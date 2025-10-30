@@ -115,3 +115,6 @@ func collect_item(item: itemData) -> bool:
 	# Inventory full
 	print("Inventory is full!")
 	return false
+	
+func NewPlayer():
+	pass

@@ -1,6 +1,6 @@
 extends SubViewport
 
-var bubble_text = "This is just a test. This is just a test. This is just a test. This is just a test. This is just a test"
+var bubble_text = "This is just a test"
 var bubble_text_length = 0
 var bubble_text_index = 0
 var current_text = ""
@@ -44,5 +44,5 @@ func _on_timer_timeout() -> void:
 			timer.start(0.06)
 		else:
 			queue_free()
-		if current_text.length() <= 0:
+		if current_text.length() == 0:
 			get_parent().visible = false
