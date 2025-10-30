@@ -1,14 +1,17 @@
-[gd_scene load_steps=5 format=3 uid="uid://jyjr0s84odql"]
+[gd_scene load_steps=7 format=3 uid="uid://jyjr0s84odql"]
 
 [ext_resource type="Script" uid="uid://b11bh54mpfuu8" path="res://scenes/entities/new_player.gd" id="1_37sbh"]
 [ext_resource type="PackedScene" uid="uid://b2firggr374w6" path="res://scenes/Camera/camera_controller.tscn" id="2_26y45"]
 [ext_resource type="PackedScene" uid="uid://s55egnlukr74" path="res://fox.tscn" id="3_btyug"]
+[ext_resource type="Resource" uid="uid://c8v7m3n2k5p4q" path="res://resources/player_inventory.tres" id="4_inv"]
+[ext_resource type="PackedScene" uid="uid://0bb61ebi0v3j" path="res://scenes/inventory_gui.tscn" id="5_invgui"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_37sbh"]
 
 [node name="NewPlayer" type="CharacterBody3D" groups=["player"]]
 script = ExtResource("1_37sbh")
 baseSpeed = 7.0
+inventory_data = ExtResource("4_inv")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -21,3 +24,5 @@ maxLimitX = -0.1
 
 [node name="RogueSkin" parent="." instance=ExtResource("3_btyug")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+
+[node name="InventoryGUI" parent="." instance=ExtResource("5_invgui")]
