@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://xlc4qq0cvb1s"]
 
 [ext_resource type="Script" path="res://scenes/items/collectible_item.gd" id="1_collectible"]
-[ext_resource type="Resource" path="res://resources/items/apple_item.tres" id="2_item_data"]
+[ext_resource type="Resource" uid="uid://cqakoqubqlb3f" path="res://resources/items/apple_item.tres" id="2_item_data"]
 [ext_resource type="PackedScene" uid="uid://jjrmwlsewv3o" path="res://assets3D/pixel_apple.glb" id="3_model"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_1"]
@@ -16,4 +16,4 @@ item_data = ExtResource("2_item_data")
 shape = SubResource("SphereShape3D_1")
 
 [node name="PixelApple" parent="." instance=ExtResource("3_model")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0.15429783, 0.28674984, -0.2627964)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.6287017, -0.10980022, 0.44153786)

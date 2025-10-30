@@ -22,6 +22,7 @@ vframes = 2
 position = Vector2(85, 85)
 
 [node name="QuantityLabel" type="Label" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 105.0
 offset_top = 118.0
