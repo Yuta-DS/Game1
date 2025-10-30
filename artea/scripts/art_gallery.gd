@@ -14,3 +14,7 @@ func _on_back_to_hubworld_pressed() -> void:
 	
 	get_tree().root.add_child(loading_screen)
 	get_tree().current_scene.queue_free() 
+
+
+func _on_body_entered(body: Node3D) -> void:
+	pass # Replace with function body.
