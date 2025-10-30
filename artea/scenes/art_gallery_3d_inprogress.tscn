@@ -1,8 +1,9 @@
-[gd_scene load_steps=56 format=3 uid="uid://cj5tghjq224it"]
+[gd_scene load_steps=62 format=3 uid="uid://cj5tghjq224it"]
 
 [ext_resource type="Script" uid="uid://bhohq7etfisvh" path="res://scripts/art_gallery.gd" id="1_h6yu7"]
 [ext_resource type="PackedScene" uid="uid://cx6j6vrnhxvfi" path="res://scenes/player_3d.tscn" id="2_3gi0n"]
 [ext_resource type="Script" uid="uid://efrx4ppi0i3q" path="res://scenes/camera_3d_2.gd" id="4_bvso8"]
+[ext_resource type="PackedScene" uid="uid://g2swdgcf4ywc" path="res://assets3D/characters/fox.glb" id="4_k4ey6"]
 [ext_resource type="Script" uid="uid://dbp2n821rrrt6" path="res://scripts/CameraFollow.gd" id="5_n1pvk"]
 [ext_resource type="Script" uid="uid://dwykxf5gpxmtn" path="res://scripts/PaintingInteraction.gd" id="7_dw71r"]
 [ext_resource type="ArrayMesh" uid="uid://d0vtopq5kt7fr" path="res://assets/models/20343_Victor_V_phonograph_v2_Texture.obj" id="11_k4ey6"]
@@ -11,6 +12,7 @@
 [ext_resource type="ArrayMesh" uid="uid://6aokdnx8qepl" path="res://assets/models/round table Ultimate(free Final).obj" id="13_6ynge"]
 [ext_resource type="ArrayMesh" uid="uid://r364k2f0d5mn" path="res://assets/models/10305_picture_frame_V2_max2011_it2.obj" id="14_6ynge"]
 [ext_resource type="Texture2D" uid="uid://bmac1y5j1g7xe" path="res://assets/models/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg" id="14_k4ey6"]
+[ext_resource type="Script" uid="uid://bk7rt45bvooh5" path="res://scenes/ExitGallery.gd" id="14_qum7w"]
 [ext_resource type="PackedScene" uid="uid://bc4s70tkatf44" path="res://assets/models/Low-Poly Plant_.fbx" id="22_8fcft"]
 [ext_resource type="Script" uid="uid://eraeiu6qk3vg" path="res://scenes/GalleryManager.gd" id="24_3btdo"]
 
@@ -181,6 +183,14 @@ albedo_color = Color(0.541176, 0.380392, 0, 0.729412)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lirsh"]
 albedo_color = Color(0.541176, 0.380392, 0, 0.729412)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_bvso8"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_rye7r"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dw71r"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_48g0v"]
+
 [node name="ArtGallery" type="Node3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -2, 0)
 script = ExtResource("1_h6yu7")
@@ -258,6 +268,13 @@ transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 
 spring_length = 6.0
 
 [node name="Camera3D" type="Camera3D" parent="Player3D/SpringArm3D"]
+
+[node name="FoxVisuals" type="Node3D" parent="Player3D"]
+
+[node name="Fox" parent="Player3D/FoxVisuals" instance=ExtResource("4_k4ey6")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+
+[node name="AnimationPlayer2" type="AnimationPlayer" parent="Player3D/FoxVisuals/Fox"]
 
 [node name="Camera3D" type="Camera3D" parent="."]
 current = true
@@ -519,3 +536,29 @@ transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -53.5987, 0, 2.23019)
 
 [node name="Low-Poly Plant_5" parent="." instance=ExtResource("22_8fcft")]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -34.0054, 0, 0.803734)
+
+[node name="Exit1" type="Area3D" parent="."]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -55.5845, 1.59177, 16.4595)
+script = ExtResource("14_qum7w")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Exit1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.474042, 0)
+shape = SubResource("BoxShape3D_bvso8")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Exit1"]
+mesh = SubResource("BoxMesh_rye7r")
+
+[node name="Exit2" type="Area3D" parent="."]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 56.3714, 0, 16.4587)
+script = ExtResource("14_qum7w")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Exit2"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 55.8124, 0.955807, 0)
+shape = SubResource("BoxShape3D_dw71r")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Exit2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.477605, 0)
+mesh = SubResource("BoxMesh_48g0v")
+
+[connection signal="body_entered" from="Exit1" to="." method="_on_body_entered"]
+[connection signal="body_entered" from="Exit2" to="." method="_on_body_entered"]
