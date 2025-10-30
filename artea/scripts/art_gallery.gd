@@ -1,4 +1,4 @@
-extends Node2D
+extends Node3D
 
 @export var painting_title: String = "artwork_1.png"
 

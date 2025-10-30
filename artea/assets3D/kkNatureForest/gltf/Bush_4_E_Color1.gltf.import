@@ -4,11 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dn7ivnjrjb02p"
-valid=false
+path="res://.godot/imported/Bush_4_E_Color1.gltf-f72fe2e09711d635e428d55213174b53.scn"
 
 [deps]
 
 source_file="res://assets3D/kkNatureForest/gltf/Bush_4_E_Color1.gltf"
+dest_files=["res://.godot/imported/Bush_4_E_Color1.gltf-f72fe2e09711d635e428d55213174b53.scn"]
 
 [params]
 
