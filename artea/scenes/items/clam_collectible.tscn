@@ -1,8 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://ici1tbtsf68y"]
+[gd_scene load_steps=7 format=3 uid="uid://vt3png3t05d4"]
 
-[ext_resource type="Script" uid="uid://b3k7m2oap5q8r" path="res://scenes/items/collectible_item.gd" id="1_40jrc"]
-[ext_resource type="Script" uid="uid://dkyjn4mm56x8o" path="res://InventoryItems/item_data.gd" id="2_2iyks"]
-[ext_resource type="PackedScene" uid="uid://tf5nu5vcnaby" path="res://assets3D/Pink_Shell_Clip_1029042716_texture.glb" id="3_40jrc"]
+[ext_resource type="Script" path="res://scenes/items/collectible_item.gd" id="1_40jrc"]
+[ext_resource type="Script" path="res://InventoryItems/item_data.gd" id="2_2iyks"]
+[ext_resource type="PackedScene" uid="uid://bfk3lfarjpsxj" path="res://assets3D/Pink_Shell_Clip_1029042716_texture.glb" id="3_40jrc"]
 [ext_resource type="Texture2D" uid="uid://yw72v3c1fydq" path="res://assets/Collectibles/pinkClam.png" id="3_qxxl7"]
 
 [sub_resource type="Resource" id="Resource_gmw1q"]
@@ -24,4 +24,4 @@ item_data = SubResource("Resource_gmw1q")
 shape = SubResource("SphereShape3D_1")
 
 [node name="Clam" parent="." instance=ExtResource("3_40jrc")]
-transform = Transform3D(1, 0, 0, 0, 0.012217055, 0.9999254, 0, -0.9999254, 0.012217055, -0.13947296, 0, -0.083171844)
+transform = Transform3D(0.5, 0, 0, 0, 0.0061085275, 0.4999627, 0, -0.4999627, 0.0061085275, -0.13947296, 0, -0.083171844)
