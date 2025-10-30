@@ -1,0 +1,134 @@
+[gd_scene load_steps=7 format=3 uid="uid://djb02d8bw6pi7"]
+
+[ext_resource type="Script" uid="uid://csqtbu457hur7" path="res://scripts/cloud_pop_ui.gd" id="1_xd30s"]
+[ext_resource type="Texture2D" uid="uid://b72ryhthaq71k" path="res://assets/Clouds/Clouds BG.png" id="2_lwtep"]
+[ext_resource type="PackedScene" uid="uid://dim1lk4t7o8jm" path="res://scenes/cloud.tscn" id="3_lwtep"]
+[ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.mp3" id="4_hyv5u"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="4_yknh2"]
+[ext_resource type="AudioStream" uid="uid://bo2fecg6xsgkk" path="res://assets/SFX/Peace - David Lastra.wav" id="6_gbrvk"]
+
+[node name="CloudPopUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_stretch_ratio = 4.35
+localize_numeral_system = false
+mouse_filter = 2
+script = ExtResource("1_xd30s")
+
+[node name="Sky Background" type="Sprite2D" parent="."]
+position = Vector2(638.037, 359.5)
+scale = Vector2(2.68882, 2.65809)
+texture = ExtResource("2_lwtep")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Cloud Spawner" type="Node2D" parent="CanvasLayer"]
+position = Vector2(10, 9)
+
+[node name="Cloud" parent="CanvasLayer/Cloud Spawner" instance=ExtResource("3_lwtep")]
+position = Vector2(521, 270)
+scale = Vector2(1e-05, 1e-05)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+rotation = -0.00125291
+
+[node name="VSplitContainer" type="VSplitContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="CenterContainer/VSplitContainer"]
+layout_mode = 2
+
+[node name="Line Edit" type="LineEdit" parent="CenterContainer/VSplitContainer/Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -315.794
+offset_top = -164.594
+offset_right = 334.206
+offset_bottom = -106.594
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_stretch_ratio = 0.0
+theme_override_fonts/font = ExtResource("4_yknh2")
+theme_override_font_sizes/font_size = 50
+placeholder_text = "What are your thoughts?"
+alignment = 1
+max_length = 60
+expand_to_text_length = true
+
+[node name="Control2" type="Control" parent="CenterContainer/VSplitContainer"]
+layout_mode = 2
+
+[node name="Create Cloud" type="Button" parent="CenterContainer/VSplitContainer/Control2"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -181.915
+offset_top = -79.4261
+offset_right = -29.9152
+offset_bottom = -31.4261
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_yknh2")
+theme_override_font_sizes/font_size = 40
+text = "Add Cloud"
+
+[node name="Pop Thoughts" type="Button" parent="CenterContainer/VSplitContainer/Control2"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 25.0834
+offset_top = -78.1667
+offset_right = 257.083
+offset_bottom = -30.1667
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_yknh2")
+theme_override_font_sizes/font_size = 40
+text = "Start Popping!"
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_hyv5u")
+pitch_scale = 1.29
+
+[node name="BGmusic" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(640, 474)
+rotation = -0.00125291
+stream = ExtResource("6_gbrvk")
+volume_db = -20.0
+autoplay = true
+
+[node name="ErrorLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 257.0
+offset_top = 32.0
+offset_right = 1069.0
+offset_bottom = 102.0
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0.747449, 0.582691, 0.201977, 1)
+theme_override_constants/shadow_outline_size = 6
+theme_override_fonts/font = ExtResource("4_yknh2")
+theme_override_font_sizes/font_size = 70
+
+[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Create Cloud" to="." method="_on_create_cloud_pressed"]
+[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_pop_thoughts_pressed"]
+[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_create_cloud_pressed"]

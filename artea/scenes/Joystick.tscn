@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3 uid="uid://bspr3hpws6rf7"]
+
+[ext_resource type="Texture2D" uid="uid://bidhxucp2kd66" path="res://assets/Joystick/joyring.png" id="1_ring"]
+[ext_resource type="Texture2D" uid="uid://hg42snfhm6ei" path="res://assets/Joystick/joyknobpng.png" id="2_knob"]
+[ext_resource type="Script" uid="uid://df5jcsv77gyin" path="res://scripts/joystick.gd" id="3_script"]
+
+[node name="Joystick" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 150.0
+offset_bottom = 150.0
+script = ExtResource("3_script")
+
+[node name="JoystickButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_right = -5.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+
+[node name="JoystickRing" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_ring")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="JoystickKnob" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 47.0
+offset_top = 33.0
+offset_right = 105.0
+offset_bottom = 96.0
+texture = ExtResource("2_knob")
+expand_mode = 1
+stretch_mode = 5

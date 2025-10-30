@@ -1,0 +1,226 @@
+[gd_scene load_steps=12 format=3 uid="uid://cov6pyq6rp3k7"]
+
+[ext_resource type="Script" uid="uid://pdre81fce6jp" path="res://scripts/drawing_tool.gd" id="1_6lgk2"]
+[ext_resource type="Texture2D" uid="uid://ckefts8nnc8q3" path="res://assets/Drawing Tool Icons/exit.png" id="2_7ue1q"]
+[ext_resource type="Texture2D" uid="uid://b512rml8o4340" path="res://assets/Drawing Tool Icons/save.png" id="3_hjdgo"]
+[ext_resource type="Script" uid="uid://ba1iewsdw2eq6" path="res://scenes/brush.gd" id="4_640pf"]
+[ext_resource type="Texture2D" uid="uid://dt32wi6t4dfey" path="res://assets/Drawing Tool Icons/undo.png" id="4_yv0fq"]
+[ext_resource type="Texture2D" uid="uid://cor1of84p7trn" path="res://assets/Drawing Tool Icons/clear.png" id="5_efxe5"]
+[ext_resource type="Texture2D" uid="uid://b8imphvwh0xim" path="res://assets/Drawing Tool Icons/eraser.png" id="6_05l77"]
+[ext_resource type="Script" uid="uid://e8hgytht1od" path="res://scenes/stamp.gd" id="6_77ary"]
+[ext_resource type="Texture2D" uid="uid://c1ae7pmdc5kmq" path="res://assets/Drawing Tool Icons/brush.png" id="7_g5x6v"]
+[ext_resource type="Texture2D" uid="uid://bwhar032y57pf" path="res://assets/Drawing Tool Icons/stamp.png" id="9_7ue1q"]
+[ext_resource type="Texture2D" uid="uid://dyf07vqr2tgon" path="res://assets/Drawing Tool Icons/Cloud.png" id="11_hjdgo"]
+
+[node name="DrawingTool" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 50.0
+offset_top = 67.0
+offset_right = 1863.0
+offset_bottom = 1194.0
+script = ExtResource("1_6lgk2")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 0
+offset_left = -28.0
+offset_top = -21.0
+offset_right = 1311.0
+offset_bottom = 751.0
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(1650, 1000)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="HSplitContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
+layout_direction = 2
+layout_mode = 2
+
+[node name="Actions" type="VSplitContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer"]
+custom_minimum_size = Vector2(120, 600)
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions"]
+layout_direction = 3
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="Exit" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_vertical = 3
+icon = ExtResource("2_7ue1q")
+icon_alignment = 1
+
+[node name="Save" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_vertical = 3
+icon = ExtResource("3_hjdgo")
+icon_alignment = 1
+
+[node name="Undo" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_vertical = 3
+text = "
+"
+icon = ExtResource("4_yv0fq")
+icon_alignment = 1
+
+[node name="Clear" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_vertical = 3
+icon = ExtResource("5_efxe5")
+icon_alignment = 1
+
+[node name="VSplitContainer" type="VSplitContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/VSplitContainer"]
+layout_mode = 2
+
+[node name="Canvas" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/VSplitContainer/VBoxContainer"]
+custom_minimum_size = Vector2(1400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 1024
+
+[node name="Drawing" type="HSplitContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer"]
+custom_minimum_size = Vector2(100, 100)
+layout_direction = 2
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+
+[node name="Eraser" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer"]
+custom_minimum_size = Vector2(100, 270)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 2
+text = "
+"
+icon = ExtResource("6_05l77")
+icon_alignment = 1
+
+[node name="Brush" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer"]
+custom_minimum_size = Vector2(100, 270)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 2
+text = "
+"
+icon = ExtResource("7_g5x6v")
+icon_alignment = 1
+script = ExtResource("4_640pf")
+
+[node name="BrushPopUp" type="PopupPanel" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Brush"]
+position = Vector2i(1367, 460)
+size = Vector2i(188, 78)
+visible = true
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Brush/BrushPopUp"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 184.0
+offset_bottom = 74.0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="GridContainer" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Brush/BrushPopUp/MarginContainer"]
+layout_mode = 2
+columns = 3
+
+[node name="SmallBrush" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Brush/BrushPopUp/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "Small"
+
+[node name="MediumBrush" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Brush/BrushPopUp/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "Med"
+
+[node name="LargeBrush" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Brush/BrushPopUp/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "Large"
+
+[node name="Stamp" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer"]
+custom_minimum_size = Vector2(100, 270)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 2
+text = "
+
+"
+icon = ExtResource("9_7ue1q")
+icon_alignment = 1
+script = ExtResource("6_77ary")
+
+[node name="StampPopUp" type="PopupPanel" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Stamp"]
+auto_translate_mode = 1
+position = Vector2i(1200, 740)
+size = Vector2i(356, 106)
+visible = true
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Stamp/StampPopUp"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 352.0
+offset_bottom = 102.0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="GridContainer" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Stamp/StampPopUp/MarginContainer"]
+layout_mode = 2
+columns = 4
+
+[node name="Cloud" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Stamp/StampPopUp/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+icon = ExtResource("11_hjdgo")
+flat = true
+icon_alignment = 1
+
+[node name="Flower" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Stamp/StampPopUp/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "
+"
+flat = true
+
+[node name="Sun" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Stamp/StampPopUp/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+flat = true
+
+[node name="Heart" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Stamp/StampPopUp/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+flat = true
+
+[node name="ColorPickerButton" type="ColorPickerButton" parent="CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer"]
+custom_minimum_size = Vector2(100, 80)
+layout_mode = 2

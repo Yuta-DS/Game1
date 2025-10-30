@@ -1,0 +1,496 @@
+[gd_scene load_steps=27 format=3 uid="uid://d23tkay8vp7qa"]
+
+[ext_resource type="Texture2D" uid="uid://bifn0ynjn5mnc" path="res://assets/Purple Bay/Assets/tiles.png" id="1_iqcv7"]
+[ext_resource type="Texture2D" uid="uid://owhlibqlymis" path="res://assets/Purple Bay/Background/Background-2.png" id="2_8pcnw"]
+[ext_resource type="Texture2D" uid="uid://kgua4pu5e1ke" path="res://assets/Purple Bay/Background/Background-3.png" id="3_4y7mp"]
+[ext_resource type="Texture2D" uid="uid://qe8sjiwlxccn" path="res://assets/Purple Bay/Background/Background-1.png" id="4_20367"]
+[ext_resource type="Texture2D" uid="uid://17ocw0fcqqbq" path="res://assets/Purple Bay/Background/Background-4.png" id="5_u7u40"]
+[ext_resource type="PackedScene" uid="uid://chtnn5vuwqksc" path="res://scenes/art_therapist_cat.tscn" id="6_fwtn0"]
+[ext_resource type="PackedScene" uid="uid://d0ychv4kn42hp" path="res://scenes/actionable.tscn" id="7_fqmtu"]
+[ext_resource type="PackedScene" uid="uid://dnigmisk0uut0" path="res://scenes/plain_barrel.tscn" id="8_pa733"]
+[ext_resource type="PackedScene" uid="uid://dewjjpcfr2ae7" path="res://scenes/purple_flower.tscn" id="9_q1dlw"]
+[ext_resource type="PackedScene" uid="uid://c3e41piyukoe1" path="res://scenes/yellow_bush.tscn" id="10_ax2r7"]
+[ext_resource type="PackedScene" uid="uid://c02j4pfrscui4" path="res://scenes/background.tscn" id="11_hminv"]
+[ext_resource type="PackedScene" uid="uid://62m34ww2gvtb" path="res://scenes/player.tscn" id="12_ndupp"]
+[ext_resource type="PackedScene" uid="uid://jjgqd6v4wq6g" path="res://scenes/npc_therapist2.tscn" id="13_8pcnw"]
+[ext_resource type="PackedScene" uid="uid://tfpr4uiqnkn4" path="res://scenes/Control_HUD.tscn" id="14_4y7mp"]
+[ext_resource type="AudioStream" uid="uid://c4j2yogfo2xl0" path="res://assets/SFX/Connecting Rainbows.mp3" id="15_20367"]
+[ext_resource type="AudioStream" uid="uid://codlt8pf5j5jq" path="res://assets/SFX/beachBG.mp3" id="16_u7u40"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lbhrr"]
+texture = ExtResource("1_iqcv7")
+0:1/0 = 0
+0:1/0/z_index = -1
+1:1/0 = 0
+1:1/0/z_index = -1
+2:1/0 = 0
+2:1/0/z_index = -1
+3:1/0 = 0
+3:1/0/z_index = -1
+0:2/0 = 0
+0:2/0/z_index = -1
+1:2/0 = 0
+1:2/0/z_index = -1
+2:2/0 = 0
+2:2/0/z_index = -1
+3:2/0 = 0
+3:2/0/z_index = -1
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+0:8/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+3:8/0 = 0
+4:8/0 = 0
+0:9/0 = 0
+1:9/0 = 0
+2:9/0 = 0
+3:9/0 = 0
+4:9/0 = 0
+3:10/0 = 0
+4:10/0 = 0
+3:11/0 = 0
+4:11/0 = 0
+3:12/0 = 0
+14:14/0 = 0
+15:14/0 = 0
+14:15/0 = 0
+15:15/0 = 0
+16:15/0 = 0
+17:15/0 = 0
+4:16/0 = 0
+5:16/0 = 0
+14:16/0 = 0
+15:16/0 = 0
+16:16/0 = 0
+17:16/0 = 0
+4:17/0 = 0
+5:17/0 = 0
+4:18/0 = 0
+4:19/0 = 0
+2:22/0 = 0
+3:22/0 = 0
+2:23/0 = 0
+3:23/0 = 0
+5:23/0 = 0
+6:23/0 = 0
+5:3/size_in_atlas = Vector2i(7, 6)
+5:3/0 = 0
+8:9/0 = 0
+9:9/0 = 0
+9:10/0 = 0
+10:10/0 = 0
+10:11/0 = 0
+10:12/0 = 0
+11:12/0 = 0
+10:13/0 = 0
+11:13/0 = 0
+11:11/0 = 0
+0:13/size_in_atlas = Vector2i(5, 3)
+0:13/0 = 0
+0:13/0/physics_layer_0/polygon_0/points = PackedVector2Array(-23.8973, -6.69125, -12.108, -16, 1.91179, -21.0296, 16, -16, 29.9513, -7.32851, 35.0494, 23.8973, -28.6768, 22.9414)
+5:14/size_in_atlas = Vector2i(2, 2)
+5:14/0 = 0
+5:14/0/physics_layer_0/polygon_0/points = PackedVector2Array(-10.8334, -1.59315, -5.41672, -6.69125, 2.54905, -8.2844, 12.108, -3.50494, 16, 3.82357, 16, 16, -12.4266, 16)
+0:16/size_in_atlas = Vector2i(2, 3)
+0:16/0 = 0
+2:16/size_in_atlas = Vector2i(2, 3)
+2:16/0 = 0
+0:19/size_in_atlas = Vector2i(2, 3)
+0:19/0 = 0
+2:19/size_in_atlas = Vector2i(2, 3)
+2:19/0 = 0
+14:17/size_in_atlas = Vector2i(3, 4)
+14:17/0 = 0
+15:21/0 = 0
+15:22/0 = 0
+7:14/size_in_atlas = Vector2i(7, 6)
+7:14/0 = 0
+9:20/size_in_atlas = Vector2i(4, 3)
+9:20/0 = 0
+3:3/size_in_atlas = Vector2i(2, 2)
+3:3/0 = 0
+3:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -8.2844, 16, -7.00988, 16, 16, -16, 16)
+3:5/size_in_atlas = Vector2i(2, 2)
+3:5/0 = 0
+3:5/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -7.64714, 16, -7.64714, 16, 16, -16, 16)
+4:0/size_in_atlas = Vector2i(4, 3)
+4:0/0 = 0
+4:0/0/z_index = -1
+4:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-33.4562, -7.00988, -16, -12.7452, 32.1817, -13.0639, 31.5444, 23.5787, -31.8631, 22.6228)
+8:0/size_in_atlas = Vector2i(2, 3)
+8:0/0 = 0
+8:0/0/z_index = -1
+8:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 15.9315, 23.5787, -15.6129, 23.5787)
+5:18/size_in_atlas = Vector2i(1, 2)
+5:18/0 = 0
+4:20/0 = 0
+4:21/0 = 0
+5:21/0 = 0
+5:22/0 = 0
+6:21/0 = 0
+6:20/0 = 0
+5:20/0 = 0
+5:12/size_in_atlas = Vector2i(2, 2)
+5:12/0 = 0
+7:13/size_in_atlas = Vector2i(2, 1)
+7:13/0 = 0
+12:3/size_in_atlas = Vector2i(7, 11)
+12:3/0 = 0
+12:3/0/z_index = -1
+0:10/size_in_atlas = Vector2i(3, 2)
+0:10/0 = 0
+5:10/size_in_atlas = Vector2i(2, 2)
+5:10/0 = 0
+10:1/size_in_atlas = Vector2i(2, 2)
+10:1/0 = 0
+10:1/0/z_index = -1
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_kvpfn"]
+texture = ExtResource("2_8pcnw")
+texture_region_size = Vector2i(32, 32)
+0:4/next_alternative_id = 2
+0:4/0 = 0
+0:4/1 = 1
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+9:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+8:5/0 = 0
+9:5/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dinhu"]
+texture = ExtResource("3_4y7mp")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+8:2/0 = 0
+9:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+8:3/0 = 0
+9:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+9:4/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_kvuet"]
+texture = ExtResource("4_20367")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+8:2/0 = 0
+9:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+8:3/0 = 0
+9:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+9:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+8:5/0 = 0
+9:5/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_trtic"]
+texture = ExtResource("5_u7u40")
+texture_region_size = Vector2i(32, 32)
+0:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+8:3/0 = 0
+9:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+9:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+8:5/0 = 0
+9:5/0 = 0
+9:2/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_iywne"]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_lbhrr")
+sources/1 = SubResource("TileSetAtlasSource_kvpfn")
+sources/2 = SubResource("TileSetAtlasSource_dinhu")
+sources/3 = SubResource("TileSetAtlasSource_kvuet")
+sources/4 = SubResource("TileSetAtlasSource_trtic")
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_iqcv7"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_vtaks"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4y7mp"]
+size = Vector2(876.157, 45.6044)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_20367"]
+size = Vector2(39, 445)
+
+[node name="Game" type="Node2D"]
+z_index = 50
+position = Vector2(-26, 47)
+scale = Vector2(1.68736, 1.68736)
+
+[node name="Background" parent="." instance=ExtResource("11_hminv")]
+z_index = -50
+position = Vector2(-81.7848, 18.9646)
+
+[node name="Instruction" type="Label" parent="."]
+offset_left = 184.312
+offset_top = 7.33378
+offset_right = 786.312
+offset_bottom = 76.3338
+theme_override_colors/font_color = Color(0.157197, 0.380535, 0.11308, 1)
+theme_override_colors/font_shadow_color = Color(0.254902, 0.54902, 0.0666667, 0.392157)
+theme_override_font_sizes/font_size = 40
+text = "Jump on the rock to start"
+metadata/_edit_use_anchors_ = true
+
+[node name="TileMap" type="TileMap" parent="."]
+z_index = -2
+position = Vector2(-1, 7.33378)
+scale = Vector2(1.01923, 1.01695)
+tile_set = SubResource("TileSet_iywne")
+format = 2
+layer_0/name = "Ocean"
+layer_0/z_index = 1
+layer_0/tile_data = PackedInt32Array(524302, 786432, 3)
+layer_1/name = "Mountains"
+layer_1/z_index = 2
+layer_2/name = "Mid"
+layer_2/z_index = 3
+layer_2/tile_data = PackedInt32Array(720915, 262144, 0, 720914, 262144, 0, 720913, 262144, 0, 720912, 262144, 0, 720911, 262144, 0, 720910, 262144, 0, 720909, 262144, 0, 720908, 262144, 0, 720907, 262144, 0, 720906, 262144, 0, 720901, 196608, 3, 720900, 196608, 3, 720899, 196608, 3, 720898, 196608, 3, 720897, 196608, 3, 720896, 196608, 3, 655382, 0, 13, 655362, 589824, 20, 524290, 458752, 14, 720905, 262144, 0, 786432, 327680, 10, 786433, 327680, 10, 786434, 327680, 10, 786435, 327680, 10, 786436, 327680, 10, 786437, 327680, 10, 655375, 0, 13, 720920, 196608, 3, 720921, 196608, 3, 720916, 262144, 0, 524294, 786432, 3, 524311, 786432, 3, 720903, 262144, 0, 720902, 262144, 0, 720904, 262144, 0, 720917, 262144, 0, 720918, 262144, 0, 720919, 262144, 0, 524302, 786432, 3)
+
+[node name="Art therapist cat" parent="." instance=ExtResource("6_fwtn0")]
+visible = false
+z_index = 6
+position = Vector2(735, 333)
+scale = Vector2(2.11992, 2.12869)
+
+[node name="Actionable2" parent="Art therapist cat" instance=ExtResource("7_fqmtu")]
+position = Vector2(-104.759, -5.63727)
+scale = Vector2(0.469772, 0.469772)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Art therapist cat/Actionable2"]
+scale = Vector2(4.45221, 4.45221)
+shape = SubResource("CircleShape2D_iqcv7")
+
+[node name="Actionable" parent="." instance=ExtResource("7_fqmtu")]
+position = Vector2(0, 7.33378)
+script = null
+
+[node name="barrels" type="Node" parent="."]
+
+[node name="Plain barrel" parent="barrels" instance=ExtResource("8_pa733")]
+position = Vector2(144, 631)
+scale = Vector2(2.67491, 2.66892)
+
+[node name="Plain barrel2" parent="barrels" instance=ExtResource("8_pa733")]
+position = Vector2(599, 631)
+scale = Vector2(2.67491, 2.66892)
+
+[node name="Flora" type="Node" parent="."]
+
+[node name="Purple Flower" parent="Flora" instance=ExtResource("9_q1dlw")]
+position = Vector2(277, 631)
+scale = Vector2(2.24384, 2.24384)
+
+[node name="Yellow Bush" parent="Flora" instance=ExtResource("10_ax2r7")]
+position = Vector2(373, 643)
+scale = Vector2(1.97056, 1.97056)
+
+[node name="Yellow Bush3" parent="Flora" instance=ExtResource("10_ax2r7")]
+position = Vector2(644, 643)
+scale = Vector2(1.97056, 1.97056)
+
+[node name="Yellow Bush4" parent="Flora" instance=ExtResource("10_ax2r7")]
+position = Vector2(225, 645)
+scale = Vector2(1.97056, 1.97056)
+
+[node name="Yellow Bush2" parent="Flora" instance=ExtResource("10_ax2r7")]
+position = Vector2(557, 643)
+scale = Vector2(1.97056, 1.97056)
+
+[node name="Player" parent="." instance=ExtResource("12_ndupp")]
+position = Vector2(308, 274.334)
+scale = Vector2(1.75669, 1.75669)
+
+[node name="Direction" type="Marker2D" parent="Player"]
+position = Vector2(-39, 57)
+scale = Vector2(1.84636, 1.84636)
+
+[node name="ActionableFinder" type="Area2D" parent="Player/Direction"]
+collision_layer = 0
+collision_mask = 128
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/Direction/ActionableFinder"]
+position = Vector2(-4.33285, -25.9971)
+shape = SubResource("CircleShape2D_vtaks")
+
+[node name="NPC" parent="." instance=ExtResource("13_8pcnw")]
+position = Vector2(740.212, 360.549)
+scale = Vector2(1.91462, 1.91462)
+
+[node name="Control" parent="." instance=ExtResource("14_4y7mp")]
+z_index = 500
+offset_left = 69.9319
+offset_top = 353.438
+offset_right = 69.9319
+offset_bottom = 353.438
+scale = Vector2(0.597101, 0.597101)
+metadata/_edit_use_anchors_ = true
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+position = Vector2(9, 5.33378)
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(346.585, 426.332)
+scale = Vector2(0.958608, 1.01849)
+shape = SubResource("RectangleShape2D_4y7mp")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(347.886, 0.222076)
+shape = SubResource("RectangleShape2D_4y7mp")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(779.214, 213.573)
+shape = SubResource("RectangleShape2D_20367")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(-0.110378, 213.573)
+shape = SubResource("RectangleShape2D_20367")
+
+[node name="BG" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(8.88962, 218.907)
+stream = ExtResource("15_20367")
+volume_db = -15.0
+autoplay = true
+
+[node name="beachBG" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(8.88962, 218.907)
+stream = ExtResource("16_u7u40")
+volume_db = -20.0
+autoplay = true

@@ -1,0 +1,574 @@
+[gd_scene load_steps=81 format=3 uid="uid://drfdo0gpexlsl"]
+
+[ext_resource type="Texture2D" uid="uid://bcmlngyltk7sp" path="res://textures/moss_ground_02_1k/moss_groud_02_Base_Color_1k.png" id="1_thnmr"]
+[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://Water.tscn" id="1_u4tjg"]
+[ext_resource type="Texture2D" uid="uid://c1piymb1ae820" path="res://textures/moss_ground_02_1k/moss_groud_02_Normal_dx_1k.png" id="2_pl5oi"]
+[ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_q1hpc"]
+[ext_resource type="PackedScene" uid="uid://bueqmdan8ll3o" path="res://textures/pebble_round_22.tscn" id="3_mwiy7"]
+[ext_resource type="Texture2D" uid="uid://k1w78rupokyg" path="res://textures/sand_01_2k/sand_01_1k/sand_01_color_1k.png" id="3_pl5oi"]
+[ext_resource type="Texture2D" uid="uid://b2xb5war6mtx" path="res://textures/sand_01_2k/sand_01_1k/sand_01_normal_dx_1k.png" id="4_pe3t7"]
+[ext_resource type="PackedScene" uid="uid://d4ajgx5olmnf0" path="res://assets3D/mountains/rock_medium_12.tscn" id="4_s5s7t"]
+[ext_resource type="PackedScene" uid="uid://6mrykb8nrbbc" path="res://assets3D/mountains/rock_medium_13.tscn" id="5_3hpl7"]
+[ext_resource type="Texture2D" uid="uid://bc6tsgn5ra624" path="res://textures/ground_tiles_13_1k/ground_tiles_13_baseColor_1k.png" id="6_ngqnt"]
+[ext_resource type="PackedScene" uid="uid://qg3h6vqjxw7q" path="res://assets3D/mountains/rock_medium_14.tscn" id="6_thnmr"]
+[ext_resource type="Texture2D" uid="uid://t2yoqh87di2x" path="res://textures/ground_tiles_13_1k/ground_tiles_13_normal_dx_1k.png" id="7_7nfwd"]
+[ext_resource type="PackedScene" uid="uid://cdb2bek873oxe" path="res://assets3D/mountains/rock_medium_22.tscn" id="7_cfloa"]
+[ext_resource type="Script" uid="uid://lgdpru8th01u" path="res://addons/proton_scatter/src/scatter.gd" id="12_0l1bc"]
+[ext_resource type="Script" uid="uid://c13nnb0jwhdqt" path="res://addons/proton_scatter/src/stack/modifier_stack.gd" id="13_1ti50"]
+[ext_resource type="Script" uid="uid://cexb85niepjul" path="res://addons/proton_scatter/src/modifiers/base_modifier.gd" id="14_g1e0d"]
+[ext_resource type="Script" uid="uid://cvj2kjiylj6d0" path="res://addons/proton_scatter/src/modifiers/create_inside_random.gd" id="15_o1ycd"]
+[ext_resource type="Script" uid="uid://du4an8aisrpm5" path="res://addons/proton_scatter/src/modifiers/randomize_transforms.gd" id="16_ha1sw"]
+[ext_resource type="Script" uid="uid://b5jyupcsost0x" path="res://addons/proton_scatter/src/modifiers/relax.gd" id="17_bsvfl"]
+[ext_resource type="Script" uid="uid://bevon172xunct" path="res://addons/proton_scatter/src/modifiers/project_on_geometry.gd" id="18_jhnfs"]
+[ext_resource type="Script" uid="uid://jp2wlxr8rcgq" path="res://addons/proton_scatter/src/modifiers/project_on_terrain3d.gd" id="19_g1e0d"]
+[ext_resource type="Shader" uid="uid://bf0h7u1q21ph3" path="res://New_Hub_World.gdshader" id="19_ha1sw"]
+[ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
+[ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
+[ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
+[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://cycle.tscn" id="24_ha1sw"]
+[ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://windshader.tscn" id="25_bsvfl"]
+[ext_resource type="Script" uid="uid://dy3aaovd6pf3p" path="res://addons/proton_scatter/src/shapes/sphere_shape.gd" id="28_cfrmd"]
+[ext_resource type="AudioStream" uid="uid://bexb5n8or0c36" path="res://assets/audio/Flowing Water and Birds (Hub).wav" id="29_cfrmd"]
+[ext_resource type="AudioStream" uid="uid://cxwpjfnl8yfbl" path="res://assets/audio/Campfire.wav" id="30_8n7aw"]
+[ext_resource type="PackedScene" uid="uid://dqrsq173aela" path="res://assets3D/house scenes/home_a.tscn" id="30_82kox"]
+[ext_resource type="PackedScene" uid="uid://c7efar8dbufti" path="res://assets3D/house scenes/church.tscn" id="30_ikt05"]
+[ext_resource type="PackedScene" uid="uid://t3u650f5iukq" path="res://scenes/inventory_gui.tscn" id="31_8n7aw"]
+[ext_resource type="PackedScene" uid="uid://cdbpebiubxrf0" path="res://assets3D/house scenes/market.tscn" id="31_k7taw"]
+[ext_resource type="Script" uid="uid://cblnrinwioycu" path="res://scripts/toggleInventory.gd" id="31_y45p1"]
+[ext_resource type="PackedScene" uid="uid://oe06cc6ieu4h" path="res://assets3D/house scenes/well.tscn" id="37_h1q0r"]
+[ext_resource type="PackedScene" uid="uid://00qxw7q0yn6m" path="res://assets3D/house scenes/windmill.tscn" id="38_k7taw"]
+[ext_resource type="PackedScene" uid="uid://dipjrbs7fbcy2" path="res://assets3D/house scenes/home_b.tscn" id="39_t72bn"]
+[ext_resource type="PackedScene" uid="uid://ys3laco1twc" path="res://assets3D/house scenes/castle.tscn" id="40_40xrb"]
+[ext_resource type="PackedScene" uid="uid://fqx6500nugky" path="res://assets3D/house scenes/tavern.tscn" id="41_kjbyn"]
+[ext_resource type="PackedScene" uid="uid://cmwutg4qjm7hv" path="res://assets3D/house scenes/watermill.tscn" id="42_fn4xt"]
+[ext_resource type="PackedScene" uid="uid://bl7duyul3lwg3" path="res://assets3D/house scenes/lumbermill.tscn" id="43_448jj"]
+[ext_resource type="PackedScene" uid="uid://bpyjccfwiqsfk" path="res://assets3D/house scenes/artéa_signpost.tscn" id="44_wlotw"]
+[ext_resource type="PackedScene" uid="uid://ch7f1gvh71svv" path="res://meshy ai/Milo_Animations.glb" id="45_k7taw"]
+[ext_resource type="PackedScene" uid="uid://mlbbm08eu5nw" path="res://assets3D/house scenes/tower_b.tscn" id="45_t72bn"]
+[ext_resource type="PackedScene" uid="uid://bdx4hvm2wninr" path="res://assets3D/house scenes/tower_catapult.tscn" id="46_40xrb"]
+[ext_resource type="PackedScene" uid="uid://dq0oeht5m27x4" path="res://assets3D/characters/Father_Animations.glb" id="47_40xrb"]
+[ext_resource type="PackedScene" uid="uid://catvjmgmxqdgx" path="res://assets3D/house scenes/Prince.tscn" id="48_kjbyn"]
+
+[sub_resource type="Gradient" id="Gradient_q1hpc"]
+offsets = PackedFloat32Array(0.2, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_mwiy7"]
+noise_type = 2
+frequency = 0.03
+cellular_jitter = 3.0
+cellular_return_type = 0
+domain_warp_enabled = true
+domain_warp_type = 1
+domain_warp_amplitude = 50.0
+domain_warp_fractal_type = 2
+domain_warp_fractal_lacunarity = 1.5
+domain_warp_fractal_gain = 1.0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_rcl8r"]
+noise = SubResource("FastNoiseLite_mwiy7")
+color_ramp = SubResource("Gradient_q1hpc")
+seamless = true
+
+[sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_7djuo"]
+_shader_parameters = {
+&"bias_distance": 512.0,
+&"blend_sharpness": 0.5,
+&"depth_blur": 0.0,
+&"enable_macro_variation": true,
+&"enable_projection": true,
+&"flat_terrain_normals": false,
+&"macro_variation1": Color(1, 1, 1, 1),
+&"macro_variation2": Color(1, 1, 1, 1),
+&"macro_variation_slope": 0.333,
+&"mipmap_bias": 1.0,
+&"noise1_angle": 0.0,
+&"noise1_offset": Vector2(0.5, 0.5),
+&"noise1_scale": 0.04,
+&"noise2_scale": 0.076,
+&"noise_texture": SubResource("NoiseTexture2D_rcl8r"),
+&"projection_threshold": 0.8
+}
+world_background = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enoow"]
+transparency = 4
+cull_mode = 2
+vertex_color_use_as_albedo = true
+backlight_enabled = true
+backlight = Color(0.5, 0.5, 0.5, 1)
+distance_fade_mode = 1
+distance_fade_min_distance = 128.0
+distance_fade_max_distance = 96.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_s5s7t"]
+generated_type = 1
+height_offset = 0.5
+material_override = SubResource("StandardMaterial3D_enoow")
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 128.0
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_pl5oi"]
+name = "moss_groud_02_Base_Color_1k"
+albedo_texture = ExtResource("1_thnmr")
+normal_texture = ExtResource("2_pl5oi")
+normal_depth = 1.684
+roughness = 1.0
+uv_scale = 1.165
+detiling_rotation = 0.269
+detiling_shift = 0.289
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_lgoah"]
+name = "sand_04_color_1k"
+id = 1
+albedo_texture = ExtResource("3_pl5oi")
+normal_texture = ExtResource("4_pe3t7")
+roughness = -0.651
+uv_scale = 1.444
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_7nfwd"]
+name = "New_Hub_World"
+id = 2
+albedo_texture = ExtResource("6_ngqnt")
+normal_texture = ExtResource("7_7nfwd")
+normal_depth = 2.0
+roughness = -0.506
+uv_scale = 1.634
+
+[sub_resource type="Terrain3DAssets" id="Terrain3DAssets_3hpl7"]
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
+texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
+
+[sub_resource type="Resource" id="Resource_82kox"]
+script = ExtResource("15_o1ycd")
+amount = 60500
+override_global_seed = true
+restrict_height = true
+reference_frame = 1
+
+[sub_resource type="Resource" id="Resource_h1q0r"]
+script = ExtResource("16_ha1sw")
+position = Vector3(0.15, 0.15, 0.15)
+rotation = Vector3(20, 360, 20)
+scale = Vector3(0.1, 0.1, 0.1)
+override_global_seed = true
+reference_frame = 2
+
+[sub_resource type="Resource" id="Resource_k7taw"]
+script = ExtResource("17_bsvfl")
+offset_step = 0.2
+consecutive_step_multiplier = 0.75
+restrict_height = true
+
+[sub_resource type="Resource" id="Resource_t72bn"]
+script = ExtResource("18_jhnfs")
+ray_length = 5.0
+ray_offset = 5.0
+remove_points_on_miss = false
+
+[sub_resource type="Resource" id="Resource_40xrb"]
+script = ExtResource("19_g1e0d")
+terrain_node = NodePath("../Terrain3D")
+
+[sub_resource type="Resource" id="Resource_kjbyn"]
+script = ExtResource("13_1ti50")
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_82kox"), SubResource("Resource_h1q0r"), SubResource("Resource_k7taw"), SubResource("Resource_t72bn"), SubResource("Resource_40xrb")])
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_bsvfl"]
+noise = SubResource("FastNoiseLite_ha1sw")
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_jhnfs"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ngqnt"]
+noise = SubResource("FastNoiseLite_jhnfs")
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_7nfwd"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_cfrmd"]
+noise = SubResource("FastNoiseLite_7nfwd")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_y45p1"]
+render_priority = 1
+shader = ExtResource("19_ha1sw")
+shader_parameter/bottom_color = Color(0.214194, 0.363532, 0.198002, 1)
+shader_parameter/top_color = Color(0.401027, 0.688921, 0.343888, 1)
+shader_parameter/color_variation_1 = Color(0.438892, 0.533217, 0.191565, 1)
+shader_parameter/noise_variation_1 = SubResource("NoiseTexture2D_bsvfl")
+shader_parameter/Noise1Scale = 20.0
+shader_parameter/color_variation_2 = Color(0.394377, 0.618859, 0.257121, 1)
+shader_parameter/noise_variation_2 = SubResource("NoiseTexture2D_ngqnt")
+shader_parameter/Noise2Scale = 20.0
+shader_parameter/windSpeed = 0.005
+shader_parameter/windDis = 0.2
+shader_parameter/noiseStrength = 0.5
+shader_parameter/displaceStrength = 3.0
+shader_parameter/wind_noise = SubResource("NoiseTexture2D_cfrmd")
+shader_parameter/windNoiseScale = 20.0
+shader_parameter/windNoisePanSpeed = Vector2(0.03, 0.03)
+shader_parameter/noiseFloor = 0.3
+shader_parameter/wind_noise_scale_strength = 0.2
+shader_parameter/wind_shadow_color = Color(0, 0.2, 0, 1)
+shader_parameter/wind_shadow_strength = 0.4
+shader_parameter/flatten_shadow_strength = 0.7
+shader_parameter/wind_shadow_displacement_threshold = 0.15
+shader_parameter/wind_shadow_smoothing = 0.3
+shader_parameter/interracting_object_pos = Vector3(0, 0, 0)
+shader_parameter/flatten_radius = 0.75
+shader_parameter/flatten_strength = 3.0
+shader_parameter/flatten_floor = 0.3
+shader_parameter/combined_noise_min_scale = 0.5
+shader_parameter/combined_noise_max_scale = 1.5
+shader_parameter/invert_combined_noise = false
+shader_parameter/debug_show_wind_noise = false
+shader_parameter/debug_show_combined_noise = false
+
+[sub_resource type="Curve3D" id="Curve3D_8n7aw"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -111.57, 0, 54.0528, 0, 0, 0, 0, 0, 0, -37.3579, 7.62939e-06, 54.9847, 0, 0, 0, 0, 0, 0, 35.5735, 0, 27.6735, 0, 0, 0, 0, 0, 0, 3.88522, 0, -100.941, 0, 0, 0, 0, 0, 0, -181.275, 7.62939e-06, -141.999, 0, 0, 0, 0, 0, 0, -130.641, 0, 38.2469),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0)
+}
+point_count = 6
+
+[sub_resource type="Resource" id="Resource_vspl4"]
+script = ExtResource("21_ha1sw")
+thickness = 40.0
+curve = SubResource("Curve3D_8n7aw")
+metadata/_custom_type_script = "uid://7iwrp8x1pemc"
+
+[sub_resource type="Resource" id="Resource_fn4xt"]
+script = ExtResource("15_o1ycd")
+amount = 188
+restrict_height = true
+reference_frame = 1
+
+[sub_resource type="Resource" id="Resource_448jj"]
+script = ExtResource("16_ha1sw")
+position = Vector3(0.15, 0.15, 0.15)
+rotation = Vector3(20, 360, 20)
+scale = Vector3(0.3, 0.3, 0.3)
+reference_frame = 2
+
+[sub_resource type="Resource" id="Resource_wlotw"]
+script = ExtResource("17_bsvfl")
+offset_step = 0.2
+consecutive_step_multiplier = 0.75
+restrict_height = true
+
+[sub_resource type="Resource" id="Resource_6s6ja"]
+script = ExtResource("18_jhnfs")
+ray_length = 5.0
+ray_offset = 5.0
+remove_points_on_miss = false
+
+[sub_resource type="Resource" id="Resource_wqsev"]
+script = ExtResource("19_g1e0d")
+terrain_node = NodePath("../Terrain3D")
+
+[sub_resource type="Resource" id="Resource_3fkt5"]
+script = ExtResource("13_1ti50")
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_fn4xt"), SubResource("Resource_448jj"), SubResource("Resource_wlotw"), SubResource("Resource_6s6ja"), SubResource("Resource_wqsev")])
+
+[sub_resource type="Resource" id="Resource_g8bsm"]
+script = ExtResource("28_cfrmd")
+radius = 120.0
+
+[node name="HubWorld" type="Node3D"]
+
+[node name="NewPlayer" parent="." instance=ExtResource("2_q1hpc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.64955, 34.126, 0)
+baseSpeed = 12.0
+
+[node name="OmniLight3D" type="OmniLight3D" parent="NewPlayer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.747093, 0)
+light_color = Color(0.577112, 0.343565, 0.153115, 1)
+light_energy = 5.412
+omni_range = 2.938
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="Terrain3D" type="Terrain3D" parent="Environment"]
+data_directory = "res://Terrain3DData"
+material = SubResource("Terrain3DMaterial_7djuo")
+assets = SubResource("Terrain3DAssets_3hpl7")
+collision_mode = 3
+top_level = true
+metadata/_edit_lock_ = true
+
+[node name="mountains" type="Node3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.13275, 0)
+
+[node name="Rock_Medium_12" parent="Environment/mountains" instance=ExtResource("4_s5s7t")]
+transform = Transform3D(50, 0, 0, 0, 50, 0, 0, 0, 50, -66.2726, 0, -184.208)
+
+[node name="Rock_Medium_13" parent="Environment/mountains" instance=ExtResource("5_3hpl7")]
+transform = Transform3D(35, 0, 0, 0, 35, 0, 0, 0, 35, 7.11679, 0, -173.842)
+
+[node name="Rock_Medium_14" parent="Environment/mountains" instance=ExtResource("6_thnmr")]
+transform = Transform3D(45, 0, 0, 0, 45, 0, 0, 0, 45, 89.4593, 0, -187.982)
+
+[node name="Rock_Medium_15" parent="Environment/mountains" instance=ExtResource("6_thnmr")]
+transform = Transform3D(6.48711, 0, 32.3561, 0, 33, 0, -32.3561, 0, 6.48711, 126.126, 0, -108.294)
+
+[node name="Rock_Medium_16" parent="Environment/mountains" instance=ExtResource("6_thnmr")]
+transform = Transform3D(32.5129, 0, -5.64926, 0, 33, 0, 5.64926, 0, 32.5129, 160.844, -30.1127, -57.5776)
+
+[node name="Rock_Medium_22" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(25, 0, 0, 0, 25, 0, 0, 0, 25, -123.202, 0, -94.9855)
+
+[node name="Rock_Medium_23" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(-11.237, 0, 15.3209, 0, 19, 0, -15.3209, 0, -11.237, -144.122, 0, -48.1343)
+
+[node name="Rock_Medium_24" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(14.5115, 0, 10.6497, 0, 18, 0, -10.6497, 0, 14.5115, -141.643, 0, -3.54373)
+
+[node name="Rock_Medium_25" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(2.4021, 0, 17.839, 0, 18, 0, -17.839, 0, 2.4021, -143.347, -3.65967, 28.5665)
+
+[node name="Rock_Medium_26" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(14.5115, 0, 10.6497, 0, 18, 0, -10.6497, 0, 14.5115, 145.518, 0, 4.36774)
+
+[node name="Rock_Medium_27" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(2.4021, 0, 17.839, 0, 18, 0, -17.839, 0, 2.4021, 143.813, -3.65967, 36.478)
+
+[node name="Rock_Medium_28" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(6.44957, 0, 4.73318, 0, 8, 0, -4.73318, 0, 6.44957, 137.01, 0, 66.1188)
+
+[node name="Rock_Medium_29" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(1.0676, 0, 7.92844, 0, 8, 0, -7.92844, 0, 1.0676, 135.306, -3.65967, 91.7427)
+
+[node name="Rock_Medium_30" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(7.91001, 0, 1.19656, 0, 8, 0, -1.19656, 0, 7.91001, 140.139, 0, 79.9132)
+
+[node name="Rock_Medium_31" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(4.62753, 0, 6.52579, 0, 8, 0, -6.52579, 0, 4.62753, 123.717, -3.65967, 107.559)
+
+[node name="Rock_Medium_32" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(4.62753, 0, 6.52579, 0, 8, 0, -6.52579, 0, 4.62753, -134.61, -3.65967, 59.3447)
+
+[node name="Rock_Medium_33" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(-7.91739, 0, 1.1467, 0, 8, 0, -1.1467, 0, -7.91739, -134.61, -3.65967, 92.1219)
+
+[node name="Rock_Medium_34" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(4.36648, 0, 6.70327, 0, 8, 0, -6.70327, 0, 4.36648, -125.713, -3.65967, 74.6686)
+
+[node name="Rock_Medium_35" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -124.42, -3.65967, 112.496)
+
+[node name="Rock_Medium_36" parent="Environment/mountains" instance=ExtResource("7_cfloa")]
+transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -135.572, -3.65967, 101.014)
+
+[node name="Grass" type="Node3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
+script = ExtResource("12_0l1bc")
+modifier_stack = SubResource("Resource_kjbyn")
+Performance/use_chunks = true
+Performance/chunk_dimensions = Vector3(15, 15, 15)
+metadata/_custom_type_script = "uid://lgdpru8th01u"
+
+[node name="ScatterItem" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+source_scale_multiplier = 0.333
+override_material = SubResource("ShaderMaterial_y45p1")
+override_cast_shadow = 0
+visibility_range_begin_margin = 0.1
+visibility_range_end_margin = 0.1
+path = "uid://bu7xabiu3yxhr"
+
+[node name="ScatterShape" type="Node3D" parent="Environment/Grass"]
+transform = Transform3D(0.953801, 0, -0.30044, 0, 1, 0, 0.30044, 0, 0.953801, 4.2984, 0, -2.62214)
+script = ExtResource("20_7nfwd")
+shape = SubResource("Resource_vspl4")
+
+[node name="landingBlocklol" parent="Environment" instance=ExtResource("3_mwiy7")]
+transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 4.73711, 0)
+
+[node name="Wata" parent="Environment" instance=ExtResource("1_u4tjg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.0534, 1.61997)
+
+[node name="DayNite" parent="Environment" instance=ExtResource("24_ha1sw")]
+
+[node name="Wind" parent="Environment" instance=ExtResource("25_bsvfl")]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 22.8594, -147.51)
+
+[node name="Objects" type="Node3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
+script = ExtResource("12_0l1bc")
+global_seed = 111
+render_mode = 1
+modifier_stack = SubResource("Resource_3fkt5")
+Performance/use_chunks = true
+Performance/chunk_dimensions = Vector3(15, 15, 15)
+metadata/_custom_type_script = "uid://lgdpru8th01u"
+
+[node name="ScatterShape" type="Node3D" parent="Environment/Objects"]
+transform = Transform3D(1, 0, -2.98023e-08, 0, 1, 0, 2.98023e-08, 0, 1, -115.799, -9.23663, -42.1334)
+script = ExtResource("20_7nfwd")
+shape = SubResource("Resource_g8bsm")
+
+[node name="ScatterItem" type="Node3D" parent="Environment/Objects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.22015, 0, 0)
+script = ExtResource("19_ngqnt")
+proportion = 1000
+source_scale_multiplier = 2.0
+path = "uid://0i3hkwmt7y7i"
+
+[node name="ScatterItem2" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 1000
+source_scale_multiplier = 2.0
+path = "uid://d0jx15044dedd"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="ScatterItem3" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 1000
+source_scale_multiplier = 2.0
+path = "uid://3b2v6tryob2h"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="ScatterItem4" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 1000
+source_scale_multiplier = 2.0
+path = "uid://bujoq42ab5mrl"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="ScatterItem5" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 1000
+source_scale_multiplier = 2.0
+path = "uid://ckdq7v5jxql8c"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="ScatterItem6" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 1000
+source_scale_multiplier = 2.0
+path = "uid://ctufrfj6udw7d"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="ScatterItem7" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 500
+source_scale_multiplier = 2.0
+path = "uid://b3xp524b2mhmg"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="ScatterItem8" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 500
+source_scale_multiplier = 2.0
+path = "uid://bsk6fvm5laoeu"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="ScatterItem9" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 500
+path = "uid://bv0p80gsjo6ra"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="ScatterItem10" type="Node3D" parent="Environment/Objects"]
+script = ExtResource("19_ngqnt")
+proportion = 500
+source_scale_multiplier = 3.0
+path = "uid://c77sgoas3pgsi"
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+
+[node name="buildings" type="Node3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 142.94, -7.62939e-06, 11.7995)
+
+[node name="Church" parent="Environment/buildings" instance=ExtResource("30_ikt05")]
+transform = Transform3D(200, 0, 0, 0, 200, 0, 0, 0, 200, -408.6961, -178.73584, -108.011765)
+
+[node name="building_home_A_red2" parent="Environment" instance=ExtResource("30_82kox")]
+transform = Transform3D(-1.333289, 0, 9.910718, 0, 10, 0, -9.910718, 0, -1.333289, 48.812668, 19, -57.933167)
+
+[node name="building_market_red2" parent="Environment" instance=ExtResource("31_k7taw")]
+transform = Transform3D(-4.371139e-07, 0, -10, 0, 10, 0, 10, 0, -4.371139e-07, 109.844, 18.877, 28.908)
+
+[node name="Water Flow" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("29_cfrmd")
+autoplay = true
+
+[node name="Wind" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("30_8n7aw")
+autoplay = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+script = ExtResource("31_y45p1")
+
+[node name="inventoryGUI" parent="CanvasLayer" instance=ExtResource("31_8n7aw")]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -608.0
+offset_top = -100.0
+offset_right = -608.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Milo_Animations" parent="." instance=ExtResource("45_k7taw")]
+transform = Transform3D(-0.90259546, 0, -4.917857, 0, 5, 0, 4.917857, 0, -0.90259546, 98.84383, 19.900011, -8.540974)
+
+[node name="building_church_red2" parent="." instance=ExtResource("30_ikt05")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 86, 19, -77.7649)
+
+[node name="building_home_A_red2" parent="." instance=ExtResource("30_82kox")]
+transform = Transform3D(-0.29352188, 0, 9.995691, 0, 10, 0, -9.995691, 0, -0.29352188, 54, 20, -46)
+
+[node name="building_home_A_red4" parent="." instance=ExtResource("30_82kox")]
+transform = Transform3D(-0.2317583, 0, 9.997314, 0, 10, 0, -9.997314, 0, -0.2317583, 52, 20, -33)
+
+[node name="building_well_red2" parent="." instance=ExtResource("37_h1q0r")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 117.27, 20.6, -18.34438)
+
+[node name="building_windmill_red2" parent="." instance=ExtResource("38_k7taw")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 133.325, 33.616, 20.692)
+
+[node name="building_home_A_red3" parent="." instance=ExtResource("30_82kox")]
+transform = Transform3D(0.8519082, 0, 9.963647, 0, 10, 0, -9.963647, 0, 0.8519082, 57.9, 21, 4)
+
+[node name="building_home_B_red2" parent="." instance=ExtResource("39_t72bn")]
+transform = Transform3D(-0.301024, 0, 9.995468, 0, 10, 0, -9.995468, 0, -0.301024, 60, 21, 16.894188)
+
+[node name="building_home_B_red3" parent="." instance=ExtResource("39_t72bn")]
+transform = Transform3D(-0.585398, 0, 9.982851, 0, 10, 0, -9.982851, 0, -0.585398, 60.06, 21.374, 32.449)
+
+[node name="building_home_B_red4" parent="." instance=ExtResource("39_t72bn")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62.5, 21, -71.245)
+
+[node name="building_castle_red2" parent="." instance=ExtResource("40_40xrb")]
+transform = Transform3D(-4.371139e-07, 0, 10, 0, 10, 0, -10, 0, -4.371139e-07, -51.4, 33.7606, 27.410515)
+
+[node name="building_tavern_red2" parent="." instance=ExtResource("41_kjbyn")]
+transform = Transform3D(-4.371139e-07, 0, 10, 0, 10, 0, -10, 0, -4.371139e-07, 55, 22.6, 55.3)
+
+[node name="building_watermill_red2" parent="." instance=ExtResource("42_fn4xt")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 115.175, 23.741, -33.06919)
+
+[node name="building_lumbermill_red2" parent="." instance=ExtResource("43_448jj")]
+transform = Transform3D(-4.371139e-07, 0, -10, 0, 10, 0, 10, 0, -4.371139e-07, 113.9, 20.12, -45.713337)
+
+[node name="Artéa_Signpost_1027230400_texture" parent="." instance=ExtResource("44_wlotw")]
+transform = Transform3D(0.74961334, 0, -9.971865, 0, 10, 0, 9.971865, 0, 0.74961334, 112.30463, 27.151157, -5.747612)
+
+[node name="building_market_red2" parent="." instance=ExtResource("31_k7taw")]
+transform = Transform3D(-4.371139e-07, 0, -10, 0, 10, 0, 10, 0, -4.371139e-07, 107.372, 19.14, 12.269)
+
+[node name="building_tower_B_red2" parent="." instance=ExtResource("45_t72bn")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 19.92006, 6.676527, 189.9072)
+
+[node name="building_tower_catapult_red2" parent="." instance=ExtResource("46_40xrb")]
+transform = Transform3D(-0.9758289, 0, 9.952274, 0, 10, 0, -9.952274, 0, -0.9758289, -51, 40.351425, -2.4687462)
+
+[node name="Father_Animations" parent="." instance=ExtResource("47_40xrb")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 81.6451, 19.944489, -66.811066)
+
+[node name="Knight" parent="." instance=ExtResource("48_kjbyn")]
+transform = Transform3D(0.48791462, 0, 4.976137, 0, 5, 0, -4.976137, 0, 0.48791462, -34.47991, 30.639301, 36.794487)

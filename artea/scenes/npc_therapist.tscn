@@ -1,0 +1,62 @@
+[gd_scene load_steps=9 format=3 uid="uid://g68laefl3uuy"]
+
+[ext_resource type="PackedScene" uid="uid://cyoda8mb6h03e" path="res://scenes/npc.tscn" id="1_gr5hc"]
+[ext_resource type="Texture2D" uid="uid://p2himnwrafgm" path="res://assets/CatPackFree/Box3.png" id="2_w7o10"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eeidn"]
+atlas = ExtResource("2_w7o10")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bfe57"]
+atlas = ExtResource("2_w7o10")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1kdke"]
+atlas = ExtResource("2_w7o10")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q8207"]
+atlas = ExtResource("2_w7o10")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4p7xo"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eeidn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bfe57")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1kdke")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q8207")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_w7o10"]
+radius = 17.0
+height = 34.0
+
+[node name="NPC" instance=ExtResource("1_gr5hc")]
+
+[node name="AnimatedSprite2D" parent="." index="0"]
+sprite_frames = SubResource("SpriteFrames_4p7xo")
+animation = &"default"
+autoplay = "default"
+frame_progress = 0.0
+
+[node name="CollisionShape2D" parent="." index="1"]
+position = Vector2(3, -32)
+shape = SubResource("CapsuleShape2D_w7o10")
+
+[node name="Actionable" parent="." index="3"]
+dialogue_start = "start_therapist_npc"
+
+[node name="CollisionShape2D2" parent="Actionable" index="0"]
+position = Vector2(3, -33)

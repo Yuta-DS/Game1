@@ -1,0 +1,60 @@
+[gd_scene load_steps=12 format=3 uid="uid://cpr65wdi4db1d"]
+
+[ext_resource type="Texture2D" uid="uid://3qr450adxv32" path="res://assets/Ocean Wallpaper Background/frame_00_delay-0.2s.png" id="1_olca2"]
+[ext_resource type="Texture2D" uid="uid://0cjwhwk25stb" path="res://assets/Ocean Wallpaper Background/frame_01_delay-0.2s.png" id="2_tur4p"]
+[ext_resource type="Texture2D" uid="uid://dtkvwcrbiaicl" path="res://assets/Ocean Wallpaper Background/frame_02_delay-0.2s.png" id="3_eu75u"]
+[ext_resource type="Texture2D" uid="uid://b07lp0w2n2wma" path="res://assets/Ocean Wallpaper Background/frame_03_delay-0.2s.png" id="4_bcm6x"]
+[ext_resource type="Texture2D" uid="uid://cfifq1hopf0f4" path="res://assets/Ocean Wallpaper Background/frame_04_delay-0.2s.png" id="5_rv5t7"]
+[ext_resource type="Texture2D" uid="uid://q6ctlc3va21v" path="res://assets/Ocean Wallpaper Background/frame_05_delay-0.2s.png" id="6_3e4ki"]
+[ext_resource type="Texture2D" uid="uid://d32xr03nbxusu" path="res://assets/Ocean Wallpaper Background/frame_06_delay-0.2s.png" id="7_fiug2"]
+[ext_resource type="Texture2D" uid="uid://dlobtacvqt7ly" path="res://assets/Ocean Wallpaper Background/frame_07_delay-0.2s.png" id="8_tmxpy"]
+[ext_resource type="Texture2D" uid="uid://drydd25g4cd26" path="res://assets/Ocean Wallpaper Background/frame_08_delay-0.2s.png" id="9_v7j34"]
+[ext_resource type="Texture2D" uid="uid://da2qvb2ccm3eo" path="res://assets/Ocean Wallpaper Background/frame_09_delay-0.2s.png" id="10_841f6"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_w3htd"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_olca2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_tur4p")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_eu75u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_bcm6x")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_rv5t7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_3e4ki")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_fiug2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_tmxpy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_v7j34")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_841f6")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="OceanBackground" type="Node2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(425.5, 214.25)
+scale = Vector2(2.1175, 2.1175)
+sprite_frames = SubResource("SpriteFrames_w3htd")
+autoplay = "default"
+frame = 6
+frame_progress = 0.582731

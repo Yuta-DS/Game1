@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3e41piyukoe1"]
+
+[ext_resource type="Texture2D" uid="uid://bifn0ynjn5mnc" path="res://assets/Legacy-Fantasy-VL.3 - Purple Bay/Assets/tiles.png" id="1_vmkky"]
+
+[node name="Yellow Bush" type="StaticBody2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_vmkky")
+region_enabled = true
+region_rect = Rect2(20, 134, 28, 29)

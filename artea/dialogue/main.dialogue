@@ -1,0 +1,226 @@
+~ start
+Wonderful Counsellor Milo: Hello, player! What is bothering you today?
+-  "Why am I always stressed out?"
+	=> stress
+-  "Why do I feel empty even when I'm around people?" 
+	=> empty
+-  "Why do I feel like I’ll never be enough?" 
+	=> enough
+-  "What if I never figure out what I’m supposed to do?"
+	=> purpose
+-  "Why do I feel exhausted all the time?"
+	=> exhausted
+-  "How do I stop feeling guilty all the time?"
+	=> guilt
+-  Next ➡ => page2
+- Go Back to Hubworld
+	=> goback_HubWorld
+
+~ page2
+Wonderful Counsellor Milo: Let’s keep talking. What else is on your mind?
+
+-  "Why can’t I stop comparing myself to others?"
+	=> comparing
+-  "Why do I care so much what people think of me?"
+	=> peoplethink
+-  "Why do I always feel left out or unwanted?"
+	=> leftout
+-  "Why do I feel sad for no reason?"
+	=> sad
+-  "What if I never figure out what I’m supposed to do?"
+	=> future
+-  "How do I stop getting so angry all the time?"
+	=> anger
+-  ⬅ Previous
+	=> start
+- 	Next ➡
+	=> page3
+- Go Back to Hubworld
+	=> goback_HubWorld
+
+~ page3
+Wonderful Counsellor Milo: You’re safe here. Let’s explore what’s going on inside.
+
+-  "Why do I feel nothing sometimes?"
+	=> numb
+-  "Who am I really? What if I don’t like myself?"
+	=> identity
+-  "What if I’m too much—or not enough—for people?"
+	=> burden
+-  "Why do I still feel alone even when I’m with people?"
+	=> lonely
+-  "Why do I always feel behind or not as good as everyone else?"
+	=> behind
+-  "What if people leave once they really know me?"
+	=> rejection
+-  ⬅ Previous
+	=> page2
+-  Next ➡
+	=> page4
+- Go Back to Hubworld
+	=> goback_HubWorld
+	
+
+~ page4
+Wonderful Counsellor Milo: I’m here for you. Keep sharing.
+
+-  "Why do I dislike the way I look sometimes?"
+	=> body
+-  "How do I let go of what happened to me?"
+	=> past
+-  "How can I trust anyone when I’ve been hurt before?"
+	=> trust
+-  "How do I stop hurting after losing someone or something important?"
+	=> grief
+-  "Why do I always care so much what other people think?"
+	=> pleasing
+-  "What if I’m too broken or messed up for God to love me?"
+	=> shame
+-  ⬅ Previous
+	=> page3
+-  Next ➡
+	=> page5
+- Go Back to Hubworld
+	=> goback_HubWorld
+
+~ page5
+Wonderful Counsellor Milo: You’re doing great. Let’s keep going.
+
+-  "How do I stop feeling like I’m not good enough?"
+	=> selfworth
+-  "Why won’t my brain just chill out?"
+	=> overthinking
+-  "What if I can’t control everything around me?"
+	=> control
+-  "What if I mess up my future?"
+	=> futurefear
+-  "Why does God feel so far away right now?"
+	=> godfar
+-  ⬅ Previous
+	=> page4
+- Go Back to Hubworld
+	=> goback_HubWorld
+
+
+~ stress
+Wonderful Counsellor Milo: You weren’t designed to carry the world on your shoulders. Even Jesus took breaks! Stress doesn’t mean you’re failing—it just means you need to breathe, reset, and trust that God’s got you. You don’t have to figure everything out today. Just take it one step at a time.
+=> start
+
+~ empty
+Wonderful Counsellor Milo: Sometimes, being surrounded by people doesn’t stop you from feeling alone. But listen—God sees you. He gets it. Even when you don’t feel Him, He’s closer than your next breath. You’re not invisible, and this feeling won’t last forever. Keep going.
+=> start
+
+~ enough
+Wonderful Counsellor Milo: Comparison is a trap, and social media is its playground. But here’s the truth: You’re not meant to look, act, or be like anyone else. You are handcrafted by God. No filter, no trend, no number on a scale can change your worth. Walk in that.
+=> start
+
+~ purpose
+Wonderful Counsellor Milo: No pressure, but you don’t need a 10-year plan to have a purpose. Your worth isn’t in a degree, job, or achievement—it’s in who you are. Just start with what’s in your hands, trust God, and take it step by step. You’re not lost. You’re in progress.
+=> start
+
+~ exhausted
+Wonderful Counsellor Milo: You’re not lazy, you’re tired. Even Jesus rested. You don’t have to earn your worth by overworking yourself. Slow down, take care of yourself, and stop feeling guilty for resting. Your body, mind, and soul need it.
+=> start
+
+~ guilt
+Wonderful Counsellor Milo: Feeling guilty doesn’t mean you’re bad—it means you care. But if you’re holding on to guilt for things God already forgave, that’s just extra weight. You can lay it down now. Jesus already paid for it.
+=> start
+
+~ comparing
+Wonderful Counsellor Milo: Comparison is the thief of joy—don’t let it steal yours. God made you one-of-a-kind, not a copy. Your journey is your own, and it’s beautiful in its own way.
+=> start
+
+~ peoplethink
+Wonderful Counsellor Milo: It’s human to want to be liked. But when it costs your peace, that’s too much. God’s opinion is the one that matters most—and He already calls you loved.
+=> start
+
+~ leftout
+Wonderful Counsellor Milo: Feeling left out doesn’t mean something’s wrong with you. Sometimes it’s just the wrong crowd. You were made for connection, not rejection—and God’s family always has room for you.
+=> start
+
+~ sad
+Wonderful Counsellor Milo: Sometimes your heart is heavy and you’re not even sure why. That’s okay. Emotions aren’t always logical—but they’re real. You’re allowed to feel. And you’re not alone in it.
+=> start
+
+~ future
+Wonderful Counsellor Milo: You don’t have to have it all figured out right now. Life isn’t a race—it’s a walk with Jesus, one step at a time. He already knows your purpose, and He’s not in a rush.
+=> start
+
+~ anger
+Wonderful Counsellor Milo: Anger isn’t bad—it’s a signal. It shows something matters to you. But you don’t have to let it take over. With God, you can learn to respond instead of react.
+=> start
+
+~ numb
+Wonderful Counsellor Milo: Feeling numb doesn’t mean you’re broken—it might just mean you’ve been through a lot. Your heart is protecting itself. But God sees through the fog, and He’s gently calling you back to life.
+=> start
+
+~ identity
+Wonderful Counsellor Milo: It’s okay not to have all the answers. But here’s what’s true: you are loved, chosen, and created with purpose. Even on your worst days.
+=> start
+
+~ burden
+Wonderful Counsellor Milo: You’re not too much. You’re not not enough. You’re human, and you’re doing your best. The right people will make space for you—and so will God.
+=> start
+
+~ lonely
+Wonderful Counsellor Milo: Feeling alone doesn’t mean something’s wrong with you—it just means your heart is craving real connection. And guess what? Jesus is the friend who never walks away.
+=> start
+
+~ behind
+Wonderful Counsellor Milo: Comparison is a thief—it steals joy and peace. But your journey is unique. You’re not behind; you’re just on your own beautiful path.
+=> start
+
+~ rejection
+Wonderful Counsellor Milo: You were never meant to be loved for a mask. The real you is worth knowing—and worth staying for. God never rejects the real you.
+=> start
+
+~ body
+Wonderful Counsellor Milo: Your body is not a mistake. It’s a miracle—a temple of God. The world’s standards are fake, but you are fearfully and wonderfully made.
+=> start
+
+~ past
+Wonderful Counsellor Milo: Your past doesn’t define you. It shaped you, but it doesn’t own you. Jesus is the ultimate Healer, and He can take every piece and make it whole.
+=> start
+
+~ trust
+Wonderful Counsellor Milo: It’s okay to be careful. Your heart matters. Trust doesn’t mean rushing—it means letting God guide you to safe people, step by step.
+=> start
+
+~ grief
+Wonderful Counsellor Milo: Grief doesn’t have a time limit. It’s okay to feel sad. Jesus wept too—He’s with you in it. And healing doesn’t mean forgetting.
+=> start
+
+~ pleasing
+Wonderful Counsellor Milo: Wanting to be liked isn’t wrong—but you don’t have to twist yourself to fit in. God already approves of you. That’s enough.
+=> start
+
+~ shame
+Wonderful Counsellor Milo: Shame lies and says you’re unworthy. But the truth? God delights in you. Nothing you’ve done or been through is too big for His love.
+=> start
+
+~ selfworth
+Wonderful Counsellor Milo: You don’t have to prove your worth—God already sees you as valuable. Confidence isn’t about being perfect, it’s about knowing who you belong to.
+=> start
+
+~ overthinking
+Wonderful Counsellor Milo: Your brain is trying to protect you—but not everything needs to be figured out all at once. God’s got the big picture. You can let go and be present.
+=> start
+
+~ control
+Wonderful Counsellor Milo: You’re not meant to control it all. Letting go isn’t losing—it’s making room for peace. When you surrender, you give God space to move.
+=> start
+
+~ futurefear
+Wonderful Counsellor Milo: God doesn’t expect you to have it all figured out. He’s already walking ahead of you. You don’t have to fear what’s next—you just have to take the next step with Him.
+=> start
+
+~ godfar
+Wonderful Counsellor Milo: Feelings can lie—God never leaves, even when it’s quiet. Sometimes He’s closer than we realise, waiting for you to lean in.
+=> start
+
+
+~ goback_HubWorld
+do GameManager.request_goback_HubWorld()
+
+
+=> END!
