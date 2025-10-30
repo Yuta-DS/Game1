@@ -1,9 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://cofjfqoswqixg"]
+[gd_scene load_steps=11 format=3 uid="uid://cofjfqoswqixg"]
 
 [ext_resource type="Texture2D" uid="uid://bi0mvl7nrxml1" path="res://textures/1064666 (5) 2.png" id="1_g5jj7"]
 [ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_0dimf"]
+[ext_resource type="Script" path="res://dialog.gd" id="2_shg8g"]
 [ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://cycle.tscn" id="3_c01cu"]
 [ext_resource type="PackedScene" uid="uid://c1us8bv7xti4a" path="res://assets3D/characters/Rogue.glb" id="5_shg8g"]
+[ext_resource type="PackedScene" uid="uid://duf811441c45y" path="res://assets3D/characters/NPCbase.tscn" id="6_cstpm"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_shg8g"]
 texture = ExtResource("1_g5jj7")
@@ -26,6 +28,7 @@ offset_top = 170.136
 grow_horizontal = 2
 grow_vertical = 0
 theme = SubResource("Theme_cstpm")
+script = ExtResource("2_shg8g")
 
 [node name="Panel" type="Panel" parent="Dialog"]
 layout_mode = 1
@@ -118,6 +121,9 @@ scroll_following = true
 [node name="TextEdit" type="TextEdit" parent="Control/PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(500, 50)
 layout_mode = 2
+
+[node name="NpCbase" parent="." instance=ExtResource("6_cstpm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.6739, 4.18381, 0)
 
 [connection signal="body_entered" from="Area3D" to="Dialog" method="_on_area_3d_body_entered"]
 [connection signal="body_exited" from="Area3D" to="Dialog" method="_on_area_3d_body_exited"]

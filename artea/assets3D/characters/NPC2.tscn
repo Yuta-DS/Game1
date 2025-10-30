@@ -1,0 +1,25 @@
+[gd_scene load_steps=6 format=3 uid="uid://d2ivubhhyarty"]
+
+[ext_resource type="PackedScene" uid="uid://cw1jegrdbs3o7" path="res://assets3D/characters/NPCs/Animated Animal Pack-glb/Horse.glb" id="1_tm8t1"]
+[ext_resource type="PackedScene" uid="uid://vqxwgoh2citm" path="res://assets3D/characters/NPCs/Animated Animal Pack-glb/Husky.glb" id="2_jk3ry"]
+[ext_resource type="PackedScene" uid="uid://bkgw61mscfvx0" path="res://assets3D/characters/NPCs/Animated Animal Pack-glb/Stag.glb" id="3_1x7kb"]
+[ext_resource type="PackedScene" uid="uid://qlntoogu842b" path="res://assets3D/characters/NPCs/Animated Animal Pack-glb/Fox.glb" id="4_u2sh3"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_tm8t1"]
+
+[node name="CharacterBody3D" type="CharacterBody3D"]
+
+[node name="Horse" parent="." instance=ExtResource("1_tm8t1")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 1.1, 0)
+shape = SubResource("CapsuleShape3D_tm8t1")
+
+[node name="Root Scene" parent="." instance=ExtResource("2_jk3ry")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9483, 0, -1.6359)
+
+[node name="Root Scene2" parent="." instance=ExtResource("3_1x7kb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.18156, 0, 7.13163)
+
+[node name="Root Scene3" parent="." instance=ExtResource("4_u2sh3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6359, 0, 7.13439)

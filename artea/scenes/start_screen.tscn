@@ -1,14 +1,14 @@
 [gd_scene load_steps=3 format=3 uid="uid://d10bpuuoe8w0m"]
 
-[ext_resource type="Script" uid="uid://ba0247lrw4x6h" path="res://start_screen.gd" id="1_pevhg"]
+[ext_resource type="Script" uid="uid://cmbmo6tngfbsj" path="res://start_screen.gd" id="1_pevhg"]
 [ext_resource type="Texture2D" uid="uid://co8ixwvp5nnyc" path="res://assets/Startscreen_Background.png" id="2_afy8x"]
 
 [node name="StartScreen" type="Node2D"]
 script = ExtResource("1_pevhg")
 
 [node name="Background" type="Sprite2D" parent="."]
-position = Vector2(953.2501, 530.06354)
-scale = Vector2(1.275716, 1.1951885)
+position = Vector2(953.25, 530.064)
+scale = Vector2(1.27572, 1.19519)
 texture = ExtResource("2_afy8x")
 
 [node name="Username" type="Label" parent="."]
