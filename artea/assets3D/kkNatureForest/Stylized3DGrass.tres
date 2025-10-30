@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://d1ol01odews76"]
+
+[ext_resource type="Shader" uid="uid://bb7yaolh460ch" path="res://assets3D/grass/GrassShader.tres" id="1_o20pk"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_o20pk")
+shader_parameter/BaseColor = Color(0.141176, 0.156863, 0.07451, 1)
+shader_parameter/WindColor = Color(0.384314, 0.529412, 0.301961, 1)

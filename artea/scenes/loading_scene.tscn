@@ -1,0 +1,66 @@
+[gd_scene load_steps=6 format=4 uid="uid://7e1pr0axhwcg"]
+
+[ext_resource type="Script" uid="uid://blpm4ciile8r2" path="res://scripts/loading_scene.gd" id="1_o5idu"]
+[ext_resource type="TileSet" uid="uid://c316dmv7e31yl" path="res://scenes/artea_game_tileset.tres" id="1_v0di8"]
+[ext_resource type="Texture2D" uid="uid://bev35lbg44liq" path="res://assets/Game Start/Opening.png" id="2_7vner"]
+[ext_resource type="Texture2D" uid="uid://cklh7a28vdurc" path="res://assets/Paintingtool/square.png" id="3_7vner"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="3_o5idu"]
+
+[node name="Loading Scene" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_o5idu")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(616.427, 361)
+scale = Vector2(0.916031, 0.916031)
+texture = ExtResource("2_7vner")
+
+[node name="progress_bar" type="TextureProgressBar" parent="."]
+layout_mode = 0
+offset_left = 255.0
+offset_top = 513.0
+offset_right = 1085.0
+offset_bottom = 533.0
+rounded = true
+nine_patch_stretch = true
+texture_progress = ExtResource("3_7vner")
+texture_progress_offset = Vector2(6.315, 0)
+tint_under = Color(0.332881, 0.332881, 0.332881, 1)
+tint_progress = Color(0.109804, 0.121569, 0.0392157, 1)
+
+[node name="wooden board" type="TileMapLayer" parent="."]
+scale = Vector2(3.84436, 3.84436)
+tile_map_data = PackedByteArray("AAAFAAIAAQACAA4AAAAFAAMAAQACABAAAAAGAAIAAQACAA4AAAAGAAMAAQACABAAAAAHAAIAAQACAA4AAAAHAAMAAQACABAAAAAIAAIAAQACAA4AAAAIAAMAAQACABAAAAAJAAIAAQACAA4AAAAJAAMAAQACABAAAAAKAAIAAQACAA4AAAAKAAMAAQACABAAAAALAAIAAQACAA4AAAALAAMAAQACABAAAAAMAAIAAQACAA4AAAAMAAMAAQACABAAAAANAAIAAQACAA4AAAANAAMAAQACABAAAAAOAAIAAQACAA4AAAAOAAMAAQACABAAAAAPAAIAAQACAA4AAAAPAAMAAQACABAAAAAQAAIAAQACAA4AAAAQAAMAAQACABAAAAARAAIAAQADAA4AAAARAAMAAQADABAAAAAEAAIAAQABAA4AAAAEAAMAAQABABAAAAA=")
+tile_set = ExtResource("1_v0di8")
+
+[node name="progress barr" type="TileMapLayer" parent="."]
+scale = Vector2(3.84436, 3.84436)
+tile_map_data = PackedByteArray("AAAEAAgAAgATAAEAAAAFAAgAAgAUAAEAAAAGAAgAAgAUAAEAAAAHAAgAAgAUAAEAAAAIAAgAAgAUAAEAAAAJAAgAAgAUAAEAAAAKAAgAAgAUAAEAAAALAAgAAgAUAAEAAAAMAAgAAgAUAAEAAAANAAgAAgAUAAEAAAAOAAgAAgAUAAEAAAAPAAgAAgAUAAEAAAAQAAgAAgAUAAEAAAARAAgAAgAWAAEAAAA=")
+tile_set = ExtResource("1_v0di8")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 0
+offset_left = 268.0
+offset_top = 146.0
+offset_right = 1118.0
+offset_bottom = 246.0
+theme_override_colors/font_color = Color(0.109804, 0.121569, 0.0392157, 1)
+theme_override_fonts/font = ExtResource("3_o5idu")
+theme_override_font_sizes/font_size = 70
+text = "Please wait while loading..."
+horizontal_alignment = 1
+
+[node name="progressLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 257.0
+offset_top = 430.0
+offset_right = 1107.0
+offset_bottom = 530.0
+theme_override_colors/font_color = Color(0.109804, 0.121569, 0.0392157, 1)
+theme_override_colors/font_outline_color = Color(0.809047, 0.814534, 0.71805, 1)
+theme_override_constants/outline_size = 13
+theme_override_fonts/font = ExtResource("3_o5idu")
+theme_override_font_sizes/font_size = 75
+text = "0%"
+horizontal_alignment = 1

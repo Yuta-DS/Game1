@@ -1,0 +1,67 @@
+[gd_scene load_steps=5 format=3 uid="uid://bgxfk64cwgp2c"]
+
+[ext_resource type="Texture2D" uid="uid://b72ryhthaq71k" path="res://assets/Clouds/Clouds BG.png" id="1_ge1ot"]
+[ext_resource type="Script" uid="uid://d37jww4dwb4q5" path="res://scripts/cloud_pop_finish.gd" id="1_k687y"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="2_ltqfl"]
+[ext_resource type="FontFile" uid="uid://cqcd6w2cgw2ub" path="res://assets/Fonts/Font Saved Tres/VT323 Minigame Menu.tres" id="3_ltqfl"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_k687y")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(639.294, 360)
+scale = Vector2(2.65441, 2.65441)
+texture = ExtResource("1_ge1ot")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -461.0
+offset_top = -238.0
+offset_right = 301.0
+offset_bottom = 107.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.178, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.760784, 0.913725, 0.882353, 1)
+theme_override_colors/font_outline_color = Color(0.406202, 0.866904, 0.924206, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_outline_size = 27
+theme_override_fonts/font = ExtResource("2_ltqfl")
+theme_override_font_sizes/font_size = 112
+text = "You did it! Your mind is now a clear sky. "
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Play Again" type="Button" parent="."]
+layout_mode = 0
+offset_left = 377.0
+offset_top = 581.0
+offset_right = 468.0
+offset_bottom = 616.0
+scale = Vector2(1.62353, 1.62353)
+theme_override_fonts/font = ExtResource("3_ltqfl")
+text = "Play Again"
+
+[node name="Return to Hubworld" type="Button" parent="."]
+layout_mode = 0
+offset_left = 604.0
+offset_top = 585.0
+offset_right = 766.0
+offset_bottom = 616.0
+scale = Vector2(1.62353, 1.62353)
+text = "Return to Hubworld"
+
+[connection signal="pressed" from="Play Again" to="." method="_on_play_again_pressed"]
+[connection signal="pressed" from="Return to Hubworld" to="." method="_on_return_to_hubworld_pressed"]

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "489299949840",
+    "project_id": "artea-9da5a",
+    "storage_bucket": "artea-9da5a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:489299949840:android:8f91d1c53c39440a744d95",
+        "android_client_info": {
+          "package_name": "wsu.package.artea"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCv0iUZKJsaxnCVQ3oicfkvqwEAiQ7hP7E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

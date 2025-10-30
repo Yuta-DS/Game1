@@ -1,0 +1,51 @@
+[gd_scene load_steps=9 format=3 uid="uid://cyoda8mb6h03e"]
+
+[ext_resource type="SpriteFrames" uid="uid://c1jy04q0ub4ar" path="res://Sprite Frames/Npc_Sprite_Frame.tres" id="1_nh2m4"]
+[ext_resource type="Script" uid="uid://4wc83ifthal0" path="res://scripts/npc.gd" id="2_abqhh"]
+[ext_resource type="Script" uid="uid://cym5d7g6hejj8" path="res://chat_detection_area.gd" id="3_rv78h"]
+[ext_resource type="PackedScene" uid="uid://d0ychv4kn42hp" path="res://scenes/actionable.tscn" id="4_7n8xq"]
+[ext_resource type="Resource" uid="uid://bvpjldbikfam7" path="res://dialogue/HubworldDialogue.dialogue" id="5_4wlns"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_nh2m4"]
+radius = 17.0
+height = 58.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_abqhh"]
+radius = 66.2722
+
+[sub_resource type="GDScript" id="GDScript_abqhh"]
+script/source = "extends CollisionShape2D
+"
+
+[node name="NPC" type="CharacterBody2D"]
+script = ExtResource("2_abqhh")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(3, -33)
+sprite_frames = ExtResource("1_nh2m4")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.147777
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -35)
+shape = SubResource("CapsuleShape2D_nh2m4")
+
+[node name="ChatDetectionArea" type="Area2D" parent="."]
+visible = false
+script = ExtResource("3_rv78h")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChatDetectionArea"]
+position = Vector2(0, -35)
+shape = SubResource("CircleShape2D_abqhh")
+script = SubResource("GDScript_abqhh")
+
+[node name="Actionable" parent="." instance=ExtResource("4_7n8xq")]
+collision_mask = 129
+dialogue_resource = ExtResource("5_4wlns")
+dialogue_start = "start_zephyr_dialogue"
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Actionable"]
+position = Vector2(0, -35)
+shape = SubResource("CircleShape2D_abqhh")
+script = SubResource("GDScript_abqhh")

@@ -1,0 +1,108 @@
+~ start_zephyr_dialogue
+Everlasting Father: Hey! Ready to lighten your mind?
+- Yes, let’s pop some thoughts!
+	=> launch_pop_thoughts
+- Maybe later
+	=> END
+
+~ launch_pop_thoughts
+Everlasting Father: *(Everlasting Father waves and points to the portal.)*
+Everlasting Father: Loading Pop Thoughts… get ready!
+do GameManager.request_pop_thoughts()
+=> END
+
+~ start_patron_pallete
+Patron Palette: [[Hello, artist!|Greetings, creator!|Hey there!]]  
+Patron Palette: Welcome to the Painting Tool. Ready to unleash your creativity?
+- Yes—let me paint!
+	=> open_painting_tool
+- How does it work?
+	=> explain_painting_tool
+- Maybe later
+	=> END
+
+~ explain_painting_tool
+Patron Palette: In the Painting Tool you get:  
+• A full colour palette to mix any hue you like  
+• Layer controls for organising your strokes  
+• Undo/Redo for fearless experimentation  
+Patron Palette: Want to jump in now?
+- Absolutely—launch it!
+	=> open_painting_tool
+- Not just yet
+	=> END
+
+~ open_painting_tool
+Patron Palette: Here we go—happy painting!  
+do GameManager.request_paingting()
+=> END
+
+~ start_maestro_montclair
+Maestro Montclair: [[Welcome, art lover!|Greetings, connoisseur!|Hello there!]]  
+Maestro Montclair: You’ve arrived at the Grand Art Gallery. What would you like to do?
+- Browse the gallery
+	=> open_art_gallery
+- Tell me about the gallery
+	=> explain_gallery
+- Maybe later
+	=> END
+
+~ explain_gallery
+Maestro Montclair: Here you can admire masterpieces from around the world—paintings, sculptures, and interactive installations.  
+Maestro Montclair: Use the arrow keys or click on any piece to view details of each work.  
+Maestro Montclair: Ready to explore?
+- Yes—show me the art!
+	=> open_art_gallery
+- Not right now
+	=> END
+
+~ open_art_gallery
+Maestro Montclair: Wonderful choice—let the inspiration begin!
+do GameManager.request_art_gallery()
+=> END
+
+
+~ start_therapist_npc
+Milo Cat (Wonderful Counsellor): Hey there, I’m Wonderful Counsellor 🐾  
+Milo Cat: I’ll be your guide in this creative healing journey.  
+
+Milo Cat: This world was made for you to relax, make art, and feel good on the inside.  
+Milo Cat: No pressure. Just expression, imagination, and kindness.  
+
+Milo Cat: Ready to enter the healing studio?
+- Yes—let’s begin  
+	=> enter_healing_journey
+- Tell me more about Artéa  
+	=> explain_artea
+- About Louisa (website)  
+	=> open_louisa_site
+- Maybe later  
+	=> END
+
+~ explain_artea
+Milo Cat: Artéa is a place of color and calm—designed to help you unwind through creativity.  
+Milo Cat: Explore painting tools, pop thought-clouds, or simply gaze at the gallery.  
+Milo Cat: Your inner world matters. Let’s make it brighter!
+- I’m ready now  
+	=> enter_healing_journey
+- Back  
+	=> start_therapist_npc
+
+~ enter_healing_journey
+Milo Cat: Wonderful—step right in and let the healing begin!  
+do GameManager.request_Art_Therapy()
+=> END
+
+~ open_louisa_site
+Milo Cat: Louisa is the visionary behind this space. You can learn more about her in her website
+- Visit Website
+	=> visit_website
+- Maybe Later
+=> END
+
+~ visit_website
+do GameManager.request_visit_website()
+=> start_therapist_npc
+
+~ END
+Nathan: See you next time!

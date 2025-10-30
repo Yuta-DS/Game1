@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://dewjjpcfr2ae7"]
+
+[ext_resource type="Texture2D" uid="uid://bifn0ynjn5mnc" path="res://assets/Legacy-Fantasy-VL.3 - Purple Bay/Assets/tiles.png" id="1_ka3ke"]
+
+[node name="Purple Flower" type="StaticBody2D"]
+z_index = 4
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_ka3ke")
+region_enabled = true
+region_rect = Rect2(0, 163, 48, 37)

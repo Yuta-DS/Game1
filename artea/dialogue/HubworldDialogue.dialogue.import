@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://bvpjldbikfam7"
+path="res://.godot/imported/HubworldDialogue.dialogue-0d1a3ab48055afc3eb1d5f83a85bcdcd.tres"
+
+[deps]
+
+source_file="res://dialogue/HubworldDialogue.dialogue"
+dest_files=["res://.godot/imported/HubworldDialogue.dialogue-0d1a3ab48055afc3eb1d5f83a85bcdcd.tres"]
+
+[params]
+
+defaults=true
