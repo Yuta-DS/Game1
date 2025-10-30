@@ -32,9 +32,9 @@
 [ext_resource type="AudioStream" uid="uid://cxwpjfnl8yfbl" path="res://assets/audio/Campfire.wav" id="30_8n7aw"]
 [ext_resource type="PackedScene" uid="uid://dqrsq173aela" path="res://assets3D/house scenes/home_a.tscn" id="30_82kox"]
 [ext_resource type="PackedScene" uid="uid://c7efar8dbufti" path="res://assets3D/house scenes/church.tscn" id="30_ikt05"]
-[ext_resource type="PackedScene" uid="uid://t3u650f5iukq" path="res://scenes/inventory_gui.tscn" id="31_8n7aw"]
 [ext_resource type="PackedScene" uid="uid://cdbpebiubxrf0" path="res://assets3D/house scenes/market.tscn" id="31_k7taw"]
-[ext_resource type="Script" uid="uid://cblnrinwioycu" path="res://scripts/toggleInventory.gd" id="31_y45p1"]
+[ext_resource type="Texture2D" uid="uid://b42uvpgfhvgje" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Inventory.png" id="32_inventory"]
+[ext_resource type="Script" uid="uid://dgfivhd7spfnv" path="res://scripts/inventory_button.gd" id="33_inventory_script"]
 [ext_resource type="PackedScene" uid="uid://oe06cc6ieu4h" path="res://assets3D/house scenes/well.tscn" id="37_h1q0r"]
 [ext_resource type="PackedScene" uid="uid://00qxw7q0yn6m" path="res://assets3D/house scenes/windmill.tscn" id="38_k7taw"]
 [ext_resource type="PackedScene" uid="uid://dipjrbs7fbcy2" path="res://assets3D/house scenes/home_b.tscn" id="39_t72bn"]
@@ -140,14 +140,14 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_82kox"]
+[sub_resource type="Resource" id="Resource_40xrb"]
 script = ExtResource("15_o1ycd")
 amount = 60500
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_h1q0r"]
+[sub_resource type="Resource" id="Resource_kjbyn"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
@@ -155,25 +155,25 @@ scale = Vector3(0.1, 0.1, 0.1)
 override_global_seed = true
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_k7taw"]
+[sub_resource type="Resource" id="Resource_fn4xt"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_t72bn"]
+[sub_resource type="Resource" id="Resource_448jj"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_40xrb"]
+[sub_resource type="Resource" id="Resource_wlotw"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_kjbyn"]
+[sub_resource type="Resource" id="Resource_6s6ja"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_82kox"), SubResource("Resource_h1q0r"), SubResource("Resource_k7taw"), SubResource("Resource_t72bn"), SubResource("Resource_40xrb")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_40xrb"), SubResource("Resource_kjbyn"), SubResource("Resource_fn4xt"), SubResource("Resource_448jj"), SubResource("Resource_wlotw")])
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
 
@@ -238,38 +238,38 @@ thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
-[sub_resource type="Resource" id="Resource_fn4xt"]
+[sub_resource type="Resource" id="Resource_wqsev"]
 script = ExtResource("15_o1ycd")
 amount = 188
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_448jj"]
+[sub_resource type="Resource" id="Resource_3fkt5"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_wlotw"]
+[sub_resource type="Resource" id="Resource_dijab"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_6s6ja"]
+[sub_resource type="Resource" id="Resource_cladr"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_wqsev"]
+[sub_resource type="Resource" id="Resource_kg6rv"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_3fkt5"]
+[sub_resource type="Resource" id="Resource_ej6pa"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_fn4xt"), SubResource("Resource_448jj"), SubResource("Resource_wlotw"), SubResource("Resource_6s6ja"), SubResource("Resource_wqsev")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_wqsev"), SubResource("Resource_3fkt5"), SubResource("Resource_dijab"), SubResource("Resource_cladr"), SubResource("Resource_kg6rv")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -363,7 +363,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_kjbyn")
+modifier_stack = SubResource("Resource_6s6ja")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -398,7 +398,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_3fkt5")
+modifier_stack = SubResource("Resource_ej6pa")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -497,22 +497,6 @@ autoplay = true
 stream = ExtResource("30_8n7aw")
 autoplay = true
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-script = ExtResource("31_y45p1")
-
-[node name="inventoryGUI" parent="CanvasLayer" instance=ExtResource("31_8n7aw")]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -608.0
-offset_top = -100.0
-offset_right = -608.0
-offset_bottom = -100.0
-grow_horizontal = 2
-grow_vertical = 2
-
 [node name="Milo_Animations" parent="." instance=ExtResource("45_k7taw")]
 transform = Transform3D(-0.90259546, 0, -4.917857, 0, 5, 0, 4.917857, 0, -0.90259546, 98.84383, 19.900011, -8.540974)
 
@@ -572,3 +556,20 @@ transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 81.6451, 19.944489, -66.81106
 
 [node name="Knight" parent="." instance=ExtResource("48_kjbyn")]
 transform = Transform3D(0.48791462, 0, 4.976137, 0, 5, 0, -4.976137, 0, 0.48791462, -34.47991, 30.639301, 36.794487)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="InventoryButton" type="TextureButton" parent="CanvasLayer"]
+anchors_preset = -1
+anchor_left = 0.898
+anchor_right = 1.0
+anchor_bottom = 0.166
+offset_left = 6.420044
+offset_top = 5.0
+offset_right = -11.0
+offset_bottom = -27.591995
+grow_horizontal = 0
+texture_normal = ExtResource("32_inventory")
+ignore_texture_size = true
+stretch_mode = 0
+script = ExtResource("33_inventory_script")
