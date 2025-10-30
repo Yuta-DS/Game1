@@ -1,17 +1,36 @@
-[gd_scene load_steps=2 format=3 uid="uid://cpbmxnjcctsoj"]
+[gd_scene load_steps=3 format=3 uid="uid://cpbmxnjcctsoj"]
 
 [ext_resource type="Texture2D" uid="uid://43wxwhjek5sw" path="res://assets/inventorySlot.png" id="1_4v6ba"]
+[ext_resource type="Script" path="res://scripts/slot.gd" id="2_slot"]
 
 [node name="slot" type="Panel"]
 self_modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(20, 20)
 offset_left = 6.0
 offset_top = 4.0
-offset_right = 91.0
-offset_bottom = 84.0
+offset_right = 176.0
+offset_bottom = 174.0
+script = ExtResource("2_slot")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(8.4, 8.45)
 texture = ExtResource("1_4v6ba")
 centered = false
 vframes = 2
+
+[node name="ItemIcon" type="Sprite2D" parent="."]
+position = Vector2(85, 85)
+
+[node name="QuantityLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 105.0
+offset_top = 118.0
+offset_right = 145.0
+offset_bottom = 148.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+text = "1"
+horizontal_alignment = 2
+vertical_alignment = 2
