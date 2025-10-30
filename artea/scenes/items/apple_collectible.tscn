@@ -1,17 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://b7rak3m5p2r8s"]
+[gd_scene load_steps=5 format=3 uid="uid://xlc4qq0cvb1s"]
 
 [ext_resource type="Script" path="res://scenes/items/collectible_item.gd" id="1_collectible"]
-[ext_resource type="Resource" uid="uid://d2k8m7n6p9q1r" path="res://resources/items/apple_item.tres" id="2_item_data"]
-[ext_resource type="PackedScene" uid="uid://cmbnrfjfr6c1b" path="res://assets3D/pixel_apple.glb" id="3_model"]
+[ext_resource type="Resource" path="res://resources/items/apple_item.tres" id="2_item_data"]
+[ext_resource type="PackedScene" uid="uid://jjrmwlsewv3o" path="res://assets3D/pixel_apple.glb" id="3_model"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_1"]
 radius = 2.5
 
 [node name="AppleCollectible" type="Area3D"]
 collision_layer = 0
-collision_mask = 1
-monitoring = true
-monitorable = true
 script = ExtResource("1_collectible")
 item_data = ExtResource("2_item_data")
 
@@ -19,4 +16,4 @@ item_data = ExtResource("2_item_data")
 shape = SubResource("SphereShape3D_1")
 
 [node name="PixelApple" parent="." instance=ExtResource("3_model")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0.15429783, 0.28674984, -0.2627964)
