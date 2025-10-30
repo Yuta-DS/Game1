@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://duf811441c45y"]
 
-[ext_resource type="Script" path="res://assets3D/characters/np_cbase.gd" id="1_7nafi"]
+[ext_resource type="Script" uid="uid://b2yotfk1dl4md" path="res://assets3D/characters/np_cbase.gd" id="1_7nafi"]
 [ext_resource type="PackedScene" uid="uid://c1us8bv7xti4a" path="res://assets3D/characters/Rogue.glb" id="1_ynoje"]
 [ext_resource type="Script" uid="uid://ul1arw53foms" path="res://assets3D/characters/sub_viewport.gd" id="3_t75y4"]
 [ext_resource type="Texture2D" uid="uid://bmgh62h0je0gt" path="res://textures/sand_01_2k/hellothisisToan.png" id="4_bisl3"]
@@ -62,6 +62,7 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "This is a test"
 
 [node name="NinePatchRect" type="NinePatchRect" parent="bubble/SubViewport/VBoxContainer/Label"]
 show_behind_parent = true
@@ -74,7 +75,7 @@ anchor_bottom = 1.95652
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("4_bisl3")
-region_rect = Rect2(141, 281.25, 340, 57)
+region_rect = Rect2(148.5, 273.25, 326.5, 77.5)
 metadata/_edit_use_anchors_ = true
 
 [node name="Timer" type="Timer" parent="bubble/SubViewport"]
