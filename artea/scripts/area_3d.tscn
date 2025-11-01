@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://d16lvme5alg2l"]
+
+[ext_resource type="Script" uid="uid://b6xv05ijguu0" path="res://Teleport.gd" id="1_ti8w2"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_t1ekm"]
+
+[sub_resource type="TorusMesh" id="TorusMesh_rj7n6"]
+
+[node name="Area3D" type="Area3D"]
+script = ExtResource("1_ti8w2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_t1ekm")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("TorusMesh_rj7n6")
