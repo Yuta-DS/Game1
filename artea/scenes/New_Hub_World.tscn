@@ -1,7 +1,7 @@
-[gd_scene load_steps=85 format=3 uid="uid://drfdo0gpexlsl"]
+[gd_scene load_steps=87 format=3 uid="uid://drfdo0gpexlsl"]
 
 [ext_resource type="Texture2D" uid="uid://bcmlngyltk7sp" path="res://textures/moss_ground_02_1k/moss_groud_02_Base_Color_1k.png" id="1_thnmr"]
-[ext_resource type="PackedScene" path="res://scenes/Water.tscn" id="1_u4tjg"]
+[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://scenes/Water.tscn" id="1_u4tjg"]
 [ext_resource type="Texture2D" uid="uid://c1piymb1ae820" path="res://textures/moss_ground_02_1k/moss_groud_02_Normal_dx_1k.png" id="2_pl5oi"]
 [ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_q1hpc"]
 [ext_resource type="PackedScene" uid="uid://bueqmdan8ll3o" path="res://textures/pebble_round_22.tscn" id="3_mwiy7"]
@@ -25,21 +25,23 @@
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
-[ext_resource type="PackedScene" path="res://scenes/cycle.tscn" id="24_ha1sw"]
-[ext_resource type="PackedScene" path="res://scenes/windshader.tscn" id="25_bsvfl"]
+[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scenes/cycle.tscn" id="24_ha1sw"]
+[ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://scenes/windshader.tscn" id="25_bsvfl"]
 [ext_resource type="Script" uid="uid://dy3aaovd6pf3p" path="res://addons/proton_scatter/src/shapes/sphere_shape.gd" id="28_cfrmd"]
 [ext_resource type="AudioStream" uid="uid://bexb5n8or0c36" path="res://assets/audio/Flowing Water and Birds (Hub).wav" id="29_cfrmd"]
 [ext_resource type="AudioStream" uid="uid://cxwpjfnl8yfbl" path="res://assets/audio/Campfire.wav" id="30_8n7aw"]
 [ext_resource type="PackedScene" uid="uid://dqrsq173aela" path="res://assets3D/house scenes/home_a.tscn" id="30_82kox"]
 [ext_resource type="PackedScene" uid="uid://c7efar8dbufti" path="res://assets3D/house scenes/church.tscn" id="30_ikt05"]
-[ext_resource type="PackedScene" uid="uid://t3u650f5iukq" path="res://scenes/inventory_gui.tscn" id="31_8n7aw"]
+[ext_resource type="PackedScene" uid="uid://0bb61ebi0v3j" path="res://scenes/inventory_gui.tscn" id="31_8n7aw"]
 [ext_resource type="PackedScene" uid="uid://cdbpebiubxrf0" path="res://assets3D/house scenes/market.tscn" id="31_k7taw"]
 [ext_resource type="Script" uid="uid://cblnrinwioycu" path="res://scripts/toggleInventory.gd" id="31_y45p1"]
-[ext_resource type="Script" path="res://thoughts.gd" id="33_fn4xt"]
+[ext_resource type="Script" uid="uid://cianvlha0eilt" path="res://thoughts.gd" id="33_fn4xt"]
 [ext_resource type="Texture2D" uid="uid://dyf07vqr2tgon" path="res://assets/Drawing Tool Icons/Cloud.png" id="34_6s6ja"]
-[ext_resource type="Script" path="res://drawing.gd" id="35_wlotw"]
+[ext_resource type="Script" uid="uid://epgcdq2xwt7b" path="res://drawing.gd" id="35_wlotw"]
 [ext_resource type="Texture2D" uid="uid://c1ae7pmdc5kmq" path="res://assets/Drawing Tool Icons/brush.png" id="36_3fkt5"]
+[ext_resource type="Script" uid="uid://cegk466llcv1e" path="res://art_gallery_button.gd" id="36_xibjn"]
 [ext_resource type="PackedScene" uid="uid://oe06cc6ieu4h" path="res://assets3D/house scenes/well.tscn" id="37_h1q0r"]
+[ext_resource type="Texture2D" uid="uid://dxhdy2k35b8lh" path="res://assets/ArtGallery/pictureframeyay.png" id="37_njk6r"]
 [ext_resource type="PackedScene" uid="uid://00qxw7q0yn6m" path="res://assets3D/house scenes/windmill.tscn" id="38_k7taw"]
 [ext_resource type="PackedScene" uid="uid://dipjrbs7fbcy2" path="res://assets3D/house scenes/home_b.tscn" id="39_t72bn"]
 [ext_resource type="PackedScene" uid="uid://ys3laco1twc" path="res://assets3D/house scenes/castle.tscn" id="40_40xrb"]
@@ -70,9 +72,9 @@ domain_warp_fractal_lacunarity = 1.5
 domain_warp_fractal_gain = 1.0
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_rcl8r"]
-noise = SubResource("FastNoiseLite_mwiy7")
-color_ramp = SubResource("Gradient_q1hpc")
 seamless = true
+color_ramp = SubResource("Gradient_q1hpc")
+noise = SubResource("FastNoiseLite_mwiy7")
 
 [sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_7djuo"]
 _shader_parameters = {
@@ -144,40 +146,72 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_h1ot2"]
+[sub_resource type="Resource" id="Resource_kl01c"]
 script = ExtResource("15_o1ycd")
 amount = 60500
+enabled = true
 override_global_seed = true
+custom_seed = 0
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_87bns"]
+[sub_resource type="Resource" id="Resource_ewago"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.1, 0.1, 0.1)
+enabled = true
 override_global_seed = true
+custom_seed = 0
+restrict_height = false
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_xibjn"]
+[sub_resource type="Resource" id="Resource_jmx7k"]
 script = ExtResource("17_bsvfl")
+iterations = 3
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
+use_computeshader = true
+enabled = true
+override_global_seed = false
+custom_seed = 0
 restrict_height = true
+reference_frame = 0
 
-[sub_resource type="Resource" id="Resource_njk6r"]
+[sub_resource type="Resource" id="Resource_itw7p"]
 script = ExtResource("18_jhnfs")
+ray_direction = Vector3(0, -1, 0)
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
+align_with_collision_normal = false
+max_slope = 90.0
+collision_mask = 1
+exclude_mask = 0
+enabled = true
+override_global_seed = false
+custom_seed = 0
+restrict_height = false
+reference_frame = 0
 
-[sub_resource type="Resource" id="Resource_kl01c"]
+[sub_resource type="Resource" id="Resource_1kntp"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
+align_with_collision_normal = false
+max_slope = 90.0
+enable_texture_filtering = false
+target_texture_id = 0
+not_target_texture = false
+texture_threshold = 0.8
+enabled = true
+override_global_seed = false
+custom_seed = 0
+restrict_height = false
+reference_frame = 0
 
-[sub_resource type="Resource" id="Resource_ewago"]
+[sub_resource type="Resource" id="Resource_krhoc"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_h1ot2"), SubResource("Resource_87bns"), SubResource("Resource_xibjn"), SubResource("Resource_njk6r"), SubResource("Resource_kl01c")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_kl01c"), SubResource("Resource_ewago"), SubResource("Resource_jmx7k"), SubResource("Resource_itw7p"), SubResource("Resource_1kntp")])
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
 
@@ -238,42 +272,77 @@ point_count = 6
 
 [sub_resource type="Resource" id="Resource_vspl4"]
 script = ExtResource("21_ha1sw")
+closed = true
 thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
-[sub_resource type="Resource" id="Resource_jmx7k"]
+[sub_resource type="Resource" id="Resource_a4768"]
 script = ExtResource("15_o1ycd")
 amount = 188
+enabled = true
+override_global_seed = false
+custom_seed = 0
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_itw7p"]
+[sub_resource type="Resource" id="Resource_xcoir"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
+enabled = true
+override_global_seed = false
+custom_seed = 0
+restrict_height = false
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_1kntp"]
+[sub_resource type="Resource" id="Resource_8kope"]
 script = ExtResource("17_bsvfl")
+iterations = 3
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
+use_computeshader = true
+enabled = true
+override_global_seed = false
+custom_seed = 0
 restrict_height = true
+reference_frame = 0
 
-[sub_resource type="Resource" id="Resource_krhoc"]
+[sub_resource type="Resource" id="Resource_wqglp"]
 script = ExtResource("18_jhnfs")
+ray_direction = Vector3(0, -1, 0)
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
+align_with_collision_normal = false
+max_slope = 90.0
+collision_mask = 1
+exclude_mask = 0
+enabled = true
+override_global_seed = false
+custom_seed = 0
+restrict_height = false
+reference_frame = 0
 
-[sub_resource type="Resource" id="Resource_a4768"]
+[sub_resource type="Resource" id="Resource_clm5u"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
+align_with_collision_normal = false
+max_slope = 90.0
+enable_texture_filtering = false
+target_texture_id = 0
+not_target_texture = false
+texture_threshold = 0.8
+enabled = true
+override_global_seed = false
+custom_seed = 0
+restrict_height = false
+reference_frame = 0
 
-[sub_resource type="Resource" id="Resource_xcoir"]
+[sub_resource type="Resource" id="Resource_4y8xt"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_jmx7k"), SubResource("Resource_itw7p"), SubResource("Resource_1kntp"), SubResource("Resource_krhoc"), SubResource("Resource_a4768")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_a4768"), SubResource("Resource_xcoir"), SubResource("Resource_8kope"), SubResource("Resource_wqglp"), SubResource("Resource_clm5u")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -367,7 +436,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_ewago")
+modifier_stack = SubResource("Resource_krhoc")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -402,7 +471,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_xcoir")
+modifier_stack = SubResource("Resource_4y8xt")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -517,6 +586,22 @@ icon = ExtResource("36_3fkt5")
 icon_alignment = 1
 expand_icon = true
 
+[node name="ArtGalleryButton" type="Node3D" parent="Environment"]
+script = ExtResource("36_xibjn")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="Environment/ArtGalleryButton"]
+
+[node name="Button" type="Button" parent="Environment/ArtGalleryButton/CanvasLayer"]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -129.0
+offset_right = 258.0
+offset_bottom = 129.0
+grow_vertical = 2
+scale = Vector2(0.5, 0.5)
+icon = ExtResource("37_njk6r")
+
 [node name="Water Flow" type="AudioStreamPlayer3D" parent="."]
 stream = ExtResource("29_cfrmd")
 autoplay = true
@@ -601,3 +686,4 @@ transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -3
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
+[connection signal="pressed" from="Environment/ArtGalleryButton/CanvasLayer/Button" to="Environment/ArtGalleryButton" method="_on_button_pressed"]
