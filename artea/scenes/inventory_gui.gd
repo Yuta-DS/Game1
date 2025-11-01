@@ -13,24 +13,50 @@ func set_inventory_data(data: inventoryData) -> void:
 	populate_slots()
 
 func populate_slots() -> void:
+	print("=== POPULATE SLOTS CALLED ===")
+	
 	# Clear existing slots
 	for child in grid_container.get_children():
 		child.queue_free()
 	
 	if inventory_data == null:
+		print("ERROR: inventory_data is null in populate_slots!")
 		return
 	
+	print("Creating ", inventory_data.slot_Data.size(), " slots")
+	
 	# Create slot for each slot in inventory
-	for slot_data in inventory_data.slot_Data:
-		var slot_scene = preload("res://scenes/slot.tscn")
+	var slot_scene = preload("res://scenes/slot.tscn")
+	for i in range(inventory_data.slot_Data.size()):
 		var slot = slot_scene.instantiate()
 		grid_container.add_child(slot)
+		
+		# Wait for slot to be ready
+		await get_tree().process_frame
+		
+		var slot_data = inventory_data.slot_Data[i]
+		if slot_data != null:
+			print("Populating slot ", i, " with item: ", slot_data.item_Data.name if slot_data.item_Data else "null")
+		else:
+			print("Populating slot ", i, " - empty")
+		
 		slot.set_slot_data(slot_data)
+	
+	print("=== POPULATE COMPLETE ===")
 
 func refresh_slots() -> void:
+	print("=== REFRESH SLOTS CALLED ===")
+	print("Grid container children count: ", grid_container.get_child_count())
+	print("Inventory slot_Data size: ", inventory_data.slot_Data.size())
+	
 	var slots = grid_container.get_children()
 	for i in range(slots.size()):
 		if i < inventory_data.slot_Data.size():
+			var slot_data = inventory_data.slot_Data[i]
+			if slot_data != null:
+				print("Slot ", i, " - Item: ", slot_data.item_Data.name if slot_data.item_Data else "null", " Qty: ", slot_data.quantity)
+			else:
+				print("Slot ", i, " - Empty (null)")
 			slots[i].set_slot_data(inventory_data.slot_Data[i])
 		else:
 			slots[i].set_slot_data(null)
@@ -44,14 +70,13 @@ func toggle_visibility() -> void:
 func open():
 	visible = true
 	isOpen = true
-	# Optional: Pause the game when inventory is open
-	# Uncomment the line below if you want the game to pause
-	# get_tree().paused = true
-	
+	# Refresh slots when opening to show latest inventory state
+	if inventory_data:
+		print("Opening inventory - refreshing slots")
+		refresh_slots()
+	else:
+		print("ERROR: inventory_data is null when opening inventory!")
+
 func close():
 	visible = false
 	isOpen = false
-	# Unpause the game when inventory closes
-	# Uncomment the line below if you want the game to pause
-	# get_tree().paused = false
-

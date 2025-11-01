@@ -22,8 +22,8 @@ mouse_filter = 2
 script = ExtResource("1_xd30s")
 
 [node name="Sky Background" type="Sprite2D" parent="."]
-position = Vector2(638.037, 359.5)
-scale = Vector2(2.68882, 2.65809)
+position = Vector2(878.8601, 577.49994)
+scale = Vector2(3.6922498, 4.26103)
 texture = ExtResource("2_lwtep")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
@@ -59,10 +59,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -315.794
-offset_top = -164.594
-offset_right = 334.206
-offset_bottom = -106.594
+offset_left = -98.207184
+offset_top = 165.68024
+offset_right = 551.79285
+offset_bottom = 223.68024
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_stretch_ratio = 0.0
@@ -82,10 +82,10 @@ anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -181.915
-offset_top = -79.4261
-offset_right = -29.9152
-offset_bottom = -31.4261
+offset_left = -16.361328
+offset_top = 276.78284
+offset_right = 135.63867
+offset_bottom = 324.78284
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_yknh2")
@@ -98,10 +98,10 @@ anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = 25.0834
-offset_top = -78.1667
-offset_right = 257.083
-offset_bottom = -30.1667
+offset_left = 266.6347
+offset_top = 280.13736
+offset_right = 498.6347
+offset_bottom = 328.13736
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_yknh2")
@@ -132,5 +132,5 @@ theme_override_fonts/font = ExtResource("4_yknh2")
 theme_override_font_sizes/font_size = 70
 
 [connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Create Cloud" to="." method="_on_create_cloud_pressed"]
-[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_create_cloud_pressed"]
 [connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_pop_thoughts_pressed"]
+[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_create_cloud_pressed"]

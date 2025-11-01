@@ -1,9 +1,12 @@
-[gd_scene load_steps=87 format=3 uid="uid://drfdo0gpexlsl"]
+[gd_scene load_steps=96 format=3 uid="uid://drfdo0gpexlsl"]
 
 [ext_resource type="Texture2D" uid="uid://bcmlngyltk7sp" path="res://textures/moss_ground_02_1k/moss_groud_02_Base_Color_1k.png" id="1_thnmr"]
-[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://scenes/Water.tscn" id="1_u4tjg"]
+[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://scripts/Water.tscn" id="1_u4tjg"]
 [ext_resource type="Texture2D" uid="uid://c1piymb1ae820" path="res://textures/moss_ground_02_1k/moss_groud_02_Normal_dx_1k.png" id="2_pl5oi"]
 [ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_q1hpc"]
+[ext_resource type="Script" path="res://scripts/simple_collectible_spawner.gd" id="2_spawner"]
+[ext_resource type="PackedScene" uid="uid://xlc4qq0cvb1s" path="res://scenes/items/apple_collectible.tscn" id="3_apple"]
+[ext_resource type="PackedScene" uid="uid://ici1tbtsf68y" path="res://scenes/items/clam_collectible.tscn" id="4_clam"]
 [ext_resource type="PackedScene" uid="uid://bueqmdan8ll3o" path="res://textures/pebble_round_22.tscn" id="3_mwiy7"]
 [ext_resource type="Texture2D" uid="uid://k1w78rupokyg" path="res://textures/sand_01_2k/sand_01_1k/sand_01_color_1k.png" id="3_pl5oi"]
 [ext_resource type="Texture2D" uid="uid://b2xb5war6mtx" path="res://textures/sand_01_2k/sand_01_1k/sand_01_normal_dx_1k.png" id="4_pe3t7"]
@@ -25,16 +28,14 @@
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
-[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scenes/cycle.tscn" id="24_ha1sw"]
-[ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://scenes/windshader.tscn" id="25_bsvfl"]
+[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scripts/cycle.tscn" id="24_ha1sw"]
+[ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://scripts/windshader.tscn" id="25_bsvfl"]
 [ext_resource type="Script" uid="uid://dy3aaovd6pf3p" path="res://addons/proton_scatter/src/shapes/sphere_shape.gd" id="28_cfrmd"]
 [ext_resource type="AudioStream" uid="uid://bexb5n8or0c36" path="res://assets/audio/Flowing Water and Birds (Hub).wav" id="29_cfrmd"]
 [ext_resource type="AudioStream" uid="uid://cxwpjfnl8yfbl" path="res://assets/audio/Campfire.wav" id="30_8n7aw"]
 [ext_resource type="PackedScene" uid="uid://dqrsq173aela" path="res://assets3D/house scenes/home_a.tscn" id="30_82kox"]
 [ext_resource type="PackedScene" uid="uid://c7efar8dbufti" path="res://assets3D/house scenes/church.tscn" id="30_ikt05"]
-[ext_resource type="PackedScene" uid="uid://0bb61ebi0v3j" path="res://scenes/inventory_gui.tscn" id="31_8n7aw"]
 [ext_resource type="PackedScene" uid="uid://cdbpebiubxrf0" path="res://assets3D/house scenes/market.tscn" id="31_k7taw"]
-[ext_resource type="Script" uid="uid://cblnrinwioycu" path="res://scripts/toggleInventory.gd" id="31_y45p1"]
 [ext_resource type="Script" uid="uid://cianvlha0eilt" path="res://thoughts.gd" id="33_fn4xt"]
 [ext_resource type="Texture2D" uid="uid://dyf07vqr2tgon" path="res://assets/Drawing Tool Icons/Cloud.png" id="34_6s6ja"]
 [ext_resource type="Script" uid="uid://epgcdq2xwt7b" path="res://drawing.gd" id="35_wlotw"]
@@ -46,6 +47,8 @@
 [ext_resource type="PackedScene" uid="uid://dipjrbs7fbcy2" path="res://assets3D/house scenes/home_b.tscn" id="39_t72bn"]
 [ext_resource type="PackedScene" uid="uid://ys3laco1twc" path="res://assets3D/house scenes/castle.tscn" id="40_40xrb"]
 [ext_resource type="PackedScene" uid="uid://fqx6500nugky" path="res://assets3D/house scenes/tavern.tscn" id="41_kjbyn"]
+[ext_resource type="Texture2D" uid="uid://b42uvpgfhvgje" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Inventory.png" id="41_kl01c"]
+[ext_resource type="Script" uid="uid://dgfivhd7spfnv" path="res://scripts/inventory_button.gd" id="42_ewago"]
 [ext_resource type="PackedScene" uid="uid://cmwutg4qjm7hv" path="res://assets3D/house scenes/watermill.tscn" id="42_fn4xt"]
 [ext_resource type="PackedScene" uid="uid://bl7duyul3lwg3" path="res://assets3D/house scenes/lumbermill.tscn" id="43_448jj"]
 [ext_resource type="PackedScene" uid="uid://bpyjccfwiqsfk" path="res://assets3D/house scenes/artéa_signpost.tscn" id="44_wlotw"]
@@ -54,6 +57,9 @@
 [ext_resource type="PackedScene" uid="uid://bdx4hvm2wninr" path="res://assets3D/house scenes/tower_catapult.tscn" id="46_40xrb"]
 [ext_resource type="PackedScene" uid="uid://dq0oeht5m27x4" path="res://assets3D/characters/Father_Animations.glb" id="47_40xrb"]
 [ext_resource type="PackedScene" uid="uid://catvjmgmxqdgx" path="res://assets3D/house scenes/Prince.tscn" id="48_kjbyn"]
+[ext_resource type="Script" uid="uid://psrly1at8x5g" path="res://scripts/teleport_Art_Gallery.gd" id="55_njk6r"]
+[ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
+[ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -72,9 +78,9 @@ domain_warp_fractal_lacunarity = 1.5
 domain_warp_fractal_gain = 1.0
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_rcl8r"]
-seamless = true
-color_ramp = SubResource("Gradient_q1hpc")
 noise = SubResource("FastNoiseLite_mwiy7")
+color_ramp = SubResource("Gradient_q1hpc")
+seamless = true
 
 [sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_7djuo"]
 _shader_parameters = {
@@ -149,9 +155,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 [sub_resource type="Resource" id="Resource_kl01c"]
 script = ExtResource("15_o1ycd")
 amount = 60500
-enabled = true
 override_global_seed = true
-custom_seed = 0
 restrict_height = true
 reference_frame = 1
 
@@ -160,54 +164,24 @@ script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.1, 0.1, 0.1)
-enabled = true
 override_global_seed = true
-custom_seed = 0
-restrict_height = false
 reference_frame = 2
 
 [sub_resource type="Resource" id="Resource_jmx7k"]
 script = ExtResource("17_bsvfl")
-iterations = 3
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
-use_computeshader = true
-enabled = true
-override_global_seed = false
-custom_seed = 0
 restrict_height = true
-reference_frame = 0
 
 [sub_resource type="Resource" id="Resource_itw7p"]
 script = ExtResource("18_jhnfs")
-ray_direction = Vector3(0, -1, 0)
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
-align_with_collision_normal = false
-max_slope = 90.0
-collision_mask = 1
-exclude_mask = 0
-enabled = true
-override_global_seed = false
-custom_seed = 0
-restrict_height = false
-reference_frame = 0
 
 [sub_resource type="Resource" id="Resource_1kntp"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
-align_with_collision_normal = false
-max_slope = 90.0
-enable_texture_filtering = false
-target_texture_id = 0
-not_target_texture = false
-texture_threshold = 0.8
-enabled = true
-override_global_seed = false
-custom_seed = 0
-restrict_height = false
-reference_frame = 0
 
 [sub_resource type="Resource" id="Resource_krhoc"]
 script = ExtResource("13_1ti50")
@@ -272,7 +246,6 @@ point_count = 6
 
 [sub_resource type="Resource" id="Resource_vspl4"]
 script = ExtResource("21_ha1sw")
-closed = true
 thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
@@ -280,9 +253,6 @@ metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 [sub_resource type="Resource" id="Resource_a4768"]
 script = ExtResource("15_o1ycd")
 amount = 188
-enabled = true
-override_global_seed = false
-custom_seed = 0
 restrict_height = true
 reference_frame = 1
 
@@ -291,54 +261,23 @@ script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
-enabled = true
-override_global_seed = false
-custom_seed = 0
-restrict_height = false
 reference_frame = 2
 
 [sub_resource type="Resource" id="Resource_8kope"]
 script = ExtResource("17_bsvfl")
-iterations = 3
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
-use_computeshader = true
-enabled = true
-override_global_seed = false
-custom_seed = 0
 restrict_height = true
-reference_frame = 0
 
 [sub_resource type="Resource" id="Resource_wqglp"]
 script = ExtResource("18_jhnfs")
-ray_direction = Vector3(0, -1, 0)
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
-align_with_collision_normal = false
-max_slope = 90.0
-collision_mask = 1
-exclude_mask = 0
-enabled = true
-override_global_seed = false
-custom_seed = 0
-restrict_height = false
-reference_frame = 0
 
 [sub_resource type="Resource" id="Resource_clm5u"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
-align_with_collision_normal = false
-max_slope = 90.0
-enable_texture_filtering = false
-target_texture_id = 0
-not_target_texture = false
-texture_threshold = 0.8
-enabled = true
-override_global_seed = false
-custom_seed = 0
-restrict_height = false
-reference_frame = 0
 
 [sub_resource type="Resource" id="Resource_4y8xt"]
 script = ExtResource("13_1ti50")
@@ -347,6 +286,12 @@ stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_a4768"), SubResour
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
 radius = 120.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kl01c"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ewago"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ewago"]
 
 [node name="HubWorld" type="Node3D"]
 
@@ -610,19 +555,17 @@ autoplay = true
 stream = ExtResource("30_8n7aw")
 autoplay = true
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-script = ExtResource("31_y45p1")
+[node name="Inventory" type="CanvasLayer" parent="."]
 
-[node name="inventoryGUI" parent="CanvasLayer" instance=ExtResource("31_8n7aw")]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -608.0
-offset_top = -100.0
-offset_right = -608.0
-offset_bottom = -100.0
+[node name="TextureButton" type="TextureButton" parent="Inventory"]
+offset_left = 1553.0
+offset_top = 31.0
+offset_right = 1666.0
+offset_bottom = 141.0
+texture_normal = ExtResource("41_kl01c")
+ignore_texture_size = true
+stretch_mode = 0
+script = ExtResource("42_ewago")
 
 [node name="Milo_Animations" parent="." instance=ExtResource("45_k7taw")]
 transform = Transform3D(-0.902595, 0, -4.91786, 0, 5, 0, 4.91786, 0, -0.902595, 98.8438, 19.9, -8.54097)
@@ -684,6 +627,67 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 81.6451, 19.9445, -66.8111)
 [node name="Knight" parent="." instance=ExtResource("48_kjbyn")]
 transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -34.4799, 30.6393, 36.7945)
 
+[node name="Art_Gallery" type="Area3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 86, 16, 16)
+script = ExtResource("55_njk6r")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Art_Gallery"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+shape = SubResource("BoxShape3D_kl01c")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Art_Gallery"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
+mesh = SubResource("BoxMesh_ewago")
+
+[node name="Drawing_Tool" type="Area3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 93.38989, 16.04015, 16)
+script = ExtResource("56_kl01c")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Drawing_Tool"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+shape = SubResource("BoxShape3D_kl01c")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Drawing_Tool"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
+mesh = SubResource("BoxMesh_ewago")
+
+[node name="Popthought_world" type="Area3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 93.38989, 16.04015, 27.525864)
+script = ExtResource("57_ewago")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Popthought_world"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+shape = SubResource("BoxShape3D_kl01c")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Popthought_world"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
+mesh = SubResource("CylinderMesh_ewago")
+
+[node name="AppleSpawner" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+script = ExtResource("2_spawner")
+collectible_scene = ExtResource("3_apple")
+spawn_count = 30
+spawn_area_size = Vector2(150, 150)
+spawn_height = 21.0
+min_distance_between = 5.0
+use_raycast = true
+raycast_height_offset = 50.0
+
+[node name="ClamSpawner" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, 50)
+script = ExtResource("2_spawner")
+collectible_scene = ExtResource("4_clam")
+spawn_count = 20
+spawn_area_size = Vector2(100, 100)
+spawn_height = 23.0
+min_distance_between = 6.0
+use_raycast = true
+raycast_height_offset = 50.0
+
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
 [connection signal="pressed" from="Environment/ArtGalleryButton/CanvasLayer/Button" to="Environment/ArtGalleryButton" method="_on_button_pressed"]
+[connection signal="body_entered" from="Art_Gallery" to="Art_Gallery" method="_on_body_entered"]
+[connection signal="body_entered" from="Drawing_Tool" to="Drawing_Tool" method="_on_body_entered"]
+[connection signal="body_entered" from="Popthought_world" to="Popthought_world" method="_on_body_entered"]

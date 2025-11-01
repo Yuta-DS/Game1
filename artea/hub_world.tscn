@@ -1,7 +1,10 @@
-[gd_scene load_steps=92 format=3 uid="uid://duyjccdsyvxn6"]
+[gd_scene load_steps=95 format=3 uid="uid://duyjccdsyvxn6"]
 
 [ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://cycle.tscn" id="1_e0qst"]
 [ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_w1cbi"]
+[ext_resource type="Script" path="res://scripts/simple_collectible_spawner.gd" id="2_spawner"]
+[ext_resource type="PackedScene" uid="uid://xlc4qq0cvb1s" path="res://scenes/items/apple_collectible.tscn" id="3_apple"]
+[ext_resource type="PackedScene" uid="uid://ici1tbtsf68y" path="res://scenes/items/clam_collectible.tscn" id="4_clam"]
 [ext_resource type="PackedScene" uid="uid://bueqmdan8ll3o" path="res://textures/pebble_round_22.tscn" id="3_gdsyq"]
 [ext_resource type="PackedScene" uid="uid://d4ajgx5olmnf0" path="res://assets3D/mountains/rock_medium_12.tscn" id="4_oxwvs"]
 [ext_resource type="Script" uid="uid://i5jcj7ukvoen" path="res://addons/terrabrush/TerraBrush.cs" id="4_tcym7"]
@@ -357,3 +360,25 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 
 
 [node name="Teleporter" parent="Environment" instance=ExtResource("67_6acxu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.63552, 10.1166, -38.3274)
+
+[node name="AppleSpawner" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+script = ExtResource("2_spawner")
+collectible_scene = ExtResource("3_apple")
+spawn_count = 30
+spawn_area_size = Vector2(150, 150)
+spawn_height = 21.0
+min_distance_between = 5.0
+use_raycast = true
+raycast_height_offset = 50.0
+
+[node name="ClamSpawner" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, 50)
+script = ExtResource("2_spawner")
+collectible_scene = ExtResource("4_clam")
+spawn_count = 20
+spawn_area_size = Vector2(100, 100)
+spawn_height = 23.0
+min_distance_between = 6.0
+use_raycast = true
+raycast_height_offset = 50.0

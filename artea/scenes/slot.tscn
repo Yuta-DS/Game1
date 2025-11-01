@@ -19,6 +19,7 @@ centered = false
 vframes = 2
 
 [node name="ItemIcon" type="Sprite2D" parent="."]
+visible = false
 position = Vector2(85, 85)
 
 [node name="QuantityLabel" type="Label" parent="."]

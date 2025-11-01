@@ -23,15 +23,20 @@ func _ready() -> void:
 	# Initialize inventory
 	print("Player ready - inventory_data: ", inventory_data)
 	print("Player ready - inventory_gui: ", inventory_gui)
+	
+	# Wait one frame for inventory_gui to be ready
+	await get_tree().process_frame
+	
 	if inventory_data and inventory_gui:
 		inventory_gui.set_inventory_data(inventory_data)
 		print("Inventory initialized successfully")
+		print("Inventory has ", inventory_data.slot_Data.size(), " slots")
 	else:
 		print("WARNING: Inventory not initialized!")
 
 func _input(event: InputEvent) -> void:
 	# Toggle inventory with I key
-	if event.is_action_pressed("toggle_inventory"):
+	if event.is_action_pressed("toggle_Inventory"):
 		print("I key pressed! inventory_gui exists: ", inventory_gui != null)
 		if inventory_gui:
 			print("Toggling inventory visibility")
@@ -83,9 +88,12 @@ func moveLogic(delta) -> void:
 
 func collect_item(item: itemData) -> bool:
 	if inventory_data == null:
+		print("ERROR: inventory_data is null!")
 		return false
 	
 	print("Collecting item: ", item.name)
+	print("Item texture: ", item.texture)
+	print("Item stackable: ", item.stackable)
 	
 	# Try to add to existing stack if stackable
 	if item.stackable:
@@ -97,7 +105,10 @@ func collect_item(item: itemData) -> bool:
 					slot.quantity += 1
 					print("Stacked! New quantity: ", slot.quantity)
 					if inventory_gui:
+						print("Refreshing inventory GUI slots")
 						inventory_gui.refresh_slots()
+					else:
+						print("WARNING: inventory_gui is null when trying to refresh!")
 					return true
 	
 	# Find empty slot
@@ -108,8 +119,12 @@ func collect_item(item: itemData) -> bool:
 			new_slot.quantity = 1
 			inventory_data.slot_Data[i] = new_slot
 			print("Added to new slot ", i)
+			print("Slot data - item: ", new_slot.item_Data.name, " qty: ", new_slot.quantity)
 			if inventory_gui:
+				print("Refreshing inventory GUI slots")
 				inventory_gui.refresh_slots()
+			else:
+				print("WARNING: inventory_gui is null when trying to refresh!")
 			return true
 	
 	# Inventory full
