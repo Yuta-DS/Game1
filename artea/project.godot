@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Artea"
 run/main_scene="uid://d10bpuuoe8w0m"
-config/features=PackedStringArray("4.4", "C#", "GL Compatibility")
+config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
