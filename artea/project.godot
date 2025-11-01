@@ -11,14 +11,9 @@ config_version=5
 [application]
 
 config/name="Artea"
-<<<<<<< HEAD
-run/main_scene="uid://ceqwe441y5bx1"
+run/main_scene="uid://d10bpuuoe8w0m"
 config/features=PackedStringArray("4.4", "C#", "GL Compatibility")
 boot_splash/image="uid://06fmhq71d8ey"
-=======
-run/main_scene="uid://d10bpuuoe8w0m"
-config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
->>>>>>> b987150fe435f93109b5faf13e69424a1c701bea
 config/icon="res://icon.svg"
 
 [autoload]
