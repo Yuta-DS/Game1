@@ -8,7 +8,7 @@ func _on_instructions_pressed():
 	$Panel.visible = true
 
 func _on_return_to_hubworld_pressed():
-	get_tree().change_scene_to_file("res://New_Hub_World.tscn")
+	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
 	
 
 

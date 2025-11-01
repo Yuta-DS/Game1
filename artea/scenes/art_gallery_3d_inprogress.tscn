@@ -189,6 +189,7 @@ albedo_color = Color(0.541176, 0.380392, 0, 0.729412)
 
 [node name="ArtGallery" type="Node3D"]
 script = ExtResource("1_h6yu7")
+painting_title = null
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_6ynge")

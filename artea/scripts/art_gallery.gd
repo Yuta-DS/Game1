@@ -4,7 +4,7 @@ extends Node3D
 var current_target_sprite: Sprite2D
 
 # --- Scene Paths ---
-const HUB_WORLD_PATH = "res://New_Hub_World.tscn"
+const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
 const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
 const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
