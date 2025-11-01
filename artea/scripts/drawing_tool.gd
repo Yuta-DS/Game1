@@ -1,6 +1,6 @@
 extends Control
 
-const CANVAS_COL: int = 102
+const CANVAS_COL: int = 90
 const CANVAS_ROW: int = 60
 const CELL_SIZE := Vector2i(16, 16)
 
@@ -541,4 +541,4 @@ func _on_local_button_pressed() -> void:
 	save_artwork_to_desktop()
 
 func _on_back_to_hub_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://New_Hub_World.tscn")
+	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")

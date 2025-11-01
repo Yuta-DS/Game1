@@ -68,4 +68,4 @@ func _on_play_again_pressed() -> void:
 
 # Return to Hubworld button
 func _on_return_to_hubworld_pressed():
-	get_tree().change_scene_to_file("res://New_Hub_World.tscn")
+	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
