@@ -67,10 +67,5 @@ func _on_play_again_pressed() -> void:
 	MusicManager._check_scene()
 
 # Return to Hubworld button
-func _on_return_to_hubworld_pressed() -> void:
-	# Uses load screen scene while loading the scene
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/artea_game.tscn"
-	
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free() 
+func _on_return_to_hubworld_pressed():
+	get_tree().change_scene_to_file("res://New_Hub_World.tscn")

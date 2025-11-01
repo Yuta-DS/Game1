@@ -12,6 +12,8 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = -428.0
+offset_bottom = -392.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_stretch_ratio = 4.35
@@ -130,5 +132,5 @@ theme_override_fonts/font = ExtResource("4_yknh2")
 theme_override_font_sizes/font_size = 70
 
 [connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Create Cloud" to="." method="_on_create_cloud_pressed"]
-[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_create_cloud_pressed"]
+[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_pop_thoughts_pressed"]

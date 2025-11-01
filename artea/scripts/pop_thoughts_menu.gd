@@ -8,11 +8,7 @@ func _on_instructions_pressed():
 	$Panel.visible = true
 
 func _on_return_to_hubworld_pressed():
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/artea_game.tscn"
-	
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free() 
+	get_tree().change_scene_to_file("res://New_Hub_World.tscn")
 	
 
 
