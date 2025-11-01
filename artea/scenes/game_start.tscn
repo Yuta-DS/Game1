@@ -14,8 +14,8 @@ shadow_color = Color(0.466667, 0.470588, 0.329412, 1)
 script = ExtResource("1_kdykw")
 
 [node name="GameStart" type="Sprite2D" parent="."]
-position = Vector2(678, 360)
-scale = Vector2(0.923028, 0.923028)
+position = Vector2(848.557, 547.705)
+scale = Vector2(1.10735, 1.0748)
 texture = ExtResource("2_kdykw")
 
 [node name="Artea Label" type="Label" parent="."]
