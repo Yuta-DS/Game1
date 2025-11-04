@@ -1,23 +1,29 @@
-To operate and code the Artea file, the system requires to run on Godot .NET (supports C#), version 4.4+.
+This document provides instructions for setting up and running the Artéa game project within the Godot Development Engine.
 
-Setup Instructions
-  Download Godot.NET, minimum version 4.4 
-  Import the game file into godot To test the file, 
-  Click run scene to run the 3D world and test it 
+**Note on Development Integrity:** To ensure maximum project stability and to minimise issues related to file path case sensitivity and the Godot .NET runtime dependencies, it is strongly recommended that all developers work on a _**Windows operating system.**_
+
+
+Guide to Running the Project
+  1. **Engine Requirement:** Download and install Godot Engine version 4.4 or newer, specifically the version that includes .NET/Mono support (for C# compilation).
+  2. **Import Project:** Import the project directory into the Godot Project Manager.
+  3. **Initial Scene Launch:** To test the project, click the "Run Scene" button (F6). If the main scene is not already assigned, set it to:
+    - "res://scenes/start_screen.tscn"
 
 The game file contains the previous and our group work. The previous group work was working on 2D version of the Artea game, but our group switch to working on the game in 3D. 
 
 The 3D version contains some of the previous group files such as:
-  authentication.tscn 
-  game_start.tscn 
-  several files of the pop thoughts world (such as cloud.tscn, cloudPopFinish.tscn, cloud_pop_ui.tscn, and popThoughtsMenu.tscn. Also all the scripts for these files)
+  - authentication.tscn 
+  - game_start.tscn 
+  - several files of the pop thoughts world (such as cloud.tscn, cloudPopFinish.tscn, cloud_pop_ui.tscn, and popThoughtsMenu.tscn. Also all the scripts for these files)
 
 But the main worlds for this project is:
 
-New_Hub_World.tscn 
-drawing_Tool.tscn and 
-script popthought files art_gallery_3D_inprogress.tscn 
+    - res://scenes/New_Hub_World.tscn
+    - res://scenes/art_gallery_3D_inprogress.tscn
+    - res://scenes/drawing_Tool.tscn
+    - res://scenes/popThoughtsMenu.tscn
 
 Several outstanding work is still in progress such as:
-- Popthought world
-- Inventory (drop items)
+
+* **Popthoughts World:** The existing 2D scenes need to be adapted or replaced within the 3D environment structure.
+* **Inventory:** The logic for dropping items (e.g., apples, shells) from the inventory needs to be implemented.
