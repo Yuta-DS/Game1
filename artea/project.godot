@@ -8,10 +8,15 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="Artea"
-config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
+run/main_scene="uid://d10bpuuoe8w0m"
+config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
 boot_splash/image="uid://06fmhq71d8ey"
 config/icon="res://icon.svg"
 
