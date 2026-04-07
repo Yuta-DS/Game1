@@ -293,6 +293,12 @@ radius = 120.0
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_ewago"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_m45cy"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1kntp"]
+albedo_color = Color(0.24313726, 0.15294118, 0.13725491, 1)
+roughness = 0.8
+
 [node name="HubWorld" type="Node3D" unique_id=1269481951]
 
 [node name="NewPlayer" parent="." unique_id=898238852 instance=ExtResource("2_q1hpc")]
@@ -681,7 +687,15 @@ min_distance_between = 6.0
 [node name="Story_Intro_Spawn" type="Label3D" parent="." unique_id=1649590757]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.352577, 25.852982, 1.8761172)
 billboard = 1
+no_depth_test = true
+modulate = Color(1, 0.95686275, 0.81960785, 1)
 text = "Welcome, Seeker. Artéa has been dimmed by fear and confusion. You are here to rediscover the truth and restore the light."
+outline_size = 20
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Story_Intro_Spawn" unique_id=1705432211]
+transform = Transform3D(0.2, 0, 0, 0, 2, 0, 0, 0, 6, 0.43448067, -0.6657982, 0)
+mesh = SubResource("BoxMesh_m45cy")
+surface_material_override/0 = SubResource("StandardMaterial3D_1kntp")
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
