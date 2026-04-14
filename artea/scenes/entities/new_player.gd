@@ -1,6 +1,9 @@
 extends CharacterBody3D
 
-#This is the jump function
+# --- AUDIO NODES ---
+@onready var footstep_player = $FootstepPlayer
+
+# --- JUMP VARIABLES ---
 @export var jump_height : float = 2.25
 @export var jump_time_to_peak : float = 0.4
 @export var jump_time_to_descent : float = 0.25
@@ -11,10 +14,9 @@ extends CharacterBody3D
 @export var baseSpeed := 4.0
 @export var runSpeed := 6.0
 
-# Inventory system
+# --- INVENTORY SYSTEM ---
 @export var inventory_data: inventoryData
 @onready var inventory_gui: Control = $InventoryGUI
-
 @onready var camera = $CameraController/Camera3D
 
 var movementInput := Vector2.ZERO
@@ -45,11 +47,8 @@ func _input(event: InputEvent) -> void:
 			print("ERROR: inventory_gui is null!")
 
 func _physics_process(delta: float) -> void:
-	
-	#velocity = Vector3(movementInput.x, 0, movementInput.y) * baseSpeed
 	moveLogic(delta)
 	jumpLogic(delta)
-	
 	move_and_slide()
 
 func jumpLogic(delta) -> void:
@@ -61,74 +60,71 @@ func jumpLogic(delta) -> void:
 		$RogueSkin/AnimationPlayer.current_animation = 'ToucheGround'
 		
 	var gravity = jump_gravity if velocity.y > 0.0 else fall_gravity
-
-
 	velocity.y -= gravity * delta
-
 	
 func moveLogic(delta) -> void:
-		movementInput = Input.get_vector("move_left", "move_right", "move_forward", "move_backward").rotated(-camera.global_rotation.y)
-		var velocity2D = Vector2(velocity.x, velocity.z)
-		var isRunning: bool = Input.is_action_pressed("run")
+	movementInput = Input.get_vector("move_left", "move_right", "move_forward", "move_backward").rotated(-camera.global_rotation.y)
+	var velocity2D = Vector2(velocity.x, velocity.z)
+	var isRunning: bool = Input.is_action_pressed("run")
+	
+	if movementInput != Vector2.ZERO:
+		var speed = runSpeed if isRunning else baseSpeed
+		velocity2D += movementInput * speed * delta * 3
+		velocity2D = velocity2D.limit_length(speed)
+		velocity.x = velocity2D.x
+		velocity.z = velocity2D.y
 		
-		if movementInput != Vector2.ZERO:
-			var speed = runSpeed if isRunning else baseSpeed
-			velocity2D += movementInput * speed * delta * 3
-			velocity2D = velocity2D.limit_length(speed)
-			velocity.x = velocity2D.x
-			velocity.z = velocity2D.y
-			$RogueSkin/AnimationPlayer.current_animation = 'Run'
-			var targetAngle = -movementInput.angle() + PI/2
-			$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
+		# SET ANIMATION
+		$RogueSkin/AnimationPlayer.current_animation = 'Run'
+		
+		# --- FOOTSTEP AUDIO START ---
+		# Only play if the player is actually touching the ground
+		if is_on_floor():
+			if not footstep_player.playing:
+				footstep_player.play()
 		else:
-			velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
-			velocity.x = velocity2D.x
-			velocity.z = velocity2D.y
-			$RogueSkin/AnimationPlayer.current_animation = 'Idle'
+			# Stop footsteps if we jump or fall
+			footstep_player.stop()
+		# --- FOOTSTEP AUDIO END ---
+
+		var targetAngle = -movementInput.angle() + PI/2
+		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
+	else:
+		velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
+		velocity.x = velocity2D.x
+		velocity.z = velocity2D.y
+		
+		# SET ANIMATION
+		$RogueSkin/AnimationPlayer.current_animation = 'Idle'
+		
+		# --- STOP FOOTSTEPS ---
+		# Stop sound when we are standing still
+		footstep_player.stop()
 
 func collect_item(item: itemData) -> bool:
 	if inventory_data == null:
 		print("ERROR: inventory_data is null!")
 		return false
 	
-	print("Collecting item: ", item.name)
-	print("Item texture: ", item.texture)
-	print("Item stackable: ", item.stackable)
-	
-	# Try to add to existing stack if stackable
 	if item.stackable:
 		for slot in inventory_data.slot_Data:
 			if slot != null and slot.item_Data != null:
-				print("Comparing with slot item: ", slot.item_Data.name)
-				# Compare by item name instead of object reference
 				if slot.item_Data.name == item.name:
 					slot.quantity += 1
-					print("Stacked! New quantity: ", slot.quantity)
 					if inventory_gui:
-						print("Refreshing inventory GUI slots")
 						inventory_gui.refresh_slots()
-					else:
-						print("WARNING: inventory_gui is null when trying to refresh!")
 					return true
 	
-	# Find empty slot
 	for i in range(inventory_data.slot_Data.size()):
 		if inventory_data.slot_Data[i] == null:
 			var new_slot = slotData.new()
 			new_slot.item_Data = item
 			new_slot.quantity = 1
 			inventory_data.slot_Data[i] = new_slot
-			print("Added to new slot ", i)
-			print("Slot data - item: ", new_slot.item_Data.name, " qty: ", new_slot.quantity)
 			if inventory_gui:
-				print("Refreshing inventory GUI slots")
 				inventory_gui.refresh_slots()
-			else:
-				print("WARNING: inventory_gui is null when trying to refresh!")
 			return true
 	
-	# Inventory full
-	print("Inventory is full!")
 	return false
 	
 func NewPlayer():
