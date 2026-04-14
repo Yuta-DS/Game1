@@ -60,6 +60,8 @@
 [ext_resource type="Script" uid="uid://psrly1at8x5g" path="res://scripts/teleport_Art_Gallery.gd" id="55_njk6r"]
 [ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
+[ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="61_a4768"]
+[ext_resource type="Script" uid="uid://bet4qknmq15o3" path="res://scenes/narrative_bubble.gd" id="62_xcoir"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -152,14 +154,14 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_1kntp"]
+[sub_resource type="Resource" id="Resource_8kope"]
 script = ExtResource("15_o1ycd")
 amount = 60500
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_krhoc"]
+[sub_resource type="Resource" id="Resource_wqglp"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
@@ -167,25 +169,25 @@ scale = Vector3(0.1, 0.1, 0.1)
 override_global_seed = true
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_a4768"]
+[sub_resource type="Resource" id="Resource_clm5u"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_xcoir"]
+[sub_resource type="Resource" id="Resource_4y8xt"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_8kope"]
+[sub_resource type="Resource" id="Resource_1fv2d"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_wqglp"]
+[sub_resource type="Resource" id="Resource_yieqa"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_1kntp"), SubResource("Resource_krhoc"), SubResource("Resource_a4768"), SubResource("Resource_xcoir"), SubResource("Resource_8kope")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_8kope"), SubResource("Resource_wqglp"), SubResource("Resource_clm5u"), SubResource("Resource_4y8xt"), SubResource("Resource_1fv2d")])
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
 
@@ -250,38 +252,38 @@ thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
-[sub_resource type="Resource" id="Resource_clm5u"]
+[sub_resource type="Resource" id="Resource_he78i"]
 script = ExtResource("15_o1ycd")
 amount = 188
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_4y8xt"]
+[sub_resource type="Resource" id="Resource_xrdtn"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_1fv2d"]
+[sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_yieqa"]
+[sub_resource type="Resource" id="Resource_462mr"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_he78i"]
+[sub_resource type="Resource" id="Resource_e81s8"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_xrdtn"]
+[sub_resource type="Resource" id="Resource_v5xqt"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_clm5u"), SubResource("Resource_4y8xt"), SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_he78i"), SubResource("Resource_xrdtn"), SubResource("Resource_m45cy"), SubResource("Resource_462mr"), SubResource("Resource_e81s8")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -292,12 +294,6 @@ radius = 120.0
 [sub_resource type="BoxMesh" id="BoxMesh_ewago"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_ewago"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_m45cy"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1kntp"]
-albedo_color = Color(0.24313726, 0.15294118, 0.13725491, 1)
-roughness = 0.8
 
 [node name="HubWorld" type="Node3D" unique_id=1269481951]
 
@@ -387,7 +383,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment" unique_id=691777072]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_wqglp")
+modifier_stack = SubResource("Resource_yieqa")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -422,7 +418,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_xrdtn")
+modifier_stack = SubResource("Resource_v5xqt")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -689,13 +685,21 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.352577, 25.852982, 1.876117
 billboard = 1
 no_depth_test = true
 modulate = Color(1, 0.95686275, 0.81960785, 1)
-text = "Welcome, Seeker. Artéa has been dimmed by fear and confusion. You are here to rediscover the truth and restore the light."
 outline_size = 20
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Story_Intro_Spawn" unique_id=1705432211]
-transform = Transform3D(0.2, 0, 0, 0, 2, 0, 0, 0, 6, 0.43448067, -0.6657982, 0)
-mesh = SubResource("BoxMesh_m45cy")
-surface_material_override/0 = SubResource("StandardMaterial3D_1kntp")
+[node name="NarrativeBubble" type="Sprite3D" parent="Story_Intro_Spawn" unique_id=1227392259]
+transform = Transform3D(0.048518512, 0, -0.9988223, 0, 1, 0, 0.9988223, 0, 0.048518512, 0, 0, 0.023192167)
+billboard = 2
+texture = ExtResource("61_a4768")
+script = ExtResource("62_xcoir")
+
+[node name="Label3D" type="Label3D" parent="Story_Intro_Spawn/NarrativeBubble" unique_id=1504670144]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
+billboard = 2
+no_depth_test = true
+text = "Welcome, Seeker. Artéa has been dimmed by fear and confusion. You are here to rediscover the truth and restore the light."
+autowrap_mode = 1
+width = 1000.0
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
