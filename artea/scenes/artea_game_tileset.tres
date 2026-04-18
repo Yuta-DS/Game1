@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=32 format=3 uid="uid://c316dmv7e31yl"]
+[gd_resource type="TileSet" format=3 uid="uid://c316dmv7e31yl"]
 
 [ext_resource type="Texture2D" uid="uid://co1fsr0qx1ohg" path="res://assets/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="1_v2j4u"]
 [ext_resource type="Texture2D" uid="uid://d3e5oc5rby5ox" path="res://assets/Legacy-Fantasy - High Forest 2.3/Trees/Yellow-Tree.png" id="2_1clra"]
