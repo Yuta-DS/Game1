@@ -55,12 +55,12 @@
 [ext_resource type="PackedScene" uid="uid://ch7f1gvh71svv" path="res://meshy ai/Milo_Animations.glb" id="45_k7taw"]
 [ext_resource type="PackedScene" uid="uid://mlbbm08eu5nw" path="res://assets3D/house scenes/tower_b.tscn" id="45_t72bn"]
 [ext_resource type="PackedScene" uid="uid://bdx4hvm2wninr" path="res://assets3D/house scenes/tower_catapult.tscn" id="46_40xrb"]
-[ext_resource type="PackedScene" uid="uid://dq0oeht5m27x4" path="res://assets3D/characters/Father_Animations.glb" id="47_40xrb"]
 [ext_resource type="PackedScene" uid="uid://catvjmgmxqdgx" path="res://assets3D/house scenes/Prince.tscn" id="48_kjbyn"]
 [ext_resource type="Script" uid="uid://psrly1at8x5g" path="res://scripts/teleport_Art_Gallery.gd" id="55_njk6r"]
 [ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
-[ext_resource type="PackedScene" path="res://scenes/milo_animations.tscn" id="61_krhoc"]
+[ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="61_krhoc"]
+[ext_resource type="PackedScene" uid="uid://b1d3rlknpgaj3" path="res://scenes/everlasting_father_animations.tscn" id="62_a4768"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -153,14 +153,14 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_krhoc"]
+[sub_resource type="Resource" id="Resource_a4768"]
 script = ExtResource("15_o1ycd")
 amount = 60500
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_a4768"]
+[sub_resource type="Resource" id="Resource_xcoir"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
@@ -168,25 +168,25 @@ scale = Vector3(0.1, 0.1, 0.1)
 override_global_seed = true
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_xcoir"]
+[sub_resource type="Resource" id="Resource_8kope"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_8kope"]
+[sub_resource type="Resource" id="Resource_wqglp"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_wqglp"]
+[sub_resource type="Resource" id="Resource_clm5u"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_clm5u"]
+[sub_resource type="Resource" id="Resource_4y8xt"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_krhoc"), SubResource("Resource_a4768"), SubResource("Resource_xcoir"), SubResource("Resource_8kope"), SubResource("Resource_wqglp")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_a4768"), SubResource("Resource_xcoir"), SubResource("Resource_8kope"), SubResource("Resource_wqglp"), SubResource("Resource_clm5u")])
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
 
@@ -251,38 +251,38 @@ thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
-[sub_resource type="Resource" id="Resource_4y8xt"]
+[sub_resource type="Resource" id="Resource_1fv2d"]
 script = ExtResource("15_o1ycd")
 amount = 188
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_1fv2d"]
+[sub_resource type="Resource" id="Resource_yieqa"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_yieqa"]
+[sub_resource type="Resource" id="Resource_he78i"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_he78i"]
+[sub_resource type="Resource" id="Resource_xrdtn"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_xrdtn"]
+[sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_m45cy"]
+[sub_resource type="Resource" id="Resource_462mr"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_4y8xt"), SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i"), SubResource("Resource_xrdtn")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i"), SubResource("Resource_xrdtn"), SubResource("Resource_m45cy")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -292,7 +292,24 @@ radius = 120.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_ewago"]
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_ewago"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_krhoc"]
+transparency = 1
+albedo_color = Color(1, 0.8745098, 0.47058824, 1)
+emission_enabled = true
+emission = Color(1, 0.9019608, 0.5882353, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a4768"]
+emission_enabled = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_a4768"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xcoir"]
+transparency = 1
+albedo_color = Color(1, 0.8745098, 0.47058824, 1)
+emission_enabled = true
+emission = Color(1, 0.9019608, 0.5882353, 1)
+emission_energy_multiplier = 2.0
 
 [node name="HubWorld" type="Node3D" unique_id=2105333492]
 
@@ -382,7 +399,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment" unique_id=831708743]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_clm5u")
+modifier_stack = SubResource("Resource_4y8xt")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -405,7 +422,7 @@ shape = SubResource("Resource_vspl4")
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 4.73711, 0)
 
 [node name="Wata" parent="Environment" unique_id=546293029 instance=ExtResource("1_u4tjg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.0534, 1.61997)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0781631, 6.540021, 1.9484688)
 
 [node name="DayNite" parent="Environment" unique_id=572675486 instance=ExtResource("24_ha1sw")]
 
@@ -417,7 +434,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_m45cy")
+modifier_stack = SubResource("Resource_462mr")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -569,7 +586,7 @@ stretch_mode = 0
 script = ExtResource("42_ewago")
 
 [node name="Milo_Animations_old" parent="." unique_id=1444388133 instance=ExtResource("45_k7taw")]
-transform = Transform3D(-0.902595, 0, -4.91786, 0, 5, 0, 4.91786, 0, -0.902595, 98.8438, 19.9, -8.54097)
+transform = Transform3D(-1.8051885, 0, -9.835715, 0, 10, 0, 9.835715, 0, -1.8051885, 110, 19.9, -15)
 
 [node name="building_church_red2" parent="." unique_id=379392783 instance=ExtResource("30_ikt05")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 86, 19, -77.7649)
@@ -622,23 +639,22 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 19.9201, 6.67653, 189.907)
 [node name="building_tower_catapult_red2" parent="." unique_id=1862347018 instance=ExtResource("46_40xrb")]
 transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, -51, 40.3514, -2.46875)
 
-[node name="Father_Animations" parent="." unique_id=1017926193 instance=ExtResource("47_40xrb")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 81.6451, 19.9445, -66.8111)
-
 [node name="Knight" parent="." unique_id=508996376 instance=ExtResource("48_kjbyn")]
 transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -34.4799, 30.6393, 36.7945)
 
 [node name="Art_Gallery" type="Area3D" parent="." unique_id=1255044157]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 86, 16, 16)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -255, 41, 22.7)
+collision_layer = 3
 script = ExtResource("55_njk6r")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Art_Gallery" unique_id=177732418]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 424.5, -12, 10)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Art_Gallery" unique_id=1986775064]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
+transform = Transform3D(9, 0, 0, 0, 9, 0, 0, 0, 9, 419.5, -10, 10)
 mesh = SubResource("BoxMesh_ewago")
+surface_material_override/0 = SubResource("StandardMaterial3D_krhoc")
 
 [node name="Drawing_Tool" type="Area3D" parent="." unique_id=1110659011]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 93.38989, 16.04015, 16)
@@ -651,18 +667,20 @@ shape = SubResource("BoxShape3D_kl01c")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Drawing_Tool" unique_id=517840038]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
 mesh = SubResource("BoxMesh_ewago")
+surface_material_override/0 = SubResource("StandardMaterial3D_a4768")
 
 [node name="Popthought_world" type="Area3D" parent="." unique_id=952177838]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 93.38989, 16.04015, 27.525864)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 90.3, 15.5, -83)
 script = ExtResource("57_ewago")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Popthought_world" unique_id=1224225643]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.635, 11.479, 21)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Popthought_world" unique_id=803191969]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
-mesh = SubResource("CylinderMesh_ewago")
+mesh = SubResource("BoxMesh_a4768")
+surface_material_override/0 = SubResource("StandardMaterial3D_xcoir")
 
 [node name="AppleSpawner" type="Node3D" parent="." unique_id=1511388824]
 script = ExtResource("2_spawner")
@@ -680,7 +698,10 @@ spawn_height = 23.0
 min_distance_between = 6.0
 
 [node name="Milo_Animations" parent="." unique_id=1929992946 instance=ExtResource("61_krhoc")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 90, 20, -9)
+transform = Transform3D(-0.3472964, 0, -1.9696155, 0, 2, 0, 1.9696155, 0, -0.3472964, 100, 20, -9)
+
+[node name="Father_Animations2" parent="." unique_id=742864976 instance=ExtResource("62_a4768")]
+transform = Transform3D(1.5695528, 0, -1.239558, 0, 2, 0, 1.239558, 0, 1.5695528, 90, 20, -70)
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]

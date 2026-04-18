@@ -5,6 +5,8 @@ extends Node3D
 
 var player_in_range = false
 var chatbot_ui = null
+var wave_timer := 0.0 # Timer for Milo's waving
+var first_wave = false
 
 func look_at_player(delta):
 	var target_pos = player.global_transform.origin
@@ -15,7 +17,7 @@ func look_at_player(delta):
 	rotation.y = lerp_angle(rotation.y, rotation_y, 5.0 * delta)
 
 func _ready():
-	anim_player.play("Walking")
+	anim_player.play("Idle_3")
 
 func _on_area_3d_player_nearby(body):
 	if body != null:
@@ -24,10 +26,27 @@ func _on_area_3d_player_nearby(body):
 	else:
 		player_in_range = false
 		#end_interaction() #To be implemented
+		
+func _on_area_3d_player_exited(body):
+	if body == player:
+		player_in_range = false
+		wave_timer = 0.0
+		anim_player.play("Idle_3")
 
 func _process(delta):
 	if player_in_range:
 		look_at_player(delta)
+		
+		if not first_wave:
+			anim_player.play("Wave_One_Hand")
+			wave_timer = 0.0
+			first_wave = true
+		
+		wave_timer += delta
+		if wave_timer >= 5.0 and not player.interacting:
+			anim_player.play("Wave_One_Hand")
+			wave_timer = 0.0
+		
 		
 		if Input.is_action_just_pressed("interact"):
 			open_chatbot()
