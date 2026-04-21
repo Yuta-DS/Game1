@@ -112,6 +112,11 @@ pointing/emulate_touch_from_mouse=true
 
 locale/translations_pot_files=PackedStringArray("res://dialogue/HubworldDialogue.dialogue", "res://assets/dialogue/main.dialogue", "res://dialogue/main.dialogue")
 
+[layer_names]
+
+3d_physics/layer_2="Grass"
+3d_physics/layer_3="Sand"
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

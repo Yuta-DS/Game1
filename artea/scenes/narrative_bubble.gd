@@ -9,4 +9,4 @@ func _ready():
 	var player_name = Global.current_user_name
 	
 	if message_label:
-		message_label.text = "Welcome, " + player_name + ". Your journey through Artéa begins now."
+		message_label.text = "Welcome Seeker, " + player_name + ". Your journey through Artéa begins now."
