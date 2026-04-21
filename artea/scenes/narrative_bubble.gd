@@ -1,12 +1,12 @@
 extends Sprite3D
 
-@export var float_speed := 2.0
-@export var float_amplitude := 0.1
+@onready var message_label = $Label3D
 
-var time := 0.0
-@onready var start_y = position.y
-
-func _process(delta):
-	time += delta
-	# This creates a smooth bobbing motion
-	position.y = start_y + sin(time * float_speed) * float_amplitude
+func _ready():
+	await get_tree().process_frame
+	
+	# Pull from the pre-existing global variable
+	var player_name = Global.current_user_name
+	
+	if message_label:
+		message_label.text = "Welcome, " + player_name + ". Your journey through Artéa begins now."
