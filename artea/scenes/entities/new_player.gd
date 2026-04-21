@@ -3,6 +3,9 @@ extends CharacterBody3D
 # --- AUDIO NODES ---
 @onready var footstep_player = $FootstepPlayer
 
+# --- UI / DEBUG NODES ---
+@onready var debug_coords = $CanvasLayer/DebugCoords 
+
 # --- JUMP VARIABLES ---
 @export var jump_height : float = 2.25
 @export var jump_time_to_peak : float = 0.4
@@ -32,23 +35,25 @@ func _ready() -> void:
 	if inventory_data and inventory_gui:
 		inventory_gui.set_inventory_data(inventory_data)
 		print("Inventory initialized successfully")
-		print("Inventory has ", inventory_data.slot_Data.size(), " slots")
 	else:
 		print("WARNING: Inventory not initialized!")
 
 func _input(event: InputEvent) -> void:
 	# Toggle inventory with I key
 	if event.is_action_pressed("toggle_Inventory"):
-		print("I key pressed! inventory_gui exists: ", inventory_gui != null)
 		if inventory_gui:
-			print("Toggling inventory visibility")
 			inventory_gui.toggle_visibility()
-		else:
-			print("ERROR: inventory_gui is null!")
 
 func _physics_process(delta: float) -> void:
 	moveLogic(delta)
 	jumpLogic(delta)
+	
+	# --- DEBUG COORDINATE UPDATE ---
+	# We snap the numbers to 1 decimal place so they are easy to read
+	if debug_coords:
+		var pos = global_position
+		debug_coords.text = "X: %.1f | Y: %.1f | Z: %.1f" % [pos.x, pos.y, pos.z]
+	
 	move_and_slide()
 
 func jumpLogic(delta) -> void:
@@ -74,18 +79,14 @@ func moveLogic(delta) -> void:
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
 		
-		# SET ANIMATION
 		$RogueSkin/AnimationPlayer.current_animation = 'Run'
 		
-		# --- FOOTSTEP AUDIO START ---
-		# Only play if the player is actually touching the ground
+		# --- FOOTSTEP AUDIO ---
 		if is_on_floor():
 			if not footstep_player.playing:
 				footstep_player.play()
 		else:
-			# Stop footsteps if we jump or fall
 			footstep_player.stop()
-		# --- FOOTSTEP AUDIO END ---
 
 		var targetAngle = -movementInput.angle() + PI/2
 		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
@@ -93,38 +94,10 @@ func moveLogic(delta) -> void:
 		velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
-		
-		# SET ANIMATION
 		$RogueSkin/AnimationPlayer.current_animation = 'Idle'
-		
-		# --- STOP FOOTSTEPS ---
-		# Stop sound when we are standing still
 		footstep_player.stop()
 
 func collect_item(item: itemData) -> bool:
-	if inventory_data == null:
-		print("ERROR: inventory_data is null!")
-		return false
-	
-	if item.stackable:
-		for slot in inventory_data.slot_Data:
-			if slot != null and slot.item_Data != null:
-				if slot.item_Data.name == item.name:
-					slot.quantity += 1
-					if inventory_gui:
-						inventory_gui.refresh_slots()
-					return true
-	
-	for i in range(inventory_data.slot_Data.size()):
-		if inventory_data.slot_Data[i] == null:
-			var new_slot = slotData.new()
-			new_slot.item_Data = item
-			new_slot.quantity = 1
-			inventory_data.slot_Data[i] = new_slot
-			if inventory_gui:
-				inventory_gui.refresh_slots()
-			return true
-	
 	return false
 	
 func NewPlayer():
