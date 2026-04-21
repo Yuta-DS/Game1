@@ -30,3 +30,14 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
 
 [node name="FootstepPlayer" type="AudioStreamPlayer3D" parent="." unique_id=638396720]
 stream = ExtResource("6_6joo3")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1119461583]
+
+[node name="DebugCoords" type="Label" parent="CanvasLayer" unique_id=1288423175]
+offset_left = 56.0
+offset_top = 46.0
+offset_right = 349.0
+offset_bottom = 170.0
+text = "
+
+"

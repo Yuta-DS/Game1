@@ -54,10 +54,18 @@ shader_parameter/color4 = Color(0, 0.267, 1, 1)
 mesh = SubResource("PlaneMesh_4nnwq")
 surface_material_override/0 = SubResource("ShaderMaterial_7edey")
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer3D" parent="." unique_id=1225712760]
+[node name="Ocean Sound" type="AudioStreamPlayer3D" parent="." unique_id=1225712760]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, 100)
 stream = ExtResource("2_vwe2q")
 volume_db = -8.0
-unit_size = 20.0
+unit_size = 70.0
 autoplay = true
-max_distance = 30.0
+max_distance = 100.0
+
+[node name="Ocean Sound 2" type="AudioStreamPlayer3D" parent="." unique_id=1686613485]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, 88)
+stream = ExtResource("2_vwe2q")
+volume_db = -8.0
+unit_size = 70.0
+autoplay = true
+max_distance = 100.0
