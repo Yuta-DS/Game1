@@ -61,6 +61,10 @@
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
 [ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="61_krhoc"]
 [ext_resource type="PackedScene" uid="uid://b1d3rlknpgaj3" path="res://scenes/everlasting_father_animations.tscn" id="62_a4768"]
+[ext_resource type="PackedScene" uid="uid://7xbyv6flli6r" path="res://scenes/knight_animations.tscn" id="62_xcoir"]
+[ext_resource type="PackedScene" uid="uid://bkm1ymlapx10o" path="res://scenes/rogue_animations.tscn" id="63_xcoir"]
+[ext_resource type="PackedScene" uid="uid://dlvg1cesiihwf" path="res://scenes/barbarian_animations.tscn" id="64_wqglp"]
+[ext_resource type="PackedScene" uid="uid://c080vovqsegsq" path="res://scenes/mage_animations.tscn" id="65_clm5u"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -153,14 +157,14 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_a4768"]
+[sub_resource type="Resource" id="Resource_4y8xt"]
 script = ExtResource("15_o1ycd")
 amount = 60500
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_xcoir"]
+[sub_resource type="Resource" id="Resource_1fv2d"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
@@ -168,25 +172,25 @@ scale = Vector3(0.1, 0.1, 0.1)
 override_global_seed = true
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_8kope"]
+[sub_resource type="Resource" id="Resource_yieqa"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_wqglp"]
+[sub_resource type="Resource" id="Resource_he78i"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_clm5u"]
+[sub_resource type="Resource" id="Resource_xrdtn"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_4y8xt"]
+[sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_a4768"), SubResource("Resource_xcoir"), SubResource("Resource_8kope"), SubResource("Resource_wqglp"), SubResource("Resource_clm5u")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_4y8xt"), SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i"), SubResource("Resource_xrdtn")])
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
 
@@ -251,38 +255,38 @@ thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
-[sub_resource type="Resource" id="Resource_1fv2d"]
+[sub_resource type="Resource" id="Resource_462mr"]
 script = ExtResource("15_o1ycd")
 amount = 188
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_yieqa"]
+[sub_resource type="Resource" id="Resource_e81s8"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_he78i"]
+[sub_resource type="Resource" id="Resource_v5xqt"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_xrdtn"]
+[sub_resource type="Resource" id="Resource_13iw3"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_m45cy"]
+[sub_resource type="Resource" id="Resource_vqqxb"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_462mr"]
+[sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i"), SubResource("Resource_xrdtn"), SubResource("Resource_m45cy")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_462mr"), SubResource("Resource_e81s8"), SubResource("Resource_v5xqt"), SubResource("Resource_13iw3"), SubResource("Resource_vqqxb")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -300,7 +304,10 @@ emission = Color(1, 0.9019608, 0.5882353, 1)
 emission_energy_multiplier = 2.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a4768"]
+transparency = 1
+albedo_color = Color(1, 0.8745098, 0.47058824, 1)
 emission_enabled = true
+emission = Color(1, 0.9019608, 0.5882353, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_a4768"]
 
@@ -399,7 +406,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment" unique_id=831708743]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_4y8xt")
+modifier_stack = SubResource("Resource_m45cy")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -434,7 +441,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_462mr")
+modifier_stack = SubResource("Resource_nfeeq")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -657,15 +664,15 @@ mesh = SubResource("BoxMesh_ewago")
 surface_material_override/0 = SubResource("StandardMaterial3D_krhoc")
 
 [node name="Drawing_Tool" type="Area3D" parent="." unique_id=1110659011]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 93.38989, 16.04015, 16)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 58.8, 16, -43)
 script = ExtResource("56_kl01c")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Drawing_Tool" unique_id=1516364125]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -8.634949, 11.478767, 19.856232)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Drawing_Tool" unique_id=517840038]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -8.9, 10.652, 19.856)
 mesh = SubResource("BoxMesh_ewago")
 surface_material_override/0 = SubResource("StandardMaterial3D_a4768")
 
@@ -702,6 +709,18 @@ transform = Transform3D(-0.3472964, 0, -1.9696155, 0, 2, 0, 1.9696155, 0, -0.347
 
 [node name="Father_Animations2" parent="." unique_id=742864976 instance=ExtResource("62_a4768")]
 transform = Transform3D(1.5695528, 0, -1.239558, 0, 2, 0, 1.239558, 0, 1.5695528, 90, 20, -70)
+
+[node name="Knight2" parent="." unique_id=668042314 instance=ExtResource("62_xcoir")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 20, -50)
+
+[node name="Rogue" parent="." unique_id=1520299301 instance=ExtResource("63_xcoir")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 20, -50)
+
+[node name="Barbarian" parent="." unique_id=172103663 instance=ExtResource("64_wqglp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 20, -45)
+
+[node name="Mage" parent="." unique_id=460202447 instance=ExtResource("65_clm5u")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 20, -45)
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
