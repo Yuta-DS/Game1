@@ -1,7 +1,8 @@
+# April 2026 - Complete pop thoughts menu and 3D clouds
 extends Control
 
 func _on_play_pressed():
-	get_tree().change_scene_to_file("res://scenes/cloud_pop_ui.tscn")
+	get_tree().change_scene_to_file("res://scenes/cloud_pop_3d.tscn")
 	
 func _on_instructions_pressed():
 	$CenterContainer.visible = false

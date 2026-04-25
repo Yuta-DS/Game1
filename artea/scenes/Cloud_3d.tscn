@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://dtjt717ak7rcx"]
+
+[ext_resource type="Script" uid="uid://cnqbl1xaj8j4e" path="res://scenes/cloud_3d.gd" id="1_q6d06"]
+[ext_resource type="Texture2D" uid="uid://dt8rbii4yqa03" path="res://scenes/cloud_white.png" id="2_3287l"]
+[ext_resource type="QuadMesh" uid="uid://bcdilut4fume4" path="res://ParticleMesh.tres" id="2_lft4b"]
+
+[sub_resource type="Gradient" id="Gradient_lft4b"]
+offsets = PackedFloat32Array(0, 0.3671875, 1)
+colors = PackedColorArray(0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_jc430"]
+gradient = SubResource("Gradient_lft4b")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_3287l"]
+spread = 180.0
+initial_velocity_min = 10.0
+initial_velocity_max = 30.0
+scale_min = 0.19999999
+scale_max = 0.5
+color_ramp = SubResource("GradientTexture1D_jc430")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3287l"]
+size = Vector3(2.5, 2.5, 0.5)
+
+[node name="Cloud3d" type="Node3D" unique_id=955006249]
+script = ExtResource("1_q6d06")
+
+[node name="CloudLabel" type="Label3D" parent="." unique_id=891207686]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
+billboard = 1
+modulate = Color(0, 0.03529412, 0.2627451, 1)
+font_size = 200
+outline_size = 6
+
+[node name="Sparkles" type="GPUParticles3D" parent="." unique_id=3725241]
+emitting = false
+amount = 150
+one_shot = true
+speed_scale = 5.0
+explosiveness = 0.5
+randomness = 0.5
+process_material = SubResource("ParticleProcessMaterial_3287l")
+draw_pass_1 = ExtResource("2_lft4b")
+
+[node name="CLoudMesh" type="Sprite3D" parent="." unique_id=849224316]
+pixel_size = 0.05
+billboard = 1
+alpha_cut = 1
+texture = ExtResource("2_3287l")
+
+[node name="ClickArea" type="Area3D" parent="." unique_id=789959477]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ClickArea" unique_id=2044776463]
+shape = SubResource("BoxShape3D_3287l")
