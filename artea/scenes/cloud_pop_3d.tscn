@@ -1,0 +1,131 @@
+[gd_scene format=3 uid="uid://2pi2hghv5wfm"]
+
+[ext_resource type="Script" uid="uid://csqtbu457hur7" path="res://scripts/cloud_pop_ui.gd" id="1_4xkxp"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="1_bq4c8"]
+[ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.mp3" id="2_4xkxp"]
+
+[sub_resource type="Environment" id="Environment_4xkxp"]
+background_mode = 1
+background_color = Color(0.7490196, 0.8784314, 1, 1)
+
+[node name="CloudPop3d" type="Node3D" unique_id=408390137]
+
+[node name="Camera" type="Camera3D" parent="." unique_id=488359440]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 2, 8)
+current = true
+
+[node name="CloudSpawner3D" type="Node3D" parent="." unique_id=1234143181]
+
+[node name="CanvasLayer2" type="CanvasLayer" parent="." unique_id=1609967894]
+script = ExtResource("1_4xkxp")
+
+[node name="UIControl" type="Control" parent="CanvasLayer2" unique_id=195048533]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="CanvasLayer2/UIControl" unique_id=265104214]
+custom_minimum_size = Vector2(1152, 648)
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.00125291
+
+[node name="VSplitContainer" type="VSplitContainer" parent="CanvasLayer2/UIControl/CenterContainer" unique_id=795809873]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer" unique_id=1635046339]
+layout_mode = 2
+
+[node name="Line Edit" type="LineEdit" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control" unique_id=878750469]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -98.207184
+offset_top = 165.68024
+offset_right = 551.79285
+offset_bottom = 223.68024
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_stretch_ratio = 0.0
+theme_override_fonts/font = ExtResource("1_bq4c8")
+theme_override_font_sizes/font_size = 50
+placeholder_text = "What are your thoughts?"
+alignment = 1
+max_length = 60
+expand_to_text_length = true
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control" unique_id=539763262]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.78431374, 1, 1, 1)
+
+[node name="Control2" type="Control" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer" unique_id=449600196]
+layout_mode = 2
+
+[node name="Create Cloud" type="Button" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control2" unique_id=872986909]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -16.361328
+offset_top = 276.78284
+offset_right = 135.63867
+offset_bottom = 324.78284
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("1_bq4c8")
+theme_override_font_sizes/font_size = 40
+text = "Add Cloud"
+
+[node name="Pop Thoughts" type="Button" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control2" unique_id=1322770943]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 266.6347
+offset_top = 280.13736
+offset_right = 498.6347
+offset_bottom = 328.13736
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("1_bq4c8")
+theme_override_font_sizes/font_size = 40
+text = "Start Popping!"
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="CanvasLayer2/UIControl" unique_id=1743346761]
+stream = ExtResource("2_4xkxp")
+pitch_scale = 1.29
+
+[node name="ErrorLabel" type="Label" parent="CanvasLayer2/UIControl" unique_id=1241539182]
+layout_mode = 0
+offset_left = 257.0
+offset_top = 32.0
+offset_right = 1069.0
+offset_bottom = 102.0
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0.747449, 0.582691, 0.201977, 1)
+theme_override_constants/shadow_outline_size = 6
+theme_override_fonts/font = ExtResource("1_bq4c8")
+theme_override_font_sizes/font_size = 70
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1632356855]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 10)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=866622050]
+environment = SubResource("Environment_4xkxp")
