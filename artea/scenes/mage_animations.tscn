@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://c080vovqsegsq"]
 
 [ext_resource type="PackedScene" uid="uid://cbkqe7o8qln37" path="res://assets3D/characters/Mage.glb" id="1_p7h85"]
+[ext_resource type="Script" uid="uid://c1s58iloqk6v" path="res://scripts/knight_animations.gd" id="2_mkn1r"]
 
 [node name="Mage" unique_id=460202447 instance=ExtResource("1_p7h85")]
+script = ExtResource("2_mkn1r")
 
 [node name="Skeleton3D" parent="Rig" parent_id_path=PackedInt32Array(923466323) index="0" unique_id=1280545305]
 bones/1/position = Vector3(0, 0.39206383, 0)
