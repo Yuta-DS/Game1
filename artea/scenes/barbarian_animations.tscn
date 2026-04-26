@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://dlvg1cesiihwf"]
 
 [ext_resource type="PackedScene" uid="uid://cm0pkn5kkravp" path="res://assets3D/characters/Barbarian.glb" id="1_gbgvm"]
+[ext_resource type="Script" uid="uid://c1s58iloqk6v" path="res://scripts/knight_animations.gd" id="2_2f8uo"]
 
 [node name="Barbarian" unique_id=172103663 instance=ExtResource("1_gbgvm")]
+script = ExtResource("2_2f8uo")
 
 [node name="Skeleton3D" parent="Rig" parent_id_path=PackedInt32Array(997577290) index="0" unique_id=1885786743]
 bones/1/position = Vector3(0, 0.39206383, 0)
