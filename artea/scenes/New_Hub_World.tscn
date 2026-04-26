@@ -157,14 +157,14 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_4y8xt"]
+[sub_resource type="Resource" id="Resource_wqglp"]
 script = ExtResource("15_o1ycd")
 amount = 60500
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_1fv2d"]
+[sub_resource type="Resource" id="Resource_clm5u"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
@@ -172,25 +172,25 @@ scale = Vector3(0.1, 0.1, 0.1)
 override_global_seed = true
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_yieqa"]
+[sub_resource type="Resource" id="Resource_4y8xt"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_he78i"]
+[sub_resource type="Resource" id="Resource_1fv2d"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_xrdtn"]
+[sub_resource type="Resource" id="Resource_yieqa"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_m45cy"]
+[sub_resource type="Resource" id="Resource_he78i"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_4y8xt"), SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i"), SubResource("Resource_xrdtn")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_wqglp"), SubResource("Resource_clm5u"), SubResource("Resource_4y8xt"), SubResource("Resource_1fv2d"), SubResource("Resource_yieqa")])
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
 
@@ -255,38 +255,38 @@ thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
-[sub_resource type="Resource" id="Resource_462mr"]
+[sub_resource type="Resource" id="Resource_xrdtn"]
 script = ExtResource("15_o1ycd")
 amount = 188
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_e81s8"]
+[sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_v5xqt"]
+[sub_resource type="Resource" id="Resource_462mr"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_13iw3"]
+[sub_resource type="Resource" id="Resource_e81s8"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_vqqxb"]
+[sub_resource type="Resource" id="Resource_v5xqt"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_nfeeq"]
+[sub_resource type="Resource" id="Resource_13iw3"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_462mr"), SubResource("Resource_e81s8"), SubResource("Resource_v5xqt"), SubResource("Resource_13iw3"), SubResource("Resource_vqqxb")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_xrdtn"), SubResource("Resource_m45cy"), SubResource("Resource_462mr"), SubResource("Resource_e81s8"), SubResource("Resource_v5xqt")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -406,7 +406,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment" unique_id=831708743]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_m45cy")
+modifier_stack = SubResource("Resource_he78i")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -441,7 +441,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_nfeeq")
+modifier_stack = SubResource("Resource_13iw3")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -536,6 +536,7 @@ transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 109
 script = ExtResource("33_fn4xt")
 
 [node name="Pop Thoughts" type="Button" parent="Environment/Thoughts" unique_id=1045586346]
+visible = false
 offset_left = 36.0
 offset_top = 50.0
 offset_right = 183.0
@@ -548,6 +549,7 @@ expand_icon = true
 script = ExtResource("35_wlotw")
 
 [node name="Paint" type="Button" parent="Environment/Drawing" unique_id=1271550632]
+visible = false
 offset_left = 41.0
 offset_top = 246.0
 offset_right = 190.0
@@ -562,6 +564,7 @@ script = ExtResource("36_xibjn")
 [node name="CanvasLayer" type="CanvasLayer" parent="Environment/ArtGalleryButton" unique_id=1414242755]
 
 [node name="Button" type="Button" parent="Environment/ArtGalleryButton/CanvasLayer" unique_id=662237871]
+visible = false
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
@@ -648,6 +651,7 @@ transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829,
 
 [node name="Knight" parent="." unique_id=508996376 instance=ExtResource("48_kjbyn")]
 transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -34.4799, 30.6393, 36.7945)
+visible = false
 
 [node name="Art_Gallery" type="Area3D" parent="." unique_id=1255044157]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -255, 41, 22.7)
@@ -711,16 +715,16 @@ transform = Transform3D(-0.3472964, 0, -1.9696155, 0, 2, 0, 1.9696155, 0, -0.347
 transform = Transform3D(1.5695528, 0, -1.239558, 0, 2, 0, 1.239558, 0, 1.5695528, 90, 20, -70)
 
 [node name="Knight2" parent="." unique_id=668042314 instance=ExtResource("62_xcoir")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 20, -50)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 35, 20)
 
 [node name="Rogue" parent="." unique_id=1520299301 instance=ExtResource("63_xcoir")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 20, -50)
+transform = Transform3D(-0.295708, 0, -0.9552784, 0, 1, 0, 0.9552784, 0, -0.295708, 10, 23.5, 4)
 
 [node name="Barbarian" parent="." unique_id=172103663 instance=ExtResource("64_wqglp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 20, -45)
+transform = Transform3D(-0.295708, 0, 0.9552784, 0, 1, 0, -0.9552784, 0, -0.295708, 57, 20, -31)
 
 [node name="Mage" parent="." unique_id=460202447 instance=ExtResource("65_clm5u")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 20, -45)
+transform = Transform3D(0.7847764, 0, 0.619779, 0, 1, 0, -0.619779, 0, 0.7847764, 59, 20, -49)
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
