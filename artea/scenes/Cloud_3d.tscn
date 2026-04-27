@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cnqbl1xaj8j4e" path="res://scenes/cloud_3d.gd" id="1_q6d06"]
 [ext_resource type="QuadMesh" uid="uid://bcdilut4fume4" path="res://ParticleMesh.tres" id="2_lft4b"]
 [ext_resource type="Texture2D" uid="uid://b6klow8fcswc7" path="res://scenes/Pastel_cloud.png" id="3_lft4b"]
+[ext_resource type="AudioStream" uid="uid://c3eb87lo1ufwq" path="res://assets/audio/Pop_sound.wav" id="4_jc430"]
 
 [sub_resource type="Gradient" id="Gradient_lft4b"]
 offsets = PackedFloat32Array(0, 0.3671875, 1)
@@ -52,3 +53,6 @@ texture = ExtResource("3_lft4b")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ClickArea" unique_id=2044776463]
 shape = SubResource("BoxShape3D_3287l")
+
+[node name="PopSound" type="AudioStreamPlayer3D" parent="." unique_id=1736505062]
+stream = ExtResource("4_jc430")

@@ -66,6 +66,7 @@ func check_click():
 	pop_cloud()
 
 func pop_cloud():
+	$PopSound.play()
 	print("=== POP_CLOUD CALLED ===")
 	
 	var sprite = $CloudMesh
