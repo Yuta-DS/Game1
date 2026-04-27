@@ -61,16 +61,22 @@ func _on_pop_thoughts_pressed():
 
 func _init_cloud_positions():
 	available_positions.clear()
-	var total_width = grid_columns * cell_size_3d.x
-	var total_height = grid_rows * cell_size_3d.y
-	var origin = Vector2(-total_width / 2.0, total_height / 2.0)
-	for row in range(grid_rows):
-		for col in range(grid_columns):
-			var pos = Vector2(
-				origin.x + col * cell_size_3d.x,
-				origin.y - row * cell_size_3d.y
-			)
-			available_positions.append(pos)
+	
+	# Mix of positions - some high, some middle, some low
+	var positions = [
+		# Top positions (sky)
+		Vector2(-3, 5), Vector2(0, 5), Vector2(3, 5),
+		Vector2(-2, 4.5), Vector2(2, 4.5),
+		# Middle positions
+		Vector2(-3, 3), Vector2(0, 3), Vector2(3, 3),
+		Vector2(-2, 2.5), Vector2(2, 2.5),
+		# Bottom positions (above ground)
+		Vector2(-3, 1.5), Vector2(0, 1.5), Vector2(3, 1.5),
+		Vector2(-2, 1), Vector2(2, 1),
+	]
+	
+	for pos in positions:
+		available_positions.append(pos)
 	available_positions.shuffle()
 
 func spawn_cloud(text: String):

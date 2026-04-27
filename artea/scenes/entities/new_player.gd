@@ -18,7 +18,6 @@ extends CharacterBody3D
 @onready var camera = $CameraController/Camera3D
 
 var movementInput := Vector2.ZERO
-var interacting: bool = false
 
 func _ready() -> void:
 	# Initialize inventory
@@ -36,22 +35,14 @@ func _ready() -> void:
 		print("WARNING: Inventory not initialized!")
 
 func _input(event: InputEvent) -> void:
-		# Toggle inventory with I key
-		if event.is_action_pressed("toggle_Inventory"):
-			print("I key pressed! inventory_gui exists: ", inventory_gui != null)
-			_on_inventory_pressed()
-				
-# Inventory button handling during chat
-func _on_inventory_pressed() -> void:
-	if interacting:
-		return
-	if inventory_gui:
-		inventory_gui.toggle_visibility()
-		print("Toggled inventory visibility")
-		
-	else:
-		print("ERROR: inventory_gui is null!")
-	
+	# Toggle inventory with I key
+	if event.is_action_pressed("toggle_Inventory"):
+		print("I key pressed! inventory_gui exists: ", inventory_gui != null)
+		if inventory_gui:
+			print("Toggling inventory visibility")
+			inventory_gui.toggle_visibility()
+		else:
+			print("ERROR: inventory_gui is null!")
 
 func _physics_process(delta: float) -> void:
 	
@@ -63,8 +54,7 @@ func _physics_process(delta: float) -> void:
 
 func jumpLogic(delta) -> void:
 	if is_on_floor():
-		#if Input.is_action_just_pressed("jump"):
-		if not interacting and Input.is_action_just_pressed("jump"):
+		if Input.is_action_just_pressed("jump"):
 			velocity.y = -jump_velocity
 	else:
 		$RogueSkin/AnimationPlayer.current_animation = 'Jump'
@@ -77,13 +67,6 @@ func jumpLogic(delta) -> void:
 
 	
 func moveLogic(delta) -> void:
-	
-		if interacting:
-			velocity.x = 0
-			velocity.z = 0
-			$RogueSkin/AnimationPlayer.current_animation = 'Idle'
-			return
-	
 		movementInput = Input.get_vector("move_left", "move_right", "move_forward", "move_backward").rotated(-camera.global_rotation.y)
 		var velocity2D = Vector2(velocity.x, velocity.z)
 		var isRunning: bool = Input.is_action_pressed("run")
