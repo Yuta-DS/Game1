@@ -3,15 +3,39 @@
 [ext_resource type="Script" uid="uid://csqtbu457hur7" path="res://scripts/cloud_pop_ui.gd" id="1_4xkxp"]
 [ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="1_bq4c8"]
 [ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.mp3" id="2_4xkxp"]
+[ext_resource type="PackedScene" uid="uid://duelwtfern64x" path="res://assets3D/kkNatureForest/gltf/Tree_1_A_Color1.gltf" id="4_bjlxx"]
+[ext_resource type="AudioStream" uid="uid://cy3l3avm3i36h" path="res://assets/audio/Beautiful Piano Music.mp3" id="6_utney"]
+[ext_resource type="PackedScene" uid="uid://xen2qn2unprq" path="res://assets3D/houses/gltf/house.gltf" id="7_f75l6"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_4xkxp"]
+sky_top_color = Color(0.85430586, 0.7977378, 0.95468724, 1)
+sky_horizon_color = Color(1, 0.90588236, 0.79607844, 1)
+ground_bottom_color = Color(0.735357, 0.9063318, 0.7977378, 1)
+sun_angle_max = 76.36
+energy_multiplier = 0.8
+
+[sub_resource type="Sky" id="Sky_bjlxx"]
+sky_material = SubResource("ProceduralSkyMaterial_4xkxp")
 
 [sub_resource type="Environment" id="Environment_4xkxp"]
-background_mode = 1
+background_mode = 2
 background_color = Color(0.7490196, 0.8784314, 1, 1)
+sky = SubResource("Sky_bjlxx")
+fog_light_color = Color(0.85430586, 0.9063318, 0.95468724, 1)
+fog_density = 0.02
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4xkxp"]
+transparency = 1
+albedo_color = Color(0.6651851, 0.85430586, 0.6651851, 0)
+roughness = 0.9
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_bjlxx"]
+size = Vector2(30, 30)
 
 [node name="CloudPop3d" type="Node3D" unique_id=408390137]
 
 [node name="Camera" type="Camera3D" parent="." unique_id=488359440]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 2, 8)
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 4, 12)
 current = true
 
 [node name="CloudSpawner3D" type="Node3D" parent="." unique_id=1234143181]
@@ -125,7 +149,41 @@ theme_override_fonts/font = ExtResource("1_bq4c8")
 theme_override_font_sizes/font_size = 70
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1632356855]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4217868, 6.4793773, 9.929048)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=866622050]
 environment = SubResource("Environment_4xkxp")
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=450601963]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Ground" unique_id=1263919602]
+transform = Transform3D(0.99433476, 0, 0, 0, 0.99433476, 0, 0, 0, 0.99433476, 9.936065, -23.389652, -5.3964567)
+material_override = SubResource("StandardMaterial3D_4xkxp")
+mesh = SubResource("PlaneMesh_bjlxx")
+
+[node name="Tree_1_A_Color16" parent="." unique_id=1333644019 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, -5.3998575, -3.7730165, -4.728174)
+
+[node name="Tree_1_A_Color20" parent="." unique_id=1677671601 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, 14.735203, -3.1715574, -4.1592503)
+
+[node name="Tree_1_A_Color19" parent="." unique_id=1798944801 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, 3.5138874, -1.9219644, 4.1908092)
+
+[node name="Tree_1_A_Color15" parent="." unique_id=1189608371 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.358413, -1.9318151, 5.893061)
+
+[node name="Tree_1_A_Color17" parent="." unique_id=279593068 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.498391, -8.541709, -3.1209497)
+
+[node name="house2" parent="." unique_id=1794742014 instance=ExtResource("7_f75l6")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 10.860384, -5.723077, 1.3203268)
+
+[node name="house4" parent="." unique_id=593846449 instance=ExtResource("7_f75l6")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -8.233041, -6.4517336, -3.0385158)
+
+[node name="BackgroundMusic" type="AudioStreamPlayer3D" parent="." unique_id=2032062737]
+stream = ExtResource("6_utney")
+volume_db = -10.0
+autoplay = true
+parameters/looping = true

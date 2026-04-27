@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://dim1lk4t7o8jm"]
+[gd_scene format=3 uid="uid://dim1lk4t7o8jm"]
 
 [ext_resource type="Script" uid="uid://ceraljeha45mg" path="res://scripts/cloud.gd" id="1_vlwrh"]
 [ext_resource type="Texture2D" uid="uid://cp4773n5q1jft" path="res://assets/Clouds/Clouds2 V2.png" id="2_2kyfr"]
@@ -265,10 +265,10 @@ animations = [{
 radius = 20.6119
 height = 56.4489
 
-[node name="Cloud" type="Node2D"]
+[node name="Cloud" type="Node2D" unique_id=1834367360]
 script = ExtResource("1_vlwrh")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=491367565]
 scale = Vector2(3, 3)
 sprite_frames = SubResource("SpriteFrames_7wpt8")
 animation = &"forming"
@@ -276,7 +276,7 @@ autoplay = "forming"
 frame = 15
 frame_progress = 1.0
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=2043996355]
 offset_left = -73.0
 offset_top = 1.0
 offset_right = 77.0
@@ -292,18 +292,36 @@ autowrap_mode = 3
 justification_flags = 160
 language = "English"
 
-[node name="Area2D" type="Area2D" parent="."]
+[node name="Area2D" type="Area2D" parent="." unique_id=1983021468]
 position = Vector2(-17, 18)
 priority = 1
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1674852221]
 position = Vector2(4.76837e-07, 6)
 rotation = 1.58482
 scale = Vector2(3.20172, 3.36604)
 shape = SubResource("CapsuleShape2D_kyqpm")
 
-[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=381886168]
 stream = ExtResource("4_fubt3")
 volume_db = -15.0
+
+[node name="Particles" type="GPUParticles2D" parent="." unique_id=1767677945]
+amount = 15
+lifetime = 1.5
+speed_scale = 5.0
+
+[node name="Sparkles" type="CPUParticles2D" parent="." unique_id=1649269046]
+emitting = false
+amount = 20
+lifetime = 0.5
+one_shot = true
+speed_scale = 10.0
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 50.0
+initial_velocity_max = 50.0
+scale_amount_min = 0.1
 
 [connection signal="input_event" from="Area2D" to="." method="_on_area_2d_input_event"]

@@ -26,9 +26,9 @@ func _setup():
 		length = 1
 	
 	# 1. CLOUD SIZE - MUCH SMALLER
-	var new_scale = 0.1 + (length * 0.0015)
-	if new_scale > 0.25:
-		new_scale = 0.25
+	var new_scale = 0.1 + (length * 0.0012)
+	if new_scale > 0.2:
+		new_scale = 0.2
 	scale = Vector3(new_scale, new_scale, new_scale)
 	
 	# 2. TEXT - MUCH BIGGER
@@ -40,18 +40,23 @@ func _setup():
 		label.outline_modulate = Color(1, 1, 1, 1)
 		label.billboard = 1
 		label.position = Vector3(0, 0, 0.2)
+		
 	
 	# 3. COLORS
 	if sprite:
-		var colors = [
-			Color(1.0, 0.6, 0.6),
-			Color(0.6, 1.0, 0.6),
-			Color(0.6, 0.6, 1.0),
-			Color(1.0, 0.7, 0.4),
-			Color(0.8, 0.5, 1.0),
-			Color(0.5, 1.0, 0.7),
-		]
-		sprite.modulate = colors[randi() % colors.size()]
+		# Force bright red - TEST ONLY
+		sprite.modulate = Color(1.0, 0.0, 0.0)
+		print("DEBUG: Cloud color set to RED")
+	
+		#var colors = [
+			#Color(1.0, 0.6, 0.6),
+			#Color(0.6, 1.0, 0.6),
+			#Color(0.6, 0.6, 1.0),
+			#Color(1.0, 0.7, 0.4),
+			#Color(0.8, 0.5, 1.0),
+			#Color(0.5, 1.0, 0.7),
+		#]
+		#sprite.modulate = colors[randi() % colors.size()]
 		sprite.pixel_size = 0.06
 	
 	print("DEBUG: Text length: ", length, " Cloud scale: ", new_scale)

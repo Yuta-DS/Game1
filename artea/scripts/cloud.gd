@@ -32,22 +32,68 @@ func _ready():
 	
 	
 	label.text = thought_text		# Assign the thought message
-	label.add_theme_color_override("font_color", get_vivid_color())
+	var cloud_color = get_vivid_color()
+	label.add_theme_color_override("font_color", get_text_color(cloud_color))
 	
-	label.add_theme_constant_override("shadow_offset_x", 2)
-	label.add_theme_constant_override("shadow_offset_y", 2)
-	label.add_theme_color_override("shadow_color", Color(0, 0, 0, 0.5))
+	sprite.modulate = cloud_color #Change the color of the cloud too.
+	
+	
+	
+	# ===== NEW CODE: SCALE CLOUD BASED ON TEXT LENGTH =====
+	# This makes longer thoughts create bigger clouds (F005 requirement)
+	var text_length = thought_text.length()
+	var new_scale = 0.8 + (text_length * 0.015)
+	
+	# Don't let it get too small or too big
+	if new_scale < 0.6:
+		new_scale = 0.6
+	if new_scale > 2.5:
+		new_scale = 2.5
+	
+	# Apply the scale
+	scale = Vector2(new_scale, new_scale)
+	# ===== END OF NEW CODE =====
+	
+	label.add_theme_constant_override("shadow_offset_x", 4)
+	label.add_theme_constant_override("shadow_offset_y", 4)
+	label.add_theme_color_override("shadow_color", Color(0, 0, 0, 0.8))
 	label.add_theme_color_override("font_outline_color", Color.WHITE)
-	label.add_theme_constant_override("outline_size", 2)
+	label.add_theme_constant_override("outline_size", 3)
 	add_to_group("active_clouds")
 	
+func set_thought(text):
+	thought_text = text
+	# Scale based on text length
+	var text_length = text.length()
+	var new_scale = 0.5 + (text_length * 0.04)
+	if new_scale < 0.4:
+		new_scale = 0.4
+	if new_scale > 3.5:
+		new_scale = 3.5
+	scale = Vector2(new_scale, new_scale)
+	
 func get_vivid_color() -> Color:
-	var allowed_hues = [0.0, 0.1, 0.15, 0.3, 0.55, 0.7, 0.85]  # Red, orange, pink, green, blue, violet
-	var hue = allowed_hues[randi() % allowed_hues.size()]
-	return Color.from_hsv(hue, 0.9, 1.0)
+	var pastel_colors = [
+		Color(1.0, 0.8, 0.8),  # Pastel pink
+		Color(0.8, 1.0, 0.8),  # Pastel green
+		Color(0.8, 0.8, 1.0),  # Pastel blue
+		Color(1.0, 1.0, 0.8),  # Pastel yellow
+		Color(1.0, 0.8, 1.0),  # Pastel purple
+		Color(0.8, 1.0, 1.0),  # Pastel mint
+	]
+	return pastel_colors[randi() % pastel_colors.size()]
+
+func get_text_color(cloud_color: Color) -> Color:
+	# If cloud is light, use dark text. If cloud is dark, use white text.
+	if cloud_color.r + cloud_color.g + cloud_color.b > 1.5:
+		return Color(0.2, 0.2, 0.2)  # Dark grey text for light clouds
+	else:
+		return Color(1.0, 1.0, 1.0)  # White text for dark clouds
 	
 # Cloud Pop behaviour
 func pop_cloud():
+	modulate = Color(1, 0.5, 0.5) #New line added for the color change when popping.
+	$Sparkles.emitting = true
 	sprite.play("popping")
 	cloudPoof.play()
 	await sprite.animation_finished
@@ -116,6 +162,7 @@ func _process(delta):
 	var new_position = position + move_direction * move_speed * delta
 	var will_hit_edge = false
 
+	label.rotation = sin(float_timer * 2) * 0.1
 	# X-axis boundary check
 	if new_position.x < 0:
 		new_position.x = lerp(0.0, position.x, edge_bounce_smoothness)
