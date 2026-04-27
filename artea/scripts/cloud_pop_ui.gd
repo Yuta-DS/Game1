@@ -118,9 +118,10 @@ func are_all_clouds_popped() -> bool:
 func cloud_popped():
 	print("=== CLOUD POPPED DEBUG ===")
 	print("popping_started: ", popping_started)
+	print("Clouds left: ", cloud_spawner.get_child_count())
 	print("are_all_clouds_popped: ", are_all_clouds_popped())
 	print("scene_changed: ", scene_changed)
-	print("Clouds remaining: ", cloud_spawner.get_child_count())
+	#print("Clouds remaining: ", cloud_spawner.get_child_count())
 	
 	if popping_started and are_all_clouds_popped() and not scene_changed:
 		print("SUCCESS: Loading completion screen!")
