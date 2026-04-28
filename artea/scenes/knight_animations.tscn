@@ -2,9 +2,14 @@
 
 [ext_resource type="PackedScene" uid="uid://dobjgeigqv7im" path="res://assets3D/characters/Knight.glb" id="1_ji1ti"]
 [ext_resource type="Script" uid="uid://c1s58iloqk6v" path="res://scripts/knight_animations.gd" id="2_dfrp1"]
+[ext_resource type="Script" uid="uid://cmibd6k0gwjah" path="res://scenes/chat_detection_area_3d.gd" id="3_mk07i"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_dfrp1"]
 
 [node name="Knight" unique_id=668042314 instance=ExtResource("1_ji1ti")]
 script = ExtResource("2_dfrp1")
+dialogue_start_title = null
+model_yaw_offset = null
 
 [node name="Skeleton3D" parent="Rig" parent_id_path=PackedInt32Array(2009606784) index="0" unique_id=653397969]
 bones/1/position = Vector3(0, 0.39206383, 0)
@@ -91,3 +96,14 @@ transform = Transform3D(0.9962748, -5.1496167e-09, 0.08623532, 5.1304343e-09, 0.
 
 [node name="AnimationPlayer" parent="." index="1" unique_id=904340691]
 autoplay = &"Idle"
+
+[node name="Area3D" type="Area3D" parent="." index="2" unique_id=926482106]
+transform = Transform3D(9, 0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 0)
+script = ExtResource("3_mk07i")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" index="0" unique_id=1435991755]
+transform = Transform3D(9, 0, 0, 0, 9, 0, 0, 0, 9, 0, 0, 0)
+shape = SubResource("SphereShape3D_dfrp1")
+
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_3d_body_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_3d_body_exited"]
