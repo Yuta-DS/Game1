@@ -17,9 +17,9 @@ extends CharacterBody3D
 @onready var jump_gravity : float = ((-2.0 * jump_height) / (jump_time_to_peak * jump_time_to_peak)) * -1.0
 @onready var fall_gravity : float = ((-2.0 * jump_height) / (jump_time_to_descent * jump_time_to_descent)) * -1.0
 
-# --- SPEED BOOSTED (FEEL THE DIFFERENCE) ---
-@export var baseSpeed := 12.0  # Was 8.0
-@export var runSpeed := 22.0   # Was 14.0
+# --- SPEED BOOSTED ---
+@export var baseSpeed := 12.0
+@export var runSpeed := 22.0
 
 # --- INVENTORY SYSTEM ---
 @export var inventory_data: inventoryData
@@ -27,6 +27,7 @@ extends CharacterBody3D
 @onready var camera = $CameraController/Camera3D
 
 var movementInput := Vector2.ZERO
+var interacting := false  # <--- CRITICAL FIX: This stops the Camera Controller error
 
 func _ready() -> void:
 	await get_tree().process_frame
@@ -35,11 +36,10 @@ func _ready() -> void:
 	
 	floor_detector.add_exception(self)
 	
-	# --- AUDIO OVERRIDE ---
 	if footstep_player is AudioStreamPlayer3D:
-		footstep_player.volume_db = 10.0 # Boost volume by 10 decibels
-		footstep_player.max_distance = 200.0 # Make it audible from far away
-		footstep_player.unit_size = 20.0 # Increases the "size" of the sound source
+		footstep_player.volume_db = 10.0
+		footstep_player.max_distance = 200.0
+		footstep_player.unit_size = 20.0
 
 func _physics_process(delta: float) -> void:
 	moveLogic(delta)
@@ -68,22 +68,19 @@ func moveLogic(delta) -> void:
 	
 	if movementInput != Vector2.ZERO:
 		var speed = runSpeed if isRunning else baseSpeed
-		velocity2D += movementInput * speed * delta * 8 # Snappier acceleration
+		velocity2D += movementInput * speed * delta * 8
 		velocity2D = velocity2D.limit_length(speed)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
 		
 		$RogueSkin/AnimationPlayer.current_animation = 'Run'
 		
-		# --- FOOTSTEP LOGIC ---
 		if is_on_floor():
 			if floor_detector.is_colliding():
 				var ground = floor_detector.get_collider()
-				
 				if ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface")):
 					if footstep_player.stream != sfx_grass:
 						footstep_player.stream = sfx_grass
-					
 					if not footstep_player.playing:
 						footstep_player.play()
 				else:
