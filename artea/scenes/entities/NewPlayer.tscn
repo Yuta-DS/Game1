@@ -42,5 +42,5 @@ text = "
 "
 
 [node name="FloorDetector" type="RayCast3D" parent="." unique_id=1675328953]
-target_position = Vector3(0, -2, 0)
-collision_mask = 7
+target_position = Vector3(0, -3.5, 0)
+collision_mask = 15
