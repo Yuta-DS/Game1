@@ -21,6 +21,9 @@ extends CharacterBody3D
 @export var baseSpeed := 12.0
 @export var runSpeed := 22.0
 
+# --- INTERACTION & GRASS FIX ---
+var interacting := false  # Critical fix for team's grass shader
+
 # --- INVENTORY SYSTEM ---
 @export var inventory_data: inventoryData
 @onready var inventory_gui: Control = $InventoryGUI
@@ -56,7 +59,8 @@ func jumpLogic(delta) -> void:
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = -jump_velocity
 	else:
-		$RogueSkin/AnimationPlayer.current_animation = 'Jump'
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'Jump'
 		
 	var gravity = jump_gravity if velocity.y > 0.0 else fall_gravity
 	velocity.y -= gravity * delta
@@ -73,22 +77,28 @@ func moveLogic(delta) -> void:
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
 		
-		$RogueSkin/AnimationPlayer.current_animation = 'Run'
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'Run'
 		
 		if is_on_floor():
 			if floor_detector.is_colliding():
 				var ground = floor_detector.get_collider()
 				if ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface")):
+				
+				# Check the collider or its parent for the grass group
+				var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
+				
+				if is_grass:
 					if footstep_player.stream != sfx_grass:
 						footstep_player.stream = sfx_grass
 					if not footstep_player.playing:
 						footstep_player.play()
 				else:
-					footstep_player.stop()
-			else:
-				footstep_player.stop()
+					if footstep_player.playing:
+						footstep_player.stop()
 		else:
-			footstep_player.stop()
+			if footstep_player.playing:
+				footstep_player.stop()
 
 		var targetAngle = -movementInput.angle() + PI/2
 		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
@@ -96,8 +106,10 @@ func moveLogic(delta) -> void:
 		velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
-		$RogueSkin/AnimationPlayer.current_animation = 'Idle'
-		footstep_player.stop()
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'Idle'
+		if footstep_player.playing:
+			footstep_player.stop()
 
-func collect_item(item: itemData) -> bool:
+func collect_item(_item: itemData) -> bool:
 	return false
