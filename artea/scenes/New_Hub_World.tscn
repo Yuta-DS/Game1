@@ -710,6 +710,7 @@ spawn_height = 23.0
 min_distance_between = 6.0
 
 [node name="Story_Intro_Spawn" parent="." unique_id=1554091635 instance=ExtResource("61_krhoc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.603652, 25.852982, 0.27523494)
 
 [node name="Milo_Animations" parent="." unique_id=1929992946 instance=ExtResource("62_milo")]
 transform = Transform3D(-0.3472964, 0, -1.9696155, 0, 2, 0, 1.9696155, 0, -0.3472964, 100, 20, -9)
