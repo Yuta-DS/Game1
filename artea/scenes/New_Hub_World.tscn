@@ -60,8 +60,7 @@
 [ext_resource type="Script" uid="uid://psrly1at8x5g" path="res://scripts/teleport_Art_Gallery.gd" id="55_njk6r"]
 [ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
-[ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="61_a4768"]
-[ext_resource type="Script" uid="uid://bet4qknmq15o3" path="res://scenes/narrative_bubble.gd" id="62_xcoir"]
+[ext_resource type="PackedScene" uid="uid://6obaxkmc212j" path="res://scenes/narrative_package.tscn" id="61_krhoc"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -679,27 +678,7 @@ collectible_scene = ExtResource("4_clam")
 spawn_height = 23.0
 min_distance_between = 6.0
 
-[node name="Story_Intro_Spawn" type="Label3D" parent="." unique_id=1649590757]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.352577, 25.852982, 1.8761172)
-billboard = 1
-no_depth_test = true
-modulate = Color(1, 0.95686275, 0.81960785, 1)
-outline_size = 20
-
-[node name="NarrativeBubble" type="Sprite3D" parent="Story_Intro_Spawn" unique_id=1227392259]
-transform = Transform3D(0.048518512, 0, -0.9988223, 0, 1, 0, 0.9988223, 0, 0.048518512, 0, 0, 0.023192167)
-billboard = 2
-texture = ExtResource("61_a4768")
-script = ExtResource("62_xcoir")
-
-[node name="Label3D" type="Label3D" parent="Story_Intro_Spawn/NarrativeBubble" unique_id=1504670144]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
-billboard = 2
-no_depth_test = true
-render_priority = 1
-text = "Welcome, Seeker. Artéa has been dimmed by fear and confusion. You are here to rediscover the truth and restore the light."
-autowrap_mode = 1
-width = 1000.0
+[node name="Story_Intro_Spawn" parent="." unique_id=1554091635 instance=ExtResource("61_krhoc")]
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
