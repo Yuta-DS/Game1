@@ -3,19 +3,20 @@
 [ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="1_65g5f"]
 [ext_resource type="Script" uid="uid://bet4qknmq15o3" path="res://scenes/narrative_bubble.gd" id="2_y48wk"]
 
-[node name="Story_Intro_Spawn" type="Label3D" unique_id=392616087]
+[node name="Story_Intro_Spawn" type="Label3D" unique_id=1554091635]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.352577, 25.852982, 1.8761172)
 billboard = 1
 no_depth_test = true
 modulate = Color(1, 0.95686275, 0.81960785, 1)
 outline_size = 20
 
-[node name="NarrativeBubble" type="Sprite3D" parent="." unique_id=1312707294]
+[node name="NarrativeBubble" type="Sprite3D" parent="." unique_id=192401457]
 transform = Transform3D(0.048518512, 0, -0.9988223, 0, 1, 0, 0.9988223, 0, 0.048518512, 0, 0, 0.023192167)
 billboard = 2
 texture = ExtResource("1_65g5f")
 script = ExtResource("2_y48wk")
 
-[node name="Label3D" type="Label3D" parent="NarrativeBubble" unique_id=1439024100]
+[node name="Label3D" type="Label3D" parent="NarrativeBubble" unique_id=699826674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
 billboard = 2
 no_depth_test = true
