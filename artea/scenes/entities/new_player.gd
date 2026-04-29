@@ -17,9 +17,12 @@ extends CharacterBody3D
 @onready var jump_gravity : float = ((-2.0 * jump_height) / (jump_time_to_peak * jump_time_to_peak)) * -1.0
 @onready var fall_gravity : float = ((-2.0 * jump_height) / (jump_time_to_descent * jump_time_to_descent)) * -1.0
 
-# --- SPEED BOOSTED (FEEL THE DIFFERENCE) ---
-@export var baseSpeed := 12.0  # Was 8.0
-@export var runSpeed := 22.0   # Was 14.0
+# --- SPEED BOOSTED ---
+@export var baseSpeed := 12.0
+@export var runSpeed := 22.0
+
+# --- INTERACTION & GRASS FIX ---
+var interacting := false  # Critical fix for team's grass shader
 
 # --- INVENTORY SYSTEM ---
 @export var inventory_data: inventoryData
@@ -37,9 +40,9 @@ func _ready() -> void:
 	
 	# --- AUDIO OVERRIDE ---
 	if footstep_player is AudioStreamPlayer3D:
-		footstep_player.volume_db = 10.0 # Boost volume by 10 decibels
-		footstep_player.max_distance = 200.0 # Make it audible from far away
-		footstep_player.unit_size = 20.0 # Increases the "size" of the sound source
+		footstep_player.volume_db = 10.0
+		footstep_player.max_distance = 200.0
+		footstep_player.unit_size = 20.0
 
 func _physics_process(delta: float) -> void:
 	moveLogic(delta)
@@ -56,7 +59,8 @@ func jumpLogic(delta) -> void:
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = -jump_velocity
 	else:
-		$RogueSkin/AnimationPlayer.current_animation = 'Jump'
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'Jump'
 		
 	var gravity = jump_gravity if velocity.y > 0.0 else fall_gravity
 	velocity.y -= gravity * delta
@@ -68,30 +72,33 @@ func moveLogic(delta) -> void:
 	
 	if movementInput != Vector2.ZERO:
 		var speed = runSpeed if isRunning else baseSpeed
-		velocity2D += movementInput * speed * delta * 8 # Snappier acceleration
+		velocity2D += movementInput * speed * delta * 8 
 		velocity2D = velocity2D.limit_length(speed)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
 		
-		$RogueSkin/AnimationPlayer.current_animation = 'Run'
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'Run'
 		
 		# --- FOOTSTEP LOGIC ---
 		if is_on_floor():
 			if floor_detector.is_colliding():
 				var ground = floor_detector.get_collider()
 				
-				if ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface")):
+				# Check the collider or its parent for the grass group
+				var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
+				
+				if is_grass:
 					if footstep_player.stream != sfx_grass:
 						footstep_player.stream = sfx_grass
-					
 					if not footstep_player.playing:
 						footstep_player.play()
 				else:
-					footstep_player.stop()
-			else:
-				footstep_player.stop()
+					if footstep_player.playing:
+						footstep_player.stop()
 		else:
-			footstep_player.stop()
+			if footstep_player.playing:
+				footstep_player.stop()
 
 		var targetAngle = -movementInput.angle() + PI/2
 		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
@@ -99,8 +106,10 @@ func moveLogic(delta) -> void:
 		velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
-		$RogueSkin/AnimationPlayer.current_animation = 'Idle'
-		footstep_player.stop()
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'Idle'
+		if footstep_player.playing:
+			footstep_player.stop()
 
-func collect_item(item: itemData) -> bool:
+func collect_item(_item: itemData) -> bool:
 	return false
