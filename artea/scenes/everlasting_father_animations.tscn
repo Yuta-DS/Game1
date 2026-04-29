@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://b1d3rlknpgaj3"]
+
+[ext_resource type="PackedScene" uid="uid://dq0oeht5m27x4" path="res://assets3D/characters/Father_Animations.glb" id="1_o816r"]
+[ext_resource type="Script" uid="uid://dk4wi12atv8q8" path="res://scripts/everlasting_father_animations.gd" id="2_gwxk0"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_o816r"]
+
+[node name="Father_Animations" unique_id=742864976 instance=ExtResource("1_o816r")]
+script = ExtResource("2_gwxk0")
+
+[node name="Skeleton3D" parent="Armature" parent_id_path=PackedInt32Array(595571285) index="0" unique_id=186108787]
+bones/0/position = Vector3(0.10570404, 69.01614, 6.641374)
+bones/0/rotation = Quaternion(0.28306037, 0.103145555, -0.12217275, 0.9456805)
+bones/1/position = Vector3(13.594222, -1.2714076, 6.051478)
+bones/1/rotation = Quaternion(0.90722746, 0.10117687, -0.105082914, 0.3945367)
+bones/2/rotation = Quaternion(0.115655646, 0.09764608, 0.11373672, 0.981913)
+bones/3/rotation = Quaternion(-0.25965118, -0.12177683, -0.16737673, 0.9432585)
+bones/4/rotation = Quaternion(-0.5097083, -0.2001007, -0.056025513, 0.83487636)
+bones/5/rotation = Quaternion(0.84693915, 0.0797877, 0.42431125, 0.31030306)
+bones/6/rotation = Quaternion(0.3364359, -0.14103253, -0.09509912, 0.9262165)
+bones/7/rotation = Quaternion(-0.6452863, 0.12612283, 0.03909902, 0.75244266)
+bones/8/rotation = Quaternion(-0.35515967, 0.06638382, -0.0040112385, 0.93243706)
+bones/9/rotation = Quaternion(-0.2780492, -0.108899534, 0.10413623, 0.9486756)
+bones/10/position = Vector3(-6.053938e-09, 13.451591, -2.3515895e-08)
+bones/10/rotation = Quaternion(-0.06509317, -0.02287787, -0.001844211, 0.9976152)
+bones/11/rotation = Quaternion(0.05147337, 0.003631582, 0.0024155017, 0.99866486)
+bones/12/rotation = Quaternion(0.45032144, 0.526951, -0.3838814, 0.610056)
+bones/13/position = Vector3(6.5598124e-06, 20.313942, 7.750438e-06)
+bones/13/rotation = Quaternion(0.5364209, 0.30705422, 0.35676792, 0.70049065)
+bones/14/position = Vector3(-7.9805056e-07, 28.846556, -9.552126e-06)
+bones/14/rotation = Quaternion(-0.18281297, -0.12284069, -0.16415112, 0.9615322)
+bones/15/position = Vector3(3.4768423e-06, 21.801464, 5.996527e-06)
+bones/15/rotation = Quaternion(0.078617685, 0.08320409, 0.0317392, 0.9929195)
+bones/16/rotation = Quaternion(0.46692666, -0.5010208, 0.34952125, 0.63936895)
+bones/17/position = Vector3(-2.6219348e-06, 20.693954, 4.0071664e-06)
+bones/17/rotation = Quaternion(0.5587124, -0.26258984, -0.384153, 0.6865228)
+bones/18/position = Vector3(2.3742882e-07, 28.84224, 1.2493547e-06)
+bones/18/rotation = Quaternion(-0.17980695, 0.10268827, 0.16622119, 0.96410334)
+bones/19/position = Vector3(-6.696264e-07, 21.057043, 1.0343879e-05)
+bones/19/rotation = Quaternion(-0.04349545, -0.28389534, -0.110491246, 0.9514743)
+bones/20/rotation = Quaternion(0.011111279, -0.021089438, 0.0058584465, 0.99969864)
+bones/21/rotation = Quaternion(0.28074577, 0.0033375416, -0.012306041, 0.9596975)
+bones/22/rotation = Quaternion(-0.18593657, -1.0097389e-08, -0.0014385617, 0.9825608)
+
+[node name="AnimationPlayer" parent="." index="1" unique_id=104092654]
+autoplay = &"Idle_3"
+
+[node name="Area3D" type="Area3D" parent="." index="2" unique_id=660642462]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" index="0" unique_id=1863357717]
+transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0)
+shape = SubResource("SphereShape3D_o816r")
+
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_animation_player_animation_finished"]

@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://crn54vry24lgt"]
+
+[ext_resource type="PackedScene" uid="uid://ch7f1gvh71svv" path="res://meshy ai/Milo_Animations.glb" id="1_5q71h"]
+[ext_resource type="Script" uid="uid://cni2qkko8tokl" path="res://scripts/milo_animations.gd" id="2_u7xxb"]
+[ext_resource type="Script" uid="uid://cmibd6k0gwjah" path="res://scenes/chat_detection_area_3d.gd" id="3_ruowu"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_oefe3"]
+
+[node name="Milo_Animations" unique_id=1929992946 instance=ExtResource("1_5q71h")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+script = ExtResource("2_u7xxb")
+
+[node name="Skeleton3D" parent="Armature" parent_id_path=PackedInt32Array(1992715842) index="0" unique_id=734086366]
+bones/0/position = Vector3(0.04803043, 12.091065, 2.319383)
+bones/0/rotation = Quaternion(-0.011397521, 0.018866768, -0.04759888, 0.9986234)
+bones/1/rotation = Quaternion(0.6165034, 0.522639, -0.58407754, 0.07500414)
+bones/2/rotation = Quaternion(0.25291675, 0.61376935, 0.4127909, 0.6236378)
+bones/3/rotation = Quaternion(-0.5196296, 0.06348779, 0.035597842, 0.8512857)
+bones/4/rotation = Quaternion(-0.47225153, 0.038279675, 0.027968604, 0.88018805)
+bones/5/rotation = Quaternion(0.5975172, -0.46405357, 0.6234091, 0.19745523)
+bones/6/rotation = Quaternion(0.5166852, -0.6036018, -0.27337793, 0.54218614)
+bones/7/rotation = Quaternion(-0.61969256, -0.025667993, -0.06025549, 0.7821071)
+bones/8/rotation = Quaternion(-0.4801974, -0.028806929, -0.035742696, 0.87595844)
+bones/9/rotation = Quaternion(0.074435465, -0.022170871, 0.023445673, 0.9967037)
+bones/10/rotation = Quaternion(-0.051945236, -0.022396706, -0.00036555273, 0.9983988)
+bones/11/rotation = Quaternion(-0.005022246, 0.020794531, 0.0037520123, 0.99976414)
+bones/12/rotation = Quaternion(0.54619944, 0.47709638, -0.47291797, 0.5003936)
+bones/13/position = Vector3(1.7945654e-06, 9.830347, 4.119397e-07)
+bones/13/rotation = Quaternion(0.35841691, 0.26488838, 0.056263827, 0.89342374)
+bones/14/position = Vector3(-1.4641618e-06, 8.383576, 3.4648665e-06)
+bones/14/rotation = Quaternion(-0.24805585, -0.19242145, -0.036526944, 0.9487403)
+bones/15/rotation = Quaternion(0.031422406, 0.037330784, 0.15600418, 0.98655045)
+bones/16/rotation = Quaternion(-0.5790008, 0.43987757, -0.43977597, -0.52712727)
+bones/17/rotation = Quaternion(0.36662546, -0.24155098, -0.078892425, 0.89499444)
+bones/18/position = Vector3(2.9675684e-06, 8.3862, 1.0113598e-05)
+bones/18/rotation = Quaternion(-0.22590657, 0.16269635, 0.05152983, 0.9590833)
+bones/19/rotation = Quaternion(-0.035857964, -0.074923456, 0.23398726, 0.96868503)
+bones/20/rotation = Quaternion(0.03218461, -0.040763345, 0.0062346715, 0.9986309)
+bones/21/rotation = Quaternion(0.23368816, 0.0034234736, -0.009524654, 0.972259)
+bones/22/rotation = Quaternion(-0.1845438, -3.5050078e-07, 0.0020174824, 0.98282224)
+bones/23/rotation = Quaternion(0.5473546, -5.4331707e-07, -0.0059854016, 0.8368794)
+
+[node name="char1" parent="Armature/Skeleton3D" index="0" unique_id=2085099761]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+
+[node name="AnimationPlayer" parent="." index="1" unique_id=502050178]
+autoplay = &"Walking"
+
+[node name="Area3D" type="Area3D" parent="." index="2" unique_id=1485653812]
+script = ExtResource("3_ruowu")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" index="0" unique_id=18758538]
+transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0)
+shape = SubResource("SphereShape3D_oefe3")
+
+[connection signal="body_entered" from="Area3D" to="Area3D" method="_on_body_entered"]
+[connection signal="body_exited" from="Area3D" to="Area3D" method="_on_body_exited"]
+[connection signal="player_nearby" from="Area3D" to="." method="_on_area_3d_player_nearby"]
