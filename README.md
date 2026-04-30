@@ -27,27 +27,3 @@ Several outstanding work is still in progress such as:
 
 * **Popthoughts World:** The existing 2D scenes need to be adapted or replaced within the 3D environment structure.
 * **Inventory:** The logic for dropping items (e.g., apples, shells) from the inventory needs to be implemented.
-
----
-
-# ================================
-# Changes April 2026
-# ================================
-
-## Git Setup & Large File Requirements (IMPORTANT)
-
-This project uses **Git LFS (Large File Storage)** for large assets including:
-- LLM model files (`.gguf`)
-- Native plugin binaries (`.dll`, `.so`, `.pdb`)
-
-These files are required for the project to run correctly (local/offline Milo AI Chatbot).
-
----
-
-### First-time setup (required for all developers)
-
-Install Git LFS before pulling or checking out the project files:
-
-git lfs install
-git clone <repo>
-git lfs pull
