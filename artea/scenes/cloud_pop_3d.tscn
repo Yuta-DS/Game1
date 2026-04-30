@@ -1,0 +1,189 @@
+[gd_scene format=3 uid="uid://2pi2hghv5wfm"]
+
+[ext_resource type="Script" uid="uid://csqtbu457hur7" path="res://scripts/cloud_pop_ui.gd" id="1_4xkxp"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="1_bq4c8"]
+[ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.mp3" id="2_4xkxp"]
+[ext_resource type="PackedScene" uid="uid://duelwtfern64x" path="res://assets3D/kkNatureForest/gltf/Tree_1_A_Color1.gltf" id="4_bjlxx"]
+[ext_resource type="AudioStream" uid="uid://cy3l3avm3i36h" path="res://assets/audio/Beautiful Piano Music.mp3" id="6_utney"]
+[ext_resource type="PackedScene" uid="uid://xen2qn2unprq" path="res://assets3D/houses/gltf/house.gltf" id="7_f75l6"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_4xkxp"]
+sky_top_color = Color(0.85430586, 0.7977378, 0.95468724, 1)
+sky_horizon_color = Color(1, 0.90588236, 0.79607844, 1)
+ground_bottom_color = Color(0.735357, 0.9063318, 0.7977378, 1)
+sun_angle_max = 76.36
+energy_multiplier = 0.8
+
+[sub_resource type="Sky" id="Sky_bjlxx"]
+sky_material = SubResource("ProceduralSkyMaterial_4xkxp")
+
+[sub_resource type="Environment" id="Environment_4xkxp"]
+background_mode = 2
+background_color = Color(0.7490196, 0.8784314, 1, 1)
+sky = SubResource("Sky_bjlxx")
+fog_light_color = Color(0.85430586, 0.9063318, 0.95468724, 1)
+fog_density = 0.02
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4xkxp"]
+transparency = 1
+albedo_color = Color(0.6651851, 0.85430586, 0.6651851, 0)
+roughness = 0.9
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_bjlxx"]
+size = Vector2(30, 30)
+
+[node name="CloudPop3d" type="Node3D" unique_id=408390137]
+
+[node name="Camera" type="Camera3D" parent="." unique_id=488359440]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 4, 12)
+current = true
+
+[node name="CloudSpawner3D" type="Node3D" parent="." unique_id=1234143181]
+
+[node name="CanvasLayer2" type="CanvasLayer" parent="." unique_id=1609967894]
+script = ExtResource("1_4xkxp")
+
+[node name="UIControl" type="Control" parent="CanvasLayer2" unique_id=195048533]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="CanvasLayer2/UIControl" unique_id=265104214]
+custom_minimum_size = Vector2(1152, 648)
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.00125291
+
+[node name="VSplitContainer" type="VSplitContainer" parent="CanvasLayer2/UIControl/CenterContainer" unique_id=795809873]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer" unique_id=1635046339]
+layout_mode = 2
+
+[node name="Line Edit" type="LineEdit" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control" unique_id=878750469]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -98.207184
+offset_top = 165.68024
+offset_right = 551.79285
+offset_bottom = 223.68024
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_stretch_ratio = 0.0
+theme_override_fonts/font = ExtResource("1_bq4c8")
+theme_override_font_sizes/font_size = 50
+placeholder_text = "What are your thoughts?"
+alignment = 1
+max_length = 60
+expand_to_text_length = true
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control" unique_id=539763262]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.78431374, 1, 1, 1)
+
+[node name="Control2" type="Control" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer" unique_id=449600196]
+layout_mode = 2
+
+[node name="Create Cloud" type="Button" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control2" unique_id=872986909]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -16.361328
+offset_top = 276.78284
+offset_right = 135.63867
+offset_bottom = 324.78284
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("1_bq4c8")
+theme_override_font_sizes/font_size = 40
+text = "Add Cloud"
+
+[node name="Pop Thoughts" type="Button" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control2" unique_id=1322770943]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 266.6347
+offset_top = 280.13736
+offset_right = 498.6347
+offset_bottom = 328.13736
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("1_bq4c8")
+theme_override_font_sizes/font_size = 40
+text = "Start Popping!"
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="CanvasLayer2/UIControl" unique_id=1743346761]
+stream = ExtResource("2_4xkxp")
+pitch_scale = 1.29
+
+[node name="ErrorLabel" type="Label" parent="CanvasLayer2/UIControl" unique_id=1241539182]
+layout_mode = 0
+offset_left = 257.0
+offset_top = 32.0
+offset_right = 1069.0
+offset_bottom = 102.0
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0.747449, 0.582691, 0.201977, 1)
+theme_override_constants/shadow_outline_size = 6
+theme_override_fonts/font = ExtResource("1_bq4c8")
+theme_override_font_sizes/font_size = 70
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1632356855]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4217868, 6.4793773, 9.929048)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=866622050]
+environment = SubResource("Environment_4xkxp")
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=450601963]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Ground" unique_id=1263919602]
+transform = Transform3D(0.99433476, 0, 0, 0, 0.99433476, 0, 0, 0, 0.99433476, 9.936065, -23.389652, -5.3964567)
+material_override = SubResource("StandardMaterial3D_4xkxp")
+mesh = SubResource("PlaneMesh_bjlxx")
+
+[node name="Tree_1_A_Color16" parent="." unique_id=1333644019 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, -5.3998575, -3.7730165, -4.728174)
+
+[node name="Tree_1_A_Color20" parent="." unique_id=1677671601 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, 14.735203, -3.1715574, -4.1592503)
+
+[node name="Tree_1_A_Color19" parent="." unique_id=1798944801 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, 3.5138874, -1.9219644, 4.1908092)
+
+[node name="Tree_1_A_Color15" parent="." unique_id=1189608371 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.358413, -1.9318151, 5.893061)
+
+[node name="Tree_1_A_Color17" parent="." unique_id=279593068 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.498391, -8.541709, -3.1209497)
+
+[node name="house2" parent="." unique_id=1794742014 instance=ExtResource("7_f75l6")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 10.860384, -5.723077, 1.3203268)
+
+[node name="house4" parent="." unique_id=593846449 instance=ExtResource("7_f75l6")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -8.233041, -6.4517336, -3.0385158)
+
+[node name="BackgroundMusic" type="AudioStreamPlayer3D" parent="." unique_id=2032062737]
+stream = ExtResource("6_utney")
+volume_db = -10.0
+autoplay = true
+parameters/looping = true
