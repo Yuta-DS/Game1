@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://b72ryhthaq71k" path="res://assets/Clouds/Clouds BG.png" id="1_ge1ot"]
 [ext_resource type="Script" uid="uid://d37jww4dwb4q5" path="res://scripts/cloud_pop_finish.gd" id="1_k687y"]
-[ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="3_ltqfl"]
+[ext_resource type="FontFile" uid="uid://dvm1adtxwis07" path="res://assets/Fonts/NewFont-Artea.otf" id="3_k687y"]
 
 [node name="Control" type="Control" unique_id=1756979450]
 modulate = Color(0.91013384, 0.8192111, 0.8962498, 1)
@@ -40,8 +40,8 @@ theme_override_colors/font_shadow_color = Color(0.80394894, 0.45528156, 0.225721
 theme_override_colors/font_outline_color = Color(1, 0.68227345, 0.78516185, 1)
 theme_override_constants/outline_size = 10
 theme_override_constants/shadow_outline_size = 27
-theme_override_fonts/font = ExtResource("3_ltqfl")
-theme_override_font_sizes/font_size = 95
+theme_override_fonts/font = ExtResource("3_k687y")
+theme_override_font_sizes/font_size = 92
 text = "You did it! Your mind is now a clear sky. "
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -55,8 +55,8 @@ offset_right = 366.0
 offset_bottom = 613.00006
 scale = Vector2(1.62353, 1.62353)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("3_ltqfl")
-theme_override_font_sizes/font_size = 25
+theme_override_fonts/font = ExtResource("3_k687y")
+theme_override_font_sizes/font_size = 26
 text = "Play Again"
 
 [node name="Return to Hubworld" type="Button" parent="." unique_id=39380138]
@@ -67,8 +67,8 @@ offset_right = 956.0
 offset_bottom = 611.00006
 scale = Vector2(1.62353, 1.62353)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("3_ltqfl")
-theme_override_font_sizes/font_size = 25
+theme_override_fonts/font = ExtResource("3_k687y")
+theme_override_font_sizes/font_size = 26
 text = "Return to Hubworld"
 
 [node name="Background" type="ColorRect" parent="." unique_id=596757187]
