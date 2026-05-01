@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Artea"
 run/main_scene="uid://d10bpuuoe8w0m"
-config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
+config/features=PackedStringArray("4.6", "GL Compatibility")
 boot_splash/image="uid://06fmhq71d8ey"
 config/icon="res://icon.svg"
 
@@ -32,7 +32,6 @@ Auth="*res://addons/godot-firebase/auth/auth.gd"
 [dialogue_manager]
 
 runtime/balloon_path="res://dialogue/HubworldBalloon.tscn"
-runtime/advanced/uses_dotnet=true
 
 [display]
 
