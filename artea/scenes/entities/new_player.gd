@@ -30,7 +30,7 @@ var interacting := false  # Critical fix for team's grass shader
 @onready var camera = $CameraController/Camera3D
 
 var movementInput := Vector2.ZERO
-var interacting := false  # <--- CRITICAL FIX: This stops the Camera Controller error
+#var interacting := false  # <--- CRITICAL FIX: This stops the Camera Controller error
 
 func _ready() -> void:
 	await get_tree().process_frame
@@ -86,16 +86,16 @@ func moveLogic(delta) -> void:
 				if ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface")):
 				
 				# Check the collider or its parent for the grass group
-				var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
-				
-				if is_grass:
-					if footstep_player.stream != sfx_grass:
-						footstep_player.stream = sfx_grass
-					if not footstep_player.playing:
-						footstep_player.play()
-				else:
-					if footstep_player.playing:
-						footstep_player.stop()
+					var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
+					
+					if is_grass:
+						if footstep_player.stream != sfx_grass:
+							footstep_player.stream = sfx_grass
+						if not footstep_player.playing:
+							footstep_player.play()
+					else:
+						if footstep_player.playing:
+							footstep_player.stop()
 		else:
 			if footstep_player.playing:
 				footstep_player.stop()
