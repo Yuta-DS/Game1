@@ -78,6 +78,12 @@ func jumpLogic(delta) -> void:
 	velocity.y -= gravity * delta
 	
 func moveLogic(delta) -> void:
+	if interacting:
+			velocity.x = 0
+			velocity.z = 0
+			$RogueSkin/AnimationPlayer.current_animation = 'Idle'
+			return
+	
 	movementInput = Input.get_vector("move_left", "move_right", "move_forward", "move_backward").rotated(-camera.global_rotation.y)
 	var velocity2D = Vector2(velocity.x, velocity.z)
 	var isRunning: bool = Input.is_action_pressed("run")
