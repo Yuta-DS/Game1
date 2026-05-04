@@ -34,7 +34,7 @@ func _process(delta):
 		start_dialogue()
 
 	if is_in_dialogue and Input.is_action_just_pressed("ui_cancel"):
-		end_dialogue()
+		GameManager.end_dialogue()
 		return
 
 	# freeze all behavior during dialogue
@@ -106,13 +106,12 @@ func start_dialogue():
 	is_in_dialogue = true
 	player.interacting = true
 
-	GameManager.start_dialogue(dialogue_start_node)
+	GameManager.start_dialogue(dialogue_start_node, self)
 
 
 func end_dialogue():
 	is_in_dialogue = false
 	player.interacting = false
-	GameManager.end_dialogue()
 	_schedule_next_cheer()
 
 
