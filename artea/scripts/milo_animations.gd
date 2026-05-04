@@ -24,7 +24,7 @@ func look_at_player(delta):
 	rotation.y = lerp_angle(rotation.y, rotation_y, 5.0 * delta)
 
 
-func _on_area_3d_player_nearby(body):
+func _on_area_3d_player_entered(body):
 	if body == player:
 		player_in_range = true
 
