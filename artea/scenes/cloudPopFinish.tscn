@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bgxfk64cwgp2c"]
 
-[ext_resource type="Texture2D" uid="uid://b72ryhthaq71k" path="res://assets/Clouds/Clouds BG.png" id="1_ge1ot"]
 [ext_resource type="Script" uid="uid://d37jww4dwb4q5" path="res://scripts/cloud_pop_finish.gd" id="1_k687y"]
+[ext_resource type="Texture2D" uid="uid://cknhwh8248t38" path="res://assets/Clouds/PastelBackground.png" id="2_ltqfl"]
 [ext_resource type="FontFile" uid="uid://dvm1adtxwis07" path="res://assets/Fonts/NewFont-Artea.otf" id="3_k687y"]
 
 [node name="Control" type="Control" unique_id=1756979450]
@@ -17,9 +17,8 @@ grow_vertical = 2
 script = ExtResource("1_k687y")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1668406729]
-position = Vector2(639.294, 360)
-scale = Vector2(2.65441, 2.65441)
-texture = ExtResource("1_ge1ot")
+scale = Vector2(4.268, 5)
+texture = ExtResource("2_ltqfl")
 
 [node name="Label" type="Label" parent="." unique_id=1854415580]
 layout_mode = 1
@@ -28,20 +27,19 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -594.5
-offset_top = -304.5
-offset_right = 234.02295
-offset_bottom = 127.5
+offset_left = -406.5
+offset_top = -252.5
+offset_right = 631.7003
+offset_bottom = 283.5
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(1.178, 1)
-theme_override_colors/font_color = Color(0.88235295, 0.39215687, 0.39215687, 1)
-theme_override_colors/font_shadow_color = Color(0.80394894, 0.45528156, 0.22572166, 1)
-theme_override_colors/font_outline_color = Color(1, 0.68227345, 0.78516185, 1)
+theme_override_colors/font_color = Color(0.9568694, 0.4432561, 0.42678407, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0)
 theme_override_constants/outline_size = 10
 theme_override_constants/shadow_outline_size = 27
 theme_override_fonts/font = ExtResource("3_k687y")
-theme_override_font_sizes/font_size = 92
+theme_override_font_sizes/font_size = 96
 text = "You did it! Your mind is now a clear sky. "
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -49,32 +47,27 @@ autowrap_mode = 3
 
 [node name="Play Again" type="Button" parent="." unique_id=810176050]
 layout_mode = 0
-offset_left = 232.0
-offset_top = 570.00006
-offset_right = 366.0
-offset_bottom = 613.00006
+offset_left = 484.0
+offset_top = 694.0
+offset_right = 618.0
+offset_bottom = 737.0
 scale = Vector2(1.62353, 1.62353)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_k687y")
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 33
 text = "Play Again"
 
 [node name="Return to Hubworld" type="Button" parent="." unique_id=39380138]
 layout_mode = 0
-offset_left = 706.0
-offset_top = 568.00006
-offset_right = 956.0
-offset_bottom = 611.00006
+offset_left = 866.0
+offset_top = 695.0
+offset_right = 1116.0
+offset_bottom = 738.0
 scale = Vector2(1.62353, 1.62353)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_k687y")
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 29
 text = "Return to Hubworld"
-
-[node name="Background" type="ColorRect" parent="." unique_id=596757187]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
 
 [connection signal="pressed" from="Play Again" to="." method="_on_play_again_pressed"]
 [connection signal="pressed" from="Return to Hubworld" to="." method="_on_return_to_hubworld_pressed"]
