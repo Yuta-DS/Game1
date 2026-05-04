@@ -30,12 +30,12 @@ albedo_color = Color(0.6651851, 0.85430586, 0.6651851, 0)
 roughness = 0.9
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_bjlxx"]
-size = Vector2(30, 30)
+size = Vector2(15, 10)
 
 [node name="CloudPop3d" type="Node3D" unique_id=408390137]
 
 [node name="Camera" type="Camera3D" parent="." unique_id=488359440]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 4, 12)
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 2, 8)
 current = true
 
 [node name="CloudSpawner3D" type="Node3D" parent="." unique_id=1234143181]
@@ -157,30 +157,36 @@ environment = SubResource("Environment_4xkxp")
 [node name="Ground" type="StaticBody3D" parent="." unique_id=450601963]
 
 [node name="GroundMesh" type="MeshInstance3D" parent="Ground" unique_id=1263919602]
-transform = Transform3D(0.99433476, 0, 0, 0, 0.99433476, 0, 0, 0, 0.99433476, 9.936065, -23.389652, -5.3964567)
+transform = Transform3D(0.99433476, 0, 0, 0, 0.99433476, 0, 0, 0, 0.99433476, 9.936, -1, -5.396)
 material_override = SubResource("StandardMaterial3D_4xkxp")
 mesh = SubResource("PlaneMesh_bjlxx")
 
 [node name="Tree_1_A_Color16" parent="." unique_id=1333644019 instance=ExtResource("4_bjlxx")]
-transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, -5.3998575, -3.7730165, -4.728174)
+transform = Transform3D(0.89995325, 0.0091690915, -0.00027757822, -0.009173292, 0.8995411, -0.027232036, 2.6193447e-11, 0.027233452, 0.8995878, -16.65932, -7.380129, -3.0477753)
+
+[node name="Tree_1_A_Color18" parent="." unique_id=1208501058 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(0.89995325, 0.0091690915, -0.00027757822, -0.009173292, 0.8995411, -0.027232036, 2.6193447e-11, 0.027233452, 0.8995878, -13.049071, -5.041337, -3.0321102)
 
 [node name="Tree_1_A_Color20" parent="." unique_id=1677671601 instance=ExtResource("4_bjlxx")]
-transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, 14.735203, -3.1715574, -4.1592503)
+transform = Transform3D(0.89995325, 0.0091690915, -0.00027757822, -0.009173292, 0.8995411, -0.027232036, 2.6193447e-11, 0.027233452, 0.8995878, 14.270624, -3.3169303, -1.7954655)
+
+[node name="Tree_1_A_Color21" parent="." unique_id=1790837242 instance=ExtResource("4_bjlxx")]
+transform = Transform3D(0.89995325, 0.0091690915, -0.00027757822, -0.009173292, 0.8995411, -0.027232036, 2.6193447e-11, 0.027233452, 0.8995878, -8.81465, -2.2177382, -2.3289127)
 
 [node name="Tree_1_A_Color19" parent="." unique_id=1798944801 instance=ExtResource("4_bjlxx")]
-transform = Transform3D(0.999948, 0.010187879, -0.00030842022, -0.010192546, 0.99949014, -0.030257817, 0, 0.03025939, 0.99954206, 3.5138874, -1.9219644, 4.1908092)
+transform = Transform3D(0.89993936, 0.010438971, -0.00035037505, -0.010444794, 0.8995265, -0.027259327, 3.4013632e-05, 0.027261559, 0.89958704, -4.408657, -3.2877438, -4.007477)
 
 [node name="Tree_1_A_Color15" parent="." unique_id=1189608371 instance=ExtResource("4_bjlxx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.358413, -1.9318151, 5.893061)
+transform = Transform3D(0.9, 0, 0, 0, 0.8999969, -0.0023718996, 0, 0.0023718996, 0.8999969, -6.59647, -5.5472507, -2.8625488)
 
 [node name="Tree_1_A_Color17" parent="." unique_id=279593068 instance=ExtResource("4_bjlxx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.498391, -8.541709, -3.1209497)
+transform = Transform3D(0.9, 0, 0, 0, 0.9, 0, 0, 0, 0.9, 9.411003, -3.32102, -2.8577576)
 
 [node name="house2" parent="." unique_id=1794742014 instance=ExtResource("7_f75l6")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 10.860384, -5.723077, 1.3203268)
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 8.944318, -7.008606, 1.2853457)
 
 [node name="house4" parent="." unique_id=593846449 instance=ExtResource("7_f75l6")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -8.233041, -6.4517336, -3.0385158)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -9.482474, -7.9838295, -3.024432)
 
 [node name="BackgroundMusic" type="AudioStreamPlayer3D" parent="." unique_id=2032062737]
 stream = ExtResource("6_utney")
