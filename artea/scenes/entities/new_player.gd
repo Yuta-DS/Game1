@@ -43,6 +43,18 @@ func _ready() -> void:
 		footstep_player.volume_db = 10.0
 		footstep_player.max_distance = 200.0
 		footstep_player.unit_size = 20.0
+		
+func _input(event: InputEvent) -> void:
+		# Toggle inventory with I key
+		if event.is_action_pressed("toggle_Inventory"):
+			print("I key pressed! inventory_gui exists: ", inventory_gui != null)
+			_on_inventory_pressed()
+			
+func _on_inventory_pressed() -> void:
+	if interacting:
+		return
+	if inventory_gui:
+		inventory_gui.toggle_visibility()
 
 func _physics_process(delta: float) -> void:
 	moveLogic(delta)
