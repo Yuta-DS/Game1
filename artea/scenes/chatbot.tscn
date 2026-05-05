@@ -42,4 +42,4 @@ text = "Send"
 
 [node name="AI_Counselor" type="NobodyWhoChat" parent="." unique_id=433028267]
 
-[node name="Model" type="NobodyWhoModel" parent="." unique_id=2043035805]
+[node name="MiloModel" type="NobodyWhoModel" parent="." unique_id=2043035805]
