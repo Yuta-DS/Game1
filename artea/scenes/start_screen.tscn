@@ -1,17 +1,17 @@
-[gd_scene load_steps=3 format=3 uid="uid://d10bpuuoe8w0m"]
+[gd_scene format=3 uid="uid://d10bpuuoe8w0m"]
 
-[ext_resource type="Script" path="res://start_screen.gd" id="1_pevhg"]
+[ext_resource type="Script" uid="uid://cgmg8ih4guj28" path="res://start_screen.gd" id="1_pevhg"]
 [ext_resource type="Texture2D" uid="uid://co8ixwvp5nnyc" path="res://assets/Startscreen_Background.png" id="2_afy8x"]
 
-[node name="StartScreen" type="Node2D"]
+[node name="StartScreen" type="Node2D" unique_id=27431153]
 script = ExtResource("1_pevhg")
 
-[node name="Background" type="Sprite2D" parent="."]
+[node name="Background" type="Sprite2D" parent="." unique_id=2082080412]
 position = Vector2(953.25, 530.064)
 scale = Vector2(1.27572, 1.19519)
 texture = ExtResource("2_afy8x")
 
-[node name="Username" type="Label" parent="."]
+[node name="Username" type="Label" parent="." unique_id=1329459374]
 offset_left = 66.0
 offset_top = 767.0
 offset_right = 329.0
@@ -19,7 +19,7 @@ offset_bottom = 836.0
 theme_override_font_sizes/font_size = 50
 text = "Username:"
 
-[node name="Button" type="Button" parent="."]
+[node name="Button" type="Button" parent="." unique_id=56447978]
 offset_left = 68.0
 offset_top = 990.0
 offset_right = 394.0
@@ -27,7 +27,7 @@ offset_bottom = 1080.0
 theme_override_font_sizes/font_size = 50
 text = "Start Game"
 
-[node name="TextEdit" type="TextEdit" parent="."]
+[node name="TextEdit" type="TextEdit" parent="." unique_id=1203315510]
 offset_left = 68.0
 offset_top = 863.0
 offset_right = 501.0
