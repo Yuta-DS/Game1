@@ -129,5 +129,47 @@ func moveLogic(delta) -> void:
 		if footstep_player.playing:
 			footstep_player.stop()
 
-func collect_item(_item: itemData) -> bool:
+func collect_item(item: itemData) -> bool:
+	if inventory_data == null:
+		print("ERROR: inventory_data is null!")
+		return false
+	
+	print("Collecting item: ", item.name)
+	print("Item texture: ", item.texture)
+	print("Item stackable: ", item.stackable)
+	
+	# Try to add to existing stack if stackable
+	if item.stackable:
+		for slot in inventory_data.slot_Data:
+			if slot != null and slot.item_Data != null:
+				print("Comparing with slot item: ", slot.item_Data.name)
+				# Compare by item name instead of object reference
+				if slot.item_Data.name == item.name:
+					slot.quantity += 1
+					print("Stacked! New quantity: ", slot.quantity)
+					if inventory_gui:
+						print("Refreshing inventory GUI slots")
+						inventory_gui.refresh_slots()
+					else:
+						print("WARNING: inventory_gui is null when trying to refresh!")
+					return true
+	
+	# Find empty slot
+	for i in range(inventory_data.slot_Data.size()):
+		if inventory_data.slot_Data[i] == null:
+			var new_slot = slotData.new()
+			new_slot.item_Data = item
+			new_slot.quantity = 1
+			inventory_data.slot_Data[i] = new_slot
+			print("Added to new slot ", i)
+			print("Slot data - item: ", new_slot.item_Data.name, " qty: ", new_slot.quantity)
+			if inventory_gui:
+				print("Refreshing inventory GUI slots")
+				inventory_gui.refresh_slots()
+			else:
+				print("WARNING: inventory_gui is null when trying to refresh!")
+			return true
+	
+	# Inventory full
+	print("Inventory is full!")
 	return false
