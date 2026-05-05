@@ -69,4 +69,3 @@ func spawn_collectibles() -> void:
 		spawned_count += 1
 	
 	print("Successfully spawned ", spawned_count, " collectibles in ", attempts, " attempts")
-

@@ -24,7 +24,7 @@ func look_at_player(delta):
 	rotation.y = lerp_angle(rotation.y, rotation_y, 5.0 * delta)
 
 
-func _on_area_3d_player_nearby(body):
+func _on_area_3d_player_entered(body):
 	if body == player:
 		player_in_range = true
 
@@ -65,7 +65,8 @@ func _process(delta):
 		wave_timer = 0.0
 
 	# interaction
-	if Input.is_action_just_pressed("interact"):
+	if Input.is_action_just_pressed("interact") and player_in_range:
+		print("Interacting with Milo")
 		open_chatbot()
 		player.interacting = true
 
@@ -76,6 +77,7 @@ func open_chatbot():
 
 	chatbot_ui = load("res://scenes/chatbot.tscn").instantiate()
 	get_tree().current_scene.add_child(chatbot_ui)
+	print("Milo opened chat")
 
 	chatbot_ui.user_input.grab_focus()
 	chatbot_ui.connect("chat_closed", Callable(self, "close_chatbot"))

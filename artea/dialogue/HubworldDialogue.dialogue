@@ -1,3 +1,16 @@
+~ start_archangel_dialogue
+Archangel Gabriel: [[Welcome, listener of the soul.|Greetings, creator of inner sound.]]
+Archangel Gabriel: This is the Chamber of Resonance—where feelings become music and colour.
+Archangel Gabriel: Here, even the heaviest thoughts can be transformed into something gentle and meaningful.
+Archangel Gabriel : Would you like to create music from your emotions?
+- Yes—let’s create something beautiful  
+	=> launch_music_minigame
+- Maybe later  
+	=> END
+
+~ launch_music_minigame
+	=> END
+
 ~ start_zephyr_dialogue
 Everlasting Father: Hey! Ready to lighten your mind?
 - Yes, let’s pop some thoughts!
@@ -38,8 +51,8 @@ do GameManager.request_paingting()
 => END
 
 ~ start_maestro_montclair
-Maestro Montclair: [[Welcome, art lover!|Greetings, connoisseur!|Hello there!]]  
-Maestro Montclair: You’ve arrived at the Grand Art Gallery. What would you like to do?
+Curator Ithiel: [[Welcome, art lover!|Greetings, connoisseur!|Hello there!]]  
+Curator Ithiel: You’ve arrived at the Grand Art Gallery. What would you like to do?
 - Browse the gallery
 	=> open_art_gallery
 - Tell me about the gallery
@@ -48,28 +61,28 @@ Maestro Montclair: You’ve arrived at the Grand Art Gallery. What would you lik
 	=> END
 
 ~ explain_gallery
-Maestro Montclair: Here you can admire masterpieces from around the world—paintings, sculptures, and interactive installations.  
-Maestro Montclair: Use the arrow keys or click on any piece to view details of each work.  
-Maestro Montclair: Ready to explore?
+Curator Ithiel: Here you can admire masterpieces from around the world—paintings, sculptures, and interactive installations.  
+Curator Ithiel: Use the arrow keys or click on any piece to view details of each work.  
+Curator Ithiel: Ready to explore?
 - Yes—show me the art!
 	=> open_art_gallery
 - Not right now
 	=> END
 
 ~ open_art_gallery
-Maestro Montclair: Wonderful choice—let the inspiration begin!
+Curator Ithiel: Wonderful choice—let the inspiration begin!
 do GameManager.request_art_gallery()
 => END
 
 
 ~ start_therapist_npc
-Milo Cat (Wonderful Counsellor): Hey there, I’m Wonderful Counsellor 🐾  
-Milo Cat: I’ll be your guide in this creative healing journey.  
+Wonderful Counsellor: Hey there, I’m Wonderful Counsellor 🐾  
+Wonderful Counsellor: I’ll be your guide in this creative healing journey.  
 
-Milo Cat: This world was made for you to relax, make art, and feel good on the inside.  
-Milo Cat: No pressure. Just expression, imagination, and kindness.  
+Wonderful Counsellor: This world was made for you to relax, make art, and feel good on the inside.  
+Wonderful Counsellor: No pressure. Just expression, imagination, and kindness.  
 
-Milo Cat: Ready to enter the healing studio?
+Wonderful Counsellor: Ready to enter the healing studio?
 - Yes—let’s begin  
 	=> enter_healing_journey
 - Tell me more about Artéa  
@@ -80,21 +93,21 @@ Milo Cat: Ready to enter the healing studio?
 	=> END
 
 ~ explain_artea
-Milo Cat: Artéa is a place of color and calm—designed to help you unwind through creativity.  
-Milo Cat: Explore painting tools, pop thought-clouds, or simply gaze at the gallery.  
-Milo Cat: Your inner world matters. Let’s make it brighter!
+Wonderful Counsellor: Artéa is a place of color and calm—designed to help you unwind through creativity.  
+Wonderful Counsellor: Explore painting tools, pop thought-clouds, or simply gaze at the gallery.  
+Wonderful Counsellor: Your inner world matters. Let’s make it brighter!
 - I’m ready now  
 	=> enter_healing_journey
 - Back  
 	=> start_therapist_npc
 
 ~ enter_healing_journey
-Milo Cat: Wonderful—step right in and let the healing begin!  
+Wonderful Counsellor: Wonderful—step right in and let the healing begin!  
 do GameManager.request_Art_Therapy()
 => END
 
 ~ open_louisa_site
-Milo Cat: Louisa is the visionary behind this space. You can learn more about her in her website
+Wonderful Counsellor: Louisa is the visionary behind this space. You can learn more about her in her website
 - Visit Website
 	=> visit_website
 - Maybe Later
