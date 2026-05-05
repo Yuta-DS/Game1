@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://dq0oeht5m27x4" path="res://assets3D/characters/Father_Animations.glb" id="1_o816r"]
 [ext_resource type="Script" uid="uid://dk4wi12atv8q8" path="res://scripts/everlasting_father_animations.gd" id="2_gwxk0"]
+[ext_resource type="Script" uid="uid://cmibd6k0gwjah" path="res://scenes/chat_detection_area_3d.gd" id="3_a2q5y"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_o816r"]
 
@@ -46,9 +47,12 @@ bones/22/rotation = Quaternion(-0.18593657, -1.0097389e-08, -0.0014385617, 0.982
 autoplay = &"Idle_3"
 
 [node name="Area3D" type="Area3D" parent="." index="2" unique_id=660642462]
+script = ExtResource("3_a2q5y")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" index="0" unique_id=1863357717]
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0)
 shape = SubResource("SphereShape3D_o816r")
 
 [connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_animation_player_animation_finished"]
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_3d_body_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_3d_body_exited"]
