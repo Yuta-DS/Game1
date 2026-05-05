@@ -1,11 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://ctbchsbolgvqh"]
+[gd_scene format=3 uid="uid://ctbchsbolgvqh"]
 
-[ext_resource type="Texture2D" uid="uid://tx6p2ucxpqgl" path="res://assets/Clouds/Menu/Menu BG.png" id="1_g4v61"]
 [ext_resource type="Script" uid="uid://bv41a05s1gxp5" path="res://scripts/pop_thoughts_menu.gd" id="1_n0gf0"]
-[ext_resource type="FontFile" uid="uid://cqcd6w2cgw2ub" path="res://assets/Fonts/Font Saved Tres/VT323 Minigame Menu.tres" id="1_uaofe"]
+[ext_resource type="Texture2D" uid="uid://divem2bli6vuu" path="res://assets/Clouds/Menu/Cloud-Minigame-Menu.png" id="2_5jjns"]
+[ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="3_5jjns"]
 [ext_resource type="AudioStream" uid="uid://b5rwhf7ltnj05" path="res://assets/SFX/introminigame.mp3" id="4_5jjns"]
 
-[node name="PopThoughtsMenu" type="Control"]
+[node name="PopThoughtsMenu" type="Control" unique_id=653637478]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,65 +16,69 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_n0gf0")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(860.7944, 557.2505)
-scale = Vector2(2.0433466, 2.3434854)
-texture = ExtResource("1_g4v61")
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=827598144]
+position = Vector2(857.25, 542.00006)
+scale = Vector2(1.0374544, 1.1732777)
+texture = ExtResource("2_5jjns")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=413889371]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 2.0
-offset_top = -4.0
-offset_right = 3.0
-offset_bottom = 4.0
+offset_left = -1.0
+offset_top = -19.0
+offset_bottom = -11.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TextureRect" type="TextureRect" parent="Panel"]
+[node name="TextureRect" type="TextureRect" parent="Panel" unique_id=1436794880]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -4.0
-offset_top = 12.0
-offset_right = 9.0
-offset_bottom = 10.0
+offset_left = 425.0
+offset_top = -495.0
+offset_right = 438.0
+offset_bottom = -497.0
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Previous" type="Button" parent="Panel"]
+[node name="Previous" type="Button" parent="Panel" unique_id=1126446733]
 layout_mode = 0
-offset_left = 244.0
-offset_top = 873.0
-offset_right = 289.0
-offset_bottom = 904.0
+offset_left = 677.0
+offset_top = 884.0
+offset_right = 729.0
+offset_bottom = 921.0
 scale = Vector2(1.74831, 1.74831)
-text = "Prev"
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 20
+text = "Back
+"
 
-[node name="Next" type="Button" parent="Panel"]
+[node name="Next" type="Button" parent="Panel" unique_id=1825627402]
 layout_mode = 0
-offset_left = 1337.0
-offset_top = 873.0
-offset_right = 1382.0
-offset_bottom = 904.0
+offset_left = 982.99994
+offset_top = 880.0
+offset_right = 1035.0
+offset_bottom = 917.0
 scale = Vector2(1.74831, 1.74831)
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 20
 text = "Next"
 
-[node name="Close" type="Button" parent="Panel"]
+[node name="Close" type="Button" parent="Panel" unique_id=1362540439]
 layout_mode = 0
-offset_left = 1661.0
-offset_top = 25.0
-offset_right = 1679.0
-offset_bottom = 56.0
+offset_left = 1588.0
+offset_top = 84.0
+offset_right = 1622.8909
+offset_bottom = 115.0
 scale = Vector2(1.74831, 1.74831)
 text = "X"
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1963473751]
 layout_mode = 0
 offset_left = 650.0
 offset_top = 540.0
@@ -82,24 +86,28 @@ offset_right = 812.0
 offset_bottom = 642.0
 scale = Vector2(2.36289, 2.36289)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=1747143596]
 layout_mode = 2
 
-[node name="Play" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="Play" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1340550159]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("1_uaofe")
-theme_override_font_sizes/font_size = 17
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 20
 text = "Play"
 
-[node name="Instructions" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="Instructions" type="Button" parent="CenterContainer/VBoxContainer" unique_id=963584416]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 20
 text = "Instructions"
 
-[node name="Return to Hubworld" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="Return to Hubworld" type="Button" parent="CenterContainer/VBoxContainer" unique_id=370675233]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 20
 text = "Return to Hubworld"
 
-[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=739270851]
 stream = ExtResource("4_5jjns")
 volume_db = -10.0
 autoplay = true
