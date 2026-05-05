@@ -3,6 +3,21 @@
 [ext_resource type="Script" uid="uid://cgmg8ih4guj28" path="res://start_screen.gd" id="1_pevhg"]
 [ext_resource type="Texture2D" uid="uid://co8ixwvp5nnyc" path="res://assets/Startscreen_Background.png" id="2_afy8x"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o7i0r"]
+bg_color = Color(0.24313726, 0.15294118, 0.13725491, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.83137256, 0.6862745, 0.21568628, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+expand_margin_left = 2.0
+expand_margin_right = 2.0
+shadow_size = 2
+
 [node name="StartScreen" type="Node2D" unique_id=27431153]
 script = ExtResource("1_pevhg")
 
@@ -25,9 +40,11 @@ offset_top = 990.0
 offset_right = 394.0
 offset_bottom = 1080.0
 theme_override_font_sizes/font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
 text = "Start Game"
 
-[node name="TextEdit" type="TextEdit" parent="." unique_id=1203315510]
+[node name="LineEdit" type="LineEdit" parent="." unique_id=1266025154]
 offset_left = 68.0
 offset_top = 863.0
 offset_right = 501.0
