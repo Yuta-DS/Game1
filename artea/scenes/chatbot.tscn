@@ -38,4 +38,4 @@ text = "Send"
 
 [node name="AI_Counselor" type="NobodyWhoChat" parent="." unique_id=433028267]
 
-[node name="HTTPRequestChatGPT2" type="HTTPRequest" parent="." unique_id=1784943902]
+[node name="MiloModel" type="NobodyWhoModel" parent="." unique_id=2043035805]
