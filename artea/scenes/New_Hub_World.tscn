@@ -596,7 +596,7 @@ stretch_mode = 0
 script = ExtResource("42_ewago")
 
 [node name="Milo_Animations_old" parent="." unique_id=1444388133 instance=ExtResource("45_k7taw")]
-transform = Transform3D(-1.8051885, 0, -9.835715, 0, 10, 0, 9.835715, 0, -1.8051885, 110, 19.9, -15)
+transform = Transform3D(-1.8051885, 0, -9.835715, 0, 10, 0, 9.835715, 0, -1.8051885, 110, 20, -15)
 
 [node name="building_church_red2" parent="." unique_id=379392783 instance=ExtResource("30_ikt05")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 86, 19, -77.7649)

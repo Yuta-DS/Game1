@@ -20,7 +20,7 @@ offset_bottom = 277.0
 [node name="ChatHistory" type="TextEdit" parent="VBoxContainer" unique_id=1742542813]
 custom_minimum_size = Vector2(400, 200)
 layout_mode = 2
-placeholder_text = "Write your message here"
+placeholder_text = "Start the chat with Milo"
 scroll_smooth = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=413830909]
@@ -36,6 +36,7 @@ placeholder_text = "write your text here"
 custom_minimum_size = Vector2(100, 30)
 layout_mode = 2
 size_flags_horizontal = 3
+text = "Send"
 
 [node name="HTTPRequestChatGPT" type="HTTPRequest" parent="." unique_id=990123601]
 
