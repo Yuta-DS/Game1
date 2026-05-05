@@ -56,6 +56,7 @@
 [ext_resource type="PackedScene" uid="uid://mlbbm08eu5nw" path="res://assets3D/house scenes/tower_b.tscn" id="45_t72bn"]
 [ext_resource type="PackedScene" uid="uid://bdx4hvm2wninr" path="res://assets3D/house scenes/tower_catapult.tscn" id="46_40xrb"]
 [ext_resource type="PackedScene" uid="uid://catvjmgmxqdgx" path="res://assets3D/house scenes/Prince.tscn" id="48_kjbyn"]
+[ext_resource type="Material" uid="uid://dkkbdeury7542" path="res://portal_colour.tres" id="55_4y8xt"]
 [ext_resource type="Script" uid="uid://psrly1at8x5g" path="res://scripts/teleport_Art_Gallery.gd" id="55_njk6r"]
 [ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
@@ -158,14 +159,14 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_clm5u"]
+[sub_resource type="Resource" id="Resource_1fv2d"]
 script = ExtResource("15_o1ycd")
 amount = 60500
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_4y8xt"]
+[sub_resource type="Resource" id="Resource_yieqa"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
@@ -173,25 +174,25 @@ scale = Vector3(0.1, 0.1, 0.1)
 override_global_seed = true
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_1fv2d"]
+[sub_resource type="Resource" id="Resource_he78i"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_yieqa"]
+[sub_resource type="Resource" id="Resource_xrdtn"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_he78i"]
+[sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_xrdtn"]
+[sub_resource type="Resource" id="Resource_462mr"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_clm5u"), SubResource("Resource_4y8xt"), SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i"), SubResource("Resource_xrdtn"), SubResource("Resource_m45cy")])
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
 
@@ -256,38 +257,38 @@ thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
-[sub_resource type="Resource" id="Resource_m45cy"]
+[sub_resource type="Resource" id="Resource_e81s8"]
 script = ExtResource("15_o1ycd")
 amount = 188
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_462mr"]
+[sub_resource type="Resource" id="Resource_v5xqt"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_e81s8"]
+[sub_resource type="Resource" id="Resource_13iw3"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_v5xqt"]
+[sub_resource type="Resource" id="Resource_vqqxb"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_13iw3"]
+[sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_vqqxb"]
+[sub_resource type="Resource" id="Resource_iq1my"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_m45cy"), SubResource("Resource_462mr"), SubResource("Resource_e81s8"), SubResource("Resource_v5xqt"), SubResource("Resource_13iw3")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_e81s8"), SubResource("Resource_v5xqt"), SubResource("Resource_13iw3"), SubResource("Resource_vqqxb"), SubResource("Resource_nfeeq")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -297,27 +298,7 @@ radius = 120.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_ewago"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_krhoc"]
-transparency = 1
-albedo_color = Color(1, 0.8745098, 0.50980395, 1)
-emission_enabled = true
-emission = Color(1, 0.9019608, 0.50980395, 1)
-emission_energy_multiplier = 2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a4768"]
-transparency = 1
-albedo_color = Color(1, 0.8745098, 0.49019608, 1)
-emission_enabled = true
-emission = Color(1, 0.9019608, 0.5882353, 1)
-
 [sub_resource type="BoxMesh" id="BoxMesh_a4768"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xcoir"]
-transparency = 1
-albedo_color = Color(1, 0.8745098, 0.50980395, 1)
-emission_enabled = true
-emission = Color(1, 0.9019608, 0.5882353, 1)
-emission_energy_multiplier = 2.0
 
 [node name="HubWorld" type="Node3D" unique_id=2105333492]
 
@@ -407,7 +388,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment" unique_id=528747255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_xrdtn")
+modifier_stack = SubResource("Resource_462mr")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -442,7 +423,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_vqqxb")
+modifier_stack = SubResource("Resource_iq1my")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -655,42 +636,44 @@ transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -3
 visible = false
 
 [node name="Art_Gallery" type="Area3D" parent="." unique_id=1255044157]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -255, 41, 22.7)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -32.3, 20, -2)
 collision_layer = 3
 script = ExtResource("55_njk6r")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Art_Gallery" unique_id=832564870]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -7.3, 11.479, 19.856)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Art_Gallery" unique_id=1174303667]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
 mesh = SubResource("BoxMesh_ewago")
+surface_material_override/0 = ExtResource("55_4y8xt")
 
 [node name="Drawing_Tool" type="Area3D" parent="." unique_id=1110659011]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 58.8, 16, -43)
 script = ExtResource("56_kl01c")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Drawing_Tool" unique_id=1055451839]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8, 10.2, 19.856)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Drawing_Tool" unique_id=517840038]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -8.95, 10.652, 19.856)
 mesh = SubResource("BoxMesh_ewago")
+surface_material_override/0 = ExtResource("55_4y8xt")
 
 [node name="Popthought_world" type="Area3D" parent="." unique_id=952177838]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 90.3, 15, -83)
 script = ExtResource("57_ewago")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Popthought_world" unique_id=1161001295]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.634949, 11.478767, 19.856232)
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.635, 11.479, 20.5)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Popthought_world" unique_id=803191969]
 transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, -8.635, 11.6, 19.6)
 mesh = SubResource("BoxMesh_a4768")
-surface_material_override/0 = SubResource("StandardMaterial3D_xcoir")
+surface_material_override/0 = ExtResource("55_4y8xt")
 
 [node name="AppleSpawner" type="Node3D" parent="." unique_id=337249485]
 script = ExtResource("2_spawner")
