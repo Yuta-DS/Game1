@@ -654,7 +654,7 @@ transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -3
 visible = false
 
 [node name="Art_Gallery" type="Area3D" parent="." unique_id=1255044157]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -255, 41, 22.7)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -255, 51, 22.7)
 collision_layer = 3
 script = ExtResource("55_njk6r")
 
@@ -668,7 +668,7 @@ mesh = SubResource("BoxMesh_ewago")
 surface_material_override/0 = SubResource("StandardMaterial3D_krhoc")
 
 [node name="Drawing_Tool" type="Area3D" parent="." unique_id=1110659011]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 58.8, 16, -43)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 58.8, 26, -43)
 script = ExtResource("56_kl01c")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Drawing_Tool" unique_id=1516364125]
@@ -681,7 +681,7 @@ mesh = SubResource("BoxMesh_ewago")
 surface_material_override/0 = SubResource("StandardMaterial3D_a4768")
 
 [node name="Popthought_world" type="Area3D" parent="." unique_id=952177838]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 90.3, 15.5, -83)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 90.3, 25.5, -83)
 script = ExtResource("57_ewago")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Popthought_world" unique_id=1224225643]
