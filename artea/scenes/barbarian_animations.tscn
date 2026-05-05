@@ -1,10 +1,13 @@
 [gd_scene format=3 uid="uid://dlvg1cesiihwf"]
 
 [ext_resource type="PackedScene" uid="uid://cm0pkn5kkravp" path="res://assets3D/characters/Barbarian.glb" id="1_gbgvm"]
-[ext_resource type="Script" uid="uid://c1s58iloqk6v" path="res://scripts/knight_animations.gd" id="2_2f8uo"]
+[ext_resource type="Script" uid="uid://wumepiakuy83" path="res://scripts/barbarian_animations.gd" id="2_1x6gn"]
+[ext_resource type="Script" uid="uid://cmibd6k0gwjah" path="res://scenes/chat_detection_area_3d.gd" id="3_1x6gn"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_b2tcy"]
 
 [node name="Barbarian" unique_id=172103663 instance=ExtResource("1_gbgvm")]
-script = ExtResource("2_2f8uo")
+script = ExtResource("2_1x6gn")
 
 [node name="Skeleton3D" parent="Rig" parent_id_path=PackedInt32Array(997577290) index="0" unique_id=1885786743]
 bones/1/position = Vector3(0, 0.39206383, 0)
@@ -84,3 +87,13 @@ transform = Transform3D(0.9962748, -5.1496167e-09, 0.08623532, 5.1304343e-09, 0.
 
 [node name="AnimationPlayer" parent="." index="1" unique_id=1330053849]
 autoplay = &"Idle"
+
+[node name="Area3D" type="Area3D" parent="." index="2" unique_id=1355784835]
+transform = Transform3D(7, 0, 0, 0, 7, 0, 0, 0, 7, 0, 0, 0)
+script = ExtResource("3_1x6gn")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" index="0" unique_id=1713988705]
+shape = SubResource("SphereShape3D_b2tcy")
+
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_3d_body_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_3d_body_exited"]
