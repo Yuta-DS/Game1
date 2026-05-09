@@ -1,24 +1,12 @@
 [gd_scene format=3 uid="uid://b7at4u5jlyu5c"]
 
 [ext_resource type="Script" uid="uid://pvrtbkfu3g2k" path="res://scripts/dialogue_ui.gd" id="1_dwk8m"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6q285"]
-bg_color = Color(0.54509807, 0.3529412, 0.16862746, 1)
-border_width_left = 25
-border_width_top = 25
-border_width_right = 25
-border_width_bottom = 25
-border_color = Color(0.8, 0.8, 0.14901961, 1)
-border_blend = true
-corner_radius_top_left = 100
-corner_radius_top_right = 100
-corner_radius_bottom_right = 100
-corner_radius_bottom_left = 100
+[ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="2_6q285"]
 
 [node name="CanvasLayer" type="CanvasLayer" unique_id=319602805]
 script = ExtResource("1_dwk8m")
 
-[node name="Panel" type="Panel" parent="." unique_id=1099292712]
+[node name="ChatBubble" type="TextureRect" parent="." unique_id=1798953814]
 custom_minimum_size = Vector2(0, 150)
 anchors_preset = 7
 anchor_left = 0.5
@@ -30,49 +18,47 @@ offset_top = -300.0
 offset_right = 500.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_6q285")
+texture = ExtResource("2_6q285")
+stretch_mode = 6
 
-[node name="RichTextLabel" type="RichTextLabel" parent="Panel" unique_id=899540478]
-custom_minimum_size = Vector2(800, 0)
+[node name="MarginContainer" type="MarginContainer" parent="ChatBubble" unique_id=1472192249]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
+anchors_preset = -1
+anchor_left = 0.53400004
 anchor_top = 0.5
-anchor_right = 0.5
+anchor_right = 0.53400004
 anchor_bottom = 0.5
-offset_left = -400.0
-offset_top = -50.0
-offset_right = 400.0
-offset_bottom = 50.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_left = -461.00006
+offset_top = -40.0
+offset_right = 338.99994
+offset_bottom = 98.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ChatBubble/MarginContainer" unique_id=1792283064]
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="ChatBubble/MarginContainer/VBoxContainer" unique_id=899540478]
+custom_minimum_size = Vector2(800, 80)
+layout_mode = 2
+theme_override_colors/default_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/normal_font_size = 24
 fit_content = true
 
-[node name="SpeakerLabel" type="Label" parent="Panel" unique_id=1147485064]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -25.0
-offset_top = -12.0
-offset_bottom = 38.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
+[node name="SpeakerLabel" type="Label" parent="ChatBubble" unique_id=1147485064]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 190.0
+offset_right = 447.0
+offset_bottom = 240.0
+theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ChoicesContainer" type="VBoxContainer" parent="Panel" unique_id=967096771]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -318.0
-offset_top = -164.0
-offset_right = 182.0
-offset_bottom = -14.0
+[node name="ChoicesContainer" type="VBoxContainer" parent="ChatBubble" unique_id=967096771]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 0
+offset_left = 73.0
+offset_top = 344.0
+offset_right = 873.0
+offset_bottom = 394.0
 grow_horizontal = 2
 grow_vertical = 0
-scale = Vector2(1.3, 1.3)
