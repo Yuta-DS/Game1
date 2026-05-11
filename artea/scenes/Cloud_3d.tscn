@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dtjt717ak7rcx"]
 
 [ext_resource type="Script" uid="uid://cnqbl1xaj8j4e" path="res://scenes/cloud_3d.gd" id="1_q6d06"]
+[ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="2_jc430"]
 [ext_resource type="Texture2D" uid="uid://b6klow8fcswc7" path="res://scenes/Pastel_cloud.png" id="3_lft4b"]
 [ext_resource type="AudioStream" uid="uid://c3eb87lo1ufwq" path="res://assets/audio/Pop_sound.wav" id="4_jc430"]
 
@@ -43,7 +44,8 @@ script = ExtResource("1_q6d06")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
 billboard = 1
 modulate = Color(0, 0.03529412, 0.2627451, 1)
-font_size = 200
+font = ExtResource("2_jc430")
+font_size = 300
 outline_size = 6
 
 [node name="Sparkles" type="GPUParticles3D" parent="." unique_id=3725241]

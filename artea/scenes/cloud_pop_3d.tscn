@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://csqtbu457hur7" path="res://scripts/cloud_pop_ui.gd" id="1_4xkxp"]
 [ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="1_bq4c8"]
 [ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.mp3" id="2_4xkxp"]
+[ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="2_f75l6"]
+[ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="3_vt6wo"]
 [ext_resource type="PackedScene" uid="uid://duelwtfern64x" path="res://assets3D/kkNatureForest/gltf/Tree_1_A_Color1.gltf" id="4_bjlxx"]
 [ext_resource type="AudioStream" uid="uid://ddtvr45ydfv7l" path="res://assets/audio/calm music.mp3" id="6_utney"]
 [ext_resource type="PackedScene" uid="uid://xen2qn2unprq" path="res://assets3D/houses/gltf/house.gltf" id="7_f75l6"]
@@ -74,15 +76,15 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -98.207184
-offset_top = 165.68024
-offset_right = 551.79285
-offset_bottom = 223.68024
+offset_left = -222.92639
+offset_top = 189.7925
+offset_right = 427.0736
+offset_bottom = 267.79248
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_stretch_ratio = 0.0
-theme_override_fonts/font = ExtResource("1_bq4c8")
-theme_override_font_sizes/font_size = 50
+theme_override_fonts/font = ExtResource("2_f75l6")
+theme_override_font_sizes/font_size = 42
 placeholder_text = "What are your thoughts?"
 alignment = 1
 max_length = 60
@@ -106,14 +108,14 @@ anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -16.361328
-offset_top = 276.78284
-offset_right = 135.63867
-offset_bottom = 324.78284
+offset_left = -220.08801
+offset_top = 306.79614
+offset_right = -17.088013
+offset_bottom = 370.79614
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_fonts/font = ExtResource("1_bq4c8")
-theme_override_font_sizes/font_size = 40
+theme_override_fonts/font = ExtResource("3_vt6wo")
+theme_override_font_sizes/font_size = 34
 text = "Add Cloud"
 
 [node name="Pop Thoughts" type="Button" parent="CanvasLayer2/UIControl/CenterContainer/VSplitContainer/Control2" unique_id=1322770943]
@@ -122,15 +124,15 @@ anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = 266.6347
-offset_top = 280.13736
-offset_right = 498.6347
-offset_bottom = 328.13736
+offset_left = 89.91174
+offset_top = 307.18457
+offset_right = 387.91174
+offset_bottom = 371.18457
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_fonts/font = ExtResource("1_bq4c8")
-theme_override_font_sizes/font_size = 40
-text = "Start Popping!"
+theme_override_fonts/font = ExtResource("2_f75l6")
+theme_override_font_sizes/font_size = 34
+text = "Start Popping !"
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="CanvasLayer2/UIControl" unique_id=1743346761]
 stream = ExtResource("2_4xkxp")
