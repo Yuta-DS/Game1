@@ -4,7 +4,7 @@
 [ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="1_bq4c8"]
 [ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.mp3" id="2_4xkxp"]
 [ext_resource type="PackedScene" uid="uid://duelwtfern64x" path="res://assets3D/kkNatureForest/gltf/Tree_1_A_Color1.gltf" id="4_bjlxx"]
-[ext_resource type="AudioStream" uid="uid://cy3l3avm3i36h" path="res://assets/audio/Beautiful Piano Music.mp3" id="6_utney"]
+[ext_resource type="AudioStream" uid="uid://ddtvr45ydfv7l" path="res://assets/audio/calm music.mp3" id="6_utney"]
 [ext_resource type="PackedScene" uid="uid://xen2qn2unprq" path="res://assets3D/houses/gltf/house.gltf" id="7_f75l6"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_4xkxp"]
