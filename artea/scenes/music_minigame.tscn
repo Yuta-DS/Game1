@@ -1,0 +1,284 @@
+[gd_scene format=3 uid="uid://rg062smgsl6g"]
+
+[ext_resource type="Script" uid="uid://je5vfnd43b23" path="res://scripts/music_minigame.gd" id="1_818vo"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b8p47"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_at7cq"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3oc71"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rds22"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p30x5"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3r8er"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p58kf"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yxbe5"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ovw0"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lo4ja"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_an5ba"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_biiki"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wlqqt"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0cf56"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n5px8"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_818vo"]
+bg_color = Color(0.6, 0.94509804, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="MusicMinigame" type="Control" unique_id=1867925414]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_818vo")
+
+[node name="BackgroundVisual" type="ColorRect" parent="." unique_id=1937901353]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+
+[node name="Overlay" type="ColorRect" parent="BackgroundVisual" unique_id=1726250871]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 0.2)
+
+[node name="VisualizerContainer" type="Control" parent="." unique_id=1933276799]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -300.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Bar1" type="Panel" parent="VisualizerContainer" unique_id=1126721193]
+layout_mode = 0
+offset_right = 20.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_b8p47")
+
+[node name="Bar2" type="Panel" parent="VisualizerContainer" unique_id=2114671601]
+layout_mode = 0
+offset_left = 20.0
+offset_right = 40.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_at7cq")
+
+[node name="Bar3" type="Panel" parent="VisualizerContainer" unique_id=1133217065]
+layout_mode = 0
+offset_left = 40.0
+offset_right = 60.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_3oc71")
+
+[node name="Bar4" type="Panel" parent="VisualizerContainer" unique_id=768321179]
+layout_mode = 0
+offset_left = 60.0
+offset_right = 80.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_rds22")
+
+[node name="Bar5" type="Panel" parent="VisualizerContainer" unique_id=876317988]
+layout_mode = 0
+offset_left = 80.0
+offset_right = 100.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_p30x5")
+
+[node name="Bar6" type="Panel" parent="VisualizerContainer" unique_id=580959834]
+layout_mode = 0
+offset_left = 100.0
+offset_right = 120.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_3r8er")
+
+[node name="Bar7" type="Panel" parent="VisualizerContainer" unique_id=1195639721]
+layout_mode = 0
+offset_left = 120.0
+offset_right = 140.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_p58kf")
+
+[node name="Bar8" type="Panel" parent="VisualizerContainer" unique_id=1308676006]
+layout_mode = 0
+offset_left = 140.0
+offset_right = 160.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_yxbe5")
+
+[node name="Bar9" type="Panel" parent="VisualizerContainer" unique_id=475105507]
+layout_mode = 0
+offset_left = 160.0
+offset_right = 180.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_8ovw0")
+
+[node name="Bar10" type="Panel" parent="VisualizerContainer" unique_id=1145638621]
+layout_mode = 0
+offset_left = 180.0
+offset_right = 200.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_lo4ja")
+
+[node name="Bar11" type="Panel" parent="VisualizerContainer" unique_id=1382149039]
+layout_mode = 0
+offset_left = 200.0
+offset_right = 220.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_an5ba")
+
+[node name="Bar12" type="Panel" parent="VisualizerContainer" unique_id=627544156]
+layout_mode = 0
+offset_left = 220.0
+offset_right = 240.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_biiki")
+
+[node name="Bar13" type="Panel" parent="VisualizerContainer" unique_id=1545992355]
+layout_mode = 0
+offset_left = 240.0
+offset_right = 260.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_wlqqt")
+
+[node name="Bar14" type="Panel" parent="VisualizerContainer" unique_id=1611629887]
+layout_mode = 0
+offset_left = 260.0
+offset_right = 280.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_0cf56")
+
+[node name="Bar15" type="Panel" parent="VisualizerContainer" unique_id=1858939283]
+layout_mode = 0
+offset_left = 280.0
+offset_right = 300.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_n5px8")
+
+[node name="Bar16" type="Panel" parent="VisualizerContainer" unique_id=228338259]
+layout_mode = 0
+offset_left = 300.0
+offset_right = 320.0
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_818vo")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=460658940]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Title" type="Label" parent="VBoxContainer" unique_id=372845258]
+layout_mode = 2
+
+[node name="EmotionInput" type="LineEdit" parent="VBoxContainer" unique_id=331061337]
+layout_mode = 2
+placeholder_text = "Type how you feel..."
+
+[node name="GenerateButton" type="Button" parent="VBoxContainer" unique_id=1875997354]
+layout_mode = 2
+text = "Transform Emotion"
+
+[node name="ResultText" type="Label" parent="VBoxContainer" unique_id=688153701]
+layout_mode = 2
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=551705016]
