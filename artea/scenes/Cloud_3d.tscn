@@ -47,6 +47,7 @@ modulate = Color(0, 0.03529412, 0.2627451, 1)
 font = ExtResource("2_jc430")
 font_size = 300
 outline_size = 6
+width = 400.0
 
 [node name="Sparkles" type="GPUParticles3D" parent="." unique_id=3725241]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.06833184, 0.09136528, 0.10631573)
