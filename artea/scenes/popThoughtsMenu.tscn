@@ -28,7 +28,7 @@ anchor_bottom = 1.0
 offset_left = 14.0
 offset_top = 8.0
 offset_right = 260.0
-offset_bottom = 218.0
+offset_bottom = 292.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -37,10 +37,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -11.0
-offset_top = -4.0
-offset_right = -161.0
-offset_bottom = 4.0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = -1406.0
+offset_bottom = -876.0
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
@@ -48,10 +48,10 @@ stretch_mode = 6
 
 [node name="Previous" type="Button" parent="Panel" unique_id=1126446733]
 layout_mode = 0
-offset_left = 934.0
-offset_top = 964.99994
-offset_right = 986.0
-offset_bottom = 1001.99994
+offset_left = 100.0
+offset_top = 520.0
+offset_right = 152.0
+offset_bottom = 557.0
 scale = Vector2(1.74831, 1.74831)
 theme_override_fonts/font = ExtResource("3_5jjns")
 theme_override_font_sizes/font_size = 20
@@ -60,10 +60,10 @@ text = "Back
 
 [node name="Next" type="Button" parent="Panel" unique_id=1825627402]
 layout_mode = 0
-offset_left = 1447.0
-offset_top = 954.0
-offset_right = 1499.0
-offset_bottom = 991.0
+offset_left = 450.0
+offset_top = 520.0
+offset_right = 502.0
+offset_bottom = 557.0
 scale = Vector2(1.74831, 1.74831)
 theme_override_fonts/font = ExtResource("3_5jjns")
 theme_override_font_sizes/font_size = 20
@@ -71,10 +71,10 @@ text = "Next"
 
 [node name="Close" type="Button" parent="Panel" unique_id=1362540439]
 layout_mode = 0
-offset_left = 1672.0
-offset_top = 97.0
-offset_right = 1706.8909
-offset_bottom = 128.0
+offset_left = 1602.0
+offset_top = 54.0
+offset_right = 1636.8909
+offset_bottom = 85.0
 scale = Vector2(1.74831, 1.74831)
 text = "X"
 
