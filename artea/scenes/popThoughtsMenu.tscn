@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://divem2bli6vuu" path="res://assets/Clouds/Menu/Cloud-Minigame-Menu.png" id="2_5jjns"]
 [ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="3_5jjns"]
 [ext_resource type="AudioStream" uid="uid://b5rwhf7ltnj05" path="res://assets/SFX/introminigame.mp3" id="4_5jjns"]
+[ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="4_lnna2"]
 
 [node name="PopThoughtsMenu" type="Control" unique_id=653637478]
 layout_mode = 3
@@ -16,8 +17,8 @@ grow_vertical = 2
 script = ExtResource("1_n0gf0")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=827598144]
-position = Vector2(978.99994, 675.87494)
-scale = Vector2(1.1924481, 1.3969207)
+position = Vector2(987, 675.87494)
+scale = Vector2(1.2021924, 1.3969207)
 texture = ExtResource("2_5jjns")
 
 [node name="Panel" type="Panel" parent="." unique_id=413889371]
@@ -37,10 +38,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 50.0
-offset_top = 50.0
-offset_right = -1406.0
-offset_bottom = -876.0
+offset_left = -15.0
+offset_top = -4.0
+offset_right = -239.0
+offset_bottom = -296.0
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
@@ -48,35 +49,43 @@ stretch_mode = 6
 
 [node name="Previous" type="Button" parent="Panel" unique_id=1126446733]
 layout_mode = 0
-offset_left = 100.0
-offset_top = 520.0
-offset_right = 152.0
-offset_bottom = 557.0
+offset_left = 13.0
+offset_top = 12.0
+offset_right = 90.0
+offset_bottom = 52.0
 scale = Vector2(1.74831, 1.74831)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("3_5jjns")
-theme_override_font_sizes/font_size = 20
-text = "Back
+theme_override_font_sizes/font_size = 22
+text = "< Back
 "
+flat = true
 
 [node name="Next" type="Button" parent="Panel" unique_id=1825627402]
 layout_mode = 0
-offset_left = 450.0
-offset_top = 520.0
-offset_right = 502.0
-offset_bottom = 557.0
+offset_left = 1512.0
+offset_top = 6.0
+offset_right = 1589.0
+offset_bottom = 46.0
 scale = Vector2(1.74831, 1.74831)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("3_5jjns")
-theme_override_font_sizes/font_size = 20
-text = "Next"
+theme_override_font_sizes/font_size = 22
+text = "Next >"
+flat = true
 
 [node name="Close" type="Button" parent="Panel" unique_id=1362540439]
 layout_mode = 0
-offset_left = 1602.0
-offset_top = 54.0
-offset_right = 1636.8909
-offset_bottom = 85.0
+offset_left = 1682.0
+offset_top = 9.0
+offset_right = 1717.4629
+offset_bottom = 47.0
 scale = Vector2(1.74831, 1.74831)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_lnna2")
+theme_override_font_sizes/font_size = 21
 text = "X"
+flat = true
 
 [node name="CenterContainer" type="CenterContainer" parent="." unique_id=1963473751]
 layout_mode = 0
