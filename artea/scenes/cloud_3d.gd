@@ -41,6 +41,7 @@ func _setup():
 		label.billboard = 1
 		label.position = Vector3(0, 0, 0.2)
 		
+		
 	
 	# 3. COLORS
 	if sprite:
@@ -103,6 +104,9 @@ func start_wandering():
 		0
 	).normalized()
 	set_process(true)
+	
+	##
+	
 
 func _process(delta):
 	if not floating:
@@ -130,3 +134,6 @@ func _process(delta):
 		base_y = new_pos.y
 	
 	global_position = new_pos
+	
+	## New lines for text wrapping
+	
