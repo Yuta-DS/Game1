@@ -24,12 +24,12 @@ func _ready():
 
 	# Preload your instruction PNGs
 	instruction_images = [
-		preload("res://assets/Clouds/Menu/Instructions/Instruction 1.png"),
-		preload("res://assets/Clouds/Menu/Instructions/Instruction 2.png"),
-		preload("res://assets/Clouds/Menu/Instructions/Instruction 3.png"),
-		preload("res://assets/Clouds/Menu/Instructions/Instruction 4.png"),
-		preload("res://assets/Clouds/Menu/Instructions/Instruction 5.png"),
-		preload("res://assets/Clouds/Menu/Instructions/Instruction 6.png"),
+		preload("res://assets/Clouds/Menu/NewInstructions/PopCloud_instruction1.png"),
+		preload("res://assets/Clouds/Menu/NewInstructions/PopCloud_instruction2.png"),
+		preload("res://assets/Clouds/Menu/NewInstructions/PopCloud_instruction3.png"),
+		preload("res://assets/Clouds/Menu/NewInstructions/PopCloud_instruction4.png"),
+		preload("res://assets/Clouds/Menu/NewInstructions/PopCloud_instruction5.png"),
+		preload("res://assets/Clouds/Menu/NewInstructions/PopCloud_instruction6.png"),
 	]
 	
 	$Panel.visible = false  # Or replace with actual node path if different
