@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cnqbl1xaj8j4e" path="res://scenes/cloud_3d.gd" id="1_q6d06"]
 [ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="2_jc430"]
 [ext_resource type="Texture2D" uid="uid://b6klow8fcswc7" path="res://scenes/Pastel_cloud.png" id="3_lft4b"]
-[ext_resource type="AudioStream" uid="uid://c3eb87lo1ufwq" path="res://assets/audio/Pop_sound.wav" id="4_jc430"]
+[ext_resource type="AudioStream" uid="uid://c7au3wks685p3" path="res://assets/audio/minigame/Cloud_pop_sound.wav" id="4_jc430"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lft4b"]
 transparency = 2
