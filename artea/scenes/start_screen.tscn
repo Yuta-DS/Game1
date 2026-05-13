@@ -105,10 +105,16 @@ theme_override_font_sizes/font_size = 50
 text = "Username:"
 horizontal_alignment = 1
 
-[node name="LineEdit" type="LineEdit" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=1266025154]
+[node name="UsernameInput" type="LineEdit" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=1266025154]
 layout_mode = 2
 theme_override_font_sizes/font_size = 50
 placeholder_text = "Enter username"
+
+[node name="PasswordInput" type="LineEdit" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=1171476167]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+placeholder_text = "Password"
+secret = true
 
 [node name="Button" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=56447978]
 layout_mode = 2
@@ -117,4 +123,12 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
 text = "Start Game"
 
+[node name="RegisterButton" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=2004161624]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
+text = "Register"
+
 [connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/RegisterButton" to="." method="_on_button_pressed"]

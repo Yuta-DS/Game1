@@ -28,6 +28,7 @@ Global="*res://scripts/Global.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameManager="*res://scripts/GameManager.gd"
 Auth="*res://addons/godot-firebase/auth/auth.gd"
+UserStorage="*uid://c35r2ihdgrlst"
 
 [dialogue_manager]
 
