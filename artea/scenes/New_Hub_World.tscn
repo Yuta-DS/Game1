@@ -60,13 +60,15 @@
 [ext_resource type="Script" uid="uid://psrly1at8x5g" path="res://scripts/teleport_Art_Gallery.gd" id="55_njk6r"]
 [ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
-[ext_resource type="PackedScene" path="res://scenes/narrative_package.tscn" id="61_krhoc"]
+[ext_resource type="PackedScene" uid="uid://6obaxkmc212j" path="res://scenes/narrative_package.tscn" id="61_krhoc"]
 [ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="62_milo"]
 [ext_resource type="PackedScene" uid="uid://b1d3rlknpgaj3" path="res://scenes/everlasting_father_animations.tscn" id="63_father"]
 [ext_resource type="PackedScene" uid="uid://7xbyv6flli6r" path="res://scenes/knight_animations.tscn" id="64_knight"]
 [ext_resource type="PackedScene" uid="uid://bkm1ymlapx10o" path="res://scenes/rogue_animations.tscn" id="65_rogue"]
 [ext_resource type="PackedScene" uid="uid://dlvg1cesiihwf" path="res://scenes/barbarian_animations.tscn" id="66_barbarian"]
 [ext_resource type="PackedScene" uid="uid://c080vovqsegsq" path="res://scenes/mage_animations.tscn" id="67_mage"]
+[ext_resource type="Script" uid="uid://ca8tvwxs47jqc" path="res://scenes/story_direction.gd" id="68_1fv2d"]
+[ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="68_yieqa"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -159,14 +161,14 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_1fv2d"]
+[sub_resource type="Resource" id="Resource_he78i"]
 script = ExtResource("15_o1ycd")
 amount = 60500
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_yieqa"]
+[sub_resource type="Resource" id="Resource_xrdtn"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
@@ -174,25 +176,25 @@ scale = Vector3(0.1, 0.1, 0.1)
 override_global_seed = true
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_he78i"]
+[sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_xrdtn"]
+[sub_resource type="Resource" id="Resource_462mr"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_m45cy"]
+[sub_resource type="Resource" id="Resource_e81s8"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_462mr"]
+[sub_resource type="Resource" id="Resource_v5xqt"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_1fv2d"), SubResource("Resource_yieqa"), SubResource("Resource_he78i"), SubResource("Resource_xrdtn"), SubResource("Resource_m45cy")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_he78i"), SubResource("Resource_xrdtn"), SubResource("Resource_m45cy"), SubResource("Resource_462mr"), SubResource("Resource_e81s8")])
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ha1sw"]
 
@@ -257,38 +259,38 @@ thickness = 40.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
-[sub_resource type="Resource" id="Resource_e81s8"]
+[sub_resource type="Resource" id="Resource_13iw3"]
 script = ExtResource("15_o1ycd")
 amount = 188
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_v5xqt"]
+[sub_resource type="Resource" id="Resource_vqqxb"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
 scale = Vector3(0.3, 0.3, 0.3)
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_13iw3"]
+[sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_vqqxb"]
+[sub_resource type="Resource" id="Resource_iq1my"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_nfeeq"]
+[sub_resource type="Resource" id="Resource_ggnbg"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_iq1my"]
+[sub_resource type="Resource" id="Resource_0x87v"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_e81s8"), SubResource("Resource_v5xqt"), SubResource("Resource_13iw3"), SubResource("Resource_vqqxb"), SubResource("Resource_nfeeq")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_13iw3"), SubResource("Resource_vqqxb"), SubResource("Resource_nfeeq"), SubResource("Resource_iq1my"), SubResource("Resource_ggnbg")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -388,7 +390,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment" unique_id=528747255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_462mr")
+modifier_stack = SubResource("Resource_v5xqt")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -410,8 +412,7 @@ shape = SubResource("Resource_vspl4")
 [node name="landingBlocklol" parent="Environment" unique_id=97436999 instance=ExtResource("3_mwiy7")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 4.73711, 0)
 
-[node name="Wata" parent="Environment" unique_id=1216249312 instance=ExtResource("1_u4tjg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.0534, 1.61997)
+[node name="Water" parent="Environment" unique_id=1279964189 instance=ExtResource("1_u4tjg")]
 
 [node name="DayNite" parent="Environment" unique_id=1891359062 instance=ExtResource("24_ha1sw")]
 
@@ -423,7 +424,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_iq1my")
+modifier_stack = SubResource("Resource_0x87v")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -710,6 +711,33 @@ transform = Transform3D(-0.295708, 0, 0.9552784, 0, 1, 0, -0.9552784, 0, -0.2957
 
 [node name="Mage" parent="." unique_id=460202447 instance=ExtResource("67_mage")]
 transform = Transform3D(0.7847764, 0, 0.619779, 0, 1, 0, -0.619779, 0, 0.7847764, 59, 20, -49)
+
+[node name="Story_Intro_Spawn2" type="Label3D" parent="." unique_id=580049014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107.823364, 22.766987, -21.084024)
+billboard = 1
+no_depth_test = true
+modulate = Color(1, 0.95686275, 0.81960785, 1)
+outline_size = 20
+
+[node name="NarrativeBubble" type="Sprite3D" parent="Story_Intro_Spawn2" unique_id=192401457]
+transform = Transform3D(0.048518512, 0, -0.9988223, 0, 1, 0, 0.9988223, 0, 0.048518512, 0, 0, 0.023192167)
+billboard = 2
+texture = ExtResource("68_yieqa")
+script = ExtResource("68_1fv2d")
+
+[node name="Label3D" type="Label3D" parent="Story_Intro_Spawn2/NarrativeBubble" unique_id=699826674]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
+billboard = 2
+no_depth_test = true
+render_priority = 1
+text = "Welcome, Seeker. Artéa has been dimmed by fear and confusion. You are here to rediscover the truth and restore the light."
+autowrap_mode = 1
+width = 1000.0
+
+[node name="CharacterName" type="Label3D" parent="Story_Intro_Spawn2/NarrativeBubble" unique_id=489327213]
+transform = Transform3D(-0.20967002, 0, 0.9777738, 0, 1, 0, -0.9777738, 0, -0.20967002, 0, 0.5, 0.1)
+offset = Vector2(-220, 0)
+billboard = 1
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
