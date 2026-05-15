@@ -12,20 +12,21 @@ outline_size = 20
 
 [node name="NarrativeBubble" type="Sprite3D" parent="." unique_id=192401457]
 transform = Transform3D(0.048518512, 0, -0.9988223, 0, 1, 0, 0.9988223, 0, 0.048518512, 0, 0, 0.023192167)
-billboard = 2
 texture = ExtResource("1_65g5f")
 script = ExtResource("2_y48wk")
 
 [node name="Label3D" type="Label3D" parent="NarrativeBubble" unique_id=699826674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
-billboard = 2
 no_depth_test = true
 render_priority = 1
+modulate = Color(0.18039216, 0.003921569, 0.2, 1)
 text = "Welcome, Seeker. Artéa has been dimmed by fear and confusion. You are here to rediscover the truth and restore the light."
 autowrap_mode = 1
 width = 1000.0
 
 [node name="CharacterName" type="Label3D" parent="NarrativeBubble" unique_id=489327213]
-transform = Transform3D(-0.20967002, 0, 0.9777738, 0, 1, 0, -0.9777738, 0, -0.20967002, 0, 0.5, 0.1)
+transform = Transform3D(1.0000024, 0, 0, 0, 1, 0, 0, 0, 1.0000024, 0.0006737709, 0.5, 0.08615494)
+extra_cull_margin = 2.0
 offset = Vector2(-220, 0)
-billboard = 1
+no_depth_test = true
+text = "Seraphim"
