@@ -59,10 +59,10 @@ text = "Play Again"
 
 [node name="Return to Hubworld" type="Button" parent="." unique_id=39380138]
 layout_mode = 0
-offset_left = 866.0
-offset_top = 695.0
-offset_right = 1116.0
-offset_bottom = 738.0
+offset_left = 930.00006
+offset_top = 691.0
+offset_right = 1183.0
+offset_bottom = 739.0
 scale = Vector2(1.62353, 1.62353)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_k687y")
