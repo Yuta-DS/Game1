@@ -9,8 +9,8 @@ var move_direction := Vector3.ZERO
 var move_speed := 0.0
 var speed_min := 0.3
 var speed_max := 0.8
-var bounds_x := 5.0
-var bounds_y := 2.5
+var bounds_x := 10.0
+var bounds_y := 5.0
 
 func _ready():
 	await get_tree().process_frame
