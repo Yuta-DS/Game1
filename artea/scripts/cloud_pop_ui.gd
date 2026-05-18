@@ -62,17 +62,18 @@ func _on_pop_thoughts_pressed():
 func _init_cloud_positions():
 	available_positions.clear()
 	
-	# Only spawn clouds in the SKY area (Y values between 1 and 5)
-	# This keeps them away from the green ground (Y = -2 to 0)
+	# Spread across wider area
 	var positions = [
-		Vector2(-5, 4.5), Vector2(0, 4.5), Vector2(5, 4.5),
-		Vector2(-4, 2.5), Vector2(0, 2.5), Vector2(4, 2.5),
-		Vector2(-3, 6), Vector2(0, 6), Vector2(3, 6),
+		Vector2(-8, 5), Vector2(0, 5), Vector2(8, 5),
+		Vector2(-7, 3.5), Vector2(0, 3.5), Vector2(7, 3.5),
+		Vector2(-6, 2), Vector2(0, 2), Vector2(6, 2),
+		Vector2(-5, 0.5), Vector2(0, 0.5), Vector2(5, 0.5),
 	]
 	
 	for pos in positions:
 		available_positions.append(pos)
-	available_positions.shuffle()
+	
+	# DON'T shuffle - use in order
 	# Mix of positions - some high, some middle, some low
 	#var positions = [
 		# Top positions (sky)
