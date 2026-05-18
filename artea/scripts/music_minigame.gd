@@ -1,11 +1,29 @@
 extends Control
 
-@onready var input = $VBoxContainer/EmotionInput
-@onready var button = $VBoxContainer/GenerateButton
-@onready var result = $VBoxContainer/ResultText
+@onready var input = $HBoxContainer/VBoxContainer/EmotionInput
+@onready var button = $HBoxContainer/VBoxContainer/GenerateButton
+@onready var result = $HBoxContainer/VBoxContainer/ResultText
 @onready var color_rect = $BackgroundVisual
 @onready var player = $MusicPlayer
 @onready var visualizer = $VisualizerContainer
+@onready var emotion_ai = $EmotionAI
+@onready var pitch_slider = $HBoxContainer/Options/PitchSlider
+@onready var default_pitch_button = $HBoxContainer/Options/ResetPitch
+@onready var drums1 = $HBoxContainer/VBoxContainer3/Drums/DrumsColumn1/ButtonDrums1
+@onready var drums3 = $HBoxContainer/VBoxContainer3/Drums/DrumsColumn1/ButtonDrums3
+@onready var drums2 = $HBoxContainer/VBoxContainer3/Drums/DrumsColumn2/ButtonDrums2
+@onready var drums4 = $HBoxContainer/VBoxContainer3/Drums/DrumsColumn2/ButtonDrums4
+@onready var drums_slider = $HBoxContainer/VBoxContainer3/DrumsPitch/DrumsSlider
+@onready var reset_drums = $HBoxContainer/VBoxContainer3/DrumsPitch/ResetDrums
+@onready var stop_drums = $HBoxContainer/VBoxContainer3/DrumsPitch/StopDrums
+@onready var drums_player = $DrumsPlayer
+@onready var model = $Model
+@export var bar_count = 77
+@export var bar_width = 20
+@export var bar_spacing = 3
+@export var min_height = 40
+@export var height_multiplier = 2.0
+var music_system_activated = false
 
 var bars = []
 var bar_speed_offsets = []
@@ -13,32 +31,329 @@ var bar_strength_offsets = []
 var bar_offsets = []
 var visualizer_speed = 5.0
 var visualizer_strength = 180.0
+var valid_emotions = [
+	"happy",
+	"anticipation",
+	"angry",
+	"disgust",
+	"sad",
+	"surprise",
+	"fear",
+	"trust"
+]
 
 var color_tween: Tween
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	
-	#bars.clear()
-	#bar_speeds.clear()
-	#bar_strengths.clear()
-	#bar_offsets.clear()
+	player.stream = load("res://assets/audio/minigame/intro.mp3")
+	player.play()
 	
-	button.pressed.connect(_on_generate_pressed)
+	# Load model
+	model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
+
+	# Connect model to AI node
+	emotion_ai.set_model_node(model)
+
+	# Set strict emotion classifier prompt
+	emotion_ai.set_system_prompt(load_emotion_prompt())
+
+	# Start AI worker
+	emotion_ai.start_worker()
+
+	# Connect response signal
+	emotion_ai.connect(
+		"response_finished",
+		Callable(self, "_on_emotion_response")
+	)
+	
+	if not button.pressed.is_connected(_on_generate_pressed):
+		button.pressed.connect(_on_generate_pressed)
 		
-	for child in visualizer.get_children():
+	create_visualizer_bars()
+	
+	pitch_slider.min_value = 0.5
+	pitch_slider.max_value = 2.0
+	pitch_slider.step = 0.01
+	pitch_slider.value = 1.0
 
-		bars.append(child)
+	pitch_slider.value_changed.connect(_on_pitch_changed)
+	
+	player.finished.connect(_on_music_finished)
+	
+	if not default_pitch_button.pressed.is_connected(_on_default_pitch_pressed):
+		default_pitch_button.pressed.connect(_on_default_pitch_pressed)
 		
-		bar_speed_offsets.append(randf_range(-1.0, 1.0))
+	if not drums1.pressed.is_connected(_on_drums1_pressed):
+		drums1.pressed.connect(_on_drums1_pressed)
 
-		bar_strength_offsets.append(randf_range(-50.0, 50.0))
+	if not drums2.pressed.is_connected(_on_drums2_pressed):
+		drums2.pressed.connect(_on_drums2_pressed)
 
-		bar_offsets.append(randf_range(0.0, 10.0))
+	if not drums3.pressed.is_connected(_on_drums3_pressed):
+		drums3.pressed.connect(_on_drums3_pressed)
 
+	if not drums4.pressed.is_connected(_on_drums4_pressed):
+		drums4.pressed.connect(_on_drums4_pressed)
+
+	if not drums_slider.value_changed.is_connected(_on_drums_slider_changed):
+		drums_slider.value_changed.connect(_on_drums_slider_changed)
+
+	if not reset_drums.pressed.is_connected(_on_reset_drums_pressed):
+		reset_drums.pressed.connect(_on_reset_drums_pressed)
+
+	if not stop_drums.pressed.is_connected(_on_stop_drums_pressed):
+		stop_drums.pressed.connect(_on_stop_drums_pressed)
+	
+	drums_slider.min_value = 0.25
+	drums_slider.max_value = 4.0
+	drums_slider.step = 0.01
+	drums_slider.value = 1.0
+	
+func _on_drums1_pressed():
+	play_drum_loop("res://assets/audio/minigame/beats/drums_1.mp3")
+
+func _on_drums2_pressed():
+	play_drum_loop("res://assets/audio/minigame/beats/drums_2.mp3")
+
+func _on_drums3_pressed():
+	play_drum_loop("res://assets/audio/minigame/beats/drums_3.mp3")
+
+func _on_drums4_pressed():
+	play_drum_loop("res://assets/audio/minigame/beats/drums_4.mp3")
+	
+func play_drum_loop(path: String):
+
+	var stream = load(path)
+
+	if stream:
+
+		drums_player.stream = stream
+
+		# force looping
+		if stream is AudioStreamOggVorbis:
+			stream.loop = true
+
+		drums_player.play()
+		drums_player.volume_db = linear_to_db(0.5)
+
+	else:
+		print("Missing drum file: ", path)
+		
+func _on_drums_slider_changed(value: float):
+
+	drums_player.pitch_scale = value
+	
+func _on_reset_drums_pressed():
+
+	drums_player.pitch_scale = 1.0
+	drums_slider.value = 1.0
+	
+func _on_stop_drums_pressed():
+
+	if drums_player.playing:
+		drums_player.stop()
+	
+func _on_default_pitch_pressed():
+	player.pitch_scale = 1.0
+	pitch_slider.value = 1.0
+
+func _on_music_finished():
+	player.play()
+	
+func _on_pitch_changed(value: float):
+	player.pitch_scale = value
+
+func create_visualizer_bars():
+
+	for i in range(bar_count):
+
+		var bar = Panel.new()
+
+		bar.custom_minimum_size = Vector2(
+			bar_width,
+			min_height
+		)
+
+		bar.position.x = i * (bar_width + bar_spacing)
+
+		# IMPORTANT
+		# gives each bar its own material/style
+		var style = StyleBoxFlat.new()
+
+		style.bg_color = Color.WHITE
+
+		bar.add_theme_stylebox_override(
+			"panel",
+			style
+		)
+
+		visualizer.add_child(bar)
+
+		bars.append(bar)
+
+		bar_speed_offsets.append(
+			randf_range(-1.0, 1.0)
+		)
+
+		bar_strength_offsets.append(
+			randf_range(-50.0, 50.0)
+		)
+
+		bar_offsets.append(
+			randf_range(0.0, 10.0)
+		)
+		
+		setup_idle_visualizer()
+		
+func setup_idle_visualizer():
+
+	for bar in bars:
+
+		# fixed height
+		bar.size.y = 600
+
+		# fixed position
+		bar.position.y = 300 - bar.size.y
+
+		var style = bar.get_theme_stylebox("panel")
+
+		if style is StyleBoxFlat:
+
+			# predetermined color
+			style.bg_color = Color(0.65, 0.82, 1.0)
+
+func load_emotion_prompt() -> String:
+
+	return """
+You are an emotion ranking system.
+
+You must analyze the user's text and distribute 100 points across emotions based on how strongly each emotion is present.
+
+Return ONLY valid JSON:
+
+{
+  "happy": number,
+  "anticipation": number,
+  "trust": number,
+  "surprise": number,
+  "angry": number,
+  "sad": number,
+  "fear": number,
+  "disgust": number
+}
+
+RULES:
+- All values must be integers
+- ALL values combined MUST equal 100
+- At least ONE emotion must be greater than 0
+- Do NOT output all zeros
+- Strongest emotion should have the highest value
+- Weak emotions should still get small values (1–20 range)
+- If uncertain, distribute evenly but NEVER all zeros
+
+OUTPUT ONLY JSON
+NO explanation
+NO extra text
+"""
+
+func extract_json(text: String) -> String:
+
+	var start = text.find("{")
+	var end = text.rfind("}")
+
+	if start == -1 or end == -1:
+		return ""
+
+	return text.substr(start, end - start + 1)
+	
+func clean_ai_response(text: String) -> String:
+
+	# remove markdown code blocks
+	text = text.replace("```json", "")
+	text = text.replace("```", "")
+
+	return text.strip_edges()
+
+func parse_emotion_from_response(response: String):
+
+	var cleaned = clean_ai_response(response)
+	print("Cleaned: ", cleaned)
+	var json_str = extract_json(cleaned)
+	print("Json_str: ", json_str)
+
+	if json_str == "":
+		print("Json_str == \"\"")
+		return "surprise"
+
+	var data = JSON.parse_string(json_str)
+	print("Type of data: ", typeof(data))
+	print("TYPE_DICTIONARY == ", TYPE_DICTIONARY)
+
+	if typeof(data) != TYPE_DICTIONARY:
+		print("Data type mismatch")
+		return "surprise"
+
+	var best_emotion = ""
+	var best_score = -1
+
+	for key in data.keys():
+
+		var value = data[key]
+		print("Key: ", key, " Value: ", value)
+
+		if typeof(value) != TYPE_FLOAT:
+			print("Value !TYPE_FLOAT")
+			continue
+
+		if value > best_score:
+			best_score = value
+			best_emotion = key
+
+	if best_emotion == "":
+		return "surprise"
+
+	return best_emotion
+
+func detect_emotion(user_text: String):
+
+	print("Analyzing emotion...")
+	print(user_text)
+
+	emotion_ai.say(user_text)
+
+func _on_emotion_response(response):
+	print(typeof(response))
+	print(response)
+	#var emotion = response.strip_edges().to_lower()
+	var emotion = parse_emotion_from_response(response)
+
+	print("RAW AI RESPONSE: " + emotion)
+
+	# Safety validation
+	if emotion not in valid_emotions:
+
+		print("Invalid emotion returned.")
+		print("Falling back to surprise.")
+
+		emotion = "surprise"
+		
+	result.text = "Detected emotion: " + emotion
+
+	print("FINAL EMOTION: " + emotion)
+
+	apply_color(emotion)
+
+	play_music(emotion)
+	
+	print("Finished processing.")
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
+func _process(delta):
+
+	if not music_system_activated:
+		return
 
 	var time = Time.get_ticks_msec() / 1000.0
 
@@ -50,7 +365,7 @@ func _process(_delta):
 	12.0
 	- visualizer_speed * 1.0
 	#+ bar_speed_offsets[i]
-)
+)*0.2
 		
 		var offset = bar_offsets[i]
 
@@ -66,16 +381,23 @@ func _process(_delta):
 			sin(time * speed + offset)
 		)
 
-		bar.size.y = 20 + wave * strength
+		var target_height = 20 + wave * strength * height_multiplier
+
+		bar.size.y = lerp(
+			bar.size.y,
+			target_height,
+			delta * 3.0
+		)
 
 		bar.position.y = 300 - bar.size.y
 
 func apply_visualizer_colors(colors: Array, random: bool):
 
-	if colors.size() < 3:
+	if colors.is_empty():
 		return
 
 	var total_bars = bars.size()
+	var color_count = colors.size()
 
 	for i in range(total_bars):
 
@@ -88,174 +410,22 @@ func apply_visualizer_colors(colors: Array, random: bool):
 			# RANDOM MODE
 			if random:
 
-				var random_color = colors.pick_random()
+				style.bg_color = colors.pick_random()
 
-				style.bg_color = random_color
-
-			# SECTION MODE
+			# DISTRIBUTED MODE
 			else:
 
-				@warning_ignore("integer_division")
-				var third_size = total_bars / 3
+				var section_size = float(total_bars) / color_count
 
-				if i < third_size:
+				var color_index = int(i / section_size)
 
-					style.bg_color = colors[0]
+				color_index = clamp(
+					color_index,
+					0,
+					color_count - 1
+				)
 
-				elif i < third_size * 2:
-
-					style.bg_color = colors[1]
-
-				else:
-
-					style.bg_color = colors[2]
-
-func detect_emotion(text: String) -> String:
-
-	text = text.to_lower()
-
-	# STRESS / OVERTHINKING / CONTROL
-	if (
-		text.find("stress") != -1 or
-		text.find("overthink") != -1 or
-		text.find("control") != -1 or
-		text.find("pressur") != -1
-	):
-		return "stress"
-
-	# EMPTY / NUMB
-	elif (
-		text.find("empty") != -1 or
-		text.find("numb") != -1 or
-		text.find("nothing") != -1 or
-		text.find("blank") != -1
-	):
-		return "empty"
-
-	# NOT ENOUGH / SELF WORTH / COMPARISON
-	elif (
-		text.find("not enough") != -1 or
-		text.find("worthless") != -1 or
-		text.find("compar") != -1 or
-		text.find("behind") != -1 or
-		text.find("inferior") != -1 or
-		text.find("failure") != -1
-	):
-		return "enough"
-
-	# PURPOSE / FUTURE FEAR
-	elif (
-		text.find("purpose") != -1 or
-		text.find("future") != -1 or
-		text.find("lost") != -1 or
-		text.find("direction") != -1 or
-		text.find("calling") != -1
-	):
-		return "purpose"
-
-	# EXHAUSTION
-	elif (
-		text.find("tired") != -1 or
-		text.find("exhaust") != -1 or
-		text.find("burned out") != -1 or
-		text.find("drained") != -1 or
-		text.find("fatigue") != -1
-	):
-		return "exhausted"
-
-	# GUILT / SHAME
-	elif (
-		text.find("guilt") != -1 or
-		text.find("shame") != -1 or
-		text.find("regret") != -1
-	):
-		return "guilt"
-
-	# PEOPLE THINK / PEOPLE PLEASING
-	elif (
-		text.find("people think") != -1 or
-		text.find("approval") != -1 or
-		text.find("accepted") != -1 or
-		text.find("accepting") != -1 or
-		text.find("please everyone") != -1 or
-		text.find("judged") != -1
-	):
-		return "peoplethink"
-
-	# LEFT OUT / LONELY / REJECTION
-	elif (
-		text.find("alone") != -1 or
-		text.find("lonely") != -1 or
-		text.find("left out") != -1 or
-		text.find("unwanted") != -1 or
-		text.find("reject") != -1 or
-		text.find("abandon") != -1
-	):
-		return "lonely"
-
-	# SAD / GRIEF
-	elif (
-		text.find("sad") != -1 or
-		text.find("grief") != -1 or
-		text.find("cry") != -1 or
-		text.find("depress") != -1 or
-		text.find("heartbr") != -1
-	):
-		return "sad"
-
-	# ANGER
-	elif (
-		text.find("angry") != -1 or
-		text.find("mad") != -1 or
-		text.find("furious") != -1 or
-		text.find("rage") != -1 or
-		text.find("irritated") != -1
-	):
-		return "anger"
-
-	# IDENTITY / BURDEN
-	elif (
-		text.find("identity") != -1 or
-		text.find("who am i") != -1 or
-		text.find("who i am") != -1 or
-		text.find("burden") != -1 or
-		text.find("too much") != -1 or
-		text.find("not enough") != -1
-	):
-		return "identity"
-
-	# BODY IMAGE
-	elif (
-		text.find("ugly") != -1 or
-		text.find("body") != -1 or
-		text.find("appearance") != -1 or
-		text.find("look") != -1 or
-		text.find("fat") != -1
-	):
-		return "body"
-
-	# PAST / TRUST
-	elif (
-		text.find("past") != -1 or
-		text.find("hurt") != -1 or
-		text.find("betray") != -1 or
-		text.find("trust") != -1 or
-		text.find("trauma") != -1
-	):
-		return "past"
-
-	# GOD FAR
-	elif (
-		text.find("god") != -1 or
-		text.find("faith") != -1 or
-		text.find("spiritual") != -1 or
-		text.find("abandoned by god") != -1
-	):
-		return "godfar"
-
-	# DEFAULT
-	else:
-		return "neutral"
+				style.bg_color = colors[color_index]
 
 func play_music(emotion: String):
 
@@ -263,55 +433,33 @@ func play_music(emotion: String):
 
 	match emotion:
 
-		"stress":
-			path = "res://audio/stress.ogg"
+		"happy":
+			path = "res://assets/audio/minigame/happy.mp3"
 
-		"empty":
-			path = "res://audio/empty.ogg"
+		"anticipation":
+			path = "res://assets/audio/minigame/anticipation.mp3"
 
-		"enough":
-			path = "res://audio/enough.ogg"
+		"angry":
+			path = "res://assets/audio/minigame/angry.mp3"
 
-		"purpose":
-			path = "res://audio/purpose.ogg"
-
-		"exhausted":
-			path = "res://audio/exhausted.ogg"
-
-		"guilt":
-			path = "res://audio/guilt.ogg"
-
-		"peoplethink":
-			path = "res://audio/peoplethink.ogg"
-
-		"lonely":
-			path = "res://audio/lonely.ogg"
+		"disgust":
+			path = "res://assets/audio/minigame/disgust.mp3"
 
 		"sad":
-			path = "res://audio/sad.ogg"
+			path = "res://assets/audio/minigame/sad.mp3"
 
-		"anger":
-			path = "res://audio/anger.ogg"
+		"surprise":
+			path = "res://assets/audio/minigame/surprise.mp3"
 
-		"identity":
-			path = "res://audio/identity.ogg"
-
-		"body":
-			path = "res://audio/body.ogg"
-
-		"past":
-			path = "res://audio/past.ogg"
+		"fear":
+			path = "res://assets/audio/minigame/fear.mp3"
 
 		"trust":
-			path = "res://audio/trust.ogg"
-
-		"godfar":
-			path = "res://audio/godfar.ogg"
+			path = "res://assets/audio/minigame/trust.mp3"
 
 		_:
-			path = "res://audio/neutral.ogg"
+			path = "res://assets/audio/minigame/intro.mp3"
 
-	# load and play safely
 	var stream = load(path)
 
 	if stream:
@@ -319,7 +467,7 @@ func play_music(emotion: String):
 		player.play()
 	else:
 		print("Audio file missing: ", path)
-		
+
 func apply_color(emotion: String):
 
 	var colors = []
@@ -327,187 +475,151 @@ func apply_color(emotion: String):
 
 	match emotion:
 
-		# STRESS / OVERTHINKING / CONTROL
-		"stress", "overthinking", "control":
-			speed = 3.5
-			visualizer_speed = speed
+		# HAPPY
+		"happy":
 
-			colors = [
-				Color(0.15, 0.0, 0.25),   # dark purple
-				Color(0.8, 0.2, 1.0),    # vivid violet
-				Color(0.1, 0.8, 0.9)     # cyan
-			]
-			apply_visualizer_colors(colors, false)
-
-		# EMPTY / NUMB
-		"empty", "numb":
-			speed = 9.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.08, 0.08, 0.12), # near black
-				Color(0.45, 0.5, 0.6),   # cold gray blue
-				Color(0.2, 0.25, 0.35)   # muted steel blue
-			]
-			apply_visualizer_colors(colors, true)
-
-		# NOT ENOUGH / SELF WORTH / COMPARING / BEHIND
-		"enough", "selfworth", "comparing", "behind":
-			speed = 6.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.1, 0.1, 0.4),    # deep blue
-				Color(1.0, 0.8, 0.2),    # gold
-				Color(0.5, 0.2, 0.8)     # royal purple
-			]
-			apply_visualizer_colors(colors, true)
-
-		# PURPOSE / FUTURE / FUTUREFEAR
-		"purpose", "future", "futurefear":
-			speed = 5.5
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.0, 0.2, 0.4),    # deep ocean blue
-				Color(0.3, 0.9, 1.0),    # bright cyan
-				Color(1.0, 0.9, 0.3)     # hopeful yellow
-			]
-			apply_visualizer_colors(colors, true)
-
-		# EXHAUSTED
-		"exhausted":
-			speed = 10.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.05, 0.05, 0.2),  # dark blue
-				Color(0.4, 0.5, 0.8),    # soft blue
-				Color(0.15, 0.0, 0.25)   # faded purple
-			]
-			apply_visualizer_colors(colors, false)
-
-		# GUILT / SHAME
-		"guilt", "shame":
-			speed = 7.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.2, 0.0, 0.0),    # deep maroon
-				Color(0.7, 0.1, 0.1),    # dark red
-				Color(1.0, 0.7, 0.2)     # redemption gold
-			]
-			apply_visualizer_colors(colors, false)
-
-		# PEOPLE THINK / PLEASING
-		"peoplethink", "pleasing":
 			speed = 5.0
 			visualizer_speed = speed
 
 			colors = [
-				Color(0.1, 0.1, 0.3),    # dark navy
-				Color(1.0, 0.4, 0.7),    # pink
-				Color(1.0, 0.85, 0.2)    # yellow
+				Color(1.0, 0.9, 0.2),    # bright yellow
+				Color(1.0, 0.75, 0.4),   # warm peach
+				Color(1.0, 0.85, 0.7),   # pastel peach
+				Color(1.0, 0.7, 0.8),    # soft pink
+				Color(1.0, 1.0, 0.85)    # creamy light
 			]
+
 			apply_visualizer_colors(colors, true)
 
-		# LEFT OUT / LONELY / REJECTION
-		"leftout", "lonely", "rejection":
-			speed = 8.0
+		# ANTICIPATION
+		"anticipation":
+
+			speed = 4.5
 			visualizer_speed = speed
 
 			colors = [
-				Color(0.0, 0.05, 0.2),   # deep midnight blue
-				Color(0.3, 0.5, 1.0),    # emotional blue
-				Color(0.6, 0.7, 1.0)     # pale soft blue
+				Color(1.0, 0.55, 0.15),  # orange
+				Color(1.0, 0.75, 0.3),   # golden orange
+				Color(1.0, 0.85, 0.5),   # soft amber
+				Color(1.0, 0.65, 0.55),  # coral
+				Color(1.0, 0.9, 0.7)     # pastel orange
 			]
-			apply_visualizer_colors(colors, false)
 
-		# SAD / GRIEF
-		"sad", "grief":
-			speed = 9.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.0, 0.1, 0.3),    # dark blue
-				Color(0.5, 0.7, 1.0),    # pale blue
-				Color(0.3, 0.0, 0.4)     # melancholy purple
-			]
 			apply_visualizer_colors(colors, false)
 
 		# ANGER
-		"anger":
+		"angry":
+
 			speed = 3.0
 			visualizer_speed = speed
 
 			colors = [
-				Color(0.25, 0.0, 0.0),   # blood red
-				Color(1.0, 0.0, 0.0),    # bright red
-				Color(1.0, 0.5, 0.0)     # fire orange
+				Color(0.9, 0.1, 0.1),    # bright red
+				Color(0.5, 0.0, 0.0),    # dark red
+				Color(1.0, 0.3, 0.0),    # fiery orange
+				Color(0.8, 0.0, 0.2),    # crimson
+				Color(0.4, 0.0, 0.1)     # blood red
 			]
+
 			apply_visualizer_colors(colors, true)
 
-		# IDENTITY / BURDEN
-		"identity", "burden":
-			speed = 6.5
-			visualizer_speed = speed
+		# DISGUST
+		"disgust":
 
-			colors = [
-				Color(0.1, 0.0, 0.3),    # deep indigo
-				Color(0.7, 0.3, 1.0),    # violet
-				Color(1.0, 1.0, 1.0)     # white
-			]
-			apply_visualizer_colors(colors, false)
-
-		# BODY IMAGE
-		"body":
-			speed = 6.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.2, 0.0, 0.1),    # dark rose
-				Color(1.0, 0.6, 0.7),    # soft pink
-				Color(1.0, 0.9, 0.7)     # peach
-			]
-			apply_visualizer_colors(colors, false)
-
-		# PAST / TRUST
-		"past", "trust":
 			speed = 7.0
 			visualizer_speed = speed
 
 			colors = [
-				Color(0.1, 0.1, 0.1),    # dark gray
-				Color(0.2, 0.7, 0.6),    # teal
-				Color(0.8, 1.0, 0.9)     # pale mint
+				Color(0.7, 0.1, 0.4),    # dark pink
+				Color(0.5, 0.0, 0.25),   # wine
+				Color(0.9, 0.5, 0.7),    # dusty pink
+				Color(0.6, 0.2, 0.45),   # muted magenta
+				Color(0.3, 0.0, 0.15)    # deep berry
 			]
-			apply_visualizer_colors(colors, true)
 
-		# GOD FAR
-		"godfar":
-			speed = 11.0
+			apply_visualizer_colors(colors, false)
+
+		# SAD
+		"sad":
+
+			speed = 9.0
 			visualizer_speed = speed
 
 			colors = [
-				Color(0.0, 0.0, 0.1),    # near black blue
-				Color(0.2, 0.2, 0.5),    # distant blue
-				Color(1.0, 0.95, 0.7)    # warm light
+				Color(0.45, 0.3, 0.7),   # purple
+				Color(0.25, 0.15, 0.45), # deep violet
+				Color(0.7, 0.6, 0.9),    # lavender
+				Color(0.55, 0.45, 0.8),  # soft lilac
+				Color(0.2, 0.1, 0.35)    # dark purple
 			]
+
+			apply_visualizer_colors(colors, false)
+
+		# SURPRISE
+		"surprise":
+
+			speed = 4.0
+			visualizer_speed = speed
+
+			colors = [
+				Color(0.4, 0.8, 1.0),    # sky blue
+				Color(0.8, 0.95, 1.0),   # icy blue
+				Color(0.5, 1.0, 1.0),    # cyan glow
+				Color(0.7, 0.85, 1.0),   # pastel blue
+				Color(1.0, 1.0, 1.0)     # white flash
+			]
+
+			apply_visualizer_colors(colors, true)
+
+		# FEAR
+		"fear":
+
+			speed = 8.5
+			visualizer_speed = speed
+
+			colors = [
+				Color(0.55, 0.75, 1.0),  # light blue
+				Color(0.2, 0.35, 0.6),   # storm blue
+				Color(0.75, 0.85, 1.0),  # pale blue
+				Color(0.35, 0.5, 0.75),  # muted blue
+				Color(0.1, 0.15, 0.3)    # dark navy
+			]
+
+			apply_visualizer_colors(colors, false)
+
+		# TRUST
+		"trust":
+
+			speed = 6.5
+			visualizer_speed = speed
+
+			colors = [
+				Color(0.2, 0.5, 0.25),   # green
+				Color(0.45, 0.75, 0.5),  # soft green
+				Color(0.7, 0.9, 0.75),   # pastel mint
+				Color(0.3, 0.6, 0.4),    # sage green
+				Color(0.1, 0.3, 0.15)    # deep forest green
+			]
+
 			apply_visualizer_colors(colors, false)
 
 		_:
+
 			speed = 6.0
 			visualizer_speed = speed
 
 			colors = [
-				Color(0.2, 0.6, 0.55),
-				Color(0.35, 0.3, 0.5),
-				Color(0.2, 0.4, 0.7)
+				Color(0.7, 0.8, 1.0),    # soft blue
+				Color(0.9, 0.8, 1.0),    # lavender
+				Color(1.0, 0.85, 0.9),   # pastel pink
+				Color(1.0, 0.95, 0.7),   # warm cream
+				Color(0.7, 0.9, 0.85)    # mint
 			]
+
 			apply_visualizer_colors(colors, true)
 
 	start_color_loop(colors, speed)
-	
+
 func start_color_loop(colors: Array, speed):
 
 	if color_tween:
@@ -527,11 +639,17 @@ func start_color_loop(colors: Array, speed):
 		)
 	
 func _on_generate_pressed():
-	var text = input.text
-	var emotion = detect_emotion(text)
 
-	result.text = "Detected emotion: " + emotion
+	var text = input.text.strip_edges()
 
-	play_music(emotion)
-	apply_color(emotion)
-	print("Finished processing")
+	if text == "":
+		return
+
+	result.text = "Analyzing emotion..."
+
+	if not music_system_activated:
+		music_system_activated = true
+
+	detect_emotion(text)
+
+	print("Emotion request sent")
