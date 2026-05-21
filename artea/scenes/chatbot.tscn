@@ -1,92 +1,84 @@
-[gd_scene load_steps=2 format=3 uid="uid://sv4s22ki8dww"]
+[gd_scene format=3 uid="uid://sv4s22ki8dww"]
 
-[sub_resource type="GDScript" id="GDScript_1wjt0"]
-resource_name = "chatbot"
-script/source = "extends VBoxContainer
+[ext_resource type="Script" uid="uid://bslgdnvsaqhn2" path="res://scenes/chatbot.gd" id="1_7qo2j"]
+[ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="2_an77j"]
 
-@onready var chat_history = $ChatHistory
-@onready var user_input = $HBoxContainer/UserInput
-@onready var send_button = $HBoxContainer/SendButton
-@onready var http_request = $HTTPRequestChatGPT
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_an77j"]
 
-var openai_api_key = \"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\" # <<<<<< REPLACE with your real key
+[node name="chatbot" type="Control" unique_id=707514885]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_7qo2j")
 
-func _ready():
-	send_button.pressed.connect(_on_send_button_pressed)
-	user_input.text_submitted.connect(_on_send_button_pressed)
-	http_request.request_completed.connect(_on_http_request_completed)
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=29689236]
+z_index = 1
+layout_mode = 1
+offset_left = -683.0
+offset_top = -290.0
+offset_right = 617.0
+offset_bottom = -60.0
 
-func _on_send_button_pressed():
-	var message = user_input.text.strip_edges()
-	if message != \"\":
-		append_to_chat(\"You: \" + message)
-		send_message_to_chatgpt(message)
-		user_input.text = \"\"
-
-func append_to_chat(text: String):
-	chat_history.text += text + \"\\n\\n\"
-	chat_history.scroll_vertical = chat_history.get_line_count()
-
-func send_message_to_chatgpt(user_message: String) -> void:
-	var url = \"https://api.openai.com/v1/chat/completions\"
-	
-	var headers = [
-		\"Content-Type: application/json\",
-		\"Authorization: Bearer \" + openai_api_key
-	]
-	
-	var body = {
-		\"model\": \"gpt-3.5-turbo\",
-		\"messages\": [
-			{\"role\": \"system\", \"content\": \"You are a friendly chatbot.\"},
-			{\"role\": \"user\", \"content\": user_message}
-		]
-	}
-	
-	var body_json = JSON.stringify(body)
-	
-	var error = http_request.request(
-		url,
-		headers,
-		HTTPClient.METHOD_POST,
-		body_json
-	)
-	
-	if error != OK:
-		append_to_chat(\"Error sending message! Error code: \" + str(error))
-
-func _on_http_request_completed(_result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray):
-	if response_code == 200:
-		var response = JSON.parse_string(body.get_string_from_utf8())
-		if response:
-			var reply_text = response[\"choices\"][0][\"message\"][\"content\"]
-			append_to_chat(\"ChatGPT: \" + reply_text.strip_edges())
-	else:
-		append_to_chat(\"Request failed! Server returned: \" + str(response_code))
-"
-
-[node name="chatbot" type="Node2D"]
-position = Vector2(9, 48)
-
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-offset_top = 115.0
-offset_right = 814.0
-offset_bottom = 277.0
-script = SubResource("GDScript_1wjt0")
-
-[node name="TextEdit" type="TextEdit" parent="VBoxContainer"]
+[node name="ChatHistory" type="TextEdit" parent="VBoxContainer" unique_id=1121175732]
+custom_minimum_size = Vector2(800, 200)
 layout_mode = 2
-placeholder_text = "Write your message here"
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_an77j")
+placeholder_text = "Start the chat with Milo..."
+wrap_mode = 1
 scroll_smooth = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1204567203]
 layout_mode = 2
 
-[node name="LineEdit" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+[node name="UserInput" type="LineEdit" parent="VBoxContainer/HBoxContainer" unique_id=1555593964]
 layout_mode = 2
-placeholder_text = "write your text here"
+size_flags_horizontal = 3
+placeholder_text = "Enter your message here..."
 
-[node name="Button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="SendButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=501537165]
+custom_minimum_size = Vector2(100, 20)
 layout_mode = 2
+text = "Send"
 
-[node name="HTTPRequestChatGPT" type="HTTPRequest" parent="."]
+[node name="HTTPRequestChatGPT" type="HTTPRequest" parent="." unique_id=990123601]
+
+[node name="AI_Counselor" type="NobodyWhoChat" parent="." unique_id=433028267]
+
+[node name="MiloModel" type="NobodyWhoModel" parent="." unique_id=2043035805]
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1581378263]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -847.9999
+offset_top = -722.99994
+offset_right = 152.00012
+offset_bottom = -122.99994
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(1.7, 1.7)
+mouse_filter = 2
+texture = ExtResource("2_an77j")
+stretch_mode = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="TextureRect" unique_id=916384367]
+layout_mode = 0
+offset_left = 219.99992
+offset_top = 202.94115
+offset_right = 898.99994
+offset_bottom = 342.94116
+
+[node name="RichTextLabel" type="RichTextLabel" parent="TextureRect/MarginContainer" unique_id=951159884]
+layout_mode = 2
+text = "Wonderful Counsellor"

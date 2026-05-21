@@ -9,8 +9,8 @@ var move_direction := Vector3.ZERO
 var move_speed := 0.0
 var speed_min := 0.3
 var speed_max := 0.8
-var bounds_x := 5.0
-var bounds_y := 2.5
+var bounds_x := 10.0
+var bounds_y := 5.0
 
 func _ready():
 	await get_tree().process_frame
@@ -40,6 +40,7 @@ func _setup():
 		label.outline_modulate = Color(1, 1, 1, 1)
 		label.billboard = 1
 		label.position = Vector3(0, 0, 0.2)
+		
 		
 	
 	# 3. COLORS
@@ -103,6 +104,9 @@ func start_wandering():
 		0
 	).normalized()
 	set_process(true)
+	
+	##
+	
 
 func _process(delta):
 	if not floating:
@@ -130,3 +134,6 @@ func _process(delta):
 		base_y = new_pos.y
 	
 	global_position = new_pos
+	
+	## New lines for text wrapping
+	

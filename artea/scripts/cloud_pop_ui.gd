@@ -62,45 +62,79 @@ func _on_pop_thoughts_pressed():
 func _init_cloud_positions():
 	available_positions.clear()
 	
-	# Mix of positions - some high, some middle, some low
+	# Spread across wider area
 	var positions = [
-		# Top positions (sky)
-		Vector2(-3, 5), Vector2(0, 5), Vector2(3, 5),
-		Vector2(-2, 4.5), Vector2(2, 4.5),
-		# Middle positions
-		Vector2(-3, 3), Vector2(0, 3), Vector2(3, 3),
-		Vector2(-2, 2.5), Vector2(2, 2.5),
-		# Bottom positions (above ground)
-		Vector2(-3, 1.5), Vector2(0, 1.5), Vector2(3, 1.5),
-		Vector2(-2, 1), Vector2(2, 1),
+		Vector2(-8, 5), Vector2(0, 5), Vector2(8, 5),
+		Vector2(-7, 3.5), Vector2(0, 3.5), Vector2(7, 3.5),
+		Vector2(-6, 2), Vector2(0, 2), Vector2(6, 2),
+		Vector2(-5, 0.5), Vector2(0, 0.5), Vector2(5, 0.5),
 	]
 	
 	for pos in positions:
 		available_positions.append(pos)
-	available_positions.shuffle()
+	
+	# DON'T shuffle - use in order
+	# Mix of positions - some high, some middle, some low
+	#var positions = [
+		# Top positions (sky)
+	#	Vector2(-3, 5), Vector2(0, 5), Vector2(3, 5),
+	#	Vector2(-2, 4.5), Vector2(2, 4.5),
+		# Middle positions
+	#	Vector2(-3, 3), Vector2(0, 3), Vector2(3, 3),
+	#	Vector2(-2, 2.5), Vector2(2, 2.5),
+		# Bottom positions (above ground)
+	#	Vector2(-3, 1.5), Vector2(0, 1.5), Vector2(3, 1.5),
+	#	Vector2(-2, 1), Vector2(2, 1),
+	#]
+	
+	#for pos in positions:
+	#	available_positions.append(pos)
+	#available_positions.shuffle()
 
 func spawn_cloud(text: String):
-	print("DEBUG: Spawning cloud: ", text)
 	if used_positions.size() >= available_positions.size():
 		errorLabel.visible = true
 		errorLabel.text = "Max number of clouds reached"
 		return
-	var possible_positions = available_positions.filter(
-		func(pos): return not used_positions.has(pos)
-	)
+	
+	# Get available positions
+	var possible_positions = available_positions.filter(func(pos): return not used_positions.has(pos))
 	if possible_positions.is_empty():
 		errorLabel.visible = true
 		errorLabel.text = "No available positions left."
 		return
-	var pos = possible_positions.pick_random()
+	
+	# Try positions until we find one that doesn't overlap
+	var pos = null
+	var max_attempts = 10
+	
+	for attempt in range(max_attempts):
+		var test_pos = possible_positions.pick_random()
+		var overlapping = false
+		
+		# Check against existing clouds
+		for cloud in cloud_spawner.get_children():
+			var distance = cloud.global_position.distance_to(Vector3(test_pos.x, test_pos.y, 0))
+			if distance < 2.5:  # Minimum distance between clouds
+				overlapping = true
+				break
+		
+		if not overlapping:
+			pos = test_pos
+			break
+	
+	if pos == null:
+		pos = possible_positions[0]  # Fallback
+	
 	used_positions.append(pos)
+	
 	var cloud = preload("res://scenes/Cloud_3d.tscn").instantiate()
 	cloud_spawner.add_child(cloud)
 	cloud.global_position = Vector3(pos.x, pos.y, 0.0)
 	cloud.thought_text = text
 	cloud.grid_position = pos
 	cloudForm.play()
-	print("DEBUG: Cloud spawned at ", cloud.global_position)
+	
 	if cloud_spawner.get_child_count() > 1:
 		pop_thoughts_button.show()
 

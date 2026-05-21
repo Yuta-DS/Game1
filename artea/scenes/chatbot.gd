@@ -5,7 +5,7 @@ extends Control
 @onready var send_button = $VBoxContainer/HBoxContainer/SendButton
 @onready var http_request = $HTTPRequestChatGPT
 @onready var ai_counselor = $AI_Counselor
-@onready var model = $Model
+@onready var model = $MiloModel
 
 var openai_api_key = "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" # <<<<<< REPLACE with your real key
 signal chat_closed
