@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" uid="uid://dim1lk4t7o8jm" path="res://scenes/cloud.tscn" id="3_lwtep"]
 [ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="4_6iu6h"]
 [ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.mp3" id="4_hyv5u"]
-[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="4_yknh2"]
 [ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="5_xed2p"]
 [ext_resource type="AudioStream" uid="uid://bo2fecg6xsgkk" path="res://assets/SFX/Peace - David Lastra.wav" id="6_gbrvk"]
 
@@ -139,7 +138,7 @@ offset_bottom = 102.0
 theme_override_colors/font_color = Color(1, 0, 0, 1)
 theme_override_colors/font_shadow_color = Color(0.747449, 0.582691, 0.201977, 1)
 theme_override_constants/shadow_outline_size = 6
-theme_override_fonts/font = ExtResource("4_yknh2")
+theme_override_fonts/font = ExtResource("5_xed2p")
 theme_override_font_sizes/font_size = 70
 
 [connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Create Cloud" to="." method="_on_create_cloud_pressed"]

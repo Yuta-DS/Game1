@@ -9,4 +9,5 @@ func _on_body_entered(body):
 
 func _on_body_exited(body):
 	if body.name == "NewPlayer":
-		emit_signal("player_nearby", null)
+		emit_signal("player_exited", null)
+		print("Exited: ", body.name)

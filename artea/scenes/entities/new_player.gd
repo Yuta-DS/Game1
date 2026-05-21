@@ -30,7 +30,6 @@ var interacting := false  # Critical fix for team's grass shader
 @onready var camera = $CameraController/Camera3D
 
 var movementInput := Vector2.ZERO
-var interacting := false  # <--- CRITICAL FIX: This stops the Camera Controller error
 
 func _ready() -> void:
 	await get_tree().process_frame
@@ -39,10 +38,23 @@ func _ready() -> void:
 	
 	floor_detector.add_exception(self)
 	
+	# --- OPTIMIZED AUDIO SETTINGS ---
 	if footstep_player is AudioStreamPlayer3D:
-		footstep_player.volume_db = 10.0
-		footstep_player.max_distance = 200.0
-		footstep_player.unit_size = 20.0
+		footstep_player.volume_db = 12.0      # Increased for clarity
+		footstep_player.max_distance = 500.0  # Prevents sound cutting out
+		footstep_player.unit_size = 35.0      # Larger 'loud zone' around player
+		footstep_player.panning_strength = 0.5
+		
+func _input(event: InputEvent) -> void:
+	# Toggle inventory with I key
+	if event.is_action_pressed("toggle_Inventory"):
+		_on_inventory_pressed()
+			
+func _on_inventory_pressed() -> void:
+	if interacting:
+		return
+	if inventory_gui:
+		inventory_gui.toggle_visibility()
 
 func _physics_process(delta: float) -> void:
 	moveLogic(delta)
@@ -56,16 +68,22 @@ func _physics_process(delta: float) -> void:
 
 func jumpLogic(delta) -> void:
 	if is_on_floor():
-		if Input.is_action_just_pressed("jump"):
+		if not interacting and Input.is_action_just_pressed("jump"):
 			velocity.y = -jump_velocity
 	else:
 		if has_node("RogueSkin/AnimationPlayer"):
-			$RogueSkin/AnimationPlayer.current_animation = 'Jump'
+			$RogueSkin/AnimationPlayer.current_animation = 'ToucheGround'
 		
 	var gravity = jump_gravity if velocity.y > 0.0 else fall_gravity
 	velocity.y -= gravity * delta
 	
 func moveLogic(delta) -> void:
+	if interacting:
+		velocity.x = 0
+		velocity.z = 0
+		$RogueSkin/AnimationPlayer.current_animation = 'Idle'
+		return
+	
 	movementInput = Input.get_vector("move_left", "move_right", "move_forward", "move_backward").rotated(-camera.global_rotation.y)
 	var velocity2D = Vector2(velocity.x, velocity.z)
 	var isRunning: bool = Input.is_action_pressed("run")
@@ -80,18 +98,19 @@ func moveLogic(delta) -> void:
 		if has_node("RogueSkin/AnimationPlayer"):
 			$RogueSkin/AnimationPlayer.current_animation = 'Run'
 		
+		# --- FOOTSTEP LOGIC FIX ---
 		if is_on_floor():
 			if floor_detector.is_colliding():
 				var ground = floor_detector.get_collider()
-				if ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface")):
-				
-				# Check the collider or its parent for the grass group
 				var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
 				
 				if is_grass:
 					if footstep_player.stream != sfx_grass:
 						footstep_player.stream = sfx_grass
+					
 					if not footstep_player.playing:
+						# Random pitch makes steps stand out against wind
+						footstep_player.pitch_scale = randf_range(0.9, 1.1)
 						footstep_player.play()
 				else:
 					if footstep_player.playing:
@@ -111,5 +130,27 @@ func moveLogic(delta) -> void:
 		if footstep_player.playing:
 			footstep_player.stop()
 
-func collect_item(_item: itemData) -> bool:
+func collect_item(item: itemData) -> bool:
+	if inventory_data == null:
+		return false
+	
+	if item.stackable:
+		for slot in inventory_data.slot_Data:
+			if slot != null and slot.item_Data != null:
+				if slot.item_Data.name == item.name:
+					slot.quantity += 1
+					if inventory_gui:
+						inventory_gui.refresh_slots()
+					return true
+	
+	for i in range(inventory_data.slot_Data.size()):
+		if inventory_data.slot_Data[i] == null:
+			var new_slot = slotData.new()
+			new_slot.item_Data = item
+			new_slot.quantity = 1
+			inventory_data.slot_Data[i] = new_slot
+			if inventory_gui:
+				inventory_gui.refresh_slots()
+			return true
+	
 	return false

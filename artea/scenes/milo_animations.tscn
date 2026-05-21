@@ -53,6 +53,6 @@ script = ExtResource("3_ruowu")
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0)
 shape = SubResource("SphereShape3D_oefe3")
 
-[connection signal="body_entered" from="Area3D" to="Area3D" method="_on_body_entered"]
-[connection signal="body_exited" from="Area3D" to="Area3D" method="_on_body_exited"]
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_3d_player_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_3d_player_exited"]
 [connection signal="player_nearby" from="Area3D" to="." method="_on_area_3d_player_nearby"]

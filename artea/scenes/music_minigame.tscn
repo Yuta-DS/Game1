@@ -1,0 +1,198 @@
+[gd_scene format=3 uid="uid://rg062smgsl6g"]
+
+[ext_resource type="Script" uid="uid://je5vfnd43b23" path="res://scripts/music_minigame.gd" id="1_818vo"]
+[ext_resource type="Theme" uid="uid://rvddr8awm483" path="res://buttons_theme.tres" id="2_b8p47"]
+
+[sub_resource type="Gradient" id="Gradient_b8p47"]
+colors = PackedColorArray(1.353256, 0.20285092, 1.353256, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_at7cq"]
+gradient = SubResource("Gradient_b8p47")
+width = 16
+height = 16
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 1)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_3oc71"]
+particle_flag_disable_z = true
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 30.0
+initial_velocity_max = 80.0
+gravity = Vector3(0, -10, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b8p47"]
+bg_color = Color(0.89827347, 0.95468724, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_at7cq"]
+bg_color = Color(0.7014107, 0.82665706, 0.95468724, 1)
+
+[node name="MusicMinigame" type="Control" unique_id=1867925414]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_818vo")
+
+[node name="BackgroundVisual" type="ColorRect" parent="." unique_id=1937901353]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+color = Color(1, 0.9776916, 0.7977378, 1)
+
+[node name="Overlay" type="ColorRect" parent="BackgroundVisual" unique_id=1726250871]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 0.2)
+
+[node name="VisualizerContainer" type="Control" parent="." unique_id=1933276799]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -300.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="EmotionParticles" type="GPUParticles2D" parent="VisualizerContainer" unique_id=2133380154]
+position = Vector2(850, 150)
+amount = 150
+texture = SubResource("GradientTexture2D_at7cq")
+lifetime = 30.0
+process_material = SubResource("ParticleProcessMaterial_3oc71")
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=551705016]
+
+[node name="EmotionAI" type="NobodyWhoChat" parent="." unique_id=1385022801]
+
+[node name="Model" type="NobodyWhoModel" parent="." unique_id=2023089112]
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=479801154]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -456.0
+offset_right = 350.0
+offset_bottom = -97.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_b8p47")
+alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer" unique_id=460658940]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=372845258]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.6)
+text = "Type an emotion:"
+
+[node name="Label" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=787207305]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.6)
+text = "I feel..."
+
+[node name="EmotionInput" type="LineEdit" parent="HBoxContainer/VBoxContainer" unique_id=331061337]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9721921, 0.24571806, 0.75725305, 1)
+placeholder_text = "Type how you feel..."
+
+[node name="GenerateButton" type="Button" parent="HBoxContainer/VBoxContainer" unique_id=1875997354]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_styles/hover = SubResource("StyleBoxFlat_b8p47")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_at7cq")
+text = "Transform Emotion"
+
+[node name="ResultText" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=688153701]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+
+[node name="Options" type="VBoxContainer" parent="HBoxContainer" unique_id=154047836]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/Options" unique_id=1884261199]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.6)
+text = "Pitch"
+horizontal_alignment = 1
+
+[node name="PitchSlider" type="HSlider" parent="HBoxContainer/Options" unique_id=123382072]
+custom_minimum_size = Vector2(200, 30)
+layout_mode = 2
+
+[node name="ResetPitch" type="Button" parent="HBoxContainer/Options" unique_id=725075729]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+text = "Reset Song Pitch"
+
+[node name="VBoxContainer3" type="VBoxContainer" parent="HBoxContainer" unique_id=1423398172]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="Drums" type="HBoxContainer" parent="HBoxContainer/VBoxContainer3" unique_id=1578496124]
+layout_mode = 2
+alignment = 1
+
+[node name="DrumsColumn1" type="VBoxContainer" parent="HBoxContainer/VBoxContainer3/Drums" unique_id=325260148]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="ButtonDrums1" type="Button" parent="HBoxContainer/VBoxContainer3/Drums/DrumsColumn1" unique_id=2139836311]
+layout_mode = 2
+text = "Drums 1"
+
+[node name="ButtonDrums3" type="Button" parent="HBoxContainer/VBoxContainer3/Drums/DrumsColumn1" unique_id=1033360948]
+layout_mode = 2
+text = "Drums 3"
+
+[node name="DrumsColumn2" type="VBoxContainer" parent="HBoxContainer/VBoxContainer3/Drums" unique_id=350760373]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="ButtonDrums2" type="Button" parent="HBoxContainer/VBoxContainer3/Drums/DrumsColumn2" unique_id=923188472]
+layout_mode = 2
+text = "Drums 2"
+
+[node name="ButtonDrums4" type="Button" parent="HBoxContainer/VBoxContainer3/Drums/DrumsColumn2" unique_id=876287097]
+layout_mode = 2
+text = "Drums 4"
+
+[node name="DrumsPitch" type="VBoxContainer" parent="HBoxContainer/VBoxContainer3" unique_id=294295931]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/VBoxContainer3/DrumsPitch" unique_id=1644644549]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 0.6)
+text = "Drums Pitch"
+horizontal_alignment = 1
+
+[node name="DrumsSlider" type="HSlider" parent="HBoxContainer/VBoxContainer3/DrumsPitch" unique_id=161945303]
+layout_mode = 2
+
+[node name="ResetDrums" type="Button" parent="HBoxContainer/VBoxContainer3/DrumsPitch" unique_id=398107223]
+layout_mode = 2
+text = "Reset Pitch"
+
+[node name="StopDrums" type="Button" parent="HBoxContainer/VBoxContainer3/DrumsPitch" unique_id=1529180294]
+layout_mode = 2
+text = "Stop Drums"
+
+[node name="DrumsPlayer" type="AudioStreamPlayer" parent="." unique_id=1937559582]

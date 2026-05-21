@@ -1,7 +1,8 @@
 extends CanvasLayer
 
-@onready var text_box = $Panel/RichTextLabel
-@onready var speaker_label = $Panel/SpeakerLabel
+@onready var text_box = $ChatBubble/MarginContainer/VBoxContainer/RichTextLabel
+@onready var speaker_label = $ChatBubble/SpeakerLabel
+@onready var choices_container = $ChatBubble/ChoicesContainer
 
 func _input(event):
 	if event.is_action_pressed("ui_accept"):
@@ -13,7 +14,7 @@ func show_text(text: String):
 
 func show_line(speaker: String, text: String):
 	# Clear choices when new dialogue appears
-	for child in $Panel/ChoicesContainer.get_children():
+	for child in choices_container.get_children():
 		child.queue_free()
 
 	speaker_label.text = speaker
@@ -23,7 +24,7 @@ var choice_buttons = []
 
 func show_choices(choices: Array):
 	# Clear old buttons
-	for child in $Panel/ChoicesContainer.get_children():
+	for child in choices_container.get_children():
 		child.queue_free()
 
 	choice_buttons.clear()
@@ -39,7 +40,7 @@ func show_choices(choices: Array):
 			GameManager.choose(index)
 		)
 
-		$Panel/ChoicesContainer.add_child(btn)
+		choices_container.add_child(btn)
 		choice_buttons.append(btn)
 	
 func type_text(text: String):
