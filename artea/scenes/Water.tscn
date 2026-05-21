@@ -50,6 +50,7 @@ shader_parameter/color3 = Color(0.059, 0.389, 0.85, 1)
 shader_parameter/color4 = Color(0, 0.267, 1, 1)
 
 [node name="Node3D" type="Node3D" unique_id=1517938570]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.13636, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=85462029]
 mesh = SubResource("PlaneMesh_4nnwq")
