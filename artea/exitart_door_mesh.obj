@@ -1,0 +1,21 @@
+# Exit Art Door Mesh
+# Simple vertical plane mesh using uploaded image as texture
+mtllib exitart_door_mesh.mtl
+o ExitArtDoor
+
+v -0.728395 0.000000 0.000000
+v 0.728395 0.000000 0.000000
+v 0.728395 3.000000 0.000000
+v -0.728395 3.000000 0.000000
+
+vt 0.000000 1.000000
+vt 1.000000 1.000000
+vt 1.000000 0.000000
+vt 0.000000 0.000000
+
+vn 0.000000 0.000000 1.000000
+
+usemtl ExitArtDoorMaterial
+s off
+f 1/1/1 2/2/1 3/3/1
+f 1/1/1 3/3/1 4/4/1

@@ -31,6 +31,10 @@ var interacting := false  # Critical fix for team's grass shader
 
 var movementInput := Vector2.ZERO
 
+#var interacting := false
+
+
+
 func _ready() -> void:
 	await get_tree().process_frame
 	if inventory_data and inventory_gui:
@@ -102,7 +106,9 @@ func moveLogic(delta) -> void:
 		if is_on_floor():
 			if floor_detector.is_colliding():
 				var ground = floor_detector.get_collider()
+				# Check the collider or its parent for the grass group
 				var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
+				
 				
 				if is_grass:
 					if footstep_player.stream != sfx_grass:
