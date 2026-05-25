@@ -47,7 +47,8 @@ func populate_slots() -> void:
 func refresh_slots() -> void:
 	print("=== REFRESH SLOTS CALLED ===")
 	print("Grid container children count: ", grid_container.get_child_count())
-	print("Inventory slot_Data size: ", inventory_data.slot_Data.size())
+	# Crashes the game if object spawned directly under the player:
+	#print("Inventory slot_Data size: ", inventory_data.slot_Data.size())
 	
 	var slots = grid_container.get_children()
 	for i in range(slots.size()):
