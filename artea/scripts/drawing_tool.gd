@@ -51,6 +51,7 @@ var max_undo_steps := 10
 
 
 func _ready() -> void:
+	http_request.timeout = 10
 	create_smooth_canvas()
 	notificationpanel.visible = false
 
@@ -168,8 +169,8 @@ func _input(event: InputEvent) -> void:
 
 			last_draw_pos = current_pos
 
-	if event.is_action_pressed("toggle_eraser"):
-		_on_eraser_pressed()
+	#if event.is_action_pressed("toggle_eraser"):
+		#_on_eraser_pressed()
 
 func get_canvas_mouse_pos() -> Vector2:
 
@@ -536,6 +537,14 @@ func upload_artwork_to_firebase() -> void:
 
 func _on_http_request_request_completed(result, response_code, headers, body) -> void:
 
+	if result != HTTPRequest.RESULT_SUCCESS:
+		print("Network error: server unreachable or timeout")
+		return
+
+	# For debugging
+	var response_text = body.get_string_from_utf8()
+	print("Server response: ", response_text)
+
 	if response_code == 200:
 		show_notification("Artwork uploaded successfully!", true)
 	else:
@@ -554,8 +563,11 @@ func _on_firebase_button_pressed() -> void:
 
 	save_artwork_to_desktop()
 
-	upload_artwork_to_firebase()
+	# Replaced by upload to server
+	#upload_artwork_to_firebase()
 
+	print("AUTH TOKEN = [", Global.auth_token, "]")
+	upload_artwork_to_server()
 
 func _on_local_button_pressed() -> void:
 
@@ -572,6 +584,40 @@ func _on_back_to_hub_button_pressed() -> void:
 func _on_art_gallery_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
 	
+# REMOTE GALLERY - SAVE/UPLOAD TO SERVER
+func upload_artwork_to_server() -> void:
+	
+	if Global.auth_token == "" or Global.auth_token == "invalid_token":
+		print("Upload blocked: invalid auth token")
+		return
+
+	var image = _build_artwork_image()
+
+	var byte_data = image.save_png_to_buffer()
+
+	if byte_data.size() == 0:
+		print("Image conversion failed")
+		return
+
+	var custom_title = _sanitize_title(title_input.text)
+
+	var headers = [
+		"Content-Type: image/png",
+		"Authorization: Bearer " + Global.auth_token,
+		"Artwork-Title: " + custom_title
+	]
+
+	var err = http_request.request_raw(
+		APIManager.BASE_URL + "/upload_artwork",
+		headers,
+		HTTPClient.METHOD_POST,
+		byte_data
+	)
+
+	if err != OK:
+		print("Request failed locally (no internet or server unreachable)")
+	else:
+		print("Uploading artwork to server...")
 	
 var notification_tween: Tween = null
 

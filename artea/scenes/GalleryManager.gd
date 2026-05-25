@@ -1,6 +1,8 @@
 extends Node3D
 
-const WORKER_LIST_URL = "https://artea-gallery-api.artea-gallery-api.workers.dev/list-art"
+#const WORKER_LIST_URL = "https://artea-gallery-api.artea-gallery-api.workers.dev/list-art"
+const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
+const SERVER_BASE = "http://54.252.162.122"
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
 
 const LOCAL_ART_PATH = "user://artworks/"
@@ -20,11 +22,14 @@ var local_art_paths: Array[String] = []
 var frame_to_artwork: Dictionary = {}
 
 func _ready() -> void:
+	print(OS.get_user_data_dir())
 	list_request.request_completed.connect(_on_list_request_completed)
 	download_request.request_completed.connect(_on_download_request_completed)
 
 	load_local_art_paths()
-	list_bucket_contents()
+	apply_local_art_over_online()
+	list_user_artworks()
+	#list_bucket_contents()
 
 # =========================================================
 # LOCAL ART LOADING
@@ -70,38 +75,34 @@ func load_local_art_paths() -> void:
 # =========================================================
 # ONLINE ART LOADING
 # =========================================================
-func list_bucket_contents() -> void:
-	var error = list_request.request(WORKER_LIST_URL)
+##func list_bucket_contents() -> void:
+	##var error = list_request.request(WORKER_LIST_URL)
+#
+	#if error != OK:
+		#print("ERROR: Could not start Worker request. Godot Error Code:", error)
 
-	if error != OK:
-		print("ERROR: Could not start Worker request. Godot Error Code:", error)
-
-func _on_list_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
+func _on_list_request_completed(result, response_code, headers, body):
 	if response_code != 200:
-		print("ERROR: Worker list request failed with code:", response_code)
-		print("Response body:", body.get_string_from_utf8())
+		print("Gallery API failed → fallback local")
+		load_local_art_paths()
+		apply_local_art_over_online()
 		return
 
-	var json_result = JSON.parse_string(body.get_string_from_utf8())
+	var data = JSON.parse_string(body.get_string_from_utf8())
 
-	if json_result is Array:
-		image_metadata = json_result
-	else:
-		print("ERROR: Worker returned invalid JSON format.")
+	if typeof(data) != TYPE_ARRAY:
+		print("Invalid JSON → fallback local")
+		load_local_art_paths()
 		return
-
-	image_metadata.sort_custom(sort_by_last_modified)
-
-	var newest_metadata = image_metadata.slice(0, mini(MAX_FRAMES_TO_LOAD, image_metadata.size()))
 
 	images_to_download.clear()
-	for item in newest_metadata:
-		images_to_download.append(item.filename)
 
-	print("Finished listing online images. Total found: ", image_metadata.size())
+	for item in data:
+		images_to_download.append(SERVER_BASE + item.url)
 
 	current_frame_index = 0
 	frame_to_artwork.clear()
+
 	start_next_download()
 
 func sort_by_last_modified(a, b):
@@ -110,25 +111,27 @@ func sort_by_last_modified(a, b):
 func start_next_download() -> void:
 	if current_frame_index >= MAX_FRAMES_TO_LOAD or images_to_download.is_empty():
 		print("Finished loading online gallery.")
-		apply_local_art_over_online()
+		# Do not show local gallery if online is available
+		#apply_local_art_over_online()
 		print_all_frame_ratings()
 		return
 
-	var filename = images_to_download.pop_front()
-	var full_url = R2_DOWNLOAD_HOST.trim_suffix("/") + "/" + filename
+	#var filename = images_to_download.pop_front()
+	#var full_url = R2_DOWNLOAD_HOST.trim_suffix("/") + "/" + filename
+	var full_url = images_to_download.pop_front()
 
 	print("Downloading online art: ", full_url)
 
 	var error = download_request.request(full_url)
 
 	if error != OK:
-		print("ERROR: Could not start download request for ", filename, ". Error code: ", error)
+		print("ERROR: Could not start download request for ", full_url, ". Error code: ", error)
 		start_next_download()
 
 func _on_download_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
 	if response_code == 200:
 		var image = Image.new()
-		var load_error = image.load_jpg_from_buffer(body)
+		var load_error = image.load_png_from_buffer(body)
 
 		if load_error == OK:
 			image.resize(512, 512, Image.INTERPOLATE_BILINEAR)
@@ -265,3 +268,15 @@ func print_all_frame_ratings() -> void:
 			print(frame_name, " -> ONLINE ART")
 		else:
 			print(frame_name, " -> ", artwork_key, " | Rating: ", get_artwork_rating(artwork_key))
+
+func list_user_artworks() -> void:
+	var headers = [
+		"Authorization: Bearer " + Global.auth_token
+	]
+
+	var error = list_request.request(MY_ARTWORKS_URL, headers)
+
+	if error != OK:
+		print("Failed to request user artworks, fallback to local")
+		load_local_art_paths()
+		apply_local_art_over_online()
