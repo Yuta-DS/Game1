@@ -43,7 +43,11 @@ class User(db.Model):
 
 class Artwork(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(
+    db.Integer,
+    db.ForeignKey('user.id'),
+    nullable=False
+)
     title = db.Column(db.String(100), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
     is_public = db.Column(db.Boolean, default=False)
@@ -92,7 +96,7 @@ def login():
     if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash):
         return jsonify({"error": "Invalid credentials"}), 401
 
-    token = create_access_token(identity=user.id)
+    token = create_access_token(identity=str(user.id))
 
     return jsonify({"token": token})
 
@@ -108,28 +112,33 @@ def allowed_file(filename):
 @app.route('/upload_artwork', methods=['POST'])
 @jwt_required()
 def upload_artwork():
-    user_id = get_jwt_identity()
+    print("HEADERS:", dict(request.headers))
+    user_id = int(get_jwt_identity())
 
-    if 'file' not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
+    image_data = request.data
 
-    file = request.files['file']
-    title = request.form.get("title", "Untitled")
+    if not image_data:
+        return jsonify({
+            "message": "No image data received"
+        }), 400
 
-    if file.filename == "":
-        return jsonify({"error": "Empty filename"}), 400
+    title = request.headers.get("Artwork-Title", "Untitled")
 
-    if not allowed_file(file.filename):
-        return jsonify({"error": "File type not allowed"}), 400
+    safe_title = secure_filename(title)
 
-    user_folder = os.path.join(UPLOAD_FOLDER, f"user_{user_id}")
+    user_folder = os.path.join(
+        UPLOAD_FOLDER,
+        f"user_{user_id}"
+    )
+
     os.makedirs(user_folder, exist_ok=True)
 
-    ext = file.filename.rsplit(".", 1)[1].lower()
-    filename = f"{uuid4().hex}.{ext}"
+    filename = f"{safe_title}.png"
 
     save_path = os.path.join(user_folder, filename)
-    file.save(save_path)
+
+    with open(save_path, "wb") as f:
+        f.write(image_data)
 
     artwork = Artwork(
         user_id=user_id,
@@ -142,51 +151,24 @@ def upload_artwork():
     db.session.commit()
 
     return jsonify({
-        "message": "Artwork uploaded successfully",
-        "artwork_id": artwork.id
-    })
-
-# =========================
-# LIST ARTWORKS
-# =========================
-
-@app.route('/my_artworks', methods=['GET'])
-@jwt_required()
-def my_artworks():
-    user_id = get_jwt_identity()
-
-    artworks = Artwork.query.filter_by(user_id=user_id).all()
-
-    return jsonify([
-        {
-            "id": a.id,
-            "title": a.title,
-            "filename": a.filename,
-            "is_public": a.is_public
-        }
-        for a in artworks
-    ])
+        "message": "Artwork uploaded successfully"
+    }), 200
 
 # =========================
 # DOWNLOAD ARTWORK
 # =========================
 
 @app.route('/download_artwork/<int:artwork_id>', methods=['GET'])
-@jwt_required()
 def download_artwork(artwork_id):
-    user_id = get_jwt_identity()
 
-    artwork = Artwork.query.filter_by(
-        id=artwork_id,
-        user_id=user_id
-    ).first()
+    artwork = Artwork.query.filter_by(id=artwork_id).first()
 
     if not artwork:
         return jsonify({"error": "Artwork not found"}), 404
 
     file_path = os.path.join(
         UPLOAD_FOLDER,
-        f"user_{user_id}",
+        f"user_{artwork.user_id}",
         artwork.filename
     )
 
@@ -194,6 +176,32 @@ def download_artwork(artwork_id):
         return jsonify({"error": "File missing on server"}), 404
 
     return send_file(file_path)
+
+# =========================
+# DOWNLOAD 12 RECENT ARTWORKS
+# =========================
+
+@app.route('/my_artworks', methods=['GET'])
+@jwt_required()
+def my_artworks():
+    user_id = int(get_jwt_identity())
+
+    artworks = Artwork.query.filter_by(user_id=user_id)\
+        .order_by(Artwork.id.desc())\
+        .limit(12)\
+        .all()
+
+    result = []
+
+    for art in artworks:
+        result.append({
+            "id": art.id,
+            "title": art.title,
+            "filename": art.filename,
+            "url": f"/download_artwork/{art.id}"
+        })
+
+    return jsonify(result), 200
 
 # =========================
 # HEALTH CHECK
