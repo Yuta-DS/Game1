@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=6 format=3 uid="uid://sxbkt4q4kxwg"]
+[gd_resource type="TileSet" format=3 uid="uid://sxbkt4q4kxwg"]
 
 [ext_resource type="Texture2D" uid="uid://bsxu35nojkikp" path="res://assets/Scarlet Monastery/Legacy-Fantasy-VL.3 - Scarlet Monastery/Assets/Tiles.png" id="1_hrobj"]
 [ext_resource type="Texture2D" uid="uid://cuqpw3xv8es78" path="res://scenes/simple_frame_sprite.png" id="2_4iagw"]

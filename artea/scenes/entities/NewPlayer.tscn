@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://b11bh54mpfuu8" path="res://scenes/entities/new_player.gd" id="1_37sbh"]
 [ext_resource type="PackedScene" uid="uid://b2firggr374w6" path="res://scenes/Camera/camera_controller.tscn" id="2_26y45"]
 [ext_resource type="PackedScene" uid="uid://s55egnlukr74" path="res://scripts/fox.tscn" id="3_btyug"]
+[ext_resource type="Resource" uid="uid://c8v7m3n2k5p4q" path="res://resources/player_inventory.tres" id="4_inv"]
 [ext_resource type="PackedScene" uid="uid://0bb61ebi0v3j" path="res://scenes/inventory_gui.tscn" id="5_invgui"]
 [ext_resource type="AudioStream" uid="uid://vfavxc7vk3c" path="res://assets/audio/FootSteps.mp3" id="6_6joo3"]
 
@@ -10,6 +11,7 @@
 
 [node name="NewPlayer" type="CharacterBody3D" unique_id=256693606 groups=["player"]]
 script = ExtResource("1_37sbh")
+inventory_data = ExtResource("4_inv")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=777462999]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -28,7 +30,9 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
 [node name="FootstepPlayer" type="AudioStreamPlayer3D" parent="." unique_id=638396720]
 stream = ExtResource("6_6joo3")
 attenuation_model = 3
+volume_db = 6.0
 max_distance = 50.0
+bus = &"SFX"
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1119461583]
 
@@ -42,5 +46,5 @@ text = "
 "
 
 [node name="FloorDetector" type="RayCast3D" parent="." unique_id=1675328953]
-target_position = Vector3(0, -2, 0)
-collision_mask = 7
+target_position = Vector3(0, -3.5, 0)
+collision_mask = 15

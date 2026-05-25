@@ -17,9 +17,12 @@ extends CharacterBody3D
 @onready var jump_gravity : float = ((-2.0 * jump_height) / (jump_time_to_peak * jump_time_to_peak)) * -1.0
 @onready var fall_gravity : float = ((-2.0 * jump_height) / (jump_time_to_descent * jump_time_to_descent)) * -1.0
 
-# --- SPEED BOOSTED (FEEL THE DIFFERENCE) ---
-@export var baseSpeed := 12.0  # Was 8.0
-@export var runSpeed := 22.0   # Was 14.0
+# --- SPEED BOOSTED ---
+@export var baseSpeed := 12.0
+@export var runSpeed := 22.0
+
+# --- INTERACTION & GRASS FIX ---
+var interacting := false  # Critical fix for team's grass shader
 
 # --- INVENTORY SYSTEM ---
 @export var inventory_data: inventoryData
@@ -28,6 +31,10 @@ extends CharacterBody3D
 
 var movementInput := Vector2.ZERO
 
+#var interacting := false
+
+
+
 func _ready() -> void:
 	await get_tree().process_frame
 	if inventory_data and inventory_gui:
@@ -35,11 +42,23 @@ func _ready() -> void:
 	
 	floor_detector.add_exception(self)
 	
-	# --- AUDIO OVERRIDE ---
+	# --- OPTIMIZED AUDIO SETTINGS ---
 	if footstep_player is AudioStreamPlayer3D:
-		footstep_player.volume_db = 10.0 # Boost volume by 10 decibels
-		footstep_player.max_distance = 200.0 # Make it audible from far away
-		footstep_player.unit_size = 20.0 # Increases the "size" of the sound source
+		footstep_player.volume_db = 12.0      # Increased for clarity
+		footstep_player.max_distance = 500.0  # Prevents sound cutting out
+		footstep_player.unit_size = 35.0      # Larger 'loud zone' around player
+		footstep_player.panning_strength = 0.5
+		
+func _input(event: InputEvent) -> void:
+	# Toggle inventory with I key
+	if event.is_action_pressed("toggle_Inventory"):
+		_on_inventory_pressed()
+			
+func _on_inventory_pressed() -> void:
+	if interacting:
+		return
+	if inventory_gui:
+		inventory_gui.toggle_visibility()
 
 func _physics_process(delta: float) -> void:
 	moveLogic(delta)
@@ -53,45 +72,58 @@ func _physics_process(delta: float) -> void:
 
 func jumpLogic(delta) -> void:
 	if is_on_floor():
-		if Input.is_action_just_pressed("jump"):
+		if not interacting and Input.is_action_just_pressed("jump"):
 			velocity.y = -jump_velocity
 	else:
-		$RogueSkin/AnimationPlayer.current_animation = 'Jump'
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'ToucheGround'
 		
 	var gravity = jump_gravity if velocity.y > 0.0 else fall_gravity
 	velocity.y -= gravity * delta
 	
 func moveLogic(delta) -> void:
+	if interacting:
+		velocity.x = 0
+		velocity.z = 0
+		$RogueSkin/AnimationPlayer.current_animation = 'Idle'
+		return
+	
 	movementInput = Input.get_vector("move_left", "move_right", "move_forward", "move_backward").rotated(-camera.global_rotation.y)
 	var velocity2D = Vector2(velocity.x, velocity.z)
 	var isRunning: bool = Input.is_action_pressed("run")
 	
 	if movementInput != Vector2.ZERO:
 		var speed = runSpeed if isRunning else baseSpeed
-		velocity2D += movementInput * speed * delta * 8 # Snappier acceleration
+		velocity2D += movementInput * speed * delta * 8
 		velocity2D = velocity2D.limit_length(speed)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
 		
-		$RogueSkin/AnimationPlayer.current_animation = 'Run'
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'Run'
 		
-		# --- FOOTSTEP LOGIC ---
+		# --- FOOTSTEP LOGIC FIX ---
 		if is_on_floor():
 			if floor_detector.is_colliding():
 				var ground = floor_detector.get_collider()
+				# Check the collider or its parent for the grass group
+				var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
 				
-				if ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface")):
+				
+				if is_grass:
 					if footstep_player.stream != sfx_grass:
 						footstep_player.stream = sfx_grass
 					
 					if not footstep_player.playing:
+						# Random pitch makes steps stand out against wind
+						footstep_player.pitch_scale = randf_range(0.9, 1.1)
 						footstep_player.play()
 				else:
-					footstep_player.stop()
-			else:
-				footstep_player.stop()
+					if footstep_player.playing:
+						footstep_player.stop()
 		else:
-			footstep_player.stop()
+			if footstep_player.playing:
+				footstep_player.stop()
 
 		var targetAngle = -movementInput.angle() + PI/2
 		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
@@ -99,8 +131,32 @@ func moveLogic(delta) -> void:
 		velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
-		$RogueSkin/AnimationPlayer.current_animation = 'Idle'
-		footstep_player.stop()
+		if has_node("RogueSkin/AnimationPlayer"):
+			$RogueSkin/AnimationPlayer.current_animation = 'Idle'
+		if footstep_player.playing:
+			footstep_player.stop()
 
 func collect_item(item: itemData) -> bool:
+	if inventory_data == null:
+		return false
+	
+	if item.stackable:
+		for slot in inventory_data.slot_Data:
+			if slot != null and slot.item_Data != null:
+				if slot.item_Data.name == item.name:
+					slot.quantity += 1
+					if inventory_gui:
+						inventory_gui.refresh_slots()
+					return true
+	
+	for i in range(inventory_data.slot_Data.size()):
+		if inventory_data.slot_Data[i] == null:
+			var new_slot = slotData.new()
+			new_slot.item_Data = item
+			new_slot.quantity = 1
+			inventory_data.slot_Data[i] = new_slot
+			if inventory_gui:
+				inventory_gui.refresh_slots()
+			return true
+	
 	return false

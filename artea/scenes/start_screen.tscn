@@ -2,6 +2,76 @@
 
 [ext_resource type="Script" uid="uid://cgmg8ih4guj28" path="res://start_screen.gd" id="1_pevhg"]
 [ext_resource type="Texture2D" uid="uid://co8ixwvp5nnyc" path="res://assets/Startscreen_Background.png" id="2_afy8x"]
+[ext_resource type="AudioStream" uid="uid://bw43puxvrmg1w" path="res://assets/audio/Atmospheric-instrumental-music.mp3" id="3_he1sj"]
+
+[sub_resource type="Animation" id="Animation_o7i0r"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationParent:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_he1sj"]
+resource_name = "float"
+length = 3.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationParent:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1.5, 3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 464), Vector2(0, 444), Vector2(0, 464)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_r2jwc"]
+_data = {
+&"RESET": SubResource("Animation_o7i0r"),
+&"float": SubResource("Animation_he1sj")
+}
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_he1sj"]
+content_margin_left = 25.0
+content_margin_top = 25.0
+content_margin_right = 25.0
+content_margin_bottom = 25.0
+bg_color = Color(0.24313726, 0.15294118, 0.13725491, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.83137256, 0.6862745, 0.21568628, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o7i0r"]
+bg_color = Color(0.24313726, 0.15294118, 0.13725491, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.83137256, 0.6862745, 0.21568628, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+expand_margin_left = 2.0
+expand_margin_right = 2.0
+shadow_size = 2
 
 [node name="StartScreen" type="Node2D" unique_id=27431153]
 script = ExtResource("1_pevhg")
@@ -11,28 +81,59 @@ position = Vector2(953.25, 530.064)
 scale = Vector2(1.27572, 1.19519)
 texture = ExtResource("2_afy8x")
 
-[node name="Username" type="Label" parent="." unique_id=1329459374]
-offset_left = 66.0
-offset_top = 767.0
-offset_right = 329.0
-offset_bottom = 836.0
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=637653761]
+libraries/ = SubResource("AnimationLibrary_r2jwc")
+autoplay = &"float"
+
+[node name="AnimationParent" type="Node2D" parent="." unique_id=700868099]
+
+[node name="CenterContainer" type="CenterContainer" parent="AnimationParent" unique_id=1695625190]
+offset_left = 175.0
+offset_top = 214.0
+offset_right = 713.0
+offset_bottom = 606.0
+
+[node name="PanelContainer" type="PanelContainer" parent="AnimationParent/CenterContainer" unique_id=675696548]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_he1sj")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="AnimationParent/CenterContainer/PanelContainer" unique_id=341983019]
+layout_mode = 2
+
+[node name="Username" type="Label" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=1329459374]
+layout_mode = 2
 theme_override_font_sizes/font_size = 50
 text = "Username:"
+horizontal_alignment = 1
 
-[node name="Button" type="Button" parent="." unique_id=56447978]
-offset_left = 68.0
-offset_top = 990.0
-offset_right = 394.0
-offset_bottom = 1080.0
-theme_override_font_sizes/font_size = 50
-text = "Start Game"
-
-[node name="TextEdit" type="TextEdit" parent="." unique_id=1203315510]
-offset_left = 68.0
-offset_top = 863.0
-offset_right = 501.0
-offset_bottom = 951.0
+[node name="UsernameInput" type="LineEdit" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=1266025154]
+layout_mode = 2
 theme_override_font_sizes/font_size = 50
 placeholder_text = "Enter username"
 
-[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
+[node name="PasswordInput" type="LineEdit" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=1171476167]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+placeholder_text = "Password"
+secret = true
+
+[node name="Button" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=56447978]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
+text = "Start Game"
+
+[node name="RegisterButton" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=2004161624]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
+text = "Register"
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=372517556]
+stream = ExtResource("3_he1sj")
+autoplay = true
+
+[connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/RegisterButton" to="." method="_on_register_button_pressed"]
