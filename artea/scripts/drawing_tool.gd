@@ -17,6 +17,11 @@ var brush_size: int = 18
 var pending_stamp_tex: Texture2D = null
 var stamp_size: int = 80
 
+
+@onready var notificationpanel: PanelContainer = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/VSplitContainer/VBoxContainer/notificationui/notificationpanel
+@onready var notificationlabel: Label = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/VSplitContainer/VBoxContainer/notificationui/notificationpanel/notificationlabel
+@onready var ddrawingaudio: AudioStreamPlayer = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/VSplitContainer/VBoxContainer/CanvasTextureRect/ddrawingaudio
+@onready var eraseaudio: AudioStreamPlayer = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/VSplitContainer/VBoxContainer/CanvasTextureRect/eraseaudio
 @onready var exit: Button = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer/Exit
 @onready var artgallery: Button = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer/artgallery
 @onready var brush: Button = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Drawing/VBoxContainer/Brush
@@ -32,8 +37,7 @@ var stamp_size: int = 80
 @onready var clear: Button = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer/Clear
 @onready var undo_button: Button = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer/Undo
 
-@onready var title_input: LineEdit = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/VSplitContainer/VBoxContainer/TitleLineEdit
-
+@onready var title_input: LineEdit = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/VSplitContainer/VBoxContainer/HBoxContainer/TitleLineEdit
 @onready var save_close_button: Button = $CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer/Save
 
 @onready var http_request: HTTPRequest = $HTTPRequest
@@ -49,6 +53,7 @@ var max_undo_steps := 10
 func _ready() -> void:
 	http_request.timeout = 10
 	create_smooth_canvas()
+	notificationpanel.visible = false
 
 	active_color = color_picker.color
 
@@ -125,6 +130,18 @@ func _input(event: InputEvent) -> void:
 				return
 
 			smooth_drawing = true
+
+			# AUDIO
+			if is_Erasing:
+
+				if not eraseaudio.playing:
+					eraseaudio.play()
+
+			else:
+
+				if not ddrawingaudio.playing:
+					ddrawingaudio.play()
+
 			last_draw_pos = pos
 
 			draw_circle_at(last_draw_pos)
@@ -132,7 +149,15 @@ func _input(event: InputEvent) -> void:
 			canvas_texture.update(canvas_image)
 
 		elif !event.pressed:
+
 			smooth_drawing = false
+
+			# STOP AUDIO
+			if ddrawingaudio.playing:
+				ddrawingaudio.stop()
+
+			if eraseaudio.playing:
+				eraseaudio.stop()
 
 	elif event is InputEventMouseMotion and smooth_drawing:
 
@@ -146,7 +171,6 @@ func _input(event: InputEvent) -> void:
 
 	#if event.is_action_pressed("toggle_eraser"):
 		#_on_eraser_pressed()
-
 
 func get_canvas_mouse_pos() -> Vector2:
 
@@ -189,9 +213,7 @@ func draw_circle_at(pos: Vector2) -> void:
 
 	var radius: float = brush_size / 2.0
 
-	var draw_color = Color.WHITE if is_Erasing else active_color
-
-	var edge_softness: float = 6.0
+	var edge_softness: float = 8.0
 
 	for y in range(
 		-int(radius + edge_softness),
@@ -220,10 +242,19 @@ func draw_circle_at(pos: Vector2) -> void:
 
 					var old_color = canvas_image.get_pixel(px, py)
 
-					var blended_color = old_color.lerp(draw_color, alpha)
+					if is_Erasing:
 
-					canvas_image.set_pixel(px, py, blended_color)
+						# Soft erase
+						var erased_color = old_color.lerp(Color.WHITE, alpha)
 
+						canvas_image.set_pixel(px, py, erased_color)
+
+					else:
+
+						# Smooth brush blending
+						var blended_color = old_color.lerp(active_color, alpha)
+
+						canvas_image.set_pixel(px, py, blended_color)
 
 func place_stamp_at(pos: Vector2) -> void:
 
@@ -422,7 +453,9 @@ func save_artwork_to_desktop() -> void:
 
 	if OS.has_feature("Android"):
 		save_path = OS.get_system_dir(OS.SYSTEM_DIR_PICTURES) + "/" + file_name
+
 	else:
+
 		save_path = OS.get_system_dir(OS.SYSTEM_DIR_PICTURES)
 
 		if save_path == "":
@@ -430,13 +463,14 @@ func save_artwork_to_desktop() -> void:
 
 		save_path += "/" + file_name
 
+	# SAVE IMAGE
 	var err = image.save_png(save_path)
 
+	# NOTIFICATION
 	if err == OK:
-		print("Artwork saved to: ", save_path)
+		show_notification("Artwork saved successfully!", true)
 	else:
-		print("Failed to save. Error code: ", err)
-
+		show_notification("Failed to save artwork!", false)
 
 func save_artwork_to_gallery() -> String:
 
@@ -459,10 +493,10 @@ func save_artwork_to_gallery() -> String:
 	var err = image.save_png(save_path)
 
 	if err == OK:
-		print("Saved to gallery folder: ", save_path)
+		show_notification("Artwork added to gallery!", true)
 		return save_path
 	else:
-		print("Failed to save to gallery folder. Error code: ", err)
+		show_notification("Failed to save to gallery!", false)
 		return ""
 
 
@@ -473,7 +507,7 @@ func upload_artwork_to_firebase() -> void:
 	var byte_data = image.save_png_to_buffer()
 
 	if byte_data.size() == 0:
-		print("Image save failed!")
+		show_notification("Image export failed!", false)
 		return
 
 	var custom_title = _sanitize_title(title_input.text)
@@ -496,9 +530,9 @@ func upload_artwork_to_firebase() -> void:
 	)
 
 	if err != OK:
-		print("Failed to send request")
+		show_notification("Failed to connect to server!", false)
 	else:
-		print("Uploading: ", file_name)
+		show_notification("Uploading artwork...", true)
 
 
 func _on_http_request_request_completed(result, response_code, headers, body) -> void:
@@ -512,9 +546,9 @@ func _on_http_request_request_completed(result, response_code, headers, body) ->
 	print("Server response: ", response_text)
 
 	if response_code == 200:
-		print("Upload success")
+		show_notification("Artwork uploaded successfully!", true)
 	else:
-		print("Upload failed: ", response_code)
+		show_notification("Failed to save artwork!", false)
 
 
 func _on_save_close_button_pressed() -> void:
@@ -584,3 +618,48 @@ func upload_artwork_to_server() -> void:
 		print("Request failed locally (no internet or server unreachable)")
 	else:
 		print("Uploading artwork to server...")
+	
+var notification_tween: Tween = null
+
+func show_notification(message: String, success := true) -> void:
+
+	# Stop old tween
+	if notification_tween:
+		notification_tween.kill()
+
+	notificationpanel.visible = true
+
+	notificationlabel.text = message
+
+	# Colors
+	if success:
+		notificationpanel.modulate = Color(0.3, 1.0, 0.3)
+	else:
+		notificationpanel.modulate = Color(1.0, 0.3, 0.3)
+
+	# Fade in
+	notificationpanel.modulate.a = 0.0
+
+	notification_tween = create_tween()
+
+	notification_tween.tween_property(
+		notificationpanel,
+		"modulate:a",
+		1.0,
+		0.25
+	)
+
+	await get_tree().create_timer(3.0).timeout
+
+	notification_tween = create_tween()
+
+	notification_tween.tween_property(
+		notificationpanel,
+		"modulate:a",
+		0.0,
+		0.4
+	)
+
+	await notification_tween.finished
+
+	notificationpanel.visible = false
