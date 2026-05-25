@@ -16,27 +16,32 @@ func _on_button_pressed():
 		return
 
 	# 3. Call the Global check
-	var status = UserStorage.login_user(entered_user, entered_pass)
-	
-	# 4. Handle the result
-	if status == "SUCCESS":
-		print("LOGIN GRANTED")
-		enter_game(entered_user)
-		
-	elif status == "WRONG_PASSWORD":
-		print("LOGIN DENIED: WRONG PASSWORD")
-		pass_node.text = "" # Clear the box for a retry
-		# We stay on the screen because we don't call enter_game()
-		
-	elif status == "USER_NOT_FOUND":
-		# Automatically register new users for the demo
-		UserStorage.register_user(entered_user, entered_pass)
-		print("New account registered for: ", entered_user)
-		enter_game(entered_user)
+	print("Attempting login...")
+
+	APIManager.login(
+		entered_user,
+		entered_pass,
+		func(success, data):
+
+			if success:
+
+				print("LOGIN GRANTED")
+
+				Global.current_user_name = entered_user
+
+				enter_game(entered_user)
+
+			else:
+
+				print("LOGIN FAILED")
+
+				print(data)
+	)
 
 func enter_game(username):
 	# Save the name for the Hub World
 	Global.current_user_name = username
+	Global.auth_token = APIManager.auth_token
 	
 	# --- PROFESSIONAL MUSIC FADE ---
 	# This creates a smooth transition instead of a sudden silence
