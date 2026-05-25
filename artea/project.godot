@@ -29,6 +29,7 @@ DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameManager="*res://scripts/GameManager.gd"
 Auth="*res://addons/godot-firebase/auth/auth.gd"
 UserStorage="*uid://c35r2ihdgrlst"
+APIManager="*uid://dodj1s54vwit2"
 
 [dialogue_manager]
 
