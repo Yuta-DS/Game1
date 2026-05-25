@@ -1,0 +1,12 @@
+[Unit]
+Description=Flask Game Backend
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/home/ubuntu/server
+ExecStart=/home/ubuntu/server/venv/bin/python server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
