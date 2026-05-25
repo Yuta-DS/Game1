@@ -155,46 +155,20 @@ def upload_artwork():
     }), 200
 
 # =========================
-# LIST ARTWORKS
-# =========================
-
-@app.route('/my_artworks', methods=['GET'])
-@jwt_required()
-def my_artworks():
-    user_id = int(get_jwt_identity())
-
-    artworks = Artwork.query.filter_by(user_id=user_id).all()
-
-    return jsonify([
-        {
-            "id": a.id,
-            "title": a.title,
-            "filename": a.filename,
-            "is_public": a.is_public
-        }
-        for a in artworks
-    ])
-
-# =========================
 # DOWNLOAD ARTWORK
 # =========================
 
 @app.route('/download_artwork/<int:artwork_id>', methods=['GET'])
-@jwt_required()
 def download_artwork(artwork_id):
-    user_id = int(get_jwt_identity())
 
-    artwork = Artwork.query.filter_by(
-        id=artwork_id,
-        user_id=user_id
-    ).first()
+    artwork = Artwork.query.filter_by(id=artwork_id).first()
 
     if not artwork:
         return jsonify({"error": "Artwork not found"}), 404
 
     file_path = os.path.join(
         UPLOAD_FOLDER,
-        f"user_{user_id}",
+        f"user_{artwork.user_id}",
         artwork.filename
     )
 
@@ -202,6 +176,32 @@ def download_artwork(artwork_id):
         return jsonify({"error": "File missing on server"}), 404
 
     return send_file(file_path)
+
+# =========================
+# DOWNLOAD 12 RECENT ARTWORKS
+# =========================
+
+@app.route('/my_artworks', methods=['GET'])
+@jwt_required()
+def my_artworks():
+    user_id = int(get_jwt_identity())
+
+    artworks = Artwork.query.filter_by(user_id=user_id)\
+        .order_by(Artwork.id.desc())\
+        .limit(12)\
+        .all()
+
+    result = []
+
+    for art in artworks:
+        result.append({
+            "id": art.id,
+            "title": art.title,
+            "filename": art.filename,
+            "url": f"/download_artwork/{art.id}"
+        })
+
+    return jsonify(result), 200
 
 # =========================
 # HEALTH CHECK
