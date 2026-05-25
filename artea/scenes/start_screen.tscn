@@ -136,4 +136,4 @@ stream = ExtResource("3_he1sj")
 autoplay = true
 
 [connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/Button" to="." method="_on_button_pressed"]
-[connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/RegisterButton" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/RegisterButton" to="." method="_on_register_button_pressed"]
