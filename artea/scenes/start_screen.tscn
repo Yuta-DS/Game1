@@ -83,15 +83,14 @@ texture = ExtResource("2_afy8x")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=637653761]
 libraries/ = SubResource("AnimationLibrary_r2jwc")
-autoplay = &"float"
 
 [node name="AnimationParent" type="Node2D" parent="." unique_id=700868099]
 
 [node name="CenterContainer" type="CenterContainer" parent="AnimationParent" unique_id=1695625190]
-offset_left = 175.0
-offset_top = 214.0
-offset_right = 713.0
-offset_bottom = 606.0
+offset_left = 89.0
+offset_top = 489.0
+offset_right = 749.0
+offset_bottom = 1151.0
 
 [node name="PanelContainer" type="PanelContainer" parent="AnimationParent/CenterContainer" unique_id=675696548]
 layout_mode = 2
@@ -131,9 +130,22 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
 text = "Register"
 
+[node name="GuestButton" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=895124456]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
+text = "Offline Guest"
+
+[node name="StatusLabel" type="Label" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=209099682]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=372517556]
 stream = ExtResource("3_he1sj")
+volume_db = -12.0
 autoplay = true
 
 [connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/Button" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/RegisterButton" to="." method="_on_register_button_pressed"]
+[connection signal="pressed" from="AnimationParent/CenterContainer/PanelContainer/VBoxContainer/GuestButton" to="." method="_on_guest_button_pressed"]
