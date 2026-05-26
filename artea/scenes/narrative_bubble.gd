@@ -12,7 +12,7 @@ func _ready():
 	
 	# 1. Set the Speaker's Name
 	if name_label:
-		name_label.text = "Seraphim" 
+		name_label.text = "Gabriel" 
 	
 	# 2. Set the Personalized Greeting
 	if message_label:
