@@ -179,6 +179,9 @@ func choose(index: int):
 
 func end_dialogue():
 	current_dialogue_node = ""
+	current_node = ""
+	current_index = 0
+	waiting_for_choice = false
 	
 	if dialogue_ui != null:
 		dialogue_ui.queue_free()

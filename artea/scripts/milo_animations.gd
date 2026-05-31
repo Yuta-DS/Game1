@@ -65,7 +65,7 @@ func _process(delta):
 		wave_timer = 0.0
 
 	# interaction
-	if Input.is_action_just_pressed("interact") and player_in_range:
+	if Input.is_action_just_pressed("interact") and player_in_range and !player.interacting:
 		print("Interacting with Milo")
 		open_chatbot()
 		player.interacting = true
