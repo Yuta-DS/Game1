@@ -9,7 +9,7 @@ var messages = [
 	"Great work! Your thoughts are now at ease.",
 	"You've lightened your mental sky—awesome job!",
 	"Your mind is calm. The clouds have passed.",
-	"Poof! All your cloudy thoughts are gone!",
+	"All your cloudy thoughts are gone!",
 	"The sky’s all clear—nice popping!",
 	"Great poppin’! Your thoughts are toast!",
 	"You've cloud-busted your way to clarity!",
@@ -59,12 +59,8 @@ func _ready() -> void:
 
 # Play again button
 func _on_play_again_pressed() -> void:
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/popThoughtsMenu.tscn"
+	get_tree().change_scene_to_file("res://scenes/popThoughtsMenu.tscn")
 	
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free() 
-	MusicManager._check_scene()
 
 # Return to Hubworld button
 func _on_return_to_hubworld_pressed():
