@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://pvrtbkfu3g2k" path="res://scripts/dialogue_ui.gd" id="1_dwk8m"]
 [ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="2_6q285"]
+[ext_resource type="Theme" uid="uid://nm7lamdm42pn" path="res://choices_buttons.tres" id="3_jx1sv"]
 
 [node name="CanvasLayer" type="CanvasLayer" unique_id=319602805]
 script = ExtResource("1_dwk8m")
@@ -62,3 +63,4 @@ offset_right = 873.0
 offset_bottom = 394.0
 grow_horizontal = 2
 grow_vertical = 0
+theme = ExtResource("3_jx1sv")
