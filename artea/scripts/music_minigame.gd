@@ -7,6 +7,7 @@ extends Control
 @onready var player = $MusicPlayer
 @onready var visualizer = $VisualizerContainer
 @onready var emotion_ai = $EmotionAI
+@onready var return_button = $ReturnButton
 @onready var pitch_slider = $HBoxContainer/Options/PitchSlider
 @onready var default_pitch_button = $HBoxContainer/Options/ResetPitch
 @onready var drums1 = $HBoxContainer/VBoxContainer3/Drums/DrumsColumn1/ButtonDrums1
@@ -653,3 +654,7 @@ func _on_generate_pressed():
 	detect_emotion(text)
 
 	print("Emotion request sent")
+
+
+func _on_return_button_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
