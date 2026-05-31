@@ -28,7 +28,8 @@ do GameManager.request_pop_thoughts()
 
 ~ start_patron_pallete
 Archangel Uriel: [[Hello, artist!|Greetings, creator!|Hey there!]]  
-Archangel Uriel: Welcome to the Imagination Realm. Ready to unleash your creativity?
+Archangel Uriel: Welcome to the Imagination Realm!
+Archangel Uriel: Ready to unleash your creativity?
 - Yes—let me paint!
 	=> open_painting_tool
 - How does it work?
