@@ -15,7 +15,7 @@ func set_inventory_data(data: inventoryData) -> void:
 
 func populate_slots() -> void:
 	print("=== POPULATE SLOTS CALLED ===")
-	
+	return # Function has been crashing the game upon spawning
 	# Clear existing slots
 	for child in grid_container.get_children():
 		child.queue_free()
@@ -33,7 +33,7 @@ func populate_slots() -> void:
 		grid_container.add_child(slot)
 		
 		# Wait for slot to be ready
-		await get_tree().process_frame
+		#await get_tree().process_frame
 		
 		var slot_data = inventory_data.slot_Data[i]
 		if slot_data != null:
