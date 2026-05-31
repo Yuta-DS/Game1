@@ -64,7 +64,7 @@
 [ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="62_milo"]
 [ext_resource type="PackedScene" uid="uid://b1d3rlknpgaj3" path="res://scenes/everlasting_father_animations.tscn" id="63_father"]
 [ext_resource type="PackedScene" uid="uid://7xbyv6flli6r" path="res://scenes/knight_animations.tscn" id="64_knight"]
-[ext_resource type="PackedScene" path="res://scenes/rogue_animations.tscn" id="65_rogue"]
+[ext_resource type="PackedScene" uid="uid://bkm1ymlapx10o" path="res://scenes/rogue_animations.tscn" id="65_rogue"]
 [ext_resource type="PackedScene" uid="uid://dlvg1cesiihwf" path="res://scenes/barbarian_animations.tscn" id="66_barbarian"]
 [ext_resource type="PackedScene" uid="uid://c080vovqsegsq" path="res://scenes/mage_animations.tscn" id="67_mage"]
 [ext_resource type="Script" uid="uid://ca8tvwxs47jqc" path="res://scenes/story_direction.gd" id="68_1fv2d"]
