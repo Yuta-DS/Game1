@@ -130,6 +130,8 @@ func execute_command(command: String):
 			request_Art_Therapy()
 		"GameManager.request_visit_website()":
 			request_visit_website()
+		"GameManager.request_music_minigame()":
+			request_music_minigame()
 			
 var current_choices = []
 
@@ -244,20 +246,19 @@ func resolve_variants(text: String) -> String:
 # EXISTING SYSTEM (UNCHANGED)
 # -----------------------
 
-func request_pop_thoughts():
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/popThoughtsMenu.tscn"
+func request_music_minigame():
+	print("DEBUG: MUSIC MINIGAME REQUESTED")
 	MusicManager._check_scene()
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	get_tree().change_scene_to_file("uid://rg062smgsl6g")
+
+func request_pop_thoughts():
+	MusicManager._check_scene()
+	get_tree().change_scene_to_file("uid://ctbchsbolgvqh")
 
 
 func request_paingting():
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/paint_tool.tscn"
 	MusicManager._check_scene()
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	get_tree().change_scene_to_file("uid://cov6pyq6rp3k7")
 
 
 # Changed to 3D Gallery
@@ -271,13 +272,14 @@ func request_visit_website():
 
 
 func request_goback_HubWorld():
+	print("DEBUG: Requested return")
 	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
 	loading_screen.next_scene_path = "res://scenes/artea_game.tscn"
 	MusicManager._check_scene()
 	get_tree().root.add_child(loading_screen)
 	get_tree().current_scene.queue_free()
 
-
+# LEGACY: 2D version cat therapist scene
 func request_Art_Therapy():
 	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
 	loading_screen.next_scene_path = "res://scenes/art_therapist_Scene.tscn"

@@ -9,7 +9,9 @@ Archangel Gabriel : Would you like to create music from your emotions?
 	=> END
 
 ~ launch_music_minigame
-	=> END
+Archangel Gabriel: *(Starts humming)*
+do GameManager.request_music_minigame()
+=> END
 
 ~ start_zephyr_dialogue
 Everlasting Father: Hey! Ready to lighten your mind?
