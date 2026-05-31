@@ -7,7 +7,7 @@ extends Control
 @onready var ai_counselor = $AI_Counselor
 @onready var model = $MiloModel
 
-var openai_api_key = "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" # <<<<<< REPLACE with your real key
+var openai_api_key = "" # <<<<<< Do not include API key in code
 signal chat_closed
 
 func _ready():
