@@ -8,9 +8,10 @@ from flask_jwt_extended import (
 )
 import bcrypt
 import os
-from datetime import timedelta
+from datetime import timedelta, datetime
 from werkzeug.utils import secure_filename
 from uuid import uuid4
+import requests
 
 app = Flask(__name__)
 
@@ -19,6 +20,9 @@ app = Flask(__name__)
 # =========================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+OPENROUTER_API_KEY = "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"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+USE_OPENROUTER = True
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -126,14 +130,20 @@ def upload_artwork():
 
     safe_title = secure_filename(title)
 
+    if not safe_title:
+        safe_title = "untitled"
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    unique_id = uuid4().hex[:8]
+
+    filename = f"{safe_title}_{timestamp}_{unique_id}.png"
+
     user_folder = os.path.join(
         UPLOAD_FOLDER,
         f"user_{user_id}"
     )
 
     os.makedirs(user_folder, exist_ok=True)
-
-    filename = f"{safe_title}.png"
 
     save_path = os.path.join(user_folder, filename)
 
@@ -203,6 +213,92 @@ def my_artworks():
 
     return jsonify(result), 200
 
+# ==================================================
+# FUTURE AI INTEGRATION
+#
+# Default project uses local LLM in Godot.
+#
+# To enable OpenRouter:
+# 1. Insert API key
+# 2. Set USE_OPENROUTER = True
+# 3. Route NPC requests through /ai/chat
+#
+# Existing implementation tested and functional.
+# ==================================================
+
+@app.route('/ai/chat', methods=['POST'])
+def ai_chat():
+    print("OPENROUTER TEST MODE ACTIVE 1")
+    data = request.json
+    messages = data.get("messages", [])
+
+    print("OPENROUTER TEST MODE ACTIVE 2")
+    if not messages:
+        print("OPENROUTER TEST MODE ACTIVE 3")
+        return jsonify({"error": "No messages provided"}), 400
+
+    last_message = messages[-1]["content"]
+
+    # -------------------------
+    # LOCAL MODE (GAME USE)
+    # -------------------------
+    local_reply = f"EC2 stub response: {last_message}"
+    print("OPENROUTER TEST MODE ACTIVE 4")
+
+    # -------------------------
+    # OPENROUTER MODE
+    # -------------------------
+
+    if USE_OPENROUTER:
+        print("OPENROUTER TEST MODE ACTIVE")
+        result = call_openrouter(messages)
+
+        if result:
+            return jsonify({
+                "status": "openrouter_test",
+                "reply": result
+            }), 200
+
+    # fallback
+    return jsonify({
+        "status": "local_stub",
+        "reply": local_reply
+    }), 200
+
+def call_openrouter(messages):
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "openai/gpt-oss-20b:free",
+        "messages": messages,
+        "temperature": 0.7
+    }
+
+    try:
+        response = requests.post(
+            OPENROUTER_URL,
+            headers=headers,
+            json=payload,
+            timeout=15
+        )
+
+        if response.status_code != 200:
+            print("OpenRouter error:", response.text)
+            return None
+
+        data = response.json()
+
+        return data["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        print("OpenRouter exception:", str(e))
+        return None
+    
+
+
 # =========================
 # HEALTH CHECK
 # =========================
@@ -224,3 +320,4 @@ if __name__ == '__main__':
         port=80,
         debug=False
     )
+
