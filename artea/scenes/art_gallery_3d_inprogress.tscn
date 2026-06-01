@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://bmac1y5j1g7xe" path="res://assets/models/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg" id="14_k4ey6"]
 [ext_resource type="Script" uid="uid://bk7rt45bvooh5" path="res://scenes/ExitGallery.gd" id="14_qum7w"]
 [ext_resource type="ArrayMesh" uid="uid://t2bnky34v4qp" path="res://exitart_door_mesh.obj" id="17_bvso8"]
+[ext_resource type="Material" uid="uid://dkkbdeury7542" path="res://portal_colour.tres" id="18_rye7r"]
 [ext_resource type="PackedScene" uid="uid://bc4s70tkatf44" path="res://assets/models/Low-Poly Plant_.fbx" id="22_8fcft"]
 [ext_resource type="Script" uid="uid://eraeiu6qk3vg" path="res://scenes/GalleryManager.gd" id="24_3btdo"]
 
@@ -552,7 +553,7 @@ transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -53.5987, 0, 2.23019)
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -34.0054, 0, 0.803734)
 
 [node name="Exit1" type="Area3D" parent="." unique_id=1651203399]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -55.5845, 1.59177, 16.4595)
+transform = Transform3D(-1.3113416e-07, 0, 3, 0, 3, 0, -3, 0, -1.3113416e-07, -58.91832, 0.028927207, 13.731781)
 script = ExtResource("14_qum7w")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Exit1" unique_id=167635426]
@@ -561,5 +562,6 @@ shape = SubResource("BoxShape3D_bvso8")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Exit1" unique_id=1668907191]
 mesh = ExtResource("17_bvso8")
+surface_material_override/0 = ExtResource("18_rye7r")
 
 [connection signal="body_entered" from="Exit1" to="." method="_on_body_entered"]
