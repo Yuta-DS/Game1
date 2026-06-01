@@ -1,6 +1,11 @@
 extends Node
 
 const BASE_URL = "http://54.252.162.122"
+const LOGIN_URL = BASE_URL + "/login"
+const REGISTER_URL = BASE_URL + "/register"
+
+const UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
+const MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
 
 var auth_token = ""
 
