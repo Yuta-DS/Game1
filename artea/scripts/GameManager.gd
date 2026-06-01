@@ -119,6 +119,7 @@ func process_next_line():
 	dialogue_ui.show_line(parsed.speaker, parsed.text)
 	
 func execute_command(command: String):
+	print("DEBUG: MATCHING COMMAND")
 	match command:
 		"GameManager.request_pop_thoughts()":
 			request_pop_thoughts()
@@ -132,6 +133,10 @@ func execute_command(command: String):
 			request_visit_website()
 		"GameManager.request_music_minigame()":
 			request_music_minigame()
+		"GameManager.request_visit_workshops()":
+			request_visit_workshops()
+		"GameManager.request_visit_collection()":
+			request_visit_collection()
 			
 var current_choices = []
 
@@ -249,7 +254,7 @@ func resolve_variants(text: String) -> String:
 func request_music_minigame():
 	print("DEBUG: MUSIC MINIGAME REQUESTED")
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("uid://rg062smgsl6g")
+	get_tree().change_scene_to_file("uid://3mhecvarwvlp")
 
 func request_pop_thoughts():
 	MusicManager._check_scene()
@@ -269,6 +274,12 @@ func request_art_gallery():
 
 func request_visit_website():
 	OS.shell_open("https://www.louisachancreative.com/")
+	
+func request_visit_workshops():
+	OS.shell_open("https://www.louisachancreative.com/news/")
+	
+func request_visit_collection():
+	OS.shell_open("https://www.louisachancreative.com/shop/")
 
 
 func request_goback_HubWorld():

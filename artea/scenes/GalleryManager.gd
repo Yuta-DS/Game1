@@ -8,7 +8,10 @@ extends Node3D
 
 const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
 const SERVER_BASE = "http://54.252.162.122"
+const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
+const SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
+const PLACEHOLDER_PATH = "res://assets/ArtGallery/placeholders/"
 
 const LOCAL_ART_PATH = "user://artworks/"
 const RATINGS_FILE_PATH = "user://artworks/ratings.json"
@@ -75,12 +78,45 @@ func _ready() -> void:
 	# -----------------------------------------------------
 	# LOAD ONLINE ARTWORKS SECOND
 	# -----------------------------------------------------
+	load_placeholders()
+
+	#load_local_art_paths()
+	#apply_local_art_over_online()
 	list_user_artworks()
 
 
 # =========================================================
 # LOCAL ART LOADING
 # =========================================================
+func load_placeholders() -> void:
+	for i in range(MAX_FRAMES_TO_LOAD):
+
+		var frame_name = "Frame_%02d" % (i + 1)
+		var frame_node = get_node_or_null("../" + frame_name)
+		var image_path
+		if frame_node == null:
+			print("Could not find frame: ", frame_name)
+			continue
+		if i == 5: # painting_6.jpg
+			image_path = PLACEHOLDER_PATH + "painting_%d.jpg" % (i + 1)
+		elif i == 8:
+			image_path = PLACEHOLDER_PATH + "painting_%d.jpeg" % (i + 1)
+		else:
+			image_path = PLACEHOLDER_PATH + "painting_%d.jpeg" % (i + 1)
+
+		one_placeholder(frame_node, image_path)
+		
+func one_placeholder(frame_node: Sprite3D, image_path: String):
+	var image = Image.new()
+
+	if image.load(image_path) != OK:
+		print("Failed to load placeholder: ", image_path)
+		return
+
+	image.resize(512, 512, Image.INTERPOLATE_BILINEAR)
+
+	var texture = ImageTexture.create_from_image(image)
+	frame_node.texture = texture
 
 func load_local_art_paths() -> void:
 

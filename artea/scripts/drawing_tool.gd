@@ -1,5 +1,8 @@
 extends Control
 
+# Link of background
+# https://images.nasa.gov/details/PIA12348
+
 # Smooth canvas
 const CANVAS_WIDTH := 1024
 const CANVAS_HEIGHT := 950
@@ -608,7 +611,7 @@ func upload_artwork_to_server() -> void:
 	]
 
 	var err = http_request.request_raw(
-		APIManager.BASE_URL + "/upload_artwork",
+		APIManager.UPLOAD_ARTWORK_URL,
 		headers,
 		HTTPClient.METHOD_POST,
 		byte_data
