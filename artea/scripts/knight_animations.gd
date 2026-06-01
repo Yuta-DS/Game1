@@ -30,7 +30,7 @@ func _process(delta):
 	timer += delta
 
 	# interaction ONLY inside zone
-	if player_in_range and Input.is_action_just_pressed("interact"):
+	if player_in_range and Input.is_action_just_pressed("interact") and !player.interacting:
 		start_dialogue()
 
 	if is_in_dialogue and Input.is_action_just_pressed("ui_cancel"):

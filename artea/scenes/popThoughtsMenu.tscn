@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ctbchsbolgvqh"]
 
 [ext_resource type="Script" uid="uid://bv41a05s1gxp5" path="res://scripts/pop_thoughts_menu.gd" id="1_n0gf0"]
-[ext_resource type="Texture2D" uid="uid://divem2bli6vuu" path="res://assets/Clouds/Menu/Cloud-Minigame-Menu.png" id="2_5jjns"]
+[ext_resource type="Texture2D" uid="uid://c4kq5fmy10iyj" path="res://assets/Clouds/Menu/Pop Thoughts Garden.png" id="2_lnna2"]
 [ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="3_5jjns"]
 [ext_resource type="AudioStream" uid="uid://b5rwhf7ltnj05" path="res://assets/SFX/introminigame.mp3" id="4_5jjns"]
 [ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="4_lnna2"]
@@ -17,9 +17,9 @@ grow_vertical = 2
 script = ExtResource("1_n0gf0")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=827598144]
-position = Vector2(987, 675.87494)
+position = Vector2(854, 672.99994)
 scale = Vector2(1.2021924, 1.3969207)
-texture = ExtResource("2_5jjns")
+texture = ExtResource("2_lnna2")
 
 [node name="Panel" type="Panel" parent="." unique_id=413889371]
 layout_mode = 1
@@ -40,7 +40,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -15.0
 offset_top = -4.0
-offset_right = -239.0
+offset_right = -13.0
 offset_bottom = -296.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -89,10 +89,10 @@ flat = true
 
 [node name="CenterContainer" type="CenterContainer" parent="." unique_id=1963473751]
 layout_mode = 0
-offset_left = 618.0
-offset_top = 628.0
-offset_right = 933.2919
-offset_bottom = 747.0
+offset_left = 550.0
+offset_top = 543.0
+offset_right = 865.2919
+offset_bottom = 662.0
 scale = Vector2(2.36289, 2.36289)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=1747143596]

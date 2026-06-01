@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-@export var speed: float = 5.0
+@export var speed: float = 10.0
 @export var input_enabled: bool = true
 
 # --- Visual & Animation Setup ---
