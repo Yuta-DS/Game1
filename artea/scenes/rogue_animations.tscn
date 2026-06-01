@@ -1,8 +1,13 @@
 [gd_scene format=3 uid="uid://bkm1ymlapx10o"]
 
 [ext_resource type="PackedScene" uid="uid://c1us8bv7xti4a" path="res://assets3D/characters/Rogue.glb" id="1_xyi4s"]
+[ext_resource type="Script" uid="uid://bfq4aadq6xydk" path="res://scripts/rogue_animations.gd" id="2_nrxar"]
+[ext_resource type="Script" uid="uid://cmibd6k0gwjah" path="res://scenes/chat_detection_area_3d.gd" id="2_vncd4"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_nrxar"]
 
 [node name="Rogue" unique_id=1520299301 instance=ExtResource("1_xyi4s")]
+script = ExtResource("2_nrxar")
 
 [node name="Skeleton3D" parent="Rig" parent_id_path=PackedInt32Array(1346312580) index="0" unique_id=148651179]
 bones/1/position = Vector3(0, 0.39206383, 0)
@@ -81,3 +86,13 @@ transform = Transform3D(0.9962748, -5.1496167e-09, 0.08623532, 5.1304343e-09, 0.
 
 [node name="AnimationPlayer" parent="." index="1" unique_id=90982677]
 autoplay = &"Cheer"
+
+[node name="Area3D" type="Area3D" parent="." index="2" unique_id=2142085033]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0)
+script = ExtResource("2_vncd4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" index="0" unique_id=1687862893]
+shape = SubResource("SphereShape3D_nrxar")
+
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_3d_body_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_3d_body_exited"]
