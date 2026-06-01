@@ -9,12 +9,13 @@ func _ready() -> void:
 	close()
 	
 func set_inventory_data(data: inventoryData) -> void:
+	print("DEBUG: SET INVENTORY DATA CALLED")
 	inventory_data = data
 	populate_slots()
 
 func populate_slots() -> void:
 	print("=== POPULATE SLOTS CALLED ===")
-	
+	return # Function has been crashing the game upon spawning
 	# Clear existing slots
 	for child in grid_container.get_children():
 		child.queue_free()
@@ -32,7 +33,7 @@ func populate_slots() -> void:
 		grid_container.add_child(slot)
 		
 		# Wait for slot to be ready
-		await get_tree().process_frame
+		#await get_tree().process_frame
 		
 		var slot_data = inventory_data.slot_Data[i]
 		if slot_data != null:
@@ -45,6 +46,11 @@ func populate_slots() -> void:
 	print("=== POPULATE COMPLETE ===")
 
 func refresh_slots() -> void:
+	
+	if inventory_data == null:
+		push_error("refresh_slots called but inventory_data is null")
+		return
+	
 	print("=== REFRESH SLOTS CALLED ===")
 	print("Grid container children count: ", grid_container.get_child_count())
 	# Crashes the game if object spawned directly under the player:
@@ -53,11 +59,6 @@ func refresh_slots() -> void:
 	var slots = grid_container.get_children()
 	for i in range(slots.size()):
 		if i < inventory_data.slot_Data.size():
-			var slot_data = inventory_data.slot_Data[i]
-			if slot_data != null:
-				print("Slot ", i, " - Item: ", slot_data.item_Data.name if slot_data.item_Data else "null", " Qty: ", slot_data.quantity)
-			else:
-				print("Slot ", i, " - Empty (null)")
 			slots[i].set_slot_data(inventory_data.slot_Data[i])
 		else:
 			slots[i].set_slot_data(null)

@@ -21,7 +21,7 @@ no_depth_test = true
 render_priority = 1
 modulate = Color(0.18039216, 0.003921569, 0.2, 1)
 text = "Welcome, Seeker. Artéa has been dimmed by fear and confusion. You are here to rediscover the truth and restore the light."
-autowrap_mode = 1
+autowrap_mode = 2
 width = 1000.0
 
 [node name="CharacterName" type="Label3D" parent="NarrativeBubble" unique_id=489327213]
@@ -29,4 +29,4 @@ transform = Transform3D(1.0000024, 0, 0, 0, 1, 0, 0, 0, 1.0000024, 0.0006737709,
 extra_cull_margin = 2.0
 offset = Vector2(-220, 0)
 no_depth_test = true
-text = "Seraphim"
+text = "Angel Gabriel"

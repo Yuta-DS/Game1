@@ -4,8 +4,12 @@ extends CanvasLayer
 @onready var speaker_label = $ChatBubble/SpeakerLabel
 @onready var choices_container = $ChatBubble/ChoicesContainer
 
+func _ready():
+	print("Dialogue UI Ready")
+
 func _input(event):
 	if event.is_action_pressed("ui_accept"):
+		print("DEBUG: UI_ACCEPT PRESSED")
 		if not GameManager.waiting_for_choice:
 			GameManager.process_next_line()
 

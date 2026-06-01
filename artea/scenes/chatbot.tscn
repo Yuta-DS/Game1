@@ -31,7 +31,11 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
 theme_override_styles/normal = SubResource("StyleBoxEmpty_an77j")
-placeholder_text = "Start the chat with Milo..."
+placeholder_text = "Hi, my name is Milo…
+You can share what’s on your mind, how you’re feeling, or anything that’s been weighing on you.
+I am here to listen, support you, and help you explore your thoughts gently.
+You can also talk about things like stress, relationships, self-doubt, or feeling lost.
+There is no right or wrong way to start—just speak freely."
 wrap_mode = 1
 scroll_smooth = true
 
