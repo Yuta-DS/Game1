@@ -41,12 +41,20 @@ Archangel Uriel: Ready to unleash your creativity?
 Archangel Uriel: In the Imagination Realm you get:  
 • A full colour palette to mix any hue you like  
 • Layer controls for organising your strokes  
-• Undo/Redo for fearless experimentation  
-Archangel Uriel: Want to jump in now?
-- Absolutely—launch it!
+• Undo/Redo for fearless experimentation
+Archangel Uriel: Art can also travel beyond this realm. Louisa shares her artwork with the world through her own Collection.
+Archangel Uriel: What would you like to do now?
+- Let's dive into the Imagination Realm!
 	=> open_painting_tool
-- Not just yet
+- View Louisa's Collection (opens in browser)
+	=> open_collection
+- Return to Artéa
 	=> END
+	
+~ open_collection
+Archangel Uriel: Every creative journey begins with a single mark. Perhaps Louisa's Collection will inspire your next one.
+do GameManager.request_visit_collection()
+=> END
 
 ~ open_painting_tool
 Archangel Uriel: Here we go—happy painting!  
@@ -77,47 +85,76 @@ do GameManager.request_art_gallery()
 => END
 
 
-~ start_therapist_npc
-Wonderful Counsellor: Hey there, I’m Wonderful Counsellor 🐾  
-Wonderful Counsellor: I’ll be your guide in this creative healing journey.  
+~ start_archangel_gabriel
+Archangel Gabriel: [[Welcome to Artéa!|Greetings, and welcome!]]
+Archangel Gabriel: I am Archangel Gabriel, the guide of Artéa — a world shaped by creativity, reflection, and emotional discovery.
 
-Wonderful Counsellor: This world was made for you to relax, make art, and feel good on the inside.  
-Wonderful Counsellor: No pressure. Just expression, imagination, and kindness.  
+Archangel Gabriel: Artéa is inspired by Louisa Chan, a Sydney-based artist and educator, and supported through Louisa Chan Creative — a practice dedicated to healing through the arts.
 
-Wonderful Counsellor: Ready to enter the healing studio?
-- Yes—let’s begin  
-	=> enter_healing_journey
-- Tell me more about Artéa  
+Archangel Gabriel: Within Artéa, you are invited to slow down, explore, and reconnect with your imagination.
+=> show_menu
+
+~ show_menu
+Archangel Gabriel: Where would you like to begin?
+- What can I do in Artéa?
 	=> explain_artea
-- About Louisa (website)  
-	=> open_louisa_site
-- Maybe later  
-	=> END
+- About Louisa Chan
+	=> open_louisa_homepage
+- Start exploring Artéa
+	=> explore_artea
 
 ~ explain_artea
-Wonderful Counsellor: Artéa is a place of color and calm—designed to help you unwind through creativity.  
-Wonderful Counsellor: Explore painting tools, pop thought-clouds, or simply gaze at the gallery.  
-Wonderful Counsellor: Your inner world matters. Let’s make it brighter!
-- I’m ready now  
-	=> enter_healing_journey
-- Back  
-	=> start_therapist_npc
+Archangel Gabriel: Artéa is a creative space for exploration, reflection, and expression.
 
-~ enter_healing_journey
-Wonderful Counsellor: Wonderful—step right in and let the healing begin!  
-do GameManager.request_Art_Therapy()
+Archangel Gabriel: You can engage with art, interactive experiences, and tools designed to support wellbeing and creativity.
+
+Archangel Gabriel: There is no pressure — only curiosity and expression.
+
+Archangel Gabriel: What would you like to do next?
+- Tell me about Louisa's Creative Healing Workshops
+	=> open_workshops
+- Go back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ open_louisa_homepage
+Archangel Gabriel: Louisa Chan is the creative visionary behind Artéa. Her work explores art, healing, and human transformation.
+
+Archangel Gabriel: You can learn more about her journey and philosophy on her official website.
+
+Archangel Gabriel: What would you like to do?
+- Visit Louisa Chan website (opens in browser)
+	=> visit_louisa_site
+- Back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ open_workshops
+Archangel Gabriel: The Creative Healing Workshops are part of Louisa Chan Creative, offering guided art-based experiences for emotional expression and wellbeing.
+
+Archangel Gabriel: These workshops blend creativity, reflection, and personal growth.
+
+Archangel Gabriel: What would you like to do?
+- View Workshops (opens in browser)
+	=> visit_workshops_site
+- Back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+	
+~ explore_artea
+Archangel Gabriel: May your time in Artéa bring clarity, creativity, and calm.
 => END
 
-~ open_louisa_site
-Wonderful Counsellor: Louisa is the visionary behind this space. You can learn more about her in her website
-- Visit Website
-	=> visit_website
-- Maybe Later
-=> END
-
-~ visit_website
+~ visit_louisa_site
 do GameManager.request_visit_website()
-=> start_therapist_npc
+=> END
+
+~ visit_workshops_site
+do GameManager.request_visit_workshops()
+=> END
 
 ~ END
-Nathan: See you next time!
+Archangel Gabriel: May your time in Artéa bring clarity, creativity, and calm.
