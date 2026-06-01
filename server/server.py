@@ -8,7 +8,7 @@ from flask_jwt_extended import (
 )
 import bcrypt
 import os
-from datetime import timedelta
+from datetime import timedelta, datetime
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 
@@ -126,14 +126,20 @@ def upload_artwork():
 
     safe_title = secure_filename(title)
 
+    if not safe_title:
+        safe_title = "untitled"
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    unique_id = uuid4().hex[:8]
+
+    filename = f"{safe_title}_{timestamp}_{unique_id}.png"
+
     user_folder = os.path.join(
         UPLOAD_FOLDER,
         f"user_{user_id}"
     )
 
     os.makedirs(user_folder, exist_ok=True)
-
-    filename = f"{safe_title}.png"
 
     save_path = os.path.join(user_folder, filename)
 
