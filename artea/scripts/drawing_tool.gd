@@ -1,5 +1,8 @@
 extends Control
 
+# Link of background
+# https://images.nasa.gov/details/PIA12348
+
 # Smooth canvas
 const CANVAS_WIDTH := 1024
 const CANVAS_HEIGHT := 950
