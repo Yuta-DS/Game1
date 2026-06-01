@@ -1,8 +1,8 @@
 extends Node3D
 
 #const WORKER_LIST_URL = "https://artea-gallery-api.artea-gallery-api.workers.dev/list-art"
-const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
-const SERVER_BASE = "http://54.252.162.122"
+const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
+const SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
 const PLACEHOLDER_PATH = "res://assets/ArtGallery/placeholders/"
 
