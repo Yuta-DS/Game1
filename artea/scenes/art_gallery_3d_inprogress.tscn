@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bhohq7etfisvh" path="res://scripts/art_gallery.gd" id="1_h6yu7"]
 [ext_resource type="PackedScene" uid="uid://cx6j6vrnhxvfi" path="res://scenes/player_3d.tscn" id="2_3gi0n"]
+[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="2_dw71r"]
 [ext_resource type="Script" uid="uid://efrx4ppi0i3q" path="res://scenes/camera_3d_2.gd" id="4_bvso8"]
 [ext_resource type="PackedScene" uid="uid://g2swdgcf4ywc" path="res://assets3D/characters/fox.glb" id="4_k4ey6"]
 [ext_resource type="Script" uid="uid://dbp2n821rrrt6" path="res://scripts/CameraFollow.gd" id="5_n1pvk"]
@@ -19,7 +20,15 @@
 [ext_resource type="PackedScene" uid="uid://bc4s70tkatf44" path="res://assets/models/Low-Poly Plant_.fbx" id="22_8fcft"]
 [ext_resource type="Script" uid="uid://eraeiu6qk3vg" path="res://scenes/GalleryManager.gd" id="24_3btdo"]
 
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_48g0v"]
+panorama = ExtResource("2_dw71r")
+
+[sub_resource type="Sky" id="Sky_a2hqd"]
+sky_material = SubResource("PanoramaSkyMaterial_48g0v")
+
 [sub_resource type="Environment" id="Environment_6ynge"]
+background_mode = 2
+sky = SubResource("Sky_a2hqd")
 ambient_light_source = 2
 ambient_light_color = Color(0.796243, 0.796243, 0.796243, 1)
 
@@ -421,6 +430,7 @@ shape = SubResource("BoxShape3D_k4ey6")
 
 [node name="chair" type="MeshInstance3D" parent="." unique_id=207194934]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.1288, 0, 5.82374)
+visible = false
 mesh = ExtResource("7_bvso8")
 skeleton = NodePath("../RoundTableUltimate(freeFinal)")
 surface_material_override/0 = SubResource("StandardMaterial3D_qum7w")
