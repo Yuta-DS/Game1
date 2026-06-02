@@ -85,7 +85,7 @@ func _ready() -> void:
 	volume_slider.min_value = 0.0
 	volume_slider.max_value = 1.0
 	volume_slider.step = 0.01
-	volume_slider.value = 0.1
+	volume_slider.value = 0.3
 
 	volume_slider.value_changed.connect(_on_volume_changed)
 	_on_volume_changed(volume_slider.value)
