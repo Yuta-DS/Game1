@@ -6,8 +6,8 @@ extends Node3D
 
 #const WORKER_LIST_URL = "https://artea-gallery-api.artea-gallery-api.workers.dev/list-art"
 
-const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
-const SERVER_BASE = "http://54.252.162.122"
+#const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
+#const SERVER_BASE = "http://54.252.162.122"
 const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
 const SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
@@ -53,35 +53,19 @@ var frame_to_artwork: Dictionary = {}
 
 func _ready() -> void:
 
-
 	print(OS.get_user_data_dir())
 
-	#clear_local_artworks()
-
 	list_request.request_completed.connect(_on_list_request_completed)
-
 	download_request.request_completed.connect(_on_download_request_completed)
+
 	rating_ui.visible = false
 
-	# -----------------------------------------------------
-	# DEFAULT ART
-	# Default frame art already exists in scene
-	# -----------------------------------------------------
+	load_placeholders()
 
-	# -----------------------------------------------------
-	# LOAD PLAYER ARTWORKS FIRST
-	# -----------------------------------------------------
 	load_local_art_paths()
 
 	apply_local_art_over_online()
 
-	# -----------------------------------------------------
-	# LOAD ONLINE ARTWORKS SECOND
-	# -----------------------------------------------------
-	load_placeholders()
-
-	#load_local_art_paths()
-	#apply_local_art_over_online()
 	list_user_artworks()
 
 
@@ -718,21 +702,6 @@ func _input(event):
 		)
 
 		show_rating_ui(current_frame_hovered)
-		
-func _on_frame_01_body_entered(body):
-
-	print("Entered Frame 01")
-
-	if body.name == "Player3D":
-
-		show_rating_ui("Frame_01")
-
-
-func _on_frame_01_body_exited(body):
-
-	if body.name == "Player":
-
-		hide_rating_ui()
 		
 
 			
