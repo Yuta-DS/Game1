@@ -757,9 +757,6 @@ offset = Vector2(-220, 0)
 modulate = Color(0.24313726, 0.15294118, 0.13725491, 1)
 text = "Councellor"
 
-[node name="Artéa_Signpost_Spawn" parent="." unique_id=273609039 instance=ExtResource("44_wlotw")]
-transform = Transform3D(-0.10496019, 0, 2.9981635, 0, 3, 0, -2.9981635, 0, -0.10496019, 10.1046295, 25.49603, 0.4509499)
-
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
 [connection signal="pressed" from="Environment/ArtGalleryButton/CanvasLayer/Button" to="Environment/ArtGalleryButton" method="_on_button_pressed"]

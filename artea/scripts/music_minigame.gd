@@ -9,6 +9,7 @@ extends Control
 @onready var emotion_ai = $EmotionAI
 @onready var return_button = $ReturnButton
 @onready var pitch_slider = $HBoxContainer/Options/PitchSlider
+@onready var volume_slider = $HBoxContainer/Options/VolumeSlider
 @onready var default_pitch_button = $HBoxContainer/Options/ResetPitch
 @onready var drums1 = $HBoxContainer/VBoxContainer3/Drums/DrumsColumn1/ButtonDrums1
 @onready var drums3 = $HBoxContainer/VBoxContainer3/Drums/DrumsColumn1/ButtonDrums3
@@ -81,6 +82,14 @@ func _ready() -> void:
 
 	pitch_slider.value_changed.connect(_on_pitch_changed)
 	
+	volume_slider.min_value = 0.0
+	volume_slider.max_value = 1.0
+	volume_slider.step = 0.01
+	volume_slider.value = 0.3
+
+	volume_slider.value_changed.connect(_on_volume_changed)
+	_on_volume_changed(volume_slider.value)
+	
 	player.finished.connect(_on_music_finished)
 	
 	if not default_pitch_button.pressed.is_connected(_on_default_pitch_pressed):
@@ -112,6 +121,13 @@ func _ready() -> void:
 	drums_slider.step = 0.01
 	drums_slider.value = 1.0
 	
+func _on_volume_changed(value: float):
+
+	var adjusted = pow(value, 2.0)
+
+	player.volume_db = linear_to_db(adjusted)
+	drums_player.volume_db = linear_to_db(adjusted)
+
 func _on_drums1_pressed():
 	play_drum_loop("res://assets/audio/minigame/beats/drums_1.mp3")
 
