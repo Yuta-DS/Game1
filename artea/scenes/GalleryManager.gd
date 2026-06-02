@@ -18,11 +18,13 @@ const RATINGS_FILE_PATH = "user://artworks/ratings.json"
 
 const MAX_FRAMES_TO_LOAD = 12
 
+
 var current_frame_hovered := ""
 var current_rating := 0
 
 @onready var rating_ui = $"../CanvasLayer/RatingUI"
 @onready var rating_label = $"../CanvasLayer/RatingUI/RatingLabel"
+@onready var likebutton: Button = $CanvasLayer/RatingPanel/HBoxContainer/LikeButton
 # =========================================================
 # NODES
 # =========================================================
@@ -63,6 +65,8 @@ func _ready() -> void:
 	load_placeholders()
 
 	list_user_artworks()
+	
+
 
 
 # =========================================================
@@ -400,7 +404,7 @@ func apply_local_art_over_online() -> void:
 				"WARNING: Could not find frame node: ",
 				frame_name
 			)
-
+	update_rating_labels()
 
 # =========================================================
 # RATING SYSTEM
@@ -469,7 +473,7 @@ func set_artwork_rating(
 
 	var ratings = load_ratings()
 
-	ratings[artwork_key] = clamp(rating, 1, 5)
+	ratings[artwork_key] = clamp(rating, 0, 1)
 
 	save_ratings(ratings)
 
@@ -507,6 +511,10 @@ func rate_frame(
 
 	var artwork_key = str(frame_to_artwork[frame_name])
 
+	print("Saving frame:", frame_name)
+	print("Artwork key:", artwork_key)
+	print("Rating:", rating)
+
 	if artwork_key == "[ONLINE]":
 
 		print("Cannot rate online placeholder artwork.")
@@ -514,6 +522,7 @@ func rate_frame(
 		return
 
 	set_artwork_rating(artwork_key, rating)
+
 	update_rating_labels()
 	update_frame_rating_color(frame_name)
 
@@ -524,17 +533,21 @@ func rate_frame(
 		get_artwork_rating(artwork_key)
 	)
 
-
 func get_frame_rating(frame_name: String) -> int:
 
-	if not frame_to_artwork.has(frame_name):
+	print("Checking frame:", frame_name)
+	print("frame_to_artwork:", frame_to_artwork)
 
+	if not frame_to_artwork.has(frame_name):
+		print("FRAME NOT FOUND")
 		return 0
 
 	var artwork_key = str(frame_to_artwork[frame_name])
+	
+
+	print("Artwork key:", artwork_key)
 
 	if artwork_key == "[ONLINE]":
-
 		return 0
 
 	return get_artwork_rating(artwork_key)
@@ -598,6 +611,8 @@ func update_rating_labels():
 	for frame_name in frame_to_artwork.keys():
 
 		var rating = get_frame_rating(frame_name)
+		print("Frame:", frame_name)
+		print("Rating:", rating)
 
 		var frame = get_node_or_null("../" + frame_name)
 
@@ -606,25 +621,18 @@ func update_rating_labels():
 
 		var label = frame.get_node_or_null("RatingLabel")
 
-		if label:
+		
 
-			label.text = "★".repeat(rating) + "☆".repeat(5 - rating)
+		if label == null:
+			continue
 
-			match rating:
-				1:
-					label.modulate = Color.RED
+		if rating > 0:
+			label.text = "♥"
+			label.modulate = Color.RED
+		else:
+			label.text = ""
 
-				2:
-					label.modulate = Color.ORANGE
-
-				3:
-					label.modulate = Color.YELLOW
-
-				4:
-					label.modulate = Color.LIME_GREEN
-
-				5:
-					label.modulate = Color.GOLD
+			
 			
 			
 func update_frame_rating_color(frame_name: String):
@@ -641,36 +649,30 @@ func update_frame_rating_color(frame_name: String):
 	if label == null:
 		return
 
-	match rating:
-
-		1:
-			label.modulate = Color.RED
-
-		2:
-			label.modulate = Color.ORANGE
-
-		3:
-			label.modulate = Color.YELLOW
-
-		4:
-			label.modulate = Color.GREEN_YELLOW
-
-		5:
-			label.modulate = Color.GOLD
-			
+	if rating > 0:
+		label.modulate = Color.RED
+	else:
+		label.text = ""
+		
+					
 func show_rating_ui(frame_name: String) -> void:
-
-	current_frame_hovered = frame_name
-
-	var rating = get_frame_rating(frame_name)
+	
+	
 
 	rating_ui.visible = true
 
-	rating_label.text = \
-		"Artwork Rating:\n" + \
-		"★".repeat(rating) + \
-		"☆".repeat(5 - rating) + \
-		"\n\nPress E to Rate"
+	var rating = get_frame_rating(frame_name)
+	print("Showing rating for:", frame_name)
+	print("Saved rating:", rating)
+
+	if rating > 0:
+		rating_label.text = "Artwork Rating:\n♥"
+		rating_label.modulate = Color.RED
+		likebutton.modulate = Color.RED
+	else:
+		rating_label.text = "Artwork Rating:\n♡"
+		rating_label.modulate = Color.WHITE
+		likebutton.modulate = Color.WHITE		
 
 
 func hide_rating_ui() -> void:
@@ -686,21 +688,25 @@ func _input(event):
 		if current_frame_hovered == "":
 			return
 
-		current_rating += 1
+		var current_saved_rating = get_frame_rating(current_frame_hovered)
 
-		if current_rating > 5:
-			current_rating = 1
-
-		rate_frame(
-			current_frame_hovered,
-			current_rating
-		)
+		if current_saved_rating == 0:
+			rate_frame(current_frame_hovered, 1)
+		else:
+			rate_frame(current_frame_hovered, 0)
 
 		show_rating_ui(current_frame_hovered)
-		
-
 			
 
 
-func _on_interaction_area_body_entered(body: Node3D) -> void:
-	pass # Replace with function body.
+func _on_interaction_area_body_entered(body: Node3D, frame_name: String) -> void:
+
+	pass
+	
+	
+
+func _on_interaction_area_body_exited(body: Node3D, frame_name: String) -> void:
+
+	pass
+	
+	
