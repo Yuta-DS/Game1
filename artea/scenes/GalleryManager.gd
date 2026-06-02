@@ -12,6 +12,20 @@ const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
 const SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
 const PLACEHOLDER_PATH = "res://assets/ArtGallery/placeholders/"
+const PLACEHOLDERS = [
+	preload("res://assets/ArtGallery/placeholders/painting_1.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_2.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_3.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_4.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_5.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_6.JPG"),
+	preload("res://assets/ArtGallery/placeholders/painting_7.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_8.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_9.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_10.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_11.jpeg"),
+	preload("res://assets/ArtGallery/placeholders/painting_12.jpeg")
+]
 
 const LOCAL_ART_PATH = "user://artworks/"
 const RATINGS_FILE_PATH = "user://artworks/ratings.json"
@@ -73,30 +87,35 @@ func load_placeholders() -> void:
 
 		var frame_name = "Frame_%02d" % (i + 1)
 		var frame_node = get_node_or_null("../" + frame_name)
-		var image_path
+
 		if frame_node == null:
 			print("Could not find frame: ", frame_name)
 			continue
-		if i == 5: # painting_6.jpg
-			image_path = PLACEHOLDER_PATH + "painting_%d.jpg" % (i + 1)
-		elif i == 8:
-			image_path = PLACEHOLDER_PATH + "painting_%d.jpeg" % (i + 1)
+
+		var image_path
+
+		if i == 5:
+			image_path = PLACEHOLDER_PATH + "painting_5.png"
 		else:
 			image_path = PLACEHOLDER_PATH + "painting_%d.jpeg" % (i + 1)
 
 		one_placeholder(frame_node, image_path)
 		
 func one_placeholder(frame_node: Sprite3D, image_path: String):
-	var image = Image.new()
 
-	if image.load(image_path) != OK:
+	var texture: Texture2D = load(image_path)
+
+	if texture == null:
 		print("Failed to load placeholder: ", image_path)
 		return
 
+	var image: Image = texture.get_image()
+
 	image.resize(512, 512, Image.INTERPOLATE_BILINEAR)
 
-	var texture = ImageTexture.create_from_image(image)
-	frame_node.texture = texture
+	var resized_texture = ImageTexture.create_from_image(image)
+
+	frame_node.texture = resized_texture
 
 func load_local_art_paths() -> void:
 
