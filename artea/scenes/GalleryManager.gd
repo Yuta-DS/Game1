@@ -62,10 +62,6 @@ func _ready() -> void:
 
 	load_placeholders()
 
-	load_local_art_paths()
-
-	apply_local_art_over_online()
-
 	list_user_artworks()
 
 
@@ -167,6 +163,13 @@ func load_local_art_paths() -> void:
 # =========================================================
 
 func list_user_artworks() -> void:
+	
+	if Global.auth_token == "":
+		print("No authenticated user -> loading local gallery")
+
+		load_local_art_paths()
+		apply_local_art_over_online()
+		return
 
 	var headers = [
 		"Authorization: Bearer " + Global.auth_token
@@ -216,6 +219,12 @@ func _on_list_request_completed(
 		apply_local_art_over_online()
 
 		return
+		
+	if data.is_empty():
+
+		print("Authenticated user has no online artwork.")
+
+		return
 
 	images_to_download.clear()
 
@@ -227,9 +236,7 @@ func _on_list_request_completed(
 
 	current_frame_index = 0
 
-	# IMPORTANT:
-	# DO NOT CLEAR frame_to_artwork
-	# otherwise online art overwrites local art
+	frame_to_artwork.clear()
 
 	start_next_download()
 
@@ -296,26 +303,14 @@ func _on_download_request_completed(
 
 			if frame_node and frame_node is Sprite3D:
 
-				# -------------------------------------------------
-				# DO NOT OVERWRITE PLAYER ARTWORKS
-				# -------------------------------------------------
-				if not frame_to_artwork.has(frame_name):
+				frame_node.texture = texture
 
-					frame_node.texture = texture
+				frame_to_artwork[frame_name] = "[ONLINE]"
 
-					frame_to_artwork[frame_name] = "[ONLINE]"
-
-					print(
-						"Online art applied to frame: ",
-						frame_name
-					)
-
-				else:
-
-					print(
-						"Skipped online overwrite for: ",
-						frame_name
-					)
+				print(
+					"Online art applied to frame: ",
+					frame_name
+				)
 
 			else:
 

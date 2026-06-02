@@ -16,32 +16,33 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_n0gf0")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=827598144]
-position = Vector2(854, 672.99994)
+[node name="Sprite2D" type="TextureRect" parent="." unique_id=1054361921]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 1641.0
+grow_vertical = 2
 scale = Vector2(1.2021924, 1.3969207)
 texture = ExtResource("2_lnna2")
 
 [node name="Panel" type="Panel" parent="." unique_id=413889371]
+custom_minimum_size = Vector2(2250, 1300)
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 14.0
-offset_top = 8.0
-offset_right = 260.0
-offset_bottom = 292.0
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -905.0
+offset_right = 1345.0
+offset_bottom = 1300.0
 grow_horizontal = 2
-grow_vertical = 2
+scale = Vector2(0.8, 0.8)
 
 [node name="TextureRect" type="TextureRect" parent="Panel" unique_id=1436794880]
+custom_minimum_size = Vector2(800, 500)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -15.0
-offset_top = -4.0
-offset_right = -13.0
-offset_bottom = -296.0
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
