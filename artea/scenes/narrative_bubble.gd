@@ -16,4 +16,4 @@ func _ready():
 	
 	# 2. Set the Personalized Greeting
 	if message_label:
-		message_label.text = "Welcome, " + player_name + ". Artéa has been dimmed by fear and confusion. You are here to rediscover the truth."
+		message_label.text = "Welcome, " + player_name + ". The light of Artéa has been waiting for you. Step forward, discover your true purpose, and bring your unique spark to our world!"
