@@ -17,43 +17,25 @@ const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 # --- Rating UI ---
 @onready var ratingpanel: Control = $CanvasLayer/RatingPanel
 @onready var ratinglabel: Label = $CanvasLayer/RatingPanel/RatingLabel
-@onready var rate1: Button = $CanvasLayer/RatingPanel/HBoxContainer/Rate1
-@onready var rate2: Button = $CanvasLayer/RatingPanel/HBoxContainer/Rate2
-@onready var rate3: Button = $CanvasLayer/RatingPanel/HBoxContainer/Rate3
-@onready var rate4: Button = $CanvasLayer/RatingPanel/HBoxContainer/Rate4
-@onready var rate5: Button = $CanvasLayer/RatingPanel/HBoxContainer/Rate5
-#@onready var artwork_label: Label = $CanvasLayer/RatingPanel/ArtworkLabel
-#@onready var rating_label: Label = $CanvasLayer/RatingPanel/RatingLabel
-#@onready var rate1: Button = $CanvasLayer/RatingPanel/Rate1
-#@onready var rate2: Button = $CanvasLayer/RatingPanel/Rate2
-#@onready var rate_3_button: Button = $CanvasLayer/RatingPanel/Rate3
-#@onready var rate_4_button: Button = $CanvasLayer/RatingPanel/Rate4
-#@onready var rate_5_button: Button = $CanvasLayer/RatingPanel/Rate5
-#@onready var close_button: Button = $CanvasLayer/RatingPanel/CloseButton
+@onready var likebutton: Button = $CanvasLayer/RatingPanel/HBoxContainer/LikeButton
+
 
 
 
 func _ready() -> void:
-	rate1.visible = true
-	rate2.visible = true
-	rate3.visible = true
-	rate4.visible = true
-	rate5.visible = true
-	rate1.text = "★"
-	rate2.text = "★★"
-	rate3.text = "★★★"
-	rate4.text = "★★★★"
-	rate5.text = "★★★★★"
+	likebutton.visible = true
+	
+	likebutton.text = "♥"
+
 	
 	print("RatingPanel = ", ratingpanel)
 	print("RatingLabel = ", ratinglabel)
-	print("Rate1 = ", rate1)
+	print("likebutton = ", likebutton)
+	
+	
 			
-	rate1.pressed.connect(func(): _on_rate_button_pressed(1))
-	rate2.pressed.connect(func(): _on_rate_button_pressed(2))
-	rate3.pressed.connect(func(): _on_rate_button_pressed(3))
-	rate4.pressed.connect(func(): _on_rate_button_pressed(4))
-	rate5.pressed.connect(func(): _on_rate_button_pressed(5))
+	likebutton.pressed.connect(func(): _on_rate_button_pressed(1))
+	
 
 	if ratingpanel:
 		ratingpanel.visible = false
@@ -69,20 +51,21 @@ func _input(event):
 		)
 
 func show_rating_panel(frame_name: String, current_rating: int) -> void:
+	print("Frame:", frame_name)
+	print("Current rating:", current_rating)
+
 	selected_frame_name = frame_name
 	ratingpanel.visible = true
 
-	var stars := ""
-
-	for i in range(5):
-		if i < current_rating:
-			stars += "★"
-		else:
-			stars += "☆"
-
-	ratinglabel.text = "Artwork Rating:\n" + stars
-
-
+	if current_rating > 0:
+		ratinglabel.text = "Artwork Rating:\n♥"
+		ratinglabel.modulate = Color.RED
+		likebutton.modulate = Color.RED
+	else:
+		ratinglabel.text = "Artwork Rating:\n♡"
+		ratinglabel.modulate = Color.WHITE
+		likebutton.modulate = Color.WHITE
+		
 func hide_rating_panel() -> void:
 	ratingpanel.visible = false
 	selected_frame_name = ""
@@ -92,19 +75,23 @@ func _on_rate_button_pressed(value: int) -> void:
 		return
 
 	var gallery_manager = $GalleryManager
+
 	if gallery_manager:
-		gallery_manager.rate_frame(selected_frame_name, value)
-		var updated_rating = gallery_manager.get_frame_rating(selected_frame_name)
-		var stars := ""
+		var current_rating = gallery_manager.get_frame_rating(selected_frame_name)
 
-		for i in range(5):
-			if i < updated_rating:
-				stars += "★"
-			else:
-				stars += "☆"
+		if current_rating > 0:
+			gallery_manager.rate_frame(selected_frame_name, 0)
 
-		ratinglabel.text = "Artwork Rating:\n" + stars
+			ratinglabel.text = "Artwork Rating:\n♡"
+			ratinglabel.modulate = Color.WHITE
+			likebutton.modulate = Color.WHITE
 
+		else:
+			gallery_manager.rate_frame(selected_frame_name, 1)
+
+			ratinglabel.text = "Artwork Rating:\n♥"
+			ratinglabel.modulate = Color.RED
+			likebutton.modulate = Color.RED			
 func _on_body_entered(body: Node3D) -> void:
 	if body is CharacterBody3D:
 		go_to_scene(HUB_WORLD_PATH)
@@ -136,12 +123,12 @@ func _on_interaction_area_body_entered(body, frame_name):
 	player_near_artwork = true
 	current_frame_name = frame_name
 
-	print("Entered:", frame_name)
+	var rating = $GalleryManager.get_frame_rating(frame_name)
 
-	show_rating_panel(
-		frame_name,
-		$GalleryManager.get_frame_rating(frame_name)
-	)
+	print("Entered:", frame_name)
+	print("Rating returned:", rating)
+
+	show_rating_panel(frame_name, rating)
 	
 
 func _on_interaction_area_body_exited(body, frame_name):
