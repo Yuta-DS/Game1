@@ -34,17 +34,6 @@ volume_db = 6.0
 max_distance = 50.0
 bus = &"SFX"
 
-[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1119461583]
-
-[node name="DebugCoords" type="Label" parent="CanvasLayer" unique_id=1288423175]
-offset_left = 56.0
-offset_top = 46.0
-offset_right = 349.0
-offset_bottom = 170.0
-text = "
-
-"
-
 [node name="FloorDetector" type="RayCast3D" parent="." unique_id=1675328953]
 target_position = Vector3(0, -3.5, 0)
 collision_mask = 15

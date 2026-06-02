@@ -6,9 +6,6 @@ extends CharacterBody3D
 
 @onready var sfx_grass = preload("res://assets/SFX/grasswalk.mp3") 
 
-# --- UI / DEBUG NODES ---
-@onready var debug_coords = $CanvasLayer/DebugCoords 
-
 # --- JUMP VARIABLES ---
 @export var jump_height : float = 2.25
 @export var jump_time_to_peak : float = 0.4
@@ -30,9 +27,6 @@ var interacting := false  # Critical fix for team's grass shader
 @onready var camera = $CameraController/Camera3D
 
 var movementInput := Vector2.ZERO
-
-#var interacting := false
-
 
 
 func _ready() -> void:
@@ -63,10 +57,6 @@ func _on_inventory_pressed() -> void:
 func _physics_process(delta: float) -> void:
 	moveLogic(delta)
 	jumpLogic(delta)
-	
-	if debug_coords:
-		var pos = global_position
-		debug_coords.text = "X: %.1f | Y: %.1f | Z: %.1f" % [pos.x, pos.y, pos.z]
 	
 	move_and_slide()
 
