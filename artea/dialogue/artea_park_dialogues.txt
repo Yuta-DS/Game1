@@ -1,0 +1,160 @@
+~ start_archangel_dialogue
+Archangel Raphael: [[Welcome, listener of the soul.|Greetings, creator of inner sound.]]
+Archangel Raphael: This is the Sanctuary of Sound—where feelings become music and colour.
+Archangel Raphael: Here, even the heaviest thoughts can be transformed into something gentle and meaningful.
+Archangel Raphael: Would you like to create music from your emotions?
+- Yes—let’s create something beautiful  
+	=> launch_music_minigame
+- Maybe later  
+	=> END
+
+~ launch_music_minigame
+Archangel Raphael: *(Starts humming)*
+do GameManager.request_music_minigame()
+=> END
+
+~ start_zephyr_dialogue
+Everlasting Father: Hey! This is the Pop Thoughts Garden! Ready to lighten your mind?
+- Yes, let’s pop some thoughts!
+	=> launch_pop_thoughts
+- Maybe later
+	=> END
+
+~ launch_pop_thoughts
+Everlasting Father: *(Everlasting Father waves and points to the portal.)*
+Everlasting Father: Loading Pop Thoughts… get ready!
+do GameManager.request_pop_thoughts()
+=> END
+
+~ start_patron_pallete
+Archangel Uriel: [[Hello, artist!|Greetings, creator!|Hey there!]]  
+Archangel Uriel: Welcome to the Imagination Realm!
+Archangel Uriel: Ready to unleash your creativity?
+- Yes—let me paint!
+	=> open_painting_tool
+- How does it work?
+	=> explain_painting_tool
+- Maybe later
+	=> END
+
+~ explain_painting_tool
+Archangel Uriel: In the Imagination Realm you get:  
+• A full colour palette to mix any hue you like  
+• Layer controls for organising your strokes  
+• Undo/Redo for fearless experimentation
+Archangel Uriel: Art can also travel beyond this realm. Louisa shares her artwork with the world through her own Collection.
+Archangel Uriel: What would you like to do now?
+- Let's dive into the Imagination Realm!
+	=> open_painting_tool
+- View Louisa's Collection (opens in browser)
+	=> open_collection
+- Return to Artéa
+	=> END
+	
+~ open_collection
+Archangel Uriel: Every creative journey begins with a single mark. Perhaps Louisa's Collection will inspire your next one.
+do GameManager.request_visit_collection()
+=> END
+
+~ open_painting_tool
+Archangel Uriel: Here we go—happy painting!  
+do GameManager.request_paingting()
+=> END
+
+~ start_maestro_montclair
+Price of Peace: [[Welcome, art lover!|Greetings, connoisseur!|Hello there!]]  
+Price of Peace: You’ve arrived at the Gallery of Light. What would you like to do?
+- Browse the gallery
+	=> open_art_gallery
+- Tell me about the gallery
+	=> explain_gallery
+- Maybe later
+	=> END
+
+~ explain_gallery
+Price of Peace: Here you can admire the masterpieces you created in the Imagination Realm!
+Price of Peace: Ready to explore?
+- Yes—show me the art!
+	=> open_art_gallery
+- Not right now
+	=> END
+
+~ open_art_gallery
+Price of Peace: Wonderful choice—let the inspiration begin!
+do GameManager.request_art_gallery()
+=> END
+
+
+~ start_archangel_gabriel
+Archangel Gabriel: [[Welcome to Artéa!|Greetings, and welcome!]]
+Archangel Gabriel: I am Archangel Gabriel, the guide of Artéa — a world shaped by creativity, reflection, and emotional discovery.
+
+Archangel Gabriel: Artéa is inspired by Louisa Chan, a Sydney-based artist and educator, and supported through Louisa Chan Creative — a practice dedicated to healing through the arts.
+
+Archangel Gabriel: Within Artéa, you are invited to slow down, explore, and reconnect with your imagination.
+=> show_menu
+
+~ show_menu
+Archangel Gabriel: Where would you like to begin?
+- What can I do in Artéa?
+	=> explain_artea
+- About Louisa Chan
+	=> open_louisa_homepage
+- Start exploring Artéa
+	=> explore_artea
+
+~ explain_artea
+Archangel Gabriel: Artéa is a creative space for exploration, reflection, and expression.
+
+Archangel Gabriel: You can engage with art, interactive experiences, and tools designed to support wellbeing and creativity.
+
+Archangel Gabriel: There is no pressure — only curiosity and expression.
+
+Archangel Gabriel: What would you like to do next?
+- Tell me about Louisa's Creative Healing Workshops
+	=> open_workshops
+- Go back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ open_louisa_homepage
+Archangel Gabriel: Louisa Chan is the creative visionary behind Artéa. Her work explores art, healing, and human transformation.
+
+Archangel Gabriel: You can learn more about her journey and philosophy on her official website.
+
+Archangel Gabriel: What would you like to do?
+- Visit Louisa Chan Creative (opens in browser)
+	=> visit_louisa_site
+- Back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ open_workshops
+Archangel Gabriel: The Creative Healing Workshops are part of Louisa Chan Creative, offering guided art-based experiences for emotional expression and wellbeing.
+
+Archangel Gabriel: These workshops blend creativity, reflection, and personal growth.
+
+Archangel Gabriel: What would you like to do?
+- View Workshops (opens in browser)
+	=> visit_workshops_site
+- Back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+	
+~ explore_artea
+Archangel Gabriel: May your time in Artéa bring clarity, creativity, and calm.
+=> END
+
+~ visit_louisa_site
+do GameManager.request_visit_website()
+=> END
+
+~ visit_workshops_site
+do GameManager.request_visit_workshops()
+=> END
+
+~ END
+Archangel Gabriel: May your time in Artéa bring clarity, creativity, and calm.
