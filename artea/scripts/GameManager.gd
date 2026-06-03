@@ -12,8 +12,13 @@ var active_npc = null
 
 func _ready():
 	randomize()
-	load_dialogue_file("uid://bvpjldbikfam7")
+	print("Loading dialogue from: HubworldDialogue.dialogue")
+	
+	load_dialogue_file("res://dialogue/artea_park_dialogues.txt")
 	#print("Loaded dialogue nodes:", dialogue_data.keys())
+	
+	#var dialogue = load("res://dialogue/HubworldDialogue.dialogue")
+	#DialogueManager.get_next_dialogue_line(dialogue)
 
 
 # -----------------------
@@ -21,6 +26,8 @@ func _ready():
 # -----------------------
 
 func load_dialogue_file(path: String):
+	print("Attempting to open: ", path)
+	print("File exists: ", FileAccess.file_exists(path))
 	var file = FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		push_error("Failed to open dialogue file")
@@ -254,22 +261,22 @@ func resolve_variants(text: String) -> String:
 func request_music_minigame():
 	print("DEBUG: MUSIC MINIGAME REQUESTED")
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("uid://3mhecvarwvlp")
+	get_tree().change_scene_to_file("res://scenes/music_minigame.tscn")
 
 func request_pop_thoughts():
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("uid://ctbchsbolgvqh")
+	get_tree().change_scene_to_file("res://scenes/popThoughtsMenu.tscn")
 
 
 func request_paingting():
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("uid://cov6pyq6rp3k7")
+	get_tree().change_scene_to_file("res://scenes/drawing_tool.tscn")
 
 
 # Changed to 3D Gallery
 func request_art_gallery():
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("uid://cj5tghjq224it")
+	get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
 
 
 func request_visit_website():
@@ -285,7 +292,7 @@ func request_visit_collection():
 func request_goback_HubWorld():
 	print("DEBUG: Requested return")
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("uid://drfdo0gpexlsl")
+	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
 
 # LEGACY: 2D version cat therapist scene
 func request_Art_Therapy():

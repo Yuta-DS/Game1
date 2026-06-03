@@ -30,6 +30,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxEmpty_an77j")
 placeholder_text = "Hi, my name is Milo…
 You can share what’s on your mind, how you’re feeling, or anything that’s been weighing on you.
@@ -45,6 +46,7 @@ layout_mode = 2
 [node name="UserInput" type="LineEdit" parent="VBoxContainer/HBoxContainer" unique_id=1555593964]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
 placeholder_text = "Enter your message here..."
 
 [node name="SendButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=501537165]
