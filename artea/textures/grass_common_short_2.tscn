@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://cyl3qacf4cyub"]
+[gd_scene format=3 uid="uid://cyl3qacf4cyub"]
 
 [ext_resource type="PackedScene" uid="uid://ca5lwoqwg7een" path="res://assets3D/stylizedNature/Grass_Common_Short.gltf" id="1_iadfm"]
 
