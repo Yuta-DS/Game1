@@ -39,7 +39,7 @@ var current_rating := 0
 
 var image_metadata: Array = []
 
-var images_to_download: Array[String] = []
+var images_to_download: Array = []
 
 var current_frame_index: int = 0
 
@@ -47,6 +47,11 @@ var local_art_paths: Array[String] = []
 
 # Keeps track of artwork assigned to frames
 var frame_to_artwork: Dictionary = {}
+
+var current_download_artwork_id = null
+
+var online_gallery_ready := false
+var local_gallery_ready := false
 
 
 # =========================================================
@@ -234,9 +239,10 @@ func _on_list_request_completed(
 
 	for item in data:
 
-		images_to_download.append(
-			SERVER_BASE + item.url
-		)
+		images_to_download.append({
+			"id": item.id,
+			"url": SERVER_BASE + item.url
+		})
 
 	current_frame_index = 0
 
@@ -253,10 +259,15 @@ func start_next_download() -> void:
 		print("Finished loading online gallery.")
 
 		print_all_frame_ratings()
+		online_gallery_ready = true
 
 		return
 
-	var full_url = images_to_download.pop_front()
+	var artwork_data = images_to_download.pop_front()
+	
+	current_download_artwork_id = int(artwork_data["id"])
+
+	var full_url = artwork_data["url"]
 
 	print("Downloading online art: ", full_url)
 
@@ -309,10 +320,12 @@ func _on_download_request_completed(
 
 				frame_node.texture = texture
 
-				frame_to_artwork[frame_name] = "[ONLINE]"
+				frame_to_artwork[frame_name] = int(current_download_artwork_id)
 
 				print(
-					"Online art applied to frame: ",
+					"Assigned artwork ID ",
+					current_download_artwork_id,
+					" to ",
 					frame_name
 				)
 
@@ -405,6 +418,7 @@ func apply_local_art_over_online() -> void:
 				frame_name
 			)
 	update_rating_labels()
+	local_gallery_ready = true
 
 # =========================================================
 # RATING SYSTEM
@@ -515,12 +529,6 @@ func rate_frame(
 	print("Artwork key:", artwork_key)
 	print("Rating:", rating)
 
-	if artwork_key == "[ONLINE]":
-
-		print("Cannot rate online placeholder artwork.")
-
-		return
-
 	set_artwork_rating(artwork_key, rating)
 
 	update_rating_labels()
@@ -534,6 +542,9 @@ func rate_frame(
 	)
 
 func get_frame_rating(frame_name: String) -> int:
+	
+	if not online_gallery_ready and not local_gallery_ready:
+		return 0
 
 	print("Checking frame:", frame_name)
 	print("frame_to_artwork:", frame_to_artwork)
