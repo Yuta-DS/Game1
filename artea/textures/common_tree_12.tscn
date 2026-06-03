@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://bi12y2qghf4g7"]
+[gd_scene format=3 uid="uid://bi12y2qghf4g7"]
 
 [ext_resource type="PackedScene" uid="uid://cbt16k08tv0b4" path="res://assets3D/stylizedNature/CommonTree_1.gltf" id="1_maur7"]
 
