@@ -29,8 +29,11 @@ These files are required for the project to run correctly (local/offline LLM).
 Install Git LFS before pulling or checking out the project files:
 
 git lfs install
+
 git clone <repo>
+
 git lfs pull
+
 
 # Server Setup
 
@@ -39,32 +42,50 @@ git lfs pull
 The server should be deployed with the following structure:
 
 server/
+
   server.py
+
   database.db
+
   uploads/
+
   venv/
+
   flaskapp.service
 
+
 server.py contains the Flask backend.
+
 database.db stores user and artwork information. (created automatically)
+
 uploads/ stores uploaded artwork files. (created automatically)
+
 venv/ contains the Python virtual environment.
+
 flaskapp.service allows the server to run automatically through systemd.
+
 
 ## Creating the Python Environment
 
 From the server directory:
 
 python3 -m venv venv
+
 source venv/bin/activate
+
 
 Install required packages:
 
 pip install flask
+
 pip install flask_sqlalchemy
+
 pip install flask_jwt_extended
+
 pip install bcrypt
+
 pip install requests
+
 
 ## Running the Server Manually
 
@@ -115,10 +136,15 @@ APIManager.gd
 Typical values:
 
   const BASE_URL = "http://YOUR_SERVER_IP"
+
   const LOGIN_URL = BASE_URL + "/login"
+
   const REGISTER_URL = BASE_URL + "/register"
+
   const UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
+
   const MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
+
 
 Replace YOUR_SERVER_IP with the public IP or domain name of the server.
 
