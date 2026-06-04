@@ -20,7 +20,7 @@ app = Flask(__name__)
 # =========================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = ""
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 USE_OPENROUTER = True
 
