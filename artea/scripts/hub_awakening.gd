@@ -1,0 +1,171 @@
+# Makes the hub world respond to how far the player has come.
+#
+# Attached to the HubWorld root. Reads JourneyState.stage and warms the
+# world as the journey deepens. Stage 0 is the world exactly as authored —
+# colour drained but no darker than it shipped — and each stage the player
+# completes adds light and saturation on top.
+#
+# This is the payoff for Pop Thoughts — the player leaves, comes back, and
+# the world is different because of what they did.
+#
+# Dev: in a debug build, press 1-5 in the hub to preview stages 0-4, 0 to
+# wipe the journey.
+extends Node3D
+
+# Sun energy per stage. Index = JourneyState.stage.
+# Stage 0 keeps cycle.tscn's authored baseline (0.65, raised from the
+# original 0.45 for a brighter map overall) on purpose. A player who has
+# not started yet must not find the world *darker* than it shipped — that
+# reads as broken lighting, not as a sleeping castle. The journey only
+# ever adds light on top of the baseline.
+const STAGE_LIGHT := [0.95, 1.10, 1.28, 1.46, 1.65]
+
+# The shipped environment's 0.95 brightness made shaded train/castle faces read
+# as silhouettes against the gold sky. Keep the world gentle but legible from
+# the first visit, then add a small lift as it wakes.
+const STAGE_BRIGHTNESS := [1.10, 1.13, 1.16, 1.18, 1.20]
+
+# Tint carries the stage as much as brightness does — a 10% energy step is
+# invisible outdoors at midday, but cold blue-grey turning to warm gold
+# reads instantly.
+const STAGE_TINT := [
+	Color(0.92, 0.85, 0.72),  # 0: quiet and a little muted, but warm — not grey
+	Color(0.96, 0.88, 0.70),  # 1: thoughts faced, warmth builds
+	Color(1.00, 0.90, 0.68),  # 2: emotions honoured, warmth
+	Color(1.00, 0.88, 0.62),  # 3: creations on the walls, golden
+	Color(1.00, 0.85, 0.55),  # 4: crown of life, full sun
+]
+
+# Colour still deepens as the world wakes, but stage 0 is no longer
+# desaturated toward grey — a new player must see a warm, colourful world
+# from the first frame, just less vivid than a fully-awakened one.
+# cycle.tscn authors saturation at 1.3, which is stage 2's value.
+const STAGE_SATURATION := [1.05, 1.15, 1.30, 1.50, 1.70]
+
+const AWAKEN_SECONDS := 2.5
+
+@onready var _sun: DirectionalLight3D = get_node_or_null(
+	"Environment/DayNite/DirectionalLight3D")
+
+var _env: Environment = null
+
+
+func _ready() -> void:
+	# The day/night AnimationPlayer animates light_energy every frame, so a
+	# tween on the same property would be overwritten. Stop the cycle
+	# before taking over the sun.
+	var anim := get_node_or_null("Environment/DayNite/AnimationPlayer")
+	if anim and anim is AnimationPlayer:
+		# stop() alone leaves the sky wherever the "cycle" animation's
+		# autoplay happened to land before this ran — a one-frame race that
+		# made the sky randomly blue instead of the authored warm palette.
+		# Explicitly re-seeking RESET after stopping pins it deterministically.
+		anim.stop()
+		if anim.has_animation("RESET"):
+			anim.play("RESET")
+			anim.seek(0.0, true)
+			anim.stop()
+
+	var world_env := get_node_or_null("Environment/DayNite/WorldEnvironment")
+	if world_env != null and world_env.environment != null:
+		# The Environment resource is shared with cycle.tscn on disk, so
+		# duplicate before writing — otherwise saturation changes leak into
+		# every other scene using it.
+		_env = world_env.environment.duplicate()
+		world_env.environment = _env
+		# Light lavender-gold distance fog ties the high islands into the sky
+		# instead of letting them pop against a hard horizon.
+		_env.fog_enabled = true
+		_env.fog_light_color = Color(0.82, 0.76, 0.92)
+		_env.fog_light_energy = 0.72
+		_env.fog_density = 0.0035
+		_env.fog_aerial_perspective = 0.42
+		_env.ambient_light_energy = 1.12
+
+	if _sun == null:
+		push_warning("hub_awakening: sun not found, sky will not respond to stage")
+
+	apply_stage(_current_stage())
+
+
+# Tween the world to a stage. Public so a dev shortcut can drive it live.
+func apply_stage(stage: int) -> void:
+	stage = clampi(stage, 0, STAGE_LIGHT.size() - 1)
+
+	# The portal pylons are independent of the sky, so they wake even in a
+	# scene where the sun is missing.
+	_wake_magitech(stage)
+
+	if _sun == null:
+		return
+
+	# Always start from the sleeping look and rise, so the player watches
+	# the world wake rather than finding it already awake.
+	_sun.light_energy = STAGE_LIGHT[0]
+	_sun.light_color = STAGE_TINT[0]
+	if _env:
+		_env.adjustment_enabled = true
+		_env.adjustment_brightness = STAGE_BRIGHTNESS[0]
+		_env.adjustment_saturation = STAGE_SATURATION[0]
+
+	var tween := create_tween().set_parallel()
+	tween.tween_property(_sun, "light_energy", STAGE_LIGHT[stage], AWAKEN_SECONDS) \
+		.set_trans(Tween.TRANS_SINE)
+	tween.tween_property(_sun, "light_color", STAGE_TINT[stage], AWAKEN_SECONDS) \
+		.set_trans(Tween.TRANS_SINE)
+	if _env:
+		tween.tween_property(_env, "adjustment_brightness",
+			STAGE_BRIGHTNESS[stage], AWAKEN_SECONDS).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(_env, "adjustment_saturation",
+			STAGE_SATURATION[stage], AWAKEN_SECONDS).set_trans(Tween.TRANS_SINE)
+
+
+# The portal pylons and village lanterns wake on the same stage the sun
+# does. Kept in step here rather than each reading JourneyState separately,
+# so the dev preview keys below move the whole world at once.
+func _wake_magitech(stage: int) -> void:
+	for path in ["Magitech", "LandmarkGlow", "LumenCitadel", "AetherAtlas",
+			"CastleCrown", "SkyRail", "SkyIsles"]:
+		var node := get_node_or_null(path)
+		if node != null and node.has_method("apply_stage"):
+			node.apply_stage(stage)
+
+
+# --- dev shortcut -----------------------------------------------------
+# Keys 1-5 preview stages 0-4 live; 0 wipes the journey back to a fresh
+# save. Debug builds only — stripped from exported release builds, so
+# players can never reach it.
+func _unhandled_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
+
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+
+	match event.keycode:
+		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5:
+			# Explicitly typed: event.keycode is untyped, so := cannot infer
+			# here and the whole script fails to compile.
+			var stage: int = event.keycode - KEY_1
+			var js := get_node_or_null("/root/JourneyState")
+			if js:
+				js.stage = stage
+				js.save()
+			apply_stage(stage)
+			print("[dev] previewing stage %d — energy %.2f, saturation %.2f"
+				% [stage, STAGE_LIGHT[stage], STAGE_SATURATION[stage]])
+
+		KEY_0:
+			var js := get_node_or_null("/root/JourneyState")
+			if js:
+				js.clear_journey()
+			apply_stage(0)
+			print("[dev] journey wiped — back to stage 0")
+
+
+# Clamped so a future stage value can never index past the tables.
+func _current_stage() -> int:
+	var js := get_node_or_null("/root/JourneyState")
+	if js == null:
+		return 0
+	return clampi(js.stage, 0, STAGE_LIGHT.size() - 1)

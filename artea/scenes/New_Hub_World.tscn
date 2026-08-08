@@ -356,6 +356,9 @@ script = ExtResource("71_magit")
 [node name="LandmarkGlow" type="Node3D" parent="."]
 script = ExtResource("72_lndmk")
 
+[node name="LumenCitadel" type="Node3D" parent="."]
+script = ExtResource("73_citdl")
+
 [node name="AetherAtlas" type="Node3D" parent="."]
 script = ExtResource("75_atlas")
 
