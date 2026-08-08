@@ -31,11 +31,15 @@ extends Node3D
 # Lifting the whole network clears the rooftops and reads as sky railway.
 const RIDES_ABOVE := 42.0
 
-const CASTLE_HUB := Vector3(-32.3, 20.0 + RIDES_ABOVE, -2.0)
+# The castle end sits low, near the village floor: the player has to be able
+# to walk up to it and board. The far end is up at island height, so every
+# line climbs — which is the point, the kingdoms are above the world.
+const CASTLE_HUB := Vector3(-32.3, 22.0, -2.0)
 
 const LINES := [
 	{
 		"id": "mindspark",
+		"isle": "mind",
 		"label": "Mind Spark",
 		# Pop Thoughts — the thoughts kingdom.
 		"dest": Vector3(90.3, 15.0 + RIDES_ABOVE, -83.0),
@@ -43,6 +47,7 @@ const LINES := [
 	},
 	{
 		"id": "heartmelody",
+		"isle": "heart",
 		"label": "Heart Melody",
 		# Music minigame — the emotions kingdom.
 		"dest": Vector3(80.0, 18.7 + RIDES_ABOVE, 72.0),
@@ -50,6 +55,7 @@ const LINES := [
 	},
 	{
 		"id": "creatorslight",
+		"isle": "creator",
 		"label": "Creator's Light",
 		# Drawing tool — the creativity kingdom.
 		"dest": Vector3(58.8, 16.0 + RIDES_ABOVE, -43.0),
@@ -101,13 +107,30 @@ var _running := false
 
 func _ready() -> void:
 	# Let the hub finish building before adding to it, matching
-	# hub_magitech.gd — the terrain and props author themselves first.
+	# hub_magitech.gd — the terrain and props author themselves first. The
+	# sky islands also build on the first frame, and the rails need their
+	# platform positions, so wait one more.
+	await get_tree().process_frame
 	await get_tree().process_frame
 
 	for line in LINES:
 		_build_line(line)
 
 	apply_stage(_current_stage())
+
+
+# Where this line's far end docks. Asks the sky islands for their platform
+# so a rail can never drift away from the island it serves; falls back to
+# the authored constant if the island layer is absent.
+func _line_destination(line: Dictionary) -> Vector3:
+	var isles := get_parent().get_node_or_null("SkyIsles")
+	if isles != null and isles.has_method("get_platform_pos"):
+		var isle_id: String = line["isle"]
+		var pos: Vector3 = isles.call("get_platform_pos", isle_id)
+		if pos != Vector3.ZERO:
+			return pos
+	var fallback: Vector3 = line["dest"]
+	return fallback
 
 
 func _process(delta: float) -> void:
@@ -153,12 +176,40 @@ func apply_stage(stage: int) -> void:
 			target * 2.2, WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
 
 
+# --- public accessors --------------------------------------------------
+#
+# hub_train_rider.gd rides these curves to carry the player to an island, so
+# they are the seam between "rails exist" and "rails are travel". Keep the
+# names stable.
+
+func get_curve(line_id: String) -> Curve3D:
+	if _curves.has(line_id):
+		var curve: Curve3D = _curves[line_id]
+		return curve
+	return null
+
+
+func get_train(line_id: String) -> Node3D:
+	if _trains.has(line_id):
+		var train: Node3D = _trains[line_id]
+		return train
+	return null
+
+
+func has_line(line_id: String) -> bool:
+	return _curves.has(line_id)
+
+
+func get_line_ids() -> Array:
+	return _curves.keys()
+
+
 # --- construction ------------------------------------------------------
 
 func _build_line(line: Dictionary) -> void:
 	var id: String = line["id"]
 	var color: Color = line["color"]
-	var dest: Vector3 = line["dest"]
+	var dest: Vector3 = _line_destination(line)
 
 	var holder := Node3D.new()
 	holder.name = "Rail_%s" % id
@@ -184,7 +235,14 @@ func _make_sagging_curve(start: Vector3, end: Vector3) -> Curve3D:
 	var curve := Curve3D.new()
 
 	var mid := (start + end) * 0.5
-	mid.y -= start.distance_to(end) * SAG_RATIO
+
+	# Lines climb from the village up to the islands, so a sag applied to the
+	# raw span length would drag the midpoint back down into the rooftops.
+	# Instead the midpoint is lifted toward the high end and only the
+	# horizontal run contributes sag — a climbing cable still bows, but it
+	# bows above what it crosses, not through it.
+	var horizontal := Vector2(end.x - start.x, end.z - start.z).length()
+	mid.y = maxf(start.y, end.y) - horizontal * SAG_RATIO * 0.5
 
 	var to_mid := mid - start
 	var from_mid := end - mid
