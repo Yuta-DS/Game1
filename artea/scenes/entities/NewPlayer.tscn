@@ -19,8 +19,8 @@ shape = SubResource("CapsuleShape3D_37sbh")
 
 [node name="CameraController" parent="." unique_id=1673383484 instance=ExtResource("2_26y45")]
 transform = Transform3D(1, 0, 0, 0, 0.906308, 0.422618, 0, -0.422618, 0.906308, 0, 1.4, 0)
-minLimitX = -0.8
-maxLimitX = -0.1
+minLimitX = -1.45
+maxLimitX = 1.45
 
 [node name="RogueSkin" parent="." unique_id=54769554 instance=ExtResource("3_btyug")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
