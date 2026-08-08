@@ -20,6 +20,11 @@ extends Node3D
 
 const IsleBuilderScript := "res://scripts/sky_isles/isle_builder.gd"
 
+# preload rather than the global class name: class_name registration is not
+# guaranteed to have run when this script parses, and relying on it failed
+# here exactly as it did for isle_builder in the prototype.
+const IsleDressing := preload("res://scripts/hub_isle_dressing.gd")
+
 # Height band the islands occupy. The hub's ground sits at Y 15-24 and its
 # tallest towers reach into the 40s, so the islands clear everything and
 # read unmistakably as "up there" from the village below.
@@ -72,6 +77,20 @@ const STAGE_GLOW := [0.0, 0.3, 0.55, 0.8, 1.0]
 const WAKE_SECONDS := 2.0
 
 var _emissive_materials: Array[StandardMaterial3D] = []
+
+# Crystal and rune-circle shader materials from the dressing. Driven by the
+# same stage value, but through an `awake` uniform rather than emission.
+var _shader_materials: Array[ShaderMaterial] = []
+
+# Island rock. Lit by the sun rather than self-lit, so it wakes by getting
+# less drab (albedo) instead of glowing, which kept the islands readable.
+var _rock_materials: Array[StandardMaterial3D] = []
+var _rock_base: Array[Color] = []
+
+# Orrery rings and gears. Turned in _process once the world is awake.
+var _spinners: Array[Node3D] = []
+var _spin_speed := 0.0
+
 var _isle_nodes: Dictionary = {}
 var _bob_time := 0.0
 
@@ -101,6 +120,13 @@ func _process(delta: float) -> void:
 		node.position.y = base_y + sin(
 			(_bob_time / BOB_PERIOD) * TAU + BOB_PHASES[i]) * BOB_AMPLITUDE
 
+	# Turn the orrery rings and gears. Alternating direction so meshing parts
+	# look driven rather than merely spinning.
+	if not is_zero_approx(_spin_speed):
+		for i in _spinners.size():
+			var direction := 1.0 if i % 2 == 0 else -1.35
+			_spinners[i].rotate_y(_spin_speed * direction * delta)
+
 
 # Called by hub_awakening.gd so the islands wake in step with the rest of
 # the world rather than tracking progress separately.
@@ -110,10 +136,28 @@ func apply_stage(stage: int) -> void:
 		return
 
 	var target: float = STAGE_GLOW[stage]
+
+	# Mechanisms turn only once the world has begun to wake — a spinning
+	# orrery on a dormant island reads as a machine running with nobody home.
+	_spin_speed = target * 0.5
+
 	var tween := create_tween().set_parallel()
 	for material in _emissive_materials:
 		tween.tween_property(material, "emission_energy_multiplier",
 			target * 1.5, WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
+
+	# Rock lifts from drab toward its full kingdom colour as the world wakes.
+	for i in _rock_materials.size():
+		var base: Color = _rock_base[i]
+		tween.tween_property(_rock_materials[i], "albedo_color",
+			base.lightened(target * 0.45), WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
+
+	# The crystal and rune shaders take the same stage through their own
+	# `awake` uniform, so the whole island wakes as one thing.
+	for material in _shader_materials:
+		tween.tween_method(
+			func(v: float) -> void: material.set_shader_parameter("awake", v),
+			0.0, target, WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
 
 
 # Public: where a train should dock at this island, in world space. The rail
@@ -148,7 +192,22 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 	# same world the rails came from.
 	var builder: GDScript = load(IsleBuilderScript)
 	if builder != null:
-		var body: Node3D = builder.build_island(radius, color.darkened(0.35), 1, index * 7 + 3)
+		# Pass our own material rather than letting the builder make one:
+		# build_island() keeps its material private, so the island body would
+		# never join the stage system and the rock stayed flat grey while all
+		# the dressing around it lit up.
+		var rock := StandardMaterial3D.new()
+		rock.albedo_color = color.darkened(0.45)
+		rock.roughness = 0.9
+		# Rock is lit by the sun, not self-lit: it takes the island's colour
+		# through albedo and leaves the glowing to the crystals and runes.
+		# Giving it emission too washed the whole island into one flat tone.
+		rock.emission_enabled = false
+		_rock_materials.append(rock)
+		_rock_base.append(rock.albedo_color)
+
+		var body: Node3D = builder.build_island_with_material(
+			radius, rock, 1, index * 7 + 3)
 		root.add_child(body)
 	else:
 		push_warning("hub_sky_isles: isle_builder missing, island %s has no body" % isle_id)
@@ -157,6 +216,17 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 	_build_platform(root, radius, color)
 	_build_landmark(root, isle_id, color)
 	_build_portal(root, isle, color)
+
+	# Magic-meets-technology detailing: rune disc, brass anchor ring, crystal
+	# lamps, railing, and the kingdom's own mechanism. Kept in its own file
+	# because the dressing is longer than the layout it decorates.
+	var dressing: Dictionary = IsleDressing.dress_isle(root, isle_id, color, radius)
+	for material in dressing["standard"]:
+		_emissive_materials.append(material)
+	for material in dressing["shader"]:
+		_shader_materials.append(material)
+	for spinner in dressing["spinners"]:
+		_spinners.append(spinner)
 
 
 # A flat collision disc just under the island's visible top, so the player
@@ -171,9 +241,10 @@ func _build_walkable_floor(parent: Node3D, radius: float) -> void:
 	cylinder.radius = radius * 0.92
 	cylinder.height = 2.0
 	shape.shape = cylinder
-	# Sits just below the mound's surface so the player stands on the rock
-	# rather than hovering above it.
-	shape.position.y = -0.6
+	# Top of the collider meets the mound's actual surface (the builder sinks
+	# its squashed sphere, so the walkable top is near +radius*0.10, not 0).
+	# Half the collider's height below that puts the player's feet on rock.
+	shape.position.y = radius * 0.10 - 1.0
 	body.add_child(shape)
 
 	parent.add_child(body)
