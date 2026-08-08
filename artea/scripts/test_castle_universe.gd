@@ -106,7 +106,24 @@ func _run() -> void:
 		_fail("gallery door is not anchored to the castle")
 		return
 
-	print("CASTLE_UNIVERSE_TEST: PASS — 3 detailed trains, 6 rides, scenic camera, 4 islands, castle door")
+	# Independent dormant/vibrant seams must not wake neighbouring islands.
+	for isle_id in ["mind", "heart", "creator"]:
+		_isles.call("set_island_vibrant", isle_id, false)
+	_isles.call("set_island_vibrant", "mind", true)
+	if not bool(_isles.call("is_island_vibrant", "mind")):
+		_fail("Mind Spark did not enter vibrant state")
+		return
+	if bool(_isles.call("is_island_vibrant", "heart")) or bool(
+			_isles.call("is_island_vibrant", "creator")):
+		_fail("independent island toggle woke a neighbouring kingdom")
+		return
+	var citadel := _hub.get_node("LumenCitadel") as Node3D
+	citadel.call("set_vibrant", true)
+	if not bool(citadel.call("is_vibrant")):
+		_fail("castle did not enter vibrant state")
+		return
+
+	print("CASTLE_UNIVERSE_TEST: PASS — 3 detailed trains, 6 rides, scenic camera, door, independent island states")
 	Engine.time_scale = 1.0
 	quit(0)
 
