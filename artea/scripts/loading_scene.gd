@@ -28,7 +28,11 @@ func _process(_delta):
 	elif status == ResourceLoader.THREAD_LOAD_LOADED:
 		var loaded_scene = ResourceLoader.load_threaded_get(next_scene_path)
 		get_tree().change_scene_to_packed(loaded_scene)
-		
-		await get_tree().process_frame  
-		MusicManager._check_scene()     
+
+		await get_tree().process_frame
+		MusicManager._check_scene()
+		loading_started = false  # prevent re-entry
+
+	elif status == ResourceLoader.THREAD_LOAD_FAILED or status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		push_error("⚠ Failed to load scene: " + next_scene_path)
 		loading_started = false  # prevent re-entry

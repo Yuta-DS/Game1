@@ -47,7 +47,7 @@ func on_login_succeeded(auth):
 	%StateLabel.text = "Login success!"
 	Firebase.Auth.save_auth(auth)
 	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://New_Hub_World.tscn"
+	loading_screen.next_scene_path = "res://scenes/New_Hub_World.tscn"
 	
 	get_tree().root.add_child(loading_screen)
 	get_tree().current_scene.queue_free() 
