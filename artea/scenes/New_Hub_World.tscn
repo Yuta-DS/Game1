@@ -25,6 +25,13 @@
 [ext_resource type="Script" uid="uid://bevon172xunct" path="res://addons/proton_scatter/src/modifiers/project_on_geometry.gd" id="18_jhnfs"]
 [ext_resource type="Script" uid="uid://jp2wlxr8rcgq" path="res://addons/proton_scatter/src/modifiers/project_on_terrain3d.gd" id="19_g1e0d"]
 [ext_resource type="Shader" uid="uid://bf0h7u1q21ph3" path="res://New_Hub_World.gdshader" id="19_ha1sw"]
+[ext_resource type="PackedScene" path="res://scenes/props/market_stall.tscn" id="100_stall"]
+[ext_resource type="PackedScene" path="res://scenes/entities/villager_barbarian.tscn" id="101_vbarb"]
+[ext_resource type="PackedScene" path="res://scenes/entities/villager_rogue.tscn" id="102_vrogue"]
+[ext_resource type="PackedScene" path="res://scenes/entities/villager_rogue_hooded.tscn" id="103_vroguehood"]
+[ext_resource type="PackedScene" path="res://scenes/entities/villager_mage.tscn" id="104_vmage"]
+[ext_resource type="PackedScene" path="res://scenes/entities/villager_knight.tscn" id="105_vknight"]
+[ext_resource type="PackedScene" path="res://scenes/entities/villager_father.tscn" id="106_vfather"]
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
@@ -56,7 +63,6 @@
 [ext_resource type="PackedScene" uid="uid://mlbbm08eu5nw" path="res://assets3D/house scenes/tower_b.tscn" id="45_t72bn"]
 [ext_resource type="PackedScene" uid="uid://bdx4hvm2wninr" path="res://assets3D/house scenes/tower_catapult.tscn" id="46_40xrb"]
 [ext_resource type="PackedScene" uid="uid://catvjmgmxqdgx" path="res://assets3D/house scenes/Prince.tscn" id="48_kjbyn"]
-[ext_resource type="Material" uid="uid://dkkbdeury7542" path="res://portal_colour.tres" id="55_4y8xt"]
 [ext_resource type="Script" uid="uid://psrly1at8x5g" path="res://scripts/teleport_Art_Gallery.gd" id="55_njk6r"]
 [ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
@@ -71,6 +77,36 @@
 [ext_resource type="Script" uid="uid://bfq4aadq6xydk" path="res://scripts/rogue_animations.gd" id="67_xrdtn"]
 [ext_resource type="Script" uid="uid://ca8tvwxs47jqc" path="res://scenes/story_direction.gd" id="68_1fv2d"]
 [ext_resource type="Texture2D" uid="uid://cc7haxr8tbq6n" path="res://textures/Sign_box.png.webp" id="68_yieqa"]
+[ext_resource type="Script" uid="uid://qb1nswsvuwr6" path="res://scripts/hub_awakening.gd" id="69_awakn"]
+[ext_resource type="Script" path="res://scripts/hub_creations.gd" id="70_creat"]
+[ext_resource type="Script" path="res://scripts/hub_magitech.gd" id="71_magit"]
+[ext_resource type="Script" path="res://scripts/hub_landmark_glow.gd" id="72_lndmk"]
+[ext_resource type="Script" path="res://scripts/hub_lumen_citadel.gd" id="73_citdl"]
+[ext_resource type="Script" path="res://scripts/aether_atlas.gd" id="75_atlas"]
+[ext_resource type="Script" path="res://scripts/hub_castle_crown.gd" id="77_crown"]
+[ext_resource type="Script" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
+[ext_resource type="PackedScene" uid="uid://bkwxa1ae6l2lb" path="res://assets3D/houses/red/building_blacksmith_red.gltf" id="78_smith"]
+[ext_resource type="PackedScene" uid="uid://rvmn0l3pa5kl" path="res://assets3D/houses/red/building_barracks_red.gltf" id="79_barrk"]
+[ext_resource type="PackedScene" uid="uid://lfbha2jf5jfk" path="res://assets3D/houses/red/building_archeryrange_red.gltf" id="80_arch"]
+[ext_resource type="PackedScene" uid="uid://3dcfig4m8j0g" path="res://assets3D/houses/red/building_mine_red.gltf" id="81_mine"]
+[ext_resource type="PackedScene" uid="uid://by5o8lpmk7jm0" path="res://assets3D/houses/red/building_tower_A_red.gltf" id="82_towa"]
+[ext_resource type="PackedScene" uid="uid://wubr3x33otmf" path="res://assets3D/houses/red/building_tower_base_red.gltf" id="83_towb"]
+[ext_resource type="PackedScene" uid="uid://c05lu4c58rg8a" path="res://assets3D/houses/gltf/bench_A.gltf" id="84_bnchA"]
+[ext_resource type="PackedScene" uid="uid://kfdt3gwvr8tp" path="res://assets3D/houses/gltf/bench_B.gltf" id="85_bnchB"]
+[ext_resource type="PackedScene" uid="uid://iayg4eshyfx3" path="res://assets3D/houses/gltf/fence_open.gltf" id="86_fnop"]
+[ext_resource type="PackedScene" uid="uid://c5tdf37glayde" path="res://assets3D/houses/gltf/fence_open_long.gltf" id="87_fnopl"]
+[ext_resource type="PackedScene" uid="uid://behtshahykv3e" path="res://assets3D/houses/gltf/fence_post.gltf" id="88_fnpost"]
+[ext_resource type="PackedScene" uid="uid://c4yi4ite6va1y" path="res://assets3D/houses/gltf/gate_double_left.gltf" id="89_gatel"]
+[ext_resource type="PackedScene" uid="uid://6kpnqojsxyoe" path="res://assets3D/houses/gltf/gate_double_right.gltf" id="90_gater"]
+[ext_resource type="PackedScene" uid="uid://rhsn7l6hbol1" path="res://assets3D/houses/gltf/foliage_A.gltf" id="91_folA"]
+[ext_resource type="PackedScene" uid="uid://n00i0cm7a00c" path="res://assets3D/houses/gltf/foliage_B.gltf" id="92_folB"]
+[ext_resource type="PackedScene" uid="uid://du1bcpx4dw6y4" path="res://assets3D/houses/gltf/mailbox.gltf" id="93_mbox"]
+[ext_resource type="PackedScene" uid="uid://piay0bemfsyc" path="res://assets3D/houses/gltf/tree.gltf" id="94_tree"]
+[ext_resource type="PackedScene" uid="uid://b6n3ns24pos1q" path="res://assets3D/houses/gltf/tree_large.gltf" id="95_treeL"]
+[ext_resource type="PackedScene" uid="uid://cehrffojukb16" path="res://assets3D/houses/gltf/fence_straight.gltf" id="96_fnstr"]
+[ext_resource type="PackedScene" uid="uid://cejjhajbx8vwe" path="res://assets3D/houses/gltf/fence_straight_long.gltf" id="97_fnstrl"]
+[ext_resource type="PackedScene" uid="uid://durvbjhil7ec1" path="res://scripts/Pier.tscn" id="98_pier"]
+[ext_resource type="PackedScene" path="res://scenes/boat.tscn" id="99_boat"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -116,13 +152,13 @@ world_background = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enoow"]
 transparency = 4
+alpha_scissor_threshold = 0.5
 cull_mode = 2
 vertex_color_use_as_albedo = true
-backlight_enabled = true
-backlight = Color(0.5, 0.5, 0.5, 1)
+backlight_enabled = false
 distance_fade_mode = 1
-distance_fade_min_distance = 128.0
-distance_fade_max_distance = 96.0
+distance_fade_min_distance = 96.0
+distance_fade_max_distance = 128.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_s5s7t"]
 generated_type = 1
@@ -300,14 +336,29 @@ radius = 120.0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_kl01c"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_ewago"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_a4768"]
-
 [node name="HubWorld" type="Node3D" unique_id=2105333492]
+script = ExtResource("69_awakn")
+
+[node name="CreationsSpawner" type="Node" parent="."]
+script = ExtResource("70_creat")
+
+[node name="Magitech" type="Node3D" parent="."]
+script = ExtResource("71_magit")
+
+[node name="LandmarkGlow" type="Node3D" parent="."]
+script = ExtResource("72_lndmk")
+
+[node name="AetherAtlas" type="Node3D" parent="."]
+script = ExtResource("75_atlas")
+
+[node name="CastleCrown" type="Node3D" parent="."]
+script = ExtResource("77_crown")
+
+[node name="CastleStairs" type="Node3D" parent="."]
+script = ExtResource("78_stairs")
 
 [node name="NewPlayer" parent="." unique_id=1353458258 instance=ExtResource("2_q1hpc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.64955, 34.126, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.64955, 25.1, 0)
 
 [node name="OmniLight3D" type="OmniLight3D" parent="NewPlayer" unique_id=828421421]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.747093, 0)
@@ -391,20 +442,12 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 
 [node name="Grass" type="Node3D" parent="Environment" unique_id=528747255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
+visible = false
 script = ExtResource("12_0l1bc")
 modifier_stack = SubResource("Resource_vqqxb")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
-
-[node name="ScatterItem" type="Node3D" parent="Environment/Grass" unique_id=68278152]
-script = ExtResource("19_ngqnt")
-source_scale_multiplier = 0.333
-override_material = SubResource("ShaderMaterial_y45p1")
-override_cast_shadow = 0
-visibility_range_begin_margin = 0.1
-visibility_range_end_margin = 0.1
-path = "uid://bu7xabiu3yxhr"
 
 [node name="ScatterShape" type="Node3D" parent="Environment/Grass" unique_id=577490913]
 transform = Transform3D(0.953801, 0, -0.30044, 0, 1, 0, 0.30044, 0, 0.953801, 4.2984, 0, -2.62214)
@@ -423,6 +466,7 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 22.
 
 [node name="Objects" type="Node3D" parent="Environment" unique_id=240408736]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
+visible = false
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
@@ -508,11 +552,8 @@ metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 [node name="buildings" type="Node3D" parent="Environment" unique_id=1896146652]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 142.94, -7.62939e-06, 11.7995)
 
-[node name="Church" parent="Environment/buildings" unique_id=2103741971 instance=ExtResource("30_ikt05")]
-transform = Transform3D(200, 0, 0, 0, 200, 0, 0, 0, 200, -408.696, -178.736, -108.012)
-
 [node name="building_home_A_red2" parent="Environment" unique_id=435689834 instance=ExtResource("30_82kox")]
-transform = Transform3D(-1.33329, 0, 9.91072, 0, 10, 0, -9.91072, 0, -1.33329, 48.8127, 19, -57.9332)
+transform = Transform3D(-1.33329, 0, 9.91072, 0, 10, 0, -9.91072, 0, -1.33329, 48.8127, 20.27, -57.9332)
 
 [node name="building_market_red2" parent="Environment" unique_id=1571344642 instance=ExtResource("31_k7taw")]
 transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 109.844, 18.877, 28.908)
@@ -584,22 +625,22 @@ script = ExtResource("42_ewago")
 transform = Transform3D(-1.8051885, 0, -9.835715, 0, 10, 0, 9.835715, 0, -1.8051885, 110, 20, -15)
 
 [node name="building_church_red2" parent="." unique_id=1083499433 instance=ExtResource("30_ikt05")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 86, 19, -77.7649)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 86, 20.0, -77.7649)
 
 [node name="building_home_A_red2" parent="." unique_id=1057404536 instance=ExtResource("30_82kox")]
-transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 54, 20, -46)
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 54, 20.24, -46)
 
 [node name="building_home_A_red4" parent="." unique_id=344902121 instance=ExtResource("30_82kox")]
-transform = Transform3D(-0.231758, 0, 9.99731, 0, 10, 0, -9.99731, 0, -0.231758, 52, 20, -33)
+transform = Transform3D(-0.231758, 0, 9.99731, 0, 10, 0, -9.99731, 0, -0.231758, 52, 20.28, -33)
 
 [node name="building_well_red2" parent="." unique_id=1252928640 instance=ExtResource("37_h1q0r")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 117.27, 20.6, -18.3444)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 117.27, 19.98, -18.3444)
 
 [node name="building_windmill_red2" parent="." unique_id=988152394 instance=ExtResource("38_k7taw")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 133.325, 33.616, 20.692)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 133.325, 16.57, 20.692)
 
 [node name="building_home_A_red3" parent="." unique_id=1370923052 instance=ExtResource("30_82kox")]
-transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 57.9, 21, 4)
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 57.9, 20.22, 4)
 
 [node name="building_home_B_red2" parent="." unique_id=2046571414 instance=ExtResource("39_t72bn")]
 transform = Transform3D(-0.301024, 0, 9.99547, 0, 10, 0, -9.99547, 0, -0.301024, 60, 21, 16.8942)
@@ -608,31 +649,31 @@ transform = Transform3D(-0.301024, 0, 9.99547, 0, 10, 0, -9.99547, 0, -0.301024,
 transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 60.06, 21.374, 32.449)
 
 [node name="building_home_B_red4" parent="." unique_id=1383198286 instance=ExtResource("39_t72bn")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62.5, 21, -71.245)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62.5, 20.04, -71.245)
 
 [node name="building_castle_red2" parent="." unique_id=654078214 instance=ExtResource("40_40xrb")]
-transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, -51.4, 33.7606, 27.4105)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, -51.4, 65.49, 27.4105)
 
 [node name="building_tavern_red2" parent="." unique_id=1819320780 instance=ExtResource("41_kjbyn")]
-transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 55, 22.6, 55.3)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 55, 22.69, 55.3)
 
 [node name="building_watermill_red2" parent="." unique_id=1337501579 instance=ExtResource("42_fn4xt")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 115.175, 23.741, -33.0692)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 115.175, 20.0, -33.0692)
 
 [node name="building_lumbermill_red2" parent="." unique_id=213990473 instance=ExtResource("43_448jj")]
-transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 113.9, 20.12, -45.7133)
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 113.9, 20.0, -45.7133)
 
 [node name="Artéa_Signpost_1027230400_texture" parent="." unique_id=1661014808 instance=ExtResource("44_wlotw")]
-transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 112.305, 27.1512, -5.74761)
+transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 112.305, 29.48, -5.74761)
 
 [node name="building_market_red2" parent="." unique_id=982705823 instance=ExtResource("31_k7taw")]
-transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 107.372, 19.14, 12.269)
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 107.372, 19.84, 12.269)
 
 [node name="building_tower_B_red2" parent="." unique_id=549820795 instance=ExtResource("45_t72bn")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 19.9201, 6.67653, 189.907)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 19.9201, 0.48, 189.907)
 
 [node name="building_tower_catapult_red2" parent="." unique_id=525608042 instance=ExtResource("46_40xrb")]
-transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, -51, 40.3514, -2.46875)
+transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, -61, 35.5, 15.5)
 
 [node name="Knight" parent="." unique_id=1422498343 instance=ExtResource("48_kjbyn")]
 transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -34.4799, 30.6393, 36.7945)
@@ -647,11 +688,6 @@ script = ExtResource("55_njk6r")
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -7.3, 11.479, 19.856)
 shape = SubResource("BoxShape3D_kl01c")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Art_Gallery" unique_id=1174303667]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.6349945, 10.651764, 19.856003)
-mesh = SubResource("BoxMesh_ewago")
-surface_material_override/0 = ExtResource("55_4y8xt")
-
 [node name="Drawing_Tool" type="Area3D" parent="." unique_id=1110659011]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 58.8, 16, -43)
 script = ExtResource("56_kl01c")
@@ -659,11 +695,6 @@ script = ExtResource("56_kl01c")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Drawing_Tool" unique_id=1055451839]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8, 10.2, 19.856)
 shape = SubResource("BoxShape3D_kl01c")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Drawing_Tool" unique_id=517840038]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -8.95, 10.652, 19.856)
-mesh = SubResource("BoxMesh_ewago")
-surface_material_override/0 = ExtResource("55_4y8xt")
 
 [node name="Drawing_Tool2" type="Area3D" parent="." unique_id=8613598]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 60.8, 16, -56)
@@ -673,11 +704,6 @@ script = ExtResource("57_he78i")
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8, 10.2, 19.856)
 shape = SubResource("BoxShape3D_kl01c")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Drawing_Tool2" unique_id=118401000]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, -8.95, 10.652, 19.856)
-mesh = SubResource("BoxMesh_ewago")
-surface_material_override/0 = ExtResource("55_4y8xt")
-
 [node name="Popthought_world" type="Area3D" parent="." unique_id=952177838]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 90.3, 15, -83)
 script = ExtResource("57_ewago")
@@ -686,10 +712,250 @@ script = ExtResource("57_ewago")
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.635, 11.479, 20.5)
 shape = SubResource("BoxShape3D_kl01c")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Popthought_world" unique_id=803191969]
-transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, -8.635, 11.6, 19.6)
-mesh = SubResource("BoxMesh_a4768")
-surface_material_override/0 = ExtResource("55_4y8xt")
+[node name="District_MindSpark" type="Node3D" parent="."]
+
+[node name="ms_home_1" parent="District_MindSpark" instance=ExtResource("30_82kox")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 68, 20.3, -95)
+
+[node name="ms_home_2" parent="District_MindSpark" instance=ExtResource("39_t72bn")]
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 78, 20.3, -100)
+
+[node name="ms_tower_a" parent="District_MindSpark" instance=ExtResource("82_towa")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 92, 20.3, -96)
+
+[node name="ms_mine" parent="District_MindSpark" instance=ExtResource("81_mine")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 104, 20.3, -90)
+
+[node name="ms_home_5" parent="District_MindSpark" instance=ExtResource("30_82kox")]
+transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 72, 20.3, -75)
+
+[node name="ms_barracks" parent="District_MindSpark" instance=ExtResource("79_barrk")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 110, 20.3, -68)
+
+[node name="ms_market" parent="District_MindSpark" instance=ExtResource("31_k7taw")]
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 96, 20.3, -80)
+
+[node name="ms_well" parent="District_MindSpark" instance=ExtResource("37_h1q0r")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 85, 20.3, -88)
+
+[node name="ms_home_7" parent="District_MindSpark" instance=ExtResource("30_82kox")]
+transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 62, 20.3, -80)
+
+[node name="ms_home_8" parent="District_MindSpark" instance=ExtResource("39_t72bn")]
+transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, 116, 20.3, -78)
+
+[node name="ms_fence_1" parent="District_MindSpark" instance=ExtResource("87_fnopl")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 78, 20.3, -94)
+
+[node name="ms_fence_2" parent="District_MindSpark" instance=ExtResource("87_fnopl")]
+transform = Transform3D(0, 0, -4, 0, 4, 0, 4, 0, 0, 88, 20.3, -90)
+
+[node name="ms_foliage_1" parent="District_MindSpark" instance=ExtResource("91_folA")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 65, 20.3, -88)
+
+[node name="ms_foliage_2" parent="District_MindSpark" instance=ExtResource("92_folB")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 120, 20.3, -70)
+
+[node name="ms_bench" parent="District_MindSpark" instance=ExtResource("84_bnchA")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 98, 20.3, -84)
+
+[node name="ms_tree_1" parent="District_MindSpark" instance=ExtResource("94_tree")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 60, 20.3, -70)
+
+[node name="ms_tree_2" parent="District_MindSpark" instance=ExtResource("95_treeL")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 122, 20.3, -80)
+
+[node name="ms_tree_3" parent="District_MindSpark" instance=ExtResource("94_tree")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 66, 20.3, -100)
+
+[node name="ms_fence_3" parent="District_MindSpark" instance=ExtResource("97_fnstrl")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 96, 20.3, -68)
+
+[node name="ms_ext_home_1" parent="District_MindSpark" instance=ExtResource("30_82kox")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 14, 21.41, -98)
+
+[node name="ms_ext_home_2" parent="District_MindSpark" instance=ExtResource("39_t72bn")]
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 14, 21.53, -66)
+
+[node name="ms_ext_tower" parent="District_MindSpark" instance=ExtResource("82_towa")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 22, 20.99, -82)
+
+[node name="ms_ext_home_3" parent="District_MindSpark" instance=ExtResource("30_82kox")]
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 22, 20.88, -106)
+
+[node name="ms_ext_well" parent="District_MindSpark" instance=ExtResource("37_h1q0r")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 22, 21.04, -74)
+
+[node name="ms_ext_home_4" parent="District_MindSpark" instance=ExtResource("39_t72bn")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 14, 21.39, -90)
+
+[node name="ms_ext_tree_1" parent="District_MindSpark" instance=ExtResource("94_tree")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 22, 20.97, -90)
+
+[node name="ms_ext_tree_2" parent="District_MindSpark" instance=ExtResource("95_treeL")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 14, 21.58, -58)
+
+[node name="District_CreatorsLight" type="Node3D" parent="."]
+
+[node name="cl_home_1" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 40, 24.1, 45)
+
+[node name="cl_blacksmith" parent="District_CreatorsLight" instance=ExtResource("78_smith")]
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 32, 24.6, 55)
+
+[node name="cl_home_3" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 44, 22.9, 66)
+
+[node name="cl_archery" parent="District_CreatorsLight" instance=ExtResource("80_arch")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 60, 21.1, 72)
+
+[node name="cl_lumbermill" parent="District_CreatorsLight" instance=ExtResource("43_448jj")]
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 50, 23.2, 60)
+
+[node name="cl_home_5" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
+transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 36, 24.1, 40)
+
+[node name="cl_home_6" parent="District_CreatorsLight" instance=ExtResource("39_t72bn")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 28, 23.8, 63)
+
+[node name="cl_market" parent="District_CreatorsLight" instance=ExtResource("31_k7taw")]
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 46, 23.9, 52)
+
+[node name="cl_tower" parent="District_CreatorsLight" instance=ExtResource("46_40xrb")]
+transform = Transform3D(0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, 0.975829, 25, 25.3, 48)
+
+[node name="cl_gate_l" parent="District_CreatorsLight" instance=ExtResource("89_gatel")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 38, 24.1, 48)
+
+[node name="cl_gate_r" parent="District_CreatorsLight" instance=ExtResource("90_gater")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 42, 24.1, 48)
+
+[node name="cl_foliage_1" parent="District_CreatorsLight" instance=ExtResource("91_folA")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 22, 24.46, 56)
+
+[node name="cl_foliage_2" parent="District_CreatorsLight" instance=ExtResource("92_folB")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 55, 22.9, 62)
+
+[node name="cl_bench" parent="District_CreatorsLight" instance=ExtResource("85_bnchB")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 42, 23.9, 50)
+
+[node name="cl_tree_1" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 20, 23.8, 65)
+
+[node name="cl_tree_2" parent="District_CreatorsLight" instance=ExtResource("95_treeL")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 58, 19.88, 78)
+
+[node name="cl_tree_3" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 30, 24.1, 38)
+
+[node name="cl_ext_home_1" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, -20, 23.9, 60)
+
+[node name="cl_ext_home_2" parent="District_CreatorsLight" instance=ExtResource("39_t72bn")]
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 0, 22.3, 70)
+
+[node name="cl_ext_mine" parent="District_CreatorsLight" instance=ExtResource("81_mine")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 20, 19.1, 100)
+
+[node name="cl_ext_home_3" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, -10, 19.2, 90)
+
+[node name="cl_ext_barracks" parent="District_CreatorsLight" instance=ExtResource("79_barrk")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 60, 19.9, 110)
+
+[node name="cl_ext_home_4" parent="District_CreatorsLight" instance=ExtResource("39_t72bn")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 10, 17.7, 110)
+
+[node name="cl_ext_tree_1" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 5, 20.5, 80)
+
+[node name="cl_ext_tree_2" parent="District_CreatorsLight" instance=ExtResource("95_treeL")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 40, 19.35, 105)
+
+[node name="Music_World" type="Area3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 80, 18.7, 72)
+script = ExtResource("57_he78i")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Music_World"]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.635, 11.479, 20.5)
+shape = SubResource("BoxShape3D_kl01c")
+
+[node name="District_HeartMelody" type="Node3D" parent="."]
+
+[node name="hm_tavern" parent="District_HeartMelody" instance=ExtResource("41_kjbyn")]
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 90, 18.61, 60)
+
+[node name="hm_home_1" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 100, 19.4, 50)
+
+[node name="hm_home_2" parent="District_HeartMelody" instance=ExtResource("39_t72bn")]
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 90, 19.2, 58)
+
+[node name="hm_home_3" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 84, 19.9, 60)
+
+[node name="hm_tower_base" parent="District_HeartMelody" instance=ExtResource("83_towb")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 70, 20.7, 66)
+
+[node name="hm_market" parent="District_HeartMelody" instance=ExtResource("31_k7taw")]
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 82, 20.53, 55)
+
+[node name="hm_home_5" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
+transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 88, 20.5, 48)
+
+[node name="hm_well" parent="District_HeartMelody" instance=ExtResource("37_h1q0r")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 78, 17.68, 78)
+
+[node name="hm_home_6" parent="District_HeartMelody" instance=ExtResource("39_t72bn")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62, 22.18, 52)
+
+[node name="hm_home_7" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
+transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 90, 17.9, 66)
+
+[node name="hm_mailbox" parent="District_HeartMelody" instance=ExtResource("93_mbox")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 92, 19.9, 62)
+
+[node name="hm_fence" parent="District_HeartMelody" instance=ExtResource("86_fnop")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 96, 18.62, 52)
+
+[node name="hm_foliage_1" parent="District_HeartMelody" instance=ExtResource("91_folA")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 66, 20.21, 72)
+
+[node name="hm_foliage_2" parent="District_HeartMelody" instance=ExtResource("92_folB")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 105, 12.30, 80)
+
+[node name="hm_bench" parent="District_HeartMelody" instance=ExtResource("84_bnchA")]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 86, 20.01, 55)
+
+[node name="hm_tree_1" parent="District_HeartMelody" instance=ExtResource("94_tree")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 105, 16.95, 50)
+
+[node name="hm_tree_2" parent="District_HeartMelody" instance=ExtResource("95_treeL")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 62, 22.02, 58)
+
+[node name="hm_ext_home_1" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 26.82, 37)
+
+[node name="hm_ext_home_2" parent="District_HeartMelody" instance=ExtResource("39_t72bn")]
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 0, 25.92, 45)
+
+[node name="hm_ext_blacksmith" parent="District_HeartMelody" instance=ExtResource("78_smith")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 8, 25.39, 21)
+
+[node name="hm_ext_home_3" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 8, 26.35, 37)
+
+[node name="hm_ext_archery" parent="District_HeartMelody" instance=ExtResource("80_arch")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 24.76, 53)
+
+[node name="hm_ext_home_4" parent="District_HeartMelody" instance=ExtResource("39_t72bn")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 8, 24.97, 53)
+
+[node name="hm_ext_tree_1" parent="District_HeartMelody" instance=ExtResource("94_tree")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 0, 23.46, 61)
+
+[node name="hm_ext_tree_2" parent="District_HeartMelody" instance=ExtResource("95_treeL")]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 8, 23.77, 61)
 
 [node name="AppleSpawner" type="Node3D" parent="." unique_id=337249485]
 script = ExtResource("2_spawner")
@@ -757,6 +1023,58 @@ offset = Vector2(-220, 0)
 modulate = Color(0.24313726, 0.15294118, 0.13725491, 1)
 text = "Councellor"
 
+[node name="Port" parent="." instance=ExtResource("98_pier")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 170, 0.5, 60)
+
+[node name="Boat" parent="." instance=ExtResource("99_boat")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 0, 78)
+
+[node name="MarketPlace" type="Node3D" parent="."]
+
+[node name="Stall1" parent="MarketPlace" instance=ExtResource("100_stall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 102, 19.97, 6)
+
+[node name="Stall2" parent="MarketPlace" instance=ExtResource("100_stall")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 113, 19.75, 6)
+
+[node name="Stall3" parent="MarketPlace" instance=ExtResource("100_stall")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 102, 19.81, 19)
+
+[node name="Stall4" parent="MarketPlace" instance=ExtResource("100_stall")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 113, 19.31, 19)
+
+[node name="Villagers" type="Node3D" parent="."]
+
+[node name="Villager_Market1" parent="Villagers" instance=ExtResource("101_vbarb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 95, 19.9, 12)
+
+[node name="Villager_Market2" parent="Villagers" instance=ExtResource("102_vrogue")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 98, 19.8, 0)
+
+[node name="Villager_Market3" parent="Villagers" instance=ExtResource("104_vmage")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92, 19.85, 20)
+
+[node name="Villager_Market4" parent="Villagers" instance=ExtResource("106_vfather")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 19.7, 25)
+
+[node name="Villager_Church1" parent="Villagers" instance=ExtResource("103_vroguehood")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 19.9, -60)
+
+[node name="Villager_Tavern1" parent="Villagers" instance=ExtResource("105_vknight")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70, 22.65, 55)
+
+[node name="Villager_Well1" parent="Villagers" instance=ExtResource("101_vbarb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 19.96, -10)
+
+[node name="Villager_Homes1" parent="Villagers" instance=ExtResource("102_vrogue")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 20.24, -55)
+
+[node name="Villager_Homes2" parent="Villagers" instance=ExtResource("104_vmage")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 20.55, 25)
+
+[node name="Villager_Homes3" parent="Villagers" instance=ExtResource("106_vfather")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 20.05, -85)
+
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
 [connection signal="pressed" from="Environment/ArtGalleryButton/CanvasLayer/Button" to="Environment/ArtGalleryButton" method="_on_button_pressed"]
@@ -764,3 +1082,4 @@ text = "Councellor"
 [connection signal="body_entered" from="Drawing_Tool" to="Drawing_Tool" method="_on_body_entered"]
 [connection signal="body_entered" from="Drawing_Tool2" to="Drawing_Tool2" method="_on_body_entered"]
 [connection signal="body_entered" from="Popthought_world" to="Popthought_world" method="_on_body_entered"]
+[connection signal="body_entered" from="Music_World" to="Music_World" method="_on_body_entered"]
