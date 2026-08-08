@@ -85,6 +85,8 @@
 [ext_resource type="Script" path="res://scripts/aether_atlas.gd" id="75_atlas"]
 [ext_resource type="Script" path="res://scripts/hub_castle_crown.gd" id="77_crown"]
 [ext_resource type="Script" path="res://scripts/hub_skyrail.gd" id="79_skyrl"]
+[ext_resource type="Script" path="res://scripts/hub_sky_isles.gd" id="80_skisl"]
+[ext_resource type="Script" path="res://scripts/hub_train_rider.gd" id="81_rider"]
 [ext_resource type="Script" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
 [ext_resource type="PackedScene" uid="uid://bkwxa1ae6l2lb" path="res://assets3D/houses/red/building_blacksmith_red.gltf" id="78_smith"]
 [ext_resource type="PackedScene" uid="uid://rvmn0l3pa5kl" path="res://assets3D/houses/red/building_barracks_red.gltf" id="79_barrk"]
@@ -336,6 +338,11 @@ script = ExtResource("28_cfrmd")
 radius = 120.0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_kl01c"]
+; Explicit doorway-sized trigger. This used to be a default 2m cube inflated by
+; a 1.5 node scale and a 3x shape scale into a 9m invisible cube sitting right
+; at the foot of the castle stair, so walking toward the stairs teleported the
+; player into the gallery instead of letting them climb.
+size = Vector3(2.5, 3, 1.2)
 
 [node name="HubWorld" type="Node3D" unique_id=2105333492]
 script = ExtResource("69_awakn")
@@ -358,8 +365,14 @@ script = ExtResource("77_crown")
 [node name="CastleStairs" type="Node3D" parent="."]
 script = ExtResource("78_stairs")
 
+[node name="SkyIsles" type="Node3D" parent="."]
+script = ExtResource("80_skisl")
+
 [node name="SkyRail" type="Node3D" parent="."]
 script = ExtResource("79_skyrl")
+
+[node name="TrainRider" type="Node3D" parent="."]
+script = ExtResource("81_rider")
 
 [node name="NewPlayer" parent="." unique_id=1353458258 instance=ExtResource("2_q1hpc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.64955, 25.1, 0)
@@ -685,11 +698,12 @@ visible = false
 
 [node name="Art_Gallery" type="Area3D" parent="." unique_id=1255044157]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -32.3, 20, -2)
-collision_layer = 3
+collision_layer = 0
+collision_mask = 1
 script = ExtResource("55_njk6r")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Art_Gallery" unique_id=832564870]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -7.3, 11.479, 19.856)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.3, 11.479, 19.856)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="Drawing_Tool" type="Area3D" parent="." unique_id=1110659011]
