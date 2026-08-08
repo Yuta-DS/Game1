@@ -17,7 +17,7 @@ extends Node3D
 
 # How long a ride takes, castle to island. Slow enough to see the world
 # from above, short enough not to become a loading screen.
-const RIDE_SECONDS := 7.0
+const RIDE_SECONDS := 10.0
 
 # How close the player must be to a station to board.
 const BOARD_RADIUS := 3.8
@@ -104,7 +104,9 @@ func board(line_id: String, forward := true) -> void:
 	_riding = true
 	_ride_target = line_id
 	if _prompt != null:
-		_prompt.visible = false
+		_prompt.visible = true
+		_prompt.text = "Riding to %s  •  Move the mouse to enjoy the view" % (
+			_line_label(line_id) if forward else "Lumen Castle")
 
 	# Suspend the player's own movement/gravity for the ride. Their camera
 	# is a child and keeps running, so mouse-look stays live throughout.
@@ -175,6 +177,8 @@ func _arrive(line_id: String, forward: bool) -> void:
 
 	_riding = false
 	_ride_target = ""
+	if _prompt != null:
+		_prompt.visible = false
 
 
 # --- setup -------------------------------------------------------------
