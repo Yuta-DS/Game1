@@ -173,6 +173,10 @@ func _set_island_state(isle_id: String, vibrant: bool, intensity: float) -> void
 	state["vibrant"] = vibrant
 	state["spin_speed"] = intensity * 0.5
 	_island_states[isle_id] = state
+	var island_fill := state["light"] as OmniLight3D
+	if island_fill != null:
+		create_tween().tween_property(island_fill, "light_energy",
+			intensity * 1.35, WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
 
 	var tween := create_tween().set_parallel()
 	var emissive: Array = state["emissive"]
@@ -230,6 +234,16 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 	add_child(root)
 	_isle_nodes[isle_id] = root
 
+	var island_fill := OmniLight3D.new()
+	island_fill.name = "KingdomFill"
+	island_fill.position = Vector3(0.0, 17.0, 2.0)
+	island_fill.light_color = color.lightened(0.36)
+	island_fill.light_energy = 0.0
+	island_fill.omni_range = 52.0
+	island_fill.omni_attenuation = 1.2
+	island_fill.shadow_enabled = false
+	root.add_child(island_fill)
+
 	# Island body: reuse the prototype's shared builder so these read as the
 	# same world the rails came from.
 	var builder: GDScript = load(IsleBuilderScript)
@@ -277,6 +291,7 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 		"rock": _rock_materials.slice(rock_start),
 		"rock_base": _rock_base.slice(rock_base_start),
 		"spinners": dressing["spinners"],
+		"light": island_fill,
 	}
 
 

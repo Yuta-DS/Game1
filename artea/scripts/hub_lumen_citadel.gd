@@ -29,6 +29,7 @@ var _rotors: Array[Node3D] = []
 var _light_materials: Array[StandardMaterial3D] = []
 var _waypoint_lights: Array[OmniLight3D] = []
 var _citadel_lamp: OmniLight3D
+var _castle_fill: OmniLight3D
 var _foundation: Node3D
 var _foundation_start_y := 0.0
 
@@ -43,6 +44,7 @@ func _ready() -> void:
 		return
 
 	_castle_start_position = _castle.position
+	_brighten_castle_materials(_castle)
 	_build_castle_foundation()
 	_build_citadel_rig()
 	_build_skyway()
@@ -85,6 +87,9 @@ func apply_stage(stage: int) -> void:
 	if _citadel_lamp != null:
 		_citadel_lamp.light_color = glow
 		_citadel_lamp.light_energy = 0.4 + float(_stage) * 0.28
+	if _castle_fill != null:
+		_castle_fill.light_color = glow.lightened(0.28)
+		_castle_fill.light_energy = 1.05 + float(_stage) * 0.16
 
 
 func set_vibrant(vibrant: bool) -> void:
@@ -111,6 +116,9 @@ func _build_castle_foundation() -> void:
 	var rock_material := StandardMaterial3D.new()
 	rock_material.albedo_color = Color(0.36, 0.34, 0.46)
 	rock_material.roughness = 0.92
+	rock_material.emission_enabled = true
+	rock_material.emission = Color(0.16, 0.14, 0.23)
+	rock_material.emission_energy_multiplier = 0.12
 
 	var island := MeshInstance3D.new()
 	var island_mesh := SphereMesh.new()
@@ -171,6 +179,37 @@ func _build_castle_foundation() -> void:
 		chain.material_override = _brass_material() if i % 2 == 0 else rock_material
 		chain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_foundation.add_child(chain)
+
+	_castle_fill = OmniLight3D.new()
+	_castle_fill.name = "CastleDetailFill"
+	_castle_fill.position = Vector3(9.0, 18.0, 8.0)
+	_castle_fill.light_color = Color(1.0, 0.78, 0.48)
+	_castle_fill.light_energy = 1.05
+	_castle_fill.omni_range = 58.0
+	_castle_fill.omni_attenuation = 1.25
+	_castle_fill.shadow_enabled = false
+	_foundation.add_child(_castle_fill)
+
+
+# Preserve the imported albedo texture in shadow by reusing it as a very low
+# emission texture. Direct sunlight still supplies shape; this only prevents the
+# castle from collapsing into a single mauve silhouette against the bright sky.
+func _brighten_castle_materials(node: Node) -> void:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			var mesh_node := child as MeshInstance3D
+			if mesh_node.mesh != null:
+				for surface in mesh_node.mesh.get_surface_count():
+					var source := mesh_node.get_active_material(surface)
+					if source is StandardMaterial3D:
+						var material := source.duplicate() as StandardMaterial3D
+						material.emission_enabled = true
+						material.emission = Color(0.58, 0.52, 0.48)
+						material.emission_energy_multiplier = 0.24
+						if material.albedo_texture != null:
+							material.emission_texture = material.albedo_texture
+						mesh_node.set_surface_override_material(surface, material)
+		_brighten_castle_materials(child)
 
 func _build_citadel_rig() -> void:
 	var rig := Node3D.new()

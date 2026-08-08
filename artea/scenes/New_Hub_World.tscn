@@ -87,6 +87,7 @@
 [ext_resource type="Script" path="res://scripts/hub_skyrail.gd" id="79_skyrl"]
 [ext_resource type="Script" path="res://scripts/hub_sky_isles.gd" id="80_skisl"]
 [ext_resource type="Script" path="res://scripts/hub_train_rider.gd" id="81_rider"]
+[ext_resource type="Script" path="res://scripts/hub_atmosphere.gd" id="82_atmos"]
 [ext_resource type="Script" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
 [ext_resource type="PackedScene" uid="uid://bkwxa1ae6l2lb" path="res://assets3D/houses/red/building_blacksmith_red.gltf" id="78_smith"]
 [ext_resource type="PackedScene" uid="uid://rvmn0l3pa5kl" path="res://assets3D/houses/red/building_barracks_red.gltf" id="79_barrk"]
@@ -358,6 +359,9 @@ script = ExtResource("72_lndmk")
 
 [node name="LumenCitadel" type="Node3D" parent="."]
 script = ExtResource("73_citdl")
+
+[node name="CastleAtmosphere" type="Node3D" parent="."]
+script = ExtResource("82_atmos")
 
 [node name="AetherAtlas" type="Node3D" parent="."]
 script = ExtResource("75_atlas")
