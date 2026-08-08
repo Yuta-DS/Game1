@@ -20,7 +20,7 @@ extends Node3D
 const RIDE_SECONDS := 7.0
 
 # How close the player must be to a station to board.
-const BOARD_RADIUS := 7.0
+const BOARD_RADIUS := 3.8
 
 # Where the player stands relative to the train while riding.
 const RIDE_OFFSET := Vector3(0.0, 2.2, 0.0)
@@ -32,11 +32,12 @@ var _player: CharacterBody3D = null
 var _riding := false
 var _ride_target := ""
 
-# Station markers, keyed by line id: the castle-end boarding point.
+# Station markers keyed by a unique station id. Each record stores its line,
+# direction and physical boarding point so rides work both out and back.
 var _stations: Dictionary = {}
 
 var _prompt: Label = null
-var _near_line := ""
+var _near_station := ""
 
 
 func _ready() -> void:
@@ -68,25 +69,28 @@ func _process(_delta: float) -> void:
 	if _riding or _player == null:
 		return
 
-	_near_line = _nearest_station()
+	_near_station = _nearest_station()
 
 	if _prompt != null:
-		if _near_line == "":
+		if _near_station == "":
 			_prompt.visible = false
 		else:
+			var station: Dictionary = _stations[_near_station]
 			_prompt.visible = true
-			_prompt.text = "Press Enter to ride to %s" % _line_label(_near_line)
+			_prompt.text = "Press Enter / Space to ride to %s" % station["destination"]
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _riding or _near_line == "":
+	if _riding or _near_station == "":
 		return
 	if event.is_action_pressed("ui_accept") or event.is_action_pressed("jump"):
-		board(_near_line)
+		var station: Dictionary = _stations[_near_station]
+		board(station["line_id"], station["forward"])
+		get_viewport().set_input_as_handled()
 
 
 # Public so a future station prop, or Milo, can put the player on a train.
-func board(line_id: String) -> void:
+func board(line_id: String, forward := true) -> void:
 	if _riding or _player == null or _rail == null:
 		return
 	if not _rail.has_method("get_curve"):
@@ -106,6 +110,8 @@ func board(line_id: String) -> void:
 	# is a child and keeps running, so mouse-look stays live throughout.
 	_player.set_physics_process(false)
 	_player.velocity = Vector3.ZERO
+	if _rail.has_method("set_train_riding"):
+		_rail.call("set_train_riding", line_id, true)
 
 	var train: Node3D = null
 	if _rail.has_method("get_train"):
@@ -115,32 +121,46 @@ func board(line_id: String) -> void:
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_method(
-		func(t: float) -> void: _ride_step(curve, length, t, train),
+		func(t: float) -> void: _ride_step(curve, length, t, train, forward),
 		0.0, 1.0, RIDE_SECONDS)
 	await tween.finished
 
-	_arrive(line_id)
+	_arrive(line_id, forward)
 
 
 # Moves the player (and the line's train, so they travel together) along the
 # curve. Called every tween step.
-func _ride_step(curve: Curve3D, length: float, t: float, train: Node3D) -> void:
+func _ride_step(curve: Curve3D, length: float, t: float, train: Node3D,
+		forward: bool) -> void:
 	if _player == null:
 		return
-	var pos := curve.sample_baked(clampf(t, 0.0, 1.0) * length)
-	_player.global_position = pos + RIDE_OFFSET
+	var progress := t if forward else 1.0 - t
+	if _rail.has_method("place_train"):
+		_rail.call("place_train", _ride_target, progress, forward)
+	else:
+		var pos := curve.sample_baked(clampf(progress, 0.0, 1.0) * length)
+		if train != null:
+			train.global_position = pos
 	if train != null:
-		train.global_position = pos
+		_player.global_position = train.global_position + RIDE_OFFSET
+	else:
+		var fallback_pos := curve.sample_baked(clampf(progress, 0.0, 1.0) * length)
+		_player.global_position = fallback_pos + RIDE_OFFSET
 
 
 # Sets the player down on the destination island's platform and gives
 # control back.
-func _arrive(line_id: String) -> void:
+func _arrive(line_id: String, forward: bool) -> void:
 	var isle_id := _isle_for_line(line_id)
 	var landing := Vector3.ZERO
 
-	if _isles != null and _isles.has_method("get_platform_pos"):
+	if forward and _isles != null and _isles.has_method("get_platform_pos"):
 		landing = _isles.call("get_platform_pos", isle_id)
+	elif not forward:
+		var home_key := "%s:out" % line_id
+		if _stations.has(home_key):
+			var home: Dictionary = _stations[home_key]
+			landing = home["position"]
 
 	if landing != Vector3.ZERO and _player != null:
 		# A little above the deck so the player settles onto it rather than
@@ -150,6 +170,8 @@ func _arrive(line_id: String) -> void:
 	if _player != null:
 		_player.velocity = Vector3.ZERO
 		_player.set_physics_process(true)
+	if _rail != null and _rail.has_method("set_train_riding"):
+		_rail.call("set_train_riding", line_id, false, 1.0 if forward else 0.0)
 
 	_riding = false
 	_ride_target = ""
@@ -163,16 +185,6 @@ func _build_stations() -> void:
 	if not _rail.has_method("get_curve"):
 		return
 
-	# All three lines share the castle end, so a boarding point placed exactly
-	# on the curve start would be identical for every line and the player
-	# could never choose a destination. Fan them out around that point into
-	# three distinct spots the player walks between.
-	var fan := {
-		"mindspark": Vector3(6.0, 0.0, -6.0),
-		"heartmelody": Vector3(8.0, 0.0, 4.0),
-		"creatorslight": Vector3(-2.0, 0.0, 8.0),
-	}
-
 	for line_id in ["mindspark", "heartmelody", "creatorslight"]:
 		var curve: Curve3D = _rail.call("get_curve", line_id)
 		if curve == null:
@@ -181,8 +193,106 @@ func _build_stations() -> void:
 		# deliberately keeps down near the village floor so the player can
 		# walk to it. Y is dropped from the comparison in _nearest_station,
 		# so the stored height is informational only.
-		var offset: Vector3 = fan[line_id]
-		_stations[line_id] = curve.sample_baked(0.0) + offset
+		# Every rail now starts at its own physical dock in Grand Station, so the
+		# visible train, rune pad and interaction point all occupy one place.
+		var station: Vector3 = curve.sample_baked(0.0)
+		var out_key := "%s:out" % line_id
+		_stations[out_key] = {
+			"line_id": line_id,
+			"position": station,
+			"forward": true,
+			"destination": _line_label(line_id),
+		}
+		_build_station_marker(line_id, station, "TO %s" % _line_label(line_id))
+
+		# Every island also gets a return pad. Without this the first successful
+		# ride strands the player at the destination.
+		if _isles != null and _isles.has_method("get_platform_pos"):
+			var isle_station: Vector3 = _isles.call(
+				"get_platform_pos", _isle_for_line(line_id))
+			if isle_station != Vector3.ZERO:
+				var back_key := "%s:back" % line_id
+				_stations[back_key] = {
+					"line_id": line_id,
+					"position": isle_station,
+					"forward": false,
+					"destination": "Lumen Castle",
+				}
+				_build_station_marker(line_id, isle_station, "RETURN TO CASTLE")
+
+
+# A visible brass-and-rune boarding pad. Previously station positions existed
+# only in a Dictionary (and called a missing function), so players had nothing
+# to walk toward and setup stopped with an invalid-method error.
+func _build_station_marker(line_id: String, station: Vector3, caption: String) -> void:
+	var marker := Node3D.new()
+	marker.name = "Station_%s_%d" % [line_id, _stations.size()]
+	add_child(marker)
+	marker.global_position = station
+
+	var color := _line_color(line_id)
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = Color(0.76, 0.52, 0.20)
+	brass.metallic = 0.8
+	brass.roughness = 0.3
+
+	var glow := StandardMaterial3D.new()
+	glow.albedo_color = color.darkened(0.15)
+	glow.emission_enabled = true
+	glow.emission = color
+	glow.emission_energy_multiplier = 1.4
+	glow.roughness = 0.25
+
+	var pad := MeshInstance3D.new()
+	var pad_mesh := CylinderMesh.new()
+	pad_mesh.top_radius = 3.0
+	pad_mesh.bottom_radius = 3.35
+	pad_mesh.height = 0.42
+	pad_mesh.radial_segments = 12
+	pad.mesh = pad_mesh
+	pad.material_override = brass
+	marker.add_child(pad)
+
+	var rune := MeshInstance3D.new()
+	var rune_mesh := TorusMesh.new()
+	rune_mesh.inner_radius = 2.05
+	rune_mesh.outer_radius = 2.35
+	rune_mesh.rings = 16
+	rune_mesh.ring_segments = 5
+	rune.mesh = rune_mesh
+	rune.position.y = 0.27
+	rune.material_override = glow
+	marker.add_child(rune)
+
+	for i in 3:
+		var crystal := MeshInstance3D.new()
+		var crystal_mesh := SphereMesh.new()
+		crystal_mesh.radius = 0.24
+		crystal_mesh.height = 0.75
+		crystal_mesh.radial_segments = 6
+		crystal_mesh.rings = 3
+		crystal.mesh = crystal_mesh
+		var angle := TAU * float(i) / 3.0
+		crystal.position = Vector3(cos(angle) * 2.65, 0.85, sin(angle) * 2.65)
+		crystal.material_override = glow
+		marker.add_child(crystal)
+
+	var label := Label3D.new()
+	label.text = caption
+	label.position = Vector3(0.0, 2.0, 0.0)
+	label.font_size = 30
+	label.outline_size = 7
+	label.modulate = color.lightened(0.35)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	marker.add_child(label)
+
+	var lamp := OmniLight3D.new()
+	lamp.position.y = 0.8
+	lamp.light_color = color
+	lamp.light_energy = 1.4
+	lamp.omni_range = 8.0
+	lamp.shadow_enabled = false
+	marker.add_child(lamp)
 
 
 # A small on-screen prompt. Deliberately a plain Label on its own
@@ -223,12 +333,14 @@ func _nearest_station() -> String:
 	var best := ""
 	var best_dist := BOARD_RADIUS
 
-	for line_id in _stations:
-		var station: Vector3 = _stations[line_id]
-		var dist := player_flat.distance_to(station)
+	for station_id in _stations:
+		var record: Dictionary = _stations[station_id]
+		var station: Vector3 = record["position"]
+		var station_flat := Vector3(station.x, 0.0, station.z)
+		var dist := player_flat.distance_to(station_flat)
 		if dist < best_dist:
 			best_dist = dist
-			best = line_id
+			best = station_id
 
 	return best
 
@@ -247,6 +359,14 @@ func _line_label(line_id: String) -> String:
 		"heartmelody": return "Heart Melody"
 		"creatorslight": return "Creator's Light"
 	return line_id
+
+
+func _line_color(line_id: String) -> Color:
+	match line_id:
+		"mindspark": return Color(0.42, 0.62, 1.00)
+		"heartmelody": return Color(0.95, 0.55, 0.30)
+		"creatorslight": return Color(1.00, 0.76, 0.30)
+	return Color.WHITE
 
 
 func _find_player() -> CharacterBody3D:
