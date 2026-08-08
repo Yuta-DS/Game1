@@ -123,7 +123,17 @@ func _run() -> void:
 		_fail("castle did not enter vibrant state")
 		return
 
-	print("CASTLE_UNIVERSE_TEST: PASS — 3 detailed trains, 6 rides, scenic camera, door, independent island states")
+	var stats := {"meshes": 0, "triangles": 0, "lights": 0}
+	for root_name in ["LumenCitadel", "CastleStairs", "SkyIsles", "SkyRail",
+			"CastleAtmosphere", "Art_Gallery"]:
+		_collect_render_stats(_hub.get_node(root_name), stats)
+	# Runtime-authored low-poly dressing uses many tiny primitive parts, but stays
+	# well below a six-figure triangle budget and avoids shadowed local lights.
+	if int(stats["triangles"]) > 100000 or int(stats["lights"]) > 40:
+		_fail("world-layer budget exceeded: %s" % stats)
+		return
+
+	print("CASTLE_UNIVERSE_TEST: PASS — 3 detailed trains, 6 rides, scenic camera, door, independent island states; stats=", stats)
 	Engine.time_scale = 1.0
 	quit(0)
 
@@ -144,3 +154,15 @@ func _find_descendant(node: Node, wanted_name: String) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+func _collect_render_stats(node: Node, stats: Dictionary) -> void:
+	if node is MeshInstance3D:
+		var mesh_node := node as MeshInstance3D
+		if mesh_node.mesh != null:
+			stats["meshes"] = int(stats["meshes"]) + 1
+			stats["triangles"] = int(stats["triangles"]) + mesh_node.mesh.get_faces().size() / 3
+	elif node is Light3D:
+		stats["lights"] = int(stats["lights"]) + 1
+	for child in node.get_children():
+		_collect_render_stats(child, stats)

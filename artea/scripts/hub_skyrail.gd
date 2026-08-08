@@ -269,8 +269,11 @@ func _build_grand_station() -> void:
 	add_child(station)
 
 	var stone := StandardMaterial3D.new()
-	stone.albedo_color = Color(0.28, 0.29, 0.38)
+	stone.albedo_color = Color(0.36, 0.38, 0.50)
 	stone.roughness = 0.82
+	stone.emission_enabled = true
+	stone.emission = Color(0.18, 0.20, 0.32)
+	stone.emission_energy_multiplier = 0.16
 
 	var brass := _metal_material(Color(0.76, 0.52, 0.20))
 	var glow := _emissive_material(Color(0.70, 0.82, 1.0), 0.75)

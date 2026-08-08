@@ -18,12 +18,12 @@ extends Node3D
 # not started yet must not find the world *darker* than it shipped — that
 # reads as broken lighting, not as a sleeping castle. The journey only
 # ever adds light on top of the baseline.
-const STAGE_LIGHT := [0.95, 1.10, 1.28, 1.46, 1.65]
+const STAGE_LIGHT := [0.88, 1.02, 1.18, 1.34, 1.50]
 
 # The shipped environment's 0.95 brightness made shaded train/castle faces read
 # as silhouettes against the gold sky. Keep the world gentle but legible from
 # the first visit, then add a small lift as it wakes.
-const STAGE_BRIGHTNESS := [1.10, 1.13, 1.16, 1.18, 1.20]
+const STAGE_BRIGHTNESS := [1.03, 1.06, 1.08, 1.10, 1.12]
 
 # Tint carries the stage as much as brightness does — a 10% energy step is
 # invisible outdoors at midday, but cold blue-grey turning to warm gold
@@ -48,6 +48,7 @@ const AWAKEN_SECONDS := 2.5
 	"Environment/DayNite/DirectionalLight3D")
 
 var _env: Environment = null
+var _fill_light: DirectionalLight3D = null
 
 
 func _ready() -> void:
@@ -77,10 +78,21 @@ func _ready() -> void:
 		# instead of letting them pop against a hard horizon.
 		_env.fog_enabled = true
 		_env.fog_light_color = Color(0.82, 0.76, 0.92)
-		_env.fog_light_energy = 0.72
-		_env.fog_density = 0.0035
-		_env.fog_aerial_perspective = 0.42
-		_env.ambient_light_energy = 1.12
+		_env.fog_light_energy = 0.34
+		_env.fog_density = 0.0011
+		_env.fog_aerial_perspective = 0.24
+		_env.ambient_light_energy = 1.18
+
+	# A low-energy, shadowless lavender fill lifts the side of the castle and
+	# trains facing away from the warm sun. This is what makes details readable
+	# without bleaching the sky or removing the authored key-light shadows.
+	_fill_light = DirectionalLight3D.new()
+	_fill_light.name = "CastleUniverseFill"
+	_fill_light.rotation_degrees = Vector3(-48.0, 142.0, 0.0)
+	_fill_light.light_color = Color(0.72, 0.78, 1.0)
+	_fill_light.light_energy = 0.22
+	_fill_light.shadow_enabled = false
+	add_child(_fill_light)
 
 	if _sun == null:
 		push_warning("hub_awakening: sun not found, sky will not respond to stage")
