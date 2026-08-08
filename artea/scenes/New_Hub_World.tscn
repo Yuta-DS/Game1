@@ -84,6 +84,7 @@
 [ext_resource type="Script" path="res://scripts/hub_lumen_citadel.gd" id="73_citdl"]
 [ext_resource type="Script" path="res://scripts/aether_atlas.gd" id="75_atlas"]
 [ext_resource type="Script" path="res://scripts/hub_castle_crown.gd" id="77_crown"]
+[ext_resource type="Script" path="res://scripts/hub_skyrail.gd" id="79_skyrl"]
 [ext_resource type="Script" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
 [ext_resource type="PackedScene" uid="uid://bkwxa1ae6l2lb" path="res://assets3D/houses/red/building_blacksmith_red.gltf" id="78_smith"]
 [ext_resource type="PackedScene" uid="uid://rvmn0l3pa5kl" path="res://assets3D/houses/red/building_barracks_red.gltf" id="79_barrk"]
@@ -356,6 +357,9 @@ script = ExtResource("77_crown")
 
 [node name="CastleStairs" type="Node3D" parent="."]
 script = ExtResource("78_stairs")
+
+[node name="SkyRail" type="Node3D" parent="."]
+script = ExtResource("79_skyrl")
 
 [node name="NewPlayer" parent="." unique_id=1353458258 instance=ExtResource("2_q1hpc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.64955, 25.1, 0)
