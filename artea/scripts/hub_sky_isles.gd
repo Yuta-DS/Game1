@@ -87,12 +87,13 @@ var _shader_materials: Array[ShaderMaterial] = []
 var _rock_materials: Array[StandardMaterial3D] = []
 var _rock_base: Array[Color] = []
 
-# Orrery rings and gears. Turned in _process once the world is awake.
-var _spinners: Array[Node3D] = []
-var _spin_speed := 0.0
+# Per-island state owns the exact materials and spinners belonging to that
+# kingdom. This is the seam future progress logic uses for independent wakes.
+var _island_states: Dictionary = {}
 
 var _isle_nodes: Dictionary = {}
 var _bob_time := 0.0
+var _debug_label: Label = null
 
 
 func _ready() -> void:
@@ -103,6 +104,7 @@ func _ready() -> void:
 		_build_isle(ISLES[i], i)
 
 	apply_stage(_current_stage())
+	_build_debug_panel()
 
 
 func _process(delta: float) -> void:
@@ -120,44 +122,80 @@ func _process(delta: float) -> void:
 		node.position.y = base_y + sin(
 			(_bob_time / BOB_PERIOD) * TAU + BOB_PHASES[i]) * BOB_AMPLITUDE
 
-	# Turn the orrery rings and gears. Alternating direction so meshing parts
-	# look driven rather than merely spinning.
-	if not is_zero_approx(_spin_speed):
-		for i in _spinners.size():
+	# Turn only the mechanisms on vibrant islands. Each kingdom owns its speed,
+	# so toggling Mind Spark never silently wakes Heart or Creator.
+	for isle_id in _island_states:
+		var state: Dictionary = _island_states[isle_id]
+		var spin_speed: float = state["spin_speed"]
+		if is_zero_approx(spin_speed):
+			continue
+		var spinners: Array = state["spinners"]
+		for i in spinners.size():
+			var spinner := spinners[i] as Node3D
 			var direction := 1.0 if i % 2 == 0 else -1.35
-			_spinners[i].rotate_y(_spin_speed * direction * delta)
+			spinner.rotate_y(spin_speed * direction * delta)
 
 
 # Called by hub_awakening.gd so the islands wake in step with the rest of
 # the world rather than tracking progress separately.
 func apply_stage(stage: int) -> void:
 	stage = clampi(stage, 0, STAGE_GLOW.size() - 1)
-	if _emissive_materials.is_empty():
+	if _island_states.is_empty():
 		return
-
 	var target: float = STAGE_GLOW[stage]
+	for isle_id in _island_states:
+		_set_island_state(isle_id, target > 0.0, target)
+	_update_debug_panel()
 
-	# Mechanisms turn only once the world has begun to wake — a spinning
-	# orrery on a dormant island reads as a machine running with nobody home.
-	_spin_speed = target * 0.5
+
+# Public binary state seam requested by the Castle Universe brief. Future
+# progress logic can call this directly; debug controls use the same path.
+func set_island_vibrant(isle_id: String, vibrant: bool) -> void:
+	_set_island_state(isle_id, vibrant, 1.0 if vibrant else 0.0)
+	_update_debug_panel()
+
+
+func is_island_vibrant(isle_id: String) -> bool:
+	if not _island_states.has(isle_id):
+		return false
+	var state: Dictionary = _island_states[isle_id]
+	return bool(state["vibrant"])
+
+
+func toggle_island(isle_id: String) -> void:
+	set_island_vibrant(isle_id, not is_island_vibrant(isle_id))
+
+
+func _set_island_state(isle_id: String, vibrant: bool, intensity: float) -> void:
+	if not _island_states.has(isle_id):
+		return
+	var state: Dictionary = _island_states[isle_id]
+	state["vibrant"] = vibrant
+	state["spin_speed"] = intensity * 0.5
+	_island_states[isle_id] = state
 
 	var tween := create_tween().set_parallel()
-	for material in _emissive_materials:
+	var emissive: Array = state["emissive"]
+	for item in emissive:
+		var material := item as StandardMaterial3D
 		tween.tween_property(material, "emission_energy_multiplier",
-			target * 1.5, WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
+			intensity * 1.5, WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
 
-	# Rock lifts from drab toward its full kingdom colour as the world wakes.
-	for i in _rock_materials.size():
-		var base: Color = _rock_base[i]
-		tween.tween_property(_rock_materials[i], "albedo_color",
-			base.lightened(target * 0.45), WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
+	var rock: Array = state["rock"]
+	var rock_base: Array = state["rock_base"]
+	for i in rock.size():
+		var material := rock[i] as StandardMaterial3D
+		var base: Color = rock_base[i]
+		tween.tween_property(material, "albedo_color",
+			base.lightened(intensity * 0.45), WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
 
-	# The crystal and rune shaders take the same stage through their own
-	# `awake` uniform, so the whole island wakes as one thing.
-	for material in _shader_materials:
+	var shaders: Array = state["shader"]
+	for item in shaders:
+		var material := item as ShaderMaterial
+		var from_value: float = float(material.get_shader_parameter("awake"))
 		tween.tween_method(
-			func(v: float) -> void: material.set_shader_parameter("awake", v),
-			0.0, target, WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
+			func(value: float) -> void: material.set_shader_parameter("awake", value),
+			from_value, intensity, WAKE_SECONDS).set_trans(Tween.TRANS_SINE)
 
 
 # Public: where a train should dock at this island, in world space. The rail
@@ -181,6 +219,10 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 	var pos: Vector3 = isle["pos"]
 	var radius: float = isle["radius"]
 	var color: Color = isle["color"]
+	var emissive_start := _emissive_materials.size()
+	var shader_start := _shader_materials.size()
+	var rock_start := _rock_materials.size()
+	var rock_base_start := _rock_base.size()
 
 	var root := Node3D.new()
 	root.name = "SkyIsle_%s" % isle_id
@@ -226,8 +268,68 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 		_emissive_materials.append(material)
 	for material in dressing["shader"]:
 		_shader_materials.append(material)
-	for spinner in dressing["spinners"]:
-		_spinners.append(spinner)
+
+	_island_states[isle_id] = {
+		"vibrant": false,
+		"spin_speed": 0.0,
+		"emissive": _emissive_materials.slice(emissive_start),
+		"shader": _shader_materials.slice(shader_start),
+		"rock": _rock_materials.slice(rock_start),
+		"rock_base": _rock_base.slice(rock_base_start),
+		"spinners": dressing["spinners"],
+	}
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	match event.keycode:
+		KEY_F5:
+			var citadel := get_parent().get_node_or_null("LumenCitadel")
+			if citadel != null and citadel.has_method("set_vibrant"):
+				citadel.call("set_vibrant", not bool(citadel.call("is_vibrant")))
+		KEY_F6:
+			toggle_island("mind")
+		KEY_F7:
+			toggle_island("heart")
+		KEY_F8:
+			toggle_island("creator")
+		KEY_F9:
+			var wake_all := not (
+				is_island_vibrant("mind") and is_island_vibrant("heart")
+				and is_island_vibrant("creator"))
+			for isle_id in ["mind", "heart", "creator"]:
+				set_island_vibrant(isle_id, wake_all)
+	_update_debug_panel()
+
+
+func _build_debug_panel() -> void:
+	if not OS.is_debug_build():
+		return
+	var layer := CanvasLayer.new()
+	layer.name = "IslandStateDebug"
+	add_child(layer)
+	_debug_label = Label.new()
+	_debug_label.position = Vector2(18.0, 70.0)
+	_debug_label.add_theme_font_size_override("font_size", 14)
+	_debug_label.add_theme_color_override("font_color", Color(1.0, 0.94, 0.76))
+	_debug_label.add_theme_color_override("font_outline_color", Color(0.05, 0.06, 0.10, 0.9))
+	_debug_label.add_theme_constant_override("outline_size", 5)
+	layer.add_child(_debug_label)
+	_update_debug_panel()
+
+
+func _update_debug_panel() -> void:
+	if _debug_label == null:
+		return
+	_debug_label.text = "ISLAND STATES  F5 Castle  F6 Mind  F7 Heart  F8 Creator  F9 All\nMind: %s   Heart: %s   Creator: %s" % [
+		_state_word("mind"), _state_word("heart"), _state_word("creator")]
+
+
+func _state_word(isle_id: String) -> String:
+	return "VIBRANT" if is_island_vibrant(isle_id) else "dormant"
 
 
 # A flat collision disc just under the island's visible top, so the player

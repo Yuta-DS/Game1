@@ -87,6 +87,14 @@ func apply_stage(stage: int) -> void:
 		_citadel_lamp.light_energy = 0.4 + float(_stage) * 0.28
 
 
+func set_vibrant(vibrant: bool) -> void:
+	apply_stage(4 if vibrant else 0)
+
+
+func is_vibrant() -> bool:
+	return _stage > 0
+
+
 # --- Citadel ---------------------------------------------------------
 
 # The imported castle previously hovered as a bare building with open sky under
