@@ -68,7 +68,7 @@ const ISLES := [
 # Staggered so the islands never bob in sync — a synchronised group reads as
 # one object, not as three places.
 const BOB_PHASES := [0.0, 2.1, 4.3]
-const BOB_AMPLITUDE := 0.35
+const BOB_AMPLITUDE := 0.24
 const BOB_PERIOD := 9.0
 
 # Island glow per journey stage. Index = JourneyState.stage.
@@ -213,6 +213,7 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 		push_warning("hub_sky_isles: isle_builder missing, island %s has no body" % isle_id)
 
 	_build_walkable_floor(root, radius)
+	_build_terrain_character(root, isle_id, color, radius)
 	_build_platform(root, radius, color)
 	_build_landmark(root, isle_id, color)
 	_build_portal(root, isle, color)
@@ -248,6 +249,134 @@ func _build_walkable_floor(parent: Node3D, radius: float) -> void:
 	body.add_child(shape)
 
 	parent.add_child(body)
+
+
+# The shared island builder provides a coherent world silhouette. This second,
+# cheap layer gives each kingdom the terrain character promised by the brief
+# without replacing the reliable flat collision disc underneath.
+func _build_terrain_character(parent: Node3D, isle_id: String, color: Color,
+		radius: float) -> void:
+	var terrain := Node3D.new()
+	terrain.name = "TerrainCharacter_%s" % isle_id
+	parent.add_child(terrain)
+
+	match isle_id:
+		"mind":
+			_build_mind_cliffs(terrain, color, radius)
+		"heart":
+			_build_heart_hills(terrain, color, radius)
+		"creator":
+			_build_creator_canvas(terrain, color, radius)
+
+
+func _build_mind_cliffs(parent: Node3D, color: Color, radius: float) -> void:
+	var crystal_rock := _terrain_material(color.darkened(0.32))
+	# An uneven crescent of crystalline cliff shards leaves the island centre
+	# open for walking and gives the silhouette an analytical, faceted edge.
+	for i in 8:
+		var angle := lerpf(-1.2, 1.3, float(i) / 7.0) + PI
+		var height := 4.0 + float((i * 5) % 4) * 1.7
+		var shard := MeshInstance3D.new()
+		shard.name = "CrystalCliff_%02d" % i
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = 0.0
+		mesh.bottom_radius = 1.3 + float(i % 3) * 0.35
+		mesh.height = height
+		mesh.radial_segments = 5
+		shard.mesh = mesh
+		shard.position = Vector3(cos(angle) * radius * 0.62,
+			radius * 0.10 + height * 0.42, sin(angle) * radius * 0.62)
+		shard.rotation_degrees.z = -8.0 + float(i) * 2.2
+		shard.material_override = crystal_rock
+		parent.add_child(shard)
+
+
+func _build_heart_hills(parent: Node3D, color: Color, radius: float) -> void:
+	var hill_material := _terrain_material(color.darkened(0.28))
+	var hill_data := [
+		[Vector3(-7.5, 1.5, 5.5), Vector3(7.5, 2.3, 6.5)],
+		[Vector3(7.0, 1.1, 5.5), Vector3(6.0, 1.8, 7.0)],
+		[Vector3(-8.0, 0.8, -7.0), Vector3(6.5, 1.5, 5.0)],
+	]
+	for i in hill_data.size():
+		var data: Array = hill_data[i]
+		var hill := MeshInstance3D.new()
+		hill.name = "SoftHill_%02d" % i
+		var mesh := SphereMesh.new()
+		mesh.radius = 1.0
+		mesh.height = 2.0
+		mesh.radial_segments = 8
+		mesh.rings = 4
+		hill.mesh = mesh
+		hill.position = data[0]
+		hill.position.y += radius * 0.10
+		hill.scale = data[1]
+		hill.material_override = hill_material
+		parent.add_child(hill)
+
+	# A small reflective pool beside the bandstand. Transparency and restrained
+	# emission keep it readable as water without an expensive reflection probe.
+	var pool := MeshInstance3D.new()
+	pool.name = "MelodyPool"
+	var pool_mesh := CylinderMesh.new()
+	pool_mesh.top_radius = 4.6
+	pool_mesh.bottom_radius = 4.3
+	pool_mesh.height = 0.10
+	pool_mesh.radial_segments = 16
+	pool.mesh = pool_mesh
+	pool.position = Vector3(7.0, radius * 0.10 + 0.24, -5.5)
+	var water := StandardMaterial3D.new()
+	water.albedo_color = Color(0.50, 0.76, 0.96, 0.62)
+	water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	water.metallic = 0.45
+	water.roughness = 0.12
+	water.emission_enabled = true
+	water.emission = Color(0.62, 0.80, 1.0)
+	water.emission_energy_multiplier = 0.0
+	pool.material_override = water
+	_emissive_materials.append(water)
+	parent.add_child(pool)
+
+
+func _build_creator_canvas(parent: Node3D, color: Color, radius: float) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var cells := 7
+	var size := radius * 1.20
+	var step := size / float(cells)
+	for z in cells:
+		for x in cells:
+			var x0 := -size * 0.5 + float(x) * step
+			var x1 := x0 + step
+			var z0 := -size * 0.5 + float(z) * step
+			var z1 := z0 + step
+			var a := Vector3(x0, _canvas_height(x0, z0, radius), z0)
+			var b := Vector3(x1, _canvas_height(x1, z0, radius), z0)
+			var c := Vector3(x0, _canvas_height(x0, z1, radius), z1)
+			var d := Vector3(x1, _canvas_height(x1, z1, radius), z1)
+			for vertex in [a, c, b, b, c, d]:
+				st.add_vertex(vertex)
+	st.generate_normals()
+	var canvas := MeshInstance3D.new()
+	canvas.name = "CanvasHill"
+	canvas.mesh = st.commit()
+	canvas.material_override = _terrain_material(color.darkened(0.18))
+	parent.add_child(canvas)
+
+
+func _canvas_height(x: float, z: float, radius: float) -> float:
+	var wave := sin(x * 0.42) * 0.34 + cos(z * 0.36) * 0.28
+	var brush := sin((x + z) * 0.23) * 0.18
+	return radius * 0.10 + 0.16 + wave + brush
+
+
+func _terrain_material(base: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = base
+	material.roughness = 0.86
+	_rock_materials.append(material)
+	_rock_base.append(base)
+	return material
 
 
 # The station platform where a train docks and the player steps off.
