@@ -11,11 +11,10 @@ const DOOR_TRIGGER_SIZE := Vector3(2.8, 7.0, 4.8)
 const BRASS := Color(0.76, 0.52, 0.20)
 const DOOR_GLOW := Color(1.0, 0.76, 0.32)
 
-## When true the player has to press "interact" to travel. Walking into a door
-## and being yanked out of the world is disorienting, and it made the castle
-## stair unusable because the stair passes near this trigger — the player never
-## got to choose. Doorways should announce themselves and wait.
-@export var require_interact := true
+## The trigger now lives only at the real castle doorway, safely beyond the
+## completed stair landing. Crossing that threshold should feel like walking
+## into a building, so it enters automatically; trains remain explicit Q choices.
+@export var require_interact := false
 
 var _player_inside: Node3D = null
 var _travelling := false
@@ -53,17 +52,28 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	# LumenCitadel gives the castle a 0.32 m idle drift. Follow its imported
 	# local door anchor so the interaction volume and light never lag behind.
+	#
+	# The whole GLOBAL transform is rewritten, not just the origin. Setting
+	# global_position alone leaves this node carrying whatever rotation and
+	# scale its parent contributes; under the 10x-scaled, 90-degree-rotated
+	# castle that stretched the doorframe boxes into the loose diagonal brass
+	# bars floating over the terrace, and skewed the trigger volume with them.
 	if _castle != null:
-		global_position = _castle.to_global(DOOR_LOCAL_ANCHOR)
+		global_transform = Transform3D(Basis.IDENTITY,
+			_castle.to_global(DOOR_LOCAL_ANCHOR))
 
 
 func _configure_live_door() -> void:
 	# The old Area used a scaled parent plus a translated shared collision shape,
 	# which put the trigger at Y=37.2 while the castle starts at Y=65.5.
-	scale = Vector3.ONE
-	rotation = Vector3.ZERO
+	#
+	# scale/rotation are LOCAL, so clearing them does not undo a scaled parent.
+	# Reset the global basis instead, matching _process.
 	if _castle != null:
-		global_position = _castle.to_global(DOOR_LOCAL_ANCHOR)
+		global_transform = Transform3D(Basis.IDENTITY,
+			_castle.to_global(DOOR_LOCAL_ANCHOR))
+	else:
+		global_transform = Transform3D(Basis.IDENTITY, global_position)
 
 	var collision := get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if collision == null:

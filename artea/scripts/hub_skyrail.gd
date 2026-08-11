@@ -4,7 +4,7 @@
 # onto the real hub. The prototype floated four islands in an empty sky;
 # here the "islands" are the destinations that already exist in
 # New_Hub_World.tscn, so this builds only the connective tissue — sagging
-# rails, support pillars, and a train per line — above the terrain the
+# rails, levitation anchors, and a train per line — above the terrain the
 # player already walks.
 #
 # Runtime-authored, same convention as hub_magitech.gd: nothing is baked
@@ -32,7 +32,31 @@ extends Node3D
 # Lifting the whole network clears the rooftops and reads as sky railway.
 const RIDES_ABOVE := 42.0
 
-const GRAND_STATION_CENTER := Vector3(-28.8, 63.8, 39.0)
+# The transit hub sits on its own terrace clear of the castle's floating
+# foundation AND clear of the front-door approach.
+#
+# The previous centre (-43.0, 27.41) was measured against the castle origin
+# (x = -51.4) without accounting for the foundation, whose island mesh has a
+# 16.5 m radius (hub_lumen_citadel._build_castle_foundation). That put the
+# station and the t=0 end of all three rails INSIDE the rock: every line was
+# born within the foundation and punched out through the castle wall on its
+# way to the islands — the "train goes through the wall" bug.
+#
+# Two invariants to preserve when tuning:
+#   1. Station and every rail start stay outside the foundation, i.e. at least
+#      FOUNDATION_RADIUS from (CASTLE_X, 27.41) on the XZ plane.
+#   2. They stay off the door walkway. The door faces +X at x = -39.8 and the
+#      plaza runs out to x = -30.8 with the stair tower at x = -29.4, so the
+#      train court is offset in Z instead of stacked on that route. The player
+#      reads stair -> causeway -> plaza -> door as one path, with the station
+#      as a separate place alongside it.
+# See scripts/test_rail_clearance.gd, which fails if either is broken.
+const CASTLE_X := -51.4
+const FOUNDATION_RADIUS := 16.5
+const STATION_X := -22.0
+const STATION_Z := 52.0
+
+const GRAND_STATION_CENTER := Vector3(STATION_X, 66.15, STATION_Z)
 
 const LINES := [
 	{
@@ -42,7 +66,7 @@ const LINES := [
 		# Pop Thoughts — the thoughts kingdom.
 		"dest": Vector3(90.3, 15.0 + RIDES_ABOVE, -83.0),
 		"color": Color(0.42, 0.62, 1.00),   # cold blue, matches the portal pylon
-		"start": Vector3(-28.8, 64.5, 31.0),
+		"start": Vector3(STATION_X, 66.45, STATION_Z - 7.9),
 	},
 	{
 		"id": "heartmelody",
@@ -51,7 +75,7 @@ const LINES := [
 		# Music minigame — the emotions kingdom.
 		"dest": Vector3(80.0, 18.7 + RIDES_ABOVE, 72.0),
 		"color": Color(0.95, 0.55, 0.30),   # warm amber
-		"start": Vector3(-28.8, 64.5, 39.0),
+		"start": Vector3(STATION_X, 66.45, STATION_Z),
 	},
 	{
 		"id": "creatorslight",
@@ -60,7 +84,7 @@ const LINES := [
 		# Drawing tool — the creativity kingdom.
 		"dest": Vector3(58.8, 16.0 + RIDES_ABOVE, -43.0),
 		"color": Color(1.00, 0.76, 0.30),   # gold
-		"start": Vector3(-28.8, 64.5, 47.0),
+		"start": Vector3(STATION_X, 66.45, STATION_Z + 7.9),
 	},
 ]
 
@@ -73,6 +97,11 @@ const LINES := [
 # rooftops. The arc has to stay clear of what is under it.
 const SAG_RATIO := 0.045
 
+# How far a line runs straight out from the station before it may curve toward
+# its island. See _make_sagging_curve: this is what stops a line whose island
+# lies behind the castle from bowing back through the castle wall.
+const DEPARTURE_RUN := 14.0
+
 # Sized to read from the ground across a ~120-unit span, not from the close
 # orbit framing the prototype used. A 0.35-radius tube that looked right in
 # an empty sky vanishes to a hairline over a detailed village.
@@ -80,8 +109,7 @@ const RAIL_RADIUS := 0.9
 const RAIL_SIDES := 5          # low: three long tubes are on screen at once
 const RAIL_SEGMENTS := 24
 
-const PILLAR_COUNT := 4
-const PILLAR_RADIUS := 1.1
+const LEVITATION_ANCHOR_COUNT := 5
 
 # Rails are visible from stage 0 — they are architecture, not a reward —
 # but they only light up as the journey deepens. Index = JourneyState.stage.
@@ -100,6 +128,8 @@ var _curves: Dictionary = {}
 var _trains: Dictionary = {}
 var _ridden_lines: Dictionary = {}
 var _train_rotors: Array[Node3D] = []
+var _levitation_crystals: Array[Node3D] = []
+var _levitation_rings: Array[Node3D] = []
 
 # Per-train progress along its curve, 0..1, keyed by line id.
 var _train_t: Dictionary = {}
@@ -129,6 +159,8 @@ func _ready() -> void:
 # the authored constant if the island layer is absent.
 func _line_destination(line: Dictionary) -> Vector3:
 	var isles := get_parent().get_node_or_null("SkyIsles")
+	if isles == null:
+		isles = get_parent().get_node_or_null("GalaxyIsles")
 	if isles != null and isles.has_method("get_platform_pos"):
 		var isle_id: String = line["isle"]
 		var pos: Vector3 = isles.call("get_platform_pos", isle_id)
@@ -143,6 +175,19 @@ func _process(delta: float) -> void:
 	for i in _train_rotors.size():
 		var direction := 1.0 if i % 2 == 0 else -1.0
 		_train_rotors[i].rotate_z(delta * direction * 1.4)
+
+	# The bridge is held aloft by aether anchors, not columns. Their slow,
+	# asynchronous motion makes the support system read as active magitech
+	# instead of decorative pipes hanging beneath the span.
+	var now := Time.get_ticks_msec() * 0.001
+	for i in _levitation_crystals.size():
+		var crystal := _levitation_crystals[i]
+		var base_y: float = crystal.get_meta("base_y")
+		var phase: float = crystal.get_meta("phase")
+		crystal.position.y = base_y + sin(now * 1.25 + phase) * 0.28
+		crystal.rotate_y(delta * (0.32 if i % 2 == 0 else -0.32))
+	for i in _levitation_rings.size():
+		_levitation_rings[i].rotate_y(delta * (0.55 if i % 2 == 0 else -0.55))
 
 	if not _running:
 		return
@@ -212,6 +257,14 @@ func has_line(line_id: String) -> bool:
 	return _curves.has(line_id)
 
 
+# How far above the bare curve a shuttle actually rides. hub_train_rider seats
+# its passenger from this so the player and the carriage cannot drift apart
+# when the rail geometry is retuned. A const is not readable through get() from
+# another script, which is why this is a method.
+func get_ride_lift() -> float:
+	return RAIL_RADIUS + 0.9
+
+
 func get_line_ids() -> Array:
 	return _curves.keys()
 
@@ -250,7 +303,7 @@ func _build_line(line: Dictionary) -> void:
 	_curves[id] = curve
 
 	holder.add_child(_build_rail_mesh(curve, color))
-	holder.add_child(_build_pillars(curve))
+	holder.add_child(_build_levitation_array(curve, color))
 
 	var train := _build_train(color, line["label"])
 	holder.add_child(train)
@@ -260,9 +313,9 @@ func _build_line(line: Dictionary) -> void:
 	_place_on_curve(train, curve, 0.0, true)
 
 
-# Open-air hub platform where all three lines terminate. One low-poly deck and
-# canopy replaces the former invisible station coordinates; its generous floor
-# overlaps the castle stair crown so the route is continuously walkable.
+# Compact castle Aether Court where all three routes terminate. The foundation
+# beneath the castle already supplies the large walkable floor, so this adds
+# only a shaped inlaid dais instead of another floating building-sized slab.
 func _build_grand_station() -> void:
 	var station := Node3D.new()
 	station.name = "GrandStation"
@@ -281,13 +334,16 @@ func _build_grand_station() -> void:
 
 	var deck := MeshInstance3D.new()
 	deck.name = "StationDeck"
-	var deck_mesh := BoxMesh.new()
-	deck_mesh.size = Vector3(13.0, 1.2, 27.0)
+	var deck_mesh := CylinderMesh.new()
+	deck_mesh.top_radius = 9.2
+	deck_mesh.bottom_radius = 9.7
+	deck_mesh.height = 0.46
+	deck_mesh.radial_segments = 12
 	deck.mesh = deck_mesh
 	deck.position = GRAND_STATION_CENTER
 	deck.material_override = stone
 	station.add_child(deck)
-	_add_static_box(station, deck_mesh.size, deck.position)
+	_add_static_cylinder(station, 9.2, 0.46, deck.position)
 
 	# Three luminous track beds show the hub-and-spoke choice before the player
 	# reaches the individual rune boarding pads.
@@ -298,26 +354,20 @@ func _build_grand_station() -> void:
 		_train_materials.append(bed_material)
 		var bed := MeshInstance3D.new()
 		var bed_mesh := BoxMesh.new()
-		bed_mesh.size = Vector3(9.5, 0.16, 2.5)
+		bed_mesh.size = Vector3(7.2, 0.12, 2.15)
 		bed.mesh = bed_mesh
-		bed.position = Vector3(GRAND_STATION_CENTER.x + 1.2, 64.46, start.z)
+		bed.position = Vector3(GRAND_STATION_CENTER.x + 2.0,
+			GRAND_STATION_CENTER.y + 0.29, start.z)
 		bed.material_override = bed_material
 		bed.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		station.add_child(bed)
 
-	# High open canopy: shelter and silhouette without obscuring the scenic view
-	# during boarding or catching the third-person spring arm.
-	for z in [27.0, 51.0]:
-		for x in [-34.2, -23.4]:
-			_add_station_box(station, Vector3(0.38, 7.4, 0.38),
-				Vector3(x, 68.0, z), brass)
-	_add_station_box(station, Vector3(12.5, 0.38, 0.55),
-		Vector3(GRAND_STATION_CENTER.x, 71.5, 27.0), brass)
-	_add_station_box(station, Vector3(12.5, 0.38, 0.55),
-		Vector3(GRAND_STATION_CENTER.x, 71.5, 51.0), brass)
-	for z in [31.0, 39.0, 47.0]:
-		_add_station_box(station, Vector3(12.5, 0.22, 0.32),
-			Vector3(GRAND_STATION_CENTER.x, 71.5, z), brass)
+	# Small holographic island shrines bring all three realm choices into the
+	# castle without trying to squeeze the full playable islands inside a room.
+	for line in LINES:
+		var start: Vector3 = line["start"]
+		var color: Color = line["color"]
+		_build_realm_shrine(station, start, color, line["label"], brass)
 
 	# Rune clock suspended above the central concourse.
 	var clock := MeshInstance3D.new()
@@ -327,47 +377,22 @@ func _build_grand_station() -> void:
 	clock_mesh.rings = 16
 	clock_mesh.ring_segments = 5
 	clock.mesh = clock_mesh
-	clock.position = Vector3(GRAND_STATION_CENTER.x, 70.2, GRAND_STATION_CENTER.z)
+	clock.position = Vector3(GRAND_STATION_CENTER.x, 69.2, GRAND_STATION_CENTER.z)
 	clock.rotation_degrees.x = 90.0
 	clock.material_override = glow
 	clock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	station.add_child(clock)
 
 	var title := Label3D.new()
-	title.text = "ARTÉA GRAND STATION"
-	title.position = Vector3(GRAND_STATION_CENTER.x, 72.2, GRAND_STATION_CENTER.z)
+	title.text = "LUMEN CASTLE • AETHER COURT"
+	title.position = Vector3(GRAND_STATION_CENTER.x, 70.7, GRAND_STATION_CENTER.z)
 	title.font_size = 42
 	title.outline_size = 9
 	title.modulate = Color(1.0, 0.88, 0.58)
 	title.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	station.add_child(title)
 
-	# Slender supports visually carry the station into the castle foundation.
-	for z in [28.0, 50.0]:
-		for x in [-33.0, -24.5]:
-			var support := MeshInstance3D.new()
-			var support_mesh := CylinderMesh.new()
-			support_mesh.top_radius = 0.48
-			support_mesh.bottom_radius = 0.72
-			support_mesh.height = 20.0
-			support_mesh.radial_segments = 6
-			support.mesh = support_mesh
-			support.position = Vector3(x, 53.2, z)
-			support.material_override = brass
-			support.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			station.add_child(support)
-
-
-func _add_station_box(parent: Node3D, size: Vector3, position: Vector3,
-		material: Material) -> MeshInstance3D:
-	var part := MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = size
-	part.mesh = mesh
-	part.position = position
-	part.material_override = material
-	parent.add_child(part)
-	return part
+	station.set_meta("inside_castle_complex", true)
 
 
 func _add_static_box(parent: Node3D, size: Vector3, position: Vector3) -> void:
@@ -381,25 +406,102 @@ func _add_static_box(parent: Node3D, size: Vector3, position: Vector3) -> void:
 	parent.add_child(body)
 
 
+func _add_static_cylinder(parent: Node3D, radius: float, height: float,
+		position: Vector3) -> void:
+	var body := StaticBody3D.new()
+	var collision := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = radius
+	shape.height = height
+	collision.shape = shape
+	body.add_child(collision)
+	body.position = position
+	parent.add_child(body)
+
+
+func _build_realm_shrine(parent: Node3D, dock: Vector3, color: Color,
+		label_text: String, brass: Material) -> void:
+	var shrine := Node3D.new()
+	shrine.name = "RealmShrine_%s" % label_text.replace(" ", "")
+	shrine.position = dock + Vector3(-3.0, 1.75, 0.0)
+	parent.add_child(shrine)
+
+	var glow := _emissive_material(color.lightened(0.2), 0.9)
+	_rail_materials.append(glow)
+	var miniature := MeshInstance3D.new()
+	var miniature_mesh := SphereMesh.new()
+	miniature_mesh.radius = 0.62
+	miniature_mesh.height = 1.05
+	miniature_mesh.radial_segments = 7
+	miniature_mesh.rings = 3
+	miniature.mesh = miniature_mesh
+	miniature.scale = Vector3(1.35, 0.52, 1.0)
+	miniature.material_override = glow
+	miniature.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	shrine.add_child(miniature)
+
+	for tilt in [-28.0, 28.0]:
+		var orbit := MeshInstance3D.new()
+		var orbit_mesh := TorusMesh.new()
+		orbit_mesh.inner_radius = 0.82
+		orbit_mesh.outer_radius = 0.96
+		orbit_mesh.rings = 12
+		orbit_mesh.ring_segments = 4
+		orbit.mesh = orbit_mesh
+		orbit.rotation_degrees = Vector3(90.0, tilt, 0.0)
+		orbit.material_override = brass
+		orbit.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		shrine.add_child(orbit)
+		_levitation_rings.append(orbit)
+
+	var label := Label3D.new()
+	label.text = label_text.to_upper()
+	label.position.y = 1.35
+	label.font_size = 22
+	label.outline_size = 7
+	label.modulate = color.lightened(0.32)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	shrine.add_child(label)
+
+
 # A rail that dips between its endpoints. Tangents leave each station
 # roughly level so a train departing doesn't lurch downward instantly.
 func _make_sagging_curve(start: Vector3, end: Vector3) -> Curve3D:
 	var curve := Curve3D.new()
 
-	var mid := (start + end) * 0.5
+	# Every line leaves the station heading directly AWAY from the castle before
+	# it is allowed to turn toward its island.
+	#
+	# Without this leg the first control tangent points at the span midpoint, so
+	# a line whose island sits behind the castle (creatorslight, at z = -43)
+	# bows back over the castle on its way out and clips the wall.
+	#
+	# The direction is computed from the castle rather than fixed to +X: the
+	# station is offset in Z from the castle, so a hard-coded axis still let the
+	# curve cut the corner. Radially outward is the only heading that guarantees
+	# the first stretch increases distance from the building.
+	var away := Vector3(start.x - CASTLE_X, 0.0, start.z - 27.41)
+	if away.length_squared() < 0.01:
+		away = Vector3.RIGHT
+	away = away.normalized()
+
+	var departure := start + away * DEPARTURE_RUN
+	curve.add_point(start, Vector3.ZERO, away * (DEPARTURE_RUN * 0.5))
+
+	var mid := (departure + end) * 0.5
 
 	# Lines climb from the village up to the islands, so a sag applied to the
 	# raw span length would drag the midpoint back down into the rooftops.
 	# Instead the midpoint is lifted toward the high end and only the
 	# horizontal run contributes sag — a climbing cable still bows, but it
 	# bows above what it crosses, not through it.
-	var horizontal := Vector2(end.x - start.x, end.z - start.z).length()
-	mid.y = maxf(start.y, end.y) - horizontal * SAG_RATIO * 0.5
+	var horizontal := Vector2(end.x - departure.x, end.z - departure.z).length()
+	mid.y = maxf(departure.y, end.y) - horizontal * SAG_RATIO * 0.5
 
-	var to_mid := mid - start
+	var to_mid := mid - departure
 	var from_mid := end - mid
 
-	curve.add_point(start, Vector3.ZERO, to_mid * 0.5)
+	curve.add_point(departure, away * (-DEPARTURE_RUN * 0.5), to_mid * 0.5)
 	curve.add_point(mid, -to_mid * 0.35, from_mid * 0.35)
 	curve.add_point(end, -from_mid * 0.5, Vector3.ZERO)
 
@@ -468,43 +570,93 @@ func _build_rail_mesh(curve: Curve3D, color: Color) -> MeshInstance3D:
 	return mesh_instance
 
 
-# Thin supports dropping from the rail toward the ground. They stop short
-# rather than reaching terrain: the hub's ground height varies along each
-# span, and a pillar punching through a hillside looks worse than one that
-# fades into the haze below.
-func _build_pillars(curve: Curve3D) -> Node3D:
+# Floating magitech anchors distributed beneath each rail. Short crystal
+# assemblies keep the skyline open and unmistakably communicate levitation;
+# there are no columns reaching toward the village or terrain below.
+func _build_levitation_array(curve: Curve3D, color: Color) -> Node3D:
 	var holder := Node3D.new()
-	holder.name = "Pillars"
+	holder.name = "LevitationArray"
 
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.30, 0.28, 0.34)
-	material.metallic = 0.4
-	material.roughness = 0.7
+	var brass := _metal_material(Color(0.74, 0.48, 0.18))
+	var glow := _emissive_material(color.lightened(0.18), 0.86)
+	_rail_materials.append(glow)
 
 	var length := curve.get_baked_length()
 
-	for i in PILLAR_COUNT:
-		# Spread along the middle of the span, skipping the ends where a
-		# pillar would collide with the station structures.
-		var t: float = lerpf(0.2, 0.8, float(i) / float(maxi(PILLAR_COUNT - 1, 1)))
+	for i in LEVITATION_ANCHOR_COUNT:
+		# Skip the station ends and let each anchor float just below the rail.
+		var t: float = lerpf(0.14, 0.86,
+			float(i) / float(maxi(LEVITATION_ANCHOR_COUNT - 1, 1)))
 		var top: Vector3 = curve.sample_baked(t * length)
-
-		var pillar := MeshInstance3D.new()
-		var mesh := CylinderMesh.new()
-		mesh.top_radius = PILLAR_RADIUS
-		mesh.bottom_radius = PILLAR_RADIUS * 1.4
-		# Long enough to visibly descend toward the village below without
-		# being terrain-sampled — the ground height varies along each span,
-		# so these fade into the haze rather than meeting it exactly.
-		mesh.height = 30.0
-		mesh.radial_segments = 6
-		pillar.mesh = mesh
-		pillar.position = top - Vector3(0.0, 15.0, 0.0)
-		pillar.material_override = material
-		pillar.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		holder.add_child(pillar)
+		_add_levitation_anchor(holder, top - Vector3(0.0, 3.1, 0.0),
+			color, brass, glow, 0.82)
 
 	return holder
+
+
+func _add_levitation_anchor(parent: Node3D, position: Vector3, color: Color,
+		brass: Material, glow: Material, scale_factor: float) -> Node3D:
+	var anchor := Node3D.new()
+	anchor.name = "AetherAnchor"
+	anchor.position = position
+	parent.add_child(anchor)
+
+	# Elongated, low-poly crystal: a magical power source rather than a pipe.
+	var crystal := MeshInstance3D.new()
+	crystal.name = "FloatingCrystal"
+	var crystal_mesh := SphereMesh.new()
+	crystal_mesh.radius = 0.72 * scale_factor
+	crystal_mesh.height = 2.5 * scale_factor
+	crystal_mesh.radial_segments = 6
+	crystal_mesh.rings = 2
+	crystal.mesh = crystal_mesh
+	crystal.material_override = glow
+	crystal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	anchor.add_child(crystal)
+	crystal.set_meta("base_y", crystal.position.y)
+	crystal.set_meta("phase", float(_levitation_crystals.size()) * 1.37)
+	_levitation_crystals.append(crystal)
+
+	# Two perpendicular brass calibration rings visually contain the crystal.
+	for axis in [Vector3(90.0, 0.0, 0.0), Vector3(0.0, 0.0, 90.0)]:
+		var ring := MeshInstance3D.new()
+		var ring_mesh := TorusMesh.new()
+		ring_mesh.inner_radius = 0.95 * scale_factor
+		ring_mesh.outer_radius = 1.12 * scale_factor
+		ring_mesh.rings = 12
+		ring_mesh.ring_segments = 5
+		ring.mesh = ring_mesh
+		ring.rotation_degrees = axis
+		ring.material_override = brass
+		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		anchor.add_child(ring)
+		_levitation_rings.append(ring)
+
+	# A small rune halo projects upward toward the underside of the bridge.
+	var halo := MeshInstance3D.new()
+	var halo_mesh := TorusMesh.new()
+	halo_mesh.inner_radius = 1.25 * scale_factor
+	halo_mesh.outer_radius = 1.38 * scale_factor
+	halo_mesh.rings = 14
+	halo_mesh.ring_segments = 4
+	halo.mesh = halo_mesh
+	halo.position.y = 1.35 * scale_factor
+	halo.material_override = glow
+	halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	anchor.add_child(halo)
+	_levitation_rings.append(halo)
+
+	# Only the four large station anchors cast real light. The fifteen span
+	# anchors use emission, avoiding a costly row of overlapping point lights.
+	if scale_factor >= 1.0:
+		var lamp := OmniLight3D.new()
+		lamp.light_color = color.lightened(0.2)
+		lamp.light_energy = 0.85 * scale_factor
+		lamp.omni_range = 8.0 * scale_factor
+		lamp.shadow_enabled = false
+		anchor.add_child(lamp)
+
+	return anchor
 
 
 # One train per line, colour-matched to its destination kingdom. The silhouette
@@ -663,11 +815,19 @@ func _place_on_curve(node: Node3D, curve: Curve3D, t: float, forward: bool) -> v
 
 	var ahead_offset := 1.5 if forward else -1.5
 	var ahead := curve.sample_baked(
-		clampf(t * length + ahead_offset, 0.0, length))
+		clampf(clampf(t, 0.0, 1.0) * length + ahead_offset, 0.0, length))
 
-	node.position = pos + Vector3(0.0, RAIL_RADIUS + 0.9, 0.0)
+	var lift := Vector3(0.0, get_ride_lift(), 0.0)
+	node.position = pos + lift
+
+	# look_at_from_position works in GLOBAL space, but pos/ahead are samples of
+	# a curve expressed in this node's local space. Feeding local coordinates to
+	# it made the train face an arbitrary direction as soon as the rail root was
+	# moved or scaled — which is exactly what the Art Castle galaxy layer does
+	# (0.5 scale, offset -33 on Y). Convert both points before aiming.
 	if ahead.distance_to(pos) > 0.01:
-		node.look_at_from_position(node.position, ahead + Vector3(0.0, RAIL_RADIUS + 0.9, 0.0), Vector3.UP)
+		node.look_at_from_position(
+			to_global(pos + lift), to_global(ahead + lift), Vector3.UP)
 
 
 func _emissive_material(color: Color, albedo_mix: float) -> StandardMaterial3D:

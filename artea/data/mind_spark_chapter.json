@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "chapter": {
+    "id": "mind_spark.two_lenses_of_wisdom",
+    "order": 1,
+    "title": "Mind Spark: The Two Lenses of Wisdom",
+    "crown_connection": "The first light for the Crown of Life is not won by defeating fear. It is discovered when courage listens to fear, tests what is true, and chooses a hopeful next step.",
+    "theme": "I can notice a difficult thought, learn from its signal, and choose a grounded path forward.",
+    "reward": {"id": "star_of_wisdom", "crown_quality": "wisdom", "strengths": ["self-awareness", "courage", "discernment", "resilience"]}
+  },
+  "content_policy": {
+    "delivery": "curated_offline",
+    "free_text": false,
+    "diagnosis": false,
+    "network": false,
+    "generative_ai": false,
+    "scoring_inner_state": false,
+    "principle": "Thoughts are visitors and signals, never a verdict about the player. Fear may protect; hope may guide. Wisdom listens to both."
+  },
+  "profiles": {
+    "faith": {"guardian_name": "Everlasting Father", "spiritual_frame": "The Maker already knows and loves the player; wisdom helps reveal gifts already placed within them."},
+    "universal": {"guardian_name": "Guardian of Wisdom", "spiritual_frame": "The player already has worth; wisdom helps reveal strengths already growing within them."}
+  },
+  "prologue": {
+    "title": "The Crown That Cannot Be Copied",
+    "location": "ARTÉA Castle — Hall of Unnamed Stars",
+    "purpose": "Establish the Crown of Life journey and assure the player that they are discovering strengths, not repairing a broken self.",
+    "reason": "The Castle can shape a unique crown only from freely discovered wisdom, harmony, and creativity.",
+    "guardian_dialogue": {
+      "faith": "The Maker knows your name and has placed light within you. Nothing in you is a broken piece. Come discover the first light for your Crown of Life.",
+      "universal": "Your name and your light belong in this universe. Nothing in you is a broken piece. Come discover the first light for your Crown of Life."
+    },
+    "choice": ["Begin the first journey", "Hear the invitation again", "Return when I am ready"]
+  },
+  "quests": [
+    {
+      "id": "quest.signal_observatory",
+      "order": 1,
+      "title": "The Signal Observatory",
+      "location": "Threshold Observatory",
+      "purpose": "Learn that a difficult thought can be noticed without being obeyed or erased.",
+      "reason": "A storm of thought-signals hides the road; the first gate opens only when both lenses observe the same signal.",
+      "guardian_dialogue": {"faith": "A fearful thought may knock loudly, but it cannot rename the person God created.", "universal": "A fearful thought may knock loudly, but it cannot decide who you are."},
+      "tasks": [
+        {
+          "id": "signal.enter_observatory", "order": 1, "title": "Enter Through Two Doors", "location": "Twin Threshold",
+          "purpose": "Introduce the technology Alarm Lens and nature-magic Hope Lens as equally necessary perspectives.",
+          "reason": "Neither door can power the observatory alone.",
+          "guardian_dialogue": {"faith": "Truth and hope are companions. Let each lens show part of what the Maker can see in full.", "universal": "Careful noticing and grounded hope are companions. Let each lens show part of the whole."},
+          "science_consequence": "The Alarm player calibrates a blue signal array and reveals the cloud's exact words.",
+          "magic_consequence": "The Hope player grows a listening vine around the signal so it can be approached safely.",
+          "failure_free_encouragement": {"faith": "There is no hurry; wisdom can wait with you.", "universal": "There is no hurry; wisdom grows at your pace."},
+          "reflection": {"prompt": "What did the two doors need?", "choices": ["Each other", "More time", "I am not sure"]}
+        },
+        {
+          "id": "signal.notice_cloud", "order": 2, "title": "Notice the Visitor", "location": "Thought-Sky Platform",
+          "purpose": "Create distance between the player and an authored difficult thought.",
+          "reason": "The cloud becomes navigable only after it is named as a visitor rather than the player's identity.",
+          "guardian_dialogue": {"faith": "You can say, 'A thought is here,' and remember that you are still known beyond it.", "universal": "You can say, 'A thought is here,' without making it your whole story."},
+          "science_consequence": "A scan frame changes the label from identity statement to visiting signal.",
+          "magic_consequence": "Wind-leaves move the cloud from over the player to a visible place beside the path.",
+          "failure_free_encouragement": {"faith": "Not sure is an honest answer, and honesty belongs in wisdom.", "universal": "Not sure is a complete answer; noticing is enough for now."},
+          "reflection": {"prompt": "Which description feels safest to practise?", "choices": ["A thought is visiting", "I can look from a distance", "Not sure yet"]}
+        },
+        {
+          "id": "signal.map_effect", "order": 3, "title": "Map What It Changes", "location": "Effect Compass",
+          "purpose": "Build vocabulary for a thought's possible effect without demanding personal disclosure.",
+          "reason": "The compass needs a curated effect before it can reveal a route through the storm.",
+          "guardian_dialogue": {"faith": "Understanding is not agreement. You may notice what a thought does without believing what it says.", "universal": "Understanding is not agreement. You may notice an effect without accepting the thought as fact."},
+          "science_consequence": "The array visualizes authored options such as louder, smaller, rushed, or unsure.",
+          "magic_consequence": "A ring of flowers changes posture and symbol for the selected effect.",
+          "failure_free_encouragement": {"faith": "Every offered answer keeps you accompanied.", "universal": "Every offered answer opens the same onward path."},
+          "reflection": {"prompt": "What can careful noticing give us?", "choices": ["Useful information", "Space to choose", "I am not sure"]}
+        },
+        {
+          "id": "signal.open_gate", "order": 4, "title": "Synchronize the First Gate", "location": "Observatory Gate",
+          "purpose": "Teach the cooperative rhythm of independent action followed by a shared result.",
+          "reason": "The first gate responds only when measured signal and living light arrive together.",
+          "guardian_dialogue": {"faith": "Courage does not mean walking alone. Join your lights when you are ready.", "universal": "Courage can be cooperative. Join your lights when you are ready."},
+          "science_consequence": "The array projects half of a stable bridge equation.",
+          "magic_consequence": "Roots form the missing half and hold the bridge in place.",
+          "failure_free_encouragement": {"faith": "A missed moment is only another invitation to try together.", "universal": "A missed moment resets gently; try together whenever you are ready."},
+          "reflection": {"prompt": "What opened the gate?", "choices": ["Listening and hope together", "Cooperation", "I am not sure"]}
+        }
+      ]
+    },
+    {
+      "id": "quest.echo_forest", "order": 2, "title": "The Echo Forest", "location": "Chrome Library of Possible Futures",
+      "purpose": "Discover that fear can carry a protective question while still exaggerating danger.",
+      "reason": "The archive has mistaken every possibility for a certainty; its predictions must be sorted, not destroyed.",
+      "guardian_dialogue": {"faith": "Fear may try to protect you. We can thank the warning, test it with truth, and refuse to let it become your master.", "universal": "Fear may try to protect you. We can hear the warning, test the evidence, and keep the choice in your hands."},
+      "tasks": [
+        {
+          "id": "archive.collect_signals", "order": 1, "title": "Collect, Do Not Chase", "location": "Prediction Gallery",
+          "purpose": "Practise calm observation instead of urgency.", "reason": "Three slow-moving signal orbs contain enough evidence to unlock the sorter.",
+          "guardian_dialogue": {"faith": "You do not have to catch every worry. Receive only what you are ready to examine.", "universal": "You do not have to catch every worry. Examine one signal at a time."},
+          "science_consequence": "The Alarm Lens samples signal strength without starting a countdown.", "magic_consequence": "The Hope Lens creates resting branches where unchosen signals can wait.",
+          "failure_free_encouragement": {"faith": "The signal will circle back; nothing good is lost by resting.", "universal": "The signal will circle back; pausing does not cost progress."},
+          "reflection": {"prompt": "How many thoughts must be solved at once?", "choices": ["Only one", "None until I am ready", "I am not sure"]}
+        },
+        {
+          "id": "archive.sort_fact_possibility", "order": 2, "title": "Fact, Possibility, or Unsure", "location": "Three-Way Sorter",
+          "purpose": "Introduce uncertainty as a valid category between belief and rejection.", "reason": "The archive stabilizes when possibilities are no longer displayed as certain facts.",
+          "guardian_dialogue": {"faith": "Truth does not fear the words 'I do not know yet.'", "universal": "Clear thinking has room for 'I do not know yet.'"},
+          "science_consequence": "A prism terminal routes an authored card into fact, possibility, or unsure.", "magic_consequence": "Three seedbeds receive matching symbols and grow without ranking the choice.",
+          "failure_free_encouragement": {"faith": "You may move any card again; learning is welcome here.", "universal": "Every card can be reconsidered; this is practice, not a test."},
+          "reflection": {"prompt": "Which choice leaves room to learn?", "choices": ["Possibility", "Unsure", "Both"]}
+        },
+        {
+          "id": "archive.find_protective_question", "order": 3, "title": "Find the Helpful Question", "location": "Core Warning Chamber",
+          "purpose": "Translate alarm into an actionable, non-catastrophic question.", "reason": "The archive core can power a safety beacon when its warning becomes a question rather than a verdict.",
+          "guardian_dialogue": {"faith": "Ask what care is needed, then let truth—not panic—answer.", "universal": "Ask what support or preparation is useful, then choose the next small action."},
+          "science_consequence": "The warning 'Everything will go wrong' is routed to curated questions such as 'What can I prepare?'", "magic_consequence": "Thorned vines soften into protective arches when a grounded question is selected.",
+          "failure_free_encouragement": {"faith": "If no question fits, choose 'I need a guide'; asking for help is wisdom.", "universal": "If no question fits, choose 'I can ask for help'; support is a valid next step."},
+          "reflection": {"prompt": "What can a warning become?", "choices": ["A useful question", "A request for help", "I am not sure"]}
+        },
+        {
+          "id": "archive.power_beacon", "order": 4, "title": "Power the Caution Beacon", "location": "Archive Roof",
+          "purpose": "Celebrate protective wisdom without rewarding avoidance.", "reason": "The transformed signal becomes a beacon marking safe choices for both lenses.",
+          "guardian_dialogue": {"faith": "The warning has found its right-sized place: a servant of wisdom, not a ruler of your story.", "universal": "The warning now has a right-sized job: offering information while you remain the chooser."},
+          "science_consequence": "A calibrated beacon projects safe route markers instead of threat alarms.", "magic_consequence": "Fireflies carry those markers into the surrounding forest path.",
+          "failure_free_encouragement": {"faith": "The beacon accepts any steady rhythm; perfection is not required.", "universal": "Any steady rhythm completes the beacon; precision is not scored."},
+          "reflection": {"prompt": "What job should the Alarm Lens have?", "choices": ["Offer information", "Notice possible needs", "I am not sure"]}
+        }
+      ]
+    },
+    {
+      "id": "quest.cross_seam_relay", "order": 3, "title": "The Cross-Seam Relay", "location": "Bioluminescent Possibility Garden",
+      "purpose": "Choose believable hope that acknowledges difficulty instead of pretending everything is easy.",
+      "reason": "The garden grows from honest next steps; forced bright answers turn to glass and cannot take root.",
+      "guardian_dialogue": {"faith": "Hope can tell the truth about a hard road and still trust that you will not walk it alone.", "universal": "Hope can acknowledge a hard road and still find one possible next step."},
+      "tasks": [
+        {
+          "id": "garden.listen_to_alarm", "order": 1, "title": "Carry the Warning Seed", "location": "Seed Crossing",
+          "purpose": "Preserve the useful part of the Alarm Lens discovery.", "reason": "The garden cannot grow authentic hope unless it receives the real concern from the archive.",
+          "guardian_dialogue": {"faith": "Bring the honest concern with you. Hope does not need you to hide it.", "universal": "Bring the honest concern with you. Grounded hope starts with what is real."},
+          "science_consequence": "The Alarm Lens compresses the protective question into a stable light-seed.", "magic_consequence": "The Hope Lens prepares soil that accepts the seed without changing its label.",
+          "failure_free_encouragement": {"faith": "The seed cannot be dropped or broken; pause whenever you need.", "universal": "The seed waits safely whenever you pause."},
+          "reflection": {"prompt": "What makes hope grounded?", "choices": ["It begins with truth", "It allows difficulty", "I am not sure"]}
+        },
+        {
+          "id": "garden.choose_response", "order": 2, "title": "Choose a Growing Thought", "location": "Three Seedbeds",
+          "purpose": "Practise selecting a curated, compassionate response that remains believable.", "reason": "Only a player-chosen response can wake the dormant garden path.",
+          "guardian_dialogue": {"faith": "Choose words you can carry: 'I can take one step,' 'I am learning,' or 'I can ask for help.'", "universal": "Choose words you can carry: 'I can take one step,' 'I am learning,' or 'I can ask for help.'"},
+          "science_consequence": "The Alarm Lens checks that the response promises no impossible certainty.", "magic_consequence": "The selected phrase grows into a distinct plant; all choices are equally luminous.",
+          "failure_free_encouragement": {"faith": "You may choose 'more time'; patience is not failure.", "universal": "You may choose 'more time'; the journey will wait."},
+          "reflection": {"prompt": "Which kind of hope can travel with you?", "choices": ["One small step", "Learning over time", "Asking for help", "More time"]}
+        },
+        {
+          "id": "garden_build_bridge", "order": 3, "title": "Weave the Living Circuit", "location": "Root-and-Rail Ravine",
+          "purpose": "Make mutual dependence visible through an original cooperative traversal.", "reason": "Metal rails conduct the plan, but living roots give it flexibility; together they span the ravine.",
+          "guardian_dialogue": {"faith": "Different gifts can serve one loving purpose. Offer what your side can give.", "universal": "Different strengths can solve one problem. Offer what your side can give."},
+          "science_consequence": "The Alarm player rotates circuit bridges to route energy toward each root anchor.", "magic_consequence": "The Hope player grows flexible root spans wherever energy reaches an anchor.",
+          "failure_free_encouragement": {"faith": "The bridge remembers every true connection; try the next piece together.", "universal": "Correct connections remain lit, and the next attempt has no penalty."},
+          "reflection": {"prompt": "Why did the bridge need both sides?", "choices": ["Plan and flexibility", "Different strengths", "I am not sure"]}
+        },
+        {
+          "id": "garden_shelter_cloud", "order": 4, "title": "Give the Cloud a Resting Place", "location": "Canopy of Enough Space",
+          "purpose": "Model regulation as making room for a thought rather than destroying it.", "reason": "The cloud must rest beside the path so the player can proceed while it remains safely acknowledged.",
+          "guardian_dialogue": {"faith": "You need not banish every cloud to keep walking in light.", "universal": "A cloud can remain nearby without covering the whole sky."},
+          "science_consequence": "A containment frame defines a calm boundary without locking or deleting the signal.", "magic_consequence": "A broad tree canopy becomes a gentle resting place for the cloud.",
+          "failure_free_encouragement": {"faith": "Any resting place you choose is received with care.", "universal": "There is no wrong resting place; choose the distance that feels comfortable."},
+          "reflection": {"prompt": "What happened to the difficult thought?", "choices": ["It gained some space", "It was still heard", "I am not sure"]}
+        }
+      ]
+    },
+    {
+      "id": "quest.role_exchange_storm", "order": 4, "title": "The Role-Exchange Storm", "location": "Mirror Meridian",
+      "purpose": "Build empathy and flexible thinking by requiring each player to experience the other role.",
+      "reason": "The meridian will reveal the Wisdom Constellation only after technology listens like nature and nature examines like technology.",
+      "guardian_dialogue": {"faith": "Wisdom grows when we listen beyond our first view. Exchange places without losing who you are.", "universal": "Wisdom grows when we practise another perspective. Exchange places without losing your own."},
+      "tasks": [
+        {
+          "id": "exchange.prepare", "order": 1, "title": "Leave a Guide for Your Partner", "location": "Meridian Antechamber",
+          "purpose": "Make the role transition supportive rather than surprising.", "reason": "Each lens can leave one authored tip that becomes the incoming player's guide symbol.",
+          "guardian_dialogue": {"faith": "A gift becomes brighter when it helps another person begin.", "universal": "A strength becomes more useful when it helps another person begin."},
+          "science_consequence": "The Alarm player selects a control diagram for scanning or routing.", "magic_consequence": "The Hope player selects a gesture diagram for growing or sheltering.",
+          "failure_free_encouragement": {"faith": "Every guide is generous; none is graded.", "universal": "Every guide is useful; none is graded."},
+          "reflection": {"prompt": "What helps someone try a new role?", "choices": ["A clear guide", "Patience", "Encouragement", "I am not sure"]}
+        },
+        {
+          "id": "exchange_cross_seam", "order": 2, "title": "Cross the Living Seam", "location": "Central Meridian",
+          "purpose": "Turn the mandatory role swap into a clear story event.", "reason": "The seam opens only when both players consent to exchange and confirm readiness.",
+          "guardian_dialogue": {"faith": "Step across when both hearts are ready; wisdom never needs to force the crossing.", "universal": "Cross when both players are ready; cooperation includes consent."},
+          "science_consequence": "Control glyphs migrate across the split while retaining accessible labels.", "magic_consequence": "Two vines braid across the seam and exchange their glowing leaves.",
+          "failure_free_encouragement": {"faith": "Waiting together is still part of the journey.", "universal": "The scene waits without penalty until both are ready."},
+          "reflection": {"prompt": "What made the exchange possible?", "choices": ["Both chose readiness", "Trust", "I am not sure"]}
+        },
+        {
+          "id": "exchange_second_signal", "order": 3, "title": "Solve From the Other Side", "location": "Reversed Observatory",
+          "purpose": "Rehearse the full notice-and-choose loop using the exchanged roles.", "reason": "A second authored thought reveals different details to players who now carry the other lens.",
+          "guardian_dialogue": {"faith": "A new viewpoint may reveal a gift you did not know you carried.", "universal": "A new viewpoint may reveal a strength you did not know you could use."},
+          "science_consequence": "The new Alarm player identifies the signal's effect and powers a truth array.", "magic_consequence": "The new Hope player selects a grounded response and grows a welcome vine.",
+          "failure_free_encouragement": {"faith": "New roles take practice; every attempt is accompanied.", "universal": "New roles take practice; hints remain available without reducing progress."},
+          "reflection": {"prompt": "What did the other lens help you notice?", "choices": ["Another useful detail", "Another way forward", "I am not sure"]}
+        },
+        {
+          "id": "exchange_join_paths", "order": 4, "title": "Create the Shared Horizon", "location": "Meridian Summit",
+          "purpose": "Integrate caution and hope into one wise action.", "reason": "The separate horizons align only when the protective question and grounded response point toward the same small step.",
+          "guardian_dialogue": {"faith": "Wisdom has heard the warning and chosen hope. Let both lights become one path.", "universal": "Wisdom has heard the warning and chosen a grounded path. Let both lenses guide the step."},
+          "science_consequence": "The technological skyline projects the safe boundaries of the next action.", "magic_consequence": "The natural skyline grows the inviting pathway within those boundaries.",
+          "failure_free_encouragement": {"faith": "The horizon realigns as often as needed.", "universal": "The horizon gently realigns after every attempt."},
+          "reflection": {"prompt": "What is wisdom in this journey?", "choices": ["Caution and hope working together", "Truth plus a next step", "I am not sure"]}
+        }
+      ]
+    },
+    {
+      "id": "quest.constellation_synthesis", "order": 5, "title": "The Wisdom Constellation", "location": "Crownward Skybridge",
+      "purpose": "Consolidate the chapter's skills and return the earned symbolic treasure to ARTÉA Castle.",
+      "reason": "The Star of Wisdom forms from the player's demonstrated sequence: Notice, Name, Choose, and Integrate.",
+      "guardian_dialogue": {"faith": "You did not become worthy here; you discovered courage and wisdom already being formed within you.", "universal": "You did not earn your worth here; you discovered courage and wisdom already growing within you."},
+      "tasks": [
+        {
+          "id": "constellation.recall_lights", "order": 1, "title": "Gather the Four Lights", "location": "Memory Orbits",
+          "purpose": "Rehearse the sequence without testing recall or speed.", "reason": "Four journey symbols orbit separately until the player touches them in any order.",
+          "guardian_dialogue": {"faith": "Your path matters more than a perfect pattern. Gather each light in your own way.", "universal": "Your path matters more than a perfect pattern. Gather each light in your own way."},
+          "science_consequence": "Alarm projects the Notice and Name symbols as navigable holograms.", "magic_consequence": "Hope grows the Choose and Integrate symbols as floating seed-lights.",
+          "failure_free_encouragement": {"faith": "No light can be lost, and any order is welcomed.", "universal": "No light can be lost, and any order completes the memory."},
+          "reflection": {"prompt": "Which light would you like nearby today?", "choices": ["Notice", "Name", "Choose", "Integrate", "Not sure"]}
+        },
+        {
+          "id": "constellation.draw_star", "order": 2, "title": "Draw the Path Between Them", "location": "Open Constellation",
+          "purpose": "Give the player authorship of the constellation without judging artistic form.", "reason": "Connections, rather than a predetermined perfect shape, awaken the star.",
+          "guardian_dialogue": {"faith": "The Maker delights in a path that is truly yours.", "universal": "A path becomes meaningful because it is truly yours."},
+          "science_consequence": "The Alarm Lens records which nodes are connected but assigns no score.", "magic_consequence": "The Hope Lens turns every valid connection into a unique flowering light trail.",
+          "failure_free_encouragement": {"faith": "Every connected shape is received as complete.", "universal": "Every connected shape is accepted and can be remade."},
+          "reflection": {"prompt": "What made this constellation yours?", "choices": ["My choices", "My path", "Our cooperation", "I am not sure"]}
+        },
+        {
+          "id": "constellation.receive_star", "order": 3, "title": "Receive or Carry Beside You", "location": "Star of Wisdom Dais",
+          "purpose": "Celebrate growth while preserving consent around body and spiritual imagery.", "reason": "The completed constellation condenses into the first treasure for the Crown of Life.",
+          "guardian_dialogue": {"faith": "Receive the Star of Wisdom, or let it travel beside you. God's love does not depend on where you place it.", "universal": "Receive the Star of Wisdom, or let it travel beside you. Your progress is equal in either choice."},
+          "science_consequence": "A star compass registers the treasure exactly once and opens the home route.", "magic_consequence": "A gentle star-spirit offers to hover above, beside, or within the journey lantern.",
+          "failure_free_encouragement": {"faith": "Choosing distance is fully honoured.", "universal": "Every placement choice grants the same completion."},
+          "reflection": {"prompt": "Where should the Star travel?", "choices": ["In my lantern", "Beside me", "Above the path"]}
+        },
+        {
+          "id": "constellation.return_castle", "order": 4, "title": "Return the First Light", "location": "ARTÉA Castle — Crown Chamber",
+          "purpose": "Connect Mind Spark to the complete Crown of Life journey without prematurely completing the crown.", "reason": "The Castle must preserve the Star until the Harmony Jewel and Creator's Light arrive in later worlds.",
+          "guardian_dialogue": {"faith": "Carry this light home. The Maker will keep its story beside the gifts still waiting to be discovered.", "universal": "Carry this light home. The Castle will keep its story beside the strengths still waiting to be discovered."},
+          "science_consequence": "The Rainbow Galaxy Train plots a verified return route to the Castle.", "magic_consequence": "The constellation folds into a star-seed that illuminates one point of the unfinished crown.",
+          "failure_free_encouragement": {"faith": "You may watch, shorten, or skip the journey home; the Star remains yours.", "universal": "You may watch, shorten, or skip the journey home; your progress remains complete."},
+          "reflection": {"prompt": "What will the Star remind you?", "choices": ["I can notice", "I can choose a next step", "I can ask for help", "My light has a place"]}
+        }
+      ]
+    }
+  ],
+  "finale": {
+    "title": "The First Point of the Crown",
+    "location": "ARTÉA Castle — Crown Chamber",
+    "purpose": "Celebrate Mind Spark while clearly promising the connected Heart Melody and Creator's Light journeys.",
+    "reason": "The Crown of Life needs three distinct treasures; the Star of Wisdom lights the route to the next kingdom but does not complete the Crown.",
+    "guardian_dialogue": {
+      "faith": "The Maker receives the story of your wisdom with joy. One light of your Crown now shines; your heart and creativity still have wonders to reveal.",
+      "universal": "The Castle receives the story of your wisdom with joy. One light of your Crown now shines; your heart and creativity still have wonders to reveal."
+    },
+    "message": {"faith": "You are known. You are loved. Courage can listen, truth can guide, and hope can choose the next step.", "universal": "You are known. You are valued. Courage can listen, truth can guide, and hope can choose the next step."}
+  },
+  "castle_return": {
+    "completion_event": "star_of_wisdom_awarded",
+    "destination": "res://scenes/artCastle.tscn",
+    "next_locked_treasure": "harmony_jewel",
+    "summary_choices": ["Replay Mind Spark", "Visit my Star", "Continue in ARTÉA Castle"]
+  }
+}

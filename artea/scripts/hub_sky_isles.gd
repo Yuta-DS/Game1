@@ -25,6 +25,13 @@ const IsleBuilderScript := "res://scripts/sky_isles/isle_builder.gd"
 # here exactly as it did for isle_builder in the prototype.
 const IsleDressing := preload("res://scripts/hub_isle_dressing.gd")
 
+# Opt-in switch for the on-screen island-state readout. False by default, so
+# ordinary debug play stays free of developer text; set it in project.godot
+# (or the editor's Project Settings) to bring the panel back while working on
+# island wake logic. The F5-F9 toggles below remain available in debug builds
+# either way.
+const ISLAND_DEBUG_PANEL_SETTING := "artea/debug/show_island_state_panel"
+
 # Height band the islands occupy. The hub's ground sits at Y 15-24 and its
 # tallest towers reach into the 40s, so the islands clear everything and
 # read unmistakably as "up there" from the village below.
@@ -45,7 +52,10 @@ const ISLES := [
 		"pos": Vector3(150.0, SKY_HEIGHT + 8.0, -140.0),
 		"radius": 22.0,
 		"color": Color(0.45, 0.62, 1.00),      # blue/lavender — thoughts
-		"scene": "res://scenes/popThoughtsMenu.tscn",
+		"guardian": "EVERLASTING FATHER • KEEPER OF WISDOM",
+		"guardian_universal": "THE KEEPER OF WISDOM",
+		"theme": "I CAN UNDERSTAND MY THOUGHTS",
+		"treasure": "STAR OF WISDOM",
 	},
 	{
 		"id": "heart",
@@ -53,7 +63,10 @@ const ISLES := [
 		"pos": Vector3(140.0, SKY_HEIGHT - 10.0, 130.0),
 		"radius": 22.0,
 		"color": Color(1.00, 0.55, 0.62),      # pink/coral — emotions
-		"scene": "res://scenes/music_minigame.tscn",
+		"guardian": "ARCHANGEL RAPHAEL • KEEPER OF HEALING",
+		"guardian_universal": "THE KEEPER OF HEALING",
+		"theme": "MY FEELINGS HAVE A VOICE",
+		"treasure": "HARMONY JEWEL",
 	},
 	{
 		"id": "creator",
@@ -61,7 +74,10 @@ const ISLES := [
 		"pos": Vector3(-140.0, SKY_HEIGHT + 2.0, -70.0),
 		"radius": 22.0,
 		"color": Color(1.00, 0.76, 0.30),      # amber/gold — creativity
-		"scene": "res://scenes/drawing_tool.tscn",
+		"guardian": "URIEL • KEEPER OF CREATIVITY",
+		"guardian_universal": "THE KEEPER OF CREATIVITY",
+		"theme": "I WAS CREATED TO CREATE",
+		"treasure": "CREATOR'S LIGHT",
 	},
 ]
 
@@ -104,6 +120,7 @@ func _ready() -> void:
 		_build_isle(ISLES[i], i)
 
 	apply_stage(_current_stage())
+	_connect_campaign_updates()
 	_build_debug_panel()
 
 
@@ -209,6 +226,14 @@ func get_platform_pos(isle_id: String) -> Vector3:
 		if isle["id"] == isle_id:
 			var pos: Vector3 = isle["pos"]
 			var radius: float = isle["radius"]
+			# Follow the island's CURRENT height rather than its authored one.
+			# These islands bob (BOB_AMPLITUDE), so the authored Y is up to a
+			# quarter-metre wrong at any given moment — enough to set an
+			# arriving passenger down through the deck, or leave the boarding
+			# pad hanging in the air beside it.
+			if _isle_nodes.has(isle_id):
+				var node: Node3D = _isle_nodes[isle_id]
+				pos.y = node.position.y
 			# Docking edge faces the castle at the origin.
 			var toward_castle := (Vector3(-32.3, pos.y, -2.0) - pos)
 			toward_castle.y = 0.0
@@ -273,6 +298,7 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 	_build_platform(root, radius, color)
 	_build_landmark(root, isle_id, color)
 	_build_portal(root, isle, color)
+	_build_story_plaque(root, isle, color, radius)
 
 	# Magic-meets-technology detailing: rune disc, brass anchor ring, crystal
 	# lamps, railing, and the kingdom's own mechanism. Kept in its own file
@@ -293,6 +319,56 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 		"spinners": dressing["spinners"],
 		"light": island_fill,
 	}
+
+
+# Re-text the guardian plaques after a facilitator changes audience mode.
+# Plaques are built once in _ready(), so without this the islands keep the
+# old naming until the hub is reloaded — a facilitator switching to universal
+# mode in front of a class would still see the angel names on the plaques.
+func refresh_audience_mode() -> void:
+	for i in ISLES.size():
+		var isle: Dictionary = ISLES[i]
+		if not _isle_nodes.has(isle["id"]):
+			continue
+		var node: Node3D = _isle_nodes[isle["id"]]
+		var plaque := node.find_child("GuardianStoryPlaque", true, false) as Label3D
+		if plaque == null:
+			continue
+		plaque.text = "%s\n%s\nDISCOVERY: %s" % [
+			_guardian_label(isle), isle["theme"], isle["treasure"]]
+	_refresh_campaign_portals()
+
+
+# The island plaque names the same guardian the dialogue does. Faith mode
+# keeps the full "EVERLASTING FATHER • KEEPER OF WISDOM" form; universal mode
+# shows only the keeper title, matching the "_universal" dialogue nodes.
+# Falls back to the faith label if no universal form is authored.
+func _guardian_label(isle: Dictionary) -> String:
+	# Absolute paths error out when this node is not inside the active scene
+	# tree — during a scene change, or under a test harness. Faith naming is
+	# the correct fallback because it is Artéa's default voice.
+	var js: Node = null
+	if is_inside_tree():
+		js = get_node_or_null("/root/JourneyState")
+	if js != null and js.audience_mode == "universal":
+		var universal: String = isle.get("guardian_universal", "")
+		if not universal.is_empty():
+			return universal
+	return isle["guardian"]
+
+
+func _build_story_plaque(parent: Node3D, isle: Dictionary, color: Color,
+		radius: float) -> void:
+	var plaque := Label3D.new()
+	plaque.name = "GuardianStoryPlaque"
+	plaque.text = "%s\n%s\nDISCOVERY: %s" % [
+		_guardian_label(isle), isle["theme"], isle["treasure"]]
+	plaque.position = Vector3(0.0, radius * 0.10 + 4.8, radius * 0.34)
+	plaque.font_size = 24
+	plaque.outline_size = 9
+	plaque.modulate = color.lightened(0.30)
+	plaque.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	parent.add_child(plaque)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -320,8 +396,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	_update_debug_panel()
 
 
-func _build_debug_panel() -> void:
+# The island-state readout is developer information, not part of what a player
+# is meant to see, so a debug build alone is not enough to earn it screen space.
+# A developer opts in explicitly through the project setting below.
+func _island_debug_panel_enabled() -> bool:
 	if not OS.is_debug_build():
+		return false
+	return bool(ProjectSettings.get_setting(ISLAND_DEBUG_PANEL_SETTING, false))
+
+
+func _build_debug_panel() -> void:
+	if not _island_debug_panel_enabled():
 		return
 	var layer := CanvasLayer.new()
 	layer.name = "IslandStateDebug"
@@ -629,9 +714,10 @@ func _build_landmark(parent: Node3D, isle_id: String, color: Color) -> void:
 			parent.add_child(dome)
 
 
-# The portal that carries the player into this kingdom's experience. Same
-# Area3D + change_scene_to_file shape the hub's ground portals already use,
-# so behaviour is identical to what the player has already learned.
+# The portal that carries the player into this kingdom's experience. The
+# JourneyCampaign autoload is the single routing seam: it enforces the visible
+# Mind -> Heart -> Creator order and makes every real mini-game return to this
+# Art Castle Galaxy instead of leaking back to the old ground hub.
 func _build_portal(parent: Node3D, isle: Dictionary, color: Color) -> void:
 	var portal := Area3D.new()
 	portal.name = "Portal_%s" % isle["id"]
@@ -662,12 +748,63 @@ func _build_portal(parent: Node3D, isle: Dictionary, color: Color) -> void:
 	_emissive_materials.append(material)
 	portal.add_child(marker)
 
-	var target: String = isle["scene"]
+	var status := Label3D.new()
+	status.name = "CampaignStatus"
+	status.text = _campaign_portal_status(str(isle["id"]))
+	status.position = Vector3(0.0, 3.2, 0.0)
+	status.font_size = 19
+	status.outline_size = 7
+	status.modulate = color.lightened(0.36)
+	status.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	portal.add_child(status)
+
+	var isle_id: String = isle["id"]
 	portal.body_entered.connect(func(body: Node3D) -> void:
-		if body is CharacterBody3D:
-			get_tree().change_scene_to_file(target))
+		var campaign := _campaign()
+		if body is CharacterBody3D and campaign != null:
+			campaign.call("enter_kingdom", isle_id))
 
 	parent.add_child(portal)
+
+
+func _connect_campaign_updates() -> void:
+	var js := get_node_or_null("/root/JourneyState")
+	if js == null or not js.has_signal("treasure_awarded"):
+		return
+	var callback := Callable(self, "_on_treasure_awarded")
+	if not js.treasure_awarded.is_connected(callback):
+		js.treasure_awarded.connect(callback)
+
+
+func _on_treasure_awarded(_treasure_id: String) -> void:
+	_refresh_campaign_portals()
+
+
+func _refresh_campaign_portals() -> void:
+	for isle in ISLES:
+		var isle_id: String = isle["id"]
+		if not _isle_nodes.has(isle_id):
+			continue
+		var portal := (_isle_nodes[isle_id] as Node3D).get_node_or_null(
+			"Portal_%s" % isle_id) as Area3D
+		if portal == null:
+			continue
+		var status := portal.get_node_or_null("CampaignStatus") as Label3D
+		if status != null:
+			status.text = _campaign_portal_status(isle_id)
+
+
+func _campaign_portal_status(isle_id: String) -> String:
+	var campaign := _campaign()
+	if campaign == null or not campaign.has_method("portal_status"):
+		return "CROWN JOURNEY\nROUTE UNAVAILABLE"
+	return str(campaign.call("portal_status", isle_id))
+
+
+func _campaign() -> Node:
+	if not is_inside_tree():
+		return null
+	return get_node_or_null("/root/JourneyCampaign")
 
 
 func _current_stage() -> int:

@@ -36,9 +36,13 @@ const MAX_FRAMES_TO_LOAD = 12
 var current_frame_hovered := ""
 var current_rating := 0
 
-@onready var rating_ui = $"../CanvasLayer/RatingUI"
-@onready var rating_label = $"../CanvasLayer/RatingUI/RatingLabel"
-@onready var likebutton: Button = $CanvasLayer/RatingPanel/HBoxContainer/LikeButton
+# The rating widgets live under CanvasLayer/RatingPanel, a sibling of this node.
+# RatingUI is a leftover empty PanelContainer — pointing at it (and omitting the
+# "../" on likebutton) made all three lookups fail, which aborted _ready() and
+# took the rest of the gallery's setup down with it.
+@onready var rating_ui = $"../CanvasLayer/RatingPanel"
+@onready var rating_label: Label = $"../CanvasLayer/RatingPanel/RatingLabel"
+@onready var likebutton: Button = $"../CanvasLayer/RatingPanel/HBoxContainer/LikeButton"
 # =========================================================
 # NODES
 # =========================================================
@@ -66,6 +70,29 @@ var current_download_artwork_id = null
 
 var online_gallery_ready := false
 var local_gallery_ready := false
+
+
+# Resolve any gallery frame into a local image path so every artwork — local,
+# downloaded, or placeholder — can open through the same creation-world pipe.
+# Remote images are copied from the frame texture into the private user folder;
+# no network URL or credential is handed to the world scene.
+func prepare_frame_for_world(frame_name: String) -> String:
+	if frame_to_artwork.has(frame_name):
+		var mapped = frame_to_artwork[frame_name]
+		if mapped is String and FileAccess.file_exists(mapped):
+			return mapped
+
+	var frame := get_node_or_null("../" + frame_name)
+	if frame == null or not frame is Sprite3D or frame.texture == null:
+		return ""
+	var image: Image = frame.texture.get_image()
+	if image == null or image.is_empty():
+		return ""
+	var directory := "user://artworks/world_sources/"
+	DirAccess.make_dir_recursive_absolute(directory)
+	var safe_name := frame_name.validate_filename()
+	var path := "%s%s_%d.png" % [directory, safe_name, Time.get_ticks_usec()]
+	return path if image.save_png(path) == OK else ""
 
 
 # =========================================================

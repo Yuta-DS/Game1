@@ -25,6 +25,59 @@ func _ready():
 # DIALOGUE SYSTEM (NEW)
 # -----------------------
 
+# Artéa's guardians are written in faith language by default — that is the
+# authentic voice of the project, not a mode to opt into. Schools and
+# community programs that need the same message without explicit faith
+# framing select JourneyState.audience_mode = "universal", and every node
+# then uses a reviewed "<node>_universal" variant.
+#
+# A required inclusive twin must never silently fall back to faith language.
+# If an authored pair is accidentally missing at release time, route to the
+# neutral, non-gating line below instead. Neutral nodes (such as Milo's
+# already-neutral prompts) can remain shared without a duplicate.
+#
+# What changes is the naming register only. The guardians keep their role,
+# their warmth, and every word of the dignity/purpose message: the Keeper of
+# Wisdom says what the Everlasting Father says. Progression, treasures and
+# rewards are identical in both modes, which JourneyState already guarantees
+# by never reading audience_mode.
+const UNIVERSAL_SUFFIX := "_universal"
+const UNIVERSAL_NEUTRAL_FALLBACK := "audience_neutral_fallback"
+const UNIVERSAL_REQUIRED_NODES := [
+	"start_archangel_dialogue",
+	"launch_music_minigame",
+	"start_zephyr_dialogue",
+	"launch_pop_thoughts",
+	"start_patron_pallete",
+	"explain_painting_tool",
+	"open_collection",
+	"open_painting_tool",
+	"start_maestro_montclair",
+	"explain_gallery",
+	"open_art_gallery",
+	"start_archangel_gabriel",
+]
+
+
+func resolve_audience_node(node_name: String) -> String:
+	if node_name.ends_with(UNIVERSAL_SUFFIX):
+		return node_name
+
+	# Absolute path, so guard against being called outside the active tree.
+	var js: Node = null
+	if is_inside_tree():
+		js = get_node_or_null("/root/JourneyState")
+	if js == null or js.audience_mode != "universal":
+		return node_name
+
+	var universal := node_name + UNIVERSAL_SUFFIX
+	if dialogue_data.has(universal):
+		return universal
+	if node_name in UNIVERSAL_REQUIRED_NODES:
+		push_warning("Missing inclusive dialogue twin for %s; using neutral fallback" % node_name)
+		return UNIVERSAL_NEUTRAL_FALLBACK
+	return node_name
+
 func load_dialogue_file(path: String):
 	print("Attempting to open: ", path)
 	print("File exists: ", FileAccess.file_exists(path))
@@ -40,6 +93,10 @@ func load_dialogue_file(path: String):
 		var line = file.get_line().strip_edges()
 
 		if line == "":
+			continue
+
+		# Comment — authoring note, never shown to the player.
+		if line.begins_with("#"):
 			continue
 
 		# New node
@@ -63,10 +120,19 @@ func start_dialogue(node_name: String, npc = null):
 
 
 func run_dialogue(node_name: String):
+	# Resolved here rather than only at start_dialogue() because "=>" jumps and
+	# choice targets re-enter through this function. Resolving at entry alone
+	# would speak the first line as the Keeper and every later line as the
+	# angel.
+	node_name = resolve_audience_node(node_name)
 	print("Running dialogue node:", node_name)
-	
+
 	if not dialogue_data.has(node_name):
-		print("Node not found:", node_name)
+		push_warning("Dialogue node not found: %s" % node_name)
+		# NPCs lock player movement before calling start_dialogue(). A bare
+		# return here used to leave that lock active forever with no dialogue UI
+		# on screen. Always run the normal cleanup path on an invalid target.
+		end_dialogue()
 		return
 
 	current_node = node_name
@@ -201,11 +267,16 @@ func end_dialogue():
 		dialogue_ui.queue_free()
 		dialogue_ui = null
 		
-	if active_npc != null:
+	if active_npc != null and is_instance_valid(active_npc) \
+			and active_npc.has_method("end_dialogue"):
 		active_npc.end_dialogue()
 		active_npc = null
-	
-		print("Dialogue ended")
+	else:
+		# The NPC may have been removed during a scene transition. Do not retain
+		# a stale owner that can poison the next interaction.
+		active_npc = null
+
+	print("Dialogue ended")
 		
 		
 func parse_line(line: String) -> Dictionary:
@@ -262,6 +333,57 @@ func request_music_minigame():
 	print("DEBUG: MUSIC MINIGAME REQUESTED")
 	MusicManager._check_scene()
 	get_tree().change_scene_to_file("res://scenes/music_minigame.tscn")
+
+# Milo speaks to where the player actually is in the journey — and, where a
+# more specific node exists, to *what they actually did* to get there.
+# Falls back to the plain "milo_stage_N" node if the journey record is
+# missing or no variant applies, so writing zero variants breaks nothing.
+func request_milo(npc = null):
+	var stage := 0
+	var js = get_node_or_null("/root/JourneyState")
+	if js != null:
+		stage = clampi(js.stage, 0, 4)
+
+	var node_name := "milo_stage_%d" % stage
+	var variant := _milo_variant(stage, js)
+	if variant != "" and dialogue_data.has(variant):
+		node_name = variant
+
+	start_dialogue(node_name, npc)
+
+
+# Which node earns the moment, based on counts JourneyState already tracks.
+# Returns "" when nothing distinguishes this playthrough from the default —
+# the plain stage node is not a fallback to apologize for, it is correct for
+# a player who has only just crossed into this stage.
+func _milo_variant(stage: int, js) -> String:
+	if js == null:
+		return ""
+
+	match stage:
+		1:
+			# Popped several thoughts in one sitting, not just the one that
+			# unlocked the stage — the courage was repeated, not a fluke.
+			if js.popped_count() >= 3:
+				return "milo_stage_1_many"
+		2:
+			# Sat with more than one kind of feeling, not the same emotion
+			# on repeat.
+			var distinct := {}
+			for e in js.emotions:
+				distinct[e.get("name", "")] = true
+			if distinct.size() >= 3:
+				return "milo_stage_2_varied"
+		3:
+			if js.creations.size() >= 3:
+				return "milo_stage_3_many"
+		4:
+			# Every recognised strength earned, not just one or two.
+			if js.strengths.size() >= 3:
+				return "milo_stage_4_full"
+
+	return ""
+
 
 func request_pop_thoughts():
 	MusicManager._check_scene()

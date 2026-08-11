@@ -8,10 +8,13 @@ var current_target_sprite: Sprite2D
 var selected_frame_name: String = ""
 var player_near_artwork = false
 var current_frame_name := ""
+var _world_opening := false
 
 # --- Scene Paths ---
 const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
 const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
+const GALLERY_FRAME_RITUAL_PATH = "res://scenes/gallery_frame_ritual.tscn"
+const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
 const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
 # --- Rating UI ---
@@ -23,6 +26,8 @@ const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
 
 func _ready() -> void:
+	_build_galaxy_transit()
+	_build_quest_journal_button()
 	likebutton.visible = true
 	
 	likebutton.text = "♥"
@@ -39,9 +44,43 @@ func _ready() -> void:
 
 	if ratingpanel:
 		ratingpanel.visible = false
+
+
+# The complete train-and-island kingdom belongs inside this cosmic Art Castle
+# scene. Runtime construction avoids duplicating the large generated meshes in
+# the scene file and guarantees the islands exist before rails resolve docks.
+func _build_galaxy_transit() -> void:
+	var transit_transform := Transform3D(Basis.from_scale(Vector3.ONE * 0.5),
+		Vector3(0.0, -33.0, 1.3))
+
+	var isles := Node3D.new()
+	isles.name = "GalaxyIsles"
+	isles.transform = transit_transform
+	isles.set_script(load("res://scripts/hub_sky_isles.gd"))
+	add_child(isles)
+
+	var rail := Node3D.new()
+	rail.name = "SkyRail"
+	rail.transform = transit_transform
+	rail.set_script(load("res://scripts/hub_skyrail.gd"))
+	add_child(rail)
+
+	var rider := Node3D.new()
+	rider.name = "TrainRider"
+	rider.set_script(load("res://scripts/hub_train_rider.gd"))
+	add_child(rider)
 		
 		
 func _input(event):
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_J:
+		_open_quest_journal()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event.is_action_pressed("ui_accept") and player_near_artwork:
+		_enter_current_frame_world()
+		get_viewport().set_input_as_handled()
+		return
 
 	if event.is_action_pressed("rate_artwork") and player_near_artwork:
 
@@ -49,6 +88,29 @@ func _input(event):
 			current_frame_name,
 			$GalleryManager.get_frame_rating(current_frame_name)
 		)
+
+
+func _build_quest_journal_button() -> void:
+	var button := Button.new()
+	button.name = "CrownJourneyJournalButton"
+	button.text = "✦ Crown Journey  [J]"
+	button.tooltip_text = "Open the Crown of Life quest journal"
+	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	button.position = Vector2(-250.0, 24.0)
+	button.custom_minimum_size = Vector2(220.0, 48.0)
+	button.focus_mode = Control.FOCUS_ALL
+	button.add_theme_font_size_override("font_size", 18)
+	button.pressed.connect(_open_quest_journal)
+	$CanvasLayer.add_child(button)
+
+
+func _open_quest_journal() -> void:
+	var campaign := get_node_or_null("/root/JourneyCampaign")
+	if campaign != null and campaign.has_method("open_quest_journal"):
+		if bool(campaign.call("open_quest_journal")):
+			return
+	if ResourceLoader.exists(QUEST_JOURNAL_PATH):
+		get_tree().change_scene_to_file(QUEST_JOURNAL_PATH)
 
 func show_rating_panel(frame_name: String, current_rating: int) -> void:
 	print("Frame:", frame_name)
@@ -58,11 +120,11 @@ func show_rating_panel(frame_name: String, current_rating: int) -> void:
 	ratingpanel.visible = true
 
 	if current_rating > 0:
-		ratinglabel.text = "Artwork Rating:\n♥"
+		ratinglabel.text = "Artwork Rating: ♥\nEnter / Space — explore this artwork"
 		ratinglabel.modulate = Color.RED
 		likebutton.modulate = Color.RED
 	else:
-		ratinglabel.text = "Artwork Rating:\n♡"
+		ratinglabel.text = "Artwork Rating: ♡\nEnter / Space — explore this artwork"
 		ratinglabel.modulate = Color.WHITE
 		likebutton.modulate = Color.WHITE
 		
@@ -142,3 +204,30 @@ func _on_interaction_area_body_exited(body, frame_name):
 	current_frame_name = ""
 
 	hide_rating_panel()
+
+
+func _enter_current_frame_world() -> void:
+	if current_frame_name.is_empty() or _world_opening:
+		return
+	_world_opening = true
+	var path: String = $GalleryManager.prepare_frame_for_world(current_frame_name)
+	if path.is_empty() or not FileAccess.file_exists(path):
+		_world_opening = false
+		ratinglabel.text = "This artwork is not available locally yet. Please try again."
+		return
+	var state := get_node_or_null("/root/CreationWorldState")
+	if state == null:
+		_world_opening = false
+		ratinglabel.text = "The Gallery Frame Ritual is not available in this scene yet."
+		return
+	if not ResourceLoader.exists(GALLERY_FRAME_RITUAL_PATH):
+		_world_opening = false
+		ratinglabel.text = "The Gallery Frame Ritual is still being prepared. Please try again shortly."
+		return
+
+	state.prepare_artwork(path, current_frame_name.replace("_", " "))
+	ratinglabel.text = "Opening the Gallery Frame Ritual…\nChoose a motif to frame your artwork."
+	var transition_error := get_tree().change_scene_to_file(GALLERY_FRAME_RITUAL_PATH)
+	if transition_error != OK:
+		_world_opening = false
+		ratinglabel.text = "The Gallery Frame Ritual could not open yet. Please try again."

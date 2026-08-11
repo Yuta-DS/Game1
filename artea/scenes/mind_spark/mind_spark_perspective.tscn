@@ -1,0 +1,182 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/mind_spark_perspective.gd" id="1_perspective"]
+[ext_resource type="PackedScene" path="res://scenes/mind_spark/mind_spark_role.tscn" id="2_role"]
+
+[sub_resource type="Environment" id="Environment_perspective"]
+resource_local_to_scene = true
+background_mode = 1
+background_color = Color(0.027, 0.086, 0.176, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.55, 0.72, 0.86, 1)
+ambient_light_energy = 0.72
+
+[sub_resource type="BoxMesh" id="GroundMesh"]
+size = Vector3(9, 0.3, 7)
+
+[sub_resource type="StandardMaterial3D" id="GroundMaterial"]
+albedo_color = Color(0.075, 0.15, 0.24, 1)
+roughness = 0.82
+
+[sub_resource type="BoxShape3D" id="GroundShape"]
+size = Vector3(9, 0.3, 7)
+
+[sub_resource type="BoxMesh" id="AnchorMesh"]
+size = Vector3(0.85, 0.18, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="AnchorMaterial"]
+resource_local_to_scene = true
+albedo_color = Color(0.36, 0.88, 1, 1)
+emission_enabled = true
+emission = Color(0.12, 0.54, 0.78, 1)
+emission_energy_multiplier = 1.15
+
+[sub_resource type="BoxMesh" id="BridgeMesh"]
+size = Vector3(5.4, 0.12, 0.56)
+
+[sub_resource type="StandardMaterial3D" id="BridgeMaterial"]
+resource_local_to_scene = true
+albedo_color = Color(0.68, 0.88, 1, 1)
+emission_enabled = true
+emission = Color(0.2, 0.65, 0.9, 1)
+emission_energy_multiplier = 0.25
+roughness = 0.5
+
+[node name="MindSparkPerspective" type="Node3D"]
+script = ExtResource("1_perspective")
+
+[node name="ProceduralDressingAnchor" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="."]
+position = Vector3(0, -0.15, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("GroundMesh")
+material_override = SubResource("GroundMaterial")
+cast_shadow = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("GroundShape")
+
+[node name="SharedAnchor" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.1, -1.05)
+mesh = SubResource("AnchorMesh")
+material_override = SubResource("AnchorMaterial")
+cast_shadow = 0
+
+[node name="AnchorStatus" type="Label3D" parent="."]
+visible = false
+position = Vector3(-2.55, 0.42, -0.9)
+text = "ANCHOR WAITING"
+font_size = 28
+outline_size = 7
+billboard = 1
+no_depth_test = true
+
+[node name="BridgeIndicator" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.08, -2.25)
+mesh = SubResource("BridgeMesh")
+material_override = SubResource("BridgeMaterial")
+cast_shadow = 0
+
+[node name="BridgeStatus" type="Label3D" parent="."]
+visible = false
+position = Vector3(2.45, 0.42, -2.1)
+text = "BRIDGE WAITING"
+font_size = 26
+outline_size = 7
+billboard = 1
+no_depth_test = true
+
+[node name="ConstellationLights" type="Node3D" parent="."]
+
+[node name="Role" parent="." instance=ExtResource("2_role")]
+position = Vector3(0, 0.02, 1.25)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(0, 5.6, 7.2)
+rotation_degrees = Vector3(-34, 0, 0)
+current = true
+fov = 54.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -28, 0)
+light_color = Color(0.72, 0.94, 1, 1)
+light_energy = 1.15
+shadow_enabled = false
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_perspective")
+
+[node name="PerspectiveHUD" type="CanvasLayer" parent="."]
+
+[node name="SideMarker" type="ColorRect" parent="PerspectiveHUD"]
+offset_right = 10.0
+offset_bottom = 116.0
+color = Color(0.36, 0.88, 1, 1)
+mouse_filter = 2
+
+[node name="Header" type="PanelContainer" parent="PerspectiveHUD"]
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 510.0
+offset_bottom = 112.0
+mouse_filter = 2
+self_modulate = Color(0.025, 0.065, 0.14, 0.94)
+
+[node name="Box" type="VBoxContainer" parent="PerspectiveHUD/Header"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Title" type="Label" parent="PerspectiveHUD/Header/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "ALARM LENS • SCIENCE"
+
+[node name="Purpose" type="Label" parent="PerspectiveHUD/Header/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 17
+text = "Notice the signal. Map what it does."
+autowrap_mode = 2
+
+[node name="ConstellationStatus" type="Label" parent="PerspectiveHUD"]
+offset_left = 20.0
+offset_top = 126.0
+offset_right = 385.0
+offset_bottom = 158.0
+theme_override_colors/font_color = Color(1, 0.94, 0.63, 1)
+theme_override_font_sizes/font_size = 18
+text = "CONSTELLATION • 0 / 3 LIGHTS"
+
+[node name="StatusRow" type="HBoxContainer" parent="PerspectiveHUD"]
+offset_left = 20.0
+offset_top = 164.0
+offset_right = 510.0
+offset_bottom = 198.0
+theme_override_constants/separation = 16
+
+[node name="Anchor" type="Label" parent="PerspectiveHUD/StatusRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "◇ ANCHOR WAITING"
+
+[node name="Bridge" type="Label" parent="PerspectiveHUD/StatusRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
+theme_override_font_sizes/font_size = 16
+text = "▱ BRIDGE WAITING"
+
+[node name="FocusStatus" type="Label" parent="PerspectiveHUD"]
+visible = false
+offset_left = 20.0
+offset_top = 204.0
+offset_right = 440.0
+offset_bottom = 240.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.03, 0.07, 0.15, 1)
+theme_override_constants/outline_size = 7
+theme_override_font_sizes/font_size = 18
+text = "FOCUS MODE • CAMERA STEADY"

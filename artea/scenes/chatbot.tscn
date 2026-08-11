@@ -20,45 +20,21 @@ script = ExtResource("1_7qo2j")
 z_index = 1
 layout_mode = 1
 offset_left = -683.0
-offset_top = -290.0
+offset_top = -600.0
 offset_right = 617.0
-offset_bottom = -60.0
+offset_bottom = -48.0
 
 [node name="ChatHistory" type="TextEdit" parent="VBoxContainer" unique_id=1121175732]
-custom_minimum_size = Vector2(800, 200)
+custom_minimum_size = Vector2(800, 142)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxEmpty_an77j")
-placeholder_text = "Hi, my name is Milo…
-You can share what’s on your mind, how you’re feeling, or anything that’s been weighing on you.
-I am here to listen, support you, and help you explore your thoughts gently.
-You can also talk about things like stress, relationships, self-doubt, or feeling lost.
-There is no right or wrong way to start—just speak freely."
+editable = false
 wrap_mode = 1
 scroll_smooth = true
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1204567203]
-layout_mode = 2
-
-[node name="UserInput" type="LineEdit" parent="VBoxContainer/HBoxContainer" unique_id=1555593964]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-placeholder_text = "Enter your message here..."
-
-[node name="SendButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=501537165]
-custom_minimum_size = Vector2(100, 20)
-layout_mode = 2
-text = "Send"
-
-[node name="HTTPRequestChatGPT" type="HTTPRequest" parent="." unique_id=990123601]
-
-[node name="AI_Counselor" type="NobodyWhoChat" parent="." unique_id=433028267]
-
-[node name="MiloModel" type="NobodyWhoModel" parent="." unique_id=2043035805]
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=1581378263]
 layout_mode = 1
@@ -87,4 +63,4 @@ offset_bottom = 342.94116
 
 [node name="RichTextLabel" type="RichTextLabel" parent="TextureRect/MarginContainer" unique_id=951159884]
 layout_mode = 2
-text = "Wonderful Counsellor"
+text = "Milo · Guided reflection"

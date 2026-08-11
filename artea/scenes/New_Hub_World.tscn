@@ -89,6 +89,9 @@
 [ext_resource type="Script" path="res://scripts/hub_train_rider.gd" id="81_rider"]
 [ext_resource type="Script" path="res://scripts/hub_atmosphere.gd" id="82_atmos"]
 [ext_resource type="Script" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
+[ext_resource type="Script" path="res://scripts/hub_castle_entrance.gd" id="83_entrn"]
+[ext_resource type="Script" path="res://scripts/viewfinder/hub_lens.gd" id="84_lens"]
+[ext_resource type="Script" path="res://scripts/viewfinder/crown_story_portal.gd" id="85_crownportal"]
 [ext_resource type="PackedScene" uid="uid://bkwxa1ae6l2lb" path="res://assets3D/houses/red/building_blacksmith_red.gltf" id="78_smith"]
 [ext_resource type="PackedScene" uid="uid://rvmn0l3pa5kl" path="res://assets3D/houses/red/building_barracks_red.gltf" id="79_barrk"]
 [ext_resource type="PackedScene" uid="uid://lfbha2jf5jfk" path="res://assets3D/houses/red/building_archeryrange_red.gltf" id="80_arch"]
@@ -372,14 +375,14 @@ script = ExtResource("77_crown")
 [node name="CastleStairs" type="Node3D" parent="."]
 script = ExtResource("78_stairs")
 
-[node name="SkyIsles" type="Node3D" parent="."]
-script = ExtResource("80_skisl")
+[node name="CastleEntrance" type="Node3D" parent="."]
+script = ExtResource("83_entrn")
 
-[node name="SkyRail" type="Node3D" parent="."]
-script = ExtResource("79_skyrl")
+[node name="HubLens" type="Node3D" parent="."]
+script = ExtResource("84_lens")
 
-[node name="TrainRider" type="Node3D" parent="."]
-script = ExtResource("81_rider")
+[node name="CrownStoryPortal" type="Node3D" parent="."]
+script = ExtResource("85_crownportal")
 
 [node name="NewPlayer" parent="." unique_id=1353458258 instance=ExtResource("2_q1hpc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.64955, 25.1, 0)
@@ -466,7 +469,6 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 
 [node name="Grass" type="Node3D" parent="Environment" unique_id=528747255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
-visible = false
 script = ExtResource("12_0l1bc")
 modifier_stack = SubResource("Resource_vqqxb")
 Performance/use_chunks = true
@@ -477,6 +479,27 @@ metadata/_custom_type_script = "uid://lgdpru8th01u"
 transform = Transform3D(0.953801, 0, -0.30044, 0, 1, 0, 0.30044, 0, 0.953801, 4.2984, 0, -2.62214)
 script = ExtResource("20_7nfwd")
 shape = SubResource("Resource_vspl4")
+
+[node name="ScatterItemGrassA" type="Node3D" parent="Environment/Grass" unique_id=528747301]
+script = ExtResource("19_ngqnt")
+proportion = 1200
+source_scale_multiplier = 1.0
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "uid://bomwqf05mal4d"
+
+[node name="ScatterItemGrassB" type="Node3D" parent="Environment/Grass" unique_id=528747302]
+script = ExtResource("19_ngqnt")
+proportion = 900
+source_scale_multiplier = 1.15
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "uid://bay1ka1kpgepi"
+
+[node name="ScatterItemBush" type="Node3D" parent="Environment/Grass" unique_id=528747303]
+script = ExtResource("19_ngqnt")
+proportion = 220
+source_scale_multiplier = 1.0
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "uid://ctufrfj6udw7d"
 
 [node name="landingBlocklol" parent="Environment" unique_id=97436999 instance=ExtResource("3_mwiy7")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 4.73711, 0)
@@ -490,7 +513,6 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 22.
 
 [node name="Objects" type="Node3D" parent="Environment" unique_id=240408736]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
-visible = false
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
@@ -676,7 +698,7 @@ transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398,
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62.5, 20.04, -71.245)
 
 [node name="building_castle_red2" parent="." unique_id=654078214 instance=ExtResource("40_40xrb")]
-transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, -51.4, 65.49, 27.4105)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, -51.4, 74.49, 27.4105)
 
 [node name="building_tavern_red2" parent="." unique_id=1819320780 instance=ExtResource("41_kjbyn")]
 transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 55, 22.69, 55.3)

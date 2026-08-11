@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "experience_id": "artea.mind_spark.five_quest_journey",
+  "reward_request": "star_of_wisdom",
+  "safety": {
+    "mode": "curated_offline",
+    "skip_policy": "end_without_evidence_or_reward",
+    "principles": [
+      "Fear is protective information, never the player's identity or an enemy.",
+      "Hope must be truthful and grounded rather than forced positivity.",
+      "All choices are authored, untimed, replay-safe, and require no disclosure."
+    ]
+  },
+  "encounters": [
+    {
+      "id": "quest.signal_observatory",
+      "order": 1,
+      "title": "The Signal Observatory",
+      "purpose": "Notice a fear signal and distinguish a warning from a prediction.",
+      "alarm_information": "The Observatory detects intensity, repetition, and uncertainty; a loud signal is not proof.",
+      "hope_information": "The living chimes reveal one honest possibility that can exist beside uncertainty.",
+      "shared_consequence": "The first thought becomes visible to both lenses without being judged or erased.",
+      "story_round_ids": ["round.small_step"],
+      "steps": [
+        {"id": "observatory.scan_signal", "actor": "alarm", "verb": "scan", "instruction": "Scan the fear signal without accepting it as fact.", "evidence": [{"event": "thought_cloud_selected", "round_id": "round.small_step"}]},
+        {"id": "observatory.hear_chime", "actor": "hope", "verb": "listen", "instruction": "Listen for a truthful possibility beside the alarm."},
+        {"id": "observatory.measure_effect", "actor": "alarm", "verb": "measure", "instruction": "Name the signal's possible effect, including not sure.", "evidence": [{"event": "thought_effect_selected", "round_id": "round.small_step"}]},
+        {"id": "observatory.light_beacon", "actor": "hope", "verb": "kindle", "instruction": "Kindle a beacon for one manageable next step."}
+      ]
+    },
+    {
+      "id": "quest.echo_forest",
+      "order": 2,
+      "title": "The Echo Forest",
+      "purpose": "Separate a repeated thought from identity and discover a grounded reframe.",
+      "alarm_information": "The archive can compare the original signal with echoes that have grown louder through repetition.",
+      "hope_information": "Memory leaves respond only to language that is kind, specific, and believable.",
+      "shared_consequence": "The echo moves from blocking the path into a shared viewing window.",
+      "story_round_ids": ["round.small_step"],
+      "steps": [
+        {"id": "forest.trace_echo", "actor": "alarm", "verb": "trace", "instruction": "Trace which words came from the original signal."},
+        {"id": "forest.grow_counterleaf", "actor": "hope", "verb": "grow", "instruction": "Grow a grounded counterleaf without denying the fear.", "evidence": [{"event": "thought_cloud_repositioned", "round_id": "round.small_step"}]},
+        {"id": "forest.align_archive", "actor": "alarm", "verb": "compare", "instruction": "Align the signal and echo records side by side."},
+        {"id": "forest.open_windows", "actor": "hope", "verb": "reframe", "instruction": "Open both viewing windows so neither lens is hidden.", "evidence": [{"event": "both_reframe_windows_viewed", "round_id": "round.small_step"}]}
+      ]
+    },
+    {
+      "id": "quest.cross_seam_relay",
+      "order": 3,
+      "title": "The Cross-Seam Relay",
+      "purpose": "Practise cause-and-effect cooperation: one lens changes what the other can reach.",
+      "alarm_information": "The brass circuit shows where energy is interrupted but cannot bridge living roots.",
+      "hope_information": "The roots can carry the signal but cannot identify a safe voltage alone.",
+      "shared_consequence": "Technology and nature form the First-Step Bridge; neither side can complete it alone.",
+      "story_round_ids": ["round.small_step"],
+      "steps": [
+        {"id": "relay.calibrate_beacon", "actor": "alarm", "verb": "calibrate", "instruction": "Set a safe signal for the root network.", "evidence": [{"event": "mind_spark_anchor_activated", "round_id": "round.small_step", "anchor_id": "anchor.signal_beacon", "lens": "alarm"}]},
+        {"id": "relay.sprout_conduit", "actor": "hope", "verb": "sprout", "instruction": "Grow a conduit toward the calibrated signal.", "evidence": [{"event": "mind_spark_anchor_activated", "round_id": "round.small_step", "anchor_id": "anchor.root_lantern", "lens": "hope"}]},
+        {"id": "relay.route_pulse", "actor": "alarm", "verb": "route", "instruction": "Route one measured pulse across the seam."},
+        {"id": "relay.weave_bridge", "actor": "hope", "verb": "weave", "instruction": "Weave the pulse and roots into a shared bridge.", "evidence": [{"event": "mind_spark_anchors_activated", "round_id": "round.small_step"}, {"event": "thought_marked_popped", "round_id": "round.small_step"}, {"event": "hope_bridge_crossed", "round_id": "round.small_step"}]}
+      ]
+    },
+    {
+      "id": "quest.role_exchange_storm",
+      "order": 4,
+      "title": "The Role-Exchange Storm",
+      "purpose": "Experience the other lens and use both perspectives when belonging feels uncertain.",
+      "alarm_information": "Storm instruments reveal disconnection patterns but their controls are unfamiliar after the exchange.",
+      "hope_information": "Shelter-vines reveal possible connection, while preserving the player's identity and boundaries.",
+      "shared_consequence": "After exchanging lenses, both travellers stabilize a Connection Bridge through the storm.",
+      "story_round_ids": ["round.safe_connection"],
+      "requires_role_swap": true,
+      "steps": [
+        {"id": "storm.exchange_lenses", "actor": "role_swap", "verb": "exchange", "instruction": "Exchange lenses before entering the storm."},
+        {"id": "storm.scan_distance", "actor": "alarm", "verb": "map", "instruction": "Map one signal of distance without defining the person by it.", "evidence": [{"event": "thought_cloud_selected", "round_id": "round.safe_connection"}, {"event": "thought_effect_selected", "round_id": "round.safe_connection"}]},
+        {"id": "storm.raise_shelter", "actor": "hope", "verb": "shelter", "instruction": "Raise one safe place where connection could begin.", "evidence": [{"event": "thought_cloud_repositioned", "round_id": "round.safe_connection"}, {"event": "both_reframe_windows_viewed", "round_id": "round.safe_connection"}]},
+        {"id": "storm.ground_array", "actor": "alarm", "verb": "ground", "instruction": "Ground the Truth Array so the storm can pass safely.", "evidence": [{"event": "mind_spark_anchor_activated", "round_id": "round.safe_connection", "anchor_id": "anchor.truth_array", "lens": "alarm"}]},
+        {"id": "storm.bind_welcome_vine", "actor": "hope", "verb": "connect", "instruction": "Bind the Welcome Vine without asking anyone to change who they are.", "evidence": [{"event": "mind_spark_anchor_activated", "round_id": "round.safe_connection", "anchor_id": "anchor.welcome_vine", "lens": "hope"}, {"event": "mind_spark_anchors_activated", "round_id": "round.safe_connection"}, {"event": "thought_marked_popped", "round_id": "round.safe_connection"}, {"event": "hope_bridge_crossed", "round_id": "round.safe_connection"}]}
+      ]
+    },
+    {
+      "id": "quest.constellation_synthesis",
+      "order": 5,
+      "title": "The Wisdom Constellation",
+      "purpose": "Synthesize Alarm and Hope into wisdom: notice, name, and choose.",
+      "alarm_information": "The star-map provides position and pattern but cannot decide what meaning the pattern carries.",
+      "hope_information": "The living light provides meaning and possibility but needs the map to form a stable constellation.",
+      "shared_consequence": "Both lenses become the Star of Wisdom, one treasure for the future Crown of Life.",
+      "story_round_ids": ["round.small_step", "round.safe_connection"],
+      "steps": [
+        {"id": "constellation.locate_notice", "actor": "alarm", "verb": "locate", "instruction": "Locate the Notice star.", "evidence": [{"event": "wisdom_symbol_activated", "symbol_id": "symbol.notice"}]},
+        {"id": "constellation.name_light", "actor": "hope", "verb": "name", "instruction": "Give the Name star a truthful light.", "evidence": [{"event": "wisdom_symbol_activated", "symbol_id": "symbol.name"}]},
+        {"id": "constellation.align_choice", "actor": "alarm", "verb": "align", "instruction": "Align the safe paths around the Choose star."},
+        {"id": "constellation.complete_choice", "actor": "hope", "verb": "choose", "instruction": "Illuminate one possible next step.", "evidence": [{"event": "wisdom_symbol_activated", "symbol_id": "symbol.choose"}, {"event": "wisdom_symbols_connected"}]}
+      ]
+    }
+  ]
+}
