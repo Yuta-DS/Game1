@@ -410,7 +410,8 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 		parent.add_child(tread)
 		tread.global_position = pos
 		tread.rotation.y = -angle
-		_add_box_body(tread, tm.size)
+		# Collision belongs to the continuous AscentRoadbed. Per-tread rotated
+		# boxes overlap into diagonal walls along the inside of the spiral.
 
 		# Riser — the vertical face under the tread. Without this the stair
 		# reads as floating planks instead of steps.
@@ -496,9 +497,22 @@ func _build_continuous_ascent(parent: Node3D, base: Vector2, ground: float,
 	var inner_edge := STAIR_RADIUS - STEP_WIDTH * 0.5
 	var outer_edge := STAIR_RADIUS + STEP_WIDTH * 0.5
 
+	# One continuous walking surface sits 2 cm beneath the visible tread tops.
+	# The old collision used a separate rotated box for every
+	# tread. Near the inside of the curve, a later box overlaps the preceding
+	# one far enough for its leading side to become a diagonal wall; the player
+	# could stand on the stair but could not advance (most visibly on the final
+	# flight below the crown). A single helix has no transverse box edges to snag
+	# the capsule, while the individual meshes preserve the stepped look.
+	# The architectural roadbed stays a closed visual volume. Its vertical inner
+	# and outer faces are intentionally not part of collision because a capsule
+	# travelling around a curve can catch those segmented boundary faces.
 	var roadbed := _helix_band_mesh(base, ground, top_y, start_angle,
 		inner_edge + 0.12, outer_edge - 0.12, -0.58, -0.12)
 	_add_helix_part(parent, "AscentRoadbed", roadbed, dark, false)
+	var walk_surface := _helix_walk_surface_mesh(base, ground, top_y, start_angle,
+		inner_edge + 0.05, outer_edge - 0.05, 0.15)
+	_add_helix_part(parent, "AscentWalkSurface", walk_surface, dark, true)
 
 	var outer_guard := _helix_band_mesh(base, ground, top_y, start_angle,
 		outer_edge - 0.24, outer_edge + 0.24, 0.06, 1.40, 0.985)
@@ -564,6 +578,38 @@ func _helix_band_mesh(base: Vector2, ground: float, top_y: float,
 		if i == samples - 1:
 			_add_surface_quad(surface, i1b, o1b, o1t, i1t)
 
+	surface.generate_normals()
+	return surface.commit()
+
+
+# Collision-only top sheet for the spiral. It deliberately has no vertical
+# boundary or end faces: the continuous guards contain the player, and omitting
+# those faces prevents the capsule from snagging on a segmented curve.
+func _helix_walk_surface_mesh(base: Vector2, ground: float, top_y: float,
+		start_angle: float, inner_radius: float, outer_radius: float,
+		top_offset: float) -> ArrayMesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var samples := maxi(_step_count, 48)
+	for i in samples:
+		var t0 := float(i) / float(samples)
+		var t1 := float(i + 1) / float(samples)
+		var a0 := start_angle + t0 * TAU * TURNS
+		var a1 := start_angle + t1 * TAU * TURNS
+		var y0 := lerpf(ground + 0.4, top_y, t0) + top_offset
+		var y1 := lerpf(ground + 0.4, top_y, t1) + top_offset
+		var i0 := Vector3(base.x + cos(a0) * inner_radius, y0,
+			base.y + sin(a0) * inner_radius)
+		var o0 := Vector3(base.x + cos(a0) * outer_radius, y0,
+			base.y + sin(a0) * outer_radius)
+		var i1 := Vector3(base.x + cos(a1) * inner_radius, y1,
+			base.y + sin(a1) * inner_radius)
+		var o1 := Vector3(base.x + cos(a1) * outer_radius, y1,
+			base.y + sin(a1) * outer_radius)
+		# Godot treats clockwise vertices as the front face. This order makes the
+		# walk surface collide from above; the reverse order is only a back face
+		# and lets the character fall through.
+		_add_surface_quad(surface, o0, o1, i1, i0)
 	surface.generate_normals()
 	return surface.commit()
 
@@ -746,7 +792,10 @@ const CROWN_SURFACE_OFFSET := 0.17
 # full 3.8 m tread width from the crown. The former full-width radial wedge is
 # the oversized floor gap visible from above.
 const STAIR_HEADROOM := 2.8
-const STAIRWELL_LANE_HALF_WIDTH := 1.15
+# The walkable centre can naturally drift about 0.85 m toward either guard.
+# Add the 0.5 m capsule radius plus a small tolerance so the crown's inner and
+# outer floor shelves do not pinch the player at the final-tread handoff.
+const STAIRWELL_LANE_HALF_WIDTH := 1.5
 
 # Battlements and a red roof cap, so the tower top matches the village towers.
 func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) -> void:
@@ -847,6 +896,27 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 			sin(shelf_angle) * shelf_mid_radius)
 		shelf_shape.rotation.y = -shelf_angle
 		body.add_child(shelf_shape)
+
+	# A simple box floor owns the high-speed handoff from the final spiral tread
+	# into the crown room. The custom CrownDeck is a concave mesh with a radial
+	# cut: at sprint speed the capsule can reach its cut edge before floor snap
+	# settles it, read that bevel as a wall, and remain pinned even though the
+	# route looks open. This apron begins at the final tread (so it never becomes
+	# a ceiling over the lower flight), spans the full capsule-width lane, and
+	# reaches inward past the cut edge onto the authoritative centre floor.
+	var stair_end_radial := Vector3(cos(stair_end_angle), 0.0,
+		sin(stair_end_angle))
+	var stair_end_tangent := Vector3(-stair_end_radial.z, 0.0,
+		stair_end_radial.x)
+	var handoff_size := Vector3(4.9, 0.28, 4.0)
+	var handoff_centre := Vector3(base.x, crown_surface_y - 0.14, base.y) \
+		+ stair_end_radial * 5.7 + stair_end_tangent * 2.0
+	var handoff := _oriented_box(parent, handoff_size, handoff_centre,
+		handoff_centre + stair_end_tangent, deck_material)
+	handoff.name = "CrownStairHandoff"
+	_add_box_body(handoff, handoff_size)
+	_build_crown_arrival_court(parent, base, crown_surface_y, stair_end_radial,
+		stair_end_tangent, deck_material, brass, cyan, violet)
 
 	# A box-shaped, collision-backed threshold carries the real player capsule
 	# across the generated CrownDeck's radial triangle seam and overlaps the
@@ -982,6 +1052,110 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	flag.material_override = red
 	parent.add_child(flag)
 	flag.global_position = pole.global_position + Vector3(0.8, 1.0, 0.0)
+
+
+# A proper arrival room at the top of the spiral. The earlier crown was a
+# circular slab with scattered props, so the stair mouth looked like a hole in
+# a roof and gave no architectural cue for where to walk next. This open
+# observatory vestibule turns the safe handoff floor into an intentional piece
+# of architecture: a dark processional carpet, paired stone/brass pylons and a
+# split arch that frames the crown without putting a lintel across the camera.
+# Everything above the floor is visual-only and stands outside the capsule lane.
+func _build_crown_arrival_court(parent: Node3D, base: Vector2,
+		surface_y: float, radial: Vector3, forward: Vector3,
+		deck_material: Material, brass: Material, cyan: Material,
+		violet: Material) -> void:
+	var court := Node3D.new()
+	court.name = "CrownArrivalCourt"
+	parent.add_child(court)
+
+	var origin := Vector3(base.x, surface_y, base.y) \
+		+ radial * 5.7 + forward * 2.0
+	var carpet := _oriented_box(court, Vector3(3.45, 0.07, 3.55),
+		origin + Vector3.UP * 0.035, origin + forward, _stone(STONE_DARK))
+	carpet.name = "CrownArrivalCarpet"
+	carpet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+	var threshold := _oriented_box(court, Vector3(3.7, 0.10, 0.34),
+		Vector3(base.x, surface_y + 0.05, base.y) + radial * STAIR_RADIUS
+			+ forward * 0.18,
+		Vector3(base.x, surface_y + 0.05, base.y) + radial * STAIR_RADIUS
+			+ forward, brass)
+	threshold.name = "CrownArrivalThreshold"
+
+	var apex := origin + forward * 0.18 + Vector3.UP * 4.45
+	for signed_value in [-1.0, 1.0]:
+		var signed: float = signed_value
+		var pylon_base := origin + radial * signed * 2.15 + forward * 0.15
+
+		var plinth := MeshInstance3D.new()
+		plinth.name = "CrownArrivalPlinth_%s" % ("Inner" if signed < 0.0 else "Outer")
+		var plinth_mesh := CylinderMesh.new()
+		plinth_mesh.top_radius = 0.52
+		plinth_mesh.bottom_radius = 0.64
+		plinth_mesh.height = 0.34
+		plinth_mesh.radial_segments = 8
+		plinth.mesh = plinth_mesh
+		plinth.material_override = deck_material
+		court.add_child(plinth)
+		plinth.global_position = pylon_base + Vector3.UP * 0.17
+
+		var pylon := MeshInstance3D.new()
+		pylon.name = "CrownArrivalPylon_%s" % ("Inner" if signed < 0.0 else "Outer")
+		var pylon_mesh := CylinderMesh.new()
+		pylon_mesh.top_radius = 0.30
+		pylon_mesh.bottom_radius = 0.40
+		pylon_mesh.height = 3.15
+		pylon_mesh.radial_segments = 8
+		pylon.mesh = pylon_mesh
+		pylon.material_override = _stone(STONE_LIGHT)
+		court.add_child(pylon)
+		pylon.global_position = pylon_base + Vector3.UP * 1.74
+
+		var collar := MeshInstance3D.new()
+		collar.name = "CrownArrivalCollar_%s" % ("Inner" if signed < 0.0 else "Outer")
+		var collar_mesh := TorusMesh.new()
+		collar_mesh.inner_radius = 0.34
+		collar_mesh.outer_radius = 0.45
+		collar_mesh.rings = 10
+		collar_mesh.ring_segments = 4
+		collar.mesh = collar_mesh
+		collar.material_override = brass
+		court.add_child(collar)
+		collar.global_position = pylon_base + Vector3.UP * 2.55
+
+		var shoulder := pylon_base + Vector3.UP * 3.32
+		var yoke := _visual_chord(court, shoulder, apex, 0.20, brass)
+		yoke.name = "CrownArrivalYoke_%s" % ("Inner" if signed < 0.0 else "Outer")
+		var lumen := _visual_chord(court,
+			shoulder + forward * 0.12 - Vector3.UP * 0.10,
+			apex + forward * 0.12 - Vector3.UP * 0.10, 0.07, cyan)
+		lumen.name = "CrownArrivalLumen_%s" % ("Inner" if signed < 0.0 else "Outer")
+
+	var crown_lens := MeshInstance3D.new()
+	crown_lens.name = "CrownArrivalLens"
+	var lens_mesh := PrismMesh.new()
+	lens_mesh.size = Vector3(0.48, 0.78, 0.32)
+	crown_lens.mesh = lens_mesh
+	crown_lens.material_override = violet
+	court.add_child(crown_lens)
+	crown_lens.global_position = apex + Vector3.UP * 0.12
+	crown_lens.look_at(crown_lens.global_position + forward, Vector3.UP)
+
+	# Flush guide lights visually lead away from the stair. They never become
+	# bumps because they remain within the same 7 cm inlay band as the carpet.
+	for guide_index in 3:
+		var guide := MeshInstance3D.new()
+		guide.name = "CrownArrivalGuide_%d" % guide_index
+		var guide_mesh := BoxMesh.new()
+		guide_mesh.size = Vector3(0.22, 0.075, 0.42)
+		guide.mesh = guide_mesh
+		guide.material_override = cyan if guide_index % 2 == 0 else violet
+		court.add_child(guide)
+		guide.global_position = origin - forward * 1.15 \
+			+ forward * float(guide_index) * 1.05 + Vector3.UP * 0.04
+		guide.look_at(guide.global_position + forward, Vector3.UP)
+		guide.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 # Builds the crown landing slab as a full disc with one radial wedge removed,

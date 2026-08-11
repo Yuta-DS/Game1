@@ -73,7 +73,15 @@ func _on_back_to_hubworld_pressed() -> void:
 
 func go_to_scene(path: String) -> void:
 	if ResourceLoader.exists(path):
+		if path == HUB_WORLD_PATH:
+			_request_castle_front_door_spawn()
 		print("TRAVELING to: ", path)
 		get_tree().change_scene_to_file(path)
 	else:
 		print("ERROR: Target scene file not found at path: ", path)
+
+
+func _request_castle_front_door_spawn() -> void:
+	var global := get_node_or_null("/root/Global")
+	if global != null and global.has_method("request_spawn_at"):
+		global.request_spawn_at("castle_front_door")

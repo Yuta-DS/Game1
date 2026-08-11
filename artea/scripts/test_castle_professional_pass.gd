@@ -35,12 +35,16 @@ func _run() -> void:
 	if stair == null:
 		_fail("castle stair did not build")
 		return
-	for required in ["AscentRoadbed", "OuterContinuousGuard",
+	for required in ["AscentRoadbed", "AscentWalkSurface", "OuterContinuousGuard",
 			"InnerContinuousGuard", "InnerSafetyPlinth"]:
 		var part := stair.get_node_or_null(required) as MeshInstance3D
 		if part == null or part.mesh == null:
 			_fail("missing continuous stair part %s" % required)
 			return
+	var walk_surface := stair.get_node_or_null("AscentWalkSurface") as MeshInstance3D
+	if walk_surface.find_children("*", "StaticBody3D", true, false).is_empty():
+		_fail("continuous spiral walk surface is missing collision")
+		return
 	var inner_plinth := stair.get_node_or_null("InnerSafetyPlinth") as MeshInstance3D
 	var inner_plinth_bodies := inner_plinth.find_children("*", "StaticBody3D", true, false) \
 		if inner_plinth != null else []
@@ -312,6 +316,25 @@ func _run() -> void:
 	if gateway_apron_body == null:
 		_fail("crown gateway apron collision is not a StaticBody3D")
 		return
+	var stair_handoff := stair.get_node_or_null("CrownStairHandoff") as MeshInstance3D
+	if stair_handoff == null or not (stair_handoff.mesh is BoxMesh) \
+			or stair_handoff.find_children("*", "StaticBody3D", true, false).is_empty():
+		_fail("crown stair mouth has no stable box-shaped handoff floor")
+		return
+	var arrival_court := stair.get_node_or_null("CrownArrivalCourt") as Node3D
+	var arrival_pylons := stair.find_children(
+		"CrownArrivalPylon_*", "MeshInstance3D", true, false)
+	var arrival_yokes := stair.find_children(
+		"CrownArrivalYoke_*", "MeshInstance3D", true, false)
+	var arrival_guides := stair.find_children(
+		"CrownArrivalGuide_*", "MeshInstance3D", true, false)
+	if arrival_court == null or arrival_pylons.size() != 2 \
+			or arrival_yokes.size() != 2 or arrival_guides.size() != 3:
+		_fail("redesigned crown arrival court is incomplete")
+		return
+	if not arrival_court.find_children("*", "StaticBody3D", true, false).is_empty():
+		_fail("crown arrival dressing added collision back into the player lane")
+		return
 	var final_tread: MeshInstance3D = null
 	for candidate in stair.find_children("StairTread_*", "MeshInstance3D", true, false):
 		var tread := candidate as MeshInstance3D
@@ -391,7 +414,10 @@ func _run() -> void:
 	var final_radial := Vector3(
 		shelf_probe_tread.global_position.x - crown_deck.global_position.x,
 		0.0, shelf_probe_tread.global_position.z - crown_deck.global_position.z).normalized()
-	for shelf_radius: float in [5.1, 7.9]:
+	# Probe beyond the full player-width stairwell lane. The opening is 3.0 m
+	# wide so a 1.0 m capsule can leave either side of the spiral without its
+	# shoulder catching the crown floor shelf.
+	for shelf_radius: float in [4.7, 8.3]:
 		var shelf_point: Vector3 = crown_deck.global_position + final_radial * shelf_radius
 		shelf_point.y = crown_surface
 		var shelf_query := PhysicsRayQueryParameters3D.create(
