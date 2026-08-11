@@ -58,7 +58,7 @@ func _run() -> void:
 		return
 
 	# Validate the gallery side without taking a network dependency. Placeholder
-	# artwork is loaded synchronously and must be capable of preparing the ritual.
+	# artwork is loaded synchronously and must become a walkable local 3D world.
 	hub.free()
 	var gallery := (load("res://scenes/art_gallery_3d_inprogress.tscn") as PackedScene).instantiate()
 	root.add_child(gallery)
@@ -78,14 +78,44 @@ func _run() -> void:
 	if artwork_path.is_empty() or not FileAccess.file_exists(artwork_path):
 		_fail("gallery artwork cannot be prepared for Art Explore")
 		return
-	if root.get_node_or_null("CreationWorldState") == null:
+	# Keep the exact prepared source stable when the real handler resolves this
+	# frame again; otherwise placeholder textures are exported under a new
+	# timestamp and correctly begin a separate world build.
+	manager.set("frame_to_artwork", {"Frame_01": artwork_path})
+	var state := root.get_node_or_null("CreationWorldState")
+	if state == null:
 		_fail("CreationWorldState is missing, so Art Explore cannot open")
 		return
-	if not ResourceLoader.exists("res://scenes/gallery_frame_ritual.tscn"):
-		_fail("Art Explore ritual scene is missing")
+	if not ResourceLoader.exists("res://scenes/creation_world.tscn"):
+		_fail("interactive artwork world scene is missing")
 		return
 
-	print("ART_CASTLE_GALLERY_TEST: PASS — raised castle door, visible marker, gallery artwork and Art Explore ritual are connected")
+	# Exercise the player's real Enter/Space handler all the way through its
+	# world preparation and scene change, without prebuilding a manifest.
+	current_scene = gallery
+	gallery.call("_enter_current_frame_world")
+	await process_frame
+	await process_frame
+	var world := current_scene
+	if world == null or world.scene_file_path != "res://scenes/creation_world.tscn":
+		var current := "nothing" if world == null else "%s (%s), status: %s" % [
+			world.name, world.scene_file_path, gallery.get_node("CanvasLayer/RatingPanel/RatingLabel").text]
+		_fail("pressing Enter at gallery artwork did not open the 3D world; current scene is %s"
+			% current)
+		return
+	if world.find_child("CreationWorldPlayer", true, false) == null:
+		_fail("interactive artwork world did not create a walking player")
+		return
+	var interactive_found := false
+	for actor in world.find_children("*", "StaticBody3D", true, false):
+		if bool(actor.get_meta("artwork_interactive", false)):
+			interactive_found = true
+			break
+	if not interactive_found:
+		_fail("interactive artwork world contains no responsive 3D artwork objects")
+		return
+
+	print("ART_CASTLE_GALLERY_TEST: PASS — raised castle door, gallery artwork, walking player and interactive 3D world are connected")
 	quit()
 
 

@@ -1,10 +1,9 @@
 extends RefCounted
 
-# Converts one AI-detected subject into an independent physical 3D object.
-# Recognised subjects use curated ARTEA models. Anything outside the curated
-# library is still reconstructed from its own crop of the player's drawing as
-# a thick, collidable art extrusion; it is never replaced with an unrelated
-# generic prop.
+# Converts one detected subject into an independent physical 3D object.
+# Anything that came from a bounded region of the artwork keeps that exact crop
+# as a thick, collidable extrusion. Curated models are reserved for new ideas
+# added by the player that do not have pixels in the source artwork.
 
 const ASSETS := {
 	"tree": "res://assets3D/houses/gltf/tree_large.gltf",
@@ -40,16 +39,33 @@ static func create(spec: Dictionary, source_image: Image, fallback_colour: Color
 	var type_name := _canonical_type(spec)
 	var asset_path := asset_path_for_spec(spec)
 	var body: StaticBody3D
-	if not asset_path.is_empty() and ResourceLoader.exists(asset_path):
+	if type_name in ["water", "river", "lake", "road", "path", "bridge", "ground"]:
+		body = _primitive_surface(type_name, fallback_colour, source_image, spec)
+	# Anything identified from a bounded region of the artwork must continue to
+	# look like what the artist drew. The previous branch chose a stock tree,
+	# house, animal or person model here and discarded the subject's painted
+	# appearance. A thick crop extrusion keeps the exact pixels, silhouette,
+	# colours and proportions while giving it collision and 3D placement.
+	elif _has_artwork_bounds(spec) and source_image != null and not source_image.is_empty():
+		body = _art_extrusion(source_image, spec, fallback_colour)
+	elif not asset_path.is_empty() and ResourceLoader.exists(asset_path):
+		# Player-added ideas without a source region can still use curated assets.
 		body = _from_asset(asset_path, type_name)
 	elif type_name in ["sun", "moon", "planet", "star", "light", "friendly_light"]:
 		body = _primitive_sphere(fallback_colour)
-	elif type_name in ["water", "river", "lake", "road", "path", "bridge", "ground"]:
-		body = _primitive_surface(type_name, fallback_colour, source_image, spec)
 	else:
 		body = _art_extrusion(source_image, spec, fallback_colour)
 	_configure_metadata(body, spec, type_name)
 	return body
+
+
+static func _has_artwork_bounds(spec: Dictionary) -> bool:
+	var bounds = spec.get("bounding_box", spec.get("bounds", null))
+	if bounds is Dictionary:
+		return bounds.has("x") and bounds.has("y") \
+			and (bounds.has("width") or bounds.has("w")) \
+			and (bounds.has("height") or bounds.has("h"))
+	return bounds is Array and bounds.size() >= 4
 
 
 static func asset_path_for_spec(spec: Dictionary) -> String:
@@ -145,6 +161,7 @@ static func _art_extrusion(source_image: Image, spec: Dictionary, colour: Color)
 		material.cull_mode = BaseMaterial3D.CULL_DISABLED
 		material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 	body.set_meta("source_bounds", [bounds.position.x, bounds.position.y, bounds.size.x, bounds.size.y])
+	body.set_meta("preserves_artwork_pixels", true)
 	return body
 
 

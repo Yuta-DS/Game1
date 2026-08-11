@@ -75,6 +75,73 @@ func current_world_is_semantic() -> bool:
 	return _manifest_is_semantic_ready(current_manifest())
 
 
+# A gallery artwork must always remain explorable. Vision-labelled manifests
+# produce the richest reconstruction, but the on-device subject extractor can
+# still build a physical, walkable and interactive world from bounded painted
+# regions, the artwork palette and its terrain image. This is intentionally a
+# separate predicate from `current_world_is_semantic`: callers can still tell
+# whether vision understood named subjects without blocking the player's door.
+func current_world_is_explorable() -> bool:
+	var manifest := current_manifest()
+	if _manifest_is_semantic_ready(manifest):
+		return true
+	return int(manifest.get("schema_version", 0)) == MANIFEST_VERSION \
+		and bool(manifest.get("local_world_ready", false)) \
+		and manifest.get("objects", []) is Array \
+		and not (manifest.get("objects", []) as Array).is_empty()
+
+
+# Prepare the best available walkable world, then call back exactly once.
+# Online/loopback vision is preferred, but a service outage never turns the
+# artwork into a dead gallery frame—the local reconstruction is persisted and
+# opens through the same interactive creation_world scene.
+func prepare_explorable_world(callback: Callable) -> void:
+	if not has_current_artwork():
+		callback.call(false, {"error": "The selected artwork could not be opened."})
+		return
+	if current_world_is_explorable():
+		callback.call(true, {
+			"world_manifest": current_manifest(),
+			"degraded": not current_world_is_semantic(),
+			"ai_source": str(current_manifest().get("vision_source", "cache")),
+		})
+		return
+	if not _can_request_ai():
+		_open_local_explorable_world(callback,
+			"Vision is unavailable, so this world was reconstructed on this device.")
+		return
+
+	# Do not hold the doorway closed while a vision request crosses the network.
+	# Start the richer reconstruction in the background, then open the local
+	# interactive version immediately. A successful response is persisted by
+	# `request_world`, so the next visit automatically uses the richer subjects.
+	request_world(
+		"Reconstruct every visible subject as a separate interactive 3D object in a walkable mini-world.",
+		func(_ok: bool, _response: Dictionary) -> void:
+			pass
+	)
+	_open_local_explorable_world(callback,
+		"The world opened immediately on this device while richer vision continues in the background.")
+
+
+func _open_local_explorable_world(callback: Callable, reason: String) -> void:
+	var manifest := _offline_manifest(current_manifest())
+	manifest["local_world_ready"] = true
+	manifest["recovery"] = {
+		"mode": "on-device",
+		"retry_automatically": true,
+		"reason": reason,
+	}
+	_store_manifest(manifest)
+	callback.call(true, {
+		"world_manifest": current_manifest(),
+		"semantic_ready": false,
+		"degraded": true,
+		"ai_source": "on-device",
+		"recovery_message": reason,
+	})
+
+
 func request_creative_guide(prompt: String, callback: Callable) -> void:
 	var image := _load_current_image()
 	if image == null:
@@ -360,6 +427,7 @@ func _offline_manifest(existing: Dictionary = {}) -> Dictionary:
 		var preserved := _normalise_manifest(existing)
 		preserved["recovery"] = {"mode": "on-device", "retry_automatically": true}
 		preserved["semantic_ready"] = bool(existing.get("semantic_ready", false))
+		preserved["local_world_ready"] = true
 		return preserved
 	var extracted_objects := ImageSubjectExtractor.extract(_load_current_image())
 	if extracted_objects.is_empty():
@@ -386,6 +454,7 @@ func _offline_manifest(existing: Dictionary = {}) -> Dictionary:
 		"recovery": {"mode": "on-device", "retry_automatically": true},
 	})
 	manifest["semantic_ready"] = false
+	manifest["local_world_ready"] = true
 	manifest["vision_source"] = "on-device"
 	return manifest
 

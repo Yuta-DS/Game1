@@ -43,7 +43,7 @@ var _ambient_root: Node3D
 func _ready() -> void:
 	_ensure_artwork_selected()
 	_manifest = CreationWorldState.current_manifest()
-	if not CreationWorldState.current_world_is_semantic():
+	if not CreationWorldState.current_world_is_explorable():
 		_show_reconstruction_blocked()
 		return
 	_build_environment()
@@ -53,6 +53,20 @@ func _ready() -> void:
 	_apply_manifest(_manifest)
 	_restore_world_drawings()
 	_start_ambient_life()
+	if not CreationWorldState.world_ready.is_connected(_on_richer_world_ready):
+		CreationWorldState.world_ready.connect(_on_richer_world_ready)
+	# The background vision request may have completed during scene construction.
+	# Reconcile its latest subjects immediately instead of waiting for re-entry.
+	var latest_manifest := CreationWorldState.current_manifest()
+	if latest_manifest != _manifest and CreationWorldState.current_world_is_explorable():
+		_apply_manifest(latest_manifest)
+
+
+func _on_richer_world_ready(manifest: Dictionary, _degraded: bool) -> void:
+	if manifest.is_empty() or not CreationWorldState.current_world_is_semantic():
+		return
+	_apply_manifest(manifest)
+	_set_status("Vision found the subjects in your artwork. The world now matches your drawing more closely.")
 
 
 func _show_reconstruction_blocked() -> void:
@@ -76,7 +90,7 @@ func _show_reconstruction_blocked() -> void:
 	title.add_theme_font_size_override("font_size", 27)
 	panel.add_child(title)
 	var message := Label.new()
-	message.text = "Vision has not identified the people, plants, buildings, animals, and scenery yet. No placeholder block world was opened. Your artwork is safe—return to the gallery and try again when vision reconnects."
+	message.text = "This artwork has not been prepared yet. Return to the gallery and enter the artwork again to build its interactive world."
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.add_theme_font_size_override("font_size", 18)

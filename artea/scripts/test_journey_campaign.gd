@@ -71,13 +71,20 @@ func _test_scene_routes(campaign: Node) -> void:
 	assert(ResourceLoader.exists(ritual_path), "the Creator ritual scene exists")
 	for source_path in [
 		"res://scripts/drawing_tool.gd",
-		"res://scripts/art_gallery.gd",
 		"res://scripts/creation_world/artwork_world_portal.gd",
 	]:
 		var creator_source := FileAccess.get_file_as_string(source_path)
 		assert(creator_source.contains(ritual_path), "%s opens the canonical Creator ritual" % source_path)
 		assert(not creator_source.contains("request_world(") and not creator_source.contains("request_creative_guide("),
 			"%s keeps canonical Creator progression offline" % source_path)
+
+	# The Art Castle gallery is an exploration surface, not the canonical
+	# Creator's Light progression gate. Entering a displayed artwork opens the
+	# interactive creation world while the drawing-tool ritual remains intact.
+	var gallery_source := FileAccess.get_file_as_string("res://scripts/art_gallery.gd")
+	assert(gallery_source.contains("res://scenes/creation_world.tscn")
+		and gallery_source.contains("prepare_explorable_world"),
+		"Art Castle artworks open their walkable interactive 3D worlds")
 
 
 func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
