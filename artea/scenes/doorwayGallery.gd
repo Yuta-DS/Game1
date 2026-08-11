@@ -19,6 +19,10 @@ func _on_body_entered(body: Node3D):
 # Scene switching function
 func go_to_scene(path: String):
 	if ResourceLoader.exists(path):
+		if path == target_scene_path:
+			var global := get_node_or_null("/root/Global")
+			if global != null and global.has_method("request_spawn_at"):
+				global.request_spawn_at("castle_front_door")
 		print("TRAVELING from:", self.name, " to: ", path)
 		get_tree().change_scene_to_file(path)
 	else:

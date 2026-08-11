@@ -414,6 +414,9 @@ func request_visit_collection():
 func request_goback_HubWorld():
 	print("DEBUG: Requested return")
 	MusicManager._check_scene()
+	var global := get_node_or_null("/root/Global")
+	if global != null and global.has_method("request_spawn_at"):
+		global.request_spawn_at("castle_front_door")
 	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
 
 # LEGACY: 2D version cat therapist scene

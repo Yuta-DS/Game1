@@ -1,6 +1,6 @@
 extends Area3D
 
-const TARGET_SCENE_PATH = "res://scenes/art_gallery_3d_inprogress.tscn"
+const TARGET_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 const CASTLE_NODE_NAME := "building_castle_red2"
 
 # Measured from the imported castle mesh. Its root is scaled 10x and rotated
@@ -34,19 +34,7 @@ func _ready() -> void:
 	_castle = get_parent().get_node_or_null(CASTLE_NODE_NAME) as Node3D
 	_configure_live_door()
 	_build_door_dressing()
-
-	if require_interact:
-		_prompt = Label3D.new()
-		_prompt.text = "Press Q — Art Gallery"
-		_prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		# Drawn through geometry so the prompt cannot be hidden by the doorframe.
-		_prompt.no_depth_test = true
-		_prompt.modulate = Color(1.0, 0.93, 0.75)
-		_prompt.outline_size = 8
-		_prompt.pixel_size = 0.012
-		_prompt.visible = false
-		add_child(_prompt)
-		_prompt.position = Vector3(0.0, 4.5, 0.0)
+	_build_art_explore_marker()
 
 
 func _process(_delta: float) -> void:
@@ -78,11 +66,35 @@ func _configure_live_door() -> void:
 	var collision := get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if collision == null:
 		return
+	monitoring = true
+	monitorable = true
 	collision.position = Vector3.ZERO
 	collision.rotation = Vector3.ZERO
 	var box := BoxShape3D.new()
 	box.size = DOOR_TRIGGER_SIZE
 	collision.shape = box
+
+
+# The doorway used to create a label only when `require_interact` was enabled,
+# but the authored hub uses automatic walk-through entry. That made the entire
+# Art Explore route look missing even while its invisible trigger still worked.
+# Keep one permanent, readable destination marker over the real raised door;
+# interaction mode reuses it for the Q prompt instead of creating a second UI.
+func _build_art_explore_marker() -> void:
+	_prompt = Label3D.new()
+	_prompt.name = "ArtExploreMarker"
+	_prompt.text = "✦ ART EXPLORE ✦\nENTER THE GALLERY"
+	_prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_prompt.no_depth_test = true
+	_prompt.modulate = Color(1.0, 0.93, 0.75)
+	_prompt.outline_modulate = Color(0.12, 0.16, 0.25, 0.95)
+	_prompt.outline_size = 10
+	_prompt.font_size = 36
+	_prompt.pixel_size = 0.012
+	add_child(_prompt)
+	# The Area uses an identity global basis at the doorway, so +Y is reliably
+	# above the threshold even though the imported castle is rotated and 10x.
+	_prompt.position = Vector3(0.0, 4.0, 0.0)
 
 
 # A readable entrance rather than an invisible trigger: stone doorway, brass
@@ -160,14 +172,14 @@ func _on_body_entered(body: Node3D) -> void:
 	if not require_interact:
 		_travel()
 	elif _prompt:
-		_prompt.visible = true
+		_prompt.text = "✦ ART EXPLORE ✦\nPress Q to enter"
 
 
 func _on_body_exited(body: Node3D) -> void:
 	if body == _player_inside:
 		_player_inside = null
 		if _prompt:
-			_prompt.visible = false
+			_prompt.text = "✦ ART EXPLORE ✦\nENTER THE GALLERY"
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -179,6 +191,9 @@ func _travel() -> void:
 	# body_entered can report twice in a frame, and the scene swap is not
 	# instant, so without this guard the change is queued more than once.
 	if _travelling:
+		return
+	if not ResourceLoader.exists(TARGET_SCENE_PATH):
+		push_error("Art Explore destination is missing: %s" % TARGET_SCENE_PATH)
 		return
 	_travelling = true
 	# Changing the scene inside a physics callback frees this Area3D while the

@@ -64,6 +64,11 @@ func _run() -> void:
 	if global.pending_spawn_point != "":
 		_fail("spawn point was not cleared after being consumed")
 		return
+	var gallery_source := FileAccess.get_file_as_string("res://scripts/art_gallery.gd")
+	if not gallery_source.contains("_request_castle_front_door_spawn()") \
+			or not gallery_source.contains("request_spawn_at(\"castle_front_door\")"):
+		_fail("the live Art Castle exit bypasses the front-door spawn handoff")
+		return
 
 	# 5. The entrance court keeps its deliberate lower datum.
 	var upper_deck_y: float = entrance.get("UPPER_DECK_Y")
