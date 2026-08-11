@@ -1,5 +1,27 @@
 extends Control
 
+const ArtEnhancer := preload("res://scripts/creation_world/art_enhancer.gd")
+
+const CREATIVE_PROMPTS := [
+	"IDENTITY • Draw a symbol that represents what makes you unique.",
+	"IDENTITY • If your personality were a landscape, what would it look like?",
+	"COURAGE • Draw a symbol of a time you were brave.",
+	"COURAGE • If courage were an animal, what would it be?",
+	"EMOTIONS • Draw your feelings as colours or weather.",
+	"EMOTIONS • Draw a safe place where your feelings can rest.",
+	"CREATIVITY • Design a magical world that could only come from you.",
+	"CREATIVITY • Create a creature that represents you.",
+	"PURPOSE • Draw a gift you would like to share with the world.",
+	"PURPOSE • Draw the person you are becoming.",
+]
+
+const REFLECTIONS := [
+	"Milo asks: What part of your artwork are you most proud of?",
+	"Milo asks: What strength did you use while creating this?",
+	"Milo asks: What story does your artwork tell?",
+	"Milo asks: What did you discover about yourself?",
+]
+
 # Link of background
 # https://images.nasa.gov/details/PIA12348
 
@@ -51,9 +73,19 @@ var stamp_size: int = 80
 
 var undo_history: Array[Image] = []
 var max_undo_steps := 10
+var _creative_prompt := ""
+var _prompt_label: Label
+var _creative_dialog: AcceptDialog
+var _creative_summary: Label
+var _creative_styles: VBoxContainer
+var _guide_button: Button
+var _enter_world_button: Button
+var _last_gallery_path := ""
 
 
 func _ready() -> void:
+	_build_creative_prompt()
+	_build_ai_companion()
 	http_request.timeout = 10
 	create_smooth_canvas()
 	notificationpanel.visible = false
@@ -88,6 +120,11 @@ func _ready() -> void:
 	save_close_button.pressed.connect(_on_save_close_button_pressed)
 
 	firebase_button.pressed.connect(_on_firebase_button_pressed)
+	# ARTÉA's default journey is private and offline. Facilitators can add a
+	# deliberate export feature later; a child should never reach cloud upload
+	# from the creative flow by accident.
+	firebase_button.visible = false
+	firebase_button.disabled = true
 
 	local_button.pressed.connect(_on_local_button_pressed)
 
@@ -98,6 +135,181 @@ func _ready() -> void:
 	artgallery.pressed.connect(_on_art_gallery_button_pressed)
 
 	_update_undo_button()
+
+
+func _build_creative_prompt() -> void:
+	var js := get_node_or_null("/root/JourneyState")
+	var prompt_index := 0
+	if js != null:
+		prompt_index = js.creations.size() % CREATIVE_PROMPTS.size()
+	_creative_prompt = CREATIVE_PROMPTS[prompt_index]
+
+	var banner := PanelContainer.new()
+	banner.name = "CreativeDiscoveryPrompt"
+	banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	banner.position = Vector2(-330.0, 12.0)
+	banner.custom_minimum_size = Vector2(660.0, 58.0)
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.12, 0.88)
+	style.border_color = Color(0.90, 0.68, 0.25, 0.85)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.set_content_margin_all(12)
+	banner.add_theme_stylebox_override("panel", style)
+	_prompt_label = Label.new()
+	_prompt_label.text = "URIEL'S CREATIVE INVITATION\n%s" % _creative_prompt
+	_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prompt_label.add_theme_font_size_override("font_size", 17)
+	_prompt_label.add_theme_color_override("font_color", Color("fff0bd"))
+	banner.add_child(_prompt_label)
+	add_child(banner)
+
+
+func _build_ai_companion() -> void:
+	var actions := get_node_or_null(
+		"CenterContainer/PanelContainer/MarginContainer/HSplitContainer/Actions/VBoxContainer")
+	if actions != null:
+		_guide_button = Button.new()
+		_guide_button.name = "CreativeGuide"
+		_guide_button.text = "✨ Creative Reflection"
+		_guide_button.tooltip_text = "Choose a kind, authored reflection without changing your original."
+		_guide_button.pressed.connect(_ask_guide_for_current_art)
+		actions.add_child(_guide_button)
+
+		_enter_world_button = Button.new()
+		_enter_world_button.name = "EnterArtworkWorld"
+		_enter_world_button.text = "✨ Frame My Artwork"
+		_enter_world_button.tooltip_text = "Place this artwork in a magical castle frame."
+		_enter_world_button.pressed.connect(_enter_current_artwork_world)
+		actions.add_child(_enter_world_button)
+
+	_creative_dialog = AcceptDialog.new()
+	_creative_dialog.name = "CreativeCompanionDialog"
+	_creative_dialog.title = "Your Creative Reflection"
+	_creative_dialog.min_size = Vector2i(720, 520)
+	_creative_dialog.get_ok_button().text = "Keep Creating"
+	add_child(_creative_dialog)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_bottom", 12)
+	_creative_dialog.add_child(margin)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	margin.add_child(box)
+
+	_creative_summary = Label.new()
+	_creative_summary.text = "Your original drawing always stays safe. The guide offers choices; you remain the artist."
+	_creative_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_creative_summary.custom_minimum_size = Vector2(650, 125)
+	_creative_summary.add_theme_font_size_override("font_size", 18)
+	box.add_child(_creative_summary)
+
+	var style_heading := Label.new()
+	style_heading.text = "Optional inspirations — choose one only if it feels like you:"
+	style_heading.add_theme_font_size_override("font_size", 17)
+	box.add_child(style_heading)
+	_creative_styles = VBoxContainer.new()
+	box.add_child(_creative_styles)
+
+	var original_button := Button.new()
+	original_button.text = "Keep My Original Exactly As It Is"
+	original_button.pressed.connect(_keep_original_for_world)
+	box.add_child(original_button)
+
+	var world_button := Button.new()
+	world_button.text = "Begin the Gallery Frame Ritual"
+	world_button.pressed.connect(func() -> void:
+		_creative_dialog.hide()
+		_enter_current_artwork_world()
+	)
+	box.add_child(world_button)
+
+
+func _ask_guide_for_current_art() -> void:
+	var path := _ensure_gallery_copy()
+	if path.is_empty():
+		return
+	_begin_creative_guide(path)
+
+
+func _begin_creative_guide(path: String) -> void:
+	_last_gallery_path = path
+	CreationWorldState.prepare_artwork(path, _sanitize_title(title_input.text))
+	_creative_dialog.popup_centered(Vector2i(760, 560))
+	_show_creative_guide({
+		"celebration": "Every mark belongs to your story. Choose what feels true to you.",
+		"scene_description": "You can keep your artwork exactly as it is, try an optional local colour treatment, or place it in a Gallery Frame Ritual.",
+		"style_ideas": ["soft watercolor", "paper collage", "storybook pastel"],
+	}, false)
+
+
+func _show_creative_guide(guide: Dictionary, degraded: bool) -> void:
+	var celebration := str(guide.get("celebration", "Your idea already has its own special spark."))
+	var scene := str(guide.get("scene_description", "Your marks can become a world with light, depth, and movement."))
+	_creative_summary.text = "%s\n\n%s" % [celebration, scene]
+	for child in _creative_styles.get_children():
+		child.queue_free()
+	var styles = guide.get("style_ideas", ["soft watercolor", "paper collage", "storybook pastel"])
+	if not styles is Array:
+		styles = ["soft watercolor", "paper collage", "storybook pastel"]
+	for style_value in styles.slice(0, 3):
+		var style := str(style_value)
+		var button := Button.new()
+		button.text = "Preview %s (optional)" % style.capitalize()
+		button.tooltip_text = "Creates a separate variation. Your original file is never overwritten."
+		button.pressed.connect(_apply_ai_style.bind(style))
+		_creative_styles.add_child(button)
+
+
+func _apply_ai_style(style: String) -> void:
+	var image := Image.new()
+	if image.load(CreationWorldState.current_artwork_path) != OK:
+		show_notification("The original artwork could not be opened.", false)
+		return
+	_creative_summary.text = "Preparing an optional %s variation…" % style
+	var path := ArtEnhancer.save_variation(image, CreationWorldState.current_artwork_path, style)
+	if path.is_empty():
+		show_notification("The optional variation could not be saved.", false)
+		return
+	CreationWorldState.select_variation(path, style)
+	var preview := Image.new()
+	if preview.load(path) == OK:
+		canvas_texture.update(preview)
+	_creative_summary.text = "The %s variation is selected for your frame ritual. Your original drawing remains unchanged, and you can switch back at any time." % style
+	show_notification("Optional variation created — original kept safely.", true)
+
+
+func _keep_original_for_world() -> void:
+	CreationWorldState.keep_original()
+	var original := Image.new()
+	if original.load(CreationWorldState.current_artwork_path) == OK:
+		canvas_texture.update(original)
+	show_notification("Your original is selected for the frame ritual.", true)
+
+
+func _enter_current_artwork_world() -> void:
+	var path := _ensure_gallery_copy()
+	if path.is_empty():
+		return
+	if CreationWorldState.current_artwork_path != path:
+		CreationWorldState.prepare_artwork(path, _sanitize_title(title_input.text))
+	_enter_world_button.disabled = true
+	show_notification("Opening the Gallery Frame Ritual…", true)
+	var scene_error := get_tree().change_scene_to_file("res://scenes/gallery_frame_ritual.tscn")
+	if scene_error != OK:
+		_enter_world_button.disabled = false
+		show_notification("The Gallery Frame Ritual could not open yet.", false)
+
+
+func _ensure_gallery_copy() -> String:
+	if not _last_gallery_path.is_empty() and FileAccess.file_exists(_last_gallery_path):
+		return _last_gallery_path
+	_last_gallery_path = save_artwork_to_gallery()
+	return _last_gallery_path
 
 
 func create_smooth_canvas() -> void:
@@ -118,6 +330,8 @@ func create_smooth_canvas() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _creative_dialog != null and _creative_dialog.visible:
+		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 
@@ -311,6 +525,9 @@ func _on_clear_button_pressed() -> void:
 
 
 func _save_current_state() -> void:
+	# Any new mark makes the previous saved copy stale. The next guide/world
+	# request will save a fresh version instead of analysing an older drawing.
+	_last_gallery_path = ""
 
 	undo_history.append(canvas_image.duplicate())
 
@@ -326,6 +543,7 @@ func _on_undo_button_pressed() -> void:
 		return
 
 	canvas_image = undo_history.pop_back()
+	_last_gallery_path = ""
 
 	canvas_texture.update(canvas_image)
 
@@ -339,6 +557,11 @@ func _update_undo_button() -> void:
 func create_quick_color_palette() -> void:
 
 	quick_color_grid.columns = 7
+
+	# The player's own colours come first — every feeling they honoured in
+	# the Sanctuary of Sound is a brush here. This is the moment the journey
+	# stops being three minigames and becomes one thing.
+	_add_earned_colors()
 
 	var colors: Array[Color] = [
 
@@ -377,42 +600,84 @@ func create_quick_color_palette() -> void:
 	]
 
 	for color in colors:
+		quick_color_grid.add_child(_make_swatch(color))
 
-		var button := Button.new()
 
-		button.custom_minimum_size = Vector2(45, 45)
+# Build a swatch for each emotion the player recorded in stage 2.
+# Most recent first, de-duplicated, so revisiting the same feeling doesn't
+# flood the palette with copies of one colour.
+func _add_earned_colors() -> void:
 
-		button.text = ""
+	var js := get_node_or_null("/root/JourneyState")
+	if js == null:
+		return
 
-		button.clip_contents = true
+	var seen := {}
 
-		var style := StyleBoxFlat.new()
+	for i in range(js.emotions.size() - 1, -1, -1):
+		var entry = js.emotions[i]
 
-		style.bg_color = color
+		var emotion_name: String = entry.get("name", "")
+		var html: String = entry.get("colour", "")
 
-		style.corner_radius_top_left = 100
-		style.corner_radius_top_right = 100
-		style.corner_radius_bottom_left = 100
-		style.corner_radius_bottom_right = 100
+		if emotion_name.is_empty() or html.is_empty():
+			continue
 
-		style.border_width_left = 2
-		style.border_width_right = 2
-		style.border_width_top = 2
-		style.border_width_bottom = 2
+		if seen.has(emotion_name):
+			continue
 
-		style.border_color = Color.WHITE
+		seen[emotion_name] = true
 
-		button.add_theme_stylebox_override("normal", style)
-		button.add_theme_stylebox_override("hover", style)
-		button.add_theme_stylebox_override("pressed", style)
+		quick_color_grid.add_child(_make_swatch(
+			Color.from_string(html, Color.WHITE),
+			"Your %s" % emotion_name,
+			true,
+		))
 
-		button.pressed.connect(func(c = color):
-			active_color = c
-			color_picker.color = c
-			is_Erasing = false
-		)
 
-		quick_color_grid.add_child(button)
+# One colour button. Shared by the standard palette and the emotion
+# swatches so both stay visually identical.
+# `tooltip` names the feeling a colour came from; empty for stock colours.
+# `earned` gives emotion swatches a gold ring so they read as the player's.
+func _make_swatch(color: Color, tooltip := "", earned := false) -> Button:
+
+	var button := Button.new()
+
+	button.custom_minimum_size = Vector2(45, 45)
+
+	button.text = ""
+
+	button.clip_contents = true
+
+	button.tooltip_text = tooltip
+
+	var style := StyleBoxFlat.new()
+
+	style.bg_color = color
+
+	style.corner_radius_top_left = 100
+	style.corner_radius_top_right = 100
+	style.corner_radius_bottom_left = 100
+	style.corner_radius_bottom_right = 100
+
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+
+	style.border_color = Color(1.0, 0.85, 0.3) if earned else Color.WHITE
+
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("hover", style)
+	button.add_theme_stylebox_override("pressed", style)
+
+	button.pressed.connect(func(c = color):
+		active_color = c
+		color_picker.color = c
+		is_Erasing = false
+	)
+
+	return button
 
 
 func _sanitize_title(raw_title: String) -> String:
@@ -496,11 +761,26 @@ func save_artwork_to_gallery() -> String:
 	var err = image.save_png(save_path)
 
 	if err == OK:
+		_record_creation(save_path, custom_title)
 		show_notification("Artwork added to gallery!", true)
 		return save_path
 	else:
 		show_notification("Failed to save to gallery!", false)
 		return ""
+
+
+# Remember what the player made, so the castle can hang it and stage 4 can
+# name the creativity it took. Only local paths — nothing here is uploaded.
+func _record_creation(path: String, title: String) -> void:
+	var js := get_node_or_null("/root/JourneyState")
+	if js == null:
+		return
+
+	js.record_creation(path, title)
+	js.advance_to(3)
+	if _prompt_label != null:
+		var reflection_index: int = (js.creations.size() - 1) % REFLECTIONS.size()
+		_prompt_label.text = "ARTWORK SAVED • FRAME IT TO DISCOVER CREATOR'S LIGHT\n%s" % REFLECTIONS[reflection_index]
 
 
 func upload_artwork_to_firebase() -> void:
@@ -562,30 +842,42 @@ func _on_firebase_button_pressed() -> void:
 
 	save_option_dialog.hide()
 
-	save_artwork_to_gallery()
+	_last_gallery_path = save_artwork_to_gallery()
 
 	save_artwork_to_desktop()
 
 	# Replaced by upload to server
 	#upload_artwork_to_firebase()
 
-	print("AUTH TOKEN = [", Global.auth_token, "]")
+	print("Authenticated artwork upload requested.")
 	upload_artwork_to_server()
+	if not _last_gallery_path.is_empty():
+		_begin_creative_guide(_last_gallery_path)
 
 func _on_local_button_pressed() -> void:
 
 	save_option_dialog.hide()
 
-	save_artwork_to_gallery()
+	_last_gallery_path = save_artwork_to_gallery()
 
 	save_artwork_to_desktop()
+	if not _last_gallery_path.is_empty():
+		_begin_creative_guide(_last_gallery_path)
 
 
 func _on_back_to_hub_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
+	_return_to_campaign()
 	
 func _on_art_gallery_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
+	_return_to_campaign()
+
+
+func _return_to_campaign() -> void:
+	var campaign := get_node_or_null("/root/JourneyCampaign")
+	if campaign != null and campaign.has_method("return_to_campaign"):
+		campaign.call("return_to_campaign")
+	else:
+		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
 	
 # REMOTE GALLERY - SAVE/UPLOAD TO SERVER
 func upload_artwork_to_server() -> void:

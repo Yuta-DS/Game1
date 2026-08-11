@@ -15,10 +15,14 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Artea"
-run/main_scene="uid://d10bpuuoe8w0m"
-config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
-boot_splash/image="uid://06fmhq71d8ey"
+run/main_scene="res://scenes/start_screen.tscn"
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
+run/main_scene.crown_story="res://scenes/viewfinder/crown_of_life_story.tscn"
+
+[artea]
+
+debug/show_island_state_panel=false
 
 [autoload]
 
@@ -27,8 +31,11 @@ MusicManager="*res://scenes/music_manager.tscn"
 Global="*res://scripts/Global.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameManager="*res://scripts/GameManager.gd"
+JourneyState="*res://scripts/JourneyState.gd"
+JourneyCampaign="*res://scripts/journey_campaign.gd"
 Auth="*res://addons/godot-firebase/auth/auth.gd"
-APIManager="*uid://dodj1s54vwit2"
+APIManager="*res://scripts/API_Manager.gd"
+CreationWorldState="*res://scripts/creation_world/creation_world_state.gd"
 
 [dialogue_manager]
 
@@ -39,9 +46,8 @@ runtime/advanced/uses_dotnet=true
 
 window/size/viewport_width=1710
 window/size/viewport_height=1112
-window/size/mode=3
-window/size/window_width_override=640
-window/size/window_height_override=360
+window/size/window_width_override=960
+window/size/window_height_override=540
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/vsync/vsync_mode=0
@@ -134,6 +140,7 @@ locale/translations_pot_files=PackedStringArray("res://dialogue/HubworldDialogue
 
 3d_physics/layer_2="Grass"
 3d_physics/layer_3="Sand"
+3d_physics/layer_4="Cuttable"
 
 [rendering]
 

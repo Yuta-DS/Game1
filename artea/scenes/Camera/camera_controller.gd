@@ -3,7 +3,7 @@
 # Yaw turns freely through a full circle; pitch is limited only near the
 # poles, where looking exactly straight up or down leaves the arm's basis
 # degenerate and the view snaps.
-extends Node3D
+extends SpringArm3D
 
 # Looked up by path in the hub, but this scene is also instanced in worlds
 # whose root is not HubWorld. Resolved defensively so the camera never hard
@@ -14,16 +14,61 @@ extends Node3D
 # to the full usable sphere. The hub previously authored -0.8/-0.1, roughly
 # -46 to -6 degrees, which pinned the view downward — the sky islands were
 # literally unlookable-at.
-@export var minLimitX: float = -1.45   # ~-83 degrees, near straight down
-@export var maxLimitX: float = 1.45    # ~+83 degrees, near straight up
+@export var minLimitX: float = -1.18   # ~-68 degrees; keeps ground context
+@export var maxLimitX: float = 1.05    # ~+60 degrees; avoids underside shots
 @export var mouseAcceleration := 0.005
+@export var startPitchX := deg_to_rad(-14.0)
+@export var startYawY := PI
+@export var pivotHeight := 2.05
+@export var minZoom := 4.8
+@export var maxZoom := 9.2
+@export var zoomStep := 0.7
+
+func _ready() -> void:
+	# Nested PackedScene transform overrides have been lost on some imports of
+	# NewPlayer.tscn. Establish the gameplay pose here so the spring arm always
+	# begins above the character instead of intersecting the terrain.
+	position.y = pivotHeight
+	rotation.x = clampf(startPitchX, minLimitX, maxLimitX)
+	rotation.y = wrapf(startYawY, -PI, PI)
+	# Castle foliage and generated architecture use several collision layers.
+	# A full mask keeps the camera on the player's side of every solid surface.
+	collision_mask = 0xFFFFFFFF
+	spring_length = clampf(spring_length, minZoom, maxZoom)
+	# Keep the first gameplay frame stable. Capturing immediately while the game
+	# steals focus turns the user's movement away from the terminal into a huge
+	# orbit and can leave them staring at empty sky. A click below opts into look.
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _exit_tree() -> void:
+	# Do not strand a hidden/captured cursor when leaving the 3D world.
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
 
 func _input(event: InputEvent) -> void:
+	# Escape releases the pointer for menus and desktop use. Clicking the game
+	# recaptures it, matching the other third-person camera in this project.
+	if event.is_action_pressed("ui_cancel"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			spring_length = maxf(minZoom, spring_length - zoomStep)
+			return
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			spring_length = minf(maxZoom, spring_length + zoomStep)
+			return
+	if event is InputEventMouseButton and event.pressed \
+			and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		return
+
 	# The player may be absent (or still loading) in non-hub scenes; only
 	# block input when there is a player and it is mid-interaction.
 	if player != null and "interacting" in player and player.interacting:
 		return
-	if event is InputEventMouseMotion:
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotateFromVector(event.relative * mouseAcceleration)
 
 func rotateFromVector(v: Vector2):

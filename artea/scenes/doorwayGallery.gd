@@ -1,8 +1,10 @@
 # ExitGallery.gd
 extends Area3D
 
-# --- CHANGE THIS PATH ---
-@export var target_scene_path: String = "res://New_Hub_World.tscn"
+# The hub lives in res://scenes/. The old res://New_Hub_World.tscn does not
+# exist, so go_to_scene() took the "target scene not found" branch below and
+# the doorway silently did nothing — the same failure ExitGallery.gd had.
+@export var target_scene_path: String = "res://scenes/New_Hub_World.tscn"
 
 # This function is automatically called when a physics body enters the Area3D
 func _on_body_entered(body: Node3D):

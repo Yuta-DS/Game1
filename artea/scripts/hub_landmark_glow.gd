@@ -15,7 +15,7 @@ const CrystalShader := preload("res://shaders/artea_crystal.gdshader")
 const LANDMARKS := [
 	{
 		"name": "Castle",
-		"pos": Vector3(-51.4, 63.76, 27.41),
+		"pos": Vector3(-51.4, 66.96, 27.41),
 		"offset": Vector3(0.0, 9.0, 0.0),
 		"color": Color(1.00, 0.72, 0.30),
 	},

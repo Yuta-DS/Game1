@@ -43,13 +43,13 @@ shader_parameter/shadow_sample = 4
 shader_parameter/clouds_density = 0.4
 shader_parameter/clouds_scale = 1.0
 shader_parameter/clouds_smoothness = 0.05
-shader_parameter/clouds_light_color = Color(0.227451, 0.447059, 1, 1)
-shader_parameter/clouds_shadow_intensity = 7.0
+shader_parameter/clouds_light_color = Color(1.0, 0.78, 0.55, 1)
+shader_parameter/clouds_shadow_intensity = 5.0
 shader_parameter/high_clouds_sampler = SubResource("NoiseTexture2D_y3dlu")
 shader_parameter/high_clouds_density = 0.0
-shader_parameter/top_color = Color(0.027451, 0.101961, 0.25098, 1)
-shader_parameter/bottom_color = Color(0.027451, 0.101961, 0.25098, 1)
-shader_parameter/sun_scatter = Color(0.12549, 0.0862745, 0.372549, 1)
+shader_parameter/top_color = Color(0.35, 0.42, 0.68, 1)
+shader_parameter/bottom_color = Color(1.0, 0.66, 0.42, 1)
+shader_parameter/sun_scatter = Color(1.0, 0.55, 0.28, 1)
 shader_parameter/astro_tint = Color(1, 1, 1, 1)
 shader_parameter/astro_sampler = ExtResource("2_pvufr")
 shader_parameter/astro_scale = 10.0
@@ -64,7 +64,7 @@ sky_material = SubResource("ShaderMaterial_d4csj")
 
 [sub_resource type="Environment" id="Environment_n7txt"]
 background_mode = 2
-background_color = Color(8.27849e-06, 0.642601, 0.857138, 1)
+background_color = Color(1.0, 0.66, 0.42, 1)
 sky = SubResource("Sky_8csbe")
 sky_rotation = Vector3(6.28319, 0, 0)
 ambient_light_source = 3
@@ -73,13 +73,13 @@ glow_enabled = true
 fog_mode = 1
 fog_light_color = Color(0.344689, 0.686021, 1, 1)
 fog_density = 1.0
-fog_aerial_perspective = 1.0
+fog_aerial_perspective = 0.35
 fog_height_density = -1.0992
 fog_depth_curve = 4.92458
 fog_depth_begin = 162.7
 fog_depth_end = 376.5
 adjustment_enabled = true
-adjustment_brightness = 0.95
+adjustment_brightness = 1.08
 adjustment_saturation = 1.3
 
 [sub_resource type="Animation" id="Animation_nayj5"]
@@ -95,7 +95,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 302.467),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Color(0.227451, 0.447059, 1, 1), Color(1, 1, 1, 1)]
+"values": [Color(1.0, 0.78, 0.55, 1), Color(1.0, 0.78, 0.55, 1)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -107,7 +107,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 302.467),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Color(0.027451, 0.101961, 0.25098, 1), Color(0.537255, 0.839216, 1, 1)]
+"values": [Color(0.35, 0.42, 0.68, 1), Color(0.35, 0.42, 0.68, 1)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -119,7 +119,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 305.767),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Color(0.027451, 0.101961, 0.25098, 1), Color(0, 0.662745, 0.898039, 1)]
+"values": [Color(1.0, 0.66, 0.42, 1), Color(1.0, 0.66, 0.42, 1)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -131,7 +131,7 @@ tracks/3/keys = {
 "times": PackedFloat32Array(0, 303.567),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Color(0.12549, 0.0862745, 0.372549, 1), Color(0.298039, 0.298039, 0.298039, 1)]
+"values": [Color(1.0, 0.55, 0.28, 1), Color(1.0, 0.55, 0.28, 1)]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
@@ -365,7 +365,7 @@ _data = {
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.898006, -1.39097e-07, -0.439984, 0.173949, 0.91853, 0.355029, 0.404138, -0.395352, 0.824845, 0, 9.15406, 1.93541)
-light_energy = 0.45
+light_energy = 0.65
 directional_shadow_mode = 0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]

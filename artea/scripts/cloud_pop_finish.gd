@@ -54,8 +54,29 @@ var messages = [
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	randomize()
-	var index = randi() % messages.size()
-	label.text = messages[index]
+	label.text = _build_reflection()
+
+
+# Reflect back what the player actually did, not a message picked at random.
+# The generic list above is the fallback for an empty journey, not the
+# default path.
+func _build_reflection() -> String:
+	var count := JourneyState.popped_count()
+	if count <= 0:
+		return messages[randi() % messages.size()]
+
+	var heaviest := JourneyState.heaviest_thought()
+
+	var opening := ""
+	if count == 1:
+		opening = "You looked at one thought today."
+	else:
+		opening = "You looked at %d thoughts today." % count
+
+	if heaviest.is_empty():
+		return opening + "\nYou didn't run from them. That's courage.\n\nSTAR OF WISDOM DISCOVERED\nYou chose hope and understanding."
+
+	return "%s\nThe heaviest one was \"%s\".\nYou didn't run from it. That's courage.\n\nSTAR OF WISDOM DISCOVERED\nYou discovered the courage to understand your thoughts and choose hope." % [opening, heaviest]
 
 # Play again button
 func _on_play_again_pressed() -> void:
@@ -64,4 +85,12 @@ func _on_play_again_pressed() -> void:
 
 # Return to Hubworld button
 func _on_return_to_hubworld_pressed():
-	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
+	_return_to_campaign()
+
+
+func _return_to_campaign() -> void:
+	var campaign := get_node_or_null("/root/JourneyCampaign")
+	if campaign != null and campaign.has_method("return_to_campaign"):
+		campaign.call("return_to_campaign")
+	else:
+		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")

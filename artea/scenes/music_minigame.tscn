@@ -76,10 +76,6 @@ process_material = SubResource("ParticleProcessMaterial_3oc71")
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=551705016]
 
-[node name="EmotionAI" type="NobodyWhoChat" parent="." unique_id=1385022801]
-
-[node name="Model" type="NobodyWhoModel" parent="." unique_id=2023089112]
-
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=479801154]
 layout_mode = 1
 anchors_preset = 8
@@ -97,30 +93,26 @@ theme = ExtResource("2_b8p47")
 alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer" unique_id=460658940]
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(270, 0)
 layout_mode = 2
 
 [node name="Title" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=372845258]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 0.6)
-text = "Type an emotion:"
+text = "Choose a feeling to explore"
 
 [node name="Label" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=787207305]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 0.6)
-text = "I feel..."
+text = "Your choice shapes this melody. You can change it or skip it."
+autowrap_mode = 2
 
-[node name="EmotionInput" type="LineEdit" parent="HBoxContainer/VBoxContainer" unique_id=331061337]
+[node name="EmotionChoices" type="GridContainer" parent="HBoxContainer/VBoxContainer" unique_id=331061337]
+custom_minimum_size = Vector2(270, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9721921, 0.24571806, 0.75725305, 1)
-placeholder_text = "Type how you feel..."
-
-[node name="GenerateButton" type="Button" parent="HBoxContainer/VBoxContainer" unique_id=1875997354]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_styles/hover = SubResource("StyleBoxFlat_b8p47")
-theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_at7cq")
-text = "Transform Emotion"
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
 
 [node name="ResultText" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=688153701]
 layout_mode = 2

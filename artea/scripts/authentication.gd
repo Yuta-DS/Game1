@@ -1,5 +1,10 @@
 extends Control
 
+# Every path out of this screen goes to the hub. They used to point at
+# res://Game.tscn and res://New_Hub_World.tscn, neither of which exists, so
+# signing up dead-ended and logging in hung on the loading screen.
+const HUB_SCENE := "res://scenes/New_Hub_World.tscn"
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -47,7 +52,11 @@ func on_login_succeeded(auth):
 	%StateLabel.text = "Login success!"
 	Firebase.Auth.save_auth(auth)
 	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://New_Hub_World.tscn"
+	# The hub lives in res://scenes/. The old res://New_Hub_World.tscn does not
+	# exist, so logging in dropped the player on a loading screen that never
+	# finished — and everything reached through the hub, including the Lens of
+	# Seeing, was unreachable from a normal start.
+	loading_screen.next_scene_path = HUB_SCENE
 	
 	get_tree().root.add_child(loading_screen)
 	get_tree().current_scene.queue_free() 
@@ -58,7 +67,9 @@ func on_signup_succeeded(auth):
 	print(auth)
 	%StateLabel.text = "Sign up success!"
 	Firebase.Auth.save_auth(auth)
-	get_tree().change_scene_to_file("res://Game.tscn")
+	# Was res://Game.tscn, which does not exist: a player who registered a new
+	# account landed nowhere.
+	get_tree().change_scene_to_file(HUB_SCENE)
 
 # Called if login fails	
 func on_login_failed(error_code, message):
@@ -85,5 +96,6 @@ func _on_sign_in_google_button_pressed():
 		Firebase.Auth.get_auth_localhost(provider, 8060)
 
 func _on_d_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/3DScenes.tscn")
+	# Was res://scenes/3DScenes.tscn, which does not exist.
+	get_tree().change_scene_to_file(HUB_SCENE)
 	

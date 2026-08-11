@@ -2,7 +2,7 @@ extends Control
 
 @onready var settingsPanel = $"Settings Panel"
 @onready var inventoryPanel = $"Inventory Panel"
-#@onready var usersPanel = 
+#@onready var usersPanel =
 
 # Called when the node enters the scene tree for the first time.
 

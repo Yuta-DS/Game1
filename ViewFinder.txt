@@ -1,0 +1,515 @@
+================================================================================
+VIEWFINDER — REAL-TIME WORLD CUTTING MECHANIC
+Study notes + port plan for the Artéa (Godot 4.4) project
+================================================================================
+
+Source repo : https://github.com/ToughNutToCrack/ViewFinder.git
+Author      : ToughNutToCrack (tntc)
+Video       : https://youtu.be/rdExK08zYBI
+Engine      : Unity 2022.3.31f1, HDRP
+Commit read : f2f92bc "project push"
+Upstream of upstream: cutting core is adapted from Kristin Lague's
+                Mesh-Cutting (https://github.com/KristinLague/Mesh-Cutting)
+Target here : /Users/davidsovann/GAME/artea (Godot 4.4, .NET/Mono, mostly GDScript)
+
+--------------------------------------------------------------------------------
+0. WHAT THE MECHANIC ACTUALLY IS
+--------------------------------------------------------------------------------
+The game is "photograph a piece of the world, then paste that photo back into
+the world as real geometry."
+
+Two-step player loop:
+
+  STEP 1 — TAKE PHOTO (left click while camera raised)
+    Everything inside the camera's view frustum is physically SLICED out of the
+    level geometry, cloned, and stored in a "film" object. The level is then
+    restored to its intact state. Player now holds a Polaroid containing a
+    frozen 3D chunk of world.
+
+  STEP 2 — PLACE PHOTO (left click while holding the developed film)
+    The frustum is computed again at the NEW player position/orientation.
+    Whatever is currently inside that new frustum gets sliced out and DELETED,
+    leaving a clean frustum-shaped hole. The stored chunk from step 1 is then
+    un-parented and activated, dropping into that hole.
+
+Net effect: you cut a wedge of world out of picture A and graft it into
+picture B, at runtime, on real meshes, with real colliders.
+
+Key insight: it is NOT a shader trick and NOT a portal. It is genuine runtime
+mesh surgery — four plane cuts (left/right/top/bottom of the frustum) applied
+in sequence to every mesh that overlaps the frustum.
+
+--------------------------------------------------------------------------------
+1. FILE INVENTORY (only 7 gameplay scripts, ~1450 lines total)
+--------------------------------------------------------------------------------
+Assets/Scripts/
+  Cutter.cs                   460 lines  Static mesh-slicing algorithm (the math)
+  CustomFrustumLocalSpace.cs  514 lines  The actual game mechanic / orchestrator
+  GeneratedMesh.cs             78 lines  Mesh accumulator (verts/normals/uv/submesh)
+  MeshTriangle.cs              32 lines  Plain data struct for one triangle
+  CollisionChecker.cs          16 lines  OnTriggerEnter -> register object to cut
+  CutPiece.cs                  14 lines  Tracks all chunks a source object split into
+  PlayerController.cs         143 lines  FPS controller + film animation + ending
+  Polaroid.cs                 156 lines  Input state machine, animations, DOF, count
+Assets/Editor/
+  MeshInfo.cs                  60 lines  Debug inspector, not needed for the port
+
+Scene: Assets/Scenes/ViewFinder.unity
+Layer: "Cuttable" (TagManager.asset) — only objects on this layer get sliced.
+Special name: any object whose name contains "Ending" triggers the end sequence.
+
+Dependency graph:
+  Polaroid  --calls-->  CustomFrustumLocalSpace.Cut(bool)
+  CustomFrustumLocalSpace  --uses-->  Cutter.Cut(go, point, normal)
+  Cutter  --uses-->  GeneratedMesh + MeshTriangle
+  CollisionChecker  --reports-->  CustomFrustumLocalSpace.AddObjectToCut(go, side)
+  CutPiece  --lives on-->  each sliced object, holds its fragment list
+
+--------------------------------------------------------------------------------
+2. THE CUTTING ALGORITHM (Cutter.cs) — how one plane cut works
+--------------------------------------------------------------------------------
+Entry point:
+  static GameObject Cut(GameObject original, Vector3 contactPoint, Vector3 cutNormal)
+Returns the NEW "right side" object; the original GameObject is mutated in place
+to become the "left side."
+
+Steps:
+
+ 2.1 Build the cut plane IN LOCAL SPACE of the target object.
+     plane = Plane(obj.InverseTransformDirection(-cutNormal),
+                   obj.InverseTransformPoint(contactPoint))
+     Doing it in local space means no per-vertex world transforms in the loop.
+     This is the single biggest perf decision in the whole project — it is why
+     the file is called "CustomFrustumLocalSpace".
+
+ 2.2 SeparateMeshes(): loop every submesh, every triangle (indices j, j+1, j+2).
+     For each of the 3 verts, plane.GetSide() -> bool left/right.
+       - all three left    -> push whole triangle into leftMesh
+       - all three right   -> push whole triangle into rightMesh
+       - mixed             -> CutTriangle()
+
+ 2.3 CutTriangle(): the interesting case. A triangle straddling the plane always
+     splits into exactly 1 vert on one side + 2 on the other. It produces FOUR
+     new triangles (2 left, 2 right).
+     - Sort the 3 verts into leftMeshTriangle / rightMeshTriangle buckets.
+       Trick: the first vertex assigned to a bucket is duplicated into slot [1],
+       so a bucket that only receives one vertex still has both slots valid.
+     - Find intersection points via plane.Raycast() along the two straddling
+       edges, giving `distance`; normalize by edge length:
+         normalizedDistance = distance / edgeLength
+       then Lerp position, normal, and UV by that t. Two new verts: vertLeft,
+       vertRight. Both are pushed to `addedVertices` (the cut boundary polyline).
+     - Emit 4 triangles; for each, if
+         dot(cross(v1-v0, v2-v0), normal[0]) < 0
+       the winding is backwards -> FlipTriangel() swaps verts 0 and 2 (and their
+       normals/UVs). This is the winding-order fix that keeps the mesh from
+       rendering inside-out.
+
+ 2.4 FillCut() / EvaluatePairs() / Fill(): cap the hole so the cut isn't hollow.
+     - `addedVertices` is an unordered soup of edge pairs (i, i+1 are the two
+       ends of one boundary segment).
+     - EvaluatePairs() walks that soup, chaining segments end-to-end into an
+       ordered polygon loop. It loops until no more matches (`isDone`), so it
+       handles multiple disjoint loops (e.g. cutting through a torus).
+     - Fill() triangulates each loop as a FAN from the loop's centroid:
+         center = average of loop verts
+         for each i: triangle(v[i], v[(i+1)%n], center)
+       UVs are planar-projected: uv = 0.5 + dot(displacement, axis).
+       The same fan is added to BOTH meshes with opposite normals (-plane.normal
+       for left, +plane.normal for right) so both halves are sealed.
+
+ 2.5 Reassembly:
+     - Destroy old colliders on the original.
+     - Original keeps leftMesh; gets a convex MeshCollider.
+     - New GameObject gets rightMesh, MeshRenderer with the same material array
+       (one entry per submesh), convex MeshCollider, kinematic Rigidbody, layer
+       "Cuttable", and a randomized name.
+
+ 2.6 `isBusy` static flag guards re-entrancy; `originalMesh` is a static scratch
+     field. Not thread-safe and not reentrant — one cut at a time, by design.
+
+KNOWN WEAKNESSES IN THE ORIGINAL (inherit these bugs if you copy blindly):
+  * Cutter.cs:17 — if isBusy is true, Cut() returns null but the CALLER still
+    does cutPiece.AddChunk(null) and allObjects.Add(null). Null-guard when you
+    port it.
+  * Cutter.cs:404 — the box mesh index buffer has a degenerate triangle
+    "3, 5, 3" (a repeated index). It's invisible for a trigger volume, but wrong.
+  * Cutter.cs:415 — Fill() computes `up = plane.normal` then
+    `left = cross(plane.normal, up)` which is always Vector3.zero. So the cap's
+    UV x-coordinate is always 0.5. Cap face UVs are effectively broken. Fix by
+    building a proper orthonormal basis from the plane normal.
+  * The algorithm reads originalMesh.vertices / .normals / .uv INSIDE the loop.
+    In Unity each of those property reads allocates a fresh copy of the array.
+    On any mesh over a few thousand triangles this is the dominant cost. Cache
+    them into locals once before the loop.
+  * convex = true on every MeshCollider means physics shapes are approximations
+    (Unity caps convex hulls at 255 verts). Concave cut pieces will have wrong
+    collision.
+  * No tangents are carried through the cut, so normal-mapped materials will
+    light incorrectly on cut geometry.
+
+--------------------------------------------------------------------------------
+3. THE FRUSTUM MECHANIC (CustomFrustumLocalSpace.cs) — the actual game
+--------------------------------------------------------------------------------
+This is the file to study most closely. It answers "which objects do I cut, and
+with which four planes?"
+
+ 3.1 SETUP (Start): creates 5 hidden helper primitives, all
+     MeshRenderer-disabled, MeshCollider convex + isTrigger + DISABLED:
+       LeftCameraPlane   (side 0)
+       RightCameraPlane  (side 1)
+       TopCameraPlane    (side 2)
+       BottomCameraPlane (side 3)
+       FrustumObject     (side 4)
+     Each gets a CollisionChecker component tagged with its side index.
+
+ 3.2 Cut(bool isTakingPicture) — SETUP PHASE:
+     Compute the 4 far-plane corners of the camera frustum, in the camera's
+     LOCAL space, then TransformPoint them to world:
+       frustumHeight = 2 * farClip * tan(fov * 0.5 * Deg2Rad)
+       frustumWidth  = frustumHeight * aspect
+       corners = (±w/2, ±h/2, farClip)
+     Build 4 Unity Planes from (cameraPos, cornerA, cornerB) — winding chosen so
+     all four normals point INWARD.
+
+     For each side, build a thin BOX MESH (CreateBoxMesh, 8 verts) by extruding
+     the triangular side-face of the frustum along that plane's normal by
+     `customOffset` (default 0.1). That box is the trigger volume used to find
+     "which objects straddle this frustum side."
+     Note the 5-point wedge is passed as 4 near verts + 4 offset verts, with the
+     midpoint of the far edge included so the box stays well-formed.
+
+ 3.3 DETECTION PHASE — the "3 frames" trick:
+     Enable the 4 side colliders, then `yield return null` THREE TIMES.
+     Unity needs more than one frame for OnTriggerEnter to fire on
+     newly-enabled/newly-created colliders. CollisionChecker fills
+     leftToCut / rightToCut / topToCut / bottomToCut via AddObjectToCut().
+     Then disable the colliders again.
+     This is a hack, and it is the mechanic's biggest fragility — it depends on
+     physics tick timing. In Godot you would instead do an explicit
+     `PhysicsDirectSpaceState3D.intersect_shape()` query and get the answer
+     synchronously in the same frame. Strictly better. See §6.
+
+ 3.4 CUTTING PHASE — sequential, order matters:
+     For left: cut each object once by leftPlane.
+     For right/top/bottom: cut EVERY EXISTING CHUNK of that object
+     (cutPiece.chunks) — because a previous side's cut may already have split it.
+       int initialCount = cutPiece.chunks.Count;
+       for (i = 0; i < initialCount; i++) Cutter.Cut(chunks[i], ...);
+     `initialCount` is snapshotted so newly added chunks aren't re-cut in the
+     same pass. Cut point passed is the CENTROID of that frustum side triangle,
+     e.g. (leftDown + leftUp + cameraPos) / 3.
+     Worst case one object becomes 2^4 = 16 fragments.
+
+     Backup of intact geometry: before the first cut, the object is renamed
+     "Name/cut" and a disabled Instantiate() clone keeps the original name. The
+     "/" in the name is the sentinel used by later sides to check "have I
+     already backed this one up?" (obj.name.Split('/').Length == 1).
+     Crude, but it works and costs nothing.
+
+ 3.5 SELECTION PHASE — which fragments are actually INSIDE?
+     Build FrustumObject: a 5-vert pyramid (apex = camera pos, base = the four
+     far corners), each vert pulled INWARD by customOffset so it doesn't
+     re-catch the pieces sitting exactly on the cut planes. Enable its trigger,
+     wait 3 more frames, collect everything into objectsInFrustum, disable.
+
+ 3.6 RESOLUTION PHASE — two branches:
+     isTakingPicture == true  (photo):
+       activeFilm = new PolaroidFilm(objectsInFrustum, capturePoint)
+         -> clones every in-frustum fragment, PARENTS the clones to the camera
+            transform, and deactivates them. Parenting to the camera is what
+            makes the photo contents "travel with the player."
+       Re-activate the intact backups (level looks untouched again).
+       Destroy every fragment.
+     isTakingPicture == false (place):
+       Strip CutPiece components from all fragments.
+       Destroy everything inside the new frustum -> leaves the hole.
+       activeFilm.ActivateFilm() -> un-parent the stored clones (SetParent(null))
+       and re-enable them. Because they were parented to the camera, they land in
+       exactly the frustum-relative position they were photographed at.
+
+     Then wait 0.5s and hand control back: controller.ChangePlayerState(true).
+     Player is frozen (ChangePlayerState(false)) for the whole operation — this
+     conveniently hides any hitch from the mesh surgery.
+
+--------------------------------------------------------------------------------
+4. SUPPORTING PIECES
+--------------------------------------------------------------------------------
+GeneratedMesh.cs
+  Accumulator. AddTriangle() appends 3 verts/normals/uvs and records indices per
+  submesh, growing the submesh list on demand. GetGeneratedMesh() builds the
+  Unity Mesh, setting UV0 and UV1 to the same data. Note the cap triangles are
+  written to submesh index (originalMesh.subMeshCount + 1) — i.e. deliberately
+  a NEW submesh, so you can assign a distinct "cut face" material. The original
+  project just copies the same material to every slot; you probably want a
+  dedicated cross-section material here.
+
+MeshTriangle.cs
+  Dumb container: 3 verts, 3 normals, 3 uvs, submesh index. Note the
+  `SubmeshIndex` property setter is an infinite recursion (set => SubmeshIndex =
+  value) but is private and never called, so it never fires. Fix on port.
+
+CollisionChecker.cs
+  16 lines. OnTriggerEnter: if layer == "Cuttable" register (gameObject, side);
+  else if name contains "Ending" register the ending object.
+
+CutPiece.cs
+  14 lines. Holds List<GameObject> chunks for one source object.
+
+Polaroid.cs
+  The input/animation state machine. Sequence, all on Mouse0:
+    "Main" state          -> raise camera, enable DepthOfField, "CameraIn"
+    "Look" state          -> take photo: decrement counter, "Film" trigger,
+                             customFrustumLocalSpace.Cut(true)
+    film "Main" state     -> "PolaroidIn" (raise the developed photo)
+    film "Look" state     -> customFrustumLocalSpace.Cut(false)  = place it
+  Mouse1 backs out of each state. `T` rotates the held film by -30 degrees
+  (and rotates objectToRotate to match) — a puzzle mechanic.
+  `checkTimer / waitTime = 0.25f` debounces input against animation states.
+  PrintEvent() is called from an ANIMATION EVENT: it instantiates the film
+  prefab, parents it to the camera holder, and slides it into filmPos.
+
+PlayerController.cs
+  Standard CharacterController FPS: mouse look with clamped pitch (±90),
+  WASD, gravity, jump. isPlayerActive gates Update. MoveFilm() coroutine glides
+  the film prefab into hand position (with Animator temporarily disabled so it
+  doesn't fight the tween). Ending: on trigger with an object named "Ending",
+  animate HDRP LensDistortion intensity 0 -> 0.5 over ~3s.
+
+--------------------------------------------------------------------------------
+5. WHY THE DESIGN WORKS (transferable lessons)
+--------------------------------------------------------------------------------
+ L1. Local-space cutting. Transform the PLANE into the object's space once,
+     instead of transforming N vertices into world space. O(1) vs O(n).
+ L2. Trigger volumes as broad-phase. Rather than testing every mesh against the
+     frustum analytically, let the physics engine answer "who overlaps this
+     wedge" and only run expensive per-triangle work on those.
+ L3. Cut with 4 half-space planes, not with a frustum solid. Plane cuts are
+     simple and composable; a frustum is just the intersection of four of them.
+     Sequential application handles the combinatorics for free.
+ L4. Backup-and-restore instead of undo. Cloning the intact object before the
+     first cut is far cheaper to reason about than trying to weld fragments back
+     together.
+ L5. Parent-to-camera as the "photo" data structure. The stored chunk's
+     transform relative to the camera IS the photo. No projection math, no
+     render textures — placement is exact by construction.
+ L6. Freeze the player during the operation. Turns an unavoidable frame hitch
+     into intentional-feeling game feel.
+ L7. Nudge helper geometry by an epsilon (customOffset) in both directions.
+     Prevents coplanar/degenerate cases at the seams. Pick this value relative to
+     your world scale.
+
+--------------------------------------------------------------------------------
+6. PORTING TO ARTÉA / GODOT 4.4 — CONCRETE PLAN
+--------------------------------------------------------------------------------
+Artéa is Godot 4.4 with .NET enabled but ~160 GDScript files and effectively no
+gameplay C#. Two options:
+
+  OPTION A (recommended): write the mechanic in C#.
+    The cutter is tight numeric loops over vertex arrays — GDScript will be
+    5-20x slower here, and this runs on every shutter press. Artéa already has
+    the .NET setup (artea/Artea.csproj), so the cost is low. Keep the
+    orchestrator in GDScript if you prefer, and call into a C# `Cutter` class.
+
+  OPTION B: pure GDScript. Viable ONLY if your cuttable props are low-poly
+    (< ~2k tris each) and you cut few objects at a time. Use PackedVector3Array
+    and avoid per-vertex Dictionary/Array-of-Array allocations.
+
+ 6.1 API TRANSLATION TABLE
+   Unity                              Godot 4.4
+   ---------------------------------  ------------------------------------------
+   GameObject                         Node3D
+   MonoBehaviour                      Node / Node3D script
+   MeshFilter.mesh                    MeshInstance3D.mesh (ArrayMesh)
+   MeshRenderer.materials[i]          MeshInstance3D.set_surface_override_material
+   MeshCollider (convex)              CollisionShape3D + ConvexPolygonShape3D
+                                      (mesh.create_convex_shape())
+   Rigidbody (isKinematic)            RigidBody3D freeze=true, or StaticBody3D
+   Plane(normal, point)               Plane(normal, point)   — same class
+   plane.GetSide(v)                   plane.is_point_over(v)
+   plane.Raycast(ray, out d)          plane.intersects_ray(from, dir) -> Vector3?
+                                      (returns the POINT, not a distance — see 6.3)
+   transform.InverseTransformPoint    global_transform.affine_inverse() * p
+   transform.InverseTransformDirection global_transform.basis.inverse() * dir
+   transform.TransformPoint           global_transform * p
+   Camera.fieldOfView / farClipPlane  Camera3D.fov / far
+   Camera.aspect                      viewport size ratio (get_viewport().size)
+   layer "Cuttable"                   collision_layer bit + set_collision_mask_value
+   OnTriggerEnter                     Area3D body_entered / area_entered signal
+   Instantiate(go)                    node.duplicate()
+   Destroy(go)                        node.queue_free()
+   SetActive(false)                   node.visible = false + set_process(false),
+                                      or remove_child + keep reference
+   SetParent(t)                       reparent(t, true)  (keeps global transform)
+   yield return null                  await get_tree().process_frame
+   Coroutine                          async func with await
+   Mesh.SetVertices/SetNormals/...    ArrayMesh.add_surface_from_arrays(
+                                        Mesh.PRIMITIVE_TRIANGLES, arrays)
+                                      with arrays[Mesh.ARRAY_VERTEX] etc.
+   subMeshCount                       ArrayMesh.get_surface_count()
+   HDRP Volume / DepthOfField         WorldEnvironment + Environment.dof_blur_*
+   HDRP LensDistortion                custom shader on a full-screen ColorRect,
+                                      or CameraAttributesPractical + shader
+
+ 6.2 THE THREE-FRAME TRICK — REPLACE IT
+   Do NOT port the "yield null x3" hack. Godot gives you a synchronous query:
+
+     var space := get_world_3d().direct_space_state
+     var params := PhysicsShapeQueryParameters3D.new()
+     params.shape = convex_shape_for_this_frustum_side
+     params.transform = Transform3D.IDENTITY   # verts already in world space
+     params.collision_mask = CUTTABLE_LAYER_MASK
+     params.collide_with_bodies = true
+     var hits := space.intersect_shape(params, 64)   # 64 = max results
+
+   That returns the overlapping bodies in the same frame, deterministically.
+   Kills the mechanic's worst fragility outright.
+   Caveat: ConvexPolygonShape3D wants points, not a triangle index buffer, so
+   build the side wedge as an 8-point (or 6-point) point cloud and let Godot
+   hull it. Much simpler than Unity's CreateBoxMesh.
+
+ 6.3 plane.Raycast DIFFERENCE — the one real gotcha
+   Unity: plane.Raycast(ray, out distance) gives a scalar distance along the ray,
+   which the original then divides by edge length to get the lerp t.
+   Godot: Plane.intersects_ray(from, dir) returns the intersection POINT (or null).
+   Port it as:
+
+     var hit = plane.intersects_ray(v_left, (v_right - v_left).normalized())
+     if hit == null: continue          # parallel / degenerate, skip
+     var t : float = (hit - v_left).length() / (v_right - v_left).length()
+
+   Or skip the ray entirely and use the analytic form, which is faster and has
+   no null case:
+     var d0 := plane.distance_to(v_left)
+     var d1 := plane.distance_to(v_right)
+     var t  := d0 / (d0 - d1)          # guard d0 - d1 near zero
+   Then lerp vertex, normal and uv by t exactly as the original does.
+
+ 6.4 MESH READ/WRITE IN GODOT
+   Read once, outside the loop:
+     var arrays := (mesh as ArrayMesh).surface_get_arrays(surface_i)
+     var verts   : PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+     var normals : PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+     var uvs     : PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+     var indices : PackedInt32Array   = arrays[Mesh.ARRAY_INDEX]
+   Write with SurfaceTool (easier, handles index dedup + tangent generation) or
+   add_surface_from_arrays (faster, full control). SurfaceTool is the right
+   default:
+     var st := SurfaceTool.new()
+     st.begin(Mesh.PRIMITIVE_TRIANGLES)
+     st.set_normal(n); st.set_uv(uv); st.add_vertex(v)   # per vertex, in order
+     st.generate_tangents()        # <- fixes the missing-tangents bug from §2
+     var out_mesh := st.commit()
+   ALSO: if a mesh has no index buffer (Godot allows non-indexed surfaces),
+   iterate verts in groups of 3 directly instead of through `indices`.
+   Meshes imported from .glb (which is most of Artéa's assets, per assets3D/)
+   are indexed, but guard anyway.
+
+ 6.5 COLLIDERS
+     var shape := ConvexPolygonShape3D.new()
+     shape.points = final_mesh.get_faces()   # or create_convex_shape()
+   For concave fragments use mesh.create_trimesh_shape() on a StaticBody3D —
+   but only if the fragment never needs to move. Same convex-hull limitation
+   as Unity applies for moving pieces.
+
+ 6.6 THE "PHOTO" STORAGE
+   Godot's reparent(new_parent, keep_global_transform=true) is the direct analog
+   of Unity's SetParent. But note the original relies on the DEFAULT
+   SetParent(t) which does NOT preserve world transform in the way you might
+   assume — it stores the chunk relative to the camera on purpose. In Godot use:
+     chunk.reparent(capture_point, true)     # store: keeps world pos, now relative
+     ...
+     chunk.reparent(get_tree().current_scene, true)   # place: bake back to world
+   Deactivate stored chunks with `visible = false` plus disabling their
+   CollisionShape3D (`disabled = true`), not queue_free.
+
+ 6.7 SUGGESTED FILE LAYOUT IN artea/
+     artea/scripts/viewfinder/MeshCutter.cs          (port of Cutter.cs)
+     artea/scripts/viewfinder/GeneratedMesh.cs       (or fold into SurfaceTool)
+     artea/scripts/viewfinder/FrustumCutter.gd       (port of CustomFrustumLocalSpace)
+     artea/scripts/viewfinder/CutPiece.gd
+     artea/scripts/viewfinder/PolaroidCamera.gd      (input state machine)
+     artea/scenes/viewfinder/polaroid.tscn
+   Register the C# cutter via [GlobalClass] so GDScript can `MeshCutter.new()`.
+   Follow the existing convention in artea/scripts (PascalCase .gd files,
+   Global.gd / GameManager.gd style autoloads).
+
+ 6.8 INTEGRATION WITH ARTÉA'S EXISTING SYSTEMS
+   - Cuttable layer: add a dedicated physics layer in project.godot
+     (Project Settings > Layer Names > 3D Physics) named "Cuttable". Do NOT
+     reuse an existing gameplay layer; the frustum wedges will trigger it.
+   - Terrain3D: do NOT make terrain cuttable. Terrain3D meshes are streamed
+     clipmaps; slicing them will fight the addon and probably crash. Restrict
+     the mechanic to discrete props (the assets3D/ .glb models, Pier, House).
+   - ProtonScatter: scattered instances are MultiMesh, which has no per-instance
+     mesh to cut. Either exclude scattered props from the Cuttable layer, or
+     bake specific scatter instances to real MeshInstance3D nodes first.
+   - MultiMeshSpawner.gd: same caveat — MultiMesh instances are uncuttable.
+   - GameManager.gd / JourneyState.gd: photo count and placement state belong
+     here if photos are meant to persist across the journey.
+   - The sky-isles prototype (artea/scripts/sky_isles, branch
+     sky-isles-prototype) is a natural fit for this — floating islands are
+     discrete, self-contained meshes, exactly the shape of prop the cutter
+     handles best.
+
+--------------------------------------------------------------------------------
+7. RISKS / BUDGET BEFORE YOU COMMIT TO THIS
+--------------------------------------------------------------------------------
+ R1. PERFORMANCE. Cost is O(triangles overlapping the frustum) x 4 cuts, and
+     the frustum extends to the camera's FAR PLANE. In the original the far
+     plane is deliberately short. If you point this at a full Artéa scene with a
+     far plane of 4000m you will cut the entire level. MITIGATION: use a short
+     dedicated `finder` Camera3D with a small `far` value (10-30m), and only
+     tag a handful of props as Cuttable.
+ R2. Cut fragments have no LOD, no lightmap UVs, no occlusion data, and fresh
+     tangents. Expect a visual pop and a shadow/GI pop the moment something is
+     cut. Godot's SDFGI will re-converge over a few frames — visible.
+ R3. Convex-only physics on fragments means concave pieces have wrong collision.
+     Player can stand on air / clip into notches.
+ R4. Skinned meshes, transparent materials, and multi-material objects each need
+     extra handling. The original only ever cuts simple opaque static props —
+     match that constraint.
+ R5. Save/load. A cut world is a runtime-generated mesh with no source asset.
+     If Artéa persists world state (JourneyState.gd suggests it does), you need
+     to serialize either the mesh data or the cut planes to reconstruct it.
+     Serializing PLANES is much cheaper — replay the cuts on load.
+ R6. Determinism. Fragment names use Random.Range(0,9999) in the original.
+     Replace with a monotonic counter if you ever need reproducible state.
+
+--------------------------------------------------------------------------------
+8. RECOMMENDED BUILD ORDER (smallest viable increments)
+--------------------------------------------------------------------------------
+ S1. Port the single-plane cutter alone. Test scene: one cube, one hardcoded
+     plane, a button. Verify: both halves render, both are capped, normals are
+     correct from both sides, no inside-out faces.
+ S2. Add the cap material as a separate surface. Confirm you can tint the
+     cross-section differently. (This is what makes cuts read visually.)
+ S3. Sequential 4-plane cut from a fixed transform, no camera, no input.
+     Verify a cube becomes a clean frustum wedge + up to 15 leftover fragments.
+ S4. Swap in the shape-query broad phase (§6.2) so it picks up multiple objects.
+ S5. Backup / restore intact geometry. Photo = clone + reparent to camera.
+ S6. Placement: cut hole at new location, delete inside, un-parent stored chunk.
+ S7. Only now: animations, DOF, photo counter, film prefab, UI.
+
+Do not skip S1-S3 in favour of copying the whole system across. The cutter is
+the only part that can be subtly, invisibly wrong, and it is the part everything
+else depends on.
+
+--------------------------------------------------------------------------------
+9. LICENSE / ATTRIBUTION
+--------------------------------------------------------------------------------
+The ViewFinder repo ships no LICENSE file at the root — it is a companion
+project to a YouTube tutorial, not an explicitly licensed library. The cutting
+core is itself derived from Kristin Lague's Mesh-Cutting (check that repo's
+license before shipping). Treat both as REFERENCE MATERIAL: study the technique
+and reimplement it for Godot rather than transliterating the source, and credit
+both authors. If you want to ship literal derived code, ask ToughNutToCrack
+directly for terms.
+
+The commercial game this mechanic imitates is Viewfinder by Sad Owl Studios /
+Thunderful — the mechanic itself is not protected, but do not reuse its name,
+art, or branding.
+
+================================================================================
+END
+================================================================================
