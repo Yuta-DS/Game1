@@ -8,6 +8,7 @@ const SketchCanvas := preload("res://scripts/creation_world/world_sketch_canvas.
 const SemanticFactory := preload("res://scripts/creation_world/semantic_object_factory.gd")
 const TerrainBuilder := preload("res://scripts/creation_world/world_terrain_builder.gd")
 const AmbientLifeLoop := preload("res://scripts/creation_world/ambient_life_loop.gd")
+const ArtworkEnvironmentAnimator := preload("res://scripts/creation_world/artwork_environment_animator.gd")
 
 const TEST_STATE := "user://creation_worlds_test.json"
 const TEST_ART := "user://creation_world_test_art.png"
@@ -220,8 +221,27 @@ func _run() -> void:
 		"low painted basins are filled with water")
 	assert(world.find_child("ArtworkAtmosphere", true, false) != null,
 		"the world ships a full sky/fog/SSAO environment")
+	var living_background := world.find_child("LivingArtworkBackground", true, false) as MeshInstance3D
+	assert(living_background != null and bool(living_background.get_meta(
+		"uses_artwork_background", false)),
+		"the artwork's painted background wraps around the world as scenery")
+	assert(living_background.material_override is ShaderMaterial,
+		"the painted background uses live wind, ripple, and light animation")
+	var environment_animator := world.find_child("ArtworkEnvironmentAnimator", true, false)
+	assert(environment_animator != null and not str(environment_animator.get_meta(
+		"motion_mode", "")).is_empty(),
+		"each artwork receives a background-dependent animation profile")
+	assert(world.find_child("ArtworkBackgroundMotion", true, false) is GPUParticles3D,
+		"the living environment adds palette-matched atmospheric motion")
 	assert(world.find_child("ArtworkFill", true, false) != null,
 		"a fill light keeps shadowed faces readable")
+	var blue_sky_profile := ArtworkEnvironmentAnimator.analyse(image, {
+		"environment": "a bright painted sky above a garden",
+		"objects": [{"type": "tree"}],
+	}, [Color("7cc8ff"), Color("ff7db8")])
+	assert(float(blue_sky_profile.get("sky", 0.0)) > 0.5
+		and float(blue_sky_profile.get("vegetation", 0.0)) > 0.5,
+		"background motion responds to both painted colour bands and semantic scenery")
 
 	var probe := TerrainBuilder.new(40.0, 32.0, 48)
 	probe.sculpt(image, [Color("86c5da"), Color("ffd166"), Color("8ac926")])
