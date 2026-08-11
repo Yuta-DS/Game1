@@ -47,7 +47,10 @@ func _run() -> void:
 		"the outage-safe guide offers three optional styles")
 	var block_fallback: Dictionary = state._offline_manifest()
 	assert(not state._manifest_is_semantic_ready(block_fallback),
-		"colour-region fallback is never accepted as a finished player world")
+		"on-device reconstruction remains honestly distinct from vision-labelled semantics")
+	state._store_manifest(block_fallback)
+	assert(state.current_world_is_explorable(),
+		"on-device artwork reconstruction still opens as a walkable interactive world")
 	state._store_manifest({
 		"schema_version": 2,
 		"semantic_ready": true,
@@ -106,17 +109,19 @@ func _run() -> void:
 	assert(world.find_child("player_idea_*", true, false) != null, "player ideas become live world geometry")
 	var drawn_tree := world.find_child("drawn_tree", true, false)
 	assert(drawn_tree != null, "vision-labelled painting subjects become separate world objects")
-	assert(drawn_tree.get_meta("reconstruction_mode", "") == "curated_3d_asset",
-		"recognised painting subjects resolve to real 3D models")
+	assert(drawn_tree.get_meta("reconstruction_mode", "") == "artwork_extrusion"
+		and bool(drawn_tree.get_meta("preserves_artwork_pixels", false)),
+		"recognised subjects preserve the artist's own pixels in physical 3D")
 	assert(bool(drawn_tree.get_meta("artwork_interactive", false)), "every reconstructed subject is interactive")
 	var tree_collision: CollisionShape3D = null
 	for child in drawn_tree.get_children():
-		if child is CollisionShape3D and child.shape is BoxShape3D:
+		if child is CollisionShape3D and child.shape != null:
 			tree_collision = child
 			break
-	assert(tree_collision != null and tree_collision.shape is BoxShape3D,
+	assert(tree_collision != null,
 		"semantic world actors include physical collision")
-	var tree_height: float = (tree_collision.shape as BoxShape3D).size.y * drawn_tree.scale.y
+	var drawn_tree_visual := drawn_tree.find_child("SemanticVisual", true, false) as MeshInstance3D
+	var tree_height: float = drawn_tree_visual.mesh.get_aabb().size.y * drawn_tree.scale.y
 	assert(tree_height > 3.5,
 		"tree size is calibrated to be several times the player height")
 	var realtime_manifest: Dictionary = manifest.duplicate(true)
@@ -156,10 +161,15 @@ func _run() -> void:
 		"label": "a tall tree",
 		"bounding_box": {"x": 0.1, "y": 0.1, "width": 0.3, "height": 0.7},
 	}, image, Color.GREEN)
-	assert(tree.get_meta("reconstruction_mode", "") == "curated_3d_asset",
-		"recognised subjects such as trees resolve to real 3D models")
-	assert(tree.find_child("Semantic3DModel", true, false) != null,
-		"the semantic model is instantiated inside the physical subject")
+	assert(tree.get_meta("reconstruction_mode", "") == "artwork_extrusion"
+		and bool(tree.get_meta("preserves_artwork_pixels", false)),
+		"a recognised tree keeps the artwork instead of becoming a stock tree")
+	var tree_visual := tree.find_child("SemanticVisual", true, false) as MeshInstance3D
+	var tree_material := tree_visual.material_override as StandardMaterial3D if tree_visual != null else null
+	assert(tree_material != null and tree_material.albedo_texture != null,
+		"the physical tree is textured with its exact crop from the source drawing")
+	assert(tree.get_meta("source_bounds", []).size() == 4,
+		"the tree retains the source region used to place and reconstruct it")
 	tree.free()
 	var water := SemanticFactory.create({
 		"id": "painted_lake",

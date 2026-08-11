@@ -13,7 +13,7 @@ var _world_opening := false
 # --- Scene Paths ---
 const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
 const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
-const GALLERY_FRAME_RITUAL_PATH = "res://scenes/gallery_frame_ritual.tscn"
+const CREATION_WORLD_PATH = "res://scenes/creation_world.tscn"
 const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
 const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
@@ -229,16 +229,25 @@ func _enter_current_frame_world() -> void:
 	var state := get_node_or_null("/root/CreationWorldState")
 	if state == null:
 		_world_opening = false
-		ratinglabel.text = "The Gallery Frame Ritual is not available in this scene yet."
+		ratinglabel.text = "The interactive artwork world is not available in this scene yet."
 		return
-	if not ResourceLoader.exists(GALLERY_FRAME_RITUAL_PATH):
+	if not ResourceLoader.exists(CREATION_WORLD_PATH):
 		_world_opening = false
-		ratinglabel.text = "The Gallery Frame Ritual is still being prepared. Please try again shortly."
+		ratinglabel.text = "The interactive artwork world is still being prepared. Please try again shortly."
 		return
 
 	state.prepare_artwork(path, current_frame_name.replace("_", " "))
-	ratinglabel.text = "Opening the Gallery Frame Ritual…\nChoose a motif to frame your artwork."
-	var transition_error := get_tree().change_scene_to_file(GALLERY_FRAME_RITUAL_PATH)
-	if transition_error != OK:
-		_world_opening = false
-		ratinglabel.text = "The Gallery Frame Ritual could not open yet. Please try again."
+	ratinglabel.text = "Building your interactive 3D artwork world…\nYou will be able to walk, jump and interact inside it."
+	state.prepare_explorable_world(func(ok: bool, response: Dictionary) -> void:
+		if not is_instance_valid(self):
+			return
+		if not ok:
+			_world_opening = false
+			ratinglabel.text = str(response.get("error",
+				"This artwork world could not open yet. Please try again."))
+			return
+		var transition_error := get_tree().change_scene_to_file(CREATION_WORLD_PATH)
+		if transition_error != OK:
+			_world_opening = false
+			ratinglabel.text = "The interactive artwork world could not open yet. Please try again."
+	)
