@@ -7,6 +7,7 @@ const SemanticObjectFactory := preload("res://scripts/creation_world/semantic_ob
 const RealtimeWorldGenerator := preload("res://scripts/creation_world/realtime_world_generator.gd")
 const TerrainBuilder := preload("res://scripts/creation_world/world_terrain_builder.gd")
 const AmbientLifeLoop := preload("res://scripts/creation_world/ambient_life_loop.gd")
+const ArtworkEnvironmentAnimator := preload("res://scripts/creation_world/artwork_environment_animator.gd")
 const HudTheme := preload("res://scripts/ui/artea_hud_theme.gd")
 const WORLD_WIDTH := 36.0
 const WORLD_DEPTH := 28.0
@@ -38,6 +39,9 @@ var _generator: Node
 var _terrain: RefCounted
 var _ambient_loop: Node
 var _ambient_root: Node3D
+var _environment_animator: Node3D
+var _sky_material: ProceduralSkyMaterial
+var _artwork_sun: DirectionalLight3D
 
 
 func _ready() -> void:
@@ -155,8 +159,9 @@ func _build_environment() -> void:
 	if _palette.is_empty():
 		_palette = [Color("86c5da"), Color("ffd166"), Color("8ac926"), Color("ff99c8")]
 
-	_build_atmosphere()
 	_build_art_backdrop()
+	_build_atmosphere()
+	_build_living_background_environment()
 
 	# The terrain is sculpted from the artwork itself, so the ground the player
 	# walks on belongs to their painting instead of being a flat neutral slab.
@@ -175,14 +180,14 @@ func _build_atmosphere() -> void:
 	var sky_high := _palette[min(1, _palette.size() - 1)].lerp(Color.WHITE, 0.12)
 	# A real gradient sky reads as open air; the previous flat clear colour was
 	# the single strongest "unfinished prototype" cue in the scene.
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = sky_high
-	sky_material.sky_horizon_color = sky_low
-	sky_material.ground_horizon_color = sky_low.darkened(0.15)
-	sky_material.ground_bottom_color = _palette[min(2, _palette.size() - 1)].darkened(0.35)
-	sky_material.sun_angle_max = 24.0
+	_sky_material = ProceduralSkyMaterial.new()
+	_sky_material.sky_top_color = sky_high
+	_sky_material.sky_horizon_color = sky_low
+	_sky_material.ground_horizon_color = sky_low.darkened(0.15)
+	_sky_material.ground_bottom_color = _palette[min(2, _palette.size() - 1)].darkened(0.35)
+	_sky_material.sun_angle_max = 24.0
 	var sky := Sky.new()
-	sky.sky_material = sky_material
+	sky.sky_material = _sky_material
 	environment.background_mode = Environment.BG_SKY
 	environment.sky = sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
@@ -209,16 +214,16 @@ func _build_atmosphere() -> void:
 	environment_node.environment = environment
 	add_child(environment_node)
 
-	var sun := DirectionalLight3D.new()
-	sun.name = "ArtworkSun"
-	sun.rotation_degrees = Vector3(-48.0, -32.0, 0.0)
-	sun.light_color = Color("fff0c2")
-	sun.light_energy = 1.15
-	sun.shadow_enabled = true
-	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
-	sun.directional_shadow_max_distance = 90.0
-	sun.shadow_bias = 0.035
-	add_child(sun)
+	_artwork_sun = DirectionalLight3D.new()
+	_artwork_sun.name = "ArtworkSun"
+	_artwork_sun.rotation_degrees = Vector3(-48.0, -32.0, 0.0)
+	_artwork_sun.light_color = Color("fff0c2")
+	_artwork_sun.light_energy = 1.15
+	_artwork_sun.shadow_enabled = true
+	_artwork_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	_artwork_sun.directional_shadow_max_distance = 90.0
+	_artwork_sun.shadow_bias = 0.035
+	add_child(_artwork_sun)
 
 	# A cool bounce light from the opposite side keeps shadowed faces readable
 	# without washing out the palette the child chose.
@@ -229,6 +234,14 @@ func _build_atmosphere() -> void:
 	fill.light_energy = 0.38
 	fill.shadow_enabled = false
 	add_child(fill)
+
+
+func _build_living_background_environment() -> void:
+	_environment_animator = ArtworkEnvironmentAnimator.new()
+	_environment_animator.name = "ArtworkEnvironmentAnimator"
+	_world_root.add_child(_environment_animator)
+	_environment_animator.call("configure", _source_artwork_image, _manifest, _palette,
+		_sky_material, _artwork_sun)
 
 
 func _build_ambient_life() -> void:
@@ -717,6 +730,8 @@ func _apply_manifest(manifest: Dictionary) -> void:
 		_palette = [Color("86c5da"), Color("ffd166"), Color("8ac926"), Color("ff99c8")]
 	if _generator != null:
 		_generator.reconcile(manifest)
+	if _environment_animator != null:
+		_environment_animator.call("update_manifest", manifest)
 
 
 func _spawn_manifest_object(spec: Dictionary, animation: Dictionary = {}, interaction: Dictionary = {}) -> Node3D:
