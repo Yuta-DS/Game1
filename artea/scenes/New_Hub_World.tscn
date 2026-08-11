@@ -29,6 +29,7 @@
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
 [ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scripts/cycle.tscn" id="24_ha1sw"]
+[ext_resource type="Script" uid="uid://dkw5mupiy2tv7" path="res://scenes/cycle_web_sky_fallback.gd" id="24_websky"]
 [ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://scripts/windshader.tscn" id="25_bsvfl"]
 [ext_resource type="Script" uid="uid://dy3aaovd6pf3p" path="res://addons/proton_scatter/src/shapes/sphere_shape.gd" id="28_cfrmd"]
 [ext_resource type="AudioStream" uid="uid://bexb5n8or0c36" path="res://assets/audio/Flowing Water and Birds (Hub).wav" id="29_cfrmd"]
@@ -417,6 +418,7 @@ transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 4.73711, 0)
 [node name="Water" parent="Environment" unique_id=1279964189 instance=ExtResource("1_u4tjg")]
 
 [node name="DayNite" parent="Environment" unique_id=1891359062 instance=ExtResource("24_ha1sw")]
+script = ExtResource("24_websky")
 
 [node name="Wind" parent="Environment" unique_id=99601764 instance=ExtResource("25_bsvfl")]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 22.8594, -147.51)
