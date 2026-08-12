@@ -88,6 +88,7 @@
 [ext_resource type="Script" path="res://scripts/hub_sky_isles.gd" id="80_skisl"]
 [ext_resource type="Script" path="res://scripts/hub_train_rider.gd" id="81_rider"]
 [ext_resource type="Script" path="res://scripts/hub_atmosphere.gd" id="82_atmos"]
+[ext_resource type="Script" path="res://scripts/web_terrain_compat.gd" id="82_webterrain"]
 [ext_resource type="Script" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
 [ext_resource type="Script" path="res://scripts/hub_castle_entrance.gd" id="83_entrn"]
 [ext_resource type="Script" path="res://scripts/viewfinder/hub_lens.gd" id="84_lens"]
@@ -351,6 +352,9 @@ size = Vector3(2.5, 3, 1.2)
 [node name="HubWorld" type="Node3D" unique_id=2105333492]
 script = ExtResource("69_awakn")
 
+[node name="WebTerrainCompatibility" type="Node" parent="."]
+script = ExtResource("82_webterrain")
+
 [node name="CreationsSpawner" type="Node" parent="."]
 script = ExtResource("70_creat")
 
@@ -485,21 +489,21 @@ script = ExtResource("19_ngqnt")
 proportion = 1200
 source_scale_multiplier = 1.0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-path = "uid://bomwqf05mal4d"
+path = "res://assets3D/kkNatureForest/grass.glb"
 
 [node name="ScatterItemGrassB" type="Node3D" parent="Environment/Grass" unique_id=528747302]
 script = ExtResource("19_ngqnt")
 proportion = 900
 source_scale_multiplier = 1.15
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-path = "uid://bay1ka1kpgepi"
+path = "res://assets3D/kkNatureForest/grass.glb"
 
 [node name="ScatterItemBush" type="Node3D" parent="Environment/Grass" unique_id=528747303]
 script = ExtResource("19_ngqnt")
 proportion = 220
 source_scale_multiplier = 1.0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-path = "uid://ctufrfj6udw7d"
+path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 
 [node name="landingBlocklol" parent="Environment" unique_id=97436999 instance=ExtResource("3_mwiy7")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 4.73711, 0)
@@ -531,68 +535,68 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.22015, 0, 0)
 script = ExtResource("19_ngqnt")
 proportion = 1000
 source_scale_multiplier = 2.0
-path = "uid://0i3hkwmt7y7i"
+path = "res://assets3D/trees/tree_4_a_color_12.tscn"
 
 [node name="ScatterItem2" type="Node3D" parent="Environment/Objects" unique_id=317556808]
 script = ExtResource("19_ngqnt")
 proportion = 1000
 source_scale_multiplier = 2.0
-path = "uid://d0jx15044dedd"
+path = "res://assets3D/trees/tree_3_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem3" type="Node3D" parent="Environment/Objects" unique_id=290454483]
 script = ExtResource("19_ngqnt")
 proportion = 1000
 source_scale_multiplier = 2.0
-path = "uid://3b2v6tryob2h"
+path = "res://assets3D/trees/tree_2_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem4" type="Node3D" parent="Environment/Objects" unique_id=2027761573]
 script = ExtResource("19_ngqnt")
 proportion = 1000
 source_scale_multiplier = 2.0
-path = "uid://bujoq42ab5mrl"
+path = "res://assets3D/trees/tree_2_b_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem5" type="Node3D" parent="Environment/Objects" unique_id=1507975234]
 script = ExtResource("19_ngqnt")
 proportion = 1000
 source_scale_multiplier = 2.0
-path = "uid://ckdq7v5jxql8c"
+path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem6" type="Node3D" parent="Environment/Objects" unique_id=1189031108]
 script = ExtResource("19_ngqnt")
 proportion = 1000
 source_scale_multiplier = 2.0
-path = "uid://ctufrfj6udw7d"
+path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem7" type="Node3D" parent="Environment/Objects" unique_id=2116162357]
 script = ExtResource("19_ngqnt")
 proportion = 500
 source_scale_multiplier = 2.0
-path = "uid://b3xp524b2mhmg"
+path = "res://assets3D/trees/tree_4_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem8" type="Node3D" parent="Environment/Objects" unique_id=932707459]
 script = ExtResource("19_ngqnt")
 proportion = 500
 source_scale_multiplier = 2.0
-path = "uid://bsk6fvm5laoeu"
+path = "res://assets3D/trees/tree_3_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem9" type="Node3D" parent="Environment/Objects" unique_id=2032956564]
 script = ExtResource("19_ngqnt")
 proportion = 500
-path = "uid://bv0p80gsjo6ra"
+path = "res://assets3D/trees/rock_3_l_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem10" type="Node3D" parent="Environment/Objects" unique_id=917907085]
 script = ExtResource("19_ngqnt")
 proportion = 500
 source_scale_multiplier = 3.0
-path = "uid://c77sgoas3pgsi"
+path = "res://assets3D/trees/rock_3_l_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="buildings" type="Node3D" parent="Environment" unique_id=1896146652]

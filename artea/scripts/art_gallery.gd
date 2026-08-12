@@ -47,39 +47,67 @@ func _ready() -> void:
 
 
 # The complete train-and-island kingdom belongs inside this cosmic Art Castle
-# scene. Runtime construction avoids duplicating the large generated meshes in
-# the scene file and guarantees the islands exist before rails resolve docks.
+# scene. The Crown Line follows the story in one open world: Gallery Station,
+# Mind Spark, Heart Melody, then Creator's Light.
+const FLOATING_WORLD_FRONT_OFFSET := Vector3(0.0, 0.0, -480.0)
+
+
 func _build_galaxy_transit() -> void:
-	var transit_transform := Transform3D(Basis.from_scale(Vector3.ONE * 0.5),
-		Vector3(0.0, -33.0, 1.3))
+	# The 2 km island is part of this same scene—there is no portal or scene
+	# change. Its arrival island is centred under the authored gallery floor,
+	# so walking north out of the gallery continues directly into the world.
+	var floating_world := Node3D.new()
+	floating_world.name = "ArtCastleFloatingWorld"
+	# ArrivalIsland is authored at local z=820 with radius 155. The gallery wall
+	# is global z=10, so this puts the island centre at z=340 and its nearest edge
+	# at z=185: a measured 175 m clear gap for the castle approach bridge. This is
+	# 75 m farther away than the previous layout while preserving its orientation.
+	floating_world.position = FLOATING_WORLD_FRONT_OFFSET
+	floating_world.set_script(load("res://scripts/art_castle_floating_world.gd"))
+	floating_world.set("embedded_in_gallery", true)
+	add_child(floating_world)
 
-	var isles := Node3D.new()
-	isles.name = "GalaxyIsles"
-	isles.transform = transit_transform
-	isles.set_script(load("res://scripts/hub_sky_isles.gd"))
-	add_child(isles)
+	var kingdom_regions := Node3D.new()
+	kingdom_regions.name = "KingdomRegions3000m"
+	kingdom_regions.set_script(load("res://scripts/art_castle_kingdom_regions.gd"))
+	floating_world.add_child(kingdom_regions)
 
-	var rail := Node3D.new()
-	rail.name = "SkyRail"
-	rail.transform = transit_transform
-	rail.set_script(load("res://scripts/hub_skyrail.gd"))
-	add_child(rail)
+	var crown_line := Node3D.new()
+	crown_line.name = "StoryCrownRailway"
+	crown_line.set_script(load("res://scripts/art_castle_story_railway.gd"))
+	floating_world.add_child(crown_line)
 
-	var rider := Node3D.new()
-	rider.name = "TrainRider"
-	rider.set_script(load("res://scripts/hub_train_rider.gd"))
-	add_child(rider)
+	var story_director := Node3D.new()
+	story_director.name = "ConnectedKingdomStory"
+	story_director.set_script(load("res://scripts/art_castle_kingdom_story.gd"))
+	floating_world.add_child(story_director)
+
+	var map_canvas := CanvasLayer.new()
+	map_canvas.name = "WorldMapCanvas"
+	map_canvas.layer = 40
+	add_child(map_canvas)
+	var minimap := Control.new()
+	minimap.name = "ArteaWorldMinimap"
+	minimap.set_script(load("res://scripts/art_castle_minimap.gd"))
+	minimap.set("map_context", "galaxy")
+	map_canvas.add_child(minimap)
 		
 		
 func _input(event):
+	if not is_inside_tree() or get_viewport() == null:
+		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_J:
 		_open_quest_journal()
-		get_viewport().set_input_as_handled()
+		var viewport := get_viewport()
+		if viewport != null:
+			viewport.set_input_as_handled()
 		return
 
 	if event.is_action_pressed("ui_accept") and player_near_artwork:
 		_enter_current_frame_world()
-		get_viewport().set_input_as_handled()
+		var viewport := get_viewport()
+		if viewport != null:
+			viewport.set_input_as_handled()
 		return
 
 	if event.is_action_pressed("rate_artwork") and player_near_artwork:

@@ -128,21 +128,14 @@ func load_placeholders() -> void:
 			print("Could not find frame: ", frame_name)
 			continue
 
-		var image_path
-
-		if i == 5:
-			image_path = PLACEHOLDER_PATH + "painting_5.png"
-		else:
-			image_path = PLACEHOLDER_PATH + "painting_%d.jpeg" % (i + 1)
-
-		one_placeholder(frame_node, image_path)
+		# Use the preloaded resources as the source of truth. The old filename
+		# reconstruction mapped Frame 06 to painting_5.png and skipped painting_6.JPG;
+		# case-sensitive Web exports could therefore leave frames blank.
+		one_placeholder(frame_node, PLACEHOLDERS[i])
 		
-func one_placeholder(frame_node: Sprite3D, image_path: String):
-
-	var texture: Texture2D = load(image_path)
-
+func one_placeholder(frame_node: Sprite3D, texture: Texture2D) -> void:
 	if texture == null:
-		print("Failed to load placeholder: ", image_path)
+		print("Failed to load placeholder for ", frame_node.name)
 		return
 
 	var image: Image = texture.get_image()
@@ -152,6 +145,8 @@ func one_placeholder(frame_node: Sprite3D, image_path: String):
 	var resized_texture = ImageTexture.create_from_image(image)
 
 	frame_node.texture = resized_texture
+	frame_node.visible = true
+	frame_node.modulate = Color.WHITE
 
 func load_local_art_paths() -> void:
 
@@ -278,7 +273,9 @@ func _on_list_request_completed(
 	if data.is_empty():
 
 		print("Authenticated user has no online artwork.")
-
+		load_local_art_paths()
+		apply_local_art_over_online()
+		online_gallery_ready = true
 		return
 
 	images_to_download.clear()
@@ -342,7 +339,11 @@ func _on_download_request_completed(
 
 		var image = Image.new()
 
-		var load_error = image.load_png_from_buffer(body)
+		var load_error := image.load_png_from_buffer(body)
+		if load_error != OK:
+			load_error = image.load_jpg_from_buffer(body)
+		if load_error != OK:
+			load_error = image.load_webp_from_buffer(body)
 
 		if load_error == OK:
 
@@ -365,6 +366,8 @@ func _on_download_request_completed(
 			if frame_node and frame_node is Sprite3D:
 
 				frame_node.texture = texture
+				frame_node.visible = true
+				frame_node.modulate = Color.WHITE
 
 				frame_to_artwork[frame_name] = int(current_download_artwork_id)
 
@@ -410,7 +413,7 @@ func apply_local_art_over_online() -> void:
 	if local_art_paths.is_empty():
 
 		print("No player artworks to replace online gallery.")
-
+		local_gallery_ready = true
 		return
 
 	print("Applying player artworks over online gallery...")
@@ -449,6 +452,8 @@ func apply_local_art_over_online() -> void:
 		if frame_node and frame_node is Sprite3D:
 
 			frame_node.texture = texture
+			frame_node.visible = true
+			frame_node.modulate = Color.WHITE
 
 			frame_to_artwork[frame_name] = local_art_paths[i]
 

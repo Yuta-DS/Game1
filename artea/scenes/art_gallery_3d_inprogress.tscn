@@ -260,7 +260,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_k4ey6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3, 8)
 
 [node name="Player3D" parent="." unique_id=1983107366 groups=["Player"] instance=ExtResource("2_3gi0n")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 12)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.2, 12)
 camera_path = NodePath("../Camera3D")
 
 [node name="FoxVisuals" type="Node3D" parent="Player3D" unique_id=124633337]

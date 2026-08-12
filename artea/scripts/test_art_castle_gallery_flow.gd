@@ -29,6 +29,9 @@ func _run() -> void:
 	portal.add_child(authored_collision)
 	hub.add_child(portal)
 	await process_frame
+	if str(portal.get("TARGET_SCENE_PATH")) != "res://scenes/art_gallery_3d_inprogress.tscn":
+		_fail("castle door bypasses the Art Gallery")
+		return
 	if not ResourceLoader.exists(str(portal.get("TARGET_SCENE_PATH"))):
 		_fail("Art Explore destination scene is missing")
 		return
@@ -68,11 +71,23 @@ func _run() -> void:
 	if player == null:
 		_fail("Art Explore gallery has no player")
 		return
+	var manager := gallery.get_node_or_null("GalleryManager")
+	if manager == null:
+		_fail("gallery artwork manager is missing")
+		return
+	for frame_index in 12:
+		var frame_name := "Frame_%02d" % (frame_index + 1)
+		var frame := gallery.get_node_or_null(frame_name) as Sprite3D
+		if frame == null or frame.texture == null or not frame.visible:
+			_fail("%s has no visible gallery artwork" % frame_name)
+			return
+		if gallery.get_node_or_null("%s/InteractionArea" % frame_name) == null:
+			_fail("%s cannot be entered by the player" % frame_name)
+			return
 	gallery.call("_on_interaction_area_body_entered", player, "Frame_01")
 	if not bool(gallery.get("player_near_artwork")):
 		_fail("gallery artwork interaction does not recognise the player")
 		return
-	var manager := gallery.get_node_or_null("GalleryManager")
 	var artwork_path := str(manager.call("prepare_frame_for_world", "Frame_01")) \
 		if manager != null else ""
 	if artwork_path.is_empty() or not FileAccess.file_exists(artwork_path):
