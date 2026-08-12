@@ -73,29 +73,64 @@ func _run() -> void:
 	root.add_child(gallery)
 	for _i in 40:
 		await process_frame
-	var rail := gallery.get_node_or_null("SkyRail") as Node3D
-	var isles := gallery.get_node_or_null("GalaxyIsles") as Node3D
-	var rider := gallery.get_node_or_null("TrainRider") as Node3D
-	if rail == null or isles == null or rider == null:
+	var floating_world := gallery.get_node_or_null("ArtCastleFloatingWorld") as Node3D
+	var crown_line := floating_world.get_node_or_null("StoryCrownRailway") as Node3D if floating_world != null else null
+	if crown_line == null or floating_world == null:
 		var child_names: Array[String] = []
 		for child in gallery.get_children():
 			child_names.append(child.name)
 		_fail("Art Castle galaxy transit layer is incomplete; children=%s" % [child_names])
 		return
-	if rail.get_node_or_null("GrandStation") == null:
-		_fail("galaxy train court did not build")
+	if gallery.get_node_or_null("FloatingCrownSanctuary") != null:
+		_fail("legacy sanctuary bridge still overlaps the gallery entrance")
 		return
-	for isle_id in ["mind", "heart", "creator"]:
-		if isles.get_node_or_null("SkyIsle_%s" % isle_id) == null:
-			_fail("galaxy world is missing %s island" % isle_id)
+	if not bool(floating_world.call("is_embedded_in_gallery")) \
+			or floating_world.call("get_exploration_size") != Vector2(2000.0, 2000.0):
+		_fail("2 km floating island is not embedded in the gallery scene")
+		return
+	if floating_world.position != Vector3(0.0, 0.0, -480.0):
+		_fail("floating world is not shifted to the player-facing side of the gallery wall")
+		return
+	for district in ["CentralSanctuary", "ArrivalIsland", "MindSparkDistrict",
+			"HeartMelodyTemple", "CreatorsLightStudio"]:
+		if floating_world.get_node_or_null(district) == null:
+			_fail("same-scene floating world is missing %s" % district)
 			return
-	var stations: Dictionary = rider.get("_stations")
-	if stations.size() != 6:
-		_fail("expected six selectable galaxy train stations, got %d" % stations.size())
+	if floating_world.get_node_or_null("ReturnToCastleGate") != null:
+		_fail("embedded world still contains a return teleport")
 		return
+	if gallery.get_node_or_null("SkyRail") != null or gallery.get_node_or_null("GalaxyIsles") != null \
+			or gallery.get_node_or_null("TrainRider") != null:
+		_fail("obsolete radial galaxy transit still exists beside the story Crown Line")
+		return
+	if int(crown_line.call("get_station_count")) != 4 or int(crown_line.call("get_segment_count")) != 3:
+		_fail("story Crown Line must have four stations joined by three segments")
+		return
+	var endpoints: PackedVector3Array = crown_line.call("get_route_endpoints")
+	if endpoints[0].distance_to(endpoints[1]) < 500.0:
+		_fail("story railway incorrectly closes into a circle")
+		return
+	var flags := {"star_of_wisdom": false, "harmony_jewel": false, "creators_light": false}
+	if not bool(crown_line.call("station_unlocked_with", 1, flags)) \
+			or bool(crown_line.call("station_unlocked_with", 2, flags)):
+		_fail("Crown Line story-order locks are incorrect at journey start")
+		return
+	flags.star_of_wisdom = true
+	if not bool(crown_line.call("station_unlocked_with", 2, flags)) \
+			or bool(crown_line.call("station_unlocked_with", 3, flags)):
+		_fail("Star of Wisdom must open Heart Melody only")
+		return
+	flags.harmony_jewel = true
+	if not bool(crown_line.call("station_unlocked_with", 3, flags)):
+		_fail("Harmony Jewel must open Creator's Light")
+		return
+	for landmarks in ["MindSparkQuestLandmarks", "HeartMelodyQuestLandmarks", "CreatorsLightQuestLandmarks"]:
+		if floating_world.get_node_or_null(landmarks) == null:
+			_fail("story world is missing %s" % landmarks)
+			return
 	var player := gallery.get_node_or_null("Player3D") as CharacterBody3D
-	if rider.get("_player") != player:
-		_fail("galaxy train rider did not bind to gallery player")
+	if crown_line.get("_player") != player:
+		_fail("Rainbow Galaxy Train did not bind to the gallery player")
 		return
-	print("GALAXY_TRANSIT_TEST: PASS — exterior clear; 3 islands and 6 rides live inside Art Castle")
+	print("GALAXY_TRANSIT_TEST: PASS — story Crown Line connects four ordered worlds in one 2 km scene")
 	quit()

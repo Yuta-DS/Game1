@@ -52,11 +52,9 @@ func _ready() -> void:
 	if js == null:
 		return
 
-	# The ceremony is the payoff for having journeyed. Someone who has done
-	# nothing yet gets the invitation, not the crown.
-	_build_ui()
-	_label.text = _compose(js)
-
+	# Keep the gallery view clear during exploration. The long evidence speech
+	# belongs in the Crown Journey journal/finale and must not open as a full
+	# screen banner every time the gallery scene loads.
 	if js.has_all_treasures():
 		js.advance_to(4)
 		_build_finale(js)

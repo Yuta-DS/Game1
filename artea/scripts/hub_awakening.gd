@@ -53,6 +53,7 @@ var _fill_light: DirectionalLight3D = null
 
 
 func _ready() -> void:
+	_build_outdoor_minimap()
 	# The day/night AnimationPlayer animates light_energy every frame, so a
 	# tween on the same property would be overwritten. Stop the cycle
 	# before taking over the sun.
@@ -75,6 +76,16 @@ func _ready() -> void:
 		# every other scene using it.
 		_env = world_env.environment.duplicate()
 		world_env.environment = _env
+		if OS.has_feature("web"):
+			# The procedural desktop sky uses shader state beyond WebGL2's
+			# compatibility budget. Keep a stable daylight backdrop on Web.
+			var web_sky_color := Color(0.38, 0.67, 0.92)
+			RenderingServer.set_default_clear_color(web_sky_color)
+			_env.background_mode = Environment.BG_CLEAR_COLOR
+			_env.background_color = web_sky_color
+			_env.sky = null
+			_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+			_env.ambient_light_color = Color(0.72, 0.82, 0.92)
 		# This inherited Environment carries experimental height/depth fog values
 		# (including a negative height density). Enabling them covers the nearby
 		# world with an opaque blue sheet: the sky and UI remain visible while all
@@ -99,6 +110,20 @@ func _ready() -> void:
 		push_warning("hub_awakening: sun not found, sky will not respond to stage")
 
 	apply_stage(_current_stage())
+
+
+func _build_outdoor_minimap() -> void:
+	# The outside kingdom needs its own atlas. The Art Castle scene creates the
+	# galaxy atlas separately, so crossing the door always changes map context.
+	var canvas := CanvasLayer.new()
+	canvas.name = "WorldMapCanvas"
+	canvas.layer = 40
+	add_child(canvas)
+	var minimap := Control.new()
+	minimap.name = "ArteaWorldMinimap"
+	minimap.set_script(load("res://scripts/art_castle_minimap.gd"))
+	minimap.set("map_context", "hub")
+	canvas.add_child(minimap)
 
 
 # Tween the world to a stage. Public so a dev shortcut can drive it live.

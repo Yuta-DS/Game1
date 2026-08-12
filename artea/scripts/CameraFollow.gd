@@ -11,8 +11,10 @@ extends Camera3D
 @export var follow_side := 0.0          # offset to the side (0 = center)
 @export var follow_look_at_offset := Vector3(0, 1.6, 0)
 @export var lerp_speed := 8.0           # how smoothly it follows
+@export var collision_margin := 0.35
 
 @export var mouse_sensitivity := 0.005
+@export var initial_pitch_degrees := -15.0
 ## Pitch clamp. Past roughly these angles the camera ends up inside the floor or
 ## staring at the ceiling, and look_at() degenerates when it lines up with UP.
 # Near-vertical rather than fully vertical on purpose: at exactly +/-90 the
@@ -50,7 +52,7 @@ func _ready() -> void:
 	# Start behind the player rather than snapping the view on the first frame.
 	if _player:
 		_yaw = _player.global_rotation.y
-	_pitch = deg_to_rad(-15.0)
+	_pitch = deg_to_rad(initial_pitch_degrees)
 
 	if capture_mouse:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -96,6 +98,19 @@ func _process(delta: float) -> void:
 		var target := focus + offset
 		target.y += follow_height
 		target += Vector3(cos(_yaw), 0.0, -sin(_yaw)) * follow_side
+
+		# Keep the third-person camera on the player's side of walls, islands and
+		# large props. Without this cast the camera crossed geometry and the whole
+		# screen could be hidden by the object behind the player.
+		var space := get_world_3d().direct_space_state
+		var query := PhysicsRayQueryParameters3D.create(focus, target)
+		if _player is CollisionObject3D:
+			query.exclude = [(_player as CollisionObject3D).get_rid()]
+		var hit := space.intersect_ray(query)
+		if not hit.is_empty():
+			var hit_position: Vector3 = hit.position
+			var toward_focus := hit_position.direction_to(focus)
+			target = hit_position + toward_focus * collision_margin
 
 		global_transform.origin = global_transform.origin.lerp(target, clamp(lerp_speed * delta, 0.0, 1.0))
 

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+		<title>$GODOT_PROJECT_NAME</title>
+		<style>
+			html, body, #canvas { margin: 0; padding: 0; border: 0; width: 100%; height: 100%; }
+			body { color: #f8f4e8; background: #080b13; overflow: hidden; touch-action: none; }
+			#canvas { display: block; }
+			#canvas:focus { outline: none; }
+			#status {
+				position: fixed; inset: 0; z-index: 10; display: flex; align-items: center;
+				justify-content: center; padding: 24px; box-sizing: border-box;
+				background: radial-gradient(circle at 50% 25%, #203454 0, #101827 42%, #080b13 100%);
+				font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			}
+			#status.hidden { display: none; }
+			#status-card { width: min(560px, 100%); text-align: center; }
+			#status-splash { display: block; width: min(100%, 420px); max-height: 42vh; object-fit: contain; margin: 0 auto 20px; }
+			#status-splash.show-image--false { display: none; }
+			#status-splash.use-filter--false { image-rendering: pixelated; }
+			#status-title { margin: 0 0 10px; font-size: clamp(1.35rem, 4vw, 2rem); }
+			#status-notice { margin: 0 auto; color: #d8dfeb; line-height: 1.55; }
+			#status-progress { display: block; width: min(360px, 80%); margin: 20px auto 0; accent-color: #d6ae63; }
+			#status-actions { display: none; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
+			#status-actions.visible { display: flex; }
+			button {
+				border: 1px solid #e5c988; border-radius: 999px; padding: 11px 20px; cursor: pointer;
+				background: #d6ae63; color: #10141c; font: inherit; font-weight: 700;
+			}
+			button.secondary { background: transparent; color: #f8f4e8; }
+			#status-help { display: none; margin: 18px auto 0; max-width: 500px; color: #aeb8c8; font-size: .9rem; line-height: 1.5; }
+			#status-help.visible { display: block; }
+		</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<canvas id="canvas">Your browser does not support the canvas element.</canvas>
+		<noscript>JavaScript is required to play ARTÉA.</noscript>
+		<div id="status">
+			<div id="status-card">
+				<img id="status-splash" class="$GODOT_SPLASH_CLASSES" src="$GODOT_SPLASH" alt="">
+				<h1 id="status-title">Preparing ARTÉA…</h1>
+				<p id="status-notice">Checking your browser’s 3D graphics support.</p>
+				<progress id="status-progress"></progress>
+				<div id="status-actions">
+					<button id="retry-button" type="button">Retry graphics</button>
+					<button id="help-button" class="secondary" type="button">What can I do?</button>
+				</div>
+				<p id="status-help">Close other ARTÉA/game tabs, update the browser, and enable hardware acceleration, then fully restart the browser. Godot 4 requires WebGL2; older devices and browsers that disable WebGL2 cannot run this build.</p>
+			</div>
+		</div>
+
+		<script src="$GODOT_URL"></script>
+		<script>
+			const GODOT_CONFIG = $GODOT_CONFIG;
+			const engine = new Engine(GODOT_CONFIG);
+			const status = document.getElementById('status');
+			const title = document.getElementById('status-title');
+			const notice = document.getElementById('status-notice');
+			const progress = document.getElementById('status-progress');
+			const actions = document.getElementById('status-actions');
+			const help = document.getElementById('status-help');
+
+			function releaseProbeContext() {
+				const probe = document.createElement('canvas');
+				const gl = probe.getContext('webgl2', { antialias: false, depth: false, stencil: false });
+				if (!gl) return false;
+				const loseContext = gl.getExtension('WEBGL_lose_context');
+				if (loseContext) loseContext.loseContext();
+				probe.width = 1;
+				probe.height = 1;
+				return true;
+			}
+
+			function showFailure(message, graphicsFailure) {
+				console.error(message);
+				title.textContent = graphicsFailure ? '3D graphics could not start' : 'ARTÉA could not start';
+				notice.textContent = message;
+				progress.style.display = 'none';
+				actions.classList.add('visible');
+				help.classList.toggle('visible', graphicsFailure);
+			}
+
+			document.getElementById('retry-button').addEventListener('click', () => {
+				const url = new URL(window.location.href);
+				url.searchParams.set('graphics-retry', Date.now().toString());
+				window.location.replace(url);
+			});
+			document.getElementById('help-button').addEventListener('click', () => help.classList.toggle('visible'));
+
+			async function start() {
+				let webgl2Available = false;
+				for (let attempt = 0; attempt < 3 && !webgl2Available; attempt += 1) {
+					webgl2Available = releaseProbeContext();
+					if (!webgl2Available) await new Promise((resolve) => setTimeout(resolve, 500));
+				}
+
+				if (!webgl2Available) {
+					showFailure('This browser did not provide WebGL2, which ARTÉA needs for 3D rendering.', true);
+					return;
+				}
+
+				// The WebGL2 probe above is retried and explicitly released. Calling
+				// Engine.getMissingFeatures here would allocate another graphics context.
+				const missing = [];
+				if (typeof fetch !== 'function') missing.push('Fetch');
+				if (!window.isSecureContext) missing.push('Secure Context (HTTPS)');
+				if (missing.length) {
+					showFailure('Required browser feature missing: ' + missing.join(', '), false);
+					return;
+				}
+
+				title.textContent = 'Loading ARTÉA…';
+				notice.textContent = 'The first load is large. Keep this tab open while the world downloads.';
+				progress.style.display = 'block';
+				try {
+					await engine.startGame({
+						onProgress(current, total) {
+							if (current > 0 && total > 0) {
+								progress.value = current;
+								progress.max = total;
+							} else {
+								progress.removeAttribute('value');
+								progress.removeAttribute('max');
+							}
+						},
+					});
+					status.classList.add('hidden');
+				} catch (error) {
+					showFailure(error instanceof Error ? error.message : String(error), false);
+				}
+			}
+
+			start();
+		</script>
+	</body>
+</html>
