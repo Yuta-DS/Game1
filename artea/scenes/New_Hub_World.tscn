@@ -25,6 +25,7 @@
 [ext_resource type="Script" uid="uid://bevon172xunct" path="res://addons/proton_scatter/src/modifiers/project_on_geometry.gd" id="18_jhnfs"]
 [ext_resource type="Script" uid="uid://jp2wlxr8rcgq" path="res://addons/proton_scatter/src/modifiers/project_on_terrain3d.gd" id="19_g1e0d"]
 [ext_resource type="Shader" uid="uid://bf0h7u1q21ph3" path="res://New_Hub_World.gdshader" id="19_ha1sw"]
+[ext_resource type="Script" uid="uid://dkw5mupiy2tv7" path="res://scenes/cycle_web_sky_fallback.gd" id="24_websky"]
 [ext_resource type="PackedScene" path="res://scenes/props/market_stall.tscn" id="100_stall"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_barbarian.tscn" id="101_vbarb"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_rogue.tscn" id="102_vrogue"]
@@ -511,6 +512,7 @@ transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 4.73711, 0)
 [node name="Water" parent="Environment" unique_id=1279964189 instance=ExtResource("1_u4tjg")]
 
 [node name="DayNite" parent="Environment" unique_id=1891359062 instance=ExtResource("24_ha1sw")]
+script = ExtResource("24_websky")
 
 [node name="Wind" parent="Environment" unique_id=99601764 instance=ExtResource("25_bsvfl")]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 22.8594, -147.51)
