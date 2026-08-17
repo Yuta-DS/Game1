@@ -15,7 +15,7 @@ set -euo pipefail
 port="${1:-8800}"
 browser="${2:-}"
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-build_dir="${BUILD_DIR:-${project_dir}/builds/web_corey}"
+build_dir="${BUILD_DIR:-${project_dir}/builds/web}"
 
 if [[ ! -f "${build_dir}/index.html" ]]; then
 	echo "No build at ${build_dir}" >&2
