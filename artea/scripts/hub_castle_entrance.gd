@@ -276,6 +276,18 @@ func _build_plaza(parent: Node3D) -> void:
 	_pave(parent, CASTLE_DOOR + OUT * terrace_start - Vector3(0.0, CEREMONIAL_RISE, 0.0),
 		terrace_length, TERRACE_WIDTH, 2, 4)
 
+	# The bridge's collision-backed landing finishes at y=67.97 while the broad
+	# arrival terrace finishes at y=67.58. A compact raised receiving court fills
+	# that measured 0.39 m level change and gives the timber bridge one grounded
+	# architectural endpoint instead of leaving it hovering above the blue slab.
+	var receiving_size := Vector3(5.2, 0.39, 6.4)
+	var receiving_centre := CASTLE_DOOR + OUT * 18.5 \
+		+ Vector3(0.0, -CEREMONIAL_RISE + 0.045, 0.0)
+	var receiving_court := _box(parent, receiving_size, receiving_centre,
+		_stone(STONE_LIGHT))
+	receiving_court.name = "CastleBridgeReceivingCourt"
+	_add_box_body(receiving_court, receiving_size)
+
 	_build_grand_stair(parent)
 	_build_substructure(parent, terrace_start, terrace_length)
 	_build_balustrades(parent, terrace_start, terrace_length)
@@ -503,11 +515,13 @@ func _build_substructure(parent: Node3D, terrace_start: float,
 		_floaters.append(crystal)
 
 		var ring_host := Node3D.new()
+		ring_host.name = "TerraceLevitationAnchor_%s" % ("L" if side < 0.0 else "R")
 		parent.add_child(ring_host)
 		ring_host.global_position = anchor
 		_gears.append(ring_host)
 
 		var ring := MeshInstance3D.new()
+		ring.name = "TerraceLevitationRing_%s" % ("L" if side < 0.0 else "R")
 		var ring_mesh := TorusMesh.new()
 		ring_mesh.inner_radius = 1.15
 		ring_mesh.outer_radius = 1.35
@@ -768,94 +782,61 @@ func _build_courtyard(parent: Node3D) -> void:
 		ember_light.global_position = brazier_spot + Vector3(0.0, 2.0, 0.0)
 
 
-# The courtyard's centrepiece: a tiered basin with a levitating aether core.
-# Deliberately the one place in the entrance where the machine half is doing
-# something visibly impossible, so the "magic AND technology" read lands.
+# The former 6.8 m fountain basin was the circular object blocking the stair
+# sightline and terrace route. Keep the requested central ball, but turn it into
+# a compact medieval fire beacon on the raised bridge court: no pool, orbit
+# rings, or broad collision disc.
 func _build_fountain(parent: Node3D, centre: Vector3) -> void:
-	var pool := MeshInstance3D.new()
-	var pool_mesh := CylinderMesh.new()
-	pool_mesh.top_radius = 3.1
-	pool_mesh.bottom_radius = 3.4
-	pool_mesh.height = 0.8
-	pool_mesh.radial_segments = 12
-	pool.mesh = pool_mesh
-	pool.material_override = _stone(STONE_LIGHT)
-	parent.add_child(pool)
-	pool.global_position = centre + Vector3(0.0, 0.25, 0.0)
-
-	var pool_body := StaticBody3D.new()
-	pool.add_child(pool_body)
-	var pool_shape := CollisionShape3D.new()
-	var pool_cyl := CylinderShape3D.new()
-	pool_cyl.radius = 3.1
-	pool_cyl.height = 0.8
-	pool_shape.shape = pool_cyl
-	pool_body.add_child(pool_shape)
-
-	# The water surface, lit rather than reflective — cheaper than a real water
-	# shader and consistent with the hub's flat-shaded look.
-	var water := MeshInstance3D.new()
-	var water_mesh := CylinderMesh.new()
-	water_mesh.top_radius = 2.8
-	water_mesh.bottom_radius = 2.8
-	water_mesh.height = 0.12
-	water_mesh.radial_segments = 12
-	water.mesh = water_mesh
-	water.material_override = _emissive(WATER_BLUE, 0.75)
-	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(water)
-	water.global_position = centre + Vector3(0.0, 0.62, 0.0)
+	var fire_beacon := Node3D.new()
+	fire_beacon.name = "MedievalCourtyardFire"
+	parent.add_child(fire_beacon)
 
 	var pedestal := MeshInstance3D.new()
+	pedestal.name = "CourtyardFirePedestal"
 	var pedestal_mesh := CylinderMesh.new()
 	pedestal_mesh.top_radius = 0.5
-	pedestal_mesh.bottom_radius = 0.85
-	pedestal_mesh.height = 1.5
+	pedestal_mesh.bottom_radius = 0.92
+	pedestal_mesh.height = 1.35
 	pedestal_mesh.radial_segments = 8
 	pedestal.mesh = pedestal_mesh
 	pedestal.material_override = _stone(STONE_DARK)
-	parent.add_child(pedestal)
-	pedestal.global_position = centre + Vector3(0.0, 1.35, 0.0)
+	fire_beacon.add_child(pedestal)
+	pedestal.global_position = centre + Vector3(0.0, 0.915, 0.0)
 
-	# Brass armature and the core it holds up. The core is registered as a
-	# spinner so _process turns it: a levitating, rotating heart for the court.
-	var ring_host := Node3D.new()
-	parent.add_child(ring_host)
-	ring_host.global_position = centre + Vector3(0.0, 2.6, 0.0)
-	_gears.append(ring_host)
-
-	for r in 2:
-		var ring := MeshInstance3D.new()
-		var ring_mesh := TorusMesh.new()
-		ring_mesh.inner_radius = 0.72 + float(r) * 0.3
-		ring_mesh.outer_radius = 0.86 + float(r) * 0.3
-		ring_mesh.rings = 14
-		ring_mesh.ring_segments = 5
-		ring.mesh = ring_mesh
-		ring.material_override = _metal(BRASS)
-		ring.rotation_degrees = Vector3(90.0 * float(r), 0.0, 22.0 * float(r))
-		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		ring_host.add_child(ring)
+	var bowl := MeshInstance3D.new()
+	bowl.name = "CourtyardFireBowl"
+	var bowl_mesh := CylinderMesh.new()
+	bowl_mesh.top_radius = 0.88
+	bowl_mesh.bottom_radius = 0.52
+	bowl_mesh.height = 0.34
+	bowl_mesh.radial_segments = 10
+	bowl.mesh = bowl_mesh
+	bowl.material_override = _metal(BRASS)
+	fire_beacon.add_child(bowl)
+	bowl.global_position = centre + Vector3(0.0, 1.73, 0.0)
 
 	var core := MeshInstance3D.new()
+	core.name = "CourtyardFireCore"
 	var core_mesh := SphereMesh.new()
-	core_mesh.radius = 0.6
-	core_mesh.height = 1.55
+	core_mesh.radius = 0.58
+	core_mesh.height = 1.28
 	core_mesh.radial_segments = 7
 	core_mesh.rings = 4
 	core.mesh = core_mesh
-	core.material_override = _crystal(CIRCUIT_CYAN)
-	parent.add_child(core)
-	core.global_position = centre + Vector3(0.0, 2.6, 0.0)
+	core.material_override = _emissive(Color("ff7628"), 3.4)
+	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	fire_beacon.add_child(core)
+	core.global_position = centre + Vector3(0.0, 2.17, 0.0)
 	_floaters.append(core)
 
 	var core_light := OmniLight3D.new()
-	core_light.light_color = Color(0.62, 0.92, 1.0)
-	core_light.light_energy = 3.0
-	core_light.omni_range = 16.0
+	core_light.name = "CourtyardFireLight"
+	core_light.light_color = Color("ffb15c")
+	core_light.light_energy = 4.2
+	core_light.omni_range = 18.0
 	core_light.shadow_enabled = false
-	parent.add_child(core_light)
-	core_light.global_position = centre + Vector3(0.0, 2.6, 0.0)
+	fire_beacon.add_child(core_light)
+	core_light.global_position = centre + Vector3(0.0, 2.17, 0.0)
 
 
 # Two towers flanking the door. This is what turns "a hole in a wall" into a

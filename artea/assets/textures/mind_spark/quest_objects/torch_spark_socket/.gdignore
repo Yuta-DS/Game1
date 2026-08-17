@@ -1,0 +1,2 @@
+# Editable Blender texture sources are packed into the runtime GLB. Keeping this
+# folder out of Godot's importer avoids shipping a second copy in Web builds.

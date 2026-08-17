@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bhohq7etfisvh" path="res://scripts/art_gallery.gd" id="1_h6yu7"]
 [ext_resource type="PackedScene" uid="uid://cx6j6vrnhxvfi" path="res://scenes/player_3d.tscn" id="2_3gi0n"]
-[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="2_dw71r"]
 [ext_resource type="PackedScene" uid="uid://g2swdgcf4ywc" path="res://assets3D/characters/fox.glb" id="4_k4ey6"]
+[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="2_dw71r"]
 [ext_resource type="Script" uid="uid://dbp2n821rrrt6" path="res://scripts/CameraFollow.gd" id="5_n1pvk"]
 [ext_resource type="ArrayMesh" uid="uid://dvxtnr8jtdt5u" path="res://chair_proxy_mesh.obj" id="7_bvso8"]
 [ext_resource type="Script" uid="uid://dwykxf5gpxmtn" path="res://scripts/PaintingInteraction.gd" id="7_dw71r"]

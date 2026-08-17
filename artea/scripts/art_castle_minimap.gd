@@ -278,6 +278,32 @@ func _landscape_color(world_position: Vector3) -> Color:
 	if _world == null:
 		return Color("151934")
 	var local := _world.to_local(world_position)
+	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+	if mind_world != null and mind_world.force_standalone_blueprint:
+		var mind_colors := [Color("35506a"), Color("315f70"), Color("3e4d75"),
+			Color("536d59"), Color("4c386a"), Color("3e6b5d")]
+		var mind_ids := mind_world.get_zone_ids()
+		for zone_index in mind_ids.size():
+			var zone_center := mind_world.position + mind_world.get_zone_position(mind_ids[zone_index])
+			if Vector2(local.x, local.z).distance_to(Vector2(zone_center.x, zone_center.z)) \
+					<= mind_world.get_zone_radius(mind_ids[zone_index]):
+				return mind_colors[zone_index].lightened(texture_wave * 0.055)
+		for route_index in mind_ids.size() - 1:
+			var route_start := mind_world.position + mind_world.get_zone_position(mind_ids[route_index])
+			var route_finish := mind_world.position + mind_world.get_zone_position(mind_ids[route_index + 1])
+			if _distance_to_segment(Vector2(local.x, local.z), Vector2(route_start.x, route_start.z),
+					Vector2(route_finish.x, route_finish.z)) <= 18.0:
+				return Color("72d6e8").lightened(texture_wave * 0.035)
+		var station_spur := mind_world.get_node_or_null(
+			"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D
+		if station_spur != null and station_spur.visible:
+			var spur_start: Vector3 = mind_world.position + station_spur.get_meta("branch_start", Vector3.ZERO)
+			var station_center: Vector3 = mind_world.position + station_spur.get_meta("station_center", Vector3.ZERO)
+			var point := Vector2(local.x, local.z)
+			if point.distance_to(Vector2(station_center.x, station_center.z)) <= 72.0 \
+					or _distance_to_segment(point, Vector2(spur_start.x, spur_start.z),
+						Vector2(station_center.x, station_center.z)) <= 12.0:
+				return Color("436b78").lightened(texture_wave * 0.04)
 	# The central galaxy uses real island centres/radii from
 	# art_castle_floating_world.gd. Water here is the surrounding star void.
 	var island_specs := [
@@ -558,6 +584,34 @@ func _draw_galaxy_full_landscape(rect: Rect2) -> void:
 	]:
 		draw_line(_map_local(bridge[0], rect), _map_local(bridge[1], rect),
 			Color("9e98ad"), 4.0, true)
+	_draw_mind_spark_blueprint(rect)
+
+
+func _draw_mind_spark_blueprint(rect: Rect2) -> void:
+	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+	if mind_world == null or not mind_world.force_standalone_blueprint:
+		return
+	var zone_ids := mind_world.get_zone_ids()
+	var points := PackedVector2Array()
+	var radius_scale := rect.size.x / maxf(_bounds.size.x, 1.0)
+	for zone_index in zone_ids.size():
+		var local_center := mind_world.position + mind_world.get_zone_position(zone_ids[zone_index])
+		var point := _map_local(local_center, rect)
+		points.append(point)
+		var radius := maxf(3.0, mind_world.get_zone_radius(zone_ids[zone_index]) * radius_scale)
+		var color := Color("315f70") if zone_index < 4 else Color("4c386a")
+		draw_circle(point, radius, Color(color, 0.92))
+		draw_arc(point, radius, 0, TAU, 32, Color("72e6f1"), 1.0, true)
+	if points.size() >= 2:
+		draw_polyline(points, Color("72d6e8"), 2.6, true)
+	var station := mind_world.get_node_or_null(
+		"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D
+	if station != null and station.visible:
+		var branch_start: Vector3 = mind_world.position + station.get_meta("branch_start", Vector3.ZERO)
+		var station_center: Vector3 = mind_world.position + station.get_meta("station_center", Vector3.ZERO)
+		draw_line(_map_local(branch_start, rect), _map_local(station_center, rect),
+			Color("72d6e8"), 2.0, true)
+		draw_circle(_map_local(station_center, rect), maxf(2.5, 72.0 * radius_scale), Color("436b78"))
 
 
 func _draw_galaxy_full(rect: Rect2) -> void:
@@ -675,6 +729,15 @@ func _recalculate_bounds() -> void:
 		max_x = maxf(max_x, centre_global.x + 1500.0 + GALAXY_PADDING)
 		min_z = minf(min_z, centre_global.z - 1500.0 - GALAXY_PADDING)
 		max_z = maxf(max_z, centre_global.z + 1500.0 + GALAXY_PADDING)
+	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+	if mind_world != null and mind_world.force_standalone_blueprint:
+		for zone_id in mind_world.get_zone_ids():
+			var centre_global := mind_world.to_global(mind_world.get_zone_position(zone_id))
+			var radius := mind_world.get_zone_radius(zone_id) + 12.0
+			min_x = minf(min_x, centre_global.x - radius)
+			max_x = maxf(max_x, centre_global.x + radius)
+			min_z = minf(min_z, centre_global.z - radius)
+			max_z = maxf(max_z, centre_global.z + radius)
 	_bounds = Rect2(min_x, min_z, max_x - min_x, max_z - min_z)
 
 
@@ -699,4 +762,3 @@ func _map_background() -> Color:
 
 func _accent() -> Color:
 	return Color("f2c55e") if map_context == CONTEXT_HUB else Color("72e6f1")
-

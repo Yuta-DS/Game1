@@ -49,16 +49,20 @@ func _run() -> void:
 		if player.is_on_floor():
 			break
 	Input.action_press("move_forward")
+	var travel := Vector3.ZERO
 	for _move in 28:
 		await physics_frame
+		var frame_travel := Vector3(player.velocity.x, 0, player.velocity.z)
+		if frame_travel.length() > 0.1:
+			travel = frame_travel.normalized()
 	Input.action_release("move_forward")
 	if player.call("get_animation_state") != "run":
 		_fail("moving character does not enter the Run animation state")
 		return
-	var travel := Vector3(player.velocity.x, 0, player.velocity.z).normalized()
 	var fox_forward := Vector3(visual.global_basis.z.x, 0, visual.global_basis.z.z).normalized()
 	if travel.length() < 0.9 or fox_forward.dot(travel) < 0.85:
-		_fail("fox body still faces opposite its travel direction")
+		_fail("character body faces away from travel: travel=%s forward=%s dot=%.3f local_yaw=%.3f root_yaw=%.3f" % [
+			travel, fox_forward, fox_forward.dot(travel), visual.rotation.y, player.global_rotation.y])
 		return
 
 	Input.action_press("jump")

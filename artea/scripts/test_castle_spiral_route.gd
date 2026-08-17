@@ -109,6 +109,27 @@ func _test_lane(player: CharacterBody3D, stair: Node3D, treads: Array,
 	return true
 
 
+func _test_crown_floor(player: CharacterBody3D, stair: Node3D) -> bool:
+	var base: Vector2 = stair.get_meta("tower_base")
+	var surface_y: float = float(stair.get_meta("tower_top_y")) + 0.17
+	var centre := Vector3(base.x, surface_y, base.y)
+	if not await _walk_to(player, centre):
+		_fail("player stuck walking to the centre of the crown; collisions: %s"
+			% _collider_label(player))
+		return false
+	for point_index in 8:
+		var angle := TAU * float(point_index) / 8.0
+		var point := centre + Vector3(cos(angle) * 3.6, 0.0, sin(angle) * 3.6)
+		if not await _walk_to(player, point):
+			_fail("player stuck crossing crown floor point %d at %s; collisions: %s" % [
+				point_index, player.global_position, _collider_label(player)])
+			return false
+		if player.global_position.y < surface_y - 0.35:
+			_fail("player fell through crown floor at point %d" % point_index)
+			return false
+	return true
+
+
 func _run() -> void:
 	var hub := (load("res://scenes/New_Hub_World.tscn") as PackedScene).instantiate()
 	root.add_child(hub)
@@ -150,8 +171,10 @@ func _run() -> void:
 	for lane_offset: float in [-0.85, 0.0, 0.85]:
 		if not await _test_lane(player, stair, treads, lane_offset):
 			return
+	if not await _test_crown_floor(player, stair):
+		return
 
-	print("CASTLE_SPIRAL_ROUTE_TEST: PASS")
+	print("CASTLE_SPIRAL_ROUTE_TEST: PASS — three stair lanes and full crown circuit")
 	quit(0)
 
 

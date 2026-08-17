@@ -1,0 +1,19 @@
+{
+  "asset": "Living Leaf Fan \u2014 Reference Faithful",
+  "method": "dense 2.5D relief with RGBA reference albedo",
+  "vertex_count": 20091,
+  "face_count": 19800,
+  "grid": [
+    181,
+    111
+  ],
+  "texture": "assets3D/tree_of_life/leaves/reference_faithful/textures/living_leaf_fan_reference_rgba.png",
+  "blend": "assets3D/tree_of_life/leaves/reference_faithful/source/living_leaf_fan_reference_faithful.blend",
+  "glb": "assets3D/tree_of_life/leaves/reference_faithful/glb/living_leaf_fan_reference_faithful.glb",
+  "preview": "artifacts/tree_of_life_leaves/living_leaf_fan_reference_faithful.png",
+  "notes": [
+    "Transparent pixels are retained only as an invisible support grid.",
+    "Leaflets, branch veins, highlights, outline, and brass connector are baked into the supplied RGBA albedo.",
+    "Luminance-driven displacement adds shallow physical relief without changing the reference silhouette."
+  ]
+}

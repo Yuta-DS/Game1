@@ -1,5 +1,11 @@
 extends Node3D
 
+const MindSparkWorldGateScene := preload("res://scenes/mind_spark/world_gate.tscn")
+const TreeOfLifeScene := preload("res://assets3D/tree_of_life/glb/artea_tree_of_life.glb")
+const CrystalBranchCanopyScene := preload("res://assets3D/tree_of_life/canopy/glb/crystal_branch_canopy.glb")
+const PoweredGravityBoughScene := preload("res://assets3D/tree_of_life/gravity_leaf_bough/glb/gravity_leaf_bough_runtime.glb")
+const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
+
 @export var embedded_in_gallery := false
 
 # The playable Art Castle Galaxy: a 2 km x 2 km connected floating world based
@@ -10,7 +16,32 @@ extends Node3D
 const WORLD_HALF_EXTENT := 1000.0
 const PLAYER_SPAWN := Vector3(0.0, 4.0, 790.0)
 const HUB := Vector3(0.0, 0.0, 1640.0)
+const TREE_OF_LIFE_GAME_SCALE := 3.30
+const TREE_OF_LIFE_SCALE_MULTIPLIER := 2.0
+# The v3 Blender clear-path tiles sit 0.63 local metres above its origin. This
+# offset places their scaled top exactly on the existing TreeCourt collision.
+const TREE_OF_LIFE_COURT_SURFACE_Y := -0.24
+const TREE_OF_LIFE_CLEAR_PATH_M := 9.5
 const MIND := Vector3(-600.0, 0.0, 1640.0)
+const MIND_GATE_POSITION := Vector3(-692.0, 1.0, 1544.0)
+const MIND_GATE_RETURN_LANDING := Vector3(-650.0, 7.0, 1575.0)
+# Keep the full six-island blueprint near enough to read from the Art Castle
+# atlas while retaining a 300 m void buffer from the western district edge.
+const MIND_WORLD_ONE_ORIGIN := Vector3(-2200.0, 0.0, 1640.0)
+const MIND_DISTRICT_RADIUS := 175.0
+# A centered odd grid keeps the Mind Bridge approach on an exact mirror axis.
+# The island deck remains the single continuous collision surface at y = 0;
+# these shallow rune inlays are visual detail only, so they cannot form steps or
+# collision seams that catch the player.
+const MIND_RUNE_GRID_SIZE := 9
+const MIND_RUNE_TILE_SPACING := 27.0
+const MIND_RUNE_TILE_SIZE := 25.2
+const MIND_RUNE_TILE_HEIGHT := 0.08
+# Walkable causeway from the Mind district out to the relocated World One.
+const CAUSEWAY_WIDTH := 26.0
+const CAUSEWAY_DECK_Y := 1.0
+const CAUSEWAY_SEGMENT_LENGTH := 420.0
+const CAUSEWAY_ISLAND_RADIUS := 46.0
 const HEART := Vector3(0.0, 0.0, 2290.0)
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
 const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
@@ -37,6 +68,8 @@ func _ready() -> void:
 	_build_heart_district()
 	_build_creator_district()
 	_build_story_landmarks()
+	_build_mind_spark_world_one_gameplay()
+	_build_world_one_walk_route()
 	_build_boundary_observatories()
 	_build_skyline()
 	_build_cloud_banks()
@@ -111,6 +144,13 @@ func _build_materials() -> void:
 	_materials.canvas = _make_material(Color("fff9e8"), 0.96)
 	_materials.black = _make_material(Color("171424"), 0.72)
 	_materials.window = _make_glow(Color("3ad2ee"), 0.76)
+	_materials.bridge_deck = _make_textured_material(
+		Color("30394c"), Color("59667e"), Color("38d9e8"), 0.74, 16)
+	_materials.bridge_edge = _make_textured_material(
+		Color("d9dce7"), Color("a5acbd"), Color("f2c55e"), 0.84, 12)
+	_materials.bridge_glass = _make_glow(Color(0.20, 0.88, 0.94, 0.32), 0.72, true)
+	_materials.bridge_structure = _make_material(Color("475166"), 0.68)
+	_materials.bridge_rubber = _make_material(Color("171b24"), 0.96)
 
 
 func _build_central_sanctuary() -> void:
@@ -175,48 +215,130 @@ func _build_castle_approach_bridge() -> void:
 	var start := Vector3(0.0, 0.0, 500.0)
 	var finish := Vector3(0.0, 0.0, 670.0)
 	_add_bridge_between(bridge, start, finish, 16.0)
+	bridge.set_meta("structural_system", "continuous_static_deck_on_portal-frame-piers")
+	bridge.set_meta("structural_mass_class", "infinite_static_mass")
+	bridge.set_meta("architectural_scale", 4.0)
+	bridge.set_meta("clear_walk_width_m", 13.6)
+	bridge.set_meta("rail_height_m", 4.8)
+	bridge.set_meta("deck_friction", 0.92)
+	bridge.set_meta("maximum_live_character_mass_kg", 250.0)
+	bridge.set_meta("design_gravity_m_s2", 9.8)
 	bridge.set_meta("castle_carpet_end_global_z", 20.0)
 	bridge.set_meta("walkway_start_global_z", to_global(start).z)
 	bridge.set_meta("walkway_width", 16.0)
 	_add_landmark_label(bridge, "CROWN JOURNEY WALKWAY", Vector3(0.0, 24.0, 615.0), Color("fff0b0"), 34)
-
+	_build_approach_fall_recovery(bridge, start, finish)
 
 func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width: float) -> void:
 	var direction := finish - start
 	var length := direction.length()
 	var midpoint := (start + finish) * 0.5
 	var yaw := atan2(direction.x, direction.z)
-	_add_box(parent, "ContinuousWalkway", midpoint, Vector3(width, 1.2, length), _materials.stone, true, yaw)
+	# Primary deck: a high-friction static body. StaticBody3D is intentionally
+	# infinite mass, so player weight, jumping and movable props cannot displace
+	# the bridge. The visible finish is a procedural circuit-stone texture.
+	_add_box(parent, "ContinuousWalkway", midpoint, Vector3(width, 1.2, length),
+		_materials.bridge_deck, true, yaw, 0.92, 0.0)
+	_add_box(parent, "UnderDeckSpine", midpoint + Vector3(0, -2.35, 0),
+		Vector3(4.0, 3.5, length - 2.0), _materials.bridge_structure, true, yaw, 0.88, 0.0)
+	# Surface plates, anti-slip transverse strips and expansion joints make the
+	# long span readable at walking height without creating collision seams.
+	for metre in range(5, int(length), 10):
+		var progress := float(metre) / length
+		var plate_center := start.lerp(finish, progress) + Vector3(0, 0.68, 0)
+		_add_box(parent, "DeckPlate_%03d" % metre, plate_center,
+			Vector3(width - 1.6, 0.10, 8.8), _materials.bridge_deck, false, yaw)
+		_add_box(parent, "AntiSlipJoint_%03d" % metre,
+			plate_center + Vector3(0, 0.09, 0), Vector3(width - 1.0, 0.08, 0.42),
+			_materials.bridge_rubber, false, yaw)
 	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
 	for side in [-1.0, 1.0]:
 		var edge: Vector3 = midpoint + side_axis * float(side) * (width * 0.5 - 0.7) + Vector3(0.0, 2.4, 0.0)
-		_add_box(parent, "SafetyRailLeft" if side < 0 else "SafetyRailRight", edge,
-			Vector3(1.2, 4.8, length), _materials.ivory, true, yaw)
+		var side_name := "Left" if side < 0 else "Right"
+		# A continuous collision curb remains at foot level; posts, glass infill
+		# and the top rail provide the detailed visible guard system.
+		_add_box(parent, "SafetyRail%s" % side_name, edge + Vector3(0, -1.65, 0),
+			Vector3(1.2, 1.5, length), _materials.bridge_edge, true, yaw, 0.86, 0.0)
+		_add_box(parent, "GuardGlass%s" % side_name, edge + Vector3(0, 0.15, 0),
+			Vector3(0.34, 3.2, length - 1.0), _materials.bridge_glass, true, yaw, 0.35, 0.0)
+		_add_box(parent, "TopRail%s" % side_name, edge + Vector3(0, 2.3, 0),
+			Vector3(0.9, 0.65, length), _materials.bridge_edge, true, yaw, 0.82, 0.0)
+		for metre in range(0, int(length) + 1, 10):
+			var post_progress := minf(1.0, float(metre) / length)
+			var post_position := start.lerp(finish, post_progress)
+			post_position += side_axis * float(side) * (width * 0.5 - 0.7) + Vector3(0, 2.55, 0)
+			_add_box(parent, "GuardPost%s_%03d" % [side_name, metre], post_position,
+				Vector3(0.9, 5.1, 0.9), _materials.bridge_edge, true, yaw, 0.82, 0.0)
 	for step in range(10, int(length), 20):
 		var progress := float(step) / length
 		var marker := start.lerp(finish, progress) + Vector3(0.0, 1.0, 0.0)
 		_add_box(parent, "RainbowPathMarker", marker, Vector3(width - 3.0, 0.18, 2.0),
 			_materials.aqua_glass, false, yaw)
+	# Portal-frame piers take the visual load into the floating foundation.
+	for metre in range(20, int(length), 30):
+		var pier_progress := float(metre) / length
+		var pier_center := start.lerp(finish, pier_progress) + Vector3(0, -10.5, 0)
+		_add_box(parent, "PierCrossbeam_%03d" % metre, pier_center + Vector3(0, 4.0, 0),
+			Vector3(width + 5.0, 2.2, 2.4), _materials.bridge_structure, true, yaw, 0.88, 0.0)
+		for side in [-1.0, 1.0]:
+			var pier_leg := pier_center + side_axis * float(side) * (width * 0.42)
+			_add_box(parent, "PierLeg_%03d_%s" % [metre, "L" if side < 0 else "R"],
+				pier_leg, Vector3(2.4, 21.0, 2.4), _materials.bridge_structure, true, yaw, 0.88, 0.0)
+	# Carpet/deck and deck/island thresholds are broad, shallow, walkable ramps.
+	for endpoint_data in [[start, "Castle"], [finish, "Island"]]:
+		_add_box(parent, "%sThresholdRamp" % endpoint_data[1],
+			(endpoint_data[0] as Vector3) + Vector3(0, 0.36, 0),
+			Vector3(width - 0.8, 0.32, 5.0), _materials.bridge_edge, true, yaw, 0.94, 0.0)
+
+
+func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vector3) -> void:
+	var recovery := Area3D.new()
+	recovery.name = "ApproachFallRecovery"
+	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -22, 0)
+	recovery.collision_layer = 0
+	recovery.collision_mask = 1
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(80, 20, start.distance_to(finish) + 30)
+	shape_node.shape = shape
+	recovery.add_child(shape_node)
+	parent.add_child(recovery)
+	recovery.body_entered.connect(_recover_approach_player.bind(start + Vector3(0, 4, 5)))
+
+
+func _recover_approach_player(body: Node3D, safe_position: Vector3) -> void:
+	if body != _player or _player == null:
+		return
+	_player.global_position = to_global(safe_position)
+	_player.velocity = Vector3.ZERO
 
 
 func _build_mind_district() -> void:
 	var district := Node3D.new()
 	district.name = "MindSparkDistrict"
 	add_child(district)
-	_build_island_foundation(district, MIND, 175.0, 52.0, 32)
+	_build_island_foundation(district, MIND, MIND_DISTRICT_RADIUS, 52.0, 32)
+	district.set_meta("symmetry_axis_z", MIND.z)
+	district.set_meta("bridge_surface_y", MIND.y)
+	district.set_meta("ground_surface_y", MIND.y)
+	district.set_meta("ground_collision_source", "WalkableDeckCollision")
+	district.set_meta("rune_grid_size", MIND_RUNE_GRID_SIZE)
+	district.set_meta("requires_jump_from_mind_bridge", false)
 
-	# A large luminous tile puzzle provides readable detail at this world scale.
-	for row in 8:
-		for column in 8:
-			var tile_pos := MIND + Vector3((column - 3.5) * 31.0, 1.0, (row - 3.5) * 31.0)
+	# An odd grid places one tile exactly on the bridge centerline. The shallow
+	# visual inlays sit over the island's continuous deck collision rather than
+	# creating 81 raised collision blocks.
+	var half_grid := float(MIND_RUNE_GRID_SIZE - 1) * 0.5
+	for row in MIND_RUNE_GRID_SIZE:
+		for column in MIND_RUNE_GRID_SIZE:
+			var tile_pos := MIND + Vector3(
+				(float(column) - half_grid) * MIND_RUNE_TILE_SPACING,
+				MIND_RUNE_TILE_HEIGHT * 0.5,
+				(float(row) - half_grid) * MIND_RUNE_TILE_SPACING)
 			var tile_mat: Material = _materials.aqua_glass if (row + column) % 2 == 0 else _materials.stone
 			_add_box(district, "RuneTile_%02d_%02d" % [row, column], tile_pos,
-				Vector3(28.0, 1.8, 28.0), tile_mat, true)
-
-	var cube_positions := [Vector3(-685.0, 18.0, 55.0), Vector3(-560.0, 14.0, 70.0),
-		Vector3(-650.0, 12.0, -70.0), Vector3(-535.0, 20.0, -48.0)]
-	for index in cube_positions.size():
-		_build_rune_cube(district, cube_positions[index], 24.0 + float(index % 2) * 8.0, index)
+				Vector3(MIND_RUNE_TILE_SIZE, MIND_RUNE_TILE_HEIGHT, MIND_RUNE_TILE_SIZE),
+				tile_mat, false)
 
 	_build_frame(district, MIND + Vector3(-92.0, 0.0, -96.0), 58.0, 76.0,
 		_materials.aqua, "MIND SPARK")
@@ -276,9 +398,121 @@ func _build_creator_district() -> void:
 # Readable physical landmarks turn the story document into an explorable route.
 # Each named node is also a stable hook for later quest interaction scripts.
 func _build_story_landmarks() -> void:
-	_build_mind_story_landmarks()
+	# Mind Spark's story landmarks live in the complete six-island World One.
+	# The original cyan district remains a clear World Gate forecourt.
 	_build_heart_story_landmarks()
 	_build_creator_story_landmarks()
+
+
+func _build_mind_spark_world_one_gameplay() -> void:
+	if has_node("MindSparkWorldOne"):
+		return
+	var world_one_scene := load("res://scenes/mind_spark/mind_spark_world_one.tscn") as PackedScene
+	if world_one_scene == null:
+		return
+	var world_one := world_one_scene.instantiate() as MindSparkWorldOne
+	world_one.name = "MindSparkWorldOne"
+	world_one.force_standalone_blueprint = true
+	world_one.return_destination_world_local = MIND_GATE_RETURN_LANDING
+	world_one.position = MIND_WORLD_ONE_ORIGIN
+	add_child(world_one)
+	var source_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
+	source_gate.name = "MindSparkWorldGate"
+	source_gate.position = MIND_GATE_POSITION
+	source_gate.destination_world_local = MIND_WORLD_ONE_ORIGIN \
+		+ world_one.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0)
+	source_gate.prompt_text = "Q • ENTER WORLD ONE: MIND SPARK"
+	add_child(source_gate)
+	_build_world_one_causeway(world_one)
+
+
+func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
+	## A physically walkable route from the Mind Spark district out to the
+	## relocated World One landing, so the new land is reachable on foot and not
+	## only through the world gate. The span crosses open void, so it is built as
+	## a piered causeway resting on intermediate support islands rather than as a
+	## single unsupported deck.
+	if has_node("MindSparkWorldOneCauseway"):
+		return
+	var causeway := Node3D.new()
+	causeway.name = "MindSparkWorldOneCauseway"
+	add_child(causeway)
+	var landing := MIND_WORLD_ONE_ORIGIN \
+		+ world_one.get_zone_position("01_world_gate_landing")
+	var flat_direction := Vector3(landing.x - MIND.x, 0.0, landing.z - MIND.z).normalized()
+	# Start on the district rim and finish on the Zone 01 floor, both slightly
+	# inside the islands so neither joint leaves a gap the player can fall through.
+	var start: Vector3 = MIND + flat_direction * (MIND_DISTRICT_RADIUS - 8.0)
+	start.y = CAUSEWAY_DECK_Y
+	var finish: Vector3 = landing - flat_direction * 118.0
+	finish.y = CAUSEWAY_DECK_Y
+	var span := start.distance_to(finish)
+	var segment_count := maxi(2, int(round(span / CAUSEWAY_SEGMENT_LENGTH)))
+	# Support islands sit between segments and carry the piers of both neighbours.
+	for index in range(1, segment_count):
+		var pier_center: Vector3 = start.lerp(finish, float(index) / float(segment_count))
+		_build_causeway_support_island(causeway, pier_center, index)
+	for index in segment_count:
+		var leg_start: Vector3 = start.lerp(finish, float(index) / float(segment_count))
+		var leg_finish: Vector3 = start.lerp(finish, float(index + 1) / float(segment_count))
+		_add_bridge_between(causeway, leg_start, leg_finish, CAUSEWAY_WIDTH)
+	_add_landmark_label(causeway, "CAUSEWAY • WALK TO WORLD ONE: MIND SPARK",
+		start + flat_direction * 40.0 + Vector3(0.0, 26.0, 0.0), Color("8df8ff"), 40)
+	_add_landmark_label(causeway, "WORLD ONE • MIND SPARK LANDING",
+		finish - flat_direction * 40.0 + Vector3(0.0, 26.0, 0.0), Color("bffbff"), 40)
+	causeway.set_meta("span_metres", span)
+	causeway.set_meta("segment_count", segment_count)
+	causeway.set_meta("deck_y", CAUSEWAY_DECK_Y)
+	causeway.set_meta("walk_start", start)
+	causeway.set_meta("walk_finish", finish)
+
+
+func _build_causeway_support_island(parent: Node3D, center: Vector3, index: int) -> void:
+	var island := Node3D.new()
+	island.name = "CausewaySupportIsland_%02d" % index
+	parent.add_child(island)
+	# The deck lands on top of the island, so the walk stays level across it.
+	_build_island_foundation(island, center, CAUSEWAY_ISLAND_RADIUS, 44.0, 24)
+	_add_cylinder(island, "RestPlaza", center + Vector3(0.0, 0.15, 0.0),
+		CAUSEWAY_ISLAND_RADIUS * 0.66, 0.3, _materials.aqua_glass, false, 24)
+	for lamp in 4:
+		var angle := TAU * float(lamp) / 4.0
+		_add_cylinder(island, "CausewayLamp_%02d" % lamp,
+			center + Vector3(cos(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72, 7.0,
+				sin(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72), 1.1, 14.0,
+			_materials.aqua, false, 8)
+
+
+func _build_world_one_walk_route() -> void:
+	var route := Node3D.new()
+	route.name = "WalkRouteToMindSparkWorldGate"
+	add_child(route)
+	var points := [
+		Vector3(0, 1.95, 675),
+		Vector3(0, 1.95, 975),
+		Vector3(0, 1.95, 1422),
+		Vector3(-105, 1.95, 1535),
+		Vector3(-210, 1.95, 1640),
+		Vector3(-430, 1.95, 1640),
+		MIND_GATE_POSITION + Vector3.UP * 0.95,
+	]
+	for index in points.size() - 1:
+		_add_walk_route_dots(route, points[index], points[index + 1], index)
+	_add_landmark_label(route, "WORLD ONE • MIND SPARK  ←  WALK LEFT",
+		Vector3(-92, 24, 1518), Color("8df8ff"), 42)
+	_add_landmark_label(route, "MIND SPARK WORLD GATE • QUESTS BEYOND",
+		Vector3(-430, 20, 1640), Color("bffbff"), 35)
+
+
+func _add_walk_route_dots(parent: Node3D, start: Vector3, finish: Vector3, segment_index: int) -> void:
+	var direction := finish - start
+	var distance := direction.length()
+	var count := maxi(1, int(distance / 18.0))
+	var yaw := atan2(direction.x, direction.z)
+	for dot_index in count + 1:
+		var progress := float(dot_index) / float(count)
+		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], start.lerp(finish, progress),
+			Vector3(7.5, 0.16, 2.2), _materials.aqua, false, yaw)
 
 
 func _build_mind_story_landmarks() -> void:
@@ -385,10 +619,17 @@ func _build_creator_story_landmarks() -> void:
 
 func _build_boundary_observatories() -> void:
 	var points := [
-		{"name": "WestObservatory", "center": Vector3(-920.0, 0.0, 1640.0), "from": Vector3(-775.0, 0.0, 1640.0), "to": Vector3(-850.0, 0.0, 1640.0)},
-		{"name": "NorthObservatory", "center": Vector3(0.0, 0.0, 2565.0), "from": Vector3(0.0, 0.0, 2465.0), "to": Vector3(0.0, 0.0, 2495.0)},
-		{"name": "EastObservatory", "center": Vector3(920.0, 0.0, 1640.0), "from": Vector3(795.0, 0.0, 1640.0), "to": Vector3(850.0, 0.0, 1640.0)},
-		{"name": "SouthObservatory", "center": Vector3(0.0, 0.0, 710.0), "from": Vector3(0.0, 0.0, 740.0), "to": Vector3(0.0, 0.0, 765.0)},
+		# The Crown Line Mind station occupies the former (-920, 0, 1640) site.
+		# Move this 112 m tower south with its own approach so its giant solid body
+		# no longer passes through the station platform and crystal canopy.
+		{"name": "WestObservatory", "center": Vector3(-920.0, 0.0, 1430.0),
+			"source_center": MIND, "source_radius": MIND_DISTRICT_RADIUS},
+		{"name": "NorthObservatory", "center": Vector3(0.0, 0.0, 2565.0),
+			"source_center": HEART, "source_radius": 175.0},
+		{"name": "EastObservatory", "center": Vector3(920.0, 0.0, 1640.0),
+			"source_center": CREATOR, "source_radius": 195.0},
+		{"name": "SouthObservatory", "center": Vector3(0.0, 0.0, 710.0),
+			"source_center": SOUTH_GATE, "source_radius": 155.0},
 	]
 	for info in points:
 		var lookout := Node3D.new()
@@ -398,10 +639,38 @@ func _build_boundary_observatories() -> void:
 		_build_island_foundation(lookout, center, 70.0, 38.0, 20)
 		_add_torus(lookout, "CompassRing", center + Vector3(0.0, 1.0, 0.0), 33.0, 38.0, _materials.gold)
 		_build_tower(lookout, center, 34.0, 112.0, _materials.ivory)
-		var from: Vector3 = info.from
-		var to: Vector3 = info.to
-		if from.distance_to(to) > 1.0:
-			_add_bridge("%sBridge" % info.name, from, to, 34.0)
+		_add_exact_twin_island_bridges("%sBridge" % info.name,
+			info.source_center, float(info.source_radius), center, 70.0)
+
+
+func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
+		source_radius: float, target_center: Vector3, target_radius: float) -> void:
+	# Two narrow decks mirror each other around the centre-to-centre axis. Their
+	# endpoints are solved on inset circles, keeping the complete deck width over
+	# land rather than leaving an outer corner suspended past a curved island rim.
+	const BRIDGE_WIDTH := 16.0
+	const LANE_OFFSET := 18.0
+	const LANDING_OVERLAP := 2.0
+	var direction := Vector3(
+		target_center.x - source_center.x, 0.0,
+		target_center.z - source_center.z).normalized()
+	var side_axis := Vector3(direction.z, 0.0, -direction.x)
+	var source_usable_radius := source_radius - LANDING_OVERLAP - BRIDGE_WIDTH * 0.5
+	var target_usable_radius := target_radius - LANDING_OVERLAP - BRIDGE_WIDTH * 0.5
+	var source_along := sqrt(source_usable_radius * source_usable_radius - LANE_OFFSET * LANE_OFFSET)
+	var target_along := sqrt(target_usable_radius * target_usable_radius - LANE_OFFSET * LANE_OFFSET)
+	for side_value in [-1.0, 1.0]:
+		var side: float = side_value
+		var start: Vector3 = source_center + direction * source_along + side_axis * side * LANE_OFFSET
+		var finish: Vector3 = target_center - direction * target_along + side_axis * side * LANE_OFFSET
+		var bridge_name := base_name if side < 0.0 else "%sTwin" % base_name
+		_add_bridge(bridge_name, start, finish, BRIDGE_WIDTH)
+		var bridge := get_node(bridge_name) as Node3D
+		bridge.set_meta("connection_start", start)
+		bridge.set_meta("connection_finish", finish)
+		bridge.set_meta("symmetry_side", int(side))
+		bridge.set_meta("symmetry_offset", LANE_OFFSET)
+		bridge.set_meta("walk_surface_y", source_center.y)
 
 
 func _build_skyline() -> void:
@@ -547,31 +816,456 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 
 
 func _build_life_tree(parent: Node3D, center: Vector3) -> void:
+	var manifest := _load_tree_of_life_manifest()
+	var source := manifest.get("source", {}) as Dictionary
+	var game_export := manifest.get("game_export", {}) as Dictionary
+	var design := manifest.get("design", {}) as Dictionary
 	var tree := Node3D.new()
 	tree.name = "TreeOfImagination"
-	tree.position = center
+	tree.position = center + Vector3.UP * TREE_OF_LIFE_COURT_SURFACE_Y
+	tree.set_meta("architecture", "nature_magic_technology_engineering")
+	tree.set_meta("blueprint_revision", manifest.get("blueprint_revision", ""))
+	tree.set_meta("blueprint_references", manifest.get("blueprint_references", []))
+	tree.set_meta("source_blend", "res://assets3D/tree_of_life/source/artea_tree_of_life.blend")
+	tree.set_meta("source_named_modules", int(source.get("named_mesh_modules", 0)))
+	tree.set_meta("source_editable_vertices", int(source.get("vertices", 0)))
+	tree.set_meta("source_editable_mesh_elements", int(source.get("editable_mesh_elements", 0)))
+	tree.set_meta("game_render_systems", int(game_export.get("mesh_nodes", 0)))
+	tree.set_meta("player_clear_path_m",
+		float(design.get("player_clear_path_m", TREE_OF_LIFE_CLEAR_PATH_M)) * TREE_OF_LIFE_GAME_SCALE)
+	tree.set_meta("foundation_depth_m", float(design.get("foundation_depth_m", 0.0)))
+	tree.set_meta("canopy_collision", false)
+	tree.set_meta("landmark_scale_multiplier", TREE_OF_LIFE_SCALE_MULTIPLIER)
+	tree.set_meta("entrance_world_direction", "south")
+	tree.set_meta("entrance_alignment", "Art Gallery -> Art Castle Entrance Bridge -> SouthArrivalBridge -> root doorway")
 	parent.add_child(tree)
-	_add_cylinder(tree, "Trunk", Vector3(0.0, 25.0, 0.0), 8.5, 50.0, _materials.wood, false, 9)
-	for branch in 9:
-		var angle := TAU * float(branch) / 9.0
-		var branch_node := _add_box(tree, "Branch_%02d" % branch,
-			Vector3(cos(angle) * 18.0, 51.0, sin(angle) * 18.0), Vector3(7.0, 7.0, 42.0),
-			_materials.wood, false, angle)
-		branch_node.rotation.x = deg_to_rad(-28.0)
-	for index in 46:
-		var angle := float(index) * 2.39996
-		var radius := 15.0 + sqrt(float(index)) * 7.0
-		var bloom := MeshInstance3D.new()
-		bloom.name = "CanopyBloom_%02d" % index
-		var mesh := SphereMesh.new()
-		mesh.radius = 13.0 + float(index % 4) * 2.5
-		mesh.height = mesh.radius * 1.5
-		mesh.radial_segments = 8
-		mesh.rings = 4
-		bloom.mesh = mesh
-		bloom.position = Vector3(cos(angle) * radius, 62.0 + sin(float(index) * 1.4) * 15.0, sin(angle) * radius)
-		bloom.material_override = _materials.purple_leaf if index % 3 else _materials.pink_leaf
-		tree.add_child(bloom)
+	var visual := TreeOfLifeScene.instantiate() as Node3D
+	visual.name = "BlenderTreeOfLifeVisual"
+	visual.scale = Vector3.ONE * TREE_OF_LIFE_GAME_SCALE
+	tree.add_child(visual)
+	_build_tree_of_life_collision(tree, manifest)
+	_build_reference_faithful_tree_canopy(tree, visual)
+
+	# The imported cyan crystal-sap materials provide the visible glow. One local
+	# light lets that heart illumination reach the surrounding roots at night.
+	var heart_light := OmniLight3D.new()
+	heart_light.name = "WisdomHeartLight"
+	heart_light.position = Vector3(0.0, 20.0 * TREE_OF_LIFE_GAME_SCALE, 0.0)
+	heart_light.light_color = Color("55e9ff")
+	heart_light.light_energy = 5.4
+	heart_light.omni_range = 64.0
+	heart_light.shadow_enabled = false
+	tree.add_child(heart_light)
+
+
+func _build_reference_faithful_tree_canopy(tree: Node3D, legacy_visual: Node3D) -> void:
+	# Keep the proven trunk, roots, foundation and traversal arch, but remove the
+	# old low-poly foliage meshes so the new painted relief leaves remain readable.
+	for mesh in legacy_visual.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := mesh as MeshInstance3D
+		if mesh_instance.name.begins_with("Foliage") \
+				or mesh_instance.name.begins_with("Branches"):
+			mesh_instance.visible = false
+	var canopy := CrystalBranchCanopyScene.instantiate() as Node3D
+	canopy.name = "ReferenceFaithfulCrystalCanopy"
+	canopy.scale = Vector3.ONE * TREE_OF_LIFE_GAME_SCALE
+	# Blender negative Y exports toward Godot positive Z. Rotate the assembly so
+	# its authored doorway and powered road face world south, directly toward the
+	# Art Gallery / Galaxy Wall bridge approach on the x=0 centerline.
+	canopy.rotation.y = PI
+	canopy.set_meta("construction", "blender_crystal_branch_canopy")
+	canopy.set_meta("leaf_types", [
+		"living_leaf_fan", "magic_rune_leaf",
+		"solar_glass_science_leaf", "emerald_sensor_leaf",
+	])
+	canopy.set_meta("leaf_instances", 20000)
+	canopy.set_meta("leaf_family_counts", {
+		"living_leaf_fan": 7500,
+		"magic_rune_leaf": 5000,
+		"solar_glass_science_leaf": 5000,
+		"emerald_sensor_leaf": 2500,
+	})
+	canopy.set_meta("leaf_cluster_width_range_m", Vector2(0.90, 4.20))
+	canopy.set_meta("individual_leaflet_width_range_m", Vector2(0.22, 1.05))
+	canopy.set_meta("canopy_diameter_m", 84.0 * TREE_OF_LIFE_GAME_SCALE)
+	canopy.set_meta("root_foundation_diameter_m", 38.4 * TREE_OF_LIFE_GAME_SCALE)
+	canopy.set_meta("faces_south_arrival_bridge", true)
+	canopy.set_meta("major_limbs", 22)
+	canopy.set_meta("secondary_twigs", 24)
+	canopy.set_meta("foliage_branch_clusters", 159)
+	canopy.set_meta("leaf_support_twigs", 1431)
+	canopy.set_meta("leaf_support_cyan_channels", 159)
+	canopy.set_meta("leaves_attached_to_support_twigs", true)
+	canopy.set_meta("living_root_trunks", 12)
+	canopy.set_meta("secondary_ground_roots", 12)
+	canopy.set_meta("entrance_framing_roots", 2)
+	canopy.set_meta("doorway_living_root_jambs", 2)
+	canopy.set_meta("doorway_editable_joints", 8)
+	canopy.set_meta("doorway_electric_fibers", 6)
+	canopy.set_meta("doorway_metal_frame", false)
+	canopy.set_meta("editable_primary_root_joints", 60)
+	canopy.set_meta("editable_secondary_root_joints", 36)
+	canopy.set_meta("secondary_root_cyan_inlays", 12)
+	canopy.set_meta("powered_root_door_clear_width_m", 9.6 * TREE_OF_LIFE_GAME_SCALE)
+	canopy.set_meta("powered_route_mesh_crossbars", 17)
+	canopy.set_meta("powered_route_deck_plates", 12)
+	canopy.set_meta("powered_route_cables", 2)
+	canopy.set_meta("root_radial_power_feeders", 6)
+	canopy.set_meta("floating_root_relays", 8)
+	canopy.set_meta("root_cyan_tributaries", 24)
+	canopy.set_meta("root_mechanical_clamp_sets", 7)
+	canopy.set_meta("cyan_energy_channels", 46)
+	canopy.set_meta("brass_articulation_collars", 70)
+	canopy.set_meta("collision_included", false)
+	tree.add_child(canopy)
+	_batch_canopy_leaf_families(canopy)
+
+	var canopy_light := OmniLight3D.new()
+	canopy_light.name = "CrystalCanopyEnergyLight"
+	canopy_light.position = Vector3(0.0, 28.5 * TREE_OF_LIFE_GAME_SCALE, 0.0)
+	canopy_light.light_color = Color("43ddff")
+	canopy_light.light_energy = 7.2
+	canopy_light.omni_range = 76.0
+	canopy_light.shadow_enabled = false
+	tree.add_child(canopy_light)
+	_build_powered_living_bough_canopy(tree, canopy)
+
+
+func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -> void:
+	# Preserve the production roots, doorway and crystal heart, while replacing
+	# the older radial foliage layer with authored gravity-bough modules.
+	var flow_material := _create_powered_bough_flow_material()
+	var powered_root_fiber_meshes := 0
+	for mesh_node in previous_canopy.find_children("*", "MeshInstance3D", true, false):
+		var mesh := mesh_node as MeshInstance3D
+		if mesh.name.begins_with("BioTechBranch_") \
+				or mesh.name.begins_with("CyanSapChannel_") \
+				or mesh.name.begins_with("BrassArticulationCollar_") \
+				or mesh.name.begins_with("LeafSupportTwig_") \
+				or mesh.name.begins_with("LeafSupportCyanChannel_"):
+			mesh.visible = false
+		if mesh.name.begins_with("RootCyanSapInlay_") \
+				or mesh.name.begins_with("SecondaryRootCyanInlay_") \
+				or mesh.name.begins_with("RootRadialPowerFeeder_") \
+				or mesh.name.begins_with("RootCyanTributary_") \
+				or mesh.name.begins_with("DoorwayElectricFiber_"):
+			mesh.material_override = flow_material
+			powered_root_fiber_meshes += 1
+	for old_batch_node in previous_canopy.find_children(
+			"CanopyLeafBatch_*", "MultiMeshInstance3D", true, false):
+		(old_batch_node as MultiMeshInstance3D).visible = false
+
+	var canopy := Node3D.new()
+	canopy.name = "PoweredLivingBoughCanopy"
+	canopy.set_meta("construction", "godot_layered_gravity_bough_modules")
+	canopy.set_meta("module_source", "res://assets3D/tree_of_life/gravity_leaf_bough/glb/gravity_leaf_bough_runtime.glb")
+	canopy.set_meta("root_skirt_boughs", 10)
+	canopy.set_meta("lower_tier_boughs", 10)
+	canopy.set_meta("middle_lower_boughs", 9)
+	canopy.set_meta("middle_upper_boughs", 8)
+	canopy.set_meta("upper_tier_boughs", 6)
+	canopy.set_meta("crown_boughs", 5)
+	canopy.set_meta("base_bough_clusters", 48)
+	canopy.set_meta("growth_boughs_per_cluster", 10)
+	canopy.set_meta("powered_bough_instances", 480)
+	canopy.set_meta("source_compound_leaf_sockets", 622080)
+	canopy.set_meta("compound_leaf_instances", 1244160)
+	canopy.set_meta("leaf_transfer_nodes", 1244160)
+	canopy.set_meta("foliage_layers_per_socket", 2)
+	canopy.set_meta("runtime_leaf_scale", 1.18)
+	canopy.set_meta("main_flow_streaks_removed", true)
+	canopy.set_meta("leaf_twig_streaks_removed", true)
+	canopy.set_meta("lateral_streaks_removed", true)
+	canopy.set_meta("lateral_sap_streaks_removed", true)
+	canopy.set_meta("visible_branch_energy", "three_strand_main_biofiber_braid")
+	canopy.set_meta("floating_crystal_transfer_nodes_preserved", true)
+	canopy.set_meta("powered_root_fiber_meshes", powered_root_fiber_meshes)
+	canopy.set_meta("root_to_leaf_energy_continuity", true)
+	canopy.set_meta("living_tree_silhouette", "six_irregular_root_to_crown_branch_layers")
+	canopy.set_meta("canopy_collision", false)
+	tree.add_child(canopy)
+
+	var module_transforms: Array[Transform3D] = []
+	var cluster_index := 0
+	for tier_spec in [
+		{"count": 10, "height": 37.0, "radius": 9.2, "scale": 3.02, "pitch": 3.0, "phase": 0.11},
+		{"count": 10, "height": 51.0, "radius": 8.0, "scale": 2.86, "pitch": 10.0, "phase": 0.43},
+		{"count": 9, "height": 65.0, "radius": 6.8, "scale": 2.58, "pitch": 18.0, "phase": 0.20},
+		{"count": 8, "height": 78.0, "radius": 5.5, "scale": 2.29, "pitch": 28.0, "phase": 0.59},
+		# Keep crown foliage face-readable. Steeper angles turn the emissive leaf
+		# veins into unexplained horizontal lines when the leaf surface is edge-on.
+		{"count": 6, "height": 84.0, "radius": 4.2, "scale": 1.15, "pitch": 21.0, "phase": 0.31},
+		{"count": 5, "height": 92.0, "radius": 3.0, "scale": 0.75, "pitch": 24.0, "phase": 0.72},
+	]:
+		var count := int(tier_spec.count)
+		for tier_index in count:
+			var irregularity := sin(float(tier_index) * 2.17 + float(cluster_index) * 0.43)
+			var yaw := TAU * float(tier_index) / float(count) + float(tier_spec.phase)
+			yaw += irregularity * 0.095
+			var cluster_root := Vector3(
+				cos(yaw) * (float(tier_spec.radius) + irregularity * 0.65),
+				float(tier_spec.height) + irregularity * 2.2,
+				sin(yaw) * (float(tier_spec.radius) + irregularity * 0.65))
+			var radial := Vector3(cos(yaw), 0.0, sin(yaw))
+			var tangent := Vector3(-sin(yaw), 0.0, cos(yaw))
+			for growth_index in 10:
+				var growth_phase := TAU * float(growth_index) / 10.0
+				var growth_noise := sin(float(cluster_index * 10 + growth_index) * 1.731)
+				var root_target := cluster_root \
+					+ tangent * cos(growth_phase) * (3.8 + float(growth_index % 3)) \
+					+ radial * sin(growth_phase) * (2.4 + float(growth_index % 2)) \
+					+ Vector3.UP * sin(growth_phase * 2.0) * 3.1
+				var growth_yaw := yaw + sin(growth_phase) * 0.24 + growth_noise * 0.035
+				var local_roll := deg_to_rad(irregularity * 5.5 + cos(growth_phase) * 8.0)
+				var upward_pitch := deg_to_rad(
+					float(tier_spec.pitch) + irregularity * 4.5 + sin(growth_phase * 1.7) * 7.0)
+				var module_scale := float(tier_spec.scale) \
+					* (0.56 + 0.08 * sin(growth_phase + irregularity))
+				var orientation := Basis(Vector3.UP, growth_yaw) \
+					* Basis(Vector3.BACK, upward_pitch) \
+					* Basis(Vector3.RIGHT, local_roll)
+				var scaled_basis := orientation.scaled(Vector3.ONE * module_scale)
+				var authored_root_socket := Vector3(-18.0, 1.0, 0.0)
+				module_transforms.append(Transform3D(
+					scaled_basis, root_target - scaled_basis * authored_root_socket))
+			cluster_index += 1
+	_batch_powered_bough_canopy(canopy, module_transforms, flow_material)
+
+	# A restrained canopy light supports the emissive shader without flattening
+	# the green, violet, blue-glass and emerald leaf materials.
+	var flow_light := OmniLight3D.new()
+	flow_light.name = "PoweredBoughFlowLight"
+	flow_light.position = Vector3(0.0, 61.0, 0.0)
+	flow_light.light_color = Color("32cfff")
+	flow_light.light_energy = 2.8
+	flow_light.omni_range = 150.0
+	flow_light.shadow_enabled = false
+	canopy.add_child(flow_light)
+
+
+func _node_transform_relative_to(node: Node3D, ancestor_root: Node3D) -> Transform3D:
+	var relative_transform := node.transform
+	var ancestor := node.get_parent()
+	while ancestor != null and ancestor != ancestor_root:
+		if ancestor is Node3D:
+			relative_transform = (ancestor as Node3D).transform * relative_transform
+		ancestor = ancestor.get_parent()
+	return relative_transform
+
+
+func _batch_powered_bough_canopy(
+		parent: Node3D, module_transforms: Array[Transform3D],
+		flow_material: ShaderMaterial) -> void:
+	# The compact Blender runtime source contains one joined living-wood branch,
+	# one joined biofiber network, four linked leaf meshes and crystal transfer
+	# nodes.  Combining all 480 smaller bough placements into seven MultiMeshes
+	# gives the requested tenfold population without 480 heavy scene hierarchies.
+	var template := PoweredGravityBoughScene.instantiate() as Node3D
+	_batch_powered_bough_meshes(
+		parent, template, "GravityBough_CombinedStructure*",
+		"PoweredBranchStructureBatch", module_transforms, null, 1, 1.0)
+	_batch_powered_bough_meshes(
+		parent, template, "Biofiber_CombinedFlow*",
+		"PoweredBranchBiofiberBatch", module_transforms, flow_material, 1, 1.0)
+	for family in [
+		"living_leaf_fan", "magic_rune_leaf",
+		"solar_glass_science_leaf", "emerald_sensor_leaf",
+	]:
+		_batch_powered_bough_meshes(
+			parent, template, "GravityBough_SocketLeaf_%s_*" % family,
+			"PoweredLeafBatch_%s" % family, module_transforms, null, 2, 1.18)
+	_batch_powered_bough_meshes(
+		parent, template, "Biofiber_LeafTransferNode_*",
+		"PoweredLeafTransferNodeBatch", module_transforms, flow_material, 2, 0.78)
+	# Biofiber_MainFlowPulse geometry intentionally is not batched. Those pulses
+	# were the unexplained horizontal white/cyan streaks above the crown. Floating
+	# crystal transfer nodes remain in their dedicated batch.
+	template.free()
+
+
+func _batch_powered_bough_meshes(
+		parent: Node3D, template: Node3D, pattern: String, batch_name: String,
+		module_transforms: Array[Transform3D], material_override: Material,
+		growth_layers: int, local_scale: float) -> void:
+	var meshes := template.find_children(pattern, "MeshInstance3D", true, false)
+	if meshes.is_empty():
+		push_warning("Powered bough runtime pattern has no meshes: %s" % pattern)
+		return
+	var first_mesh := meshes[0] as MeshInstance3D
+	var source_transforms: Array[Transform3D] = []
+	for mesh_node in meshes:
+		source_transforms.append(_node_transform_relative_to(
+			mesh_node as Node3D, template))
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = first_mesh.mesh
+	var source_count := source_transforms.size()
+	multimesh.instance_count = module_transforms.size() * source_count * growth_layers
+	var output_index := 0
+	for module_index in module_transforms.size():
+		var module_transform := module_transforms[module_index]
+		for layer_index in growth_layers:
+			for source_index in source_count:
+				var local_transform := source_transforms[source_index]
+				var stagger := -1.0 if (source_index + module_index) % 2 == 0 else 1.0
+				if batch_name.begins_with("PoweredLeafBatch_") and module_index >= 370:
+					# Upper compound leaves otherwise become edge-on glowing veins from
+					# elevation views. Preserve the socket and tilt only the leaf face.
+					local_transform.basis = local_transform.basis.rotated(
+						Vector3.RIGHT, deg_to_rad(34.0 + stagger * 7.0))
+				if growth_layers > 1:
+					local_transform.basis = local_transform.basis.scaled(
+						Vector3.ONE * local_scale)
+				if layer_index > 0:
+					local_transform.origin += Vector3(
+						stagger * (0.16 + float(source_index % 3) * 0.045),
+						0.20 + float(source_index % 5) * 0.025,
+						-stagger * (0.13 + float(source_index % 4) * 0.035))
+					local_transform.basis = local_transform.basis \
+						.rotated(Vector3.UP, stagger * deg_to_rad(6.5)) \
+						.scaled(Vector3.ONE * 0.94)
+				multimesh.set_instance_transform(
+					output_index, module_transform * local_transform)
+				output_index += 1
+	var batch := MultiMeshInstance3D.new()
+	batch.name = batch_name
+	batch.multimesh = multimesh
+	batch.material_override = material_override
+	batch.set_meta("source_meshes", source_count)
+	batch.set_meta("module_instances", module_transforms.size())
+	batch.set_meta("growth_layers", growth_layers)
+	parent.add_child(batch)
+
+
+func _create_powered_bough_flow_material() -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode unshaded, cull_disabled;
+varying float flow_coordinate;
+void vertex() {
+	flow_coordinate = VERTEX.x + VERTEX.y * 0.42 + VERTEX.z * 0.71;
+}
+void fragment() {
+	float wave = 0.5 + 0.5 * sin(flow_coordinate * 2.4 - TIME * 5.6);
+	float filament = smoothstep(0.28, 0.92, wave);
+	vec3 cyan = mix(vec3(0.005, 0.18, 0.48), vec3(0.18, 0.92, 1.0), filament);
+	ALBEDO = cyan * 0.34;
+	EMISSION = cyan * (1.35 + filament * 3.2);
+}
+"""
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	return material
+
+
+func _batch_canopy_leaf_families(canopy: Node3D) -> void:
+	# The Blender source retains all 20,000 linked leaf objects for individual
+	# editing. Runtime replaces those nodes with four MultiMeshes, preserving
+	# every authored transform while reducing the crown to four foliage draws.
+	var family_names := [
+		"living_leaf_fan", "magic_rune_leaf",
+		"solar_glass_science_leaf", "emerald_sensor_leaf",
+	]
+	var total_instances := 0
+	for family_name in family_names:
+		var leaves := canopy.find_children(
+			"CanopyLeaf_%s_*" % family_name, "MeshInstance3D", true, false)
+		if leaves.is_empty():
+			continue
+		var first_leaf := leaves[0] as MeshInstance3D
+		var multimesh := MultiMesh.new()
+		multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		multimesh.mesh = first_leaf.mesh
+		multimesh.instance_count = leaves.size()
+		for index in leaves.size():
+			var leaf := leaves[index] as MeshInstance3D
+			var relative_transform := leaf.transform
+			var ancestor := leaf.get_parent()
+			while ancestor != null and ancestor != canopy:
+				if ancestor is Node3D:
+					relative_transform = (ancestor as Node3D).transform * relative_transform
+				ancestor = ancestor.get_parent()
+			multimesh.set_instance_transform(index, relative_transform)
+		var batch := MultiMeshInstance3D.new()
+		batch.name = "CanopyLeafBatch_%s" % family_name
+		batch.multimesh = multimesh
+		batch.set_meta("leaf_family", family_name)
+		batch.set_meta("leaf_instances", leaves.size())
+		canopy.add_child(batch)
+		total_instances += leaves.size()
+		for leaf in leaves:
+			var leaf_node := leaf as MeshInstance3D
+			leaf_node.get_parent().remove_child(leaf_node)
+			leaf_node.queue_free()
+	canopy.set_meta("runtime_leaf_batches", family_names.size())
+	canopy.set_meta("runtime_batched_leaf_instances", total_instances)
+
+
+func _load_tree_of_life_manifest() -> Dictionary:
+	if not FileAccess.file_exists(TREE_OF_LIFE_MANIFEST_PATH):
+		return {}
+	var file := FileAccess.open(TREE_OF_LIFE_MANIFEST_PATH, FileAccess.READ)
+	if file == null:
+		return {}
+	var parsed = JSON.parse_string(file.get_as_text())
+	return parsed as Dictionary if parsed is Dictionary else {}
+
+
+func _build_tree_of_life_collision(tree: Node3D, manifest: Dictionary) -> void:
+	# The 172k-vertex Blender mesh is visual-only. Authored manifest primitives
+	# approximate the load-bearing trunk and low roots without turning thousands
+	# of leaves into expensive collision. The centerline remains a continuous
+	# south-to-north arch wider than the production player capsule.
+	var collision_root := Node3D.new()
+	collision_root.name = "TreeOfLifeCollisionProxies"
+	collision_root.set_meta("proxy_system", "low_cost_authored_primitives")
+	collision_root.set_meta("clear_path_axis", "local_z")
+	var policy := manifest.get("collision_policy", {}) as Dictionary
+	var collision_scale := TREE_OF_LIFE_GAME_SCALE if bool(policy.get("scale_with_visual", true)) else 1.0
+	collision_root.set_meta("minimum_clear_width_m", TREE_OF_LIFE_CLEAR_PATH_M * collision_scale)
+	collision_root.set_meta("collision_scale", collision_scale)
+	tree.add_child(collision_root)
+
+	var trunk_specs := policy.get("trunk_pillars", []) as Array
+	for value in trunk_specs:
+		var spec := value as Dictionary
+		var trunk_body := StaticBody3D.new()
+		trunk_body.name = String(spec.get("name", "TrunkPillar"))
+		trunk_body.position = Vector3(
+			float(spec.get("x_m", 0.0)) * collision_scale,
+			float(spec.get("y_m", 13.5)) * collision_scale,
+			0.0)
+		trunk_body.set_meta("tree_collision_role", "load_bearing_trunk")
+		var trunk_shape_node := CollisionShape3D.new()
+		var trunk_shape := CylinderShape3D.new()
+		trunk_shape.radius = float(spec.get("radius_m", 3.25)) * collision_scale
+		trunk_shape.height = float(spec.get("height_m", 27.0)) * collision_scale
+		trunk_shape_node.shape = trunk_shape
+		trunk_body.add_child(trunk_shape_node)
+		collision_root.add_child(trunk_body)
+
+	var root_specs := policy.get("root_proxies", []) as Array
+	for value in root_specs:
+		var spec := value as Dictionary
+		var blender_xy := spec.get("position_blender_xy_m", [0.0, 0.0]) as Array
+		var size_values := spec.get("size_m", [3.3, 3.0, 16.0]) as Array
+		var root_body := StaticBody3D.new()
+		root_body.name = String(spec.get("name", "LowRootProxy"))
+		# Blender local Y becomes Godot local -Z through the glTF Y-up export.
+		root_body.position = Vector3(
+			float(blender_xy[0]) * collision_scale,
+			float(size_values[1]) * collision_scale * 0.5,
+			-float(blender_xy[1]) * collision_scale)
+		root_body.rotation.y = deg_to_rad(float(spec.get("yaw_godot_deg", 0.0)))
+		root_body.set_meta("tree_collision_role", "low_root")
+		var root_shape_node := CollisionShape3D.new()
+		var root_shape := BoxShape3D.new()
+		root_shape.size = Vector3(
+			float(size_values[0]), float(size_values[1]), float(size_values[2])) * collision_scale
+		root_shape_node.shape = root_shape
+		root_body.add_child(root_shape_node)
+		collision_root.add_child(root_body)
 
 
 func _build_cat_companion(parent: Node3D, position: Vector3) -> void:
@@ -597,13 +1291,6 @@ func _build_radial_arches(parent: Node3D) -> void:
 		HUB + Vector3(-145.0, 0.0, 145.0), HUB + Vector3(145.0, 0.0, 145.0)]
 	for index in configs.size():
 		_build_arch(parent, configs[index], 34.0, 58.0, 12.0, _materials.ivory)
-
-
-func _build_rune_cube(parent: Node3D, position: Vector3, size: float, index: int) -> void:
-	var cube := _add_box(parent, "ConstellationCube_%02d" % index, position,
-		Vector3.ONE * size, _materials.aqua_glass, true, float(index) * 0.32)
-	_animated_nodes.append(cube)
-	_add_torus(parent, "CubeOrbit_%02d" % index, position, size * 0.72, size * 0.79, _materials.gold, Vector3(90.0, 25.0, 0.0))
 
 
 func _build_easel(parent: Node3D, position: Vector3, index: int) -> void:
@@ -774,7 +1461,8 @@ func _add_landmark_label(parent: Node3D, text: String, position: Vector3,
 
 
 func _add_box(parent: Node3D, node_name: String, position: Vector3, size: Vector3,
-		material: Material, collision_enabled: bool = false, yaw: float = 0.0) -> MeshInstance3D:
+		material: Material, collision_enabled: bool = false, yaw: float = 0.0,
+		friction: float = 0.86, bounce: float = 0.0) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
 	instance.name = node_name
 	var mesh := BoxMesh.new()
@@ -786,6 +1474,14 @@ func _add_box(parent: Node3D, node_name: String, position: Vector3, size: Vector
 	parent.add_child(instance)
 	if collision_enabled:
 		var body := StaticBody3D.new()
+		body.name = "%sCollision" % node_name
+		var physics_material := PhysicsMaterial.new()
+		physics_material.friction = friction
+		physics_material.bounce = bounce
+		body.physics_material_override = physics_material
+		body.set_meta("mass_class", "infinite_static_mass")
+		body.set_meta("friction", friction)
+		body.set_meta("bounce", bounce)
 		var shape_node := CollisionShape3D.new()
 		var shape := BoxShape3D.new()
 		shape.size = size
@@ -877,4 +1573,23 @@ func _make_glow(color: Color, energy: float,
 	material.emission_enabled = true
 	material.emission = color
 	material.emission_energy_multiplier = energy
+	return material
+
+
+func _make_textured_material(base: Color, panel: Color, circuit: Color,
+		roughness: float, cell_size: int) -> StandardMaterial3D:
+	var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for y in 64:
+		for x in 64:
+			var on_joint := x % cell_size <= 1 or y % cell_size <= 1
+			var on_circuit := (x % (cell_size * 2) == cell_size / 2 and y % cell_size > 3) \
+				or (y % (cell_size * 2) == cell_size / 2 and x % cell_size > 3)
+			image.set_pixel(x, y, circuit if on_circuit else (panel if on_joint else base))
+	var texture := ImageTexture.create_from_image(image)
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color.WHITE
+	material.albedo_texture = texture
+	material.roughness = roughness
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	material.uv1_scale = Vector3(3.0, 3.0, 3.0)
 	return material

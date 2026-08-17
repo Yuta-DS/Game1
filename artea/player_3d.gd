@@ -251,10 +251,21 @@ func _apply_attack_hits() -> void:
 	for area in _attack_area.get_overlapping_areas():
 		if _hit_targets.has(area):
 			continue
-		var target := area.get_parent()
+		var target := _find_damage_receiver(area)
 		if target != null and target != self and target.has_method("take_damage"):
 			target.call("take_damage", attack_damage, self)
 			_hit_targets[area] = true
+
+
+func _find_damage_receiver(node: Node) -> Node:
+	var current := node
+	for _depth in 5:
+		if current == null:
+			return null
+		if current.has_method("take_damage"):
+			return current
+		current = current.get_parent()
+	return null
 
 
 func _set_blocking(active: bool) -> void:

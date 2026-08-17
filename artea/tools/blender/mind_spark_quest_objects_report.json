@@ -1,0 +1,3244 @@
+{
+  "objects": [
+    {
+      "object_id": "thought_spark_socket",
+      "root_node": "ThoughtSparkSocketModel",
+      "hero_target": "SparkReceiverBowl",
+      "collision_node": "UCX_thought_spark_socket",
+      "triangles_lod0": 23806,
+      "triangles_lod1": 11900,
+      "triangles_lod2": 5216,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        1.399999976158142
+      ],
+      "state_parts": {
+        "inactive": [
+          "CentralSpark_Inactive"
+        ],
+        "active": [
+          "CentralSpark_Active"
+        ],
+        "completed": [
+          "CentralSpark",
+          "SparkBeam"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_thought_spark_socket_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_thought_spark_socket_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_thought_spark_socket"
+          ]
+        },
+        "SparkReceiverBowl": {
+          "triangles": 1064,
+          "materials": [
+            "MAT_Accent_thought_spark_socket_hero",
+            "MAT_Albedo_thought_spark_socket"
+          ]
+        },
+        "SocketCrown": {
+          "triangles": 4608,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "Pip1": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "Pip2": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "Pip3": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "CentralSpark_Inactive": {
+          "triangles": 354,
+          "materials": [
+            "MAT_Circuit_thought_spark_socket"
+          ]
+        },
+        "CentralSpark_Active": {
+          "triangles": 354,
+          "materials": [
+            "MAT_Crystal_thought_spark_socket"
+          ]
+        },
+        "CentralSpark": {
+          "triangles": 354,
+          "materials": [
+            "MAT_Crystal_thought_spark_socket"
+          ]
+        },
+        "SparkBeam": {
+          "triangles": 604,
+          "materials": [
+            "MAT_Crystal_thought_spark_socket"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_thought_spark_socket_hero",
+        "MAT_Accent_thought_spark_socket_ring",
+        "MAT_Albedo_thought_spark_socket",
+        "MAT_Circuit_thought_spark_socket",
+        "MAT_Crystal_thought_spark_socket",
+        "MAT_Stone_thought_spark_socket"
+      ],
+      "texture": "thought_spark_socket_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/thought_spark_socket.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 3442572
+    },
+    {
+      "object_id": "evidence_scanner",
+      "root_node": "EvidenceScannerModel",
+      "hero_target": "ScannerGlass",
+      "collision_node": "UCX_evidence_scanner",
+      "triangles_lod0": 19192,
+      "triangles_lod1": 9596,
+      "triangles_lod2": 4208,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        0.9403543472290039
+      ],
+      "state_parts": {
+        "inactive": [
+          "ScannerGlass_State_Inactive"
+        ],
+        "active": [
+          "ScannerGlass_State_Active"
+        ],
+        "completed": [
+          "ScannerGlass_State_Completed"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_evidence_scanner_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_evidence_scanner_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_evidence_scanner"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_evidence_scanner"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_evidence_scanner"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_evidence_scanner"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_evidence_scanner"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_evidence_scanner"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_evidence_scanner"
+          ]
+        },
+        "ScannerFrameTop": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_evidence_scanner_hero"
+          ]
+        },
+        "ScannerFrameBottom": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_evidence_scanner_hero"
+          ]
+        },
+        "ScannerFrameLeft": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_evidence_scanner_hero"
+          ]
+        },
+        "ScannerFrameRight": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_evidence_scanner_hero"
+          ]
+        },
+        "ScannerGlass": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Crystal_evidence_scanner",
+            "MAT_Albedo_evidence_scanner"
+          ]
+        },
+        "ScannerCrystal": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_evidence_scanner"
+          ]
+        },
+        "FactButton": {
+          "triangles": 912,
+          "materials": [
+            "MAT_Accent_Scanner_FactButton"
+          ]
+        },
+        "FearButton": {
+          "triangles": 912,
+          "materials": [
+            "MAT_Accent_Scanner_FearButton"
+          ]
+        },
+        "ScannerGlass_State_Inactive": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Circuit_evidence_scanner",
+            "MAT_Albedo_evidence_scanner"
+          ]
+        },
+        "ScannerGlass_State_Active": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Accent_Scanner_Active",
+            "MAT_Albedo_evidence_scanner"
+          ]
+        },
+        "ScannerGlass_State_Completed": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Accent_Scanner_Completed",
+            "MAT_Albedo_evidence_scanner"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Scanner_Active",
+        "MAT_Accent_Scanner_Completed",
+        "MAT_Accent_Scanner_FactButton",
+        "MAT_Accent_Scanner_FearButton",
+        "MAT_Accent_evidence_scanner_hero",
+        "MAT_Accent_evidence_scanner_ring",
+        "MAT_Albedo_evidence_scanner",
+        "MAT_Circuit_evidence_scanner",
+        "MAT_Crystal_evidence_scanner",
+        "MAT_Stone_evidence_scanner"
+      ],
+      "texture": "evidence_scanner_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/evidence_scanner.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 2834136
+    },
+    {
+      "object_id": "perspective_lens",
+      "root_node": "PerspectiveLensModel",
+      "hero_target": "LensBody/LensCrystal",
+      "collision_node": "UCX_perspective_lens",
+      "triangles_lod0": 18736,
+      "triangles_lod1": 9368,
+      "triangles_lod2": 4102,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        1.2499473094940186,
+        0.925000011920929,
+        0.9265602827072144
+      ],
+      "state_parts": {
+        "inactive": [
+          "LensGlass_Inactive"
+        ],
+        "active": [
+          "LensGlass_Active"
+        ],
+        "completed": [
+          "LensGlass_Completed"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_perspective_lens_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_perspective_lens_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_perspective_lens"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_perspective_lens"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_perspective_lens"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_perspective_lens"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_perspective_lens"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_perspective_lens"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_perspective_lens"
+          ]
+        },
+        "LensBody": {
+          "triangles": 4608,
+          "materials": [
+            "MAT_Accent_perspective_lens_hero"
+          ]
+        },
+        "LensCrystal": {
+          "triangles": 912,
+          "materials": [
+            "MAT_Crystal_perspective_lens",
+            "MAT_Albedo_perspective_lens"
+          ]
+        },
+        "LensSupportL": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_perspective_lens_hero"
+          ]
+        },
+        "LensSupportR": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_perspective_lens_hero"
+          ]
+        },
+        "PathBeam": {
+          "triangles": 2400,
+          "materials": [
+            "MAT_Circuit_perspective_lens"
+          ]
+        },
+        "LensGlass_Inactive": {
+          "triangles": 316,
+          "materials": [
+            "MAT_Circuit_perspective_lens"
+          ]
+        },
+        "LensGlass_Active": {
+          "triangles": 316,
+          "materials": [
+            "MAT_Accent_Lens_Active"
+          ]
+        },
+        "LensGlass_Completed": {
+          "triangles": 316,
+          "materials": [
+            "MAT_Accent_Lens_Completed"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Lens_Active",
+        "MAT_Accent_Lens_Completed",
+        "MAT_Accent_perspective_lens_hero",
+        "MAT_Accent_perspective_lens_ring",
+        "MAT_Albedo_perspective_lens",
+        "MAT_Circuit_perspective_lens",
+        "MAT_Crystal_perspective_lens",
+        "MAT_Stone_perspective_lens"
+      ],
+      "texture": "perspective_lens_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/perspective_lens.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 2839900
+    },
+    {
+      "object_id": "memory_constellation_board",
+      "root_node": "MemoryConstellationBoardModel",
+      "hero_target": "ConstellationSlate",
+      "collision_node": "UCX_memory_constellation_board",
+      "triangles_lod0": 37612,
+      "triangles_lod1": 18808,
+      "triangles_lod2": 8264,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        0.9814625978469849
+      ],
+      "state_parts": {
+        "inactive": [
+          "ConstellationGlyph_Inactive"
+        ],
+        "active": [
+          "ConstellationGlyph_Active"
+        ],
+        "completed": [
+          "ConstellationStar"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_memory_constellation_board_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_memory_constellation_board_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_memory_constellation_board"
+          ]
+        },
+        "ConstellationFrameTop": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_memory_constellation_board_hero"
+          ]
+        },
+        "ConstellationFrameBottom": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_memory_constellation_board_hero"
+          ]
+        },
+        "ConstellationFrameLeft": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_memory_constellation_board_hero"
+          ]
+        },
+        "ConstellationFrameRight": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_memory_constellation_board_hero"
+          ]
+        },
+        "ConstellationSlate": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Crystal_memory_constellation_board",
+            "MAT_Albedo_memory_constellation_board"
+          ]
+        },
+        "FrameJewel1": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_memory_constellation_board"
+          ]
+        },
+        "FrameJewel2": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_memory_constellation_board"
+          ]
+        },
+        "FrameJewel3": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_memory_constellation_board"
+          ]
+        },
+        "FrameJewel4": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_memory_constellation_board"
+          ]
+        },
+        "Socket1": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "Socket2": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "Socket3": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "MemoryLink1": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "MemoryLink2": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "ConstellationGlyph_Inactive": {
+          "triangles": 2,
+          "materials": [
+            "MAT_Circuit_memory_constellation_board"
+          ]
+        },
+        "ConstellationGlyph_Active": {
+          "triangles": 2,
+          "materials": [
+            "MAT_Accent_Constellation_Active"
+          ]
+        },
+        "ConstellationStar": {
+          "triangles": 740,
+          "materials": [
+            "MAT_Accent_Constellation_Completed"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Constellation_Active",
+        "MAT_Accent_Constellation_Completed",
+        "MAT_Accent_memory_constellation_board_hero",
+        "MAT_Accent_memory_constellation_board_ring",
+        "MAT_Albedo_memory_constellation_board",
+        "MAT_Circuit_memory_constellation_board",
+        "MAT_Crystal_memory_constellation_board",
+        "MAT_Stone_memory_constellation_board"
+      ],
+      "texture": "memory_constellation_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/memory_constellation_board.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 5083504
+    },
+    {
+      "object_id": "logic_gate_arch",
+      "root_node": "LogicGateArchModel",
+      "hero_target": "Door",
+      "collision_node": "UCX_logic_gate_arch",
+      "triangles_lod0": 19964,
+      "triangles_lod1": 9982,
+      "triangles_lod2": 4378,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        1.4199999570846558
+      ],
+      "state_parts": {
+        "inactive": [
+          "Door"
+        ],
+        "active": [
+          "Door_Active"
+        ],
+        "completed": [
+          "Door_Completed",
+          "PathBeam"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_logic_gate_arch_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_logic_gate_arch_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_logic_gate_arch"
+          ]
+        },
+        "LogicPillarL": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_logic_gate_arch_hero"
+          ]
+        },
+        "LogicPillar": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_logic_gate_arch_hero"
+          ]
+        },
+        "LogicLintel": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_logic_gate_arch_hero"
+          ]
+        },
+        "GateCrownCrystal": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_logic_gate_arch"
+          ]
+        },
+        "EvidenceSocket1": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        },
+        "EvidenceSocket2": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        },
+        "Door": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_GateDoor",
+            "MAT_Albedo_logic_gate_arch"
+          ]
+        },
+        "Door_Active": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Accent_Gate_Active",
+            "MAT_Albedo_logic_gate_arch"
+          ]
+        },
+        "Door_Completed": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Accent_Gate_Completed",
+            "MAT_Albedo_logic_gate_arch"
+          ]
+        },
+        "PathBeam": {
+          "triangles": 604,
+          "materials": [
+            "MAT_Circuit_logic_gate_arch"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Gate_Active",
+        "MAT_Accent_Gate_Completed",
+        "MAT_Accent_logic_gate_arch_hero",
+        "MAT_Accent_logic_gate_arch_ring",
+        "MAT_Albedo_logic_gate_arch",
+        "MAT_Circuit_logic_gate_arch",
+        "MAT_Crystal_logic_gate_arch",
+        "MAT_Stone_GateDoor",
+        "MAT_Stone_logic_gate_arch"
+      ],
+      "texture": "logic_gate_arch_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/logic_gate_arch.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 2924688
+    },
+    {
+      "object_id": "truth_bridge_tile",
+      "root_node": "TruthBridgeTileModel",
+      "hero_target": "BridgeTile/CircuitTile",
+      "collision_node": "UCX_truth_bridge_tile",
+      "triangles_lod0": 30434,
+      "triangles_lod1": 15218,
+      "triangles_lod2": 6682,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        0.5929999947547913
+      ],
+      "state_parts": {
+        "inactive": [
+          "CircuitTileState_Inactive"
+        ],
+        "active": [
+          "CircuitTileState_Active"
+        ],
+        "completed": [
+          "CompletionCrystal"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_truth_bridge_tile_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_truth_bridge_tile_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_truth_bridge_tile"
+          ]
+        },
+        "BridgeTile": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Accent_truth_bridge_tile_hero"
+          ]
+        },
+        "CircuitTile": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile",
+            "MAT_Albedo_truth_bridge_tile"
+          ]
+        },
+        "TileCircuitRing": {
+          "triangles": 4608,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "TileCircuitSpoke00": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "TileCircuitSpoke01": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "TileCircuitSpoke02": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "TileCorner00": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_truth_bridge_tile"
+          ]
+        },
+        "TileCorner01": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_truth_bridge_tile"
+          ]
+        },
+        "TileCorner02": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_truth_bridge_tile"
+          ]
+        },
+        "TileCorner03": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_truth_bridge_tile"
+          ]
+        },
+        "CircuitTileState_Inactive": {
+          "triangles": 2,
+          "materials": [
+            "MAT_Circuit_truth_bridge_tile"
+          ]
+        },
+        "CircuitTileState_Active": {
+          "triangles": 2,
+          "materials": [
+            "MAT_Accent_Bridge_Active"
+          ]
+        },
+        "CompletionCrystal": {
+          "triangles": 354,
+          "materials": [
+            "MAT_Accent_Bridge_Completed"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Bridge_Active",
+        "MAT_Accent_Bridge_Completed",
+        "MAT_Accent_truth_bridge_tile_hero",
+        "MAT_Accent_truth_bridge_tile_ring",
+        "MAT_Albedo_truth_bridge_tile",
+        "MAT_Circuit_truth_bridge_tile",
+        "MAT_Crystal_truth_bridge_tile",
+        "MAT_Stone_truth_bridge_tile"
+      ],
+      "texture": "truth_bridge_tile_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/truth_bridge_tile.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 4287564
+    },
+    {
+      "object_id": "focus_bell_beacon",
+      "root_node": "FocusBellBeaconModel",
+      "hero_target": "FocusBell",
+      "collision_node": "UCX_focus_bell_beacon",
+      "triangles_lod0": 28268,
+      "triangles_lod1": 14132,
+      "triangles_lod2": 6198,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        1.381462574005127
+      ],
+      "state_parts": {
+        "inactive": [
+          "HintArrowMarker_Inactive"
+        ],
+        "active": [
+          "HintArrowMarker_Active"
+        ],
+        "completed": [
+          "HintArrowMarker_Completed"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_focus_bell_beacon_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_focus_bell_beacon_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_focus_bell_beacon"
+          ]
+        },
+        "ShrinePillarL": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Stone_BellShrine"
+          ]
+        },
+        "ShrinePillarR": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Stone_BellShrine"
+          ]
+        },
+        "ShrineLintel": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Stone_BellShrine"
+          ]
+        },
+        "FocusBell": {
+          "triangles": 1064,
+          "materials": [
+            "MAT_Accent_focus_bell_beacon_hero",
+            "MAT_Albedo_focus_bell_beacon"
+          ]
+        },
+        "BellRim": {
+          "triangles": 4608,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "BellHanger": {
+          "triangles": 2400,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "BellWaveL": {
+          "triangles": 3840,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "BellWaveR": {
+          "triangles": 3840,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "HintArrowMarker_Inactive": {
+          "triangles": 354,
+          "materials": [
+            "MAT_Circuit_focus_bell_beacon"
+          ]
+        },
+        "HintArrowMarker_Active": {
+          "triangles": 354,
+          "materials": [
+            "MAT_Accent_Bell_Active"
+          ]
+        },
+        "HintArrowMarker_Completed": {
+          "triangles": 740,
+          "materials": [
+            "MAT_Accent_Bell_Completed"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Bell_Active",
+        "MAT_Accent_Bell_Completed",
+        "MAT_Accent_focus_bell_beacon_hero",
+        "MAT_Accent_focus_bell_beacon_ring",
+        "MAT_Albedo_focus_bell_beacon",
+        "MAT_Circuit_focus_bell_beacon",
+        "MAT_Stone_BellShrine",
+        "MAT_Stone_focus_bell_beacon"
+      ],
+      "texture": "focus_bell_beacon_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/focus_bell_beacon.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 4119564
+    },
+    {
+      "object_id": "warden_anchor",
+      "root_node": "WardenAnchorModel",
+      "hero_target": "WardenShield",
+      "collision_node": "UCX_warden_anchor",
+      "triangles_lod0": 25984,
+      "triangles_lod1": 12992,
+      "triangles_lod2": 5694,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        1.1549673080444336
+      ],
+      "state_parts": {
+        "inactive": [
+          "WardenShield_Inactive"
+        ],
+        "active": [
+          "WardenShield_Active"
+        ],
+        "completed": [
+          "BrokenCore"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_warden_anchor_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_warden_anchor_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_warden_anchor"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_warden_anchor"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_warden_anchor"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_warden_anchor"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_warden_anchor"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_warden_anchor"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_warden_anchor"
+          ]
+        },
+        "AnchorBody": {
+          "triangles": 480,
+          "materials": [
+            "MAT_Stone_AnchorBody"
+          ]
+        },
+        "CrystalSpine": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "WardenOuterShard00": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "WardenOuterShard01": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "WardenOuterShard02": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "WardenOuterShard03": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "WardenOuterShard04": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "WardenOuterShard05": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "WardenOuterShard06": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "WardenOuterShard07": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_warden_anchor"
+          ]
+        },
+        "Hurtbox_Ring": {
+          "triangles": 4608,
+          "materials": [
+            "MAT_Circuit_warden_anchor"
+          ]
+        },
+        "WardenShield_Inactive": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Stone_Warden_Inactive",
+            "MAT_Albedo_warden_anchor"
+          ]
+        },
+        "WardenShield_Active": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Accent_Warden_Active",
+            "MAT_Albedo_warden_anchor"
+          ]
+        },
+        "BrokenCore": {
+          "triangles": 740,
+          "materials": [
+            "MAT_Accent_Warden_Broken"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Warden_Active",
+        "MAT_Accent_Warden_Broken",
+        "MAT_Accent_warden_anchor_ring",
+        "MAT_Albedo_warden_anchor",
+        "MAT_Circuit_warden_anchor",
+        "MAT_Crystal_warden_anchor",
+        "MAT_Stone_AnchorBody",
+        "MAT_Stone_Warden_Inactive",
+        "MAT_Stone_warden_anchor"
+      ],
+      "texture": "warden_anchor_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/warden_anchor.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 3761312
+    },
+    {
+      "object_id": "calm_rain_basin",
+      "root_node": "CalmRainBasinModel",
+      "hero_target": "BasinWater",
+      "collision_node": "UCX_calm_rain_basin",
+      "triangles_lod0": 20842,
+      "triangles_lod1": 10420,
+      "triangles_lod2": 4568,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        1.2300000190734863
+      ],
+      "state_parts": {
+        "inactive": [
+          "StormCloud_Inactive"
+        ],
+        "active": [
+          "StormCloud_Active"
+        ],
+        "completed": [
+          "BasinWater"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_calm_rain_basin_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_calm_rain_basin_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_calm_rain_basin"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_calm_rain_basin"
+          ]
+        },
+        "RainBasin": {
+          "triangles": 1368,
+          "materials": [
+            "MAT_Accent_calm_rain_basin_hero"
+          ]
+        },
+        "RainBasinRim": {
+          "triangles": 4608,
+          "materials": [
+            "MAT_Circuit_calm_rain_basin"
+          ]
+        },
+        "BasinPost00": {
+          "triangles": 2400,
+          "materials": [
+            "MAT_Stone_BasinPost"
+          ]
+        },
+        "BasinPost01": {
+          "triangles": 2400,
+          "materials": [
+            "MAT_Stone_BasinPost"
+          ]
+        },
+        "BasinPost02": {
+          "triangles": 2400,
+          "materials": [
+            "MAT_Stone_BasinPost"
+          ]
+        },
+        "StormCloud_Inactive": {
+          "triangles": 98,
+          "materials": [
+            "MAT_Stone_StormCloud"
+          ]
+        },
+        "StormCloud_Active": {
+          "triangles": 98,
+          "materials": [
+            "MAT_Accent_Rain_Active"
+          ]
+        },
+        "BasinWater": {
+          "triangles": 2,
+          "materials": [
+            "MAT_Accent_Rain_Completed",
+            "MAT_Albedo_calm_rain_basin"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Rain_Active",
+        "MAT_Accent_Rain_Completed",
+        "MAT_Accent_calm_rain_basin_hero",
+        "MAT_Accent_calm_rain_basin_ring",
+        "MAT_Albedo_calm_rain_basin",
+        "MAT_Circuit_calm_rain_basin",
+        "MAT_Stone_BasinPost",
+        "MAT_Stone_StormCloud",
+        "MAT_Stone_calm_rain_basin"
+      ],
+      "texture": "calm_rain_basin_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/calm_rain_basin.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 3059116
+    },
+    {
+      "object_id": "identity_reflection_mirror",
+      "root_node": "IdentityReflectionMirrorModel",
+      "hero_target": "ReflectionSurface",
+      "collision_node": "UCX_identity_reflection_mirror",
+      "triangles_lod0": 32880,
+      "triangles_lod1": 16440,
+      "triangles_lod2": 7218,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        1.0953541994094849
+      ],
+      "state_parts": {
+        "inactive": [
+          "ReflectionSurface_Inactive"
+        ],
+        "active": [
+          "ReflectionSurface_Active"
+        ],
+        "completed": [
+          "ReflectionSurface"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_identity_reflection_mirror_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_identity_reflection_mirror_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_identity_reflection_mirror"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_identity_reflection_mirror"
+          ]
+        },
+        "MirrorFrame": {
+          "triangles": 3584,
+          "materials": [
+            "MAT_Accent_identity_reflection_mirror_hero"
+          ]
+        },
+        "MirrorJewelRing": {
+          "triangles": 2400,
+          "materials": [
+            "MAT_Crystal_identity_reflection_mirror"
+          ]
+        },
+        "MirrorGem00": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_identity_reflection_mirror"
+          ]
+        },
+        "MirrorGem01": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_identity_reflection_mirror"
+          ]
+        },
+        "MirrorGem02": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_identity_reflection_mirror"
+          ]
+        },
+        "MirrorGem03": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_identity_reflection_mirror"
+          ]
+        },
+        "MirrorGem04": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_identity_reflection_mirror"
+          ]
+        },
+        "MirrorGem05": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Crystal_identity_reflection_mirror"
+          ]
+        },
+        "ReflectionSurface_Inactive": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_Reflect_Inactive",
+            "MAT_Albedo_identity_reflection_mirror"
+          ]
+        },
+        "ReflectionSurface_Active": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Crystal_identity_reflection_mirror",
+            "MAT_Albedo_identity_reflection_mirror"
+          ]
+        },
+        "ReflectionSurface": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Accent_Reflect_Completed",
+            "MAT_Albedo_identity_reflection_mirror"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Reflect_Completed",
+        "MAT_Accent_identity_reflection_mirror_hero",
+        "MAT_Accent_identity_reflection_mirror_ring",
+        "MAT_Albedo_identity_reflection_mirror",
+        "MAT_Circuit_identity_reflection_mirror",
+        "MAT_Crystal_identity_reflection_mirror",
+        "MAT_Stone_Reflect_Inactive",
+        "MAT_Stone_identity_reflection_mirror"
+      ],
+      "texture": "identity_reflection_mirror_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/identity_reflection_mirror.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 4565336
+    },
+    {
+      "object_id": "checkpoint_server_root",
+      "root_node": "CheckpointServerRootModel",
+      "hero_target": "ServerRootTrunk",
+      "collision_node": "UCX_checkpoint_server_root",
+      "triangles_lod0": 25402,
+      "triangles_lod1": 12704,
+      "triangles_lod2": 5578,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        0.8600000143051147,
+        0.925000011920929,
+        1.5191779136657715
+      ],
+      "state_parts": {
+        "inactive": [
+          "ServerConsoleGlow_Inactive"
+        ],
+        "active": [
+          "ServerConsoleGlow_Active"
+        ],
+        "completed": [
+          "ServerConsoleGlow_Completed"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_checkpoint_server_root_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_checkpoint_server_root_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_checkpoint_server_root"
+          ]
+        },
+        "ServerConsoleTop": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Stone_ServerConsole"
+          ]
+        },
+        "ServerConsoleBottom": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Stone_ServerConsole"
+          ]
+        },
+        "ServerConsoleLeft": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Stone_ServerConsole"
+          ]
+        },
+        "ServerConsoleRight": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Stone_ServerConsole"
+          ]
+        },
+        "ServerConsolePanel": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "ServerRootTrunk": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Accent_checkpoint_server_root_hero",
+            "MAT_Albedo_checkpoint_server_root"
+          ]
+        },
+        "LivingRootBranch": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "RootBranchLower00": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "RootBranchLower01": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "RootBranchLower02": {
+          "triangles": 1200,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "RootCanopyCrystal": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_checkpoint_server_root"
+          ]
+        },
+        "MenuButtonSave": {
+          "triangles": 912,
+          "materials": [
+            "MAT_Accent_Server_MenuButtonSave"
+          ]
+        },
+        "MenuButtonHeal": {
+          "triangles": 912,
+          "materials": [
+            "MAT_Accent_Server_MenuButtonHeal"
+          ]
+        },
+        "MenuButtonTask": {
+          "triangles": 912,
+          "materials": [
+            "MAT_Accent_Server_MenuButtonTask"
+          ]
+        },
+        "ServerConsoleGlow_Inactive": {
+          "triangles": 2,
+          "materials": [
+            "MAT_Circuit_checkpoint_server_root"
+          ]
+        },
+        "ServerConsoleGlow_Active": {
+          "triangles": 2,
+          "materials": [
+            "MAT_Accent_Server_Active"
+          ]
+        },
+        "ServerConsoleGlow_Completed": {
+          "triangles": 2,
+          "materials": [
+            "MAT_Accent_Server_Completed"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Server_Active",
+        "MAT_Accent_Server_Completed",
+        "MAT_Accent_Server_MenuButtonHeal",
+        "MAT_Accent_Server_MenuButtonSave",
+        "MAT_Accent_Server_MenuButtonTask",
+        "MAT_Accent_checkpoint_server_root_hero",
+        "MAT_Accent_checkpoint_server_root_ring",
+        "MAT_Albedo_checkpoint_server_root",
+        "MAT_Circuit_checkpoint_server_root",
+        "MAT_Crystal_checkpoint_server_root",
+        "MAT_Stone_ServerConsole",
+        "MAT_Stone_checkpoint_server_root"
+      ],
+      "texture": "checkpoint_server_root_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/checkpoint_server_root.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 3683644
+    },
+    {
+      "object_id": "clear_path_projector",
+      "root_node": "ClearPathProjectorModel",
+      "hero_target": "RouteProjector",
+      "collision_node": "UCX_clear_path_projector",
+      "triangles_lod0": 38856,
+      "triangles_lod1": 19428,
+      "triangles_lod2": 8532,
+      "bounds_min": [
+        -0.8600000143051147,
+        -0.925000011920929,
+        -0.12000000476837158
+      ],
+      "bounds_max": [
+        2.1849400997161865,
+        0.925000011920929,
+        0.9929845333099365
+      ],
+      "state_parts": {
+        "inactive": [
+          "ProjectorBeam_Inactive"
+        ],
+        "active": [
+          "ProjectorBeam_Active"
+        ],
+        "completed": [
+          "ProjectorGoalStar"
+        ]
+      },
+      "parts": {
+        "PedestalStoneBase": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalStoneCrown": {
+          "triangles": 476,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalEnergyRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_clear_path_projector_ring"
+          ]
+        },
+        "PedestalInnerRing": {
+          "triangles": 768,
+          "materials": [
+            "MAT_Accent_clear_path_projector_ring"
+          ]
+        },
+        "PedestalArmor00": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalCircuitStud00": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "PedestalArmor01": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalArmor02": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalCircuitStud02": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "PedestalArmor03": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalArmor04": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalCircuitStud04": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "PedestalArmor05": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalArmor06": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalCircuitStud06": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "PedestalArmor07": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalArmor08": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalCircuitStud08": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "PedestalArmor09": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalArmor10": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalCircuitStud10": {
+          "triangles": 80,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "PedestalArmor11": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalStrut": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalStrut1": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "PedestalStrut2": {
+          "triangles": 300,
+          "materials": [
+            "MAT_Stone_clear_path_projector"
+          ]
+        },
+        "RouteProjector": {
+          "triangles": 912,
+          "materials": [
+            "MAT_Accent_clear_path_projector_hero",
+            "MAT_Albedo_clear_path_projector"
+          ]
+        },
+        "ProjectorTip": {
+          "triangles": 1392,
+          "materials": [
+            "MAT_Crystal_clear_path_projector"
+          ]
+        },
+        "RouteDot00": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "RouteDot01": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "RouteDot02": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "RouteDot03": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "RouteDot04": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "RouteDot05": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "RouteDot06": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "RouteDot07": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "RouteDot08": {
+          "triangles": 3000,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "ProjectorBeam_Inactive": {
+          "triangles": 740,
+          "materials": [
+            "MAT_Circuit_clear_path_projector"
+          ]
+        },
+        "ProjectorBeam_Active": {
+          "triangles": 604,
+          "materials": [
+            "MAT_Accent_Projector_Active"
+          ]
+        },
+        "ProjectorGoalStar": {
+          "triangles": 740,
+          "materials": [
+            "MAT_Accent_Projector_Completed"
+          ]
+        }
+      },
+      "materials": [
+        "MAT_Accent_Projector_Active",
+        "MAT_Accent_Projector_Completed",
+        "MAT_Accent_clear_path_projector_hero",
+        "MAT_Accent_clear_path_projector_ring",
+        "MAT_Albedo_clear_path_projector",
+        "MAT_Circuit_clear_path_projector",
+        "MAT_Crystal_clear_path_projector",
+        "MAT_Stone_clear_path_projector"
+      ],
+      "texture": "clear_path_projector_albedo_v1.png",
+      "glb_path": "assets3D/mind_spark/quest_objects/glb/clear_path_projector.glb",
+      "glb_exists": true,
+      "glb_size_bytes": 5110800
+    }
+  ],
+  "blend_path": "assets3D/mind_spark/quest_objects/source/mind_spark_quest_objects.blend"
+}

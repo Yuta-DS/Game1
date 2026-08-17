@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Artea"
 run/main_scene="res://scenes/start_screen.tscn"
-config/features=PackedStringArray("4.7", "GL Compatibility")
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 run/main_scene.crown_story="res://scenes/viewfinder/crown_of_life_story.tscn"
 
@@ -33,6 +33,7 @@ DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameManager="*res://scripts/GameManager.gd"
 JourneyState="*res://scripts/JourneyState.gd"
 JourneyCampaign="*res://scripts/journey_campaign.gd"
+PlayerIdentityTracker="*res://scripts/player_identity_tracker.gd"
 Auth="*res://addons/godot-firebase/auth/auth.gd"
 APIManager="*res://scripts/API_Manager.gd"
 CreationWorldState="*res://scripts/creation_world/creation_world_state.gd"
@@ -40,6 +41,7 @@ CreationWorldState="*res://scripts/creation_world/creation_world_state.gd"
 [dialogue_manager]
 
 runtime/balloon_path="res://dialogue/HubworldBalloon.tscn"
+runtime/advanced/uses_dotnet=true
 
 [display]
 

@@ -15,6 +15,8 @@ const ALARM_DARK := Color("#07162d")
 const HOPE_GOLD := Color("#ffe56d")
 const HOPE_GREEN := Color("#183d34")
 const RoleController := preload("res://scripts/mind_spark/mind_spark_role_controller.gd")
+const QuestObjectScene := preload("res://scenes/mind_spark/quest_objects/quest_object_base.tscn")
+const QuestObjectCatalog := preload("res://scripts/mind_spark/quest_objects/quest_object_catalog.gd")
 
 @export var perspective_kind := PerspectiveKind.ALARM_SCIENCE
 @export var role_id := "alarm"
@@ -33,6 +35,7 @@ var _focus_mode := false
 var _constellation_nodes: Array[MeshInstance3D] = []
 var _interaction_station: Node3D
 var _interaction_station_id := ""
+var _support_objects: Array[QuestObjectBase] = []
 var _quest_index := 0
 
 
@@ -47,6 +50,10 @@ func configure_perspective(
 	input_policy = new_input_policy
 	_configured_actions = actions.duplicate()
 	if is_node_ready():
+		for index in _support_objects.size():
+			var support_id := "focus_bell" if index == 0 else "path_projector"
+			_support_objects[index].configure(_support_objects[index].definition,
+				"chapter.%s.support.%s" % [role_id, support_id])
 		_apply_configuration()
 
 
@@ -150,32 +157,25 @@ func command_companion(target: Vector3, activate_on_arrival: bool = false) -> vo
 ## affordance, proximity validation, and readable feedback.
 func set_interaction_station(step_id: String, label_text: String, target: Vector3, active: bool) -> void:
 	_interaction_station_id = step_id if active else ""
+	if active and (not is_instance_valid(_interaction_station) \
+			or str(_interaction_station.get_meta("step_id", "")) != step_id):
+		if is_instance_valid(_interaction_station):
+			remove_child(_interaction_station)
+			_interaction_station.free()
+		var object := QuestObjectScene.instantiate() as QuestObjectBase
+		object.name = "InteractionStation"
+		object.definition = QuestObjectCatalog.definition_for_step(step_id)
+		object.save_id = "chapter.%s.%s" % [role_id, step_id]
+		object.set_meta("step_id", step_id)
+		add_child(object)
+		_interaction_station = object
 	if not is_instance_valid(_interaction_station):
-		_interaction_station = Node3D.new()
-		_interaction_station.name = "InteractionStation"
-		add_child(_interaction_station)
-		var pedestal := _mesh(CylinderMesh.new(), _material(
-			ALARM_BLUE if perspective_kind == PerspectiveKind.ALARM_SCIENCE else HOPE_GOLD, 1.0))
-		(pedestal.mesh as CylinderMesh).top_radius = 0.48
-		(pedestal.mesh as CylinderMesh).bottom_radius = 0.62
-		(pedestal.mesh as CylinderMesh).height = 0.24
-		_interaction_station.add_child(pedestal)
-		var marker := _mesh(SphereMesh.new(), _material(Color.WHITE, 1.4))
-		(marker.mesh as SphereMesh).radius = 0.16
-		(marker.mesh as SphereMesh).height = 0.32
-		marker.position.y = 0.62
-		_interaction_station.add_child(marker)
-		var label := Label3D.new()
-		label.name = "StationLabel"
-		label.position = Vector3(0.0, 1.18, 0.0)
-		label.font_size = 32
-		label.outline_size = 8
-		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		label.no_depth_test = true
-		_interaction_station.add_child(label)
+		return
 	_interaction_station.position = target
 	_interaction_station.visible = active
-	(_interaction_station.get_node("StationLabel") as Label3D).text = label_text
+	if active and _interaction_station is QuestObjectBase:
+		(_interaction_station as QuestObjectBase).prompt.text = "%s\n%s" % [label_text,
+			(_interaction_station as QuestObjectBase).prompt.text]
 
 
 func interaction_station_position() -> Vector3:
@@ -189,6 +189,28 @@ func role_is_near_station(max_distance := 1.65) -> bool:
 
 func current_station_id() -> String:
 	return _interaction_station_id
+
+
+func interact_current_object(action: StringName = &"primary", value: Variant = null) -> Dictionary:
+	if not _interaction_station is QuestObjectBase:
+		return {"accepted": false, "reason": "no_quest_object", "completed": false}
+	return (_interaction_station as QuestObjectBase).interact(action, value)
+
+
+func current_object_actions() -> Array[StringName]:
+	if _interaction_station is QuestObjectBase:
+		return (_interaction_station as QuestObjectBase).available_actions()
+	return []
+
+
+func interact_support_if_near(max_distance := 1.5) -> Dictionary:
+	for object in _support_objects:
+		if is_instance_valid(object) and role.position.distance_to(object.position) <= max_distance:
+			var result := object.interact(&"primary")
+			result["handled"] = true
+			result["object_name"] = object.definition.display_name
+			return result
+	return {"handled": false}
 
 
 func set_quest_environment(index: int, quest_title: String) -> void:
@@ -214,6 +236,7 @@ func _ready() -> void:
 	set_shared_anchor_active(false)
 	set_bridge_integrated(false)
 	set_constellation_progress(0, 3)
+	_build_support_objects()
 	_update_focus_status()
 
 
@@ -375,6 +398,22 @@ func _update_focus_status() -> void:
 		label.text = "FOCUS MODE • CAMERA STEADY"
 	elif reduced_motion:
 		label.text = "REDUCED MOTION • CAMERA STEADY"
+
+
+func _build_support_objects() -> void:
+	if not _support_objects.is_empty():
+		return
+	for support in [
+		{"index": 6, "position": Vector3(-3.7, 0.0, -2.7), "id": "focus_bell"},
+		{"index": 11, "position": Vector3(3.7, 0.0, -2.7), "id": "path_projector"},
+	]:
+		var object := QuestObjectScene.instantiate() as QuestObjectBase
+		object.definition = QuestObjectCatalog.definition_at(int(support["index"]))
+		object.save_id = "chapter.%s.support.%s" % [role_id, support["id"]]
+		object.position = support["position"]
+		object.scale = Vector3.ONE * 0.72
+		add_child(object)
+		_support_objects.append(object)
 
 
 func _mesh(mesh: PrimitiveMesh, material: Material) -> MeshInstance3D:

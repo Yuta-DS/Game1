@@ -53,6 +53,7 @@ var completion_committed := false
 var return_requested := false
 var solo_mode := true
 var _last_quest_index := -1
+var _object_choice_bar: HBoxContainer
 
 
 func inject_dependencies(new_journey_state: Node, new_campaign: Node, new_director = null,
@@ -69,6 +70,7 @@ func inject_dependencies(new_journey_state: Node, new_campaign: Node, new_direct
 
 func _ready() -> void:
 	_ensure_input_actions()
+	_ensure_object_choice_bar()
 	_cap_viewports()
 	get_viewport().size_changed.connect(_cap_viewports)
 	if journey_state == null:
@@ -138,10 +140,32 @@ func _on_role_interaction(role_id: String) -> void:
 	if director.phase != EncounterDirector.PHASE_ACTIVE:
 		return
 	var perspective = alarm_perspective if role_id == EncounterDirector.LENS_ALARM else hope_perspective
-	if not perspective.role_is_near_station():
-		hint_label.text = "Move beside the glowing station, then interact. No timing is required."
+	var support: Dictionary = perspective.interact_support_if_near()
+	if bool(support.get("handled", false)):
+		hint_label.text = "%s • %s" % [support.get("object_name", "Support tool"),
+			str(support.get("reason", "ready")).replace("_", " ").to_upper()]
 		return
-	_perform_current_step(role_id)
+	if not perspective.role_is_near_station():
+		hint_label.text = "Move beside the required object, Focus Bell, or dotted-route Projector. No timing is required."
+		return
+	_perform_object_interaction(perspective, role_id)
+
+
+func _perform_object_interaction(perspective, role_id: String,
+		action: StringName = &"primary", value: Variant = null) -> bool:
+	var result: Dictionary = perspective.interact_current_object(action, value)
+	if not bool(result.get("accepted", false)):
+		hint_label.text = str(result.get("reason", "try again")).replace("_", " ").capitalize()
+		_render_object_choices(perspective, role_id)
+		return false
+	var reason := str(result.get("reason", "progress"))
+	if bool(result.get("completed", false)) or reason in ["already_complete", "skipped"]:
+		_clear_object_choices()
+		return _perform_current_step(role_id)
+	hint_label.text = "%s • %d/%d" % [reason.replace("_", " ").to_upper(),
+		int(result.get("progress", 0)), int(result.get("total", 1))]
+	_render_object_choices(perspective, role_id)
+	return true
 
 
 func _on_role_ping(_role_id: String) -> void:
@@ -200,7 +224,7 @@ func _perform_accessibility_action() -> void:
 		return
 	var perspective = alarm_perspective if lens == EncounterDirector.LENS_ALARM else hope_perspective
 	perspective.role.position = perspective.interaction_station_position()
-	_perform_current_step(lens)
+	_perform_object_interaction(perspective, lens)
 
 
 func _exchange_roles() -> void:
@@ -299,6 +323,9 @@ func _render_active_step(encounter: Dictionary) -> void:
 	if solo_mode and lens in [EncounterDirector.LENS_ALARM, EncounterDirector.LENS_HOPE]:
 		var companion_lens := EncounterDirector.LENS_HOPE if director.solo_human_lens == EncounterDirector.LENS_ALARM else EncounterDirector.LENS_ALARM
 		companion_button.visible = lens == companion_lens
+	if lens in [EncounterDirector.LENS_ALARM, EncounterDirector.LENS_HOPE]:
+		var perspective = alarm_perspective if lens == EncounterDirector.LENS_ALARM else hope_perspective
+		_render_object_choices(perspective, lens)
 
 
 func _step_hint(lens: String) -> String:
@@ -333,6 +360,60 @@ func _hide_context_actions() -> void:
 	swap_button.visible = false
 	assist_button.visible = false
 	receive_button.get_parent().visible = false
+	_clear_object_choices()
+
+
+func _ensure_object_choice_bar() -> void:
+	if is_instance_valid(_object_choice_bar):
+		return
+	_object_choice_bar = HBoxContainer.new()
+	_object_choice_bar.name = "ObjectChoices"
+	_object_choice_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	_object_choice_bar.add_theme_constant_override("separation", 10)
+	$Layout/ActionPanel/Box.add_child(_object_choice_bar)
+	$Layout/ActionPanel/Box.move_child(_object_choice_bar, 5)
+
+
+func _render_object_choices(perspective, role_id: String) -> void:
+	_clear_object_choices()
+	if not is_instance_valid(_object_choice_bar):
+		return
+	var actions: Array = perspective.current_object_actions()
+	# Primary movement keys already cover simple repeated actions. Buttons are
+	# reserved for a real choice, help, or reset.
+	if actions == [&"primary"]:
+		return
+	for action in actions:
+		if action in [&"scan", &"turn", &"dodge", &"strike"]:
+			continue
+		var button := Button.new()
+		button.text = _object_action_label(action)
+		button.pressed.connect(_on_object_choice.bind(perspective, role_id, action))
+		_object_choice_bar.add_child(button)
+	_object_choice_bar.visible = _object_choice_bar.get_child_count() > 0
+
+
+func _clear_object_choices() -> void:
+	if not is_instance_valid(_object_choice_bar):
+		return
+	for child in _object_choice_bar.get_children():
+		_object_choice_bar.remove_child(child)
+		child.free()
+	_object_choice_bar.visible = false
+
+
+func _on_object_choice(perspective, role_id: String, action: StringName) -> void:
+	_perform_object_interaction(perspective, role_id, action)
+
+
+func _object_action_label(action: StringName) -> String:
+	var labels := {
+		&"fact": "★ FACT", &"fear": "☁ FEAR", &"node": "CONNECT NEXT NODE",
+		&"reset": "↺ RESET", &"help": "? HELP", &"answer_a": "ANSWER A",
+		&"answer_b": "ANSWER B", &"private": "PRIVATE", &"skip": "SKIP",
+		&"replay": "REPLAY", &"save": "SAVE", &"heal": "HEAL", &"task": "CURRENT TASK",
+	}
+	return str(labels.get(action, str(action).replace("_", " ").to_upper()))
 
 
 func _set_reduced_motion(enabled: bool) -> void:

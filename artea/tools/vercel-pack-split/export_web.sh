@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+project_dir="$(cd "${script_dir}/../.." && pwd)"
 output_dir="${project_dir}/builds/web"
 godot_bin="${GODOT_BIN:-/Users/davidsovann/Downloads/Godot.app/Contents/MacOS/Godot}"
 
@@ -22,12 +23,14 @@ rm -f "${output_dir}/index.pck"
 "${godot_bin}" --headless --path "${project_dir}" \
 	--export-release Web "${output_dir}/index.html"
 
-cp "${project_dir}/web/pck-loader.js" "${output_dir}/pck-loader.js"
+cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
 
 # Split from the end and shrink the source after every part. This keeps peak
 # disk use near one PCK instead of requiring a second full copy of the build.
 pck_path="${output_dir}/index.pck"
-part_size=$((90 * 1024 * 1024))
+# Small parts keep each upload below Vercel's connection timeout and avoid the
+# CLI buffering several large requests on constrained build machines.
+part_size=$((8 * 1024 * 1024))
 pck_size=$(stat -f '%z' "${pck_path}")
 part_index=$(((pck_size - 1) / part_size))
 while (( part_index >= 0 )); do

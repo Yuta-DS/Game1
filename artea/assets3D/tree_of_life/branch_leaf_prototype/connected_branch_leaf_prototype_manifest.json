@@ -1,0 +1,18 @@
+{
+  "asset": "connected_branch_leaf_prototype",
+  "main_limbs": 1,
+  "secondary_boughs": 8,
+  "tertiary_leaf_twigs": 16,
+  "attached_compound_leaves": 128,
+  "leaf_counts": {
+    "living_leaf_fan": 48,
+    "magic_rune_leaf": 32,
+    "solar_glass_science_leaf": 32,
+    "emerald_sensor_leaf": 16
+  },
+  "all_leaves_attached_to_tertiary_twigs": true,
+  "source_blend": "assets3D/tree_of_life/branch_leaf_prototype/source/connected_branch_leaf_prototype.blend",
+  "game_glb": "assets3D/tree_of_life/branch_leaf_prototype/glb/connected_branch_leaf_prototype.glb",
+  "front_preview": "artifacts/tree_of_life_branch_leaf/branch_leaf_front.png",
+  "side_preview": "artifacts/tree_of_life_branch_leaf/branch_leaf_side.png"
+}

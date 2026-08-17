@@ -72,7 +72,9 @@ func _run() -> void:
 		_fail("stair or entrance script root missing")
 		return
 	var terrace_top: float = entrance_root.get("TERRACE_DECK_Y")
-	var deck_top := deck.global_position.y + 0.35
+	# Read the authored mesh surface instead of assuming the old 0.7 m slab.
+	# This keeps the route assertion valid when the crown fascia is refined.
+	var deck_top: float = deck.global_position.y + deck.mesh.get_aabb().end.y
 	if absf(deck_top - terrace_top) > MAX_WALKABLE_STEP:
 		_fail("crown deck (%.2f) is not level with the terrace (%.2f): a %.2f m step"
 			% [deck_top, terrace_top, absf(deck_top - terrace_top)])

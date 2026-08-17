@@ -1,0 +1,27 @@
+{
+  "asset": "gravity_leaf_bough",
+  "main_boughs": 1,
+  "alternating_laterals": 27,
+  "leaf_bearing_twigs": 162,
+  "socket_attached_compound_leaves": 1296,
+  "leaf_counts": {
+    "living_leaf_fan": 486,
+    "magic_rune_leaf": 324,
+    "solar_glass_science_leaf": 324,
+    "emerald_sensor_leaf": 162
+  },
+  "biofiber_main_braid_strands": 3,
+  "biofiber_main_flow_pulses": 24,
+  "biofiber_lateral_strands": 54,
+  "biofiber_leaf_twig_conduits": 162,
+  "biofiber_leaf_transfer_nodes": 1296,
+  "godot_animation_ready_material": "MAT_BiofiberOpticFlow",
+  "maximum_socket_error_m": 9.830249847454215e-07,
+  "average_socket_error_m": 4.1966888499598235e-08,
+  "layout": "elongated_plagiotropic_bough_with_distal_gravity_sag",
+  "source_blend": "assets3D/tree_of_life/gravity_leaf_bough/source/gravity_leaf_bough.blend",
+  "game_glb": "assets3D/tree_of_life/gravity_leaf_bough/glb/gravity_leaf_bough.glb",
+  "side_preview": "artifacts/tree_of_life_gravity_bough/gravity_leaf_bough_side.png",
+  "top_preview": "artifacts/tree_of_life_gravity_bough/gravity_leaf_bough_top.png",
+  "socket_closeup": "artifacts/tree_of_life_gravity_bough/gravity_leaf_bough_socket_closeup.png"
+}
