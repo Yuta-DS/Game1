@@ -75,7 +75,6 @@ func _ready() -> void:
         if _emoji_enabled:
             _emoji_sv = SubViewport.new()
             _emoji_sv.size = Vector2i(128, 128)
-            _emoji_sv.usage = SubViewport.USAGE_2D
             _emoji_sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
             add_child(_emoji_sv)
             _emoji_sv.visible = false

@@ -1,0 +1,64 @@
+{
+  "asset": "Reference-Faithful Leaf Library",
+  "method": "four dense 2.5D relief meshes with generated RGBA reference albedos",
+  "grid_per_leaf": [
+    181,
+    111
+  ],
+  "minimum_detail_points_per_leaf": 20091,
+  "leaves": {
+    "living_leaf_fan": {
+      "name": "Living Leaf Fan",
+      "object": "LivingLeafFanReferenceRelief",
+      "vertices": 20091,
+      "faces": 19800,
+      "texture": "assets3D/tree_of_life/leaves/reference_faithful/textures/living_leaf_fan_reference_rgba.png",
+      "blend": "assets3D/tree_of_life/leaves/reference_faithful/source/living_leaf_fan_reference_faithful.blend",
+      "glb": "assets3D/tree_of_life/leaves/reference_faithful/glb/living_leaf_fan_reference_faithful.glb",
+      "preview": "artifacts/tree_of_life_leaves/reference_faithful/living_leaf_fan.png"
+    },
+    "magic_rune_leaf": {
+      "name": "Magic Rune Leaf",
+      "object": "MagicRuneLeafReferenceRelief",
+      "vertices": 20091,
+      "faces": 19800,
+      "texture": "assets3D/tree_of_life/leaves/reference_faithful/textures/magic_rune_leaf_reference_rgba.png",
+      "blend": "assets3D/tree_of_life/leaves/reference_faithful/source/magic_rune_leaf_reference_faithful.blend",
+      "glb": "assets3D/tree_of_life/leaves/reference_faithful/glb/magic_rune_leaf_reference_faithful.glb",
+      "preview": "artifacts/tree_of_life_leaves/reference_faithful/magic_rune_leaf.png"
+    },
+    "solar_glass_science_leaf": {
+      "name": "Solar-Glass Science Leaf",
+      "object": "SolarGlassScienceLeafReferenceRelief",
+      "vertices": 20091,
+      "faces": 19800,
+      "texture": "assets3D/tree_of_life/leaves/reference_faithful/textures/solar_glass_science_leaf_reference_rgba.png",
+      "blend": "assets3D/tree_of_life/leaves/reference_faithful/source/solar_glass_science_leaf_reference_faithful.blend",
+      "glb": "assets3D/tree_of_life/leaves/reference_faithful/glb/solar_glass_science_leaf_reference_faithful.glb",
+      "preview": "artifacts/tree_of_life_leaves/reference_faithful/solar_glass_science_leaf.png"
+    },
+    "emerald_sensor_leaf": {
+      "name": "Emerald Sensor Leaf",
+      "object": "EmeraldSensorLeafReferenceRelief",
+      "vertices": 20091,
+      "faces": 19800,
+      "texture": "assets3D/tree_of_life/leaves/reference_faithful/textures/emerald_sensor_leaf_reference_rgba.png",
+      "blend": "assets3D/tree_of_life/leaves/reference_faithful/source/emerald_sensor_leaf_reference_faithful.blend",
+      "glb": "assets3D/tree_of_life/leaves/reference_faithful/glb/emerald_sensor_leaf_reference_faithful.glb",
+      "preview": "artifacts/tree_of_life_leaves/reference_faithful/emerald_sensor_leaf.png"
+    }
+  },
+  "combined": {
+    "blend": "assets3D/tree_of_life/leaves/reference_faithful/source/reference_faithful_leaf_library.blend",
+    "glb": "assets3D/tree_of_life/leaves/reference_faithful/glb/reference_faithful_leaf_library.glb",
+    "preview": "artifacts/tree_of_life_leaves/reference_faithful/reference_faithful_leaf_library.png",
+    "objects": [
+      "LivingLeafFanReferenceRelief",
+      "MagicRuneLeafReferenceRelief",
+      "SolarGlassScienceLeafReferenceRelief",
+      "EmeraldSensorLeafReferenceRelief"
+    ],
+    "total_vertices": 80364
+  },
+  "collision_included": false
+}

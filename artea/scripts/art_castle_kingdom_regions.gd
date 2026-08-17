@@ -5,6 +5,12 @@ extends Node3D
 # kilometres of authored exploration without thousands of individual props.
 
 const KINGDOM_SIZE := Vector2(3000.0, 3000.0)
+const LAND_CHUNK_SIZE := 570.0
+const LAND_CHUNK_SPACING := 580.0
+const SHELF_BRIDGE_WIDTH := 30.0
+const SHELF_BRIDGE_THICKNESS := 1.2
+const SHELF_BRIDGE_LANDING_LENGTH := 6.0
+const SHELF_BRIDGE_MAX_SLOPE_DEGREES := 18.0
 const GALLERY_CONNECTION_Z := 820.0
 const CASTLE_CLEAR_BUFFER := 1600.0
 const MIND_CENTER := Vector3(-3600.0, 0.0, 3940.0)
@@ -94,6 +100,10 @@ func _build_materials() -> void:
 	_materials.ivory = _material(Color("e8e5ef"), 0.84)
 	_materials.shadow = _material(Color("8587a2"), 0.94)
 	_materials.mind = _material(Color("23233e"), 0.82)
+	_materials.mind_surface_a = _material(Color("202b43"), 0.88)
+	_materials.mind_surface_b = _material(Color("29304b"), 0.84)
+	_materials.mind_court = _material(Color("17263d"), 0.64, Color("1b5872"), 0.22)
+	_materials.mind_edge = _material(Color("243d5a"), 0.48, Color("2bcfe3"), 0.38)
 	_materials.aqua = _material(Color("39dbea"), 0.32, Color("26d7f2"), 1.5)
 	_materials.purple = _material(Color("8b69d3"), 0.72, Color("7048c5"), 0.45)
 	_materials.green = _material(Color("58a979"), 0.90)
@@ -114,7 +124,7 @@ func _build_kingdom(kingdom_id: String, center: Vector3) -> void:
 	_build_landmass(kingdom, kingdom_id, center)
 	_build_boundary(kingdom, kingdom_id, center)
 	var route: Array = STORY_ROUTES[kingdom_id]
-	_build_story_path(kingdom, route)
+	_build_story_path(kingdom, route, kingdom_id)
 	for index in route.size():
 		_build_checkpoint(kingdom, kingdom_id, route[index], index)
 	_add_label(kingdom, "%s • 3000m × 3000m" % kingdom_id.replace("_", " ").to_upper(),
@@ -126,20 +136,146 @@ func _build_landmass(parent: Node3D, kingdom_id: String, center: Vector3) -> voi
 	land.name = "OptimizedLandmass"
 	parent.add_child(land)
 	var ground_material: Material = _materials.mind if kingdom_id == "mind" else _materials.ivory
+	var chunk_surfaces := {}
 	# A five-by-five family of 570 m floating shelves establishes the exact
 	# 3 km region while leaving narrow surreal seams and sightlines to the sky.
 	for row in 5:
 		for column in 5:
-			var x := center.x - 1160.0 + column * 580.0
-			var z := center.z - 1160.0 + row * 580.0
+			var x := center.x - 1160.0 + column * LAND_CHUNK_SPACING
+			var z := center.z - 1160.0 + row * LAND_CHUNK_SPACING
 			var rise := sin(float(row) * 1.7 + float(column) * 0.9) * 18.0
 			var deck_pos := Vector3(x, -18.0 + rise, z)
+			chunk_surfaces[Vector2i(column, row)] = deck_pos + Vector3.UP * 19.0
 			_add_box(land, "LandChunk_%02d_%02d" % [row, column], deck_pos,
-				Vector3(570, 38, 570), ground_material, true)
+				Vector3(LAND_CHUNK_SIZE, 38, LAND_CHUNK_SIZE), ground_material, true)
+			if kingdom_id == "mind":
+				var surface_material: Material = _materials.mind_surface_a if (row + column) % 2 == 0 else _materials.mind_surface_b
+				_add_box(land, "MindSurface_%02d_%02d" % [row, column], deck_pos + Vector3(0, 19.2, 0),
+					Vector3(566, 0.42, 566), surface_material)
+				# Thin luminous seams preserve the user's shelf grid while making it
+				# read as a living computer landscape instead of unfinished blocks.
+				for seam_index in 3:
+					var seam_offset := -170.0 + seam_index * 170.0
+					_add_box(land, "MindCircuitX_%02d_%02d_%02d" % [row, column, seam_index],
+						deck_pos + Vector3(0, 19.48, seam_offset), Vector3(520, 0.12, 1.25), _materials.mind_edge)
+					_add_box(land, "MindCircuitZ_%02d_%02d_%02d" % [row, column, seam_index],
+						deck_pos + Vector3(seam_offset, 19.48, 0), Vector3(1.25, 0.12, 520), _materials.mind_edge)
 			_add_box(land, "FloatingRoot_%02d_%02d" % [row, column], deck_pos + Vector3(0, -92, 0),
 				Vector3(410, 150, 410), _materials.shadow)
 			if (row + column) % 2 == 0:
-				_build_grove(land, kingdom_id, deck_pos + Vector3(0, 25, 0), row * 5 + column)
+				var grove_height := 19.0 if kingdom_id == "mind" else 25.0
+				_build_grove(land, kingdom_id, deck_pos + Vector3(0, grove_height, 0), row * 5 + column)
+	_build_inter_island_bridge_grid(land, kingdom_id, chunk_surfaces)
+
+
+func _build_inter_island_bridge_grid(land: Node3D, kingdom_id: String,
+		chunk_surfaces: Dictionary) -> void:
+	var grid := Node3D.new()
+	grid.name = "InterIslandBridgeGrid"
+	grid.set_meta("kingdom_id", kingdom_id)
+	grid.set_meta("chunk_count", 25)
+	grid.set_meta("minimum_connections_per_chunk", 2)
+	land.add_child(grid)
+	var bridge_count := 0
+	for row in 5:
+		for column in 5:
+			var chunk := Vector2i(column, row)
+			for neighbour in [Vector2i(column + 1, row), Vector2i(column, row + 1)]:
+				if not chunk_surfaces.has(neighbour):
+					continue
+				_build_exact_shelf_bridge(grid,
+					"ShelfBridge_%02d_%02d_to_%02d_%02d" % [row, column, neighbour.y, neighbour.x],
+					chunk, neighbour, chunk_surfaces[chunk], chunk_surfaces[neighbour])
+				bridge_count += 1
+	grid.set_meta("bridge_count", bridge_count)
+
+
+func _build_exact_shelf_bridge(parent: Node3D, node_name: String,
+		chunk_a: Vector2i, chunk_b: Vector2i, surface_a: Vector3, surface_b: Vector3) -> void:
+	var bridge := Node3D.new()
+	bridge.name = node_name
+	bridge.set_meta("chunk_a", chunk_a)
+	bridge.set_meta("chunk_b", chunk_b)
+	bridge.set_meta("surface_a_y", surface_a.y)
+	bridge.set_meta("surface_b_y", surface_b.y)
+	parent.add_child(bridge)
+	var direction := Vector3(surface_b.x - surface_a.x, 0.0, surface_b.z - surface_a.z).normalized()
+	var gap := LAND_CHUNK_SPACING - LAND_CHUNK_SIZE
+	var required_run := absf(surface_b.y - surface_a.y) \
+		/ tan(deg_to_rad(SHELF_BRIDGE_MAX_SLOPE_DEGREES))
+	# The two level landing pieces consume part of the total run. Include them in
+	# the inset calculation so the middle slope itself, not just the whole bridge,
+	# stays within the player-safe angle.
+	var inset := maxf(8.0,
+		(required_run + SHELF_BRIDGE_LANDING_LENGTH * 2.0 - gap) * 0.5)
+	var half_chunk := LAND_CHUNK_SIZE * 0.5
+	var start_surface := surface_a + direction * (half_chunk - inset)
+	var finish_surface := surface_b - direction * (half_chunk - inset)
+	var start_landing_end := start_surface + direction * SHELF_BRIDGE_LANDING_LENGTH
+	start_landing_end.y = start_surface.y
+	var finish_landing_start := finish_surface - direction * SHELF_BRIDGE_LANDING_LENGTH
+	finish_landing_start.y = finish_surface.y
+	_add_exact_bridge_segment(bridge, "StartLanding", start_surface, start_landing_end)
+	_add_exact_bridge_segment(bridge, "SlopeSpan", start_landing_end, finish_landing_start)
+	_add_exact_bridge_segment(bridge, "FinishLanding", finish_landing_start, finish_surface)
+	_add_shelf_bridge_guards(bridge, start_surface, finish_surface)
+	bridge.set_meta("walk_start", start_surface)
+	bridge.set_meta("walk_finish", finish_surface)
+	bridge.set_meta("slope_degrees", rad_to_deg(atan2(
+		absf(finish_landing_start.y - start_landing_end.y),
+		Vector2(finish_landing_start.x - start_landing_end.x,
+			finish_landing_start.z - start_landing_end.z).length())))
+
+
+func _add_exact_bridge_segment(parent: Node3D, node_name: String,
+		start_surface: Vector3, finish_surface: Vector3) -> void:
+	var horizontal_length := Vector2(
+		finish_surface.x - start_surface.x,
+		finish_surface.z - start_surface.z).length()
+	var slope := atan2(finish_surface.y - start_surface.y, horizontal_length)
+	var top_vertical_offset := cos(slope) * SHELF_BRIDGE_THICKNESS * 0.5
+	var start_center := start_surface - Vector3.UP * top_vertical_offset
+	var finish_center := finish_surface - Vector3.UP * top_vertical_offset
+	_add_sloped_box_between(parent, node_name, start_center, finish_center,
+		Vector2(SHELF_BRIDGE_WIDTH, SHELF_BRIDGE_THICKNESS), _materials.silver, true)
+	var deck := parent.get_node(node_name) as MeshInstance3D
+	deck.set_meta("walk_surface_start_y", start_surface.y)
+	deck.set_meta("walk_surface_finish_y", finish_surface.y)
+
+
+func _add_shelf_bridge_guards(parent: Node3D, start_surface: Vector3,
+		finish_surface: Vector3) -> void:
+	# One continuous pair is lighter than repeating rails on all three deck
+	# pieces, while remaining perfectly mirrored around the complete bridge axis.
+	var horizontal := Vector3(
+		finish_surface.x - start_surface.x, 0.0,
+		finish_surface.z - start_surface.z).normalized()
+	var side_axis := Vector3(horizontal.z, 0.0, -horizontal.x)
+	for side_value in [-1.0, 1.0]:
+		var side: float = side_value
+		var side_name := "Left" if side < 0.0 else "Right"
+		var rail_offset: Vector3 = side_axis * side * (SHELF_BRIDGE_WIDTH * 0.5 - 0.6)
+		_add_sloped_box_between(parent, "%sSafetyRail" % side_name,
+			start_surface + rail_offset + Vector3.UP * 1.5,
+			finish_surface + rail_offset + Vector3.UP * 1.5,
+			Vector2(0.8, 2.4), _materials.glass, true)
+
+
+func _add_sloped_box_between(parent: Node3D, node_name: String,
+		start_center: Vector3, finish_center: Vector3, cross_section: Vector2,
+		material: Material, collision: bool) -> MeshInstance3D:
+	var direction := finish_center - start_center
+	var horizontal_length := Vector2(direction.x, direction.z).length()
+	var instance := _add_box(parent, node_name, start_center.lerp(finish_center, 0.5),
+		Vector3(cross_section.x, cross_section.y, direction.length()), material, collision)
+	instance.rotation = Vector3(
+		-atan2(direction.y, horizontal_length), atan2(direction.x, direction.z), 0.0)
+	if collision:
+		var collision_body := parent.get_child(parent.get_child_count() - 1) as StaticBody3D
+		if collision_body != null:
+			collision_body.name = "%sCollision" % node_name
+			collision_body.rotation = instance.rotation
+	return instance
 
 
 func _build_boundary(parent: Node3D, kingdom_id: String, center: Vector3) -> void:
@@ -159,7 +295,7 @@ func _build_boundary(parent: Node3D, kingdom_id: String, center: Vector3) -> voi
 			_kingdom_material(kingdom_id), false, 10)
 
 
-func _build_story_path(parent: Node3D, route: Array) -> void:
+func _build_story_path(parent: Node3D, route: Array, kingdom_id := "") -> void:
 	var path := Node3D.new()
 	path.name = "ConnectedStoryPath"
 	parent.add_child(path)
@@ -169,6 +305,9 @@ func _build_story_path(parent: Node3D, route: Array) -> void:
 		var middle := (start + finish) * 0.5 + Vector3(0, 4, sin(float(index) * 1.9) * 90.0)
 		_add_walkway(path, "StoryWay_%02d_A" % index, start, middle, 30.0)
 		_add_walkway(path, "StoryWay_%02d_B" % index, middle, finish, 30.0)
+		if kingdom_id == "mind":
+			_add_route_seam(path, "StoryCircuit_%02d_A" % index, start, middle)
+			_add_route_seam(path, "StoryCircuit_%02d_B" % index, middle, finish)
 
 
 func _build_checkpoint(parent: Node3D, kingdom_id: String, info: Dictionary, index: int) -> void:
@@ -179,8 +318,9 @@ func _build_checkpoint(parent: Node3D, kingdom_id: String, info: Dictionary, ind
 	checkpoint.set_meta("checkpoint_id", info.id)
 	checkpoint.set_meta("story_index", index)
 	parent.add_child(checkpoint)
+	var court_material: Material = _materials.mind_court if kingdom_id == "mind" else _materials.ivory
 	_add_cylinder(checkpoint, "CheckpointCourt", Vector3(0, -2, 0), 70.0 if index < 7 else 105.0,
-		5.0, _materials.ivory, true, 32)
+		5.0, court_material, true, 32)
 	_add_cylinder(checkpoint, "StoryLight", Vector3(0, 2, 0), 20.0, 1.2,
 		_kingdom_material(kingdom_id), false, 24)
 	_add_label(checkpoint, info.title, Vector3(0, 42, 0), _kingdom_color(kingdom_id), 39)
@@ -284,6 +424,23 @@ func _decorate_creator(parent: Node3D, checkpoint_id: String, _index: int) -> vo
 
 
 func _build_grove(parent: Node3D, kingdom_id: String, center: Vector3, seed: int) -> void:
+	if kingdom_id == "mind":
+		var tree_scenes := [
+			"res://assets3D/trees/tree_1_c_color_12.tscn",
+			"res://assets3D/trees/tree_2_b_color_12.tscn",
+			"res://assets3D/trees/tree_3_a_color_12.tscn",
+			"res://assets3D/trees/tree_4_a_color_12.tscn",
+		]
+		for index in 9:
+			var angle := TAU * float(index) / 9.0 + seed * 0.31
+			var radius := 78.0 + float(index % 3) * 42.0
+			var tree := _add_asset_scene(parent, "MindLivingTree_%02d_%02d" % [seed, index],
+				tree_scenes[(seed + index) % tree_scenes.size()],
+				center + Vector3(cos(angle) * radius, 0, sin(angle) * radius),
+				Vector3.ONE * (7.0 + float((seed + index) % 4) * 1.4))
+			if tree != null:
+				tree.rotation.y = angle + PI
+		return
 	for index in 7:
 		var angle := TAU * index / 7.0 + seed * 0.31
 		var radius := 80.0 + (index % 3) * 30.0
@@ -292,6 +449,29 @@ func _build_grove(parent: Node3D, kingdom_id: String, center: Vector3, seed: int
 			5, 44 + index % 3 * 16, _materials.wood, false, 7)
 		_add_sphere(parent, "DistantCanopy", center + Vector3(cos(angle) * radius, 55 + index % 3 * 16, sin(angle) * radius),
 			Vector3(18, 22, 18), material)
+
+
+func _add_asset_scene(parent: Node3D, node_name: String, resource_path: String,
+		position_value: Vector3, scale_value: Vector3) -> Node3D:
+	var packed := load(resource_path) as PackedScene
+	if packed == null:
+		return null
+	var instance := packed.instantiate() as Node3D
+	if instance == null:
+		return null
+	instance.name = node_name
+	instance.position = position_value
+	instance.scale = scale_value
+	parent.add_child(instance)
+	return instance
+
+
+func _add_route_seam(parent: Node3D, node_name: String, start: Vector3, finish: Vector3) -> void:
+	var direction := finish - start
+	var seam := _add_box(parent, node_name, (start + finish) * 0.5 + Vector3.UP * 2.65,
+		Vector3(2.6, 0.24, direction.length() - 4.0), _materials.aqua)
+	seam.rotation = Vector3(-atan2(direction.y, Vector2(direction.x, direction.z).length()),
+		atan2(direction.x, direction.z), 0)
 
 
 func _build_gate(parent: Node3D, material: Material) -> void:

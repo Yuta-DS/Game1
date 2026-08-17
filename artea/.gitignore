@@ -1,3 +1,10 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+.vercel
+
+# Godot leaves these behind when an import is interrupted
+*.png.import-*
+
+# Blender autosave backups
+*.blend1

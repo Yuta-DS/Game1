@@ -78,6 +78,36 @@ const TOWER_SIDES := 8            # octagonal, matching the village towers
 const STAIR_RADIUS := 6.5
 const STEP_WIDTH := 3.8
 const STEP_DEPTH := 1.6
+# The visible tread/riser lane must stop before the inner faces of both helical
+# guards. The old boxes reached each guard's centreline, which made their ends
+# visibly pass through the barrier. The extra gap also clears the farther
+# corner of each deep, tangential tread as it turns around the tower.
+const INNER_GUARD_HALF_WIDTH := 0.22
+const OUTER_GUARD_HALF_WIDTH := 0.24
+const TREAD_GUARD_GAP := 0.12
+const TREAD_INNER_RADIUS := STAIR_RADIUS - STEP_WIDTH * 0.5 \
+	+ INNER_GUARD_HALF_WIDTH + TREAD_GUARD_GAP
+const TREAD_OUTER_RADIUS := STAIR_RADIUS + STEP_WIDTH * 0.5 \
+	- OUTER_GUARD_HALF_WIDTH - TREAD_GUARD_GAP
+const TREAD_CLEAR_WIDTH := TREAD_OUTER_RADIUS - TREAD_INNER_RADIUS
+const TREAD_CENTRE_RADIUS := (TREAD_INNER_RADIUS + TREAD_OUTER_RADIUS) * 0.5
+# Shared centre datum for the terrain-level first tread and every continuous
+# helix around it. Keeping this in one place prevents the guard, roadbed and
+# walking surface from starting above the visible stair again.
+const FIRST_TREAD_CENTRE_OFFSET := 0.17
+# The grounded medieval flight now owns the lead-in. Starting the curved guards
+# before the true spiral used to sweep them across that straight approach and
+# create an invisible pinch point, so the helical guards begin at tread zero.
+const GUARD_ENTRY_LEAD_T := 0.0
+# The first grounded flight is closed down to the actual sloped Terrain3D
+# surface. Past this point the stair visibly becomes the tower's spiral rather
+# than pretending the entire elevated ascent is part of the hillside.
+const ENTRY_FOUNDATION_END_T := 0.20
+# A short grounded flight reaches back onto the real hillside. The tower-centre
+# terrain datum is substantially higher than the land at the stair mouth, so a
+# nominally grounded first spiral tread can still demand a jump from the player.
+const GROUND_ENTRY_RUN := 6.0
+const GROUND_ENTRY_MAX_RISE := 0.28
 
 # Rise per tread. Kept well under the controller's MAX_STEP_HEIGHT (0.65) so
 # every step is climbed by walking, never by jumping.
@@ -375,7 +405,11 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	# STEP_RISE regardless of terrain height. Hard-coding 96 steps meant the rise
 	# silently changed with the ground, and on tall ground it exceeded what the
 	# controller can step over — the stair became unclimbable by arithmetic.
-	var climb := top_y - (ground + 0.4)
+	# The first visible tread now rests directly on terrain. The old +0.4 datum
+	# needed a large circular apron to hide the gap, which looked like a ring
+	# blocking the staircase in the supplied screenshot.
+	var first_tread_y := ground + FIRST_TREAD_CENTRE_OFFSET
+	var climb := top_y - first_tread_y
 	_step_count = maxi(2, int(ceil(climb / STEP_RISE)))
 
 	# Treads must overlap along the arc, or the capsule drops into the wedge
@@ -383,28 +417,30 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	# closer together than the box is deep.
 	var arc_step: float = (TAU * TURNS * STAIR_RADIUS) / float(_step_count)
 	var tread_depth: float = maxf(STEP_DEPTH, arc_step * 1.6)
+	parent.set_meta("stair_tread_inner_radius", TREAD_INNER_RADIUS)
+	parent.set_meta("stair_tread_outer_radius", TREAD_OUTER_RADIUS)
+	parent.set_meta("inner_guard_lane_face_radius",
+		STAIR_RADIUS - STEP_WIDTH * 0.5 + INNER_GUARD_HALF_WIDTH)
+	parent.set_meta("outer_guard_lane_face_radius",
+		STAIR_RADIUS + STEP_WIDTH * 0.5 - OUTER_GUARD_HALF_WIDTH)
 
-	# A broad terrain-sunk apron guarantees a continuous first contact even
-	# where the painted hillside undulates around the tower entrance.
-	var entry_pos := Vector3(
-		base.x + cos(start_angle) * STAIR_RADIUS,
-		ground + 0.05,
-		base.y + sin(start_angle) * STAIR_RADIUS)
-	_build_entry_apron(parent, entry_pos, start_angle, light, brass, cyan_glow)
 	_build_continuous_ascent(parent, base, ground, top_y, start_angle,
 		dark, light, brass)
+	_build_grounded_medieval_entry(parent, base, first_tread_y, start_angle,
+		light, dark)
 
 	for i in _step_count:
 		var t := float(i) / float(_step_count - 1)
 		var angle := start_angle + t * TAU * TURNS
-		var y: float = lerpf(ground + 0.4, top_y, t)
-		var pos := Vector3(base.x + cos(angle) * STAIR_RADIUS, y, base.y + sin(angle) * STAIR_RADIUS)
+		var y: float = lerpf(first_tread_y, top_y, t)
+		var pos := Vector3(base.x + cos(angle) * TREAD_CENTRE_RADIUS, y,
+			base.y + sin(angle) * TREAD_CENTRE_RADIUS)
 
 		# Tread — the surface the player runs on.
 		var tread := MeshInstance3D.new()
 		tread.name = "StairTread_%03d" % i
 		var tm := BoxMesh.new()
-		tm.size = Vector3(STEP_WIDTH, 0.34, tread_depth)
+		tm.size = Vector3(TREAD_CLEAR_WIDTH, 0.34, tread_depth)
 		tread.mesh = tm
 		tread.material_override = light if i % 2 == 0 else dark
 		parent.add_child(tread)
@@ -417,7 +453,7 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 		# reads as floating planks instead of steps.
 		var riser := MeshInstance3D.new()
 		var rm := BoxMesh.new()
-		rm.size = Vector3(STEP_WIDTH, STEP_RISE + 0.3, 0.3)
+		rm.size = Vector3(TREAD_CLEAR_WIDTH, STEP_RISE + 0.3, 0.3)
 		riser.mesh = rm
 		riser.material_override = dark
 		parent.add_child(riser)
@@ -458,7 +494,7 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 			medallion.rotation_degrees = Vector3(90.0, rad_to_deg(-angle), 0.0)
 
 		if i % 24 == 0:
-			_add_lantern(parent, base, angle, y)
+			_add_medieval_stair_torch(parent, base, angle, y, i)
 
 	# Diegetic instruction at the foot of the stair: it explicitly reassures the
 	# player that this is a free-walk route, not another automatic transport.
@@ -473,10 +509,10 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	var sign_angle := first_angle + 0.55
 	var wayfinding := Label3D.new()
 	wayfinding.name = "FreePassageSign"
-	wayfinding.text = "✦ Lumen Ascent ✦\nWalk freely  •  Space to jump"
+	wayfinding.text = "HIGH KEEP\nCastle stair"
 	wayfinding.font_size = 18
 	wayfinding.outline_size = 6
-	wayfinding.modulate = CIRCUIT_CYAN.lightened(0.25)
+	wayfinding.modulate = Color(0.92, 0.78, 0.54)
 	wayfinding.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	wayfinding.pixel_size = 0.0065
 	parent.add_child(wayfinding)
@@ -484,6 +520,86 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 		base.x + cos(sign_angle) * (STAIR_RADIUS + 4.2),
 		ground + 2.1,
 		base.y + sin(sign_angle) * (STAIR_RADIUS + 4.2))
+
+
+# Builds a real walkable connection from the hillside to the first spiral
+# tread. Every tread samples the terrain beneath both lane edges, extends below
+# the lowest sample, and rises no more than GROUND_ENTRY_MAX_RISE. The broad
+# buried boxes read as old castle foundations instead of floating steps.
+func _build_grounded_medieval_entry(parent: Node3D, base: Vector2,
+		first_tread_y: float, start_angle: float, light: Material,
+		dark: Material) -> void:
+	var entry := Node3D.new()
+	entry.name = "GroundedMedievalEntry"
+	parent.add_child(entry)
+	var radial := Vector3(cos(start_angle), 0.0, sin(start_angle))
+	var forward := Vector3(-sin(start_angle), 0.0, cos(start_angle))
+	var first_centre := Vector3(base.x, first_tread_y, base.y) \
+		+ radial * TREAD_CENTRE_RADIUS
+	var first_surface_y := first_tread_y + 0.17
+	var far_centre := first_centre - forward * GROUND_ENTRY_RUN
+	var far_ground := -INF
+	for lane_fraction in [-0.48, 0.0, 0.48]:
+		var lane_point: Vector3 = far_centre + radial * (TREAD_CLEAR_WIDTH * lane_fraction)
+		far_ground = maxf(far_ground, _ground_at(lane_point.x, lane_point.z))
+	var entry_surface_y := minf(first_surface_y - 0.04, far_ground + 0.08)
+	var total_rise := maxf(0.04, first_surface_y - entry_surface_y)
+	var entry_step_count := maxi(3, int(ceil(total_rise / GROUND_ENTRY_MAX_RISE)))
+	var run_per_step := GROUND_ENTRY_RUN / float(entry_step_count)
+	var tread_depth := run_per_step + 0.18
+	entry.set_meta("step_count", entry_step_count)
+	entry.set_meta("maximum_rise", total_rise / float(entry_step_count))
+	entry.set_meta("terrain_surface_y", far_ground)
+	var ramp_start := Vector3(far_centre.x, entry_surface_y - 0.11, far_centre.z)
+	var ramp_end := Vector3(first_centre.x, first_surface_y - 0.11, first_centre.z)
+	var ramp_length := ramp_start.distance_to(ramp_end) + 0.36
+	var ramp := _oriented_box(entry,
+		Vector3(TREAD_CLEAR_WIDTH - 0.10, 0.22, ramp_length),
+		ramp_start.lerp(ramp_end, 0.5), ramp_end, dark)
+	ramp.name = "GroundEntryWalkSurface"
+	_add_box_body(ramp, (ramp.mesh as BoxMesh).size)
+	ramp.visible = false
+	ramp.set_meta("collision_only", true)
+
+	for step_index in entry_step_count:
+		var progress := float(step_index + 1) / float(entry_step_count)
+		var centre := far_centre + forward * (run_per_step * (float(step_index) + 0.5))
+		var surface_y := lerpf(entry_surface_y, first_surface_y, progress)
+		var foundation_floor := surface_y - 0.25
+		for lane_fraction in [-0.52, 0.0, 0.52]:
+			for depth_fraction in [-0.5, 0.5]:
+				var sample: Vector3 = centre \
+					+ radial * (TREAD_CLEAR_WIDTH * lane_fraction) \
+					+ forward * (tread_depth * depth_fraction)
+				foundation_floor = minf(foundation_floor,
+					_ground_at(sample.x, sample.z) - 0.38)
+		var height := maxf(0.28, surface_y - foundation_floor)
+		var tread_position := Vector3(centre.x, surface_y - height * 0.5, centre.z)
+		var tread := _oriented_box(entry,
+			Vector3(TREAD_CLEAR_WIDTH, height, tread_depth),
+			tread_position, tread_position + forward,
+			light if step_index % 2 == 0 else dark)
+		tread.name = "GroundEntryStoneTread_%02d" % step_index
+		tread.set_meta("visual_only", true)
+		# A narrow oak edge makes the ground flight read as deliberately medieval
+		# while remaining visual-only and flush with the walking surface.
+		var edge_position := Vector3(centre.x, surface_y - 0.05, centre.z) \
+			+ forward * (tread_depth * 0.5 - 0.08)
+		var timber_edge := _oriented_box(entry,
+			Vector3(TREAD_CLEAR_WIDTH - 0.16, 0.10, 0.12),
+			edge_position, edge_position + forward,
+			_stone(Color(0.30, 0.17, 0.08)))
+		timber_edge.name = "GroundEntryTimberEdge_%02d" % step_index
+
+	# Paired stone newels frame the first step without narrowing the route.
+	for side_sign in [-1.0, 1.0]:
+		var post_centre: Vector3 = far_centre + radial * side_sign * (TREAD_CLEAR_WIDTH * 0.5 + 0.34)
+		var post_ground := _ground_at(post_centre.x, post_centre.z)
+		var post_position := Vector3(post_centre.x, post_ground + 0.66, post_centre.z)
+		var post := _oriented_box(entry, Vector3(0.52, 1.45, 0.52),
+			post_position, post_position + forward, dark)
+		post.name = "GroundEntryStoneNewel_%s" % ("Left" if side_sign < 0.0 else "Right")
+	entry.set_meta("walkable_from_terrain", true)
 
 
 # The old safety rail was one box per tread. Even with overlap, more than a
@@ -508,24 +624,32 @@ func _build_continuous_ascent(parent: Node3D, base: Vector2, ground: float,
 	# and outer faces are intentionally not part of collision because a capsule
 	# travelling around a curve can catch those segmented boundary faces.
 	var roadbed := _helix_band_mesh(base, ground, top_y, start_angle,
-		inner_edge + 0.12, outer_edge - 0.12, -0.58, -0.12)
+		TREAD_INNER_RADIUS, TREAD_OUTER_RADIUS, -0.58, -0.12)
 	_add_helix_part(parent, "AscentRoadbed", roadbed, dark, false)
 	var walk_surface := _helix_walk_surface_mesh(base, ground, top_y, start_angle,
-		inner_edge + 0.05, outer_edge - 0.05, 0.15)
+		TREAD_INNER_RADIUS, TREAD_OUTER_RADIUS, 0.15)
 	_add_helix_part(parent, "AscentWalkSurface", walk_surface, dark, true)
 
 	var outer_guard := _helix_band_mesh(base, ground, top_y, start_angle,
-		outer_edge - 0.24, outer_edge + 0.24, 0.06, 1.40, 0.985)
-	_add_helix_part(parent, "OuterContinuousGuard", outer_guard, light, true)
+		outer_edge - OUTER_GUARD_HALF_WIDTH,
+		outer_edge + OUTER_GUARD_HALF_WIDTH, -0.62, 1.40, 1.0,
+		GUARD_ENTRY_LEAD_T)
+	var outer_guard_part := _add_helix_part(parent, "OuterContinuousGuard",
+		outer_guard, light, true)
+	outer_guard_part.set_meta("bottom_offset", -0.62)
 	var outer_cap := _helix_band_mesh(base, ground, top_y, start_angle,
-		outer_edge - 0.16, outer_edge + 0.16, 1.40, 1.56, 0.985)
+		outer_edge - 0.16, outer_edge + 0.16, 1.40, 1.56, 1.0,
+		GUARD_ENTRY_LEAD_T)
 	_add_helix_part(parent, "OuterContinuousCap", outer_cap, brass, false)
 
 	var inner_guard := _helix_band_mesh(base, ground, top_y, start_angle,
-		inner_edge - 0.22, inner_edge + 0.22, 0.06, 1.28, 0.985)
+		inner_edge - INNER_GUARD_HALF_WIDTH,
+		inner_edge + INNER_GUARD_HALF_WIDTH, 0.06, 1.28, 1.0,
+		GUARD_ENTRY_LEAD_T)
 	_add_helix_part(parent, "InnerContinuousGuard", inner_guard, dark, true)
 	var inner_cap := _helix_band_mesh(base, ground, top_y, start_angle,
-		inner_edge - 0.14, inner_edge + 0.14, 1.28, 1.43, 0.985)
+		inner_edge - 0.14, inner_edge + 0.14, 1.28, 1.43, 1.0,
+		GUARD_ENTRY_LEAD_T)
 	_add_helix_part(parent, "InnerContinuousCap", inner_cap, brass, false)
 
 	# Close the narrow service slot behind the inner guard. The tower collider is
@@ -537,23 +661,174 @@ func _build_continuous_ascent(parent: Node3D, base: Vector2, ground: float,
 	# architecture and giving any over-jumping player a broad surface from which
 	# they can step or jump safely back onto the stair.
 	var inner_plinth := _helix_band_mesh(base, ground, top_y, start_angle,
-		TOWER_TOP_RADIUS - 0.05, inner_edge + 0.02, -0.05, 1.05, 0.985)
+		TOWER_TOP_RADIUS - 0.05, inner_edge + 0.02, -0.05, 1.05, 0.96,
+		GUARD_ENTRY_LEAD_T)
 	_add_helix_part(parent, "InnerSafetyPlinth", inner_plinth, dark, true)
+
+	var entry_foundation_mesh := _terrain_fitted_entry_foundation_mesh(base,
+		ground, top_y, start_angle, TOWER_BOTTOM_RADIUS - 0.05,
+		outer_edge + OUTER_GUARD_HALF_WIDTH)
+	var entry_foundation := _add_helix_part(parent,
+		"TerrainFittedEntryFoundation", entry_foundation_mesh, light, true)
+	entry_foundation.set_meta("terrain_fitted", true)
+	entry_foundation.set_meta("foundation_end_t", ENTRY_FOUNDATION_END_T)
+
+	_build_low_poly_stair_growth(parent, base, ground, top_y, start_angle,
+		outer_edge)
+
+
+# Closed low-poly wedge under the first flight. Every bottom corner samples the
+# terrain independently, so a hillside that slopes across the stair width can
+# never leave the broad floating gap produced by one centre-point datum.
+func _terrain_fitted_entry_foundation_mesh(base: Vector2, ground: float,
+		top_y: float, start_angle: float, inner_radius: float,
+		outer_radius: float) -> ArrayMesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	const SAMPLES := 28
+	# Use the lowest measured terrain point as one buried datum. Independent
+	# bottoms can interpolate over a small hollow and expose a daylight seam even
+	# though both sampled endpoints touch soil.
+	var foundation_floor := ground
+	for floor_index in SAMPLES + 1:
+		var floor_t := lerpf(GUARD_ENTRY_LEAD_T, ENTRY_FOUNDATION_END_T,
+			float(floor_index) / float(SAMPLES))
+		var floor_angle := start_angle + floor_t * TAU * TURNS
+		for floor_radius_value in [inner_radius, outer_radius]:
+			var floor_radius: float = float(floor_radius_value)
+			var floor_x: float = base.x + cos(floor_angle) * floor_radius
+			var floor_z: float = base.y + sin(floor_angle) * floor_radius
+			foundation_floor = minf(foundation_floor, _ground_at(floor_x, floor_z))
+	foundation_floor -= 0.35
+	for sample_index in SAMPLES:
+		var t0 := lerpf(GUARD_ENTRY_LEAD_T, ENTRY_FOUNDATION_END_T,
+			float(sample_index) / float(SAMPLES))
+		var t1 := lerpf(GUARD_ENTRY_LEAD_T, ENTRY_FOUNDATION_END_T,
+			float(sample_index + 1) / float(SAMPLES))
+		var corners0 := _terrain_foundation_cross_section(base, ground, top_y,
+			start_angle, inner_radius, outer_radius, t0, foundation_floor)
+		var corners1 := _terrain_foundation_cross_section(base, ground, top_y,
+			start_angle, inner_radius, outer_radius, t1, foundation_floor)
+		var i0t: Vector3 = corners0[0]
+		var o0t: Vector3 = corners0[1]
+		var i0b: Vector3 = corners0[2]
+		var o0b: Vector3 = corners0[3]
+		var i1t: Vector3 = corners1[0]
+		var o1t: Vector3 = corners1[1]
+		var i1b: Vector3 = corners1[2]
+		var o1b: Vector3 = corners1[3]
+		_add_surface_quad(surface, i0t, i1t, o1t, o0t)
+		_add_surface_quad(surface, i0b, o0b, o1b, i1b)
+		_add_surface_quad(surface, o0b, o0t, o1t, o1b)
+		_add_surface_quad(surface, i0b, i1b, i1t, i0t)
+		if sample_index == 0:
+			_add_surface_quad(surface, i0b, i0t, o0t, o0b)
+		if sample_index == SAMPLES - 1:
+			_add_surface_quad(surface, i1b, o1b, o1t, i1t)
+	surface.generate_normals()
+	return surface.commit()
+
+
+func _terrain_foundation_cross_section(base: Vector2, ground: float,
+		top_y: float, start_angle: float, inner_radius: float,
+		outer_radius: float, t: float, foundation_floor: float) -> Array[Vector3]:
+	var clamped_t := maxf(t, 0.0)
+	var angle := start_angle + t * TAU * TURNS
+	var inner_xz := Vector2(base.x + cos(angle) * inner_radius,
+		base.y + sin(angle) * inner_radius)
+	var outer_xz := Vector2(base.x + cos(angle) * outer_radius,
+		base.y + sin(angle) * outer_radius)
+	var stair_underside := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET,
+		top_y, clamped_t) - 0.58
+	var inner_bottom := foundation_floor
+	var outer_bottom := foundation_floor
+	# The buried start can sit above the mathematical stair underside on a steep
+	# patch. Collapse that cross-section into the ground instead of inverting it.
+	var inner_top := maxf(stair_underside, inner_bottom + 0.03)
+	var outer_top := maxf(stair_underside, outer_bottom + 0.03)
+	return [
+		Vector3(inner_xz.x, inner_top, inner_xz.y),
+		Vector3(outer_xz.x, outer_top, outer_xz.y),
+		Vector3(inner_xz.x, inner_bottom, inner_xz.y),
+		Vector3(outer_xz.x, outer_bottom, outer_xz.y),
+	]
+
+
+# Visual-only low-poly tree fibres reclaim the outside of the castle ascent.
+# They sit beyond the outer guard's finished face, so no branch, leaf or hidden
+# collider can enter the player's stair lane.
+func _build_low_poly_stair_growth(parent: Node3D, base: Vector2, ground: float,
+		top_y: float, start_angle: float, outer_edge: float) -> void:
+	var growth := Node3D.new()
+	growth.name = "LowPolyStairGrowth"
+	parent.add_child(growth)
+	var bark := _stone(Color(0.30, 0.19, 0.08))
+	var young_bark := _stone(Color(0.22, 0.34, 0.10))
+	var leaf_green := _stone(Color(0.24, 0.52, 0.12))
+	var leaf_light := _stone(Color(0.42, 0.67, 0.18))
+	const FIBRE_COUNT := 2
+	const FIBRE_SEGMENTS := 44
+	# Straight low-poly chords cut slightly inward between points on a curve.
+	# This offset includes that chord depth, keeping the complete fibre visible
+	# above the curved outer face instead of burying its middle in the masonry.
+	var fibre_radius := outer_edge + OUTER_GUARD_HALF_WIDTH + 0.34
+	for fibre_index in FIBRE_COUNT:
+		var phase := float(fibre_index) * PI
+		for segment_index in FIBRE_SEGMENTS:
+			var t0 := lerpf(-0.02, 1.0,
+				float(segment_index) / float(FIBRE_SEGMENTS))
+			var t1 := lerpf(-0.02, 1.0,
+				float(segment_index + 1) / float(FIBRE_SEGMENTS))
+			var point0 := _stair_growth_point(base, ground, top_y, start_angle,
+				fibre_radius + float(fibre_index) * 0.07, t0, phase)
+			var point1 := _stair_growth_point(base, ground, top_y, start_angle,
+				fibre_radius + float(fibre_index) * 0.07, t1, phase)
+			var fibre := _visual_chord(growth, point0, point1,
+				0.16 if fibre_index == 0 else 0.12,
+				bark if fibre_index == 0 else young_bark)
+			fibre.name = "StairTreeFiber_%d_%02d" % [fibre_index, segment_index]
+
+			if segment_index % 5 == 2:
+				var leaf := MeshInstance3D.new()
+				leaf.name = "StairTreeLeaf_%d_%02d" % [fibre_index, segment_index]
+				var leaf_mesh := PrismMesh.new()
+				leaf_mesh.size = Vector3(0.44, 0.70, 0.16)
+				leaf.mesh = leaf_mesh
+				leaf.material_override = leaf_green if (
+					segment_index + fibre_index) % 2 == 0 else leaf_light
+				growth.add_child(leaf)
+				var middle := point0.lerp(point1, 0.5)
+				var radial := Vector3(middle.x - base.x, 0.0,
+					middle.z - base.y).normalized()
+				leaf.global_position = middle + radial * 0.28 + Vector3.UP * 0.12
+				leaf.look_at(leaf.global_position + radial, Vector3.UP)
+				leaf.rotation.z += deg_to_rad(-24.0 if fibre_index == 0 else 24.0)
+
+
+func _stair_growth_point(base: Vector2, ground: float, top_y: float,
+		start_angle: float, radius: float, t: float, phase: float) -> Vector3:
+	var clamped_t := maxf(t, 0.0)
+	var angle := start_angle + t * TAU * TURNS
+	var stair_y := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, clamped_t)
+	var weave_height := 0.48 + sin(t * TAU * 5.0 + phase) * 0.27
+	return Vector3(base.x + cos(angle) * radius, stair_y + weave_height,
+		base.y + sin(angle) * radius)
 
 
 func _helix_band_mesh(base: Vector2, ground: float, top_y: float,
 		start_angle: float, inner_radius: float, outer_radius: float,
-		bottom_offset: float, top_offset: float, end_t: float = 1.0) -> ArrayMesh:
+		bottom_offset: float, top_offset: float, end_t: float = 1.0,
+		start_t: float = 0.0) -> ArrayMesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var samples := maxi(_step_count, 48)
 	for i in samples:
-		var t0 := end_t * float(i) / float(samples)
-		var t1 := end_t * float(i + 1) / float(samples)
+		var t0 := lerpf(start_t, end_t, float(i) / float(samples))
+		var t1 := lerpf(start_t, end_t, float(i + 1) / float(samples))
 		var a0 := start_angle + t0 * TAU * TURNS
 		var a1 := start_angle + t1 * TAU * TURNS
-		var y0 := lerpf(ground + 0.4, top_y, t0)
-		var y1 := lerpf(ground + 0.4, top_y, t1)
+		var y0 := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, maxf(t0, 0.0))
+		var y1 := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, maxf(t1, 0.0))
 
 		var i0b := Vector3(base.x + cos(a0) * inner_radius,
 			y0 + bottom_offset, base.y + sin(a0) * inner_radius)
@@ -596,8 +871,8 @@ func _helix_walk_surface_mesh(base: Vector2, ground: float, top_y: float,
 		var t1 := float(i + 1) / float(samples)
 		var a0 := start_angle + t0 * TAU * TURNS
 		var a1 := start_angle + t1 * TAU * TURNS
-		var y0 := lerpf(ground + 0.4, top_y, t0) + top_offset
-		var y1 := lerpf(ground + 0.4, top_y, t1) + top_offset
+		var y0 := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, t0) + top_offset
+		var y1 := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, t1) + top_offset
 		var i0 := Vector3(base.x + cos(a0) * inner_radius, y0,
 			base.y + sin(a0) * inner_radius)
 		var o0 := Vector3(base.x + cos(a0) * outer_radius, y0,
@@ -622,6 +897,38 @@ func _add_surface_quad(surface: SurfaceTool, a: Vector3, b: Vector3,
 	surface.add_vertex(a)
 	surface.add_vertex(c)
 	surface.add_vertex(d)
+
+
+func _tapered_landing_mesh(length: float, outer_width: float,
+		inner_width: float, height: float) -> ArrayMesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var half_length := length * 0.5
+	var half_height := height * 0.5
+	# Local +X points toward the spiral's outer edge after look_at(); local Z is
+	# the walking direction. Wider outer corners overlap the final tread, while
+	# the narrow inner pair disappear cleanly into the crown floor.
+	var outer_left := Vector3(half_length, half_height, -outer_width * 0.5)
+	var outer_right := Vector3(half_length, half_height, outer_width * 0.5)
+	var inner_left := Vector3(-half_length, half_height, -inner_width * 0.5)
+	var inner_right := Vector3(-half_length, half_height, inner_width * 0.5)
+	var outer_left_bottom := Vector3(outer_left.x, -half_height, outer_left.z)
+	var outer_right_bottom := Vector3(outer_right.x, -half_height, outer_right.z)
+	var inner_left_bottom := Vector3(inner_left.x, -half_height, inner_left.z)
+	var inner_right_bottom := Vector3(inner_right.x, -half_height, inner_right.z)
+	_add_surface_quad(surface, outer_left, inner_left, inner_right, outer_right)
+	_add_surface_quad(surface, outer_left_bottom, outer_right_bottom,
+		inner_right_bottom, inner_left_bottom)
+	_add_surface_quad(surface, outer_left_bottom, inner_left_bottom,
+		inner_left, outer_left)
+	_add_surface_quad(surface, outer_right, inner_right,
+		inner_right_bottom, outer_right_bottom)
+	_add_surface_quad(surface, outer_left_bottom, outer_left,
+		outer_right, outer_right_bottom)
+	_add_surface_quad(surface, inner_left, inner_left_bottom,
+		inner_right_bottom, inner_right)
+	surface.generate_normals()
+	return surface.commit() as ArrayMesh
 
 
 func _add_helix_part(parent: Node3D, part_name: String, mesh: ArrayMesh,
@@ -780,7 +1087,7 @@ func _build_entry_apron(parent: Node3D, entry_pos: Vector3, angle: float,
 # dominated the castle approach and made the crown read as a floating plaza;
 # this still fully supports the player while keeping the tower silhouette.
 const LANDING_RADIUS := 8.4
-const CROWN_SLAB_HEIGHT := 0.7
+const CROWN_SLAB_HEIGHT := 0.42
 # `top_y` is the centre of the final 0.34 m spiral tread, so its walkable
 # surface is 0.17 m higher. Keep the crown's finished floor on that same datum;
 # the former `top_y + 0.5` slab centre put its surface 0.68 m above the last
@@ -908,6 +1215,11 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 		sin(stair_end_angle))
 	var stair_end_tangent := Vector3(-stair_end_radial.z, 0.0,
 		stair_end_radial.x)
+	# Keep one simple collider for reliable high-speed movement, but do not render
+	# that oversized rectangle. Its old 4.0 m tangential width projected far past
+	# the 3.46 m stair lane and was the loose block visible over the final steps.
+	# Keep a generous invisible collider under the fitted landing so players remain
+	# supported while entering from either side of the curved final tread.
 	var handoff_size := Vector3(4.9, 0.28, 4.0)
 	var handoff_centre := Vector3(base.x, crown_surface_y - 0.14, base.y) \
 		+ stair_end_radial * 5.7 + stair_end_tangent * 2.0
@@ -915,6 +1227,26 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 		handoff_centre + stair_end_tangent, deck_material)
 	handoff.name = "CrownStairHandoff"
 	_add_box_body(handoff, handoff_size)
+	handoff.visible = false
+	handoff.set_meta("collision_only", true)
+
+	# A tapered masonry tongue now owns the visible transition. Its broad end
+	# matches the final tread while the inner end narrows into the crown floor,
+	# so the join reads as a deliberate landing instead of a rotated box dropped
+	# across the stairwell. The hidden box above remains the gameplay authority.
+	var handoff_visual := MeshInstance3D.new()
+	handoff_visual.name = "MedievalCrownStairLanding"
+	handoff_visual.mesh = _tapered_landing_mesh(4.9,
+		TREAD_CLEAR_WIDTH + 0.10, TREAD_CLEAR_WIDTH - 0.52, 0.18)
+	var handoff_material := deck_material.duplicate() as StandardMaterial3D
+	handoff_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	handoff_visual.material_override = handoff_material
+	parent.add_child(handoff_visual)
+	handoff_visual.global_position = Vector3(handoff_centre.x,
+		crown_surface_y - 0.09, handoff_centre.z)
+	handoff_visual.look_at(handoff_visual.global_position + stair_end_tangent,
+		Vector3.UP)
+	handoff_visual.set_meta("visual_role", "fitted_spiral_to_crown_transition")
 	_build_crown_arrival_court(parent, base, crown_surface_y, stair_end_radial,
 		stair_end_tangent, deck_material, brass, cyan, violet)
 
@@ -1052,6 +1384,72 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	flag.material_override = red
 	parent.add_child(flag)
 	flag.global_position = pole.global_position + Vector3(0.8, 1.0, 0.0)
+	_build_medieval_ballista(parent, base, crown_surface_y, gate_dir,
+		stair_end_radial)
+
+
+# A defensive ballista gives the stair tower a believable medieval purpose.
+# It is mounted above the floor on the parapet side and intentionally has no
+# collision: the complete crown remains safe to walk even if a player presses
+# against the display.
+func _build_medieval_ballista(parent: Node3D, base: Vector2,
+		surface_y: float, gate_dir: Vector3, stair_dir: Vector3) -> void:
+	var weapon := Node3D.new()
+	weapon.name = "MedievalBallista"
+	parent.add_child(weapon)
+	var outward := (gate_dir + stair_dir).normalized()
+	if outward.length_squared() < 0.5:
+		outward = Vector3(0.0, 0.0, -1.0)
+	var side := Vector3(-outward.z, 0.0, outward.x)
+	var origin := Vector3(base.x, surface_y, base.y) - outward * 4.25
+	var stone := _stone(STONE_DARK)
+	var oak := _stone(Color(0.31, 0.18, 0.08))
+	var iron := _metal(Color(0.12, 0.13, 0.15))
+	var rope := _stone(Color(0.53, 0.39, 0.19))
+
+	var pedestal_position := origin + Vector3.UP * 0.39
+	var pedestal := _oriented_box(weapon, Vector3(2.5, 0.78, 2.25),
+		pedestal_position, pedestal_position + outward, stone)
+	pedestal.name = "BallistaStonePedestal"
+	var turntable := MeshInstance3D.new()
+	turntable.name = "BallistaIronTurntable"
+	var turntable_mesh := CylinderMesh.new()
+	turntable_mesh.top_radius = 0.92
+	turntable_mesh.bottom_radius = 1.02
+	turntable_mesh.height = 0.22
+	turntable_mesh.radial_segments = 10
+	turntable.mesh = turntable_mesh
+	turntable.material_override = iron
+	weapon.add_child(turntable)
+	turntable.global_position = origin + Vector3.UP * 0.89
+
+	var stock_start := origin + Vector3.UP * 1.18 - outward * 0.95
+	var stock_end := origin + Vector3.UP * 1.42 + outward * 1.75
+	var stock := _visual_chord(weapon, stock_start, stock_end, 0.34, oak)
+	stock.name = "BallistaWoodStock"
+	var bow_centre := origin + Vector3.UP * 1.45 + outward * 0.72
+	for arm_sign in [-1.0, 1.0]:
+		var arm_end: Vector3 = bow_centre + side * arm_sign * 2.0 \
+			- outward * 0.28 + Vector3.UP * 0.18
+		var arm := _visual_chord(weapon, bow_centre, arm_end, 0.22, oak)
+		arm.name = "BallistaWoodArm_%s" % ("Left" if arm_sign < 0.0 else "Right")
+		var cord := _visual_chord(weapon, arm_end, stock_start + Vector3.UP * 0.12,
+			0.055, rope)
+		cord.name = "BallistaRope_%s" % ("Left" if arm_sign < 0.0 else "Right")
+	var bolt := _visual_chord(weapon, stock_start + Vector3.UP * 0.24,
+		stock_end + outward * 0.85 + Vector3.UP * 0.24, 0.09, iron)
+	bolt.name = "BallistaIronBolt"
+	var bolt_head := MeshInstance3D.new()
+	bolt_head.name = "BallistaIronBoltHead"
+	var head_mesh := PrismMesh.new()
+	head_mesh.size = Vector3(0.30, 0.52, 0.30)
+	bolt_head.mesh = head_mesh
+	bolt_head.material_override = iron
+	weapon.add_child(bolt_head)
+	bolt_head.global_position = stock_end + outward * 0.98 + Vector3.UP * 0.24
+	bolt_head.look_at(bolt_head.global_position + outward, Vector3.UP)
+	weapon.set_meta("visual_only", true)
+	weapon.set_meta("clear_walkable_crown", true)
 
 
 # A proper arrival room at the top of the spiral. The earlier crown was a
@@ -1460,6 +1858,7 @@ func _build_bridge(parent: Node3D, base: Vector2, top_y: float) -> void:
 		var t := (float(i) + 0.5) / float(BRIDGE_SEGMENTS)
 		var p := start.lerp(target, t)
 		var plank := MeshInstance3D.new()
+		plank.name = "LumenBridgeSurfacePlank_%02d" % i
 		var mesh := BoxMesh.new()
 		mesh.size = Vector3(BRIDGE_WIDTH, 0.38, segment_length + 0.22)
 		plank.mesh = mesh
@@ -1478,8 +1877,9 @@ func _build_bridge(parent: Node3D, base: Vector2, top_y: float) -> void:
 		# fusion in one detail. Both pieces stay within BRIDGE_FLUSH_INLAY of the
 		# plank surface, so this is an inlay the player walks straight over.
 		var conduit_pos := p + Vector3(0.0, 0.41 + BRIDGE_FLUSH_INLAY, 0.0)
-		_oriented_box(parent, Vector3(0.62, 0.08, segment_length + 0.24),
-			conduit_pos, target, brass)
+		var conduit := _oriented_box(parent,
+			Vector3(0.62, 0.08, segment_length + 0.24), conduit_pos, target, brass)
+		conduit.name = "LumenBridgeConduit_%02d" % i
 		var conductor := _oriented_box(parent, Vector3(0.34, 0.10, segment_length + 0.26),
 			conduit_pos + Vector3(0.0, 0.01, 0.0), target, cyan)
 		conductor.name = "LumenCenterConductor_%02d" % i
@@ -1499,8 +1899,10 @@ func _build_bridge(parent: Node3D, base: Vector2, top_y: float) -> void:
 
 			# A brass collar where each rib meets the deck: the machined half of
 			# the vocabulary, worked into the masonry rather than bolted beside it.
-			_oriented_box(parent, Vector3(BRIDGE_WIDTH * 0.68, 0.16, 0.66),
+			var collar := _oriented_box(parent,
+				Vector3(BRIDGE_WIDTH * 0.68, 0.16, 0.66),
 				p - Vector3(0.0, 0.3, 0.0), target, brass)
+			collar.name = "AetherTensionCollar_%d" % int(i / 4)
 
 			# Aether lamp on alternating sides, so the causeway is lit at night
 			# and the ribs are readable from below.
@@ -1931,6 +2333,50 @@ func _oriented_box(parent: Node3D, size: Vector3, position: Vector3,
 	part.global_position = position
 	part.look_at(target, Vector3.UP)
 	return part
+
+
+func _add_medieval_stair_torch(parent: Node3D, base: Vector2, angle: float,
+		y: float, index: int) -> void:
+	var torch := Node3D.new()
+	torch.name = "MedievalStairTorch_%03d" % index
+	parent.add_child(torch)
+	var radial := Vector3(cos(angle), 0.0, sin(angle))
+	var tangent := Vector3(-radial.z, 0.0, radial.x)
+	var anchor := Vector3(base.x, y, base.y) \
+		+ radial * (STAIR_RADIUS + STEP_WIDTH * 0.5 + 0.34)
+	var oak := _stone(Color(0.29, 0.16, 0.07))
+	var iron := _metal(Color(0.11, 0.12, 0.14))
+	var flame_material := StandardMaterial3D.new()
+	flame_material.albedo_color = Color(1.0, 0.48, 0.08)
+	flame_material.emission_enabled = true
+	flame_material.emission = Color(1.0, 0.19, 0.025)
+	flame_material.emission_energy_multiplier = 2.2
+
+	var bracket := _visual_chord(torch,
+		anchor + radial * 0.02 + Vector3.UP * 0.56,
+		anchor + radial * 0.58 + Vector3.UP * 0.92, 0.13, oak)
+	bracket.name = "TorchWoodBracket"
+	var basket := MeshInstance3D.new()
+	basket.name = "TorchIronBasket"
+	var basket_mesh := CylinderMesh.new()
+	basket_mesh.top_radius = 0.27
+	basket_mesh.bottom_radius = 0.18
+	basket_mesh.height = 0.34
+	basket_mesh.radial_segments = 6
+	basket.mesh = basket_mesh
+	basket.material_override = iron
+	torch.add_child(basket)
+	basket.global_position = anchor + radial * 0.62 + Vector3.UP * 1.06
+	var flame := MeshInstance3D.new()
+	flame.name = "TorchFlame"
+	var flame_mesh := PrismMesh.new()
+	flame_mesh.size = Vector3(0.30, 0.72, 0.30)
+	flame.mesh = flame_mesh
+	flame.material_override = flame_material
+	torch.add_child(flame)
+	flame.global_position = basket.global_position + Vector3.UP * 0.47
+	flame.rotation.y = atan2(tangent.z, tangent.x)
+	torch.set_meta("visual_only", true)
 
 
 func _add_lantern(parent: Node3D, base: Vector2, angle: float, y: float) -> void:

@@ -1,8 +1,8 @@
-# Vercel pack splitting (not currently wired up)
+# Vercel pack splitting
 
-Kept for reference. Nothing in the project references these files — the Web
-export preset points at `res://web_export_shell.html` and `html/head_include`
-is empty.
+The Web export preset injects `pck-loader.js` into
+`res://web_export_shell.html`, and `export_web.sh` copies the loader beside the
+split pack before deployment.
 
 ## What this was for
 
@@ -21,23 +21,15 @@ not be deployed as-is. These three files worked around it:
   with a retry button. Superseded: `Engine.getMissingFeatures()` in the current
   shell covers the same detection more correctly, including WebAssembly.
 
-## Restoring it
+## Configuration
 
-If web deployment moves back to Vercel, or to any host with a per-file size cap:
-
-1. Move `pck-loader.js` back to `artea/web/pck-loader.js`.
-2. Set `html/head_include="<script src=\"pck-loader.js\"></script>"` in the Web
-   preset in `export_presets.cfg`.
-3. Use `export_web.sh` instead of a plain `--export-release Web`. It copies the
-   loader into the build directory and does the splitting.
+Use `export_web.sh` instead of a plain `--export-release Web`. It exports from
+the project root, copies the colocated loader into the build directory, and
+does the splitting.
 
 The loader and the current shell do not conflict — the loader only intercepts
 `index.pck` and is inert for every other request. Keeping the shell as-is and
 restoring only the loader plus the export script is the smaller change.
 
-## Why it is parked
-
-The project moved to `web_export_shell.html` to stay aligned with the
-`web-compatibility` branch and avoid maintaining two shells. That shell has no
-pack splitting, so a Vercel deploy would fail on the 100 MB cap until the loader
-is restored. Local serving and hosts without a per-file cap need none of this.
+The current `web_export_shell.html` remains the single maintained shell; the
+head include adds only the bounded fetch shim needed by Vercel's file limit.

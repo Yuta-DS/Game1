@@ -46,10 +46,6 @@ func _ready() -> void:
 	_castle_start_position = _castle.position
 	_brighten_castle_materials(_castle)
 	_build_castle_foundation()
-	_build_high_aether_facade()
-	_build_astral_observatory_crown()
-	_build_reference_astral_machine()
-	_build_citadel_rig()
 	_build_skyway()
 	apply_stage(_current_stage())
 
@@ -109,9 +105,11 @@ func is_vibrant() -> bool:
 
 # --- Citadel ---------------------------------------------------------
 
-# The imported castle previously hovered as a bare building with open sky under
-# its floor. This low-poly rock/engine island gives it physical weight, a future
-# gallery plaza, and compact levitation anchors beneath its rock island.
+# The imported castle previously hovered above a tapered rock island with
+# dangling levitation anchors. A single giant living tree now carries the full
+# silhouette from the ground into the castle floor: its trunk is the vertical
+# load path, its upper roots cradle the foundation, and its ground roots make
+# the support feel grown rather than suspended.
 func _build_castle_foundation() -> void:
 	_foundation = Node3D.new()
 	_foundation.name = "CastleFoundation"
@@ -120,39 +118,7 @@ func _build_castle_foundation() -> void:
 		_castle.position.z)
 	_foundation_start_y = _foundation.position.y
 
-	var rock_material := StandardMaterial3D.new()
-	rock_material.albedo_color = Color(0.30, 0.34, 0.42)
-	rock_material.roughness = 0.92
-	rock_material.emission_enabled = true
-	rock_material.emission = Color(0.12, 0.15, 0.21)
-	rock_material.emission_energy_multiplier = 0.08
-
-	# A floating citadel needs a readable load path. The previous compressed
-	# sphere looked like a smooth purple capsule and made the castle appear to
-	# sit on a placeholder primitive. Two low-poly tapered masses create a broad
-	# inhabited shelf, a rocky keel, and a silhouette that reads at village scale.
-	var island := MeshInstance3D.new()
-	island.name = "CitadelRockShelf"
-	var island_mesh := CylinderMesh.new()
-	island_mesh.top_radius = 16.5
-	island_mesh.bottom_radius = 8.2
-	island_mesh.height = 11.0
-	island_mesh.radial_segments = 12
-	island.mesh = island_mesh
-	island.material_override = rock_material
-	_foundation.add_child(island)
-
-	var keel := MeshInstance3D.new()
-	keel.name = "CitadelRockKeel"
-	var keel_mesh := CylinderMesh.new()
-	keel_mesh.top_radius = 8.2
-	keel_mesh.bottom_radius = 1.8
-	keel_mesh.height = 8.5
-	keel_mesh.radial_segments = 10
-	keel.mesh = keel_mesh
-	keel.position.y = -9.5
-	keel.material_override = rock_material
-	_foundation.add_child(keel)
+	_build_giant_tree_foundation()
 
 	# The raised citadel's entry is a deliberate open sector, not a solid disc
 	# that cuts across the final stair. These three support decks preserve safe
@@ -174,6 +140,7 @@ func _build_castle_foundation() -> void:
 	_foundation.add_child(gallery_anchor)
 
 	var plaza := MeshInstance3D.new()
+	plaza.name = "GalleryFoundationPlaza"
 	var plaza_mesh := CylinderMesh.new()
 	plaza_mesh.top_radius = 7.0
 	plaza_mesh.bottom_radius = 7.6
@@ -184,40 +151,9 @@ func _build_castle_foundation() -> void:
 	plaza.material_override = _ink_material()
 	_foundation.add_child(plaza)
 
-	# Compact floating anchors replace the former 25–35 m cylinders beneath the
-	# castle. Those read as canopy pipes from ground level and visually tangled
-	# with the stair. Faceted shards and calibration rings retain the magitech
-	# explanation without placing any tall vertical geometry near the doorway.
 	_foundation.set_meta("pipe_free_foundation", true)
-	var anchor_glow := _glow_material(STAGE_COLOURS[0])
-	for i in 5:
-		var angle := TAU * float(i) / 5.0 + 0.35
-		var anchor := Node3D.new()
-		anchor.name = "FloatingFoundationAnchor_%d" % (i + 1)
-		anchor.position = Vector3(cos(angle) * (8.0 + float(i % 2) * 1.8),
-			-7.0 - float(i % 2) * 1.1,
-			sin(angle) * (6.5 + float((i + 1) % 2) * 1.8))
-		_foundation.add_child(anchor)
-
-		var shard := MeshInstance3D.new()
-		var shard_mesh := SphereMesh.new()
-		shard_mesh.radius = 1.0
-		shard_mesh.height = 3.2
-		shard_mesh.radial_segments = 6
-		shard_mesh.rings = 3
-		shard.mesh = shard_mesh
-		shard.material_override = rock_material if i % 2 else anchor_glow
-		shard.rotation_degrees = Vector3(8.0 * sin(angle), rad_to_deg(angle), 12.0 * cos(angle))
-		shard.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		anchor.add_child(shard)
-
-		var ring := MeshInstance3D.new()
-		ring.mesh = _torus(1.18, 1.42)
-		ring.rotation_degrees.x = 90.0
-		ring.material_override = _brass_material()
-		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		anchor.add_child(ring)
-		_rotors.append(ring)
+	_foundation.set_meta("foundation_style", "giant_living_tree")
+	_foundation.set_meta("floating_undercarriage_removed", true)
 
 	_castle_fill = OmniLight3D.new()
 	_castle_fill.name = "CastleDetailFill"
@@ -228,6 +164,453 @@ func _build_castle_foundation() -> void:
 	_castle_fill.omni_attenuation = 1.25
 	_castle_fill.shadow_enabled = false
 	_foundation.add_child(_castle_fill)
+
+
+func _build_giant_tree_foundation() -> void:
+	var tree := Node3D.new()
+	tree.name = "GiantTreeFoundation"
+	tree.set_meta("supports_castle_foundation", true)
+	tree.set_meta("grounded_root_system", true)
+	tree.set_meta("visual_style", "curved_low_poly_living_bark_with_fibres_and_leaves")
+	tree.set_meta("supported_areas", ["castle_core", "gallery_block", "crystal_block"])
+	_foundation.add_child(tree)
+
+	var bark := StandardMaterial3D.new()
+	bark.albedo_color = Color("76502f")
+	bark.roughness = 0.96
+	var bark_light := bark.duplicate() as StandardMaterial3D
+	bark_light.albedo_color = Color("9a6b3d")
+	var bark_shadow := bark.duplicate() as StandardMaterial3D
+	bark_shadow.albedo_color = Color("4b3426")
+	var moss := StandardMaterial3D.new()
+	moss.albedo_color = Color("4f8c3c")
+	moss.roughness = 1.0
+	var vine := StandardMaterial3D.new()
+	vine.albedo_color = Color("315e32")
+	vine.roughness = 0.94
+	var leaf_green := StandardMaterial3D.new()
+	leaf_green.albedo_color = Color("4f963f")
+	leaf_green.roughness = 0.88
+	var leaf_olive := leaf_green.duplicate() as StandardMaterial3D
+	leaf_olive.albedo_color = Color("789b42")
+
+	# One centred, gently bending tube now replaces the old straight cylinder.
+	# Its lowest ring meets the hub terrain and its crown reaches the castle
+	# underside, keeping the entire load path visible from the low player camera.
+	var trunk_points: Array[Vector3] = [
+		Vector3(0.0, -49.0, 0.0), Vector3(-0.8, -39.0, 0.5),
+		Vector3(0.9, -28.0, -0.8), Vector3(-0.5, -17.0, 0.7),
+		Vector3(0.0, -7.0, 0.0),
+	]
+	var trunk := _add_curved_root(tree, "TreeTrunkCore", trunk_points,
+		PackedFloat32Array([10.8, 10.3, 9.1, 7.7, 6.2]), bark, 10)
+	trunk.set_meta("load_path", "ground_to_castle")
+
+	# Thick old-growth flutes fuse visually into the core. Their slow spiral and
+	# alternating bark values produce the layered wood grain from the approved
+	# concept while keeping one coherent trunk silhouette.
+	for flute_index in 6:
+		var flute_points := _spiral_offset_curve(trunk_points, 6.7,
+			TAU * float(flute_index) / 6.0 + 0.12, 0.34)
+		var flute := _add_curved_root(tree, "TrunkFlute_%02d" % (flute_index + 1),
+			flute_points, PackedFloat32Array([2.8, 2.55, 2.15, 1.55, 0.82]),
+			bark_light if flute_index % 2 == 0 else bark_shadow, 8)
+		flute.set_meta("structural_trunk_flute", true)
+
+	# Braided fibre lines sit just above the trunk surface. Alternating bark and
+	# living-green strands make the requested wood-fibre language legible without
+	# turning the trunk into a dense foliage column.
+	for fibre_index in 8:
+		var fibre_points := _spiral_offset_curve(trunk_points, 7.0,
+			TAU * float(fibre_index) / 8.0, 0.72)
+		var fibre := _add_curved_root(tree, "TreeFiber_Trunk_%02d" % (fibre_index + 1),
+			fibre_points, PackedFloat32Array([0.46, 0.40, 0.34, 0.27, 0.18]),
+			vine if fibre_index % 3 == 0 else bark_light, 6)
+		fibre.set_meta("tree_fibre", true)
+
+	_build_integrated_castle_root_crown(tree, bark, bark_light, bark_shadow, vine)
+
+	# Six general cradle roots carry the rear and side perimeter. The two front
+	# architectural areas receive their own named supports below.
+	for root_index in 6:
+		var angle := TAU * float(root_index) / 6.0 + 0.52
+		var spread := 10.8 + float(root_index % 2) * 1.1
+		var start := Vector3(cos(angle) * 3.4, -14.0, sin(angle) * 3.4)
+		var points: Array[Vector3] = [
+			start,
+			Vector3(cos(angle + 0.10) * 4.6, -10.0, sin(angle + 0.10) * 4.6),
+			Vector3(cos(angle - 0.08) * 6.8, -5.0, sin(angle - 0.08) * 6.8),
+			Vector3(cos(angle + 0.05) * 9.2, 0.2, sin(angle + 0.05) * 9.2),
+			Vector3(cos(angle) * spread, 4.35, sin(angle) * spread),
+		]
+		var cradle := _add_curved_root(tree, "CastleCradleRoot_%02d" % (root_index + 1),
+			points, PackedFloat32Array([3.6, 3.2, 2.65, 1.9, 1.15]),
+			bark_light if root_index % 2 == 0 else bark, 8)
+		cradle.set_meta("castle_contact", true)
+		_add_support_fibres(tree, "Core_%02d" % (root_index + 1), points,
+			2.35, bark_shadow, vine)
+		if root_index % 2 == 0:
+			_add_tree_leaf_cluster(tree, "Core_%02d" % (root_index + 1),
+				points[3], angle, leaf_green, leaf_olive, 5)
+
+	_build_architecture_root_support(tree, "Gallery", -1.0,
+		bark, bark_light, bark_shadow, vine, moss, leaf_green, leaf_olive)
+	_build_architecture_root_support(tree, "Crystal", 1.0,
+		bark, bark_light, bark_shadow, vine, moss, leaf_green, leaf_olive)
+	_build_front_wall_center_supports(tree, bark, bark_light, bark_shadow, vine,
+		moss, leaf_green, leaf_olive)
+
+	# Wide buttress roots meet the hub terrain and counter the top-heavy castle.
+	# Alternating lengths avoid a mechanically perfect radial star.
+	for root_index in 10:
+		var angle := TAU * float(root_index) / 10.0 + 0.08
+		var length := 18.0 + float(root_index % 4) * 2.4
+		var start := Vector3(cos(angle) * 4.2, -44.0,
+			sin(angle) * 4.2)
+		var elbow := Vector3(cos(angle + 0.08) * 11.5, -48.0,
+			sin(angle + 0.08) * 11.5)
+		var tip := Vector3(cos(angle - 0.05) * length, -49.1,
+			sin(angle - 0.05) * length)
+		var ground_points: Array[Vector3] = [
+			start, start.lerp(elbow, 0.55) + Vector3.UP * 1.0, elbow, tip]
+		_add_curved_root(tree, "GroundButtressRoot_%02d" % (root_index + 1),
+			ground_points, PackedFloat32Array([4.4, 3.4, 2.5, 0.35]),
+			bark_shadow if root_index % 3 == 0 else bark, 8)
+		if root_index % 2 == 0:
+			_add_tree_leaf_cluster(tree, "Ground_%02d" % (root_index + 1),
+				elbow + Vector3.UP * 0.8, angle, leaf_green, leaf_olive, 3)
+
+	# A few larger sprouts climb the trunk itself so foliage reads from ground
+	# level and connects the leafy support joints into one living system.
+	for trunk_leaf_index in 6:
+		var leaf_angle := TAU * float(trunk_leaf_index) / 6.0 + 0.30
+		var leaf_height := -35.0 + float(trunk_leaf_index) * 5.1
+		_add_tree_leaf_cluster(tree, "Trunk_%02d" % (trunk_leaf_index + 1),
+			Vector3(cos(leaf_angle) * 8.0, leaf_height,
+				sin(leaf_angle) * 8.0), leaf_angle, leaf_green, leaf_olive, 5)
+
+	# Sparse moss lines emphasize growth without turning the trunk bright green.
+	for moss_index in 6:
+		var moss_points := _spiral_offset_curve(trunk_points, 7.35,
+			TAU * float(moss_index) / 6.0 + 0.42, 0.48)
+		_add_curved_root(tree, "MossGrowth_%02d" % (moss_index + 1), moss_points,
+			PackedFloat32Array([0.34, 0.30, 0.25, 0.18, 0.10]), moss, 5)
+
+	tree.set_meta("curved_core_cradle_roots", 6)
+	tree.set_meta("integrated_castle_root_crown", true)
+	tree.set_meta("under_castle_bearing_roots", 8)
+	tree.set_meta("architecture_support_zones", 2)
+	tree.set_meta("front_wall_center_supports", 2)
+	tree.set_meta("ground_buttress_roots", 10)
+	tree.set_meta("tree_fibres_and_vines", tree.find_children(
+		"TreeFiber_*", "MeshInstance3D", true, false).size())
+	tree.set_meta("leaf_elements", tree.find_children(
+		"TreeLeaf_*", "MeshInstance3D", true, false).size())
+
+
+# The old upper roots arrived at the castle as separate narrow tips. From a low
+# camera angle they looked like floating cut branches instead of one structure.
+# This flared crown overlaps the ground-to-castle trunk, then spreads eight
+# interlocking bearing roots across the complete underside of the main keep.
+# Every branch terminates exactly against the 3.7 m foundation underside.
+func _build_integrated_castle_root_crown(tree: Node3D, bark: Material,
+		bark_light: Material, bark_shadow: Material, vine: Material) -> void:
+	var crown := Node3D.new()
+	crown.name = "IntegratedCastleRootCrown"
+	crown.set_meta("load_path", "central_trunk_to_full_castle_underside")
+	crown.set_meta("foundation_contact_y", 3.7)
+	crown.set_meta("bearing_root_count", 8)
+	tree.add_child(crown)
+
+	var crown_points: Array[Vector3] = [
+		Vector3(0.0, -12.0, 0.0),
+		Vector3(0.4, -7.8, -0.3),
+		Vector3(-0.35, -3.6, 0.4),
+		Vector3(0.0, 0.2, 0.0),
+		Vector3(0.0, 3.72, 0.0),
+	]
+	var trunk_crown := _add_curved_root(crown, "CastleRootCrownCore", crown_points,
+		PackedFloat32Array([6.2, 6.55, 7.0, 7.6, 8.15]), bark, 12)
+	trunk_crown.set_meta("continuous_with_tree_trunk", true)
+	trunk_crown.set_meta("castle_contact", true)
+	_add_support_fibres(crown, "CastleRootCrown", crown_points, 7.1,
+		bark_shadow, vine)
+
+	for bearing_index in 8:
+		var angle := TAU * float(bearing_index) / 8.0 + PI * 0.125
+		var direction := Vector3(cos(angle), 0.0, sin(angle))
+		var contact_radius := 10.8 if bearing_index % 2 == 0 else 9.6
+		var contact := direction * contact_radius + Vector3.UP * 3.70
+		var points: Array[Vector3] = [
+			direction * 3.2 + Vector3.UP * -7.4,
+			direction * 4.8 + Vector3.UP * -3.4,
+			direction * 7.0 + Vector3.UP * 0.2,
+			direction * (contact_radius - 1.2) + Vector3.UP * 3.15,
+			contact,
+		]
+		var bearing := _add_curved_root(crown,
+			"UnderCastleBearingRoot_%02d" % (bearing_index + 1), points,
+			PackedFloat32Array([3.25, 2.75, 2.05, 1.25, 0.68]),
+			bark_light if bearing_index % 2 == 0 else bark_shadow, 9)
+		bearing.set_meta("castle_contact", true)
+		bearing.set_meta("foundation_contact", contact)
+		bearing.set_meta("structural_role", "radial_under_keep_bearing")
+
+		# A second, finer strand crosses each principal bearing. The alternating
+		# direction makes the crown read as grown-together timber, not eight poles.
+		var cross_direction := Vector3(cos(angle + 0.34), 0.0, sin(angle + 0.34))
+		var tie_points: Array[Vector3] = [
+			direction * 4.4 + Vector3.UP * -2.8,
+			direction.lerp(cross_direction, 0.45) * 7.0 + Vector3.UP * 0.1,
+			cross_direction * (contact_radius - 1.6) + Vector3.UP * 3.52,
+		]
+		var tie := _add_curved_root(crown,
+			"UnderCastleCrossTie_%02d" % (bearing_index + 1), tie_points,
+			PackedFloat32Array([1.15, 0.82, 0.34]), bark, 7)
+		tie.set_meta("structural_role", "interwoven_crown_tie")
+
+
+func _build_front_wall_center_supports(tree: Node3D, bark: Material,
+		bark_light: Material, bark_shadow: Material, vine: Material, moss: Material,
+		leaf_green: Material, leaf_olive: Material) -> void:
+	var front_supports := Node3D.new()
+	front_supports.name = "FrontWallCenterSupports"
+	front_supports.set_meta("placement", "centered_under_two_front_facing_walls")
+	front_supports.set_meta("separate_from_central_foundation", true)
+	tree.add_child(front_supports)
+
+	# Gallery: measured from the live ArtExploreMarker/door face at world
+	# (-39.8, 82.29, 27.41). Crystal wall: the outer front arrival mass beside it
+	# is centred at world (-21.9, 67.28, 27.41). Foundation-space coordinates
+	# below keep both new trunks under those front centres, not under the castle's
+	# old central origin at (0, 0, 0).
+	var supports := [
+		{
+			"label": "GalleryEntrance",
+			"target": Vector3(11.6, 4.15, 0.0),
+			"base": Vector3(12.8, -49.0, -7.8),
+			"world_target_name": "art_explore_gallery_entrance_wall",
+		},
+		{
+			"label": "CrystalWindow",
+			# Stop below the arrival terrace underside. The former target rose two
+			# metres higher and the crown/grip branches pierced the walkable slab.
+			"target": Vector3(29.5, -5.35, 0.0),
+			"base": Vector3(30.8, -49.0, 8.2),
+			"world_target_name": "outer_crystal_window_wall",
+		},
+	]
+
+	for support_index in supports.size():
+		var support: Dictionary = supports[support_index]
+		var label := str(support.label)
+		var target: Vector3 = support.target
+		var base: Vector3 = support.base
+		var target_name := str(support.world_target_name)
+		var trunk_points: Array[Vector3] = [
+			base,
+			base.lerp(target, 0.20) + Vector3(-1.0, 0.0, 1.8),
+			base.lerp(target, 0.43) + Vector3(1.2, 0.0, -1.4),
+			base.lerp(target, 0.67) + Vector3(-0.8, 0.0, 0.9),
+			base.lerp(target, 0.86) + Vector3(0.45, 0.0, -0.35),
+			target,
+		]
+		var trunk := _add_curved_root(front_supports,
+			"%sFrontCenterRoot" % label, trunk_points,
+			PackedFloat32Array([5.4, 5.05, 4.5, 3.7, 2.8, 1.55]),
+			bark if support_index == 0 else bark_light, 10)
+		trunk.set_meta("ground_to_front_wall", true)
+		trunk.set_meta("target_name", target_name)
+		trunk.set_meta("target_center", target)
+		trunk.set_meta("centered_support", true)
+		_add_support_fibres(front_supports, "%sFrontCenter" % label,
+			trunk_points, 3.35, bark_shadow, vine)
+		# The crystal-side trunk now bears directly against the slab underside.
+		# Its former wall-grip forks and contact leaves continued through the
+		# terrace floor into the player area, so that support ends cleanly here.
+		if label == "CrystalWindow":
+			continue
+
+		# A short symmetrical fork cups the wall's lower centre without covering the
+		# label or either crystal window. The load-bearing trunk still terminates on
+		# the exact centreline requested by the user.
+		for grip_index in 2:
+			var grip_side := -1.0 if grip_index == 0 else 1.0
+			var grip_points: Array[Vector3] = [
+				trunk_points[4],
+				target + Vector3(0.15, -1.5, grip_side * 1.8),
+				target + Vector3(0.10, 0.2, grip_side * 3.2),
+				target + Vector3(-0.15, 2.8, grip_side * 3.7),
+			]
+			var grip := _add_curved_root(front_supports,
+				"%sFrontWallGripRoot_%02d" % [label, grip_index + 1], grip_points,
+				PackedFloat32Array([2.35, 1.85, 1.12, 0.38]),
+				bark_light if grip_index == 0 else bark, 8)
+			grip.set_meta("front_wall_grip", true)
+			grip.set_meta("target_name", target_name)
+			_add_support_fibres(front_supports,
+				"%sFrontGrip_%02d" % [label, grip_index + 1], grip_points,
+				1.38, bark_shadow, vine)
+			_add_tree_leaf_cluster(front_supports,
+				"%sFrontContact_%02d" % [label, grip_index + 1],
+				grip_points[2] + Vector3(-0.4, -0.2, grip_side * 0.25),
+				grip_side * 0.72, leaf_green, leaf_olive, 6)
+
+		for foliage_index in 4:
+			var point_index := foliage_index + 1
+			var foliage_side := -1.0 if foliage_index % 2 == 0 else 1.0
+			_add_tree_leaf_cluster(front_supports,
+				"%sFrontTrunk_%02d" % [label, foliage_index + 1],
+				trunk_points[point_index] + Vector3(-0.4, 0.3, foliage_side * 2.5),
+				foliage_side * 0.65, leaf_green, leaf_olive, 5)
+
+		var moss_points: Array[Vector3] = []
+		for point in trunk_points:
+			moss_points.append(point + Vector3(-1.45, 0.15, 0.55))
+		_add_curved_root(front_supports, "TreeFiber_%sFrontMoss" % label,
+			moss_points, PackedFloat32Array([0.38, 0.34, 0.28, 0.22, 0.15, 0.07]),
+			moss, 6).set_meta("tree_fibre", true)
+
+
+func _build_architecture_root_support(tree: Node3D, area_name: String, _side: float,
+		bark: Material, bark_light: Material, bark_shadow: Material, vine: Material,
+		moss: Material, leaf_green: Material, leaf_olive: Material) -> void:
+	var zone := Node3D.new()
+	zone.name = "%sRootSupportZone" % area_name
+	# These coordinates are measured from the actual underside meshes, not inferred
+	# from a camera view. GalleryFoundationPlaza is centred at (10.5, 5.8, 0),
+	# while CastleUpperCourt is centred at (15.8, -1.41, 0) in Foundation space.
+	var is_gallery := area_name == "Gallery"
+	var target_center := Vector3(10.5, 5.45, 0.0) if is_gallery \
+		else Vector3(15.8, -1.78, 0.0)
+	var target_id := "gallery_foundation_plaza" if is_gallery else "castle_upper_court"
+	var base_z := -8.0 if is_gallery else 8.0
+	zone.set_meta("supported_area", target_id)
+	zone.set_meta("ground_to_architecture", true)
+	zone.set_meta("target_underside", target_center)
+	zone.set_meta("root_cradle_count", 2)
+	zone.set_meta("edge_grip_count", 2)
+	zone.set_meta("preserves_architecture_features", true)
+	tree.add_child(zone)
+
+	# A complete secondary trunk begins at terrain height and rises directly below
+	# each cantilever. This is the key visual correction: these are no longer short
+	# branches attached beside the central castle trunk.
+	var trunk_points: Array[Vector3] = [
+		Vector3(5.6 if is_gallery else 11.8, -49.0, base_z),
+		Vector3(6.4 if is_gallery else 12.6, -38.0, base_z * 0.88),
+		Vector3(7.7 if is_gallery else 13.4, -27.0, base_z * 0.68),
+		Vector3(8.6 if is_gallery else 14.4, -16.0, base_z * 0.42),
+		Vector3(9.4 if is_gallery else 15.1, -7.0, base_z * 0.20),
+		Vector3(10.0 if is_gallery else 15.5,
+			0.3 if is_gallery else -5.8, 0.0),
+	]
+	var ground_trunk := _add_curved_root(zone,
+		"%sGroundSupportTrunk" % area_name, trunk_points,
+		PackedFloat32Array([5.8, 5.5, 4.9, 4.1, 3.2, 2.4]), bark, 10)
+	ground_trunk.set_meta("load_path", "terrain_to_%s" % target_id)
+	ground_trunk.set_meta("ground_to_architecture", true)
+	_add_support_fibres(zone, "%sGroundTrunk" % area_name, trunk_points,
+		3.55, bark_shadow, vine)
+
+	for trunk_leaf_index in 4:
+		var trunk_point_index := trunk_leaf_index + 1
+		var leaf_side := -1.0 if trunk_leaf_index % 2 == 0 else 1.0
+		_add_tree_leaf_cluster(zone,
+			"%sGroundTrunk_%02d" % [area_name, trunk_leaf_index + 1],
+			trunk_points[trunk_point_index] + Vector3(leaf_side * 3.0, 0.4,
+				leaf_side * 1.3), leaf_side * 0.7, leaf_green, leaf_olive, 6)
+
+	# Two forks spread from each secondary trunk into separated underside contact
+	# pads. Their tips curl only just around the slab lip, keeping the blue facade,
+	# gallery label, windows, and player routes open.
+	var contact_span_x := 3.2 if is_gallery else 2.8
+	var contact_span_z := 5.5 if is_gallery else 8.2
+	var fork_start := trunk_points[trunk_points.size() - 1]
+	for support_index in 2:
+		var branch_side := -1.0 if support_index == 0 else 1.0
+		var contact := target_center + Vector3(
+			branch_side * contact_span_x, 0.0, branch_side * contact_span_z)
+		var points: Array[Vector3] = [
+			fork_start,
+			fork_start.lerp(contact, 0.34) + Vector3(0.0, -0.7, branch_side * 0.7),
+			fork_start.lerp(contact, 0.68) + Vector3(branch_side * 0.5, -0.15, 0.0),
+			contact,
+			contact + Vector3(branch_side * 0.25, 1.65, -branch_side * 0.35),
+		]
+		var root := _add_curved_root(zone,
+			"%sSupportRoot_%02d" % [area_name, support_index + 1], points,
+			PackedFloat32Array([2.8, 2.55, 2.05, 1.28, 0.48]),
+			bark if support_index == 0 else bark_light, 9)
+		root.set_meta("castle_contact", true)
+		root.set_meta("supported_area", target_id)
+		root.set_meta("contact_point", contact)
+		_add_support_fibres(zone, "%s_%02d" % [area_name, support_index + 1],
+			points, 1.75, bark_shadow, vine)
+		var foliage_offset := Vector3(branch_side * 0.72, 0.55, -branch_side * 0.3)
+		_add_tree_leaf_cluster(zone, "%sJoint_%02d" % [area_name, support_index + 1],
+			points[2] + foliage_offset, branch_side * 0.75, leaf_green, leaf_olive, 7)
+		_add_tree_leaf_cluster(zone, "%sContact_%02d" % [area_name, support_index + 1],
+			contact + Vector3(branch_side * 0.5, -0.2, -branch_side * 0.4),
+			branch_side * 0.75,
+			leaf_green, leaf_olive, 6)
+		var moss_points: Array[Vector3] = [
+			points[1] + Vector3(-branch_side * 0.45, 0.25, 0.35),
+			contact + Vector3(-branch_side * 0.20, -0.10, 0.42),
+		]
+		_add_curved_root(zone, "MossContact_%s_%02d" % [area_name, support_index + 1],
+			moss_points, PackedFloat32Array([0.30, 0.12]), moss, 5)
+
+	# A broad wooden U reads as a cradle beneath each blue mass, matching the
+	# reference silhouette without placing a decorative trunk in front of it.
+	var left_contact := target_center + Vector3(-contact_span_x, 0.0, -contact_span_z)
+	var right_contact := target_center + Vector3(contact_span_x, 0.0, contact_span_z)
+	var cradle_points: Array[Vector3] = [
+		left_contact,
+		target_center + Vector3(-contact_span_x * 0.55, -3.2, -contact_span_z * 0.50),
+		target_center + Vector3(0.0, -4.6, 0.0),
+		target_center + Vector3(contact_span_x * 0.55, -3.2, contact_span_z * 0.50),
+		right_contact,
+	]
+	var cradle := _add_curved_root(zone, "%sUndersideCradleSweepRoot" % area_name,
+		cradle_points, PackedFloat32Array([1.18, 1.65, 1.9, 1.65, 1.18]),
+		bark_light, 9)
+	cradle.set_meta("underside_cradle", true)
+	cradle.set_meta("supported_area", target_id)
+	_add_support_fibres(zone, "%sUndersideCradle" % area_name, cradle_points,
+		1.25, bark_shadow, vine)
+
+
+func _add_support_fibres(parent: Node3D, label: String, points: Array[Vector3],
+		root_radius: float, bark_fibre: Material, vine: Material) -> void:
+	for fibre_index in 3:
+		var fibre_points := _spiral_offset_curve(points, root_radius,
+			TAU * float(fibre_index) / 3.0 + 0.35, 0.92)
+		var fibre_radii := PackedFloat32Array()
+		for point_index in points.size():
+			fibre_radii.append(lerpf(0.34, 0.10,
+				float(point_index) / float(points.size() - 1)))
+		_add_curved_root(parent, "TreeFiber_%s_%02d" % [label, fibre_index + 1],
+			fibre_points, fibre_radii,
+			vine if fibre_index == 2 else bark_fibre, 5)
+
+
+func _add_tree_leaf_cluster(parent: Node3D, label: String, position: Vector3,
+		yaw: float, green: Material, olive: Material, leaf_count: int) -> void:
+	var cluster := Node3D.new()
+	cluster.name = "TreeLeafCluster_%s" % label
+	cluster.position = position
+	cluster.rotation.y = -yaw
+	parent.add_child(cluster)
+	for leaf_index in leaf_count:
+		var angle := TAU * float(leaf_index) / float(leaf_count)
+		var leaf := _add_mesh(cluster, _sphere(0.82, 1.64),
+			green if leaf_index % 2 == 0 else olive,
+			Vector3(cos(angle) * 1.35, sin(angle * 1.7) * 0.58,
+				sin(angle) * 1.05),
+			Vector3(1.95, 0.28, 0.90),
+			Vector3(0.20 * sin(angle), angle, 0.45 * cos(angle)))
+		leaf.name = "TreeLeaf_%s_%02d" % [label, leaf_index + 1]
 
 
 # The High Aether Citadel is a facade system, not a pile of props. Two
@@ -607,6 +990,114 @@ func _add_beam_between(parent: Node3D, from: Vector3, to: Vector3,
 		material, from.lerp(to, 0.5))
 	beam.basis = Basis.looking_at(delta.normalized(), Vector3.UP)
 	return beam
+
+
+func _add_curved_root(parent: Node3D, root_name: String, points: Array[Vector3],
+		radii: PackedFloat32Array, material: Material,
+		radial_segments: int) -> MeshInstance3D:
+	var root := _add_mesh(parent, _curved_root_mesh(points, radii, radial_segments),
+		material, Vector3.ZERO)
+	root.name = root_name
+	return root
+
+
+func _curved_root_mesh(points: Array[Vector3], radii: PackedFloat32Array,
+		radial_segments: int) -> ArrayMesh:
+	assert(points.size() >= 2 and points.size() == radii.size())
+	var sampled := _sample_root_curve(points, radii, 4)
+	var mesh_points := sampled.points as Array[Vector3]
+	var mesh_radii := sampled.radii as PackedFloat32Array
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var normal_axis := Vector3.ZERO
+	for point_index in mesh_points.size():
+		var tangent: Vector3
+		if point_index == 0:
+			tangent = (mesh_points[1] - mesh_points[0]).normalized()
+		elif point_index == mesh_points.size() - 1:
+			tangent = (mesh_points[point_index] - mesh_points[point_index - 1]).normalized()
+		else:
+			tangent = (mesh_points[point_index + 1] - mesh_points[point_index - 1]).normalized()
+		# Parallel-transport the ring frame along the curve. Rebuilding it from a
+		# global axis at every point caused sudden 90-degree flips, visible as dark
+		# bands across the old roots.
+		if point_index == 0:
+			var reference := Vector3.RIGHT if absf(tangent.dot(Vector3.UP)) > 0.88 else Vector3.UP
+			normal_axis = tangent.cross(reference).normalized()
+		else:
+			normal_axis = normal_axis - tangent * normal_axis.dot(tangent)
+			if normal_axis.length_squared() < 0.0001:
+				var fallback := Vector3.RIGHT if absf(tangent.dot(Vector3.UP)) > 0.88 else Vector3.UP
+				normal_axis = tangent.cross(fallback)
+			normal_axis = normal_axis.normalized()
+		var binormal := tangent.cross(normal_axis).normalized()
+		for side_index in radial_segments:
+			var angle := TAU * float(side_index) / float(radial_segments)
+			var radial := normal_axis * cos(angle) + binormal * sin(angle)
+			surface.set_uv(Vector2(float(side_index) / float(radial_segments),
+				float(point_index) / float(mesh_points.size() - 1)))
+			surface.add_vertex(mesh_points[point_index] + radial * mesh_radii[point_index])
+	# Seal both ends. Open root tubes exposed flat interior wedges from oblique
+	# castle views, which made otherwise connected roots appear broken or floating.
+	var start_center := mesh_points.size() * radial_segments
+	surface.set_uv(Vector2(0.5, 0.0))
+	surface.add_vertex(mesh_points[0])
+	var end_center := start_center + 1
+	surface.set_uv(Vector2(0.5, 1.0))
+	surface.add_vertex(mesh_points[-1])
+	for ring_index in mesh_points.size() - 1:
+		for side_index in radial_segments:
+			var next_side := (side_index + 1) % radial_segments
+			var current := ring_index * radial_segments + side_index
+			var current_next := ring_index * radial_segments + next_side
+			var upper := (ring_index + 1) * radial_segments + side_index
+			var upper_next := (ring_index + 1) * radial_segments + next_side
+			for vertex_index in [current, upper, current_next, current_next, upper, upper_next]:
+				surface.add_index(vertex_index)
+	var final_ring_start := (mesh_points.size() - 1) * radial_segments
+	for side_index in radial_segments:
+		var next_side := (side_index + 1) % radial_segments
+		for vertex_index in [start_center, next_side, side_index]:
+			surface.add_index(vertex_index)
+		for vertex_index in [end_center, final_ring_start + side_index,
+				final_ring_start + next_side]:
+			surface.add_index(vertex_index)
+	surface.generate_normals()
+	return surface.commit() as ArrayMesh
+
+
+func _sample_root_curve(points: Array[Vector3], radii: PackedFloat32Array,
+		steps_per_segment: int) -> Dictionary:
+	var sampled_points: Array[Vector3] = []
+	var sampled_radii := PackedFloat32Array()
+	for segment_index in points.size() - 1:
+		var p0 := points[maxi(segment_index - 1, 0)]
+		var p1 := points[segment_index]
+		var p2 := points[segment_index + 1]
+		var p3 := points[mini(segment_index + 2, points.size() - 1)]
+		for step_index in steps_per_segment:
+			var t := float(step_index) / float(steps_per_segment)
+			var t2 := t * t
+			var t3 := t2 * t
+			var point := 0.5 * ((2.0 * p1) + (-p0 + p2) * t \
+				+ (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 \
+				+ (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3)
+			sampled_points.append(point)
+			sampled_radii.append(lerpf(radii[segment_index], radii[segment_index + 1], t))
+	sampled_points.append(points[-1])
+	sampled_radii.append(radii[-1])
+	return {"points": sampled_points, "radii": sampled_radii}
+
+
+func _spiral_offset_curve(points: Array[Vector3], radius: float, phase: float,
+		twist: float) -> Array[Vector3]:
+	var result: Array[Vector3] = []
+	for point_index in points.size():
+		var taper := lerpf(1.0, 0.38, float(point_index) / float(points.size() - 1))
+		var angle := phase + float(point_index) * twist
+		result.append(points[point_index] + Vector3(cos(angle) * radius * taper,
+			0.22 * sin(angle * 1.7), sin(angle) * radius * taper))
+	return result
 
 
 func _build_facade_gear(parent: Node3D, index: int, position: Vector3,

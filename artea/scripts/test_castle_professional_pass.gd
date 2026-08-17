@@ -45,6 +45,25 @@ func _run() -> void:
 	if walk_surface.find_children("*", "StaticBody3D", true, false).is_empty():
 		_fail("continuous spiral walk surface is missing collision")
 		return
+	var grounded_entry := stair.get_node_or_null("GroundedMedievalEntry") as Node3D
+	if grounded_entry == null or not bool(grounded_entry.get_meta(
+			"walkable_from_terrain", false)):
+		_fail("castle stair is missing its terrain-grounded medieval entry")
+		return
+	var ground_steps := grounded_entry.find_children(
+		"GroundEntryStoneTread_*", "MeshInstance3D", true, false)
+	if ground_steps.size() < 3 or float(grounded_entry.get_meta(
+			"maximum_rise", 99.0)) > 0.28:
+		_fail("ground entry does not provide enough controller-safe stone steps")
+		return
+	var ground_walk_surface := grounded_entry.get_node_or_null(
+		"GroundEntryWalkSurface") as MeshInstance3D
+	if ground_walk_surface == null or ground_walk_surface.visible \
+			or not bool(ground_walk_surface.get_meta("collision_only", false)) \
+			or ground_walk_surface.find_children(
+				"*", "StaticBody3D", true, false).size() != 1:
+		_fail("ground entry is missing its seamless hidden walk surface")
+		return
 	var inner_plinth := stair.get_node_or_null("InnerSafetyPlinth") as MeshInstance3D
 	var inner_plinth_bodies := inner_plinth.find_children("*", "StaticBody3D", true, false) \
 		if inner_plinth != null else []
@@ -64,7 +83,7 @@ func _run() -> void:
 	for slot_probe_index in 12:
 		var slot_t := 0.985 * (float(slot_probe_index) + 0.5) / 12.0
 		var slot_angle := slot_t * TAU * 2.35
-		var slot_surface_y := lerpf(ascent_ground + 0.4, ascent_top, slot_t)
+		var slot_surface_y := lerpf(ascent_ground + 0.17, ascent_top, slot_t)
 		var slot_point := Vector3(
 			ascent_base.x + cos(slot_angle) * 3.6,
 			slot_surface_y,
@@ -257,16 +276,91 @@ func _run() -> void:
 			return
 
 	var foundation := hub.get_node_or_null("CastleFoundation") as Node3D
-	var shelf := foundation.get_node_or_null("CitadelRockShelf") as MeshInstance3D \
+	var tree_foundation := foundation.get_node_or_null("GiantTreeFoundation") as Node3D \
 		if foundation != null else null
-	var keel := foundation.get_node_or_null("CitadelRockKeel") as MeshInstance3D \
-		if foundation != null else null
-	if shelf == null or keel == null or not (shelf.mesh is CylinderMesh):
-		_fail("floating citadel has no tapered rock shelf and keel")
+	if tree_foundation == null \
+			or foundation.get_meta("foundation_style", "") != "giant_living_tree" \
+			or not bool(foundation.get_meta("floating_undercarriage_removed", false)):
+		_fail("castle has no grounded giant-tree foundation")
 		return
-	var shelf_mesh := shelf.mesh as CylinderMesh
-	if shelf_mesh.top_radius <= shelf_mesh.bottom_radius:
-		_fail("citadel foundation is not tapered")
+	if tree_foundation.get_node_or_null("TreeTrunkCore") == null \
+			or tree_foundation.find_children(
+				"CastleCradleRoot_*", "MeshInstance3D", true, false).size() != 6 \
+			or tree_foundation.find_children(
+				"GroundButtressRoot_*", "MeshInstance3D", true, false).size() != 10:
+		_fail("giant-tree trunk, castle cradle roots, or ground roots are incomplete")
+		return
+	var gallery_zone := tree_foundation.get_node_or_null("GalleryRootSupportZone") as Node3D
+	var crystal_zone := tree_foundation.get_node_or_null("CrystalRootSupportZone") as Node3D
+	if gallery_zone == null or crystal_zone == null \
+			or gallery_zone.find_children(
+				"GallerySupportRoot_*", "MeshInstance3D", true, false).size() != 2 \
+			or crystal_zone.find_children(
+				"CrystalSupportRoot_*", "MeshInstance3D", true, false).size() != 2 \
+			or gallery_zone.get_node_or_null("GalleryGroundSupportTrunk") == null \
+			or crystal_zone.get_node_or_null("CrystalGroundSupportTrunk") == null \
+			or gallery_zone.get_node_or_null("GalleryUndersideCradleSweepRoot") == null \
+			or crystal_zone.get_node_or_null("CrystalUndersideCradleSweepRoot") == null \
+			or not bool(gallery_zone.get_meta("ground_to_architecture", false)) \
+			or not bool(crystal_zone.get_meta("ground_to_architecture", false)) \
+			or gallery_zone.get_meta("supported_area", "") != "gallery_foundation_plaza" \
+			or crystal_zone.get_meta("supported_area", "") != "castle_upper_court":
+		_fail("gallery and crystal architecture do not have independent living-root cradles")
+		return
+	var gallery_trunk := gallery_zone.get_node("GalleryGroundSupportTrunk") as MeshInstance3D
+	var crystal_trunk := crystal_zone.get_node("CrystalGroundSupportTrunk") as MeshInstance3D
+	var gallery_trunk_bounds := gallery_trunk.mesh.get_aabb()
+	var crystal_trunk_bounds := crystal_trunk.mesh.get_aabb()
+	if gallery_trunk_bounds.position.y > -48.0 \
+			or gallery_trunk_bounds.end.y < 0.0 \
+			or crystal_trunk_bounds.position.y > -48.0 \
+			or crystal_trunk_bounds.end.y < -6.0:
+		_fail("two front support trunks do not form continuous ground-to-castle load paths")
+		return
+	var front_wall_supports := tree_foundation.get_node_or_null(
+		"FrontWallCenterSupports") as Node3D
+	var gallery_front_root := front_wall_supports.get_node_or_null(
+		"GalleryEntranceFrontCenterRoot") as MeshInstance3D if front_wall_supports != null else null
+	var crystal_front_root := front_wall_supports.get_node_or_null(
+		"CrystalWindowFrontCenterRoot") as MeshInstance3D if front_wall_supports != null else null
+	if front_wall_supports == null or gallery_front_root == null or crystal_front_root == null \
+			or not bool(front_wall_supports.get_meta("separate_from_central_foundation", false)) \
+			or int(tree_foundation.get_meta("front_wall_center_supports", 0)) != 2 \
+			or gallery_front_root.get_meta("target_name", "") \
+				!= "art_explore_gallery_entrance_wall" \
+			or crystal_front_root.get_meta("target_name", "") \
+				!= "outer_crystal_window_wall" \
+			or not (gallery_front_root.get_meta("target_center", Vector3.ZERO) as Vector3) \
+				.is_equal_approx(Vector3(11.6, 4.15, 0.0)) \
+			or not (crystal_front_root.get_meta("target_center", Vector3.ZERO) as Vector3) \
+				.is_equal_approx(Vector3(29.5, -5.35, 0.0)):
+		_fail("two additional roots are not centred under the confirmed front walls")
+		return
+	for front_root in [gallery_front_root, crystal_front_root]:
+		var front_bounds := (front_root as MeshInstance3D).mesh.get_aabb()
+		var required_contact_y := 4.0 if front_root == gallery_front_root else -5.6
+		if front_bounds.position.y > -48.0 or front_bounds.end.y < required_contact_y:
+			_fail("front wall root %s does not rise continuously from terrain" % front_root.name)
+			return
+	var tree_fibres := tree_foundation.find_children(
+		"TreeFiber_*", "MeshInstance3D", true, false)
+	var tree_leaves := tree_foundation.find_children(
+		"TreeLeaf_*", "MeshInstance3D", true, false)
+	if tree_fibres.size() < 40 or tree_leaves.size() < 120 \
+			or int(tree_foundation.get_meta("architecture_support_zones", 0)) != 2:
+		_fail("living-root fibres, vines, leaves, or two-area support metadata are incomplete")
+		return
+	for root_mesh in tree_foundation.find_children(
+			"*Root_*", "MeshInstance3D", true, false):
+		if not ((root_mesh as MeshInstance3D).mesh is ArrayMesh):
+			_fail("living root %s is not a continuous curved mesh" % root_mesh.name)
+			return
+	if foundation.get_node_or_null("CitadelRockShelf") != null \
+			or foundation.get_node_or_null("CitadelRockKeel") != null \
+			or not foundation.find_children(
+				"FloatingFoundationAnchor_*", "Node3D", true, false).is_empty() \
+			or hub.get_node_or_null("building_castle_red2/LumenEngineRig") != null:
+		_fail("old floating rock, anchors, or mechanical undercarriage remain beneath castle")
 		return
 
 	var castle := hub.get_node_or_null("building_castle_red2") as Node3D
@@ -321,6 +415,20 @@ func _run() -> void:
 			or stair_handoff.find_children("*", "StaticBody3D", true, false).is_empty():
 		_fail("crown stair mouth has no stable box-shaped handoff floor")
 		return
+	var fitted_handoff := stair.get_node_or_null(
+		"MedievalCrownStairLanding") as MeshInstance3D
+	if stair_handoff.visible or not bool(stair_handoff.get_meta("collision_only", false)) \
+			or fitted_handoff == null or not (fitted_handoff.mesh is ArrayMesh) \
+			or not fitted_handoff.find_children(
+				"*", "StaticBody3D", true, false).is_empty():
+		_fail("spiral crown still renders the oversized box instead of the fitted landing")
+		return
+	var ballista := stair.get_node_or_null("MedievalBallista") as Node3D
+	if ballista == null or not bool(ballista.get_meta("visual_only", false)) \
+			or ballista.find_children("BallistaWoodArm_*", "MeshInstance3D", true, false).size() != 2 \
+			or not ballista.find_children("*", "StaticBody3D", true, false).is_empty():
+		_fail("crown is missing its safe visual-only medieval ballista")
+		return
 	var arrival_court := stair.get_node_or_null("CrownArrivalCourt") as Node3D
 	var arrival_pylons := stair.find_children(
 		"CrownArrivalPylon_*", "MeshInstance3D", true, false)
@@ -371,8 +479,9 @@ func _run() -> void:
 		var floor_hit := space_state.intersect_ray(floor_query)
 		if not floor_hit.has("collider") or (floor_hit["collider"] != deck_body \
 				and floor_hit["collider"] != gateway_apron_body):
-			_fail("crown centre has a player-trapping floor gap at radius %.1f angle %.2f"
-				% [TRAP_RING_RADIUS, probe_angle])
+			_fail("crown centre has a player-trapping floor gap at radius %.1f angle %.2f (hit %s)"
+				% [TRAP_RING_RADIUS, probe_angle,
+					floor_hit.get("collider", "nothing")])
 			return
 
 	# The deck must have an actual open stairwell above the final approach,
@@ -531,132 +640,44 @@ func _run() -> void:
 		_fail("high citadel approach has no collision-backed smooth ramp")
 		return
 
-	# The researched magic-and-science facade must remain an authored system:
-	# paired structural buttresses, an instrument aperture and an overhead
-	# calibration band. They are visual-only, leaving the ascent collision clear.
-	var facade := hub.get_node_or_null("CastleFoundation/HighAetherFacade") as Node3D
-	if facade == null \
-		or facade.find_children("AetherButtress_*", "Node3D", true, false).size() != 2 \
-		or facade.get_node_or_null("ObservatoryAperture") == null \
-		or hub.get_node_or_null("CastleFoundation/AetherCalibrationBand") == null \
-		or not facade.find_children("*", "StaticBody3D", true, false).is_empty():
-		_fail("high aether facade is incomplete")
+	# The user requested the floating orbital observatory and its related astral
+	# machinery be removed completely. The simple castle keeps only the authored
+	# architecture, living-tree foundation, and safe gameplay approach.
+	for removed_path in ["HighAetherFacade", "AetherCalibrationBand",
+			"AstralObservatoryCrown", "ReferenceAstralMachine"]:
+		if foundation.get_node_or_null(removed_path) != null:
+			_fail("removed orbital castle machinery still exists: %s" % removed_path)
+			return
+	if not hub.find_children("AetherCalibrationNode_*", "Node3D", true, false).is_empty() \
+			or not hub.find_children("CelestialCoreRing_*", "MeshInstance3D", true, false).is_empty():
+		_fail("orbital calibration or celestial-core pieces remain in the hub")
 		return
-	var calibration_nodes := hub.find_children("AetherCalibrationNode_*", "Node3D", true, false)
-	var observatory := hub.get_node_or_null("CastleFoundation/AstralObservatoryCrown") as Node3D
-	if calibration_nodes.size() != 6 \
-		or observatory == null \
-		or observatory.get_node_or_null("CrownLumenLens") == null \
-		or observatory.find_children("CrownAstralFin_*", "Node3D", true, false).size() != 4 \
-		or not observatory.find_children("*", "StaticBody3D", true, false).is_empty():
-		_fail("art castle structural hierarchy or observatory crown is incomplete")
+	var simple_palette_found := false
+	for castle_mesh_candidate in castle.find_children("*", "MeshInstance3D", true, false):
+		var castle_mesh := castle_mesh_candidate as MeshInstance3D
+		if castle_mesh.mesh == null:
+			continue
+		for castle_surface in castle_mesh.mesh.get_surface_count():
+			var castle_material := castle_mesh.get_active_material(castle_surface)
+			if castle_material is StandardMaterial3D \
+					and castle_material.get_meta("castle_palette", "") == "simple_village_atlas" \
+					and not (castle_material as StandardMaterial3D).emission_enabled:
+				simple_palette_found = true
+	if not simple_palette_found:
+		_fail("castle does not use the simple non-emissive village colour atlas")
 		return
-	if foundation == null:
-		_fail("high aether facade has no foundation")
-		return
-	# The foundation's real support collision must remain outside the central
-	# final-ascent corridor. This catches a future return to the old full-disc
-	# collider, which would make the taller visual castle look reachable but
-	# physically block its stairs midway up.
+
+	# Real support collision remains outside the final-ascent corridor after the
+	# visual simplification.
 	for support_name in ["FoundationRearSupport", "FoundationWestSupport", "FoundationEastSupport"]:
 		var support := foundation.get_node_or_null(support_name) as StaticBody3D
 		if support == null:
-			_fail("high aether foundation support is missing: %s" % support_name)
+			_fail("simple castle foundation support is missing: %s" % support_name)
 			return
 		if support.global_position.x > -44.0 \
-			and absf(support.global_position.z - entrance_axis.z) < 4.5:
+				and absf(support.global_position.z - entrance_axis.z) < 4.5:
 			_fail("foundation support intrudes into final ascent corridor: %s" % support_name)
 			return
-
-	# Whole-castle reference machine: a monumental measuring spire, integrated
-	# celestial core, articulated skyline arms, floating archive and readable
-	# script facade.  Inventory and dimensions are measured from the live world,
-	# while one complete AABB sweep protects the real door/ascent prism.
-	var machine := foundation.get_node_or_null("ReferenceAstralMachine") as Node3D
-	if machine == null:
-		_fail("reference astral machine did not build")
-		return
-	var machine_meshes := machine.find_children("*", "MeshInstance3D", true, false)
-	var machine_lights := machine.find_children("*", "OmniLight3D", true, false)
-	if machine_meshes.size() > 100 or machine_lights.size() > 2:
-		_fail("reference machine exceeds visual budget: %d meshes / %d lights"
-			% [machine_meshes.size(), machine_lights.size()])
-		return
-	if not machine.find_children("*", "StaticBody3D", true, false).is_empty():
-		_fail("reference machine contains gameplay collision")
-		return
-	var spire := machine.get_node_or_null("AetherMeasureSpire/AetherMeasureMonolith") \
-		as MeshInstance3D
-	if spire == null:
-		_fail("AetherMeasureSpire monolith is missing")
-		return
-	var spire_bounds := _world_aabb(spire)
-	var spire_plan_width := maxf(spire_bounds.size.x, spire_bounds.size.z)
-	if spire_bounds.size.y < 24.0 or spire_bounds.size.y > 30.0 \
-			or spire_bounds.size.y / spire_plan_width < 5.2:
-		_fail("AetherMeasureSpire is not monumental/slender: AABB %s" % spire_bounds)
-		return
-	var channels := machine.find_children("AetherSpireCyanChannel_*", "MeshInstance3D", true, false)
-	var rails := machine.find_children("AetherSpireBrassRail_*", "MeshInstance3D", true, false)
-	if channels.size() != 3 or rails.size() != 4:
-		_fail("AetherMeasureSpire channel/rail inventory is incomplete")
-		return
-	var core_sphere := machine.get_node_or_null("CelestialCore/CelestialCoreSphere") \
-		as MeshInstance3D
-	var core_rings := machine.find_children("CelestialCoreRing_*", "MeshInstance3D", true, false)
-	if core_sphere == null or core_rings.size() != 3:
-		_fail("CelestialCore sphere or crossed rings are missing")
-		return
-	if machine.get_node_or_null("CelestialCore/CelestialCoreStalk") == null:
-		_fail("CelestialCore is not visibly seated into the castle crown")
-		return
-	var core_bounds := _world_aabb(core_sphere)
-	if core_bounds.size.x < 5.0 or core_bounds.size.x > 7.0 \
-			or core_bounds.size.y < 5.0 or core_bounds.size.y > 7.0:
-		_fail("CelestialCore is outside the 5–7 m diameter: %s" % core_bounds.size)
-		return
-	var lumen_arms := machine.find_children("LumenArm_*", "Node3D", true, false)
-	var arm_outer_beams := machine.find_children("LumenArmOuterBeam_*", "MeshInstance3D", true, false)
-	var arm_conductors := machine.find_children("LumenArmConductor_*", "MeshInstance3D", true, false)
-	if lumen_arms.size() != 2 or arm_outer_beams.size() != 4 or arm_conductors.size() != 4:
-		_fail("articulated LumenArm skyline inventory is incomplete")
-		return
-	var archive := machine.get_node_or_null("FloatingArchiveCube") as Node3D
-	var archive_faces := machine.find_children("ArchiveLuminousFace_*", "MeshInstance3D", true, false)
-	if archive == null or archive_faces.size() != 6:
-		_fail("FloatingArchiveCube does not have six luminous inset faces")
-		return
-	var script_facade := machine.get_node_or_null("MachineScriptFacade") as Node3D
-	var script_panels := machine.find_children("MachineScriptPanel_*", "MeshInstance3D", true, false)
-	var facade_gears := machine.find_children("MachineFacadeGear_*", "Node3D", true, false)
-	var machine_gear_teeth := machine.find_children("MachineGearTooth_*", "MeshInstance3D", true, false)
-	var terminals := machine.find_children("*Terminal*", "Node3D", true, false)
-	if script_facade == null or script_panels.size() != 4 \
-			or facade_gears.size() != 3 or machine_gear_teeth.size() != 18 \
-			or terminals.size() < 5:
-		_fail("script facade, readable gear train, or distributed terminals are incomplete")
-		return
-	var door_ascent_prism := AABB(Vector3(-42.5, 67.4, entrance_axis.z - 2.4),
-		Vector3(15.0, 14.2, 4.8))
-	for machine_piece_candidate in machine_meshes:
-		var machine_piece := machine_piece_candidate as MeshInstance3D
-		if machine_piece == null or machine_piece.mesh == null:
-			_fail("reference machine inventory contains an invalid mesh")
-			return
-		if _world_aabb(machine_piece).intersects(door_ascent_prism):
-			_fail("reference machine piece %s enters the final ascent/door prism"
-				% machine_piece.name)
-			return
-	var machine_transform := machine.global_transform
-	var archive_rotation := archive.rotation.y
-	for _machine_frame in 24:
-		await process_frame
-	if not machine.global_transform.is_equal_approx(machine_transform):
-		_fail("reference machine architecture moved with its walkable castle")
-		return
-	if is_equal_approx(archive.rotation.y, archive_rotation):
-		_fail("FloatingArchiveCube is not connected to the slow rotor system")
-		return
 
 	var skyway := hub.get_node_or_null("SkywayMap") as Node3D
 	var bead_count := skyway.find_children("Skyway_Bead*", "MeshInstance3D", true, false).size() \
@@ -675,8 +696,8 @@ func _run() -> void:
 		_fail("professional collision-aware follow camera is not configured")
 		return
 
-	print("CASTLE_POLISH_TEST: PASS — reference bridge %d meshes/%d lights; astral machine %d meshes/%d lights; clear approach prisms" \
-		% [bridge_mesh_count, bridge_light_count, machine_meshes.size(), machine_lights.size()])
+	print("CASTLE_POLISH_TEST: PASS — reference bridge %d meshes/%d lights; orbital machinery removed; simple village palette active" \
+		% [bridge_mesh_count, bridge_light_count])
 	quit()
 
 
