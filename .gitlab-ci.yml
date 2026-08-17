@@ -1,0 +1,46 @@
+image: barichello/godot-ci:4.7.1
+
+stages:
+  - web
+
+variables:
+  GODOT_BIN: godot
+  VERCEL_ORG_ID: team_g0vdyuJffZjOsf5FyGHlia7S
+  VERCEL_PROJECT_ID: prj_qPPpOnkYg3Bww3uUFWjegD7TqAFR
+
+web_build:
+  stage: web
+  interruptible: true
+  cache:
+    key: godot-web-imports
+    paths:
+      - artea/.godot/imported/
+  script:
+    - cd artea
+    - bash scripts/export_web.sh
+    - test -f builds/web/index.html
+    - test -f builds/web/index.wasm
+    - test -f builds/web/index.pck.parts.json
+    - test -f builds/web/pck-loader.js
+    - test -f assets3D/characters/milo_villager_lowpoly.glb
+    - test "$(find builds/web -maxdepth 1 -name 'index.pck.part*' | wc -l)" -gt 0
+  rules:
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+web_production:
+  stage: web
+  interruptible: false
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends nodejs npm
+  script:
+    - cd artea
+    - bash scripts/export_web.sh
+    - cd builds/web
+    - npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $VERCEL_TOKEN
+  environment:
+    name: production
+    url: https://artea-web.vercel.app/

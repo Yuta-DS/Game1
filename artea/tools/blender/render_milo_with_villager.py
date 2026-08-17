@@ -33,15 +33,12 @@ def position_character(imported, name, x_position, target_height):
     return root
 
 
-bpy.ops.wm.open_mainfile(
-    filepath=str(ROOT / "assets3D/characters/milo_scholar/milo_scholar_production.blend1")
+bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.ops.import_scene.gltf(
+    filepath=str(ROOT / "assets3D/characters/milo_villager_lowpoly.glb")
 )
-preview_names = {"PreviewCamera", "PreviewFloor", "Area", "Area.001", "Area.002"}
-for obj in list(bpy.context.scene.objects):
-    if obj.name in preview_names:
-        bpy.data.objects.remove(obj, do_unlink=True)
 milo_objects = list(bpy.context.scene.objects)
-position_character(
+milo_root = position_character(
     milo_objects,
     "Mayor Milo",
     -0.82,
@@ -50,7 +47,7 @@ position_character(
 before = set(bpy.context.scene.objects)
 bpy.ops.import_scene.gltf(filepath=str(ROOT / "assets3D/characters/Barbarian.glb"))
 villager_objects = [obj for obj in bpy.context.scene.objects if obj not in before]
-position_character(
+villager_root = position_character(
     villager_objects,
     "Market Villager",
     0.82,
@@ -98,3 +95,18 @@ scene.render.film_transparent = False
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 bpy.ops.render.render(write_still=True)
 print(f"MILO_VILLAGER_RENDER: wrote {OUTPUT}")
+
+# Also produce a portrait at roughly the same framing as the supplied sample so
+# facial finish and silhouette can be judged without the scale comparison.
+villager_root.hide_render = True
+for child in villager_root.children_recursive:
+    child.hide_render = True
+milo_root.location.x += 0.82
+camera.location = (0, -3.25, 1.48)
+camera.data.lens = 68
+look_at(camera, (0, 0, 0.92))
+scene.render.resolution_x = 768
+scene.render.resolution_y = 960
+scene.render.filepath = str(ROOT / "artifacts" / "milo_quality_preview.png")
+bpy.ops.render.render(write_still=True)
+print(f"MILO_PORTRAIT_RENDER: wrote {scene.render.filepath}")

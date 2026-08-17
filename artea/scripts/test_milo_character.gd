@@ -30,10 +30,10 @@ func _run() -> void:
 	var vertex_count := 0
 	for surface_index in unified_mesh.mesh.get_surface_count():
 		vertex_count += unified_mesh.mesh.surface_get_array_len(surface_index)
-	# Godot duplicates boundary vertices across the 19 material surfaces. The
-	# authored Blender mesh is 4.5k vertices; the imported surface total remains
-	# comfortably below the market-NPC quality ceiling.
-	if vertex_count < 1500 or vertex_count > 7500:
+	# Godot duplicates boundary vertices across the material surfaces. Milo uses
+	# denser rounded facial and clothing forms than background villagers because
+	# he is a close-up story character, while remaining light enough for the hub.
+	if vertex_count < 5000 or vertex_count > 18000:
 		_fail("Milo polygon density is outside the low-poly NPC target: %d vertices" % vertex_count)
 		return
 	if unified_mesh.mesh.get_surface_count() < 10:
