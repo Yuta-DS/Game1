@@ -2,7 +2,6 @@ extends SceneTree
 
 const MiloNPCScene := preload("res://scenes/milo_animations.tscn")
 const ArteaSignScene := preload("res://assets3D/house scenes/artéa_signpost.tscn")
-const FoxCastStyleScene := preload("res://scripts/fox.tscn")
 const OUTPUT := "res://artifacts/milo_at_artea_sign.png"
 
 
@@ -74,13 +73,12 @@ func _capture() -> void:
 	milo.scale = Vector3.ONE * 1.5
 	milo.position = Vector3(-1.8, 0, 0)
 	stage.add_child(milo)
-
-	# Include a production villager at its live hub scale so this proof also
-	# guards Milo's cast-relative height and visual language.
-	var cast_reference := FoxCastStyleScene.instantiate() as Node3D
-	cast_reference.position = Vector3(0.1, 0, 0)
-	cast_reference.scale = Vector3.ONE * 1.5
-	stage.add_child(cast_reference)
+	# The production controller anchors to absolute hub coordinates in _ready().
+	# Reset and freeze it for this isolated proof stage after _ready has run.
+	await process_frame
+	milo.set_process(false)
+	milo.set_physics_process(false)
+	milo.position = Vector3(-1.8, 0, 0)
 
 	var signpost := ArteaSignScene.instantiate() as Node3D
 	signpost.position = Vector3(3.1, 1.5, 0.6)

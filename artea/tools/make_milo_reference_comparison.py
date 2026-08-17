@@ -3,8 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 ROOT = Path("/Users/davidsovann/S2603/artea")
-REFERENCE_APPEARANCE = Path("/var/folders/j8/tctb8gfs2_72jd0t0t7hzq9h0000gn/T/codex-clipboard-f63f6e07-a7d5-4d16-b6e6-aacdf9c6e900.png")
-REFERENCE_GAME = Path("/var/folders/j8/tctb8gfs2_72jd0t0t7hzq9h0000gn/T/codex-clipboard-b048517b-d0ca-407f-84a0-aebe59b729de.png")
+REFERENCE_APPEARANCE = Path("/var/folders/j8/tctb8gfs2_72jd0t0t7hzq9h0000gn/T/TemporaryItems/NSIRD_screencaptureui_0bR0Tz/Screenshot 2026-08-17 at 6.04.53 pm.png")
 RESULT = ROOT / "artifacts/milo_scholar_preview.png"
 OUTPUT = ROOT / "artifacts/milo_reference_side_by_side.png"
 
@@ -14,14 +13,12 @@ gap = 16
 background = (20, 43, 61)
 
 appearance = Image.open(REFERENCE_APPEARANCE).convert("RGB")
-game = Image.open(REFERENCE_GAME).convert("RGB")
 result = Image.open(RESULT).convert("RGB")
 
-# Image 2 is the scale/style evidence. Crop around its Milo while retaining a
-# narrow strip of the neighboring villager for an honest proportion comparison.
-game = game.crop((190, 180, 850, 1000))
 # Crop the render to the same character-card framing as the supplied targets.
-result = result.crop((245, 135, 655, 835))
+# Tight character-card crop: compare the two designs at equal on-screen height,
+# not at the unrelated margins of their source screenshots.
+result = result.crop((245, 190, 655, 810))
 
 
 def fit(image, target_height, target_width=600):
@@ -30,9 +27,8 @@ def fit(image, target_height, target_width=600):
 
 
 panels = [
-    ("APPEARANCE TARGET", fit(appearance, height, 520)),
-    ("IN-GAME STYLE / SCALE", fit(game, height, 610)),
-    ("NEW RIGGED MODEL", fit(result, height, 610)),
+    ("EXACT TARGET", fit(appearance, height, 650)),
+    ("NEW RIGGED MODEL", fit(result, height, 650)),
 ]
 width = sum(panel.width for _, panel in panels) + gap * (len(panels) + 1)
 canvas = Image.new("RGB", (width, height + header + gap * 2), background)

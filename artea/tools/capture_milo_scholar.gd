@@ -17,31 +17,31 @@ func _capture() -> void:
 	var world_environment := WorldEnvironment.new()
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("061e31")
+	environment.background_color = Color("6f9fbd")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("b9ddf2")
-	environment.ambient_light_energy = 0.58
+	environment.ambient_light_color = Color("d9e5eb")
+	environment.ambient_light_energy = 0.34
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	world_environment.environment = environment
 	stage.add_child(world_environment)
 
 	var key := DirectionalLight3D.new()
 	key.rotation_degrees = Vector3(-42, -32, 0)
-	key.light_color = Color("ffdfb2")
-	key.light_energy = 1.05
-	key.shadow_enabled = true
+	key.light_color = Color("fff2df")
+	key.light_energy = 0.62
+	key.shadow_enabled = false
 	stage.add_child(key)
 	var rim := DirectionalLight3D.new()
 	rim.rotation_degrees = Vector3(-20, 145, 0)
-	rim.light_color = Color("58bfe4")
-	rim.light_energy = 0.48
+	rim.light_color = Color("d8edf5")
+	rim.light_energy = 0.12
 	stage.add_child(rim)
 
 	var floor_mesh := MeshInstance3D.new()
 	var floor := PlaneMesh.new()
 	floor.size = Vector2(12, 12)
 	var floor_material := StandardMaterial3D.new()
-	floor_material.albedo_color = Color("09263a")
+	floor_material.albedo_color = Color("8cabb9")
 	floor_material.roughness = 0.9
 	floor.material = floor_material
 	floor_mesh.mesh = floor

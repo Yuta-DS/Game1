@@ -3,13 +3,13 @@
 // the parts in browser memory before the engine starts.
 (() => {
 	const nativeFetch = window.fetch.bind(window);
-	// Enough for the current ~430 MB pack at the export script's 8 MB parts.
+	// Fallback bound for older builds that do not provide a part manifest.
 	// Bounding the
 	// search keeps a hung probe from stalling startup forever: the previous
 	// version walked parts with an unbounded `for (;;)` and awaited each HEAD in
 	// turn, so one request that never settled meant the pack was never fetched
 	// and the engine sat at the loading screen with no error.
-	const MAX_PARTS = 64;
+	const MAX_PARTS = 128;
 
 	const buildKey = new URL(window.location.href).searchParams.get("build");
 	const partUrl = (requestUrl, index) => {
@@ -26,6 +26,21 @@
 	// Probe in parallel, then count the leading run of hits. Sequential probing
 	// cost one round trip per part before the download could start.
 	const countParts = async (requestUrl) => {
+		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
+		if (buildKey) {
+			manifestUrl.searchParams.set("build", buildKey);
+		}
+		try {
+			const manifestResponse = await nativeFetch(manifestUrl, { cache: "no-store" });
+			if (manifestResponse.ok) {
+				const manifest = await manifestResponse.json();
+				if (Number.isInteger(manifest.count) && manifest.count > 0) {
+					return manifest.count;
+				}
+			}
+		} catch (_error) {
+			// Fall through to bounded probing for backward-compatible builds.
+		}
 		const probes = Array.from({ length: MAX_PARTS }, (_, index) =>
 			nativeFetch(partUrl(requestUrl, index), { method: "HEAD", cache: "no-store" })
 				.then((response) => response.ok)
