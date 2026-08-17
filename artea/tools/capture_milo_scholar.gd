@@ -20,7 +20,7 @@ func _capture() -> void:
 	environment.background_color = Color("061e31")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color("b9ddf2")
-	environment.ambient_light_energy = 0.78
+	environment.ambient_light_energy = 0.58
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	world_environment.environment = environment
 	stage.add_child(world_environment)
@@ -28,13 +28,13 @@ func _capture() -> void:
 	var key := DirectionalLight3D.new()
 	key.rotation_degrees = Vector3(-42, -32, 0)
 	key.light_color = Color("ffdfb2")
-	key.light_energy = 1.55
+	key.light_energy = 1.05
 	key.shadow_enabled = true
 	stage.add_child(key)
 	var rim := DirectionalLight3D.new()
 	rim.rotation_degrees = Vector3(-20, 145, 0)
 	rim.light_color = Color("58bfe4")
-	rim.light_energy = 0.75
+	rim.light_energy = 0.48
 	stage.add_child(rim)
 
 	var floor_mesh := MeshInstance3D.new()

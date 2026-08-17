@@ -76,7 +76,19 @@ func _begin_pause(duration := -1.0) -> void:
 	_pause_timer = duration if duration >= 0.0 else randf_range(minimum_pause, maximum_pause)
 	velocity.x = 0.0
 	velocity.z = 0.0
+	_reset_mayor_arm_pose()
 	_play_animation("Idle_3")
+
+
+func _reset_mayor_arm_pose() -> void:
+	var skeleton := find_child("Skeleton3D", true, false) as Skeleton3D
+	if skeleton == null:
+		return
+	for bone_name in ["upperarm.l", "lowerarm.l", "wrist.l", "hand.l",
+			"upperarm.r", "lowerarm.r", "wrist.r", "hand.r"]:
+		var bone_index := skeleton.find_bone(bone_name)
+		if bone_index >= 0:
+			skeleton.reset_bone_pose(bone_index)
 
 
 func _choose_town_target() -> void:

@@ -26,4 +26,14 @@ func _ready() -> void:
 	for alias in aliases:
 		var source: String = aliases[alias]
 		if not library.has_animation(alias) and animation_player.has_animation(source):
-			library.add_animation(alias, animation_player.get_animation(source).duplicate())
+			var clip := animation_player.get_animation(source).duplicate()
+			if alias == "Idle_3":
+				# The source warrior idle holds its forearms in front of the torso.
+				# Milo's approved mayor pose keeps both sleeves relaxed at his sides.
+				# All non-arm idle motion (breathing, head, coat and legs) remains.
+				for track_index in range(clip.get_track_count() - 1, -1, -1):
+					var path := str(clip.track_get_path(track_index)).to_lower()
+					if path.contains("upperarm") or path.contains("lowerarm") \
+							or path.contains("wrist") or path.contains("hand"):
+						clip.remove_track(track_index)
+			library.add_animation(alias, clip)
