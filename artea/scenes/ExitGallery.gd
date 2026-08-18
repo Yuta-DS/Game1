@@ -1,7 +1,7 @@
 extends Area3D
 
 # --- Configuration ---
-@export var target_scene_path: String = "res://New_Hub_World.tscn"
+@export var target_scene_path: String = "res://scenes/New_Hub_World.tscn"
 
 # --- Signal Handler ---
 

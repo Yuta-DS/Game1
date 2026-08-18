@@ -2,7 +2,7 @@
 extends Area3D
 
 # --- CHANGE THIS PATH ---
-@export var target_scene_path: String = "res://New_Hub_World.tscn"
+@export var target_scene_path: String = "res://scenes/New_Hub_World.tscn"
 
 # This function is automatically called when a physics body enters the Area3D
 func _on_body_entered(body: Node3D):
