@@ -16,7 +16,19 @@ func _ready():
 		if world_env and world_env.environment:
 			var env = world_env.environment
 			env.background_mode = Environment.BG_COLOR
-			env.ambient_light_source = Environment.AMBIENT_SOURCE_BG
+			# BG_COLOR uses background_color, which this script never set, so it
+			# stayed at its default of black. Sourcing ambient from a black
+			# background gives zero ambient light - every model then renders as a
+			# black silhouette while sun-lit terrain still looks correct. Set the
+			# daylight backdrop explicitly and take ambient from an explicit
+			# colour rather than from the background.
+			env.background_color = Color(0.38, 0.67, 0.92)
+			env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+			env.ambient_light_color = Color(0.72, 0.82, 0.92)
+			env.ambient_light_energy = 1.0
+			# Any sky contribution would pull the term back toward the sky that
+			# is unusable on this renderer.
+			env.ambient_light_sky_contribution = 0.0
 			env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 
 		_disable_scatter_threading()

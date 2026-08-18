@@ -86,6 +86,14 @@ func _ready() -> void:
 			_env.sky = null
 			_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 			_env.ambient_light_color = Color(0.72, 0.82, 0.92)
+			# AMBIENT_SOURCE_COLOR still BLENDS toward the sky by
+			# ambient_light_sky_contribution, which defaults to 1.0 and is
+			# authored to 0.6 in cycle.tscn. With _env.sky cleared just above,
+			# that fraction of the ambient term comes from nothing, so most of
+			# the ambient light vanished and models rendered near-black. Force
+			# the contribution to zero so the colour above is the whole term.
+			_env.ambient_light_sky_contribution = 0.0
+			_env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 		# This inherited Environment carries experimental height/depth fog values
 		# (including a negative height density). Enabling them covers the nearby
 		# world with an opaque blue sheet: the sky and UI remain visible while all
