@@ -162,7 +162,12 @@ renderer/rendering_method="mobile"
 renderer/rendering_method.web="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=3
-anti_aliasing/quality/screen_space_aa=1
+; Screen-space AA (FXAA) exists only on Forward+/Mobile.  The web export runs
+; gl_compatibility, where requesting it does nothing but log an error.  A .web
+; feature-tag override does NOT suppress it - the base value is still applied -
+; so FXAA is off project-wide.  MSAA (msaa_3d above) works on every renderer and
+; is what actually smooths edges here.
+anti_aliasing/quality/screen_space_aa=0
 
 [shader_globals]
 

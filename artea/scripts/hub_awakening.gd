@@ -92,7 +92,14 @@ func _ready() -> void:
 		# terrain, trains, and character meshes disappear. Keep legacy fog off;
 		# the authored sky shader already supplies the distant atmosphere.
 		_env.fog_enabled = false
-		_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		# Ambient must NOT be forced back to the sky on Web.  The block above
+		# clears _env.sky (the procedural sky exceeds WebGL2's budget), so
+		# sourcing ambient from the sky there means sourcing it from nothing:
+		# ambient light drops to zero and every model renders as a black
+		# silhouette, while sun-lit terrain still looks correct - which is what
+		# made this read as a model bug rather than a lighting one.
+		if not OS.has_feature("web"):
+			_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 		_env.ambient_light_energy = 1.25
 
 	# A low-energy, shadowless lavender fill lifts the side of the castle and
