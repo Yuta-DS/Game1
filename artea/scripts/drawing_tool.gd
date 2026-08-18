@@ -505,6 +505,10 @@ func save_artwork_to_gallery() -> String:
 
 func upload_artwork_to_firebase() -> void:
 
+	if not Global.is_online_session():
+		print("Upload blocked: guest/offline session")
+		return
+
 	var image = _build_artwork_image()
 
 	var byte_data = image.save_png_to_buffer()
@@ -590,8 +594,8 @@ func _on_art_gallery_button_pressed() -> void:
 # REMOTE GALLERY - SAVE/UPLOAD TO SERVER
 func upload_artwork_to_server() -> void:
 	
-	if Global.auth_token == "" or Global.auth_token == "invalid_token":
-		print("Upload blocked: invalid auth token")
+	if not Global.is_online_session():
+		print("Upload blocked: guest/offline session or invalid auth token")
 		return
 
 	var image = _build_artwork_image()

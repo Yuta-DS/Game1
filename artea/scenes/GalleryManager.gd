@@ -192,8 +192,8 @@ func load_local_art_paths() -> void:
 
 func list_user_artworks() -> void:
 	
-	if Global.auth_token == "":
-		print("No authenticated user -> loading local gallery")
+	if not Global.is_online_session():
+		print("Guest/offline session -> loading local gallery, no API call")
 
 		load_local_art_paths()
 		apply_local_art_over_online()

@@ -144,9 +144,12 @@ func check_internet_connection() -> bool:
 # Handles variable registration tracking, audio attenuation, and scene execution
 func enter_game(username: String, is_guest: bool = false):
 	# Direct assignment block to separate your tracks completely
+	Global.is_guest = is_guest
 	if is_guest:
 		Global.current_user_name = "Guest_Player"
-		Global.auth_token = "OFFLINE_GUEST_TOKEN"
+		# Leave the token empty: every network path keys off an empty token
+		# (or Global.is_online_session()) to decide whether to skip the API.
+		Global.auth_token = ""
 		print("SESSION LOCKED: API Database completely bypassed.")
 	else:
 		Global.current_user_name = username
