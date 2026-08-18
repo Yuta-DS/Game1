@@ -14,11 +14,27 @@ func _enter_tree() -> void:
 	# is removed from this runtime.
 	var environment := get_node_or_null("../Environment")
 	if environment != null:
+		# Only ProtonScatter's *generation* is a problem on the single-threaded
+		# Web runtime, not the nodes themselves.  Freeing these subtrees also
+		# destroyed every hand-placed child underneath them - bridges, props and
+		# other authored landmarks - which is why they vanished on Web while
+		# looking correct on desktop.
+		#
+		# Disable the scatter roots so they never kick off a rebuild, and
+		# reparent anything the author placed by hand so it survives.
 		for child_name in ["Grass", "Objects"]:
 			var scatter_root := environment.get_node_or_null(child_name)
-			if scatter_root != null:
-				environment.remove_child(scatter_root)
-				scatter_root.free()
+			if scatter_root == null:
+				continue
+			for authored in _authored_children(scatter_root):
+				var keep_transform := authored.global_transform if authored is Node3D else Transform3D()
+				scatter_root.remove_child(authored)
+				environment.add_child(authored)
+				authored.owner = environment.owner
+				if authored is Node3D:
+					authored.global_transform = keep_transform
+			scatter_root.process_mode = Node.PROCESS_MODE_DISABLED
+			scatter_root.visible = false
 		var terrain = environment.get_node_or_null("Terrain3D")
 		if terrain != null:
 			terrain.visible = false
@@ -151,3 +167,18 @@ func _add_collision(mesh: ArrayMesh) -> void:
 	collision.shape = shape
 	body.add_child(collision)
 	add_child(body)
+
+
+func _authored_children(scatter_root: Node) -> Array:
+	# ProtonScatter's own machinery is its ScatterShape/ScatterItem children and
+	# the MultiMeshInstance3D output it generates. Everything else under the
+	# root was placed by hand in the editor and must be preserved.
+	var authored: Array = []
+	for child in scatter_root.get_children():
+		var name_text := str(child.name)
+		if name_text.begins_with("ScatterShape") or name_text.begins_with("ScatterItem"):
+			continue
+		if child is MultiMeshInstance3D:
+			continue
+		authored.append(child)
+	return authored
