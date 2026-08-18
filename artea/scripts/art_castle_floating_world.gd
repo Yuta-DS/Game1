@@ -413,6 +413,12 @@ func _build_mind_spark_world_one_gameplay() -> void:
 	var world_one := world_one_scene.instantiate() as MindSparkWorldOne
 	world_one.name = "MindSparkWorldOne"
 	world_one.force_standalone_blueprint = true
+	# Defer World One's construction on the web. It is ~27,000 mesh nodes, 82%
+	# of every mesh in the art gallery, and building it up front took the scene
+	# to 1,161 MB against the hub's 348 MB - past what a wasm32 browser holding
+	# the pack in memory can serve, so the gallery came up empty. The world gate
+	# and the causeway both build it on demand.
+	world_one.defer_world_build = OS.has_feature("web")
 	world_one.return_destination_world_local = MIND_GATE_RETURN_LANDING
 	world_one.position = MIND_WORLD_ONE_ORIGIN
 	add_child(world_one)
@@ -424,6 +430,8 @@ func _build_mind_spark_world_one_gameplay() -> void:
 	source_gate.prompt_text = "Q • ENTER WORLD ONE: MIND SPARK"
 	add_child(source_gate)
 	_build_world_one_causeway(world_one)
+	if world_one.defer_world_build:
+		_add_world_one_build_trigger(world_one)
 
 
 func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
@@ -1593,3 +1601,25 @@ func _make_textured_material(base: Color, panel: Color, circuit: Color,
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	material.uv1_scale = Vector3(3.0, 3.0, 3.0)
 	return material
+
+
+func _add_world_one_build_trigger(world_one: MindSparkWorldOne) -> void:
+	## The world gate builds World One on travel, but the causeway is a second,
+	## walkable way in. Without a trigger here a player who walks across it
+	## arrives at empty space. This area covers the landing and builds the world
+	## before they reach it.
+	var trigger := Area3D.new()
+	trigger.name = "MindSparkWorldOneBuildTrigger"
+	trigger.position = MIND_WORLD_ONE_ORIGIN \
+		+ world_one.get_zone_position("01_world_gate_landing")
+	var shape := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	# Generous radius: building takes a moment, so it should start well before
+	# the player can see that nothing is there.
+	sphere.radius = 320.0
+	shape.shape = sphere
+	trigger.add_child(shape)
+	trigger.body_entered.connect(func(body: Node3D) -> void:
+		if body is CharacterBody3D:
+			world_one.ensure_world_built())
+	add_child(trigger)
