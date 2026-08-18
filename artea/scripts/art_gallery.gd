@@ -27,6 +27,7 @@ const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
 func _ready() -> void:
 	_build_galaxy_transit()
+	_report_galaxy_state()
 	_build_quest_journal_button()
 	likebutton.visible = true
 	
@@ -50,6 +51,30 @@ func _ready() -> void:
 # scene. The Crown Line follows the story in one open world: Gallery Station,
 # Mind Spark, Heart Melody, then Creator's Light.
 const FLOATING_WORLD_FRONT_OFFSET := Vector3(0.0, 0.0, -480.0)
+
+
+func _report_galaxy_state() -> void:
+	# The galaxy world builds correctly in headless runs on the same renderer the
+	# web uses, so any remaining failure is specific to the browser. Print what
+	# actually exists at runtime so the console says which stage broke instead of
+	# leaving it to be guessed at.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var world := find_child("ArtCastleFloatingWorld", true, false)
+	var meshes := 0
+	if world != null:
+		var stack: Array = [world]
+		while stack.size() > 0:
+			var n: Node = stack.pop_back()
+			if n is VisualInstance3D and (n as Node3D).is_visible_in_tree():
+				meshes += 1
+			for c in n.get_children():
+				stack.append(c)
+	var cam := get_viewport().get_camera_3d() if get_viewport() != null else null
+	print("[ARTEA] galaxy world=", world != null,
+		" visible_meshes=", meshes,
+		" camera=", cam.global_position if cam != null else "none",
+		" renderer=", RenderingServer.get_video_adapter_name())
 
 
 func _build_galaxy_transit() -> void:
