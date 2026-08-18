@@ -14,7 +14,8 @@ def look_at(obj, target):
     obj.rotation_euler = (Vector(target) - obj.location).to_track_quat("-Z", "Y").to_euler()
 
 
-def position_character(imported, name, x_position, target_height):
+def position_character(imported, name, x_position):
+    """Place both production GLBs at their native in-game scale."""
     root = bpy.data.objects.new(name, None)
     bpy.context.scene.collection.objects.link(root)
     top_level = [obj for obj in imported if obj.parent not in imported]
@@ -22,14 +23,15 @@ def position_character(imported, name, x_position, target_height):
         obj.parent = root
 
     meshes = [obj for obj in imported if obj.type == "MESH"]
+    bpy.context.view_layer.update()
     corners = [obj.matrix_world @ Vector(corner) for obj in meshes for corner in obj.bound_box]
     low = Vector((min(p.x for p in corners), min(p.y for p in corners), min(p.z for p in corners)))
     high = Vector((max(p.x for p in corners), max(p.y for p in corners), max(p.z for p in corners)))
-    scale = target_height / max(high.z - low.z, 0.001)
-    root.scale = (scale, scale, scale)
-    root.location = (-((low.x + high.x) * 0.5) * scale + x_position,
-                     -((low.y + high.y) * 0.5) * scale,
-                     -low.z * scale)
+    root.location = (
+        x_position - (low.x + high.x) * 0.5,
+        -(low.y + high.y) * 0.5,
+        -low.z,
+    )
     return root
 
 
@@ -38,20 +40,18 @@ bpy.ops.import_scene.gltf(
     filepath=str(ROOT / "assets3D/characters/milo_villager_lowpoly.glb")
 )
 milo_objects = list(bpy.context.scene.objects)
-milo_root = position_character(
+position_character(
     milo_objects,
     "Mayor Milo",
     -0.82,
-    1.72,
 )
 before = set(bpy.context.scene.objects)
 bpy.ops.import_scene.gltf(filepath=str(ROOT / "assets3D/characters/Barbarian.glb"))
 villager_objects = [obj for obj in bpy.context.scene.objects if obj not in before]
-villager_root = position_character(
+position_character(
     villager_objects,
     "Market Villager",
     0.82,
-    1.72,
 )
 
 bpy.ops.mesh.primitive_plane_add(size=200, location=(0, 0, -0.015))
@@ -60,10 +60,10 @@ ground_material = bpy.data.materials.new("Artea Grass")
 ground_material.diffuse_color = (0.11, 0.32, 0.09, 1)
 ground.data.materials.append(ground_material)
 
-bpy.ops.object.camera_add(location=(0, -8.0, 2.05))
+bpy.ops.object.camera_add(location=(0, -15.0, 3.1))
 camera = bpy.context.object
 camera.data.lens = 62
-look_at(camera, (0, 0, 0.88))
+look_at(camera, (0, 0, 1.45))
 bpy.context.scene.camera = camera
 
 for location, energy, size, color in (
@@ -95,18 +95,3 @@ scene.render.film_transparent = False
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 bpy.ops.render.render(write_still=True)
 print(f"MILO_VILLAGER_RENDER: wrote {OUTPUT}")
-
-# Also produce a portrait at roughly the same framing as the supplied sample so
-# facial finish and silhouette can be judged without the scale comparison.
-villager_root.hide_render = True
-for child in villager_root.children_recursive:
-    child.hide_render = True
-milo_root.location.x += 0.82
-camera.location = (0, -3.25, 1.48)
-camera.data.lens = 68
-look_at(camera, (0, 0, 0.92))
-scene.render.resolution_x = 768
-scene.render.resolution_y = 960
-scene.render.filepath = str(ROOT / "artifacts" / "milo_quality_preview.png")
-bpy.ops.render.render(write_still=True)
-print(f"MILO_PORTRAIT_RENDER: wrote {scene.render.filepath}")
