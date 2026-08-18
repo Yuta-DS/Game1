@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cgmg8ih4guj28" path="res://start_screen.gd" id="1_pevhg"]
 [ext_resource type="Texture2D" uid="uid://co8ixwvp5nnyc" path="res://assets/Startscreen_Background.png" id="2_afy8x"]
-[ext_resource type="AudioStream" uid="uid://bw43puxvrmg1w" path="res://assets/audio/Atmospheric-instrumental-music.mp3" id="3_he1sj"]
+[ext_resource type="AudioStream" uid="uid://bw43puxvrmg1w" path="res://assets/audio/Atmospheric-instrumental-music.ogg" id="3_he1sj"]
 
 [sub_resource type="Animation" id="Animation_o7i0r"]
 length = 0.001

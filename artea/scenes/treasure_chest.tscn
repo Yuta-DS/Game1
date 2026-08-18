@@ -3,8 +3,8 @@
 [ext_resource type="Texture2D" uid="uid://co1fsr0qx1ohg" path="res://assets/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="1_75h8e"]
 [ext_resource type="Script" uid="uid://ddvah7tvghc2m" path="res://scripts/treasure_chest.gd" id="1_ybsko"]
 [ext_resource type="Texture2D" uid="uid://dcqoitu3fuqys" path="res://assets/Collectibles/orb.png" id="3_4lyqs"]
-[ext_resource type="AudioStream" uid="uid://cacro6jdhbkf0" path="res://assets/SFX/open chest.wav" id="4_b1w43"]
-[ext_resource type="AudioStream" uid="uid://b853lclmr1lkt" path="res://assets/SFX/fairy dust.mp3" id="5_tymi3"]
+[ext_resource type="AudioStream" uid="uid://cacro6jdhbkf0" path="res://assets/SFX/open chest.ogg" id="4_b1w43"]
+[ext_resource type="AudioStream" uid="uid://b853lclmr1lkt" path="res://assets/SFX/fairy dust.ogg" id="5_tymi3"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ybsko"]
 atlas = ExtResource("1_75h8e")

@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://s55egnlukr74" path="res://scripts/fox.tscn" id="3_btyug"]
 [ext_resource type="Resource" uid="uid://c8v7m3n2k5p4q" path="res://resources/player_inventory.tres" id="4_inv"]
 [ext_resource type="PackedScene" uid="uid://0bb61ebi0v3j" path="res://scenes/inventory_gui.tscn" id="5_invgui"]
-[ext_resource type="AudioStream" uid="uid://vfavxc7vk3c" path="res://assets/audio/FootSteps.mp3" id="6_6joo3"]
+[ext_resource type="AudioStream" uid="uid://vfavxc7vk3c" path="res://assets/audio/FootSteps.ogg" id="6_6joo3"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_37sbh"]
 

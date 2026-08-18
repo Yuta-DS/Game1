@@ -76,7 +76,7 @@ var journey_state_override: Node
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	
-	player.stream = load("res://assets/audio/minigame/intro.mp3")
+	player.stream = load("res://assets/audio/minigame/intro.ogg")
 	player.play()
 	
 	create_visualizer_bars()
@@ -209,16 +209,16 @@ func _on_volume_changed(value: float):
 	drums_player.volume_db = linear_to_db(adjusted)
 
 func _on_drums1_pressed():
-	play_drum_loop("res://assets/audio/minigame/beats/drums_1.mp3")
+	play_drum_loop("res://assets/audio/minigame/beats/drums_1.ogg")
 
 func _on_drums2_pressed():
-	play_drum_loop("res://assets/audio/minigame/beats/drums_2.mp3")
+	play_drum_loop("res://assets/audio/minigame/beats/drums_2.ogg")
 
 func _on_drums3_pressed():
-	play_drum_loop("res://assets/audio/minigame/beats/drums_3.mp3")
+	play_drum_loop("res://assets/audio/minigame/beats/drums_3.ogg")
 
 func _on_drums4_pressed():
-	play_drum_loop("res://assets/audio/minigame/beats/drums_4.mp3")
+	play_drum_loop("res://assets/audio/minigame/beats/drums_4.ogg")
 	
 func play_drum_loop(path: String):
 
@@ -452,31 +452,31 @@ func play_music(emotion: String):
 	match emotion:
 
 		"happy":
-			path = "res://assets/audio/minigame/happy.mp3"
+			path = "res://assets/audio/minigame/happy.ogg"
 
 		"anticipation":
-			path = "res://assets/audio/minigame/anticipation.mp3"
+			path = "res://assets/audio/minigame/anticipation.ogg"
 
 		"angry":
-			path = "res://assets/audio/minigame/angry.mp3"
+			path = "res://assets/audio/minigame/angry.ogg"
 
 		"disgust":
-			path = "res://assets/audio/minigame/disgust.mp3"
+			path = "res://assets/audio/minigame/disgust.ogg"
 
 		"sad":
-			path = "res://assets/audio/minigame/sad.mp3"
+			path = "res://assets/audio/minigame/sad.ogg"
 
 		"surprise":
-			path = "res://assets/audio/minigame/surprise.mp3"
+			path = "res://assets/audio/minigame/surprise.ogg"
 
 		"fear":
-			path = "res://assets/audio/minigame/fear.mp3"
+			path = "res://assets/audio/minigame/fear.ogg"
 
 		"trust":
-			path = "res://assets/audio/minigame/trust.mp3"
+			path = "res://assets/audio/minigame/trust.ogg"
 
 		_:
-			path = "res://assets/audio/minigame/intro.mp3"
+			path = "res://assets/audio/minigame/intro.ogg"
 
 	var stream = load(path)
 

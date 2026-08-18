@@ -4,9 +4,9 @@ extends Node
 @onready var player2: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
 #Aliases
-const PEACE_TRACK = preload("res://assets/SFX/Peace - David Lastra.wav")
-const MAGIC_TRACK = preload("res://assets/SFX/Magic in the Garden.mp3")
-const PAINT_TRACK = preload("res://assets/SFX/Forest Frolic Loop.mp3")
+const PEACE_TRACK = preload("res://assets/SFX/Peace - David Lastra.ogg")
+const MAGIC_TRACK = preload("res://assets/SFX/Magic in the Garden.ogg")
+const PAINT_TRACK = preload("res://assets/SFX/Forest Frolic Loop.ogg")
 
 @export var scene_to_track: Dictionary = {
 	"res://scenes/cloud_pop_ui.tscn":	PEACE_TRACK,

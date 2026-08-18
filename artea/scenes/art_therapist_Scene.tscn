@@ -14,8 +14,8 @@
 [ext_resource type="PackedScene" uid="uid://62m34ww2gvtb" path="res://scenes/player.tscn" id="12_ndupp"]
 [ext_resource type="PackedScene" uid="uid://jjgqd6v4wq6g" path="res://scenes/npc_therapist2.tscn" id="13_8pcnw"]
 [ext_resource type="PackedScene" uid="uid://tfpr4uiqnkn4" path="res://scenes/Control_HUD.tscn" id="14_4y7mp"]
-[ext_resource type="AudioStream" uid="uid://c4j2yogfo2xl0" path="res://assets/SFX/Connecting Rainbows.mp3" id="15_20367"]
-[ext_resource type="AudioStream" uid="uid://codlt8pf5j5jq" path="res://assets/SFX/beachBG.mp3" id="16_u7u40"]
+[ext_resource type="AudioStream" uid="uid://c4j2yogfo2xl0" path="res://assets/SFX/Connecting Rainbows.ogg" id="15_20367"]
+[ext_resource type="AudioStream" uid="uid://codlt8pf5j5jq" path="res://assets/SFX/beachBG.ogg" id="16_u7u40"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lbhrr"]
 texture = ExtResource("1_iqcv7")

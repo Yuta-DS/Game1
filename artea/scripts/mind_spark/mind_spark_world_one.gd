@@ -22,8 +22,8 @@ const WorldGateScene := preload("res://scenes/mind_spark/world_gate.tscn")
 # boxes and drums. Used to give the props real cut geometry instead of raw
 # BoxMesh/SphereMesh primitives.
 const Bricks := preload("res://scripts/altar/AltarParts.gd")
-const NetworkAmbience := preload("res://assets/audio/Atmospheric-instrumental-music.mp3")
-const SanctuaryAmbience := preload("res://assets/audio/calm music.mp3")
+const NetworkAmbience := preload("res://assets/audio/Atmospheric-instrumental-music.ogg")
+const SanctuaryAmbience := preload("res://assets/audio/calm music.ogg")
 const IslandDetailAnimator := preload("res://scripts/mind_spark/mind_spark_island_detail_animator.gd")
 const ENEMY_DEFINITIONS := {
 	"static_mite": preload("res://resources/mind_spark/enemies/static_mite.tres"),

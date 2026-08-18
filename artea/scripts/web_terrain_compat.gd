@@ -27,7 +27,7 @@ func _enter_tree() -> void:
 			if scatter_root == null:
 				continue
 			for authored in _authored_children(scatter_root):
-				var keep_transform := authored.global_transform if authored is Node3D else Transform3D()
+				var keep_transform: Transform3D = (authored as Node3D).global_transform if authored is Node3D else Transform3D()
 				scatter_root.remove_child(authored)
 				environment.add_child(authored)
 				authored.owner = environment.owner

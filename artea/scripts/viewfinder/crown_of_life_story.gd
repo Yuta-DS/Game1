@@ -38,20 +38,20 @@ const STONE_ALBEDO := "res://demo/assets/textures/rock023_alb_ht.png"
 # Heart Melody in particular is legible with the game fully muted (captions
 # already carry the same words in the HUD) and distinct with sound on.
 const CHAPTER_SFX := {
-	"mind_spark": "res://assets/audio/minigame/anticipation.mp3",
-	"heart_melody": "res://assets/audio/minigame/happy.mp3",
-	"creators_light": "res://assets/audio/minigame/trust.mp3",
+	"mind_spark": "res://assets/audio/minigame/anticipation.ogg",
+	"heart_melody": "res://assets/audio/minigame/happy.ogg",
+	"creators_light": "res://assets/audio/minigame/trust.ogg",
 }
-const BRIDGE_OPEN_SFX := "res://assets/SFX/open chest.wav"
-const AMBIENT_MUSIC := "res://assets/audio/Atmospheric-instrumental-music.mp3"
+const BRIDGE_OPEN_SFX := "res://assets/SFX/open chest.ogg"
+const AMBIENT_MUSIC := "res://assets/audio/Atmospheric-instrumental-music.ogg"
 const INTERACT_RADIUS := 6.0
 const HEART_EMOTIONS := [
-	{"name": "Joy", "colour": Color("ffd166"), "sound": "res://assets/audio/minigame/happy.mp3"},
-	{"name": "Sadness", "colour": Color("72a5ff"), "sound": "res://assets/audio/minigame/sad.mp3"},
-	{"name": "Frustration", "colour": Color("ff6b6b"), "sound": "res://assets/audio/minigame/angry.mp3"},
-	{"name": "Fear", "colour": Color("a78bfa"), "sound": "res://assets/audio/minigame/fear.mp3"},
-	{"name": "Peace", "colour": Color("55e6c1"), "sound": "res://assets/SFX/Peace - David Lastra.wav"},
-	{"name": "Hope", "colour": Color("ff9de2"), "sound": "res://assets/audio/minigame/trust.mp3"},
+	{"name": "Joy", "colour": Color("ffd166"), "sound": "res://assets/audio/minigame/happy.ogg"},
+	{"name": "Sadness", "colour": Color("72a5ff"), "sound": "res://assets/audio/minigame/sad.ogg"},
+	{"name": "Frustration", "colour": Color("ff6b6b"), "sound": "res://assets/audio/minigame/angry.ogg"},
+	{"name": "Fear", "colour": Color("a78bfa"), "sound": "res://assets/audio/minigame/fear.ogg"},
+	{"name": "Peace", "colour": Color("55e6c1"), "sound": "res://assets/SFX/Peace - David Lastra.ogg"},
+	{"name": "Hope", "colour": Color("ff9de2"), "sound": "res://assets/audio/minigame/trust.ogg"},
 ]
 const CREATIVE_CHOICES := [
 	{"name": "Courage Sun", "colour": Color("ffd166")},
