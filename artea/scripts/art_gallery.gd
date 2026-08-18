@@ -71,10 +71,26 @@ func _report_galaxy_state() -> void:
 			for c in n.get_children():
 				stack.append(c)
 	var cam := get_viewport().get_camera_3d() if get_viewport() != null else null
-	print("[ARTEA] galaxy world=", world != null,
-		" visible_meshes=", meshes,
-		" camera=", cam.global_position if cam != null else "none",
-		" renderer=", RenderingServer.get_video_adapter_name())
+	var report := "world=%s meshes=%d cam=%s" % [
+		str(world != null), meshes,
+		str(cam.global_position) if cam != null else "none"]
+	print("[ARTEA] galaxy ", report)
+
+	# Also show it on screen. Asking for a browser console reading has not been
+	# workable, and this makes the same information visible to anyone running
+	# the build, including on a phone where no console is reachable.
+	var hud := CanvasLayer.new()
+	hud.name = "GalaxyDiagnosticHUD"
+	hud.layer = 100
+	add_child(hud)
+	var label := Label.new()
+	label.name = "GalaxyDiagnosticLabel"
+	label.text = "[ARTEA] " + report
+	label.position = Vector2(12, 12)
+	label.add_theme_color_override("font_color", Color(1, 1, 0.4))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	label.add_theme_constant_override("outline_size", 6)
+	hud.add_child(label)
 
 
 func _build_galaxy_transit() -> void:
