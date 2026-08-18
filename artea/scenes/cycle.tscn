@@ -65,7 +65,17 @@ background_mode = 2
 background_color = Color(8.27849e-06, 0.642601, 0.857138, 1)
 sky = SubResource("Sky_8csbe")
 sky_rotation = Vector3(6.28319, 0, 0)
-ambient_light_source = 3
+; ambient_light_source: 3 = Sky.  The sky here is a custom shader using
+; use_half_res_pass, which the web's gl_compatibility renderer cannot run, so on
+; the web the sky contributed NO ambient light at all - every model rendered as
+; a black silhouette while the terrain, lit directly by the sun, looked fine.
+;
+; Source 2 = Color blends a fixed ambient colour with the sky instead of relying
+; on it.  Desktop still gets sky reflections; the web gets a real ambient term.
+ambient_light_source = 2
+ambient_light_color = Color(0.478431, 0.607843, 0.729412, 1)
+ambient_light_energy = 0.45
+ambient_light_sky_contribution = 0.6
 reflected_light_source = 2
 glow_enabled = true
 fog_mode = 1
