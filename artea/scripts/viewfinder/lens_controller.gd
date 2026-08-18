@@ -170,6 +170,12 @@ func _restore_placements() -> void:
 # own exposure/DOF settings are never overwritten.
 func _build_dof() -> void:
 	_lens_attributes = CameraAttributesPractical.new()
+	# Depth-of-field blur exists only on Forward+/Mobile. The Web export runs
+	# gl_compatibility (its template ships no other renderer), where enabling
+	# these logs a warning per lens and blurs nothing. Leave the attributes
+	# unblurred there so the lens still frames shots without the noise.
+	if OS.has_feature("web"):
+		return
 	_lens_attributes.dof_blur_near_enabled = true
 	_lens_attributes.dof_blur_near_distance = DOF_NEAR_DISTANCE
 	_lens_attributes.dof_blur_near_transition = DOF_TRANSITION
