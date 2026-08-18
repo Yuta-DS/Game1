@@ -245,6 +245,10 @@ func _get(property):
 	elif property == "Performance/chunk_dimensions":
 		return chunk_dimensions
 
+	# Godot 4.7 requires all code paths to return; null means "property not
+	# handled here", which is what the implicit fallthrough meant before.
+	return null
+
 
 func is_thread_running() -> bool:
 	return _thread != null and _thread.is_started()

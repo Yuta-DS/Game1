@@ -52,23 +52,28 @@ func _ready() -> void:
 	player.stream = load("res://assets/audio/minigame/intro.mp3")
 	player.play()
 	
-	# Load model
-	model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
+	# The emotion classifier needs the local LLM, which has no web build.
+	# Skip AI setup there; the minigame still runs, just without classification.
+	if Global.has_local_llm():
+		# Load model
+		model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
 
-	# Connect model to AI node
-	emotion_ai.set_model_node(model)
+		# Connect model to AI node
+		emotion_ai.set_model_node(model)
 
-	# Set strict emotion classifier prompt
-	emotion_ai.set_system_prompt(load_emotion_prompt())
+		# Set strict emotion classifier prompt
+		emotion_ai.set_system_prompt(load_emotion_prompt())
 
-	# Start AI worker
-	emotion_ai.start_worker()
+		# Start AI worker
+		emotion_ai.start_worker()
 
-	# Connect response signal
-	emotion_ai.connect(
-		"response_finished",
-		Callable(self, "_on_emotion_response")
-	)
+		# Connect response signal
+		emotion_ai.connect(
+			"response_finished",
+			Callable(self, "_on_emotion_response")
+		)
+	else:
+		print("Local LLM unavailable (web build) - emotion AI disabled.")
 	
 	if not button.pressed.is_connected(_on_generate_pressed):
 		button.pressed.connect(_on_generate_pressed)
@@ -660,6 +665,12 @@ func _on_generate_pressed():
 	var text = input.text.strip_edges()
 
 	if text == "":
+		return
+
+	# Without the local LLM there is no worker to answer, so bail out with a
+	# message instead of leaving "Analyzing emotion..." on screen forever.
+	if not Global.has_local_llm():
+		result.text = "Emotion analysis is unavailable in the browser version."
 		return
 
 	result.text = "Analyzing emotion..."

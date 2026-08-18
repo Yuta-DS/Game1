@@ -11,6 +11,12 @@ var openai_api_key = "" # <<<<<< Do not include API key in code
 signal chat_closed
 
 func _ready():
+	# No local LLM on web (nobodywho has no wasm build, and the .gguf models
+	# are ~2GB). Show a notice instead of crashing on the missing extension.
+	if not Global.has_local_llm():
+		_disable_chat("Milo is unavailable in the browser version.")
+		return
+
 	# Load the .gguf model
 	model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
 	ai_counselor.set_model_node(model)
@@ -126,3 +132,15 @@ func close_chat():
 func _input(event):
 	if event.is_action_pressed("ui_cancel"): # If chat closed
 		close_chat()
+
+
+# Puts the chat UI into a read-only "unavailable" state.
+func _disable_chat(reason: String) -> void:
+	if chat_history:
+		chat_history.text = reason
+	if user_input:
+		user_input.editable = false
+		user_input.placeholder_text = "Unavailable"
+	if send_button:
+		send_button.disabled = true
+	print("Chatbot disabled: ", reason)
