@@ -54,6 +54,10 @@ const FLOATING_WORLD_FRONT_OFFSET := Vector3(0.0, 0.0, -480.0)
 
 
 func _report_galaxy_state() -> void:
+	# Report unconditionally and as early as possible. If the gallery appears
+	# empty and this text is absent, the scene itself is not being reached and
+	# the fault is upstream of anything in this file.
+	_show_boot_banner()
 	# The galaxy world builds correctly in headless runs on the same renderer the
 	# web uses, so any remaining failure is specific to the browser. Print what
 	# actually exists at runtime so the console says which stage broke instead of
@@ -347,3 +351,29 @@ func _enter_current_frame_world() -> void:
 			_world_opening = false
 			ratinglabel.text = "The interactive artwork world could not open yet. Please try again."
 	)
+
+
+func _show_boot_banner() -> void:
+	## Drawn the instant the gallery loads, before any world construction, so
+	## there is always visible evidence of whether this scene ran at all.
+	var hud := CanvasLayer.new()
+	hud.name = "GalleryBootBanner"
+	hud.layer = 128
+	add_child(hud)
+	var label := Label.new()
+	label.text = "[ARTEA] gallery scene loaded — building world…"
+	label.position = Vector2(12, 40)
+	label.add_theme_color_override("font_color", Color(0.4, 1, 0.5))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	label.add_theme_constant_override("outline_size", 6)
+	hud.add_child(label)
+	# Surface any script error that would otherwise only reach the console.
+	var web_note := Label.new()
+	web_note.text = "web=%s renderer=%s" % [
+		str(OS.has_feature("web")),
+		RenderingServer.get_video_adapter_name()]
+	web_note.position = Vector2(12, 64)
+	web_note.add_theme_color_override("font_color", Color(0.6, 0.9, 1))
+	web_note.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	web_note.add_theme_constant_override("outline_size", 6)
+	hud.add_child(web_note)
