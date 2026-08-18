@@ -1,4 +1,4 @@
-extends Node3D
+extends Node
 
 @export var painting_title: String = "artwork_1.png"
 
@@ -65,7 +65,34 @@ func _build_galaxy_transit() -> void:
 	floating_world.position = FLOATING_WORLD_FRONT_OFFSET
 	floating_world.set_script(load("res://scripts/art_castle_floating_world.gd"))
 	floating_world.set("embedded_in_gallery", true)
-	add_child(floating_world)
+	# A Node3D only renders beneath a 3D parent. This scene's root may be a
+	# Node2D (ArtGallery.tscn) or a Node3D (art_gallery_3d.tscn), so when it is
+	# 2D the world goes inside a SubViewport that provides the missing 3D world,
+	# displayed behind the 2D content rather than not at all.
+	# Compared as a plain Node so the static analyser does not reject the test:
+	# under `extends Node` it can prove `self is Node3D` is impossible and refuses
+	# to parse the script at all.
+	var host: Node = self
+	if host is Node3D:
+		add_child(floating_world)
+	else:
+		var viewport := SubViewport.new()
+		viewport.name = "GalaxyViewport"
+		viewport.size = Vector2i(1920, 1080)
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		viewport.handle_input_locally = false
+		var container := SubViewportContainer.new()
+		container.name = "GalaxyViewportContainer"
+		container.stretch = true
+		container.set_anchors_preset(Control.PRESET_FULL_RECT)
+		container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var layer := CanvasLayer.new()
+		layer.name = "GalaxyCanvas"
+		layer.layer = -10
+		add_child(layer)
+		layer.add_child(container)
+		container.add_child(viewport)
+		viewport.add_child(floating_world)
 
 	var kingdom_regions := Node3D.new()
 	kingdom_regions.name = "KingdomRegions3000m"
