@@ -73,7 +73,14 @@
 		const requestUrl = typeof input === "string" ? input : input.url;
 		const url = new URL(requestUrl, window.location.href);
 
-		if (!url.pathname.endsWith("/index.pck")) {
+		// The pack is not the only file that has to be split. Cloudflare Pages
+		// rejects any single file over 25 MB, and index.side.wasm (the
+		// GDExtension side module) is 42 MB, so it is split the same way and
+		// rejoined here. Serving it pre-gzipped is not an option: Cloudflare
+		// strips a manually set Content-Encoding, so the browser receives gzip
+		// bytes where it expects a wasm module and refuses to instantiate it.
+		const splittable = ["/index.pck", "/index.side.wasm"];
+		if (!splittable.some((name) => url.pathname.endsWith(name))) {
 			return nativeFetch(input, init);
 		}
 

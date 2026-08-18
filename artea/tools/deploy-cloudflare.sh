@@ -21,10 +21,10 @@
 #       the export script, and rejoined in the browser by pck-loader.js. The
 #       whole .pck must NOT be uploaded; only the parts.
 #     * index.side.wasm (42 MB) - the GDExtension side module (terrain_3d).
-#       This one CANNOT be split: pck-loader.js only intercepts /index.pck, and
-#       the browser loads the side module directly, so a split copy would simply
-#       404. It is served gzipped instead, which Cloudflare decompresses
-#       transparently and which brings it under the limit.
+#       Serving it pre-gzipped does NOT work: Cloudflare strips a manually set
+#       Content-Encoding header, so the browser receives gzip bytes where it
+#       expects a wasm module (verified: the deployed file began 1f8b instead of
+#       \0asm). It is split like the pack instead, and pck-loader.js rejoins it.
 #
 #   A deployment also may not exceed 20,000 files; this build is ~150, so that
 #   limit is not a concern.
@@ -105,30 +105,14 @@ split_oversized() {
 for candidate in "${stage_dir}"/*; do
 	[[ -f "${candidate}" ]] || continue
 	name="$(basename "${candidate}")"
-	[[ "${name}" == index.pck.part* ]] && continue
-	size=$(stat -f '%z' "${candidate}" 2>/dev/null || stat -c '%s' "${candidate}")
-	(( size <= max_bytes )) || {
-		if [[ "${name}" == *.wasm ]]; then
-			echo "    compressing ${name} ($(( size / 1024 / 1024 )) MB)"
-			gzip -9 -f "${candidate}"
-			mv "${candidate}.gz" "${candidate}"
-		else
-			echo "    WARNING: ${name} is $(( size / 1024 / 1024 )) MB and cannot be split"
-		fi
-	}
+	[[ "${name}" == *.part[0-9][0-9] ]] && continue
+	split_oversized "${candidate}"
 done
 
 # Cloudflare needs the right MIME type for .wasm or the browser refuses to
 # stream-compile it, and long-lived caching on the immutable pack parts keeps
 # repeat loads cheap.
-# A gzipped file served without Content-Encoding: gzip arrives as gzip bytes
-# and fails to instantiate, so that header is required, not cosmetic.
 cat > "${stage_dir}/_headers" <<'HEADERS'
-/index.side.wasm
-  Content-Type: application/wasm
-  Content-Encoding: gzip
-  Cache-Control: public, max-age=31536000, immutable
-
 /*.wasm
   Content-Type: application/wasm
   Cache-Control: public, max-age=31536000, immutable
