@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d1627xfu7k75w"
-path="res://.godot/imported/thumbnail.webp-984a63a4821c86b811fe8d51a2e1fc94.ctex"
+path.s3tc="res://.godot/imported/thumbnail.webp-984a63a4821c86b811fe8d51a2e1fc94.s3tc.ctex"
+path.etc2="res://.godot/imported/thumbnail.webp-984a63a4821c86b811fe8d51a2e1fc94.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://scripts/thumbnail.webp"
-dest_files=["res://.godot/imported/thumbnail.webp-984a63a4821c86b811fe8d51a2e1fc94.ctex"]
+dest_files=["res://.godot/imported/thumbnail.webp-984a63a4821c86b811fe8d51a2e1fc94.s3tc.ctex", "res://.godot/imported/thumbnail.webp-984a63a4821c86b811fe8d51a2e1fc94.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

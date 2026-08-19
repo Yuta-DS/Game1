@@ -68,6 +68,17 @@ echo "==> Staging deployment in ${stage_dir}"
 rm -rf "${stage_dir}"
 mkdir -p "${stage_dir}"
 
+# web.sh exports a whole index.pck and does not split it, so any part files and
+# manifest still sitting in builds/web are left over from an earlier, differently
+# sized export. Copying those stages a manifest that disagrees with the pack:
+# the browser reads the stale count, fetches too few parts, and assembles a
+# truncated pack - which loads without an obvious error and then behaves as if
+# half the game is missing. Drop them so the split below is always authoritative.
+find "${build_dir}" -maxdepth 1 -name 'index.pck.part*' -delete
+rm -f "${build_dir}/index.pck.parts.json"
+find "${build_dir}" -maxdepth 1 -name 'index.side.wasm.part*' -delete
+rm -f "${build_dir}/index.side.wasm.parts.json"
+
 # Copy everything except the unsplit pack, which is what the parts replace.
 for path in "${build_dir}"/*; do
 	name="$(basename "${path}")"
@@ -102,6 +113,13 @@ split_oversized() {
 
 # Only the pack may be split - the loader rejoins nothing else. Anything else
 # that is oversized has to be shrunk in place instead.
+# Copy the pack in and split it here. Splitting at deploy time, from the pack
+# that was actually exported, is what keeps the part count and the manifest
+# honest - a mismatch silently truncates the game in the browser.
+if [[ -f "${build_dir}/index.pck" ]]; then
+	cp "${build_dir}/index.pck" "${stage_dir}/index.pck"
+fi
+
 for candidate in "${stage_dir}"/*; do
 	[[ -f "${candidate}" ]] || continue
 	name="$(basename "${candidate}")"

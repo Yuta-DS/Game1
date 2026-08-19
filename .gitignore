@@ -34,3 +34,12 @@ server/logs/
 server/ai_cache/
 server/.env
 API-Key.txt
+
+# Web export output (regenerable)
+build/
+
+# Cloudflare Wrangler local state
+.wrangler/
+
+# Blender autosave backups
+*.blend1

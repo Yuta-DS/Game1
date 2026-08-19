@@ -166,11 +166,17 @@ func enter_game(username: String, is_guest: bool = false):
 		Global.auth_token = APIManager.auth_token
 		print("SESSION LOCKED: Connected to live API Server for user: ", username)
 	
-	# Execute professional volume fade to make the soundscape transition pleasant
+	# Fade the menu music out, but do not wait on it.
+	#
+	# This previously did `await tween.finished`. A tween only advances while its
+	# node is processing, and on the web browsers suspend audio until a user
+	# gesture, so the fade could never complete and the await stayed pending
+	# forever - leaving the screen on "Entering as Guest (Offline Mode)..." with
+	# no error, because the scene change below was never reached. The fade is
+	# polish; changing scene is what this button is for.
 	if menu_music:
-		var tween = create_tween()
+		var tween := create_tween()
 		tween.tween_property(menu_music, "volume_db", -80.0, 1.5)
-		await tween.finished
-	
+
 	# Open up the master integrated sandbox environment
 	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")

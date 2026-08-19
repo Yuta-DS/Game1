@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b8imphvwh0xim"
-path="res://.godot/imported/eraser.png-2f2ee0e515a9e8038cb91458efbb9b82.ctex"
+path.s3tc="res://.godot/imported/eraser.png-2f2ee0e515a9e8038cb91458efbb9b82.s3tc.ctex"
+path.etc2="res://.godot/imported/eraser.png-2f2ee0e515a9e8038cb91458efbb9b82.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Drawing Tool Icons/eraser.png"
-dest_files=["res://.godot/imported/eraser.png-2f2ee0e515a9e8038cb91458efbb9b82.ctex"]
+dest_files=["res://.godot/imported/eraser.png-2f2ee0e515a9e8038cb91458efbb9b82.s3tc.ctex", "res://.godot/imported/eraser.png-2f2ee0e515a9e8038cb91458efbb9b82.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

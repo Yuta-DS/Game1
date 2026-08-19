@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://17ocw0fcqqbq"
-path="res://.godot/imported/Background-4.png-ecc25e056424c8508bf31b323d0da815.ctex"
+path.s3tc="res://.godot/imported/Background-4.png-ecc25e056424c8508bf31b323d0da815.s3tc.ctex"
+path.etc2="res://.godot/imported/Background-4.png-ecc25e056424c8508bf31b323d0da815.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Purple Bay/Background/Background-4.png"
-dest_files=["res://.godot/imported/Background-4.png-ecc25e056424c8508bf31b323d0da815.ctex"]
+dest_files=["res://.godot/imported/Background-4.png-ecc25e056424c8508bf31b323d0da815.s3tc.ctex", "res://.godot/imported/Background-4.png-ecc25e056424c8508bf31b323d0da815.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -216,19 +216,53 @@ const engine = new Engine(GODOT_CONFIG);
 		}
 	} else {
 		setStatusMode('progress');
+
+		// Surface what is happening on screen. Startup failures here are
+		// otherwise silent - the page simply sits on a progress bar - and
+		// reading the browser console is not always practical.
+		const diag = document.createElement('div');
+		diag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;'
+			+ 'font:12px/1.5 monospace;color:#9fe;background:rgba(0,0,0,.75);'
+			+ 'padding:6px 10px;border-radius:4px;max-width:90vw;white-space:pre-wrap';
+		diag.textContent = 'starting…';
+		document.body.appendChild(diag);
+		const say = (msg) => { diag.textContent = msg; console.log('[ARTEA] ' + msg); };
+
+		// Any uncaught error or rejected promise is the most likely cause of a
+		// stall, so show those rather than letting them reach only the console.
+		window.addEventListener('error', (e) => {
+			say('ERROR: ' + (e.message || e.error) + '\n' + (e.filename || '') + ':' + (e.lineno || ''));
+		});
+		window.addEventListener('unhandledrejection', (e) => {
+			say('UNHANDLED: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+		});
+
+		let lastPct = -1;
 		engine.startGame({
 			'onProgress': function (current, total) {
 				if (current > 0 && total > 0) {
 					statusProgress.value = current;
 					statusProgress.max = total;
+					const pct = Math.floor((current / total) * 100);
+					if (pct !== lastPct) {
+						lastPct = pct;
+						say('loading ' + pct + '%  (' + (current / 1048576).toFixed(0)
+							+ ' / ' + (total / 1048576).toFixed(0) + ' MB)');
+					}
 				} else {
 					statusProgress.removeAttribute('value');
 					statusProgress.removeAttribute('max');
+					say('loading… (size unknown)');
 				}
 			},
 		}).then(() => {
 			setStatusMode('hidden');
-		}, displayFailureNotice);
+			say('engine started');
+			setTimeout(() => diag.remove(), 4000);
+		}, (err) => {
+			say('START FAILED: ' + err);
+			displayFailureNotice(err);
+		});
 	}
 }());
 		</script>

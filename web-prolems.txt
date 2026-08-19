@@ -1,0 +1,333 @@
+================================================================================
+ARTEA WEB BUILD - ROOT PROBLEMS AND FIXES
+Traced 2026-08-19. Symptom that started it: "Offline Guest hangs forever in the
+browser." Four separate problems were stacked on top of each other; each one is
+listed with what proved it and exactly how it was (or should be) fixed.
+
+Final state: web build loads, Offline Guest enters the hub in ~12 seconds, and
+the character walks. Verified headlessly end to end.
+================================================================================
+
+
+--------------------------------------------------------------------------------
+PROBLEM 1 - HUB SCENE MISSING TWO DEPENDENCIES ON WEB          [FIXED, VERIFIED]
+--------------------------------------------------------------------------------
+SYMPTOM
+  Start screen renders fine. Click Offline Guest, nothing happens, forever.
+  No crash, no error on screen. Desktop build unaffected.
+
+ROOT CAUSE
+  The Web export preset excluded the pattern  meshy*/**  which dropped the whole
+  "meshy ai/" folder from the web pack, including the .import remap files.
+
+  Two shipped scenes depend on files in that folder:
+    scenes/New_Hub_World.tscn            -> meshy ai/Milo_Animations.glb
+    assets3D/house scenes/artea_signpost.tscn
+                                         -> meshy ai/Artea_Signpost_...glb
+
+  With the remaps gone, the UIDs did not resolve, the .glb fell back to its raw
+  path, no importer exists for a raw .glb at runtime, and the hub PackedScene
+  instantiated to null:
+
+    WARNING: 'res://scenes/New_Hub_World.tscn': In external resource #63,
+      invalid UID: 'uid://ch7f1gvh71svv' - using text path instead
+    ERROR: No loader found for resource: res://meshy ai/Milo_Animations.glb
+    ERROR: Failed to load scene dependency:
+      "res://assets3D/house scenes/artea_signpost.tscn"
+    ERROR: Parameter "new_scene" is null.
+       at: change_scene_to_packed (scene/main/scene_tree.cpp:1717)
+
+  change_scene_to_packed received null, so the scene switch became a no-op and
+  the player sat on the start screen. That is the "stuck forever".
+
+FIX APPLIED
+  File: artea/export_presets.cfg  (line 86, Web preset exclude_filter)
+
+    BEFORE:   meshy*/**
+    AFTER:    meshy ai/Milo_output*
+
+  Only Milo_output.glb and its texture in that folder are unreferenced by any
+  shipped scene, so they stay excluded; everything the hub needs now ships.
+
+COST
+  Web pack grew 730 MB -> 762 MB.
+
+HOW TO VERIFY
+  Re-export, load the build, click Offline Guest. The hub loads and the console
+  shows "Successfully spawned N collectibles" instead of the errors above.
+
+RULE TO REMEMBER
+  Never exclude a folder by wildcard without checking what references it:
+    grep -rn "meshy ai/" --include=*.tscn --include=*.gd --include=*.tres .
+
+
+--------------------------------------------------------------------------------
+PROBLEM 2 - STALE PACK PARTS SERVED AFTER EVERY RE-EXPORT      [FIXED, VERIFIED]
+--------------------------------------------------------------------------------
+SYMPTOM
+  Loading bar reaches ~100% and never finishes, or the build behaves like an
+  older revision even though the export just succeeded.
+
+ROOT CAUSE
+  Godot emits one large index.pck. tools/web.sh splits it into 8 MB parts for
+  local serving, and pck-loader.js rejoins them in the browser.
+
+  split_for_local() skipped splitting whenever index.pck.parts.json existed,
+  without checking whether the pack had changed since. So after a re-export the
+  loader kept streaming the PREVIOUS export's parts:
+
+    parts on disk / manifest : 742,174,116 bytes, 89 parts  (21:30 export)
+    actual index.pck         : 730,059,656 bytes            (01:48 export)
+    GODOT_CONFIG.fileSizes   : 730,059,656 bytes
+
+  pck-loader.js sets Content-Length from the manifest, so the byte totals
+  disagreed with what the engine expected and the load never settled. Silent -
+  no error, just a progress bar that parks.
+
+FIX APPLIED
+  File: artea/tools/web.sh  (split_for_local, ~line 94)
+
+  Now reads "bytes" out of the existing manifest, compares it to the real file
+  size, and re-splits when they differ, deleting old parts first:
+
+    if [[ -f "${pck}.parts.json" ]]; then
+        manifest_size=$(sed -E 's/.*"bytes":([0-9]+).*/\1/' "${pck}.parts.json")
+        [[ "${manifest_size}" == "${pck_size}" ]] && return 0
+        echo "  $(basename "${pck}"): stale parts, re-splitting"
+    fi
+    rm -f "${pck}".part?? "${pck}.parts.json"
+
+  The duplicated inline pck-splitting block further down was deleted in favour
+  of a single split_for_local call, so pack and side-wasm follow one code path.
+
+HOW TO VERIFY
+  Re-export and watch for the line "index.pck: stale parts, re-splitting".
+  Then confirm the join is byte-exact:
+
+    cd artea/builds/web
+    /bin/cat index.pck.part?? | md5 -q
+    md5 -q index.pck              # the two hashes must match
+
+MANUAL RECOVERY (if it ever happens again)
+    cd artea/builds/web
+    rm -f index.pck.part?? index.pck.parts.json
+    ./artea/tools/web.sh --serve-only
+
+
+--------------------------------------------------------------------------------
+PROBLEM 3 - BROWSER CACHE MIXES MODULE SETS ACROSS EXPORTS     [FIXED, VERIFIED]
+--------------------------------------------------------------------------------
+SYMPTOM
+  A tab that worked before a re-export now hangs, while a fresh browser profile
+  or a different port loads the same build fine.
+
+ROOT CAUSE
+  The local server is "python3 -m http.server", which sends no Cache-Control
+  and no ETag. Browsers then apply heuristic freshness to index.js, index.wasm,
+  pck-loader.js and libterrain.web.release.wasm32.wasm. After a re-export a tab
+  can pair cached modules from the old export with the new pack.
+
+  Cmd+Shift+R does NOT fix this on its own - it revalidates the top-level
+  document, not the resources the engine fetches afterwards.
+
+FIX APPLIED
+  File: artea/tools/web.sh (end of file)
+
+  "python3 -m http.server" was replaced with a ThreadingHTTPServer whose
+  handler stamps every response:
+
+      Cache-Control: no-store, must-revalidate
+      Pragma: no-cache
+
+  Nothing from a previous export can be reused now, on any port.
+
+HOW TO VERIFY
+      curl -sI http://127.0.0.1:8801/index.js | grep -i cache-control
+      -> Cache-Control: no-store, must-revalidate
+
+  The old workaround - serving each build on a different port so the cache key
+  changes - is no longer needed.
+
+
+--------------------------------------------------------------------------------
+PROBLEM 4 - SCENE SWITCH FAILS SILENTLY                                  [OPEN]
+--------------------------------------------------------------------------------
+SYMPTOM
+  This is the reason Problem 1 looked like a hang instead of an error. Worth
+  fixing on its own: any future missing dependency will fail just as invisibly.
+
+ROOT CAUSE
+  File: artea/scripts/authentication.gd  lines 72 and 100
+
+    get_tree().change_scene_to_file(HUB_SCENE)
+
+  change_scene_to_file returns an Error code. When the packed scene cannot be
+  instantiated it logs to stdout - which a player in a browser never sees - and
+  returns non-OK. The return value is discarded, so the game just stays put.
+
+SUGGESTED FIX
+    var err := get_tree().change_scene_to_file(HUB_SCENE)
+    if err != OK:
+        push_error("Hub scene failed to load: %d" % err)
+        # surface it on screen too - stdout is invisible to a browser player
+
+  Apply at both call sites.
+
+
+--------------------------------------------------------------------------------
+PROBLEM 5 - CROWN OF LIFE STORY LOADS A TEXTURE EXCLUDED FROM WEB        [OPEN]
+--------------------------------------------------------------------------------
+SYMPTOM
+  Web only, cosmetic: untextured stone in the Crown of Life story scene, plus
+  error spam. Not a crash.
+
+ROOT CAUSE
+  File: artea/scripts/viewfinder/crown_of_life_story.gd
+
+    line  35:  const STONE_ALBEDO := "res://demo/assets/textures/rock023_alb_ht.png"
+    line 505:  material.albedo_texture = load(STONE_ALBEDO)
+
+  The Web preset excludes  demo/**  so that load() returns null on web. The
+  scene is reachable in game via scripts/viewfinder/crown_story_portal.gd and
+  scripts/journey_campaign.gd.
+
+SUGGESTED FIX
+  Preferred: move the texture out of demo/ into a real assets folder and update
+  the constant. Nothing in the game should depend on a plugin's demo folder.
+  Quicker: add that single file to the Web preset's include_filter.
+
+
+--------------------------------------------------------------------------------
+PROBLEM 6 - TERRAIN3D MATERIAL EXCEEDS THE WEBGL2 UNIFORM BUFFER LIMIT   [OPEN]
+--------------------------------------------------------------------------------
+SYMPTOM
+  Once per hub load:
+
+    ERROR: Condition "p_ubo_size > uint32_t(
+      Config::get_singleton()->max_uniform_buffer_size)" is true.
+       at: update_parameters_internal
+           (drivers/gles3/storage/material_storage.cpp:1109)
+
+ROOT CAUSE
+  Web can only use the Compatibility (GLES3) renderer, whose uniform buffer
+  ceiling is lower than the desktop backends'. The oversized uniform block comes
+  from Terrain3D's shader, whose texture arrays live inside the GDExtension
+  binary (addons/terrain_3d/bin/libterrain.web.release.wasm32.wasm), not in
+  project shader source.
+
+IMPACT
+  That one material does not receive its parameters correctly on web. The hub
+  still renders and plays.
+
+SUGGESTED FIX
+  Reduce Terrain3D's enabled texture slots, or accept it. Check Terrain3D's
+  own release notes first - this is an upstream constraint, not project code.
+
+
+--------------------------------------------------------------------------------
+BENIGN NOISE - NO ACTION NEEDED
+--------------------------------------------------------------------------------
+  [Firebase Error] >> Unable to read .env file at path
+    'res://addons/godot-firebase/.env'
+      Optional addon config, deliberately absent. Offline Guest bypasses auth
+      anyway ("SESSION LOCKED: API Database completely bypassed").
+
+  WARNING: instance_reset_physics_interpolation() is deprecated.
+      Godot 4.7 compat shim called from an addon. Harmless.
+
+  The AudioContext was not allowed to start.
+      Standard browser autoplay policy. Resolves on the first user gesture.
+
+
+--------------------------------------------------------------------------------
+FULL AUDIT THAT WAS RUN
+--------------------------------------------------------------------------------
+  Every res:// reference in shipped .tscn / .gd / .tres files was matched
+  against the Web preset's 33 exclude patterns.
+
+  155 raw hits. 148 of them are excluded files referencing other excluded files
+  (proton_scatter demos, artifacts/ capture outputs, scripts/test_*.gd) and are
+  irrelevant. Of the 7 referenced by files that actually ship:
+
+    crown_of_life_story.gd -> demo/.../rock023_alb_ht.png
+        REAL - Problem 5 above.
+    art_castle_story_railway.gd:1904 -> crown_line_lego_train.blend
+        SAFE - set_meta("source_blend", ...) provenance string, never loaded.
+    art_castle_floating_world.gd:837 -> artea_tree_of_life.blend
+        SAFE - same provenance pattern.
+    proton_scatter/tests/unit_testing.tscn -> demo grid.png
+        DEAD - addon test scene, never loaded at runtime.
+    3 x scripts/tree_of_life/capture_*.gd -> artifacts/...
+        DEAD - editor capture tools. They ship only because the exclude pattern
+        scripts/capture_*.gd does not match the scripts/tree_of_life/ subfolder.
+        Tidy-up: broaden it to scripts/**/capture_*.gd so tooling stops riding
+        along in the player build.
+
+
+--------------------------------------------------------------------------------
+HOW TO RUN AND VERIFY THE WEB BUILD
+--------------------------------------------------------------------------------
+  Use the CLI at the repo root (needs a NON-Mono Godot - Godot 4 cannot export
+  web from a Mono/.NET build):
+
+      ./web                 export if needed, serve, open a browser
+      ./web rebuild         force a fresh export first
+      ./web serve           serve whatever is already built
+      ./web verify          headless check that Offline Guest reaches the hub
+      ./web status          what is built, whether parts are stale, what serves
+      ./web stop            stop the local server
+
+      ./web --port 9000     any command takes --port and --no-open
+
+  Defaults live in .webrc at the repo root if you want to change them:
+
+      PORT=9000
+      GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot
+
+  ./web wraps artea/tools/web.sh, which still works directly if preferred:
+
+      ./artea/tools/web.sh --rebuild          # export, split, serve, open
+      ./artea/tools/web.sh --serve-only       # serve what already exists
+      ./artea/tools/web.sh --port 8801        # pick the port
+      ./artea/tools/web.sh --no-open          # serve without a browser
+
+  The build cannot be opened from disk - index.html fetches the pack and the
+  wasm, and file:// origins are opaque. It needs a real HTTP origin.
+
+  On-screen diagnostics: the page draws a diag box in the bottom-left corner
+  that reports "loading N% (x / y MB)", then "engine started", or the failure.
+  Read that first when something stalls - it tells you which stage broke:
+
+      stuck mid-percentage        -> server or stream side (Problem 2)
+      reaches 100%, never starts  -> wasm32 memory pressure
+      START FAILED / UNHANDLED    -> a real script exception, message included
+
+  Headless verification is  ./web verify , which runs artea/tools/web-smoke.js.
+  It needs no npm packages at all - Node's global WebSocket talks straight to
+  Chrome's debug port, and the script starts Chrome itself.
+
+  What it does: navigate, wait for "engine started" in the console, click the
+  canvas at the Offline Guest button (300,726 at 1280x800), wait for
+  "Successfully spawned" from the hub, hold W, and compare screenshots before
+  and after. A frozen game returns byte-identical frames, which is what
+  separates "rendered once" from "playable". It exits 0 only when the frame
+  changed, the renderer did not crash, and no fatal resource errors appeared.
+
+  Screenshots and the full console log land in artea/builds/smoke/.
+
+  Run it against any URL, including a deployed one:
+
+      node artea/tools/web-smoke.js https://artea-web.vercel.app/ --out /tmp/x
+
+  Last verified run:
+
+      0.3s loading http://localhost:8801/index.html
+      4.4s OK  engine started
+      8.6s clicking Offline Guest
+      9.7s OK  guest login accepted
+     11.7s OK  hub scene built
+     19.8s holding W to test movement
+     24.0s frame changed while moving: true
+     24.0s fatal resource errors: 0
+      RESULT: PLAYABLE
+================================================================================

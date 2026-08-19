@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://vh4q5qow4fok"
-path="res://.godot/imported/Dark-Tree.png-0f4ee8097c3c060b53cb071626bc9133.ctex"
+path.s3tc="res://.godot/imported/Dark-Tree.png-0f4ee8097c3c060b53cb071626bc9133.s3tc.ctex"
+path.etc2="res://.godot/imported/Dark-Tree.png-0f4ee8097c3c060b53cb071626bc9133.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/Trees/Dark-Tree.png"
-dest_files=["res://.godot/imported/Dark-Tree.png-0f4ee8097c3c060b53cb071626bc9133.ctex"]
+dest_files=["res://.godot/imported/Dark-Tree.png-0f4ee8097c3c060b53cb071626bc9133.s3tc.ctex", "res://.godot/imported/Dark-Tree.png-0f4ee8097c3c060b53cb071626bc9133.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

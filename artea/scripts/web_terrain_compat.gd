@@ -33,6 +33,31 @@ func _enter_tree() -> void:
 				authored.owner = environment.owner
 				if authored is Node3D:
 					authored.global_transform = keep_transform
+			# ProtonScatter spawns a real Thread to run its build
+			# (scatter.gd:148-153). The web export runs without WASM thread
+			# support - terrain_3d's web binary is non-threaded-only - so that
+			# Thread never executes, while is_thread_running() reports true
+			# forever. The initial build then produces nothing and every later
+			# rebuild() just sets a flag and returns, so the scene never finishes
+			# coming up. Its own escape hatch runs the same work synchronously.
+			if "dbg_disable_thread" in scatter_root:
+				scatter_root.dbg_disable_thread = true
+			if "force_rebuild_on_load" in scatter_root:
+				scatter_root.force_rebuild_on_load = false
+
+			# The Relax modifier is O(n^2) on the CPU and only avoids that via a
+			# compute shader, which needs a RenderingDevice backend. Web is on
+			# gl_compatibility, so create_local_rendering_device() returns null
+			# and it silently falls back to the CPU path - measured at 10-14
+			# seconds per hub load on this scene's 3000-point Grass node.
+			if "modifier_stack" in scatter_root:
+				var stack = scatter_root.modifier_stack
+				if stack != null and "stack" in stack:
+					for modifier in stack.stack:
+						var script = modifier.get_script() if modifier else null
+						if script != null and script.resource_path.ends_with("relax.gd"):
+							modifier.iterations = 0
+
 			scatter_root.process_mode = Node.PROCESS_MODE_DISABLED
 			scatter_root.visible = false
 		var terrain = environment.get_node_or_null("Terrain3D")
