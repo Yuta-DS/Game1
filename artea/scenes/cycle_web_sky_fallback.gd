@@ -12,13 +12,6 @@ extends Node3D
 # desktop keeps the full shader-driven sky.
 func _ready():
 	if OS.has_feature("web"):
-		var world_env = $WorldEnvironment
-		if world_env and world_env.environment:
-			var env = world_env.environment
-			env.background_mode = Environment.BG_COLOR
-			env.ambient_light_source = Environment.AMBIENT_SOURCE_BG
-			env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
-
 		_disable_scatter_threading()
 		_skip_relax_on_web()
 

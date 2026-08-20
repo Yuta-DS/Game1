@@ -1,11 +1,3 @@
-[gd_scene load_steps=2 format=3 uid="uid://vrpgdqvt1kq1"]
-
-[ext_resource type="Script" uid="uid://i5jcj7ukvoen" path="res://addons/terrabrush/TerraBrush.cs" id="1_4orre"]
+[gd_scene load_steps=1 format=3 uid="uid://vrpgdqvt1kq1"]
 
 [node name="Node3D" type="Node3D"]
-
-[node name="TerraBrush" type="Node3D" parent="."]
-script = ExtResource("1_4orre")
-DataPath = "res://newstuff"
-metadata/_custom_type_script = "uid://i5jcj7ukvoen"
-metadata/_edit_lock_ = true

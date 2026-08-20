@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Artea"
 run/main_scene="uid://d10bpuuoe8w0m"
-config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/image="uid://06fmhq71d8ey"
 config/icon="res://icon.svg"
 
@@ -33,7 +33,6 @@ APIManager="*uid://dodj1s54vwit2"
 [dialogue_manager]
 
 runtime/balloon_path="res://dialogue/HubworldBalloon.tscn"
-runtime/advanced/uses_dotnet=true
 
 [display]
 
@@ -45,10 +44,6 @@ window/size/window_height_override=360
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/vsync/vsync_mode=0
-
-[dotnet]
-
-project/assembly_name="Artea"
 
 [editor_plugins]
 
