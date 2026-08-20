@@ -43,3 +43,6 @@ build/
 
 # Blender autosave backups
 *.blend1
+
+# GLB colour-edit backups, regenerable via tools/recolour_tree_fibers.py --restore
+*.precolour
