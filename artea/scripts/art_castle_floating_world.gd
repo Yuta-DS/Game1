@@ -16,8 +16,42 @@ const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_ma
 const WORLD_HALF_EXTENT := 1000.0
 const PLAYER_SPAWN := Vector3(0.0, 4.0, 790.0)
 const HUB := Vector3(0.0, 0.0, 1640.0)
-const TREE_OF_LIFE_GAME_SCALE := 3.30
+const TREE_OF_LIFE_GAME_SCALE := 4.20
+# The bough canopy, ornaments and shrine were authored against this scale, so
+# everything built in tree-local units is multiplied by the ratio between the
+# two instead of being re-tuned whenever the body size changes.
+const TREE_OF_LIFE_AUTHORED_SCALE := 3.30
+const TREE_OF_LIFE_BODY_RATIO := TREE_OF_LIFE_GAME_SCALE / TREE_OF_LIFE_AUTHORED_SCALE
 const TREE_OF_LIFE_SCALE_MULTIPLIER := 2.0
+
+# Web LOD for the Tree of Life.
+#
+# The authored canopy is 480 bough modules x 1,296 compound leaf sockets x 2
+# growth layers = 1,244,160 leaf instances, and each "leaf" is a 6,336 triangle
+# compound cluster. That is 7.9 billion triangles in four MultiMesh draws, none
+# of which cull, because each batch's AABB covers the whole crown. A wasm32
+# build has neither the memory nor the vertex throughput for it.
+#
+# On Web the same silhouette is rebuilt from fewer modules, every third leaf
+# socket, one growth layer, and a flat card in place of each compound cluster.
+const BOUGH_GROWTH_PER_CLUSTER := 10
+# Boughs are authored along their local X axis (their root socket sits at
+# x=-18), so stretching that axis alone makes a branch reach further without
+# also making it thicker. Tiers carry their own "length" so the crown spire can
+# reach while the established lower canopy keeps its authored proportions.
+const BOUGH_DEFAULT_LENGTH := 1.0
+const WEB_BOUGH_GROWTH_PER_CLUSTER := 2
+const WEB_LEAF_SOCKET_STRIDE := 3
+const WEB_LEAF_GROWTH_LAYERS := 1
+# Above this triangle count a leaf is replaced by a card carrying its material.
+const WEB_LEAF_CARD_TRIANGLE_LIMIT := 64
+
+
+static func _use_web_lod() -> bool:
+	# The environment override lets the cost measurement and the regression test
+	# exercise the Web path from a desktop headless run.
+	return OS.has_feature("web") or OS.get_environment("ARTEA_FORCE_WEB_LOD") == "1"
+
 # The v3 Blender clear-path tiles sit 0.63 local metres above its origin. This
 # offset places their scaled top exactly on the existing TreeCourt collision.
 const TREE_OF_LIFE_COURT_SURFACE_Y := -0.24
@@ -853,6 +887,8 @@ func _build_life_tree(parent: Node3D, center: Vector3) -> void:
 	tree.add_child(visual)
 	_build_tree_of_life_collision(tree, manifest)
 	_build_reference_faithful_tree_canopy(tree, visual)
+	_build_trunk_energy_veins(tree)
+	_build_wisdom_heart_shrine(tree)
 
 	# The imported cyan crystal-sap materials provide the visible glow. One local
 	# light lets that heart illumination reach the surrounding roots at night.
@@ -865,6 +901,436 @@ func _build_life_tree(parent: Node3D, center: Vector3) -> void:
 	heart_light.shadow_enabled = false
 	tree.add_child(heart_light)
 
+
+# The wisdom heart shrine: the crystal the tree is named for, mounted on the
+# trunk's south face where the player meets it, rather than lost in the canopy.
+# Everything here is procedural - a few hundred triangles - so it costs nothing
+# on Web and can be retuned without a Blender round trip.
+# Clearance kept between the top of the root doorway and the bottom of the
+# shrine frame, so the setting reads as a gateway keystone over the opening.
+const HEART_SHRINE_DOOR_CLEARANCE := 1.5
+# One factor for the whole setting. The frame has to clear the doorway, so a
+# smaller shrine is what lets it sit down close to the gate instead of riding
+# high in the canopy.
+const HEART_SHRINE_SCALE := 0.62
+const HEART_SHRINE_FALLBACK_HEIGHT := 64.0
+const HEART_SHRINE_DEPTH := 44.0
+const HEART_SHRINE_CRYSTAL_HEIGHT := 26.0
+const HEART_SHRINE_CRYSTAL_RADIUS := 7.4
+# The rings must clear the crystal at every tilt, so the ring radius is set from
+# the gem's longest half-axis (height * 0.56 at the tips) plus this gap. A ring
+# radius below that lets a tilted ring pass straight through the crystal.
+const HEART_SHRINE_RING_GAP := 3.2
+const HEART_SHRINE_FRAME_RADIUS := HEART_SHRINE_CRYSTAL_HEIGHT * 0.56 + HEART_SHRINE_RING_GAP
+const HEART_SHRINE_OVAL_STRETCH := 1.5
+const HEART_SHRINE_SPIN_SECONDS := 14.0
+# How tightly the setting sits against the trunk: 1.0 would leave it standing
+# off the bark, lower presses it into the body.
+const HEART_SHRINE_HUG := 1.02
+const HEART_GEAR_TEETH := 20
+const HEART_GEAR_IDLER_TEETH := 9
+const HEART_GEAR_SECONDS := 26.0
+# Boughs pointing south within this arc are skipped across the heart's own
+# height band, so the setting sits in a clear niche. The band is derived from
+# where the heart actually is, not from guessed heights.
+const HEART_NICHE_ARC_DEGREES := 88.0
+const HEART_NICHE_MARGIN := 3.0
+# Dyson-style orbital rings. They are the same ring as the mandorla - same
+# radius, same tube, same oval stretch - and differ only in how they are tilted
+# and how long they take to turn.
+const HEART_SHRINE_ORBIT_RINGS := [
+	{"tilt_x": 0.0, "tilt_z": 0.0, "seconds": 11.0},
+	{"tilt_x": 62.0, "tilt_z": 0.0, "seconds": -14.5},
+	{"tilt_x": 0.0, "tilt_z": 58.0, "seconds": 18.0},
+]
+const HEART_SHRINE_OUTLINE_GROW := 0.95
+
+
+
+
+# Energy veins climbing the bark. They are pinned to the real surface: the
+# trunk and root mesh is sampled into a height x angle table of bark radii, and
+# every vein segment is placed on that surface. A guessed cylinder profile
+# floats off the bark wherever the trunk is not round - which it never is.
+#
+# The authored CyanSapChannel meshes cannot be reused for this: they trace the
+# old radial branch layout, so with those branches hidden they stick out past
+# the canopy as loose horizontal streaks.
+const VEIN_COUNT := 18
+const VEIN_SEGMENTS := 30
+const VEIN_BOTTOM := 3.0
+const VEIN_TOP := 92.0
+const VEIN_THICKNESS := 0.9
+const VEIN_WANDER := 0.14
+# Sampling resolution of the bark table, and how far off the surface a vein
+# sits so it reads as lying on the bark rather than buried in it.
+const VEIN_HEIGHT_BUCKETS := 34
+const VEIN_ANGLE_BUCKETS := 48
+const VEIN_SURFACE_OFFSET := 0.6
+# A vein may only move this far off the bark radius per segment. Without the
+# clamp a vein snaps from the trunk out to a root tip in one step and the span
+# between crosses open air.
+const VEIN_MAX_RADIUS_STEP := 2.6
+const VEIN_VERTEX_STRIDE := 3
+
+
+func _build_trunk_energy_veins(tree: Node3D) -> void:
+	var bark := _sample_bark_profile(tree)
+	if bark.is_empty():
+		push_warning("Tree of Life: no bark samples, skipping energy veins")
+		return
+
+	var veins := Node3D.new()
+	veins.name = "TrunkEnergyVeins"
+	tree.add_child(veins)
+
+	var segment := BoxMesh.new()
+	segment.size = Vector3(VEIN_THICKNESS, 1.0, VEIN_THICKNESS)
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = segment
+	multimesh.instance_count = VEIN_COUNT * VEIN_SEGMENTS
+	var index := 0
+	for vein in VEIN_COUNT:
+		var phase := TAU * float(vein) / float(VEIN_COUNT)
+		# Walk each vein from the crown down, clamping how far it may move off
+		# the bark per step, so it stays glued to the trunk and only eases out
+		# onto the root flare near the ground.
+		var path := PackedVector3Array()
+		var carried := -1.0
+		for step in range(VEIN_SEGMENTS, -1, -1):
+			var walk := float(step) / float(VEIN_SEGMENTS)
+			var raw := _vein_point(bark, phase, walk, vein)
+			var radius := Vector2(raw.x, raw.z).length()
+			if carried < 0.0:
+				carried = radius
+			else:
+				carried = clampf(radius, carried - VEIN_MAX_RADIUS_STEP,
+					carried + VEIN_MAX_RADIUS_STEP)
+			var angle := atan2(raw.z, raw.x)
+			path.append(Vector3(cos(angle) * carried, raw.y, sin(angle) * carried))
+		path.reverse()
+		var previous := path[0]
+		for step in VEIN_SEGMENTS:
+			var point := path[step + 1]
+			var span := point - previous
+			var length := maxf(span.length(), 0.01)
+			var up := span / length
+			var side := up.cross(Vector3.FORWARD)
+			if side.length() < 0.01:
+				side = up.cross(Vector3.RIGHT)
+			side = side.normalized()
+			var basis := Basis()
+			basis.x = side
+			basis.y = up
+			basis.z = side.cross(up).normalized()
+			# Scale on the right so a segment stretches along its own run rather
+			# than along world Y.
+			basis = basis * Basis.from_scale(Vector3(1.0, length, 1.0))
+			multimesh.set_instance_transform(
+				index, Transform3D(basis, previous + span * 0.5))
+			previous = point
+			index += 1
+
+	var batch := MultiMeshInstance3D.new()
+	batch.name = "TrunkVeinBatch"
+	batch.multimesh = multimesh
+	batch.material_override = _create_powered_bough_flow_material()
+	batch.set_meta("veins", VEIN_COUNT)
+	batch.set_meta("pinned_to_bark", true)
+	veins.add_child(batch)
+
+
+func _sample_bark_profile(tree: Node3D) -> PackedFloat32Array:
+	# Build a height x angle table of the furthest surface point, in tree space.
+	# That outer hull is the bark: trunk where the trunk is widest, root flare
+	# lower down, so veins laid on it follow both without any guessing.
+	var table := PackedFloat32Array()
+	table.resize(VEIN_HEIGHT_BUCKETS * VEIN_ANGLE_BUCKETS)
+	table.fill(0.0)
+	var visual := tree.get_node_or_null("BlenderTreeOfLifeVisual") as Node3D
+	if visual == null:
+		return PackedFloat32Array()
+	var band := (VEIN_TOP - VEIN_BOTTOM) / float(VEIN_HEIGHT_BUCKETS)
+	var samples := 0
+	for node in visual.find_children("*", "MeshInstance3D", true, false):
+		var mesh_node := node as MeshInstance3D
+		if mesh_node.mesh == null or not mesh_node.is_visible_in_tree():
+			continue
+		var to_tree := tree.global_transform.affine_inverse() * mesh_node.global_transform
+		for surface in mesh_node.mesh.get_surface_count():
+			var arrays := mesh_node.mesh.surface_get_arrays(surface)
+			if arrays.is_empty():
+				continue
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var vertex_index := 0
+			while vertex_index < vertices.size():
+				var point := to_tree * vertices[vertex_index]
+				vertex_index += VEIN_VERTEX_STRIDE
+				if point.y < VEIN_BOTTOM or point.y > VEIN_TOP:
+					continue
+				var radius := Vector2(point.x, point.z).length()
+				if radius < 1.0:
+					continue
+				var height_bucket := clampi(
+					int((point.y - VEIN_BOTTOM) / band), 0, VEIN_HEIGHT_BUCKETS - 1)
+				var angle := fposmod(atan2(point.z, point.x), TAU)
+				var angle_bucket := clampi(
+					int(angle / TAU * float(VEIN_ANGLE_BUCKETS)),
+					0, VEIN_ANGLE_BUCKETS - 1)
+				var slot := height_bucket * VEIN_ANGLE_BUCKETS + angle_bucket
+				if radius > table[slot]:
+					table[slot] = radius
+				samples += 1
+	if samples == 0:
+		return PackedFloat32Array()
+
+	# Fill gaps: a bucket with no vertices would drop a vein to the tree axis.
+	for height_bucket in VEIN_HEIGHT_BUCKETS:
+		var row_start := height_bucket * VEIN_ANGLE_BUCKETS
+		var row_max := 0.0
+		for angle_bucket in VEIN_ANGLE_BUCKETS:
+			row_max = maxf(row_max, table[row_start + angle_bucket])
+		for angle_bucket in VEIN_ANGLE_BUCKETS:
+			if table[row_start + angle_bucket] <= 0.0:
+				table[row_start + angle_bucket] = row_max
+	return table
+
+
+func _bark_radius(bark: PackedFloat32Array, height: float, angle: float) -> float:
+	var band := (VEIN_TOP - VEIN_BOTTOM) / float(VEIN_HEIGHT_BUCKETS)
+	var height_bucket := clampi(
+		int((height - VEIN_BOTTOM) / band), 0, VEIN_HEIGHT_BUCKETS - 1)
+	var angle_bucket := clampi(
+		int(fposmod(angle, TAU) / TAU * float(VEIN_ANGLE_BUCKETS)),
+		0, VEIN_ANGLE_BUCKETS - 1)
+	return bark[height_bucket * VEIN_ANGLE_BUCKETS + angle_bucket]
+
+
+func _vein_point(bark: PackedFloat32Array, phase: float, travel: float,
+		vein: int) -> Vector3:
+	var height := lerpf(VEIN_BOTTOM, VEIN_TOP, travel)
+	# A slow wander so the veins read as grown rather than machined.
+	var angle := phase + sin(travel * PI * 2.4 + float(vein) * 1.37) * VEIN_WANDER
+	var radius := _bark_radius(bark, height, angle) + VEIN_SURFACE_OFFSET
+	return Vector3(cos(angle) * radius, height, sin(angle) * radius)
+
+
+func _build_wisdom_heart_shrine(tree: Node3D) -> void:
+	var shrine := Node3D.new()
+	shrine.name = "WisdomHeartShrine"
+	# The doorway and the arrival bridge face world south, so the shrine faces
+	# the same way - the player walks straight at it. It sits tight against the
+	# trunk rather than standing off it: this is the tree's heart, not a sign.
+	shrine.scale = Vector3.ONE * HEART_SHRINE_SCALE * TREE_OF_LIFE_BODY_RATIO
+	shrine.position = Vector3(0.0, _heart_shrine_height(tree),
+		-HEART_SHRINE_DEPTH * TREE_OF_LIFE_BODY_RATIO * HEART_SHRINE_HUG)
+	tree.add_child(shrine)
+
+	var gold := _make_glow(Color("ffcf5c"), 0.9)
+	gold.metallic = 0.35
+	gold.metallic_specular = 0.95
+	gold.roughness = 0.28
+	var gold_dark := _make_glow(Color("c99a34"), 0.5)
+	gold_dark.metallic = 0.3
+	gold_dark.roughness = 0.36
+	var crystal := _make_glow(Color("13a6e8"), 0.9)
+	crystal.metallic = 0.15
+	crystal.roughness = 0.05
+	crystal.next_pass = _make_crystal_outline_material()
+	var crystal_core := _make_glow(Color("bdf3ff"), 1.4)
+
+	_build_heart_gear_frame(shrine, gold, gold_dark)
+
+	var spin_pivot := Node3D.new()
+	spin_pivot.name = "HeartCrystalSpin"
+	shrine.add_child(spin_pivot)
+
+	var heart := MeshInstance3D.new()
+	heart.name = "HeartShrineCrystal"
+	heart.mesh = _build_faceted_crystal_mesh(
+		HEART_SHRINE_CRYSTAL_RADIUS, HEART_SHRINE_CRYSTAL_HEIGHT, 8)
+	heart.material_override = crystal
+	spin_pivot.add_child(heart)
+
+	var heart_core := MeshInstance3D.new()
+	heart_core.name = "HeartShrineCrystalCore"
+	heart_core.mesh = _build_faceted_crystal_mesh(
+		HEART_SHRINE_CRYSTAL_RADIUS * 0.46, HEART_SHRINE_CRYSTAL_HEIGHT * 0.62, 6)
+	heart_core.material_override = crystal_core
+	spin_pivot.add_child(heart_core)
+
+	_spin_forever(spin_pivot, HEART_SHRINE_SPIN_SECONDS)
+
+	var shrine_light := OmniLight3D.new()
+	shrine_light.name = "HeartShrineLight"
+	shrine_light.light_color = Color("9fdcff")
+	shrine_light.light_energy = 4.2
+	shrine_light.omni_range = 90.0
+	shrine_light.shadow_enabled = false
+	shrine.add_child(shrine_light)
+
+
+func _build_heart_gear_frame(shrine: Node3D, gold: StandardMaterial3D,
+		gold_dark: StandardMaterial3D) -> void:
+	# A cog around the gem, with two smaller cogs meshing into it, so the heart
+	# reads as machinery seated in the trunk.
+	_add_gear(shrine, "HeartGearMain", Vector3.ZERO, HEART_SHRINE_FRAME_RADIUS,
+		HEART_GEAR_TEETH, 2.6, gold, HEART_GEAR_SECONDS)
+	var mesh_radius := HEART_SHRINE_FRAME_RADIUS * 0.42
+	for side in [-1.0, 1.0]:
+		# Seated so their teeth meet the main cog's rim, and turning the other
+		# way, which is what makes a gear train read as driven.
+		var offset := Vector3(
+			side * (HEART_SHRINE_FRAME_RADIUS + mesh_radius) * 0.86,
+			(HEART_SHRINE_FRAME_RADIUS + mesh_radius) * 0.42 * side,
+			1.2)
+		_add_gear(shrine, "HeartGearIdler_%s" % ("L" if side < 0.0 else "R"),
+			offset, mesh_radius, HEART_GEAR_IDLER_TEETH, 1.8, gold_dark,
+			-HEART_GEAR_SECONDS * 0.42)
+
+	var backing := MeshInstance3D.new()
+	backing.name = "HeartGearBacking"
+	var disc := CylinderMesh.new()
+	disc.top_radius = HEART_SHRINE_FRAME_RADIUS * 0.86
+	disc.bottom_radius = HEART_SHRINE_FRAME_RADIUS * 0.86
+	disc.height = 1.4
+	disc.radial_segments = 22
+	backing.mesh = disc
+	backing.material_override = _make_material(Color("15202f"), 0.6)
+	backing.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+	backing.position = Vector3(0.0, 0.0, 3.4)
+	shrine.add_child(backing)
+
+
+func _add_gear(parent: Node3D, gear_name: String, offset: Vector3, radius: float,
+		teeth: int, rim_depth: float, material: StandardMaterial3D,
+		seconds: float) -> void:
+	var pivot := Node3D.new()
+	pivot.name = gear_name
+	pivot.position = offset
+	parent.add_child(pivot)
+
+	var rim := MeshInstance3D.new()
+	rim.name = "%s_Rim" % gear_name
+	var torus := TorusMesh.new()
+	torus.inner_radius = radius
+	torus.outer_radius = radius + rim_depth
+	torus.rings = 26
+	torus.ring_segments = 6
+	rim.mesh = torus
+	rim.material_override = material
+	# TorusMesh lies flat; stand it up so the cog faces the player.
+	rim.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+	pivot.add_child(rim)
+
+	var hub := MeshInstance3D.new()
+	hub.name = "%s_Hub" % gear_name
+	var hub_mesh := CylinderMesh.new()
+	hub_mesh.top_radius = radius * 0.22
+	hub_mesh.bottom_radius = radius * 0.22
+	hub_mesh.height = rim_depth * 1.5
+	hub_mesh.radial_segments = 10
+	hub.mesh = hub_mesh
+	hub.material_override = material
+	hub.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+	pivot.add_child(hub)
+
+	for spoke_index in 4:
+		var spoke := MeshInstance3D.new()
+		spoke.name = "%s_Spoke_%02d" % [gear_name, spoke_index]
+		var spoke_mesh := BoxMesh.new()
+		spoke_mesh.size = Vector3(radius * 1.55, rim_depth * 0.5, rim_depth * 0.9)
+		spoke.mesh = spoke_mesh
+		spoke.material_override = material
+		spoke.rotation.z = PI * float(spoke_index) / 4.0
+		pivot.add_child(spoke)
+
+	for tooth_index in teeth:
+		var angle := TAU * float(tooth_index) / float(teeth)
+		var tooth := MeshInstance3D.new()
+		tooth.name = "%s_Tooth_%02d" % [gear_name, tooth_index]
+		var tooth_mesh := BoxMesh.new()
+		tooth_mesh.size = Vector3(rim_depth * 1.15, rim_depth * 1.5, rim_depth * 1.15)
+		tooth.mesh = tooth_mesh
+		tooth.material_override = material
+		tooth.position = Vector3(
+			cos(angle) * (radius + rim_depth * 1.35),
+			sin(angle) * (radius + rim_depth * 1.35),
+			0.0)
+		tooth.rotation.z = angle
+		pivot.add_child(tooth)
+
+	_spin_forever(pivot, seconds, "z")
+
+
+func _spin_forever(pivot: Node3D, seconds: float, axis: String = "y") -> void:
+	# A looping tween rather than _process: the rotation keeps running without
+	# this world script paying a per-frame callback for decoration.
+	#
+	# The axis matters: a cog faces the player, so it has to turn about Z. Turned
+	# about Y it goes edge-on twice a revolution and disappears.
+	var spin := pivot.create_tween().set_loops()
+	spin.tween_property(pivot, "rotation:%s" % axis,
+		TAU * signf(seconds), absf(seconds)).from(0.0)
+
+
+func _make_crystal_outline_material() -> StandardMaterial3D:
+	var outline := StandardMaterial3D.new()
+	outline.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	outline.albedo_color = Color("06103a")
+	outline.cull_mode = BaseMaterial3D.CULL_FRONT
+	outline.grow = true
+	outline.grow_amount = HEART_SHRINE_OUTLINE_GROW
+	return outline
+
+
+func _heart_shrine_height(tree: Node3D) -> float:
+	# Sit the frame directly above the root doorway rather than at a guessed
+	# height, so the shrine keeps its keystone relationship to the opening even
+	# if the doorway geometry is re-authored.
+	var doorway_top := -INF
+	for node in tree.find_children("*Doorway*", "MeshInstance3D", true, false):
+		var mesh_node := node as MeshInstance3D
+		if mesh_node.mesh == null or not mesh_node.is_visible_in_tree():
+			continue
+		var bounds := mesh_node.global_transform * mesh_node.mesh.get_aabb()
+		doorway_top = maxf(doorway_top, bounds.position.y + bounds.size.y)
+	if doorway_top == -INF:
+		return HEART_SHRINE_FALLBACK_HEIGHT
+	var frame_half_height := HEART_SHRINE_FRAME_RADIUS * HEART_SHRINE_OVAL_STRETCH \
+		* HEART_SHRINE_SCALE * TREE_OF_LIFE_BODY_RATIO
+	return (doorway_top - tree.global_position.y) \
+		+ frame_half_height + HEART_SHRINE_DOOR_CLEARANCE
+
+
+func _build_faceted_crystal_mesh(radius: float, height: float, sides: int) -> ArrayMesh:
+	# A bipyramid, the same construction the Blender source uses for the heart
+	# crystals, so the runtime shrine matches the authored faceting.
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var top := Vector3(0.0, height * 0.56, 0.0)
+	var bottom := Vector3(0.0, -height * 0.56, 0.0)
+	for index in sides:
+		var angle := TAU * float(index) / float(sides)
+		var next_angle := TAU * float(index + 1) / float(sides)
+		var a := Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		var b := Vector3(cos(next_angle) * radius, 0.0, sin(next_angle) * radius)
+		for triangle in [[top, a, b], [bottom, b, a]]:
+			var corner_a: Vector3 = triangle[0]
+			var corner_b: Vector3 = triangle[1]
+			var corner_c: Vector3 = triangle[2]
+			var normal := (corner_b - corner_a).cross(corner_c - corner_a).normalized()
+			for point in [corner_a, corner_b, corner_c]:
+				vertices.append(point)
+				normals.append(normal)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 func _build_reference_faithful_tree_canopy(tree: Node3D, legacy_visual: Node3D) -> void:
 	# Keep the proven trunk, roots, foundation and traversal arch, but remove the
@@ -946,6 +1412,9 @@ func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -
 	var powered_root_fiber_meshes := 0
 	for mesh_node in previous_canopy.find_children("*", "MeshInstance3D", true, false):
 		var mesh := mesh_node as MeshInstance3D
+		# The sap channels trace the OLD radial branch layout, so showing them
+		# once those branches are hidden leaves blue lines sticking out past the
+		# new canopy - the horizontal streaks noted below.
 		if mesh.name.begins_with("BioTechBranch_") \
 				or mesh.name.begins_with("CyanSapChannel_") \
 				or mesh.name.begins_with("BrassArticulationCollar_") \
@@ -991,21 +1460,44 @@ func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -
 	canopy.set_meta("root_to_leaf_energy_continuity", true)
 	canopy.set_meta("living_tree_silhouette", "six_irregular_root_to_crown_branch_layers")
 	canopy.set_meta("canopy_collision", false)
+	canopy.scale = Vector3.ONE * TREE_OF_LIFE_BODY_RATIO
 	tree.add_child(canopy)
 
 	var module_transforms: Array[Transform3D] = []
 	var cluster_index := 0
+	var growth_per_cluster := WEB_BOUGH_GROWTH_PER_CLUSTER if _use_web_lod() \
+		else BOUGH_GROWTH_PER_CLUSTER
+	# Canopy modules are authored in pre-ratio units, so bring the heart's world
+	# height back into the same space before comparing tier heights against it.
+	var niche_centre := _heart_shrine_height(tree) / TREE_OF_LIFE_BODY_RATIO
+	var niche_reach := HEART_SHRINE_FRAME_RADIUS * HEART_SHRINE_OVAL_STRETCH \
+		* HEART_SHRINE_SCALE * HEART_NICHE_MARGIN
+	var niche_low := niche_centre - niche_reach
+	var niche_high := niche_centre + niche_reach
+	# Published so the ornament pass keeps the same volume clear.
+	canopy.set_meta("heart_niche_centre", niche_centre)
+	canopy.set_meta("heart_niche_reach", niche_reach)
+	# Christmas-tree silhouette: evenly spaced whorls tapering from a wide base to
+	# the star, branch length shrinking with height, and pitch sweeping from a
+	# droop at the bottom to a lift at the crown, which is what separates a fir
+	# from a lollipop.
 	for tier_spec in [
-		{"count": 10, "height": 37.0, "radius": 9.2, "scale": 3.02, "pitch": 3.0, "phase": 0.11},
-		{"count": 10, "height": 51.0, "radius": 8.0, "scale": 2.86, "pitch": 10.0, "phase": 0.43},
-		{"count": 9, "height": 65.0, "radius": 6.8, "scale": 2.58, "pitch": 18.0, "phase": 0.20},
-		{"count": 8, "height": 78.0, "radius": 5.5, "scale": 2.29, "pitch": 28.0, "phase": 0.59},
-		# Keep crown foliage face-readable. Steeper angles turn the emissive leaf
-		# veins into unexplained horizontal lines when the leaf surface is edge-on.
-		{"count": 6, "height": 84.0, "radius": 4.2, "scale": 1.15, "pitch": 21.0, "phase": 0.31},
-		{"count": 5, "height": 92.0, "radius": 3.0, "scale": 0.75, "pitch": 24.0, "phase": 0.72},
+		{"count": 10, "height": 32.0, "radius": 10.5, "scale": 3.30, "pitch": -9.0, "phase": 0.10, "length": 1.00},
+		{"count": 10, "height": 41.0, "radius": 9.6, "scale": 3.08, "pitch": -6.0, "phase": 0.42, "length": 1.03},
+		{"count": 9, "height": 50.0, "radius": 8.7, "scale": 2.86, "pitch": -3.0, "phase": 0.74, "length": 1.06},
+		{"count": 9, "height": 59.0, "radius": 7.9, "scale": 2.62, "pitch": 1.0, "phase": 0.16, "length": 1.10},
+		{"count": 8, "height": 68.0, "radius": 7.0, "scale": 2.38, "pitch": 5.0, "phase": 0.55, "length": 1.15},
+		{"count": 8, "height": 77.0, "radius": 6.2, "scale": 2.14, "pitch": 9.0, "phase": 0.28, "length": 1.21},
+		{"count": 7, "height": 86.0, "radius": 5.4, "scale": 1.90, "pitch": 13.0, "phase": 0.66, "length": 1.28},
+		{"count": 6, "height": 95.0, "radius": 4.6, "scale": 1.66, "pitch": 17.0, "phase": 0.34, "length": 1.36},
+		{"count": 6, "height": 104.0, "radius": 3.9, "scale": 1.42, "pitch": 21.0, "phase": 0.71, "length": 1.45},
+		{"count": 5, "height": 113.0, "radius": 3.2, "scale": 1.18, "pitch": 25.0, "phase": 0.20, "length": 1.55},
+		{"count": 4, "height": 121.0, "radius": 2.5, "scale": 0.96, "pitch": 29.0, "phase": 0.60, "length": 1.65},
+		{"count": 4, "height": 128.0, "radius": 1.9, "scale": 0.78, "pitch": 33.0, "phase": 0.38, "length": 1.75},
+		{"count": 3, "height": 134.0, "radius": 1.4, "scale": 0.62, "pitch": 37.0, "phase": 0.80, "length": 1.85},
 	]:
 		var count := int(tier_spec.count)
+		var tier_length := float(tier_spec.get("length", BOUGH_DEFAULT_LENGTH))
 		for tier_index in count:
 			var irregularity := sin(float(tier_index) * 2.17 + float(cluster_index) * 0.43)
 			var yaw := TAU * float(tier_index) / float(count) + float(tier_spec.phase)
@@ -1014,10 +1506,18 @@ func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -
 				cos(yaw) * (float(tier_spec.radius) + irregularity * 0.65),
 				float(tier_spec.height) + irregularity * 2.2,
 				sin(yaw) * (float(tier_spec.radius) + irregularity * 0.65))
+			# South is -Z, which is where the heart sits. Leave that arc clear
+			# through the heart's own height band so nothing curtains it.
+			var height_value := float(tier_spec.height)
+			if height_value >= niche_low and height_value <= niche_high:
+				var south_delta := absf(wrapf(yaw - PI * 1.5, -PI, PI))
+				if south_delta < deg_to_rad(HEART_NICHE_ARC_DEGREES):
+					cluster_index += 1
+					continue
 			var radial := Vector3(cos(yaw), 0.0, sin(yaw))
 			var tangent := Vector3(-sin(yaw), 0.0, cos(yaw))
-			for growth_index in 10:
-				var growth_phase := TAU * float(growth_index) / 10.0
+			for growth_index in growth_per_cluster:
+				var growth_phase := TAU * float(growth_index) / float(growth_per_cluster)
 				var growth_noise := sin(float(cluster_index * 10 + growth_index) * 1.731)
 				var root_target := cluster_root \
 					+ tangent * cos(growth_phase) * (3.8 + float(growth_index % 3)) \
@@ -1032,12 +1532,14 @@ func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -
 				var orientation := Basis(Vector3.UP, growth_yaw) \
 					* Basis(Vector3.BACK, upward_pitch) \
 					* Basis(Vector3.RIGHT, local_roll)
-				var scaled_basis := orientation.scaled(Vector3.ONE * module_scale)
+				var scaled_basis := orientation * Basis.from_scale(
+					Vector3(tier_length, 1.0, 1.0) * module_scale)
 				var authored_root_socket := Vector3(-18.0, 1.0, 0.0)
 				module_transforms.append(Transform3D(
 					scaled_basis, root_target - scaled_basis * authored_root_socket))
 			cluster_index += 1
 	_batch_powered_bough_canopy(canopy, module_transforms, flow_material)
+	_build_canopy_ornaments(canopy, module_transforms)
 
 	# A restrained canopy light supports the emissive shader without flattening
 	# the green, violet, blue-glass and emerald leaf materials.
@@ -1049,6 +1551,107 @@ func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -
 	flow_light.omni_range = 150.0
 	flow_light.shadow_enabled = false
 	canopy.add_child(flow_light)
+
+
+
+# Baubles hung along the whorls. Three colours ride the branches and every
+# fitting - cap and hanger - is gold, matching the star and the shrine rings.
+const ORNAMENT_COLOURS := [
+	Color("d62839"),
+	Color("1f6bd8"),
+	Color("7a3bd6"),
+]
+const ORNAMENT_EVERY_NTH_BOUGH := 1
+const ORNAMENT_RADIUS := 2.0
+# Ornaments per bough, spaced along its length so they run from the lowest
+# whorl to the crown rather than clustering at the branch tips.
+const ORNAMENT_PER_BOUGH := 3
+const ORNAMENT_ALONG_BOUGH := [11.0, 15.5, 19.5]
+# Multiplied by the bough's own scale, so baubles clear the foliage on the big
+# lower whorls as well as the small crown ones.
+const ORNAMENT_DROP_FACTOR := 5.4
+
+
+func _build_canopy_ornaments(
+		canopy: Node3D, module_transforms: Array[Transform3D]) -> void:
+	# One MultiMesh per colour plus one for the gold fittings, so the whole
+	# decoration is four draws no matter how many baubles hang.
+	var hang_points: Array[Transform3D] = []
+	var niche_centre := canopy.get_meta("heart_niche_centre", 0.0) as float
+	var niche_reach := canopy.get_meta("heart_niche_reach", 0.0) as float
+	for module_index in module_transforms.size():
+		if module_index % ORNAMENT_EVERY_NTH_BOUGH != 0:
+			continue
+		var module_transform := module_transforms[module_index]
+		# Boughs run along local X, so step along that axis and let each bauble
+		# drop straight down in world space, the way a real ornament hangs.
+		# Boughs are scaled up to 3.3x, so their foliage is metres thick. A drop
+		# measured in world units leaves every bauble buried inside the leaves;
+		# it has to scale with the bough it hangs from.
+		var bough_scale := module_transform.basis.get_scale().y
+		for slot in ORNAMENT_PER_BOUGH:
+			var along := float(ORNAMENT_ALONG_BOUGH[slot % ORNAMENT_ALONG_BOUGH.size()])
+			var sway := float((module_index + slot) % 3) - 1.0
+			var anchor := module_transform * Vector3(along, 0.0, sway * 1.6)
+			var drop := bough_scale * (ORNAMENT_DROP_FACTOR
+				+ float((module_index + slot) % 4) * 0.55)
+			var placed_at := anchor + Vector3.DOWN * drop
+			# Keep the heart's niche clear of hanging decoration too.
+			if niche_reach > 0.0 and placed_at.z < 0.0 \
+					and absf(placed_at.y - niche_centre) < niche_reach \
+					and absf(placed_at.x) < niche_reach:
+				continue
+			hang_points.append(Transform3D(Basis.IDENTITY, placed_at))
+	if hang_points.is_empty():
+		return
+
+	var sphere := SphereMesh.new()
+	sphere.radius = ORNAMENT_RADIUS
+	sphere.height = ORNAMENT_RADIUS * 2.0
+	sphere.radial_segments = 10
+	sphere.rings = 6
+
+	for colour_index in ORNAMENT_COLOURS.size():
+		var subset: Array[Transform3D] = []
+		for point_index in hang_points.size():
+			if point_index % ORNAMENT_COLOURS.size() == colour_index:
+				subset.append(hang_points[point_index])
+		if subset.is_empty():
+			continue
+		var multimesh := MultiMesh.new()
+		multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		multimesh.mesh = sphere
+		multimesh.instance_count = subset.size()
+		for index in subset.size():
+			multimesh.set_instance_transform(index, subset[index])
+		var batch := MultiMeshInstance3D.new()
+		batch.name = "CanopyOrnamentBatch_%02d" % colour_index
+		batch.multimesh = multimesh
+		batch.material_override = _make_glow(
+			ORNAMENT_COLOURS[colour_index], 0.65)
+		batch.set_meta("ornament_count", subset.size())
+		canopy.add_child(batch)
+
+	# Gold caps and hangers, one per bauble.
+	var cap := CylinderMesh.new()
+	cap.top_radius = ORNAMENT_RADIUS * 0.30
+	cap.bottom_radius = ORNAMENT_RADIUS * 0.52
+	cap.height = ORNAMENT_RADIUS * 1.55
+	cap.radial_segments = 8
+	var cap_multimesh := MultiMesh.new()
+	cap_multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	cap_multimesh.mesh = cap
+	cap_multimesh.instance_count = hang_points.size()
+	for index in hang_points.size():
+		var fitting := hang_points[index]
+		fitting.origin += Vector3.UP * (ORNAMENT_RADIUS * 1.35)
+		cap_multimesh.set_instance_transform(index, fitting)
+	var cap_batch := MultiMeshInstance3D.new()
+	cap_batch.name = "CanopyOrnamentCapBatch"
+	cap_batch.multimesh = cap_multimesh
+	cap_batch.material_override = _make_glow(Color("e8bf63"), 0.45)
+	canopy.add_child(cap_batch)
+	canopy.set_meta("ornaments", hang_points.size())
 
 
 func _node_transform_relative_to(node: Node3D, ancestor_root: Node3D) -> Transform3D:
@@ -1094,19 +1697,32 @@ func _batch_powered_bough_canopy(
 func _batch_powered_bough_meshes(
 		parent: Node3D, template: Node3D, pattern: String, batch_name: String,
 		module_transforms: Array[Transform3D], material_override: Material,
-		growth_layers: int, local_scale: float) -> void:
+		growth_layers_arg: int, local_scale: float) -> void:
+	var growth_layers := growth_layers_arg
 	var meshes := template.find_children(pattern, "MeshInstance3D", true, false)
 	if meshes.is_empty():
 		push_warning("Powered bough runtime pattern has no meshes: %s" % pattern)
 		return
+	var is_leaf_batch := batch_name.begins_with("PoweredLeafBatch_")
+	var web_lod := _use_web_lod()
+	if web_lod and batch_name == "PoweredLeafTransferNodeBatch":
+		# 1.24 M instances of a 20 triangle node reads as nothing at web draw
+		# distances while costing a full extra MultiMesh pass.
+		return
 	var first_mesh := meshes[0] as MeshInstance3D
 	var source_transforms: Array[Transform3D] = []
-	for mesh_node in meshes:
+	var stride := WEB_LEAF_SOCKET_STRIDE if web_lod and is_leaf_batch else 1
+	for source_index in meshes.size():
+		if source_index % stride != 0:
+			continue
 		source_transforms.append(_node_transform_relative_to(
-			mesh_node as Node3D, template))
+			meshes[source_index] as Node3D, template))
+	if web_lod and is_leaf_batch:
+		growth_layers = mini(growth_layers, WEB_LEAF_GROWTH_LAYERS)
 	var multimesh := MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.mesh = first_mesh.mesh
+	multimesh.mesh = _web_leaf_card(first_mesh) if web_lod and is_leaf_batch \
+		else first_mesh.mesh
 	var source_count := source_transforms.size()
 	multimesh.instance_count = module_transforms.size() * source_count * growth_layers
 	var output_index := 0
@@ -1132,8 +1748,15 @@ func _batch_powered_bough_meshes(
 					local_transform.basis = local_transform.basis \
 						.rotated(Vector3.UP, stagger * deg_to_rad(6.5)) \
 						.scaled(Vector3.ONE * 0.94)
-				multimesh.set_instance_transform(
-					output_index, module_transform * local_transform)
+				var placed := module_transform * local_transform
+				if is_leaf_batch:
+					# Keep the leaf's own shape: take its position from the
+					# stretched branch, but rebuild the basis unstretched, using
+					# the module's unscaled axis for size.
+					var leaf_scale := module_transform.basis.get_scale().y
+					placed.basis = placed.basis.orthonormalized().scaled(
+						Vector3.ONE * leaf_scale * local_scale)
+				multimesh.set_instance_transform(output_index, placed)
 				output_index += 1
 	var batch := MultiMeshInstance3D.new()
 	batch.name = batch_name
@@ -1144,6 +1767,29 @@ func _batch_powered_bough_meshes(
 	batch.set_meta("growth_layers", growth_layers)
 	parent.add_child(batch)
 
+
+func _web_leaf_card(source: MeshInstance3D) -> Mesh:
+	# Each authored leaf is a 6,336 triangle compound cluster. At canopy distance
+	# on Web it reads as a coloured shape, so replace it with a single card of the
+	# same footprint carrying the same material - two triangles instead of 6,336.
+	var source_mesh := source.mesh
+	if source_mesh == null:
+		return null
+	var bounds := source_mesh.get_aabb()
+	var card := PlaneMesh.new()
+	card.size = Vector2(maxf(bounds.size.x, 0.05), maxf(bounds.size.z, 0.05))
+	card.subdivide_width = 0
+	card.subdivide_depth = 0
+	var material := source_mesh.surface_get_material(0)
+	if material == null:
+		material = source.material_override
+	if material is StandardMaterial3D:
+		# A card has no thickness, so it must not vanish when seen from beneath.
+		var flat := (material as StandardMaterial3D).duplicate() as StandardMaterial3D
+		flat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		material = flat
+	card.material = material
+	return card
 
 func _create_powered_bough_flow_material() -> ShaderMaterial:
 	var shader := Shader.new()
@@ -1157,9 +1803,12 @@ void vertex() {
 void fragment() {
 	float wave = 0.5 + 0.5 * sin(flow_coordinate * 2.4 - TIME * 5.6);
 	float filament = smoothstep(0.28, 0.92, wave);
-	vec3 cyan = mix(vec3(0.005, 0.18, 0.48), vec3(0.18, 0.92, 1.0), filament);
-	ALBEDO = cyan * 0.34;
-	EMISSION = cyan * (1.35 + filament * 3.2);
+	// Blue, to match the heart crystal the fibers feed.
+	// Bright enough to read as energy against a lit sky: a dark blue base with
+	// modest emission just looks like painted trim.
+	vec3 flow = mix(vec3(0.04, 0.24, 0.92), vec3(0.32, 0.66, 1.0), filament);
+	ALBEDO = flow * 0.5;
+	EMISSION = flow * (1.7 + filament * 3.1);
 }
 """
 	var material := ShaderMaterial.new()
