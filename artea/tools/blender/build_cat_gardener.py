@@ -1,4 +1,4 @@
-"""Build Poppy, a friendly rabbit gardener in the established villager style."""
+"""Build Cat, a friendly cat gardener in the established villager style."""
 
 from pathlib import Path
 import math
@@ -9,14 +9,14 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "assets3D/characters/milo_exact_target_parts.glb"
-OUTPUT_GLB = ROOT / "assets3D/characters/poppy_rabbit_gardener.glb"
-OUTPUT_BLEND = ROOT / "assets3D/characters/poppy_rabbit_gardener.blend"
-OUTPUT_RENDER = ROOT / "artifacts/poppy_rabbit_gardener.png"
+OUTPUT_GLB = ROOT / "assets3D/characters/cat_gardener.glb"
+OUTPUT_BLEND = ROOT / "assets3D/characters/cat_gardener.blend"
+OUTPUT_RENDER = ROOT / "artifacts/cat_gardener.png"
 OUTPUT_VIEWS = {
-    "front": ROOT / "artifacts/poppy_360_front.png",
-    "right": ROOT / "artifacts/poppy_360_right.png",
-    "back": ROOT / "artifacts/poppy_360_back.png",
-    "left": ROOT / "artifacts/poppy_360_left.png",
+    "front": ROOT / "artifacts/cat_360_front.png",
+    "right": ROOT / "artifacts/cat_360_right.png",
+    "back": ROOT / "artifacts/cat_360_back.png",
+    "left": ROOT / "artifacts/cat_360_left.png",
 }
 
 
@@ -45,11 +45,11 @@ def finish(obj, name, mat, bone, armature, parts, smooth=False):
         apply_material(obj, mat)
         group = obj.vertex_groups.new(name=bone)
         group.add(range(len(obj.data.vertices)), 1.0, "REPLACE")
-        modifier = obj.modifiers.new("PoppyVillagerRig", "ARMATURE")
+        modifier = obj.modifiers.new("CatVillagerRig", "ARMATURE")
         modifier.object = armature
     obj.parent = armature
     obj["villager_part"] = name
-    obj["character"] = "Poppy Rabbit Gardener"
+    obj["character"] = "Cat Gardener"
     parts.append(obj)
     return obj
 
@@ -110,7 +110,7 @@ def look_at(obj, target):
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(SOURCE))
 armature = next(obj for obj in bpy.context.scene.objects if obj.type == "ARMATURE")
-armature.name = "PoppyRabbitGardenerRig"
+armature.name = "CatGardenerRig"
 
 # Remove Milo-specific anatomy and ceremonial tailoring while retaining the
 # proven villager body, eyes, paws, legs and animation-ready topology.
@@ -128,24 +128,24 @@ for obj in list(bpy.context.scene.objects):
 parts = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
 
 # Milo's moustache previously bridged these face layers. Seat them directly on
-# Poppy's cream rabbit muzzle so the nose and mouth do not float in side view.
+# Cat's cream cat muzzle so the nose and mouth do not float in side view.
 for face_name, depth_shift in (("Nose", 0.060), ("Mouth", 0.055)):
     face_part = bpy.data.objects.get(face_name)
     if face_part is not None:
         face_part.location.y += depth_shift
 
-FUR = material("Poppy warm rabbit fur", "b8916f")
-FUR_LIGHT = material("Poppy cream muzzle", "e7d8bd")
-INNER_EAR = material("Poppy inner ear", "d9a69f")
-GREEN = material("Poppy moss gardening coat", "4f6f52")
-GREEN_DARK = material("Poppy coat seams", "304a38")
-APRON = material("Poppy linen apron", "c7ad78")
-APRON_LIGHT = material("Poppy apron pocket", "d7c391")
-KERCHIEF = material("Poppy berry kerchief", "a84e46")
-BOOT = material("Poppy garden boots", "514337")
-SOIL = material("Poppy trouser brown", "403a34")
-BLACK = material("Poppy eye", "17191a", 0.35)
-WHITE = material("Poppy eye highlight", "f4eee4")
+FUR = material("Cat warm cat fur", "b8916f")
+FUR_LIGHT = material("Cat cream muzzle", "e7d8bd")
+INNER_EAR = material("Cat inner ear", "d9a69f")
+GREEN = material("Cat moss gardening coat", "4f6f52")
+GREEN_DARK = material("Cat coat seams", "304a38")
+APRON = material("Cat linen apron", "c7ad78")
+APRON_LIGHT = material("Cat apron pocket", "d7c391")
+KERCHIEF = material("Cat berry kerchief", "a84e46")
+BOOT = material("Cat garden boots", "514337")
+SOIL = material("Cat trouser brown", "403a34")
+BLACK = material("Cat eye", "17191a", 0.35)
+WHITE = material("Cat eye highlight", "f4eee4")
 
 for obj in parts:
     if obj.name == "Head" or obj.name.startswith(("CheekUpper_", "CheekLower_")):
@@ -168,17 +168,18 @@ for obj in parts:
             or obj.name.startswith("BackCoatHem_"):
         apply_material(obj, GREEN_DARK)
 
-# Tall rabbit ears overlap the head so they read as connected from all sides.
+# Compact triangular cat ears overlap the skull so they remain connected from
+# the front, side, and rear without reading as long rabbit ears.
 for side, label in ((-1, "L"), (1, "R")):
-    panel("RabbitEarOuter_" + label,
-          [(0.31 * side, 1.66), (0.34 * side, 2.12),
-           (0.28 * side, 2.28), (0.19 * side, 2.30),
-           (0.12 * side, 2.15), (0.13 * side, 1.68)],
+    panel("CatEarOuter_" + label,
+          [(0.33 * side, 1.64), (0.31 * side, 1.96),
+           (0.24 * side, 2.15), (0.17 * side, 2.02),
+           (0.13 * side, 1.66)],
           -0.075, 0.17, FUR, "head", armature, parts, bevel=0.018)
-    panel("RabbitEarInner_" + label,
-          [(0.285 * side, 1.75), (0.300 * side, 2.08),
-           (0.255 * side, 2.21), (0.205 * side, 2.22),
-           (0.160 * side, 2.10), (0.165 * side, 1.77)],
+    panel("CatEarInner_" + label,
+          [(0.285 * side, 1.72), (0.270 * side, 1.94),
+           (0.235 * side, 2.07), (0.190 * side, 1.98),
+           (0.165 * side, 1.74)],
           -0.095, 0.012, INNER_EAR, "head", armature, parts, bevel=0.012)
     tube("ApronStrap_" + label,
          [(0.245 * side, -0.287, 1.085), (0.180 * side, -0.300, 0.930)],
@@ -204,7 +205,13 @@ sphere("ApronButton_L", (-0.18, -0.330, 0.945), (0.028, 0.014, 0.028),
        GREEN_DARK, "chest", armature, parts)
 sphere("ApronButton_R", (0.18, -0.330, 0.945), (0.028, 0.014, 0.028),
        GREEN_DARK, "chest", armature, parts)
-sphere("RabbitTail", (0.0, 0.335, 0.610), (0.105, 0.090, 0.105),
+# A curved, tapered-looking cat tail replaces the former round rabbit tail.
+tube("CatTail",
+     [(0.16, 0.300, 0.56), (0.31, 0.350, 0.63),
+      (0.44, 0.370, 0.75), (0.50, 0.350, 0.89),
+      (0.46, 0.325, 1.01)],
+     0.055, FUR, "hips", armature, parts)
+sphere("CatTailTip", (0.46, 0.325, 1.01), (0.058, 0.058, 0.058),
        FUR_LIGHT, "hips", armature, parts)
 
 for part in parts:
@@ -223,7 +230,7 @@ for location, energy in (((-3, -4, 5), 300), ((3, -2, 3), 100),
     light.data.energy = energy
     light.data.size = 3.0
     look_at(light, (0, 0, 1.15))
-world = bpy.data.worlds.new("PoppyWorld")
+world = bpy.data.worlds.new("CatWorld")
 world.use_nodes = True
 world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.16, 0.34, 0.38, 1)
 world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.42
@@ -257,4 +264,4 @@ bpy.context.view_layer.objects.active = armature
 bpy.ops.export_scene.gltf(
     filepath=str(OUTPUT_GLB), export_format="GLB", use_selection=True,
     export_animations=True, export_nla_strips=True, export_materials="EXPORT")
-print(f"POPPY_BUILD: {len(parts)} parts -> {OUTPUT_GLB}")
+print(f"CAT_BUILD: {len(parts)} parts -> {OUTPUT_GLB}")
