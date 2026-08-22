@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dvuwb0yce4sb7"
-path="res://.godot/imported/shooting_star_sampler.png-b6a55a9c8b222b1427c0cac68a387ebd.ctex"
+path.s3tc="res://.godot/imported/shooting_star_sampler.png-b6a55a9c8b222b1427c0cac68a387ebd.s3tc.ctex"
+path.etc2="res://.godot/imported/shooting_star_sampler.png-b6a55a9c8b222b1427c0cac68a387ebd.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/shooting_star_sampler.png"
-dest_files=["res://.godot/imported/shooting_star_sampler.png-b6a55a9c8b222b1427c0cac68a387ebd.ctex"]
+dest_files=["res://.godot/imported/shooting_star_sampler.png-b6a55a9c8b222b1427c0cac68a387ebd.s3tc.ctex", "res://.godot/imported/shooting_star_sampler.png-b6a55a9c8b222b1427c0cac68a387ebd.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
