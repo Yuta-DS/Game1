@@ -1,3 +1,5 @@
+RUN AS WEB: ./web   (rebuild: ./web rebuild | check it plays: ./web verify | stop: ./web stop)
+
 ===============================================================================
 ARTEA - CONFIGURATION & SETUP GUIDE
 Cross-platform: macOS (primary focus), Linux/Ubuntu, Windows
