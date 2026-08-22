@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cefs5q87f2s5r"
-path="res://.godot/imported/Sell.png-9166c024fa4e65cc16f63af93e39d35b.ctex"
+path.s3tc="res://.godot/imported/Sell.png-9166c024fa4e65cc16f63af93e39d35b.s3tc.ctex"
+path.etc2="res://.godot/imported/Sell.png-9166c024fa4e65cc16f63af93e39d35b.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/village-npc-pixel-art-character-sprite-pack/Peasants_4/Sell.png"
-dest_files=["res://.godot/imported/Sell.png-9166c024fa4e65cc16f63af93e39d35b.ctex"]
+dest_files=["res://.godot/imported/Sell.png-9166c024fa4e65cc16f63af93e39d35b.s3tc.ctex", "res://.godot/imported/Sell.png-9166c024fa4e65cc16f63af93e39d35b.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

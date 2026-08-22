@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/MockUp-01-N.png-803dd5660f4c13fa16727b6b59e2d
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1

@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://by6ev811x5mhi"
-path="res://.godot/imported/Run-Sheet.png-019302b704d28f98379f1a7968b5933c.ctex"
+path.s3tc="res://.godot/imported/Run-Sheet.png-019302b704d28f98379f1a7968b5933c.s3tc.ctex"
+path.etc2="res://.godot/imported/Run-Sheet.png-019302b704d28f98379f1a7968b5933c.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Run/Run-Sheet.png"
-dest_files=["res://.godot/imported/Run-Sheet.png-019302b704d28f98379f1a7968b5933c.ctex"]
+dest_files=["res://.godot/imported/Run-Sheet.png-019302b704d28f98379f1a7968b5933c.s3tc.ctex", "res://.godot/imported/Run-Sheet.png-019302b704d28f98379f1a7968b5933c.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

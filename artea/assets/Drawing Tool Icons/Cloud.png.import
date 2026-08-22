@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dyf07vqr2tgon"
-path="res://.godot/imported/Cloud.png-4c1fd248636ac77eb4905e8eddeb1097.ctex"
+path.s3tc="res://.godot/imported/Cloud.png-4c1fd248636ac77eb4905e8eddeb1097.s3tc.ctex"
+path.etc2="res://.godot/imported/Cloud.png-4c1fd248636ac77eb4905e8eddeb1097.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Drawing Tool Icons/Cloud.png"
-dest_files=["res://.godot/imported/Cloud.png-4c1fd248636ac77eb4905e8eddeb1097.ctex"]
+dest_files=["res://.godot/imported/Cloud.png-4c1fd248636ac77eb4905e8eddeb1097.s3tc.ctex", "res://.godot/imported/Cloud.png-4c1fd248636ac77eb4905e8eddeb1097.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://pxrt8opnwpou"
-path="res://.godot/imported/Idle.png-31e386902f87c103ca78257347005e77.ctex"
+path.s3tc="res://.godot/imported/Idle.png-31e386902f87c103ca78257347005e77.s3tc.ctex"
+path.etc2="res://.godot/imported/Idle.png-31e386902f87c103ca78257347005e77.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/CatPackFree/Idle.png"
-dest_files=["res://.godot/imported/Idle.png-31e386902f87c103ca78257347005e77.ctex"]
+dest_files=["res://.godot/imported/Idle.png-31e386902f87c103ca78257347005e77.s3tc.ctex", "res://.godot/imported/Idle.png-31e386902f87c103ca78257347005e77.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

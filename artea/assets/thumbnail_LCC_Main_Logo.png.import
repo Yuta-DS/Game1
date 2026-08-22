@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cdpwltuwlsf7m"
-path="res://.godot/imported/thumbnail_LCC_Main_Logo.png-ff28d1cf614379397e0b12b812c59779.ctex"
+path.s3tc="res://.godot/imported/thumbnail_LCC_Main_Logo.png-ff28d1cf614379397e0b12b812c59779.s3tc.ctex"
+path.etc2="res://.godot/imported/thumbnail_LCC_Main_Logo.png-ff28d1cf614379397e0b12b812c59779.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/thumbnail_LCC_Main_Logo.png"
-dest_files=["res://.godot/imported/thumbnail_LCC_Main_Logo.png-ff28d1cf614379397e0b12b812c59779.ctex"]
+dest_files=["res://.godot/imported/thumbnail_LCC_Main_Logo.png-ff28d1cf614379397e0b12b812c59779.s3tc.ctex", "res://.godot/imported/thumbnail_LCC_Main_Logo.png-ff28d1cf614379397e0b12b812c59779.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

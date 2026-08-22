@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bwhar032y57pf"
-path="res://.godot/imported/stamp.png-6e7375aba49d5c1c3b73f951fff90bf0.ctex"
+path.s3tc="res://.godot/imported/stamp.png-6e7375aba49d5c1c3b73f951fff90bf0.s3tc.ctex"
+path.etc2="res://.godot/imported/stamp.png-6e7375aba49d5c1c3b73f951fff90bf0.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Drawing Tool Icons/stamp.png"
-dest_files=["res://.godot/imported/stamp.png-6e7375aba49d5c1c3b73f951fff90bf0.ctex"]
+dest_files=["res://.godot/imported/stamp.png-6e7375aba49d5c1c3b73f951fff90bf0.s3tc.ctex", "res://.godot/imported/stamp.png-6e7375aba49d5c1c3b73f951fff90bf0.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
