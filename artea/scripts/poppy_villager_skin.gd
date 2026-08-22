@@ -5,7 +5,7 @@ func is_villager_lowpoly_skin() -> bool:
 	return true
 
 
-func is_cat_gardener_skin() -> bool:
+func is_rabbit_gardener_skin() -> bool:
 	return true
 
 
