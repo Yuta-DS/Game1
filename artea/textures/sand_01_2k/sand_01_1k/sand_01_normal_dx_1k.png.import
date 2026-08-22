@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2xb5war6mtx"
-path="res://.godot/imported/sand_01_normal_dx_1k.png-689795b0479e7cab344d4590366107cc.ctex"
+path.s3tc="res://.godot/imported/sand_01_normal_dx_1k.png-689795b0479e7cab344d4590366107cc.s3tc.ctex"
+path.etc2="res://.godot/imported/sand_01_normal_dx_1k.png-689795b0479e7cab344d4590366107cc.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/sand_01_2k/sand_01_1k/sand_01_normal_dx_1k.png"
-dest_files=["res://.godot/imported/sand_01_normal_dx_1k.png-689795b0479e7cab344d4590366107cc.ctex"]
+dest_files=["res://.godot/imported/sand_01_normal_dx_1k.png-689795b0479e7cab344d4590366107cc.s3tc.ctex", "res://.godot/imported/sand_01_normal_dx_1k.png-689795b0479e7cab344d4590366107cc.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
