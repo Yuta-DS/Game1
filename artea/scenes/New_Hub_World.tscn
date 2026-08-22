@@ -718,7 +718,7 @@ transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 1
 
 [node name="OriginalCatStatue" type="Node3D" parent="."]
 # Restore the original cat landmark at its authored position beside the sign.
-transform = Transform3D(-1.8051885, 0, -9.835715, 0, 10, 0, 9.835715, 0, -1.8051885, 110, 20, -15)
+transform = Transform3D(1.8051885, 0, 9.835715, 0, 10, 0, -9.835715, 0, 1.8051885, 110, 20, -15)
 script = ExtResource("76_cat_statue")
 
 [node name="OriginalCatModel" parent="OriginalCatStatue" instance=ExtResource("45_cat_statue")]

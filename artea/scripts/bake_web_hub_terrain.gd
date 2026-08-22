@@ -15,7 +15,7 @@ func _bake() -> void:
 	for _frame in range(12):
 		await process_frame
 	var terrain = scene.get_node("Environment/Terrain3D")
-	var mesh := _build_mesh(terrain.get("data"))
+	var mesh := _build_mesh(terrain.get("data"), _build_palette(terrain))
 	var error := ResourceSaver.save(mesh, "res://resources/web_hub_terrain.res")
 	if error != OK:
 		push_error("Failed to save Web terrain mesh: %s" % error_string(error))
@@ -25,7 +25,38 @@ func _bake() -> void:
 	quit()
 
 
-func _build_mesh(terrain_data) -> ArrayMesh:
+# One flat colour per painted Terrain3D texture, taken as the average of the
+# asset's own albedo. The Web ground carries no UVs, so this is what lets the
+# village brick, the sand and the moss read as different surfaces instead of
+# one procedural green.
+func _build_palette(terrain) -> PackedColorArray:
+	var palette := PackedColorArray()
+	var assets = terrain.get("assets")
+	if assets == null:
+		push_warning("Terrain3D has no assets; falling back to height-based colour.")
+		return palette
+	for asset in assets.get("texture_list"):
+		var averaged := Color(0.5, 0.5, 0.5)
+		if asset != null and asset.albedo_texture != null:
+			var img: Image = asset.albedo_texture.get_image()
+			if img != null:
+				if img.is_compressed():
+					img.decompress()
+				img.resize(1, 1, Image.INTERPOLATE_LANCZOS)
+				averaged = img.get_pixel(0, 0)
+		print("  palette[%d] = %s (%s)" % [palette.size(), str(averaged),
+			str(asset.name) if asset != null else "?"])
+		palette.append(averaged)
+	return palette
+
+
+func _palette_color(palette: PackedColorArray, id: int) -> Color:
+	if palette.is_empty():
+		return Color(0.5, 0.5, 0.5)
+	return palette[clampi(id, 0, palette.size() - 1)]
+
+
+func _build_mesh(terrain_data, palette: PackedColorArray) -> ArrayMesh:
 	var side := GRID_CELLS + 1
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
@@ -56,10 +87,27 @@ func _build_mesh(terrain_data) -> ArrayMesh:
 			var normal := Vector3(left - right, GRID_SPACING * 2.0, back - front).normalized()
 			normals[index] = normal
 			var slope := 1.0 - normal.y
-			var lowland := Color(0.20, 0.42, 0.16)
-			var highland := Color(0.34, 0.39, 0.27)
-			var rock := Color(0.36, 0.35, 0.33)
-			colors[index] = lowland.lerp(highland, clampf((height - 18.0) / 38.0, 0.0, 1.0)).lerp(rock, clampf(slope * 2.6, 0.0, 1.0))
+			if palette.is_empty():
+				var lowland := Color(0.20, 0.42, 0.16)
+				var highland := Color(0.34, 0.39, 0.27)
+				var rock := Color(0.36, 0.35, 0.33)
+				colors[index] = lowland.lerp(highland, clampf((height - 18.0) / 38.0, 0.0, 1.0)).lerp(rock, clampf(slope * 2.6, 0.0, 1.0))
+			else:
+				# Blend the two painted textures exactly as Terrain3D does, then
+				# tint by its colour map. A colour map that has never been
+				# painted reads as black, which would erase everything, so an
+				# unpainted texel is treated as white.
+				var base_id: int = terrain_data.get_control_base_id(center)
+				var overlay_id: int = terrain_data.get_control_overlay_id(center)
+				var blend: float = terrain_data.get_control_blend(center)
+				if is_nan(blend):
+					blend = 0.0
+				var ground := _palette_color(palette, base_id).lerp(
+					_palette_color(palette, overlay_id), clampf(blend, 0.0, 1.0))
+				var painted: Color = terrain_data.get_color(center)
+				if painted.r + painted.g + painted.b > 0.01:
+					ground = Color(ground.r * painted.r, ground.g * painted.g, ground.b * painted.b)
+				colors[index] = ground
 
 	var write_index := 0
 	for z_index in range(GRID_CELLS):

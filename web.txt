@@ -1,6 +1,6 @@
 ================================================================================
 ARTEA WEB BUILD - ROOT PROBLEMS AND FIXES
-Traced 2026-08-19. Symptom that started it: "Offline Guest hangs forever in the
+that started it: "Offline Guest hangs forever in the
 browser." Four separate problems were stacked on top of each other; each one is
 listed with what proved it and exactly how it was (or should be) fixed.
 
@@ -8,7 +8,73 @@ Final state: web build loads, Offline Guest enters the hub in ~12 seconds, and
 the character walks. Verified headlessly end to end.
 ================================================================================
 
+--------------------------------------------------------------------------------
+HOW TO RUN AND VERIFY THE WEB BUILD
+--------------------------------------------------------------------------------
+  Use the CLI at the repo root (needs a NON-Mono Godot - Godot 4 cannot export
+  web from a Mono/.NET build):
 
+      ./web                 export if needed, serve, open a browser
+      ./web rebuild         force a fresh export first
+      ./web serve           serve whatever is already built
+      ./web verify          headless check that Offline Guest reaches the hub
+      ./web status          what is built, whether parts are stale, what serves
+      ./web stop            stop the local server
+
+      ./web --port 9000     any command takes --port and --no-open
+
+  Defaults live in .webrc at the repo root if you want to change them:
+
+      PORT=9000
+      GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot
+
+  ./web wraps artea/tools/web.sh, which still works directly if preferred:
+
+      ./artea/tools/web.sh --rebuild          # export, split, serve, open
+      ./artea/tools/web.sh --serve-only       # serve what already exists
+      ./artea/tools/web.sh --port 8801        # pick the port
+      ./artea/tools/web.sh --no-open          # serve without a browser
+
+  The build cannot be opened from disk - index.html fetches the pack and the
+  wasm, and file:// origins are opaque. It needs a real HTTP origin.
+
+  On-screen diagnostics: the page draws a diag box in the bottom-left corner
+  that reports "loading N% (x / y MB)", then "engine started", or the failure.
+  Read that first when something stalls - it tells you which stage broke:
+
+      stuck mid-percentage        -> server or stream side (Problem 2)
+      reaches 100%, never starts  -> wasm32 memory pressure
+      START FAILED / UNHANDLED    -> a real script exception, message included
+
+  Headless verification is  ./web verify , which runs artea/tools/web-smoke.js.
+  It needs no npm packages at all - Node's global WebSocket talks straight to
+  Chrome's debug port, and the script starts Chrome itself.
+
+  What it does: navigate, wait for "engine started" in the console, click the
+  canvas at the Offline Guest button (300,726 at 1280x800), wait for
+  "Successfully spawned" from the hub, hold W, and compare screenshots before
+  and after. A frozen game returns byte-identical frames, which is what
+  separates "rendered once" from "playable". It exits 0 only when the frame
+  changed, the renderer did not crash, and no fatal resource errors appeared.
+
+  Screenshots and the full console log land in artea/builds/smoke/.
+
+  Run it against any URL, including a deployed one:
+
+      node artea/tools/web-smoke.js https://artea-web.vercel.app/ --out /tmp/x
+
+  Last verified run:
+
+      0.3s loading http://localhost:8801/index.html
+      4.4s OK  engine started
+      8.6s clicking Offline Guest
+      9.7s OK  guest login accepted
+     11.7s OK  hub scene built
+     19.8s holding W to test movement
+     24.0s frame changed while moving: true
+     24.0s fatal resource errors: 0
+      RESULT: PLAYABLE
+================================================================================
 --------------------------------------------------------------------------------
 PROBLEM 1 - HUB SCENE MISSING TWO DEPENDENCIES ON WEB          [FIXED, VERIFIED]
 --------------------------------------------------------------------------------
@@ -263,71 +329,4 @@ FULL AUDIT THAT WAS RUN
         Tidy-up: broaden it to scripts/**/capture_*.gd so tooling stops riding
         along in the player build.
 
-
---------------------------------------------------------------------------------
-HOW TO RUN AND VERIFY THE WEB BUILD
---------------------------------------------------------------------------------
-  Use the CLI at the repo root (needs a NON-Mono Godot - Godot 4 cannot export
-  web from a Mono/.NET build):
-
-      ./web                 export if needed, serve, open a browser
-      ./web rebuild         force a fresh export first
-      ./web serve           serve whatever is already built
-      ./web verify          headless check that Offline Guest reaches the hub
-      ./web status          what is built, whether parts are stale, what serves
-      ./web stop            stop the local server
-
-      ./web --port 9000     any command takes --port and --no-open
-
-  Defaults live in .webrc at the repo root if you want to change them:
-
-      PORT=9000
-      GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot
-
-  ./web wraps artea/tools/web.sh, which still works directly if preferred:
-
-      ./artea/tools/web.sh --rebuild          # export, split, serve, open
-      ./artea/tools/web.sh --serve-only       # serve what already exists
-      ./artea/tools/web.sh --port 8801        # pick the port
-      ./artea/tools/web.sh --no-open          # serve without a browser
-
-  The build cannot be opened from disk - index.html fetches the pack and the
-  wasm, and file:// origins are opaque. It needs a real HTTP origin.
-
-  On-screen diagnostics: the page draws a diag box in the bottom-left corner
-  that reports "loading N% (x / y MB)", then "engine started", or the failure.
-  Read that first when something stalls - it tells you which stage broke:
-
-      stuck mid-percentage        -> server or stream side (Problem 2)
-      reaches 100%, never starts  -> wasm32 memory pressure
-      START FAILED / UNHANDLED    -> a real script exception, message included
-
-  Headless verification is  ./web verify , which runs artea/tools/web-smoke.js.
-  It needs no npm packages at all - Node's global WebSocket talks straight to
-  Chrome's debug port, and the script starts Chrome itself.
-
-  What it does: navigate, wait for "engine started" in the console, click the
-  canvas at the Offline Guest button (300,726 at 1280x800), wait for
-  "Successfully spawned" from the hub, hold W, and compare screenshots before
-  and after. A frozen game returns byte-identical frames, which is what
-  separates "rendered once" from "playable". It exits 0 only when the frame
-  changed, the renderer did not crash, and no fatal resource errors appeared.
-
-  Screenshots and the full console log land in artea/builds/smoke/.
-
-  Run it against any URL, including a deployed one:
-
-      node artea/tools/web-smoke.js https://artea-web.vercel.app/ --out /tmp/x
-
-  Last verified run:
-
-      0.3s loading http://localhost:8801/index.html
-      4.4s OK  engine started
-      8.6s clicking Offline Guest
-      9.7s OK  guest login accepted
-     11.7s OK  hub scene built
-     19.8s holding W to test movement
-     24.0s frame changed while moving: true
-     24.0s fatal resource errors: 0
-      RESULT: PLAYABLE
 ================================================================================

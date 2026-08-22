@@ -27,11 +27,11 @@ for suffix, side in ((".l", 1.0), (".r", -1.0)):
     # chest instead of hanging at Milo's sides.  The chain now runs out to the
     # shoulder line and straight down, matching the built geometry.
     chain = {
-        "upperarm": ((0.34 * side, -0.04, 1.10), (0.48 * side, -0.05, 0.96)),
-        "lowerarm": ((0.48 * side, -0.05, 0.96), (0.54 * side, -0.07, 0.78)),
-        "wrist": ((0.54 * side, -0.07, 0.78), (0.56 * side, -0.08, 0.66)),
-        "hand": ((0.56 * side, -0.08, 0.66), (0.56 * side, -0.09, 0.50)),
-        "handslot": ((0.56 * side, -0.09, 0.58), (0.56 * side, -0.20, 0.58)),
+        "upperarm": ((0.20 * side, 0.0, 1.11), (0.28 * side, 0.0, 0.94)),
+        "lowerarm": ((0.28 * side, 0.0, 0.94), (0.31 * side, 0.0, 0.78)),
+        "wrist": ((0.31 * side, 0.0, 0.78), (0.32 * side, 0.0, 0.71)),
+        "hand": ((0.32 * side, 0.0, 0.71), (0.32 * side, 0.0, 0.60)),
+        "handslot": ((0.32 * side, 0.0, 0.62), (0.32 * side, -0.10, 0.62)),
     }
     for bone_name, (head, tail) in chain.items():
         bone = armature.data.edit_bones.get(bone_name + suffix)
@@ -71,25 +71,25 @@ def material(name, hex_color, roughness=0.78, metallic=0.0):
 CREAM = material("Milo Cream Fur", "c4b094", 0.58)
 WHITE = material("Milo White Fur", "f0ece4", 0.56)
 MOUSTACHE = material("Milo Moustache", "fffaf1", 0.52)
-NAVY = material("Milo Midnight Tailcoat", "08101f", 0.72)
-PURPLE = material("Milo Plum Waistcoat", "3f2f50", 0.62)
-PURPLE_LIGHT = material("Milo Waistcoat Highlight", "5a4564", 0.60)
+NAVY = material("Milo Navy Mayor Coat", "102c45", 0.58)
+PURPLE = material("Milo Purple Waistcoat", "8876aa", 0.54)
+PURPLE_LIGHT = material("Milo Waistcoat Highlight", "a99ac5", 0.52)
 PURPLE_DARK = material("Milo Waistcoat Seam", "574876", 0.56)
 GOLD = material("Milo Brushed Gold", "b9983c", 0.24, 0.48)
 MAYOR_GOLD = material("Milo Antique Suit Gold", "8f6b32", 0.50, 0.22)
-TEAL = material("Milo Teal Lapel Piping", "477f7e", 0.52)
+TEAL = material("Milo Teal Piping", "3c929f", 0.42)
 PINK = material("Milo Pink Nose", "d8b1aa", 0.48)
-DARK = material("Milo Trousers", "111217", 0.70)
-EYE_WHITE = material("Milo Warm Eye White", "d8d2c5", 0.56)
+DARK = material("Milo Trousers", "101318", 0.64)
+EYE_WHITE = material("Milo Warm Eye White", "e2dfd3", 0.50)
 BROW_SHADOW = material("Milo Brow Underside", "aec7cf", 0.58)
-COLLAR = material("Milo Warm Shirt Collar", "cabb9f", 0.68)
+COLLAR = material("Milo Mint Collar", "a7d2cf", 0.54)
 TIE_PURPLE = material("Milo Mayor Tie", "4a315e", 0.56)
 CANE_BROWN = material("Milo Cane Wood", "402b1a", 0.60)
 IRIS = material("Milo Warm Brown Iris", "2a2825", 0.16)
-PUPIL = material("Milo Brown Black Pupil", "211d19", 0.18)
+PUPIL = material("Milo Black Pupil", "0b1115", 0.10)
 HIGHLIGHT = material("Milo Eye Highlight", "ffffff", 0.08)
 MOUTH = material("Milo Mouth", "4a4542", 0.60)
-BROWN = material("Milo Dark Brown Boots", "201711", 0.62)
+BROWN = material("Milo Brown Shoes", "30261f", 0.48)
 SOLE = material("Milo Shoe Soles", "090c0e", 0.58)
 MARKING = material("Milo Fur Marking", "a18d74", 0.58)
 GREEN = material("Milo Leaf Pin", "77af76", 0.38)
@@ -221,7 +221,11 @@ def make_tabby_fur_material():
     return mat
 
 
-TABBY_FUR = make_tabby_fur_material()
+# The approved target is a clean warm-cream cat.  Its only darker markings are
+# the small forehead triangle and the two tail bands; full-body tabby stripes
+# change the character identity and make the face read much busier than the
+# supplied reference.
+TABBY_FUR = CREAM
 
 parts = []
 
@@ -454,12 +458,11 @@ rounded_panel("MayorTieBlade", [(-0.036, 1.010), (0.036, 1.010),
               -0.371, 0.065, TIE_PURPLE, "chest", bevel=0.006, segments=2)
 sphere("MayorMedallion", (0, -0.381, 0.970), (0.038, 0.030, 0.047),
        MAYOR_GOLD, "chest", 16, 9)
-for z in (0.840, 0.735):
-    sphere("WaistcoatButton", (0, -0.358, z), (0.026, 0.026, 0.026),
-           MAYOR_GOLD, "chest", 14, 8)
-for side in (-1, 1):
-    sphere("TailcoatButton", (0.225 * side, -0.366, 0.805),
-           (0.031, 0.028, 0.031), MAYOR_GOLD, "chest", 14, 8)
+# Four large paired buttons are one of the target's clearest costume cues.
+for z in (0.855, 0.735):
+    for side in (-1, 1):
+        sphere("WaistcoatButton", (0.105 * side, -0.376, z),
+               (0.031, 0.027, 0.031), MAYOR_GOLD, "chest", 14, 8)
 
 # Head and cheeks are deliberately broad and low, matching the market NPC head
 # to body ratio and the approved cream-cat mayor reference.
@@ -476,8 +479,8 @@ for vertex in cat_head.data.vertices:
         vertex.co.x *= 1.04
     else:
         vertex.co.x *= 1.04 - (normalized_z - 0.55) * 0.10
-sphere("MuzzleL", (-0.090, -0.374, 1.35), (0.158, 0.072, 0.100), WHITE, "head", 26, 16)
-sphere("MuzzleR", (0.090, -0.374, 1.35), (0.158, 0.072, 0.100), WHITE, "head", 26, 16)
+sphere("MuzzleL", (-0.082, -0.374, 1.35), (0.125, 0.060, 0.078), WHITE, "head", 26, 16)
+sphere("MuzzleR", (0.082, -0.374, 1.35), (0.125, 0.060, 0.078), WHITE, "head", 26, 16)
 
 # Face features were previously placed on a single flat plane of fixed y.  The
 # skull is an ellipsoid, so in profile the whole face read as a detached card
@@ -561,13 +564,13 @@ for side, label in ((-1, "L"), (1, "R")):
 for side, label in ((-1, "L"), (1, "R")):
     conform_to_head(
         sphere("EyeWhite" + label, (0.160 * side, -0.347, 1.50),
-               (0.112, 0.035, 0.125), EYE_WHITE, "head", 24, 16),
+               (0.088, 0.030, 0.105), EYE_WHITE, "head", 24, 16),
         inset=0.020)
     # Compact, smoothly rounded brown-black pupils match the target's softer
     # glossy ovals instead of the previous tall blue-black faceted shapes.
     conform_to_head(
         sphere("Pupil" + label, (0.160 * side, -0.392, 1.50),
-               (0.040, 0.016, 0.070), PUPIL, "head", 24, 16),
+               (0.033, 0.014, 0.061), PUPIL, "head", 24, 16),
         inset=0.004)
     conform_to_head(
         sphere("EyeHighlight" + label, (0.145 * side, -0.410, 1.548),
@@ -614,43 +617,23 @@ conform_to_head(
 # Their top edge stays below the glasses rims so the two accessories remain
 # visually and geometrically separate while still meeting beneath the nose.
 conform_to_head(
-    sphere("MoustachePadL", (-0.130, -0.448, 1.275), (0.215, 0.043, 0.090),
+    sphere("MoustachePadL", (-0.115, -0.448, 1.285), (0.170, 0.038, 0.070),
            MOUSTACHE, "head", 26, 16, (0, 0, -0.12)),
     inset=-0.074)
 conform_to_head(
-    sphere("MoustachePadR", (0.130, -0.448, 1.275), (0.215, 0.043, 0.090),
+    sphere("MoustachePadR", (0.115, -0.448, 1.285), (0.170, 0.038, 0.070),
            MOUSTACHE, "head", 26, 16, (0, 0, 0.12)),
     inset=-0.074)
 conform_to_head(
-    curved_tube("MoustacheL", [(-0.01, -0.470, 1.305), (-0.10, -0.474, 1.235),
-                               (-0.21, -0.466, 1.250), (-0.325, -0.448, 1.315)],
-                0.042, MOUSTACHE, "head"),
+    curved_tube("MoustacheL", [(-0.01, -0.470, 1.305), (-0.09, -0.474, 1.250),
+                               (-0.18, -0.466, 1.260), (-0.270, -0.448, 1.315)],
+                0.036, MOUSTACHE, "head"),
     inset=-0.082)
 conform_to_head(
-    curved_tube("MoustacheR", [(0.01, -0.470, 1.305), (0.10, -0.474, 1.235),
-                               (0.21, -0.466, 1.250), (0.325, -0.448, 1.315)],
-                0.042, MOUSTACHE, "head"),
+    curved_tube("MoustacheR", [(0.01, -0.470, 1.305), (0.09, -0.474, 1.250),
+                               (0.18, -0.466, 1.260), (0.270, -0.448, 1.315)],
+                0.036, MOUSTACHE, "head"),
     inset=-0.082)
-
-# Layered cheek tufts and three fine whiskers on each side turn the outer
-# moustache silhouette into recognisable feline facial furniture.  The broad
-# mayor moustache remains central, while these thinner strands originate from
-# the muzzle and fan naturally toward the side of the cat face.
-tuft_right = [(0.255, 1.420), (0.425, 1.390), (0.370, 1.350),
-              (0.490, 1.305), (0.365, 1.270), (0.260, 1.305)]
-for side, label in ((-1, "L"), (1, "R")):
-    rounded_panel("SideMoustacheTuft" + label,
-                  [(x * side, z) for x, z in tuft_right],
-                  -0.385, 0.025, MOUSTACHE, "head",
-                  bevel=0.012, segments=3)
-    whisker_starts = (1.355, 1.325, 1.295)
-    whisker_ends = (1.405, 1.335, 1.265)
-    for index, (start_z, end_z) in enumerate(zip(whisker_starts, whisker_ends)):
-        curved_tube("CatWhisker%s%d" % (label, index),
-                    [(0.235 * side, -0.472, start_z),
-                     (0.350 * side, -0.470, (start_z + end_z) * 0.5),
-                     (0.500 * side, -0.445, end_z)],
-                    0.005, MOUSTACHE, "head")
 
 # Small central forehead marking.
 prism("ForeheadMark", [(-0.075, -0.392, 1.78), (0.075, -0.392, 1.78), (0, -0.402, 1.63)],
@@ -665,9 +648,9 @@ for side, suffix in ((-1, ".r"), (1, ".l")):
     # A rounded rectangular sleeve has a controlled lower edge, allowing the
     # sleeve, cuff and paw to meet at clean boundaries rather than intersecting
     # three ellipsoids.  The slight outward tilt preserves shoulder connection.
-    sleeve = cube("MayorSleeve" + label, (0.500 * side, -0.055, 0.905),
-                  (0.140, 0.150, 0.300), NAVY, "upperarm" + suffix,
-                  rotation=(0, -side * 0.02, 0), bevel=0.105)
+    sleeve = cube("MayorSleeve" + label, (0.475 * side, -0.055, 0.890),
+                  (0.115, 0.140, 0.275), NAVY, "upperarm" + suffix,
+                  rotation=(0, -side * 0.02, 0), bevel=0.095)
     # The formal gold sleeve band is material painted onto the sleeve's own
     # polygon rows.  It therefore bends and shades with the navy cloth without
     # creating a separate torus, ridge, gap or stacked-object silhouette.
@@ -681,73 +664,13 @@ for side, suffix in ((-1, ".r"), (1, ".l")):
     # A softly bevelled box matches the sleeve's lower footprint.  The paw is
     # slightly narrower than the coat opening and shares its z=0.63 boundary,
     # producing a deliberate covered wrist instead of a ball under a rectangle.
-    cube("Paw" + label, (0.560 * side, -0.090, 0.545),
-         (0.105, 0.098, 0.078), TABBY_FUR, "hand" + suffix,
-         bevel=0.052)
-    # Three modelled fingers and a thumb replace the two scratched-on lines.
-    # The reference sheet shows articulated paws; incised lines on a box read as
-    # a mitten at any distance, and no amount of extra subdivision fixes that
-    # because the silhouette itself is wrong.
-    #
-    # The palm box spans y -0.093..0.117 and z 0.470..0.630.  Earlier fingers ran
-    # from z=0.530 down to 0.430 at y=-0.020..-0.055, which put them *inside* the
-    # palm volume (its front face is y=-0.093) and started them halfway up the
-    # palm rather than at its lower edge - so they read as lumps embedded in a
-    # mitten instead of digits.  Fingers now hang from the palm's underside
-    # (z=PALM_BOTTOM) and curl forward past its front face.
-    PALM_X = 0.560 * side
-    PALM_BOTTOM = 0.467
-    PALM_FRONT = -0.188
-    for finger_index, finger_x in enumerate((-0.055, 0.0, 0.055)):
-        # Middle finger is longest, as on a real hand.
-        finger_length = 0.105 if finger_index == 1 else 0.090
-        knuckle = (PALM_X + finger_x, -0.120, PALM_BOTTOM + 0.030)
-        mid = (PALM_X + finger_x * 1.04, -0.135,
-               PALM_BOTTOM - finger_length * 0.50)
-        tip = (PALM_X + finger_x * 1.06, -0.148,
-               PALM_BOTTOM - finger_length)
-        curved_tube("PawFinger%s%d" % (label, finger_index),
-                    [knuckle, mid, tip], 0.024, TABBY_FUR, "hand" + suffix)
-        # Cap the open end so no hollow tube mouth shows at the fingertip.
-        sphere("PawFingerTip%s%d" % (label, finger_index), tip,
-               (0.024, 0.024, 0.024), TABBY_FUR, "hand" + suffix, 10, 8)
-    # The thumb opposes the fingers: it leaves the palm's inner side and folds
-    # forward, so the hand can read as gripping rather than as a flat paddle.
-    thumb_tip = (PALM_X - 0.088 * side, PALM_FRONT - 0.020, 0.505)
-    curved_tube("PawThumb" + label,
-                [(PALM_X - 0.050 * side, -0.090, 0.565),
-                 (PALM_X - 0.085 * side, -0.142, 0.540),
-                 thumb_tip],
-                0.026, TABBY_FUR, "hand" + suffix)
-    sphere("PawThumbTip" + label, thumb_tip,
-           (0.026, 0.026, 0.026), TABBY_FUR, "hand" + suffix, 10, 8)
+    sphere("Paw" + label, (0.505 * side, -0.090, 0.565),
+           (0.090, 0.080, 0.105), TABBY_FUR, "hand" + suffix, 20, 12)
 
 # A small left thumb folds across the front of the hidden cane section.  The
 # visible shaft stops at the hand boundaries, so no wood passes through skin.
 # The cane-grip thumb blob is gone: the right paw now models a real opposed
 # thumb, and keeping both produced two thumbs on one hand.
-
-# Milo's cane uses separate upper and lower visible shaft sections.  The gap
-# from z=0.47..0.63 is exactly concealed by the fist, creating a proper grip
-# without intersecting geometry.
-tube("MayorCaneShaftUpper", [(-0.560, -0.090, 0.720),
-                              (-0.560, -0.090, 0.600)],
-     0.020, CANE_BROWN, "hand.r")
-tube("MayorCaneShaftLower", [(-0.560, -0.090, 0.520),
-                              (-0.560, -0.090, 0.080)],
-     0.020, CANE_BROWN, "hand.r")
-# A front-facing curved gold handle rises clearly above the closed fist.  Its
-# first point meets the wooden upper shaft; the curl turns inward like the
-# supplied mayor-cane reference instead of appearing as a loose gold button.
-curved_tube("MayorCaneHook", [(-0.560, -0.090, 0.715),
-                               (-0.565, -0.115, 0.800),
-                               (-0.530, -0.160, 0.845),
-                               (-0.465, -0.180, 0.822)],
-            0.019, GOLD, "hand.r")
-torus("MayorCaneBand", (-0.560, -0.090, 0.155), 0.027, 0.008,
-      MAYOR_GOLD, "hand.r", rotation=(0, 0, 0))
-sphere("MayorCaneTip", (-0.560, -0.090, 0.060),
-       (0.028, 0.028, 0.042), MAYOR_GOLD, "hand.r", 14, 8)
 
 # Full-height tailored trousers wrap every leg through 360 degrees.  Their
 # rounded rectangular volume runs from beneath the waistcoat to the boot top,
@@ -799,80 +722,84 @@ torus("TailStripeUpper", (0.468, TAIL_BACK + 0.172, 0.78), 0.059, 0.011,
 sphere("TailTip", (0.40, TAIL_BACK + 0.12, 0.92), (0.062, 0.062, 0.067),
        MARKING, "hips", 14, 8)
 
-# ---------------------------------------------------------------------------
-# Long mayoral overcoat, tailored details and lapel pins.
-#
-# The approved turnaround shows a knee-length coat rather than the short jacket
-# built above: the skirt falls past the hips, hangs open over the trousers, and
-# carries a collar, pocket flaps, and a rear vent closed by a gold-buttoned belt
-# strap.  These are the details that separate the finished character from the
-# blocked-out prototype, so they are modelled rather than painted.
-#
-# Every skirt piece is weighted to "hips" instead of "chest".  The hips bone
-# leads the walk cycle, so the coat swings with the body instead of staying
-# pinned to the ribcage and shearing through the legs.
-COAT_SKIRT_TOP = 0.62
-COAT_SKIRT_HEM = 0.20
+# Restore the compact approved body from the target capture.  Later concept
+# experiments made the vest narrow, squared the sleeves, reduced the boots and
+# pushed the hands outward; those changes are intentionally discarded here.
+target_body_prefixes = (
+    "MayorCoatBody", "PurpleWaistcoat", "WaistcoatFacet", "ShirtCollar",
+    "WaistcoatSeam", "InlaidTailcoatFront", "MayorTie", "MayorMedallion",
+    "WaistcoatButton", "MayorSleeve", "Paw", "TrouserLeg", "Boot", "Sole",
+    "MayorTail", "TailStripe", "TailTip",
+)
+for obj in list(parts):
+    if obj.name.startswith(target_body_prefixes):
+        parts.remove(obj)
+        bpy.data.objects.remove(obj, do_unlink=True)
 
-# Left and right front skirt panels hang open, revealing the trousers between
-# them exactly as in the reference sheet.
-for side, label in ((-1, "L"), (1, "R")):
-    panel("CoatSkirtFront" + label,
-          [(0.055 * side, COAT_SKIRT_TOP),
-           (0.315 * side, COAT_SKIRT_TOP),
-           (0.355 * side, COAT_SKIRT_HEM + 0.06),
-           (0.330 * side, COAT_SKIRT_HEM),
-           (0.080 * side, COAT_SKIRT_HEM)],
-          -0.350, 0.116, NAVY, "hips")
+cube("MayorCoatBody", (0, 0.015, 0.84), (0.42, 0.275, 0.40),
+     NAVY, "chest", bevel=0.18)
+panel("PurpleWaistcoat", [(-0.225, 1.07), (0.225, 1.07), (0.225, 0.68),
+                           (0.078, 0.59), (-0.078, 0.59), (-0.225, 0.68)],
+      -0.318, 0.025, PURPLE, "chest")
+panel("WaistcoatFacetL", [(-0.215, 1.055), (-0.020, 1.055),
+                           (-0.075, 0.965), (-0.185, 0.905)],
+      -0.346, 0.014, PURPLE_LIGHT, "chest")
+panel("WaistcoatFacetR", [(0.215, 1.055), (0.020, 1.055),
+                           (0.075, 0.965), (0.185, 0.905)],
+      -0.346, 0.014, PURPLE_LIGHT, "chest")
+panel("ShirtCollarL", [(-0.17, 1.10), (-0.015, 1.065), (-0.095, 0.995)],
+      -0.338, 0.018, COLLAR, "chest")
+panel("ShirtCollarR", [(0.17, 1.10), (0.015, 1.065), (0.095, 0.995)],
+      -0.338, 0.018, COLLAR, "chest")
+tube("WaistcoatSeam", [(0, -0.347, 0.66), (0, -0.347, 0.98)],
+     0.008, PURPLE_DARK, "chest")
+tube("TealLapelL", [(-0.10, -0.353, 1.10), (-0.19, -0.353, 1.045),
+                     (-0.225, -0.348, 0.96)], 0.008, TEAL, "chest")
+tube("TealLapelR", [(0.10, -0.353, 1.10), (0.19, -0.353, 1.045),
+                     (0.225, -0.348, 0.96)], 0.008, TEAL, "chest")
+tube("GoldCoatHem", [(-0.29, -0.260, 0.57), (0, -0.286, 0.54),
+                     (0.29, -0.260, 0.57)], 0.012, GOLD, "chest")
+prism("MayorTie", [(-0.055, -0.372, 1.04), (0.055, -0.372, 1.04),
+                    (0.065, -0.372, 0.93), (0, -0.372, 0.855),
+                    (-0.065, -0.372, 0.93)],
+      [(0, 1, 2, 3, 4)], PURPLE_LIGHT, "chest")
+for x in (-0.105, 0.105):
+    for z in (0.72, 0.87):
+        sphere("CoatButton", (x, -0.365, z), (0.038, 0.020, 0.038),
+               GOLD, "chest", 16, 9)
+sphere("MayorMedallion", (0, -0.386, 1.035), (0.043, 0.022, 0.050),
+       GOLD, "chest", 18, 10)
 
-# The back skirt is one continuous panel, split at the centre by the vent.
-for side, label in ((-1, "L"), (1, "R")):
-    panel("CoatSkirtBack" + label,
-          [(0.018 * side, COAT_SKIRT_TOP),
-           (0.360 * side, COAT_SKIRT_TOP),
-           (0.395 * side, COAT_SKIRT_HEM + 0.06),
-           (0.360 * side, COAT_SKIRT_HEM),
-           (0.018 * side, COAT_SKIRT_HEM)],
-          0.180, 0.115, NAVY, "hips")
+for side, suffix in ((-1, ".r"), (1, ".l")):
+    label = "L" if side < 0 else "R"
+    sphere("MayorSleeve" + label, (0.425 * side, 0, 0.91),
+           (0.120, 0.125, 0.285), NAVY, "upperarm" + suffix, 24, 15)
+    torus("GoldCuff" + label, (0.440 * side, 0, 0.69), 0.090, 0.014,
+          GOLD, "wrist" + suffix, rotation=(0, 0, 0))
+    sphere("Paw" + label, (0.440 * side, -0.015, 0.605),
+           (0.110, 0.108, 0.132), CREAM, "hand" + suffix, 24, 15)
+    for line_offset in (-0.022, 0.022):
+        tube("PawLine" + label,
+             [(0.440 * side + line_offset, -0.125, 0.59),
+              (0.440 * side + line_offset, -0.127, 0.63)],
+             0.004, MARKING, "hand" + suffix)
+    sphere("TrouserLeg" + label, (0.14 * side, -0.002, 0.350),
+           (0.120, 0.108, 0.150), DARK, "lowerleg" + suffix, 24, 16)
+    sphere("Boot" + label, (0.14 * side, -0.095, 0.140),
+           (0.200, 0.225, 0.120), BROWN, "foot" + suffix, 28, 17)
+    sphere("Sole" + label, (0.14 * side, -0.090, 0.058),
+           (0.195, 0.210, 0.014), SOLE, "foot" + suffix, 26, 8)
 
-# Side panels close the gap between the front and back skirt so the coat reads
-# as a tube of cloth rather than four separate cards.
-for side, label in ((-1, "L"), (1, "R")):
-    cube("CoatSkirtSide" + label, (0.372 * side, -0.010, 0.445),
-         (0.030, 0.300, 0.185), NAVY, "hips", bevel=0.028)
-
-# Standing collar around the neck opening.
-for side, label in ((-1, "L"), (1, "R")):
-    rounded_panel("CoatCollar" + label,
-                  [(0.070 * side, 1.215), (0.225 * side, 1.175),
-                   (0.235 * side, 1.120), (0.080 * side, 1.145)],
-                  -0.300, 0.190, NAVY, "chest", bevel=0.010, segments=2)
-
-# Pocket flaps on the skirt front, and the gold-buttoned belt strap that closes
-# the rear vent.  Both sit proud of the fabric they attach to.
-for side, label in ((-1, "L"), (1, "R")):
-    rounded_panel("CoatPocketFlap" + label,
-                  [(0.130 * side, 0.520), (0.340 * side, 0.520),
-                   (0.340 * side, 0.455), (0.130 * side, 0.455)],
-                  -0.368, 0.030, NAVY, "hips", bevel=0.008, segments=2)
-    sphere("CoatPocketStud" + label, (0.235 * side, -0.372, 0.487),
-           (0.016, 0.016, 0.016), MAYOR_GOLD, "hips", 12, 8)
-
-rounded_panel("CoatBeltStrap",
-              [(-0.185, 0.560), (0.185, 0.560),
-               (0.185, 0.498), (-0.185, 0.498)],
-              0.286, 0.030, MAYOR_GOLD, "hips", bevel=0.008, segments=2)
-for side in (-1, 1):
-    sphere("CoatBeltButton", (0.120 * side, 0.300, 0.529),
-           (0.019, 0.019, 0.019), MAYOR_GOLD, "hips", 12, 8)
-
-# The three lapel pins from the reference.  Their materials were already defined
-# but never placed, so the finished coat was missing its insignia entirely.
-for pin_x, pin_z, pin_mat, pin_name in ((0.232, 1.045, VIOLET, "Star"),
-                                        (0.276, 0.995, CYAN, "Diamond"),
-                                        (0.214, 0.960, GREEN, "Leaf")):
-    sphere("LapelPin" + pin_name, (pin_x, -0.366, pin_z),
-           (0.026, 0.020, 0.026), pin_mat, "chest", 12, 8)
+curved_tube("MayorTail", [(0.27, 0.10, 0.64), (0.44, 0.12, 0.70),
+                          (0.58, 0.10, 0.80), (0.58, 0.07, 0.91),
+                          (0.52, 0.05, 0.98)],
+            0.060, CREAM, "hips")
+torus("TailStripeLower", (0.575, 0.105, 0.78), 0.061, 0.011,
+      MARKING, "hips", rotation=(0, 0, 0))
+torus("TailStripeUpper", (0.575, 0.075, 0.89), 0.059, 0.011,
+      MARKING, "hips", rotation=(0, 0, 0))
+sphere("TailTip", (0.52, 0.05, 0.98), (0.062, 0.062, 0.067),
+       MARKING, "hips", 14, 8)
 
 # Join into one material-rich mesh. Vertex groups keep each region attached to
 # the matching villager bone, while the overlapping sculpt produces a single
