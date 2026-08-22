@@ -4,7 +4,7 @@ extends CharacterBody3D
 @onready var footstep_player = $FootstepPlayer
 @onready var floor_detector = $FloorDetector 
 
-@onready var sfx_grass = preload("res://assets/SFX/grasswalk.mp3") 
+@onready var sfx_grass = preload("res://assets/SFX/grasswalk.ogg") 
 
 # --- JUMP VARIABLES ---
 @export var jump_height : float = 2.25

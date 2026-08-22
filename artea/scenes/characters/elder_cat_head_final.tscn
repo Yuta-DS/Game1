@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://assets3D/characters/elder_cat_head_lowpoly.glb" id="1_head"]
+
+[node name="MayorAlderHeadFinal" type="Node3D"]
+
+[node name="HeadModel" parent="." instance=ExtResource("1_head")]

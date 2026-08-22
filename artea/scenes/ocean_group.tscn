@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c8ag5g1kjn1wi"]
 
-[ext_resource type="AudioStream" uid="uid://8eksvwwqe1hq" path="res://assets/audio/Ocean_Ambience_Loop.mp3" id="1_hmx4s"]
+[ext_resource type="AudioStream" uid="uid://8eksvwwqe1hq" path="res://assets/audio/Ocean_Ambience_Loop.ogg" id="1_hmx4s"]
 
 [node name="Ocean_Group" type="Node3D" unique_id=2099080688]
 

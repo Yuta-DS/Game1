@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbtplavf8oi74"
-path="res://.godot/imported/UNNDO.png-8ac0704b839302f5fa9e79c394120d89.ctex"
+path.s3tc="res://.godot/imported/UNNDO.png-8ac0704b839302f5fa9e79c394120d89.s3tc.ctex"
+path.etc2="res://.godot/imported/UNNDO.png-8ac0704b839302f5fa9e79c394120d89.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://UNNDO.png"
-dest_files=["res://.godot/imported/UNNDO.png-8ac0704b839302f5fa9e79c394120d89.ctex"]
+dest_files=["res://.godot/imported/UNNDO.png-8ac0704b839302f5fa9e79c394120d89.s3tc.ctex", "res://.godot/imported/UNNDO.png-8ac0704b839302f5fa9e79c394120d89.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

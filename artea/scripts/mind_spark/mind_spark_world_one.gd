@@ -22,8 +22,8 @@ const WorldGateScene := preload("res://scenes/mind_spark/world_gate.tscn")
 # boxes and drums. Used to give the props real cut geometry instead of raw
 # BoxMesh/SphereMesh primitives.
 const Bricks := preload("res://scripts/altar/AltarParts.gd")
-const NetworkAmbience := preload("res://assets/audio/Atmospheric-instrumental-music.mp3")
-const SanctuaryAmbience := preload("res://assets/audio/calm music.mp3")
+const NetworkAmbience := preload("res://assets/audio/Atmospheric-instrumental-music.ogg")
+const SanctuaryAmbience := preload("res://assets/audio/calm music.ogg")
 const IslandDetailAnimator := preload("res://scripts/mind_spark/mind_spark_island_detail_animator.gd")
 const ENEMY_DEFINITIONS := {
 	"static_mite": preload("res://resources/mind_spark/enemies/static_mite.tres"),
@@ -129,12 +129,34 @@ var _status: Label
 var _last_safe_position := Vector3(-960, 8, 420)
 
 
+## When true, build_world() is not run on _ready and must be triggered by
+## calling ensure_world_built(). World One is by far the heaviest construction
+## in the game - measured at ~27,000 mesh nodes, 82% of every mesh in the art
+## gallery scene - and building it up front is what pushed the gallery past the
+## web export's memory ceiling. Deferring it until the player actually travels
+## here keeps the gallery affordable in a browser.
+@export var defer_world_build := false
+
+var _world_built := false
+
+
 func _ready() -> void:
-	build_world()
+	if not defer_world_build:
+		ensure_world_built()
 	_last_safe_position = to_global(get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0))
 	_find_player.call_deferred()
 	if build_hud:
 		_build_hud()
+
+
+## Build the world if it has not been built yet. Safe to call repeatedly; the
+## work happens once. get_zone_position() falls back to the authored ZONES
+## table, so gates and routes can be positioned before this runs.
+func ensure_world_built() -> void:
+	if _world_built:
+		return
+	_world_built = true
+	build_world()
 
 
 func build_world() -> void:
@@ -169,6 +191,7 @@ func build_world() -> void:
 		# The optional station is deliberately the final standalone construction
 		# phase. It branches from Zone 05 and never participates in story routing.
 		_build_station_spur(geometry)
+	_batch_static_geometry(self)
 	set_meta("world_identity", "living computer forest")
 	set_meta("lead_force", "technology_science")
 	set_meta("zone_count", 6)
@@ -3634,3 +3657,134 @@ func _add_star(parent: Node3D, at: Vector3, radius: float) -> void:
 		var ray := _add_box(star, "StarRay", Vector3.ZERO, Vector3(radius * 2, 1.5, 3), _materials.gold)
 		ray.rotation.y = TAU * float(index) / 8.0
 	_add_sphere(star, "StarCore", Vector3.ZERO, Vector3.ONE * 5, _materials.gold)
+
+
+# --- Static geometry batching -------------------------------------------------
+#
+# This world is authored as ~27,000 individual MeshInstance3D nodes, which is
+# 82% of every mesh in the art gallery scene. Measured, the gallery allocates
+# 1,161 MB and 104,096 objects against the hub's 348 MB and 26,058 - and the web
+# export is a wasm32 build with a hard 4 GB address space that also holds the
+# pack in memory, so the browser runs out and the world never appears. It builds
+# fine on desktop, which is why this looked like a rendering bug rather than a
+# budget one.
+#
+# Every generator here creates a fresh mesh resource per call, so identical
+# shapes are never shared. Rather than rewrite thousands of lines of authored
+# generators, this pass runs afterwards: it groups finished MeshInstance3D nodes
+# by what they actually draw and collapses each group into one
+# MultiMeshInstance3D. The result is visually identical - same meshes, same
+# materials, same transforms - at a fraction of the node and object count.
+#
+# Nodes are left alone when collapsing them would change behaviour: anything
+# with children, a script, collision, or group membership stays a real node so
+# gameplay code that looks them up still finds them.
+
+const BATCH_MIN_GROUP := 8
+
+
+func _batch_static_geometry(root: Node3D) -> void:
+	if root == null:
+		return
+	var groups := {}
+	_collect_batchable(root, groups)
+	var collapsed := 0
+	var removed := 0
+	for key in groups:
+		var members: Array = groups[key]
+		if members.size() < BATCH_MIN_GROUP:
+			continue
+		var first: MeshInstance3D = members[0]
+		# Batch against the geometry root rather than each node's own parent.
+		# Grouping per-parent left 18,363 batchable nodes untouched simply
+		# because identical pieces were scattered across many parents.
+		var parent := root
+		if parent == null:
+			continue
+		var multi := MultiMesh.new()
+		multi.transform_format = MultiMesh.TRANSFORM_3D
+		multi.mesh = first.mesh
+		multi.instance_count = members.size()
+		for index in members.size():
+			var member: MeshInstance3D = members[index]
+			# Transforms are taken relative to the shared parent so the batch can
+			# sit in the same place in the tree without moving anything.
+			multi.set_instance_transform(index,
+				parent.global_transform.affine_inverse() * member.global_transform)
+		var batch := MultiMeshInstance3D.new()
+		batch.name = "BatchedGeometry_%d" % collapsed
+		batch.multimesh = multi
+		batch.material_override = first.material_override
+		parent.add_child(batch)
+		for member in members:
+			member.queue_free()
+			removed += 1
+		collapsed += 1
+	if collapsed > 0:
+		set_meta("batched_geometry_groups", collapsed)
+		set_meta("batched_geometry_nodes_removed", removed)
+
+
+func _collect_batchable(node: Node, groups: Dictionary) -> void:
+	for child in node.get_children():
+		_collect_batchable(child, groups)
+	if not (node is MeshInstance3D):
+		return
+	var instance := node as MeshInstance3D
+	# Keep anything gameplay code may reach for, or whose behaviour depends on
+	# being a real node in the tree.
+	if instance.get_child_count() > 0:
+		return
+	if instance.get_script() != null:
+		return
+	if instance.get_groups().size() > 0:
+		return
+	if instance.mesh == null:
+		return
+	# Group by what is actually drawn: identical primitive parameters and the
+	# same material can share one MultiMesh.
+	var key := "%s|%s|%s" % [
+		instance.mesh.get_class(),
+		_mesh_signature(instance.mesh),
+		_material_signature(instance.material_override),
+	]
+	if not groups.has(key):
+		groups[key] = []
+	groups[key].append(instance)
+
+
+func _mesh_signature(mesh: Mesh) -> String:
+	# Primitive meshes are equivalent when their defining dimensions match.
+	if mesh is BoxMesh:
+		return str((mesh as BoxMesh).size)
+	if mesh is CylinderMesh:
+		var cylinder := mesh as CylinderMesh
+		return "%f,%f,%f,%d" % [cylinder.top_radius, cylinder.bottom_radius,
+			cylinder.height, cylinder.radial_segments]
+	if mesh is SphereMesh:
+		var sphere := mesh as SphereMesh
+		return "%f,%f,%d,%d" % [sphere.radius, sphere.height,
+			sphere.radial_segments, sphere.rings]
+	if mesh is TorusMesh:
+		var torus := mesh as TorusMesh
+		return "%f,%f" % [torus.inner_radius, torus.outer_radius]
+	if mesh is PlaneMesh:
+		return str((mesh as PlaneMesh).size)
+	# Unknown mesh types are only ever batched with themselves.
+	return str(mesh.get_instance_id())
+
+
+func _material_signature(material: Material) -> String:
+	# Materials are generated per call site, so comparing instance IDs would put
+	# every visually identical surface in its own group and batch almost nothing.
+	# Compare what actually determines appearance instead.
+	if material == null:
+		return "none"
+	if material is StandardMaterial3D:
+		var standard := material as StandardMaterial3D
+		return "std|%s|%f|%f|%d|%d|%s" % [
+			str(standard.albedo_color), standard.roughness, standard.metallic,
+			standard.shading_mode, standard.transparency,
+			str(standard.emission if standard.emission_enabled else Color(0, 0, 0)),
+		]
+	return str(material.get_instance_id())

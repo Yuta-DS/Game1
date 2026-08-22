@@ -51,6 +51,22 @@ func _run() -> void:
 			or statue.find_child("char1", true, false) == null:
 		_fail("the original cat statue is not visibly restored beside the Artéa sign")
 		return
+	if absf(wrapf(statue.rotation_degrees.y, 0.0, 360.0) - 280.4) > 0.2:
+		_fail("the original cat statue is not facing the requested opposite direction")
+		return
+	for mesh_node in statue.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := mesh_node as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+		for surface_index in mesh_instance.mesh.get_surface_count():
+			var statue_material := mesh_instance.get_active_material(surface_index)
+			if statue_material is BaseMaterial3D:
+				var solid := statue_material as BaseMaterial3D
+				if solid.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED \
+						or solid.no_depth_test \
+						or solid.cull_mode != BaseMaterial3D.CULL_BACK:
+					_fail("the original cat statue still has a see-through surface")
+					return
 	if Vector2(final_position.x - player.global_position.x,
 			final_position.z - player.global_position.z).length() < 50.0:
 		_fail("Milo is still waiting near the player spawn")

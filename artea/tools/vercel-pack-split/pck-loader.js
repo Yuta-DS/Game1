@@ -25,6 +25,9 @@
 
 	// Probe in parallel, then count the leading run of hits. Sequential probing
 	// cost one round trip per part before the download could start.
+	// Byte totals from each manifest, keyed by request URL.
+	const manifestBytes = new Map();
+
 	const countParts = async (requestUrl) => {
 		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
 		if (buildKey) {
@@ -35,6 +38,12 @@
 			if (manifestResponse.ok) {
 				const manifest = await manifestResponse.json();
 				if (Number.isInteger(manifest.count) && manifest.count > 0) {
+					// Keep the byte total: the streamed Response needs a
+					// Content-Length, and streaming means it cannot be measured
+					// from an assembled Blob any more.
+					if (Number.isInteger(manifest.bytes)) {
+						manifestBytes.set(requestUrl, manifest.bytes);
+					}
 					return manifest.count;
 				}
 			}
@@ -54,26 +63,51 @@
 	// Fetch one at a time. Requesting all pack parts at once
 	// holds two copies of the pack in memory at peak and mobile Safari drops the
 	// tab under that pressure.
-	const fetchParts = async (requestUrl, partCount) => {
-		const parts = [];
-		for (let index = 0; index < partCount; index += 1) {
-			const url = partUrl(requestUrl, index);
-			const response = await nativeFetch(url, { cache: "no-store" });
-
-			if (!response.ok) {
-				throw new Error(`${url} returned ${response.status}`);
+	// Stream the parts instead of buffering them.
+	//
+	// The previous version awaited response.arrayBuffer() for every part and
+	// kept them all, then copied the lot into a Blob - so a 748 MB pack existed
+	// twice in JS memory (~1.5 GB) before Godot mounted its own copy. Against
+	// wasm32's 4 GB address space that was enough to hang or kill the tab.
+	//
+	// A ReadableStream hands each chunk straight to the consumer and drops it,
+	// so peak cost is one part (8 MB) rather than the whole pack.
+	const streamParts = (requestUrl, partCount) => new ReadableStream({
+		async start(controller) {
+			try {
+				for (let index = 0; index < partCount; index += 1) {
+					const url = partUrl(requestUrl, index);
+					const response = await nativeFetch(url, { cache: "no-store" });
+					if (!response.ok) {
+						throw new Error(`${url} returned ${response.status}`);
+					}
+					// Pump this part through without retaining it.
+					const reader = response.body.getReader();
+					for (;;) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						controller.enqueue(value);
+					}
+				}
+				controller.close();
+			} catch (error) {
+				controller.error(error);
 			}
-
-			parts.push(await response.arrayBuffer());
-		}
-		return parts;
-	};
+		},
+	});
 
 	window.fetch = async (input, init) => {
 		const requestUrl = typeof input === "string" ? input : input.url;
 		const url = new URL(requestUrl, window.location.href);
 
-		if (!url.pathname.endsWith("/index.pck")) {
+		// The pack is not the only file that has to be split. Cloudflare Pages
+		// rejects any single file over 25 MB, and index.side.wasm (the
+		// GDExtension side module) is 42 MB, so it is split the same way and
+		// rejoined here. Serving it pre-gzipped is not an option: Cloudflare
+		// strips a manually set Content-Encoding, so the browser receives gzip
+		// bytes where it expects a wasm module and refuses to instantiate it.
+		const splittable = ["/index.pck", "/index.side.wasm"];
+		if (!splittable.some((name) => url.pathname.endsWith(name))) {
 			return nativeFetch(input, init);
 		}
 
@@ -85,15 +119,18 @@
 		// `init` is deliberately not forwarded to the part requests. It applies to
 		// the pack as a whole, and a Range header replayed against every part
 		// would slice each one and corrupt the join.
-		const parts = await fetchParts(requestUrl, partCount);
-		const pack = new Blob(parts, { type: "application/octet-stream" });
+		// `pack.size` used to come from the assembled Blob. Streaming removed the
+		// Blob, so the size comes from the manifest instead; without this the
+		// loader threw "pack is not defined" and nothing loaded at all.
+		const headers = { "Content-Type": "application/octet-stream" };
+		const totalBytes = manifestBytes.get(requestUrl);
+		if (Number.isInteger(totalBytes)) {
+			headers["Content-Length"] = String(totalBytes);
+		}
 
-		return new Response(pack, {
+		return new Response(streamParts(requestUrl, partCount), {
 			status: 200,
-			headers: {
-				"Content-Length": String(pack.size),
-				"Content-Type": "application/octet-stream",
-			},
+			headers,
 		});
 	};
 })();

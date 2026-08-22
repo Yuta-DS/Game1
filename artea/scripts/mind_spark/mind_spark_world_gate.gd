@@ -27,6 +27,12 @@ func teleport_player(player: CharacterBody3D) -> bool:
 	var floating_world := _find_floating_world()
 	if floating_world == null:
 		return false
+	# World One may be built lazily to keep the art gallery within the web
+	# export's memory budget, so make sure it exists before travelling into it -
+	# otherwise the player lands in empty space where the world should be.
+	var world_one := floating_world.get_node_or_null("MindSparkWorldOne")
+	if world_one != null and world_one.has_method("ensure_world_built"):
+		world_one.call("ensure_world_built")
 	player.global_position = floating_world.to_global(destination_world_local)
 	player.velocity = Vector3.ZERO
 	travelled.emit(destination_world_local)

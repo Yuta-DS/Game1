@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cuqpw3xv8es78"
-path="res://.godot/imported/simple_frame_sprite.png-51dfe6d51d0bd252ca164faded2e885c.ctex"
+path.s3tc="res://.godot/imported/simple_frame_sprite.png-51dfe6d51d0bd252ca164faded2e885c.s3tc.ctex"
+path.etc2="res://.godot/imported/simple_frame_sprite.png-51dfe6d51d0bd252ca164faded2e885c.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://scenes/simple_frame_sprite.png"
-dest_files=["res://.godot/imported/simple_frame_sprite.png-51dfe6d51d0bd252ca164faded2e885c.ctex"]
+dest_files=["res://.godot/imported/simple_frame_sprite.png-51dfe6d51d0bd252ca164faded2e885c.s3tc.ctex", "res://.godot/imported/simple_frame_sprite.png-51dfe6d51d0bd252ca164faded2e885c.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -1,4 +1,4 @@
-extends Node3D
+extends Node
 
 @export var painting_title: String = "artwork_1.png"
 
@@ -27,6 +27,7 @@ const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
 func _ready() -> void:
 	_build_galaxy_transit()
+	_report_galaxy_state()
 	_build_quest_journal_button()
 	likebutton.visible = true
 	
@@ -52,6 +53,34 @@ func _ready() -> void:
 const FLOATING_WORLD_FRONT_OFFSET := Vector3(0.0, 0.0, -480.0)
 
 
+func _report_galaxy_state() -> void:
+	# Report unconditionally and as early as possible. If the gallery appears
+	# empty and this text is absent, the scene itself is not being reached and
+	# the fault is upstream of anything in this file.
+	# The galaxy world builds correctly in headless runs on the same renderer the
+	# web uses, so any remaining failure is specific to the browser. Print what
+	# actually exists at runtime so the console says which stage broke instead of
+	# leaving it to be guessed at.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var world := find_child("ArtCastleFloatingWorld", true, false)
+	var meshes := 0
+	if world != null:
+		var stack: Array = [world]
+		while stack.size() > 0:
+			var n: Node = stack.pop_back()
+			if n is VisualInstance3D and (n as Node3D).is_visible_in_tree():
+				meshes += 1
+			for c in n.get_children():
+				stack.append(c)
+	var cam := get_viewport().get_camera_3d() if get_viewport() != null else null
+	var report := "world=%s meshes=%d cam=%s" % [
+		str(world != null), meshes,
+		str(cam.global_position) if cam != null else "none"]
+	print("[ARTEA] galaxy ", report)
+
+
+
 func _build_galaxy_transit() -> void:
 	# The 2 km island is part of this same scene—there is no portal or scene
 	# change. Its arrival island is centred under the authored gallery floor,
@@ -65,7 +94,34 @@ func _build_galaxy_transit() -> void:
 	floating_world.position = FLOATING_WORLD_FRONT_OFFSET
 	floating_world.set_script(load("res://scripts/art_castle_floating_world.gd"))
 	floating_world.set("embedded_in_gallery", true)
-	add_child(floating_world)
+	# A Node3D only renders beneath a 3D parent. This scene's root may be a
+	# Node2D (ArtGallery.tscn) or a Node3D (art_gallery_3d.tscn), so when it is
+	# 2D the world goes inside a SubViewport that provides the missing 3D world,
+	# displayed behind the 2D content rather than not at all.
+	# Compared as a plain Node so the static analyser does not reject the test:
+	# under `extends Node` it can prove `self is Node3D` is impossible and refuses
+	# to parse the script at all.
+	var host: Node = self
+	if host is Node3D:
+		add_child(floating_world)
+	else:
+		var viewport := SubViewport.new()
+		viewport.name = "GalaxyViewport"
+		viewport.size = Vector2i(1920, 1080)
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		viewport.handle_input_locally = false
+		var container := SubViewportContainer.new()
+		container.name = "GalaxyViewportContainer"
+		container.stretch = true
+		container.set_anchors_preset(Control.PRESET_FULL_RECT)
+		container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var layer := CanvasLayer.new()
+		layer.name = "GalaxyCanvas"
+		layer.layer = -10
+		add_child(layer)
+		layer.add_child(container)
+		container.add_child(viewport)
+		viewport.add_child(floating_world)
 
 	var kingdom_regions := Node3D.new()
 	kingdom_regions.name = "KingdomRegions3000m"

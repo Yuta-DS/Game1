@@ -1,0 +1,61 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://assets3D/characters/Rogue.glb" id="1_model"]
+[ext_resource type="Script" path="res://scripts/npc/town_villager.gd" id="2_script"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.34
+height = 1.55
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_dialogue"]
+radius = 1.8
+
+[node name="TownVillager" type="CharacterBody3D" groups=["npc", "villager", "town_villager"]]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("2_script")
+idle_animation = &"Idle"
+walk_animation = &"Walking_A"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.78, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="Model" parent="." instance=ExtResource("1_model")]
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_height_offset = 0.05
+target_desired_distance = 0.3
+path_desired_distance = 0.25
+avoidance_enabled = true
+radius = 0.42
+
+[node name="DialogueArea" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DialogueArea"]
+position = Vector3(0, 0.85, 0)
+shape = SubResource("SphereShape3D_dialogue")
+
+[node name="InteractionPrompt" type="Label3D" parent="."]
+position = Vector3(0, 2.15, 0)
+billboard = 1
+no_depth_test = true
+modulate = Color(1, 0.91, 0.65, 1)
+outline_size = 12
+font_size = 32
+text = "Q  Talk to Artea Villager"
+
+[node name="VillagerName" type="Label3D" parent="."]
+position = Vector3(0, 1.9, 0)
+billboard = 1
+no_depth_test = true
+modulate = Color(0.84, 0.95, 1, 1)
+outline_size = 10
+font_size = 26
+text = "Artea Villager"
+
+[connection signal="body_entered" from="DialogueArea" to="." method="_on_dialogue_area_body_entered"]
+[connection signal="body_exited" from="DialogueArea" to="." method="_on_dialogue_area_body_exited"]

@@ -9,6 +9,7 @@ extends Control
 @onready var content: VBoxContainer = $VBoxContainer
 
 signal chat_closed
+signal companion_pose_requested(pose_name: String)
 
 # Compatibility focus target for milo_animations.gd. It points to a curated
 # button, never to an editable text-entry control.
@@ -106,6 +107,125 @@ const SKIP_CHOICE := {
 	"universal": "That is okay. Skipping this moment does not change your journey.",
 }
 
+# Wonderful Counsellor Milo stays a guided, non-clinical companion.  Players
+# name their own experience through authored choices; Milo never guesses a
+# hidden emotion from artwork, colour, behaviour or personal text.
+const EMOTION_CHECK_INS := [
+	{
+		"label": "I feel worried or unsure",
+		"acknowledge": "Worry or uncertainty can make the next step feel larger. You do not have to solve everything now.",
+		"strength": "Naming uncertainty can show honesty and courage.",
+		"question": "What is one small part you can choose, and one part you can leave for later?",
+		"activity": "Try Mind Spark: pause, notice one thought, then choose one small hopeful response.",
+	},
+	{
+		"label": "I feel frustrated or stuck",
+		"acknowledge": "Being stuck can be tiring. A pause is allowed, and trying a different path still counts.",
+		"strength": "Coming back to a challenge can show persistence and flexibility.",
+		"question": "Would a smaller step, a new tool, or asking someone for help make this lighter?",
+		"activity": "Try Creator's Light: make one mark without needing it to be perfect.",
+	},
+	{
+		"label": "I feel sad or low",
+		"acknowledge": "Thank you for choosing words for a difficult feeling. You do not have to carry it alone.",
+		"strength": "Reaching for a quiet check-in can show self-awareness.",
+		"question": "What kind of support would feel kind right now: company, rest, music, or a trusted person?",
+		"activity": "Try Heart Melody gently, or choose Need help to find real-world support.",
+	},
+	{
+		"label": "I feel excited or proud",
+		"acknowledge": "That sounds like a moment worth noticing. You are allowed to enjoy what went well.",
+		"strength": "Recognising progress can build confidence and gratitude.",
+		"question": "What choice or effort helped create this moment?",
+		"activity": "Visit your current journey space and make a small celebration mark, sound, or reflection.",
+	},
+	{
+		"label": "I am not sure what I feel",
+		"acknowledge": "Not knowing is a real answer. You can stay curious without forcing a label.",
+		"strength": "Making room for uncertainty can show patience.",
+		"question": "What do you notice first: energy, heaviness, stillness, or something else?",
+		"activity": "Try Heart Melody and choose a sound before choosing a feeling word.",
+	},
+]
+
+const STRENGTH_DISCOVERIES := [
+	{
+		"label": "I kept trying",
+		"strength": "Perseverance",
+		"reflection": "You continued even when the result was not immediate.",
+		"question": "What helped you return for one more step?",
+	},
+	{
+		"label": "I asked for help",
+		"strength": "Connection",
+		"reflection": "Asking for support can be a wise and courageous choice.",
+		"question": "Who or what helped the task feel more possible?",
+	},
+	{
+		"label": "I made or imagined something",
+		"strength": "Creativity",
+		"reflection": "You turned an idea into something you could explore.",
+		"question": "Which part feels most like your own voice?",
+	},
+	{
+		"label": "I noticed what was happening inside",
+		"strength": "Self-awareness",
+		"reflection": "Pausing to notice can help you choose your next step with care.",
+		"question": "What did noticing help you understand or choose?",
+	},
+]
+
+const ACTIVITY_GUIDES := [
+	{
+		"label": "Work with a busy thought",
+		"activity": "Mind Spark",
+		"guide": "Notice one thought, test a kinder or more useful response, and keep only what helps.",
+	},
+	{
+		"label": "Explore a feeling through sound",
+		"activity": "Heart Melody",
+		"guide": "Use rhythm, pitch, or quiet listening. You can explore without explaining the feeling.",
+	},
+	{
+		"label": "Express something creatively",
+		"activity": "Creator's Light",
+		"guide": "Make one mark, shape, or colour choice that belongs to you. There is no perfect result.",
+	},
+	{
+		"label": "Look back at my growth",
+		"activity": "Crown of Life",
+		"guide": "Review choices and discoveries already recorded by your journey, without adding a new reward.",
+	},
+]
+
+const STAGE_PROGRESS := {
+	0: {
+		"evidence": "You arrived and made space for a first choice.",
+		"strength": "Curiosity",
+		"next": "Explore at your own pace and choose one small beginning.",
+	},
+	1: {
+		"evidence": "You reached Mind Spark and practised meeting a thought with choice.",
+		"strength": "Perspective",
+		"next": "Notice which response helps you take the next grounded step.",
+	},
+	2: {
+		"evidence": "You continued into Heart Melody and explored experience through sound.",
+		"strength": "Emotional awareness",
+		"next": "Let a rhythm or quiet moment show you what you want to carry forward.",
+	},
+	3: {
+		"evidence": "You reached Creator's Light and gave an idea a visible form.",
+		"strength": "Creative courage",
+		"next": "Choose one part of your creation that feels meaningful to you.",
+	},
+	4: {
+		"evidence": "You brought discoveries from across the journey toward the Crown of Life.",
+		"strength": "Integration",
+		"next": "Pause to recognise how your choices, not perfection, shaped the journey.",
+	},
+}
+
 var _stage := 0
 var _mode := "faith"
 var _choices: VBoxContainer
@@ -130,18 +250,49 @@ func _resolve_safe_context() -> void:
 
 
 func _show_choices() -> void:
+	companion_pose_requested.emit("welcome")
 	var reflection: Dictionary = CURATED_REFLECTIONS.get(_stage, CURATED_REFLECTIONS[0])
-	chat_history.text = "Milo · %s\n\n%s\n\nChoose one, or skip. Nothing you choose here changes your progress." % [
+	chat_history.text = "Wonderful Counsellor Milo · %s\n\n%s\n\nChoose one, or skip. Nothing you choose here changes your progress." % [
 		reflection["title"],
 		MODE_INTROS[_mode],
 	]
 	_clear_choices()
 
 	var prompt := Label.new()
-	prompt.text = "Choose a star path"
+	prompt.text = "How can Milo walk alongside you?"
 	prompt.add_theme_font_size_override("font_size", 18)
 	prompt.add_theme_color_override("font_color", Color(0.86, 0.91, 1.0))
 	_choices.add_child(prompt)
+
+	for path_spec in [
+		["Check in with a feeling", _show_emotion_check_ins],
+		["Reflect with Milo", _show_stage_reflections],
+		["Discover a strength", _show_strength_discoveries],
+		["Celebrate my progress", _show_progress_celebration],
+		["Choose an ARTÉA activity", _show_activity_guides],
+	]:
+		var path_button := _quiet_button(path_spec[0], path_spec[1])
+		_choices.add_child(path_button)
+		if user_input == null:
+			user_input = path_button
+
+	var quiet_note := Label.new()
+	quiet_note.text = "Milo responds only to choices you make and progress the game already knows. He does not diagnose, analyse artwork, or replace a trusted person."
+	quiet_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quiet_note.add_theme_font_size_override("font_size", 14)
+	quiet_note.add_theme_color_override("font_color", Color(0.70, 0.78, 0.92))
+	_choices.add_child(quiet_note)
+
+	_choices.add_child(_choice_button(SKIP_CHOICE))
+	_choices.add_child(_quiet_button("Need help", _show_support))
+	_choices.add_child(_quiet_button("Close", close_chat))
+
+
+func _show_stage_reflections() -> void:
+	companion_pose_requested.emit("tablet")
+	var reflection: Dictionary = CURATED_REFLECTIONS.get(_stage, CURATED_REFLECTIONS[0])
+	chat_history.text = "Wonderful Counsellor Milo · Reflection Partner\n\n%s\n\nChoose a reflection, or return without answering." % str(reflection["title"])
+	_clear_choices()
 
 	for choice in reflection["choices"]:
 		var choice_button := _choice_button(choice)
@@ -153,20 +304,104 @@ func _show_choices() -> void:
 	if user_input == null:
 		user_input = skip_button
 
-	var quiet_note := Label.new()
-	quiet_note.text = "Milo uses only these local, guided choices. Your artwork and colours are not analysed."
-	quiet_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	quiet_note.add_theme_font_size_override("font_size", 14)
-	quiet_note.add_theme_color_override("font_color", Color(0.70, 0.78, 0.92))
-	_choices.add_child(quiet_note)
+	_add_companion_navigation()
 
+
+func _show_emotion_check_ins() -> void:
+	companion_pose_requested.emit("heart")
+	chat_history.text = "Wonderful Counsellor Milo · Emotional Companion\n\nChoose words that feel closest, or return without choosing. Milo will respond to your choice—not guess what you feel."
+	_clear_choices()
+	for check_in in EMOTION_CHECK_INS:
+		var button := _quiet_button(str(check_in.label), _respond_to_emotion.bind(check_in))
+		_choices.add_child(button)
+		if user_input == null:
+			user_input = button
+	_add_companion_navigation()
+
+
+func _respond_to_emotion(check_in: Dictionary) -> void:
+	companion_pose_requested.emit("encourage")
+	_show_companion_response(
+		"Emotional Companion",
+		"You chose: %s\n\n%s\n\nStrength Milo notices: %s\n\nA reflection to consider: %s\n\nA gentle ARTÉA step: %s" % [
+			str(check_in.label), str(check_in.acknowledge), str(check_in.strength),
+			str(check_in.question), str(check_in.activity),
+		]
+	)
+
+
+func _show_strength_discoveries() -> void:
+	companion_pose_requested.emit("encourage")
+	chat_history.text = "Wonderful Counsellor Milo · Strength Discoverer\n\nChoose something you actually did. Milo will name a possible strength without turning it into a score or reward."
+	_clear_choices()
+	for discovery in STRENGTH_DISCOVERIES:
+		var button := _quiet_button(str(discovery.label), _respond_to_strength.bind(discovery))
+		_choices.add_child(button)
+		if user_input == null:
+			user_input = button
+	_add_companion_navigation()
+
+
+func _respond_to_strength(discovery: Dictionary) -> void:
+	_show_companion_response(
+		"Strength Discoverer",
+		"You chose: %s\n\nPossible strength: %s\n\n%s\n\nReflection: %s" % [
+			str(discovery.label), str(discovery.strength),
+			str(discovery.reflection), str(discovery.question),
+		]
+	)
+
+
+func _show_progress_celebration() -> void:
+	companion_pose_requested.emit("encourage")
+	var progress: Dictionary = STAGE_PROGRESS.get(_stage, STAGE_PROGRESS[0])
+	_show_companion_response(
+		"Encourager",
+		"What the journey records: %s\n\nStrength reflected in that step: %s\n\nA possible next step: %s\n\nYour progress comes from the choices you made; this reflection does not add or remove rewards." % [
+			str(progress.evidence), str(progress.strength), str(progress.next),
+		]
+	)
+
+
+func _show_activity_guides() -> void:
+	companion_pose_requested.emit("map")
+	chat_history.text = "Wonderful Counsellor Milo · Journey Guide\n\nChoose what would help now. Milo will suggest an ARTÉA activity without changing your progress."
+	_clear_choices()
+	for guide in ACTIVITY_GUIDES:
+		var button := _quiet_button(str(guide.label), _respond_with_activity.bind(guide))
+		_choices.add_child(button)
+		if user_input == null:
+			user_input = button
+	_add_companion_navigation()
+
+
+func _respond_with_activity(guide: Dictionary) -> void:
+	companion_pose_requested.emit("guide")
+	_show_companion_response(
+		"Journey Guide",
+		"Suggested activity: %s\n\n%s\n\nYou can try it, choose another path, or continue your current adventure." % [
+			str(guide.activity), str(guide.guide),
+		]
+	)
+
+
+func _show_companion_response(title: String, message: String) -> void:
+	chat_history.text = "Wonderful Counsellor Milo · %s\n\n%s" % [title, message]
+	_clear_choices()
+	_add_companion_navigation()
+
+
+func _add_companion_navigation() -> void:
+	var back_button := _quiet_button("Back to companion paths", _show_choices)
+	_choices.add_child(back_button)
+	user_input = back_button
 	_choices.add_child(_quiet_button("Need help", _show_support))
 	_choices.add_child(_quiet_button("Close", close_chat))
 
 
 func _choose_reflection(choice: Dictionary) -> void:
 	var reply := str(choice.get(_mode, choice.get("universal", "")))
-	chat_history.text = "Milo · %s\n\n%s\n\nYou can continue your adventure whenever you are ready." % [
+	chat_history.text = "Wonderful Counsellor Milo · %s\n\n%s\n\nYou can continue your adventure whenever you are ready." % [
 		str(choice.get("label", "A quiet choice")),
 		reply,
 	]
@@ -179,6 +414,7 @@ func _choose_reflection(choice: Dictionary) -> void:
 
 
 func _clear_choices() -> void:
+	user_input = null
 	if _choices == null:
 		_choices = VBoxContainer.new()
 		_choices.name = "CuratedChoices"
@@ -187,6 +423,7 @@ func _clear_choices() -> void:
 		return
 
 	for child in _choices.get_children():
+		_choices.remove_child(child)
 		child.queue_free()
 
 
