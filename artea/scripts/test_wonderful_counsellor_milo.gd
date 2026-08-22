@@ -38,16 +38,24 @@ func _run() -> void:
 		"Milo offers an explicit emotional check-in")
 	assert(_has_button(choices, "I feel worried or unsure"),
 		"players name their own feeling instead of Milo inferring it")
+	assert(_has_button(choices, "I feel stressed or overwhelmed"),
+		"Milo offers a dedicated stress and overwhelm check-in")
 	chat._respond_to_emotion({
-		"label": "I feel worried or unsure",
-		"acknowledge": "ACKNOWLEDGE",
-		"strength": "COURAGE",
-		"question": "REFLECTION QUESTION",
-		"activity": "MIND SPARK ACTIVITY",
+		"label": "I feel stressed or overwhelmed",
+		"acknowledge": "I hear you. VALIDATION EVIDENCE",
+		"reflection": "It sounds like REFLECTION EVIDENCE",
+		"strength": "You are more than this moment. STRENGTH EVIDENCE",
+		"question": "Let's explore this together. GUIDANCE EVIDENCE",
+		"activity": "Would you like to visit the Mind Spark Kingdom?",
 	})
 	assert(requested_poses.back() == "encourage",
 		"emotion response opens Milo's arms in encouragement")
-	for evidence in ["ACKNOWLEDGE", "COURAGE", "REFLECTION QUESTION", "MIND SPARK ACTIVITY"]:
+	for evidence in [
+		"VALIDATE", "I hear you", "REFLECT", "It sounds like",
+		"IDENTITY & STRENGTH", "You are more than this moment",
+		"GENTLE GUIDANCE", "Let's explore this together",
+		"CONNECT TO ARTÉA", "Mind Spark Kingdom",
+	]:
 		assert(history.text.contains(evidence),
 			"emotion response contains %s" % evidence)
 

@@ -112,39 +112,52 @@ const SKIP_CHOICE := {
 # hidden emotion from artwork, colour, behaviour or personal text.
 const EMOTION_CHECK_INS := [
 	{
+		"label": "I feel stressed or overwhelmed",
+		"acknowledge": "I hear you. It sounds like you have been carrying a lot.",
+		"reflection": "Feeling stressed does not mean you are weak. Sometimes it means your mind and heart have been working hard to cope.",
+		"strength": "You are more than this moment. Naming the pressure can show honesty, courage, and self-awareness.",
+		"question": "Let's explore this together. What is one thought or responsibility that feels heaviest right now?",
+		"activity": "Would you like to visit the Mind Spark Kingdom and explore a kinder, more useful response to that thought?",
+	},
+	{
 		"label": "I feel worried or unsure",
-		"acknowledge": "Worry or uncertainty can make the next step feel larger. You do not have to solve everything now.",
-		"strength": "Naming uncertainty can show honesty and courage.",
-		"question": "What is one small part you can choose, and one part you can leave for later?",
-		"activity": "Try Mind Spark: pause, notice one thought, then choose one small hopeful response.",
+		"acknowledge": "I hear you. Worry or uncertainty can make the next step feel larger.",
+		"reflection": "It sounds like not knowing what comes next may be making this moment feel harder.",
+		"strength": "You are more than this moment. Naming uncertainty can show honesty and courage.",
+		"question": "Let's explore this together. What is one small part you can choose, and one part you can leave for later?",
+		"activity": "Would you like to visit Mind Spark, notice one thought, and choose one small hopeful response?",
 	},
 	{
 		"label": "I feel frustrated or stuck",
-		"acknowledge": "Being stuck can be tiring. A pause is allowed, and trying a different path still counts.",
-		"strength": "Coming back to a challenge can show persistence and flexibility.",
-		"question": "Would a smaller step, a new tool, or asking someone for help make this lighter?",
-		"activity": "Try Creator's Light: make one mark without needing it to be perfect.",
+		"acknowledge": "I hear you. Being stuck can be tiring.",
+		"reflection": "It sounds like you have been working at something that is not moving the way you hoped.",
+		"strength": "You are more than this moment. Coming back to a challenge can show persistence and flexibility.",
+		"question": "Let's explore this together. Would a smaller step, a new tool, or asking someone for help make this lighter?",
+		"activity": "Would you like to visit Creator's Light and make one mark without needing it to be perfect?",
 	},
 	{
 		"label": "I feel sad or low",
-		"acknowledge": "Thank you for choosing words for a difficult feeling. You do not have to carry it alone.",
-		"strength": "Reaching for a quiet check-in can show self-awareness.",
-		"question": "What kind of support would feel kind right now: company, rest, music, or a trusted person?",
-		"activity": "Try Heart Melody gently, or choose Need help to find real-world support.",
+		"acknowledge": "I hear you. Thank you for choosing words for a difficult feeling.",
+		"reflection": "It sounds like this moment may feel heavy. You do not have to carry it alone.",
+		"strength": "You are more than this moment. Reaching for a quiet check-in can show self-awareness.",
+		"question": "Let's explore this together. What support would feel kind right now: company, rest, music, or a trusted person?",
+		"activity": "Would you like to visit Heart Melody gently, or choose Need help to find real-world support?",
 	},
 	{
 		"label": "I feel excited or proud",
-		"acknowledge": "That sounds like a moment worth noticing. You are allowed to enjoy what went well.",
-		"strength": "Recognising progress can build confidence and gratitude.",
-		"question": "What choice or effort helped create this moment?",
-		"activity": "Visit your current journey space and make a small celebration mark, sound, or reflection.",
+		"acknowledge": "I hear you. That sounds like a moment worth noticing.",
+		"reflection": "It sounds like something you chose or created has brought energy and pride.",
+		"strength": "You are more than one achievement. Recognising progress can build confidence and gratitude.",
+		"question": "Let's explore this together. What choice or effort helped create this moment?",
+		"activity": "Would you like to revisit your current ARTÉA space and make a small celebration mark, sound, or reflection?",
 	},
 	{
 		"label": "I am not sure what I feel",
-		"acknowledge": "Not knowing is a real answer. You can stay curious without forcing a label.",
-		"strength": "Making room for uncertainty can show patience.",
-		"question": "What do you notice first: energy, heaviness, stillness, or something else?",
-		"activity": "Try Heart Melody and choose a sound before choosing a feeling word.",
+		"acknowledge": "I hear you. Not knowing is a real answer.",
+		"reflection": "It sounds like the feeling may not have clear words yet, and you do not have to force a label.",
+		"strength": "You are more than this uncertain moment. Making room for it can show patience and curiosity.",
+		"question": "Let's explore this together. What do you notice first: energy, heaviness, stillness, or something else?",
+		"activity": "Would you like to visit Heart Melody and choose a sound before choosing a feeling word?",
 	},
 ]
 
@@ -323,8 +336,9 @@ func _respond_to_emotion(check_in: Dictionary) -> void:
 	companion_pose_requested.emit("encourage")
 	_show_companion_response(
 		"Emotional Companion",
-		"You chose: %s\n\n%s\n\nStrength Milo notices: %s\n\nA reflection to consider: %s\n\nA gentle ARTÉA step: %s" % [
-			str(check_in.label), str(check_in.acknowledge), str(check_in.strength),
+		"You chose: %s\n\nVALIDATE\n%s\n\nREFLECT\n%s\n\nIDENTITY & STRENGTH\n%s\n\nGENTLE GUIDANCE\n%s\n\nCONNECT TO ARTÉA\n%s" % [
+			str(check_in.label), str(check_in.acknowledge),
+			str(check_in.reflection), str(check_in.strength),
 			str(check_in.question), str(check_in.activity),
 		]
 	)
