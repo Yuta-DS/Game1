@@ -45,6 +45,7 @@ var valid_emotions = [
 ]
 
 var color_tween: Tween
+var local_llm_available := false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -52,23 +53,23 @@ func _ready() -> void:
 	player.stream = load("res://assets/audio/minigame/intro.mp3")
 	player.play()
 	
-	# Load model
-	model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
-
-	# Connect model to AI node
-	emotion_ai.set_model_node(model)
-
-	# Set strict emotion classifier prompt
-	emotion_ai.set_system_prompt(load_emotion_prompt())
-
-	# Start AI worker
-	emotion_ai.start_worker()
-
-	# Connect response signal
-	emotion_ai.connect(
-		"response_finished",
-		Callable(self, "_on_emotion_response")
-	)
+	# Keep the native NobodyWho classifier on desktop. Its extension has no Web
+	# binary, so browsers use the deterministic classifier below.
+	if ClassDB.can_instantiate("NobodyWhoModel") and ClassDB.can_instantiate("NobodyWhoChat"):
+		model.queue_free()
+		emotion_ai.queue_free()
+		model = ClassDB.instantiate("NobodyWhoModel")
+		model.name = "Model"
+		add_child(model)
+		emotion_ai = ClassDB.instantiate("NobodyWhoChat")
+		emotion_ai.name = "EmotionAI"
+		add_child(emotion_ai)
+		model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
+		emotion_ai.set_model_node(model)
+		emotion_ai.set_system_prompt(load_emotion_prompt())
+		emotion_ai.start_worker()
+		emotion_ai.connect("response_finished", Callable(self, "_on_emotion_response"))
+		local_llm_available = true
 	
 	if not button.pressed.is_connected(_on_generate_pressed):
 		button.pressed.connect(_on_generate_pressed)
@@ -338,7 +339,19 @@ func detect_emotion(user_text: String):
 	print("Analyzing emotion...")
 	print(user_text)
 
-	emotion_ai.say(user_text)
+	if local_llm_available:
+		emotion_ai.say(user_text)
+	else:
+		APIManager.chat([
+			{"role": "system", "content": load_emotion_prompt()},
+			{"role": "user", "content": user_text}
+		], _on_server_emotion_response)
+
+func _on_server_emotion_response(success: bool, response: String) -> void:
+	if success:
+		_on_emotion_response(response)
+	else:
+		result.text = "Emotion analysis is unavailable. Please try again."
 
 func _on_emotion_response(response):
 	print(typeof(response))

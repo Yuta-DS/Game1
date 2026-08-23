@@ -15,7 +15,7 @@ func _ready():
 		
 	if OS.get_name() == "Web":
 		var provider: AuthProvider = Firebase.Auth.get_GoogleProvider()
-		Firebase.Auth.set_redirect_uri("http://localhost:8060/index.html")
+		Firebase.Auth.set_redirect_uri(_get_web_redirect_uri())
 		var token = Firebase.Auth.get_token_from_url(provider)
 		if token:
 			Firebase.Auth.login_with_oauth(token, provider)
@@ -43,7 +43,6 @@ func _on_signup_button_pressed():
 
 # Called when login is successful
 func on_login_succeeded(auth):
-	print(auth)
 	%StateLabel.text = "Login success!"
 	Firebase.Auth.save_auth(auth)
 	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
@@ -55,7 +54,6 @@ func on_login_succeeded(auth):
 	
 # Called when sign up is successful	
 func on_signup_succeeded(auth):
-	print(auth)
 	%StateLabel.text = "Sign up success!"
 	Firebase.Auth.save_auth(auth)
 	get_tree().change_scene_to_file("res://Game.tscn")
@@ -78,11 +76,17 @@ func _on_sign_in_google_button_pressed():
 	
 	if OS.get_name() == "Web":
 		# For web
-		Firebase.Auth.set_redirect_uri("http://localhost:8060/index.html")
+		Firebase.Auth.set_redirect_uri(_get_web_redirect_uri())
 		Firebase.Auth.get_auth_with_redirect(provider)
 	else:
 		# For desktop
 		Firebase.Auth.get_auth_localhost(provider, 8060)
+
+func _get_web_redirect_uri() -> String:
+	var redirect_uri = JavaScriptBridge.eval("window.location.origin + window.location.pathname", true)
+	if redirect_uri is String and not redirect_uri.is_empty():
+		return redirect_uri
+	return "http://localhost:8060/index.html"
 
 func _on_d_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/3DScenes.tscn")

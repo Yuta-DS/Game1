@@ -15,10 +15,13 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Artea"
-run/main_scene="uid://d10bpuuoe8w0m"
-config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
-boot_splash/image="uid://06fmhq71d8ey"
+run/main_scene="res://scenes/start_screen.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[artea]
+
+network/api_base_url=""
 
 [autoload]
 
@@ -29,11 +32,11 @@ DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameManager="*res://scripts/GameManager.gd"
 Auth="*res://addons/godot-firebase/auth/auth.gd"
 APIManager="*uid://dodj1s54vwit2"
+WebAudioUnlock="*res://scripts/web_audio_unlock.gd"
 
 [dialogue_manager]
 
 runtime/balloon_path="res://dialogue/HubworldBalloon.tscn"
-runtime/advanced/uses_dotnet=true
 
 [display]
 

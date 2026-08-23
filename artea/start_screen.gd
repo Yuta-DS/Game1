@@ -137,6 +137,10 @@ func _on_guest_button_pressed() -> void:
 
 # Simple local network card presence check
 func check_internet_connection() -> bool:
+	# Browsers do not expose desktop network-interface information reliably.
+	# Let the HTTP request report the real connection result instead.
+	if OS.get_name() == "Web":
+		return true
 	if IP.get_local_addresses().size() == 0:
 		return false
 	return true

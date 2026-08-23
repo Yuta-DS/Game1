@@ -3,3 +3,25 @@ artea/addons/terrain_3d/bin/~libterrain.windows.debug.x86_64.dll
 ~*
 *.tmp
 *.import
+# Generated Godot web exports
+/web-build/
+/artea/index.*
+/artea/libterrain.web.*.wasm
+
+# Local validation files
+/.flask-validation.*
+/.web-validation.*
+
+# Temporary files
+*.tmp
+*.TMP
+
+# macOS archive metadata
+__MACOSX/
+.DS_Store
+# Python generated files
+__pycache__/
+*.pyc
+
+# Local Flask database
+/server/database.db

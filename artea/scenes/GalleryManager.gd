@@ -8,8 +8,6 @@ extends Node3D
 
 #const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
 #const SERVER_BASE = "http://54.252.162.122"
-const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
-const SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
 const PLACEHOLDER_PATH = "res://assets/ArtGallery/placeholders/"
 const PLACEHOLDERS = [
@@ -192,7 +190,7 @@ func load_local_art_paths() -> void:
 
 func list_user_artworks() -> void:
 	
-	if Global.auth_token == "":
+	if not Global.has_online_session():
 		print("No authenticated user -> loading local gallery")
 
 		load_local_art_paths()
@@ -204,7 +202,7 @@ func list_user_artworks() -> void:
 	]
 
 	var error = list_request.request(
-		MY_ARTWORKS_URL,
+		APIManager.get_my_artworks_url(),
 		headers
 	)
 
@@ -260,7 +258,7 @@ func _on_list_request_completed(
 
 		images_to_download.append({
 			"id": item.id,
-			"url": SERVER_BASE + item.url
+			"url": APIManager.get_base_url() + item.url
 		})
 
 	current_frame_index = 0

@@ -590,7 +590,7 @@ func _on_art_gallery_button_pressed() -> void:
 # REMOTE GALLERY - SAVE/UPLOAD TO SERVER
 func upload_artwork_to_server() -> void:
 	
-	if Global.auth_token == "" or Global.auth_token == "invalid_token":
+	if not Global.has_online_session():
 		print("Upload blocked: invalid auth token")
 		return
 
@@ -611,7 +611,7 @@ func upload_artwork_to_server() -> void:
 	]
 
 	var err = http_request.request_raw(
-		APIManager.UPLOAD_ARTWORK_URL,
+		APIManager.get_upload_artwork_url(),
 		headers,
 		HTTPClient.METHOD_POST,
 		byte_data

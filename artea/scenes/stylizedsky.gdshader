@@ -217,7 +217,7 @@ void sky() {
 		vec3 clouds_direction = vec3(EYEDIR.xz / clamp(EYEDIR.y, 0.0, 1.0), 1.0);
 		vec2 clouds = EYEDIR.y > 0.0 ? cloud_ray_march(clouds_direction, LIGHT0_DIRECTION) : vec2(0.0);
 
-		COLOR = mix(bottom_color, clouds_light_color, exp(-clouds.y * clouds_shadow_intensity));
+		COLOR.rgb = mix(bottom_color, clouds_light_color, exp(-clouds.y * clouds_shadow_intensity));
 		ALPHA = (1.0 - exp(-clouds.x * horizon_mask * bottom_mask * 10.0));
 
 	}else{
