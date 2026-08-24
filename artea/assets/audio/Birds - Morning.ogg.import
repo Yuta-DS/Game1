@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dbng83t36wlse"
+path="res://.godot/imported/Birds - Morning.ogg-ed134aa07b4fc142bdd693c7b2569484.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/Birds - Morning.ogg"
+dest_files=["res://.godot/imported/Birds - Morning.ogg-ed134aa07b4fc142bdd693c7b2569484.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
