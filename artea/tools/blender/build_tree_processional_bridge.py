@@ -307,8 +307,7 @@ def build_portal(parts, mats, index, y):
             ((-19.0, y - 1.35, 15.2), (-8.0, y - 1.35, 20.0)),
             ((19.0, y - 1.35, 15.2), (8.0, y - 1.35, 20.0)),
             ((-8.0, y - 1.35, 20.0), orb),
-            ((8.0, y - 1.35, 20.0), orb),
-            ((0.0, y - 1.35, 12.8), orb))):
+            ((8.0, y - 1.35, 20.0), orb))):
         beam(f"PortalLivingVine_{index}_{vine_index}", start, finish,
              0.30, mats["antique_gold"], parts, "PORTAL_GOLD", component, 0.42)
     for leaf_index, (x, z, rotation) in enumerate((

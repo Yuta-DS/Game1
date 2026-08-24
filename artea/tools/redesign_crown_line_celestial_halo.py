@@ -123,13 +123,7 @@ torus("Engine_CelestialHaloOuterPart_Ring", (0, HALO_Y, 10.28), 2.78, .15, gold,
 for index in range(12):
     angle = math.tau * index / 12.0
     radial = Vector((math.cos(angle), math.sin(angle), 0.0))
-    beam(
-        "Engine_CelestialHaloOuterPart_Ray_%02d" % index,
-        radial * 2.18 + Vector((0, HALO_Y, 10.28)),
-        radial * 3.28 + Vector((0, HALO_Y, 10.28)),
-        .085, gold, parent,
-    )
-    point = radial * 3.28 + Vector((0, HALO_Y, 10.37))
+    point = radial * 2.78 + Vector((0, HALO_Y, 10.37))
     crystal(
         "Engine_CelestialHaloOuterPart_Crystal_%02d" % index,
         point, .13, .48, purple if index % 2 else cyan, parent,

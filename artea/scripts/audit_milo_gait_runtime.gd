@@ -18,9 +18,13 @@ func _run() -> void:
 	for node in milo.find_children("*", "Node", true, false):
 		if "cane" in node.name.to_lower():
 			var node_3d := node as Node3D
-			print("CANE_NODE %s %s global=(%.3f,%.3f,%.3f)" % [
+			var bounds := (node as MeshInstance3D).get_aabb() if node is MeshInstance3D \
+				else AABB()
+			var center := node_3d.to_global(bounds.get_center())
+			print("CANE_NODE %s %s global=(%.3f,%.3f,%.3f) center=(%.3f,%.3f,%.3f) size=(%.3f,%.3f,%.3f)" % [
 				str(milo.get_path_to(node)), node.get_class(), node_3d.global_position.x,
-				node_3d.global_position.y, node_3d.global_position.z])
+				node_3d.global_position.y, node_3d.global_position.z, center.x, center.y,
+				center.z, bounds.size.x, bounds.size.y, bounds.size.z])
 	animation_player.play("Cane_Walk", 0.0, 1.0)
 	var clip := animation_player.get_animation("Cane_Walk")
 	for sample_index in 17:

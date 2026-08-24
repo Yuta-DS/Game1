@@ -56,9 +56,9 @@ func _run() -> void:
 		if blender_bridge.find_child(component, true, false) == null:
 			_fail("Tree of Life Blender bridge is missing %s" % component)
 			return
-	if int(tree_bridge.get_meta("blender_editable_module_count", 0)) != 692 \
+	if int(tree_bridge.get_meta("blender_editable_module_count", 0)) != 689 \
 			or int(tree_bridge.get_meta("blender_runtime_mesh_group_count", 0)) != 9 \
-			or int(tree_bridge.get_meta("bridge_runtime_triangle_count", 0)) != 26248:
+			or int(tree_bridge.get_meta("bridge_runtime_triangle_count", 0)) != 26116:
 		_fail("Tree of Life Blender bridge optimization metadata changed")
 		return
 	for rail in tree_bridge.find_children("SafetyRail*", "MeshInstance3D", true, false):

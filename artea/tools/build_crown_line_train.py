@@ -1782,12 +1782,8 @@ def engine(center_y=-17.0, parent=model_root):
           MAT["accent_gold"],parent=eng)
     for i in range(12):
         ang=math.tau*i/12
-        beam(f"Engine_CelestialHaloOuterPart_Ray_{i:02d}",
-             (math.cos(ang)*2.18,halo_y+math.sin(ang)*2.18,10.28),
-             (math.cos(ang)*3.28,halo_y+math.sin(ang)*3.28,10.28),
-             .085,MAT["accent_gold"],8,eng)
         crystal(f"Engine_CelestialHaloOuterPart_Crystal_{i:02d}",
-                (math.cos(ang)*3.28,halo_y+math.sin(ang)*3.28,10.37),
+                (math.cos(ang)*2.78,halo_y+math.sin(ang)*2.78,10.37),
                 .13,.48,MAT["purple" if i%2 else "cyan"],parent=eng,detailed=False)
     torus("Engine_CelestialHaloInnerPart_Ring",(0,halo_y,10.52),1.82,.105,
           MAT["cyan"],parent=eng)

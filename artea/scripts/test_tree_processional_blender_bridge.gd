@@ -15,9 +15,9 @@ func _run() -> void:
 	assert(FileAccess.file_exists(BLEND_PATH), "editable Tree bridge Blender source is missing")
 	assert(ResourceLoader.exists(GLB_PATH), "Tree bridge GLB must import in Godot")
 	assert(String(manifest.get("performance_profile", "")) == "laptop_cpu_low")
-	assert(int(manifest.get("editable_source_modules", 0)) == 692)
+	assert(int(manifest.get("editable_source_modules", 0)) == 689)
 	assert(int(manifest.get("runtime_mesh_groups", 0)) == 9)
-	assert(int(manifest.get("runtime_triangles", 999999)) == 26248)
+	assert(int(manifest.get("runtime_triangles", 999999)) == 26116)
 	assert(int(manifest.get("portal_count", 0)) == 3)
 	assert(int(manifest.get("pylon_count", 0)) == 18)
 	assert(int(manifest.get("rail_bay_count", 0)) == 16)
@@ -45,7 +45,7 @@ func _run() -> void:
 	assert(absf(bounds.size.x - 62.15) < 0.05, "Tree bridge width changed from Blender")
 	assert(absf(bounds.size.y - 42.696) < 0.05, "Tree bridge vertical extent changed from Blender")
 	assert(absf(bounds.size.z - 447.0) < 0.05, "Tree bridge route length changed from Blender")
-	print("TREE_PROCESSIONAL_BLENDER_BRIDGE_TEST: PASS — bounds=%s modules=692 groups=9 triangles=26248" % bounds.size)
+	print("TREE_PROCESSIONAL_BLENDER_BRIDGE_TEST: PASS — bounds=%s modules=689 groups=9 triangles=26116" % bounds.size)
 	quit()
 
 
