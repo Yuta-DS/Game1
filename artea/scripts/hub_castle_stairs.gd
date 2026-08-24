@@ -363,13 +363,25 @@ func _build_tower(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	var shape := CollisionShape3D.new()
 	var cyl := CylinderShape3D.new()
 	# CylinderShape3D cannot taper, so this one shape has to stand in for a cone.
-	# Sizing it to the *bottom* radius would push a 4 m wall right through the
-	# inner edge of every tread — the tread's inner edge sits at 4.6 m, leaving
-	# 0.6 m of walkway against a 1.0 m wide capsule, which is exactly where the
-	# climb jammed. Sizing to the narrower top radius keeps the full tread walkable
-	# for the whole height; the visual flare at the base is decorative and sits
-	# below the first step, where the player never walks.
-	cyl.radius = TOWER_TOP_RADIUS
+	# Sizing it to the *bottom* radius (4.0) would push a wall through the
+	# walkway itself — the walkway's own collision starts at TREAD_INNER_RADIUS
+	# (4.94), leaving only 0.94 m clear, too little for a 1.0 m wide capsule
+	# through the whole climb.
+	#
+	# Sizing it to the narrower top radius (3.0) keeps the walkway fully clear,
+	# but leaves an invisible pocket behind the inner guard rail (which starts
+	# at inner_edge - INNER_GUARD_HALF_WIDTH = 4.38): a player who gets past the
+	# rail — by jumping it, or through the small gaps InnerSafetyPlinth doesn't
+	# fully cover near the crown — finds nothing solid there and falls through
+	# open space. Extending the collision out to the guard's own inner face
+	# (plus a small overlap so the two colliders always seal, even across the
+	# guard's faceted helix mesh) removes that pocket entirely: the pillar is
+	# now solid right up to the rail, so there is nowhere to fall into, while
+	# still stopping 0.5 m short of the walkway's own collision boundary. The
+	# visible tower mesh above is unchanged — only this invisible shape widens.
+	var pillar_collision_radius := (STAIR_RADIUS - STEP_WIDTH * 0.5) \
+		- INNER_GUARD_HALF_WIDTH + 0.05
+	cyl.radius = pillar_collision_radius
 	cyl.height = height
 	shape.shape = cyl
 	body.add_child(shape)
