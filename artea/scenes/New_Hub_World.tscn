@@ -36,7 +36,7 @@
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
-[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scripts/cycle.tscn" id="24_ha1sw"]
+[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scenes/cycle.tscn" id="24_ha1sw"]
 [ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://scripts/windshader.tscn" id="25_bsvfl"]
 [ext_resource type="Script" uid="uid://dy3aaovd6pf3p" path="res://addons/proton_scatter/src/shapes/sphere_shape.gd" id="28_cfrmd"]
 [ext_resource type="AudioStream" uid="uid://bexb5n8or0c36" path="res://assets/audio/Flowing Water and Birds (Hub).ogg" id="29_cfrmd"]
