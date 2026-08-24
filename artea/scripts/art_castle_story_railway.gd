@@ -132,6 +132,11 @@ var _speed_needle: Node3D
 var _wheel_mechanism_parts: Array[Node3D] = []
 var _reactor_mechanism_parts: Array[Node3D] = []
 var _steam_gear_parts: Array[Node3D] = []
+var _steam_rod_parts: Array[Node3D] = []
+var _steam_pressure_parts: Array[Node3D] = []
+var _steam_valve_parts: Array[Node3D] = []
+var _steam_exhaust_particles: GPUParticles3D
+var _celestial_halo_parts: Array[Node3D] = []
 var _brake_needles: Array[Node3D] = []
 var _island_power_rotors: Array[Node3D] = []
 var _island_power_lights: Array[OmniLight3D] = []
@@ -456,7 +461,22 @@ func get_horn_request_count() -> int:
 
 func get_registered_mechanism_count() -> int:
 	return _speed_band_parts.size() + _speed_rotor_parts.size() + _wheel_mechanism_parts.size() \
-		+ _reactor_mechanism_parts.size() + _steam_gear_parts.size() + _brake_needles.size()
+		+ _reactor_mechanism_parts.size() + _steam_gear_parts.size() \
+		+ _steam_rod_parts.size() + _steam_pressure_parts.size() \
+		+ _steam_valve_parts.size() + _celestial_halo_parts.size() + _brake_needles.size()
+
+
+func get_steam_engine_animation_state() -> Dictionary:
+	return {
+		"gear_count": _steam_gear_parts.size(),
+		"rod_count": _steam_rod_parts.size(),
+		"pressure_count": _steam_pressure_parts.size(),
+		"valve_count": _steam_valve_parts.size(),
+		"has_exhaust": _steam_exhaust_particles != null,
+		"exhaust_emitting": _steam_exhaust_particles.emitting \
+			if _steam_exhaust_particles != null else false,
+		"celestial_halo_count": _celestial_halo_parts.size(),
+	}
 
 
 func get_directional_vfx_state() -> Dictionary:
@@ -2283,6 +2303,11 @@ func _register_train_mechanisms(detailed_train: Node3D) -> void:
 	_wheel_mechanism_parts.clear()
 	_reactor_mechanism_parts.clear()
 	_steam_gear_parts.clear()
+	_steam_rod_parts.clear()
+	_steam_pressure_parts.clear()
+	_steam_valve_parts.clear()
+	_steam_exhaust_particles = null
+	_celestial_halo_parts.clear()
 	_brake_needles.clear()
 	for candidate in detailed_train.find_children("*", "MeshInstance3D", true, false):
 		var part := candidate as Node3D
@@ -2310,10 +2335,36 @@ func _register_train_mechanisms(detailed_train: Node3D) -> void:
 			part.set_meta("mechanism_base_scale", part.scale)
 		elif part_name.contains("Engine_SteamDriveGear_") \
 			or part_name.contains("Engine_SteamValveGear_") \
-			or part_name.contains("Engine_SteamGovernorGear_"):
+			or part_name.contains("Engine_SteamGovernorGear_") \
+			or part_name.contains("Engine_SteamGearHub_") \
+			or part_name.contains("Engine_SteamGearEnergyRing_"):
 			_steam_gear_parts.append(part)
-			part.set_meta("mechanism_spin_direction",
-				-1.0 if part_name.contains("Valve") else 1.0)
+			var gear_ratio := 1.0
+			if part_name.contains("Valve") or part_name.ends_with("_1"):
+				gear_ratio = -1.45
+			elif part_name.contains("Governor") or part_name.ends_with("_2"):
+				gear_ratio = 2.05
+			part.set_meta("mechanism_spin_ratio", gear_ratio)
+		elif part_name.contains("Engine_SteamConnectingRod_"):
+			_steam_rod_parts.append(part)
+			part.set_meta("mechanism_base_position", part.position)
+			part.set_meta("mechanism_base_rotation", part.rotation)
+			part.set_meta("mechanism_phase", 0.0 if part_name.ends_with("_L") else PI)
+		elif part_name.contains("Engine_SteamPressureOrb_") \
+			or part_name.contains("Engine_SteamPressureHalo_"):
+			_steam_pressure_parts.append(part)
+			part.set_meta("mechanism_base_scale", part.scale)
+			part.set_meta("mechanism_phase", 0.0 if part_name.ends_with("_0") else PI * .64)
+		elif part_name.contains("Engine_SteamPipeValve_") \
+			or part_name.contains("Engine_SteamChimneyEnergyRing"):
+			_steam_valve_parts.append(part)
+			if part_name.contains("Engine_SteamChimneyEnergyRing"):
+				_build_steam_exhaust(part)
+		elif part_name.contains("Engine_CelestialHaloOuterMechanism") \
+			or part_name.contains("Engine_CelestialHaloInnerMechanism"):
+			_celestial_halo_parts.append(part)
+			part.set_meta("mechanism_spin_ratio",
+				-1.35 if part_name.contains("Inner") else 1.0)
 		elif part_name.contains("Engine_BrakeGaugeNeedle_"):
 			_brake_needles.append(part)
 			part.set_meta("mechanism_base_rotation", part.rotation)
@@ -2350,8 +2401,31 @@ func _update_train_mechanisms(delta: float) -> void:
 	for wheel_part in _wheel_mechanism_parts:
 		wheel_part.rotate_x(signed_spin)
 	for steam_gear in _steam_gear_parts:
-		var gear_direction: float = steam_gear.get_meta("mechanism_spin_direction", 1.0)
-		steam_gear.rotate_z(signed_spin * gear_direction * 1.22)
+		var gear_ratio: float = steam_gear.get_meta("mechanism_spin_ratio", 1.0)
+		steam_gear.rotate_z(signed_spin * gear_ratio * 1.22)
+	var steam_phase := _mechanism_time * (2.6 + speed_ratio * 8.4)
+	for rod_part in _steam_rod_parts:
+		var rod_phase: float = rod_part.get_meta("mechanism_phase", 0.0)
+		var rod_motion := sin(steam_phase + rod_phase)
+		var rod_base_position: Vector3 = rod_part.get_meta("mechanism_base_position", Vector3.ZERO)
+		var rod_base_rotation: Vector3 = rod_part.get_meta("mechanism_base_rotation", Vector3.ZERO)
+		rod_part.position = rod_base_position + Vector3(0.0, 0.0, rod_motion * .24)
+		rod_part.rotation = rod_base_rotation + Vector3(rod_motion * .08, 0.0, rod_motion * .12)
+	for pressure_part in _steam_pressure_parts:
+		var pressure_phase: float = pressure_part.get_meta("mechanism_phase", 0.0)
+		var base_pressure_scale: Vector3 = pressure_part.get_meta("mechanism_base_scale", Vector3.ONE)
+		var pressure_pulse := 1.0 + sin(steam_phase * .72 + pressure_phase) \
+			* (.035 + speed_ratio * .075)
+		pressure_part.scale = base_pressure_scale * pressure_pulse
+	for valve_part in _steam_valve_parts:
+		valve_part.rotate_z(delta * (.35 + speed_ratio * 5.8))
+	for halo_part in _celestial_halo_parts:
+		var halo_ratio: float = halo_part.get_meta("mechanism_spin_ratio", 1.0)
+		halo_part.rotate_y(delta * (.22 + speed_ratio * 2.25) * halo_ratio)
+	if _steam_exhaust_particles != null:
+		_steam_exhaust_particles.emitting = true
+		_steam_exhaust_particles.amount_ratio = .12 + speed_ratio * .88
+		_steam_exhaust_particles.speed_scale = .42 + speed_ratio * 1.35
 	var reactor_pulse := 1.0 + speed_ratio * 0.22 \
 		+ sin(_mechanism_time * (3.0 + speed_ratio * 8.0)) * (0.025 + speed_ratio * 0.045)
 	for reactor_part in _reactor_mechanism_parts:
@@ -2362,6 +2436,46 @@ func _update_train_mechanisms(delta: float) -> void:
 		brake_needle.rotation = base_rotation + Vector3(0.0, speed_ratio * 1.85, 0.0)
 	if _train_glow != null:
 		_train_glow.light_energy = 5.0 + speed_ratio * 8.0 + sin(_mechanism_time * 5.0) * 0.4
+
+
+func _build_steam_exhaust(chimney_ring: Node3D) -> void:
+	var exhaust := GPUParticles3D.new()
+	exhaust.name = "SteamOrbChimneyExhaust"
+	exhaust.amount = 42
+	exhaust.lifetime = 2.4
+	exhaust.preprocess = 1.2
+	exhaust.randomness = .42
+	exhaust.fixed_fps = 30
+	exhaust.local_coords = false
+	exhaust.visibility_aabb = AABB(Vector3(-8.0, -2.0, -8.0), Vector3(16.0, 22.0, 16.0))
+	var steam_motion := ParticleProcessMaterial.new()
+	steam_motion.direction = Vector3.UP
+	steam_motion.spread = 18.0
+	steam_motion.initial_velocity_min = 1.8
+	steam_motion.initial_velocity_max = 4.8
+	steam_motion.gravity = Vector3(0.0, .75, 0.0)
+	steam_motion.damping_min = .35
+	steam_motion.damping_max = 1.1
+	steam_motion.scale_min = .55
+	steam_motion.scale_max = 1.65
+	steam_motion.color = Color(0.58, 0.92, 1.0, .46)
+	exhaust.process_material = steam_motion
+	var puff_mesh := SphereMesh.new()
+	puff_mesh.radius = .34
+	puff_mesh.height = .68
+	puff_mesh.radial_segments = 8
+	puff_mesh.rings = 4
+	var puff_material := StandardMaterial3D.new()
+	puff_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	puff_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	puff_material.albedo_color = Color(0.66, 0.94, 1.0, .38)
+	puff_material.emission_enabled = true
+	puff_material.emission = Color(0.24, 0.68, 1.0)
+	puff_material.emission_energy_multiplier = .75
+	puff_mesh.material = puff_material
+	exhaust.draw_pass_1 = puff_mesh
+	chimney_ring.add_child(exhaust)
+	_steam_exhaust_particles = exhaust
 
 
 func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> void:

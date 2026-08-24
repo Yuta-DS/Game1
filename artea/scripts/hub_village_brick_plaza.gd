@@ -6,6 +6,8 @@ const CORNER_RADIUS := 10.0
 const CELL_SIZE := 1.0
 const SURFACE_LIFT := 0.055
 const BRICK_SHADER := preload("res://shaders/village_brick_plaza.gdshader")
+const SELECTED_GROUND_TEXTURE := preload(
+	"res://textures/ground_tiles_13_1k/ground_tiles_13_baseColor_1k.png")
 const WEB_GRID_SIDE := 513
 const WEB_GRID_SPACING := 8.0
 const WEB_HALF_EXTENT := 2048.0
@@ -42,6 +44,7 @@ func _build_plaza() -> void:
 	plaza.mesh = mesh
 	var material := ShaderMaterial.new()
 	material.shader = BRICK_SHADER
+	material.set_shader_parameter("ground_texture", SELECTED_GROUND_TEXTURE)
 	plaza.material_override = material
 	plaza.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(plaza)

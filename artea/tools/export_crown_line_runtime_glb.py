@@ -28,6 +28,15 @@ MECHANISM_MARKERS = (
     "Engine_SteamDriveGear_",
     "Engine_SteamValveGear_",
     "Engine_SteamGovernorGear_",
+    "Engine_SteamGearHub_",
+    "Engine_SteamGearEnergyRing_",
+    "Engine_SteamConnectingRod_",
+    "Engine_SteamPressureOrb_",
+    "Engine_SteamPressureHalo_",
+    "Engine_SteamPipeValve_",
+    "Engine_SteamChimneyEnergyRing",
+    "Engine_CelestialHaloOuterMechanism",
+    "Engine_CelestialHaloInnerMechanism",
     "Engine_BrakeGaugeNeedle_",
 )
 
@@ -51,6 +60,17 @@ RUNTIME_KID_PALETTE = {
     "Energy_Cyan": ((0.370, 0.950, 1.000, 1.0), .04, .24),
     "Energy_Glass": ((0.120, 0.580, 0.720, 1.0), .06, .28),
     "Cab_Clear_Cyan_Glass": ((0.320, 0.840, 0.920, 1.0), .01, .22),
+    "Cab_Warning_Red": ((0.920, 0.060, 0.080, 1.0), .10, .32),
+    "Cab_Warning_Amber": ((1.000, 0.420, 0.060, 1.0), .10, .32),
+    "Cab_Signal_Green": ((0.060, 0.820, 0.300, 1.0), .08, .30),
+    "Engine_Rainbow_Red": ((1.000, 0.120, 0.240, 1.0), .10, .32),
+    "Engine_Rainbow_Orange": ((1.000, 0.380, 0.060, 1.0), .10, .32),
+    "Engine_Rainbow_Yellow": ((1.000, 0.820, 0.080, 1.0), .08, .34),
+    "Engine_Rainbow_Green": ((0.120, 0.820, 0.340, 1.0), .08, .32),
+    "Engine_Rainbow_Blue": ((0.060, 0.320, 1.000, 1.0), .12, .27),
+    "Engine_Rainbow_Indigo": ((0.220, 0.120, 0.720, 1.0), .10, .30),
+    "Engine_Rainbow_Violet": ((0.720, 0.200, 1.000, 1.0), .08, .28),
+    "Engine_Tank_PearlWhite": ((0.985, 0.965, 0.900, 1.0), .08, .24),
     # Nature: fresh mint, leaf green and warm living-root tones.
     "Leaf_Teal": ((0.100, 0.600, 0.340, 1.0), .02, .48),
     "Leaf_Inner_Light": ((0.480, 0.820, 0.340, 1.0), .01, .44),
@@ -93,9 +113,9 @@ for material_name, (base_color, metallic, roughness) in RUNTIME_KID_PALETTE.item
     bsdf.inputs["Base Color"].default_value = base_color
     bsdf.inputs["Metallic"].default_value = metallic
     bsdf.inputs["Roughness"].default_value = roughness
-    if material_name in {"Crown_Gold", "Cover_Rib_EngravedGold"}:
-        # These slots used to be luminous metal. Clear inherited emission so
-        # the matte sandstone stays warm and calm in bright station lighting.
+    if material_name in {"Crown_Gold", "Cover_Rib_EngravedGold", "Engine_Tank_PearlWhite"}:
+        # Clear source-preview illumination so runtime sandstone and pearl-white
+        # surfaces stay physically shaded in the bright station lighting.
         for socket_name in ("Emission Color", "Emission Strength"):
             socket = bsdf.inputs.get(socket_name)
             if socket is not None:
@@ -149,6 +169,33 @@ for obj in bpy.data.objects:
 for obj in list(bpy.data.objects):
     if obj.name.startswith("RENDER_"):
         bpy.data.objects.remove(obj, do_unlink=True)
+
+
+def consolidate_halo_mechanism(part_marker, mechanism_name):
+    """Join one editable halo layer while retaining its centre-ring pivot."""
+    parts = [obj for obj in bpy.data.objects if obj.type == "MESH" and part_marker in obj.name]
+    if not parts:
+        return
+    ring = next((obj for obj in parts if obj.name.endswith("_Ring")), parts[0])
+    world_matrices = {obj: obj.matrix_world.copy() for obj in parts}
+    for obj in parts:
+        obj.parent = None
+        obj.matrix_world = world_matrices[obj]
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in parts:
+        obj.select_set(True)
+    bpy.context.view_layer.objects.active = ring
+    bpy.ops.object.convert(target="MESH")
+    bpy.ops.object.join()
+    ring.name = mechanism_name
+
+
+consolidate_halo_mechanism(
+    "Engine_CelestialHaloOuterPart_", "TRAIN_Engine_CelestialHaloOuterMechanism"
+)
+consolidate_halo_mechanism(
+    "Engine_CelestialHaloInnerPart_", "TRAIN_Engine_CelestialHaloInnerMechanism"
+)
 
 meshes = [obj for obj in bpy.data.objects if obj.type == "MESH" and obj.name.startswith("TRAIN_")]
 mechanisms = [obj for obj in meshes if is_mechanism(obj)]

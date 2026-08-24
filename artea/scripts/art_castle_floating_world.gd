@@ -9,6 +9,8 @@ const BlenderHeartCrystalScene := preload(
 const CrystalBranchCanopyScene := preload("res://assets3D/tree_of_life/canopy/glb/crystal_branch_canopy.glb")
 const PoweredGravityBoughScene := preload("res://assets3D/tree_of_life/gravity_leaf_bough/glb/gravity_leaf_bough_runtime.glb")
 const CastleGalaxyBridgeGateScene := preload("res://assets3D/castle_galaxy_bridge/glb/castle_galaxy_bridge_gate.glb")
+const TreeProcessionalBridgeScene := preload(
+	"res://assets3D/tree_processional_bridge/glb/tree_processional_bridge.glb")
 const FacetedPodLeafStyle := preload(
 	"res://scripts/tree_of_life/leaf_style_faceted_pod.gd")
 const BlossomBudClusterLeafStyle := preload(
@@ -1222,9 +1224,7 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 
 func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
 		end: Vector3, width: float, yaw: float, side_axis: Vector3) -> void:
-	var direction := end - start
-	var length := direction.length()
-	var midpoint := (start + end) * 0.5
+	var length := start.distance_to(end)
 	bridge.set_meta("visual_style", "castle_arcane_tree_of_life_processional")
 	bridge.set_meta("performance_profile", "laptop_cpu_low")
 	bridge.set_meta("processional_length_m", length)
@@ -1232,89 +1232,27 @@ func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
 	bridge.set_meta("botanical_rail_bays", 8)
 	bridge.set_meta("bough_portal_count", 3)
 	bridge.set_meta("collision_policy", "original_continuous_walkway_and_safety_rails")
-
-	# Calm ivory field, living-sap centreline, and paired gold route boundaries.
-	_add_box(bridge, "TreeIvoryProcessionalDeck", midpoint + Vector3.UP * 0.18,
-		Vector3(42.0, 0.36, length - 0.8), _materials.passage_stone, false, yaw)
-	_add_box(bridge, "LivingSapInlay", midpoint + Vector3.UP * 0.39,
-		Vector3(0.72, 0.08, length - 2.0), _materials.passage_light, false, yaw)
-	for side in [-1.0, 1.0]:
-		_add_box(bridge, "GoldRouteBoundary_%+d" % int(side),
-			midpoint + side_axis * float(side) * 20.0 + Vector3.UP * 0.39,
-			Vector3(0.34, 0.10, length - 1.2), _materials.gold, false, yaw)
-
-	var bays := 8
-	var rail_offset := width * 0.5 - 3.25
-	for side in [-1.0, 1.0]:
-		for index in range(bays + 1):
-			var t := float(index) / float(bays)
-			var pylon := start.lerp(end, t) + side_axis * float(side) * rail_offset
-			_add_box(bridge, "TreePylon_%+d_%02d" % [int(side), index],
-				pylon + Vector3.UP * 2.4, Vector3(2.3, 4.8, 2.3),
-				_materials.passage_stone, false, yaw)
-			_add_box(bridge, "TreePylonGoldCap_%+d_%02d" % [int(side), index],
-				pylon + Vector3.UP * 5.05, Vector3(2.8, 0.5, 2.8),
-				_materials.gold, false, yaw)
-			_add_box(bridge, "TreePylonLight_%+d_%02d" % [int(side), index],
-				pylon + Vector3.UP * 6.6, Vector3(0.72, 2.5, 0.72),
-				_materials.passage_light, false, yaw)
-			_add_sphere(bridge, "TreePylonOrb_%+d_%02d" % [int(side), index],
-				pylon + Vector3.UP * 8.05, Vector3(0.72, 0.72, 0.72), _materials.gold)
-
-		for bay in range(bays):
-			var a := start.lerp(end, float(bay) / float(bays)) \
-				+ side_axis * float(side) * rail_offset
-			var b := start.lerp(end, float(bay + 1) / float(bays)) \
-				+ side_axis * float(side) * rail_offset
-			_add_bridge_beam(bridge, "BotanicalRailTop_%+d_%02d" % [int(side), bay],
-				a + Vector3.UP * 5.0, b + Vector3.UP * 5.0, 0.24, _materials.gold)
-			_add_bridge_beam(bridge, "BotanicalVineA_%+d_%02d" % [int(side), bay],
-				a + Vector3.UP * 1.3, b + Vector3.UP * 4.7, 0.18, _materials.gold)
-			_add_bridge_beam(bridge, "BotanicalVineB_%+d_%02d" % [int(side), bay],
-				a + Vector3.UP * 4.7, b + Vector3.UP * 1.3, 0.18, _materials.gold)
-			var leaf_center := a.lerp(b, 0.5) + Vector3.UP * 3.0
-			_add_sphere(bridge, "LivingLeafRelief_%+d_%02d" % [int(side), bay],
-				leaf_center, Vector3(0.18, 0.95, 1.7), _materials.passage_light)
-
-	# Three tall bough portals create a ceremonial rhythm toward the tree while
-	# preserving a 42 m clear processional deck beneath their pointed crowns.
-	for portal_index in 3:
-		var t := 0.24 + float(portal_index) * 0.26
-		var center := start.lerp(end, t)
-		var portal := Node3D.new()
-		portal.name = "TreeBoughPortal_%02d" % portal_index
-		bridge.add_child(portal)
-		var left := center - side_axis * 23.0
-		var right := center + side_axis * 23.0
-		_add_box(portal, "LeftBoughPier", left + Vector3.UP * 7.0,
-			Vector3(2.2, 14.0, 2.2), _materials.passage_stone, false, yaw)
-		_add_box(portal, "RightBoughPier", right + Vector3.UP * 7.0,
-			Vector3(2.2, 14.0, 2.2), _materials.passage_stone, false, yaw)
-		var apex := center + Vector3.UP * 23.0
-		_add_bridge_beam(portal, "LeftGoldenBough", left + Vector3.UP * 14.0,
-			apex, 0.42, _materials.gold)
-		_add_bridge_beam(portal, "RightGoldenBough", right + Vector3.UP * 14.0,
-			apex, 0.42, _materials.gold)
-		_add_sphere(portal, "BoughCrownLight", apex, Vector3(1.45, 1.45, 1.45),
-			_materials.passage_light)
-
-
-func _add_bridge_beam(parent: Node3D, node_name: String, start: Vector3,
-		finish: Vector3, radius: float, material: Material) -> MeshInstance3D:
-	var delta := finish - start
-	var beam := MeshInstance3D.new()
-	beam.name = node_name
-	var mesh := CylinderMesh.new()
-	mesh.top_radius = radius
-	mesh.bottom_radius = radius
-	mesh.height = delta.length()
-	mesh.radial_segments = 4
-	beam.mesh = mesh
-	beam.position = (start + finish) * 0.5
-	beam.quaternion = Quaternion(Vector3.UP, delta.normalized())
-	beam.material_override = material
-	parent.add_child(beam)
-	return beam
+	bridge.set_meta("blender_editable_module_count", 689)
+	bridge.set_meta("blender_runtime_mesh_group_count", 9)
+	bridge.set_meta("bridge_runtime_triangle_count", 26116)
+	bridge.set_meta("clear_gameplay_lane_m", 42.0)
+	bridge.set_meta("maximum_portal_height_m", 28.046)
+	var asset_holder := Node3D.new()
+	asset_holder.name = "ReferenceTreeProcessionalBridge"
+	# Blender +Y imports as Godot -Z, which matches this route from z=1422 to
+	# z=975 exactly. Its paver top sits 23 cm above the tested collision deck.
+	asset_holder.position = start
+	asset_holder.rotation.y = yaw + PI
+	asset_holder.set_meta("source_blend",
+		"res://assets3D/tree_processional_bridge/blend/tree_processional_bridge.blend")
+	asset_holder.set_meta("source_glb",
+		"res://assets3D/tree_processional_bridge/glb/tree_processional_bridge.glb")
+	asset_holder.set_meta("visual_only", true)
+	bridge.add_child(asset_holder)
+	var blender_asset := TreeProcessionalBridgeScene.instantiate() as Node3D
+	if blender_asset != null:
+		blender_asset.name = "BlenderTreeProcessionalBridge"
+		asset_holder.add_child(blender_asset)
 
 
 func _build_life_tree(parent: Node3D, center: Vector3) -> void:

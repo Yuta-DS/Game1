@@ -49,15 +49,21 @@ func _run() -> void:
 		"player breadcrumbs retain the safe route order")
 
 	await physics_frame
+	var first_step_speed := Vector2(milo.velocity.x, milo.velocity.z).length()
 	await physics_frame
+	var second_step_speed := Vector2(milo.velocity.x, milo.velocity.z).length()
 	_check(str(milo.call("get_companion_state_name")) == "CATCHING_UP",
 		"a distant Milo enters the catch-up state (got %s at %.2fm)" % [
 			str(milo.call("get_companion_state_name")),
 			milo.global_position.distance_to(player.global_position)])
 	var locomotion_player := milo.find_child("AnimationPlayer", true, false) \
 		as AnimationPlayer
-	_check(locomotion_player != null and locomotion_player.current_animation == "Run",
-		"a distant Milo uses the authored running cycle while catching up")
+	_check(locomotion_player != null and locomotion_player.current_animation == "Cane_Walk",
+		"a distant Milo keeps the supported cane gait instead of switching to a human sprint")
+	_check(first_step_speed > 0.01 and first_step_speed < float(milo.get("catch_up_speed")) * 0.4,
+		"Milo eases into movement instead of jumping to full running speed")
+	_check(second_step_speed > first_step_speed,
+		"Milo accelerates progressively across physics frames")
 	var start_distance := milo.global_position.distance_to(player.global_position)
 	for _frame in 720:
 		await physics_frame
@@ -69,6 +75,20 @@ func _run() -> void:
 	_check(str(milo.call("get_companion_state_name")) == "IDLE_NEAR_PLAYER",
 		"Milo stops instead of crowding the player (got %s)" % str(
 			milo.call("get_companion_state_name")))
+
+	# Stopping also eases out instead of zeroing the body velocity in one frame.
+	milo.velocity = Vector3(1.5, 0.0, 0.0)
+	milo.set("companion_state", 2) # CompanionState.FOLLOWING
+	milo.set("_follow_active", false)
+	milo.set("_previous_player_position", player.global_position)
+	await physics_frame
+	var eased_stop_speed := Vector2(milo.velocity.x, milo.velocity.z).length()
+	_check(eased_stop_speed > 0.01 and eased_stop_speed < 1.5,
+		"Milo eases out of movement instead of snapping to a stop")
+	for _frame in 30:
+		await physics_frame
+	_check(Vector2(milo.velocity.x, milo.velocity.z).length() < 0.01,
+		"Milo settles fully after the short deceleration")
 
 	# Castle height is not a teleport. A breadcrumb directly above Milo must stay
 	# in the route, and ordinary multi-level traversal cannot pop Milo upstairs.
@@ -144,5 +164,5 @@ func _run() -> void:
 		push_error("MILO_COMPANION_FOLLOW_TEST: %d failure(s)" % _failures)
 		quit(1)
 		return
-	print("MILO_COMPANION_FOLLOW_TEST: PASS — breadcrumb following, catch-up, stop distance, non-blocking body, teleport recovery, and scene manager")
+	print("MILO_COMPANION_FOLLOW_TEST: PASS — eased acceleration and stopping, breadcrumb following, catch-up, non-blocking body, teleport recovery, and scene manager")
 	quit()

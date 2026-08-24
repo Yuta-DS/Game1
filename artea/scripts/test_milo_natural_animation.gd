@@ -17,6 +17,16 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
+	var floor := StaticBody3D.new()
+	floor.name = "MiloGroundingTestFloor"
+	floor.collision_layer = 1
+	var floor_shape := CollisionShape3D.new()
+	var floor_box := BoxShape3D.new()
+	floor_box.size = Vector3(12.0, 0.10, 12.0)
+	floor_shape.shape = floor_box
+	floor_shape.position.y = -0.05
+	floor.add_child(floor_shape)
+	root.add_child(floor)
 	var player := CharacterBody3D.new()
 	player.name = "NewPlayer"
 	player.add_to_group("player")
@@ -28,6 +38,32 @@ func _run() -> void:
 	root.add_child(milo)
 	await process_frame
 	milo.call("set_companion_player", player, false)
+	var locomotion_player := milo.find_child("AnimationPlayer", true, false) \
+		as AnimationPlayer
+	var cane_clip := locomotion_player.get_animation("Cane_Walk") \
+		if locomotion_player != null else null
+	_check(cane_clip != null and cane_clip.get_track_count() >= 14,
+		"Milo retargets the town NPC's baked torso and lower-body walk")
+	if cane_clip != null:
+		for track_index in cane_clip.get_track_count():
+			_check(str(cane_clip.track_get_path(track_index)).begins_with(
+				"MiloExactTargetRig/Skeleton3D:"),
+				"retargeted NPC tracks address Milo's live skeleton")
+	_check(milo.find_child("LegIK_L", true, false) is TwoBoneIK3D \
+			and milo.find_child("LegIK_R", true, false) is TwoBoneIK3D,
+		"deterministic two-bone constraints ground both legs after animation")
+	_check(milo.find_child("CaneArmIK", true, false) is TwoBoneIK3D,
+		"the cane hand follows the planted prop through its own arm constraint")
+	milo.set("_cane_cycle_time", 0.25 * 1.28)
+	_check(float(milo.call("get_foot_contact_weight", "l")) > 0.95 \
+			and float(milo.call("get_foot_contact_weight", "r")) < 0.05,
+		"the left stance foot owns the first supported half-stride")
+	_check(float(milo.call("get_cane_contact_weight")) > 0.95,
+		"the cane is planted with the contralateral left stance foot")
+	milo.call("_reset_cane_gait")
+	milo.call("_advance_cane_gait", 0.10, 1.40)
+	_check(absf(float(milo.call("get_gait_phase")) - 0.10) < 0.002,
+		"gait phase advances from real distance rather than an unrelated timer")
 
 	for side in ["L", "R"]:
 		for prefix in ["EyelidRelaxed", "EyelidHalf", "EyelidClosed",
@@ -73,19 +109,46 @@ func _run() -> void:
 
 	# Sample a quarter-stride where weight has moved visibly across the body.
 	milo.call("_set_companion_state", 2) # FOLLOWING
+	milo.velocity = Vector3(1.0, 0.0, 0.0)
 	milo.set("_cane_cycle_time", 0.29)
+	locomotion_player.play("Cane_Walk")
+	locomotion_player.seek(0.27, true)
+	locomotion_player.advance(0.0)
 	for _frame in 12:
 		milo.call("_update_secondary_motion", 1.0 / 60.0)
+		milo.call("_update_terrain_grounding", 1.0 / 60.0)
+	var left_leg_ik := milo.find_child("LegIK_L", true, false) as TwoBoneIK3D
+	var cane_arm_ik := milo.find_child("CaneArmIK", true, false) as TwoBoneIK3D
+	_check(left_leg_ik != null and left_leg_ik.get_influence() > 0.5,
+		"the planted stance leg is constrained to real floor geometry")
+	_check(cane_arm_ik != null and cane_arm_ik.get_influence() > 0.5,
+		"the cane hand stays constrained to its moving grip during support")
 	var walk_offset: Vector3 = milo.call("get_secondary_motion_offset")
 	var foot_offset: Vector3 = milo.call("get_left_foot_motion_offset")
-	_check(walk_offset.y > 0.008 and absf(walk_offset.x) > 0.003,
-		"walking transfers body weight vertically and laterally")
-	_check(walk_offset.length() < 0.035,
-		"secondary gait polish stays restrained and cannot detach the feet")
-	_check(foot_offset.y > 0.015 and absf(foot_offset.z) > 0.025,
-		"the leading shoe has a visible lift and forward footfall")
+	var left_thigh: Vector3 = milo.call("get_rig_bone_pose_angle", "upperleg.l")
+	var right_thigh: Vector3 = milo.call("get_rig_bone_pose_angle", "upperleg.r")
+	var left_knee: Vector3 = milo.call("get_rig_bone_pose_angle", "lowerleg.l")
+	var right_knee: Vector3 = milo.call("get_rig_bone_pose_angle", "lowerleg.r")
+	var cane_arm: Vector3 = milo.call("get_procedural_gait_angle", "upperarm.l")
+	var free_arm: Vector3 = milo.call("get_procedural_gait_angle", "upperarm.r")
+	_check(absf(walk_offset.x) > 0.002 and walk_offset.length() < 0.020,
+		"walking transfers restrained body weight without exaggerated bobbing")
+	_check(foot_offset.length() < 0.001,
+		"skinned shoes stay attached to the rig instead of moving as whole meshes")
+	_check(left_thigh.distance_to(right_thigh) > 8.0,
+		"NPC leg curves retarget as an alternating stride on Milo")
+	_check(maxf(left_knee.length(), right_knee.length()) > 8.0,
+		"the NPC recovery curve folds one knee instead of leaving rigid legs")
+	_check(absf(cane_arm.x) < absf(free_arm.x) * 0.65,
+		"the cane arm stays supported while the free arm counter-swings")
+	var walking_curls: Dictionary = milo.call("get_hand_curl_amounts")
+	_check(float(walking_curls.get("Paw_R", 0.0)) > 0.65,
+		"the visible cane paw keeps a secure whole-hand grip while walking")
+	_check(float(walking_curls.get("Paw_L", 1.0)) < 0.35,
+		"the free paw remains relaxed enough to counter-swing")
 
 	milo.call("_set_companion_state", 1) # IDLE_NEAR_PLAYER
+	milo.velocity = Vector3.ZERO
 	for _frame in 90:
 		milo.call("_update_secondary_motion", 1.0 / 60.0)
 	var settled_offset: Vector3 = milo.call("get_secondary_motion_offset")
@@ -118,10 +181,11 @@ func _run() -> void:
 
 	milo.queue_free()
 	player.queue_free()
+	floor.queue_free()
 	await process_frame
 	if _failures > 0:
 		push_error("MILO_NATURAL_ANIMATION_TEST: %d failure(s)" % _failures)
 		quit(1)
 		return
-	print("MILO_NATURAL_ANIMATION_TEST: PASS — eyelids, blink, focus, grounding, stride weight, and smooth idle settling")
+	print("MILO_NATURAL_ANIMATION_TEST: PASS — NPC-retargeted leg curves, cane-arm overlay, grounding, blink, focus, and smooth idle settling")
 	quit()
