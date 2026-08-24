@@ -1,10 +1,6 @@
 extends CharacterBody3D
 
-# --- AUDIO NODES & RESOURCES ---
-@onready var footstep_player = $FootstepPlayer
 @onready var floor_detector = $FloorDetector 
-
-@onready var sfx_grass = preload("res://assets/SFX/grasswalk.ogg") 
 
 # --- JUMP VARIABLES ---
 @export var jump_height : float = 2.25
@@ -65,13 +61,6 @@ func _ready() -> void:
 	
 	floor_detector.add_exception(self)
 	
-	# --- OPTIMIZED AUDIO SETTINGS ---
-	if footstep_player is AudioStreamPlayer3D:
-		footstep_player.volume_db = -4.0
-		footstep_player.max_distance = 24.0
-		footstep_player.unit_size = 6.0
-		footstep_player.panning_strength = 0.5
-		
 func _input(event: InputEvent) -> void:
 	# Toggle inventory with I key
 	if event.is_action_pressed("toggle_Inventory"):
@@ -279,29 +268,6 @@ func moveLogic(delta) -> void:
 				locomotion = "Walk"
 			_play_locomotion_animation(locomotion, 1.05 if isRunning else 0.72)
 		
-		# --- FOOTSTEP LOGIC FIX ---
-		if is_on_floor():
-			if floor_detector.is_colliding():
-				var ground = floor_detector.get_collider()
-				# Check the collider or its parent for the grass group
-				var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
-				
-				
-				if is_grass:
-					if footstep_player.stream != sfx_grass:
-						footstep_player.stream = sfx_grass
-					
-					if not footstep_player.playing:
-						# Random pitch makes steps stand out against wind
-						footstep_player.pitch_scale = randf_range(0.9, 1.1)
-						footstep_player.play()
-				else:
-					if footstep_player.playing:
-						footstep_player.stop()
-		else:
-			if footstep_player.playing:
-				footstep_player.stop()
-
 		var targetAngle = -movementInput.angle() + PI/2
 		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
 	else:
@@ -309,8 +275,6 @@ func moveLogic(delta) -> void:
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
 		_play_locomotion_animation("Idle", 1.0)
-		if footstep_player.playing:
-			footstep_player.stop()
 
 
 func _play_locomotion_animation(animation_name: String, speed_scale: float) -> void:

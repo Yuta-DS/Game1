@@ -63,11 +63,33 @@ func _run() -> void:
 	if gallery_station_global.z <= 10.0:
 		_fail("Crown Line station still sits behind the Art Castle wall")
 		return
-	var approach_bridge := world.get_node_or_null("ArtCastleEntranceBridge175m") as Node3D
+	var approach_bridge := world.get_node_or_null("CastleToGalaxyBridge175m") as Node3D
 	if approach_bridge == null or approach_bridge.get_node_or_null("ContinuousWalkway") == null \
 			or approach_bridge.get_node_or_null("SafetyRailLeft") == null \
 			or approach_bridge.get_node_or_null("SafetyRailRight") == null:
 		_fail("175m Art Castle approach bridge is missing walkway or safety rails")
+	var front_gate := approach_bridge.get_node_or_null("ReferenceFrontGate") as Node3D
+	var blender_asset := front_gate.get_node_or_null("BlenderCastleGalaxyBridgeGate") \
+			if front_gate != null else null
+	if front_gate == null or blender_asset == null \
+			or String(front_gate.get_meta("source_blend", "")).get_extension() != "blend" \
+			or int(approach_bridge.get_meta("blender_editable_module_count", 0)) < 1200 \
+			or String(approach_bridge.get_meta("bridge_performance_profile", "")) \
+					!= "laptop_cpu_low" \
+			or int(approach_bridge.get_meta("bridge_runtime_triangle_count", 999999)) >= 130000 \
+			or int(approach_bridge.get_meta("blender_runtime_mesh_group_count", 0)) > 16:
+		_fail("bridge is not using the laptop-optimized Blender modular asset")
+		return
+	if float(front_gate.get_meta("clear_opening_width_m", 0.0)) < 13.6 \
+			or float(front_gate.get_meta("gate_outer_width_m", 0.0)) < 40.0 \
+			or float(front_gate.get_meta("gate_finial_height_m", 0.0)) < 50.0 \
+			or float(front_gate.get_meta("rear_wall_setback_m", 0.0)) < 150.0 \
+			or not front_gate.find_children("*", "StaticBody3D", true, false).is_empty():
+		_fail("enlarged front gate scale, setback, or clear bridge route is incorrect")
+		return
+	if approach_bridge.get_meta("visual_progression", "") \
+			!= "reference_masonry_gate_to_galaxy_light":
+		_fail("bridge does not use the supplied masonry-and-gate reference language")
 		return
 	var walkway := approach_bridge.get_node("ContinuousWalkway") as MeshInstance3D
 	var walkway_mesh := walkway.mesh as BoxMesh

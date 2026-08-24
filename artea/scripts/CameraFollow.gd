@@ -115,13 +115,13 @@ func _input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_zoom_by(zoom_step)
 
-	# 1 = first person, 2 = third person. Matched on physical keycode so the
-	# binding survives non-QWERTY layouts, the same way the project binds Q/W/S.
+	# 1 and 2 are reserved for Crown Line drive/passenger selection. Camera view
+	# switching remains available on 3 and 4.
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).physical_keycode
-		if key == KEY_1:
+		if key == KEY_3:
 			set_view_mode("first")
-		elif key == KEY_2:
+		elif key == KEY_4:
 			set_view_mode("third")
 
 	# Escape releases the cursor so the player can reach menus; clicking back in

@@ -85,7 +85,7 @@ func _build_art_explore_marker() -> void:
 	_prompt.name = "ArtExploreMarker"
 	_prompt.text = "✦ ART EXPLORE ✦\nENTER THE GALLERY"
 	_prompt.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_prompt.no_depth_test = true
+	_prompt.no_depth_test = false
 	_prompt.modulate = Color(1.0, 0.93, 0.75)
 	_prompt.outline_modulate = Color(0.12, 0.16, 0.25, 0.95)
 	_prompt.outline_size = 10

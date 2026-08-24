@@ -52,6 +52,19 @@ var _env: Environment = null
 var _fill_light: DirectionalLight3D = null
 
 
+func _enter_tree() -> void:
+	if not OS.has_feature("web"):
+		return
+	# PackedScene has constructed the complete hub hierarchy before the root is
+	# inserted into the SceneTree. Remove Terrain3D now, before that child
+	# receives NOTIFICATION_ENTER_TREE and asks WebGL for a uniform block larger
+	# than the platform limit. WebTerrainCompatibility supplies the visible
+	# compact mesh and heightmap collision later in the same frame.
+	var compatibility := get_node_or_null("WebTerrainCompatibility")
+	if compatibility != null:
+		compatibility.call("_disable_native_terrain_material")
+
+
 func _ready() -> void:
 	_build_outdoor_minimap()
 	# The day/night AnimationPlayer animates light_energy every frame, so a

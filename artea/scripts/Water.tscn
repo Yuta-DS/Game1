@@ -6,6 +6,8 @@
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_4nnwq"]
 size = Vector2(1000, 1000)
+subdivide_width = 120
+subdivide_depth = 120
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_xt0xg"]
 noise_type = 3
@@ -31,23 +33,23 @@ noise = SubResource("FastNoiseLite_qsqs7")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_7edey"]
 render_priority = 0
 shader = ExtResource("1_4nnwq")
-shader_parameter/time_speed = 0.01
-shader_parameter/surface_speed = 1.0
+shader_parameter/time_speed = 0.35
+shader_parameter/surface_speed = 0.025
 shader_parameter/spin = 0.08
-shader_parameter/brightness = 0.6
-shader_parameter/color_intensity = 0.0
+shader_parameter/brightness = 0.82
+shader_parameter/color_intensity = 0.35
 shader_parameter/horizontal_frequency = 2.0
 shader_parameter/vertical_frequency = 2.0
 shader_parameter/size = 3.0
 shader_parameter/banding_bias = 0.66
 shader_parameter/wave_texture = SubResource("NoiseTexture2D_rrwdp")
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_4nnwq")
-shader_parameter/wave_height = 0.1
-shader_parameter/texture_height = 0.1
-shader_parameter/color1 = Color(0.59, 0.761, 1, 1)
-shader_parameter/color2 = Color(0.274, 0.474, 0.98, 1)
-shader_parameter/color3 = Color(0.059, 0.389, 0.85, 1)
-shader_parameter/color4 = Color(0, 0.267, 1, 1)
+shader_parameter/wave_height = 0.45
+shader_parameter/texture_height = 0.12
+shader_parameter/color1 = Color(0.38, 0.76, 0.84, 1)
+shader_parameter/color2 = Color(0.1, 0.48, 0.66, 1)
+shader_parameter/color3 = Color(0.025, 0.25, 0.43, 1)
+shader_parameter/color4 = Color(0.015, 0.12, 0.24, 1)
 
 [sub_resource type="TorusMesh" id="TorusMesh_xt0xg"]
 inner_radius = 0.784
@@ -55,11 +57,13 @@ inner_radius = 0.784
 [node name="Node3D" type="Node3D" unique_id=1141068562]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=421923215]
+position = Vector3(0, 0.75, 0)
 mesh = SubResource("PlaneMesh_4nnwq")
 surface_material_override/0 = SubResource("ShaderMaterial_7edey")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=1204032903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.97995, 0)
+visible = false
 mesh = SubResource("TorusMesh_xt0xg")
 surface_material_override/0 = SubResource("ShaderMaterial_7edey")
 

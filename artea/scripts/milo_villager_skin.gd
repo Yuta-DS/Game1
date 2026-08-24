@@ -18,6 +18,32 @@ func is_market_cast_style() -> bool:
 
 
 func _ready() -> void:
+	# The speaking shapes are exported as ordinary rigged meshes. They start
+	# hidden everywhere; the live companion controller reveals them only while
+	# Milo is presenting dialogue.
+	var mouth_small := find_child("MouthOpenSmall", true, false) as GeometryInstance3D
+	var mouth_wide := find_child("MouthOpenWide", true, false) as GeometryInstance3D
+	var tongue_small := find_child("TongueSmall", true, false) as GeometryInstance3D
+	var tongue_wide := find_child("TongueWide", true, false) as GeometryInstance3D
+	if mouth_small != null:
+		mouth_small.visible = false
+	if mouth_wide != null:
+		mouth_wide.visible = false
+	if tongue_small != null:
+		tongue_small.visible = false
+	if tongue_wide != null:
+		tongue_wide.visible = false
+	# Relaxed upper lids remain visible at rest. The two deeper blink cards are
+	# controlled by the live companion and must never stack in static previews.
+	for side in ["L", "R"]:
+		var half_lid := find_child("EyelidHalf_%s" % side, true, false) \
+			as GeometryInstance3D
+		var closed_lid := find_child("EyelidClosed_%s" % side, true, false) \
+			as GeometryInstance3D
+		if half_lid != null:
+			half_lid.visible = false
+		if closed_lid != null:
+			closed_lid.visible = false
 	var animation_player := find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if animation_player == null:
 		return

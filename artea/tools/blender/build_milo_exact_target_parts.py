@@ -252,6 +252,20 @@ def surface_panel(name, front_outline, thickness, mat, bone, collection,
     return prism(name, verts, faces, mat, bone, collection, bevel)
 
 
+def vector_extruded_panel(name, front_outline, extrusion, mat, bone,
+                          collection, bevel=0.0):
+    """Extrude a fitted panel along an arbitrary vector (used at coat sides)."""
+    count = len(front_outline)
+    offset = Vector(extrusion)
+    verts = list(front_outline)
+    verts += [tuple(Vector(point) + offset) for point in front_outline]
+    faces = [tuple(range(count))[::-1], tuple(range(count, count * 2))]
+    for index in range(count):
+        next_index = (index + 1) % count
+        faces.append((index, next_index, count + next_index, count + index))
+    return prism(name, verts, faces, mat, bone, collection, bevel)
+
+
 def tapered_panel(name, front_outline, back_depths, mat, bone, collection,
                   bevel=0.0):
     """Extrude a panel with per-vertex depth so pointed forms taper in 3D."""
@@ -524,6 +538,154 @@ def weighted_tapered_limb(name, rings, ring_weights, mat, collection,
     return obj
 
 
+def faceted_mitten_paw(name, center_x, center_z, side, style, mat, bone,
+                       collection):
+    """Sculpt one fused hand volume, then recess its front finger grooves.
+
+    Metaballs create one watertight palm/thumb/finger skin. Boolean impressions
+    are then carved only into its front surface, matching the reference's real
+    sculpted separations without adding any visible or disconnected objects.
+    """
+    field = bpy.data.metaballs.new(name + "SculptField")
+    field.resolution = 0.010
+    field.render_resolution = 0.008
+    field.threshold = 0.62
+    field_obj = bpy.data.objects.new(name + "SculptField", field)
+    bpy.context.scene.collection.objects.link(field_obj)
+
+    def add_field(offset_x, offset_z, radius):
+        element = field.elements.new()
+        element.co = (center_x + offset_x * side, -0.040,
+                      center_z + offset_z)
+        element.radius = radius
+        element.stiffness = 2.0
+
+    # Four overlapping palm fields make a broad rounded box rather than a ball.
+    for offset_x in (-0.032, 0.032):
+        add_field(offset_x, 0.034, 0.084)
+        add_field(offset_x, -0.026, 0.082)
+    # Three lower fields form soft fingertip volumes in the same fused skin.
+    finger_z = -0.066 if style == "relaxed" else -0.071
+    add_field(-0.048, finger_z, 0.035)
+    add_field(0.000, finger_z - 0.002, 0.037)
+    add_field(0.048, finger_z, 0.035)
+    # Two overlapping fields make a vertical thumb mound on the body-facing
+    # edge. They are converted together with the palm, never attached later.
+    add_field(-0.120, -0.012, 0.048)
+    add_field(-0.116, 0.034, 0.047)
+
+    bpy.ops.object.select_all(action="DESELECT")
+    field_obj.select_set(True)
+    bpy.context.view_layer.objects.active = field_obj
+    bpy.ops.object.convert(target="MESH")
+    paw = bpy.context.object
+    paw.data.name = name + "Mesh"
+    # Fit the implicit surface to the measured front envelope and retain enough
+    # depth for a soft dome. Metaball radii evaluate smaller than their nominal
+    # field size at this threshold, so the fitted factors are deliberate.
+    for vertex in paw.data.vertices:
+        vertex.co.x = center_x + (vertex.co.x - center_x) * 1.20
+        vertex.co.y = -0.040 + (vertex.co.y + 0.040) * 1.76
+        vertex.co.z = center_z + (vertex.co.z - center_z) * 1.18
+    paw.data.update()
+
+    def carve_front_groove(cutter_name, location, scale, rotation=(0, 0, 0)):
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            segments=16, ring_count=8, location=location, rotation=rotation)
+        cutter = bpy.context.object
+        cutter.name = cutter_name
+        cutter.scale = scale
+        bpy.context.view_layer.objects.active = cutter
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        modifier = paw.modifiers.new(cutter_name + "Difference", "BOOLEAN")
+        modifier.operation = "DIFFERENCE"
+        modifier.solver = "EXACT"
+        modifier.object = cutter
+        bpy.context.view_layer.objects.active = paw
+        paw.select_set(True)
+        bpy.ops.object.modifier_apply(modifier=modifier.name)
+        bpy.data.objects.remove(cutter, do_unlink=True)
+
+    # Two narrow bottom-up impressions separate three fingers. The relaxed
+    # hand uses shallower grooves; the cane grip receives stronger definition.
+    groove_depth = 0.032 if style == "relaxed" else 0.038
+    groove_height = 0.025 if style == "relaxed" else 0.032
+    for groove_x in (-0.026, 0.026):
+        carve_front_groove(
+            name + "FingerGroove", (center_x + groove_x * side, -0.122,
+                                     center_z - 0.070),
+            (0.006, groove_depth, groove_height))
+    # A longer, slightly angled recess clearly separates the vertical thumb
+    # mound from the palm while leaving the back of the one-piece mesh intact.
+    carve_front_groove(
+        name + "ThumbGroove", (center_x - 0.112 * side, -0.120,
+                                center_z + 0.006),
+        (0.009, 0.045, 0.050),
+        rotation=(0.0, math.radians(-6.0 * side), 0.0))
+
+    # Reduce the implicit surface to the established soft low-poly density.
+    decimate = paw.modifiers.new(name + "LowPoly", "DECIMATE")
+    decimate.ratio = 0.34
+    bpy.context.view_layer.objects.active = paw
+    bpy.ops.object.modifier_apply(modifier=decimate.name)
+    paw.data.materials.clear()
+    paw = finish(paw, name, mat, bone, collection, smooth=True)
+    paw.shape_key_add(name="Basis", from_mix=False)
+    curl_key = paw.shape_key_add(name="FingerCurl", from_mix=False)
+    for vertex in curl_key.data:
+        canonical_x = (vertex.co.x - center_x) * side
+        lower_amount = max(0.0, min(1.0,
+                           (center_z - 0.025 - vertex.co.z) / 0.078))
+        if canonical_x > -0.100 and lower_amount > 0.0:
+            vertex.co.z += 0.036 * lower_amount
+            vertex.co.y -= 0.026 * lower_amount
+        elif canonical_x <= -0.100 and lower_amount > 0.0:
+            # The integrated thumb closes more subtly with the finger row.
+            vertex.co.x += 0.016 * side * lower_amount
+            vertex.co.z += 0.012 * lower_amount
+    paw["milo_design_role"] = "%s unified sculpted hand" % style
+    paw["continuous_hand_mesh"] = True
+    paw["finger_lobe_count"] = 3
+    paw["thumb_integrated"] = True
+    paw["front_thumb_gap_depth"] = 0.022
+    paw["front_thumb_gap_recess"] = 0.045
+    paw["curl_shape_key"] = "FingerCurl"
+    paw["sculpted_front_grooves"] = 3
+    paw["grip_axis_x"] = center_x + 0.010 * side
+    return paw
+
+
+def verify_unified_hand_fit(paw, style):
+    """Prove the hand is one connected mesh with one whole-hand curl target."""
+    adjacency = {vertex.index: set() for vertex in paw.data.vertices}
+    for edge in paw.data.edges:
+        a, b = edge.vertices
+        adjacency[a].add(b)
+        adjacency[b].add(a)
+    visited = set()
+    pending = [0]
+    while pending:
+        index = pending.pop()
+        if index in visited:
+            continue
+        visited.add(index)
+        pending.extend(adjacency[index] - visited)
+    if len(visited) != len(paw.data.vertices):
+        raise RuntimeError(f"{paw.name} contains disconnected finger pieces")
+    if paw.data.shape_keys is None or "FingerCurl" not in paw.data.shape_keys.key_blocks:
+        raise RuntimeError(f"{paw.name} lacks its unified finger curl deformation")
+    gap_depth = float(paw.get("front_thumb_gap_depth", 0.0))
+    if gap_depth < 0.015 or gap_depth > 0.030:
+        raise RuntimeError(f"{paw.name} front thumb gap is not readable: {gap_depth}")
+    gap_recess = float(paw.get("front_thumb_gap_recess", 0.0))
+    if gap_recess < 0.035 or gap_recess > 0.050:
+        raise RuntimeError(f"{paw.name} front thumb crease is not sculpted: {gap_recess}")
+    verify_reference_hand_fit(paw, style)
+    print(f"MILO_UNIFIED_HAND: {style} one connected object, "
+          f"{len(paw.data.vertices)} vertices, thumb gap {gap_depth:.3f}, "
+          f"recess {gap_recess:.3f}")
+
+
 def horizontal_tapered_form(name, rings, mat, bone, collection,
                             segments=10, smooth=False):
     """Create a swept leaf form from elliptical Y/Z cross-sections."""
@@ -550,6 +712,49 @@ def horizontal_tapered_form(name, rings, mat, bone, collection,
     obj = bpy.data.objects.new(name, mesh)
     collection.objects.link(obj)
     return finish(obj, name, mat, bone, collection, smooth=smooth)
+
+
+def depth_tapered_form(name, rings, mat, bone, collection,
+                       segments=10, smooth=False):
+    """Create a swept fur/leaf form using elliptical X/Z cross-sections."""
+    verts = []
+    for center_x, center_y, center_z, radius_x, radius_z in rings:
+        for index in range(segments):
+            angle = 2.0 * math.pi * index / segments
+            verts.append((center_x + radius_x * math.cos(angle),
+                          center_y,
+                          center_z + radius_z * math.sin(angle)))
+    faces = [tuple(range(segments))[::-1]]
+    for ring_index in range(len(rings) - 1):
+        start = ring_index * segments
+        next_start = start + segments
+        for index in range(segments):
+            next_index = (index + 1) % segments
+            faces.append((start + index, start + next_index,
+                          next_start + next_index, next_start + index))
+    last_start = (len(rings) - 1) * segments
+    faces.append(tuple(range(last_start, last_start + segments)))
+    mesh = bpy.data.meshes.new(name + "Mesh")
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    collection.objects.link(obj)
+    return finish(obj, name, mat, bone, collection, smooth=smooth)
+
+
+def head_back_point(x, z, clearance=0.0):
+    """Sample Milo's rear head ellipsoid for blueprint-locked scalp plates."""
+    center_y = -0.005
+    center_z = 1.51
+    radius_x = 0.46
+    radius_y = 0.35
+    radius_z = 0.43
+    remaining = (1.0 - (x / radius_x) ** 2
+                 - ((z - center_z) / radius_z) ** 2)
+    if remaining < -1e-5:
+        raise ValueError(f"rear-hair point falls outside head: {x}, {z}")
+    return (x, center_y + radius_y * math.sqrt(max(0.0, remaining))
+            + clearance, z)
 
 
 def coat_ring_dimensions_at_z(z, ring_specs):
@@ -732,25 +937,58 @@ def verify_cane_palm_clearance(paw_rings, cane_bottom, cane_top,
     print(f"MILO_CANE_PALM_CLEARANCE: {closest:.6f}")
 
 
-def verify_cane_fist_alignment(paw_rings, cane_top, maximum_offset=0.010):
-    """Prove the cane terminates centrally inside the closed fist silhouette."""
+def verify_cane_fist_alignment(paw, cane_top, maximum_offset=0.012):
+    """Prove the cane terminates centrally inside the actual mitten mesh."""
     top = Vector(cane_top)
-    lower_ring = None
-    upper_ring = None
-    for first, second in zip(paw_rings, paw_rings[1:]):
-        if first[2] >= top.z >= second[2]:
-            upper_ring, lower_ring = first, second
-            break
-    if lower_ring is None or upper_ring is None:
+    bounds = [paw.matrix_world @ Vector(corner) for corner in paw.bound_box]
+    minimum_z = min(point.z for point in bounds)
+    maximum_z = max(point.z for point in bounds)
+    if not minimum_z <= top.z <= maximum_z:
         raise RuntimeError("Mayor cane top does not terminate inside the fist")
-    height_t = ((top.z - lower_ring[2]) /
-                (upper_ring[2] - lower_ring[2]))
-    palm_x = lower_ring[0] + (upper_ring[0] - lower_ring[0]) * height_t
+    palm_x = float(paw.get("grip_axis_x",
+                           (min(point.x for point in bounds)
+                            + max(point.x for point in bounds)) * 0.5))
     offset = abs(top.x - palm_x)
     if offset > maximum_offset:
         raise RuntimeError(
             f"Mayor cane is not centered under fist: offset {offset:.6f}")
     print(f"MILO_CANE_FIST_ALIGNMENT: {offset:.6f}")
+
+
+def verify_reference_hand_fit(paw, style):
+    """Prove the unified sculpted hand keeps the blueprint proportions."""
+    paw_bounds = [paw.matrix_world @ Vector(corner) for corner in paw.bound_box]
+    paw_min = Vector((min(point.x for point in paw_bounds),
+                      min(point.y for point in paw_bounds),
+                      min(point.z for point in paw_bounds)))
+    paw_max = Vector((max(point.x for point in paw_bounds),
+                      max(point.y for point in paw_bounds),
+                      max(point.z for point in paw_bounds)))
+    size = paw_max - paw_min
+    if (size.x < 0.24 or size.x > 0.28 or size.y < 0.16
+            or size.y > 0.20 or size.z < 0.20 or size.z > 0.23):
+        raise RuntimeError(
+            f"{paw.name} lost the rounded reference proportions: {size}")
+    print(f"MILO_REFERENCE_HAND_FIT: {style} size={size}")
+
+
+def verify_trouser_continuity(trouser, boot, coat_bottom=0.240):
+    """Prove each trouser leg bridges the coat hem and its matching boot."""
+    trouser_bounds = [trouser.matrix_world @ Vector(corner)
+                      for corner in trouser.bound_box]
+    boot_bounds = [boot.matrix_world @ Vector(corner)
+                   for corner in boot.bound_box]
+    trouser_min_z = min(point.z for point in trouser_bounds)
+    trouser_max_z = max(point.z for point in trouser_bounds)
+    boot_max_z = max(point.z for point in boot_bounds)
+    if trouser_min_z > boot_max_z + 0.004:
+        raise RuntimeError(f"{trouser.name} floats above {boot.name}")
+    if trouser_max_z < coat_bottom:
+        raise RuntimeError(f"{trouser.name} does not reach the coat hem")
+    trouser["continuous_from_coat_to_boot"] = True
+    print(f"MILO_TROUSER_CONTINUITY: {trouser.name} "
+          f"{trouser_min_z:.4f}..{trouser_max_z:.4f}, "
+          f"boot top {boot_max_z:.4f}")
 
 
 def tube(name, points, radius, mat, bone, collection, curved=False, radii=None):
@@ -853,25 +1091,29 @@ parts = []
 CREAM = material("Artea Statue Warm Cream Fur", "e2bd78", 0.44)
 WHITE = material("Artea Statue Ivory Muzzle", "f3e1bd", 0.48)
 PINK = material("Artea Statue Rose Nose", "d58d82", 0.36)
-INNER_EAR = material("Artea Statue Amber Inner Ear", "c77735", 0.40)
-NAVY = material("Target Mayor Blue", "08182c", 0.74)
-NAVY_LIGHT = material("Target Mayor Lapel Blue", "061322", 0.72)
-NAVY_PANEL = material("Target Mayor Tailored Panel Blue", "102943", 0.76)
-NAVY_SEAM = material("Target Dark Navy Seam", "030b16", 0.82)
-NAVY_POCKET = material("Target Dark Navy Pocket", "071a2d", 0.80)
+INNER_EAR = material("Artea Milo Soft Rose Inner Ear", "c98578", 0.46)
+NAVY = material("Target Mayor Blue", "0e2942", 0.74)
+NAVY_LIGHT = material("Target Mayor Lapel Blue", "0a2036", 0.72)
+NAVY_PANEL = material("Target Mayor Tailored Panel Blue", "1b4564", 0.76)
+NAVY_SEAM = material("Target Dark Navy Seam", "06111f", 0.82)
+NAVY_POCKET = material("Target Dark Navy Pocket", "0a2137", 0.80)
 PURPLE = material("Target Lavender", "2f6fa7", 0.64)
 PURPLE_LIGHT = material("Target Lavender Highlight", "5797c7", 0.60)
 PURPLE_SEAM = material("Target Lavender Seam", "1d476d", 0.70)
-TEAL = material("Target Mint Piping", "45b6c4", 0.50)
+TEAL = material("Target Mint Piping", "6a98b1", 0.60)
 GOLD = material("Target Gold", "d0a84b", 0.24, 0.62)
-DARK = material("Target Trousers", "30363d", 0.70)
-BROWN = material("Target Shoes", "604a3b", 0.40)
+DARK = material("Target Trousers", "17354d", 0.74)
+BROWN = material("Target Shoes", "6b5140", 0.68)
 WOOD = material("Mayor Cane Dark Wood", "60351e", 0.48)
 BLACK = material("Artea Milo Purple Pupil", "613f91", 0.18)
-EYE_WHITE = material("Artea Statue Warm Eye White", "eee5d2", 0.46)
+INNER_EYE = material("Artea Milo Deep Purple Iris", "2d194b", 0.14)
+EYE_GLINT = material("Artea Milo Eye Catchlight", "fff8e8", 0.20)
+EYE_WHITE = material("Artea Statue Warm Eye White", "f3ead9", 0.38)
 MARKING = material("Artea Statue Caramel Fur Marking", "9f5425", 0.38)
 MARKING_DARK = material("Artea Statue Deep Caramel Stripe", "703718", 0.42)
-MOUTH = material("Target Mouth", "574e48", 0.64)
+PAW_DETAIL = material("Artea Milo Recessed Paw Detail", "5b321f", 0.90)
+MOUTH = material("Artea Milo Warm Mouth Shadow", "3e2631", 0.58)
+TONGUE = material("Artea Milo Gentle Rose Tongue", "d98287", 0.48)
 
 # 01 — head and side cheeks.
 sphere("Head", (0, -0.005, 1.51), (0.46, 0.35, 0.43), CREAM, "head", collections["head"], 32, 20)
@@ -901,6 +1143,57 @@ prism("ForeheadMark",
        (0.000, -0.296, 1.755)],
       [(0, 1, 4, 3), (1, 2, 5, 4), (3, 4, 6), (4, 5, 6)],
       MARKING, "head", collections["head"])
+
+# The authoritative three-view blueprint shows three nested fur shingles laid
+# directly over the REAR scalp. They must not rise over the forehead in front.
+# Each outline follows the head ellipsoid, while its center V is lifted just
+# enough to create the restrained three-tip profile seen from the side.
+REAR_HAIR_SPECS = (
+    ("RearHairLower", 0.003,
+     [(-0.390, 1.600), (-0.195, 1.690), (0.000, 1.780),
+      (0.195, 1.690), (0.390, 1.600)],
+     [(-0.390, 1.530), (-0.195, 1.430), (0.000, 1.350),
+      (0.195, 1.430), (0.390, 1.530)]),
+    ("RearHairMiddle", 0.007,
+     [(-0.345, 1.715), (-0.170, 1.800), (0.000, 1.885),
+      (0.170, 1.800), (0.345, 1.715)],
+     [(-0.345, 1.675), (-0.170, 1.625), (0.000, 1.565),
+      (0.170, 1.625), (0.345, 1.675)]),
+    ("RearHairUpper", 0.011,
+     [(-0.275, 1.815), (-0.140, 1.885), (0.000, 1.935),
+      (0.140, 1.885), (0.275, 1.815)],
+     [(-0.275, 1.785), (-0.140, 1.755), (0.000, 1.730),
+      (0.140, 1.755), (0.275, 1.785)]),
+)
+REAR_HAIR_PARTS = []
+for hair_name, clearance, top_xz, bottom_xz in REAR_HAIR_SPECS:
+    top_row = [head_back_point(x, z, clearance) for x, z in top_xz]
+    bottom_row = []
+    for index, (x, z) in enumerate(bottom_xz):
+        center_tip_lift = 0.009 if index == len(bottom_xz) // 2 else 0.003
+        bottom_row.append(head_back_point(x, z, clearance + center_tip_lift))
+    hair_part = surface_strip(
+        hair_name, top_row, bottom_row, 0.008, CREAM, "head",
+        collections["head"], bevel=0.004)
+    hair_part["milo_design_role"] = "blueprint rear scalp chevron"
+    REAR_HAIR_PARTS.append(hair_part)
+
+if len(REAR_HAIR_PARTS) != 3:
+    raise RuntimeError("Milo blueprint requires exactly three rear hair layers")
+for hair_part in REAR_HAIR_PARTS:
+    if hair_part.vertex_groups.get("head") is None:
+        raise RuntimeError(f"{hair_part.name} is not bound to Milo's head")
+rear_hair_points = [hair_part.matrix_world @ vertex.co
+                    for hair_part in REAR_HAIR_PARTS
+                    for vertex in hair_part.data.vertices]
+if min(point.y for point in rear_hair_points) < 0.0:
+    raise RuntimeError("Milo's rear hair has crossed onto the front hemisphere")
+if max(point.x for point in rear_hair_points) \
+        - min(point.x for point in rear_hair_points) < 0.76:
+    raise RuntimeError("Milo rear hair is too narrow for the blueprint back view")
+if min(point.z for point in rear_hair_points) > 1.36:
+    raise RuntimeError("Milo rear hair has lost the lowest blueprint chevron")
+print("MILO_REAR_HAIR: three head-hugging back-only chevrons verified")
 
 # 02 — outer and inner ears remain independent for silhouette matching. The
 # outer shell is a true tapered wedge: its broad root is buried in the head,
@@ -948,9 +1241,19 @@ for side, label in ((-1, "L"), (1, "R")):
     ]
     surface_panel("EarInner_" + label, inner_surface, -0.007,
                   INNER_EAR, "head", collections["ears"], bevel=0.010)
+    # One restrained curved fold gives the pinna readable depth without
+    # copying realistic cartilage or adding noisy nested panels.
+    ear_fold = tube(
+        "EarInnerFold_" + label,
+        [(0.375 * side, -0.066, 1.770),
+         (0.350 * side, -0.050, 1.875),
+         (0.305 * side, -0.027, 1.955)],
+        0.006, CREAM, "head", collections["ears"], curved=True)
+    ear_fold["milo_design_role"] = "soft inner-ear depth fold"
 
-# 03 — one clean eyeball shell and one dark pupil per side. The separate white
-# pupil highlights were removed to match the requested clean eye treatment.
+# 03 — layered, expressive eyes.  The broad lavender iris preserves the target
+# design, while a deep inner pupil, small catchlight and separately rigged lid
+# cards keep Milo from reading as a fixed prototype doll in motion.
 for side, label in ((-1, "L"), (1, "R")):
     # Broad caramel eye masks reproduce the warm face points of the ARTÉA cat
     # statue.  They hug the head behind the eye shells instead of floating as
@@ -964,30 +1267,125 @@ for side, label in ((-1, "L"), (1, "R")):
     clean_ellipsoid("Pupil_" + label, (0.160 * side, -0.389, 1.50),
                     (0.052, 0.011, 0.052), BLACK,
                     "head", collections["eyes"], 24, 16)
-    torus("GlassesRing_" + label, (0.160 * side, -0.421, 1.51),
-          0.137, 0.012, GOLD, "head", collections["eyes"])
-    brow = [(0.055 * side, 1.700), (0.175 * side, 1.720),
-            (0.275 * side, 1.690), (0.265 * side, 1.650),
-            (0.170 * side, 1.675), (0.065 * side, 1.660)]
-    panel("Brow_" + label, brow, -0.405, 0.012, WHITE, "head", collections["eyes"])
-tube("GlassesBridge", [(-0.035, -0.423, 1.515), (0, -0.426, 1.532),
-                        (0.035, -0.423, 1.515)],
+    clean_ellipsoid("IrisInner_" + label,
+                    (0.160 * side, -0.402, 1.496),
+                    (0.025, 0.007, 0.029), INNER_EYE,
+                    "head", collections["eyes"], 20, 12)
+    # Both highlights sit toward the same studio/world light direction instead
+    # of mirroring, which makes the pair read as one focused gaze.
+    clean_ellipsoid("EyeCatchlight_" + label,
+                    (0.149 * side, -0.410, 1.516),
+                    (0.009, 0.0035, 0.011), EYE_GLINT,
+                    "head", collections["eyes"], 12, 8)
+
+    eye_x = 0.160 * side
+    # The relaxed lid is a curved bridge between the facial mask and eye dome.
+    # Its upper ridge sits close to the face, the centre rolls forward over the
+    # iris, and both corners taper back into the caramel marking. This removes
+    # the separate flat-card silhouette while retaining the approved shape.
+    relaxed_lid_surface = [
+        (eye_x - 0.098, -0.382, 1.585),
+        (eye_x, -0.370, 1.620),
+        (eye_x + 0.098, -0.382, 1.585),
+        (eye_x + 0.090, -0.401, 1.554),
+        (eye_x, -0.412, 1.574),
+        (eye_x - 0.090, -0.401, 1.554),
+    ]
+    half_lid_surface = [
+        (eye_x - 0.098, -0.382, 1.585),
+        (eye_x, -0.370, 1.620),
+        (eye_x + 0.098, -0.382, 1.585),
+        (eye_x + 0.095, -0.402, 1.495),
+        (eye_x, -0.418, 1.485),
+        (eye_x - 0.095, -0.402, 1.495),
+    ]
+    closed_lid_surface = [
+        (eye_x - 0.098, -0.382, 1.585),
+        (eye_x, -0.370, 1.620),
+        (eye_x + 0.098, -0.382, 1.585),
+        (eye_x + 0.092, -0.398, 1.420),
+        (eye_x, -0.410, 1.390),
+        (eye_x - 0.092, -0.398, 1.420),
+    ]
+    relaxed_lid_object = surface_panel(
+        "EyelidRelaxed_" + label, relaxed_lid_surface, 0.003,
+        MARKING, "head", collections["eyes"], bevel=0.004)
+    half_lid_object = surface_panel(
+        "EyelidHalf_" + label, half_lid_surface, 0.003,
+        MARKING, "head", collections["eyes"], bevel=0.005)
+    closed_lid_object = surface_panel(
+        "EyelidClosed_" + label, closed_lid_surface, 0.003,
+        MARKING, "head", collections["eyes"], bevel=0.005)
+    for lid_object in (relaxed_lid_object, half_lid_object,
+                       closed_lid_object):
+        lid_depths = [vertex.co.y for vertex in lid_object.data.vertices]
+        depth_curve = max(lid_depths) - min(lid_depths)
+        if depth_curve < 0.020:
+            raise RuntimeError(f"{lid_object.name} is too flat to follow the face")
+        lid_object["face_conforming_depth_curve"] = depth_curve
+    # These meshes must ship in the GLB for Godot's blink controller, but only
+    # the relaxed upper lid belongs in the neutral Blender proof render.
+    half_lid_object.hide_render = True
+    closed_lid_object.hide_render = True
+    glasses_center_y = -0.438
+    glasses_minor_radius = 0.012
+    torus("GlassesRing_" + label, (0.160 * side, glasses_center_y, 1.51),
+          0.137, glasses_minor_radius, GOLD, "head", collections["eyes"])
+    # Full temple arms make the spectacles believable in profile. They travel
+    # back along the skull and terminate before the inner ear rather than
+    # disappearing into the face mask.
+    glasses_temple = tube(
+        "GlassesTemple_" + label,
+        [(0.292 * side, glasses_center_y, 1.525),
+         (0.335 * side, -0.345, 1.535),
+         (0.400 * side, -0.205, 1.565),
+         (0.430 * side, -0.060, 1.610),
+         (0.410 * side, 0.015, 1.585)],
+        0.0045, GOLD, "head", collections["eyes"], curved=True)
+    glasses_temple["milo_design_role"] = "profile spectacle temple"
+    eyelid_front_y = -0.418
+    glasses_back_y = glasses_center_y + glasses_minor_radius
+    glasses_lid_clearance = eyelid_front_y - glasses_back_y
+    if glasses_lid_clearance < 0.006:
+        raise RuntimeError(
+            f"GlassesRing_{label} is too close to the animated eyelid")
+    glasses_temple["minimum_eyelid_clearance"] = glasses_lid_clearance
+    print(f"MILO_GLASSES_CLEARANCE: {label} {glasses_lid_clearance:.6f}")
+    # A single shallow brow-frame grows out of the caramel face mask and
+    # overlaps the relaxed lid root.  The blueprint shows one soft eyebrow per
+    # eye, so there is deliberately no second dark line floating above it.
+    brow_frame_surface = [
+        (0.050 * side, -0.360, 1.700),
+        (0.175 * side, -0.350, 1.728),
+        (0.285 * side, -0.362, 1.692),
+        (0.270 * side, -0.382, 1.647),
+        (0.170 * side, -0.388, 1.672),
+        (0.060 * side, -0.374, 1.660),
+    ]
+    brow_frame = surface_panel(
+        "BrowFrame_" + label, brow_frame_surface, 0.005,
+        MARKING, "head", collections["eyes"], bevel=0.008)
+    brow_frame["milo_design_role"] = "eyelid-to-face transition"
+    print(f"MILO_EYE_ARCHITECTURE: {label} curved lids and brow frame verified")
+tube("GlassesBridge", [(-0.035, -0.440, 1.515), (0, -0.443, 1.532),
+                        (0.035, -0.440, 1.515)],
      0.010, GOLD, "head", collections["eyes"], curved=True)
 
 # 04 — nose, muzzle, sculpted moustache lobes and mouth.
 for side, label in ((-1, "L"), (1, "R")):
-    sphere("Muzzle_" + label, (0.090 * side, -0.374, 1.35),
-           (0.158, 0.072, 0.100), WHITE, "head", collections["face"], 26, 16)
+    sphere("Muzzle_" + label, (0.075 * side, -0.374, 1.35),
+           (0.135, 0.066, 0.088), WHITE, "head", collections["face"], 26, 16)
     # A low-poly leaf lobe grows from beneath the cat nose, drops into a full
     # curved belly, then rises into the sharp outer curl seen in the reference.
     horizontal_tapered_form(
         "MoustachePad_" + label,
         [(0.004 * side, -0.465, 1.345, 0.022, 0.034),
-         (0.070 * side, -0.470, 1.320, 0.044, 0.060),
-         (0.150 * side, -0.474, 1.292, 0.054, 0.082),
-         (0.230 * side, -0.468, 1.302, 0.052, 0.076),
-         (0.300 * side, -0.452, 1.340, 0.038, 0.052),
-         (0.355 * side, -0.430, 1.395, 0.010, 0.012)],
+         (0.055 * side, -0.470, 1.322, 0.035, 0.046),
+         (0.120 * side, -0.474, 1.302, 0.044, 0.064),
+         (0.190 * side, -0.468, 1.310, 0.042, 0.058),
+         (0.230 * side, -0.452, 1.342, 0.030, 0.040),
+         (0.265 * side, -0.440, 1.365, 0.020, 0.026),
+         (0.295 * side, -0.430, 1.390, 0.008, 0.010)],
         WHITE, "head", collections["face"], segments=10, smooth=False
     )
 # Compact rounded cat nose: broad bridge, pinched lower corners and a soft
@@ -1001,9 +1399,50 @@ for side, label in ((-1, "L"), (1, "R")):
                     (0.028 * side, -0.526, 1.380),
                     (0.006, 0.003, 0.0045), BLACK,
                     "head", collections["face"], 12, 8)
-panel("Mouth", [(-0.040, 1.245), (0, 1.268),
-                 (0.040, 1.245), (0, 1.225)],
-      -0.506, 0.012, MOUTH, "head", collections["face"], bevel=0.005)
+# The lower muzzle is the permanent supporting socket for every speech state.
+# It sits behind the moustache and visible mouth plates, so the animation reads
+# as deformation within Milo's face rather than cards appearing in open space.
+mouth_socket = clean_ellipsoid(
+    "MouthSocket", (0.000, -0.455, 1.285), (0.100, 0.018, 0.055),
+    WHITE, "head", collections["face"], 18, 12)
+mouth_socket["milo_design_role"] = "layered lower muzzle speech socket"
+mouth_closed = surface_panel(
+    "Mouth",
+    [(-0.043, -0.500, 1.270), (0.043, -0.500, 1.270),
+     (0.043, -0.505, 1.220), (0.000, -0.512, 1.195),
+     (-0.043, -0.505, 1.220)],
+    0.005, PINK, "head", collections["face"], bevel=0.006)
+mouth_closed["milo_design_role"] = "blueprint rose closed-mouth chin"
+# Three separately rigged mouth cards give Godot a tiny, dependable viseme
+# set without adding a fragile jaw bone to the donor skeleton.  Only `Mouth`
+# is visible at rest; the runtime companion controller swaps in one of these
+# dark cavities while Milo is presenting a line.
+mouth_open_small = panel(
+    "MouthOpenSmall", [(-0.038, 1.255), (0.0, 1.270),
+                       (0.038, 1.255), (0.032, 1.218),
+                       (0.0, 1.205), (-0.032, 1.218)],
+    -0.509, 0.014, MOUTH, "head", collections["face"], bevel=0.006)
+mouth_open_wide = panel(
+    "MouthOpenWide", [(-0.052, 1.262), (0.0, 1.280),
+                      (0.052, 1.262), (0.047, 1.195),
+                      (0.0, 1.170), (-0.047, 1.195)],
+    -0.511, 0.015, MOUTH, "head", collections["face"], bevel=0.007)
+tongue_small = panel(
+    "TongueSmall", [(-0.013, 1.233), (0.013, 1.233),
+                    (0.011, 1.225), (0.000, 1.222), (-0.011, 1.225)],
+    -0.526, 0.004, TONGUE, "head", collections["face"], bevel=0.004)
+tongue_wide = panel(
+    "TongueWide", [(-0.018, 1.217), (0.018, 1.217),
+                   (0.015, 1.205), (0.000, 1.201), (-0.015, 1.205)],
+    -0.529, 0.004, TONGUE, "head", collections["face"], bevel=0.005)
+for hidden_speech_part in (mouth_open_small, mouth_open_wide,
+                           tongue_small, tongue_wide):
+    hidden_speech_part.hide_render = True
+for speech_part in (mouth_closed, mouth_open_small, mouth_open_wide,
+                    tongue_small, tongue_wide):
+    if speech_part.vertex_groups.get("head") is None:
+        raise RuntimeError(f"{speech_part.name} is not bound to Milo's head")
+print("MILO_MOUTH_ARCHITECTURE: socket, three visemes and tongue inserts verified")
 
 # 05 — the coat is Milo's torso, not a second shape placed over a body shell.
 # Five tailored rings form one closed shoulder-to-boot mesh; every visible
@@ -1032,6 +1471,14 @@ def coat_front_point(x, z, clearance):
     return (x, surface_y - clearance, z)
 
 
+def coat_back_point(x, z, clearance):
+    """Place a rear tailoring point outside the exact faceted coat surface."""
+    surface_y = faceted_coat_surface_y(
+        x, z, COAT_RING_SPECS, rear=True
+    )
+    return (x, surface_y + clearance, z)
+
+
 # Layered open coat lapels sit behind the waistcoat, giving the long coat a
 # tailored front instead of reading as one uninterrupted blue body shell.
 for side, label in ((-1, "L"), (1, "R")):
@@ -1053,7 +1500,7 @@ for side, label in ((-1, "L"), (1, "R")):
            coat_front_point(0.220 * side, 1.075, 0.007),
            coat_front_point(0.245 * side, 0.820, 0.007),
            coat_front_point(0.295 * side, 0.900, 0.007)],
-          0.003, NAVY_LIGHT, "chest", collections["outfit"], bevel=0.0)
+          -0.005, NAVY_LIGHT, "chest", collections["outfit"], bevel=0.003)
     tube("GoldLapelEdge_" + label,
          [coat_front_point(0.225 * side, 1.060, 0.014),
           coat_front_point(0.247 * side, 0.825, 0.014)],
@@ -1081,7 +1528,7 @@ for side, label in ((-1, "L"), (1, "R")):
            coat_front_point(0.350 * side, 0.558, 0.007),
            coat_front_point(0.340 * side, 0.505, 0.007),
            coat_front_point(0.205 * side, 0.495, 0.007)],
-          0.002, NAVY_POCKET, "chest", collections["outfit"], bevel=0.0)
+          -0.004, NAVY_POCKET, "chest", collections["outfit"], bevel=0.003)
 
 # The waistcoat is a fitted shell, not a flat card. Its columns align with the
 # same coat facets as the host, while the pointed lower row preserves the
@@ -1109,12 +1556,12 @@ surface_panel("Collar_L",
       [coat_front_point(-0.185, 1.115, 0.016),
        coat_front_point(-0.015, 1.075, 0.016),
        coat_front_point(-0.105, 0.990, 0.016)],
-      0.003, TEAL, "chest", collections["outfit"], bevel=0.0)
+      -0.004, TEAL, "chest", collections["outfit"], bevel=0.003)
 surface_panel("Collar_R",
       [coat_front_point(0.185, 1.115, 0.016),
        coat_front_point(0.015, 1.075, 0.016),
        coat_front_point(0.105, 0.990, 0.016)],
-      0.003, TEAL, "chest", collections["outfit"], bevel=0.0)
+      -0.004, TEAL, "chest", collections["outfit"], bevel=0.003)
 surface_panel("Tie",
       [coat_front_point(-0.070, 1.070, 0.020),
        coat_front_point(0.070, 1.070, 0.020),
@@ -1159,68 +1606,70 @@ tube("FrontTailCenterSeam", [(0.000, -0.278, 0.585),
                               (0.000, -0.278, 0.300)],
      0.003, NAVY_SEAM, "chest", collections["outfit"])
 
-# The coat is authored all the way around rather than being a decorated front
-# shell. A shallow back yoke, fitted rear quarters, split riding vent and side
-# seams make every turntable angle intentional while staying attached to the
-# same chest bone as the front tailoring.
-# Columns land on the coat's rear facet boundaries. Both rows are sampled
-# from the exact coat profile, then lifted by a controlled tailoring clearance;
-# the thin rear wall remains above the host instead of entering it.
-yoke_x = (-0.320, -0.2025, 0.000, 0.2025, 0.320)
-yoke_top_z = (1.070, 1.090, 1.100, 1.090, 1.070)
-yoke_bottom_z = (0.955, 0.938, 0.900, 0.938, 0.955)
-yoke_clearance = 0.009
-yoke_top = [(x, faceted_coat_surface_y(x, z, COAT_RING_SPECS) + yoke_clearance, z)
-            for x, z in zip(yoke_x, yoke_top_z)]
-yoke_bottom = [(x, faceted_coat_surface_y(x, z, COAT_RING_SPECS) + yoke_clearance, z)
-               for x, z in zip(yoke_x, yoke_bottom_z)]
-surface_strip("BackYoke", yoke_top, yoke_bottom, -0.003,
-              NAVY_LIGHT, "chest", collections["outfit"], bevel=0.0)
-
-# Cyan piping traces the upper collar line while the gold strip below anchors
-# it to the mayoral palette. Both strips follow the rear facets exactly.
-teal_yoke_top = [(x, y + 0.006, z + 0.002) for x, y, z in yoke_top]
-teal_yoke_bottom = [(x, y + 0.006, z - 0.009) for x, y, z in yoke_top]
-surface_strip("TealBackYokeEdge", teal_yoke_top, teal_yoke_bottom, -0.0015,
-              TEAL, "chest", collections["outfit"], bevel=0.0)
-
-# Tailored flat piping follows the yoke plane. Unlike a circular tube, its
-# rear face cannot dip through the garment when the coat changes angle.
-gold_bottom = [(x, y + 0.003, z + 0.001) for x, y, z in yoke_bottom]
-gold_top = []
-for top, bottom in zip(yoke_top, yoke_bottom):
-    gold_top.append((bottom[0], bottom[1] + 0.003,
-                     bottom[2] + min(0.014, (top[2] - bottom[2]) * 0.12)))
-surface_strip("GoldBackYokeEdge", gold_top, gold_bottom, -0.0015,
-              GOLD, "chest", collections["outfit"], bevel=0.0)
-
-# Rear waist belt and paired gold buttons complete the same colour layout from
-# behind. The belt is sampled from the coat surface, so it remains embedded in
-# the curved torso rather than floating as a flat bar.
-back_belt_top = coat_facet_row(0.675, COAT_RING_SPECS, 0.009, rear=True)
-back_belt_bottom = coat_facet_row(0.600, COAT_RING_SPECS, 0.009, rear=True)
+# The blueprint uses a SHORT central back strap, not a full-width belt. It is
+# sampled from the rear coat facets and carries only the two visible buttons.
+back_belt_x = (-0.180, 0.000, 0.180)
+back_belt_top = [coat_back_point(x, 0.845, 0.009) for x in back_belt_x]
+back_belt_bottom = [coat_back_point(x, 0.765, 0.009) for x in back_belt_x]
 surface_strip("BackWaistBelt", back_belt_top, back_belt_bottom, -0.003,
               NAVY_LIGHT, "chest", collections["outfit"], bevel=0.0)
-back_belt_gold_top_upper = [(x, y + 0.004, z + 0.002)
-                            for x, y, z in back_belt_top]
-back_belt_gold_top_lower = [(x, y + 0.004, z - 0.008)
-                            for x, y, z in back_belt_top]
-surface_strip("GoldBackBeltEdgeTop", back_belt_gold_top_upper,
-              back_belt_gold_top_lower, -0.0015, GOLD, "chest",
-              collections["outfit"], bevel=0.0)
-back_belt_gold_bottom_upper = [(x, y + 0.004, z + 0.008)
-                               for x, y, z in back_belt_bottom]
-back_belt_gold_bottom_lower = [(x, y + 0.004, z - 0.002)
-                               for x, y, z in back_belt_bottom]
-surface_strip("GoldBackBeltEdgeBottom", back_belt_gold_bottom_upper,
-              back_belt_gold_bottom_lower, -0.0015, GOLD, "chest",
-              collections["outfit"], bevel=0.0)
+
+# Two shallow rear quarters make the riding-tail construction legible from
+# behind. They follow the host facets, stop clear of the center vent and share
+# the chest bone, so they add tailoring depth without cloth simulation.
+for side, label in ((-1, "L"), (1, "R")):
+    rear_tail_x = [0.030 * side, 0.2025 * side,
+                   0.350 * side, 0.405 * side]
+    rear_tail_top = [coat_back_point(x, z, 0.012)
+                     for x, z in zip(rear_tail_x,
+                                     (0.590, 0.595, 0.600, 0.590))]
+    rear_tail_bottom = [coat_back_point(x, z, 0.012)
+                        for x, z in zip(rear_tail_x,
+                                        (0.315, 0.275, 0.290, 0.325))]
+    rear_tail = surface_strip(
+        "RearCoatTail_" + label,
+        rear_tail_top, rear_tail_bottom, 0.003,
+        NAVY_PANEL, "chest", collections["outfit"], bevel=0.0)
+    rear_tail["milo_design_role"] = "separate short split coat-tail quarter"
+
+# The blueprint side view has an attached rear skirt flap, with a single gold
+# lower/vent edge. These panels begin inside the coat-side envelope so their
+# roots cannot float, then extend rearward as one restrained tailored layer.
+for side, label in ((-1, "L"), (1, "R")):
+    side_x = 0.402 * side
+    side_tail_outline = [
+        (side_x, 0.015, 0.900),
+        (side_x, 0.225, 0.850),
+        (side_x, 0.302, 0.355),
+        (side_x, 0.235, 0.300),
+        (side_x, 0.135, 0.505),
+        (side_x, 0.020, 0.560),
+    ]
+    side_tail = vector_extruded_panel(
+        "SideCoatTail_" + label, side_tail_outline,
+        (0.010 * side, 0.0, 0.0), NAVY_PANEL, "chest",
+        collections["outfit"], bevel=0.002)
+    side_tail["milo_design_role"] = "attached blueprint side skirt flap"
+    side_tail["root_embedded_in_coat"] = True
+    root_radius_x, _root_radius_y, _root_center_y = \
+        coat_ring_dimensions_at_z(0.900, COAT_RING_SPECS)
+    root_overlap = root_radius_x - abs(side_x)
+    if root_overlap < 0.005:
+        raise RuntimeError(f"SideCoatTail_{label} is not anchored in CoatBody")
+    side_tail["coat_root_overlap"] = root_overlap
+    print(f"MILO_SIDE_COAT_ATTACHMENT: SideCoatTail_{label} "
+          f"root overlap {root_overlap:.6f}")
+    tube("GoldSideCoatTailEdge_" + label,
+         [(0.414 * side, 0.302, 0.355),
+          (0.414 * side, 0.235, 0.300),
+          (0.414 * side, 0.135, 0.505)],
+         0.004, GOLD, "chest", collections["outfit"], curved=True)
 for side, label in ((-1, "L"), (1, "R")):
     button_x = 0.130 * side
     button_y = faceted_coat_surface_y(
-        button_x, 0.638, COAT_RING_SPECS) + 0.025
+        button_x, 0.805, COAT_RING_SPECS) + 0.025
     domed_button("BackBeltButton_" + label,
-                 (button_x, button_y, 0.638), 0.025, 0.014,
+                 (button_x, button_y, 0.805), 0.025, 0.014,
                  GOLD, "chest", collections["outfit"], sides=10)
 for side, label in ((-1, "L"), (1, "R")):
     tube("BackVentEdge_" + label,
@@ -1232,9 +1681,6 @@ for side, label in ((-1, "L"), (1, "R")):
           (0.414 * side, 0.000, 0.690),
           (0.405 * side, 0.115, 0.355)],
          0.003, NAVY_SEAM, "chest", collections["outfit"])
-tube("BackCenterSeam", [(0.000, 0.314, 0.895), (0.000, 0.314, 0.600)],
-     0.003, NAVY_SEAM, "chest", collections["outfit"])
-
 # 06/07 — each sleeve is one continuous tapered skin across the full arm
 # chain. The blended elbow/wrist rings keep the silhouette connected during
 # animation instead of moving three rigid boxes independently.
@@ -1268,41 +1714,36 @@ for side, suffix, label in ((-1, ".r", "L"), (1, ".l", "R")):
         (0.097, 0.118), (0.104, 0.125), (0.714, 0.722),
         GOLD, "wrist" + suffix, collections["arms"],
         sleeve_radii=(0.092, 0.106))
-    paw_rings = (
-        [(0.440 * side, -0.015, 0.700, 0.072, 0.085),
-         (0.440 * side, -0.015, 0.665, 0.095, 0.105),
-         (0.440 * side, -0.015, 0.600, 0.105, 0.110),
-         (0.440 * side, -0.015, 0.535, 0.088, 0.092),
-         (0.440 * side, -0.015, 0.490, 0.040, 0.050)]
-        if label == "L" else
-        [(0.440, -0.015, 0.700, 0.072, 0.085),
-         (0.447, -0.015, 0.665, 0.088, 0.102),
-         (0.456, -0.015, 0.610, 0.100, 0.110),
-         (0.465, -0.015, 0.555, 0.093, 0.100),
-         (0.475, -0.015, 0.500, 0.045, 0.055)])
-    weighted_tapered_limb(
-        "Paw_" + label, paw_rings,
-        [(("hand" + suffix, 1.0),)] * 5,
-        MARKING, collections["arms"]
-    )
-    if label == "L":
-        sphere("PawThumb_L", (0.370 * side, -0.095, 0.610),
-               (0.042, 0.048, 0.056), MARKING,
-               "hand" + suffix, collections["arms"], 16, 10)
-    sphere("Trouser_" + label, (0.16 * side, -0.002, 0.290),
-           (0.090, 0.100, 0.075), DARK, "lowerleg" + suffix, collections["legs"])
-    sphere("Boot_" + label, (0.17 * side, -0.095, 0.140),
-           (0.170, 0.225, 0.120), BROWN, "foot" + suffix, collections["legs"], 28, 17)
+    # Target close-ups: the palm, three finger lobes and thumb are sculpted from
+    # one continuous object. Finger definition comes from the silhouette and a
+    # unified curl shape key, never from attached sphere objects.
+    paw_center_x = 0.440 * side if label == "L" else 0.455
+    hand_style = "relaxed" if label == "L" else "cane_grip"
+    paw = faceted_mitten_paw(
+        "Paw_" + label, paw_center_x, 0.590, side, hand_style,
+        MARKING, "hand" + suffix, collections["arms"])
+    verify_unified_hand_fit(paw, hand_style)
+    # Two full trouser legs continue from under the coat to the shoes. Their
+    # inner edges leave a narrow intentional center split, not an empty broken
+    # torso gap, and the deep navy matches the blueprint rather than charcoal.
+    trouser = weighted_tapered_limb(
+        "Trouser_" + label,
+        [(0.150 * side, -0.002, 0.465, 0.140, 0.120),
+         (0.150 * side, -0.002, 0.400, 0.145, 0.126),
+         (0.150 * side, -0.002, 0.250, 0.142, 0.126),
+         (0.150 * side, -0.002, 0.185, 0.132, 0.118)],
+        [(('lowerleg' + suffix, 1.0),)] * 4,
+        DARK, collections["legs"], segments=12)
+    boot = sphere("Boot_" + label, (0.17 * side, -0.095, 0.105),
+                  (0.170, 0.225, 0.085), BROWN, "foot" + suffix,
+                  collections["legs"], 28, 17)
+    verify_trouser_continuity(trouser, boot)
     sphere("Sole_" + label, (0.17 * side, -0.090, 0.058),
            (0.168, 0.210, 0.018), DARK, "foot" + suffix, collections["legs"], 26, 8)
 
-# 08 — the animal tail exits through the center-back coat vent shown in the
-# approved placement crop, then sweeps toward Milo's right side.
-tube("Tail", [(0.00, 0.16, 0.52), (0.00, 0.315, 0.52),
-              (0.16, 0.32, 0.54), (0.36, 0.29, 0.60),
-              (0.52, 0.25, 0.68), (0.58, 0.21, 0.78),
-              (0.54, 0.18, 0.87)], 0.060, MARKING, "hips", collections["tail"],
-     curved=True, radii=(1.50, 1.38, 1.28, 1.15, 1.02, 0.88, 0.72))
+# 08 — the authoritative front/side/back blueprint has a clean, tail-free rear
+# coat silhouette. No tail mesh is generated.
+
 # 09 — mayor's walking cane. The reference uses a closed mitten-like fist
 # resting directly over the shaft. The cane terminates centrally inside the
 # lower paw silhouette, a compact gold grip remains visible underneath, and
@@ -1325,35 +1766,20 @@ tube("MayorCaneHook",
 sphere("MayorCaneGroundTip", (0.523, -0.020, 0.045),
        (0.028, 0.028, 0.042), GOLD, CANE_BONE,
        collections["accessories"], 16, 10)
-# The thumb leans diagonally into the grip. The paw surface stays clean: the
-# former etched finger/crease curves read as scars in close views.
-sphere("PawThumb_R", (0.445, -0.127, 0.575),
-       (0.032, 0.020, 0.052), MARKING, CANE_BONE,
-       collections["arms"], 16, 10,
-       rotation=(0, math.radians(-40), 0))
 verify_cane_fist_alignment(
-    [(0.440, -0.015, 0.700, 0.072, 0.085),
-     (0.447, -0.015, 0.665, 0.088, 0.102),
-     (0.456, -0.015, 0.610, 0.100, 0.110),
-     (0.465, -0.015, 0.555, 0.093, 0.100),
-     (0.475, -0.015, 0.500, 0.045, 0.055)],
+    bpy.data.objects["Paw_R"],
     (0.465, -0.020, 0.545))
-sphere("TailTip", (0.54, 0.18, 0.87), (0.062, 0.062, 0.067),
-       MARKING_DARK, "hips", collections["tail"], 14, 8)
-
 # Regression proof for the fitted back tailoring. This runs on every rebuild,
 # so later shape edits cannot silently reintroduce floating or intersecting
-# yoke geometry.
+# belt and split-tail geometry.
 verify_surface_clearance(
-    "CoatBody", ("BackYoke", "TealBackYokeEdge", "GoldBackYokeEdge",
-                 "BackWaistBelt", "GoldBackBeltEdgeTop",
-                 "GoldBackBeltEdgeBottom"), (0.0, -1.0, 0.0),
+    "CoatBody", ("BackWaistBelt", "RearCoatTail_L", "RearCoatTail_R"),
+    (0.0, -1.0, 0.0),
     minimum=0.001
 )
 verify_faceted_coat_clearance(
-    ("BackYoke", "TealBackYokeEdge", "GoldBackYokeEdge",
-     "BackWaistBelt", "GoldBackBeltEdgeTop", "GoldBackBeltEdgeBottom",
-     "BackBeltButton_L", "BackBeltButton_R"),
+    ("BackWaistBelt", "BackBeltButton_L", "BackBeltButton_R", "RearCoatTail_L",
+     "RearCoatTail_R"),
     COAT_RING_SPECS, rear=True, minimum=0.001
 )
 verify_surface_clearance(

@@ -95,7 +95,7 @@ const TREAD_CENTRE_RADIUS := (TREAD_INNER_RADIUS + TREAD_OUTER_RADIUS) * 0.5
 # helix around it. Keeping this in one place prevents the guard, roadbed and
 # walking surface from starting above the visible stair again.
 const FIRST_TREAD_CENTRE_OFFSET := 0.17
-# The grounded medieval flight now owns the lead-in. Starting the curved guards
+# The grounded castle flight now owns the lead-in. Starting the curved guards
 # before the true spiral used to sweep them across that straight approach and
 # create an invisible pinch point, so the helical guards begin at tread zero.
 const GUARD_ENTRY_LEAD_T := 0.0
@@ -426,7 +426,7 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 
 	_build_continuous_ascent(parent, base, ground, top_y, start_angle,
 		dark, light, brass)
-	_build_grounded_medieval_entry(parent, base, first_tread_y, start_angle,
+	_build_grounded_castle_entry(parent, base, first_tread_y, start_angle,
 		light, dark)
 
 	for i in _step_count:
@@ -494,7 +494,7 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 			medallion.rotation_degrees = Vector3(90.0, rad_to_deg(-angle), 0.0)
 
 		if i % 24 == 0:
-			_add_medieval_stair_torch(parent, base, angle, y, i)
+			_add_castle_stair_torch(parent, base, angle, y, i)
 
 	# Diegetic instruction at the foot of the stair: it explicitly reassures the
 	# player that this is a free-walk route, not another automatic transport.
@@ -526,11 +526,11 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 # tread. Every tread samples the terrain beneath both lane edges, extends below
 # the lowest sample, and rises no more than GROUND_ENTRY_MAX_RISE. The broad
 # buried boxes read as old castle foundations instead of floating steps.
-func _build_grounded_medieval_entry(parent: Node3D, base: Vector2,
+func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 		first_tread_y: float, start_angle: float, light: Material,
 		dark: Material) -> void:
 	var entry := Node3D.new()
-	entry.name = "GroundedMedievalEntry"
+	entry.name = "GroundedCastleEntry"
 	parent.add_child(entry)
 	var radial := Vector3(cos(start_angle), 0.0, sin(start_angle))
 	var forward := Vector3(-sin(start_angle), 0.0, cos(start_angle))
@@ -581,7 +581,7 @@ func _build_grounded_medieval_entry(parent: Node3D, base: Vector2,
 			light if step_index % 2 == 0 else dark)
 		tread.name = "GroundEntryStoneTread_%02d" % step_index
 		tread.set_meta("visual_only", true)
-		# A narrow oak edge makes the ground flight read as deliberately medieval
+		# A narrow oak edge makes the ground flight read as deliberately castle
 		# while remaining visual-only and flush with the walking surface.
 		var edge_position := Vector3(centre.x, surface_y - 0.05, centre.z) \
 			+ forward * (tread_depth * 0.5 - 0.08)
@@ -957,7 +957,7 @@ func _add_helix_part(parent: Node3D, part_name: String, mesh: ArrayMesh,
 	return part
 
 
-# Finished facade language for the tower: structural stone remains medieval,
+# Finished facade language for the tower: structural stone remains castle,
 # while recessed dark panels, brass frames, and crystal circuitry make the
 # mechanism lifting the castle route readable from ground level.
 func _build_tower_facade(parent: Node3D, base: Vector2,
@@ -1235,7 +1235,7 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	# so the join reads as a deliberate landing instead of a rotated box dropped
 	# across the stairwell. The hidden box above remains the gameplay authority.
 	var handoff_visual := MeshInstance3D.new()
-	handoff_visual.name = "MedievalCrownStairLanding"
+	handoff_visual.name = "CastleCrownStairLanding"
 	handoff_visual.mesh = _tapered_landing_mesh(4.9,
 		TREAD_CLEAR_WIDTH + 0.10, TREAD_CLEAR_WIDTH - 0.52, 0.18)
 	var handoff_material := deck_material.duplicate() as StandardMaterial3D
@@ -1384,18 +1384,18 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	flag.material_override = red
 	parent.add_child(flag)
 	flag.global_position = pole.global_position + Vector3(0.8, 1.0, 0.0)
-	_build_medieval_ballista(parent, base, crown_surface_y, gate_dir,
+	_build_castle_ballista(parent, base, crown_surface_y, gate_dir,
 		stair_end_radial)
 
 
-# A defensive ballista gives the stair tower a believable medieval purpose.
+# A defensive ballista gives the stair tower a believable castle purpose.
 # It is mounted above the floor on the parapet side and intentionally has no
 # collision: the complete crown remains safe to walk even if a player presses
 # against the display.
-func _build_medieval_ballista(parent: Node3D, base: Vector2,
+func _build_castle_ballista(parent: Node3D, base: Vector2,
 		surface_y: float, gate_dir: Vector3, stair_dir: Vector3) -> void:
 	var weapon := Node3D.new()
-	weapon.name = "MedievalBallista"
+	weapon.name = "CastleBallista"
 	parent.add_child(weapon)
 	var outward := (gate_dir + stair_dir).normalized()
 	if outward.length_squared() < 0.5:
@@ -2335,10 +2335,10 @@ func _oriented_box(parent: Node3D, size: Vector3, position: Vector3,
 	return part
 
 
-func _add_medieval_stair_torch(parent: Node3D, base: Vector2, angle: float,
+func _add_castle_stair_torch(parent: Node3D, base: Vector2, angle: float,
 		y: float, index: int) -> void:
 	var torch := Node3D.new()
-	torch.name = "MedievalStairTorch_%03d" % index
+	torch.name = "CastleStairTorch_%03d" % index
 	parent.add_child(torch)
 	var radial := Vector3(cos(angle), 0.0, sin(angle))
 	var tangent := Vector3(-radial.z, 0.0, radial.x)

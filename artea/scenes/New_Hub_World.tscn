@@ -33,6 +33,7 @@
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_mage.tscn" id="104_vmage"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_knight.tscn" id="105_vknight"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_father.tscn" id="106_vfather"]
+[ext_resource type="Script" path="res://scripts/npc/milo_guide_point.gd" id="107_milo_point"]
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
@@ -83,7 +84,7 @@
 [ext_resource type="Script" path="res://scripts/hub_magitech.gd" id="71_magit"]
 [ext_resource type="Script" path="res://scripts/hub_landmark_glow.gd" id="72_lndmk"]
 [ext_resource type="Script" path="res://scripts/hub_lumen_citadel.gd" id="73_citdl"]
-[ext_resource type="Script" path="res://scripts/medieval_castle_redesign.gd" id="74_medieval"]
+[ext_resource type="Script" path="res://scripts/castle_redesign.gd" id="74_castle"]
 [ext_resource type="Script" path="res://scripts/original_cat_statue.gd" id="76_cat_statue"]
 [ext_resource type="Script" path="res://scripts/hub_castle_crown.gd" id="77_crown"]
 [ext_resource type="Script" path="res://scripts/hub_skyrail.gd" id="79_skyrl"]
@@ -91,6 +92,10 @@
 [ext_resource type="Script" path="res://scripts/hub_train_rider.gd" id="81_rider"]
 [ext_resource type="Script" path="res://scripts/hub_atmosphere.gd" id="82_atmos"]
 [ext_resource type="Script" path="res://scripts/web_terrain_compat.gd" id="82_webterrain"]
+[ext_resource type="Script" path="res://scripts/hub_grass_interaction.gd" id="108_grass_interaction"]
+[ext_resource type="PackedScene" path="res://scenes/vegetation/grass_clump_3d.tscn" id="109_grass_3d"]
+[ext_resource type="Script" path="res://scripts/hub_village_brick_plaza.gd" id="111_brick_plaza"]
+[ext_resource type="Script" path="res://addons/proton_scatter/src/shapes/box_shape.gd" id="112_scatter_box"]
 [ext_resource type="Script" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
 [ext_resource type="Script" path="res://scripts/hub_castle_entrance.gd" id="83_entrn"]
 [ext_resource type="Script" path="res://scripts/viewfinder/hub_lens.gd" id="84_lens"]
@@ -211,7 +216,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 
 [sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("15_o1ycd")
-amount = 60500
+amount = 52000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
@@ -226,6 +231,7 @@ reference_frame = 2
 
 [sub_resource type="Resource" id="Resource_e81s8"]
 script = ExtResource("17_bsvfl")
+iterations = 0
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
@@ -296,16 +302,20 @@ shader_parameter/debug_show_combined_noise = false
 
 [sub_resource type="Curve3D" id="Curve3D_8n7aw"]
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -111.57, 0, 54.0528, 0, 0, 0, 0, 0, 0, -37.3579, 7.62939e-06, 54.9847, 0, 0, 0, 0, 0, 0, 35.5735, 0, 27.6735, 0, 0, 0, 0, 0, 0, 3.88522, 0, -100.941, 0, 0, 0, 0, 0, 0, -181.275, 7.62939e-06, -141.999, 0, 0, 0, 0, 0, 0, -130.641, 0, 38.2469),
-"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -175, 0, -185, 0, 0, 0, 0, 0, 0, 120, 0, -185, 0, 0, 0, 0, 0, 0, 170, 0, -140, 0, 0, 0, 0, 0, 0, 170, 0, 105, 0, 0, 0, 0, 0, 0, 125, 0, 135, 0, 0, 0, 0, 0, 0, -145, 0, 130, 0, 0, 0, 0, 0, 0, -180, 0, 70, 0, 0, 0, 0, 0, 0, -190, 0, -120),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0)
 }
-point_count = 6
+point_count = 8
 
 [sub_resource type="Resource" id="Resource_vspl4"]
 script = ExtResource("21_ha1sw")
-thickness = 40.0
+thickness = 30.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
+
+[sub_resource type="Resource" id="Resource_village_plaza_exclusion"]
+script = ExtResource("112_scatter_box")
+size = Vector3(74, 100, 122)
 
 [sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("15_o1ycd")
@@ -316,8 +326,8 @@ reference_frame = 1
 [sub_resource type="Resource" id="Resource_iq1my"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
-rotation = Vector3(20, 360, 20)
-scale = Vector3(0.3, 0.3, 0.3)
+rotation = Vector3(0, 360, 0)
+scale = Vector3(0.18, 0.18, 0.18)
 reference_frame = 2
 
 [sub_resource type="Resource" id="Resource_ggnbg"]
@@ -357,6 +367,12 @@ script = ExtResource("69_awakn")
 [node name="WebTerrainCompatibility" type="Node" parent="."]
 script = ExtResource("82_webterrain")
 
+[node name="GrassInteraction" type="Node" parent="."]
+script = ExtResource("108_grass_interaction")
+
+[node name="VillageBrickPlaza" type="Node3D" parent="."]
+script = ExtResource("111_brick_plaza")
+
 [node name="CreationsSpawner" type="Node" parent="."]
 script = ExtResource("70_creat")
 
@@ -369,8 +385,8 @@ script = ExtResource("72_lndmk")
 [node name="LumenCitadel" type="Node3D" parent="."]
 script = ExtResource("73_citdl")
 
-[node name="MedievalCastleRedesign" type="Node3D" parent="."]
-script = ExtResource("74_medieval")
+[node name="CastleRedesign" type="Node3D" parent="."]
+script = ExtResource("74_castle")
 
 [node name="CastleAtmosphere" type="Node3D" parent="."]
 script = ExtResource("82_atmos")
@@ -482,27 +498,83 @@ Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
 
 [node name="ScatterShape" type="Node3D" parent="Environment/Grass" unique_id=577490913]
-transform = Transform3D(0.953801, 0, -0.30044, 0, 1, 0, 0.30044, 0, 0.953801, 4.2984, 0, -2.62214)
 script = ExtResource("20_7nfwd")
 shape = SubResource("Resource_vspl4")
+
+[node name="VillagePlazaExclusion" type="Node3D" parent="Environment/Grass"]
+position = Vector3(90.4983, 0, -49.2097)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_village_plaza_exclusion")
 
 [node name="ScatterItemGrassA" type="Node3D" parent="Environment/Grass" unique_id=528747301]
 script = ExtResource("19_ngqnt")
 proportion = 1200
-source_scale_multiplier = 1.0
+source_scale_multiplier = 0.32
+override_material = SubResource("ShaderMaterial_y45p1")
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-path = "res://assets3D/kkNatureForest/grass.glb"
+path = "res://scenes/vegetation/grass_clump_3d.tscn"
 
 [node name="ScatterItemGrassB" type="Node3D" parent="Environment/Grass" unique_id=528747302]
 script = ExtResource("19_ngqnt")
 proportion = 900
-source_scale_multiplier = 1.15
+source_scale_multiplier = 0.36
+override_material = SubResource("ShaderMaterial_y45p1")
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-path = "res://assets3D/kkNatureForest/grass.glb"
+path = "res://scenes/vegetation/grass_clump_3d.tscn"
+
+[node name="ScatterItemFlowerRed" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 12
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_red_3d.tscn"
+
+[node name="ScatterItemFlowerOrange" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 12
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_orange_3d.tscn"
+
+[node name="ScatterItemFlowerYellow" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 12
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_yellow_3d.tscn"
+
+[node name="ScatterItemFlowerGreen" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 12
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_green_3d.tscn"
+
+[node name="ScatterItemFlowerBlue" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 12
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_blue_3d.tscn"
+
+[node name="ScatterItemFlowerIndigo" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 12
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_indigo_3d.tscn"
+
+[node name="ScatterItemFlowerViolet" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 12
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_violet_3d.tscn"
 
 [node name="ScatterItemBush" type="Node3D" parent="Environment/Grass" unique_id=528747303]
 script = ExtResource("19_ngqnt")
-proportion = 220
+proportion = 0
 source_scale_multiplier = 1.0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://assets3D/trees/tree_1_c_color_12.tscn"
@@ -533,59 +605,65 @@ transform = Transform3D(1, 0, -2.98023e-08, 0, 1, 0, 2.98023e-08, 0, 1, -115.799
 script = ExtResource("20_7nfwd")
 shape = SubResource("Resource_g8bsm")
 
+[node name="VillagePlazaExclusion" type="Node3D" parent="Environment/Objects"]
+position = Vector3(19.1855, 0, -30)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_village_plaza_exclusion")
+
 [node name="ScatterItem" type="Node3D" parent="Environment/Objects" unique_id=1584586711]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.22015, 0, 0)
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_4_a_color_12.tscn"
 
 [node name="ScatterItem2" type="Node3D" parent="Environment/Objects" unique_id=317556808]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_3_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem3" type="Node3D" parent="Environment/Objects" unique_id=290454483]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_2_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem4" type="Node3D" parent="Environment/Objects" unique_id=2027761573]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_2_b_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem5" type="Node3D" parent="Environment/Objects" unique_id=1507975234]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem6" type="Node3D" parent="Environment/Objects" unique_id=1189031108]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem7" type="Node3D" parent="Environment/Objects" unique_id=2116162357]
 script = ExtResource("19_ngqnt")
 proportion = 500
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_4_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem8" type="Node3D" parent="Environment/Objects" unique_id=932707459]
 script = ExtResource("19_ngqnt")
 proportion = 500
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_3_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -1038,6 +1116,24 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.603652, 25.680845, 0.275234
 # tower over every NPC in the market. Milo now stands beside the Artéa sign.
 transform = Transform3D(-0.1736482, 0, -0.9848078, 0, 1, 0, 0.9848078, 0, -0.1736482, 104.8, 21, -7.25)
 
+[node name="MiloGuidePoints" type="Node3D" parent="."]
+
+[node name="HomePoint" type="Marker3D" parent="MiloGuidePoints"]
+position = Vector3(104.8, 21, -7.25)
+script = ExtResource("107_milo_point")
+guide_point_id = &"home"
+
+[node name="ReminderPoint" type="Marker3D" parent="MiloGuidePoints"]
+position = Vector3(101.5, 20.5, -3.5)
+script = ExtResource("107_milo_point")
+guide_point_id = &"reminder"
+
+[node name="CelebrationPoint" type="Marker3D" parent="MiloGuidePoints"]
+position = Vector3(107.5, 21, -4.0)
+script = ExtResource("107_milo_point")
+guide_point_id = &"celebration"
+arrival_animation = &"Celebrate"
+
 [node name="Father_Animations2" parent="." unique_id=742864976 instance=ExtResource("63_father")]
 transform = Transform3D(1.5695528, 0, -1.239558, 0, 2, 0, 1.239558, 0, 1.5695528, 90, 20, -70)
 
@@ -1057,7 +1153,7 @@ transform = Transform3D(0.7847764, 0, 0.619779, 0, 1, 0, -0.619779, 0, 0.7847764
 [node name="Story_Intro_Spawn2" type="Label3D" parent="." unique_id=580049014]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107.823364, 22.766987, -21.084024)
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 modulate = Color(1, 0.95686275, 0.81960785, 1)
 outline_size = 20
 
@@ -1069,7 +1165,7 @@ script = ExtResource("68_1fv2d")
 
 [node name="Label3D" type="Label3D" parent="Story_Intro_Spawn2/NarrativeBubble" unique_id=699826674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.099998474)
-no_depth_test = true
+no_depth_test = false
 render_priority = 1
 modulate = Color(0.18039216, 0.003921569, 0.2, 1)
 text = "The air feels different here, Player. You should find Milo, our Wonderful Councellor.

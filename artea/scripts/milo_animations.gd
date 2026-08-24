@@ -1,12 +1,30 @@
 extends CharacterBody3D
 
-@onready var player = get_node("../NewPlayer")
+enum CompanionState {
+	WAITING,
+	IDLE_NEAR_PLAYER,
+	FOLLOWING,
+	CATCHING_UP,
+	GREETING,
+	TALKING,
+	LISTENING,
+	REFLECTING,
+	GUIDING,
+	ENCOURAGING,
+	CELEBRATING,
+	SUPPORTING,
+}
 
 @export var walk_speed := 1.10
-@export var wander_radius := 7.0
-@export var minimum_pause := 1.6
-@export var maximum_pause := 4.5
-@export var initial_greeting_pause := 10.0
+@export var catch_up_speed := 2.35
+@export var follow_start_distance := 3.1
+@export var follow_stop_distance := 2.15
+@export var catch_up_distance := 8.0
+@export var safe_reposition_distance := 18.0
+@export var maximum_vertical_separation := 5.0
+@export var player_teleport_distance := 12.0
+@export var breadcrumb_spacing := 0.75
+@export var gravity_enabled := true
 
 const STAGE_GLOW := [
 	Color("7896c8"),
@@ -27,6 +45,48 @@ const COUNSELLOR_ANIMATIONS := {
 
 var player_in_range := false
 var chatbot_ui = null
+var player: CharacterBody3D
+var companion_state := CompanionState.WAITING
+var _breadcrumbs: Array[Vector3] = []
+var _last_player_sample := Vector3.INF
+var _previous_player_position := Vector3.INF
+var _follow_active := false
+var mouth_closed: MeshInstance3D
+var mouth_open_small: MeshInstance3D
+var mouth_open_wide: MeshInstance3D
+var tongue_small: GeometryInstance3D
+var tongue_wide: GeometryInstance3D
+var _speech_remaining := 0.0
+var _speech_elapsed := 0.0
+var _mouth_shape := "closed"
+var _tts_voice_id := ""
+var _tts_voice_resolved := false
+var greeting_voice: AudioStreamPlayer3D
+var _recorded_greeting_played := false
+var _conversation_state := CompanionState.GREETING
+var _conversation_active := false
+var relaxed_eyelids: Array[GeometryInstance3D] = []
+var half_eyelids: Array[GeometryInstance3D] = []
+var closed_eyelids: Array[GeometryInstance3D] = []
+var gaze_parts: Array[Node3D] = []
+var _gaze_origins: Dictionary = {}
+var _blink_shape := "relaxed"
+var _blink_elapsed := 0.0
+var _blink_active := false
+var _blink_timer := 2.4
+var _blink_rng := RandomNumberGenerator.new()
+var model_root: Node3D
+var _model_base_position := Vector3.ZERO
+var _model_base_rotation := Vector3.ZERO
+var _motion_elapsed := 0.0
+var contact_shadow: MeshInstance3D
+var cane_contact_shadow: MeshInstance3D
+var free_hand_parts: Array[Node3D] = []
+var left_foot_parts: Array[Node3D] = []
+var right_foot_parts: Array[Node3D] = []
+var _secondary_part_origins: Dictionary = {}
+var hand_meshes: Array[MeshInstance3D] = []
+var _hand_curl_shape_indices: Dictionary = {}
 
 var wave_timer := 0.0
 var first_wave := false
@@ -39,10 +99,6 @@ var counsellor_props: Node3D
 var map_prop: Node3D
 var tablet_prop: Node3D
 var counsellor_sparkles: Node3D
-var _home: Vector3
-var _walk_target: Vector3
-var _pause_timer := 0.0
-var _is_walking := false
 var _cane_cycle_time := 0.0
 var _cane_gait_state := "plant"
 
@@ -51,6 +107,7 @@ const CANE_PLANT_END := 0.18
 const CANE_SUPPORT_END := 0.70
 const COUNSELLOR_POSE_SECONDS := 0.36
 const HAND_CLEARANCE_ARC := 0.16
+const BLINK_SECONDS := 0.22
 const ARM_BONES := [
 	"upperarm.l", "lowerarm.l", "wrist.l", "hand.l",
 	"upperarm.r", "lowerarm.r", "wrist.r", "hand.r",
@@ -60,23 +117,324 @@ var counsellor_pose_tween: Tween
 
 
 func _ready():
-	# This nested inherited scene loses its instance origin when the Web hub is
-	# assembled. The Artéa sign keeps its authored landmark transform, so use it
-	# as Milo's stable anchor. He now works beside the sign instead of waiting at
-	# the player's spawn point.
-	if player != null:
-		var artea_sign := get_node_or_null("../Artéa_Signpost_1027230400_texture") as Node3D
-		if artea_sign != null:
-			global_position = artea_sign.global_position + Vector3(-7.5, -8.5, -1.5)
-		else:
-			global_position = Vector3(104.8, 21.0, -7.25)
+	# Milo is a non-blocking companion. He still collides with the world so his
+	# body can walk on terrain, but the player and combat systems cannot hit him.
+	collision_layer = 0
+	collision_mask = 1
 	anim_player = _find_animation_player(self)
-	_home = global_position
-	_begin_pause(initial_greeting_pause)
+	if anim_player != null:
+		# Evaluate the authored clip before Milo's controller adds its restrained
+		# gaze and weight-shift pass during the same rendered frame.
+		anim_player.process_priority = -10
 	_play_animation("Idle_3")
+	model_root = get_node_or_null("Model") as Node3D
+	if model_root != null:
+		_model_base_position = model_root.position
+		_model_base_rotation = model_root.rotation
 	_build_counsellor_props()
+	_resolve_mouth_shapes()
+	greeting_voice = get_node_or_null("MiloGreetingVoice") as AudioStreamPlayer3D
+	_resolve_eye_system()
+	_resolve_secondary_parts()
+	_build_contact_shadow()
 	_build_journey_aura()
 	_apply_journey_stage()
+	var initial_player := _find_player()
+	if initial_player != null:
+		set_companion_player(initial_player, false)
+	else:
+		_set_companion_state(CompanionState.WAITING)
+
+
+func _find_player() -> CharacterBody3D:
+	for group_name in [&"player", &"Player"]:
+		var candidate := get_tree().get_first_node_in_group(group_name)
+		if candidate is CharacterBody3D:
+			return candidate as CharacterBody3D
+	var parent := get_parent()
+	if parent != null:
+		for node_name in [&"NewPlayer", &"Player3D"]:
+			var candidate := parent.get_node_or_null(NodePath(String(node_name)))
+			if candidate is CharacterBody3D:
+				return candidate as CharacterBody3D
+	return null
+
+
+func set_companion_player(next_player: CharacterBody3D,
+		reposition_near_player := false) -> void:
+	player = next_player
+	_breadcrumbs.clear()
+	_last_player_sample = Vector3.INF
+	_previous_player_position = Vector3.INF
+	_follow_active = false
+	if player == null:
+		_set_companion_state(CompanionState.WAITING)
+		return
+	_sample_player_breadcrumb(true)
+	_previous_player_position = player.global_position
+	if reposition_near_player or global_position.distance_to(player.global_position) \
+			> safe_reposition_distance:
+		_reposition_safely_near_player()
+	_set_companion_state(CompanionState.IDLE_NEAR_PLAYER)
+
+
+func _set_companion_state(next_state: CompanionState) -> void:
+	companion_state = next_state
+
+
+func get_companion_state_name() -> String:
+	return CompanionState.keys()[companion_state]
+
+
+func _resolve_mouth_shapes() -> void:
+	mouth_closed = find_child("Mouth", true, false) as MeshInstance3D
+	mouth_open_small = find_child("MouthOpenSmall", true, false) as MeshInstance3D
+	mouth_open_wide = find_child("MouthOpenWide", true, false) as MeshInstance3D
+	tongue_small = find_child("TongueSmall", true, false) as GeometryInstance3D
+	tongue_wide = find_child("TongueWide", true, false) as GeometryInstance3D
+	_set_mouth_shape("closed")
+
+
+func _set_mouth_shape(shape_name: String) -> void:
+	_mouth_shape = shape_name
+	if mouth_closed != null:
+		mouth_closed.visible = shape_name == "closed"
+	if mouth_open_small != null:
+		mouth_open_small.visible = shape_name == "small"
+	if mouth_open_wide != null:
+		mouth_open_wide.visible = shape_name == "wide"
+	if tongue_small != null:
+		tongue_small.visible = shape_name == "small"
+	if tongue_wide != null:
+		tongue_wide.visible = shape_name == "wide"
+
+
+func _on_companion_speech_requested(spoken_text: String) -> void:
+	var clean_text := spoken_text.strip_edges()
+	if clean_text.is_empty():
+		_stop_speaking()
+		return
+	_speech_elapsed = 0.0
+	_speech_remaining = clampf(float(clean_text.length()) / 14.0, 0.8, 42.0)
+	_set_companion_state(CompanionState.TALKING)
+	_set_mouth_shape("small")
+	if greeting_voice != null and greeting_voice.playing:
+		greeting_voice.stop()
+	_speak_with_platform_voice(_spoken_version(clean_text))
+
+
+func _play_recorded_greeting() -> void:
+	if greeting_voice == null or greeting_voice.stream == null \
+			or greeting_voice.playing or _recorded_greeting_played:
+		return
+	_recorded_greeting_played = true
+	_speech_elapsed = 0.0
+	_speech_remaining = greeting_voice.stream.get_length()
+	_set_companion_state(CompanionState.TALKING)
+	_set_mouth_shape("small")
+	greeting_voice.play()
+
+
+func _spoken_version(source_text: String) -> String:
+	var spoken := source_text.replace("Wonderful Counsellor Milo ·", "")
+	spoken = spoken.replace("Milo:", "")
+	spoken = spoken.replace("·", ".")
+	# UI layout uses blank lines and bullets; TTS reads more naturally when they
+	# become pauses instead of announcing formatting.
+	while "\n\n" in spoken:
+		spoken = spoken.replace("\n\n", ". ")
+	return spoken.replace("\n", " ").strip_edges()
+
+
+func _speak_with_platform_voice(spoken_text: String) -> void:
+	if spoken_text.is_empty() or not DisplayServer.has_feature(
+			DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		return
+	if not _tts_voice_resolved:
+		_tts_voice_resolved = true
+		var voices := DisplayServer.tts_get_voices()
+		# Milo has one recognisable voice across supported platforms. Prefer a
+		# warm male English voice by name, then fall back by English locale.
+		for voice_data in voices:
+			var voice_name := str(voice_data.get("name", "")).to_lower()
+			var voice_id := str(voice_data.get("id", "")).to_lower()
+			if voice_name.contains("daniel") or voice_id.contains("daniel"):
+				_tts_voice_id = str(voice_data.get("id", ""))
+				break
+		for preferred_prefix in ["en_GB", "en_AU", "en_US", "en"]:
+			if not _tts_voice_id.is_empty():
+				break
+			for voice_data in voices:
+				if str(voice_data.get("language", "")).begins_with(preferred_prefix):
+					_tts_voice_id = str(voice_data.get("id", ""))
+					break
+			if not _tts_voice_id.is_empty():
+				break
+	if _tts_voice_id.is_empty():
+		return
+	var voice_volume := 82
+	if player != null:
+		var distance := global_position.distance_to(player.global_position)
+		voice_volume = int(round(lerpf(86.0, 24.0, clampf(distance / 30.0, 0.0, 1.0))))
+	DisplayServer.tts_speak(spoken_text, _tts_voice_id, voice_volume, 0.90, 0.96, 2603, true)
+
+
+func _on_companion_activity_state_requested(state_name: String) -> void:
+	var state_key := state_name.to_upper()
+	if not CompanionState.has(state_key):
+		return
+	_conversation_state = int(CompanionState[state_key])
+	_conversation_active = true
+	if not is_speaking():
+		_set_companion_state(_conversation_state)
+
+
+func _update_speaking(delta: float) -> void:
+	if _speech_remaining <= 0.0:
+		return
+	_speech_elapsed += delta
+	_speech_remaining = maxf(0.0, _speech_remaining - delta)
+	if _speech_remaining <= 0.0:
+		_stop_speaking()
+		return
+	var phase := int(floor(_speech_elapsed / 0.11)) % 4
+	match phase:
+		0, 2:
+			_set_mouth_shape("small")
+		1:
+			_set_mouth_shape("wide")
+		_:
+			_set_mouth_shape("closed")
+
+
+func _stop_speaking() -> void:
+	_speech_remaining = 0.0
+	_speech_elapsed = 0.0
+	_set_mouth_shape("closed")
+	if _conversation_active:
+		_set_companion_state(_conversation_state)
+	elif player != null:
+		_set_companion_state(CompanionState.IDLE_NEAR_PLAYER)
+
+
+func is_speaking() -> bool:
+	return _speech_remaining > 0.0
+
+
+func get_mouth_shape() -> String:
+	return _mouth_shape
+
+
+func _resolve_eye_system() -> void:
+	_blink_rng.seed = 0x4d494c4f
+	for side in ["L", "R"]:
+		var relaxed := find_child("EyelidRelaxed_%s" % side, true, false) \
+			as GeometryInstance3D
+		var half := find_child("EyelidHalf_%s" % side, true, false) \
+			as GeometryInstance3D
+		var closed := find_child("EyelidClosed_%s" % side, true, false) \
+			as GeometryInstance3D
+		if relaxed != null:
+			relaxed_eyelids.append(relaxed)
+		if half != null:
+			half_eyelids.append(half)
+		if closed != null:
+			closed_eyelids.append(closed)
+		for part_prefix in ["Pupil", "IrisInner", "EyeCatchlight"]:
+			var part := find_child("%s_%s" % [part_prefix, side], true, false) \
+				as Node3D
+			if part != null:
+				gaze_parts.append(part)
+				_gaze_origins[part] = part.position
+	_set_eyelid_shape("relaxed")
+
+
+func trigger_blink() -> void:
+	_blink_active = true
+	_blink_elapsed = 0.0
+
+
+func get_blink_shape() -> String:
+	return _blink_shape
+
+
+func _set_eyelid_shape(shape_name: String) -> void:
+	_blink_shape = shape_name
+	for lid in relaxed_eyelids:
+		lid.visible = shape_name == "relaxed"
+	for lid in half_eyelids:
+		lid.visible = shape_name == "half"
+	for lid in closed_eyelids:
+		lid.visible = shape_name == "closed"
+
+
+func _update_eye_animation(delta: float) -> void:
+	if _blink_active:
+		_blink_elapsed += delta
+		var phase := _blink_elapsed / BLINK_SECONDS
+		if phase < 0.25:
+			_set_eyelid_shape("half")
+		elif phase < 0.58:
+			_set_eyelid_shape("closed")
+		elif phase < 0.82:
+			_set_eyelid_shape("half")
+		else:
+			_set_eyelid_shape("relaxed")
+			_blink_active = false
+			_blink_timer = _blink_rng.randf_range(2.6, 5.1)
+	else:
+		_blink_timer -= delta
+		if _blink_timer <= 0.0:
+			trigger_blink()
+
+	# Milo follows the player's face with a deliberately tiny shared iris move.
+	# Keeping all six eye layers together avoids the sliding-doll-eye effect.
+	var gaze_offset := Vector3.ZERO
+	if player != null and is_instance_valid(player):
+		var local_target := global_transform.affine_inverse() \
+			* (player.global_position + Vector3.UP * 1.25)
+		gaze_offset.x = clampf(local_target.x * 0.0035, -0.010, 0.010)
+		gaze_offset.z = clampf((local_target.y - 1.50) * 0.0035, -0.006, 0.006)
+	var focus_weight := 1.0 - exp(-delta * 8.0)
+	for part in gaze_parts:
+		var origin: Vector3 = _gaze_origins[part]
+		part.position = part.position.lerp(origin + gaze_offset, focus_weight)
+
+
+func get_gaze_offset() -> Vector3:
+	if gaze_parts.is_empty():
+		return Vector3.ZERO
+	var part := gaze_parts[0]
+	return part.position - (_gaze_origins[part] as Vector3)
+
+
+func _resolve_secondary_parts() -> void:
+	for part_name in ["Paw_L", "Cuff_L", "CuffAccent_L"]:
+		_add_secondary_part(free_hand_parts, part_name)
+	for side in ["L", "R"]:
+		var hand := find_child("Paw_%s" % side, true, false) as MeshInstance3D
+		if hand == null or hand.mesh == null:
+			continue
+		for shape_index in hand.mesh.get_blend_shape_count():
+			if hand.mesh.get_blend_shape_name(shape_index) == "FingerCurl":
+				hand_meshes.append(hand)
+				_hand_curl_shape_indices[hand] = shape_index
+				break
+	for part_name in ["Trouser_L", "Boot_L", "Sole_L"]:
+		_add_secondary_part(left_foot_parts, part_name)
+	for part_name in ["Trouser_R", "Boot_R", "Sole_R"]:
+		_add_secondary_part(right_foot_parts, part_name)
+
+
+func _add_secondary_part(target: Array[Node3D], part_name: String) -> void:
+	var part := find_child(part_name, true, false) as Node3D
+	if part != null:
+		target.append(part)
+		_secondary_part_origins[part] = part.position
+
+
+func get_companion_activity_name() -> String:
+	return CompanionState.keys()[_conversation_state]
 
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
@@ -266,6 +624,8 @@ func _set_cane_visible(is_visible: bool) -> void:
 		var part_name := str(part.name)
 		if part_name.begins_with("MayorCane") or part_name.begins_with("CaneGrip"):
 			part.visible = is_visible
+	if cane_contact_shadow != null:
+		cane_contact_shadow.visible = is_visible
 
 
 func _set_counsellor_prop(pose_name: String) -> void:
@@ -277,10 +637,8 @@ func _set_counsellor_prop(pose_name: String) -> void:
 		counsellor_sparkles.visible = pose_name in ["encourage", "heart"]
 
 
-func _begin_pause(duration := -1.0) -> void:
+func _begin_pause(_duration := -1.0) -> void:
 	_cancel_counsellor_pose_transition()
-	_is_walking = false
-	_pause_timer = duration if duration >= 0.0 else randf_range(minimum_pause, maximum_pause)
 	velocity.x = 0.0
 	velocity.z = 0.0
 	_reset_cane_gait()
@@ -290,6 +648,8 @@ func _begin_pause(duration := -1.0) -> void:
 	_play_animation("Idle_3")
 	if anim_player != null:
 		anim_player.speed_scale = 1.0
+	if player != null:
+		_set_companion_state(CompanionState.IDLE_NEAR_PLAYER)
 
 
 func _reset_cane_gait() -> void:
@@ -335,54 +695,152 @@ func _reset_mayor_arm_pose() -> void:
 			skeleton.reset_bone_pose(bone_index)
 
 
-func _choose_town_target() -> void:
-	var angle := randf() * TAU
-	var distance := randf_range(wander_radius * 0.35, wander_radius)
-	_walk_target = _home + Vector3(cos(angle) * distance, 0.0, sin(angle) * distance)
-	_is_walking = true
-
-
 func _physics_process(delta: float) -> void:
-	if not is_on_floor():
+	if gravity_enabled and not is_on_floor():
 		velocity.y -= 20.0 * delta
 	else:
 		velocity.y = 0.0
 
-	# Milo stops to greet the player, then resumes his town route after they go.
-	if player_in_range:
+	if player == null or not is_instance_valid(player):
+		player = _find_player()
+		if player == null:
+			_set_companion_state(CompanionState.WAITING)
+			velocity.x = 0.0
+			velocity.z = 0.0
+			move_and_slide()
+			return
+		set_companion_player(player, false)
+
+	if _player_teleported_since_last_frame():
+		_reposition_safely_near_player()
+		move_and_slide()
+		return
+	_sample_player_breadcrumb()
+	# Conversation owns Milo's pose and facing until the panel closes.
+	if chatbot_ui != null or player_in_range:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
 		return
 
-	if not _is_walking:
-		_pause_timer -= delta
-		if _pause_timer <= 0.0:
-			_choose_town_target()
-	else:
-		var to_target := _walk_target - global_position
-		to_target.y = 0.0
-		if to_target.length() <= 0.45:
+	var separation := global_position.distance_to(player.global_position)
+	_prune_reached_breadcrumbs()
+	if separation >= follow_start_distance:
+		_follow_active = true
+	elif separation <= follow_stop_distance:
+		_follow_active = false
+	if not _follow_active:
+		if companion_state in [CompanionState.FOLLOWING, CompanionState.CATCHING_UP]:
 			_begin_pause()
 		else:
-			var direction := to_target.normalized()
-			var stride_multiplier := _advance_cane_gait(delta)
-			velocity.x = direction.x * walk_speed * stride_multiplier
-			velocity.z = direction.z * walk_speed * stride_multiplier
-			rotation.y = lerp_angle(rotation.y, atan2(direction.x, direction.z), 5.5 * delta)
-			# The cane-side arm remains in its authored closed grip while the
-			# opposite arm and legs retain the market-villager walking motion.
-			_play_animation("Cane_Walk")
-			if anim_player != null:
-				# Cadence follows the same support curve as translation: slow while
-				# planting, quickest while stepping past the cane, then ease back.
-				anim_player.speed_scale = lerpf(0.82, 1.08,
-					clampf((stride_multiplier - 0.52) / 0.70, 0.0, 1.0))
+			velocity.x = 0.0
+			velocity.z = 0.0
+		move_and_slide()
+		return
+
+	var target := _breadcrumbs[0] if not _breadcrumbs.is_empty() \
+		else player.global_position
+	var to_target := target - global_position
+	to_target.y = 0.0
+	if to_target.length_squared() <= 0.01:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		move_and_slide()
+		return
+	var direction := to_target.normalized()
+	var stride_multiplier := _advance_cane_gait(delta)
+	var movement_speed := catch_up_speed if separation >= catch_up_distance else walk_speed
+	_set_companion_state(CompanionState.CATCHING_UP if separation >= catch_up_distance \
+		else CompanionState.FOLLOWING)
+	velocity.x = direction.x * movement_speed * stride_multiplier
+	velocity.z = direction.z * movement_speed * stride_multiplier
+	rotation.y = lerp_angle(rotation.y, atan2(direction.x, direction.z), 5.5 * delta)
+	# Following uses the measured cane walk. At long range Milo uses the authored
+	# running cycle so catching up reads as continuous movement, not sliding.
+	_play_animation("Run" if companion_state == CompanionState.CATCHING_UP \
+		else "Cane_Walk")
+	if anim_player != null:
+		anim_player.speed_scale = lerpf(0.82, 1.08,
+			clampf((stride_multiplier - 0.52) / 0.70, 0.0, 1.0))
 
 	move_and_slide()
 
 
+func _sample_player_breadcrumb(force := false) -> void:
+	if player == null:
+		return
+	var sample := player.global_position
+	if not force and _last_player_sample != Vector3.INF \
+			and sample.distance_to(_last_player_sample) < breadcrumb_spacing:
+		return
+	_breadcrumbs.append(sample)
+	_last_player_sample = sample
+	if _breadcrumbs.size() > 96:
+		_breadcrumbs.pop_front()
+
+
+func _player_teleported_since_last_frame() -> bool:
+	if player == null:
+		return false
+	var current := player.global_position
+	if _previous_player_position == Vector3.INF:
+		_previous_player_position = current
+		return false
+	var moved := current.distance_to(_previous_player_position)
+	_previous_player_position = current
+	return moved >= player_teleport_distance
+
+
+func _prune_reached_breadcrumbs() -> void:
+	while _breadcrumbs.size() > 1:
+		if not _has_reached_breadcrumb(_breadcrumbs[0]):
+			break
+		_breadcrumbs.pop_front()
+
+
+func _has_reached_breadcrumb(point: Vector3) -> bool:
+	var point_delta := point - global_position
+	var horizontal_delta := Vector2(point_delta.x, point_delta.z).length()
+	# A point directly above or below Milo is not reached. Retaining its height
+	# keeps him on the player's castle stair/ledge route instead of cutting to
+	# another side of the structure.
+	return horizontal_delta <= 0.65 and absf(point_delta.y) <= 0.85
+
+
+func _reposition_safely_near_player() -> void:
+	if player == null:
+		return
+	var horizontal_velocity := Vector3(player.velocity.x, 0.0, player.velocity.z)
+	var behind := -horizontal_velocity.normalized() if horizontal_velocity.length() > 0.2 \
+		else Vector3(1.0, 0.0, 1.0).normalized()
+	var desired := player.global_position
+	var world := get_world_3d()
+	if world != null:
+		var side := Vector3(-behind.z, 0.0, behind.x)
+		for offset: Vector3 in [behind * follow_stop_distance,
+				side * follow_stop_distance, -side * follow_stop_distance,
+				-behind * follow_stop_distance, Vector3.ZERO]:
+			var candidate: Vector3 = player.global_position + offset
+			var query := PhysicsRayQueryParameters3D.create(
+				candidate + Vector3.UP * 4.0, candidate + Vector3.DOWN * 10.0, 1)
+			query.exclude = [get_rid(), player.get_rid()]
+			var hit := world.direct_space_state.intersect_ray(query)
+			if not hit.is_empty():
+				desired = candidate
+				desired.y = (hit.position as Vector3).y + 0.05
+				break
+	global_position = desired
+	velocity = Vector3.ZERO
+	_breadcrumbs.clear()
+	_follow_active = false
+	_sample_player_breadcrumb(true)
+	_previous_player_position = player.global_position
+	_begin_pause()
+
+
 func look_at_player(delta):
+	if player == null:
+		return
 	var target_pos = player.global_transform.origin
 	var my_pos = global_transform.origin
 
@@ -411,6 +869,9 @@ func _reset_npc_state():
 
 
 func _process(delta):
+	_update_speaking(delta)
+	_update_eye_animation(delta)
+	_update_secondary_motion(delta)
 	_apply_journey_stage()
 	if aura != null:
 		aura.rotate_y(delta * (0.18 + max(journey_stage, 0) * 0.08))
@@ -424,26 +885,125 @@ func _process(delta):
 	# INSIDE interaction zone: waving logic
 	if not first_wave:
 		_play_animation("Wave_One_Hand")
+		_set_companion_state(CompanionState.GREETING)
+		_play_recorded_greeting()
 		wave_timer = 0.0
 		first_wave = true
 
 	wave_timer += delta
 
-	if wave_timer >= 5.0 and not player.interacting:
+	if wave_timer >= 5.0 and not _player_is_busy():
 		_play_animation("Wave_One_Hand")
 		wave_timer = 0.0
 
 	# interaction
-	if Input.is_action_just_pressed("interact") and player_in_range and !player.interacting:
+	if Input.is_action_just_pressed("interact") and player_in_range \
+			and not _player_is_busy():
 		print("Interacting with Milo")
 		open_chatbot()
-		player.interacting = true
+
+
+func _update_secondary_motion(delta: float) -> void:
+	if model_root == null:
+		return
+	_motion_elapsed += delta
+	var target_position := _model_base_position
+	var target_rotation := _model_base_rotation
+	var is_walking := companion_state in [CompanionState.FOLLOWING,
+		CompanionState.CATCHING_UP]
+	var stride_wave := 0.0
+	if is_walking:
+		var stride_phase := _cane_cycle_time / CANE_GAIT_CYCLE_SECONDS
+		stride_wave = sin(stride_phase * TAU)
+		# A restrained rise, side-to-side load and forward intent make the donor
+		# leg animation feel grounded while keeping the cane paw securely planted.
+		target_position.y += absf(stride_wave) * 0.018
+		target_position.x += stride_wave * 0.008
+		target_rotation.x -= 0.032
+		target_rotation.z += stride_wave * 0.024
+	else:
+		var breath := sin(_motion_elapsed * 1.65)
+		target_position.y += breath * 0.004
+		target_rotation.z += breath * 0.004
+	var settle_weight := 1.0 - exp(-delta * 10.0)
+	model_root.position = model_root.position.lerp(target_position, settle_weight)
+	model_root.rotation.x = lerp_angle(model_root.rotation.x,
+		target_rotation.x, settle_weight)
+	model_root.rotation.z = lerp_angle(model_root.rotation.z,
+		target_rotation.z, settle_weight)
+	_update_limb_secondary_motion(stride_wave, is_walking, delta)
+
+
+func _update_limb_secondary_motion(stride_wave: float, is_walking: bool,
+		delta: float) -> void:
+	var free_hand_offset := Vector3.ZERO
+	var left_foot_offset := Vector3.ZERO
+	var right_foot_offset := Vector3.ZERO
+	if is_walking:
+		# The cane hand stays planted. The opposite paw counter-swings, while each
+		# shoe lifts only during its own forward half-stride for readable footfall.
+		free_hand_offset = Vector3(0.0, absf(stride_wave) * 0.010,
+			-stride_wave * 0.040)
+		left_foot_offset = Vector3(0.0, maxf(stride_wave, 0.0) * 0.035,
+			stride_wave * 0.052)
+		right_foot_offset = Vector3(0.0, maxf(-stride_wave, 0.0) * 0.035,
+			-stride_wave * 0.052)
+	var weight := 1.0 - exp(-delta * 16.0)
+	_set_secondary_part_offset(free_hand_parts, free_hand_offset, weight)
+	_set_secondary_part_offset(left_foot_parts, left_foot_offset, weight)
+	_set_secondary_part_offset(right_foot_parts, right_foot_offset, weight)
+	_update_hand_motion(stride_wave, is_walking, delta)
+
+
+func _update_hand_motion(stride_wave: float, is_walking: bool,
+		delta: float) -> void:
+	# Each complete hand is one connected mesh. Its one FingerCurl blend shape
+	# deforms the three sculpted lobes together, so no digit can detach or float.
+	var curl := 0.08 + sin(_motion_elapsed * 1.65) * 0.025
+	if is_walking:
+		curl = 0.26 + absf(stride_wave) * 0.10
+	if is_speaking() or companion_state in [CompanionState.TALKING,
+			CompanionState.ENCOURAGING, CompanionState.CELEBRATING]:
+		curl = 0.62 + sin(_speech_elapsed * 10.0) * 0.16
+	var weight := 1.0 - exp(-delta * 18.0)
+	for hand in hand_meshes:
+		var shape_index: int = _hand_curl_shape_indices[hand]
+		var current := hand.get_blend_shape_value(shape_index)
+		hand.set_blend_shape_value(shape_index, lerpf(current, curl, weight))
+
+
+func get_hand_curl_amounts() -> Dictionary:
+	var result := {}
+	for hand in hand_meshes:
+		var shape_index: int = _hand_curl_shape_indices[hand]
+		result[str(hand.name)] = hand.get_blend_shape_value(shape_index)
+	return result
+
+
+func _set_secondary_part_offset(parts: Array[Node3D], offset: Vector3,
+		weight: float) -> void:
+	for part in parts:
+		var origin: Vector3 = _secondary_part_origins[part]
+		part.position = part.position.lerp(origin + offset, weight)
+
+
+func get_left_foot_motion_offset() -> Vector3:
+	if left_foot_parts.is_empty():
+		return Vector3.ZERO
+	var part := left_foot_parts[0]
+	return part.position - (_secondary_part_origins[part] as Vector3)
+
+
+func get_secondary_motion_offset() -> Vector3:
+	return model_root.position - _model_base_position if model_root != null \
+		else Vector3.ZERO
 
 
 func open_chatbot():
 	if chatbot_ui != null:
 		return
 
+	_conversation_active = true
 	chatbot_ui = load("res://scenes/chatbot.tscn").instantiate()
 	get_tree().current_scene.add_child(chatbot_ui)
 	print("Milo opened chat")
@@ -452,9 +1012,15 @@ func open_chatbot():
 	chatbot_ui.connect("chat_closed", Callable(self, "close_chatbot"))
 	chatbot_ui.connect("companion_pose_requested",
 		Callable(self, "_on_companion_pose_requested"))
+	chatbot_ui.connect("companion_speech_requested",
+		Callable(self, "_on_companion_speech_requested"))
+	chatbot_ui.connect("companion_activity_state_requested",
+		Callable(self, "_on_companion_activity_state_requested"))
 	_on_companion_pose_requested("welcome")
+	chatbot_ui.call("replay_current_speech")
 
-	player.interacting = true
+	_set_player_interaction_locked(true)
+	_set_companion_state(CompanionState.TALKING)
 
 
 func close_chatbot():
@@ -462,23 +1028,50 @@ func close_chatbot():
 		chatbot_ui.queue_free()
 		chatbot_ui = null
 
-	player.interacting = false
+	_set_player_interaction_locked(false)
+	_conversation_active = false
+	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		DisplayServer.tts_stop()
+	_stop_speaking()
 	_set_counsellor_prop("")
 	_play_animation("Idle_3")
 	# Return through the same clear transition instead of snapping the paws back
 	# through the coat as the dialogue closes.
 	_start_counsellor_arm_transition("neutral")
+	_set_companion_state(CompanionState.IDLE_NEAR_PLAYER)
+
+
+func _player_is_busy() -> bool:
+	if player == null or not is_instance_valid(player):
+		return false
+	if "interacting" in player and bool(player.get("interacting")):
+		return true
+	if "input_enabled" in player and not bool(player.get("input_enabled")):
+		return true
+	return false
+
+
+func _set_player_interaction_locked(locked: bool) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	if "interacting" in player:
+		player.set("interacting", locked)
+	elif player.has_method("set_input_enabled"):
+		player.call("set_input_enabled", not locked)
+	elif "input_enabled" in player:
+		player.set("input_enabled", not locked)
 
 
 func _exit_tree() -> void:
 	# Scene changes and parent removal can bypass the chatbot's Close signal.
 	# Never carry Milo's movement lock into the surviving player/world.
 	_cancel_counsellor_pose_transition()
+	_conversation_active = false
+	_stop_speaking()
 	if chatbot_ui != null and is_instance_valid(chatbot_ui):
 		chatbot_ui.queue_free()
 		chatbot_ui = null
-	if player != null and is_instance_valid(player) and "interacting" in player:
-		player.interacting = false
+	_set_player_interaction_locked(false)
 
 
 func _build_counsellor_props() -> void:
@@ -564,6 +1157,49 @@ func _prop_box(parent: Node3D, part_name: String, size: Vector3,
 	part.material_override = material
 	parent.add_child(part)
 	return part
+
+
+func _build_contact_shadow() -> void:
+	# A soft local contact patch prevents Milo's broad shoes from appearing to
+	# float when the level's directional shadow is faint or outside its atlas.
+	contact_shadow = MeshInstance3D.new()
+	contact_shadow.name = "MiloContactShadow"
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.82, 0.48)
+	contact_shadow.mesh = quad
+	contact_shadow.position = Vector3(0.0, 0.026, 0.02)
+	contact_shadow.rotation_degrees.x = -90.0
+	contact_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var shadow_material := ShaderMaterial.new()
+	var shadow_shader := Shader.new()
+	shadow_shader.code = """
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, blend_mix;
+void fragment() {
+	vec2 p = (UV - vec2(0.5)) * 2.0;
+	float edge = smoothstep(1.0, 0.18, dot(p, p));
+	ALBEDO = vec3(0.025, 0.035, 0.055);
+	ALPHA = edge * 0.30;
+}
+"""
+	shadow_material.shader = shadow_shader
+	contact_shadow.material_override = shadow_material
+	add_child(contact_shadow)
+
+	# A second restrained patch sits under the authored cane tip. It shares the
+	# same soft shader and follows Milo's root, appearing only while the cane is
+	# visible so counsellor poses without the cane do not leave a stray dot.
+	cane_contact_shadow = MeshInstance3D.new()
+	cane_contact_shadow.name = "MiloCaneContactShadow"
+	var cane_quad := QuadMesh.new()
+	cane_quad.size = Vector2(0.17, 0.14)
+	cane_contact_shadow.mesh = cane_quad
+	cane_contact_shadow.position = Vector3(0.52, 0.027, 0.02)
+	cane_contact_shadow.rotation_degrees.x = -90.0
+	cane_contact_shadow.cast_shadow = \
+		GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	cane_contact_shadow.material_override = shadow_material
+	add_child(cane_contact_shadow)
 
 
 # Milo's glow is evidence of the journey, not a generic NPC highlight. The

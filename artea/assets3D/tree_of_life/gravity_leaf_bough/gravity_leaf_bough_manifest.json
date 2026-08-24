@@ -23,5 +23,7 @@
   "game_glb": "assets3D/tree_of_life/gravity_leaf_bough/glb/gravity_leaf_bough.glb",
   "side_preview": "artifacts/tree_of_life_gravity_bough/gravity_leaf_bough_side.png",
   "top_preview": "artifacts/tree_of_life_gravity_bough/gravity_leaf_bough_top.png",
-  "socket_closeup": "artifacts/tree_of_life_gravity_bough/gravity_leaf_bough_socket_closeup.png"
+  "socket_closeup": "artifacts/tree_of_life_gravity_bough/gravity_leaf_bough_socket_closeup.png",
+  "attachment_proof": "artifacts/tree_of_life_gravity_bough/gravity_leaf_bough_attachment_proof.png",
+  "attachment_proof_leaf_count": 8
 }

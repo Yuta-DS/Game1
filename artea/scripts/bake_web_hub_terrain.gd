@@ -16,6 +16,11 @@ func _bake() -> void:
 		await process_frame
 	var terrain = scene.get_node("Environment/Terrain3D")
 	var mesh := _build_mesh(terrain.get("data"), _build_palette(terrain))
+	var surface_map_error := _save_surface_map(terrain.get("data"))
+	if surface_map_error != OK:
+		push_error("Failed to save Web terrain surface map: %s" % error_string(surface_map_error))
+		quit(1)
+		return
 	var error := ResourceSaver.save(mesh, "res://resources/web_hub_terrain.res")
 	if error != OK:
 		push_error("Failed to save Web terrain mesh: %s" % error_string(error))
@@ -23,6 +28,26 @@ func _bake() -> void:
 		return
 	print("Saved Web hub terrain: %d vertices" % ((GRID_CELLS + 1) * (GRID_CELLS + 1)))
 	quit()
+
+
+# R8 lookup used by Web audio after Terrain3D is replaced by its baked mesh.
+# Values are texture IDs: 0 moss/grass, 1 sand, 2 village ground tile.
+func _save_surface_map(terrain_data) -> Error:
+	var side := GRID_CELLS + 1
+	var image := Image.create(side, side, false, Image.FORMAT_R8)
+	for z_index in side:
+		for x_index in side:
+			var center := Vector3(
+				float(x_index) * GRID_SPACING - HALF_EXTENT, 0.0,
+				float(z_index) * GRID_SPACING - HALF_EXTENT)
+			var base_id: int = terrain_data.get_control_base_id(center)
+			var overlay_id: int = terrain_data.get_control_overlay_id(center)
+			var blend: float = terrain_data.get_control_blend(center)
+			var texture_id := overlay_id if not is_nan(blend) and blend >= 0.5 else base_id
+			# Store the three IDs at the centres of broad thirds. This survives Web
+			# texture transcoding and filtering much more safely than raw 1/255 steps.
+			image.set_pixel(x_index, z_index, Color((float(clampi(texture_id, 0, 2)) + 0.5) / 3.0, 0, 0))
+	return image.save_png("res://resources/web_hub_surface_map.png")
 
 
 # One flat colour per painted Terrain3D texture, taken as the average of the

@@ -39,7 +39,7 @@ shape = SubResource("SphereShape3D_dialogue")
 visible = false
 position = Vector3(0, 2.42, 0)
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 modulate = Color(1, 0.92, 0.62, 1)
 outline_size = 10
 font_size = 34
@@ -48,7 +48,7 @@ text = "Press Q to speak with Mayor Alder"
 [node name="MayorName" type="Label3D" parent="."]
 position = Vector3(0, 2.12, 0)
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 modulate = Color(1, 0.82, 0.38, 1)
 outline_size = 10
 font_size = 40
@@ -72,4 +72,3 @@ position = Vector3(0, 1.5, 1)
 [connection signal="body_exited" from="DialogueArea" to="." method="_on_dialogue_area_body_exited"]
 [connection signal="timeout" from="ReminderTimer" to="." method="_on_reminder_timer_timeout"]
 [connection signal="timeout" from="CelebrationTimer" to="." method="_on_celebration_timer_timeout"]
-

@@ -1,7 +1,7 @@
 extends SceneTree
 
 const SHOTS := [
-	["grounded_medieval_entry", Vector3(13.0, 31.5, 15.0),
+	["grounded_castle_entry", Vector3(13.0, 31.5, 15.0),
 		Vector3(5.1, 27.2, 24.4)],
 	["crown_ballista", Vector3(-1.4, 73.8, 38.5),
 		Vector3(-1.4, 68.0, 27.41)],

@@ -784,11 +784,11 @@ func _build_courtyard(parent: Node3D) -> void:
 
 # The former 6.8 m fountain basin was the circular object blocking the stair
 # sightline and terrace route. Keep the requested central ball, but turn it into
-# a compact medieval fire beacon on the raised bridge court: no pool, orbit
+# a compact castle fire beacon on the raised bridge court: no pool, orbit
 # rings, or broad collision disc.
 func _build_fountain(parent: Node3D, centre: Vector3) -> void:
 	var fire_beacon := Node3D.new()
-	fire_beacon.name = "MedievalCourtyardFire"
+	fire_beacon.name = "CastleCourtyardFire"
 	parent.add_child(fire_beacon)
 
 	var pedestal := MeshInstance3D.new()

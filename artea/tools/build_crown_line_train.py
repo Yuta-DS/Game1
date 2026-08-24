@@ -1348,6 +1348,91 @@ def engine(center_y=-17.0, parent=model_root):
                    (side*(1.20+valve_i*.08),yy,3.02+(valve_i%3)*.16),
                    .050,MAT["cyan"],7,3,eng)
 
+    # Steam-orb hybrid machinery.  The old crystal reactor remains the power
+    # source; this exposed boiler, valve train and geared transmission makes
+    # that energy readable as a magical steam locomotive from either side.
+    boiler_y = center_y-5.55
+    cylinder("Engine_SteamBoilerBarrel",(0,boiler_y,4.72),1.62,5.65,
+             MAT["navy"],32,rot=(math.pi/2,0,0),parent=eng)
+    for band_i, band_y in enumerate((boiler_y-2.35,boiler_y-1.16,boiler_y,
+                                     boiler_y+1.16,boiler_y+2.35)):
+        torus(f"Engine_SteamBoilerGoldBand_{band_i}",(0,band_y,4.72),1.68,.095,
+              MAT["accent_gold"],rot=(math.pi/2,0,0),parent=eng)
+    for rivet_i in range(12):
+        angle = math.tau*rivet_i/12
+        sphere(f"Engine_SteamBoilerRainbowRivet_{rivet_i:02d}",
+               (math.cos(angle)*1.67,boiler_y-2.67,4.72+math.sin(angle)*1.67),
+               .095,(MAT["cyan"],MAT["purple"],MAT["pink"],MAT["teal_light"])[rivet_i%4],
+               8,4,eng)
+
+    # Crown-shaped smokestack and two pressure domes retain the ornate visual
+    # language of the existing train instead of looking like an added kit.
+    stack_y = boiler_y-.78
+    cylinder("Engine_SteamChimneyStem",(0,stack_y,6.72),.53,2.10,
+             MAT["bronze"],24,parent=eng)
+    for stack_i,(height,radius,material_key) in enumerate((
+            (5.92,.74,"gold"),(7.42,.76,"gold"),(7.72,1.04,"accent_gold"))):
+        cylinder(f"Engine_SteamChimneyCrown_{stack_i}",(0,stack_y,height),
+                 radius,.22,MAT[material_key],24,parent=eng)
+    torus("Engine_SteamChimneyEnergyRing",(0,stack_y,7.32),.69,.09,
+          MAT["cyan"],parent=eng)
+    for dome_i,(dome_y,dome_colour) in enumerate(((boiler_y+1.15,"purple"),
+                                                   (boiler_y+2.18,"cyan"))):
+        cylinder(f"Engine_SteamPressureDome_{dome_i}",(0,dome_y,6.25),
+                 .56,.72,MAT["gold"],20,parent=eng)
+        sphere(f"Engine_SteamPressureOrb_{dome_i}",(0,dome_y,6.68),
+               .48,MAT[dome_colour],16,8,eng)
+        torus(f"Engine_SteamPressureHalo_{dome_i}",(0,dome_y,6.66),
+              .60,.055,MAT["accent_gold"],parent=eng)
+
+    def steam_gear_profile(radius, teeth=18):
+        points=[]
+        for point_i in range(teeth*4):
+            angle=math.tau*point_i/(teeth*4)
+            tooth_phase=point_i%4
+            point_radius=radius if tooth_phase in (1,2) else radius*.84
+            points.append((math.cos(angle)*point_radius,math.sin(angle)*point_radius))
+        return points
+
+    for side in (-1,1):
+        side_tag="L" if side<0 else "R"
+        gear_x=side*5.47
+        gear_specs=(("Drive",boiler_y-.80,3.12,1.48,20,"accent_gold"),
+                    ("Valve",boiler_y+1.48,4.05,.96,16,"purple"),
+                    ("Governor",boiler_y+2.62,3.04,.70,14,"cyan"))
+        for gear_i,(gear_kind,gear_y,gear_z,gear_radius,teeth,colour) in enumerate(gear_specs):
+            custom_prism(f"Engine_Steam{gear_kind}Gear_{side_tag}_{gear_i}",
+                         steam_gear_profile(gear_radius,teeth),.24,
+                         (gear_x,gear_y,gear_z),MAT[colour],
+                         rot=(0,math.pi/2,0),parent=eng,bevel=.045)
+            cylinder(f"Engine_SteamGearHub_{side_tag}_{gear_i}",
+                     (gear_x+side*.15,gear_y,gear_z),gear_radius*.26,.34,
+                     MAT["gold"],16,rot=(0,math.pi/2,0),parent=eng)
+            torus(f"Engine_SteamGearEnergyRing_{side_tag}_{gear_i}",
+                  (gear_x+side*.19,gear_y,gear_z),gear_radius*.55,.065,
+                  MAT[("cyan","pink","teal_light")[gear_i]],
+                  rot=(0,math.pi/2,0),parent=eng)
+        # Piston cylinder and bright connecting rod visually couple the reactor
+        # to the large drive gear. They sit beyond the bodywork and stay clear
+        # of the driver's floor and doors.
+        cylinder(f"Engine_SteamPistonCylinder_{side_tag}",
+                 (gear_x,boiler_y-2.15,3.14),.36,1.48,MAT["bronze"],18,
+                 rot=(math.pi/2,0,0),parent=eng)
+        beam(f"Engine_SteamConnectingRod_{side_tag}",
+             (gear_x+side*.22,boiler_y-1.66,3.14),
+             (gear_x+side*.22,boiler_y+.96,3.89),.105,MAT["accent_gold"],10,eng)
+        beam(f"Engine_SteamOrbFeedPipe_{side_tag}",
+             (side*1.15,reactor_y+.62,3.78),(side*3.86,boiler_y-1.85,5.33),
+             .14,MAT["bronze"],12,eng)
+        beam(f"Engine_SteamRainbowPressurePipe_{side_tag}",
+             (side*3.86,boiler_y-1.85,5.33),(side*3.86,boiler_y+2.15,6.28),
+             .105,MAT["cyan" if side<0 else "purple"],10,eng)
+        for valve_i in range(3):
+            valve_y=boiler_y-1.05+valve_i*1.30
+            torus(f"Engine_SteamPipeValve_{side_tag}_{valve_i}",
+                  (side*3.90,valve_y,5.68+valve_i*.22),.25,.055,
+                  MAT["accent_gold"],rot=(0,math.pi/2,0),parent=eng)
+
     # Driver floor: removable energy tiles, seam strips and four corner locks.
     for row in range(6):
         for column in range(5):

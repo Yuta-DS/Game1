@@ -218,6 +218,60 @@ Milo: Whatever you want to do next, I am still here.
 ~ milo_wait
 Milo: That is alright. There is no hurry here, and nothing to get right.
 
+# Short walking-guide lines used by MiloGuide. They help without taking the
+# next action away from the player or repeating the longer counsellor chat.
+~ milo_guide_stage_0
+Milo: I am beside you. When you are ready, let us begin with the Mind Spark Kingdom and notice one thought together.
+=> END
+
+~ milo_guide_stage_1
+Milo: You have already practised noticing a thought. The Sanctuary of Sound is ready when you want to listen to the feeling beneath it.
+=> END
+
+~ milo_guide_stage_2
+Milo: You stayed with what you felt. The Imagination Realm can help you give that feeling a shape, colour, or mark.
+=> END
+
+~ milo_guide_stage_3
+Milo: You made something honest. The Gallery of Light is where we can pause and recognise what your work reveals about your strengths.
+=> END
+
+~ milo_guide_stage_4
+Milo: You have travelled through thought, feeling, and creation. I will keep walking beside you wherever you choose to explore next.
+=> END
+
+~ milo_hint_stage_0
+Milo: Try choosing just one thought. You do not need to solve it; noticing it is enough for this step.
+=> END
+
+~ milo_hint_stage_1
+Milo: Listen for the feeling under the thought, then choose the sound or colour that feels closest to it.
+=> END
+
+~ milo_hint_stage_2
+Milo: Begin with one mark. Let your hand answer before you ask the artwork to be perfect.
+=> END
+
+~ milo_hint_stage_3
+Milo: Look for the piece you made and give yourself time to notice what it carries before moving on.
+=> END
+
+~ milo_celebrate_mind
+Milo: You noticed a thought without letting it define you. That is awareness growing stronger.
+=> END
+
+~ milo_celebrate_heart
+Milo: You listened to a feeling and gave it room. That took patience and courage.
+=> END
+
+~ milo_celebrate_creator
+Milo: You turned something inside you into something real. Your creativity made that possible.
+=> END
+
+~ milo_celebrate_complete
+Milo: Look at the path behind you. You kept showing up with curiosity, courage, and imagination — and those strengths are yours.
+=> END
+
 # -----------------------
 # MILO — moment-specific variants.
 # GameManager.request_milo() picks these over the plain stage node when

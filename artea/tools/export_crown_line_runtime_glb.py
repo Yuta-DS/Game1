@@ -25,6 +25,9 @@ MECHANISM_MARKERS = (
     "Engine_ReactorEmitter_",
     "Engine_ReactorValveCore_",
     "Engine_NoseCrystal_InnerLightCore",
+    "Engine_SteamDriveGear_",
+    "Engine_SteamValveGear_",
+    "Engine_SteamGovernorGear_",
     "Engine_BrakeGaugeNeedle_",
 )
 

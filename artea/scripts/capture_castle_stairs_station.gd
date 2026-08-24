@@ -18,7 +18,7 @@ const SHOTS := [
 	["06_station_deck", Vector3(-22.0, 69.5, 68.0), STATION],
 	["07_station_stair_junction", Vector3(6.0, 73.0, 56.0), Vector3(-12.0, 67.5, 40.0)],
 	["08_crown_gate", Vector3(-14.0, 71.0, 38.0), Vector3(-6.0, 68.2, 27.41)],
-	["09_grounded_medieval_entry", Vector3(13.0, 31.5, 15.0), GROUND_ENTRY],
+	["09_grounded_castle_entry", Vector3(13.0, 31.5, 15.0), GROUND_ENTRY],
 	["10_crown_ballista", Vector3(-1.4, 73.8, 38.5), CROWN],
 ]
 

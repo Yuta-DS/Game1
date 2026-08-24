@@ -181,6 +181,17 @@ func _run() -> void:
 				or (beams[0] as MeshInstance3D).mesh.get_faces().size() < 100:
 			_fail("%s centre beam was reduced to disconnected primitive boxes" % segment.name)
 			return
+		var beam := beams[0] as MeshInstance3D
+		var colours := beam.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR] as PackedColorArray
+		var unique_colours := {}
+		for colour in colours:
+			unique_colours[(colour as Color).to_html(false)] = true
+		if not beam.material_override is ShaderMaterial or unique_colours.size() < 7:
+			_fail("%s centre beam does not carry the full rainbow palette" % segment.name)
+			return
+		if (ribbons[0] as MeshInstance3D).material_override != railway.get("_gold_material"):
+			_fail("%s energy ribbon is not using the gold railway accent" % segment.name)
+			return
 	var incoming_mind_segment := route.get_node("StorySegment_1_gallery_to_mind") as Node3D
 	var outgoing_mind_segment := route.get_node("StorySegment_2_mind_to_heart") as Node3D
 	for mind_segment in [incoming_mind_segment, outgoing_mind_segment]:

@@ -72,9 +72,8 @@ text = "Q • ENTER MIND SPARK"
 font_size = 32
 outline_size = 10
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 visible = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {&"": SubResource("Library")}
-

@@ -91,7 +91,7 @@ text = "THE STORM IS HURT • BREAK THE DARK ANCHORS"
 font_size = 34
 outline_size = 10
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 
 [node name="GentleRain" type="GPUParticles3D" parent="."]
 position = Vector3(0, 26, 0)
@@ -100,4 +100,3 @@ lifetime = 2.2
 process_material = SubResource("RainProcess")
 draw_pass_1 = SubResource("RainDrop")
 emitting = false
-

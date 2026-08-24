@@ -41,7 +41,7 @@ func _run() -> void:
 		_fail("gallery world or real player controller did not load")
 		return
 
-	var bridge := floating_world.get_node_or_null("ArtCastleEntranceBridge175m") as Node3D
+	var bridge := floating_world.get_node_or_null("CastleToGalaxyBridge175m") as Node3D
 	if bridge == null:
 		_fail("the engineered gallery-to-castle approach bridge is missing")
 		return

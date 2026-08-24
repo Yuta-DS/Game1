@@ -45,10 +45,10 @@ func _run() -> void:
 	if walk_surface.find_children("*", "StaticBody3D", true, false).is_empty():
 		_fail("continuous spiral walk surface is missing collision")
 		return
-	var grounded_entry := stair.get_node_or_null("GroundedMedievalEntry") as Node3D
+	var grounded_entry := stair.get_node_or_null("GroundedCastleEntry") as Node3D
 	if grounded_entry == null or not bool(grounded_entry.get_meta(
 			"walkable_from_terrain", false)):
-		_fail("castle stair is missing its terrain-grounded medieval entry")
+		_fail("castle stair is missing its terrain-grounded castle entry")
 		return
 	var ground_steps := grounded_entry.find_children(
 		"GroundEntryStoneTread_*", "MeshInstance3D", true, false)
@@ -416,18 +416,18 @@ func _run() -> void:
 		_fail("crown stair mouth has no stable box-shaped handoff floor")
 		return
 	var fitted_handoff := stair.get_node_or_null(
-		"MedievalCrownStairLanding") as MeshInstance3D
+		"CastleCrownStairLanding") as MeshInstance3D
 	if stair_handoff.visible or not bool(stair_handoff.get_meta("collision_only", false)) \
 			or fitted_handoff == null or not (fitted_handoff.mesh is ArrayMesh) \
 			or not fitted_handoff.find_children(
 				"*", "StaticBody3D", true, false).is_empty():
 		_fail("spiral crown still renders the oversized box instead of the fitted landing")
 		return
-	var ballista := stair.get_node_or_null("MedievalBallista") as Node3D
+	var ballista := stair.get_node_or_null("CastleBallista") as Node3D
 	if ballista == null or not bool(ballista.get_meta("visual_only", false)) \
 			or ballista.find_children("BallistaWoodArm_*", "MeshInstance3D", true, false).size() != 2 \
 			or not ballista.find_children("*", "StaticBody3D", true, false).is_empty():
-		_fail("crown is missing its safe visual-only medieval ballista")
+		_fail("crown is missing its safe visual-only castle ballista")
 		return
 	var arrival_court := stair.get_node_or_null("CrownArrivalCourt") as Node3D
 	var arrival_pylons := stair.find_children(

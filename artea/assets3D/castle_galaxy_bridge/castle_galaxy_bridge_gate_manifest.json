@@ -1,0 +1,115 @@
+{
+  "asset": "castle_galaxy_bridge_gate",
+  "version": 1,
+  "performance_profile": "laptop_cpu_low",
+  "target_triangle_budget": 130000,
+  "previous_triangle_count": 200108,
+  "source_blend": "assets3D/castle_galaxy_bridge/blend/castle_galaxy_bridge_gate.blend",
+  "game_glb": "assets3D/castle_galaxy_bridge/glb/castle_galaxy_bridge_gate.glb",
+  "reference_image_pixels": [
+    1090,
+    1028
+  ],
+  "front_gate_reference_measurements": {
+    "tower_center_separation_px": 538,
+    "central_facade_width_px": 350,
+    "outline_thickness_px": 5,
+    "crest_top_orb_diameter_px": 49,
+    "crest_side_orb_diameter_px": 51,
+    "crest_side_offset_m": 3.9,
+    "outline_lower_v_height_m": 34.15,
+    "continuous_facade_outline_modules": 1,
+    "structural_wall_halves": 2,
+    "portal_molding_layers": 3,
+    "tower_roof_stages": 2,
+    "shape_driven_outline_systems": 4,
+    "tower_panel_outline_count": 6,
+    "facade_outline_profile_vertices": 4
+  },
+  "dimensions_m": {
+    "bridge_length": 170.0,
+    "bridge_width": 16.0,
+    "gate_outer_width": 42.0,
+    "gate_finial_height": 52.0,
+    "clear_portal_width": 14.8,
+    "portal_shoulder_height": 19.0,
+    "portal_apex_height": 34.0,
+    "central_facade_max_height": 46.48,
+    "rear_wall_setback_in_game": 157.0
+  },
+  "editable_source_modules": 1437,
+  "editable_component_hierarchy": {
+    "root": "00_CASTLE_GALAXY_ASSEMBLY",
+    "major_components": 4,
+    "subcomponents": {
+      "LEFT_GATE_TOWER/FOUNDATION": 4,
+      "LEFT_GATE_TOWER/LOWER_BODY": 51,
+      "LEFT_GATE_TOWER/MID_BODY": 56,
+      "LEFT_GATE_TOWER/UPPER_BODY": 43,
+      "LEFT_GATE_TOWER/ROOF": 7,
+      "LEFT_GATE_TOWER/ORNAMENT": 24,
+      "RIGHT_GATE_TOWER/FOUNDATION": 4,
+      "RIGHT_GATE_TOWER/LOWER_BODY": 51,
+      "RIGHT_GATE_TOWER/MID_BODY": 56,
+      "RIGHT_GATE_TOWER/UPPER_BODY": 43,
+      "RIGHT_GATE_TOWER/ROOF": 7,
+      "RIGHT_GATE_TOWER/ORNAMENT": 10,
+      "CENTRAL_FACADE/POINTED_PORTAL": 82,
+      "CENTRAL_FACADE/GABLE_BODY": 13,
+      "CENTRAL_FACADE/STEPPED_CROWN": 7,
+      "CENTRAL_FACADE/THREE_LIGHT_CREST": 19,
+      "BRIDGE/PAVING": 81,
+      "BRIDGE/DECK_STRUCTURE": 3,
+      "BRIDGE/FASCIA_AND_ARCHES": 550,
+      "BRIDGE/BALUSTRADE": 128,
+      "BRIDGE/LANTERNS_AND_NEWELS": 198
+    }
+  },
+  "hierarchy_node_count": 26,
+  "tower_body_course_count_per_tower": 14,
+  "tower_body_chunk_count": 70,
+  "game_mesh_groups": 13,
+  "group_module_counts": {
+    "PAVING": 78,
+    "DECK_STRUCTURE": 3,
+    "CYAN_LIGHT": 99,
+    "BRONZE_TRIM": 119,
+    "FASCIA_MASONRY": 380,
+    "UNDERSIDE_ARCH": 96,
+    "NEWELS": 54,
+    "LANTERN_FRAMES": 90,
+    "ROOFS": 30,
+    "BALUSTRADE": 128,
+    "GATE_MASONRY": 120,
+    "GATE_BRICK_DETAIL": 188,
+    "PORTAL_ARCH": 52
+  },
+  "game_triangles": 61036,
+  "triangle_reduction_percent": 69.5,
+  "measured_blender_bounds_m": {
+    "size": [
+      42.0,
+      171.45,
+      61.4751
+    ],
+    "minimum": [
+      -21.0,
+      -0.725,
+      -8.9751
+    ],
+    "maximum": [
+      21.0,
+      170.725,
+      52.5
+    ]
+  },
+  "measured_surface_color_mix_percent": {
+    "sand_ivory": 60.06,
+    "gold": 31.87,
+    "blue": 8.06
+  },
+  "coordinate_system": "Blender metric, X width, Y route, Z height",
+  "collision": "existing tested Godot bridge collision retained",
+  "web_compatible": true,
+  "laptop_cpu_optimized": true
+}

@@ -1,0 +1,58 @@
+{
+  "character": "Milo",
+  "voice": "Consented user voice clone — soft, sweet, clearly voiced",
+  "locale": "en",
+  "rate_words_per_minute": 142,
+  "line": "Hi! I'm Milo. I'll stay right here with you. Whenever you're ready, we can explore together.",
+  "asset": "res://assets/audio/milo/milo_voice.ogg",
+  "format": "Ogg Vorbis",
+  "usage": "Active first proximity greeting. Dynamic local-LLM replies remain text plus platform TTS because this fixed recording cannot synthesize arbitrary new wording at runtime.",
+  "alternate_preview": {
+    "asset": "res://assets/audio/milo/milo_voice_inventor_preview.ogg",
+    "line": "Ah, yes. What a curious little puzzle. Every grand discovery begins with one patient question. Come along; let us examine it together.",
+    "direction": "Original eccentric elder inventor: bright, precise, warm, nimble, and scholarly. Not a Heimerdinger or Mick Wingert voice clone.",
+    "format": "Ogg Vorbis"
+  },
+  "similar_preview_v2": {
+    "asset": "res://assets/audio/milo/milo_voice_inventor_v2_preview.ogg",
+    "line": "Ah, splendid. Now, this is a most unusual little problem. We must be careful, of course, but every discovery starts with a curious mind. Come along; let us work it out together.",
+    "direction": "Original elderly British inventor with elevated pitch, soft rasp, precise diction, nervous curiosity, and warm scholarly energy.",
+    "format": "Ogg Vorbis"
+  },
+  "natural_preview_v3": {
+    "asset": "res://assets/audio/milo/milo_voice_natural_v3_preview.ogg",
+    "line": "Ah, splendid. Now, this is a rather unusual little problem. We should be careful, of course. But every discovery begins with a curious mind. Come along. Let's work it out together.",
+    "direction": "Natural neural British male voice with conversational pauses, restrained pitch, warm curiosity, and minimal processing.",
+    "format": "Ogg Vorbis"
+  },
+  "consented_voice_clone_preview": {
+    "asset": "res://assets/audio/milo/milo_voice_clone_preview.ogg",
+    "line": "Hello, I am Milo. I will walk beside you. Let us explore together.",
+    "direction": "Local zero-shot clone generated from a user-owned voice reference, with gentle cleanup and the model's implicit provenance watermark.",
+    "format": "Ogg Vorbis"
+  },
+  "consented_voice_clone_light_preview": {
+    "asset": "res://assets/audio/milo/milo_voice_clone_light_preview.ogg",
+    "line": "Hello, I am Milo. I will walk beside you. Let us explore together.",
+    "direction": "Lighter comparison of the consented local voice clone: subtly raised tone, reduced low-end weight, preserved timing, and no character impersonation.",
+    "format": "Ogg Vorbis"
+  },
+  "consented_voice_clone_natural_preview": {
+    "asset": "res://assets/audio/milo/milo_voice_clone_natural_preview.ogg",
+    "line": "Hi. I'm Milo. I'll stay right here with you. When you're ready, we can explore together.",
+    "direction": "Natural take from the user-owned voice reference: neutral pitch and formants, restrained expression, conversational pacing, minimal cleanup, and the model's implicit provenance watermark.",
+    "format": "Ogg Vorbis"
+  },
+  "consented_voice_clone_soft_sweet_preview": {
+    "asset": "res://assets/audio/milo/milo_voice_clone_soft_sweet_preview.ogg",
+    "line": "Hi! I'm Milo. I'll stay right here with you. Whenever you're ready, we can explore together.",
+    "direction": "Soft and sweet take from the user-owned voice reference: neutral pitch, gentle delivery, warmer balance, softened consonants, quieter mastering, and the model's implicit provenance watermark.",
+    "format": "Ogg Vorbis"
+  },
+  "consented_voice_clone_clear_soft_preview": {
+    "asset": "res://assets/audio/milo/milo_voice.ogg",
+    "line": "Hi, I'm Milo. I'll stay right here with you. Whenever you're ready, we can explore together.",
+    "direction": "Soft and sweet but clearly voiced version of the consented clone: supported midrange, reduced breath and air, subtly lifted tone, gentle dynamics, and the model's implicit provenance watermark.",
+    "format": "Ogg Vorbis"
+  }
+}

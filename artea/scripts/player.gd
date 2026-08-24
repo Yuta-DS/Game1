@@ -102,11 +102,30 @@ func _physics_process(delta: float) -> void:
 		if anim_player.animation != "attack1":
 			anim_player.play("attack1")
 @onready var footstep_player = $WalkingSoundPlayer
+const GRASS_FOOTSTEPS := [
+	preload("res://assets/audio/footsteps/grass/0.ogg"),
+	preload("res://assets/audio/footsteps/grass/2.ogg"),
+	preload("res://assets/audio/footsteps/grass/5.ogg"),
+]
+const STONE_FOOTSTEPS := [
+	preload("res://assets/audio/footsteps/stone/Fantozzi-StoneL1.ogg"),
+	preload("res://assets/audio/footsteps/stone/Fantozzi-StoneR1.ogg"),
+	preload("res://assets/audio/footsteps/stone/Fantozzi-StoneL2.ogg"),
+	preload("res://assets/audio/footsteps/stone/Fantozzi-StoneR2.ogg"),
+]
+var footstep_index := 0
 
 				
 func play_footstep():
-	if not footstep_player.playing:
-		footstep_player.play()
+	if not is_on_floor():
+		return
+	var scene := get_tree().current_scene
+	var variants := GRASS_FOOTSTEPS if scene != null and scene.name == "Artea Game" \
+		else STONE_FOOTSTEPS
+	footstep_player.stream = variants[footstep_index % variants.size()]
+	footstep_player.pitch_scale = 0.99 + float(footstep_index % 3) * 0.01
+	footstep_index += 1
+	footstep_player.play()
 
 
 func _on_area_2d_body_entered(body: Node2D) -> void:

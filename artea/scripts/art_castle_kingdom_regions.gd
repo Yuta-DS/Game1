@@ -523,7 +523,7 @@ func _add_label(parent: Node3D, text: String, position_value: Vector3, color: Co
 	label.outline_size = 10
 	label.modulate = color
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
+	label.no_depth_test = false
 	parent.add_child(label)
 
 

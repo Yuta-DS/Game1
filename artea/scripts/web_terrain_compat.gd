@@ -2,18 +2,20 @@ extends Node
 
 const WEB_TERRAIN_MESH_PATH := "res://resources/web_hub_terrain.res"
 const GRASS_MATERIAL_PATH := "res://assets3D/kkNatureForest/Stylized3DGrass.tres"
+const WEB_TERRAIN_SHADER_PATH := "res://shaders/web_terrain.gdshader"
+const WEB_WATER_SHADER_PATH := "res://shaders/web_water.gdshader"
 
 # The Grass scatter is authored at 60500 instances, and 220 of its 2320
 # proportion units are tree_1_c_color_12 - about 5700 full-size trees, which is
 # what walls the horizon in. Thin both for Web.
-const WEB_GRASS_AMOUNT := 24000
-const WEB_GRASS_TREE_PROPORTION := 15
+const WEB_GRASS_AMOUNT := 28000
+const WEB_GRASS_TREE_PROPORTION := 0
 
 # Blade size. ProtonScatter only offers a uniform multiplier
 # (scatter_item.gd process_transform scales by Vector3.ONE * this), so this
 # shortens and narrows together rather than squashing height alone. Applied as
 # a factor so the authored A/B size difference (1.0 vs 1.15) is preserved.
-const WEB_GRASS_SCALE := 0.55
+const WEB_GRASS_SCALE := 0.75
 
 var _collision_built := false
 
@@ -21,6 +23,7 @@ var _collision_built := false
 func _enter_tree() -> void:
 	if not OS.has_feature("web"):
 		return
+	_disable_native_terrain_material()
 
 	# The ground has to be collidable before anything else is ready, not in
 	# _ready() alongside the visual mesh. ProtonScatter places instances by
@@ -31,6 +34,21 @@ func _enter_tree() -> void:
 	var early_mesh := load(WEB_TERRAIN_MESH_PATH) as ArrayMesh
 	if early_mesh != null:
 		_add_collision(early_mesh)
+
+
+func _disable_native_terrain_material() -> void:
+	# This method is also called by the hub root's _enter_tree(), before its
+	# Terrain3D child enters the SceneTree. Clearing only its material is not
+	# sufficient: Terrain3D installs its own minimum shader during enter-tree and
+	# that still owns the oversized region-map block. Remove the native backend
+	# entirely on Web; the baked mesh and heightmap below replace both of its
+	# runtime responsibilities.
+	var terrain = get_node_or_null("../Environment/Terrain3D")
+	if terrain == null:
+		return
+	var parent := terrain.get_parent()
+	parent.remove_child(terrain)
+	terrain.free()
 
 
 func _apply_web_scatter_tuning() -> void:
@@ -85,10 +103,17 @@ func _apply_web_scatter_tuning() -> void:
 			if "modifier_stack" in scatter_root:
 				var stack = scatter_root.modifier_stack
 				if stack != null and "stack" in stack:
-					for modifier in stack.stack:
+					for modifier in stack.stack.duplicate():
 						var script = modifier.get_script() if modifier else null
-						if script != null and script.resource_path.ends_with("relax.gd"):
-							modifier.iterations = 0
+						if script != null:
+							if script.resource_path.ends_with("relax.gd"):
+								modifier.iterations = 0
+							elif script.resource_path.ends_with("project_on_terrain3d.gd"):
+								# The native Terrain3D node is absent on Web. The preceding
+								# collider projection modifier hits WebTerrainCollision and
+								# supplies the same height placement.
+								stack.stack.erase(modifier)
+								continue
 						# Thin the grass field. 60500 instances is a desktop
 						# figure; on the single-threaded Web runtime it is both
 						# a long synchronous build and a lot of draw setup.
@@ -137,11 +162,6 @@ func _ready() -> void:
 
 	_apply_web_scatter_tuning()
 
-	var terrain = get_node_or_null("../Environment/Terrain3D")
-	if terrain == null:
-		push_warning("Web terrain mesh could not find Terrain3D.")
-		return
-
 	# Terrain3D's region-map uniform exceeds WebGL2's 16 KiB uniform-block
 	# floor even with its minimum shader, so Web gets a compact mesh sampled
 	# from the same data instead.
@@ -149,7 +169,9 @@ func _ready() -> void:
 	# Its collision is NOT still live here: _enter_tree() above already set
 	# collision_mode to 0 and disabled the node's processing. Everything the
 	# player stands on from this point is WebTerrainCollision, built below.
-	terrain.visible = false
+	var terrain = get_node_or_null("../Environment/Terrain3D")
+	if terrain != null:
+		terrain.visible = false
 	var web_mesh := load(WEB_TERRAIN_MESH_PATH) as ArrayMesh
 	if web_mesh == null:
 		push_warning("Web terrain mesh asset is missing.")
@@ -157,14 +179,11 @@ func _ready() -> void:
 	var fallback := MeshInstance3D.new()
 	fallback.name = "WebTerrainMesh"
 	fallback.mesh = web_mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color.WHITE
-	material.vertex_color_use_as_albedo = true
-	material.roughness = 0.92
-	fallback.material_override = material
+	fallback.material_override = _make_web_terrain_material()
 	add_child(fallback)
 	_add_collision(web_mesh)  # no-op if _enter_tree already built it
 	_add_web_sky_dome()
+	_apply_web_water()
 
 	var day_night := get_node_or_null("../Environment/DayNite")
 	if day_night != null:
@@ -208,17 +227,57 @@ func _add_web_sky_dome() -> void:
 	dome_mesh.height = 2000.0
 	dome_mesh.radial_segments = 24
 	dome_mesh.rings = 12
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.38, 0.67, 0.92)
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.cull_mode = BaseMaterial3D.CULL_FRONT
-	material.disable_receive_shadows = true
+	var material := ShaderMaterial.new()
+	material.shader = load("res://shaders/web_sky_dome.gdshader") as Shader
+	if material.shader == null:
+		push_warning("Web sky dome shader is unavailable; using the clear-colour fallback.")
+		return
 	var dome := MeshInstance3D.new()
 	dome.name = "WebSkyDome"
 	dome.mesh = dome_mesh
 	dome.material_override = material
 	dome.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dome.extra_cull_margin = 2000.0
 	add_child(dome)
+
+
+func _make_web_terrain_material() -> Material:
+	var shader := load(WEB_TERRAIN_SHADER_PATH) as Shader
+	if shader != null:
+		var shader_material := ShaderMaterial.new()
+		shader_material.shader = shader
+		return shader_material
+	var fallback_material := StandardMaterial3D.new()
+	fallback_material.albedo_color = Color.WHITE
+	fallback_material.vertex_color_use_as_albedo = true
+	fallback_material.roughness = 0.92
+	return fallback_material
+
+
+func _apply_web_water() -> void:
+	# The authored water shader discards fragments according to the camera angle.
+	# Compatibility/WebGL interpolates that threshold differently enough for the
+	# ocean to develop holes and hard bands. The scene also contains a decorative
+	# torus five metres above the sea, which reads as a floating water ring in the
+	# hub. Keep both desktop-only and use one deterministic Web material here.
+	var water_root := get_node_or_null("../Environment/Water")
+	if water_root == null:
+		push_warning("Web water fallback could not find the hub Water node.")
+		return
+	var shader := load(WEB_WATER_SHADER_PATH) as Shader
+	if shader == null:
+		push_warning("Web water shader is unavailable; keeping the authored material.")
+		return
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	for child in water_root.get_children():
+		if child is not MeshInstance3D:
+			continue
+		var mesh_instance := child as MeshInstance3D
+		if mesh_instance.name == "MeshInstance3D2":
+			mesh_instance.visible = false
+			continue
+		mesh_instance.material_override = material
 
 
 func _add_collision(mesh: ArrayMesh) -> void:
@@ -281,10 +340,9 @@ func _add_collision(mesh: ArrayMesh) -> void:
 func _retune_grass_items(scatter_root: Node) -> void:
 	# Two separate faults live in the Grass scatter's item list.
 	#
-	# 1. grass.glb ships a StandardMaterial3D whose albedo is pure white with no
-	#    texture and no vertex-colour albedo, so every blade renders white and
-	#    reads as invisible against the ground. The stylised material that was
-	#    authored for it sits unused next to the mesh; assign it here.
+	# 1. The authored low-poly clump uses real box geometry. Keep its cheap Web
+	#    material override and scale the blades down without touching flowers,
+	#    whose separate petal/stem materials must remain visible.
 	# 2. The item named "ScatterItemBush" is not a bush - it points at
 	#    assets3D/trees/tree_1_c_color_12.tscn. At proportion 220 of 2320 it
 	#    produces thousands of full-size trees out of the *grass* scatter, which
@@ -296,7 +354,7 @@ func _retune_grass_items(scatter_root: Node) -> void:
 		var source_path := str(item.path)
 		if source_path.begins_with("res://assets3D/trees/"):
 			item.proportion = WEB_GRASS_TREE_PROPORTION
-		else:
+		elif source_path.ends_with("grass_clump_3d.tscn"):
 			if grass_material != null and "override_material" in item:
 				item.override_material = grass_material
 			if "source_scale_multiplier" in item:

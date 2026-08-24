@@ -15,8 +15,26 @@ extends Node
 
 # Verify these before every release — numbers and operating hours change,
 # and a dead crisis number is worse than none at all.
-# Last checked: 2026-08-07.
+# Last checked against Healthdirect, Kids Helpline and Lifeline: 2026-08-23.
 const RESOURCES := [
+	{
+		"region": "Australia — immediate danger",
+		"name": "Emergency services",
+		"contact": "000",
+		"note": "Call now for police, fire, or ambulance in a serious and urgent emergency.",
+	},
+	{
+		"region": "Australia — ages 5 to 25",
+		"name": "Kids Helpline",
+		"contact": "1800 55 1800",
+		"note": "Free counselling support, 24 hours a day, 7 days a week.",
+	},
+	{
+		"region": "Australia",
+		"name": "Lifeline",
+		"contact": "13 11 14",
+		"note": "Crisis support by phone, 24 hours a day, 7 days a week.",
+	},
 	{
 		"region": "International",
 		"name": "Find a Helpline",
@@ -69,6 +87,10 @@ func show_card() -> void:
 		tree.paused = false
 
 
+func is_card_visible() -> bool:
+	return _layer != null and _layer.visible
+
+
 func _hide() -> void:
 	if _layer == null:
 		return
@@ -91,9 +113,9 @@ func _build_ui() -> void:
 
 	_panel = PanelContainer.new()
 	_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_panel.custom_minimum_size = Vector2(720, 0)
+	_panel.custom_minimum_size = Vector2(720, 640)
 	# PRESET_CENTER anchors the corner, not the middle — offset by half.
-	_panel.position = Vector2(-360, -260)
+	_panel.position = Vector2(-360, -320)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.10, 0.09, 0.16, 0.97)
@@ -120,7 +142,12 @@ func _build_ui() -> void:
 	close.pressed.connect(_hide)
 	box.add_child(close)
 
-	_panel.add_child(box)
+	var scroll := ScrollContainer.new()
+	scroll.name = "SupportResourcesScroll"
+	scroll.custom_minimum_size = Vector2(664, 580)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.add_child(box)
+	_panel.add_child(scroll)
 	_layer.add_child(_panel)
 
 

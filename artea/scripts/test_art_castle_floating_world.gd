@@ -37,6 +37,29 @@ func _run() -> void:
 		if bridge_node == null or bridge_node.get_node_or_null("Walkway") == null:
 			_fail("missing connected walkway %s" % bridge)
 			return
+	var tree_bridge := world.get_node_or_null("SouthArrivalBridge") as Node3D
+	if tree_bridge.get_meta("visual_style", "") != \
+			"castle_arcane_tree_of_life_processional" \
+			or tree_bridge.get_meta("performance_profile", "") != "laptop_cpu_low":
+		_fail("Tree of Life bridge is missing its Arcane laptop visual profile")
+		return
+	if not is_equal_approx(float(tree_bridge.get_meta("processional_length_m", 0.0)), 447.0) \
+			or not is_equal_approx(float(tree_bridge.get_meta("processional_width_m", 0.0)), 62.0):
+		_fail("Tree of Life processional bridge dimensions changed")
+		return
+	for component in ["TreeIvoryProcessionalDeck", "LivingSapInlay",
+			"TreeBoughPortal_00", "TreeBoughPortal_01", "TreeBoughPortal_02"]:
+		if tree_bridge.get_node_or_null(component) == null:
+			_fail("Tree of Life bridge is missing %s" % component)
+			return
+	if tree_bridge.find_children("TreePylon_*", "MeshInstance3D", true, false).size() != 18 \
+			or tree_bridge.find_children("BotanicalVineA_*", "MeshInstance3D", true, false).size() != 16:
+		_fail("Tree of Life bridge modular rail rhythm is incomplete")
+		return
+	for rail in tree_bridge.find_children("SafetyRail*", "MeshInstance3D", true, false):
+		if (rail as MeshInstance3D).visible:
+			_fail("Tree of Life safety blockout is obscuring its botanical railing")
+			return
 
 	var player := world.get_node_or_null("Player3D") as CharacterBody3D
 	if player == null or player.position.distance_to(world.call("get_player_spawn")) > 0.1:

@@ -71,7 +71,7 @@ text = "ANCHOR WAITING"
 font_size = 28
 outline_size = 7
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 
 [node name="BridgeIndicator" type="MeshInstance3D" parent="."]
 position = Vector3(0, 0.08, -2.25)
@@ -86,7 +86,7 @@ text = "BRIDGE WAITING"
 font_size = 26
 outline_size = 7
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 
 [node name="ConstellationLights" type="Node3D" parent="."]
 

@@ -32,7 +32,7 @@
     ],
     "materials" : [
         {
-            "name" : "hexagons_medieval",
+            "name" : "hexagons_castle",
             "pbrMetallicRoughness" : {
                 "baseColorTexture" : {
                     "index" : 0
@@ -81,8 +81,8 @@
     "images" : [
         {
             "mimeType" : "image/png",
-            "name" : "hexagons_medieval",
-            "uri" : "hexagons_medieval.png"
+            "name" : "hexagons_castle",
+            "uri" : "hexagons_castle.png"
         }
     ],
     "accessors" : [

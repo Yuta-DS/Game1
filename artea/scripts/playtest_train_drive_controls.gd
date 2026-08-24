@@ -322,8 +322,8 @@ func _play() -> void:
 		_fail("taking the cab did not engage the ride camera")
 		return
 
-	# 1 drops to first person, 2 comes back out, both while driving.
-	await _tap(KEY_1)
+	# 1 and 2 select train roles; camera views live on 3 and 4.
+	await _tap(KEY_3)
 	if String(_camera.call("get_view_mode")) != "first":
 		_fail("pressing 1 did not switch to first person")
 		return
@@ -335,11 +335,11 @@ func _play() -> void:
 		_fail("first person did not hide the character's own model")
 		return
 	await _save(OUTPUT_DIR + "/playtest_04a_first_person_cab.png")
-	await _tap(KEY_2)
+	await _tap(KEY_4)
 	if String(_camera.call("get_view_mode")) != "third":
 		_fail("pressing 2 did not switch back to third person")
 		return
-	print("TRAIN_PLAYTEST: 1 and 2 switch first/third person while driving")
+	print("TRAIN_PLAYTEST: 3 and 4 switch first/third person while driving")
 
 	# Scroll wheel widens the view for sightseeing.
 	var zoom_before := float(_camera.get("follow_distance"))

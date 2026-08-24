@@ -116,18 +116,29 @@ var _drive_progress := 0.0
 var _drive_motion_direction := 1
 var _display_speed_kph := 0.0
 var _last_train_position := Vector3.ZERO
+var _movement_vfx: Node3D
+var _rainbow_trail_particles: GPUParticles3D
+var _gold_trail_particles: GPUParticles3D
+var _rainbow_wake_ribbons: Array[MeshInstance3D] = []
+var _motion_blur_echoes: Array[Node3D] = []
+var _motion_echo_history: Array[Transform3D] = []
+var _last_motion_direction := Vector3.FORWARD
+var _movement_vfx_speed_ratio := 0.0
+var _rainbow_gold_accent_count := 0
+var _horn_request_count := 0
 var _speed_band_parts: Array[Node3D] = []
 var _speed_rotor_parts: Array[Node3D] = []
 var _speed_needle: Node3D
 var _wheel_mechanism_parts: Array[Node3D] = []
 var _reactor_mechanism_parts: Array[Node3D] = []
+var _steam_gear_parts: Array[Node3D] = []
 var _brake_needles: Array[Node3D] = []
 var _island_power_rotors: Array[Node3D] = []
 var _island_power_lights: Array[OmniLight3D] = []
 var _mechanism_time := 0.0
 var _prompt: Label
 var _status: Label
-var _rail_material: StandardMaterial3D
+var _rail_material: ShaderMaterial
 var _gold_material: StandardMaterial3D
 var _glass_material: StandardMaterial3D
 var _stone_material: StandardMaterial3D
@@ -168,6 +179,19 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _player == null:
 		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		var pressed_key := (event as InputEventKey).physical_keycode
+		if pressed_key == KEY_NONE:
+			pressed_key = (event as InputEventKey).keycode
+		if pressed_key == KEY_R and _manual_driving:
+			if request_horn():
+				get_viewport().set_input_as_handled()
+			return
+		if pressed_key == KEY_1 or pressed_key == KEY_2:
+			var mode := "drive" if pressed_key == KEY_1 else "ride"
+			if select_train_mode(mode):
+				get_viewport().set_input_as_handled()
+			return
 	# "interact" is the project's Q binding (physical keycode 81). Testing
 	# event.keycode directly missed it entirely: the action is authored with
 	# physical_keycode set and keycode left at 0, so the old comparison only
@@ -426,9 +450,37 @@ func get_display_speed_kph() -> float:
 	return _display_speed_kph
 
 
+func get_horn_request_count() -> int:
+	return _horn_request_count
+
+
 func get_registered_mechanism_count() -> int:
 	return _speed_band_parts.size() + _speed_rotor_parts.size() + _wheel_mechanism_parts.size() \
-		+ _reactor_mechanism_parts.size() + _brake_needles.size()
+		+ _reactor_mechanism_parts.size() + _steam_gear_parts.size() + _brake_needles.size()
+
+
+func get_directional_vfx_state() -> Dictionary:
+	var ribbon_positions: Array[Vector3] = []
+	for ribbon in _rainbow_wake_ribbons:
+		ribbon_positions.append(ribbon.global_position)
+	var echo_positions: Array[Vector3] = []
+	var visible_echo_count := 0
+	for echo in _motion_blur_echoes:
+		if echo.visible:
+			echo_positions.append(echo.global_position)
+			visible_echo_count += 1
+	return {
+		"available": _movement_vfx != null and _rainbow_trail_particles != null,
+		"emitting": _rainbow_trail_particles.emitting if _rainbow_trail_particles != null else false,
+		"movement_direction": _last_motion_direction,
+		"trail_world_position": _movement_vfx.global_position if _movement_vfx != null else Vector3.ZERO,
+		"speed_ratio": _movement_vfx_speed_ratio,
+		"rainbow_colour_count": 7,
+		"ribbon_world_positions": ribbon_positions,
+		"echo_world_positions": echo_positions,
+		"visible_echo_count": visible_echo_count,
+		"gold_accent_count": _rainbow_gold_accent_count,
+	}
 
 
 func get_train_feature_summary() -> Dictionary:
@@ -446,8 +498,56 @@ func get_train_feature_summary() -> Dictionary:
 		"seat_interaction_range_m": SEAT_INTERACTION_RANGE,
 		"interaction_rule": "nearest cab or passenger seat",
 		"cab_entry": "front doorway to driver seat",
-		"driver_controls": "Q enter/exit, W forward, S reverse",
+		"mode_controls": "1 drive, 2 ride",
+		"driver_controls": "1 drive, W forward, S reverse, R horn, Q exit",
 	}
+
+
+func request_horn() -> bool:
+	if not _manual_driving or _train == null:
+		return false
+	var audio_manager := get_node_or_null("/root/WorldSpatialAudio")
+	if audio_manager == null or not audio_manager.has_method("request_train_horn") \
+			or not bool(audio_manager.call("request_train_horn", _train)):
+		return false
+	_horn_request_count += 1
+	_status.text = "REAL TRAIN AIR HORN"
+	return true
+
+
+func select_train_mode(mode: String) -> bool:
+	if mode != "drive" and mode != "ride" or _player == null or _train == null:
+		return false
+	if _manual_driving:
+		if mode == "drive":
+			return true
+		if _drive_segment >= 0:
+			_status.text = "STOP AT A STATION BEFORE SWITCHING TO PASSENGER MODE"
+			return false
+		_disembark_driver()
+	elif _seated_passenger:
+		if mode == "ride":
+			return true
+		if _passenger_in_motion:
+			_status.text = "PASSENGER RIDE IN PROGRESS  •  SWITCH TO DRIVER AT THE NEXT STATION"
+			return false
+		leave_passenger_seat()
+	elif _riding:
+		return false
+	elif _player.global_position.distance_to(get_train_deck_position()) > INTERACTION_RANGE:
+		return false
+	if mode == "drive":
+		_player.global_position = get_driver_interaction_position()
+		return board_as_driver()
+	var closest_seat := 0
+	var closest_distance := INF
+	for seat_index in BENCH_SEATS.size():
+		var distance := _player.global_position.distance_to(get_passenger_seat_position(seat_index))
+		if distance < closest_distance:
+			closest_distance = distance
+			closest_seat = seat_index
+	_player.global_position = get_passenger_seat_position(closest_seat)
+	return sit_in_passenger_seat(closest_seat)
 
 
 func sit_in_passenger_seat(seat_index: int) -> bool:
@@ -463,7 +563,7 @@ func sit_in_passenger_seat(seat_index: int) -> bool:
 	_player.velocity = Vector3.ZERO
 	_player.global_position = _train.to_global(BENCH_SEATS[seat_index])
 	_begin_ride_camera(14.0)
-	_status.text = "SEATED ON THE CROWN LINE  •  Q STAND  •  1 FIRST PERSON  •  2 THIRD PERSON"
+	_status.text = "PASSENGER MODE  •  2 RIDE  •  1 DRIVE AT A STATION  •  Q STAND"
 	call_deferred("_ride_seated_passenger_one_station")
 	return true
 
@@ -551,7 +651,7 @@ func board_as_driver() -> bool:
 	_player.global_position = _train.to_global(DRIVER_SEAT)
 	# Driving pulls the view furthest out: the whole train plus the track ahead.
 	_begin_ride_camera(18.0)
-	_status.text = "DRIVER MODE  •  HOLD W FORWARD  •  HOLD S REVERSE  •  Q EXIT AT A STATION  •  1 FIRST PERSON  •  2 THIRD PERSON"
+	_status.text = "DRIVER MODE  •  W/S MOVE  •  R HORN  •  2 RIDE AT A STATION  •  Q EXIT"
 	return true
 
 
@@ -594,7 +694,7 @@ func drive_manual(throttle: float, delta: float) -> void:
 		/ maxf(curve.get_baked_length(), 1.0)
 	_drive_progress = clampf(_drive_progress + progress_delta * float(drive_direction), 0.0, 1.0)
 	_set_train_progress(_drive_segment, _drive_progress)
-	_status.text = "DRIVING  •  %03d KM/H  •  %s  •  W FORWARD / S REVERSE" \
+	_status.text = "DRIVING  •  %03d KM/H  •  %s  •  W/S MOVE  •  R HORN" \
 		% [roundi(_display_speed_kph), _segment_destination_name(drive_direction)]
 	if is_equal_approx(_drive_progress, 0.0):
 		_dock_manual_train(_drive_segment)
@@ -621,7 +721,7 @@ func _dock_manual_train(station_index: int) -> void:
 	if _player != null:
 		_player.global_position = _train.to_global(DRIVER_SEAT)
 		_player.velocity = Vector3.ZERO
-	_status.text = "DOCKED AT %s  •  Q EXIT  •  W/S KEEP DRIVING" % STATIONS[_current_station].title
+	_status.text = "DOCKED AT %s  •  R HORN  •  Q EXIT  •  W/S KEEP DRIVING" % STATIONS[_current_station].title
 
 
 func _segment_destination_name(drive_direction: int) -> String:
@@ -696,10 +796,18 @@ func is_station_unlocked(index: int) -> bool:
 
 
 func _build_materials() -> void:
-	_rail_material = _material(Color("e8d8ff"), 0.36, Color("9b6cff"), 1.6)
-	# The continuous swept beam is viewed from above, below and beside while it
-	# curves through space, so keep both faces visible at every camera angle.
-	_rail_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_rail_material = ShaderMaterial.new()
+	_rail_material.shader = Shader.new()
+	_rail_material.shader.code = """
+shader_type spatial;
+render_mode cull_disabled;
+void fragment() {
+	ALBEDO = COLOR.rgb;
+	EMISSION = COLOR.rgb * 0.85;
+	ROUGHNESS = 0.28;
+	METALLIC = 0.18;
+}
+"""
 	_gold_material = _material(Color("f6cb67"), 0.42, Color("f3a936"), 1.2)
 	_glass_material = _material(Color(0.18, 0.86, 0.97, 0.72), 0.20, Color("36dcff"), 1.7, true)
 	_stone_material = _material(Color("d7d7e5"), 0.84)
@@ -770,9 +878,9 @@ func _build_track_mesh(parent: Node3D, curve: Curve3D, segment_index: int) -> vo
 		beam_points.append(centre)
 		ribbon_points.append(centre + Vector3.UP * 0.87)
 	_add_continuous_curve_prism(parent, "CenterMonorailBeam", beam_points,
-		3.2, 1.6, _rail_material, true)
+		3.2, 1.6, _rail_material, true, true)
 	_add_continuous_curve_prism(parent, "CrownLineEnergyRibbon", ribbon_points,
-		0.92, 0.14, _glass_material, false)
+		0.92, 0.14, _gold_material, false)
 	# Only the approach and departure beside Mind Spark receive the circuit-garden
 	# guide rails. The rest of the kingdom loop keeps its established appearance.
 	if segment_index == 0 or segment_index == 1:
@@ -812,7 +920,7 @@ func _build_mind_spark_railway_details(parent: Node3D, curve: Curve3D,
 
 func _add_continuous_curve_prism(parent: Node3D, node_name: String,
 		points: PackedVector3Array, width: float, height: float,
-		material: Material, collision: bool) -> MeshInstance3D:
+		material: Material, collision: bool, rainbow_colours: bool = false) -> MeshInstance3D:
 	var rings: Array[PackedVector3Array] = []
 	for index in points.size():
 		var previous := points[maxi(0, index - 1)]
@@ -831,16 +939,25 @@ func _add_continuous_curve_prism(parent: Node3D, node_name: String,
 		]))
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var spectrum := [
+		Color("ff426d"), Color("ff9a45"), Color("ffe95a"), Color("55ef87"),
+		Color("42e9f5"), Color("4c78ff"), Color("b85cff")]
 	for ring_index in rings.size() - 1:
+		var colour_a: Color = spectrum[ring_index % spectrum.size()] if rainbow_colours else Color.WHITE
+		var colour_b: Color = spectrum[(ring_index + 1) % spectrum.size()] if rainbow_colours else Color.WHITE
 		for edge_index in 4:
 			var next_edge := (edge_index + 1) % 4
-			_add_surface_quad(surface,
+			_add_surface_coloured_quad(surface,
 				rings[ring_index][edge_index], rings[ring_index + 1][edge_index],
-				rings[ring_index + 1][next_edge], rings[ring_index][next_edge])
-	_add_surface_quad(surface, rings[0][3], rings[0][2], rings[0][1], rings[0][0])
+				rings[ring_index + 1][next_edge], rings[ring_index][next_edge],
+				colour_a, colour_b)
+	_add_surface_coloured_quad(surface, rings[0][3], rings[0][2], rings[0][1], rings[0][0],
+		spectrum[0] if rainbow_colours else Color.WHITE,
+		spectrum[0] if rainbow_colours else Color.WHITE)
 	var last_ring := rings.size() - 1
-	_add_surface_quad(surface, rings[last_ring][0], rings[last_ring][1],
-		rings[last_ring][2], rings[last_ring][3])
+	var last_colour: Color = spectrum[last_ring % spectrum.size()] if rainbow_colours else Color.WHITE
+	_add_surface_coloured_quad(surface, rings[last_ring][0], rings[last_ring][1],
+		rings[last_ring][2], rings[last_ring][3], last_colour, last_colour)
 	surface.generate_normals()
 	var mesh := surface.commit()
 	var instance := MeshInstance3D.new()
@@ -863,6 +980,14 @@ func _add_continuous_curve_prism(parent: Node3D, node_name: String,
 		body.physics_material_override = physics_material
 		parent.add_child(body)
 	return instance
+
+
+func _add_surface_coloured_quad(surface: SurfaceTool, a: Vector3, b: Vector3,
+		c: Vector3, d: Vector3, colour_a: Color, colour_b: Color) -> void:
+	for vertex_data in [[a, colour_a], [b, colour_b], [c, colour_b],
+			[a, colour_a], [c, colour_b], [d, colour_a]]:
+		surface.set_color(vertex_data[1])
+		surface.add_vertex(vertex_data[0])
 
 
 func _add_surface_quad(surface: SurfaceTool, a: Vector3, b: Vector3,
@@ -913,7 +1038,7 @@ func _build_stations() -> void:
 		board_label.font_size = 28
 		board_label.outline_size = 8
 		board_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		board_label.no_depth_test = true
+		board_label.no_depth_test = false
 		station.add_child(board_label)
 		for spoke in 8:
 			var angle := TAU * float(spoke) / 8.0
@@ -932,7 +1057,7 @@ func _build_stations() -> void:
 		label.font_size = 46
 		label.outline_size = 10
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		label.no_depth_test = true
+		label.no_depth_test = false
 		station.add_child(label)
 
 
@@ -1835,12 +1960,12 @@ func _build_train() -> void:
 				Vector3(4.8, 0.6, 0.8), _glass_material, true)
 			var driver_label := Label3D.new()
 			driver_label.name = "DriverControls"
-			driver_label.text = "CROWN LINE DRIVER\nQ  CONTROL   •   W  FORWARD   •   S  REVERSE"
+			driver_label.text = "CROWN LINE DRIVER\n1 DRIVE  •  W/S MOVE  •  R HORN  •  Q EXIT"
 			driver_label.position = Vector3(0.0, 4.2, -4.4)
 			driver_label.font_size = 22
 			driver_label.outline_size = 6
 			driver_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			driver_label.no_depth_test = true
+			driver_label.no_depth_test = false
 			carriage.add_child(driver_label)
 		for side in [-1.0, 1.0]:
 			for z in [-4.0, 4.0]:
@@ -1876,6 +2001,8 @@ func _build_train() -> void:
 	_train_glow.omni_range = 38.0
 	_train.add_child(_train_glow)
 	_attach_detailed_train_visual()
+	_build_rainbow_gold_layout()
+	_build_directional_movement_vfx()
 	_train.position = STATIONS[START_STATION_INDEX].position
 	_orient_train_at_station(START_STATION_INDEX)
 
@@ -1905,6 +2032,7 @@ func _attach_detailed_train_visual() -> void:
 	detailed_train.set_meta("editable_part_count", DETAILED_TRAIN_EDITABLE_PARTS)
 	detailed_train.set_meta("walkable_collision_source", "procedural_two_coach_shell")
 	_train.add_child(detailed_train)
+	_enhance_detailed_train_palette(detailed_train)
 	# The production train now carries a second, native-Godot interpretation of
 	# the same shared bird/bullet cover blueprint used by the Blender source.
 	# It is intentionally separate so comparison captures can toggle either
@@ -1917,12 +2045,244 @@ func _attach_detailed_train_visual() -> void:
 	_last_train_position = _train.global_position
 
 
+func _enhance_detailed_train_palette(detailed_train: Node3D) -> void:
+	# Preserve the authored textures while lifting the muted runtime material
+	# families into a clearer rainbow-and-gold hierarchy. Surface overrides keep
+	# the source GLB untouched and therefore remain safe for the Web export.
+	var palette := {
+		"aged_gold": Color("ffd45a"),
+		"gold": Color("ffd45a"),
+		"roof_teal": Color("25e0bd"),
+		"roof_turquoise": Color("35c9ff"),
+		"navy": Color("4169e8"),
+		"violet": Color("b16cff"),
+		"cyan": Color("50efff"),
+		"indigo": Color("7659e8"),
+		"living_root": Color("55b96f"),
+	}
+	for candidate in detailed_train.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := candidate as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+		for surface_index in mesh_instance.mesh.get_surface_count():
+			var source := mesh_instance.mesh.surface_get_material(surface_index) as StandardMaterial3D
+			if source == null:
+				continue
+			var material_name := source.resource_name.to_lower()
+			var selected := Color.TRANSPARENT
+			for palette_key in palette:
+				if material_name.contains(palette_key):
+					selected = palette[palette_key]
+					break
+			if selected.a <= 0.0:
+				continue
+			var enhanced := source.duplicate() as StandardMaterial3D
+			enhanced.albedo_color = selected
+			enhanced.emission_enabled = true
+			enhanced.emission = selected
+			enhanced.emission_energy_multiplier = 0.38 if material_name.contains("gold") else 0.22
+			if material_name.contains("gold"):
+				enhanced.metallic = 0.86
+				enhanced.roughness = 0.24
+			mesh_instance.set_surface_override_material(surface_index, enhanced)
+
+
+func _build_rainbow_gold_layout() -> void:
+	var accents := Node3D.new()
+	accents.name = "RainbowGoldAccentLayout"
+	_train.add_child(accents)
+	_rainbow_gold_accent_count = 0
+	# Two continuous gold sills visually bind the engine and both coaches into
+	# one royal Crown Line silhouette.
+	for side in [-1.0, 1.0]:
+		_add_box(accents, "GoldRoyalSillLeft" if side < 0.0 else "GoldRoyalSillRight",
+			Vector3(side * 5.72, 0.95, -0.8), Vector3(0.22, 0.30, 45.0),
+			_gold_material, false)
+		_rainbow_gold_accent_count += 1
+	# Seven slim spectrum rails run over each open coach canopy. They add colour
+	# without covering seats, doors, the driver view, or walkable collision.
+	var spectrum := [
+		Color("ff4f78"), Color("ff934d"), Color("ffe45b"), Color("5ee889"),
+		Color("43e6ee"), Color("4d82ff"), Color("b16cff")]
+	for coach_z in [0.0, 15.0]:
+		for colour_index in spectrum.size():
+			var colour: Color = spectrum[colour_index]
+			var rainbow_material := _material(colour, 0.28, colour, 0.78)
+			var x := -3.6 + float(colour_index) * 1.2
+			_add_box(accents, "CoachSpectrum_%02d_%02d" % [int(coach_z), colour_index],
+				Vector3(x, 7.55, coach_z), Vector3(0.32, 0.18, 12.2),
+				rainbow_material, false)
+			_rainbow_gold_accent_count += 1
+
+
+func _build_directional_movement_vfx() -> void:
+	_movement_vfx = Node3D.new()
+	_movement_vfx.name = "DirectionalRainbowMovementVFX"
+	_movement_vfx.top_level = true
+	_train.add_child(_movement_vfx)
+	_build_motion_blur_echoes()
+
+	var spectrum := [
+		Color("ff426d"), Color("ff914d"), Color("ffe95a"), Color("55ef87"),
+		Color("42e9f5"), Color("4c78ff"), Color("b16cff")]
+	_rainbow_wake_ribbons.clear()
+	for colour_index in spectrum.size():
+		var colour: Color = spectrum[colour_index]
+		var ribbon := MeshInstance3D.new()
+		ribbon.name = "RainbowWakeRibbon_%02d" % colour_index
+		var ribbon_mesh := BoxMesh.new()
+		ribbon_mesh.size = Vector3(0.46, 0.14, 1.0)
+		var ribbon_material := StandardMaterial3D.new()
+		ribbon_material.albedo_color = Color(colour, 0.76)
+		ribbon_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		ribbon_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		ribbon_material.emission_enabled = true
+		ribbon_material.emission = colour
+		ribbon_material.emission_energy_multiplier = 2.2
+		ribbon_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		ribbon_mesh.material = ribbon_material
+		ribbon.mesh = ribbon_mesh
+		ribbon.visible = false
+		_movement_vfx.add_child(ribbon)
+		ribbon.top_level = true
+		_rainbow_wake_ribbons.append(ribbon)
+
+	var rainbow := Gradient.new()
+	rainbow.offsets = PackedFloat32Array([0.0, 0.14, 0.29, 0.43, 0.58, 0.74, 1.0])
+	rainbow.colors = PackedColorArray([
+		Color("ff426d"), Color("ff9a45"), Color("ffe95a"), Color("55ef87"),
+		Color("42e9f5"), Color("4c78ff"), Color(0.72, 0.35, 1.0, 0.0)])
+	_rainbow_trail_particles = _make_train_trail_particles(
+		"RainbowDirectionTrail", rainbow, 360, 1.75, 0.52, 54.0)
+	_movement_vfx.add_child(_rainbow_trail_particles)
+
+	var gold := Gradient.new()
+	gold.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
+	gold.colors = PackedColorArray([
+		Color("fff4b0"), Color("ffd04d"), Color(1.0, 0.55, 0.10, 0.0)])
+	_gold_trail_particles = _make_train_trail_particles(
+		"GoldCrownSparkTrail", gold, 144, 1.20, 0.32, 40.0)
+	_movement_vfx.add_child(_gold_trail_particles)
+	_movement_vfx.global_position = _train.global_position + Vector3.UP * 2.2
+
+
+func _build_motion_blur_echoes() -> void:
+	_motion_blur_echoes.clear()
+	_motion_echo_history.clear()
+	var echo_colours := [
+		Color("55efff"), Color("7f75ff"), Color("c968ff"),
+		Color("ff5fa0"), Color("ffd45a")]
+	for echo_index in 5:
+		var echo := Node3D.new()
+		echo.name = "TrainMotionEcho_%02d" % (echo_index + 1)
+		echo.visible = false
+		_movement_vfx.add_child(echo)
+		echo.top_level = true
+		var alpha := 0.055 - float(echo_index) * 0.007
+		var body_material := _make_motion_echo_material(echo_colours[echo_index], alpha)
+		var gold_material := _make_motion_echo_material(Color("ffd45a"), alpha * 0.82)
+		# Rounded, transparent volumes leave a soft train-shaped persistence trail.
+		# Unlike the previous wire boxes, these have no hard rectangular edges.
+		_add_motion_echo_glow(echo, "EchoEngineGlow",
+			Vector3(0.0, 4.2, -15.0), Vector3(12.0, 8.2, 17.0), body_material)
+		_add_motion_echo_glow(echo, "EchoCoachFrontGlow",
+			Vector3(0.0, 3.8, 0.0), Vector3(11.0, 7.4, 13.0), body_material)
+		_add_motion_echo_glow(echo, "EchoCoachRearGlow",
+			Vector3(0.0, 3.8, 15.0), Vector3(11.0, 7.4, 13.0), body_material)
+		_add_motion_echo_glow(echo, "EchoGoldChassisGlow",
+			Vector3(0.0, 0.7, -0.8), Vector3(11.8, 0.45, 44.0), gold_material)
+		_motion_blur_echoes.append(echo)
+
+
+func _make_motion_echo_material(colour: Color, alpha: float) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(colour, alpha)
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.emission_enabled = true
+	material.emission = colour
+	material.emission_energy_multiplier = 0.72
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.no_depth_test = false
+	return material
+
+
+func _add_motion_echo_glow(parent: Node3D, node_name: String,
+		center: Vector3, size: Vector3, material: Material) -> void:
+	var glow := MeshInstance3D.new()
+	glow.name = node_name
+	var glow_mesh := SphereMesh.new()
+	glow_mesh.radius = 1.0
+	glow_mesh.height = 2.0
+	glow_mesh.radial_segments = 16
+	glow_mesh.rings = 8
+	glow.mesh = glow_mesh
+	glow.position = center
+	glow.scale = size * 0.5
+	glow.material_override = material
+	parent.add_child(glow)
+
+
+func _make_train_trail_particles(node_name: String, colour_gradient: Gradient,
+		particle_amount: int, particle_lifetime: float, particle_radius: float,
+		maximum_velocity: float) -> GPUParticles3D:
+	var particles := GPUParticles3D.new()
+	particles.name = node_name
+	particles.amount = particle_amount
+	particles.lifetime = particle_lifetime
+	particles.preprocess = particle_lifetime
+	particles.randomness = 0.36
+	particles.fixed_fps = 30
+	particles.local_coords = false
+	particles.emitting = false
+	particles.visibility_aabb = AABB(Vector3(-70.0, -35.0, -70.0), Vector3(140.0, 70.0, 140.0))
+
+	var motion := ParticleProcessMaterial.new()
+	motion.direction = Vector3(0.0, 0.0, -1.0)
+	motion.spread = 22.0
+	motion.initial_velocity_min = maximum_velocity * 0.52
+	motion.initial_velocity_max = maximum_velocity
+	motion.gravity = Vector3(0.0, 1.6, 0.0)
+	motion.damping_min = 4.0
+	motion.damping_max = 8.0
+	motion.scale_min = 0.55
+	motion.scale_max = 1.65
+	if node_name == "RainbowDirectionTrail":
+		# Randomized hue gives every cross-section of the wake a true spectrum;
+		# the lifetime ramp then orders those colours into a soft rainbow tail.
+		motion.hue_variation_min = -1.0
+		motion.hue_variation_max = 1.0
+	motion.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	motion.emission_box_extents = Vector3(4.8, 1.8, 0.8)
+	var ramp_texture := GradientTexture1D.new()
+	ramp_texture.gradient = colour_gradient
+	motion.color_ramp = ramp_texture
+	particles.process_material = motion
+
+	var spark_mesh := SphereMesh.new()
+	spark_mesh.radius = particle_radius
+	spark_mesh.height = particle_radius * 2.0
+	spark_mesh.radial_segments = 5
+	spark_mesh.rings = 2
+	var spark_material := StandardMaterial3D.new()
+	spark_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	spark_material.vertex_color_use_as_albedo = true
+	spark_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	spark_material.no_depth_test = false
+	spark_mesh.material = spark_material
+	particles.draw_pass_1 = spark_mesh
+	return particles
+
+
 func _register_train_mechanisms(detailed_train: Node3D) -> void:
 	_speed_band_parts.clear()
 	_speed_rotor_parts.clear()
 	_speed_needle = null
 	_wheel_mechanism_parts.clear()
 	_reactor_mechanism_parts.clear()
+	_steam_gear_parts.clear()
 	_brake_needles.clear()
 	for candidate in detailed_train.find_children("*", "MeshInstance3D", true, false):
 		var part := candidate as Node3D
@@ -1948,6 +2308,12 @@ func _register_train_mechanisms(detailed_train: Node3D) -> void:
 			or part_name.contains("Engine_NoseCrystal_InnerLightCore"):
 			_reactor_mechanism_parts.append(part)
 			part.set_meta("mechanism_base_scale", part.scale)
+		elif part_name.contains("Engine_SteamDriveGear_") \
+			or part_name.contains("Engine_SteamValveGear_") \
+			or part_name.contains("Engine_SteamGovernorGear_"):
+			_steam_gear_parts.append(part)
+			part.set_meta("mechanism_spin_direction",
+				-1.0 if part_name.contains("Valve") else 1.0)
 		elif part_name.contains("Engine_BrakeGaugeNeedle_"):
 			_brake_needles.append(part)
 			part.set_meta("mechanism_base_rotation", part.rotation)
@@ -1957,8 +2323,10 @@ func _update_train_mechanisms(delta: float) -> void:
 	if _train == null or delta <= 0.0:
 		return
 	_mechanism_time += delta
-	var travelled := _train.global_position.distance_to(_last_train_position)
+	var motion_delta := _train.global_position - _last_train_position
+	var travelled := motion_delta.length()
 	_last_train_position = _train.global_position
+	_update_directional_movement_vfx(delta, motion_delta)
 	if not _manual_driving:
 		var measured_speed := clampf(travelled / delta * DISPLAY_MAX_SPEED_KPH \
 			/ MANUAL_DRIVE_SPEED, 0.0, DISPLAY_MAX_SPEED_KPH)
@@ -1981,6 +2349,9 @@ func _update_train_mechanisms(delta: float) -> void:
 	var signed_spin := float(_drive_motion_direction) * speed_ratio * delta * 8.5
 	for wheel_part in _wheel_mechanism_parts:
 		wheel_part.rotate_x(signed_spin)
+	for steam_gear in _steam_gear_parts:
+		var gear_direction: float = steam_gear.get_meta("mechanism_spin_direction", 1.0)
+		steam_gear.rotate_z(signed_spin * gear_direction * 1.22)
 	var reactor_pulse := 1.0 + speed_ratio * 0.22 \
 		+ sin(_mechanism_time * (3.0 + speed_ratio * 8.0)) * (0.025 + speed_ratio * 0.045)
 	for reactor_part in _reactor_mechanism_parts:
@@ -1991,6 +2362,65 @@ func _update_train_mechanisms(delta: float) -> void:
 		brake_needle.rotation = base_rotation + Vector3(0.0, speed_ratio * 1.85, 0.0)
 	if _train_glow != null:
 		_train_glow.light_energy = 5.0 + speed_ratio * 8.0 + sin(_mechanism_time * 5.0) * 0.4
+
+
+func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> void:
+	if _movement_vfx == null or _rainbow_trail_particles == null \
+			or _gold_trail_particles == null:
+		return
+	var raw_speed := motion_delta.length() / maxf(delta, 0.0001)
+	var moving := raw_speed > 0.75 and motion_delta.length_squared() > 0.0001
+	if moving:
+		var measured_direction := motion_delta.normalized()
+		if _last_motion_direction.dot(measured_direction) < -0.35:
+			_motion_echo_history.clear()
+		_last_motion_direction = measured_direction
+		_motion_echo_history.push_front(_train.global_transform)
+		if _motion_echo_history.size() > 40:
+			_motion_echo_history.pop_back()
+		# Place the emitter opposite actual world movement. This naturally swaps
+		# from the rear coach to the engine end when the driver reverses, so the
+		# rainbow always streams behind travel instead of behind a fixed train end.
+		_movement_vfx.global_position = _train.global_position \
+			- _last_motion_direction * 24.0 + Vector3.UP * 2.4
+		_movement_vfx.global_basis = Basis.looking_at(-_last_motion_direction, Vector3.UP)
+	_movement_vfx_speed_ratio = move_toward(_movement_vfx_speed_ratio,
+		clampf(raw_speed / MANUAL_DRIVE_SPEED, 0.0, 1.0) if moving else 0.0,
+		delta * (3.8 if moving else 5.5))
+	var should_emit := moving and _movement_vfx_speed_ratio > 0.015
+	_rainbow_trail_particles.emitting = should_emit
+	_gold_trail_particles.emitting = should_emit
+	if not moving:
+		_motion_echo_history.clear()
+	for echo_index in _motion_blur_echoes.size():
+		var echo := _motion_blur_echoes[echo_index]
+		var history_index := 2 + echo_index * 3
+		var has_snapshot := should_emit and history_index < _motion_echo_history.size()
+		echo.visible = has_snapshot
+		if has_snapshot:
+			echo.global_transform = _motion_echo_history[history_index]
+			# A slight longitudinal stretch blends the snapshots into motion blur
+			# while retaining a recognizable engine-and-two-coach silhouette.
+			echo.scale = Vector3(1.0 + float(echo_index) * 0.018, 1.0,
+				1.0 + _movement_vfx_speed_ratio * 0.16)
+	var ribbon_length := lerpf(10.0, 58.0, _movement_vfx_speed_ratio)
+	var ribbon_side := _last_motion_direction.cross(Vector3.UP).normalized()
+	if ribbon_side.length_squared() < 0.01:
+		ribbon_side = Vector3.RIGHT
+	for ribbon_index in _rainbow_wake_ribbons.size():
+		var ribbon := _rainbow_wake_ribbons[ribbon_index]
+		ribbon.visible = should_emit
+		ribbon.global_basis = Basis.looking_at(_last_motion_direction, Vector3.UP)
+		ribbon.scale = Vector3(1.0, 1.0, ribbon_length)
+		ribbon.global_position = _train.global_position \
+			- _last_motion_direction * (24.0 + ribbon_length * 0.5) \
+			+ ribbon_side * (-4.2 + float(ribbon_index) * 1.4) \
+			+ Vector3.UP * (2.4 + sin(_mechanism_time * 5.0 \
+				+ float(ribbon_index) * 0.72) * 0.34)
+	_rainbow_trail_particles.amount_ratio = clampf(0.58 + _movement_vfx_speed_ratio * 0.42, 0.0, 1.0) \
+		if should_emit else 0.0
+	_gold_trail_particles.amount_ratio = clampf(0.38 + _movement_vfx_speed_ratio * 0.48, 0.0, 0.86) \
+		if should_emit else 0.0
 
 
 func _build_hud() -> void:
@@ -2014,7 +2444,7 @@ func _update_prompt() -> void:
 		return
 	if _riding:
 		if _manual_driving:
-			_prompt.text = "YOU ARE DRIVING  •  HOLD W FORWARD  •  HOLD S REVERSE  •  Q EXIT WHEN DOCKED"
+			_prompt.text = "YOU ARE DRIVING  •  W/S MOVE  •  R HORN  •  Q EXIT WHEN DOCKED"
 		elif _seated_passenger:
 			_prompt.text = "SEATED ON THE CROWN LINE  •  Q STAND"
 		else:
