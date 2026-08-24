@@ -118,11 +118,16 @@ var _foot_locks: Dictionary = {}
 var _foot_was_planted: Dictionary = {"l": false, "r": false}
 var _cane_arm_ik: TwoBoneIK3D
 var _cane_grip_target: Node3D
+var _cane_hand_anchor_local := Vector3.ZERO
 var _cane_elbow_pole: Node3D
 var _cane_rig: Node3D
+var _cane_base_transform := Transform3D.IDENTITY
 var _cane_tip_mesh: MeshInstance3D
 var _cane_tip_lock := Vector3.ZERO
 var _cane_tip_locked := false
+var _cane_was_planted := false
+var _cane_rest_tip_local := Vector3.ZERO
+var _cane_recovery_start_tip_local := Vector3.ZERO
 var _grounding_targets: Node3D
 
 const CANE_GAIT_CYCLE_SECONDS := 1.28
@@ -139,6 +144,77 @@ const CONTACT_BLEND_PHASE := 0.055
 const FOOT_BONE_CLEARANCE := 0.14
 const GROUND_PROBE_UP := 0.42
 const GROUND_PROBE_DOWN := 0.72
+const CANE_RECOVERY_TIP_FORWARD := 0.16
+const CANE_RECOVERY_TIP_LIFT := 0.105
+# Eight hand-authored contact/down/pass/up poses describe one complete supported
+# step. Every upper-body part samples this same timing so the cane hand, free arm
+# and centre of mass no longer look like unrelated procedural motions.
+const CANE_HAND_KEY_POSES := [
+	{"phase": 0.00, "grip": Vector3(0.000, -0.012, 0.080),
+		"upper": Vector3(-8.0, 0.0, -7.0), "lower": Vector3(-34.0, 0.0, 0.0),
+		"wrist": Vector3(8.0, 0.0, -3.0),
+		"free_upper": Vector3(-14.0, 0.0, 3.0),
+		"free_lower": Vector3(-9.0, 0.0, 0.0),
+		"free_wrist": Vector3(3.0, 0.0, 0.0),
+		"body_position": Vector3(0.006, 0.004, 0.0),
+		"body_rotation": Vector3(-0.044, 0.0, -0.010)},
+	{"phase": 0.12, "grip": Vector3(0.004, -0.030, 0.055),
+		"upper": Vector3(-10.0, 0.0, -9.0), "lower": Vector3(-42.0, 0.0, 0.0),
+		"wrist": Vector3(6.0, 0.0, -2.0),
+		"free_upper": Vector3(-10.0, 0.0, 2.0),
+		"free_lower": Vector3(-13.0, 0.0, 0.0),
+		"free_wrist": Vector3(2.0, 0.0, 0.0),
+		"body_position": Vector3(0.013, -0.008, 0.0),
+		"body_rotation": Vector3(-0.058, 0.008, -0.027)},
+	{"phase": 0.30, "grip": Vector3(0.008, -0.020, 0.005),
+		"upper": Vector3(-6.0, 0.0, -7.0), "lower": Vector3(-39.0, 0.0, 0.0),
+		"wrist": Vector3(3.0, 0.0, 1.0),
+		"free_upper": Vector3(2.0, 0.0, 1.0),
+		"free_lower": Vector3(-15.0, 0.0, 0.0),
+		"free_wrist": Vector3(-1.0, 0.0, 0.0),
+		"body_position": Vector3(0.009, 0.001, 0.0),
+		"body_rotation": Vector3(-0.048, 0.004, -0.017)},
+	{"phase": 0.50, "grip": Vector3(0.004, 0.005, -0.060),
+		"upper": Vector3(1.0, 0.0, -5.0), "lower": Vector3(-35.0, 0.0, 0.0),
+		"wrist": Vector3(-4.0, 0.0, 4.0),
+		"free_upper": Vector3(14.0, 0.0, 2.0),
+		"free_lower": Vector3(-9.0, 0.0, 0.0),
+		"free_wrist": Vector3(-3.0, 0.0, 0.0),
+		"body_position": Vector3(-0.005, 0.004, 0.0),
+		"body_rotation": Vector3(-0.041, -0.004, 0.012)},
+	{"phase": 0.60, "grip": Vector3(0.012, 0.050, -0.045),
+		"upper": Vector3(7.0, 0.0, -7.0), "lower": Vector3(-46.0, 0.0, 0.0),
+		"wrist": Vector3(-8.0, 0.0, 6.0),
+		"free_upper": Vector3(10.0, 0.0, 3.0),
+		"free_lower": Vector3(-13.0, 0.0, 0.0),
+		"free_wrist": Vector3(-2.0, 0.0, 0.0),
+		"body_position": Vector3(-0.008, -0.006, 0.0),
+		"body_rotation": Vector3(-0.047, -0.008, 0.020)},
+	{"phase": 0.75, "grip": Vector3(0.018, 0.065, 0.025),
+		"upper": Vector3(3.0, 0.0, -10.0), "lower": Vector3(-44.0, 0.0, 0.0),
+		"wrist": Vector3(-2.0, 0.0, 4.0),
+		"free_upper": Vector3(-2.0, 0.0, 2.0),
+		"free_lower": Vector3(-15.0, 0.0, 0.0),
+		"free_wrist": Vector3(1.0, 0.0, 0.0),
+		"body_position": Vector3(-0.004, 0.001, 0.0),
+		"body_rotation": Vector3(-0.043, -0.004, 0.013)},
+	{"phase": 0.90, "grip": Vector3(0.008, 0.015, 0.075),
+		"upper": Vector3(-5.0, 0.0, -8.0), "lower": Vector3(-37.0, 0.0, 0.0),
+		"wrist": Vector3(5.0, 0.0, 0.0),
+		"free_upper": Vector3(-11.0, 0.0, 3.0),
+		"free_lower": Vector3(-12.0, 0.0, 0.0),
+		"free_wrist": Vector3(2.0, 0.0, 0.0),
+		"body_position": Vector3(0.002, 0.007, 0.0),
+		"body_rotation": Vector3(-0.041, 0.0, 0.001)},
+	{"phase": 1.00, "grip": Vector3(0.000, -0.012, 0.080),
+		"upper": Vector3(-8.0, 0.0, -7.0), "lower": Vector3(-34.0, 0.0, 0.0),
+		"wrist": Vector3(8.0, 0.0, -3.0),
+		"free_upper": Vector3(-14.0, 0.0, 3.0),
+		"free_lower": Vector3(-9.0, 0.0, 0.0),
+		"free_wrist": Vector3(3.0, 0.0, 0.0),
+		"body_position": Vector3(0.006, 0.004, 0.0),
+		"body_rotation": Vector3(-0.044, 0.0, -0.010)},
+]
 const COUNSELLOR_POSE_SECONDS := 0.36
 const HAND_CLEARANCE_ARC := 0.16
 const BLINK_SECONDS := 0.22
@@ -539,15 +615,30 @@ func _setup_cane_constraint() -> void:
 		false, false)
 	for part in cane_parts:
 		(part as Node3D).reparent(_cane_rig, true)
+	# The sculpted prop was built for the shorter donor. A walking stick should
+	# meet a relaxed, flexed wrist; extending only its vertical working length
+	# prevents Milo from locking his elbow to reach a handle below his paw.
+	_cane_rig.scale.y = 1.28
+	_cane_base_transform = _cane_rig.transform
 	_cane_grip_target = Node3D.new()
 	_cane_grip_target.name = "MiloCaneGripTarget"
 	_cane_rig.add_child(_cane_grip_target)
-	_cane_grip_target.global_position = _bone_world_position("wrist.l")
+	var cane_hook := find_child("MayorCaneHook", true, false) as MeshInstance3D
+	var grip_position := _bone_world_position("wrist.l")
+	if cane_hook != null and cane_hook.mesh != null:
+		var hook_bounds := cane_hook.get_aabb()
+		grip_position = cane_hook.to_global(hook_bounds.get_center()) \
+			+ global_transform.basis.y.normalized() * 0.045
+	_cane_grip_target.global_position = grip_position
+	_cane_hand_anchor_local = to_local(grip_position)
+	_cane_rest_tip_local = to_local(_cane_tip_world_position())
+	_cane_recovery_start_tip_local = _cane_rest_tip_local
 	_cane_elbow_pole = Node3D.new()
 	_cane_elbow_pole.name = "MiloCaneElbowPole"
 	_grounding_targets.add_child(_cane_elbow_pole)
-	_cane_elbow_pole.global_position = _bone_world_position("lowerarm.l") \
-		+ global_transform.basis.z.normalized() * 0.24
+	_cane_elbow_pole.global_position = _bone_world_position("upperarm.l") \
+		+ global_transform.basis.x.normalized() * 0.34 \
+		+ global_transform.basis.z.normalized() * 0.10
 	_cane_arm_ik = _create_two_bone_ik("CaneArmIK", "upperarm.l",
 		"lowerarm.l", "wrist.l", _cane_grip_target, _cane_elbow_pole)
 
@@ -795,6 +886,10 @@ func _reset_cane_gait() -> void:
 	_foot_locks.clear()
 	_foot_was_planted = {"l": false, "r": false}
 	_cane_tip_locked = false
+	_cane_was_planted = false
+	_cane_recovery_start_tip_local = _cane_rest_tip_local
+	if _cane_rig != null:
+		_cane_rig.transform = _cane_base_transform
 	for side in _leg_ik:
 		(_leg_ik[side] as TwoBoneIK3D).set_influence(0.0)
 	if _cane_arm_ik != null:
@@ -850,6 +945,35 @@ func get_foot_contact_weight(side: String) -> float:
 func get_cane_contact_weight() -> float:
 	return _contact_weight(_current_gait_phase(), CANE_CONTACT_START,
 		CANE_CONTACT_END)
+
+
+func _sample_cane_hand_pose(phase: float) -> Dictionary:
+	var wrapped := fposmod(phase, 1.0)
+	for pose_index in range(CANE_HAND_KEY_POSES.size() - 1):
+		var from_pose: Dictionary = CANE_HAND_KEY_POSES[pose_index]
+		var to_pose: Dictionary = CANE_HAND_KEY_POSES[pose_index + 1]
+		var start := float(from_pose.phase)
+		var finish := float(to_pose.phase)
+		if wrapped <= finish:
+			var linear_weight := inverse_lerp(start, finish, wrapped)
+			var weight := smoothstep(0.0, 1.0, linear_weight)
+			return {
+				"grip": (from_pose.grip as Vector3).lerp(to_pose.grip, weight),
+				"upper": (from_pose.upper as Vector3).lerp(to_pose.upper, weight),
+				"lower": (from_pose.lower as Vector3).lerp(to_pose.lower, weight),
+				"wrist": (from_pose.wrist as Vector3).lerp(to_pose.wrist, weight),
+				"free_upper": (from_pose.free_upper as Vector3).lerp(
+					to_pose.free_upper, weight),
+				"free_lower": (from_pose.free_lower as Vector3).lerp(
+					to_pose.free_lower, weight),
+				"free_wrist": (from_pose.free_wrist as Vector3).lerp(
+					to_pose.free_wrist, weight),
+				"body_position": (from_pose.body_position as Vector3).lerp(
+					to_pose.body_position, weight),
+				"body_rotation": (from_pose.body_rotation as Vector3).lerp(
+					to_pose.body_rotation, weight),
+			}
+	return CANE_HAND_KEY_POSES[0]
 
 
 func _contact_weight(phase: float, contact_start: float,
@@ -1155,12 +1279,12 @@ func _update_secondary_motion(delta: float) -> void:
 		stride_wave = sin(stride_phase * TAU)
 		var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 		gait_strength = clampf(horizontal_speed / maxf(walk_speed, 0.01), 0.0, 1.0)
-		# The root carries only the centre-of-mass shift. Limbs articulate on their
-		# deform bones below; moving whole skinned meshes made the old feet slide.
-		target_position.y += (1.0 - absf(stride_wave)) * 0.006 * gait_strength
-		target_position.x += stride_wave * 0.005 * gait_strength
-		target_rotation.x -= 0.045 * gait_strength
-		target_rotation.z += stride_wave * 0.012 * gait_strength
+		# Contact/down/pass/up keys carry the centre of mass over each stance foot.
+		# Limbs still articulate on deform bones, so shoes remain attached and IK
+		# can lock the planted foot without fighting a second sinusoidal root pass.
+		var body_pose := _sample_cane_hand_pose(stride_phase)
+		target_position += (body_pose.body_position as Vector3) * gait_strength
+		target_rotation += (body_pose.body_rotation as Vector3) * gait_strength
 	else:
 		var breath := sin(_motion_elapsed * 1.65)
 		target_position.y += breath * 0.004
@@ -1225,6 +1349,10 @@ func _update_cane_grounding(delta: float, contact_weight: float,
 		is_walking: bool, gait_strength: float) -> void:
 	if _cane_rig == null or _cane_tip_mesh == null:
 		return
+	var phase := _current_gait_phase()
+	var authored_pose := _sample_cane_hand_pose(phase)
+	var desired_grip := to_global(_cane_hand_anchor_local \
+		+ (authored_pose.grip as Vector3) * gait_strength)
 	var planted := is_walking and contact_weight > 0.015
 	if planted and not _cane_tip_locked:
 		var tip_position := _cane_tip_world_position()
@@ -1233,30 +1361,60 @@ func _update_cane_grounding(delta: float, contact_weight: float,
 			_cane_tip_lock = hit.position as Vector3
 			_cane_tip_locked = true
 	if planted and _cane_tip_locked:
-		var tip_now := _cane_tip_world_position()
-		_cane_rig.global_position += _cane_tip_lock - tip_now
+		_place_cane_between(_cane_tip_lock, desired_grip)
 		if cane_contact_shadow != null:
 			cane_contact_shadow.global_position = _cane_tip_lock \
 				+ Vector3.UP * 0.027
 	else:
+		if _cane_was_planted:
+			_cane_recovery_start_tip_local = to_local(_cane_tip_world_position())
 		_cane_tip_locked = false
-		var phase := _current_gait_phase()
 		var recovery_progress := fposmod(phase - CANE_CONTACT_END, 1.0) \
 			/ fposmod(CANE_CONTACT_START - CANE_CONTACT_END, 1.0)
-		var recovery_arc := sin(clampf(recovery_progress, 0.0, 1.0) * PI)
-		var recovery_offset := Vector3(0.0, recovery_arc * 0.055,
-			recovery_arc * 0.075) * gait_strength
-		var settle := 1.0 - exp(-delta * 9.0)
-		_cane_rig.position = _cane_rig.position.lerp(recovery_offset, settle)
+		var recovery_weight := smoothstep(0.0, 1.0,
+			clampf(recovery_progress, 0.0, 1.0))
+		var target_tip_local := _cane_rest_tip_local \
+			+ Vector3.FORWARD * CANE_RECOVERY_TIP_FORWARD
+		var start_tip := to_global(_cane_recovery_start_tip_local)
+		var target_tip := to_global(target_tip_local)
+		var target_hit := _probe_ground(target_tip)
+		if not target_hit.is_empty():
+			target_tip.y = (target_hit.position as Vector3).y
+		var desired_tip := start_tip.lerp(target_tip, recovery_weight)
+		desired_tip += global_transform.basis.y.normalized() \
+			* sin(recovery_weight * PI) * CANE_RECOVERY_TIP_LIFT * gait_strength
+		_place_cane_between(desired_tip, desired_grip)
 		if cane_contact_shadow != null:
-			var tip := _cane_tip_world_position()
-			cane_contact_shadow.global_position = Vector3(tip.x,
-				global_position.y + 0.027, tip.z)
+			var shadow_hit := _probe_ground(desired_tip)
+			var shadow_y := (shadow_hit.position as Vector3).y + 0.027 \
+				if not shadow_hit.is_empty() else global_position.y + 0.027
+			cane_contact_shadow.global_position = Vector3(desired_tip.x,
+				shadow_y, desired_tip.z)
 	if _cane_elbow_pole != null:
-		_cane_elbow_pole.global_position = _bone_world_position("lowerarm.l") \
-			+ global_transform.basis.z.normalized() * 0.24
+		var grip_offset := authored_pose.grip as Vector3
+		_cane_elbow_pole.global_position = _bone_world_position("upperarm.l") \
+			+ global_transform.basis.x.normalized() * (0.23 + grip_offset.y * 0.30) \
+			+ global_transform.basis.z.normalized() * (0.17 + grip_offset.z * 0.65)
 	if _cane_arm_ik != null:
-		_cane_arm_ik.set_influence(0.76 * gait_strength if is_walking else 0.0)
+		_cane_arm_ik.set_influence(0.98 * gait_strength if is_walking else 0.0)
+	_cane_was_planted = planted
+
+
+func _place_cane_between(desired_tip: Vector3, desired_grip: Vector3) -> void:
+	if _cane_grip_target == null:
+		return
+	var tip_now := _cane_tip_world_position()
+	var grip_now := _cane_grip_target.global_position
+	var current_axis := grip_now - tip_now
+	var desired_axis := desired_grip - desired_tip
+	if current_axis.length_squared() > 0.0001 \
+			and desired_axis.length_squared() > 0.0001:
+		var swing := Quaternion(current_axis.normalized(), desired_axis.normalized())
+		var global_pose := _cane_rig.global_transform
+		global_pose.basis = Basis(swing) * global_pose.basis
+		_cane_rig.global_transform = global_pose
+	var corrected_tip := _cane_tip_world_position()
+	_cane_rig.global_position += desired_tip - corrected_tip
 
 
 func _cane_tip_world_position() -> Vector3:
@@ -1306,20 +1464,19 @@ func _update_procedural_cane_gait(stride_wave: float, is_walking: bool,
 		targets[bone_name] = Vector3.ZERO
 	if is_walking:
 		var phase := _current_gait_phase()
-		var cane_wave := cos(phase * TAU)
-		var cane_load := maxf(cane_wave, 0.0)
+		var cane_pose := _sample_cane_hand_pose(phase)
 
-		# The visual right arm is .l on this mirrored donor rig. It stays flexed
-		# around the cane and advances only a few degrees. The free arm (.r) makes
-		# the restrained counter-swing that balances the opposite stepping leg.
-		targets["upperarm.l"] = Vector3(-3.0 + cane_wave * 2.5, 0.0, -4.0)
-		targets["lowerarm.l"] = Vector3(-13.0 + cane_load * 3.0, 0.0, 0.0)
-		targets["wrist.l"] = Vector3(4.0 - cane_wave * 2.0, 0.0, 0.0)
-		targets["hand.l"] = Vector3(0.0, 0.0, cane_wave * 1.5)
-		targets["upperarm.r"] = Vector3(-stride_wave * 9.0, 0.0, 2.0)
-		targets["lowerarm.r"] = Vector3(-7.0 - absf(stride_wave) * 5.0,
-			0.0, 0.0)
-		targets["wrist.r"] = Vector3(stride_wave * 2.5, 0.0, 0.0)
+		# The visual right arm is .l on this mirrored donor rig. Its authored key
+		# poses flex the shoulder, elbow and wrist before IK places the paw exactly
+		# on the cane hook. The free arm counter-swings with the opposite leg.
+		targets["upperarm.l"] = cane_pose.upper as Vector3
+		targets["lowerarm.l"] = cane_pose.lower as Vector3
+		targets["wrist.l"] = cane_pose.wrist as Vector3
+		targets["hand.l"] = Vector3(0.0, 0.0,
+			lerpf(-3.0, 4.0, get_cane_contact_weight()))
+		targets["upperarm.r"] = cane_pose.free_upper as Vector3
+		targets["lowerarm.r"] = cane_pose.free_lower as Vector3
+		targets["wrist.r"] = cane_pose.free_wrist as Vector3
 
 	for bone_name in targets:
 		targets[bone_name] = (targets[bone_name] as Vector3) * gait_strength

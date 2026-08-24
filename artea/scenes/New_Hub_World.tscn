@@ -215,7 +215,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 
 [sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("15_o1ycd")
-amount = 52000
+amount = 120000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
@@ -244,6 +244,10 @@ remove_points_on_miss = false
 [sub_resource type="Resource" id="Resource_13iw3"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
+max_slope = 52.0
+enable_texture_filtering = true
+target_texture_id = 0
+texture_threshold = 0.5
 
 [sub_resource type="Resource" id="Resource_vqqxb"]
 script = ExtResource("13_1ti50")
@@ -267,12 +271,12 @@ noise = SubResource("FastNoiseLite_7nfwd")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_y45p1"]
 render_priority = 1
 shader = ExtResource("19_ha1sw")
-shader_parameter/bottom_color = Color(0.214194, 0.363532, 0.198002, 1)
-shader_parameter/top_color = Color(0.401027, 0.688921, 0.343888, 1)
-shader_parameter/color_variation_1 = Color(0.438892, 0.533217, 0.191565, 1)
+shader_parameter/bottom_color = Color(0.18, 0.44, 0.14, 1)
+shader_parameter/top_color = Color(0.36, 0.7, 0.24, 1)
+shader_parameter/color_variation_1 = Color(0.3, 0.62, 0.18, 1)
 shader_parameter/noise_variation_1 = SubResource("NoiseTexture2D_bsvfl")
 shader_parameter/Noise1Scale = 20.0
-shader_parameter/color_variation_2 = Color(0.394377, 0.618859, 0.257121, 1)
+shader_parameter/color_variation_2 = Color(0.24, 0.56, 0.18, 1)
 shader_parameter/noise_variation_2 = SubResource("NoiseTexture2D_ngqnt")
 shader_parameter/Noise2Scale = 20.0
 shader_parameter/windSpeed = 0.005
@@ -524,49 +528,49 @@ path = "res://scenes/vegetation/grass_clump_3d.tscn"
 
 [node name="ScatterItemFlowerRed" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_red_3d.tscn"
 
 [node name="ScatterItemFlowerOrange" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_orange_3d.tscn"
 
 [node name="ScatterItemFlowerYellow" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_yellow_3d.tscn"
 
 [node name="ScatterItemFlowerGreen" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_green_3d.tscn"
 
 [node name="ScatterItemFlowerBlue" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_blue_3d.tscn"
 
 [node name="ScatterItemFlowerIndigo" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_indigo_3d.tscn"
 
 [node name="ScatterItemFlowerViolet" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_violet_3d.tscn"

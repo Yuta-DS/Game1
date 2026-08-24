@@ -209,6 +209,78 @@ func _run() -> void:
 			if station.get_node_or_null(required_part) == null:
 				_fail("station %d lacks designed traversal part %s" % [station_index + 1, required_part])
 				return
+		var platform_design := station.get_node("WalkablePlatform") as Node3D
+		if String(platform_design.get_meta("design", "")) != "twin_train_fit_platform" \
+				or absf(float(platform_design.get_meta("platform_length_m", 0.0)) - 57.0) > 0.01 \
+				or absf(float(platform_design.get_meta("central_train_clearance_m", 0.0)) - 12.0) > 0.01:
+			_fail("station %d does not use the new train-fit twin-platform architecture" % (station_index + 1))
+			return
+		for platform_part in ["LeftStructuralDeck", "RightStructuralDeck",
+				"LeftRaisedBoardingBase", "RightRaisedBoardingBase",
+				"CentralMonorailServiceChannel", "LeftChannelLight", "RightChannelLight"]:
+			if platform_design.get_node_or_null(platform_part) == null:
+				_fail("station %d new platform lacks %s" % [station_index + 1, platform_part])
+				return
+		if platform_design.find_children("*RainbowFascia_*", "MeshInstance3D", false, false).size() != 14:
+			_fail("station %d platform does not carry fourteen separated rainbow fascia panels" % (station_index + 1))
+			return
+		var roof_foundations := station.get_node_or_null("OldRoofSupportFoundations") as Node3D
+		if roof_foundations == null \
+				or roof_foundations.find_children("RoofPlinth_*", "MeshInstance3D", false, false).size() != 6:
+			_fail("station %d restored roof columns lack six structural platform plinths" % (station_index + 1))
+			return
+		var boarding_layout := station.get_node("BoardingLane") as Node3D
+		if not bool(boarding_layout.get_meta("aligned_to_train_route", false)) \
+				or absf(float(boarding_layout.get_meta("train_clear_width_m", 0.0)) - 12.0) > 0.01:
+			_fail("station %d boarding layout is not sized and aligned to the train" % (station_index + 1))
+			return
+		for boarding_part in ["DriverWalkwayLeft", "DriverWalkwayRight",
+				"PassengerWalkwayLeft", "PassengerWalkwayRight",
+				"DriverBoardingBridgeLeft", "DriverBoardingBridgeRight",
+				"PassengerBoardingBridgeLeft", "PassengerBoardingBridgeRight",
+				"EntranceToTrainWalkway", "DriverZoneSign", "PassengerZoneSign"]:
+			if boarding_layout.get_node_or_null(boarding_part) == null:
+				_fail("station %d lacks train-fit boarding part %s" % [station_index + 1, boarding_part])
+				return
+		var route_forward: Vector3 = railway.call("get_route_forward_direction_at_station", station_index)
+		if (-boarding_layout.basis.z).normalized().dot(route_forward) < 0.999:
+			_fail("station %d walkways do not follow the parked train direction" % (station_index + 1))
+			return
+		for guard_name in ["PlatformGuardLeft", "PlatformGuardRight"]:
+			var guard := station.get_node(guard_name) as Node3D
+			if String(guard.get_meta("barrier_plan", "")) != "train_fit_no_overlap":
+				_fail("station %d %s lacks the purposeful no-overlap barrier plan" % [
+					station_index + 1, guard_name])
+				return
+			if float(guard.get_meta("train_side_clearance_m", 0.0)) < 0.6:
+				_fail("station %d %s barrier is too close to the train machinery" % [
+					station_index + 1, guard_name])
+				return
+			if int(guard.get_meta("shared_connection_post_count", 0)) < 18:
+				_fail("station %d %s barrier spans are not connected by shared posts" % [
+					station_index + 1, guard_name])
+				return
+			for barrier_name in ["EngineMachineryBarrier", "CoachSeparationBarrier",
+					"RearTrackBarrier", "FrontPlatformEndStop", "RearPlatformEndStop"]:
+				var barrier := guard.get_node_or_null(barrier_name) as Node3D
+				if barrier == null or String(barrier.get_meta("purpose", "")).is_empty():
+					_fail("station %d %s has no defined safety purpose" % [
+						station_index + 1, barrier_name])
+					return
+				if int(barrier.get_meta("connected_span_count", 0)) < 1:
+					_fail("station %d %s is not divided into connected rail spans" % [
+						station_index + 1, barrier_name])
+					return
+			var driver_clear: Vector2 = guard.get_meta("driver_gate_clear_z")
+			var passenger_clear: Vector2 = guard.get_meta("passenger_gate_clear_z")
+			if driver_clear.x >= 0.0 or driver_clear.y <= 0.0 \
+					or passenger_clear.x >= 15.0 or passenger_clear.y <= 15.0:
+				_fail("station %d barriers close a driver or passenger boarding gate" % (station_index + 1))
+				return
+		if station.get_node_or_null("DestinationWheel") != null \
+				or not station.find_children("WheelSpoke", "MeshInstance3D", true, false).is_empty():
+			_fail("station %d still contains the redundant destination disc or floor spokes" % (station_index + 1))
+			return
 		if station_index == 1:
 			var mind_upgrade := station.get_node_or_null("MindSparkStationUpgrade") as Node3D
 			if mind_upgrade == null \
@@ -265,10 +337,10 @@ func _run() -> void:
 			if (station.get_node("FloatingDockStructure") as Node3D).visible:
 				_fail("Mind Spark generic foundation remains visible through its faceted island")
 				return
-			if mind_upgrade.find_children("CircuitMonolith_*", "MeshInstance3D", true, false).size() != 10 \
+			if mind_upgrade.find_children("CircuitMonolith_*", "MeshInstance3D", true, false).size() != 4 \
 					or mind_upgrade.find_children("RestoredSolarGlassPetal_*", "MeshInstance3D", true, false).size() != 12 \
 					or mind_upgrade.get_node_or_null("RestoredBranchingSupportColumns") == null:
-				_fail("Mind Spark station lacks the restored split-wing canopy design")
+				_fail("Mind Spark station lacks its restored split-wing roof and wayfinding pylons")
 				return
 			for restored_petal in mind_upgrade.find_children(
 					"RestoredSolarGlassPetal_*", "MeshInstance3D", true, false):
@@ -289,13 +361,16 @@ func _run() -> void:
 			return
 		var canopy := pavilion.get_node_or_null("LivingCrystalCanopy") as Node3D
 		if canopy == null or canopy.find_children("SolarGlassPetal_*", "MeshInstance3D", true, false).size() != 12:
-			_fail("station %d does not have twelve engineered solar-glass canopy petals" % (station_index + 1))
+			_fail("station %d does not have its original twelve-leaf roof" % (station_index + 1))
 			return
 		if pavilion.get_node_or_null("BranchingSupportColumns") == null \
-				or pavilion.get_node_or_null("ResonanceBoardingArchRear") == null \
-				or pavilion.get_node_or_null("ResonanceBoardingArchFront") == null \
-				or pavilion.get_node_or_null("CrystalEnergySpine") == null:
+				or pavilion.get_node_or_null("CanopyEnergyRing") == null:
 			_fail("station %d is missing its bio-magitech structural system" % (station_index + 1))
+			return
+		if pavilion.get_node_or_null("ResonanceBoardingArchRear") != null \
+				or pavilion.get_node_or_null("ResonanceBoardingArchFront") != null \
+				or pavilion.get_node_or_null("CrystalEnergySpine") != null:
+			_fail("station %d still contains the obstructive portals or centre mast" % (station_index + 1))
 			return
 		# All roof petals and columns must stay outside the 15 m central train slot.
 		for petal_candidate in canopy.find_children("SolarGlassPetal_*", "MeshInstance3D", true, false):
@@ -303,12 +378,20 @@ func _run() -> void:
 				_fail("station %d canopy obstructs the central monorail slot" % (station_index + 1))
 				return
 	var first_car := railway.get_node("RainbowGalaxyTrain/Carriage_01") as Node3D
+	if not train is AnimatableBody3D or not (train as AnimatableBody3D).sync_to_physics:
+		_fail("complete train is not one synchronized moving platform")
+		return
+	var platform := train as AnimatableBody3D
+	if platform.collision_layer != 1 or platform.collision_mask != 1 \
+			or String(platform.get_meta("mass_model", "")) != "infinite_mass_moving_platform" \
+			or platform.find_children("*", "CollisionShape3D", false, false).size() < 30:
+		_fail("train platform lacks complete solid collision or infinite-mass metadata")
+		return
 	# The single centre bench is now two side benches with a walkable aisle
 	# between them, so the coach can be crossed on foot instead of climbed over.
-	for train_part in ["PassengerDeck", "PassengerDeckCollision", "CoachGuardLeft",
-			"CoachGuardRight", "JumpBenchLeft", "JumpBenchLeftCollision",
-			"JumpBenchRight", "JumpBenchRightCollision", "DriverConsole",
-			"DriverConsoleCollision", "DriverControls"]:
+	for train_part in ["PassengerDeck", "CoachRoofWalkway", "CoachGuardLeft_Front",
+			"CoachGuardRight_Rear", "BoardingStepLeft", "BoardingStepRight", "JumpBenchLeft",
+			"JumpBenchRight", "DriverConsole", "DriverControls"]:
 		if first_car.get_node_or_null(train_part) == null:
 			_fail("rideable train lacks %s" % train_part)
 			return
@@ -337,8 +420,16 @@ func _run() -> void:
 	# was untriggerable in play while this assertion still passed.
 	var driver_range := float(railway.call("get_driver_interaction_range"))
 	var seat_range := float(railway.call("get_seat_interaction_range"))
-	if driver_range < 3.0 or driver_range > 10.0 or seat_range < 3.0 or seat_range > 6.0:
+	if driver_range < 8.0 or driver_range > 14.0 or seat_range < 6.0 or seat_range > 10.0:
 		_fail("Q interaction range is not a reachable, train-section-local radius")
+		return
+	var flexible_range := float(railway.call("get_flexible_boarding_range"))
+	if flexible_range < 10.0 or flexible_range > 18.0:
+		_fail("1/2 boarding range is not forgiving while remaining train-local")
+		return
+	var outside_shell := train.to_global(Vector3(6.4 + flexible_range - 0.05, 2.0, 0.0))
+	if float(railway.call("get_distance_to_train_footprint", outside_shell)) > flexible_range:
+		_fail("flexible boarding does not measure from the train shell")
 		return
 	var driver_position: Vector3 = railway.call("get_driver_interaction_position")
 	if String(railway.call("get_interaction_mode_for_position",

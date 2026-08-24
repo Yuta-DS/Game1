@@ -68,8 +68,9 @@ const DRIVER_SEAT := Vector3(0.0, 2.4, -4.6)
 # coach so approaching the cab from anywhere on the deck offers driving without
 # the player having to hunt for an exact spot; the seat range stays shorter so
 # the two never fight over the middle of the coach.
-const DRIVER_INTERACTION_RANGE := 8.0
-const SEAT_INTERACTION_RANGE := 3.5
+const DRIVER_INTERACTION_RANGE := 12.0
+const SEAT_INTERACTION_RANGE := 7.5
+const FLEXIBLE_BOARDING_RANGE := 14.0
 # Seat points are where the player capsule's CENTRE is placed, so they sit a
 # capsule half-height above the bench top (JumpBench spans y 0.65..2.65) rather
 # than on it. At the old y=3.0 the character's feet ended up level with the
@@ -151,6 +152,7 @@ var _nature_material: StandardMaterial3D
 var _violet_material: StandardMaterial3D
 var _canopy_material: StandardMaterial3D
 var _dark_metal_material: StandardMaterial3D
+var _station_rainbow_materials: Array[StandardMaterial3D] = []
 
 
 func _ready() -> void:
@@ -394,6 +396,23 @@ func get_seat_interaction_range() -> float:
 	return SEAT_INTERACTION_RANGE
 
 
+func get_flexible_boarding_range() -> float:
+	return FLEXIBLE_BOARDING_RANGE
+
+
+func get_distance_to_train_footprint(world_position: Vector3) -> float:
+	if _train == null:
+		return INF
+	var local := _train.to_local(world_position)
+	# Measure from the whole player-facing shell, not one centre point, so 1/2
+	# boarding is equally comfortable beside the engine or either coach.
+	var closest := Vector3(
+		clampf(local.x, -6.4, 6.4),
+		clampf(local.y, 0.0, 9.0),
+		clampf(local.z, -27.5, 22.0))
+	return local.distance_to(closest)
+
+
 func get_passenger_seat_position(seat_index: int) -> Vector3:
 	if _train == null or seat_index < 0 or seat_index >= BENCH_SEATS.size():
 		return Vector3.ZERO
@@ -516,7 +535,11 @@ func get_train_feature_summary() -> Dictionary:
 		"proximity_interactions": true,
 		"driver_interaction_range_m": DRIVER_INTERACTION_RANGE,
 		"seat_interaction_range_m": SEAT_INTERACTION_RANGE,
+		"flexible_boarding_range_m": FLEXIBLE_BOARDING_RANGE,
+		"moving_platform_bodies": 1,
+		"collision_mass_model": "infinite-mass animatable platform shells",
 		"interaction_rule": "nearest cab or passenger seat",
+		"boarding_gates": "centre opening on both sides of both coaches",
 		"cab_entry": "front doorway to driver seat",
 		"mode_controls": "1 drive, 2 ride",
 		"driver_controls": "1 drive, W forward, S reverse, R horn, Q exit",
@@ -554,7 +577,7 @@ func select_train_mode(mode: String) -> bool:
 		leave_passenger_seat()
 	elif _riding:
 		return false
-	elif _player.global_position.distance_to(get_train_deck_position()) > INTERACTION_RANGE:
+	elif get_distance_to_train_footprint(_player.global_position) > FLEXIBLE_BOARDING_RANGE:
 		return false
 	if mode == "drive":
 		_player.global_position = get_driver_interaction_position()
@@ -836,6 +859,10 @@ void fragment() {
 	_canopy_material = _material(Color(0.23, 0.48, 0.72, 0.76), 0.24,
 		Color("48cce8"), 0.72, true)
 	_dark_metal_material = _material(Color("263552"), 0.42, Color("283f65"), 0.20)
+	_station_rainbow_materials.clear()
+	for colour in [Color("ff557f"), Color("ff9f43"), Color("ffe66d"),
+			Color("5ee58c"), Color("42d9ff"), Color("647dff"), Color("b56cff")]:
+		_station_rainbow_materials.append(_material(colour, 0.30, colour, 0.85))
 
 
 func _build_route() -> void:
@@ -1028,7 +1055,7 @@ func _build_stations() -> void:
 		station.position = info.position
 		stations_root.add_child(station)
 		_station_nodes.append(station)
-		_add_cylinder(station, "WalkablePlatform", Vector3(0.0, -3.2, 0.0), 38.0, 4.0, _stone_material, true)
+		_build_station_platform_from_scratch(station, index)
 		_build_floating_dock_structure(station)
 		if String(info.id) == "mind":
 			_build_mind_spark_station_upgrade(station)
@@ -1039,36 +1066,21 @@ func _build_stations() -> void:
 		if is_zero_approx(dock_sign):
 			dock_sign = -1.0
 		_build_world_access_bridge(station, landing_local, dock_sign)
-		_add_cylinder(station, "DestinationWheel", Vector3(0.0, -0.6, 0.0), 17.0, 1.0, _glass_material, false)
-		# The access stair is built by the skybridge function on the same east-west
-		# axis as the world bridge. A former north-facing ramp left a gap at this
-		# exact dock edge even though both pieces existed visually.
-		# Start the lane clear of the stair head. At the full 15 m width its west
-		# edge reached x=-7.5, the exact top step, so the lane body bit ~1.1 m
-		# into the flight and the player caught on it stepping off the stairs.
-		const BOARDING_LANE_WIDTH := 12.8
-		_add_box(station, "BoardingLane",
-			Vector3(-dock_sign * (15.0 - BOARDING_LANE_WIDTH) * 0.5, 0.8, 11.0),
-			Vector3(BOARDING_LANE_WIDTH, 0.6, 28.0), _glass_material, true)
-		_build_platform_guardrails(station, dock_sign)
+		_build_train_fit_boarding_layout(station, dock_sign, index)
 		var board_label := Label3D.new()
 		board_label.name = "BoardTrainSign"
-		board_label.text = "WALK ONTO THE CROWN LINE\nQ BY A BENCH: RIDE  ✦  Q IN CAB: DRIVE\nW FORWARD  ✦  S REVERSE"
-		board_label.position = Vector3(0.0, 7.0, 24.0)
-		board_label.font_size = 28
+		board_label.text = "1  DRIVE   ✦   2  RIDE\nQ  USE SEAT"
+		board_label.position = Vector3(-dock_sign * 22.0, 6.5, 18.0)
+		board_label.font_size = 32
 		board_label.outline_size = 8
 		board_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		board_label.no_depth_test = false
 		station.add_child(board_label)
-		for spoke in 8:
-			var angle := TAU * float(spoke) / 8.0
-			_add_segment_box(station, "WheelSpoke", Vector3(0.0, 0.15, 0.0),
-				Vector3(cos(angle) * 14.0, 0.15, sin(angle) * 14.0), Vector2(0.55, 0.55), _gold_material)
 		var beacon := OmniLight3D.new()
 		beacon.name = "UnlockBeacon"
 		beacon.position = Vector3(0.0, 13.0, 0.0)
-		beacon.omni_range = 42.0
-		beacon.light_energy = 5.0
+		beacon.omni_range = 30.0
+		beacon.light_energy = 3.0
 		station.add_child(beacon)
 		var label := Label3D.new()
 		label.name = "StationSign"
@@ -1079,6 +1091,160 @@ func _build_stations() -> void:
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = false
 		station.add_child(label)
+
+
+func _build_station_platform_from_scratch(station: Node3D,
+		station_index: int) -> void:
+	# A twin-platform station matches the actual 54 m train envelope. Local -Z
+	# follows the route, leaving a twelve-metre central monorail channel and two
+	# independent eight-metre platform foundations.
+	var platform := Node3D.new()
+	platform.name = "WalkablePlatform"
+	platform.basis = Basis.looking_at(
+		get_route_forward_direction_at_station(station_index), Vector3.UP)
+	platform.set_meta("design", "twin_train_fit_platform")
+	platform.set_meta("platform_length_m", 57.0)
+	platform.set_meta("central_train_clearance_m", 12.0)
+	platform.set_meta("raised_boarding_top_y", 1.1)
+	station.add_child(platform)
+
+	const FOUNDATION_X := 10.0
+	const FOUNDATION_WIDTH := 8.0
+	const FOUNDATION_LENGTH := 57.0
+	const FOUNDATION_CENTRE_Z := -1.5
+	const RAISED_BOARDING_X := 8.75
+	const RAISED_BOARDING_LENGTH := 40.0
+	const RAISED_BOARDING_CENTRE_Z := 4.0
+	for side in [-1.0, 1.0]:
+		var side_name := "Left" if side < 0.0 else "Right"
+		_add_box(platform, "%sStructuralDeck" % side_name,
+			Vector3(float(side) * FOUNDATION_X, -2.2, FOUNDATION_CENTRE_Z),
+			Vector3(FOUNDATION_WIDTH, 2.0, FOUNDATION_LENGTH),
+			_stone_material, true)
+		# The 2.3 m riser carries the colored driver/passenger walking surfaces at
+		# train-step height instead of leaving those floors floating above the base.
+		_add_box(platform, "%sRaisedBoardingBase" % side_name,
+			Vector3(float(side) * RAISED_BOARDING_X, -0.05,
+				RAISED_BOARDING_CENTRE_Z),
+			Vector3(5.5, 2.3, RAISED_BOARDING_LENGTH),
+			_dark_metal_material, true)
+		_add_segment_box(platform, "%sInnerGoldSafetyEdge" % side_name,
+			Vector3(float(side) * 6.0, -1.0, -30.0),
+			Vector3(float(side) * 6.0, -1.0, 27.0),
+			Vector2(0.28, 0.42), _gold_material)
+		_add_segment_box(platform, "%sOuterGoldFascia" % side_name,
+			Vector3(float(side) * 14.0, -1.0, -30.0),
+			Vector3(float(side) * 14.0, -1.0, 27.0),
+			Vector2(0.32, 0.58), _gold_material)
+		# Seven non-overlapping eight-metre light panels make the platform itself
+		# rainbow while the continuous gold fascia keeps the station hierarchy.
+		for colour_index in 7:
+			_add_box(platform, "%sRainbowFascia_%02d" % [side_name, colour_index],
+				Vector3(float(side) * 14.08, -1.82,
+					-25.5 + float(colour_index) * 8.0),
+				Vector3(0.16, 0.70, 7.72),
+				_station_rainbow_materials[colour_index], false)
+
+	# The lowered service bed makes the single centre rail readable and keeps all
+	# station collision outside the train shell. It is intentionally non-walkable.
+	_add_box(platform, "CentralMonorailServiceChannel",
+		Vector3(0.0, -2.65, -1.5), Vector3(11.5, 0.7, 57.0),
+		_dark_metal_material, false)
+	_add_segment_box(platform, "LeftChannelLight",
+		Vector3(-5.72, -2.18, -30.0), Vector3(-5.72, -2.18, 27.0),
+		Vector2(0.20, 0.16), _glass_material)
+	_add_segment_box(platform, "RightChannelLight",
+		Vector3(5.72, -2.18, -30.0), Vector3(5.72, -2.18, 27.0),
+		Vector2(0.20, 0.16), _glass_material)
+
+	# The restored roof uses six columns in the original station axes. Give every
+	# column a real plinth and an outrigger back to the twin structural decks.
+	var roof_foundations := Node3D.new()
+	roof_foundations.name = "OldRoofSupportFoundations"
+	station.add_child(roof_foundations)
+	for side in [-1.0, 1.0]:
+		for support_index in 3:
+			var support_z := -14.0 + float(support_index) * 14.0
+			var support_position := Vector3(float(side) * 19.0, -1.4, support_z)
+			_add_cylinder(roof_foundations,
+				"RoofPlinth_%s_%02d" % ["L" if side < 0.0 else "R", support_index],
+				support_position, 2.25, 2.8, _stone_material, true, 12)
+			_add_torus(roof_foundations,
+				"RoofPlinthGoldRing_%s_%02d" % ["L" if side < 0.0 else "R", support_index],
+				support_position + Vector3.UP * 1.45, 1.72, 2.10, _gold_material)
+			_add_walkway_between(roof_foundations,
+				"RoofFoundationOutrigger_%s_%02d" % [
+					"L" if side < 0.0 else "R", support_index],
+				Vector3(float(side) * 13.5, -1.55, support_z),
+				Vector3(float(side) * 17.2, -1.55, support_z),
+				2.2, 1.1, _dark_metal_material, true)
+
+
+func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
+		station_index: int) -> void:
+	# Basis.looking_at aligns local -Z with the train's forward direction. Every
+	# boarding surface is therefore authored in train space even though the four
+	# stations face different directions around the Crown Line.
+	var direction := get_route_forward_direction_at_station(station_index)
+	var layout := Node3D.new()
+	layout.name = "BoardingLane"
+	layout.basis = Basis.looking_at(direction, Vector3.UP)
+	layout.set_meta("aligned_to_train_route", true)
+	layout.set_meta("train_clear_width_m", 12.0)
+	layout.set_meta("train_clear_length_m", 54.0)
+	station.add_child(layout)
+
+	# The train shell is 12 m wide. These 5.5 m side platforms begin exactly at
+	# x=+/-6 m, flush with its boarding steps, and never overlap its collision.
+	# The forward violet section reaches the first-coach cab; the longer cyan
+	# section serves the two passenger-coach gates at z=0 and z=15.
+	for side in [-1.0, 1.0]:
+		var side_name := "Left" if side < 0.0 else "Right"
+		_add_box(layout, "DriverWalkway%s" % side_name,
+			Vector3(float(side) * 8.75, 0.8, -7.0), Vector3(5.5, 0.6, 18.0),
+			_violet_material, true)
+		_add_box(layout, "PassengerWalkway%s" % side_name,
+			Vector3(float(side) * 8.75, 0.8, 13.0), Vector3(5.5, 0.6, 22.0),
+			_glass_material, true)
+		_add_box(layout, "DriverBoardingBridge%s" % side_name,
+			Vector3(float(side) * 6.0, 0.8, 0.0), Vector3(1.2, 0.6, 4.2),
+			_gold_material, true)
+		_add_box(layout, "PassengerBoardingBridge%s" % side_name,
+			Vector3(float(side) * 6.0, 0.8, 15.0), Vector3(1.2, 0.6, 4.2),
+			_gold_material, true)
+
+	# Join the top of the arrival stair to the nearest train-side platform. The
+	# connector is calculated in route space, so it never asks the player to walk
+	# across the train or centre monorail to reach a boarding gate.
+	var stair_top_station := Vector3(7.5 * dock_sign, 1.1, 0.0)
+	var stair_top_local := layout.transform.affine_inverse() * stair_top_station
+	var access_side := signf(stair_top_local.x)
+	if is_zero_approx(access_side):
+		access_side = dock_sign
+	var access_target := Vector3(access_side * 8.75, 1.1,
+		clampf(stair_top_local.z, -14.5, 23.5))
+	_add_walkway_between(layout, "EntranceToTrainWalkway", stair_top_local,
+		access_target, 4.6, 0.6, _gold_material, true)
+
+	_add_boarding_zone_label(layout, "DriverZoneSign",
+		"DRIVER  •  1", Vector3(access_side * 11.9, 4.0, -7.0), Color("ffd45a"))
+	_add_boarding_zone_label(layout, "PassengerZoneSign",
+		"RIDING  •  2", Vector3(access_side * 11.9, 4.0, 13.0), Color("72eaff"))
+	_build_platform_guardrails(station, layout.basis, access_side, access_target.z)
+
+
+func _add_boarding_zone_label(parent: Node3D, node_name: String, text_value: String,
+		position_value: Vector3, colour: Color) -> void:
+	var label := Label3D.new()
+	label.name = node_name
+	label.text = text_value
+	label.position = position_value
+	label.font_size = 30
+	label.outline_size = 8
+	label.modulate = colour
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = false
+	parent.add_child(label)
 
 
 func _build_mind_spark_station_upgrade(station: Node3D) -> void:
@@ -1107,9 +1273,8 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 		_add_segment_box(promenade, "CircuitWalkMarker_%02d" % marker_index,
 			inner, outer, Vector2(0.28, 0.16), _glass_material)
 
-	# Restore the earlier split-wing roof the player selected: twelve large cyan
-	# solar-glass leaves, sand-gold outlines, green branch columns and an open
-	# centre above the train. All pieces remain visual-only and above clearance.
+	# The original split-wing roof uses twelve large cyan solar-glass leaves with
+	# sand-gold outlines and an open centre above the train.
 	var crystal_tree := Node3D.new()
 	crystal_tree.name = "MindCrystalTreeCanopy"
 	upgrade.add_child(crystal_tree)
@@ -1170,12 +1335,12 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 					"L" if side < 0 else "R", support_index],
 				Vector3(x, 9.2, z), 1.15, 0.65, _gold_material, false, 12)
 
-	# Tall circuit monoliths create the Mind Spark skyline. They are visual-only
-	# and sit on the outer rim, so they cannot trap the player or clip the train.
+	# Four outer wayfinding pylons retain the Mind Spark skyline without turning
+	# the platform rim into a wall of repeated monoliths.
 	var monoliths := Node3D.new()
 	monoliths.name = "CircuitMonolithGarden"
 	upgrade.add_child(monoliths)
-	var monolith_angles := [-2.55, -2.12, -1.66, -1.18, -0.64, 0.66, 1.18, 1.66, 2.12, 2.55]
+	var monolith_angles := [-2.35, -0.80, 0.80, 2.35]
 	for monolith_index in monolith_angles.size():
 		var angle: float = monolith_angles[monolith_index]
 		var height := 8.0 + float(monolith_index % 3) * 2.3
@@ -1187,13 +1352,6 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 		_add_box(monoliths, "CyanRunePanel_%02d" % monolith_index,
 			position_value + Vector3.UP * 0.2, Vector3(1.15, height * 0.62, 0.68),
 			_glass_material, false, 0.0, -angle + PI * 0.5)
-	for rail_index in 12:
-		var angle_a := TAU * float(rail_index) / 12.0
-		var angle_b := TAU * float(rail_index + 1) / 12.0
-		_add_segment_box(upgrade, "SandSafetyRail_%02d" % rail_index,
-			Vector3(cos(angle_a) * 35.0, 2.2, sin(angle_a) * 35.0),
-			Vector3(cos(angle_b) * 35.0, 2.2, sin(angle_b) * 35.0),
-			Vector2(0.25, 0.25), _gold_material)
 
 
 func _build_mind_spark_floating_ground(upgrade: Node3D) -> void:
@@ -1508,8 +1666,8 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 	canopy.name = "LivingCrystalCanopy"
 	pavilion.add_child(canopy)
 	var petal_mesh := _leaf_petal_mesh(22.0, 10.0, 0.48)
-	# Six authored leaf prisms on each side form a radial flower crown while
-	# preserving the open central slot above the monorail and moving train.
+	# Restore the original twelve-leaf split-wing roof while preserving the open
+	# central slot above the monorail and moving train.
 	for side in [-1.0, 1.0]:
 		for petal_index in 6:
 			var ratio := float(petal_index) / 5.0
@@ -1539,12 +1697,6 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 				"GoldenPetalVein_%s_%02d" % ["L" if side < 0 else "R", petal_index],
 				root + Vector3.UP * 0.32, tip + Vector3.UP * 0.32,
 				Vector2(0.20, 0.20), _gold_material)
-	# Layered platform rings turn the plain drum into the blueprint's engineered
-	# circular boarding crown.
-	_add_torus(pavilion, "OuterPlatformEnergyRing", Vector3(0.0, -0.9, 0.0),
-		33.4, 34.0, _gold_material)
-	_add_torus(pavilion, "InnerPlatformCircuitRing", Vector3(0.0, 0.28, 0.0),
-		17.4, 17.9, _glass_material)
 	# Branching columns sit outside the 15 m boarding lane. Their gold collars
 	# show where the living structure connects to engineered roof modules.
 	var supports := Node3D.new()
@@ -1564,20 +1716,14 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 			_add_walkway_between(supports, "CanopyBranchOuter_%s_%02d" % ["L" if side < 0 else "R", support_index],
 				Vector3(x, 8.6, z), Vector3(float(side) * 27.0, 12.0, z),
 				0.62, 0.62, _nature_material, false)
-	_build_resonance_arch(pavilion, "ResonanceBoardingArchRear", Vector3(-13.0, 4.9, 2.0), -1.0)
-	_build_resonance_arch(pavilion, "ResonanceBoardingArchFront", Vector3(13.0, 4.9, 2.0), 1.0)
-	# A crystal spine marks the station centre but stays above head and train
-	# clearance; the thin vertical shaft is visual-only.
-	_add_cylinder(pavilion, "CrystalEnergySpine", Vector3(0.0, 14.2, 1.5),
-		1.05, 7.0, _violet_material, false, 6)
+	# A high energy ring identifies the Crown Line without adding a portal or
+	# centre mast in front of the train.
 	_add_torus(pavilion, "CanopyEnergyRing", Vector3(0.0, 12.1, 1.5),
 		8.35, 8.8, _gold_material)
 	for side in [-1.0, 1.0]:
-		for planter_index in 2:
-			var planter_z := -11.0 + float(planter_index) * 23.0
-			_build_crystal_planter(pavilion,
-				"CrystalPlanter_%s_%02d" % ["L" if side < 0 else "R", planter_index],
-				Vector3(float(side) * 26.0, 0.2, planter_z))
+		_build_crystal_planter(pavilion,
+			"CrystalPlanter_%s" % ("L" if side < 0 else "R"),
+			Vector3(float(side) * 27.0, 0.2, -12.0))
 	# Cyan circuits guide players around the track and toward both boarding bays.
 	for side in [-1.0, 1.0]:
 		_add_walkway_between(pavilion, "PlatformCircuit_%s" % ("L" if side < 0 else "R"),
@@ -1878,32 +2024,137 @@ func _add_surface_ramp_mesh(parent: Node3D, node_name: String, start_surface: Ve
 	parent.add_child(instance)
 
 
-func _build_platform_guardrails(station: Node3D, dock_sign: float) -> void:
+func _build_platform_guardrails(station: Node3D, route_basis: Basis,
+		access_side: float, access_z: float) -> void:
+	# Every barrier has one safety job and shares its corner posts with adjoining
+	# sections. The inner rails protect the empty track/engine area while their
+	# two deliberate gaps line up with the train's driver and passenger steps.
+	# The collision shell is 6 m from centre and the detailed gears project a
+	# little farther. At x=6.8 the 0.32 m rail keeps 0.64 m of true air clearance.
+	const INNER_EDGE_X := 6.80
+	const OUTER_EDGE_X := 11.50
+	const PLATFORM_FRONT_Z := -16.0
+	const PLATFORM_REAR_Z := 24.0
+	const DRIVER_GATE_HALF_LENGTH := 2.3
+	const PASSENGER_GATE_Z := 15.0
+	const PASSENGER_GATE_HALF_LENGTH := 2.3
+	const ENTRANCE_GATE_HALF_LENGTH := 2.6
 	for side in [-1.0, 1.0]:
-		var side_x := float(side) * 18.0
-		var is_dock_side := is_equal_approx(float(side), dock_sign)
-		for post_index in 6:
-			var z := -16.0 + float(post_index) * 8.0
-			# Leave the centre of whichever platform edge faces this station's
-			# world landing open. Mind Spark approaches from the right; the other
-			# three stations currently approach from the left.
-			if is_dock_side and absf(z) < 6.0:
-				continue
-			_add_box(station, "PlatformRailPost", Vector3(side_x, 1.7, z),
-				Vector3(0.42, 3.4, 0.42), _gold_material, true)
-		for height in [1.4, 3.1]:
-			var guard_name := "PlatformGuardLeft" if side < 0.0 else "PlatformGuardRight"
-			if is_dock_side:
-				_add_walkway_between(station, guard_name,
-					Vector3(side_x, height, -16.0), Vector3(side_x, height, -6.0),
-					0.38, 0.38, _gold_material, true)
-				_add_walkway_between(station, "%sFront" % guard_name,
-					Vector3(side_x, height, 6.0), Vector3(side_x, height, 24.0),
-					0.38, 0.38, _gold_material, true)
-			else:
-				_add_walkway_between(station, guard_name,
-					Vector3(side_x, height, -16.0), Vector3(side_x, height, 24.0),
-					0.38, 0.38, _gold_material, true)
+		var guard := Node3D.new()
+		guard.name = "PlatformGuardLeft" if side < 0.0 else "PlatformGuardRight"
+		guard.basis = route_basis
+		guard.set_meta("barrier_plan", "train_fit_no_overlap")
+		guard.set_meta("train_side_clearance_m", INNER_EDGE_X - 6.0 - 0.16)
+		guard.set_meta("driver_gate_clear_z", Vector2(-DRIVER_GATE_HALF_LENGTH,
+			DRIVER_GATE_HALF_LENGTH))
+		guard.set_meta("passenger_gate_clear_z", Vector2(
+			PASSENGER_GATE_Z - PASSENGER_GATE_HALF_LENGTH,
+			PASSENGER_GATE_Z + PASSENGER_GATE_HALF_LENGTH))
+		station.add_child(guard)
+		var inner_x := float(side) * INNER_EDGE_X
+		var outer_x := float(side) * OUTER_EDGE_X
+		_add_purpose_barrier_segment(guard, "EngineMachineryBarrier",
+			Vector3(inner_x, 0.0, PLATFORM_FRONT_Z),
+			Vector3(inner_x, 0.0, -DRIVER_GATE_HALF_LENGTH),
+			"prevents access to the engine and empty guideway")
+		_add_purpose_barrier_segment(guard, "CoachSeparationBarrier",
+			Vector3(inner_x, 0.0, DRIVER_GATE_HALF_LENGTH),
+			Vector3(inner_x, 0.0,
+				PASSENGER_GATE_Z - PASSENGER_GATE_HALF_LENGTH),
+			"keeps players on the platform between the two boarding gates")
+		_add_purpose_barrier_segment(guard, "RearTrackBarrier",
+			Vector3(inner_x, 0.0,
+				PASSENGER_GATE_Z + PASSENGER_GATE_HALF_LENGTH),
+			Vector3(inner_x, 0.0, PLATFORM_REAR_Z),
+			"prevents stepping behind the rear coach")
+
+		# Only the side reached by the station entrance receives an outer opening.
+		# The opposite outer rail is continuous because it has no valid approach.
+		if is_equal_approx(float(side), access_side):
+			var gap_start := clampf(access_z - ENTRANCE_GATE_HALF_LENGTH,
+				PLATFORM_FRONT_Z, PLATFORM_REAR_Z)
+			var gap_end := clampf(access_z + ENTRANCE_GATE_HALF_LENGTH,
+				PLATFORM_FRONT_Z, PLATFORM_REAR_Z)
+			if gap_start - PLATFORM_FRONT_Z > 0.5:
+				_add_purpose_barrier_segment(guard, "OuterFallGuardFront",
+					Vector3(outer_x, 0.0, PLATFORM_FRONT_Z),
+					Vector3(outer_x, 0.0, gap_start),
+					"protects the raised outer walkway before the entrance")
+			if PLATFORM_REAR_Z - gap_end > 0.5:
+				_add_purpose_barrier_segment(guard, "OuterFallGuardRear",
+					Vector3(outer_x, 0.0, gap_end),
+					Vector3(outer_x, 0.0, PLATFORM_REAR_Z),
+					"protects the raised outer walkway after the entrance")
+			guard.set_meta("entrance_gate_clear_z", Vector2(gap_start, gap_end))
+		else:
+			_add_purpose_barrier_segment(guard, "OuterFallGuard",
+				Vector3(outer_x, 0.0, PLATFORM_FRONT_Z),
+				Vector3(outer_x, 0.0, PLATFORM_REAR_Z),
+				"protects the raised platform edge away from the entrance")
+
+		_add_purpose_barrier_segment(guard, "FrontPlatformEndStop",
+			Vector3(inner_x, 0.0, PLATFORM_FRONT_Z),
+			Vector3(outer_x, 0.0, PLATFORM_FRONT_Z),
+			"stops players walking beyond the front of the platform")
+		_add_purpose_barrier_segment(guard, "RearPlatformEndStop",
+			Vector3(inner_x, 0.0, PLATFORM_REAR_Z),
+			Vector3(outer_x, 0.0, PLATFORM_REAR_Z),
+			"stops players walking beyond the rear of the platform")
+
+		# One post per coordinate connects every rail span. Long sections receive
+		# intermediate supports at no more than five-metre spacing, while adjoining
+		# sections reuse the exact same corner post.
+		var post_points := {}
+		for segment in guard.get_children():
+			if segment.has_meta("barrier_start"):
+				var start_value: Vector3 = segment.get_meta("barrier_start")
+				var finish_value: Vector3 = segment.get_meta("barrier_finish")
+				var support_count := maxi(1,
+					ceili(start_value.distance_to(finish_value) / 5.0))
+				for support_index in support_count + 1:
+					var support_ratio := float(support_index) / float(support_count)
+					var support_position := start_value.lerp(finish_value, support_ratio)
+					_add_unique_barrier_post(guard, post_points,
+						Vector3(support_position.x, 1.65, support_position.z))
+		guard.set_meta("shared_connection_post_count", post_points.size())
+
+
+func _add_purpose_barrier_segment(parent: Node3D, node_name: String,
+		start: Vector3, finish: Vector3, purpose: String) -> void:
+	var section := Node3D.new()
+	section.name = node_name
+	section.set_meta("purpose", purpose)
+	section.set_meta("barrier_start", start)
+	section.set_meta("barrier_finish", finish)
+	parent.add_child(section)
+	var direction := (finish - start).normalized()
+	var span_count := maxi(1, ceili(start.distance_to(finish) / 5.0))
+	section.set_meta("connected_span_count", span_count)
+	for span_index in span_count:
+		var raw_span_start := start.lerp(finish,
+			float(span_index) / float(span_count))
+		var raw_span_finish := start.lerp(finish,
+			float(span_index + 1) / float(span_count))
+		# Stop every span at the face of its 0.38 m support posts. Neighboring
+		# spans connect through one post but their collision boxes never overlap.
+		var rail_start := raw_span_start + direction * 0.19
+		var rail_finish := raw_span_finish - direction * 0.19
+		for height in [1.25, 2.75]:
+			_add_walkway_between(section,
+				("LowerRail" if height < 2.0 else "UpperRail") + "_%02d" % span_index,
+				rail_start + Vector3.UP * float(height),
+				rail_finish + Vector3.UP * float(height),
+				0.32, 0.32, _gold_material, true)
+
+
+func _add_unique_barrier_post(parent: Node3D, used_points: Dictionary,
+		position_value: Vector3) -> void:
+	var point_key := "%.3f:%.3f" % [position_value.x, position_value.z]
+	if used_points.has(point_key):
+		return
+	used_points[point_key] = true
+	_add_box(parent, "BarrierPost", position_value,
+		Vector3(0.38, 3.3, 0.38), _gold_material, true)
 
 
 func _add_walkway_between(parent: Node3D, node_name: String, start: Vector3, finish: Vector3,
@@ -1935,7 +2186,9 @@ func _add_walkway_between(parent: Node3D, node_name: String, start: Vector3, fin
 
 
 func _build_train() -> void:
-	_train = Node3D.new()
+	var train_platform := AnimatableBody3D.new()
+	_configure_train_platform_body(train_platform, "complete_train")
+	_train = train_platform
 	_train.name = "RainbowGalaxyTrain"
 	_train.position = STATIONS[0].position
 	add_child(_train)
@@ -1953,9 +2206,22 @@ func _build_train() -> void:
 		# Open passenger deck: walkable/jumpable floor, low walls, open centre.
 		_add_box(carriage, "PassengerDeck", Vector3(0.0, 0.65, 0.0), Vector3(11.0, 1.3, 13.0),
 			body_material, true)
+		# Solid roof proxy: a player landing from above stands on the authored
+		# canopy instead of passing through its decorative Blender geometry.
+		_add_box(carriage, "CoachRoofWalkway", Vector3(0.0, 7.18, 0.0),
+			Vector3(10.8, 0.30, 12.6), body_material, true)
+		# Split side rails leave a broad centre boarding gate. Low external steps
+		# let the player walk or jump onto either coach from either platform side.
 		for side in [-1.0, 1.0]:
-			_add_box(carriage, "CoachGuardLeft" if side < 0 else "CoachGuardRight",
-				Vector3(side * 5.15, 2.0, 0.0), Vector3(0.7, 2.7, 13.0), _gold_material, true)
+			var side_name := "Left" if side < 0 else "Right"
+			for guard_z in [-4.35, 4.35]:
+				_add_box(carriage, "CoachGuard%s_%s" % [side_name,
+					"Rear" if guard_z > 0.0 else "Front"],
+					Vector3(side * 5.15, 2.0, guard_z), Vector3(0.7, 2.7, 4.3),
+					_gold_material, true)
+			_add_box(carriage, "BoardingStep%s" % side_name,
+				Vector3(side * 5.82, 0.48, 0.0), Vector3(0.75, 0.55, 4.0),
+				_gold_material, true)
 		# Split end guards leave a 4 m centre doorway aligned with the station lane.
 		for end_z in [-6.15, 6.15]:
 			for side in [-1.0, 1.0]:
@@ -1989,16 +2255,20 @@ func _build_train() -> void:
 			carriage.add_child(driver_label)
 		for side in [-1.0, 1.0]:
 			for z in [-4.0, 4.0]:
-				_add_cylinder(carriage, "StarWheel", Vector3(side * 5.4, 0.4, z), 2.1, 1.0, _gold_material, false, 16, Vector3(0.0, 0.0, 90.0))
+				_add_cylinder(carriage, "StarWheel", Vector3(side * 5.4, 0.4, z), 2.1, 1.0,
+					_gold_material, true, 16, Vector3(0.0, 0.0, 90.0))
 
 	# Gangway plate bridging the two coaches. Each deck is 13 m long and they sit
 	# 15 m apart, leaving a 2 m hole at z=6.5..8.5 that dropped the player
 	# straight through the train to the rail below. The plate is flush with both
 	# decks so walking between coaches is a continuous floor, not a jump.
-	_add_box(_train, "CoachGangway", Vector3(0.0, 0.65, 7.5), Vector3(4.0, 1.3, 2.6),
+	var gangway := Node3D.new()
+	gangway.name = "CoachGangwayPlatform"
+	_train.add_child(gangway)
+	_add_box(gangway, "CoachGangway", Vector3(0.0, 0.65, 7.5), Vector3(4.0, 1.3, 2.6),
 		_gold_material, true)
 	for gangway_side in [-1.0, 1.0]:
-		_add_box(_train, "GangwayRail", Vector3(gangway_side * 2.35, 2.0, 7.5),
+		_add_box(gangway, "GangwayRail", Vector3(gangway_side * 2.35, 2.0, 7.5),
 			Vector3(0.3, 2.7, 2.6), _gold_material, true)
 
 	var engine := Node3D.new()
@@ -2007,12 +2277,15 @@ func _build_train() -> void:
 	_train.add_child(engine)
 	_add_box(engine, "EngineBody", Vector3(0.0, 4.0, 0.0), Vector3(12.0, 8.0, 17.0),
 		_material(Color("724cc5"), 0.30, Color("aa84ff"), 1.3), true)
+	_add_box(engine, "EngineNoseCollision", Vector3(0.0, 2.4, -10.2),
+		Vector3(9.0, 4.8, 4.0), _gold_material, true)
 	# Guard rail along the engine's rear roof edge. The roof is 8 m up and the
 	# coach deck is at 1.3 m, so anyone who got onto the engine could walk off
 	# the back and take a 6.7 m fall onto the deck. This closes that edge.
 	_add_box(engine, "EngineRoofGuard", Vector3(0.0, 8.55, 8.2), Vector3(12.0, 1.1, 0.4),
 		_gold_material, true)
-	_add_cylinder(engine, "CrownChimney", Vector3(0.0, 10.0, -2.0), 2.6, 8.0, _gold_material, false, 12)
+	_add_cylinder(engine, "CrownChimney", Vector3(0.0, 10.0, -2.0), 2.6, 8.0,
+		_gold_material, true, 12)
 	_train_glow = OmniLight3D.new()
 	_train_glow.name = "GuidingLight"
 	_train_glow.position = Vector3(0.0, 7.0, -10.0)
@@ -2032,7 +2305,7 @@ func _attach_detailed_train_visual() -> void:
 	if detailed_scene == null:
 		push_warning("Crown Line detailed Blender train could not be loaded")
 		return
-	# Keep the proven procedural StaticBody3D collision and driver labels while
+	# Keep the synchronized infinite-mass train collision and driver labels while
 	# replacing its primitive meshes with the optimized textured export. The source
 	# Blend retains all 13,000 editable components; the game export consolidates its
 	# static surfaces and preserves named moving mechanisms for playable frame rates.
@@ -2050,7 +2323,7 @@ func _attach_detailed_train_visual() -> void:
 	detailed_train.set_meta("source_blend",
 		"res://assets3D/crown_line_train/crown_line_lego_train.blend")
 	detailed_train.set_meta("editable_part_count", DETAILED_TRAIN_EDITABLE_PARTS)
-	detailed_train.set_meta("walkable_collision_source", "procedural_two_coach_shell")
+	detailed_train.set_meta("walkable_collision_source", "complete_animatable_train_shell")
 	_train.add_child(detailed_train)
 	_enhance_detailed_train_palette(detailed_train)
 	# The production train now carries a second, native-Godot interpretation of
@@ -2729,12 +3002,24 @@ func _add_box(parent: Node3D, node_name: String, position_value: Vector3, size: 
 	instance.material_override = material
 	parent.add_child(instance)
 	if collision:
-		var body := StaticBody3D.new()
-		body.name = "%sCollision" % node_name
 		var shape_node := CollisionShape3D.new()
 		var shape := BoxShape3D.new()
 		shape.size = size
 		shape_node.shape = shape
+		var collision_owner := _get_train_collision_owner(parent)
+		if collision_owner != null:
+			shape_node.name = "%s_%sCollision" % [parent.name, node_name]
+			var source_transform := Transform3D(
+				Basis.from_euler(Vector3(rotation_x, rotation_y, 0.0)), position_value)
+			shape_node.transform = collision_owner.global_transform.affine_inverse() \
+				* parent.global_transform * source_transform
+			collision_owner.add_child(shape_node, true)
+			return
+		var body := StaticBody3D.new()
+		body.name = "%sCollision" % node_name
+		shape_node.name = "CollisionShape3D"
+		shape_node.position = Vector3.ZERO
+		shape_node.rotation = Vector3.ZERO
 		body.add_child(shape_node)
 		body.position = position_value
 		body.rotation = Vector3(rotation_x, rotation_y, 0.0)
@@ -2757,15 +3042,45 @@ func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3,
 	instance.material_override = material
 	parent.add_child(instance)
 	if collision:
-		var body := StaticBody3D.new()
 		var shape_node := CollisionShape3D.new()
 		var shape := CylinderShape3D.new()
 		shape.radius = radius
 		shape.height = height
 		shape_node.shape = shape
+		var collision_owner := _get_train_collision_owner(parent)
+		if collision_owner != null:
+			shape_node.name = "%s_%sCollision" % [parent.name, node_name]
+			var rotation_radians := Vector3(
+				deg_to_rad(rotation_value.x), deg_to_rad(rotation_value.y), deg_to_rad(rotation_value.z))
+			var source_transform := Transform3D(Basis.from_euler(rotation_radians), position_value)
+			shape_node.transform = collision_owner.global_transform.affine_inverse() \
+				* parent.global_transform * source_transform
+			collision_owner.add_child(shape_node, true)
+			return
+		var body := StaticBody3D.new()
+		shape_node.name = "CollisionShape3D"
+		shape_node.position = Vector3.ZERO
+		shape_node.rotation = Vector3.ZERO
 		body.add_child(shape_node)
 		body.position = position_value
+		body.rotation_degrees = rotation_value
 		parent.add_child(body)
+
+
+func _configure_train_platform_body(body: AnimatableBody3D, shell_kind: String) -> void:
+	body.sync_to_physics = true
+	body.collision_layer = 1
+	body.collision_mask = 1
+	body.set_meta("train_collision_shell", shell_kind)
+	body.set_meta("mass_model", "infinite_mass_moving_platform")
+
+
+func _get_train_collision_owner(parent: Node3D) -> CollisionObject3D:
+	if _train is AnimatableBody3D and (parent == _train or _train.is_ancestor_of(parent)):
+		return _train as AnimatableBody3D
+	if parent is CollisionObject3D:
+		return parent as CollisionObject3D
+	return null
 
 
 func _add_faceted_floating_island(parent: Node3D) -> void:

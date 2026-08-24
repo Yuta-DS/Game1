@@ -67,6 +67,12 @@ func _ready() -> void:
 	floor_block_on_wall = true
 	max_slides = 8
 	safe_margin = 0.04
+	# Crown Line cars are synchronized AnimatableBody3D platforms on layer 1.
+	# Track their floor and wall velocity so the player can walk and jump aboard
+	# without the moving train sliding out from underneath the capsule.
+	platform_floor_layers = 1
+	platform_wall_layers = 1
+	platform_on_leave = CharacterBody3D.PLATFORM_ON_LEAVE_ADD_UPWARD_VELOCITY
 
 	if camera_path:
 		_camera = get_node_or_null(camera_path) as Camera3D

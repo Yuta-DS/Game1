@@ -54,6 +54,15 @@ func _run() -> void:
 		"deterministic two-bone constraints ground both legs after animation")
 	_check(milo.find_child("CaneArmIK", true, false) is TwoBoneIK3D,
 		"the cane hand follows the planted prop through its own arm constraint")
+	var grip_target := milo.find_child("MiloCaneGripTarget", true, false) as Node3D
+	var cane_hook := milo.find_child("MayorCaneHook", true, false) as MeshInstance3D
+	_check(grip_target != null and cane_hook != null \
+			and grip_target.global_position.distance_to(cane_hook.to_global(
+				cane_hook.get_aabb().get_center()) + milo.global_transform.basis.y \
+				.normalized() * 0.045) < 0.012,
+		"the constrained paw targets the physical cane hook instead of empty space")
+	_check(grip_target != null and grip_target.global_position.y > 0.54,
+		"the fitted cane reaches a relaxed wrist height instead of locking the elbow")
 	milo.set("_cane_cycle_time", 0.25 * 1.28)
 	_check(float(milo.call("get_foot_contact_weight", "l")) > 0.95 \
 			and float(milo.call("get_foot_contact_weight", "r")) < 0.05,
@@ -139,8 +148,19 @@ func _run() -> void:
 		"NPC leg curves retarget as an alternating stride on Milo")
 	_check(maxf(left_knee.length(), right_knee.length()) > 8.0,
 		"the NPC recovery curve folds one knee instead of leaving rigid legs")
-	_check(absf(cane_arm.x) < absf(free_arm.x) * 0.65,
-		"the cane arm stays supported while the free arm counter-swings")
+	var loaded_pose: Dictionary = milo.call("_sample_cane_hand_pose", 0.12)
+	var recovery_pose: Dictionary = milo.call("_sample_cane_hand_pose", 0.75)
+	_check((loaded_pose.grip as Vector3).distance_to(recovery_pose.grip) > 0.08,
+		"the authored cane hand travels visibly from loaded support into recovery")
+	_check((loaded_pose.free_upper as Vector3).distance_to(
+			recovery_pose.free_upper) > 7.0,
+		"the free arm uses authored contact and passing poses instead of a sine wave")
+	_check((loaded_pose.body_position as Vector3).distance_to(
+			recovery_pose.body_position) > 0.015,
+		"the centre of mass transfers between the cane-supported and passing poses")
+	_check(absf(cane_arm.x) > 3.0 and absf(cane_arm.x) < 22.0 \
+			and absf(free_arm.x) > 2.0,
+		"the supported arm flexes visibly while the free arm counter-swings")
 	var walking_curls: Dictionary = milo.call("get_hand_curl_amounts")
 	_check(float(walking_curls.get("Paw_R", 0.0)) > 0.65,
 		"the visible cane paw keeps a secure whole-hand grip while walking")
@@ -187,5 +207,5 @@ func _run() -> void:
 		push_error("MILO_NATURAL_ANIMATION_TEST: %d failure(s)" % _failures)
 		quit(1)
 		return
-	print("MILO_NATURAL_ANIMATION_TEST: PASS — NPC-retargeted leg curves, cane-arm overlay, grounding, blink, focus, and smooth idle settling")
+	print("MILO_NATURAL_ANIMATION_TEST: PASS — NPC leg curves, authored full-body cane poses, grounding, blink, focus, and smooth idle settling")
 	quit()
