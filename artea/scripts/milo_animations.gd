@@ -942,7 +942,9 @@ func _physics_process(delta: float) -> void:
 	var desired_velocity := direction * movement_speed * stride_multiplier
 	if not _has_walkable_ground_ahead(direction):
 		desired_velocity = Vector3.ZERO
-	var acceleration := movement_acceleration * (1.35 if _catch_up_active else 1.0)
+	# Catch-up changes the destination speed, not Milo's physical ability to lunge.
+	# Keeping the same acceleration preserves the supported elderly silhouette.
+	var acceleration := movement_acceleration
 	var actual_speed := _approach_horizontal_velocity(
 		desired_velocity, acceleration, delta)
 	_advance_cane_gait(delta, actual_speed)

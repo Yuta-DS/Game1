@@ -39,6 +39,21 @@ func _run() -> void:
 			_check(str(cane_clip.track_get_path(track_index)).begins_with(
 				"MiloExactTargetRig/Skeleton3D:"),
 				"retargeted NPC tracks address Milo's live skeleton")
+	_check(milo.find_child("LegIK_L", true, false) is TwoBoneIK3D \
+			and milo.find_child("LegIK_R", true, false) is TwoBoneIK3D,
+		"deterministic two-bone constraints ground both legs after animation")
+	_check(milo.find_child("CaneArmIK", true, false) is TwoBoneIK3D,
+		"the cane hand follows the planted prop through its own arm constraint")
+	milo.set("_cane_cycle_time", 0.25 * 1.28)
+	_check(float(milo.call("get_foot_contact_weight", "l")) > 0.95 \
+			and float(milo.call("get_foot_contact_weight", "r")) < 0.05,
+		"the left stance foot owns the first supported half-stride")
+	_check(float(milo.call("get_cane_contact_weight")) > 0.95,
+		"the cane is planted with the contralateral left stance foot")
+	milo.call("_reset_cane_gait")
+	milo.call("_advance_cane_gait", 0.10, 1.40)
+	_check(absf(float(milo.call("get_gait_phase")) - 0.10) < 0.002,
+		"gait phase advances from real distance rather than an unrelated timer")
 
 	for side in ["L", "R"]:
 		for prefix in ["EyelidRelaxed", "EyelidHalf", "EyelidClosed",
