@@ -36,12 +36,12 @@ func _run() -> void:
 	var overgrowth := hub.get_node_or_null(
 		"VillageBrickPlaza/GrassOvergrowth") as MultiMeshInstance3D
 	if overgrowth == null or overgrowth.multimesh == null \
-			or overgrowth.multimesh.instance_count < 1000:
+			or overgrowth.multimesh.instance_count < 1250:
 		_fail("medieval brick joints must include sparse modeled grass overgrowth")
 		return
 	var bounds := brick_ground.mesh.get_aabb()
 	if bounds.position.x > 55.0 or bounds.end.x < 125.0 \
-			or bounds.position.z > -89.0 or bounds.end.z < 29.0:
+			or bounds.position.z > -94.0 or bounds.end.z < 54.0:
 		_fail("brick ground must cover the full church-to-market village center")
 		return
 	for scatter_name in ["Grass", "Objects"]:
@@ -51,7 +51,7 @@ func _run() -> void:
 			_fail("%s scatter must be excluded from the brick plaza" % scatter_name)
 			return
 		if not exclusion.shape.is_point_inside(
-				Vector3(90.0, 25.0, -30.0), exclusion.global_transform):
+				Vector3(90.0, 25.0, -20.0), exclusion.global_transform):
 			_fail("%s exclusion must cover the village-center bricks" % scatter_name)
 			return
 	print("VILLAGE_BRICK_PLAZA_TEST: PASS — medieval brick square with moss and modeled grass overgrowth")

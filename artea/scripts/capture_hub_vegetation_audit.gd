@@ -57,7 +57,7 @@ func _capture() -> void:
 
 	camera.fov = 60.0
 	if not await _save(camera, Vector3(90.0, 78.0, 65.0),
-			Vector3(90.0, 20.0, -30.0), VILLAGE_BRICK_PATH):
+			Vector3(90.0, 20.0, -20.0), VILLAGE_BRICK_PATH):
 		quit(1)
 		return
 

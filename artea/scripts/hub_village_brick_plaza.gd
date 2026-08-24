@@ -1,7 +1,7 @@
 extends Node3D
 
-const PLAZA_CENTER := Vector2(90.0, -30.0)
-const PLAZA_SIZE := Vector2(72.0, 120.0)
+const PLAZA_CENTER := Vector2(90.0, -20.0)
+const PLAZA_SIZE := Vector2(72.0, 150.0)
 const CORNER_RADIUS := 10.0
 const CELL_SIZE := 1.0
 const SURFACE_LIFT := 0.055
@@ -9,7 +9,7 @@ const BRICK_SHADER := preload("res://shaders/village_brick_plaza.gdshader")
 const WEB_GRID_SIDE := 513
 const WEB_GRID_SPACING := 8.0
 const WEB_HALF_EXTENT := 2048.0
-const OVERGROWTH_TUFTS := 340
+const OVERGROWTH_TUFTS := 420
 const BLADES_PER_TUFT := 3
 
 var _terrain_data
@@ -138,7 +138,7 @@ func _add_grass_overgrowth() -> void:
 	for tuft_index in OVERGROWTH_TUFTS:
 		var point := Vector2.ZERO
 		for _attempt in 20:
-			if tuft_index < 225:
+			if tuft_index < 280:
 				# Most growth follows the damp, less-travelled plaza perimeter.
 				var side := tuft_index % 4
 				if side < 2:

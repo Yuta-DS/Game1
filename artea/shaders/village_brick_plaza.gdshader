@@ -21,7 +21,7 @@ void vertex() {
 }
 
 void fragment() {
-	vec2 local = world_xz - vec2(90.0, -30.0);
+	vec2 local = world_xz - vec2(90.0, -20.0);
 	// Uneven running courses read like hand-laid medieval setts rather than a
 	// modern machine-perfect herringbone floor.
 	float course_hint = floor(local.y / 0.88);
@@ -60,7 +60,7 @@ void fragment() {
 
 	// A darker soldier-course frame gives the square a deliberately designed
 	// edge without making it feel like a modern tiled floor.
-	float edge_distance = min(36.0 - abs(local.x), 60.0 - abs(local.y));
+	float edge_distance = min(36.0 - abs(local.x), 75.0 - abs(local.y));
 	float border = 1.0 - smoothstep(0.7, 2.0, edge_distance);
 	paver = mix(paver, stone_cool * 0.82, border * 0.7);
 	float moss_noise = hash21(chip_cell + paver_id * 5.0 + vec2(41.0, 7.0));

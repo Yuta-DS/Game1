@@ -315,7 +315,7 @@ metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
 [sub_resource type="Resource" id="Resource_village_plaza_exclusion"]
 script = ExtResource("112_scatter_box")
-size = Vector3(74, 100, 122)
+size = Vector3(74, 100, 152)
 
 [sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("15_o1ycd")
@@ -502,7 +502,7 @@ script = ExtResource("20_7nfwd")
 shape = SubResource("Resource_vspl4")
 
 [node name="VillagePlazaExclusion" type="Node3D" parent="Environment/Grass"]
-position = Vector3(90.4983, 0, -49.2097)
+position = Vector3(90.4983, 0, -39.2097)
 script = ExtResource("20_7nfwd")
 negative = true
 shape = SubResource("Resource_village_plaza_exclusion")
@@ -606,7 +606,7 @@ script = ExtResource("20_7nfwd")
 shape = SubResource("Resource_g8bsm")
 
 [node name="VillagePlazaExclusion" type="Node3D" parent="Environment/Objects"]
-position = Vector3(19.1855, 0, -30)
+position = Vector3(19.1855, 0, -20)
 script = ExtResource("20_7nfwd")
 negative = true
 shape = SubResource("Resource_village_plaza_exclusion")
