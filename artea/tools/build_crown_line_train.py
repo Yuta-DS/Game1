@@ -1426,15 +1426,22 @@ def engine(center_y=-17.0, parent=model_root):
                   (gear_x+side*.19,gear_y,gear_z),gear_radius*.55,.065,
                   MAT[("cyan","pink","teal_light")[gear_i]],
                   rot=(0,math.pi/2,0),parent=eng)
-        # Piston cylinder and bright connecting rod visually couple the reactor
-        # to the large drive gear. They sit beyond the bodywork and stay clear
-        # of the driver's floor and doors.
+        # A compact piston sits in its own lower-forward bay. Only the short
+        # outer-face linkage reaches the crank pin, so no geometry crosses the
+        # drive gear, neighbouring transmission, or cabinet panels.
+        linkage_x=gear_x+side*.56
         cylinder(f"Engine_SteamPistonCylinder_{side_tag}",
-                 (gear_x,boiler_y-2.15,3.14),.36,1.48,MAT["bronze"],18,
+                 (linkage_x,boiler_y-3.25,2.00),.26,1.00,MAT["bronze"],18,
                  rot=(math.pi/2,0,0),parent=eng)
+        torus(f"Engine_SteamPistonCollar_{side_tag}",
+              (linkage_x,boiler_y-2.73,2.00),.31,.060,MAT["accent_gold"],
+              rot=(math.pi/2,0,0),parent=eng)
         beam(f"Engine_SteamConnectingRod_{side_tag}",
-             (gear_x+side*.22,boiler_y-1.66,3.14),
-             (gear_x+side*.22,boiler_y+.96,3.89),.105,MAT["accent_gold"],10,eng)
+             (linkage_x,boiler_y-2.72,2.00),
+             (linkage_x,boiler_y-1.90,2.25),.080,MAT["accent_gold"],10,eng)
+        cylinder(f"Engine_SteamCrankPin_{side_tag}",
+                 (linkage_x,boiler_y-1.90,2.25),.18,.18,MAT["cyan"],16,
+                 rot=(0,math.pi/2,0),parent=eng)
         beam(f"Engine_SteamOrbFeedPipe_{side_tag}",
              (side*1.15,reactor_y+.62,3.78),(side*3.86,boiler_y-1.85,5.33),
              .14,MAT["bronze"],12,eng)

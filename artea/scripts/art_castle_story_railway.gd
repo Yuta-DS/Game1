@@ -2682,8 +2682,10 @@ func _update_train_mechanisms(delta: float) -> void:
 		var rod_motion := sin(steam_phase + rod_phase)
 		var rod_base_position: Vector3 = rod_part.get_meta("mechanism_base_position", Vector3.ZERO)
 		var rod_base_rotation: Vector3 = rod_part.get_meta("mechanism_base_rotation", Vector3.ZERO)
-		rod_part.position = rod_base_position + Vector3(0.0, 0.0, rod_motion * .24)
-		rod_part.rotation = rod_base_rotation + Vector3(rod_motion * .08, 0.0, rod_motion * .12)
+		# The compact crank linkage uses a restrained stroke so it remains in its
+		# dedicated clearance bay throughout the full animation cycle.
+		rod_part.position = rod_base_position + Vector3(0.0, 0.0, rod_motion * .10)
+		rod_part.rotation = rod_base_rotation + Vector3(rod_motion * .04, 0.0, rod_motion * .06)
 	for pressure_part in _steam_pressure_parts:
 		var pressure_phase: float = pressure_part.get_meta("mechanism_phase", 0.0)
 		var base_pressure_scale: Vector3 = pressure_part.get_meta("mechanism_base_scale", Vector3.ONE)
