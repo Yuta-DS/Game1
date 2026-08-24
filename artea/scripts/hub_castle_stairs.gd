@@ -363,25 +363,24 @@ func _build_tower(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	var shape := CollisionShape3D.new()
 	var cyl := CylinderShape3D.new()
 	# CylinderShape3D cannot taper, so this one shape has to stand in for a cone.
-	# Sizing it to the *bottom* radius (4.0) would push a wall through the
-	# walkway itself — the walkway's own collision starts at TREAD_INNER_RADIUS
-	# (4.94), leaving only 0.94 m clear, too little for a 1.0 m wide capsule
-	# through the whole climb.
+	# Sizing it to the *bottom* radius would push a 4 m wall right through the
+	# inner edge of every tread — the tread's inner edge sits at 4.6 m, leaving
+	# 0.6 m of walkway against a 1.0 m wide capsule, which is exactly where the
+	# climb jammed. Sizing to the narrower top radius keeps the full tread walkable
+	# for the whole height; the visual flare at the base is decorative and sits
+	# below the first step, where the player never walks.
 	#
-	# Sizing it to the narrower top radius (3.0) keeps the walkway fully clear,
-	# but leaves an invisible pocket behind the inner guard rail (which starts
-	# at inner_edge - INNER_GUARD_HALF_WIDTH = 4.38): a player who gets past the
-	# rail — by jumping it, or through the small gaps InnerSafetyPlinth doesn't
-	# fully cover near the crown — finds nothing solid there and falls through
-	# open space. Extending the collision out to the guard's own inner face
-	# (plus a small overlap so the two colliders always seal, even across the
-	# guard's faceted helix mesh) removes that pocket entirely: the pillar is
-	# now solid right up to the rail, so there is nowhere to fall into, while
-	# still stopping 0.5 m short of the walkway's own collision boundary. The
-	# visible tower mesh above is unchanged — only this invisible shape widens.
-	var pillar_collision_radius := (STAIR_RADIUS - STEP_WIDTH * 0.5) \
-		- INNER_GUARD_HALF_WIDTH + 0.05
-	cyl.radius = pillar_collision_radius
+	# This must stay a plain, angle-independent cylinder rather than tracking the
+	# guard's radius: it exists at every angle for the tower's whole height, so
+	# widening it out to the guard's own footprint (tried and reverted — commit
+	# 17cb6ab) makes it overlap the guard's collision continuously along the
+	# *entire* spiral, not just near the pocket that needed closing. A player
+	# standing anywhere on the inner rail then has their capsule touching two
+	# overlapping solids — a smooth cylinder and the guard's faceted trimesh — at
+	# a sharp seam, which is what froze movement when jumping onto the railing.
+	# The pocket behind the rail is closed instead by InnerSafetyPlinth, a
+	# helix-shaped fill that only overlaps the guard where the guard actually is.
+	cyl.radius = TOWER_TOP_RADIUS
 	cyl.height = height
 	shape.shape = cyl
 	body.add_child(shape)
@@ -664,6 +663,47 @@ func _build_continuous_ascent(parent: Node3D, base: Vector2, ground: float,
 		GUARD_ENTRY_LEAD_T)
 	_add_helix_part(parent, "InnerContinuousCap", inner_cap, brass, false)
 
+	# Both guard rails are closed, boxy collision volumes (top + bottom + inner +
+	# outer faces) — the same cross-section AscentRoadbed used before
+	# AscentWalkSurface was split out. A capsule that ends up on top of a guard
+	# (jumping the rail is exactly the scenario InnerSafetyPlinth exists to
+	# survive) catches on the internal edges between that box's own faces when
+	# it tries to walk, and simply freezes. diag_stair_rail_stand.gd reproduces
+	# this on plain, otherwise-unmodified guard geometry (t=0.10, nowhere near
+	# the crown or the pillar), so this is pre-existing and not caused by any of
+	# the crown/pillar work above. The guard boxes themselves must stay
+	# collision-backed — they are the wall stopping a player on the walkway from
+	# passing through to the drop beyond — but a separate single-face top sheet,
+	# floating a small gap above each guard's cap the way AscentWalkSurface
+	# floats above AscentRoadbed, gives a player who lands up there a smooth
+	# surface with no internal seam to snag on.
+	#
+	# Standing on either walk surface puts a player roughly 1.3-1.5 m higher
+	# than a tread walker, but _build_crown only guarantees STAIR_HEADROOM above
+	# tread height when it cuts CrownDeck's stairwell opening — so unclamped,
+	# the same diagnostic caught a player pinned between this surface and
+	# CrownDeck's underside around t=0.9, well before reaching the crown.
+	# Clamping to the same headroom below the crown floor's underside makes the
+	# surface duck down as it approaches the crown, preserving that clearance
+	# for the taller stance instead of assuming tread-height is all that matters.
+	var crown_floor_underside := top_y + CROWN_SURFACE_OFFSET - CROWN_SLAB_HEIGHT
+	var guard_walk_ceiling := crown_floor_underside - STAIR_HEADROOM
+	var outer_guard_walk_surface := _helix_walk_surface_mesh(base, ground, top_y,
+		start_angle, outer_edge - OUTER_GUARD_HALF_WIDTH,
+		outer_edge + OUTER_GUARD_HALF_WIDTH, 1.60, guard_walk_ceiling)
+	var outer_guard_walk_part := _add_helix_part(parent, "OuterGuardWalkSurface",
+		outer_guard_walk_surface, brass, true)
+	outer_guard_walk_part.visible = false
+	outer_guard_walk_part.set_meta("collision_only", true)
+
+	var inner_guard_walk_surface := _helix_walk_surface_mesh(base, ground, top_y,
+		start_angle, inner_edge - INNER_GUARD_HALF_WIDTH,
+		inner_edge + INNER_GUARD_HALF_WIDTH, 1.47, guard_walk_ceiling)
+	var inner_guard_walk_part := _add_helix_part(parent, "InnerGuardWalkSurface",
+		inner_guard_walk_surface, brass, true)
+	inner_guard_walk_part.visible = false
+	inner_guard_walk_part.set_meta("collision_only", true)
+
 	# Close the narrow service slot behind the inner guard. The tower collider is
 	# deliberately only 3.0 m wide while the guard begins around radius 4.38 m;
 	# at the circular entry apron that left a player-sized pocket behind the
@@ -672,9 +712,27 @@ func _build_continuous_ascent(parent: Node3D, base: Vector2, ground: float,
 	# plinth follows the same helix beneath the cap, turning that slot into solid
 	# architecture and giving any over-jumping player a broad surface from which
 	# they can step or jump safely back onto the stair.
+	#
+	# end_t previously stopped at 0.96 instead of running the full climb, because
+	# a flat top_offset of 1.05 m eventually pokes through CrownDeck's solid
+	# centre disc (see _build_crown/_crown_deck_mesh, which floors every angle at
+	# this plinth's radius once close enough to the crown) and becomes a solid
+	# pillar sitting directly in the final tread-to-crown walking path — extending
+	# end_t to 1.0 without a ceiling regressed CASTLE_SPIRAL_ROUTE_TEST with the
+	# player stuck entering the crown against this exact node. That left the last
+	# stretch of climb with a rail but no floor behind it: jumping the rail there
+	# dropped a player through open space onto nothing short of a much lower turn
+	# of the spiral. Passing the crown floor's underside as a ceiling lets the
+	# plinth run the full climb — its cap flattens toward that underside instead
+	# of piercing it, closing the pocket without ever standing proud of the floor.
+	# Unlike widening the tower's own collider (tried and reverted — see
+	# _build_tower), this only overlaps the guard along the guard's own helix
+	# path, not at every angle, so it does not create the continuous seam that
+	# froze movement when standing on the rail. crown_floor_underside is computed
+	# above, alongside the guard walk surfaces that need the same ceiling.
 	var inner_plinth := _helix_band_mesh(base, ground, top_y, start_angle,
-		TOWER_TOP_RADIUS - 0.05, inner_edge + 0.02, -0.05, 1.05, 0.96,
-		GUARD_ENTRY_LEAD_T)
+		TOWER_TOP_RADIUS - 0.05, inner_edge + 0.02, -0.05, 1.05, 1.0,
+		GUARD_ENTRY_LEAD_T, crown_floor_underside)
 	_add_helix_part(parent, "InnerSafetyPlinth", inner_plinth, dark, true)
 
 	var entry_foundation_mesh := _terrain_fitted_entry_foundation_mesh(base,
@@ -830,7 +888,7 @@ func _stair_growth_point(base: Vector2, ground: float, top_y: float,
 func _helix_band_mesh(base: Vector2, ground: float, top_y: float,
 		start_angle: float, inner_radius: float, outer_radius: float,
 		bottom_offset: float, top_offset: float, end_t: float = 1.0,
-		start_t: float = 0.0) -> ArrayMesh:
+		start_t: float = 0.0, ceiling_y: float = INF) -> ArrayMesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var samples := maxi(_step_count, 48)
@@ -841,19 +899,28 @@ func _helix_band_mesh(base: Vector2, ground: float, top_y: float,
 		var a1 := start_angle + t1 * TAU * TURNS
 		var y0 := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, maxf(t0, 0.0))
 		var y1 := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, maxf(t1, 0.0))
+		# Clamping both faces to a shared ceiling (rather than just the top)
+		# lets a band run all the way to t=1 without its top face poking through
+		# solid geometry above it (e.g. the crown floor): once y0/y1 + the
+		# offsets would exceed the ceiling, the band flattens toward zero height
+		# instead of inverting.
+		var bottom0 := minf(y0 + bottom_offset, ceiling_y)
+		var top0 := minf(y0 + top_offset, ceiling_y)
+		var bottom1 := minf(y1 + bottom_offset, ceiling_y)
+		var top1 := minf(y1 + top_offset, ceiling_y)
 
 		var i0b := Vector3(base.x + cos(a0) * inner_radius,
-			y0 + bottom_offset, base.y + sin(a0) * inner_radius)
-		var i0t := Vector3(i0b.x, y0 + top_offset, i0b.z)
+			bottom0, base.y + sin(a0) * inner_radius)
+		var i0t := Vector3(i0b.x, top0, i0b.z)
 		var o0b := Vector3(base.x + cos(a0) * outer_radius,
-			y0 + bottom_offset, base.y + sin(a0) * outer_radius)
-		var o0t := Vector3(o0b.x, y0 + top_offset, o0b.z)
+			bottom0, base.y + sin(a0) * outer_radius)
+		var o0t := Vector3(o0b.x, top0, o0b.z)
 		var i1b := Vector3(base.x + cos(a1) * inner_radius,
-			y1 + bottom_offset, base.y + sin(a1) * inner_radius)
-		var i1t := Vector3(i1b.x, y1 + top_offset, i1b.z)
+			bottom1, base.y + sin(a1) * inner_radius)
+		var i1t := Vector3(i1b.x, top1, i1b.z)
 		var o1b := Vector3(base.x + cos(a1) * outer_radius,
-			y1 + bottom_offset, base.y + sin(a1) * outer_radius)
-		var o1t := Vector3(o1b.x, y1 + top_offset, o1b.z)
+			bottom1, base.y + sin(a1) * outer_radius)
+		var o1t := Vector3(o1b.x, top1, o1b.z)
 
 		_add_surface_quad(surface, i0t, i1t, o1t, o0t) # top
 		_add_surface_quad(surface, i0b, o0b, o1b, i1b) # underside
@@ -874,7 +941,7 @@ func _helix_band_mesh(base: Vector2, ground: float, top_y: float,
 # those faces prevents the capsule from snagging on a segmented curve.
 func _helix_walk_surface_mesh(base: Vector2, ground: float, top_y: float,
 		start_angle: float, inner_radius: float, outer_radius: float,
-		top_offset: float) -> ArrayMesh:
+		top_offset: float, ceiling_y: float = INF) -> ArrayMesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var samples := maxi(_step_count, 48)
@@ -883,8 +950,13 @@ func _helix_walk_surface_mesh(base: Vector2, ground: float, top_y: float,
 		var t1 := float(i + 1) / float(samples)
 		var a0 := start_angle + t0 * TAU * TURNS
 		var a1 := start_angle + t1 * TAU * TURNS
-		var y0 := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, t0) + top_offset
-		var y1 := lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, t1) + top_offset
+		# Clamped to a ceiling for surfaces that stand a player well above tread
+		# height (see the guard-rail walk surfaces in _build_continuous_ascent):
+		# the crown floor's cutout only guarantees STAIR_HEADROOM above the
+		# *tread*, so a taller standing height needs its own surface to duck
+		# down and preserve that same clearance as it nears the crown.
+		var y0 := minf(lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, t0) + top_offset, ceiling_y)
+		var y1 := minf(lerpf(ground + FIRST_TREAD_CENTRE_OFFSET, top_y, t1) + top_offset, ceiling_y)
 		var i0 := Vector3(base.x + cos(a0) * inner_radius, y0,
 			base.y + sin(a0) * inner_radius)
 		var o0 := Vector3(base.x + cos(a0) * outer_radius, y0,
