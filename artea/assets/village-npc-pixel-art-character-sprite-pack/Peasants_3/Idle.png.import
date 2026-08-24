@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1ch6sitsndg2"
 path.s3tc="res://.godot/imported/Idle.png-e3c15bd2b9ae1b7fe608a0fef6729459.s3tc.ctex"
-path.etc2="res://.godot/imported/Idle.png-e3c15bd2b9ae1b7fe608a0fef6729459.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/village-npc-pixel-art-character-sprite-pack/Peasants_3/Idle.png"
-dest_files=["res://.godot/imported/Idle.png-e3c15bd2b9ae1b7fe608a0fef6729459.s3tc.ctex", "res://.godot/imported/Idle.png-e3c15bd2b9ae1b7fe608a0fef6729459.etc2.ctex"]
+dest_files=["res://.godot/imported/Idle.png-e3c15bd2b9ae1b7fe608a0fef6729459.s3tc.ctex"]
 
 [params]
 

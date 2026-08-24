@@ -4,9 +4,8 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dq72q8iddi12a"
 path.s3tc="res://.godot/imported/Pink_Shell_Clip_1029042716_texture_1.jpg-93ccc10085de9205a4b5a5dc9eb5cb34.s3tc.ctex"
-path.etc2="res://.godot/imported/Pink_Shell_Clip_1029042716_texture_1.jpg-93ccc10085de9205a4b5a5dc9eb5cb34.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -16,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets3D/Pink_Shell_Clip_1029042716_texture_1.jpg"
-dest_files=["res://.godot/imported/Pink_Shell_Clip_1029042716_texture_1.jpg-93ccc10085de9205a4b5a5dc9eb5cb34.s3tc.ctex", "res://.godot/imported/Pink_Shell_Clip_1029042716_texture_1.jpg-93ccc10085de9205a4b5a5dc9eb5cb34.etc2.ctex"]
+dest_files=["res://.godot/imported/Pink_Shell_Clip_1029042716_texture_1.jpg-93ccc10085de9205a4b5a5dc9eb5cb34.s3tc.ctex"]
 
 [params]
 

@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://rrks4oofgqvf"
 path.s3tc="res://.godot/imported/Arrow.png-a6b5bbe5d12762bb748ebd86e03b1d85.s3tc.ctex"
-path.etc2="res://.godot/imported/Arrow.png-a6b5bbe5d12762bb748ebd86e03b1d85.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Arrow.png"
-dest_files=["res://.godot/imported/Arrow.png-a6b5bbe5d12762bb748ebd86e03b1d85.s3tc.ctex", "res://.godot/imported/Arrow.png-a6b5bbe5d12762bb748ebd86e03b1d85.etc2.ctex"]
+dest_files=["res://.godot/imported/Arrow.png-a6b5bbe5d12762bb748ebd86e03b1d85.s3tc.ctex"]
 
 [params]
 

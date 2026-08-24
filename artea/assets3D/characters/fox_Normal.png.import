@@ -4,9 +4,8 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://hcx51xfch40b"
 path.s3tc="res://.godot/imported/fox_Normal.png-0d489a6dae014936de4af592a0903c15.s3tc.ctex"
-path.etc2="res://.godot/imported/fox_Normal.png-0d489a6dae014936de4af592a0903c15.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -16,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets3D/characters/fox_Normal.png"
-dest_files=["res://.godot/imported/fox_Normal.png-0d489a6dae014936de4af592a0903c15.s3tc.ctex", "res://.godot/imported/fox_Normal.png-0d489a6dae014936de4af592a0903c15.etc2.ctex"]
+dest_files=["res://.godot/imported/fox_Normal.png-0d489a6dae014936de4af592a0903c15.s3tc.ctex"]
 
 [params]
 

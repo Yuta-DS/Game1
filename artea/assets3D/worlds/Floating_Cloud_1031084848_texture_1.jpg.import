@@ -4,9 +4,8 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://7oj6qlta4h83"
 path.s3tc="res://.godot/imported/Floating_Cloud_1031084848_texture_1.jpg-db211ce61f1ff8883a7555790ebdc880.s3tc.ctex"
-path.etc2="res://.godot/imported/Floating_Cloud_1031084848_texture_1.jpg-db211ce61f1ff8883a7555790ebdc880.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -16,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets3D/worlds/Floating_Cloud_1031084848_texture_1.jpg"
-dest_files=["res://.godot/imported/Floating_Cloud_1031084848_texture_1.jpg-db211ce61f1ff8883a7555790ebdc880.s3tc.ctex", "res://.godot/imported/Floating_Cloud_1031084848_texture_1.jpg-db211ce61f1ff8883a7555790ebdc880.etc2.ctex"]
+dest_files=["res://.godot/imported/Floating_Cloud_1031084848_texture_1.jpg-db211ce61f1ff8883a7555790ebdc880.s3tc.ctex"]
 
 [params]
 

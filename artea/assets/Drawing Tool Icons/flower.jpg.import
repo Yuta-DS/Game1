@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b27i3j1egti8g"
 path.s3tc="res://.godot/imported/flower.jpg-4b6a6662c7c96eea1262ed76dd5295e4.s3tc.ctex"
-path.etc2="res://.godot/imported/flower.jpg-4b6a6662c7c96eea1262ed76dd5295e4.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Drawing Tool Icons/flower.jpg"
-dest_files=["res://.godot/imported/flower.jpg-4b6a6662c7c96eea1262ed76dd5295e4.s3tc.ctex", "res://.godot/imported/flower.jpg-4b6a6662c7c96eea1262ed76dd5295e4.etc2.ctex"]
+dest_files=["res://.godot/imported/flower.jpg-4b6a6662c7c96eea1262ed76dd5295e4.s3tc.ctex"]
 
 [params]
 
