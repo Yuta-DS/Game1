@@ -101,7 +101,11 @@ split_for_local() {
 	local pck="$1"
 	[[ -f "${pck}" ]] || return 0
 	local pck_size
-	pck_size=$(stat -f '%z' "${pck}" 2>/dev/null || stat -c '%s' "${pck}")
+	# GNU stat (Linux, Git Bash on Windows) accepts -c; BSD stat (macOS) does
+	# not and falls through to -f. The reverse order is a trap: GNU stat -f
+	# means "filesystem status" and exits 0 with the wrong number instead of
+	# erroring, so a -f-first probe silently poisons pck_size on those platforms.
+	pck_size=$(stat -c '%s' "${pck}" 2>/dev/null || stat -f '%z' "${pck}")
 	# Re-split whenever the file no longer matches its manifest. Skipping merely
 	# because a manifest exists left a re-export serving the PREVIOUS export's
 	# parts: the loader streamed a pack that disagreed with GODOT_CONFIG's
@@ -135,8 +139,15 @@ echo "  ${url}"
 echo "First load pulls the whole pack - give it a minute. Ctrl-C to stop."
 echo
 
+open_url() {
+	command -v open >/dev/null 2>&1 && { open "$1"; return; }       # macOS
+	command -v xdg-open >/dev/null 2>&1 && { xdg-open "$1"; return; } # Linux
+	command -v start >/dev/null 2>&1 && { start "$1"; return; }      # Git Bash / Windows
+	echo "Don't know how to open a browser here - visit $1" >&2
+}
+
 if [[ "${open_browser}" == 1 ]]; then
-	( sleep 1; open "${url}" ) &
+	( sleep 1; open_url "${url}" ) &
 fi
 
 # Serve with caching switched off.  The stock `python3 -m http.server` sends
