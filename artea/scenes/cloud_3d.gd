@@ -2,6 +2,9 @@ extends Node3D
 
 var thought_text := ""
 var grid_position = null
+var paused := false          # first click holds the thought still to look at it
+var resolving := false       # one cloud may report exactly one completed resolve
+var was_wandering := false   # so releasing resumes only if it was drifting
 var floating := false
 var float_timer := 0.0
 var base_y := 0.0
@@ -17,7 +20,10 @@ func _ready():
 	_setup()
 
 func _setup():
-	var sprite = $CloudMesh
+	# The shipped scene names this node CLoudMesh. Keep the authored scene data
+	# intact and resolve the exact node name here rather than silently failing
+	# on every cloud setup.
+	var sprite = $CLoudMesh
 	var label = $CloudLabel
 	
 	# Get text length
@@ -63,14 +69,60 @@ func _setup():
 	print("DEBUG: Text length: ", length, " Cloud scale: ", new_scale)
 	add_to_group("cloud_ui")
 
+# Two clicks, not one. The first pauses the thought so the player can look
+# at it without fighting it; the second lets it go. Witness, then release.
 func check_click():
-	pop_cloud()
+	if not paused:
+		_hold_thought()
+	else:
+		pop_cloud()
+
+
+func _hold_thought():
+	paused = true
+	was_wandering = floating
+	floating = false
+
+	# Bring it forward and steady it so it reads as "being looked at".
+	var sprite = $CLoudMesh
+	if sprite:
+		sprite.modulate = Color(1.0, 0.95, 0.7)
+
+	var ui = _get_ui()
+	if ui and ui.has_method("thought_held"):
+		ui.thought_held(thought_text)
+
+
+# Let the thought drift on without popping it — not every thought has to go.
+func release_thought():
+	if not paused:
+		return
+	paused = false
+
+	var sprite = $CLoudMesh
+	if sprite:
+		sprite.modulate = Color(1.0, 0.0, 0.0)
+
+	if was_wandering:
+		floating = true
+
+
+func _get_ui():
+	return get_node_or_null("/root/CloudPop3d/CanvasLayer2")
+
 
 func pop_cloud():
+	# A fast second click can arrive while the pop animation is running. It
+	# must not count the same cloud twice toward the kingdom completion.
+	if resolving:
+		return
+	resolving = true
+
+	JourneyState.mark_popped(thought_text)
 	$PopSound.play()
 	print("=== POP_CLOUD CALLED ===")
 	
-	var sprite = $CloudMesh
+	var sprite = $CLoudMesh
 	if sprite:
 		sprite.modulate = Color(1.0, 0.2, 0.2)
 	
@@ -78,8 +130,17 @@ func pop_cloud():
 	if sparkles:
 		sparkles.emitting = true
 	
-	# Directly find the UI and call cloud_popped
-	var ui = get_node("/root/CloudPop3d/CanvasLayer2")
+	await get_tree().create_timer(0.3).timeout
+
+	# The UI determines completion from the number of live clouds. Detach this
+	# cloud before reporting so it can only finish after every spawned cloud is
+	# resolved, while preserving the visible pop animation above.
+	var ui = _get_ui()
+	var parent := get_parent()
+	if parent != null:
+		parent.remove_child(self)
+	queue_free()
+
 	if ui:
 		print("UI found: ", ui.name)
 		if ui.has_method("cloud_popped"):
@@ -89,9 +150,6 @@ func pop_cloud():
 			print("UI does not have cloud_popped method")
 	else:
 		print("UI not found at /root/CloudPop3d/CanvasLayer2")
-	
-	await get_tree().create_timer(0.3).timeout
-	queue_free()
 
 func start_wandering():
 	floating = true

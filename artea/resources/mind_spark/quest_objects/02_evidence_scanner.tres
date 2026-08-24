@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestObjectDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/quest_objects/quest_object_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+object_kind = 1
+display_name = "Evidence Scanner"
+action_prompt = "SCAN • THEN CHOOSE"
+success_message = "✓ EVIDENCE SAVED"
+accent_color = Color(0.42, 0.88, 1, 1)
+icon_waiting = "⌕"
+icon_success = "✓"
+

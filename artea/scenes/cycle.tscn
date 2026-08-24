@@ -3,6 +3,7 @@
 [ext_resource type="Shader" uid="uid://b80li2r7qy7fh" path="res://scenes/stylizedsky.gdshader" id="1_b5t5u"]
 [ext_resource type="Texture2D" uid="uid://ck04myctechrl" path="res://assets3D/Crescent_Moon_PNG_Clip_Art_Image.png" id="2_pvufr"]
 [ext_resource type="Texture2D" uid="uid://dovfcxhu27760" path="res://assets3D/suntext.png" id="3_y4nex"]
+[ext_resource type="Texture2D" uid="uid://dvuwb0yce4sb7" path="res://assets3D/shooting_star_sampler.png" id="4_shooting"]
 
 [sub_resource type="Curve" id="Curve_ni3bq"]
 _data = [Vector2(0.00820794, 0.0132458), 0.0, 0.0, 0, 0, Vector2(0.143639, 0.992513), 0.0, 0.0, 0, 0, Vector2(0.989056, 0.833794), 0.0, 0.0, 0, 0]
@@ -30,9 +31,6 @@ noise = SubResource("FastNoiseLite_58gty")
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_y3dlu"]
 noise = SubResource("FastNoiseLite_ngqnb")
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_7pepn"]
-load_path = "res://.godot/imported/shooting_star_sampler.png-b6a55a9c8b222b1427c0cac68a387ebd.ctex"
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_d4csj"]
 shader = ExtResource("1_b5t5u")
 shader_parameter/cloud_shape_sampler = SubResource("NoiseTexture2D_itgs2")
@@ -56,7 +54,7 @@ shader_parameter/astro_scale = 10.0
 shader_parameter/astro_intensity = 3.0
 shader_parameter/stars_intensity = 5.0
 shader_parameter/shooting_stars_intensity = 10.0
-shader_parameter/shooting_star_sampler = SubResource("CompressedTexture2D_7pepn")
+shader_parameter/shooting_star_sampler = ExtResource("4_shooting")
 shader_parameter/shooting_star_tint = Color(0.284761, 0.723707, 0.333819, 1)
 
 [sub_resource type="Sky" id="Sky_8csbe"]
@@ -67,7 +65,17 @@ background_mode = 2
 background_color = Color(8.27849e-06, 0.642601, 0.857138, 1)
 sky = SubResource("Sky_8csbe")
 sky_rotation = Vector3(6.28319, 0, 0)
-ambient_light_source = 3
+; ambient_light_source: 3 = Sky.  The sky here is a custom shader using
+; use_half_res_pass, which the web's gl_compatibility renderer cannot run, so on
+; the web the sky contributed NO ambient light at all - every model rendered as
+; a black silhouette while the terrain, lit directly by the sun, looked fine.
+;
+; Source 2 = Color blends a fixed ambient colour with the sky instead of relying
+; on it.  Desktop still gets sky reflections; the web gets a real ambient term.
+ambient_light_source = 2
+ambient_light_color = Color(0.478431, 0.607843, 0.729412, 1)
+ambient_light_energy = 0.45
+ambient_light_sky_contribution = 0.6
 reflected_light_source = 2
 glow_enabled = true
 fog_mode = 1

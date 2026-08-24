@@ -1,0 +1,27 @@
+{
+  "design": "Crown Line shared bird-bullet engine cover",
+  "coordinate_note": "X width, Y height, Z forward in Godot; Blender maps Z here to its Y axis",
+  "cover_start_z": -29.58,
+  "cover_end_z": -19.93,
+  "upper_widths": [0.34, 0.82, 1.78, 3.18, 4.32],
+  "upper_centres": [3.22, 3.49, 3.84, 4.06, 3.72],
+  "upper_arches": [0.13, 0.29, 0.49, 0.58, 0.36],
+  "lower_widths": [0.31, 0.74, 1.68, 3.16, 4.40],
+  "lower_centres": [2.90, 2.72, 2.60, 2.72, 3.04],
+  "lower_arches": [0.05, 0.10, 0.16, 0.18, 0.12],
+  "godot_shell_bands": 24,
+  "godot_panel_rows": 20,
+  "godot_panel_contours": 12,
+  "palette": {
+    "deep_teal": "148099",
+    "light_teal": "52d7c0",
+    "side_teal": "1ab3b8",
+    "nature_green": "30c96d",
+    "blue_steel": "2e6bc2",
+    "coral": "e6b366",
+    "vent": "14233a",
+    "ivory": "eadfbe",
+    "cyan": "5ff3ff",
+    "purple": "bf6bff"
+  }
+}

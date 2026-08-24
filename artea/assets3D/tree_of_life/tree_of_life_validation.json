@@ -1,0 +1,56 @@
+{
+  "passed": true,
+  "errors": [],
+  "source": {
+    "named_mesh_modules": 1545,
+    "vertices": 583120,
+    "edges": 889888,
+    "faces": 358918,
+    "editable_elements": 1831926,
+    "leaf_modules": 4928,
+    "leaf_power_nodes": 44,
+    "leaf_tech_spines": 88
+  },
+  "game_export": {
+    "mesh_nodes": 10,
+    "systems": [
+      "Branches",
+      "BrassEngineering",
+      "CrystalTechnology",
+      "FoliageMagic",
+      "FoliageNature",
+      "FoliageSolarGlass",
+      "Foundation",
+      "Roots",
+      "Trunk",
+      "WisdomStar"
+    ],
+    "dimensions_m": [
+      67.36192321777344,
+      68.07242965698242,
+      72.21178436279297
+    ],
+    "materials": [
+      "MAT_BlackBioTechSpine",
+      "MAT_CrystalSap_Cyan",
+      "MAT_EngineeredBrass",
+      "MAT_EngineeredFoundationDark",
+      "MAT_GoldInlayStone",
+      "MAT_HeartCrystal",
+      "MAT_HeartCrystalInnerViolet",
+      "MAT_LeafCircuit_Cyan",
+      "MAT_Leaf_EmeraldSensor",
+      "MAT_Leaf_Forest",
+      "MAT_Leaf_Jade",
+      "MAT_Leaf_LavenderMagic",
+      "MAT_Leaf_Moss",
+      "MAT_Leaf_VioletMagic",
+      "MAT_LivingBark",
+      "MAT_LivingBark_Dark",
+      "MAT_LivingBark_Light",
+      "MAT_RootAnchorStone",
+      "MAT_SolarGlassLeaf",
+      "MAT_WisdomGold"
+    ]
+  }
+}

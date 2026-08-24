@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://assets3D/characters/elder_cat_moustache_final.glb" id="1_moustache"]
+
+[node name="MayorAlderMoustacheFinal" type="Node3D"]
+
+[node name="MoustacheModel" parent="." instance=ExtResource("1_moustache")]

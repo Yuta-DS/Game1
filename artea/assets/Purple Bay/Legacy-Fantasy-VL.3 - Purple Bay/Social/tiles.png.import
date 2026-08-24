@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cly15o5g2w8t0"
-path="res://.godot/imported/tiles.png-2075070e2c6a2c30901559660142ddf9.ctex"
+path.s3tc="res://.godot/imported/tiles.png-2075070e2c6a2c30901559660142ddf9.s3tc.ctex"
+path.etc2="res://.godot/imported/tiles.png-2075070e2c6a2c30901559660142ddf9.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Social/tiles.png"
-dest_files=["res://.godot/imported/tiles.png-2075070e2c6a2c30901559660142ddf9.ctex"]
+dest_files=["res://.godot/imported/tiles.png-2075070e2c6a2c30901559660142ddf9.s3tc.ctex", "res://.godot/imported/tiles.png-2075070e2c6a2c30901559660142ddf9.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

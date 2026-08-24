@@ -2,9 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bhohq7etfisvh" path="res://scripts/art_gallery.gd" id="1_h6yu7"]
 [ext_resource type="PackedScene" uid="uid://cx6j6vrnhxvfi" path="res://scenes/player_3d.tscn" id="2_3gi0n"]
-[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="2_dw71r"]
-[ext_resource type="Script" uid="uid://efrx4ppi0i3q" path="res://scenes/camera_3d_2.gd" id="4_bvso8"]
 [ext_resource type="PackedScene" uid="uid://g2swdgcf4ywc" path="res://assets3D/characters/fox.glb" id="4_k4ey6"]
+[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="2_dw71r"]
 [ext_resource type="Script" uid="uid://dbp2n821rrrt6" path="res://scripts/CameraFollow.gd" id="5_n1pvk"]
 [ext_resource type="ArrayMesh" uid="uid://dvxtnr8jtdt5u" path="res://chair_proxy_mesh.obj" id="7_bvso8"]
 [ext_resource type="Script" uid="uid://dwykxf5gpxmtn" path="res://scripts/PaintingInteraction.gd" id="7_dw71r"]
@@ -20,6 +19,7 @@
 [ext_resource type="Material" uid="uid://dkkbdeury7542" path="res://portal_colour.tres" id="18_rye7r"]
 [ext_resource type="PackedScene" uid="uid://bc4s70tkatf44" path="res://assets/models/Low-Poly Plant_.fbx" id="22_8fcft"]
 [ext_resource type="Script" uid="uid://eraeiu6qk3vg" path="res://scenes/GalleryManager.gd" id="24_3btdo"]
+[ext_resource type="Script" uid="uid://fggwgtmoslkc" path="res://scripts/gallery_ceremony.gd" id="25_crown"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_48g0v"]
 panorama = ExtResource("2_dw71r")
@@ -44,7 +44,10 @@ albedo_color = Color(0.58383, 0.466893, 0.241801, 0.996078)
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_2frkh"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_48dhn"]
-size = Vector3(4.23376, 0.1, 2.33618)
+; The paintings run from x=-50 to x=50 along the wall at z~0, but this floor was
+; only 4.2 x 2.3 units, so the player walked off it within a couple of steps and
+; fell out of the level. Sized to cover the whole room instead.
+size = Vector3(120, 0.5, 60)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_k2ron"]
 
@@ -257,23 +260,15 @@ surface_material_override/0 = SubResource("StandardMaterial3D_k4ey6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3, 8)
 
 [node name="Player3D" parent="." unique_id=1983107366 groups=["Player"] instance=ExtResource("2_3gi0n")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="Player3D" unique_id=1080938631]
-shape = SubResource("CapsuleShape3D_2frkh")
-
-[node name="Camera3D2" type="Camera3D" parent="Player3D" unique_id=1968155295]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 3, 6)
-fov = 70.0
-near = 0.1
-far = 500.0
-script = ExtResource("4_bvso8")
-
-[node name="SpringArm3D" type="SpringArm3D" parent="Player3D" unique_id=455299656]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 2, 0)
-spring_length = 6.0
-
-[node name="Camera3D" type="Camera3D" parent="Player3D/SpringArm3D" unique_id=1263767505]
+; The player spawned rotated 180 degrees (-1 on X and Z), facing +z. The galaxy
+; world is built at z=-480, directly behind that, and the camera follows the
+; player's back - so the gallery opened looking away from the world and it
+; appeared to be missing entirely. Facing -z puts the world in front on spawn.
+;
+; Spawn is also moved back from z=12 to z=26: the follow camera sits 7 m behind
+; the player, which at z=12 put it inside the gallery's rear wall.
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 26)
+camera_path = NodePath("../Camera3D")
 
 [node name="FoxVisuals" type="Node3D" parent="Player3D" unique_id=124633337]
 
@@ -488,6 +483,9 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 6.36041, 0, 3.58337)
 [node name="Low-Poly Plant_3" parent="." unique_id=600643860 instance=ExtResource("22_8fcft")]
 transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, 5.19448, 0, 2.21)
 
+[node name="Ceremony" type="Node" parent="." unique_id=178681412]
+script = ExtResource("25_crown")
+
 [node name="GalleryManager" type="Node3D" parent="." unique_id=178681411]
 script = ExtResource("24_3btdo")
 
@@ -646,7 +644,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [connection signal="body_entered" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_01"]]
-[connection signal="body_exited" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_exited"]
+[connection signal="body_exited" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_01"]]
 [connection signal="body_entered" from="Frame_02/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_02"]]
 [connection signal="body_exited" from="Frame_02/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_02"]]
 [connection signal="body_entered" from="Frame_03/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_03"]]

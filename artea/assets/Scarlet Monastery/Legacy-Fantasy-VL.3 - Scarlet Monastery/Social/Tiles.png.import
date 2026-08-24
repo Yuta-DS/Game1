@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/Tiles.png-95f3f84059a8db920562bd97f0c8cf46.ct
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1

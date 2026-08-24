@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dmttd2nma4g7k"
-path="res://.godot/imported/User.png-5157c39d7898a32494d9a44dbd925e15.ctex"
+path.s3tc="res://.godot/imported/User.png-5157c39d7898a32494d9a44dbd925e15.s3tc.ctex"
+path.etc2="res://.godot/imported/User.png-5157c39d7898a32494d9a44dbd925e15.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/User.png"
-dest_files=["res://.godot/imported/User.png-5157c39d7898a32494d9a44dbd925e15.ctex"]
+dest_files=["res://.godot/imported/User.png-5157c39d7898a32494d9a44dbd925e15.s3tc.ctex", "res://.godot/imported/User.png-5157c39d7898a32494d9a44dbd925e15.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

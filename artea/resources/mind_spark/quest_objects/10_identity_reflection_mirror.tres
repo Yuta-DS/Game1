@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="QuestObjectDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/quest_objects/quest_object_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+object_kind = 9
+display_name = "Identity Reflection Mirror"
+action_prompt = "CHOOSE • PRIVATE • SKIP"
+success_message = "✓ PRIVATE EVIDENCE SAVED"
+accent_color = Color(0.92, 0.72, 1, 1)
+icon_waiting = "◇"
+icon_success = "✓"
+identity_evidence_id = "mind_spark.reflection.after_quest"
+

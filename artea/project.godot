@@ -15,10 +15,14 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Artea"
-run/main_scene="uid://d10bpuuoe8w0m"
-config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
-boot_splash/image="uid://06fmhq71d8ey"
+run/main_scene="res://scenes/start_screen.tscn"
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
+run/main_scene.crown_story="res://scenes/viewfinder/crown_of_life_story.tscn"
+
+[artea]
+
+debug/show_island_state_panel=false
 
 [autoload]
 
@@ -27,28 +31,26 @@ MusicManager="*res://scenes/music_manager.tscn"
 Global="*res://scripts/Global.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameManager="*res://scripts/GameManager.gd"
+JourneyState="*res://scripts/JourneyState.gd"
+JourneyCampaign="*res://scripts/journey_campaign.gd"
+PlayerIdentityTracker="*res://scripts/player_identity_tracker.gd"
 Auth="*res://addons/godot-firebase/auth/auth.gd"
-APIManager="*uid://dodj1s54vwit2"
+APIManager="*res://scripts/API_Manager.gd"
+CreationWorldState="*res://scripts/creation_world/creation_world_state.gd"
 
 [dialogue_manager]
 
 runtime/balloon_path="res://dialogue/HubworldBalloon.tscn"
-runtime/advanced/uses_dotnet=true
 
 [display]
 
 window/size/viewport_width=1710
 window/size/viewport_height=1112
-window/size/mode=3
-window/size/window_width_override=640
-window/size/window_height_override=360
+window/size/window_width_override=960
+window/size/window_height_override=540
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/vsync/vsync_mode=0
-
-[dotnet]
-
-project/assembly_name="Artea"
 
 [editor_plugins]
 
@@ -70,6 +72,11 @@ ui_accept={
 attack={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":70,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+block={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":71,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
 move_left={
@@ -134,13 +141,13 @@ locale/translations_pot_files=PackedStringArray("res://dialogue/HubworldDialogue
 
 3d_physics/layer_2="Grass"
 3d_physics/layer_3="Sand"
+3d_physics/layer_4="Cuttable"
 
 [rendering]
 
 renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=3
-anti_aliasing/quality/screen_space_aa=1
 
 [shader_globals]
 

@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://bkk0ul4eyucdf" path="res://assets/Legacy-Fantasy - High Forest 2.3/Character/Attack-01/Attack-01-Sheet.png" id="2_qlg0r"]
 [ext_resource type="Texture2D" uid="uid://c8saivej5v6nn" path="res://assets/Legacy-Fantasy - High Forest 2.3/Character/Jumlp-All/Jump-All-Sheet.png" id="3_dqkch"]
 [ext_resource type="Texture2D" uid="uid://cirpcby8755bs" path="res://assets/Legacy-Fantasy - High Forest 2.3/Character/Run/Run-Sheet.png" id="3_qhqgy"]
-[ext_resource type="AudioStream" uid="uid://bthy6nqokpv7t" path="res://assets/SFX/walk1.mp3" id="6_tuyoq"]
+[ext_resource type="AudioStream" uid="uid://bthy6nqokpv7t" path="res://assets/SFX/walk1.ogg" id="6_tuyoq"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_31cv2"]
 atlas = ExtResource("2_qlg0r")

@@ -8,7 +8,12 @@ static var shader_file: RDShaderFile
 @export var iterations : int = 3
 @export var offset_step : float = 0.01
 @export var consecutive_step_multiplier : float = 0.5
-@export var use_computeshader : bool = true
+# Default off: the compute shader path fails to compile on this project's
+# Godot 4.7 + Metal combination (SPIR-V-to-Metal cross-compile error in
+# compute_relax.glsl), crashing the scatter rebuild with a wall of
+# RenderingDevice errors. The CPU fallback below still works correctly,
+# just slower — fine for the point counts this project scatters.
+@export var use_computeshader : bool = false
 
 
 func _init() -> void:

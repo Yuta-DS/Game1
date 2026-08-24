@@ -1,12 +1,10 @@
 extends Control
 
-@onready var input = $HBoxContainer/VBoxContainer/EmotionInput
-@onready var button = $HBoxContainer/VBoxContainer/GenerateButton
 @onready var result = $HBoxContainer/VBoxContainer/ResultText
+@onready var emotion_choices: GridContainer = $HBoxContainer/VBoxContainer/EmotionChoices
 @onready var color_rect = $BackgroundVisual
 @onready var player = $MusicPlayer
 @onready var visualizer = $VisualizerContainer
-@onready var emotion_ai = $EmotionAI
 @onready var return_button = $ReturnButton
 @onready var pitch_slider = $HBoxContainer/Options/PitchSlider
 @onready var volume_slider = $HBoxContainer/Options/VolumeSlider
@@ -19,7 +17,7 @@ extends Control
 @onready var reset_drums = $HBoxContainer/VBoxContainer3/DrumsPitch/ResetDrums
 @onready var stop_drums = $HBoxContainer/VBoxContainer3/DrumsPitch/StopDrums
 @onready var drums_player = $DrumsPlayer
-@onready var model = $Model
+@onready var title_label = $HBoxContainer/VBoxContainer/Title
 @export var bar_count = 77
 @export var bar_width = 20
 @export var bar_spacing = 3
@@ -33,46 +31,54 @@ var bar_strength_offsets = []
 var bar_offsets = []
 var visualizer_speed = 5.0
 var visualizer_strength = 180.0
-var valid_emotions = [
-	"happy",
-	"anticipation",
-	"angry",
-	"disgust",
-	"sad",
-	"surprise",
-	"fear",
-	"trust"
+var color_tween: Tween
+
+# A deliberate player choice maps to ARTÉA's six story feelings. The legacy
+# sound keys retain the existing music and visualizer palette assets; the
+# journey record stores the player-facing choice rather than an inferred label.
+const EMOTION_CHOICES := [
+	{
+		"id": "joy", "label": "Joy", "sound_key": "happy",
+		"reply": "You chose Joy. Let this melody be as bright or gentle as you choose.",
+	},
+	{
+		"id": "sadness", "label": "Sadness", "sound_key": "sad",
+		"reply": "You chose Sadness. You do not have to explain it. You can change the music at any time.",
+	},
+	{
+		"id": "frustration", "label": "Frustration", "sound_key": "angry",
+		"reply": "You chose Frustration. You can make this rhythm steady, strong, quiet, or different.",
+	},
+	{
+		"id": "fear", "label": "Fear", "sound_key": "fear",
+		"reply": "You chose Fear. You can listen, change the sound, or choose another feeling.",
+	},
+	{
+		"id": "peace", "label": "Peace", "sound_key": "trust",
+		"reply": "You chose Peace. You can keep this melody soft, change it, or move on.",
+	},
+	{
+		"id": "hope", "label": "Hope", "sound_key": "anticipation",
+		"reply": "You chose Hope. You can let this sound grow, soften, or make room for another choice.",
+	},
 ]
 
-var color_tween: Tween
+# Index rather than copied thought text: Heart Melody can connect to Mind Spark
+# without showing or passing the player's original wording to another system.
+var seeded_thought_index := -1
+var recorded_choice_ids := {}
+
+# Test-only injection seam. Production resolves the normal autoload; a focused
+# test can supply an in-memory record and prove this scene never writes a real
+# player's save.
+var journey_state_override: Node
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	
-	player.stream = load("res://assets/audio/minigame/intro.mp3")
+	player.stream = load("res://assets/audio/minigame/intro.ogg")
 	player.play()
 	
-	# Load model
-	model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
-
-	# Connect model to AI node
-	emotion_ai.set_model_node(model)
-
-	# Set strict emotion classifier prompt
-	emotion_ai.set_system_prompt(load_emotion_prompt())
-
-	# Start AI worker
-	emotion_ai.start_worker()
-
-	# Connect response signal
-	emotion_ai.connect(
-		"response_finished",
-		Callable(self, "_on_emotion_response")
-	)
-	
-	if not button.pressed.is_connected(_on_generate_pressed):
-		button.pressed.connect(_on_generate_pressed)
-		
 	create_visualizer_bars()
 	
 	pitch_slider.min_value = 0.5
@@ -120,7 +126,81 @@ func _ready() -> void:
 	drums_slider.max_value = 4.0
 	drums_slider.step = 0.01
 	drums_slider.value = 1.0
-	
+
+	_seed_from_journey()
+	_build_emotion_choices()
+
+
+# If the player faced a thought in Pop Thoughts, offer the six curated choices
+# at Heart Melody. This keeps stage 1 and stage 2 connected without asking
+# the player to type or re-read their original wording.
+func _seed_from_journey() -> void:
+	var js := _journey_state()
+	if js == null:
+		return
+
+	# The most recent thought the player popped but hasn't yet paired
+	# with a feeling.
+	for i in range(js.thoughts.size() - 1, -1, -1):
+		var t = js.thoughts[i]
+		if t.get("popped", false) and t.get("emotion", "") == "":
+			seeded_thought_index = i
+			break
+
+	if seeded_thought_index < 0:
+		return
+
+	if title_label:
+		title_label.text = "Milo: You met a thought in Mind Spark.\nChoose a feeling to explore — or skip it."
+
+
+func _journey_state() -> Node:
+	if journey_state_override != null:
+		return journey_state_override
+	if not is_inside_tree():
+		return null
+	return get_node_or_null("/root/JourneyState")
+
+
+func _build_emotion_choices() -> void:
+	emotion_choices.columns = 2
+	for child in emotion_choices.get_children():
+		child.queue_free()
+
+	for choice in EMOTION_CHOICES:
+		emotion_choices.add_child(_emotion_button(choice))
+
+	var skip := Button.new()
+	skip.text = "Skip for now"
+	skip.custom_minimum_size = Vector2(0, 42)
+	skip.tooltip_text = "You can keep playing instruments without choosing a feeling."
+	skip.pressed.connect(_skip_emotion)
+	emotion_choices.add_child(skip)
+
+
+func _emotion_button(choice: Dictionary) -> Button:
+	var button := Button.new()
+	button.text = str(choice["label"])
+	button.custom_minimum_size = Vector2(0, 42)
+	button.tooltip_text = "Choose this feeling for the music. It is not inferred from your words, art, or colours."
+
+	var palette := _palette_for(str(choice["sound_key"]))
+	var accent: Color = palette[0] if not palette.is_empty() else Color(0.65, 0.82, 1.0)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(accent, 0.24)
+	normal.border_color = Color(accent, 0.88)
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(8)
+	normal.set_content_margin_all(8)
+	button.add_theme_stylebox_override("normal", normal)
+
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(accent, 0.42)
+	hover.border_color = Color.WHITE
+	button.add_theme_stylebox_override("hover", hover)
+	button.pressed.connect(_choose_emotion.bind(choice))
+	return button
+
 func _on_volume_changed(value: float):
 
 	var adjusted = pow(value, 2.0)
@@ -129,16 +209,16 @@ func _on_volume_changed(value: float):
 	drums_player.volume_db = linear_to_db(adjusted)
 
 func _on_drums1_pressed():
-	play_drum_loop("res://assets/audio/minigame/beats/drums_1.mp3")
+	play_drum_loop("res://assets/audio/minigame/beats/drums_1.ogg")
 
 func _on_drums2_pressed():
-	play_drum_loop("res://assets/audio/minigame/beats/drums_2.mp3")
+	play_drum_loop("res://assets/audio/minigame/beats/drums_2.ogg")
 
 func _on_drums3_pressed():
-	play_drum_loop("res://assets/audio/minigame/beats/drums_3.mp3")
+	play_drum_loop("res://assets/audio/minigame/beats/drums_3.ogg")
 
 func _on_drums4_pressed():
-	play_drum_loop("res://assets/audio/minigame/beats/drums_4.mp3")
+	play_drum_loop("res://assets/audio/minigame/beats/drums_4.ogg")
 	
 func play_drum_loop(path: String):
 
@@ -241,130 +321,51 @@ func setup_idle_visualizer():
 			# predetermined color
 			style.bg_color = Color(0.65, 0.82, 1.0)
 
-func load_emotion_prompt() -> String:
+func _choose_emotion(choice: Dictionary) -> void:
+	var emotion_id := str(choice.get("id", ""))
+	var sound_key := str(choice.get("sound_key", ""))
+	if emotion_id.is_empty() or not EMOTION_PALETTES.has(sound_key):
+		return
 
-	return """
-You are an emotion ranking system.
+	music_system_activated = true
+	apply_color(sound_key)
+	play_music(sound_key)
 
-You must analyze the user's text and distribute 100 points across emotions based on how strongly each emotion is present.
+	var is_new_choice := not recorded_choice_ids.has(emotion_id)
+	if is_new_choice:
+		recorded_choice_ids[emotion_id] = true
+		_record_emotion(emotion_id, sound_key)
 
-Return ONLY valid JSON:
+	result.text = "Milo: %s" % str(choice.get("reply", "You chose a melody path."))
+	if is_new_choice:
+		result.text += "\n\nHARMONY JEWEL DISCOVERED\nYour feelings matter. Your heart has a beautiful voice."
+	else:
+		result.text += "\n\nYou can keep playing, choose another melody, or return when you are ready."
 
-{
-  "happy": number,
-  "anticipation": number,
-  "trust": number,
-  "surprise": number,
-  "angry": number,
-  "sad": number,
-  "fear": number,
-  "disgust": number
-}
 
-RULES:
-- All values must be integers
-- ALL values combined MUST equal 100
-- At least ONE emotion must be greater than 0
-- Do NOT output all zeros
-- Strongest emotion should have the highest value
-- Weak emotions should still get small values (1–20 range)
-- If uncertain, distribute evenly but NEVER all zeros
+func _skip_emotion() -> void:
+	result.text = "Milo: That is okay. You can play with pitch and drums without naming a feeling. Skipping does not change your journey."
 
-OUTPUT ONLY JSON
-NO explanation
-NO extra text
-"""
 
-func extract_json(text: String) -> String:
+# Save only a deliberate player-selected feeling. The colour carries forward
+# into stage 3 from the matching music palette, never from inferred artwork
+# or typed text.
+func _record_emotion(emotion_id: String, sound_key: String) -> void:
+	var js := _journey_state()
+	if js == null:
+		return
 
-	var start = text.find("{")
-	var end = text.rfind("}")
+	js.record_emotion(emotion_id, _emotion_colour(sound_key))
 
-	if start == -1 or end == -1:
-		return ""
+	# Pair the selection to the source thought by index. The thought's text is
+	# neither displayed here nor supplied to another system.
+	var thoughts = js.get("thoughts")
+	if seeded_thought_index >= 0 and thoughts is Array and seeded_thought_index < thoughts.size():
+		thoughts[seeded_thought_index]["emotion"] = emotion_id
+		js.save()
+		seeded_thought_index = -1
 
-	return text.substr(start, end - start + 1)
-	
-func clean_ai_response(text: String) -> String:
-
-	# remove markdown code blocks
-	text = text.replace("```json", "")
-	text = text.replace("```", "")
-
-	return text.strip_edges()
-
-func parse_emotion_from_response(response: String):
-
-	var cleaned = clean_ai_response(response)
-	print("Cleaned: ", cleaned)
-	var json_str = extract_json(cleaned)
-	print("Json_str: ", json_str)
-
-	if json_str == "":
-		print("Json_str == \"\"")
-		return "surprise"
-
-	var data = JSON.parse_string(json_str)
-	print("Type of data: ", typeof(data))
-	print("TYPE_DICTIONARY == ", TYPE_DICTIONARY)
-
-	if typeof(data) != TYPE_DICTIONARY:
-		print("Data type mismatch")
-		return "surprise"
-
-	var best_emotion = ""
-	var best_score = -1
-
-	for key in data.keys():
-
-		var value = data[key]
-		print("Key: ", key, " Value: ", value)
-
-		if typeof(value) != TYPE_FLOAT:
-			print("Value !TYPE_FLOAT")
-			continue
-
-		if value > best_score:
-			best_score = value
-			best_emotion = key
-
-	if best_emotion == "":
-		return "surprise"
-
-	return best_emotion
-
-func detect_emotion(user_text: String):
-
-	print("Analyzing emotion...")
-	print(user_text)
-
-	emotion_ai.say(user_text)
-
-func _on_emotion_response(response):
-	print(typeof(response))
-	print(response)
-	#var emotion = response.strip_edges().to_lower()
-	var emotion = parse_emotion_from_response(response)
-
-	print("RAW AI RESPONSE: " + emotion)
-
-	# Safety validation
-	if emotion not in valid_emotions:
-
-		print("Invalid emotion returned.")
-		print("Falling back to surprise.")
-
-		emotion = "surprise"
-		
-	result.text = "Detected emotion: " + emotion
-
-	print("FINAL EMOTION: " + emotion)
-
-	apply_color(emotion)
-
-	play_music(emotion)
-	
-	print("Finished processing.")
+	js.advance_to(2)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -451,31 +452,31 @@ func play_music(emotion: String):
 	match emotion:
 
 		"happy":
-			path = "res://assets/audio/minigame/happy.mp3"
+			path = "res://assets/audio/minigame/happy.ogg"
 
 		"anticipation":
-			path = "res://assets/audio/minigame/anticipation.mp3"
+			path = "res://assets/audio/minigame/anticipation.ogg"
 
 		"angry":
-			path = "res://assets/audio/minigame/angry.mp3"
+			path = "res://assets/audio/minigame/angry.ogg"
 
 		"disgust":
-			path = "res://assets/audio/minigame/disgust.mp3"
+			path = "res://assets/audio/minigame/disgust.ogg"
 
 		"sad":
-			path = "res://assets/audio/minigame/sad.mp3"
+			path = "res://assets/audio/minigame/sad.ogg"
 
 		"surprise":
-			path = "res://assets/audio/minigame/surprise.mp3"
+			path = "res://assets/audio/minigame/surprise.ogg"
 
 		"fear":
-			path = "res://assets/audio/minigame/fear.mp3"
+			path = "res://assets/audio/minigame/fear.ogg"
 
 		"trust":
-			path = "res://assets/audio/minigame/trust.mp3"
+			path = "res://assets/audio/minigame/trust.ogg"
 
 		_:
-			path = "res://assets/audio/minigame/intro.mp3"
+			path = "res://assets/audio/minigame/intro.ogg"
 
 	var stream = load(path)
 
@@ -485,157 +486,128 @@ func play_music(emotion: String):
 	else:
 		print("Audio file missing: ", path)
 
+# Palette, visualizer speed, and whether bars are coloured randomly or in
+# bands — one entry per emotion. Single source of truth: apply_color()
+# renders it and _emotion_colour() reads it for the journey record.
+const EMOTION_PALETTES := {
+	"happy": {
+		"speed": 5.0, "random": true,
+		"colors": [
+			Color(1.0, 0.9, 0.2),    # bright yellow
+			Color(1.0, 0.75, 0.4),   # warm peach
+			Color(1.0, 0.85, 0.7),   # pastel peach
+			Color(1.0, 0.7, 0.8),    # soft pink
+			Color(1.0, 1.0, 0.85),   # creamy light
+		],
+	},
+	"anticipation": {
+		"speed": 4.5, "random": false,
+		"colors": [
+			Color(1.0, 0.55, 0.15),  # orange
+			Color(1.0, 0.75, 0.3),   # golden orange
+			Color(1.0, 0.85, 0.5),   # soft amber
+			Color(1.0, 0.65, 0.55),  # coral
+			Color(1.0, 0.9, 0.7),    # pastel orange
+		],
+	},
+	"angry": {
+		"speed": 3.0, "random": true,
+		"colors": [
+			Color(0.9, 0.1, 0.1),    # bright red
+			Color(0.5, 0.0, 0.0),    # dark red
+			Color(1.0, 0.3, 0.0),    # fiery orange
+			Color(0.8, 0.0, 0.2),    # crimson
+			Color(0.4, 0.0, 0.1),    # blood red
+		],
+	},
+	"disgust": {
+		"speed": 7.0, "random": false,
+		"colors": [
+			Color(0.7, 0.1, 0.4),    # dark pink
+			Color(0.5, 0.0, 0.25),   # wine
+			Color(0.9, 0.5, 0.7),    # dusty pink
+			Color(0.6, 0.2, 0.45),   # muted magenta
+			Color(0.3, 0.0, 0.15),   # deep berry
+		],
+	},
+	"sad": {
+		"speed": 9.0, "random": false,
+		"colors": [
+			Color(0.45, 0.3, 0.7),   # purple
+			Color(0.25, 0.15, 0.45), # deep violet
+			Color(0.7, 0.6, 0.9),    # lavender
+			Color(0.55, 0.45, 0.8),  # soft lilac
+			Color(0.2, 0.1, 0.35),   # dark purple
+		],
+	},
+	"surprise": {
+		"speed": 4.0, "random": true,
+		"colors": [
+			Color(0.4, 0.8, 1.0),    # sky blue
+			Color(0.8, 0.95, 1.0),   # icy blue
+			Color(0.5, 1.0, 1.0),    # cyan glow
+			Color(0.7, 0.85, 1.0),   # pastel blue
+			Color(1.0, 1.0, 1.0),    # white flash
+		],
+	},
+	"fear": {
+		"speed": 8.5, "random": false,
+		"colors": [
+			Color(0.55, 0.75, 1.0),  # light blue
+			Color(0.2, 0.35, 0.6),   # storm blue
+			Color(0.75, 0.85, 1.0),  # pale blue
+			Color(0.35, 0.5, 0.75),  # muted blue
+			Color(0.1, 0.15, 0.3),   # dark navy
+		],
+	},
+	"trust": {
+		"speed": 6.5, "random": false,
+		"colors": [
+			Color(0.2, 0.5, 0.25),   # green
+			Color(0.45, 0.75, 0.5),  # soft green
+			Color(0.7, 0.9, 0.75),   # pastel mint
+			Color(0.3, 0.6, 0.4),    # sage green
+			Color(0.1, 0.3, 0.15),   # deep forest green
+		],
+	},
+}
+
+const DEFAULT_PALETTE := {
+	"speed": 6.0, "random": true,
+	"colors": [
+		Color(0.7, 0.8, 1.0),    # soft blue
+		Color(0.9, 0.8, 1.0),    # lavender
+		Color(1.0, 0.85, 0.9),   # pastel pink
+		Color(1.0, 0.95, 0.7),   # warm cream
+		Color(0.7, 0.9, 0.85),   # mint
+	],
+}
+
+
+func _palette_for(emotion: String) -> Array:
+	return EMOTION_PALETTES.get(emotion, DEFAULT_PALETTE)["colors"]
+
+
 func apply_color(emotion: String):
 
-	var colors = []
-	var speed = 6.0
+	var entry: Dictionary = EMOTION_PALETTES.get(emotion, DEFAULT_PALETTE)
+	var colors: Array = entry["colors"]
+	var speed: float = entry["speed"]
 
-	match emotion:
-
-		# HAPPY
-		"happy":
-
-			speed = 5.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(1.0, 0.9, 0.2),    # bright yellow
-				Color(1.0, 0.75, 0.4),   # warm peach
-				Color(1.0, 0.85, 0.7),   # pastel peach
-				Color(1.0, 0.7, 0.8),    # soft pink
-				Color(1.0, 1.0, 0.85)    # creamy light
-			]
-
-			apply_visualizer_colors(colors, true)
-
-		# ANTICIPATION
-		"anticipation":
-
-			speed = 4.5
-			visualizer_speed = speed
-
-			colors = [
-				Color(1.0, 0.55, 0.15),  # orange
-				Color(1.0, 0.75, 0.3),   # golden orange
-				Color(1.0, 0.85, 0.5),   # soft amber
-				Color(1.0, 0.65, 0.55),  # coral
-				Color(1.0, 0.9, 0.7)     # pastel orange
-			]
-
-			apply_visualizer_colors(colors, false)
-
-		# ANGER
-		"angry":
-
-			speed = 3.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.9, 0.1, 0.1),    # bright red
-				Color(0.5, 0.0, 0.0),    # dark red
-				Color(1.0, 0.3, 0.0),    # fiery orange
-				Color(0.8, 0.0, 0.2),    # crimson
-				Color(0.4, 0.0, 0.1)     # blood red
-			]
-
-			apply_visualizer_colors(colors, true)
-
-		# DISGUST
-		"disgust":
-
-			speed = 7.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.7, 0.1, 0.4),    # dark pink
-				Color(0.5, 0.0, 0.25),   # wine
-				Color(0.9, 0.5, 0.7),    # dusty pink
-				Color(0.6, 0.2, 0.45),   # muted magenta
-				Color(0.3, 0.0, 0.15)    # deep berry
-			]
-
-			apply_visualizer_colors(colors, false)
-
-		# SAD
-		"sad":
-
-			speed = 9.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.45, 0.3, 0.7),   # purple
-				Color(0.25, 0.15, 0.45), # deep violet
-				Color(0.7, 0.6, 0.9),    # lavender
-				Color(0.55, 0.45, 0.8),  # soft lilac
-				Color(0.2, 0.1, 0.35)    # dark purple
-			]
-
-			apply_visualizer_colors(colors, false)
-
-		# SURPRISE
-		"surprise":
-
-			speed = 4.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.4, 0.8, 1.0),    # sky blue
-				Color(0.8, 0.95, 1.0),   # icy blue
-				Color(0.5, 1.0, 1.0),    # cyan glow
-				Color(0.7, 0.85, 1.0),   # pastel blue
-				Color(1.0, 1.0, 1.0)     # white flash
-			]
-
-			apply_visualizer_colors(colors, true)
-
-		# FEAR
-		"fear":
-
-			speed = 8.5
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.55, 0.75, 1.0),  # light blue
-				Color(0.2, 0.35, 0.6),   # storm blue
-				Color(0.75, 0.85, 1.0),  # pale blue
-				Color(0.35, 0.5, 0.75),  # muted blue
-				Color(0.1, 0.15, 0.3)    # dark navy
-			]
-
-			apply_visualizer_colors(colors, false)
-
-		# TRUST
-		"trust":
-
-			speed = 6.5
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.2, 0.5, 0.25),   # green
-				Color(0.45, 0.75, 0.5),  # soft green
-				Color(0.7, 0.9, 0.75),   # pastel mint
-				Color(0.3, 0.6, 0.4),    # sage green
-				Color(0.1, 0.3, 0.15)    # deep forest green
-			]
-
-			apply_visualizer_colors(colors, false)
-
-		_:
-
-			speed = 6.0
-			visualizer_speed = speed
-
-			colors = [
-				Color(0.7, 0.8, 1.0),    # soft blue
-				Color(0.9, 0.8, 1.0),    # lavender
-				Color(1.0, 0.85, 0.9),   # pastel pink
-				Color(1.0, 0.95, 0.7),   # warm cream
-				Color(0.7, 0.9, 0.85)    # mint
-			]
-
-			apply_visualizer_colors(colors, true)
+	visualizer_speed = speed
+	apply_visualizer_colors(colors, entry["random"])
 
 	start_color_loop(colors, speed)
+
+
+
+# The single colour that best stands for this feeling — the first entry of
+# the palette apply_color() already uses, so stage 3's brushes match what
+# the player saw here.
+func _emotion_colour(emotion: String) -> Color:
+	var palette := _palette_for(emotion)
+	return palette[0] if not palette.is_empty() else Color(0.7, 0.8, 1.0)
+
 
 func start_color_loop(colors: Array, speed):
 
@@ -655,22 +627,9 @@ func start_color_loop(colors: Array, speed):
 			speed
 		)
 	
-func _on_generate_pressed():
-
-	var text = input.text.strip_edges()
-
-	if text == "":
-		return
-
-	result.text = "Analyzing emotion..."
-
-	if not music_system_activated:
-		music_system_activated = true
-
-	detect_emotion(text)
-
-	print("Emotion request sent")
-
-
 func _on_return_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
+	var campaign := get_node_or_null("/root/JourneyCampaign")
+	if campaign != null and campaign.has_method("return_to_campaign"):
+		campaign.call("return_to_campaign")
+	else:
+		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")

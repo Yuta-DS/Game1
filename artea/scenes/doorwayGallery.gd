@@ -1,8 +1,10 @@
 # ExitGallery.gd
 extends Area3D
 
-# --- CHANGE THIS PATH ---
-@export var target_scene_path: String = "res://New_Hub_World.tscn"
+# The hub lives in res://scenes/. The old res://New_Hub_World.tscn does not
+# exist, so go_to_scene() took the "target scene not found" branch below and
+# the doorway silently did nothing — the same failure ExitGallery.gd had.
+@export var target_scene_path: String = "res://scenes/New_Hub_World.tscn"
 
 # This function is automatically called when a physics body enters the Area3D
 func _on_body_entered(body: Node3D):
@@ -17,6 +19,10 @@ func _on_body_entered(body: Node3D):
 # Scene switching function
 func go_to_scene(path: String):
 	if ResourceLoader.exists(path):
+		if path == target_scene_path:
+			var global := get_node_or_null("/root/Global")
+			if global != null and global.has_method("request_spawn_at"):
+				global.request_spawn_at("castle_front_door")
 		print("TRAVELING from:", self.name, " to: ", path)
 		get_tree().change_scene_to_file(path)
 	else:

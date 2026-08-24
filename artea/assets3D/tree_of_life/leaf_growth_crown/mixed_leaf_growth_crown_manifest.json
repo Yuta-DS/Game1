@@ -1,0 +1,18 @@
+{
+  "asset": "mixed_leaf_growth_crown",
+  "branch_free": true,
+  "concealed_growth_core": true,
+  "editable_leaf_blades": 44,
+  "raised_cyan_vein_components": 484,
+  "living_rim_components": 88,
+  "leaf_family_counts": {
+    "living_green": 16,
+    "magic_violet": 12,
+    "solar_glass": 8,
+    "emerald_sensor": 8
+  },
+  "source_blend": "assets3D/tree_of_life/leaf_growth_crown/source/mixed_leaf_growth_crown.blend",
+  "game_glb": "assets3D/tree_of_life/leaf_growth_crown/glb/mixed_leaf_growth_crown.glb",
+  "top_preview": "artifacts/tree_of_life_leaf_growth/mixed_leaf_growth_top.png",
+  "front_preview": "artifacts/tree_of_life_leaf_growth/mixed_leaf_growth_front.png"
+}

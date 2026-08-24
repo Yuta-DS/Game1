@@ -36,9 +36,13 @@ const MAX_FRAMES_TO_LOAD = 12
 var current_frame_hovered := ""
 var current_rating := 0
 
-@onready var rating_ui = $"../CanvasLayer/RatingUI"
-@onready var rating_label = $"../CanvasLayer/RatingUI/RatingLabel"
-@onready var likebutton: Button = $CanvasLayer/RatingPanel/HBoxContainer/LikeButton
+# The rating widgets live under CanvasLayer/RatingPanel, a sibling of this node.
+# RatingUI is a leftover empty PanelContainer — pointing at it (and omitting the
+# "../" on likebutton) made all three lookups fail, which aborted _ready() and
+# took the rest of the gallery's setup down with it.
+@onready var rating_ui = $"../CanvasLayer/RatingPanel"
+@onready var rating_label: Label = $"../CanvasLayer/RatingPanel/RatingLabel"
+@onready var likebutton: Button = $"../CanvasLayer/RatingPanel/HBoxContainer/LikeButton"
 # =========================================================
 # NODES
 # =========================================================
@@ -66,6 +70,29 @@ var current_download_artwork_id = null
 
 var online_gallery_ready := false
 var local_gallery_ready := false
+
+
+# Resolve any gallery frame into a local image path so every artwork — local,
+# downloaded, or placeholder — can open through the same creation-world pipe.
+# Remote images are copied from the frame texture into the private user folder;
+# no network URL or credential is handed to the world scene.
+func prepare_frame_for_world(frame_name: String) -> String:
+	if frame_to_artwork.has(frame_name):
+		var mapped = frame_to_artwork[frame_name]
+		if mapped is String and FileAccess.file_exists(mapped):
+			return mapped
+
+	var frame := get_node_or_null("../" + frame_name)
+	if frame == null or not frame is Sprite3D or frame.texture == null:
+		return ""
+	var image: Image = frame.texture.get_image()
+	if image == null or image.is_empty():
+		return ""
+	var directory := "user://artworks/world_sources/"
+	DirAccess.make_dir_recursive_absolute(directory)
+	var safe_name := frame_name.validate_filename()
+	var path := "%s%s_%d.png" % [directory, safe_name, Time.get_ticks_usec()]
+	return path if image.save_png(path) == OK else ""
 
 
 # =========================================================
@@ -101,21 +128,14 @@ func load_placeholders() -> void:
 			print("Could not find frame: ", frame_name)
 			continue
 
-		var image_path
-
-		if i == 5:
-			image_path = PLACEHOLDER_PATH + "painting_5.png"
-		else:
-			image_path = PLACEHOLDER_PATH + "painting_%d.jpeg" % (i + 1)
-
-		one_placeholder(frame_node, image_path)
+		# Use the preloaded resources as the source of truth. The old filename
+		# reconstruction mapped Frame 06 to painting_5.png and skipped painting_6.JPG;
+		# case-sensitive Web exports could therefore leave frames blank.
+		one_placeholder(frame_node, PLACEHOLDERS[i])
 		
-func one_placeholder(frame_node: Sprite3D, image_path: String):
-
-	var texture: Texture2D = load(image_path)
-
+func one_placeholder(frame_node: Sprite3D, texture: Texture2D) -> void:
 	if texture == null:
-		print("Failed to load placeholder: ", image_path)
+		print("Failed to load placeholder for ", frame_node.name)
 		return
 
 	var image: Image = texture.get_image()
@@ -125,6 +145,8 @@ func one_placeholder(frame_node: Sprite3D, image_path: String):
 	var resized_texture = ImageTexture.create_from_image(image)
 
 	frame_node.texture = resized_texture
+	frame_node.visible = true
+	frame_node.modulate = Color.WHITE
 
 func load_local_art_paths() -> void:
 
@@ -251,7 +273,9 @@ func _on_list_request_completed(
 	if data.is_empty():
 
 		print("Authenticated user has no online artwork.")
-
+		load_local_art_paths()
+		apply_local_art_over_online()
+		online_gallery_ready = true
 		return
 
 	images_to_download.clear()
@@ -315,7 +339,11 @@ func _on_download_request_completed(
 
 		var image = Image.new()
 
-		var load_error = image.load_png_from_buffer(body)
+		var load_error := image.load_png_from_buffer(body)
+		if load_error != OK:
+			load_error = image.load_jpg_from_buffer(body)
+		if load_error != OK:
+			load_error = image.load_webp_from_buffer(body)
 
 		if load_error == OK:
 
@@ -338,6 +366,8 @@ func _on_download_request_completed(
 			if frame_node and frame_node is Sprite3D:
 
 				frame_node.texture = texture
+				frame_node.visible = true
+				frame_node.modulate = Color.WHITE
 
 				frame_to_artwork[frame_name] = int(current_download_artwork_id)
 
@@ -383,7 +413,7 @@ func apply_local_art_over_online() -> void:
 	if local_art_paths.is_empty():
 
 		print("No player artworks to replace online gallery.")
-
+		local_gallery_ready = true
 		return
 
 	print("Applying player artworks over online gallery...")
@@ -422,6 +452,8 @@ func apply_local_art_over_online() -> void:
 		if frame_node and frame_node is Sprite3D:
 
 			frame_node.texture = texture
+			frame_node.visible = true
+			frame_node.modulate = Color.WHITE
 
 			frame_to_artwork[frame_name] = local_art_paths[i]
 

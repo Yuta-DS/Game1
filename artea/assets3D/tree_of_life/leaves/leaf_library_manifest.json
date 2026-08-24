@@ -1,0 +1,67 @@
+{
+  "asset": "artea_standalone_leaf_library",
+  "version": 2,
+  "design_revision": "reference_authored_organic_branch_maps",
+  "scope": "leaves_only_no_tree_geometry",
+  "reference_image": "codex-clipboard-86c29e54-72e3-43fd-b039-3cde5127183a.png",
+  "minimum_editable_vertices_per_leaf": 10000,
+  "source_blend": "assets3D/tree_of_life/leaves/source/artea_leaf_library.blend",
+  "game_glb": "assets3D/tree_of_life/leaves/glb/artea_leaf_library.glb",
+  "individual_game_glbs": {
+    "living_leaf_fan": "assets3D/tree_of_life/leaves/glb/individual/living_leaf_fan.glb",
+    "magic_rune_leaf": "assets3D/tree_of_life/leaves/glb/individual/magic_rune_leaf.glb",
+    "solar_glass_science_leaf": "assets3D/tree_of_life/leaves/glb/individual/solar_glass_science_leaf.glb",
+    "emerald_sensor_leaf": "assets3D/tree_of_life/leaves/glb/individual/emerald_sensor_leaf.glb"
+  },
+  "textures": {
+    "living_leaf_olive_albedo": "assets3D/tree_of_life/leaves/textures/living_leaf_olive_albedo.png",
+    "living_branch_teal_albedo": "assets3D/tree_of_life/leaves/textures/living_branch_teal_albedo.png"
+  },
+  "leaves": {
+    "living_leaf_fan": {
+      "named_modules": 14,
+      "vertices": 10481,
+      "edges": 17968,
+      "faces": 8120
+    },
+    "magic_rune_leaf": {
+      "named_modules": 8,
+      "vertices": 11068,
+      "edges": 20888,
+      "faces": 10079
+    },
+    "solar_glass_science_leaf": {
+      "named_modules": 8,
+      "vertices": 11132,
+      "edges": 20952,
+      "faces": 10095
+    },
+    "emerald_sensor_leaf": {
+      "named_modules": 10,
+      "vertices": 10814,
+      "edges": 20593,
+      "faces": 10019
+    }
+  },
+  "materials": [
+    "MAT_LeafLibrary_BlackBioTech",
+    "MAT_LeafLibrary_BrassConnector",
+    "MAT_LeafLibrary_CrystalCircuit",
+    "MAT_LeafLibrary_CrystalCircuitSoft",
+    "MAT_LeafLibrary_CrystalNode",
+    "MAT_LeafLibrary_EmeraldA",
+    "MAT_LeafLibrary_EmeraldB",
+    "MAT_LeafLibrary_ForestA",
+    "MAT_LeafLibrary_ForestB",
+    "MAT_LeafLibrary_ForestC",
+    "MAT_LeafLibrary_GoldOutline",
+    "MAT_LeafLibrary_LivingVein",
+    "MAT_LeafLibrary_SolarGlassA",
+    "MAT_LeafLibrary_SolarGlassB",
+    "MAT_LeafLibrary_SolarGlassC",
+    "MAT_LeafLibrary_VioletA",
+    "MAT_LeafLibrary_VioletB",
+    "MAT_LeafLibrary_VioletC"
+  ],
+  "tree_files_modified": false
+}

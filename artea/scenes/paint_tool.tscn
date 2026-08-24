@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://7xt4ip3g0ycd"]
 
 [ext_resource type="Script" uid="uid://caqjskn135p1g" path="res://scripts/paint_tool.gd" id="1_4rbg4"]
-[ext_resource type="Texture2D" uid="uid://cv2o86orf714t" path="res://assets/Game Start/GameStart.png" id="2_ici5b"]
+[ext_resource type="Texture2D" path="res://assets/Game Start/Opening.png" id="2_ici5b"]
 [ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="2_v0vtf"]
 
 [sub_resource type="Theme" id="Theme_a36a0"]
