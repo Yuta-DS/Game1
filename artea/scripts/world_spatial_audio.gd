@@ -6,6 +6,9 @@ const ART_CASTLE_HUB := Vector3(0.0, 0.0, 1640.0)
 const ART_CASTLE_MIND := Vector3(-600.0, 0.0, 1640.0)
 const ART_CASTLE_HEART := Vector3(0.0, 0.0, 2290.0)
 const ART_CASTLE_CREATOR := Vector3(600.0, 0.0, 1640.0)
+const TREE_BRIDGE_PORTAL_STATIONS := [107.28, 223.50, 339.72]
+const TREE_BRIDGE_START_Z := 1422.0
+const TREE_BRIDGE_MID_Z := 1198.5
 
 var _active_scene: Node
 var _scene_audio_root: Node3D
@@ -774,11 +777,56 @@ func _install_environment_audio() -> void:
 			_scene_audio_root.transform = floating_world.transform
 		_add_loop("CloudSea", "res://assets/audio/Ocean_Ambience_Loop.ogg",
 			Vector3(0.0, -35.0, 1460.0), -22.0, 520.0, 85.0)
+		_install_tree_bridge_ambience()
 		_add_recorded_wind("TreeOfLifeCanopyWind", ART_CASTLE_HUB + Vector3(0, 92, 0), 310.0)
 		_add_recorded_wind("MindSparkHighWind", ART_CASTLE_MIND + Vector3(0, 54, 0), 230.0)
 		_add_loop("HeartMelodyWaterGarden", "res://assets/audio/waterfall_ambient_loop.ogg",
 			ART_CASTLE_HEART + Vector3(0, 8, 0), -18.0, 240.0, 38.0)
 		_add_recorded_wind("CreatorsLightCanvasWind", ART_CASTLE_CREATOR + Vector3(0, 42, 0), 230.0)
+
+
+func _install_tree_bridge_ambience() -> void:
+	# Three restrained zones make the 447 m crossing feel continuous without a
+	# single flat ambience following the player or adding expensive processors.
+	var wind_positions := [
+		Vector3(-16.0, 17.0, 1347.0),
+		Vector3(18.0, 20.0, TREE_BRIDGE_MID_Z),
+		Vector3(-14.0, 17.0, 1050.0),
+	]
+	for index in wind_positions.size():
+		var wind := _new_spatial_source("TreeBridgeWind_%02d" % index,
+			wind_positions[index], -29.0, 155.0, 20.0)
+		wind.stream = ProceduralFoleyScript.make_wind_loop(82520 + index * 97, true)
+		_tag_tree_bridge_source(wind, &"elevated_wind")
+		wind.play(float(index) * 1.35)
+
+	# The three cyan crown crystals share one deterministic stream, but start at
+	# different phases so the bridge never produces a mechanically synced chord.
+	var crystal_stream := ProceduralFoleyScript.make_world_object_loop(&"magic")
+	for index in TREE_BRIDGE_PORTAL_STATIONS.size():
+		var station: float = TREE_BRIDGE_PORTAL_STATIONS[index]
+		var crystal := _new_spatial_source("TreeBridgeCrystal_%02d" % index,
+			Vector3(0.0, 22.0, TREE_BRIDGE_START_Z - station),
+			-31.0, 92.0, 12.0)
+		crystal.stream = crystal_stream
+		crystal.attenuation_filter_cutoff_hz = 7200.0
+		_tag_tree_bridge_source(crystal, &"crystal_resonance")
+		crystal.play(float(index) * 1.85)
+
+	# A nearly subliminal low body tone sits below the midpoint. It gives the
+	# long span physical weight while footsteps remain the dominant close sound.
+	var structure := _new_spatial_source("TreeBridgeStructure",
+		Vector3(0.0, -8.0, TREE_BRIDGE_MID_Z), -35.0, 115.0, 16.0)
+	structure.stream = ProceduralFoleyScript.make_world_object_loop(&"mechanism")
+	structure.attenuation_filter_cutoff_hz = 3200.0
+	_tag_tree_bridge_source(structure, &"structural_resonance")
+	structure.play(2.4)
+
+
+func _tag_tree_bridge_source(source: AudioStreamPlayer3D, layer: StringName) -> void:
+	source.set_meta("environment_profile", "tree_processional_bridge")
+	source.set_meta("environment_layer", layer)
+	source.set_meta("laptop_cpu_profile", "seven_mono_emitters_no_realtime_effects")
 
 
 func _stop_legacy_hub_ambience() -> void:

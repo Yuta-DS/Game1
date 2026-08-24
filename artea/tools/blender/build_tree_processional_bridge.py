@@ -310,13 +310,29 @@ def build_portal(parts, mats, index, y):
             ((8.0, y - 1.35, 20.0), orb))):
         beam(f"PortalLivingVine_{index}_{vine_index}", start, finish,
              0.30, mats["antique_gold"], parts, "PORTAL_GOLD", component, 0.42)
-    for leaf_index, (x, z, rotation) in enumerate((
-            (-14.5, 17.1, -22), (-10.5, 19.0, 28), (-6.2, 20.7, -18),
-            (14.5, 17.1, 22), (10.5, 19.0, -28), (6.2, 20.7, 18))):
-        leaf = ico(f"PortalLeaf_{index}_{leaf_index}", (x, y - 1.48, z),
-                   0.82, (0.30, 0.65, 1.35), mats["bright_gold"], parts,
-                   "PORTAL_GOLD", component)
-        leaf.rotation_euler.y = math.radians(rotation)
+    # Seat the six bough crystals on exact points along the living-vine
+    # segments.  Their front-face offset keeps the gold rail from visibly
+    # passing through the crystal when viewed from the playable lane.
+    bough_crystals = (
+        ((-19.0, 15.2), (-8.0, 20.0), 0.40),
+        ((-19.0, 15.2), (-8.0, 20.0), 0.78),
+        ((-8.0, 20.0), (0.0, 22.0), 0.25),
+        ((19.0, 15.2), (8.0, 20.0), 0.40),
+        ((19.0, 15.2), (8.0, 20.0), 0.78),
+        ((8.0, 20.0), (0.0, 22.0), 0.25),
+    )
+    for crystal_index, (start, finish, progress) in enumerate(bough_crystals):
+        start_x, start_z = start
+        finish_x, finish_z = finish
+        x = start_x + (finish_x - start_x) * progress
+        z = start_z + (finish_z - start_z) * progress
+        tangent_angle = math.atan2(finish_x - start_x, finish_z - start_z)
+        crystal_angle = tangent_angle - math.copysign(math.pi * 0.5,
+                                                       tangent_angle)
+        crystal = ico(f"PortalBoughCrystal_{index}_{crystal_index}",
+                      (x, y - 1.93, z), 0.82, (0.30, 0.65, 1.35),
+                      mats["bright_gold"], parts, "PORTAL_GOLD", component)
+        crystal.rotation_euler.y = crystal_angle
 
 
 def build_bridge(parts, mats):
