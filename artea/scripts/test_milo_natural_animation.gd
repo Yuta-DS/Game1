@@ -17,6 +17,16 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
+	var floor := StaticBody3D.new()
+	floor.name = "MiloGroundingTestFloor"
+	floor.collision_layer = 1
+	var floor_shape := CollisionShape3D.new()
+	var floor_box := BoxShape3D.new()
+	floor_box.size = Vector3(12.0, 0.10, 12.0)
+	floor_shape.shape = floor_box
+	floor_shape.position.y = -0.05
+	floor.add_child(floor_shape)
+	root.add_child(floor)
 	var player := CharacterBody3D.new()
 	player.name = "NewPlayer"
 	player.add_to_group("player")
@@ -106,6 +116,13 @@ func _run() -> void:
 	locomotion_player.advance(0.0)
 	for _frame in 12:
 		milo.call("_update_secondary_motion", 1.0 / 60.0)
+		milo.call("_update_terrain_grounding", 1.0 / 60.0)
+	var left_leg_ik := milo.find_child("LegIK_L", true, false) as TwoBoneIK3D
+	var cane_arm_ik := milo.find_child("CaneArmIK", true, false) as TwoBoneIK3D
+	_check(left_leg_ik != null and left_leg_ik.get_influence() > 0.5,
+		"the planted stance leg is constrained to real floor geometry")
+	_check(cane_arm_ik != null and cane_arm_ik.get_influence() > 0.5,
+		"the cane hand stays constrained to its moving grip during support")
 	var walk_offset: Vector3 = milo.call("get_secondary_motion_offset")
 	var foot_offset: Vector3 = milo.call("get_left_foot_motion_offset")
 	var left_thigh: Vector3 = milo.call("get_rig_bone_pose_angle", "upperleg.l")
@@ -164,6 +181,7 @@ func _run() -> void:
 
 	milo.queue_free()
 	player.queue_free()
+	floor.queue_free()
 	await process_frame
 	if _failures > 0:
 		push_error("MILO_NATURAL_ANIMATION_TEST: %d failure(s)" % _failures)
