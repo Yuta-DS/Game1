@@ -122,15 +122,6 @@ func _apply_web_scatter_tuning() -> void:
 			terrain.set("collision_mode", 0)
 
 
-func _process(_delta: float) -> void:
-	if not OS.has_feature("web"):
-		return
-	var dome := get_node_or_null("WebSkyDome") as MeshInstance3D
-	var camera := get_viewport().get_camera_3d()
-	if dome != null and camera != null:
-		dome.global_position = camera.global_position
-
-
 func _ready() -> void:
 	if not OS.has_feature("web"):
 		return
@@ -164,61 +155,16 @@ func _ready() -> void:
 	fallback.material_override = material
 	add_child(fallback)
 	_add_collision(web_mesh)  # no-op if _enter_tree already built it
-	_add_web_sky_dome()
-
-	var day_night := get_node_or_null("../Environment/DayNite")
-	if day_night != null:
-		var animation_player := day_night.get_node_or_null("AnimationPlayer") as AnimationPlayer
-		if animation_player != null:
-			animation_player.stop()
-		var world_environment := day_night.get_node_or_null("WorldEnvironment") as WorldEnvironment
-		if world_environment != null and world_environment.environment != null:
-			world_environment.environment.background_mode = Environment.BG_COLOR
-			world_environment.environment.background_color = Color(0.38, 0.67, 0.92)
-			world_environment.environment.sky = null
-	call_deferred("_apply_web_environment")
-
-
-func _apply_web_environment() -> void:
-	# HubWorld's root script duplicates and retunes the shared Environment in
-	# its own _ready(), after this child has run. Re-apply the Web-safe sky once
-	# all scene-ready hooks have completed.
-	var world_environment := get_node_or_null(
-		"../Environment/DayNite/WorldEnvironment") as WorldEnvironment
-	if world_environment == null or world_environment.environment == null:
-		return
-	var environment := world_environment.environment
-	var sky_color := Color(0.38, 0.67, 0.92)
-	RenderingServer.set_default_clear_color(sky_color)
-	environment.background_mode = Environment.BG_CLEAR_COLOR
-	environment.background_color = sky_color
-	environment.sky = null
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color(0.72, 0.82, 0.92)
-
-
-func _add_web_sky_dome() -> void:
-	# Some Compatibility/WebGL drivers clear BG_COLOR/BG_CLEAR_COLOR to white
-	# when the original procedural Sky resource has already initialized. An
-	# inexpensive inward-facing dome makes the fallback deterministic.
-	var dome_mesh := SphereMesh.new()
-	# Keep the dome inside the camera far plane and follow the camera so the
-	# player can travel without ever reaching its edge.
-	dome_mesh.radius = 1000.0
-	dome_mesh.height = 2000.0
-	dome_mesh.radial_segments = 24
-	dome_mesh.rings = 12
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.38, 0.67, 0.92)
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.cull_mode = BaseMaterial3D.CULL_FRONT
-	material.disable_receive_shadows = true
-	var dome := MeshInstance3D.new()
-	dome.name = "WebSkyDome"
-	dome.mesh = dome_mesh
-	dome.material_override = material
-	dome.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(dome)
+	# _add_web_sky_dome() and the sky/ambient override below assumed the
+	# procedural sky was unusable on web. That was a misdiagnosis: the real
+	# cause of black rendering across the whole project was the Web export
+	# preset packaging ETC2/ASTC-compressed textures, which this machine's
+	# desktop-class GPU (and most desktop GPUs) cannot decode at all under
+	# WebGL2 - fixed by switching the Web preset to S3TC/BPTC. With that
+	# fixed, stylizedsky.gdshader's actual bug (render_mode use_half_res_pass
+	# reading HALF_RES_COLOR back as opaque black under Compatibility, a
+	# separate issue) is fixed directly in the shader now, so the authored
+	# sky can run unmodified on web same as desktop.
 
 
 func _add_collision(mesh: ArrayMesh) -> void:

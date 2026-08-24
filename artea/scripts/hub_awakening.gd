@@ -76,38 +76,26 @@ func _ready() -> void:
 		# every other scene using it.
 		_env = world_env.environment.duplicate()
 		world_env.environment = _env
-		if OS.has_feature("web"):
-			# The procedural desktop sky uses shader state beyond WebGL2's
-			# compatibility budget. Keep a stable daylight backdrop on Web.
-			var web_sky_color := Color(0.38, 0.67, 0.92)
-			RenderingServer.set_default_clear_color(web_sky_color)
-			_env.background_mode = Environment.BG_CLEAR_COLOR
-			_env.background_color = web_sky_color
-			_env.sky = null
-			_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-			_env.ambient_light_color = Color(0.72, 0.82, 0.92)
-			# AMBIENT_SOURCE_COLOR still BLENDS toward the sky by
-			# ambient_light_sky_contribution, which defaults to 1.0 and is
-			# authored to 0.6 in cycle.tscn. With _env.sky cleared just above,
-			# that fraction of the ambient term comes from nothing, so most of
-			# the ambient light vanished and models rendered near-black. Force
-			# the contribution to zero so the colour above is the whole term.
-			_env.ambient_light_sky_contribution = 0.0
-			_env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
-		# This inherited Environment carries experimental height/depth fog values
-		# (including a negative height density). Enabling them covers the nearby
-		# world with an opaque blue sheet: the sky and UI remain visible while all
-		# terrain, trains, and character meshes disappear. Keep legacy fog off;
-		# the authored sky shader already supplies the distant atmosphere.
+		# The Web branch here used to clear _env.sky and fall back to a flat
+		# colour, on the assumption the procedural sky exceeded WebGL2's
+		# compatibility budget. That was a misdiagnosis: the actual cause of
+		# black rendering across the whole project was the Web export preset
+		# packaging ETC2/ASTC-compressed textures, which desktop-class GPUs
+		# cannot decode under WebGL2 at all - fixed by switching the preset
+		# to S3TC/BPTC. The sky shader's real, separate bug (render_mode
+		# use_half_res_pass reading HALF_RES_COLOR back as opaque black under
+		# Compatibility) is fixed directly in stylizedsky.gdshader now, so
+		# the authored sky and its sky-sourced ambient run unmodified on Web,
+		# identically to desktop.
+		#
+		# This inherited Environment carries experimental height/depth fog
+		# values (including a negative height density). Enabling them covers
+		# the nearby world with an opaque blue sheet: the sky and UI remain
+		# visible while all terrain, trains, and character meshes disappear.
+		# Keep legacy fog off; the authored sky shader already supplies the
+		# distant atmosphere.
 		_env.fog_enabled = false
-		# Ambient must NOT be forced back to the sky on Web.  The block above
-		# clears _env.sky (the procedural sky exceeds WebGL2's budget), so
-		# sourcing ambient from the sky there means sourcing it from nothing:
-		# ambient light drops to zero and every model renders as a black
-		# silhouette, while sun-lit terrain still looks correct - which is what
-		# made this read as a model bug rather than a lighting one.
-		if not OS.has_feature("web"):
-			_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 		_env.ambient_light_energy = 1.25
 
 	# A low-energy, shadowless lavender fill lifts the side of the castle and

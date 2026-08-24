@@ -1,5 +1,4 @@
 shader_type sky;
-render_mode use_half_res_pass;
 
 group_uniforms clouds;
 
@@ -213,14 +212,15 @@ void sky() {
 	}
 
 	// clouds
-	if (AT_HALF_RES_PASS) {
-		vec3 clouds_direction = vec3(EYEDIR.xz / clamp(EYEDIR.y, 0.0, 1.0), 1.0);
-		vec2 clouds = EYEDIR.y > 0.0 ? cloud_ray_march(clouds_direction, LIGHT0_DIRECTION) : vec2(0.0);
+	// Computed directly (not via a half-res sub-pass + composite) because
+	// use_half_res_pass/HALF_RES_COLOR is a Forward+/Mobile-only feature -
+	// it never runs under the Compatibility renderer, which silently left
+	// HALF_RES_COLOR reading back as opaque black and overwrote sky_color.
+	vec3 clouds_direction = vec3(EYEDIR.xz / clamp(EYEDIR.y, 0.0, 1.0), 1.0);
+	vec2 clouds = EYEDIR.y > 0.0 ? cloud_ray_march(clouds_direction, LIGHT0_DIRECTION) : vec2(0.0);
 
-		COLOR = mix(bottom_color, clouds_light_color, exp(-clouds.y * clouds_shadow_intensity));
-		ALPHA = (1.0 - exp(-clouds.x * horizon_mask * bottom_mask * 10.0));
+	vec3 clouds_color = mix(bottom_color, clouds_light_color, exp(-clouds.y * clouds_shadow_intensity));
+	float clouds_alpha = (1.0 - exp(-clouds.x * horizon_mask * bottom_mask * 10.0));
 
-	}else{
-		COLOR.rgb = mix(sky_color, HALF_RES_COLOR.rgb, HALF_RES_COLOR.a);
-	}
+	COLOR.rgb = mix(sky_color, clouds_color, clouds_alpha);
 }
