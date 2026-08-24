@@ -211,7 +211,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 
 [sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("15_o1ycd")
-amount = 40000
+amount = 24000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
