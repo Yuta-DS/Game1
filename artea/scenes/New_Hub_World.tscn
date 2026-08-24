@@ -856,7 +856,7 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62, 20.3, -104)
 transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 75, 20.3, -108)
 
 [node name="ms_tower_a" parent="District_MindSpark" instance=ExtResource("82_towa")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 35, 20.6, -20)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 26, 22.5, 18)
 
 [node name="ms_mine" parent="District_MindSpark" instance=ExtResource("81_mine")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 105, 0.78, -108)
@@ -865,7 +865,7 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 105, 0.78, -108)
 transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 72, 20.3, -75)
 
 [node name="ms_barracks" parent="District_MindSpark" instance=ExtResource("79_barrk")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 35, 21.0, 5)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 59, 20.2, -17)
 
 [node name="ms_market" parent="District_MindSpark" instance=ExtResource("31_k7taw")]
 transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 108, 8.65, -82)
