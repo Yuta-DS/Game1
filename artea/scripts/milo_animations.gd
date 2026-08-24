@@ -17,9 +17,13 @@ enum CompanionState {
 
 @export var walk_speed := 1.10
 @export var catch_up_speed := 2.35
+@export var movement_acceleration := 4.2
+@export var movement_deceleration := 5.4
+@export var turn_speed := 5.0
 @export var follow_start_distance := 3.1
 @export var follow_stop_distance := 2.15
 @export var catch_up_distance := 8.0
+@export var catch_up_exit_distance := 6.5
 @export var safe_reposition_distance := 18.0
 @export var maximum_vertical_separation := 5.0
 @export var player_teleport_distance := 12.0
@@ -51,6 +55,7 @@ var _breadcrumbs: Array[Vector3] = []
 var _last_player_sample := Vector3.INF
 var _previous_player_position := Vector3.INF
 var _follow_active := false
+var _catch_up_active := false
 var mouth_closed: MeshInstance3D
 var mouth_open_small: MeshInstance3D
 var mouth_open_wide: MeshInstance3D
@@ -87,6 +92,9 @@ var right_foot_parts: Array[Node3D] = []
 var _secondary_part_origins: Dictionary = {}
 var hand_meshes: Array[MeshInstance3D] = []
 var _hand_curl_shape_indices: Dictionary = {}
+var gait_skeleton: Skeleton3D
+var _gait_bone_indices: Dictionary = {}
+var _procedural_gait_angles: Dictionary = {}
 
 var wave_timer := 0.0
 var first_wave := false
@@ -102,13 +110,17 @@ var counsellor_sparkles: Node3D
 var _cane_cycle_time := 0.0
 var _cane_gait_state := "plant"
 
-const CANE_GAIT_CYCLE_SECONDS := 1.15
+const CANE_GAIT_CYCLE_SECONDS := 1.28
 const CANE_PLANT_END := 0.18
 const CANE_SUPPORT_END := 0.70
 const COUNSELLOR_POSE_SECONDS := 0.36
 const HAND_CLEARANCE_ARC := 0.16
 const BLINK_SECONDS := 0.22
 const ARM_BONES := [
+	"upperarm.l", "lowerarm.l", "wrist.l", "hand.l",
+	"upperarm.r", "lowerarm.r", "wrist.r", "hand.r",
+]
+const GAIT_BONES := [
 	"upperarm.l", "lowerarm.l", "wrist.l", "hand.l",
 	"upperarm.r", "lowerarm.r", "wrist.r", "hand.r",
 ]
@@ -136,6 +148,7 @@ func _ready():
 	greeting_voice = get_node_or_null("MiloGreetingVoice") as AudioStreamPlayer3D
 	_resolve_eye_system()
 	_resolve_secondary_parts()
+	_resolve_gait_rig()
 	_build_contact_shadow()
 	_build_journey_aura()
 	_apply_journey_stage()
@@ -167,6 +180,7 @@ func set_companion_player(next_player: CharacterBody3D,
 	_last_player_sample = Vector3.INF
 	_previous_player_position = Vector3.INF
 	_follow_active = false
+	_catch_up_active = false
 	if player == null:
 		_set_companion_state(CompanionState.WAITING)
 		return
@@ -426,6 +440,17 @@ func _resolve_secondary_parts() -> void:
 		_add_secondary_part(right_foot_parts, part_name)
 
 
+func _resolve_gait_rig() -> void:
+	gait_skeleton = find_child("Skeleton3D", true, false) as Skeleton3D
+	if gait_skeleton == null:
+		return
+	for bone_name in GAIT_BONES:
+		var bone_index := gait_skeleton.find_bone(bone_name)
+		if bone_index >= 0:
+			_gait_bone_indices[bone_name] = bone_index
+			_procedural_gait_angles[bone_name] = Vector3.ZERO
+
+
 func _add_secondary_part(target: Array[Node3D], part_name: String) -> void:
 	var part := find_child(part_name, true, false) as Node3D
 	if part != null:
@@ -664,16 +689,17 @@ func _sample_cane_gait(phase: float) -> Dictionary:
 	var wrapped := fposmod(phase, 1.0)
 	if wrapped < CANE_PLANT_END:
 		var plant_t := smoothstep(0.0, CANE_PLANT_END, wrapped)
-		return {"state": "plant", "speed": lerpf(0.52, 0.72, plant_t)}
+		return {"state": "plant", "speed": lerpf(0.82, 0.90, plant_t)}
 	if wrapped < CANE_SUPPORT_END:
 		var support_t := smoothstep(CANE_PLANT_END, CANE_SUPPORT_END, wrapped)
-		return {"state": "support", "speed": lerpf(0.86, 1.22, support_t)}
+		return {"state": "support", "speed": lerpf(0.92, 1.05, support_t)}
 	var recovery_t := smoothstep(CANE_SUPPORT_END, 1.0, wrapped)
-	return {"state": "recover", "speed": lerpf(0.88, 0.62, recovery_t)}
+	return {"state": "recover", "speed": lerpf(1.00, 0.84, recovery_t)}
 
 
-func _advance_cane_gait(delta: float) -> float:
-	_cane_cycle_time = fposmod(_cane_cycle_time + delta, CANE_GAIT_CYCLE_SECONDS)
+func _advance_cane_gait(delta: float, pace_scale := 1.0) -> float:
+	_cane_cycle_time = fposmod(_cane_cycle_time + delta * pace_scale,
+		CANE_GAIT_CYCLE_SECONDS)
 	var phase := _cane_cycle_time / CANE_GAIT_CYCLE_SECONDS
 	var sample := _sample_cane_gait(phase)
 	_cane_gait_state = str(sample.state)
@@ -718,8 +744,7 @@ func _physics_process(delta: float) -> void:
 	_sample_player_breadcrumb()
 	# Conversation owns Milo's pose and facing until the panel closes.
 	if chatbot_ui != null or player_in_range:
-		velocity.x = 0.0
-		velocity.z = 0.0
+		_approach_horizontal_velocity(Vector3.ZERO, movement_deceleration, delta)
 		move_and_slide()
 		return
 
@@ -731,10 +756,15 @@ func _physics_process(delta: float) -> void:
 		_follow_active = false
 	if not _follow_active:
 		if companion_state in [CompanionState.FOLLOWING, CompanionState.CATCHING_UP]:
-			_begin_pause()
+			var remaining_speed := _approach_horizontal_velocity(
+				Vector3.ZERO, movement_deceleration, delta)
+			if remaining_speed <= 0.03:
+				_begin_pause()
+			else:
+				_play_animation("Cane_Walk")
+				_update_locomotion_playback(remaining_speed, walk_speed)
 		else:
-			velocity.x = 0.0
-			velocity.z = 0.0
+			_approach_horizontal_velocity(Vector3.ZERO, movement_deceleration, delta)
 		move_and_slide()
 		return
 
@@ -743,27 +773,51 @@ func _physics_process(delta: float) -> void:
 	var to_target := target - global_position
 	to_target.y = 0.0
 	if to_target.length_squared() <= 0.01:
-		velocity.x = 0.0
-		velocity.z = 0.0
+		_approach_horizontal_velocity(Vector3.ZERO, movement_deceleration, delta)
 		move_and_slide()
 		return
 	var direction := to_target.normalized()
-	var stride_multiplier := _advance_cane_gait(delta)
-	var movement_speed := catch_up_speed if separation >= catch_up_distance else walk_speed
-	_set_companion_state(CompanionState.CATCHING_UP if separation >= catch_up_distance \
+	if separation >= catch_up_distance:
+		_catch_up_active = true
+	elif separation <= catch_up_exit_distance:
+		_catch_up_active = false
+	var stride_multiplier := _advance_cane_gait(delta,
+		1.22 if _catch_up_active else 1.0)
+	var movement_speed := catch_up_speed if _catch_up_active else walk_speed
+	_set_companion_state(CompanionState.CATCHING_UP if _catch_up_active \
 		else CompanionState.FOLLOWING)
-	velocity.x = direction.x * movement_speed * stride_multiplier
-	velocity.z = direction.z * movement_speed * stride_multiplier
-	rotation.y = lerp_angle(rotation.y, atan2(direction.x, direction.z), 5.5 * delta)
-	# Following uses the measured cane walk. At long range Milo uses the authored
-	# running cycle so catching up reads as continuous movement, not sliding.
-	_play_animation("Run" if companion_state == CompanionState.CATCHING_UP \
-		else "Cane_Walk")
-	if anim_player != null:
-		anim_player.speed_scale = lerpf(0.82, 1.08,
-			clampf((stride_multiplier - 0.52) / 0.70, 0.0, 1.0))
+	var desired_velocity := direction * movement_speed * stride_multiplier
+	var acceleration := movement_acceleration * (1.35 if _catch_up_active else 1.0)
+	var actual_speed := _approach_horizontal_velocity(
+		desired_velocity, acceleration, delta)
+	var travel_direction := Vector3(velocity.x, 0.0, velocity.z).normalized()
+	if travel_direction.length_squared() > 0.01:
+		var turn_weight := 1.0 - exp(-turn_speed * delta)
+		rotation.y = lerp_angle(rotation.y,
+			atan2(travel_direction.x, travel_direction.z), turn_weight)
+	# Milo is an elderly cane user, so catch-up remains a quicker version of the
+	# same supported gait instead of switching into the donor's human sprint.
+	_play_animation("Cane_Walk")
+	_update_locomotion_playback(actual_speed, movement_speed)
 
 	move_and_slide()
+
+
+func _approach_horizontal_velocity(target: Vector3, acceleration: float,
+		delta: float) -> float:
+	var current := Vector3(velocity.x, 0.0, velocity.z)
+	var next := current.move_toward(Vector3(target.x, 0.0, target.z),
+		maxf(acceleration, 0.01) * delta)
+	velocity.x = next.x
+	velocity.z = next.z
+	return next.length()
+
+
+func _update_locomotion_playback(actual_speed: float, authored_speed: float) -> void:
+	if anim_player == null:
+		return
+	var speed_ratio := actual_speed / maxf(authored_speed, 0.01)
+	anim_player.speed_scale = clampf(speed_ratio, 0.55, 1.12)
 
 
 func _sample_player_breadcrumb(force := false) -> void:
@@ -833,6 +887,7 @@ func _reposition_safely_near_player() -> void:
 	velocity = Vector3.ZERO
 	_breadcrumbs.clear()
 	_follow_active = false
+	_catch_up_active = false
 	_sample_player_breadcrumb(true)
 	_previous_player_position = player.global_position
 	_begin_pause()
@@ -912,15 +967,18 @@ func _update_secondary_motion(delta: float) -> void:
 	var is_walking := companion_state in [CompanionState.FOLLOWING,
 		CompanionState.CATCHING_UP]
 	var stride_wave := 0.0
+	var gait_strength := 0.0
 	if is_walking:
-		var stride_phase := _cane_cycle_time / CANE_GAIT_CYCLE_SECONDS
+		var stride_phase := _current_gait_phase()
 		stride_wave = sin(stride_phase * TAU)
-		# A restrained rise, side-to-side load and forward intent make the donor
-		# leg animation feel grounded while keeping the cane paw securely planted.
-		target_position.y += absf(stride_wave) * 0.018
-		target_position.x += stride_wave * 0.008
-		target_rotation.x -= 0.032
-		target_rotation.z += stride_wave * 0.024
+		var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+		gait_strength = clampf(horizontal_speed / maxf(walk_speed, 0.01), 0.0, 1.0)
+		# The root carries only the centre-of-mass shift. Limbs articulate on their
+		# deform bones below; moving whole skinned meshes made the old feet slide.
+		target_position.y += (1.0 - absf(stride_wave)) * 0.006 * gait_strength
+		target_position.x += stride_wave * 0.005 * gait_strength
+		target_rotation.x -= 0.045 * gait_strength
+		target_rotation.z += stride_wave * 0.012 * gait_strength
 	else:
 		var breath := sin(_motion_elapsed * 1.65)
 		target_position.y += breath * 0.004
@@ -931,42 +989,106 @@ func _update_secondary_motion(delta: float) -> void:
 		target_rotation.x, settle_weight)
 	model_root.rotation.z = lerp_angle(model_root.rotation.z,
 		target_rotation.z, settle_weight)
-	_update_limb_secondary_motion(stride_wave, is_walking, delta)
+	_update_limb_secondary_motion(stride_wave, is_walking, gait_strength, delta)
 
 
 func _update_limb_secondary_motion(stride_wave: float, is_walking: bool,
-		delta: float) -> void:
-	var free_hand_offset := Vector3.ZERO
-	var left_foot_offset := Vector3.ZERO
-	var right_foot_offset := Vector3.ZERO
-	if is_walking:
-		# The cane hand stays planted. The opposite paw counter-swings, while each
-		# shoe lifts only during its own forward half-stride for readable footfall.
-		free_hand_offset = Vector3(0.0, absf(stride_wave) * 0.010,
-			-stride_wave * 0.040)
-		left_foot_offset = Vector3(0.0, maxf(stride_wave, 0.0) * 0.035,
-			stride_wave * 0.052)
-		right_foot_offset = Vector3(0.0, maxf(-stride_wave, 0.0) * 0.035,
-			-stride_wave * 0.052)
+		gait_strength: float, delta: float) -> void:
 	var weight := 1.0 - exp(-delta * 16.0)
-	_set_secondary_part_offset(free_hand_parts, free_hand_offset, weight)
-	_set_secondary_part_offset(left_foot_parts, left_foot_offset, weight)
-	_set_secondary_part_offset(right_foot_parts, right_foot_offset, weight)
+	# Skinned hands and shoes must remain at their authored node origins. Their
+	# bones now create the motion, keeping sleeves, trousers and paws connected.
+	_set_secondary_part_offset(free_hand_parts, Vector3.ZERO, weight)
+	_set_secondary_part_offset(left_foot_parts, Vector3.ZERO, weight)
+	_set_secondary_part_offset(right_foot_parts, Vector3.ZERO, weight)
+	_update_procedural_cane_gait(stride_wave, is_walking, gait_strength, delta)
 	_update_hand_motion(stride_wave, is_walking, delta)
+
+
+func _update_procedural_cane_gait(stride_wave: float, is_walking: bool,
+		gait_strength: float, delta: float) -> void:
+	if gait_skeleton == null:
+		return
+	if not is_walking and companion_state not in [CompanionState.WAITING,
+			CompanionState.IDLE_NEAR_PLAYER]:
+		# Dialogue, greetings and authored gestures own the rig completely.
+		return
+	var targets: Dictionary = {}
+	for bone_name in GAIT_BONES:
+		targets[bone_name] = Vector3.ZERO
+	if is_walking:
+		var phase := _current_gait_phase()
+		var cane_wave := cos(phase * TAU)
+		var cane_load := maxf(cane_wave, 0.0)
+
+		# The visual right arm is .l on this mirrored donor rig. It stays flexed
+		# around the cane and advances only a few degrees. The free arm (.r) makes
+		# the restrained counter-swing that balances the opposite stepping leg.
+		targets["upperarm.l"] = Vector3(-3.0 + cane_wave * 2.5, 0.0, -4.0)
+		targets["lowerarm.l"] = Vector3(-13.0 + cane_load * 3.0, 0.0, 0.0)
+		targets["wrist.l"] = Vector3(4.0 - cane_wave * 2.0, 0.0, 0.0)
+		targets["hand.l"] = Vector3(0.0, 0.0, cane_wave * 1.5)
+		targets["upperarm.r"] = Vector3(-stride_wave * 9.0, 0.0, 2.0)
+		targets["lowerarm.r"] = Vector3(-7.0 - absf(stride_wave) * 5.0,
+			0.0, 0.0)
+		targets["wrist.r"] = Vector3(stride_wave * 2.5, 0.0, 0.0)
+
+	for bone_name in targets:
+		targets[bone_name] = (targets[bone_name] as Vector3) * gait_strength
+	var blend_weight := 1.0 - exp(-delta * (18.0 if is_walking else 10.0))
+	for bone_name in _gait_bone_indices:
+		var bone_index: int = _gait_bone_indices[bone_name]
+		var target_degrees: Vector3 = targets.get(bone_name, Vector3.ZERO)
+		var target_rotation := Quaternion.from_euler(Vector3(
+			deg_to_rad(target_degrees.x), deg_to_rad(target_degrees.y),
+			deg_to_rad(target_degrees.z)))
+		var current := gait_skeleton.get_bone_pose_rotation(bone_index)
+		var blended := current.slerp(target_rotation, blend_weight).normalized()
+		gait_skeleton.set_bone_pose_rotation(bone_index, blended)
+		var blended_euler := blended.get_euler()
+		_procedural_gait_angles[bone_name] = Vector3(
+			rad_to_deg(blended_euler.x), rad_to_deg(blended_euler.y),
+			rad_to_deg(blended_euler.z))
+
+
+func get_procedural_gait_angle(bone_name: String) -> Vector3:
+	return _procedural_gait_angles.get(bone_name, Vector3.ZERO)
+
+
+func get_rig_bone_pose_angle(bone_name: String) -> Vector3:
+	if gait_skeleton == null:
+		return Vector3.ZERO
+	var bone_index := gait_skeleton.find_bone(bone_name)
+	if bone_index < 0:
+		return Vector3.ZERO
+	var euler := gait_skeleton.get_bone_pose_rotation(bone_index).get_euler()
+	return Vector3(rad_to_deg(euler.x), rad_to_deg(euler.y), rad_to_deg(euler.z))
+
+
+func _current_gait_phase() -> float:
+	if anim_player != null and anim_player.current_animation == "Cane_Walk":
+		var clip := anim_player.get_animation("Cane_Walk")
+		if clip != null and clip.length > 0.0:
+			return fposmod(anim_player.current_animation_position / clip.length, 1.0)
+	return fposmod(_cane_cycle_time / CANE_GAIT_CYCLE_SECONDS, 1.0)
 
 
 func _update_hand_motion(stride_wave: float, is_walking: bool,
 		delta: float) -> void:
 	# Each complete hand is one connected mesh. Its one FingerCurl blend shape
 	# deforms the three sculpted lobes together, so no digit can detach or float.
-	var curl := 0.08 + sin(_motion_elapsed * 1.65) * 0.025
-	if is_walking:
-		curl = 0.26 + absf(stride_wave) * 0.10
-	if is_speaking() or companion_state in [CompanionState.TALKING,
-			CompanionState.ENCOURAGING, CompanionState.CELEBRATING]:
-		curl = 0.62 + sin(_speech_elapsed * 10.0) * 0.16
+	var idle_curl := 0.08 + sin(_motion_elapsed * 1.65) * 0.025
+	var speaking := is_speaking() or companion_state in [CompanionState.TALKING,
+			CompanionState.ENCOURAGING, CompanionState.CELEBRATING]
 	var weight := 1.0 - exp(-delta * 18.0)
 	for hand in hand_meshes:
+		var curl := idle_curl
+		if is_walking:
+			# Paw_R is the visible cane hand; it keeps a secure unified grip while
+			# the free paw remains relaxed enough to counter-swing.
+			curl = 0.78 + absf(stride_wave) * 0.08 \
+				if hand.name == "Paw_R" else 0.18 + absf(stride_wave) * 0.05
+		if speaking:
+			curl = 0.62 + sin(_speech_elapsed * 10.0) * 0.16
 		var shape_index: int = _hand_curl_shape_indices[hand]
 		var current := hand.get_blend_shape_value(shape_index)
 		hand.set_blend_shape_value(shape_index, lerpf(current, curl, weight))

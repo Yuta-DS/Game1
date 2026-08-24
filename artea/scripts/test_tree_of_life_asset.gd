@@ -135,8 +135,9 @@ func _run() -> void:
 	if tree_bridge == null \
 			or tree_bridge.get_meta("visual_style", "") != \
 				"castle_arcane_tree_of_life_processional" \
-			or tree_bridge.get_node_or_null("LivingSapInlay") == null \
-			or tree_bridge.get_node_or_null("TreeBoughPortal_02/BoughCrownLight") == null:
+			or tree_bridge.get_node_or_null(
+				"ReferenceTreeProcessionalBridge/BlenderTreeProcessionalBridge") == null \
+			or int(tree_bridge.get_meta("bough_portal_count", 0)) != 3:
 		_fail("Tree of Life southern approach is not presented as the Arcane processional bridge")
 		return
 

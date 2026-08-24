@@ -31,7 +31,12 @@ func _run() -> void:
 	var material := brick_ground.material_override as ShaderMaterial
 	if material == null or material.shader == null \
 			or material.shader.resource_path != "res://shaders/village_brick_plaza.gdshader":
-		_fail("brick ground must use the weathered diagonal stone-brick plaza shader")
+		_fail("village ground must use its continuous terrain-fitted surface shader")
+		return
+	var selected_texture := material.get_shader_parameter("ground_texture") as Texture2D
+	if selected_texture == null or selected_texture.resource_path != \
+			"res://textures/ground_tiles_13_1k/ground_tiles_13_baseColor_1k.png":
+		_fail("the full village center must use the user-selected gray-green ground style")
 		return
 	var overgrowth := hub.get_node_or_null(
 		"VillageBrickPlaza/GrassOvergrowth") as MultiMeshInstance3D
@@ -54,5 +59,5 @@ func _run() -> void:
 				Vector3(90.0, 25.0, -20.0), exclusion.global_transform):
 			_fail("%s exclusion must cover the village-center bricks" % scatter_name)
 			return
-	print("VILLAGE_BRICK_PLAZA_TEST: PASS — medieval brick square with moss and modeled grass overgrowth")
+	print("VILLAGE_BRICK_PLAZA_TEST: PASS — selected gray-green ground covers the full village center")
 	quit()

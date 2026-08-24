@@ -1,0 +1,70 @@
+{
+  "asset": "tree_processional_bridge",
+  "version": 1,
+  "reference_image": "design/tree_of_life/bridge/tree_processional_bridge_concept_v1.png",
+  "source_blend": "assets3D/tree_processional_bridge/blend/tree_processional_bridge.blend",
+  "game_glb": "assets3D/tree_processional_bridge/glb/tree_processional_bridge.glb",
+  "renders": [
+    "artifacts/tree_processional_bridge_blender_render.png",
+    "artifacts/tree_processional_bridge_components.png"
+  ],
+  "dimensions_m": {
+    "length": 447.0,
+    "width": 62.0,
+    "clear_gameplay_lane": 42.0,
+    "maximum_height": 28.046,
+    "bay_length": 55.875
+  },
+  "component_breakdown": {
+    "BRIDGE/DECK_BAY": 201,
+    "BRIDGE/CYAN_ROUTE": 1,
+    "BRIDGE/GOLD_ROUTE": 2,
+    "BRIDGE/PYLON": 144,
+    "BRIDGE/BOTANICAL_RAIL_BAY": 208,
+    "BRIDGE/BOUGH_PORTAL": 84,
+    "BRIDGE/UNDERSIDE_SUPPORT": 52
+  },
+  "editable_source_modules": 692,
+  "runtime_mesh_groups": 9,
+  "runtime_group_modules": {
+    "DECK_STRUCTURE": 1,
+    "DECK_IVORY": 200,
+    "CYAN_LIGHT": 46,
+    "GOLD_TRIM": 56,
+    "UNDERSIDE_BLUE": 34,
+    "PYLON_IVORY": 72,
+    "RAIL_GOLD": 208,
+    "PORTAL_IVORY": 30,
+    "PORTAL_GOLD": 45
+  },
+  "runtime_triangles": 26248,
+  "measured_bounds_m": {
+    "minimum": [
+      -31.075,
+      0.0,
+      -14.65
+    ],
+    "maximum": [
+      31.075,
+      447.0,
+      28.046
+    ],
+    "size": [
+      62.15,
+      447.0,
+      42.696
+    ]
+  },
+  "portal_count": 3,
+  "pylon_count": 18,
+  "rail_bay_count": 16,
+  "material_design_ratio_percent": {
+    "ivory_sand": 60,
+    "gold": 30,
+    "cyan_blue": 10
+  },
+  "coordinate_system": "Blender metric: X width, Y route, Z height",
+  "collision": "visual-only GLB over existing tested Godot continuous route collision",
+  "performance_profile": "laptop_cpu_low",
+  "web_compatible": true
+}

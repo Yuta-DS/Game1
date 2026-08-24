@@ -8,8 +8,8 @@
     "untextured_meshes": [],
     "view_surface_object_counts": {
       "front": 5683,
-      "side": 2138,
-      "top": 2179
+      "side": 2126,
+      "top": 2169
     },
     "reference_palette": "warm ivory, deep navy, layered teal, aged gold, cyan energy, living roots and flowers"
   },
@@ -408,7 +408,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0,
@@ -1328,7 +1328,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.56,
@@ -1351,7 +1351,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.56,
@@ -1374,7 +1374,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.56,
@@ -1397,7 +1397,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.56,
@@ -1420,7 +1420,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.56,
@@ -1443,7 +1443,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.56,
@@ -1466,7 +1466,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.56,
@@ -1489,7 +1489,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.56,
@@ -2041,7 +2041,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.56,
@@ -2064,7 +2064,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.56,
@@ -2087,7 +2087,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.56,
@@ -2110,7 +2110,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.56,
@@ -2133,7 +2133,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.56,
@@ -2156,7 +2156,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.56,
@@ -2179,7 +2179,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.56,
@@ -2202,7 +2202,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.56,
@@ -2662,7 +2662,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.4181,
@@ -2708,7 +2708,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.2654,
@@ -2777,7 +2777,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.9498,
@@ -2846,7 +2846,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.4408,
@@ -2915,7 +2915,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.7079,
@@ -2961,7 +2961,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7611,
@@ -3007,7 +3007,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.621,
@@ -3053,7 +3053,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.621,
@@ -3099,7 +3099,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7611,
@@ -3145,7 +3145,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.7079,
@@ -3191,7 +3191,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.4408,
@@ -3260,7 +3260,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.9498,
@@ -3329,7 +3329,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.2654,
@@ -3398,7 +3398,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.4181,
@@ -25472,6 +25472,1409 @@
       ]
     },
     {
+      "name": "TRAIN_Engine_SteamBoilerBarrel",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Train_Navy"
+      ],
+      "location_m": [
+        0.0,
+        -22.55,
+        4.72
+      ],
+      "rotation_degrees": [
+        90.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.24,
+        3.24,
+        5.65
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerGoldBand_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        0.0,
+        -24.9,
+        4.72
+      ],
+      "rotation_degrees": [
+        90.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.55,
+        3.55,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerGoldBand_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        0.0,
+        -23.71,
+        4.72
+      ],
+      "rotation_degrees": [
+        90.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.55,
+        3.55,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerGoldBand_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        0.0,
+        -22.55,
+        4.72
+      ],
+      "rotation_degrees": [
+        90.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.55,
+        3.55,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerGoldBand_3",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        0.0,
+        -21.39,
+        4.72
+      ],
+      "rotation_degrees": [
+        90.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.55,
+        3.55,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerGoldBand_4",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        0.0,
+        -20.2,
+        4.72
+      ],
+      "rotation_degrees": [
+        90.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.55,
+        3.55,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_00",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        1.67,
+        -25.22,
+        4.72
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_01",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crystal_Purple"
+      ],
+      "location_m": [
+        1.4463,
+        -25.22,
+        5.555
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_02",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Flower_Pink"
+      ],
+      "location_m": [
+        0.835,
+        -25.22,
+        6.1663
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_03",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Leaf_Inner_Light"
+      ],
+      "location_m": [
+        0.0,
+        -25.22,
+        6.39
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_04",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        -0.835,
+        -25.22,
+        6.1663
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_05",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crystal_Purple"
+      ],
+      "location_m": [
+        -1.4463,
+        -25.22,
+        5.555
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_06",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Flower_Pink"
+      ],
+      "location_m": [
+        -1.67,
+        -25.22,
+        4.72
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_07",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Leaf_Inner_Light"
+      ],
+      "location_m": [
+        -1.4463,
+        -25.22,
+        3.885
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_08",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        -0.835,
+        -25.22,
+        3.2737
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_09",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crystal_Purple"
+      ],
+      "location_m": [
+        -0.0,
+        -25.22,
+        3.05
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_10",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Flower_Pink"
+      ],
+      "location_m": [
+        0.835,
+        -25.22,
+        3.2737
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamBoilerRainbowRivet_11",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Leaf_Inner_Light"
+      ],
+      "location_m": [
+        1.4463,
+        -25.22,
+        3.885
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.19,
+        0.19,
+        0.19
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamChimneyStem",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Root_Bronze_Band"
+      ],
+      "location_m": [
+        0.0,
+        -23.33,
+        6.72
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.06,
+        1.06,
+        2.1
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamChimneyCrown_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        0.0,
+        -23.33,
+        5.92
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.48,
+        1.48,
+        0.22
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamChimneyCrown_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        0.0,
+        -23.33,
+        7.42
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.52,
+        1.52,
+        0.22
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamChimneyCrown_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        0.0,
+        -23.33,
+        7.72
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.08,
+        2.08,
+        0.22
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamChimneyEnergyRing",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        0.0,
+        -23.33,
+        7.32
+      ],
+      "rotation_degrees": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.56,
+        1.56,
+        0.18
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPressureDome_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        0.0,
+        -21.4,
+        6.25
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.12,
+        1.12,
+        0.72
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPressureOrb_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crystal_Purple"
+      ],
+      "location_m": [
+        0.0,
+        -21.4,
+        6.68
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.96,
+        0.96,
+        0.96
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPressureHalo_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        0.0,
+        -21.4,
+        6.66
+      ],
+      "rotation_degrees": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.31,
+        1.31,
+        0.11
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPressureDome_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        0.0,
+        -20.37,
+        6.25
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.12,
+        1.12,
+        0.72
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPressureOrb_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        0.0,
+        -20.37,
+        6.68
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.96,
+        0.96,
+        0.96
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPressureHalo_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        0.0,
+        -20.37,
+        6.66
+      ],
+      "rotation_degrees": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.31,
+        1.31,
+        0.11
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamDriveGear_L_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        -5.47,
+        -23.35,
+        3.12
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.9403,
+        2.9403,
+        0.24
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearHub_L_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        -5.62,
+        -23.35,
+        3.12
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.7696,
+        0.7696,
+        0.34
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearEnergyRing_L_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        -5.66,
+        -23.35,
+        3.12
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.758,
+        1.758,
+        0.13
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamValveGear_L_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crystal_Purple"
+      ],
+      "location_m": [
+        -5.47,
+        -21.07,
+        4.05
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.8991,
+        1.8991,
+        0.24
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearHub_L_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        -5.62,
+        -21.07,
+        4.05
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4992,
+        0.4992,
+        0.34
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearEnergyRing_L_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Flower_Pink"
+      ],
+      "location_m": [
+        -5.66,
+        -21.07,
+        4.05
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.186,
+        1.186,
+        0.13
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGovernorGear_L_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        -5.47,
+        -19.93,
+        3.04
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.3802,
+        1.3963,
+        0.24
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearHub_L_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        -5.62,
+        -19.93,
+        3.04
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.364,
+        0.364,
+        0.34
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearEnergyRing_L_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Leaf_Inner_Light"
+      ],
+      "location_m": [
+        -5.66,
+        -19.93,
+        3.04
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.9,
+        0.9,
+        0.13
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPistonCylinder_L",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Root_Bronze_Band"
+      ],
+      "location_m": [
+        -5.47,
+        -24.7,
+        3.14
+      ],
+      "rotation_degrees": [
+        90.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.7091,
+        0.72,
+        1.48
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamConnectingRod_L",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        -5.69,
+        -22.9,
+        3.515
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.1997,
+        0.1983,
+        2.7252
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamOrbFeedPipe_L",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Root_Bronze_Band"
+      ],
+      "location_m": [
+        -2.505,
+        -25.7,
+        4.555
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.2679,
+        0.2679,
+        4.0628
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamRainbowPressurePipe_L",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        -3.86,
+        -22.4,
+        5.805
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.1997,
+        0.1983,
+        4.1113
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPipeValve_L_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        -3.9,
+        -23.6,
+        5.68
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.61,
+        0.61,
+        0.11
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPipeValve_L_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        -3.9,
+        -22.3,
+        5.9
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.61,
+        0.61,
+        0.11
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPipeValve_L_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        -3.9,
+        -21.0,
+        6.12
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.61,
+        0.61,
+        0.11
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamDriveGear_R_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        5.47,
+        -23.35,
+        3.12
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.9403,
+        2.9403,
+        0.24
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearHub_R_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        5.62,
+        -23.35,
+        3.12
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.7696,
+        0.7696,
+        0.34
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearEnergyRing_R_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        5.66,
+        -23.35,
+        3.12
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.758,
+        1.758,
+        0.13
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamValveGear_R_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crystal_Purple"
+      ],
+      "location_m": [
+        5.47,
+        -21.07,
+        4.05
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.8991,
+        1.8991,
+        0.24
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearHub_R_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        5.62,
+        -21.07,
+        4.05
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4992,
+        0.4992,
+        0.34
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearEnergyRing_R_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Flower_Pink"
+      ],
+      "location_m": [
+        5.66,
+        -21.07,
+        4.05
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.186,
+        1.186,
+        0.13
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGovernorGear_R_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Energy_Cyan"
+      ],
+      "location_m": [
+        5.47,
+        -19.93,
+        3.04
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.3802,
+        1.3963,
+        0.24
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearHub_R_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_Gold"
+      ],
+      "location_m": [
+        5.62,
+        -19.93,
+        3.04
+      ],
+      "rotation_degrees": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.364,
+        0.364,
+        0.34
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamGearEnergyRing_R_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Leaf_Inner_Light"
+      ],
+      "location_m": [
+        5.66,
+        -19.93,
+        3.04
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.9,
+        0.9,
+        0.13
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPistonCylinder_R",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Root_Bronze_Band"
+      ],
+      "location_m": [
+        5.47,
+        -24.7,
+        3.14
+      ],
+      "rotation_degrees": [
+        90.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.7091,
+        0.72,
+        1.48
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamConnectingRod_R",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        5.69,
+        -22.9,
+        3.515
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.1997,
+        0.1983,
+        2.7252
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamOrbFeedPipe_R",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Root_Bronze_Band"
+      ],
+      "location_m": [
+        2.505,
+        -25.7,
+        4.555
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.2679,
+        0.2679,
+        4.0628
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamRainbowPressurePipe_R",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crystal_Purple"
+      ],
+      "location_m": [
+        3.86,
+        -22.4,
+        5.805
+      ],
+      "rotation_degrees": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.1997,
+        0.1983,
+        4.1113
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPipeValve_R_0",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        3.9,
+        -23.6,
+        5.68
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.61,
+        0.61,
+        0.11
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPipeValve_R_1",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        3.9,
+        -22.3,
+        5.9
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.61,
+        0.61,
+        0.11
+      ]
+    },
+    {
+      "name": "TRAIN_Engine_SteamPipeValve_R_2",
+      "parent": "TRAIN_Engine_Assembly",
+      "object_type": "MESH",
+      "materials": [
+        "Crown_AccentGold"
+      ],
+      "location_m": [
+        3.9,
+        -21.0,
+        6.12
+      ],
+      "rotation_degrees": [
+        -0.0,
+        90.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.61,
+        0.61,
+        0.11
+      ]
+    },
+    {
       "name": "TRAIN_Engine_DriverFloorTile_00_00",
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
@@ -38655,7 +40058,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2797,
@@ -38678,7 +40081,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.0101,
@@ -38701,7 +40104,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.5074,
@@ -38724,7 +40127,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2898,
@@ -38747,7 +40150,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5128,
@@ -38770,7 +40173,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5128,
@@ -38793,7 +40196,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2898,
@@ -38816,7 +40219,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.5074,
@@ -38839,7 +40242,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.0101,
@@ -38862,7 +40265,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2797,
@@ -39092,7 +40495,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6499,
@@ -39115,7 +40518,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4191,
@@ -39138,7 +40541,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2402,
@@ -39161,7 +40564,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.317,
@@ -39184,7 +40587,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.8774,
@@ -39207,7 +40610,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.6026,
@@ -39230,7 +40633,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.1411,
@@ -39253,7 +40656,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.3719,
@@ -39276,7 +40679,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.0094,
@@ -39299,7 +40702,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2543,
@@ -39529,7 +40932,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6394,
@@ -39552,7 +40955,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4174,
@@ -39575,7 +40978,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.847,
@@ -39598,7 +41001,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.1524,
@@ -39621,7 +41024,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.5821,
@@ -39644,7 +41047,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.5821,
@@ -39667,7 +41070,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.1524,
@@ -39690,7 +41093,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.847,
@@ -39713,7 +41116,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4174,
@@ -39736,7 +41139,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6394,
@@ -39966,7 +41369,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2543,
@@ -39989,7 +41392,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.0094,
@@ -40012,7 +41415,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.3719,
@@ -40035,7 +41438,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.1411,
@@ -40058,7 +41461,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.6026,
@@ -40081,7 +41484,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.8774,
@@ -40104,7 +41507,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.317,
@@ -40127,7 +41530,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2402,
@@ -40150,7 +41553,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4191,
@@ -40173,7 +41576,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6499,
@@ -40403,7 +41806,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2797,
@@ -40426,7 +41829,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.0101,
@@ -40449,7 +41852,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.5074,
@@ -40472,7 +41875,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2898,
@@ -40495,7 +41898,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5128,
@@ -40518,7 +41921,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5128,
@@ -40541,7 +41944,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2898,
@@ -40564,7 +41967,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.5074,
@@ -40587,7 +41990,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.0101,
@@ -40610,7 +42013,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2797,
@@ -40840,7 +42243,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6499,
@@ -40863,7 +42266,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4191,
@@ -40886,7 +42289,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2402,
@@ -40909,7 +42312,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.317,
@@ -40932,7 +42335,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.8774,
@@ -40955,7 +42358,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.6026,
@@ -40978,7 +42381,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.1411,
@@ -41001,7 +42404,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.3719,
@@ -41024,7 +42427,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.0094,
@@ -41047,7 +42450,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2543,
@@ -41277,7 +42680,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6394,
@@ -41300,7 +42703,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4174,
@@ -41323,7 +42726,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.847,
@@ -41346,7 +42749,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.1524,
@@ -41369,7 +42772,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.5821,
@@ -41392,7 +42795,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.5821,
@@ -41415,7 +42818,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.1524,
@@ -41438,7 +42841,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.847,
@@ -41461,7 +42864,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4174,
@@ -41484,7 +42887,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6394,
@@ -41714,7 +43117,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2543,
@@ -41737,7 +43140,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.0094,
@@ -41760,7 +43163,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.3719,
@@ -41783,7 +43186,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.1411,
@@ -41806,7 +43209,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.6026,
@@ -41829,7 +43232,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.8774,
@@ -41852,7 +43255,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.317,
@@ -41875,7 +43278,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2402,
@@ -41898,7 +43301,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4191,
@@ -41921,7 +43324,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6499,
@@ -42151,7 +43554,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4776,
@@ -42174,7 +43577,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6325,
@@ -42197,7 +43600,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5181,
@@ -42220,7 +43623,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0295,
@@ -42243,7 +43646,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9847,
@@ -42266,7 +43669,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.6615,
@@ -42289,7 +43692,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7317,
@@ -42312,7 +43715,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.4712,
@@ -42335,7 +43738,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.7005,
@@ -42358,7 +43761,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.1085,
@@ -42588,7 +43991,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5861,
@@ -42611,7 +44014,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0681,
@@ -42634,7 +44037,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9531,
@@ -42657,7 +44060,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7612,
@@ -42680,7 +44083,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.6462,
@@ -42703,7 +44106,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.6462,
@@ -42726,7 +44129,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7612,
@@ -42749,7 +44152,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9531,
@@ -42772,7 +44175,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0681,
@@ -42795,7 +44198,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5861,
@@ -43025,7 +44428,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.1085,
@@ -43048,7 +44451,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.7005,
@@ -43071,7 +44474,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.4712,
@@ -43094,7 +44497,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7317,
@@ -43117,7 +44520,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.6615,
@@ -43140,7 +44543,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9847,
@@ -43163,7 +44566,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0295,
@@ -43186,7 +44589,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5181,
@@ -43209,7 +44612,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6325,
@@ -43232,7 +44635,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4776,
@@ -43462,7 +44865,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4776,
@@ -43485,7 +44888,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6325,
@@ -43508,7 +44911,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5181,
@@ -43531,7 +44934,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0295,
@@ -43554,7 +44957,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9847,
@@ -43577,7 +44980,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.6615,
@@ -43600,7 +45003,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7317,
@@ -43623,7 +45026,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.4712,
@@ -43646,7 +45049,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.7005,
@@ -43669,7 +45072,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.1085,
@@ -43899,7 +45302,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5861,
@@ -43922,7 +45325,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0681,
@@ -43945,7 +45348,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9531,
@@ -43968,7 +45371,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7612,
@@ -43991,7 +45394,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.6462,
@@ -44014,7 +45417,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.6462,
@@ -44037,7 +45440,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7612,
@@ -44060,7 +45463,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9531,
@@ -44083,7 +45486,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0681,
@@ -44106,7 +45509,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5861,
@@ -44336,7 +45739,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.1085,
@@ -44359,7 +45762,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.7005,
@@ -44382,7 +45785,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.4712,
@@ -44405,7 +45808,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7317,
@@ -44428,7 +45831,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.6615,
@@ -44451,7 +45854,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9847,
@@ -44474,7 +45877,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0295,
@@ -44497,7 +45900,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5181,
@@ -44520,7 +45923,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6325,
@@ -44543,7 +45946,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4776,
@@ -44727,7 +46130,7 @@
       "parent": "TRAIN_Engine_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0,
@@ -58454,7 +59857,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.78,
@@ -58707,7 +60110,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.78,
@@ -58960,7 +60363,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.78,
@@ -59213,7 +60616,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.78,
@@ -60179,7 +61582,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.92,
@@ -60294,7 +61697,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.92,
@@ -61927,7 +63330,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2646,
@@ -61950,7 +63353,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9555,
@@ -61973,7 +63376,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.4259,
@@ -61996,7 +63399,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2201,
@@ -62019,7 +63422,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4851,
@@ -62042,7 +63445,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4851,
@@ -62065,7 +63468,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2201,
@@ -62088,7 +63491,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.4259,
@@ -62111,7 +63514,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9555,
@@ -62134,7 +63537,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2646,
@@ -62364,7 +63767,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6148,
@@ -62387,7 +63790,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.3965,
@@ -62410,7 +63813,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2272,
@@ -62433,7 +63836,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2459,
@@ -62456,7 +63859,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.7219,
@@ -62479,7 +63882,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.4079,
@@ -62502,7 +63905,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.9713,
@@ -62525,7 +63928,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.2437,
@@ -62548,7 +63951,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9548,
@@ -62571,7 +63974,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2406,
@@ -62801,7 +64204,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6048,
@@ -62824,7 +64227,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.3948,
@@ -62847,7 +64250,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7472,
@@ -62870,7 +64273,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.982,
@@ -62893,7 +64296,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.3344,
@@ -62916,7 +64319,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.3344,
@@ -62939,7 +64342,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.982,
@@ -62962,7 +64365,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7472,
@@ -62985,7 +64388,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.3948,
@@ -63008,7 +64411,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6048,
@@ -63238,7 +64641,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2406,
@@ -63261,7 +64664,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9548,
@@ -63284,7 +64687,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.2437,
@@ -63307,7 +64710,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.9713,
@@ -63330,7 +64733,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.4079,
@@ -63353,7 +64756,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.7219,
@@ -63376,7 +64779,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2459,
@@ -63399,7 +64802,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2272,
@@ -63422,7 +64825,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.3965,
@@ -63445,7 +64848,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6148,
@@ -63675,7 +65078,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2646,
@@ -63698,7 +65101,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9555,
@@ -63721,7 +65124,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.4259,
@@ -63744,7 +65147,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2201,
@@ -63767,7 +65170,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4851,
@@ -63790,7 +65193,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4851,
@@ -63813,7 +65216,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2201,
@@ -63836,7 +65239,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.4259,
@@ -63859,7 +65262,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9555,
@@ -63882,7 +65285,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2646,
@@ -64112,7 +65515,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6148,
@@ -64135,7 +65538,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.3965,
@@ -64158,7 +65561,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2272,
@@ -64181,7 +65584,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2459,
@@ -64204,7 +65607,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.7219,
@@ -64227,7 +65630,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.4079,
@@ -64250,7 +65653,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.9713,
@@ -64273,7 +65676,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.2437,
@@ -64296,7 +65699,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9548,
@@ -64319,7 +65722,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2406,
@@ -64549,7 +65952,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6048,
@@ -64572,7 +65975,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.3948,
@@ -64595,7 +65998,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7472,
@@ -64618,7 +66021,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.982,
@@ -64641,7 +66044,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.3344,
@@ -64664,7 +66067,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.3344,
@@ -64687,7 +66090,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.982,
@@ -64710,7 +66113,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7472,
@@ -64733,7 +66136,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.3948,
@@ -64756,7 +66159,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6048,
@@ -64986,7 +66389,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2406,
@@ -65009,7 +66412,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9548,
@@ -65032,7 +66435,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.2437,
@@ -65055,7 +66458,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.9713,
@@ -65078,7 +66481,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.4079,
@@ -65101,7 +66504,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.7219,
@@ -65124,7 +66527,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2459,
@@ -65147,7 +66550,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2272,
@@ -65170,7 +66573,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.3965,
@@ -65193,7 +66596,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6148,
@@ -65423,7 +66826,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4518,
@@ -65446,7 +66849,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5983,
@@ -65469,7 +66872,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4901,
@@ -65492,7 +66895,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0279,
@@ -65515,7 +66918,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9315,
@@ -65538,7 +66941,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.5717,
@@ -65561,7 +66964,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.6381,
@@ -65584,7 +66987,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.3916,
@@ -65607,7 +67010,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6627,
@@ -65630,7 +67033,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.1026,
@@ -65860,7 +67263,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5544,
@@ -65883,7 +67286,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0644,
@@ -65906,7 +67309,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9016,
@@ -65929,7 +67332,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.666,
@@ -65952,7 +67355,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.5032,
@@ -65975,7 +67378,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.5032,
@@ -65998,7 +67401,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.666,
@@ -66021,7 +67424,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9016,
@@ -66044,7 +67447,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0644,
@@ -66067,7 +67470,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5544,
@@ -66297,7 +67700,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.1026,
@@ -66320,7 +67723,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6627,
@@ -66343,7 +67746,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.3916,
@@ -66366,7 +67769,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.6381,
@@ -66389,7 +67792,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.5717,
@@ -66412,7 +67815,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9315,
@@ -66435,7 +67838,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0279,
@@ -66458,7 +67861,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4901,
@@ -66481,7 +67884,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5983,
@@ -66504,7 +67907,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4518,
@@ -66734,7 +68137,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4518,
@@ -66757,7 +68160,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5983,
@@ -66780,7 +68183,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4901,
@@ -66803,7 +68206,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0279,
@@ -66826,7 +68229,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9315,
@@ -66849,7 +68252,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.5717,
@@ -66872,7 +68275,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.6381,
@@ -66895,7 +68298,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.3916,
@@ -66918,7 +68321,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6627,
@@ -66941,7 +68344,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.1026,
@@ -67171,7 +68574,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5544,
@@ -67194,7 +68597,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0644,
@@ -67217,7 +68620,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9016,
@@ -67240,7 +68643,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.666,
@@ -67263,7 +68666,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.5032,
@@ -67286,7 +68689,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.5032,
@@ -67309,7 +68712,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.666,
@@ -67332,7 +68735,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9016,
@@ -67355,7 +68758,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0644,
@@ -67378,7 +68781,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5544,
@@ -67608,7 +69011,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.1026,
@@ -67631,7 +69034,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6627,
@@ -67654,7 +69057,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.3916,
@@ -67677,7 +69080,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.6381,
@@ -67700,7 +69103,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.5717,
@@ -67723,7 +69126,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9315,
@@ -67746,7 +69149,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0279,
@@ -67769,7 +69172,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4901,
@@ -67792,7 +69195,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5983,
@@ -67815,7 +69218,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4518,
@@ -67999,7 +69402,7 @@
       "parent": "TRAIN_Coach_A_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0,
@@ -79035,7 +80438,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.78,
@@ -79288,7 +80691,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.78,
@@ -79541,7 +80944,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.78,
@@ -79794,7 +81197,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.78,
@@ -80760,7 +82163,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.92,
@@ -80875,7 +82278,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.92,
@@ -82508,7 +83911,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2646,
@@ -82531,7 +83934,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9555,
@@ -82554,7 +83957,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.4259,
@@ -82577,7 +83980,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2201,
@@ -82600,7 +84003,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4851,
@@ -82623,7 +84026,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4851,
@@ -82646,7 +84049,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2201,
@@ -82669,7 +84072,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.4259,
@@ -82692,7 +84095,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9555,
@@ -82715,7 +84118,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2646,
@@ -82945,7 +84348,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6148,
@@ -82968,7 +84371,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.3965,
@@ -82991,7 +84394,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2272,
@@ -83014,7 +84417,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2459,
@@ -83037,7 +84440,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.7219,
@@ -83060,7 +84463,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.4079,
@@ -83083,7 +84486,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.9713,
@@ -83106,7 +84509,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.2437,
@@ -83129,7 +84532,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9548,
@@ -83152,7 +84555,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2406,
@@ -83382,7 +84785,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6048,
@@ -83405,7 +84808,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.3948,
@@ -83428,7 +84831,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7472,
@@ -83451,7 +84854,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.982,
@@ -83474,7 +84877,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.3344,
@@ -83497,7 +84900,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         4.3344,
@@ -83520,7 +84923,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.982,
@@ -83543,7 +84946,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.7472,
@@ -83566,7 +84969,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.3948,
@@ -83589,7 +84992,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6048,
@@ -83819,7 +85222,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2406,
@@ -83842,7 +85245,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9548,
@@ -83865,7 +85268,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.2437,
@@ -83888,7 +85291,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.9713,
@@ -83911,7 +85314,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         3.4079,
@@ -83934,7 +85337,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.7219,
@@ -83957,7 +85360,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2459,
@@ -83980,7 +85383,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2272,
@@ -84003,7 +85406,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.3965,
@@ -84026,7 +85429,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6148,
@@ -84256,7 +85659,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2646,
@@ -84279,7 +85682,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9555,
@@ -84302,7 +85705,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.4259,
@@ -84325,7 +85728,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.2201,
@@ -84348,7 +85751,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4851,
@@ -84371,7 +85774,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4851,
@@ -84394,7 +85797,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2201,
@@ -84417,7 +85820,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.4259,
@@ -84440,7 +85843,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9555,
@@ -84463,7 +85866,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2646,
@@ -84693,7 +86096,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6148,
@@ -84716,7 +86119,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.3965,
@@ -84739,7 +86142,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2272,
@@ -84762,7 +86165,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2459,
@@ -84785,7 +86188,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.7219,
@@ -84808,7 +86211,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.4079,
@@ -84831,7 +86234,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.9713,
@@ -84854,7 +86257,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.2437,
@@ -84877,7 +86280,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9548,
@@ -84900,7 +86303,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2406,
@@ -85130,7 +86533,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6048,
@@ -85153,7 +86556,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.3948,
@@ -85176,7 +86579,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7472,
@@ -85199,7 +86602,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.982,
@@ -85222,7 +86625,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.3344,
@@ -85245,7 +86648,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -4.3344,
@@ -85268,7 +86671,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.982,
@@ -85291,7 +86694,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.7472,
@@ -85314,7 +86717,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.3948,
@@ -85337,7 +86740,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6048,
@@ -85567,7 +86970,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.2406,
@@ -85590,7 +86993,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9548,
@@ -85613,7 +87016,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.2437,
@@ -85636,7 +87039,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.9713,
@@ -85659,7 +87062,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -3.4079,
@@ -85682,7 +87085,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.7219,
@@ -85705,7 +87108,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.2459,
@@ -85728,7 +87131,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.2272,
@@ -85751,7 +87154,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.3965,
@@ -85774,7 +87177,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6148,
@@ -86004,7 +87407,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4518,
@@ -86027,7 +87430,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5983,
@@ -86050,7 +87453,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4901,
@@ -86073,7 +87476,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0279,
@@ -86096,7 +87499,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9315,
@@ -86119,7 +87522,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.5717,
@@ -86142,7 +87545,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.6381,
@@ -86165,7 +87568,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.3916,
@@ -86188,7 +87591,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6627,
@@ -86211,7 +87614,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.1026,
@@ -86441,7 +87844,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5544,
@@ -86464,7 +87867,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0644,
@@ -86487,7 +87890,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9016,
@@ -86510,7 +87913,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.666,
@@ -86533,7 +87936,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.5032,
@@ -86556,7 +87959,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         2.5032,
@@ -86579,7 +87982,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.666,
@@ -86602,7 +88005,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9016,
@@ -86625,7 +88028,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0644,
@@ -86648,7 +88051,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5544,
@@ -86878,7 +88281,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.1026,
@@ -86901,7 +88304,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.6627,
@@ -86924,7 +88327,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.3916,
@@ -86947,7 +88350,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.6381,
@@ -86970,7 +88373,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         1.5717,
@@ -86993,7 +88396,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.9315,
@@ -87016,7 +88419,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0279,
@@ -87039,7 +88442,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4901,
@@ -87062,7 +88465,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.5983,
@@ -87085,7 +88488,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.4518,
@@ -87315,7 +88718,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4518,
@@ -87338,7 +88741,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5983,
@@ -87361,7 +88764,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4901,
@@ -87384,7 +88787,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0279,
@@ -87407,7 +88810,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9315,
@@ -87430,7 +88833,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.5717,
@@ -87453,7 +88856,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.6381,
@@ -87476,7 +88879,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.3916,
@@ -87499,7 +88902,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6627,
@@ -87522,7 +88925,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.1026,
@@ -87752,7 +89155,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5544,
@@ -87775,7 +89178,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0644,
@@ -87798,7 +89201,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9016,
@@ -87821,7 +89224,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.666,
@@ -87844,7 +89247,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.5032,
@@ -87867,7 +89270,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -2.5032,
@@ -87890,7 +89293,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.666,
@@ -87913,7 +89316,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9016,
@@ -87936,7 +89339,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0644,
@@ -87959,7 +89362,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5544,
@@ -88189,7 +89592,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.1026,
@@ -88212,7 +89615,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.6627,
@@ -88235,7 +89638,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.3916,
@@ -88258,7 +89661,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.6381,
@@ -88281,7 +89684,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -1.5717,
@@ -88304,7 +89707,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.9315,
@@ -88327,7 +89730,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         -0.0279,
@@ -88350,7 +89753,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4901,
@@ -88373,7 +89776,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.5983,
@@ -88396,7 +89799,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.4518,
@@ -88580,7 +89983,7 @@
       "parent": "TRAIN_Coach_B_Assembly",
       "object_type": "MESH",
       "materials": [
-        "Crown_Gold"
+        "Crown_AccentGold"
       ],
       "location_m": [
         0.0,
@@ -297593,1409 +298996,6 @@
         0.0662,
         0.0294,
         0.0059
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SeatStitch_03414",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.12,
-        21.23,
-        3.27
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0243,
-        0.0168,
-        0.0022
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_LeafVeinPin_03415",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        1.4219,
-        19.8584,
-        8.598
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0356,
-        0.0185,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_UnderframeBolt_03416",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Bronze_Band"
-      ],
-      "location_m": [
-        -4.96,
-        25.3928,
-        1.03
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0608,
-        0.0252,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_GardenTrimStud_03417",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        0.063,
-        28.03,
-        2.16
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0648,
-        0.0202,
-        0.0058
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_ArchTilePin_03418",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        -3.301,
-        12.09,
-        7.3663
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0491,
-        0.0218,
-        0.0044
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabTactileLegend_03419",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Cab_Warning_Amber"
-      ],
-      "location_m": [
-        3.81,
-        -18.052,
-        3.675
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0432,
-        0.0047,
-        0.0021
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SillFastener_03420",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        5.31,
-        -16.6957,
-        1.98
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0562,
-        0.0269,
-        0.005
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CanopyVeinDash_03421",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Leaf_Inner_Light"
-      ],
-      "location_m": [
-        -1.5485,
-        -16.4407,
-        8.585
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0675,
-        0.021,
-        0.006
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabFrameRivet_03422",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.495,
-        -13.296,
-        3.15
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0401,
-        0.0227,
-        0.0036
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_RootBindingDash_03423",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Highlight"
-      ],
-      "location_m": [
-        -4.2849,
-        17.8115,
-        0.6115
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0662,
-        0.0294,
-        0.0059
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SeatStitch_03424",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.12,
-        4.821,
-        3.27
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0243,
-        0.0168,
-        0.0022
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_LeafVeinPin_03425",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        0.6025,
-        -13.7389,
-        8.598
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0356,
-        0.0185,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_UnderframeBolt_03426",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Energy_Cyan"
-      ],
-      "location_m": [
-        -4.96,
-        25.5376,
-        1.03
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0608,
-        0.0252,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_GardenTrimStud_03427",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        -1.7,
-        -7.763,
-        2.16
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0648,
-        0.0202,
-        0.0058
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_ArchTilePin_03428",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Energy_Cyan"
-      ],
-      "location_m": [
-        -3.3663,
-        -21.76,
-        7.3379
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0491,
-        0.0218,
-        0.0044
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabTactileLegend_03429",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Warm_Ivory"
-      ],
-      "location_m": [
-        -3.535,
-        -18.052,
-        3.73
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0432,
-        0.0047,
-        0.0021
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SillFastener_03430",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        5.31,
-        -16.5217,
-        1.98
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0562,
-        0.0269,
-        0.005
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CanopyVeinDash_03431",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Leaf_Inner_Light"
-      ],
-      "location_m": [
-        -1.5485,
-        1.0593,
-        8.585
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0675,
-        0.021,
-        0.006
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabFrameRivet_03432",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.495,
-        -13.214,
-        3.15
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0401,
-        0.0227,
-        0.0036
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_RootBindingDash_03433",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Highlight"
-      ],
-      "location_m": [
-        -4.232,
-        17.9308,
-        0.4783
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0662,
-        0.0294,
-        0.0059
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SeatStitch_03434",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.12,
-        21.321,
-        3.27
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0243,
-        0.0168,
-        0.0022
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_LeafVeinPin_03435",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        0.6025,
-        3.7611,
-        8.598
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0356,
-        0.0185,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_UnderframeBolt_03436",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Bronze_Band"
-      ],
-      "location_m": [
-        -4.96,
-        25.6825,
-        1.03
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0608,
-        0.0252,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_GardenTrimStud_03437",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        -1.7,
-        9.837,
-        2.16
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0648,
-        0.0202,
-        0.0058
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_ArchTilePin_03438",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Energy_Cyan"
-      ],
-      "location_m": [
-        -3.3663,
-        -4.41,
-        7.3379
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0491,
-        0.0218,
-        0.0044
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabTactileLegend_03439",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Warm_Ivory"
-      ],
-      "location_m": [
-        -2.055,
-        -18.052,
-        3.73
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0432,
-        0.0047,
-        0.0021
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SillFastener_03440",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        5.31,
-        -16.3478,
-        1.98
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0562,
-        0.0269,
-        0.005
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CanopyVeinDash_03441",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Leaf_Inner_Light"
-      ],
-      "location_m": [
-        -1.5485,
-        17.5593,
-        8.585
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0675,
-        0.021,
-        0.006
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabFrameRivet_03442",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.495,
-        -13.132,
-        3.15
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0401,
-        0.0227,
-        0.0036
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_RootBindingDash_03443",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Bronze_Band"
-      ],
-      "location_m": [
-        -4.1987,
-        18.0501,
-        0.2823
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0662,
-        0.0294,
-        0.0059
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SeatStitch_03444",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.12,
-        4.912,
-        3.27
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0243,
-        0.0168,
-        0.0022
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_LeafVeinPin_03445",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        0.6025,
-        20.2611,
-        8.598
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0356,
-        0.0185,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_UnderframeBolt_03446",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Bronze_Band"
-      ],
-      "location_m": [
-        -4.96,
-        25.8273,
-        1.03
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0608,
-        0.0252,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_GardenTrimStud_03447",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        -1.7,
-        27.037,
-        2.16
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0648,
-        0.0202,
-        0.0058
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_ArchTilePin_03448",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Energy_Cyan"
-      ],
-      "location_m": [
-        -3.3663,
-        12.09,
-        7.3379
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0491,
-        0.0218,
-        0.0044
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabTactileLegend_03449",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Warm_Ivory"
-      ],
-      "location_m": [
-        -0.575,
-        -18.052,
-        3.73
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0432,
-        0.0047,
-        0.0021
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SillFastener_03450",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        5.31,
-        -16.1739,
-        1.98
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0562,
-        0.0269,
-        0.005
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CanopyVeinDash_03451",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Leaf_Inner_Light"
-      ],
-      "location_m": [
-        1.4753,
-        -16.739,
-        8.585
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0675,
-        0.021,
-        0.006
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabFrameRivet_03452",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.495,
-        -13.05,
-        3.15
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0401,
-        0.0227,
-        0.0036
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_RootBindingDash_03453",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Highlight"
-      ],
-      "location_m": [
-        -4.1905,
-        18.1695,
-        0.0562
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0662,
-        0.0294,
-        0.0059
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SeatStitch_03454",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.12,
-        21.412,
-        3.27
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0243,
-        0.0168,
-        0.0022
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_LeafVeinPin_03455",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        -0.3087,
-        -13.6804,
-        8.598
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0356,
-        0.0185,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_UnderframeBolt_03456",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Energy_Cyan"
-      ],
-      "location_m": [
-        -4.96,
-        25.9721,
-        1.03
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0608,
-        0.0252,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_GardenTrimStud_03457",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        1.7,
-        -7.763,
-        2.16
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0648,
-        0.0202,
-        0.0058
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_ArchTilePin_03458",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        -3.4301,
-        -21.76,
-        7.3089
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0491,
-        0.0218,
-        0.0044
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabTactileLegend_03459",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Warm_Ivory"
-      ],
-      "location_m": [
-        0.905,
-        -18.052,
-        3.73
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0432,
-        0.0047,
-        0.0021
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SillFastener_03460",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        5.31,
-        -16.0,
-        1.98
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0562,
-        0.0269,
-        0.005
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CanopyVeinDash_03461",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Leaf_Inner_Light"
-      ],
-      "location_m": [
-        1.4753,
-        0.761,
-        8.585
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0675,
-        0.021,
-        0.006
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabFrameRivet_03462",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.495,
-        -12.968,
-        3.15
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0401,
-        0.0227,
-        0.0036
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_RootBindingDash_03463",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Highlight"
-      ],
-      "location_m": [
-        -4.2087,
-        18.2888,
-        -0.1627
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0662,
-        0.0294,
-        0.0059
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SeatStitch_03464",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.12,
-        5.003,
-        3.27
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0243,
-        0.0168,
-        0.0022
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_LeafVeinPin_03465",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        -0.3087,
-        3.8196,
-        8.598
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0356,
-        0.0185,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_UnderframeBolt_03466",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Bronze_Band"
-      ],
-      "location_m": [
-        -4.96,
-        26.117,
-        1.03
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0608,
-        0.0252,
-        0.0032
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_GardenTrimStud_03467",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        1.7,
-        9.837,
-        2.16
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0648,
-        0.0202,
-        0.0058
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_ArchTilePin_03468",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        -3.4301,
-        -4.41,
-        7.3089
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0491,
-        0.0218,
-        0.0044
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabTactileLegend_03469",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Warm_Ivory"
-      ],
-      "location_m": [
-        2.385,
-        -18.052,
-        3.73
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0432,
-        0.0047,
-        0.0021
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SillFastener_03470",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        5.31,
-        -15.8261,
-        1.98
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0562,
-        0.0269,
-        0.005
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CanopyVeinDash_03471",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Leaf_Inner_Light"
-      ],
-      "location_m": [
-        1.4753,
-        17.261,
-        8.585
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0675,
-        0.021,
-        0.006
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_CabFrameRivet_03472",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.495,
-        -12.886,
-        3.15
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0401,
-        0.0227,
-        0.0036
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_RootBindingDash_03473",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Root_Highlight"
-      ],
-      "location_m": [
-        -4.2503,
-        18.4081,
-        -0.3381
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0662,
-        0.0294,
-        0.0059
-      ]
-    },
-    {
-      "name": "TRAIN_Finish_SeatStitch_03474",
-      "parent": "TRAIN_CrownLineConstructionRoot",
-      "object_type": "MESH",
-      "materials": [
-        "Crown_Gold"
-      ],
-      "location_m": [
-        4.12,
-        21.503,
-        3.27
-      ],
-      "rotation_degrees": [
-        0.0,
-        0.0,
-        0.0
-      ],
-      "dimensions_m": [
-        0.0243,
-        0.0168,
-        0.0022
       ]
     }
   ]

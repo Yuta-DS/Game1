@@ -47,14 +47,19 @@ func _run() -> void:
 			or not is_equal_approx(float(tree_bridge.get_meta("processional_width_m", 0.0)), 62.0):
 		_fail("Tree of Life processional bridge dimensions changed")
 		return
-	for component in ["TreeIvoryProcessionalDeck", "LivingSapInlay",
-			"TreeBoughPortal_00", "TreeBoughPortal_01", "TreeBoughPortal_02"]:
-		if tree_bridge.get_node_or_null(component) == null:
-			_fail("Tree of Life bridge is missing %s" % component)
+	var blender_bridge := tree_bridge.get_node_or_null(
+		"ReferenceTreeProcessionalBridge/BlenderTreeProcessionalBridge") as Node3D
+	if blender_bridge == null:
+		_fail("Tree of Life bridge is missing its Blender-authored visual")
+		return
+	for component in ["DeckIvory", "CyanLight", "RailGold", "PortalIvory", "PortalGold"]:
+		if blender_bridge.find_child(component, true, false) == null:
+			_fail("Tree of Life Blender bridge is missing %s" % component)
 			return
-	if tree_bridge.find_children("TreePylon_*", "MeshInstance3D", true, false).size() != 18 \
-			or tree_bridge.find_children("BotanicalVineA_*", "MeshInstance3D", true, false).size() != 16:
-		_fail("Tree of Life bridge modular rail rhythm is incomplete")
+	if int(tree_bridge.get_meta("blender_editable_module_count", 0)) != 692 \
+			or int(tree_bridge.get_meta("blender_runtime_mesh_group_count", 0)) != 9 \
+			or int(tree_bridge.get_meta("bridge_runtime_triangle_count", 0)) != 26248:
+		_fail("Tree of Life Blender bridge optimization metadata changed")
 		return
 	for rail in tree_bridge.find_children("SafetyRail*", "MeshInstance3D", true, false):
 		if (rail as MeshInstance3D).visible:

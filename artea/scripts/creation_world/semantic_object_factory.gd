@@ -28,10 +28,10 @@ const ASSETS := {
 	"donkey": "res://assets3D/Animated Animal Pack-glb/Donkey.glb",
 	"alpaca": "res://assets3D/Animated Animal Pack-glb/Alpaca.glb",
 	"stag": "res://assets3D/Animated Animal Pack-glb/Stag.glb",
-	"person": "res://assets3D/characters/Father_output.glb",
-	"human": "res://assets3D/characters/Father_output.glb",
-	"character": "res://assets3D/characters/Father_output.glb",
-	"avatar": "res://assets3D/characters/Father_output.glb",
+	"person": "res://assets3D/characters/Rogue.glb",
+	"human": "res://assets3D/characters/Rogue.glb",
+	"character": "res://assets3D/characters/Rogue.glb",
+	"avatar": "res://assets3D/characters/Rogue.glb",
 }
 
 
