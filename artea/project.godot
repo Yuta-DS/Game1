@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Artea"
 run/main_scene="res://scenes/start_screen.tscn"
-config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 run/main_scene.crown_story="res://scenes/viewfinder/crown_of_life_story.tscn"
 
@@ -146,7 +146,6 @@ locale/translations_pot_files=PackedStringArray("res://dialogue/HubworldDialogue
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
-textures/vram_compression/import_etc2_astc=false
 textures/vram_compression/import_s3tc_bptc=true
 anti_aliasing/quality/msaa_3d=3
 
