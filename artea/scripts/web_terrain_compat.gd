@@ -229,6 +229,19 @@ func _apply_web_environment() -> void:
 	environment.sky = null
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color(0.72, 0.82, 0.92)
+	# Compatibility/WebGL drivers must not blend this explicit colour toward
+	# the procedural sky we deliberately removed above. A non-zero sky share
+	# makes ambient lighting collapse toward black on affected browsers, leaving
+	# only the shadowed outline of imported models visible.
+	environment.ambient_light_energy = 1.25
+	environment.ambient_light_sky_contribution = 0.0
+	environment.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+	environment.fog_enabled = false
+	# Keep the authored journey saturation, but guarantee a readable baseline
+	# even if a browser initializes the duplicated Environment before
+	# HubAwakening has applied its stage values.
+	environment.adjustment_enabled = true
+	environment.adjustment_brightness = maxf(environment.adjustment_brightness, 1.05)
 
 
 func _add_web_sky_dome() -> void:
