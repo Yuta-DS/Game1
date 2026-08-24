@@ -82,11 +82,7 @@ func _ready() -> void:
 		# black rendering across the whole project was the Web export preset
 		# packaging ETC2/ASTC-compressed textures, which desktop-class GPUs
 		# cannot decode under WebGL2 at all - fixed by switching the preset
-		# to S3TC/BPTC. The sky shader's real, separate bug (render_mode
-		# use_half_res_pass reading HALF_RES_COLOR back as opaque black under
-		# Compatibility) is fixed directly in stylizedsky.gdshader now, so
-		# the authored sky and its sky-sourced ambient run unmodified on Web,
-		# identically to desktop.
+		# to S3TC/BPTC.
 		#
 		# This inherited Environment carries experimental height/depth fog
 		# values (including a negative height density). Enabling them covers
@@ -95,7 +91,19 @@ func _ready() -> void:
 		# Keep legacy fog off; the authored sky shader already supplies the
 		# distant atmosphere.
 		_env.fog_enabled = false
-		_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		# Do NOT force AMBIENT_SOURCE_SKY on web. cycle_web_sky_fallback.gd
+		# (child of this node, so its _ready() runs before this one) sets
+		# AMBIENT_SOURCE_COLOR specifically because stylizedsky.gdshader's
+		# cloud pass samples NoiseTexture2D/CurveTexture resources that
+		# generate on a background thread - the web export has no WASM
+		# thread support (same reason ProtonScatter is disabled on web
+		# below), so those textures may never finish generating and the
+		# sky can render blown-out/incorrect. Unconditionally overwriting
+		# ambient_light_source here undid that fix and re-sourced ambient
+		# light from the same unreliable sky on web. Desktop keeps the
+		# full sky-sourced ambient; web keeps the flat-colour fallback.
+		if not OS.has_feature("web"):
+			_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 		_env.ambient_light_energy = 1.25
 
 	# A low-energy, shadowless lavender fill lifts the side of the castle and
