@@ -717,22 +717,31 @@ func _build_continuous_ascent(parent: Node3D, base: Vector2, ground: float,
 	# a flat top_offset of 1.05 m eventually pokes through CrownDeck's solid
 	# centre disc (see _build_crown/_crown_deck_mesh, which floors every angle at
 	# this plinth's radius once close enough to the crown) and becomes a solid
-	# pillar sitting directly in the final tread-to-crown walking path — extending
-	# end_t to 1.0 without a ceiling regressed CASTLE_SPIRAL_ROUTE_TEST with the
-	# player stuck entering the crown against this exact node. That left the last
-	# stretch of climb with a rail but no floor behind it: jumping the rail there
-	# dropped a player through open space onto nothing short of a much lower turn
-	# of the spiral. Passing the crown floor's underside as a ceiling lets the
-	# plinth run the full climb — its cap flattens toward that underside instead
-	# of piercing it, closing the pocket without ever standing proud of the floor.
-	# Unlike widening the tower's own collider (tried and reverted — see
-	# _build_tower), this only overlaps the guard along the guard's own helix
-	# path, not at every angle, so it does not create the continuous seam that
-	# froze movement when standing on the rail. crown_floor_underside is computed
-	# above, alongside the guard walk surfaces that need the same ceiling.
+	# pillar sitting directly in the final tread-to-crown walking path. That left
+	# the last stretch of climb with a rail but no floor behind it: jumping the
+	# rail there dropped a player through open space onto nothing short of a much
+	# lower turn of the spiral.
+	#
+	# Clamping the top face to the crown floor's underside (tried and reverted)
+	# fixed the fall-through but let the top face converge onto the *bottom*
+	# face too, right where they touch the underside: two zero-thickness,
+	# opposite-facing quads sitting exactly coincident with CrownDeck itself,
+	# which z-fights and reads as an "inverted" patch only visible from below,
+	# and gave the player a paper-thin ledge to snag on entering the crown.
+	# Instead, end_t is solved so the band's TOP face stops a real clearance gap
+	# short of the underside — never touching CrownDeck, never degenerating —
+	# and the small remainder of the climb needs no filler at all: by that point
+	# the rising spiral itself is close enough to the fixed-height crown floor
+	# that there is no longer room for a player-sized pocket to exist there.
+	const CROWN_CLEARANCE_GAP := 0.15
+	var plinth_climb := top_y - (ground + FIRST_TREAD_CENTRE_OFFSET)
+	var plinth_ceiling := crown_floor_underside - CROWN_CLEARANCE_GAP
+	var plinth_end_t: float = clampf(
+		1.0 - (top_y + 1.05 - plinth_ceiling) / plinth_climb,
+		GUARD_ENTRY_LEAD_T, 1.0)
 	var inner_plinth := _helix_band_mesh(base, ground, top_y, start_angle,
-		TOWER_TOP_RADIUS - 0.05, inner_edge + 0.02, -0.05, 1.05, 1.0,
-		GUARD_ENTRY_LEAD_T, crown_floor_underside)
+		TOWER_TOP_RADIUS - 0.05, inner_edge + 0.02, -0.05, 1.05, plinth_end_t,
+		GUARD_ENTRY_LEAD_T)
 	_add_helix_part(parent, "InnerSafetyPlinth", inner_plinth, dark, true)
 
 	var entry_foundation_mesh := _terrain_fitted_entry_foundation_mesh(base,
@@ -787,14 +796,18 @@ func _terrain_fitted_entry_foundation_mesh(base: Vector2, ground: float,
 		var o1t: Vector3 = corners1[1]
 		var i1b: Vector3 = corners1[2]
 		var o1b: Vector3 = corners1[3]
-		_add_surface_quad(surface, i0t, i1t, o1t, o0t)
-		_add_surface_quad(surface, i0b, o0b, o1b, i1b)
-		_add_surface_quad(surface, o0b, o0t, o1t, o1b)
-		_add_surface_quad(surface, i0b, i1b, i1t, i0t)
+		# Same corrected winding as _helix_band_mesh (see diag_helix_winding.gd) —
+		# this function was independently authored with the same original
+		# (wrong) vertex order, which put the foundation's own top-facing
+		# surface pointing down at the base of the stairs.
+		_add_surface_quad(surface, o0t, o1t, i1t, i0t)
+		_add_surface_quad(surface, i0b, i1b, o1b, o0b)
+		_add_surface_quad(surface, o1b, o1t, o0t, o0b)
+		_add_surface_quad(surface, i0t, i1t, i1b, i0b)
 		if sample_index == 0:
-			_add_surface_quad(surface, i0b, i0t, o0t, o0b)
+			_add_surface_quad(surface, o0b, o0t, i0t, i0b)
 		if sample_index == SAMPLES - 1:
-			_add_surface_quad(surface, i1b, o1b, o1t, i1t)
+			_add_surface_quad(surface, i1t, o1t, o1b, i1b)
 	surface.generate_normals()
 	return surface.commit()
 
@@ -922,15 +935,26 @@ func _helix_band_mesh(base: Vector2, ground: float, top_y: float,
 			bottom1, base.y + sin(a1) * outer_radius)
 		var o1t := Vector3(o1b.x, top1, o1b.z)
 
-		_add_surface_quad(surface, i0t, i1t, o1t, o0t) # top
-		_add_surface_quad(surface, i0b, o0b, o1b, i1b) # underside
-		_add_surface_quad(surface, o0b, o0t, o1t, o1b) # outer face
-		_add_surface_quad(surface, i0b, i1b, i1t, i0t) # inner face
+		# Verified empirically against _helix_walk_surface_mesh's proven-correct
+		# up-facing order (see diag_helix_winding.gd): the four orders below were
+		# all backwards — top's generated normal pointed down (-Y) instead of up,
+		# and outer face pointed inward instead of away from the tower axis. That
+		# is a pre-existing bug in every guard, cap, roadbed, and plinth built
+		# from this function (all of them use it), not something introduced this
+		# session — it explains both the "inverted, only visible from underneath"
+		# look reported everywhere along the stairway and is a very plausible
+		# contributor to the capsule-snagging collision behaviour, since
+		# inconsistently wound trimesh faces are exactly what makes
+		# ConcavePolygonShape3D collision resolution unreliable.
+		_add_surface_quad(surface, o0t, o1t, i1t, i0t) # top
+		_add_surface_quad(surface, i0b, i1b, o1b, o0b) # underside
+		_add_surface_quad(surface, o1b, o1t, o0t, o0b) # outer face
+		_add_surface_quad(surface, i0t, i1t, i1b, i0b) # inner face
 
 		if i == 0:
-			_add_surface_quad(surface, i0b, i0t, o0t, o0b)
+			_add_surface_quad(surface, o0b, o0t, i0t, i0b)
 		if i == samples - 1:
-			_add_surface_quad(surface, i1b, o1b, o1t, i1t)
+			_add_surface_quad(surface, i1t, o1t, o1b, i1b)
 
 	surface.generate_normals()
 	return surface.commit()
@@ -1000,17 +1024,22 @@ func _tapered_landing_mesh(length: float, outer_width: float,
 	var outer_right_bottom := Vector3(outer_right.x, -half_height, outer_right.z)
 	var inner_left_bottom := Vector3(inner_left.x, -half_height, inner_left.z)
 	var inner_right_bottom := Vector3(inner_right.x, -half_height, inner_right.z)
-	_add_surface_quad(surface, outer_left, inner_left, inner_right, outer_right)
-	_add_surface_quad(surface, outer_left_bottom, outer_right_bottom,
-		inner_right_bottom, inner_left_bottom)
-	_add_surface_quad(surface, outer_left_bottom, inner_left_bottom,
-		inner_left, outer_left)
-	_add_surface_quad(surface, outer_right, inner_right,
-		inner_right_bottom, outer_right_bottom)
-	_add_surface_quad(surface, outer_left_bottom, outer_left,
-		outer_right, outer_right_bottom)
-	_add_surface_quad(surface, inner_left, inner_left_bottom,
-		inner_right_bottom, inner_right)
+	# Verified empirically (diag_crown_disc_winding.gd): all six faces of this
+	# mesh were backwards — every one of them tested opposite to its intended
+	# direction (top pointed down, the two ends and two sides all pointed
+	# inward instead of outward). Each call below is simply the reverse of the
+	# original argument order, which flips every face at once.
+	_add_surface_quad(surface, outer_right, inner_right, inner_left, outer_left)
+	_add_surface_quad(surface, inner_left_bottom, inner_right_bottom,
+		outer_right_bottom, outer_left_bottom)
+	_add_surface_quad(surface, outer_left, inner_left,
+		inner_left_bottom, outer_left_bottom)
+	_add_surface_quad(surface, outer_right_bottom, inner_right_bottom,
+		inner_right, outer_right)
+	_add_surface_quad(surface, outer_right_bottom, outer_right,
+		outer_left, outer_left_bottom)
+	_add_surface_quad(surface, inner_right, inner_right_bottom,
+		inner_left_bottom, inner_left)
 	surface.generate_normals()
 	return surface.commit() as ArrayMesh
 
@@ -1682,8 +1711,37 @@ func _crown_deck_mesh(base: Vector2, surface_y: float, outer_radius: float,
 		var c0b := Vector3(c0t.x, bottom_y, c0t.z)
 		var c1b := Vector3(c1t.x, bottom_y, c1t.z)
 
-		_add_surface_quad(surface, c0t, c1t, o1t, o0t)  # top ring
-		_add_surface_quad(surface, o0b, o1b, c1b, c0b)  # underside
+		# Winding corrected to match _helix_band_mesh's fix (diag_helix_winding.gd)
+		# — this ring was independently authored with the same original (wrong)
+		# vertex order, leaving the crown platform's top face pointing down.
+		_add_surface_quad(surface, o0t, o1t, c1t, c0t)  # top ring
+		_add_surface_quad(surface, c0b, c1b, o1b, o0b)  # underside
+
+	# The stairwell opening is a pie slice missing from the ring above. Its two
+	# straight edges get a cap below (at cut_start/cut_end), but the slab has
+	# real thickness (slab_height), and the two CURVED edges of that opening —
+	# where the solid centre disc's outer rim (inner_radius) and the outer
+	# shelf's inner rim (cut_outer_radius) meet the open hole — had no cap at
+	# all: bare slab thickness with no face, rather than a wrong one. That is
+	# what read as "inverted"/see-through from inside the stairwell looking at
+	# the platform's inner edge. Winding verified empirically
+	# (diag_crown_disc_winding.gd).
+	var wedge_span := cut_end - cut_start
+	var wedge_segments := maxi(1, roundi(float(segments) * absf(wedge_span) / full_turn))
+	for i in wedge_segments:
+		var wa0 := lerpf(cut_start, cut_end, float(i) / float(wedge_segments))
+		var wa1 := lerpf(cut_start, cut_end, float(i + 1) / float(wedge_segments))
+		var inner0t := Vector3(base.x + cos(wa0) * inner_radius, top_y, base.y + sin(wa0) * inner_radius)
+		var inner1t := Vector3(base.x + cos(wa1) * inner_radius, top_y, base.y + sin(wa1) * inner_radius)
+		var inner0b := Vector3(inner0t.x, bottom_y, inner0t.z)
+		var inner1b := Vector3(inner1t.x, bottom_y, inner1t.z)
+		_add_surface_quad(surface, inner1t, inner0t, inner0b, inner1b)
+
+		var outer0t := Vector3(base.x + cos(wa0) * cut_outer_radius, top_y, base.y + sin(wa0) * cut_outer_radius)
+		var outer1t := Vector3(base.x + cos(wa1) * cut_outer_radius, top_y, base.y + sin(wa1) * cut_outer_radius)
+		var outer0b := Vector3(outer0t.x, bottom_y, outer0t.z)
+		var outer1b := Vector3(outer1t.x, bottom_y, outer1t.z)
+		_add_surface_quad(surface, outer0t, outer1t, outer1b, outer0b)
 
 	# Restore the crown outside the player's stair lane. Previously the cut ran
 	# all the way to LANDING_RADIUS, leaving a broad pie-slice hole beside the
@@ -1704,9 +1762,10 @@ func _crown_deck_mesh(base: Vector2, surface_y: float, outer_radius: float,
 		var i1b := Vector3(i1t.x, bottom_y, i1t.z)
 		var o0b := Vector3(o0t.x, bottom_y, o0t.z)
 		var o1b := Vector3(o1t.x, bottom_y, o1t.z)
-		_add_surface_quad(surface, i0t, i1t, o1t, o0t)
-		_add_surface_quad(surface, i0b, o0b, o1b, i1b)
-		_add_surface_quad(surface, o0b, o0t, o1t, o1b)
+		# Same winding correction as the top ring above and _helix_band_mesh.
+		_add_surface_quad(surface, o0t, o1t, i1t, i0t)
+		_add_surface_quad(surface, i0b, i1b, o1b, o0b)
+		_add_surface_quad(surface, o1b, o1t, o0t, o0b)
 
 	# Floor the complete centre disc inside `inner_radius`. The ring above only
 	# starts at that radius; without this fan, the 3.0 m tower cap and the 3.6 m
@@ -1726,13 +1785,17 @@ func _crown_deck_mesh(base: Vector2, surface_y: float, outer_radius: float,
 			top_y, base.y + sin(a1) * inner_radius)
 		var c0b := Vector3(c0t.x, bottom_y, c0t.z)
 		var c1b := Vector3(c1t.x, bottom_y, c1t.z)
-		# Reversed winding on the underside keeps both faces correctly oriented.
+		# Verified empirically (diag_crown_disc_winding.gd): (centre, c1, c0) was
+		# backwards — normal pointed straight down (0,-1,0) instead of up. Same
+		# root-cause mistake as _helix_band_mesh, just in a triangle fan instead
+		# of a quad strip. Swapped to (centre, c0, c1), and the underside swapped
+		# to match so the two faces stay correctly opposed.
 		surface.add_vertex(centre_top)
-		surface.add_vertex(c1t)
 		surface.add_vertex(c0t)
+		surface.add_vertex(c1t)
 		surface.add_vertex(centre_bottom)
-		surface.add_vertex(c0b)
 		surface.add_vertex(c1b)
+		surface.add_vertex(c0b)
 
 	# Cap the two straight edges of the wedge cut, and floor the small centre
 	# disc bounded by inner_radius so the stairwell opening reads as a clean
@@ -1742,10 +1805,15 @@ func _crown_deck_mesh(base: Vector2, surface_y: float, outer_radius: float,
 		var ob := Vector3(ot.x, bottom_y, ot.z)
 		var it := Vector3(base.x + cos(cut_angle) * inner_radius, top_y, base.y + sin(cut_angle) * inner_radius)
 		var ib := Vector3(it.x, bottom_y, it.z)
+		# Verified empirically (diag_crown_disc_winding.gd): both caps faced
+		# outward, away from the open stairwell, instead of inward toward where
+		# the player actually stands. Swapping which branch uses which order
+		# fixes both (each is the reverse of the other, so this is exactly a
+		# winding flip for both).
 		if cut_angle == cut_start:
-			_add_surface_quad(surface, ib, ob, ot, it)
-		else:
 			_add_surface_quad(surface, it, ot, ob, ib)
+		else:
+			_add_surface_quad(surface, ib, ob, ot, it)
 
 	surface.generate_normals()
 	return surface.commit()
