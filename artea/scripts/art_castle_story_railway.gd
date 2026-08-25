@@ -1230,7 +1230,8 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 		"DRIVER  •  1", Vector3(access_side * 11.9, 4.0, -7.0), Color("ffd45a"))
 	_add_boarding_zone_label(layout, "PassengerZoneSign",
 		"RIDING  •  2", Vector3(access_side * 11.9, 4.0, 13.0), Color("72eaff"))
-	_build_platform_guardrails(station, layout.basis, access_side, access_target.z)
+	_build_platform_guardrails(station, layout.basis, access_side, access_target.z,
+		dock_sign)
 
 
 func _add_boarding_zone_label(parent: Node3D, node_name: String, text_value: String,
@@ -1721,9 +1722,11 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 	_add_torus(pavilion, "CanopyEnergyRing", Vector3(0.0, 12.1, 1.5),
 		8.35, 8.8, _gold_material)
 	for side in [-1.0, 1.0]:
-		_build_crystal_planter(pavilion,
-			"CrystalPlanter_%s" % ("L" if side < 0 else "R"),
-			Vector3(float(side) * 27.0, 0.2, -12.0))
+		for planter_index in 2:
+			var planter_z := -12.0 + float(planter_index) * 24.0
+			_build_crystal_planter(pavilion,
+				"CrystalPlanter_%s_%02d" % ["L" if side < 0 else "R", planter_index],
+				Vector3(float(side) * 27.0, 0.2, planter_z))
 	# Cyan circuits guide players around the track and toward both boarding bays.
 	for side in [-1.0, 1.0]:
 		_add_walkway_between(pavilion, "PlatformCircuit_%s" % ("L" if side < 0 else "R"),
@@ -1902,12 +1905,23 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 			Vector3(STEP_DEPTH, TREAD_THICKNESS, SIDE_STAIR_WIDTH), _stone_material, false)
 	var ramp_start := Vector3(stair_start_x + dock_sign * STEP_DEPTH * 0.5,
 		STAIR_BOTTOM_TOP_Y - 0.04, 0.0)
+	# Reach platform height before its rotated outer edge crosses the access lane.
+	# Continuing the old slope through that edge left a short riser in the centre
+	# lane; the platform collision then deflected an ordinary straight walk into
+	# the side guards. The level upper landing clears that seam without a jump.
+	var ramp_plateau_start := Vector3(stair_end_x + dock_sign * 7.0,
+		STAIR_TOP_TOP_Y + 0.16, 0.0)
 	var ramp_finish := Vector3(stair_end_x - dock_sign * STEP_DEPTH * 0.5,
 		STAIR_TOP_TOP_Y + 0.16, 0.0)
-	_add_surface_ramp_mesh(stairs, "CentralAccessRamp", ramp_start, ramp_finish,
+	_add_surface_ramp_mesh(stairs, "CentralAccessRamp", ramp_start, ramp_plateau_start,
+		CENTRAL_RAMP_WIDTH, 0.24, _dark_metal_material)
+	_add_surface_ramp_mesh(stairs, "CentralAccessLanding", ramp_plateau_start, ramp_finish,
 		CENTRAL_RAMP_WIDTH, 0.24, _dark_metal_material)
 	_add_surface_ramp_mesh(stairs, "CrystalEnergyConduit",
-		ramp_start + Vector3.UP * 0.15, ramp_finish + Vector3.UP * 0.15,
+		ramp_start + Vector3.UP * 0.15, ramp_plateau_start + Vector3.UP * 0.15,
+		1.05, 0.08, _glass_material)
+	_add_surface_ramp_mesh(stairs, "CrystalEnergyLandingConduit",
+		ramp_plateau_start + Vector3.UP * 0.15, ramp_finish + Vector3.UP * 0.15,
 		1.05, 0.08, _glass_material)
 	# One convex body carries the complete landing-to-platform route. Two boxes
 	# that only touched at the stair foot exposed an internal end face, so the
@@ -1916,6 +1930,7 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 		access_landing_surface,
 		Vector3(stair_start_x + dock_sign * STEP_DEPTH * 0.5,
 			STAIR_BOTTOM_TOP_Y - 0.10, 0.0),
+		Vector3(ramp_plateau_start.x, STAIR_TOP_TOP_Y + 0.10, 0.0),
 		Vector3(stair_end_x - dock_sign * STEP_DEPTH * 0.5,
 			STAIR_TOP_TOP_Y + 0.10, 0.0), 15.6, 0.42)
 	# Open rails replace the previous 2.6 m solid yellow walls, which filled the
@@ -1970,14 +1985,15 @@ func _add_surface_ramp_collision(parent: Node3D, node_name: String, start_surfac
 
 
 func _add_combined_access_collision(parent: Node3D, node_name: String,
-		landing_surface: Vector3, foot_surface: Vector3, top_surface: Vector3,
+		landing_surface: Vector3, foot_surface: Vector3, plateau_surface: Vector3,
+		top_surface: Vector3,
 		width: float, _thickness: float) -> void:
 	var body := StaticBody3D.new()
 	body.name = "%sCollision" % node_name
 	var shape_node := CollisionShape3D.new()
 	var shape := ConcavePolygonShape3D.new()
 	shape.backface_collision = true
-	var surfaces := [landing_surface, foot_surface, top_surface]
+	var surfaces := [landing_surface, foot_surface, plateau_surface, top_surface]
 	var edges: Array[PackedVector3Array] = []
 	for index in surfaces.size():
 		var previous: Vector3 = surfaces[maxi(0, index - 1)]
@@ -2025,7 +2041,7 @@ func _add_surface_ramp_mesh(parent: Node3D, node_name: String, start_surface: Ve
 
 
 func _build_platform_guardrails(station: Node3D, route_basis: Basis,
-		access_side: float, access_z: float) -> void:
+		access_side: float, access_z: float, station_access_side: float) -> void:
 	# Every barrier has one safety job and shares its corner posts with adjoining
 	# sections. The inner rails protect the empty track/engine area while their
 	# two deliberate gaps line up with the train's driver and passenger steps.
@@ -2039,6 +2055,16 @@ func _build_platform_guardrails(station: Node3D, route_basis: Basis,
 	const PASSENGER_GATE_Z := 15.0
 	const PASSENGER_GATE_HALF_LENGTH := 2.3
 	const ENTRANCE_GATE_HALF_LENGTH := 2.6
+	# Preserve the direct opening marker used by traversal checks and older scene
+	# integrations. The detailed guard sections now live under PlatformGuard*,
+	# but this node still identifies which outer side owns the entrance gap.
+	var entrance_marker := Node3D.new()
+	entrance_marker.name = "PlatformGuardLeftFront" \
+		if station_access_side < 0.0 else "PlatformGuardRightFront"
+	entrance_marker.set_meta("entrance_gate_clear_z", Vector2(
+		access_z - ENTRANCE_GATE_HALF_LENGTH,
+		access_z + ENTRANCE_GATE_HALF_LENGTH))
+	station.add_child(entrance_marker)
 	for side in [-1.0, 1.0]:
 		var guard := Node3D.new()
 		guard.name = "PlatformGuardLeft" if side < 0.0 else "PlatformGuardRight"
