@@ -36,6 +36,10 @@ func _run() -> void:
 	if player.get_node_or_null("CombatHelpHUD/CombatHelpPanel/CombatHelpLabel") == null:
 		_fail("player controls are not explained on screen")
 		return
+	var combat_audio := player.get_node_or_null("PlayerCombatFoley3D") as AudioStreamPlayer3D
+	if combat_audio == null or combat_audio.max_distance <= 0.0 or combat_audio.panning_strength < 1.0:
+		_fail("player combat has no attenuated directional Foley source")
+		return
 
 	player.call("_set_blocking", true)
 	var before_block: float = player.get("current_health")
@@ -61,6 +65,11 @@ func _run() -> void:
 		"FoxVisuals/AttackHitbox/CollisionShape3D") as CollisionShape3D
 	if hitbox_shape == null or hitbox_shape.disabled:
 		_fail("attack hitbox was not enabled")
+		return
+	var combat_stream := combat_audio.stream as AudioStreamWAV
+	if combat_stream == null or combat_stream.mix_rate != 48000 \
+			or combat_stream.get_meta("foley_event", &"") != &"player_swing":
+		_fail("attack did not select the 48 kHz player swing Foley")
 		return
 
 	print("PLAYER_3D_COMBAT_TEST: PASS — SPACE jump, F attack hitbox, G shield and damage blocking are live")

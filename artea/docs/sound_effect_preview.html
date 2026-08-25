@@ -29,7 +29,7 @@
 <body>
   <header>
     <h1>Artéa sound-effect preview</h1>
-    <p id="summary">Loading the complete installed recording set…</p>
+    <p id="summary">Loading the selected in-game professional recording set…</p>
     <div class="tools">
       <input id="filter" type="search" placeholder="Filter: grass, train, Milo, cave, wood…">
       <button id="stop">Stop all sounds</button>
@@ -44,24 +44,23 @@
         'tree_wind_loop.wav','watermill_loop.wav','sawmill_loop.wav','blacksmith_hammer.wav',
         'cave_air_loop.wav','aether_power_loop.wav','train_departure_horn.wav'
       ]),
-      'Train': named('train', [
-        'real_train_rail.wav','crown_train_steam_modern_loop.wav','crown_train_power_whistle_horn.wav'
+      'Train — selected Royal Hudson field recordings': named('pro_train', [
+        'royal_hudson_engine_loop.wav','royal_hudson_rail_loop.wav','royal_hudson_whistle.wav'
       ]),
-      'Vegetation passing beside player': named('vegetation',['leaves01.ogg','leaves02.ogg']),
-      'Footsteps — grass underfoot': range('footsteps/grass',9),
+      'Vegetation passing beside player — professional': named('pro_vegetation',[
+        'foliage_brush_0.ogg','foliage_brush_1.ogg'
+      ]),
+      'Footsteps — grass underfoot — professional': range('pro_footsteps/grass',6),
       'Footsteps — earth and dirt': range('footsteps/earth',6),
-      'Footsteps — gravel': range('footsteps/gravel',10),
-      'Footsteps — dry brick and tile': range('footsteps/brick',9),
+      'Footsteps — gravel — professional': range('pro_footsteps/gravel',6),
+      'Footsteps — dry brick and tile — professional': range('pro_footsteps/brick',6),
       'Footsteps — wooden bridge and planks': range('footsteps/wood',9),
-      'Footsteps — metal only': range('footsteps/metal',8),
+      'Footsteps — metal only — professional': range('pro_footsteps/metal',6),
       'Footsteps — sand': named('footsteps/sand',[
         'Fantozzi-SandL1.ogg','Fantozzi-SandR1.ogg','Fantozzi-SandL2.ogg',
         'Fantozzi-SandR2.ogg','Fantozzi-SandL3.ogg','Fantozzi-SandR3.ogg'
       ]),
-      'Footsteps — stone': named('footsteps/stone',[
-        'Fantozzi-StoneL1.ogg','Fantozzi-StoneR1.ogg','Fantozzi-StoneL2.ogg',
-        'Fantozzi-StoneR2.ogg','Fantozzi-StoneL3.ogg','Fantozzi-StoneR3.ogg'
-      ]),
+      'Footsteps — stone — professional': range('pro_footsteps/stone',6),
       'Milo voice candidates': named('milo',[
         'milo_voice.ogg','milo_voice_preview.ogg','milo_voice_clone_preview.ogg',
         'milo_voice_clone_light_preview.ogg','milo_voice_clone_natural_preview.ogg',

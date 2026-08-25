@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+const MindSparkFoley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
+
 signal health_changed(current: float, maximum: float)
 signal attack_started
 signal block_changed(active: bool)
@@ -53,6 +55,7 @@ var _land_reaction_remaining := 0.0
 var _hit_reaction_remaining := 0.0
 var _visual_base_position := Vector3.ZERO
 var _visual_base_scale := Vector3.ONE
+var _combat_audio: AudioStreamPlayer3D
 
 
 func _ready() -> void:
@@ -81,6 +84,7 @@ func _ready() -> void:
 		_visual_base_position = fox_visuals.position
 		_visual_base_scale = fox_visuals.scale
 	_build_combat_rig()
+	_build_combat_audio()
 	_build_combat_help()
 	_update_character_animation(0.0, false)
 
@@ -231,6 +235,7 @@ func _start_attack() -> void:
 		_attack_arc.visible = true
 	_play_first_available(["Attack", "attack", "Attack1", "SwordAttack", "Idle"])
 	_show_status("ATTACK", Color("ffd36e"))
+	_play_combat_sound(&"player_swing")
 	attack_started.emit()
 
 
@@ -362,11 +367,13 @@ func take_damage(amount: float, _source: Node = null) -> float:
 		return 0.0
 	if is_blocking:
 		_show_status("BLOCKED!", Color("79e8ff"))
+		_play_combat_sound(&"player_block")
 		return 0.0
 	var applied := minf(amount, current_health)
 	current_health = maxf(0.0, current_health - applied)
 	_hit_reaction_remaining = 0.32
 	_show_status("-%d HP" % int(applied), Color("ff786f"))
+	_play_combat_sound(&"player_hurt")
 	health_changed.emit(current_health, max_health)
 	return applied
 
@@ -476,6 +483,25 @@ func _build_combat_help() -> void:
 	label.add_theme_font_size_override("font_size", 17)
 	label.modulate = Color("f3ecff")
 	panel.add_child(label)
+
+
+func _build_combat_audio() -> void:
+	_combat_audio = AudioStreamPlayer3D.new()
+	_combat_audio.name = "PlayerCombatFoley3D"
+	_combat_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	_combat_audio.unit_size = 2.4
+	_combat_audio.max_distance = 34.0
+	_combat_audio.volume_db = -5.0
+	_combat_audio.panning_strength = 1.0
+	_combat_audio.bus = &"SFX"
+	add_child(_combat_audio)
+
+
+func _play_combat_sound(event: StringName) -> void:
+	if _combat_audio == null:
+		return
+	_combat_audio.stream = MindSparkFoley.make_combat_event(event)
+	_combat_audio.play()
 
 
 func _show_status(text: String, color: Color) -> void:
