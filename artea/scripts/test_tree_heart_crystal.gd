@@ -70,21 +70,20 @@ func _run() -> void:
 		_fail("heart gear is not fitted into its tree socket and clamp system")
 		return
 	var spin := shrine.get_node_or_null("HeartCrystalSpin") as Node3D
-	if spin == null or spin.get_node_or_null("HeartShrineCrystal") == null \
-			or spin.get_node_or_null("HeartShrineCrystalCore") == null:
-		_fail("faceted diamond or its inner light core is missing")
+	var heart := spin.get_node_or_null("HeartShrineCrystal") as Node3D \
+		if spin != null else null
+	var suspension := shrine.get_node_or_null(
+		"HeartCrystalFloatingSuspension") as MeshInstance3D
+	if spin == null or heart == null \
+			or heart.get_meta("crystal_shape", "") != "blender_cut_heart_diamond" \
+			or int(heart.get_meta("internal_core_facets", 0)) != 8 \
+			or suspension == null:
+		_fail("Blender heart diamond or its internal crystal structure is missing")
 		return
-	var heart_material := (spin.get_node("HeartShrineCrystal") as MeshInstance3D) \
-		.material_override as StandardMaterial3D
-	if heart_material == null or heart_material.albedo_color.b <= 0.9 \
-			or heart_material.albedo_color.b <= heart_material.albedo_color.g:
-		_fail("heart diamond is not the approved saturated blue")
-		return
-	var crystal_cage := shrine.get_node_or_null("HeartCrystalOrganizedCage") as MeshInstance3D
-	if crystal_cage == null \
-			or str(crystal_cage.get_meta("construction", "")) \
-				!= "four_symmetric_prongs_seat_blue_crystal":
-		_fail("blue heart crystal is not organized inside its four-prong frame")
+	if str(suspension.get_meta("construction", "")) \
+			!= "top_and_bottom_noncontact_suspension_terminals" \
+			or not bool(suspension.get_meta("crystal_face_clear", false)):
+		_fail("heart crystal is not held by its clear non-contact suspension")
 		return
 	var facade := tree.get_node_or_null("ReferenceTrunkRootFacade") as Node3D
 	var root_energy_bundle := tree.get_node_or_null(

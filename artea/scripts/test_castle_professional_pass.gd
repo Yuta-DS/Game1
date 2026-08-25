@@ -416,6 +416,8 @@ func _run() -> void:
 			or stair_handoff.find_children("*", "StaticBody3D", true, false).is_empty():
 		_fail("crown stair mouth has no stable box-shaped handoff floor")
 		return
+	var stair_handoff_body := stair_handoff.find_children(
+		"*", "StaticBody3D", true, false)[0] as StaticBody3D
 	var fitted_handoff := stair.get_node_or_null(
 		"CastleCrownStairLanding") as MeshInstance3D
 	if stair_handoff.visible or not bool(stair_handoff.get_meta("collision_only", false)) \
@@ -479,7 +481,8 @@ func _run() -> void:
 		floor_query.collide_with_areas = false
 		var floor_hit := space_state.intersect_ray(floor_query)
 		if not floor_hit.has("collider") or (floor_hit["collider"] != deck_body \
-				and floor_hit["collider"] != gateway_apron_body):
+				and floor_hit["collider"] != gateway_apron_body \
+				and floor_hit["collider"] != stair_handoff_body):
 			_fail("crown centre has a player-trapping floor gap at radius %.1f angle %.2f (hit %s)"
 				% [TRAP_RING_RADIUS, probe_angle,
 					floor_hit.get("collider", "nothing")])
@@ -524,6 +527,9 @@ func _run() -> void:
 	var final_radial := Vector3(
 		shelf_probe_tread.global_position.x - crown_deck.global_position.x,
 		0.0, shelf_probe_tread.global_position.z - crown_deck.global_position.z).normalized()
+	var outer_guard := stair.get_node("OuterContinuousGuard") as MeshInstance3D
+	var outer_guard_body := outer_guard.find_children(
+		"*", "StaticBody3D", true, false)[0] as StaticBody3D
 	# Probe beyond the full player-width stairwell lane. The opening is 3.0 m
 	# wide so a 1.0 m capsule can leave either side of the spiral without its
 	# shoulder catching the crown floor shelf.
@@ -534,7 +540,11 @@ func _run() -> void:
 			shelf_point + Vector3.UP * 0.35, shelf_point - Vector3.UP * 0.2)
 		shelf_query.collide_with_areas = false
 		var shelf_hit := space_state.intersect_ray(shelf_query)
-		if not shelf_hit.has("collider") or shelf_hit["collider"] != deck_body:
+		# Radius 8.3 intentionally lands on the collision-backed outer guard
+		# (STAIR_RADIUS + half the tread width), whose smooth top is a supported
+		# recovery surface. It closes the side gap just as effectively as CrownDeck.
+		if not shelf_hit.has("collider") or (shelf_hit["collider"] != deck_body \
+				and shelf_hit["collider"] != outer_guard_body):
 			var blocker := "nothing"
 			if shelf_hit.has("collider"):
 				blocker = str((shelf_hit["collider"] as Node).get_parent().name)

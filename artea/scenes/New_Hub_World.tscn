@@ -121,6 +121,8 @@
 [ext_resource type="PackedScene" uid="uid://cejjhajbx8vwe" path="res://assets3D/houses/gltf/fence_straight_long.gltf" id="97_fnstrl"]
 [ext_resource type="PackedScene" uid="uid://durvbjhil7ec1" path="res://scripts/Pier.tscn" id="98_pier"]
 [ext_resource type="PackedScene" path="res://scenes/boat.tscn" id="99_boat"]
+[ext_resource type="PackedScene" path="res://scenes/characters/elder_cat_mayor.tscn" id="113_mayor"]
+[ext_resource type="PackedScene" path="res://scenes/characters/town_villager.tscn" id="114_town_villager"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -1216,6 +1218,23 @@ transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 102, 19.81, 19)
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 113, 19.31, 19)
 
 [node name="Villagers" type="Node3D" parent="."]
+
+[node name="AlderGuidePoints" type="Node3D" parent="Villagers"]
+
+[node name="HomePoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(107, 20, 16)
+
+[node name="MissionBriefingPoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(103, 20, 12)
+
+[node name="CelebrationPoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(110, 20, 9)
+
+[node name="MayorAlder" parent="Villagers" instance=ExtResource("113_mayor")]
+position = Vector3(107, 20, 16)
+
+[node name="Villager_Greeter" parent="Villagers" instance=ExtResource("114_town_villager")]
+position = Vector3(88, 20, 8)
 
 [node name="Villager_Market1" parent="Villagers" instance=ExtResource("101_vbarb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 95, 19.9, 12)
