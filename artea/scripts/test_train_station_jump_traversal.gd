@@ -34,8 +34,8 @@ func _run() -> void:
 	var station_position: Vector3 = railway.call("get_station_position", 0)
 	var gallery_station := railway.get_node("StoryStations/Station_01_gallery") as Node3D
 	var pavilion := gallery_station.get_node_or_null("BioMagitechPavilion") as Node3D
-	if pavilion == null or pavilion.find_children("CrystalPlanter_*", "Node3D", true, false).size() != 4:
-		_fail("Gallery Station bio-magitech pavilion or its four safe-edge planters is missing")
+	if pavilion == null or pavilion.find_children("CrystalPlanter_*", "Node3D", true, false).size() != 2:
+		_fail("Gallery Station bio-magitech pavilion or its two stair-clear planters is missing")
 		return
 	var access_stairs := gallery_station.get_node_or_null("AccessRamp") as Node3D
 	if access_stairs == null:
@@ -126,11 +126,16 @@ func _run() -> void:
 		_fail("player cannot stand at the bottom of the station ramp")
 		return
 	Input.action_press("move_right")
+	var reached_ramp_top := false
 	for _frame in 300:
 		await physics_frame
+		var live_ramp_position := gallery_station.to_local(player.global_position)
+		if live_ramp_position.x >= -6.5 and live_ramp_position.y >= 0.7:
+			reached_ramp_top = true
+			break
 	Input.action_release("move_right")
 	var player_at_ramp_top := gallery_station.to_local(player.global_position)
-	if player_at_ramp_top.x < -6.5 or player_at_ramp_top.y < 0.7:
+	if not reached_ramp_top:
 		var collision_names: Array[String] = []
 		for collision_index in player.get_slide_collision_count():
 			var collider := player.get_slide_collision(collision_index).get_collider() as Node
@@ -159,12 +164,17 @@ func _run() -> void:
 		return
 	Input.action_press("move_right")
 	Input.action_press("run")
+	var reached_long_stair_top := false
 	for _frame in 600:
 		await physics_frame
+		var live_long_stair_position := gallery_station.to_local(player.global_position)
+		if live_long_stair_position.x >= -42.0 and live_long_stair_position.y >= -4.0:
+			reached_long_stair_top = true
+			break
 	Input.action_release("run")
 	Input.action_release("move_right")
 	var player_after_long_stair := gallery_station.to_local(player.global_position)
-	if player_after_long_stair.x < -42.0 or player_after_long_stair.y < -4.0:
+	if not reached_long_stair_top:
 		_fail("player cannot walk through the pictured long station stair " \
 			+ "(reached %s)" % player_after_long_stair)
 		return
@@ -184,9 +194,11 @@ func _run() -> void:
 			or mind_deck_min_x < 36.0:
 		_fail("Mind Spark station stair is not centred toward the main park island")
 		return
-	var mind_right_guard_opening := mind_station.get_node_or_null("PlatformGuardRightFront")
-	if mind_right_guard_opening == null:
-		_fail("Mind Spark station east guardrail has no centred stair entrance opening")
+	var mind_left_guard := mind_station.get_node_or_null("PlatformGuardLeft") as Node3D
+	var mind_right_guard := mind_station.get_node_or_null("PlatformGuardRight") as Node3D
+	if (mind_left_guard == null or not mind_left_guard.has_meta("entrance_gate_clear_z")) \
+			and (mind_right_guard == null or not mind_right_guard.has_meta("entrance_gate_clear_z")):
+		_fail("Mind Spark station has no stair-aligned platform entrance opening")
 		return
 	var west_observatory_tower := world.get_node_or_null(
 		"WestObservatory/ObservatoryTower") as MeshInstance3D
@@ -242,9 +254,12 @@ func _run() -> void:
 		_fail("player cannot walk from the Mind Spark park island through the station entrance " \
 			+ "(reached %s, collisions %s)" % [player_at_mind_station, mind_collision_names])
 		return
-	var stair_guard := access_stairs.get_node_or_null("StairGuardLeft") as MeshInstance3D
-	if stair_guard == null or not (stair_guard.mesh is BoxMesh) \
-			or (stair_guard.mesh as BoxMesh).size.y > 0.5:
+	var stair_guard := access_stairs.get_node_or_null("StairGuardLeft") as Node3D
+	if stair_guard == null \
+			or String(stair_guard.get_meta("barrier_plan", "")) \
+				!= "rainbow_glass_gold_frame" \
+			or stair_guard.find_children(
+				"GlassWindow_*", "MeshInstance3D", true, false).is_empty():
 		_fail("station stairs still use a view-blocking solid guard wall")
 		return
 	# The station landing is a safe player point 2 m above the island. Verify
