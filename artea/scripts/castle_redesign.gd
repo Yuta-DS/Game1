@@ -9,6 +9,7 @@ extends Node3D
 const CASTLE_NAME := "building_castle_red2"
 var _stone: StandardMaterial3D
 var _stone_light: StandardMaterial3D
+var _stone_course: StandardMaterial3D
 var _slate: StandardMaterial3D
 var _timber: StandardMaterial3D
 var _timber_light: StandardMaterial3D
@@ -37,24 +38,32 @@ func _ready() -> void:
 	_remove_reference_technology()
 	_restyle_castle_approach()
 	_build_castle_architecture(castle)
+	_build_village_style_stair_tower()
+	_position_castle_commander()
 
 
 func _create_materials() -> void:
-	# Match the supplied original castle: cool blue-grey masonry with strong red
-	# roofs and accents, rather than the beige/slate recolour from the last pass.
-	_stone = _material(Color("687f91"), 0.94)
-	_stone_light = _material(Color("91a7b2"), 0.92)
-	_slate = _material(Color("b43b38"), 0.90)
-	_timber = _material(Color("4b2f1b"), 0.91)
-	_timber_light = _material(Color("704725"), 0.94)
-	_timber_dark = _material(Color("302015"), 0.96)
-	_iron = _material(Color("171c1e"), 0.76, 0.58)
+	# Sampled from the same red-house kit used by tower_B, tower_catapult and the
+	# village homes. The imported castle already uses their hexagons_castle atlas;
+	# these flat procedural materials reproduce its rendered value hierarchy so
+	# added architecture no longer looks like a different graphics pack.
+	_stone = _material(Color("8399a6"), 0.92)
+	_stone_light = _material(Color("c7d2d2"), 0.90)
+	_stone_course = _material(Color("9aabb2"), 0.91)
+	_slate = _material(Color("ef443d"), 0.88)
+	_timber = _material(Color("7f4628"), 0.91)
+	_timber_light = _material(Color("a96032"), 0.90)
+	_timber_dark = _material(Color("4d2d20"), 0.94)
+	_iron = _material(Color("526671"), 0.82, 0.18)
 	_stone.set_meta("castle_role", "weathered_masonry")
 	_stone.set_meta("original_palette_role", "blue_gray_castle_masonry")
 	_stone_light.set_meta("original_palette_role", "blue_gray_castle_highlight")
 	_slate.set_meta("original_palette_role", "reference_red_roof")
 	_timber.set_meta("castle_role", "oak_structure")
 	_iron.set_meta("castle_role", "wrought_iron")
+	for shared_material in [_stone, _stone_light, _stone_course, _slate, _timber,
+			_timber_light, _timber_dark, _iron]:
+		shared_material.set_meta("render_family", "red_village_hexagons_castle")
 
 
 func _material(colour: Color, roughness: float, metallic := 0.0) -> StandardMaterial3D:
@@ -153,11 +162,28 @@ func _restyle_approach_tree(node: Node) -> void:
 					"castledoortread", "castledoornosing"]) or thin_technology_strip:
 				mesh.visible = false
 				mesh.set_meta("removed_for_castle_redesign", true)
-			elif _name_has_any(lower_name, ["plank", "door", "handrail", "rail",
-					"post", "bench"]):
-				mesh.material_override = _timber
-			elif _name_has_any(lower_name, ["nosing", "cap", "keel", "collar"]):
+			elif "aetherwindowframe" in lower_name:
+				mesh.material_override = _stone_light
+			elif "aetherwindow" in lower_name:
 				mesh.material_override = _iron
+			elif _name_has_any(lower_name, ["stonecourse", "foundationbuttress",
+					"buttresspier", "cornice", "masonryblock"]):
+				mesh.material_override = _stone_course
+			elif _name_has_any(lower_name, ["roof", "banner", "shield", "pennant"]):
+				mesh.material_override = _slate
+			elif _name_has_any(lower_name, ["guardcap", "continuouscap", "nosing",
+					"handrail", "rail"]):
+				# Roof red belongs on roofs and heraldry in the reference village,
+				# not as a long racetrack stripe around the stair tower.
+				mesh.material_override = _timber_dark
+				mesh.set_meta("castle_palette_role", "dark_oak_stair_edge")
+			elif _name_has_any(lower_name, ["plank", "door", "bench", "timber"]):
+				mesh.material_override = _timber
+			elif _name_has_any(lower_name, ["keel", "collar", "hinge", "bracket"]):
+				mesh.material_override = _iron
+			elif _name_has_any(lower_name, ["tread", "step", "paving", "court",
+					"deck", "landing", "roadbed", "walksurface", "walksurface"]):
+				mesh.material_override = _stone_light
 			else:
 				mesh.material_override = _stone
 		elif child is OmniLight3D:
@@ -174,11 +200,28 @@ func _name_has_any(value: String, fragments: Array[String]) -> bool:
 	return false
 
 
+# Knight2 is the active animated commander; the similarly named Knight node is
+# an invisible legacy model. He stands on the raised doorway court, outside the
+# 4.8 m central walking lane, so players can reach his dialogue without using
+# an NPC body as a stair obstacle.
+func _position_castle_commander() -> void:
+	var commander := get_parent().get_node_or_null("Knight2") as Node3D
+	if commander == null:
+		push_warning("Castle Castle: animated commander not found")
+		return
+	commander.visible = true
+	commander.global_position = CASTLE_DOOR_WORLD + Vector3(1.9, 0.18, 3.55)
+	commander.rotation.y = -PI * 0.5
+	commander.set_meta("castle_role", "upper_court_commander")
+	commander.set_meta("route_policy", "outside_central_stair_lane")
+
+
 func _build_castle_architecture(castle: Node3D) -> void:
 	var architecture := Node3D.new()
 	architecture.name = "CastleArchitecture"
 	architecture.set_meta("reference", "user_supplied_castle_screenshot")
-	architecture.set_meta("style", "castle_stone_slate_timber_iron")
+	architecture.set_meta("style", "shared_red_village_castle_kit")
+	architecture.set_meta("render_family", "red_village_hexagons_castle")
 	architecture.set_meta("collision_policy", "visual_only_preserve_imported_collision")
 	get_parent().add_child(architecture)
 	architecture.global_position = castle.global_position + Vector3(0.0, -4.2, 0.0)
@@ -189,6 +232,51 @@ func _build_castle_architecture(castle: Node3D) -> void:
 	_build_bridge_barbican(architecture)
 	_build_front_gatehouse(architecture)
 	_build_full_castle_ascent(architecture)
+
+
+# The separate spiral stair tower was the last large smooth surface in the
+# castle precinct. Reference tower_B and the catapult tower break their walls
+# into many small low-poly faces; this staggered veneer gives the stair tower
+# the same apparent mesh density, scale and light response without replacing
+# its authoritative collision cylinder or narrowing the route.
+func _build_village_style_stair_tower() -> void:
+	var stair := get_parent().get_node_or_null("CastleStairs/CastleStair") as Node3D
+	if stair == null:
+		return
+	var overlay := Node3D.new()
+	overlay.name = "VillageStyleStairTowerMasonry"
+	overlay.set_meta("style_reference", "tower_B_and_tower_catapult")
+	overlay.set_meta("render_family", "red_village_hexagons_castle")
+	overlay.set_meta("collision_policy", "visual_only")
+	get_parent().add_child(overlay)
+
+	var base: Vector2 = stair.get_meta("tower_base")
+	var ground := float(stair.get_meta("terrain_ground_y"))
+	var top_y := float(stair.get_meta("tower_top_y"))
+	var facade_height := top_y - ground
+	const ROW_HEIGHT := 2.20
+	var row_count := maxi(4, int(floor((facade_height - 3.0) / ROW_HEIGHT)))
+	for row_index in row_count:
+		var y := ground + 1.55 + float(row_index) * ROW_HEIGHT
+		var height_ratio := clampf((y - ground) / maxf(facade_height, 0.1), 0.0, 1.0)
+		var wall_radius := lerpf(3.88, 3.08, height_ratio) + 0.018
+		for face_index in 8:
+			var angle := TAU * float(face_index) / 8.0
+			var radial := Vector3(cos(angle), 0.0, sin(angle))
+			var tangent := Vector3(-radial.z, 0.0, radial.x)
+			var stagger := 0.28 if row_index % 2 == 1 else 0.0
+			for block_index in 2:
+				var lateral := (float(block_index) - 0.5) * 1.30 + stagger
+				# The staggered end block wraps naturally onto the next octagonal
+				# face; clipping it would create a repeated vertical seam.
+				var position := Vector3(base.x, y, base.y) + radial * wall_radius \
+					+ tangent * lateral
+				var block := _add_mesh(overlay,
+					_box(Vector3(1.10, 0.18, 0.036)), _stone_course, position)
+				block.name = "VillageMasonryBlock_%02d_%d_%d" % [
+					row_index, face_index, block_index]
+				block.rotation.y = -angle
+				block.set_meta("visual_only", true)
 
 
 func _build_turret_roofs(parent: Node3D) -> void:
@@ -370,14 +458,24 @@ func _build_bridge_barbican(parent: Node3D) -> void:
 	var barbican := Node3D.new()
 	barbican.name = "CastleBridgeBarbican"
 	barbican.position = parent.to_local(BRIDGE_END_WORLD)
+	barbican.set_meta("route_policy", "solid_towers_clear_central_court_lane")
 	parent.add_child(barbican)
 	for side_value in [-1.0, 1.0]:
 		var lateral: float = side_value
-		var pier := _add_mesh(barbican, _box(Vector3(2.2, 5.2, 2.2)), _stone,
-			Vector3(0.0, 2.6, lateral * 3.25))
+		# The former +/-3.25 m placement left less than one capsule width between
+		# a tower and the central fire. Because the towers were also visual-only,
+		# the fox appeared to solve that impossible gap by walking through stone.
+		# Moving them to the terrace shoulders creates a broad real route while
+		# keeping the bridge framed by the same two-tower silhouette.
+		var tower_size := Vector3(2.2, 5.2, 2.2)
+		var tower_lateral := lateral * 4.2
+		var pier := _add_mesh(barbican, _box(tower_size), _stone,
+			Vector3(0.0, 2.6, tower_lateral))
 		pier.name = "BarbicanTower"
+		pier.set_meta("collision_policy", "solid_simple_box_no_mesh_tunnelling")
+		_add_box_body(pier, tower_size, "SolidBarbicanTower")
 		var roof := _add_mesh(barbican, _cone(1.75, 2.4, 8), _slate,
-			Vector3(0.0, 6.35, lateral * 3.25))
+			Vector3(0.0, 6.35, tower_lateral))
 		roof.name = "BarbicanSlateRoof"
 	var left_shoulder := Vector3(0.0, 4.6, -2.3)
 	var right_shoulder := Vector3(0.0, 4.6, 2.3)
@@ -532,6 +630,21 @@ func _add_mesh(parent: Node3D, mesh: Mesh, material: Material,
 	part.position = position
 	parent.add_child(part)
 	return part
+
+
+func _add_box_body(host: MeshInstance3D, size: Vector3,
+		body_name: String) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = body_name
+	body.set_meta("collision_policy", "simple_solid_architecture")
+	host.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "SolidShape"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	return body
 
 
 func _add_beam_between(parent: Node3D, from: Vector3, to: Vector3,

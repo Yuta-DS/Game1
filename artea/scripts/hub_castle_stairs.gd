@@ -78,17 +78,18 @@ const TOWER_SIDES := 8            # octagonal, matching the village towers
 const STAIR_RADIUS := 6.5
 const STEP_WIDTH := 3.8
 const STEP_DEPTH := 1.6
-# The visible tread/riser lane must stop before the inner faces of both helical
-# guards. The old boxes reached each guard's centreline, which made their ends
-# visibly pass through the barrier. The extra gap also clears the farther
-# corner of each deep, tangential tread as it turns around the tower.
+# The visible tread/riser lane and the single collision road must tuck slightly
+# beneath the inner faces of both helical guards. Stopping short used to leave a
+# continuous daylight/collision slot beside each barrier: a jumping capsule or
+# a loose object could settle into it and become wedged. A small hidden overlap
+# closes that slot without letting the visible tread ends pass through the wall.
 const INNER_GUARD_HALF_WIDTH := 0.22
 const OUTER_GUARD_HALF_WIDTH := 0.24
-const TREAD_GUARD_GAP := 0.12
+const TREAD_GUARD_OVERLAP := 0.10
 const TREAD_INNER_RADIUS := STAIR_RADIUS - STEP_WIDTH * 0.5 \
-	+ INNER_GUARD_HALF_WIDTH + TREAD_GUARD_GAP
+	+ INNER_GUARD_HALF_WIDTH - TREAD_GUARD_OVERLAP
 const TREAD_OUTER_RADIUS := STAIR_RADIUS + STEP_WIDTH * 0.5 \
-	- OUTER_GUARD_HALF_WIDTH - TREAD_GUARD_GAP
+	- OUTER_GUARD_HALF_WIDTH + TREAD_GUARD_OVERLAP
 const TREAD_CLEAR_WIDTH := TREAD_OUTER_RADIUS - TREAD_INNER_RADIUS
 const TREAD_CENTRE_RADIUS := (TREAD_INNER_RADIUS + TREAD_OUTER_RADIUS) * 0.5
 # Shared centre datum for the terrain-level first tread and every continuous
@@ -107,7 +108,6 @@ const ENTRY_FOUNDATION_END_T := 0.20
 # terrain datum is substantially higher than the land at the stair mouth, so a
 # nominally grounded first spiral tread can still demand a jump from the player.
 const GROUND_ENTRY_RUN := 6.0
-const GROUND_ENTRY_MAX_RISE := 0.28
 
 # Rise per tread. Kept well under the controller's MAX_STEP_HEIGHT (0.65) so
 # every step is climbed by walking, never by jumping.
@@ -423,6 +423,8 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 		STAIR_RADIUS - STEP_WIDTH * 0.5 + INNER_GUARD_HALF_WIDTH)
 	parent.set_meta("outer_guard_lane_face_radius",
 		STAIR_RADIUS + STEP_WIDTH * 0.5 - OUTER_GUARD_HALF_WIDTH)
+	parent.set_meta("stair_guard_surface_overlap", TREAD_GUARD_OVERLAP)
+	parent.set_meta("stair_lane_has_no_barrier_gap", true)
 
 	_build_continuous_ascent(parent, base, ground, top_y, start_angle,
 		dark, light, brass)
@@ -523,9 +525,11 @@ func _build_stair(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 
 
 # Builds a real walkable connection from the hillside to the first spiral
-# tread. Every tread samples the terrain beneath both lane edges, extends below
-# the lowest sample, and rises no more than GROUND_ENTRY_MAX_RISE. The broad
-# buried boxes read as old castle foundations instead of floating steps.
+# tread. The former collision ramp was hidden beneath chunky visual steps, so
+# the player moved smoothly while the architecture looked uneven and artificial.
+# One visible, collision-backed promenade now owns the whole straight route:
+# there are no riser seams to snag a capsule and the visible ground matches the
+# surface the player actually stands on.
 func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 		first_tread_y: float, start_angle: float, light: Material,
 		dark: Material) -> void:
@@ -543,53 +547,19 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 		var lane_point: Vector3 = far_centre + radial * (TREAD_CLEAR_WIDTH * lane_fraction)
 		far_ground = maxf(far_ground, _ground_at(lane_point.x, lane_point.z))
 	var entry_surface_y := minf(first_surface_y - 0.04, far_ground + 0.08)
-	var total_rise := maxf(0.04, first_surface_y - entry_surface_y)
-	var entry_step_count := maxi(3, int(ceil(total_rise / GROUND_ENTRY_MAX_RISE)))
-	var run_per_step := GROUND_ENTRY_RUN / float(entry_step_count)
-	var tread_depth := run_per_step + 0.18
-	entry.set_meta("step_count", entry_step_count)
-	entry.set_meta("maximum_rise", total_rise / float(entry_step_count))
 	entry.set_meta("terrain_surface_y", far_ground)
-	var ramp_start := Vector3(far_centre.x, entry_surface_y - 0.11, far_centre.z)
-	var ramp_end := Vector3(first_centre.x, first_surface_y - 0.11, first_centre.z)
+	var ramp_start := Vector3(far_centre.x, entry_surface_y - 0.15, far_centre.z)
+	var ramp_end := Vector3(first_centre.x, first_surface_y - 0.15, first_centre.z)
 	var ramp_length := ramp_start.distance_to(ramp_end) + 0.36
 	var ramp := _oriented_box(entry,
-		Vector3(TREAD_CLEAR_WIDTH - 0.10, 0.22, ramp_length),
-		ramp_start.lerp(ramp_end, 0.5), ramp_end, dark)
+		Vector3(TREAD_CLEAR_WIDTH, 0.30, ramp_length),
+		ramp_start.lerp(ramp_end, 0.5), ramp_end, light)
 	ramp.name = "GroundEntryWalkSurface"
 	_add_box_body(ramp, (ramp.mesh as BoxMesh).size)
-	ramp.visible = false
-	ramp.set_meta("collision_only", true)
-
-	for step_index in entry_step_count:
-		var progress := float(step_index + 1) / float(entry_step_count)
-		var centre := far_centre + forward * (run_per_step * (float(step_index) + 0.5))
-		var surface_y := lerpf(entry_surface_y, first_surface_y, progress)
-		var foundation_floor := surface_y - 0.25
-		for lane_fraction in [-0.52, 0.0, 0.52]:
-			for depth_fraction in [-0.5, 0.5]:
-				var sample: Vector3 = centre \
-					+ radial * (TREAD_CLEAR_WIDTH * lane_fraction) \
-					+ forward * (tread_depth * depth_fraction)
-				foundation_floor = minf(foundation_floor,
-					_ground_at(sample.x, sample.z) - 0.38)
-		var height := maxf(0.28, surface_y - foundation_floor)
-		var tread_position := Vector3(centre.x, surface_y - height * 0.5, centre.z)
-		var tread := _oriented_box(entry,
-			Vector3(TREAD_CLEAR_WIDTH, height, tread_depth),
-			tread_position, tread_position + forward,
-			light if step_index % 2 == 0 else dark)
-		tread.name = "GroundEntryStoneTread_%02d" % step_index
-		tread.set_meta("visual_only", true)
-		# A narrow oak edge makes the ground flight read as deliberately castle
-		# while remaining visual-only and flush with the walking surface.
-		var edge_position := Vector3(centre.x, surface_y - 0.05, centre.z) \
-			+ forward * (tread_depth * 0.5 - 0.08)
-		var timber_edge := _oriented_box(entry,
-			Vector3(TREAD_CLEAR_WIDTH - 0.16, 0.10, 0.12),
-			edge_position, edge_position + forward,
-			_stone(Color(0.30, 0.17, 0.08)))
-		timber_edge.name = "GroundEntryTimberEdge_%02d" % step_index
+	ramp.set_meta("smooth_straight_route", true)
+	ramp.set_meta("authoritative_collision_surface", true)
+	entry.set_meta("surface_start", Vector3(far_centre.x, entry_surface_y, far_centre.z))
+	entry.set_meta("surface_end", Vector3(first_centre.x, first_surface_y, first_centre.z))
 
 	# Paired stone newels frame the first step without narrowing the route.
 	for side_sign in [-1.0, 1.0]:
@@ -599,7 +569,45 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 		var post := _oriented_box(entry, Vector3(0.52, 1.45, 0.52),
 			post_position, post_position + forward, dark)
 		post.name = "GroundEntryStoneNewel_%s" % ("Left" if side_sign < 0.0 else "Right")
+	_build_ground_entry_balustrades(entry, radial, far_centre,
+		first_centre, entry_surface_y, first_surface_y, light)
 	entry.set_meta("walkable_from_terrain", true)
+	entry.set_meta("barriers_join_spiral", true)
+	entry.set_meta("collision_surface_continuous", true)
+
+
+# Low retaining walls give the straight ground promenade a finished silhouette
+# and carry both spiral barriers into the hillside. Each side is one continuous
+# sloped piece; the former segmented boxes visibly kinked and left unnecessary
+# joins. They remain visual-only and outboard of the authoritative promenade,
+# so neither wall nor its cap can catch the player or a loose prop.
+func _build_ground_entry_balustrades(parent: Node3D, radial: Vector3,
+		far_centre: Vector3, first_centre: Vector3,
+		entry_surface_y: float, first_surface_y: float, material: Material) -> void:
+	const WALL_HEIGHT := 0.92
+	const WALL_THICKNESS := 0.34
+	var brass := _metal(Color(0.78, 0.52, 0.18))
+	for side_index in 2:
+		var side_name := "Inner" if side_index == 0 else "Outer"
+		var guard_radius := STAIR_RADIUS - STEP_WIDTH * 0.5 \
+			if side_index == 0 else STAIR_RADIUS + STEP_WIDTH * 0.5
+		var lateral_offset := guard_radius - STAIR_RADIUS
+		var from := far_centre + radial * lateral_offset
+		var to := first_centre + radial * lateral_offset
+		from.y = entry_surface_y + WALL_HEIGHT * 0.5 - 0.04
+		to.y = first_surface_y + WALL_HEIGHT * 0.5 - 0.04
+		var centre := from.lerp(to, 0.5)
+		var wall := _oriented_box(parent,
+			Vector3(WALL_THICKNESS, WALL_HEIGHT, from.distance_to(to) + 0.10),
+			centre, to, material)
+		wall.name = "GroundEntry%sBarrier" % side_name
+		wall.set_meta("visual_only", true)
+		wall.set_meta("continuous_slope", true)
+		var cap_from := from + Vector3.UP * (WALL_HEIGHT * 0.5)
+		var cap_to := to + Vector3.UP * (WALL_HEIGHT * 0.5)
+		var cap := _visual_chord(parent, cap_from, cap_to, 0.12, brass)
+		cap.name = "GroundEntry%sBarrierCap" % side_name
+		cap.set_meta("visual_only", true)
 
 
 # The old safety rail was one box per tread. Even with overlap, more than a
@@ -1005,6 +1013,7 @@ func _build_tower_facade(parent: Node3D, base: Vector2,
 			panel.rotation.y = -angle
 
 			var frame := MeshInstance3D.new()
+			frame.name = "AetherWindowFrame_%d_%d" % [tier, face_i]
 			var frame_mesh := TorusMesh.new()
 			frame_mesh.inner_radius = 0.48
 			frame_mesh.outer_radius = 0.62
@@ -1018,6 +1027,7 @@ func _build_tower_facade(parent: Node3D, base: Vector2,
 			frame.rotation_degrees = Vector3(90.0, rad_to_deg(-angle), 0.0)
 
 			var core := MeshInstance3D.new()
+			core.name = "AetherWindowCore_%d_%d" % [tier, face_i]
 			var core_mesh := SphereMesh.new()
 			core_mesh.radius = 0.22
 			core_mesh.height = 0.72

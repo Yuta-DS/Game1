@@ -66,6 +66,29 @@ func _walk_to(player: CharacterBody3D, destination: Vector3) -> bool:
 	return false
 
 
+func _jump_to_route(player: CharacterBody3D, destination: Vector3) -> bool:
+	player.velocity.y = 7.0
+	var became_airborne := false
+	var landed := false
+	for _frame in 150:
+		var delta := destination - player.global_position
+		delta.y = 0.0
+		if delta.length() > 0.05:
+			player.velocity.x = delta.normalized().x * 7.0
+			player.velocity.z = delta.normalized().z * 7.0
+		player.velocity.y -= 28.0 / 60.0
+		player.move_and_slide()
+		await physics_frame
+		if not player.is_on_floor():
+			became_airborne = true
+		elif became_airborne:
+			landed = true
+			break
+	# Landing anywhere on the six-metre promenade is valid; the following walk
+	# assertion proves the capsule can immediately continue onto the spiral.
+	return landed
+
+
 func _run() -> void:
 	var hub := (load("res://scenes/New_Hub_World.tscn") as PackedScene).instantiate()
 	root.add_child(hub)
@@ -77,6 +100,38 @@ func _run() -> void:
 	if stair == null or player == null:
 		_fail("castle stair or packed player did not load")
 		return
+	# The walk surface must continue beneath both guard faces. A positive visual
+	# gap here is also a physical slot where a jumping player or prop can wedge.
+	var inner_surface_radius: float = stair.get_meta("stair_tread_inner_radius")
+	var outer_surface_radius: float = stair.get_meta("stair_tread_outer_radius")
+	var inner_guard_face: float = stair.get_meta("inner_guard_lane_face_radius")
+	var outer_guard_face: float = stair.get_meta("outer_guard_lane_face_radius")
+	if inner_surface_radius >= inner_guard_face \
+			or outer_surface_radius <= outer_guard_face:
+		_fail("stair walking surface does not overlap both barrier faces: %.2f/%.2f .. %.2f/%.2f"
+			% [inner_surface_radius, inner_guard_face,
+				outer_guard_face, outer_surface_radius])
+		return
+	var grounded_entry := stair.get_node_or_null("GroundedCastleEntry") as Node3D
+	if grounded_entry == null \
+			or not bool(grounded_entry.get_meta("barriers_join_spiral", false)) \
+			or grounded_entry.find_children(
+				"GroundEntry*Barrier", "MeshInstance3D", true, false).size() != 2:
+		_fail("ground entry does not carry both barriers continuously into the terrain")
+		return
+	var promenade := grounded_entry.get_node_or_null("GroundEntryWalkSurface") \
+		as MeshInstance3D
+	if promenade == null or not promenade.visible \
+			or not bool(promenade.get_meta("smooth_straight_route", false)) \
+			or promenade.find_children("*", "StaticBody3D", true, false).size() != 1:
+		_fail("ground entry is not one visible, smooth collision promenade")
+		return
+	for barrier in grounded_entry.find_children(
+			"GroundEntry*Barrier", "MeshInstance3D", true, false):
+		if not barrier.find_children("*", "StaticBody3D", true, false).is_empty():
+			_fail("decorative ground-entry barrier can physically snag the player: %s"
+				% barrier.name)
+			return
 	var treads := stair.find_children("StairTread_*", "MeshInstance3D", true, false)
 	treads.sort_custom(func(a, b):
 		return (a as MeshInstance3D).global_position.y < (b as MeshInstance3D).global_position.y)
@@ -97,6 +152,16 @@ func _run() -> void:
 		if not await _settle(player, approach + Vector3.UP * 5.0):
 			_fail("player could not settle on terrain in lane %.2f" % lane_offset)
 			return
+		var first_lane_target := first.global_position + radial * lane_offset
+		if not await _jump_to_route(player, first_lane_target) \
+				or not await _walk_to(player,
+					(treads[4] as MeshInstance3D).global_position + radial * lane_offset):
+			_fail("player jump wedged at the ground-to-stair handoff in lane %.2f at %s; collisions: %s"
+				% [lane_offset, player.global_position, _colliders(player)])
+			return
+		if not await _settle(player, approach + Vector3.UP * 5.0):
+			_fail("player could not reset on terrain in lane %.2f" % lane_offset)
+			return
 		for tread_index in 12:
 			var tread := treads[tread_index] as MeshInstance3D
 			var tread_radial := Vector3(
@@ -107,7 +172,7 @@ func _run() -> void:
 				_fail("walking from land stuck in lane %.2f before %s at %s; collisions: %s" % [
 					lane_offset, tread.name, player.global_position, _colliders(player)])
 				return
-	print("CASTLE_GROUND_ENTRY_ROUTE_TEST: PASS")
+	print("CASTLE_GROUND_ENTRY_ROUTE_TEST: PASS — three smooth walking lanes and three jump recoveries")
 	quit()
 
 

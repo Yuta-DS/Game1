@@ -320,6 +320,10 @@ metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 script = ExtResource("112_scatter_box")
 size = Vector3(74, 100, 152)
 
+[sub_resource type="Resource" id="Resource_castle_route_tree_exclusion"]
+script = ExtResource("112_scatter_box")
+size = Vector3(78, 100, 46)
+
 [sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("15_o1ycd")
 amount = 188
@@ -613,6 +617,12 @@ position = Vector3(19.1855, 0, -20)
 script = ExtResource("20_7nfwd")
 negative = true
 shape = SubResource("Resource_village_plaza_exclusion")
+
+[node name="CastleRouteTreeExclusion" type="Node3D" parent="Environment/Objects"]
+position = Vector3(-96.8145, 0, 27.41)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_castle_route_tree_exclusion")
 
 [node name="ScatterItem" type="Node3D" parent="Environment/Objects" unique_id=1584586711]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.22015, 0, 0)

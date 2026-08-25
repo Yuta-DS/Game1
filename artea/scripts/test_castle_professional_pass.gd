@@ -50,19 +50,20 @@ func _run() -> void:
 			"walkable_from_terrain", false)):
 		_fail("castle stair is missing its terrain-grounded castle entry")
 		return
-	var ground_steps := grounded_entry.find_children(
-		"GroundEntryStoneTread_*", "MeshInstance3D", true, false)
-	if ground_steps.size() < 3 or float(grounded_entry.get_meta(
-			"maximum_rise", 99.0)) > 0.28:
-		_fail("ground entry does not provide enough controller-safe stone steps")
-		return
 	var ground_walk_surface := grounded_entry.get_node_or_null(
 		"GroundEntryWalkSurface") as MeshInstance3D
-	if ground_walk_surface == null or ground_walk_surface.visible \
-			or not bool(ground_walk_surface.get_meta("collision_only", false)) \
+	if ground_walk_surface == null or not ground_walk_surface.visible \
+			or not (ground_walk_surface.mesh is BoxMesh) \
+			or not bool(ground_walk_surface.get_meta("smooth_straight_route", false)) \
+			or not bool(ground_walk_surface.get_meta(
+				"authoritative_collision_surface", false)) \
 			or ground_walk_surface.find_children(
 				"*", "StaticBody3D", true, false).size() != 1:
-		_fail("ground entry is missing its seamless hidden walk surface")
+		_fail("ground entry is missing its single smooth visible walk surface")
+		return
+	if not grounded_entry.find_children(
+			"GroundEntryStoneTread_*", "MeshInstance3D", true, false).is_empty():
+		_fail("chunky ground-entry steps remain over the smooth promenade")
 		return
 	var inner_plinth := stair.get_node_or_null("InnerSafetyPlinth") as MeshInstance3D
 	var inner_plinth_bodies := inner_plinth.find_children("*", "StaticBody3D", true, false) \

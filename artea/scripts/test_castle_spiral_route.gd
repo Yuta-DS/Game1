@@ -130,6 +130,72 @@ func _test_crown_floor(player: CharacterBody3D, stair: Node3D) -> bool:
 	return true
 
 
+# Exercise the reported jump case with the packed capsule. The player launches
+# from each usable lane, lands back on the continuous roadbed, then must resume
+# walking immediately; merely detecting a floor after the jump would miss a
+# capsule wedged in the former floor/barrier slot.
+func _test_jump_recovery(player: CharacterBody3D, stair: Node3D,
+		treads: Array, lane_offset: float) -> bool:
+	var start_index := int(treads.size() * 0.45)
+	var finish_index := mini(start_index + 8, treads.size() - 2)
+	var start_tread := treads[start_index] as MeshInstance3D
+	var base: Vector2 = stair.get_meta("tower_base")
+	var start_radial := Vector3(start_tread.global_position.x - base.x, 0.0,
+		start_tread.global_position.z - base.y).normalized()
+	if not await _settle(player,
+			start_tread.global_position + start_radial * lane_offset + Vector3.UP * 3.0):
+		_fail("player could not settle before jump in lane %.2f" % lane_offset)
+		return false
+
+	player.velocity.y = 7.0
+	var target_index := start_index + 1
+	var became_airborne := false
+	var landed := false
+	for _frame in 150:
+		var target_tread := treads[target_index] as MeshInstance3D
+		var target_radial := Vector3(target_tread.global_position.x - base.x, 0.0,
+			target_tread.global_position.z - base.y).normalized()
+		var target := target_tread.global_position + target_radial * lane_offset
+		var delta := target - player.global_position
+		delta.y = 0.0
+		if delta.length() < 0.52 and target_index < finish_index:
+			target_index += 1
+			target_tread = treads[target_index] as MeshInstance3D
+			target_radial = Vector3(target_tread.global_position.x - base.x, 0.0,
+				target_tread.global_position.z - base.y).normalized()
+			target = target_tread.global_position + target_radial * lane_offset
+			delta = target - player.global_position
+			delta.y = 0.0
+		var was_on_floor := player.is_on_floor()
+		var before := player.global_position
+		if delta.length() > 0.01:
+			player.velocity.x = delta.normalized().x * 7.0
+			player.velocity.z = delta.normalized().z * 7.0
+		player.velocity.y -= 28.0 / 60.0
+		var intended := player.velocity
+		player.move_and_slide()
+		player._try_step_up(was_on_floor, before, intended, 1.0 / 60.0)
+		await physics_frame
+		if not player.is_on_floor():
+			became_airborne = true
+		elif became_airborne:
+			landed = true
+			break
+	if not landed:
+		_fail("player did not land safely after stair jump in lane %.2f; collisions: %s"
+			% [lane_offset, _collider_label(player)])
+		return false
+
+	var finish_tread := treads[finish_index] as MeshInstance3D
+	var finish_radial := Vector3(finish_tread.global_position.x - base.x, 0.0,
+		finish_tread.global_position.z - base.y).normalized()
+	if not await _walk_to(player, finish_tread.global_position + finish_radial * lane_offset):
+		_fail("player landed but remained stuck after jump in lane %.2f at %s; collisions: %s"
+			% [lane_offset, player.global_position, _collider_label(player)])
+		return false
+	return true
+
+
 func _run() -> void:
 	var hub := (load("res://scenes/New_Hub_World.tscn") as PackedScene).instantiate()
 	root.add_child(hub)
@@ -173,8 +239,11 @@ func _run() -> void:
 			return
 	if not await _test_crown_floor(player, stair):
 		return
+	for lane_offset: float in [-0.75, 0.0, 0.75]:
+		if not await _test_jump_recovery(player, stair, treads, lane_offset):
+			return
 
-	print("CASTLE_SPIRAL_ROUTE_TEST: PASS — three stair lanes and full crown circuit")
+	print("CASTLE_SPIRAL_ROUTE_TEST: PASS — three walking lanes, three jump recoveries, and full crown circuit")
 	quit(0)
 
 

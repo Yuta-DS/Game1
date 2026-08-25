@@ -45,8 +45,24 @@ const MIN_STEP_FORWARD := 0.08
 # little lower than the near side.
 const STEP_DOWN_PROBE := 0.1
 
+# The imported fox mesh extends roughly 0.05 m below its root pivot. Nested
+# PackedScene transform overrides have also proved unreliable after reimport,
+# so establish both the authored scale and a small visual-only foot lift here.
+# The CharacterBody and capsule are unchanged: physics stays on the floor while
+# the rendered feet sit on top of it instead of being depth-clipped by paving.
+const VISUAL_MODEL_SCALE := 1.5
+# Keep enough render clearance for the skinned boot animation. The former
+# 0.055 m correction left the mesh bounds just 5 mm above the plane, which can
+# still depth-clip at normal camera distance even though physics is grounded.
+const VISUAL_FOOT_LIFT := 0.105
+
 
 func _ready() -> void:
+	var visual := get_node_or_null("RogueSkin") as Node3D
+	if visual != null:
+		visual.scale = Vector3.ONE * VISUAL_MODEL_SCALE
+		visual.position.y = VISUAL_FOOT_LIFT
+		visual.set_meta("ground_alignment", "feet_on_rendered_surface")
 	# The stair treads are separate boxes, so the body needs to stay attached to
 	# them on the way down instead of launching off each edge.
 	floor_snap_length = 0.7

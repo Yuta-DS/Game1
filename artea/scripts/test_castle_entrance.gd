@@ -85,18 +85,25 @@ func _run() -> void:
 	player.add_child(visual)
 	root.add_child(player)
 	var root_yaw_before := player.global_rotation.y
-	var camera_yaw_before := camera.global_rotation.y
 	global.request_spawn_at("castle_front_door")
 	entrance.call("_apply_pending_spawn")
 	if absf(angle_difference(player.global_rotation.y, root_yaw_before)) > 0.001:
 		_fail("castle exit rotated the player root, causing sideways locomotion")
 		return
-	if absf(angle_difference(camera.global_rotation.y, camera_yaw_before)) > 0.001:
-		_fail("castle exit changed the camera-relative movement basis")
-		return
 	var outward_yaw := atan2(Vector3.RIGHT.x, Vector3.RIGHT.z)
+	var camera_yaw := -outward_yaw
+	if absf(angle_difference(camera.global_rotation.y, camera_yaw)) > 0.001:
+		_fail("castle exit camera does not face outward with the character")
+		return
 	if absf(angle_difference(visual.global_rotation.y, outward_yaw)) > 0.001:
 		_fail("castle exit did not face the visible character out over the plaza")
+		return
+	# NewPlayer maps Forward through the camera yaw. It must resolve to the same
+	# +X direction as the doorway and visible fox, otherwise the first movement
+	# after returning from the castle is a 90-degree sideways slide.
+	var forward_motion := Vector2(0.0, -1.0).rotated(-camera.global_rotation.y)
+	if forward_motion.distance_to(Vector2(Vector3.RIGHT.x, Vector3.RIGHT.z)) > 0.001:
+		_fail("Forward input does not move outward after the castle exit")
 		return
 	var gallery_source := FileAccess.get_file_as_string("res://scripts/art_gallery.gd")
 	if not gallery_source.contains("_request_castle_front_door_spawn()") \
