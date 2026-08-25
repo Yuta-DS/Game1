@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://drfdo0gpexlsl"]
 
 [ext_resource type="Texture2D" uid="uid://bcmlngyltk7sp" path="res://textures/moss_ground_02_1k/moss_groud_02_Base_Color_1k.png" id="1_thnmr"]
-[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://scripts/Water.tscn" id="1_u4tjg"]
+[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://scenes/Water.tscn" id="1_u4tjg"]
 [ext_resource type="Texture2D" uid="uid://c1piymb1ae820" path="res://textures/moss_ground_02_1k/moss_groud_02_Normal_dx_1k.png" id="2_pl5oi"]
 [ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_q1hpc"]
 [ext_resource type="Script" uid="uid://rtu7ectlsryj" path="res://scripts/simple_collectible_spawner.gd" id="2_spawner"]
@@ -36,7 +36,7 @@
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
-[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scripts/cycle.tscn" id="24_ha1sw"]
+[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scenes/cycle.tscn" id="24_ha1sw"]
 [ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://scripts/windshader.tscn" id="25_bsvfl"]
 [ext_resource type="Script" uid="uid://dy3aaovd6pf3p" path="res://addons/proton_scatter/src/shapes/sphere_shape.gd" id="28_cfrmd"]
 [ext_resource type="AudioStream" uid="uid://bexb5n8or0c36" path="res://assets/audio/Flowing Water and Birds (Hub).ogg" id="29_cfrmd"]
@@ -519,6 +519,7 @@ script = ExtResource("19_ngqnt")
 proportion = 1200
 source_scale_multiplier = 0.32
 override_material = SubResource("ShaderMaterial_y45p1")
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/grass_clump_3d.tscn"
 
@@ -527,6 +528,7 @@ script = ExtResource("19_ngqnt")
 proportion = 900
 source_scale_multiplier = 0.36
 override_material = SubResource("ShaderMaterial_y45p1")
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/grass_clump_3d.tscn"
 
@@ -583,6 +585,7 @@ path = "res://scenes/vegetation/wildflower_violet_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 0
 source_scale_multiplier = 1.0
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 
