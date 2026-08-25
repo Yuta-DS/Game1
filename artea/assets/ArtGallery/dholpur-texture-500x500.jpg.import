@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://biar3id087pir"
 path.s3tc="res://.godot/imported/dholpur-texture-500x500.jpg-8fdd9b1b7a002c6e55c4c57f55a78c54.s3tc.ctex"
-path.etc2="res://.godot/imported/dholpur-texture-500x500.jpg-8fdd9b1b7a002c6e55c4c57f55a78c54.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/ArtGallery/dholpur-texture-500x500.jpg"
-dest_files=["res://.godot/imported/dholpur-texture-500x500.jpg-8fdd9b1b7a002c6e55c4c57f55a78c54.s3tc.ctex", "res://.godot/imported/dholpur-texture-500x500.jpg-8fdd9b1b7a002c6e55c4c57f55a78c54.etc2.ctex"]
+dest_files=["res://.godot/imported/dholpur-texture-500x500.jpg-8fdd9b1b7a002c6e55c4c57f55a78c54.s3tc.ctex"]
 
 [params]
 

@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b8jykk87vngoc"
 path.s3tc="res://.godot/imported/undo-icon-style-free-vector.jpg-1830e7a4678f6325b23758995b4e1b81.s3tc.ctex"
-path.etc2="res://.godot/imported/undo-icon-style-free-vector.jpg-1830e7a4678f6325b23758995b4e1b81.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://undo-icon-style-free-vector.jpg"
-dest_files=["res://.godot/imported/undo-icon-style-free-vector.jpg-1830e7a4678f6325b23758995b4e1b81.s3tc.ctex", "res://.godot/imported/undo-icon-style-free-vector.jpg-1830e7a4678f6325b23758995b4e1b81.etc2.ctex"]
+dest_files=["res://.godot/imported/undo-icon-style-free-vector.jpg-1830e7a4678f6325b23758995b4e1b81.s3tc.ctex"]
 
 [params]
 

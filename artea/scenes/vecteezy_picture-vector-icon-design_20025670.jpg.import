@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://d2apgm1l704uu"
 path.s3tc="res://.godot/imported/vecteezy_picture-vector-icon-design_20025670.jpg-b9d434899699adf5a50d107378a2e961.s3tc.ctex"
-path.etc2="res://.godot/imported/vecteezy_picture-vector-icon-design_20025670.jpg-b9d434899699adf5a50d107378a2e961.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://scenes/vecteezy_picture-vector-icon-design_20025670.jpg"
-dest_files=["res://.godot/imported/vecteezy_picture-vector-icon-design_20025670.jpg-b9d434899699adf5a50d107378a2e961.s3tc.ctex", "res://.godot/imported/vecteezy_picture-vector-icon-design_20025670.jpg-b9d434899699adf5a50d107378a2e961.etc2.ctex"]
+dest_files=["res://.godot/imported/vecteezy_picture-vector-icon-design_20025670.jpg-b9d434899699adf5a50d107378a2e961.s3tc.ctex"]
 
 [params]
 

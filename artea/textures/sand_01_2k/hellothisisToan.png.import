@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmgh62h0je0gt"
 path.s3tc="res://.godot/imported/hellothisisToan.png-371ec65ac638e347b2d694aad8d5d491.s3tc.ctex"
-path.etc2="res://.godot/imported/hellothisisToan.png-371ec65ac638e347b2d694aad8d5d491.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/sand_01_2k/hellothisisToan.png"
-dest_files=["res://.godot/imported/hellothisisToan.png-371ec65ac638e347b2d694aad8d5d491.s3tc.ctex", "res://.godot/imported/hellothisisToan.png-371ec65ac638e347b2d694aad8d5d491.etc2.ctex"]
+dest_files=["res://.godot/imported/hellothisisToan.png-371ec65ac638e347b2d694aad8d5d491.s3tc.ctex"]
 
 [params]
 
