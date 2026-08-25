@@ -44,6 +44,25 @@ func _run() -> void:
 			or int(state.celestial_halo_count) != 2 or not bool(state.has_exhaust):
 		_fail("runtime export is missing steam mechanisms, the two halo layers, or exhaust")
 		return
+	if int(state.exhaust_rainbow_colour_count) != 7 \
+			or not bool(state.exhaust_world_space):
+		_fail("engine exhaust is not seven-colour world-space rainbow smoke")
+		return
+	var rainbow_smoke := detailed.find_child(
+		"RainbowSteamChimneySmoke", true, false) as GPUParticles3D
+	if rainbow_smoke == null \
+			or not String(rainbow_smoke.get_parent().name).contains(
+				"Engine_SteamChimneyEnergyRing"):
+		_fail("rainbow smoke does not originate from the steam-engine chimney")
+		return
+	var smoke_motion := rainbow_smoke.process_material as ParticleProcessMaterial
+	var smoke_ramp := smoke_motion.color_ramp as GradientTexture1D \
+		if smoke_motion != null else null
+	if smoke_ramp == null or smoke_ramp.gradient == null \
+			or smoke_ramp.gradient.colors.size() != 8 \
+			or smoke_ramp.gradient.colors[-1].a > .01:
+		_fail("rainbow chimney smoke lacks the full spectrum-to-transparent colour ramp")
+		return
 
 	var gear := detailed.find_child("*SteamDriveGear*", true, false) as Node3D
 	var rod := detailed.find_child("*SteamConnectingRod*", true, false) as Node3D
@@ -90,5 +109,5 @@ func _run() -> void:
 		_fail("chimney steam did not emit while the engine was running")
 		return
 
-	print("CROWN_TRAIN_STEAM_ENGINE_MOTION_TEST: PASS — gears, rods, pressure orbs, valves, chimney steam, and both celestial-halo layers animate in the playable train")
+	print("CROWN_TRAIN_STEAM_ENGINE_MOTION_TEST: PASS — gears, rods, pressure orbs, valves, rainbow chimney smoke, and both celestial-halo layers animate in the playable train")
 	quit()

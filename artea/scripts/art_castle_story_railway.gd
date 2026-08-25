@@ -136,6 +136,7 @@ var _display_speed_kph := 0.0
 var _last_train_position := Vector3.ZERO
 var _movement_vfx: Node3D
 var _rainbow_trail_particles: GPUParticles3D
+var _rainbow_smoke_wake_particles: GPUParticles3D
 var _gold_trail_particles: GPUParticles3D
 var _rainbow_wake_ribbons: Array[MeshInstance3D] = []
 var _motion_blur_echoes: Array[Node3D] = []
@@ -154,6 +155,7 @@ var _steam_rod_parts: Array[Node3D] = []
 var _steam_pressure_parts: Array[Node3D] = []
 var _steam_valve_parts: Array[Node3D] = []
 var _steam_exhaust_particles: GPUParticles3D
+var _steam_exhaust_colour_count := 0
 var _celestial_halo_parts: Array[Node3D] = []
 var _brake_needles: Array[Node3D] = []
 var _island_power_rotors: Array[Node3D] = []
@@ -517,6 +519,9 @@ func get_steam_engine_animation_state() -> Dictionary:
 		"has_exhaust": _steam_exhaust_particles != null,
 		"exhaust_emitting": _steam_exhaust_particles.emitting \
 			if _steam_exhaust_particles != null else false,
+		"exhaust_rainbow_colour_count": _steam_exhaust_colour_count,
+		"exhaust_world_space": not _steam_exhaust_particles.local_coords \
+			if _steam_exhaust_particles != null else false,
 		"celestial_halo_count": _celestial_halo_parts.size(),
 	}
 
@@ -534,6 +539,11 @@ func get_directional_vfx_state() -> Dictionary:
 	return {
 		"available": _movement_vfx != null and _rainbow_trail_particles != null,
 		"emitting": _rainbow_trail_particles.emitting if _rainbow_trail_particles != null else false,
+		"smoke_wake_available": _rainbow_smoke_wake_particles != null,
+		"smoke_wake_emitting": _rainbow_smoke_wake_particles.emitting \
+			if _rainbow_smoke_wake_particles != null else false,
+		"wake_style": "soft_rainbow_aurora_smoke",
+		"has_hard_line_ribbons": not _rainbow_wake_ribbons.is_empty(),
 		"movement_direction": _last_motion_direction,
 		"trail_world_position": _movement_vfx.global_position if _movement_vfx != null else Vector3.ZERO,
 		"speed_ratio": _movement_vfx_speed_ratio,
@@ -2950,30 +2960,10 @@ func _build_directional_movement_vfx() -> void:
 	_train.add_child(_movement_vfx)
 	_build_motion_blur_echoes()
 
-	var spectrum := [
-		Color("ff426d"), Color("ff914d"), Color("ffe95a"), Color("55ef87"),
-		Color("42e9f5"), Color("4c78ff"), Color("b16cff")]
+	# The former seven BoxMesh ribbons read as rigid laser lines. Keep this array
+	# empty for compatibility with state probes and use one rounded smoke emitter
+	# below, preserving the spectrum without hard geometry or seven draw calls.
 	_rainbow_wake_ribbons.clear()
-	for colour_index in spectrum.size():
-		var colour: Color = spectrum[colour_index]
-		var ribbon := MeshInstance3D.new()
-		ribbon.name = "RainbowWakeRibbon_%02d" % colour_index
-		var ribbon_mesh := BoxMesh.new()
-		ribbon_mesh.size = Vector3(0.46, 0.14, 1.0)
-		var ribbon_material := StandardMaterial3D.new()
-		ribbon_material.albedo_color = Color(colour, 0.76)
-		ribbon_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		ribbon_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		ribbon_material.emission_enabled = true
-		ribbon_material.emission = colour
-		ribbon_material.emission_energy_multiplier = 2.2
-		ribbon_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-		ribbon_mesh.material = ribbon_material
-		ribbon.mesh = ribbon_mesh
-		ribbon.visible = false
-		_movement_vfx.add_child(ribbon)
-		ribbon.top_level = true
-		_rainbow_wake_ribbons.append(ribbon)
 
 	var rainbow := Gradient.new()
 	rainbow.offsets = PackedFloat32Array([0.0, 0.14, 0.29, 0.43, 0.58, 0.74, 1.0])
@@ -2983,6 +2973,17 @@ func _build_directional_movement_vfx() -> void:
 	_rainbow_trail_particles = _make_train_trail_particles(
 		"RainbowDirectionTrail", rainbow, 360, 1.75, 0.52, 54.0)
 	_movement_vfx.add_child(_rainbow_trail_particles)
+
+	var smoke_rainbow := Gradient.new()
+	smoke_rainbow.offsets = PackedFloat32Array([
+		0.0, .13, .27, .41, .56, .72, .87, 1.0])
+	smoke_rainbow.colors = PackedColorArray([
+		Color(1.0, .06, .24, .82), Color(1.0, .36, .03, .80),
+		Color(1.0, .94, .02, .78), Color(.04, 1.0, .24, .76),
+		Color(.02, .92, 1.0, .72), Color(.08, .26, 1.0, .68),
+		Color(.72, .04, 1.0, .62), Color(.90, .12, 1.0, 0.0)])
+	_rainbow_smoke_wake_particles = _make_train_smoke_wake_particles(smoke_rainbow)
+	_movement_vfx.add_child(_rainbow_smoke_wake_particles)
 
 	var gold := Gradient.new()
 	gold.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
@@ -3106,6 +3107,54 @@ func _make_train_trail_particles(node_name: String, colour_gradient: Gradient,
 	return particles
 
 
+func _make_train_smoke_wake_particles(colour_gradient: Gradient) -> GPUParticles3D:
+	var smoke := GPUParticles3D.new()
+	smoke.name = "RainbowAuroraSmokeWake"
+	smoke.amount = 132
+	smoke.lifetime = 2.65
+	smoke.preprocess = 1.3
+	smoke.randomness = .58
+	smoke.fixed_fps = 30
+	smoke.local_coords = false
+	smoke.emitting = false
+	smoke.visibility_aabb = AABB(
+		Vector3(-78.0, -28.0, -78.0), Vector3(156.0, 68.0, 156.0))
+	var motion := ParticleProcessMaterial.new()
+	motion.direction = Vector3(0.0, 0.0, -1.0)
+	motion.spread = 34.0
+	motion.initial_velocity_min = 10.0
+	motion.initial_velocity_max = 26.0
+	motion.gravity = Vector3(0.0, 1.25, 0.0)
+	motion.damping_min = 2.0
+	motion.damping_max = 5.2
+	motion.scale_min = .72
+	motion.scale_max = 2.55
+	motion.hue_variation_min = -.12
+	motion.hue_variation_max = .12
+	motion.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	motion.emission_box_extents = Vector3(4.8, 2.0, 1.0)
+	var ramp_texture := GradientTexture1D.new()
+	ramp_texture.gradient = colour_gradient
+	motion.color_ramp = ramp_texture
+	smoke.process_material = motion
+	var puff_mesh := SphereMesh.new()
+	puff_mesh.radius = .82
+	puff_mesh.height = 1.64
+	puff_mesh.radial_segments = 8
+	puff_mesh.rings = 4
+	var puff_material := StandardMaterial3D.new()
+	puff_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	puff_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	puff_material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	puff_material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	puff_material.vertex_color_use_as_albedo = true
+	puff_material.albedo_color = Color(1.0, 1.0, 1.0, .82)
+	puff_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	puff_mesh.material = puff_material
+	smoke.draw_pass_1 = puff_mesh
+	return smoke
+
+
 func _register_train_mechanisms(detailed_train: Node3D) -> void:
 	_speed_band_parts.clear()
 	_speed_rotor_parts.clear()
@@ -3117,6 +3166,7 @@ func _register_train_mechanisms(detailed_train: Node3D) -> void:
 	_steam_pressure_parts.clear()
 	_steam_valve_parts.clear()
 	_steam_exhaust_particles = null
+	_steam_exhaust_colour_count = 0
 	_celestial_halo_parts.clear()
 	_brake_needles.clear()
 	for candidate in detailed_train.find_children("*", "MeshInstance3D", true, false):
@@ -3252,47 +3302,67 @@ func _update_train_mechanisms(delta: float) -> void:
 
 func _build_steam_exhaust(chimney_ring: Node3D) -> void:
 	var exhaust := GPUParticles3D.new()
-	exhaust.name = "SteamOrbChimneyExhaust"
-	exhaust.amount = 42
-	exhaust.lifetime = 2.4
-	exhaust.preprocess = 1.2
+	exhaust.name = "RainbowSteamChimneySmoke"
+	# Keep this emitter compact for Web: colour variation comes from one particle
+	# draw call instead of seven separate smoke systems.
+	exhaust.amount = 56
+	exhaust.lifetime = 2.8
+	exhaust.preprocess = 1.4
 	exhaust.randomness = .42
 	exhaust.fixed_fps = 30
+	# World-space puffs stay where the chimney released them, producing a real
+	# smoke trail behind the engine in both forward and reverse travel.
 	exhaust.local_coords = false
-	exhaust.visibility_aabb = AABB(Vector3(-8.0, -2.0, -8.0), Vector3(16.0, 22.0, 16.0))
+	exhaust.visibility_aabb = AABB(Vector3(-18.0, -3.0, -18.0), Vector3(36.0, 30.0, 36.0))
 	var steam_motion := ParticleProcessMaterial.new()
 	steam_motion.direction = Vector3.UP
-	steam_motion.spread = 18.0
-	steam_motion.initial_velocity_min = 1.8
-	steam_motion.initial_velocity_max = 4.8
-	steam_motion.gravity = Vector3(0.0, .75, 0.0)
-	steam_motion.damping_min = .35
-	steam_motion.damping_max = 1.1
-	steam_motion.scale_min = .55
-	steam_motion.scale_max = 1.65
-	steam_motion.color = Color(0.58, 0.92, 1.0, .46)
+	steam_motion.spread = 22.0
+	steam_motion.initial_velocity_min = 2.0
+	steam_motion.initial_velocity_max = 5.2
+	steam_motion.gravity = Vector3(0.0, .62, 0.0)
+	steam_motion.damping_min = .28
+	steam_motion.damping_max = .92
+	steam_motion.scale_min = .62
+	steam_motion.scale_max = 1.9
+	steam_motion.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	steam_motion.emission_sphere_radius = .18
+	steam_motion.hue_variation_min = -.08
+	steam_motion.hue_variation_max = .08
+	var rainbow_smoke := Gradient.new()
+	rainbow_smoke.offsets = PackedFloat32Array([
+		0.0, .13, .27, .41, .56, .72, .87, 1.0])
+	rainbow_smoke.colors = PackedColorArray([
+		Color(1.0, .05, .22, .86), Color(1.0, .34, .02, .84),
+		Color(1.0, .94, .02, .82), Color(.03, 1.0, .22, .80),
+		Color(.02, .92, 1.0, .76), Color(.07, .25, 1.0, .72),
+		Color(.72, .03, 1.0, .66), Color(.90, .10, 1.0, 0.0)])
+	var smoke_ramp := GradientTexture1D.new()
+	smoke_ramp.gradient = rainbow_smoke
+	steam_motion.color_ramp = smoke_ramp
 	exhaust.process_material = steam_motion
 	var puff_mesh := SphereMesh.new()
-	puff_mesh.radius = .34
-	puff_mesh.height = .68
+	puff_mesh.radius = .40
+	puff_mesh.height = .80
 	puff_mesh.radial_segments = 8
 	puff_mesh.rings = 4
 	var puff_material := StandardMaterial3D.new()
 	puff_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	puff_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	puff_material.albedo_color = Color(0.66, 0.94, 1.0, .38)
-	puff_material.emission_enabled = true
-	puff_material.emission = Color(0.24, 0.68, 1.0)
-	puff_material.emission_energy_multiplier = .75
+	puff_material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	puff_material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	puff_material.vertex_color_use_as_albedo = true
+	puff_material.albedo_color = Color(1.0, 1.0, 1.0, .76)
+	puff_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	puff_mesh.material = puff_material
 	exhaust.draw_pass_1 = puff_mesh
 	chimney_ring.add_child(exhaust)
 	_steam_exhaust_particles = exhaust
+	_steam_exhaust_colour_count = 7
 
 
 func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> void:
 	if _movement_vfx == null or _rainbow_trail_particles == null \
-			or _gold_trail_particles == null:
+			or _rainbow_smoke_wake_particles == null or _gold_trail_particles == null:
 		return
 	var raw_speed := motion_delta.length() / maxf(delta, 0.0001)
 	var moving := raw_speed > 0.75 and motion_delta.length_squared() > 0.0001
@@ -3315,6 +3385,7 @@ func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> vo
 		delta * (3.8 if moving else 5.5))
 	var should_emit := moving and _movement_vfx_speed_ratio > 0.015
 	_rainbow_trail_particles.emitting = should_emit
+	_rainbow_smoke_wake_particles.emitting = should_emit
 	_gold_trail_particles.emitting = should_emit
 	if not moving:
 		_motion_echo_history.clear()
@@ -3329,22 +3400,11 @@ func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> vo
 			# while retaining a recognizable engine-and-two-coach silhouette.
 			echo.scale = Vector3(1.0 + float(echo_index) * 0.018, 1.0,
 				1.0 + _movement_vfx_speed_ratio * 0.16)
-	var ribbon_length := lerpf(10.0, 58.0, _movement_vfx_speed_ratio)
-	var ribbon_side := _last_motion_direction.cross(Vector3.UP).normalized()
-	if ribbon_side.length_squared() < 0.01:
-		ribbon_side = Vector3.RIGHT
-	for ribbon_index in _rainbow_wake_ribbons.size():
-		var ribbon := _rainbow_wake_ribbons[ribbon_index]
-		ribbon.visible = should_emit
-		ribbon.global_basis = Basis.looking_at(_last_motion_direction, Vector3.UP)
-		ribbon.scale = Vector3(1.0, 1.0, ribbon_length)
-		ribbon.global_position = _train.global_position \
-			- _last_motion_direction * (24.0 + ribbon_length * 0.5) \
-			+ ribbon_side * (-4.2 + float(ribbon_index) * 1.4) \
-			+ Vector3.UP * (2.4 + sin(_mechanism_time * 5.0 \
-				+ float(ribbon_index) * 0.72) * 0.34)
 	_rainbow_trail_particles.amount_ratio = clampf(0.58 + _movement_vfx_speed_ratio * 0.42, 0.0, 1.0) \
 		if should_emit else 0.0
+	_rainbow_smoke_wake_particles.amount_ratio = clampf(
+		.42 + _movement_vfx_speed_ratio * .58, 0.0, 1.0) if should_emit else 0.0
+	_rainbow_smoke_wake_particles.speed_scale = .72 + _movement_vfx_speed_ratio * .76
 	_gold_trail_particles.amount_ratio = clampf(0.38 + _movement_vfx_speed_ratio * 0.48, 0.0, 0.86) \
 		if should_emit else 0.0
 
