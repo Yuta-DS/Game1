@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://hg42snfhm6ei"
 path.s3tc="res://.godot/imported/joyknobpng.png-414615013cbd0923d2c8669b283b3572.s3tc.ctex"
+path.etc2="res://.godot/imported/joyknobpng.png-414615013cbd0923d2c8669b283b3572.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Joystick/joyknobpng.png"
-dest_files=["res://.godot/imported/joyknobpng.png-414615013cbd0923d2c8669b283b3572.s3tc.ctex"]
+dest_files=["res://.godot/imported/joyknobpng.png-414615013cbd0923d2c8669b283b3572.s3tc.ctex", "res://.godot/imported/joyknobpng.png-414615013cbd0923d2c8669b283b3572.etc2.ctex"]
 
 [params]
 

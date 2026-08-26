@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c55wcdlbxgsf"
 path.s3tc="res://.godot/imported/Rainbow_3306278596_88715.png-ba4c4105ea05f33d4096fe5fa667c80e.s3tc.ctex"
+path.etc2="res://.godot/imported/Rainbow_3306278596_88715.png-ba4c4105ea05f33d4096fe5fa667c80e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/ArtGallery/Rainbow_3306278596_88715.png"
-dest_files=["res://.godot/imported/Rainbow_3306278596_88715.png-ba4c4105ea05f33d4096fe5fa667c80e.s3tc.ctex"]
+dest_files=["res://.godot/imported/Rainbow_3306278596_88715.png-ba4c4105ea05f33d4096fe5fa667c80e.s3tc.ctex", "res://.godot/imported/Rainbow_3306278596_88715.png-ba4c4105ea05f33d4096fe5fa667c80e.etc2.ctex"]
 
 [params]
 

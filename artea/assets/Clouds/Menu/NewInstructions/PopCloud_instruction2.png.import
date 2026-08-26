@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bfija4f4vopol"
 path.s3tc="res://.godot/imported/PopCloud_instruction2.png-eeee85ee2100491d3aed110258562ee6.s3tc.ctex"
+path.etc2="res://.godot/imported/PopCloud_instruction2.png-eeee85ee2100491d3aed110258562ee6.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Clouds/Menu/NewInstructions/PopCloud_instruction2.png"
-dest_files=["res://.godot/imported/PopCloud_instruction2.png-eeee85ee2100491d3aed110258562ee6.s3tc.ctex"]
+dest_files=["res://.godot/imported/PopCloud_instruction2.png-eeee85ee2100491d3aed110258562ee6.s3tc.ctex", "res://.godot/imported/PopCloud_instruction2.png-eeee85ee2100491d3aed110258562ee6.etc2.ctex"]
 
 [params]
 

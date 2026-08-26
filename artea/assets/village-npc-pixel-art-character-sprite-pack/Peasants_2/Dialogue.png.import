@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ct52kedx7disn"
 path.s3tc="res://.godot/imported/Dialogue.png-a460dc5aa16b5f07af5f661dbcdff9d7.s3tc.ctex"
+path.etc2="res://.godot/imported/Dialogue.png-a460dc5aa16b5f07af5f661dbcdff9d7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/village-npc-pixel-art-character-sprite-pack/Peasants_2/Dialogue.png"
-dest_files=["res://.godot/imported/Dialogue.png-a460dc5aa16b5f07af5f661dbcdff9d7.s3tc.ctex"]
+dest_files=["res://.godot/imported/Dialogue.png-a460dc5aa16b5f07af5f661dbcdff9d7.s3tc.ctex", "res://.godot/imported/Dialogue.png-a460dc5aa16b5f07af5f661dbcdff9d7.etc2.ctex"]
 
 [params]
 

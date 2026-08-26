@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://q7s27dun5aby"
 path.s3tc="res://.godot/imported/Father_output_texture_0.png-aac7a40181ef11207b6b09e04dc7808c.s3tc.ctex"
+path.etc2="res://.godot/imported/Father_output_texture_0.png-aac7a40181ef11207b6b09e04dc7808c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets3D/characters/Father_output_texture_0.png"
-dest_files=["res://.godot/imported/Father_output_texture_0.png-aac7a40181ef11207b6b09e04dc7808c.s3tc.ctex"]
+dest_files=["res://.godot/imported/Father_output_texture_0.png-aac7a40181ef11207b6b09e04dc7808c.s3tc.ctex", "res://.godot/imported/Father_output_texture_0.png-aac7a40181ef11207b6b09e04dc7808c.etc2.ctex"]
 
 [params]
 

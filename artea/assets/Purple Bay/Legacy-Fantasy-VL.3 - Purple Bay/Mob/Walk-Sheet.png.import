@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://j1mdcvass70w"
 path.s3tc="res://.godot/imported/Walk-Sheet.png-f2e890a59f519a6e272e349ff30340eb.s3tc.ctex"
+path.etc2="res://.godot/imported/Walk-Sheet.png-f2e890a59f519a6e272e349ff30340eb.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Mob/Walk-Sheet.png"
-dest_files=["res://.godot/imported/Walk-Sheet.png-f2e890a59f519a6e272e349ff30340eb.s3tc.ctex"]
+dest_files=["res://.godot/imported/Walk-Sheet.png-f2e890a59f519a6e272e349ff30340eb.s3tc.ctex", "res://.godot/imported/Walk-Sheet.png-f2e890a59f519a6e272e349ff30340eb.etc2.ctex"]
 
 [params]
 
