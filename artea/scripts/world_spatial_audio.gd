@@ -120,7 +120,12 @@ func _ready() -> void:
 	}
 	var power_whistle := load("res://assets/audio/pro_train/royal_hudson_whistle.wav")
 	_train_event_streams = {
-		&"departure": power_whistle,
+		# Automatic departures previously replayed the same long locomotive
+		# whistle as the manual horn. Moving trains could therefore fill the hub
+		# with repeated "doo doo" calls even when the player never requested one.
+		# Keep the realistic whistle on the explicit R control and use a short,
+		# gentle bird chorus for unattended departures.
+		&"departure": ProceduralFoleyScript.make_train_event(&"departure"),
 		&"horn": power_whistle,
 		&"brake": ProceduralFoleyScript.make_train_event(&"brake"),
 	}

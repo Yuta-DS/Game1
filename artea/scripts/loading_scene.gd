@@ -66,12 +66,51 @@ func _wait_for_scatter_then_finish() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
+	# is_thread_running() only reports true when ProtonScatter actually spawned
+	# a Thread. On Web (no WASM thread support), scatter.gd takes its
+	# dbg_disable_thread branch instead and builds synchronously via a
+	# deferred call, so is_thread_running() never reports true there and a
+	# wait gated on it was skipped entirely - the loading screen closed
+	# before grass finished placing. build_version increments in
+	# _on_transforms_ready() the same way on both the threaded and
+	# synchronous paths, so it is a reliable "build in flight" check on
+	# every platform.
+	#
+	# This polls build_version every frame instead of `await
+	# scatter.build_completed`. A rebuild that crashes on Web (observed as an
+	# "Uncaught RuntimeError: table index is out of bounds" WASM trap, most
+	# likely from the Objects scatter's keep_static_colliders registering a
+	# collision shape with PhysicsServer3D per tree instance) can silently
+	# orphan a coroutine suspended on that signal - it never resumes and the
+	# loading screen is stuck on screen forever, worse than the pop-in this
+	# was written to hide. Polling only depends on get_tree().process_frame,
+	# which keeps firing every frame regardless of what else breaks, and the
+	# deadline below guarantees a hand-off no matter what.
+	# Every scatter node here is a fresh instance from this scene load, so
+	# build_version starts at 0 and "has completed its first build" is simply
+	# build_version >= 1 - not "has advanced past whatever value it happened
+	# to be at when this loop started". A start_version snapshot looked
+	# right but breaks for any scatter that already finished (e.g. Objects,
+	# lighter than Grass, often done before this loop even starts polling):
+	# it can never build a second time on its own, so waiting for a further
+	# increment burned the full deadline for no reason.
+	var pending: Array = []
 	var hub := get_tree().current_scene
 	if hub:
 		for scatter in hub.find_children("*", "Node3D", true, false):
-			if scatter.has_signal("build_completed") and scatter.has_method("is_thread_running") \
-					and scatter.is_thread_running():
-				await scatter.build_completed
+			if scatter.has_signal("build_completed") and "build_version" in scatter:
+				pending.append(scatter)
+
+	var deadline := Time.get_ticks_msec() + 15000
+	while Time.get_ticks_msec() < deadline:
+		var all_done := true
+		for scatter in pending:
+			if is_instance_valid(scatter) and scatter.build_version < 1:
+				all_done = false
+				break
+		if all_done:
+			break
+		await get_tree().process_frame
 
 	waiting_for_scatter = false
 	queue_free()

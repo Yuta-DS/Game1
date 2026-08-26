@@ -90,7 +90,15 @@ func _run() -> void:
 		_fail("lateral vegetation needs the two field-recorded leaf takes")
 		return
 	var train_loops: Dictionary = director.get("_train_loop_streams")
+	var train_events: Dictionary = director.get("_train_event_streams")
 	var world_loops: Dictionary = director.get("_world_loop_streams")
+	var departure_cue := train_events.get(&"departure") as AudioStreamWAV
+	var manual_horn := train_events.get(&"horn") as AudioStreamWAV
+	if departure_cue == null or departure_cue == manual_horn \
+			or departure_cue.loop_mode != AudioStreamWAV.LOOP_DISABLED \
+			or departure_cue.get_length() > 2.0:
+		_fail("automatic departures need a short bird cue distinct from the manual train horn")
+		return
 	for profile in [&"windmill", &"watermill", &"lumbermill", &"cave_air", &"aether_power"]:
 		var recorded_loop := world_loops.get(profile) as AudioStreamWAV
 		if recorded_loop == null or recorded_loop.loop_mode != AudioStreamWAV.LOOP_FORWARD \

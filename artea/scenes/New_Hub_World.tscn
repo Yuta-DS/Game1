@@ -55,7 +55,7 @@
 [ext_resource type="PackedScene" uid="uid://dipjrbs7fbcy2" path="res://assets3D/house scenes/home_b.tscn" id="39_t72bn"]
 [ext_resource type="PackedScene" uid="uid://ys3laco1twc" path="res://assets3D/house scenes/castle.tscn" id="40_40xrb"]
 [ext_resource type="PackedScene" uid="uid://fqx6500nugky" path="res://assets3D/house scenes/tavern.tscn" id="41_kjbyn"]
-[ext_resource type="Texture2D" uid="uid://b42uvpgfhvgje" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Inventory.png" id="41_kl01c"]
+[ext_resource type="Texture2D" path="res://assets/UI/inventory_backpack.svg" id="41_kl01c"]
 [ext_resource type="Script" uid="uid://dgfivhd7spfnv" path="res://scripts/inventory_button.gd" id="42_ewago"]
 [ext_resource type="PackedScene" uid="uid://cmwutg4qjm7hv" path="res://assets3D/house scenes/watermill.tscn" id="42_fn4xt"]
 [ext_resource type="PackedScene" uid="uid://bl7duyul3lwg3" path="res://assets3D/house scenes/lumbermill.tscn" id="43_448jj"]
@@ -92,6 +92,7 @@
 [ext_resource type="Script" path="res://scripts/hub_atmosphere.gd" id="82_atmos"]
 [ext_resource type="Script" path="res://scripts/web_terrain_compat.gd" id="82_webterrain"]
 [ext_resource type="Script" path="res://scripts/hub_grass_interaction.gd" id="108_grass_interaction"]
+[ext_resource type="Script" path="res://scripts/hub_bee_garden.gd" id="110_bee_garden"]
 [ext_resource type="PackedScene" path="res://scenes/vegetation/grass_clump_3d.tscn" id="109_grass_3d"]
 [ext_resource type="Script" path="res://scripts/hub_village_brick_plaza.gd" id="111_brick_plaza"]
 [ext_resource type="Script" path="res://addons/proton_scatter/src/shapes/box_shape.gd" id="112_scatter_box"]
@@ -328,7 +329,7 @@ size = Vector3(78, 100, 46)
 
 [sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("15_o1ycd")
-amount = 188
+amount = 260
 restrict_height = true
 reference_frame = 1
 
@@ -378,6 +379,11 @@ script = ExtResource("82_webterrain")
 
 [node name="GrassInteraction" type="Node" parent="."]
 script = ExtResource("108_grass_interaction")
+
+[node name="BeeGarden" type="Node3D" parent="."]
+script = ExtResource("110_bee_garden")
+flower_scatter_path = NodePath("../Environment/Grass")
+tree_scatter_path = NodePath("../Environment/Objects")
 
 [node name="VillageBrickPlaza" type="Node3D" parent="."]
 script = ExtResource("111_brick_plaza")
@@ -761,13 +767,17 @@ autoplay = true
 [node name="Inventory" type="CanvasLayer" parent="." unique_id=882521813]
 
 [node name="TextureButton" type="TextureButton" parent="Inventory" unique_id=1125274895]
-offset_left = 1553.0
-offset_top = 31.0
-offset_right = 1666.0
-offset_bottom = 141.0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -112.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 112.0
+grow_horizontal = 0
 texture_normal = ExtResource("41_kl01c")
 ignore_texture_size = true
-stretch_mode = 0
+stretch_mode = 5
 script = ExtResource("42_ewago")
 
 [node name="building_church_red2" parent="." unique_id=1083499433 instance=ExtResource("30_ikt05")]
