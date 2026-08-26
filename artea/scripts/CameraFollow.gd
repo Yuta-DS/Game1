@@ -62,6 +62,10 @@ var _pitch := 0.0
 var _touch_emulation_was_on := false
 
 func _ready() -> void:
+	# Follow after gameplay movers have published their final frame transform.
+	# This is especially important for sync-to-physics train platforms, whose
+	# rider position otherwise reaches the camera one render frame late.
+	process_priority = 100
 	_player = get_node_or_null(player_path)
 	current = true  # make this the active camera
 
@@ -283,8 +287,17 @@ func _collision_safe_target(focus: Vector3, target: Vector3) -> Vector3:
 	# screen could be hidden by the object behind the player.
 	var space := get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(focus, target)
+	var excluded_rids: Array[RID] = []
 	if _player is CollisionObject3D:
-		query.exclude = [(_player as CollisionObject3D).get_rid()]
+		excluded_rids.append((_player as CollisionObject3D).get_rid())
+	# The train is the platform carrying the camera focus, not an intervening
+	# wall. Letting the camera ray hit its own carriage shell makes the target
+	# alternate between stopped and moving as rail geometry crosses the ray.
+	if _ride_view_active:
+		for ride_body in get_tree().get_nodes_in_group("ride_camera_ignore"):
+			if ride_body is CollisionObject3D:
+				excluded_rids.append((ride_body as CollisionObject3D).get_rid())
+	query.exclude = excluded_rids
 	var hit := space.intersect_ray(query)
 	if hit.is_empty():
 		return target

@@ -147,15 +147,6 @@ func _apply_web_scatter_tuning() -> void:
 			terrain.set("collision_mode", 0)
 
 
-func _process(_delta: float) -> void:
-	if not OS.has_feature("web"):
-		return
-	var dome := get_node_or_null("WebSkyDome") as MeshInstance3D
-	var camera := get_viewport().get_camera_3d()
-	if dome != null and camera != null:
-		dome.global_position = camera.global_position
-
-
 func _ready() -> void:
 	if not OS.has_feature("web"):
 		return

@@ -152,6 +152,7 @@ const GAIT_BONES := [
 ]
 
 var counsellor_pose_tween: Tween
+var _active_counsellor_pose := ""
 
 
 func _ready():
@@ -593,6 +594,7 @@ func _play_animation(animation_name: String) -> void:
 
 
 func _on_companion_pose_requested(pose_name: String) -> void:
+	_active_counsellor_pose = pose_name
 	var animation_name := str(COUNSELLOR_ANIMATIONS.get(pose_name, "Counsellor_Welcome"))
 	_play_animation(animation_name)
 	_start_counsellor_arm_transition(pose_name)
@@ -775,6 +777,7 @@ func _set_counsellor_prop(pose_name: String) -> void:
 
 func _begin_pause(_duration := -1.0) -> void:
 	_cancel_counsellor_pose_transition()
+	_active_counsellor_pose = ""
 	velocity.x = 0.0
 	velocity.z = 0.0
 	_reset_cane_gait()
@@ -1296,6 +1299,11 @@ func _update_limb_secondary_motion(stride_wave: float, is_walking: bool,
 func _update_procedural_cane_gait(stride_wave: float, is_walking: bool,
 		gait_strength: float, delta: float) -> void:
 	if gait_skeleton == null:
+		return
+	# The counsellor FK pose owns these same arm bones. The idle cane-gait pass
+	# used to reset their rotations after the transition, pulling both paws away
+	# from the visible map and tablet edges.
+	if not _active_counsellor_pose.is_empty():
 		return
 	if not is_walking and companion_state not in [CompanionState.WAITING,
 			CompanionState.IDLE_NEAR_PLAYER]:

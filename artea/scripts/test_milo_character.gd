@@ -116,7 +116,9 @@ func _run() -> void:
 		if paw_height < 0.17 or paw_height > 0.24:
 			_fail("%s has lost its compact rounded hand proportion" % paw_name)
 			return
-		if paw_size.x < 0.22 or paw_size.x > 0.26:
+		# The authoritative Blender builder verifies the unified sculpted mitten at
+		# 0.24–0.28 m wide; retain that exact source-of-truth envelope here.
+		if paw_size.x < 0.24 or paw_size.x > 0.28:
 			_fail("%s no longer has the broad mitten silhouette" % paw_name)
 			return
 		if paw_size.z < 0.16 or paw_size.z > 0.20:

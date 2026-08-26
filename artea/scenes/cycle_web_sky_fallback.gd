@@ -1,35 +1,38 @@
 extends Node3D
 
-# The custom procedural sky shader (stylizedsky.gdshader) renders solid
-# black under the web export's GLES3/Compatibility renderer. Extensively
-# ruled out as the cause: shader compile failure, shader logic (forced-
-# magenta test - written before any texture sampling, still came out
-# black), half-res-pass compositing, glow, fog, adjustment, multiple
-# WorldEnvironment nodes, camera environment override, Sky.process_mode
-# (baked vs realtime). This is a genuine gap in Godot 4.7.1's Compatibility
-# renderer's sky compositing, not something fixable at the project level -
-# falling back to a flat sky color + BG-sourced lighting on web only;
-# desktop keeps the full shader-driven sky.
+# The custom procedural sky shader (stylizedsky.gdshader) used to render
+# solid black, then solid white, under the web export's GLES3/Compatibility
+# renderer. Neither was the shader itself - stylizedsky.gdshader's real bug
+# (render_mode use_half_res_pass reading HALF_RES_COLOR back as opaque black
+# under Compatibility) was already fixed by computing clouds directly instead
+# of via that half-res pass. What remained were two things stacked on top of
+# each other:
+#
+# 1. hub_awakening.gd duplicated this Environment after this node's _ready()
+#    ran and unconditionally reset ambient_light_source back to SKY on every
+#    platform, undoing whatever this script set. Fixed there by gating that
+#    reset behind `if not OS.has_feature("web")`.
+# 2. Glow is an additive full-screen bloom pass, and under the Compatibility
+#    renderer's non-HDR bloom it washes bright/light content out to solid
+#    white far more aggressively than under Forward+/Mobile. hub_awakening.gd
+#    also tweens the sun up to 1.10-1.52 energy (vs the scene's authored
+#    0.45-0.65), feeding a brighter source into that bloom. Confirmed by
+#    testing background_color directly: a saturated test colour survived
+#    intact, but the authored daylight blue (already close to white in raw
+#    luminance) washed to solid white until glow was disabled.
+#
+# With both fixed, the authored sky renders correctly on web same as desktop
+# - no flat-colour fallback needed.
 func _ready():
 	if OS.has_feature("web"):
 		var world_env = $WorldEnvironment
 		if world_env and world_env.environment:
 			var env = world_env.environment
-			env.background_mode = Environment.BG_COLOR
-			# BG_COLOR uses background_color, which this script never set, so it
-			# stayed at its default of black. Sourcing ambient from a black
-			# background gives zero ambient light - every model then renders as a
-			# black silhouette while sun-lit terrain still looks correct. Set the
-			# daylight backdrop explicitly and take ambient from an explicit
-			# colour rather than from the background.
-			env.background_color = Color(0.38, 0.67, 0.92)
-			env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-			env.ambient_light_color = Color(0.72, 0.82, 0.92)
-			env.ambient_light_energy = 1.0
-			# Any sky contribution would pull the term back toward the sky that
-			# is unusable on this renderer.
-			env.ambient_light_sky_contribution = 0.0
-			env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+			env.background_mode = Environment.BG_SKY
+			env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+			env.ambient_light_sky_contribution = 1.0
+			env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+			env.glow_enabled = false
 
 		_disable_scatter_threading()
 		_skip_relax_on_web()

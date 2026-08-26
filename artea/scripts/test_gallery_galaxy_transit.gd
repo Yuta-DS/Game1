@@ -103,12 +103,14 @@ func _run() -> void:
 			or gallery.get_node_or_null("TrainRider") != null:
 		_fail("obsolete radial galaxy transit still exists beside the story Crown Line")
 		return
-	if int(crown_line.call("get_station_count")) != 4 or int(crown_line.call("get_segment_count")) != 3:
-		_fail("story Crown Line must have four stations joined by three segments")
+	if int(crown_line.call("get_station_count")) != 4 \
+			or int(crown_line.call("get_segment_count")) != 4 \
+			or not bool(crown_line.call("is_closed_loop")):
+		_fail("story Crown Line must join four stations in one closed loop")
 		return
 	var endpoints: PackedVector3Array = crown_line.call("get_route_endpoints")
 	if endpoints[0].distance_to(endpoints[1]) < 500.0:
-		_fail("story railway incorrectly closes into a circle")
+		_fail("the first and final station locations overlap")
 		return
 	var flags := {"star_of_wisdom": false, "harmony_jewel": false, "creators_light": false}
 	if not bool(crown_line.call("station_unlocked_with", 1, flags)) \
@@ -124,7 +126,10 @@ func _run() -> void:
 	if not bool(crown_line.call("station_unlocked_with", 3, flags)):
 		_fail("Harmony Jewel must open Creator's Light")
 		return
-	for landmarks in ["MindSparkQuestLandmarks", "HeartMelodyQuestLandmarks", "CreatorsLightQuestLandmarks"]:
+	# Mind Spark now ships as the complete six-island gameplay world rather than
+	# the old decorative landmark cluster. Heart and Creator retain their named
+	# landmark containers.
+	for landmarks in ["MindSparkWorldOne", "HeartMelodyQuestLandmarks", "CreatorsLightQuestLandmarks"]:
 		if floating_world.get_node_or_null(landmarks) == null:
 			_fail("story world is missing %s" % landmarks)
 			return

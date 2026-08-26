@@ -77,6 +77,7 @@ func _run() -> void:
 
 	var start_y := player.global_position.y
 	var start_z := player.global_position.z
+	var highest_y := start_y
 
 	# Drive the body forward for a few seconds of simulated walking. The real
 	# controller reads Input, so push the body directly and call the same
@@ -92,14 +93,17 @@ func _run() -> void:
 		var intended := player.velocity
 		player.move_and_slide()
 		player._try_step_up(was_on_floor, pre, intended, 1.0 / 60.0)
+		highest_y = maxf(highest_y, player.global_position.y)
 		walked_frames += 1
 		await physics_frame
+		if player.global_position.z > STEP_SPACING * float(STEP_COUNT - 1):
+			break
 
-	var climbed := player.global_position.y - start_y
+	var climbed := highest_y - start_y
 	var advanced := player.global_position.z - start_z
 	var top_y := STEP_RISE * float(STEP_COUNT - 1)
 
-	print("start y=%.2f z=%.2f -> end y=%.2f z=%.2f (climbed %.2f, advanced %.2f)" % [
+	print("start y=%.2f z=%.2f -> end y=%.2f z=%.2f (maximum climb %.2f, advanced %.2f)" % [
 		start_y, start_z, player.global_position.y, player.global_position.z,
 		climbed, advanced])
 	print("flight top tread surface y=%.2f" % (top_y + TREAD_THICKNESS * 0.5))

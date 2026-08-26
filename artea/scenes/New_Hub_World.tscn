@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://drfdo0gpexlsl"]
 
 [ext_resource type="Texture2D" uid="uid://bcmlngyltk7sp" path="res://textures/moss_ground_02_1k/moss_groud_02_Base_Color_1k.png" id="1_thnmr"]
-[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://scripts/Water.tscn" id="1_u4tjg"]
+[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://scenes/Water.tscn" id="1_u4tjg"]
 [ext_resource type="Texture2D" uid="uid://c1piymb1ae820" path="res://textures/moss_ground_02_1k/moss_groud_02_Normal_dx_1k.png" id="2_pl5oi"]
 [ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_q1hpc"]
 [ext_resource type="Script" uid="uid://rtu7ectlsryj" path="res://scripts/simple_collectible_spawner.gd" id="2_spawner"]
@@ -36,7 +36,7 @@
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
-[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scripts/cycle.tscn" id="24_ha1sw"]
+[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scenes/cycle.tscn" id="24_ha1sw"]
 [ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://scripts/windshader.tscn" id="25_bsvfl"]
 [ext_resource type="Script" uid="uid://dy3aaovd6pf3p" path="res://addons/proton_scatter/src/shapes/sphere_shape.gd" id="28_cfrmd"]
 [ext_resource type="AudioStream" uid="uid://bexb5n8or0c36" path="res://assets/audio/Flowing Water and Birds (Hub).ogg" id="29_cfrmd"]
@@ -121,6 +121,8 @@
 [ext_resource type="PackedScene" uid="uid://cejjhajbx8vwe" path="res://assets3D/houses/gltf/fence_straight_long.gltf" id="97_fnstrl"]
 [ext_resource type="PackedScene" uid="uid://durvbjhil7ec1" path="res://scripts/Pier.tscn" id="98_pier"]
 [ext_resource type="PackedScene" path="res://scenes/boat.tscn" id="99_boat"]
+[ext_resource type="PackedScene" path="res://scenes/characters/elder_cat_mayor.tscn" id="113_mayor"]
+[ext_resource type="PackedScene" path="res://scenes/characters/town_villager.tscn" id="114_town_villager"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -215,7 +217,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 
 [sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("15_o1ycd")
-amount = 52000
+amount = 24000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
@@ -511,6 +513,7 @@ script = ExtResource("19_ngqnt")
 proportion = 1200
 source_scale_multiplier = 0.32
 override_material = SubResource("ShaderMaterial_y45p1")
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/grass_clump_3d.tscn"
 
@@ -519,6 +522,7 @@ script = ExtResource("19_ngqnt")
 proportion = 900
 source_scale_multiplier = 0.36
 override_material = SubResource("ShaderMaterial_y45p1")
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/grass_clump_3d.tscn"
 
@@ -575,6 +579,7 @@ path = "res://scenes/vegetation/wildflower_violet_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 0
 source_scale_multiplier = 1.0
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 
@@ -1199,6 +1204,23 @@ transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 102, 19.81, 19)
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 113, 19.31, 19)
 
 [node name="Villagers" type="Node3D" parent="."]
+
+[node name="AlderGuidePoints" type="Node3D" parent="Villagers"]
+
+[node name="HomePoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(107, 20, 16)
+
+[node name="MissionBriefingPoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(103, 20, 12)
+
+[node name="CelebrationPoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(110, 20, 9)
+
+[node name="MayorAlder" parent="Villagers" instance=ExtResource("113_mayor")]
+position = Vector3(107, 20, 16)
+
+[node name="Villager_Greeter" parent="Villagers" instance=ExtResource("114_town_villager")]
+position = Vector3(88, 20, 8)
 
 [node name="Villager_Market1" parent="Villagers" instance=ExtResource("101_vbarb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 95, 19.9, 12)

@@ -85,7 +85,7 @@ const DRIVER_SEAT := Vector3(0.0, 2.4, DRIVER_SIDE_GATE_Z)
 # coach so approaching the cab from anywhere on the deck offers driving without
 # the player having to hunt for an exact spot; the seat range stays shorter so
 # the two never fight over the middle of the coach.
-const DRIVER_INTERACTION_RANGE := 12.0
+const DRIVER_INTERACTION_RANGE := 14.0
 const SEAT_INTERACTION_RANGE := 7.5
 const FLEXIBLE_BOARDING_RANGE := 14.0
 # Seat points are where the player capsule's CENTRE is placed, so they sit a
@@ -121,6 +121,7 @@ var _curves: Array[Curve3D] = []
 var _station_nodes: Array[Node3D] = []
 var _player: CharacterBody3D
 var _train: Node3D
+var _rider_anchor: RemoteTransform3D
 var _train_glow: OmniLight3D
 var _current_station := START_STATION_INDEX
 var _direction := 1
@@ -178,6 +179,7 @@ var _piltover_pixel_floor_material: StandardMaterial3D
 var _station_rainbow_materials: Array[StandardMaterial3D] = []
 var _station_rainbow_glass_materials: Array[StandardMaterial3D] = []
 var _barrier_rainbow_cursor := 0
+var _external_drive_commanded := false
 
 
 func _ready() -> void:
@@ -197,17 +199,26 @@ func _process(delta: float) -> void:
 	if _manual_driving:
 		var throttle := Input.get_action_strength("move_forward") \
 			- Input.get_action_strength("move_backward")
-		drive_manual(throttle, delta)
+		if absf(throttle) >= 0.01:
+			_advance_manual_drive(throttle, delta)
+		elif _external_drive_commanded:
+			_external_drive_commanded = false
+		else:
+			_advance_manual_drive(0.0, delta)
 	elif _train != null and not _riding:
 		# Keep the docked chassis exactly aligned with the level guideway.
 		_train.position.y = ROUTE_HEIGHT
-	if _seated_passenger and _player != null and _train != null and _passenger_seat_index >= 0:
+	# sync_to_physics applies the queued platform transform at the frame boundary.
+	# Seat the driver from that visible transform before the follow camera runs;
+	# relying only on the earlier queued target leaves the camera one frame behind.
+	if _manual_driving and _player != null and _train != null:
+		_player.global_position = _train.to_global(DRIVER_SEAT)
+		_player.velocity = Vector3.ZERO
+	elif _seated_passenger and _player != null and _train != null and _passenger_seat_index >= 0:
 		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
 	_update_train_mechanisms(delta)
 	_update_island_power_effect(delta)
 	_update_prompt()
-
-
 func _unhandled_input(event: InputEvent) -> void:
 	if _player == null:
 		return
@@ -460,7 +471,10 @@ func get_interaction_mode_for_position(world_position: Vector3) -> String:
 	var seat_distance := INF
 	if nearest_seat >= 0:
 		seat_distance = world_position.distance_to(get_passenger_seat_position(nearest_seat))
-	if driver_distance <= DRIVER_INTERACTION_RANGE and driver_distance <= seat_distance:
+	# The redesigned engine places the visible cab farther forward than the first
+	# passenger bench. Everything within the cab's explicit interaction radius is
+	# driver territory; otherwise the nearest bench offers passenger mode.
+	if driver_distance <= DRIVER_INTERACTION_RANGE:
 		return "drive"
 	if nearest_seat >= 0:
 		return "sit"
@@ -638,6 +652,7 @@ func sit_in_passenger_seat(seat_index: int) -> bool:
 	_player.call("set_input_enabled", false)
 	_player.velocity = Vector3.ZERO
 	_player.global_position = _train.to_global(BENCH_SEATS[seat_index])
+	_attach_rider_anchor(BENCH_SEATS[seat_index])
 	_begin_ride_camera(14.0)
 	_status.text = "PASSENGER MODE  •  2 RIDE  •  1 DRIVE AT A STATION  •  Q STAND"
 	call_deferred("_ride_seated_passenger_one_station")
@@ -648,6 +663,8 @@ func leave_passenger_seat() -> bool:
 	if not _seated_passenger or _player == null:
 		return false
 	var seat_position := _train.to_global(BENCH_SEATS[_passenger_seat_index])
+	if _rider_anchor != null:
+		_rider_anchor.remote_path = NodePath()
 	_seated_passenger = false
 	_passenger_in_motion = false
 	_passenger_seat_index = -1
@@ -725,6 +742,7 @@ func board_as_driver() -> bool:
 	_player.call("set_input_enabled", false)
 	_player.velocity = Vector3.ZERO
 	_player.global_position = _train.to_global(DRIVER_SEAT)
+	_attach_rider_anchor(DRIVER_SEAT)
 	# Driving pulls the view furthest out: the whole train plus the track ahead.
 	_begin_ride_camera(18.0)
 	_status.text = "DRIVER MODE  •  W/S MOVE  •  R HORN  •  2 RIDE AT A STATION  •  Q EXIT"
@@ -742,6 +760,11 @@ func request_disembark() -> bool:
 # Positive throttle follows Gallery -> Mind -> Heart -> Creator -> Gallery;
 # negative throttle reverses around the same closed Crown Line.
 func drive_manual(throttle: float, delta: float) -> void:
+	_external_drive_commanded = absf(throttle) >= 0.01
+	_advance_manual_drive(throttle, delta)
+
+
+func _advance_manual_drive(throttle: float, delta: float) -> void:
 	if not _manual_driving or _train == null:
 		return
 	var requested_direction := _drive_motion_direction
@@ -750,7 +773,26 @@ func drive_manual(throttle: float, delta: float) -> void:
 	var changing_direction := requested_direction != _drive_motion_direction and _display_speed_kph > 0.5
 	if not changing_direction and absf(throttle) >= 0.01:
 		_drive_motion_direction = requested_direction
+	var drive_direction := _drive_motion_direction
+	if _drive_segment < 0 and not changing_direction and absf(throttle) >= 0.01:
+		if not _begin_manual_segment(drive_direction):
+			_display_speed_kph = 0.0
+			return
 	var target_speed := 0.0 if changing_direction else absf(throttle) * DISPLAY_MAX_SPEED_KPH
+	# A held throttle still has to arrive like a train, not hit the station at
+	# line speed and teleport to rest. Cap speed by the physical stopping distance
+	# so both the platform and its ride camera decelerate continuously into docks.
+	if _drive_segment >= 0 and target_speed > 0.0:
+		var arrival_curve := _curves[_drive_segment]
+		var remaining_progress := 1.0 - _drive_progress \
+			if drive_direction > 0 else _drive_progress
+		var remaining_distance := maxf(remaining_progress, 0.0) \
+			* arrival_curve.get_baked_length()
+		var braking_metres_per_second_sq := DISPLAY_BRAKING_KPH_S \
+			/ DISPLAY_MAX_SPEED_KPH * MANUAL_DRIVE_SPEED
+		var arrival_speed_cap := sqrt(2.0 * braking_metres_per_second_sq \
+			* remaining_distance) / MANUAL_DRIVE_SPEED * DISPLAY_MAX_SPEED_KPH
+		target_speed = minf(target_speed, arrival_speed_cap)
 	var speed_rate := DISPLAY_ACCELERATION_KPH_S if target_speed > _display_speed_kph \
 		else DISPLAY_BRAKING_KPH_S
 	_display_speed_kph = move_toward(_display_speed_kph, target_speed, speed_rate * maxf(delta, 0.0))
@@ -759,11 +801,6 @@ func drive_manual(throttle: float, delta: float) -> void:
 		if _player != null:
 			_player.global_position = _train.to_global(DRIVER_SEAT)
 		return
-	var drive_direction := _drive_motion_direction
-	if _drive_segment < 0:
-		if not _begin_manual_segment(drive_direction):
-			_display_speed_kph = 0.0
-			return
 	var curve := _curves[_drive_segment]
 	var progress_delta := (_display_speed_kph / DISPLAY_MAX_SPEED_KPH) \
 		* MANUAL_DRIVE_SPEED * maxf(delta, 0.0) \
@@ -792,8 +829,11 @@ func _dock_manual_train(station_index: int) -> void:
 	_current_station = posmod(station_index, STATIONS.size())
 	_drive_segment = -1
 	_display_speed_kph = 0.0
-	_train.position = STATIONS[_current_station].position
-	_orient_train_at_station(_current_station)
+	# Preserve the continuously interpolated arrival heading. Incoming and
+	# outgoing rails share one station tangent, so forcing a fresh basis here is
+	# unnecessary and creates a visible final-frame snap on synchronized bodies.
+	_train.transform = Transform3D(
+		_train.basis, STATIONS[_current_station].position)
 	if _player != null:
 		_player.global_position = _train.to_global(DRIVER_SEAT)
 		_player.velocity = Vector3.ZERO
@@ -813,6 +853,8 @@ func _disembark_driver() -> void:
 	_manual_driving = false
 	_riding = false
 	_display_speed_kph = 0.0
+	if _rider_anchor != null:
+		_rider_anchor.remote_path = NodePath()
 	if _player != null:
 		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
 		_player.velocity = Vector3.ZERO
@@ -2680,6 +2722,13 @@ func _build_train() -> void:
 	_train.name = "RainbowGalaxyTrain"
 	_train.position = STATIONS[0].position
 	add_child(_train)
+	_rider_anchor = RemoteTransform3D.new()
+	_rider_anchor.name = "RiderTransformAnchor"
+	_rider_anchor.position = DRIVER_SEAT
+	_rider_anchor.update_position = true
+	_rider_anchor.update_rotation = false
+	_rider_anchor.update_scale = false
+	_train.add_child(_rider_anchor)
 	var colours := [Color("f35c94"), Color("f3bc55"), Color("63d69b"), Color("5bc9ed"), Color("9370dc")]
 	# The reference train has two open passenger coaches behind one crystal
 	# engine. These simple hidden bodies remain the authoritative walkable and
@@ -3365,8 +3414,8 @@ func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> vo
 			or _rainbow_smoke_wake_particles == null or _gold_trail_particles == null:
 		return
 	var raw_speed := motion_delta.length() / maxf(delta, 0.0001)
-	var moving := raw_speed > 0.75 and motion_delta.length_squared() > 0.0001
-	if moving:
+	var has_motion_sample := raw_speed > 0.75 and motion_delta.length_squared() > 0.0001
+	if has_motion_sample:
 		var measured_direction := motion_delta.normalized()
 		if _last_motion_direction.dot(measured_direction) < -0.35:
 			_motion_echo_history.clear()
@@ -3380,14 +3429,24 @@ func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> vo
 		_movement_vfx.global_position = _train.global_position \
 			- _last_motion_direction * 24.0 + Vector3.UP * 2.4
 		_movement_vfx.global_basis = Basis.looking_at(-_last_motion_direction, Vector3.UP)
+	# Render frames can outnumber physics frames. A frame with no new platform
+	# transform is not a stopped train, so retain the commanded speed and echo
+	# history between physics samples instead of flickering the trail off.
+	var commanded_moving := _riding and _display_speed_kph > 0.5
+	var target_ratio := clampf(_display_speed_kph / DISPLAY_MAX_SPEED_KPH, 0.0, 1.0) \
+		if _manual_driving else (clampf(raw_speed / MANUAL_DRIVE_SPEED, 0.0, 1.0) \
+		if has_motion_sample else _movement_vfx_speed_ratio)
+	if not commanded_moving and not has_motion_sample:
+		target_ratio = 0.0
+	var response_delta := maxf(delta, 1.0 / 120.0)
 	_movement_vfx_speed_ratio = move_toward(_movement_vfx_speed_ratio,
-		clampf(raw_speed / MANUAL_DRIVE_SPEED, 0.0, 1.0) if moving else 0.0,
-		delta * (3.8 if moving else 5.5))
-	var should_emit := moving and _movement_vfx_speed_ratio > 0.015
+		target_ratio, response_delta * (3.8 if commanded_moving or has_motion_sample else 5.5))
+	var should_emit := (commanded_moving or has_motion_sample) \
+		and _movement_vfx_speed_ratio > 0.015
 	_rainbow_trail_particles.emitting = should_emit
 	_rainbow_smoke_wake_particles.emitting = should_emit
 	_gold_trail_particles.emitting = should_emit
-	if not moving:
+	if not commanded_moving and not has_motion_sample:
 		_motion_echo_history.clear()
 	for echo_index in _motion_blur_echoes.size():
 		var echo := _motion_blur_echoes[echo_index]
@@ -3519,16 +3578,26 @@ func _set_train_progress(segment_index: int, progress: float) -> void:
 	var behind := curve.sample_baked(clampf(distance - AIM_SPAN, 0.0, length))
 	var ahead := curve.sample_baked(clampf(distance + AIM_SPAN, 0.0, length))
 
-	_train.position = point
 	var direction := ahead - behind
+	var next_basis := _train.basis
 	if direction.length_squared() > 0.01:
 		var target_basis := Basis.looking_at(direction.normalized(), Vector3.UP)
 		# Ease into the new heading so any residual step in the sampled tangent
 		# arrives as a turn rather than a snap. Framerate-independent so the ride
 		# feels the same whether the browser build runs at 30 or 60 fps.
-		var blend := 1.0 - pow(0.0001, get_process_delta_time())
-		_train.basis = _train.basis.slerp(target_basis, clampf(blend, 0.0, 1.0)) \
+		# Uncapped/headless render frames can report a near-zero process delta even
+		# while the public drive API advances at a fixed simulation step. Keep a
+		# 120 Hz floor so heading interpolation cannot fall far behind the curve and
+		# then snap to the station tangent when docking.
+		var blend_delta := maxf(get_process_delta_time(), 1.0 / 120.0)
+		var blend := 1.0 - pow(0.0001, blend_delta)
+		next_basis = _train.basis.slerp(target_basis, clampf(blend, 0.0, 1.0)) \
 			if _manual_driving else target_basis
+	# sync_to_physics defers transform changes. Assigning position and basis
+	# separately made the basis assignment copy the old position over the queued
+	# movement, so the speedometer advanced while the platform stayed docked.
+	var next_transform := Transform3D(next_basis, point)
+	_train.transform = next_transform
 	if _player != null:
 		var rider_offset := DRIVER_SEAT
 		if _seated_passenger and _passenger_seat_index >= 0:
@@ -3545,7 +3614,12 @@ func _orient_train_at_station(station_index: int) -> void:
 	var curve: Curve3D = _curves[posmod(station_index, _curves.size())]
 	direction = curve.sample_baked(2.0) - curve.sample_baked(0.0)
 	if direction.length_squared() > 0.01:
-		_train.basis = Basis.looking_at(direction.normalized(), Vector3.UP)
+		# Keep station placement and heading in the same synchronized transform.
+		# Separate position/basis assignments race inside AnimatableBody3D and can
+		# leave a one-frame heading-only dock snap.
+		_train.transform = Transform3D(
+			Basis.looking_at(direction.normalized(), Vector3.UP),
+			STATIONS[posmod(station_index, STATIONS.size())].position)
 
 
 func _refresh_station_lights() -> void:
@@ -3670,8 +3744,17 @@ func _configure_train_platform_body(body: AnimatableBody3D, shell_kind: String) 
 	body.sync_to_physics = true
 	body.collision_layer = 1
 	body.collision_mask = 1
+	body.add_to_group("ride_camera_ignore")
 	body.set_meta("train_collision_shell", shell_kind)
 	body.set_meta("mass_model", "infinite_mass_moving_platform")
+
+
+func _attach_rider_anchor(local_seat: Vector3) -> void:
+	if _rider_anchor == null or _player == null \
+			or not _rider_anchor.is_inside_tree() or not _player.is_inside_tree():
+		return
+	_rider_anchor.position = local_seat
+	_rider_anchor.remote_path = _rider_anchor.get_path_to(_player)
 
 
 func _get_train_collision_owner(parent: Node3D) -> CollisionObject3D:

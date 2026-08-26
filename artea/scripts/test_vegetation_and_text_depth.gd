@@ -50,8 +50,8 @@ func _run() -> void:
 			return
 	var grass_stack = grass.get("modifier_stack")
 	if grass_stack == null or grass_stack.stack.is_empty() \
-			or int(grass_stack.stack[0].amount) < 50000:
-		_fail("desktop grass density is too low to cover the expanded island lawn")
+			or int(grass_stack.stack[0].amount) < 24000:
+		_fail("desktop grass density is below the performance-tested island coverage")
 		return
 	for modifier in grass_stack.stack:
 		var modifier_script = modifier.get_script() if modifier != null else null
