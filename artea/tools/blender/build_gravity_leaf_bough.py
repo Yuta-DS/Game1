@@ -28,6 +28,7 @@ ARTIFACT_ROOT = PROJECT / "artifacts/tree_of_life_gravity_bough"
 SIDE_PATH = ARTIFACT_ROOT / "gravity_leaf_bough_side.png"
 TOP_PATH = ARTIFACT_ROOT / "gravity_leaf_bough_top.png"
 SOCKET_PATH = ARTIFACT_ROOT / "gravity_leaf_bough_socket_closeup.png"
+ATTACHMENT_PATH = ARTIFACT_ROOT / "gravity_leaf_bough_attachment_proof.png"
 
 
 # Local coordinates of the visible brass stem connector in each reference
@@ -213,6 +214,8 @@ def main():
     lateral_fiber_count = 0
     twig_fiber_count = 0
     leaf_energy_node_count = 0
+    attachment_detail_objects = []
+    attachment_detail_center = Vector((0.0, 0.0, 0.0))
 
     # Alternating lateral ranks avoid the rejected circular/radial rosette.
     # Proximal laterals are longer and stronger; distal laterals become shorter.
@@ -236,8 +239,11 @@ def main():
         base_radius = 0.48 * (1.0 - 0.38 * t)
         lateral_radii = tuple(base_radius * (1.0 - 0.78 * i / (len(lateral_path) - 1))
             for i in range(len(lateral_path)))
-        export_objects.append(canopy.make_tube(f"GravityBough_Lateral_{rank:02d}",
-            lateral_path, lateral_radii, 9, twig_wood, lateral_collection))
+        lateral_wood = canopy.make_tube(f"GravityBough_Lateral_{rank:02d}",
+            lateral_path, lateral_radii, 9, twig_wood, lateral_collection)
+        export_objects.append(lateral_wood)
+        if rank == 10:
+            attachment_detail_objects.append(lateral_wood)
         lateral_count += 1
 
         channel_path = tuple((x, y, z + lateral_radii[i] * 0.74)
@@ -273,9 +279,13 @@ def main():
             twig_path = catmull_rom((tuple(twig_anchor), tuple(twig_middle), tuple(twig_end)), 5)
             twig_radii = tuple(0.16 * (1.0 - 0.72 * i / (len(twig_path) - 1))
                 for i in range(len(twig_path)))
-            export_objects.append(canopy.make_tube(
+            leaf_twig = canopy.make_tube(
                 f"GravityBough_LeafTwig_{rank:02d}_{twig_rank:02d}", twig_path,
-                twig_radii, 7, twig_wood, twig_collection))
+                twig_radii, 7, twig_wood, twig_collection)
+            export_objects.append(leaf_twig)
+            if rank == 10 and twig_rank == 3:
+                attachment_detail_objects.append(leaf_twig)
+                attachment_detail_center = Vector(twig_path[len(twig_path) // 2])
             twig_fiber_path = wrapped_fiber_path(
                 twig_path, twig_radii, 0.5 + twig_rank * 0.72, 0.72, 1.08)
             export_objects.append(canopy.make_tube(
@@ -312,6 +322,8 @@ def main():
                 leaf.matrix_world = leaf_matrix(socket_world, family, scale, azimuth, pitch, roll)
                 leaf_collection.objects.link(leaf)
                 export_objects.append(leaf)
+                if rank == 10 and twig_rank == 3:
+                    attachment_detail_objects.append(leaf)
                 transformed_socket = leaf.matrix_world @ LEAF_SOCKET_LOCAL[family]
                 socket_errors.append((transformed_socket - socket_world).length)
                 energy_node = energy_node_template.copy()
@@ -351,6 +363,9 @@ def main():
     side_camera = add_camera("GravityBoughSideCamera", (0, -48, 15), (0, 0, 0), 44)
     top_camera = add_camera("GravityBoughTopCamera", (0, 0, 52), (0, 0, 0), 44)
     socket_camera = add_camera("GravityBoughSocketCamera", (-5.5, -12, 8), (-5.5, 0, 1.7), 12)
+    attachment_camera = add_camera("GravityBoughAttachmentCamera",
+        tuple(attachment_detail_center + Vector((0.0, -14.0, 4.0))),
+        tuple(attachment_detail_center), 10)
     scene = bpy.context.scene
     scene.render.engine = "BLENDER_EEVEE"
     scene.render.resolution_x = 1400
@@ -379,6 +394,19 @@ def main():
         scene.render.filepath = str(path)
         bpy.ops.render.render(write_still=True)
 
+    # Prove one complete biological connection without the visual ambiguity of
+    # the full canopy: parent lateral -> curved twig -> eight brass-socket leaves.
+    # Visibility is restored immediately so the saved source and GLB stay whole.
+    previous_visibility = {obj: obj.hide_render for obj in export_objects}
+    detail_set = set(attachment_detail_objects)
+    for obj in export_objects:
+        obj.hide_render = obj not in detail_set
+    scene.camera = attachment_camera
+    scene.render.filepath = str(ATTACHMENT_PATH)
+    bpy.ops.render.render(write_still=True)
+    for obj, hidden in previous_visibility.items():
+        obj.hide_render = hidden
+
     manifest = {
         "asset": "gravity_leaf_bough",
         "main_boughs": 1,
@@ -400,6 +428,8 @@ def main():
         "side_preview": str(SIDE_PATH.relative_to(PROJECT)),
         "top_preview": str(TOP_PATH.relative_to(PROJECT)),
         "socket_closeup": str(SOCKET_PATH.relative_to(PROJECT)),
+        "attachment_proof": str(ATTACHMENT_PATH.relative_to(PROJECT)),
+        "attachment_proof_leaf_count": 8,
     }
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(manifest, indent=2))

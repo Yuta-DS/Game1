@@ -59,7 +59,7 @@ const CREATIVE_CHOICES := [
 	{"name": "Wonder Portal", "colour": Color("55e6c1")},
 ]
 const GUARDIAN_MODELS := [
-	"res://assets3D/characters/Father_Animations.glb",
+	"res://assets3D/characters/Barbarian.glb",
 	"res://assets3D/characters/Knight.glb",
 	"res://assets3D/characters/Mage.glb",
 ]

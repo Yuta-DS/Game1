@@ -64,6 +64,17 @@ MAT = {
     "rubber": material("Cab_Control_Rubber", (0.012, 0.016, 0.024), 0.08, 0.58),
     "green": material("Planter_Green", (0.08, 0.30, 0.15), 0.15, 0.60),
     "rail": material("Rail_Dark", (0.018, 0.025, 0.065), 0.82, 0.22),
+    "rainbow_red": material("Engine_Rainbow_Red", (1.00, 0.12, 0.24), 0.10, 0.32),
+    "rainbow_orange": material("Engine_Rainbow_Orange", (1.00, 0.38, 0.06), 0.10, 0.32),
+    "rainbow_yellow": material("Engine_Rainbow_Yellow", (1.00, 0.82, 0.08), 0.08, 0.34),
+    "rainbow_green": material("Engine_Rainbow_Green", (0.12, 0.82, 0.34), 0.08, 0.32),
+    "rainbow_blue": material("Engine_Rainbow_Blue", (0.06, 0.32, 1.00), 0.12, 0.27,
+                             (0.02, 0.18, 1.00), 1.1),
+    "rainbow_indigo": material("Engine_Rainbow_Indigo", (0.22, 0.12, 0.72), 0.10, 0.30),
+    "rainbow_violet": material("Engine_Rainbow_Violet", (0.72, 0.20, 1.00), 0.08, 0.28,
+                               (0.48, 0.05, 1.00), .75),
+    "tank_white": material("Engine_Tank_PearlWhite", (0.985, 0.965, 0.900), 0.08, 0.24,
+                           (0.78, 0.74, 0.62), .55),
 }
 
 
@@ -900,11 +911,12 @@ def engine(center_y=-17.0, parent=model_root):
     eng.parent = parent
     model_objects.append(eng)
     # Multi-layer chassis and raised corner bumpers.
-    box("Engine_UnderframeNavy", (0,center_y, .90), (11.4,16.0,.62), MAT["navy"], .18, parent=eng)
+    box("Engine_UnderframeNavy", (0,center_y, .90), (11.4,16.0,.62), MAT["rainbow_indigo"], .18, parent=eng)
     box("Engine_ChassisGold", (0,center_y,1.23), (11.15,15.75,.28), MAT["gold"], .10, parent=eng)
     box("Engine_FloorCream", (0,center_y,1.52), (10.6,15.1,.34), MAT["cream"], .08, parent=eng)
     for side in (-1,1):
-        box(f"Engine_SideSillNavy_{side:+d}",(side*5.05,center_y,1.72),(.42,14.8,.62),MAT["navy"],.10,parent=eng)
+        box(f"Engine_SideSillNavy_{side:+d}",(side*5.05,center_y,1.72),(.42,14.8,.62),
+            MAT["rainbow_red" if side<0 else "rainbow_violet"],.10,parent=eng)
         box(f"Engine_SideSillGold_{side:+d}",(side*5.29,center_y,1.87),(.14,14.9,.22),MAT["gold"],.035,parent=eng)
     for x in (-4.55,4.55):
         for dy in (-6.55,6.55):
@@ -918,12 +930,12 @@ def engine(center_y=-17.0, parent=model_root):
     # Enclosed bullet-train cockpit shell. The roof and belt armour wrap the
     # driver mechanically while the transparent front remains unobstructed.
     tapered_box("Engine_CabRoofShell",(0,cab_y-.35,7.62),7.80,7.75,9.10,.30,.48,
-                MAT["navy"],eng,.10)
+                MAT["rainbow_violet"],eng,.10)
     tapered_box("Engine_CabRoofGoldBlade",(0,cab_y-.58,7.88),7.40,7.35,8.72,.10,.16,
                 MAT["accent_gold"],eng,.035)
     for side in (-1,1):
         box(f"Engine_CabBeltArmour_{side:+d}",(side*4.62,cab_y,3.18),
-            (.46,7.05,1.12),MAT["navy"],.09,parent=eng)
+            (.46,7.05,1.12),MAT["rainbow_green" if side<0 else "rainbow_blue"],.09,parent=eng)
         box(f"Engine_CabBeltGoldRail_{side:+d}",(side*4.88,cab_y,3.65),
             (.10,7.18,.18),MAT["gold"],.025,parent=eng)
         for scale_i in range(8):
@@ -1337,7 +1349,9 @@ def engine(center_y=-17.0, parent=model_root):
         for fin_i in range(7):
             box(f"Engine_ReactorCoolingFin_{side:+d}_{fin_i}",
                 (side*(2.05+fin_i*.20),reactor_y+.58+fin_i*.13,3.18),
-                (.09,.52,1.05-fin_i*.06),MAT["navy"],.022,
+                (.09,.52,1.05-fin_i*.06),MAT[("rainbow_red","rainbow_orange",
+                "rainbow_yellow","rainbow_green","rainbow_blue","rainbow_indigo",
+                "rainbow_violet")[fin_i]],.022,
                 rot=(0,math.radians(side*(10+fin_i*2)),0),parent=eng)
         for valve_i in range(10):
             yy=reactor_y+.18+valve_i*.15
@@ -1347,6 +1361,98 @@ def engine(center_y=-17.0, parent=model_root):
             sphere(f"Engine_ReactorValveCore_{side:+d}_{valve_i:02d}",
                    (side*(1.20+valve_i*.08),yy,3.02+(valve_i%3)*.16),
                    .050,MAT["cyan"],7,3,eng)
+
+    # Steam-orb hybrid machinery.  The old crystal reactor remains the power
+    # source; this exposed boiler, valve train and geared transmission makes
+    # that energy readable as a magical steam locomotive from either side.
+    boiler_y = center_y-5.55
+    cylinder("Engine_SteamBoilerBarrel",(0,boiler_y,4.72),1.62,5.65,
+             MAT["tank_white"],32,rot=(math.pi/2,0,0),parent=eng)
+    for band_i, band_y in enumerate((boiler_y-2.35,boiler_y-1.16,boiler_y,
+                                     boiler_y+1.16,boiler_y+2.35)):
+        torus(f"Engine_SteamBoilerGoldBand_{band_i}",(0,band_y,4.72),1.68,.095,
+              MAT["accent_gold"],rot=(math.pi/2,0,0),parent=eng)
+    for rivet_i in range(12):
+        angle = math.tau*rivet_i/12
+        sphere(f"Engine_SteamBoilerRainbowRivet_{rivet_i:02d}",
+               (math.cos(angle)*1.67,boiler_y-2.67,4.72+math.sin(angle)*1.67),
+               .095,(MAT["cyan"],MAT["purple"],MAT["pink"],MAT["teal_light"])[rivet_i%4],
+               8,4,eng)
+
+    # Crown-shaped smokestack and two pressure domes retain the ornate visual
+    # language of the existing train instead of looking like an added kit.
+    stack_y = boiler_y-.78
+    cylinder("Engine_SteamChimneyStem",(0,stack_y,6.72),.53,2.10,
+             MAT["bronze"],24,parent=eng)
+    for stack_i,(height,radius,material_key) in enumerate((
+            (5.92,.74,"gold"),(7.42,.76,"gold"),(7.72,1.04,"accent_gold"))):
+        cylinder(f"Engine_SteamChimneyCrown_{stack_i}",(0,stack_y,height),
+                 radius,.22,MAT[material_key],24,parent=eng)
+    torus("Engine_SteamChimneyEnergyRing",(0,stack_y,7.32),.69,.09,
+          MAT["cyan"],parent=eng)
+    for dome_i,(dome_y,dome_colour) in enumerate(((boiler_y+1.15,"rainbow_blue"),
+                                                   (boiler_y+2.18,"rainbow_violet"))):
+        cylinder(f"Engine_SteamPressureDome_{dome_i}",(0,dome_y,6.25),
+                 .56,.72,MAT["gold"],20,parent=eng)
+        sphere(f"Engine_SteamPressureOrb_{dome_i}",(0,dome_y,6.68),
+               .48,MAT[dome_colour],16,8,eng)
+        torus(f"Engine_SteamPressureHalo_{dome_i}",(0,dome_y,6.66),
+              .60,.055,MAT["accent_gold"],parent=eng)
+
+    def steam_gear_profile(radius, teeth=18):
+        points=[]
+        for point_i in range(teeth*4):
+            angle=math.tau*point_i/(teeth*4)
+            tooth_phase=point_i%4
+            point_radius=radius if tooth_phase in (1,2) else radius*.84
+            points.append((math.cos(angle)*point_radius,math.sin(angle)*point_radius))
+        return points
+
+    for side in (-1,1):
+        side_tag="L" if side<0 else "R"
+        gear_x=side*5.47
+        gear_specs=(("Drive",boiler_y-.80,3.12,1.48,20,"accent_gold"),
+                    ("Valve",boiler_y+1.48,4.05,.96,16,"purple"),
+                    ("Governor",boiler_y+2.62,3.04,.70,14,"cyan"))
+        for gear_i,(gear_kind,gear_y,gear_z,gear_radius,teeth,colour) in enumerate(gear_specs):
+            custom_prism(f"Engine_Steam{gear_kind}Gear_{side_tag}_{gear_i}",
+                         steam_gear_profile(gear_radius,teeth),.24,
+                         (gear_x,gear_y,gear_z),MAT[colour],
+                         rot=(0,math.pi/2,0),parent=eng,bevel=.045)
+            cylinder(f"Engine_SteamGearHub_{side_tag}_{gear_i}",
+                     (gear_x+side*.15,gear_y,gear_z),gear_radius*.26,.34,
+                     MAT["gold"],16,rot=(0,math.pi/2,0),parent=eng)
+            torus(f"Engine_SteamGearEnergyRing_{side_tag}_{gear_i}",
+                  (gear_x+side*.19,gear_y,gear_z),gear_radius*.55,.065,
+                  MAT[("cyan","pink","teal_light")[gear_i]],
+                  rot=(0,math.pi/2,0),parent=eng)
+        # A compact piston sits in its own lower-forward bay. Only the short
+        # outer-face linkage reaches the crank pin, so no geometry crosses the
+        # drive gear, neighbouring transmission, or cabinet panels.
+        linkage_x=gear_x+side*.56
+        cylinder(f"Engine_SteamPistonCylinder_{side_tag}",
+                 (linkage_x,boiler_y-3.25,2.00),.26,1.00,MAT["bronze"],18,
+                 rot=(math.pi/2,0,0),parent=eng)
+        torus(f"Engine_SteamPistonCollar_{side_tag}",
+              (linkage_x,boiler_y-2.73,2.00),.31,.060,MAT["accent_gold"],
+              rot=(math.pi/2,0,0),parent=eng)
+        beam(f"Engine_SteamConnectingRod_{side_tag}",
+             (linkage_x,boiler_y-2.72,2.00),
+             (linkage_x,boiler_y-1.90,2.25),.080,MAT["accent_gold"],10,eng)
+        cylinder(f"Engine_SteamCrankPin_{side_tag}",
+                 (linkage_x,boiler_y-1.90,2.25),.18,.18,MAT["cyan"],16,
+                 rot=(0,math.pi/2,0),parent=eng)
+        beam(f"Engine_SteamOrbFeedPipe_{side_tag}",
+             (side*1.15,reactor_y+.62,3.78),(side*3.86,boiler_y-1.85,5.33),
+             .14,MAT["bronze"],12,eng)
+        beam(f"Engine_SteamRainbowPressurePipe_{side_tag}",
+             (side*3.86,boiler_y-1.85,5.33),(side*3.86,boiler_y+2.15,6.28),
+             .105,MAT["cyan" if side<0 else "purple"],10,eng)
+        for valve_i in range(3):
+            valve_y=boiler_y-1.05+valve_i*1.30
+            torus(f"Engine_SteamPipeValve_{side_tag}_{valve_i}",
+                  (side*3.90,valve_y,5.68+valve_i*.22),.25,.055,
+                  MAT["accent_gold"],rot=(0,math.pi/2,0),parent=eng)
 
     # Driver floor: removable energy tiles, seam strips and four corner locks.
     for row in range(6):
@@ -1674,13 +1780,28 @@ def engine(center_y=-17.0, parent=model_root):
                 rot=(math.radians(-8),0,0),parent=eng)
     for clip_i,xx in enumerate((2.90,3.86)):
         box(f"Engine_RouteManualClip_{clip_i}",(xx,cab_y-.29,5.04),(.18,.08,.30),MAT["gold"],.025,parent=eng)
-    # Crown canopy: larger layered flower, star halo, vertical crystal.
+    # Crown canopy: a layered botanical flower beneath a celestial gyroscope.
+    # Outer and inner part prefixes are consolidated into two pivot-correct
+    # runtime mechanisms by export_crown_line_runtime_glb.py.
     roof_rosette("Engine_CrownCanopy", center_y+1.0, 8.25, 7.4, eng, crown=True)
-    torus("Engine_CrownHalo", (0, center_y+1.0, 10.10), 2.35, .16, MAT["gold"], parent=eng)
-    for i in range(8):
-        ang = math.tau*i/8
-        beam(f"Engine_HaloRay_{i:02d}", (math.cos(ang)*1.3, center_y+1+math.sin(ang)*1.3, 10.10),
-             (math.cos(ang)*3.0, center_y+1+math.sin(ang)*3.0, 10.10), .085, MAT["gold"], 7, eng)
+    halo_y=center_y+1.0
+    torus("Engine_CelestialHaloOuterPart_Ring",(0,halo_y,10.28),2.78,.15,
+          MAT["accent_gold"],parent=eng)
+    for i in range(12):
+        ang=math.tau*i/12
+        crystal(f"Engine_CelestialHaloOuterPart_Crystal_{i:02d}",
+                (math.cos(ang)*2.78,halo_y+math.sin(ang)*2.78,10.37),
+                .13,.48,MAT["purple" if i%2 else "cyan"],parent=eng,detailed=False)
+    torus("Engine_CelestialHaloInnerPart_Ring",(0,halo_y,10.52),1.82,.105,
+          MAT["cyan"],parent=eng)
+    halo_rainbow=(MAT["rainbow_red"],MAT["rainbow_orange"],MAT["rainbow_yellow"],
+                  MAT["rainbow_green"],MAT["rainbow_blue"],MAT["rainbow_indigo"],
+                  MAT["rainbow_violet"])
+    for i in range(7):
+        ang=math.tau*i/7+math.radians(8)
+        sphere(f"Engine_CelestialHaloInnerPart_RainbowNode_{i:02d}",
+               (math.cos(ang)*1.82,halo_y+math.sin(ang)*1.82,10.52),
+               .16,halo_rainbow[i],10,5,eng)
     root_bogie("Engine_Bogie", center_y, 13.3, eng)
     return eng
 

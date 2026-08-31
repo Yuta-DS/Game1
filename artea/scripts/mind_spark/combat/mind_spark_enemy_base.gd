@@ -7,6 +7,7 @@ signal state_changed(enemy: MindSparkEnemyBase, state: int)
 enum State { IDLE, NOTICE, TELEGRAPH, ATTACK, RECOVERY, DEFEATED }
 
 const Definition := preload("res://scripts/mind_spark/combat/mind_spark_enemy_definition.gd")
+const Foley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
 
 @export var definition: MindSparkEnemyDefinition
 @export var encounter_id := ""
@@ -24,9 +25,11 @@ var _state_time := 0.0
 var _player: CharacterBody3D
 var _attack_applied := false
 var _spawn_position := Vector3.ZERO
+var _combat_audio: AudioStreamPlayer3D
 
 
 func _ready() -> void:
+	_build_combat_audio()
 	if definition == null:
 		push_error("MindSparkEnemyBase requires a definition")
 		set_physics_process(false)
@@ -71,10 +74,12 @@ func take_damage(amount: float, source: Node = null) -> float:
 		return 0.0
 	var multiplier := _damage_multiplier(source)
 	if multiplier <= 0.0:
+		_play_combat_sound(&"enemy_block")
 		_show_feedback("BLOCKED • WAIT FOR CYAN", Color("74e8ff"))
 		return 0.0
 	var applied := minf(current_health, amount * multiplier)
 	current_health -= applied
+	_play_combat_sound(&"enemy_hit")
 	name_label.text = "%s • %d HP" % [definition.display_name.to_upper(), ceili(current_health)]
 	_show_feedback("-%d SHELL" % int(applied), Color("ffd36b"))
 	if current_health <= 0.0:
@@ -148,6 +153,7 @@ func _damage_multiplier(source: Node) -> float:
 func _set_state(next_state: int, duration: float) -> void:
 	if state == next_state and duration <= 0.0:
 		return
+	var state_changed_now := state != next_state
 	state = next_state
 	_state_time = duration
 	_attack_applied = false
@@ -155,6 +161,12 @@ func _set_state(next_state: int, duration: float) -> void:
 	$VisualRoot/ProjectilePreview.visible = false
 	$VisualRoot/ProjectilePreview.position = Vector3(0, 1.0, 0)
 	core.visible = state == State.RECOVERY and definition.enemy_kind == Definition.EnemyKind.BLIGHT_SENTINEL
+	if state_changed_now:
+		match state:
+			State.NOTICE: _play_combat_sound(&"enemy_notice")
+			State.TELEGRAPH: _play_combat_sound(&"enemy_telegraph")
+			State.ATTACK: _play_combat_sound(&"enemy_attack")
+			State.DEFEATED: _play_combat_sound(&"enemy_defeat")
 	state_changed.emit(self, state)
 
 
@@ -315,3 +327,22 @@ func _show_feedback(text: String, color: Color) -> void:
 	var tween := create_tween()
 	tween.tween_interval(0.55)
 	tween.tween_callback(func(): $Feedback.visible = false)
+
+
+func _build_combat_audio() -> void:
+	_combat_audio = AudioStreamPlayer3D.new()
+	_combat_audio.name = "CombatFoley3D"
+	_combat_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	_combat_audio.unit_size = 3.0
+	_combat_audio.max_distance = 46.0
+	_combat_audio.volume_db = -5.0
+	_combat_audio.panning_strength = 1.0
+	_combat_audio.bus = &"SFX"
+	add_child(_combat_audio)
+
+
+func _play_combat_sound(event: StringName) -> void:
+	if _combat_audio == null:
+		return
+	_combat_audio.stream = Foley.make_combat_event(event)
+	_combat_audio.play()

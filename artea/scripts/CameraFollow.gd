@@ -62,6 +62,10 @@ var _pitch := 0.0
 var _touch_emulation_was_on := false
 
 func _ready() -> void:
+	# Follow after gameplay movers have published their final frame transform.
+	# This is especially important for sync-to-physics train platforms, whose
+	# rider position otherwise reaches the camera one render frame late.
+	process_priority = 100
 	_player = get_node_or_null(player_path)
 	current = true  # make this the active camera
 
@@ -115,13 +119,13 @@ func _input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_zoom_by(zoom_step)
 
-	# 1 = first person, 2 = third person. Matched on physical keycode so the
-	# binding survives non-QWERTY layouts, the same way the project binds Q/W/S.
+	# 1 and 2 are reserved for Crown Line drive/passenger selection. Camera view
+	# switching remains available on 3 and 4.
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).physical_keycode
-		if key == KEY_1:
+		if key == KEY_3:
 			set_view_mode("first")
-		elif key == KEY_2:
+		elif key == KEY_4:
 			set_view_mode("third")
 
 	# Escape releases the cursor so the player can reach menus; clicking back in
@@ -283,8 +287,17 @@ func _collision_safe_target(focus: Vector3, target: Vector3) -> Vector3:
 	# screen could be hidden by the object behind the player.
 	var space := get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(focus, target)
+	var excluded_rids: Array[RID] = []
 	if _player is CollisionObject3D:
-		query.exclude = [(_player as CollisionObject3D).get_rid()]
+		excluded_rids.append((_player as CollisionObject3D).get_rid())
+	# The train is the platform carrying the camera focus, not an intervening
+	# wall. Letting the camera ray hit its own carriage shell makes the target
+	# alternate between stopped and moving as rail geometry crosses the ray.
+	if _ride_view_active:
+		for ride_body in get_tree().get_nodes_in_group("ride_camera_ignore"):
+			if ride_body is CollisionObject3D:
+				excluded_rids.append((ride_body as CollisionObject3D).get_rid())
+	query.exclude = excluded_rids
 	var hit := space.intersect_ray(query)
 	if hit.is_empty():
 		return target

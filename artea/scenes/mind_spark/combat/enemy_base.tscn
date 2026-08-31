@@ -102,13 +102,12 @@ position = Vector3(0, 4.2, 0)
 font_size = 26
 outline_size = 8
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 
 [node name="Feedback" type="Label3D" parent="."]
 position = Vector3(0, 3.5, 0)
 font_size = 24
 outline_size = 8
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 visible = false
-

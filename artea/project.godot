@@ -24,6 +24,11 @@ run/main_scene.crown_story="res://scenes/viewfinder/crown_of_life_story.tscn"
 
 debug/show_island_state_panel=false
 
+[audio]
+
+general/2d_panning_strength=1.0
+general/3d_panning_strength=1.0
+
 [autoload]
 
 Firebase="*res://addons/godot-firebase/firebase/firebase.tscn"
@@ -33,10 +38,12 @@ DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameManager="*res://scripts/GameManager.gd"
 JourneyState="*res://scripts/JourneyState.gd"
 JourneyCampaign="*res://scripts/journey_campaign.gd"
+MiloCompanionManager="*res://scripts/MiloCompanionManager.gd"
 PlayerIdentityTracker="*res://scripts/player_identity_tracker.gd"
 Auth="*res://addons/godot-firebase/auth/auth.gd"
 APIManager="*res://scripts/API_Manager.gd"
 CreationWorldState="*res://scripts/creation_world/creation_world_state.gd"
+WorldSpatialAudio="*res://scripts/world_spatial_audio.gd"
 
 [dialogue_manager]
 

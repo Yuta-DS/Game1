@@ -32,7 +32,7 @@
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_rogue_hooded.tscn" id="103_vroguehood"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_mage.tscn" id="104_vmage"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_knight.tscn" id="105_vknight"]
-[ext_resource type="PackedScene" path="res://scenes/entities/villager_father.tscn" id="106_vfather"]
+[ext_resource type="Script" path="res://scripts/npc/milo_guide_point.gd" id="107_milo_point"]
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
@@ -55,7 +55,7 @@
 [ext_resource type="PackedScene" uid="uid://dipjrbs7fbcy2" path="res://assets3D/house scenes/home_b.tscn" id="39_t72bn"]
 [ext_resource type="PackedScene" uid="uid://ys3laco1twc" path="res://assets3D/house scenes/castle.tscn" id="40_40xrb"]
 [ext_resource type="PackedScene" uid="uid://fqx6500nugky" path="res://assets3D/house scenes/tavern.tscn" id="41_kjbyn"]
-[ext_resource type="Texture2D" uid="uid://b42uvpgfhvgje" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Inventory.png" id="41_kl01c"]
+[ext_resource type="Texture2D" path="res://assets/UI/inventory_backpack.svg" id="41_kl01c"]
 [ext_resource type="Script" uid="uid://dgfivhd7spfnv" path="res://scripts/inventory_button.gd" id="42_ewago"]
 [ext_resource type="PackedScene" uid="uid://cmwutg4qjm7hv" path="res://assets3D/house scenes/watermill.tscn" id="42_fn4xt"]
 [ext_resource type="PackedScene" uid="uid://bl7duyul3lwg3" path="res://assets3D/house scenes/lumbermill.tscn" id="43_448jj"]
@@ -83,7 +83,7 @@
 [ext_resource type="Script" path="res://scripts/hub_magitech.gd" id="71_magit"]
 [ext_resource type="Script" path="res://scripts/hub_landmark_glow.gd" id="72_lndmk"]
 [ext_resource type="Script" path="res://scripts/hub_lumen_citadel.gd" id="73_citdl"]
-[ext_resource type="Script" path="res://scripts/medieval_castle_redesign.gd" id="74_medieval"]
+[ext_resource type="Script" path="res://scripts/castle_redesign.gd" id="74_castle"]
 [ext_resource type="Script" path="res://scripts/original_cat_statue.gd" id="76_cat_statue"]
 [ext_resource type="Script" path="res://scripts/hub_castle_crown.gd" id="77_crown"]
 [ext_resource type="Script" path="res://scripts/hub_skyrail.gd" id="79_skyrl"]
@@ -91,6 +91,11 @@
 [ext_resource type="Script" path="res://scripts/hub_train_rider.gd" id="81_rider"]
 [ext_resource type="Script" path="res://scripts/hub_atmosphere.gd" id="82_atmos"]
 [ext_resource type="Script" path="res://scripts/web_terrain_compat.gd" id="82_webterrain"]
+[ext_resource type="Script" path="res://scripts/hub_grass_interaction.gd" id="108_grass_interaction"]
+[ext_resource type="Script" path="res://scripts/hub_bee_garden.gd" id="110_bee_garden"]
+[ext_resource type="PackedScene" path="res://scenes/vegetation/grass_clump_3d.tscn" id="109_grass_3d"]
+[ext_resource type="Script" path="res://scripts/hub_village_brick_plaza.gd" id="111_brick_plaza"]
+[ext_resource type="Script" path="res://addons/proton_scatter/src/shapes/box_shape.gd" id="112_scatter_box"]
 [ext_resource type="Script" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
 [ext_resource type="Script" path="res://scripts/hub_castle_entrance.gd" id="83_entrn"]
 [ext_resource type="Script" path="res://scripts/viewfinder/hub_lens.gd" id="84_lens"]
@@ -117,6 +122,8 @@
 [ext_resource type="PackedScene" uid="uid://cejjhajbx8vwe" path="res://assets3D/houses/gltf/fence_straight_long.gltf" id="97_fnstrl"]
 [ext_resource type="PackedScene" uid="uid://durvbjhil7ec1" path="res://scripts/Pier.tscn" id="98_pier"]
 [ext_resource type="PackedScene" path="res://scenes/boat.tscn" id="99_boat"]
+[ext_resource type="PackedScene" path="res://scenes/characters/elder_cat_mayor.tscn" id="113_mayor"]
+[ext_resource type="PackedScene" path="res://scenes/characters/town_villager.tscn" id="114_town_villager"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -211,7 +218,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 
 [sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("15_o1ycd")
-amount = 24000
+amount = 120000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
@@ -226,6 +233,7 @@ reference_frame = 2
 
 [sub_resource type="Resource" id="Resource_e81s8"]
 script = ExtResource("17_bsvfl")
+iterations = 0
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
@@ -239,6 +247,10 @@ remove_points_on_miss = false
 [sub_resource type="Resource" id="Resource_13iw3"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
+max_slope = 52.0
+enable_texture_filtering = true
+target_texture_id = 0
+texture_threshold = 0.5
 
 [sub_resource type="Resource" id="Resource_vqqxb"]
 script = ExtResource("13_1ti50")
@@ -262,12 +274,12 @@ noise = SubResource("FastNoiseLite_7nfwd")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_y45p1"]
 render_priority = 1
 shader = ExtResource("19_ha1sw")
-shader_parameter/bottom_color = Color(0.214194, 0.363532, 0.198002, 1)
-shader_parameter/top_color = Color(0.401027, 0.688921, 0.343888, 1)
-shader_parameter/color_variation_1 = Color(0.438892, 0.533217, 0.191565, 1)
+shader_parameter/bottom_color = Color(0.18, 0.44, 0.14, 1)
+shader_parameter/top_color = Color(0.36, 0.7, 0.24, 1)
+shader_parameter/color_variation_1 = Color(0.3, 0.62, 0.18, 1)
 shader_parameter/noise_variation_1 = SubResource("NoiseTexture2D_bsvfl")
 shader_parameter/Noise1Scale = 20.0
-shader_parameter/color_variation_2 = Color(0.394377, 0.618859, 0.257121, 1)
+shader_parameter/color_variation_2 = Color(0.24, 0.56, 0.18, 1)
 shader_parameter/noise_variation_2 = SubResource("NoiseTexture2D_ngqnt")
 shader_parameter/Noise2Scale = 20.0
 shader_parameter/windSpeed = 0.005
@@ -296,28 +308,36 @@ shader_parameter/debug_show_combined_noise = false
 
 [sub_resource type="Curve3D" id="Curve3D_8n7aw"]
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -111.57, 0, 54.0528, 0, 0, 0, 0, 0, 0, -37.3579, 7.62939e-06, 54.9847, 0, 0, 0, 0, 0, 0, 35.5735, 0, 27.6735, 0, 0, 0, 0, 0, 0, 3.88522, 0, -100.941, 0, 0, 0, 0, 0, 0, -181.275, 7.62939e-06, -141.999, 0, 0, 0, 0, 0, 0, -130.641, 0, 38.2469),
-"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -175, 0, -185, 0, 0, 0, 0, 0, 0, 120, 0, -185, 0, 0, 0, 0, 0, 0, 170, 0, -140, 0, 0, 0, 0, 0, 0, 170, 0, 105, 0, 0, 0, 0, 0, 0, 125, 0, 135, 0, 0, 0, 0, 0, 0, -145, 0, 130, 0, 0, 0, 0, 0, 0, -180, 0, 70, 0, 0, 0, 0, 0, 0, -190, 0, -120),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0)
 }
-point_count = 6
+point_count = 8
 
 [sub_resource type="Resource" id="Resource_vspl4"]
 script = ExtResource("21_ha1sw")
-thickness = 40.0
+thickness = 30.0
 curve = SubResource("Curve3D_8n7aw")
 metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 
+[sub_resource type="Resource" id="Resource_village_plaza_exclusion"]
+script = ExtResource("112_scatter_box")
+size = Vector3(74, 100, 152)
+
+[sub_resource type="Resource" id="Resource_castle_route_tree_exclusion"]
+script = ExtResource("112_scatter_box")
+size = Vector3(78, 100, 46)
+
 [sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("15_o1ycd")
-amount = 188
+amount = 260
 restrict_height = true
 reference_frame = 1
 
 [sub_resource type="Resource" id="Resource_iq1my"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
-rotation = Vector3(20, 360, 20)
-scale = Vector3(0.3, 0.3, 0.3)
+rotation = Vector3(0, 360, 0)
+scale = Vector3(0.18, 0.18, 0.18)
 reference_frame = 2
 
 [sub_resource type="Resource" id="Resource_ggnbg"]
@@ -357,6 +377,17 @@ script = ExtResource("69_awakn")
 [node name="WebTerrainCompatibility" type="Node" parent="."]
 script = ExtResource("82_webterrain")
 
+[node name="GrassInteraction" type="Node" parent="."]
+script = ExtResource("108_grass_interaction")
+
+[node name="BeeGarden" type="Node3D" parent="."]
+script = ExtResource("110_bee_garden")
+flower_scatter_path = NodePath("../Environment/Grass")
+tree_scatter_path = NodePath("../Environment/Objects")
+
+[node name="VillageBrickPlaza" type="Node3D" parent="."]
+script = ExtResource("111_brick_plaza")
+
 [node name="CreationsSpawner" type="Node" parent="."]
 script = ExtResource("70_creat")
 
@@ -369,8 +400,8 @@ script = ExtResource("72_lndmk")
 [node name="LumenCitadel" type="Node3D" parent="."]
 script = ExtResource("73_citdl")
 
-[node name="MedievalCastleRedesign" type="Node3D" parent="."]
-script = ExtResource("74_medieval")
+[node name="CastleRedesign" type="Node3D" parent="."]
+script = ExtResource("74_castle")
 
 [node name="CastleAtmosphere" type="Node3D" parent="."]
 script = ExtResource("82_atmos")
@@ -482,29 +513,85 @@ Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
 
 [node name="ScatterShape" type="Node3D" parent="Environment/Grass" unique_id=577490913]
-transform = Transform3D(0.953801, 0, -0.30044, 0, 1, 0, 0.30044, 0, 0.953801, 4.2984, 0, -2.62214)
 script = ExtResource("20_7nfwd")
 shape = SubResource("Resource_vspl4")
+
+[node name="VillagePlazaExclusion" type="Node3D" parent="Environment/Grass"]
+position = Vector3(90.4983, 0, -39.2097)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_village_plaza_exclusion")
 
 [node name="ScatterItemGrassA" type="Node3D" parent="Environment/Grass" unique_id=528747301]
 script = ExtResource("19_ngqnt")
 proportion = 1200
-source_scale_multiplier = 1.0
+source_scale_multiplier = 0.32
+override_material = SubResource("ShaderMaterial_y45p1")
 override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-path = "res://assets3D/kkNatureForest/grass.glb"
+path = "res://scenes/vegetation/grass_clump_3d.tscn"
 
 [node name="ScatterItemGrassB" type="Node3D" parent="Environment/Grass" unique_id=528747302]
 script = ExtResource("19_ngqnt")
 proportion = 900
-source_scale_multiplier = 1.15
+source_scale_multiplier = 0.36
+override_material = SubResource("ShaderMaterial_y45p1")
 override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-path = "res://assets3D/kkNatureForest/grass.glb"
+path = "res://scenes/vegetation/grass_clump_3d.tscn"
+
+[node name="ScatterItemFlowerRed" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 36
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_red_3d.tscn"
+
+[node name="ScatterItemFlowerOrange" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 36
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_orange_3d.tscn"
+
+[node name="ScatterItemFlowerYellow" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 36
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_yellow_3d.tscn"
+
+[node name="ScatterItemFlowerGreen" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 36
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_green_3d.tscn"
+
+[node name="ScatterItemFlowerBlue" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 36
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_blue_3d.tscn"
+
+[node name="ScatterItemFlowerIndigo" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 36
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_indigo_3d.tscn"
+
+[node name="ScatterItemFlowerViolet" type="Node3D" parent="Environment/Grass"]
+script = ExtResource("19_ngqnt")
+proportion = 36
+source_scale_multiplier = 0.85
+metadata/_custom_type_script = "uid://c52rvhnaia2p3"
+path = "res://scenes/vegetation/wildflower_violet_3d.tscn"
 
 [node name="ScatterItemBush" type="Node3D" parent="Environment/Grass" unique_id=528747303]
 script = ExtResource("19_ngqnt")
-proportion = 220
+proportion = 0
 source_scale_multiplier = 1.0
 override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
@@ -536,59 +623,71 @@ transform = Transform3D(1, 0, -2.98023e-08, 0, 1, 0, 2.98023e-08, 0, 1, -115.799
 script = ExtResource("20_7nfwd")
 shape = SubResource("Resource_g8bsm")
 
+[node name="VillagePlazaExclusion" type="Node3D" parent="Environment/Objects"]
+position = Vector3(19.1855, 0, -20)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_village_plaza_exclusion")
+
+[node name="CastleRouteTreeExclusion" type="Node3D" parent="Environment/Objects"]
+position = Vector3(-96.8145, 0, 27.41)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_castle_route_tree_exclusion")
+
 [node name="ScatterItem" type="Node3D" parent="Environment/Objects" unique_id=1584586711]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.22015, 0, 0)
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_4_a_color_12.tscn"
 
 [node name="ScatterItem2" type="Node3D" parent="Environment/Objects" unique_id=317556808]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_3_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem3" type="Node3D" parent="Environment/Objects" unique_id=290454483]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_2_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem4" type="Node3D" parent="Environment/Objects" unique_id=2027761573]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_2_b_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem5" type="Node3D" parent="Environment/Objects" unique_id=1507975234]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem6" type="Node3D" parent="Environment/Objects" unique_id=1189031108]
 script = ExtResource("19_ngqnt")
 proportion = 1000
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_1_c_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem7" type="Node3D" parent="Environment/Objects" unique_id=2116162357]
 script = ExtResource("19_ngqnt")
 proportion = 500
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_4_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="ScatterItem8" type="Node3D" parent="Environment/Objects" unique_id=932707459]
 script = ExtResource("19_ngqnt")
 proportion = 500
-source_scale_multiplier = 2.0
+source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_3_a_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -612,7 +711,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 142.94, -7.62939e-06, 11.7995
 transform = Transform3D(-1.33329, 0, 9.91072, 0, 10, 0, -9.91072, 0, -1.33329, 48.8127, 20.27, -57.9332)
 
 [node name="building_market_red2" parent="Environment" unique_id=1571344642 instance=ExtResource("31_k7taw")]
-transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 109.844, 18.877, 28.908)
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 121, 12, 36)
 
 [node name="Thoughts" type="Node3D" parent="Environment" unique_id=2010566303]
 script = ExtResource("33_fn4xt")
@@ -668,17 +767,21 @@ autoplay = true
 [node name="Inventory" type="CanvasLayer" parent="." unique_id=882521813]
 
 [node name="TextureButton" type="TextureButton" parent="Inventory" unique_id=1125274895]
-offset_left = 1553.0
-offset_top = 31.0
-offset_right = 1666.0
-offset_bottom = 141.0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -112.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 112.0
+grow_horizontal = 0
 texture_normal = ExtResource("41_kl01c")
 ignore_texture_size = true
-stretch_mode = 0
+stretch_mode = 5
 script = ExtResource("42_ewago")
 
 [node name="building_church_red2" parent="." unique_id=1083499433 instance=ExtResource("30_ikt05")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 86, 20.0, -77.7649)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 90, 20.0, -72)
 
 [node name="building_home_A_red2" parent="." unique_id=1057404536 instance=ExtResource("30_82kox")]
 transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 54, 20.24, -46)
@@ -690,7 +793,7 @@ transform = Transform3D(-0.231758, 0, 9.99731, 0, 10, 0, -9.99731, 0, -0.231758,
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 117.27, 19.98, -18.3444)
 
 [node name="building_windmill_red2" parent="." unique_id=988152394 instance=ExtResource("38_k7taw")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 133.325, 16.57, 20.692)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 135, 2.22, 20.692)
 
 [node name="building_home_A_red3" parent="." unique_id=1370923052 instance=ExtResource("30_82kox")]
 transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 57.9, 20.22, 4)
@@ -702,13 +805,13 @@ transform = Transform3D(-0.301024, 0, 9.99547, 0, 10, 0, -9.99547, 0, -0.301024,
 transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 60.06, 21.374, 32.449)
 
 [node name="building_home_B_red4" parent="." unique_id=1383198286 instance=ExtResource("39_t72bn")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62.5, 20.04, -71.245)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 58, 20.04, -72)
 
 [node name="building_castle_red2" parent="." unique_id=654078214 instance=ExtResource("40_40xrb")]
 transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, -51.4, 74.49, 27.4105)
 
 [node name="building_tavern_red2" parent="." unique_id=1819320780 instance=ExtResource("41_kjbyn")]
-transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 55, 22.69, 55.3)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 74, 21.1, 38)
 
 [node name="building_watermill_red2" parent="." unique_id=1337501579 instance=ExtResource("42_fn4xt")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 115.175, 20.0, -33.0692)
@@ -727,13 +830,13 @@ script = ExtResource("76_cat_statue")
 [node name="OriginalCatModel" parent="OriginalCatStatue" instance=ExtResource("45_cat_statue")]
 
 [node name="building_market_red2" parent="." unique_id=982705823 instance=ExtResource("31_k7taw")]
-transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 107.372, 19.84, 12.269)
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 121, 17.47, 10)
 
 [node name="building_tower_B_red2" parent="." unique_id=549820795 instance=ExtResource("45_t72bn")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 19.9201, 0.48, 189.907)
 
 [node name="building_tower_catapult_red2" parent="." unique_id=525608042 instance=ExtResource("46_40xrb")]
-transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, -61, 35.5, 15.5)
+transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, -70, 39.47, 10)
 
 [node name="Knight" parent="." unique_id=1422498343 instance=ExtResource("48_kjbyn")]
 transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -34.4799, 30.6393, 36.7945)
@@ -776,85 +879,85 @@ shape = SubResource("BoxShape3D_kl01c")
 [node name="District_MindSpark" type="Node3D" parent="."]
 
 [node name="ms_home_1" parent="District_MindSpark" instance=ExtResource("30_82kox")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 68, 20.3, -95)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62, 20.3, -104)
 
 [node name="ms_home_2" parent="District_MindSpark" instance=ExtResource("39_t72bn")]
-transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 78, 20.3, -100)
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 75, 20.3, -108)
 
 [node name="ms_tower_a" parent="District_MindSpark" instance=ExtResource("82_towa")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 92, 20.3, -96)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 26, 22.5, 18)
 
 [node name="ms_mine" parent="District_MindSpark" instance=ExtResource("81_mine")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 104, 20.3, -90)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 105, 0.78, -108)
 
 [node name="ms_home_5" parent="District_MindSpark" instance=ExtResource("30_82kox")]
 transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 72, 20.3, -75)
 
 [node name="ms_barracks" parent="District_MindSpark" instance=ExtResource("79_barrk")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 110, 20.3, -68)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 59, 20.2, -17)
 
 [node name="ms_market" parent="District_MindSpark" instance=ExtResource("31_k7taw")]
-transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 96, 20.3, -80)
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 108, 8.65, -82)
 
 [node name="ms_well" parent="District_MindSpark" instance=ExtResource("37_h1q0r")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 85, 20.3, -88)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 88, 17.16, -91)
 
 [node name="ms_home_7" parent="District_MindSpark" instance=ExtResource("30_82kox")]
-transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 62, 20.3, -80)
+transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 60, 20.3, -90)
 
 [node name="ms_home_8" parent="District_MindSpark" instance=ExtResource("39_t72bn")]
-transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, 116, 20.3, -78)
+transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, 121, 0.03, -96)
 
 [node name="ms_fence_1" parent="District_MindSpark" instance=ExtResource("87_fnopl")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 78, 20.3, -94)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 55, 20.3, -116)
 
 [node name="ms_fence_2" parent="District_MindSpark" instance=ExtResource("87_fnopl")]
-transform = Transform3D(0, 0, -4, 0, 4, 0, 4, 0, 0, 88, 20.3, -90)
+transform = Transform3D(0, 0, -4, 0, 4, 0, 4, 0, 0, 125, 0, -112)
 
 [node name="ms_foliage_1" parent="District_MindSpark" instance=ExtResource("91_folA")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 65, 20.3, -88)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 53, 20.3, -100)
 
 [node name="ms_foliage_2" parent="District_MindSpark" instance=ExtResource("92_folB")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 120, 20.3, -70)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 130, 2.25, -66)
 
 [node name="ms_bench" parent="District_MindSpark" instance=ExtResource("84_bnchA")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 98, 20.3, -84)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 96, 9.52, -94)
 
 [node name="ms_tree_1" parent="District_MindSpark" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 60, 20.3, -70)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 47, 20.3, -82)
 
 [node name="ms_tree_2" parent="District_MindSpark" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 122, 20.3, -80)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 142, 0.2, -100)
 
 [node name="ms_tree_3" parent="District_MindSpark" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 66, 20.3, -100)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 50, 20.3, -108)
 
 [node name="ms_fence_3" parent="District_MindSpark" instance=ExtResource("97_fnstrl")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 96, 20.3, -68)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 130, 2.01, -64)
 
 [node name="ms_ext_home_1" parent="District_MindSpark" instance=ExtResource("30_82kox")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 14, 21.41, -98)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 10, 21.41, -110)
 
 [node name="ms_ext_home_2" parent="District_MindSpark" instance=ExtResource("39_t72bn")]
-transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 14, 21.53, -66)
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 10, 21.53, -70)
 
 [node name="ms_ext_tower" parent="District_MindSpark" instance=ExtResource("82_towa")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 22, 20.99, -82)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 25, 20.99, -86)
 
 [node name="ms_ext_home_3" parent="District_MindSpark" instance=ExtResource("30_82kox")]
-transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 22, 20.88, -106)
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 24, 20.88, -110)
 
 [node name="ms_ext_well" parent="District_MindSpark" instance=ExtResource("37_h1q0r")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 22, 21.04, -74)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 25, 21.04, -66)
 
 [node name="ms_ext_home_4" parent="District_MindSpark" instance=ExtResource("39_t72bn")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 14, 21.39, -90)
 
 [node name="ms_ext_tree_1" parent="District_MindSpark" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 22, 20.97, -90)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 35, 20.97, -105)
 
 [node name="ms_ext_tree_2" parent="District_MindSpark" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 14, 21.58, -58)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 35, 21.58, -45)
 
 [node name="District_CreatorsLight" type="Node3D" parent="."]
 
@@ -862,52 +965,52 @@ transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 14, 21.58, -58)
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 40, 24.1, 45)
 
 [node name="cl_blacksmith" parent="District_CreatorsLight" instance=ExtResource("78_smith")]
-transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 32, 24.6, 55)
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 28, 24.6, 58)
 
 [node name="cl_home_3" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
-transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 44, 22.9, 66)
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 62, 22.9, 58)
 
 [node name="cl_archery" parent="District_CreatorsLight" instance=ExtResource("80_arch")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 60, 21.1, 72)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 60, 21.1, 76)
 
 [node name="cl_lumbermill" parent="District_CreatorsLight" instance=ExtResource("43_448jj")]
 transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 50, 23.2, 60)
 
 [node name="cl_home_5" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
-transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 36, 24.1, 40)
+transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 28, 24.1, 38)
 
 [node name="cl_home_6" parent="District_CreatorsLight" instance=ExtResource("39_t72bn")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 28, 23.8, 63)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 28, 22.12, 72)
 
 [node name="cl_market" parent="District_CreatorsLight" instance=ExtResource("31_k7taw")]
-transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 46, 23.9, 52)
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 42, 19.99, 84)
 
 [node name="cl_tower" parent="District_CreatorsLight" instance=ExtResource("46_40xrb")]
-transform = Transform3D(0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, 0.975829, 25, 25.3, 48)
+transform = Transform3D(0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, 0.975829, 14, 25.3, 46)
 
 [node name="cl_gate_l" parent="District_CreatorsLight" instance=ExtResource("89_gatel")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 38, 24.1, 48)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 36, 24.1, 52)
 
 [node name="cl_gate_r" parent="District_CreatorsLight" instance=ExtResource("90_gater")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 42, 24.1, 48)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 44, 24.1, 52)
 
 [node name="cl_foliage_1" parent="District_CreatorsLight" instance=ExtResource("91_folA")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 22, 24.46, 56)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 18, 24.46, 55)
 
 [node name="cl_foliage_2" parent="District_CreatorsLight" instance=ExtResource("92_folB")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 55, 22.9, 62)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 72, 17.93, 82)
 
 [node name="cl_bench" parent="District_CreatorsLight" instance=ExtResource("85_bnchB")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 42, 23.9, 50)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 40, 22.09, 70)
 
 [node name="cl_tree_1" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 20, 23.8, 65)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 15, 21.33, 78)
 
 [node name="cl_tree_2" parent="District_CreatorsLight" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 58, 19.88, 78)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 80, 4.4, 135)
 
 [node name="cl_tree_3" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 30, 24.1, 38)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 10, 24.1, 25)
 
 [node name="cl_ext_home_1" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, -20, 23.9, 60)
@@ -922,16 +1025,16 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 20, 19.1, 100)
 transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, -10, 19.2, 90)
 
 [node name="cl_ext_barracks" parent="District_CreatorsLight" instance=ExtResource("79_barrk")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 60, 19.9, 110)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 60, 14.77, 110)
 
 [node name="cl_ext_home_4" parent="District_CreatorsLight" instance=ExtResource("39_t72bn")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 10, 17.7, 110)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 17.7, 110)
 
 [node name="cl_ext_tree_1" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 5, 20.5, 80)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, -28, 20.5, 90)
 
 [node name="cl_ext_tree_2" parent="District_CreatorsLight" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 40, 19.35, 105)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 40, 14.64, 122)
 
 [node name="Music_World" type="Area3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 80, 18.7, 72)
@@ -944,55 +1047,55 @@ shape = SubResource("BoxShape3D_kl01c")
 [node name="District_HeartMelody" type="Node3D" parent="."]
 
 [node name="hm_tavern" parent="District_HeartMelody" instance=ExtResource("41_kjbyn")]
-transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 90, 18.61, 60)
+transform = Transform3D(-4.37114e-07, 0, 10, 0, 10, 0, -10, 0, -4.37114e-07, 90, 18.61, 55)
 
 [node name="hm_home_1" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 100, 19.4, 50)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 108, 16.61, 48)
 
 [node name="hm_home_2" parent="District_HeartMelody" instance=ExtResource("39_t72bn")]
-transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 90, 19.2, 58)
+transform = Transform3D(-0.293522, 0, 9.99569, 0, 10, 0, -9.99569, 0, -0.293522, 108, 14.03, 63)
 
 [node name="hm_home_3" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
-transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 84, 19.9, 60)
+transform = Transform3D(0.851908, 0, 9.96365, 0, 10, 0, -9.96365, 0, 0.851908, 78, 19.9, 52)
 
 [node name="hm_tower_base" parent="District_HeartMelody" instance=ExtResource("83_towb")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 70, 20.7, 66)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 74, 20.7, 68)
 
 [node name="hm_market" parent="District_HeartMelody" instance=ExtResource("31_k7taw")]
-transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 82, 20.53, 55)
+transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 90, 16.05, 76)
 
 [node name="hm_home_5" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
-transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 88, 20.5, 48)
+transform = Transform3D(-0.585398, 0, 9.98285, 0, 10, 0, -9.98285, 0, -0.585398, 108, 11.43, 82)
 
 [node name="hm_well" parent="District_HeartMelody" instance=ExtResource("37_h1q0r")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 78, 17.68, 78)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 80, 13.03, 102)
 
 [node name="hm_home_6" parent="District_HeartMelody" instance=ExtResource("39_t72bn")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 62, 22.18, 52)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 72, 16.2, 92)
 
 [node name="hm_home_7" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
-transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 90, 17.9, 66)
+transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 94, 11.73, 96)
 
 [node name="hm_mailbox" parent="District_HeartMelody" instance=ExtResource("93_mbox")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 92, 19.9, 62)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 92, 17.96, 62)
 
 [node name="hm_fence" parent="District_HeartMelody" instance=ExtResource("86_fnop")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 96, 18.62, 52)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 118, 13.37, 48)
 
 [node name="hm_foliage_1" parent="District_HeartMelody" instance=ExtResource("91_folA")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 66, 20.21, 72)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 80, 18.47, 72)
 
 [node name="hm_foliage_2" parent="District_HeartMelody" instance=ExtResource("92_folB")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 105, 12.30, 80)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 116, 7.9, 90)
 
 [node name="hm_bench" parent="District_HeartMelody" instance=ExtResource("84_bnchA")]
-transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 86, 20.01, 55)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 60, 22.32, 45)
 
 [node name="hm_tree_1" parent="District_HeartMelody" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 105, 16.95, 50)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 125, 7.52, 72)
 
 [node name="hm_tree_2" parent="District_HeartMelody" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 62, 22.02, 58)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 55, 7.5, 140)
 
 [node name="hm_ext_home_1" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 26.82, 37)
@@ -1013,10 +1116,10 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 24.76, 53)
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 8, 24.97, 53)
 
 [node name="hm_ext_tree_1" parent="District_HeartMelody" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 0, 23.46, 61)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, -35, 21.77, 75)
 
 [node name="hm_ext_tree_2" parent="District_HeartMelody" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 8, 23.77, 61)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 100, 5.06, 120)
 
 [node name="AppleSpawner" type="Node3D" parent="." unique_id=337249485]
 script = ExtResource("2_spawner")
@@ -1041,8 +1144,26 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.603652, 25.680845, 0.275234
 # tower over every NPC in the market. Milo now stands beside the Artéa sign.
 transform = Transform3D(-0.1736482, 0, -0.9848078, 0, 1, 0, 0.9848078, 0, -0.1736482, 104.8, 21, -7.25)
 
+[node name="MiloGuidePoints" type="Node3D" parent="."]
+
+[node name="HomePoint" type="Marker3D" parent="MiloGuidePoints"]
+position = Vector3(104.8, 21, -7.25)
+script = ExtResource("107_milo_point")
+guide_point_id = &"home"
+
+[node name="ReminderPoint" type="Marker3D" parent="MiloGuidePoints"]
+position = Vector3(101.5, 20.5, -3.5)
+script = ExtResource("107_milo_point")
+guide_point_id = &"reminder"
+
+[node name="CelebrationPoint" type="Marker3D" parent="MiloGuidePoints"]
+position = Vector3(107.5, 21, -4.0)
+script = ExtResource("107_milo_point")
+guide_point_id = &"celebration"
+arrival_animation = &"Celebrate"
+
 [node name="Father_Animations2" parent="." unique_id=742864976 instance=ExtResource("63_father")]
-transform = Transform3D(1.5695528, 0, -1.239558, 0, 2, 0, 1.239558, 0, 1.5695528, 90, 20, -70)
+transform = Transform3D(1.5695528, 0, -1.239558, 0, 2, 0, 1.239558, 0, 1.5695528, 90, 20, -61)
 
 [node name="Knight2" parent="." unique_id=668042314 instance=ExtResource("64_knight")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 35, 20)
@@ -1060,7 +1181,7 @@ transform = Transform3D(0.7847764, 0, 0.619779, 0, 1, 0, -0.619779, 0, 0.7847764
 [node name="Story_Intro_Spawn2" type="Label3D" parent="." unique_id=580049014]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107.823364, 22.766987, -21.084024)
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 modulate = Color(1, 0.95686275, 0.81960785, 1)
 outline_size = 20
 
@@ -1072,7 +1193,7 @@ script = ExtResource("68_1fv2d")
 
 [node name="Label3D" type="Label3D" parent="Story_Intro_Spawn2/NarrativeBubble" unique_id=699826674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.099998474)
-no_depth_test = true
+no_depth_test = false
 render_priority = 1
 modulate = Color(0.18039216, 0.003921569, 0.2, 1)
 text = "The air feels different here, Player. You should find Milo, our Wonderful Councellor.
@@ -1108,6 +1229,23 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 113, 19.31, 19)
 
 [node name="Villagers" type="Node3D" parent="."]
 
+[node name="AlderGuidePoints" type="Node3D" parent="Villagers"]
+
+[node name="HomePoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(107, 20, 16)
+
+[node name="MissionBriefingPoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(103, 20, 12)
+
+[node name="CelebrationPoint" type="Marker3D" parent="Villagers/AlderGuidePoints"]
+position = Vector3(110, 20, 9)
+
+[node name="MayorAlder" parent="Villagers" instance=ExtResource("113_mayor")]
+position = Vector3(107, 20, 16)
+
+[node name="Villager_Greeter" parent="Villagers" instance=ExtResource("114_town_villager")]
+position = Vector3(88, 20, 8)
+
 [node name="Villager_Market1" parent="Villagers" instance=ExtResource("101_vbarb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 95, 19.9, 12)
 
@@ -1117,7 +1255,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 98, 19.8, 0)
 [node name="Villager_Market3" parent="Villagers" instance=ExtResource("104_vmage")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92, 19.85, 20)
 
-[node name="Villager_Market4" parent="Villagers" instance=ExtResource("106_vfather")]
+[node name="Villager_Market4" parent="Villagers" instance=ExtResource("105_vknight")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 19.7, 25)
 
 [node name="Villager_Church1" parent="Villagers" instance=ExtResource("103_vroguehood")]
@@ -1135,7 +1273,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 20.24, -55)
 [node name="Villager_Homes2" parent="Villagers" instance=ExtResource("104_vmage")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 20.55, 25)
 
-[node name="Villager_Homes3" parent="Villagers" instance=ExtResource("106_vfather")]
+[node name="Villager_Homes3" parent="Villagers" instance=ExtResource("103_vroguehood")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 20.05, -85)
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]

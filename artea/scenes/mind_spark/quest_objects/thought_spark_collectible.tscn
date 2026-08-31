@@ -66,8 +66,7 @@ text = "THOUGHT SPARK • WALK THROUGH"
 font_size = 28
 outline_size = 8
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {&"": SubResource("Library")}
-

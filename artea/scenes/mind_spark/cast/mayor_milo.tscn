@@ -34,5 +34,4 @@ position = Vector3(0, 11, 0)
 font_size = 28
 outline_size = 9
 billboard = 1
-no_depth_test = true
-
+no_depth_test = false

@@ -559,7 +559,7 @@ def build_document():
 
     doc.add_heading("Identity non-negotiables", level=2)
     for item in [
-        "No traditional medieval castle inside Mind Spark. Its monumental architecture is made from logic, glass, roots, data, and starlight.",
+        "No traditional castle castle inside Mind Spark. Its monumental architecture is made from logic, glass, roots, data, and starlight.",
         "The player never attacks a thought, creature, guardian, or storm.",
         "Wrong choices are treated as information. The game calmly invites another look.",
         "Routes must remain readable even when effects are active; visual beauty cannot hide gameplay.",
@@ -907,7 +907,7 @@ def build_document():
         ("Return portal/platform", "1", "Post-reward route to the Gallery; remains available for replay."),
     ])
 
-    add_inventory_table(doc, "6.3 Architecture and major landmarks", "No medieval castle is required. Monumentality comes from logic, glass, roots, and starlight.", [
+    add_inventory_table(doc, "6.3 Architecture and major landmarks", "No castle castle is required. Monumentality comes from logic, glass, roots, and starlight.", [
         ("Cyan glass entry arch", "1", "First threshold; simple enough to match the prototype and bright enough to guide arrival."),
         ("Fear Gate", "1", "Single-ring logic frame; iconography communicates uncertainty and prediction."),
         ("Proof Gate", "1", "Double-support analysis frame with evidence slots and scan beams."),
@@ -1215,7 +1215,7 @@ def build_document():
     checks = {
         "Identity": [
             "Technology/Science is immediately dominant, with visible support from Nature and Magic.",
-            "The world reads as a living computer forest, not a futuristic city or medieval castle.",
+            "The world reads as a living computer forest, not a futuristic city or castle castle.",
             "Cyan, violet, white, charcoal, emerald, and restrained gold follow the approved hierarchy.",
             "The professional concept’s entrance, gates, central court, storm, and sanctuary remain recognisable.",
         ],

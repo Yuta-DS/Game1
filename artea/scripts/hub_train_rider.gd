@@ -304,7 +304,7 @@ func _build_station_marker(station_id: String, line_id: String,
 		crystal.material_override = glow
 		marker.add_child(crystal)
 
-	# This holographic medieval sign exists in world space, but stays folded
+	# This holographic castle sign exists in world space, but stays folded
 	# into the pad until the player steps close enough to select this train.
 	var popup := Node3D.new()
 	popup.name = "RouteSelectionPopup"

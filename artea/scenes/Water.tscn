@@ -6,6 +6,8 @@
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_4nnwq"]
 size = Vector2(1000, 1000)
+subdivide_width = 128
+subdivide_depth = 128
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_xt0xg"]
 noise_type = 3

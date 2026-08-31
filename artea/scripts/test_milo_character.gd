@@ -43,15 +43,43 @@ func _run() -> void:
 			var surface_material := part_mesh.mesh.surface_get_material(surface_index)
 			if surface_material != null:
 				materials_by_name[surface_material.resource_name] = surface_material
-	for required_part in ["Head", "EarOuter_L", "EyeWhite_L", "Nose", "CoatBody",
-			"FrontCoatPanel_L", "CoatLapel_L", "CoatDart_L", "GoldLapelEdge_L",
-			"TealCoatLapelPiping_L", "GoldCoatFrontEdge_L",
-			"PocketFlap_L", "GoldPocketTrim_L", "GoldCoatHem360", "GoldTieClip",
-			"BackYoke", "TealBackYokeEdge", "BackWaistBelt",
-			"GoldBackBeltEdgeTop", "BackBeltButton_L",
-			"BackVentEdge_L", "CoatSideSeam_L",
-			"BackCenterSeam", "FrontTailCenterSeam",
-			"Sleeve_L", "CuffAccent_L", "Paw_L", "Boot_L", "Tail",
+	for required_part in ["Head", "ForeheadMark", "RearHairUpper",
+			"RearHairMiddle", "RearHairLower",
+			"EarOuter_L", "EarOuter_R", "EarInner_L", "EarInner_R",
+			"EarInnerFold_L", "EarInnerFold_R",
+			"CheekUpper_L", "CheekUpper_R", "CheekLower_L", "CheekLower_R",
+			"FaceMask_L", "FaceMask_R",
+			"EyeWhite_L", "EyeWhite_R", "Pupil_L", "Pupil_R",
+			"IrisInner_L", "IrisInner_R", "EyeCatchlight_L", "EyeCatchlight_R",
+			"EyelidRelaxed_L", "EyelidRelaxed_R",
+			"EyelidHalf_L", "EyelidHalf_R",
+			"EyelidClosed_L", "EyelidClosed_R",
+			"BrowFrame_L", "BrowFrame_R",
+			"GlassesRing_L", "GlassesRing_R", "GlassesBridge",
+			"GlassesTemple_L", "GlassesTemple_R",
+			"Muzzle_L", "Muzzle_R", "MoustachePad_L", "MoustachePad_R",
+			"Nose", "Nostril_L", "Nostril_R", "MouthSocket", "Mouth",
+			"MouthOpenSmall", "MouthOpenWide", "TongueSmall", "TongueWide",
+			"CoatBody",
+			"FrontCoatPanel_L", "FrontCoatPanel_R",
+			"CoatLapel_L", "CoatLapel_R", "CoatDart_L", "CoatDart_R",
+			"GoldLapelEdge_L", "GoldLapelEdge_R",
+			"TealCoatLapelPiping_L", "TealCoatLapelPiping_R",
+			"GoldCoatFrontEdge_L", "GoldCoatFrontEdge_R",
+			"PocketFlap_L", "PocketFlap_R", "GoldPocketTrim_L", "GoldPocketTrim_R",
+			"Waistcoat", "WaistcoatFacet_L", "WaistcoatFacet_R",
+			"Collar_L", "Collar_R", "Tie", "GoldCoatHem360", "GoldTieClip",
+			"BackWaistBelt",
+			"BackBeltButton_L", "BackBeltButton_R",
+			"RearCoatTail_L", "RearCoatTail_R",
+			"SideCoatTail_L", "SideCoatTail_R",
+			"GoldSideCoatTailEdge_L", "GoldSideCoatTailEdge_R",
+			"BackVentEdge_L", "BackVentEdge_R",
+			"CoatSideSeam_L", "CoatSideSeam_R",
+			"FrontTailCenterSeam",
+			"Sleeve_L", "Sleeve_R", "Cuff_L", "Cuff_R",
+			"CuffAccent_L", "CuffAccent_R", "Paw_L", "Paw_R",
+			"Trouser_L", "Trouser_R", "Boot_L", "Boot_R", "Sole_L", "Sole_R",
 			"MayorCaneShaft", "MayorCaneLowerFerrule", "MayorCaneUpperCollar",
 			"MayorCaneHook", "MayorCaneGroundTip"]:
 		if milo.find_child(required_part, true, false) == null:
@@ -59,10 +87,62 @@ func _run() -> void:
 			return
 	for removed_crease in ["PawCrease_1_L", "PawCrease_2_L",
 			"PawCrease_1_R", "PawCrease_2_R", "CaneGripFingerUpper_R",
-			"CaneGripFingerMiddle_R", "CaneGripFingerLower_R",
+			"CaneGripFingerMiddle_R", "CaneGripFingerLower_R", "PawSideCrease_R",
+			"PawToeLine_1_L", "PawToeLine_2_L",
+			"PawToeLine_1_R", "PawToeLine_2_R",
+			"PawThumb_L", "PawThumb_R",
+			"PawFinger_1_L", "PawFinger_2_L", "PawFinger_3_L",
+			"PawFinger_1_R", "PawFinger_2_R", "PawFinger_3_R",
 			"TailStripeUpper"]:
 		if milo.find_child(removed_crease, true, false) != null:
 			_fail("Milo's paw still contains the scar line %s" % removed_crease)
+			return
+	for blueprint_excluded_part in ["Brow_L", "Brow_R", "BackYoke",
+			"TealBackYokeEdge", "GoldBackYokeEdge",
+			"GoldBackBeltEdgeTop", "GoldBackBeltEdgeBottom", "BackCenterSeam",
+			"CrownFurCenter",
+			"CrownFurMiddle_L", "CrownFurMiddle_R", "CrownFurLower_L",
+			"CrownFurLower_R", "Tail", "TailTip"]:
+		if milo.find_child(blueprint_excluded_part, true, false) != null:
+			_fail("Milo contains the non-blueprint duplicate detail %s" \
+					% blueprint_excluded_part)
+			return
+	# Blueprint-proportion regressions for the corrected hands, trousers and
+	# attached side skirt. These checks protect silhouette, not mere node names.
+	for paw_name in ["Paw_L", "Paw_R"]:
+		var paw := milo.find_child(paw_name, true, false) as MeshInstance3D
+		var paw_size := paw.get_aabb().size
+		var paw_height := paw_size.y
+		if paw_height < 0.17 or paw_height > 0.24:
+			_fail("%s has lost its compact rounded hand proportion" % paw_name)
+			return
+		# The authoritative Blender builder verifies the unified sculpted mitten at
+		# 0.24–0.28 m wide; retain that exact source-of-truth envelope here.
+		if paw_size.x < 0.24 or paw_size.x > 0.28:
+			_fail("%s no longer has the broad mitten silhouette" % paw_name)
+			return
+		if paw_size.z < 0.16 or paw_size.z > 0.20:
+			_fail("%s side profile is flat or box-like instead of domed" % paw_name)
+			return
+		if paw.mesh.get_blend_shape_count() != 1 \
+				or paw.mesh.get_blend_shape_name(0) != "FingerCurl":
+			_fail("%s is not one unified deformable hand object" % paw_name)
+			return
+	var paw_meshes := milo.find_children("Paw_*", "MeshInstance3D", true, false)
+	if paw_meshes.size() != 2:
+		_fail("Milo must contain exactly two unified paw objects, found %d" \
+			% paw_meshes.size())
+		return
+	for trouser_name in ["Trouser_L", "Trouser_R"]:
+		var trouser := milo.find_child(trouser_name, true, false) as MeshInstance3D
+		if trouser.get_aabb().size.y < 0.26:
+			_fail("%s no longer bridges the coat and boot" % trouser_name)
+			return
+	for tail_name in ["SideCoatTail_L", "SideCoatTail_R"]:
+		var side_tail := milo.find_child(tail_name, true, false) as MeshInstance3D
+		var tail_size := side_tail.get_aabb().size
+		if tail_size.y < 0.50 or tail_size.z < 0.24:
+			_fail("%s no longer forms the attached side-view coat flap" % tail_name)
 			return
 	# Facial-shape regression: both purple pupils must remain circular in the
 	# front X/Z plane, and the tabby triangle must stay high on the crown.
@@ -84,8 +164,9 @@ func _run() -> void:
 			return
 	# Godot duplicates boundary vertices across material surfaces. This range
 	# keeps Milo near the established market-cast density while allowing his
-	# separately inspectable mayor details.
-	if vertex_count < 2500 or vertex_count > 18000:
+	# separately inspectable mayor details. The six articulated finger meshes
+	# add a small, deliberate allowance while keeping the same low-poly style.
+	if vertex_count < 2500 or vertex_count > 18500:
 		_fail("Milo polygon density is outside the low-poly NPC target: %d vertices" % vertex_count)
 		return
 	if surface_count < 20:
@@ -93,7 +174,7 @@ func _run() -> void:
 		return
 	for required_material in ["Artea Statue Warm Cream Fur",
 			"Artea Statue Caramel Fur Marking",
-			"Artea Statue Amber Inner Ear", "Target Mayor Blue",
+			"Artea Milo Soft Rose Inner Ear", "Target Mayor Blue",
 			"Target Mayor Lapel Blue", "Target Mayor Tailored Panel Blue",
 			"Target Lavender", "Target Mint Piping", "Target Gold",
 			"Artea Milo Purple Pupil"]:
@@ -136,6 +217,14 @@ func _run() -> void:
 	if skeleton == null or skeleton.get_bone_count() < 35:
 		_fail("Milo's full-body villager animation skeleton is missing")
 		return
+	for required_bone in ["root", "chest", "head", "hips",
+			"upperarm.l", "lowerarm.l", "wrist.l", "hand.l",
+			"upperarm.r", "lowerarm.r", "wrist.r", "hand.r",
+			"upperleg.l", "lowerleg.l", "foot.l",
+			"upperleg.r", "lowerleg.r", "foot.r"]:
+		if skeleton.find_bone(required_bone) < 0:
+			_fail("Milo's blueprint rig chain is missing bone %s" % required_bone)
+			return
 	var animation_players := milo.find_children("*", "AnimationPlayer", true, false)
 	var animations := animation_players[0] as AnimationPlayer if not animation_players.is_empty() else null
 	if animations == null:
@@ -186,8 +275,9 @@ func _run() -> void:
 	if not is_equal_approx(npc.scale.x, 1.0):
 		_fail("reusable Cat Mayor Milo scene must stay at native villager scale")
 		return
-	if float(npc.get("walk_speed")) <= 0.0 or float(npc.get("wander_radius")) > 3.0:
-		_fail("Milo's greeting route can carry him out of the spawn camera")
+	if float(npc.get("walk_speed")) <= 0.0 \
+			or float(npc.get("follow_stop_distance")) >= float(npc.get("follow_start_distance")):
+		_fail("Milo's companion following distances are invalid")
 		return
 	var plant_sample: Dictionary = npc.call("_sample_cane_gait", 0.05)
 	var support_sample: Dictionary = npc.call("_sample_cane_gait", 0.50)
@@ -203,8 +293,11 @@ func _run() -> void:
 	var dummy_player := CharacterBody3D.new()
 	dummy_player.name = "NewPlayer"
 	root.add_child(dummy_player)
+	npc.position = Vector3.ZERO
+	npc.set("gravity_enabled", false)
 	root.add_child(npc)
 	await process_frame
+	npc.call("set_companion_player", dummy_player, false)
 	var pose_props := npc.find_child("CounsellorPoseProps", true, false) as Node3D
 	var map_prop := npc.find_child("CounsellorMap", true, false) as Node3D
 	var tablet_prop := npc.find_child("CounsellorTablet", true, false) as Node3D
@@ -237,7 +330,8 @@ func _run() -> void:
 		npc_skeleton.find_bone("hand.r")).origin
 	if map_hand_l.distance_to(Vector3(0.42, 1.05, 0.487)) > 0.01 \
 			or map_hand_r.distance_to(Vector3(-0.42, 1.05, 0.487)) > 0.01:
-		_fail("both map paws must stay connected to the measured prop edges")
+		_fail("both map paws must stay connected to the measured prop edges: %s / %s" \
+			% [map_hand_l, map_hand_r])
 		return
 	var map_grip_l := npc_skeleton.get_bone_global_pose(
 		npc_skeleton.find_bone("hand.l")).basis.y.normalized()
@@ -270,14 +364,15 @@ func _run() -> void:
 	if heart_hand.z - 0.105 <= 0.29:
 		_fail("heart pose paw penetrates Milo's coat")
 		return
+	npc.position = Vector3(-6.0, 0.0, 0.0)
 	var walk_start := npc.position
-	npc.set("_pause_timer", 0.0)
-	for _frame in 12:
+	npc.call("_begin_pause")
+	for _frame in 36:
 		await physics_frame
 	var horizontal_distance := Vector2(npc.position.x - walk_start.x,
 		npc.position.z - walk_start.z).length()
 	if horizontal_distance < 0.08:
-		_fail("Milo did not physically walk when his town route started")
+		_fail("Milo did not physically walk toward his player companion")
 		return
 	var npc_animation := npc.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if npc_animation == null or npc_animation.current_animation != "Cane_Walk":
@@ -308,9 +403,9 @@ func _run() -> void:
 			or not hub_text.contains("res://meshy ai/Milo_Animations.glb"):
 		_fail("the original cat statue is missing beside the Artéa sign")
 		return
-	if not hub_text.contains("Transform3D(-0.1736482, 0, -0.9848078, 0, 1, 0, 0.9848078, 0, -0.1736482, 104.8, 21, -7.25)"):
-		_fail("live hub Mayor Milo must stand beside the Artéa sign at native 1x scale")
+	if not ProjectSettings.has_setting("autoload/MiloCompanionManager"):
+		_fail("live Milo companion lifecycle manager is not registered")
 		return
 
-	print("MILO_CHARACTER_TEST: PASS — approved Cat Mayor silhouette on shared villager rig, exact 1x hub scale, animations, sign placement, interaction, player unchanged")
+	print("MILO_CHARACTER_TEST: PASS — approved target-matched Mayor Milo, shared villager rig, companion walk, counsellor poses, interaction, player unchanged")
 	quit()

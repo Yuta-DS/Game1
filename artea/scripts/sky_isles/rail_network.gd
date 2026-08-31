@@ -295,6 +295,7 @@ func _build_pillars(curve: Curve3D) -> Node3D:
 func _build_train(color: Color, isle_id: String) -> Node3D:
 	var train := Node3D.new()
 	train.name = "Train_%s" % isle_id
+	train.set_meta("spatial_train_root", true)
 
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color

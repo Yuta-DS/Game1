@@ -37,9 +37,10 @@ func _run() -> void:
 	if final_position.y < 18.0:
 		_fail("Milo fell below the playable hub surface")
 		return
-	if Vector2(final_position.x - sign.global_position.x,
-			final_position.z - sign.global_position.z).length() > 10.0:
-		_fail("Milo is not stationed beside the Artéa sign")
+	var companion_distance := Vector2(final_position.x - player.global_position.x,
+		final_position.z - player.global_position.z).length()
+	if companion_distance > 4.0 or companion_distance < 0.9:
+		_fail("Milo is not keeping a comfortable companion distance from the player")
 		return
 	print("MILO_STATUE_TRACE: sign=%s statue=%s distance=%.2f descendants=%s" % [
 		sign.global_position, statue.global_position,
@@ -67,9 +68,9 @@ func _run() -> void:
 						or solid.cull_mode != BaseMaterial3D.CULL_BACK:
 					_fail("the original cat statue still has a see-through surface")
 					return
-	if Vector2(final_position.x - player.global_position.x,
-			final_position.z - player.global_position.z).length() < 50.0:
-		_fail("Milo is still waiting near the player spawn")
+	var manager := root.get_node_or_null("MiloCompanionManager")
+	if manager == null or manager.call("get_active_milo") != milo:
+		_fail("the companion manager did not adopt the hub's authored Milo")
 		return
-	print("MILO_LIVE_HUB_VISIBILITY_TEST: PASS — Milo and original cat statue are beside the Artéa sign")
+	print("MILO_LIVE_HUB_VISIBILITY_TEST: PASS — live Milo accompanies the player and the original cat statue remains beside the sign")
 	quit()

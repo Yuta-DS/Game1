@@ -22,11 +22,13 @@ func _mesh_triangles(mesh: Mesh) -> int:
 		var arrays := mesh.surface_get_arrays(surface)
 		if arrays.is_empty():
 			continue
-		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
-		if indices.size() > 0:
+		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] \
+			if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+		if not indices.is_empty():
 			triangles += indices.size() / 3
 		else:
-			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX] \
+				if arrays[Mesh.ARRAY_VERTEX] != null else PackedVector3Array()
 			triangles += vertices.size() / 3
 	return triangles
 
@@ -34,6 +36,13 @@ func _mesh_triangles(mesh: Mesh) -> int:
 func _measure() -> void:
 	var world := WorldScene.instantiate() as Node3D
 	root.add_child(world)
+	# The cost pass is static; unrelated district animation must not retain stale
+	# decoration references while this tool advances setup frames.
+	for candidate in world.find_children("*", "Node", true, false):
+		var candidate_script := candidate.get_script() as Script
+		if candidate_script != null and candidate_script.resource_path.ends_with(
+				"mind_spark_island_detail_animator.gd"):
+			candidate.set_process(false)
 	for _frame in 6:
 		await process_frame
 	var tree := world.get_node_or_null("CentralSanctuary/TreeOfImagination") as Node3D

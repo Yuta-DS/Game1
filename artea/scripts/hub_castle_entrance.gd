@@ -80,6 +80,15 @@ const UPPER_DECK_Y := CASTLE_DOOR.y
 # — both files share one arrival level.
 const CEREMONIAL_RISE := 1.6
 const TERRACE_DECK_Y := UPPER_DECK_Y - CEREMONIAL_RISE
+# The timber bridge surface is 0.39 m above the old broad terrace slab. The
+# former fix raised only a small rectangle beneath the fire, which left a
+# hidden step across the middle of the walking route. Lift the complete usable
+# terrace surface so bridge, fire court and stair approach form one floor.
+const TERRACE_SURFACE_LIFT := 0.39
+# The arrival court is a walkable surface, not a stacked foundation block.
+# Keep it thin so its edge matches the bridge and surrounding architecture;
+# its top remains fixed at the same 67.97 m collision/render plane.
+const TERRACE_SLAB_THICKNESS := 0.32
 
 const UPPER_LENGTH := 8.4
 const GRAND_STAIR_STEPS := 7
@@ -135,6 +144,8 @@ var _rune_materials: Array[ShaderMaterial] = []
 var _glow_materials: Array[StandardMaterial3D] = []
 var _banners: Array[Node3D] = []
 var _gears: Array[Node3D] = []
+var _fire_flames: Array[Dictionary] = []
+var _fire_lights: Array[OmniLight3D] = []
 
 # Nodes that hover in place — currently the fountain's aether core. Their rest
 # height is captured on the first _process so the bob is relative to wherever
@@ -185,6 +196,34 @@ func _process(delta: float) -> void:
 			+ sin(_sway_time * 1.1 + float(i) * 2.3) * 0.18
 		floater.rotate_y(delta * 0.5)
 
+	# Each low-poly flame has a slightly different rhythm. The overlapping,
+	# pointed silhouettes bend and stretch independently, which reads as live
+	# fire without a billboard texture or a GPU-only particle dependency.
+	for flame_data in _fire_flames:
+		var flame := flame_data["node"] as MeshInstance3D
+		var phase := float(flame_data["phase"])
+		var speed := float(flame_data["speed"])
+		var base_position := flame_data["base_position"] as Vector3
+		var base_scale := flame_data["base_scale"] as Vector3
+		var pulse := sin(_sway_time * speed + phase)
+		var cross_pulse := cos(_sway_time * (speed * 0.73) + phase * 1.31)
+		flame.position = base_position + Vector3(
+			cross_pulse * float(flame_data["sway"]),
+			pulse * 0.07,
+			sin(_sway_time * (speed * 0.61) + phase) * float(flame_data["sway"]))
+		flame.scale = Vector3(base_scale.x * (1.0 - pulse * 0.10),
+			base_scale.y * (1.0 + pulse * 0.18),
+			base_scale.z * (1.0 - pulse * 0.10))
+		flame.rotation.y += delta * (0.34 + speed * 0.05)
+		flame.rotation.z = cross_pulse * 0.10
+
+	for i in _fire_lights.size():
+		var fire_light := _fire_lights[i]
+		var base_energy := float(fire_light.get_meta("base_energy", 3.0))
+		fire_light.light_energy = base_energy * (0.88
+			+ sin(_sway_time * 8.7 + float(i) * 2.1) * 0.08
+			+ sin(_sway_time * 13.1 + float(i)) * 0.04)
+
 
 # --- arrival -----------------------------------------------------------
 
@@ -210,9 +249,25 @@ func _apply_pending_spawn() -> void:
 	player.velocity = Vector3.ZERO
 	player.global_position = get_spawn_position()
 
-	# Face the player away from the door, looking out over the plaza and the
-	# kingdom beyond — they just came OUT of the castle.
-	player.rotation.y = atan2(OUT.x, OUT.z)
+	# Keep the CharacterBody root stable, but align both the orbit camera and the
+	# visible fox with the doorway's +X outward direction. NewPlayer rotates its
+	# Forward input by the camera yaw; facing only RogueSkin outward left the
+	# camera at PI, so Forward resolved to +Z and produced a 90-degree sideways
+	# slide until the model caught up.
+	var outward_yaw := atan2(OUT.x, OUT.z)
+	# Camera-relative movement rotates input by the inverse camera yaw, so its
+	# convention is the opposite of the visible model's world-facing yaw.
+	var camera_yaw := -outward_yaw
+	var camera_controller := player.get_node_or_null("CameraController") as Node3D
+	if camera_controller != null:
+		var camera_rotation := camera_controller.global_rotation
+		camera_rotation.y = camera_yaw
+		camera_controller.global_rotation = camera_rotation
+	var visual := player.get_node_or_null("RogueSkin") as Node3D
+	if visual != null:
+		var visual_rotation := visual.global_rotation
+		visual_rotation.y = outward_yaw
+		visual.global_rotation = visual_rotation
 
 
 # Public so a portal, a test, or a future fast-travel system can ask where this
@@ -262,31 +317,30 @@ func _build_plaza(parent: Node3D) -> void:
 		Vector3(UPPER_LENGTH, PLAZA_THICKNESS, PLAZA_WIDTH),
 		upper_deck - Vector3(0.0, 0.45, 0.0), _stone(STONE_MID))
 	upper.name = "CastleUpperCourt"
+	upper.set_meta("surface_policy", "single_collision_backed_floor_no_overlay")
 	_add_box_body(upper, Vector3(UPPER_LENGTH, PLAZA_THICKNESS, PLAZA_WIDTH))
-	_pave(parent, CASTLE_DOOR, UPPER_LENGTH, PLAZA_WIDTH, 3, 5)
 
 	# --- arrival terrace: where the causeway lands, one ceremonial rise below ---
 	var terrace_deck := CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.5) \
 		- Vector3(0.0, CEREMONIAL_RISE, 0.0)
+	# One thin floor, one exact collider. The old construction used a 0.60 m base
+	# slab, a separate 0.39 m wearing course, then visual brick tiles. The later
+	# single-slab repair removed the overlap but retained their combined 0.99 m
+	# depth. This keeps only a 0.32 m structural deck while holding its sole top
+	# face at the timber bridge surface (67.97 m).
+	var terrace_size := Vector3(
+		terrace_length, TERRACE_SLAB_THICKNESS, TERRACE_WIDTH)
+	var terrace_surface_offset := -0.15 + TERRACE_SURFACE_LIFT
 	var terrace := _box(parent,
-		Vector3(terrace_length, PLAZA_THICKNESS, TERRACE_WIDTH),
-		terrace_deck - Vector3(0.0, 0.45, 0.0), _stone(STONE_MID))
+		terrace_size,
+		terrace_deck + Vector3(0.0,
+			terrace_surface_offset - TERRACE_SLAB_THICKNESS * 0.5, 0.0),
+		_stone(STONE_MID))
 	terrace.name = "CastleArrivalTerrace"
-	_add_box_body(terrace, Vector3(terrace_length, PLAZA_THICKNESS, TERRACE_WIDTH))
-	_pave(parent, CASTLE_DOOR + OUT * terrace_start - Vector3(0.0, CEREMONIAL_RISE, 0.0),
-		terrace_length, TERRACE_WIDTH, 2, 4)
-
-	# The bridge's collision-backed landing finishes at y=67.97 while the broad
-	# arrival terrace finishes at y=67.58. A compact raised receiving court fills
-	# that measured 0.39 m level change and gives the timber bridge one grounded
-	# architectural endpoint instead of leaving it hovering above the blue slab.
-	var receiving_size := Vector3(5.2, 0.39, 6.4)
-	var receiving_centre := CASTLE_DOOR + OUT * 18.5 \
-		+ Vector3(0.0, -CEREMONIAL_RISE + 0.045, 0.0)
-	var receiving_court := _box(parent, receiving_size, receiving_centre,
-		_stone(STONE_LIGHT))
-	receiving_court.name = "CastleBridgeReceivingCourt"
-	_add_box_body(receiving_court, receiving_size)
+	terrace.set_meta("surface_policy", "single_collision_backed_floor_no_overlay")
+	terrace.set_meta("bridge_surface_y", 67.97)
+	terrace.set_meta("slab_thickness", TERRACE_SLAB_THICKNESS)
+	_add_box_body(terrace, terrace_size)
 
 	_build_grand_stair(parent)
 	_build_substructure(parent, terrace_start, terrace_length)
@@ -479,11 +533,10 @@ func _build_substructure(parent: Node3D, terrace_start: float,
 			- Vector3(0.0, 1.65, 0.0), dark)
 	upper_skirt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
-	var terrace_skirt := _box(parent,
-		Vector3(terrace_length - 0.5, 1.7, TERRACE_WIDTH - 0.5),
-		CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.5)
-			- Vector3(0.0, 1.55, 0.0), dark)
-	terrace_skirt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# Removed the former 1.7 m terrace skirt. Its top reached 68.63 m while the
+	# real walkable plane is 67.97 m, so it rendered 0.66 m through the grounded
+	# player and made the fox appear buried in the floor. The thin terrace above
+	# is now the only render surface and the only collider at this location.
 
 	# Corbels marching along both long edges, under the overhang.
 	for side_value in [-1.0, 1.0]:
@@ -561,15 +614,23 @@ func _build_balustrades(parent: Node3D, terrace_start: float,
 		# Terrace balustrade: baluster posts under a continuous brass rail, so
 		# the player can see out over the kingdom while they walk up.
 		var rail_y := 1.05
-		var terrace_y := -CEREMONIAL_RISE
-		_box(parent, Vector3(terrace_length, 0.4, 0.6),
+		var terrace_y := -CEREMONIAL_RISE + TERRACE_SURFACE_LIFT
+		var terrace_base := _box(parent, Vector3(terrace_length, 0.4, 0.6),
 			CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.5)
 				+ ALONG * side * (TERRACE_WIDTH * 0.5 - 0.3)
 				+ Vector3(0.0, terrace_y - 0.05, 0.0), _stone(STONE_DARK))
-		_box(parent, Vector3(terrace_length, 0.2, 0.75),
+		terrace_base.name = "TerraceBalustradeBase_%s" % ("L" if side < 0.0 else "R")
+		var terrace_rail := _box(parent, Vector3(terrace_length, 0.2, 0.75),
 			CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.5)
 				+ ALONG * side * (TERRACE_WIDTH * 0.5 - 0.3)
 				+ Vector3(0.0, terrace_y + rail_y, 0.0), _metal(BRASS))
+		terrace_rail.name = "TerraceBalustradeRail_%s" % ("L" if side < 0.0 else "R")
+		_add_safety_barrier(parent,
+			"TerraceSideBarrier_%s" % ("L" if side < 0.0 else "R"),
+			Vector3(terrace_length, 1.45, 0.62),
+			CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.5)
+				+ ALONG * side * (TERRACE_WIDTH * 0.5 - 0.3)
+				+ Vector3(0.0, terrace_y + 0.52, 0.0))
 
 		var balusters := 7
 		for b in balusters:
@@ -579,6 +640,43 @@ func _build_balustrades(parent: Node3D, terrace_start: float,
 					+ ALONG * side * (TERRACE_WIDTH * 0.5 - 0.3)
 					+ Vector3(0.0, terrace_y + rail_y * 0.5 - 0.05, 0.0),
 				_stone(STONE_LIGHT))
+
+	# The two long rails left the outward edge exposed. Close that edge with
+	# matching stone-and-brass returns while keeping a 5.6 m central gateway for
+	# the 4.8 m timber causeway. These pieces are backed by continuous collision,
+	# so the fox cannot slip between decorative balusters.
+	var gate_width := 5.6
+	var return_span := (TERRACE_WIDTH - gate_width) * 0.5
+	var outward_x := terrace_start + terrace_length - 0.3
+	var return_rail_y := 1.05
+	var return_terrace_y := -CEREMONIAL_RISE + TERRACE_SURFACE_LIFT
+	for side_value in [-1.0, 1.0]:
+		var side: float = side_value
+		var lateral := gate_width * 0.5 + return_span * 0.5
+		var return_centre := CASTLE_DOOR + OUT * outward_x \
+			+ ALONG * side * lateral
+		var return_base := _box(parent, Vector3(0.6, 0.4, return_span),
+			return_centre + Vector3(0.0, return_terrace_y - 0.05, 0.0),
+			_stone(STONE_DARK))
+		return_base.name = "TerraceGateReturnBase_%s" % ("L" if side < 0.0 else "R")
+		var return_rail := _box(parent, Vector3(0.75, 0.2, return_span),
+			return_centre + Vector3(0.0, return_terrace_y + return_rail_y, 0.0),
+			_metal(BRASS))
+		return_rail.name = "TerraceGateReturnRail_%s" % ("L" if side < 0.0 else "R")
+		_add_safety_barrier(parent,
+			"TerraceGateReturnBarrier_%s" % ("L" if side < 0.0 else "R"),
+			Vector3(0.62, 1.45, return_span),
+			return_centre + Vector3(0.0, return_terrace_y + 0.52, 0.0))
+		for post_index in 3:
+			var post_t := (float(post_index) + 0.5) / 3.0
+			var post_position := return_centre \
+				+ ALONG * (post_t - 0.5) * return_span
+			var post := _box(parent, Vector3(0.3, return_rail_y - 0.2, 0.3),
+				post_position + Vector3(0.0,
+					return_terrace_y + return_rail_y * 0.5 - 0.05, 0.0),
+				_stone(STONE_LIGHT))
+			post.name = "TerraceGateBaluster_%s_%02d" % [
+				"L" if side < 0.0 else "R", post_index]
 
 
 # A colonnade down both sides of the upper court.
@@ -660,25 +758,6 @@ func _build_colonnade(parent: Node3D) -> void:
 					_metal(BRASS))
 
 
-# Inlaid flagstone checker for one deck. Extracted so both levels are paved the
-# same way — a single pale slab clips to flat white under the hub's sun and
-# reads as untextured, which is what the first courtyard looked like.
-func _pave(parent: Node3D, origin: Vector3, length: float, width: float,
-		cols: int, rows: int) -> void:
-	for cx in cols:
-		for cz in rows:
-			if (cx + cz) % 2 == 1:
-				continue
-			var u := (float(cx) + 0.5) / float(cols)
-			var v := (float(cz) + 0.5) / float(rows)
-			_box(parent,
-				Vector3(length / float(cols) * 0.86, 0.08,
-					width / float(rows) * 0.86),
-				origin + OUT * (length * u) + ALONG * ((v - 0.5) * width)
-					- Vector3(0.0, 0.11, 0.0),
-				_stone(STONE_DARK))
-
-
 # What turns the landing into a courtyard: something at its centre worth
 # walking to, and things around its edges that imply the place is used.
 #
@@ -700,6 +779,9 @@ func _build_courtyard(parent: Node3D) -> void:
 	var centre := CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.55) \
 		- Vector3(0.0, CEREMONIAL_RISE, 0.0)
 
+	# The requested fire replaces the old orange orb at its exact centre point.
+	# Its paired side barriers organize traffic into two broad bypass lanes while
+	# keeping both the bridge opening and castle-stair opening unobstructed.
 	_build_fountain(parent, centre)
 
 	# Planters and benches in matched pairs down both sides of the walk, so the
@@ -782,13 +864,14 @@ func _build_courtyard(parent: Node3D) -> void:
 		ember_light.global_position = brazier_spot + Vector3(0.0, 2.0, 0.0)
 
 
-# The former 6.8 m fountain basin was the circular object blocking the stair
-# sightline and terrace route. Keep the requested central ball, but turn it into
-# a compact medieval fire beacon on the raised bridge court: no pool, orbit
-# rings, or broad collision disc.
+# Preserve the authored pedestal and bowl exactly where the orange orb stood;
+# only the orb itself is replaced by live fire. This avoids accumulating a new
+# fireplace, paving, or barriers around an already composed castle court.
 func _build_fountain(parent: Node3D, centre: Vector3) -> void:
 	var fire_beacon := Node3D.new()
-	fire_beacon.name = "MedievalCourtyardFire"
+	fire_beacon.name = "CastleCourtyardFire"
+	fire_beacon.set_meta("style", "original_orb_pedestal_live_fire_replacement")
+	fire_beacon.set_meta("collision_policy", "solid_original_pedestal")
 	parent.add_child(fire_beacon)
 
 	var pedestal := MeshInstance3D.new()
@@ -802,41 +885,69 @@ func _build_fountain(parent: Node3D, centre: Vector3) -> void:
 	pedestal.material_override = _stone(STONE_DARK)
 	fire_beacon.add_child(pedestal)
 	pedestal.global_position = centre + Vector3(0.0, 0.915, 0.0)
+	_add_cylinder_body(pedestal, 0.92, 1.35)
 
 	var bowl := MeshInstance3D.new()
 	bowl.name = "CourtyardFireBowl"
 	var bowl_mesh := CylinderMesh.new()
-	bowl_mesh.top_radius = 0.88
-	bowl_mesh.bottom_radius = 0.52
+	bowl_mesh.top_radius = 0.92
+	bowl_mesh.bottom_radius = 0.58
 	bowl_mesh.height = 0.34
 	bowl_mesh.radial_segments = 10
 	bowl.mesh = bowl_mesh
 	bowl.material_override = _metal(BRASS)
 	fire_beacon.add_child(bowl)
 	bowl.global_position = centre + Vector3(0.0, 1.73, 0.0)
+	_add_cylinder_body(bowl, 0.88, 0.34)
 
-	var core := MeshInstance3D.new()
-	core.name = "CourtyardFireCore"
-	var core_mesh := SphereMesh.new()
-	core_mesh.radius = 0.58
-	core_mesh.height = 1.28
-	core_mesh.radial_segments = 7
-	core_mesh.rings = 4
-	core.mesh = core_mesh
-	core.material_override = _emissive(Color("ff7628"), 3.4)
-	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	fire_beacon.add_child(core)
-	core.global_position = centre + Vector3(0.0, 2.17, 0.0)
-	_floaters.append(core)
+	var flames := Node3D.new()
+	flames.name = "CourtyardLiveFlames"
+	flames.set_meta("animation", "real_time_independent_flame_sway")
+	fire_beacon.add_child(flames)
+	flames.global_position = centre + Vector3(0.0, 1.89, 0.0)
+
+	var flame_specs := [
+		[Vector3(-0.24, 0.43, 0.08), Vector3(0.72, 1.00, 0.72), 0.2, 5.3, 0.09, Color("ff6a1f")],
+		[Vector3(0.22, 0.39, -0.10), Vector3(0.66, 0.88, 0.66), 1.4, 6.1, 0.08, Color("ff8a24")],
+		[Vector3(0.02, 0.63, 0.02), Vector3(0.80, 1.28, 0.80), 2.7, 5.7, 0.11, Color("ff5a18")],
+		[Vector3(-0.08, 0.45, -0.18), Vector3(0.48, 0.82, 0.48), 3.8, 7.0, 0.07, Color("ffc43d")],
+		[Vector3(0.15, 0.50, 0.14), Vector3(0.44, 0.92, 0.44), 5.1, 6.6, 0.07, Color("ffd85a")],
+		[Vector3(0.00, 0.36, 0.00), Vector3(0.52, 0.72, 0.52), 6.0, 7.6, 0.05, Color("fff0a0")],
+	]
+	for flame_index in flame_specs.size():
+		var spec: Array = flame_specs[flame_index]
+		var flame := MeshInstance3D.new()
+		flame.name = "CourtyardFlame_%02d" % (flame_index + 1)
+		var flame_mesh := CylinderMesh.new()
+		flame_mesh.top_radius = 0.025
+		flame_mesh.bottom_radius = 0.34
+		flame_mesh.height = 0.92
+		flame_mesh.radial_segments = 6
+		flame.mesh = flame_mesh
+		flame.material_override = _emissive(spec[5] as Color, 3.7)
+		flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		flames.add_child(flame)
+		flame.position = spec[0] as Vector3
+		flame.scale = spec[1] as Vector3
+		_fire_flames.append({
+			"node": flame,
+			"base_position": flame.position,
+			"base_scale": flame.scale,
+			"phase": float(spec[2]),
+			"speed": float(spec[3]),
+			"sway": float(spec[4]),
+		})
 
 	var core_light := OmniLight3D.new()
 	core_light.name = "CourtyardFireLight"
 	core_light.light_color = Color("ffb15c")
-	core_light.light_energy = 4.2
-	core_light.omni_range = 18.0
+	core_light.light_energy = 4.0
+	core_light.omni_range = 15.0
 	core_light.shadow_enabled = false
+	core_light.set_meta("base_energy", 4.0)
 	fire_beacon.add_child(core_light)
-	core_light.global_position = centre + Vector3(0.0, 2.17, 0.0)
+	core_light.global_position = centre + Vector3(0.0, 2.48, 0.0)
+	_fire_lights.append(core_light)
 
 
 # Two towers flanking the door. This is what turns "a hole in a wall" into a
@@ -1115,6 +1226,26 @@ func _add_cylinder_body(host: MeshInstance3D, radius: float, height: float) -> v
 	cylinder.height = height
 	shape.shape = cylinder
 	body.add_child(shape)
+
+
+# Decorative balusters remain visually open, but the safety line behind them
+# must behave as one wall. A single simple box prevents capsule snagging on a
+# row of tiny post colliders and closes gaps without adding another visible
+# mesh to the castle composition.
+func _add_safety_barrier(parent: Node3D, barrier_name: String,
+		size: Vector3, position: Vector3) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = barrier_name
+	body.set_meta("collision_policy", "continuous_non_snag_safety_barrier")
+	parent.add_child(body)
+	body.global_position = position
+	var shape := CollisionShape3D.new()
+	shape.name = "ContinuousBarrierShape"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	return body
 
 
 func _stone(color: Color) -> StandardMaterial3D:

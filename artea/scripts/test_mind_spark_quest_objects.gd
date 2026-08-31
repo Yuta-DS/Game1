@@ -21,6 +21,7 @@ func _run() -> void:
 	tracker.save_path = TEST_IDENTITY
 	tracker.clear_evidence()
 	var silhouette_signatures: Dictionary = {}
+	var foley_profiles: Dictionary = {}
 
 	for index in 12:
 		var definition := Catalog.definition_at(index)
@@ -41,6 +42,13 @@ func _run() -> void:
 		_assert_authored_surface_texture(object)
 		_assert_real_model_geometry(object)
 		_assert_specialized_children(index, object)
+		object.call("_play_tone")
+		var feedback_stream := object.feedback_sound.stream as AudioStreamWAV
+		assert(feedback_stream != null and feedback_stream.mix_rate == 48000 and not feedback_stream.stereo,
+			"%s uses 48 kHz mono positional Foley" % definition.display_name)
+		var foley_event := String(feedback_stream.get_meta("foley_event", ""))
+		assert(not foley_event.is_empty(), "%s identifies its physical sound profile" % definition.display_name)
+		foley_profiles[foley_event] = true
 		var signature := _silhouette_signature(object)
 		silhouette_signatures[signature] = int(silhouette_signatures.get(signature, 0)) + 1
 		if index == 6:
@@ -51,6 +59,7 @@ func _run() -> void:
 		await process_frame
 	assert(silhouette_signatures.size() >= 10,
 		"the twelve authored assets have distinguishable mesh-count and bounding-box silhouettes")
+	assert(foley_profiles.size() == 12, "all twelve quest-object kinds have distinct Foley profiles")
 
 	await _test_socket_persistence_and_save_order()
 	await _test_scanner_lens_and_sequences()

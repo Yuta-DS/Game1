@@ -665,6 +665,7 @@ func _add_levitation_anchor(parent: Node3D, position: Vector3, color: Color,
 func _build_train(color: Color, label: String) -> Node3D:
 	var train := Node3D.new()
 	train.name = "Train_%s" % label.replace(" ", "")
+	train.set_meta("spatial_train_root", true)
 
 	var body_material := _emissive_material(color, 0.72)
 	var glass_material := _emissive_material(color.lightened(0.35), 0.82)

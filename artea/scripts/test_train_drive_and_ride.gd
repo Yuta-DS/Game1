@@ -21,6 +21,14 @@ func _point_is_inside_solid(space: PhysicsDirectSpaceState3D, point: Vector3) ->
 	return not space.intersect_point(query, 8).is_empty()
 
 
+func _press_train_mode(railway: Node3D, key: Key) -> void:
+	var event := InputEventKey.new()
+	event.pressed = true
+	event.keycode = key
+	event.physical_keycode = key
+	railway.call("_unhandled_input", event)
+
+
 func _run() -> void:
 	# Mirror art_gallery.gd: the railway lives under an offset floating world
 	# while the player sits at the scene root, so every to_global() conversion
@@ -84,13 +92,16 @@ func _run() -> void:
 		_fail("standing by the benches does not offer a passenger seat")
 		return
 
-	# 3. Boarding as driver from a spot the player can actually reach.
+	# 3. Number 1 explicitly selects driver mode from the train deck.
 	player.global_position = front_deck
-	if not bool(railway.call("board_as_driver")):
-		_fail("Q at the cab did not take control of the train")
-		return
+	_press_train_mode(railway, KEY_1)
 	if not bool(railway.call("is_driving")):
-		_fail("boarding the cab did not enter driver mode")
+		_fail("pressing 1 at the train did not take control of the train")
+		return
+	var horn_count := int(railway.call("get_horn_request_count"))
+	_press_train_mode(railway, KEY_R)
+	if int(railway.call("get_horn_request_count")) != horn_count + 1:
+		_fail("pressing R while driving did not sound the train horn")
 		return
 
 	# 4. Hold W: the train must accelerate and cover ground along the route.
@@ -137,18 +148,16 @@ func _run() -> void:
 		_fail("leaving the cab did not exit driver mode")
 		return
 
-	# 7. Sitting as a passenger works from the bench end of the same deck.
+	# 7. Number 2 explicitly selects passenger mode from the same train deck.
 	player.global_position = train.to_global(Vector3(0.0, 2.4, 2.8))
 	var nearest_seat := int(railway.call("get_nearest_passenger_seat_index",
 		player.global_position))
 	if nearest_seat < 0:
 		_fail("no passenger seat is reachable from the bench deck")
 		return
-	if not bool(railway.call("sit_in_passenger_seat", nearest_seat)):
-		_fail("Q by the benches did not seat the player")
-		return
+	_press_train_mode(railway, KEY_2)
 	if not bool(railway.call("is_passenger_seated")):
-		_fail("sitting did not register the player as a passenger")
+		_fail("pressing 2 at the train did not register the player as a passenger")
 		return
 	await process_frame
 	if player.global_position.distance_to(
@@ -156,7 +165,7 @@ func _run() -> void:
 		_fail("the seated passenger is not actually on the seat")
 		return
 
-	print("TRAIN_DRIVE_TEST: PASS — cab and seats reachable, Q boards, W drives forward, S reverses")
+	print("TRAIN_DRIVE_TEST: PASS — 1 drives, 2 rides, R horns, W moves forward and S reverses")
 	quit()
 
 

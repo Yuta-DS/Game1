@@ -1,10 +1,6 @@
 extends CharacterBody3D
 
-# --- AUDIO NODES & RESOURCES ---
-@onready var footstep_player = $FootstepPlayer
 @onready var floor_detector = $FloorDetector 
-
-@onready var sfx_grass = preload("res://assets/SFX/grasswalk.ogg") 
 
 # --- JUMP VARIABLES ---
 @export var jump_height : float = 2.25
@@ -49,8 +45,24 @@ const MIN_STEP_FORWARD := 0.08
 # little lower than the near side.
 const STEP_DOWN_PROBE := 0.1
 
+# The imported fox mesh extends roughly 0.05 m below its root pivot. Nested
+# PackedScene transform overrides have also proved unreliable after reimport,
+# so establish both the authored scale and a small visual-only foot lift here.
+# The CharacterBody and capsule are unchanged: physics stays on the floor while
+# the rendered feet sit on top of it instead of being depth-clipped by paving.
+const VISUAL_MODEL_SCALE := 1.5
+# Keep enough render clearance for the skinned boot animation. The former
+# 0.055 m correction left the mesh bounds just 5 mm above the plane, which can
+# still depth-clip at normal camera distance even though physics is grounded.
+const VISUAL_FOOT_LIFT := 0.105
+
 
 func _ready() -> void:
+	var visual := get_node_or_null("RogueSkin") as Node3D
+	if visual != null:
+		visual.scale = Vector3.ONE * VISUAL_MODEL_SCALE
+		visual.position.y = VISUAL_FOOT_LIFT
+		visual.set_meta("ground_alignment", "feet_on_rendered_surface")
 	# The stair treads are separate boxes, so the body needs to stay attached to
 	# them on the way down instead of launching off each edge.
 	floor_snap_length = 0.7
@@ -65,13 +77,6 @@ func _ready() -> void:
 	
 	floor_detector.add_exception(self)
 	
-	# --- OPTIMIZED AUDIO SETTINGS ---
-	if footstep_player is AudioStreamPlayer3D:
-		footstep_player.volume_db = -4.0
-		footstep_player.max_distance = 24.0
-		footstep_player.unit_size = 6.0
-		footstep_player.panning_strength = 0.5
-		
 func _input(event: InputEvent) -> void:
 	# Toggle inventory with I key
 	if event.is_action_pressed("toggle_Inventory"):
@@ -279,29 +284,6 @@ func moveLogic(delta) -> void:
 				locomotion = "Walk"
 			_play_locomotion_animation(locomotion, 1.05 if isRunning else 0.72)
 		
-		# --- FOOTSTEP LOGIC FIX ---
-		if is_on_floor():
-			if floor_detector.is_colliding():
-				var ground = floor_detector.get_collider()
-				# Check the collider or its parent for the grass group
-				var is_grass = ground.is_in_group("grass_surface") or (ground.get_parent() and ground.get_parent().is_in_group("grass_surface"))
-				
-				
-				if is_grass:
-					if footstep_player.stream != sfx_grass:
-						footstep_player.stream = sfx_grass
-					
-					if not footstep_player.playing:
-						# Random pitch makes steps stand out against wind
-						footstep_player.pitch_scale = randf_range(0.9, 1.1)
-						footstep_player.play()
-				else:
-					if footstep_player.playing:
-						footstep_player.stop()
-		else:
-			if footstep_player.playing:
-				footstep_player.stop()
-
 		var targetAngle = -movementInput.angle() + PI/2
 		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
 	else:
@@ -309,8 +291,6 @@ func moveLogic(delta) -> void:
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
 		_play_locomotion_animation("Idle", 1.0)
-		if footstep_player.playing:
-			footstep_player.stop()
 
 
 func _play_locomotion_animation(animation_name: String, speed_scale: float) -> void:
