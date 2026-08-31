@@ -48,7 +48,7 @@ const GROUNDED_RESPONSES := [
 	"I CAN GATHER MORE EVIDENCE", "I CAN CREATE A NEW WAY FORWARD",
 ]
 const CONTROL_ORDER := [
-	"colour_prism", "rhythm_prism", "weight_prism",
+	"colour_prism", "rhythm_prism", "weight_prism", "analysis_console",
 	"west_regulator", "east_regulator", "outer_ring", "middle_ring", "inner_ring", "confirm",
 ]
 const SEED_NAMES := ["THOUGHT", "FEELING", "CHOICE"]
@@ -173,6 +173,9 @@ func prompt_for_player(player: Node3D) -> Dictionary:
 			status = "%s • CURRENT SEED: %s • USE EACH SEED ONCE" % [
 				control_id.replace("_prism", "").to_upper(),
 				"EMPTY" if current_seed < 0 else SEED_NAMES[current_seed]]
+		"analysis_console":
+			prompt = "Q • ANALYZE THE LIGHT COMPOSITION"
+			status = _analysis_console_preview()
 		"west_regulator":
 			prompt = "Q • HOLD THE THOUGHT SIGNAL STEADY"
 			status = "NOTICE • A THOUGHT IS VISITING: “%s”" % AUTHORED_THOUGHT
@@ -219,11 +222,15 @@ func interact_control(control_id: String) -> Dictionary:
 		return _result(true, "replay_started")
 	if control_id in ["colour_prism", "rhythm_prism", "weight_prism"]:
 		current_state[control_id] = (int(current_state.get(control_id, -1)) + 1) % 3
+		current_state.composition_analyzed = false
+		current_state.reasoning_bonus = false
 		var seed_harmony := _seed_harmony()
-		current_state.composition_analyzed = not seed_harmony.is_empty()
-		current_state.reasoning_bonus = not seed_harmony.is_empty()
 		_feedback("LIGHT COMPOSITION DISCOVERED • %s" % str(seed_harmony.name) \
 			if not seed_harmony.is_empty() else "ROUTE THOUGHT • FEELING • CHOICE ONCE EACH")
+	elif control_id == "analysis_console":
+		_analyze_composition()
+		return _result(true, "composition_analyzed" if bool(current_state.composition_analyzed) \
+			else "analysis_feedback")
 	elif control_id in ["west_regulator", "east_regulator"]:
 		if not bool(current_state.get("composition_analyzed", false)):
 			_feedback("ANALYZE THE LIGHT COMPOSITION BEFORE ADJUSTING ITS PRESSURE")
@@ -350,6 +357,42 @@ func _seed_harmony() -> Dictionary:
 	return {}
 
 
+func _analyze_composition() -> void:
+	var values := [int(current_state.get("colour_prism", -1)),
+		int(current_state.get("rhythm_prism", -1)), int(current_state.get("weight_prism", -1))]
+	current_state.analysis_observations = int(current_state.get("analysis_observations", 0)) + 1
+	var selected := 0
+	var unique := {}
+	for value in values:
+		if value >= 0:
+			selected += 1
+			unique[value] = true
+	if selected < 3:
+		_feedback("ANALYSIS • %d / 3 INSTRUMENTS ACTIVE • COMPLETE THE EXPERIMENT BEFORE JUDGING IT" % selected, 5.0)
+	elif unique.size() < 3:
+		_feedback("ANALYSIS • ONE SIGNAL REPEATS • A LIVING COMPOSITION NEEDS THOUGHT, FEELING AND CHOICE", 6.0)
+	else:
+		var harmony := _seed_harmony()
+		current_state.composition_analyzed = not harmony.is_empty()
+		current_state.reasoning_bonus = not harmony.is_empty()
+		_feedback("PATTERN RECOGNIZED • %s • %s • NOW TEST ITS PRESSURE" % [
+			str(harmony.name), str(harmony.clue)], 7.0)
+	_save()
+	_apply_state(true)
+	puzzle_state_changed.emit(get_puzzle_state())
+
+
+func _analysis_console_preview() -> String:
+	if bool(current_state.get("composition_analyzed", false)):
+		return "ANALYZED • %s • THE CONSOLE WILL NOT CHOOSE THE PRESSURE FOR YOU" % str(_active_harmony().name)
+	var values := [int(current_state.get("colour_prism", -1)),
+		int(current_state.get("rhythm_prism", -1)), int(current_state.get("weight_prism", -1))]
+	var selected := 0
+	for value in values:
+		selected += int(value >= 0)
+	return "COMPARE CAUSE AND EFFECT • %d / 3 INSTRUMENTS ACTIVE" % selected
+
+
 func _active_harmony() -> Dictionary:
 	return _seed_harmony()
 
@@ -404,6 +447,8 @@ func _status_summary() -> String:
 		return "UNDERSTANDING SENT FORWARD • AWARENESS BEARING SIGIL SECURED"
 	if not _light_lab_ready():
 		return "LIVING LIGHT LAB • ROUTE THOUGHT, FEELING AND CHOICE WITHOUT DUPLICATION"
+	if not bool(current_state.get("composition_analyzed", false)):
+		return "%s DISCOVERED • USE THE ANALYSIS CONSOLE TO STUDY THE RELATIONSHIP" % str(_active_harmony().name)
 	if not _regulators_ready():
 		return "%s DISCOVERED • NOW MATCH ITS TWO LIGHT PRESSURES" % str(_active_harmony().name)
 	if not _rings_ready():
@@ -449,6 +494,10 @@ func _process(delta: float) -> void:
 			var pulse_start: Vector3 = light_pulse.get_meta("path_start", Vector3.ZERO)
 			var pulse_end: Vector3 = light_pulse.get_meta("path_end", Vector3.ZERO)
 			light_pulse.position = pulse_start.lerp(pulse_end, pulse_phase)
+	var analysis_rotor := find_child("AnalysisRotor", true, false) as Node3D
+	if analysis_rotor != null:
+		analysis_rotor.rotation.y = _rotor_phase * 0.4
+		analysis_rotor.rotation.x = sin(_rotor_phase) * 0.08
 
 
 func _apply_state(animate: bool) -> void:
@@ -567,6 +616,26 @@ func _apply_state(animate: bool) -> void:
 		transformed.visible = powered
 	for bloom in find_children("HeavenlyBloom_*", "MeshInstance3D", true, false):
 		(bloom as MeshInstance3D).scale = Vector3(1.95, 0.90, 1.95) if powered else Vector3(1.6, 0.72, 1.6)
+	_apply_analysis_console_state()
+
+
+func _apply_analysis_console_state() -> void:
+	var console := find_child("AetherAnalysisConsoleModel", true, false) as Node3D
+	if console == null:
+		return
+	var analyzed := bool(current_state.get("composition_analyzed", false))
+	var heart := console.find_child("AnalysisHeartLens", true, false) as MeshInstance3D
+	if heart != null:
+		heart.material_override = _feedback_material(analyzed, is_powered())
+	var seed_values := [int(current_state.get("colour_prism", -1)),
+		int(current_state.get("rhythm_prism", -1)), int(current_state.get("weight_prism", -1))]
+	for index in 3:
+		var evidence_lamp := console.find_child("EvidenceLamp_%d" % (index + 1), true, false) as MeshInstance3D
+		if evidence_lamp != null:
+			evidence_lamp.material_override = _light_seed_material(seed_values[index], seed_values[index] >= 0)
+	var analysis_light := find_child("AetherAnalysisConsoleLight", true, false) as Light3D
+	if analysis_light != null:
+		analysis_light.light_energy = 3.1 if is_powered() else (2.0 if analyzed else 1.15)
 
 
 func _apply_gauge(gauge_name: String, value: int, target: int) -> void:

@@ -61,8 +61,8 @@ func _run() -> void:
 	var foundation := landing.get_node("ModularFloatingFoundation") as Node3D
 	assert(foundation.get_child_count() > 0)
 	assert(gate.get_node_or_null("CompassMachine") != null)
-	assert(gate.find_children("PuzzleControl_*", "Node3D", true, false).size() == 9,
-		"the reusable architecture preserves all base puzzle stations")
+	assert(gate.find_children("PuzzleControl_*", "Node3D", true, false).size() == 10,
+		"the reusable architecture preserves all current puzzle stations")
 	print("IslandOneGateKitV21: PASS — reusable gate kit preserves foundation and puzzle")
 	world.queue_free()
 	await process_frame

@@ -27,6 +27,8 @@ const PuzzleSelectorProductionScene := preload(
 	"res://assets3D/mind_spark/puzzle_control_kit/glb/mind_spark_puzzle_selector.glb")
 const PuzzleConfirmationProductionScene := preload(
 	"res://assets3D/mind_spark/puzzle_control_kit/glb/mind_spark_puzzle_confirmation.glb")
+const AetherAnalysisConsoleScene := preload(
+	"res://assets3D/mind_spark/aether_analysis_console/glb/aether_analysis_console.glb")
 # Procedural brick library: chamfered masonry, faceted crystals, bevelled
 # boxes and drums. Used to give the props real cut geometry instead of raw
 # BoxMesh/SphereMesh primitives.
@@ -2402,6 +2404,7 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 	_build_compass_control(controls, "inner_ring", Vector3(22, 3.0, 58), "CHOOSE + NOTICE", 1)
 	_build_compass_control(controls, "confirm", Vector3(0, 3.0, 76), "SEND FORWARD", 2)
 	_build_living_light_routes(arrival)
+	_build_aether_analysis_console(controls)
 
 	_build_pressure_gauge(arrival, "WestPressureGauge", Vector3(-24.0, 12.5, -22.0), -0.18)
 	_build_pressure_gauge(arrival, "EastPressureGauge", Vector3(24.0, 12.5, -22.0), 0.18)
@@ -3075,6 +3078,25 @@ func _build_living_light_routes(parent: Node3D) -> void:
 			seed_materials[halo_index], Vector3(90 - halo_index * 24, halo_index * 31, 0))
 	_add_sphere(ready_halo, "CompositionHeart", Vector3.ZERO, Vector3.ONE * 1.05,
 		_materials.gold)
+
+
+func _build_aether_analysis_console(controls: Node3D) -> void:
+	var control := Node3D.new()
+	control.name = "PuzzleControl_analysis_console"
+	control.position = Vector3(-57.0, 3.0, 11.0)
+	control.set_meta("control_id", "analysis_console")
+	control.set_meta("purpose", "compare experimental relationships without revealing the solution")
+	control.set_meta("production_asset", "Blender Aether Analysis Console")
+	control.set_meta("interaction_model", "experiment, analyze, compare, revise")
+	control.set_meta("preserve_authored_nodes", true)
+	controls.add_child(control)
+	var console := AetherAnalysisConsoleScene.instantiate() as Node3D
+	console.name = "AetherAnalysisConsoleModel"
+	console.scale = Vector3.ONE * 1.65
+	console.rotation_degrees.y = 18.0
+	control.add_child(console)
+	var console_light := _add_zone_light(control, Vector3(0, 4.8, 0), Color("d9fff4"), 8.0, 1.2)
+	console_light.name = "AetherAnalysisConsoleLight"
 
 
 func _build_pressure_gauge(parent: Node3D, gauge_name: String, at: Vector3, yaw: float) -> void:
