@@ -24,11 +24,11 @@ func _cache_details() -> void:
 
 func _process(delta: float) -> void:
 	_elapsed += delta
-	for orbiter in _orbiters.duplicate():
+	for orbiter in _orbiters:
 		if not is_instance_valid(orbiter):
 			continue
 		orbiter.rotate_y(delta * float(orbiter.get_meta("detail_orbit_speed")))
-	for packet in _packets.duplicate():
+	for packet in _packets:
 		if not is_instance_valid(packet):
 			continue
 		var start: Vector3 = packet.get_meta("path_start")

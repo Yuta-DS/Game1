@@ -40,7 +40,9 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _test_world_geometry(world: MindSparkWorldOne) -> void:
-	assert(world.get_zone_ids().size() == 6, "World One has the required six zones")
+	assert(world.get_zone_ids().size() == 6, "World One preserves the required six gameplay districts")
+	assert(int(world.get_meta("physical_island_count", 0)) == 3,
+		"the six gameplay districts are combined into three physical islands")
 	assert(world.get_meta("world_identity") == "living computer forest")
 	var geometry := world.get_node("WorldOneGeometry")
 	for zone_id in world.get_zone_ids():
@@ -61,7 +63,7 @@ func _test_world_geometry(world: MindSparkWorldOne) -> void:
 func _test_greybox_build_order(world: MindSparkWorldOne, geometry: Node,
 		route: Node, spur: Node) -> void:
 	var expected_order := PackedStringArray([
-		"six_zone_floors",
+		"three_fused_super_island_foundations",
 		"main_story_route",
 		"world_gate_checkpoints_boss_sanctuary",
 		"optional_station_spur",
