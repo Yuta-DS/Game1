@@ -20,6 +20,7 @@ signal companion_activity_state_requested(state_name: String)
 var user_input: Control
 
 const ReflectionEngine := preload("res://scripts/MiloReflectionEngine.gd")
+const WisdomEngine := preload("res://scripts/MiloWisdomEngine.gd")
 const SupportCard := preload("res://scripts/support_card.gd")
 const LOCAL_LLM_MODEL_PATH := "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
 const LOCAL_LLM_PROMPT_PATH := "res://addons/nobodywho/milo_prompt.txt"
@@ -27,6 +28,7 @@ const LOCAL_LLM_CONTEXT_LENGTH := 2048
 const LOCAL_LLM_TIMEOUT_SECONDS := 120.0
 const LOCAL_LLM_MAX_RESPONSE_CHARS := 720
 var _reflection_engine := ReflectionEngine.new()
+var _wisdom_engine := WisdomEngine.new()
 var _message_input: LineEdit
 var campaign_router: Node
 var _support_card: Node
@@ -36,6 +38,7 @@ var _local_llm_response := ""
 var _local_llm_generating := false
 var _local_llm_request_id := 0
 var _pending_authored_response: Dictionary = {}
+var _pending_grounded_response: Dictionary = {}
 
 const ACTIVITY_DESTINATIONS := {
 	"mind": "Mind Spark Kingdom",
@@ -284,12 +287,20 @@ var _choices: VBoxContainer
 
 
 func _ready() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	# This is a display transcript, not a text-input surface.
 	chat_history.editable = false
 	chat_history.selecting_enabled = true
 	_resolve_safe_context()
 	_initialize_local_llm()
 	_show_choices()
+
+
+func _process(_delta: float) -> void:
+	# Web can deliver the pointer-lock event from the opening click one frame
+	# late. Keep Milo's modal conversation in ordinary cursor mode throughout.
+	if visible and Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func _resolve_safe_context() -> void:
@@ -434,8 +445,17 @@ func _submit_message(input: LineEdit) -> void:
 		)
 		_show_support()
 		return
+	var grounded: Dictionary = _wisdom_engine.respond(message, _mode)
+	# Exact citation requests bypass generation on every platform so model prose
+	# can never alter the retrieved wording or fabricate a missing verse.
+	if str(grounded.get("category", "")) in ["scripture_reference", "scripture_not_found"]:
+		_show_grounded_wisdom_response(grounded)
+		return
 	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
-		_begin_local_llm_response(message, response)
+		_begin_local_llm_response(message, response, grounded)
+		return
+	if not grounded.is_empty() and bool(grounded.get("handled", false)):
+		_show_grounded_wisdom_response(grounded)
 		return
 	_show_authored_message_response(response)
 
@@ -450,6 +470,11 @@ func _show_authored_message_response(response: Dictionary) -> void:
 		],
 		str(response.get("activity_id", ""))
 	)
+
+
+func _show_grounded_wisdom_response(response: Dictionary) -> void:
+	_request_companion_activity("REFLECTING", "tablet")
+	_show_companion_response("Wisdom Library", str(response.get("text", "")))
 
 
 func _initialize_local_llm() -> void:
@@ -496,12 +521,13 @@ func _attach_local_llm_chat(local_chat: Node) -> void:
 
 
 func _begin_local_llm_response(message: String,
-		authored_response: Dictionary) -> void:
+		authored_response: Dictionary, grounded_response := {}) -> void:
 	if _local_llm_generating:
 		return
 	_local_llm_generating = true
 	_local_llm_response = ""
 	_pending_authored_response = authored_response.duplicate(true)
+	_pending_grounded_response = grounded_response.duplicate(true)
 	_local_llm_request_id += 1
 	var request_id := _local_llm_request_id
 	_request_companion_activity("LISTENING", "heart")
@@ -514,7 +540,8 @@ func _begin_local_llm_response(message: String,
 	waiting.add_theme_color_override("font_color", Color(0.78, 0.86, 1.0))
 	_choices.add_child(waiting)
 	_choices.add_child(_quiet_button("Close", close_chat))
-	_local_llm_chat.call("say", message)
+	_local_llm_chat.call("say", _wisdom_engine.build_local_model_packet(
+		message, grounded_response))
 	get_tree().create_timer(LOCAL_LLM_TIMEOUT_SECONDS).timeout.connect(
 		_on_local_llm_timeout.bind(request_id))
 
@@ -534,11 +561,12 @@ func _on_local_llm_response_finished(response: String) -> void:
 	_local_llm_generating = false
 	var clean_response := _clean_local_llm_response(response)
 	if clean_response.is_empty():
-		_show_authored_message_response(_pending_authored_response)
+		_show_pending_local_fallback()
 	else:
 		_request_companion_activity("REFLECTING", "tablet")
 		_show_companion_response("Local Reflection", clean_response)
 	_pending_authored_response.clear()
+	_pending_grounded_response.clear()
 
 
 func _on_local_llm_timeout(request_id: int) -> void:
@@ -547,8 +575,17 @@ func _on_local_llm_timeout(request_id: int) -> void:
 	_local_llm_generating = false
 	if _local_llm_chat != null and _local_llm_chat.has_method("stop_generation"):
 		_local_llm_chat.call("stop_generation")
-	_show_authored_message_response(_pending_authored_response)
+	_show_pending_local_fallback()
 	_pending_authored_response.clear()
+	_pending_grounded_response.clear()
+
+
+func _show_pending_local_fallback() -> void:
+	if not _pending_grounded_response.is_empty() \
+			and bool(_pending_grounded_response.get("handled", false)):
+		_show_grounded_wisdom_response(_pending_grounded_response)
+	else:
+		_show_authored_message_response(_pending_authored_response)
 
 
 func _clean_local_llm_response(source: String) -> String:
@@ -568,8 +605,8 @@ func _clean_local_llm_response(source: String) -> String:
 
 func _local_llm_privacy_note() -> String:
 	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
-		return "Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check. Milo does not diagnose or replace a trusted person."
-	return "Typed messages stay on this device and are not saved. This build uses Milo's authored local reflections. Milo does not diagnose or replace a trusted person."
+		return "Milo is a fictional game character. Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check and does not diagnose or replace a trusted person."
+	return "Milo is a fictional game character. Typed messages stay on this device and are not saved. This build uses authored local reflections and a public-domain Bible library. Milo does not diagnose or replace a trusted person."
 
 
 func is_local_llm_active() -> bool:
@@ -744,6 +781,7 @@ func _choice_button(choice: Dictionary) -> Button:
 func _quiet_button(text: String, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
+	button.focus_mode = Control.FOCUS_ALL
 	button.custom_minimum_size = Vector2(0, 40)
 	button.add_theme_font_size_override("font_size", 17)
 	button.tooltip_text = "This choice is local and does not change your rewards."
@@ -789,6 +827,7 @@ func close_chat() -> void:
 		_local_llm_chat.call("stop_generation")
 	_local_llm_generating = false
 	_local_llm_request_id += 1
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	emit_signal("chat_closed")
 
 

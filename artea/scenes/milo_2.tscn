@@ -1,0 +1,51 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/characters/milo_2_scholar.tscn" id="1_milo_2"]
+[ext_resource type="Script" path="res://scripts/milo_2_controller.gd" id="2_behavior"]
+[ext_resource type="Script" path="res://scenes/chat_detection_area_3d.gd" id="3_detection"]
+[ext_resource type="AudioStream" path="res://assets/audio/milo/milo_voice.ogg" id="4_milo_voice"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_milo_2"]
+radius = 4.5
+
+[node name="Milo2" instance=ExtResource("1_milo_2")]
+scale = Vector3(1, 1, 1)
+script = ExtResource("2_behavior")
+metadata/milo_generation = 2
+metadata/milo_visual_variant = "pictured_prototype_reference"
+
+[node name="MayorMiloName" type="Label3D" parent="."]
+position = Vector3(0, 2.15, 0)
+billboard = 1
+modulate = Color(1, 0.9, 0.48, 1)
+outline_modulate = Color(0.1, 0.08, 0.12, 1)
+outline_size = 12
+text = "Mayor Milo"
+font_size = 44
+
+[node name="InteractionPrompt" type="Label3D" parent="."]
+visible = false
+position = Vector3(0, 2.62, 0)
+billboard = 1
+no_depth_test = true
+visibility_range_end = 14.0
+modulate = Color(1, 0.92, 0.62, 1)
+outline_modulate = Color(0.05, 0.08, 0.13, 1)
+outline_size = 12
+text = "Press Q to chat with Milo"
+font_size = 38
+
+[node name="MiloGreetingVoice" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("4_milo_voice")
+unit_size = 2.0
+max_distance = 24.0
+
+[node name="Area3D" type="Area3D" parent="."]
+script = ExtResource("3_detection")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("SphereShape3D_milo_2")
+
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_3d_player_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_3d_player_exited"]
+[connection signal="player_nearby" from="Area3D" to="." method="_on_area_3d_player_nearby"]

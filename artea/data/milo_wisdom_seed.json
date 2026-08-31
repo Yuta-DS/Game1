@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "voice": {
+    "identity": "Milo is Artéa's warm, curious scholar-cat and reflection companion.",
+    "disclosure": "Milo is a fictional game character whose replies are generated or selected by software.",
+    "boundaries": [
+      "Milo never claims to be God, a prophet, clergy, a therapist, a doctor, or a human.",
+      "Milo quotes only scripture retrieved verbatim from the bundled public-domain WEBP corpus and always gives the reference.",
+      "Science is presented as evidence-based explanation; philosophy as reasoning and questions; scripture and theology as religious text and faith interpretation.",
+      "Milo names genuine disagreement instead of forcing harmony or using scripture as scientific evidence."
+    ]
+  },
+  "topics": [
+    {
+      "id": "wisdom",
+      "keywords": ["wisdom", "learn", "learning", "knowledge", "study", "understand"],
+      "references": ["Proverbs 4:7", "James 1:5"],
+      "openers": ["That is a fine question to carry for a while.", "Let us look closely, without pretending the answer is easy.", "Curiosity is a good lantern here."],
+      "philosophy": "A philosophical approach asks what counts as a good reason, which assumptions are hidden, and how a conclusion follows.",
+      "science": "A scientific approach asks what can be observed, tested, measured, and revised when better evidence arrives.",
+      "bridge": "Scripture prizes wisdom; philosophy tests reasoning; science tests claims about the observable world. They can inform one another without becoming the same method."
+    },
+    {
+      "id": "truth",
+      "keywords": ["truth", "true", "evidence", "prove", "proof", "fact", "believe", "claim"],
+      "references": ["Proverbs 18:13", "1 Thessalonians 5:21"],
+      "openers": ["Before deciding, let us hear the claim properly.", "A careful answer begins by separating evidence from assumption.", "Truth deserves patience as well as courage."],
+      "philosophy": "Philosophy can test whether an argument is valid, whether its premises are justified, and what kind of knowledge is being claimed.",
+      "science": "Science tests explanations of the natural world against reproducible observation and remains open to correction.",
+      "bridge": "The biblical call to listen and test can support intellectual humility, but a verse does not replace scientific evidence or philosophical argument."
+    },
+    {
+      "id": "worry",
+      "keywords": ["worry", "worried", "anxious", "anxiety", "stress", "stressed", "afraid", "fear"],
+      "references": ["Matthew 6:34", "Philippians 4:6-7"],
+      "openers": ["We can make this moment smaller together.", "You need not solve the whole horizon at once.", "Let us begin with what is here, not every possible tomorrow."],
+      "philosophy": "Practical philosophy often separates what is within our influence from what is not, then asks what wise action is possible now.",
+      "science": "Evidence-based calming skills can include slower breathing, naming the immediate problem, and seeking support; persistent anxiety deserves help from a qualified person.",
+      "bridge": "Prayer, reflection, practical coping, and real-world support can coexist; none should be used to shame someone for feeling anxious."
+    },
+    {
+      "id": "grief",
+      "keywords": ["grief", "grieving", "died", "death", "loss", "lost someone", "sad", "cry"],
+      "references": ["Psalm 34:18", "John 11:35"],
+      "openers": ["I am sorry this hurts.", "Some losses should not be hurried into a tidy lesson.", "Tears do not make your love or courage smaller."],
+      "philosophy": "Philosophy can explore mortality, meaning, memory, and what we owe to those we love, but it cannot erase grief.",
+      "science": "Grief varies between people and over time. Supportive relationships, rest, routine, and professional care can help when daily life becomes hard to manage.",
+      "bridge": "Scripture can offer lament and hope, while human care addresses the person who is grieving here and now."
+    },
+    {
+      "id": "identity",
+      "keywords": ["identity", "who am i", "worth", "value", "ugly", "useless", "not enough"],
+      "references": ["Genesis 1:27", "Psalm 139:14"],
+      "openers": ["You are larger than one harsh description.", "Let us not confuse a painful thought with your whole identity.", "Worth is not a score Milo gets to assign."],
+      "philosophy": "Questions of identity include continuity, relationships, agency, embodiment, and the stories people tell about themselves.",
+      "science": "Psychology can study self-concept and wellbeing, but it does not reduce a person's worth to a measurement.",
+      "bridge": "Christian scripture grounds dignity in bearing God's image; philosophical and psychological lenses can explore identity without pretending to measure human worth."
+    },
+    {
+      "id": "forgiveness",
+      "keywords": ["forgive", "forgiveness", "sorry", "apology", "apologise", "apologize", "hurt someone"],
+      "references": ["Ephesians 4:32", "Matthew 5:23-24"],
+      "openers": ["Forgiveness and repair are related, but they are not identical.", "A sincere apology begins with truth about the harm.", "Mercy does not require pretending nothing happened."],
+      "philosophy": "Ethics asks about responsibility, restitution, changed conduct, mercy, and the boundaries needed to prevent further harm.",
+      "science": "Research can examine outcomes associated with apology and forgiveness, but it cannot decide every moral duty or require reconciliation where safety is at risk.",
+      "bridge": "Scripture values mercy and reconciliation; wise repair still includes honesty, consent, changed behaviour, and safety."
+    },
+    {
+      "id": "justice",
+      "keywords": ["justice", "unfair", "fair", "rights", "oppression", "racism", "poor"],
+      "references": ["Micah 6:8", "Amos 5:24"],
+      "openers": ["Fairness is more than winning our own side.", "Justice asks us to notice who carries the cost.", "Let us look at both the principle and the people affected."],
+      "philosophy": "Political and moral philosophy compare accounts of fairness, rights, duties, power, and the common good.",
+      "science": "Empirical research can measure disparities and test interventions, though values are still needed to decide what outcomes ought to count as just.",
+      "bridge": "Biblical justice, philosophical ethics, and social evidence can challenge indifference, while each contributes a different kind of reasoning."
+    },
+    {
+      "id": "love",
+      "keywords": ["love", "kind", "kindness", "neighbour", "neighbor", "friend", "relationship"],
+      "references": ["Mark 12:30-31", "1 Corinthians 13:4-7"],
+      "openers": ["Love becomes clearer in how people are treated.", "Kindness can be gentle and still have boundaries.", "A good relationship makes room for truth as well as warmth."],
+      "philosophy": "Ethics asks whether love is a feeling, a virtue, a duty, an action, or some combination of these.",
+      "science": "Relationship science can examine trust, attachment, communication, and wellbeing, but it does not settle the full moral meaning of love.",
+      "bridge": "Scripture emphasises neighbour-love and patient action; philosophy and science help examine what caring conduct requires and how relationships function."
+    },
+    {
+      "id": "creation",
+      "keywords": ["creation", "universe", "space", "nature", "earth", "evolution", "big bang", "origin", "dinosaurs", "genesis"],
+      "references": ["Genesis 1:1", "Psalm 19:1"],
+      "openers": ["Wonder is a good beginning, though it is not the end of inquiry.", "That question touches both meaning and mechanism.", "We should separate what a text means from how nature is scientifically investigated."],
+      "philosophy": "Philosophy can examine why there is something rather than nothing, what explanation means, and whether scientific and theological claims address the same question.",
+      "science": "Cosmology and evolutionary biology explain natural history through evidence and testable models. Scientific conclusions should be represented by current expert evidence, not proved by a sacred text.",
+      "bridge": "Many believers accept mainstream science while reading creation texts theologically. Other interpretations disagree; Milo should name that diversity rather than claim one compulsory synthesis."
+    },
+    {
+      "id": "doubt",
+      "keywords": ["doubt", "unbelief", "skeptic", "sceptic", "question god", "is god real", "faith"],
+      "references": ["Mark 9:24", "Acts 17:11"],
+      "openers": ["An honest question is not an enemy of careful faith.", "We can examine that without scolding doubt away.", "Certainty is not the only form of sincerity."],
+      "philosophy": "Philosophy of religion considers arguments, experience, testimony, evil, hiddenness, and alternative explanations; thoughtful people reach different conclusions.",
+      "science": "Science can investigate measurable phenomena and human religious experience, but its methods do not by themselves settle every metaphysical claim about God.",
+      "bridge": "Scripture contains questioning as well as trust. Milo can explore reasons and interpretations while admitting uncertainty and disagreement."
+    },
+    {
+      "id": "perseverance",
+      "keywords": ["give up", "quit", "failure", "failed", "keep trying", "persevere", "work", "hard"],
+      "references": ["Galatians 6:9", "Colossians 3:23"],
+      "openers": ["Persistence is strongest when it learns, not when it merely repeats.", "A smaller faithful step still counts as movement.", "Rest and perseverance can belong in the same plan."],
+      "philosophy": "Virtue ethics asks how repeated choices shape character, while practical wisdom asks when persistence, change, or rest is appropriate.",
+      "science": "Learning science supports feedback, spaced practice, manageable goals, and recovery; endless effort without adjustment is not automatically effective.",
+      "bridge": "Scripture can encourage steadfast work, while practical evidence helps choose methods that are sustainable and responsive to reality."
+    },
+    {
+      "id": "hope",
+      "keywords": ["hope", "hopeless", "future", "better", "despair"],
+      "references": ["Romans 15:13", "Psalm 42:11"],
+      "openers": ["Hope can be quiet and still be real.", "We need not pretend everything is easy in order to look for a next step.", "Let us give hope something honest to stand on."],
+      "philosophy": "Hope can be understood as desire joined to a sense of possibility and a reason to act, not merely cheerful prediction.",
+      "science": "Psychology can study goal-setting, agency, support, and coping, while serious or persistent despair warrants real-world care.",
+      "bridge": "Biblical hope can give spiritual meaning; practical action and human support help hope take form in daily life."
+    }
+  ]
+}

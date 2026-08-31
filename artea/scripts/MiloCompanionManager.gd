@@ -6,7 +6,7 @@
 # companion panel remains available through the activity UI instead.
 extends Node
 
-const MILO_SCENE := preload("res://scenes/milo_animations.tscn")
+const MILO_SCENE := preload("res://milo2/godot/milo2_game_character.tscn")
 
 var active_milo: CharacterBody3D
 var active_player: CharacterBody3D
@@ -27,6 +27,7 @@ func _attach_to_current_scene() -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
+	_remove_legacy_milos(scene)
 	var player := _find_3d_player(scene)
 	if player == null:
 		return
@@ -56,9 +57,24 @@ func _find_3d_player(scene: Node) -> CharacterBody3D:
 func _find_live_milo(scene: Node) -> CharacterBody3D:
 	for candidate in get_tree().get_nodes_in_group("milo"):
 		if candidate is CharacterBody3D and scene.is_ancestor_of(candidate) \
-				and candidate.has_method("set_companion_player"):
+				and not candidate.is_queued_for_deletion() \
+				and _is_final_milo(candidate):
 			return candidate as CharacterBody3D
 	return null
+
+
+func _remove_legacy_milos(scene: Node) -> void:
+	# Older levels may still contain an embedded generation-1 Milo. Remove that
+	# runtime instance before resolving the companion so only Milo 2 can appear.
+	for candidate in get_tree().get_nodes_in_group("milo"):
+		if candidate is CharacterBody3D and scene.is_ancestor_of(candidate) \
+				and not _is_final_milo(candidate):
+			candidate.queue_free()
+
+
+func _is_final_milo(candidate: Node) -> bool:
+	return candidate.has_method("get_milo_generation") \
+		and int(candidate.call("get_milo_generation")) == 2
 
 
 func refresh_companion() -> void:

@@ -60,7 +60,6 @@
 [ext_resource type="PackedScene" uid="uid://cmwutg4qjm7hv" path="res://assets3D/house scenes/watermill.tscn" id="42_fn4xt"]
 [ext_resource type="PackedScene" uid="uid://bl7duyul3lwg3" path="res://assets3D/house scenes/lumbermill.tscn" id="43_448jj"]
 [ext_resource type="PackedScene" uid="uid://bpyjccfwiqsfk" path="res://assets3D/house scenes/artéa_signpost.tscn" id="44_wlotw"]
-[ext_resource type="PackedScene" uid="uid://ch7f1gvh71svv" path="res://meshy ai/Milo_Animations.glb" id="45_cat_statue"]
 [ext_resource type="PackedScene" uid="uid://mlbbm08eu5nw" path="res://assets3D/house scenes/tower_b.tscn" id="45_t72bn"]
 [ext_resource type="PackedScene" uid="uid://bdx4hvm2wninr" path="res://assets3D/house scenes/tower_catapult.tscn" id="46_40xrb"]
 [ext_resource type="PackedScene" uid="uid://catvjmgmxqdgx" path="res://assets3D/house scenes/Prince.tscn" id="48_kjbyn"]
@@ -69,7 +68,7 @@
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
 [ext_resource type="Script" uid="uid://cdn8hn68ky8aq" path="res://scripts/teleport_music.gd" id="57_he78i"]
 [ext_resource type="PackedScene" uid="uid://6obaxkmc212j" path="res://scenes/narrative_package.tscn" id="61_krhoc"]
-[ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="62_milo"]
+[ext_resource type="PackedScene" path="res://milo2/godot/milo2_game_character.tscn" id="62_milo"]
 [ext_resource type="PackedScene" uid="uid://b1d3rlknpgaj3" path="res://scenes/everlasting_father_animations.tscn" id="63_father"]
 [ext_resource type="PackedScene" uid="uid://7xbyv6flli6r" path="res://scenes/knight_animations.tscn" id="64_knight"]
 [ext_resource type="PackedScene" uid="uid://bkm1ymlapx10o" path="res://scenes/rogue_animations.tscn" id="65_rogue"]
@@ -84,7 +83,6 @@
 [ext_resource type="Script" path="res://scripts/hub_landmark_glow.gd" id="72_lndmk"]
 [ext_resource type="Script" path="res://scripts/hub_lumen_citadel.gd" id="73_citdl"]
 [ext_resource type="Script" path="res://scripts/castle_redesign.gd" id="74_castle"]
-[ext_resource type="Script" path="res://scripts/original_cat_statue.gd" id="76_cat_statue"]
 [ext_resource type="Script" path="res://scripts/hub_castle_crown.gd" id="77_crown"]
 [ext_resource type="Script" path="res://scripts/hub_skyrail.gd" id="79_skyrl"]
 [ext_resource type="Script" path="res://scripts/hub_sky_isles.gd" id="80_skisl"]
@@ -803,13 +801,6 @@ transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 113
 [node name="Artéa_Signpost_1027230400_texture" parent="." unique_id=1661014808 instance=ExtResource("44_wlotw")]
 transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 112.305, 29.48, -5.74761)
 
-[node name="OriginalCatStatue" type="Node3D" parent="."]
-# Restore the original cat landmark at its authored position beside the sign.
-transform = Transform3D(1.8051885, 0, 9.835715, 0, 10, 0, -9.835715, 0, 1.8051885, 110, 20, -15)
-script = ExtResource("76_cat_statue")
-
-[node name="OriginalCatModel" parent="OriginalCatStatue" instance=ExtResource("45_cat_statue")]
-
 [node name="building_market_red2" parent="." unique_id=982705823 instance=ExtResource("31_k7taw")]
 transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 121, 17.47, 10)
 
@@ -1120,7 +1111,7 @@ min_distance_between = 6.0
 [node name="Story_Intro_Spawn" parent="." unique_id=1554091635 instance=ExtResource("61_krhoc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.603652, 25.680845, 0.27523494)
 
-[node name="Milo_Animations2" parent="." unique_id=1929992946 instance=ExtResource("62_milo")]
+[node name="Milo2Gameplay" parent="." unique_id=1929992946 instance=ExtResource("62_milo")]
 # Native villager scale. The previous basis was exactly 2x and made Mayor Milo
 # tower over every NPC in the market. Milo now stands beside the Artéa sign.
 transform = Transform3D(-0.1736482, 0, -0.9848078, 0, 1, 0, 0.9848078, 0, -0.1736482, 104.8, 21, -7.25)
