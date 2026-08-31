@@ -27,6 +27,7 @@
 [ext_resource type="Shader" uid="uid://bf0h7u1q21ph3" path="res://New_Hub_World.gdshader" id="19_ha1sw"]
 [ext_resource type="Script" uid="uid://dkw5mupiy2tv7" path="res://scenes/cycle_web_sky_fallback.gd" id="24_websky"]
 [ext_resource type="PackedScene" path="res://scenes/props/market_stall.tscn" id="100_stall"]
+[ext_resource type="PackedScene" path="res://scenes/watchtower_harbour_link.tscn" id="108_tower_link"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_barbarian.tscn" id="101_vbarb"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_rogue.tscn" id="102_vrogue"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_rogue_hooded.tscn" id="103_vroguehood"]
@@ -1208,10 +1209,16 @@ modulate = Color(0.24313726, 0.15294118, 0.13725491, 1)
 text = "Councellor"
 
 [node name="Port" parent="." instance=ExtResource("98_pier")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 170, 0.5, 60)
+position = Vector3(38, 0.9, 184)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1.5, 1.5, 1.5)
 
 [node name="Boat" parent="." instance=ExtResource("99_boat")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 0, 78)
+position = Vector3(32, 0.92, 197.4)
+rotation = Vector3(0, -1.5707963, 0)
+
+[node name="WatchtowerHarbourLink" parent="." instance=ExtResource("108_tower_link")]
+position = Vector3(19.9201, 0, 189.907)
 
 [node name="MarketPlace" type="Node3D" parent="."]
 
