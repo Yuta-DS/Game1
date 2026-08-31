@@ -6,7 +6,7 @@ import math
 import os
 
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -33,6 +33,14 @@ CRYSTAL_SPECS = (
 )
 
 
+def resolved_world_matrix(obj):
+    """Resolve transforms even when the editable collection is excluded."""
+    local_matrix = obj.matrix_parent_inverse @ obj.matrix_basis
+    if obj.parent is None:
+        return local_matrix
+    return resolved_world_matrix(obj.parent) @ local_matrix
+
+
 def align_crystals() -> None:
     for portal_index, portal_y in enumerate(PORTAL_Y):
         for crystal_index, (start, finish, progress) in enumerate(CRYSTAL_SPECS):
@@ -52,6 +60,11 @@ def align_crystals() -> None:
                 if crystal is None:
                     raise RuntimeError(
                         f"Missing {family}_{portal_index}_{crystal_index}")
+                mesh_center = sum(
+                    (Vector(corner) for corner in crystal.bound_box),
+                    Vector()) / 8.0
+                if mesh_center.length > 0.0001:
+                    crystal.data.transform(Matrix.Translation(-mesh_center))
                 crystal.location = (x, portal_y + y_offset, z)
                 crystal.rotation_euler = (0.0, crystal_angle, 0.0)
 
@@ -69,7 +82,7 @@ def verify_crystals() -> int:
             ))
             crystal = bpy.data.objects[
                 f"PortalBoughCrystal_{portal_index}_{crystal_index}"]
-            if (crystal.location - expected).length > 0.0001:
+            if (resolved_world_matrix(crystal).translation - expected).length > 0.0001:
                 raise RuntimeError(f"Off-bough crystal: {crystal.name}")
             tangent = Vector((finish_x - start_x, 0.0,
                               finish_z - start_z)).normalized()
@@ -95,13 +108,15 @@ def rebuild_portal_runtime_mesh() -> None:
         duplicate = source.copy()
         duplicate.data = source.data.copy()
         runtime.objects.link(duplicate)
-        # Editable components live below semantic hierarchy parents. Preserve the
-        # evaluated world transform before joining them into the flat runtime mesh;
-        # retaining their parent-local coordinates here applies the portal offset a
-        # second time when the result is parented to the export root.
-        world_matrix = source.matrix_world.copy()
+        # Editable components live in an excluded hierarchy collection, so
+        # matrix_world can remain stale after scripted edits. Resolve the parent
+        # chain directly and bake it into the copied vertices before joining.
+        # Keeping every duplicate at identity also avoids join applying an
+        # active-object offset to components from later portals.
+        world_matrix = resolved_world_matrix(source)
         duplicate.parent = None
-        duplicate.matrix_world = world_matrix
+        duplicate.data.transform(world_matrix)
+        duplicate.matrix_basis = Matrix.Identity(4)
         copies.append(duplicate)
     if not copies:
         raise RuntimeError("No PORTAL_GOLD source components found")

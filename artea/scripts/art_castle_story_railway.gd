@@ -25,11 +25,6 @@ const STATIONS := [
 # Keeping this named avoids a later station reorder silently moving the player's
 # first train away from the opening castle runway/arrival island.
 const START_STATION_INDEX := 0
-const STATION_WALKING_SURFACE_STYLE := "arcane_pixel_deco_floor_gold_edge"
-const CANONICAL_STATION_BLUEPRINT := "rainbow_civic_station_v1"
-const WEB_STATION_VISIBILITY_RANGE_M := 600.0
-const WEB_STATION_VISIBILITY_MARGIN_M := 80.0
-const ROOF_SUPPORT_Z_POSITIONS := [-14.0, 14.0]
 
 const CONTROL_POINTS := [
 	# Preserve the original station approach/departure directions, but keep every
@@ -66,20 +61,8 @@ const INTERACTION_RANGE := 48.0
 # the old interaction point at z=-6 sat on the far side of the driver console
 # wall, out of reach from the deck. Keep both on the walkable deck side of the
 # bulkhead, above the deck floor (deck top is y=1.3).
-# The detailed Blender cab occupies train z=-19.375..-12.325. These values also
-# own the station glass opening, gold bridge, cab step and walkable collision, so
-# every visible gap is the same physical doorway.
-const DRIVER_SIDE_GATE_Z := -15.85
-const DRIVER_SIDE_GATE_HALF_LENGTH := 3.525
-const PASSENGER_SIDE_GATE_HALF_LENGTH := 2.2
-# Passenger boarding happens at the two visible connector entrances: first
-# between the engine and Coach A, then between Coach A and Coach B.
-const PASSENGER_FRONT_GATE_Z := -8.35
-const PASSENGER_REAR_GATE_Z := 9.75
-const PASSENGER_FRONT_CAR_CENTRE_Z := 1.5
-const PASSENGER_REAR_CAR_CENTRE_Z := 18.0
-const DRIVER_INTERACTION_POINT := Vector3(0.0, 2.4, DRIVER_SIDE_GATE_Z)
-const DRIVER_SEAT := Vector3(0.0, 2.4, DRIVER_SIDE_GATE_Z)
+const DRIVER_INTERACTION_POINT := Vector3(0.0, 2.4, -4.6)
+const DRIVER_SEAT := Vector3(0.0, 2.4, -4.6)
 # Q is a close, intentional interaction, but it has to be comfortable to hit
 # while walking. The driver range covers the whole front third of the first
 # coach so approaching the cab from anywhere on the deck offers driving without
@@ -93,8 +76,8 @@ const FLEXIBLE_BOARDING_RANGE := 14.0
 # than on it. At the old y=3.0 the character's feet ended up level with the
 # cushion and it read as standing on the bench instead of sitting in it.
 const BENCH_SEATS := [
-	Vector3(-2.4, 3.45, 4.3), Vector3(0.0, 3.45, 4.3), Vector3(2.4, 3.45, 4.3),
-	Vector3(-2.4, 3.45, 20.8), Vector3(0.0, 3.45, 20.8), Vector3(2.4, 3.45, 20.8),
+	Vector3(-2.4, 3.45, 2.8), Vector3(0.0, 3.45, 2.8), Vector3(2.4, 3.45, 2.8),
+	Vector3(-2.4, 3.45, 17.8), Vector3(0.0, 3.45, 17.8), Vector3(2.4, 3.45, 17.8),
 ]
 const BOARDING_OFFSET := Vector3(0.0, 0.0, 11.0)
 const ACCESS_DECK_THICKNESS := 1.0
@@ -121,6 +104,7 @@ var _curves: Array[Curve3D] = []
 var _station_nodes: Array[Node3D] = []
 var _player: CharacterBody3D
 var _train: Node3D
+var _rider_anchor: RemoteTransform3D
 var _train_glow: OmniLight3D
 var _current_station := START_STATION_INDEX
 var _direction := 1
@@ -136,7 +120,6 @@ var _display_speed_kph := 0.0
 var _last_train_position := Vector3.ZERO
 var _movement_vfx: Node3D
 var _rainbow_trail_particles: GPUParticles3D
-var _rainbow_smoke_wake_particles: GPUParticles3D
 var _gold_trail_particles: GPUParticles3D
 var _rainbow_wake_ribbons: Array[MeshInstance3D] = []
 var _motion_blur_echoes: Array[Node3D] = []
@@ -155,7 +138,6 @@ var _steam_rod_parts: Array[Node3D] = []
 var _steam_pressure_parts: Array[Node3D] = []
 var _steam_valve_parts: Array[Node3D] = []
 var _steam_exhaust_particles: GPUParticles3D
-var _steam_exhaust_colour_count := 0
 var _celestial_halo_parts: Array[Node3D] = []
 var _brake_needles: Array[Node3D] = []
 var _island_power_rotors: Array[Node3D] = []
@@ -171,13 +153,8 @@ var _nature_material: StandardMaterial3D
 var _violet_material: StandardMaterial3D
 var _canopy_material: StandardMaterial3D
 var _dark_metal_material: StandardMaterial3D
-var _piltover_ivory_material: StandardMaterial3D
-var _piltover_teal_material: StandardMaterial3D
-var _piltover_navy_material: StandardMaterial3D
-var _piltover_pixel_floor_material: StandardMaterial3D
 var _station_rainbow_materials: Array[StandardMaterial3D] = []
-var _station_rainbow_glass_materials: Array[StandardMaterial3D] = []
-var _barrier_rainbow_cursor := 0
+var _external_drive_commanded := false
 
 
 func _ready() -> void:
@@ -197,17 +174,26 @@ func _process(delta: float) -> void:
 	if _manual_driving:
 		var throttle := Input.get_action_strength("move_forward") \
 			- Input.get_action_strength("move_backward")
-		drive_manual(throttle, delta)
+		if absf(throttle) >= 0.01:
+			_advance_manual_drive(throttle, delta)
+		elif _external_drive_commanded:
+			_external_drive_commanded = false
+		else:
+			_advance_manual_drive(0.0, delta)
 	elif _train != null and not _riding:
 		# Keep the docked chassis exactly aligned with the level guideway.
 		_train.position.y = ROUTE_HEIGHT
-	if _seated_passenger and _player != null and _train != null and _passenger_seat_index >= 0:
+	# sync_to_physics applies the queued platform transform at the frame boundary.
+	# Seat the driver from that visible transform before the follow camera runs;
+	# relying only on the earlier queued target leaves the camera one frame behind.
+	if _manual_driving and _player != null and _train != null:
+		_player.global_position = _train.to_global(DRIVER_SEAT)
+		_player.velocity = Vector3.ZERO
+	elif _seated_passenger and _player != null and _train != null and _passenger_seat_index >= 0:
 		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
 	_update_train_mechanisms(delta)
 	_update_island_power_effect(delta)
 	_update_prompt()
-
-
 func _unhandled_input(event: InputEvent) -> void:
 	if _player == null:
 		return
@@ -434,7 +420,7 @@ func get_distance_to_train_footprint(world_position: Vector3) -> float:
 	var closest := Vector3(
 		clampf(local.x, -6.4, 6.4),
 		clampf(local.y, 0.0, 9.0),
-		clampf(local.z, -27.5, 25.5))
+		clampf(local.z, -27.5, 22.0))
 	return local.distance_to(closest)
 
 
@@ -519,9 +505,6 @@ func get_steam_engine_animation_state() -> Dictionary:
 		"has_exhaust": _steam_exhaust_particles != null,
 		"exhaust_emitting": _steam_exhaust_particles.emitting \
 			if _steam_exhaust_particles != null else false,
-		"exhaust_rainbow_colour_count": _steam_exhaust_colour_count,
-		"exhaust_world_space": not _steam_exhaust_particles.local_coords \
-			if _steam_exhaust_particles != null else false,
 		"celestial_halo_count": _celestial_halo_parts.size(),
 	}
 
@@ -539,11 +522,6 @@ func get_directional_vfx_state() -> Dictionary:
 	return {
 		"available": _movement_vfx != null and _rainbow_trail_particles != null,
 		"emitting": _rainbow_trail_particles.emitting if _rainbow_trail_particles != null else false,
-		"smoke_wake_available": _rainbow_smoke_wake_particles != null,
-		"smoke_wake_emitting": _rainbow_smoke_wake_particles.emitting \
-			if _rainbow_smoke_wake_particles != null else false,
-		"wake_style": "soft_rainbow_aurora_smoke",
-		"has_hard_line_ribbons": not _rainbow_wake_ribbons.is_empty(),
 		"movement_direction": _last_motion_direction,
 		"trail_world_position": _movement_vfx.global_position if _movement_vfx != null else Vector3.ZERO,
 		"speed_ratio": _movement_vfx_speed_ratio,
@@ -638,6 +616,7 @@ func sit_in_passenger_seat(seat_index: int) -> bool:
 	_player.call("set_input_enabled", false)
 	_player.velocity = Vector3.ZERO
 	_player.global_position = _train.to_global(BENCH_SEATS[seat_index])
+	_attach_rider_anchor(BENCH_SEATS[seat_index])
 	_begin_ride_camera(14.0)
 	_status.text = "PASSENGER MODE  •  2 RIDE  •  1 DRIVE AT A STATION  •  Q STAND"
 	call_deferred("_ride_seated_passenger_one_station")
@@ -648,6 +627,8 @@ func leave_passenger_seat() -> bool:
 	if not _seated_passenger or _player == null:
 		return false
 	var seat_position := _train.to_global(BENCH_SEATS[_passenger_seat_index])
+	if _rider_anchor != null:
+		_rider_anchor.remote_path = NodePath()
 	_seated_passenger = false
 	_passenger_in_motion = false
 	_passenger_seat_index = -1
@@ -725,6 +706,7 @@ func board_as_driver() -> bool:
 	_player.call("set_input_enabled", false)
 	_player.velocity = Vector3.ZERO
 	_player.global_position = _train.to_global(DRIVER_SEAT)
+	_attach_rider_anchor(DRIVER_SEAT)
 	# Driving pulls the view furthest out: the whole train plus the track ahead.
 	_begin_ride_camera(18.0)
 	_status.text = "DRIVER MODE  •  W/S MOVE  •  R HORN  •  2 RIDE AT A STATION  •  Q EXIT"
@@ -742,6 +724,11 @@ func request_disembark() -> bool:
 # Positive throttle follows Gallery -> Mind -> Heart -> Creator -> Gallery;
 # negative throttle reverses around the same closed Crown Line.
 func drive_manual(throttle: float, delta: float) -> void:
+	_external_drive_commanded = absf(throttle) >= 0.01
+	_advance_manual_drive(throttle, delta)
+
+
+func _advance_manual_drive(throttle: float, delta: float) -> void:
 	if not _manual_driving or _train == null:
 		return
 	var requested_direction := _drive_motion_direction
@@ -750,7 +737,26 @@ func drive_manual(throttle: float, delta: float) -> void:
 	var changing_direction := requested_direction != _drive_motion_direction and _display_speed_kph > 0.5
 	if not changing_direction and absf(throttle) >= 0.01:
 		_drive_motion_direction = requested_direction
+	var drive_direction := _drive_motion_direction
+	if _drive_segment < 0 and not changing_direction and absf(throttle) >= 0.01:
+		if not _begin_manual_segment(drive_direction):
+			_display_speed_kph = 0.0
+			return
 	var target_speed := 0.0 if changing_direction else absf(throttle) * DISPLAY_MAX_SPEED_KPH
+	# A held throttle still has to arrive like a train, not hit the station at
+	# line speed and teleport to rest. Cap speed by the physical stopping distance
+	# so both the platform and its ride camera decelerate continuously into docks.
+	if _drive_segment >= 0 and target_speed > 0.0:
+		var arrival_curve := _curves[_drive_segment]
+		var remaining_progress := 1.0 - _drive_progress \
+			if drive_direction > 0 else _drive_progress
+		var remaining_distance := maxf(remaining_progress, 0.0) \
+			* arrival_curve.get_baked_length()
+		var braking_metres_per_second_sq := DISPLAY_BRAKING_KPH_S \
+			/ DISPLAY_MAX_SPEED_KPH * MANUAL_DRIVE_SPEED
+		var arrival_speed_cap := sqrt(2.0 * braking_metres_per_second_sq \
+			* remaining_distance) / MANUAL_DRIVE_SPEED * DISPLAY_MAX_SPEED_KPH
+		target_speed = minf(target_speed, arrival_speed_cap)
 	var speed_rate := DISPLAY_ACCELERATION_KPH_S if target_speed > _display_speed_kph \
 		else DISPLAY_BRAKING_KPH_S
 	_display_speed_kph = move_toward(_display_speed_kph, target_speed, speed_rate * maxf(delta, 0.0))
@@ -759,11 +765,6 @@ func drive_manual(throttle: float, delta: float) -> void:
 		if _player != null:
 			_player.global_position = _train.to_global(DRIVER_SEAT)
 		return
-	var drive_direction := _drive_motion_direction
-	if _drive_segment < 0:
-		if not _begin_manual_segment(drive_direction):
-			_display_speed_kph = 0.0
-			return
 	var curve := _curves[_drive_segment]
 	var progress_delta := (_display_speed_kph / DISPLAY_MAX_SPEED_KPH) \
 		* MANUAL_DRIVE_SPEED * maxf(delta, 0.0) \
@@ -792,8 +793,11 @@ func _dock_manual_train(station_index: int) -> void:
 	_current_station = posmod(station_index, STATIONS.size())
 	_drive_segment = -1
 	_display_speed_kph = 0.0
-	_train.position = STATIONS[_current_station].position
-	_orient_train_at_station(_current_station)
+	# Preserve the continuously interpolated arrival heading. Incoming and
+	# outgoing rails share one station tangent, so forcing a fresh basis here is
+	# unnecessary and creates a visible final-frame snap on synchronized bodies.
+	_train.transform = Transform3D(
+		_train.basis, STATIONS[_current_station].position)
 	if _player != null:
 		_player.global_position = _train.to_global(DRIVER_SEAT)
 		_player.velocity = Vector3.ZERO
@@ -813,6 +817,8 @@ func _disembark_driver() -> void:
 	_manual_driving = false
 	_riding = false
 	_display_speed_kph = 0.0
+	if _rider_anchor != null:
+		_rider_anchor.remote_path = NodePath()
 	if _player != null:
 		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
 		_player.velocity = Vector3.ZERO
@@ -892,83 +898,10 @@ void fragment() {
 	_canopy_material = _material(Color(0.23, 0.48, 0.72, 0.76), 0.24,
 		Color("48cce8"), 0.72, true)
 	_dark_metal_material = _material(Color("263552"), 0.42, Color("283f65"), 0.20)
-	# Piltover-inspired arcane engineering: pale carved stone, oxidized teal
-	# metal and deep blue machinery carry the structure. Gold remains an accent.
-	_piltover_ivory_material = _material(Color("d9d2c0"), 0.72,
-		Color("8eb8ba"), 0.08)
-	_piltover_teal_material = _material(Color("245f64"), 0.46,
-		Color("2b8c91"), 0.22)
-	_piltover_navy_material = _material(Color("182c43"), 0.40,
-		Color("224f68"), 0.18)
-	_build_piltover_pixel_floor_material()
 	_station_rainbow_materials.clear()
-	_station_rainbow_glass_materials.clear()
 	for colour in [Color("ff557f"), Color("ff9f43"), Color("ffe66d"),
 			Color("5ee58c"), Color("42d9ff"), Color("647dff"), Color("b56cff")]:
-		_station_rainbow_materials.append(_material(colour, 0.26, colour, 1.25))
-		var glass_colour := Color(colour.r, colour.g, colour.b, 0.58)
-		_station_rainbow_glass_materials.append(
-			_material(glass_colour, 0.16, colour, 1.55, true))
-
-
-func _build_piltover_pixel_floor_material() -> void:
-	# One 64 px authored tile carries the whole floor language without coplanar
-	# overlay meshes. A gold perimeter frames mirrored rainbow inlays so the
-	# platform feels celebratory while retaining a calm, readable navy field.
-	const TILE_SIZE := 64
-	var image := Image.create(TILE_SIZE, TILE_SIZE, false, Image.FORMAT_RGBA8)
-	var navy := Color("182c43")
-	var recess := Color("203b4d")
-	var teal := Color("245f64")
-	var cyan := Color("45c7d8")
-	var brass := Color("c99b3d")
-	var rainbow := [Color("ef6687"), Color("f28b46"), Color("f4d35e"),
-		Color("65d68a"), Color("45c7d8"), Color("5c86e8"), Color("a879e8")]
-	for pixel_y in TILE_SIZE:
-		for pixel_x in TILE_SIZE:
-			var colour := navy
-			var edge_distance := mini(mini(pixel_x, TILE_SIZE - 1 - pixel_x),
-				mini(pixel_y, TILE_SIZE - 1 - pixel_y))
-			if edge_distance < 2:
-				colour = brass
-			elif edge_distance < 4:
-				colour = recess
-			elif edge_distance == 4:
-				colour = teal
-			# A restrained central circuit and paired crossbars remain legible when
-			# the tile is stretched across a long platform or repeated on steps.
-			if pixel_x in range(31, 33) and pixel_y in range(10, 54):
-				colour = cyan
-			if pixel_y in [20, 21, 42, 43] and pixel_x in range(18, 46):
-				colour = cyan
-			# Seven mirrored pixel ribbons provide the requested color without adding
-			# loose geometry that can project through the platform camera.
-			for ribbon_index in rainbow.size():
-				var ribbon_y := 25 + ribbon_index * 2
-				if pixel_y == ribbon_y and (pixel_x in range(8, 25) \
-						or pixel_x in range(40, 57)):
-					colour = rainbow[ribbon_index]
-			# Stepped Deco fans point toward the centre from both short ends.
-			for fan_y in [12, 51]:
-				var fan_depth := absi(pixel_y - fan_y)
-				if fan_depth <= 4 and absi(pixel_x - 32) == 8 + fan_depth * 2:
-					colour = teal
-			# Four small brass keystones stay below ten percent of the tile.
-			for corner in [Vector2i(10, 10), Vector2i(53, 10),
-					Vector2i(10, 53), Vector2i(53, 53)]:
-				if absi(pixel_x - corner.x) + absi(pixel_y - corner.y) <= 2:
-					colour = brass
-			# Sparse deterministic chips keep the floor painterly, never noisy.
-			if (pixel_x * 17 + pixel_y * 31) % 211 == 0 and edge_distance > 8:
-				colour = teal
-			image.set_pixel(pixel_x, pixel_y, colour)
-	var texture := ImageTexture.create_from_image(image)
-	_piltover_pixel_floor_material = _material(Color.WHITE, 0.58)
-	_piltover_pixel_floor_material.albedo_texture = texture
-	_piltover_pixel_floor_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	_piltover_pixel_floor_material.set_meta("palette_style", "rainbow_inlay_gold_frame")
-	_piltover_pixel_floor_material.set_meta("gold_frame", true)
-	_piltover_pixel_floor_material.set_meta("rainbow_colour_count", rainbow.size())
+		_station_rainbow_materials.append(_material(colour, 0.30, colour, 0.85))
 
 
 func _build_route() -> void:
@@ -1161,11 +1094,18 @@ func _build_stations() -> void:
 		station.position = info.position
 		stations_root.add_child(station)
 		_station_nodes.append(station)
+		_build_station_platform_from_scratch(station, index)
+		_build_floating_dock_structure(station)
+		if String(info.id) == "mind":
+			_build_mind_spark_station_upgrade(station)
+		else:
+			_build_bio_magitech_pavilion(station)
 		var landing_local: Vector3 = info.landing - info.position
 		var dock_sign := signf(landing_local.x)
 		if is_zero_approx(dock_sign):
 			dock_sign = -1.0
-		_build_canonical_station(station, index, landing_local, dock_sign)
+		_build_world_access_bridge(station, landing_local, dock_sign)
+		_build_train_fit_boarding_layout(station, dock_sign, index)
 		var board_label := Label3D.new()
 		board_label.name = "BoardTrainSign"
 		board_label.text = "1  DRIVE   ✦   2  RIDE\nQ  USE SEAT"
@@ -1190,164 +1130,6 @@ func _build_stations() -> void:
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = false
 		station.add_child(label)
-		_apply_web_station_performance_profile(station)
-
-
-func _build_canonical_station(station: Node3D, station_index: int,
-		landing_local: Vector3, dock_sign: float) -> void:
-	# Every Crown Line stop is an instance of this one architectural blueprint.
-	# Only its world transform, access-bridge reach and sign text may differ; the
-	# platform, ground, roof, stairs, barriers and boarding gaps stay identical.
-	station.set_meta("canonical_station_blueprint", CANONICAL_STATION_BLUEPRINT)
-	station.set_meta("canonical_station_source", "gallery_station")
-	station.set_meta("complete_station_template", true)
-	station.set_meta("old_station_roof_restored", true)
-	station.set_meta("old_station_restoration_scope", "roof_only")
-	_build_station_platform_from_scratch(station, station_index)
-	_build_floating_dock_structure(station)
-	_build_bio_magitech_pavilion(station)
-	_build_train_fit_boarding_layout(station, dock_sign, station_index)
-	# Access is built last so its glass reuses the exact platform gateway edges
-	# and its adaptive world end can meet each kingdom without altering the stair.
-	_build_world_access_bridge(station, landing_local, dock_sign)
-
-
-func _uses_web_station_performance_profile() -> bool:
-	return OS.has_feature("web") \
-		or OS.get_environment("ARTEA_FORCE_WEB_STATION_LOD") == "1"
-
-
-func _apply_web_station_performance_profile(station: Node3D) -> void:
-	if not _uses_web_station_performance_profile():
-		return
-	# The four stations are more than 1.2 km apart. A 600 m visibility range keeps
-	# the complete station, stair and bridge visible throughout approach and play,
-	# while preventing the browser from submitting the other three complexes.
-	station.process_mode = Node.PROCESS_MODE_DISABLED
-	station.set_meta("web_performance_profile", "single_nearby_station_shadowless")
-	station.set_meta("web_visibility_range_m", WEB_STATION_VISIBILITY_RANGE_M)
-	station.set_meta("web_visibility_margin_m", WEB_STATION_VISIBILITY_MARGIN_M)
-	station.set_meta("web_max_simultaneous_station_complexes", 1)
-	_consolidate_web_station_geometry(station)
-	var geometry_instances := station.find_children(
-		"*", "GeometryInstance3D", true, false)
-	for geometry_candidate in geometry_instances:
-		var geometry := geometry_candidate as GeometryInstance3D
-		geometry.visibility_range_end = WEB_STATION_VISIBILITY_RANGE_M
-		geometry.visibility_range_end_margin = WEB_STATION_VISIBILITY_MARGIN_M
-		geometry.visibility_range_fade_mode = \
-			GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
-		geometry.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	station.set_meta("web_range_limited_geometry_count", geometry_instances.size())
-	for light_candidate in station.find_children("*", "Light3D", true, false):
-		var station_light := light_candidate as Light3D
-		station_light.shadow_enabled = false
-		station_light.distance_fade_enabled = true
-		station_light.distance_fade_begin = 420.0
-		station_light.distance_fade_length = 80.0
-
-
-func _consolidate_web_station_geometry(station: Node3D) -> void:
-	# All station meshes are static. Merge them by shared material so WebGL sends
-	# a few large buffers instead of hundreds of tiny primitive draw submissions.
-	# Physics is authored in separate StaticBody3D nodes and is never removed.
-	var source_meshes := station.find_children("*", "MeshInstance3D", true, false)
-	var merge_meshes: Array[MeshInstance3D] = []
-	var preserved_meshes := 0
-	var groups := {}
-	var station_inverse := station.global_transform.affine_inverse()
-	for mesh_candidate in source_meshes:
-		var mesh_instance := mesh_candidate as MeshInstance3D
-		if mesh_instance.mesh == null:
-			continue
-		# Keep palette-defining floor sectors and translucent roof petals as
-		# separate objects. Merging them changes alpha sorting and washes the seven
-		# authored colours into the front-most material in WebGL.
-		if mesh_instance.name.begins_with("RainbowCivicFloorSector_") \
-				or mesh_instance.name.begins_with("SolarGlassPetal_"):
-			preserved_meshes += 1
-			continue
-		merge_meshes.append(mesh_instance)
-		var station_transform := station_inverse * mesh_instance.global_transform
-		for surface_index in mesh_instance.mesh.get_surface_count():
-			var surface_material := mesh_instance.material_override
-			if surface_material == null:
-				surface_material = mesh_instance.mesh.surface_get_material(surface_index)
-			var material_key := str(surface_material.get_instance_id()) \
-				if surface_material != null else "none"
-			if not groups.has(material_key):
-				var surface_tool := SurfaceTool.new()
-				surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-				surface_tool.set_material(surface_material)
-				groups[material_key] = {
-					"surface_tool": surface_tool,
-					"material": surface_material,
-					"source_count": 0,
-				}
-			var group: Dictionary = groups[material_key]
-			(group.surface_tool as SurfaceTool).append_from(
-				mesh_instance.mesh, surface_index, station_transform)
-			group.source_count = int(group.source_count) + 1
-	for mesh_instance in merge_meshes:
-		if is_instance_valid(mesh_instance) and mesh_instance.get_parent() != null:
-			mesh_instance.get_parent().remove_child(mesh_instance)
-			mesh_instance.free()
-	var batches := Node3D.new()
-	batches.name = "WebStationBatchedGeometry"
-	station.add_child(batches)
-	var batch_index := 0
-	for material_key in groups:
-		var group: Dictionary = groups[material_key]
-		var combined_mesh := (group.surface_tool as SurfaceTool).commit()
-		if combined_mesh == null:
-			continue
-		var batch := MeshInstance3D.new()
-		batch.name = "StationMaterialBatch_%02d" % batch_index
-		batch.mesh = combined_mesh
-		batch.material_override = group.material as Material
-		batch.set_meta("combined_source_surface_count", int(group.source_count))
-		batches.add_child(batch)
-		batch_index += 1
-	station.set_meta("web_source_mesh_count", source_meshes.size())
-	station.set_meta("web_batched_mesh_count", batch_index)
-	station.set_meta("web_palette_mesh_count", preserved_meshes)
-
-
-func get_station_performance_summary() -> Dictionary:
-	var total_geometry := 0
-	var range_limited_geometry := 0
-	var shadowless_geometry := 0
-	var profiled_stations := 0
-	var source_meshes := 0
-	var batched_meshes := 0
-	var palette_meshes := 0
-	for station in _station_nodes:
-		if station.has_meta("web_performance_profile"):
-			profiled_stations += 1
-		source_meshes += int(station.get_meta("web_source_mesh_count", 0))
-		batched_meshes += int(station.get_meta("web_batched_mesh_count", 0))
-		palette_meshes += int(station.get_meta("web_palette_mesh_count", 0))
-		for geometry_candidate in station.find_children(
-				"*", "GeometryInstance3D", true, false):
-			var geometry := geometry_candidate as GeometryInstance3D
-			total_geometry += 1
-			if geometry.visibility_range_end > 0.0 \
-					and geometry.visibility_range_end <= WEB_STATION_VISIBILITY_RANGE_M:
-				range_limited_geometry += 1
-			if geometry.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
-				shadowless_geometry += 1
-	return {
-		"web_profile_active": _uses_web_station_performance_profile(),
-		"profiled_station_count": profiled_stations,
-		"total_station_geometry": total_geometry,
-		"range_limited_geometry": range_limited_geometry,
-		"shadowless_geometry": shadowless_geometry,
-		"source_station_meshes": source_meshes,
-		"batched_station_meshes": batched_meshes,
-		"preserved_palette_meshes": palette_meshes,
-		"visibility_range_m": WEB_STATION_VISIBILITY_RANGE_M,
-		"max_simultaneous_station_complexes": 1,
-	}
 
 
 func _build_station_platform_from_scratch(station: Node3D,
@@ -1363,15 +1145,6 @@ func _build_station_platform_from_scratch(station: Node3D,
 	platform.set_meta("platform_length_m", 57.0)
 	platform.set_meta("central_train_clearance_m", 12.0)
 	platform.set_meta("raised_boarding_top_y", 1.1)
-	platform.set_meta("continuous_boarding_collision", true)
-	platform.set_meta("ground_synced_to_train", true)
-	platform.set_meta("walking_surface_style", STATION_WALKING_SURFACE_STYLE)
-	platform.set_meta("foundation_design_language", "piltover_arcane_engineering")
-	platform.set_meta("gold_accent_ratio", 0.10)
-	platform.set_meta("ground_layout", "single_surface_mirrored")
-	platform.set_meta("visual_surface_layers_per_side", 1)
-	platform.set_meta("rainbow_fascia_colour_count", 7)
-	platform.set_meta("gold_frame_layout", true)
 	station.add_child(platform)
 
 	const FOUNDATION_X := 10.0
@@ -1379,49 +1152,43 @@ func _build_station_platform_from_scratch(station: Node3D,
 	const FOUNDATION_LENGTH := 57.0
 	const FOUNDATION_CENTRE_Z := -1.5
 	const RAISED_BOARDING_X := 8.75
-	# Carry the raised deck beside the full engine nose, not just the coaches.
-	# This gives players a continuous protected approach from the station entrance
-	# to the driver doorway without making them step beside exposed machinery.
-	const RAISED_BOARDING_LENGTH := 52.0
-	const RAISED_BOARDING_CENTRE_Z := -2.0
+	const RAISED_BOARDING_LENGTH := 40.0
+	const RAISED_BOARDING_CENTRE_Z := 4.0
 	for side in [-1.0, 1.0]:
 		var side_name := "Left" if side < 0.0 else "Right"
 		_add_box(platform, "%sStructuralDeck" % side_name,
 			Vector3(float(side) * FOUNDATION_X, -2.2, FOUNDATION_CENTRE_Z),
 			Vector3(FOUNDATION_WIDTH, 2.0, FOUNDATION_LENGTH),
-			_piltover_navy_material, true)
+			_stone_material, true)
 		# The 2.3 m riser carries the colored driver/passenger walking surfaces at
 		# train-step height instead of leaving those floors floating above the base.
 		_add_box(platform, "%sRaisedBoardingBase" % side_name,
 			Vector3(float(side) * RAISED_BOARDING_X, -0.05,
 				RAISED_BOARDING_CENTRE_Z),
 			Vector3(5.5, 2.3, RAISED_BOARDING_LENGTH),
-			_piltover_navy_material, true)
-		# One repeated teal inset system gives both elevations the same measured
-		# Piltover rhythm. Gaps expose the navy structure instead of stacking a
-		# second set of rainbow panels over these panels.
-		for panel_index in 8:
-			_add_box(platform, "%sPiltoverInsetPanel_%02d" % [side_name, panel_index],
-				Vector3(float(side) * 14.10, -2.22,
-					-26.0 + float(panel_index) * 7.0),
-				Vector3(0.18, 1.05, 5.8),
-				_station_rainbow_materials[panel_index % 7], false)
-		# No glowing lengthwise conduit here: in the gameplay perspective it crossed
-		# the underside of the bridge as one long pale diagonal line.
+			_dark_metal_material, true)
 		_add_segment_box(platform, "%sInnerGoldSafetyEdge" % side_name,
 			Vector3(float(side) * 6.0, -1.0, -30.0),
 			Vector3(float(side) * 6.0, -1.0, 27.0),
-			Vector2(0.16, 0.26), _gold_material)
+			Vector2(0.28, 0.42), _gold_material)
 		_add_segment_box(platform, "%sOuterGoldFascia" % side_name,
 			Vector3(float(side) * 14.0, -1.0, -30.0),
 			Vector3(float(side) * 14.0, -1.0, 27.0),
-			Vector2(0.18, 0.32), _gold_material)
+			Vector2(0.32, 0.58), _gold_material)
+		# Seven non-overlapping eight-metre light panels make the platform itself
+		# rainbow while the continuous gold fascia keeps the station hierarchy.
+		for colour_index in 7:
+			_add_box(platform, "%sRainbowFascia_%02d" % [side_name, colour_index],
+				Vector3(float(side) * 14.08, -1.82,
+					-25.5 + float(colour_index) * 8.0),
+				Vector3(0.16, 0.70, 7.72),
+				_station_rainbow_materials[colour_index], false)
 
 	# The lowered service bed makes the single centre rail readable and keeps all
 	# station collision outside the train shell. It is intentionally non-walkable.
 	_add_box(platform, "CentralMonorailServiceChannel",
 		Vector3(0.0, -2.65, -1.5), Vector3(11.5, 0.7, 57.0),
-		_piltover_navy_material, false)
+		_dark_metal_material, false)
 	_add_segment_box(platform, "LeftChannelLight",
 		Vector3(-5.72, -2.18, -30.0), Vector3(-5.72, -2.18, 27.0),
 		Vector2(0.20, 0.16), _glass_material)
@@ -1429,36 +1196,27 @@ func _build_station_platform_from_scratch(station: Node3D,
 		Vector3(5.72, -2.18, -30.0), Vector3(5.72, -2.18, 27.0),
 		Vector2(0.20, 0.16), _glass_material)
 
-	# Keep only the front and rear roof foundations. The former z=0 pair occupied
-	# the centre of the 15.6 m-wide arrival stair and its cyan entrance walkway.
+	# The restored roof uses six columns in the original station axes. Give every
+	# column a real plinth and an outrigger back to the twin structural decks.
 	var roof_foundations := Node3D.new()
 	roof_foundations.name = "OldRoofSupportFoundations"
-	roof_foundations.set_meta("centre_supports_removed", true)
-	roof_foundations.set_meta("stair_clear_half_width_m", 11.75)
-	roof_foundations.set_meta("roof_load_path_continuous", true)
 	station.add_child(roof_foundations)
 	for side in [-1.0, 1.0]:
-		for support_index in ROOF_SUPPORT_Z_POSITIONS.size():
-			var support_z: float = ROOF_SUPPORT_Z_POSITIONS[support_index]
+		for support_index in 3:
+			var support_z := -14.0 + float(support_index) * 14.0
 			var support_position := Vector3(float(side) * 19.0, -1.4, support_z)
 			_add_cylinder(roof_foundations,
 				"RoofPlinth_%s_%02d" % ["L" if side < 0.0 else "R", support_index],
-				support_position, 2.25, 2.8, _piltover_ivory_material, true, 12)
+				support_position, 2.25, 2.8, _stone_material, true, 12)
 			_add_torus(roof_foundations,
 				"RoofPlinthGoldRing_%s_%02d" % ["L" if side < 0.0 else "R", support_index],
 				support_position + Vector3.UP * 1.45, 1.72, 2.10, _gold_material)
-			# This pier begins exactly at the plinth bottom and penetrates the island
-			# hull, making the canopy-to-foundation load path visually continuous.
-			_add_cylinder(roof_foundations,
-				"RoofFoundationDropPier_%s_%02d" % [
+			_add_walkway_between(roof_foundations,
+				"RoofFoundationOutrigger_%s_%02d" % [
 					"L" if side < 0.0 else "R", support_index],
-				Vector3(float(side) * 19.0, -6.4, support_z),
-				1.28, 7.2, _piltover_teal_material, false, 8)
-			_add_torus(roof_foundations,
-				"RoofFoundationHextechCollar_%s_%02d" % [
-					"L" if side < 0.0 else "R", support_index],
-				Vector3(float(side) * 19.0, -3.0, support_z),
-				1.30, 1.58, _gold_material)
+				Vector3(float(side) * 13.5, -1.55, support_z),
+				Vector3(float(side) * 17.2, -1.55, support_z),
+				2.2, 1.1, _dark_metal_material, true)
 
 
 func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
@@ -1473,40 +1231,26 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 	layout.set_meta("aligned_to_train_route", true)
 	layout.set_meta("train_clear_width_m", 12.0)
 	layout.set_meta("train_clear_length_m", 54.0)
-	layout.set_meta("driver_walkway_front_z", -28.0)
-	layout.set_meta("driver_boarding_gate_z", DRIVER_SIDE_GATE_Z)
-	layout.set_meta("driver_gate_width_m", DRIVER_SIDE_GATE_HALF_LENGTH * 2.0)
-	layout.set_meta("driver_route_continuous", true)
-	layout.set_meta("boarding_gap_count", 3)
-	layout.set_meta("passenger_gate_count", 2)
-	layout.set_meta("platform_ground_synced", true)
-	layout.set_meta("walking_surface_style", STATION_WALKING_SURFACE_STYLE)
-	layout.set_meta("driver_ground_range_z", Vector2(-28.0, -12.1))
-	layout.set_meta("passenger_ground_range_z", Vector2(-12.1, 24.0))
-	layout.set_meta("mirrored_ground_layout", true)
-	layout.set_meta("overlapping_surface_layers", false)
 	station.add_child(layout)
 
-	# Each side now has exactly one visible 52 m cyan surface. The driver and two
-	# passenger destinations are communicated by the aligned gates and signs,
-	# avoiding the old stack of full-ground, driver, passenger and landing meshes.
+	# The train shell is 12 m wide. These 5.5 m side platforms begin exactly at
+	# x=+/-6 m, flush with its boarding steps, and never overlap its collision.
+	# The forward violet section reaches the first-coach cab; the longer cyan
+	# section serves the two passenger-coach gates at z=0 and z=15.
 	for side in [-1.0, 1.0]:
 		var side_name := "Left" if side < 0.0 else "Right"
-		_add_box(layout, "SynchronizedPlatformGround%s" % side_name,
-			Vector3(float(side) * 8.75, 1.115, -2.0),
-			Vector3(5.5, 0.03, 52.0), _piltover_pixel_floor_material, false)
+		_add_box(layout, "DriverWalkway%s" % side_name,
+			Vector3(float(side) * 8.75, 0.8, -7.0), Vector3(5.5, 0.6, 18.0),
+			_violet_material, true)
+		_add_box(layout, "PassengerWalkway%s" % side_name,
+			Vector3(float(side) * 8.75, 0.8, 13.0), Vector3(5.5, 0.6, 22.0),
+			_glass_material, true)
 		_add_box(layout, "DriverBoardingBridge%s" % side_name,
-			Vector3(float(side) * 6.0, 0.8, DRIVER_SIDE_GATE_Z),
-			Vector3(1.2, 0.6, DRIVER_SIDE_GATE_HALF_LENGTH * 2.0),
-			_piltover_pixel_floor_material, true)
-		_add_box(layout, "PassengerBoardingBridgeFront%s" % side_name,
-			Vector3(float(side) * 6.0, 0.8, PASSENGER_FRONT_GATE_Z),
-			Vector3(1.2, 0.6, PASSENGER_SIDE_GATE_HALF_LENGTH * 2.0),
-			_piltover_pixel_floor_material, true)
+			Vector3(float(side) * 6.0, 0.8, 0.0), Vector3(1.2, 0.6, 4.2),
+			_gold_material, true)
 		_add_box(layout, "PassengerBoardingBridge%s" % side_name,
-			Vector3(float(side) * 6.0, 0.8, PASSENGER_REAR_GATE_Z),
-			Vector3(1.2, 0.6, PASSENGER_SIDE_GATE_HALF_LENGTH * 2.0),
-			_piltover_pixel_floor_material, true)
+			Vector3(float(side) * 6.0, 0.8, 15.0), Vector3(1.2, 0.6, 4.2),
+			_gold_material, true)
 
 	# Join the top of the arrival stair to the nearest train-side platform. The
 	# connector is calculated in route space, so it never asks the player to walk
@@ -1518,35 +1262,15 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 		access_side = dock_sign
 	var access_target := Vector3(access_side * 8.75, 1.1,
 		clampf(stair_top_local.z, -14.5, 23.5))
-	# _add_walkway_between positions a box by its centre. Lower both endpoints by
-	# half its thickness so the connector TOP is exactly the 1.1 m platform top.
-	_add_walkway_between(layout, "EntranceToTrainWalkway",
-		stair_top_local - Vector3.UP * 0.3,
-		access_target - Vector3.UP * 0.3, 4.6, 0.6,
-		_piltover_pixel_floor_material, true)
+	_add_walkway_between(layout, "EntranceToTrainWalkway", stair_top_local,
+		access_target, 4.6, 0.6, _gold_material, true)
 
 	_add_boarding_zone_label(layout, "DriverZoneSign",
-		"DRIVER  •  1", Vector3(access_side * 11.9, 4.0,
-			DRIVER_SIDE_GATE_Z), Color("ffd45a"))
-	_add_boarding_zone_label(layout, "PassengerFrontZoneSign",
-		"RIDE 1  •  2", Vector3(access_side * 11.9, 4.0,
-			PASSENGER_FRONT_GATE_Z), Color("72eaff"))
-	_add_boarding_zone_label(layout, "PassengerRearZoneSign",
-		"RIDE 2  •  2", Vector3(access_side * 11.9, 4.0,
-			PASSENGER_REAR_GATE_Z), Color("72eaff"))
-	# Project the full 15.6 m stair head into train space. A fixed 5.2 m opening
-	# was narrower than this diagonal approach, so the stair glass crossed the
-	# platform windows on both sides of the nominal gate.
-	var stair_gate_a := layout.transform.affine_inverse() \
-		* Vector3(7.5 * dock_sign, 1.1, -7.8)
-	var stair_gate_b := layout.transform.affine_inverse() \
-		* Vector3(7.5 * dock_sign, 1.1, 7.8)
-	var entrance_gate_z := Vector2(minf(stair_gate_a.z, stair_gate_b.z) - 2.0,
-		maxf(stair_gate_a.z, stair_gate_b.z) + 2.0)
-	if entrance_gate_z.y - entrance_gate_z.x < 8.0:
-		var gate_centre := (entrance_gate_z.x + entrance_gate_z.y) * 0.5
-		entrance_gate_z = Vector2(gate_centre - 4.0, gate_centre + 4.0)
-	_build_platform_guardrails(station, layout.basis, access_side, entrance_gate_z)
+		"DRIVER  •  1", Vector3(access_side * 11.9, 4.0, -7.0), Color("ffd45a"))
+	_add_boarding_zone_label(layout, "PassengerZoneSign",
+		"RIDING  •  2", Vector3(access_side * 11.9, 4.0, 13.0), Color("72eaff"))
+	_build_platform_guardrails(station, layout.basis, access_side, access_target.z,
+		dock_sign)
 
 
 func _add_boarding_zone_label(parent: Node3D, node_name: String, text_value: String,
@@ -1593,13 +1317,13 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 	# sand-gold outlines and an open centre above the train.
 	var crystal_tree := Node3D.new()
 	crystal_tree.name = "MindCrystalTreeCanopy"
-	crystal_tree.visible = true
-	crystal_tree.set_meta("restored_old_station_roof", true)
 	upgrade.add_child(crystal_tree)
 	_add_cylinder(crystal_tree, "CyanKnowledgeMast", Vector3(0.0, 7.0, 0.0),
 		0.62, 14.0, _glass_material, false, 8)
 	_add_cylinder(crystal_tree, "VioletMindCrystal", Vector3(0.0, 15.2, 0.0),
 		1.35, 5.0, _violet_material, false, 6)
+	_add_torus(crystal_tree, "RestoredCanopyEnergyRing", Vector3(0.0, 12.1, 0.0),
+		8.35, 8.8, _gold_material)
 	var restored_petal_mesh := _leaf_petal_mesh(22.0, 10.0, 0.48)
 	for side in [-1.0, 1.0]:
 		for petal_index in 6:
@@ -1616,10 +1340,7 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 			petal.mesh = restored_petal_mesh
 			petal.position = centre
 			petal.rotation.y = angle
-			var petal_colour_index := (petal_index + (0 if side < 0 else 3)) % 7
-			petal.material_override = _station_rainbow_glass_materials[petal_colour_index]
-			petal.set_meta("rainbow_material_index", petal_colour_index)
-			petal.set_meta("gold_edge_frame", true)
+			petal.material_override = _canopy_material
 			crystal_tree.add_child(petal)
 			var root := centre - outward * 11.0
 			var shoulder_a := centre - outward * 1.8 - tangent * 5.0
@@ -1640,37 +1361,19 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 				Vector2(0.20, 0.20), _gold_material)
 	var restored_supports := Node3D.new()
 	restored_supports.name = "RestoredBranchingSupportColumns"
-	restored_supports.set_meta("centre_supports_removed", true)
-	restored_supports.set_meta("canopy_bearing_connected", true)
 	upgrade.add_child(restored_supports)
 	for side in [-1.0, 1.0]:
-		for support_index in ROOF_SUPPORT_Z_POSITIONS.size():
-			var z: float = ROOF_SUPPORT_Z_POSITIONS[support_index]
+		for support_index in 3:
+			var z := -14.0 + float(support_index) * 14.0
 			var x := float(side) * 19.0
 			_add_cylinder(restored_supports,
 				"RestoredLivingColumn_%s_%02d" % [
 					"L" if side < 0 else "R", support_index],
-				Vector3(x, 5.2, z), 0.75, 10.4, _piltover_teal_material, false, 8)
+				Vector3(x, 5.2, z), 0.75, 10.4, _nature_material, false, 8)
 			_add_cylinder(restored_supports,
 				"RestoredEngineeringCollar_%s_%02d" % [
 					"L" if side < 0 else "R", support_index],
 				Vector3(x, 9.2, z), 1.15, 0.65, _gold_material, false, 12)
-			_add_walkway_between(restored_supports,
-				"RestoredCanopyBranchInner_%s_%02d" % [
-					"L" if side < 0 else "R", support_index],
-				Vector3(x, 8.6, z), Vector3(float(side) * 13.0, 12.0, z),
-				0.62, 0.62, _piltover_teal_material, false)
-			_add_walkway_between(restored_supports,
-				"RestoredCanopyBranchOuter_%s_%02d" % [
-					"L" if side < 0 else "R", support_index],
-				Vector3(x, 8.6, z), Vector3(float(side) * 27.0, 12.0, z),
-				0.62, 0.62, _piltover_teal_material, false)
-			_add_walkway_between(restored_supports,
-				"RestoredRoofBearingBeam_%s_%02d" % [
-					"L" if side < 0 else "R", support_index],
-				Vector3(float(side) * 12.5, 12.35, z),
-				Vector3(float(side) * 27.5, 12.35, z),
-				0.78, 0.52, _piltover_ivory_material, false)
 
 	# Four outer wayfinding pylons retain the Mind Spark skyline without turning
 	# the platform rim into a wall of repeated monoliths.
@@ -1696,11 +1399,6 @@ func _build_mind_spark_floating_ground(upgrade: Node3D) -> void:
 	ground.name = "MindSparkFloatingGround"
 	ground.set_meta("walkable_circuit_floor", true)
 	ground.set_meta("faceted_suspended_foundation", true)
-	ground.set_meta("design_language", "piltover_arcane_engineering")
-	ground.set_meta("gold_accent_ratio", 0.10)
-	ground.set_meta("roof_load_path_continuous", true)
-	ground.set_meta("organized_colour_bands", true)
-	ground.set_meta("decorative_circuit_count", 8)
 	upgrade.add_child(ground)
 	# Replace the generic drum/roots at this station only; the dedicated faceted
 	# island below supplies the complete visible load-bearing silhouette.
@@ -1718,21 +1416,33 @@ func _build_mind_spark_floating_ground(upgrade: Node3D) -> void:
 		35.8, 37.8, floor_light)
 	_add_cylinder(ground, "CentralCircuitDisc", Vector3(0.0, -0.78, 0.0),
 		7.2, 0.18, floor_blue, false, 32)
+	_add_torus(ground, "CentralCircuitHalo", Vector3(0.0, -0.62, 0.0),
+		4.2, 4.7, _glass_material)
+	_add_torus(ground, "InnerCircuitRing", Vector3(0.0, -0.70, 0.0),
+		13.8, 14.25, _glass_material)
 	_add_torus(ground, "OuterCircuitRing", Vector3(0.0, -0.70, 0.0),
 		27.4, 27.85, _glass_material)
-	# Eight evenly spaced circuit lines are enough to establish the technology
-	# language without turning the walking floor into a pile of crossing objects.
-	for circuit_index in 8:
-		var angle := TAU * float(circuit_index) / 8.0
+	for circuit_index in 16:
+		var angle := TAU * float(circuit_index) / 16.0
 		var direction := Vector3(cos(angle), 0.0, sin(angle))
 		_add_segment_box(ground, "RadialCircuit_%02d" % circuit_index,
 			direction * 7.5 + Vector3.UP * -0.58,
 			direction * 35.6 + Vector3.UP * -0.58,
 			Vector2(0.22, 0.10), _glass_material)
-	# A single narrow crown band supplies the gold accent; it stays below the
-	# walking floor and does not compete with or overlap the cyan route markings.
-	_add_torus(ground, "PiltoverGoldCrownBand", Vector3(0.0, -3.02, 0.0),
-		33.45, 34.0, _gold_material)
+	# The three brighter axial conduits reproduce the strong parallel path in the
+	# reference without adding collision or narrowing the boarding route.
+	for lane_index in 3:
+		var lane_x := -1.35 + float(lane_index) * 1.35
+		_add_segment_box(ground, "StationAxisConduit_%02d" % lane_index,
+			Vector3(lane_x, -0.50, -36.2), Vector3(lane_x, -0.50, 36.2),
+			Vector2(0.24, 0.11), floor_light)
+	for panel_index in 24:
+		var angle_a := TAU * float(panel_index) / 24.0
+		var angle_b := TAU * float(panel_index + 1) / 24.0
+		_add_segment_box(ground, "OuterDeckPanelSeam_%02d" % panel_index,
+			Vector3(cos(angle_a) * 36.8, -0.52, sin(angle_a) * 36.8),
+			Vector3(cos(angle_b) * 36.8, -0.52, sin(angle_b) * 36.8),
+			Vector2(0.20, 0.10), floor_light)
 
 	# One authored triangular mesh now creates the reference's continuous rocky
 	# taper. Alternating ring rotations produce readable diamond facets instead
@@ -1962,111 +1672,30 @@ func _update_island_power_effect(delta: float) -> void:
 func _build_floating_dock_structure(station: Node3D) -> void:
 	var structure := Node3D.new()
 	structure.name = "FloatingDockStructure"
-	structure.set_meta("design_language", "piltover_arcane_engineering")
-	structure.set_meta("gold_accent_ratio", 0.10)
-	structure.set_meta("roof_load_path_continuous", true)
-	structure.set_meta("top_ground_style", "rainbow_civic_crown_gold_grid")
-	structure.set_meta("rainbow_ground_sector_count", 14)
-	structure.set_meta("gold_ground_frame", true)
 	station.add_child(structure)
-	# A layered civic undercroft replaces the plain gray drum. The pale crown,
-	# teal mechanical belt and navy tapered hull form one readable floating island.
 	_add_cylinder(structure, "SuspendedFoundation", Vector3(0, -8.0, 0), 32.0, 10.0,
-		_piltover_navy_material, false, 16)
-	_add_tapered_cylinder(structure, "PiltoverIvoryHullCrown",
-		Vector3(0.0, -4.6, 0.0), 34.0, 32.0, 3.2,
-		_piltover_ivory_material, 24)
-	_add_tapered_cylinder(structure, "PiltoverTealUndercroft",
-		Vector3(0.0, -15.0, 0.0), 31.8, 11.0, 18.0,
-		_piltover_teal_material, 24)
-	_add_torus(structure, "TenPercentGoldCrownTrim", Vector3(0.0, -3.05, 0.0),
-		32.8, 33.35, _gold_material)
-	_add_torus(structure, "HextechHullEnergyBelt", Vector3(0.0, -7.0, 0.0),
-		31.7, 32.15, _glass_material)
-	_build_rainbow_civic_crown_floor(structure)
-	# Do not hang a bright core spike below the island: from the boarding camera it
-	# projected through the bridge as the last stray pale line. The restrained
-	# cyan hull belt now communicates levitation without obstructing the platform.
-	# Twelve geometric ribs tie the upper crown into the tapered undercroft.
-	for rib_index in 12:
-		var rib_angle := TAU * float(rib_index) / 12.0
-		var rib_direction := Vector3(cos(rib_angle), 0.0, sin(rib_angle))
-		_add_walkway_between(structure, "PiltoverHullRib_%02d" % rib_index,
-			rib_direction * 31.0 + Vector3.UP * -4.5,
-			rib_direction * 10.0 + Vector3.UP * -23.0,
-			0.72, 0.48, _piltover_ivory_material, false)
-	# Four small gold keystones punctuate the otherwise teal/ivory silhouette;
-	# their area stays subordinate to the primary 90% palette.
-	for keystone_index in 4:
-		var keystone_angle := PI * 0.25 + TAU * float(keystone_index) / 4.0
-		_add_box(structure, "GoldHullKeystone_%02d" % keystone_index,
-			Vector3(cos(keystone_angle) * 31.9, -5.4,
-				sin(keystone_angle) * 31.9),
-			Vector3(1.2, 1.0, 1.2), _gold_material, false,
-			0.0, -keystone_angle)
-	# The former eight glowing AetherAnchor spikes also projected through the
-	# bridge. The restrained cyan hull belt now owns the levitation read.
-	# Keep the under-platform silhouette open. The former diagonal cyan braces
-	# crossed the bridge/foundation in the player camera and read as stray white
-	# lines. Roof loads are already carried by the paired vertical drop piers.
-
-
-func _build_rainbow_civic_crown_floor(structure: Node3D) -> void:
-	# Replace the old exposed gray cap with one deliberate station plaza. Fourteen
-	# radial color panels repeat the seven-color palette twice; slim gold seams
-	# turn the arrangement into architecture and visually connect it to the frames.
-	const SECTOR_COUNT := 14
-	const INNER_RADIUS := 10.8
-	const OUTER_RADIUS := 31.0
-	const FLOOR_Y := -2.93
-	_add_cylinder(structure, "RainbowCivicFloorCore",
-		Vector3(0.0, FLOOR_Y - 0.04, 0.0), INNER_RADIUS, 0.08,
-		_piltover_navy_material, false, 28)
-	_add_torus(structure, "RainbowCivicFloorInnerGoldRing",
-		Vector3(0.0, FLOOR_Y + 0.05, 0.0), INNER_RADIUS - 0.34,
-		INNER_RADIUS + 0.06, _gold_material)
-	for sector_index in SECTOR_COUNT:
-		var angle_a := -PI * 0.5 + TAU * float(sector_index) / float(SECTOR_COUNT)
-		var angle_b := -PI * 0.5 + TAU * float(sector_index + 1) / float(SECTOR_COUNT)
-		_add_rainbow_civic_floor_sector(structure,
-			"RainbowCivicFloorSector_%02d" % sector_index,
-			angle_a, angle_b, INNER_RADIUS, OUTER_RADIUS, FLOOR_Y,
-			_station_rainbow_materials[sector_index % 7], sector_index % 7)
-		var seam_direction := Vector3(cos(angle_a), 0.0, sin(angle_a))
-		_add_walkway_between(structure, "CivicGoldRadialFrame_%02d" % sector_index,
-			seam_direction * (INNER_RADIUS + 0.1) + Vector3.UP * (FLOOR_Y + 0.07),
-			seam_direction * (OUTER_RADIUS - 0.1) + Vector3.UP * (FLOOR_Y + 0.07),
-			0.20, 0.10, _gold_material, false)
-
-
-func _add_rainbow_civic_floor_sector(parent: Node3D, node_name: String,
-		angle_a: float, angle_b: float, inner_radius: float, outer_radius: float,
-		height: float, material: Material, colour_index: int) -> void:
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	const CURVE_STEPS := 4
-	for curve_index in CURVE_STEPS:
-		var ratio_a := float(curve_index) / float(CURVE_STEPS)
-		var ratio_b := float(curve_index + 1) / float(CURVE_STEPS)
-		var step_angle_a := lerpf(angle_a, angle_b, ratio_a)
-		var step_angle_b := lerpf(angle_a, angle_b, ratio_b)
-		var inner_a := Vector3(cos(step_angle_a) * inner_radius, height,
-			sin(step_angle_a) * inner_radius)
-		var inner_b := Vector3(cos(step_angle_b) * inner_radius, height,
-			sin(step_angle_b) * inner_radius)
-		var outer_a := Vector3(cos(step_angle_a) * outer_radius, height,
-			sin(step_angle_a) * outer_radius)
-		var outer_b := Vector3(cos(step_angle_b) * outer_radius, height,
-			sin(step_angle_b) * outer_radius)
-		_add_surface_quad(surface, inner_a, outer_a, outer_b, inner_b)
-	surface.generate_normals()
-	var sector := MeshInstance3D.new()
-	sector.name = node_name
-	sector.mesh = surface.commit()
-	sector.material_override = material
-	sector.set_meta("rainbow_material_index", colour_index)
-	sector.set_meta("gold_seam_framed", true)
-	parent.add_child(sector)
+		_stone_material, false, 16)
+	for index in 8:
+		var angle := TAU * float(index) / 8.0
+		var anchor := MeshInstance3D.new()
+		anchor.name = "AetherAnchor_%02d" % index
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = 3.6
+		mesh.bottom_radius = 0.35
+		mesh.height = 15.0
+		mesh.radial_segments = 6
+		anchor.mesh = mesh
+		anchor.position = Vector3(cos(angle) * 22.0, -18.0, sin(angle) * 22.0)
+		anchor.material_override = _glass_material
+		structure.add_child(anchor)
+	# Living roots make the load path legible without adding collision beneath
+	# the playable deck. They connect the platform rim to the crystal foundation.
+	for side in [-1.0, 1.0]:
+		for rib_index in 3:
+			var z := -13.0 + float(rib_index) * 13.0
+			_add_walkway_between(structure, "LivingRootRib_%s_%02d" % ["L" if side < 0 else "R", rib_index],
+				Vector3(float(side) * 27.0, -4.0, z),
+				Vector3(float(side) * 8.0, -16.0, z * 0.45), 1.0, 1.0, _nature_material, false)
 
 
 func _build_bio_magitech_pavilion(station: Node3D) -> void:
@@ -2075,8 +1704,6 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 	station.add_child(pavilion)
 	var canopy := Node3D.new()
 	canopy.name = "LivingCrystalCanopy"
-	canopy.visible = true
-	canopy.set_meta("restored_old_station_roof", true)
 	pavilion.add_child(canopy)
 	var petal_mesh := _leaf_petal_mesh(22.0, 10.0, 0.48)
 	# Restore the original twelve-leaf split-wing roof while preserving the open
@@ -2093,10 +1720,7 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 			petal.mesh = petal_mesh
 			petal.position = centre
 			petal.rotation.y = angle
-			var petal_colour_index := (petal_index + (0 if side < 0 else 3)) % 7
-			petal.material_override = _station_rainbow_glass_materials[petal_colour_index]
-			petal.set_meta("rainbow_material_index", petal_colour_index)
-			petal.set_meta("gold_edge_frame", true)
+			petal.material_override = _canopy_material
 			canopy.add_child(petal)
 			var root := centre - outward * 11.0
 			var shoulder_a := centre - outward * 1.8 - tangent * 5.0
@@ -2117,37 +1741,36 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 	# show where the living structure connects to engineered roof modules.
 	var supports := Node3D.new()
 	supports.name = "BranchingSupportColumns"
-	supports.set_meta("centre_supports_removed", true)
-	supports.set_meta("canopy_bearing_connected", true)
 	pavilion.add_child(supports)
 	for side in [-1.0, 1.0]:
-		for support_index in ROOF_SUPPORT_Z_POSITIONS.size():
-			var z: float = ROOF_SUPPORT_Z_POSITIONS[support_index]
+		for support_index in 3:
+			var z := -14.0 + float(support_index) * 14.0
 			var x := float(side) * 19.0
 			_add_cylinder(supports, "LivingColumn_%s_%02d" % ["L" if side < 0 else "R", support_index],
-				Vector3(x, 5.2, z), 0.75, 10.4, _piltover_teal_material, false, 8)
+				Vector3(x, 5.2, z), 0.75, 10.4, _nature_material, false, 8)
 			_add_cylinder(supports, "EngineeringCollar_%s_%02d" % ["L" if side < 0 else "R", support_index],
 				Vector3(x, 9.2, z), 1.15, 0.65, _gold_material, false, 12)
 			_add_walkway_between(supports, "CanopyBranchInner_%s_%02d" % ["L" if side < 0 else "R", support_index],
 				Vector3(x, 8.6, z), Vector3(float(side) * 13.0, 12.0, z),
-				0.62, 0.62, _piltover_teal_material, false)
+				0.62, 0.62, _nature_material, false)
 			_add_walkway_between(supports, "CanopyBranchOuter_%s_%02d" % ["L" if side < 0 else "R", support_index],
 				Vector3(x, 8.6, z), Vector3(float(side) * 27.0, 12.0, z),
-				0.62, 0.62, _piltover_teal_material, false)
-			_add_walkway_between(supports,
-				"RoofBearingBeam_%s_%02d" % [
-					"L" if side < 0 else "R", support_index],
-				Vector3(float(side) * 12.5, 12.35, z),
-				Vector3(float(side) * 27.5, 12.35, z),
-				0.78, 0.52, _piltover_ivory_material, false)
+				0.62, 0.62, _nature_material, false)
+	# A high energy ring identifies the Crown Line without adding a portal or
+	# centre mast in front of the train.
+	_add_torus(pavilion, "CanopyEnergyRing", Vector3(0.0, 12.1, 1.5),
+		8.35, 8.8, _gold_material)
 	for side in [-1.0, 1.0]:
-		_build_crystal_planter(pavilion,
-			"CrystalPlanter_%s" % ("L" if side < 0 else "R"),
-			Vector3(float(side) * 27.0, 0.2, -12.0))
-	# Lighting guides players toward both boarding bays. The former loose cyan
-	# PlatformCircuit strips crossed the lower bridge camera as diagonal lines;
-	# their color language now lives safely inside the framed floor texture.
+		for planter_index in 2:
+			var planter_z := -12.0 + float(planter_index) * 24.0
+			_build_crystal_planter(pavilion,
+				"CrystalPlanter_%s_%02d" % ["L" if side < 0 else "R", planter_index],
+				Vector3(float(side) * 27.0, 0.2, planter_z))
+	# Cyan circuits guide players around the track and toward both boarding bays.
 	for side in [-1.0, 1.0]:
+		_add_walkway_between(pavilion, "PlatformCircuit_%s" % ("L" if side < 0 else "R"),
+			Vector3(float(side) * 10.0, 0.35, -17.0),
+			Vector3(float(side) * 10.0, 0.35, 21.0), 0.30, 0.08, _glass_material, false)
 		var pavilion_light := OmniLight3D.new()
 		pavilion_light.name = "CanopyGlowLeft" if side < 0 else "CanopyGlowRight"
 		pavilion_light.position = Vector3(float(side) * 13.0, 7.0, 2.0)
@@ -2196,7 +1819,6 @@ func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
 		dock_sign: float) -> void:
 	var bridge := Node3D.new()
 	bridge.name = "KingdomAccessSkybridge"
-	bridge.set_meta("walking_surface_style", STATION_WALKING_SURFACE_STYLE)
 	station.add_child(bridge)
 	# Meet the circular platform at its outer rim instead of passing underneath
 	# it. The 16 m bridge is 7.3 m wide at the outer stair edges, so x=-37 keeps
@@ -2213,7 +1835,7 @@ func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
 		var bridge_basis := Basis.looking_at((landing - dock_edge).normalized(), Vector3.UP)
 		landing.y = landing_surface_y - bridge_basis.y.y * ACCESS_DECK_THICKNESS * 0.5
 	_add_walkway_between(bridge, "FloatingAccessDeck", dock_edge, landing, 16.0,
-		ACCESS_DECK_THICKNESS, _piltover_pixel_floor_material, false)
+		ACCESS_DECK_THICKNESS, _dark_metal_material, false)
 	_build_bridge_ceremonial_ascent(bridge, dock_edge, landing)
 	_build_dock_arrival_stairs(station, dock_sign,
 		Vector3(landing.x, landing_surface_y, landing.z))
@@ -2226,22 +1848,17 @@ func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
 	const SKYBRIDGE_GUARD_OFFSET := 7.9
 	for side in [-1.0, 1.0]:
 		var edge_offset := side_axis * float(side) * SKYBRIDGE_GUARD_OFFSET
-		var skybridge_guard := Node3D.new()
-		skybridge_guard.name = "SkybridgeGuardLeft" if side < 0 else "SkybridgeGuardRight"
-		skybridge_guard.set_meta("barrier_plan", "rainbow_glass_gold_frame")
-		bridge.add_child(skybridge_guard)
-		var guard_start := dock_edge + edge_offset
-		var guard_finish := landing + edge_offset
-		_add_purpose_barrier_segment(skybridge_guard, "GlassBarrier",
-			guard_start, guard_finish,
-			"protects the elevated station approach with a clear view")
-		var shared_posts := {}
-		var span_count := maxi(1, ceili(guard_start.distance_to(guard_finish) / 6.5))
-		for post_index in span_count + 1:
-			var ratio := float(post_index) / float(span_count)
-			_add_unique_barrier_post(skybridge_guard, shared_posts,
-				guard_start.lerp(guard_finish, ratio))
-		skybridge_guard.set_meta("shared_connection_post_count", shared_posts.size())
+		for rail_height in [1.15, 2.35]:
+			var lateral: Vector3 = edge_offset + Vector3.UP * float(rail_height)
+			_add_walkway_between(bridge,
+				"SkybridgeGuardLeft" if side < 0 else "SkybridgeGuardRight",
+				dock_edge + lateral, landing + lateral, 0.30, 0.30, _gold_material, true)
+		for post_index in 9:
+			var ratio := float(post_index) / 8.0
+			var surface := dock_edge.lerp(landing, ratio) + edge_offset
+			_add_box(bridge, "SkybridgeRailPost",
+				surface + Vector3.UP * 1.2, Vector3(0.34, 2.4, 0.34),
+				_gold_material, true)
 
 
 func _build_bridge_ceremonial_ascent(parent: Node3D, start: Vector3, finish: Vector3) -> void:
@@ -2266,12 +1883,14 @@ func _build_bridge_ceremonial_ascent(parent: Node3D, start: Vector3, finish: Vec
 			_add_box(parent,
 				"CeremonialStep_%s_%02d" % ["L" if side < 0 else "R", step_index],
 				Vector3(tread_centre.x, surface.y - 0.06, tread_centre.z),
-				Vector3(SIDE_WIDTH, 0.12, step_depth),
-				_piltover_pixel_floor_material, false,
+				Vector3(SIDE_WIDTH, 0.12, step_depth), _stone_material, false,
 				0.0, atan2(forward.x, forward.z))
 	_add_surface_ramp_mesh(parent, "CentralLumenRamp",
 		start + Vector3.UP * 0.62, finish + Vector3.UP * 0.62,
-		CENTRAL_WIDTH, 0.16, _piltover_pixel_floor_material)
+		CENTRAL_WIDTH, 0.16, _dark_metal_material)
+	_add_surface_ramp_mesh(parent, "AccessEnergyConduit",
+		start + Vector3.UP * 0.73, finish + Vector3.UP * 0.73,
+		1.05, 0.08, _glass_material)
 	# Three paired crystal gardens break the long climb into a measured sequence
 	# of magical-engineering nodes while remaining outside the clear centre lane.
 	for garden_index in 3:
@@ -2302,7 +1921,6 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 		access_landing_surface: Vector3) -> void:
 	var stairs := Node3D.new()
 	stairs.name = "AccessRamp"
-	stairs.set_meta("walking_surface_style", STATION_WALKING_SURFACE_STYLE)
 	station.add_child(stairs)
 	# Keep the visible stair rhythm, but let one continuous ramp carry the
 	# player. The old cumulative collision boxes all extended to one shared
@@ -2320,18 +1938,30 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 		var x := lerpf(stair_start_x, stair_end_x, ratio)
 		_add_box(stairs, "DockStep_%02d" % (index + 1),
 			Vector3(x, top_y - TREAD_THICKNESS * 0.5, -SIDE_STAIR_Z),
-			Vector3(STEP_DEPTH, TREAD_THICKNESS, SIDE_STAIR_WIDTH),
-			_piltover_pixel_floor_material, false)
+			Vector3(STEP_DEPTH, TREAD_THICKNESS, SIDE_STAIR_WIDTH), _stone_material, false)
 		_add_box(stairs, "DockStepRight_%02d" % (index + 1),
 			Vector3(x, top_y - TREAD_THICKNESS * 0.5, SIDE_STAIR_Z),
-			Vector3(STEP_DEPTH, TREAD_THICKNESS, SIDE_STAIR_WIDTH),
-			_piltover_pixel_floor_material, false)
+			Vector3(STEP_DEPTH, TREAD_THICKNESS, SIDE_STAIR_WIDTH), _stone_material, false)
 	var ramp_start := Vector3(stair_start_x + dock_sign * STEP_DEPTH * 0.5,
 		STAIR_BOTTOM_TOP_Y - 0.04, 0.0)
+	# Reach platform height before its rotated outer edge crosses the access lane.
+	# Continuing the old slope through that edge left a short riser in the centre
+	# lane; the platform collision then deflected an ordinary straight walk into
+	# the side guards. The level upper landing clears that seam without a jump.
+	var ramp_plateau_start := Vector3(stair_end_x + dock_sign * 7.0,
+		STAIR_TOP_TOP_Y + 0.16, 0.0)
 	var ramp_finish := Vector3(stair_end_x - dock_sign * STEP_DEPTH * 0.5,
 		STAIR_TOP_TOP_Y + 0.16, 0.0)
-	_add_surface_ramp_mesh(stairs, "CentralAccessRamp", ramp_start, ramp_finish,
-		CENTRAL_RAMP_WIDTH, 0.24, _piltover_pixel_floor_material)
+	_add_surface_ramp_mesh(stairs, "CentralAccessRamp", ramp_start, ramp_plateau_start,
+		CENTRAL_RAMP_WIDTH, 0.24, _dark_metal_material)
+	_add_surface_ramp_mesh(stairs, "CentralAccessLanding", ramp_plateau_start, ramp_finish,
+		CENTRAL_RAMP_WIDTH, 0.24, _dark_metal_material)
+	_add_surface_ramp_mesh(stairs, "CrystalEnergyConduit",
+		ramp_start + Vector3.UP * 0.15, ramp_plateau_start + Vector3.UP * 0.15,
+		1.05, 0.08, _glass_material)
+	_add_surface_ramp_mesh(stairs, "CrystalEnergyLandingConduit",
+		ramp_plateau_start + Vector3.UP * 0.15, ramp_finish + Vector3.UP * 0.15,
+		1.05, 0.08, _glass_material)
 	# One convex body carries the complete landing-to-platform route. Two boxes
 	# that only touched at the stair foot exposed an internal end face, so the
 	# player stopped at the exact bridge/stair seam despite both tops lining up.
@@ -2339,40 +1969,32 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 		access_landing_surface,
 		Vector3(stair_start_x + dock_sign * STEP_DEPTH * 0.5,
 			STAIR_BOTTOM_TOP_Y - 0.10, 0.0),
+		Vector3(ramp_plateau_start.x, STAIR_TOP_TOP_Y + 0.10, 0.0),
 		Vector3(stair_end_x - dock_sign * STEP_DEPTH * 0.5,
 			STAIR_TOP_TOP_Y + 0.10, 0.0), 15.6, 0.42)
-	# Match the station's glass-window language and stop three metres before the
-	# platform. That open landing is the one shared gateway; continuing the old
-	# Connect directly between existing skybridge and platform edge posts. The
-	# stair owns no endpoint posts, so all pieces touch without doubling geometry.
-	var gateway_a: Vector3 = station.get_meta("shared_barrier_gateway_a",
-		Vector3(stair_end_x, 0.0, -7.55))
-	var gateway_b: Vector3 = station.get_meta("shared_barrier_gateway_b",
-		Vector3(stair_end_x, 0.0, 7.55))
-	var left_probe := Vector3(stair_end_x, 0.0, -7.55)
-	var left_target := gateway_a if left_probe.distance_to(gateway_a) \
-		<= left_probe.distance_to(gateway_b) else gateway_b
-	var right_target := gateway_b if left_target == gateway_a else gateway_a
+	# Open rails replace the previous 2.6 m solid yellow walls, which filled the
+	# camera and visually hid the stairs in the Web build.
 	for side in [-1.0, 1.0]:
-		var stair_guard := Node3D.new()
-		stair_guard.name = "StairGuardLeft" if side < 0 else "StairGuardRight"
-		stair_guard.set_meta("barrier_plan", "rainbow_glass_gold_frame")
-		stair_guard.set_meta("connected_to_shared_barrier_edges", true)
-		stairs.add_child(stair_guard)
-		var guard_start := Vector3(dock_sign * 37.0, -1.2, float(side) * 7.9)
-		var guard_finish := left_target if side < 0.0 else right_target
-		stair_guard.set_meta("shared_start", guard_start)
-		stair_guard.set_meta("shared_finish", guard_finish)
-		_add_purpose_barrier_segment(stair_guard, "GlassBarrier",
-			guard_start, guard_finish,
-			"connects the skybridge edge directly to the platform gateway edge")
-		var shared_posts := {}
-		var span_count := maxi(1, ceili(guard_start.distance_to(guard_finish) / 6.5))
-		for post_index in range(1, span_count):
-			var ratio := float(post_index) / float(span_count)
-			_add_unique_barrier_post(stair_guard, shared_posts,
-				guard_start.lerp(guard_finish, ratio))
-		stair_guard.set_meta("shared_connection_post_count", shared_posts.size())
+		var side_z := float(side) * 7.55
+		for post_index in 7:
+			var ratio := float(post_index) / 6.0
+			var x := lerpf(stair_start_x, stair_end_x, ratio)
+			var tread_y := lerpf(STAIR_BOTTOM_TOP_Y, STAIR_TOP_TOP_Y, ratio)
+			_add_box(stairs, "StairRailPost", Vector3(x, tread_y + 1.25, side_z),
+				Vector3(0.38, 2.5, 0.38), _gold_material, true)
+		var rail_start := Vector3(stair_start_x, STAIR_BOTTOM_TOP_Y + 2.15, side_z)
+		var rail_finish := Vector3(stair_end_x, STAIR_TOP_TOP_Y + 2.15, side_z)
+		_add_walkway_between(stairs,
+			"StairGuardLeft" if side < 0 else "StairGuardRight",
+			rail_start, rail_finish, 0.38, 0.38, _gold_material, true)
+	# Inner handrails clearly separate the ceremonial side stairs from the
+	# accessible luminous centre ramp.
+	for side in [-1.0, 1.0]:
+		var inner_z := float(side) * (CENTRAL_RAMP_WIDTH * 0.5 + 0.18)
+		_add_walkway_between(stairs, "InnerRampGuardLeft" if side < 0 else "InnerRampGuardRight",
+			Vector3(stair_start_x, STAIR_BOTTOM_TOP_Y + 1.05, inner_z),
+			Vector3(stair_end_x, STAIR_TOP_TOP_Y + 1.05, inner_z),
+			0.24, 0.24, _gold_material, false)
 
 
 func _add_surface_ramp_collision(parent: Node3D, node_name: String, start_surface: Vector3,
@@ -2402,14 +2024,15 @@ func _add_surface_ramp_collision(parent: Node3D, node_name: String, start_surfac
 
 
 func _add_combined_access_collision(parent: Node3D, node_name: String,
-		landing_surface: Vector3, foot_surface: Vector3, top_surface: Vector3,
+		landing_surface: Vector3, foot_surface: Vector3, plateau_surface: Vector3,
+		top_surface: Vector3,
 		width: float, _thickness: float) -> void:
 	var body := StaticBody3D.new()
 	body.name = "%sCollision" % node_name
 	var shape_node := CollisionShape3D.new()
 	var shape := ConcavePolygonShape3D.new()
 	shape.backface_collision = true
-	var surfaces := [landing_surface, foot_surface, top_surface]
+	var surfaces := [landing_surface, foot_surface, plateau_surface, top_surface]
 	var edges: Array[PackedVector3Array] = []
 	for index in surfaces.size():
 		var previous: Vector3 = surfaces[maxi(0, index - 1)]
@@ -2457,71 +2080,65 @@ func _add_surface_ramp_mesh(parent: Node3D, node_name: String, start_surface: Ve
 
 
 func _build_platform_guardrails(station: Node3D, route_basis: Basis,
-		access_side: float, entrance_gate_z: Vector2) -> void:
+		access_side: float, access_z: float, station_access_side: float) -> void:
 	# Every barrier has one safety job and shares its corner posts with adjoining
 	# sections. The inner rails protect the empty track/engine area while their
-	# three deliberate gaps line up with the driver and both passenger coaches.
+	# two deliberate gaps line up with the train's driver and passenger steps.
 	# The collision shell is 6 m from centre and the detailed gears project a
 	# little farther. At x=6.8 the 0.32 m rail keeps 0.64 m of true air clearance.
 	const INNER_EDGE_X := 6.80
 	const OUTER_EDGE_X := 11.50
-	const PLATFORM_FRONT_Z := -28.0
+	const PLATFORM_FRONT_Z := -16.0
 	const PLATFORM_REAR_Z := 24.0
+	const DRIVER_GATE_HALF_LENGTH := 2.3
+	const PASSENGER_GATE_Z := 15.0
+	const PASSENGER_GATE_HALF_LENGTH := 2.3
+	const ENTRANCE_GATE_HALF_LENGTH := 2.6
+	# Preserve the direct opening marker used by traversal checks and older scene
+	# integrations. The detailed guard sections now live under PlatformGuard*,
+	# but this node still identifies which outer side owns the entrance gap.
+	var entrance_marker := Node3D.new()
+	entrance_marker.name = "PlatformGuardLeftFront" \
+		if station_access_side < 0.0 else "PlatformGuardRightFront"
+	entrance_marker.set_meta("entrance_gate_clear_z", Vector2(
+		access_z - ENTRANCE_GATE_HALF_LENGTH,
+		access_z + ENTRANCE_GATE_HALF_LENGTH))
+	station.add_child(entrance_marker)
 	for side in [-1.0, 1.0]:
 		var guard := Node3D.new()
 		guard.name = "PlatformGuardLeft" if side < 0.0 else "PlatformGuardRight"
 		guard.basis = route_basis
-		guard.set_meta("barrier_plan", "rainbow_glass_gold_frame")
-		guard.set_meta("rainbow_colour_count", 7)
-		guard.set_meta("gold_frame_layout", true)
-		guard.set_meta("platform_front_z", PLATFORM_FRONT_Z)
+		guard.set_meta("barrier_plan", "train_fit_no_overlap")
 		guard.set_meta("train_side_clearance_m", INNER_EDGE_X - 6.0 - 0.16)
-		guard.set_meta("driver_gate_clear_z", Vector2(
-			DRIVER_SIDE_GATE_Z - DRIVER_SIDE_GATE_HALF_LENGTH,
-			DRIVER_SIDE_GATE_Z + DRIVER_SIDE_GATE_HALF_LENGTH))
-		guard.set_meta("boarding_gap_count", 3)
-		guard.set_meta("passenger_front_gate_clear_z", Vector2(
-			PASSENGER_FRONT_GATE_Z - PASSENGER_SIDE_GATE_HALF_LENGTH,
-			PASSENGER_FRONT_GATE_Z + PASSENGER_SIDE_GATE_HALF_LENGTH))
-		guard.set_meta("passenger_rear_gate_clear_z", Vector2(
-			PASSENGER_REAR_GATE_Z - PASSENGER_SIDE_GATE_HALF_LENGTH,
-			PASSENGER_REAR_GATE_Z + PASSENGER_SIDE_GATE_HALF_LENGTH))
-		# Preserve the original metadata key for callers that treat the rear coach
-		# as the primary passenger gate.
-		guard.set_meta("passenger_gate_clear_z", guard.get_meta(
-			"passenger_rear_gate_clear_z"))
+		guard.set_meta("driver_gate_clear_z", Vector2(-DRIVER_GATE_HALF_LENGTH,
+			DRIVER_GATE_HALF_LENGTH))
+		guard.set_meta("passenger_gate_clear_z", Vector2(
+			PASSENGER_GATE_Z - PASSENGER_GATE_HALF_LENGTH,
+			PASSENGER_GATE_Z + PASSENGER_GATE_HALF_LENGTH))
 		station.add_child(guard)
 		var inner_x := float(side) * INNER_EDGE_X
 		var outer_x := float(side) * OUTER_EDGE_X
 		_add_purpose_barrier_segment(guard, "EngineMachineryBarrier",
 			Vector3(inner_x, 0.0, PLATFORM_FRONT_Z),
-			Vector3(inner_x, 0.0,
-				DRIVER_SIDE_GATE_Z - DRIVER_SIDE_GATE_HALF_LENGTH),
+			Vector3(inner_x, 0.0, -DRIVER_GATE_HALF_LENGTH),
 			"prevents access to the engine and empty guideway")
 		_add_purpose_barrier_segment(guard, "CoachSeparationBarrier",
+			Vector3(inner_x, 0.0, DRIVER_GATE_HALF_LENGTH),
 			Vector3(inner_x, 0.0,
-				DRIVER_SIDE_GATE_Z + DRIVER_SIDE_GATE_HALF_LENGTH),
-			Vector3(inner_x, 0.0,
-				PASSENGER_FRONT_GATE_Z - PASSENGER_SIDE_GATE_HALF_LENGTH),
-			"separates the driving opening from the first passenger opening")
-		_add_purpose_barrier_segment(guard, "BetweenPassengerCoachesBarrier",
-			Vector3(inner_x, 0.0,
-				PASSENGER_FRONT_GATE_Z + PASSENGER_SIDE_GATE_HALF_LENGTH),
-			Vector3(inner_x, 0.0,
-				PASSENGER_REAR_GATE_Z - PASSENGER_SIDE_GATE_HALF_LENGTH),
-			"separates the two passenger-coach boarding openings")
+				PASSENGER_GATE_Z - PASSENGER_GATE_HALF_LENGTH),
+			"keeps players on the platform between the two boarding gates")
 		_add_purpose_barrier_segment(guard, "RearTrackBarrier",
 			Vector3(inner_x, 0.0,
-				PASSENGER_REAR_GATE_Z + PASSENGER_SIDE_GATE_HALF_LENGTH),
+				PASSENGER_GATE_Z + PASSENGER_GATE_HALF_LENGTH),
 			Vector3(inner_x, 0.0, PLATFORM_REAR_Z),
 			"prevents stepping behind the rear coach")
 
 		# Only the side reached by the station entrance receives an outer opening.
 		# The opposite outer rail is continuous because it has no valid approach.
 		if is_equal_approx(float(side), access_side):
-			var gap_start := clampf(entrance_gate_z.x,
+			var gap_start := clampf(access_z - ENTRANCE_GATE_HALF_LENGTH,
 				PLATFORM_FRONT_Z, PLATFORM_REAR_Z)
-			var gap_end := clampf(entrance_gate_z.y,
+			var gap_end := clampf(access_z + ENTRANCE_GATE_HALF_LENGTH,
 				PLATFORM_FRONT_Z, PLATFORM_REAR_Z)
 			if gap_start - PLATFORM_FRONT_Z > 0.5:
 				_add_purpose_barrier_segment(guard, "OuterFallGuardFront",
@@ -2534,10 +2151,6 @@ func _build_platform_guardrails(station: Node3D, route_basis: Basis,
 					Vector3(outer_x, 0.0, PLATFORM_REAR_Z),
 					"protects the raised outer walkway after the entrance")
 			guard.set_meta("entrance_gate_clear_z", Vector2(gap_start, gap_end))
-			station.set_meta("shared_barrier_gateway_a",
-				route_basis * Vector3(outer_x, 0.0, gap_start))
-			station.set_meta("shared_barrier_gateway_b",
-				route_basis * Vector3(outer_x, 0.0, gap_end))
 		else:
 			_add_purpose_barrier_segment(guard, "OuterFallGuard",
 				Vector3(outer_x, 0.0, PLATFORM_FRONT_Z),
@@ -2553,8 +2166,8 @@ func _build_platform_guardrails(station: Node3D, route_basis: Basis,
 			Vector3(outer_x, 0.0, PLATFORM_REAR_Z),
 			"stops players walking beyond the rear of the platform")
 
-		# One slim post per coordinate connects every window. Long sections receive
-		# intermediate supports at no more than 6.5 m spacing, while adjoining
+		# One post per coordinate connects every rail span. Long sections receive
+		# intermediate supports at no more than five-metre spacing, while adjoining
 		# sections reuse the exact same corner post.
 		var post_points := {}
 		for segment in guard.get_children():
@@ -2562,12 +2175,12 @@ func _build_platform_guardrails(station: Node3D, route_basis: Basis,
 				var start_value: Vector3 = segment.get_meta("barrier_start")
 				var finish_value: Vector3 = segment.get_meta("barrier_finish")
 				var support_count := maxi(1,
-					ceili(start_value.distance_to(finish_value) / 6.5))
+					ceili(start_value.distance_to(finish_value) / 5.0))
 				for support_index in support_count + 1:
 					var support_ratio := float(support_index) / float(support_count)
 					var support_position := start_value.lerp(finish_value, support_ratio)
 					_add_unique_barrier_post(guard, post_points,
-						support_position)
+						Vector3(support_position.x, 1.65, support_position.z))
 		guard.set_meta("shared_connection_post_count", post_points.size())
 
 
@@ -2580,58 +2193,23 @@ func _add_purpose_barrier_segment(parent: Node3D, node_name: String,
 	section.set_meta("barrier_finish", finish)
 	parent.add_child(section)
 	var direction := (finish - start).normalized()
-	var span_count := maxi(1, ceili(start.distance_to(finish) / 6.5))
+	var span_count := maxi(1, ceili(start.distance_to(finish) / 5.0))
 	section.set_meta("connected_span_count", span_count)
-	section.set_meta("style", "rainbow_glass_small_gold_frame")
-	section.set_meta("gold_frame_layout", true)
 	for span_index in span_count:
 		var raw_span_start := start.lerp(finish,
 			float(span_index) / float(span_count))
 		var raw_span_finish := start.lerp(finish,
 			float(span_index + 1) / float(span_count))
-		# A single clear pane replaces the two heavy middle rails. Thin top/bottom
-		# frames stop at the face of the 0.22 m shared posts, so the gold layout is
-		# continuous but never doubled at a joint.
-		var frame_start := raw_span_start + direction * 0.11
-		var frame_finish := raw_span_finish - direction * 0.11
-		_add_glass_barrier_window(section, "GlassWindow_%02d" % span_index,
-			frame_start, frame_finish)
-		for frame_spec in [["BottomGoldFrame", 1.22], ["TopGoldFrame", 3.18]]:
+		# Stop every span at the face of its 0.38 m support posts. Neighboring
+		# spans connect through one post but their collision boxes never overlap.
+		var rail_start := raw_span_start + direction * 0.19
+		var rail_finish := raw_span_finish - direction * 0.19
+		for height in [1.25, 2.75]:
 			_add_walkway_between(section,
-				"%s_%02d" % [frame_spec[0], span_index],
-				frame_start + Vector3.UP * float(frame_spec[1]),
-				frame_finish + Vector3.UP * float(frame_spec[1]),
-				0.18, 0.18, _gold_material, false)
-
-
-func _add_glass_barrier_window(parent: Node3D, node_name: String,
-		start: Vector3, finish: Vector3) -> void:
-	var direction := finish - start
-	if direction.length() < 0.05:
-		return
-	var basis := Basis.looking_at(direction.normalized(), Vector3.UP)
-	var midpoint := (start + finish) * 0.5 + Vector3.UP * 2.20
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(0.10, 1.72, direction.length())
-	var window := MeshInstance3D.new()
-	window.name = node_name
-	window.mesh = mesh
-	window.transform = Transform3D(basis, midpoint)
-	var colour_index := _barrier_rainbow_cursor % _station_rainbow_glass_materials.size()
-	_barrier_rainbow_cursor += 1
-	window.material_override = _station_rainbow_glass_materials[colour_index]
-	window.set_meta("rainbow_material_index", colour_index)
-	window.set_meta("gold_frame_layout", true)
-	parent.add_child(window)
-	var body := StaticBody3D.new()
-	body.name = "%sCollision" % node_name
-	var shape_node := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = mesh.size
-	shape_node.shape = shape
-	body.add_child(shape_node)
-	body.transform = Transform3D(basis, midpoint)
-	parent.add_child(body)
+				("LowerRail" if height < 2.0 else "UpperRail") + "_%02d" % span_index,
+				rail_start + Vector3.UP * float(height),
+				rail_finish + Vector3.UP * float(height),
+				0.32, 0.32, _gold_material, true)
 
 
 func _add_unique_barrier_post(parent: Node3D, used_points: Dictionary,
@@ -2640,9 +2218,8 @@ func _add_unique_barrier_post(parent: Node3D, used_points: Dictionary,
 	if used_points.has(point_key):
 		return
 	used_points[point_key] = true
-	_add_box(parent, "SlimGoldWindowPost",
-		position_value + Vector3.UP * 2.20,
-		Vector3(0.22, 2.14, 0.22), _gold_material, true)
+	_add_box(parent, "BarrierPost", position_value,
+		Vector3(0.38, 3.3, 0.38), _gold_material, true)
 
 
 func _add_walkway_between(parent: Node3D, node_name: String, start: Vector3, finish: Vector3,
@@ -2680,16 +2257,21 @@ func _build_train() -> void:
 	_train.name = "RainbowGalaxyTrain"
 	_train.position = STATIONS[0].position
 	add_child(_train)
+	_rider_anchor = RemoteTransform3D.new()
+	_rider_anchor.name = "RiderTransformAnchor"
+	_rider_anchor.position = DRIVER_SEAT
+	_rider_anchor.update_position = true
+	_rider_anchor.update_rotation = false
+	_rider_anchor.update_scale = false
+	_train.add_child(_rider_anchor)
 	var colours := [Color("f35c94"), Color("f3bc55"), Color("63d69b"), Color("5bc9ed"), Color("9370dc")]
 	# The reference train has two open passenger coaches behind one crystal
 	# engine. These simple hidden bodies remain the authoritative walkable and
 	# rideable collision shell beneath the detailed Blender construction.
-	var carriage_centres := [PASSENGER_FRONT_CAR_CENTRE_Z,
-		PASSENGER_REAR_CAR_CENTRE_Z]
 	for carriage_index in 2:
 		var carriage := Node3D.new()
 		carriage.name = "Carriage_%02d" % (carriage_index + 1)
-		carriage.position.z = carriage_centres[carriage_index]
+		carriage.position.z = float(carriage_index) * 15.0
 		_train.add_child(carriage)
 		var body_material := _material(colours[(carriage_index + 2) % colours.size()], 0.32,
 			colours[(carriage_index + 2) % colours.size()], 0.9)
@@ -2709,12 +2291,9 @@ func _build_train() -> void:
 					"Rear" if guard_z > 0.0 else "Front"],
 					Vector3(side * 5.15, 2.0, guard_z), Vector3(0.7, 2.7, 4.3),
 					_gold_material, true)
-			if carriage_index == 0:
-				_add_box(carriage, "DriverCabStep%s" % side_name,
-					Vector3(side * 5.82, 0.825,
-						DRIVER_SIDE_GATE_Z - carriage.position.z),
-					Vector3(0.75, 0.55, DRIVER_SIDE_GATE_HALF_LENGTH * 2.0),
-					_glass_material, true)
+			_add_box(carriage, "BoardingStep%s" % side_name,
+				Vector3(side * 5.82, 0.48, 0.0), Vector3(0.75, 0.55, 4.0),
+				_gold_material, true)
 		# Split end guards leave a 4 m centre doorway aligned with the station lane.
 		for end_z in [-6.15, 6.15]:
 			for side in [-1.0, 1.0]:
@@ -2735,14 +2314,12 @@ func _build_train() -> void:
 			# the cab: the player could never get within Q range of the driver
 			# point, so driving was unreachable in play. Keeping it below
 			# standing height leaves the cab walkable and still reads as a desk.
-			_add_box(carriage, "DriverConsole", Vector3(0.0, 1.6,
-				-17.3 - carriage.position.z),
+			_add_box(carriage, "DriverConsole", Vector3(0.0, 1.6, -5.6),
 				Vector3(4.8, 0.6, 0.8), _glass_material, true)
 			var driver_label := Label3D.new()
 			driver_label.name = "DriverControls"
 			driver_label.text = "CROWN LINE DRIVER\n1 DRIVE  •  W/S MOVE  •  R HORN  •  Q EXIT"
-			driver_label.position = Vector3(0.0, 4.2,
-				DRIVER_SIDE_GATE_Z - carriage.position.z)
+			driver_label.position = Vector3(0.0, 4.2, -4.4)
 			driver_label.font_size = 22
 			driver_label.outline_size = 6
 			driver_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -2753,75 +2330,25 @@ func _build_train() -> void:
 				_add_cylinder(carriage, "StarWheel", Vector3(side * 5.4, 0.4, z), 2.1, 1.0,
 					_gold_material, true, 16, Vector3(0.0, 0.0, 90.0))
 
-	# Two full-width thresholds align collision with the visible connector
-	# entrances selected by the user. The first bridges the engine-to-coach gap;
-	# the second replaces the narrow railed gangway between both coaches.
-	var boarding_entrances := Node3D.new()
-	boarding_entrances.name = "PassengerBoardingEntrances"
-	_train.add_child(boarding_entrances)
-	_add_box(boarding_entrances, "EngineCoachConnectorFloor",
-		Vector3(0.0, 0.65, PASSENGER_FRONT_GATE_Z),
-		Vector3(11.0, 1.3, PASSENGER_SIDE_GATE_HALF_LENGTH * 2.0),
-		_glass_material, true)
-	for side in [-1.0, 1.0]:
-		var side_name := "Left" if side < 0.0 else "Right"
-		_add_box(boarding_entrances, "PassengerFrontEntranceStep%s" % side_name,
-			Vector3(side * 5.82, 0.825, PASSENGER_FRONT_GATE_Z),
-			Vector3(0.75, 0.55, PASSENGER_SIDE_GATE_HALF_LENGTH * 2.0),
-			_glass_material, true)
-		_add_box(boarding_entrances, "PassengerRearEntranceStep%s" % side_name,
-			Vector3(side * 5.82, 0.825, PASSENGER_REAR_GATE_Z),
-			Vector3(0.75, 0.55, PASSENGER_SIDE_GATE_HALF_LENGTH * 2.0),
-			_glass_material, true)
-
-	# Gangway plate bridging the two coaches. Each deck is 13 m long and their
-	# detailed-model centres are 16.5 m apart, leaving a 3.5 m opening that dropped the player
+	# Gangway plate bridging the two coaches. Each deck is 13 m long and they sit
+	# 15 m apart, leaving a 2 m hole at z=6.5..8.5 that dropped the player
 	# straight through the train to the rail below. The plate is flush with both
 	# decks so walking between coaches is a continuous floor, not a jump.
 	var gangway := Node3D.new()
 	gangway.name = "CoachGangwayPlatform"
 	_train.add_child(gangway)
-	var gangway_z := (PASSENGER_FRONT_CAR_CENTRE_Z
-		+ PASSENGER_REAR_CAR_CENTRE_Z) * 0.5
-	_add_box(gangway, "CoachGangway", Vector3(0.0, 0.65, gangway_z),
-		Vector3(11.0, 1.3, 4.4),
-		_glass_material, true)
+	_add_box(gangway, "CoachGangway", Vector3(0.0, 0.65, 7.5), Vector3(4.0, 1.3, 2.6),
+		_gold_material, true)
+	for gangway_side in [-1.0, 1.0]:
+		_add_box(gangway, "GangwayRail", Vector3(gangway_side * 2.35, 2.0, 7.5),
+			Vector3(0.3, 2.7, 2.6), _gold_material, true)
 
 	var engine := Node3D.new()
 	engine.name = "MiloEngine"
 	engine.position = Vector3(0.0, 0.0, -15.0)
 	_train.add_child(engine)
-	var engine_collision_material := _material(
-		Color("724cc5"), 0.30, Color("aa84ff"), 1.3)
-	# The old 12x8x17 solid box filled the visible cab. Split it at the authored
-	# doorway edges, retaining solid front/rear machinery while giving the cab a
-	# walkable floor and roof. Players can now cross the station bridge without
-	# entering hidden collision.
-	const ENGINE_BODY_FRONT_Z := -23.5
-	const ENGINE_BODY_REAR_Z := -6.5
-	var cab_front_z := DRIVER_SIDE_GATE_Z - DRIVER_SIDE_GATE_HALF_LENGTH
-	var cab_rear_z := DRIVER_SIDE_GATE_Z + DRIVER_SIDE_GATE_HALF_LENGTH
-	var front_shell_length := cab_front_z - ENGINE_BODY_FRONT_Z
-	_add_box(engine, "EngineFrontMachineryCollision",
-		Vector3(0.0, 4.0,
-			(ENGINE_BODY_FRONT_Z + cab_front_z) * 0.5 - engine.position.z),
-		Vector3(12.0, 8.0, front_shell_length), engine_collision_material, true)
-	# Split the rear bulkhead around a central passage and leave the connector
-	# behind it as walkable floor instead of refilling it with one solid box.
-	for bulkhead_side in [-1.0, 1.0]:
-		_add_box(engine, "EngineCabRearBulkheadLeft" if bulkhead_side < 0.0 \
-				else "EngineCabRearBulkheadRight",
-			Vector3(bulkhead_side * 3.75, 4.0,
-				cab_rear_z - engine.position.z),
-			Vector3(4.5, 8.0, 0.4), engine_collision_material, true)
-	_add_box(engine, "EngineCabWalkableFloor",
-		Vector3(0.0, 0.65, DRIVER_SIDE_GATE_Z - engine.position.z),
-		Vector3(11.0, 1.3, DRIVER_SIDE_GATE_HALF_LENGTH * 2.0),
-		engine_collision_material, true)
-	_add_box(engine, "EngineCabWalkableRoof",
-		Vector3(0.0, 7.85, DRIVER_SIDE_GATE_Z - engine.position.z),
-		Vector3(11.0, 0.3, DRIVER_SIDE_GATE_HALF_LENGTH * 2.0),
-		engine_collision_material, true)
+	_add_box(engine, "EngineBody", Vector3(0.0, 4.0, 0.0), Vector3(12.0, 8.0, 17.0),
+		_material(Color("724cc5"), 0.30, Color("aa84ff"), 1.3), true)
 	_add_box(engine, "EngineNoseCollision", Vector3(0.0, 2.4, -10.2),
 		Vector3(9.0, 4.8, 4.0), _gold_material, true)
 	# Guard rail along the engine's rear roof edge. The roof is 8 m up and the
@@ -2934,7 +2461,7 @@ func _build_rainbow_gold_layout() -> void:
 	# one royal Crown Line silhouette.
 	for side in [-1.0, 1.0]:
 		_add_box(accents, "GoldRoyalSillLeft" if side < 0.0 else "GoldRoyalSillRight",
-			Vector3(side * 5.72, 0.95, 1.0), Vector3(0.22, 0.30, 49.0),
+			Vector3(side * 5.72, 0.95, -0.8), Vector3(0.22, 0.30, 45.0),
 			_gold_material, false)
 		_rainbow_gold_accent_count += 1
 	# Seven slim spectrum rails run over each open coach canopy. They add colour
@@ -2942,7 +2469,7 @@ func _build_rainbow_gold_layout() -> void:
 	var spectrum := [
 		Color("ff4f78"), Color("ff934d"), Color("ffe45b"), Color("5ee889"),
 		Color("43e6ee"), Color("4d82ff"), Color("b16cff")]
-	for coach_z in [PASSENGER_FRONT_GATE_Z, PASSENGER_REAR_GATE_Z]:
+	for coach_z in [0.0, 15.0]:
 		for colour_index in spectrum.size():
 			var colour: Color = spectrum[colour_index]
 			var rainbow_material := _material(colour, 0.28, colour, 0.78)
@@ -2960,10 +2487,30 @@ func _build_directional_movement_vfx() -> void:
 	_train.add_child(_movement_vfx)
 	_build_motion_blur_echoes()
 
-	# The former seven BoxMesh ribbons read as rigid laser lines. Keep this array
-	# empty for compatibility with state probes and use one rounded smoke emitter
-	# below, preserving the spectrum without hard geometry or seven draw calls.
+	var spectrum := [
+		Color("ff426d"), Color("ff914d"), Color("ffe95a"), Color("55ef87"),
+		Color("42e9f5"), Color("4c78ff"), Color("b16cff")]
 	_rainbow_wake_ribbons.clear()
+	for colour_index in spectrum.size():
+		var colour: Color = spectrum[colour_index]
+		var ribbon := MeshInstance3D.new()
+		ribbon.name = "RainbowWakeRibbon_%02d" % colour_index
+		var ribbon_mesh := BoxMesh.new()
+		ribbon_mesh.size = Vector3(0.46, 0.14, 1.0)
+		var ribbon_material := StandardMaterial3D.new()
+		ribbon_material.albedo_color = Color(colour, 0.76)
+		ribbon_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		ribbon_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		ribbon_material.emission_enabled = true
+		ribbon_material.emission = colour
+		ribbon_material.emission_energy_multiplier = 2.2
+		ribbon_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		ribbon_mesh.material = ribbon_material
+		ribbon.mesh = ribbon_mesh
+		ribbon.visible = false
+		_movement_vfx.add_child(ribbon)
+		ribbon.top_level = true
+		_rainbow_wake_ribbons.append(ribbon)
 
 	var rainbow := Gradient.new()
 	rainbow.offsets = PackedFloat32Array([0.0, 0.14, 0.29, 0.43, 0.58, 0.74, 1.0])
@@ -2973,17 +2520,6 @@ func _build_directional_movement_vfx() -> void:
 	_rainbow_trail_particles = _make_train_trail_particles(
 		"RainbowDirectionTrail", rainbow, 360, 1.75, 0.52, 54.0)
 	_movement_vfx.add_child(_rainbow_trail_particles)
-
-	var smoke_rainbow := Gradient.new()
-	smoke_rainbow.offsets = PackedFloat32Array([
-		0.0, .13, .27, .41, .56, .72, .87, 1.0])
-	smoke_rainbow.colors = PackedColorArray([
-		Color(1.0, .06, .24, .82), Color(1.0, .36, .03, .80),
-		Color(1.0, .94, .02, .78), Color(.04, 1.0, .24, .76),
-		Color(.02, .92, 1.0, .72), Color(.08, .26, 1.0, .68),
-		Color(.72, .04, 1.0, .62), Color(.90, .12, 1.0, 0.0)])
-	_rainbow_smoke_wake_particles = _make_train_smoke_wake_particles(smoke_rainbow)
-	_movement_vfx.add_child(_rainbow_smoke_wake_particles)
 
 	var gold := Gradient.new()
 	gold.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
@@ -3015,13 +2551,11 @@ func _build_motion_blur_echoes() -> void:
 		_add_motion_echo_glow(echo, "EchoEngineGlow",
 			Vector3(0.0, 4.2, -15.0), Vector3(12.0, 8.2, 17.0), body_material)
 		_add_motion_echo_glow(echo, "EchoCoachFrontGlow",
-			Vector3(0.0, 3.8, PASSENGER_FRONT_GATE_Z),
-			Vector3(11.0, 7.4, 13.0), body_material)
+			Vector3(0.0, 3.8, 0.0), Vector3(11.0, 7.4, 13.0), body_material)
 		_add_motion_echo_glow(echo, "EchoCoachRearGlow",
-			Vector3(0.0, 3.8, PASSENGER_REAR_GATE_Z),
-			Vector3(11.0, 7.4, 13.0), body_material)
+			Vector3(0.0, 3.8, 15.0), Vector3(11.0, 7.4, 13.0), body_material)
 		_add_motion_echo_glow(echo, "EchoGoldChassisGlow",
-			Vector3(0.0, 0.7, 1.0), Vector3(11.8, 0.45, 49.0), gold_material)
+			Vector3(0.0, 0.7, -0.8), Vector3(11.8, 0.45, 44.0), gold_material)
 		_motion_blur_echoes.append(echo)
 
 
@@ -3107,54 +2641,6 @@ func _make_train_trail_particles(node_name: String, colour_gradient: Gradient,
 	return particles
 
 
-func _make_train_smoke_wake_particles(colour_gradient: Gradient) -> GPUParticles3D:
-	var smoke := GPUParticles3D.new()
-	smoke.name = "RainbowAuroraSmokeWake"
-	smoke.amount = 132
-	smoke.lifetime = 2.65
-	smoke.preprocess = 1.3
-	smoke.randomness = .58
-	smoke.fixed_fps = 30
-	smoke.local_coords = false
-	smoke.emitting = false
-	smoke.visibility_aabb = AABB(
-		Vector3(-78.0, -28.0, -78.0), Vector3(156.0, 68.0, 156.0))
-	var motion := ParticleProcessMaterial.new()
-	motion.direction = Vector3(0.0, 0.0, -1.0)
-	motion.spread = 34.0
-	motion.initial_velocity_min = 10.0
-	motion.initial_velocity_max = 26.0
-	motion.gravity = Vector3(0.0, 1.25, 0.0)
-	motion.damping_min = 2.0
-	motion.damping_max = 5.2
-	motion.scale_min = .72
-	motion.scale_max = 2.55
-	motion.hue_variation_min = -.12
-	motion.hue_variation_max = .12
-	motion.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	motion.emission_box_extents = Vector3(4.8, 2.0, 1.0)
-	var ramp_texture := GradientTexture1D.new()
-	ramp_texture.gradient = colour_gradient
-	motion.color_ramp = ramp_texture
-	smoke.process_material = motion
-	var puff_mesh := SphereMesh.new()
-	puff_mesh.radius = .82
-	puff_mesh.height = 1.64
-	puff_mesh.radial_segments = 8
-	puff_mesh.rings = 4
-	var puff_material := StandardMaterial3D.new()
-	puff_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	puff_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	puff_material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	puff_material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
-	puff_material.vertex_color_use_as_albedo = true
-	puff_material.albedo_color = Color(1.0, 1.0, 1.0, .82)
-	puff_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	puff_mesh.material = puff_material
-	smoke.draw_pass_1 = puff_mesh
-	return smoke
-
-
 func _register_train_mechanisms(detailed_train: Node3D) -> void:
 	_speed_band_parts.clear()
 	_speed_rotor_parts.clear()
@@ -3166,7 +2652,6 @@ func _register_train_mechanisms(detailed_train: Node3D) -> void:
 	_steam_pressure_parts.clear()
 	_steam_valve_parts.clear()
 	_steam_exhaust_particles = null
-	_steam_exhaust_colour_count = 0
 	_celestial_halo_parts.clear()
 	_brake_needles.clear()
 	for candidate in detailed_train.find_children("*", "MeshInstance3D", true, false):
@@ -3302,71 +2787,51 @@ func _update_train_mechanisms(delta: float) -> void:
 
 func _build_steam_exhaust(chimney_ring: Node3D) -> void:
 	var exhaust := GPUParticles3D.new()
-	exhaust.name = "RainbowSteamChimneySmoke"
-	# Keep this emitter compact for Web: colour variation comes from one particle
-	# draw call instead of seven separate smoke systems.
-	exhaust.amount = 56
-	exhaust.lifetime = 2.8
-	exhaust.preprocess = 1.4
+	exhaust.name = "SteamOrbChimneyExhaust"
+	exhaust.amount = 42
+	exhaust.lifetime = 2.4
+	exhaust.preprocess = 1.2
 	exhaust.randomness = .42
 	exhaust.fixed_fps = 30
-	# World-space puffs stay where the chimney released them, producing a real
-	# smoke trail behind the engine in both forward and reverse travel.
 	exhaust.local_coords = false
-	exhaust.visibility_aabb = AABB(Vector3(-18.0, -3.0, -18.0), Vector3(36.0, 30.0, 36.0))
+	exhaust.visibility_aabb = AABB(Vector3(-8.0, -2.0, -8.0), Vector3(16.0, 22.0, 16.0))
 	var steam_motion := ParticleProcessMaterial.new()
 	steam_motion.direction = Vector3.UP
-	steam_motion.spread = 22.0
-	steam_motion.initial_velocity_min = 2.0
-	steam_motion.initial_velocity_max = 5.2
-	steam_motion.gravity = Vector3(0.0, .62, 0.0)
-	steam_motion.damping_min = .28
-	steam_motion.damping_max = .92
-	steam_motion.scale_min = .62
-	steam_motion.scale_max = 1.9
-	steam_motion.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	steam_motion.emission_sphere_radius = .18
-	steam_motion.hue_variation_min = -.08
-	steam_motion.hue_variation_max = .08
-	var rainbow_smoke := Gradient.new()
-	rainbow_smoke.offsets = PackedFloat32Array([
-		0.0, .13, .27, .41, .56, .72, .87, 1.0])
-	rainbow_smoke.colors = PackedColorArray([
-		Color(1.0, .05, .22, .86), Color(1.0, .34, .02, .84),
-		Color(1.0, .94, .02, .82), Color(.03, 1.0, .22, .80),
-		Color(.02, .92, 1.0, .76), Color(.07, .25, 1.0, .72),
-		Color(.72, .03, 1.0, .66), Color(.90, .10, 1.0, 0.0)])
-	var smoke_ramp := GradientTexture1D.new()
-	smoke_ramp.gradient = rainbow_smoke
-	steam_motion.color_ramp = smoke_ramp
+	steam_motion.spread = 18.0
+	steam_motion.initial_velocity_min = 1.8
+	steam_motion.initial_velocity_max = 4.8
+	steam_motion.gravity = Vector3(0.0, .75, 0.0)
+	steam_motion.damping_min = .35
+	steam_motion.damping_max = 1.1
+	steam_motion.scale_min = .55
+	steam_motion.scale_max = 1.65
+	steam_motion.color = Color(0.58, 0.92, 1.0, .46)
 	exhaust.process_material = steam_motion
 	var puff_mesh := SphereMesh.new()
-	puff_mesh.radius = .40
-	puff_mesh.height = .80
+	puff_mesh.radius = .34
+	puff_mesh.height = .68
 	puff_mesh.radial_segments = 8
 	puff_mesh.rings = 4
 	var puff_material := StandardMaterial3D.new()
 	puff_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	puff_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	puff_material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	puff_material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
-	puff_material.vertex_color_use_as_albedo = true
-	puff_material.albedo_color = Color(1.0, 1.0, 1.0, .76)
-	puff_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	puff_material.albedo_color = Color(0.66, 0.94, 1.0, .38)
+	puff_material.emission_enabled = true
+	puff_material.emission = Color(0.24, 0.68, 1.0)
+	puff_material.emission_energy_multiplier = .75
 	puff_mesh.material = puff_material
 	exhaust.draw_pass_1 = puff_mesh
 	chimney_ring.add_child(exhaust)
 	_steam_exhaust_particles = exhaust
-	_steam_exhaust_colour_count = 7
 
 
 func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> void:
 	if _movement_vfx == null or _rainbow_trail_particles == null \
-			or _rainbow_smoke_wake_particles == null or _gold_trail_particles == null:
+			or _gold_trail_particles == null:
 		return
 	var raw_speed := motion_delta.length() / maxf(delta, 0.0001)
-	var moving := raw_speed > 0.75 and motion_delta.length_squared() > 0.0001
-	if moving:
+	var has_motion_sample := raw_speed > 0.75 and motion_delta.length_squared() > 0.0001
+	if has_motion_sample:
 		var measured_direction := motion_delta.normalized()
 		if _last_motion_direction.dot(measured_direction) < -0.35:
 			_motion_echo_history.clear()
@@ -3380,14 +2845,23 @@ func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> vo
 		_movement_vfx.global_position = _train.global_position \
 			- _last_motion_direction * 24.0 + Vector3.UP * 2.4
 		_movement_vfx.global_basis = Basis.looking_at(-_last_motion_direction, Vector3.UP)
+	# Render frames can outnumber physics frames. A frame with no new platform
+	# transform is not a stopped train, so retain the commanded speed and echo
+	# history between physics samples instead of flickering the trail off.
+	var commanded_moving := _riding and _display_speed_kph > 0.5
+	var target_ratio := clampf(_display_speed_kph / DISPLAY_MAX_SPEED_KPH, 0.0, 1.0) \
+		if _manual_driving else (clampf(raw_speed / MANUAL_DRIVE_SPEED, 0.0, 1.0) \
+		if has_motion_sample else _movement_vfx_speed_ratio)
+	if not commanded_moving and not has_motion_sample:
+		target_ratio = 0.0
+	var response_delta := maxf(delta, 1.0 / 120.0)
 	_movement_vfx_speed_ratio = move_toward(_movement_vfx_speed_ratio,
-		clampf(raw_speed / MANUAL_DRIVE_SPEED, 0.0, 1.0) if moving else 0.0,
-		delta * (3.8 if moving else 5.5))
-	var should_emit := moving and _movement_vfx_speed_ratio > 0.015
+		target_ratio, response_delta * (3.8 if commanded_moving or has_motion_sample else 5.5))
+	var should_emit := (commanded_moving or has_motion_sample) \
+		and _movement_vfx_speed_ratio > 0.015
 	_rainbow_trail_particles.emitting = should_emit
-	_rainbow_smoke_wake_particles.emitting = should_emit
 	_gold_trail_particles.emitting = should_emit
-	if not moving:
+	if not commanded_moving and not has_motion_sample:
 		_motion_echo_history.clear()
 	for echo_index in _motion_blur_echoes.size():
 		var echo := _motion_blur_echoes[echo_index]
@@ -3400,11 +2874,22 @@ func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> vo
 			# while retaining a recognizable engine-and-two-coach silhouette.
 			echo.scale = Vector3(1.0 + float(echo_index) * 0.018, 1.0,
 				1.0 + _movement_vfx_speed_ratio * 0.16)
+	var ribbon_length := lerpf(10.0, 58.0, _movement_vfx_speed_ratio)
+	var ribbon_side := _last_motion_direction.cross(Vector3.UP).normalized()
+	if ribbon_side.length_squared() < 0.01:
+		ribbon_side = Vector3.RIGHT
+	for ribbon_index in _rainbow_wake_ribbons.size():
+		var ribbon := _rainbow_wake_ribbons[ribbon_index]
+		ribbon.visible = should_emit
+		ribbon.global_basis = Basis.looking_at(_last_motion_direction, Vector3.UP)
+		ribbon.scale = Vector3(1.0, 1.0, ribbon_length)
+		ribbon.global_position = _train.global_position \
+			- _last_motion_direction * (24.0 + ribbon_length * 0.5) \
+			+ ribbon_side * (-4.2 + float(ribbon_index) * 1.4) \
+			+ Vector3.UP * (2.4 + sin(_mechanism_time * 5.0 \
+				+ float(ribbon_index) * 0.72) * 0.34)
 	_rainbow_trail_particles.amount_ratio = clampf(0.58 + _movement_vfx_speed_ratio * 0.42, 0.0, 1.0) \
 		if should_emit else 0.0
-	_rainbow_smoke_wake_particles.amount_ratio = clampf(
-		.42 + _movement_vfx_speed_ratio * .58, 0.0, 1.0) if should_emit else 0.0
-	_rainbow_smoke_wake_particles.speed_scale = .72 + _movement_vfx_speed_ratio * .76
 	_gold_trail_particles.amount_ratio = clampf(0.38 + _movement_vfx_speed_ratio * 0.48, 0.0, 0.86) \
 		if should_emit else 0.0
 
@@ -3519,16 +3004,26 @@ func _set_train_progress(segment_index: int, progress: float) -> void:
 	var behind := curve.sample_baked(clampf(distance - AIM_SPAN, 0.0, length))
 	var ahead := curve.sample_baked(clampf(distance + AIM_SPAN, 0.0, length))
 
-	_train.position = point
 	var direction := ahead - behind
+	var next_basis := _train.basis
 	if direction.length_squared() > 0.01:
 		var target_basis := Basis.looking_at(direction.normalized(), Vector3.UP)
 		# Ease into the new heading so any residual step in the sampled tangent
 		# arrives as a turn rather than a snap. Framerate-independent so the ride
 		# feels the same whether the browser build runs at 30 or 60 fps.
-		var blend := 1.0 - pow(0.0001, get_process_delta_time())
-		_train.basis = _train.basis.slerp(target_basis, clampf(blend, 0.0, 1.0)) \
+		# Uncapped/headless render frames can report a near-zero process delta even
+		# while the public drive API advances at a fixed simulation step. Keep a
+		# 120 Hz floor so heading interpolation cannot fall far behind the curve and
+		# then snap to the station tangent when docking.
+		var blend_delta := maxf(get_process_delta_time(), 1.0 / 120.0)
+		var blend := 1.0 - pow(0.0001, blend_delta)
+		next_basis = _train.basis.slerp(target_basis, clampf(blend, 0.0, 1.0)) \
 			if _manual_driving else target_basis
+	# sync_to_physics defers transform changes. Assigning position and basis
+	# separately made the basis assignment copy the old position over the queued
+	# movement, so the speedometer advanced while the platform stayed docked.
+	var next_transform := Transform3D(next_basis, point)
+	_train.transform = next_transform
 	if _player != null:
 		var rider_offset := DRIVER_SEAT
 		if _seated_passenger and _passenger_seat_index >= 0:
@@ -3545,7 +3040,12 @@ func _orient_train_at_station(station_index: int) -> void:
 	var curve: Curve3D = _curves[posmod(station_index, _curves.size())]
 	direction = curve.sample_baked(2.0) - curve.sample_baked(0.0)
 	if direction.length_squared() > 0.01:
-		_train.basis = Basis.looking_at(direction.normalized(), Vector3.UP)
+		# Keep station placement and heading in the same synchronized transform.
+		# Separate position/basis assignments race inside AnimatableBody3D and can
+		# leave a one-frame heading-only dock snap.
+		_train.transform = Transform3D(
+			Basis.looking_at(direction.normalized(), Vector3.UP),
+			STATIONS[posmod(station_index, STATIONS.size())].position)
 
 
 func _refresh_station_lights() -> void:
@@ -3670,8 +3170,17 @@ func _configure_train_platform_body(body: AnimatableBody3D, shell_kind: String) 
 	body.sync_to_physics = true
 	body.collision_layer = 1
 	body.collision_mask = 1
+	body.add_to_group("ride_camera_ignore")
 	body.set_meta("train_collision_shell", shell_kind)
 	body.set_meta("mass_model", "infinite_mass_moving_platform")
+
+
+func _attach_rider_anchor(local_seat: Vector3) -> void:
+	if _rider_anchor == null or _player == null \
+			or not _rider_anchor.is_inside_tree() or not _player.is_inside_tree():
+		return
+	_rider_anchor.position = local_seat
+	_rider_anchor.remote_path = _rider_anchor.get_path_to(_player)
 
 
 func _get_train_collision_owner(parent: Node3D) -> CollisionObject3D:
@@ -3687,11 +3196,10 @@ func _add_faceted_floating_island(parent: Node3D) -> void:
 	var ring_radii: Array[float] = [34.0, 34.0, 28.0, 20.0, 11.5]
 	var ring_heights: Array[float] = [-3.0, -5.2, -9.6, -15.4, -21.2]
 	var ring_rotations: Array[float] = [0.0, PI / 24.0, 0.0, PI / 24.0, 0.0]
-	# One colour per horizontal band makes the suspended island readable from a
-	# distance. Gold is handled by the separate narrow crown band above, avoiding
-	# the former triangle-by-triangle colour noise.
-	var band_colours: Array[Color] = [
-		Color("d9d2c0"), Color("2f7374"), Color("245f64"), Color("182c43")]
+	var palette: Array[Color] = [
+		Color("a9bdd1"), Color("8fa8c1"), Color("7893af"),
+		Color("6885a4"), Color("567493"), Color("92aec7"),
+	]
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for band_index in ring_radii.size() - 1:
@@ -3714,13 +3222,14 @@ func _add_faceted_floating_island(parent: Node3D) -> void:
 				cos(angle_b + ring_rotations[band_index + 1]) * ring_radii[band_index + 1],
 				ring_heights[band_index + 1],
 				sin(angle_b + ring_rotations[band_index + 1]) * ring_radii[band_index + 1])
-			var band_colour: Color = band_colours[band_index]
+			var color_a := palette[(band_index * 2 + segment_index) % palette.size()]
+			var color_b := palette[(band_index * 2 + segment_index + 2) % palette.size()]
 			if (band_index + segment_index) % 2 == 0:
-				_add_colored_surface_triangle(surface, top_a, bottom_a, bottom_b, band_colour)
-				_add_colored_surface_triangle(surface, top_a, bottom_b, top_b, band_colour)
+				_add_colored_surface_triangle(surface, top_a, bottom_a, bottom_b, color_a)
+				_add_colored_surface_triangle(surface, top_a, bottom_b, top_b, color_b)
 			else:
-				_add_colored_surface_triangle(surface, top_a, bottom_a, top_b, band_colour)
-				_add_colored_surface_triangle(surface, top_b, bottom_a, bottom_b, band_colour)
+				_add_colored_surface_triangle(surface, top_a, bottom_a, top_b, color_a)
+				_add_colored_surface_triangle(surface, top_b, bottom_a, bottom_b, color_b)
 	var tip := Vector3(0.0, -27.0, 0.0)
 	var last_ring := ring_radii.size() - 1
 	for segment_index in SEGMENTS:
@@ -3731,7 +3240,7 @@ func _add_faceted_floating_island(parent: Node3D) -> void:
 		var ring_b := Vector3(cos(angle_b) * ring_radii[last_ring],
 			ring_heights[last_ring], sin(angle_b) * ring_radii[last_ring])
 		_add_colored_surface_triangle(surface, ring_a, tip, ring_b,
-			Color("182c43"))
+			palette[(segment_index + 3) % palette.size()])
 	surface.generate_normals()
 	var mesh := surface.commit()
 	var material := _material(Color.WHITE, 0.88)

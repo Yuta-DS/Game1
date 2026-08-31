@@ -90,7 +90,10 @@ AI_HEALTH_CHECK_SECONDS = float(os.environ.get(
 ))
 AI_UPSTREAM_TIMEOUT_SECONDS = float(os.environ.get(
     "AI_UPSTREAM_TIMEOUT_SECONDS",
-    "25"
+    # Vision world manifests are larger than guide responses and routinely need
+    # more than 25 seconds. Keep two-route failover inside the game's 90-second
+    # wait while allowing either route enough time to return valid schema JSON.
+    "40"
 ))
 AI_CACHE_MAX_AGE_SECONDS = int(os.environ.get(
     "AI_CACHE_MAX_AGE_SECONDS",
@@ -774,6 +777,62 @@ def _offline_world_manifest(title, creative_brief, existing_manifest):
     }
 
 
+def _world_manifest_from_vision_brief(title, creative_brief):
+    """Recover a semantic world from the successful vision-guide response.
+
+    The creative guide and world builder use separate circuits. If the larger
+    world request times out after vision already identified concrete subjects,
+    preserve that AI result as a validated cache fallback instead of replacing
+    it with an unrelated two-object meadow.
+    """
+    if not isinstance(creative_brief, dict) or not creative_brief:
+        return None
+    searchable = json.dumps(creative_brief, ensure_ascii=False).lower()
+    subject_specs = (
+        ("person", ("person", "girl", "boy", "child", "woman", "man"), "foreground center"),
+        ("boat", ("boat", "canoe", "ship"), "foreground left"),
+        ("pagoda", ("pagoda", "temple"), "background left"),
+        ("tree", ("tree", "willow"), "midground right"),
+        ("water", ("water", "lake", "river", "sea", "pond"), "foreground center"),
+        ("mountain", ("mountain", "hill", "foothill"), "background center"),
+        ("bridge", ("bridge",), "midground center"),
+        ("house", ("house", "home", "cottage"), "midground left"),
+        ("cloud", ("cloud",), "sky"),
+        ("sun", ("sun",), "sky right"),
+        ("flower", ("flower",), "foreground right"),
+        ("bird", ("bird",), "sky left"),
+    )
+    objects = []
+    for subject_type, aliases, position_hint in subject_specs:
+        if not any(alias in searchable for alias in aliases):
+            continue
+        objects.append({
+            "id": f"vision_{subject_type}_{len(objects) + 1}",
+            "type": subject_type,
+            "description": f"the {subject_type} identified by the creative vision guide",
+            "position_hint": position_hint,
+            "depth_layer": (
+                "far" if "background" in position_hint or "sky" in position_hint
+                else "near" if "foreground" in position_hint else "middle"
+            ),
+            "scale_hint": "large" if subject_type in {"water", "mountain"} else "medium",
+            "source": "vision_guide_cache",
+        })
+    if len(objects) < 3:
+        return None
+    recovered = _upgrade_legacy_semantic_manifest({
+        "world_title": title or creative_brief.get("title") or "My Living Artwork",
+        "celebration": creative_brief.get("celebration", "Your artwork has opened into a world."),
+        "environment": creative_brief.get("scene_description", ""),
+        "visual_style": "faithful reconstruction from the creative vision guide",
+        "objects": objects,
+        "characters": [],
+        "animations": [],
+        "interactions": [],
+    })
+    return recovered if _semantic_world_manifest_is_complete(recovered) else None
+
+
 def _probe_open_circuits_once():
     checked_keys = set()
     for service in ("creative_guide", "world_builder"):
@@ -1233,13 +1292,21 @@ def ai_world_builder():
                 ai_source = "cache"
                 status = "cached_fallback"
             else:
-                manifest = _offline_world_manifest(
-                    title,
-                    creative_brief or {},
-                    existing_manifest or {}
+                manifest = _world_manifest_from_vision_brief(
+                    title, creative_brief or {}
                 )
-                ai_source = "offline"
-                status = "offline_fallback"
+                if manifest:
+                    ai_source = "cache"
+                    status = "vision_brief_cache_fallback"
+                    _save_ai_cache("world_builder", fingerprint, manifest)
+                else:
+                    manifest = _offline_world_manifest(
+                        title,
+                        creative_brief or {},
+                        existing_manifest or {}
+                    )
+                    ai_source = "offline"
+                    status = "offline_fallback"
 
         return jsonify({
             "status": status,

@@ -178,5 +178,15 @@ func enter_game(username: String, is_guest: bool = false):
 		var tween := create_tween()
 		tween.tween_property(menu_music, "volume_db", -80.0, 1.5)
 
-	# Open up the master integrated sandbox environment
-	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
+	# Open up the master integrated sandbox environment through the loading
+	# screen rather than a direct change_scene_to_file. A direct swap dropped
+	# the player straight into a bare hub that then visibly populated with
+	# tens of thousands of grass instances over the next few seconds -
+	# ProtonScatter builds them on a background thread, which keeps the game
+	# from freezing but does nothing to hide the pop-in. The loading screen
+	# now waits on that thread too (see loading_scene.gd), not just the scene
+	# resource itself.
+	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
+	loading_screen.next_scene_path = "res://scenes/New_Hub_World.tscn"
+	get_tree().root.add_child(loading_screen)
+	get_tree().current_scene.queue_free()

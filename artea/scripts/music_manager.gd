@@ -11,7 +11,7 @@ const PAINT_TRACK = preload("res://assets/SFX/Forest Frolic Loop.ogg")
 @export var scene_to_track: Dictionary = {
 	"res://scenes/cloud_pop_ui.tscn":	PEACE_TRACK,
 	"res://scenes/cloudPopFinish.tscn":	PEACE_TRACK,
-	"res://scenes/ArtGallery.tscn":		MAGIC_TRACK,
+	"res://scenes/art_gallery_3d_inprogress.tscn": MAGIC_TRACK,
 	"res://scenes/PaintingView.tscn":	MAGIC_TRACK,
 	"res://scenes/paint_tool.tscn":		PAINT_TRACK,
 }

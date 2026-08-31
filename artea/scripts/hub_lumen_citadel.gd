@@ -273,9 +273,24 @@ func _build_giant_tree_foundation() -> void:
 			sin(angle - 0.05) * length)
 		var ground_points: Array[Vector3] = [
 			start, start.lerp(elbow, 0.55) + Vector3.UP * 1.0, elbow, tip]
-		_add_curved_root(tree, "GroundButtressRoot_%02d" % (root_index + 1),
+		var ground_root := _add_curved_root(tree,
+			"GroundButtressRoot_%02d" % (root_index + 1),
 			ground_points, PackedFloat32Array([4.4, 3.4, 2.5, 0.35]),
 			bark_shadow if root_index % 3 == 0 else bark, 8)
+		# These exposed roots read as small ground mountains. A single simplified
+		# convex hull closes the underside and gives the player one continuous,
+		# climbable surface instead of detailed triangle seams or a hollow arch.
+		ground_root.create_convex_collision(true, true)
+		var collision_bodies := ground_root.find_children(
+			"*", "StaticBody3D", false, false)
+		var collision_body := collision_bodies[0] as StaticBody3D \
+			if not collision_bodies.is_empty() else null
+		if collision_body != null:
+			collision_body.name = "WalkableRootBody"
+		ground_root.set_meta("walkable_ground_mound", true)
+		ground_root.set_meta("closed_underside_collision", true)
+		ground_root.set_meta("root_tip", tip)
+		ground_root.set_meta("root_elbow", elbow)
 		if root_index % 2 == 0:
 			_add_tree_leaf_cluster(tree, "Ground_%02d" % (root_index + 1),
 				elbow + Vector3.UP * 0.8, angle, leaf_green, leaf_olive, 3)

@@ -4,11 +4,20 @@ const WEB_TERRAIN_MESH_PATH := "res://resources/web_hub_terrain.res"
 const GRASS_MATERIAL_PATH := "res://assets3D/kkNatureForest/Stylized3DGrass.tres"
 const WEB_TERRAIN_SHADER_PATH := "res://shaders/web_terrain.gdshader"
 const WEB_WATER_SHADER_PATH := "res://shaders/web_water.gdshader"
+const WEB_SURFACE_MAP_PATH := "res://resources/web_hub_surface_map.png"
+const WEB_GRASS_ALBEDO_PATH := "res://textures/moss_ground_02_1k/moss_groud_02_Base_Color_1k.png"
+const WEB_SAND_ALBEDO_PATH := "res://textures/sand_01_2k/sand_01_1k/sand_01_color_1k.png"
+const WEB_BRICK_ALBEDO_PATH := "res://textures/ground_tiles_13_1k/ground_tiles_13_baseColor_1k.png"
+const WebGrassSurfaceFilter := preload("res://scripts/web_grass_surface_filter.gd")
 
-# The Grass scatter is authored at 60500 instances, and 220 of its 2320
-# proportion units are tree_1_c_color_12 - about 5700 full-size trees, which is
-# what walls the horizon in. Thin both for Web.
-const WEB_GRASS_AMOUNT := 28000
+# An additional physics layer used only by ProtonScatter. The player continues
+# to collide through layers 1/2, while this bit lets grass rays ignore houses,
+# props, bridges and every collider except the baked land terrain.
+const WEB_TERRAIN_SCATTER_LAYER := 1 << 19
+
+# Desktop uses a dense 120000-instance meadow. Keep broad Web coverage while
+# reducing the count enough for its single-threaded synchronous scatter build.
+const WEB_GRASS_AMOUNT := 65000
 const WEB_GRASS_TREE_PROPORTION := 0
 
 # Blade size. ProtonScatter only offers a uniform multiplier
@@ -108,11 +117,17 @@ func _apply_web_scatter_tuning() -> void:
 						if script != null:
 							if script.resource_path.ends_with("relax.gd"):
 								modifier.iterations = 0
+							elif child_name == "Grass" and script.resource_path.ends_with("project_on_geometry.gd"):
+								modifier.collision_mask = WEB_TERRAIN_SCATTER_LAYER
+								modifier.remove_points_on_miss = true
+								modifier.max_slope = 52.0
 							elif script.resource_path.ends_with("project_on_terrain3d.gd"):
 								# The native Terrain3D node is absent on Web. The preceding
 								# collider projection modifier hits WebTerrainCollision and
 								# supplies the same height placement.
 								stack.stack.erase(modifier)
+								if child_name == "Grass":
+									stack.stack.append(WebGrassSurfaceFilter.new())
 								continue
 						# Thin the grass field. 60500 instances is a desktop
 						# figure; on the single-threaded Web runtime it is both
@@ -246,6 +261,15 @@ func _make_web_terrain_material() -> Material:
 	if shader != null:
 		var shader_material := ShaderMaterial.new()
 		shader_material.shader = shader
+		# The baked mesh keeps Terrain3D's shape and vertex colour, while this
+		# compact surface map selects the same authored grass, sand, or village
+		# paving texture. Sampling the real albedo artwork is what preserves the
+		# dense meadow flowers visible in the desktop editor instead of reducing
+		# the whole landscape to an averaged green fallback.
+		shader_material.set_shader_parameter("surface_map", load(WEB_SURFACE_MAP_PATH))
+		shader_material.set_shader_parameter("grass_albedo", load(WEB_GRASS_ALBEDO_PATH))
+		shader_material.set_shader_parameter("sand_albedo", load(WEB_SAND_ALBEDO_PATH))
+		shader_material.set_shader_parameter("brick_albedo", load(WEB_BRICK_ALBEDO_PATH))
 		return shader_material
 	var fallback_material := StandardMaterial3D.new()
 	fallback_material.albedo_color = Color.WHITE
@@ -331,7 +355,7 @@ func _add_collision(mesh: ArrayMesh) -> void:
 
 	var body := StaticBody3D.new()
 	body.name = "WebTerrainCollision"
-	body.collision_layer = 3
+	body.collision_layer = 3 | WEB_TERRAIN_SCATTER_LAYER
 	body.add_child(collision)
 	add_child(body)
 	_collision_built = true

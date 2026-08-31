@@ -2,7 +2,7 @@ extends SceneTree
 
 const MILO_SCENE := preload("res://scenes/milo_animations.tscn")
 const FRAME_DIRECTORY := "/tmp/artea_milo_polish_frames"
-const FRAME_COUNT := 72
+const FRAME_COUNT := 96
 const FRAME_RATE := 24.0
 
 
@@ -55,32 +55,35 @@ func _capture() -> void:
 		as AnimationPlayer
 	for frame_index in FRAME_COUNT:
 		var delta := 1.0 / FRAME_RATE
-		if frame_index < 20:
+		if frame_index < 16:
 			milo.call("_set_companion_state", 1) # IDLE_NEAR_PLAYER
+			milo.velocity = Vector3.ZERO
 			if frame_index == 7:
 				milo.call("trigger_blink")
 			if animation_player != null:
 				animation_player.play("Idle_3", 0.0)
 				animation_player.seek(float(frame_index) * delta, true)
-		elif frame_index < 52:
-			var stride_phase := float(frame_index - 20) / 16.0
+		elif frame_index < 80:
 			milo.call("_set_companion_state", 2) # FOLLOWING
-			milo.set("_cane_cycle_time",
-				fposmod(stride_phase, 1.0) * 1.15)
+			milo.velocity = Vector3(0.0, 0.0, 1.10)
+			milo.position.z += milo.velocity.z * delta
+			milo.call("_advance_cane_gait", delta, 1.10)
 			if animation_player != null:
-				animation_player.play("Cane_Walk", 0.0)
-				var walk_clip := animation_player.get_animation("Cane_Walk")
-				animation_player.seek(fposmod(stride_phase, 1.0) \
-					* walk_clip.length, true)
+				milo.call("_play_animation", "Cane_Walk")
+				milo.call("_update_locomotion_playback", 1.10, 1.10)
 		else:
-			milo.call("_set_companion_state", 5) # TALKING
-			if frame_index == 52:
-				milo.call("_on_companion_speech_requested",
-					"I hear you. Let us explore this together.")
-				milo.call("_on_companion_pose_requested", "encourage")
+			var stop_weight := 1.0 - float(frame_index - 80) / 15.0
+			milo.call("_set_companion_state", 2) # FOLLOWING while settling
+			milo.velocity = Vector3(0.0, 0.0, 1.10 * maxf(stop_weight, 0.0))
+			milo.position.z += milo.velocity.z * delta
+			milo.call("_advance_cane_gait", delta, milo.velocity.z)
+			milo.call("_update_locomotion_playback", milo.velocity.z, 1.10)
 		milo.call("_update_eye_animation", delta)
 		milo.call("_update_secondary_motion", delta)
+		milo.call("_update_terrain_grounding", delta)
 		milo.call("_update_speaking", delta)
+		camera.position.z = 5.9 + milo.position.z
+		camera.look_at(milo.position + Vector3(0.0, 1.05, 0.0), Vector3.UP)
 		await process_frame
 		await process_frame
 		var frame_path := "%s/frame_%03d.png" % [FRAME_DIRECTORY, frame_index]
@@ -120,6 +123,15 @@ func _build_environment(stage: Node3D) -> void:
 	floor_material.roughness = 0.90
 	floor.material_override = floor_material
 	stage.add_child(floor)
+	var floor_body := StaticBody3D.new()
+	floor_body.collision_layer = 1
+	var floor_collision := CollisionShape3D.new()
+	var floor_shape := BoxShape3D.new()
+	floor_shape.size = Vector3(10.0, 0.10, 8.0)
+	floor_collision.shape = floor_shape
+	floor_collision.position.y = -0.065
+	floor_body.add_child(floor_collision)
+	stage.add_child(floor_body)
 
 	_add_light(stage, Vector3(-43.0, -28.0, 0.0), Color("ffe1bb"), 0.92, true)
 	_add_light(stage, Vector3(25.0, 145.0, 0.0), Color("8fd5ff"), 0.25, false)

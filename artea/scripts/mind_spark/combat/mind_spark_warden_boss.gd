@@ -12,6 +12,7 @@ const MAX_HEALTH := 300.0
 const XP_REWARD := 150
 const TELEGRAPH_SECONDS := 1.15
 const RECOVERY_SECONDS := 4.0
+const Foley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
 
 @onready var shell: Node3D = $VisualRoot/BlightShell
 @onready var core: MeshInstance3D = $VisualRoot/CrystalCore
@@ -29,9 +30,11 @@ var _damage_applied := false
 var _player: CharacterBody3D
 var _storm_crown: Node3D
 var _visual_time := 0.0
+var _combat_audio: AudioStreamPlayer3D
 
 
 func _ready() -> void:
+	_build_combat_audio()
 	_build_storm_crown()
 	core.visible = false
 	storm_line.visible = false
@@ -69,6 +72,7 @@ func start_battle() -> void:
 	_cycle_time = TELEGRAPH_SECONDS
 	storm_line.visible = true
 	core_label.text = "DODGE THE WIDE STORM LINE"
+	_play_combat_sound(&"warden_storm")
 
 
 func reset_battle() -> void:
@@ -90,6 +94,7 @@ func take_damage(amount: float, _source: Node = null) -> float:
 		return 0.0
 	var applied := minf(current_health, amount)
 	current_health -= applied
+	_play_combat_sound(&"warden_hit")
 	core_label.text = "OPEN CORE • %d / 300" % ceili(current_health)
 	if current_health <= 0.0:
 		_free_warden()
@@ -124,6 +129,7 @@ func _physics_process(delta: float) -> void:
 	if not _damage_applied and _player != null and _player.global_position.distance_to(global_position) < 38.0:
 		_player.call("take_damage", 16.0, self)
 		_damage_applied = true
+		_play_combat_sound(&"warden_strike")
 	var next_anchor := _next_unbroken_anchor()
 	if next_anchor >= 0:
 		var result := anchors[next_anchor].interact(&"dodge")
@@ -153,6 +159,7 @@ func _open_core() -> void:
 	core.visible = true
 	_set_phase(Phase.PHASE_3)
 	core_label.text = "OPEN CRYSTAL CORE • 300 / 300"
+	_play_combat_sound(&"warden_open")
 
 
 func _free_warden() -> void:
@@ -162,6 +169,7 @@ func _free_warden() -> void:
 	core.visible = true
 	core_label.text = "COMBAT STOPPED • PLACE THE FINAL SPARK"
 	_set_phase(Phase.COMPLETE)
+	_play_combat_sound(&"warden_free")
 	combat_stopped.emit()
 	defeated.emit(XP_REWARD)
 
@@ -261,3 +269,22 @@ func _material(albedo: Color, emission: Color, energy: float, roughness: float) 
 	material.emission = emission
 	material.emission_energy_multiplier = energy
 	return material
+
+
+func _build_combat_audio() -> void:
+	_combat_audio = AudioStreamPlayer3D.new()
+	_combat_audio.name = "WardenCombatFoley3D"
+	_combat_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	_combat_audio.unit_size = 8.0
+	_combat_audio.max_distance = 82.0
+	_combat_audio.volume_db = -3.0
+	_combat_audio.panning_strength = 1.0
+	_combat_audio.bus = &"SFX"
+	add_child(_combat_audio)
+
+
+func _play_combat_sound(event: StringName) -> void:
+	if _combat_audio == null:
+		return
+	_combat_audio.stream = Foley.make_combat_event(event)
+	_combat_audio.play()

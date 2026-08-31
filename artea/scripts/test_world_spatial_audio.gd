@@ -90,7 +90,15 @@ func _run() -> void:
 		_fail("lateral vegetation needs the two field-recorded leaf takes")
 		return
 	var train_loops: Dictionary = director.get("_train_loop_streams")
+	var train_events: Dictionary = director.get("_train_event_streams")
 	var world_loops: Dictionary = director.get("_world_loop_streams")
+	var departure_cue := train_events.get(&"departure") as AudioStreamWAV
+	var manual_horn := train_events.get(&"horn") as AudioStreamWAV
+	if departure_cue == null or departure_cue == manual_horn \
+			or departure_cue.loop_mode != AudioStreamWAV.LOOP_DISABLED \
+			or departure_cue.get_length() > 2.0:
+		_fail("automatic departures need a short bird cue distinct from the manual train horn")
+		return
 	for profile in [&"windmill", &"watermill", &"lumbermill", &"cave_air", &"aether_power"]:
 		var recorded_loop := world_loops.get(profile) as AudioStreamWAV
 		if recorded_loop == null or recorded_loop.loop_mode != AudioStreamWAV.LOOP_FORWARD \
@@ -127,6 +135,12 @@ func _run() -> void:
 	var earth := StaticBody3D.new()
 	earth.name = "VillageDirtGroundCollision"
 	root.add_child(earth)
+	var meadow_trail := StaticBody3D.new()
+	meadow_trail.name = "MeadowTrailGroundCollision"
+	root.add_child(meadow_trail)
+	var railway := StaticBody3D.new()
+	railway.name = "RailTrackCollision"
+	root.add_child(railway)
 	if director.call("classify_surface", grass) != &"grass" \
 			or director.call("classify_surface", bridge) != &"wood" \
 			or director.call("classify_surface", stair) != &"stone" \
@@ -134,7 +148,9 @@ func _run() -> void:
 			or director.call("classify_surface", sand) != &"sand" \
 			or director.call("classify_surface", gravel) != &"gravel" \
 			or director.call("classify_surface", metal) != &"metal" \
-			or director.call("classify_surface", earth) != &"earth":
+			or director.call("classify_surface", earth) != &"earth" \
+			or director.call("classify_surface", meadow_trail) != &"earth" \
+			or director.call("classify_surface", railway) != &"metal":
 		_fail("authored collider names must select all eight physical footstep families")
 		return
 	if director.call("_terrain_texture_to_surface", 0) != &"grass" \
@@ -203,6 +219,12 @@ func _run() -> void:
 	var train := Node3D.new()
 	train.name = "RainbowGalaxyTrain"
 	root.add_child(train)
+	var imported_train_part := Node3D.new()
+	imported_train_part.name = "TRAIN_Engine_SteamValve"
+	train.add_child(imported_train_part)
+	if bool(director.call("_is_train_root", imported_train_part)):
+		_fail("an imported TRAIN_* visual part must not receive its own complete train rig")
+		return
 	director.call("_register_train", train)
 	for audio_name in ["TractionEngine3D", "RailClatter3D", "TravelWind3D", "TrainEvents3D"]:
 		var player := train.get_node_or_null(audio_name) as AudioStreamPlayer3D

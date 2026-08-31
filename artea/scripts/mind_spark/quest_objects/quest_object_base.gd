@@ -11,6 +11,7 @@ signal checkpoint_action_requested(action: String)
 
 const Definition := preload("res://scripts/mind_spark/quest_objects/quest_object_definition.gd")
 const StateStore := preload("res://scripts/mind_spark/quest_objects/quest_object_state_store.gd")
+const Foley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
 const MODEL_SCENE_PATHS := [
 	"res://scenes/mind_spark/quest_objects/models/thought_spark_socket_model.tscn",
 	"res://scenes/mind_spark/quest_objects/models/evidence_scanner_model.tscn",
@@ -1164,26 +1165,9 @@ func _mesh(mesh: PrimitiveMesh, size: float) -> MeshInstance3D:
 
 
 func _play_tone() -> void:
-	if feedback_sound.stream == null:
-		feedback_sound.stream = _make_tone()
+	feedback_sound.stream = Foley.make_quest_feedback(
+		definition.object_kind, bool(current_state.get("completed", false)))
 	feedback_sound.play()
-
-
-func _make_tone() -> AudioStreamWAV:
-	var wav := AudioStreamWAV.new()
-	wav.format = AudioStreamWAV.FORMAT_16_BITS
-	wav.mix_rate = 11025
-	wav.stereo = false
-	var frames := 1102
-	var bytes := PackedByteArray()
-	bytes.resize(frames * 2)
-	for index in frames:
-		var envelope := 1.0 - float(index) / frames
-		var sample := int(sin(TAU * 660.0 * float(index) / wav.mix_rate) * 6800.0 * envelope)
-		bytes[index * 2] = sample & 0xff
-		bytes[index * 2 + 1] = (sample >> 8) & 0xff
-	wav.data = bytes
-	return wav
 
 
 func _on_body_entered(_body: Node3D) -> void:
