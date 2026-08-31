@@ -1,4 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://durvbjhil7ec1"]
+[gd_scene load_steps=5 format=3 uid="uid://durvbjhil7ec1"]
+
+[ext_resource type="PackedScene" path="res://assets3D/coastal_harbour/artea_sea_life.glb" id="2_life"]
+[ext_resource type="Script" path="res://scripts/coastal_sea_life.gd" id="3_life"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
 albedo_color = Color(0.55, 0.36, 0.2, 1)
@@ -7,6 +10,10 @@ roughness = 0.85
 [sub_resource type="BoxMesh" id="BoxMesh_rf2q6"]
 
 [node name="Pier" type="Node3D"]
+script = ExtResource("3_life")
+
+[node name="SeaLife" parent="." instance=ExtResource("2_life")]
+rotation = Vector3(0, 3.1415927, 0)
 
 [node name="Board" type="MeshInstance3D" parent="."]
 transform = Transform3D(20, 0, 0, 0, 0.2, 0, 0, 0, 2, 0, 0, 0)
