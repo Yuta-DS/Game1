@@ -55,7 +55,7 @@ const ALONG := Vector3.BACK
 #   [0 .. UPPER_LENGTH] upper court, then GRAND_STAIR_RUN, then the terrace.
 # At 15.0 the terrace was left only 3.2 m deep — too cramped to arrive on and
 # far too small for the fountain it carries. 24.0 gives it 12.2 m.
-const PLAZA_LENGTH := 24.0
+const PLAZA_LENGTH := 22.4 # Ends at the real bridge mouth, not a ledge beyond it.
 const PLAZA_WIDTH := 19.0
 const PLAZA_THICKNESS := 0.6
 
@@ -85,16 +85,11 @@ const UPPER_LENGTH := 8.4
 const GRAND_STAIR_STEPS := 7
 const GRAND_STAIR_RUN := 3.4     # horizontal depth of the whole flight
 const TERRACE_WIDTH := 15.0      # narrower than the upper court, so it reads as an approach
+const RoyalCourt := preload("res://scripts/castle_royal_courtyard.gd")
 # Match the established clear doorway route. The former 7.4 m span dominated
 # the facade and visually covered the Art Castle door from the approach.
 const CASTLE_ASCENT_WIDTH := 4.8
 const CASTLE_THRESHOLD_WIDTH := 5.2
-const CASTLE_ASCENT_RUN := UPPER_LENGTH
-# A compact three-tread ceremony at the door. Three 0.6 m rises stay within
-# the controller's safe step height and keep the visible staircase short.
-const DOOR_STAIR_STEPS := 3
-const DOOR_STAIR_RUN := 1.5
-const DOOR_STAIR_RISE := 1.8
 
 # The imported doorway is at the top of the final ascent, not on the lower
 # entrance court. Keep doorway furniture on that raised threshold while court
@@ -136,10 +131,10 @@ var _glow_materials: Array[StandardMaterial3D] = []
 var _banners: Array[Node3D] = []
 var _gears: Array[Node3D] = []
 
-# Nodes that hover in place — currently the fountain's aether core. Their rest
-# height is captured on the first _process so the bob is relative to wherever
-# they were built.
+# Nodes that hover in place. Their rest height is captured on the first
+# _process so the bob is relative to wherever they were built.
 var _floaters: Array[Node3D] = []
+var _live_flames: Array[MeshInstance3D] = []
 var _gear_speed := 0.0
 var _sway_time := 0.0
 
@@ -184,6 +179,21 @@ func _process(delta: float) -> void:
 		floater.global_position.y = rest_y \
 			+ sin(_sway_time * 1.1 + float(i) * 2.3) * 0.18
 		floater.rotate_y(delta * 0.5)
+
+	# Each courtyard flame has its own height pulse and sideways lick. Keeping
+	# the rest transform as metadata prevents cumulative animation drift.
+	for flame in _live_flames:
+		var phase: float = flame.get_meta("phase")
+		var rest_position: Vector3 = flame.get_meta("rest_position")
+		var base_scale: Vector3 = flame.get_meta("base_scale")
+		var pulse := 1.0 + sin(_sway_time * 5.2 + phase) * 0.14
+		flame.position = rest_position + Vector3(
+			sin(_sway_time * 3.7 + phase) * 0.045,
+			sin(_sway_time * 6.1 + phase * 1.3) * 0.075,
+			cos(_sway_time * 4.1 + phase) * 0.045
+		)
+		flame.scale = Vector3(base_scale.x / pulse, base_scale.y * pulse, base_scale.z / pulse)
+		flame.rotation.y = sin(_sway_time * 2.8 + phase) * 0.22
 
 
 # --- arrival -----------------------------------------------------------
@@ -239,12 +249,9 @@ func _build_entrance() -> void:
 
 	_build_plaza(rig)
 	_build_castle_ascent(rig)
-	_build_colonnade(rig)
+	_build_court_turrets(rig)
 	_build_courtyard(rig)
-	_build_gatehouse(rig)
-	_build_arch(rig)
 	_build_lamps(rig)
-	_build_banners(rig)
 	_build_rune_seal(rig)
 
 
@@ -260,8 +267,9 @@ func _build_plaza(parent: Node3D) -> void:
 	var upper_deck := CASTLE_DOOR + OUT * (UPPER_LENGTH * 0.5)
 	var upper := _box(parent,
 		Vector3(UPPER_LENGTH, PLAZA_THICKNESS, PLAZA_WIDTH),
-		upper_deck - Vector3(0.0, 0.45, 0.0), _stone(STONE_MID))
+		upper_deck - Vector3(0.0, 0.45, 0.0), RoyalCourt.stone_material(true))
 	upper.name = "CastleUpperCourt"
+	upper.set_meta("preserve_castle_finish", true)
 	_add_box_body(upper, Vector3(UPPER_LENGTH, PLAZA_THICKNESS, PLAZA_WIDTH))
 	_pave(parent, CASTLE_DOOR, UPPER_LENGTH, PLAZA_WIDTH, 3, 5)
 
@@ -270,23 +278,14 @@ func _build_plaza(parent: Node3D) -> void:
 		- Vector3(0.0, CEREMONIAL_RISE, 0.0)
 	var terrace := _box(parent,
 		Vector3(terrace_length, PLAZA_THICKNESS, TERRACE_WIDTH),
-		terrace_deck - Vector3(0.0, 0.45, 0.0), _stone(STONE_MID))
+		Vector3(terrace_deck.x, RoyalCourt.FLOOR_Y - PLAZA_THICKNESS * 0.5, terrace_deck.z),
+		RoyalCourt.stone_material(true))
 	terrace.name = "CastleArrivalTerrace"
+	terrace.set_meta("preserve_castle_finish", true)
+	terrace.set_meta("surface_policy", "single_collision_backed_floor_no_overlay")
 	_add_box_body(terrace, Vector3(terrace_length, PLAZA_THICKNESS, TERRACE_WIDTH))
-	_pave(parent, CASTLE_DOOR + OUT * terrace_start - Vector3(0.0, CEREMONIAL_RISE, 0.0),
-		terrace_length, TERRACE_WIDTH, 2, 4)
-
-	# The bridge's collision-backed landing finishes at y=67.97 while the broad
-	# arrival terrace finishes at y=67.58. A compact raised receiving court fills
-	# that measured 0.39 m level change and gives the timber bridge one grounded
-	# architectural endpoint instead of leaving it hovering above the blue slab.
-	var receiving_size := Vector3(5.2, 0.39, 6.4)
-	var receiving_centre := CASTLE_DOOR + OUT * 18.5 \
-		+ Vector3(0.0, -CEREMONIAL_RISE + 0.045, 0.0)
-	var receiving_court := _box(parent, receiving_size, receiving_centre,
-		_stone(STONE_LIGHT))
-	receiving_court.name = "CastleBridgeReceivingCourt"
-	_add_box_body(receiving_court, receiving_size)
+	# One deck now meets the existing bridge landing at 67.97 throughout.
+	# No raised receiving rectangle or decorative paver geometry sits above it.
 
 	_build_grand_stair(parent)
 	_build_substructure(parent, terrace_start, terrace_length)
@@ -297,170 +296,60 @@ func _build_plaza(parent: Node3D) -> void:
 # shallow, and flanked by solid cheek walls — the thing that makes the door
 # feel earned rather than adjacent.
 func _build_grand_stair(parent: Node3D) -> void:
-	var light := _stone(STONE_LIGHT)
-	var dark := _stone(STONE_DARK)
-	var stair_width := PLAZA_WIDTH * 0.62
-
+	# Regular closed risers meet the actual deck tops, not an old design datum.
+	var rig := Node3D.new()
+	rig.name = "RoyalCeremonialStair"
+	rig.set_meta("preserve_castle_finish", true)
+	parent.add_child(rig)
+	rig.global_position = Vector3(CASTLE_DOOR.x, RoyalCourt.FLOOR_Y, CASTLE_DOOR.z)
+	var stone := RoyalCourt.stone_material()
+	var tread_material := _stone(STONE_LIGHT)
+	var coping := _stone(Color("b7c7cc"))
+	var upper_surface := UPPER_DECK_Y - 0.15
+	var rise := upper_surface - RoyalCourt.FLOOR_Y
+	var run := GRAND_STAIR_RUN / float(GRAND_STAIR_STEPS)
+	var width := PLAZA_WIDTH * 0.62
 	for i in GRAND_STAIR_STEPS:
-		var t := (float(i) + 0.5) / float(GRAND_STAIR_STEPS)
-		# Step 0 is at the TOP (nearest the door) and the flight descends
-		# outward, so treads line up with the upper court's edge.
-		var out_distance := UPPER_LENGTH + GRAND_STAIR_RUN * t
-		var step_y := -CEREMONIAL_RISE * t
-		var tread_depth := GRAND_STAIR_RUN / float(GRAND_STAIR_STEPS) + 0.55
-
-		var step := _box(parent,
-			Vector3(tread_depth, 0.42, stair_width),
-			CASTLE_DOOR + OUT * out_distance
-				+ Vector3(0.0, step_y - 0.25, 0.0),
-			light if i % 2 == 0 else dark)
-		step.name = "GrandStairTread_%02d" % i
-		_add_box_body(step, Vector3(tread_depth, 0.42, stair_width))
-
-		# A glowing tread inlay every other step, echoing the spiral stair's
-		# wayfinding so the two climbs read as the same architecture.
-		if i % 2 == 0:
-			var inlay := _box(parent,
-				Vector3(tread_depth * 0.34, 0.05, stair_width * 0.72),
-				CASTLE_DOOR + OUT * out_distance
-					+ Vector3(0.0, step_y - 0.02, 0.0),
-				_emissive(CIRCUIT_CYAN, 1.5))
-			inlay.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-
-	# Cheek walls: solid ramps of masonry down both sides of the flight, capped
-	# in brass. Without them the steps float as loose slabs.
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		var lateral: float = stair_width * 0.5 + 0.55
-		for i in GRAND_STAIR_STEPS:
-			var t := (float(i) + 0.5) / float(GRAND_STAIR_STEPS)
-			var out_distance := UPPER_LENGTH + GRAND_STAIR_RUN * t
-			var step_y := -CEREMONIAL_RISE * t
-			var depth := GRAND_STAIR_RUN / float(GRAND_STAIR_STEPS) + 0.6
-			var height := 1.15 + (CEREMONIAL_RISE - CEREMONIAL_RISE * t) * 0.35
-
-			var cheek := _box(parent, Vector3(depth, height, 1.1),
-				CASTLE_DOOR + OUT * out_distance + ALONG * side * lateral
-					+ Vector3(0.0, step_y - 0.45 + height * 0.5, 0.0), dark)
-			_add_box_body(cheek, Vector3(depth, height, 1.1))
-
-			_box(parent, Vector3(depth + 0.06, 0.2, 1.26),
-				CASTLE_DOOR + OUT * out_distance + ALONG * side * lateral
-					+ Vector3(0.0, step_y - 0.45 + height + 0.08, 0.0),
-				_metal(BRASS))
-
-		# A newel pillar with a lamp at the foot of each cheek wall, marking
-		# the bottom of the flight from across the terrace.
-		var foot := CASTLE_DOOR + OUT * (UPPER_LENGTH + GRAND_STAIR_RUN + 0.4) \
-			+ ALONG * side * lateral
-		var newel := _box(parent, Vector3(1.5, 2.5, 1.5),
-			foot + Vector3(0.0, 0.85, 0.0), _stone(STONE_LIGHT))
-		_add_box_body(newel, Vector3(1.5, 2.5, 1.5))
-		_box(parent, Vector3(1.75, 0.26, 1.75),
-			foot + Vector3(0.0, 2.2, 0.0), _metal(BRASS))
-
-		var orb := MeshInstance3D.new()
-		var orb_mesh := SphereMesh.new()
-		orb_mesh.radius = 0.5
-		orb_mesh.height = 1.2
-		orb_mesh.radial_segments = 7
-		orb_mesh.rings = 4
-		orb.mesh = orb_mesh
-		orb.material_override = _crystal(RUNE_VIOLET)
-		parent.add_child(orb)
-		orb.global_position = foot + Vector3(0.0, 2.95, 0.0)
-		_floaters.append(orb)
-
-		var orb_light := OmniLight3D.new()
-		orb_light.light_color = Color(0.85, 0.66, 1.0)
-		orb_light.light_energy = 2.4
-		orb_light.omni_range = 13.0
-		orb_light.shadow_enabled = false
-		parent.add_child(orb_light)
-		orb_light.global_position = foot + Vector3(0.0, 2.95, 0.0)
+		var top := rise * float(GRAND_STAIR_STEPS - i) / float(GRAND_STAIR_STEPS)
+		var step := RoyalCourt.box(rig, "GrandStairTread_%02d" % i,
+			Vector3(run, top + 0.35, width),
+			Vector3(UPPER_LENGTH + run * (float(i) + 0.5), (top - 0.35) * 0.5, 0),
+			tread_material, true)
+		step.set_meta("surface_top_y", RoyalCourt.FLOOR_Y + top)
+	for side: float in [-1.0, 1.0]:
+		var lateral := side * (width * 0.5 + 0.3)
+		var points := PackedVector3Array()
+		for z: float in [lateral - 0.3, lateral + 0.3]:
+			points.append(Vector3(UPPER_LENGTH, -0.35, z))
+			points.append(Vector3(UPPER_LENGTH + GRAND_STAIR_RUN, -0.35, z))
+			points.append(Vector3(UPPER_LENGTH + GRAND_STAIR_RUN, 1.6, z))
+			points.append(Vector3(UPPER_LENGTH, rise + 1.6, z))
+		var cheek := RoyalCourt.mesh(rig, "CeremonialClosedCheek", RoyalCourt.prism(points), Vector3.ZERO, stone)
+		RoyalCourt.solid(cheek, cheek.mesh.create_convex_shape())
+		var cap_points := PackedVector3Array()
+		for z: float in [lateral - 0.3, lateral + 0.3]:
+			cap_points.append(Vector3(UPPER_LENGTH, rise + 1.47, z))
+			cap_points.append(Vector3(UPPER_LENGTH + GRAND_STAIR_RUN, 1.47, z))
+			cap_points.append(Vector3(UPPER_LENGTH + GRAND_STAIR_RUN, 1.6, z))
+			cap_points.append(Vector3(UPPER_LENGTH, rise + 1.6, z))
+		RoyalCourt.mesh(rig, "CeremonialFlushCoping", RoyalCourt.prism(cap_points), Vector3.ZERO, coping)
+		var foot := Vector3(UPPER_LENGTH + GRAND_STAIR_RUN - 0.10, 1.02, lateral)
+		RoyalCourt.box(rig, "CeremonialFootNewel", Vector3(0.82, 2.04, 0.82), foot, stone, true)
+		RoyalCourt.box(rig, "CeremonialNewelCollar", Vector3(0.82, 0.12, 0.82), foot + Vector3.UP * 0.90, coping)
+		var roof := CylinderMesh.new()
+		roof.top_radius = 0.0
+		roof.bottom_radius = 0.64
+		roof.height = 0.72
+		roof.radial_segments = 4
+		var red_cap := RoyalCourt.mesh(rig, "CeremonialNewelRoof", roof,
+			foot + Vector3.UP * 1.38, _stone(Color("ef443d")))
+		red_cap.rotation.y = PI * 0.25
 
 
-# The long rise is handled by a clean approach ramp, then the final 1.8 m is a
-# short three-tread ceremonial stair sized to the Art Castle door. This keeps a
-# recognisable stair at the threshold without rebuilding the oversized flight
-# that hid the doorway.
+# One royal flight owns both its visible treads and the player collision.
+# The portal builds the matching door and frame at the same upper datum.
 func _build_castle_ascent(parent: Node3D) -> void:
-	var ramp_run := CASTLE_ASCENT_RUN - DOOR_STAIR_RUN
-	var ramp_rise := CASTLE_RISE - DOOR_STAIR_RISE
-	var angle := -atan2(ramp_rise, ramp_run)
-	var length := Vector2(ramp_run, ramp_rise).length()
-	var centre := Vector3(
-		CASTLE_DOOR.x + DOOR_STAIR_RUN + ramp_run * 0.5,
-		UPPER_DECK_Y + ramp_rise * 0.5,
-		CASTLE_DOOR.z)
-	var ramp_size := Vector3(length, 0.42, CASTLE_ASCENT_WIDTH)
-	var ramp := _box(parent, ramp_size, centre, _stone(STONE_DARK))
-	ramp.name = "CastleAscentRamp"
-	ramp.global_rotation.z = angle
-	_add_box_body(ramp, ramp_size)
-
-	# One restrained centre conduit preserves the established aether language
-	# without making the smooth surface read as another run of treads.
-	var surface_normal := Vector3(-sin(angle), cos(angle), 0.0)
-	var inlay := _box(parent, Vector3(length * 0.88, 0.045,
-		CASTLE_ASCENT_WIDTH * 0.46), centre + surface_normal * 0.235,
-		_emissive(CIRCUIT_CYAN, 1.35))
-	inlay.name = "CastleAscentConduit"
-	inlay.global_rotation.z = angle
-	inlay.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		var edge := _box(parent, Vector3(length, 0.14, 0.28),
-			centre + surface_normal * 0.29
-				+ ALONG * side * (CASTLE_ASCENT_WIDTH * 0.5 + 0.12),
-			_metal(BRASS))
-		edge.global_rotation.z = angle
-
-	# Three restrained stone treads finish the procession. Thin brass nosings
-	# and small cyan centre inlays give them detail without turning the doorway
-	# into another stack of bright blue bars.
-	var tread_depth := DOOR_STAIR_RUN / float(DOOR_STAIR_STEPS)
-	for i in DOOR_STAIR_STEPS:
-		var surface_y := UPPER_DECK_Y + ramp_rise \
-			+ DOOR_STAIR_RISE * float(i + 1) / float(DOOR_STAIR_STEPS)
-		var out_distance := DOOR_STAIR_RUN - (float(i) + 0.5) * tread_depth
-		var tread_size := Vector3(tread_depth + 0.12, 0.36, CASTLE_ASCENT_WIDTH)
-		var tread := _box(parent, tread_size,
-			CASTLE_DOOR + OUT * out_distance
-				+ Vector3(0.0, surface_y - 0.18, 0.0),
-			_stone(STONE_LIGHT if i % 2 == 0 else STONE_MID))
-		tread.name = "CastleDoorTread_%02d" % i
-		_add_box_body(tread, tread_size)
-
-		var nosing := _box(parent,
-			Vector3(0.12, 0.14, CASTLE_ASCENT_WIDTH + 0.16),
-			CASTLE_DOOR + OUT * (out_distance + tread_depth * 0.48)
-				+ Vector3(0.0, surface_y - 0.07, 0.0), _metal(BRASS))
-		nosing.name = "CastleDoorNosing_%02d" % i
-
-		var step_inlay := _box(parent,
-			Vector3(tread_depth * 0.42, 0.045, CASTLE_ASCENT_WIDTH * 0.34),
-			CASTLE_DOOR + OUT * out_distance
-				+ Vector3(0.0, surface_y + 0.025, 0.0),
-			_emissive(CIRCUIT_CYAN, 1.2))
-		step_inlay.name = "CastleDoorInlay_%02d" % i
-		step_inlay.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-
-	# Overlap the final compact tread and the imported doorway so there is no seam at
-	# the raised threshold.
-	# Keep the horizontal threshold entirely BEHIND the ramp endpoint. The old
-	# 1.5 m slab was centred 0.45 m outward, so 1.2 m of its vertical front face
-	# projected down the 47-degree ascent. The capsule met that face while the
-	# top was still ~1.3 m above its feet and became pinned despite both pieces
-	# having StaticBody3D collision. Its outward edge now meets the ramp exactly;
-	# the controller encounters only a walkable sub-0.65 m transition while the
-	# slab continues inward beneath the imported doorway.
-	var threshold_size := Vector3(1.4, 0.42, CASTLE_THRESHOLD_WIDTH)
-	var threshold := _box(parent, threshold_size,
-		CASTLE_THRESHOLD - OUT * 0.7 - Vector3.UP * 0.21, _stone(STONE_LIGHT))
-	threshold.name = "RaisedCastleThreshold"
-	_add_box_body(threshold, threshold_size)
+	preload("res://scripts/castle_royal_entry.gd").build_stair(parent)
 
 
 # What holds the courtyard up. The decks previously ended in a razor edge with
@@ -477,12 +366,16 @@ func _build_substructure(parent: Node3D, terrace_start: float,
 		Vector3(UPPER_LENGTH - 0.5, 1.9, PLAZA_WIDTH - 0.5),
 		CASTLE_DOOR + OUT * (UPPER_LENGTH * 0.5)
 			- Vector3(0.0, 1.65, 0.0), dark)
+	upper_skirt.name = "CastleUpperCourtUnderside"
 	upper_skirt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 	var terrace_skirt := _box(parent,
 		Vector3(terrace_length - 0.5, 1.7, TERRACE_WIDTH - 0.5),
-		CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.5)
-			- Vector3(0.0, 1.55, 0.0), dark)
+		Vector3(CASTLE_DOOR.x + terrace_start + terrace_length * 0.5,
+			RoyalCourt.FLOOR_Y - PLAZA_THICKNESS - 0.85, CASTLE_DOOR.z), dark)
+	terrace_skirt.name = "CastleArrivalUnderside"
+	# This skirt previously used the UPPER court datum, putting its uncollidable
+	# top at 68.63 through the player's body. It must end below the real floor.
 	terrace_skirt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 	# Corbels marching along both long edges, under the overhang.
@@ -546,6 +439,7 @@ func _build_balustrades(parent: Node3D, terrace_start: float,
 			+ ALONG * side * (PLAZA_WIDTH * 0.5 - 0.3)
 		var parapet := _box(parent, Vector3(UPPER_LENGTH, 1.0, 0.55),
 			edge + Vector3(0.0, 0.35, 0.0), _stone(STONE_DARK))
+		parapet.name = "CastleUpperCourtSideBarrier_%s" % ("L" if side < 0.0 else "R")
 		_add_box_body(parapet, Vector3(UPPER_LENGTH, 1.0, 0.55))
 		_box(parent, Vector3(UPPER_LENGTH, 0.18, 0.72),
 			edge + Vector3(0.0, 0.94, 0.0), _metal(BRASS))
@@ -558,106 +452,43 @@ func _build_balustrades(parent: Node3D, terrace_start: float,
 					+ Vector3(0.0, 1.28, 0.0),
 				_stone(STONE_LIGHT))
 
-		# Terrace balustrade: baluster posts under a continuous brass rail, so
-		# the player can see out over the kingdom while they walk up.
-		var rail_y := 1.05
-		var terrace_y := -CEREMONIAL_RISE
-		_box(parent, Vector3(terrace_length, 0.4, 0.6),
-			CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.5)
-				+ ALONG * side * (TERRACE_WIDTH * 0.5 - 0.3)
-				+ Vector3(0.0, terrace_y - 0.05, 0.0), _stone(STONE_DARK))
-		_box(parent, Vector3(terrace_length, 0.2, 0.75),
-			CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.5)
-				+ ALONG * side * (TERRACE_WIDTH * 0.5 - 0.3)
-				+ Vector3(0.0, terrace_y + rail_y, 0.0), _metal(BRASS))
+	# The arrival level uses the solid royal courtyard perimeter, built by
+	# castle_redesign after the shared palette is applied. No loose balusters.
 
-		var balusters := 7
-		for b in balusters:
-			var bt := (float(b) + 0.5) / float(balusters)
-			_box(parent, Vector3(0.28, rail_y - 0.2, 0.28),
-				CASTLE_DOOR + OUT * (terrace_start + terrace_length * bt)
-					+ ALONG * side * (TERRACE_WIDTH * 0.5 - 0.3)
-					+ Vector3(0.0, terrace_y + rail_y * 0.5 - 0.05, 0.0),
-				_stone(STONE_LIGHT))
-
-
-# A colonnade down both sides of the upper court.
-#
-# This is the piece that was missing more than any prop: vertical elements
-# repeating along the walk. Without them the courtyard was a floor with objects
-# scattered on it and the eye had nothing to travel along. Columns give the
-# approach rhythm, frame the door, and finally put something at the player's
-# own height between the tiny railings and the enormous castle.
-func _build_colonnade(parent: Node3D) -> void:
-	# 3 per side, not 4: with the gatehouse towers now doing more of the
-	# framing work close to the door, a fourth pair of columns crowded the
-	# court's short 8.4 m length into a picket fence instead of a rhythm.
-	var count := 3
-	var lateral := PLAZA_WIDTH * 0.5 - 1.5
-
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		for i in count:
-			var t := (float(i) + 0.6) / float(count + 0.4)
-			var foot := CASTLE_DOOR + COURT_LEVEL + OUT * (UPPER_LENGTH * t) \
-				+ ALONG * side * lateral
-
-			# Plinth, shaft, brass collar, capital — a column with parts reads
-			# as carved; a single box reads as a post.
-			_box(parent, Vector3(1.5, 0.55, 1.5),
-				foot + Vector3(0.0, 0.0, 0.0), _stone(STONE_DARK))
-
-			var shaft := MeshInstance3D.new()
-			var shaft_mesh := CylinderMesh.new()
-			shaft_mesh.top_radius = 0.44
-			shaft_mesh.bottom_radius = 0.55
-			shaft_mesh.height = 5.2
-			shaft_mesh.radial_segments = 8
-			shaft.mesh = shaft_mesh
-			shaft.material_override = _stone(STONE_LIGHT)
-			parent.add_child(shaft)
-			shaft.global_position = foot + Vector3(0.0, 2.9, 0.0)
-			_add_cylinder_body(shaft, 0.55, 5.2)
-
-			_box(parent, Vector3(1.05, 0.26, 1.05),
-				foot + Vector3(0.0, 4.3, 0.0), _metal(BRASS))
-			_box(parent, Vector3(1.3, 0.5, 1.3),
-				foot + Vector3(0.0, 5.7, 0.0), _stone(STONE_LIGHT))
-
-			# A caged aether lamp hanging off the inner face of each column, so
-			# the walk is lit at the player's eye level rather than only from
-			# the ground.
-			var lamp_pos := foot + ALONG * side * -0.9 + Vector3(0.0, 4.6, 0.0)
-			var cage := MeshInstance3D.new()
-			var cage_mesh := SphereMesh.new()
-			cage_mesh.radius = 0.34
-			cage_mesh.height = 0.85
-			cage_mesh.radial_segments = 6
-			cage_mesh.rings = 3
-			cage.mesh = cage_mesh
-			cage.material_override = _crystal(RAIL_GLOW)
-			parent.add_child(cage)
-			cage.global_position = lamp_pos
-
-			var lamp := OmniLight3D.new()
-			lamp.light_color = Color(1.0, 0.84, 0.56)
-			lamp.light_energy = 1.6
-			lamp.omni_range = 9.0
-			lamp.shadow_enabled = false
-			parent.add_child(lamp)
-			lamp.global_position = lamp_pos
-
-			# A short lintel spanning to the next column turns a row of posts
-			# into an arcade.
-			if i < count - 1:
-				var next_t := (float(i) + 1.6) / float(count + 0.4)
-				var span := UPPER_LENGTH * (next_t - t)
-				_box(parent, Vector3(span, 0.5, 0.75),
-					foot + OUT * (span * 0.5) + Vector3(0.0, 6.1, 0.0),
-					_stone(STONE_MID))
-				_box(parent, Vector3(span * 0.9, 0.16, 0.92),
-					foot + OUT * (span * 0.5) + Vector3(0.0, 6.42, 0.0),
-					_metal(BRASS))
+# Compact fortified turrets repeat the keep's red roofs, recessed round windows
+# and dark string courses. They replace the six tall classical columns and all
+# overhead lintels; the central ascent and side garden aisles stay open.
+func _build_court_turrets(parent: Node3D) -> void:
+	var style := preload("res://scripts/castle_reference_style.gd")
+	var rig := Node3D.new()
+	rig.name = "KeepCourtTurrets"
+	rig.set_meta("preserve_castle_finish", true)
+	rig.set_meta("style_reference", "main_castle_compact_red_turrets")
+	parent.add_child(rig)
+	for side: float in [-1.0, 1.0]:
+		for index in 2:
+			var turret := Node3D.new()
+			turret.name = "CourtTurret_%s_%d" % ["L" if side < 0.0 else "R", index]
+			rig.add_child(turret)
+			turret.global_position = CASTLE_DOOR + Vector3(1.5 + index * 5.4, -0.15, side * 8.65)
+			RoyalCourt.box(turret, "SolidTurretShaft", Vector3(1.7, 3.2, 1.7),
+				Vector3(0, 1.6, 0), style.material("wall"), true)
+			RoyalCourt.box(turret, "TurretFootCourse", Vector3(1.7, 0.32, 1.7),
+				Vector3(0, 0.16, 0), style.material("trim"), true)
+			RoyalCourt.box(turret, "TurretCrownCourse", Vector3(1.8, 0.32, 1.8),
+				Vector3(0, 3.12, 0), style.material("trim"), true)
+			var roof := CylinderMesh.new()
+			roof.top_radius = 0.0
+			roof.bottom_radius = 1.42
+			roof.height = 1.35
+			roof.radial_segments = 4
+			var cap := RoyalCourt.mesh(turret, "TurretRedRoof", roof,
+				Vector3(0, 3.955, 0), style.material("roof"))
+			cap.rotation.y = PI * 0.25
+			RoyalCourt.solid(cap, roof.create_convex_shape())
+			style.window(turret, Vector3(0, 1.7, side * 0.862), Vector3(0, 0, side), 0.62)
+			style.window(turret, Vector3(0.862, 1.7, 0), Vector3.RIGHT, 0.62)
+			style.cluster(turret, Vector3(0, 0.68, side * 0.862), Vector3(0, 0, side), 0.70)
 
 
 # Inlaid flagstone checker for one deck. Extracted so both levels are paved the
@@ -686,106 +517,28 @@ func _pave(parent: Node3D, origin: Vector3, length: float, width: float,
 # aether fountain anchors the middle, planters and benches line the approach,
 # and standing braziers mark the walk to the door.
 func _build_courtyard(parent: Node3D) -> void:
-	# Everything here lives on the UPPER court, at the door's own level.
-	var up := Vector3.ZERO
-
-	# The fountain lives on the ARRIVAL TERRACE, below the grand stair — not on
-	# the upper court. On the upper court it stood squarely on the axis between
-	# the stair head and the doorway, so the player had to walk around their own
-	# centrepiece to get in, and it hid the door on the climb. Down here it is
-	# the thing the player meets when they step off the causeway, and the stair
-	# and doorway beyond it stay completely clear.
-	var terrace_start := UPPER_LENGTH + GRAND_STAIR_RUN
-	var terrace_length := PLAZA_LENGTH - terrace_start
-	var centre := CASTLE_DOOR + OUT * (terrace_start + terrace_length * 0.55) \
-		- Vector3(0.0, CEREMONIAL_RISE, 0.0)
-
-	_build_fountain(parent, centre)
-
-	# Planters and benches in matched pairs down both sides of the walk, so the
-	# route to the door reads as a deliberate axis rather than open floor.
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		# Inboard of the colonnade (which stands at PLAZA_WIDTH*0.5 - 1.5). A
-		# 1.0 m half-width planter against a 0.55 m column radius needs at least
-		# 1.55 m of separation or the two intersect.
-		var lateral: float = PLAZA_WIDTH * 0.5 - 3.4
-
+	# Keep the centre fire and all walking datums unchanged.
+	_build_fountain(parent, RoyalCourt.CENTER - Vector3.UP * 0.24)
+	var style := preload("res://scripts/castle_reference_style.gd")
+	var garden := Node3D.new()
+	garden.name = "KeepCourtHerbGarden"
+	garden.set_meta("preserve_castle_finish", true)
+	garden.set_meta("garden_style", "medieval_enclosed_herb_garden")
+	parent.add_child(garden)
+	# Reuse the roof/court's low, solid herb beds. The old anonymous hedge
+	# spheres were repainted as stone by the legacy presentation pass.
+	# Leave a full-width aisle between planting and the outer turret line.
+	for side: float in [-1.0, 1.0]:
 		for slot in 2:
-			var along_t: float = 0.26 + float(slot) * 0.44
-			var spot := CASTLE_DOOR + OUT * (UPPER_LENGTH * along_t) \
-				+ ALONG * side * lateral + up
-
-			# Planter: a stone trough with a clipped hedge, the softest thing
-			# in an otherwise entirely hard-surfaced scene.
-			var trough := _box(parent, Vector3(2.0, 0.7, 2.0),
-				spot + Vector3(0.0, 0.20, 0.0), _stone(STONE_LIGHT))
-			_add_box_body(trough, Vector3(2.0, 0.7, 2.0))
-			_box(parent, Vector3(1.7, 0.24, 1.7),
-				spot + Vector3(0.0, 0.60, 0.0), _stone(BRASS.darkened(0.35)))
-
-			var hedge := MeshInstance3D.new()
-			var hedge_mesh := SphereMesh.new()
-			hedge_mesh.radius = 0.95
-			hedge_mesh.height = 1.5
-			hedge_mesh.radial_segments = 7
-			hedge_mesh.rings = 4
-			hedge.mesh = hedge_mesh
-			hedge.material_override = _stone(HEDGE_GREEN)
-			parent.add_child(hedge)
-			hedge.global_position = spot + Vector3(0.0, 1.25, 0.0)
-
-			# A bench between the planters, facing the fountain.
-			if slot == 0:
-				var bench_spot := CASTLE_DOOR + OUT * (UPPER_LENGTH * 0.52) \
-					+ ALONG * side * (lateral + 0.2) + up
-				_box(parent, Vector3(0.5, 0.45, 2.6),
-					bench_spot + Vector3(0.0, 0.05, 0.0), _stone(STONE_DARK))
-				_box(parent, Vector3(1.5, 0.22, 2.9),
-					bench_spot + Vector3(0.0, 0.34, 0.0), _stone(STONE_LIGHT))
-
-		# Standing brazier marking the walk to the door: the magitech read,
-		# a crystal burning in a brass basin instead of a fire.
-		var brazier_spot := CASTLE_DOOR + OUT * (UPPER_LENGTH * 0.16) \
-			+ ALONG * side * (PLAZA_WIDTH * 0.5 - 1.9) + up
-		_box(parent, Vector3(0.55, 1.5, 0.55),
-			brazier_spot + Vector3(0.0, 0.6, 0.0), _metal(BRASS))
-
-		var basin := MeshInstance3D.new()
-		var basin_mesh := CylinderMesh.new()
-		basin_mesh.top_radius = 0.72
-		basin_mesh.bottom_radius = 0.34
-		basin_mesh.height = 0.5
-		basin_mesh.radial_segments = 8
-		basin.mesh = basin_mesh
-		basin.material_override = _metal(BRASS)
-		parent.add_child(basin)
-		basin.global_position = brazier_spot + Vector3(0.0, 1.55, 0.0)
-
-		var ember := MeshInstance3D.new()
-		var ember_mesh := SphereMesh.new()
-		ember_mesh.radius = 0.42
-		ember_mesh.height = 0.95
-		ember_mesh.radial_segments = 6
-		ember_mesh.rings = 3
-		ember.mesh = ember_mesh
-		ember.material_override = _crystal(RAIL_GLOW)
-		parent.add_child(ember)
-		ember.global_position = brazier_spot + Vector3(0.0, 2.0, 0.0)
-
-		var ember_light := OmniLight3D.new()
-		ember_light.light_color = Color(1.0, 0.78, 0.45)
-		ember_light.light_energy = 2.2
-		ember_light.omni_range = 11.0
-		ember_light.shadow_enabled = false
-		parent.add_child(ember_light)
-		ember_light.global_position = brazier_spot + Vector3(0.0, 2.0, 0.0)
+			var along_t := 0.26 + float(slot) * 0.44
+			var spot := CASTLE_DOOR + Vector3(UPPER_LENGTH * along_t, -0.15, side * 5.8)
+			RoyalCourt.planter(garden, spot, side, style.material("wall"),
+				style.material("trim"), style.material("recess"), style.material("trim"))
 
 
-# The former 6.8 m fountain basin was the circular object blocking the stair
-# sightline and terrace route. Keep the requested central ball, but turn it into
-# a compact castle fire beacon on the raised bridge court: no pool, orbit
-# rings, or broad collision disc.
+# The former 6.8 m fountain basin and orange orb blocked the stair sightline
+# and terrace route. Replace both with a compact, animated castle brazier: no
+# pool, orbit rings, broad collision disc, or solid orb masquerading as fire.
 func _build_fountain(parent: Node3D, centre: Vector3) -> void:
 	var fire_beacon := Node3D.new()
 	fire_beacon.name = "CastleCourtyardFire"
@@ -802,6 +555,7 @@ func _build_fountain(parent: Node3D, centre: Vector3) -> void:
 	pedestal.material_override = _stone(STONE_DARK)
 	fire_beacon.add_child(pedestal)
 	pedestal.global_position = centre + Vector3(0.0, 0.915, 0.0)
+	_add_cylinder_body(pedestal, 0.92, 1.35)
 
 	var bowl := MeshInstance3D.new()
 	bowl.name = "CourtyardFireBowl"
@@ -814,20 +568,44 @@ func _build_fountain(parent: Node3D, centre: Vector3) -> void:
 	bowl.material_override = _metal(BRASS)
 	fire_beacon.add_child(bowl)
 	bowl.global_position = centre + Vector3(0.0, 1.73, 0.0)
+	_add_cylinder_body(bowl, 0.88, 0.34)
 
-	var core := MeshInstance3D.new()
-	core.name = "CourtyardFireCore"
-	var core_mesh := SphereMesh.new()
-	core_mesh.radius = 0.58
-	core_mesh.height = 1.28
-	core_mesh.radial_segments = 7
-	core_mesh.rings = 4
-	core.mesh = core_mesh
-	core.material_override = _emissive(Color("ff7628"), 3.4)
-	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	fire_beacon.add_child(core)
-	core.global_position = centre + Vector3(0.0, 2.17, 0.0)
-	_floaters.append(core)
+	var live_flames := Node3D.new()
+	live_flames.name = "CourtyardLiveFlames"
+	live_flames.set_meta("animation", "real_time_independent_flame_sway")
+	fire_beacon.add_child(live_flames)
+
+	# Seven tapered tongues read as actual fire from every approach angle. Two
+	# colours and uneven heights preserve the world's low-poly visual language.
+	var flame_offsets := [
+		Vector3(0.0, 0.0, 0.0),
+		Vector3(-0.28, -0.10, 0.08),
+		Vector3(0.27, -0.05, 0.12),
+		Vector3(-0.08, -0.14, -0.25),
+		Vector3(0.17, -0.12, -0.22),
+		Vector3(-0.32, -0.20, -0.18),
+		Vector3(0.34, -0.18, -0.08),
+	]
+	for i in flame_offsets.size():
+		var flame := MeshInstance3D.new()
+		flame.name = "CourtyardFlame_%02d" % i
+		var flame_mesh := CylinderMesh.new()
+		flame_mesh.top_radius = 0.035
+		flame_mesh.bottom_radius = 0.19 if i > 0 else 0.27
+		flame_mesh.height = 0.78 + float((i * 3) % 5) * 0.12
+		flame_mesh.radial_segments = 5
+		flame.mesh = flame_mesh
+		flame.material_override = _emissive(
+			Color("ffd84a") if i % 3 == 0 else Color("ff6d1f"),
+			4.2 if i % 3 == 0 else 3.5
+		)
+		flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		live_flames.add_child(flame)
+		flame.global_position = centre + Vector3(0.0, 2.16, 0.0) + flame_offsets[i]
+		flame.set_meta("phase", float(i) * 1.37)
+		flame.set_meta("rest_position", flame.position)
+		flame.set_meta("base_scale", flame.scale)
+		_live_flames.append(flame)
 
 	var core_light := OmniLight3D.new()
 	core_light.name = "CourtyardFireLight"
@@ -837,124 +615,6 @@ func _build_fountain(parent: Node3D, centre: Vector3) -> void:
 	core_light.shadow_enabled = false
 	fire_beacon.add_child(core_light)
 	core_light.global_position = centre + Vector3(0.0, 2.17, 0.0)
-
-
-# Two towers flanking the door. This is what turns "a hole in a wall" into a
-# gate: mass on either side, red roofs matching the village, brass machinery
-# worked into the stone rather than bolted onto it.
-# Scaled down and pulled tight against the door — a flanking tower reads as
-# part of the castle facade when it stands shoulder to shoulder with the
-# real doorway, not when it out-sizes and out-heights it a few metres out.
-# The former 10.3 m towers at 1.45 m shaft radius competed with the castle's
-# own mass instead of extending it; this keeps the same silhouette (shaft,
-# machined band, roof, finial) at roughly two-thirds the size.
-func _build_gatehouse(parent: Node3D) -> void:
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		var centre := CASTLE_DOOR + DOOR_LEVEL + OUT * 0.7 + ALONG * side * 3.5
-
-		var shaft := MeshInstance3D.new()
-		var shaft_mesh := CylinderMesh.new()
-		shaft_mesh.top_radius = 0.85
-		shaft_mesh.bottom_radius = 1.05
-		shaft_mesh.height = 5.4
-		shaft_mesh.radial_segments = 8
-		shaft.mesh = shaft_mesh
-		shaft.material_override = _stone(STONE_LIGHT)
-		parent.add_child(shaft)
-		shaft.global_position = centre + Vector3(0.0, 2.3, 0.0)
-		_add_cylinder_body(shaft, 1.05, 5.4)
-
-		# Machined band: brass ring plus a rotating gear. Same object as the
-		# masonry, which is the whole point of the style.
-		var band := MeshInstance3D.new()
-		var band_mesh := CylinderMesh.new()
-		band_mesh.top_radius = 0.94
-		band_mesh.bottom_radius = 0.94
-		band_mesh.height = 0.34
-		band_mesh.radial_segments = 8
-		band.mesh = band_mesh
-		band.material_override = _metal(BRASS)
-		parent.add_child(band)
-		band.global_position = centre + Vector3(0.0, 3.4, 0.0)
-
-		var gear := Node3D.new()
-		parent.add_child(gear)
-		gear.global_position = centre + Vector3(0.0, 3.4, 0.0)
-		_gears.append(gear)
-		for tooth in 8:
-			var angle := TAU * float(tooth) / 8.0
-			var t := MeshInstance3D.new()
-			var tm := BoxMesh.new()
-			tm.size = Vector3(0.22, 0.19, 0.22)
-			t.mesh = tm
-			t.material_override = _metal(BRASS)
-			t.position = Vector3(cos(angle) * 1.04, 0.0, sin(angle) * 1.04)
-			gear.add_child(t)
-
-		var roof := MeshInstance3D.new()
-		var roof_mesh := CylinderMesh.new()
-		roof_mesh.top_radius = 0.0
-		roof_mesh.bottom_radius = 1.28
-		roof_mesh.height = 1.7
-		roof_mesh.radial_segments = 8
-		roof.mesh = roof_mesh
-		roof.material_override = _stone(ROOF_RED)
-		parent.add_child(roof)
-		roof.global_position = centre + Vector3(0.0, 5.85, 0.0)
-
-		# Arrow slit, lit from within — the tower reads as occupied.
-		var slit := _box(parent, Vector3(0.15, 1.1, 0.26),
-			centre + OUT * 0.9 + Vector3(0.0, 2.7, 0.0), _emissive(RAIL_GLOW, 1.6))
-		slit.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-
-		var finial := MeshInstance3D.new()
-		var finial_mesh := SphereMesh.new()
-		finial_mesh.radius = 0.24
-		finial_mesh.height = 0.68
-		finial_mesh.radial_segments = 6
-		finial_mesh.rings = 3
-		finial.mesh = finial_mesh
-		finial.material_override = _crystal(CIRCUIT_CYAN)
-		parent.add_child(finial)
-		finial.global_position = centre + Vector3(0.0, 6.9, 0.0)
-
-
-# The arch over the doorway, carrying a keystone crystal. Read as magic from a
-# distance, as an aether conduit up close.
-func _build_arch(parent: Node3D) -> void:
-	var span := 6.6
-	var rise := 7.0
-
-	for i in 9:
-		var t := float(i) / 8.0
-		var angle := PI * t
-		var voussoir := _box(parent, Vector3(0.9, 0.85, 0.85),
-			CASTLE_DOOR + DOOR_LEVEL + OUT * 0.9
-				+ ALONG * (cos(angle) * span * 0.5)
-				+ Vector3(0.0, 2.2 + sin(angle) * (rise - 2.2), 0.0),
-			_stone(STONE_LIGHT if i % 2 == 0 else STONE_DARK))
-		voussoir.rotation.x = angle
-
-	var keystone := MeshInstance3D.new()
-	var key_mesh := SphereMesh.new()
-	key_mesh.radius = 0.62
-	key_mesh.height = 1.75
-	key_mesh.radial_segments = 6
-	key_mesh.rings = 3
-	keystone.mesh = key_mesh
-	keystone.material_override = _crystal(RUNE_VIOLET)
-	parent.add_child(keystone)
-	keystone.global_position = CASTLE_DOOR + DOOR_LEVEL + OUT * 0.9 + Vector3(0.0, rise + 0.5, 0.0)
-
-	# Conduits running the keystone's power down into the gatehouse: the visible
-	# explanation for why the arch glows at all.
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		var conduit := _box(parent, Vector3(0.16, 4.4, 0.16),
-			CASTLE_DOOR + DOOR_LEVEL + OUT * 0.9 + ALONG * side * 3.3
-				+ Vector3(0.0, 4.4, 0.0), _metal(BRASS))
-		conduit.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _build_lamps(parent: Node3D) -> void:
@@ -986,38 +646,6 @@ func _build_lamps(parent: Node3D) -> void:
 		lamp.shadow_enabled = false
 		parent.add_child(lamp)
 		lamp.global_position = post_base + Vector3(0.0, 3.1, 0.0)
-
-
-func _build_banners(parent: Node3D) -> void:
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		var anchor := CASTLE_DOOR + DOOR_LEVEL + OUT * 1.6 + ALONG * side * 2.6 \
-			+ Vector3(0.0, 5.4, 0.0)
-
-		var pivot := Node3D.new()
-		parent.add_child(pivot)
-		pivot.global_position = anchor
-		_banners.append(pivot)
-
-		var cloth := MeshInstance3D.new()
-		var cloth_mesh := BoxMesh.new()
-		cloth_mesh.size = Vector3(0.09, 3.2, 1.5)
-		cloth.mesh = cloth_mesh
-		cloth.material_override = _stone(ROOF_RED)
-		cloth.position = Vector3(0.0, -1.6, 0.0)
-		pivot.add_child(cloth)
-
-		# The sigil on the banner: rune shader, so it wakes with the journey
-		# like every other rune surface in the project.
-		var sigil := MeshInstance3D.new()
-		var sigil_mesh := PlaneMesh.new()
-		sigil_mesh.size = Vector2(1.1, 1.1)
-		sigil.mesh = sigil_mesh
-		sigil.rotation_degrees = Vector3(90.0, 0.0, 90.0)
-		sigil.position = Vector3(0.09, -1.5, 0.0)
-		sigil.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		sigil.material_override = _rune(CIRCUIT_CYAN)
-		pivot.add_child(sigil)
 
 
 # The etched circle on the threshold — the same single strongest "magic and

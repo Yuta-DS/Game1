@@ -1,0 +1,37 @@
+{
+  "authoring": "Blender 5.2 direct scripting; anyCreature local plugin compiler",
+  "units": "metres; game Y-up",
+  "water_loop_seconds": 4,
+  "assets": {
+    "FountainStone": {
+      "editable_components": 106,
+      "triangles": 10048,
+      "shape_key_meshes": 0,
+      "bytes": 489668
+    },
+    "WaterMotion": {
+      "editable_components": 34,
+      "triangles": 10048,
+      "shape_key_meshes": 10,
+      "bytes": 690908
+    },
+    "VeinedFoliage": {
+      "editable_components": 70,
+      "triangles": 2856,
+      "shape_key_meshes": 0,
+      "bytes": 117928
+    },
+    "RoyalIris": {
+      "editable_components": 14,
+      "triangles": 864,
+      "shape_key_meshes": 0,
+      "bytes": 43524
+    },
+    "MasonryBridge": {
+      "editable_components": 304,
+      "triangles": 57460,
+      "shape_key_meshes": 0,
+      "bytes": 6776176
+    }
+  }
+}

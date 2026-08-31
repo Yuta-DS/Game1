@@ -96,12 +96,14 @@ func _test_lane(player: CharacterBody3D, stair: Node3D, treads: Array,
 	centre.y = final_tread.global_position.y
 	var radial := (final_tread.global_position - centre).normalized()
 	var tangent := Vector3(-radial.z, 0.0, radial.x)
-	var crown_entry := final_tread.global_position + radial * lane_offset + tangent * 1.2
+	# Follow the open landing past the inner guard's end before turning. Turning
+	# at 1.2 m would deliberately cut through the newly protected roof edge.
+	var crown_entry := final_tread.global_position + radial * lane_offset + tangent * 2.5
 	if not await _walk_to(player, crown_entry):
 		_fail("player stuck leaving final tread in lane %.2f at %s; collisions: %s" % [
 			lane_offset, player.global_position, _collider_label(player)])
 		return false
-	var crown_interior := centre + radial * 3.8
+	var crown_interior := centre + radial * 3.8 + tangent * 2.5
 	if not await _walk_to(player, crown_interior):
 		_fail("player stuck entering crown from lane %.2f at %s; collisions: %s" % [
 			lane_offset, player.global_position, _collider_label(player)])
@@ -113,13 +115,18 @@ func _test_crown_floor(player: CharacterBody3D, stair: Node3D) -> bool:
 	var base: Vector2 = stair.get_meta("tower_base")
 	var surface_y: float = float(stair.get_meta("tower_top_y")) + 0.17
 	var centre := Vector3(base.x, surface_y, base.y)
-	if not await _walk_to(player, centre):
-		_fail("player stuck walking to the centre of the crown; collisions: %s"
+	# The approved fountain is now on the centre, so enter its surrounding
+	# aisle from the arrival angle without cutting through the solid basin.
+	var entry_angle := atan2(player.global_position.z - centre.z,
+		player.global_position.x - centre.x)
+	var aisle_entry := centre + Vector3(cos(entry_angle), 0, sin(entry_angle)) * 3.4
+	if not await _walk_to(player, aisle_entry):
+		_fail("player stuck reaching the central fountain aisle; collisions: %s"
 			% _collider_label(player))
 		return false
 	for point_index in 8:
-		var angle := TAU * float(point_index) / 8.0
-		var point := centre + Vector3(cos(angle) * 3.6, 0.0, sin(angle) * 3.6)
+		var angle := entry_angle + TAU * float(point_index + 1) / 8.0
+		var point := centre + Vector3(cos(angle) * 3.4, 0.0, sin(angle) * 3.4)
 		if not await _walk_to(player, point):
 			_fail("player stuck crossing crown floor point %d at %s; collisions: %s" % [
 				point_index, player.global_position, _collider_label(player)])
@@ -142,6 +149,57 @@ func _run() -> void:
 	if stair == null or player == null:
 		_fail("castle stair or packed player did not load")
 		return
+	var barrier_overlap := float(stair.get_meta("outer_barrier_tread_overlap", 0.0))
+	if barrier_overlap < 0.35:
+		_fail("outer parapet does not cover the tread ends (overlap %.2f m)"
+			% barrier_overlap)
+		return
+	var parapet_width := float(stair.get_meta("outer_parapet_width", INF))
+	if parapet_width > 0.90:
+		_fail("outer parapet is wide enough to read as a second floor (%.2f m)"
+			% parapet_width)
+		return
+	var visible_tread_radius := float(stair.get_meta("visible_tread_outer_radius", INF))
+	var guard_face_radius := float(stair.get_meta("outer_guard_lane_face_radius", -INF))
+	if visible_tread_radius >= guard_face_radius:
+		_fail("visible treads still intersect outer barrier (%.2f >= %.2f)" % [
+			visible_tread_radius, guard_face_radius])
+		return
+	var tread_wall_clearance := float(stair.get_meta(
+		"visible_tread_wall_clearance", 0.0))
+	if tread_wall_clearance < 0.12:
+		_fail("visible tread corner clearance is too small (%.2f m)"
+			% tread_wall_clearance)
+		return
+	var parapet_masonry := stair.get_node_or_null(
+		"OuterParapetMasonry") as Node3D
+	if parapet_masonry == null \
+			or parapet_masonry.get_meta("style", "") != "reference_tower_sparse_masonry" \
+			or parapet_masonry.find_children("ReferenceStonePatch*", "Node3D", false, false).size() != 26 \
+			or parapet_masonry.get_node_or_null("OuterParapetBrickCoping") == null \
+			or parapet_masonry.get_node_or_null("OuterParapetMortarBed") != null:
+		_fail("outer parapet does not match the reference tower's sparse stone and fitted coping")
+		return
+	var grounded_entry := stair.get_node_or_null("GroundedCastleEntry") as Node3D
+	if grounded_entry == null or not grounded_entry.get_meta("terrain_gap_closed", false):
+		_fail("ground entry has no terrain-fitted foundation")
+		return
+	if float(grounded_entry.get_meta("visible_surface_outer_radius", INF)) \
+			> guard_face_radius + 0.025 or float(grounded_entry.get_meta("visible_surface_outer_radius", -INF)) < guard_face_radius:
+		_fail("straight entry paving must seat into the wall by at most 2.5 cm")
+		return
+	var entry_foundation := grounded_entry.get_node_or_null(
+		"GroundEntryTerrainFoundation") as MeshInstance3D
+	if entry_foundation == null or entry_foundation.find_children(
+		"*", "StaticBody3D", true, false).is_empty():
+		_fail("ground entry terrain foundation is not solid")
+		return
+	var foundation_material := entry_foundation.material_override \
+		as StandardMaterial3D
+	if foundation_material == null \
+			or foundation_material.cull_mode != BaseMaterial3D.CULL_DISABLED:
+		_fail("ground entry foundation visually opens from exterior angles")
+		return
 
 	var treads := stair.find_children("StairTread_*", "MeshInstance3D", true, false)
 	treads.sort_custom(func(a, b):
@@ -151,8 +209,22 @@ func _run() -> void:
 		return
 	var walk_surface := stair.get_node_or_null("AscentWalkSurface") as MeshInstance3D
 	if walk_surface == null or walk_surface.find_children(
-			"*", "StaticBody3D", true, false).is_empty():
+		"*", "StaticBody3D", true, false).is_empty():
 		_fail("continuous spiral walk surface has no collision")
+		return
+	if walk_surface.visible or not walk_surface.get_meta("collision_only", false):
+		_fail("spiral collision sheet is still visible through the parapet")
+		return
+	var ascent_soffit := stair.get_node_or_null("AscentRoadbed") as MeshInstance3D
+	var soffit_material: StandardMaterial3D = null
+	if ascent_soffit != null:
+		soffit_material = ascent_soffit.material_override as StandardMaterial3D
+	if ascent_soffit == null \
+			or not ascent_soffit.get_meta("finished_stone_soffit", false) \
+			or not ascent_soffit.get_meta("covers_riser_bottoms", false) \
+			or soffit_material == null \
+			or soffit_material.cull_mode != BaseMaterial3D.CULL_DISABLED:
+		_fail("stair underside is not a closed two-sided stone soffit")
 		return
 	var probe_tread := treads[treads.size() - 24] as MeshInstance3D
 	var probe := PhysicsRayQueryParameters3D.create(

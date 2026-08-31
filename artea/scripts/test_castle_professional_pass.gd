@@ -41,6 +41,14 @@ func _run() -> void:
 		if part == null or part.mesh == null:
 			_fail("missing continuous stair part %s" % required)
 			return
+	var audited_soffit := stair.get_node("AscentRoadbed") as MeshInstance3D
+	var integrated_newel := stair.get_node("InnerSafetyPlinth") as MeshInstance3D
+	if float(audited_soffit.get_meta("outer_masonry_overlap", 0.0)) < 0.20 \
+			or not bool(audited_soffit.get_meta("radial_faces_buried_and_omitted", false)) \
+			or not bool(integrated_newel.get_meta("integrated_stone_newel_mass", false)) \
+			or float(integrated_newel.get_meta("soffit_overlap", 0.0)) < 0.15:
+		_fail("spiral soffit radial faces are not buried into both masonry sides")
+		return
 	var walk_surface := stair.get_node_or_null("AscentWalkSurface") as MeshInstance3D
 	if walk_surface.find_children("*", "StaticBody3D", true, false).is_empty():
 		_fail("continuous spiral walk surface is missing collision")
@@ -50,19 +58,20 @@ func _run() -> void:
 			"walkable_from_terrain", false)):
 		_fail("castle stair is missing its terrain-grounded castle entry")
 		return
-	var ground_steps := grounded_entry.find_children(
-		"GroundEntryStoneTread_*", "MeshInstance3D", true, false)
-	if ground_steps.size() < 3 or float(grounded_entry.get_meta(
-			"maximum_rise", 99.0)) > 0.28:
-		_fail("ground entry does not provide enough controller-safe stone steps")
-		return
 	var ground_walk_surface := grounded_entry.get_node_or_null(
 		"GroundEntryWalkSurface") as MeshInstance3D
-	if ground_walk_surface == null or ground_walk_surface.visible \
-			or not bool(ground_walk_surface.get_meta("collision_only", false)) \
-			or ground_walk_surface.find_children(
-				"*", "StaticBody3D", true, false).size() != 1:
-		_fail("ground entry is missing its seamless hidden walk surface")
+	var ground_walk_collision := grounded_entry.get_node_or_null(
+		"GroundEntryWalkCollision") as MeshInstance3D
+	if ground_walk_surface == null or not ground_walk_surface.visible \
+			or not bool(ground_walk_surface.get_meta("smooth_straight_route", false)) \
+			or ground_walk_collision == null or ground_walk_collision.visible \
+			or not bool(ground_walk_collision.get_meta(
+				"authoritative_collision_surface", false)) \
+			or ground_walk_collision.find_children(
+				"*", "StaticBody3D", true, false).size() != 1 \
+			or not ground_walk_surface.material_override is ShaderMaterial \
+			or not ground_walk_surface.get_meta("floor_edges_seated_in_masonry", false):
+		_fail("ground entry is missing its visible paved route or seamless hidden collision")
 		return
 	var inner_plinth := stair.get_node_or_null("InnerSafetyPlinth") as MeshInstance3D
 	var inner_plinth_bodies := inner_plinth.find_children("*", "StaticBody3D", true, false) \
@@ -144,10 +153,9 @@ func _run() -> void:
 	if core_safety_fields != 2 or mouth_safety_wings != 4:
 		_fail("causeway safety field naming/inventory does not describe two flared mouths")
 		return
-	# Exact Aether Lens Bridge inventory. The former duplicated gateways used
-	# unnamed 1.15 m collider piers at the deck edge and a 6 m box lintel across
-	# the player camera. The new paired lens gates are named, visual-only, and
-	# stand outside the complete 4.8 m road envelope.
+	# Exact bridge inventory. The tall duplicated lens gateways are intentionally
+	# absent: timber rails, medieval crown posts and the castle gatehouse already
+	# mark both handoffs without mixing diagonal machinery into the silhouette.
 	var rune_seals := stair.find_children("LumenRuneSeal_*", "MeshInstance3D", true, false)
 	var arch_pylons := stair.find_children("LumenArchPylon_*", "MeshInstance3D", true, false)
 	var arch_keystones := stair.find_children("LumenArchKeystone_*", "MeshInstance3D", true, false)
@@ -173,18 +181,18 @@ func _run() -> void:
 	var levitation_coils := stair.find_children("AetherLevitationCoil_*", "MeshInstance3D", true, false)
 	var bridge_keel := stair.get_node_or_null("AetherBridgeKeel") as MeshInstance3D
 	if rune_seals.size() != 3 or arch_pylons.size() != 2 or arch_keystones.size() != 1 \
-			or lens_gates.size() != 2 or lens_pylons.size() != 4 \
-			or lens_yokes.size() != 8 or lens_apices.size() != 2 \
+			or not lens_gates.is_empty() or not lens_pylons.is_empty() \
+			or not lens_yokes.is_empty() or not lens_apices.is_empty() \
 			or midspan_frames.size() != 1 or arch_yokes.size() != 4 \
 			or glass_bays.size() != 6 or glass_tracery.size() != 12 \
 			or rune_fascias.size() != 2 or fascia_runes.size() != 6 \
 			or gear_roots.size() != 2 or gear_hubs.size() != 2 \
 			or gear_cores.size() != 2 or gear_teeth.size() != 16 \
-			or astrolabe_rings.size() != 4 or astrolabe_cores.size() != 2 \
+			or not astrolabe_rings.is_empty() or not astrolabe_cores.is_empty() \
 			or conductors.size() != 12 or tension_ribs.size() != 3 \
 			or underbraces.size() != 6 or levitation_coils.size() != 2 \
 			or bridge_keel == null:
-		_fail("Aether Lens Bridge inventory is incomplete: %d seals, %d resonance pylons, %d keystones, %d gates, %d gate pylons, %d yokes, %d lenses, %d conductor segments, %d ribs, %d coils, keel %s"
+		_fail("castle bridge inventory is incomplete: %d seals, %d resonance pylons, %d keystones, %d obsolete gates, %d obsolete gate pylons, %d obsolete yokes, %d obsolete lenses, %d conductor segments, %d ribs, %d coils, keel %s"
 			% [rune_seals.size(), arch_pylons.size(), arch_keystones.size(),
 				lens_gates.size(), lens_pylons.size(), lens_yokes.size(), lens_apices.size(),
 				conductors.size(), tension_ribs.size(), levitation_coils.size(), bridge_keel != null])
@@ -393,6 +401,81 @@ func _run() -> void:
 	if crown_deck_bodies.is_empty():
 		_fail("spiral crown landing has no collision")
 		return
+	var roof_finish := stair.get_node_or_null("CrownMasonryFinish") as Node3D
+	if roof_finish == null \
+			or not bool(roof_finish.get_meta("clean_uninterrupted_roof_surface", false)) \
+			or not bool(roof_finish.get_meta("concentric_and_radial_lines_removed", false)) \
+			or not roof_finish.get_children().is_empty() \
+			or not stair.find_children("CrownPavingCourse_*", "MeshInstance3D", true, false).is_empty() \
+			or not stair.find_children("CrownRadialMasonryJoint_*", "MeshInstance3D", true, false).is_empty() \
+			or stair.get_node_or_null("CrownStoneCompass") != null \
+			or not stair.find_children("CrownCompassJoint_*", "MeshInstance3D", true, false).is_empty():
+		_fail("crown roof still contains the reported white or black line work")
+		return
+	if stair.get_node_or_null("CrownStoneMedallion") != null:
+		_fail("raised centre medallion still creates an unwanted rooftop outline")
+		return
+	var centre_finish := stair.get_node_or_null("CrownDeckCentreStoneFinish") \
+		as MeshInstance3D
+	if centre_finish == null or not (centre_finish.mesh is CylinderMesh) \
+			or not bool(centre_finish.get_meta("covers_exposed_tower_cap", false)) \
+			or not centre_finish.find_children(
+				"*", "StaticBody3D", true, false).is_empty():
+		_fail("crown centre still exposes the dark tower cap or adds duplicate collision")
+		return
+	var blender_parapets := stair.find_children(
+		"BlenderCrownParapetPanel_*", "Node3D", true, false)
+	if blender_parapets.size() < 3:
+		_fail("Blender-authored rooftop parapet modules are missing")
+		return
+	for panel_candidate in blender_parapets:
+		var panel := panel_candidate as Node3D
+		if panel.find_children("*", "MeshInstance3D", true, false).size() < 3 \
+				or not panel.find_children(
+					"*", "StaticBody3D", true, false).is_empty() \
+				or String(panel.get_meta("collision_policy", "")) \
+					!= "visual_only_over_procedural_godot_wall":
+			_fail("Blender parapet lost detail or introduced snag-prone collision")
+			return
+	var stair_arrival_wings: Array[Node] = []
+	for wing_candidate in stair.find_children(
+			"CrownStairArrivalWing_*", "Node3D", true, false):
+		if (wing_candidate as Node).has_meta("source_blend"):
+			stair_arrival_wings.append(wing_candidate)
+	var stair_arrival_guard := stair.get_node_or_null(
+		"CrownStairArrivalGuard_Outer") as MeshInstance3D
+	if stair_arrival_wings.size() != 2 or stair_arrival_guard == null \
+			or stair_arrival_guard.find_children(
+				"*", "StaticBody3D", true, false).is_empty() \
+			or not bool(stair_arrival_guard.get_meta(
+				"continuous_from_stair_to_rooftop", false)):
+		_fail("rooftop perimeter does not narrow safely into the stair arrival")
+		return
+	var stairwell_return := stair.get_node_or_null(
+		"CrownStairwellInnerReturn") as MeshInstance3D
+	var stairwell_return_coping := stair.get_node_or_null(
+		"CrownStairwellInnerReturnCoping") as MeshInstance3D
+	if stairwell_return == null \
+			or stairwell_return_coping == null \
+			or stairwell_return.find_children("*", "StaticBody3D", true, false).is_empty() \
+			or not bool(stairwell_return.get_meta("continuous_stairwell_barrier", false)) \
+			or stairwell_return.get_meta("design_language", "") \
+				!= "restrained_medieval_castle_masonry" \
+			or not bool(stairwell_return_coping.get_meta("castle_stone_coping", false)) \
+			or stair.find_children("CrownStairwellReturnBrick_*", "MeshInstance3D", true, false).size() < 32:
+		_fail("rooftop stairwell is not fully framed in matching castle masonry")
+		return
+	var parapet_joint_piers := stair.find_children(
+		"CrownParapetJointPier_*", "MeshInstance3D", true, false)
+	if parapet_joint_piers.size() < 4:
+		_fail("rooftop perimeter still has open dark joints between parapet panels")
+		return
+	for pier_candidate in parapet_joint_piers:
+		var pier := pier_candidate as MeshInstance3D
+		if not bool(pier.get_meta("closes_parapet_panel_joint", false)) \
+				or pier.find_children("*", "StaticBody3D", true, false).is_empty():
+			_fail("rooftop parapet joint pier is decorative but not solid")
+			return
 	var deck_body := crown_deck_bodies[0] as StaticBody3D
 	if deck_body == null:
 		_fail("spiral crown landing collision is not a StaticBody3D")
@@ -423,25 +506,46 @@ func _run() -> void:
 				"*", "StaticBody3D", true, false).is_empty():
 		_fail("spiral crown still renders the oversized box instead of the fitted landing")
 		return
-	var ballista := stair.get_node_or_null("CastleBallista") as Node3D
-	if ballista == null or not bool(ballista.get_meta("visual_only", false)) \
-			or ballista.find_children("BallistaWoodArm_*", "MeshInstance3D", true, false).size() != 2 \
-			or not ballista.find_children("*", "StaticBody3D", true, false).is_empty():
-		_fail("crown is missing its safe visual-only castle ballista")
+	var fountain := stair.get_node_or_null("CastleRoyalFountain") as Node3D
+	if fountain == null or not bool(fountain.get_meta("solid_stone_animated_water", false)) \
+			or fountain.find_children("BasinCascade_*", "MeshInstance3D", true, false).size() != 4 \
+			or fountain.find_children("*", "StaticBody3D", true, false).size() != 1 \
+			or stair.get_node_or_null("CastleBallista") != null:
+		_fail("royal fountain has not safely replaced the rooftop ballista")
 		return
 	var arrival_court := stair.get_node_or_null("CrownArrivalCourt") as Node3D
 	var arrival_pylons := stair.find_children(
 		"CrownArrivalPylon_*", "MeshInstance3D", true, false)
-	var arrival_yokes := stair.find_children(
-		"CrownArrivalYoke_*", "MeshInstance3D", true, false)
-	var arrival_guides := stair.find_children(
-		"CrownArrivalGuide_*", "MeshInstance3D", true, false)
-	if arrival_court == null or arrival_pylons.size() != 2 \
-			or arrival_yokes.size() != 2 or arrival_guides.size() != 3:
-		_fail("redesigned crown arrival court is incomplete")
+	var arrival_caps := stair.find_children(
+		"CrownArrivalCap_*", "MeshInstance3D", true, false)
+	var arrival_roofs := stair.find_children(
+		"CrownArrivalRoof_*", "MeshInstance3D", true, false)
+	var arrival_ashlar := stair.find_children(
+		"CrownArrivalAshlarCourse_*", "MeshInstance3D", true, false)
+	if arrival_court == null \
+			or arrival_court.get_meta("design_language", "") \
+				!= "restrained_medieval_castle_masonry" \
+			or arrival_pylons.size() != 2 or arrival_caps.size() != 2 \
+			or arrival_roofs.size() != 2 or arrival_ashlar.size() != 2:
+		_fail("medieval crown arrival gate is incomplete")
 		return
 	if not arrival_court.find_children("*", "StaticBody3D", true, false).is_empty():
 		_fail("crown arrival dressing added collision back into the player lane")
+		return
+	if not stair.find_children("CrownArrivalYoke_*", "MeshInstance3D", true, false).is_empty() \
+			or not stair.find_children("CrownArrivalGuide_*", "MeshInstance3D", true, false).is_empty() \
+			or stair.get_node_or_null("CrownArrivalLens") != null:
+		_fail("mixed glowing arrival machinery remains on the medieval crown")
+		return
+	var crown_vaulting := stair.get_node_or_null("CrownUndersideVaulting") as Node3D
+	if crown_vaulting == null \
+			or not bool(crown_vaulting.get_meta("finished_beneath_surface", false)) \
+			or not bool(crown_vaulting.get_meta("uninterrupted_stone_soffit", false)) \
+			or not crown_vaulting.find_children("CrownUndersideCorbel_*", "MeshInstance3D", true, false).is_empty() \
+			or not crown_vaulting.find_children("CrownUndersideVaultRib_*", "MeshInstance3D", true, false).is_empty() \
+			or crown_vaulting.get_node_or_null("CrownUndersideRingBeam") != null \
+			or not crown_vaulting.find_children("*", "StaticBody3D", true, false).is_empty():
+		_fail("crown beneath-surface vaulting is incomplete or obstructive")
 		return
 	var final_tread: MeshInstance3D = null
 	for candidate in stair.find_children("StairTread_*", "MeshInstance3D", true, false):
@@ -465,6 +569,8 @@ func _run() -> void:
 	# 3.6 m inner edge—just wide enough for the player capsule to drop into and
 	# become wedged at the exact location shown in the overhead bug capture.
 	var space_state: PhysicsDirectSpaceState3D = (stair.get_world_3d() as World3D).direct_space_state
+	var handoff_body := stair.get_node("CrownStairHandoff").find_children(
+		"*", "StaticBody3D", true, false).front() as StaticBody3D
 	const TRAP_RING_RADIUS := 3.3
 	for probe_index in 16:
 		var probe_angle := TAU * float(probe_index) / 16.0
@@ -476,9 +582,16 @@ func _run() -> void:
 			Vector3(crown_deck.global_position.x, crown_surface - 1.0,
 				crown_deck.global_position.z) + probe_xz)
 		floor_query.collide_with_areas = false
+		# The requested solid fountain now occupies part of this old empty-floor
+		# probe ring. Still verify the roof underneath it; fountain support and
+		# player escape are covered by test_castle_royal_fountain.gd.
+		floor_query.exclude = [(fountain.get_node("SolidFountainStone") as StaticBody3D).get_rid()]
 		var floor_hit := space_state.intersect_ray(floor_query)
 		if not floor_hit.has("collider") or (floor_hit["collider"] != deck_body \
-				and floor_hit["collider"] != gateway_apron_body):
+				and floor_hit["collider"] != gateway_apron_body \
+				and floor_hit["collider"] != handoff_body) \
+				or (floor_hit.has("position") \
+				and absf((floor_hit["position"] as Vector3).y - crown_surface) > 0.03):
 			_fail("crown centre has a player-trapping floor gap at radius %.1f angle %.2f (hit %s)"
 				% [TRAP_RING_RADIUS, probe_angle,
 					floor_hit.get("collider", "nothing")])
@@ -633,11 +746,11 @@ func _run() -> void:
 		_fail("high aether citadel datum is not elevated above the entrance court")
 		return
 	var entrance_rig := entrance_root.get_node_or_null("CastleEntrance") as Node3D
-	var ascent_ramp := entrance_rig.get_node_or_null("CastleAscentRamp") as MeshInstance3D \
+	var ascent_ramp := entrance_rig.get_node_or_null("RoyalCastleStair/RoyalTread_00") as MeshInstance3D \
 		if entrance_rig != null else null
 	if ascent_ramp == null \
 		or ascent_ramp.find_children("*", "StaticBody3D", true, false).is_empty():
-		_fail("high citadel approach has no collision-backed smooth ramp")
+		_fail("high citadel approach has no collision-backed royal stair")
 		return
 
 	# The user requested the floating orbital observatory and its related astral

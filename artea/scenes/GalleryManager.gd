@@ -139,7 +139,13 @@ func one_placeholder(frame_node: Sprite3D, texture: Texture2D) -> void:
 		return
 
 	var image: Image = texture.get_image()
-
+	if image == null or image.is_empty():
+		frame_node.texture = texture
+		return
+	if image.is_compressed() and image.decompress() != OK:
+		# Retain the original playable artwork if a platform cannot decode it.
+		frame_node.texture = texture
+		return
 	image.resize(512, 512, Image.INTERPOLATE_BILINEAR)
 
 	var resized_texture = ImageTexture.create_from_image(image)
