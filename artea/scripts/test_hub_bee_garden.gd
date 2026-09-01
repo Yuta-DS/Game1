@@ -12,18 +12,23 @@ func _init() -> void:
 	var garden := BeeGarden.new()
 	garden.call("_build_shared_materials")
 	garden.call("_build_batched_bees")
-	if garden.bee_count != garden.ORIGINAL_BEE_COUNT * garden.POPULATION_MULTIPLIER:
-		_fail("bee population is not exactly 18 times the original swarm")
+	if garden.bee_count != 70:
+		_fail("bee population must be a restrained 70-bee swarm")
 		return
 	var batched := garden.get_node_or_null("BatchedBees") as MultiMeshInstance3D
-	if batched == null or batched.multimesh.instance_count != 252:
-		_fail("252 bees must share one Web-safe MultiMesh")
+	if batched == null or batched.multimesh.instance_count != 70:
+		_fail("70 bees must share one Web-safe MultiMesh")
 		return
 
 	var flower_points: Array[Vector3] = [
 		Vector3.ZERO,
+		Vector3(2, 0, 0),
 		Vector3(4, 0, 0),
-		Vector3(8, 0, 3),
+		Vector3(6, 0, 0),
+		Vector3(8, 0, 0),
+		Vector3(10, 0, 0),
+		Vector3(12, 0, 0),
+		Vector3(100, 0, 0),
 	]
 	garden.set("_flower_points", flower_points)
 	garden.call("_seed_flight_paths")
@@ -34,6 +39,15 @@ func _init() -> void:
 		if bee_data["source"] == bee_data["target"]:
 			_fail("a bee must have a different destination flower")
 			return
+		var source: Vector3 = flower_points[int(bee_data["source"])]
+		var target: Vector3 = flower_points[int(bee_data["target"])]
+		if source == Vector3.ZERO and source.distance_to(target) > 10.0:
+			_fail("bees must choose nearby flowers instead of crossing the garden")
+			return
+		var duration: float = bee_data["duration"]
+		if duration < garden.MIN_FLIGHT_DURATION or duration > garden.MAX_FLIGHT_DURATION:
+			_fail("bee travel must use the slower bounded flight duration")
+			return
 	if size_classes.size() != 3 or garden.BASE_SCALE != 0.45:
 		_fail("small, medium, and large bee classes must remain distinct")
 		return
@@ -42,6 +56,16 @@ func _init() -> void:
 		if final_scale < 0.40 or final_scale > 0.50:
 			_fail("every bee size must be 50 to 60 percent smaller")
 			return
+
+	var curve_probe: Dictionary = bees[0].duplicate()
+	curve_probe["source"] = 0
+	curve_probe["target"] = 1
+	curve_probe["progress"] = 0.5
+	curve_probe["dwell"] = 0.0
+	var curved_position: Vector3 = garden.call("_flight_position", curve_probe)
+	if absf(curved_position.z) < 0.1:
+		_fail("bee flight must arc naturally instead of following a straight line")
+		return
 
 	var before_progress: float = bees[0]["progress"]
 	garden.call("_process", 0.5)
@@ -58,7 +82,7 @@ func _init() -> void:
 		_fail("bee homes were not mounted at available tree positions")
 		return
 
-	print("HUB_BEE_GARDEN_TEST: PASS — 252 batched bees, three 50–60 percent smaller sizes, flower travel, and tree homes")
+	print("HUB_BEE_GARDEN_TEST: PASS — 70 batched bees use slow curved routes between nearby flowers and retain tree homes")
 	quit(0)
 
 

@@ -1,19 +1,24 @@
 extends Node3D
 
-## Web-safe life for the hub meadow. The full 252-bee population is rendered
-## by one MultiMesh and updated as transforms, rather than as hundreds of
-## independent scene trees. Bees travel between real scattered flowers and a
-## few visible homes are attached to real scattered tree positions.
+## Web-safe life for the hub meadow. A restrained bee population is rendered
+## by one MultiMesh and updated as transforms, rather than as independent scene
+## trees. Bees take slow, curved routes between nearby real scattered flowers,
+## while a few visible homes are attached to real scattered tree positions.
 
 @export var flower_scatter_path: NodePath
 @export var tree_scatter_path: NodePath
-@export_range(1, 400, 1) var bee_count := 252
-@export_range(1, 12, 1) var bee_home_count := 6
+@export_range(1, 120, 1) var bee_count := 70
+@export_range(1, 8, 1) var bee_home_count := 4
 
-const ORIGINAL_BEE_COUNT := 14
-const POPULATION_MULTIPLIER := 18
 const BASE_SCALE := 0.45
 const SIZE_VARIANTS := [0.90, 1.0, 1.10]
+const NEARBY_FLOWER_CHOICES := 5
+const MIN_FLIGHT_DURATION := 7.0
+const MAX_FLIGHT_DURATION := 15.0
+const FLIGHT_SPEED := 1.35
+const MIN_HOVER_TIME := 0.8
+const MAX_HOVER_TIME := 1.8
+const FLOWER_HOVER_HEIGHT := 0.60
 const FLOWER_ITEM_PREFIX := "ScatterItemFlower"
 const TREE_ITEM_NAMES := [
 	"ScatterItem", "ScatterItem2", "ScatterItem3", "ScatterItem4",
@@ -55,13 +60,28 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	for index in _bees.size():
 		var bee_data := _bees[index]
+		var dwell: float = bee_data["dwell"]
+		if dwell > 0.0:
+			bee_data["dwell"] = maxf(0.0, dwell - delta)
+			_bees[index] = bee_data
+			_update_bee_transform(index, bee_data)
+			continue
 		var progress: float = bee_data["progress"] + delta / float(bee_data["duration"])
 		if progress >= 1.0:
 			var source_index: int = bee_data["target"]
 			bee_data["source"] = source_index
 			bee_data["target"] = _next_flower_index(source_index, index)
-			bee_data["duration"] = 3.4 + float(index % 9) * 0.31
-			progress = fmod(progress, 1.0)
+			bee_data["duration"] = _flight_duration(
+				_flower_points[source_index],
+				_flower_points[int(bee_data["target"])],
+				index
+			)
+			bee_data["dwell"] = lerpf(
+				MIN_HOVER_TIME,
+				MAX_HOVER_TIME,
+				float((index * 17 + source_index * 11) % 100) / 99.0
+			)
+			progress = 0.0
 		bee_data["progress"] = progress
 		_bees[index] = bee_data
 		_update_bee_transform(index, bee_data)
@@ -194,8 +214,12 @@ func _seed_flight_paths() -> void:
 			"source": source_index,
 			"target": target_index,
 			"progress": fmod(float(index) * 0.173, 1.0),
-			"duration": 3.4 + float(index % 9) * 0.31,
+			"duration": _flight_duration(
+				_flower_points[source_index], _flower_points[target_index], index
+			),
+			"dwell": 0.0,
 			"phase": float(index) * 2.39996,
+			"curve_side": -1.0 if index % 2 == 0 else 1.0,
 			"size_class": index % SIZE_VARIANTS.size(),
 		}
 		_bees.append(data)
@@ -205,22 +229,79 @@ func _seed_flight_paths() -> void:
 func _next_flower_index(source_index: int, bee_index: int) -> int:
 	if _flower_points.size() <= 1:
 		return source_index
-	var stride := 1 + (bee_index * 7 + source_index * 3) % (_flower_points.size() - 1)
-	return (source_index + stride) % _flower_points.size()
+
+	# Keep a tiny ordered list instead of sorting the complete flower scatter.
+	# This makes every route local even when the meadow contains thousands of
+	# flowers, while remaining cheap enough for Web startup.
+	var nearby: Array[Dictionary] = []
+	for candidate_index in _flower_points.size():
+		if candidate_index == source_index:
+			continue
+		var distance_squared := _flower_points[source_index].distance_squared_to(
+			_flower_points[candidate_index]
+		)
+		var insert_at := nearby.size()
+		for slot in nearby.size():
+			if distance_squared < float(nearby[slot]["distance_squared"]):
+				insert_at = slot
+				break
+		nearby.insert(insert_at, {
+			"index": candidate_index,
+			"distance_squared": distance_squared,
+		})
+		if nearby.size() > NEARBY_FLOWER_CHOICES:
+			nearby.pop_back()
+
+	var choice := (bee_index * 3 + source_index) % nearby.size()
+	return int(nearby[choice]["index"])
+
+
+func _flight_duration(from: Vector3, to: Vector3, bee_index: int) -> float:
+	var distance := from.distance_to(to)
+	var variation := 0.90 + float(bee_index % 7) * 0.035
+	return clampf(distance / FLIGHT_SPEED * variation,
+		MIN_FLIGHT_DURATION, MAX_FLIGHT_DURATION)
+
+
+func _flight_position(bee_data: Dictionary) -> Vector3:
+	var from := _flower_points[int(bee_data["source"])]
+	var to := _flower_points[int(bee_data["target"])]
+	var phase: float = bee_data["phase"]
+	var dwell: float = bee_data["dwell"]
+	if dwell > 0.0:
+		var hover_angle := _elapsed * 1.8 + phase
+		return from + Vector3(
+			cos(hover_angle) * 0.12,
+			FLOWER_HOVER_HEIGHT + sin(hover_angle * 1.7) * 0.06,
+			sin(hover_angle) * 0.12
+		)
+
+	var progress: float = bee_data["progress"]
+	var eased := smoothstep(0.0, 1.0, progress)
+	var flat_direction := to - from
+	flat_direction.y = 0.0
+	var sideways := Vector3(-flat_direction.z, 0.0, flat_direction.x).normalized()
+	if sideways.is_zero_approx():
+		sideways = Vector3.RIGHT
+	var distance := from.distance_to(to)
+	var curve_amount := clampf(distance * 0.18, 0.55, 2.4) \
+		* float(bee_data["curve_side"])
+	var control := from.lerp(to, 0.5) + sideways * curve_amount
+	control.y = maxf(from.y, to.y) + 1.25 + minf(distance * 0.06, 0.9)
+
+	var inverse := 1.0 - eased
+	var position := from * inverse * inverse \
+		+ control * 2.0 * inverse * eased \
+		+ to * eased * eased
+	position.y += FLOWER_HOVER_HEIGHT + sin(_elapsed * 3.2 + phase) * 0.07
+	position += sideways * sin(progress * TAU * 1.5 + phase) * 0.10
+	return position
 
 
 func _update_bee_transform(index: int, bee_data: Dictionary) -> void:
-	var from := _flower_points[int(bee_data["source"])]
 	var to := _flower_points[int(bee_data["target"])]
-	var progress: float = bee_data["progress"]
-	var eased := smoothstep(0.0, 1.0, progress)
-	var position := from.lerp(to, eased)
-	var phase: float = bee_data["phase"]
-	position.y += 0.60 + sin(PI * progress) * 1.35 \
-		+ sin(_elapsed * 8.0 + phase) * 0.10
-	position.x += sin(PI * progress * 2.0 + phase) * 0.18
-
-	var direction := to - from
+	var position := _flight_position(bee_data)
+	var direction := to - position
 	var yaw := atan2(direction.x, direction.z) if direction.length_squared() > 0.001 else 0.0
 	var size_class: int = bee_data["size_class"]
 	var scale_value: float = BASE_SCALE * float(SIZE_VARIANTS[size_class])
