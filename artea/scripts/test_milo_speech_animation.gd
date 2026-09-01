@@ -41,6 +41,20 @@ func _run() -> void:
 		return
 	var greeting_voice := milo.get_node_or_null("MiloGreetingVoice") \
 		as AudioStreamPlayer3D
+	var interaction_prompt := milo.get_node_or_null("InteractionPrompt") as Label3D
+	var mayor_name := milo.get_node_or_null("MayorMiloName") as Label3D
+	var interaction_shape := milo.get_node_or_null("Area3D/CollisionShape3D") \
+		as CollisionShape3D
+	print("MILO_CHAT_RANGE_TRACE: shape=%s radius=%s" % [interaction_shape.shape,
+		interaction_shape.shape.radius if interaction_shape != null \
+		and interaction_shape.shape is SphereShape3D else "n/a"])
+	if interaction_prompt == null or interaction_prompt.text != "Press Q to chat with Milo":
+		_fail("Milo must visibly explain how to open chat")
+		return
+	if interaction_shape == null or not interaction_shape.shape is SphereShape3D \
+			or (interaction_shape.shape as SphereShape3D).radius < 4.0:
+		_fail("Milo's chat range must cover his companion follow distance")
+		return
 	if greeting_voice == null or greeting_voice.stream == null \
 			or greeting_voice.stream.get_length() < 5.0:
 		_fail("Milo's generated spatial greeting voice is missing or truncated")
@@ -48,27 +62,35 @@ func _run() -> void:
 	if greeting_voice.stream.resource_path != "res://assets/audio/milo/milo_voice.ogg":
 		_fail("Milo must use the approved milo_voice.ogg greeting")
 		return
-	milo.call("_play_recorded_greeting")
-	if not greeting_voice.playing or not milo.call("is_speaking") \
-			or milo.call("get_mouth_shape") != "small":
-		_fail("the recorded greeting must drive Milo's speaking and mouth timeline")
+	milo.call("_on_area_3d_player_entered", player)
+	milo.call("_process", 0.016)
+	if not interaction_prompt.visible:
+		_fail("Milo's Q prompt must appear when the player enters chat range")
 		return
-	greeting_voice.stop()
+	if mayor_name == null or not mayor_name.text.contains("Press Q to chat"):
+		_fail("Milo's proven nameplate must also show the nearby Q instruction")
+		return
+	milo.call("_play_recorded_greeting")
+	if not milo.call("is_speaking") or milo.call("get_mouth_shape") != "small":
+		_fail("the original Milo recording must drive his speaking and mouth timeline")
+		return
+	if not greeting_voice.playing:
+		_fail("the consented original Milo voice must play instead of device TTS")
+		return
+	milo.call("_on_area_3d_player_exited", player)
+	player.global_position = Vector3(20.0, 0.0, 0.0)
+	milo.call("_process", 0.016)
+	if interaction_prompt.visible:
+		_fail("Milo's Q prompt must hide outside chat range")
+		return
+	if mayor_name.text != "Mayor Milo":
+		_fail("Milo's nameplate must reset outside chat range")
+		return
 	milo.call("_stop_speaking")
 
 	milo.call("_on_companion_speech_requested", "I hear you. Let us explore this together.")
-	if not milo.call("is_speaking") or milo.call("get_mouth_shape") != "small":
-		_fail("a companion line must immediately begin the talking timeline")
-		return
-	milo.call("_update_speaking", 0.12)
-	if milo.call("get_mouth_shape") != "wide" or not wide.visible \
-			or not tongue_wide.visible or tongue_small.visible:
-		_fail("the talking timeline must reach Milo's readable wide-open mouth")
-		return
-	milo.call("_update_speaking", 0.11)
-	if milo.call("get_mouth_shape") != "small" or not small.visible \
-			or not tongue_small.visible or tongue_wide.visible:
-		_fail("the talking timeline must alternate between open mouth shapes")
+	if milo.call("is_speaking") or milo.call("get_mouth_shape") != "closed":
+		_fail("dynamic text must not be spoken in a substituted robotic voice")
 		return
 	milo.call("_stop_speaking")
 	if milo.call("is_speaking") or milo.call("get_mouth_shape") != "closed" \
@@ -89,8 +111,8 @@ func _run() -> void:
 	if spoken_lines.is_empty() or not spoken_lines.back().contains("Emotional Companion"):
 		_fail("each presented Milo response must publish its complete text as speech")
 		return
-	if not milo.call("is_speaking") or milo.call("get_companion_state_name") != "TALKING":
-		_fail("chatbot speech must drive the live companion into TALKING state")
+	if milo.call("is_speaking") or milo.call("get_companion_state_name") != "TALKING":
+		_fail("dynamic chat must remain readable without impersonating Milo's voice")
 		return
 	chat.call("replay_current_speech")
 	if spoken_lines.size() != 2 or spoken_lines[0] != spoken_lines[1]:
@@ -102,5 +124,9 @@ func _run() -> void:
 	milo.queue_free()
 	player.queue_free()
 	await process_frame
-	print("MILO_SPEECH_ANIMATION_TEST: PASS — chatbot lines drive three rigged mouth shapes and close cleanly")
+	var source := FileAccess.get_file_as_string("res://scripts/milo_animations.gd")
+	if not source.contains("use_device_tts_for_dynamic_replies := false"):
+		_fail("robotic device TTS must remain disabled by default")
+		return
+	print("MILO_SPEECH_ANIMATION_TEST: PASS — original Milo greeting, readable dynamic replies, Q access, and rigged mouth shapes")
 	quit()

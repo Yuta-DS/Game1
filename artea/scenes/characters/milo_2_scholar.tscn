@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/characters/milo_prototype_reference_skin.tscn" id="1_milo_2"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_milo_2_body"]
+radius = 0.30
+height = 1.20
+
+[node name="Milo2Scholar" type="CharacterBody3D" groups=["npc", "villager", "milo", "milo_2"]]
+metadata/milo_generation = 2
+metadata/milo_visual_variant = "pictured_prototype_reference"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.60, 0)
+shape = SubResource("CapsuleShape3D_milo_2_body")
+
+[node name="Model" parent="." instance=ExtResource("1_milo_2")]

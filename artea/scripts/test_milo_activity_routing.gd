@@ -85,7 +85,7 @@ func _run() -> void:
 
 
 func _has_button(container: VBoxContainer, label: String) -> bool:
-	for child in container.get_children():
-		if child is Button and child.text == label:
+	for child in container.find_children("*", "Button", true, false):
+		if (child as Button).text == label:
 			return true
 	return false

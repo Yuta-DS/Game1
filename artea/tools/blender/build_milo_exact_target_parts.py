@@ -17,7 +17,8 @@ import json
 from pathlib import Path
 
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Quaternion, Vector
+from mathutils.bvhtree import BVHTree
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -410,7 +411,8 @@ def coat_bottom_trim(name, ring_spec, mat, bone, collection, segments=12,
 
 def fitted_elliptical_cuff(name, center, inner_radii, outer_radii, z_range,
                            mat, bone, collection, segments=12,
-                           sleeve_radii=(0.088, 0.102)):
+                           sleeve_radii=(0.088, 0.102),
+                           limb_axis=(0.0, 0.0, -1.0)):
     """Build a faceted cuff rail outside the elliptical sleeve/hand joint.
 
     A circular torus cuts through Milo's wider front-to-back sleeve profile.
@@ -421,16 +423,24 @@ def fitted_elliptical_cuff(name, center, inner_radii, outer_radii, z_range,
     inner_x, inner_y = inner_radii
     outer_x, outer_y = outer_radii
     z_bottom, z_top = z_range
+    axis = Vector(limb_axis).normalized()
+    depth_axis = Vector((0.0, 1.0, 0.0))
+    profile_axis = depth_axis.cross(axis).normalized()
+    center_point = Vector((center_x, center_y, (z_bottom + z_top) * 0.5))
+    half_height = (z_top - z_bottom) * 0.5
     rings = []
-    for radius_x, radius_y, z in (
-            (inner_x, inner_y, z_bottom),
-            (inner_x, inner_y, z_top),
-            (outer_x, outer_y, z_bottom),
-            (outer_x, outer_y, z_top)):
+    for radius_x, radius_y, longitudinal in (
+            (inner_x, inner_y, -half_height),
+            (inner_x, inner_y, half_height),
+            (outer_x, outer_y, -half_height),
+            (outer_x, outer_y, half_height)):
+        ring_center = center_point + axis * longitudinal
         rings.append([
-            (center_x + radius_x * math.cos(2.0 * math.pi * index / segments),
-             center_y + radius_y * math.sin(2.0 * math.pi * index / segments),
-             z)
+            tuple(ring_center
+                  + profile_axis * radius_x
+                  * math.cos(2.0 * math.pi * index / segments)
+                  + depth_axis * radius_y
+                  * math.sin(2.0 * math.pi * index / segments))
             for index in range(segments)
         ])
     verts = [vertex for ring in rings for vertex in ring]
@@ -466,6 +476,7 @@ def fitted_elliptical_cuff(name, center, inner_radii, outer_radii, z_range,
         raise RuntimeError(f"{name} penetrates the sleeve envelope")
     obj["minimum_sleeve_clearance"] = minimum_clearance
     obj["fitted_to_elliptical_sleeve"] = True
+    obj["aligned_to_wrist_axis"] = True
     print(f"MILO_CUFF_CLEARANCE: {name} {minimum_clearance:.6f}")
     return finish(obj, name, mat, bone, collection, smooth=False)
 
@@ -494,17 +505,109 @@ def tailored_coat_body(name, ring_specs, mat, bone, collection, segments=12):
     return prism(name, verts, faces, mat, bone, collection, bevel=0.012)
 
 
+def blend_coat_shoulders_into_armature(coat):
+    """Let the coat crown follow each sleeve without turning it into a tube.
+
+    The coat remains the torso mesh, but vertices near each armhole borrow a
+    restrained amount of upper-arm motion. This is the cloth-equivalent of a
+    sewn sleeve cap: the shoulder seam stays planted while the coat crown
+    yields slightly when the arm swings.
+    """
+    chest = coat.vertex_groups.get("chest")
+    if chest is None:
+        raise RuntimeError("CoatBody lacks its chest binding")
+    arm_groups = {
+        -1: coat.vertex_groups.new(name="upperarm.r"),
+        1: coat.vertex_groups.new(name="upperarm.l"),
+    }
+    maximum_arm_weight = 0.0
+    influenced_vertices = 0
+    for vertex in coat.data.vertices:
+        side = -1 if vertex.co.x < 0.0 else 1
+        height = max(0.0, min(1.0, (vertex.co.z - 0.955) / 0.225))
+        lateral = max(0.0, min(1.0, (abs(vertex.co.x) - 0.205) / 0.135))
+        height = height * height * (3.0 - 2.0 * height)
+        lateral = lateral * lateral * (3.0 - 2.0 * lateral)
+        arm_weight = 0.16 * height * lateral
+        if arm_weight <= 1e-5:
+            continue
+        chest.add([vertex.index], 1.0 - arm_weight, "REPLACE")
+        arm_groups[side].add([vertex.index], arm_weight, "REPLACE")
+        maximum_arm_weight = max(maximum_arm_weight, arm_weight)
+        influenced_vertices += 1
+    coat["sewn_sleeve_cap_response"] = True
+    coat["shoulder_arm_weight_max"] = maximum_arm_weight
+    coat["shoulder_influenced_vertices"] = influenced_vertices
+    return coat
+
+
+def verify_coat_shoulder_response(coat):
+    """Reject a rigid or over-flexible coat shoulder before export."""
+    used = set()
+    max_arm_weight = 0.0
+    influenced = 0
+    for vertex in coat.data.vertices:
+        total = 0.0
+        vertex_arm_weight = 0.0
+        for assignment in vertex.groups:
+            group_name = coat.vertex_groups[assignment.group].name
+            used.add(group_name)
+            total += assignment.weight
+            if group_name.startswith("upperarm."):
+                vertex_arm_weight += assignment.weight
+        if abs(total - 1.0) > 1e-5:
+            raise RuntimeError(
+                f"CoatBody vertex {vertex.index} weight sum {total:.6f}"
+            )
+        if vertex_arm_weight > 1e-5:
+            influenced += 1
+            max_arm_weight = max(max_arm_weight, vertex_arm_weight)
+    required = {"chest", "upperarm.r", "upperarm.l"}
+    if not required.issubset(used) or influenced < 8:
+        raise RuntimeError("CoatBody shoulders do not respond to both sleeves")
+    if max_arm_weight < 0.12 or max_arm_weight > 0.17:
+        raise RuntimeError(
+            f"CoatBody shoulder response is out of range: {max_arm_weight:.3f}"
+        )
+    print(f"MILO_COAT_SHOULDER_RESPONSE: {influenced} vertices, "
+          f"maximum upper-arm weight {max_arm_weight:.3f}")
+
+
 def weighted_tapered_limb(name, rings, ring_weights, mat, collection,
-                          segments=12):
+                          segments=12, orient_to_path=False,
+                          fixed_ring_count=0):
     """Create one connected tapered limb with smooth weights along its chain."""
     if len(rings) != len(ring_weights):
         raise ValueError("limb rings and weight rows must have equal length")
     verts = []
-    for center_x, center_y, center_z, radius_x, radius_y in rings:
+    depth_axis = Vector((0.0, 1.0, 0.0))
+    centers = [Vector(ring[:3]) for ring in rings]
+    for ring_index, (center_x, center_y, center_z,
+                     radius_x, radius_y) in enumerate(rings):
+        center = centers[ring_index]
+        if orient_to_path:
+            if ring_index == 0:
+                tangent = centers[1] - center
+            elif ring_index == len(centers) - 1:
+                tangent = center - centers[ring_index - 1]
+            else:
+                tangent = centers[ring_index + 1] - centers[ring_index - 1]
+            tangent.normalize()
+            path_profile_axis = depth_axis.cross(tangent).normalized()
+            if fixed_ring_count > 0:
+                blend = min(1.0, ring_index / float(fixed_ring_count))
+                blend = blend * blend * (3.0 - 2.0 * blend)
+                profile_axis = Vector((1.0, 0.0, 0.0)).lerp(
+                    path_profile_axis, blend).normalized()
+            else:
+                profile_axis = path_profile_axis
+        else:
+            profile_axis = Vector((1.0, 0.0, 0.0))
         for index in range(segments):
             angle = 2.0 * math.pi * index / segments
-            verts.append((center_x + radius_x * math.cos(angle),
-                          center_y + radius_y * math.sin(angle), center_z))
+            vertex = center + profile_axis * radius_x * math.cos(angle) \
+                + depth_axis * radius_y * math.sin(angle)
+            verts.append(tuple(vertex))
     faces = [tuple(range(segments))[::-1]]
     for ring_index in range(len(rings) - 1):
         start = ring_index * segments
@@ -535,7 +638,32 @@ def weighted_tapered_limb(name, rings, ring_weights, mat, collection,
                 group = obj.vertex_groups.new(name=bone_name)
                 groups[bone_name] = group
             group.add(indices, weight, "REPLACE")
+    if orient_to_path:
+        obj["cross_sections_follow_limb_axis"] = True
+        obj["fixed_socket_ring_count"] = fixed_ring_count
     return obj
+
+
+def scale_limb_profile(rings, radius_scales, clearance_preservation):
+    """Scale limb thickness while controlling its inner attachment edge.
+
+    A blind radial scale pulls a large sleeve back through Milo's coat. For the
+    free arm, the centerline moves outward by a matching portion of the radius
+    increase, preserving the established torso clearance. The preservation
+    amount then eases to zero at the wrist so the hand and cuff stay aligned.
+    """
+    if len(rings) != len(radius_scales) \
+            or len(rings) != len(clearance_preservation):
+        raise ValueError("limb scale profiles must match the ring count")
+    scaled = []
+    for ring, radius_scale, preserve in zip(
+            rings, radius_scales, clearance_preservation):
+        center_x, center_y, center_z, radius_x, radius_y = ring
+        side = -1.0 if center_x < 0.0 else 1.0
+        outward_shift = side * radius_x * (radius_scale - 1.0) * preserve
+        scaled.append((center_x + outward_shift, center_y, center_z,
+                       radius_x * radius_scale, radius_y * radius_scale))
+    return scaled
 
 
 def faceted_mitten_paw(name, center_x, center_z, side, style, mat, bone,
@@ -569,10 +697,12 @@ def faceted_mitten_paw(name, center_x, center_z, side, style, mat, bone,
     add_field(-0.048, finger_z, 0.035)
     add_field(0.000, finger_z - 0.002, 0.037)
     add_field(0.048, finger_z, 0.035)
-    # Two overlapping fields make a vertical thumb mound on the body-facing
-    # edge. They are converted together with the palm, never attached later.
-    add_field(-0.120, -0.012, 0.048)
-    add_field(-0.116, 0.034, 0.047)
+    # A short chain of small overlapping fields grows a low thumb pad directly
+    # out of the palm. Keeping its root broad and its tip shallow prevents the
+    # old marble-like thumb silhouette while preserving one watertight skin.
+    add_field(-0.070, 0.022, 0.038)
+    add_field(-0.090, 0.006, 0.034)
+    add_field(-0.103, -0.012, 0.029)
 
     bpy.ops.object.select_all(action="DESELECT")
     field_obj.select_set(True)
@@ -584,7 +714,9 @@ def faceted_mitten_paw(name, center_x, center_z, side, style, mat, bone,
     # depth for a soft dome. Metaball radii evaluate smaller than their nominal
     # field size at this threshold, so the fitted factors are deliberate.
     for vertex in paw.data.vertices:
-        vertex.co.x = center_x + (vertex.co.x - center_x) * 1.20
+        # Preserve the approved broad mitten envelope after replacing the old
+        # protruding thumb mound with a low palm-grown pad.
+        vertex.co.x = center_x + (vertex.co.x - center_x) * 1.23
         vertex.co.y = -0.040 + (vertex.co.y + 0.040) * 1.76
         vertex.co.z = center_z + (vertex.co.z - center_z) * 1.18
     paw.data.update()
@@ -615,12 +747,12 @@ def faceted_mitten_paw(name, center_x, center_z, side, style, mat, bone,
             name + "FingerGroove", (center_x + groove_x * side, -0.122,
                                      center_z - 0.070),
             (0.006, groove_depth, groove_height))
-    # A longer, slightly angled recess clearly separates the vertical thumb
-    # mound from the palm while leaving the back of the one-piece mesh intact.
+    # A shallow angled crease suggests the thumb joint without cutting a deep
+    # border that would make the pad read as a separate attached object.
     carve_front_groove(
-        name + "ThumbGroove", (center_x - 0.112 * side, -0.120,
-                                center_z + 0.006),
-        (0.009, 0.045, 0.050),
+        name + "ThumbGroove", (center_x - 0.084 * side, -0.116,
+                                center_z + 0.004),
+        (0.007, 0.029, 0.036),
         rotation=(0.0, math.radians(-6.0 * side), 0.0))
 
     # Reduce the implicit surface to the established soft low-poly density.
@@ -630,27 +762,47 @@ def faceted_mitten_paw(name, center_x, center_z, side, style, mat, bone,
     bpy.ops.object.modifier_apply(modifier=decimate.name)
     paw.data.materials.clear()
     paw = finish(paw, name, mat, bone, collection, smooth=True)
+    palm_angle = math.radians(90.0 * side)
+    palm_cos = math.cos(palm_angle)
+    palm_sin = math.sin(palm_angle)
+    for vertex in paw.data.vertices:
+        offset_x = vertex.co.x - center_x
+        offset_y = vertex.co.y + 0.040
+        vertex.co.x = center_x + palm_cos * offset_x - palm_sin * offset_y
+        vertex.co.y = -0.040 + palm_sin * offset_x + palm_cos * offset_y
+    paw.data.update()
     paw.shape_key_add(name="Basis", from_mix=False)
     curl_key = paw.shape_key_add(name="FingerCurl", from_mix=False)
     for vertex in curl_key.data:
-        canonical_x = (vertex.co.x - center_x) * side
+        rotated_x = vertex.co.x - center_x
+        rotated_y = vertex.co.y + 0.040
+        original_x = palm_cos * rotated_x + palm_sin * rotated_y
+        canonical_x = original_x * side
         lower_amount = max(0.0, min(1.0,
                            (center_z - 0.025 - vertex.co.z) / 0.078))
         if canonical_x > -0.100 and lower_amount > 0.0:
+            original_delta_y = -0.026 * lower_amount
+            vertex.co.x -= palm_sin * original_delta_y
+            vertex.co.y += palm_cos * original_delta_y
             vertex.co.z += 0.036 * lower_amount
-            vertex.co.y -= 0.026 * lower_amount
-        elif canonical_x <= -0.100 and lower_amount > 0.0:
-            # The integrated thumb closes more subtly with the finger row.
-            vertex.co.x += 0.016 * side * lower_amount
+        elif canonical_x <= -0.075 and lower_amount > 0.0:
+            # The low integrated thumb pad closes subtly with the finger row.
+            original_delta_x = 0.010 * side * lower_amount
+            vertex.co.x += palm_cos * original_delta_x
+            vertex.co.y += palm_sin * original_delta_x
             vertex.co.z += 0.012 * lower_amount
     paw["milo_design_role"] = "%s unified sculpted hand" % style
     paw["continuous_hand_mesh"] = True
     paw["finger_lobe_count"] = 3
     paw["thumb_integrated"] = True
-    paw["front_thumb_gap_depth"] = 0.022
-    paw["front_thumb_gap_recess"] = 0.045
+    paw["thumb_shape"] = "low_relief_palm_pad"
+    paw["front_thumb_gap_depth"] = 0.012
+    paw["front_thumb_gap_recess"] = 0.029
     paw["curl_shape_key"] = "FingerCurl"
     paw["sculpted_front_grooves"] = 3
+    paw["palm_faces_side"] = True
+    paw["palm_normal_x"] = side
+    paw["finger_row_axis"] = "depth"
     paw["grip_axis_x"] = center_x + 0.010 * side
     return paw
 
@@ -675,11 +827,16 @@ def verify_unified_hand_fit(paw, style):
     if paw.data.shape_keys is None or "FingerCurl" not in paw.data.shape_keys.key_blocks:
         raise RuntimeError(f"{paw.name} lacks its unified finger curl deformation")
     gap_depth = float(paw.get("front_thumb_gap_depth", 0.0))
-    if gap_depth < 0.015 or gap_depth > 0.030:
+    if gap_depth < 0.008 or gap_depth > 0.016:
         raise RuntimeError(f"{paw.name} front thumb gap is not readable: {gap_depth}")
     gap_recess = float(paw.get("front_thumb_gap_recess", 0.0))
-    if gap_recess < 0.035 or gap_recess > 0.050:
+    if gap_recess < 0.024 or gap_recess > 0.034:
         raise RuntimeError(f"{paw.name} front thumb crease is not sculpted: {gap_recess}")
+    if paw.get("thumb_shape", "") != "low_relief_palm_pad":
+        raise RuntimeError(f"{paw.name} thumb is not integrated as a palm pad")
+    if not paw.get("palm_faces_side", False) \
+            or abs(float(paw.get("palm_normal_x", 0.0))) < 0.99:
+        raise RuntimeError(f"{paw.name} palm does not face outward")
     verify_reference_hand_fit(paw, style)
     print(f"MILO_UNIFIED_HAND: {style} one connected object, "
           f"{len(paw.data.vertices)} vertices, thumb gap {gap_depth:.3f}, "
@@ -889,8 +1046,8 @@ def verify_limb_weights(detail_names, required_bones):
 
 
 def verify_shoulder_fit(detail_name, chest_bone, upperarm_bone,
-                        coat_edge_x, segments=12):
-    """Prove the sleeve socket overlaps and stays anchored to the coat."""
+                        coat_edge_x, coat_ring_specs, segments=12):
+    """Prove the socket attaches, then clears the coat below the underarm."""
     detail = bpy.data.objects[detail_name]
     groups = {group.name: group.index for group in detail.vertex_groups}
     chest_group = groups[chest_bone]
@@ -910,14 +1067,85 @@ def verify_shoulder_fit(detail_name, chest_bone, upperarm_bone,
         raise RuntimeError(
             f"{detail_name} shoulder does not overlap coat edge {coat_edge_x:.4f}"
         )
-    if any(weight(vertex, chest_group) < 0.79 for vertex in top_ring):
+    if any(weight(vertex, chest_group) < 0.83 or
+           weight(vertex, upperarm_group) < 0.15
+           for vertex in top_ring):
         raise RuntimeError(f"{detail_name} inner shoulder is not chest-anchored")
-    if any(weight(vertex, chest_group) < 0.34 or
-           weight(vertex, upperarm_group) < 0.64
+    if any(weight(vertex, chest_group) < 0.69 or
+           weight(vertex, upperarm_group) < 0.29
            for vertex in blend_ring):
         raise RuntimeError(f"{detail_name} shoulder blend is incomplete")
+    clearances = []
+    # Rings zero through four form the attached shoulder socket. From ring five
+    # downward, every sleeve cross-section must sit completely outside the coat.
+    for ring_index in range(5, len(detail.data.vertices) // segments):
+        ring = list(detail.data.vertices[
+            ring_index * segments:(ring_index + 1) * segments])
+        ring_z = sum(vertex.co.z for vertex in ring) / len(ring)
+        sleeve_inner_x = min(abs(vertex.co.x) for vertex in ring)
+        coat_radius_x, _coat_radius_y, _coat_center_y = \
+            coat_ring_dimensions_at_z(ring_z, coat_ring_specs)
+        clearances.append(sleeve_inner_x - coat_radius_x)
+    if not clearances or min(clearances) < 0.003:
+        raise RuntimeError(
+            f"{detail_name} intersects coat below shoulder: "
+            f"{min(clearances) if clearances else float('-inf'):.4f} m")
     print(f"MILO_SHOULDER_FIT: {detail_name} overlaps coat "
-          f"{inner_x:.4f}..{outer_x:.4f} at edge {coat_edge_x:.4f}")
+          f"{inner_x:.4f}..{outer_x:.4f} at edge {coat_edge_x:.4f}; "
+          f"underarm clearance {min(clearances):.4f} m")
+
+
+def verify_animated_underarm_clearance(armature, action, sleeve_names,
+                                       socket_ring_count=5, segments=16,
+                                       sample_count=16):
+    """Reject skinned sleeve/coat intersections across the walking action."""
+    scene = bpy.context.scene
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    start, end = action.frame_range
+
+    def evaluated_tree(obj, first_vertex=0):
+        evaluated = obj.evaluated_get(depsgraph)
+        mesh = evaluated.to_mesh()
+        matrix = evaluated.matrix_world
+        vertices = [matrix @ vertex.co for vertex in mesh.vertices]
+        polygons = [tuple(polygon.vertices) for polygon in mesh.polygons
+                    if all(index >= first_vertex for index in polygon.vertices)]
+        tree = BVHTree.FromPolygons(vertices, polygons, all_triangles=False)
+        evaluated.to_mesh_clear()
+        return tree, vertices
+
+    original_action = armature.animation_data.action
+    original_frame = scene.frame_current
+    armature.animation_data.action = action
+    first_free_vertex = socket_ring_count * segments
+    collision = None
+    for sample_index in range(sample_count):
+        amount = sample_index / max(sample_count - 1, 1)
+        frame = start + (end - start) * amount
+        frame_floor = math.floor(frame)
+        scene.frame_set(frame_floor, subframe=frame - frame_floor)
+        depsgraph.update()
+        coat_tree, coat_vertices = evaluated_tree(bpy.data.objects["CoatBody"])
+        for sleeve_name in sleeve_names:
+            sleeve_tree, sleeve_vertices = evaluated_tree(
+                bpy.data.objects[sleeve_name], first_free_vertex)
+            if coat_tree.overlap(sleeve_tree):
+                free_vertices = sleeve_vertices[first_free_vertex:]
+                collision = (sleeve_name, frame,
+                             min(abs(vertex.x) for vertex in free_vertices),
+                             max(abs(vertex.x) for vertex in coat_vertices))
+                break
+        if collision is not None:
+            break
+    armature.animation_data.action = original_action
+    scene.frame_set(original_frame)
+    if collision is not None:
+        raise RuntimeError(
+            f"{collision[0]} intersects coat during walk at frame "
+            f"{collision[1]:.2f}; sleeve inner x {collision[2]:.4f}, "
+            f"coat outer x {collision[3]:.4f}")
+    print("MILO_ANIMATED_UNDERARM_CLEARANCE: both sleeves clear coat "
+          f"across {sample_count} walk-cycle samples")
 
 
 def verify_cane_palm_clearance(paw_rings, cane_bottom, cane_top,
@@ -957,7 +1185,9 @@ def verify_cane_fist_alignment(paw, cane_top, maximum_offset=0.012):
 
 def verify_reference_hand_fit(paw, style):
     """Prove the unified sculpted hand keeps the blueprint proportions."""
-    paw_bounds = [paw.matrix_world @ Vector(corner) for corner in paw.bound_box]
+    basis_vertices = paw.data.shape_keys.key_blocks["Basis"].data \
+        if paw.data.shape_keys is not None else paw.data.vertices
+    paw_bounds = [paw.matrix_world @ vertex.co for vertex in basis_vertices]
     paw_min = Vector((min(point.x for point in paw_bounds),
                       min(point.y for point in paw_bounds),
                       min(point.z for point in paw_bounds)))
@@ -965,8 +1195,8 @@ def verify_reference_hand_fit(paw, style):
                       max(point.y for point in paw_bounds),
                       max(point.z for point in paw_bounds)))
     size = paw_max - paw_min
-    if (size.x < 0.24 or size.x > 0.28 or size.y < 0.16
-            or size.y > 0.20 or size.z < 0.20 or size.z > 0.23):
+    if (size.y < 0.24 or size.y > 0.28 or size.x < 0.16
+            or size.x > 0.20 or size.z < 0.20 or size.z > 0.23):
         raise RuntimeError(
             f"{paw.name} lost the rounded reference proportions: {size}")
     print(f"MILO_REFERENCE_HAND_FIT: {style} size={size}")
@@ -1039,6 +1269,123 @@ def look_at(obj, target):
     obj.rotation_euler = (Vector(target) - obj.location).to_track_quat("-Z", "Y").to_euler()
 
 
+def action_channelbag(action):
+    """Return the Blender 5 layered-action channel bag used by this rig."""
+    slot = action.slots[0]
+    strip = action.layers[0].strips[0]
+    return strip.channelbag(slot)
+
+
+def replace_bone_rotation_keys(action, bone_name, samples):
+    """Write a complete cyclic quaternion curve into an imported action copy."""
+    path = f'pose.bones["{bone_name}"].rotation_quaternion'
+    curves = {
+        curve.array_index: curve
+        for curve in action_channelbag(action).fcurves
+        if curve.data_path == path
+    }
+    if len(curves) != 4:
+        raise RuntimeError(f"Missing quaternion curves for {bone_name}")
+    for component, curve in curves.items():
+        curve.keyframe_points.clear()
+        for frame, rotation in samples:
+            point = curve.keyframe_points.insert(frame, rotation[component])
+            point.interpolation = "BEZIER"
+            point.handle_left_type = "AUTO_CLAMPED"
+            point.handle_right_type = "AUTO_CLAMPED"
+        curve.update()
+
+
+def build_milo_walking_action(armature):
+    """Author a Milo-proportioned full-body walk from the cast's source gait.
+
+    The donor action already supplies convincing hips, legs and opposing step
+    timing. Milo's much larger head and broad coat amplify its upper-body sway,
+    so spine/chest rotations are softened and the head is stabilized in
+    armature space with subtle step-timed life layered back in.
+    """
+    source = bpy.data.actions.get("Walking_A")
+    if source is None:
+        raise RuntimeError("Walking_A is missing from the donor rig")
+    animation_data = armature.animation_data_create()
+    animation_data.action = source
+    if source.slots:
+        animation_data.action_slot = source.slots[0]
+    armature.data.pose_position = "POSE"
+    start, end = source.frame_range
+    sample_count = 33
+    sample_times = [
+        start + (end - start) * index / (sample_count - 1)
+        for index in range(sample_count)
+    ]
+    neutral_arm_bones = (
+        "upperarm.l", "lowerarm.l", "wrist.l", "hand.l",
+        "upperarm.r", "lowerarm.r", "wrist.r", "hand.r",
+    )
+    rotations = {"spine": [], "chest": [], "head": [],
+                 **{bone_name: [] for bone_name in neutral_arm_bones}}
+    head_rest_rotation = armature.data.bones["head"].matrix_local.to_quaternion()
+
+    for index, frame in enumerate(sample_times):
+        frame_floor = math.floor(frame)
+        bpy.context.scene.frame_set(frame_floor, subframe=frame - frame_floor)
+        bpy.context.view_layer.update()
+
+        # Preserve the donor's counter-rotation but reduce its amplitude for
+        # Milo's short, wide silhouette. This keeps the coat weighted without
+        # making the whole torso rock like one rigid mannequin block.
+        for bone_name, strength in (("spine", 0.90), ("chest", 0.84)):
+            pose_bone = armature.pose.bones[bone_name]
+            location, rotation, scale = pose_bone.matrix_basis.decompose()
+            softened = Quaternion().slerp(rotation, strength).normalized()
+            pose_bone.matrix_basis = Matrix.LocRotScale(location, softened, scale)
+            rotations[bone_name].append((frame, softened.copy()))
+        bpy.context.view_layer.update()
+
+        head = armature.pose.bones["head"]
+        head_location, current_head_rotation, head_scale = head.matrix.decompose()
+        phase = index / (sample_count - 1)
+        # Stabilize enough to keep the eyes readable while retaining a restrained
+        # amount of the donor's neck response. Milo's previous 70% lock read as a
+        # floating mannequin head once the shoulders and cane became more active.
+        stabilized = current_head_rotation.slerp(head_rest_rotation, 0.62)
+        yaw = Quaternion(Vector((0.0, 0.0, 1.0)),
+                         math.radians(1.35) * math.sin(phase * math.tau))
+        nod = Quaternion(Vector((1.0, 0.0, 0.0)),
+                         math.radians(1.05) * math.sin(phase * math.tau * 2.0))
+        roll = Quaternion(Vector((0.0, 1.0, 0.0)),
+                          math.radians(0.70) * math.sin(phase * math.tau + math.pi / 2.0))
+        desired_head_rotation = (yaw @ nod @ roll @ stabilized).normalized()
+        head.matrix = Matrix.LocRotScale(
+            head_location, desired_head_rotation, head_scale)
+        bpy.context.view_layer.update()
+        rotations["head"].append(
+            (frame, head.matrix_basis.to_quaternion().normalized()))
+        # Milo's runtime anatomical IK authors both walking arm chains. Remove
+        # the donor warrior's sideways shoulder fold from this base clip so it
+        # cannot pull either sleeve through the broad mayoral coat before IK.
+        for bone_name in neutral_arm_bones:
+            arm_rotation = Quaternion()
+            if bone_name == "upperarm.r":
+                # Retain a restrained sagittal counter-swing in the exported
+                # clip; runtime IK refines its wrist target and backward elbow.
+                arm_rotation = Quaternion(
+                    Vector((1.0, 0.0, 0.0)),
+                    math.radians(8.5) * math.cos(phase * math.tau))
+            rotations[bone_name].append((frame, arm_rotation))
+
+    milo_action = source.copy()
+    milo_action.name = "Milo_Walking"
+    for bone_name, samples in rotations.items():
+        replace_bone_rotation_keys(milo_action, bone_name, samples)
+    animation_data.action = milo_action
+    if milo_action.slots:
+        animation_data.action_slot = milo_action.slots[0]
+    bpy.context.scene.frame_set(int(start))
+    bpy.context.view_layer.update()
+    return milo_action
+
+
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(SOURCE_RIG))
 armature = next(obj for obj in bpy.context.scene.objects if obj.type == "ARMATURE")
@@ -1054,13 +1401,13 @@ bpy.ops.object.mode_set(mode="EDIT")
 for suffix, side in ((".l", 1.0), (".r", -1.0)):
     chain = {
         "upperarm": ((0.355 * side, 0.0, 1.12),
-                     (0.405 * side, 0.0, 0.91)),
-        "lowerarm": ((0.405 * side, 0.0, 0.91),
-                     (0.435 * side, 0.0, 0.76)),
-        "wrist": ((0.435 * side, 0.0, 0.76),
-                  (0.440 * side, 0.0, 0.69)),
-        "hand": ((0.440 * side, 0.0, 0.69),
-                 (0.440 * side, -0.005, 0.55)),
+                     (0.545 * side, 0.0, 0.91)),
+        "lowerarm": ((0.545 * side, 0.0, 0.91),
+                     (0.575 * side, 0.0, 0.76)),
+        "wrist": ((0.575 * side, 0.0, 0.76),
+                  (0.585 * side, 0.0, 0.69)),
+        "hand": ((0.585 * side, 0.0, 0.69),
+                 (0.585 * side, -0.005, 0.55)),
     }
     for bone_name, (head, tail) in chain.items():
         bone = armature.data.edit_bones.get(bone_name + suffix)
@@ -1069,6 +1416,7 @@ for suffix, side in ((".l", 1.0), (".r", -1.0)):
             bone.head = head
             bone.tail = tail
 bpy.ops.object.mode_set(mode="OBJECT")
+milo_walk_action = build_milo_walking_action(armature)
 
 references = make_collection("00_TARGET_REFERENCE")
 collections = {
@@ -1459,8 +1807,9 @@ COAT_RING_SPECS = [
     (1.080, 0.405, 0.270, 0.015),
     (1.180, 0.330, 0.230, 0.015),
 ]
-tailored_coat_body("CoatBody", COAT_RING_SPECS,
-                   NAVY, "chest", collections["outfit"])
+coat_body = tailored_coat_body("CoatBody", COAT_RING_SPECS,
+                               NAVY, "chest", collections["outfit"])
+blend_coat_shoulders_into_armature(coat_body)
 
 
 def coat_front_point(x, z, clearance):
@@ -1682,42 +2031,117 @@ for side, label in ((-1, "L"), (1, "R")):
           (0.405 * side, 0.115, 0.355)],
          0.003, NAVY_SEAM, "chest", collections["outfit"])
 # 06/07 — each sleeve is one continuous tapered skin across the full arm
-# chain. The blended elbow/wrist rings keep the silhouette connected during
-# animation instead of moving three rigid boxes independently.
+# chain. Dense, gradual rings around the anatomical elbow prevent linear skinning
+# from turning a deep bend into one angular block joined to a thin forearm.
 for side, suffix, label in ((-1, ".r", "L"), (1, ".l", "R")):
-    weighted_tapered_limb(
+    sleeve_rings = [
+        (0.330 * side, 0.000, 1.150, 0.075, 0.095),
+        # The side-depth stays slightly flatter than the visible width. This
+        # reads as tailored cloth over an arm instead of a padded round tube.
+        (0.355 * side, 0.000, 1.125, 0.106, 0.103),
+        (0.386 * side, 0.000, 1.105, 0.111, 0.107),
+        (0.425 * side, 0.000, 1.080, 0.113, 0.109),
+        (0.470 * side, 0.000, 1.040, 0.111, 0.107),
+        (0.516 * side, 0.000, 0.985, 0.106, 0.103),
+        (0.542 * side, 0.000, 0.950, 0.103, 0.099),
+        (0.560 * side, 0.000, 0.925, 0.101, 0.096),
+        (0.570 * side, 0.000, 0.910, 0.100, 0.094),
+        (0.573 * side, 0.000, 0.895, 0.099, 0.093),
+        (0.576 * side, 0.000, 0.870, 0.098, 0.093),
+        (0.581 * side, 0.000, 0.835, 0.096, 0.094),
+        (0.587 * side, 0.000, 0.790, 0.094, 0.095),
+        (0.592 * side, 0.000, 0.750, 0.092, 0.095),
+        (0.597 * side, 0.000, 0.720, 0.089, 0.093),
+        (0.600 * side, 0.000, 0.690, 0.083, 0.091),
+    ]
+    if label == "R":
+        # The cane shoulder needs a little more lateral room than the relaxed
+        # arm. Fade the offset out through the elbow so the socket sits outside
+        # the coat while the cuff and hand keep their authored cane alignment.
+        shoulder_outward = (
+            0.018, 0.020, 0.020, 0.018, 0.015, 0.011, 0.008, 0.005,
+            0.003, 0.002, 0.001, 0.000, 0.000, 0.000, 0.000, 0.000,
+        )
+        # A very small cloth-volume correction around the bend removes the
+        # pinched hourglass that made upper and lower sleeve read as separate
+        # pieces. The long taper remains visible; this is not a global scale-up.
+        bend_width = (
+            0.000, 0.000, 0.001, 0.002, 0.003, 0.004, 0.005, 0.006,
+            0.006, 0.006, 0.005, 0.004, 0.003, 0.002, 0.001, 0.000,
+        )
+        sleeve_rings = [
+            (x + shoulder_outward[index] * side, y, z,
+             radius_x + bend_width[index], radius_y + bend_width[index] * 0.55)
+            for index, (x, y, z, radius_x, radius_y) in enumerate(sleeve_rings)
+        ]
+    sleeve = weighted_tapered_limb(
         "Sleeve_" + label,
-        [(0.325 * side, 0.000, 1.150, 0.055, 0.080),
-         (0.350 * side, 0.000, 1.125, 0.095, 0.115),
-         (0.385 * side, 0.000, 1.040, 0.122, 0.130),
-         (0.410 * side, 0.000, 0.900, 0.112, 0.122),
-         (0.430 * side, 0.000, 0.770, 0.098, 0.112),
-         (0.440 * side, 0.000, 0.690, 0.088, 0.102)],
-        [(("chest", 0.80), ("upperarm" + suffix, 0.20)),
-         (("chest", 0.35), ("upperarm" + suffix, 0.65)),
+        scale_limb_profile(
+        # A tailored sleeve profile gives Milo a soft shoulder cap, a controlled
+        # upper-arm taper, a small anatomical elbow and a clean forearm taper.
+        # The gradual centerline avoids both the old segmented hinge and the
+        # swollen S-shaped tube produced by over-preserving elbow volume.
+        # The enlarged sleeve cap begins well inside the coat and matches the
+        # coat shoulder's upper-arm influence at its boundary. This keeps the
+        # two meshes visually fused throughout the swing instead of opening a
+        # moving shoulder line.
+        sleeve_rings,
+        # Normal 1.0x sleeve size. The shared scaling path remains explicit so
+        # later size changes cannot accidentally move the wrist or shoulder.
+        (1.00, 1.00, 1.00, 1.00, 1.00,
+         1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
+         1.00, 1.00, 1.00),
+        # No clearance compensation is needed at the normal profile size.
+        (0.00, 0.00, 0.00, 0.00, 0.00,
+         0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+         0.00, 0.00, 0.00)),
+        [(("chest", 0.84), ("upperarm" + suffix, 0.16)),
+         (("chest", 0.70), ("upperarm" + suffix, 0.30)),
+         (("chest", 0.55), ("upperarm" + suffix, 0.45)),
+         (("chest", 0.40), ("upperarm" + suffix, 0.60)),
+         (("chest", 0.25), ("upperarm" + suffix, 0.75)),
+         # A broad, monotonic elbow blend makes the whole cloth tube curve.
+         # Keeping rigid upper/lower regions away from the joint prevents a
+         # visible hinge between two otherwise smooth sleeve volumes.
          (("upperarm" + suffix, 0.95), ("lowerarm" + suffix, 0.05)),
-         (("upperarm" + suffix, 0.45), ("lowerarm" + suffix, 0.55)),
+         (("upperarm" + suffix, 0.86), ("lowerarm" + suffix, 0.14)),
+         (("upperarm" + suffix, 0.74), ("lowerarm" + suffix, 0.26)),
+         (("upperarm" + suffix, 0.62), ("lowerarm" + suffix, 0.38)),
+         (("upperarm" + suffix, 0.50), ("lowerarm" + suffix, 0.50)),
+         (("upperarm" + suffix, 0.38), ("lowerarm" + suffix, 0.62)),
+         (("upperarm" + suffix, 0.26), ("lowerarm" + suffix, 0.74)),
+         (("upperarm" + suffix, 0.10), ("lowerarm" + suffix, 0.85),
+          ("wrist" + suffix, 0.05)),
          (("lowerarm" + suffix, 0.80), ("wrist" + suffix, 0.20)),
+         (("lowerarm" + suffix, 0.55), ("wrist" + suffix, 0.45)),
          (("wrist" + suffix, 1.00),)],
-        NAVY_PANEL, collections["arms"]
+        NAVY, collections["arms"], segments=16,
+        orient_to_path=True, fixed_ring_count=5
     )
-    # The wrist is elliptical, so circular toruses visibly sank into both the
-    # sleeve and paw. These two tailored rails follow the actual cuff profile,
-    # sit just outside its surface and remain rigidly attached to the wrist.
+    sleeve["arm_size_scale"] = 1.00
+    sleeve["smooth_wrist_scale_transition"] = True
+    sleeve["cane_shoulder_outward_offset"] = 0.020 if label == "R" else 0.000
+    sleeve["continuous_cane_arm_profile"] = label == "R"
+    print(f"MILO_ARM_SIZE: Sleeve_{label} normal 1.00x profile")
+    # One compact fitted cuff bridges sleeve to paw. Its narrow lower trim
+    # overlaps the edge, so the pair reads as one tailored cuff instead of two
+    # separated hoops or one oversized rectangular band in profile.
     fitted_elliptical_cuff(
-        "Cuff_" + label, (0.439 * side, -0.006),
-        (0.094, 0.114), (0.103, 0.123), (0.683, 0.697),
+        "Cuff_" + label, (0.599 * side, -0.006),
+        (0.088, 0.101), (0.099, 0.112), (0.684, 0.700),
         GOLD, "wrist" + suffix, collections["arms"],
-        sleeve_radii=(0.089, 0.103))
+        sleeve_radii=(0.083, 0.091),
+        limb_axis=(0.010 * side, 0.0, -0.070))
     fitted_elliptical_cuff(
-        "CuffAccent_" + label, (0.436 * side, -0.006),
-        (0.097, 0.118), (0.104, 0.125), (0.714, 0.722),
+        "CuffAccent_" + label, (0.599 * side, -0.006),
+        (0.090, 0.105), (0.100, 0.115), (0.697, 0.707),
         GOLD, "wrist" + suffix, collections["arms"],
-        sleeve_radii=(0.092, 0.106))
+        sleeve_radii=(0.085, 0.095),
+        limb_axis=(0.010 * side, 0.0, -0.070))
     # Target close-ups: the palm, three finger lobes and thumb are sculpted from
     # one continuous object. Finger definition comes from the silhouette and a
     # unified curl shape key, never from attached sphere objects.
-    paw_center_x = 0.440 * side if label == "L" else 0.455
+    paw_center_x = 0.600 * side
     hand_style = "relaxed" if label == "L" else "cane_grip"
     paw = faceted_mitten_paw(
         "Paw_" + label, paw_center_x, 0.590, side, hand_style,
@@ -1749,26 +2173,26 @@ for side, suffix, label in ((-1, ".r", "L"), (1, ".l", "R")):
 # lower paw silhouette, a compact gold grip remains visible underneath, and
 # shallow knuckle contours replace the former exposed wraparound finger bars.
 CANE_BONE = "hand.l"
-tube("MayorCaneShaft", [(0.520, -0.020, 0.100),
-                        (0.465, -0.020, 0.545)],
+tube("MayorCaneShaft", [(0.665, -0.020, 0.100),
+                        (0.610, -0.020, 0.545)],
      0.024, WOOD, CANE_BONE, collections["accessories"])
-tube("MayorCaneLowerFerrule", [(0.523, -0.020, 0.055),
-                               (0.515, -0.020, 0.145)],
+tube("MayorCaneLowerFerrule", [(0.668, -0.020, 0.055),
+                               (0.660, -0.020, 0.145)],
      0.028, GOLD, CANE_BONE, collections["accessories"])
-torus("MayorCaneLowerCollar", (0.515, -0.020, 0.145), 0.033, 0.008,
+torus("MayorCaneLowerCollar", (0.660, -0.020, 0.145), 0.033, 0.008,
       GOLD, CANE_BONE, collections["accessories"], rotation=(0, 0, 0))
-torus("MayorCaneUpperCollar", (0.469, -0.020, 0.478), 0.034, 0.009,
+torus("MayorCaneUpperCollar", (0.614, -0.020, 0.478), 0.034, 0.009,
       GOLD, CANE_BONE, collections["accessories"], rotation=(0, 0, 0))
 tube("MayorCaneHook",
-     [(0.438, -0.020, 0.525), (0.465, -0.020, 0.540),
-      (0.492, -0.020, 0.525)],
+     [(0.583, -0.020, 0.525), (0.610, -0.020, 0.540),
+      (0.637, -0.020, 0.525)],
      0.015, GOLD, CANE_BONE, collections["accessories"], curved=True)
-sphere("MayorCaneGroundTip", (0.523, -0.020, 0.045),
+sphere("MayorCaneGroundTip", (0.668, -0.020, 0.045),
        (0.028, 0.028, 0.042), GOLD, CANE_BONE,
        collections["accessories"], 16, 10)
 verify_cane_fist_alignment(
     bpy.data.objects["Paw_R"],
-    (0.465, -0.020, 0.545))
+    (0.610, -0.020, 0.545))
 # Regression proof for the fitted back tailoring. This runs on every rebuild,
 # so later shape edits cannot silently reintroduce floating or intersecting
 # belt and split-tail geometry.
@@ -1798,9 +2222,12 @@ verify_limb_weights(
         "Sleeve_R": ("upperarm.l", "lowerarm.l", "wrist.l"),
     },
 )
+verify_coat_shoulder_response(coat_body)
 # The coat radius is 0.3525 m at z=1.150, interpolated between its top rings.
-verify_shoulder_fit("Sleeve_L", "chest", "upperarm.r", 0.3525)
-verify_shoulder_fit("Sleeve_R", "chest", "upperarm.l", 0.3525)
+verify_shoulder_fit("Sleeve_L", "chest", "upperarm.r", 0.3525,
+                    COAT_RING_SPECS, segments=16)
+verify_shoulder_fit("Sleeve_R", "chest", "upperarm.l", 0.3525,
+                    COAT_RING_SPECS, segments=16)
 
 # Every part remains separate but follows its assigned donor-rig bone.
 for part in parts:
@@ -1883,6 +2310,16 @@ look_at(camera, (0, 0, 1.03))
 scene.render.filepath = str(OUTPUT_RENDER)
 
 # Save the alignment workspace first, then export only rig plus model parts.
+# Export from POSE, not REST: REST suppresses evaluated animation transforms and
+# previously left Milo's embedded Walking_A with only three surviving tracks.
+armature.data.pose_position = "POSE"
+armature.animation_data.action = milo_walk_action
+if milo_walk_action.slots:
+    armature.animation_data.action_slot = milo_walk_action.slots[0]
+bpy.context.scene.frame_set(0)
+bpy.context.view_layer.update()
+verify_animated_underarm_clearance(
+    armature, milo_walk_action, ("Sleeve_L", "Sleeve_R"))
 OUTPUT_BLEND.parent.mkdir(parents=True, exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(OUTPUT_BLEND))
 bpy.ops.object.select_all(action="DESELECT")
@@ -1892,7 +2329,9 @@ for part in parts:
 bpy.context.view_layer.objects.active = armature
 bpy.ops.export_scene.gltf(
     filepath=str(OUTPUT_GLB), export_format="GLB", use_selection=True,
-    export_animations=True, export_nla_strips=True, export_materials="EXPORT"
+    export_animations=True, export_animation_mode="ACTIONS",
+    export_nla_strips=False, export_force_sampling=True,
+    export_materials="EXPORT"
 )
 print(
     f"MILO_EXACT_PARTS_BUILD: {len(parts)} named parts -> {OUTPUT_GLB}\n"

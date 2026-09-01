@@ -21,15 +21,17 @@ func _run() -> void:
 	chat._show_choices()
 	assert(requested_poses.back() == "welcome",
 		"the companion menu uses Milo's welcoming cane pose")
-	for companion_path in [
+	for removed_companion_path in [
 		"Check in with a feeling",
 		"Reflect with Milo",
 		"Discover a strength",
 		"Celebrate my progress",
 		"Choose an ARTÉA activity",
 	]:
-		assert(_has_button(choices, companion_path),
-			"Wonderful Counsellor Milo exposes %s" % companion_path)
+		assert(not _has_button(choices, removed_companion_path),
+			"chat-only Milo hides the old %s option" % removed_companion_path)
+	assert(_has_button(choices, "Ask Milo"),
+		"chat-only Milo keeps one explicit send control")
 
 	chat._show_emotion_check_ins()
 	assert(requested_poses.back() == "heart",
@@ -51,13 +53,16 @@ func _run() -> void:
 	assert(requested_poses.back() == "encourage",
 		"emotion response opens Milo's arms in encouragement")
 	for evidence in [
-		"VALIDATE", "I hear you", "REFLECT", "It sounds like",
-		"IDENTITY & STRENGTH", "You are more than this moment",
-		"GENTLE GUIDANCE", "Let's explore this together",
-		"CONNECT TO ARTÉA", "Mind Spark Kingdom",
+		"VALIDATION EVIDENCE", "It sounds like", "REFLECTION EVIDENCE",
+		"You are more than this moment", "STRENGTH EVIDENCE",
+		"Let's explore this together", "GUIDANCE EVIDENCE", "Mind Spark Kingdom",
 	]:
 		assert(history.text.contains(evidence),
 			"emotion response contains %s" % evidence)
+	for robotic_heading in ["VALIDATE\n", "REFLECT\n", "IDENTITY & STRENGTH",
+			"GENTLE GUIDANCE", "CONNECT TO ARTÉA"]:
+		assert(not history.text.contains(robotic_heading),
+			"emotion response removes robotic heading %s" % robotic_heading)
 
 	chat._show_strength_discoveries()
 	assert(requested_poses.back() == "encourage",
@@ -117,7 +122,7 @@ func _run() -> void:
 
 
 func _has_button(container: VBoxContainer, text: String) -> bool:
-	for child in container.get_children():
-		if child is Button and child.text == text:
+	for child in container.find_children("*", "Button", true, false):
+		if (child as Button).text == text:
 			return true
 	return false

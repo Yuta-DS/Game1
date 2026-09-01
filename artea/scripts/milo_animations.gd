@@ -1923,6 +1923,13 @@ func open_chatbot():
 	chatbot_ui = load("res://scenes/chatbot.tscn").instantiate()
 	get_tree().current_scene.add_child(chatbot_ui)
 	print("Milo opened chat")
+	var companion_manager := get_node_or_null("/root/MiloCompanionManager")
+	if companion_manager != null \
+			and companion_manager.has_method("get_conversation_context") \
+			and chatbot_ui.has_method("configure_conversation_context"):
+		chatbot_ui.call("configure_conversation_context",
+			companion_manager.call("get_conversation_context"),
+			get_tree().current_scene.name, get_companion_state_name())
 
 	chatbot_ui.user_input.grab_focus()
 	chatbot_ui.connect("chat_closed", Callable(self, "close_chatbot"))

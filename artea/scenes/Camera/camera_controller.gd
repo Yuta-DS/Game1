@@ -52,6 +52,11 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
+	# Modal UI owns the pointer. This must run before generic click capture;
+	# otherwise clicking a Milo option re-locks the mouse to camera look.
+	if player != null and "interacting" in player and player.interacting:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			spring_length = maxf(minZoom, spring_length - zoomStep)
@@ -64,10 +69,6 @@ func _input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		return
 
-	# The player may be absent (or still loading) in non-hub scenes; only
-	# block input when there is a player and it is mid-interaction.
-	if player != null and "interacting" in player and player.interacting:
-		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotateFromVector(event.relative * mouseAcceleration)
 
