@@ -1,0 +1,67 @@
+<svg width="1800" height="360" viewBox="0 0 1800 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vellum" x1="900" y1="64" x2="900" y2="338" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF0C9"/>
+      <stop offset="0.5" stop-color="#F0D39A"/>
+      <stop offset="1" stop-color="#D8AE68"/>
+    </linearGradient>
+    <linearGradient id="vellumEdge" x1="900" y1="44" x2="900" y2="346" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF1B8"/>
+      <stop offset="0.45" stop-color="#C8963B"/>
+      <stop offset="1" stop-color="#70491A"/>
+    </linearGradient>
+    <linearGradient id="midnight" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#153A51"/>
+      <stop offset="0.52" stop-color="#0A2436"/>
+      <stop offset="1" stop-color="#061621"/>
+    </linearGradient>
+    <linearGradient id="antiqueGold" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFE7A0"/>
+      <stop offset="0.34" stop-color="#D7A94C"/>
+      <stop offset="0.72" stop-color="#9A681F"/>
+      <stop offset="1" stop-color="#664114"/>
+    </linearGradient>
+    <pattern id="paperGrain" width="46" height="46" patternUnits="userSpaceOnUse">
+      <path d="M3 13C12 9 20 16 30 12C36 10 41 10 45 12" stroke="#9B6B2B" stroke-opacity="0.045" stroke-width="2"/>
+      <circle cx="12" cy="33" r="1.5" fill="#734B20" fill-opacity="0.055"/>
+      <circle cx="38" cy="28" r="1" fill="#FFF6D9" fill-opacity="0.16"/>
+    </pattern>
+  </defs>
+
+  <path d="M54 67H1746L1792 113V292L1746 338H54L8 292V113L54 67Z" fill="#040C12" fill-opacity="0.62"/>
+  <path d="M49 54H1751L1794 97V279L1751 322H49L6 279V97L49 54Z" fill="url(#vellumEdge)" stroke="#FFF2C3" stroke-width="4"/>
+  <path d="M62 68H1738L1780 110V266L1738 308H62L20 266V110L62 68Z" fill="#714B1B"/>
+  <path d="M70 76H1730L1769 115V261L1730 300H70L31 261V115L70 76Z" fill="url(#vellum)" stroke="#FFECC0" stroke-width="3"/>
+  <path d="M70 76H1730L1769 115" stroke="#FFF8DC" stroke-opacity="0.82" stroke-width="5"/>
+  <path d="M31 261L70 300H1730L1769 261" stroke="#84591F" stroke-opacity="0.56" stroke-width="5"/>
+  <path d="M83 90H1717L1754 127V249L1717 286H83L46 249V127L83 90Z" stroke="#B47D2C" stroke-opacity="0.52" stroke-width="2"/>
+  <path d="M83 90H1717L1754 127" stroke="#FFF5D1" stroke-opacity="0.7" stroke-width="2"/>
+  <path d="M31 76L70 76L31 115" fill="#FFE6A3" fill-opacity="0.48"/>
+  <path d="M1769 76L1730 76L1769 115" fill="#FFE6A3" fill-opacity="0.48"/>
+  <path d="M31 300L70 300L31 261" fill="#8B5D20" fill-opacity="0.34"/>
+  <path d="M1769 300L1730 300L1769 261" fill="#8B5D20" fill-opacity="0.34"/>
+  <path d="M70 76H1730L1769 115V261L1730 300H70L31 261V115L70 76Z" fill="url(#paperGrain)"/>
+  <path d="M119 270C332 287 527 262 724 275C934 289 1127 259 1330 274C1461 284 1570 276 1677 260" stroke="#80551E" stroke-opacity="0.10" stroke-width="7" stroke-linecap="round"/>
+
+  <path d="M133 9H769L818 55L769 101H133L84 55L133 9Z" fill="#06111A" stroke="#553510" stroke-width="8"/>
+  <path d="M140 14H762L804 55L762 96H140L98 55L140 14Z" fill="url(#midnight)" stroke="url(#antiqueGold)" stroke-width="4"/>
+  <path d="M120 55L149 29H188L166 55L188 81H149L120 55Z" fill="#C99537"/>
+  <path d="M782 55L753 29H714L736 55L714 81H753L782 55Z" fill="#C99537"/>
+  <circle cx="145" cy="55" r="7" fill="#FFF0B3"/>
+  <circle cx="757" cy="55" r="7" fill="#FFF0B3"/>
+  <path d="M205 34V76" stroke="#D0A24A" stroke-opacity="0.58" stroke-width="2"/>
+  <path d="M691 34V76" stroke="#D0A24A" stroke-opacity="0.58" stroke-width="2"/>
+
+  <g stroke="#A36E25" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M61 136V113L84 90H117"/>
+    <path d="M1739 136V113L1716 90H1683"/>
+    <path d="M61 240V263L84 286H117"/>
+    <path d="M1739 240V263L1716 286H1683"/>
+  </g>
+  <g fill="#B57F2E">
+    <path d="M85 117L92 124L85 131L78 124L85 117Z"/>
+    <path d="M1715 117L1722 124L1715 131L1708 124L1715 117Z"/>
+  </g>
+  <circle cx="1694" cy="248" r="25" fill="#C38D3A" fill-opacity="0.13" stroke="#84571F" stroke-opacity="0.32" stroke-width="2"/>
+  <path d="M1683 242L1694 253L1705 242" stroke="#6F491B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
