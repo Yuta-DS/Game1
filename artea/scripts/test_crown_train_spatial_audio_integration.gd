@@ -37,6 +37,10 @@ func _run() -> void:
 		if audio == null or audio.max_distance < 180.0 or audio.panning_strength < 1.0:
 			_fail("%s must be long-range fully directional train audio" % audio_name)
 			return
+	var controls := train.get_node_or_null("TrainControls3D") as AudioStreamPlayer3D
+	if controls == null or controls.max_distance > 100.0 or controls.panning_strength < 1.0:
+		_fail("cab and passenger control sounds need a close-range spatial source")
+		return
 	var engine := train.get_node("TractionEngine3D") as AudioStreamPlayer3D
 	var engine_loop := engine.stream as AudioStreamWAV
 	if engine_loop == null or engine_loop.get_length() < 7.9 \
@@ -49,14 +53,31 @@ func _run() -> void:
 	var horn_streams: Dictionary = director.get("_train_event_streams")
 	var horn := horn_streams.get(&"horn") as AudioStreamWAV
 	if horn == null or horn.get_length() < 3.1 or horn.loop_mode != AudioStreamWAV.LOOP_DISABLED:
-		_fail("R must trigger the substantial realistic locomotive horn one-shot")
+		_fail("H must trigger the substantial realistic locomotive horn one-shot")
 		return
 	if not bool(director.call("request_train_horn", train)):
-		_fail("the shared train audio manager rejected the R horn request")
+		_fail("the shared train audio manager rejected the H horn request")
 		return
 	var events := train.get_node("TrainEvents3D") as AudioStreamPlayer3D
 	if not events.playing or events.stream != horn:
-		_fail("the R horn request did not play through the train's spatial event source")
+		_fail("the H horn request did not play through the train's spatial event source")
 		return
-	print("CROWN_TRAIN_SPATIAL_AUDIO_TEST: PASS — engine, rail, wind, brake and R real-air-horn are spatially attached")
+	var close_events := [&"power_on", &"reverser", &"throttle", &"valve",
+		&"board", &"seat", &"ui_confirm", &"brake_release"]
+	var distant_events := [&"departure", &"brake", &"arrival", &"door"]
+	for event_name in close_events + distant_events:
+		var stream := horn_streams.get(event_name) as AudioStreamWAV
+		if stream == null or stream.get_length() < 0.2 \
+				or stream.loop_mode != AudioStreamWAV.LOOP_DISABLED:
+			_fail("%s needs a substantial Web-safe one-shot" % event_name)
+			return
+		if not bool(director.call("request_train_event", train, event_name)):
+			_fail("shared audio manager rejected %s" % event_name)
+			return
+		var expected_source := controls if event_name in close_events else events
+		if expected_source.stream != stream \
+				or expected_source.get_meta("last_train_event", &"") != event_name:
+			_fail("%s played from the wrong train position" % event_name)
+			return
+	print("CROWN_TRAIN_SPATIAL_AUDIO_TEST: PASS — engine, rails, H horn and all cab/passenger events are spatially attached")
 	quit()

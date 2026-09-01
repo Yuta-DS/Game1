@@ -18,9 +18,11 @@ const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
 const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
 # --- Rating UI ---
-@onready var ratingpanel: Control = $CanvasLayer/RatingPanel
-@onready var ratinglabel: Label = $CanvasLayer/RatingPanel/RatingLabel
-@onready var likebutton: Button = $CanvasLayer/RatingPanel/HBoxContainer/LikeButton
+@onready var ratingpanel: Control = get_node_or_null("CanvasLayer/RatingPanel") as Control
+@onready var ratinglabel: Label = get_node_or_null(
+	"CanvasLayer/RatingPanel/RatingLabel") as Label
+@onready var likebutton: Button = get_node_or_null(
+	"CanvasLayer/RatingPanel/HBoxContainer/LikeButton") as Button
 
 
 
@@ -29,9 +31,10 @@ func _ready() -> void:
 	_build_galaxy_transit()
 	_report_galaxy_state()
 	_build_quest_journal_button()
-	likebutton.visible = true
-	
-	likebutton.text = "♥"
+	if likebutton != null:
+		likebutton.visible = true
+		likebutton.text = "♥"
+		likebutton.pressed.connect(func(): _on_rate_button_pressed(1))
 
 	
 	print("RatingPanel = ", ratingpanel)
@@ -40,9 +43,6 @@ func _ready() -> void:
 	
 	
 			
-	likebutton.pressed.connect(func(): _on_rate_button_pressed(1))
-	
-
 	if ratingpanel:
 		ratingpanel.visible = false
 
@@ -185,7 +185,12 @@ func _build_quest_journal_button() -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_size_override("font_size", 18)
 	button.pressed.connect(_open_quest_journal)
-	$CanvasLayer.add_child(button)
+	var canvas_layer := get_node_or_null("CanvasLayer") as CanvasLayer
+	if canvas_layer == null:
+		canvas_layer = CanvasLayer.new()
+		canvas_layer.name = "CanvasLayer"
+		add_child(canvas_layer)
+	canvas_layer.add_child(button)
 
 
 func _open_quest_journal() -> void:

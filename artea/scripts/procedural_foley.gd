@@ -161,7 +161,13 @@ static func make_train_loop(layer: StringName) -> AudioStreamWAV:
 
 
 static func make_train_event(event_name: StringName) -> AudioStreamWAV:
-	var duration := 1.8 if event_name == &"departure" else 1.25
+	var durations := {
+		&"departure": 1.8, &"brake": 1.25, &"power_on": 0.9,
+		&"reverser": 0.34, &"throttle": 0.45, &"valve": 0.8,
+		&"board": 0.32, &"seat": 0.38, &"arrival": 1.3,
+		&"ui_confirm": 0.24, &"door": 0.75, &"brake_release": 0.55,
+	}
+	var duration: float = float(durations.get(event_name, 0.6))
 	var sample_count := int(duration * SAMPLE_RATE)
 	var samples := PackedFloat32Array()
 	samples.resize(sample_count)
@@ -172,24 +178,61 @@ static func make_train_event(event_name: StringName) -> AudioStreamWAV:
 		var time := float(index) / SAMPLE_RATE
 		var progress := time / duration
 		var value := 0.0
-		if event_name == &"departure":
-			# A friendly two-note Crown Line departure call rather than a harsh
-			# real-world locomotive horn.
-			var note_envelope := sin(PI * clampf(progress, 0.0, 1.0))
-			var second_note := smoothstep(0.34, 0.48, progress)
-			value = sin(TAU * 293.66 * time) * (1.0 - second_note) * 0.44
-			value += sin(TAU * 392.0 * time) * second_note * 0.38
-			value += sin(TAU * 587.33 * time) * note_envelope * 0.08
-			value *= note_envelope
-		else:
-			# Brake shoe shimmer, followed by a pneumatic release at the dock.
-			var squeal_envelope := pow(maxf(0.0, 1.0 - progress), 1.7)
-			var frequency := lerpf(1250.0, 620.0, progress)
-			value = sin(TAU * frequency * time) * squeal_envelope * 0.18
-			var raw := random.randf_range(-1.0, 1.0)
-			hiss = lerpf(hiss, raw, 0.22)
-			value += hiss * smoothstep(0.42, 0.62, progress) \
-				* pow(maxf(0.0, 1.0 - progress), 0.55) * 0.42
+		var raw := random.randf_range(-1.0, 1.0)
+		hiss = lerpf(hiss, raw, 0.20)
+		match event_name:
+			&"departure":
+				var note_envelope := sin(PI * clampf(progress, 0.0, 1.0))
+				var second_note := smoothstep(0.34, 0.48, progress)
+				value = sin(TAU * 293.66 * time) * (1.0 - second_note) * 0.44
+				value += sin(TAU * 392.0 * time) * second_note * 0.38
+				value += sin(TAU * 587.33 * time) * note_envelope * 0.08
+				value *= note_envelope
+			&"brake":
+				var squeal_envelope := pow(maxf(0.0, 1.0 - progress), 1.7)
+				value = sin(TAU * lerpf(1250.0, 620.0, progress) * time) \
+					* squeal_envelope * 0.18
+				value += hiss * smoothstep(0.42, 0.62, progress) \
+					* pow(maxf(0.0, 1.0 - progress), 0.55) * 0.42
+			&"power_on":
+				var power_envelope := sin(PI * progress)
+				value = sin(TAU * lerpf(78.0, 196.0, progress) * time) \
+					* power_envelope * 0.34
+				value += sin(TAU * 784.0 * time) * pow(maxf(0.0, 1.0 - progress * 8.0), 5.0) * 0.28
+			&"reverser":
+				var click := pow(maxf(0.0, 1.0 - progress * 9.0), 5.0)
+				var latch := pow(maxf(0.0, 1.0 - absf(progress - 0.58) * 15.0), 4.0)
+				value = sin(TAU * 540.0 * time) * click * 0.52 \
+					+ sin(TAU * 310.0 * time) * latch * 0.38
+			&"throttle":
+				var lever := pow(maxf(0.0, 1.0 - progress * 7.0), 4.0)
+				value = sin(TAU * 420.0 * time) * lever * 0.38
+				value += sin(TAU * 92.0 * time) * sin(PI * progress) * 0.16
+			&"valve", &"brake_release":
+				var air := sin(PI * progress) * (1.0 - progress * 0.35)
+				value = hiss * air * 0.48
+				value += sin(TAU * 880.0 * time) \
+					* pow(maxf(0.0, 1.0 - progress * 12.0), 4.0) * 0.14
+			&"board":
+				var step_hit := pow(maxf(0.0, 1.0 - progress * 8.0), 3.0)
+				value = sin(TAU * 92.0 * time) * step_hit * 0.52 + hiss * step_hit * 0.16
+			&"seat":
+				var settle := sin(PI * progress)
+				value = sin(TAU * 72.0 * time) * settle * 0.28 + hiss * settle * 0.18
+			&"arrival":
+				var chime := sin(PI * progress)
+				var note := 523.25 if progress < 0.34 else 659.25 if progress < 0.68 else 783.99
+				value = sin(TAU * note * time) * chime * 0.30
+				value += sin(TAU * note * 2.0 * time) * chime * 0.05
+			&"ui_confirm":
+				value = sin(TAU * lerpf(720.0, 980.0, progress) * time) \
+					* pow(maxf(0.0, 1.0 - progress), 1.6) * 0.32
+			&"door":
+				var slide := sin(PI * progress)
+				value = hiss * slide * 0.30
+				value += sin(TAU * lerpf(180.0, 95.0, progress) * time) * slide * 0.18
+			_:
+				value = hiss * sin(PI * progress) * 0.25
 		samples[index] = clampf(value, -1.0, 1.0)
 	return _stream_from_samples(samples, false)
 

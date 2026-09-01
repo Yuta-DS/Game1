@@ -39,8 +39,10 @@ func _run() -> void:
 	if blueprint.layout_side != "right/east" \
 			or float(blueprint.kingdom_boundary_clearance_m) != 200.0 \
 			or float(blueprint.access_bridge_width_m) != 16.0 \
-			or blueprint.rail_system != "single_center_monorail" \
+			or blueprint.rail_system != "centre_support_with_dual_wheel_rails" \
 			or float(blueprint.center_beam_width_m) != 3.2 \
+			or absf(float(blueprint.wheel_rail_gauge_m) - 8.0) > 0.01 \
+			or absf(float(blueprint.wheel_rail_top_below_train_origin_m) - 0.85) > 0.01 \
 			or not bool(blueprint.closed_loop):
 		_fail("floating station engineering blueprint has incorrect side or dimensions")
 		return
@@ -166,7 +168,9 @@ func _run() -> void:
 	for segment in route.get_children():
 		var beams := segment.find_children("CenterMonorailBeam", "MeshInstance3D", false, false)
 		var ribbons := segment.find_children("CrownLineEnergyRibbon", "MeshInstance3D", false, false)
+		var wheel_rails := segment.find_children("CrownWheelRail*", "MeshInstance3D", false, false)
 		if beams.size() != 1 or ribbons.size() != 1 \
+				or wheel_rails.size() != 2 \
 				or not bool(segment.get_meta("continuous_track", false)) \
 				or int(segment.get_meta("visual_mesh_pieces", 0)) != 1 \
 				or float(segment.get_meta("sample_spacing_m", 100.0)) > 10.1 \
@@ -176,6 +180,12 @@ func _run() -> void:
 			return
 		if segment.find_children("CenterMonorailBeamCollision", "StaticBody3D", false, false).size() != 1:
 			_fail("%s continuous centre beam is missing its matching collision surface" % segment.name)
+			return
+		if segment.find_children("CrownWheelRail*Collision", "StaticBody3D", false, false).size() != 2 \
+				or absf(float(segment.get_meta("wheel_rail_half_gauge_m", 0.0)) - 4.0) > 0.01 \
+				or absf(float(segment.get_meta(
+					"wheel_rail_top_below_train_origin_m", 0.0)) - 0.85) > 0.01:
+			_fail("%s wheel rails do not align with the train's measured ±4 m treads" % segment.name)
 			return
 		if not ((beams[0] as MeshInstance3D).mesh is ArrayMesh) \
 				or (beams[0] as MeshInstance3D).mesh.get_faces().size() < 100:
@@ -615,7 +625,7 @@ func _run() -> void:
 	var second_car := railway.get_node("RainbowGalaxyTrain/Carriage_02") as Node3D
 	var engine := railway.get_node("RainbowGalaxyTrain/MiloEngine") as Node3D
 	if not train is AnimatableBody3D or not (train as AnimatableBody3D).sync_to_physics:
-		_fail("complete train is not one synchronized moving platform")
+		_fail("complete train is not one script-driven moving platform")
 		return
 	var platform := train as AnimatableBody3D
 	if platform.collision_layer != 1 or platform.collision_mask != 1 \
@@ -678,8 +688,8 @@ func _run() -> void:
 			railway.to_global(railway.call("get_station_position", 1))) > 30.0:
 		_fail("passenger was not released safely at the destination platform")
 		return
-	# Q resolves by local train section: cab enters driver mode, benches seat the
-	# passenger. W/S move in both directions around the closed line.
+	# R enters driver mode and T chooses the nearest passenger section. Q is
+	# reserved for leaving the train. W/S move in both directions around the line.
 	# The ranges must stay local to one train section, but they also have to be
 	# reachable: a 2 m radius could only ever be satisfied by standing exactly on
 	# the interaction point, which the deck geometry made impossible, so the cab
@@ -687,7 +697,7 @@ func _run() -> void:
 	var driver_range := float(railway.call("get_driver_interaction_range"))
 	var seat_range := float(railway.call("get_seat_interaction_range"))
 	if driver_range < 8.0 or driver_range > 14.0 or seat_range < 6.0 or seat_range > 10.0:
-		_fail("Q interaction range is not a reachable, train-section-local radius")
+		_fail("train interaction range is not a reachable, section-local radius")
 		return
 	var flexible_range := float(railway.call("get_flexible_boarding_range"))
 	if flexible_range < 10.0 or flexible_range > 18.0:
@@ -702,25 +712,34 @@ func _run() -> void:
 			driver_position + train.global_basis.x.normalized() * (driver_range - 0.05))) != "drive" \
 			or String(railway.call("get_interaction_mode_for_position",
 			driver_position + train.global_basis.x.normalized() * (driver_range + 0.05))) != "none":
-		_fail("driver Q interaction does not respect its own range boundary")
+		_fail("driver interaction does not respect its own range boundary")
 		return
 	player.global_position = driver_position
-	# Press the project's "interact" action rather than a raw Q keycode: the
-	# binding is authored as a physical keycode, so a keycode-only event is not
-	# what the running game actually delivers.
-	var board_event := InputEventAction.new()
-	board_event.action = "interact"
+	var exit_only_event := InputEventAction.new()
+	exit_only_event.action = "interact"
+	exit_only_event.pressed = true
+	railway.call("_unhandled_input", exit_only_event)
+	if bool(railway.call("is_driving")):
+		_fail("Q boards the train even though it is reserved for exit")
+		return
+	var board_event := InputEventKey.new()
 	board_event.pressed = true
+	board_event.keycode = KEY_R
+	board_event.physical_keycode = KEY_R
 	railway.call("_unhandled_input", board_event)
 	if not bool(railway.call("is_driving")):
-		_fail("the visible Q interaction does not put the player on the train driver platform")
+		_fail("R does not put the player on the train driver platform")
 		return
 	if player.global_position.distance_to(railway.call("get_driver_seat_position")) > 0.05:
-		_fail("cab-door Q interaction does not move the player into the actual driver seat")
+		_fail("R does not move the player into the actual driver seat")
 		return
 	if bool(player.get("input_enabled")):
 		_fail("walking input remains active while the player drives the train")
 		return
+	# Finish power/pressure checks, select reverse while stopped, release brake.
+	railway.call("drive_manual", 0.0, 1.8)
+	railway.call("drive_manual", -1.0, 0.45)
+	railway.call("drive_manual", -1.0, 0.3)
 	railway.call("drive_manual", -1.0, 0.5)
 	if float(railway.call("get_display_speed_kph")) <= 0.0:
 		_fail("driver speed display does not respond to actual train acceleration")
@@ -743,6 +762,9 @@ func _run() -> void:
 	if not bool(railway.call("board_as_driver")):
 		_fail("driver cannot re-board for the complete kingdom route")
 		return
+	railway.call("drive_manual", 0.0, 1.8)
+	railway.call("drive_manual", 1.0, 0.45)
+	railway.call("drive_manual", 1.0, 0.3)
 	for expected_station in [1, 2, 3, 0]:
 		railway.call("drive_manual", 1.0, 30.0)
 		if int(railway.call("get_current_station")) != expected_station:
@@ -759,7 +781,7 @@ func _run() -> void:
 			first_seat_position - train.global_basis.x.normalized() * (seat_range - 0.05))) != "sit" \
 			or String(railway.call("get_interaction_mode_for_position",
 			first_seat_position - train.global_basis.x.normalized() * (seat_range + 0.05))) != "none":
-		_fail("passenger Q interaction does not respect its own range boundary")
+		_fail("passenger interaction does not respect its own range boundary")
 		return
 	if String(railway.call("get_interaction_mode_for_position", player.global_position)) != "sit":
 		_fail("passenger section proximity does not resolve to sitting")

@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+const MindSparkFoley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
+
 signal health_changed(current: float, maximum: float)
 signal attack_started
 signal block_changed(active: bool)
@@ -32,6 +34,9 @@ signal block_changed(active: bool)
 
 const RUNNING_SPEED_THRESHOLD = 0.1 # Minimum speed to trigger the running animation
 const ROTATION_SPEED = 10.0 # Speed at which the fox model rotates (adjust as needed)
+# Midpoint of the pupils in the shipped fox's rest mesh (orthographic front/side
+# measurements). Convert through the head bone so seating/animation/scale apply.
+const FOX_EYE_REST := Vector3(0.0, 0.84, 0.205)
 
 var _camera: Camera3D
 var current_health := 100.0
@@ -53,6 +58,13 @@ var _land_reaction_remaining := 0.0
 var _hit_reaction_remaining := 0.0
 var _visual_base_position := Vector3.ZERO
 var _visual_base_scale := Vector3.ONE
+var _vehicle_pose := ""
+var _driver_state: Dictionary = {}
+var _driver_pose_rig := preload("res://scripts/train_driver_pose.gd").new()
+var _eye_skeleton: Skeleton3D
+var _eye_head := -1
+var _eye_bone_offset := Vector3.ZERO
+var _combat_audio: AudioStreamPlayer3D
 
 
 func _ready() -> void:
@@ -67,6 +79,12 @@ func _ready() -> void:
 	floor_block_on_wall = true
 	max_slides = 8
 	safe_margin = 0.04
+	# Crown Line cars are synchronized AnimatableBody3D platforms on layer 1.
+	# Track their floor and wall velocity so the player can walk and jump aboard
+	# without the moving train sliding out from underneath the capsule.
+	platform_floor_layers = 1
+	platform_wall_layers = 1
+	platform_on_leave = CharacterBody3D.PLATFORM_ON_LEAVE_ADD_UPWARD_VELOCITY
 
 	if camera_path:
 		_camera = get_node_or_null(camera_path) as Camera3D
@@ -74,7 +92,13 @@ func _ready() -> void:
 	if fox_visuals != null:
 		_visual_base_position = fox_visuals.position
 		_visual_base_scale = fox_visuals.scale
+		_eye_skeleton = fox_visuals.find_child("Skeleton3D", true, false) as Skeleton3D
+		if _eye_skeleton != null:
+			_eye_head = _eye_skeleton.find_bone("Bone.001")
+			if _eye_head >= 0:
+				_eye_bone_offset = _eye_skeleton.get_bone_global_rest(_eye_head).affine_inverse() * FOX_EYE_REST
 	_build_combat_rig()
+	_build_combat_audio()
 	_build_combat_help()
 	_update_character_animation(0.0, false)
 
@@ -87,6 +111,58 @@ func set_input_enabled(v: bool) -> void:
 		_jump_buffer_remaining = 0.0
 		velocity.x = 0.0
 		velocity.z = 0.0
+
+
+func set_vehicle_pose(pose_name: String) -> void:
+	if pose_name not in ["", "driver", "passenger"]:
+		return
+	if pose_name == _vehicle_pose:
+		return
+	if _vehicle_pose == "driver":
+		_driver_pose_rig.finish()
+		_driver_state.clear()
+	_vehicle_pose = pose_name
+	if pose_name == "driver" and fox_visuals != null:
+		_driver_pose_rig.begin(fox_visuals, animation_player)
+
+
+func set_train_driver_state(state: Dictionary, delta: float = 0.0) -> void:
+	_driver_state = state.duplicate()
+	# Pose after the railway has seated the player and moved its handles in the
+	# same render tick. Physics-tick world targets lag behind a moving platform.
+	if _vehicle_pose == "driver":
+		_update_character_animation(delta, false)
+
+
+func get_train_driver_animation_state() -> Dictionary:
+	return {"phase": _driver_state.get("phase", "off"),
+		"rig_bound": is_instance_valid(_driver_pose_rig.skeleton),
+		"hand_error_m": _driver_pose_rig.hand_error,
+		"left_target": _driver_state.get("left_target", Vector3.ZERO),
+		"right_target": _driver_state.get("right_target", Vector3.ZERO)}
+
+
+func get_vehicle_pose() -> String:
+	return _vehicle_pose
+
+
+func get_first_person_eye_position(fallback_offset := Vector3(0.0, 1.55, 0.0)) -> Vector3:
+	if is_instance_valid(_eye_skeleton) and _eye_head >= 0:
+		return _eye_skeleton.to_global(
+			_eye_skeleton.get_bone_global_pose(_eye_head) * _eye_bone_offset)
+	return to_global(fallback_offset)
+
+
+func set_train_seated_pose(enabled: bool) -> void:
+	# Compatibility seam for the newer train harness. The richer vehicle-pose
+	# system owns the actual driver/passenger rig and animation state.
+	set_vehicle_pose("driver" if enabled else "")
+	velocity = Vector3.ZERO
+	_update_character_animation(0.0, false)
+
+
+func is_train_seated_pose() -> bool:
+	return _vehicle_pose == "driver" or _vehicle_pose == "passenger"
 
 
 # The active camera can be swapped at runtime (the gallery tweens between a
@@ -113,6 +189,13 @@ func get_camera_relative_move_direction(input_dir: Vector2) -> Vector3:
 
 func _physics_process(delta: float) -> void:
 	_update_combat(delta)
+	# Seat transforms are owned by the moving train. Do not fight its anchor with
+	# gravity/move_and_slide while seated; ordinary gravity resumes on exit.
+	if _vehicle_pose != "":
+		velocity = Vector3.ZERO
+		if _vehicle_pose != "driver":
+			_update_character_animation(delta, false)
+		return
 	var was_grounded := is_on_floor()
 	_hit_reaction_remaining = maxf(0.0, _hit_reaction_remaining - delta)
 	_land_reaction_remaining = maxf(0.0, _land_reaction_remaining - delta)
@@ -225,6 +308,7 @@ func _start_attack() -> void:
 		_attack_arc.visible = true
 	_play_first_available(["Attack", "attack", "Attack1", "SwordAttack", "Idle"])
 	_show_status("ATTACK", Color("ffd36e"))
+	_play_combat_sound(&"player_swing")
 	attack_started.emit()
 
 
@@ -293,7 +377,26 @@ func _update_character_animation(delta: float, moving: bool) -> void:
 		return
 	fox_visuals.position = _visual_base_position
 	fox_visuals.scale = _visual_base_scale
+	fox_visuals.rotation.x = 0.0
 	fox_visuals.rotation.z = 0.0
+	if _vehicle_pose == "driver":
+		_animation_state = "driver_" + String(_driver_state.get("phase", "ready"))
+		_driver_pose_rig.apply(delta, _driver_state)
+		return
+	if _vehicle_pose != "":
+		_animation_state = _vehicle_pose
+		_play_character_clip(["Sit", "Idle"], 0.72)
+		# The fox model has no authored Sit clip, so a restrained squash and
+		# lowered body creates a stable seated silhouette while retaining its
+		# familiar idle breathing. The driver sits slightly taller to see over
+		# the controls; passengers settle deeper into the cushion.
+		var passenger := _vehicle_pose == "passenger"
+		fox_visuals.position.y -= 0.42 if passenger else 0.24
+		fox_visuals.position.z += 0.10
+		fox_visuals.scale = _visual_base_scale * (
+			Vector3(1.06, 0.70, 1.08) if passenger else Vector3(1.03, 0.82, 1.04))
+		fox_visuals.rotation.x = -0.10 if passenger else -0.04
+		return
 	if current_health <= 0.0:
 		_animation_state = "defeated"
 		_play_character_clip(["Death", "Defeat", "Idle"], 0.55)
@@ -356,11 +459,13 @@ func take_damage(amount: float, _source: Node = null) -> float:
 		return 0.0
 	if is_blocking:
 		_show_status("BLOCKED!", Color("79e8ff"))
+		_play_combat_sound(&"player_block")
 		return 0.0
 	var applied := minf(amount, current_health)
 	current_health = maxf(0.0, current_health - applied)
 	_hit_reaction_remaining = 0.32
 	_show_status("-%d HP" % int(applied), Color("ff786f"))
+	_play_combat_sound(&"player_hurt")
 	health_changed.emit(current_health, max_health)
 	return applied
 
@@ -470,6 +575,25 @@ func _build_combat_help() -> void:
 	label.add_theme_font_size_override("font_size", 17)
 	label.modulate = Color("f3ecff")
 	panel.add_child(label)
+
+
+func _build_combat_audio() -> void:
+	_combat_audio = AudioStreamPlayer3D.new()
+	_combat_audio.name = "PlayerCombatFoley3D"
+	_combat_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	_combat_audio.unit_size = 2.4
+	_combat_audio.max_distance = 34.0
+	_combat_audio.volume_db = -5.0
+	_combat_audio.panning_strength = 1.0
+	_combat_audio.bus = &"SFX"
+	add_child(_combat_audio)
+
+
+func _play_combat_sound(event: StringName) -> void:
+	if _combat_audio == null:
+		return
+	_combat_audio.stream = MindSparkFoley.make_combat_event(event)
+	_combat_audio.play()
 
 
 func _show_status(text: String, color: Color) -> void:

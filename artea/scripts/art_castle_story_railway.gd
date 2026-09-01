@@ -9,6 +9,10 @@ const STATION_STRAIGHT_LENGTH := 150.0
 # Crown Line widths. The two large kingdom arcs are far broader; this lower
 # bound applies only to the compact Gallery/Mind Spark sightseeing loop.
 const MINIMUM_DESIGN_TURN_RADIUS := 40.0
+const TRAIN_WHEEL_RAIL_HALF_GAUGE := 4.0
+const TRAIN_WHEEL_RAIL_CENTRE_DROP := 0.96
+const TRAIN_WHEEL_RAIL_WIDTH := 0.36
+const TRAIN_WHEEL_RAIL_HEIGHT := 0.22
 
 const STATIONS := [
 	{"id": "gallery", "title": "ARTÉA GALLERY", "subtitle": "RIGHT-SIDE SKY DOCK", "position": Vector3(260.0, ROUTE_HEIGHT, 820.0), "landing": Vector3(150.0, 2.0, 820.0)},
@@ -46,9 +50,12 @@ const BLUEPRINT := {
 	"dock_radius_m": 38.0,
 	"access_bridge_width_m": 16.0,
 	"platform_guard_height_m": 3.0,
-	"rail_system": "single_center_monorail",
+	"rail_system": "centre_support_with_dual_wheel_rails",
 	"center_beam_width_m": 3.2,
 	"center_beam_height_m": 1.6,
+	"wheel_rail_gauge_m": TRAIN_WHEEL_RAIL_HALF_GAUGE * 2.0,
+	"wheel_rail_top_below_train_origin_m":
+		TRAIN_WHEEL_RAIL_CENTRE_DROP - TRAIN_WHEEL_RAIL_HEIGHT * 0.5,
 	"train_origin_above_beam_m": 1.4,
 	"minimum_rail_elevation_m": ROUTE_HEIGHT - 1.4,
 	"station_straight_length_m": STATION_STRAIGHT_LENGTH,
@@ -71,6 +78,25 @@ const INTERACTION_RANGE := 48.0
 # every visible gap is the same physical doorway.
 const DRIVER_SIDE_GATE_Z := -15.85
 const DRIVER_SIDE_GATE_HALF_LENGTH := 3.525
+const CAB_SIDE_GLASS_LOWER_EDGE_Y := 4.55
+# Follow the complete purple driving-roof frame on both long sides. A third
+# light-ball row closes the rear edge; the front edge deliberately stays open.
+# Measured directly from the imported Engine_Rainbow_Violet frame surface.
+const ENGINE_ROOF_FRAME_FRONT_EDGE_Z := -20.10
+const ENGINE_ROOF_FRAME_REAR_EDGE_Z := -12.30
+const ENGINE_ROOF_FRAME_OUTER_X := 4.54
+const ROOF_BALL_RADIUS := 0.28
+# Centre each endpoint ball one radius inside the frame. Its visible edge then
+# finishes exactly at the purple beam instead of protruding beyond it.
+const ENGINE_ROOF_GARLAND_FRONT_EDGE_Z := \
+	ENGINE_ROOF_FRAME_FRONT_EDGE_Z + ROOF_BALL_RADIUS
+const ENGINE_ROOF_GARLAND_REAR_EDGE_Z := \
+	ENGINE_ROOF_FRAME_REAR_EDGE_Z - ROOF_BALL_RADIUS
+const ENGINE_ROOF_GARLAND_CENTER_Z := \
+	(ENGINE_ROOF_GARLAND_FRONT_EDGE_Z + ENGINE_ROOF_GARLAND_REAR_EDGE_Z) * 0.5
+const ENGINE_ROOF_GARLAND_HALF_LENGTH := \
+	(ENGINE_ROOF_GARLAND_REAR_EDGE_Z - ENGINE_ROOF_GARLAND_FRONT_EDGE_Z) * 0.5
+const RoofLightProfile := preload("res://scripts/train_roof_light_profile.gd")
 const PASSENGER_SIDE_GATE_HALF_LENGTH := 2.2
 # Passenger boarding happens at the two visible connector entrances: first
 # between the engine and Coach A, then between Coach A and Coach B.
@@ -79,7 +105,9 @@ const PASSENGER_REAR_GATE_Z := 9.75
 const PASSENGER_FRONT_CAR_CENTRE_Z := 1.5
 const PASSENGER_REAR_CAR_CENTRE_Z := 18.0
 const DRIVER_INTERACTION_POINT := Vector3(0.0, 2.4, DRIVER_SIDE_GATE_Z)
-const DRIVER_SEAT := Vector3(0.0, 2.4, DRIVER_SIDE_GATE_Z)
+# The authored centre cushion tops out near y=3.25, not at the deck height.
+# Account for the seated fox's hip offset and leave room behind the dashboard.
+const DRIVER_SEAT := Vector3(0.0, 3.55, -15.05)
 # Q is a close, intentional interaction, but it has to be comfortable to hit
 # while walking. The driver range covers the whole front third of the first
 # coach so approaching the cab from anywhere on the deck offers driving without
@@ -95,6 +123,11 @@ const FLEXIBLE_BOARDING_RANGE := 14.0
 const BENCH_SEATS := [
 	Vector3(-2.4, 3.45, 4.3), Vector3(0.0, 3.45, 4.3), Vector3(2.4, 3.45, 4.3),
 	Vector3(-2.4, 3.45, 20.8), Vector3(0.0, 3.45, 20.8), Vector3(2.4, 3.45, 20.8),
+]
+const PASSENGER_SEATS_PER_SECTION := 3
+const TRAIN_RAINBOW := [
+	Color("ff3f6c"), Color("ff8b38"), Color("ffe14d"), Color("47e57d"),
+	Color("35d9ff"), Color("5574ff"), Color("b84dff"),
 ]
 const BOARDING_OFFSET := Vector3(0.0, 0.0, 11.0)
 const ACCESS_DECK_THICKNESS := 1.0
@@ -130,6 +163,10 @@ var _manual_driving := false
 var _seated_passenger := false
 var _passenger_in_motion := false
 var _passenger_seat_index := -1
+var _passenger_waiting_at_station := false
+var _passenger_tween: Tween
+var _passenger_prompt_camera: Node
+var _passenger_ui: CanvasLayer
 var _drive_segment := -1
 var _drive_progress := 0.0
 var _drive_motion_direction := 1
@@ -145,6 +182,11 @@ var _motion_echo_history: Array[Transform3D] = []
 var _last_motion_direction := Vector3.FORWARD
 var _movement_vfx_speed_ratio := 0.0
 var _rainbow_gold_accent_count := 0
+var _removed_botanical_roof_triangle_count := 0
+var _removed_blue_cab_barrier_triangle_count := 0
+var _cab_side_glass_triangle_count := 0
+var _removed_cab_shoulder_scale_triangle_count := 0
+var _removed_cab_window_frame_triangle_count := 0
 var _horn_request_count := 0
 var _speed_band_parts: Array[Node3D] = []
 var _speed_rotor_parts: Array[Node3D] = []
@@ -152,6 +194,7 @@ var _speed_needle: Node3D
 var _wheel_mechanism_parts: Array[Node3D] = []
 var _reactor_mechanism_parts: Array[Node3D] = []
 var _steam_gear_parts: Array[Node3D] = []
+var _gear_transmission := preload("res://scripts/train_gear_transmission.gd").new()
 var _steam_rod_parts: Array[Node3D] = []
 var _steam_pressure_parts: Array[Node3D] = []
 var _steam_valve_parts: Array[Node3D] = []
@@ -180,6 +223,10 @@ var _station_rainbow_materials: Array[StandardMaterial3D] = []
 var _station_rainbow_glass_materials: Array[StandardMaterial3D] = []
 var _barrier_rainbow_cursor := 0
 var _external_drive_commanded := false
+var _driver_actions := preload("res://scripts/train_driver_actions.gd").new()
+var _driver_console: Node3D
+var _driver_controls_label: Label3D
+var _last_driver_audio_phase := "off"
 
 
 func _ready() -> void:
@@ -197,14 +244,12 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_refresh_station_lights()
 	if _manual_driving:
-		var throttle := Input.get_action_strength("move_forward") \
-			- Input.get_action_strength("move_backward")
-		if absf(throttle) >= 0.01:
-			_advance_manual_drive(throttle, delta)
-		elif _external_drive_commanded:
+		if _external_drive_commanded:
 			_external_drive_commanded = false
 		else:
-			_advance_manual_drive(0.0, delta)
+			var throttle := Input.get_action_strength("move_forward") \
+				- Input.get_action_strength("move_backward")
+			_advance_manual_drive(throttle, delta)
 	elif _train != null and not _riding:
 		# Keep the docked chassis exactly aligned with the level guideway.
 		_train.position.y = ROUTE_HEIGHT
@@ -214,24 +259,31 @@ func _process(delta: float) -> void:
 	if _manual_driving and _player != null and _train != null:
 		_player.global_position = _train.to_global(DRIVER_SEAT)
 		_player.velocity = Vector3.ZERO
+		_align_player_to_train()
 	elif _seated_passenger and _player != null and _train != null and _passenger_seat_index >= 0:
 		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
+		_player.velocity = Vector3.ZERO
+		_align_player_to_train()
 	_update_train_mechanisms(delta)
+	_update_driver_visuals(delta)
 	_update_island_power_effect(delta)
 	_update_prompt()
 func _unhandled_input(event: InputEvent) -> void:
 	if _player == null:
 		return
+	if _passenger_waiting_at_station:
+		# Arrival has two explicit choices; ignore train shortcuts behind it.
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var pressed_key := (event as InputEventKey).physical_keycode
 		if pressed_key == KEY_NONE:
 			pressed_key = (event as InputEventKey).keycode
-		if pressed_key == KEY_R and _manual_driving:
+		if pressed_key == KEY_H and _manual_driving:
 			if request_horn():
 				get_viewport().set_input_as_handled()
 			return
-		if pressed_key == KEY_1 or pressed_key == KEY_2:
-			var mode := "drive" if pressed_key == KEY_1 else "ride"
+		if pressed_key == KEY_R or pressed_key == KEY_T:
+			var mode := "drive" if pressed_key == KEY_R else "ride"
 			if select_train_mode(mode):
 				get_viewport().set_input_as_handled()
 			return
@@ -256,15 +308,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if _riding:
 			return
-		var interaction_mode := get_interaction_mode_for_position(_player.global_position)
-		if interaction_mode == "drive":
-			board_as_driver()
-			get_viewport().set_input_as_handled()
-			return
-		if interaction_mode == "sit":
-			var nearest_seat := get_nearest_passenger_seat_index(_player.global_position)
-			sit_in_passenger_seat(nearest_seat)
-			get_viewport().set_input_as_handled()
+		# R and T are the only boarding keys. Q remains a dedicated leave/exit
+		# action, so the same key never means both entering and leaving the train.
+		return
 
 
 # The active third-person camera, if this scene has one. Riding and driving push
@@ -281,10 +327,12 @@ func _follow_camera() -> Node:
 
 
 # Boarding always starts in third person so the player can see the train they
-# are on. They remain free to press 1 for first person once aboard.
+# are on. They remain free to press 3 for first person once aboard.
 func _begin_ride_camera(distance: float) -> void:
 	var camera := _follow_camera()
 	if camera != null:
+		if _manual_driving and camera.has_method("configure_driver_view"):
+			camera.call("configure_driver_view", _train, DRIVER_SEAT + Vector3(0, 1.55, 0))
 		camera.call("begin_ride_view", distance)
 
 
@@ -292,6 +340,35 @@ func _end_ride_camera() -> void:
 	var camera := _follow_camera()
 	if camera != null:
 		camera.call("end_ride_view")
+
+
+func _align_player_to_train() -> void:
+	if _player == null or _train == null:
+		return
+	var forward := -_train.global_basis.z
+	forward.y = 0.0
+	if forward.length_squared() > 0.001:
+		_player.look_at(_player.global_position + forward.normalized(), Vector3.UP)
+
+
+func _set_player_vehicle_pose(pose_name: String) -> void:
+	if _player != null and _player.has_method("set_vehicle_pose"):
+		_player.call("set_vehicle_pose", pose_name)
+
+
+func get_driver_system_state() -> Dictionary:
+	return _driver_actions.snapshot()
+
+
+func _update_driver_visuals(delta: float) -> void:
+	if _driver_console == null:
+		return
+	var state: Dictionary = _driver_actions.snapshot()
+	var targets: Dictionary = _driver_console.call("update_controls", state, delta)
+	if _manual_driving and _player != null and _player.has_method("set_train_driver_state"):
+		state["left_target"] = targets["left"]
+		state["right_target"] = targets["right"]
+		_player.call("set_train_driver_state", state, delta)
 
 
 func get_station_count() -> int:
@@ -424,6 +501,16 @@ func get_passenger_seat_count() -> int:
 	return BENCH_SEATS.size()
 
 
+func get_passenger_section_for_seat(seat_index: int) -> int:
+	if seat_index < 0 or seat_index >= BENCH_SEATS.size():
+		return -1
+	return seat_index / PASSENGER_SEATS_PER_SECTION
+
+
+func get_current_passenger_section() -> int:
+	return get_passenger_section_for_seat(_passenger_seat_index)
+
+
 func get_driver_interaction_range() -> float:
 	return DRIVER_INTERACTION_RANGE
 
@@ -463,14 +550,28 @@ func is_passenger_train_moving() -> bool:
 	return _seated_passenger and _passenger_in_motion
 
 
+func is_passenger_waiting_at_station() -> bool:
+	return _seated_passenger and _passenger_waiting_at_station
+
+
+func get_passenger_disembark_position() -> Vector3:
+	# Resolve the raised boarding lane in its rotated station basis. A fixed world
+	# X offset can place passengers beyond the platform on two of the four docks.
+	var lane := _station_nodes[_current_station].get_node("BoardingLane") as Node3D
+	var access_side := signf(lane.to_local(to_global(STATIONS[_current_station].landing)).x)
+	if is_zero_approx(access_side):
+		access_side = 1.0
+	var gate_z := PASSENGER_FRONT_GATE_Z \
+		if get_current_passenger_section() == 0 else PASSENGER_REAR_GATE_Z
+	return lane.to_global(Vector3(
+		access_side * 8.75, 1.1 + LANDING_PLAYER_CLEARANCE, gate_z))
+
+
 func get_interaction_mode_for_position(world_position: Vector3) -> String:
 	if _train == null:
 		return "none"
 	var driver_distance := world_position.distance_to(get_driver_interaction_position())
 	var nearest_seat := get_nearest_passenger_seat_index(world_position)
-	var seat_distance := INF
-	if nearest_seat >= 0:
-		seat_distance = world_position.distance_to(get_passenger_seat_position(nearest_seat))
 	# The redesigned engine places the visible cab farther forward than the first
 	# passenger bench. Everything within the cab's explicit interaction radius is
 	# driver territory; otherwise the nearest bench offers passenger mode.
@@ -588,8 +689,11 @@ func get_train_feature_summary() -> Dictionary:
 		"interaction_rule": "nearest cab or passenger seat",
 		"boarding_gates": "centre opening on both sides of both coaches",
 		"cab_entry": "front doorway to driver seat",
-		"mode_controls": "1 drive, 2 ride",
-		"driver_controls": "1 drive, W forward, S reverse, R horn, Q exit",
+		"passenger_sections": 2,
+		"rainbow_colour_count": TRAIN_RAINBOW.size(),
+		"gold_structure_preserved": true,
+		"mode_controls": "R drive, T sit in nearest passenger section",
+		"driver_controls": "R drive, W forward, S reverse, H horn, Q exit",
 	}
 
 
@@ -601,8 +705,33 @@ func request_horn() -> bool:
 			or not bool(audio_manager.call("request_train_horn", _train)):
 		return false
 	_horn_request_count += 1
+	_driver_actions.sound_horn()
+	_update_driver_visuals(0.0)
 	_status.text = "REAL TRAIN AIR HORN"
 	return true
+
+
+func _request_train_audio_event(event_name: StringName) -> bool:
+	if _train == null:
+		return false
+	var audio_manager := get_node_or_null("/root/WorldSpatialAudio")
+	return audio_manager != null and audio_manager.has_method("request_train_event") \
+		and bool(audio_manager.call("request_train_event", _train, event_name))
+
+
+func _update_driver_phase_audio(previous_phase: String, next_phase: String) -> void:
+	if next_phase == previous_phase:
+		return
+	var phase_events := {
+		"power_on": &"power_on",
+		"check_pressure": &"valve",
+		"select_direction": &"reverser",
+		"release_brake": &"brake_release",
+		"accelerating": &"throttle",
+		"braking": &"brake",
+	}
+	if phase_events.has(next_phase):
+		_request_train_audio_event(phase_events[next_phase])
 
 
 func select_train_mode(mode: String) -> bool:
@@ -652,47 +781,68 @@ func sit_in_passenger_seat(seat_index: int) -> bool:
 	_player.call("set_input_enabled", false)
 	_player.velocity = Vector3.ZERO
 	_player.global_position = _train.to_global(BENCH_SEATS[seat_index])
+	_align_player_to_train()
+	_set_player_vehicle_pose("passenger")
 	_attach_rider_anchor(BENCH_SEATS[seat_index])
 	_begin_ride_camera(14.0)
-	_status.text = "PASSENGER MODE  •  2 RIDE  •  1 DRIVE AT A STATION  •  Q STAND"
-	call_deferred("_ride_seated_passenger_one_station")
+	_request_train_audio_event(&"seat")
+	_status.text = "PASSENGER SECTION %d  •  T SIT  •  R DRIVE AT A STATION  •  Q STAND" \
+		% (get_current_passenger_section() + 1)
+	# Begin synchronously so another boarding/exit event in this frame cannot
+	# leave a stale deferred departure behind.
+	_ride_seated_passenger_one_station()
 	return true
 
 
 func leave_passenger_seat() -> bool:
-	if not _seated_passenger or _player == null:
+	if not _seated_passenger or _player == null or _passenger_in_motion:
 		return false
-	var seat_position := _train.to_global(BENCH_SEATS[_passenger_seat_index])
+	var platform_exit := get_passenger_disembark_position()
+	_close_passenger_prompt()
+	_passenger_ui.call("close_journey")
 	if _rider_anchor != null:
 		_rider_anchor.remote_path = NodePath()
 	_seated_passenger = false
 	_passenger_in_motion = false
 	_passenger_seat_index = -1
 	_riding = false
-	_player.global_position = seat_position + Vector3(0.0, 0.2, 2.2)
+	_player.global_position = platform_exit
 	_player.velocity = Vector3.ZERO
+	_set_player_vehicle_pose("")
 	_player.call("set_input_enabled", true)
 	_end_ride_camera()
-	_status.text = "CROWN LINE PASSENGER SEAT RELEASED"
+	_request_train_audio_event(&"ui_confirm")
+	_request_train_audio_event(&"door")
+	_status.text = "ARRIVED  •  Explore %s" % STATIONS[_current_station].title
 	return true
 
 
 func _ride_seated_passenger_one_station() -> void:
-	if not _seated_passenger or _train == null:
+	if not _seated_passenger or _train == null or _passenger_in_motion:
 		return
 	var target := posmod(_current_station + 1, STATIONS.size())
 	if not is_station_unlocked(target):
 		_status.text = _locked_message(target)
+		_show_passenger_arrival()
 		return
+	_close_passenger_prompt()
 	_passenger_in_motion = true
+	_request_train_audio_event(&"door")
+	_passenger_ui.call("show_travel", STATIONS[target].title, get_current_passenger_section())
 	var segment_index := _current_station
 	_status.text = "PASSENGER RIDE  •  %s → %s" % [
 		STATIONS[_current_station].title, STATIONS[target].title]
-	var tween := create_tween()
-	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_method(func(progress: float) -> void:
-		_set_train_progress(segment_index, progress), 0.0, 1.0, ride_duration)
-	await tween.finished
+	_passenger_tween = create_tween()
+	_passenger_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_passenger_tween.tween_method(func(progress: float) -> void:
+		_set_train_progress(segment_index, progress), 0.0, 1.0, maxf(ride_duration, 0.01))
+	_passenger_tween.tween_callback(_finish_passenger_leg.bind(target))
+
+
+func _finish_passenger_leg(target: int) -> void:
+	if not _seated_passenger or not _passenger_in_motion:
+		return
+	_passenger_tween = null
 	_current_station = target
 	_train.position = STATIONS[_current_station].position
 	_orient_train_at_station(_current_station)
@@ -700,7 +850,51 @@ func _ride_seated_passenger_one_station() -> void:
 	if _player != null and _passenger_seat_index >= 0:
 		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
 		_player.velocity = Vector3.ZERO
-	_status.text = "DOCKED AT %s  •  Q STAND" % STATIONS[_current_station].title
+	_request_train_audio_event(&"arrival")
+	_show_passenger_arrival()
+
+
+func _show_passenger_arrival() -> void:
+	_passenger_waiting_at_station = true
+	var target := posmod(_current_station + 1, STATIONS.size())
+	var locked_reason := "" if is_station_unlocked(target) else _locked_message(target)
+	_passenger_ui.call("show_arrival", STATIONS[_current_station].title, STATIONS[target].title, locked_reason)
+	_status.text = "DOCKED AT %s  •  CHOOSE GET OFF OR NEXT STATION" % STATIONS[_current_station].title
+	_passenger_prompt_camera = _follow_camera()
+	if _passenger_prompt_camera != null and _passenger_prompt_camera.has_method("set_passenger_prompt_active"):
+		_passenger_prompt_camera.call("set_passenger_prompt_active", true)
+
+
+func continue_passenger_journey() -> bool:
+	if not is_passenger_waiting_at_station() or _passenger_in_motion:
+		return false
+	if not is_station_unlocked(posmod(_current_station + 1, STATIONS.size())):
+		_show_passenger_arrival()
+		return false
+	_request_train_audio_event(&"ui_confirm")
+	_ride_seated_passenger_one_station()
+	return true
+
+
+func _close_passenger_prompt() -> void:
+	_passenger_waiting_at_station = false
+	if is_instance_valid(_passenger_prompt_camera) and _passenger_prompt_camera.has_method("set_passenger_prompt_active"):
+		_passenger_prompt_camera.call("set_passenger_prompt_active", false)
+	_passenger_prompt_camera = null
+
+
+func _exit_tree() -> void:
+	if _passenger_tween != null:
+		_passenger_tween.kill()
+		_passenger_tween = null
+	_close_passenger_prompt()
+	# Removing/replacing the railway must not strand a surviving player seated
+	# with disabled input. Child tweens cannot keep moving them after removal.
+	if _seated_passenger and is_instance_valid(_player):
+		_set_player_vehicle_pose("")
+		_player.call("set_input_enabled", true)
+		if _player.is_inside_tree():
+			_end_ride_camera()
 
 
 func request_ride() -> bool:
@@ -733,6 +927,11 @@ func board_as_driver() -> bool:
 		return false
 	_riding = true
 	_manual_driving = true
+	_driver_actions.begin()
+	_last_driver_audio_phase = _driver_actions.phase
+	_request_train_audio_event(&"board")
+	if _driver_controls_label != null:
+		_driver_controls_label.visible = false
 	_drive_segment = -1
 	_drive_progress = 0.0
 	_drive_motion_direction = 1
@@ -740,12 +939,13 @@ func board_as_driver() -> bool:
 	_train.position = STATIONS[_current_station].position
 	_orient_train_at_station(_current_station)
 	_player.call("set_input_enabled", false)
-	_player.velocity = Vector3.ZERO
-	_player.global_position = _train.to_global(DRIVER_SEAT)
+	_place_player_in_driver_seat()
+	_set_player_vehicle_pose("driver")
+	_update_driver_visuals(0.0)
 	_attach_rider_anchor(DRIVER_SEAT)
 	# Driving pulls the view furthest out: the whole train plus the track ahead.
 	_begin_ride_camera(18.0)
-	_status.text = "DRIVER MODE  •  W/S MOVE  •  R HORN  •  2 RIDE AT A STATION  •  Q EXIT"
+	_status.text = "CAB SETUP  •  POWER ON → CHECK PRESSURE → READY  •  W/S MOVE  •  H HORN"
 	return true
 
 
@@ -760,13 +960,19 @@ func request_disembark() -> bool:
 # Positive throttle follows Gallery -> Mind -> Heart -> Creator -> Gallery;
 # negative throttle reverses around the same closed Crown Line.
 func drive_manual(throttle: float, delta: float) -> void:
-	_external_drive_commanded = absf(throttle) >= 0.01
+	_external_drive_commanded = true
 	_advance_manual_drive(throttle, delta)
 
 
 func _advance_manual_drive(throttle: float, delta: float) -> void:
 	if not _manual_driving or _train == null:
 		return
+	var previous_audio_phase := _last_driver_audio_phase
+	throttle = _driver_actions.step(throttle, delta, _display_speed_kph)
+	_last_driver_audio_phase = _driver_actions.phase
+	_update_driver_phase_audio(previous_audio_phase, _last_driver_audio_phase)
+	_status.text = "CAB: %s  •  W FORWARD  •  S REVERSE  •  RELEASE TO BRAKE  •  H HORN" \
+		% _driver_actions.phase.replace("_", " ").to_upper()
 	var requested_direction := _drive_motion_direction
 	if absf(throttle) >= 0.01:
 		requested_direction = 1 if throttle > 0.0 else -1
@@ -793,13 +999,16 @@ func _advance_manual_drive(throttle: float, delta: float) -> void:
 		var arrival_speed_cap := sqrt(2.0 * braking_metres_per_second_sq \
 			* remaining_distance) / MANUAL_DRIVE_SPEED * DISPLAY_MAX_SPEED_KPH
 		target_speed = minf(target_speed, arrival_speed_cap)
+		if target_speed < _display_speed_kph - 0.1:
+			_driver_actions.apply_arrival_brake()
 	var speed_rate := DISPLAY_ACCELERATION_KPH_S if target_speed > _display_speed_kph \
 		else DISPLAY_BRAKING_KPH_S
 	_display_speed_kph = move_toward(_display_speed_kph, target_speed, speed_rate * maxf(delta, 0.0))
-	if _display_speed_kph < 0.05:
+	# Only snap to rest while braking. At high FPS a first acceleration step is
+	# smaller than 0.05 km/h; discarding it every render tick prevents departure.
+	if _display_speed_kph < 0.05 and target_speed <= 0.0:
 		_display_speed_kph = 0.0
-		if _player != null:
-			_player.global_position = _train.to_global(DRIVER_SEAT)
+		_place_player_in_driver_seat()
 		return
 	var curve := _curves[_drive_segment]
 	var progress_delta := (_display_speed_kph / DISPLAY_MAX_SPEED_KPH) \
@@ -807,11 +1016,14 @@ func _advance_manual_drive(throttle: float, delta: float) -> void:
 		/ maxf(curve.get_baked_length(), 1.0)
 	_drive_progress = clampf(_drive_progress + progress_delta * float(drive_direction), 0.0, 1.0)
 	_set_train_progress(_drive_segment, _drive_progress)
-	_status.text = "DRIVING  •  %03d KM/H  •  %s  •  W/S MOVE  •  R HORN" \
-		% [roundi(_display_speed_kph), _segment_destination_name(drive_direction)]
-	if is_equal_approx(_drive_progress, 0.0):
+	_status.text = "%s  •  %03d KM/H  •  %s  •  W/S MOVE  •  RELEASE TO BRAKE  •  H HORN" \
+		% [_driver_actions.phase.replace("_", " ").to_upper(),
+			roundi(_display_speed_kph), _segment_destination_name(drive_direction)]
+	# Only the destination end can dock. Near-zero progress on a forward
+	# departure is not an arrival (especially with very small render deltas).
+	if drive_direction < 0 and _drive_progress <= 0.0:
 		_dock_manual_train(_drive_segment)
-	elif is_equal_approx(_drive_progress, 1.0):
+	elif drive_direction > 0 and _drive_progress >= 1.0:
 		_dock_manual_train(_drive_segment + 1)
 
 
@@ -835,9 +1047,8 @@ func _dock_manual_train(station_index: int) -> void:
 	_train.transform = Transform3D(
 		_train.basis, STATIONS[_current_station].position)
 	if _player != null:
-		_player.global_position = _train.to_global(DRIVER_SEAT)
-		_player.velocity = Vector3.ZERO
-	_status.text = "DOCKED AT %s  •  R HORN  •  Q EXIT  •  W/S KEEP DRIVING" % STATIONS[_current_station].title
+		_place_player_in_driver_seat()
+	_status.text = "DOCKED AT %s  •  H HORN  •  Q EXIT  •  W/S KEEP DRIVING" % STATIONS[_current_station].title
 
 
 func _segment_destination_name(drive_direction: int) -> String:
@@ -851,15 +1062,23 @@ func _disembark_driver() -> void:
 	if not _manual_driving or _drive_segment >= 0:
 		return
 	_manual_driving = false
+	_driver_actions.end()
+	_last_driver_audio_phase = "off"
+	if _driver_controls_label != null:
+		_driver_controls_label.visible = true
+	_external_drive_commanded = false
 	_riding = false
 	_display_speed_kph = 0.0
 	if _rider_anchor != null:
 		_rider_anchor.remote_path = NodePath()
 	if _player != null:
+		_player.call("set_train_seated_pose", false)
 		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
 		_player.velocity = Vector3.ZERO
+		_set_player_vehicle_pose("")
 		_player.call("set_input_enabled", true)
 	_end_ride_camera()
+	_request_train_audio_event(&"door")
 	_status.text = "ARRIVED  •  Explore %s" % STATIONS[_current_station].title
 
 
@@ -1067,15 +1286,38 @@ func _build_track_mesh(parent: Node3D, curve: Curve3D, segment_index: int) -> vo
 	var sample_count := maxi(2, int(ceil(length / 10.0)))
 	var beam_points := PackedVector3Array()
 	var ribbon_points := PackedVector3Array()
+	var left_wheel_rail_points := PackedVector3Array()
+	var right_wheel_rail_points := PackedVector3Array()
 	for sample_index in sample_count + 1:
 		var distance := length * float(sample_index) / float(sample_count)
-		var centre := curve.sample_baked(distance) - Vector3.UP * 1.4
+		var route_point := curve.sample_baked(distance)
+		var previous := curve.sample_baked(maxf(0.0, distance - 2.0))
+		var following := curve.sample_baked(minf(length, distance + 2.0))
+		var forward := (following - previous).normalized()
+		var side := Vector3.UP.cross(forward).normalized()
+		if side.length_squared() < 0.01:
+			side = Vector3.RIGHT
+		var centre := route_point - Vector3.UP * 1.4
 		beam_points.append(centre)
 		ribbon_points.append(centre + Vector3.UP * 0.87)
+		var wheel_rail_centre := route_point - Vector3.UP * TRAIN_WHEEL_RAIL_CENTRE_DROP
+		left_wheel_rail_points.append(
+			wheel_rail_centre - side * TRAIN_WHEEL_RAIL_HALF_GAUGE)
+		right_wheel_rail_points.append(
+			wheel_rail_centre + side * TRAIN_WHEEL_RAIL_HALF_GAUGE)
 	_add_continuous_curve_prism(parent, "CenterMonorailBeam", beam_points,
 		3.2, 1.6, _rail_material, true, true)
 	_add_continuous_curve_prism(parent, "CrownLineEnergyRibbon", ribbon_points,
 		0.92, 0.14, _gold_material, false)
+	# The imported train has real left/right wheel treads centred at ±4.0 m.
+	# Preserve the strong centre support, but give those wheels two continuous
+	# steel-and-gold rail heads so the train visibly and physically sits on track.
+	_add_continuous_curve_prism(parent, "CrownWheelRailLeft",
+		left_wheel_rail_points, TRAIN_WHEEL_RAIL_WIDTH, TRAIN_WHEEL_RAIL_HEIGHT,
+		_gold_material, true)
+	_add_continuous_curve_prism(parent, "CrownWheelRailRight",
+		right_wheel_rail_points, TRAIN_WHEEL_RAIL_WIDTH, TRAIN_WHEEL_RAIL_HEIGHT,
+		_gold_material, true)
 	# Only the approach and departure beside Mind Spark receive the circuit-garden
 	# guide rails. The rest of the kingdom loop keeps its established appearance.
 	if segment_index == 0 or segment_index == 1:
@@ -1084,6 +1326,9 @@ func _build_track_mesh(parent: Node3D, curve: Curve3D, segment_index: int) -> vo
 	parent.set_meta("visual_mesh_pieces", 1)
 	parent.set_meta("sample_spacing_m", length / float(sample_count))
 	parent.set_meta("route_length_m", length)
+	parent.set_meta("wheel_rail_half_gauge_m", TRAIN_WHEEL_RAIL_HALF_GAUGE)
+	parent.set_meta("wheel_rail_top_below_train_origin_m",
+		TRAIN_WHEEL_RAIL_CENTRE_DROP - TRAIN_WHEEL_RAIL_HEIGHT * 0.5)
 
 
 func _build_mind_spark_railway_details(parent: Node3D, curve: Curve3D,
@@ -1210,7 +1455,7 @@ func _build_stations() -> void:
 		_build_canonical_station(station, index, landing_local, dock_sign)
 		var board_label := Label3D.new()
 		board_label.name = "BoardTrainSign"
-		board_label.text = "1  DRIVE   ✦   2  RIDE\nQ  USE SEAT"
+		board_label.text = "R  DRIVE   ✦   T  SIT\nQ  LEAVE TRAIN"
 		board_label.position = Vector3(-dock_sign * 22.0, 6.5, 18.0)
 		board_label.font_size = 32
 		board_label.outline_size = 8
@@ -1245,6 +1490,8 @@ func _build_canonical_station(station: Node3D, station_index: int,
 	station.set_meta("complete_station_template", true)
 	station.set_meta("old_station_roof_restored", true)
 	station.set_meta("old_station_restoration_scope", "roof_only")
+	station.set_meta("physicality_policy",
+		"walkable surfaces and reachable architectural solids collide; trim and VFX do not")
 	_build_station_platform_from_scratch(station, station_index)
 	_build_floating_dock_structure(station)
 	_build_bio_magitech_pavilion(station)
@@ -1463,7 +1710,7 @@ func _build_station_platform_from_scratch(station: Node3D,
 	# station collision outside the train shell. It is intentionally non-walkable.
 	_add_box(platform, "CentralMonorailServiceChannel",
 		Vector3(0.0, -2.65, -1.5), Vector3(11.5, 0.7, 57.0),
-		_piltover_navy_material, false)
+		_piltover_navy_material, true)
 	_add_segment_box(platform, "LeftChannelLight",
 		Vector3(-5.72, -2.18, -30.0), Vector3(-5.72, -2.18, 27.0),
 		Vector2(0.20, 0.16), _glass_material)
@@ -1495,7 +1742,7 @@ func _build_station_platform_from_scratch(station: Node3D,
 				"RoofFoundationDropPier_%s_%02d" % [
 					"L" if side < 0.0 else "R", support_index],
 				Vector3(float(side) * 19.0, -6.4, support_z),
-				1.28, 7.2, _piltover_teal_material, false, 8)
+				1.28, 7.2, _piltover_teal_material, true, 8)
 			_add_torus(roof_foundations,
 				"RoofFoundationHextechCollar_%s_%02d" % [
 					"L" if side < 0.0 else "R", support_index],
@@ -1610,7 +1857,8 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 	upgrade.name = "MindSparkStationUpgrade"
 	upgrade.set_meta("zone_scope", "mind_spark_only")
 	upgrade.set_meta("walk_around_train", true)
-	upgrade.set_meta("cab_q_interaction", true)
+	upgrade.set_meta("cab_r_interaction", true)
+	upgrade.set_meta("q_reserved_for_exit", true)
 	station.add_child(upgrade)
 	_build_mind_spark_floating_ground(upgrade)
 
@@ -2014,7 +2262,7 @@ func _build_floating_dock_structure(station: Node3D) -> void:
 	# A layered civic undercroft replaces the plain gray drum. The pale crown,
 	# teal mechanical belt and navy tapered hull form one readable floating island.
 	_add_cylinder(structure, "SuspendedFoundation", Vector3(0, -8.0, 0), 32.0, 10.0,
-		_piltover_navy_material, false, 16)
+		_piltover_navy_material, true, 16)
 	_add_tapered_cylinder(structure, "PiltoverIvoryHullCrown",
 		Vector3(0.0, -4.6, 0.0), 34.0, 32.0, 3.2,
 		_piltover_ivory_material, 24)
@@ -2140,6 +2388,8 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 			petal.set_meta("rainbow_material_index", petal_colour_index)
 			petal.set_meta("gold_edge_frame", true)
 			canopy.add_child(petal)
+			_add_static_mesh_collision(canopy, "%sCollision" % petal.name,
+				petal.mesh, petal.transform)
 			var root := centre - outward * 11.0
 			var shoulder_a := centre - outward * 1.8 - tangent * 5.0
 			var tip := centre + outward * 11.0
@@ -2167,7 +2417,7 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 			var z: float = ROOF_SUPPORT_Z_POSITIONS[support_index]
 			var x := float(side) * 19.0
 			_add_cylinder(supports, "LivingColumn_%s_%02d" % ["L" if side < 0 else "R", support_index],
-				Vector3(x, 5.2, z), 0.75, 10.4, _piltover_teal_material, false, 8)
+				Vector3(x, 5.2, z), 0.75, 10.4, _piltover_teal_material, true, 8)
 			_add_cylinder(supports, "EngineeringCollar_%s_%02d" % ["L" if side < 0 else "R", support_index],
 				Vector3(x, 9.2, z), 1.15, 0.65, _gold_material, false, 12)
 			_add_walkway_between(supports, "CanopyBranchInner_%s_%02d" % ["L" if side < 0 else "R", support_index],
@@ -2214,10 +2464,10 @@ func _build_resonance_arch(parent: Node3D, node_name: String,
 	for z_side in [-1.0, 1.0]:
 		_add_box(arch, "ArchFootRear" if z_side < 0 else "ArchFootFront",
 			Vector3(0.0, -3.9, float(z_side) * 3.0), Vector3(1.1, 1.3, 1.3),
-			_dark_metal_material, false)
+			_dark_metal_material, true)
 		_add_cylinder(arch, "ArchCrystalRear" if z_side < 0 else "ArchCrystalFront",
 			Vector3(0.0, -2.8, float(z_side) * 3.0), 0.38, 1.5,
-			_violet_material, false, 6)
+			_violet_material, true, 6)
 
 
 func _build_crystal_planter(parent: Node3D, node_name: String, position_value: Vector3) -> void:
@@ -2231,7 +2481,7 @@ func _build_crystal_planter(parent: Node3D, node_name: String, position_value: V
 		_add_cylinder(planter, "GrowthCrystal_%02d" % crystal_index,
 			Vector3(-1.2 + float(crystal_index) * 1.2, 1.25, 0.0),
 			0.36 + float(crystal_index) * 0.08, 2.4 + float(crystal_index % 2),
-			_violet_material, false, 6)
+			_violet_material, true, 6)
 
 
 func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
@@ -2333,9 +2583,9 @@ func _build_ascent_crystal_node(parent: Node3D, node_name: String,
 	node.position = position_value
 	parent.add_child(node)
 	_add_box(node, "GardenPlinth", Vector3(0.0, 0.0, 0.0),
-		Vector3(2.6, 0.55, 1.4), _nature_material, false)
+		Vector3(2.6, 0.55, 1.4), _nature_material, true)
 	_add_cylinder(node, "WayfindingCrystal", Vector3(0.0, 1.05, 0.0),
-		0.42, 2.1, _violet_material, false, 6)
+		0.42, 2.1, _violet_material, true, 6)
 	_add_torus(node, "EnergyCollar", Vector3(0.0, 0.65, 0.0),
 		0.62, 0.78, _gold_material)
 
@@ -2715,6 +2965,25 @@ func _add_walkway_between(parent: Node3D, node_name: String, start: Vector3, fin
 		parent.add_child(body)
 
 
+func _add_side_snowflake_bar(parent: Node3D, node_name: String, start: Vector3,
+		finish: Vector3, width: float, depth: float, material: Material) -> void:
+	var direction := finish - start
+	if direction.length() < 0.01:
+		return
+	var direction_normalized := direction.normalized()
+	var safe_up := Vector3.FORWARD if absf(direction_normalized.dot(Vector3.UP)) > 0.96 \
+		else Vector3.UP
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(width, depth, direction.length())
+	instance.mesh = mesh
+	instance.transform = Transform3D(Basis.looking_at(direction_normalized, safe_up),
+		(start + finish) * 0.5)
+	instance.material_override = material
+	parent.add_child(instance)
+
+
 func _build_train() -> void:
 	var train_platform := AnimatableBody3D.new()
 	_configure_train_platform_body(train_platform, "complete_train")
@@ -2779,17 +3048,30 @@ func _build_train() -> void:
 				Vector3(bench_side * 2.4, 1.65, 2.8), Vector3(1.9, 2.0, 2.2),
 				_glass_material, true)
 		if carriage_index == 0:
+			# A real driver chair anchors the character at the controls. Its backrest
+			# sits behind the fox (local +Z), leaving a clear reach to the console.
+			var driver_seat_local_z := DRIVER_SEAT.z - carriage.position.z
+			_add_box(carriage, "DriverSeatCushion",
+				Vector3(0.0, 1.42, driver_seat_local_z),
+				Vector3(2.15, 0.42, 1.75), _gold_material, false)
+			_add_box(carriage, "DriverSeatBack",
+				Vector3(0.0, 2.35, driver_seat_local_z + 0.82),
+				Vector3(2.25, 1.95, 0.34), _glass_material, false)
+			_add_cylinder(carriage, "DriverSeatPedestal",
+				Vector3(0.0, 0.86, driver_seat_local_z), 0.48, 1.15,
+				_gold_material, false, 12)
 			# A waist-high control desk, not a full-height wall. At 2.7 m tall
 			# and centred at y=2.0 this sealed the doorway between the deck and
-			# the cab: the player could never get within Q range of the driver
+			# the cab: the player could never get within boarding range of the driver
 			# point, so driving was unreachable in play. Keeping it below
 			# standing height leaves the cab walkable and still reads as a desk.
 			_add_box(carriage, "DriverConsole", Vector3(0.0, 1.6,
 				-17.3 - carriage.position.z),
 				Vector3(4.8, 0.6, 0.8), _glass_material, true)
 			var driver_label := Label3D.new()
+			_driver_controls_label = driver_label
 			driver_label.name = "DriverControls"
-			driver_label.text = "CROWN LINE DRIVER\n1 DRIVE  •  W/S MOVE  •  R HORN  •  Q EXIT"
+			driver_label.text = "CROWN LINE DRIVER\nR DRIVE  •  W/S MOVE  •  H HORN  •  Q EXIT"
 			driver_label.position = Vector3(0.0, 4.2,
 				DRIVER_SIDE_GATE_Z - carriage.position.z)
 			driver_label.font_size = 22
@@ -2889,7 +3171,11 @@ func _build_train() -> void:
 	_train.add_child(_train_glow)
 	_attach_detailed_train_visual()
 	_build_rainbow_gold_layout()
+	_driver_console = Node3D.new()
+	_driver_console.set_script(preload("res://scripts/train_driver_console.gd"))
+	_train.add_child(_driver_console)
 	_build_directional_movement_vfx()
+	preload("res://scripts/train_cab_sightline.gd").refit_native(_train)
 	_train.position = STATIONS[START_STATION_INDEX].position
 	_orient_train_at_station(START_STATION_INDEX)
 
@@ -2920,6 +3206,8 @@ func _attach_detailed_train_visual() -> void:
 	detailed_train.set_meta("walkable_collision_source", "complete_animatable_train_shell")
 	_train.add_child(detailed_train)
 	_enhance_detailed_train_palette(detailed_train)
+	preload("res://scripts/train_cab_sightline.gd").refit_imported(_train, detailed_train)
+	preload("res://scripts/train_driver_seat.gd").build(_train, _mixed_rainbow_seat_material())
 	# The production train now carries a second, native-Godot interpretation of
 	# the same shared bird/bullet cover blueprint used by the Blender source.
 	# It is intentionally separate so comparison captures can toggle either
@@ -2936,9 +3224,13 @@ func _enhance_detailed_train_palette(detailed_train: Node3D) -> void:
 	# Preserve the authored textures while lifting the muted runtime material
 	# families into a clearer rainbow-and-gold hierarchy. Surface overrides keep
 	# the source GLB untouched and therefore remain safe for the Web export.
+	_remove_original_botanical_roofs(detailed_train)
+	_enlarge_original_engine_tank(detailed_train)
 	var palette := {
 		"aged_gold": Color("ffd45a"),
 		"gold": Color("ffd45a"),
+		"engine_tank_pearlwhite": Color("fff4d6"),
+		"coach_cream": Color("fff06a"),
 		"roof_teal": Color("25e0bd"),
 		"roof_turquoise": Color("35c9ff"),
 		"navy": Color("4169e8"),
@@ -2947,6 +3239,7 @@ func _enhance_detailed_train_palette(detailed_train: Node3D) -> void:
 		"indigo": Color("7659e8"),
 		"living_root": Color("55b96f"),
 	}
+	var rainbow_seat_material := _mixed_rainbow_seat_material()
 	for candidate in detailed_train.find_children("*", "MeshInstance3D", true, false):
 		var mesh_instance := candidate as MeshInstance3D
 		if mesh_instance.mesh == null:
@@ -2956,6 +3249,12 @@ func _enhance_detailed_train_palette(detailed_train: Node3D) -> void:
 			if source == null:
 				continue
 			var material_name := source.resource_name.to_lower()
+			# Recolour the authored seat surfaces in place. This preserves every old
+			# cushion, back, curve and position while mixing the full rainbow across
+			# each seat instead of replacing it with new box geometry.
+			if material_name.contains("seat_navy"):
+				mesh_instance.set_surface_override_material(surface_index, rainbow_seat_material)
+				continue
 			var selected := Color.TRANSPARENT
 			for palette_key in palette:
 				if material_name.contains(palette_key):
@@ -2971,7 +3270,501 @@ func _enhance_detailed_train_palette(detailed_train: Node3D) -> void:
 			if material_name.contains("gold"):
 				enhanced.metallic = 0.86
 				enhanced.roughness = 0.24
+			elif material_name.contains("engine_tank_pearlwhite"):
+				# Warm ivory and a tight highlight make the enlarged authored boiler
+				# read as glazed pearl instead of a flat white cylinder.
+				enhanced.metallic = 0.10
+				enhanced.roughness = 0.14
+				enhanced.emission_energy_multiplier = 0.10
 			mesh_instance.set_surface_override_material(surface_index, enhanced)
+
+
+func _enlarge_original_engine_tank(detailed_train: Node3D) -> void:
+	# The authored pearl tank is one surface inside the optimized combined GLB.
+	# Resize only that surface and its nearby gold bands around the original local
+	# centre. This enlarges the real boiler without adding a second front tank.
+	const TANK_CENTRE := Vector3(0.0, 3.0, 18.15)
+	const RADIAL_SCALE := 1.28
+	const LENGTH_SCALE := 1.18
+	var resized_vertex_count := 0
+	for candidate in detailed_train.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := candidate as MeshInstance3D
+		var source_mesh := mesh_instance.mesh as ArrayMesh
+		if source_mesh == null:
+			continue
+		var contains_tank_surface := false
+		for surface_index in source_mesh.get_surface_count():
+			var surface_material := source_mesh.surface_get_material(surface_index)
+			if surface_material != null and String(surface_material.resource_name).to_lower() \
+					.contains("engine_tank_pearlwhite"):
+				contains_tank_surface = true
+				break
+		if not contains_tank_surface:
+			continue
+		var rebuilt_mesh := ArrayMesh.new()
+		for surface_index in source_mesh.get_surface_count():
+			var arrays: Array = source_mesh.surface_get_arrays(surface_index)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL] \
+				if arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array else PackedVector3Array()
+			var source_material := source_mesh.surface_get_material(surface_index)
+			var material_name := String(source_material.resource_name).to_lower() \
+				if source_material != null else ""
+			var scales_entire_surface := material_name.contains("engine_tank_pearlwhite")
+			var scales_tank_gold := material_name.contains("crown_accentgold") \
+				or material_name.contains("crown_gold")
+			if scales_entire_surface or scales_tank_gold:
+				for vertex_index in vertices.size():
+					var source_vertex := vertices[vertex_index]
+					var scales_vertex := scales_entire_surface or _is_original_tank_gold_vertex(
+						source_vertex)
+					if not scales_vertex:
+						continue
+					var offset := source_vertex - TANK_CENTRE
+					vertices[vertex_index] = TANK_CENTRE + Vector3(
+						offset.x * RADIAL_SCALE,
+						offset.y * RADIAL_SCALE,
+						offset.z * LENGTH_SCALE)
+					if normals.size() == vertices.size():
+						var source_normal := normals[vertex_index]
+						normals[vertex_index] = Vector3(
+							source_normal.x / RADIAL_SCALE,
+							source_normal.y / RADIAL_SCALE,
+							source_normal.z / LENGTH_SCALE).normalized()
+					resized_vertex_count += 1
+			arrays[Mesh.ARRAY_VERTEX] = vertices
+			if normals.size() == vertices.size():
+				arrays[Mesh.ARRAY_NORMAL] = normals
+			rebuilt_mesh.add_surface_from_arrays(
+				source_mesh.surface_get_primitive_type(surface_index), arrays)
+			var rebuilt_surface := rebuilt_mesh.get_surface_count() - 1
+			rebuilt_mesh.surface_set_material(rebuilt_surface, source_material)
+			rebuilt_mesh.surface_set_name(rebuilt_surface,
+				source_mesh.surface_get_name(surface_index))
+		mesh_instance.mesh = rebuilt_mesh
+		mesh_instance.set_meta("original_engine_tank_enlarged", true)
+		mesh_instance.set_meta("original_engine_tank_radial_scale", RADIAL_SCALE)
+		mesh_instance.set_meta("original_engine_tank_length_scale", LENGTH_SCALE)
+		mesh_instance.set_meta("original_engine_tank_resized_vertices", resized_vertex_count)
+		detailed_train.set_meta("original_engine_tank_enlarged", true)
+		detailed_train.set_meta("original_engine_tank_radial_scale", RADIAL_SCALE)
+		detailed_train.set_meta("original_engine_tank_length_scale", LENGTH_SCALE)
+		detailed_train.set_meta("original_engine_tank_resized_vertices", resized_vertex_count)
+
+
+func _is_original_tank_gold_vertex(vertex: Vector3) -> bool:
+	return absf(vertex.x) <= 2.20 and vertex.y >= 0.90 and vertex.y <= 5.10 \
+		and vertex.z >= 14.70 and vertex.z <= 21.60
+
+
+func _remove_original_botanical_roofs(detailed_train: Node3D) -> void:
+	_removed_botanical_roof_triangle_count = 0
+	_removed_blue_cab_barrier_triangle_count = 0
+	_cab_side_glass_triangle_count = 0
+	_removed_cab_shoulder_scale_triangle_count = 0
+	_removed_cab_window_frame_triangle_count = 0
+	var cab_side_glass_generated_triangle_count := 0
+	var removed_control_wheel_triangles := 0
+	for candidate in detailed_train.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := candidate as MeshInstance3D
+		var source_mesh := mesh_instance.mesh as ArrayMesh
+		if source_mesh == null:
+			continue
+		var rebuilt_mesh := ArrayMesh.new()
+		var mesh_changed := false
+		for surface_index in source_mesh.get_surface_count():
+			var arrays: Array = source_mesh.surface_get_arrays(surface_index)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			var source_material := source_mesh.surface_get_material(surface_index)
+			var material_name := source_material.resource_name.to_lower() \
+				if source_material != null else ""
+			var filtered_indices := PackedInt32Array()
+			var transparent_glass_vertices := PackedVector3Array()
+			var transparent_glass_normals := PackedVector3Array()
+			var blue_side_barrier_triangles := {}
+			var cab_window_frame_triangles := {}
+			var control_wheel_triangles := {}
+			if not indices.is_empty() and (_is_botanical_roof_material(material_name) \
+					or material_name.contains("cab_control_rubber") or material_name.contains("seat_navy")):
+				control_wheel_triangles = preload("res://scripts/train_driver_view.gd").find_control_wheel_triangles(
+					mesh_instance, _train, vertices, indices)
+			if material_name.contains("energy_glass") and not indices.is_empty():
+				blue_side_barrier_triangles = _find_blue_side_barrier_triangles(
+					mesh_instance, vertices, indices)
+			if material_name.contains("crown_accentgold") and not indices.is_empty():
+				cab_window_frame_triangles = _find_cab_window_frame_triangles(
+					mesh_instance, vertices, indices)
+			var filters_detailed_geometry := _is_botanical_roof_material(material_name) \
+				or material_name.contains("cab_control_rubber") \
+				or material_name.contains("seat_navy") \
+				or material_name.contains("energy_glass") \
+				or material_name.contains("warm_ivory")
+			if not indices.is_empty() and filters_detailed_geometry:
+				for triangle_start in range(0, indices.size(), 3):
+					if triangle_start + 2 >= indices.size():
+						break
+					var a: Vector3 = _train.to_local(mesh_instance.to_global(
+						vertices[indices[triangle_start]]))
+					var b: Vector3 = _train.to_local(mesh_instance.to_global(
+						vertices[indices[triangle_start + 1]]))
+					var c: Vector3 = _train.to_local(mesh_instance.to_global(
+						vertices[indices[triangle_start + 2]]))
+					var centroid := (a + b + c) / 3.0
+					# Measured NavigationHeart rings, spokes, crystal and both yoke
+					# grips. Do not remove gauges, rail wheels or exterior wreaths.
+					if control_wheel_triangles.has(triangle_start):
+						removed_control_wheel_triangles += 1
+						mesh_changed = true
+						continue
+					if _is_cab_shoulder_scale_triangle(centroid, material_name):
+						_removed_cab_shoulder_scale_triangle_count += 1
+						mesh_changed = true
+						continue
+					if cab_window_frame_triangles.has(triangle_start):
+						_removed_cab_window_frame_triangle_count += 1
+						mesh_changed = true
+						continue
+					if _is_botanical_roof_material(material_name) \
+							and _is_original_botanical_roof_triangle(centroid, material_name):
+						_removed_botanical_roof_triangle_count += 1
+						mesh_changed = true
+						continue
+					if _is_blue_cab_barrier_triangle(centroid, material_name):
+						_removed_blue_cab_barrier_triangle_count += 1
+						mesh_changed = true
+						continue
+					if blue_side_barrier_triangles.has(triangle_start):
+						_cab_side_glass_triangle_count += 1
+						var clipped_glass := _clip_triangle_above_train_y(mesh_instance,
+							PackedVector3Array([
+								vertices[indices[triangle_start]],
+								vertices[indices[triangle_start + 1]],
+								vertices[indices[triangle_start + 2]],
+							]), CAB_SIDE_GLASS_LOWER_EDGE_Y)
+						for clipped_start in range(0, clipped_glass.size(), 3):
+							var clipped_a := clipped_glass[clipped_start]
+							var clipped_b := clipped_glass[clipped_start + 1]
+							var clipped_c := clipped_glass[clipped_start + 2]
+							var clipped_normal := (clipped_b - clipped_a).cross(
+								clipped_c - clipped_a).normalized()
+							transparent_glass_vertices.append_array(PackedVector3Array([
+								clipped_a, clipped_b, clipped_c]))
+							transparent_glass_normals.append_array(PackedVector3Array([
+								clipped_normal, clipped_normal, clipped_normal]))
+							cab_side_glass_generated_triangle_count += 1
+						mesh_changed = true
+						continue
+					filtered_indices.append(indices[triangle_start])
+					filtered_indices.append(indices[triangle_start + 1])
+					filtered_indices.append(indices[triangle_start + 2])
+			else:
+				filtered_indices = indices
+			if indices.is_empty() or not filtered_indices.is_empty():
+				arrays[Mesh.ARRAY_INDEX] = filtered_indices
+				rebuilt_mesh.add_surface_from_arrays(
+					source_mesh.surface_get_primitive_type(surface_index), arrays)
+				var rebuilt_surface := rebuilt_mesh.get_surface_count() - 1
+				rebuilt_mesh.surface_set_material(rebuilt_surface, source_material)
+				rebuilt_mesh.surface_set_name(rebuilt_surface,
+					source_mesh.surface_get_name(surface_index))
+			if not transparent_glass_vertices.is_empty():
+				var glass_arrays := []
+				glass_arrays.resize(Mesh.ARRAY_MAX)
+				glass_arrays[Mesh.ARRAY_VERTEX] = transparent_glass_vertices
+				glass_arrays[Mesh.ARRAY_NORMAL] = transparent_glass_normals
+				rebuilt_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, glass_arrays)
+				var glass_surface := rebuilt_mesh.get_surface_count() - 1
+				rebuilt_mesh.surface_set_material(glass_surface,
+					_cab_side_clear_glass_material())
+				rebuilt_mesh.surface_set_name(glass_surface, "CabSideClearGlass")
+		if mesh_changed:
+			mesh_instance.mesh = rebuilt_mesh
+	detailed_train.set_meta("original_botanical_roofs_removed",
+		_removed_botanical_roof_triangle_count > 0)
+	detailed_train.set_meta("removed_driver_control_wheel_triangles", removed_control_wheel_triangles)
+	detailed_train.set_meta("removed_botanical_roof_triangles",
+		_removed_botanical_roof_triangle_count)
+	detailed_train.set_meta("blue_cab_barrier_removed",
+		_removed_blue_cab_barrier_triangle_count > 0)
+	detailed_train.set_meta("removed_blue_cab_barrier_triangles",
+		_removed_blue_cab_barrier_triangle_count)
+	detailed_train.set_meta("cab_side_glass_visible", _cab_side_glass_triangle_count == 440)
+	detailed_train.set_meta("cab_side_glass_triangle_count", _cab_side_glass_triangle_count)
+	detailed_train.set_meta("cab_side_glass_pane_count", 2 \
+		if _cab_side_glass_triangle_count == 440 else 0)
+	detailed_train.set_meta("cab_side_glass_alpha", 0.22)
+	detailed_train.set_meta("cab_side_glass_lower_edge_y_m", CAB_SIDE_GLASS_LOWER_EDGE_Y)
+	detailed_train.set_meta("cab_side_glass_clipped_to_window_opening", true)
+	detailed_train.set_meta("cab_side_glass_generated_triangle_count",
+		cab_side_glass_generated_triangle_count)
+	detailed_train.set_meta("cab_shoulder_scales_removed",
+		_removed_cab_shoulder_scale_triangle_count > 0)
+	detailed_train.set_meta("removed_cab_shoulder_scale_triangles",
+		_removed_cab_shoulder_scale_triangle_count)
+	detailed_train.set_meta("removed_cab_shoulder_scale_count", 16 \
+		if _removed_cab_shoulder_scale_triangle_count > 0 else 0)
+	detailed_train.set_meta("cab_side_pillars_restored", true)
+	detailed_train.set_meta("thin_gold_cab_window_frames_removed",
+		_removed_cab_window_frame_triangle_count > 0)
+	detailed_train.set_meta("removed_cab_window_frame_triangles",
+		_removed_cab_window_frame_triangle_count)
+
+
+func _clip_triangle_above_train_y(mesh_instance: MeshInstance3D,
+		triangle: PackedVector3Array, minimum_train_y: float) -> PackedVector3Array:
+	var polygon: Array[Vector3] = [triangle[0], triangle[1], triangle[2]]
+	var clipped: Array[Vector3] = []
+	for edge_index in polygon.size():
+		var current := polygon[edge_index]
+		var following := polygon[(edge_index + 1) % polygon.size()]
+		var current_y := _train.to_local(mesh_instance.to_global(current)).y
+		var following_y := _train.to_local(mesh_instance.to_global(following)).y
+		var current_inside := current_y >= minimum_train_y
+		var following_inside := following_y >= minimum_train_y
+		if current_inside:
+			clipped.append(current)
+		if current_inside != following_inside:
+			var ratio := (minimum_train_y - current_y) / (following_y - current_y)
+			clipped.append(current.lerp(following, ratio))
+	var triangles := PackedVector3Array()
+	for fan_index in range(1, clipped.size() - 1):
+		triangles.append_array(PackedVector3Array([
+			clipped[0], clipped[fan_index], clipped[fan_index + 1]]))
+	return triangles
+
+
+func _is_botanical_roof_material(material_name: String) -> bool:
+	return material_name.contains("leaf_teal") \
+		or material_name.contains("leaf_inner_light") \
+		or material_name.contains("crown_gold") \
+		or material_name.contains("crown_accentgold") \
+		or material_name.contains("energy_cyan") \
+		or material_name.contains("crystal_purple")
+
+
+func _is_original_botanical_roof_triangle(centroid: Vector3,
+		material_name: String) -> bool:
+	var inside_roof_zone := false
+	for roof_z in [PASSENGER_FRONT_CAR_CENTRE_Z, PASSENGER_REAR_CAR_CENTRE_Z, -17.0]:
+		if Vector2(centroid.x, centroid.z - float(roof_z)).length() <= 7.55:
+			inside_roof_zone = true
+			break
+	if not inside_roof_zone:
+		return false
+	if material_name.contains("leaf_teal") or material_name.contains("leaf_inner_light"):
+		return centroid.y >= 7.72
+	# Remove only the rosette backing, veins, beads and old centre in their narrow
+	# height band. Structural gold arches/eaves sit below it; the engine halo sits
+	# above it and therefore survives.
+	return centroid.y >= 7.94 and centroid.y <= 9.22
+
+
+func _is_cab_shoulder_scale_triangle(centroid: Vector3,
+		material_name: String) -> bool:
+	return (material_name.contains("warm_ivory") or material_name.contains("leaf_teal")) \
+		and absf(centroid.x) >= 4.64 and absf(centroid.x) <= 4.88 \
+		and centroid.y >= 6.65 and centroid.y <= 7.25 \
+		and centroid.z >= -18.95 and centroid.z <= -12.80
+
+
+func _cab_side_clear_glass_material() -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.resource_name = "CabSideClearGlass"
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.albedo_color = Color(0.38, 0.90, 1.0, 0.22)
+	material.metallic = 0.05
+	material.roughness = 0.08
+	material.emission_enabled = true
+	material.emission = Color(0.18, 0.62, 0.75)
+	material.emission_energy_multiplier = 0.10
+	material.set_meta("glass_style", "clear_visible_cab_glass")
+	material.set_meta("glass_alpha", 0.22)
+	return material
+
+
+func _is_blue_cab_barrier_triangle(centroid: Vector3,
+		material_name: String) -> bool:
+	# Remove only the navy rubber-backed rectangle highlighted beside the driver.
+	# The dashboard, instruments and the opposite structural cab wall remain.
+	return material_name.contains("cab_control_rubber") \
+		and centroid.x >= 2.82 and centroid.x <= 3.94 \
+		and centroid.y >= 4.01 and centroid.y <= 5.39 \
+		and centroid.z >= -16.03 and centroid.z <= -15.55
+
+
+func _find_blue_side_barrier_triangles(mesh_instance: MeshInstance3D,
+		vertices: PackedVector3Array, indices: PackedInt32Array) -> Dictionary:
+	# Identify whole connected components rather than cutting by position: two tiny
+	# glass fittings share the panes' coordinate band and must remain untouched.
+	var triangle_count := indices.size() / 3
+	var parents: Array[int] = []
+	parents.resize(triangle_count)
+	for triangle_index in triangle_count:
+		parents[triangle_index] = triangle_index
+	var owner_by_vertex := {}
+	for triangle_index in triangle_count:
+		for corner in 3:
+			var vertex := vertices[indices[triangle_index * 3 + corner]]
+			var key := "%.4f:%.4f:%.4f" % [vertex.x, vertex.y, vertex.z]
+			if owner_by_vertex.has(key):
+				_union_mesh_triangles(parents, triangle_index, int(owner_by_vertex[key]))
+			else:
+				owner_by_vertex[key] = triangle_index
+	var component_bounds := {}
+	for triangle_index in triangle_count:
+		var root_index := _find_mesh_triangle_root(parents, triangle_index)
+		for corner in 3:
+			var vertex: Vector3 = _train.to_local(mesh_instance.to_global(
+				vertices[indices[triangle_index * 3 + corner]]))
+			if not component_bounds.has(root_index):
+				component_bounds[root_index] = AABB(vertex, Vector3.ZERO)
+			else:
+				component_bounds[root_index] = (component_bounds[root_index] as AABB).expand(
+					vertex)
+	var barrier_roots := {}
+	for root_index in component_bounds:
+		var bounds := component_bounds[root_index] as AABB
+		var centre := bounds.get_center()
+		if absf(absf(centre.x) - 4.56) <= 0.02 \
+				and absf(centre.y - 5.18) <= 0.02 \
+				and absf(centre.z + 15.85) <= 0.02 \
+				and bounds.size.x >= 3.25 and bounds.size.y >= 5.80 \
+				and bounds.size.z <= 0.14:
+			barrier_roots[root_index] = true
+	var triangle_starts := {}
+	for triangle_index in triangle_count:
+		if barrier_roots.has(_find_mesh_triangle_root(parents, triangle_index)):
+			triangle_starts[triangle_index * 3] = true
+	return triangle_starts
+
+
+func _find_cab_window_frame_triangles(mesh_instance: MeshInstance3D,
+		vertices: PackedVector3Array, indices: PackedInt32Array) -> Dictionary:
+	# The imported mesh joins every gold detail into one surface. Select only the
+	# sixteen disconnected, pencil-thin pieces forming the rectangular window
+	# outlines (eight per side), leaving the chunky cab pillars and roof gold intact.
+	var triangle_count := indices.size() / 3
+	var parents: Array[int] = []
+	parents.resize(triangle_count)
+	for triangle_index in triangle_count:
+		parents[triangle_index] = triangle_index
+	var owner_by_vertex := {}
+	for triangle_index in triangle_count:
+		for corner in 3:
+			var vertex := vertices[indices[triangle_index * 3 + corner]]
+			var key := "%.4f:%.4f:%.4f" % [vertex.x, vertex.y, vertex.z]
+			if owner_by_vertex.has(key):
+				_union_mesh_triangles(parents, triangle_index, int(owner_by_vertex[key]))
+			else:
+				owner_by_vertex[key] = triangle_index
+	var component_bounds := {}
+	for triangle_index in triangle_count:
+		var root_index := _find_mesh_triangle_root(parents, triangle_index)
+		for corner in 3:
+			var point: Vector3 = _train.to_local(mesh_instance.to_global(
+				vertices[indices[triangle_index * 3 + corner]]))
+			if not component_bounds.has(root_index):
+				component_bounds[root_index] = AABB(point, Vector3.ZERO)
+			else:
+				component_bounds[root_index] = (component_bounds[root_index] as AABB).expand(
+					point)
+	var frame_roots := {}
+	for root_index in component_bounds:
+		var bounds := component_bounds[root_index] as AABB
+		var centre := bounds.get_center()
+		if absf(absf(centre.x) - 4.56) <= 0.03 and bounds.size.x <= 0.23 \
+				and centre.y >= 3.40 and centre.y <= 6.90 \
+				and centre.z >= -19.0 and centre.z <= -12.70 \
+				and bounds.size.y >= 0.55 and bounds.size.y <= 5.20:
+			frame_roots[root_index] = true
+	var triangle_starts := {}
+	for triangle_index in triangle_count:
+		if frame_roots.has(_find_mesh_triangle_root(parents, triangle_index)):
+			triangle_starts[triangle_index * 3] = true
+	return triangle_starts
+
+
+func _find_mesh_triangle_root(parents: Array[int], index: int) -> int:
+	var cursor := index
+	while parents[cursor] != cursor:
+		parents[cursor] = parents[parents[cursor]]
+		cursor = parents[cursor]
+	return cursor
+
+
+func _union_mesh_triangles(parents: Array[int], a: int, b: int) -> void:
+	var root_a := _find_mesh_triangle_root(parents, a)
+	var root_b := _find_mesh_triangle_root(parents, b)
+	if root_a != root_b:
+		parents[root_b] = root_a
+
+
+func _mixed_rainbow_seat_material() -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.set_meta("seat_style", "original_geometry_mixed_rainbow")
+	material.set_meta("animated_rainbow", true)
+	material.set_meta("rainbow_colour_count", 7)
+	material.set_meta("equal_colour_distribution", true)
+	material.set_meta("seat_effect_style", "golden_aurora_silk")
+	material.set_meta("warm_luxury_gold_sheen", true)
+	material.shader = Shader.new()
+	material.shader.code = """
+shader_type spatial;
+render_mode specular_schlick_ggx;
+
+varying float rainbow_hue;
+uniform float upholstery_phase = 0.0;
+
+vec3 rainbow_colour(float hue) {
+	// A warm, cheerful luxury palette: coral, apricot, sunshine, mint, aqua,
+	// clear sky and orchid. Their similar lightness keeps every colour present.
+	vec3 red = vec3(1.00, 0.32, 0.46);
+	vec3 orange = vec3(1.00, 0.58, 0.26);
+	vec3 yellow = vec3(1.00, 0.82, 0.30);
+	vec3 green = vec3(0.34, 0.90, 0.54);
+	vec3 cyan = vec3(0.25, 0.82, 0.86);
+	vec3 blue = vec3(0.38, 0.62, 1.00);
+	vec3 violet = vec3(0.78, 0.44, 1.00);
+	float band = fract(hue) * 7.0;
+	float blend = smoothstep(0.04, 0.96, fract(band));
+	if (band < 1.0) return mix(red, orange, blend);
+	if (band < 2.0) return mix(orange, yellow, blend);
+	if (band < 3.0) return mix(yellow, green, blend);
+	if (band < 4.0) return mix(green, cyan, blend);
+	if (band < 5.0) return mix(cyan, blue, blend);
+	if (band < 6.0) return mix(blue, violet, blend);
+	return mix(violet, red, blend);
+}
+
+void vertex() {
+	// One broad aurora cycle crosses each old cushion, with a gentle diagonal
+	// drift that follows the original upholstery instead of reading as stripes.
+	rainbow_hue = fract(UV.x * 0.70 + UV.y * 0.35 + VERTEX.x * 0.58 \
+		+ VERTEX.y * 0.10 + VERTEX.z * 0.06 + upholstery_phase);
+}
+
+void fragment() {
+	// The aurora flows slowly enough to feel like silk rather than flashing neon.
+	float animated_hue = fract(rainbow_hue + TIME * 0.060);
+	vec3 colour = rainbow_colour(animated_hue);
+	float silk_wave = 0.5 + 0.5 * sin((rainbow_hue * 2.0 + TIME * 0.12) * 6.283185);
+	colour *= 0.96 + silk_wave * 0.10;
+	colour = mix(colour, vec3(1.00, 0.88, 0.66), 0.07);
+	float rim = pow(1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0), 3.0);
+	float gold_glint = pow(0.5 + 0.5 * sin((rainbow_hue * 3.0 - TIME * 0.18) \
+		* 6.283185), 18.0);
+	float gold_amount = clamp(rim * 0.42 + gold_glint * 0.10, 0.0, 0.46);
+	vec3 warm_gold = vec3(1.00, 0.74, 0.22);
+	ALBEDO = mix(colour, warm_gold, gold_amount);
+	EMISSION = colour * 0.23 + warm_gold * gold_amount * 0.18;
+	METALLIC = gold_amount * 0.38;
+	SPECULAR = 0.72;
+	ROUGHNESS = mix(0.30, 0.18, gold_amount);
+}
+"""
+	return material
 
 
 func _build_rainbow_gold_layout() -> void:
@@ -2986,20 +3779,497 @@ func _build_rainbow_gold_layout() -> void:
 			Vector3(side * 5.72, 0.95, 1.0), Vector3(0.22, 0.30, 49.0),
 			_gold_material, false)
 		_rainbow_gold_accent_count += 1
-	# Seven slim spectrum rails run over each open coach canopy. They add colour
-	# without covering seats, doors, the driver view, or walkable collision.
-	var spectrum := [
-		Color("ff4f78"), Color("ff934d"), Color("ffe45b"), Color("5ee889"),
-		Color("43e6ee"), Color("4d82ff"), Color("b16cff")]
-	for coach_z in [PASSENGER_FRONT_GATE_Z, PASSENGER_REAR_GATE_Z]:
-		for colour_index in spectrum.size():
-			var colour: Color = spectrum[colour_index]
-			var rainbow_material := _material(colour, 0.28, colour, 0.78)
-			var x := -3.6 + float(colour_index) * 1.2
-			_add_box(accents, "CoachSpectrum_%02d_%02d" % [int(coach_z), colour_index],
-				Vector3(x, 7.55, coach_z), Vector3(0.32, 0.18, 12.2),
-				rainbow_material, false)
-			_rainbow_gold_accent_count += 1
+	_build_snowflake_roof_crowns(accents)
+	_build_christmas_train_decor(accents)
+	# Keep the exterior free of added rainbow barriers and keep the original seat
+	# geometry unobstructed. Its mixed-rainbow material is applied directly above.
+
+
+func _build_snowflake_roof_crowns(parent: Node3D) -> void:
+	var snowflakes := Node3D.new()
+	snowflakes.name = "SnowflakeRoofCrowns"
+	snowflakes.set_meta("roof_shape", "six_point_crystal_snowflake")
+	snowflakes.set_meta("snowflake_count", 3)
+	snowflakes.set_meta("points_per_snowflake", 6)
+	snowflakes.set_meta("curved_arm_segments", 3)
+	snowflakes.set_meta("arm_height_variation_m", 0.14)
+	snowflakes.set_meta("profile", "near_flat_crystal_filigree")
+	snowflakes.set_meta("connected_to_roof_structure", true)
+	snowflakes.set_meta("measured_to_each_roof_section", true)
+	snowflakes.set_meta("roof_edge_margin_m", 0.28)
+	snowflakes.set_meta("driving_roof_center_z_m", DRIVER_SIDE_GATE_Z)
+	snowflakes.set_meta("driving_roof_half_extents_m",
+		Vector2(4.60, DRIVER_SIDE_GATE_HALF_LENGTH))
+	snowflakes.set_meta("driving_roof_edge_margin_m", 0.32)
+	snowflakes.set_meta("driving_snowflake_fitted_to_cab", true)
+	snowflakes.set_meta("driving_snowflake_halo_clearance_m", 0.80)
+	snowflakes.set_meta("passenger_clearance_preserved", true)
+	parent.add_child(snowflakes)
+	var ice_colour := Color("bceafa")
+	var ice_material := _material(ice_colour, 0.12, Color("a7e9ff"), 0.15)
+	var pearl_material := _material(Color("fff8e7"), 0.16, Color("fff1bf"), 0.08)
+	var roof_centres := [
+		Vector3(0.0, 8.24, PASSENGER_FRONT_CAR_CENTRE_Z),
+		Vector3(0.0, 8.24, PASSENGER_REAR_CAR_CENTRE_Z),
+		Vector3(0.0, 8.28, DRIVER_SIDE_GATE_Z),
+	]
+	var roof_half_extents := [Vector2(4.78, 6.00), Vector2(4.78, 6.00),
+		Vector2(4.60, DRIVER_SIDE_GATE_HALF_LENGTH)]
+	var roof_edge_margins := [0.28, 0.28, 0.32]
+	for snowflake_index in roof_centres.size():
+		var centre: Vector3 = roof_centres[snowflake_index]
+		var roof_half_extent: Vector2 = roof_half_extents[snowflake_index]
+		var roof_edge_margin: float = float(roof_edge_margins[snowflake_index])
+		var is_driver_roof := snowflake_index == 2
+		snowflakes.set_meta("roof_%02d_half_extents_m" % snowflake_index,
+			roof_half_extent)
+		var prefix := "SnowflakeRoof_%02d" % snowflake_index
+		# A layered hexagonal heart makes the six-way symmetry readable from above
+		# and from the lower passenger camera.
+		_add_cylinder(snowflakes, prefix + "_GoldHeart", centre,
+			0.66 if is_driver_roof else 0.80, 0.16, _gold_material, false, 6)
+		_add_cylinder(snowflakes, prefix + "_PearlHeart", centre + Vector3.UP * 0.12,
+			0.52 if is_driver_roof else 0.64, 0.10, pearl_material, false, 6)
+		if is_driver_roof:
+			# The existing celestial ornament stays at its authored height. A
+			# slim pedestal closes the gap exposed by lowering the snowflake.
+			_add_cylinder(snowflakes, prefix + "_HaloStem", Vector3(0, 8.90, -16.0),
+				0.18, 1.16, _gold_material, false, 6)
+			_add_cylinder(snowflakes, prefix + "_HaloSocket", Vector3(0, 8.48, -16.0),
+				0.38, 0.16, pearl_material, false, 6)
+			_add_cylinder(snowflakes, prefix + "_HaloCollar", Vector3(0, 9.36, -16.0),
+				0.34, 0.14, _gold_material, false, 6)
+		for point_index in 6:
+			var angle := TAU * float(point_index) / 6.0
+			var direction := Vector3(cos(angle), 0.0, sin(angle))
+			var perpendicular := Vector3(-direction.z, 0.0, direction.x)
+			var x_limit := INF if absf(direction.x) < 0.001 \
+				else (roof_half_extent.x - roof_edge_margin) / absf(direction.x)
+			var z_limit := INF if absf(direction.z) < 0.001 \
+				else (roof_half_extent.y - roof_edge_margin) / absf(direction.z)
+			var arm_radius: float = minf(x_limit, z_limit)
+			# Nearly level filigree: only 14 cm of relief across the entire arm.
+			# Separate short mounting brackets carry it down to the roof.
+			var outer_drop := 0.10
+			var arm_points := [
+				centre + direction * arm_radius * 0.14 + Vector3.UP * 0.04,
+				centre + direction * arm_radius * 0.46,
+				centre + direction * arm_radius * 0.76 \
+					+ Vector3.DOWN * 0.05,
+				centre + direction * arm_radius + Vector3.DOWN * outer_drop,
+			]
+			for segment_index in 3:
+				var segment_start: Vector3 = arm_points[segment_index]
+				var segment_finish: Vector3 = arm_points[segment_index + 1]
+				_add_walkway_between(snowflakes,
+					"%s_CurvedIceArm_%02d_%02d" % [prefix, point_index, segment_index],
+					segment_start, segment_finish,
+					0.38 if is_driver_roof else 0.42, 0.16, ice_material, false)
+				_add_walkway_between(snowflakes,
+					"%s_CurvedGoldVein_%02d_%02d" % [prefix, point_index, segment_index],
+					segment_start + Vector3.UP * 0.10,
+					segment_finish + Vector3.UP * 0.10,
+					0.06, 0.035, _gold_material, false)
+			for branch_index in 2:
+				var branch_root: Vector3 = arm_points[branch_index + 1]
+				for branch_side in [-1.0, 1.0]:
+					var branch_side_value: float = float(branch_side)
+					var branch_finish: Vector3 = branch_root + direction * arm_radius * 0.13 \
+						+ perpendicular * branch_side_value * arm_radius \
+							* (0.23 - float(branch_index) * 0.025) \
+						+ Vector3.DOWN * 0.025
+					branch_finish.x = clampf(branch_finish.x,
+						centre.x - roof_half_extent.x + roof_edge_margin,
+						centre.x + roof_half_extent.x - roof_edge_margin)
+					branch_finish.z = clampf(branch_finish.z,
+						centre.z - roof_half_extent.y + roof_edge_margin,
+						centre.z + roof_half_extent.y - roof_edge_margin)
+					_add_walkway_between(snowflakes,
+						"%s_Branch_%02d_%02d_%s" % [prefix, point_index,
+							branch_index, "L" if branch_side_value < 0.0 else "R"],
+						branch_root, branch_finish,
+						0.26 if is_driver_roof else 0.30, 0.14, ice_material, false)
+					_add_walkway_between(snowflakes,
+						"%s_BranchGold_%02d_%02d_%s" % [prefix, point_index,
+							branch_index, "L" if branch_side_value < 0.0 else "R"],
+						branch_root + Vector3.UP * 0.085, branch_finish + Vector3.UP * 0.085,
+						0.045, 0.03, _gold_material, false)
+			var arm_finish: Vector3 = arm_points[3]
+			_add_cylinder(snowflakes, "%s_TipGem_%02d" % [prefix, point_index],
+				arm_finish + Vector3.UP * 0.08,
+				0.14 if is_driver_roof else 0.16, 0.12, pearl_material, false, 6)
+			# A short inward gold brace lands each point on the existing canopy/eave,
+			# making the decorative snowflake visibly part of the train structure.
+			var roof_connection := centre + direction * arm_radius * 0.88
+			roof_connection.y = 7.95 if is_driver_roof else 7.56
+			_add_walkway_between(snowflakes,
+				"%s_RoofConnector_%02d" % [prefix, point_index],
+				arm_finish, roof_connection, 0.14, 0.14, _gold_material, false)
+			_add_cylinder(snowflakes, "%s_ConnectorFoot_%02d" % [prefix, point_index],
+				roof_connection, 0.20, 0.24, _gold_material, false, 6)
+		_rainbow_gold_accent_count += 46
+
+
+func _build_christmas_train_decor(parent: Node3D) -> void:
+	var christmas := Node3D.new()
+	christmas.name = "GoldenChristmasExpressDecor"
+	christmas.set_meta("theme", "golden_christmas_express")
+	christmas.set_meta("engine_wreath", false)
+	christmas.set_meta("engine_front_green_removed", true)
+	christmas.set_meta("engine_front_style", "luxury_pearl_crystal_boiler")
+	christmas.set_meta("engine_front_symmetrical", true)
+	christmas.set_meta("engine_front_added_tank", false)
+	christmas.set_meta("engine_front_added_pilot", false)
+	christmas.set_meta("engine_original_tank_enlarged", true)
+	christmas.set_meta("engine_original_tank_radial_scale", 1.28)
+	christmas.set_meta("engine_original_tank_length_scale", 1.18)
+	christmas.set_meta("engine_original_crystal_uncovered", true)
+	christmas.set_meta("engine_tank_open_front_collar", true)
+	christmas.set_meta("engine_tank_longitudinal_rail_count", 5)
+	christmas.set_meta("engine_tank_front_jewel_count", 6)
+	christmas.set_meta("engine_tank_center_left_open", true)
+	christmas.set_meta("engine_tank_front_collar_z_m", -25.91)
+	christmas.set_meta("engine_tank_center_y_m", 4.72)
+	christmas.set_meta("engine_side_wreath_count", 2)
+	christmas.set_meta("engine_side_snowflake_crest_count", 0)
+	christmas.set_meta("green_side_rings_restored", true)
+	christmas.set_meta("coach_bow_count", 4)
+	christmas.set_meta("candy_cane_column_count", 8)
+	christmas.set_meta("warm_light_count", 36)
+	christmas.set_meta("roof_curve_count", 7)
+	christmas.set_meta("roof_christmas_ball_count", 51)
+	christmas.set_meta("roof_garland_placement", "under_top_frame")
+	christmas.set_meta("roof_frame_attachment_count", 51)
+	christmas.set_meta("roof_curve_segments_per_line", 12)
+	christmas.set_meta("engine_side_curve_segments_per_line", 16)
+	christmas.set_meta("roof_curve_symmetric", true)
+	christmas.set_meta("engine_roof_curve_center_z_m", ENGINE_ROOF_GARLAND_CENTER_Z)
+	christmas.set_meta("engine_roof_curve_front_edge_z_m",
+		ENGINE_ROOF_GARLAND_FRONT_EDGE_Z)
+	christmas.set_meta("engine_roof_curve_rear_edge_z_m",
+		ENGINE_ROOF_GARLAND_REAR_EDGE_Z)
+	christmas.set_meta("engine_roof_curve_span_m", ENGINE_ROOF_GARLAND_HALF_LENGTH * 2.0)
+	christmas.set_meta("engine_ball_spacing_m", ENGINE_ROOF_GARLAND_HALF_LENGTH * 2.0 / 8.0)
+	christmas.set_meta("engine_roof_purple_frame_front_edge_z_m",
+		ENGINE_ROOF_FRAME_FRONT_EDGE_Z)
+	christmas.set_meta("engine_roof_purple_frame_rear_edge_z_m",
+		ENGINE_ROOF_FRAME_REAR_EDGE_Z)
+	christmas.set_meta("engine_roof_purple_frame_outer_x_m", ENGINE_ROOF_FRAME_OUTER_X)
+	christmas.set_meta("engine_roof_ball_radius_m", ROOF_BALL_RADIUS)
+	christmas.set_meta("engine_roof_garland_measured_from_mesh", true)
+	christmas.set_meta("engine_roof_edge_inset_m", RoofLightProfile.EDGE_INSET)
+	christmas.set_meta("roof_mounts_seated_in_lower_edge", true)
+	christmas.set_meta("engine_roof_garland_flush_underbeam", true)
+	christmas.set_meta("engine_roof_garland_raised_to_requested_edge", true)
+	christmas.set_meta("engine_roof_garland_matches_outermost_edges", true)
+	christmas.set_meta("engine_roof_short_vertical_mount_count", 23)
+	christmas.set_meta("engine_roof_garland_shape", "u_shape_sides_and_rear")
+	christmas.set_meta("engine_side_light_ball_count", 18)
+	christmas.set_meta("engine_rear_light_ball_count", 5)
+	christmas.set_meta("engine_front_light_ball_count", 0)
+	christmas.set_meta("passenger_roof_curve_span_m", 12.0)
+	christmas.set_meta("passenger_ball_spacing_m", 2.0)
+	christmas.set_meta("roof_curve_reaches_both_end_frames", true)
+	christmas.set_meta("ornament_drop_m", 0.40)
+	christmas.set_meta("passenger_roof_curve_count", 4)
+	christmas.set_meta("passenger_christmas_ball_count", 28)
+	christmas.set_meta("decorative_collision", false)
+	parent.add_child(christmas)
+	var evergreen := _material(Color("0b8f55"), 0.36, Color("18b76d"), 0.22)
+	var cranberry := _material(Color("e62f4b"), 0.30, Color("ff5268"), 0.42)
+	var snow_white := _material(Color("fffaf0"), 0.24, Color("fff4d3"), 0.56)
+	var ribbon_gold := _material(Color("ffd35a"), 0.18, Color("ffdf7e"), 0.48)
+	var light_colours := [
+		Color("ff536b"), Color("ffb83e"), Color("fff27a"),
+		Color("63eb91"), Color("62ddff"), Color("b985ff"),
+	]
+	var light_materials: Array[StandardMaterial3D] = []
+	for colour in light_colours:
+		light_materials.append(_material(colour, 0.16, colour, 1.65))
+	_build_curved_roof_ball_garlands(christmas, evergreen, ribbon_gold,
+		light_materials)
+	_build_luxury_original_engine_tank_trim(christmas, ribbon_gold,
+		snow_white, light_materials)
+
+	for side in [-1.0, 1.0]:
+		var side_label := "L" if side < 0.0 else "R"
+		# Restore the original evergreen ring, cranberry bow and gold bell shown in
+		# the reference, mirrored on the two engine sides.
+		_add_torus(christmas, "EngineSideWreath_%s" % side_label,
+			Vector3(side * 6.24, 4.72, -17.30), 0.82, 1.34, evergreen,
+			Vector3(0.0, 0.0, 90.0))
+		_add_cylinder(christmas, "EngineSideBowA_%s" % side_label,
+			Vector3(side * 6.38, 3.63, -17.72), 0.42, 0.22, cranberry,
+			false, 8, Vector3(0.0, 0.0, 90.0))
+		_add_cylinder(christmas, "EngineSideBowB_%s" % side_label,
+			Vector3(side * 6.38, 3.63, -16.88), 0.42, 0.22, cranberry,
+			false, 8, Vector3(0.0, 0.0, 90.0))
+		_add_cylinder(christmas, "EngineSideBell_%s" % side_label,
+			Vector3(side * 6.48, 3.56, -17.30), 0.24, 0.32, ribbon_gold,
+			false, 10, Vector3(0.0, 0.0, 90.0))
+		_add_box(christmas, "EvergreenLowerTrim_%s" % ("L" if side < 0.0 else "R"),
+			Vector3(side * 5.86, 1.28, 1.0), Vector3(0.16, 0.24, 48.2),
+			evergreen, false)
+
+	# Snow rests on the coach eaves; evergreen garlands and jewel bulbs hang just
+	# beneath it. All pieces are visual-only and remain above the playable deck.
+	for side in [-1.0, 1.0]:
+		for coach_z in [PASSENGER_FRONT_CAR_CENTRE_Z, PASSENGER_REAR_CAR_CENTRE_Z]:
+			_add_box(christmas, "SnowEave_%s_%02d" % [
+				"L" if side < 0.0 else "R", int(coach_z)],
+				Vector3(side * 4.96, 8.04, coach_z), Vector3(0.36, 0.20, 12.45),
+				snow_white, false)
+			var garland_start := Vector3(side * 5.02, 7.77, coach_z - 6.0)
+			var garland_mid := Vector3(side * 5.02, 7.52, coach_z)
+			var garland_finish := Vector3(side * 5.02, 7.77, coach_z + 6.0)
+			_add_walkway_between(christmas, "EvergreenGarlandA_%s_%02d" % [
+				"L" if side < 0.0 else "R", int(coach_z)],
+				garland_start, garland_mid, 0.24, 0.24, evergreen, false)
+			_add_walkway_between(christmas, "EvergreenGarlandB_%s_%02d" % [
+				"L" if side < 0.0 else "R", int(coach_z)],
+				garland_mid, garland_finish, 0.24, 0.24, evergreen, false)
+			for bulb_index in 9:
+				var bulb_z: float = float(coach_z) - 5.25 + float(bulb_index) * 1.31
+				var bulb_y: float = 7.70 - 0.18 * (1.0 - abs(float(bulb_index) - 4.0) / 4.0)
+				_add_cylinder(christmas, "WarmBulb_%s_%02d_%02d" % [
+					"L" if side < 0.0 else "R", int(coach_z), bulb_index],
+					Vector3(side * 5.05, bulb_y, bulb_z), 0.15, 0.25,
+					light_materials[bulb_index % light_materials.size()], false, 8)
+			# A large coach bow anchors each garland without covering the open door.
+			_add_cylinder(christmas, "CoachBowA_%s_%02d" % [
+				"L" if side < 0.0 else "R", int(coach_z)],
+				Vector3(side * 5.18, 7.30, float(coach_z) - 0.40),
+				0.38, 0.20, cranberry, false, 8, Vector3(0.0, 0.0, 90.0))
+			_add_cylinder(christmas, "CoachBowB_%s_%02d" % [
+				"L" if side < 0.0 else "R", int(coach_z)],
+				Vector3(side * 5.18, 7.30, float(coach_z) + 0.40),
+				0.38, 0.20, cranberry, false, 8, Vector3(0.0, 0.0, 90.0))
+			_add_cylinder(christmas, "CoachBowBell_%s_%02d" % [
+				"L" if side < 0.0 else "R", int(coach_z)],
+				Vector3(side * 5.28, 7.24, coach_z), 0.22, 0.28,
+				ribbon_gold, false, 10, Vector3(0.0, 0.0, 90.0))
+
+	# Eight striped pillars turn the coach arches into candy-cane supports. The
+	# stripes sit on the outward face, never inside the passenger aisle.
+	for coach_z in [PASSENGER_FRONT_CAR_CENTRE_Z, PASSENGER_REAR_CAR_CENTRE_Z]:
+		for side in [-1.0, 1.0]:
+			for end_offset in [-5.72, 5.72]:
+				for stripe_index in 10:
+					var stripe_material: Material = cranberry if stripe_index % 2 == 0 else snow_white
+					_add_box(christmas, "CandyCaneStripe_%02d_%s_%s_%02d" % [
+						int(coach_z), "L" if side < 0.0 else "R",
+						"F" if end_offset < 0.0 else "B", stripe_index],
+						Vector3(side * 4.72, 2.58 + float(stripe_index) * 0.46,
+							float(coach_z) + float(end_offset)),
+						Vector3(0.30, 0.38, 0.30), stripe_material, false)
+
+	# Two small wrapped gifts decorate the rear platform corners without covering
+	# either passenger section or the interaction path.
+	for side in [-1.0, 1.0]:
+		var gift_colour: Material = cranberry if side < 0.0 else evergreen
+		_add_box(christmas, "RearGift_%s" % ("L" if side < 0.0 else "R"),
+			Vector3(side * 4.18, 1.86, 25.10), Vector3(1.36, 1.18, 1.36),
+			gift_colour, false)
+		_add_box(christmas, "RearGiftRibbon_%s" % ("L" if side < 0.0 else "R"),
+			Vector3(side * 4.18, 2.49, 25.10), Vector3(1.52, 0.10, 0.22),
+			ribbon_gold, false)
+	_rainbow_gold_accent_count += 164
+
+func _build_luxury_original_engine_tank_trim(parent: Node3D, gold: Material,
+		pearl: Material, jewel_materials: Array[StandardMaterial3D]) -> void:
+	# Dress the enlarged authored boiler instead of placing another tank in front.
+	# Every piece is a thin, open trim seated on its measured 2.07 m radius; the
+	# centre stays empty so the original crystal nose remains the visual focus.
+	# These train-local measurements include the imported GLB mesh transform.
+	const TANK_CENTER := Vector3(0.0, 4.72, -22.55)
+	const TANK_FRONT_Z := -25.91
+	const TANK_TRIM_RADIUS := 2.09
+	const RAIL_LENGTH := 5.72
+	var ice := _material(Color("8ff5ff"), 0.12, Color("52e8ff"), 0.92)
+
+	# Five slim crown rails visually connect the existing circular boiler bands.
+	# Their evenly mirrored placement improves the silhouette without hiding the
+	# pearl body or adding collision around the driving section.
+	var rail_angles := [-150.0, -110.0, -70.0, -30.0, 90.0]
+	for rail_index in rail_angles.size():
+		var angle := deg_to_rad(float(rail_angles[rail_index]))
+		var rail_position := Vector3(
+			cos(angle) * TANK_TRIM_RADIUS,
+			TANK_CENTER.y + sin(angle) * TANK_TRIM_RADIUS,
+			TANK_CENTER.z)
+		_add_cylinder(parent, "EngineTankCrownRail_%02d" % rail_index,
+			rail_position, 0.055, RAIL_LENGTH,
+			ice if rail_index == 2 else gold, false, 10,
+			Vector3(90.0, 0.0, 0.0))
+
+	# Two concentric open rings form a fitted front collar. Unlike the removed
+	# front tank, these have no face, dome, or centre cap.
+	_add_torus(parent, "EngineTankFrontGoldCollar",
+		Vector3(0.0, TANK_CENTER.y, TANK_FRONT_Z), 1.67, 1.84, gold,
+		Vector3(90.0, 0.0, 0.0))
+	_add_torus(parent, "EngineTankFrontCrystalInlay",
+		Vector3(0.0, TANK_CENTER.y, TANK_FRONT_Z - 0.035), 1.48, 1.57, ice,
+		Vector3(90.0, 0.0, 0.0))
+
+	# Equal spacing and equal size keep the rainbow balanced rather than letting
+	# any one colour dominate the warm pearl-and-gold treatment.
+	for jewel_index in 6:
+		var angle := TAU * float(jewel_index) / 6.0 + PI / 6.0
+		var jewel_position := Vector3(
+			cos(angle) * 1.755,
+			TANK_CENTER.y + sin(angle) * 1.755,
+			TANK_FRONT_Z - 0.09)
+		_add_cylinder(parent, "EngineTankFrontJewel_%02d" % jewel_index,
+			jewel_position, 0.12, 0.13,
+			jewel_materials[jewel_index % jewel_materials.size()], false, 8,
+			Vector3(90.0, 0.0, 0.0))
+	# Small pearl clasps soften the transition where the open collar meets the
+	# boiler body while leaving its central face and crystal sightline untouched.
+	for side in [-1.0, 1.0]:
+		_add_cylinder(parent, "EngineTankPearlClasp_%s" % (
+			"L" if side < 0.0 else "R"),
+			Vector3(side * 1.92, TANK_CENTER.y, TANK_FRONT_Z + 0.02),
+			0.18, 0.14, pearl, false, 10, Vector3(90.0, 0.0, 0.0))
+
+
+func _build_curved_roof_ball_garlands(parent: Node3D, line_material: Material,
+		cap_material: Material, ball_materials: Array[StandardMaterial3D]) -> void:
+	var purple_faces := RoofLightProfile.purple_faces(_train)
+	var rear_right := RoofLightProfile.side_anchor(purple_faces,
+		ENGINE_ROOF_GARLAND_REAR_EDGE_Z, 1.0)
+	if not rear_right.is_finite():
+		push_error("Cannot attach train lights: purple roof profile is missing")
+		return
+	var rear_half_width := rear_right.x
+	parent.set_meta("engine_roof_garland_outer_x_m", rear_half_width)
+	parent.set_meta("engine_rear_ball_spacing_m", rear_half_width * 2.0 / 6.0)
+	# Each section uses its own measured roof frame: engine first, then both coaches.
+	# Twelve short segments make each line read as one smooth symmetric curve. Seven
+	# equally spaced gold stems and ornaments land on every second curve sample.
+	var section_centres := [ENGINE_ROOF_GARLAND_CENTER_Z, PASSENGER_FRONT_CAR_CENTRE_Z,
+		PASSENGER_REAR_CAR_CENTRE_Z]
+	var section_half_lengths := [ENGINE_ROOF_GARLAND_HALF_LENGTH, 6.00, 6.00]
+	var section_half_widths := [rear_half_width, 4.78 - 0.28, 4.78 - 0.28]
+	var section_frame_undersides := [rear_right.y, 7.94, 7.94]
+	var section_garland_heights := [rear_right.y - RoofLightProfile.LINE_CLEARANCE, 7.78, 7.78]
+	var section_sag_depths := [0.04, 0.38, 0.38]
+	for section_index in section_centres.size():
+		var centre_z: float = float(section_centres[section_index])
+		var half_length: float = float(section_half_lengths[section_index])
+		var half_width: float = float(section_half_widths[section_index])
+		var frame_underside: float = float(section_frame_undersides[section_index])
+		var garland_height: float = float(section_garland_heights[section_index])
+		var sag_depth: float = float(section_sag_depths[section_index])
+		var curve_steps := 16 if section_index == 0 else 12
+		for side in [-1.0, 1.0]:
+			var previous_node := Vector3.ZERO
+			for curve_index in curve_steps + 1:
+				var ratio := float(curve_index) / float(curve_steps)
+				var centred_ratio := ratio * 2.0 - 1.0
+				var sag := sag_depth * (1.0 - centred_ratio * centred_ratio)
+				var curve_node := Vector3(float(side) * half_width,
+					garland_height - sag,
+					centre_z - half_length + ratio * half_length * 2.0)
+				var anchor := Vector3(curve_node.x, frame_underside, curve_node.z)
+				if section_index == 0:
+					anchor = RoofLightProfile.side_anchor(purple_faces, curve_node.z, side)
+					if not anchor.is_finite():
+						push_error("A train light has no purple roof edge above it")
+						return
+					curve_node = anchor + Vector3.DOWN * (RoofLightProfile.LINE_CLEARANCE + sag)
+				if curve_index > 0:
+					_add_walkway_between(parent,
+						"RoofCurve_%02d_%s_%02d" % [section_index,
+							"L" if float(side) < 0.0 else "R", curve_index - 1],
+						previous_node, curve_node, 0.12, 0.12, line_material, false)
+				previous_node = curve_node
+				if curve_index % 2 != 0:
+					continue
+				var node_index := int(curve_index / 2)
+				var mount_name := "RoofFrameMount_%02d_%s_%02d" % [section_index,
+					"L" if float(side) < 0.0 else "R", node_index]
+				var attachment_height: float = anchor.y - curve_node.y
+				if section_index == 0:
+					attachment_height += RoofLightProfile.CONTACT_OVERLAP
+				_add_cylinder(parent, mount_name,
+					Vector3(curve_node.x, curve_node.y + attachment_height * 0.5,
+						curve_node.z), 0.055, attachment_height,
+					cap_material, false, 8)
+				if section_index == 0:
+					var mount := parent.get_node(mount_name) as Node3D
+					mount.set_meta("purple_beam_contact", anchor)
+					_add_cylinder(parent, "RoofEdgeSocket_%02d_%s_%02d" % [section_index,
+						"L" if side < 0 else "R", node_index], anchor,
+						0.08, 0.035, cap_material, false, 12)
+				var ball_position := curve_node + Vector3.DOWN * 0.40
+				_add_cylinder(parent,
+					"RoofBallHanger_%02d_%s_%02d" % [section_index,
+						"L" if float(side) < 0.0 else "R", node_index],
+					curve_node + Vector3.DOWN * 0.10, 0.055, 0.20,
+					cap_material, false, 8)
+				_add_christmas_ball(parent,
+					"RoofBall_%02d_%s_%02d" % [section_index,
+						"L" if float(side) < 0.0 else "R", node_index],
+					ball_position,
+					ball_materials[(node_index + section_index * 2) % ball_materials.size()],
+					cap_material)
+
+	# The back row spans the purple rear frame from its far-left to far-right
+	# corner. No equivalent front row is created.
+	var previous_rear_node := Vector3.ZERO
+	for curve_index in 13:
+		var ratio := float(curve_index) / 12.0
+		var centred_ratio := ratio * 2.0 - 1.0
+		var sag := 0.04 * (1.0 - centred_ratio * centred_ratio)
+		var anchor := RoofLightProfile.anchor_at(purple_faces,
+			-rear_half_width + ratio * rear_half_width * 2.0,
+			ENGINE_ROOF_GARLAND_REAR_EDGE_Z)
+		if not anchor.is_finite():
+			push_error("A rear train light has no purple roof edge above it")
+			return
+		var curve_node := anchor + Vector3.DOWN * (RoofLightProfile.LINE_CLEARANCE + sag)
+		if curve_index > 0:
+			_add_walkway_between(parent, "EngineRearRoofCurve_%02d" % (curve_index - 1),
+				previous_rear_node, curve_node, 0.12, 0.12, line_material, false)
+		previous_rear_node = curve_node
+		if curve_index % 2 != 0:
+			continue
+		var node_index := int(curve_index / 2)
+		# The side rows already own both rear corner balls, so the rear row adds
+		# only its five interior ornaments and never doubles the endpoints.
+		if node_index == 0 or node_index == 6:
+			continue
+		var attachment_height := anchor.y - curve_node.y + RoofLightProfile.CONTACT_OVERLAP
+		_add_cylinder(parent, "EngineRearRoofFrameMount_%02d" % node_index,
+			Vector3(curve_node.x, curve_node.y + attachment_height * 0.5,
+				curve_node.z), 0.055, attachment_height, cap_material, false, 8)
+		(parent.get_node("EngineRearRoofFrameMount_%02d" % node_index) as Node3D).set_meta(
+			"purple_beam_contact", anchor)
+		_add_cylinder(parent, "EngineRearRoofEdgeSocket_%02d" % node_index,
+			anchor, 0.08, 0.035, cap_material, false, 12)
+		_add_cylinder(parent, "EngineRearRoofBallHanger_%02d" % node_index,
+			curve_node + Vector3.DOWN * 0.10, 0.055, 0.20,
+			cap_material, false, 8)
+		_add_christmas_ball(parent, "EngineRearRoofBall_%02d" % node_index,
+			curve_node + Vector3.DOWN * 0.40,
+			ball_materials[node_index % ball_materials.size()], cap_material)
+
+
+func _add_christmas_ball(parent: Node3D, node_name: String, position_value: Vector3,
+		ball_material: Material, cap_material: Material) -> void:
+	var ball := MeshInstance3D.new()
+	ball.name = node_name
+	var ball_mesh := SphereMesh.new()
+	ball_mesh.radius = ROOF_BALL_RADIUS
+	ball_mesh.height = ROOF_BALL_RADIUS * 2.0
+	ball_mesh.radial_segments = 12
+	ball_mesh.rings = 6
+	ball.mesh = ball_mesh
+	ball.position = position_value
+	ball.material_override = ball_material
+	parent.add_child(ball)
+	_add_cylinder(parent, node_name + "_GoldCap", position_value + Vector3.UP * 0.30,
+		0.085, 0.10, cap_material, false, 8)
 
 
 func _build_directional_movement_vfx() -> void:
@@ -3248,12 +4518,6 @@ func _register_train_mechanisms(detailed_train: Node3D) -> void:
 			or part_name.contains("Engine_SteamGearHub_") \
 			or part_name.contains("Engine_SteamGearEnergyRing_"):
 			_steam_gear_parts.append(part)
-			var gear_ratio := 1.0
-			if part_name.contains("Valve") or part_name.ends_with("_1"):
-				gear_ratio = -1.45
-			elif part_name.contains("Governor") or part_name.ends_with("_2"):
-				gear_ratio = 2.05
-			part.set_meta("mechanism_spin_ratio", gear_ratio)
 		elif part_name.contains("Engine_SteamConnectingRod_"):
 			_steam_rod_parts.append(part)
 			part.set_meta("mechanism_base_position", part.position)
@@ -3277,6 +4541,7 @@ func _register_train_mechanisms(detailed_train: Node3D) -> void:
 		elif part_name.contains("Engine_BrakeGaugeNeedle_"):
 			_brake_needles.append(part)
 			part.set_meta("mechanism_base_rotation", part.rotation)
+	_gear_transmission.configure(detailed_train)
 
 
 func _update_train_mechanisms(delta: float) -> void:
@@ -3306,16 +4571,18 @@ func _update_train_mechanisms(delta: float) -> void:
 		_speed_needle.rotation = needle_base + Vector3(0.0, speed_ratio * 3.65, 0.0)
 	for speed_rotor in _speed_rotor_parts:
 		speed_rotor.rotate_y(delta * (.35 + speed_ratio * 5.5))
-	var signed_spin := float(_drive_motion_direction) * speed_ratio * delta * 8.5
+	# Passenger/autopilot travel is forward even after a previous reverse drive.
+	var spin_direction := float(_drive_motion_direction) if _manual_driving \
+		else signf(motion_delta.dot(-_train.global_basis.z))
+	var signed_spin := spin_direction * speed_ratio * delta * 8.5
 	for wheel_part in _wheel_mechanism_parts:
 		wheel_part.rotate_x(signed_spin)
-	for steam_gear in _steam_gear_parts:
-		var gear_ratio: float = steam_gear.get_meta("mechanism_spin_ratio", 1.0)
-		steam_gear.rotate_z(signed_spin * gear_ratio * 1.22)
+	_gear_transmission.advance(signed_spin)
 	var steam_phase := _mechanism_time * (2.6 + speed_ratio * 8.4)
+	var steam_pressure: float = _driver_actions.pressure if _manual_driving else 1.0
 	for rod_part in _steam_rod_parts:
 		var rod_phase: float = rod_part.get_meta("mechanism_phase", 0.0)
-		var rod_motion := sin(steam_phase + rod_phase)
+		var rod_motion := sin(_gear_transmission.phase + rod_phase)
 		var rod_base_position: Vector3 = rod_part.get_meta("mechanism_base_position", Vector3.ZERO)
 		var rod_base_rotation: Vector3 = rod_part.get_meta("mechanism_base_rotation", Vector3.ZERO)
 		# The compact crank linkage uses a restrained stroke so it remains in its
@@ -3326,7 +4593,7 @@ func _update_train_mechanisms(delta: float) -> void:
 		var pressure_phase: float = pressure_part.get_meta("mechanism_phase", 0.0)
 		var base_pressure_scale: Vector3 = pressure_part.get_meta("mechanism_base_scale", Vector3.ONE)
 		var pressure_pulse := 1.0 + sin(steam_phase * .72 + pressure_phase) \
-			* (.035 + speed_ratio * .075)
+			* (.035 + speed_ratio * .075) * steam_pressure
 		pressure_part.scale = base_pressure_scale * pressure_pulse
 	for valve_part in _steam_valve_parts:
 		valve_part.rotate_z(delta * (.35 + speed_ratio * 5.8))
@@ -3335,7 +4602,7 @@ func _update_train_mechanisms(delta: float) -> void:
 		halo_part.rotate_y(delta * (.22 + speed_ratio * 2.25) * halo_ratio)
 	if _steam_exhaust_particles != null:
 		_steam_exhaust_particles.emitting = true
-		_steam_exhaust_particles.amount_ratio = .12 + speed_ratio * .88
+		_steam_exhaust_particles.amount_ratio = (.12 + speed_ratio * .88) * steam_pressure
 		_steam_exhaust_particles.speed_scale = .42 + speed_ratio * 1.35
 	var reactor_pulse := 1.0 + speed_ratio * 0.22 \
 		+ sin(_mechanism_time * (3.0 + speed_ratio * 8.0)) * (0.025 + speed_ratio * 0.045)
@@ -3344,7 +4611,8 @@ func _update_train_mechanisms(delta: float) -> void:
 		reactor_part.scale = base_scale * reactor_pulse
 	for brake_needle in _brake_needles:
 		var base_rotation: Vector3 = brake_needle.get_meta("mechanism_base_rotation", Vector3.ZERO)
-		brake_needle.rotation = base_rotation + Vector3(0.0, speed_ratio * 1.85, 0.0)
+		var brake_reading: float = _driver_actions.brake if _manual_driving else 1.0 - speed_ratio
+		brake_needle.rotation = base_rotation + Vector3(0.0, brake_reading * 1.85, 0.0)
 	if _train_glow != null:
 		_train_glow.light_energy = 5.0 + speed_ratio * 8.0 + sin(_mechanism_time * 5.0) * 0.4
 
@@ -3469,6 +4737,10 @@ func _update_directional_movement_vfx(delta: float, motion_delta: Vector3) -> vo
 
 
 func _build_hud() -> void:
+	_passenger_ui = preload("res://scripts/train_passenger_journey_ui.gd").new()
+	add_child(_passenger_ui)
+	_passenger_ui.get_off_requested.connect(leave_passenger_seat)
+	_passenger_ui.continue_requested.connect(continue_passenger_journey)
 	var canvas := CanvasLayer.new()
 	canvas.name = "CrownLineHUD"
 	add_child(canvas)
@@ -3489,9 +4761,9 @@ func _update_prompt() -> void:
 		return
 	if _riding:
 		if _manual_driving:
-			_prompt.text = "YOU ARE DRIVING  •  W/S MOVE  •  R HORN  •  Q EXIT WHEN DOCKED"
+			_prompt.text = "YOU ARE DRIVING  •  W/S MOVE  •  H HORN  •  Q EXIT WHEN DOCKED"
 		elif _seated_passenger:
-			_prompt.text = "SEATED ON THE CROWN LINE  •  Q STAND"
+			_prompt.text = "AUTO-DRIVE  •  CHOOSE YOUR NEXT STOP ON ARRIVAL"
 		else:
 			_prompt.text = "RAINBOW GALAXY TRAIN  •  MILO IS GUIDING THE CROWN LINE"
 		return
@@ -3501,17 +4773,17 @@ func _update_prompt() -> void:
 	var interaction_mode := get_interaction_mode_for_position(_player.global_position)
 	if interaction_mode == "drive":
 		var target := posmod(_current_station + 1, STATIONS.size())
-		_prompt.text = "Q DRIVE  •  W FORWARD  •  S REVERSE  •  %s NEXT" % STATIONS[target].title
+		_prompt.text = "R DRIVE  •  W FORWARD  •  S REVERSE  •  %s NEXT" % STATIONS[target].title
 		return
 	if interaction_mode == "sit":
-		_prompt.text = "Q SIT AND RIDE  •  WALK TO THE CAB TO DRIVE"
+		_prompt.text = "T SIT IN THE NEAREST PASSENGER SECTION  •  R DRIVE"
 		return
 	if _player.global_position.distance_to(_boarding_position(_current_station)) > INTERACTION_RANGE:
 		_prompt.text = "CROWN LINE  •  Walk onto a coach to sit or enter the cab to drive"
 		return
 	var target := posmod(_current_station + _direction, STATIONS.size())
 	if is_station_unlocked(target):
-		_prompt.text = "Q  BOARD DRIVER DECK  •  W FORWARD  •  S REVERSE  •  %s NEXT" \
+		_prompt.text = "R  DRIVE  •  T  SIT IN NEAREST SECTION  •  %s NEXT" \
 			% STATIONS[target].title
 	else:
 		_prompt.text = _locked_message(target)
@@ -3604,7 +4876,21 @@ func _set_train_progress(segment_index: int, progress: float) -> void:
 			rider_offset = BENCH_SEATS[_passenger_seat_index]
 		elif not _manual_driving:
 			rider_offset = BENCH_SEATS[0]
-		_player.global_position = _train.to_global(rider_offset)
+		if _manual_driving:
+			_place_player_in_driver_seat()
+		else:
+			_player.global_position = _train.to_global(rider_offset)
+
+
+func _place_player_in_driver_seat() -> void:
+	if _player == null or _train == null:
+		return
+	# Align the character root with the chassis before positioning it. The fox's
+	# seated visual faces local -Z, matching the train's forward axis, and the
+	# whole pose therefore follows every bend without sliding or facing sideways.
+	_player.global_basis = _train.global_basis.orthonormalized()
+	_player.global_position = _train.to_global(DRIVER_SEAT)
+	_player.velocity = Vector3.ZERO
 
 
 func _orient_train_at_station(station_index: int) -> void:
@@ -3699,6 +4985,23 @@ func _add_box(parent: Node3D, node_name: String, position_value: Vector3, size: 
 		parent.add_child(body)
 
 
+func _add_static_mesh_collision(parent: Node3D, node_name: String,
+		mesh: Mesh, transform_value: Transform3D) -> void:
+	if mesh == null or mesh.get_faces().is_empty():
+		return
+	var body := StaticBody3D.new()
+	body.name = node_name
+	var shape_node := CollisionShape3D.new()
+	shape_node.name = "CollisionShape3D"
+	var shape := ConcavePolygonShape3D.new()
+	shape.backface_collision = true
+	shape.set_faces(mesh.get_faces())
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	body.transform = transform_value
+	parent.add_child(body)
+
+
 func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3,
 		radius: float, height: float, material: Material, collision: bool,
 		segments: int = 32, rotation_value: Vector3 = Vector3.ZERO) -> void:
@@ -3731,6 +5034,7 @@ func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3,
 			collision_owner.add_child(shape_node, true)
 			return
 		var body := StaticBody3D.new()
+		body.name = "%sCollision" % node_name
 		shape_node.name = "CollisionShape3D"
 		shape_node.position = Vector3.ZERO
 		shape_node.rotation = Vector3.ZERO
@@ -3741,6 +5045,9 @@ func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3,
 
 
 func _configure_train_platform_body(body: AnimatableBody3D, shell_kind: String) -> void:
+	# Route motion assigns one complete Transform3D at a time. Synchronizing that
+	# target through the physics step gives Godot a real platform velocity, so a
+	# freely standing or jumping character is carried with the moving train.
 	body.sync_to_physics = true
 	body.collision_layer = 1
 	body.collision_mask = 1

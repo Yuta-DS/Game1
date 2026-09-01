@@ -23,8 +23,12 @@ extends Camera3D
 @export var max_follow_distance := 26.0
 @export var zoom_step := 1.4
 
-## Eye offset used in first person, relative to the player's origin.
+## Fallback eye offset for characters without a measured head/eye socket.
 @export var first_person_eye := Vector3(0.0, 1.55, 0.0)
+## Wider first-person framing without moving the eye behind the character.
+@export_range(60.0, 110.0, 1.0) var first_person_fov := 95.0
+## A slight downward gaze shows the route and the low dashboard from the eyes.
+@export_range(-10.0, 0.0, 0.5) var driver_initial_pitch_degrees := -4.0
 
 @export var mouse_sensitivity := 0.005
 @export var initial_pitch_degrees := -15.0
@@ -46,12 +50,15 @@ var _player: Node3D
 var _tween: Tween
 var _inspect_focus := Vector3.ZERO
 
-## "third" or "first". Riding and driving always force "third" so the player can
-## see the train they are on; 1 and 2 switch freely the rest of the time.
+## "third" or "first". Boarding starts in third; 3 and 4 switch freely.
 var _view := "third"
 ## Set while the player is aboard the train. First person is still selectable
-## with 1, but boarding always starts from the third-person view.
+## with 3, but boarding always starts from the third-person view.
 var _ride_view_active := false
+var _driver_view_train: Node3D
+var _driver_eye_local := Vector3.ZERO
+var _previous_driver_yaw := 0.0
+var _third_person_fov := 75.0
 
 ## Last frame's focus point, used to carry the train's motion into the camera
 ## before smoothing so a fast-moving ride does not leave the view trailing.
@@ -60,12 +67,18 @@ var _previous_focus := Vector3.ZERO
 var _yaw := 0.0
 var _pitch := 0.0
 var _touch_emulation_was_on := false
+## Track deliberate cursor release separately from OS pointer-lock state:
+## Web capture can be deferred/denied, but Escape must still suspend looking.
+var _mouse_look_released := false
+var _passenger_prompt_active := false
+var _mouse_look_released_before_prompt := false
 
 func _ready() -> void:
 	# Follow after gameplay movers have published their final frame transform.
 	# This is especially important for sync-to-physics train platforms, whose
 	# rider position otherwise reaches the camera one render frame late.
 	process_priority = 100
+	_third_person_fov = fov
 	_player = get_node_or_null(player_path)
 	current = true  # make this the active camera
 
@@ -98,11 +111,13 @@ func _exit_tree() -> void:
 # _input rather than _unhandled_input: the rating UI is a Control layer, and
 # once it has focus it consumes events before they reach the unhandled stage.
 func _input(event: InputEvent) -> void:
+	if not current or _passenger_prompt_active:
+		return
 	# Orbit whenever the camera is in follow mode. This deliberately does not
 	# require MOUSE_MODE_CAPTURED: capture can silently fail to apply (it does
 	# on a headless run, and can lag by a frame after an alt-tab), and gating on
 	# it meant the view froze with no way to recover.
-	if event is InputEventMouseMotion and _mode == "follow":
+	if event is InputEventMouseMotion and _mode == "follow" and not _mouse_look_released:
 		# Wrapped rather than left to accumulate: yaw turns freely through a
 		# full circle in both directions, and wrapping keeps it from drifting
 		# into large float values over a long session.
@@ -125,23 +140,63 @@ func _input(event: InputEvent) -> void:
 		var key := (event as InputEventKey).physical_keycode
 		if key == KEY_3:
 			set_view_mode("first")
+			_resume_mouse_look()
 		elif key == KEY_4:
 			set_view_mode("third")
+			_resume_mouse_look()
 
-	# Escape releases the cursor so the player can reach menus; clicking back in
-	# the window recaptures it.
+	# Escape releases both pointer lock and camera motion for menu interaction.
 	if event.is_action_pressed("ui_cancel"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif event is InputEventMouseButton and event.pressed and capture_mouse and _mode == "follow" \
+		_release_mouse_look()
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Let GUI buttons consume clicks first; only game-space clicks recapture.
+	if current and not _passenger_prompt_active and event is InputEventMouseButton and event.pressed and capture_mouse and _mode == "follow" \
 			and event.button_index == MOUSE_BUTTON_LEFT:
+		_resume_mouse_look()
+
+func _release_mouse_look() -> void:
+	_mouse_look_released = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _resume_mouse_look() -> void:
+	if _mode != "follow" or _passenger_prompt_active:
+		return
+	_mouse_look_released = false
+	if capture_mouse:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
+func set_passenger_prompt_active(active: bool) -> void:
+	if active == _passenger_prompt_active:
+		return
+	_passenger_prompt_active = active
+	if active:
+		_mouse_look_released_before_prompt = _mouse_look_released
+		_release_mouse_look()
+	elif not _mouse_look_released_before_prompt:
+		_resume_mouse_look()
+
 func _process(delta: float) -> void:
+	if _driver_view_train != null and not is_instance_valid(_driver_view_train):
+		end_ride_view()
 	if _mode == "follow" and _player and _view == "first":
 		# First person sits at the player's eye and aims along the same yaw and
 		# pitch the mouse already drives, so switching views never changes which
 		# way "forward" is for movement.
 		global_transform.origin = _player.global_transform.origin + first_person_eye
+		if _player.has_method("get_first_person_eye_position"):
+			global_position = _player.call("get_first_person_eye_position", first_person_eye)
+		if _has_driver_view():
+			# The eye follows the character's pose. Mouse yaw remains a free look
+			# offset relative to the train instead of drifting off the track.
+			if not _player.has_method("get_first_person_eye_position"):
+				global_position = _driver_view_train.to_global(_driver_eye_local)
+			var train_yaw := _driver_view_train.global_rotation.y
+			_yaw = wrapf(_yaw + angle_difference(_previous_driver_yaw, train_yaw), -PI, PI)
+			_previous_driver_yaw = train_yaw
+			global_basis = _driver_view_train.global_basis.orthonormalized() * Basis.from_euler(
+				Vector3(_pitch, angle_difference(train_yaw, _yaw), 0.0))
+			return
 		var aim := Vector3(
 			sin(_yaw) * cos(_pitch),
 			sin(-_pitch),
@@ -212,14 +267,25 @@ func _zoom_by(amount: float) -> void:
 
 
 # "first" or "third". Public so the train can force the third-person view when
-# the player boards, and so a HUD button can offer the same toggle as 1/2.
+# the player boards, and so a HUD button can offer the same toggle as 3/4.
 func set_view_mode(view: String) -> void:
 	if view != "first" and view != "third":
 		return
+	if view == "first" and _view != "first":
+		_third_person_fov = fov
+	if view == "first" and _view != "first" and _has_driver_view():
+		_yaw = _driver_view_train.global_rotation.y
+		_previous_driver_yaw = _yaw
+		_pitch = deg_to_rad(driver_initial_pitch_degrees)
 	_view = view
+	_apply_view_fov()
 	_apply_character_visibility()
 	if _view == "third" and _player:
 		_snap_to_follow_target()
+
+
+func _apply_view_fov() -> void:
+	fov = first_person_fov if _view == "first" and _mode == "follow" else _third_person_fov
 
 
 # In first person the camera sits at the player's eye, which is inside their own
@@ -255,6 +321,16 @@ func begin_ride_view(distance := 14.0) -> void:
 
 func end_ride_view() -> void:
 	_ride_view_active = false
+	_driver_view_train = null
+
+
+func configure_driver_view(train: Node3D, eye_local: Vector3) -> void:
+	_driver_view_train = train
+	_driver_eye_local = eye_local
+
+
+func _has_driver_view() -> bool:
+	return _ride_view_active and is_instance_valid(_driver_view_train)
 
 
 func is_ride_view_active() -> bool:
@@ -307,10 +383,11 @@ func _collision_safe_target(focus: Vector3, target: Vector3) -> Vector3:
 
 func enter_inspect(target: Node3D) -> void:
 	_mode = "inspect"
+	_apply_view_fov()
 	_inspect_focus = target.global_transform.origin
 
 	# Free the cursor so the rating panel can be clicked while inspecting.
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_release_mouse_look()
 
 	var forward := target.global_transform.basis.z.normalized()
 	var cam_pos := _inspect_focus + (forward * 2.2) + Vector3(0, 1.4, 0)
@@ -321,7 +398,7 @@ func enter_inspect(target: Node3D) -> void:
 
 func exit_inspect() -> void:
 	_mode = "follow"
+	_apply_view_fov()
 	if _tween: _tween.kill()
 
-	if capture_mouse:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_resume_mouse_look()
