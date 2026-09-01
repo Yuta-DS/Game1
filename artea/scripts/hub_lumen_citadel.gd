@@ -160,9 +160,17 @@ func _build_castle_foundation() -> void:
 	_castle_fill.position = Vector3(9.0, 18.0, 8.0)
 	_castle_fill.light_color = Color(1.0, 0.78, 0.48)
 	_castle_fill.light_energy = 1.05
-	_castle_fill.omni_range = 58.0
+	# Was 58.0 - a "detail fill" light doesn't need to reach the surrounding
+	# terrain and village; that range put it overlapping every other castle
+	# light (citadel_lamp, core_light, lens_light, both buttress lights) on
+	# any mesh near the castle, stacking 5-6 lights in one fragment's lighting
+	# loop under the non-clustered Compatibility renderer.
+	_castle_fill.omni_range = 22.0
 	_castle_fill.omni_attenuation = 1.25
 	_castle_fill.shadow_enabled = false
+	_castle_fill.distance_fade_enabled = true
+	_castle_fill.distance_fade_begin = 45.0
+	_castle_fill.distance_fade_length = 15.0
 	_foundation.add_child(_castle_fill)
 
 
@@ -675,6 +683,9 @@ func _build_high_aether_facade() -> void:
 		lamp.light_energy = 0.65
 		lamp.omni_range = 10.0
 		lamp.shadow_enabled = false
+		lamp.distance_fade_enabled = true
+		lamp.distance_fade_begin = 45.0
+		lamp.distance_fade_length = 15.0
 		buttress.add_child(lamp)
 
 	# A complete aperture is scientific enough to read as a calibration device,
@@ -776,6 +787,9 @@ func _build_astral_observatory_crown() -> void:
 	lens_light.light_energy = 0.9
 	lens_light.omni_range = 16.0
 	lens_light.shadow_enabled = false
+	lens_light.distance_fade_enabled = true
+	lens_light.distance_fade_begin = 45.0
+	lens_light.distance_fade_length = 15.0
 	lens.add_child(lens_light)
 
 
@@ -875,6 +889,9 @@ func _build_reference_astral_machine() -> void:
 	core_light.light_energy = 0.45
 	core_light.omni_range = 18.0
 	core_light.shadow_enabled = false
+	core_light.distance_fade_enabled = true
+	core_light.distance_fade_begin = 45.0
+	core_light.distance_fade_length = 15.0
 	core.add_child(core_light)
 
 	# Twin articulated skyline arms frame the tower like enormous telescope
@@ -1191,6 +1208,9 @@ func _build_citadel_rig() -> void:
 	_citadel_lamp.position = Vector3(0.0, -0.2, 0.0)
 	_citadel_lamp.omni_range = 18.0
 	_citadel_lamp.shadow_enabled = false
+	_citadel_lamp.distance_fade_enabled = true
+	_citadel_lamp.distance_fade_begin = 45.0
+	_citadel_lamp.distance_fade_length = 15.0
 	engine.add_child(_citadel_lamp)
 
 	# Four articulated stabilisers read as a travelling machine, not a static

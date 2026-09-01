@@ -359,6 +359,9 @@ func _build_station_marker(station_id: String, line_id: String,
 	lamp.light_energy = 1.4
 	lamp.omni_range = 8.0
 	lamp.shadow_enabled = false
+	lamp.distance_fade_enabled = true
+	lamp.distance_fade_begin = 45.0
+	lamp.distance_fade_length = 15.0
 	marker.add_child(lamp)
 
 

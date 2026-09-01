@@ -267,6 +267,13 @@ func _build_isle(isle: Dictionary, index: int) -> void:
 	island_fill.omni_range = 52.0
 	island_fill.omni_attenuation = 1.2
 	island_fill.shadow_enabled = false
+	# "KingdomFill" is meant to read as a whole island glowing from a distance
+	# (unlike CastleDetailFill, which had no such excuse for its old 58 range),
+	# so the fade distances scale up with its own 52-unit range instead of
+	# reusing the tighter castle-cluster values.
+	island_fill.distance_fade_enabled = true
+	island_fill.distance_fade_begin = 80.0
+	island_fill.distance_fade_length = 20.0
 	root.add_child(island_fill)
 
 	# Island body: reuse the prototype's shared builder so these read as the

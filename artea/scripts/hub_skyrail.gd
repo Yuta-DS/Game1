@@ -654,6 +654,9 @@ func _add_levitation_anchor(parent: Node3D, position: Vector3, color: Color,
 		lamp.light_energy = 0.85 * scale_factor
 		lamp.omni_range = 8.0 * scale_factor
 		lamp.shadow_enabled = false
+		lamp.distance_fade_enabled = true
+		lamp.distance_fade_begin = 45.0
+		lamp.distance_fade_length = 15.0
 		anchor.add_child(lamp)
 
 	return anchor
@@ -781,6 +784,9 @@ func _build_train(color: Color, label: String) -> Node3D:
 	lamp.light_energy = 2.3
 	lamp.omni_range = 16.0
 	lamp.shadow_enabled = false
+	lamp.distance_fade_enabled = true
+	lamp.distance_fade_begin = 45.0
+	lamp.distance_fade_length = 15.0
 	lamp.position = Vector3(0.0, 1.2, 1.2)
 	train.add_child(lamp)
 

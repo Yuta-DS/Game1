@@ -430,6 +430,9 @@ func _build_grand_stair(parent: Node3D) -> void:
 		orb_light.light_energy = 2.4
 		orb_light.omni_range = 13.0
 		orb_light.shadow_enabled = false
+		orb_light.distance_fade_enabled = true
+		orb_light.distance_fade_begin = 45.0
+		orb_light.distance_fade_length = 15.0
 		parent.add_child(orb_light)
 		orb_light.global_position = foot + Vector3(0.0, 2.95, 0.0)
 
@@ -742,6 +745,9 @@ func _build_colonnade(parent: Node3D) -> void:
 			lamp.light_energy = 1.6
 			lamp.omni_range = 9.0
 			lamp.shadow_enabled = false
+			lamp.distance_fade_enabled = true
+			lamp.distance_fade_begin = 45.0
+			lamp.distance_fade_length = 15.0
 			parent.add_child(lamp)
 			lamp.global_position = lamp_pos
 
@@ -860,6 +866,9 @@ func _build_courtyard(parent: Node3D) -> void:
 		ember_light.light_energy = 2.2
 		ember_light.omni_range = 11.0
 		ember_light.shadow_enabled = false
+		ember_light.distance_fade_enabled = true
+		ember_light.distance_fade_begin = 45.0
+		ember_light.distance_fade_length = 15.0
 		parent.add_child(ember_light)
 		ember_light.global_position = brazier_spot + Vector3(0.0, 2.0, 0.0)
 
@@ -944,6 +953,9 @@ func _build_fountain(parent: Node3D, centre: Vector3) -> void:
 	core_light.light_energy = 4.0
 	core_light.omni_range = 15.0
 	core_light.shadow_enabled = false
+	core_light.distance_fade_enabled = true
+	core_light.distance_fade_begin = 45.0
+	core_light.distance_fade_length = 15.0
 	core_light.set_meta("base_energy", 4.0)
 	fire_beacon.add_child(core_light)
 	core_light.global_position = centre + Vector3(0.0, 2.48, 0.0)
@@ -1095,6 +1107,9 @@ func _build_lamps(parent: Node3D) -> void:
 		lamp.light_energy = 2.6
 		lamp.omni_range = 13.0
 		lamp.shadow_enabled = false
+		lamp.distance_fade_enabled = true
+		lamp.distance_fade_begin = 45.0
+		lamp.distance_fade_length = 15.0
 		parent.add_child(lamp)
 		lamp.global_position = post_base + Vector3(0.0, 3.1, 0.0)
 

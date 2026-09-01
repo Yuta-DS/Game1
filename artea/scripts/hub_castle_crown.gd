@@ -125,6 +125,9 @@ func _build_crown() -> void:
 		lamp.light_energy = 0.9
 		lamp.omni_range = 4.0
 		lamp.shadow_enabled = false
+		lamp.distance_fade_enabled = true
+		lamp.distance_fade_begin = 45.0
+		lamp.distance_fade_length = 15.0
 		arm.add_child(lamp)
 
 	var crown_jewel := MeshInstance3D.new()
@@ -151,6 +154,9 @@ func _build_crown() -> void:
 	_spire_lamp.light_energy = 1.4
 	_spire_lamp.omni_range = 7.0
 	_spire_lamp.shadow_enabled = false
+	_spire_lamp.distance_fade_enabled = true
+	_spire_lamp.distance_fade_begin = 45.0
+	_spire_lamp.distance_fade_length = 15.0
 	rig.add_child(_spire_lamp)
 
 	var bob := create_tween().set_loops()

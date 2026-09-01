@@ -134,6 +134,9 @@ func _build_pylon(portal: Dictionary) -> void:
 	lamp.light_energy = 1.6
 	lamp.omni_range = 9.0
 	lamp.shadow_enabled = false
+	lamp.distance_fade_enabled = true
+	lamp.distance_fade_begin = 45.0
+	lamp.distance_fade_length = 15.0
 	pylon.add_child(lamp)
 
 

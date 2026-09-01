@@ -145,6 +145,9 @@ func _build_lantern(landmark: Dictionary) -> void:
 	lamp.light_energy = 1.1
 	lamp.omni_range = 6.0
 	lamp.shadow_enabled = false
+	lamp.distance_fade_enabled = true
+	lamp.distance_fade_begin = 45.0
+	lamp.distance_fade_length = 15.0
 	holder.add_child(lamp)
 
 	var phase := fmod(landmark["pos"].x + landmark["pos"].z, 3.0)
