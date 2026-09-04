@@ -1,0 +1,68 @@
+{
+  "R": {
+    "finger_joint_fractions": [
+      0,
+      0.46,
+      0.76,
+      1
+    ],
+    "finger_count": 3,
+    "palm_rays": 3,
+    "thumb_chain": [
+      "CMC",
+      "MCP",
+      "IP"
+    ],
+    "local_palmar_axis": "+Z",
+    "note": "Human-inspired mechanics adapted to the reference three-finger cartoon paw, not a literal human anatomical model.",
+    "size_fit": {
+      "palm_length_scale": 1.12,
+      "palm_width_scale": 1.3,
+      "palm_depth_scale": 1.2,
+      "digit_length_scale": 0.72,
+      "wrist_socket_preserved": false,
+      "wrist_joint_preserved": true,
+      "proportion_brief": "Compact rounded paws; latest fit request supersedes earlier 2x dimensions.",
+      "subdivision_level": 3,
+      "previous_scales": {
+        "palm_length": 1.36,
+        "palm_width": 1.6,
+        "palm_depth": 1.72,
+        "digit_length": 1.24
+      }
+    }
+  },
+  "L": {
+    "finger_joint_fractions": [
+      0,
+      0.46,
+      0.76,
+      1
+    ],
+    "finger_count": 3,
+    "palm_rays": 3,
+    "thumb_chain": [
+      "CMC",
+      "MCP",
+      "IP"
+    ],
+    "local_palmar_axis": "+Z",
+    "note": "Human-inspired mechanics adapted to the reference three-finger cartoon paw, not a literal human anatomical model.",
+    "size_fit": {
+      "palm_length_scale": 1.12,
+      "palm_width_scale": 1.3,
+      "palm_depth_scale": 1.2,
+      "digit_length_scale": 0.72,
+      "wrist_socket_preserved": false,
+      "wrist_joint_preserved": true,
+      "proportion_brief": "Compact rounded paws; latest fit request supersedes earlier 2x dimensions.",
+      "subdivision_level": 3,
+      "previous_scales": {
+        "palm_length": 1.36,
+        "palm_width": 1.6,
+        "palm_depth": 1.72,
+        "digit_length": 1.24
+      }
+    }
+  }
+}

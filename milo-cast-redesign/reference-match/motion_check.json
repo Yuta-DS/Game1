@@ -1,0 +1,52 @@
+{
+  "rendered_frames": 232,
+  "fps": 24,
+  "non_finite_vertices": 0,
+  "bounds": {
+    "Milo_Reference_Boot_l": {
+      "min_z": -0.030451390892267227,
+      "max_z": 0.366143137216568
+    },
+    "Milo_Reference_Boot_r": {
+      "min_z": -0.030285371467471123,
+      "max_z": 0.36167046427726746
+    },
+    "Milo_Reference_Coat_and_Suit": {
+      "min_z": 0.21722277998924255,
+      "max_z": 0.9755815863609314
+    },
+    "Milo_Reference_Curved_Tail": {
+      "min_z": 0.05464991554617882,
+      "max_z": 0.4482780992984772
+    },
+    "Milo_Reference_Face_Details": {
+      "min_z": 0.9755889773368835,
+      "max_z": 1.8128691911697388
+    },
+    "Milo_Reference_Head": {
+      "min_z": 0.9417688846588135,
+      "max_z": 1.7239807844161987
+    },
+    "Milo_Reference_Limb_Details": {
+      "min_z": 0.027553880587220192,
+      "max_z": 0.8393997550010681
+    },
+    "Milo_Reference_Paw_l": {
+      "min_z": 0.42251548171043396,
+      "max_z": 0.8345603942871094
+    },
+    "Milo_Reference_Paw_r": {
+      "min_z": 0.5034648776054382,
+      "max_z": 0.725920557975769
+    },
+    "Milo_Reference_Sleeve_l": {
+      "min_z": 0.5239665508270264,
+      "max_z": 1.0112723112106323
+    },
+    "Milo_Reference_Sleeve_r": {
+      "min_z": 0.5798851847648621,
+      "max_z": 1.0065144300460815
+    }
+  },
+  "limits": "No Godot collision or facial/finger articulation validation"
+}

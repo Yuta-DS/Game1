@@ -39,8 +39,10 @@ func _run() -> void:
 	if blueprint.layout_side != "right/east" \
 			or float(blueprint.kingdom_boundary_clearance_m) != 200.0 \
 			or float(blueprint.access_bridge_width_m) != 16.0 \
-			or blueprint.rail_system != "single_center_monorail" \
+			or blueprint.rail_system != "centre_support_with_dual_wheel_rails" \
 			or float(blueprint.center_beam_width_m) != 3.2 \
+			or absf(float(blueprint.wheel_rail_gauge_m) - 8.0) > 0.01 \
+			or absf(float(blueprint.wheel_rail_top_below_train_origin_m) - 0.85) > 0.01 \
 			or not bool(blueprint.closed_loop):
 		_fail("floating station engineering blueprint has incorrect side or dimensions")
 		return
@@ -166,7 +168,9 @@ func _run() -> void:
 	for segment in route.get_children():
 		var beams := segment.find_children("CenterMonorailBeam", "MeshInstance3D", false, false)
 		var ribbons := segment.find_children("CrownLineEnergyRibbon", "MeshInstance3D", false, false)
+		var wheel_rails := segment.find_children("CrownWheelRail*", "MeshInstance3D", false, false)
 		if beams.size() != 1 or ribbons.size() != 1 \
+				or wheel_rails.size() != 2 \
 				or not bool(segment.get_meta("continuous_track", false)) \
 				or int(segment.get_meta("visual_mesh_pieces", 0)) != 1 \
 				or float(segment.get_meta("sample_spacing_m", 100.0)) > 10.1 \
@@ -176,6 +180,12 @@ func _run() -> void:
 			return
 		if segment.find_children("CenterMonorailBeamCollision", "StaticBody3D", false, false).size() != 1:
 			_fail("%s continuous centre beam is missing its matching collision surface" % segment.name)
+			return
+		if segment.find_children("CrownWheelRail*Collision", "StaticBody3D", false, false).size() != 2 \
+				or absf(float(segment.get_meta("wheel_rail_half_gauge_m", 0.0)) - 4.0) > 0.01 \
+				or absf(float(segment.get_meta(
+					"wheel_rail_top_below_train_origin_m", 0.0)) - 0.85) > 0.01:
+			_fail("%s wheel rails do not align with the train's measured ±4 m treads" % segment.name)
 			return
 		if not ((beams[0] as MeshInstance3D).mesh is ArrayMesh) \
 				or (beams[0] as MeshInstance3D).mesh.get_faces().size() < 100:
@@ -614,8 +624,8 @@ func _run() -> void:
 	var first_car := railway.get_node("RainbowGalaxyTrain/Carriage_01") as Node3D
 	var second_car := railway.get_node("RainbowGalaxyTrain/Carriage_02") as Node3D
 	var engine := railway.get_node("RainbowGalaxyTrain/MiloEngine") as Node3D
-	if not train is AnimatableBody3D or not (train as AnimatableBody3D).sync_to_physics:
-		_fail("complete train is not one synchronized moving platform")
+	if not train is AnimatableBody3D or (train as AnimatableBody3D).sync_to_physics:
+		_fail("complete train is not one script-driven moving platform")
 		return
 	var platform := train as AnimatableBody3D
 	if platform.collision_layer != 1 or platform.collision_mask != 1 \

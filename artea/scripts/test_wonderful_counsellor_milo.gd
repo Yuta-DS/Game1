@@ -16,8 +16,8 @@ func _run() -> void:
 		requested_poses.append(pose_name)
 	)
 
-	var history := chat.get_node("VBoxContainer/ChatHistory") as TextEdit
-	var choices := chat.get_node("VBoxContainer/CuratedChoices") as VBoxContainer
+	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
+	var choices := chat.get_node("InputContent/CuratedChoices") as VBoxContainer
 	chat._show_choices()
 	assert(requested_poses.back() == "welcome",
 		"the companion menu uses Milo's welcoming cane pose")
@@ -30,7 +30,7 @@ func _run() -> void:
 	]:
 		assert(not _has_button(choices, removed_companion_path),
 			"chat-only Milo hides the old %s option" % removed_companion_path)
-	assert(_has_button(choices, "Ask Milo"),
+	assert(_has_button(choices, "Send"),
 		"chat-only Milo keeps one explicit send control")
 
 	chat._show_emotion_check_ins()

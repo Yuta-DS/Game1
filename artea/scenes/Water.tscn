@@ -3,9 +3,12 @@
 [ext_resource type="Shader" uid="uid://bwec0cn7xsxjs" path="res://Water.gdshader" id="1_4nnwq"]
 [ext_resource type="PackedScene" uid="uid://bv7c61i5fe66r" path="res://scenes/ocean_sounds.tscn" id="2_vwe2q"]
 [ext_resource type="Script" uid="uid://ghrycpe5u7pw" path="res://scenes/ocean_sounds.gd" id="3_45jge"]
+[ext_resource type="Script" path="res://scripts/ocean_waves.gd" id="4_waves"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_4nnwq"]
 size = Vector2(1000, 1000)
+subdivide_width = 384
+subdivide_depth = 384
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_xt0xg"]
 noise_type = 3
@@ -51,6 +54,7 @@ shader_parameter/color4 = Color(0, 0.267, 1, 1)
 
 [node name="Node3D" type="Node3D" unique_id=1517938570]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.13636, 0)
+script = ExtResource("4_waves")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=85462029]
 mesh = SubResource("PlaneMesh_4nnwq")

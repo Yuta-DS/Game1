@@ -30,9 +30,10 @@ enum CompanionState {
 @export var breadcrumb_spacing := 0.75
 @export var gravity_enabled := true
 @export var terrain_grounding_enabled := true
-# Off by default: browser/system TTS does not preserve Milo's consented voice.
-# This remains an explicit accessibility fallback for a future settings panel.
-@export var use_device_tts_for_dynamic_replies := false
+# Dynamic Rex/local-LLM replies have no prerecorded equivalent, so read the
+# exact response with the platform voice on native builds and Web Speech in the
+# browser. The recorded Milo greeting remains unchanged.
+@export var use_device_tts_for_dynamic_replies := true
 
 const STAGE_GLOW := [
 	Color("7896c8"),
@@ -51,7 +52,9 @@ const COUNSELLOR_ANIMATIONS := {
 	"heart": "Counsellor_Heart",
 }
 const CHAT_INTERACTION_RADIUS := 4.5
-const MILO_WELCOME_SPEECH := "Hello, traveller. I’m Milo, Artéa’s scholar and reflection companion. Stand nearby and press Q whenever you would like to talk."
+const MILO_CHAT_ACTION := "talk_to_milo"
+const MILO_CHAT_KEY_LABEL := "T"
+const MILO_WELCOME_SPEECH := "Hello, traveller. I’m Milo, Artéa’s scholar and reflection companion. Stand nearby and press T whenever you would like to talk."
 
 var player_in_range := false
 var chatbot_ui = null
@@ -72,6 +75,13 @@ var _speech_elapsed := 0.0
 var _mouth_shape := "closed"
 var _tts_voice_id := ""
 var _tts_voice_resolved := false
+var _tts_request_serial := 0
+var _tts_utterance_base := 0
+var _tts_voice_retry_count := 0
+var _speech_sentences: Array[String] = []
+var _speech_sentence_index := -1
+var _speech_full_text := ""
+const MILO_TTS_ID_START := 260300
 var greeting_voice: AudioStreamPlayer3D
 var interaction_prompt: Label3D
 var mayor_name_label: Label3D
@@ -230,8 +240,8 @@ var counsellor_pose_tween: Tween
 
 
 func _ready():
-	# Resolve Milo's shared Q input before nearby legacy NPCs. Opening Milo chat
-	# locks player interaction, so later NPC controllers correctly ignore the key.
+	# Resolve Milo's dedicated talk input before nearby controllers. Opening the
+	# chat locks player interaction, so later NPC controllers ignore the frame.
 	process_priority = -100
 	# Milo is a non-blocking companion. He still collides with the world so his
 	# body can walk on terrain, but the player and combat systems cannot hit him.
@@ -255,6 +265,7 @@ func _ready():
 	greeting_voice = get_node_or_null("MiloGreetingVoice") as AudioStreamPlayer3D
 	interaction_prompt = get_node_or_null("InteractionPrompt") as Label3D
 	mayor_name_label = get_node_or_null("MayorMiloName") as Label3D
+	_configure_tts_callbacks()
 	var chat_collision := get_node_or_null("Area3D/CollisionShape3D") \
 		as CollisionShape3D
 	if chat_collision != null and chat_collision.shape is SphereShape3D:
@@ -347,18 +358,21 @@ func _on_companion_speech_requested(spoken_text: String) -> void:
 		_stop_speaking()
 		return
 	if not use_device_tts_for_dynamic_replies:
-		# One fixed recording cannot synthesize arbitrary player-dependent text.
-		# Keep the response readable rather than substituting a robotic identity.
+		# Retain an explicit opt-out for accessibility/privacy settings.
 		_stop_speaking()
 		_set_companion_state(CompanionState.TALKING)
 		return
+	_speech_full_text = _spoken_version(clean_text)
+	_speech_sentences = _split_speech_sentences(_speech_full_text)
+	_speech_sentence_index = -1
 	_speech_elapsed = 0.0
-	_speech_remaining = clampf(float(clean_text.length()) / 14.0, 0.8, 42.0)
+	_speech_remaining = clampf(float(clean_text.length()) / 11.0, 1.2, 60.0)
 	_set_companion_state(CompanionState.TALKING)
 	_set_mouth_shape("small")
 	if greeting_voice != null and greeting_voice.playing:
 		greeting_voice.stop()
-	_speak_with_platform_voice(_spoken_version(clean_text))
+	_present_spoken_sentence(0)
+	_speak_with_platform_voice(_speech_full_text)
 
 
 func _play_recorded_greeting() -> void:
@@ -388,41 +402,116 @@ func _spoken_version(source_text: String) -> String:
 	return spoken.replace("\n", " ").strip_edges()
 
 
+func _split_speech_sentences(spoken_text: String) -> Array[String]:
+	var sentences: Array[String] = []
+	var current := ""
+	for index in spoken_text.length():
+		var character := spoken_text.substr(index, 1)
+		current += character
+		var next_character := spoken_text.substr(index + 1, 1) \
+			if index + 1 < spoken_text.length() else ""
+		if character in [".", "!", "?"] \
+				and (next_character.is_empty() or next_character == " "):
+			var sentence := current.strip_edges()
+			if not sentence.is_empty():
+				sentences.append(sentence)
+			current = ""
+	var remainder := current.strip_edges()
+	if not remainder.is_empty():
+		sentences.append(remainder)
+	if sentences.is_empty() and not spoken_text.strip_edges().is_empty():
+		sentences.append(spoken_text.strip_edges())
+	return sentences
+
+
+func _configure_tts_callbacks() -> void:
+	if not DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		return
+	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_STARTED,
+		Callable(self, "_on_tts_utterance_started"))
+	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED,
+		Callable(self, "_on_tts_utterance_ended"))
+
+
+func _present_spoken_sentence(index: int, full_reply := "") -> void:
+	if index < 0 or index >= _speech_sentences.size():
+		return
+	_speech_sentence_index = index
+	if chatbot_ui != null and is_instance_valid(chatbot_ui) \
+			and chatbot_ui.has_method("show_spoken_sentence"):
+		chatbot_ui.call("show_spoken_sentence", _speech_sentences[index], index,
+			_speech_sentences.size(), full_reply if not full_reply.is_empty() \
+			else _speech_full_text)
+
+
+func _on_tts_utterance_started(utterance_id: int) -> void:
+	var index := utterance_id - _tts_utterance_base
+	if index < 0 or index >= _speech_sentences.size():
+		return
+	_present_spoken_sentence(index)
+
+
+func _on_tts_utterance_ended(utterance_id: int) -> void:
+	var index := utterance_id - _tts_utterance_base
+	if index != _speech_sentences.size() - 1:
+		return
+	_stop_speaking()
+
+
 func _speak_with_platform_voice(spoken_text: String) -> void:
 	if spoken_text.is_empty():
 		return
-	if OS.has_feature("web"):
-		_speak_with_web_voice(spoken_text)
-		return
 	if not DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		return
-	if not _tts_voice_resolved:
-		_tts_voice_resolved = true
-		var voices := DisplayServer.tts_get_voices()
-		# Milo has one recognisable voice across supported platforms. Prefer a
-		# warm male English voice by name, then fall back by English locale.
-		for voice_data in voices:
-			var voice_name := str(voice_data.get("name", "")).to_lower()
-			var voice_id := str(voice_data.get("id", "")).to_lower()
-			if voice_name.contains("daniel") or voice_id.contains("daniel"):
-				_tts_voice_id = str(voice_data.get("id", ""))
-				break
-		for preferred_prefix in ["en_GB", "en_AU", "en_US", "en"]:
-			if not _tts_voice_id.is_empty():
-				break
-			for voice_data in voices:
-				if str(voice_data.get("language", "")).begins_with(preferred_prefix):
-					_tts_voice_id = str(voice_data.get("id", ""))
-					break
-			if not _tts_voice_id.is_empty():
-				break
+	DisplayServer.tts_stop()
+	_tts_request_serial += 1
+	_tts_voice_retry_count = 0
+	_try_start_platform_voice(_tts_request_serial)
+
+
+func _try_start_platform_voice(request_serial: int) -> void:
+	if request_serial != _tts_request_serial or _speech_sentences.is_empty():
+		return
+	_resolve_tts_voice()
 	if _tts_voice_id.is_empty():
+		# Browser voices often arrive shortly after the WebGL game starts. Retry
+		# briefly instead of dropping Milo's first LLM answer in silence.
+		if OS.has_feature("web") and _tts_voice_retry_count < 8:
+			_tts_voice_retry_count += 1
+			get_tree().create_timer(0.35).timeout.connect(
+				_try_start_platform_voice.bind(request_serial))
 		return
 	var voice_volume := 82
 	if player != null:
 		var distance := global_position.distance_to(player.global_position)
 		voice_volume = int(round(lerpf(86.0, 24.0, clampf(distance / 30.0, 0.0, 1.0))))
-	DisplayServer.tts_speak(spoken_text, _tts_voice_id, voice_volume, 0.90, 0.96, 2603, true)
+	_tts_utterance_base = MILO_TTS_ID_START + (_tts_request_serial % 1000) * 100
+	for index in _speech_sentences.size():
+		DisplayServer.tts_speak(_speech_sentences[index], _tts_voice_id,
+			voice_volume, 0.90, 0.96, _tts_utterance_base + index, index == 0)
+
+
+func _resolve_tts_voice() -> void:
+	if not _tts_voice_id.is_empty():
+		return
+	var voices := DisplayServer.tts_get_voices()
+	# Milo has one recognisable voice across supported platforms. Prefer a warm
+	# male English voice by name, then fall back by Australian/British locale.
+	for voice_data in voices:
+		var voice_name := str(voice_data.get("name", "")).to_lower()
+		var voice_id := str(voice_data.get("id", "")).to_lower()
+		if voice_name.contains("daniel") or voice_id.contains("daniel"):
+			_tts_voice_id = str(voice_data.get("id", ""))
+			break
+	for preferred_prefix in ["en_AU", "en-AU", "en_GB", "en-GB", "en_US",
+			"en-US", "en"]:
+		if not _tts_voice_id.is_empty():
+			break
+		for voice_data in voices:
+			if str(voice_data.get("language", "")).begins_with(preferred_prefix):
+				_tts_voice_id = str(voice_data.get("id", ""))
+				break
+	_tts_voice_resolved = not _tts_voice_id.is_empty()
 
 
 func _speak_with_web_voice(spoken_text: String) -> void:
@@ -476,9 +565,13 @@ func _update_speaking(delta: float) -> void:
 
 
 func _stop_speaking() -> void:
+	_tts_request_serial += 1
 	_speech_remaining = 0.0
 	_speech_elapsed = 0.0
 	_set_mouth_shape("closed")
+	if chatbot_ui != null and is_instance_valid(chatbot_ui) \
+			and chatbot_ui.has_method("finish_spoken_reply"):
+		chatbot_ui.call("finish_spoken_reply")
 	if _conversation_active:
 		_set_companion_state(_conversation_state)
 	elif player != null:
@@ -1379,8 +1472,6 @@ func look_at_player(delta):
 func _on_area_3d_player_entered(body):
 	if body == player:
 		player_in_range = true
-		if interaction_prompt != null:
-			interaction_prompt.visible = true
 
 
 func _on_area_3d_player_exited(body):
@@ -1405,13 +1496,13 @@ func _process(delta):
 	_update_secondary_motion(delta)
 	_update_terrain_grounding(delta)
 	_apply_journey_stage()
-	# Reconcile every frame because Web physics can deliver the proximity signal
-	# before inherited Label3D children finish their first visibility update.
-	# The prompt therefore reflects the real Q interaction condition exactly.
+	# The mayor nameplate is the single interaction cue. The older standalone
+	# prompt is retained only for scene compatibility and stays hidden so Web
+	# builds never stack duplicate Q/T labels above Milo.
 	if interaction_prompt != null:
-		interaction_prompt.visible = player_in_range and chatbot_ui == null
+		interaction_prompt.visible = false
 	if mayor_name_label != null:
-		mayor_name_label.text = "Mayor Milo\nPress Q to chat" \
+		mayor_name_label.text = "Mayor Milo\nPress %s to chat" % MILO_CHAT_KEY_LABEL \
 			if player_in_range and chatbot_ui == null else "Mayor Milo"
 	if aura != null:
 		aura.rotate_y(delta * (0.18 + max(journey_stage, 0) * 0.08))
@@ -1437,7 +1528,7 @@ func _process(delta):
 		wave_timer = 0.0
 
 	# interaction
-	if Input.is_action_just_pressed("interact") and player_in_range \
+	if Input.is_action_just_pressed(MILO_CHAT_ACTION) and player_in_range \
 			and not _player_is_busy():
 		print("Interacting with Milo")
 		open_chatbot()

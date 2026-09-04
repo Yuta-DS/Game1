@@ -9,6 +9,10 @@ const STATION_STRAIGHT_LENGTH := 150.0
 # Crown Line widths. The two large kingdom arcs are far broader; this lower
 # bound applies only to the compact Gallery/Mind Spark sightseeing loop.
 const MINIMUM_DESIGN_TURN_RADIUS := 40.0
+const TRAIN_WHEEL_RAIL_HALF_GAUGE := 4.0
+const TRAIN_WHEEL_RAIL_CENTRE_DROP := 0.96
+const TRAIN_WHEEL_RAIL_WIDTH := 0.36
+const TRAIN_WHEEL_RAIL_HEIGHT := 0.22
 
 const STATIONS := [
 	{"id": "gallery", "title": "ARTÉA GALLERY", "subtitle": "RIGHT-SIDE SKY DOCK", "position": Vector3(260.0, ROUTE_HEIGHT, 820.0), "landing": Vector3(150.0, 2.0, 820.0)},
@@ -46,9 +50,12 @@ const BLUEPRINT := {
 	"dock_radius_m": 38.0,
 	"access_bridge_width_m": 16.0,
 	"platform_guard_height_m": 3.0,
-	"rail_system": "single_center_monorail",
+	"rail_system": "centre_support_with_dual_wheel_rails",
 	"center_beam_width_m": 3.2,
 	"center_beam_height_m": 1.6,
+	"wheel_rail_gauge_m": TRAIN_WHEEL_RAIL_HALF_GAUGE * 2.0,
+	"wheel_rail_top_below_train_origin_m":
+		TRAIN_WHEEL_RAIL_CENTRE_DROP - TRAIN_WHEEL_RAIL_HEIGHT * 0.5,
 	"train_origin_above_beam_m": 1.4,
 	"minimum_rail_elevation_m": ROUTE_HEIGHT - 1.4,
 	"station_straight_length_m": STATION_STRAIGHT_LENGTH,
@@ -79,13 +86,13 @@ const PASSENGER_REAR_GATE_Z := 9.75
 const PASSENGER_FRONT_CAR_CENTRE_Z := 1.5
 const PASSENGER_REAR_CAR_CENTRE_Z := 18.0
 const DRIVER_INTERACTION_POINT := Vector3(0.0, 2.4, DRIVER_SIDE_GATE_Z)
-const DRIVER_SEAT := Vector3(0.0, 2.4, DRIVER_SIDE_GATE_Z)
+const DRIVER_SEAT := Vector3(0.0, 2.15, -15.65)
 # Q is a close, intentional interaction, but it has to be comfortable to hit
 # while walking. The driver range covers the whole front third of the first
 # coach so approaching the cab from anywhere on the deck offers driving without
 # the player having to hunt for an exact spot; the seat range stays shorter so
 # the two never fight over the middle of the coach.
-const DRIVER_INTERACTION_RANGE := 12.0
+const DRIVER_INTERACTION_RANGE := 14.0
 const SEAT_INTERACTION_RANGE := 7.5
 const FLEXIBLE_BOARDING_RANGE := 14.0
 # Seat points are where the player capsule's CENTRE is placed, so they sit a
@@ -457,10 +464,7 @@ func get_interaction_mode_for_position(world_position: Vector3) -> String:
 		return "none"
 	var driver_distance := world_position.distance_to(get_driver_interaction_position())
 	var nearest_seat := get_nearest_passenger_seat_index(world_position)
-	var seat_distance := INF
-	if nearest_seat >= 0:
-		seat_distance = world_position.distance_to(get_passenger_seat_position(nearest_seat))
-	if driver_distance <= DRIVER_INTERACTION_RANGE and driver_distance <= seat_distance:
+	if driver_distance <= DRIVER_INTERACTION_RANGE:
 		return "drive"
 	if nearest_seat >= 0:
 		return "sit"
@@ -723,8 +727,8 @@ func board_as_driver() -> bool:
 	_train.position = STATIONS[_current_station].position
 	_orient_train_at_station(_current_station)
 	_player.call("set_input_enabled", false)
-	_player.velocity = Vector3.ZERO
-	_player.global_position = _train.to_global(DRIVER_SEAT)
+	_player.call("set_train_seated_pose", true)
+	_place_player_in_driver_seat()
 	# Driving pulls the view furthest out: the whole train plus the track ahead.
 	_begin_ride_camera(18.0)
 	_status.text = "DRIVER MODE  •  W/S MOVE  •  R HORN  •  2 RIDE AT A STATION  •  Q EXIT"
@@ -756,8 +760,7 @@ func drive_manual(throttle: float, delta: float) -> void:
 	_display_speed_kph = move_toward(_display_speed_kph, target_speed, speed_rate * maxf(delta, 0.0))
 	if _display_speed_kph < 0.05:
 		_display_speed_kph = 0.0
-		if _player != null:
-			_player.global_position = _train.to_global(DRIVER_SEAT)
+		_place_player_in_driver_seat()
 		return
 	var drive_direction := _drive_motion_direction
 	if _drive_segment < 0:
@@ -772,9 +775,12 @@ func drive_manual(throttle: float, delta: float) -> void:
 	_set_train_progress(_drive_segment, _drive_progress)
 	_status.text = "DRIVING  •  %03d KM/H  •  %s  •  W/S MOVE  •  R HORN" \
 		% [roundi(_display_speed_kph), _segment_destination_name(drive_direction)]
-	if is_equal_approx(_drive_progress, 0.0):
+	# Progress is clamped above, so only a true endpoint should dock. On long
+	# routes the first valid acceleration step can be below Godot's approximate
+	# equality epsilon; treating that as zero made the train instantly re-dock.
+	if _drive_progress <= 0.0:
 		_dock_manual_train(_drive_segment)
-	elif is_equal_approx(_drive_progress, 1.0):
+	elif _drive_progress >= 1.0:
 		_dock_manual_train(_drive_segment + 1)
 
 
@@ -795,8 +801,7 @@ func _dock_manual_train(station_index: int) -> void:
 	_train.position = STATIONS[_current_station].position
 	_orient_train_at_station(_current_station)
 	if _player != null:
-		_player.global_position = _train.to_global(DRIVER_SEAT)
-		_player.velocity = Vector3.ZERO
+		_place_player_in_driver_seat()
 	_status.text = "DOCKED AT %s  •  R HORN  •  Q EXIT  •  W/S KEEP DRIVING" % STATIONS[_current_station].title
 
 
@@ -814,6 +819,7 @@ func _disembark_driver() -> void:
 	_riding = false
 	_display_speed_kph = 0.0
 	if _player != null:
+		_player.call("set_train_seated_pose", false)
 		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
 		_player.velocity = Vector3.ZERO
 		_player.call("set_input_enabled", true)
@@ -1025,15 +1031,38 @@ func _build_track_mesh(parent: Node3D, curve: Curve3D, segment_index: int) -> vo
 	var sample_count := maxi(2, int(ceil(length / 10.0)))
 	var beam_points := PackedVector3Array()
 	var ribbon_points := PackedVector3Array()
+	var left_wheel_rail_points := PackedVector3Array()
+	var right_wheel_rail_points := PackedVector3Array()
 	for sample_index in sample_count + 1:
 		var distance := length * float(sample_index) / float(sample_count)
-		var centre := curve.sample_baked(distance) - Vector3.UP * 1.4
+		var route_point := curve.sample_baked(distance)
+		var previous := curve.sample_baked(maxf(0.0, distance - 2.0))
+		var following := curve.sample_baked(minf(length, distance + 2.0))
+		var forward := (following - previous).normalized()
+		var side := Vector3.UP.cross(forward).normalized()
+		if side.length_squared() < 0.01:
+			side = Vector3.RIGHT
+		var centre := route_point - Vector3.UP * 1.4
 		beam_points.append(centre)
 		ribbon_points.append(centre + Vector3.UP * 0.87)
+		var wheel_rail_centre := route_point - Vector3.UP * TRAIN_WHEEL_RAIL_CENTRE_DROP
+		left_wheel_rail_points.append(
+			wheel_rail_centre - side * TRAIN_WHEEL_RAIL_HALF_GAUGE)
+		right_wheel_rail_points.append(
+			wheel_rail_centre + side * TRAIN_WHEEL_RAIL_HALF_GAUGE)
 	_add_continuous_curve_prism(parent, "CenterMonorailBeam", beam_points,
 		3.2, 1.6, _rail_material, true, true)
 	_add_continuous_curve_prism(parent, "CrownLineEnergyRibbon", ribbon_points,
 		0.92, 0.14, _gold_material, false)
+	# The imported train has real left/right wheel treads centred at ±4.0 m.
+	# Preserve the strong centre support, but give those wheels two continuous
+	# steel-and-gold rail heads so the train visibly and physically sits on track.
+	_add_continuous_curve_prism(parent, "CrownWheelRailLeft",
+		left_wheel_rail_points, TRAIN_WHEEL_RAIL_WIDTH, TRAIN_WHEEL_RAIL_HEIGHT,
+		_gold_material, true)
+	_add_continuous_curve_prism(parent, "CrownWheelRailRight",
+		right_wheel_rail_points, TRAIN_WHEEL_RAIL_WIDTH, TRAIN_WHEEL_RAIL_HEIGHT,
+		_gold_material, true)
 	# Only the approach and departure beside Mind Spark receive the circuit-garden
 	# guide rails. The rest of the kingdom loop keeps its established appearance.
 	if segment_index == 0 or segment_index == 1:
@@ -1042,6 +1071,9 @@ func _build_track_mesh(parent: Node3D, curve: Curve3D, segment_index: int) -> vo
 	parent.set_meta("visual_mesh_pieces", 1)
 	parent.set_meta("sample_spacing_m", length / float(sample_count))
 	parent.set_meta("route_length_m", length)
+	parent.set_meta("wheel_rail_half_gauge_m", TRAIN_WHEEL_RAIL_HALF_GAUGE)
+	parent.set_meta("wheel_rail_top_below_train_origin_m",
+		TRAIN_WHEEL_RAIL_CENTRE_DROP - TRAIN_WHEEL_RAIL_HEIGHT * 0.5)
 
 
 func _build_mind_spark_railway_details(parent: Node3D, curve: Curve3D,
@@ -1203,6 +1235,8 @@ func _build_canonical_station(station: Node3D, station_index: int,
 	station.set_meta("complete_station_template", true)
 	station.set_meta("old_station_roof_restored", true)
 	station.set_meta("old_station_restoration_scope", "roof_only")
+	station.set_meta("physicality_policy",
+		"walkable surfaces and reachable architectural solids collide; trim and VFX do not")
 	_build_station_platform_from_scratch(station, station_index)
 	_build_floating_dock_structure(station)
 	_build_bio_magitech_pavilion(station)
@@ -1421,7 +1455,7 @@ func _build_station_platform_from_scratch(station: Node3D,
 	# station collision outside the train shell. It is intentionally non-walkable.
 	_add_box(platform, "CentralMonorailServiceChannel",
 		Vector3(0.0, -2.65, -1.5), Vector3(11.5, 0.7, 57.0),
-		_piltover_navy_material, false)
+		_piltover_navy_material, true)
 	_add_segment_box(platform, "LeftChannelLight",
 		Vector3(-5.72, -2.18, -30.0), Vector3(-5.72, -2.18, 27.0),
 		Vector2(0.20, 0.16), _glass_material)
@@ -1453,7 +1487,7 @@ func _build_station_platform_from_scratch(station: Node3D,
 				"RoofFoundationDropPier_%s_%02d" % [
 					"L" if side < 0.0 else "R", support_index],
 				Vector3(float(side) * 19.0, -6.4, support_z),
-				1.28, 7.2, _piltover_teal_material, false, 8)
+				1.28, 7.2, _piltover_teal_material, true, 8)
 			_add_torus(roof_foundations,
 				"RoofFoundationHextechCollar_%s_%02d" % [
 					"L" if side < 0.0 else "R", support_index],
@@ -1972,7 +2006,7 @@ func _build_floating_dock_structure(station: Node3D) -> void:
 	# A layered civic undercroft replaces the plain gray drum. The pale crown,
 	# teal mechanical belt and navy tapered hull form one readable floating island.
 	_add_cylinder(structure, "SuspendedFoundation", Vector3(0, -8.0, 0), 32.0, 10.0,
-		_piltover_navy_material, false, 16)
+		_piltover_navy_material, true, 16)
 	_add_tapered_cylinder(structure, "PiltoverIvoryHullCrown",
 		Vector3(0.0, -4.6, 0.0), 34.0, 32.0, 3.2,
 		_piltover_ivory_material, 24)
@@ -2098,6 +2132,8 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 			petal.set_meta("rainbow_material_index", petal_colour_index)
 			petal.set_meta("gold_edge_frame", true)
 			canopy.add_child(petal)
+			_add_static_mesh_collision(canopy, "%sCollision" % petal.name,
+				petal.mesh, petal.transform)
 			var root := centre - outward * 11.0
 			var shoulder_a := centre - outward * 1.8 - tangent * 5.0
 			var tip := centre + outward * 11.0
@@ -2125,7 +2161,7 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 			var z: float = ROOF_SUPPORT_Z_POSITIONS[support_index]
 			var x := float(side) * 19.0
 			_add_cylinder(supports, "LivingColumn_%s_%02d" % ["L" if side < 0 else "R", support_index],
-				Vector3(x, 5.2, z), 0.75, 10.4, _piltover_teal_material, false, 8)
+				Vector3(x, 5.2, z), 0.75, 10.4, _piltover_teal_material, true, 8)
 			_add_cylinder(supports, "EngineeringCollar_%s_%02d" % ["L" if side < 0 else "R", support_index],
 				Vector3(x, 9.2, z), 1.15, 0.65, _gold_material, false, 12)
 			_add_walkway_between(supports, "CanopyBranchInner_%s_%02d" % ["L" if side < 0 else "R", support_index],
@@ -2172,10 +2208,10 @@ func _build_resonance_arch(parent: Node3D, node_name: String,
 	for z_side in [-1.0, 1.0]:
 		_add_box(arch, "ArchFootRear" if z_side < 0 else "ArchFootFront",
 			Vector3(0.0, -3.9, float(z_side) * 3.0), Vector3(1.1, 1.3, 1.3),
-			_dark_metal_material, false)
+			_dark_metal_material, true)
 		_add_cylinder(arch, "ArchCrystalRear" if z_side < 0 else "ArchCrystalFront",
 			Vector3(0.0, -2.8, float(z_side) * 3.0), 0.38, 1.5,
-			_violet_material, false, 6)
+			_violet_material, true, 6)
 
 
 func _build_crystal_planter(parent: Node3D, node_name: String, position_value: Vector3) -> void:
@@ -2189,7 +2225,7 @@ func _build_crystal_planter(parent: Node3D, node_name: String, position_value: V
 		_add_cylinder(planter, "GrowthCrystal_%02d" % crystal_index,
 			Vector3(-1.2 + float(crystal_index) * 1.2, 1.25, 0.0),
 			0.36 + float(crystal_index) * 0.08, 2.4 + float(crystal_index % 2),
-			_violet_material, false, 6)
+			_violet_material, true, 6)
 
 
 func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
@@ -2291,9 +2327,9 @@ func _build_ascent_crystal_node(parent: Node3D, node_name: String,
 	node.position = position_value
 	parent.add_child(node)
 	_add_box(node, "GardenPlinth", Vector3(0.0, 0.0, 0.0),
-		Vector3(2.6, 0.55, 1.4), _nature_material, false)
+		Vector3(2.6, 0.55, 1.4), _nature_material, true)
 	_add_cylinder(node, "WayfindingCrystal", Vector3(0.0, 1.05, 0.0),
-		0.42, 2.1, _violet_material, false, 6)
+		0.42, 2.1, _violet_material, true, 6)
 	_add_torus(node, "EnergyCollar", Vector3(0.0, 0.65, 0.0),
 		0.62, 0.78, _gold_material)
 
@@ -2730,6 +2766,18 @@ func _build_train() -> void:
 				Vector3(bench_side * 2.4, 1.65, 2.8), Vector3(1.9, 2.0, 2.2),
 				_glass_material, true)
 		if carriage_index == 0:
+			# A real driver chair anchors the character at the controls. Its backrest
+			# sits behind the fox (local +Z), leaving a clear reach to the console.
+			var driver_seat_local_z := DRIVER_SEAT.z - carriage.position.z
+			_add_box(carriage, "DriverSeatCushion",
+				Vector3(0.0, 1.42, driver_seat_local_z),
+				Vector3(2.15, 0.42, 1.75), _gold_material, false)
+			_add_box(carriage, "DriverSeatBack",
+				Vector3(0.0, 2.35, driver_seat_local_z + 0.82),
+				Vector3(2.25, 1.95, 0.34), _glass_material, false)
+			_add_cylinder(carriage, "DriverSeatPedestal",
+				Vector3(0.0, 0.86, driver_seat_local_z), 0.48, 1.15,
+				_gold_material, false, 12)
 			# A waist-high control desk, not a full-height wall. At 2.7 m tall
 			# and centred at y=2.0 this sealed the doorway between the deck and
 			# the cab: the player could never get within Q range of the driver
@@ -3535,7 +3583,21 @@ func _set_train_progress(segment_index: int, progress: float) -> void:
 			rider_offset = BENCH_SEATS[_passenger_seat_index]
 		elif not _manual_driving:
 			rider_offset = BENCH_SEATS[0]
-		_player.global_position = _train.to_global(rider_offset)
+		if _manual_driving:
+			_place_player_in_driver_seat()
+		else:
+			_player.global_position = _train.to_global(rider_offset)
+
+
+func _place_player_in_driver_seat() -> void:
+	if _player == null or _train == null:
+		return
+	# Align the character root with the chassis before positioning it. The fox's
+	# seated visual faces local -Z, matching the train's forward axis, and the
+	# whole pose therefore follows every bend without sliding or facing sideways.
+	_player.global_basis = _train.global_basis.orthonormalized()
+	_player.global_position = _train.to_global(DRIVER_SEAT)
+	_player.velocity = Vector3.ZERO
 
 
 func _orient_train_at_station(station_index: int) -> void:
@@ -3625,6 +3687,23 @@ func _add_box(parent: Node3D, node_name: String, position_value: Vector3, size: 
 		parent.add_child(body)
 
 
+func _add_static_mesh_collision(parent: Node3D, node_name: String,
+		mesh: Mesh, transform_value: Transform3D) -> void:
+	if mesh == null or mesh.get_faces().is_empty():
+		return
+	var body := StaticBody3D.new()
+	body.name = node_name
+	var shape_node := CollisionShape3D.new()
+	shape_node.name = "CollisionShape3D"
+	var shape := ConcavePolygonShape3D.new()
+	shape.backface_collision = true
+	shape.set_faces(mesh.get_faces())
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	body.transform = transform_value
+	parent.add_child(body)
+
+
 func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3,
 		radius: float, height: float, material: Material, collision: bool,
 		segments: int = 32, rotation_value: Vector3 = Vector3.ZERO) -> void:
@@ -3657,6 +3736,7 @@ func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3,
 			collision_owner.add_child(shape_node, true)
 			return
 		var body := StaticBody3D.new()
+		body.name = "%sCollision" % node_name
 		shape_node.name = "CollisionShape3D"
 		shape_node.position = Vector3.ZERO
 		shape_node.rotation = Vector3.ZERO
@@ -3667,7 +3747,12 @@ func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3,
 
 
 func _configure_train_platform_body(body: AnimatableBody3D, shell_kind: String) -> void:
-	body.sync_to_physics = true
+	# The railway owns the chassis transform and advances it continuously along a
+	# Curve3D. sync_to_physics rejects those direct transform assignments outside
+	# the physics callback, leaving speed/progress active while the visible train
+	# remains at the dock. AnimatableBody3D still behaves as an infinite-mass
+	# moving platform with synchronization disabled, while accepting route motion.
+	body.sync_to_physics = false
 	body.collision_layer = 1
 	body.collision_mask = 1
 	body.set_meta("train_collision_shell", shell_kind)

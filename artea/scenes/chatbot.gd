@@ -6,8 +6,9 @@
 # or uploaded; Web and unsupported builds retain the authored local response.
 extends Control
 
-@onready var chat_history: TextEdit = $VBoxContainer/ChatHistory
-@onready var content: VBoxContainer = $VBoxContainer
+@onready var chat_history: TextEdit = $MiloReplyCard/ChatHistory
+@onready var content: VBoxContainer = $InputContent
+@onready var milo_role: Label = $MiloReplyCard/MiloRole
 
 signal chat_closed
 signal companion_pose_requested(pose_name: String)
@@ -43,6 +44,9 @@ var _local_llm_request_id := 0
 var _pending_authored_response: Dictionary = {}
 var _pending_grounded_response: Dictionary = {}
 var _pending_player_message := ""
+var _last_player_message := ""
+var _last_spoken_text := ""
+var _spoken_full_reply := ""
 
 const ACTIVITY_DESTINATIONS := {
 	"mind": "Mind Spark Kingdom",
@@ -423,8 +427,19 @@ func _emotion_from_choice(label: String) -> String:
 
 
 func _add_message_input() -> void:
+	if not _last_player_message.is_empty():
+		var player_echo := Label.new()
+		player_echo.name = "PlayerLastMessage"
+		player_echo.text = "YOU  •  %s" % _short_player_echo(_last_player_message)
+		player_echo.custom_minimum_size = Vector2(0, 25)
+		player_echo.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		player_echo.add_theme_font_override("font", UI_BODY_FONT)
+		player_echo.add_theme_font_size_override("font_size", 19)
+		player_echo.add_theme_color_override("font_color", Color(0.23, 0.145, 0.065, 1.0))
+		_choices.add_child(player_echo)
+
 	var prompt := Label.new()
-	prompt.text = "WRITE TO MILO   •   280 CHARACTERS MAX"
+	prompt.text = "YOU  •  TYPE YOUR REPLY   ·   280 CHARACTERS MAX"
 	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	prompt.add_theme_font_override("font", UI_BODY_FONT)
 	prompt.add_theme_font_size_override("font_size", 16)
@@ -449,7 +464,7 @@ func _add_message_input() -> void:
 	_message_input.add_theme_stylebox_override("normal", _input_style(false))
 	_message_input.add_theme_stylebox_override("focus", _input_style(true))
 	row.add_child(_message_input)
-	_message_send_button = _quiet_button("Ask Milo", _submit_message.bind(_message_input))
+	_message_send_button = _quiet_button("Send", _submit_message.bind(_message_input))
 	_message_send_button.name = "MiloMessageSend"
 	_message_send_button.custom_minimum_size = Vector2(144, 48)
 	_style_send_button(_message_send_button)
@@ -458,6 +473,17 @@ func _add_message_input() -> void:
 		_submit_message(_message_input)
 	)
 	user_input = _message_input
+
+
+func _short_player_echo(message: String) -> String:
+	var clean := message.replace("\n", " ").strip_edges()
+	if clean.length() <= 110:
+		return clean
+	var shortened := clean.left(109)
+	var last_space := shortened.rfind(" ")
+	if last_space > 70:
+		shortened = shortened.left(last_space)
+	return shortened + "…"
 
 
 func _submit_message(input: LineEdit) -> void:
@@ -469,6 +495,7 @@ func _submit_message(input: LineEdit) -> void:
 		input.placeholder_text = "Write a few words for Milo first."
 		input.grab_focus()
 		return
+	_last_player_message = message
 	var response: Dictionary = _reflection_engine.reflect(message)
 	if bool(response.get("urgent", false)):
 		_request_companion_activity("SUPPORTING", "heart")
@@ -729,7 +756,10 @@ func _show_companion_response(title: String, message: String,
 
 
 func _show_chat_response(title: String, message: String) -> void:
-	_speak("Wonderful Counsellor Milo · %s\n\n%s" % [title, message])
+	# The speaker card already identifies Milo. Keep this surface focused on the
+	# actual reply so a player can follow the same words that Milo reads aloud.
+	milo_role.text = title.to_upper()
+	_speak(message, message)
 	_clear_choices()
 	_add_message_input()
 
@@ -929,14 +959,36 @@ func _show_support() -> void:
 	_support_card.call("show_card")
 
 
-func _speak(text: String) -> void:
-	chat_history.text = text
-	companion_speech_requested.emit(text)
+func _speak(text: String, spoken_text := "") -> void:
+	_spoken_full_reply = text.strip_edges()
+	chat_history.add_theme_font_size_override("font_size", 24)
+	chat_history.text = _spoken_full_reply
+	_last_spoken_text = spoken_text.strip_edges() \
+		if not spoken_text.strip_edges().is_empty() else _spoken_full_reply
+	companion_speech_requested.emit(_last_spoken_text)
+
+
+func show_spoken_sentence(sentence: String, sentence_index: int,
+		sentence_count: int, full_reply: String) -> void:
+	if sentence.strip_edges().is_empty():
+		return
+	_spoken_full_reply = full_reply.strip_edges()
+	chat_history.add_theme_font_size_override("font_size", 32)
+	chat_history.text = sentence.strip_edges()
+	milo_role.text = "READING  ·  %d OF %d" % [sentence_index + 1,
+		maxi(sentence_count, 1)]
+
+
+func finish_spoken_reply() -> void:
+	chat_history.add_theme_font_size_override("font_size", 24)
+	if not _spoken_full_reply.is_empty():
+		chat_history.text = _spoken_full_reply
+	milo_role.text = "ART SCHOLAR  ·  READY"
 
 
 func replay_current_speech() -> void:
-	if chat_history != null and not chat_history.text.is_empty():
-		companion_speech_requested.emit(chat_history.text)
+	if not _last_spoken_text.is_empty():
+		companion_speech_requested.emit(_last_spoken_text)
 
 
 func close_chat() -> void:

@@ -38,15 +38,18 @@ func _run() -> void:
 	root.add_child(world)
 	for _frame in 4: await process_frame
 	var quest := world.get_node("QuestController") as MindSparkWorldOneQuest
-	assert(quest.target_first_play_minutes() == 60, "four quest targets sit inside the required 55–70 minute first play")
+	assert(quest.target_first_play_minutes() == 64, "the detailed Island One puzzle keeps first play inside the required 55–70 minutes")
 	assert(quest.current_task().id == "wake_two_roots")
 	var checkpoints: Array[QuestObjectBase] = []
 	for object in world.get_quest_objects():
 		if object.definition.object_kind == QuestObjectDefinition.ObjectKind.CHECKPOINT_SERVER_ROOT:
 			checkpoints.append(object)
 	var focus := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.FOCUS_BELL_BEACON)
-	assert(str(focus.get_meta("current_required_target", "")).contains("Checkpoint"),
-		"Focus Bell identifies only the current required object")
+	assert(str(focus.get_meta("current_required_target", "")).contains("Aether Compass"),
+		"Focus Bell first identifies Island One's required machine")
+	var compass := world.get_island_one_puzzle()
+	assert(compass != null and compass.solve_for_test().reason == "completed")
+	assert(bool(quest.progress.island_one_compass_solved), "Bearing Sigil completion is connected to Quest One")
 	player.take_damage(40.0)
 	assert(checkpoints[0].available_actions() == [&"save", &"heal", &"task"])
 	assert(checkpoints[0].interact(&"heal").accepted and player.current_health == player.max_health,

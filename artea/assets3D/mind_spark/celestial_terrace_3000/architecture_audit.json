@@ -1,0 +1,178 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "3000_parts_preserved",
+      "passed": true
+    },
+    {
+      "name": "80_fitted_curved_ashlar_blocks",
+      "passed": true
+    },
+    {
+      "name": "12_curved_intrados_liners",
+      "passed": true
+    },
+    {
+      "name": "4_cornice_return_stones",
+      "passed": true
+    },
+    {
+      "name": "old_lower_rivet_array_replaced",
+      "passed": true
+    },
+    {
+      "name": "pier_1_continuous_bearing_into_rock",
+      "passed": true
+    },
+    {
+      "name": "pier_2_continuous_bearing_into_rock",
+      "passed": true
+    },
+    {
+      "name": "pier_3_continuous_bearing_into_rock",
+      "passed": true
+    },
+    {
+      "name": "cornice_returns_join_capitals_and_deck",
+      "passed": true
+    },
+    {
+      "name": "lower_arch_backing_has_masonry_depth",
+      "passed": true
+    }
+  ],
+  "before": {
+    "scope": "Geometry and visual construction logic; no stress, load, or real-world safety certification",
+    "part_count": 3000,
+    "pier_bearings": [
+      {
+        "pier": 1,
+        "old_foot_vertices_inside_rock": 0,
+        "support_courses": 0,
+        "new_bearing_vertices_inside_rock": 0,
+        "foot_to_corbel_contact": false,
+        "corbel_courses_connected": false
+      },
+      {
+        "pier": 2,
+        "old_foot_vertices_inside_rock": 0,
+        "support_courses": 0,
+        "new_bearing_vertices_inside_rock": 0,
+        "foot_to_corbel_contact": false,
+        "corbel_courses_connected": false
+      },
+      {
+        "pier": 3,
+        "old_foot_vertices_inside_rock": 0,
+        "support_courses": 0,
+        "new_bearing_vertices_inside_rock": 0,
+        "foot_to_corbel_contact": false,
+        "corbel_courses_connected": false
+      }
+    ],
+    "curved_ashlar_blocks": 0,
+    "intrados_lining_blocks": 0,
+    "cornice_return_blocks": 0,
+    "old_repetitive_lower_rivets": 120
+  },
+  "after": {
+    "scope": "Geometry and visual construction logic; no stress, load, or real-world safety certification",
+    "part_count": 3000,
+    "pier_bearings": [
+      {
+        "pier": 1,
+        "old_foot_vertices_inside_rock": 0,
+        "support_courses": 4,
+        "new_bearing_vertices_inside_rock": 36,
+        "foot_to_corbel_contact": true,
+        "corbel_courses_connected": true
+      },
+      {
+        "pier": 2,
+        "old_foot_vertices_inside_rock": 0,
+        "support_courses": 4,
+        "new_bearing_vertices_inside_rock": 72,
+        "foot_to_corbel_contact": true,
+        "corbel_courses_connected": true
+      },
+      {
+        "pier": 3,
+        "old_foot_vertices_inside_rock": 0,
+        "support_courses": 4,
+        "new_bearing_vertices_inside_rock": 36,
+        "foot_to_corbel_contact": true,
+        "corbel_courses_connected": true
+      }
+    ],
+    "curved_ashlar_blocks": 80,
+    "intrados_lining_blocks": 12,
+    "cornice_return_blocks": 4,
+    "old_repetitive_lower_rivets": 0,
+    "cornice_returns": [
+      {
+        "part": "CT3_1185_Cornice_return_left_course1",
+        "capital_contact_bounds": true,
+        "vertices_inside_deck": 12
+      },
+      {
+        "part": "CT3_1186_Cornice_return_left_course2",
+        "capital_contact_bounds": true,
+        "vertices_inside_deck": 6
+      },
+      {
+        "part": "CT3_1187_Cornice_return_right_course1",
+        "capital_contact_bounds": true,
+        "vertices_inside_deck": 12
+      },
+      {
+        "part": "CT3_1188_Cornice_return_right_course2",
+        "capital_contact_bounds": true,
+        "vertices_inside_deck": 6
+      }
+    ],
+    "lower_arch_backing_depths_m": [
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15,
+      1.15
+    ]
+  },
+  "source_sha256": "a420eeecf91e7f560e27eb3793e660f6b5bdba88349f6bed2b7fc6419e8816d8"
+}

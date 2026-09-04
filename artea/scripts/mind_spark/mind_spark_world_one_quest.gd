@@ -8,13 +8,13 @@ signal world_completed
 const SAVE_PATH := "user://mind_spark_walkable_world_one_progress.json"
 const ECHO_IDS := ["world_one.fact_and_fear", "world_one.hope_path"]
 const QUESTS := [
-	{"id": "wake_network", "title": "WAKE THE LIVING NETWORK", "task_end": 1, "xp": 75, "target_minutes": 13},
+	{"id": "wake_network", "title": "WAKE THE LIVING NETWORK", "task_end": 1, "xp": 75, "target_minutes": 17},
 	{"id": "broken_pattern", "title": "READ THE BROKEN PATTERN", "task_end": 4, "xp": 100, "target_minutes": 13},
 	{"id": "hope_path", "title": "BUILD THE HOPE PATH", "task_end": 7, "xp": 125, "target_minutes": 14},
 	{"id": "free_warden", "title": "FREE THE THOUGHT STORM WARDEN", "task_end": 9, "xp": 200, "target_minutes": 20},
 ]
 const TASKS := [
-	{"id": "wake_two_roots", "quest": 0, "title": "Wake two Checkpoint Server Roots", "zone": "01–02", "prompt": "Use SAVE at both glowing Server Roots • 0/2"},
+	{"id": "wake_two_roots", "quest": 0, "title": "Notice a thought and wake the Living Network", "zone": "01–02", "prompt": "Hold the thought signal, name what it may feel like, choose a grounded response, then send understanding forward"},
 	{"id": "collect_two_sparks", "quest": 0, "title": "Collect and place two Thought Sparks", "zone": "02", "prompt": "Walk through two Sparks, then use the Spark Socket • 0/2"},
 	{"id": "scan_fact_fear", "quest": 1, "title": "Separate FACT from FEAR", "zone": "03", "prompt": "Scan the clue and choose FACT or FEAR"},
 	{"id": "restore_memory", "quest": 1, "title": "Restore the three-node memory", "zone": "03", "prompt": "Connect the three large nodes in order; reset and help are available"},
@@ -45,7 +45,8 @@ var journey_state: Node
 var identity_tracker: Node
 var progress := {
 	"completed_task_ids": [], "completed_quest_ids": [], "checkpoint_root_ids": [],
-	"collected_spark_ids": [], "defeated_enemy_ids": [], "xp": 0, "completed": false,
+	"collected_spark_ids": [], "defeated_enemy_ids": [], "island_one_compass_solved": false,
+	"xp": 0, "completed": false,
 }
 var _current_task_index := 0
 var _reflection_queue: Array[Dictionary] = []
@@ -108,6 +109,8 @@ func _bind_world() -> void:
 
 
 func _connect_world_events() -> void:
+	if not world.island_one_puzzle_solved.is_connected(_on_island_one_puzzle_solved):
+		world.island_one_puzzle_solved.connect(_on_island_one_puzzle_solved)
 	for object in world.get_quest_objects():
 		object.completed.connect(_on_object_completed)
 		object.progress_changed.connect(_on_object_progress)
@@ -121,6 +124,18 @@ func _connect_world_events() -> void:
 	var boss := world.get_warden() as MindSparkWardenBoss
 	boss.defeated.connect(_on_boss_defeated)
 	boss.combat_stopped.connect(_on_boss_combat_stopped)
+	var compass := world.get_island_one_puzzle()
+	if compass != null and compass.is_powered():
+		progress.island_one_compass_solved = true
+
+
+func _on_island_one_puzzle_solved(_result: Dictionary) -> void:
+	progress.island_one_compass_solved = true
+	_save_progress()
+	if _dialogue_label != null:
+		_dialogue_label.text = "Everlasting Father: You noticed the thought without letting it define you. The Awareness Bearing now carries that understanding to Island Two."
+	_try_complete_landing_task()
+	_update_support_target()
 
 
 func _process(_delta: float) -> void:
@@ -163,8 +178,7 @@ func _on_checkpoint_action(action: String, save_id: String) -> void:
 					roots.append(save_id)
 				world.set_world_state("waking")
 				_save_progress()
-				if roots.size() >= 2:
-					_complete_current_task("wake_two_roots")
+				_try_complete_landing_task()
 		"heal":
 			if _player == null:
 				_find_player()
@@ -253,6 +267,12 @@ func _try_complete_network_quest_task() -> void:
 	if _current_task_index == 1 and socket != null and int(socket.current_state.get("progress", 0)) >= 2 \
 			and _wave_cleared("network"):
 		_complete_current_task("collect_two_sparks")
+
+
+func _try_complete_landing_task() -> void:
+	if _current_task_index == 0 and bool(progress.island_one_compass_solved) \
+			and (progress.checkpoint_root_ids as Array).size() >= 2:
+		_complete_current_task("wake_two_roots")
 
 
 func _complete_current_task(expected_id: String) -> bool:
@@ -359,7 +379,7 @@ func _update_cast_for_task() -> void:
 	if milo != null:
 		milo.position = world.get_zone_position("01_world_gate_landing") + _world_offset(Vector3(-28, 3, -12))
 		if milo.has_method("set_dialogue_line"):
-			milo.call("set_dialogue_line", "The Blight is a shell, not the creature. Wake both roots and follow the cyan path.")
+			milo.call("set_dialogue_line", "Balance the twin towers, align the compass, then wake both roots. Its cyan route points to Island Two.")
 	if guardian == null:
 		return
 	var guide_position := world.get_zone_position("03_constellation_court") + _world_offset(Vector3(0, 4, -84))
@@ -387,6 +407,12 @@ func _update_support_target() -> void:
 	var target: QuestObjectBase
 	match _current_task_index:
 		0:
+			if not bool(progress.island_one_compass_solved):
+				var compass := world.get_island_one_puzzle()
+				if compass != null:
+					world.set_support_target_position(world.to_local(compass.to_global(Vector3(0, 3, 8))),
+						"Aether Compass")
+					return
 			for object in world.get_quest_objects():
 				if object.definition.object_kind == QuestObjectDefinition.ObjectKind.CHECKPOINT_SERVER_ROOT \
 						and not (progress.checkpoint_root_ids as Array).has(object.save_id):
@@ -472,7 +498,7 @@ func _restore_runtime_state() -> void:
 		world.set_station_spur_available(true)
 		world.set_return_gate_enabled(true)
 		_equip_wisdom_blade()
-	elif not (progress.checkpoint_root_ids as Array).is_empty():
+	elif bool(progress.island_one_compass_solved) or not (progress.checkpoint_root_ids as Array).is_empty():
 		world.set_world_state("waking")
 
 
@@ -579,7 +605,7 @@ func _render_hud() -> void:
 
 func _guardian_line_for_task(task_index: int) -> String:
 	if task_index <= 1:
-		return "Mayor Milo: The sword breaks only the Blight shell. Wake the roots and follow their cyan light."
+		return "Mayor Milo: Balance the twin towers, align the compass, then wake the roots and follow their cyan light."
 	if task_index <= 4:
 		return "Mother Guardian: A thought can feel strong without being a fact. Look for one clear sign."
 	if task_index <= 7:

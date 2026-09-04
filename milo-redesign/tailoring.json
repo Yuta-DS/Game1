@@ -1,0 +1,31 @@
+{
+  "name": "milo_soft_tailoring",
+  "palette": {
+    "coat": {"color": "#334561", "rough": 0.82},
+    "sleeve": {"color": "#334561", "rough": 0.82}
+  },
+  "smooth_angle": 65,
+  "shading": {"gradient": {"top": 0.10, "bottom": -0.18}, "noise": {"size": 0.008, "amount": 0.035}},
+  "joints": {
+    "Hips": [0, 0.44, 0], "Spine": [0, 0.84, 0], "Chest": [0, 1.12, 0],
+    "LShoulder": [0.285, 1.065, 0], "LElbow": [0.545, 0.91, 0],
+    "LWrist": [0.575, 0.76, 0], "LCuff": [0.585, 0.69, 0]
+  },
+  "chains": {"body": ["Hips", "Spine", "Chest"], "LArm": ["LShoulder", "LElbow", "LWrist", "LCuff"]},
+  "attach": {"LArm": "Chest"},
+  "mirror": ["LArm"],
+  "touch": [["body", "LArm"]],
+  "volumes": [
+    {"chain": "body", "material": "coat", "sides": 20, "frame": "up",
+      "profile": [[0, 0.35, 0.24], [0.38, 0.34, 0.245], [0.74, 0.325, 0.23], [1, 0.365, 0.20]],
+      "caps": ["dome", "dome"], "ring_step": 0.04},
+    {"chain": "LArm", "material": "sleeve", "sides": 16, "frame": "up",
+      "profile": [[0, 0.145, 0.125], [0.20, 0.128, 0.115], [0.55, 0.112, 0.106], [0.82, 0.105, 0.102], [1, 0.096, 0.101]],
+      "caps": ["dome", "none"], "ring_step": 0.025}
+  ],
+  "animations": {
+    "idle": {"duration": 3.2, "loop": true, "tracks": {"Chest": {"rx": [[0,0], [0.5,1.2], [1,0]]}}},
+    "move": {"duration": 1.28, "loop": true, "mirror_phase": 0.5, "tracks": {"LShoulder": {"rx": [[0,-10],[0.5,10],[1,-10]]}, "LElbow": {"rx": [[0,0],[0.5,8],[1,0]]}}},
+    "greet": {"duration": 2.4, "loop": false, "tracks": {"RShoulder": {"rx": [[0,0],[0.4,-16],[0.7,-16],[1,0]]}}}
+  }
+}

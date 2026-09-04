@@ -1,0 +1,3675 @@
+{
+  "rig": "MiloExactTargetRig",
+  "rig_matrix": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "bones": {
+    "root": {
+      "head": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "tail": [
+        0.0,
+        1.028623408672047e-08,
+        0.30051636695861816
+      ],
+      "parent": null
+    },
+    "hips": {
+      "head": [
+        0.0,
+        1.3885260941037814e-08,
+        0.4056633710861206
+      ],
+      "tail": [
+        0.0,
+        2.0456369043131417e-08,
+        0.597640872001648
+      ],
+      "parent": "root"
+    },
+    "spine": {
+      "head": [
+        0.0,
+        2.0456369043131417e-08,
+        0.597640872001648
+      ],
+      "tail": [
+        0.0,
+        3.329165565446601e-08,
+        0.9726287722587585
+      ],
+      "parent": "hips"
+    },
+    "chest": {
+      "head": [
+        0.0,
+        3.3291652101752334e-08,
+        0.9726287126541138
+      ],
+      "tail": [
+        0.0,
+        4.18787529099518e-08,
+        1.2235043048858643
+      ],
+      "parent": "spine"
+    },
+    "upperarm.l": {
+      "head": [
+        0.35499998927116394,
+        0.0,
+        1.1200000047683716
+      ],
+      "tail": [
+        0.5450000166893005,
+        0.0,
+        0.9100000262260437
+      ],
+      "parent": "chest"
+    },
+    "lowerarm.l": {
+      "head": [
+        0.5450000166893005,
+        0.0,
+        0.9100000262260437
+      ],
+      "tail": [
+        0.574999988079071,
+        0.0,
+        0.7599999904632568
+      ],
+      "parent": "upperarm.l"
+    },
+    "wrist.l": {
+      "head": [
+        0.574999988079071,
+        0.0,
+        0.7599999904632568
+      ],
+      "tail": [
+        0.5849999785423279,
+        0.0,
+        0.6899999976158142
+      ],
+      "parent": "lowerarm.l"
+    },
+    "hand.l": {
+      "head": [
+        0.5849999785423279,
+        0.0,
+        0.6899999976158142
+      ],
+      "tail": [
+        0.5849999785423279,
+        -0.004999999888241291,
+        0.550000011920929
+      ],
+      "parent": "wrist.l"
+    },
+    "handslot.l": {
+      "head": [
+        0.8831324577331543,
+        -2.1290299301313098e-08,
+        1.0492606163024902
+      ],
+      "tail": [
+        0.8831324577331543,
+        -0.11201024800539017,
+        1.0492606163024902
+      ],
+      "parent": "hand.l"
+    },
+    "upperarm.r": {
+      "head": [
+        -0.35499998927116394,
+        0.0,
+        1.1200000047683716
+      ],
+      "tail": [
+        -0.5450000166893005,
+        0.0,
+        0.9100000262260437
+      ],
+      "parent": "chest"
+    },
+    "lowerarm.r": {
+      "head": [
+        -0.5450000166893005,
+        0.0,
+        0.9100000262260437
+      ],
+      "tail": [
+        -0.574999988079071,
+        0.0,
+        0.7599999904632568
+      ],
+      "parent": "upperarm.r"
+    },
+    "wrist.r": {
+      "head": [
+        -0.574999988079071,
+        0.0,
+        0.7599999904632568
+      ],
+      "tail": [
+        -0.5849999785423279,
+        0.0,
+        0.6899999976158142
+      ],
+      "parent": "lowerarm.r"
+    },
+    "hand.r": {
+      "head": [
+        -0.5849999785423279,
+        0.0,
+        0.6899999976158142
+      ],
+      "tail": [
+        -0.5849999785423279,
+        -0.004999999888241291,
+        0.550000011920929
+      ],
+      "parent": "wrist.r"
+    },
+    "handslot.r": {
+      "head": [
+        -0.8831324577331543,
+        -2.1290299301313098e-08,
+        1.0492606163024902
+      ],
+      "tail": [
+        -0.8831324577331543,
+        -0.11201024800539017,
+        1.0492606163024902
+      ],
+      "parent": "hand.r"
+    },
+    "head": {
+      "head": [
+        0.0,
+        4.2492160901019815e-08,
+        1.2414252758026123
+      ],
+      "tail": [
+        0.0,
+        5.107926170921928e-08,
+        1.4923007488250732
+      ],
+      "parent": "chest"
+    },
+    "upperleg.l": {
+      "head": [
+        0.17094504833221436,
+        6.5973204677050035e-09,
+        0.5192506313323975
+      ],
+      "tail": [
+        0.17094501852989197,
+        -0.007889259606599808,
+        0.29231026768684387
+      ],
+      "parent": "hips"
+    },
+    "lowerleg.l": {
+      "head": [
+        0.17094501852989197,
+        -0.007889281027019024,
+        0.29231029748916626
+      ],
+      "tail": [
+        0.17094501852989197,
+        0.01858590543270111,
+        0.14523719251155853
+      ],
+      "parent": "upperleg.l"
+    },
+    "foot.l": {
+      "head": [
+        0.17094500362873077,
+        0.01858590543270111,
+        0.14523719251155853
+      ],
+      "tail": [
+        0.17094500362873077,
+        -0.09639275819063187,
+        0.025990217924118042
+      ],
+      "parent": "lowerleg.l"
+    },
+    "toes.l": {
+      "head": [
+        0.17094500362873077,
+        -0.09639275819063187,
+        0.025990217924118042
+      ],
+      "tail": [
+        0.17094500362873077,
+        -0.2620427906513214,
+        0.025990203022956848
+      ],
+      "parent": "foot.l"
+    },
+    "upperleg.r": {
+      "head": [
+        -0.17094504833221436,
+        6.597310697742387e-09,
+        0.5192506313323975
+      ],
+      "tail": [
+        -0.17094501852989197,
+        -0.007889259606599808,
+        0.29231026768684387
+      ],
+      "parent": "hips"
+    },
+    "lowerleg.r": {
+      "head": [
+        -0.17094501852989197,
+        -0.007889281027019024,
+        0.29231029748916626
+      ],
+      "tail": [
+        -0.17094501852989197,
+        0.01858590543270111,
+        0.14523719251155853
+      ],
+      "parent": "upperleg.r"
+    },
+    "foot.r": {
+      "head": [
+        -0.17094500362873077,
+        0.01858590543270111,
+        0.14523719251155853
+      ],
+      "tail": [
+        -0.17094500362873077,
+        -0.09639275819063187,
+        0.025990217924118042
+      ],
+      "parent": "lowerleg.r"
+    },
+    "toes.r": {
+      "head": [
+        -0.17094500362873077,
+        -0.09639275819063187,
+        0.025990217924118042
+      ],
+      "tail": [
+        -0.17094500362873077,
+        -0.2620427906513214,
+        0.025990203022956848
+      ],
+      "parent": "foot.r"
+    },
+    "kneeIK.l": {
+      "head": [
+        0.17094500362873077,
+        -0.5758122205734253,
+        0.2923102080821991
+      ],
+      "tail": [
+        0.17094500362873077,
+        -0.8763285875320435,
+        0.29231026768684387
+      ],
+      "parent": "root"
+    },
+    "control-toe-roll.l": {
+      "head": [
+        0.17094503343105316,
+        -0.2457893192768097,
+        0.025990262627601624
+      ],
+      "tail": [
+        0.17094501852989197,
+        0.11704334616661072,
+        0.025990324094891548
+      ],
+      "parent": "root"
+    },
+    "control-heel-roll.l": {
+      "head": [
+        0.17094503343105316,
+        0.11704322695732117,
+        0.025990324094891548
+      ],
+      "tail": [
+        0.17094504833221436,
+        -0.0963929146528244,
+        0.025990288704633713
+      ],
+      "parent": "control-toe-roll.l"
+    },
+    "control-foot-roll.l": {
+      "head": [
+        0.17094503343105316,
+        -0.09639279544353485,
+        0.025990288704633713
+      ],
+      "tail": [
+        0.17094503343105316,
+        0.018585890531539917,
+        0.1452372819185257
+      ],
+      "parent": "control-heel-roll.l"
+    },
+    "heelIK.l": {
+      "head": [
+        0.17094504833221436,
+        0.018585816025733948,
+        0.14523720741271973
+      ],
+      "tail": [
+        0.17094504833221436,
+        0.1842358559370041,
+        0.14523723721504211
+      ],
+      "parent": "control-foot-roll.l"
+    },
+    "IK-foot.l": {
+      "head": [
+        0.17094506323337555,
+        0.01858583651483059,
+        0.14523722231388092
+      ],
+      "tail": [
+        0.17094506323337555,
+        -0.09639283269643784,
+        0.025990232825279236
+      ],
+      "parent": "control-foot-roll.l"
+    },
+    "IK-toe.l": {
+      "head": [
+        0.17094503343105316,
+        0.11704321950674057,
+        0.025990324094891548
+      ],
+      "tail": [
+        0.17094503343105316,
+        -0.096392922103405,
+        0.025990288704633713
+      ],
+      "parent": "control-heel-roll.l"
+    },
+    "kneeIK.r": {
+      "head": [
+        -0.17094498872756958,
+        -0.5758122205734253,
+        0.2923102080821991
+      ],
+      "tail": [
+        -0.17094498872756958,
+        -0.8763285875320435,
+        0.29231026768684387
+      ],
+      "parent": "root"
+    },
+    "control-toe-roll.r": {
+      "head": [
+        -0.17094503343105316,
+        -0.2457893192768097,
+        0.025990255177021027
+      ],
+      "tail": [
+        -0.17094504833221436,
+        0.11704334616661072,
+        0.02599031664431095
+      ],
+      "parent": "root"
+    },
+    "control-heel-roll.r": {
+      "head": [
+        -0.17094503343105316,
+        0.11704322695732117,
+        0.02599031664431095
+      ],
+      "tail": [
+        -0.17094501852989197,
+        -0.0963929146528244,
+        0.025990281254053116
+      ],
+      "parent": "control-toe-roll.r"
+    },
+    "control-foot-roll.r": {
+      "head": [
+        -0.17094504833221436,
+        -0.09639279544353485,
+        0.025990281254053116
+      ],
+      "tail": [
+        -0.17094504833221436,
+        0.018585890531539917,
+        0.1452372670173645
+      ],
+      "parent": "control-heel-roll.r"
+    },
+    "heelIK.r": {
+      "head": [
+        -0.17094504833221436,
+        0.018585816025733948,
+        0.14523720741271973
+      ],
+      "tail": [
+        -0.17094504833221436,
+        0.1842358559370041,
+        0.14523723721504211
+      ],
+      "parent": "control-foot-roll.r"
+    },
+    "IK-foot.r": {
+      "head": [
+        -0.17094504833221436,
+        0.0185858141630888,
+        0.14523723721504211
+      ],
+      "tail": [
+        -0.17094504833221436,
+        -0.09639285504817963,
+        0.02599024772644043
+      ],
+      "parent": "control-foot-roll.r"
+    },
+    "IK-toe.r": {
+      "head": [
+        -0.17094503343105316,
+        0.11704321950674057,
+        0.02599031664431095
+      ],
+      "tail": [
+        -0.17094503343105316,
+        -0.096392922103405,
+        0.025990281254053116
+      ],
+      "parent": "control-heel-roll.r"
+    },
+    "elbowIK.l": {
+      "head": [
+        0.45350730419158936,
+        0.5888594388961792,
+        1.106760859489441
+      ],
+      "tail": [
+        0.45350730419158936,
+        0.8893758058547974,
+        1.106760859489441
+      ],
+      "parent": "root"
+    },
+    "handIK.l": {
+      "head": [
+        0.7131814956665039,
+        -9.010469170789293e-08,
+        1.106760859489441
+      ],
+      "tail": [
+        1.013697862625122,
+        -5.428035620980154e-08,
+        1.106760859489441
+      ],
+      "parent": "root"
+    },
+    "elbowIK.r": {
+      "head": [
+        -0.45350730419158936,
+        0.588859498500824,
+        1.106760859489441
+      ],
+      "tail": [
+        -0.45350730419158936,
+        0.8893758654594421,
+        1.106760859489441
+      ],
+      "parent": "root"
+    },
+    "handIK.r": {
+      "head": [
+        -0.7131815552711487,
+        -7.254827494307392e-08,
+        1.106760859489441
+      ],
+      "tail": [
+        -1.013697862625122,
+        -1.0837261044116531e-07,
+        1.106760859489441
+      ],
+      "parent": "root"
+    }
+  },
+  "meshes": [
+    {
+      "name": "RENDER_ONLY_StudioFloor",
+      "vertices": 4,
+      "materials": [
+        "RENDER ONLY Studio Floor"
+      ],
+      "groups": [],
+      "location": [
+        0.0,
+        0.0,
+        -0.02500000037252903
+      ],
+      "dimensions": [
+        12.0,
+        12.0,
+        0.0
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Head",
+      "vertices": 74,
+      "materials": [
+        "Artea Statue Warm Cream Fur"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        -0.004999999888241291,
+        1.5099999904632568
+      ],
+      "dimensions": [
+        0.8995616436004639,
+        0.6824495196342468,
+        0.8599132299423218
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CheekUpper_L",
+      "vertices": 32,
+      "materials": [
+        "Artea Statue Warm Cream Fur"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.134261816740036,
+        0.17499998211860657,
+        0.12069821357727051
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CheekLower_L",
+      "vertices": 24,
+      "materials": [
+        "Artea Statue Ivory Muzzle"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.1048615574836731,
+        0.12999999523162842,
+        0.0699930191040039
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CheekUpper_R",
+      "vertices": 32,
+      "materials": [
+        "Artea Statue Warm Cream Fur"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.13639280200004578,
+        0.17499998211860657,
+        0.11927759647369385
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CheekLower_R",
+      "vertices": 24,
+      "materials": [
+        "Artea Statue Ivory Muzzle"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.10571393370628357,
+        0.12999999523162842,
+        0.0699930191040039
+      ],
+      "hidden": false
+    },
+    {
+      "name": "ForeheadMark",
+      "vertices": 7,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.1399858593940735,
+        0.1159999817609787,
+        0.14098036289215088
+      ],
+      "hidden": false
+    },
+    {
+      "name": "RearHairLower",
+      "vertices": 108,
+      "materials": [
+        "Artea Statue Warm Cream Fur"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.7808169722557068,
+        0.1684018224477768,
+        0.42833220958709717
+      ],
+      "hidden": false
+    },
+    {
+      "name": "RearHairMiddle",
+      "vertices": 108,
+      "materials": [
+        "Artea Statue Warm Cream Fur"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.6904088258743286,
+        0.19926290214061737,
+        0.3185245990753174
+      ],
+      "hidden": false
+    },
+    {
+      "name": "RearHairUpper",
+      "vertices": 100,
+      "materials": [
+        "Artea Statue Warm Cream Fur"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.5503039956092834,
+        0.26108303666114807,
+        0.20451688766479492
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EarOuter_L",
+      "vertices": 90,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.2866341471672058,
+        0.18568012118339539,
+        0.5300217866897583
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EarInner_L",
+      "vertices": 54,
+      "materials": [
+        "Artea Milo Soft Rose Inner Ear"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.2292260229587555,
+        0.07581905275583267,
+        0.27092885971069336
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EarInnerFold_L",
+      "vertices": 42,
+      "materials": [
+        "Artea Statue Warm Cream Fur"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.08363381028175354,
+        0.04933742433786392,
+        0.18846440315246582
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EarOuter_R",
+      "vertices": 90,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.29089152812957764,
+        0.18568012118339539,
+        0.5271161794662476
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EarInner_R",
+      "vertices": 54,
+      "materials": [
+        "Artea Milo Soft Rose Inner Ear"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.23204609751701355,
+        0.07581905275583267,
+        0.268682599067688
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EarInnerFold_R",
+      "vertices": 42,
+      "materials": [
+        "Artea Statue Warm Cream Fur"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.0785001814365387,
+        0.04933742433786392,
+        0.1901845932006836
+      ],
+      "hidden": false
+    },
+    {
+      "name": "FaceMask_L",
+      "vertices": 29,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.4099585711956024,
+        0.022000044584274292,
+        0.4699525833129883
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EyeWhite_L",
+      "vertices": 25,
+      "materials": [
+        "Artea Statue Warm Eye White"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.20397938787937164,
+        0.0350000262260437,
+        0.2359762191772461
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Pupil_L",
+      "vertices": 362,
+      "materials": [
+        "Artea Milo Purple Pupil"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        -0.1599999964237213,
+        -0.3889999985694885,
+        1.5
+      ],
+      "dimensions": [
+        0.10398945212364197,
+        0.022000014781951904,
+        0.1039896011352539
+      ],
+      "hidden": false
+    },
+    {
+      "name": "IrisInner_L",
+      "vertices": 222,
+      "materials": [
+        "Artea Milo Deep Purple Iris"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        -0.1599999964237213,
+        -0.4020000100135803,
+        1.496000051498413
+      ],
+      "dimensions": [
+        0.04999494552612305,
+        0.013999998569488525,
+        0.05799424648284912
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EyeCatchlight_L",
+      "vertices": 86,
+      "materials": [
+        "Artea Milo Eye Catchlight"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        -0.14900000393390656,
+        -0.4099999964237213,
+        1.5160000324249268
+      ],
+      "dimensions": [
+        0.017998188734054565,
+        0.00700002908706665,
+        0.021997809410095215
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EyelidRelaxed_L",
+      "vertices": 76,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.19533558189868927,
+        0.045194149017333984,
+        0.06672012805938721
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EyelidHalf_L",
+      "vertices": 76,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.1958826333284378,
+        0.049686700105667114,
+        0.1346980333328247
+      ],
+      "hidden": true
+    },
+    {
+      "name": "EyelidClosed_L",
+      "vertices": 84,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.19587202370166779,
+        0.04189792275428772,
+        0.22941327095031738
+      ],
+      "hidden": true
+    },
+    {
+      "name": "GlassesRing_L",
+      "vertices": 96,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        -0.1599999964237213,
+        -0.43799999356269836,
+        1.5099999904632568
+      ],
+      "dimensions": [
+        0.29796987771987915,
+        0.2979696989059448,
+        0.020784705877304077
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GlassesTemple_L",
+      "vertices": 66,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.14532843232154846,
+        0.4565964341163635,
+        0.0949862003326416
+      ],
+      "hidden": false
+    },
+    {
+      "name": "BrowFrame_L",
+      "vertices": 76,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.2338021695613861,
+        0.0433136522769928,
+        0.0787578821182251
+      ],
+      "hidden": false
+    },
+    {
+      "name": "FaceMask_R",
+      "vertices": 29,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.4099586009979248,
+        0.022000044584274292,
+        0.4699525833129883
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EyeWhite_R",
+      "vertices": 25,
+      "materials": [
+        "Artea Statue Warm Eye White"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.20397937297821045,
+        0.0350000262260437,
+        0.2359762191772461
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Pupil_R",
+      "vertices": 362,
+      "materials": [
+        "Artea Milo Purple Pupil"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.1599999964237213,
+        -0.3889999985694885,
+        1.5
+      ],
+      "dimensions": [
+        0.10398945212364197,
+        0.022000014781951904,
+        0.1039896011352539
+      ],
+      "hidden": false
+    },
+    {
+      "name": "IrisInner_R",
+      "vertices": 222,
+      "materials": [
+        "Artea Milo Deep Purple Iris"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.1599999964237213,
+        -0.4020000100135803,
+        1.496000051498413
+      ],
+      "dimensions": [
+        0.049994975328445435,
+        0.013999998569488525,
+        0.05799424648284912
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EyeCatchlight_R",
+      "vertices": 86,
+      "materials": [
+        "Artea Milo Eye Catchlight"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.14900000393390656,
+        -0.4099999964237213,
+        1.5160000324249268
+      ],
+      "dimensions": [
+        0.017998188734054565,
+        0.00700002908706665,
+        0.021997809410095215
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EyelidRelaxed_R",
+      "vertices": 76,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.19533558189868927,
+        0.045194149017333984,
+        0.06672012805938721
+      ],
+      "hidden": false
+    },
+    {
+      "name": "EyelidHalf_R",
+      "vertices": 76,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.1958826631307602,
+        0.049686700105667114,
+        0.1346980333328247
+      ],
+      "hidden": true
+    },
+    {
+      "name": "EyelidClosed_R",
+      "vertices": 84,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.19587203860282898,
+        0.04189792275428772,
+        0.22941327095031738
+      ],
+      "hidden": true
+    },
+    {
+      "name": "GlassesRing_R",
+      "vertices": 96,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.1599999964237213,
+        -0.43799999356269836,
+        1.5099999904632568
+      ],
+      "dimensions": [
+        0.29796984791755676,
+        0.2979696989059448,
+        0.020784705877304077
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GlassesTemple_R",
+      "vertices": 66,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.14775636792182922,
+        0.4565964341163635,
+        0.09101724624633789
+      ],
+      "hidden": false
+    },
+    {
+      "name": "BrowFrame_R",
+      "vertices": 76,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.23357626795768738,
+        0.0433136522769928,
+        0.08139407634735107
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GlassesBridge",
+      "vertices": 42,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.07836351543664932,
+        0.022961527109146118,
+        0.03399848937988281
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Muzzle_L",
+      "vertices": 74,
+      "materials": [
+        "Artea Statue Ivory Muzzle"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        -0.07500000298023224,
+        -0.37400001287460327,
+        1.350000023841858
+      ],
+      "dimensions": [
+        0.2637602686882019,
+        0.12869048118591309,
+        0.17598211765289307
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MoustachePad_L",
+      "vertices": 70,
+      "materials": [
+        "Artea Statue Ivory Muzzle"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.2909257709980011,
+        0.09799998998641968,
+        0.16084837913513184
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Muzzle_R",
+      "vertices": 74,
+      "materials": [
+        "Artea Statue Ivory Muzzle"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.07500000298023224,
+        -0.37400001287460327,
+        1.350000023841858
+      ],
+      "dimensions": [
+        0.2637602984905243,
+        0.12869048118591309,
+        0.17598211765289307
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MoustachePad_R",
+      "vertices": 70,
+      "materials": [
+        "Artea Statue Ivory Muzzle"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.2922043800354004,
+        0.09799998998641968,
+        0.15587615966796875
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Nose",
+      "vertices": 98,
+      "materials": [
+        "Artea Statue Rose Nose"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.12116716057062149,
+        0.03400003910064697,
+        0.07571995258331299
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Nostril_L",
+      "vertices": 86,
+      "materials": [
+        "Artea Milo Purple Pupil"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        -0.02800000086426735,
+        -0.5260000228881836,
+        1.3799999952316284
+      ],
+      "dimensions": [
+        0.011998787522315979,
+        0.006000041961669922,
+        0.008999228477478027
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Nostril_R",
+      "vertices": 86,
+      "materials": [
+        "Artea Milo Purple Pupil"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.02800000086426735,
+        -0.5260000228881836,
+        1.3799999952316284
+      ],
+      "dimensions": [
+        0.011998787522315979,
+        0.006000041961669922,
+        0.008999228477478027
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MouthSocket",
+      "vertices": 200,
+      "materials": [
+        "Artea Statue Ivory Muzzle"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        -0.45500001311302185,
+        1.284999966621399
+      ],
+      "dimensions": [
+        0.19694165885448456,
+        0.03600001335144043,
+        0.10998868942260742
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Mouth",
+      "vertices": 70,
+      "materials": [
+        "Artea Statue Rose Nose"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.08663129806518555,
+        0.01597389578819275,
+        0.07490062713623047
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MouthOpenSmall",
+      "vertices": 84,
+      "materials": [
+        "Artea Milo Warm Mouth Shadow"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.07407165318727493,
+        0.013999998569488525,
+        0.062380313873291016
+      ],
+      "hidden": true
+    },
+    {
+      "name": "MouthOpenWide",
+      "vertices": 84,
+      "materials": [
+        "Artea Milo Warm Mouth Shadow"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.10294772684574127,
+        0.014999985694885254,
+        0.1070026159286499
+      ],
+      "hidden": true
+    },
+    {
+      "name": "TongueSmall",
+      "vertices": 70,
+      "materials": [
+        "Artea Milo Gentle Rose Tongue"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.02502734400331974,
+        0.0040000081062316895,
+        0.010846972465515137
+      ],
+      "hidden": true
+    },
+    {
+      "name": "TongueWide",
+      "vertices": 62,
+      "materials": [
+        "Artea Milo Gentle Rose Tongue"
+      ],
+      "groups": [
+        "head"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.03502632677555084,
+        0.0040000081062316895,
+        0.016225814819335938
+      ],
+      "hidden": true
+    },
+    {
+      "name": "CoatBody",
+      "vertices": 220,
+      "materials": [
+        "Target Mayor Blue"
+      ],
+      "groups": [
+        "chest",
+        "upperarm.r",
+        "upperarm.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.834815263748169,
+        0.5700000524520874,
+        0.9366265535354614
+      ],
+      "hidden": false
+    },
+    {
+      "name": "FrontCoatPanel_L",
+      "vertices": 16,
+      "materials": [
+        "Target Mayor Tailored Panel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.35614705085754395,
+        0.23774458467960358,
+        0.7003568410873413
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CoatLapel_L",
+      "vertices": 48,
+      "materials": [
+        "Target Mayor Lapel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.099458247423172,
+        0.07600632309913635,
+        0.26898324489593506
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldLapelEdge_L",
+      "vertices": 24,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.03248429298400879,
+        0.013134941458702087,
+        0.23574590682983398
+      ],
+      "hidden": false
+    },
+    {
+      "name": "TealCoatLapelPiping_L",
+      "vertices": 30,
+      "materials": [
+        "Target Mint Piping"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.07492280006408691,
+        0.06283585727214813,
+        0.24843645095825195
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldCoatFrontEdge_L",
+      "vertices": 66,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.08916455507278442,
+        0.12284652888774872,
+        0.7959208488464355
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CoatDart_L",
+      "vertices": 24,
+      "materials": [
+        "Target Dark Navy Seam"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.018558979034423828,
+        0.012856453657150269,
+        0.05642884969711304
+      ],
+      "hidden": false
+    },
+    {
+      "name": "PocketFlap_L",
+      "vertices": 56,
+      "materials": [
+        "Target Dark Navy Pocket"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.1542958915233612,
+        0.10115493834018707,
+        0.06347939372062683
+      ],
+      "hidden": false
+    },
+    {
+      "name": "FrontCoatPanel_R",
+      "vertices": 16,
+      "materials": [
+        "Target Mayor Tailored Panel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.3548380136489868,
+        0.23774458467960358,
+        0.6996238231658936
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CoatLapel_R",
+      "vertices": 48,
+      "materials": [
+        "Target Mayor Lapel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.09961539506912231,
+        0.07600632309913635,
+        0.2682216167449951
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldLapelEdge_R",
+      "vertices": 24,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.030031919479370117,
+        0.013134941458702087,
+        0.23588693141937256
+      ],
+      "hidden": false
+    },
+    {
+      "name": "TealCoatLapelPiping_R",
+      "vertices": 30,
+      "materials": [
+        "Target Mint Piping"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.07511287927627563,
+        0.06283585727214813,
+        0.24776017665863037
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldCoatFrontEdge_R",
+      "vertices": 66,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.08257347345352173,
+        0.12284652888774872,
+        0.7965394258499146
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CoatDart_R",
+      "vertices": 24,
+      "materials": [
+        "Target Dark Navy Seam"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.019120514392852783,
+        0.012856453657150269,
+        0.05633789300918579
+      ],
+      "hidden": false
+    },
+    {
+      "name": "PocketFlap_R",
+      "vertices": 56,
+      "materials": [
+        "Target Dark Navy Pocket"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.15443196892738342,
+        0.10115493834018707,
+        0.06199571490287781
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Waistcoat",
+      "vertices": 20,
+      "materials": [
+        "Target Lavender"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.46208804845809937,
+        0.07059463858604431,
+        0.48619765043258667
+      ],
+      "hidden": false
+    },
+    {
+      "name": "WaistcoatFacet_L",
+      "vertices": 8,
+      "materials": [
+        "Target Lavender Highlight"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.20499715209007263,
+        0.047003135085105896,
+        0.10528647899627686
+      ],
+      "hidden": false
+    },
+    {
+      "name": "LapelPiping_L",
+      "vertices": 30,
+      "materials": [
+        "Target Mint Piping"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.11662571132183075,
+        0.02634337544441223,
+        0.1213178038597107
+      ],
+      "hidden": false
+    },
+    {
+      "name": "WaistcoatFacet_R",
+      "vertices": 8,
+      "materials": [
+        "Target Lavender Highlight"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.20499718189239502,
+        0.047003135085105896,
+        0.10578382015228271
+      ],
+      "hidden": false
+    },
+    {
+      "name": "LapelPiping_R",
+      "vertices": 30,
+      "materials": [
+        "Target Mint Piping"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.11614016443490982,
+        0.026343360543251038,
+        0.1220824122428894
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Collar_L",
+      "vertices": 42,
+      "materials": [
+        "Target Mint Piping"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.16808940470218658,
+        0.046898797154426575,
+        0.12409579753875732
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Collar_R",
+      "vertices": 42,
+      "materials": [
+        "Target Mint Piping"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.16850420832633972,
+        0.046898797154426575,
+        0.1232767105102539
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Tie",
+      "vertices": 10,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.16999764740467072,
+        0.027760714292526245,
+        0.27036285400390625
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Medallion",
+      "vertices": 72,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        -0.2878749966621399,
+        1.034999966621399
+      ],
+      "dimensions": [
+        0.09599867463111877,
+        0.09599852561950684,
+        0.02400001883506775
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Button_1_L",
+      "vertices": 140,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        -0.13500000536441803,
+        -0.2628462612628937,
+        0.7350000143051147
+      ],
+      "dimensions": [
+        0.07232895493507385,
+        0.07346469163894653,
+        0.019999980926513672
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Button_1_R",
+      "vertices": 140,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.13500000536441803,
+        -0.2628462612628937,
+        0.7350000143051147
+      ],
+      "dimensions": [
+        0.07232895493507385,
+        0.07346469163894653,
+        0.019999980926513672
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Button_2_L",
+      "vertices": 140,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        -0.13500000536441803,
+        -0.2571771740913391,
+        0.875
+      ],
+      "dimensions": [
+        0.07232894003391266,
+        0.07346463203430176,
+        0.02000001072883606
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Button_2_R",
+      "vertices": 140,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.13500000536441803,
+        -0.2571771740913391,
+        0.875
+      ],
+      "dimensions": [
+        0.07232894003391266,
+        0.07346463203430176,
+        0.02000001072883606
+      ],
+      "hidden": false
+    },
+    {
+      "name": "WaistcoatSeam",
+      "vertices": 24,
+      "materials": [
+        "Target Lavender Seam"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.009596861898899078,
+        0.014458179473876953,
+        0.30518782138824463
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldWaistcoatEdge_L",
+      "vertices": 30,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.22947436571121216,
+        0.06997674703598022,
+        0.4549431800842285
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldPocketTrim_L",
+      "vertices": 8,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.15502408146858215,
+        0.10114970803260803,
+        0.029811203479766846
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldWaistcoatEdge_R",
+      "vertices": 30,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.23291411995887756,
+        0.06997674703598022,
+        0.4526035785675049
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldPocketTrim_R",
+      "vertices": 8,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.15514972805976868,
+        0.10114970803260803,
+        0.028188049793243408
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldTieClip",
+      "vertices": 56,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        -0.2865416705608368,
+        0.875
+      ],
+      "dimensions": [
+        0.08001983165740967,
+        0.008000016212463379,
+        0.012376785278320312
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MayoralWatchChain",
+      "vertices": 54,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.10369086265563965,
+        0.019017726182937622,
+        0.12387466430664062
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldCoatHem360",
+      "vertices": 48,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.8058074712753296,
+        0.5644094944000244,
+        0.0720447301864624
+      ],
+      "hidden": false
+    },
+    {
+      "name": "FrontTailCenterSeam",
+      "vertices": 24,
+      "materials": [
+        "Target Dark Navy Seam"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.007492167875170708,
+        0.0051961541175842285,
+        0.2850274443626404
+      ],
+      "hidden": false
+    },
+    {
+      "name": "BackWaistBelt",
+      "vertices": 12,
+      "materials": [
+        "Target Mayor Lapel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.36041390895843506,
+        0.03886675834655762,
+        0.08188384771347046
+      ],
+      "hidden": false
+    },
+    {
+      "name": "RearCoatTail_L",
+      "vertices": 16,
+      "materials": [
+        "Target Mayor Tailored Panel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.37638235092163086,
+        0.27094829082489014,
+        0.3257678747177124
+      ],
+      "hidden": false
+    },
+    {
+      "name": "RearCoatTail_R",
+      "vertices": 16,
+      "materials": [
+        "Target Mayor Tailored Panel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.37643468379974365,
+        0.27094829082489014,
+        0.32422322034835815
+      ],
+      "hidden": false
+    },
+    {
+      "name": "SideCoatTail_L",
+      "vertices": 84,
+      "materials": [
+        "Target Mayor Tailored Panel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.013111650943756104,
+        0.2866631746292114,
+        0.5986793637275696
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldSideCoatTailEdge_L",
+      "vertices": 42,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.009073257446289062,
+        0.17231135070323944,
+        0.20992127060890198
+      ],
+      "hidden": false
+    },
+    {
+      "name": "SideCoatTail_R",
+      "vertices": 84,
+      "materials": [
+        "Target Mayor Tailored Panel Blue"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.013111650943756104,
+        0.2866631746292114,
+        0.5986794233322144
+      ],
+      "hidden": false
+    },
+    {
+      "name": "GoldSideCoatTailEdge_R",
+      "vertices": 42,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.009073257446289062,
+        0.17231135070323944,
+        0.2099212408065796
+      ],
+      "hidden": false
+    },
+    {
+      "name": "BackBeltButton_L",
+      "vertices": 140,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        -0.12999999523162842,
+        0.29791659116744995,
+        0.8050000071525574
+      ],
+      "dimensions": [
+        0.047581739723682404,
+        0.048225343227386475,
+        0.013999998569488525
+      ],
+      "hidden": false
+    },
+    {
+      "name": "BackBeltButton_R",
+      "vertices": 140,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.12999999523162842,
+        0.29791659116744995,
+        0.8050000071525574
+      ],
+      "dimensions": [
+        0.047581762075424194,
+        0.048225343227386475,
+        0.013999998569488525
+      ],
+      "hidden": false
+    },
+    {
+      "name": "BackVentEdge_L",
+      "vertices": 30,
+      "materials": [
+        "Target Dark Navy Seam"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.0468650758266449,
+        0.011991053819656372,
+        0.3005428612232208
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CoatSideSeam_L",
+      "vertices": 30,
+      "materials": [
+        "Target Dark Navy Seam"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.016449153423309326,
+        0.2350545972585678,
+        0.616891086101532
+      ],
+      "hidden": false
+    },
+    {
+      "name": "BackVentEdge_R",
+      "vertices": 30,
+      "materials": [
+        "Target Dark Navy Seam"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.04373033344745636,
+        0.011991053819656372,
+        0.30090877413749695
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CoatSideSeam_R",
+      "vertices": 30,
+      "materials": [
+        "Target Dark Navy Seam"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.016736000776290894,
+        0.2350545972585678,
+        0.6169028282165527
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Sleeve_L",
+      "vertices": 256,
+      "materials": [
+        "Target Mayor Blue"
+      ],
+      "groups": [
+        "chest",
+        "upperarm.r",
+        "lowerarm.r",
+        "wrist.r"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.4734020233154297,
+        0.24916599690914154,
+        0.49586188793182373
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Cuff_L",
+      "vertices": 48,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "wrist.r"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.19541192054748535,
+        0.2241496443748474,
+        0.06636631488800049
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CuffAccent_L",
+      "vertices": 48,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "wrist.r"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.19590336084365845,
+        0.22954989969730377,
+        0.06122845411300659
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Paw_L",
+      "vertices": 443,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "hand.r"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.18348604440689087,
+        0.24332386255264282,
+        0.1683109998703003
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Sleeve_R",
+      "vertices": 256,
+      "materials": [
+        "Target Mayor Blue"
+      ],
+      "groups": [
+        "chest",
+        "upperarm.l",
+        "lowerarm.l",
+        "wrist.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.4145786464214325,
+        0.22019997239112854,
+        0.5127593278884888
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Cuff_R",
+      "vertices": 48,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "wrist.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.19833362102508545,
+        0.22399994730949402,
+        0.04282563924789429
+      ],
+      "hidden": false
+    },
+    {
+      "name": "CuffAccent_R",
+      "vertices": 48,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "wrist.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.19949764013290405,
+        0.22999995946884155,
+        0.03715407848358154
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Paw_R",
+      "vertices": 451,
+      "materials": [
+        "Artea Statue Caramel Fur Marking"
+      ],
+      "groups": [
+        "hand.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.1702284812927246,
+        0.24337336421012878,
+        0.17040425539016724
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Trouser_L",
+      "vertices": 48,
+      "materials": [
+        "Target Trousers"
+      ],
+      "groups": [
+        "lowerleg.r"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.2900000214576721,
+        0.30488720536231995,
+        0.26852595806121826
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Boot_L",
+      "vertices": 74,
+      "materials": [
+        "Target Shoes"
+      ],
+      "groups": [
+        "foot.r"
+      ],
+      "location": [
+        -0.17000000178813934,
+        -0.0949999988079071,
+        0.10499999672174454
+      ],
+      "dimensions": [
+        0.3314754366874695,
+        0.34813252091407776,
+        0.32525700330734253
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Sole_L",
+      "vertices": 74,
+      "materials": [
+        "Target Trousers"
+      ],
+      "groups": [
+        "foot.r"
+      ],
+      "location": [
+        -0.17000000178813934,
+        -0.09000000357627869,
+        0.057999998331069946
+      ],
+      "dimensions": [
+        0.3275757431983948,
+        0.3064170777797699,
+        0.28350892663002014
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Trouser_R",
+      "vertices": 48,
+      "materials": [
+        "Target Trousers"
+      ],
+      "groups": [
+        "lowerleg.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.2900000214576721,
+        0.2616586983203888,
+        0.29560503363609314
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Boot_R",
+      "vertices": 74,
+      "materials": [
+        "Target Shoes"
+      ],
+      "groups": [
+        "foot.l"
+      ],
+      "location": [
+        0.17000000178813934,
+        -0.0949999988079071,
+        0.10499999672174454
+      ],
+      "dimensions": [
+        0.3314754366874695,
+        0.398807168006897,
+        0.267769992351532
+      ],
+      "hidden": false
+    },
+    {
+      "name": "Sole_R",
+      "vertices": 74,
+      "materials": [
+        "Target Trousers"
+      ],
+      "groups": [
+        "foot.l"
+      ],
+      "location": [
+        0.17000000178813934,
+        -0.09000000357627869,
+        0.057999998331069946
+      ],
+      "dimensions": [
+        0.3275757431983948,
+        0.35856595635414124,
+        0.21176302433013916
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MayorCaneShaft",
+      "vertices": 24,
+      "materials": [
+        "Mayor Cane Dark Wood"
+      ],
+      "groups": [
+        "hand.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.09395045042037964,
+        0.048000045120716095,
+        0.45016393065452576
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MayorCaneLowerFerrule",
+      "vertices": 24,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "hand.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.05585736036300659,
+        0.05600003898143768,
+        0.09408143907785416
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MayorCaneLowerCollar",
+      "vertices": 96,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "hand.l"
+      ],
+      "location": [
+        0.6600000262260437,
+        -0.019999999552965164,
+        0.14499999582767487
+      ],
+      "dimensions": [
+        0.08199888467788696,
+        0.08200003206729889,
+        0.014243602752685547
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MayorCaneUpperCollar",
+      "vertices": 96,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "hand.l"
+      ],
+      "location": [
+        0.6140000224113464,
+        -0.019999999552965164,
+        0.4779999852180481
+      ],
+      "dimensions": [
+        0.0859987735748291,
+        0.08600002527236938,
+        0.01599133014678955
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MayorCaneHook",
+      "vertices": 42,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "hand.l"
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "dimensions": [
+        0.06661653518676758,
+        0.030000019818544388,
+        0.03945380449295044
+      ],
+      "hidden": false
+    },
+    {
+      "name": "MayorCaneGroundTip",
+      "vertices": 74,
+      "materials": [
+        "Target Gold"
+      ],
+      "groups": [
+        "hand.l"
+      ],
+      "location": [
+        0.6679999828338623,
+        -0.019999999552965164,
+        0.04500000178813934
+      ],
+      "dimensions": [
+        0.05469310283660889,
+        0.054595980793237686,
+        0.08399868756532669
+      ],
+      "hidden": false
+    }
+  ],
+  "actions": [
+    {
+      "name": "1H_Melee_Attack_Chop",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "1H_Melee_Attack_Slice_Diagonal",
+      "range": [
+        0.0,
+        24.0
+      ]
+    },
+    {
+      "name": "1H_Melee_Attack_Slice_Horizontal",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "1H_Melee_Attack_Stab",
+      "range": [
+        0.0,
+        38.400001525878906
+      ]
+    },
+    {
+      "name": "1H_Ranged_Aiming",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "1H_Ranged_Reload",
+      "range": [
+        0.0,
+        28.0
+      ]
+    },
+    {
+      "name": "1H_Ranged_Shoot",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "1H_Ranged_Shooting",
+      "range": [
+        0.0,
+        38.400001525878906
+      ]
+    },
+    {
+      "name": "2H_Melee_Attack_Chop",
+      "range": [
+        0.0,
+        39.20000076293945
+      ]
+    },
+    {
+      "name": "2H_Melee_Attack_Slice",
+      "range": [
+        0.0,
+        26.400001525878906
+      ]
+    },
+    {
+      "name": "2H_Melee_Attack_Spin",
+      "range": [
+        0.0,
+        57.60000228881836
+      ]
+    },
+    {
+      "name": "2H_Melee_Attack_Spinning",
+      "range": [
+        0.0,
+        16.0
+      ]
+    },
+    {
+      "name": "2H_Melee_Attack_Stab",
+      "range": [
+        0.0,
+        38.400001525878906
+      ]
+    },
+    {
+      "name": "2H_Melee_Idle",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "2H_Ranged_Aiming",
+      "range": [
+        0.0,
+        38.400001525878906
+      ]
+    },
+    {
+      "name": "2H_Ranged_Reload",
+      "range": [
+        0.0,
+        38.400001525878906
+      ]
+    },
+    {
+      "name": "2H_Ranged_Shoot",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "2H_Ranged_Shooting",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Block",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Block_Attack",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Block_Hit",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Blocking",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Cheer",
+      "range": [
+        0.0,
+        40.0
+      ]
+    },
+    {
+      "name": "Death_A",
+      "range": [
+        0.0,
+        19.200000762939453
+      ]
+    },
+    {
+      "name": "Death_A_Pose",
+      "range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Death_B",
+      "range": [
+        0.0,
+        63.20000457763672
+      ]
+    },
+    {
+      "name": "Death_B_Pose",
+      "range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Dodge_Backward",
+      "range": [
+        0.0,
+        9.600000381469727
+      ]
+    },
+    {
+      "name": "Dodge_Forward",
+      "range": [
+        0.0,
+        9.600000381469727
+      ]
+    },
+    {
+      "name": "Dodge_Left",
+      "range": [
+        0.0,
+        9.600000381469727
+      ]
+    },
+    {
+      "name": "Dodge_Right",
+      "range": [
+        0.0,
+        9.600000381469727
+      ]
+    },
+    {
+      "name": "Dualwield_Melee_Attack_Chop",
+      "range": [
+        0.0,
+        30.399999618530273
+      ]
+    },
+    {
+      "name": "Dualwield_Melee_Attack_Slice",
+      "range": [
+        0.0,
+        28.0
+      ]
+    },
+    {
+      "name": "Dualwield_Melee_Attack_Stab",
+      "range": [
+        0.0,
+        38.400001525878906
+      ]
+    },
+    {
+      "name": "Hit_A",
+      "range": [
+        0.0,
+        16.0
+      ]
+    },
+    {
+      "name": "Hit_B",
+      "range": [
+        0.0,
+        20.799999237060547
+      ]
+    },
+    {
+      "name": "Idle",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Interact",
+      "range": [
+        0.0,
+        31.19999885559082
+      ]
+    },
+    {
+      "name": "Jump_Full_Long",
+      "range": [
+        0.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Jump_Full_Short",
+      "range": [
+        0.0,
+        28.0
+      ]
+    },
+    {
+      "name": "Jump_Idle",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Jump_Land",
+      "range": [
+        0.0,
+        16.0
+      ]
+    },
+    {
+      "name": "Jump_Start",
+      "range": [
+        0.0,
+        14.40000057220459
+      ]
+    },
+    {
+      "name": "Lie_Down",
+      "range": [
+        0.0,
+        72.0
+      ]
+    },
+    {
+      "name": "Lie_Idle",
+      "range": [
+        0.0,
+        64.0
+      ]
+    },
+    {
+      "name": "Lie_Pose",
+      "range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Lie_StandUp",
+      "range": [
+        0.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Milo_Walking",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "PickUp",
+      "range": [
+        0.0,
+        31.19999885559082
+      ]
+    },
+    {
+      "name": "Running_A",
+      "range": [
+        0.0,
+        19.200000762939453
+      ]
+    },
+    {
+      "name": "Running_B",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Running_Strafe_Left",
+      "range": [
+        0.0,
+        19.200000762939453
+      ]
+    },
+    {
+      "name": "Running_Strafe_Right",
+      "range": [
+        0.0,
+        19.200000762939453
+      ]
+    },
+    {
+      "name": "Sit_Chair_Down",
+      "range": [
+        0.0,
+        19.200000762939453
+      ]
+    },
+    {
+      "name": "Sit_Chair_Idle",
+      "range": [
+        0.0,
+        86.39999389648438
+      ]
+    },
+    {
+      "name": "Sit_Chair_Pose",
+      "range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Sit_Chair_StandUp",
+      "range": [
+        0.0,
+        19.200000762939453
+      ]
+    },
+    {
+      "name": "Sit_Floor_Down",
+      "range": [
+        0.0,
+        24.0
+      ]
+    },
+    {
+      "name": "Sit_Floor_Idle",
+      "range": [
+        0.0,
+        96.0
+      ]
+    },
+    {
+      "name": "Sit_Floor_Pose",
+      "range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Sit_Floor_StandUp",
+      "range": [
+        0.0,
+        27.200000762939453
+      ]
+    },
+    {
+      "name": "Spellcast_Long",
+      "range": [
+        0.0,
+        60.79999923706055
+      ]
+    },
+    {
+      "name": "Spellcast_Raise",
+      "range": [
+        0.0,
+        50.39999771118164
+      ]
+    },
+    {
+      "name": "Spellcast_Shoot",
+      "range": [
+        0.0,
+        22.399999618530273
+      ]
+    },
+    {
+      "name": "Spellcasting",
+      "range": [
+        0.0,
+        16.0
+      ]
+    },
+    {
+      "name": "T-Pose",
+      "range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Throw",
+      "range": [
+        0.0,
+        32.79999923706055
+      ]
+    },
+    {
+      "name": "Unarmed_Idle",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Unarmed_Melee_Attack_Kick",
+      "range": [
+        0.0,
+        22.399999618530273
+      ]
+    },
+    {
+      "name": "Unarmed_Melee_Attack_Punch_A",
+      "range": [
+        0.0,
+        35.20000076293945
+      ]
+    },
+    {
+      "name": "Unarmed_Melee_Attack_Punch_B",
+      "range": [
+        0.0,
+        40.0
+      ]
+    },
+    {
+      "name": "Unarmed_Pose",
+      "range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Use_Item",
+      "range": [
+        0.0,
+        38.400001525878906
+      ]
+    },
+    {
+      "name": "Walking_A",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Walking_B",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Walking_Backwards",
+      "range": [
+        0.0,
+        25.60000228881836
+      ]
+    },
+    {
+      "name": "Walking_C",
+      "range": [
+        0.0,
+        38.400001525878906
+      ]
+    }
+  ]
+}

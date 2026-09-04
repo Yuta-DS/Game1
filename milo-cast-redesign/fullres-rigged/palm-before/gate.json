@@ -1,0 +1,23 @@
+{
+  "passed": false,
+  "asset": "milo_fullres.glb",
+  "sha256": "ee3978b3652fe7b92bb2d2c9fc4a483b760a47dec1b010b34d00d84034b42470",
+  "checks": [
+    {"name": "self_contained_glb", "passed": true},
+    {"name": "normalized_skin_weights", "passed": true},
+    {"name": "finite_vertices_all_486_authored_frames", "passed": true},
+    {"name": "six_named_baked_clips", "passed": true},
+    {"name": "loop_endpoint_vertex_match", "passed": true, "max_error": 0.0},
+    {"name": "no_boot_ground_penetration", "passed": true, "minimum_z": 0.01199987},
+    {"name": "maximum_edge_stretch_under_3x_all_clips", "passed": true, "clip": "Greet", "observed": 2.74158},
+    {"name": "maximum_hand_edge_stretch_under_3x_all_clips", "passed": true, "clip": "Cane_Hold", "observed": 2.2734},
+    {"name": "single_connected_manifold_mesh_per_hand", "passed": true},
+    {"name": "sampled_hand_cane_surface_intersections", "passed": true, "frames": [0, 48, 96], "intersecting_triangle_pairs": 0},
+    {"name": "non_hand_geometry_preserved", "passed": true, "meshes": 100, "tolerance_m": 0.0000001},
+    {"name": "independent_hand_improvement_review", "passed": true, "verdict": "substantial visual improvement; cane grip remains less convincing than the greeting hand"},
+    {"name": "godot_compatibility_import_and_clip_motion", "passed": true},
+    {"name": "local_godot_preview_render", "passed": true},
+    {"name": "independent_faithful_reference_likeness", "passed": false, "verdict": "moderate-likeness interpretation, not a close match"}
+  ],
+  "not_claimed": ["full AnyCreature quality-gate pass", "collision-free deformation", "production LOD", "live game integration", "Blender MCP/plugin execution", "production deployment"]
+}

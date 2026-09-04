@@ -53,6 +53,7 @@ var _land_reaction_remaining := 0.0
 var _hit_reaction_remaining := 0.0
 var _visual_base_position := Vector3.ZERO
 var _visual_base_scale := Vector3.ONE
+var _train_seated_pose := false
 
 
 func _ready() -> void:
@@ -87,6 +88,16 @@ func set_input_enabled(v: bool) -> void:
 		_jump_buffer_remaining = 0.0
 		velocity.x = 0.0
 		velocity.z = 0.0
+
+
+func set_train_seated_pose(enabled: bool) -> void:
+	_train_seated_pose = enabled
+	velocity = Vector3.ZERO
+	_update_character_animation(0.0, false)
+
+
+func is_train_seated_pose() -> bool:
+	return _train_seated_pose
 
 
 # The active camera can be swapped at runtime (the gallery tweens between a
@@ -290,10 +301,23 @@ func get_available_character_animations() -> PackedStringArray:
 
 func _update_character_animation(delta: float, moving: bool) -> void:
 	if fox_visuals == null:
+		_animation_state = "train_seated" if _train_seated_pose else _animation_state
 		return
 	fox_visuals.position = _visual_base_position
 	fox_visuals.scale = _visual_base_scale
+	fox_visuals.rotation.x = 0.0
 	fox_visuals.rotation.z = 0.0
+	if _train_seated_pose:
+		# The fox asset has no authored sitting clip. Keep its calm Idle motion,
+		# lower the hips onto the cushion and compress the leg silhouette into a
+		# stable seated driving posture instead of leaving it standing in the cab.
+		_animation_state = "train_seated"
+		_play_character_clip(["Idle"], 0.72)
+		fox_visuals.position += Vector3(0.0, -0.72, 0.10)
+		fox_visuals.scale = _visual_base_scale * Vector3(1.02, 0.72, 1.02)
+		fox_visuals.rotation.x = -0.08
+		fox_visuals.rotation.y = PI
+		return
 	if current_health <= 0.0:
 		_animation_state = "defeated"
 		_play_character_clip(["Death", "Defeat", "Idle"], 0.55)

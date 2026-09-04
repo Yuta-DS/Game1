@@ -27,12 +27,18 @@ if "${godot_bin}" --version | grep -qi mono; then
 fi
 
 mkdir -p "${output_dir}"
-find "${output_dir}" -maxdepth 1 -type f -name 'index.pck.part[0-9][0-9]' -delete
+# Part indices become three digits once the pack exceeds 800 MiB. Remove every
+# generated numeric part from the prior export so stale part100+ files cannot
+# fill the disk or leak into the next deployment.
+find "${output_dir}" -maxdepth 1 -type f -name 'index.pck.part*' -delete
 rm -f "${output_dir}/index.pck"
 rm -f "${output_dir}/index.pck.parts.json"
 
 "${godot_bin}" --headless --path "${project_dir}" \
 	--export-release Web "${output_dir}/index.html"
+
+python3 "${script_dir}/../patch_web_release_loader.py" \
+	"${output_dir}/index.html"
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
 

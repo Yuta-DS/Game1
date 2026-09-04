@@ -1,0 +1,89 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "self_contained",
+      "passed": true
+    },
+    {
+      "name": "41_cast_bones",
+      "passed": true
+    },
+    {
+      "name": "geometry_and_normalized_skin_weights",
+      "passed": true,
+      "bad_records": 0,
+      "vertices": 5341,
+      "triangles": 4692
+    },
+    {
+      "name": "cast_scale_triangle_budget",
+      "passed": true
+    },
+    {
+      "name": "expected_clips",
+      "passed": true
+    },
+    {
+      "name": "Idle_tracks",
+      "passed": true,
+      "duration": 3.0
+    },
+    {
+      "name": "Idle_loop",
+      "passed": true,
+      "max_channel_delta": 0.0
+    },
+    {
+      "name": "Walking_A_tracks",
+      "passed": true,
+      "duration": 1.3333333730697632
+    },
+    {
+      "name": "Walking_A_loop",
+      "passed": true,
+      "max_channel_delta": 0.0
+    },
+    {
+      "name": "Guide_tracks",
+      "passed": true,
+      "duration": 3.0
+    },
+    {
+      "name": "Speak_tracks",
+      "passed": true,
+      "duration": 3.0
+    },
+    {
+      "name": "Speak_loop",
+      "passed": true,
+      "max_channel_delta": 0.0
+    }
+  ],
+  "bytes": 537008,
+  "meshes": 6,
+  "material_primitives": 15,
+  "animations": [
+    {
+      "name": "Idle",
+      "duration": 3.0,
+      "channels": 123
+    },
+    {
+      "name": "Walking_A",
+      "duration": 1.3333333730697632,
+      "channels": 123
+    },
+    {
+      "name": "Guide",
+      "duration": 3.0,
+      "channels": 123
+    },
+    {
+      "name": "Speak",
+      "duration": 3.0,
+      "channels": 123
+    }
+  ],
+  "limits": "Structural and loop checks only; not a Godot integration or full AnyCreature style/attack certification."
+}

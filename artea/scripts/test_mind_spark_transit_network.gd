@@ -49,5 +49,5 @@ func _run() -> void:
 	assert(player.global_position.is_equal_approx(expected_global),
 		"portal must deliver the fox to its exact safe island landing")
 	assert(player.velocity == Vector3.ZERO)
-	print("MindSparkTransitNetwork: PASS — 6 islands retain bridge ring and gain 3 reciprocal restored-world shortcuts")
+	print("MindSparkTransitNetwork: PASS — 6 districts retain 3 reciprocal restored-world shortcuts across 3 islands")
 	quit()

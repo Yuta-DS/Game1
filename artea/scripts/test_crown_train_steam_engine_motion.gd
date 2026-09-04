@@ -85,6 +85,9 @@ func _run() -> void:
 	if not bool(railway.call("board_as_driver")):
 		_fail("could not enter driving mode")
 		return
+	# Use one fixed command/update pair per sample; the normal Input poll has no
+	# held key in this direct-call test and must not inject a second zero throttle.
+	railway.set_process(false)
 	var gear_moved := false
 	var rod_moved := false
 	var pressure_moved := false
@@ -93,6 +96,7 @@ func _run() -> void:
 	var halo_inner_moved := false
 	for _frame in 150:
 		railway.call("drive_manual", 1.0, 1.0 / 60.0)
+		railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame
 		gear_moved = gear_moved or not gear.basis.is_equal_approx(gear_basis)
 		rod_moved = rod_moved or not rod.transform.is_equal_approx(rod_transform)

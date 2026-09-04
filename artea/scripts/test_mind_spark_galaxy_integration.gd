@@ -51,5 +51,5 @@ func _run() -> void:
 	assert(not station_binding.visible and not bool(station_binding.get_meta("blocks_story_route")))
 	var remote := floating_world.get_node_or_null("KingdomRegions3000m/MindKingdom3000m/MindSparkWorldOne")
 	assert(remote == null, "no duplicate World One remains in the remote 3 km shelf map")
-	print("MindSparkGalaxyIntegration: PASS — complete six-island World One is gate-mounted outside the district")
+	print("MindSparkGalaxyIntegration: PASS — complete three-island/six-district World One is gate-mounted outside the district")
 	quit()

@@ -763,8 +763,11 @@ func _install_environment_audio() -> void:
 	var scene_name := String(_active_scene.name)
 	if scene_name == "HubWorld":
 		_stop_legacy_hub_ambience()
+		var harbour := _active_scene.get_node_or_null("Port") as Node3D
+		var harbour_audio_position := harbour.global_position + Vector3(0, 5, 0) \
+			if harbour != null else Vector3(145.0, 8.0, 67.0)
 		_add_loop("HarbourWaterAndBirds", "res://assets/audio/Flowing Water and Birds (Hub).ogg",
-			Vector3(145.0, 8.0, 67.0), -15.0, 115.0, 20.0)
+			harbour_audio_position, -15.0, 115.0, 20.0)
 		_add_loop("CastleCourtyardFire", "res://assets/audio/Campfire.ogg",
 			Vector3(-51.0, 76.0, 28.0), -18.0, 62.0, 8.0)
 		_add_recorded_wind("WesternTreeWind", Vector3(-108.0, 38.0, -18.0), 92.0)

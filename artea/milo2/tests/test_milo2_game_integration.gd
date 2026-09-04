@@ -32,8 +32,8 @@ func _initialize() -> void:
 			_expect(milo.has_method("open_chatbot"), "Milo 2 lost chat interaction")
 			_expect(milo.get_node_or_null("Model") != null, "finalized Milo 2 model is missing")
 			var prompt := milo.get_node_or_null("InteractionPrompt") as Label3D
-			_expect(prompt != null and prompt.text == "Press Q to chat with Milo",
-				"Milo 2 does not expose the established Q chat prompt")
+			_expect(prompt != null and prompt.text == "Press T to chat with Milo",
+				"Milo 2 does not expose the dedicated T chat prompt")
 			milo.call("_play_animation", "Cane_Walk")
 			await process_frame
 			var player := _find_animation_player(milo)

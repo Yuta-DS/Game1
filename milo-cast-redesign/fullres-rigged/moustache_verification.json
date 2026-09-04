@@ -1,0 +1,82 @@
+{
+  "passed": true,
+  "sha256": "3671a6f52743d2f3fbdb89cfbc119f92d95f918f397e75c0d3fc634a5a6ae362",
+  "parts": {
+    "Moustache_1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "skull_attachment_intersections": 346,
+      "eye_spectacle_intersections": {
+        "Eye_-1": 0,
+        "Eye_1": 0,
+        "Glasses_Bridge": 0,
+        "Glasses_Rim_-1": 0,
+        "Glasses_Rim_1": 0,
+        "Glasses_Temple_-1": 0,
+        "Glasses_Temple_1": 0
+      },
+      "bound_bones": [
+        "head"
+      ],
+      "triangles": 10944
+    },
+    "Moustache_-1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "skull_attachment_intersections": 328,
+      "eye_spectacle_intersections": {
+        "Eye_-1": 0,
+        "Eye_1": 0,
+        "Glasses_Bridge": 0,
+        "Glasses_Rim_-1": 0,
+        "Glasses_Rim_1": 0,
+        "Glasses_Temple_-1": 0,
+        "Glasses_Temple_1": 0
+      },
+      "bound_bones": [
+        "head"
+      ],
+      "triangles": 10944
+    },
+    "Cheek_Ruff_1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "skull_attachment_intersections": 351,
+      "eye_spectacle_intersections": {
+        "Eye_-1": 0,
+        "Eye_1": 0,
+        "Glasses_Bridge": 0,
+        "Glasses_Rim_-1": 0,
+        "Glasses_Rim_1": 0,
+        "Glasses_Temple_-1": 0,
+        "Glasses_Temple_1": 0
+      },
+      "bound_bones": [
+        "head"
+      ],
+      "triangles": 12412
+    },
+    "Cheek_Ruff_-1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "skull_attachment_intersections": 360,
+      "eye_spectacle_intersections": {
+        "Eye_-1": 0,
+        "Eye_1": 0,
+        "Glasses_Bridge": 0,
+        "Glasses_Rim_-1": 0,
+        "Glasses_Rim_1": 0,
+        "Glasses_Temple_-1": 0,
+        "Glasses_Temple_1": 0
+      },
+      "bound_bones": [
+        "head"
+      ],
+      "triangles": 12412
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "sha256": "2b0df04a1705f731a0d118d49c82182ffb2251f683366d201b767cf79d577bd8",
+  "passed": false,
+  "checks": [
+    {
+      "script": "verify_cat_paws.py",
+      "passed": true
+    },
+    {
+      "script": "check_cat_paw_scope.py",
+      "passed": true
+    },
+    {
+      "script": "verify.py",
+      "passed": true
+    },
+    {
+      "script": "verify_hand_contacts.py",
+      "passed": false,
+      "error": "Hand self-intersection in sampled pose"
+    },
+    {
+      "script": "verify_hand_mechanics.py",
+      "passed": true
+    },
+    {
+      "script": "verify_palm_orientation.py",
+      "passed": true
+    },
+    {
+      "script": "verify_cuff_clearance.py",
+      "passed": true
+    },
+    {
+      "script": "verify_head_style.py",
+      "passed": true
+    }
+  ]
+}

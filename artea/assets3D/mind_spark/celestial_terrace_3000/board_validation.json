@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "images_loaded": 4,
+  "inventory_rows": 3000,
+  "csv_rows": 3000,
+  "unique_part_names": 3000,
+  "positive_dimensions": true,
+  "source_hashes_match": true,
+  "architecture_checks": 10,
+  "architecture_source_hash_matches": true,
+  "search_result": "59 matching parts · 3,000 total",
+  "mobile_width": 390,
+  "horizontal_overflow": false,
+  "page_errors": []
+}

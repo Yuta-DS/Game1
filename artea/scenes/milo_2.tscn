@@ -32,7 +32,7 @@ visibility_range_end = 14.0
 modulate = Color(1, 0.92, 0.62, 1)
 outline_modulate = Color(0.05, 0.08, 0.13, 1)
 outline_size = 12
-text = "Press Q to chat with Milo"
+text = "Press T to chat with Milo"
 font_size = 38
 
 [node name="MiloGreetingVoice" type="AudioStreamPlayer3D" parent="."]

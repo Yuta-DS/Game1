@@ -1,0 +1,25 @@
+{
+  "id": 3,
+  "name": "Astral Observatory",
+  "file": "island_03.glb",
+  "source": "source/island_03_3000.blend",
+  "bom": "bom/island_03_parts.csv",
+  "editable_mesh_parts": 3000,
+  "natural_components_before_patching": 2252,
+  "surface_split_operations": 748,
+  "component_kinds": {
+    "editable_surface_patch": 1138,
+    "constructed_component": 1245,
+    "connected_component": 617
+  },
+  "categories": {
+    "00_Preserved_Architecture": 637,
+    "01_Civic_Paving": 533,
+    "02_Cliff_Masonry": 634,
+    "03_Civic_Frieze": 324,
+    "04_Engine_Assemblies": 705,
+    "05_Service_Galleries": 167
+  },
+  "runtime_triangles": 210372,
+  "glb_bytes": 8805900
+}

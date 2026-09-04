@@ -32,10 +32,28 @@ var _failures := 0
 
 
 func _init() -> void:
+	var compat_source := FileAccess.get_file_as_string("res://scripts/web_terrain_compat.gd")
+	var grass_filter_source := FileAccess.get_file_as_string("res://scripts/web_grass_surface_filter.gd")
+	_check(compat_source.contains("child_name in [\"Grass\", \"Objects\"]")
+		and compat_source.contains("modifier.collision_mask = WEB_TERRAIN_SCATTER_LAYER"),
+		"Web grass and trees cannot project onto houses or props")
+	_check(compat_source.contains("WebNaturalSoilSurfaceFilter.new()"),
+		"Web vegetation stacks install the painted-surface filter")
+	_check(grass_filter_source.contains("GRASS_TEXTURE_ID := 0"),
+		"Web surface filter targets only authored grass soil")
+	_check(grass_filter_source.contains("Vector2i.LEFT")
+		and grass_filter_source.contains("Vector2i.RIGHT")
+		and grass_filter_source.contains("Vector2i.UP")
+		and grass_filter_source.contains("Vector2i.DOWN"),
+		"Web surface filter keeps grass away from non-soil boundaries")
+
 	var hub := Node3D.new()
 	var compat := Node.new()
 	compat.name = "WebTerrainCompatibility"
-	compat.set_script(load("res://scripts/web_terrain_compat.gd"))
+	var compat_script := load("res://scripts/web_terrain_compat.gd") as Script
+	_check(compat_script != null and compat_script.can_instantiate(),
+		"Web terrain compatibility script compiles")
+	compat.set_script(compat_script)
 	hub.add_child(compat)
 
 	var environment := Node3D.new()
@@ -74,7 +92,7 @@ func _init() -> void:
 		"Terrain3D is removed before WebGL can allocate its oversized UBO")
 	compat.call("_apply_web_scatter_tuning")
 	var distribution = grass.modifier_stack.stack[0]
-	_check(distribution.amount == 28000, "Web grass count covers the full landscape")
+	_check(distribution.amount == 65000, "Web grass count covers the full landscape")
 	_check(grass.get_node("ScatterItemBush").proportion == 0,
 		"tree asset is removed from the grass distribution")
 	_check(is_equal_approx(grass.get_node("ScatterItemGrassA").source_scale_multiplier, 0.24),
@@ -89,6 +107,10 @@ func _init() -> void:
 	_check(terrain_material != null and terrain_material.shader != null
 		and terrain_material.shader.resource_path == "res://shaders/web_terrain.gdshader",
 		"Web terrain uses its compact detail shader")
+	for parameter_name in ["surface_map", "grass_albedo", "sand_albedo", "brick_albedo"]:
+		var texture := terrain_material.get_shader_parameter(parameter_name) as Texture2D
+		_check(texture != null,
+			"Web terrain includes the %s texture" % parameter_name)
 
 	compat.call("_apply_web_water")
 	var water_material := sea.material_override as ShaderMaterial

@@ -41,17 +41,17 @@ func _run() -> void:
 	var name_label := milo.get_node_or_null("MayorMiloName") as Label3D
 	if interaction_shape == null or not interaction_shape.shape is SphereShape3D \
 			or (interaction_shape.shape as SphereShape3D).radius < 4.0:
-		_fail("live Milo's Q chat range does not cover his companion distance")
+		_fail("live Milo's T chat range does not cover his companion distance")
 		return
 	if prompt == null or name_label == null:
 		_fail("live Milo does not expose the visible chat guidance")
 		return
 	milo._process(0.0)
-	if not prompt.visible or not name_label.text.contains("Press Q to chat"):
-		_fail("live Milo does not reveal Q chat guidance at companion distance")
+	if prompt.visible or not name_label.text.contains("Press T to chat"):
+		_fail("live Milo does not expose one clean T chat guidance label")
 		return
 	if milo.process_priority >= 0:
-		_fail("live Milo cannot win shared Q input over overlapping legacy NPCs")
+		_fail("live Milo cannot prioritize his dedicated talk input")
 		return
 	if final_position.y < 18.0:
 		_fail("Milo fell below the playable hub surface")

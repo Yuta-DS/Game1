@@ -81,10 +81,11 @@ func _run() -> void:
 	root.add_child(chat)
 	await process_frame
 	var input := chat.user_input as LineEdit
-	var history := chat.get_node("VBoxContainer/ChatHistory") as TextEdit
+	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
+	var role := chat.get_node("MiloReplyCard/MiloRole") as Label
 	input.text = "Please show me John 3:16"
 	chat._submit_message(input)
-	assert(history.text.contains("Wisdom Library") and history.text.contains("John 3:16") \
+	assert(role.text == "WISDOM LIBRARY" and history.text.contains("John 3:16") \
 		and history.text.contains("For God so loved the world"),
 		"the live Web-safe chat surface displays exact grounded scripture")
 	chat.queue_free()

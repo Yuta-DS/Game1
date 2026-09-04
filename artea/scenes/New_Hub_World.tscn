@@ -27,6 +27,7 @@
 [ext_resource type="Shader" uid="uid://bf0h7u1q21ph3" path="res://New_Hub_World.gdshader" id="19_ha1sw"]
 [ext_resource type="Script" uid="uid://dkw5mupiy2tv7" path="res://scenes/cycle_web_sky_fallback.gd" id="24_websky"]
 [ext_resource type="PackedScene" path="res://scenes/props/market_stall.tscn" id="100_stall"]
+[ext_resource type="PackedScene" path="res://scenes/watchtower_harbour_link.tscn" id="108_tower_link"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_barbarian.tscn" id="101_vbarb"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_rogue.tscn" id="102_vrogue"]
 [ext_resource type="PackedScene" path="res://scenes/entities/villager_rogue_hooded.tscn" id="103_vroguehood"]
@@ -55,7 +56,7 @@
 [ext_resource type="PackedScene" uid="uid://dipjrbs7fbcy2" path="res://assets3D/house scenes/home_b.tscn" id="39_t72bn"]
 [ext_resource type="PackedScene" uid="uid://ys3laco1twc" path="res://assets3D/house scenes/castle.tscn" id="40_40xrb"]
 [ext_resource type="PackedScene" uid="uid://fqx6500nugky" path="res://assets3D/house scenes/tavern.tscn" id="41_kjbyn"]
-[ext_resource type="Texture2D" uid="uid://b42uvpgfhvgje" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Inventory.png" id="41_kl01c"]
+[ext_resource type="Texture2D" path="res://assets/UI/inventory_backpack.svg" id="41_kl01c"]
 [ext_resource type="Script" uid="uid://dgfivhd7spfnv" path="res://scripts/inventory_button.gd" id="42_ewago"]
 [ext_resource type="PackedScene" uid="uid://cmwutg4qjm7hv" path="res://assets3D/house scenes/watermill.tscn" id="42_fn4xt"]
 [ext_resource type="PackedScene" uid="uid://bl7duyul3lwg3" path="res://assets3D/house scenes/lumbermill.tscn" id="43_448jj"]
@@ -117,7 +118,7 @@
 [ext_resource type="PackedScene" uid="uid://b6n3ns24pos1q" path="res://assets3D/houses/gltf/tree_large.gltf" id="95_treeL"]
 [ext_resource type="PackedScene" uid="uid://cehrffojukb16" path="res://assets3D/houses/gltf/fence_straight.gltf" id="96_fnstr"]
 [ext_resource type="PackedScene" uid="uid://cejjhajbx8vwe" path="res://assets3D/houses/gltf/fence_straight_long.gltf" id="97_fnstrl"]
-[ext_resource type="PackedScene" uid="uid://durvbjhil7ec1" path="res://scripts/Pier.tscn" id="98_pier"]
+[ext_resource type="PackedScene" path="res://scripts/Pier.tscn" id="98_pier"]
 [ext_resource type="PackedScene" path="res://scenes/boat.tscn" id="99_boat"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
@@ -213,7 +214,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 
 [sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("15_o1ycd")
-amount = 52000
+amount = 120000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
@@ -242,6 +243,10 @@ remove_points_on_miss = false
 [sub_resource type="Resource" id="Resource_13iw3"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
+max_slope = 52.0
+enable_texture_filtering = true
+target_texture_id = 0
+texture_threshold = 0.5
 
 [sub_resource type="Resource" id="Resource_vqqxb"]
 script = ExtResource("13_1ti50")
@@ -265,12 +270,12 @@ noise = SubResource("FastNoiseLite_7nfwd")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_y45p1"]
 render_priority = 1
 shader = ExtResource("19_ha1sw")
-shader_parameter/bottom_color = Color(0.214194, 0.363532, 0.198002, 1)
-shader_parameter/top_color = Color(0.401027, 0.688921, 0.343888, 1)
-shader_parameter/color_variation_1 = Color(0.438892, 0.533217, 0.191565, 1)
+shader_parameter/bottom_color = Color(0.18, 0.44, 0.14, 1)
+shader_parameter/top_color = Color(0.36, 0.7, 0.24, 1)
+shader_parameter/color_variation_1 = Color(0.3, 0.62, 0.18, 1)
 shader_parameter/noise_variation_1 = SubResource("NoiseTexture2D_bsvfl")
 shader_parameter/Noise1Scale = 20.0
-shader_parameter/color_variation_2 = Color(0.394377, 0.618859, 0.257121, 1)
+shader_parameter/color_variation_2 = Color(0.24, 0.56, 0.18, 1)
 shader_parameter/noise_variation_2 = SubResource("NoiseTexture2D_ngqnt")
 shader_parameter/Noise2Scale = 20.0
 shader_parameter/windSpeed = 0.005
@@ -314,6 +319,14 @@ metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 script = ExtResource("112_scatter_box")
 size = Vector3(74, 100, 152)
 
+[sub_resource type="Resource" id="Resource_creator_district_tree_exclusion"]
+script = ExtResource("112_scatter_box")
+size = Vector3(110, 100, 110)
+
+[sub_resource type="Resource" id="Resource_heart_district_tree_exclusion"]
+script = ExtResource("112_scatter_box")
+size = Vector3(78, 100, 86)
+
 [sub_resource type="Resource" id="Resource_castle_route_tree_exclusion"]
 script = ExtResource("112_scatter_box")
 size = Vector3(78, 100, 46)
@@ -346,6 +359,10 @@ remove_points_on_miss = false
 [sub_resource type="Resource" id="Resource_27crv"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
+max_slope = 35.0
+enable_texture_filtering = true
+target_texture_id = 0
+texture_threshold = 0.5
 
 [sub_resource type="Resource" id="Resource_j2px0"]
 script = ExtResource("13_1ti50")
@@ -526,49 +543,49 @@ path = "res://scenes/vegetation/grass_clump_3d.tscn"
 
 [node name="ScatterItemFlowerRed" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_red_3d.tscn"
 
 [node name="ScatterItemFlowerOrange" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_orange_3d.tscn"
 
 [node name="ScatterItemFlowerYellow" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_yellow_3d.tscn"
 
 [node name="ScatterItemFlowerGreen" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_green_3d.tscn"
 
 [node name="ScatterItemFlowerBlue" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_blue_3d.tscn"
 
 [node name="ScatterItemFlowerIndigo" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_indigo_3d.tscn"
 
 [node name="ScatterItemFlowerViolet" type="Node3D" parent="Environment/Grass"]
 script = ExtResource("19_ngqnt")
-proportion = 12
+proportion = 36
 source_scale_multiplier = 0.85
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_violet_3d.tscn"
@@ -611,6 +628,18 @@ position = Vector3(19.1855, 0, -20)
 script = ExtResource("20_7nfwd")
 negative = true
 shape = SubResource("Resource_village_plaza_exclusion")
+
+[node name="CreatorsLightTreeExclusion" type="Node3D" parent="Environment/Objects"]
+position = Vector3(-45.8145, 0, 85)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_creator_district_tree_exclusion")
+
+[node name="HeartMelodyTreeExclusion" type="Node3D" parent="Environment/Objects"]
+position = Vector3(24.1855, 0, 88)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_heart_district_tree_exclusion")
 
 [node name="CastleRouteTreeExclusion" type="Node3D" parent="Environment/Objects"]
 position = Vector3(-96.8145, 0, 27.41)
@@ -750,13 +779,19 @@ autoplay = true
 [node name="Inventory" type="CanvasLayer" parent="." unique_id=882521813]
 
 [node name="TextureButton" type="TextureButton" parent="Inventory" unique_id=1125274895]
-offset_left = 1553.0
-offset_top = 31.0
-offset_right = 1666.0
-offset_bottom = 141.0
+texture_filter = 2
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -112.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 112.0
+grow_horizontal = 0
+tooltip_text = "Inventory (I)"
 texture_normal = ExtResource("41_kl01c")
 ignore_texture_size = true
-stretch_mode = 0
+stretch_mode = 5
 script = ExtResource("42_ewago")
 
 [node name="building_church_red2" parent="." unique_id=1083499433 instance=ExtResource("30_ikt05")]
@@ -805,7 +840,7 @@ transform = Transform3D(0.749613, 0, -9.97186, 0, 10, 0, 9.97186, 0, 0.749613, 1
 transform = Transform3D(-4.37114e-07, 0, -10, 0, 10, 0, 10, 0, -4.37114e-07, 121, 17.47, 10)
 
 [node name="building_tower_B_red2" parent="." unique_id=549820795 instance=ExtResource("45_t72bn")]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 19.9201, 0.48, 189.907)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 19.9201, 1.8, 189.907)
 
 [node name="building_tower_catapult_red2" parent="." unique_id=525608042 instance=ExtResource("46_40xrb")]
 transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, -70, 39.47, 10)
@@ -896,13 +931,13 @@ transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 130, 2.25, -66)
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 96, 9.52, -94)
 
 [node name="ms_tree_1" parent="District_MindSpark" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 47, 20.3, -82)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 47, 20.176, -82)
 
 [node name="ms_tree_2" parent="District_MindSpark" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 142, 0.2, -100)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 142, 0.199, -100)
 
 [node name="ms_tree_3" parent="District_MindSpark" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 50, 20.3, -108)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 50, 20.063, -108)
 
 [node name="ms_fence_3" parent="District_MindSpark" instance=ExtResource("97_fnstrl")]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 130, 2.01, -64)
@@ -926,10 +961,10 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 25, 21.04, -66)
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 14, 21.39, -90)
 
 [node name="ms_ext_tree_1" parent="District_MindSpark" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 35, 20.97, -105)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 35, 20.303, -105)
 
 [node name="ms_ext_tree_2" parent="District_MindSpark" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 35, 21.58, -45)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 35, 20.583, -45)
 
 [node name="District_CreatorsLight" type="Node3D" parent="."]
 
@@ -976,13 +1011,13 @@ transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 72, 17.93, 82)
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 40, 22.09, 70)
 
 [node name="cl_tree_1" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 15, 21.33, 78)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 15, 21.329, 78)
 
 [node name="cl_tree_2" parent="District_CreatorsLight" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 80, 4.4, 135)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 80, 4.397, 135)
 
 [node name="cl_tree_3" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 10, 24.1, 25)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, -24, 31.096, -8)
 
 [node name="cl_ext_home_1" parent="District_CreatorsLight" instance=ExtResource("30_82kox")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, -20, 23.9, 60)
@@ -1003,10 +1038,10 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 60, 14.77, 110)
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 17.7, 110)
 
 [node name="cl_ext_tree_1" parent="District_CreatorsLight" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, -28, 20.5, 90)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, -28, 19.015, 90)
 
 [node name="cl_ext_tree_2" parent="District_CreatorsLight" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 40, 14.64, 122)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 40, 14.642, 122)
 
 [node name="Music_World" type="Area3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 80, 18.7, 72)
@@ -1064,10 +1099,10 @@ transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 116, 7.9, 90)
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 60, 22.32, 45)
 
 [node name="hm_tree_1" parent="District_HeartMelody" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 125, 7.52, 72)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 125, 7.518, 72)
 
 [node name="hm_tree_2" parent="District_HeartMelody" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 55, 7.5, 140)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 55, 7.127, 140)
 
 [node name="hm_ext_home_1" parent="District_HeartMelody" instance=ExtResource("30_82kox")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 26.82, 37)
@@ -1088,10 +1123,10 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 24.76, 53)
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 8, 24.97, 53)
 
 [node name="hm_ext_tree_1" parent="District_HeartMelody" instance=ExtResource("94_tree")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, -35, 21.77, 75)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, -35, 21.772, 75)
 
 [node name="hm_ext_tree_2" parent="District_HeartMelody" instance=ExtResource("95_treeL")]
-transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 100, 5.06, 120)
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 100, 5.063, 120)
 
 [node name="AppleSpawner" type="Node3D" parent="." unique_id=337249485]
 script = ExtResource("2_spawner")
@@ -1180,10 +1215,16 @@ modulate = Color(0.24313726, 0.15294118, 0.13725491, 1)
 text = "Councellor"
 
 [node name="Port" parent="." instance=ExtResource("98_pier")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 170, 0.5, 60)
+position = Vector3(38, 0.9, 184)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1.5, 1.5, 1.5)
 
 [node name="Boat" parent="." instance=ExtResource("99_boat")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 0, 78)
+position = Vector3(32, 0.92, 197.4)
+rotation = Vector3(0, -1.5707963, 0)
+
+[node name="WatchtowerHarbourLink" parent="." instance=ExtResource("108_tower_link")]
+position = Vector3(19.9201, 0, 189.907)
 
 [node name="MarketPlace" type="Node3D" parent="."]
 

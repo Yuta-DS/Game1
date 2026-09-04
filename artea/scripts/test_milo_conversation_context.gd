@@ -78,7 +78,7 @@ func _run() -> void:
 	await process_frame
 	chat.configure_conversation_context(live_context, "ArtStudio", "painting")
 	var input := chat.user_input as LineEdit
-	var history := chat.get_node("VBoxContainer/ChatHistory") as TextEdit
+	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
 	input.text = "How can I improve the composition of my painting?"
 	chat._submit_message(input)
 	assert(history.text.contains("ART ·") and history.text.to_lower().contains("composition"),

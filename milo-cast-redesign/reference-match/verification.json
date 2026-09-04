@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "self_contained",
+      "passed": true
+    },
+    {
+      "name": "original_41_bone_skin",
+      "passed": true
+    },
+    {
+      "name": "finite_geometry_valid_indices_normalized_weights",
+      "passed": true,
+      "bad_records": 0
+    },
+    {
+      "name": "four_original_body_actions",
+      "passed": true
+    },
+    {
+      "name": "Idle_body_channels_preserved",
+      "passed": true
+    },
+    {
+      "name": "Walking_A_body_channels_preserved",
+      "passed": true
+    },
+    {
+      "name": "Guide_body_channels_preserved",
+      "passed": true
+    },
+    {
+      "name": "Speak_body_channels_preserved",
+      "passed": true
+    }
+  ],
+  "triangles": 21358,
+  "bytes": 926524,
+  "meshes": 11,
+  "limits": "Not an artistic-likeness verdict, gameplay test or full AnyCreature certification."
+}

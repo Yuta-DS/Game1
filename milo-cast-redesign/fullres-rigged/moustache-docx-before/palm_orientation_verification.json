@@ -1,0 +1,27 @@
+{
+  "idle_R": {
+    "palm_inward_dot": 0.7947444319725037,
+    "thumb_forward_m": 0.04913245886564255,
+    "palm_world": [
+      0.7947444319725037,
+      0.5637836456298828,
+      -0.22478722035884857
+    ]
+  },
+  "idle_L": {
+    "palm_inward_dot": 0.7947443723678589,
+    "thumb_forward_m": 0.04913244768977165,
+    "palm_world": [
+      -0.7947443723678589,
+      0.5637837052345276,
+      -0.22478719055652618
+    ]
+  },
+  "greeting": {
+    "palm_forward_dot": 0.9990838170051575,
+    "thumb_toward_body": true
+  },
+  "cane": {
+    "back_of_hand_forward_dot": 1.0
+  }
+}

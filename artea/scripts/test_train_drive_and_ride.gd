@@ -98,6 +98,18 @@ func _run() -> void:
 	if not bool(railway.call("is_driving")):
 		_fail("pressing 1 at the train did not take control of the train")
 		return
+	if not bool(player.call("is_train_seated_pose")):
+		_fail("the driver character did not enter a seated driving pose")
+		return
+	var train_forward := -train.global_basis.z.normalized()
+	var player_forward := -player.global_basis.z.normalized()
+	if player_forward.dot(train_forward) < 0.99:
+		_fail("the seated driver is not facing the front of the train")
+		return
+	# This suite drives through the public method with a fixed delta. Disable the
+	# runtime Input poll so an empty test keyboard cannot apply a second, zero
+	# throttle command in the same iteration and cancel the command under test.
+	railway.set_process(false)
 	var horn_count := int(railway.call("get_horn_request_count"))
 	_press_train_mode(railway, KEY_R)
 	if int(railway.call("get_horn_request_count")) != horn_count + 1:
