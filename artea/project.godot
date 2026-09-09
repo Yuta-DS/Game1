@@ -44,6 +44,7 @@ Auth="*res://addons/godot-firebase/auth/auth.gd"
 APIManager="*res://scripts/API_Manager.gd"
 CreationWorldState="*res://scripts/creation_world/creation_world_state.gd"
 WorldSpatialAudio="*res://scripts/world_spatial_audio.gd"
+CoordinateProbe="*res://scripts/coordinate_probe.gd"
 
 [dialogue_manager]
 

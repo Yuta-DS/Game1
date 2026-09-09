@@ -430,8 +430,12 @@ func _build_castle_bridge(parent: Node3D) -> void:
 			var post_t := float(post_index) / 5.0
 			var foot := start.lerp(finish, post_t) + side_offset + Vector3.UP * 0.48
 			var post_top := foot + Vector3.UP * 1.72
-			_add_beam_between(bridge, foot, post_top, 0.24, _timber_dark).name = \
-				"CarvedRailPost"
+			var rail_post := _add_beam_between(bridge, foot, post_top, 0.24, _timber_dark)
+			rail_post.name = "CarvedRailPost"
+			# Rail posts mark the causeway edge, so solid collision here is the
+			# normal expected behaviour of a railing (it should stop a player
+			# from walking through it, not just decorate the drop-off).
+			_add_box_body(rail_post, Vector3(0.24, 0.24, 1.72), "SolidCarvedRailPost")
 			var cap := _add_mesh(bridge, _cone(0.28, 0.46, 4), _slate,
 				post_top + Vector3.UP * 0.22)
 			cap.name = "RailPostCap"
