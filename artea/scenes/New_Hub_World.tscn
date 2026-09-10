@@ -61,15 +61,12 @@
 [ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
 [ext_resource type="Script" uid="uid://cdn8hn68ky8aq" path="res://scripts/teleport_music.gd" id="57_he78i"]
-[ext_resource type="PackedScene" uid="uid://6obaxkmc212j" path="res://scenes/narrative_package.tscn" id="61_krhoc"]
 [ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="62_milo"]
 [ext_resource type="PackedScene" uid="uid://b1d3rlknpgaj3" path="res://scenes/everlasting_father_animations.tscn" id="63_father"]
 [ext_resource type="PackedScene" uid="uid://7xbyv6flli6r" path="res://scenes/knight_animations.tscn" id="64_knight"]
 [ext_resource type="PackedScene" uid="uid://bkm1ymlapx10o" path="res://scenes/rogue_animations.tscn" id="65_rogue"]
 [ext_resource type="PackedScene" uid="uid://dlvg1cesiihwf" path="res://scenes/barbarian_animations.tscn" id="66_barbarian"]
 [ext_resource type="PackedScene" uid="uid://c080vovqsegsq" path="res://scenes/mage_animations.tscn" id="67_mage"]
-[ext_resource type="Script" uid="uid://ca8tvwxs47jqc" path="res://scenes/story_direction.gd" id="68_1fv2d"]
-[ext_resource type="Texture2D" uid="uid://cc7haxr8tbq6n" path="res://textures/Sign_box.png.webp" id="68_yieqa"]
 [ext_resource type="Script" uid="uid://qb1nswsvuwr6" path="res://scripts/hub_awakening.gd" id="69_awakn"]
 [ext_resource type="Script" uid="uid://gsntm6hmt4y5" path="res://scripts/hub_creations.gd" id="70_creat"]
 [ext_resource type="Script" uid="uid://21liuf4lp7d4" path="res://scripts/hub_magitech.gd" id="71_magit"]
@@ -209,14 +206,14 @@ uv_scale = 1.634
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_s5s7t")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_pl5oi"), SubResource("Terrain3DTextureAsset_lgoah"), SubResource("Terrain3DTextureAsset_7nfwd")])
 
-[sub_resource type="Resource" id="Resource_eap1h"]
+[sub_resource type="Resource" id="Resource_pk4hi"]
 script = ExtResource("15_o1ycd")
 amount = 120000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_krlol"]
+[sub_resource type="Resource" id="Resource_p0xvw"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(20, 360, 20)
@@ -224,29 +221,29 @@ scale = Vector3(0.1, 0.1, 0.1)
 override_global_seed = true
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_emlyt"]
+[sub_resource type="Resource" id="Resource_g0q3j"]
 script = ExtResource("17_bsvfl")
 iterations = 0
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_c0ikk"]
+[sub_resource type="Resource" id="Resource_eap1h"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_i7yxs"]
+[sub_resource type="Resource" id="Resource_krlol"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 max_slope = 52.0
 enable_texture_filtering = true
 texture_threshold = 0.5
 
-[sub_resource type="Resource" id="Resource_qyuht"]
+[sub_resource type="Resource" id="Resource_emlyt"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_eap1h"), SubResource("Resource_krlol"), SubResource("Resource_emlyt"), SubResource("Resource_c0ikk"), SubResource("Resource_i7yxs")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_pk4hi"), SubResource("Resource_p0xvw"), SubResource("Resource_g0q3j"), SubResource("Resource_eap1h"), SubResource("Resource_krlol")])
 
 [sub_resource type="Curve3D" id="Curve3D_8n7aw"]
 _data = {
@@ -315,38 +312,38 @@ shader_parameter/invert_combined_noise = false
 shader_parameter/debug_show_wind_noise = false
 shader_parameter/debug_show_combined_noise = false
 
-[sub_resource type="Resource" id="Resource_27vc5"]
+[sub_resource type="Resource" id="Resource_c0ikk"]
 script = ExtResource("15_o1ycd")
 amount = 260
 restrict_height = true
 reference_frame = 1
 
-[sub_resource type="Resource" id="Resource_0q807"]
+[sub_resource type="Resource" id="Resource_i7yxs"]
 script = ExtResource("16_ha1sw")
 position = Vector3(0.15, 0.15, 0.15)
 rotation = Vector3(0, 360, 0)
 scale = Vector3(0.18, 0.18, 0.18)
 reference_frame = 2
 
-[sub_resource type="Resource" id="Resource_d5vl2"]
+[sub_resource type="Resource" id="Resource_qyuht"]
 script = ExtResource("17_bsvfl")
 offset_step = 0.2
 consecutive_step_multiplier = 0.75
 restrict_height = true
 
-[sub_resource type="Resource" id="Resource_0pbd4"]
+[sub_resource type="Resource" id="Resource_27vc5"]
 script = ExtResource("18_jhnfs")
 ray_length = 5.0
 ray_offset = 5.0
 remove_points_on_miss = false
 
-[sub_resource type="Resource" id="Resource_khth6"]
+[sub_resource type="Resource" id="Resource_0q807"]
 script = ExtResource("19_g1e0d")
 terrain_node = NodePath("../Terrain3D")
 
-[sub_resource type="Resource" id="Resource_dcuya"]
+[sub_resource type="Resource" id="Resource_d5vl2"]
 script = ExtResource("13_1ti50")
-stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_27vc5"), SubResource("Resource_0q807"), SubResource("Resource_d5vl2"), SubResource("Resource_0pbd4"), SubResource("Resource_khth6")])
+stack = Array[ExtResource("14_g1e0d")]([SubResource("Resource_c0ikk"), SubResource("Resource_i7yxs"), SubResource("Resource_qyuht"), SubResource("Resource_27vc5"), SubResource("Resource_0q807")])
 
 [sub_resource type="Resource" id="Resource_g8bsm"]
 script = ExtResource("28_cfrmd")
@@ -421,7 +418,11 @@ script = ExtResource("84_lens")
 script = ExtResource("85_crownportal")
 
 [node name="NewPlayer" parent="." unique_id=1353458258 instance=ExtResource("2_q1hpc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.64955, 25.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 105.46222, 20.015047, -6.195652)
+override_initial_facing = true
+initial_facing_radians = 4.31096325
+override_initial_camera_yaw = true
+initial_camera_yaw_radians = 1.43116999
 
 [node name="OmniLight3D" type="OmniLight3D" parent="NewPlayer" unique_id=828421421]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.747093, 0)
@@ -506,7 +507,7 @@ transform = Transform3D(-7.95647, 0, 0.83345, 0, 8, 0, -0.83345, 0, -7.95647, -1
 [node name="Grass" type="Node3D" parent="Environment" unique_id=528747255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49825, 25.5775, 19.2097)
 script = ExtResource("12_0l1bc")
-modifier_stack = SubResource("Resource_qyuht")
+modifier_stack = SubResource("Resource_emlyt")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -612,7 +613,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
 render_mode = 1
-modifier_stack = SubResource("Resource_dcuya")
+modifier_stack = SubResource("Resource_d5vl2")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
 metadata/_custom_type_script = "uid://lgdpru8th01u"
@@ -1190,9 +1191,6 @@ collectible_scene = ExtResource("4_clam")
 spawn_height = 23.0
 min_distance_between = 6.0
 
-[node name="Story_Intro_Spawn" parent="." unique_id=1554091635 instance=ExtResource("61_krhoc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.603652, 25.680845, 0.27523494)
-
 [node name="Milo_Animations2" parent="." unique_id=1929992946 instance=ExtResource("62_milo")]
 
 [node name="MiloGuidePoints" type="Node3D" parent="." unique_id=1509663988]
@@ -1219,40 +1217,13 @@ transform = Transform3D(1.5695528, 0, -1.239558, 0, 2, 0, 1.239558, 0, 1.5695528
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 35, 20)
 
 [node name="Rogue" parent="." unique_id=1520299301 instance=ExtResource("65_rogue")]
-transform = Transform3D(-0.295708, 0, -0.9552784, 0, 1, 0, 0.9552784, 0, -0.295708, 9.261498, 23.5, 3.635168)
+transform = Transform3D(-0.7042032, 0, 0.7099904, 0, 1, 0, -0.7099904, 0, -0.7042032, 100.123764, 19.9392, -3.1377468)
 
 [node name="Barbarian" parent="." unique_id=172103663 instance=ExtResource("66_barbarian")]
 transform = Transform3D(-0.295708, 0, 0.9552784, 0, 1, 0, -0.9552784, 0, -0.295708, 57, 20, -31)
 
 [node name="Mage" parent="." unique_id=460202447 instance=ExtResource("67_mage")]
 transform = Transform3D(0.7847764, 0, 0.619779, 0, 1, 0, -0.619779, 0, 0.7847764, 59, 20, -49)
-
-[node name="Story_Intro_Spawn2" type="Label3D" parent="." unique_id=580049014]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107.823364, 22.766987, -21.084024)
-billboard = 1
-modulate = Color(1, 0.95686275, 0.81960785, 1)
-outline_size = 20
-
-[node name="NarrativeBubble" type="Sprite3D" parent="Story_Intro_Spawn2" unique_id=192401457]
-transform = Transform3D(-0.04442152, 0, -0.9990129, 0, 1, 0, 0.9990129, 0, -0.04442152, 0.9329605, 0.4874916, 6.1495)
-pixel_size = 0.006
-texture = ExtResource("68_yieqa")
-script = ExtResource("68_1fv2d")
-
-[node name="Label3D" type="Label3D" parent="Story_Intro_Spawn2/NarrativeBubble" unique_id=699826674]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.099998474)
-render_priority = 1
-modulate = Color(0.18039216, 0.003921569, 0.2, 1)
-text = "The air feels different here, Player. You should find Milo, our Wonderful Councellor.
-"
-autowrap_mode = 2
-width = 800.0
-
-[node name="CharacterName" type="Label3D" parent="Story_Intro_Spawn2/NarrativeBubble" unique_id=489327213]
-transform = Transform3D(0.9999626, 0, 0.00883121, 0, 1, 0, -0.00883121, 0, 0.9999626, 0, 0.5, 0.099998474)
-offset = Vector2(-220, 0)
-modulate = Color(0.24313726, 0.15294118, 0.13725491, 1)
-text = "Councellor"
 
 [node name="Port" parent="." unique_id=2058906824 instance=ExtResource("98_pier")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 170, 0.5, 60)
