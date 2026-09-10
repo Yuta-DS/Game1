@@ -156,6 +156,41 @@ var _canopy_material: StandardMaterial3D
 var _dark_metal_material: StandardMaterial3D
 var _station_rainbow_materials: Array[StandardMaterial3D] = []
 var _external_drive_commanded := false
+var _station_fall_recovery := -1
+
+
+func get_station_disembark_position(index: int) -> Vector3:
+	var platform := _station_nodes[posmod(index, STATIONS.size())].get_node("WalkablePlatform") as Node3D
+	return platform.to_global(Vector3(8.75, 3.0, 0.0))
+
+
+func _place_player_on_station() -> void:
+	_player.global_position = get_station_disembark_position(_current_station)
+	_player.velocity = Vector3.ZERO
+	_station_fall_recovery = _current_station
+
+
+func _physics_process(_delta: float) -> void:
+	if _player == null or _riding:
+		return
+	# Arm only after reaching an elevated station or its docked train. Walking
+	# down the access stairs or leaving the station clears the recovery region.
+	for index in _station_nodes.size():
+		var platform := _station_nodes[index].get_node("WalkablePlatform") as Node3D
+		var local := platform.to_local(_player.global_position)
+		if absf(local.x) < 18.0 and absf(local.z) < 34.0 \
+				and local.y >= -1.5 and local.y < 16.0:
+			_station_fall_recovery = index
+			return
+	if _station_fall_recovery < 0:
+		return
+	var platform := _station_nodes[_station_fall_recovery].get_node("WalkablePlatform") as Node3D
+	var local := platform.to_local(_player.global_position)
+	if _player.is_on_floor() or absf(local.x) > 45.0 or absf(local.z) > 60.0:
+		_station_fall_recovery = -1
+	elif local.y < -6.0 and _player.velocity.y < 0.0:
+		_player.global_position = get_station_disembark_position(_station_fall_recovery)
+		_player.velocity = Vector3.ZERO
 
 
 func _ready() -> void:
@@ -621,23 +656,21 @@ func sit_in_passenger_seat(seat_index: int) -> bool:
 	_player.global_position = _train.to_global(BENCH_SEATS[seat_index])
 	_attach_rider_anchor(BENCH_SEATS[seat_index])
 	_begin_ride_camera(14.0)
-	_status.text = "PASSENGER MODE  •  2 RIDE  •  1 DRIVE AT A STATION  •  Q STAND"
+	_status.text = "PASSENGER MODE  •  2 RIDE  •  1 DRIVE AT A STATION  •  Q EXIT AT STATION"
 	call_deferred("_ride_seated_passenger_one_station")
 	return true
 
 
 func leave_passenger_seat() -> bool:
-	if not _seated_passenger or _player == null:
+	if not _seated_passenger or _player == null or _passenger_in_motion:
 		return false
-	var seat_position := _train.to_global(BENCH_SEATS[_passenger_seat_index])
 	if _rider_anchor != null:
 		_rider_anchor.remote_path = NodePath()
 	_seated_passenger = false
 	_passenger_in_motion = false
 	_passenger_seat_index = -1
 	_riding = false
-	_player.global_position = seat_position + Vector3(0.0, 0.2, 2.2)
-	_player.velocity = Vector3.ZERO
+	_place_player_on_station()
 	_player.call("set_input_enabled", true)
 	_end_ride_camera()
 	_status.text = "CROWN LINE PASSENGER SEAT RELEASED"
@@ -667,7 +700,7 @@ func _ride_seated_passenger_one_station() -> void:
 	if _player != null and _passenger_seat_index >= 0:
 		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
 		_player.velocity = Vector3.ZERO
-	_status.text = "DOCKED AT %s  •  Q STAND" % STATIONS[_current_station].title
+	_status.text = "DOCKED AT %s  •  Q EXIT AT STATION" % STATIONS[_current_station].title
 
 
 func request_ride() -> bool:
@@ -823,8 +856,7 @@ func _disembark_driver() -> void:
 	if _rider_anchor != null:
 		_rider_anchor.remote_path = NodePath()
 	if _player != null:
-		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
-		_player.velocity = Vector3.ZERO
+		_place_player_on_station()
 		_player.call("set_input_enabled", true)
 	_end_ride_camera()
 	_status.text = "ARRIVED  •  Explore %s" % STATIONS[_current_station].title
@@ -2949,7 +2981,7 @@ func _update_prompt() -> void:
 	if _manual_driving:
 		_prompt.text = "DRIVER MODE\nW  Forward\nS  Reverse\nRelease W/S  Brake\nR  Sound horn\n2  Passenger mode at station\nQ  Exit when docked"
 	elif _seated_passenger:
-		_prompt.text = "PASSENGER MODE\nEnjoy the ride to the next station.\nAt each station:\n2  Continue to next station\n1  Take the controls\nQ  Stand up"
+		_prompt.text = "PASSENGER MODE\nEnjoy the ride to the next station.\nAt each station:\n2  Continue to next station\n1  Take the controls\nQ  Exit onto platform"
 	else:
 		_prompt.text = "1  Drive the train\n2  Sit and ride\n\nALL FOUR STATIONS OPEN\nGallery → Mind Spark\n→ Heart Melody → Creator's Light\n→ Gallery"
 	return
@@ -2991,8 +3023,7 @@ func _ride_to(target: int) -> void:
 	_train.position = STATIONS[_current_station].position
 	_orient_train_at_station(_current_station)
 	if _player != null:
-		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
-		_player.velocity = Vector3.ZERO
+		_place_player_on_station()
 		_player.call("set_input_enabled", true)
 	_end_ride_camera()
 	_status.text = "ARRIVED  •  Explore %s" % STATIONS[_current_station].title
