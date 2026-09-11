@@ -93,6 +93,7 @@
 [ext_resource type="Script" path="res://scripts/web_terrain_compat.gd" id="82_webterrain"]
 [ext_resource type="Script" path="res://scripts/hub_grass_interaction.gd" id="108_grass_interaction"]
 [ext_resource type="Script" path="res://scripts/hub_bee_garden.gd" id="110_bee_garden"]
+[ext_resource type="Script" path="res://scripts/hub_scatter_visibility_range.gd" id="200_scatter_visibility"]
 [ext_resource type="PackedScene" path="res://scenes/vegetation/grass_clump_3d.tscn" id="109_grass_3d"]
 [ext_resource type="Script" path="res://scripts/hub_village_brick_plaza.gd" id="111_brick_plaza"]
 [ext_resource type="Script" path="res://addons/proton_scatter/src/shapes/box_shape.gd" id="112_scatter_box"]
@@ -218,7 +219,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 
 [sub_resource type="Resource" id="Resource_m45cy"]
 script = ExtResource("15_o1ycd")
-amount = 120000
+amount = 45000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
@@ -384,6 +385,18 @@ script = ExtResource("108_grass_interaction")
 script = ExtResource("110_bee_garden")
 flower_scatter_path = NodePath("../Environment/Grass")
 tree_scatter_path = NodePath("../Environment/Objects")
+
+[node name="GrassVisibilityRange" type="Node" parent="."]
+script = ExtResource("200_scatter_visibility")
+scatter_path = NodePath("../Environment/Grass")
+visibility_range_end = 55.0
+visibility_range_end_margin = 10.0
+
+[node name="ObjectsVisibilityRange" type="Node" parent="."]
+script = ExtResource("200_scatter_visibility")
+scatter_path = NodePath("../Environment/Objects")
+visibility_range_end = 150.0
+visibility_range_end_margin = 25.0
 
 [node name="VillageBrickPlaza" type="Node3D" parent="."]
 script = ExtResource("111_brick_plaza")
@@ -612,7 +625,7 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 22.
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
-render_mode = 1
+keep_static_colliders = true
 modifier_stack = SubResource("Resource_j2px0")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)
