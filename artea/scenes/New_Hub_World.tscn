@@ -557,6 +557,7 @@ path = "res://scenes/vegetation/grass_clump_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_red_3d.tscn"
 
@@ -564,6 +565,7 @@ path = "res://scenes/vegetation/wildflower_red_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_orange_3d.tscn"
 
@@ -571,6 +573,7 @@ path = "res://scenes/vegetation/wildflower_orange_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_yellow_3d.tscn"
 
@@ -578,6 +581,7 @@ path = "res://scenes/vegetation/wildflower_yellow_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_green_3d.tscn"
 
@@ -585,6 +589,7 @@ path = "res://scenes/vegetation/wildflower_green_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_blue_3d.tscn"
 
@@ -592,6 +597,7 @@ path = "res://scenes/vegetation/wildflower_blue_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_indigo_3d.tscn"
 
@@ -599,6 +605,7 @@ path = "res://scenes/vegetation/wildflower_indigo_3d.tscn"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 path = "res://scenes/vegetation/wildflower_violet_3d.tscn"
 
