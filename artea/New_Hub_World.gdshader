@@ -91,8 +91,7 @@ void vertex() {
 
     // Wind sway
     float shapedNoise = 0.0;
-    float noiseVal = texture(wind_noise, windNoiseUV).r;
-    float bias = noiseVal - 0.5;
+    float bias = windNoiseVal - 0.5;
     if (bias < 0.0) {
         shapedNoise = mix(0.0, noiseFloor - 0.5, -bias * 2.0);
     } else {
