@@ -1,5 +1,4 @@
 shader_type spatial;
-render_mode cull_disabled;
 
 // Base gradient
 uniform vec3 bottom_color : source_color;
