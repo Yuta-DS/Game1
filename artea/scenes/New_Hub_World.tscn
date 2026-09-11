@@ -389,8 +389,8 @@ tree_scatter_path = NodePath("../Environment/Objects")
 [node name="GrassVisibilityRange" type="Node" parent="."]
 script = ExtResource("200_scatter_visibility")
 scatter_path = NodePath("../Environment/Grass")
-visibility_range_end = 55.0
-visibility_range_end_margin = 10.0
+visibility_range_end = 40.0
+visibility_range_end_margin = 8.0
 
 [node name="ObjectsVisibilityRange" type="Node" parent="."]
 script = ExtResource("200_scatter_visibility")
