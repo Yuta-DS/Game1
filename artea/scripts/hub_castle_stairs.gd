@@ -562,9 +562,27 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 	var ramp_start := Vector3(far_centre.x, entry_surface_y - 0.15, far_centre.z)
 	var ramp_end := Vector3(first_centre.x, first_surface_y - 0.15, first_centre.z)
 	var ramp_length := ramp_start.distance_to(ramp_end) + 0.36
+	# The far-lane sampling above only checks ground height at the very end of
+	# the run, then this box draws one straight line to the first tread. On a
+	# hillside that dips below that straight line anywhere in between, the
+	# walkway floats with a visible gap underneath. Re-sample the ground along
+	# the whole run and deepen the slab so its underside always reaches it,
+	# without moving the walkable top surface anyone is already using.
+	var ramp_underside_clearance := 0.0
+	var ramp_ground_samples := 8
+	for step in range(ramp_ground_samples + 1):
+		var t: float = float(step) / ramp_ground_samples
+		var sample_point: Vector3 = ramp_start.lerp(ramp_end, t)
+		for lane_fraction in [-0.48, 0.0, 0.48]:
+			var lane_point: Vector3 = sample_point + radial * (TREAD_CLEAR_WIDTH * lane_fraction)
+			var ground_here := _ground_at(lane_point.x, lane_point.z)
+			ramp_underside_clearance = maxf(ramp_underside_clearance, sample_point.y - ground_here)
+	var ramp_extra_depth := ramp_underside_clearance + 0.15
+	var ramp_height := 0.30 + ramp_extra_depth
+	var ramp_centre := ramp_start.lerp(ramp_end, 0.5) - Vector3(0.0, ramp_extra_depth * 0.5, 0.0)
 	var ramp := _oriented_box(entry,
-		Vector3(TREAD_CLEAR_WIDTH, 0.30, ramp_length),
-		ramp_start.lerp(ramp_end, 0.5), ramp_end, light)
+		Vector3(TREAD_CLEAR_WIDTH, ramp_height, ramp_length),
+		ramp_centre, ramp_end, light)
 	ramp.name = "GroundEntryWalkSurface"
 	_add_box_body(ramp, (ramp.mesh as BoxMesh).size)
 	ramp.set_meta("smooth_straight_route", true)
