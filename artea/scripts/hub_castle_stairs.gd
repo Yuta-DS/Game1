@@ -15,6 +15,17 @@
 # deleting one node.
 extends Node3D
 
+# web_terrain_compat.gd's baked ground replacement (WebTerrainCollision) is
+# the only thing in the project that sets this bit. _ground_at()'s raycast
+# fallback below allowlists it: NewPlayer's CharacterBody3D has no collision
+# layer/mask override of its own, so it runs on Godot's plain default (layer
+# 1, mask 1) -- moving this file's own architecture to a different layer to
+# exclude it from that ray would have made the player fall straight through
+# all of it. Allowlisting the one thing that is actually ground sidesteps
+# that entirely: it works no matter what layer everything else is on, and
+# handles decorative mountain rock and any other stray prop the same way.
+const WebTerrainCompat := preload("res://scripts/web_terrain_compat.gd")
+
 # Matches building_castle_red2 in New_Hub_World.tscn.
 const CASTLE_XZ := Vector2(-51.4, 27.41)
 const CASTLE_BASE_Y := 74.49
@@ -568,16 +579,28 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 	# walkway floats with a visible gap underneath. Re-sample the ground along
 	# the whole run and deepen the slab so its underside always reaches it,
 	# without moving the walkable top surface anyone is already using.
+	#
+	# Only trust Terrain3D itself for these extra samples. _ground_at() falls
+	# back to a bare world ray when Terrain3D is absent -- true on Web, which
+	# frees the node entirely -- and that ray has no way to tell the ground
+	# apart from a nearby stair tread, wall, or roof (see its own comment).
+	# 27 new raycasts along this run made that misread far more likely than the
+	# two or three the rest of this function already relied on, which is
+	# exactly what produced a Web-only shape once this landed. Skipping the
+	# deepening on Web leaves its geometry exactly as it was before this fix;
+	# only desktop, where the height data is real, gets the deeper slab.
+	var terrain_present := get_parent().get_node_or_null("Environment/Terrain3D") != null
 	var ramp_underside_clearance := 0.0
-	var ramp_ground_samples := 8
-	for step in range(ramp_ground_samples + 1):
-		var t: float = float(step) / ramp_ground_samples
-		var sample_point: Vector3 = ramp_start.lerp(ramp_end, t)
-		for lane_fraction in [-0.48, 0.0, 0.48]:
-			var lane_point: Vector3 = sample_point + radial * (TREAD_CLEAR_WIDTH * lane_fraction)
-			var ground_here := _ground_at(lane_point.x, lane_point.z)
-			ramp_underside_clearance = maxf(ramp_underside_clearance, sample_point.y - ground_here)
-	var ramp_extra_depth := ramp_underside_clearance + 0.15
+	if terrain_present:
+		var ramp_ground_samples := 8
+		for step in range(ramp_ground_samples + 1):
+			var t: float = float(step) / ramp_ground_samples
+			var sample_point: Vector3 = ramp_start.lerp(ramp_end, t)
+			for lane_fraction in [-0.48, 0.0, 0.48]:
+				var lane_point: Vector3 = sample_point + radial * (TREAD_CLEAR_WIDTH * lane_fraction)
+				var ground_here := _ground_at(lane_point.x, lane_point.z)
+				ramp_underside_clearance = maxf(ramp_underside_clearance, sample_point.y - ground_here)
+	var ramp_extra_depth := ramp_underside_clearance + 0.15 if terrain_present else 0.0
 	var ramp_height := 0.30 + ramp_extra_depth
 	var ramp_centre := ramp_start.lerp(ramp_end, 0.5) - Vector3(0.0, ramp_extra_depth * 0.5, 0.0)
 	var ramp := _oriented_box(entry,
@@ -2633,10 +2656,19 @@ func _ground_at(x: float, z: float) -> float:
 		if not is_nan(height):
 			return height
 
-	# Defensive fallback for worlds that reuse the stair without Terrain3D.
+	# Defensive fallback for worlds that reuse the stair without Terrain3D --
+	# which, on Web, is every world: Terrain3D is freed there entirely before
+	# this generator runs, so this is not a rare defensive path there, it is
+	# the only ground query Web ever gets. Mask to the one layer that is
+	# actually ground (see WebTerrainCompat above) rather than trying to
+	# exclude every possible thing the ray could otherwise land on -- this
+	# stair climbs a hillside dotted with decorative rock meshes and its own
+	# already-built architecture, any of which a blind ray could mistake for
+	# the earth.
 	var space := get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(
 		Vector3(x, 400.0, z), Vector3(x, -100.0, z))
+	query.collision_mask = WebTerrainCompat.WEB_TERRAIN_SCATTER_LAYER
 	var hit := space.intersect_ray(query)
 	return hit.position.y if hit.has("position") else 35.5
 
