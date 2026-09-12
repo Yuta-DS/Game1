@@ -75,6 +75,11 @@
 [ext_resource type="Script" uid="uid://kb7gxmt1810v" path="res://scripts/castle_redesign.gd" id="74_castle"]
 [ext_resource type="Script" uid="uid://fk3emtido11m" path="res://scripts/original_cat_statue.gd" id="76_cat_statue"]
 [ext_resource type="Script" uid="uid://xqkwwyaa8kds" path="res://scripts/hub_castle_crown.gd" id="77_crown"]
+[ext_resource type="Script" path="res://scripts/hub_skyrail.gd" id="79_skyrl"]
+[ext_resource type="Script" path="res://scripts/hub_sky_isles.gd" id="80_skisl"]
+[ext_resource type="Script" path="res://scripts/hub_train_rider.gd" id="81_rider"]
+[ext_resource type="Script" path="res://scripts/hub_scatter_visibility_range.gd" id="200_scatter_visibility"]
+[ext_resource type="PackedScene" path="res://scenes/vegetation/grass_clump_3d.tscn" id="109_grass_3d"]
 [ext_resource type="PackedScene" uid="uid://bkwxa1ae6l2lb" path="res://assets3D/houses/red/building_blacksmith_red.gltf" id="78_smith"]
 [ext_resource type="Script" uid="uid://b6fuats8qcann" path="res://scripts/hub_castle_stairs.gd" id="78_stairs"]
 [ext_resource type="PackedScene" uid="uid://rvmn0l3pa5kl" path="res://assets3D/houses/red/building_barracks_red.gltf" id="79_barrk"]
@@ -211,7 +216,7 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 
 [sub_resource type="Resource" id="Resource_eap1h"]
 script = ExtResource("15_o1ycd")
-amount = 120000
+amount = 45000
 override_global_seed = true
 restrict_height = true
 reference_frame = 1
@@ -396,6 +401,18 @@ script = ExtResource("110_bee_garden")
 flower_scatter_path = NodePath("../Environment/Grass")
 tree_scatter_path = NodePath("../Environment/Objects")
 
+[node name="GrassVisibilityRange" type="Node" parent="."]
+script = ExtResource("200_scatter_visibility")
+scatter_path = NodePath("../Environment/Grass")
+visibility_range_end = 40.0
+visibility_range_end_margin = 8.0
+
+[node name="ObjectsVisibilityRange" type="Node" parent="."]
+script = ExtResource("200_scatter_visibility")
+scatter_path = NodePath("../Environment/Objects")
+visibility_range_end = 150.0
+visibility_range_end_margin = 25.0
+
 [node name="VillageBrickPlaza" type="Node3D" parent="." unique_id=671891079]
 script = ExtResource("111_brick_plaza")
 
@@ -559,6 +576,7 @@ metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 path = "res://scenes/vegetation/wildflower_red_3d.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -566,6 +584,7 @@ metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 path = "res://scenes/vegetation/wildflower_orange_3d.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -573,6 +592,7 @@ metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 path = "res://scenes/vegetation/wildflower_yellow_3d.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -580,6 +600,7 @@ metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 path = "res://scenes/vegetation/wildflower_green_3d.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -587,6 +608,7 @@ metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 path = "res://scenes/vegetation/wildflower_blue_3d.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -594,6 +616,7 @@ metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 path = "res://scenes/vegetation/wildflower_indigo_3d.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -601,6 +624,7 @@ metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 script = ExtResource("19_ngqnt")
 proportion = 36
 source_scale_multiplier = 0.85
+override_cast_shadow = 0
 path = "res://scenes/vegetation/wildflower_violet_3d.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
@@ -635,7 +659,7 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 22.
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.8145, 29.2245, 0)
 script = ExtResource("12_0l1bc")
 global_seed = 111
-render_mode = 1
+keep_static_colliders = true
 modifier_stack = SubResource("Resource_dcuya")
 Performance/use_chunks = true
 Performance/chunk_dimensions = Vector3(15, 15, 15)

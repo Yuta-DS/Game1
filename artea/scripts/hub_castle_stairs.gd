@@ -25,6 +25,7 @@ extends Node3D
 # that entirely: it works no matter what layer everything else is on, and
 # handles decorative mountain rock and any other stray prop the same way.
 const WebTerrainCompat := preload("res://scripts/web_terrain_compat.gd")
+const HubLightFade := preload("res://scripts/hub_light_fade.gd")
 
 # Matches building_castle_red2 in New_Hub_World.tscn.
 const CASTLE_XZ := Vector2(-51.4, 27.41)
@@ -2171,6 +2172,7 @@ func _build_bridge(parent: Node3D, base: Vector2, top_y: float) -> void:
 	beacon.light_energy = 1.7
 	beacon.omni_range = 10.0
 	beacon.shadow_enabled = false
+	HubLightFade.apply(beacon)
 	parent.add_child(beacon)
 	beacon.global_position = target + Vector3(0.0, 1.4, 0.0)
 
@@ -2323,6 +2325,7 @@ func _build_lumen_ceremony(parent: Node3D, start: Vector3, target: Vector3,
 		arch_lamp.light_energy = 1.5
 		arch_lamp.omni_range = 9.0
 		arch_lamp.shadow_enabled = false
+		HubLightFade.apply(arch_lamp)
 		parent.add_child(arch_lamp)
 		arch_lamp.global_position = arch_centre + Vector3(0.0, 4.2, 0.0)
 
@@ -2643,6 +2646,7 @@ func _add_lantern(parent: Node3D, base: Vector2, angle: float, y: float) -> void
 	lamp.light_energy = 1.2
 	lamp.omni_range = 9.0
 	lamp.shadow_enabled = false
+	HubLightFade.apply(lamp)
 	bulb.add_child(lamp)
 
 
