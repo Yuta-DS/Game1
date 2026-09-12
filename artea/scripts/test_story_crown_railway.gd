@@ -112,20 +112,10 @@ func _run() -> void:
 			_fail("%s station is not 200m beyond its east boundary" % ["Heart", "Creator"][kingdom_index])
 			return
 	var flags := {"star_of_wisdom": false, "harmony_jewel": false, "creators_light": false}
-	if not railway.call("station_unlocked_with", 0, flags) \
-			or not railway.call("station_unlocked_with", 1, flags) \
-			or railway.call("station_unlocked_with", 2, flags):
-		_fail("initial station locks do not match the story")
-		return
-	flags.star_of_wisdom = true
-	if not railway.call("station_unlocked_with", 2, flags) \
-			or railway.call("station_unlocked_with", 3, flags):
-		_fail("Star of Wisdom must unlock only Heart Melody")
-		return
-	flags.harmony_jewel = true
-	if not railway.call("station_unlocked_with", 3, flags):
-		_fail("Harmony Jewel must unlock Creator's Light")
-		return
+	for station_index in 4:
+		if not railway.call("station_unlocked_with", station_index, flags):
+			_fail("every station must be reachable without treasures")
+			return
 	for required in ["CrownLineRoute", "StoryStations", "RainbowGalaxyTrain", "CrownLineHUD"]:
 		if railway.get_node_or_null(required) == null:
 			_fail("railway failed to build %s" % required)
@@ -469,8 +459,8 @@ func _run() -> void:
 	var journey := root.get_node_or_null("JourneyState")
 	if journey != null:
 		journey.set("treasures", {
-			"star_of_wisdom": true,
-			"harmony_jewel": true,
+			"star_of_wisdom": false,
+			"harmony_jewel": false,
 			"creators_light": false,
 		})
 	player.global_position = railway.call("get_driver_interaction_position")
@@ -481,6 +471,11 @@ func _run() -> void:
 		railway.call("drive_manual", 1.0, 30.0)
 		if int(railway.call("get_current_station")) != expected_station:
 			_fail("manual forward control did not reach loop station %d" % expected_station)
+			return
+	for expected_station in [3, 2, 1, 0]:
+		railway.call("drive_manual", -1.0, 30.0)
+		if int(railway.call("get_current_station")) != expected_station:
+			_fail("reverse control did not reach station %d" % expected_station)
 			return
 	if not bool(railway.call("request_disembark")):
 		_fail("driver cannot disembark after returning to Gallery on the closed loop")
