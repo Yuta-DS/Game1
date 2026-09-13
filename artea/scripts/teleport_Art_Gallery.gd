@@ -1,5 +1,7 @@
 extends Area3D
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 const TARGET_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 const CASTLE_NODE_NAME := "building_castle_red2"
 
@@ -199,4 +201,13 @@ func _travel() -> void:
 	# Changing the scene inside a physics callback frees this Area3D while the
 	# physics server is still iterating it. Deferring runs the swap once the
 	# callback has unwound.
-	get_tree().change_scene_to_file.call_deferred(TARGET_SCENE_PATH)
+	_enter_gallery.call_deferred()
+
+
+# The castle interior is a large scene that takes several seconds to build.
+# change_scene_to_file() loads it synchronously, so the game simply froze on
+# the last hub frame for the whole duration with no sign it was doing
+# anything. SceneLoader.change_scene_with_loading threads the load behind the
+# progress bar instead - the same route every other way into the castle uses.
+func _enter_gallery() -> void:
+	SceneLoader.change_scene_with_loading(get_tree(), TARGET_SCENE_PATH)

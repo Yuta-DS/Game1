@@ -7,6 +7,8 @@
 # corresponding real kingdom and back to the Art Castle Galaxy.
 extends Node
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 signal kingdom_entered(kingdom_id: String)
 signal returned_to_castle
 
@@ -136,7 +138,11 @@ func start_campaign(scene_tree: SceneTree = null) -> bool:
 
 func return_to_campaign(scene_tree: SceneTree = null) -> bool:
 	active_kingdom_id = ""
-	var returned := _change_scene(CAMPAIGN_HOME_SCENE, scene_tree)
+	# The castle is a large scene, so it goes through the loading screen rather
+	# than freezing on a synchronous swap. The quest journal and guided-story
+	# routes below stay on the direct path in _change_scene: they are light
+	# enough that a loading screen would only flash in front of them.
+	var returned := _change_scene_with_loading(CAMPAIGN_HOME_SCENE, scene_tree)
 	if returned:
 		returned_to_castle.emit()
 	return returned
@@ -151,6 +157,16 @@ func open_quest_journal(scene_tree: SceneTree = null) -> bool:
 # simplified path.
 func open_guided_lens_story(scene_tree: SceneTree = null) -> bool:
 	return _change_scene(OPTIONAL_GUIDED_STORY_SCENE, scene_tree)
+
+
+func _change_scene_with_loading(scene_path: String, scene_tree: SceneTree = null) -> bool:
+	if not ResourceLoader.exists(scene_path):
+		push_error("JourneyCampaign: missing scene %s" % scene_path)
+		return false
+	var tree := _scene_tree(scene_tree)
+	if tree == null:
+		return false
+	return SceneLoader.change_scene_with_loading(tree, scene_path)
 
 
 func _change_scene(scene_path: String, scene_tree: SceneTree = null) -> bool:

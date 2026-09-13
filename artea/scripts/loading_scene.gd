@@ -5,28 +5,66 @@ extends Control
 @onready var progress_label = $progressLabel
 
 var loading_started := false
-var waiting_for_scatter := false
-var _dot_timer := 0.0
+var _shown_percent := 0.0
+
+# Entering a scene has three phases with very different costs, and only
+# reporting the first one left the bar parked while the other two ran. Each
+# phase owns a slice of the bar and fills its slice from a real measurement:
+# the resource loader's own fraction, the number of scatter nodes that have
+# finished building, and the number of settled frames. Nothing here advances
+# on a timer - a bar that creeps forward on its own looks informative while
+# telling the player nothing, and would go right back to hiding a stall.
+const LOAD_SLICE := 0.6
+const SCATTER_SLICE := 0.3
+const SETTLE_SLICE := 0.1
+
+# How the screen decides the new scene is actually drawable (see
+# _hold_until_first_frames_settle).
+#
+# The budget separates "still stalling" from "running normally", NOT "running
+# well". The Art Castle's ordinary frames are already in the 30-45 ms range,
+# while the first-draw stalls this is waiting out are 100 ms+, so the
+# threshold sits above the former and well below the latter. Setting it near
+# the normal frame time instead would mean the condition is essentially never
+# met and the screen just burns the full timeout on every load.
+const SETTLE_FRAME_BUDGET_MS := 80
+const SETTLE_FRAMES_REQUIRED := 3
+const SETTLE_TIMEOUT_MS := 5000
 
 func _ready():
-	if next_scene_path != "":
-		ResourceLoader.load_threaded_request(next_scene_path)
-		loading_started = true
-	else:
+	if next_scene_path == "":
 		push_error("⚠ No scene path provided to loading screen.")
-
-func _process(delta):
-	if waiting_for_scatter:
-		# ProtonScatter has no percent-complete to report, only a completion
-		# signal (see _wait_for_scatter_then_finish), so there is no real
-		# number to show here. A static "100%" for several seconds reads as
-		# frozen/broken, so cycle the label instead - the point is to prove
-		# the game is still alive, not to claim false precision.
-		_dot_timer += delta
-		var dots := (int(_dot_timer / 0.4) % 3) + 1
-		progress_label.text = "Placing foliage" + ".".repeat(dots)
 		return
+	_start_load_once_visible()
 
+
+# The request deliberately does NOT start in _ready(). The Web export ships
+# without WASM thread support (export_presets.cfg variant/thread_support), so
+# load_threaded_request cannot actually hand the work to a background thread
+# there and the first chunk of it lands on the main thread instead. Starting
+# it in _ready() therefore blocked before this screen had ever been drawn, and
+# the player sat looking at a frozen frame of the scene they were leaving with
+# no indication anything was happening. Giving the screen two frames to
+# actually reach the display first costs ~30 ms and makes the wait legible.
+func _start_load_once_visible() -> void:
+	# Label the frames this is about to wait for, so the first thing that
+	# reaches the display already reads as a load in progress.
+	_report(0.0, "Loading world")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	ResourceLoader.load_threaded_request(next_scene_path)
+	loading_started = true
+
+# The bar only ever moves forward. Phase three's measurement can legitimately
+# reset (a stalled frame puts the settled-frame count back to zero), and a bar
+# that jumps backwards reads as a bug rather than as honest reporting.
+func _report(fraction: float, text: String) -> void:
+	_shown_percent = maxf(_shown_percent, clampf(fraction, 0.0, 1.0) * 100.0)
+	progress_bar.value = _shown_percent
+	progress_label.text = "%d%%  %s" % [int(_shown_percent), text]
+
+
+func _process(_delta):
 	if not loading_started:
 		return
 
@@ -34,9 +72,7 @@ func _process(delta):
 	var status = ResourceLoader.load_threaded_get_status(next_scene_path, progress)
 
 	if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-		var percent = progress[0] * 100.0
-		progress_bar.value = percent
-		progress_label.text = str(percent as int) + "%"
+		_report(float(progress[0]) * LOAD_SLICE, "Loading world")
 
 	elif status == ResourceLoader.THREAD_LOAD_LOADED:
 		loading_started = false  # prevent re-entry
@@ -56,9 +92,7 @@ func _process(delta):
 # pop into a bare hub. Hold the screen until every scatter node still
 # building finishes, then hand off.
 func _wait_for_scatter_then_finish() -> void:
-	progress_bar.value = 100
-	progress_label.text = "Placing foliage..."
-	waiting_for_scatter = true
+	_report(LOAD_SLICE, "Building the world")
 
 	# full_rebuild() is deferred from each Scatter node's own _ready(), so
 	# give that a couple of idle frames to actually start before checking -
@@ -101,16 +135,51 @@ func _wait_for_scatter_then_finish() -> void:
 			if scatter.has_signal("build_completed") and "build_version" in scatter:
 				pending.append(scatter)
 
-	var deadline := Time.get_ticks_msec() + 15000
-	while Time.get_ticks_msec() < deadline:
-		var all_done := true
-		for scatter in pending:
-			if is_instance_valid(scatter) and scatter.build_version < 1:
-				all_done = false
+	# How many of them have finished is a real, reportable number, so the bar
+	# fills across this phase instead of parking at a single value. A scene
+	# with no scatter nodes at all (the Art Castle) has nothing to report and
+	# no reason to claim it is placing foliage, so it just takes the slice.
+	if pending.is_empty():
+		_report(LOAD_SLICE + SCATTER_SLICE, "Building the world")
+	else:
+		var deadline := Time.get_ticks_msec() + 15000
+		while Time.get_ticks_msec() < deadline:
+			var done := 0
+			for scatter in pending:
+				if not is_instance_valid(scatter) or scatter.build_version >= 1:
+					done += 1
+			_report(LOAD_SLICE + SCATTER_SLICE * (float(done) / float(pending.size())),
+				"Placing foliage (%d/%d)" % [done, pending.size()])
+			if done >= pending.size():
 				break
-		if all_done:
-			break
-		await get_tree().process_frame
+			await get_tree().process_frame
 
-	waiting_for_scatter = false
+	await _hold_until_first_frames_settle()
 	queue_free()
+
+
+# A scene being loaded and instantiated is not the same as it being ready to
+# draw. The Art Castle only pays for most of its materials when they are first
+# rendered - the Compatibility renderer (the only one Web can use) compiles a
+# shader the first time it actually draws with it, synchronously - so the
+# first frames after the swap are by far the most expensive ones. The scatter
+# wait above does not cover this: it exits immediately for any scene with no
+# ProtonScatter nodes, which includes the castle, so this screen used to free
+# itself one frame too early and the player saw the freeze happen just after
+# it disappeared. Staying up until frames are actually landing on time keeps
+# that cost behind the loading screen where it belongs.
+func _hold_until_first_frames_settle() -> void:
+	var base := LOAD_SLICE + SCATTER_SLICE
+	_report(base, "Preparing the view")
+	var deadline := Time.get_ticks_msec() + SETTLE_TIMEOUT_MS
+	var calm_frames := 0
+	while calm_frames < SETTLE_FRAMES_REQUIRED and Time.get_ticks_msec() < deadline:
+		var started := Time.get_ticks_msec()
+		await get_tree().process_frame
+		if Time.get_ticks_msec() - started <= SETTLE_FRAME_BUDGET_MS:
+			calm_frames += 1
+		else:
+			calm_frames = 0
+		_report(base + SETTLE_SLICE * (float(calm_frames) / float(SETTLE_FRAMES_REQUIRED)),
+			"Preparing the view")
+	_report(1.0, "Ready")

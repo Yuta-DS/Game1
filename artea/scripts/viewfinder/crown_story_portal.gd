@@ -9,6 +9,8 @@
 # no prompt to read, no button to find.
 extends Node3D
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 const STORY_SCENE_PATH := "res://scenes/viewfinder/crown_of_life_story.tscn"
 const CAMPAIGN_HOME_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 const LABEL_TEXT := "Crown of Life Adventure • Begin Journey"
@@ -95,4 +97,4 @@ func _on_body_entered(body: Node3D) -> void:
 	else:
 		# Supports an isolated scene harness without restoring the legacy hub
 		# route. Normal game launches always use the campaign autoload above.
-		get_tree().change_scene_to_file(CAMPAIGN_HOME_SCENE)
+		SceneLoader.change_scene_with_loading(get_tree(), CAMPAIGN_HOME_SCENE)

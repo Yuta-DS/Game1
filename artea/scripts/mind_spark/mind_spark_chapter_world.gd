@@ -1,6 +1,8 @@
 class_name MindSparkChapterWorld
 extends Control
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 ## Full five-quest Mind Spark chapter coordinator. Story and encounter data are
 ## curated, local resources; presentation nodes never award journey progress.
 
@@ -441,7 +443,7 @@ func _return_to_castle() -> void:
 	if campaign != null and campaign.has_method("return_to_campaign"):
 		campaign.call("return_to_campaign", get_tree())
 	elif ResourceLoader.exists(CASTLE_SCENE):
-		get_tree().change_scene_to_file(CASTLE_SCENE)
+		SceneLoader.change_scene_with_loading(get_tree(), CASTLE_SCENE)
 
 
 func _finale_dialogue() -> String:

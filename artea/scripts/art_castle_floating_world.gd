@@ -1,5 +1,7 @@
 extends Node3D
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 const MindSparkWorldGateScene := preload("res://scenes/mind_spark/world_gate.tscn")
 const TreeOfLifeScene := preload("res://assets3D/tree_of_life/glb/artea_tree_of_life.glb")
 const BlueprintTrunkRootScene := preload(
@@ -1148,7 +1150,13 @@ func _on_return_gate_entered(body: Node3D) -> void:
 	if not ResourceLoader.exists(RETURN_SCENE_PATH):
 		return
 	_travelling = true
-	get_tree().change_scene_to_file.call_deferred(RETURN_SCENE_PATH)
+	# Deferred: swapping scenes inside the Area3D's body_entered callback frees
+	# this node while the physics server is still iterating it.
+	_return_to_gallery.call_deferred()
+
+
+func _return_to_gallery() -> void:
+	SceneLoader.change_scene_with_loading(get_tree(), RETURN_SCENE_PATH)
 
 
 func _build_island_foundation(parent: Node3D, center: Vector3, radius: float,

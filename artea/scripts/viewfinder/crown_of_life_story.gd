@@ -17,6 +17,8 @@
 # gallery_ceremony.gd's evidentiary standard.
 extends Node3D
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 const ControllerScript := preload("res://scripts/viewfinder/lens_controller.gd")
 const FrustumCutterScript := preload("res://scripts/viewfinder/frustum_cutter.gd")
 
@@ -2014,7 +2016,7 @@ func _return_to_castle() -> void:
 	if OS.has_feature("crown_story"):
 		get_tree().quit()
 	else:
-		get_tree().change_scene_to_file(HUB_SCENE_PATH)
+		SceneLoader.change_scene_with_loading(get_tree(), HUB_SCENE_PATH)
 
 
 func _return_label() -> String:

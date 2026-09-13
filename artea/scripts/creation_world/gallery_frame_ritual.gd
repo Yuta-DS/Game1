@@ -5,6 +5,8 @@
 ## chosen motif is the meaning-making action; the app simply remembers it.
 extends Control
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 const CASTLE_FALLBACK_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 
 const MOTIFS := {
@@ -290,7 +292,7 @@ func _return_to_campaign() -> void:
 	if campaign != null and campaign.has_method("return_to_campaign"):
 		campaign.call("return_to_campaign")
 		return
-	get_tree().change_scene_to_file(CASTLE_FALLBACK_SCENE)
+	SceneLoader.change_scene_with_loading(get_tree(), CASTLE_FALLBACK_SCENE)
 
 
 func _panel_style(fill: Color, border: Color, width: int, radius: int) -> StyleBoxFlat:
