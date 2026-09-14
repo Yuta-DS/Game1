@@ -809,10 +809,25 @@ func _advance_manual_drive(throttle: float, delta: float) -> void:
 	_set_train_progress(_drive_segment, _drive_progress)
 	_status.text = "DRIVING  •  %03d KM/H  •  %s  •  W/S MOVE  •  R HORN" \
 		% [roundi(_display_speed_kph), _segment_destination_name(drive_direction)]
-	if is_equal_approx(_drive_progress, 0.0):
+	# Arrival is the end of travel in the direction of travel, tested against the
+	# clamp bounds exactly.
+	#
+	# is_equal_approx() was wrong here twice over. Its tolerance has an absolute
+	# floor of CMP_EPSILON (1e-5) when comparing against zero, and the first
+	# frames out of a station move the curve parameter by far less than that --
+	# the train is accelerating from rest along a curve hundreds of metres long,
+	# so the first non-zero progress measured ~5e-6. That read as "already at
+	# progress 0". Testing both ends regardless of direction then made the
+	# station just departed count as an arrival, so the train docked back where
+	# it started, zeroed its speed, and repeated it the next frame: a held
+	# throttle could not leave the platform at all. Which stations trapped it
+	# depended on the length of the curve being left, and auto-drive was
+	# unaffected because it does not come through here.
+	if drive_direction > 0:
+		if _drive_progress >= 1.0:
+			_dock_manual_train(_drive_segment + 1)
+	elif _drive_progress <= 0.0:
 		_dock_manual_train(_drive_segment)
-	elif is_equal_approx(_drive_progress, 1.0):
-		_dock_manual_train(_drive_segment + 1)
 
 
 func _begin_manual_segment(drive_direction: int) -> bool:
