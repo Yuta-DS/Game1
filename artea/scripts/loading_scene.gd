@@ -1,5 +1,7 @@
 extends Control
 
+const ShaderWarmup := preload("res://scripts/shader_warmup.gd")
+
 @export var next_scene_path: String = ""
 @onready var progress_bar = $progress_bar
 @onready var progress_label = $progressLabel
@@ -15,8 +17,14 @@ var _shown_percent := 0.0
 # on a timer - a bar that creeps forward on its own looks informative while
 # telling the player nothing, and would go right back to hiding a stall.
 const LOAD_SLICE := 0.6
-const SCATTER_SLICE := 0.3
+const SCATTER_SLICE := 0.22
+const WARMUP_SLICE := 0.08
 const SETTLE_SLICE := 0.1
+
+# The shader warmup is real, measurable work (the castle's 32 distinct variants
+# cost ~4.4 s of compilation between them), so it gets its own slice of the bar
+# rather than being hidden inside the settle phase.
+const WARMUP_TIMEOUT_MS := 20000
 
 # How the screen decides the new scene is actually drawable (see
 # _hold_until_first_frames_settle).
@@ -154,8 +162,58 @@ func _wait_for_scatter_then_finish() -> void:
 				break
 			await get_tree().process_frame
 
+	await _warm_shaders()
 	await _hold_until_first_frames_settle()
 	queue_free()
+
+
+# Compile the new scene's shaders while this screen is still covering them.
+#
+# The Compatibility renderer compiles a material's shader the first time it
+# draws with it, synchronously, on the main thread. _hold_until_first_frames_
+# settle() below waits for that to stop happening, but waiting only covers the
+# materials that happen to face the camera in those first frames. Every other
+# one still compiles later, during play, as a hitch the moment it first comes
+# into view.
+#
+# That matters more since the world started being distance-culled
+# (world_streaming_director.gd): distant cells are now guaranteed not to have
+# been drawn during the settle frames, so without this every cell appearing as
+# the player walks out of the castle would arrive with a fresh compile attached.
+func _warm_shaders() -> void:
+	var scene := get_tree().current_scene
+	if scene == null:
+		return
+	# Benchmark escape hatch (tools/bench_castle_cold.gd), so the before/after
+	# can be measured in the same build rather than by reverting the change.
+	if Engine.has_meta("artea_skip_shader_warmup"):
+		return
+	_report(LOAD_SLICE + SCATTER_SLICE, "Compiling shaders")
+	var materials := ShaderWarmup.collect(scene)
+	if materials.is_empty():
+		return
+	var rig := ShaderWarmup.build_rig(materials)
+	add_child(rig)
+	var total := ShaderWarmup.warm_node_count(rig)
+	# Revealed a couple of variants at a time rather than all at once. Each
+	# reveal makes the next frame as long as those compiles take, so doing the
+	# lot in one frame would lock the screen solid for the whole run with the
+	# bar frozen - the exact thing this screen exists to avoid. The deadline is
+	# a backstop only: a driver that compiles unusually slowly hands over to
+	# gameplay rather than stranding the player here.
+	var cursor := 0
+	var deadline := Time.get_ticks_msec() + WARMUP_TIMEOUT_MS
+	while cursor >= 0 and Time.get_ticks_msec() < deadline:
+		cursor = ShaderWarmup.reveal_next(rig, cursor)
+		if cursor < 0:
+			break
+		if total > 0:
+			_report(LOAD_SLICE + SCATTER_SLICE
+				+ WARMUP_SLICE * (float(cursor) / float(total)), "Compiling shaders")
+		await get_tree().process_frame
+	# One more frame so the final batch is actually drawn before the rig goes.
+	await get_tree().process_frame
+	rig.queue_free()
 
 
 # A scene being loaded and instantiated is not the same as it being ready to
@@ -169,7 +227,7 @@ func _wait_for_scatter_then_finish() -> void:
 # it disappeared. Staying up until frames are actually landing on time keeps
 # that cost behind the loading screen where it belongs.
 func _hold_until_first_frames_settle() -> void:
-	var base := LOAD_SLICE + SCATTER_SLICE
+	var base := LOAD_SLICE + SCATTER_SLICE + WARMUP_SLICE
 	_report(base, "Preparing the view")
 	var deadline := Time.get_ticks_msec() + SETTLE_TIMEOUT_MS
 	var calm_frames := 0
