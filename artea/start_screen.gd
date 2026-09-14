@@ -13,10 +13,32 @@ extends Node2D
 func _ready():
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	get_viewport().size_changed.connect(_layout_for_screen)
+	_layout_for_screen.call_deferred()
+
+func _layout_for_screen() -> void:
+	var viewport_size := get_viewport_rect().size
+	var background: Sprite2D = $Background
+	var texture_size := background.texture.get_size()
+	background.position = viewport_size * 0.5
+	background.scale = Vector2.ONE * maxf(viewport_size.x / texture_size.x, viewport_size.y / texture_size.y)
+	# The old scene offsets placed the guest button below the design viewport.
+	# Fit the complete form, including feedback, after every rotation or resize.
+	var container: CenterContainer = $AnimationParent/CenterContainer
+	var panel: PanelContainer = container.get_node("PanelContainer")
+	var form_size := Vector2(660.0, maxf(660.0, panel.get_combined_minimum_size().y))
+	var desired_width := viewport_size.x * 0.9 if viewport_size.y > viewport_size.x else 760.0
+	var form_scale := minf(desired_width / form_size.x, viewport_size.y * 0.88 / form_size.y)
+	container.size = form_size
+	container.scale = Vector2.ONE * form_scale
+	container.position = (viewport_size - form_size * form_scale) * 0.5
+	$AnimationParent.position = Vector2.ZERO
 
 # Helper utility to cleanly control status messages and alert color states
 func show_message(text: String, is_error: bool = true):
 	status_label.text = text
+	_layout_for_screen.call_deferred()
 	if is_error:
 		status_label.add_theme_color_override("font_color", Color.RED)
 	else:
