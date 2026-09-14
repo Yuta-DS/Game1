@@ -87,3 +87,13 @@ scene-scoped suites.
 - The in-game chatbot uses a local LLM via `nobodywho`. `server.py` has
   a test OpenRouter path under `/ai/chat` intended as a starting point
   for swapping in a cloud model provider later.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in this repo's GitHub Issues (wsu-comp3018/COMP3018-S26-G3), via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context layout (no CONTEXT-MAP.md). See `docs/agents/domain.md`.
