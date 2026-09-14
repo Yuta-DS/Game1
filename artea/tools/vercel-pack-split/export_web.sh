@@ -26,6 +26,11 @@ if "${godot_bin}" --version | grep -qi mono; then
 	exit 1
 fi
 
+# Fail before replacing any existing build if the public client config is absent.
+# The source .env may contain OAuth secrets and must never be packed wholesale.
+"${godot_bin}" --headless --path "${project_dir}" \
+	--script res://tools/export_firebase_client_config.gd
+
 mkdir -p "${output_dir}"
 # Part indices become three digits once the pack exceeds 800 MiB. Remove every
 # generated numeric part from the prior export so stale part100+ files cannot

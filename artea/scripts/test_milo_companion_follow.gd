@@ -78,6 +78,11 @@ func _run() -> void:
 	_check(followed_distance >= float(milo.get("follow_stop_distance")) - 0.2,
 		"Milo preserves visible personal space instead of overlapping the player (%.2fm)" \
 		% followed_distance)
+	_check(bool(milo.get("first_wave")), "Milo still greets the player on arrival")
+	milo.call("_process", 5.1)
+	_check(str(milo.call("get_companion_state_name")) == "IDLE_NEAR_PLAYER" \
+			and locomotion_player.current_animation == "Idle_3",
+		"the completed arrival greeting does not restart every five seconds")
 
 	# Stopping also eases out instead of zeroing the body velocity in one frame.
 	milo.velocity = Vector3(1.5, 0.0, 0.0)

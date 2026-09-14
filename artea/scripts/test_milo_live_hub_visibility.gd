@@ -12,6 +12,21 @@ func _fail(message: String) -> void:
 	quit(1)
 
 
+func _visual_height(character: Node3D, visual_root: Node3D) -> float:
+	var combined := AABB()
+	var has_bounds := false
+	for node in visual_root.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := node as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+		var root_local := character.global_transform.affine_inverse() \
+			* mesh_instance.global_transform
+		var bounds := root_local * mesh_instance.get_aabb()
+		combined = combined.merge(bounds) if has_bounds else bounds
+		has_bounds = true
+	return combined.size.y if has_bounds else 0.0
+
+
 func _run() -> void:
 	var hub := HubScene.instantiate()
 	root.add_child(hub)
@@ -31,6 +46,25 @@ func _run() -> void:
 		milo.is_visible_in_tree(), milo.get_node_or_null("MayorMiloName") != null])
 	if not milo.is_visible_in_tree():
 		_fail("Milo is hidden in the live hub")
+		return
+	var milo_model := milo.get_node_or_null("Model") as Node3D
+	var player_model := player.get_node_or_null("RogueSkin") as Node3D
+	if milo_model == null or player_model == null:
+		_fail("live Milo or player visual root is missing")
+		return
+	var milo_height := _visual_height(milo, milo_model)
+	var player_height := _visual_height(player, player_model)
+	var height_ratio := milo_height / player_height if player_height > 0.0 else 0.0
+	print("MILO_LIVE_SIZE_TRACE: milo=%0.3f player=%0.3f ratio=%0.3f" % [
+		milo_height, player_height, height_ratio])
+	if height_ratio < 0.95 or height_ratio > 1.05:
+		_fail("Milo is not normalized to the playable character's visual height")
+		return
+	var body_shape := milo.get_node_or_null("CollisionShape3D") \
+		as CollisionShape3D
+	if body_shape == null or not body_shape.shape is CapsuleShape3D \
+			or absf((body_shape.shape as CapsuleShape3D).height - 2.0) > 0.001:
+		_fail("Milo's body collision does not match the normalized cast scale")
 		return
 	var interaction_shape := milo.get_node_or_null("Area3D/CollisionShape3D") \
 		as CollisionShape3D

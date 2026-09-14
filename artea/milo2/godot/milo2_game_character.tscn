@@ -6,8 +6,8 @@
 [ext_resource type="AudioStream" path="res://assets/audio/milo/milo_voice.ogg" id="4_voice"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_milo2_game"]
-radius = 0.55
-height = 2.7
+radius = 0.5
+height = 2.0
 
 [sub_resource type="SphereShape3D" id="Sphere_milo2_chat"]
 radius = 4.5
@@ -18,13 +18,13 @@ metadata/milo_generation = 2
 metadata/milo_visual_variant = "independent_reference_build_gameplay"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-position = Vector3(0, 1.35, 0)
+position = Vector3(0, 1, 0)
 shape = SubResource("Capsule_milo2_game")
 
 [node name="Model" parent="." instance=ExtResource("2_skin")]
 
 [node name="MayorMiloName" type="Label3D" parent="."]
-position = Vector3(0, 3.24, 0)
+position = Vector3(0, 2.08, 0)
 billboard = 1
 modulate = Color(1, 0.9, 0.48, 1)
 outline_modulate = Color(0.05, 0.07, 0.09, 1)
@@ -34,7 +34,7 @@ font_size = 44
 
 [node name="InteractionPrompt" type="Label3D" parent="."]
 visible = false
-position = Vector3(0, 3.58, 0)
+position = Vector3(0, 2.38, 0)
 billboard = 1
 no_depth_test = true
 visibility_range_end = 14.0

@@ -36,8 +36,11 @@ func _run() -> void:
 	assert(world.is_island_one_star_gate_open())
 	var west := gate.get_node("WestGoldenStarLeaf") as AnimatableBody3D
 	var east := gate.get_node("EastGoldenStarLeaf") as AnimatableBody3D
-	assert(west.position.x < -15.0 and east.position.x > 15.0,
-		"the opened leaves clear the central fused-island promenade")
+	assert(absf(absf(west.position.x) - 5.70) < 0.001 and absf(absf(east.position.x) - 5.70) < 0.001,
+		"the opened leaves retain fixed outer hinge axes")
+	assert(is_equal_approx(west.rotation.y, deg_to_rad(-96.0)) \
+		and is_equal_approx(east.rotation.y, deg_to_rad(96.0)),
+		"the opened leaves swing inward and clear the central promenade")
 	print("MindSparkZone02RouteClearance: PASS — fused saddle + opened star gate, no duplicate bridge")
 	world.queue_free()
 	await process_frame

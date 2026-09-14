@@ -45,11 +45,11 @@ func _run() -> void:
 		if object.definition.object_kind == QuestObjectDefinition.ObjectKind.CHECKPOINT_SERVER_ROOT:
 			checkpoints.append(object)
 	var focus := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.FOCUS_BELL_BEACON)
-	assert(str(focus.get_meta("current_required_target", "")).contains("Aether Compass"),
-		"Focus Bell first identifies Island One's required machine")
+	assert(str(focus.get_meta("current_required_target", "")).contains("Route Thought"),
+		"Focus Bell identifies the first precise Signal Observatory objective")
 	var compass := world.get_island_one_puzzle()
 	assert(compass != null and compass.solve_for_test().reason == "completed")
-	assert(bool(quest.progress.island_one_compass_solved), "Bearing Sigil completion is connected to Quest One")
+	assert(bool(quest.progress.island_one_compass_solved), "Echo Seed completion is connected to Island One")
 	player.take_damage(40.0)
 	assert(checkpoints[0].available_actions() == [&"save", &"heal", &"task"])
 	assert(checkpoints[0].interact(&"heal").accepted and player.current_health == player.max_health,
@@ -66,12 +66,28 @@ func _run() -> void:
 	assert(socket.definition.display_name == "Torch Spark Socket")
 	assert(socket.interact().accepted and socket.interact().accepted)
 	assert(world.is_quest_gate_open(0), "Quest One saves before opening its next path")
+	assert(bool(quest.progress.island_two_invitation_received), "Island One sends its Echo Seed to Island Two")
+	assert(str(world.get_meta("island_two_story_state")) == "invited")
+	player.global_position = world.to_global(world.get_zone_position("03_constellation_court") + Vector3.UP * 3.0)
+	quest.call("_try_begin_island_two_story")
+	assert(bool(quest.progress.island_two_arrived), "crossing into Island Two begins the evidence story once")
+	assert(str(world.get_meta("island_two_story_state")) == "received")
 	var scanner := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
-	assert(scanner.interact(&"scan").accepted and scanner.interact(&"fact").completed)
+	assert(not scanner.interact(&"fact").accepted)
+	for answer in [&"fact", &"fear", &"fact"]:
+		assert(scanner.interact(&"scan").accepted)
+		assert(scanner.interact(answer).accepted)
+	assert(scanner.current_state.completed)
 	for enemy in world.get_enemies():
 		if enemy.encounter_id == "constellation": enemy.take_damage(999.0)
 	var board := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.MEMORY_CONSTELLATION)
-	assert(board.interact().accepted and board.interact().accepted and board.interact().completed)
+	assert(not board.interact().accepted)
+	assert(board.interact(&"node", "choose").reason == "wrong_link_reset")
+	assert(board.interact(&"node", "notice").accepted)
+	assert(board.interact(&"undo").accepted)
+	for node in ["notice", "name", "choose"]:
+		assert(board.interact(&"node", node).accepted)
+	assert(board.current_state.completed)
 	assert(socket.interact().completed, "the restored memory gives the third Spark for a player placement")
 	var logic := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.LOGIC_GATE_ARCH)
 	assert(logic.interaction_enabled, "3/3 explicitly opens the linked Logic Gate task")

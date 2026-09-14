@@ -26,8 +26,8 @@ func _run() -> void:
 	assert(compass.get_node_or_null("CompassMachine/InnerCompassRing") != null)
 	assert(compass.get_node_or_null("WestPressureGauge/PressureNeedle") != null)
 	assert(compass.get_node_or_null("EastPressureGauge/PressureNeedle") != null)
-	assert(compass.find_children("PuzzleControl_*", "Node3D", true, false).size() == 10,
-		"ten readable stations include the Living Light Laboratory and analysis console")
+	assert(compass.find_children("PuzzleControl_*", "Node3D", true, false).size() == 16,
+		"sixteen readable stations cover the Signal Observatory and Echo Garden")
 	assert(compass.find_children("*Rune_*", "MeshInstance3D", true, false).size() == 84,
 		"the three rings retain 84 individually editable bearing plaques")
 	assert(compass.find_children("CanopyGlassTriangle_*", "MeshInstance3D", true, false).size() == 144,
@@ -48,7 +48,7 @@ func _run() -> void:
 		"an incomplete route gives non-punitive partial alignment feedback")
 	assert(compass.solve_for_test().reason == "completed")
 	assert(compass.is_powered() and solved_events.size() == 1)
-	assert(str(solved_events[0].relic_id) == "bearing_sigil")
+	assert(str(solved_events[0].relic_id) == "echo_seed")
 	assert(bool(world.get_meta("island_one_bearing_sigil", false)))
 	assert(compass.get_node("SolvedRouteProjection").visible)
 	assert(compass.get_node("BridgePowerSocketGlow").visible)

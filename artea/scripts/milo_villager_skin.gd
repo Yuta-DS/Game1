@@ -81,7 +81,10 @@ func _ready() -> void:
 	}
 	for alias in aliases:
 		var source: String = aliases[alias]
-		if not library.has_animation(alias) and animation_player.has_animation(source):
+		# Cane_Walk has a compatible donor fallback even when the authored
+		# Milo_Walking clip was not exported. Do not skip that fallback here.
+		if not library.has_animation(alias) and (alias == "Cane_Walk" \
+				or animation_player.has_animation(source)):
 			var clip: Animation
 			if alias == "Cane_Walk":
 				clip = _build_milo_cane_walk(animation_player)

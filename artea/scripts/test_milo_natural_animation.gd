@@ -232,9 +232,11 @@ func _run() -> void:
 		"gait phase advances from real distance calibrated to donor foot travel")
 
 	for side in ["L", "R"]:
-		for prefix in ["PrototypeEyeWhite", "EyelidHalf", "EyelidClosed",
-				"Pupil", "PrototypeBrow", "PrototypeMoustache"]:
-			_check(milo.find_child("%s_%s" % [prefix, side], true, false) != null,
+		# This suite loads preserved Milo 1, whose live GLB uses these names.
+		for prefix in ["EyeWhite", "EyelidHalf", "EyelidClosed",
+				"Pupil", "BrowFrame", "MoustachePad"]:
+			var face_part := milo.find_child("%s_%s" % [prefix, side], true, false) as MeshInstance3D
+			_check(face_part != null and face_part.mesh != null,
 				"the live face includes %s_%s" % [prefix, side])
 	_check(str(milo.call("get_blink_shape")) == "relaxed",
 		"Milo begins with a relaxed open gaze")
@@ -401,6 +403,11 @@ func _run() -> void:
 
 	# The blueprint requires one sculpted object per hand. Exercise each hand's
 	# single whole-hand deformation and prove both sides curl together.
+	# Voice is deliberately opt-in; exercise speech gestures without changing
+	# that production default or invoking the machine's speech synthesizer.
+	_check(not bool(milo.get("voice_enabled")), "Milo stays silent by default")
+	milo.set("voice_enabled", true)
+	milo.set("use_device_tts_for_dynamic_replies", false)
 	milo.call("_on_companion_speech_requested",
 		"Let us explore this together.")
 	for _frame in 18:
@@ -452,6 +459,7 @@ func _check_cane_recovery_cycle(player: CharacterBody3D) -> void:
 	probe.call("_set_companion_state", 2) # FOLLOWING
 	var largest_cane_flex := 0.0
 	var largest_forearm_step := 0.0
+	var largest_step_frame := -1
 	var previous_forearm := Vector3.ZERO
 	for cycle_frame in 80:
 		var delta := 1.0 / 60.0
@@ -474,8 +482,10 @@ func _check_cane_recovery_cycle(player: CharacterBody3D) -> void:
 			float(probe.call("get_cane_elbow_flex_degrees")))
 		var forearm_direction := (wrist - elbow).normalized()
 		if cycle_frame > 0:
-			largest_forearm_step = maxf(largest_forearm_step,
-				rad_to_deg(previous_forearm.angle_to(forearm_direction)))
+			var step := rad_to_deg(previous_forearm.angle_to(forearm_direction))
+			if step > largest_forearm_step:
+				largest_forearm_step = step
+				largest_step_frame = cycle_frame
 		previous_forearm = forearm_direction
 		_check(shoulder.distance_to(elbow) > 0.20,
 			"the upper sleeve retains its connected bone length during recovery")
@@ -483,7 +493,9 @@ func _check_cane_recovery_cycle(player: CharacterBody3D) -> void:
 		"the cane elbow stays below the former extreme recovery fold (%.2f)" \
 			% largest_cane_flex)
 	_check(largest_forearm_step < 7.0,
-		"the cane forearm advances smoothly without a one-frame flip (%.2f)" \
-			% largest_forearm_step)
+		"the cane forearm advances smoothly without a one-frame flip (%.2f at frame %d)" \
+			% [largest_forearm_step, largest_step_frame])
+	print("MILO_CANE_RECOVERY_METRICS: max_forearm_step=%.2f degrees; max_elbow_flex=%.2f degrees" \
+		% [largest_forearm_step, largest_cane_flex])
 	probe.queue_free()
 	await process_frame

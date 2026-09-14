@@ -83,11 +83,18 @@ func _run() -> void:
 	var input := chat.user_input as LineEdit
 	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
 	var role := chat.get_node("MiloReplyCard/MiloRole") as Label
+	var spoken_grounded_outputs: Array[String] = []
+	chat.companion_speech_requested.connect(func(spoken_text: String) -> void:
+		spoken_grounded_outputs.append(spoken_text)
+	)
 	input.text = "Please show me John 3:16"
 	chat._submit_message(input)
 	assert(role.text == "WISDOM LIBRARY" and history.text.contains("John 3:16") \
 		and history.text.contains("For God so loved the world"),
 		"the live Web-safe chat surface displays exact grounded scripture")
+	assert(not spoken_grounded_outputs.is_empty() \
+		and spoken_grounded_outputs.back() == history.text,
+		"Milo sends the complete exact grounded/RAG response to his voice queue")
 	chat.queue_free()
 
 	print("MILO_WISDOM_ENGINE_TEST: PASS — exact WEBP lookup, domain boundaries, mode consent, variation, safety, privacy")

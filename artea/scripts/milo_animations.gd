@@ -34,6 +34,9 @@ enum CompanionState {
 # exact response with the platform voice on native builds and Web Speech in the
 # browser. The recorded Milo greeting remains unchanged.
 @export var use_device_tts_for_dynamic_replies := true
+# Audio is disabled by default. Milo's chat text, reading layout, and response
+# generation remain available without playing the recorded greeting or TTS.
+@export var voice_enabled := false
 
 const STAGE_GLOW := [
 	Color("7896c8"),
@@ -82,6 +85,9 @@ var _speech_sentences: Array[String] = []
 var _speech_sentence_index := -1
 var _speech_full_text := ""
 const MILO_TTS_ID_START := 260300
+const TTS_ESTIMATED_CHARACTERS_PER_SECOND := 11.0
+const TTS_SENTENCE_PAUSE_SECONDS := 0.45
+const TTS_COMPLETION_GRACE_SECONDS := 8.0
 var greeting_voice: AudioStreamPlayer3D
 var interaction_prompt: Label3D
 var mayor_name_label: Label3D
@@ -353,6 +359,9 @@ func _set_mouth_shape(shape_name: String) -> void:
 
 
 func _on_companion_speech_requested(spoken_text: String) -> void:
+	if not voice_enabled:
+		_stop_speaking()
+		return
 	var clean_text := spoken_text.strip_edges()
 	if clean_text.is_empty():
 		_stop_speaking()
@@ -366,7 +375,12 @@ func _on_companion_speech_requested(spoken_text: String) -> void:
 	_speech_sentences = _split_speech_sentences(_speech_full_text)
 	_speech_sentence_index = -1
 	_speech_elapsed = 0.0
-	_speech_remaining = clampf(float(clean_text.length()) / 11.0, 1.2, 60.0)
+	# This is only a watchdog for platforms whose TTS completion callback fails.
+	# Do not cap it: grounded scripture and other RAG answers can legitimately
+	# take longer than one minute, and Milo must keep his reading UI and mouth
+	# active until every queued sentence has been spoken.
+	_speech_remaining = _speech_watchdog_seconds(_speech_full_text,
+		_speech_sentences.size())
 	_set_companion_state(CompanionState.TALKING)
 	_set_mouth_shape("small")
 	if greeting_voice != null and greeting_voice.playing:
@@ -375,7 +389,20 @@ func _on_companion_speech_requested(spoken_text: String) -> void:
 	_speak_with_platform_voice(_speech_full_text)
 
 
+func _speech_watchdog_seconds(spoken_text: String, sentence_count: int) -> float:
+	var estimated_reading := float(spoken_text.length()) \
+		/ TTS_ESTIMATED_CHARACTERS_PER_SECOND
+	var estimated_pauses := float(maxi(sentence_count - 1, 0)) \
+		* TTS_SENTENCE_PAUSE_SECONDS
+	return maxf(1.2, estimated_reading + estimated_pauses \
+		+ TTS_COMPLETION_GRACE_SECONDS)
+
+
 func _play_recorded_greeting() -> void:
+	if not voice_enabled:
+		if greeting_voice != null and greeting_voice.playing:
+			greeting_voice.stop()
+		return
 	if _recorded_greeting_played:
 		return
 	_recorded_greeting_played = true
@@ -459,7 +486,7 @@ func _on_tts_utterance_ended(utterance_id: int) -> void:
 
 
 func _speak_with_platform_voice(spoken_text: String) -> void:
-	if spoken_text.is_empty():
+	if not voice_enabled or spoken_text.is_empty():
 		return
 	if not DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		return
@@ -470,7 +497,8 @@ func _speak_with_platform_voice(spoken_text: String) -> void:
 
 
 func _try_start_platform_voice(request_serial: int) -> void:
-	if request_serial != _tts_request_serial or _speech_sentences.is_empty():
+	if not voice_enabled or request_serial != _tts_request_serial \
+			or _speech_sentences.is_empty():
 		return
 	_resolve_tts_voice()
 	if _tts_voice_id.is_empty():
@@ -1349,7 +1377,9 @@ func _approach_horizontal_velocity(target: Vector3, acceleration: float,
 
 
 func _update_locomotion_playback(actual_speed: float, authored_speed: float) -> void:
-	if anim_player == null:
+	# A skin can finish loading after the controller starts following. Missing
+	# clips must not cause an error on every physics frame or freeze other clips.
+	if anim_player == null or not anim_player.has_animation("Cane_Walk"):
 		return
 	var clip := anim_player.get_animation("Cane_Walk")
 	if clip == null or clip.length <= 0.0:
@@ -1514,7 +1544,8 @@ func _process(delta):
 	look_at_player(delta)
 
 	# INSIDE interaction zone: waving logic
-	if not first_wave:
+	if not first_wave and chatbot_ui == null and not _conversation_active \
+			and not _player_is_busy():
 		_play_animation("Wave_One_Hand")
 		_set_companion_state(CompanionState.GREETING)
 		_play_recorded_greeting()
@@ -1523,9 +1554,14 @@ func _process(delta):
 
 	wave_timer += delta
 
-	if wave_timer >= 5.0 and not _player_is_busy():
-		_play_animation("Wave_One_Hand")
-		wave_timer = 0.0
+	# Greeting is a one-shot arrival gesture, not a permanent locomotion state
+	# or a repeated interruption every five seconds while the player stands here.
+	var greeting_duration := 1.0
+	if anim_player != null and anim_player.has_animation("Wave_One_Hand"):
+		greeting_duration = anim_player.get_animation("Wave_One_Hand").length / 0.76 + 0.22
+	if companion_state == CompanionState.GREETING and wave_timer >= greeting_duration \
+			and chatbot_ui == null and not _conversation_active and not is_speaking():
+		_begin_pause()
 
 	# interaction
 	if Input.is_action_just_pressed(MILO_CHAT_ACTION) and player_in_range \
@@ -1652,8 +1688,12 @@ func _update_cane_grounding(delta: float, contact_weight: float,
 		if _cane_was_planted:
 			_cane_recovery_start_tip_local = to_local(_cane_tip_world_position())
 		_cane_tip_locked = false
-		var recovery_progress := fposmod(phase - CANE_CONTACT_END, 1.0) \
-			/ fposmod(CANE_CONTACT_START - CANE_CONTACT_END, 1.0)
+		# Contact fades below the planted threshold just BEFORE CONTACT_END.
+		# Wrapping that small negative offset mapped it to the END of recovery,
+		# snapping the cane forward and back on consecutive frames. Recovery is
+		# the non-wrapping interval [0.44, 0.93]; clamp early release to its start.
+		var recovery_progress := (phase - CANE_CONTACT_END) \
+			/ (CANE_CONTACT_START - CANE_CONTACT_END)
 		var recovery_weight := smoothstep(0.0, 1.0,
 			clampf(recovery_progress, 0.0, 1.0))
 		# Milo's model faces local +Z. Advance the stick toward the next heel

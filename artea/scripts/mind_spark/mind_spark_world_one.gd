@@ -199,18 +199,26 @@ func build_world() -> void:
 		_build_six_zones(geometry)
 		_build_three_fused_super_islands(geometry)
 		_build_main_route(geometry)
-		_build_island_transit_network(geometry)
+		# The completed three-island route uses its authored gates and connected
+		# walkways. Do not add the retired cyan pads or violet/cyan shortcut rings:
+		# they are not a quest mechanic and visually conflict with the campus.
 		_build_zone_landmarks()
 		_build_progression_gates(geometry)
 	_build_organized_bio_tree_world(geometry)
+	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
+		_repair_island_one_legacy_openings(geometry)
 	_place_functional_objects()
 	_place_collectibles()
 	_place_cast()
 	_place_combat_population()
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
+		load("res://scripts/mind_spark/island_one_research_campus.gd").apply(self)
+		load("res://scripts/mind_spark/island_two_memory_campus.gd").apply(self)
+	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		# The optional station is deliberately the final standalone construction
 		# phase. It branches from Zone 05 and never participates in story routing.
 		_build_station_spur(geometry)
+	_refine_island_one_surroundings()
 	_batch_static_geometry(self)
 	set_meta("world_identity", "living computer forest")
 	set_meta("lead_force", "technology_science")
@@ -227,6 +235,88 @@ func build_world() -> void:
 		foundation_mode = "authored_galaxy_land"
 	set_meta("foundation_mode", foundation_mode)
 	set_world_state("sleeping")
+
+
+func _refine_island_one_surroundings() -> void:
+	# Clone only scenery overrides before batching. Shared world materials and
+	# imported instruments must retain their own state/finish contracts.
+	var finishes := {}
+	for zone_id in ["01_world_gate_landing", "02_living_network_forest", "03_constellation_court", "04_hope_path_ridge"]:
+		var zone := _zone_nodes.get(zone_id) as Node3D
+		if zone != null:
+			_refine_island_one_scenery_node(zone, finishes)
+	for name in ["FusedSuperIsland_01_02", "FusedSuperIsland_03_04", "IslandOnePerimeterRepairs", "IslandOneResearchCampus"]:
+		var assembly := find_child(name,true,false)
+		if assembly != null:
+			_refine_island_one_scenery_node(assembly,finishes)
+	var lighting := {
+		"HighHeavenlyArrivalLight": [0.95, 82.0],
+		"HighPuzzleCompositionLight": [0.85, 52.0],
+		"ElevatedTreeCrownLight": [1.15, 54.0],
+	}
+	for light_name in lighting:
+		var light := find_child(light_name, true, false) as OmniLight3D
+		if light != null:
+			light.light_energy = lighting[light_name][0]
+			light.omni_range = lighting[light_name][1]
+			light.light_color = Color("ffe8c9")
+	# Keep nearby operating instructions; suppress distant title clutter rather
+	# than deleting labels or hiding the real evidence/question panels.
+	if _island_one_puzzle != null:
+		var profile := Node3D.new()
+		profile.name = "IslandOneLightingProfile"
+		profile.set_script(preload("res://scripts/mind_spark/island_one_lighting_profile.gd"))
+		_island_one_puzzle.add_child(profile)
+		for label in _island_one_puzzle.find_children("QuestPurposeLabel", "Label3D", true, false):
+			label.visibility_range_end = 24.0
+			label.visibility_range_end_margin = 4.0
+	set_meta("island_one_environment_revision", "warm_scenery_01")
+
+
+func _refine_island_one_scenery_node(node: Node, finishes: Dictionary) -> void:
+	if node.name == "PuzzleControls":
+		return
+	if node is MeshInstance3D:
+		var original := (node as MeshInstance3D).material_override as StandardMaterial3D
+		if original != null:
+			var key := original.get_instance_id()
+			if not finishes.has(key):
+				var finish := original.duplicate() as StandardMaterial3D
+				# Architecture reflects light; only small energy accents emit it.
+				finish.emission_energy_multiplier = minf(finish.emission_energy_multiplier, 0.24)
+				if finish.metallic > 0.5:
+					finish.roughness = maxf(finish.roughness, 0.48)
+					finish.metallic_specular = minf(finish.metallic_specular, 0.55)
+					finish.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+				if original == _materials.gold:
+					finish.albedo_color = Color("c5a366")
+					finish.emission_enabled = false
+				elif original == _materials.cyan:
+					finish.albedo_color = Color("8fd6c8")
+					finish.emission = Color("8fd6c8")
+				finishes[key] = finish
+			(node as MeshInstance3D).material_override = finishes[key]
+		# Imported GLBs keep materials on surfaces, so the old override-only
+		# pass never reached their highly reflective gold trim and paving inlays.
+		var imported := node as MeshInstance3D
+		if imported.mesh != null and imported.material_override == null:
+			for surface in imported.mesh.get_surface_count():
+				var source := imported.get_active_material(surface) as StandardMaterial3D
+				if source == null or source.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+					continue
+				var key := source.get_instance_id()
+				if not finishes.has(key):
+					var finish := source.duplicate() as StandardMaterial3D
+					finish.metallic = minf(source.metallic,.45)
+					finish.roughness = maxf(source.roughness,.62)
+					finish.metallic_specular = .0
+					# Decorative gilding uses diffuse colour at tiny grazing angles;
+					# native Mobile's specular path produced blue/black edge pixels.
+					finish.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+					finishes[key] = finish
+				imported.set_surface_override_material(surface,finishes[key])
+	for child in node.get_children():
+		_refine_island_one_scenery_node(child, finishes)
 
 
 func _uses_galaxy_foundation() -> bool:
@@ -886,6 +976,24 @@ func set_quest_gate_open(quest_index: int, open: bool) -> void:
 	if quest_index < 0 or quest_index >= _quest_gates.size():
 		return
 	var gate := _quest_gates[quest_index]
+	if str(gate.get_meta("custom_gate_motion", "")) == "island_two_memory_hinges":
+		var motion := gate.get_node_or_null("IslandTwoMemoryGate/SafeMemoryGateMotion")
+		if motion != null:
+			# Physical leaves now guard the opening throughout movement. The old
+			# central slab must not intersect their sampled sweep.
+			gate.get_node("CollisionShape3D").set_deferred("disabled", true)
+			motion.call("request", open, true)
+			gate.set_meta("open", open)
+			return
+		var west_leaf := gate.get_node_or_null("IslandTwoMemoryGate/WestMemoryLeaf") as Node3D
+		var east_leaf := gate.get_node_or_null("IslandTwoMemoryGate/EastMemoryLeaf") as Node3D
+		if west_leaf != null:
+			west_leaf.rotation.y = -PI * 0.5 if open else 0.0
+		if east_leaf != null:
+			east_leaf.rotation.y = PI * 0.5 if open else 0.0
+		gate.get_node("CollisionShape3D").disabled = open
+		gate.set_meta("open", open)
+		return
 	var closed_position: Vector3 = gate.get_meta("closed_position")
 	gate.position = closed_position + (Vector3.UP * 22.0 if open else Vector3.ZERO)
 	gate.get_node("CollisionShape3D").disabled = open
@@ -894,6 +1002,63 @@ func set_quest_gate_open(quest_index: int, open: bool) -> void:
 
 func is_quest_gate_open(quest_index: int) -> bool:
 	return quest_index >= 0 and quest_index < _quest_gates.size() and bool(_quest_gates[quest_index].get_meta("open", false))
+
+
+func set_island_two_story_state(state: String) -> void:
+	var valid_states := ["dormant", "invited", "received", "evidence_sorted",
+		"memory_woven", "archive_open", "hope_reframed", "truth_materialised",
+		"guardian_freed"]
+	if state not in valid_states:
+		return
+	set_meta("island_two_story_state", state)
+	var receiver := get_node_or_null("IslandTwoMemoryCampus/EchoSeedArrivalReceiver") as Node3D
+	if receiver == null:
+		return
+	var dormant := receiver.get_node_or_null("DormantHalo") as MeshInstance3D
+	var invited := receiver.get_node_or_null("InvitedHalo") as MeshInstance3D
+	var seed := receiver.get_node_or_null("ReceivedEchoSeed") as MeshInstance3D
+	if dormant != null:
+		dormant.visible = state == "dormant"
+	if invited != null:
+		invited.visible = state != "dormant"
+	if seed != null:
+		seed.visible = state not in ["dormant", "invited"]
+	var label := receiver.get_node_or_null("ReceiverStateLabel") as Label3D
+	if label != null:
+		var receiver_text: String = {
+			"dormant": "DORMANT", "invited": "AWAITING ECHO SEED",
+			"received": "THREE FRAGMENTS RECEIVED",
+			"evidence_sorted": "EVIDENCE PLATES VERIFIED",
+			"memory_woven": "FAIR MEMORY WOVEN", "archive_open": "ARCHIVE ROUTE OPEN",
+			"hope_reframed": "THREE VIEWPOINTS ALIGNED",
+			"truth_materialised": "GROUNDED HOPE FORMED",
+			"guardian_freed": "UNDERSTANDING RESTORED",
+		}.get(state, "DORMANT")
+		label.text = "ECHO SEED RECEIVER • %s" % receiver_text
+	var state_order := valid_states.find(state)
+	var evidence_bus := get_node_or_null("IslandTwoMemoryCampus/EvidenceAetherBus") as Node3D
+	if evidence_bus != null:
+		var active_readings: int = {"received": 1, "evidence_sorted": 3,
+			"memory_woven": 5, "archive_open": 7, "hope_reframed": 7,
+			"truth_materialised": 7, "guardian_freed": 7}.get(state, 0)
+		for index in 7:
+			var reading := evidence_bus.get_node_or_null("ArchiveBusReading_%02d" % (index + 1)) as Node3D
+			if reading != null:
+				reading.scale = Vector3.ONE if index < active_readings else Vector3.ONE * 0.32
+	var hope_conduit := get_node_or_null("IslandTwoMemoryCampus/HopeMaterialisationConduit") as Node3D
+	if hope_conduit != null:
+		var active_segments := 0
+		if state_order >= valid_states.find("hope_reframed"):
+			active_segments = 3
+		if state_order >= valid_states.find("truth_materialised"):
+			active_segments = 5
+		for index in 5:
+			var segment := hope_conduit.get_node_or_null("HopeSignalSegment_%02d" % (index + 1)) as Node3D
+			if segment != null:
+				segment.visible = index < active_segments
+	var reward := get_node_or_null("IslandTwoMemoryCampus/EliteGuardianCourt/GuardianRewardSocket/RewardHopeCrystal") as Node3D
+	if reward != null:
+		reward.visible = state == "guardian_freed"
 
 
 func activate_enemy_wave(encounter_id: String) -> int:
@@ -943,14 +1108,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.keycode == KEY_Q and _island_one_puzzle != null \
 			and _island_one_puzzle.nearest_control(_player) != null:
-		var puzzle_result := _island_one_puzzle.interact_nearest(_player)
-		if _status != null:
-			_status.text = str(puzzle_result.get("reason", "ready")).replace("_", " ").to_upper()
+		if not has_node("QuestStationPanel"):
+			var panel := preload("res://scripts/mind_spark/quest_station_panel.gd").new()
+			panel.name = "QuestStationPanel"
+			add_child(panel)
+			panel.open(_island_one_puzzle,_player,str(_island_one_puzzle.nearest_control(_player).get_meta("control_id")))
 		if get_viewport() != null:
 			get_viewport().set_input_as_handled()
 		return
 	var object := _nearest_object()
 	if object == null:
+		return
+	if object.save_id in ["world_one.evidence_scanner", "world_one.memory_board",
+			"world_one.logic_gate", "world_one.perspective_lens", "world_one.truth_bridge"]:
+		if event.keycode == KEY_Q and not has_node("QuestStationPanel"):
+			var panel := preload("res://scripts/mind_spark/island_two_station_panel.gd").new()
+			panel.name = "QuestStationPanel"
+			add_child(panel)
+			panel.open_object(object, _player, INTERACTION_RANGE)
+			get_viewport().set_input_as_handled()
 		return
 	var handled := false
 	if event.keycode == KEY_Q:
@@ -1099,7 +1275,7 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 		island_visual.position = Vector3(center.x, shared_surface_y, center.z)
 		island_visual.set_meta("editable_source_parts", 3000)
 		island_visual.set_meta("runtime_batches", 9)
-		island_visual.set_meta("visible_overlay_batches", 3)
+		island_visual.set_meta("visible_overlay_batches", 1)
 		island_visual.set_meta("application_mode", "additive_above_ground_only")
 		island_visual.set_meta("existing_foundation_preserved", true)
 		island_visual.set_meta("legacy_districts", PackedStringArray([
@@ -1114,10 +1290,12 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 		# detailed brass/ivory conservatory ribs retain the glasshouse silhouette.
 		# The broad Architecture batch duplicates this runtime scene's authored
 		# conservatory and placed a fence-like wall through the Thought Sanctum.
-		# Keep the Blender gameplay fittings, puzzle architecture and nature, but
-		# let the live segmented vault own the large architectural silhouette.
+		# Keep only the segmented puzzle architecture. The separate live Quest One
+		# controls own interaction; the imported Gameplay overlay is decoration
+		# only and contains the unwanted raised green line, solid rings and gold
+		# floor tracks.
 		var visible_roles := PackedStringArray([
-			"Gameplay", "GameplayArchitecture", "Nature"
+			"GameplayArchitecture"
 		])
 		for mesh in island_visual.find_children("MSI1_Runtime_*", "MeshInstance3D", true, false):
 			var role := str((mesh as MeshInstance3D).get_meta("runtime_role", ""))
@@ -1125,6 +1303,20 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 				role = str((mesh as MeshInstance3D).name).trim_prefix("MSI1_Runtime_")
 			(mesh as MeshInstance3D).visible = role in visible_roles
 			(mesh as MeshInstance3D).set_meta("additive_overlay_visible", role in visible_roles)
+			if role == "Nature":
+				# Replace the entire old tree/loose-planter layer, not the teaching
+				# tree or any of the puzzle's state-driven geometry.
+				mesh.visible = false
+				mesh.set_meta("preserve_authored_nodes", true)
+				mesh.set_meta("additive_overlay_visible", false)
+		var garden_scene := preload("res://assets3D/mind_spark/echo_garden_benchmark/export/echo_garden.glb")
+		var garden := garden_scene.instantiate() as Node3D
+		garden.name = "EchoGardenHeroBenchmark"
+		# Original Blender crown garden origin: (95, 42.5, 0), Z-up.
+		garden.position = Vector3(95, 0, -42.5)
+		garden.set_meta("preserve_authored_nodes", true)
+		garden.set_meta("replaces_role", "Nature")
+		island_visual.add_child(garden)
 
 		# The visible saddle lives in the GLB. This collision-only bridge closes
 		# the seam between the two retained circular gameplay floor colliders.
@@ -1686,7 +1878,10 @@ func _build_zone_landmarks() -> void:
 	# Phase 03 begins only after every floor and the complete story route exist.
 	# This keeps future landmark iteration from changing the navigation topology.
 	_build_landing(_zone_nodes["01_world_gate_landing"])
-	_build_network_forest(_zone_nodes["02_living_network_forest"])
+	# The former FibreRoot landmark was eight raised green rectangular bars.
+	# They read as stray lines across the finished ivory garden deck, rather than
+	# as living roots, and are not part of a quest, collision route, or power
+	# system. The authored trees and garden assemblies below now own this space.
 	_build_constellation_court(_zone_nodes["03_constellation_court"])
 	_build_hope_ridge(_zone_nodes["04_hope_path_ridge"])
 	_build_storm_arena(_zone_nodes["05_thought_storm_arena"])
@@ -1822,10 +2017,15 @@ func _build_island_one_heavenly_star_gate(route: Node3D, start: Vector3,
 	gate.add_child(production_visual)
 	var halo := Node3D.new()
 	halo.name = "HeavenlyStarHalo"
+	halo.set_meta("design_revision", "v41_integrated_astrolabe_filigree_gate")
+	halo.set_meta("design_origin", "earlier ivory conservatory arch and aether focal-point language")
 	gate.add_child(halo)
 	var detailed_star := production_visual.find_child("MSHG_PowerStar", true, false) as MeshInstance3D
 	if detailed_star != null:
 		detailed_star.reparent(halo, true)
+		detailed_star.visible = false
+		detailed_star.set_meta("retired_visual", "pastel star replaced by mechanical astrolabe crest")
+	_build_gate_astrolabe_crest(halo, gate)
 	# Compatibility feedback node retained for the existing state contract; the
 	# visible core belongs to the production star mesh above.
 	var core := _add_sphere(gate, "HeavenlyGatePowerCore", Vector3(0, 27.65, -1.7),
@@ -1835,29 +2035,334 @@ func _build_island_one_heavenly_star_gate(route: Node3D, start: Vector3,
 	_add_label(gate, "THE WAY OPENS WHEN UNDERSTANDING BECOMES LIGHT", Vector3(0, 34.0, 0),
 		Color("ffe5a4"), 23)
 	_add_zone_light(gate, Vector3(0, 27.0, -4.0), Color("ffd77f"), 34.0, 1.35)
+	_build_heavenly_gate_surroundings(gate)
 
 	_island_one_star_gate_leaves.clear()
 	for side in [-1.0, 1.0]:
 		var leaf := AnimatableBody3D.new()
 		leaf.name = "WestGoldenStarLeaf" if side < 0 else "EastGoldenStarLeaf"
 		leaf.sync_to_physics = true
-		leaf.position = Vector3.ZERO
+		# The body origin is the outer hinge pin, not the centre of the artwork.
+		# This makes both visible geometry and collision sweep around a real support
+		# axis without passing through the classical piers.
+		leaf.position = Vector3(side * 5.70, 0, -1.32)
 		leaf.set_meta("closed_position", leaf.position)
-		leaf.set_meta("open_position", Vector3(side * 17.0, 0, 0))
+		leaf.set_meta("open_position", leaf.position)
+		leaf.set_meta("closed_rotation_y", 0.0)
+		leaf.set_meta("open_rotation_y", side * deg_to_rad(96.0))
+		leaf.set_meta("opening_mechanism", "three-bearing classical hinge leaf swinging inward around its outer pier")
+		leaf.set_meta("mass_clearance", "leaf sweeps through a reserved semicircle behind the threshold and never crosses either pier")
 		gate.add_child(leaf)
 		var runtime_leaf_name := "MSHG_GateLeafLeft" if side < 0 else "MSHG_GateLeafRight"
 		var authored_leaf := production_visual.find_child(runtime_leaf_name, true, false) as MeshInstance3D
 		if authored_leaf != null:
 			authored_leaf.reparent(leaf, true)
+			authored_leaf.visible = false
+			authored_leaf.set_meta("retired_visual", "rectangular shutter replaced by celestial filigree wing")
+		_build_heavenly_gate_leaf_visual(leaf, side)
 		var shape_node := CollisionShape3D.new()
 		shape_node.name = "GateLeafCollision"
-		shape_node.position = Vector3(side * 3.1, 11.0, 0)
+		shape_node.position = Vector3(-side * 2.68, 10.5, 0)
 		var shape := BoxShape3D.new()
-		shape.size = Vector3(6.1, 19.0, 1.6)
+		shape.size = Vector3(5.9, 17.2, 1.10)
 		shape_node.shape = shape
 		leaf.add_child(shape_node)
 		_island_one_star_gate_leaves.append(leaf)
 	_set_island_one_star_gate_open(false, false)
+
+
+func _build_gate_astrolabe_crest(halo: Node3D, gate: Node3D) -> void:
+	# The crown is now architecture first and mechanism second. Its fixed ivory
+	# sweeps carry the rotating astrolabe into both pylons, so the silhouette reads
+	# as a celestial threshold rather than a machine badge floating above a wall.
+	var architecture := Node3D.new()
+	architecture.name = "HeavenlyCrownArchitecture"
+	architecture.set_meta("purpose", "carries the celestial crown into the gate pylons")
+	architecture.set_meta("visual_hierarchy", "ivory structure, warm gold ribs, aether glass, emerald accent")
+	gate.add_child(architecture)
+	var crest_at := Vector3(0, 25.0, -2.15)
+	for side in [-1.0, 1.0]:
+		var suffix := "West" if side < 0.0 else "East"
+		var shoulder := Vector3(side * 13.3, 19.5, -1.25)
+		var spring := Vector3(side * 7.5, 23.6, -1.80)
+		var crown_join := crest_at + Vector3(side * 3.25, -1.15, 0.25)
+		_add_cable_between(architecture, "%sIvoryCrownSweepLower" % suffix,
+			shoulder, spring, 0.72, 0.48, _materials.sanctum_ivory, 12)
+		_add_cable_between(architecture, "%sIvoryCrownSweepUpper" % suffix,
+			spring, crown_join, 0.54, 0.34, _materials.sanctum_ivory, 12)
+		_add_cable_between(architecture, "%sGiltCrownRib" % suffix,
+			shoulder + Vector3(0, 0.35, -0.55), crown_join + Vector3(0, 0.25, -0.55),
+			0.19, 0.12, _materials.gold, 10)
+		_add_triangle_patch(architecture, "CrownAetherWing_%s" % suffix,
+			shoulder + Vector3(0, 0.65, 0.35), spring + Vector3(0, 0.55, 0.35),
+			crown_join + Vector3(0, 0.35, 0.35), _materials.arrival_glass)
+		for pearl_index in 3:
+			var pearl_at := shoulder.lerp(crown_join, (float(pearl_index) + 1.0) / 4.0)
+			_add_sphere(architecture, "%sCrownPearl_%02d" % [suffix, pearl_index + 1],
+				pearl_at + Vector3(0, 0.45, -0.42), Vector3.ONE * 0.27,
+				_materials.sanctum_ivory)
+	_add_brick(architecture, "HeavenlyCrownKeystone", crest_at + Vector3(0, -3.65, 0.35),
+		Bricks.build_crystal(1.25, 3.2, 0.26, 8), _materials.sanctum_ivory)
+	_add_brick(architecture, "HeavenlyCrownKeystoneInlay", crest_at + Vector3(0, -3.6, -0.35),
+		Bricks.build_crystal(0.58, 2.0, 0.20, 8), _materials.gold)
+	_add_zone_light(architecture, crest_at + Vector3(0, 0, -1.8), Color("fff0bd"), 18.0, 1.1)
+
+	# The central instrument remains animated feedback, but emerald is confined to
+	# the wisdom crystal and a slim inner order. Ivory and warm gold lead the read.
+	_add_torus(halo, "AstrolabeIvoryBearingRing", crest_at, 2.95, 3.48,
+		_materials.sanctum_ivory, Vector3(90, 0, 0))
+	_add_torus(halo, "AstrolabeOuterBrassRing", crest_at + Vector3(0, 0, -0.14), 2.46, 2.92,
+		_materials.astral_brass, Vector3(90, 0, 0))
+	_add_torus(halo, "AstrolabeAetherHalo", crest_at + Vector3(0, 0, -0.22), 1.95, 2.30,
+		_materials.arrival_glass, Vector3(90, 0, 0))
+	_add_torus(halo, "AstrolabeInnerEmeraldRing", crest_at + Vector3(0, 0, -0.28),
+		1.43, 1.67, _materials.green_glow, Vector3(90, 0, 0))
+	for tooth_index in 12:
+		var tooth_angle := TAU * float(tooth_index) / 12.0
+		_add_box(halo, "AstrolabeGearTooth_%02d" % (tooth_index + 1),
+			crest_at + Vector3(sin(tooth_angle) * 3.28, cos(tooth_angle) * 3.28, 0.04),
+			Vector3(0.26, 0.58, 0.30),
+			_materials.sanctum_ivory if tooth_index % 2 == 0 else _materials.gold,
+			false, -tooth_angle)
+	for spoke_index in 8:
+		var spoke_angle := TAU * float(spoke_index) / 8.0
+		_add_cable_between(halo, "AstrolabeSpoke_%02d" % (spoke_index + 1), crest_at,
+			crest_at + Vector3(sin(spoke_angle) * 2.40, cos(spoke_angle) * 2.40, -0.10),
+			0.13, 0.08, _materials.astral_brass, 8)
+	_add_brick(halo, "AstrolabeEmeraldWisdomCrystal", crest_at + Vector3(0, 0, -0.48),
+		Bricks.build_crystal(0.72, 3.25, 0.25, 8), _materials.green_glow)
+	_add_sphere(halo, "AstrolabeWisdomPearl", crest_at + Vector3(0, 0, -0.72),
+		Vector3.ONE * 0.48, _materials.arrival_glass)
+	for orbit_index in 3:
+		var orbit_angle := -PI * 0.42 + float(orbit_index) * PI * 0.42
+		var jewel_at := crest_at + Vector3(sin(orbit_angle) * 3.82,
+			cos(orbit_angle) * 1.65 - 0.22, -0.22)
+		_add_sphere(halo, "AstrolabeEmeraldJewel_%02d" % (orbit_index + 1), jewel_at,
+			Vector3.ONE * 0.30, _materials.arrival_glass)
+		_add_cable_between(halo, "AstrolabeOrbitBrace_%02d" % (orbit_index + 1),
+			crest_at, jewel_at, 0.10, 0.07, _materials.gold, 6)
+	_add_box(halo, "AstrolabeCrownFinial", crest_at + Vector3(0, 3.95, 0),
+		Vector3(0.30, 1.30, 0.30), _materials.astral_brass)
+	_add_sphere(halo, "AstrolabeCrownPearl", crest_at + Vector3(0, 4.72, 0),
+		Vector3.ONE * 0.38, _materials.arrival_glass)
+	# Move the animation pivot to the bearing centre while preserving every
+	# child's world-space placement. Rotation and pulse now happen in place.
+	for child in halo.get_children():
+		if child is Node3D:
+			(child as Node3D).position -= crest_at
+	halo.position = crest_at
+
+
+func _build_heavenly_gate_surroundings(gate: Node3D) -> void:
+	# A complete threshold court gives every previously empty area a job: the
+	# centre remains circulation, the lintel carries the celestial arch, and the
+	# side bays power the two classical hinge shafts.
+	var court := Node3D.new()
+	court.name = "HeavenlyThresholdCourt"
+	court.set_meta("clear_walkway_width_m", 11.8)
+	court.set_meta("mechanical_story", "aether motors turn two vertical hinge shafts so the grille leaves swing inward")
+	court.set_meta("mass_clearance_rule", "each moving leaf stays inside its reserved inward swing envelope and outside the stone piers")
+	court.set_meta("door_configuration", "two opposed inward-swinging hinged leaves")
+	gate.add_child(court)
+	_add_brick(court, "CelestialThresholdSlab", Vector3(0, 0.20, 0.45),
+		Bricks.build_bevel_box(Vector3(14.2, 0.42, 5.4), 0.18), _materials.sanctum_ivory)
+	_add_brick(court, "ThresholdGiltLeadingEdge", Vector3(0, 0.46, -2.18),
+		Bricks.build_bevel_box(Vector3(14.0, 0.20, 0.26), 0.08), _materials.gold)
+	for ray_index in 7:
+		var ray_x := -5.4 + float(ray_index) * 1.8
+		_add_cable_between(court, "ThresholdLightRay_%02d" % (ray_index + 1),
+			Vector3(0, 0.48, 1.65), Vector3(ray_x, 0.48, -1.75),
+			0.07, 0.055, _materials.arrival_glass, 6)
+	_build_reference_heavenly_slide_portal(court)
+	# Fixed lintel and threshold bands visually anchor the arch without suggesting
+	# that the doors travel horizontally.
+	_add_brick(court, "HeavenlyGateLintelBand", Vector3(0, 20.06, -1.28),
+		Bricks.build_bevel_box(Vector3(27.4, 0.54, 0.82), 0.12), _materials.astral_brass)
+	_add_brick(court, "HeavenlyGateThresholdBand", Vector3(0, 1.18, -1.18),
+		Bricks.build_bevel_box(Vector3(27.0, 0.28, 0.62), 0.08), _materials.gold)
+	_add_cable_between(court, "WestHingePowerConduit", Vector3(-0.35, 19.52, -1.62),
+		Vector3(-13.25, 19.52, -1.62), 0.10, 0.08, _materials.gold, 8)
+	_add_cable_between(court, "EastHingePowerConduit", Vector3(0.35, 19.52, -1.62),
+		Vector3(13.25, 19.52, -1.62), 0.10, 0.08, _materials.gold, 8)
+
+	for side in [-1.0, 1.0]:
+		var suffix := "West" if side < 0.0 else "East"
+		var bay_x: float = float(side) * 10.18
+		# These side housings are fixed drive rooms for the hinge shafts. They no
+		# longer pretend to be empty pockets for a sliding leaf.
+		var pocket := Node3D.new()
+		pocket.name = "%sHingeDriveHousing" % suffix
+		pocket.set_meta("hinge_axis_x", side * 5.70)
+		pocket.set_meta("reserved_swing_degrees", 96.0)
+		pocket.set_meta("leaf_width_m", 5.85)
+		court.add_child(pocket)
+		_add_brick(pocket, "HingeHousingAetherLiner", Vector3(bay_x, 10.5, -0.38),
+			Bricks.build_bevel_box(Vector3(6.55, 17.7, 0.28), 0.12), _materials.sanctum_lavender_glass)
+		for jamb_offset in [-3.34, 3.34]:
+			_add_brick(pocket, "HingeHousingIvoryJamb_%s" % str(jamb_offset),
+				Vector3(bay_x + jamb_offset, 10.5, -2.18),
+				Bricks.build_bevel_box(Vector3(0.62, 18.5, 0.36), 0.14), _materials.sanctum_ivory)
+		_add_brick(pocket, "HingeHousingGiltCanopy", Vector3(bay_x, 19.70, -2.18),
+			Bricks.build_bevel_box(Vector3(7.25, 0.60, 0.40), 0.14), _materials.astral_brass)
+		_add_brick(pocket, "HingeHousingGiltSill", Vector3(bay_x, 1.00, -2.18),
+			Bricks.build_bevel_box(Vector3(7.25, 0.35, 0.40), 0.12), _materials.astral_brass)
+		for locator_index in 3:
+			_add_sphere(pocket, "HingeTorqueLight_%02d" % (locator_index + 1),
+				Vector3(bay_x - float(side) * 3.08, 5.0 + float(locator_index) * 5.2, -1.72),
+				Vector3.ONE * 0.24, _materials.green_glow)
+		var motor_x: float = bay_x + float(side) * 2.25
+		# Keep the gear, teeth and aether core under one bearing pivot. This makes
+		# the visible drive train rotate as a rigid assembly during the opening
+		# stroke instead of reading as static ornament attached to a moving door.
+		var drive_rotor := Node3D.new()
+		drive_rotor.name = "%sHingeDriveRotor" % suffix
+		drive_rotor.position = Vector3(motor_x, 17.15, -1.82)
+		drive_rotor.set_meta("purpose", "turns the door chain and roller carriage")
+		pocket.add_child(drive_rotor)
+		_add_torus(drive_rotor, "HingeDriveGear", Vector3.ZERO,
+			1.12, 1.62, _materials.astral_brass, Vector3(90, 0, 0))
+		var motor_core := _add_cylinder(drive_rotor, "%sHingeMotorCore" % suffix,
+			Vector3(0, 0, -0.20), 0.74, 0.42,
+			_materials.arrival_glass, false, 20)
+		motor_core.rotation_degrees.x = 90.0
+		for tooth_index in 10:
+			var tooth_angle := TAU * float(tooth_index) / 10.0
+			_add_box(drive_rotor, "HingeDriveTooth_%02d" % (tooth_index + 1),
+				Vector3(sin(tooth_angle) * 1.82, cos(tooth_angle) * 1.82, 0.04),
+				Vector3(0.26, 0.58, 0.28), _materials.gold, false, -tooth_angle)
+		# Graduated marks make the receiving bay read as a measured machine cavity
+		# and provide a visual indication of how far each leaf has travelled.
+		for gauge_index in 7:
+			var gauge_x := bay_x - float(side) * (2.55 - float(gauge_index) * 0.82)
+			_add_brick(pocket, "HingeAngleGauge_%02d" % (gauge_index + 1),
+				Vector3(gauge_x, 2.05, -2.40),
+				Bricks.build_bevel_box(Vector3(0.10, 0.56 if gauge_index % 2 == 0 else 0.34, 0.12), 0.03),
+				_materials.gold)
+		_add_brick(pocket, "HingeCelestialNameplate", Vector3(bay_x, 18.35, -2.42),
+			Bricks.build_bevel_box(Vector3(2.8, 0.62, 0.16), 0.10), _materials.sanctum_ivory)
+		_add_brick(pocket, "HingeNameplateInlay", Vector3(bay_x, 18.35, -2.54),
+			Bricks.build_crystal(0.34, 1.12, 0.10, 8), _materials.green_glow)
+
+		# The rear power bay supplies the chain motor while remaining behind the
+		# swing envelope and outside the clear central walking corridor.
+		var bay := Node3D.new()
+		bay.name = "%sHingeDrivePowerBay" % suffix
+		bay.set_meta("service_clearance_m", 1.2)
+		court.add_child(bay)
+		_add_brick(bay, "IvoryBayPlinth", Vector3(bay_x, 1.05, 1.20),
+			Bricks.build_bevel_box(Vector3(5.6, 1.55, 4.8), 0.30), _materials.sanctum_ivory)
+		_add_brick(bay, "IvoryBayCanopy", Vector3(bay_x, 17.9, 1.20),
+			Bricks.build_bevel_box(Vector3(5.9, 1.0, 4.9), 0.26), _materials.sanctum_ivory)
+		for post_offset in [-2.05, 2.05]:
+			_add_brick(bay, "BayPost_%s" % str(post_offset),
+				Vector3(bay_x + post_offset, 9.4, 1.20),
+				Bricks.build_bevel_box(Vector3(0.64, 16.4, 0.72), 0.16), _materials.celestial_floor)
+		var reservoir := _add_cylinder(bay, "AetherLiftReservoir",
+			Vector3(bay_x, 7.2, 1.20), 1.52, 9.8,
+			_materials.arrival_glass, false, 24)
+		reservoir.set_meta("purpose", "stores puzzle energy for the gate opening stroke")
+		for band_index in 4:
+			_add_torus(bay, "ReservoirGiltBand_%02d" % (band_index + 1),
+				Vector3(bay_x, 3.7 + float(band_index) * 2.35, 1.20),
+				1.48, 1.72, _materials.gold)
+		var weight_x: float = bay_x - float(side) * 1.75
+		_add_brick(bay, "GuidedChainTensioner", Vector3(weight_x, 12.5, 1.18),
+			Bricks.build_bevel_box(Vector3(1.15, 4.4, 1.35), 0.20), _materials.astral_brass)
+		_add_cable_between(bay, "TensionerGuideA",
+			Vector3(weight_x - 0.58, 2.1, 1.20), Vector3(weight_x - 0.58, 17.3, 1.20),
+			0.11, 0.08, _materials.gold, 8)
+		_add_cable_between(bay, "TensionerGuideB",
+			Vector3(weight_x + 0.58, 2.1, 1.20), Vector3(weight_x + 0.58, 17.3, 1.20),
+			0.11, 0.08, _materials.gold, 8)
+		_add_torus(bay, "ChainReturnPulley", Vector3(weight_x, 16.2, 0.55),
+			0.82, 1.20, _materials.astral_brass, Vector3(90, 0, 0))
+		_add_cable_between(bay, "HingeMotorPowerConduit",
+			Vector3(bay_x, 14.6, 0.25), Vector3(motor_x, 17.15, -1.55),
+			0.24, 0.16, _materials.gold, 10)
+
+		# Low luminous gardens soften the machinery and occupy the outer corners
+		# without hiding the door or creating collision in the approach lane.
+		var garden_x: float = float(side) * 13.6
+		_add_brick(court, "%sCelestialPlanter" % suffix, Vector3(garden_x, 1.0, -3.6),
+			Bricks.build_bevel_box(Vector3(5.0, 1.6, 3.4), 0.34), _materials.sanctum_ivory)
+		for stem_index in 5:
+			var stem_x: float = garden_x - 1.55 + float(stem_index) * 0.78
+			var stem_top := Vector3(stem_x, 3.0 + float(stem_index % 2) * 0.55, -3.6)
+			_add_cable_between(court, "%sGardenStem_%02d" % [suffix, stem_index + 1],
+				Vector3(stem_x, 1.75, -3.6), stem_top, 0.10, 0.06,
+				_materials.astral_brass, 6)
+			_add_sphere(court, "%sAetherBlossom_%02d" % [suffix, stem_index + 1],
+				stem_top, Vector3(0.42, 0.28, 0.42),
+				_materials.arrival_glass if stem_index % 2 == 0 else _materials.sanctum_ivory)
+		_add_zone_light(court, Vector3(garden_x, 4.0, -3.4), Color("dffcff"), 8.0, 0.65)
+
+
+func _build_reference_heavenly_slide_portal(court: Node3D) -> void:
+	# The reference silhouette is a classical arch floating in warm cloud light.
+	# This outer order is fixed architecture: only the two filigree leaves move.
+	# Keeping structure and moving mass separate also makes the slide physically
+	# readable from the player's approach.
+	var portal := Node3D.new()
+	portal.name = "ClassicalHeavenlyHingedPortal"
+	portal.set_meta("reference_language", "semicircular ivory arch, gold reveal, paired pilasters and symmetrical filigree")
+	portal.set_meta("moving_parts", "WestGoldenStarLeaf and EastGoldenStarLeaf rotate around outer hinge pins")
+	court.add_child(portal)
+	var spring_y := 17.55
+	var outer_radius := 7.42
+	var inner_radius := 6.72
+	for side in [-1.0, 1.0]:
+		var side_value: float = float(side)
+		var suffix := "West" if side_value < 0.0 else "East"
+		var pier_x: float = side_value * outer_radius
+		_add_brick(portal, "%sCloudstonePlinth" % suffix, Vector3(pier_x, 1.35, -2.62),
+			Bricks.build_bevel_box(Vector3(2.35, 2.15, 2.45), 0.28), _materials.sanctum_ivory)
+		_add_brick(portal, "%sClassicalPilaster" % suffix, Vector3(pier_x, 9.55, -2.55),
+			Bricks.build_bevel_box(Vector3(1.42, 15.1, 1.65), 0.22), _materials.celestial_floor)
+		_add_brick(portal, "%sGiltPilasterInset" % suffix, Vector3(pier_x, 9.70, -3.43),
+			Bricks.build_bevel_box(Vector3(0.44, 11.9, 0.16), 0.06), _materials.gold)
+		_add_brick(portal, "%sCorinthianCapital" % suffix, Vector3(pier_x, spring_y, -2.58),
+			Bricks.build_bevel_box(Vector3(2.55, 1.38, 2.25), 0.25), _materials.sanctum_ivory)
+		_add_brick(portal, "%sCapitalGoldBand" % suffix, Vector3(pier_x, spring_y + 0.28, -3.76),
+			Bricks.build_bevel_box(Vector3(2.72, 0.24, 0.16), 0.05), _materials.astral_brass)
+		for flute_index in 3:
+			var flute_x: float = pier_x + (-0.36 + float(flute_index) * 0.36)
+			_add_cable_between(portal, "%sPilasterFlute_%02d" % [suffix, flute_index + 1],
+				Vector3(flute_x, 3.1, -3.43), Vector3(flute_x, 15.8, -3.43),
+				0.055, 0.035, _materials.astral_brass, 8)
+	# Three concentric segmented orders create carved depth without a solid wall.
+	var arch_orders := [
+		[outer_radius, 0.54, _materials.sanctum_ivory],
+		[7.05, 0.22, _materials.gold],
+		[inner_radius, 0.26, _materials.sanctum_ivory],
+	]
+	for order_index in arch_orders.size():
+		var order: Array = arch_orders[order_index]
+		var radius: float = float(order[0])
+		var thickness: float = float(order[1])
+		var material: Material = order[2] as Material
+		for segment_index in 24:
+			var angle_a := PI * float(segment_index) / 24.0
+			var angle_b := PI * float(segment_index + 1) / 24.0
+			_add_cable_between(portal, "HeavenlyArchOrder_%02d_%02d" % [order_index + 1, segment_index + 1],
+				Vector3(cos(angle_a) * radius, spring_y + sin(angle_a) * radius, -2.68 - float(order_index) * 0.12),
+				Vector3(cos(angle_b) * radius, spring_y + sin(angle_b) * radius, -2.68 - float(order_index) * 0.12),
+				thickness, thickness * 0.72, material, 8)
+	# A restrained sunrise and paired scrolls fill the tympanum like the reference
+	# while leaving the crown astrolabe as the highest-level puzzle feedback.
+	var dawn_center := Vector3(0, 20.45, -3.15)
+	_add_torus(portal, "TympanumDawnRose", dawn_center, 0.48, 0.82,
+		_materials.astral_brass, Vector3(90, 0, 0))
+	_add_sphere(portal, "TympanumWisdomPearl", dawn_center + Vector3(0, 0, -0.20),
+		Vector3.ONE * 0.34, _materials.arrival_glass)
+	for ray_index in 9:
+		var ray_angle := PI * float(ray_index) / 8.0
+		_add_cable_between(portal, "TympanumSunRay_%02d" % (ray_index + 1), dawn_center,
+			dawn_center + Vector3(cos(ray_angle) * 3.75, sin(ray_angle) * 3.25, 0),
+			0.085, 0.045, _materials.gold, 6)
+	_add_heavenly_gate_scroll(portal, "WestTympanumScroll", Vector3(-3.75, 21.05, -3.18), 1.0, 1.18)
+	_add_heavenly_gate_scroll(portal, "EastTympanumScroll", Vector3(3.75, 21.05, -3.18), -1.0, 1.18)
+	_add_brick(portal, "HeavenlyArchKeystone", Vector3(0, spring_y + outer_radius, -3.06),
+		Bricks.build_crystal(0.70, 2.10, 0.18, 8), _materials.sanctum_ivory)
 
 
 func _build_heavenly_gate_pylon(gate: Node3D, suffix: String, side: float) -> void:
@@ -1887,28 +2392,158 @@ func _build_heavenly_gate_pylon(gate: Node3D, suffix: String, side: float) -> vo
 
 
 func _build_heavenly_gate_leaf_visual(leaf: AnimatableBody3D, side: float) -> void:
-	# A narrow ivory spine with open gilded filigree reads as a crafted portal
-	# leaf rather than a rectangular wall. Collision remains one stable box.
-	_add_brick(leaf, "IvoryLeafSpine", Vector3(side * 4.7, 0, 0),
-		Bricks.build_bevel_box(Vector3(2.1, 17.0, 1.75), 0.36), _materials.celestial_floor)
-	_add_brick(leaf, "GiltLeafBase", Vector3(0, -7.8, 0),
-		Bricks.build_bevel_box(Vector3(11.2, 1.5, 2.0), 0.32), _materials.astral_brass)
+	# A symmetric framed carriage keeps its centre on the rail. Every ornamental
+	# component belongs to the moving body; rollers and guide shoes make the means
+	# of support readable at player distance.
+	var leaf_center_y := 10.5
+	_add_brick(leaf, "IvoryLeafSpine", Vector3(0, leaf_center_y, 0),
+		Bricks.build_bevel_box(Vector3(0.30, 15.8, 0.70), 0.10), _materials.sanctum_ivory)
+	_add_brick(leaf, "IvoryMeetingStile", Vector3(-side * 2.68, leaf_center_y, 0),
+		Bricks.build_bevel_box(Vector3(0.38, 16.5, 0.78), 0.13), _materials.celestial_floor)
+	_add_brick(leaf, "IvoryOuterStile", Vector3(side * 2.68, leaf_center_y, 0),
+		Bricks.build_bevel_box(Vector3(0.38, 16.5, 0.78), 0.13), _materials.celestial_floor)
+	_add_brick(leaf, "GiltLeafBase", Vector3(0, 2.25, 0),
+		Bricks.build_bevel_box(Vector3(5.85, 0.62, 0.88), 0.18), _materials.astral_brass)
+	_add_cable_between(leaf, "GiltLeafCrown",
+		Vector3(side * 2.55, 14.25, -0.42), Vector3(-side * 2.55, 18.35, -0.42),
+		0.22, 0.14, _materials.astral_brass, 10)
+	# The perimeter is assembled from stepped structural orders, matching the
+	# layered ivory-and-gold language of the surrounding civic architecture.
+	for frame_level in 3:
+		var inset := float(frame_level) * 0.22
+		var frame_material: Material = _materials.gold if frame_level == 1 else _materials.sanctum_ivory
+		_add_brick(leaf, "CelestialFrameWest_%02d" % (frame_level + 1),
+			Vector3(-2.34 + inset, leaf_center_y, -0.74 - float(frame_level) * 0.08),
+			Bricks.build_bevel_box(Vector3(0.18, 14.95 - inset * 2.0, 0.20), 0.05), frame_material)
+		_add_brick(leaf, "CelestialFrameEast_%02d" % (frame_level + 1),
+			Vector3(2.34 - inset, leaf_center_y, -0.74 - float(frame_level) * 0.08),
+			Bricks.build_bevel_box(Vector3(0.18, 14.95 - inset * 2.0, 0.20), 0.05), frame_material)
+	# Narrow translucent channels preserve the aether identity without turning the
+	# leaf into a heavy glass shutter.
+	for pane_index in 3:
+		var pane_x := -1.65 + float(pane_index) * 1.65
+		_add_brick(leaf, "AetherDoorPane_%02d" % (pane_index + 1),
+			Vector3(pane_x, 10.15, 0.18),
+			Bricks.build_bevel_box(Vector3(0.26, 13.9, 0.14), 0.06),
+			_materials.arrival_glass if pane_index != 1 else _materials.sanctum_lavender_glass)
+	# Seven fine grille bars rise toward the meeting seam, producing one complete
+	# arched composition only when both hinged leaves are sealed together.
+	for bar_index in 7:
+		var bar_x := -2.16 + float(bar_index) * 0.72
+		var inward_progress := clampf((-side * bar_x + 2.16) / 4.32, 0.0, 1.0)
+		var bar_top := 14.35 + inward_progress * 3.75
+		var bar_bottom := 2.65
+		_add_cable_between(leaf, "CelestialGrilleBar_%02d" % (bar_index + 1),
+			Vector3(bar_x, bar_bottom, -0.94), Vector3(bar_x, bar_top, -0.94),
+			0.105, 0.065, _materials.gold, 10)
+		_add_sphere(leaf, "GrilleSpearPearl_%02d" % (bar_index + 1),
+			Vector3(bar_x, bar_top + 0.16, -0.94), Vector3(0.12, 0.30, 0.12),
+			_materials.sanctum_ivory)
+	var medallion_at := Vector3(-side * 1.52, leaf_center_y + 0.15, -1.12)
+	# Six radial braces transfer visual load from the medallion into the perimeter.
 	for rib_index in 6:
 		var progress := float(rib_index) / 5.0
-		var outer_x := side * lerpf(4.6, 1.0, progress)
-		var start := Vector3(side * 4.7, -7.0 + progress * 13.0, -1.12)
-		var finish := Vector3(outer_x, -5.8 + progress * 12.8, -1.12)
-		_add_cable_between(leaf, "GiltWingRib_%02d" % (rib_index + 1), start,
-			finish, 0.34, 0.18, _materials.gold, 8)
+		var feather_tip := Vector3(
+			(-2.35 if rib_index % 2 == 0 else 2.35),
+			leaf_center_y - 6.0 + progress * 12.0, -0.86)
+		_add_cable_between(leaf, "GiltWingRib_%02d" % (rib_index + 1),
+			medallion_at + Vector3(0, 0, 0.18), feather_tip,
+			0.12, 0.075, _materials.gold, 8)
+	# Four fine aether braces form a calm diamond around the central seal.
+	var lattice_targets := [
+		Vector3(-2.20, 5.0, -0.98), Vector3(2.20, 5.0, -0.98),
+		Vector3(-2.20, 16.0, -0.98), Vector3(2.20, 16.0, -0.98),
+	]
 	for lattice_index in 4:
-		var y := -4.8 + float(lattice_index) * 3.2
 		_add_cable_between(leaf, "AetherLattice_%02d" % (lattice_index + 1),
-			Vector3(side * 4.35, y, -1.18), Vector3(-side * 4.2, y + side * 1.2, -1.18),
-			0.20, 0.14, _materials.arrival_glass, 8)
-	_add_torus(leaf, "LeafStarMedallion", Vector3(-side * 1.8, 1.0, -1.32),
-		1.6, 2.35, _materials.gold, Vector3(90, 0, 0))
-	_add_sphere(leaf, "LeafAetherJewel", Vector3(-side * 1.8, 1.0, -1.52),
-		Vector3.ONE * 0.82, _materials.arrival_glass)
+			medallion_at + Vector3(0, 0, 0.08), lattice_targets[lattice_index],
+			0.16, 0.10, _materials.arrival_glass, 8)
+	for pearl_index in 5:
+		_add_sphere(leaf, "LeafFeatherPearl_%02d" % (pearl_index + 1),
+			Vector3(-2.28 + float(pearl_index) * 1.14, 17.75, -1.12),
+			Vector3.ONE * 0.23, _materials.sanctum_ivory)
+	_add_torus(leaf, "LeafAstrolabeMedallion",
+		medallion_at,
+		0.52, 0.88, _materials.gold, Vector3(90, 0, 0))
+	_add_sphere(leaf, "LeafAetherJewel",
+		medallion_at + Vector3(0, 0, -0.22),
+		Vector3.ONE * 0.30, _materials.green_glow)
+	# Mirrored scrollwork is the signature detail from the reference. It occupies
+	# the negative space between bars but stays thin enough to preserve visibility.
+	_add_heavenly_gate_scroll(leaf, "UpperFiligreeScroll", Vector3(-side * 0.92, 15.55, -1.04), side, 0.72)
+	_add_heavenly_gate_scroll(leaf, "LowerFiligreeScroll", Vector3(-side * 0.92, 7.10, -1.04), side, 0.62)
+	# Each half of the celestial lock remains attached to its own leaf. When the
+	# doors meet, the tongue nests between the receiver forks without overlapping
+	# solid geometry; when they open, the complete seal visibly separates.
+	var meeting_x := -side * 2.78
+	var lock := Node3D.new()
+	lock.name = "WestCelestialInterlock" if side < 0.0 else "EastCelestialInterlock"
+	lock.position = Vector3(meeting_x, leaf_center_y, -1.28)
+	lock.set_meta("mechanism", "paired tongue and fork seam lock")
+	leaf.add_child(lock)
+	_add_brick(lock, "InterlockBackplate", Vector3.ZERO,
+		Bricks.build_bevel_box(Vector3(0.44, 3.65, 0.32), 0.10), _materials.astral_brass)
+	for lock_band in [-1.20, 1.20]:
+		_add_brick(lock, "InterlockFork_%s" % str(lock_band), Vector3(0, lock_band, -0.24),
+			Bricks.build_bevel_box(Vector3(0.62, 0.34, 0.42), 0.08), _materials.gold)
+	_add_brick(lock, "InterlockWisdomKey", Vector3(0, 0, -0.34),
+		Bricks.build_crystal(0.40, 1.65, 0.16, 8), _materials.green_glow)
+	# Fine fasteners and circuit pearls give close-range scale without competing
+	# with the medallion, which remains the dominant player-facing focal point.
+	for fastener_index in 8:
+		var fastener_y := 3.45 + float(fastener_index) * 2.02
+		for fastener_side in [-1.0, 1.0]:
+			_add_sphere(leaf, "FrameRivet_%s_%02d" % ["W" if fastener_side < 0 else "E", fastener_index + 1],
+				Vector3(fastener_side * 2.50, fastener_y, -0.98), Vector3.ONE * 0.115,
+				_materials.gold)
+	for circuit_index in 4:
+		var circuit_y := 4.4 + float(circuit_index) * 3.85
+		_add_cable_between(leaf, "AetherCircuit_%02d" % (circuit_index + 1),
+			Vector3(-1.95, circuit_y, -0.90), Vector3(1.95, circuit_y, -0.90),
+			0.075, 0.05, _materials.arrival_glass, 6)
+	_add_brick(leaf, "DoorStateCrystal", Vector3(0, 17.55, -1.20),
+		Bricks.build_crystal(0.34, 1.20, 0.12, 8), _materials.arrival_glass)
+	# Three separated bearing knuckles carry the leaf around the outer pier. Their
+	# common axis becomes the AnimatableBody origin after the pivot correction.
+	for hinge_index in 3:
+		var hinge_y := 4.35 + float(hinge_index) * 6.05
+		var hinge_x := side * 2.68
+		var barrel := _add_cylinder(leaf, "DoorHingeBarrel_%02d" % (hinge_index + 1),
+			Vector3(hinge_x, hinge_y, -0.18), 0.34, 1.62,
+			_materials.astral_brass, false, 18)
+		barrel.set_meta("load_role", "supports rotating leaf on outer pier")
+		_add_torus(leaf, "DoorHingeCollarTop_%02d" % (hinge_index + 1),
+			Vector3(hinge_x, hinge_y + 0.72, -0.18), 0.30, 0.46, _materials.gold)
+		_add_torus(leaf, "DoorHingeCollarBottom_%02d" % (hinge_index + 1),
+			Vector3(hinge_x, hinge_y - 0.72, -0.18), 0.30, 0.46, _materials.gold)
+	_add_brick(leaf, "DoorHingeSpine", Vector3(side * 2.68, 10.5, 0.02),
+		Bricks.build_bevel_box(Vector3(0.26, 16.8, 0.30), 0.07), _materials.gold)
+	# Rebase every authored component around the outside stile. The parent body's
+	# origin is now a true hinge axis rather than the former leaf centre.
+	for visual_child in leaf.get_children():
+		if visual_child is Node3D:
+			(visual_child as Node3D).position += Vector3(-side * 2.68, 0, 0)
+
+
+func _add_heavenly_gate_scroll(parent: Node3D, node_name: String, center: Vector3,
+		mirror: float, scale_value: float) -> void:
+	# A segmented logarithmic curl exports as ordinary Web-safe mesh pieces and
+	# remains individually editable, unlike a shader-only decorative line.
+	var scroll := Node3D.new()
+	scroll.name = node_name
+	scroll.set_meta("editable_segments", 14)
+	parent.add_child(scroll)
+	var previous := center + Vector3(mirror * scale_value * 1.65, 0, 0)
+	for segment_index in 14:
+		var progress := float(segment_index + 1) / 14.0
+		var angle := progress * TAU * 1.18
+		var radius := scale_value * lerpf(1.65, 0.18, progress)
+		var current := center + Vector3(mirror * cos(angle) * radius, sin(angle) * radius, 0)
+		_add_cable_between(scroll, "ScrollSegment_%02d" % (segment_index + 1),
+			previous, current, 0.075, 0.045, _materials.gold, 6)
+		previous = current
+	_add_sphere(scroll, "ScrollPearl", previous + Vector3(0, 0, -0.04),
+		Vector3.ONE * 0.13, _materials.sanctum_ivory)
 
 
 func get_island_one_heavenly_star_gate() -> Node3D:
@@ -1928,16 +2563,26 @@ func _set_island_one_star_gate_open(open: bool, animate: bool) -> void:
 		_island_one_star_gate_tween.kill()
 	gate.set_meta("gate_open", open)
 	gate.set_meta("gate_state", "opening" if open and animate else ("open" if open else "sealed"))
+	var motion := gate.get_node_or_null("SafeGateMotion")
+	if motion == null:
+		motion = preload("res://scripts/mind_spark/safe_gate_motion.gd").new()
+		motion.name = "SafeGateMotion"
+		gate.add_child(motion)
+	motion.request(open,animate)
 	var core := gate.get_node_or_null("HeavenlyGatePowerCore") as MeshInstance3D
 	if core != null:
 		core.material_override = _materials.gold if open else _materials.astral_lavender
-	for engine_core in gate.find_children("*HingeAetherCore", "MeshInstance3D", true, false):
+	for engine_core in gate.find_children("*HingeMotorCore", "MeshInstance3D", true, false):
 		(engine_core as MeshInstance3D).material_override = _materials.gold if open else _materials.arrival_glass
+	for state_crystal in gate.find_children("DoorStateCrystal", "MeshInstance3D", true, false):
+		(state_crystal as MeshInstance3D).material_override = _materials.green_glow if open else _materials.arrival_glass
 	if not animate:
 		for leaf in _island_one_star_gate_leaves:
 			leaf.position = leaf.get_meta("open_position") if open else leaf.get_meta("closed_position")
+			leaf.rotation.y = float(leaf.get_meta("open_rotation_y")) if open \
+				else float(leaf.get_meta("closed_rotation_y"))
 		return
-	_island_one_star_gate_tween = create_tween().set_parallel(true)
+	_island_one_star_gate_tween = create_tween().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS).set_parallel(true)
 	var halo := gate.get_node_or_null("HeavenlyStarHalo") as Node3D
 	if halo != null:
 		_island_one_star_gate_tween.tween_property(halo, "rotation:z",
@@ -1952,12 +2597,12 @@ func _set_island_one_star_gate_open(open: bool, animate: bool) -> void:
 		_island_one_star_gate_tween.tween_property(core, "scale", Vector3.ONE * 1.28, 0.48) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		_island_one_star_gate_tween.tween_property(core, "scale", Vector3.ONE, 0.46).set_delay(0.48)
-	for leaf in _island_one_star_gate_leaves:
-		_island_one_star_gate_tween.tween_property(leaf, "position",
-			leaf.get_meta("open_position") if open else leaf.get_meta("closed_position"), 1.45).set_delay(0.38) \
-			.set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
-	_island_one_star_gate_tween.chain().tween_callback(func() -> void:
-		gate.set_meta("gate_state", "open" if open else "sealed"))
+	for drive_rotor in gate.find_children("*HingeDriveRotor", "Node3D", true, false):
+		var rotor := drive_rotor as Node3D
+		_island_one_star_gate_tween.tween_property(rotor, "rotation:z",
+			rotor.rotation.z + (TAU * 2.0 if open else -TAU * 2.0), 2.03) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	# Leaf transforms and completion state belong to obstruction-aware physics motion.
 
 
 func _zone_floor_surface_y(zone_center: Vector3) -> float:
@@ -2652,7 +3297,7 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 		var indicator_face := _add_cylinder(instrument,
 			"SanctumIndicatorFace_%s" % target_names[index],
 			socket_at + Vector3(0, 0, 0.18), 1.72, 0.18,
-			_materials.sanctum_dial, false, 24)
+			_materials.green_glow, false, 24)
 		indicator_face.rotation_degrees.x = 90.0
 		_add_torus(instrument, "ConstellationSocket_%s" % target_names[index], socket_at,
 			1.75, 2.48, _materials.sanctum_ivory, Vector3(90, 0, 0))
@@ -2664,9 +3309,9 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 		pointer.position = socket_at + Vector3(0, 0, 0.42)
 		instrument.add_child(pointer)
 		_add_box(pointer, "ActualNeedle", Vector3(0, 0.88, 0),
-			Vector3(0.30, 1.76, 0.24), _materials.arrival_glass)
+			Vector3(0.30, 1.76, 0.24), _materials.green_glow)
 		_add_sphere(pointer, "ActualJewel", Vector3(0, 1.82, 0),
-			Vector3.ONE * 0.34, _materials.arrival_glass)
+			Vector3.ONE * 0.34, _materials.green_glow)
 		var target := Node3D.new()
 		target.name = "ConstellationTarget_%s" % target_names[index]
 		target.position = socket_at + Vector3(0, 0, 0.50)
@@ -2799,163 +3444,405 @@ func _build_compass_ring(parent: Node3D, ring_name: String, inner_radius: float,
 
 
 func _build_compass_control(parent: Node3D, control_id: String, at: Vector3,
-		title: String, control_kind: int) -> void:
+		title: String, _control_kind: int) -> void:
+	_build_heavenly_quest_instrument(parent, control_id, at, title)
+
+func _build_light_prism_control(parent: Node3D, control_id: String, at: Vector3,
+		title: String) -> void:
+	if control_id == "weight_prism":
+		_build_weight_benchmark(parent, at, title)
+	else:
+		_build_heavenly_quest_instrument(parent, control_id, at, title)
+
+func _build_heavenly_quest_instrument(parent: Node3D, control_id: String,
+		at: Vector3, title: String) -> void:
 	var control := Node3D.new()
 	control.name = "PuzzleControl_%s" % control_id
 	control.position = at
 	control.set_meta("control_id", control_id)
 	control.set_meta("purpose", title)
+	control.set_meta("preserve_authored_nodes", true)
 	control.set_meta("production_visual", true)
+	control.set_meta("design_revision", "heavenly_kit_02")
 	parent.add_child(control)
-	var production_scene: PackedScene = PuzzleRegulatorProductionScene
-	var module_count := 131
-	if control_kind == 0:
-		production_scene = PuzzleRegulatorProductionScene
-		module_count = 131
-	elif control_kind == 1:
-		production_scene = PuzzleSelectorProductionScene
-		module_count = 122
-	else:
-		production_scene = PuzzleConfirmationProductionScene
-		module_count = 124
-	var production_visual := production_scene.instantiate() as Node3D
-	production_visual.name = "ProductionControlVisual"
-	production_visual.set_meta("editable_source_modules", module_count)
-	production_visual.set_meta("all_faces_triangulated", true)
-	control.add_child(production_visual)
-	_add_label(control, title, Vector3(0, 8.65, 0), Color("fff7d6"), 18)
+	var path := "res://assets3D/mind_spark/quest_kit/%s/export/%s.glb" % [control_id, control_id]
+	var model := (load(path) as PackedScene).instantiate() as Node3D
+	model.name = "HeavenlyQuestInstrument"
+	model.set_script(load("res://scripts/mind_spark/heavenly_quest_instrument.gd"))
+	model.set("control_id", control_id)
+	# Face the established west-side instrument approach; no station is relocated.
+	model.rotation.y = -PI / 2.0
+	control.add_child(model)
+	if control_id.begins_with("echo_signal_") or control_id == "analysis_console":
+		var headings := ["FACT", "POSSIBILITY", "UNSURE"] if control_id.begins_with("echo_signal_") else ["THOUGHT", "FEELING", "CHOICE"]
+		for i in 3:
+			var card := model.find_child("Card%d" % i, true, false) as Node3D
+			var heading := Label3D.new()
+			heading.name = "CardMeaning"
+			heading.text = headings[i]
+			heading.font_size = 22
+			heading.pixel_size = .003
+			heading.position = Vector3(0, .30, .11)
+			heading.modulate = Color("fff2d9")
+			card.add_child(heading)
+	var identity := Node3D.new()
+	identity.name = "QuestIdentityCrown"
+	identity.set_meta("graphic_role", _quest_control_role(control_id))
+	identity.set_meta("control_id", control_id)
+	identity.set_meta("design_revision", "heavenly_kit_02")
+	identity.set_meta("preserve_authored_nodes", true)
+	control.add_child(identity)
+	var lens := model.find_child("StateLens", true, false) as MeshInstance3D
+	assert(lens != null, "Quest kit export requires its state lens: " + control_id)
+	lens.reparent(identity, true)
+	lens.name = "QuestStateCore"
+	lens.set_meta("authored_scale", lens.scale)
+	lens.set_meta("feedback_states", ["inactive", "current", "complete", "powered"])
+	var label := _add_label(control, title, Vector3(-1.55, 1.65, 0), Color("fff2d9"), 24)
+	label.name = "QuestPurposeLabel"
+	label.pixel_size = 0.0045
+	label.set_meta("interaction_verb", "OBSERVE • OPERATE")
+	var body := StaticBody3D.new()
+	body.name = "InstrumentPlinthCollision"
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(2.65, 1.95, 5.4 if control_id in ["analysis_console", "echo_question"] else 4.4)
+	shape.shape = box
+	shape.position.y = 0.975
+	body.add_child(shape)
+	control.add_child(body)
+	var anchor := Marker3D.new()
+	anchor.name = "InspectionAnchor"
+	anchor.position = Vector3(-8, 3.2, 0)
+	control.add_child(anchor)
+	if control_id.ends_with("_prism"):
+		_attach_quest_output(control, -1.0)
 
 
-func _build_light_prism_control(parent: Node3D, control_id: String, at: Vector3,
-		title: String) -> void:
-	var station_kind := control_id.trim_suffix("_prism")
-	var station_index := ["colour", "rhythm", "weight"].find(station_kind)
+func _attach_quest_output(control: Node3D, direction: float) -> void:
+	var port := _add_cylinder(control, "OutputPort", Vector3(direction * 1.12, .72, 0),
+		.20, .34, _materials.astral_brass, false, 12)
+	port.rotation.z = PI / 2.0
+	var anchor := Marker3D.new()
+	anchor.name = "EnergyOutputAnchor"
+	anchor.position = Vector3(direction * 1.30, .72, 0)
+	control.add_child(anchor)
+
+
+func _build_weight_benchmark(parent: Node3D, at: Vector3, title: String) -> void:
 	var control := Node3D.new()
-	control.name = "PuzzleControl_%s" % control_id
+	control.name = "PuzzleControl_weight_prism"
 	control.position = at
 	control.set_meta("preserve_authored_nodes", true)
-	control.set_meta("control_id", control_id)
-	control.set_meta("purpose", "route one unique light seed through %s" % title)
+	control.set_meta("control_id", "weight_prism")
+	control.set_meta("purpose", "route one unique light seed through visual weight")
 	control.set_meta("interaction_model", "walk, observe, rotate, compare live beam")
-	control.set_meta("design_revision", "v33_production_living_light_instrument")
-	control.set_meta("editable_component_count", 96 + station_index * 8)
-	control.set_meta("mechanical_systems", ["stepped foundation", "seed carousel", "detent gear",
-		"three-axis prism gimbal", "beam emitter", "lock piston", "%s experiment" % station_kind])
+	control.set_meta("design_revision", "weight_benchmark_01")
 	parent.add_child(control)
-	# Layered, bevelled foundation with visible fastening and service access.
-	_add_brick(control, "PrismFoundationLower", Vector3(0, 0.20, 0),
-		Bricks.build_bevel_box(Vector3(5.8, 0.40, 5.8), 0.26), _materials.sanctum_ivory)
-	_add_brick(control, "PrismFoundationUpper", Vector3(0, 0.58, 0),
-		Bricks.build_bevel_box(Vector3(4.9, 0.34, 4.9), 0.20), _materials.celestial_floor)
-	_add_cylinder(control, "PrismBearingPedestal", Vector3(0, 1.12, 0), 2.25, 0.78,
-		_materials.sanctum_ivory, false, 24)
-	_add_torus(control, "PrismGoldenScale", Vector3(0, 1.54, 0), 1.82, 2.28,
-		_materials.astral_brass)
-	for bolt_index in 12:
-		var bolt_angle := TAU * float(bolt_index) / 12.0
-		_add_cylinder(control, "FoundationBolt_%02d" % (bolt_index + 1),
-			Vector3(sin(bolt_angle) * 2.34, 0.86, cos(bolt_angle) * 2.34),
-			0.11, 0.16, _materials.gold, false, 8)
-	# Twenty-four teeth make the selected 120-degree detents mechanically legible.
-	for tooth_index in 24:
-		var tooth_angle := TAU * float(tooth_index) / 24.0
-		_add_box(control, "CarouselGearTooth_%02d" % (tooth_index + 1),
-			Vector3(sin(tooth_angle) * 2.35, 1.52, cos(tooth_angle) * 2.35),
-			Vector3(0.25, 0.30, 0.58), _materials.astral_brass, false, tooth_angle)
+	var packed := load("res://assets3D/mind_spark/quest_kit/weight_prism/export/weight_prism.glb") as PackedScene
+	var model := packed.instantiate() as Node3D
+	model.name = "WeightPrismBenchmark"
+	model.set_script(load("res://scripts/mind_spark/weight_prism_benchmark.gd"))
+	# Blender's -Y front exports as Godot +Z. Face the western approach aisle.
+	model.rotation.y = -PI / 2.0
+	control.add_child(model)
+	var identity := Node3D.new()
+	identity.name = "QuestIdentityCrown"
+	identity.set_meta("graphic_role", _quest_control_role("weight_prism"))
+	identity.set_meta("control_id", "weight_prism")
+	identity.set_meta("design_revision", "weight_benchmark_01")
+	identity.set_meta("preserve_authored_nodes", true)
+	control.add_child(identity)
+	var lens := model.find_child("StateLens", true, false) as MeshInstance3D
+	if lens != null:
+		lens.reparent(identity, true)
+		lens.name = "QuestStateCore"
+		lens.set_meta("authored_scale", lens.scale)
+		lens.set_meta("feedback_states", ["inactive", "current", "complete", "powered"])
+	var label := _add_label(control, "%s\nROTATE • BALANCE" % title,
+		Vector3(-1.35, 1.28, 0), Color("fff2d9"), 24)
+	label.name = "QuestPurposeLabel"
+	label.pixel_size = 0.005
+	label.set_meta("interaction_verb", "ROTATE • BALANCE")
+	# A simple plinth collider keeps physical collision independent of art.
+	var body := StaticBody3D.new()
+	body.name = "WeightPlinthCollision"
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(2.65, 2.1, 5.8)
+	shape.shape = box
+	shape.position.y = 1.05
+	body.add_child(shape)
+	control.add_child(body)
+	var camera_anchor := Marker3D.new()
+	camera_anchor.name = "InspectionAnchor"
+	camera_anchor.position = Vector3(-9, 3.2, 0)
+	control.add_child(camera_anchor)
+	_attach_quest_output(control, 1.0)
 
-	# Three visible cartridges establish the rule before the player touches the
-	# station: cyan Thought, lavender Feeling, gold Choice—each may be routed once.
-	var carousel := Node3D.new()
-	carousel.name = "SeedCarousel_%s" % station_kind
-	carousel.position = Vector3(0, 1.72, 0)
-	control.add_child(carousel)
-	var cartridge_materials := [_materials.arrival_glass, _materials.sanctum_lavender_glass,
-		_materials.gold]
-	for seed_index in 3:
-		var seed_angle := TAU * float(seed_index) / 3.0
-		var socket_at := Vector3(sin(seed_angle) * 1.62, 0.34, cos(seed_angle) * 1.62)
-		_add_cylinder(carousel, "SeedSocketCase_%d" % seed_index, socket_at,
-			0.54, 0.48, _materials.sanctum_ivory, false, 16)
-		_add_torus(carousel, "SeedSocketBezel_%d" % seed_index,
-			socket_at + Vector3.UP * 0.27, 0.38, 0.54, _materials.astral_brass)
-		var lamp := _add_sphere(carousel, "SeedSocketLamp_%s_%d" % [station_kind, seed_index],
-			socket_at + Vector3.UP * 0.62, Vector3(0.38, 0.54, 0.38), cartridge_materials[seed_index])
-		lamp.set_meta("seed_index", seed_index)
-		for cage_side in [-1.0, 1.0]:
-			_add_cable_between(carousel, "CartridgeCage_%d" % seed_index,
-				socket_at + Vector3(cage_side * 0.46, 0.22, 0),
-				socket_at + Vector3(cage_side * 0.46, 0.96, 0),
-				0.06, 0.06, _materials.gold, 6)
 
-	var rotor := Node3D.new()
-	rotor.name = "LightPrismRotor_%s" % station_kind
-	rotor.position = Vector3(0, 4.65, 0)
-	control.add_child(rotor)
-	# Three-axis gimbal: the outer yoke carries load, the two inner meridians show
-	# that the triangular optic is truly aimable rather than a static decoration.
-	_add_torus(rotor, "PrismOuterGimbal", Vector3.ZERO, 2.0, 2.24,
-		_materials.astral_brass, Vector3(90, 0, 0))
-	_add_torus(rotor, "PrismPitchGimbal", Vector3.ZERO, 1.65, 1.86,
-		_materials.gold, Vector3(0, 0, 90))
-	_add_torus(rotor, "PrismRollGimbal", Vector3.ZERO, 1.32, 1.50,
-		_materials.arrival_glass, Vector3(0, 90, 0))
-	for bracket_index in 4:
-		var bracket_angle := TAU * float(bracket_index) / 4.0
-		_add_brick(rotor, "GimbalBearingBracket_%02d" % (bracket_index + 1),
-			Vector3(sin(bracket_angle) * 2.12, cos(bracket_angle) * 2.12, 0),
-			Bricks.build_bevel_box(Vector3(0.52, 0.52, 0.72), 0.12), _materials.sanctum_ivory)
-	_add_brick(rotor, "TriangulatedAetherPrism", Vector3.ZERO,
-		Bricks.build_crystal(1.22, 3.9, 0.34, 6), _materials.arrival_glass)
-	for facet_index in 6:
-		var facet_angle := TAU * float(facet_index) / 6.0
-		_add_cable_between(rotor, "PrismFacetEdge_%02d" % (facet_index + 1),
-			Vector3(sin(facet_angle) * 1.18, -1.55, cos(facet_angle) * 1.18),
-			Vector3(0, 1.92, 0), 0.055, 0.035, _materials.gold, 6)
-	var seed := _add_sphere(rotor, "LightSeedCore_%s" % station_kind,
-		Vector3(0, 2.48, 0), Vector3.ONE * 0.62, _materials.sanctum_ivory)
-	seed.set_meta("seed_slot", control_id)
-	# Beam nozzle, focus lens, iris blades and manual lock piston make the input and
-	# output directions explicit from a first-person camera.
-	var emitter := Node3D.new()
-	emitter.name = "BeamEmitter_%s" % station_kind
-	emitter.position = Vector3(2.55, 4.65, 0)
-	control.add_child(emitter)
-	var emitter_body := _add_cylinder(emitter, "EmitterIvoryBarrel", Vector3.ZERO,
-		0.72, 1.42, _materials.sanctum_ivory, false, 20)
-	emitter_body.rotation_degrees.z = 90.0
-	var emitter_lens := _add_cylinder(emitter, "EmitterFocusLens", Vector3(0.78, 0, 0),
-		0.52, 0.20, _materials.arrival_glass, false, 20)
-	emitter_lens.rotation_degrees.z = 90.0
-	_add_torus(emitter, "EmitterGiltCollar", Vector3(0.70, 0, 0), 0.60, 0.78,
-		_materials.astral_brass, Vector3(0, 0, 90))
-	var shutter := Node3D.new()
-	shutter.name = "PrismEmitterShutter_%s" % station_kind
-	shutter.position = Vector3(0.90, 0, 0)
-	emitter.add_child(shutter)
-	for blade_index in 6:
-		var blade_angle := TAU * float(blade_index) / 6.0
-		_add_box(shutter, "IrisBlade_%02d" % (blade_index + 1),
-			Vector3(0, sin(blade_angle) * 0.32, cos(blade_angle) * 0.32),
-			Vector3(0.08, 0.22, 0.50), _materials.gold, false, blade_angle)
-	var lock_piston := Node3D.new()
-	lock_piston.name = "PrismLockPiston_%s" % station_kind
-	lock_piston.position = Vector3(-2.15, 2.35, 0)
-	control.add_child(lock_piston)
-	_add_cylinder(lock_piston, "LockPistonBody", Vector3.ZERO, 0.34, 1.35,
-		_materials.astral_brass, false, 12)
-	_add_sphere(lock_piston, "LockPistonPearl", Vector3(0, 0.86, 0),
-		Vector3.ONE * 0.42, _materials.arrival_glass)
-	# Handwheel and scale ticks explain that Q advances one physical detent.
-	_add_torus(control, "PrismOperatorHandwheel", Vector3(-2.75, 3.0, 0), 0.82, 1.05,
-		_materials.gold, Vector3(0, 0, 90))
-	for spoke_index in 6:
-		var spoke_angle := TAU * float(spoke_index) / 6.0
-		_add_cable_between(control, "HandwheelSpoke_%02d" % (spoke_index + 1),
-			Vector3(-2.75, 3.0, 0),
-			Vector3(-2.75, 3.0 + sin(spoke_angle) * 0.78, cos(spoke_angle) * 0.78),
-			0.07, 0.05, _materials.astral_brass, 6)
-	_build_prism_science_instrument(control, station_kind)
-	_add_label(control, title, Vector3(0, 8.25, 0), Color("fff2c0"), 15)
+func _build_quest_control_identity(control: Node3D, control_id: String, title: String) -> void:
+	# The production pedestals deliberately share one mechanical language. This
+	# crown gives every quest object a different, readable silhouette, while the
+	# shared frame, action plaque and state jewel remain reusable across quests.
+	var cluster_center := Vector3(-52, control.position.y, 24) if control.position.x < -30.0 \
+		else Vector3(0, control.position.y, 20)
+	var outward := Vector3(control.position.x - cluster_center.x, 0,
+		control.position.z - cluster_center.z).normalized()
+	if outward.length_squared() < 0.1:
+		outward = Vector3(0, 0, -1)
+	var crown := Node3D.new()
+	crown.name = "QuestIdentityCrown"
+	# The send console occupies the middle dial's former approach ray.
+	# Face this instrument into the open western aisle instead.
+	if control_id == "middle_ring":
+		outward = Vector3.LEFT
+	# Mount the emblem on the player-facing shoulder of the machine. The old
+	# centre placement was frequently hidden behind the tall production rotor.
+	crown.position = outward * 3.15 + Vector3.UP * 6.65
+	crown.set_meta("control_id", control_id)
+	crown.set_meta("graphic_role", _quest_control_role(control_id))
+	crown.set_meta("reusable_component_family", "heavenly quest identity crown")
+	crown.set_meta("design_revision", "v41_textured_low_poly_final")
+	crown.set_meta("material_system", "procedural albedo + roughness + normal")
+	crown.set_meta("final_art_asset", true)
+	crown.set_meta("preserve_authored_nodes", true)
+	control.add_child(crown)
+	# `look_at()` expects a global target; the controls are authored under a
+	# translated puzzle root. A local looking basis keeps every badge facing its
+	# matching approach path instead of randomly exposing its blank back plate.
+	crown.basis = Basis.looking_at(outward, Vector3.UP)
+	var ivory: Material = _materials.quest_ivory
+	var ivory_inset: Material = _materials.quest_ivory_inset
+	var brass: Material = _materials.quest_brass
+	var gold: Material = _materials.quest_gold_leaf
+	var teal: Material = _materials.quest_teal_enamel
+	var lavender: Material = _materials.quest_lavender_enamel
+	# Five readable depth layers replace the old single disc. Twelve radial sides
+	# give a deliberate low-poly silhouette; the inset, bezel and clamps catch
+	# warm light separately and make the construction believable from first person.
+	_add_cylinder(crown, "QuestIdentityRearHousing", Vector3(0, 0, 0.18), 1.82, 0.24,
+		brass, false, 12).rotation_degrees.x = 90.0
+	_add_cylinder(crown, "QuestIdentityIvoryMedallion", Vector3(0, 0, 0), 1.68, 0.34,
+		ivory, false, 12).rotation_degrees.x = 90.0
+	_add_cylinder(crown, "QuestIdentityRecessedFace", Vector3(0, 0, -0.25), 1.38, 0.10,
+		ivory_inset, false, 12).rotation_degrees.x = 90.0
+	_add_torus(crown, "QuestIdentityGiltBezel", Vector3(0, 0, -0.22), 1.42, 1.72,
+		brass, Vector3(90, 0, 0))
+	var state_core := _add_sphere(crown, "QuestStateCore", Vector3(0, 0, -0.42),
+		Vector3(0.24, 0.24, 0.10), ivory)
+	state_core.set_meta("feedback_states", ["inactive", "current", "complete", "powered"])
+	state_core.set_meta("authored_scale", state_core.scale)
+	for clamp_index in 8:
+		var clamp_angle := TAU * float(clamp_index) / 8.0
+		var clamp := _add_box(crown, "QuestHousingClamp_%02d" % (clamp_index + 1),
+			Vector3(sin(clamp_angle) * 1.72, cos(clamp_angle) * 1.72, -0.30),
+			Vector3(0.18, 0.42, 0.18), brass)
+		clamp.rotation.z = -clamp_angle
+		_add_cylinder(crown, "QuestHousingRivet_%02d" % (clamp_index + 1),
+			Vector3(sin(clamp_angle) * 1.72, cos(clamp_angle) * 1.72, -0.42),
+			0.085, 0.08, gold, false, 8).rotation_degrees.x = 90.0
+	# Paired aether crystals are a shared quality signature and provide a clear
+	# top/bottom orientation even when the icon itself is rotationally symmetric.
+	_add_brick(crown, "QuestAetherFinialTop", Vector3(0, 2.08, -0.20),
+		Bricks.build_crystal(0.18, 0.64, 0.08, 6), teal)
+	var lower_finial := _add_brick(crown, "QuestAetherFinialBottom", Vector3(0, -2.08, -0.20),
+		Bricks.build_crystal(0.18, 0.64, 0.08, 6), lavender)
+	lower_finial.rotation.z = PI
+
+	match control_id:
+		"colour_prism":
+			# Three dichroic jewels arranged as a colour-mixing triangle.
+			var colours := [teal, lavender, gold]
+			for index in 3:
+				var angle := TAU * float(index) / 3.0
+				_add_sphere(crown, "ColourSpectrumJewel_%02d" % (index + 1),
+					Vector3(sin(angle) * 0.92, cos(angle) * 0.92, -0.56),
+					Vector3(0.34, 0.34, 0.16), colours[index])
+				_add_cable_between(crown, "ColourMixingEdge_%02d" % (index + 1),
+					Vector3(sin(angle) * 0.92, cos(angle) * 0.92, -0.48),
+					Vector3(sin(angle + TAU / 3.0) * 0.92,
+						cos(angle + TAU / 3.0) * 0.92, -0.48),
+					0.07, 0.07, gold, 6)
+		"rhythm_prism":
+			# A rising 3:4:5 rhythm can be read without relying on the title.
+			for index in 3:
+				var bar_height := 0.68 + float(index) * 0.34
+				_add_box(crown, "RhythmMeasure_%02d" % (index + 1),
+					Vector3(-0.78 + float(index) * 0.78, -0.28 + bar_height * 0.5, -0.54),
+					Vector3(0.24, bar_height, 0.18),
+					teal if index != 1 else gold)
+			for beat_index in 5:
+				_add_sphere(crown, "RhythmBeat_%02d" % (beat_index + 1),
+					Vector3(-1.0 + float(beat_index) * 0.5, -1.06, -0.54),
+					Vector3.ONE * (0.13 if beat_index % 2 else 0.20), brass)
+		"weight_prism":
+			# A literal balance reads immediately as visual-weight experimentation.
+			_add_cable_between(crown, "WeightBalanceBeam", Vector3(-1.12, 0.38, -0.52),
+				Vector3(1.12, -0.12, -0.52), 0.10, 0.10, brass, 8)
+			_add_triangle_patch(crown, "WeightFulcrum",
+				Vector3(-0.42, -0.92, -0.50), Vector3(0.42, -0.92, -0.50),
+				Vector3(0, 0.25, -0.50), ivory)
+			_add_sphere(crown, "WeightLightMass", Vector3(-1.06, 0.08, -0.54),
+				Vector3.ONE * 0.28, teal)
+			_add_sphere(crown, "WeightHeavyMass", Vector3(1.02, -0.55, -0.54),
+				Vector3.ONE * 0.46, gold)
+		"analysis_console":
+			_add_torus(crown, "AnalysisLens", Vector3(0, 0.12, -0.48), 0.62, 0.88,
+				teal, Vector3(90, 0, 0))
+			for index in 3:
+				var angle := TAU * float(index) / 3.0
+				_add_sphere(crown, "AnalysisEvidence_%02d" % (index + 1),
+					Vector3(sin(angle) * 1.18, cos(angle) * 1.18, -0.54),
+					Vector3.ONE * 0.22,
+					[teal, lavender, gold][index])
+		"west_regulator", "east_regulator":
+			# Paired pressure chambers identify these as balancing controls.
+			for side in [-1.0, 1.0]:
+				_add_cylinder(crown, "PressureChamber_%s" % ("L" if side < 0 else "R"),
+					Vector3(side * 0.62, -0.08, -0.54), 0.30, 1.55,
+					teal if side < 0 else gold, false, 12)
+				_add_torus(crown, "PressureCollar_%s" % ("L" if side < 0 else "R"),
+					Vector3(side * 0.62, 0.50, -0.54), 0.28, 0.39,
+					brass)
+			_add_cable_between(crown, "PressureEqualizer",
+				Vector3(-0.62, 0.72, -0.52), Vector3(0.62, 0.72, -0.52),
+				0.10, 0.10, brass, 8)
+		"outer_ring", "middle_ring", "inner_ring":
+			var selected_ring := ["outer_ring", "middle_ring", "inner_ring"].find(control_id)
+			for index in 3:
+				var radius := 1.14 - float(index) * 0.34
+				_add_torus(crown, "OrbitGraphic_%02d" % (index + 1), Vector3(0, 0, -0.56 - index * 0.04),
+					radius, radius + (0.16 if index == selected_ring else 0.09),
+					gold if index == selected_ring else teal,
+					Vector3(90, 0, 0))
+				_add_box(crown, "OrbitIndex_%02d" % (index + 1),
+					Vector3(0, radius, -0.80), Vector3(0.16, 0.24, 0.12), gold)
+		"confirm":
+			# A vertical launch key communicates that this sends the composed signal.
+			_add_triangle_patch(crown, "SendForwardArrowHead",
+				Vector3(-0.72, 0.08, -0.52), Vector3(0.72, 0.08, -0.52),
+				Vector3(0, 1.18, -0.52), gold)
+			_add_box(crown, "SendForwardStem", Vector3(0, -0.54, -0.52),
+				Vector3(0.30, 1.25, 0.18), teal)
+		"echo_collector":
+			# Three descending resonance orbs feed one receiving cup.
+			for index in 3:
+				_add_sphere(crown, "CollectorEcho_%02d" % (index + 1),
+					Vector3(-0.72 + float(index) * 0.72, 0.62, -0.54),
+					Vector3.ONE * (0.24 + float(index) * 0.05),
+					[teal, lavender, gold][index])
+			_add_triangle_patch(crown, "CollectorFunnel",
+				Vector3(-1.05, 0.06, -0.50), Vector3(1.05, 0.06, -0.50),
+				Vector3(0, -1.08, -0.50), ivory)
+		"echo_signal_1", "echo_signal_2", "echo_signal_3":
+			var echo_count := int(control_id.right(1))
+			for index in echo_count:
+				var y := -0.54 + float(index) * 0.54
+				_add_torus(crown, "EchoWave_%02d" % (index + 1),
+					Vector3(0, y, -0.52), 0.48 + float(index) * 0.12,
+					0.62 + float(index) * 0.12,
+					[teal, lavender, gold][index], Vector3(90, 0, 0))
+			for category_index in 3:
+				_add_sphere(crown, "EchoCategoryKey_%02d" % (category_index + 1),
+					Vector3(-0.68 + float(category_index) * 0.68, -1.16, -0.54),
+					Vector3.ONE * 0.18,
+					[gold, lavender, teal][category_index])
+		"echo_question":
+			# Four framed cards identify a choice of perspectives; each sits in a
+			# physical socket with an engraved line and a numbered tab.
+			for index in 4:
+				var finish := Vector3(-0.52 + (index % 2) * 1.04, 0.60 - int(index / 2) * 1.20, -0.52)
+				_add_box(crown, "QuestionSocket_%02d" % index, finish,
+					Vector3(0.92, 1.08, 0.18), brass)
+				_add_box(crown, "QuestionChoice_%02d" % (index + 1), finish + Vector3(0, 0, -0.12),
+					Vector3(0.76, 0.92, 0.12), teal if index == 2 else ivory)
+				for line_index in 3:
+					_add_box(crown, "CardEngraving_%d_%d" % [index, line_index],
+						finish + Vector3(0, 0.20 - line_index * 0.20, -0.20),
+						Vector3(0.48 - line_index * 0.08, 0.035, 0.025), brass)
+		"echo_beacon":
+			_add_brick(crown, "BeaconWisdomCrystal", Vector3(0, 0, -0.52),
+				Bricks.build_crystal(0.50, 1.85, 0.20, 8), teal)
+			for index in 8:
+				var angle := TAU * float(index) / 8.0
+				_add_cable_between(crown, "BeaconRay_%02d" % (index + 1),
+					Vector3(sin(angle) * 0.72, cos(angle) * 0.72, -0.50),
+					Vector3(sin(angle) * 1.28, cos(angle) * 1.28, -0.50),
+					0.07, 0.04, gold, 6)
+
+	var verb := _quest_control_verb(control_id)
+	var purpose_label := _add_label(control, "%s\n%s" % [title, verb],
+		crown.position + Vector3.UP * 3.3, Color("fff2c0"), 28)
+	purpose_label.pixel_size = 0.008
+	purpose_label.name = "QuestPurposeLabel"
+	purpose_label.set_meta("interaction_verb", verb)
+	_finish_quest_instrument(crown, control_id)
+
+
+func _finish_quest_instrument(crown: Node3D, control_id: String) -> void:
+	# Put one-sided reliefs on both faces, with depth, so they survive the
+	# reversed viewing direction of controls on opposite sides of the court.
+	for child in crown.get_children():
+		if child is MeshInstance3D:
+			var mesh_instance := child as MeshInstance3D
+			if mesh_instance.material_override is StandardMaterial3D:
+				var finish := mesh_instance.material_override.duplicate() as StandardMaterial3D
+				finish.cull_mode = BaseMaterial3D.CULL_DISABLED
+				mesh_instance.material_override = finish
+			if mesh_instance.mesh is SphereMesh:
+				var sphere := mesh_instance.mesh.duplicate() as SphereMesh
+				sphere.radial_segments = 12
+				sphere.rings = 6
+				mesh_instance.mesh = sphere
+	# Clearly supported housing and accessible grip, shared across the kit.
+	for side in [-1.0, 1.0]:
+		_add_box(crown, "MountFoot_%s" % side, Vector3(side * 1.20, -2.30, 0.08),
+			Vector3(0.38, 1.08, 0.48), _materials.quest_ivory)
+		_add_box(crown, "MountInlay_%s" % side, Vector3(side * 1.20, -2.30, -0.18),
+			Vector3(0.09, 0.82, 0.06), _materials.quest_brass)
+	if control_id in ["west_regulator", "east_regulator"]:
+		var sign_value := 1.0 if control_id == "west_regulator" else -1.0
+		_add_box(crown, "PressureDirection", Vector3(0, sign_value * 1.02, -0.72),
+			Vector3(0.20, 0.36, 0.14), _materials.quest_teal_enamel)
+		var arrow := _add_brick(crown, "PressureFlowArrow", Vector3(0, sign_value * 1.22, -0.72),
+			Bricks.build_crystal(0.18, 0.36, 0.05, 4), _materials.quest_gold_leaf)
+		arrow.rotation.z = 0.0 if sign_value > 0 else PI
+	if control_id == "echo_collector":
+		for index in 3:
+			_add_cable_between(crown, "CollectorConduit_%d" % index,
+				Vector3(-0.72 + index * 0.72, 0.48, -0.72), Vector3(0, -0.85, -0.72),
+				0.04, 0.04, _materials.quest_gold_leaf, 6)
+		_add_box(crown, "CollectorReservoir", Vector3(0, -1.06, -0.72),
+			Vector3(0.54, 0.26, 0.24), _materials.quest_teal_enamel)
+
+
+func _quest_control_role(control_id: String) -> String:
+	var roles := {
+		"colour_prism": "mix colour relationships", "rhythm_prism": "measure visual rhythm",
+		"weight_prism": "balance visual weight", "analysis_console": "compare gathered evidence",
+		"west_regulator": "notice pressure", "east_regulator": "make space",
+		"outer_ring": "align notice", "middle_ring": "align understanding",
+		"inner_ring": "align choice", "confirm": "send the composed signal",
+		"echo_collector": "collect three thought echoes", "echo_signal_1": "classify certainty",
+		"echo_signal_2": "classify possibility", "echo_signal_3": "classify the unknown",
+		"echo_question": "choose a protective question", "echo_beacon": "verify and broadcast hope",
+	}
+	return str(roles.get(control_id, "quest interaction"))
+
+
+func _quest_control_verb(control_id: String) -> String:
+	var verbs := {
+		"colour_prism": "ROTATE • MIX", "rhythm_prism": "ROTATE • COUNT",
+		"weight_prism": "ROTATE • BALANCE", "analysis_console": "COMPARE • ANALYSE",
+		"west_regulator": "TURN • NOTICE", "east_regulator": "TURN • RELEASE",
+		"outer_ring": "ALIGN • NOTICE", "middle_ring": "ALIGN • UNDERSTAND",
+		"inner_ring": "ALIGN • CHOOSE", "confirm": "PRESS • SEND",
+		"echo_collector": "CHARGE ×3 • LISTEN", "echo_signal_1": "SORT • CERTAINTY",
+		"echo_signal_2": "SORT • POSSIBILITY", "echo_signal_3": "SORT • UNKNOWN",
+		"echo_question": "TURN • REFRAME", "echo_beacon": "PRESS • VERIFY",
+	}
+	return str(verbs.get(control_id, "INTERACT"))
 
 
 func _build_prism_science_instrument(parent: Node3D, station_kind: String) -> void:
@@ -3008,8 +3895,10 @@ func _build_living_light_routes(parent: Node3D) -> void:
 	routes.set_meta("beam_feedback", "continuous physical cause-and-effect")
 	parent.add_child(routes)
 	var prism_names := ["colour", "rhythm", "weight"]
-	var starts := [Vector3(-39.5, 8.4, 16.0), Vector3(-37.5, 8.4, 30.0),
-		Vector3(-66.0, 8.4, 24.0)]
+	var starts: Array[Vector3] = []
+	for prism_name in prism_names:
+		var source := parent.get_node("PuzzleControls/PuzzleControl_%s_prism/EnergyOutputAnchor" % prism_name) as Node3D
+		starts.append(parent.to_local(source.global_position))
 	var receivers := [Vector3(-52.0, 39.0, 24.0), Vector3(0, 20.0, 42.0),
 		Vector3(0, 7.0, 8.0)]
 	var seed_materials := [_materials.arrival_glass, _materials.sanctum_lavender_glass,
@@ -3081,23 +3970,8 @@ func _build_living_light_routes(parent: Node3D) -> void:
 
 
 func _build_aether_analysis_console(controls: Node3D) -> void:
-	var control := Node3D.new()
-	control.name = "PuzzleControl_analysis_console"
-	control.position = Vector3(-57.0, 3.0, 11.0)
-	control.set_meta("control_id", "analysis_console")
-	control.set_meta("purpose", "compare experimental relationships without revealing the solution")
-	control.set_meta("production_asset", "Blender Aether Analysis Console")
-	control.set_meta("interaction_model", "experiment, analyze, compare, revise")
-	control.set_meta("preserve_authored_nodes", true)
-	controls.add_child(control)
-	var console := AetherAnalysisConsoleScene.instantiate() as Node3D
-	console.name = "AetherAnalysisConsoleModel"
-	console.scale = Vector3.ONE * 1.65
-	console.rotation_degrees.y = 18.0
-	control.add_child(console)
-	var console_light := _add_zone_light(control, Vector3(0, 4.8, 0), Color("d9fff4"), 8.0, 1.2)
-	console_light.name = "AetherAnalysisConsoleLight"
-
+	_build_heavenly_quest_instrument(controls, "analysis_console",
+		Vector3(-57.0, 3.0, 11.0), "ANALYSIS • COMPARE EVIDENCE")
 
 func _build_pressure_gauge(parent: Node3D, gauge_name: String, at: Vector3, yaw: float) -> void:
 	var gauge := Node3D.new()
@@ -3362,6 +4236,151 @@ func _build_island_one_science_art_garden(parent: Node3D) -> void:
 	# prototype pedestals were removed because they doubled every station and made
 	# the garden read as scattered props rather than one coherent institution.
 	_build_living_light_atelier_architecture(parent)
+	_build_echo_garden_quest(parent)
+
+
+func _build_echo_garden_quest(parent: MindSparkIslandOnePuzzle) -> void:
+	var controls := parent.get_node("PuzzleControls") as Node3D
+	var quest := Node3D.new()
+	quest.name = "EchoGardenQuestArchitecture"
+	quest.set_meta("preserve_authored_nodes", true)
+	quest.set_meta("quest_id", "quest.echo_forest")
+	quest.set_meta("design_revision", "v39_signal_prism_echo_garden")
+	quest.set_meta("gameplay_sequence", ["collect", "classify", "question", "verify"])
+	quest.set_meta("untimed", true)
+	quest.set_meta("mandatory_jump", false)
+	parent.add_child(quest)
+
+	# A six-station outer crescent keeps the mature Wisdom Tree as the landmark.
+	# Detailed production controls are reused, but each receives a distinct
+	# instrument face and a visible conduit to the root chamber.
+	var station_specs := [
+		["echo_collector", Vector3(-68, 3.0, 48), "INSTALL PRISM • LISTEN", 0],
+		["echo_signal_1", Vector3(-80, 3.0, 12), "ECHO I • EXAMINE", 1],
+		["echo_signal_2", Vector3(-84, 3.0, 25), "ECHO II • EXAMINE", 1],
+		["echo_signal_3", Vector3(-80, 3.0, 38), "ECHO III • EXAMINE", 1],
+		["echo_question", Vector3(-53, 3.0, 54), "SHAPE THE HELPFUL QUESTION", 1],
+		["echo_beacon", Vector3(-36, 3.0, 48), "TEST THE CAUTION BEACON", 2],
+	]
+	for spec in station_specs:
+		_build_compass_control(controls, str(spec[0]), spec[1], str(spec[2]), int(spec[3]))
+		var control := controls.get_node("PuzzleControl_%s" % str(spec[0])) as Node3D
+		control.set_meta("quest_id", "quest.echo_forest")
+		control.set_meta("interaction_model", "walk, observe, classify, revise")
+		control.set_meta("reusable_component_family", "echo garden instrument")
+
+	# Quest 1's reward becomes a physical key rather than an inventory-only flag.
+	var prism_socket := Node3D.new()
+	prism_socket.name = "SignalPrismTransferSocket"
+	prism_socket.position = Vector3(-64, 4.4, 52)
+	quest.add_child(prism_socket)
+	_add_cylinder(prism_socket, "PrismSocketIvoryBody", Vector3.ZERO, 2.15, 1.4,
+		_materials.sanctum_ivory, false, 24)
+	_add_torus(prism_socket, "PrismSocketGiltBezel", Vector3(0, 0.78, 0), 1.52, 2.12,
+		_materials.astral_brass)
+	_add_brick(prism_socket, "InstalledSignalPrism", Vector3(0, 2.35, 0),
+		Bricks.build_crystal(1.18, 4.1, 0.30, 8), _materials.arrival_glass)
+	for clamp_index in 8:
+		var clamp_angle := TAU * float(clamp_index) / 8.0
+		_add_box(prism_socket, "PrismSocketClamp_%02d" % (clamp_index + 1),
+			Vector3(sin(clamp_angle) * 1.92, 1.05, cos(clamp_angle) * 1.92),
+			Vector3(0.28, 0.72, 0.46), _materials.gold, false, clamp_angle)
+
+	# Three slow signal orbs rest in branch cradles. They disappear from the
+	# listening canopy one at a time and reappear at the classifier rail.
+	var orb_positions := [Vector3(-72, 12.0, 18), Vector3(-75, 15.0, 28), Vector3(-70, 18.0, 38)]
+	for orb_index in 3:
+		var orb_at: Vector3 = orb_positions[orb_index]
+		_add_cable_between(quest, "EchoListeningBranch_%02d" % (orb_index + 1),
+			Vector3(-52, 7.0 + orb_index * 1.6, 24), orb_at,
+			0.24, 0.10, _materials.astral_brass, 10)
+		var orb := _add_sphere(quest, "EchoListeningOrb_%02d" % (orb_index + 1), orb_at,
+			Vector3.ONE * 1.25,
+			_materials.arrival_glass if orb_index == 0 else (
+				_materials.sanctum_lavender_glass if orb_index == 1 else _materials.gold))
+		orb.set_meta("echo_index", orb_index)
+		_add_torus(quest, "EchoOrbCradle_%02d" % (orb_index + 1), orb_at,
+			1.45, 1.82, _materials.astral_brass, Vector3(90, 0, 0))
+		var resting := _add_sphere(quest, "RestingEchoOrb_%02d" % (orb_index + 1),
+			Vector3(-78.0, 5.9, 12.0 + orb_index * 13.0), Vector3.ONE * 0.72,
+			_materials.arrival_glass)
+		resting.visible = false
+
+	# Statement and category readings stay attached to the new classifier desks.
+	for station_index in 3:
+		var control := controls.get_node("PuzzleControl_echo_signal_%d" % (station_index + 1)) as Node3D
+		var signal_label := _add_label(control, "ECHO %d" % (station_index + 1),
+			Vector3(-1.4, 5.3, 0), Color("fff2d9"), 20)
+		signal_label.name = "EchoSignalText_%02d" % (station_index + 1)
+		signal_label.pixel_size = 0.007
+		var category_label := _add_label(control, "UNCLASSIFIED",
+			Vector3(-1.4, 4.3, 0), Color("d9fff4"), 20)
+		category_label.name = "EchoCategoryReading_%02d" % (station_index + 1)
+		category_label.pixel_size = 0.006
+	var question_reading := _add_label(quest, "CHOOSE A USEFUL QUESTION",
+		Vector3(-54.5, 8.5, 54), Color("fff2d9"), 20)
+	question_reading.name = "ProtectiveQuestionReading"
+	question_reading.pixel_size = 0.007
+
+	# The new cradled crystal replaces the old tower and radial-ray overlay.
+	var beacon := controls.get_node("PuzzleControl_echo_beacon") as Node3D
+	var beacon_light := _add_zone_light(beacon, Vector3(0, 4.0, 0), Color("8fe8dc"), 8.0, 0.15)
+	beacon_light.name = "CautionBeaconLight"
+	var reward := Node3D.new()
+	reward.name = "EchoSeedReward"
+	reward.position = Vector3(-36, -3.0, 48)
+	reward.visible = false
+	quest.add_child(reward)
+	_add_sphere(reward, "EchoSeedHeart", Vector3.ZERO, Vector3(1.25, 1.75, 1.25),
+		_materials.gold)
+	for petal_index in 8:
+		var petal_angle := TAU * float(petal_index) / 8.0
+		_add_sphere(reward, "EchoSeedPetal_%02d" % (petal_index + 1),
+			Vector3(sin(petal_angle) * 1.55, cos(petal_angle) * 1.15, 0),
+			Vector3(0.72, 0.38, 0.28), _materials.arrival_glass)
+
+	# Every station terminates at the root well; this is the visible explanation
+	# for why solving the garden wakes the island rather than an arbitrary gate.
+	var route_points := [Vector3(-68, 3.8, 48), Vector3(-80, 3.8, 12),
+		Vector3(-84, 3.8, 25), Vector3(-80, 3.8, 38), Vector3(-53, 3.8, 54),
+		Vector3(-36, 3.8, 48)]
+	for route_index in route_points.size():
+		_add_cable_between(quest, "EchoRootConduit_%02d" % (route_index + 1),
+			route_points[route_index], Vector3(-52, 3.8, 24), 0.18, 0.09,
+			_materials.arrival_glass if route_index % 2 == 0 else _materials.astral_brass, 8)
+		for pulse_index in 3:
+			var pulse := _add_sphere(quest,
+				"EchoRootPulse_%02d_%02d" % [route_index + 1, pulse_index + 1],
+				route_points[route_index], Vector3.ONE * 0.26, _materials.arrival_glass)
+			pulse.visible = false
+			pulse.set_meta("route_index", route_index)
+			pulse.set_meta("path_start", route_points[route_index])
+			pulse.set_meta("path_end", Vector3(-52, 3.8, 24))
+			pulse.set_meta("pulse_offset", float(pulse_index) / 3.0)
+
+	# Four restrained floor-light chapters form one readable walking path. Each
+	# chapter appears only when its destination is the next meaningful action.
+	var guidance := Node3D.new()
+	guidance.name = "EchoGardenGuidancePath"
+	guidance.set_meta("clear_width_m", 5.5)
+	guidance.set_meta("mandatory_jump", false)
+	quest.add_child(guidance)
+	var guidance_points := [Vector3(0, 3.05, 72), Vector3(-68, 3.05, 48),
+		Vector3(-82, 3.05, 25), Vector3(-53, 3.05, 54), Vector3(-36, 3.05, 48)]
+	for chapter_index in 4:
+		for marker_index in 8:
+			var progress := float(marker_index + 1) / 8.0
+			var marker_at: Vector3 = guidance_points[chapter_index].lerp(
+				guidance_points[chapter_index + 1], progress)
+			var marker := _add_sphere(guidance,
+				"GuidanceLight_%02d_%02d" % [chapter_index + 1, marker_index + 1],
+				marker_at, Vector3(0.30, 0.07, 0.46),
+				_materials.gold if chapter_index == 3 else _materials.arrival_glass)
+			marker.visible = false
+			marker.set_meta("guidance_chapter", chapter_index)
+	var objective_display := _add_label(quest, "SIGNAL PRISM REQUIRED",
+		Vector3(-52, 18.0, 24), Color("fff2c0"), 14)
+	objective_display.name = "EchoGardenObjectiveDisplay"
 
 
 func _build_living_light_atelier_architecture(parent: Node3D) -> void:
@@ -3548,10 +4567,17 @@ func _build_hope_ridge(zone: Node3D) -> void:
 			at - Vector3(0, 0.75, 0), Vector3(36, 0.50, 56),
 			_materials.celestial_floor, false)
 		_add_box(zone, "HopePathTile_%02d" % index, at, Vector3(34, 2, 54),
-			_materials.gold if index % 2 == 0 else _materials.cyan, true)
+			_materials.celestial_floor, true)
 		_add_box(zone, "HopePathGiltReveal_%02d" % index,
 			at + Vector3(0, 1.08, 0), Vector3(31, 0.18, 49),
-			_materials.astral_brass, false)
+			_materials.gold if index == 4 else _materials.arrival_glass, false)
+		# Quiet low-poly measures communicate progress without turning the full
+		# walking surface into a saturated prototype panel. Gold appears only on
+		# the final verified stage.
+		for measure in 3:
+			_add_box(zone,"HopePathMeasure_%02d_%02d"%[index,measure],
+				at+Vector3(-9+measure*9,1.22,-15+index*2),Vector3(3.6,.12,8.0),
+				_materials.gold if index==4 else _materials.astral_glass,false)
 		for flower in 3:
 			_add_sphere(zone, "ThoughtFlower", at + Vector3(-10 + flower * 10, 4, 20),
 				Vector3(2.5, 1.4, 2.5), _materials.green_glow)
@@ -4632,16 +5658,17 @@ func _place_functional_objects() -> void:
 	# anchors intentionally repeat because the world design calls for two safe
 	# roots and three boss shield layers.
 	var specs := [
-		[10, "world_one.checkpoint.landing", "01_world_gate_landing", Vector3(-48, 2, 34)],
-		[11, "world_one.path_projector", "01_world_gate_landing", Vector3(48, 2, 34)],
-		[0, "world_one.spark_socket", "02_living_network_forest", Vector3(0, 2, 16)],
+		# Keep the wider authored station cabinets outside canopy rails and tree roots.
+		[10, "world_one.checkpoint.landing", "01_world_gate_landing", Vector3(-75, 2, 60)],
+		[11, "world_one.path_projector", "01_world_gate_landing", Vector3(75, 2, 60)],
+		[0, "world_one.spark_socket", "02_living_network_forest", Vector3(0, 2, 32)],
 		[10, "world_one.checkpoint.network", "02_living_network_forest", Vector3(-52, 2, -38)],
 		[1, "world_one.evidence_scanner", "03_fear_gate", Vector3(-38, 4, -12)],
 		[3, "world_one.memory_board", "03_constellation_court", Vector3(0, 4, 10)],
 		[4, "world_one.logic_gate", "03_proof_gate", Vector3(38, 4, -12)],
-		[6, "world_one.focus_bell", "03_constellation_court", Vector3(0, 4, -62)],
-		[2, "world_one.perspective_lens", "04_hope_path_ridge", Vector3(-45, 3, 0)],
-		[5, "world_one.truth_bridge", "04_hope_path_ridge", Vector3(45, 3, 0)],
+		[6, "world_one.focus_bell", "03_constellation_court", Vector3(12, 4, -48)],
+		[2, "world_one.perspective_lens", "04_hope_path_ridge", Vector3(-45, 3, 10)],
+		[5, "world_one.truth_bridge", "04_hope_path_ridge", Vector3(45, 3, 10)],
 		[7, "world_one.warden_anchor.1", "05_thought_storm_arena", Vector3(-82, 3, 28)],
 		[7, "world_one.warden_anchor.2", "05_thought_storm_arena", Vector3(0, 3, -88)],
 		[7, "world_one.warden_anchor.3", "05_thought_storm_arena", Vector3(82, 3, 28)],
@@ -4690,8 +5717,8 @@ func _place_combat_population() -> void:
 		["circuit_wisp", "constellation", "03_constellation_court", Vector3(-62, 4, 46)],
 		["circuit_wisp", "constellation", "03_constellation_court", Vector3(0, 4, 66)],
 		["circuit_wisp", "constellation", "03_constellation_court", Vector3(62, 4, 46)],
-		["root_stalker", "ridge", "04_hope_path_ridge", Vector3(-48, 4, 72)],
-		["blight_sentinel", "ridge", "04_hope_path_ridge", Vector3(48, 4, 72)],
+		["root_stalker", "ridge", "04_hope_path_ridge", Vector3(-14, 4, 72)],
+		["blight_sentinel", "ridge", "04_hope_path_ridge", Vector3(14, 4, 72)],
 		["circuit_wisp", "boss_adds", "05_thought_storm_arena", Vector3(-48, 4, -54)],
 		["static_mite", "boss_adds", "05_thought_storm_arena", Vector3(48, 4, -54)],
 	]
@@ -4704,8 +5731,8 @@ func _place_combat_population() -> void:
 			["circuit_wisp", "constellation", "03_constellation_court", Vector3(-28, 2, 24)],
 			["circuit_wisp", "constellation", "03_constellation_court", Vector3(0, 2, 31)],
 			["circuit_wisp", "constellation", "03_constellation_court", Vector3(28, 2, 24)],
-			["root_stalker", "ridge", "04_hope_path_ridge", Vector3(-22, 1, 24)],
-			["blight_sentinel", "ridge", "04_hope_path_ridge", Vector3(22, 1, 24)],
+			["root_stalker", "ridge", "04_hope_path_ridge", Vector3(-10, 1, 24)],
+			["blight_sentinel", "ridge", "04_hope_path_ridge", Vector3(10, 1, 24)],
 			["circuit_wisp", "boss_adds", "05_thought_storm_arena", Vector3(-20, 2, -18)],
 			["static_mite", "boss_adds", "05_thought_storm_arena", Vector3(20, 1, -18)],
 		]
@@ -4805,6 +5832,13 @@ func _update_hud() -> void:
 	panel.visible = object != null
 	if object == null:
 		return
+	if object.save_id in ["world_one.evidence_scanner", "world_one.memory_board",
+			"world_one.logic_gate", "world_one.perspective_lens", "world_one.truth_bridge"]:
+		_prompt.text = "Q • OPEN " + object.definition.display_name.to_upper()
+		var count := int(object.current_state.get("evidence_index", 0)) if object.save_id.ends_with("evidence_scanner") else int(object.current_state.get("progress", 0))
+		var total := 3 if object.save_id.ends_with("evidence_scanner") else object.definition.validated_total()
+		_status.text = "STATION COMPLETE" if bool(object.current_state.get("completed", false)) else "%d/%d • READ, EXPERIMENT, REVISE" % [count, total]
+		return
 	var actions := object.available_actions()
 	var choices := PackedStringArray()
 	for index in mini(actions.size(), 5):
@@ -4885,6 +5919,8 @@ func _build_organized_bio_tree_world(geometry: Node3D) -> void:
 						shifted_global.y = candidate_global.y
 						positions[local_index] = zone.to_local(shifted_global)
 			var tree_scale := _designed_grove_tree_scale(zone_id, local_index, compact)
+			if not compact and zone_id in ["01_world_gate_landing", "02_living_network_forest"]:
+				positions[local_index] = _clear_garden_position(zone, positions[local_index], tree_scale)
 			var grove_tree := _build_grove_bio_tree(grove, positions[local_index],
 				tree_scale, world_tree_index, local_index)
 			grove_tree.set_meta("zone_id", zone_id)
@@ -4902,6 +5938,191 @@ func _build_organized_bio_tree_world(geometry: Node3D) -> void:
 				world_tree_index += 1
 	set_meta("organized_tree_count", world_tree_index - 1)
 	set_meta("organized_tree_distribution", "10/30/14/14/8/24")
+
+
+func _clear_garden_position(zone: Node3D, preferred: Vector3, tree_scale: float) -> Vector3:
+	# Whole canopy envelopes, not just trunk centers. Preserve authored station
+	# positions and two-lobe circulation while finding the nearest planting pocket.
+	var zone_index := 0 if str(zone.get_meta("zone_id")) == "01_world_gate_landing" else 1
+	var radius := float(ZONES[zone_index].radius)
+	var canopy := 18.0 * tree_scale + 2.0
+	var initial := atan2(preferred.x, preferred.z)
+	for attempt in 720:
+		var ring := mini(attempt / 144, 4)
+		var angle := initial + float(attempt % 144) * TAU / 144.0
+		var distance := minf(Vector2(preferred.x, preferred.z).length(), radius - canopy - 14.0) - float(ring) * 9.0
+		var candidate := Vector3(sin(angle)*distance, preferred.y, cos(angle)*distance)
+		var global_at := zone.to_global(candidate)
+		var clear := true
+		var gate := get_island_one_heavenly_star_gate()
+		if gate != null and Vector2(global_at.x-gate.global_position.x, global_at.z-gate.global_position.z).length() < 58.0 + canopy:
+			continue
+		for tree in get_tree().get_nodes_in_group("mind_spark_organized_tree"):
+			if tree is Node3D and tree.has_meta("garden_canopy_radius"):
+				if Vector2(global_at.x-tree.global_position.x, global_at.z-tree.global_position.z).length() < canopy + float(tree.get_meta("garden_canopy_radius")) + 3.0:
+					clear = false
+		if _island_one_puzzle != null:
+			for control in _island_one_puzzle.get_node("PuzzleControls").get_children():
+				if control is Node3D and Vector2(global_at.x-control.global_position.x, global_at.z-control.global_position.z).length() < canopy + 12.0:
+					clear = false
+		# A clear promenade through the joined courts and to both bridge ends.
+		for target_index in [1-zone_index, 5 if zone_index == 0 else 2]:
+			var delta: Vector3 = ZONES[target_index].position - ZONES[zone_index].position
+			var direction := Vector2(delta.x,delta.z).normalized()
+			var point := Vector2(candidate.x,candidate.z)
+			if point.dot(direction) > 0 and absf(point.cross(direction)) < 12.0 + canopy:
+				clear = false
+		if clear:
+			return candidate
+	push_error("No clear planting pocket for " + str(zone.name))
+	return preferred
+
+
+func _is_exposed_garden_edge(zone_index: int, angle: float) -> bool:
+	var center: Vector3 = ZONES[zone_index].position
+	var radius := float(ZONES[zone_index].radius) * .985
+	var radial := Vector2(sin(angle),cos(angle))
+	var at := Vector2(center.x,center.z) + radial * radius
+	var paired_index := zone_index ^ 1
+	var other: Vector3 = ZONES[paired_index].position
+	if at.distance_to(Vector2(other.x,other.z)) < float(ZONES[paired_index].radius) + 2.0:
+		return false
+	var exit_index := (5 if zone_index == 0 else 2) if zone_index < 2 else (zone_index - 1 if zone_index % 2 == 0 else zone_index + 1)
+	var exit: Vector3 = ZONES[exit_index].position - center
+	var direction := Vector2(exit.x,exit.z).normalized()
+	var opening_half_width := 30.0 if zone_index < 2 else 18.0
+	return not (radial.dot(direction) > 0 and absf(radial.cross(direction))*radius < opening_half_width)
+
+
+func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void:
+	var repairs := Node3D.new()
+	repairs.name = "IslandOnePerimeterRepairs" if first_zone == 0 else "IslandTwoPerimeterRepairs"
+	repairs.set_meta("preserve_authored_nodes", true)
+	parent.add_child(repairs)
+	for zone_index in range(first_zone, first_zone + 2):
+		var center: Vector3 = ZONES[zone_index].position
+		var radius := float(ZONES[zone_index].radius) * 0.985
+		var zone: Node3D = _zone_nodes[ZONES[zone_index].id]
+		# Replace, never stack over, the old incomplete reference rail batch.
+		for old in zone.find_children("Railing_v11_*", "MeshInstance3D", true, false):
+			old.visible = false
+			old.set_meta("preserve_authored_nodes",true)
+		for bay in 24:
+			var start := TAU * float(bay) / 24.0
+			# Split at exact current route/interior boundaries. Map the reference
+			# module onto contiguous exposed sub-arcs rather than omit whole bays.
+			var run_start := -1
+			for step in 7:
+				var exposed := step < 6 and _is_exposed_garden_edge(zone_index,start + (float(step)+.5)*TAU/144.0)
+				if exposed and run_start < 0:
+					run_start = step
+				if not exposed and run_start >= 0:
+					var a := start + float(run_start)*TAU/144.0
+					var b := start + float(step)*TAU/144.0
+					var panel := preload("res://assets3D/mind_spark/echo_garden_benchmark/export/rail_bay.glb").instantiate() as Node3D
+					panel.name = "ReferenceScrollwork_%d_%d" % [zone_index,bay]
+					panel.position = center
+					panel.rotation.y = (a+b)*.5
+					panel.scale = Vector3.ONE * float(ZONES[zone_index].radius)
+					# Short terminal bays are regenerated in polar coordinates, so
+					# their scrollwork follows the same curvature without shear.
+					if step-run_start != 6:
+						_compress_railing_arc(panel,float(step-run_start)/6.0)
+					repairs.add_child(panel)
+					for end in [a,b]:
+						var key := "ReferencePost_%d_%d" % [zone_index,roundi(fposmod(end,TAU)*144.0/TAU)%144]
+						if repairs.has_node(key):
+							continue
+						var post := preload("res://assets3D/mind_spark/echo_garden_benchmark/export/rail_post.glb").instantiate() as Node3D
+						post.name = key
+						post.position = center
+						post.rotation.y = end
+						post.scale = Vector3.ONE * float(ZONES[zone_index].radius)
+						repairs.add_child(post)
+					run_start = -1
+		for segment in 144:
+			var angle := TAU * (float(segment) + .5) / 144.0
+			var radial := Vector2(sin(angle), cos(angle))
+			var at := center + Vector3(radial.x * radius, 0, radial.y * radius)
+			if not _is_exposed_garden_edge(zone_index,angle):
+				continue
+			at.y = _zone_floor_surface_y(center)
+			var length := TAU * radius / 144.0 + .12
+			var yaw := atan2(radial.x, radial.y)
+			var name := "RepairedBay_%d_%03d" % [zone_index, segment]
+			var collision := _add_box(repairs, name, at + Vector3.UP * 5.0,
+				Vector3(length, 10.0, .8), _materials.sanctum_ivory, true, yaw)
+			collision.visible = false
+	if first_zone == 2:
+		_consolidate_perimeter_posts(repairs)
+
+
+func _consolidate_perimeter_posts(repairs: Node3D) -> void:
+	# Arc endpoints are unique by angle, but endpoints on short runs or on the
+	# other fused lobe can still occupy the same physical pier footprint.
+	# Consolidate connected spatial clusters, not just identical node names.
+	var pending: Array[Node3D] = []
+	for child in repairs.get_children():
+		if str(child.name).begins_with("ReferencePost_"):
+			pending.append(child)
+	var merged := 0
+	while not pending.is_empty():
+		var cluster: Array[Node3D] = [pending.pop_front()]
+		var cursor := 0
+		while cursor < cluster.size():
+			var source := _perimeter_post_anchor(cluster[cursor])
+			for i in range(pending.size() - 1, -1, -1):
+				var candidate := _perimeter_post_anchor(pending[i])
+				if Vector2(source.x-candidate.x, source.z-candidate.z).length() < 14.0:
+					cluster.append(pending[i])
+					pending.remove_at(i)
+			cursor += 1
+		if cluster.size() < 2: continue
+		var average := Vector3.ZERO
+		for post in cluster: average += _perimeter_post_anchor(post)
+		average /= cluster.size()
+		var keeper := cluster[0]
+		var shift := average - _perimeter_post_anchor(keeper)
+		shift.y = 0
+		keeper.global_position += shift
+		keeper.set_meta("consolidated_post_count", cluster.size())
+		for i in range(1, cluster.size()):
+			cluster[i].visible = false
+			cluster[i].set_meta("replaced_by_shared_pier", keeper.name)
+			merged += 1
+	repairs.set_meta("consolidated_duplicate_posts", merged)
+
+
+func _perimeter_post_anchor(post: Node3D) -> Vector3:
+	# GLB vertices are authored around the island rim, not the root origin.
+	var mesh := post.get_child(0) as MeshInstance3D
+	return mesh.to_global(mesh.get_aabb().get_center())
+
+
+func _compress_railing_arc(root_node: Node, factor: float) -> void:
+	for child in root_node.get_children():
+		_compress_railing_arc(child,factor)
+	if root_node is MeshInstance3D:
+		var instance := root_node as MeshInstance3D
+		var source := instance.mesh
+		var mesh := ArrayMesh.new()
+		for surface in source.get_surface_count():
+			var arrays := source.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			for index in vertices.size():
+				var v := vertices[index]
+				var angle := atan2(v.x,v.z)*factor
+				var radius := Vector2(v.x,v.z).length()
+				vertices[index] = Vector3(sin(angle)*radius,v.y,cos(angle)*radius)
+			arrays[Mesh.ARRAY_VERTEX] = vertices
+			var temporary := ArrayMesh.new()
+			temporary.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+			var builder := SurfaceTool.new()
+			builder.create_from(temporary,0)
+			builder.generate_normals()
+			builder.set_material(source.surface_get_material(surface))
+			builder.commit(mesh)
+		instance.mesh = mesh
 
 
 func _designed_grove_positions(zone_id: String, count: int,
@@ -4977,6 +6198,23 @@ func _build_grove_bio_tree(parent: Node3D, at: Vector3, tree_scale: float,
 	tree.set_meta("growth_scale", tree_scale)
 	tree.set_meta("visual_system", "nature bark + green nutrients + cyan data + violet magic")
 	parent.add_child(tree)
+	if str(parent.get_meta("zone_id", "")) in ["01_world_gate_landing", "02_living_network_forest"]:
+		var sapling_models := [
+			preload("res://assets3D/mind_spark/echo_garden_benchmark/export/echo_sapling.glb"),
+			preload("res://assets3D/mind_spark/echo_garden_benchmark/export/echo_sapling_1.glb"),
+			preload("res://assets3D/mind_spark/echo_garden_benchmark/export/echo_sapling_2.glb")]
+		var sapling := sapling_models[variant % 3].instantiate() as Node3D
+		sapling.name = "HeavenlySapling"
+		tree.add_child(sapling)
+		tree.set_meta("visual_system", "pale clustered canopy matching Echo Garden hero")
+		tree.set_meta("preserve_authored_nodes", true)
+		tree.set_meta("garden_canopy_radius", 18.0 * tree_scale + 2.0)
+		tree.set_meta("garden_variant", variant % 3)
+		var bed_collision := _add_cylinder(tree,"ContainedPlantingCollision",Vector3(0,.5,0),11.25,1.0,_materials.sanctum_ivory,true,16)
+		bed_collision.visible = false
+		var trunk_collision := _add_cylinder(tree,"SaplingTrunkCollision",Vector3(0,8,0),2.0,16.0,_materials.sanctum_ivory,true,10)
+		trunk_collision.visible = false
+		return tree
 	var socket := _add_cylinder(tree, "GroveSocketCore", Vector3(0, 0.70, 0),
 		4.8, 1.4, _materials.bio_gunmetal, false, 16)
 	socket.set_meta("editable_component", true)
@@ -5226,6 +6464,25 @@ func _build_materials() -> void:
 		Color("b89ad8", 0.38), 0.24, Color("d8b8ff"), 0.30)
 	_materials.sanctum_lavender_glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_materials.sanctum_lavender_glass.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# Production quest props use a compact procedural PBR library. The albedo,
+	# roughness and normal maps are generated once at world build time, keeping
+	# the low-poly assets self-contained and Web-export safe while giving every
+	# bevel and facet a material response instead of a flat prototype colour.
+	_materials.quest_ivory = _low_poly_surface_material(
+		Color("eadfc8"), Color("fff4dc"), Color("b99d72"), 0.68, 0.04, 11, 16)
+	_materials.quest_ivory_inset = _low_poly_surface_material(
+		Color("c8b99d"), Color("e8dcc4"), Color("927958"), 0.76, 0.02, 17, 12)
+	_materials.quest_brass = _low_poly_surface_material(
+		Color("9f6b24"), Color("e0b961"), Color("664015"), 0.34, 0.84, 23, 10)
+	_materials.quest_gold_leaf = _low_poly_surface_material(
+		Color("d6a638"), Color("ffe68b"), Color("8f5f17"), 0.28, 0.78, 31, 12,
+		Color("ffce58"), 0.20)
+	_materials.quest_teal_enamel = _low_poly_surface_material(
+		Color("176b70"), Color("54b9ad"), Color("0b414b"), 0.38, 0.44, 41, 14,
+		Color("54d9ca"), 0.12)
+	_materials.quest_lavender_enamel = _low_poly_surface_material(
+		Color("665080"), Color("b397c5"), Color("3b294d"), 0.42, 0.34, 53, 14,
+		Color("c6a2e5"), 0.10)
 	_materials.island_deck_panel_a = _material(Color("65758c"), 0.62)
 	_materials.island_deck_panel_b = _material(Color("4b596e"), 0.72)
 	_materials.island_rim = _material(Color("172238"), 0.68)
@@ -5326,6 +6583,80 @@ func _textured_material(base: Color, panel: Color, circuit: Color,
 	material.roughness = roughness
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	material.uv1_scale = Vector3(2.5, 2.5, 2.5)
+	return material
+
+
+func _low_poly_surface_material(base: Color, highlight: Color, edge: Color,
+		roughness: float, metallic: float, seed: int, cell_size: int,
+		emission := Color.BLACK, emission_energy := 0.0) -> StandardMaterial3D:
+	# Each triangular cell receives a slightly different value, while narrow
+	# diagonal seams and a derived normal map make the finish read at player
+	# distance. This is intentionally subtle: geometry carries the silhouette;
+	# texture supplies stone grain, brushed metal and edge variation.
+	const TEXTURE_SIZE := 128
+	var albedo_image := Image.create(TEXTURE_SIZE, TEXTURE_SIZE, false, Image.FORMAT_RGBA8)
+	var roughness_image := Image.create(TEXTURE_SIZE, TEXTURE_SIZE, false, Image.FORMAT_RGBA8)
+	var normal_image := Image.create(TEXTURE_SIZE, TEXTURE_SIZE, false, Image.FORMAT_RGBA8)
+	var heights := PackedFloat32Array()
+	heights.resize(TEXTURE_SIZE * TEXTURE_SIZE)
+	for y in TEXTURE_SIZE:
+		for x in TEXTURE_SIZE:
+			var cell_x := int(x / cell_size)
+			var cell_y := int(y / cell_size)
+			var local_x := x % cell_size
+			var local_y := y % cell_size
+			var uses_rising_diagonal := (cell_x + cell_y + seed) % 2 == 0
+			var diagonal_distance: int = absi(local_x - local_y) if uses_rising_diagonal \
+				else absi((local_x + local_y) - (cell_size - 1))
+			var seam: bool = diagonal_distance <= 1 or local_x <= 1 or local_y <= 1
+			var facet_hash: int = posmod(cell_x * 37 + cell_y * 61 + seed * 19, 101)
+			var facet_value := 0.20 + float(facet_hash) / 101.0 * 0.58
+			var grain_hash: int = posmod(x * 17 + y * 43 + seed * 29, 97)
+			var grain := (float(grain_hash) / 96.0 - 0.5) * 0.075
+			var colour := base.lerp(highlight, clampf(0.42 + facet_value * 0.24 + grain * 0.20, 0.0, 1.0))
+			if seam:
+				colour = colour.lerp(edge, 0.08)
+			albedo_image.set_pixel(x, y, colour)
+			var height := 0.48 if seam else 0.52 + facet_value * 0.05 + grain * 0.12
+			heights[y * TEXTURE_SIZE + x] = height
+			var local_roughness := clampf(roughness + grain * 0.85 + (0.10 if seam else 0.0), 0.08, 0.96)
+			roughness_image.set_pixel(x, y, Color(local_roughness, local_roughness,
+				local_roughness, 1.0))
+	for y in TEXTURE_SIZE:
+		for x in TEXTURE_SIZE:
+			var left := heights[y * TEXTURE_SIZE + maxi(0, x - 1)]
+			var right := heights[y * TEXTURE_SIZE + mini(TEXTURE_SIZE - 1, x + 1)]
+			var down := heights[maxi(0, y - 1) * TEXTURE_SIZE + x]
+			var up := heights[mini(TEXTURE_SIZE - 1, y + 1) * TEXTURE_SIZE + x]
+			var normal := Vector3((left - right) * 1.8, (down - up) * 1.8, 1.0).normalized()
+			normal_image.set_pixel(x, y, Color(normal.x * 0.5 + 0.5,
+				normal.y * 0.5 + 0.5, normal.z * 0.5 + 0.5, 1.0))
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color.WHITE
+	material.albedo_texture = ImageTexture.create_from_image(albedo_image)
+	material.roughness = roughness
+	material.roughness_texture = ImageTexture.create_from_image(roughness_image)
+	material.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+	material.metallic = metallic
+	if metallic > 0.5:
+		material.metallic = minf(metallic, 0.55)
+	material.metallic_specular = 0.82 if metallic > 0.5 else 0.46
+	material.normal_enabled = true
+	material.normal_texture = ImageTexture.create_from_image(normal_image)
+	material.normal_scale = 0.16
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	material.uv1_scale = Vector3(1.8, 1.8, 1.8)
+	albedo_image.generate_mipmaps()
+	roughness_image.generate_mipmaps()
+	normal_image.generate_mipmaps()
+	material.albedo_texture = ImageTexture.create_from_image(albedo_image)
+	material.roughness_texture = ImageTexture.create_from_image(roughness_image)
+	material.normal_texture = ImageTexture.create_from_image(normal_image)
+	if emission_energy > 0.0:
+		material.emission_enabled = true
+		material.emission = emission
+		material.emission_texture = material.albedo_texture
+		material.emission_energy_multiplier = emission_energy
 	return material
 
 
@@ -5704,6 +7035,10 @@ func _batch_static_geometry(root: Node3D) -> void:
 
 
 func _collect_batchable(node: Node, groups: Dictionary) -> void:
+	# A root-level MultiMesh cannot inherit a retired assembly's visibility.
+	# Leave hidden source nodes untouched instead of resurrecting their geometry.
+	if node is Node3D and not (node as Node3D).is_visible_in_tree():
+		return
 	# Actor descendants are owned by scripts that toggle/animate individual meshes.
 	# Moving them into the world batch frees those references and breaks combat.
 	if node is MindSparkEnemyBase or node.get_meta("preserve_authored_nodes", false):

@@ -78,12 +78,24 @@ func _run() -> void:
 	if mayor_name == null or not mayor_name.text.contains("Press T to chat"):
 		_fail("Milo's proven nameplate must also show the nearby T instruction")
 		return
-	milo.call("_play_recorded_greeting")
-	if not milo.call("is_speaking") or milo.call("get_mouth_shape") != "small":
-		_fail("the original Milo recording must drive his speaking and mouth timeline")
+	if bool(milo.get("voice_enabled")):
+		_fail("all Milo voice playback must be disabled by default")
 		return
-	if not greeting_voice.playing:
-		_fail("the consented original Milo voice must play instead of device TTS")
+	milo.call("_play_recorded_greeting")
+	if greeting_voice.playing or milo.call("is_speaking"):
+		_fail("the recorded milo_voice.ogg greeting must remain silent")
+		return
+	milo.call("_on_companion_speech_requested",
+		"This generated response must also remain silent.")
+	if greeting_voice.playing or milo.call("is_speaking"):
+		_fail("LLM and RAG output must not start TTS while voice is disabled")
+		return
+	# Preserve the opt-in speech path as a reversible setting and continue the
+	# existing mouth/queue regression checks with audio explicitly enabled.
+	milo.set("voice_enabled", true)
+	milo.call("_play_recorded_greeting")
+	if not greeting_voice.playing or not milo.call("is_speaking"):
+		_fail("the retained voice system must still work when explicitly enabled")
 		return
 	milo.call("_on_area_3d_player_exited", player)
 	player.global_position = Vector3(20.0, 0.0, 0.0)
@@ -106,6 +118,18 @@ func _run() -> void:
 			or tongue_small.visible or tongue_wide.visible:
 		_fail("stopping a line must restore exactly the closed mouth")
 		return
+	var long_grounded_reply := ("This grounded sentence must be read completely. " \
+		.repeat(32)).strip_edges()
+	milo.call("_on_companion_speech_requested", long_grounded_reply)
+	if float(milo.get("_speech_remaining")) <= 60.0:
+		_fail("long LLM and RAG replies must not be cut off after sixty seconds")
+		return
+	var queued_sentences: Array = milo.get("_speech_sentences")
+	if queued_sentences.size() != 32 \
+			or str(queued_sentences.back()) != "This grounded sentence must be read completely.":
+		_fail("the speech queue must retain every sentence from a grounded reply")
+		return
+	milo.call("_stop_speaking")
 
 	var chat := ChatbotScene.instantiate()
 	root.add_child(chat)
@@ -152,6 +176,9 @@ func _run() -> void:
 	player.queue_free()
 	await process_frame
 	var source := FileAccess.get_file_as_string("res://scripts/milo_animations.gd")
+	if not source.contains("voice_enabled := false"):
+		_fail("Milo voice must remain disabled by default")
+		return
 	if not source.contains("use_device_tts_for_dynamic_replies := true"):
 		_fail("dynamic reply speech must remain enabled by default")
 		return

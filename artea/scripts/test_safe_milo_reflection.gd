@@ -76,6 +76,10 @@ func _run() -> void:
 	var fake_chat := FakeLocalChat.new()
 	chat.add_child(fake_chat)
 	chat._attach_local_llm_chat(fake_chat)
+	var spoken_outputs: Array[String] = []
+	chat.companion_speech_requested.connect(func(spoken_text: String) -> void:
+		spoken_outputs.append(spoken_text)
+	)
 	message_input = chat.user_input as LineEdit
 	message_input.text = "I need a calm next step"
 	chat._submit_message(message_input)
@@ -88,10 +92,13 @@ func _run() -> void:
 		"a safe typed message is sent to the local LLM inside a grounded context packet")
 	assert(history.text.contains("local model"), "Milo shows local inference status")
 	fake_chat.response_updated.emit("I see you. ")
-	fake_chat.response_finished.emit("I see you. Take one gentle step when you are ready.")
+	var complete_llm_reply := "I see you. Take one gentle step when you are ready."
+	fake_chat.response_finished.emit(complete_llm_reply)
 	var role := chat.get_node("MiloReplyCard/MiloRole") as Label
 	assert(role.text == "LOCAL REFLECTION", "the completed local response is identified as Milo's LLM reply")
 	assert(history.text.contains("one gentle step"), "Milo displays the local model response")
+	assert(not spoken_outputs.is_empty() and spoken_outputs.back() == complete_llm_reply,
+		"Milo sends the complete final local-LLM output to his voice queue")
 	var visible_chat_buttons := choices.find_children("*", "Button", true, false)
 	assert(visible_chat_buttons.size() == 1 \
 		and (visible_chat_buttons[0] as Button).text == "Send",

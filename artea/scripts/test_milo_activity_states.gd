@@ -24,6 +24,13 @@ func _run() -> void:
 	chat.companion_pose_requested.connect(milo._on_companion_pose_requested)
 	chat.companion_speech_requested.connect(milo._on_companion_speech_requested)
 
+	# Muted guidance retains the listening activity; TALKING is opt-in.
+	assert(not milo.voice_enabled, "voice stays disabled by default")
+	chat._show_emotion_check_ins()
+	assert(milo.get_companion_state_name() == "LISTENING" and not milo.is_speaking(),
+		"muted guidance stays in listening without starting speech")
+	milo.voice_enabled = true
+	milo.use_device_tts_for_dynamic_replies = false
 	chat._show_emotion_check_ins()
 	assert(milo.get_companion_activity_name() == "LISTENING",
 		"emotion check-in gives Milo an explicit listening activity")

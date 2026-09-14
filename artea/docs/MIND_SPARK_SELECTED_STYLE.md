@@ -1,5 +1,10 @@
 # MindSpark — selected island style
 
+> Historical reference. For current work, use
+> [Mind Spark style and implementation standard](MIND_SPARK_STYLE_AND_IMPLEMENTATION_STANDARD.md).
+> The six-island and 3,000-object requirements below are superseded; retain this
+> document for its architectural references and source history.
+
 The user selected the attached enginehouse reference on 2026-08-28 after
 reviewing the v10 Dawn Viaduct prototype. This reference supersedes v10's
 exposed engine-platform silhouette as the visual direction. This document

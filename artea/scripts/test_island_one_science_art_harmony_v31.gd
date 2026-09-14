@@ -37,24 +37,13 @@ func _run() -> void:
 	assert(puzzle.get_node("HighPuzzleCompositionLight").position.y >= 36.0)
 	for prism_id in ["colour", "rhythm", "weight"]:
 		var prism_control := puzzle.get_node("PuzzleControls/PuzzleControl_%s_prism" % prism_id) as Node3D
-		assert(str(prism_control.get_meta("design_revision")) == "v33_production_living_light_instrument")
-		assert(int(prism_control.get_meta("editable_component_count", 0)) >= 96)
-		assert(prism_control.find_children("FoundationBolt_*", "MeshInstance3D", true, false).size() == 12)
-		assert(prism_control.find_children("CarouselGearTooth_*", "MeshInstance3D", true, false).size() == 24)
-		assert(prism_control.find_children("SeedSocketLamp_*", "MeshInstance3D", true, false).size() == 3)
-		assert(prism_control.find_children("IrisBlade_*", "MeshInstance3D", true, false).size() == 6)
+		assert(prism_control.has_node("WeightPrismBenchmark") if prism_id == "weight" else
+			prism_control.has_node("HeavenlyQuestInstrument"))
+		assert(prism_control.has_node("QuestIdentityCrown/QuestStateCore"))
 	assert(puzzle.find_children("LightBeamPulse_*", "MeshInstance3D", true, false).size() == 18)
-	assert(puzzle.find_child("ColourScienceInstrument", true, false) != null)
-	assert(puzzle.find_child("RhythmScienceInstrument", true, false) != null)
-	assert(puzzle.find_child("WeightScienceInstrument", true, false) != null)
-	var analysis_control := puzzle.get_node("PuzzleControls/PuzzleControl_analysis_console") as Node3D
-	assert(str(analysis_control.get_meta("production_asset")) == "Blender Aether Analysis Console")
-	var console := analysis_control.get_node("AetherAnalysisConsoleModel") as Node3D
-	assert(console.find_child("AnalysisRotor", true, false) is Node3D)
-	assert(console.find_child("AnalysisHeartLens", true, false) is MeshInstance3D)
-	for lamp_index in 3:
-		assert(console.find_child("EvidenceLamp_%d" % (lamp_index + 1), true, false) is MeshInstance3D)
-
+	var console := puzzle.get_node("PuzzleControls/PuzzleControl_analysis_console/HeavenlyQuestInstrument")
+	for card_index in 3:
+		assert(console.find_child("Card%d" % card_index, true, false) is Node3D)
 	var solutions := [
 		{"seeds": [1, 2, 3], "regulators": [1, 2], "moves": [3, 2, 1], "targets": [1, 0, 5], "name": "CALM CONTRAST"},
 		{"seeds": [2, 3, 1], "regulators": [2, 1], "moves": [1, 3, 2], "targets": [5, 5, 0], "name": "CURIOUS COUNTERPOINT"},
@@ -88,6 +77,7 @@ func _run() -> void:
 		assert([state.outer_ring, state.middle_ring, state.inner_ring] == solution.targets)
 		assert(puzzle.interact_control("confirm").reason == "completed")
 		assert(str(puzzle.get_thought_journey().harmony) == solution.name)
+		assert(puzzle.solve_echo_for_test().reason == "completed")
 	print("ISLAND_ONE_SCIENCE_ART_HARMONY_V31: PASS — golden-angle garden + three creative solutions")
 	world.queue_free()
 	await process_frame

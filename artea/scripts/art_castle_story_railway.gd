@@ -3310,7 +3310,10 @@ func _update_train_mechanisms(delta: float) -> void:
 		wheel_part.rotate_x(signed_spin)
 	for steam_gear in _steam_gear_parts:
 		var gear_ratio: float = steam_gear.get_meta("mechanism_spin_ratio", 1.0)
-		steam_gear.rotate_z(signed_spin * gear_ratio * 1.22)
+		# The imported GLB axle is parent-space X, not Z. Reverse the drive
+		# rotation; alternating ratios keep neighbours counter-rotating and
+		# each hub/energy ring locked to its own gear on both train sides.
+		steam_gear.rotate_x(-signed_spin * gear_ratio * 1.22)
 	var steam_phase := _mechanism_time * (2.6 + speed_ratio * 8.4)
 	for rod_part in _steam_rod_parts:
 		var rod_phase: float = rod_part.get_meta("mechanism_phase", 0.0)

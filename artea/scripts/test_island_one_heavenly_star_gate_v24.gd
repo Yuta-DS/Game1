@@ -36,6 +36,8 @@ func _run() -> void:
 	assert(east.get_node_or_null("GateLeafCollision") is CollisionShape3D)
 	var west_closed := west.position
 	var east_closed := east.position
+	assert(str(gate.get_node("HeavenlyThresholdCourt").get_meta("mass_clearance_rule", "")).contains(
+		"reserved inward swing envelope"))
 
 	# Exercise the eight-bearing composition. The +1/+2/−2 couplings require
 	# observation and planning; this six-move route discovers Calm Contrast.
@@ -58,15 +60,24 @@ func _run() -> void:
 	assert([aligned.outer_ring, aligned.middle_ring, aligned.inner_ring] == [1, 0, 5])
 	assert(aligned.constellation_turns == 6)
 	assert(puzzle.interact_control("confirm").reason == "completed")
+	assert(not world.is_island_one_star_gate_open(),
+		"the Signal Prism unlocks Quest 2 without opening the inter-island gate")
+	assert(puzzle.solve_echo_for_test().reason == "completed")
 	assert(world.is_island_one_star_gate_open())
 	assert(str(gate.get_meta("gate_state", "")) == "opening")
 	await create_timer(2.1).timeout
 	assert(str(gate.get_meta("gate_state", "")) == "open")
-	assert(west.position.x < west_closed.x and east.position.x > east_closed.x,
-		"both physical leaves retract outward into their pylons")
+	assert(west.position.distance_to(west_closed) < 0.001 and east.position.distance_to(east_closed) < 0.001,
+		"the two outer hinge pins remain fixed throughout the opening stroke")
+	assert(is_equal_approx(west.rotation.y, deg_to_rad(-96.0)) \
+		and is_equal_approx(east.rotation.y, deg_to_rad(96.0)),
+		"both leaves swing inward and away from the arriving player")
+	var halo := gate.get_node("HeavenlyStarHalo") as Node3D
+	assert(halo.position.is_equal_approx(Vector3(0, 25.0, -2.15)),
+		"the astrolabe rotates around its crown bearing instead of orbiting the gate origin")
 	assert((gate.get_node("HeavenlyGatePowerCore") as MeshInstance3D).material_override \
 		== world.get("_materials").gold)
-	print("IslandOneHeavenlyStarGateV24: PASS — coupled constellation → powered physical gate")
+	print("IslandOneHeavenlyStarGateV24: PASS — Signal Observatory + Echo Garden → powered hinged gate")
 
 	world.queue_free()
 	await process_frame

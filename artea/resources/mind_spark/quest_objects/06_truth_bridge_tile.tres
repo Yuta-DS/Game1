@@ -5,10 +5,9 @@
 [resource]
 script = ExtResource("1")
 object_kind = 5
-display_name = "Truth Bridge Tile"
-action_prompt = "CHOOSE THE TRUE STATEMENT"
-success_message = "▰ TRUE TILE SOLID"
+display_name = "Truth Foundry"
+action_prompt = "CHOOSE EVIDENCE-GROUNDED HOPE"
+success_message = "▰ GROUNDED HOPE MATERIALISED"
 accent_color = Color(0.42, 0.9, 0.87, 1)
 icon_waiting = "▱"
 icon_success = "▰"
-
