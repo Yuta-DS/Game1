@@ -160,6 +160,7 @@ func _ready() -> void:
 	_build_creator_district()
 	_build_story_landmarks()
 	_build_mind_spark_world_one_gameplay()
+	_build_heart_melody_island_one()
 	_build_world_one_walk_route()
 	_build_boundary_observatories()
 	_build_skyline()
@@ -168,6 +169,34 @@ func _ready() -> void:
 	if not embedded_in_gallery:
 		_build_standalone_minimap()
 		_build_return_gate()
+
+
+func _build_heart_melody_island_one() -> void:
+	if has_node("HeartMelodyWorld"):
+		return
+	var scene := load("res://scenes/heart_melody/heart_garden_world.tscn") as PackedScene
+	var heart := scene.instantiate() as Node3D
+	heart.name = "HeartMelodyWorld"
+	heart.position = Vector3(6000, 0, 2290)
+	heart.set("defer_build", true)
+	add_child(heart)
+	var gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
+	gate.name = "HeartMelodyWorldGate"
+	gate.position = HEART + Vector3(-95, 4, 10)
+	gate.target_world_path = NodePath("../HeartMelodyWorld")
+	gate.destination_world_local = heart.position + HeartGardenWorld.ARRIVAL
+	gate.prompt_text = "Q • ENTER HEART MELODY: FEELING GARDEN"
+	add_child(gate)
+	heart.connect("return_requested", func():
+		var body = heart.get("player") as CharacterBody3D
+		if body != null:
+			body.global_position = to_global(HEART + Vector3(-83, 6, 10))
+			body.velocity = Vector3.ZERO)
+	var journey := get_node_or_null("/root/JourneyState")
+	if journey != null:
+		gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel"))
+		journey.treasure_awarded.connect(func(_id: String):
+			gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel")))
 
 
 func _build_standalone_minimap() -> void:

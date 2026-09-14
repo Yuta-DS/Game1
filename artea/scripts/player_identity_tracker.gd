@@ -36,7 +36,10 @@ func _ready() -> void:
 	load_evidence()
 
 
-func record_evidence(evidence_id: String, axis: String, choice: String) -> bool:
+func record_evidence(evidence_id: String, axis: String, choice: String,
+		world_id := "mind_spark", context: Dictionary = {}) -> bool:
+	if world_id not in ["mind_spark", "heart_melody", "creators_light"]:
+		return false
 	if evidence_id.strip_edges().is_empty() or axis not in AXES or choice.strip_edges().is_empty():
 		return false
 	if evidence.has(evidence_id):
@@ -44,10 +47,17 @@ func record_evidence(evidence_id: String, axis: String, choice: String) -> bool:
 	var side := _normalized_side(axis, choice)
 	if side.is_empty():
 		return false
-	evidence[evidence_id] = {"axis": axis, "choice": choice, "side": side, "world_id": "mind_spark"}
+	var record := {"axis": axis, "choice": choice, "side": side, "world_id": world_id}
+	for field in ["canonical_quest_id", "save_alias", "task_id", "source"]:
+		var field_value := str(context.get(field, "")).strip_edges()
+		if not field_value.is_empty():
+			record[field] = field_value
+	evidence[evidence_id] = record
 	identity_axis_counts[side] = int(identity_axis_counts.get(side, 0)) + 1
 	identity_evidence_ids.append(evidence_id)
-	identity_answer_history.append({"evidence_id": evidence_id, "side": side, "world_id": "mind_spark"})
+	var history_record := record.duplicate(true)
+	history_record["evidence_id"] = evidence_id
+	identity_answer_history.append(history_record)
 	if not save():
 		evidence.erase(evidence_id)
 		identity_axis_counts[side] = maxi(0, int(identity_axis_counts[side]) - 1)
@@ -168,5 +178,8 @@ func _rebuild_summary_from_evidence() -> void:
 			continue
 		identity_axis_counts[side] = int(identity_axis_counts[side]) + 1
 		identity_evidence_ids.append(str(evidence_id))
-		identity_answer_history.append({"evidence_id": str(evidence_id), "side": side,
-			"world_id": str(item.get("world_id", "mind_spark"))})
+		var history_record := item.duplicate(true)
+		history_record["evidence_id"] = str(evidence_id)
+		history_record["side"] = side
+		history_record["world_id"] = str(item.get("world_id", "mind_spark"))
+		identity_answer_history.append(history_record)

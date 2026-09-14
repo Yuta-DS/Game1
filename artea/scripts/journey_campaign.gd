@@ -28,7 +28,7 @@ const KINGDOMS := {
 	},
 	"heart": {
 		"label": "Heart Melody Kingdom",
-		"scene_path": "res://scenes/music_minigame.tscn",
+		"scene_path": "res://scenes/heart_melody/heart_garden_entry.tscn",
 		"treasure": "harmony_jewel",
 		"requires": ["star_of_wisdom"],
 	},

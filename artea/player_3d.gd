@@ -20,6 +20,7 @@ signal block_changed(active: bool)
 @export var attack_cooldown := 0.55
 @export var attack_active_time := 0.18
 @export var block_speed_multiplier := 0.38
+@export var blocking_available := true
 
 ## The camera the player moves relative to. When unset, the player falls back to
 ## the viewport's active camera, so the gallery, the hub and any other scene all
@@ -287,6 +288,7 @@ func _find_damage_receiver(node: Node) -> Node:
 
 
 func _set_blocking(active: bool) -> void:
+	active = active and blocking_available
 	if is_blocking == active:
 		return
 	is_blocking = active

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/heart_melody/heart_garden_preview.tscn" id="1"]
+
+[node name="HeartGarden" instance=ExtResource("1")]
+campaign_entry = true
+
