@@ -3,18 +3,23 @@ extends Node
 
 signal task_completed(task_id: String)
 signal quest_completed(quest_id: String)
+signal canonical_quest_completed(canonical_quest_id: String, save_alias: String)
+signal step_started(task_id: String, canonical_quest_id: String, task_index: int)
+signal step_feedback(task_id: String, accepted: bool, message: String)
+signal environment_state_requested(state_id: String, payload: Dictionary)
 signal world_completed
 signal island_transition_started(from_island: int, to_island: int)
 signal island_arrived(island_index: int)
 
 const SAVE_PATH := "user://mind_spark_walkable_world_one_progress.json"
 const ECHO_IDS := ["world_one.fact_and_fear", "world_one.hope_path"]
+const ChapterCatalog := preload("res://scripts/mind_spark/mind_spark_chapter_catalog.gd")
 const QUESTS := [
-	{"id": "notice_signal", "title": "NOTICE THE SIGNAL", "task_end": 0, "xp": 0, "target_minutes": 10},
-	{"id": "island_one_awareness", "title": "LISTEN TO THE ECHO", "task_end": 1, "xp": 75, "target_minutes": 7},
-	{"id": "broken_pattern", "title": "UNDERSTAND THE MOMENT", "task_end": 4, "xp": 100, "target_minutes": 13},
-	{"id": "hope_path", "title": "BUILD A POSSIBLE TOMORROW", "task_end": 7, "xp": 125, "target_minutes": 14},
-	{"id": "free_warden", "title": "CALM THE THOUGHT STORM", "task_end": 9, "xp": 200, "target_minutes": 20},
+	{"id": "notice_signal", "canonical_id": "quest.signal_observatory", "title": "NOTICE THE SIGNAL", "task_end": 0, "xp": 0, "target_minutes": 10},
+	{"id": "island_one_awareness", "canonical_id": "quest.echo_forest", "title": "LISTEN TO THE ECHO", "task_end": 1, "xp": 75, "target_minutes": 7},
+	{"id": "broken_pattern", "canonical_id": "quest.cross_seam_relay", "title": "UNDERSTAND THE MOMENT", "task_end": 4, "xp": 100, "target_minutes": 13},
+	{"id": "hope_path", "canonical_id": "quest.role_exchange_storm", "title": "BUILD A POSSIBLE TOMORROW", "task_end": 7, "xp": 125, "target_minutes": 14},
+	{"id": "free_warden", "canonical_id": "quest.constellation_synthesis", "title": "CALM THE THOUGHT STORM", "task_end": 9, "xp": 200, "target_minutes": 20},
 ]
 const TASKS := [
 	{"id": "wake_two_roots", "quest": 0, "title": "Form the Signal Prism", "zone": "01", "prompt": "Explore the thought signal and align the Observatory to form the Signal Prism"},
@@ -67,6 +72,7 @@ var _quest_label: Label
 var _task_label: Label
 var _dialogue_label: Label
 var _reflection_label: Label
+var _chapter_catalog := ChapterCatalog.new()
 
 
 func _ready() -> void:
@@ -94,6 +100,40 @@ func pending_identity_count() -> int:
 	return _reflection_queue.size()
 
 
+func identity_tracking_contract() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for task_index in IDENTITY_MOMENTS:
+		var moment: Dictionary = IDENTITY_MOMENTS[task_index]
+		var task: Dictionary = TASKS[int(task_index)]
+		var quest_index := int(task.get("quest", 0))
+		result.append({
+			"evidence_id": str(moment.id),
+			"axis": str(moment.axis),
+			"task_id": str(task.id),
+			"canonical_quest_id": str(QUESTS[quest_index].canonical_id),
+			"save_alias": str(QUESTS[quest_index].id),
+			"option_a": str(moment.a),
+			"option_b": str(moment.b),
+		})
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.evidence_id) < str(b.evidence_id))
+	return result
+
+
+func identity_progress_by_quest() -> Dictionary:
+	var result := {}
+	for item in identity_tracking_contract():
+		var quest_id := str(item.canonical_quest_id)
+		if not result.has(quest_id):
+			result[quest_id] = {"available": 0, "recorded": 0, "evidence_ids": []}
+		result[quest_id].available = int(result[quest_id].available) + 1
+		(result[quest_id].evidence_ids as Array).append(str(item.evidence_id))
+		if identity_tracker != null and identity_tracker.has_method("has_evidence") \
+				and bool(identity_tracker.call("has_evidence", item.evidence_id)):
+			result[quest_id].recorded = int(result[quest_id].recorded) + 1
+	return result
+
+
 func target_first_play_minutes() -> int:
 	var total := 0
 	for quest in QUESTS:
@@ -116,6 +156,7 @@ func _bind_world() -> void:
 	_restore_runtime_state()
 	_build_hud()
 	_apply_task_gating()
+	_emit_step_started()
 
 
 func _connect_world_events() -> void:
@@ -124,6 +165,7 @@ func _connect_world_events() -> void:
 	for object in world.get_quest_objects():
 		object.completed.connect(_on_object_completed)
 		object.progress_changed.connect(_on_object_progress)
+		object.feedback_changed.connect(_on_object_feedback)
 		object.linked_task_opened.connect(_on_linked_task_opened)
 		if object.definition.object_kind == QuestObjectDefinition.ObjectKind.CHECKPOINT_SERVER_ROOT:
 			object.checkpoint_action_requested.connect(_on_checkpoint_action.bind(object.save_id))
@@ -238,6 +280,14 @@ func _on_object_progress(save_id: String, current: int, _total: int) -> void:
 		_try_complete_network_quest_task()
 
 
+func _on_object_feedback(_save_id: String, message: String, _icon: String) -> void:
+	var task := current_task()
+	if task.is_empty():
+		return
+	step_feedback.emit(str(task.get("id", "")), not message.begins_with("TRY") \
+		and not message.contains("MISMATCH"), message)
+
+
 func _on_object_completed(save_id: String, _result: Dictionary) -> void:
 	match save_id:
 		"world_one.evidence_scanner":
@@ -334,13 +384,33 @@ func _complete_current_task(expected_id: String) -> bool:
 		if quest_index == 1:
 			_begin_island_two_handoff()
 		quest_completed.emit(quest_id)
+		var canonical_id := str(QUESTS[quest_index].canonical_id)
+		canonical_quest_completed.emit(canonical_id, quest_id)
+		var contract := _chapter_catalog.runtime_contract(canonical_id)
+		var state_id := str(contract.get("environment_state", ""))
+		if not state_id.is_empty():
+			environment_state_requested.emit(state_id, {
+				"canonical_quest_id": canonical_id,
+				"save_alias": quest_id,
+				"success_effects": contract.get("success_effects", []),
+			})
 		if quest_index == 4:
 			_complete_world()
 	else:
 		_save_progress()
 	_sync_island_two_story_state()
 	_apply_task_gating()
+	_emit_step_started()
 	return true
+
+
+func _emit_step_started() -> void:
+	var task := current_task()
+	if task.is_empty():
+		return
+	var quest_index := int(task.get("quest", 0))
+	step_started.emit(str(task.get("id", "")), str(QUESTS[quest_index].canonical_id),
+		_current_task_index)
 
 
 func complete_garden_reflection() -> bool:
@@ -609,10 +679,15 @@ func _restore_runtime_state() -> void:
 func _queue_identity_moment(task_index: int) -> void:
 	if not IDENTITY_MOMENTS.has(task_index):
 		return
-	var moment: Dictionary = IDENTITY_MOMENTS[task_index]
+	var moment: Dictionary = IDENTITY_MOMENTS[task_index].duplicate(true)
+	var task: Dictionary = TASKS[task_index]
+	var quest_index := int(task.get("quest", 0))
+	moment["task_id"] = str(task.get("id", ""))
+	moment["canonical_quest_id"] = str(QUESTS[quest_index].canonical_id)
+	moment["save_alias"] = str(QUESTS[quest_index].id)
 	if identity_tracker != null and identity_tracker.has_method("has_evidence") and bool(identity_tracker.call("has_evidence", moment.id)):
 		return
-	_reflection_queue.append(moment.duplicate(true))
+	_reflection_queue.append(moment)
 
 
 func _record_identity_side(side_a: bool) -> void:
@@ -620,7 +695,13 @@ func _record_identity_side(side_a: bool) -> void:
 		return
 	var moment: Dictionary = _reflection_queue[0]
 	if identity_tracker != null:
-		identity_tracker.call("record_evidence", moment.id, moment.axis, moment.side_a if side_a else moment.side_b)
+		identity_tracker.call("record_evidence", moment.id, moment.axis,
+			moment.side_a if side_a else moment.side_b, "mind_spark", {
+				"canonical_quest_id": moment.canonical_quest_id,
+				"save_alias": moment.save_alias,
+				"task_id": moment.task_id,
+				"source": "optional_post_task_reflection",
+			})
 	_dismiss_identity_moment()
 
 

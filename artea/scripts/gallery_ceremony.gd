@@ -42,6 +42,11 @@ const NO_JOURNEY := "Milo: Your story here has not started yet.\nWander, feel, m
 
 var _panel: PanelContainer
 var _label: RichTextLabel
+var _identity_panel: PanelContainer
+var _identity_summary: Label
+var _identity_accept_button: Button
+var _identity_star_label: Label3D
+var _identity_tracker: Node
 
 
 func _ready() -> void:
@@ -58,6 +63,7 @@ func _ready() -> void:
 	if js.has_all_treasures():
 		js.advance_to(4)
 		_build_finale(js)
+		_build_identity_reveal()
 
 
 # Milo's speech, assembled from evidence.
@@ -97,6 +103,11 @@ func _compose(js) -> String:
 	lines.append("")
 	if js.has_all_treasures():
 		lines.append("[color=#fff2a8]The three treasures become the Light of Identity.[/color]")
+		var tracker := get_node_or_null("/root/PlayerIdentityTracker")
+		if tracker != null and bool(tracker.get("identity_locked")):
+			var code := str(tracker.get("identity_result_code"))
+			var friendly_name := str(tracker.call("friendly_identity_name", code))
+			lines.append("[color=#b8f2e6]%s — %s[/color]" % [friendly_name, code])
 		lines.append(_closing(js))
 	else:
 		lines.append("The Crown of Life is still forming: %d of 3 treasures discovered." % js.treasure_count())
@@ -182,6 +193,7 @@ func _build_finale(js) -> void:
 	star_label.outline_size = 10
 	star_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	star.add_child(star_label)
+	_identity_star_label = star_label
 
 	# Rails author themselves a couple of frames after the gallery opens.
 	for _i in 4:
@@ -196,6 +208,115 @@ func _build_finale(js) -> void:
 			var parts := parade.find_children("*", "MeshInstance3D", true, false)
 			for i in parts.size():
 				(parts[i] as MeshInstance3D).material_override = _finale_material(rainbow[i % rainbow.size()], 1.35)
+
+
+func _build_identity_reveal() -> void:
+	_identity_tracker = get_node_or_null("/root/PlayerIdentityTracker")
+	if _identity_tracker == null or not _identity_tracker.has_method("preview_identity"):
+		return
+	var code := str(_identity_tracker.call("preview_identity"))
+	if code.is_empty():
+		return
+	var friendly_name := str(_identity_tracker.call("friendly_identity_name", code))
+	var layer := CanvasLayer.new()
+	layer.name = "IdentityFinaleLayer"
+	layer.layer = 42
+	add_child(layer)
+
+	var replay := Button.new()
+	replay.name = "ReplayIdentityRevealButton"
+	replay.text = "Identity reflection"
+	replay.position = Vector2(24, 24)
+	replay.custom_minimum_size = Vector2(210, 48)
+	replay.pressed.connect(func() -> void: _identity_panel.visible = true)
+	layer.add_child(replay)
+
+	_identity_panel = PanelContainer.new()
+	_identity_panel.name = "IdentityFinalePanel"
+	_identity_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_identity_panel.position = Vector2(-280, -150)
+	_identity_panel.custom_minimum_size = Vector2(560, 300)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.035, 0.08, 0.12, 0.96)
+	style.border_color = Color("d9b85f")
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(18)
+	style.set_content_margin_all(26)
+	_identity_panel.add_theme_stylebox_override("panel", style)
+	layer.add_child(_identity_panel)
+
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 16)
+	_identity_panel.add_child(column)
+	var title := Label.new()
+	title.text = "YOUR FRIENDLY IDENTITY REFLECTION"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+	column.add_child(title)
+	_identity_summary = Label.new()
+	_identity_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_identity_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_identity_summary.add_theme_font_size_override("font_size", 20)
+	column.add_child(_identity_summary)
+	var safety := Label.new()
+	safety.text = "This is a private, friendly reflection of your choices—not a score, diagnosis, or limit."
+	safety.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	safety.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(safety)
+
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	actions.add_theme_constant_override("separation", 12)
+	column.add_child(actions)
+	_identity_accept_button = Button.new()
+	_identity_accept_button.name = "AcceptIdentityButton"
+	_identity_accept_button.text = "Accept this reflection"
+	_identity_accept_button.custom_minimum_size = Vector2(230, 48)
+	_identity_accept_button.pressed.connect(_accept_identity_result)
+	actions.add_child(_identity_accept_button)
+	var private_button := Button.new()
+	private_button.name = "KeepIdentityPrivateButton"
+	private_button.text = "Keep private for now"
+	private_button.custom_minimum_size = Vector2(210, 48)
+	private_button.pressed.connect(_close_identity_reveal)
+	actions.add_child(private_button)
+
+	if bool(_identity_tracker.get("identity_locked")):
+		_show_locked_identity(code, friendly_name)
+	_identity_panel.visible = not bool(_identity_tracker.get("identity_reveal_seen"))
+
+
+func _accept_identity_result() -> void:
+	if _identity_tracker == null:
+		return
+	var code := str(_identity_tracker.call("finalize_identity"))
+	if code.is_empty():
+		return
+	_show_locked_identity(code, str(_identity_tracker.call("friendly_identity_name", code)))
+	_identity_tracker.call("mark_reveal_seen")
+
+
+func _show_locked_identity(code: String, friendly_name: String) -> void:
+	_identity_summary.text = "%s\n%s" % [friendly_name, code]
+	_identity_accept_button.disabled = true
+	_identity_accept_button.text = "Reflection accepted"
+	_update_identity_star_label(friendly_name)
+
+
+func _close_identity_reveal() -> void:
+	if _identity_tracker != null:
+		_identity_tracker.call("mark_reveal_seen")
+	_identity_panel.visible = false
+
+
+func _update_identity_star_label(friendly_name: String) -> void:
+	if _identity_star_label == null:
+		return
+	var who := "YOUR"
+	var global_node := get_node_or_null("/root/Global")
+	if global_node != null and not str(global_node.current_user_name).strip_edges().is_empty():
+		who = str(global_node.current_user_name).strip_edges().to_upper() + "'S"
+	_identity_star_label.text = "%s STAR\n%s\nYOUR STORY MATTERS" % [who, friendly_name.to_upper()]
 
 
 func _finale_material(color: Color, energy: float) -> StandardMaterial3D:

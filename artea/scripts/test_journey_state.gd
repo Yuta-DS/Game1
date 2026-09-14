@@ -63,6 +63,7 @@ func _init() -> void:
 	assert(js.stage == 3, "stage never demotes")
 
 	# --- round trip through disk ---
+	js.heart_campaign_version = 1 # Existing pre-adventure journey fixture.
 	js.record_emotion("sad", Color(0.2, 0.4, 0.9))
 	var creation_id: String = str(js.record_creation("user://art/a.png", "storm"))
 	assert(js.has_treasure("harmony_jewel"), "Heart Melody awards Harmony Jewel")

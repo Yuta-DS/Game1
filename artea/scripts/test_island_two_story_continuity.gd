@@ -30,15 +30,21 @@ func _run() -> void:
 	assert(str(world.get_meta("island_two_story_state")) == "received")
 
 	var scanner := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
-	for answer in [&"fact", &"fear", &"fact"]:
-		assert(scanner.interact(&"scan").accepted)
-		assert(scanner.interact(answer).accepted)
+	assert(not scanner.interact(&"fact").accepted)
+	for channel in 3:
+		assert(not scanner.interact(&"capture", channel).accepted)
+		for adjustment in [2, 1, 3][channel]:
+			assert(scanner.interact(&"adjust", channel).accepted)
+		assert(scanner.interact(&"capture", channel).accepted)
+	assert(scanner.current_state.completed)
 	assert(quest.current_task().id == "restore_memory")
 	assert(str(world.get_meta("island_two_story_state")) == "evidence_sorted")
 
 	var board := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.MEMORY_CONSTELLATION)
-	for memory_step in ["notice", "name", "choose"]:
-		assert(board.interact(&"node", memory_step).accepted)
+	assert(not board.interact(&"replay").accepted)
+	assert(board.interact(&"swap", 0).accepted)
+	assert(board.interact(&"swap", 1).accepted)
+	assert(board.interact(&"replay").completed)
 	assert(quest.current_task().id == "open_logic_gate")
 	assert(str(world.get_meta("island_two_story_state")) == "memory_woven")
 
@@ -52,22 +58,28 @@ func _run() -> void:
 	for enemy in world.get_enemies():
 		if enemy.encounter_id == "constellation":
 			enemy.take_damage(999.0)
-	assert(logic.interact(&"place_evidence").accepted)
-	assert(logic.interact(&"place_evidence").completed)
+	assert(not logic.interact(&"test").accepted)
+	assert(logic.interact(&"trial", 0).accepted)
+	assert(logic.interact(&"trial", 1).accepted)
+	assert(logic.interact(&"model", 1).accepted)
+	assert(logic.interact(&"test").completed)
 	assert(world.is_quest_gate_open(1))
 	assert(str(world.get_meta("island_two_story_state")) == "archive_open")
 
 	var lens := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.PERSPECTIVE_LENS)
-	assert(lens.interact(&"turn").accepted)
-	assert(lens.interact(&"turn").accepted)
-	assert(lens.interact(&"turn").completed)
+	for view in 3:
+		assert(lens.interact(&"view", view).accepted)
+		assert(lens.interact(&"interpret", view).accepted)
+	assert(lens.current_state.completed)
 	assert(str(world.get_meta("island_two_story_state")) == "hope_reframed")
 
 	var truth := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
-	assert(not truth.interact(&"fear").accepted)
-	assert(not truth.interact(&"fantasy").accepted)
-	assert(truth.interact(&"true").completed)
+	assert(truth.interact(&"approach", 0).accepted)
+	for knob in [0, 0, 1]:
+		assert(truth.interact(&"tune", knob).accepted)
+	assert(truth.interact(&"project").completed)
 	assert(str(world.get_meta("island_two_story_state")) == "truth_materialised")
+	assert(quest.complete_garden_reflection())
 	for enemy in world.get_enemies():
 		if enemy.encounter_id == "ridge":
 			enemy.take_damage(999.0)

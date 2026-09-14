@@ -1,0 +1,40 @@
+extends SceneTree
+
+const Journey := preload("res://scripts/JourneyState.gd")
+const Identity := preload("res://scripts/player_identity_tracker.gd")
+
+func _init() -> void:
+	var path := "user://test_heart_migration_%d.json" % Time.get_ticks_usec()
+	var journey := Journey.new()
+	journey.save_path = path
+	journey.record_emotion("hope", Color.GREEN)
+	assert(not journey.has_treasure("harmony_jewel"),"new feeling choices cannot award World Two")
+	var roundtrip := Journey.new()
+	roundtrip.save_path = path
+	roundtrip.load_journey()
+	assert(not roundtrip.has_treasure("harmony_jewel"),"new emotion records cannot infer reward on load")
+	var legacy := FileAccess.open(path,FileAccess.WRITE)
+	legacy.store_string(JSON.stringify({"emotions":[{"name":"hope"}]}))
+	legacy.close()
+	roundtrip.load_journey()
+	assert(roundtrip.has_treasure("harmony_jewel") and roundtrip.heart_campaign_version == 1)
+	roundtrip.save()
+	journey.load_journey()
+	assert(journey.has_treasure("harmony_jewel"),"legacy earned reward survives migration")
+	journey.clear_journey()
+	assert(journey.heart_campaign_version == 2,"new journeys do not inherit old completion shortcuts")
+	var tracker := Identity.new()
+	tracker.save_path = path
+	assert(tracker.record_evidence("HM_ID_01","energy","I","heart_melody"))
+	assert(tracker.record_evidence("HM_ID_01","energy","E","heart_melody"))
+	assert(tracker.identity_axis_counts.I == 1 and tracker.identity_axis_counts.E == 0)
+	assert(tracker.identity_answer_history[0].world_id == "heart_melody")
+	assert(tracker.record_evidence("MS_ID_01","energy","E"))
+	assert(tracker.identity_answer_history[1].world_id == "mind_spark")
+	assert(tracker.identity_result_code.is_empty())
+	tracker.clear_evidence()
+	tracker.free()
+	journey.free()
+	roundtrip.free()
+	print("HEART_GARDEN_MIGRATION: PASS — new reward guard, legacy entitlement and cross-world identity")
+	quit()

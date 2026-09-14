@@ -38,6 +38,16 @@ func _run() -> void:
 	root.add_child(world)
 	for _frame in 4: await process_frame
 	var quest := world.get_node("QuestController") as MindSparkWorldOneQuest
+	var completed_canonical_ids: Array[String] = []
+	var requested_environment_states: Array[String] = []
+	quest.canonical_quest_completed.connect(
+		func(canonical_id: String, _save_alias: String) -> void:
+			completed_canonical_ids.append(canonical_id)
+	)
+	quest.environment_state_requested.connect(
+		func(state_id: String, _payload: Dictionary) -> void:
+			requested_environment_states.append(state_id)
+	)
 	assert(quest.target_first_play_minutes() == 64, "the detailed Island One puzzle keeps first play inside the required 55–70 minutes")
 	assert(quest.current_task().id == "wake_two_roots")
 	var checkpoints: Array[QuestObjectBase] = []
@@ -120,6 +130,20 @@ func _run() -> void:
 	var basin := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.CALM_RAIN_BASIN)
 	assert(basin.interact(&"hold").completed)
 	assert(quest.completed_task_count() == 10 and bool(quest.progress.completed))
+	assert(completed_canonical_ids == [
+		"quest.signal_observatory",
+		"quest.echo_forest",
+		"quest.cross_seam_relay",
+		"quest.role_exchange_storm",
+		"quest.constellation_synthesis",
+	], "walkable progression emits the five canonical quest receipts in order")
+	assert(requested_environment_states == [
+		"signal_prism_formed",
+		"echo_seed_secured",
+		"archive_open",
+		"guardian_freed",
+		"star_of_wisdom_awarded",
+	], "each canonical quest requests its authored persistent environment state")
 	assert(world.is_quest_gate_open(3), "the final quest saves before opening the sanctuary")
 	assert(bool(world.get_node("WorldOneGeometry/OptionalCompletedWorldStationSpur").get_meta("available")),
 		"the optional station spur becomes available only after completion")
@@ -128,9 +152,21 @@ func _run() -> void:
 		"Wisdom Blade is a visual socket upgrade with the documented 30 damage")
 	assert(boss.rain.emitting and not boss.active, "combat remains stopped and the storm becomes gentle rain")
 	assert(quest.pending_identity_count() == 8, "all eight optional identity evidence moments are queued")
+	var identity_contract := quest.identity_tracking_contract()
+	assert(identity_contract.size() == 8 and identity_contract[0].evidence_id == "MS_ID_01" \
+		and identity_contract[7].evidence_id == "MS_ID_08",
+		"the public identity contract exposes all eight stable Mind Spark evidence IDs")
 	for index in 8: quest.call("_record_identity_side", index % 2 == 0)
 	assert(identity.identity_evidence_ids.size() == 8 and identity.identity_result_code.is_empty(),
 		"Mind Spark stores eight first answers but never chooses an identity")
+	assert(identity.evidence_for_quest("quest.signal_observatory").size() == 1)
+	assert(identity.evidence_for_quest("quest.echo_forest").size() == 1)
+	assert(identity.evidence_for_quest("quest.cross_seam_relay").size() == 3)
+	assert(identity.evidence_for_quest("quest.role_exchange_storm").size() == 1)
+	assert(identity.evidence_for_quest("quest.constellation_synthesis").size() == 2)
+	var tracked_progress := quest.identity_progress_by_quest()
+	assert(int(tracked_progress["quest.cross_seam_relay"].recorded) == 3,
+		"quest-level identity progress reports recorded optional evidence without changing completion")
 	world.queue_free()
 	await process_frame
 	var restored := _new_world(journey, identity)
