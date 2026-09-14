@@ -207,6 +207,7 @@ func build_world() -> void:
 	_build_organized_bio_tree_world(geometry)
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		_repair_island_one_legacy_openings(geometry)
+		_repair_island_one_legacy_openings(geometry, 4)
 	_place_functional_objects()
 	_place_collectibles()
 	_place_cast()
@@ -5987,6 +5988,8 @@ func _is_exposed_garden_edge(zone_index: int, angle: float) -> bool:
 	var other: Vector3 = ZONES[paired_index].position
 	if at.distance_to(Vector2(other.x,other.z)) < float(ZONES[paired_index].radius) + 2.0:
 		return false
+	if zone_index == 5:
+		return true # Sanctuary is the terminal district, with no sixth sky bridge.
 	var exit_index := (5 if zone_index == 0 else 2) if zone_index < 2 else (zone_index - 1 if zone_index % 2 == 0 else zone_index + 1)
 	var exit: Vector3 = ZONES[exit_index].position - center
 	var direction := Vector2(exit.x,exit.z).normalized()
@@ -5996,7 +5999,7 @@ func _is_exposed_garden_edge(zone_index: int, angle: float) -> bool:
 
 func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void:
 	var repairs := Node3D.new()
-	repairs.name = "IslandOnePerimeterRepairs" if first_zone == 0 else "IslandTwoPerimeterRepairs"
+	repairs.name = ["IslandOnePerimeterRepairs", "IslandTwoPerimeterRepairs", "IslandThreePerimeterRepairs"][first_zone / 2]
 	repairs.set_meta("preserve_authored_nodes", true)
 	parent.add_child(repairs)
 	for zone_index in range(first_zone, first_zone + 2):
@@ -6004,7 +6007,7 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 		var radius := float(ZONES[zone_index].radius) * 0.985
 		var zone: Node3D = _zone_nodes[ZONES[zone_index].id]
 		# Replace, never stack over, the old incomplete reference rail batch.
-		for old in zone.find_children("Railing_v11_*", "MeshInstance3D", true, false):
+		for old in zone.find_children("Railing_*", "MeshInstance3D", true, false):
 			old.visible = false
 			old.set_meta("preserve_authored_nodes",true)
 		for bay in 24:

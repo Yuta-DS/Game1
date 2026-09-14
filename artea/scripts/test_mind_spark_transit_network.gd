@@ -19,4 +19,7 @@ func _run() -> void:
 	assert(world.get_transit_portals().is_empty(),
 		"the player must use authored gates and walkways, not duplicate shortcut portals")
 	print("MindSparkTransitNetwork: PASS — retired cyan pads and violet/cyan shortcut rings remain removed")
+	floating_world.queue_free()
+	await process_frame
+	await process_frame
 	quit()

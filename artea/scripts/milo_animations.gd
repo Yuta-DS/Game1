@@ -243,6 +243,7 @@ const GAIT_BONES := [
 ]
 
 var counsellor_pose_tween: Tween
+var _active_counsellor_pose := ""
 
 
 func _ready():
@@ -952,6 +953,8 @@ func _play_animation(animation_name: String) -> void:
 
 
 func _on_companion_pose_requested(pose_name: String) -> void:
+	if anim_player != null:
+		anim_player.process_priority = -10
 	var animation_name := str(COUNSELLOR_ANIMATIONS.get(pose_name, "Counsellor_Welcome"))
 	_play_animation(animation_name)
 	_start_counsellor_arm_transition(pose_name)
@@ -1028,11 +1031,15 @@ func _blend_counsellor_arm_pose(weight: float, skeleton: Skeleton3D,
 
 func _finish_counsellor_arm_transition(pose_name: String) -> void:
 	counsellor_pose_tween = null
+	_active_counsellor_pose = pose_name
+	# Resolve the prop endpoint against the current animated torso, after blend-out.
+	_apply_counsellor_arm_pose(pose_name)
 	_set_cane_visible(pose_name in ["welcome", "guide", "neutral"])
 	_set_counsellor_prop(pose_name)
 
 
 func _cancel_counsellor_pose_transition() -> void:
+	_active_counsellor_pose = ""
 	if counsellor_pose_tween != null and counsellor_pose_tween.is_valid():
 		counsellor_pose_tween.kill()
 	counsellor_pose_tween = null
@@ -1057,16 +1064,16 @@ func _apply_counsellor_arm_pose(pose_name: String) -> void:
 				Vector3(55.0, 0.0, -125.0), Vector3(0.0, 0.0, 14.0))
 			# The map's visible front reaches z=0.376. A 0.105 m-deep paw
 			# therefore rests at z=0.487 with 6 mm clearance instead of clipping.
-			_place_hand("l", Vector3(0.42, 1.05, 0.487))
-			_place_hand("r", Vector3(-0.42, 1.05, 0.487))
+			_place_hand("l", Vector3(0.42, 1.05, 0.487), 0.0, true)
+			_place_hand("r", Vector3(-0.42, 1.05, 0.487), 0.0, true)
 		"tablet":
 			_pose_arm("l", Vector3(-55.0, 0.0, -30.0),
 				Vector3(55.0, 0.0, 130.0), Vector3(0.0, 0.0, -12.0))
 			_pose_arm("r", Vector3(-55.0, 0.0, 30.0),
 				Vector3(55.0, 0.0, -130.0), Vector3(0.0, 0.0, 16.0))
 			# Tablet runes reach z=0.409; z=0.520 retains the same safe gap.
-			_place_hand("l", Vector3(0.29, 1.05, 0.520))
-			_place_hand("r", Vector3(-0.41, 1.05, 0.520))
+			_place_hand("l", Vector3(0.29, 1.05, 0.520), 0.0, true)
+			_place_hand("r", Vector3(-0.41, 1.05, 0.520), 0.0, true)
 		"encourage":
 			_pose_arm("l", Vector3(-8.0, 0.0, -58.0),
 				Vector3(0.0, 0.0, -26.0), Vector3(0.0, 0.0, 12.0))
@@ -1098,7 +1105,7 @@ func _set_bone_euler(skeleton: Skeleton3D, bone_name: String,
 		skeleton.set_bone_pose_rotation(bone_index, rest_rotation * gesture_rotation)
 
 
-func _place_hand(side: String, target: Vector3, roll_degrees := 0.0) -> void:
+func _place_hand(side: String, target: Vector3, roll_degrees := 0.0, inward_grip := false) -> void:
 	var skeleton := find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton == null:
 		return
@@ -1106,6 +1113,9 @@ func _place_hand(side: String, target: Vector3, roll_degrees := 0.0) -> void:
 	if bone_index < 0:
 		return
 	var hand_pose := skeleton.get_bone_global_pose(bone_index)
+	if inward_grip:
+		var grip_direction := Vector3(-1.0 if side == "l" else 1.0, 0.25, 0.0).normalized()
+		hand_pose.basis = Basis(Quaternion(hand_pose.basis.y.normalized(), grip_direction)) * hand_pose.basis
 	if not is_zero_approx(roll_degrees):
 		hand_pose.basis = Basis(Vector3.FORWARD, deg_to_rad(roll_degrees)) \
 			* hand_pose.basis
@@ -1525,6 +1535,9 @@ func _process(delta):
 	_update_eye_animation(delta)
 	_update_secondary_motion(delta)
 	_update_terrain_grounding(delta)
+	# Keep hands on the prop as the animated chest continues breathing.
+	if _active_counsellor_pose in ["map", "tablet", "heart"]:
+		_apply_counsellor_arm_pose(_active_counsellor_pose)
 	_apply_journey_stage()
 	# The mayor nameplate is the single interaction cue. The older standalone
 	# prompt is retained only for scene compatibility and stays hidden so Web

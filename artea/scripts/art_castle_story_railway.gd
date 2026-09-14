@@ -281,7 +281,7 @@ func _follow_camera() -> Node:
 func _begin_ride_camera(distance: float) -> void:
 	var camera := _follow_camera()
 	if camera != null:
-		camera.call("begin_ride_view", distance)
+		camera.call("begin_ride_view", distance, _train)
 
 
 func _end_ride_camera() -> void:
@@ -772,7 +772,7 @@ func drive_manual(throttle: float, delta: float) -> void:
 		* MANUAL_DRIVE_SPEED * maxf(delta, 0.0) \
 		/ maxf(curve.get_baked_length(), 1.0)
 	_drive_progress = clampf(_drive_progress + progress_delta * float(drive_direction), 0.0, 1.0)
-	_set_train_progress(_drive_segment, _drive_progress)
+	_set_train_progress(_drive_segment, _drive_progress, delta)
 	_status.text = "DRIVING  •  %03d KM/H  •  %s  •  W/S MOVE  •  R HORN" \
 		% [roundi(_display_speed_kph), _segment_destination_name(drive_direction)]
 	# Progress is clamped above, so only a true endpoint should dock. On long
@@ -1237,6 +1237,14 @@ func _build_canonical_station(station: Node3D, station_index: int,
 	station.set_meta("old_station_restoration_scope", "roof_only")
 	station.set_meta("physicality_policy",
 		"walkable surfaces and reachable architectural solids collide; trim and VFX do not")
+	var route_basis := Basis.looking_at(get_route_forward_direction_at_station(station_index), Vector3.UP)
+	# A nearly end-on train approach must enter from its side; otherwise the
+	# diagonal guard cuts across the stair and funnels players into a platform wall.
+	var access_basis := Basis.IDENTITY.slerp(route_basis, 0.5) \
+		if absf(route_basis.x.x) < 0.3 else Basis.IDENTITY
+	station.set_meta("access_basis", access_basis)
+	landing_local = access_basis.inverse() * landing_local
+	dock_sign = signf(landing_local.x)
 	_build_station_platform_from_scratch(station, station_index)
 	_build_floating_dock_structure(station)
 	_build_bio_magitech_pavilion(station)
@@ -1244,6 +1252,8 @@ func _build_canonical_station(station: Node3D, station_index: int,
 	# Access is built last so its glass reuses the exact platform gateway edges
 	# and its adaptive world end can meet each kingdom without altering the stair.
 	_build_world_access_bridge(station, landing_local, dock_sign)
+	(station.get_node("KingdomAccessSkybridge") as Node3D).basis = access_basis
+	(station.get_node("AccessRamp") as Node3D).basis = access_basis
 
 
 func _uses_web_station_performance_profile() -> bool:
@@ -1257,7 +1267,10 @@ func _apply_web_station_performance_profile(station: Node3D) -> void:
 	# The four stations are more than 1.2 km apart. A 600 m visibility range keeps
 	# the complete station, stair and bridge visible throughout approach and play,
 	# while preventing the browser from submitting the other three complexes.
-	station.process_mode = Node.PROCESS_MODE_DISABLED
+	# Static bodies need an active process mode: disabling the station also
+	# removes inherited CollisionObject3D bodies from the Web physics world.
+	# Mesh batching and visibility ranges provide the rendering savings.
+	station.process_mode = Node.PROCESS_MODE_INHERIT
 	station.set_meta("web_performance_profile", "single_nearby_station_shadowless")
 	station.set_meta("web_visibility_range_m", WEB_STATION_VISIBILITY_RANGE_M)
 	station.set_meta("web_visibility_margin_m", WEB_STATION_VISIBILITY_MARGIN_M)
@@ -1545,7 +1558,8 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 	# Join the top of the arrival stair to the nearest train-side platform. The
 	# connector is calculated in route space, so it never asks the player to walk
 	# across the train or centre monorail to reach a boarding gate.
-	var stair_top_station := Vector3(7.5 * dock_sign, 1.1, 0.0)
+	var access_basis: Basis = station.get_meta("access_basis", Basis.IDENTITY)
+	var stair_top_station := access_basis * Vector3(7.5 * dock_sign, 1.1, 0.0)
 	var stair_top_local := layout.transform.affine_inverse() * stair_top_station
 	var access_side := signf(stair_top_local.x)
 	if is_zero_approx(access_side):
@@ -1572,9 +1586,9 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 	# was narrower than this diagonal approach, so the stair glass crossed the
 	# platform windows on both sides of the nominal gate.
 	var stair_gate_a := layout.transform.affine_inverse() \
-		* Vector3(7.5 * dock_sign, 1.1, -7.8)
+		* (access_basis * Vector3(7.5 * dock_sign, 1.1, -7.8))
 	var stair_gate_b := layout.transform.affine_inverse() \
-		* Vector3(7.5 * dock_sign, 1.1, 7.8)
+		* (access_basis * Vector3(7.5 * dock_sign, 1.1, 7.8))
 	var entrance_gate_z := Vector2(minf(stair_gate_a.z, stair_gate_b.z) - 2.0,
 		maxf(stair_gate_a.z, stair_gate_b.z) + 2.0)
 	if entrance_gate_z.y - entrance_gate_z.x < 8.0:
@@ -2385,6 +2399,9 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 		Vector3(stair_end_x, 0.0, -7.55))
 	var gateway_b: Vector3 = station.get_meta("shared_barrier_gateway_b",
 		Vector3(stair_end_x, 0.0, 7.55))
+	var access_basis: Basis = station.get_meta("access_basis", Basis.IDENTITY)
+	gateway_a = access_basis.inverse() * gateway_a
+	gateway_b = access_basis.inverse() * gateway_b
 	var left_probe := Vector3(stair_end_x, 0.0, -7.55)
 	var left_target := gateway_a if left_probe.distance_to(gateway_a) \
 		<= left_probe.distance_to(gateway_b) else gateway_b
@@ -3554,7 +3571,7 @@ func _ride_to(target: int) -> void:
 	_riding = false
 
 
-func _set_train_progress(segment_index: int, progress: float) -> void:
+func _set_train_progress(segment_index: int, progress: float, delta: float = -1.0) -> void:
 	var curve := _curves[segment_index]
 	var length := curve.get_baked_length()
 	var distance := length * clampf(progress, 0.0, 1.0)
@@ -3577,7 +3594,8 @@ func _set_train_progress(segment_index: int, progress: float) -> void:
 		# Ease into the new heading so any residual step in the sampled tangent
 		# arrives as a turn rather than a snap. Framerate-independent so the ride
 		# feels the same whether the browser build runs at 30 or 60 fps.
-		var blend := 1.0 - pow(0.0001, get_process_delta_time())
+		var step_delta := get_process_delta_time() if delta < 0.0 else delta
+		var blend := 1.0 - pow(0.0001, maxf(step_delta, 0.0))
 		_train.basis = _train.basis.slerp(target_basis, clampf(blend, 0.0, 1.0)) \
 			if _manual_driving else target_basis
 	if _player != null:

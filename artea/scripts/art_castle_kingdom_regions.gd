@@ -381,6 +381,10 @@ func _decorate_heart(parent: Node3D, checkpoint_id: String, index: int) -> void:
 	else:
 		for instrument in 7:
 			var angle := TAU * instrument / 7.0
+			# The arrival bridge leaves the court toward +X. Keep the full
+			# instrument ring, but put its opening on that walking route.
+			if checkpoint_id == "arrival":
+				angle += PI / 7.0
 			_add_cylinder(parent, "EmotionInstrument", Vector3(cos(angle) * 42, 10, sin(angle) * 42),
 				8 + instrument % 2 * 4, 18, emotional_materials[index], true, 16)
 

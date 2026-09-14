@@ -201,16 +201,18 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_checkpoint_action(action: String, save_id: String) -> void:
 	match action:
 		"save":
+			# Checkpoints remain usable after the Observatory advances task zero.
+			var roots: Array = progress.checkpoint_root_ids
+			if not roots.has(save_id):
+				roots.append(save_id)
 			_save_progress()
 			if _dialogue_label != null:
 				_dialogue_label.text = "Progress saved at this Server Root."
 			if _current_task_index == 0:
-				var roots: Array = progress.checkpoint_root_ids
-				if not roots.has(save_id):
-					roots.append(save_id)
 				world.set_world_state("waking")
-				_save_progress()
 				_try_complete_landing_task()
+			elif _current_task_index == 1:
+				_try_complete_network_quest_task()
 		"heal":
 			if _player == null:
 				_find_player()
@@ -444,7 +446,10 @@ func _apply_task_gating() -> void:
 		3:
 			_enable_kind(QuestObjectDefinition.ObjectKind.MEMORY_CONSTELLATION)
 		4:
-			_enable_kind(QuestObjectDefinition.ObjectKind.LOGIC_GATE_ARCH)
+			_enable_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
+			var socket := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
+			if socket != null and bool(socket.current_state.get("completed", false)):
+				_enable_kind(QuestObjectDefinition.ObjectKind.LOGIC_GATE_ARCH)
 		5:
 			_enable_kind(QuestObjectDefinition.ObjectKind.PERSPECTIVE_LENS)
 		6:

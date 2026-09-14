@@ -45,9 +45,10 @@ func _run() -> void:
 	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
 	assert(input.text.is_empty(), "urgent private wording is cleared immediately")
 	assert(not history.text.contains("I want to hurt myself"), "urgent private wording is never echoed")
-	assert(history.text.contains("Get real-world help now") and history.text.contains("trusted adult"),
+	assert(chat.milo_role.text == "GET REAL-WORLD HELP NOW" and history.text.contains("trusted adult"),
 		"urgent wording replaces normal reflection with direct real-world support")
 	assert(support_card.call("is_card_visible"), "urgent wording opens the support card automatically")
+	assert(chat.get("_last_player_message") == "", "urgent private wording is not retained for a player echo")
 
 	chat.queue_free()
 	print("MILO_SUPPORT_SAFETY_TEST: PASS — urgent interception, trusted-adult guidance, verified contacts, working card, and no message echo")

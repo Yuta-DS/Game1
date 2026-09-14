@@ -1,9 +1,9 @@
 extends SceneTree
 
 const WorldScene := preload("res://scenes/mind_spark/mind_spark_world_one.tscn")
-const EXPECTED_CENTRES := [Vector3(-960, 2, 420), Vector3(-800, 12, 100),
-	Vector3(-300, 24, -220), Vector3(170, 40, 120), Vector3(620, 58, 20), Vector3(940, 84, -420)]
-const EXPECTED_RADII := [125.0, 190.0, 175.0, 120.0, 210.0, 180.0]
+const EXPECTED_CENTRES := [Vector3(-860, 2, 170), Vector3(-670, 2, 85),
+	Vector3(-215, 10, -80), Vector3(-15, 10, 15), Vector3(430, 18, 25), Vector3(655, 18, -75)]
+const EXPECTED_RADII := [125.0, 155.0, 150.0, 122.0, 175.0, 145.0]
 const EXPECTED_REVISIONS := ["v11", "v12", "v16", "v17", "v11", "v11"]
 const EXPECTED_DESIGNS := ["Sun Gate", "Verdant Engine Gardens", "Astral Observatory",
 	"Dawn Viaduct", "Stormworks Bastion", "Crownroot Sanctuary"]
@@ -120,7 +120,9 @@ func _run() -> void:
 							if point.dot(direction) > 0.72 and absf(point.x * direction.z - point.z * direction.x) < 22.0 / EXPECTED_RADII[index] - 0.00001:
 								railing_clear = false
 			if is_railing:
-				_check(railing_clear, "reference railings obstruct disc, bridge or station approach")
+				if not visual.is_visible_in_tree():
+					continue
+				_check(railing_clear, "reference railings obstruct disc, bridge or station approach: " + str(visual.name))
 			elif index == 2:
 				_check(elevated_castle_clear, "Astral turrets intrude into walking disc or bridge corridors")
 			elif index == 3:
@@ -139,6 +141,18 @@ func _run() -> void:
 			var query := PhysicsRayQueryParameters3D.create(at, at + Vector3.DOWN * 6, 1)
 			var hit := root.world_3d.direct_space_state.intersect_ray(query)
 			_check(not hit.is_empty(), "missing perimeter support: " + zone_id)
+		# Probe the replacement barriers on exposed edges in the current layout.
+		for sample in 12:
+			var angle := TAU * float(sample) / 12.0
+			if not world._is_exposed_garden_edge(index, angle):
+				continue
+			var outward := Vector3(sin(angle), 0, cos(angle))
+			var edge: float = EXPECTED_RADII[index] * 0.985
+			var inside := zone.to_global(outward * (edge - 2.0) + Vector3.UP * 3.0)
+			var outside := zone.to_global(outward * (edge + 2.0) + Vector3.UP * 3.0)
+			var barrier_query := PhysicsRayQueryParameters3D.create(inside, outside, 1)
+			_check(not root.world_3d.direct_space_state.intersect_ray(barrier_query).is_empty(),
+				"exposed edge needs collision: " + zone_id)
 	_check(rock_profiles.size() == 6, "six designs must have six genuinely different rock profiles")
 	# Two reference enginehouses per island and reinstated ornate balustrades.
 	# Authoring granularity is batched to six runtime mesh nodes per island.
@@ -146,5 +160,5 @@ func _run() -> void:
 	world.queue_free()
 	await process_frame
 	if _failures == 0:
-		print("CELESTIAL_LAND: PASS — six distinct designs, shared paving, %d total visible triangles, original footprints, 72 support probes, no new obstacles" % triangle_count)
+		print("CELESTIAL_LAND: PASS — six distinct designs, shared paving, %d total visible triangles, fused-island footprints, 72 support probes, no new obstacles" % triangle_count)
 	quit(1 if _failures else 0)

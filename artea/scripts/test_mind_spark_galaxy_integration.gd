@@ -52,4 +52,7 @@ func _run() -> void:
 	var remote := floating_world.get_node_or_null("KingdomRegions3000m/MindKingdom3000m/MindSparkWorldOne")
 	assert(remote == null, "no duplicate World One remains in the remote 3 km shelf map")
 	print("MindSparkGalaxyIntegration: PASS — complete three-island/six-district World One is gate-mounted outside the district")
+	gallery.queue_free()
+	await process_frame
+	await process_frame
 	quit()

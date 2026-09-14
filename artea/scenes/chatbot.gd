@@ -498,6 +498,8 @@ func _submit_message(input: LineEdit) -> void:
 	_last_player_message = message
 	var response: Dictionary = _reflection_engine.reflect(message)
 	if bool(response.get("urgent", false)):
+		# Never retain urgent private wording in the player-echo UI.
+		_last_player_message = ""
 		_request_companion_activity("SUPPORTING", "heart")
 		_show_chat_response(
 			"Get real-world help now",

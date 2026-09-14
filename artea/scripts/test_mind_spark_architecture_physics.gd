@@ -133,4 +133,7 @@ func _run() -> void:
 		return
 
 	print("MIND_SPARK_ARCHITECTURE_PHYSICS: PASS — bridge, six islands, story decks, textures, and real remote jump verified")
+	gallery.queue_free()
+	await process_frame
+	await process_frame
 	quit()

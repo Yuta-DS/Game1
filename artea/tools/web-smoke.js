@@ -115,6 +115,8 @@ async function connect() {
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
 	await send('Runtime.enable');
 	await send('Page.enable');
+	await send('Page.bringToFront');
+	await send('Emulation.setFocusEmulationEnabled', { enabled: true });
 
 	const shot = async (name) => {
 		const s = await send('Page.captureScreenshot', { format: 'png' });
@@ -150,7 +152,9 @@ async function connect() {
 	try {
 		say('loading ' + url);
 		await send('Page.navigate', { url });
-		await waitForLog(/engine started/, 'engine started', 180000);
+		// Production's first uncached load currently assembles about 1.16 GB of
+		// split pack data. Slower links can legitimately need several minutes.
+		await waitForLog(/engine started/, 'engine started', 600000);
 		await sleep(4000);
 		await shot('01-start-screen');
 
@@ -165,6 +169,10 @@ async function connect() {
 		// that separates "rendered once" from "playable".
 		say('holding W to test movement');
 		await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+		await sleep(250);
+		const pointer = await send('Runtime.evaluate', { expression: 'document.pointerLockElement === document.getElementById("canvas")', returnByValue: true });
+		if (pointer.result.value !== true) throw new Error('game canvas did not acquire pointer lock');
+		say('canvas acquired pointer lock');
 		await key('keyDown', 'KeyW', 87);
 		await sleep(2500);
 		const during = await shot('03-moving');
@@ -181,7 +189,9 @@ async function connect() {
 		say('fatal resource errors: ' + fatal.length);
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
 
-		const pass = moved && !crashed() && fatal.length === 0;
+		const runtimeErrors = consoleLines.filter((line) => /EXCEPTION|SCRIPT ERROR:|\[ARTEA\] UNHANDLED/.test(line));
+		say('runtime exceptions: ' + runtimeErrors.length);
+		const pass = moved && !crashed() && fatal.length === 0 && runtimeErrors.length === 0;
 		console.log('\nscreenshots: ' + outDir);
 		console.log('RESULT: ' + (pass ? 'PLAYABLE' : 'NOT PLAYABLE'));
 		if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});

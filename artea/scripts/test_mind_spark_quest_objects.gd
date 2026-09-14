@@ -201,22 +201,15 @@ func _test_socket_persistence_and_save_order() -> void:
 		"empty socket removes the legacy circle in favor of the segmented technology receptacle")
 	assert(not socket.get_node("VisualRoot/ObjectGlow").visible,
 		"detailed PBR textures are not washed out by the legacy flood light")
-	for ball_name in [
-		"Core", "CentralSpark", "Pip1", "Pip2", "Pip3",
-		"_MeshInstance3D_10", "_MeshInstance3D_11", "_MeshInstance3D_12", "_MeshInstance3D_13",
-		"PedestalCircuitStud00", "PedestalCircuitStud02", "PedestalCircuitStud04",
-		"PedestalCircuitStud06", "PedestalCircuitStud08", "PedestalCircuitStud10",
-		"SocketPylonCrystal00", "SocketPylonCrystal01", "SocketPylonCrystal02", "SocketPylonCrystal03",
-	]:
-		_assert_textured_socket_ball(socket, ball_name)
-	var beam := socket._find_blender_part("Beam_Core")
-	var orb := socket._find_blender_part("Orb_Glass_Shell")
-	var crown := socket._find_blender_part("Orb_Crown_Top_Crystal")
-	var well_halo := socket._find_blender_part("Well_Violet_Halo")
-	assert(beam != null and orb != null and crown != null and well_halo != null,
-		"detailed socket exposes staged Blender components")
-	assert(not beam.visible and not orb.visible and not crown.visible and not well_halo.visible,
-		"0/3 shows the segmented technology receptacle without a generic floating ring")
+	# The generic socket now uses the catalog GLB; the world has its own
+	# memory-style instrument. Check the catalog's authored state meshes.
+	var inactive := socket._find_blender_part("CentralSpark_Inactive")
+	var active := socket._find_blender_part("CentralSpark_Active")
+	var completed := socket._find_blender_part("CentralSpark")
+	var beam := socket._find_blender_part("SparkBeam")
+	assert(inactive != null and active != null and completed != null and beam != null)
+	assert(inactive.visible and not active.visible and not completed.visible and not beam.visible,
+		"0/3 shows the unpowered catalog socket")
 	var saved_before_signal := {"value": false}
 	var opened_task := {"id": ""}
 	socket.completed.connect(func(id: String, _result: Dictionary) -> void:
@@ -226,19 +219,19 @@ func _test_socket_persistence_and_save_order() -> void:
 	assert(socket.interact()["reason"] == "find_thought_spark_first", "socket accepts only a found Spark")
 	socket.set_meta("available_sparks", 1)
 	assert(socket.interact()["progress"] == 1)
-	assert(socket.prompt.text.contains("1/3") and beam.visible and well_halo.visible and not orb.visible,
-		"1/3 powers the beam but does not form the orb")
+	assert(socket.prompt.text.contains("1/3") and active.visible and not inactive.visible and not completed.visible,
+		"1/3 activates the socket without showing completion")
 	assert(socket.get_node("VisualRoot/CentralSpark").visible, "placed Spark becomes a visible crystal and beam")
 	assert(socket.interact()["reason"] == "find_thought_spark_first", "one found Spark cannot be placed twice")
 	socket.set_meta("available_sparks", 2)
 	assert(socket.interact()["progress"] == 2)
-	assert(socket.prompt.text.contains("2/3") and orb.visible and not crown.visible,
-		"2/3 forms the energy orb while the crown remains closed")
+	assert(socket.prompt.text.contains("2/3") and active.visible and not completed.visible,
+		"2/3 keeps the completion reward locked")
 	socket.set_meta("available_sparks", 3)
 	var done: Dictionary = socket.interact()
 	assert(done["completed"] and saved_before_signal["value"], "completion is saved before the signal opens a gate")
-	assert(opened_task["id"] == "open_logic_gate" and crown.visible,
-		"3/3 completes the crown and opens the linked task")
+	assert(opened_task["id"] == "open_logic_gate" and completed.visible and beam.visible and not active.visible,
+		"3/3 reveals the completed crystal and beam and opens the linked task")
 	socket.queue_free()
 	await process_frame
 	var restored: QuestObjectBase = await _spawn(0, "socket")

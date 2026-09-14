@@ -74,31 +74,41 @@ func _run() -> void:
 	assert(str(world.get_meta("island_two_story_state")) == "received")
 	var scanner := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
 	assert(not scanner.interact(&"fact").accepted)
-	for answer in [&"fact", &"fear", &"fact"]:
-		assert(scanner.interact(&"scan").accepted)
-		assert(scanner.interact(answer).accepted)
+	for channel in 3:
+		assert(not scanner.interact(&"capture", channel).accepted)
+		for adjustment in [2, 1, 3][channel]:
+			assert(scanner.interact(&"adjust", channel).accepted)
+		assert(scanner.interact(&"capture", channel).accepted)
 	assert(scanner.current_state.completed)
 	for enemy in world.get_enemies():
 		if enemy.encounter_id == "constellation": enemy.take_damage(999.0)
 	var board := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.MEMORY_CONSTELLATION)
 	assert(not board.interact().accepted)
-	assert(board.interact(&"node", "choose").reason == "wrong_link_reset")
-	assert(board.interact(&"node", "notice").accepted)
-	assert(board.interact(&"undo").accepted)
-	for node in ["notice", "name", "choose"]:
-		assert(board.interact(&"node", node).accepted)
+	assert(not board.interact(&"replay").accepted)
+	assert(board.interact(&"swap", 0).accepted)
+	assert(board.interact(&"swap", 1).accepted)
+	assert(board.interact(&"replay").completed)
 	assert(board.current_state.completed)
 	assert(socket.interact().completed, "the restored memory gives the third Spark for a player placement")
 	var logic := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.LOGIC_GATE_ARCH)
 	assert(logic.interaction_enabled, "3/3 explicitly opens the linked Logic Gate task")
-	assert(logic.interact().accepted and logic.interact().completed)
+	assert(not logic.interact(&"test").accepted)
+	assert(logic.interact(&"trial", 0).accepted)
+	assert(logic.interact(&"trial", 1).accepted)
+	assert(logic.interact(&"model", 1).accepted)
+	assert(logic.interact(&"test").completed)
 	assert(world.is_quest_gate_open(1), "Quest Two opens only after its saved evidence chain")
 	var lens := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.PERSPECTIVE_LENS)
-	assert(lens.interact().accepted and lens.interact().accepted and lens.interact().completed)
+	for view in 3:
+		assert(lens.interact(&"view", view).accepted)
+		assert(lens.interact(&"interpret", view).accepted)
+	assert(lens.current_state.completed)
 	var bridge := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
-	assert(bridge.interact(&"true").completed)
-	for enemy in world.get_enemies():
-		if enemy.encounter_id == "ridge": enemy.take_damage(999.0)
+	assert(bridge.interact(&"approach", 0).accepted)
+	for knob in [0, 0, 1]:
+		assert(bridge.interact(&"tune", knob).accepted)
+	assert(bridge.interact(&"project").completed)
+	assert(quest.complete_garden_reflection(), "garden reflection completes the untimed investigation")
 	assert(world.is_quest_gate_open(2), "elite guard completion saves the pre-boss checkpoint")
 	var boss := world.get_warden() as MindSparkWardenBoss
 	for anchor in world.get_quest_objects():
@@ -130,6 +140,11 @@ func _run() -> void:
 	assert(restored_quest.completed_task_count() == 10 and restored.is_quest_gate_open(3),
 		"save/reload preserves all quests, gates and completion")
 	print("MindSparkWorldOneStory: all checks passed")
+	restored.queue_free()
+	player.queue_free()
+	journey.queue_free()
+	identity.queue_free()
+	await process_frame
 	_cleanup()
 	quit()
 

@@ -558,6 +558,7 @@ func _run() -> void:
 				_fail("station %d stair barrier is not connected edge-to-edge" % (station_index + 1))
 				return
 			var shared_finish: Vector3 = stair_guard.get_meta("shared_finish")
+			shared_finish = access_ramp.transform * shared_finish
 			var gateway_a: Vector3 = station.get_meta("shared_barrier_gateway_a")
 			var gateway_b: Vector3 = station.get_meta("shared_barrier_gateway_b")
 			if minf(shared_finish.distance_to(gateway_a),

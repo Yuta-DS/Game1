@@ -11,6 +11,7 @@ func _init() -> void:
 		DirAccess.remove_absolute(TEST_STORE)
 	var world := WorldScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
+	world.get_node("QuestController").enabled = false
 	world.object_state_store_path = TEST_STORE
 	root.add_child(world)
 	await process_frame
@@ -214,8 +215,12 @@ func _test_object_coverage(world: MindSparkWorldOne) -> void:
 		kinds[object.definition.object_kind] = true
 	assert(kinds.size() == Definition.ObjectKind.size(), "all twelve approved functional object types are present")
 	var scanner := world.get_object_by_kind(Definition.ObjectKind.EVIDENCE_SCANNER)
-	assert(scanner.interact()["reason"] == "choose_fact_or_fear")
-	assert(scanner.interact(&"fact")["completed"], "physical scanner completes a saved FACT/FEAR choice")
+	assert(not scanner.interact(&"capture", 0).accepted, "observation needs a clear instrument reading")
+	for channel in 3:
+		for adjustment in [2, 1, 3][channel]:
+			assert(scanner.interact(&"adjust", channel).accepted)
+		assert(scanner.interact(&"capture", channel).accepted)
+	assert(scanner.current_state.completed, "physical scanner saves all three observations")
 	var anchor := world.get_object_by_kind(Definition.ObjectKind.WARDEN_ANCHOR)
 	assert(anchor.interact()["reason"] == "vulnerable")
 	assert(anchor.interact(&"strike")["completed"], "physical Warden anchor has dodge and strike states")

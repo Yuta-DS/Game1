@@ -232,7 +232,7 @@ func _scan_existing_spatial_sources() -> void:
 
 func _on_tree_node_added(node: Node) -> void:
 	if node is AudioStreamPlayer3D:
-		call_deferred("_configure_surround_source", node as AudioStreamPlayer3D)
+		call_deferred("_configure_surround_source_by_id", node.get_instance_id())
 	if node is Node3D:
 		# Large galaxy scenes add tens of thousands of decorative mesh nodes.
 		# Filter synchronously by semantic name so only the handful of possible
@@ -242,6 +242,13 @@ func _on_tree_node_added(node: Node) -> void:
 			call_deferred("_consider_world_audio_node", node)
 		if _is_vegetation_anchor(spatial):
 			call_deferred("_register_vegetation_anchor", spatial)
+
+
+func _configure_surround_source_by_id(instance_id: int) -> void:
+	# Nodes may be freed by a scene transition before this deferred call runs.
+	var source := instance_from_id(instance_id) as AudioStreamPlayer3D
+	if is_instance_valid(source):
+		_configure_surround_source(source)
 
 
 func _configure_surround_source(source: AudioStreamPlayer3D) -> void:

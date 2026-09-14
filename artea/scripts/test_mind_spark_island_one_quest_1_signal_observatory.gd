@@ -45,6 +45,11 @@ func _run() -> void:
 	print("MIND_SPARK_ISLAND_ONE_QUEST_1: PASS — Signal Prism opens garden; Island Two remains locked; save restored")
 	restored.queue_free()
 	await process_frame
+	# Imported quest materials release their render RIDs asynchronously after
+	# queued node deletion, including under the dummy headless renderer.
+	for _frame in 4:
+		await process_frame
+	await create_timer(0.1).timeout
 	_cleanup()
 	quit()
 

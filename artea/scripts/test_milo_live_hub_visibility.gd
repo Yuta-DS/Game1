@@ -1,6 +1,6 @@
 extends SceneTree
 
-const HubScene := preload("res://scenes/New_Hub_World.tscn")
+const HUB_SCENE_PATH := "res://scenes/New_Hub_World.tscn"
 
 
 func _init() -> void:
@@ -28,7 +28,7 @@ func _visual_height(character: Node3D, visual_root: Node3D) -> float:
 
 
 func _run() -> void:
-	var hub := HubScene.instantiate()
+	var hub := (load(HUB_SCENE_PATH) as PackedScene).instantiate()
 	root.add_child(hub)
 	current_scene = hub
 	await process_frame
@@ -100,4 +100,7 @@ func _run() -> void:
 		_fail("the companion manager did not adopt the hub's authored Milo")
 		return
 	print("MILO_LIVE_HUB_VISIBILITY_TEST: PASS — finalized Milo 2 is the only live Milo and accompanies the player")
+	hub.queue_free()
+	await process_frame
+	await create_timer(0.1).timeout
 	quit()

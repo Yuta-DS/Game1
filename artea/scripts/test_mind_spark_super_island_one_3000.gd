@@ -30,8 +30,8 @@ func _run() -> void:
 		if (mesh as MeshInstance3D).visible:
 			visible_batches += 1
 	print("MindSparkSuperIslandOne3000: visible upper-detail batches = %d" % visible_batches)
-	assert(visible_batches == 3,
-		"only the three non-duplicating upper-detail batches are layered over the existing island")
+	assert(visible_batches == 1,
+		"only the segmented gameplay architecture remains over the existing island")
 	assert(fusion.get_node_or_null("SharedIvorySaddleCollision") is StaticBody3D,
 		"the fused waist has uninterrupted traversal collision")
 	assert(int(fusion.get_meta("foundation_machine_parts", -1)) == 0,
@@ -51,7 +51,8 @@ func _run() -> void:
 
 	var compass := world.get_island_one_puzzle()
 	assert(compass != null)
-	assert(compass.find_children("PuzzleControl_*", "Node3D", true, false).size() == 6)
+	for control in ["colour_prism", "rhythm_prism", "weight_prism", "analysis_console", "west_regulator", "east_regulator", "outer_ring", "middle_ring", "inner_ring", "confirm"]:
+		assert(compass.find_child("PuzzleControl_" + control, true, false) != null, "Signal Observatory control is present: " + control)
 	assert(world.get_quest_objects().size() == 15)
 	assert(world.get_collectibles().size() == 2)
 	print("MindSparkSuperIslandOne3000: PASS — additive top design preserves the existing island")

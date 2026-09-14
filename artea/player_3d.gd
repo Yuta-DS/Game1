@@ -123,6 +123,13 @@ func get_camera_relative_move_direction(input_dir: Vector2) -> Vector3:
 
 
 func _physics_process(delta: float) -> void:
+	# The railway owns the seated transform. Sliding against its moving hull
+	# displaces the rider between render frames and jolts the follow camera.
+	if _train_seated_pose:
+		velocity = Vector3.ZERO
+		_update_character_animation(delta, false)
+		return
+
 	_update_combat(delta)
 	var was_grounded := is_on_floor()
 	_hit_reaction_remaining = maxf(0.0, _hit_reaction_remaining - delta)

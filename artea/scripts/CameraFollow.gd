@@ -51,6 +51,7 @@ var _inspect_focus := Vector3.ZERO
 var _view := "third"
 ## Set while the player is aboard the train. First person is still selectable
 ## with 1, but boarding always starts from the third-person view.
+var _ride_collision_rids: Array[RID] = []
 var _ride_view_active := false
 
 ## Last frame's focus point, used to carry the train's motion into the camera
@@ -238,7 +239,13 @@ func get_view_mode() -> String:
 # Called by the train when the player takes a seat or the driver cab. Riding
 # always begins in third person — the point of being on the train is seeing it —
 # and pulls the view out far enough to take in the carriage and the route.
-func begin_ride_view(distance := 14.0) -> void:
+func begin_ride_view(distance := 14.0, vehicle: Node3D = null) -> void:
+	_ride_collision_rids.clear()
+	if vehicle != null:
+		if vehicle is CollisionObject3D:
+			_ride_collision_rids.append(vehicle.get_rid())
+		for body in vehicle.find_children("*", "CollisionObject3D", true, false):
+			_ride_collision_rids.append(body.get_rid())
 	_ride_view_active = true
 	follow_distance = clampf(distance, min_follow_distance, max_follow_distance)
 	# Seed the motion carry-over from where the focus is now. Without this the
@@ -250,6 +257,7 @@ func begin_ride_view(distance := 14.0) -> void:
 
 
 func end_ride_view() -> void:
+	_ride_collision_rids.clear()
 	_ride_view_active = false
 
 
@@ -285,6 +293,10 @@ func _collision_safe_target(focus: Vector3, target: Vector3) -> Vector3:
 	var query := PhysicsRayQueryParameters3D.create(focus, target)
 	if _player is CollisionObject3D:
 		query.exclude = [(_player as CollisionObject3D).get_rid()]
+	if _ride_view_active:
+		var excluded := query.exclude
+		excluded.append_array(_ride_collision_rids)
+		query.exclude = excluded
 	var hit := space.intersect_ray(query)
 	if hit.is_empty():
 		return target

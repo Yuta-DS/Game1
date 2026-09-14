@@ -48,13 +48,13 @@ func _run() -> void:
 			"EarOuter_L", "EarOuter_R", "EarInner_L", "EarInner_R",
 			"EarInnerFold_L", "EarInnerFold_R",
 			"CheekUpper_L", "CheekUpper_R", "CheekLower_L", "CheekLower_R",
-			"PrototypeEyeWhite_L", "PrototypeEyeWhite_R", "Pupil_L", "Pupil_R",
+			"EyeWhite_L", "EyeWhite_R", "Pupil_L", "Pupil_R",
 			"EyelidHalf_L", "EyelidHalf_R",
 			"EyelidClosed_L", "EyelidClosed_R",
-			"PrototypeBrow_L", "PrototypeBrow_R",
+			"BrowFrame_L", "BrowFrame_R",
 			"GlassesRing_L", "GlassesRing_R", "GlassesBridge",
 			"GlassesTemple_L", "GlassesTemple_R",
-			"Muzzle_L", "Muzzle_R", "PrototypeMoustache_L", "PrototypeMoustache_R",
+			"Muzzle_L", "Muzzle_R", "MoustachePad_L", "MoustachePad_R",
 			"Nose", "Nostril_L", "Nostril_R", "Mouth",
 			"MouthOpenSmall", "MouthOpenWide", "TongueSmall", "TongueWide",
 			"CoatBody",
@@ -78,8 +78,7 @@ func _run() -> void:
 			"CuffAccent_L", "CuffAccent_R", "Paw_L", "Paw_R",
 			"Trouser_L", "Trouser_R", "Boot_L", "Boot_R", "Sole_L", "Sole_R",
 			"MayorCaneShaft", "MayorCaneLowerFerrule", "MayorCaneUpperCollar",
-			"MayorCaneHook", "MayorCaneGroundTip",
-			"PrototypeCoatBelt", "PrototypeBeltBuckle"]:
+			"MayorCaneHook", "MayorCaneGroundTip"]:
 		if milo.find_child(required_part, true, false) == null:
 			_fail("measured Milo part is missing: %s" % required_part)
 			return
@@ -95,20 +94,10 @@ func _run() -> void:
 		if milo.find_child(removed_crease, true, false) != null:
 			_fail("Milo's paw still contains the scar line %s" % removed_crease)
 			return
-	for blueprint_excluded_part in ["Brow_L", "Brow_R", "BackYoke",
-			"TealBackYokeEdge", "GoldBackYokeEdge",
-			"GoldBackBeltEdgeTop", "GoldBackBeltEdgeBottom", "BackCenterSeam",
-			"CrownFurCenter",
-			"CrownFurMiddle_L", "CrownFurMiddle_R", "CrownFurLower_L",
-			"CrownFurLower_R", "Tail", "TailTip",
-			"FaceMask_L", "FaceMask_R", "EyeWhite_L", "EyeWhite_R",
-			"IrisInner_L", "IrisInner_R", "EyeCatchlight_L", "EyeCatchlight_R",
-			"EyelidRelaxed_L", "EyelidRelaxed_R",
-			"MoustachePad_L", "MoustachePad_R", "BrowFrame_L", "BrowFrame_R",
-			"ForeheadMark", "MouthSocket"]:
-		if milo.find_child(blueprint_excluded_part, true, false) != null:
-			_fail("Milo contains the non-blueprint duplicate detail %s" \
-					% blueprint_excluded_part)
+	# The measured statue face and the pictured prototype are separate assets.
+	for duplicate in ["PrototypeEyeWhite_L", "PrototypeEyeWhite_R", "PrototypeMoustache_L", "PrototypeMoustache_R", "PrototypeCoatBelt"]:
+		if milo.find_child(duplicate, true, false) != null:
+			_fail("prototype geometry was mixed into measured Milo: " + duplicate)
 			return
 	# Blueprint-proportion regressions for the corrected hands, trousers and
 	# attached side skirt. These checks protect silhouette, not mere node names.
@@ -153,8 +142,8 @@ func _run() -> void:
 	for pupil_name in ["Pupil_L", "Pupil_R"]:
 		var pupil := milo.find_child(pupil_name, true, false) as MeshInstance3D
 		var pupil_size := pupil.get_aabb().size
-		if pupil_size.y < pupil_size.x * 1.30:
-			_fail("%s must retain the prototype's vertical oval, got X/Y %.4f/%.4f" \
+		if not is_equal_approx(pupil_size.y, pupil_size.x) or pupil_size.x < 0.09:
+			_fail("%s must retain the measured round pupil, got X/Y %.4f/%.4f" \
 					% [pupil_name, pupil_size.x, pupil_size.y])
 			return
 	var forehead_mark := milo.find_child("ForeheadMark", true, false) as MeshInstance3D
@@ -177,23 +166,23 @@ func _run() -> void:
 	if surface_count < 20:
 		_fail("Milo's suit and face material separation is missing")
 		return
-	for required_material in ["Prototype Warm Ivory Fur",
-			"Prototype Inner Ear", "Prototype Dark Teal Coat",
-			"Prototype Teal Tailoring", "Prototype Burgundy Waistcoat",
-			"Prototype Luxury Gold", "Prototype Soft Black Eye",
-			"Prototype Belt Leather", "Prototype Moustache Ivory"]:
+	for required_material in ["Artea Statue Warm Cream Fur",
+			"Artea Milo Soft Rose Inner Ear", "Target Mayor Blue",
+			"Target Mayor Tailored Panel Blue", "Target Lavender",
+			"Target Gold", "Artea Milo Purple Pupil",
+			"Mayor Cane Dark Wood", "Artea Statue Ivory Muzzle"]:
 		if not materials_by_name.has(required_material):
 			_fail("Milo's PBR finish is missing %s; found %s" \
 				% [required_material, materials_by_name.keys()])
 			return
-	var coat_material := materials_by_name["Prototype Dark Teal Coat"] as BaseMaterial3D
-	var panel_material := materials_by_name["Prototype Teal Tailoring"] as BaseMaterial3D
-	var fur_material := materials_by_name["Prototype Warm Ivory Fur"] as BaseMaterial3D
-	var waistcoat_material := materials_by_name["Prototype Burgundy Waistcoat"] as BaseMaterial3D
-	var gold_material := materials_by_name["Prototype Luxury Gold"] as BaseMaterial3D
-	var pupil_material := materials_by_name["Prototype Soft Black Eye"] as BaseMaterial3D
-	if coat_material.roughness < 0.70 or fur_material.roughness < 0.62 \
-			or fur_material.roughness > 0.72:
+	var coat_material := materials_by_name["Target Mayor Blue"] as BaseMaterial3D
+	var panel_material := materials_by_name["Target Mayor Tailored Panel Blue"] as BaseMaterial3D
+	var fur_material := materials_by_name["Artea Statue Warm Cream Fur"] as BaseMaterial3D
+	var waistcoat_material := materials_by_name["Target Lavender"] as BaseMaterial3D
+	var gold_material := materials_by_name["Target Gold"] as BaseMaterial3D
+	var pupil_material := materials_by_name["Artea Milo Purple Pupil"] as BaseMaterial3D
+	if coat_material.roughness < 0.70 or fur_material.roughness < 0.40 \
+			or fur_material.roughness > 0.50:
 		_fail("Milo's prototype coat and warm fur must retain their soft finish; got %.3f and %.3f" \
 			% [coat_material.roughness, fur_material.roughness])
 		return
@@ -207,8 +196,8 @@ func _run() -> void:
 			<= coat_material.albedo_color.get_luminance():
 		_fail("Milo's tailored panels must remain readable over the main coat")
 		return
-	if waistcoat_material.albedo_color.r <= waistcoat_material.albedo_color.g:
-		_fail("Milo's waistcoat must retain the prototype's burgundy focal colour")
+	if waistcoat_material.albedo_color.b <= waistcoat_material.albedo_color.r:
+		_fail("Milo's waistcoat must retain the measured blue-lavender focal colour")
 		return
 	var skeletons := milo.find_children("*", "Skeleton3D", true, false)
 	var skeleton := skeletons[0] as Skeleton3D if not skeletons.is_empty() else null
@@ -299,6 +288,7 @@ func _run() -> void:
 			or sparkles == null or cane == null:
 		_fail("Milo's counsellor pose props are incomplete")
 		return
+	npc.call("_on_companion_activity_state_requested", "GUIDING")
 	npc.call("_on_companion_pose_requested", "map")
 	if map_prop.visible or tablet_prop.visible or cane.visible:
 		_fail("solid props and cane must remain hidden while the paws are moving")

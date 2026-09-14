@@ -37,7 +37,7 @@ func _run() -> void:
 			var authored := fusion.get_node("BlenderAuthoredIslandOneTopOverlay") as Node3D
 			assert(int(authored.get_meta("editable_source_parts", 0)) == 3000)
 			assert(int(authored.get_meta("runtime_batches", 0)) == 9)
-			assert(int(authored.get_meta("visible_overlay_batches", 0)) == 3)
+			assert(int(authored.get_meta("visible_overlay_batches", 0)) == 1)
 			assert(bool(authored.get_meta("existing_foundation_preserved", false)))
 			assert(str(authored.get_meta("application_mode", "")) == "additive_above_ground_only")
 		else:

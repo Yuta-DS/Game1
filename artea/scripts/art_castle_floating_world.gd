@@ -831,6 +831,10 @@ func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 	# Start on the district rim and finish on the Zone 01 floor, both slightly
 	# inside the islands so neither joint leaves a gap the player can fall through.
 	var start: Vector3 = MIND + flat_direction * (MIND_DISTRICT_RADIUS - 8.0)
+	# The train landing shares this island rim. Offset the causeway entrance
+	# around the rim so its raised threshold and rails do not cross that lane.
+	start = MIND + (start - MIND + Vector3(0.0, 0.0, 36.0)).normalized() \
+		* (MIND_DISTRICT_RADIUS - 8.0)
 	start.y = CAUSEWAY_DECK_Y
 	var finish: Vector3 = landing - flat_direction * 118.0
 	finish.y = CAUSEWAY_DECK_Y
@@ -5347,3 +5351,10 @@ func _add_world_one_build_trigger(world_one: MindSparkWorldOne) -> void:
 		if body is CharacterBody3D:
 			world_one.ensure_world_built())
 	add_child(trigger)
+
+
+func _exit_tree() -> void:
+	for source in [_tree_christmas_melody, _tree_christmas_bells]:
+		if is_instance_valid(source):
+			source.stop()
+			source.stream = null
