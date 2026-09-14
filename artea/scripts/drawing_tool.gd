@@ -1,5 +1,7 @@
 extends Control
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 const ArtEnhancer := preload("res://scripts/creation_world/art_enhancer.gd")
 
 const CREATIVE_PROMPTS := [
@@ -877,7 +879,7 @@ func _return_to_campaign() -> void:
 	if campaign != null and campaign.has_method("return_to_campaign"):
 		campaign.call("return_to_campaign")
 	else:
-		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
+		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
 	
 # REMOTE GALLERY - SAVE/UPLOAD TO SERVER
 func upload_artwork_to_server() -> void:

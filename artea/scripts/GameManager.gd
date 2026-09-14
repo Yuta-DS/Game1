@@ -1,5 +1,7 @@
 extends Node
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 var current_dialogue_node := ""
 var dialogue_ui = null
 # Test
@@ -398,7 +400,7 @@ func request_paingting():
 # Changed to 3D Gallery
 func request_art_gallery():
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
 
 
 func request_visit_website():
@@ -417,7 +419,7 @@ func request_goback_HubWorld():
 	var global := get_node_or_null("/root/Global")
 	if global != null and global.has_method("request_spawn_at"):
 		global.request_spawn_at("castle_front_door")
-	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")
 
 # LEGACY: 2D version cat therapist scene
 func request_Art_Therapy():

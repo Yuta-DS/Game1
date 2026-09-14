@@ -1,6 +1,8 @@
 class_name MindSparkSplitWorld
 extends Control
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 ## Coordinates two isolated Mind Spark perspectives around one deterministic,
 ## authored state machine. This layer owns presentation and persistence seams;
 ## the perspectives never mutate journey progress themselves.
@@ -378,7 +380,7 @@ func _return_to_castle() -> void:
 	if campaign != null and campaign.has_method("return_to_campaign"):
 		campaign.call("return_to_campaign", get_tree())
 	elif ResourceLoader.exists(CASTLE_SCENE):
-		get_tree().change_scene_to_file(CASTLE_SCENE)
+		SceneLoader.change_scene_with_loading(get_tree(), CASTLE_SCENE)
 
 
 func _on_phase_changed(_phase_id: String) -> void:

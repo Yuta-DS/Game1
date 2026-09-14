@@ -1,5 +1,7 @@
 extends Area3D
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 # --- Configuration ---
 @export var target_scene_path: String = "res://scenes/New_Hub_World.tscn"
 
@@ -38,4 +40,12 @@ func go_to_scene(path: String):
 	# Changing the scene from inside a physics callback frees this Area3D while
 	# the physics server is still iterating it. Deferring runs the swap once
 	# that callback has unwound.
-	get_tree().change_scene_to_file.call_deferred(path)
+	_leave_gallery.call_deferred(path)
+
+
+# The hub is the heaviest scene in the project (its ProtonScatter grass alone
+# places tens of thousands of instances), so stepping out of the gallery goes
+# through the loading screen rather than freezing on a synchronous swap -- the
+# same route used walking in through the castle door.
+func _leave_gallery(path: String) -> void:
+	SceneLoader.change_scene_with_loading(get_tree(), path)
