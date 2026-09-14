@@ -145,6 +145,7 @@ var _island_power_lights: Array[OmniLight3D] = []
 var _mechanism_time := 0.0
 var _prompt: Label
 var _status: Label
+var _controls_panel: PanelContainer
 var _rail_material: ShaderMaterial
 var _gold_material: StandardMaterial3D
 var _glass_material: StandardMaterial3D
@@ -155,6 +156,41 @@ var _canopy_material: StandardMaterial3D
 var _dark_metal_material: StandardMaterial3D
 var _station_rainbow_materials: Array[StandardMaterial3D] = []
 var _external_drive_commanded := false
+var _station_fall_recovery := -1
+
+
+func get_station_disembark_position(index: int) -> Vector3:
+	var platform := _station_nodes[posmod(index, STATIONS.size())].get_node("WalkablePlatform") as Node3D
+	return platform.to_global(Vector3(8.75, 3.0, 0.0))
+
+
+func _place_player_on_station() -> void:
+	_player.global_position = get_station_disembark_position(_current_station)
+	_player.velocity = Vector3.ZERO
+	_station_fall_recovery = _current_station
+
+
+func _physics_process(_delta: float) -> void:
+	if _player == null or _riding:
+		return
+	# Arm only after reaching an elevated station or its docked train. Walking
+	# down the access stairs or leaving the station clears the recovery region.
+	for index in _station_nodes.size():
+		var platform := _station_nodes[index].get_node("WalkablePlatform") as Node3D
+		var local := platform.to_local(_player.global_position)
+		if absf(local.x) < 18.0 and absf(local.z) < 34.0 \
+				and local.y >= -1.5 and local.y < 16.0:
+			_station_fall_recovery = index
+			return
+	if _station_fall_recovery < 0:
+		return
+	var platform := _station_nodes[_station_fall_recovery].get_node("WalkablePlatform") as Node3D
+	var local := platform.to_local(_player.global_position)
+	if _player.is_on_floor() or absf(local.x) > 45.0 or absf(local.z) > 60.0:
+		_station_fall_recovery = -1
+	elif local.y < -6.0 and _player.velocity.y < 0.0:
+		_player.global_position = get_station_disembark_position(_station_fall_recovery)
+		_player.velocity = Vector3.ZERO
 
 
 func _ready() -> void:
@@ -581,6 +617,8 @@ func select_train_mode(mode: String) -> bool:
 		_disembark_driver()
 	elif _seated_passenger:
 		if mode == "ride":
+			if not _passenger_in_motion:
+				_ride_seated_passenger_one_station()
 			return true
 		if _passenger_in_motion:
 			_status.text = "PASSENGER RIDE IN PROGRESS  •  SWITCH TO DRIVER AT THE NEXT STATION"
@@ -618,23 +656,21 @@ func sit_in_passenger_seat(seat_index: int) -> bool:
 	_player.global_position = _train.to_global(BENCH_SEATS[seat_index])
 	_attach_rider_anchor(BENCH_SEATS[seat_index])
 	_begin_ride_camera(14.0)
-	_status.text = "PASSENGER MODE  •  2 RIDE  •  1 DRIVE AT A STATION  •  Q STAND"
+	_status.text = "PASSENGER MODE  •  2 RIDE  •  1 DRIVE AT A STATION  •  Q EXIT AT STATION"
 	call_deferred("_ride_seated_passenger_one_station")
 	return true
 
 
 func leave_passenger_seat() -> bool:
-	if not _seated_passenger or _player == null:
+	if not _seated_passenger or _player == null or _passenger_in_motion:
 		return false
-	var seat_position := _train.to_global(BENCH_SEATS[_passenger_seat_index])
 	if _rider_anchor != null:
 		_rider_anchor.remote_path = NodePath()
 	_seated_passenger = false
 	_passenger_in_motion = false
 	_passenger_seat_index = -1
 	_riding = false
-	_player.global_position = seat_position + Vector3(0.0, 0.2, 2.2)
-	_player.velocity = Vector3.ZERO
+	_place_player_on_station()
 	_player.call("set_input_enabled", true)
 	_end_ride_camera()
 	_status.text = "CROWN LINE PASSENGER SEAT RELEASED"
@@ -664,7 +700,7 @@ func _ride_seated_passenger_one_station() -> void:
 	if _player != null and _passenger_seat_index >= 0:
 		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
 		_player.velocity = Vector3.ZERO
-	_status.text = "DOCKED AT %s  •  Q STAND" % STATIONS[_current_station].title
+	_status.text = "DOCKED AT %s  •  Q EXIT AT STATION" % STATIONS[_current_station].title
 
 
 func request_ride() -> bool:
@@ -820,8 +856,7 @@ func _disembark_driver() -> void:
 	if _rider_anchor != null:
 		_rider_anchor.remote_path = NodePath()
 	if _player != null:
-		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
-		_player.velocity = Vector3.ZERO
+		_place_player_on_station()
 		_player.call("set_input_enabled", true)
 	_end_ride_camera()
 	_status.text = "ARRIVED  •  Explore %s" % STATIONS[_current_station].title
@@ -831,14 +866,9 @@ func _boarding_position(station_index: int) -> Vector3:
 	return to_global(STATIONS[station_index].position + BOARDING_OFFSET)
 
 
-func station_unlocked_with(index: int, treasure_flags: Dictionary) -> bool:
-	if index <= 1:
-		return index >= 0
-	if index == 2:
-		return bool(treasure_flags.get("star_of_wisdom", false))
-	if index == 3:
-		return bool(treasure_flags.get("harmony_jewel", false))
-	return false
+func station_unlocked_with(index: int, _treasure_flags: Dictionary) -> bool:
+	# Railway travel is available from the start; world quests keep their own progress.
+	return index >= 0 and index < STATIONS.size()
 
 
 func completed_station_unlocked_with(index: int, treasure_flags: Dictionary) -> bool:
@@ -2898,50 +2928,63 @@ func _build_hud() -> void:
 	var canvas := CanvasLayer.new()
 	canvas.name = "CrownLineHUD"
 	add_child(canvas)
-	# Keep private labels as non-rendered state sinks because the driving logic
-	# updates their text. The former 520px panel obscured the left side of play.
+	canvas.layer = 20
+	_controls_panel = PanelContainer.new()
+	_controls_panel.name = "TrainControls"
+	_controls_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+	_controls_panel.offset_left = -354
+	_controls_panel.offset_right = -18
+	_controls_panel.offset_top = -150
+	_controls_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.045, 0.09, 0.94)
+	style.border_color = Color("70e5ff")
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 18
+	style.content_margin_right = 18
+	style.content_margin_top = 16
+	style.content_margin_bottom = 16
+	_controls_panel.add_theme_stylebox_override("panel", style)
+	canvas.add_child(_controls_panel)
+	var column := VBoxContainer.new()
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_theme_constant_override("separation", 12)
+	_controls_panel.add_child(column)
+	var heading := Label.new()
+	heading.text = "CROWN LINE · TRAIN CONTROLS"
+	heading.add_theme_font_size_override("font_size", 20)
+	heading.add_theme_color_override("font_color", Color("70e5ff"))
+	column.add_child(heading)
 	_prompt = Label.new()
-	_prompt.name = "HiddenDriverPrompt"
-	_prompt.visible = false
-	canvas.add_child(_prompt)
+	_prompt.name = "Instructions"
+	_prompt.add_theme_font_size_override("font_size", 20)
+	_prompt.add_theme_color_override("font_color", Color.WHITE)
+	_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_prompt)
 	_status = Label.new()
-	_status.name = "HiddenDriverStatus"
-	_status.visible = false
-	canvas.add_child(_status)
+	_status.name = "JourneyStatus"
+	_status.add_theme_font_size_override("font_size", 16)
+	_status.add_theme_color_override("font_color", Color("ffe29a"))
+	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_status)
+	_controls_panel.visible = false
 
 
 func _update_prompt() -> void:
 	if _prompt == null:
 		return
-	if _riding:
-		if _manual_driving:
-			_prompt.text = "YOU ARE DRIVING  •  W/S MOVE  •  R HORN  •  Q EXIT WHEN DOCKED"
-		elif _seated_passenger:
-			_prompt.text = "SEATED ON THE CROWN LINE  •  Q STAND"
-		else:
-			_prompt.text = "RAINBOW GALAXY TRAIN  •  MILO IS GUIDING THE CROWN LINE"
+	_controls_panel.visible = _player != null and (_riding or \
+		get_distance_to_train_footprint(_player.global_position) <= FLEXIBLE_BOARDING_RANGE)
+	if not _controls_panel.visible:
 		return
-	if _player == null:
-		_prompt.text = "CROWN LINE  •  Follow the glowing rails to a station"
-		return
-	var interaction_mode := get_interaction_mode_for_position(_player.global_position)
-	if interaction_mode == "drive":
-		var target := posmod(_current_station + 1, STATIONS.size())
-		_prompt.text = "Q DRIVE  •  W FORWARD  •  S REVERSE  •  %s NEXT" % STATIONS[target].title
-		return
-	if interaction_mode == "sit":
-		_prompt.text = "Q SIT AND RIDE  •  WALK TO THE CAB TO DRIVE"
-		return
-	if _player.global_position.distance_to(_boarding_position(_current_station)) > INTERACTION_RANGE:
-		_prompt.text = "CROWN LINE  •  Walk onto a coach to sit or enter the cab to drive"
-		return
-	var target := posmod(_current_station + _direction, STATIONS.size())
-	if is_station_unlocked(target):
-		_prompt.text = "Q  BOARD DRIVER DECK  •  W FORWARD  •  S REVERSE  •  %s NEXT" \
-			% STATIONS[target].title
+	if _manual_driving:
+		_prompt.text = "DRIVER MODE\nW  Forward\nS  Reverse\nRelease W/S  Brake\nR  Sound horn\n2  Passenger mode at station\nQ  Exit when docked"
+	elif _seated_passenger:
+		_prompt.text = "PASSENGER MODE\nEnjoy the ride to the next station.\nAt each station:\n2  Continue to next station\n1  Take the controls\nQ  Exit onto platform"
 	else:
-		_prompt.text = _locked_message(target)
-
+		_prompt.text = "1  Drive the train\n2  Sit and ride\n\nALL FOUR STATIONS OPEN\nGallery → Mind Spark\n→ Heart Melody → Creator's Light\n→ Gallery"
+	return
 
 func _locked_message(target: int) -> String:
 	if target == 2:
@@ -2980,8 +3023,7 @@ func _ride_to(target: int) -> void:
 	_train.position = STATIONS[_current_station].position
 	_orient_train_at_station(_current_station)
 	if _player != null:
-		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
-		_player.velocity = Vector3.ZERO
+		_place_player_on_station()
 		_player.call("set_input_enabled", true)
 	_end_ride_camera()
 	_status.text = "ARRIVED  •  Explore %s" % STATIONS[_current_station].title

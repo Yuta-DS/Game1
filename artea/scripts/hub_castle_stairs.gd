@@ -15,6 +15,18 @@
 # deleting one node.
 extends Node3D
 
+# web_terrain_compat.gd's baked ground replacement (WebTerrainCollision) is
+# the only thing in the project that sets this bit. _ground_at()'s raycast
+# fallback below allowlists it: NewPlayer's CharacterBody3D has no collision
+# layer/mask override of its own, so it runs on Godot's plain default (layer
+# 1, mask 1) -- moving this file's own architecture to a different layer to
+# exclude it from that ray would have made the player fall straight through
+# all of it. Allowlisting the one thing that is actually ground sidesteps
+# that entirely: it works no matter what layer everything else is on, and
+# handles decorative mountain rock and any other stray prop the same way.
+const WebTerrainCompat := preload("res://scripts/web_terrain_compat.gd")
+const HubLightFade := preload("res://scripts/hub_light_fade.gd")
+
 # Matches building_castle_red2 in New_Hub_World.tscn.
 const CASTLE_XZ := Vector2(-51.4, 27.41)
 const CASTLE_BASE_Y := 74.49
@@ -562,9 +574,39 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 	var ramp_start := Vector3(far_centre.x, entry_surface_y - 0.15, far_centre.z)
 	var ramp_end := Vector3(first_centre.x, first_surface_y - 0.15, first_centre.z)
 	var ramp_length := ramp_start.distance_to(ramp_end) + 0.36
+	# The far-lane sampling above only checks ground height at the very end of
+	# the run, then this box draws one straight line to the first tread. On a
+	# hillside that dips below that straight line anywhere in between, the
+	# walkway floats with a visible gap underneath. Re-sample the ground along
+	# the whole run and deepen the slab so its underside always reaches it,
+	# without moving the walkable top surface anyone is already using.
+	#
+	# Only trust Terrain3D itself for these extra samples. _ground_at() falls
+	# back to a bare world ray when Terrain3D is absent -- true on Web, which
+	# frees the node entirely -- and that ray has no way to tell the ground
+	# apart from a nearby stair tread, wall, or roof (see its own comment).
+	# 27 new raycasts along this run made that misread far more likely than the
+	# two or three the rest of this function already relied on, which is
+	# exactly what produced a Web-only shape once this landed. Skipping the
+	# deepening on Web leaves its geometry exactly as it was before this fix;
+	# only desktop, where the height data is real, gets the deeper slab.
+	var terrain_present := get_parent().get_node_or_null("Environment/Terrain3D") != null
+	var ramp_underside_clearance := 0.0
+	if terrain_present:
+		var ramp_ground_samples := 8
+		for step in range(ramp_ground_samples + 1):
+			var t: float = float(step) / ramp_ground_samples
+			var sample_point: Vector3 = ramp_start.lerp(ramp_end, t)
+			for lane_fraction in [-0.48, 0.0, 0.48]:
+				var lane_point: Vector3 = sample_point + radial * (TREAD_CLEAR_WIDTH * lane_fraction)
+				var ground_here := _ground_at(lane_point.x, lane_point.z)
+				ramp_underside_clearance = maxf(ramp_underside_clearance, sample_point.y - ground_here)
+	var ramp_extra_depth := ramp_underside_clearance + 0.15 if terrain_present else 0.0
+	var ramp_height := 0.30 + ramp_extra_depth
+	var ramp_centre := ramp_start.lerp(ramp_end, 0.5) - Vector3(0.0, ramp_extra_depth * 0.5, 0.0)
 	var ramp := _oriented_box(entry,
-		Vector3(TREAD_CLEAR_WIDTH, 0.30, ramp_length),
-		ramp_start.lerp(ramp_end, 0.5), ramp_end, light)
+		Vector3(TREAD_CLEAR_WIDTH, ramp_height, ramp_length),
+		ramp_centre, ramp_end, light)
 	ramp.name = "GroundEntryWalkSurface"
 	_add_box_body(ramp, (ramp.mesh as BoxMesh).size)
 	ramp.set_meta("smooth_straight_route", true)
@@ -1512,9 +1554,12 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 
 
 # A defensive ballista gives the stair tower a believable castle purpose.
-# It is mounted above the floor on the parapet side and intentionally has no
-# collision: the complete crown remains safe to walk even if a player presses
-# against the display.
+# It is mounted above the floor on the parapet side. The stone pedestal and
+# iron turntable are solid (a player was able to stand inside them), but the
+# wood stock/arms/ropes/bolt above stay collision-free -- they project out
+# over the parapet toward `outward`, and giving them collision risked
+# deflecting a sliding player toward the edge, which was the original
+# concern here.
 func _build_castle_ballista(parent: Node3D, base: Vector2,
 		surface_y: float, gate_dir: Vector3, stair_dir: Vector3) -> void:
 	var weapon := Node3D.new()
@@ -1534,6 +1579,7 @@ func _build_castle_ballista(parent: Node3D, base: Vector2,
 	var pedestal := _oriented_box(weapon, Vector3(2.5, 0.78, 2.25),
 		pedestal_position, pedestal_position + outward, stone)
 	pedestal.name = "BallistaStonePedestal"
+	_add_box_collision(pedestal, Vector3(2.5, 0.78, 2.25))
 	var turntable := MeshInstance3D.new()
 	turntable.name = "BallistaIronTurntable"
 	var turntable_mesh := CylinderMesh.new()
@@ -1545,6 +1591,7 @@ func _build_castle_ballista(parent: Node3D, base: Vector2,
 	turntable.material_override = iron
 	weapon.add_child(turntable)
 	turntable.global_position = origin + Vector3.UP * 0.89
+	_add_cylinder_collision(turntable, 1.02, 0.22)
 
 	var stock_start := origin + Vector3.UP * 1.18 - outward * 0.95
 	var stock_end := origin + Vector3.UP * 1.42 + outward * 1.75
@@ -1581,7 +1628,9 @@ func _build_castle_ballista(parent: Node3D, base: Vector2,
 # observatory vestibule turns the safe handoff floor into an intentional piece
 # of architecture: a dark processional carpet, paired stone/brass pylons and a
 # split arch that frames the crown without putting a lintel across the camera.
-# Everything above the floor is visual-only and stands outside the capsule lane.
+# The plinth+pylon posts are solid (a player could stand inside them); the
+# collar/yoke/lumen arching overhead and the apex lens stay visual-only,
+# since those sit above head height and were never the walkable footprint.
 func _build_crown_arrival_court(parent: Node3D, base: Vector2,
 		surface_y: float, radial: Vector3, forward: Vector3,
 		deck_material: Material, brass: Material, cyan: Material,
@@ -1620,6 +1669,7 @@ func _build_crown_arrival_court(parent: Node3D, base: Vector2,
 		plinth.material_override = deck_material
 		court.add_child(plinth)
 		plinth.global_position = pylon_base + Vector3.UP * 0.17
+		_add_cylinder_collision(plinth, 0.64, 0.34)
 
 		var pylon := MeshInstance3D.new()
 		pylon.name = "CrownArrivalPylon_%s" % ("Inner" if signed < 0.0 else "Outer")
@@ -1632,6 +1682,10 @@ func _build_crown_arrival_court(parent: Node3D, base: Vector2,
 		pylon.material_override = _stone(STONE_LIGHT)
 		court.add_child(pylon)
 		pylon.global_position = pylon_base + Vector3.UP * 1.74
+		# Solid ground-level post; the collar/yoke/lumen arching overhead and the
+		# apex lens stay collision-free (this is the "outside the capsule lane"
+		# part the class doc comment above refers to).
+		_add_cylinder_collision(pylon, 0.40, 3.15)
 
 		var collar := MeshInstance3D.new()
 		collar.name = "CrownArrivalCollar_%s" % ("Inner" if signed < 0.0 else "Outer")
@@ -2118,6 +2172,7 @@ func _build_bridge(parent: Node3D, base: Vector2, top_y: float) -> void:
 	beacon.light_energy = 1.7
 	beacon.omni_range = 10.0
 	beacon.shadow_enabled = false
+	HubLightFade.apply(beacon)
 	parent.add_child(beacon)
 	beacon.global_position = target + Vector3(0.0, 1.4, 0.0)
 
@@ -2270,6 +2325,7 @@ func _build_lumen_ceremony(parent: Node3D, start: Vector3, target: Vector3,
 		arch_lamp.light_energy = 1.5
 		arch_lamp.omni_range = 9.0
 		arch_lamp.shadow_enabled = false
+		HubLightFade.apply(arch_lamp)
 		parent.add_child(arch_lamp)
 		arch_lamp.global_position = arch_centre + Vector3(0.0, 4.2, 0.0)
 
@@ -2497,6 +2553,31 @@ func _oriented_box(parent: Node3D, size: Vector3, position: Vector3,
 	return part
 
 
+# Adds a box collider as a child of `mesh_instance`, sized/oriented to match
+# it exactly (inherits the mesh's own transform).
+func _add_box_collision(mesh_instance: MeshInstance3D, size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	mesh_instance.add_child(body)
+
+
+# Adds a cylinder collider as a child of `mesh_instance`, matching it exactly.
+func _add_cylinder_collision(mesh_instance: MeshInstance3D, radius: float,
+		height: float) -> void:
+	var body := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var cyl := CylinderShape3D.new()
+	cyl.radius = radius
+	cyl.height = height
+	shape.shape = cyl
+	body.add_child(shape)
+	mesh_instance.add_child(body)
+
+
 func _add_castle_stair_torch(parent: Node3D, base: Vector2, angle: float,
 		y: float, index: int) -> void:
 	var torch := Node3D.new()
@@ -2565,6 +2646,7 @@ func _add_lantern(parent: Node3D, base: Vector2, angle: float, y: float) -> void
 	lamp.light_energy = 1.2
 	lamp.omni_range = 9.0
 	lamp.shadow_enabled = false
+	HubLightFade.apply(lamp)
 	bulb.add_child(lamp)
 
 
@@ -2578,10 +2660,19 @@ func _ground_at(x: float, z: float) -> float:
 		if not is_nan(height):
 			return height
 
-	# Defensive fallback for worlds that reuse the stair without Terrain3D.
+	# Defensive fallback for worlds that reuse the stair without Terrain3D --
+	# which, on Web, is every world: Terrain3D is freed there entirely before
+	# this generator runs, so this is not a rare defensive path there, it is
+	# the only ground query Web ever gets. Mask to the one layer that is
+	# actually ground (see WebTerrainCompat above) rather than trying to
+	# exclude every possible thing the ray could otherwise land on -- this
+	# stair climbs a hillside dotted with decorative rock meshes and its own
+	# already-built architecture, any of which a blind ray could mistake for
+	# the earth.
 	var space := get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(
 		Vector3(x, 400.0, z), Vector3(x, -100.0, z))
+	query.collision_mask = WebTerrainCompat.WEB_TERRAIN_SCATTER_LAYER
 	var hit := space.intersect_ray(query)
 	return hit.position.y if hit.has("position") else 35.5
 
