@@ -114,9 +114,12 @@ class Cell:
 	## (the Crown Line train) is still tested where it actually is.
 	var local_aabbs: Array[AABB] = []
 	var cached_world_aabb := AABB()
-	## Static cells reuse `cached_world_aabb`; only cells that can move are
-	## recomputed on every check.
-	var dynamic := false
+	## Each root's global transform as of the last time cached_world_aabb was
+	## computed. A cell is re-measured when one of these no longer matches --
+	## see _refresh_if_moved().
+	var cached_transforms: Array[Transform3D] = []
+	## Which root the rolling second probe looks at next (see _refresh_if_moved).
+	var probe_cursor := 0
 	var view_distance := 0.0
 	var shown := true
 	## Cells that are only text - the world's signposts. They are one draw call
@@ -254,8 +257,7 @@ func _add_cell(roots: Array) -> void:
 			continue
 		cell.roots.append(root)
 		cell.local_aabbs.append(local)
-		if not cell.dynamic and _can_move(root):
-			cell.dynamic = true
+		cell.cached_transforms.append(root.global_transform)
 		if all_labels and not _only_labels(root):
 			all_labels = false
 		_collect_object_radii(root, object_radii)
@@ -347,21 +349,58 @@ func _visual_count(root: Node) -> int:
 	return total
 
 
-## A cell is treated as movable if anything in it carries a script, since that
-## script may be driving a transform. Static cells reuse the AABB computed once
-## here, which is what keeps the per-check cost proportional to the cell list
-## rather than to the scene.
-func _can_move(root: Node3D) -> bool:
-	var stack: Array = [root]
-	while stack.size() > 0:
-		var node: Node = stack.pop_back()
-		if node.get_script() != null:
-			return true
-		if node is AnimationPlayer or node is AnimationTree:
-			return true
-		for child in node.get_children():
-			stack.append(child)
-	return false
+## Re-measure a cell if any of its roots has moved since it was last measured.
+##
+## This replaces asking "could this cell move?" by looking for a script inside
+## it, which got the Crown Line train wrong and hid it out from under a player
+## riding it. RainbowGalaxyTrain carries no script: it is driven by
+## art_castle_story_railway.gd on an ANCESTOR assigning _train.transform. The
+## cell kept the bounding box from where the train was parked, so once the ride
+## was ~380 m out the distance to that stale box crossed the cull threshold and
+## all 138 visible parts of the train disappeared.
+##
+## Comparing the transform instead asks the question that actually matters --
+## "has this moved?" -- and is right regardless of what does the moving: an
+## ancestor script, an AnimationPlayer, a Tween, or physics. It costs one
+## Transform3D comparison per root per check, against cells that overwhelmingly
+## have a single root, so static cells still pay almost nothing.
+## Only two roots are tested per cell, not all of them, because bundling put up
+## to CELL_MAX_ROOTS roots in a cell and the world has 9,433 of them in total --
+## comparing every one cost 2.69 ms per pass (0.67 ms per frame averaged over
+## the check interval), which is a quarter of the castle's frame budget spent
+## proving that 336 of 355 cells had not moved.
+##
+## Root 0 is enough to catch everything that matters. A cell's roots are always
+## siblings under one parent, so anything that moves the parent -- the train
+## being driven, an island drifting -- moves every root's GLOBAL transform,
+## root 0 included. What root 0 alone would miss is one non-first sibling
+## translating on its own while its parent stays put, so a second probe walks
+## the remaining roots one per check. That bounds the cost at two comparisons
+## per cell while still noticing such a sibling within a few checks rather than
+## never.
+func _refresh_if_moved(cell: Cell) -> void:
+	if cell.roots.is_empty():
+		return
+	var moved := _root_moved(cell, 0)
+	if not moved and cell.roots.size() > 1:
+		cell.probe_cursor += 1
+		if cell.probe_cursor >= cell.roots.size():
+			cell.probe_cursor = 1
+		moved = _root_moved(cell, cell.probe_cursor)
+	if not moved:
+		return
+	cell.cached_world_aabb = _world_aabb(cell)
+	for index in cell.roots.size():
+		var root := cell.roots[index]
+		if is_instance_valid(root):
+			cell.cached_transforms[index] = root.global_transform
+
+
+func _root_moved(cell: Cell, index: int) -> bool:
+	var root := cell.roots[index]
+	if not is_instance_valid(root):
+		return false
+	return root.global_transform != cell.cached_transforms[index]
 
 
 func _only_labels(root: Node3D) -> bool:
@@ -411,10 +450,8 @@ func _apply(force: bool) -> void:
 			if not cell.shown:
 				_set_cell_visible(cell, true)
 			continue
-		var box := cell.cached_world_aabb
-		if cell.dynamic:
-			box = _world_aabb(cell)
-		var distance := _distance_to(box, eye)
+		_refresh_if_moved(cell)
+		var distance := _distance_to(cell.cached_world_aabb, eye)
 		var threshold := cell.view_distance
 		if cell.shown:
 			# Widened once shown, so a cell sitting exactly on its own
