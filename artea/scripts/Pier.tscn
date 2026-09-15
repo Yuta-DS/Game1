@@ -1,13 +1,25 @@
-[gd_scene load_steps=5 format=3 uid="uid://durvbjhil7ec1"]
+[gd_scene load_steps=10 format=3 uid="uid://durvbjhil7ec1"]
 
 [ext_resource type="PackedScene" path="res://assets3D/coastal_harbour/artea_sea_life.glb" id="2_life"]
 [ext_resource type="Script" path="res://scripts/coastal_sea_life.gd" id="3_life"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
-albedo_color = Color(0.55, 0.36, 0.2, 1)
-roughness = 0.85
+[ext_resource type="PackedScene" path="res://assets3D/coastal_harbour/artea_harbour.glb" id="1_harbour"]
+[ext_resource type="Script" path="res://scripts/watchtower_harbour_link.gd" id="4_collision"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_rf2q6"]
+[sub_resource type="BoxShape3D" id="BoxShape_landing"]
+size = Vector3(12, 0.32, 4.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape_jetty"]
+size = Vector3(3.55, 0.32, 10.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape_berth"]
+size = Vector3(4.5, 0.32, 3.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape_office"]
+size = Vector3(2.6, 2.6, 2.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape_counter"]
+size = Vector3(2.95, 1.04, 0.86)
 
 [node name="Pier" type="Node3D"]
 script = ExtResource("3_life")
@@ -15,153 +27,30 @@ script = ExtResource("3_life")
 [node name="SeaLife" parent="." instance=ExtResource("2_life")]
 rotation = Vector3(0, 3.1415927, 0)
 
-[node name="Board" type="MeshInstance3D" parent="."]
-transform = Transform3D(20, 0, 0, 0, 0.2, 0, 0, 0, 2, 0, 0, 0)
-mesh = SubResource("BoxMesh_rf2q6")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
+[node name="HarbourModel" parent="." instance=ExtResource("1_harbour")]
+rotation = Vector3(0, 3.1415927, 0)
+script = ExtResource("4_collision")
 
-[node name="columns" type="Node3D" parent="."]
+[node name="WalkableHarbour" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 1
 
-[node name="Column1" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 2.319, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
+[node name="LandingCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(0, 0.44, -4.95)
+shape = SubResource("BoxShape_landing")
 
-[node name="Column2" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 2.319, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
+[node name="JettyCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(0, 0.44, 2.25)
+shape = SubResource("BoxShape_jetty")
 
-[node name="Column3" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 0.0185528, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
+[node name="BerthCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(-4, 0.44, 6)
+shape = SubResource("BoxShape_berth")
 
-[node name="Column4" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 0.0185528, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
+[node name="OfficeCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(3.6, 1.9, -5)
+shape = SubResource("BoxShape_office")
 
-[node name="Column5" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, -1.68823, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column6" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, -1.68823, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column7" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 9.68414, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column8" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 9.68414, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column9" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 7.38369, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column10" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 7.38369, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column11" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 5.67691, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column12" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 5.67691, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column13" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 5.08325, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column14" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 5.08325, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column15" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 2.7828, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column16" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 2.7828, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column17" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 1.07602, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column18" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, 1.07602, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column19" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, -1.81878, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column20" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, -1.81878, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column21" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, -4.11923, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column22" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, -4.11923, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column23" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, -5.82601, -9.75468, 0.834839)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
-
-[node name="Column24" type="MeshInstance3D" parent="columns"]
-transform = Transform3D(0.2, 0, 0, 0, 20, 0, 0, 0, 0.2, -5.82601, -9.75468, -0.797735)
-mesh = SubResource("BoxMesh_rf2q6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_wood")
+[node name="CounterCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(-3.8, 1.12, -4)
+shape = SubResource("BoxShape_counter")

@@ -25,6 +25,7 @@
 [ext_resource type="Script" uid="uid://bevon172xunct" path="res://addons/proton_scatter/src/modifiers/project_on_geometry.gd" id="18_jhnfs"]
 [ext_resource type="Script" uid="uid://jp2wlxr8rcgq" path="res://addons/proton_scatter/src/modifiers/project_on_terrain3d.gd" id="19_g1e0d"]
 [ext_resource type="Shader" uid="uid://bf0h7u1q21ph3" path="res://New_Hub_World.gdshader" id="19_ha1sw"]
+[ext_resource type="PackedScene" path="res://scenes/watchtower_harbour_link.tscn" id="108_tower_link"]
 [ext_resource type="Script" uid="uid://c52rvhnaia2p3" path="res://addons/proton_scatter/src/scatter_item.gd" id="19_ngqnt"]
 [ext_resource type="Script" uid="uid://yshoogcq6iwg" path="res://addons/proton_scatter/src/scatter_shape.gd" id="20_7nfwd"]
 [ext_resource type="Script" uid="uid://7iwrp8x1pemc" path="res://addons/proton_scatter/src/shapes/path_shape.gd" id="21_ha1sw"]
@@ -1352,11 +1353,17 @@ transform = Transform3D(-0.295708, 0, 0.9552784, 0, 1, 0, -0.9552784, 0, -0.2957
 [node name="Mage" parent="." unique_id=460202447 instance=ExtResource("67_mage")]
 transform = Transform3D(0.7847764, 0, 0.619779, 0, 1, 0, -0.619779, 0, 0.7847764, 59, 20, -49)
 
-[node name="Port" parent="." unique_id=2058906824 instance=ExtResource("98_pier")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 170, 0.5, 60)
+[node name="Port" parent="." instance=ExtResource("98_pier")]
+position = Vector3(38, 0.9, 184)
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1.5, 1.5, 1.5)
 
-[node name="Boat" parent="." unique_id=319280685 instance=ExtResource("99_boat")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 170, 0, 78)
+[node name="Boat" parent="." instance=ExtResource("99_boat")]
+position = Vector3(32, 0.92, 197.4)
+rotation = Vector3(0, -1.5707963, 0)
+
+[node name="WatchtowerHarbourLink" parent="." instance=ExtResource("108_tower_link")]
+position = Vector3(19.9201, 0, 189.907)
 
 [node name="MarketPlace" type="Node3D" parent="." unique_id=1989590030]
 
