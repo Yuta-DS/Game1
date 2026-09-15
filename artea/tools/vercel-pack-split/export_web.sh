@@ -26,13 +26,40 @@ if "${godot_bin}" --version | grep -qi mono; then
 	exit 1
 fi
 
+# Keep player-facing resources in the Web pack. This runs before any existing
+# build is removed, so an accidental export exclusion cannot replace a known
+# playable production build.
+"${godot_bin}" --headless --path "${project_dir}" \
+	--script res://scripts/test_web_feature_parity.gd
+
+# Fail before replacing any existing build if the public client config is absent.
+# The source .env may contain OAuth secrets and must never be packed wholesale.
+"${godot_bin}" --headless --path "${project_dir}" \
+	--script res://tools/export_firebase_client_config.gd
+
 mkdir -p "${output_dir}"
-find "${output_dir}" -maxdepth 1 -type f -name 'index.pck.part[0-9][0-9]' -delete
+# Part indices become three digits once the pack exceeds 800 MiB. Remove every
+# generated numeric part from the prior export so stale part100+ files cannot
+# fill the disk or leak into the next deployment.
+find "${output_dir}" -maxdepth 1 -type f -name 'index.pck.part*' -delete
 rm -f "${output_dir}/index.pck"
 rm -f "${output_dir}/index.pck.parts.json"
 
-"${godot_bin}" --headless --path "${project_dir}" \
-	--export-release Web "${output_dir}/index.html"
+export_log="$(mktemp -t artea-web-export.XXXXXX)"
+if ! "${godot_bin}" --headless --path "${project_dir}" \
+		--export-release Web "${output_dir}/index.html" 2>&1 | tee "${export_log}"; then
+	rm -f "${export_log}"
+	exit 1
+fi
+if grep -Eq '^(SCRIPT ERROR:|ERROR:)' "${export_log}"; then
+	echo "Web export emitted runtime resource or script errors." >&2
+	rm -f "${export_log}"
+	exit 1
+fi
+rm -f "${export_log}"
+
+python3 "${script_dir}/../patch_web_release_loader.py" \
+	"${output_dir}/index.html"
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
 

@@ -1,0 +1,10 @@
+{
+  "name": "Milo statue-inspired soft cheek head",
+  "qa_isolate": true,
+  "palette": {"fur": {"color": "#E8D7B3", "rough": 0.88}},
+  "smooth_angle": 65,
+  "shading": {"gradient": {"top": 0.06, "bottom": -0.12}, "noise": {"size": 0.07, "amount": 0.012}},
+  "joints": {"Neck": [0,1.245,0], "Chin": [0,1.36,0.01], "Cheeks": [0,1.53,0.02], "Brow": [0,1.75,0], "Crown": [0,1.96,-0.01]},
+  "chains": {"head": ["Neck","Chin","Cheeks","Brow","Crown"]},
+  "volumes": [{"chain":"head", "material":"fur", "sides":32, "frame":"up", "ring_step":0.04, "caps":["dome","dome"], "profile":[[0,0.13,0.125,{"exp":2.3}],[0.17,0.30,0.235,{"exp":2.4}],[0.36,0.465,0.305,{"exp":2.35}],[0.60,0.455,0.32,{"exp":2.2}],[0.83,0.355,0.275,{"exp":2.15}],[1,0.18,0.175,{"exp":2.1}]]}]
+}

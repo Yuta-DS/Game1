@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "sha256": "2b0df04a1705f731a0d118d49c82182ffb2251f683366d201b767cf79d577bd8",
+  "baseline_sha256": "de1d2689fd6d082d0bebb63c26ed7447a13f10676c24a865f2dbc374a8a13150",
+  "unchanged_meshes_and_materials": 93,
+  "geometry_tolerance_m": 1e-07,
+  "protected_animation_exactly_unchanged": true,
+  "scope": "Paw skin/pads, central moustache, four new cheek tufts; digit rig proportions and poses, optional cane placement. No live-game changes."
+}

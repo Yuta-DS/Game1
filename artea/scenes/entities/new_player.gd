@@ -97,7 +97,7 @@ func _ready() -> void:
 	floor_max_angle = deg_to_rad(50.0)
 	floor_block_on_wall = false
 
-	await get_tree().process_frame
+	# Child controls are already ready here; bind before physics can collect.
 	if inventory_data and inventory_gui:
 		inventory_gui.set_inventory_data(inventory_data)
 	

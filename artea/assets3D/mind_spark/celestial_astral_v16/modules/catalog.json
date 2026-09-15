@@ -1,0 +1,54 @@
+[
+  {
+    "name": "promenade_panel",
+    "file": "promenade_panel.blend",
+    "editable_objects": 1,
+    "units": "metres",
+    "up_axis": "Z",
+    "source_origin": [
+      0.9925714285714285,
+      0,
+      0
+    ],
+    "usage": "Append the named Collection in Blender. Place/rotate/scale the collection as one module; internal meshes remain editable."
+  },
+  {
+    "name": "steam_generator",
+    "file": "steam_generator.blend",
+    "editable_objects": 62,
+    "units": "metres",
+    "up_axis": "Z",
+    "source_origin": [
+      0.84,
+      0.04,
+      -1.26
+    ],
+    "usage": "Append the named Collection in Blender. Place/rotate/scale the collection as one module; internal meshes remain editable."
+  },
+  {
+    "name": "carved_engine_chamber",
+    "file": "carved_engine_chamber.blend",
+    "editable_objects": 57,
+    "units": "metres",
+    "up_axis": "Z",
+    "source_origin": [
+      0.84,
+      0.04,
+      -1.469
+    ],
+    "usage": "Append the named Collection in Blender. Place/rotate/scale the collection as one module; internal meshes remain editable."
+  },
+  {
+    "name": "curved_load_cradle",
+    "file": "curved_load_cradle.blend",
+    "editable_objects": 10,
+    "units": "metres",
+    "up_axis": "Z",
+    "source_origin": [
+      0.215,
+      0.085,
+      -1.57
+    ],
+    "usage": "Append the named Collection in Blender. Place/rotate/scale the collection as one module; internal meshes remain editable."
+  }
+]

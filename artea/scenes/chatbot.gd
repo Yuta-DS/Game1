@@ -6,8 +6,9 @@
 # or uploaded; Web and unsupported builds retain the authored local response.
 extends Control
 
-@onready var chat_history: TextEdit = $VBoxContainer/ChatHistory
-@onready var content: VBoxContainer = $VBoxContainer
+@onready var chat_history: TextEdit = $MiloReplyCard/ChatHistory
+@onready var content: VBoxContainer = $InputContent
+@onready var milo_role: Label = $MiloReplyCard/MiloRole
 
 signal chat_closed
 signal companion_pose_requested(pose_name: String)
@@ -20,6 +21,8 @@ signal companion_activity_state_requested(state_name: String)
 var user_input: Control
 
 const ReflectionEngine := preload("res://scripts/MiloReflectionEngine.gd")
+const WisdomEngine := preload("res://scripts/MiloWisdomEngine.gd")
+const ConversationContext := preload("res://scripts/MiloConversationContext.gd")
 const SupportCard := preload("res://scripts/support_card.gd")
 const LOCAL_LLM_MODEL_PATH := "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
 const LOCAL_LLM_PROMPT_PATH := "res://addons/nobodywho/milo_prompt.txt"
@@ -27,7 +30,10 @@ const LOCAL_LLM_CONTEXT_LENGTH := 2048
 const LOCAL_LLM_TIMEOUT_SECONDS := 120.0
 const LOCAL_LLM_MAX_RESPONSE_CHARS := 720
 var _reflection_engine := ReflectionEngine.new()
+var _wisdom_engine := WisdomEngine.new()
+var _conversation_context := ConversationContext.new()
 var _message_input: LineEdit
+var _message_send_button: Button
 var campaign_router: Node
 var _support_card: Node
 var _local_llm_model: Node
@@ -36,6 +42,11 @@ var _local_llm_response := ""
 var _local_llm_generating := false
 var _local_llm_request_id := 0
 var _pending_authored_response: Dictionary = {}
+var _pending_grounded_response: Dictionary = {}
+var _pending_player_message := ""
+var _last_player_message := ""
+var _last_spoken_text := ""
+var _spoken_full_reply := ""
 
 const ACTIVITY_DESTINATIONS := {
 	"mind": "Mind Spark Kingdom",
@@ -282,14 +293,53 @@ var _stage := 0
 var _mode := "faith"
 var _choices: VBoxContainer
 
+const UI_INK := Color(0.13, 0.10, 0.075, 1.0)
+const UI_PARCHMENT := Color(0.96, 0.89, 0.72, 1.0)
+const UI_NAVY := Color(0.075, 0.13, 0.24, 0.96)
+const UI_NAVY_HOVER := Color(0.12, 0.22, 0.36, 0.98)
+const UI_GOLD := Color(0.70, 0.52, 0.21, 0.95)
+const UI_GOLD_BRIGHT := Color(0.93, 0.75, 0.36, 1.0)
+const UI_BODY_FONT := preload("res://assets/Fonts/grenze/Grenze-Medium.ttf")
+
 
 func _ready() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	# This is a display transcript, not a text-input surface.
 	chat_history.editable = false
 	chat_history.selecting_enabled = true
+	_apply_banner_theme()
 	_resolve_safe_context()
+	var current_scene := get_tree().current_scene
+	_conversation_context.update_scene(current_scene.name if current_scene != null \
+		else "unknown", _stage, _mode, "conversation", false)
 	_initialize_local_llm()
 	_show_choices()
+
+
+func _apply_banner_theme() -> void:
+	content.add_theme_constant_override("separation", 7)
+	chat_history.tooltip_text = "Milo's current reply"
+
+
+func configure_conversation_context(context: MiloConversationContext,
+		scene_name := "unknown", activity_state := "conversation") -> void:
+	if context != null:
+		_conversation_context = context
+	_conversation_context.update_scene(scene_name, _stage, _mode,
+		activity_state.to_lower(), false)
+
+
+func _process(_delta: float) -> void:
+	# Web can deliver the pointer-lock event from the opening click one frame
+	# late. Keep Milo's modal conversation in ordinary cursor mode throughout.
+	if visible and Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close_chat()
 
 
 func _resolve_safe_context() -> void:
@@ -305,42 +355,12 @@ func _resolve_safe_context() -> void:
 func _show_choices() -> void:
 	_request_companion_activity("GREETING", "welcome")
 	var reflection: Dictionary = CURATED_REFLECTIONS.get(_stage, CURATED_REFLECTIONS[0])
-	_speak("Wonderful Counsellor Milo · %s\n\n%s\n\nChoose one, or skip. Nothing you choose here changes your progress." % [
+	_speak("Wonderful Counsellor Milo · %s\n\n%s\n\nWhat would you like to talk about?" % [
 		reflection["title"],
 		MODE_INTROS[_mode],
 	])
 	_clear_choices()
-
-	var prompt := Label.new()
-	prompt.text = "How can Milo walk alongside you?"
-	prompt.add_theme_font_size_override("font_size", 18)
-	prompt.add_theme_color_override("font_color", Color(0.86, 0.91, 1.0))
-	_choices.add_child(prompt)
-
-	for path_spec in [
-		["Check in with a feeling", _show_emotion_check_ins],
-		["Reflect with Milo", _show_stage_reflections],
-		["Discover a strength", _show_strength_discoveries],
-		["Celebrate my progress", _show_progress_celebration],
-		["Choose an ARTÉA activity", _show_activity_guides],
-	]:
-		var path_button := _quiet_button(path_spec[0], path_spec[1])
-		_choices.add_child(path_button)
-		if user_input == null:
-			user_input = path_button
-
 	_add_message_input()
-
-	var quiet_note := Label.new()
-	quiet_note.text = _local_llm_privacy_note()
-	quiet_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	quiet_note.add_theme_font_size_override("font_size", 14)
-	quiet_note.add_theme_color_override("font_color", Color(0.70, 0.78, 0.92))
-	_choices.add_child(quiet_note)
-
-	_choices.add_child(_choice_button(SKIP_CHOICE))
-	_choices.add_child(_quiet_button("Need help", _show_support))
-	_choices.add_child(_quiet_button("Close", close_chat))
 
 
 func _show_stage_reflections() -> void:
@@ -376,41 +396,94 @@ func _show_emotion_check_ins() -> void:
 
 func _respond_to_emotion(check_in: Dictionary) -> void:
 	_request_companion_activity("ENCOURAGING", "encourage")
+	var player_choice := str(check_in.label)
+	var emotion := _emotion_from_choice(player_choice)
+	_conversation_context.observe_player_message(player_choice, emotion, "")
+	var response := {
+		"emotion": emotion,
+		"validate": str(check_in.acknowledge),
+		"reflect": str(check_in.reflection),
+		"strength": str(check_in.strength),
+		"guidance": str(check_in.question),
+		"activity": str(check_in.activity),
+	}
+	var natural_response := _conversation_context.naturalize_reflection(
+		response, player_choice)
 	_show_companion_response(
 		"Emotional Companion",
-		"You chose: %s\n\nVALIDATE\n%s\n\nREFLECT\n%s\n\nIDENTITY & STRENGTH\n%s\n\nGENTLE GUIDANCE\n%s\n\nCONNECT TO ARTÉA\n%s" % [
-			str(check_in.label), str(check_in.acknowledge),
-			str(check_in.reflection), str(check_in.strength),
-			str(check_in.question), str(check_in.activity),
-		],
+		natural_response,
 		str(check_in.get("activity_id", ""))
 	)
+	_record_conversation_exchange(player_choice, natural_response,
+		_conversation_context.choose_intention("", emotion))
+
+
+func _emotion_from_choice(label: String) -> String:
+	var lower := label.to_lower()
+	for emotion in ["worried", "stressed", "sad", "frustrated", "lonely", "proud"]:
+		if lower.contains(emotion):
+			return emotion
+	return "unclear"
 
 
 func _add_message_input() -> void:
+	if not _last_player_message.is_empty():
+		var player_echo := Label.new()
+		player_echo.name = "PlayerLastMessage"
+		player_echo.text = "YOU  •  %s" % _short_player_echo(_last_player_message)
+		player_echo.custom_minimum_size = Vector2(0, 25)
+		player_echo.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		player_echo.add_theme_font_override("font", UI_BODY_FONT)
+		player_echo.add_theme_font_size_override("font_size", 19)
+		player_echo.add_theme_color_override("font_color", Color(0.23, 0.145, 0.065, 1.0))
+		_choices.add_child(player_echo)
+
 	var prompt := Label.new()
-	prompt.text = "Or tell Milo what is on your mind (up to 280 characters):"
+	prompt.text = "YOU  •  TYPE YOUR REPLY   ·   280 CHARACTERS MAX"
 	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	prompt.add_theme_font_override("font", UI_BODY_FONT)
 	prompt.add_theme_font_size_override("font_size", 16)
+	prompt.add_theme_color_override("font_color", Color(0.30, 0.20, 0.105, 0.92))
 	_choices.add_child(prompt)
 
 	var row := HBoxContainer.new()
 	row.name = "LocalMessageRow"
+	row.add_theme_constant_override("separation", 10)
 	_choices.add_child(row)
 	_message_input = LineEdit.new()
 	_message_input.name = "MiloMessageInput"
-	_message_input.placeholder_text = "For example: Why am I always stressed?"
+	_message_input.placeholder_text = "Share a thought, a question, or something you noticed…"
 	_message_input.max_length = ReflectionEngine.MAX_MESSAGE_LENGTH
 	_message_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_input.tooltip_text = "This message is processed locally and is not saved."
+	_message_input.custom_minimum_size = Vector2(0, 48)
+	_message_input.add_theme_font_override("font", UI_BODY_FONT)
+	_message_input.add_theme_font_size_override("font_size", 20)
+	_message_input.add_theme_color_override("font_color", UI_PARCHMENT)
+	_message_input.add_theme_color_override("font_placeholder_color", Color(0.88, 0.82, 0.70, 0.86))
+	_message_input.add_theme_stylebox_override("normal", _input_style(false))
+	_message_input.add_theme_stylebox_override("focus", _input_style(true))
 	row.add_child(_message_input)
-	var send_button := _quiet_button("Ask Milo", _submit_message.bind(_message_input))
-	send_button.name = "MiloMessageSend"
-	row.add_child(send_button)
+	_message_send_button = _quiet_button("Send", _submit_message.bind(_message_input))
+	_message_send_button.name = "MiloMessageSend"
+	_message_send_button.custom_minimum_size = Vector2(144, 48)
+	_style_send_button(_message_send_button)
+	row.add_child(_message_send_button)
 	_message_input.text_submitted.connect(func(_submitted_text: String) -> void:
 		_submit_message(_message_input)
 	)
 	user_input = _message_input
+
+
+func _short_player_echo(message: String) -> String:
+	var clean := message.replace("\n", " ").strip_edges()
+	if clean.length() <= 110:
+		return clean
+	var shortened := clean.left(109)
+	var last_space := shortened.rfind(" ")
+	if last_space > 70:
+		shortened = shortened.left(last_space)
+	return shortened + "…"
 
 
 func _submit_message(input: LineEdit) -> void:
@@ -419,13 +492,16 @@ func _submit_message(input: LineEdit) -> void:
 	var message := input.text.substr(0, ReflectionEngine.MAX_MESSAGE_LENGTH).strip_edges()
 	input.clear()
 	if message.is_empty():
-		input.placeholder_text = "Write a few words first—or choose a path above."
+		input.placeholder_text = "Write a few words for Milo first."
 		input.grab_focus()
 		return
+	_last_player_message = message
 	var response: Dictionary = _reflection_engine.reflect(message)
 	if bool(response.get("urgent", false)):
+		# Never retain urgent private wording in the player-echo UI.
+		_last_player_message = ""
 		_request_companion_activity("SUPPORTING", "heart")
-		_show_companion_response(
+		_show_chat_response(
 			"Get real-world help now",
 			"%s\n\n%s\n\n%s\n\n%s\n\n%s" % [
 				str(response.validate), str(response.reflect), str(response.strength),
@@ -434,22 +510,45 @@ func _submit_message(input: LineEdit) -> void:
 		)
 		_show_support()
 		return
-	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
-		_begin_local_llm_response(message, response)
+	var grounded: Dictionary = _wisdom_engine.respond(message, _mode,
+		_conversation_context.snapshot())
+	var topic := str(grounded.get("category", ""))
+	_conversation_context.observe_player_message(message,
+		str(response.get("emotion", "unclear")), topic)
+	# Exact citation requests bypass generation on every platform so model prose
+	# can never alter the retrieved wording or fabricate a missing verse.
+	if str(grounded.get("category", "")) in ["scripture_reference", "scripture_not_found"]:
+		_show_grounded_wisdom_response(grounded, message)
 		return
-	_show_authored_message_response(response)
+	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
+		_begin_local_llm_response(message, response, grounded)
+		return
+	if not grounded.is_empty() and bool(grounded.get("handled", false)):
+		_show_grounded_wisdom_response(grounded, message)
+		return
+	_show_authored_message_response(response, message)
 
 
-func _show_authored_message_response(response: Dictionary) -> void:
+func _show_authored_message_response(response: Dictionary,
+		player_message := "") -> void:
 	_request_companion_activity("REFLECTING", "tablet")
-	_show_companion_response(
+	var natural_response := _conversation_context.naturalize_reflection(
+		response, player_message)
+	_show_chat_response(
 		"Reflection Partner",
-		"VALIDATE\n%s\n\nREFLECT\n%s\n\nIDENTITY & STRENGTH\n%s\n\nGENTLE GUIDANCE\n%s\n\nCONNECT TO ARTÉA\n%s" % [
-			str(response.validate), str(response.reflect), str(response.strength),
-			str(response.guidance), str(response.activity),
-		],
-		str(response.get("activity_id", ""))
+		natural_response
 	)
+	_record_conversation_exchange(player_message, natural_response,
+		_conversation_context.choose_intention("", str(response.get("emotion", "unclear"))))
+
+
+func _show_grounded_wisdom_response(response: Dictionary,
+		player_message := "") -> void:
+	_request_companion_activity("REFLECTING", "tablet")
+	var grounded_text := str(response.get("text", ""))
+	_show_chat_response("Wisdom Library", grounded_text)
+	_record_conversation_exchange(player_message, grounded_text,
+		_conversation_context.choose_intention(str(response.get("category", "")), ""))
 
 
 func _initialize_local_llm() -> void:
@@ -496,25 +595,25 @@ func _attach_local_llm_chat(local_chat: Node) -> void:
 
 
 func _begin_local_llm_response(message: String,
-		authored_response: Dictionary) -> void:
+		authored_response: Dictionary, grounded_response := {}) -> void:
 	if _local_llm_generating:
 		return
 	_local_llm_generating = true
 	_local_llm_response = ""
 	_pending_authored_response = authored_response.duplicate(true)
+	_pending_grounded_response = grounded_response.duplicate(true)
+	_pending_player_message = message
 	_local_llm_request_id += 1
 	var request_id := _local_llm_request_id
 	_request_companion_activity("LISTENING", "heart")
 	chat_history.text = "Wonderful Counsellor Milo · Listening\n\nMilo is thinking with the local model…"
 	_clear_choices()
-	var waiting := Label.new()
-	waiting.name = "MiloLocalModelStatus"
-	waiting.text = "Thinking locally… Your message stays on this device."
-	waiting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	waiting.add_theme_color_override("font_color", Color(0.78, 0.86, 1.0))
-	_choices.add_child(waiting)
-	_choices.add_child(_quiet_button("Close", close_chat))
-	_local_llm_chat.call("say", message)
+	_add_message_input()
+	_message_input.editable = false
+	_message_input.placeholder_text = "Milo is thinking locally…"
+	_message_send_button.disabled = true
+	_local_llm_chat.call("say", _wisdom_engine.build_local_model_packet(
+		message, grounded_response, _conversation_context.snapshot()))
 	get_tree().create_timer(LOCAL_LLM_TIMEOUT_SECONDS).timeout.connect(
 		_on_local_llm_timeout.bind(request_id))
 
@@ -534,11 +633,17 @@ func _on_local_llm_response_finished(response: String) -> void:
 	_local_llm_generating = false
 	var clean_response := _clean_local_llm_response(response)
 	if clean_response.is_empty():
-		_show_authored_message_response(_pending_authored_response)
+		_show_pending_local_fallback()
 	else:
 		_request_companion_activity("REFLECTING", "tablet")
-		_show_companion_response("Local Reflection", clean_response)
+		_show_chat_response("Local Reflection", clean_response)
+		var local_category := str(_pending_grounded_response.get("category", ""))
+		var local_emotion := str(_pending_authored_response.get("emotion", "unclear"))
+		_record_conversation_exchange(_pending_player_message, clean_response,
+			_conversation_context.choose_intention(local_category, local_emotion))
 	_pending_authored_response.clear()
+	_pending_grounded_response.clear()
+	_pending_player_message = ""
 
 
 func _on_local_llm_timeout(request_id: int) -> void:
@@ -547,8 +652,20 @@ func _on_local_llm_timeout(request_id: int) -> void:
 	_local_llm_generating = false
 	if _local_llm_chat != null and _local_llm_chat.has_method("stop_generation"):
 		_local_llm_chat.call("stop_generation")
-	_show_authored_message_response(_pending_authored_response)
+	_show_pending_local_fallback()
 	_pending_authored_response.clear()
+	_pending_grounded_response.clear()
+	_pending_player_message = ""
+
+
+func _show_pending_local_fallback() -> void:
+	if not _pending_grounded_response.is_empty() \
+			and bool(_pending_grounded_response.get("handled", false)):
+		_show_grounded_wisdom_response(_pending_grounded_response,
+			_pending_player_message)
+	else:
+		_show_authored_message_response(_pending_authored_response,
+			_pending_player_message)
 
 
 func _clean_local_llm_response(source: String) -> String:
@@ -568,8 +685,8 @@ func _clean_local_llm_response(source: String) -> String:
 
 func _local_llm_privacy_note() -> String:
 	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
-		return "Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check. Milo does not diagnose or replace a trusted person."
-	return "Typed messages stay on this device and are not saved. This build uses Milo's authored local reflections. Milo does not diagnose or replace a trusted person."
+		return "Milo is a fictional game character. Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check and does not diagnose or replace a trusted person."
+	return "Milo is a fictional game character. Typed messages stay on this device and are not saved. This build uses authored local reflections and a public-domain Bible library. Milo does not diagnose or replace a trusted person."
 
 
 func is_local_llm_active() -> bool:
@@ -640,6 +757,15 @@ func _show_companion_response(title: String, message: String,
 	_add_companion_navigation(destination_id)
 
 
+func _show_chat_response(title: String, message: String) -> void:
+	# The speaker card already identifies Milo. Keep this surface focused on the
+	# actual reply so a player can follow the same words that Milo reads aloud.
+	milo_role.text = title.to_upper()
+	_speak(message, message)
+	_clear_choices()
+	_add_message_input()
+
+
 func _add_companion_navigation(destination_id := "") -> void:
 	if ACTIVITY_DESTINATIONS.has(destination_id):
 		var destination_name := str(ACTIVITY_DESTINATIONS[destination_id])
@@ -703,8 +829,20 @@ func _campaign() -> Node:
 
 
 func _request_companion_activity(state_name: String, pose_name: String) -> void:
+	var scene_name := "unknown"
+	if get_tree().current_scene != null:
+		scene_name = get_tree().current_scene.name
+	_conversation_context.update_scene(scene_name, _stage, _mode,
+		state_name.to_lower(), state_name.to_upper() == "SUPPORTING")
 	companion_activity_state_requested.emit(state_name)
 	companion_pose_requested.emit(pose_name)
+
+
+func _record_conversation_exchange(player_message: String, milo_response: String,
+		intention: String) -> void:
+	if player_message.strip_edges().is_empty():
+		return
+	_conversation_context.record_exchange(player_message, milo_response, intention)
 
 
 func _choose_reflection(choice: Dictionary) -> void:
@@ -726,7 +864,7 @@ func _clear_choices() -> void:
 	if _choices == null:
 		_choices = VBoxContainer.new()
 		_choices.name = "CuratedChoices"
-		_choices.add_theme_constant_override("separation", 8)
+		_choices.add_theme_constant_override("separation", 4)
 		content.add_child(_choices)
 		return
 
@@ -744,24 +882,74 @@ func _choice_button(choice: Dictionary) -> Button:
 func _quiet_button(text: String, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(0, 40)
-	button.add_theme_font_size_override("font_size", 17)
+	button.focus_mode = Control.FOCUS_ALL
+	button.custom_minimum_size = Vector2(0, 25)
+	button.add_theme_font_override("font", UI_BODY_FONT)
+	button.add_theme_font_size_override("font_size", 12)
+	button.add_theme_color_override("font_color", UI_PARCHMENT)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_focus_color", Color.WHITE)
 	button.tooltip_text = "This choice is local and does not change your rewards."
 
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0.11, 0.16, 0.32, 0.94)
-	normal.border_color = Color(0.48, 0.73, 1.0, 0.82)
+	normal.bg_color = UI_NAVY
+	normal.border_color = UI_GOLD
 	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(9)
-	normal.set_content_margin_all(8)
+	normal.set_corner_radius_all(7)
+	normal.set_content_margin_all(5)
 	button.add_theme_stylebox_override("normal", normal)
 
 	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color(0.18, 0.28, 0.49, 0.98)
-	hover.border_color = Color(0.83, 0.70, 1.0, 0.96)
+	hover.bg_color = UI_NAVY_HOVER
+	hover.border_color = UI_GOLD_BRIGHT
 	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("focus", hover)
+	var pressed := hover.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.18, 0.13, 0.07, 0.98)
+	button.add_theme_stylebox_override("pressed", pressed)
 	button.pressed.connect(action)
 	return button
+
+
+func _style_send_button(button: Button) -> void:
+	button.add_theme_font_size_override("font_size", 20)
+	button.add_theme_color_override("font_color", Color(0.06, 0.12, 0.18, 1.0))
+	button.add_theme_color_override("font_hover_color", Color(0.03, 0.07, 0.11, 1.0))
+	button.add_theme_color_override("font_focus_color", Color(0.03, 0.07, 0.11, 1.0))
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.80, 0.58, 0.22, 1.0)
+	normal.border_color = Color(1.0, 0.91, 0.64, 1.0)
+	normal.set_border_width_all(2)
+	normal.set_corner_radius_all(10)
+	normal.set_content_margin_all(8)
+	normal.shadow_color = Color(0.10, 0.06, 0.02, 0.32)
+	normal.shadow_size = 3
+	normal.shadow_offset = Vector2(0, 2)
+	button.add_theme_stylebox_override("normal", normal)
+	var active := normal.duplicate() as StyleBoxFlat
+	active.bg_color = Color(0.93, 0.75, 0.36, 1.0)
+	active.border_color = Color(1.0, 0.95, 0.76, 1.0)
+	button.add_theme_stylebox_override("hover", active)
+	button.add_theme_stylebox_override("focus", active)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.62, 0.43, 0.15, 1.0)
+	button.add_theme_stylebox_override("pressed", pressed)
+
+
+func _input_style(focused: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.06, 0.085, 0.97)
+	style.border_color = UI_GOLD_BRIGHT if focused else Color(0.42, 0.32, 0.18, 0.9)
+	style.set_border_width_all(2 if focused else 1)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 16.0
+	style.content_margin_right = 16.0
+	style.content_margin_top = 8.0
+	style.content_margin_bottom = 8.0
+	style.shadow_color = Color(0.10, 0.06, 0.02, 0.22)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(0, 2)
+	return style
 
 
 func _show_support() -> void:
@@ -773,14 +961,36 @@ func _show_support() -> void:
 	_support_card.call("show_card")
 
 
-func _speak(text: String) -> void:
-	chat_history.text = text
-	companion_speech_requested.emit(text)
+func _speak(text: String, spoken_text := "") -> void:
+	_spoken_full_reply = text.strip_edges()
+	chat_history.add_theme_font_size_override("font_size", 24)
+	chat_history.text = _spoken_full_reply
+	_last_spoken_text = spoken_text.strip_edges() \
+		if not spoken_text.strip_edges().is_empty() else _spoken_full_reply
+	companion_speech_requested.emit(_last_spoken_text)
+
+
+func show_spoken_sentence(sentence: String, sentence_index: int,
+		sentence_count: int, full_reply: String) -> void:
+	if sentence.strip_edges().is_empty():
+		return
+	_spoken_full_reply = full_reply.strip_edges()
+	chat_history.add_theme_font_size_override("font_size", 32)
+	chat_history.text = sentence.strip_edges()
+	milo_role.text = "READING  ·  %d OF %d" % [sentence_index + 1,
+		maxi(sentence_count, 1)]
+
+
+func finish_spoken_reply() -> void:
+	chat_history.add_theme_font_size_override("font_size", 24)
+	if not _spoken_full_reply.is_empty():
+		chat_history.text = _spoken_full_reply
+	milo_role.text = "ART SCHOLAR  ·  READY"
 
 
 func replay_current_speech() -> void:
-	if chat_history != null and not chat_history.text.is_empty():
-		companion_speech_requested.emit(chat_history.text)
+	if not _last_spoken_text.is_empty():
+		companion_speech_requested.emit(_last_spoken_text)
 
 
 func close_chat() -> void:
@@ -789,6 +999,7 @@ func close_chat() -> void:
 		_local_llm_chat.call("stop_generation")
 	_local_llm_generating = false
 	_local_llm_request_id += 1
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	emit_signal("chat_closed")
 
 

@@ -1,0 +1,11 @@
+{
+  "frames": 631,
+  "max_pip_dip_coupling_error_deg": 4.3371701224259596e-05,
+  "max_finger_sideways_hinge_rotation_deg": 9.039473085515675e-06,
+  "max_digit_translation_m": 1.915060131752621e-07,
+  "max_digit_scale_error": 3.5762786865234375e-07,
+  "thumb_cmc_rotation_max_deg": 42.17470033225248,
+  "outer_palm_flexion_max_deg": 8.399993745071583,
+  "passed": true,
+  "limits": "Human-inspired kinematic structure and authored joint ranges only; not a medical simulation or proof of natural-looking motion, contact forces or collision-free hands."
+}

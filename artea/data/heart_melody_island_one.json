@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "world_id": "heart_melody",
+  "island_id": "heart_melody.island_one",
+  "title": "Quiet Meadow and Feeling Garden",
+  "content_policy": {
+    "delivery": "curated_offline",
+    "personal_disclosure_required": false,
+    "identity_affects_rewards": false,
+    "timed_reasoning": false
+  },
+  "districts": ["quiet_meadow", "feeling_garden"],
+  "layout": {
+    "footprint_metres": [200, 120],
+    "quiet_meadow": {"centre": [-43, 0, 0], "radii": [53, 48], "sector_count": 6},
+    "feeling_garden": {"centre": [42, 0, 0], "radii": [60, 52], "sector_count": 6},
+    "main_route_width": 4.0,
+    "side_route_width": 3.0,
+    "bridge_width": 4.0,
+    "shortcuts": ["seed_canopy_cutthrough", "restored_root_crossing"]
+  },
+  "support_objects": [
+    {"id": "heart_melody.island_one.arrival_bloom", "kind": "checkpoint", "required": false},
+    {"id": "heart_melody.island_one.route_stone", "kind": "map", "required": false},
+    {"id": "heart_melody.island_one.lantern_arrival", "kind": "comfort_lantern", "required": false},
+    {"id": "heart_melody.island_one.lantern_mid", "kind": "comfort_lantern", "required": false},
+    {"id": "heart_melody.island_one.bench_arrival", "kind": "song_memory_bench", "required": false},
+    {"id": "heart_melody.island_one.bench_rhythm", "kind": "song_memory_bench", "required": false},
+    {"id": "heart_melody.island_one.phrase", "kind": "listening_blossom", "required": false},
+    {"id": "heart_melody.island_one.encounter_0", "kind": "combat_clearing", "required": false},
+    {"id": "heart_melody.island_one.encounter_1", "kind": "combat_clearing", "required": false}
+  ],
+  "identity_moments": [
+    {"id": "HM_ID_01", "axis": "energy", "choices": ["E", "I"], "required": false},
+    {"id": "HM_ID_02", "axis": "information", "choices": ["S", "N"], "required": false},
+    {"id": "HM_ID_03", "axis": "decisions", "choices": ["T", "F"], "required": false},
+    {"id": "HM_ID_04", "axis": "structure", "choices": ["J", "P"], "required": false}
+  ],
+  "combat": {
+    "max_active_enemies": 2,
+    "assist": {"damage_multiplier": 0.5, "warning_multiplier": 1.7, "recovery_multiplier": 1.5},
+    "enemies": {
+      "echo_moth": {"hp": 40, "xp": 12, "damage": 8, "warning_seconds": 1.0, "recovery_seconds": 1.5},
+      "pulse_slime": {"hp": 50, "xp": 15, "damage": 10, "warning_seconds": 1.2, "recovery_seconds": 1.8}
+    }
+  },
+  "quest": {
+    "id": "heart_melody.quest.wake_feeling_garden",
+    "title": "Wake the Feeling Garden",
+    "xp": 80,
+    "tasks": [
+      {
+        "id": "heart_melody.task.plant_feeling_seeds",
+        "title": "Plant three Feeling Seeds",
+        "required_count": 3,
+        "hint_ladder": ["Follow the path to the three stone nests.", "Choose any feeling or a sound, preview it, then confirm planting."],
+        "success_effect": "seed_flowers_bloom"
+      },
+      {
+        "id": "heart_melody.task.restore_garden_rhythm",
+        "title": "Restore the flower rhythm and release the Blight",
+        "prerequisites": ["heart_melody.task.plant_feeling_seeds"],
+        "phrase": ["leaf", "sun", "droplet"],
+        "hint_ladder": ["Listen to the garden's three-note phrase.", "Watch the symbols as the flowers play: Leaf, Sun, Droplet."],
+        "encounter_waves": [["garden.moth.1"], ["garden.moth.2", "garden.slime.1"]],
+        "success_effect": "garden_restored"
+      }
+    ]
+  },
+  "completion": {
+    "checkpoint": "restored_garden",
+    "next_island_implemented": false,
+    "endpoint_text": "The garden's song is restored. The river is waiting.",
+    "awards_world_treasure": false,
+    "unlocks_train": false
+  }
+}

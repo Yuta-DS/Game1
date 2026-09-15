@@ -11,6 +11,7 @@ func _init() -> void:
 		DirAccess.remove_absolute(TEST_STORE)
 	var world := WorldScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
+	world.get_node("QuestController").enabled = false
 	world.object_state_store_path = TEST_STORE
 	root.add_child(world)
 	await process_frame
@@ -40,7 +41,9 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _test_world_geometry(world: MindSparkWorldOne) -> void:
-	assert(world.get_zone_ids().size() == 6, "World One has the required six zones")
+	assert(world.get_zone_ids().size() == 6, "World One preserves the required six gameplay districts")
+	assert(int(world.get_meta("physical_island_count", 0)) == 3,
+		"the six gameplay districts are combined into three physical islands")
 	assert(world.get_meta("world_identity") == "living computer forest")
 	var geometry := world.get_node("WorldOneGeometry")
 	for zone_id in world.get_zone_ids():
@@ -61,7 +64,7 @@ func _test_world_geometry(world: MindSparkWorldOne) -> void:
 func _test_greybox_build_order(world: MindSparkWorldOne, geometry: Node,
 		route: Node, spur: Node) -> void:
 	var expected_order := PackedStringArray([
-		"six_zone_floors",
+		"three_fused_super_island_foundations",
 		"main_story_route",
 		"world_gate_checkpoints_boss_sanctuary",
 		"optional_station_spur",
@@ -212,8 +215,12 @@ func _test_object_coverage(world: MindSparkWorldOne) -> void:
 		kinds[object.definition.object_kind] = true
 	assert(kinds.size() == Definition.ObjectKind.size(), "all twelve approved functional object types are present")
 	var scanner := world.get_object_by_kind(Definition.ObjectKind.EVIDENCE_SCANNER)
-	assert(scanner.interact()["reason"] == "choose_fact_or_fear")
-	assert(scanner.interact(&"fact")["completed"], "physical scanner completes a saved FACT/FEAR choice")
+	assert(not scanner.interact(&"capture", 0).accepted, "observation needs a clear instrument reading")
+	for channel in 3:
+		for adjustment in [2, 1, 3][channel]:
+			assert(scanner.interact(&"adjust", channel).accepted)
+		assert(scanner.interact(&"capture", channel).accepted)
+	assert(scanner.current_state.completed, "physical scanner saves all three observations")
 	var anchor := world.get_object_by_kind(Definition.ObjectKind.WARDEN_ANCHOR)
 	assert(anchor.interact()["reason"] == "vulnerable")
 	assert(anchor.interact(&"strike")["completed"], "physical Warden anchor has dodge and strike states")

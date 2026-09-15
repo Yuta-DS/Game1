@@ -1,0 +1,13 @@
+[application]
+config/name="Mind Spark Island One Capture"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
+[filesystem]
+import/blender/enabled=false
+
+[rendering]
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"

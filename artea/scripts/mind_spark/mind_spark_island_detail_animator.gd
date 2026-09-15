@@ -67,25 +67,18 @@ func _process(delta: float) -> void:
 	# elapsed clock still advances, so the animation is where it would have been
 	# when the island comes back into view rather than resuming from a freeze.
 	_elapsed += delta
-	if not is_visible_in_tree():
-		return
-	if _needs_recache:
-		_cache_details()
-
-	for index in _orbiters.size():
-		var orbiter := _orbiters[index]
+	for orbiter in _orbiters:
 		if not is_instance_valid(orbiter):
-			_needs_recache = true
 			continue
-		orbiter.rotate_y(delta * _orbit_speeds[index])
-
-	for index in _packets.size():
-		var packet := _packets[index]
+		orbiter.rotate_y(delta * float(orbiter.get_meta("detail_orbit_speed")))
+	for packet in _packets:
 		if not is_instance_valid(packet):
-			_needs_recache = true
 			continue
-		var phase := _packet_phases[index]
-		var progress := fposmod(phase + _elapsed * _packet_speeds[index], 1.0)
-		packet.position = _packet_starts[index].lerp(_packet_ends[index], progress)
+		var start: Vector3 = packet.get_meta("path_start")
+		var finish: Vector3 = packet.get_meta("path_end")
+		var phase := float(packet.get_meta("packet_phase"))
+		var speed := float(packet.get_meta("packet_speed"))
+		var progress := fposmod(phase + _elapsed * speed, 1.0)
+		packet.position = start.lerp(finish, progress)
 		var pulse := 0.82 + sin((_elapsed * 5.0 + phase * TAU) + variant_index * 0.4) * 0.18
 		packet.scale = _packet_base_scales[index] * pulse

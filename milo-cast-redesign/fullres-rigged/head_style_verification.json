@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "sha256": "3671a6f52743d2f3fbdb89cfbc119f92d95f918f397e75c0d3fc634a5a6ae362",
+  "topology": {
+    "Head_Cranium_AnyCreature": {
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "triangles": 5280
+    },
+    "Eye_-1": {
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "triangles": 1216
+    },
+    "Eye_1": {
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "triangles": 1216
+    }
+  },
+  "single_dark_material_per_eye": true,
+  "iris_sclera_glint_socket_geometry_removed": true,
+  "all_face_normals_smooth": true,
+  "blink": {
+    "Hand_Mechanics": {
+      "frames": 145,
+      "minimum_vertical_scale": 0.10177776962518692,
+      "maximum_vertical_scale": 1.0000001192092896
+    },
+    "Cane_Hold": {
+      "frames": 97,
+      "minimum_vertical_scale": 0.23233333230018616,
+      "maximum_vertical_scale": 1.0000001192092896
+    },
+    "Speak": {
+      "frames": 97,
+      "minimum_vertical_scale": 0.23233333230018616,
+      "maximum_vertical_scale": 1.0000001192092896
+    },
+    "Guide": {
+      "frames": 73,
+      "minimum_vertical_scale": 0.10177776962518692,
+      "maximum_vertical_scale": 1.0000001192092896
+    },
+    "Greet": {
+      "frames": 73,
+      "minimum_vertical_scale": 0.10177776962518692,
+      "maximum_vertical_scale": 1.0000001192092896
+    },
+    "Walking_A": {
+      "frames": 49,
+      "minimum_vertical_scale": 0.27933332324028015,
+      "maximum_vertical_scale": 1.0000001192092896
+    },
+    "Idle": {
+      "frames": 97,
+      "minimum_vertical_scale": 0.23233333230018616,
+      "maximum_vertical_scale": 1.0000001192092896
+    }
+  },
+  "limitations": "Eye-bone compression, not anatomically modeled eyelids. Visual style requires image review."
+}

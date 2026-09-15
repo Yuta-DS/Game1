@@ -94,4 +94,7 @@ func _run() -> void:
 		_fail("completion did not reveal the optional Zone 05 station spur")
 		return
 	print("MIND_SPARK_LIVE_GATE_BLUEPRINT: PASS — source, abort, completion return, floors, route, and station policy verified")
+	gallery.queue_free()
+	await process_frame
+	await process_frame
 	quit()

@@ -52,9 +52,14 @@ func _run() -> void:
 	if not bool(railway.call("board_as_driver")):
 		_fail("could not board the live train to exercise movement VFX")
 		return
+	# Drive with a deterministic fixed timestep. The live _process() input poll
+	# would otherwise see no held keyboard key in this direct-call test and apply
+	# an extra zero-throttle command after every commanded frame.
+	railway.set_process(false)
 
 	for _frame in 120:
 		railway.call("drive_manual", 1.0, 1.0 / 60.0)
+		railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame
 	var forward: Dictionary = railway.call("get_directional_vfx_state")
 	if not bool(forward.emitting) or float(forward.speed_ratio) <= 0.05:
@@ -80,6 +85,7 @@ func _run() -> void:
 	var reversed := false
 	for _frame in 300:
 		railway.call("drive_manual", -1.0, 1.0 / 60.0)
+		railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame
 		var state: Dictionary = railway.call("get_directional_vfx_state")
 		if bool(state.emitting) and int(state.visible_echo_count) >= 3 \
@@ -106,6 +112,7 @@ func _run() -> void:
 
 	for _frame in 180:
 		railway.call("drive_manual", 0.0, 1.0 / 60.0)
+		railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame
 	var stopped: Dictionary = railway.call("get_directional_vfx_state")
 	if bool(stopped.emitting) or float(stopped.speed_ratio) > 0.02 \

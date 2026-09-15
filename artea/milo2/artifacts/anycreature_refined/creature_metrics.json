@@ -1,0 +1,275 @@
+{
+ "name": "creature",
+ "stats": {
+  "triangles": 62708,
+  "skinnedMeshes": 14,
+  "animations": [
+   "Milo2_Idle",
+   "Milo2_Walk",
+   "Milo2_Wave"
+  ]
+ },
+ "names": [
+  "m2 ivory fur",
+  "m2 deep navy coat",
+  "m2 burgundy waistcoat",
+  "m2 tailored navy",
+  "m2 antique gold",
+  "m2 warm white fur",
+  "m2 brown leather",
+  "m2 charcoal trousers",
+  "m2 umber boots",
+  "m2 inner ear",
+  "m2 eye ivory",
+  "m2 soft black pupil",
+  "m2 rose nose",
+  "m2 tail stripe"
+ ],
+ "lum": {
+  "front": 37,
+  "side": 71.1,
+  "tq": 56.3,
+  "reartq": 50.2,
+  "top": 152.3
+ },
+ "hi_sat_share": {
+  "front": 0.4643,
+  "side": 0.3348,
+  "tq": 0.4221,
+  "reartq": 0.3776,
+  "top": 0.041
+ },
+ "parts": {
+  "m2 ivory fur": {
+   "size": [
+    2.244130313396454,
+    2.743180513381958,
+    1.140001356601715
+   ],
+   "share": {
+    "front": 0.22437,
+    "side": 0.45538,
+    "tq": 0.29425,
+    "reartq": 0.45037,
+    "top": 0.78644
+   },
+   "span_ratio": 0.9329,
+   "height_ratio": 0.8849
+  },
+  "m2 deep navy coat": {
+   "size": [
+    1.6600000262260437,
+    1.1999999284744263,
+    0.7200000286102295
+   ],
+   "share": {
+    "front": 0.05687,
+    "side": 0.21905,
+    "tq": 0.10318,
+    "reartq": 0.30914,
+    "top": 0
+   },
+   "span_ratio": 0.6706,
+   "height_ratio": 0.3871
+  },
+  "m2 burgundy waistcoat": {
+   "size": [
+    0.5699999928474426,
+    1.1608482599258423,
+    0.06999999284744263
+   ],
+   "share": {
+    "front": 0.05109,
+    "side": 0.01632,
+    "tq": 0.03156,
+    "reartq": 0.00037,
+    "top": 0
+   },
+   "span_ratio": 0.2128,
+   "height_ratio": 0.3745
+  },
+  "m2 tailored navy": {
+   "size": [
+    1.940000057220459,
+    1.1830850839614868,
+    0.7029999941587448
+   ],
+   "share": {
+    "front": 0.23467,
+    "side": 0.06688,
+    "tq": 0.18422,
+    "reartq": 0.06018,
+    "top": 0.00997
+   },
+   "span_ratio": 0.7648,
+   "height_ratio": 0.3816
+  },
+  "m2 antique gold": {
+   "size": [
+    1.8653062582015991,
+    1.9659865498542786,
+    0.4525418132543564
+   ],
+   "share": {
+    "front": 0.06744,
+    "side": 0.0249,
+    "tq": 0.06072,
+    "reartq": 0.00777,
+    "top": 0.02534
+   },
+   "span_ratio": 0.7114,
+   "height_ratio": 0.6342
+  },
+  "m2 warm white fur": {
+   "size": [
+    2.2225353717803955,
+    1.9295008778572083,
+    0.9984117448329926
+   ],
+   "share": {
+    "front": 0.09188,
+    "side": 0.05292,
+    "tq": 0.07987,
+    "reartq": 0.01985,
+    "top": 0.09761
+   },
+   "span_ratio": 0.903,
+   "height_ratio": 0.6224
+  },
+  "m2 brown leather": {
+   "size": [
+    1.2799999713897705,
+    0.7899259328842163,
+    0.08599996566772461
+   ],
+   "share": {
+    "front": 0.02722,
+    "side": 0.00398,
+    "tq": 0.0208,
+    "reartq": 0.00013,
+    "top": 0.00057
+   },
+   "span_ratio": 0.4755,
+   "height_ratio": 0.2548
+  },
+  "m2 charcoal trousers": {
+   "size": [
+    1.100000262260437,
+    0.8399999141693115,
+    0.5400001108646393
+   ],
+   "share": {
+    "front": 0.04342,
+    "side": 0.0129,
+    "tq": 0.02939,
+    "reartq": 0.05344,
+    "top": 0
+   },
+   "span_ratio": 0.4542,
+   "height_ratio": 0.271
+  },
+  "m2 umber boots": {
+   "size": [
+    1.1800000667572021,
+    0.3200000524520874,
+    0.6999999731779099
+   ],
+   "share": {
+    "front": 0.08666,
+    "side": 0.09548,
+    "tq": 0.09946,
+    "reartq": 0.0725,
+    "top": 0
+   },
+   "span_ratio": 0.5085,
+   "height_ratio": 0.1032
+  },
+  "m2 inner ear": {
+   "size": [
+    1.1294664144515991,
+    0.3078606128692627,
+    0.03999999165534973
+   ],
+   "share": {
+    "front": 0.0132,
+    "side": 0.00559,
+    "tq": 0.01491,
+    "reartq": 0.00498,
+    "top": 0.00949
+   },
+   "span_ratio": 0.4189,
+   "height_ratio": 0.0993
+  },
+  "m2 eye ivory": {
+   "size": [
+    0.9700003266334534,
+    0.5199999809265137,
+    0.12000015377998352
+   ],
+   "share": {
+    "front": 0.06191,
+    "side": 0.01807,
+    "tq": 0.03583,
+    "reartq": 0.00657,
+    "top": 0.04036
+   },
+   "span_ratio": 0.3622,
+   "height_ratio": 0.1677
+  },
+  "m2 soft black pupil": {
+   "size": [
+    0.7080000936985016,
+    0.3299999237060547,
+    0.054000020027160645
+   ],
+   "share": {
+    "front": 0.02288,
+    "side": 0.00223,
+    "tq": 0.01765,
+    "reartq": 0,
+    "top": 0
+   },
+   "span_ratio": 0.2632,
+   "height_ratio": 0.1065
+  },
+  "m2 rose nose": {
+   "size": [
+    0.21000007539987564,
+    0.15000009536743164,
+    0.12000000476837158
+   ],
+   "share": {
+    "front": 0.00417,
+    "side": 0.00144,
+    "tq": 0.00401,
+    "reartq": 0,
+    "top": 0.00514
+   },
+   "span_ratio": 0.0896,
+   "height_ratio": 0.0484
+  },
+  "m2 tail stripe": {
+   "size": [
+    0.6030333042144775,
+    0.5006921887397766,
+    0.35100000351667404
+   ],
+   "share": {
+    "front": 0.01423,
+    "side": 0.02486,
+    "tq": 0.02414,
+    "reartq": 0.01469,
+    "top": 0.02508
+   },
+   "span_ratio": 0.2586,
+   "height_ratio": 0.1615
+  }
+ },
+ "whole": {
+  "size": [
+   2.3382352822315164,
+   3.100000198648068,
+   1.3464126488981902
+  ]
+ }
+}

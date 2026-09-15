@@ -8,102 +8,42 @@ func _init() -> void:
 func _run() -> void:
 	var world := (load("res://scenes/mind_spark/mind_spark_world_one.tscn") as PackedScene).instantiate() as MindSparkWorldOne
 	world.build_hud = false
+	world.object_state_store_path = "user://test_mind_spark_texture_v12.json"
 	root.add_child(world)
 	for _frame in 4:
 		await process_frame
 	var geometry := world.get_node("WorldOneGeometry") as Node3D
 	var foundation_count := 0
 	var detailed_surface_count := 0
-	var animated_packet_count := 0
-	var movement_samples: Array[Dictionary] = []
 	for zone_id in world.get_zone_ids():
 		var zone := geometry.get_node(zone_id.to_pascal_case()) as Node3D
 		var foundation := zone.get_node_or_null("ModularFloatingFoundation") as Node3D
-		if foundation == null:
-			_fail("%s has no modular floating foundation" % zone_id)
+		var expected_revision := "v12" if zone_id == "02_living_network_forest" else "v11"
+		if zone_id == "03_constellation_court":
+			expected_revision = "v16"
+		elif zone_id == "04_hope_path_ridge":
+			expected_revision = "v17"
+		if foundation == null or foundation.get_meta("source_revision", "") != expected_revision:
+			_fail("%s has no reference-style %s celestial land" % [zone_id, expected_revision])
 			return
 		foundation_count += 1
-		var aligned_deck_radius := world.get_zone_radius(zone_id) * 0.945
-		for deck_plate in foundation.find_children("DeckPlate_*", "MeshInstance3D", true, false):
-			var plate_mesh := (deck_plate as MeshInstance3D).mesh as ArrayMesh
-			if plate_mesh == null or plate_mesh.get_surface_count() == 0:
-				_fail("%s contains a deck plate without auditable mesh geometry" % zone_id)
-				return
-			var arrays := plate_mesh.surface_get_arrays(0)
-			var vertices := arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array
-			var maximum_vertex_radius := 0.0
-			for vertex in vertices:
-				maximum_vertex_radius = maxf(maximum_vertex_radius,
-					Vector2(vertex.x, vertex.z).length())
-			if absf(maximum_vertex_radius - aligned_deck_radius) > 0.01:
-				_fail("%s deck plates do not share one aligned outer radius" % zone_id)
-				return
-		var aligned_armour_radius := world.get_zone_radius(zone_id) * 0.93
-		for rim_armour in foundation.find_children("RimArmour_*", "MeshInstance3D", true, false):
-			var armour_position := (rim_armour as Node3D).position
-			if absf(Vector2(armour_position.x, armour_position.z).length() \
-					- aligned_armour_radius) > 0.01:
-				_fail("%s rim armour modules do not share one aligned circle" % zone_id)
-				return
 		var meshes := foundation.find_children("*", "MeshInstance3D", true, false)
-		if meshes.size() < 130:
-			_fail("%s has only %d editable visual surfaces" % [zone_id, meshes.size()])
+		var expected_meshes := 14 if zone_id == "03_constellation_court" else (10 if zone_id == "04_hope_path_ridge" else 6)
+		if meshes.size() != expected_meshes:
+			_fail("%s has an incorrect static / moving assembly count" % zone_id)
 			return
 		detailed_surface_count += meshes.size()
-		var network := foundation.get_node_or_null("AnimatedSurfaceDetailNetwork") as Node3D
-		if network == null:
-			_fail("%s has no raised surface-detail network" % zone_id)
-			return
-		var packets := network.find_children("AnimatedDataPacket*", "MeshInstance3D", true, false)
-		if packets.size() < 16:
-			_fail("%s has too few animated data packets" % zone_id)
-			return
-		animated_packet_count += packets.size()
-		movement_samples.append({"packet": packets[0], "start": (packets[0] as Node3D).position})
-		if foundation.find_children("AnimatedShellServiceBelt*", "Node3D", true, false).size() != 3:
-			_fail("%s does not have three animated underbody service belts" % zone_id)
-			return
-		if foundation.find_children("EditableShellModule*", "MeshInstance3D", true, false).size() < 36:
-			_fail("%s underbody has too few physical service modules" % zone_id)
-			return
-		if foundation.find_children("CrystalFacetEdge*", "MeshInstance3D", true, false).size() < 20:
-			_fail("%s crystals have no physical facet-edge details" % zone_id)
-			return
-		if foundation.find_children("PhysicalFacetTrace*", "MeshInstance3D", true, false).size() < 48:
-			_fail("%s crystals have too few physical fracture traces" % zone_id)
-			return
-		if foundation.find_children("CrystalFacetCell*", "MeshInstance3D", true, false).size() < 768:
-			_fail("%s crystals are not decomposed into enough editable triangular facets" % zone_id)
-			return
-		if foundation.find_children("DeckMicroCell*", "MeshInstance3D", true, false).size() < 120:
-			_fail("%s deck is not decomposed into enough editable nested panels" % zone_id)
-			return
-		if foundation.find_children("TechPanelSlit*", "MeshInstance3D", true, false).size() < 45:
-			_fail("%s deck armour has too few physical circuit insets" % zone_id)
-			return
-		if foundation.find_children("ConstellationDial*", "MeshInstance3D", true, false).size() != 4:
-			_fail("%s deck has no four-part calibration dial layer" % zone_id)
-			return
-		if foundation.find_children("RootBarkSegment*", "MeshInstance3D", true, false).size() < 30:
-			_fail("%s underside has too few physical bark-root segments" % zone_id)
-			return
-		if foundation.find_children("RootEnergyVein*", "MeshInstance3D", true, false).size() < 30:
-			_fail("%s underside roots have too few separate energy veins" % zone_id)
-			return
-		if foundation.find_children("RootCyanFiber*", "MeshInstance3D", true, false).size() < 48:
-			_fail("%s underside roots have too few cyan transfer fibres" % zone_id)
-			return
-		var root_packets := foundation.find_children("RootNutrientPacket*", "MeshInstance3D", true, false)
-		if root_packets.size() < 48:
-			_fail("%s underside roots have too few animated transfer packets" % zone_id)
-			return
-		movement_samples.append({"packet": root_packets[0], "start": (root_packets[0] as Node3D).position})
-	for _frame in 20:
-		await process_frame
-	for sample in movement_samples:
-		var packet := sample.packet as Node3D
-		if packet.position.distance_to(sample.start as Vector3) < 0.1:
-			_fail("animated surface packet did not move during the runtime sample")
+		var variant_index := int(foundation.get_meta("variant_index", 0))
+		var family_revision := "v17" if zone_id == "04_hope_path_ridge" else "v11"
+		for family in ["CelestialIvoryDeck", "Rock_%s_%02d" % [family_revision, variant_index],
+				"Architecture_%s_%02d" % [family_revision, variant_index], "Machinery_%s_%02d" % [family_revision, variant_index],
+				"Inlay_%s_%02d" % [family_revision, variant_index], "Railing_%s_%02d" % [family_revision, variant_index]]:
+			var visual := foundation.find_child(family, true, false) as MeshInstance3D
+			if visual == null or visual.mesh == null or visual.mesh.get_surface_count() == 0:
+				_fail("%s is missing actual geometry for %s" % [zone_id, family])
+				return
+		if foundation.find_children("*", "CollisionObject3D", true, false).size() != 0:
+			_fail("celestial visual shell must not introduce route obstacles")
 			return
 	var sanctuary := geometry.get_node("06OldestTreeSanctuary") as Node3D
 	var bio_tree := sanctuary.find_child("MindSparkBioDataTree", true, false) as Node3D
@@ -328,10 +268,10 @@ func _run() -> void:
 	if tree_packet.position.distance_to(tree_packet_start) < 0.1:
 		_fail("Bio-Data Tree nutrient packet did not move upward through the trunk")
 		return
-	if detailed_surface_count < 10000:
-		_fail("assembly has only %d editable detail meshes; expected at least 10,000" % detailed_surface_count)
+	if detailed_surface_count != 48:
+		_fail("expected thirty-six static land meshes plus eight moving assemblies, got %d" % detailed_surface_count)
 		return
-	print("MIND_SPARK_ISLAND_GEOMETRY_DETAIL: PASS — %d foundations, %d editable detail meshes, %d animated surface packets" % [foundation_count, detailed_surface_count, animated_packet_count])
+	print("MIND_SPARK_ISLAND_GEOMETRY_DETAIL: PASS — %d celestial foundations, %d batched land meshes; existing Bio-Data Tree detail and animation preserved" % [foundation_count, detailed_surface_count])
 	quit()
 
 

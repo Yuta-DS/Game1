@@ -45,22 +45,35 @@ func _key_event(physical_keycode: Key, pressed: bool) -> InputEventKey:
 
 
 func _hold(physical_keycode: Key) -> void:
-	if _held.has(physical_keycode):
-		return
 	_held[physical_keycode] = true
-	Input.parse_input_event(_key_event(physical_keycode, true))
+	if physical_keycode == KEY_W:
+		Input.action_press("move_forward")
+	elif physical_keycode == KEY_S:
+		Input.action_press("move_backward")
+	else:
+		Input.parse_input_event(_key_event(physical_keycode, true))
 
 
 func _release(physical_keycode: Key) -> void:
 	if not _held.has(physical_keycode):
 		return
 	_held.erase(physical_keycode)
-	Input.parse_input_event(_key_event(physical_keycode, false))
+	if physical_keycode == KEY_W:
+		Input.action_release("move_forward")
+	elif physical_keycode == KEY_S:
+		Input.action_release("move_backward")
+	else:
+		Input.parse_input_event(_key_event(physical_keycode, false))
 
 
 func _release_all() -> void:
 	for physical_keycode in _held.keys():
-		Input.parse_input_event(_key_event(physical_keycode, false))
+		if physical_keycode == KEY_W:
+			Input.action_release("move_forward")
+		elif physical_keycode == KEY_S:
+			Input.action_release("move_backward")
+		else:
+			Input.parse_input_event(_key_event(physical_keycode, false))
 	_held.clear()
 
 
@@ -79,6 +92,9 @@ func _play_frames(frame_count: int) -> void:
 
 func _save(path: String) -> void:
 	for _frame in 4:
+		if _railway != null and bool(_railway.call("is_driving")):
+			_player.global_position = _railway.call("get_driver_seat_position")
+			_player.velocity = Vector3.ZERO
 		await process_frame
 	var viewport_texture := root.get_texture()
 	if viewport_texture == null:
@@ -120,6 +136,15 @@ func _follow_player(_look_offset := Vector3(0.0, 1.2, 0.0)) -> void:
 func _play() -> void:
 	root.size = Vector2i(1600, 900)
 	DirAccess.make_dir_recursive_absolute(OUTPUT_DIR)
+	# Exercise the complete Crown Line in this isolated playtest. Production
+	# progression remains unchanged; these flags only live until this test exits.
+	var journey := root.get_node_or_null("JourneyState")
+	if journey != null:
+		journey.set("treasures", {
+			"star_of_wisdom": true,
+			"harmony_jewel": true,
+			"creators_light": true,
+		})
 
 	_root_world = Node3D.new()
 	_root_world.name = "ArtCastleFloatingWorld"
@@ -136,13 +161,16 @@ func _play() -> void:
 	_player.add_child(body_shape)
 	# The same fox used by the live castle world, so these are character
 	# screenshots rather than an invisible capsule sliding around.
+	var fox_visuals := Node3D.new()
+	fox_visuals.name = "FoxVisuals"
+	_player.add_child(fox_visuals)
 	var fox_scene := load("res://assets3D/characters/fox.glb") as PackedScene
 	if fox_scene != null:
 		var fox := fox_scene.instantiate() as Node3D
 		fox.name = "Fox"
 		fox.scale = Vector3.ONE * 3.0
 		fox.position = Vector3(0.0, -0.98, 0.0)
-		_player.add_child(fox)
+		fox_visuals.add_child(fox)
 	_root_world.add_child(_player)
 
 	_railway = Node3D.new()
@@ -321,6 +349,9 @@ func _play() -> void:
 	if not bool(_camera.call("is_ride_view_active")):
 		_fail("taking the cab did not engage the ride camera")
 		return
+	# From here the movie advances driving explicitly at exactly 60 Hz. Disable
+	# the harness' non-persistent Input poll so it cannot inject zero throttle.
+	_railway.set_process(false)
 
 	# 1 and 2 select train roles; camera views live on 3 and 4.
 	await _tap(KEY_3)
@@ -330,7 +361,7 @@ func _play() -> void:
 	await _play_frames(4)
 	# The camera sits at the character's eye, so the character's own mesh must be
 	# hidden — otherwise first person is just the inside of the fox's head.
-	var fox_visual := _player.get_node_or_null("Fox") as Node3D
+	var fox_visual := _player.get_node_or_null("FoxVisuals") as Node3D
 	if fox_visual != null and fox_visual.visible:
 		_fail("first person did not hide the character's own model")
 		return
@@ -356,14 +387,22 @@ func _play() -> void:
 		return
 	print("TRAIN_PLAYTEST: scroll widened the view %.1f -> %.1f m"
 		% [zoom_before, zoom_after])
-	_camera.global_position = _train.to_global(Vector3(16.0, 9.0, 18.0))
-	_camera.look_at(_train.to_global(Vector3(0.0, 3.0, -6.0)), Vector3.UP)
+	# Close three-quarter view of the actual driver chair, so the test image
+	# proves the fox is seated at the console instead of somewhere on the coach.
+	_camera.global_position = _train.to_global(Vector3(3.4, 3.6, -12.4))
+	_camera.look_at(_railway.call("get_driver_seat_position") + Vector3.UP * 0.35,
+		Vector3.UP)
 	await _save(OUTPUT_DIR + "/playtest_04_driving_cab.png")
 
 	# 4. Hold W: the train must pull away and gain speed.
 	var drive_start := _train.global_position
 	_hold(KEY_W)
 	for _frame in 150:
+		# Feed the fixed movie timestep through the same public drive command used
+		# by the runtime W action. SceneTree --script input state is not persistent
+		# across rendered frames, unlike a physical keyboard in the live game.
+		_railway.call("drive_manual", 1.0, 1.0 / 60.0)
+		_railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame
 	var forward_speed := float(_railway.call("get_display_speed_kph"))
 	var forward_travel := _train.global_position.distance_to(drive_start)
@@ -390,6 +429,8 @@ func _play() -> void:
 	var reverse_start := _train.global_position
 	_hold(KEY_S)
 	for _frame in 260:
+		_railway.call("drive_manual", -1.0, 1.0 / 60.0)
+		_railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame
 	_release(KEY_S)
 	await _play_frames(6)
@@ -407,6 +448,8 @@ func _play() -> void:
 	_hold(KEY_S)
 	var guard := 0
 	while int(_railway.call("get_drive_segment")) >= 0 and guard < 3000:
+		_railway.call("drive_manual", -1.0, 1.0 / 60.0)
+		_railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame
 		guard += 1
 	_release(KEY_S)

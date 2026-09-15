@@ -1,0 +1,108 @@
+{
+ "sil_front": {
+  "W_over_H": 0.42,
+  "fill": 0.591,
+  "thirds_cols": [
+   0.14,
+   0.52,
+   0.35
+  ],
+  "thirds_rows": [
+   0.33,
+   0.35,
+   0.32
+  ],
+  "compactness": 5.3,
+  "neg_pockets": [],
+  "com": [
+   0.56,
+   0.51
+  ],
+  "protrusions": [],
+  "sq_fill": 0.246,
+  "mirror_sym": 0.61,
+  "straight_max": 0.4
+ },
+ "sil_side": {
+  "W_over_H": 0.63,
+  "fill": 0.718,
+  "thirds_cols": [
+   0.32,
+   0.42,
+   0.25
+  ],
+  "thirds_rows": [
+   0.29,
+   0.36,
+   0.35
+  ],
+  "compactness": 3.8,
+  "neg_pockets": [],
+  "com": [
+   0.47,
+   0.52
+  ],
+  "protrusions": [],
+  "sq_fill": 0.45,
+  "mirror_sym": 0.82,
+  "straight_max": 0.19
+ },
+ "sil_top": {
+  "W_over_H": 0.76,
+  "fill": 0.711,
+  "thirds_cols": [
+   0.31,
+   0.42,
+   0.26
+  ],
+  "thirds_rows": [
+   0.27,
+   0.46,
+   0.27
+  ],
+  "compactness": 4.0,
+  "neg_pockets": [
+   146
+  ],
+  "com": [
+   0.49,
+   0.5
+  ],
+  "protrusions": [],
+  "sq_fill": 0.539,
+  "mirror_sym": 0.81,
+  "straight_max": 0.1
+ },
+ "sil_hero": {
+  "W_over_H": 0.56,
+  "fill": 0.631,
+  "thirds_cols": [
+   0.3,
+   0.47,
+   0.23
+  ],
+  "thirds_rows": [
+   0.29,
+   0.37,
+   0.33
+  ],
+  "compactness": 4.6,
+  "neg_pockets": [
+   152
+  ],
+  "com": [
+   0.47,
+   0.52
+  ],
+  "protrusions": [
+   {
+    "dir_deg": 148,
+    "size": 0.011,
+    "thinness": 3.0
+   }
+  ],
+  "sq_fill": 0.356,
+  "mirror_sym": 0.74,
+  "straight_max": 0.13
+ }
+}

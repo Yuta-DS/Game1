@@ -22,6 +22,7 @@ signal block_changed(active: bool)
 @export var attack_cooldown := 0.55
 @export var attack_active_time := 0.18
 @export var block_speed_multiplier := 0.38
+@export var blocking_available := true
 
 ## The camera the player moves relative to. When unset, the player falls back to
 ## the viewport's active camera, so the gallery, the hub and any other scene all
@@ -55,7 +56,7 @@ var _land_reaction_remaining := 0.0
 var _hit_reaction_remaining := 0.0
 var _visual_base_position := Vector3.ZERO
 var _visual_base_scale := Vector3.ONE
-var _combat_audio: AudioStreamPlayer3D
+var _train_seated_pose := false
 
 
 func _ready() -> void:
@@ -99,6 +100,16 @@ func set_input_enabled(v: bool) -> void:
 		velocity.z = 0.0
 
 
+func set_train_seated_pose(enabled: bool) -> void:
+	_train_seated_pose = enabled
+	velocity = Vector3.ZERO
+	_update_character_animation(0.0, false)
+
+
+func is_train_seated_pose() -> bool:
+	return _train_seated_pose
+
+
 # The active camera can be swapped at runtime (the gallery tweens between a
 # follow camera and an inspect camera), so this is resolved per frame rather
 # than cached once.
@@ -122,6 +133,13 @@ func get_camera_relative_move_direction(input_dir: Vector2) -> Vector3:
 
 
 func _physics_process(delta: float) -> void:
+	# The railway owns the seated transform. Sliding against its moving hull
+	# displaces the rider between render frames and jolts the follow camera.
+	if _train_seated_pose:
+		velocity = Vector3.ZERO
+		_update_character_animation(delta, false)
+		return
+
 	_update_combat(delta)
 	var was_grounded := is_on_floor()
 	_hit_reaction_remaining = maxf(0.0, _hit_reaction_remaining - delta)
@@ -280,6 +298,7 @@ func _find_damage_receiver(node: Node) -> Node:
 
 
 func _set_blocking(active: bool) -> void:
+	active = active and blocking_available
 	if is_blocking == active:
 		return
 	is_blocking = active
@@ -301,10 +320,23 @@ func get_available_character_animations() -> PackedStringArray:
 
 func _update_character_animation(delta: float, moving: bool) -> void:
 	if fox_visuals == null:
+		_animation_state = "train_seated" if _train_seated_pose else _animation_state
 		return
 	fox_visuals.position = _visual_base_position
 	fox_visuals.scale = _visual_base_scale
+	fox_visuals.rotation.x = 0.0
 	fox_visuals.rotation.z = 0.0
+	if _train_seated_pose:
+		# The fox asset has no authored sitting clip. Keep its calm Idle motion,
+		# lower the hips onto the cushion and compress the leg silhouette into a
+		# stable seated driving posture instead of leaving it standing in the cab.
+		_animation_state = "train_seated"
+		_play_character_clip(["Idle"], 0.72)
+		fox_visuals.position += Vector3(0.0, -0.72, 0.10)
+		fox_visuals.scale = _visual_base_scale * Vector3(1.02, 0.72, 1.02)
+		fox_visuals.rotation.x = -0.08
+		fox_visuals.rotation.y = PI
+		return
 	if current_health <= 0.0:
 		_animation_state = "defeated"
 		_play_character_clip(["Death", "Defeat", "Idle"], 0.55)

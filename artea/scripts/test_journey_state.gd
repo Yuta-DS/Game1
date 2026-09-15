@@ -65,7 +65,8 @@ func _init() -> void:
 	# --- round trip through disk ---
 	js.record_emotion("sad", Color(0.2, 0.4, 0.9))
 	var creation_id: String = str(js.record_creation("user://art/a.png", "storm"))
-	assert(js.has_treasure("harmony_jewel"), "Heart Melody awards Harmony Jewel")
+	assert(not js.has_treasure("harmony_jewel"), "Island One emotion choices do not complete Heart Melody")
+	js.treasures["harmony_jewel"] = true # Simulate the future full-world Shield/Jewel reward.
 	assert(not js.has_treasure("creators_light"),
 		"saving artwork alone does not skip the Gallery Frame Ritual")
 	assert(js.complete_creator_frame_ritual(creation_id, "star_bridge"),

@@ -65,7 +65,7 @@ const GUARDIAN_MODELS := [
 	"res://assets3D/characters/Knight.glb",
 	"res://assets3D/characters/Mage.glb",
 ]
-const MILO_MODEL := "res://meshy ai/Milo_Animations.glb"
+const MILO_MODEL := "res://milo2/godot/milo2_skin.tscn"
 
 # One entry per kingdom, in play order. Zone N is not enterable (its gap
 # Area3D stays inert) until zone N-1's chapter has been recorded, so the

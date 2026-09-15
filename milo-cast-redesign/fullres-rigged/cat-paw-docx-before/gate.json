@@ -1,0 +1,147 @@
+{
+  "passed": false,
+  "asset": "milo_fullres.glb",
+  "sha256": "de1d2689fd6d082d0bebb63c26ed7447a13f10676c24a865f2dbc374a8a13150",
+  "scope": "Local compact-paw and layered-moustache candidate; visual review is not user approval.",
+  "checks": [
+    {
+      "name": "self_contained_glb",
+      "passed": true
+    },
+    {
+      "name": "normalized_skin_weights",
+      "passed": true
+    },
+    {
+      "name": "finite_vertices_all_authored_frames",
+      "passed": true,
+      "frames": 631
+    },
+    {
+      "name": "seven_named_clips_and_61_bones",
+      "passed": true
+    },
+    {
+      "name": "compact_paw_proportions",
+      "passed": true,
+      "ratios": {
+        "L": {
+          "wrist_to_middle_tip_m": 0.6910163763686944,
+          "knuckle_span_m": 0.812498476017855,
+          "skin_length_m": 0.7095792365029318
+        },
+        "R": {
+          "wrist_to_middle_tip_m": 0.6910162667361006,
+          "knuckle_span_m": 0.8124985097515982,
+          "skin_length_m": 0.7095792678796323
+        }
+      },
+      "earlier_2x_size_target_superseded": true,
+      "evidence": "compact_paw_verification.json"
+    },
+    {
+      "name": "protected_geometry_materials_body_wrist_face_motion",
+      "passed": true,
+      "meshes": 93,
+      "evidence": "compact_scope_verification.json"
+    },
+    {
+      "name": "protected_non_digit_rest_transforms",
+      "passed": true,
+      "bones": 31,
+      "tolerance": 0.000001,
+      "max_error": 7.897615432739258e-7
+    },
+    {
+      "name": "closed_connected_paws_and_moustache_halves",
+      "passed": true,
+      "evidence": "compact_paw_verification.json"
+    },
+    {
+      "name": "maximum_hand_edge_stretch_under_3x",
+      "passed": true,
+      "observed": 1.9394584540886115
+    },
+    {
+      "name": "maximum_full_character_edge_stretch_under_3x",
+      "passed": false,
+      "observed": 3.259505822021384,
+      "remaining_issue": "Pre-existing raised-arm sleeve distortion."
+    },
+    {
+      "name": "all_authored_hand_cane_surface_intersections",
+      "passed": true,
+      "frames_checked": 97
+    },
+    {
+      "name": "sampled_hand_self_intersections",
+      "passed": true,
+      "samples": 146,
+      "scope": "All 145 Hand_Mechanics left-hand frames and Cane_Hold right hand at frame zero."
+    },
+    {
+      "name": "cane_frame_zero_all_pad_clearances_under_3mm",
+      "passed": false,
+      "clearances_m": {
+        "finger0": 0.0014594534877687693,
+        "finger1": 0.0018081854796037078,
+        "finger2": 0.004695023875683546,
+        "thumb": 0.001593898981809616
+      },
+      "remaining_issue": "Index pad remains about 4.7 mm from shaft; do not claim the grip fully finished."
+    },
+    {
+      "name": "verify_hand_mechanics.py",
+      "passed": true,
+      "evidence": "hand_mechanics_verification.json"
+    },
+    {
+      "name": "verify_palm_orientation.py",
+      "passed": true,
+      "evidence": "palm_orientation_verification.json"
+    },
+    {
+      "name": "verify_cuff_clearance.py",
+      "passed": true,
+      "evidence": "cuff_clearance_verification.json"
+    },
+    {
+      "name": "verify_head_style.py",
+      "passed": true,
+      "evidence": "head_style_verification.json"
+    },
+    {
+      "name": "godot_compatibility_import_and_seven_clip_motion",
+      "passed": true,
+      "evidence": "preview/godot_import_verification.json"
+    },
+    {
+      "name": "local_godot_graphical_preview",
+      "passed": true,
+      "evidence": "godot_preview.png"
+    },
+    {
+      "name": "independent_paw_proportions_and_moustache_style_improved",
+      "passed": true,
+      "scope": "Image-only review; remaining glove-like digits and feather-like spacing documented.",
+      "evidence": "COMPACT_PAW_REVIEW.md"
+    },
+    {
+      "name": "full_visual_finish_and_user_approval",
+      "passed": false,
+      "evidence": "COMPACT_PAW_REVIEW.md"
+    }
+  ],
+  "regression_summary": "compact_regression_summary.json",
+  "not_claimed": [
+    "full AnyCreature quality-gate pass",
+    "all fingertips touching the cane",
+    "exact reference match or user visual approval",
+    "realistic cat anatomy or hair strands",
+    "force-solved grasp",
+    "full-character or arbitrary-pose collision freedom",
+    "production LOD or live-game integration",
+    "Blender MCP/plugin execution",
+    "commit, push, upload or deployment"
+  ]
+}

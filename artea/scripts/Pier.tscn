@@ -1,9 +1,8 @@
-[gd_scene load_steps=10 format=3 uid="uid://durvbjhil7ec1"]
-
-[ext_resource type="PackedScene" path="res://assets3D/coastal_harbour/artea_sea_life.glb" id="2_life"]
-[ext_resource type="Script" path="res://scripts/coastal_sea_life.gd" id="3_life"]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://assets3D/coastal_harbour/artea_harbour.glb" id="1_harbour"]
+[ext_resource type="PackedScene" path="res://assets3D/coastal_harbour/artea_sea_life.glb" id="2_life"]
+[ext_resource type="Script" path="res://scripts/coastal_sea_life.gd" id="3_life"]
 [ext_resource type="Script" path="res://scripts/watchtower_harbour_link.gd" id="4_collision"]
 
 [sub_resource type="BoxShape3D" id="BoxShape_landing"]
@@ -24,12 +23,12 @@ size = Vector3(2.95, 1.04, 0.86)
 [node name="Pier" type="Node3D"]
 script = ExtResource("3_life")
 
-[node name="SeaLife" parent="." instance=ExtResource("2_life")]
-rotation = Vector3(0, 3.1415927, 0)
-
 [node name="HarbourModel" parent="." instance=ExtResource("1_harbour")]
 rotation = Vector3(0, 3.1415927, 0)
 script = ExtResource("4_collision")
+
+[node name="SeaLife" parent="." instance=ExtResource("2_life")]
+rotation = Vector3(0, 3.1415927, 0)
 
 [node name="WalkableHarbour" type="StaticBody3D" parent="."]
 collision_layer = 1

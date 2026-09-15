@@ -44,8 +44,8 @@ func _run() -> void:
 	chat.campaign_router = campaign
 	root.add_child(chat)
 	await process_frame
-	var choices := chat.get_node("VBoxContainer/CuratedChoices") as VBoxContainer
-	var history := chat.get_node("VBoxContainer/ChatHistory") as TextEdit
+	var choices := chat.get_node("InputContent/CuratedChoices") as VBoxContainer
+	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
 	var travel_requests: Array[String] = []
 	chat.activity_travel_requested.connect(func(activity_id: String) -> void:
 		travel_requests.append(activity_id)
@@ -85,7 +85,7 @@ func _run() -> void:
 
 
 func _has_button(container: VBoxContainer, label: String) -> bool:
-	for child in container.get_children():
-		if child is Button and child.text == label:
+	for child in container.find_children("*", "Button", true, false):
+		if (child as Button).text == label:
 			return true
 	return false

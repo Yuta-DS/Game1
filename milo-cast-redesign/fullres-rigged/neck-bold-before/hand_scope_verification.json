@@ -1,0 +1,6 @@
+{
+  "unchanged_non_hand_meshes": 100,
+  "triangle_geometry_identical_within_m": 1e-07,
+  "comparison": "Triangle positions canonicalized independently of export vertex/index ordering.",
+  "scope": "Paws, hand/digit rig and poses, cane-hold arm/accessory placement, local preview. No live game changes."
+}

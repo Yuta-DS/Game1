@@ -6,6 +6,8 @@ signal travelled(destination_world_local: Vector3)
 @export var destination_world_local := Vector3.ZERO
 @export var gate_enabled := true
 @export var prompt_text := "Q • ENTER MIND SPARK"
+@export var target_world_path: NodePath
+@export var build_world_on_travel := true
 
 var _player_inside: CharacterBody3D
 
@@ -30,11 +32,16 @@ func teleport_player(player: CharacterBody3D) -> bool:
 	# World One may be built lazily to keep the art gallery within the web
 	# export's memory budget, so make sure it exists before travelling into it -
 	# otherwise the player lands in empty space where the world should be.
-	var world_one := floating_world.get_node_or_null("MindSparkWorldOne")
-	if world_one != null and world_one.has_method("ensure_world_built"):
-		world_one.call("ensure_world_built")
+	var destination_world := get_node_or_null(target_world_path) if not target_world_path.is_empty() \
+		else floating_world.get_node_or_null("MindSparkWorldOne")
+	if build_world_on_travel and destination_world != null and destination_world.has_method("ensure_world_built"):
+		var result: Variant = destination_world.call("ensure_world_built")
+		if result is bool and not result:
+			return false
 	player.global_position = floating_world.to_global(destination_world_local)
 	player.velocity = Vector3.ZERO
+	if build_world_on_travel and destination_world != null and destination_world.has_method("activate"):
+		destination_world.call("activate", player)
 	travelled.emit(destination_world_local)
 	return true
 
@@ -70,4 +77,3 @@ func _apply_enabled() -> void:
 	$Prompt.text = prompt_text if gate_enabled else "WORLD GATE • COMPLETE THE CURRENT QUEST"
 	$Portal.visible = gate_enabled
 	$Light.visible = gate_enabled
-

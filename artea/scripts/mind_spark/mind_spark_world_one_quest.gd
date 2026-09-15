@@ -4,27 +4,35 @@ extends Node
 signal task_completed(task_id: String)
 signal quest_completed(quest_id: String)
 signal world_completed
+signal island_transition_started(from_island: int, to_island: int)
+signal island_arrived(island_index: int)
 
 const SAVE_PATH := "user://mind_spark_walkable_world_one_progress.json"
 const ECHO_IDS := ["world_one.fact_and_fear", "world_one.hope_path"]
 const QUESTS := [
-	{"id": "wake_network", "title": "WAKE THE LIVING NETWORK", "task_end": 1, "xp": 75, "target_minutes": 13},
-	{"id": "broken_pattern", "title": "READ THE BROKEN PATTERN", "task_end": 4, "xp": 100, "target_minutes": 13},
-	{"id": "hope_path", "title": "BUILD THE HOPE PATH", "task_end": 7, "xp": 125, "target_minutes": 14},
-	{"id": "free_warden", "title": "FREE THE THOUGHT STORM WARDEN", "task_end": 9, "xp": 200, "target_minutes": 20},
+	{"id": "notice_signal", "title": "NOTICE THE SIGNAL", "task_end": 0, "xp": 0, "target_minutes": 10},
+	{"id": "island_one_awareness", "title": "LISTEN TO THE ECHO", "task_end": 1, "xp": 75, "target_minutes": 7},
+	{"id": "broken_pattern", "title": "UNDERSTAND THE MOMENT", "task_end": 4, "xp": 100, "target_minutes": 13},
+	{"id": "hope_path", "title": "BUILD A POSSIBLE TOMORROW", "task_end": 7, "xp": 125, "target_minutes": 14},
+	{"id": "free_warden", "title": "CALM THE THOUGHT STORM", "task_end": 9, "xp": 200, "target_minutes": 20},
 ]
 const TASKS := [
-	{"id": "wake_two_roots", "quest": 0, "title": "Wake two Checkpoint Server Roots", "zone": "01–02", "prompt": "Use SAVE at both glowing Server Roots • 0/2"},
-	{"id": "collect_two_sparks", "quest": 0, "title": "Collect and place two Thought Sparks", "zone": "02", "prompt": "Walk through two Sparks, then use the Spark Socket • 0/2"},
-	{"id": "scan_fact_fear", "quest": 1, "title": "Separate FACT from FEAR", "zone": "03", "prompt": "Scan the clue and choose FACT or FEAR"},
-	{"id": "restore_memory", "quest": 1, "title": "Restore the three-node memory", "zone": "03", "prompt": "Connect the three large nodes in order; reset and help are available"},
-	{"id": "open_logic_gate", "quest": 1, "title": "Open the Logic Gate", "zone": "03", "prompt": "Place the memory Spark, then place the two evidence pieces"},
-	{"id": "turn_lens", "quest": 2, "title": "Reveal the Hope Path", "zone": "04", "prompt": "Turn the Perspective Lens through three fixed angles"},
-	{"id": "form_truth_bridge", "quest": 2, "title": "Make the Truth Bridge solid", "zone": "04", "prompt": "Choose the true statement; the tile changes shape"},
-	{"id": "clear_elite_guard", "quest": 2, "title": "Free the elite guard", "zone": "04", "prompt": "Break the Stalker and Sentinel Blight shells"},
-	{"id": "free_warden_core", "quest": 3, "title": "Break three anchors and free the core", "zone": "05", "prompt": "Dodge wide lines, strike open rings, then attack the crystal core"},
-	{"id": "place_final_spark", "quest": 3, "title": "Change the storm into gentle rain", "zone": "05–06", "prompt": "HOLD at the Calm Rain Basin; there is no timed input"},
+	{"id": "wake_two_roots", "quest": 0, "title": "Form the Signal Prism", "zone": "01", "prompt": "Explore the thought signal and align the Observatory to form the Signal Prism"},
+	{"id": "collect_two_sparks", "quest": 1, "title": "Carry the Echo Seed forward", "zone": "02", "prompt": "Complete the two Thought Spark relay to carry the intact Echo Seed to Island Two"},
+	{"id": "scan_fact_fear", "quest": 2, "title": "Investigate Ari's interrupted experiment", "zone": "03", "prompt": "Focus the optical plate, inspect the recorder, and test the cooling valve. Capture three observations"},
+	{"id": "restore_memory", "quest": 2, "title": "Reconstruct what happened", "zone": "03", "prompt": "Reorder the recorded event strips and replay them against your observations"},
+	{"id": "open_logic_gate", "quest": 2, "title": "Test an explanation", "zone": "03", "prompt": "Test how cooling affects the shutter; distinguish what the evidence explains from what remains unknown"},
+	{"id": "turn_lens", "quest": 3, "title": "See more than one perspective", "zone": "04", "prompt": "Distinguish Ari's feeling, the machine's behaviour and the helper's offer"},
+	{"id": "form_truth_bridge", "quest": 3, "title": "Restore the living projection", "zone": "04", "prompt": "Choose a useful approach, adjust the coupled optics and project the leaf pattern"},
+	{"id": "clear_elite_guard", "quest": 3, "title": "Share what changed with Ari", "zone": "04", "prompt": "Return to the completed projector and share the discovery to reveal Island Three"},
+	{"id": "free_warden_core", "quest": 4, "title": "Break three anchors and free the core", "zone": "05", "prompt": "Dodge wide lines, strike open rings, then attack the crystal core"},
+	{"id": "place_final_spark", "quest": 4, "title": "Change the storm into gentle rain", "zone": "05–06", "prompt": "HOLD at the Calm Rain Basin; there is no timed input"},
 ]
+const ISLAND_TWO_STORY_ORDER := {
+	"dormant": 0, "invited": 1, "received": 2, "evidence_sorted": 3,
+	"memory_woven": 4, "archive_open": 5, "hope_reframed": 6,
+	"truth_materialised": 7, "guardian_freed": 8,
+}
 const IDENTITY_MOMENTS := {
 	0: {"id": "MS_ID_01", "axis": "energy", "a": "E • Talk and act with others", "b": "I • Think and act quietly", "side_a": "E", "side_b": "I"},
 	1: {"id": "MS_ID_02", "axis": "information", "a": "S • Notice clear details", "b": "N • Notice patterns and possibilities", "side_a": "S", "side_b": "N"},
@@ -45,7 +53,10 @@ var journey_state: Node
 var identity_tracker: Node
 var progress := {
 	"completed_task_ids": [], "completed_quest_ids": [], "checkpoint_root_ids": [],
-	"collected_spark_ids": [], "defeated_enemy_ids": [], "xp": 0, "completed": false,
+	"collected_spark_ids": [], "defeated_enemy_ids": [], "island_one_compass_solved": false,
+	"completed_island_one_quest_ids": [],
+	"island_two_invitation_received": false, "island_two_arrived": false,
+	"xp": 0, "completed": false,
 }
 var _current_task_index := 0
 var _reflection_queue: Array[Dictionary] = []
@@ -108,6 +119,8 @@ func _bind_world() -> void:
 
 
 func _connect_world_events() -> void:
+	if not world.island_one_puzzle_solved.is_connected(_on_island_one_puzzle_solved):
+		world.island_one_puzzle_solved.connect(_on_island_one_puzzle_solved)
 	for object in world.get_quest_objects():
 		object.completed.connect(_on_object_completed)
 		object.progress_changed.connect(_on_object_progress)
@@ -121,19 +134,53 @@ func _connect_world_events() -> void:
 	var boss := world.get_warden() as MindSparkWardenBoss
 	boss.defeated.connect(_on_boss_defeated)
 	boss.combat_stopped.connect(_on_boss_combat_stopped)
+	var compass := world.get_island_one_puzzle()
+	if compass != null and not compass.quest_completed.is_connected(_on_island_one_subquest_completed):
+		compass.quest_completed.connect(_on_island_one_subquest_completed)
+	if compass != null and compass.is_powered():
+		progress.island_one_compass_solved = true
+
+
+func _on_island_one_subquest_completed(quest_id: String, reward: Dictionary) -> void:
+	var completed: Array = progress.completed_island_one_quest_ids
+	if not completed.has(quest_id):
+		completed.append(quest_id)
+	_save_progress()
+	if _dialogue_label != null:
+		_dialogue_label.text = "Everlasting Father: The Signal Prism now reveals the Echo Garden." \
+			if str(reward.get("relic_id", "")) == "signal_prism" else \
+			"Everlasting Father: The warning became a helpful question. The Echo Seed can awaken the golden gate."
+	_update_support_target()
+
+
+func _on_island_one_puzzle_solved(_result: Dictionary) -> void:
+	progress.island_one_compass_solved = true
+	_save_progress()
+	if _dialogue_label != null:
+		_dialogue_label.text = "Everlasting Father: You noticed the thought, found the useful question, and formed the Echo Seed. Island Two can now receive its light."
+	_try_complete_landing_task()
+	_try_complete_network_quest_task()
+	_update_support_target()
 
 
 func _process(_delta: float) -> void:
-	if not enabled or _hud_root == null:
+	if not enabled:
 		return
 	if _player == null:
 		_find_player()
+	_try_begin_island_two_story()
+	if _current_task_index == 0: _try_complete_landing_task()
+	elif _current_task_index == 1: _try_complete_network_quest_task()
+	if _hud_root == null:
+		return
 	_hud_root.visible = _player != null and _player.global_position.distance_to(world.global_position) < 2050.0
 	_render_hud()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not enabled or not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if world != null and world.has_node("QuestStationPanel"):
 		return
 	if event.keycode == KEY_R and not _reflection_queue.is_empty():
 		_reflection_open = not _reflection_open
@@ -154,17 +201,18 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_checkpoint_action(action: String, save_id: String) -> void:
 	match action:
 		"save":
+			# Checkpoints remain usable after the Observatory advances task zero.
+			var roots: Array = progress.checkpoint_root_ids
+			if not roots.has(save_id):
+				roots.append(save_id)
 			_save_progress()
 			if _dialogue_label != null:
 				_dialogue_label.text = "Progress saved at this Server Root."
 			if _current_task_index == 0:
-				var roots: Array = progress.checkpoint_root_ids
-				if not roots.has(save_id):
-					roots.append(save_id)
 				world.set_world_state("waking")
-				_save_progress()
-				if roots.size() >= 2:
-					_complete_current_task("wake_two_roots")
+				_try_complete_landing_task()
+			elif _current_task_index == 1:
+				_try_complete_network_quest_task()
 		"heal":
 			if _player == null:
 				_find_player()
@@ -201,7 +249,7 @@ func _on_object_completed(save_id: String, _result: Dictionary) -> void:
 		"world_one.spark_socket":
 			_apply_task_gating()
 		"world_one.logic_gate":
-			if _current_task_index == 4 and _wave_cleared("constellation"):
+			if _current_task_index == 4:
 				_complete_current_task("open_logic_gate")
 		"world_one.perspective_lens":
 			if _current_task_index == 5: _complete_current_task("turn_lens")
@@ -251,8 +299,15 @@ func _on_boss_defeated(xp_reward: int) -> void:
 func _try_complete_network_quest_task() -> void:
 	var socket := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
 	if _current_task_index == 1 and socket != null and int(socket.current_state.get("progress", 0)) >= 2 \
-			and _wave_cleared("network"):
+			and bool(progress.island_one_compass_solved) \
+			and (progress.checkpoint_root_ids as Array).size() >= 2 and _wave_cleared("network"):
 		_complete_current_task("collect_two_sparks")
+
+
+func _try_complete_landing_task() -> void:
+	var puzzle := world.get_island_one_puzzle()
+	if _current_task_index == 0 and puzzle != null and puzzle.is_signal_observatory_complete():
+		_complete_current_task("wake_two_roots")
 
 
 func _complete_current_task(expected_id: String) -> bool:
@@ -275,14 +330,73 @@ func _complete_current_task(expected_id: String) -> bool:
 			progress.xp = int(progress.xp) + int(QUESTS[quest_index].xp)
 		# Saving intentionally precedes the gate/path unlock.
 		_save_progress()
-		world.set_quest_gate_open(quest_index, true)
+		if quest_index > 0: world.set_quest_gate_open(quest_index - 1, true)
+		if quest_index == 1:
+			_begin_island_two_handoff()
 		quest_completed.emit(quest_id)
-		if quest_index == 3:
+		if quest_index == 4:
 			_complete_world()
 	else:
 		_save_progress()
+	_sync_island_two_story_state()
 	_apply_task_gating()
 	return true
+
+
+func complete_garden_reflection() -> bool:
+	if _current_task_index != 7: return false
+	var projector := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
+	if projector == null or not bool(projector.current_state.get("completed", false)): return false
+	var result: Variant = projector.current_state.get("result", {})
+	progress["garden_approach"] = result.get("approach", "Earlier restoration") if result is Dictionary else "Earlier restoration"
+	return _complete_current_task("clear_elite_guard")
+
+
+func _begin_island_two_handoff() -> void:
+	progress.island_two_invitation_received = true
+	_sync_island_two_story_state()
+	_save_progress()
+	island_transition_started.emit(1, 2)
+	if _dialogue_label != null:
+		_dialogue_label.text = "Everlasting Father: Your Echo Seed is whole. Carry it to Ari's garden; its light can help us understand an unfinished experiment."
+
+
+func _try_begin_island_two_story() -> void:
+	if _player == null or _current_task_index != 2 or bool(progress.island_two_arrived):
+		return
+	if not bool(progress.island_two_invitation_received):
+		return
+	var centre := world.to_global(world.get_zone_position("03_constellation_court"))
+	var player_flat := Vector2(_player.global_position.x, _player.global_position.z)
+	var centre_flat := Vector2(centre.x, centre.z)
+	if player_flat.distance_to(centre_flat) > world.get_zone_radius("03_constellation_court") * 0.92:
+		return
+	progress.island_two_arrived = true
+	_sync_island_two_story_state()
+	_save_progress()
+	island_arrived.emit(2)
+	if _dialogue_label != null:
+		_dialogue_label.text = "Everlasting Father: Ari believes the stopped garden proves they should never have tried. Something happened here. Let us understand it before deciding what it means."
+	_update_support_target()
+
+
+func _island_two_story_state_for_progress() -> String:
+	if _current_task_index >= 8: return "guardian_freed"
+	if _current_task_index == 7: return "truth_materialised"
+	if _current_task_index == 6: return "hope_reframed"
+	if _current_task_index == 5: return "archive_open"
+	if _current_task_index == 4: return "memory_woven"
+	if _current_task_index == 3: return "evidence_sorted"
+	if bool(progress.island_two_arrived): return "received"
+	if bool(progress.island_two_invitation_received): return "invited"
+	return "dormant"
+
+
+func _sync_island_two_story_state() -> void:
+	if world == null:
+		return
+	var state := _island_two_story_state_for_progress()
+	world.set_island_two_story_state(state)
 
 
 func _complete_world() -> void:
@@ -334,11 +448,13 @@ func _apply_task_gating() -> void:
 		4:
 			_enable_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
 			var socket := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
-			var logic := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.LOGIC_GATE_ARCH)
-			logic.interaction_enabled = socket != null and bool(socket.current_state.get("completed", false))
+			if socket != null and bool(socket.current_state.get("completed", false)):
+				_enable_kind(QuestObjectDefinition.ObjectKind.LOGIC_GATE_ARCH)
 		5:
 			_enable_kind(QuestObjectDefinition.ObjectKind.PERSPECTIVE_LENS)
 		6:
+			_enable_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
+		7:
 			_enable_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
 		8:
 			_enable_kind(QuestObjectDefinition.ObjectKind.WARDEN_ANCHOR)
@@ -359,7 +475,7 @@ func _update_cast_for_task() -> void:
 	if milo != null:
 		milo.position = world.get_zone_position("01_world_gate_landing") + _world_offset(Vector3(-28, 3, -12))
 		if milo.has_method("set_dialogue_line"):
-			milo.call("set_dialogue_line", "The Blight is a shell, not the creature. Wake both roots and follow the cyan path.")
+			milo.call("set_dialogue_line", "Balance the twin towers, align the compass, then wake both roots. Its cyan route points to Island Two.")
 	if guardian == null:
 		return
 	var guide_position := world.get_zone_position("03_constellation_court") + _world_offset(Vector3(0, 4, -84))
@@ -386,24 +502,36 @@ func _update_support_target() -> void:
 		return
 	var target: QuestObjectBase
 	match _current_task_index:
-		0:
+		0, 1:
+			var island_puzzle := world.get_island_one_puzzle()
+			if island_puzzle != null and not island_puzzle.is_powered():
+				var target_control_id := island_puzzle.current_target_control_id()
+				var target_control := island_puzzle.get_node_or_null(
+					"PuzzleControls/PuzzleControl_%s" % target_control_id) as Node3D
+				if target_control != null:
+					world.set_support_target_position(world.to_local(target_control.global_position),
+						island_puzzle.current_objective())
+					return
+			if not bool(progress.island_one_compass_solved):
+				var compass := world.get_island_one_puzzle()
+				if compass != null:
+					world.set_support_target_position(world.to_local(compass.to_global(Vector3(0, 3, 8))),
+						"Aether Compass")
+					return
 			for object in world.get_quest_objects():
 				if object.definition.object_kind == QuestObjectDefinition.ObjectKind.CHECKPOINT_SERVER_ROOT \
 						and not (progress.checkpoint_root_ids as Array).has(object.save_id):
 					target = object
 					break
-		1: target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
+			if target == null: target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
 		2: target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
 		3: target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.MEMORY_CONSTELLATION)
 		4:
-			var socket := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
-			target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.LOGIC_GATE_ARCH) \
-				if socket != null and bool(socket.current_state.get("completed", false)) else socket
+			target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.LOGIC_GATE_ARCH)
 		5: target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.PERSPECTIVE_LENS)
 		6: target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
 		7:
-			world.set_support_target_position(world.get_zone_position("04_hope_path_ridge"), "Elite guard")
-			return
+			target = world.get_object_by_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
 		8:
 			for object in world.get_quest_objects():
 				if object.definition.object_kind == QuestObjectDefinition.ObjectKind.WARDEN_ANCHOR \
@@ -418,10 +546,6 @@ func _update_support_target() -> void:
 func _activate_current_combat() -> void:
 	if _current_task_index <= 1:
 		world.activate_enemy_wave("network")
-	elif _current_task_index <= 4:
-		world.activate_enemy_wave("constellation")
-	elif _current_task_index == 7:
-		world.activate_enemy_wave("ridge")
 	elif _current_task_index == 8:
 		world.activate_enemy_wave("boss_adds")
 		(world.get_warden() as MindSparkWardenBoss).start_battle()
@@ -463,7 +587,13 @@ func _restore_runtime_state() -> void:
 		if (progress.defeated_enemy_ids as Array).has(enemy.name):
 			enemy.restore_defeated()
 	for quest_index in 4:
-		world.set_quest_gate_open(quest_index, (progress.completed_quest_ids as Array).has(str(QUESTS[quest_index].id)))
+		world.set_quest_gate_open(quest_index, (progress.completed_quest_ids as Array).has(str(QUESTS[quest_index + 1].id)))
+	# Existing task IDs remain stable; the extra chapter is a zero-XP subdivision.
+	if (progress.completed_task_ids as Array).has("wake_two_roots") and not (progress.completed_quest_ids as Array).has("notice_signal"):
+		progress.completed_quest_ids.append("notice_signal")
+	if (progress.completed_quest_ids as Array).has("island_one_awareness"):
+		progress.island_two_invitation_received = true
+	_sync_island_two_story_state()
 	if (progress.completed_task_ids as Array).has("free_warden_core"):
 		(world.get_warden() as MindSparkWardenBoss).restore_combat_stopped()
 	if bool(progress.completed):
@@ -472,7 +602,7 @@ func _restore_runtime_state() -> void:
 		world.set_station_spur_available(true)
 		world.set_return_gate_enabled(true)
 		_equip_wisdom_blade()
-	elif not (progress.checkpoint_root_ids as Array).is_empty():
+	elif bool(progress.island_one_compass_solved) or not (progress.checkpoint_root_ids as Array).is_empty():
 		world.set_world_state("waking")
 
 
@@ -561,11 +691,26 @@ func _render_hud() -> void:
 	if bool(progress.completed):
 		_quest_label.text = "WORLD ONE COMPLETE • STAR OF WISDOM"
 		_task_label.text = "Wisdom Blade equipped • Heart Melody World Gate ready"
-		_dialogue_label.text = "Mother Guardian: What helped you move forward when the path was not clear?"
+		_dialogue_label.text = "Everlasting Father: What helped you move forward when the path was not clear?"
 	else:
 		var task := current_task()
+		if _current_task_index in [0, 1]:
+			var island_puzzle := world.get_island_one_puzzle()
+			var signal_complete := island_puzzle != null and island_puzzle.is_signal_observatory_complete()
+			_quest_label.text = "ISLAND ONE • QUEST %d/5 • %s" % [2 if signal_complete else 1,
+				"ECHO GARDEN" if signal_complete else "SIGNAL OBSERVATORY"]
+			_task_label.text = "%s\n%s" % [island_puzzle.current_objective(),
+				str(island_puzzle.current_task_id()).replace("_", " ").replace(".", " • ").to_upper()]
+			_dialogue_label.text = _guardian_line_for_task(_current_task_index)
+			_reflection_label.text = "Movement and experimentation are untimed; every wrong attempt preserves your work."
+			if island_puzzle.is_echo_garden_complete():
+				_task_label.text = "Echo Seed secured. Save at the two Server Roots: %d/2.\nThen complete the Thought Spark relay before the route to Island Two opens." % (progress.checkpoint_root_ids as Array).size()
+				_dialogue_label.text = "Everlasting Father: Your seed is ready. Ground its light at the roots, then carry it onward."
+			return
 		var quest: Dictionary = QUESTS[int(task.get("quest", 0))]
-		_quest_label.text = "QUEST %d/4 • %s • %d XP" % [int(task.quest) + 1, quest.title, int(progress.xp)]
+		_quest_label.text = "QUEST %d/5 • %s • %d XP" % [int(task.quest) + 1, quest.title, int(progress.xp)]
+		if _current_task_index == 1:
+			task.prompt = "Place two Thought Sparks and clear the network encounter to open the next route."
 		_task_label.text = "TASK %d/10 • %s\n%s" % [_current_task_index + 1, task.title, task.prompt]
 		_dialogue_label.text = _guardian_line_for_task(_current_task_index)
 	if _reflection_queue.is_empty():
@@ -578,13 +723,28 @@ func _render_hud() -> void:
 
 
 func _guardian_line_for_task(task_index: int) -> String:
-	if task_index <= 1:
-		return "Mayor Milo: The sword breaks only the Blight shell. Wake the roots and follow their cyan light."
-	if task_index <= 4:
-		return "Mother Guardian: A thought can feel strong without being a fact. Look for one clear sign."
-	if task_index <= 7:
-		return "Mother Guardian: Each clear choice changes the route; it does not grade you."
-	return "Mother Guardian: The storm is hurt and confused. Break the dark anchors, then help it become rain."
+	if task_index == 0:
+		return "Everlasting Father: Notice the signal without obeying it. Then listen for the useful question inside its echo."
+	if task_index == 1:
+		var puzzle := world.get_island_one_puzzle()
+		if puzzle != null and not puzzle.is_echo_garden_complete():
+			return "Everlasting Father: Carry your Signal Prism into the Echo Garden. Listen for the useful question inside the thought."
+		return "Everlasting Father: Complete the Spark relay. Its current will carry your Echo Seed across the golden threshold to Island Two."
+	if task_index == 2:
+		if bool(progress.island_two_invitation_received) and not bool(progress.island_two_arrived):
+			return "Everlasting Father: The intact Echo Seed reveals Ari's unfinished garden. Follow its receiver light from the bridge."
+		return "Everlasting Father: Ari feels frightened. That feeling matters. Inspect the plate, recorder and cooling valve before testing an explanation."
+	if task_index == 3:
+		return "Everlasting Father: The record shows drift, lost cooling and a protective shutdown. Reconstruct their order. Ari's touch alone may not explain it."
+	if task_index == 4:
+		return "Everlasting Father: Which explanation fits every observation? Run the model. A mismatch is useful information, not a failure."
+	if task_index == 5:
+		return "Everlasting Father: Ari's feeling, the machine's behaviour and an offer of help each add something. Explore all three."
+	if task_index == 6:
+		return "Everlasting Father: Test a smaller bed, work with Ari, or restore cooling first. Each is a useful next step. Watch how your optical adjustments change the light."
+	if task_index == 7:
+		return "Ari: I still have something to learn. Now I know where to start. Share our discovery at the projector to reveal the storm beyond."
+	return "Everlasting Father: You found a way forward without every answer. Help the troubled storm release its anchors and become gentle rain."
 
 
 func _save_progress() -> bool:

@@ -75,6 +75,14 @@ func _run() -> void:
 	_check(str(milo.call("get_companion_state_name")) == "IDLE_NEAR_PLAYER",
 		"Milo stops instead of crowding the player (got %s)" % str(
 			milo.call("get_companion_state_name")))
+	_check(followed_distance >= float(milo.get("follow_stop_distance")) - 0.2,
+		"Milo preserves visible personal space instead of overlapping the player (%.2fm)" \
+		% followed_distance)
+	_check(bool(milo.get("first_wave")), "Milo still greets the player on arrival")
+	milo.call("_process", 5.1)
+	_check(str(milo.call("get_companion_state_name")) == "IDLE_NEAR_PLAYER" \
+			and locomotion_player.current_animation == "Idle_3",
+		"the completed arrival greeting does not restart every five seconds")
 
 	# Stopping also eases out instead of zeroing the body velocity in one frame.
 	milo.velocity = Vector3(1.5, 0.0, 0.0)
@@ -108,8 +116,22 @@ func _run() -> void:
 	var repaired_distance := milo.global_position.distance_to(player.global_position)
 	_check(repaired_distance < 4.0,
 		"Milo safely reappears near the player after a teleport")
+	_check(repaired_distance >= float(milo.get("follow_stop_distance")) - 0.2,
+		"teleport recovery places Milo beside the player rather than inside their silhouette")
 	_check(milo.velocity.length() < 0.01,
 		"safe repositioning clears stale movement velocity")
+
+	var shore_wait_position := milo.global_position
+	player.set_meta("sailing_boat", true)
+	player.position += Vector3(35, 0, 0)
+	for frame in 12:
+		await physics_frame
+	_check(milo.global_position.distance_to(shore_wait_position) < 0.01,
+		"Milo waits ashore rather than following the sailing player over water")
+	player.remove_meta("sailing_boat")
+	await physics_frame
+	_check(milo.global_position.distance_to(player.global_position) < 4.0,
+		"safe disembarking resumes the companion's normal catch-up")
 
 	_check(ProjectSettings.has_setting("autoload/MiloCompanionManager"),
 		"the scene-lifecycle companion manager is registered as an autoload")

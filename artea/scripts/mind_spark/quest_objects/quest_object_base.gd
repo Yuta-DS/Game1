@@ -11,7 +11,8 @@ signal checkpoint_action_requested(action: String)
 
 const Definition := preload("res://scripts/mind_spark/quest_objects/quest_object_definition.gd")
 const StateStore := preload("res://scripts/mind_spark/quest_objects/quest_object_state_store.gd")
-const Foley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
+const UnfinishedLight := preload("res://scripts/mind_spark/unfinished_light_rules.gd")
+const ResearchSound := preload("res://scripts/mind_spark/research_sound_cues.gd")
 const MODEL_SCENE_PATHS := [
 	"res://scenes/mind_spark/quest_objects/models/thought_spark_socket_model.tscn",
 	"res://scenes/mind_spark/quest_objects/models/evidence_scanner_model.tscn",
@@ -104,6 +105,8 @@ var current_state: Dictionary = {}
 var state_store := StateStore.new()
 var _completion_emitted := false
 var _ready_for_use := false
+var _sound_action: StringName = &"primary"
+var _sound_cache: Dictionary = {}
 
 
 func configure(new_definition: QuestObjectDefinition, new_save_id: String,
@@ -158,6 +161,11 @@ func interact(action: StringName = &"primary", value: Variant = null) -> Diction
 		var available_sparks := int(get_meta("available_sparks", definition.validated_total()))
 		if int(current_state.get("progress", 0)) >= available_sparks:
 			return _result(false, "find_thought_spark_first")
+	if bool(get_meta("unfinished_light", false)) and save_id in UnfinishedLight.IDS:
+		_sound_action=action
+		var outcome := UnfinishedLight.use(self, action, value)
+		_apply_visual_state(true)
+		return _result(bool(outcome[0]), str(outcome[1]))
 	if definition.object_kind == Definition.ObjectKind.FOCUS_BELL_BEACON:
 		arm_hint_timer()
 	var accepted := false
@@ -179,8 +187,8 @@ func interact(action: StringName = &"primary", value: Variant = null) -> Diction
 			accepted = action in [&"primary", &"place_evidence"]
 			if accepted: reason = _advance_progress()
 		Definition.ObjectKind.TRUTH_BRIDGE_TILE:
-			accepted = action in [&"primary", &"true"]
-			if accepted: reason = _complete({"answer": "true"})
+			var truth := _use_truth_materialiser(action)
+			accepted = truth[0]; reason = truth[1]
 		Definition.ObjectKind.FOCUS_BELL_BEACON:
 			accepted = action in [&"primary", &"help", &"toggle"]
 			if accepted:
@@ -243,6 +251,10 @@ func available_actions() -> Array[StringName]:
 			return [&"turn", &"reset"]
 		Definition.ObjectKind.MEMORY_CONSTELLATION:
 			return [&"node", &"reset", &"help"]
+		Definition.ObjectKind.LOGIC_GATE_ARCH:
+			return [&"place_evidence"]
+		Definition.ObjectKind.TRUTH_BRIDGE_TILE:
+			return [&"fear", &"fantasy", &"true"]
 		Definition.ObjectKind.FOCUS_BELL_BEACON:
 			return [&"help", &"toggle"]
 		Definition.ObjectKind.WARDEN_ANCHOR:
@@ -287,6 +299,8 @@ func _advance_progress() -> String:
 
 
 func _use_evidence_scanner(action: StringName) -> Array:
+	if save_id == "world_one.evidence_scanner":
+		return _use_evidence_cards(action)
 	if action in [&"primary", &"scan"] and not bool(current_state.get("scanned", false)):
 		current_state["scanned"] = true
 		_save_and_feedback("SCANNED • CHOOSE FACT OR FEAR", "⌕")
@@ -295,6 +309,40 @@ func _use_evidence_scanner(action: StringName) -> Array:
 		current_state["result"] = str(action)
 		return [true, _complete({"evidence": str(action)})]
 	return [false, "scan_first" if not current_state["scanned"] else "choose_fact_or_fear"]
+
+
+const EVIDENCE_CARDS := [
+	"The practice log records one completed attempt.",
+	"One difficult attempt means I will always fail.",
+	"The log records a second attempt after a pause.",
+]
+const EVIDENCE_ANSWERS := [&"fact", &"fear", &"fact"]
+const EVIDENCE_HINTS := [
+	"Look for something the log actually records, not a prediction.",
+	"Does one attempt prove what will always happen? Worry is real, but this prediction is not established.",
+	"The second attempt is an observed action, even though its outcome is unknown.",
+]
+
+func _use_evidence_cards(action: StringName) -> Array:
+	var index := clampi(int(current_state.get("evidence_index", 0)), 0, 2)
+	if action in [&"scan", &"primary"]:
+		current_state["scanned"] = true
+		_save_and_feedback("CARD %d/3 • READ THE LOG" % (index + 1), "⌕")
+		return [true, "read_evidence"]
+	if not bool(current_state.get("scanned", false)):
+		return [false, "scan_first"]
+	if action not in [&"fact", &"fear"]:
+		return [false, "choose_fact_or_fear"]
+	if action != EVIDENCE_ANSWERS[index]:
+		_save_and_feedback(EVIDENCE_HINTS[index], "?")
+		return [false, "reconsider_evidence"]
+	current_state["evidence_index"] = index + 1
+	current_state["progress"] = index + 1
+	if index == 2:
+		return [true, _complete({"evidence": "verified_log", "cards": 3})]
+	current_state["scanned"] = false
+	_save_and_feedback("EVIDENCE SECURED • SCAN THE NEXT CARD", "◆")
+	return [true, "evidence_secured"]
 
 
 func _use_perspective_lens(action: StringName) -> Array:
@@ -310,7 +358,40 @@ func _use_perspective_lens(action: StringName) -> Array:
 	return [true, "angle_changed"]
 
 
+const TRUTH_STATEMENTS := {
+	"fear": "One difficult attempt proves I will always fail.",
+	"fantasy": "If I hope enough, every attempt will be easy.",
+	"true": "One difficult attempt can teach me how to try the next step.",
+}
+
+
+func _use_truth_materialiser(action: StringName) -> Array:
+	if action == &"primary" or action not in [&"fear", &"fantasy", &"true"]:
+		return [false, "choose_supported_statement"]
+	current_state["selected_statement"] = str(action)
+	if action == &"fear":
+		_save_and_feedback("FEAR IS MEANINGFUL • BUT ‘ALWAYS’ IS NOT IN THE LOG", "?")
+		return [false, "prediction_not_supported"]
+	if action == &"fantasy":
+		_save_and_feedback("HOPE NEEDS AN HONEST NEXT STEP • NOT A PROMISE OF EASE", "?")
+		return [false, "fantasy_not_supported"]
+	return [true, _complete({"answer": "true", "statement": TRUTH_STATEMENTS["true"],
+		"materialised_path": true})]
+
+
 func _use_sequence(action: StringName, value: Variant) -> Array:
+	if save_id == "world_one.memory_board":
+		if action == &"undo":
+			var prior: Array = current_state.get("sequence", [])
+			if prior.is_empty():
+				return [false, "nothing_to_undo"]
+			prior.pop_back()
+			current_state["sequence"] = prior
+			current_state["progress"] = prior.size()
+			_save_and_feedback("LAST LINK REMOVED • TRY ANOTHER CONNECTION", "↺")
+			return [true, "link_undone"]
+		if action in [&"primary", &"node"] and value == null:
+			return [false, "choose_a_memory_node"]
 	if action == &"reset":
 		return [reset_sequence(), "reset"]
 	if action == &"help":
@@ -413,7 +494,10 @@ func _save_and_feedback(message: String, feedback_icon: String, save := true) ->
 	status.text = message
 	icon.text = feedback_icon
 	feedback_changed.emit(save_id, message, feedback_icon)
-	_play_tone()
+	var cue: StringName = &""
+	if bool(get_meta("unfinished_light",false)) and save_id in UnfinishedLight.IDS:
+		cue=ResearchSound.select(_sound_action,feedback_icon!="?",bool(current_state.get("completed",false)))
+	_play_tone(cue)
 	return true
 
 
@@ -505,6 +589,8 @@ func _apply_visual_state(animate: bool) -> void:
 
 
 func _progress_text() -> String:
+	if save_id == "world_one.evidence_scanner":
+		return "%d/3" % clampi(int(current_state.get("evidence_index", 0)), 0, 3)
 	match definition.object_kind:
 		Definition.ObjectKind.FOCUS_BELL_BEACON:
 			return "HINT ON" if current_state.get("hint_enabled", false) else "OPTIONAL"
@@ -576,6 +662,12 @@ func _attach_blender_model(kind: int) -> void:
 	if kind < 0 or kind >= BLENDER_MODEL_PATHS.size():
 		return
 	var path := str(BLENDER_MODEL_PATHS[kind])
+	var family := save_id.begins_with("world_one.") and kind != Definition.ObjectKind.MEMORY_CONSTELLATION
+	if family:
+		var slug := path.get_file().get_basename()
+		path = "res://assets3D/mind_spark/quest_kit/memory_style_family/%s/export/%s.glb" % [slug, slug]
+	if kind == Definition.ObjectKind.MEMORY_CONSTELLATION and save_id == "world_one.memory_board":
+		path = "res://assets3D/mind_spark/quest_kit/memory_board/export/memory_board.glb"
 	if not ResourceLoader.exists(path):
 		push_error("Missing Blender quest-object model for %s: %s" % [definition.display_name, path])
 		return
@@ -585,10 +677,36 @@ func _attach_blender_model(kind: int) -> void:
 		return
 	var imported := packed.instantiate() as Node3D
 	imported.name = "BlenderModel"
-	if kind == Definition.ObjectKind.THOUGHT_SPARK_SOCKET:
+	if kind == Definition.ObjectKind.THOUGHT_SPARK_SOCKET and not family:
 		# Match the former two-metre gameplay prop while retaining source detail.
 		imported.scale = Vector3.ONE * 0.30
 	visual_root.add_child(imported)
+	if family:
+		imported.set_meta("memory_style_family", true)
+		set_meta("preserve_authored_nodes", true)
+		if kind not in [Definition.ObjectKind.LOGIC_GATE_ARCH, Definition.ObjectKind.TRUTH_BRIDGE_TILE, Definition.ObjectKind.CALM_RAIN_BASIN]:
+			var caption := Label3D.new()
+			caption.name = "ActionCaption"
+			caption.text = ["PLACE SPARKS", "SCAN / COMPARE", "TURN / OBSERVE", "", "", "", "ASK FOR HELP", "DODGE / RESPOND", "", "REFLECT / SKIP", "SAVE / REST", "SHOW THE WAY"][kind]
+			caption.position = Vector3(0, .63, .499)
+			caption.font_size = 28
+			caption.pixel_size = .0015
+			caption.modulate = Color("245b61")
+			caption.outline_size = 0
+			imported.add_child(caption)
+	if kind == Definition.ObjectKind.MEMORY_CONSTELLATION and save_id == "world_one.memory_board":
+		imported.set_meta("memory_board_benchmark", true)
+		set_meta("preserve_authored_nodes", true)
+		for index in 3:
+			var label := Label3D.new()
+			label.name = "MemoryNodeCaption%d" % index
+			label.text = str(definition.sequence_order[index]).to_upper() if index < definition.sequence_order.size() else str(index + 1)
+			label.position = Vector3(-0.53 + index * 0.53, 0.94, 0.158)
+			label.font_size = 32
+			label.pixel_size = 0.0013
+			label.modulate = Color("245b61")
+			label.outline_size = 0
+			imported.add_child(label)
 	for child in imported.find_children("LOD1*", "Node3D", true, false):
 		(child as Node3D).visible = false
 	for child in imported.find_children("LOD2*", "Node3D", true, false):
@@ -670,6 +788,34 @@ func _apply_torch_spark_ball_textures() -> void:
 func _apply_blender_visual_state() -> void:
 	if definition == null:
 		return
+	var imported := visual_root.get_node_or_null("BlenderModel")
+	if imported != null and imported.get_meta("memory_style_family", false):
+		_apply_memory_family_state(imported)
+		return
+	if imported != null and imported.get_meta("memory_board_benchmark", false):
+		# Mobile/Compatibility can still render legacy instance transparency.
+		# Retain behavior nodes, but explicitly hide their obsolete surfaces after
+		# the shared visual updater has touched them on every state change.
+		for geometry in visual_root.find_children("*", "GeometryInstance3D", true, false):
+			if not imported.is_ancestor_of(geometry):
+				geometry.visible = false
+		var progress := clampi(int(current_state.get("progress", 0)), 0, 3)
+		prompt.text = "MEMORY RESTORED • 3/3" if bool(current_state.get("completed", false)) else "CONNECT THE MEMORY • %d/3" % progress
+		for index in 3:
+			var cap := _find_blender_part("NodeCap%d" % index)
+			if cap != null:
+				if not cap.has_meta("rest_position"):
+					cap.set_meta("rest_position", cap.position)
+				cap.position = cap.get_meta("rest_position") + Vector3(0, 0, -0.018 if index < progress else 0.0)
+				cap.set_meta("selected", index < progress)
+		for index in 2:
+			var link := _find_blender_part("Link%d" % index)
+			if link != null:
+				link.visible = progress >= index + 2
+		var reward := _find_blender_part("RewardSeal")
+		if reward != null:
+			reward.visible = bool(current_state.get("completed", false))
+		return
 	var kind := int(definition.object_kind)
 	if kind < 0 or kind >= BLENDER_STATE_PARTS.size():
 		return
@@ -687,6 +833,82 @@ func _apply_blender_visual_state() -> void:
 				part.visible = phase == visible_phase
 	if kind == Definition.ObjectKind.THOUGHT_SPARK_SOCKET:
 		_apply_torch_spark_socket_stage()
+
+
+func _apply_memory_family_state(imported: Node3D) -> void:
+	# Retain authored collisions and scripts; hide only their replaced surfaces.
+	for geometry in visual_root.find_children("*", "GeometryInstance3D", true, false):
+		if not imported.is_ancestor_of(geometry):
+			if geometry.name in ["PathBeam", "HintArrow", "SafeArrow", "GentleRain"] or geometry.get_parent().name == "RouteDots":
+				geometry.transparency = 0.0
+				if geometry is Label3D:
+					geometry.modulate.a = 1.0
+				if geometry is GPUParticles3D:
+					geometry.visible = true
+				continue
+			geometry.visible = false
+	# Labels must clear the new silhouette, rather than intersect the housing.
+	var top := 1.92
+	if definition.object_kind in [Definition.ObjectKind.PERSPECTIVE_LENS, Definition.ObjectKind.IDENTITY_REFLECTION_MIRROR]:
+		top = 2.22
+	if definition.object_kind == Definition.ObjectKind.LOGIC_GATE_ARCH:
+		top = 3.83
+	elif definition.object_kind in [Definition.ObjectKind.CALM_RAIN_BASIN, Definition.ObjectKind.TRUTH_BRIDGE_TILE]:
+		top = .93
+	prompt.text = definition.display_name.to_upper()
+	prompt.position = Vector3(0, top + .18, .10)
+	prompt.font_size = 24
+	prompt.pixel_size = .0032
+	status.position = Vector3(0, top, .10)
+	status.font_size = 19
+	status.pixel_size = .0028
+	status.text = status.text.replace("_", " ").to_upper()
+	var hint := visual_root.get_node_or_null("HintArrow") as Label3D
+	if hint != null:
+		hint.position = Vector3(0, top + .36, .10)
+		hint.font_size = 19
+		hint.pixel_size = .0028
+	icon.visible = false # The three physical indicator windows carry this state.
+	var done := bool(current_state.get("completed", false))
+	var progress := int(current_state.get("progress", 0))
+	if save_id == "world_one.evidence_scanner":
+		progress = int(current_state.get("evidence_index", 0))
+	var active := progress > 0 or bool(current_state.get("scanned", false))
+	active = active or bool(current_state.get("guide_enabled", false)) or bool(current_state.get("hint_enabled", false))
+	var stage := 3 if done else (clampi(progress, 1, 2) if active else 0)
+	if definition.object_kind == Definition.ObjectKind.LOGIC_GATE_ARCH:
+		stage = clampi(progress,0,2)
+	var binary := definition.object_kind in [Definition.ObjectKind.TRUTH_BRIDGE_TILE, Definition.ObjectKind.FOCUS_BELL_BEACON, Definition.ObjectKind.WARDEN_ANCHOR, Definition.ObjectKind.CALM_RAIN_BASIN, Definition.ObjectKind.IDENTITY_REFLECTION_MIRROR, Definition.ObjectKind.CHECKPOINT_SERVER_ROOT, Definition.ObjectKind.CLEAR_PATH_PROJECTOR]
+	if binary:
+		stage = 1 if done or active or str(current_state.get("last_action", "")) != "" else 0
+	for i in 3:
+		var indicator := _find_blender_part("Status%d" % i)
+		if indicator != null:
+			indicator.visible = i < stage
+		var charge := _find_blender_part("Charge%d" % i)
+		if charge != null:
+			charge.visible = i < progress
+	var mechanism := _find_blender_part("Mechanism")
+	if mechanism != null:
+		if not mechanism.has_meta("rest_transform"):
+			mechanism.set_meta("rest_transform", mechanism.transform)
+		mechanism.transform = mechanism.get_meta("rest_transform")
+		match definition.object_kind:
+			Definition.ObjectKind.EVIDENCE_SCANNER:
+				mechanism.position.y += .10 if bool(current_state.get("scanned", false)) else -.12
+			Definition.ObjectKind.PERSPECTIVE_LENS:
+				mechanism.rotation.y = float(maxi(0,int(current_state.get("angle_step",0)))) * PI / 4.0
+			Definition.ObjectKind.LOGIC_GATE_ARCH:
+				mechanism.position.y += 1.6 if done else 0.0
+			Definition.ObjectKind.WARDEN_ANCHOR:
+				mechanism.visible = int(current_state.get("anchor_state",0)) != AnchorState.BROKEN
+			Definition.ObjectKind.CALM_RAIN_BASIN, Definition.ObjectKind.TRUTH_BRIDGE_TILE:
+				mechanism.visible = done
+			Definition.ObjectKind.FOCUS_BELL_BEACON:
+				mechanism.position.x += .10 if bool(current_state.get("hint_enabled",false)) else 0.0
+	var reward := _find_blender_part("Reward")
+	if reward != null:
+		reward.visible = done
 
 
 func _apply_torch_spark_socket_stage() -> void:
@@ -1164,14 +1386,45 @@ func _mesh(mesh: PrimitiveMesh, size: float) -> MeshInstance3D:
 		definition.accent_color, 0.62, 0.32))
 
 
-func _play_tone() -> void:
-	feedback_sound.stream = Foley.make_quest_feedback(
-		definition.object_kind, bool(current_state.get("completed", false)))
+func _play_tone(cue: StringName = &"") -> void:
+	if cue!=&"":
+		if not _sound_cache.has(cue): _sound_cache[cue]=ResearchSound.make(cue)
+		feedback_sound.stop()
+		feedback_sound.stream=_sound_cache[cue]
+		set_meta("last_sound_cue",cue)
+	elif feedback_sound.stream == null:
+		feedback_sound.stream = _make_tone()
 	feedback_sound.play()
 
 
+func _exit_tree() -> void:
+	# Stop scene-local playback before releasing its generated stream. Scene
+	# changes can interrupt feedback, and re-entry can lazily create a fresh clip.
+	if is_instance_valid(feedback_sound):
+		feedback_sound.stop()
+		feedback_sound.stream = null
+	_sound_cache.clear()
+
+
+func _make_tone() -> AudioStreamWAV:
+	var wav := AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.mix_rate = 11025
+	wav.stereo = false
+	var frames := 1102
+	var bytes := PackedByteArray()
+	bytes.resize(frames * 2)
+	for index in frames:
+		var envelope := 1.0 - float(index) / frames
+		var sample := int(sin(TAU * 660.0 * float(index) / wav.mix_rate) * 6800.0 * envelope)
+		bytes[index * 2] = sample & 0xff
+		bytes[index * 2 + 1] = (sample >> 8) & 0xff
+	wav.data = bytes
+	return wav
+
+
 func _on_body_entered(_body: Node3D) -> void:
-	prompt.visible = true
+	prompt.visible = not bool(get_meta("physical_signage", false))
 	interaction_requested.emit(self)
 
 

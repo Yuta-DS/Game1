@@ -23,10 +23,9 @@ const FACING_SPEED_THRESHOLD := 0.08
 const TELEPORT_DISTANCE := 100.0
 
 # The compact map used to queue a redraw on every single frame. Each redraw
-# samples ~530 landscape tiles, and _draw() is not cheap enough to be run 60
-# times a second for a 208 px circle - profiled inside the castle it was 12 ms
-# of a 15 ms frame, by far the largest single cost in the scene, and GDScript
-# costs several times that again under WASM in the Web export.
+# samples ~530 landscape tiles. The current native castle benchmark measured
+# 23.5 ms/frame with these updates and 12.0 ms with only the updates paused.
+# Cache per-redraw data and avoid rebuilding this 208 px circle every frame.
 #
 # Nothing on this map changes fast enough to need 60 Hz. It is refreshed on a
 # fixed cadence, and immediately when the player has actually moved far enough

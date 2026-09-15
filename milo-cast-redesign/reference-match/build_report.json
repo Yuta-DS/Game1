@@ -1,0 +1,13 @@
+{
+  "triangles": 21358,
+  "meshes": 11,
+  "bones": 41,
+  "actions": [
+    "Idle",
+    "Walking_A",
+    "Guide",
+    "Speak"
+  ],
+  "visual_review": "Recognition passes; faithful-reference likeness remains unverified as a pass. See REVIEW.md for final independent verdict.",
+  "scope": "Separate reference-model rebuild; not integrated into game"
+}

@@ -1,0 +1,165 @@
+{
+  "asset_sha256": "2b0df04a1705f731a0d118d49c82182ffb2251f683366d201b767cf79d577bd8",
+  "media": {
+    "hero.jpg": {
+      "sha256": "826a7779db140eb7826d3541c02462fc697db17399381a72f4d8d05cf79294c9",
+      "bytes": 125553
+    },
+    "front.jpg": {
+      "sha256": "2b3f7ac4e5f118fa62bdc92b554df075ab3879a61e12bae22cbeb44ac3b4a25a",
+      "bytes": 125089
+    },
+    "side.jpg": {
+      "sha256": "792c0d05692cde60c2ba737bae0136866a45a5d947768c3f4f86ddafe618ed91",
+      "bytes": 93798
+    },
+    "back.jpg": {
+      "sha256": "73f4a86fa2c355fe51d73a61b08777be98e4a70f5a1d5440e49694d577c321ec",
+      "bytes": 93580
+    },
+    "face.jpg": {
+      "sha256": "4d4304fa53fdd21462ec77b304c90578b05d8ba51e6eb31dcae49df5c759052c",
+      "bytes": 125145
+    },
+    "paws.jpg": {
+      "sha256": "d5fa8a5d0a4832efcef43a818ab236524970f5eb73067ee017cd42fc152e18df",
+      "bytes": 61070
+    },
+    "turnaround.jpg": {
+      "sha256": "19c4a3fb07e2564636666314d54c2fb61d5fa1dca90316de2b04c6e9eb1d0c24",
+      "bytes": 160398
+    },
+    "relaxed_paw.jpg": {
+      "sha256": "c7b5747fece3b1be7c37ebbcf71ce7cbc07a603f1d8bde1d239a37d2b98f1e7c",
+      "bytes": 78188
+    },
+    "greeting_hand.jpg": {
+      "sha256": "2e1d1fbf6227f2c4b9b326556701e77e14dfe2110dda0acde79dbd9e0b80ee14",
+      "bytes": 68542
+    },
+    "cane_grip.jpg": {
+      "sha256": "126d140f9e960a35af6648a2eac37adefb7ec976de26476925bb95ae4d70dc4c",
+      "bytes": 78380
+    },
+    "cane_grip_inside.jpg": {
+      "sha256": "5fbfe416070db68bb20de6b6d602cf9c10e5d4c7d7849f92ebf70ffc006b57f9",
+      "bytes": 85313
+    },
+    "cast_eye_comparison.jpg": {
+      "sha256": "3e761bdfc39f5a976c8ab9adc242bffe6ba7bb46daf24640195fd4458f9e41cf",
+      "bytes": 276336
+    },
+    "milo_motion.mp4": {
+      "sha256": "20a070e3f4b41f61e407b0c13d7c4e47242fc09c9738d16635c7ccef911ce40b",
+      "bytes": 1025074
+    },
+    "milo_hand_mechanics.mp4": {
+      "sha256": "d206e4a33224f4aaae09acae7df62bffc898e0b56d9e127b8657c38ef1981d63",
+      "bytes": 402321
+    },
+    "godot_preview.png": {
+      "sha256": "eb89559a446e52b9e3d4a992222f8b74b3e76eecaec24f2b57f6b53e8536bff7",
+      "bytes": 224097
+    },
+    "godot_hand_Greet.png": {
+      "sha256": "73bfd8790c150bd62b3fb9430c78f8660e758e0410d101fdf8845797aa6eadac",
+      "bytes": 243480
+    },
+    "godot_hand_Cane_Hold.png": {
+      "sha256": "73e1513218f9bf228fb0448a288d509b918870d3bb29027f285d25b46730c611",
+      "bytes": 296368
+    },
+    "godot_hand_Hand_Mechanics.png": {
+      "sha256": "0221841eb41c87fe2a1149ff4bcbaf98d0a06b3ab13529141d7e7c6a4e36300f",
+      "bytes": 240883
+    },
+    "pose_Idle.jpg": {
+      "sha256": "7fa0ae79d394208c84c99089606c521844f267c457abe200957698ad681cda7c",
+      "bytes": 107470
+    },
+    "pose_Walking_A.jpg": {
+      "sha256": "9b52b7c56d0dbe48c49a605f18761bd0fda72c9257e2be17fae4b8647a5a4da2",
+      "bytes": 108671
+    },
+    "pose_Greet.jpg": {
+      "sha256": "aa844fe26e84f7cb4393e8dd19cd6f05447d1fcb4b89fbd93a23b5079c2d6c97",
+      "bytes": 108688
+    },
+    "pose_Guide.jpg": {
+      "sha256": "4746440e7561c936fe5b8e5de127bfe231a5ab48713af011fcd3105afc6c14c2",
+      "bytes": 108161
+    },
+    "pose_Speak.jpg": {
+      "sha256": "59552835bdbe42f0654317f87073b88d2bea7a16e38778d82db3b69350d00d10",
+      "bytes": 109363
+    },
+    "pose_Cane_Hold.jpg": {
+      "sha256": "cbbf88ed6f1ae3722c3d06a2903851598f94177f49f5115af8779dd9c1c2d720",
+      "bytes": 108660
+    },
+    "face_open.jpg": {
+      "sha256": "41e301de4bf16328f1ced40210c5a09e2fc30a5c7ed3181000831d3bf965677c",
+      "bytes": 81126
+    },
+    "face_closing.jpg": {
+      "sha256": "e4a055f958f1f2715f91b58ff6bf535068b744cf10dd455395fc839a61e97495",
+      "bytes": 80653
+    },
+    "face_blink.jpg": {
+      "sha256": "8e5ce88b16adfec99dea2902b51fe14479064bcf03bd8742df9ab458ff84e5bc",
+      "bytes": 79898
+    },
+    "face_reopened.jpg": {
+      "sha256": "f76121c20abb48149de5753f4eda6a2363f4427c39709fd677de6f6a5164ae2b",
+      "bytes": 81029
+    },
+    "mechanics_side_relaxed.jpg": {
+      "sha256": "6e6add56b98cb3fea3c5f883d472efeef15810c4defa923948b7be2844416010",
+      "bytes": 143496
+    },
+    "mechanics_back_hook.jpg": {
+      "sha256": "17fd1ce76aa4eeed3691750cc10532e62ccbcd1aba2af4ad678b4c442d29ef5d",
+      "bytes": 68925
+    },
+    "mechanics_palm_hook.jpg": {
+      "sha256": "be6e91479be4a9eefb66593e81e33d7cfc559a2db77aa351b601e39b1b678bbf",
+      "bytes": 68270
+    },
+    "mechanics_side_hook.jpg": {
+      "sha256": "af717673b770f9c0e1a1c487be719f3050dbaaea4fe35963f7fd3d12c5ba28b9",
+      "bytes": 142426
+    },
+    "mechanics_palm_opposition.jpg": {
+      "sha256": "21740f23014835784e32125cd5f2d8a07036bb89e070ff4783ef64a826486a0d",
+      "bytes": 68211
+    },
+    "mechanics_back_open.jpg": {
+      "sha256": "28571cc680977e82df03e153019e267e10346f812d94b7d817316f7e816aa4ec",
+      "bytes": 69535
+    },
+    "mechanics_back_opposition.jpg": {
+      "sha256": "f28313bd07fbdcc450d8b01182e31dea427904e51de29550bad73641348439de",
+      "bytes": 68907
+    },
+    "mechanics_side_open.jpg": {
+      "sha256": "c7d66f26a33d9b44d12d4c48c34030c2fe583010b34eb0c1952b75263eb95fc1",
+      "bytes": 142664
+    },
+    "mechanics_palm_open.jpg": {
+      "sha256": "65044a60d0d3f5cbd8eefacd7ac2e6dd0a3d348fadb36e8772672dd2c1fbd4eb",
+      "bytes": 68471
+    },
+    "mechanics_palm_relaxed.jpg": {
+      "sha256": "1c833cc07ead4504ee561724c029465e271b80114d24216abc7150c3ae128a86",
+      "bytes": 68504
+    },
+    "mechanics_back_relaxed.jpg": {
+      "sha256": "05a985dc6188b11fc72f3e7bc12f5883b6056d37d62b1f4b7627de6a2b76308f",
+      "bytes": 69346
+    },
+    "mechanics_side_opposition.jpg": {
+      "sha256": "cc45cd7a5e74af0791334c0258c20c01b1b10522c0b216eb8f7a23e58295a809",
+      "bytes": 142017
+    }
+  }
+}

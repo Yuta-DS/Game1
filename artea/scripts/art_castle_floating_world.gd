@@ -163,6 +163,7 @@ func _ready() -> void:
 	_build_creator_district()
 	_build_story_landmarks()
 	_build_mind_spark_world_one_gameplay()
+	_build_heart_melody_island_one()
 	_build_world_one_walk_route()
 	_build_boundary_observatories()
 	_build_skyline()
@@ -187,6 +188,34 @@ func _build_streaming_director() -> void:
 	streaming.world_root = self
 	streaming.player = _player
 	add_child(streaming)
+
+
+func _build_heart_melody_island_one() -> void:
+	if has_node("HeartMelodyWorld"):
+		return
+	var scene := load("res://scenes/heart_melody/heart_garden_world.tscn") as PackedScene
+	var heart := scene.instantiate() as Node3D
+	heart.name = "HeartMelodyWorld"
+	heart.position = Vector3(6000, 0, 2290)
+	heart.set("defer_build", true)
+	add_child(heart)
+	var gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
+	gate.name = "HeartMelodyWorldGate"
+	gate.position = HEART + Vector3(-95, 4, 10)
+	gate.target_world_path = NodePath("../HeartMelodyWorld")
+	gate.destination_world_local = heart.position + HeartGardenWorld.ARRIVAL
+	gate.prompt_text = "Q • ENTER HEART MELODY: FEELING GARDEN"
+	add_child(gate)
+	heart.connect("return_requested", func():
+		var body = heart.get("player") as CharacterBody3D
+		if body != null:
+			body.global_position = to_global(HEART + Vector3(-83, 6, 10))
+			body.velocity = Vector3.ZERO)
+	var journey := get_node_or_null("/root/JourneyState")
+	if journey != null:
+		gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel"))
+		journey.treasure_awarded.connect(func(_id: String):
+			gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel")))
 
 
 func _build_standalone_minimap() -> void:
@@ -850,6 +879,10 @@ func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 	# Start on the district rim and finish on the Zone 01 floor, both slightly
 	# inside the islands so neither joint leaves a gap the player can fall through.
 	var start: Vector3 = MIND + flat_direction * (MIND_DISTRICT_RADIUS - 8.0)
+	# The train landing shares this island rim. Offset the causeway entrance
+	# around the rim so its raised threshold and rails do not cross that lane.
+	start = MIND + (start - MIND + Vector3(0.0, 0.0, 36.0)).normalized() \
+		* (MIND_DISTRICT_RADIUS - 8.0)
 	start.y = CAUSEWAY_DECK_Y
 	var finish: Vector3 = landing - flat_direction * 118.0
 	finish.y = CAUSEWAY_DECK_Y
@@ -5372,3 +5405,10 @@ func _add_world_one_build_trigger(world_one: MindSparkWorldOne) -> void:
 		if body is CharacterBody3D:
 			world_one.ensure_world_built())
 	add_child(trigger)
+
+
+func _exit_tree() -> void:
+	for source in [_tree_christmas_melody, _tree_christmas_bells]:
+		if is_instance_valid(source):
+			source.stop()
+			source.stream = null

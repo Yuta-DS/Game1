@@ -1,0 +1,317 @@
+{
+  "passed": false,
+  "local_mechanical_checks_passed": true,
+  "status": "local_review_prototype",
+  "full_anycreature_gate": "not_certified",
+  "live_game_integration": "not_performed",
+  "checks": [
+    {
+      "name": "normalized_skin_weights",
+      "passed": true,
+      "bad_vertices": [],
+      "source": "Blender"
+    },
+    {
+      "name": "Idle_finite_and_skin_stretch",
+      "passed": true,
+      "max_edge_stretch": 2.3209056317880963,
+      "samples": 17,
+      "source": "Blender"
+    },
+    {
+      "name": "Idle_ground_clearance",
+      "passed": true,
+      "min_sole_z": -1.7299174714935361e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Idle_cane_grip",
+      "passed": true,
+      "max_error_m": 1.64757254626572e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Idle_reachable_targets",
+      "passed": true,
+      "max_error_m": 0,
+      "source": "Blender"
+    },
+    {
+      "name": "Idle_loop_closure",
+      "passed": true,
+      "max_matrix_delta": 1.4695760038993391e-18,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_InPlace_finite_and_skin_stretch",
+      "passed": true,
+      "max_edge_stretch": 2.919211805584416,
+      "samples": 17,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_InPlace_ground_clearance",
+      "passed": true,
+      "min_sole_z": -1.691290520966504e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_InPlace_cane_grip",
+      "passed": true,
+      "max_error_m": 1.2377834115800373e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_InPlace_reachable_targets",
+      "passed": true,
+      "max_error_m": 0,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_InPlace_loop_closure",
+      "passed": true,
+      "max_matrix_delta": 0.0,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_Forward_finite_and_skin_stretch",
+      "passed": true,
+      "max_edge_stretch": 2.9192040489353066,
+      "samples": 17,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_Forward_ground_clearance",
+      "passed": true,
+      "min_sole_z": -1.8683687130760518e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_Forward_cane_grip",
+      "passed": true,
+      "max_error_m": 1.3657139822709083e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Walk_Forward_reachable_targets",
+      "passed": true,
+      "max_error_m": 0,
+      "source": "Blender"
+    },
+    {
+      "name": "Welcome_finite_and_skin_stretch",
+      "passed": true,
+      "max_edge_stretch": 2.3209056317880963,
+      "samples": 17,
+      "source": "Blender"
+    },
+    {
+      "name": "Welcome_ground_clearance",
+      "passed": true,
+      "min_sole_z": -1.5084495430528477e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Welcome_cane_grip",
+      "passed": true,
+      "max_error_m": 7.028863677424642e-08,
+      "source": "Blender"
+    },
+    {
+      "name": "Welcome_reachable_targets",
+      "passed": true,
+      "max_error_m": 0,
+      "source": "Blender"
+    },
+    {
+      "name": "Listen_finite_and_skin_stretch",
+      "passed": true,
+      "max_edge_stretch": 2.3209056317880963,
+      "samples": 17,
+      "source": "Blender"
+    },
+    {
+      "name": "Listen_ground_clearance",
+      "passed": true,
+      "min_sole_z": -1.7299174714935361e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Listen_cane_grip",
+      "passed": true,
+      "max_error_m": 1.64757254626572e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Listen_reachable_targets",
+      "passed": true,
+      "max_error_m": 0,
+      "source": "Blender"
+    },
+    {
+      "name": "Speak_finite_and_skin_stretch",
+      "passed": true,
+      "max_edge_stretch": 2.3209056317880963,
+      "samples": 17,
+      "source": "Blender"
+    },
+    {
+      "name": "Speak_ground_clearance",
+      "passed": true,
+      "min_sole_z": -1.7299174714935361e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Speak_cane_grip",
+      "passed": true,
+      "max_error_m": 1.64757254626572e-07,
+      "source": "Blender"
+    },
+    {
+      "name": "Speak_reachable_targets",
+      "passed": true,
+      "max_error_m": 0,
+      "source": "Blender"
+    },
+    {
+      "name": "forward_walk_planted_contact",
+      "passed": true,
+      "max_drift_m": 1.228781230931777e-07,
+      "samples": 145,
+      "source": "Blender"
+    },
+    {
+      "name": "self_contained",
+      "passed": true,
+      "source": "glTF"
+    },
+    {
+      "name": "31_deform_bones",
+      "passed": true,
+      "source": "glTF"
+    },
+    {
+      "name": "geometry_and_normalized_weights",
+      "passed": true,
+      "bad_records": 0,
+      "vertices": 62062,
+      "triangles": 118670,
+      "source": "glTF"
+    },
+    {
+      "name": "six_expected_clips",
+      "passed": true,
+      "source": "glTF"
+    },
+    {
+      "name": "Idle_tracks",
+      "passed": true,
+      "morph_channels": 4,
+      "duration": 4.0,
+      "source": "glTF"
+    },
+    {
+      "name": "Idle_export_loop",
+      "passed": true,
+      "max_channel_delta": 1.4695760038993391e-18,
+      "source": "glTF"
+    },
+    {
+      "name": "Walk_InPlace_tracks",
+      "passed": true,
+      "morph_channels": 4,
+      "duration": 1.600000023841858,
+      "source": "glTF"
+    },
+    {
+      "name": "Walk_InPlace_export_loop",
+      "passed": true,
+      "max_channel_delta": 0.0,
+      "source": "glTF"
+    },
+    {
+      "name": "Walk_Forward_tracks",
+      "passed": true,
+      "morph_channels": 4,
+      "duration": 4.800000190734863,
+      "source": "glTF"
+    },
+    {
+      "name": "Welcome_tracks",
+      "passed": true,
+      "morph_channels": 4,
+      "duration": 3.200000047683716,
+      "source": "glTF"
+    },
+    {
+      "name": "Listen_tracks",
+      "passed": true,
+      "morph_channels": 4,
+      "duration": 4.0,
+      "source": "glTF"
+    },
+    {
+      "name": "Speak_tracks",
+      "passed": true,
+      "morph_channels": 4,
+      "duration": 4.0,
+      "source": "glTF"
+    },
+    {
+      "name": "walk_continuous_video",
+      "passed": true,
+      "source": "ffprobe and ffmpeg decode",
+      "frames": 144,
+      "fps": 30
+    },
+    {
+      "name": "welcome_continuous_video",
+      "passed": true,
+      "source": "ffprobe and ffmpeg decode",
+      "frames": 96,
+      "fps": 30
+    },
+    {
+      "name": "speak_continuous_video",
+      "passed": true,
+      "source": "ffprobe and ffmpeg decode",
+      "frames": 120,
+      "fps": 30
+    },
+    {
+      "name": "listen_continuous_video",
+      "passed": true,
+      "source": "ffprobe and ffmpeg decode",
+      "frames": 120,
+      "fps": 30
+    },
+    {
+      "name": "idle_continuous_video",
+      "passed": true,
+      "source": "ffprobe and ffmpeg decode",
+      "frames": 120,
+      "fps": 30
+    },
+    {
+      "name": "independent_high_polish_review",
+      "passed": false,
+      "source": "Independent image-only reader",
+      "unresolved": [
+        "Eye integration",
+        "Shoulder cleanup",
+        "Runtime shading discrepancy"
+      ]
+    }
+  ],
+  "sha256": {
+    "milo_quality_v2.blend": "53e12278d1033d678221413f52360b344c7608418c07d4cc1a6227478b75b65c",
+    "milo_quality_v2.glb": "ebf92e791cd5cf70b4359abfa6f838b6cfdeb5e2c7ab1793f55add4aa83c615f",
+    "hero.png": "e78d0e3327321d1a08e385d64d2516710888406f36dfbd3af0897bb63a0e5104",
+    "face_closeup.png": "116b52c2ab45c2684102ea42cefcf5c33958d38d1a24b9c4faf09dba5fe76c80",
+    "walk.mp4": "974ad3263d7472177edf75249ef2ec11e7bf4926c85e9b87346bed1f71d4fadb",
+    "welcome.mp4": "acf76ed6ddaf930cf99955f852117b6f95cd20ac3cf4aabc1608cba4897a0791",
+    "speak.mp4": "aa05880feeb2dcbe8a7b46b7d51853bff07ec8b2f45e34f9f3b42e19f5ca1e5d",
+    "listen.mp4": "697173ca66971c2a4f75b8764004868e3f45b4438b143ef5cc137d1a140f2820",
+    "idle.mp4": "df0ad44eaa8cc4503a83b24a0649e87ed84a45e09c13895e8ef29928b9f6e376"
+  }
+}

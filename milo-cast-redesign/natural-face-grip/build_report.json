@@ -1,0 +1,20 @@
+{
+  "triangles": 28960,
+  "bones": 41,
+  "actions": [
+    "Idle",
+    "Walking_A",
+    "Guide",
+    "Speak"
+  ],
+  "cane_handle_center": [
+    -0.58,
+    -0.145,
+    0.708
+  ],
+  "shaft_axis": [
+    -0.49699999999999994,
+    -0.145
+  ],
+  "scope": "Local face/paws/cane revision; no game integration"
+}

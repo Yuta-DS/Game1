@@ -1,0 +1,74 @@
+{
+  "mesh_count": 125,
+  "bone_count": 41,
+  "checks": [
+    {
+      "name": "normalized_deform_weights",
+      "passed": true,
+      "bad_vertices": []
+    },
+    {
+      "name": "Milo_Redesign_Idle_finite_and_stretch",
+      "passed": true
+    },
+    {
+      "name": "Milo_Redesign_Idle_stationary_cane_hand",
+      "passed": true
+    },
+    {
+      "name": "Milo_Redesign_Welcome_finite_and_stretch",
+      "passed": true
+    },
+    {
+      "name": "Milo_Redesign_Welcome_stationary_cane_hand",
+      "passed": true
+    },
+    {
+      "name": "Milo_Redesign_Listen_finite_and_stretch",
+      "passed": true
+    },
+    {
+      "name": "Milo_Redesign_Listen_stationary_cane_hand",
+      "passed": true
+    },
+    {
+      "name": "Milo_Walking_finite_and_stretch",
+      "passed": true
+    }
+  ],
+  "clips": {
+    "Milo_Redesign_Idle": {
+      "samples": 33,
+      "finite_vertices": true,
+      "max_sleeve_edge_stretch": 1.0000029256191942,
+      "cane_hand_displacement_m": 0.0,
+      "free_hand_displacement_m": 0.0,
+      "duration_seconds": 3.2083333333333335
+    },
+    "Milo_Redesign_Welcome": {
+      "samples": 33,
+      "finite_vertices": true,
+      "max_sleeve_edge_stretch": 1.720748573495958,
+      "cane_hand_displacement_m": 0.0,
+      "free_hand_displacement_m": 0.29303269959907186,
+      "duration_seconds": 2.4166666666666665
+    },
+    "Milo_Redesign_Listen": {
+      "samples": 33,
+      "finite_vertices": true,
+      "max_sleeve_edge_stretch": 1.0000029256191942,
+      "cane_hand_displacement_m": 0.0,
+      "free_hand_displacement_m": 0.0,
+      "duration_seconds": 3.0
+    },
+    "Milo_Walking": {
+      "samples": 33,
+      "finite_vertices": true,
+      "max_sleeve_edge_stretch": 1.3665593829600866,
+      "cane_hand_displacement_m": 0.05761733310184024,
+      "free_hand_displacement_m": 0.11922867249647155,
+      "duration_seconds": 1.0666667620340984
+    }
+  },
+  "passed": true
+}

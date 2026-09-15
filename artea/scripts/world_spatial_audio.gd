@@ -230,7 +230,7 @@ func _scan_existing_spatial_sources() -> void:
 
 func _on_tree_node_added(node: Node) -> void:
 	if node is AudioStreamPlayer3D:
-		call_deferred("_configure_surround_source", node as AudioStreamPlayer3D)
+		call_deferred("_configure_surround_source_by_id", node.get_instance_id())
 	if node is Node3D:
 		# Large galaxy scenes add tens of thousands of decorative mesh nodes.
 		# Filter synchronously by semantic name so only the handful of possible
@@ -240,6 +240,13 @@ func _on_tree_node_added(node: Node) -> void:
 			call_deferred("_consider_world_audio_node", node)
 		if _is_vegetation_anchor(spatial):
 			call_deferred("_register_vegetation_anchor", spatial)
+
+
+func _configure_surround_source_by_id(instance_id: int) -> void:
+	# Nodes may be freed by a scene transition before this deferred call runs.
+	var source := instance_from_id(instance_id) as AudioStreamPlayer3D
+	if is_instance_valid(source):
+		_configure_surround_source(source)
 
 
 func _configure_surround_source(source: AudioStreamPlayer3D) -> void:
@@ -772,8 +779,11 @@ func _install_environment_audio() -> void:
 	var scene_name := String(_active_scene.name)
 	if scene_name == "HubWorld":
 		_stop_legacy_hub_ambience()
+		var harbour := _active_scene.get_node_or_null("Port") as Node3D
+		var harbour_audio_position := harbour.global_position + Vector3(0, 5, 0) \
+			if harbour != null else Vector3(145.0, 8.0, 67.0)
 		_add_loop("HarbourWaterAndBirds", "res://assets/audio/Flowing Water and Birds (Hub).ogg",
-			Vector3(145.0, 8.0, 67.0), -15.0, 115.0, 20.0)
+			harbour_audio_position, -15.0, 115.0, 20.0)
 		_add_loop("CastleCourtyardFire", "res://assets/audio/Campfire.ogg",
 			Vector3(-51.0, 76.0, 28.0), -18.0, 62.0, 8.0)
 		_add_recorded_wind("WesternTreeWind", Vector3(-108.0, 38.0, -18.0), 92.0)

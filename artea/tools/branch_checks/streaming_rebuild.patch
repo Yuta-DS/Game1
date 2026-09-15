@@ -1,0 +1,17 @@
+diff --git a/artea/scripts/world_streaming_director.gd b/artea/scripts/world_streaming_director.gd
+index d35eb278..0bf5f573 100644
+--- a/artea/scripts/world_streaming_director.gd
++++ b/artea/scripts/world_streaming_director.gd
+@@ -165,6 +165,12 @@ func _process(_delta: float) -> void:
+ ## Re-derive the cell list. Call after adding or removing a large part of the
+ ## world at runtime; the per-frame path never does this.
+ func rebuild() -> void:
++	# Restore only roots this director culled before discarding ownership.
++	# Otherwise _split() mistakes them for authored-hidden geometry and they
++	# never re-enter the cell list when the player returns.
++	for cell in _cells:
++		if not cell.shown:
++			_set_cell_visible(cell, true)
+ 	_cells.clear()
+ 	_build_cells()
+ 	_apply(true)

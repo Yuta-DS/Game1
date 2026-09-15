@@ -1,0 +1,147 @@
+{
+  "passed": false,
+  "asset": "milo_fullres.glb",
+  "sha256": "e25647bd815f8d6eed975dc4dfad8b0f878b31480eda80b51f268f88b2020a94",
+  "checks": [
+    {
+      "name": "self_contained_glb",
+      "passed": true
+    },
+    {
+      "name": "normalized_skin_weights",
+      "passed": true
+    },
+    {
+      "name": "finite_vertices_all_631_authored_frames",
+      "passed": true
+    },
+    {
+      "name": "seven_named_baked_clips_and_61_bones",
+      "passed": true
+    },
+    {
+      "name": "palm_length_and_knuckle_width_doubled",
+      "passed": true,
+      "ratio": 2,
+      "evidence": "medieval_update_verification.json"
+    },
+    {
+      "name": "hand_triangles_quadrupled_and_smooth_shaded",
+      "passed": true,
+      "before_per_hand": 14080,
+      "after_per_hand": 56320
+    },
+    {
+      "name": "medieval_outfit_components_and_modern_lapel_tie_removal",
+      "passed": true
+    },
+    {
+      "name": "exported_finger_hinges_ranges_coupling_no_scaling",
+      "passed": true,
+      "frames_checked": 631
+    },
+    {
+      "name": "loop_endpoint_vertex_match",
+      "passed": true,
+      "max_error": 0
+    },
+    {
+      "name": "no_boot_ground_penetration",
+      "passed": true,
+      "minimum_z": 0.01199987
+    },
+    {
+      "name": "maximum_edge_stretch_under_3x_all_clips",
+      "passed": false,
+      "observed": 3.2595055324082427,
+      "remaining_issue": "Raised-arm sleeve distortion remains above the conservative 3x target. Not production-approved."
+    },
+    {
+      "name": "maximum_hand_edge_stretch_under_3x_all_clips",
+      "passed": true,
+      "observed": 1.8195308594756034
+    },
+    {
+      "name": "anatomical_palm_orientation_export",
+      "passed": true,
+      "rest_inward_dot_min": 0.794744,
+      "wave_forward_dot": 0.999084,
+      "cane_dorsal_forward_dot": 1
+    },
+    {
+      "name": "single_connected_manifold_mesh_per_hand",
+      "passed": true
+    },
+    {
+      "name": "all_authored_hand_cane_surface_intersections",
+      "passed": true,
+      "frames_checked": 97,
+      "intersecting_triangle_pairs": 0
+    },
+    {
+      "name": "hand_mechanics_left_hand_self_intersections",
+      "passed": true,
+      "frames_checked": 145,
+      "nonadjacent_intersecting_triangle_pairs": 0
+    },
+    {
+      "name": "cane_frame_zero_right_hand_self_intersections",
+      "passed": true,
+      "frames_checked": 1,
+      "nonadjacent_intersecting_triangle_pairs": 0
+    },
+    {
+      "name": "cane_frame_zero_palmar_distal_pad_clearance_under_3mm",
+      "passed": true,
+      "clearances_m": [
+        0.00184285,
+        0.00147463,
+        0.00158747,
+        0.0014154
+      ]
+    },
+    {
+      "name": "sampled_distal_palm_cuff_clearance",
+      "passed": true,
+      "samples": 70,
+      "scope": "Five frames per clip per hand. Excludes buried wrist within 25mm of wrist joint."
+    },
+    {
+      "name": "protected_head_tail_boot_trouser_cane_geometry_preserved",
+      "passed": true,
+      "meshes": 49,
+      "tolerance_m": 1e-7
+    },
+    {
+      "name": "godot_compatibility_import_and_clip_motion",
+      "passed": true
+    },
+    {
+      "name": "local_godot_preview_render",
+      "passed": true
+    },
+    {
+      "name": "independent_visual_finish",
+      "passed": false,
+      "verdict": "Friendly elderly cat / fantasy scholar. Clothing reads Renaissance/storybook rather than distinctly medieval. Crowded finger joins, stiff coat, faceted head/tail remain. See MEDIEVAL_REVIEW.md for verbatim review and scope."
+    },
+    {
+      "name": "independent_faithful_reference_likeness",
+      "passed": false,
+      "historical": true,
+      "verdict": "Moderate, not close; face unchanged in this revision."
+    }
+  ],
+  "not_claimed": [
+    "full AnyCreature quality-gate pass",
+    "fully realistic anatomy or motion",
+    "historically accurate costume",
+    "human motion capture",
+    "arbitrary-pose or full-character collision-free deformation",
+    "force-solved cane grip",
+    "production LOD",
+    "live game integration",
+    "Blender MCP/plugin execution",
+    "production deployment"
+  ]
+}
