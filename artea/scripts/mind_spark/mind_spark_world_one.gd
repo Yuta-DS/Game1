@@ -901,6 +901,19 @@ func _build_progression_gates(parent: Node3D) -> void:
 		gate.set_meta("gated_connection", "%s>%s" % [
 			ZONES[route_start_index].id, ZONES[route_start_index + 1].id])
 		gates.add_child(gate)
+		if quest_index == 0:
+			# Island One and Island Two already have a complete, collision-backed
+			# sky bridge. A generic wall across its centre made the route look
+			# unfinished and prevented free exploration. Keep this compatibility
+			# node in the quest-gate array so save IDs and later indices do not
+			# move, but make progression narrative-only: no visible barrier and no
+			# invisible collision may occupy the bridge lane.
+			gate.set_meta("open", true)
+			gate.set_meta("physical_barrier_removed", true)
+			gate.set_meta("progression_mode", "narrative_only_clear_crossing")
+			gate.set_meta("removal_reason", "Island One to Island Two bridge must remain physically unobstructed")
+			_quest_gates.append(gate)
+			continue
 		_add_box(gate, "Barrier", Vector3(0, 7, 0), Vector3(25, 14, 1.6), _materials.violet)
 		var collision := CollisionShape3D.new()
 		collision.name = "CollisionShape3D"
@@ -1107,6 +1120,12 @@ func set_quest_gate_open(quest_index: int, open: bool) -> void:
 	if quest_index < 0 or quest_index >= _quest_gates.size():
 		return
 	var gate := _quest_gates[quest_index]
+	if bool(gate.get_meta("physical_barrier_removed", false)):
+		# The Island One -> Island Two crossing has no physical gate. Calls from
+		# legacy quest/save code are intentionally idempotent and cannot recreate
+		# an invisible blocker or report this open route as closed.
+		gate.set_meta("open", true)
+		return
 	if str(gate.get_meta("custom_gate_motion", "")) == "island_two_memory_hinges":
 		var motion := gate.get_node_or_null("IslandTwoMemoryGate/SafeMemoryGateMotion")
 		if motion != null:

@@ -28,7 +28,7 @@ func _run() -> void:
 	assert(not puzzle.is_echo_garden_complete())
 	assert(not puzzle.is_powered(), "Quest 1 alone must not power the inter-island gate")
 	assert(world.is_island_one_star_gate_open(), "The internal garden threshold must open for Quest 2")
-	assert(not world.is_quest_gate_open(0), "The exit to Island Two must remain locked")
+	assert(world.is_quest_gate_open(0), "The Island Two bridge must remain physically clear")
 	assert(completed_ids == ["quest.signal_observatory"])
 	assert(bool(puzzle.get_puzzle_state().signal_prism_claimed))
 	assert((puzzle.find_child("BearingSigilReward", true, false) as Node3D).visible)
@@ -41,8 +41,8 @@ func _run() -> void:
 	assert(restored_puzzle.is_signal_observatory_complete())
 	assert(not restored_puzzle.is_echo_garden_complete())
 	assert(restored.is_island_one_star_gate_open())
-	assert(not restored.is_quest_gate_open(0))
-	print("MIND_SPARK_ISLAND_ONE_QUEST_1: PASS — Signal Prism opens garden; Island Two remains locked; save restored")
+	assert(restored.is_quest_gate_open(0))
+	print("MIND_SPARK_ISLAND_ONE_QUEST_1: PASS — Signal Prism opens garden; Island Two bridge remains clear; save restored")
 	restored.queue_free()
 	await process_frame
 	# Imported quest materials release their render RIDs asynchronously after
