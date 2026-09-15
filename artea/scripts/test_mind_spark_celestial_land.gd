@@ -55,6 +55,12 @@ func _run() -> void:
 				shared_paving = paving.mesh
 			else:
 				_check(paving.mesh == shared_paving, "paving should share one mesh resource")
+			if index >= 4:
+				_check(paving.get_meta("continuous_gold_seams_removed", false),
+					"Island Three still exposes the imported continuous gold paving surface")
+				_check(paving.get_surface_override_material(2) != null \
+					and paving.get_surface_override_material(2) != paving.mesh.surface_get_material(2),
+					"Island Three gold paving surface was not replaced with luminous ivory")
 		var rock_name := "Rock_v17_04" if index == 3 else "Rock_v11_%02d" % (index+1)
 		var rock := land.find_child(rock_name, true, false) as MeshInstance3D
 		_check(rock != null, "missing variant-specific rock profile")
@@ -157,6 +163,16 @@ func _run() -> void:
 	# Two reference enginehouses per island and reinstated ornate balustrades.
 	# Authoring granularity is batched to six runtime mesh nodes per island.
 	_check(triangle_count > 10000 and triangle_count < 3500000, "whole-family geometry budget: %d" % triangle_count)
+	var storm_compass := world.find_child("StormCompassCivicFloor", true, false)
+	_check(storm_compass != null and storm_compass.get_meta("continuous_gold_floor_lines", -1) == 0,
+		"Storm Compass still uses continuous gold bearing lines")
+	var island_three_fusion := world.find_child("FusedSuperIsland_05_06", true, false)
+	_check(island_three_fusion != null \
+		and island_three_fusion.get_meta("continuous_gold_promenade_removed", false),
+		"Island Three promenade still uses the continuous gold route inlay")
+	_check(island_three_fusion != null \
+		and island_three_fusion.find_child("InternalPromenadeInlay", true, false) == null,
+		"Island Three retained the old gold promenade mesh")
 	world.queue_free()
 	await process_frame
 	if _failures == 0:

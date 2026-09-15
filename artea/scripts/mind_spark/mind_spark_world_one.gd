@@ -37,6 +37,7 @@ const NetworkAmbience := preload("res://assets/audio/Atmospheric-instrumental-mu
 const SanctuaryAmbience := preload("res://assets/audio/calm music.ogg")
 const IslandDetailAnimator := preload("res://scripts/mind_spark/mind_spark_island_detail_animator.gd")
 const IslandOnePuzzleScript := preload("res://scripts/mind_spark/mind_spark_island_one_puzzle.gd")
+const IslandThreeExperienceScript := preload("res://scripts/mind_spark/mind_spark_island_three_experience.gd")
 const ENEMY_DEFINITIONS := {
 	"static_mite": preload("res://resources/mind_spark/enemies/static_mite.tres"),
 	"glitch_sprout": preload("res://resources/mind_spark/enemies/glitch_sprout.tres"),
@@ -146,6 +147,9 @@ var _last_safe_position := Vector3(-960, 8, 420)
 var _island_one_puzzle: MindSparkIslandOnePuzzle
 var _island_one_star_gate_leaves: Array[AnimatableBody3D] = []
 var _island_one_star_gate_tween: Tween
+var _island_three_return_gate_leaves: Array[AnimatableBody3D] = []
+var _island_three_return_gate_tween: Tween
+var _island_three_experience: MindSparkIslandThreeExperience
 
 
 ## When true, build_world() is not run on _ready and must be triggered by
@@ -212,6 +216,7 @@ func build_world() -> void:
 	_place_collectibles()
 	_place_cast()
 	_place_combat_population()
+	_build_island_three_experience()
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		load("res://scripts/mind_spark/island_one_research_campus.gd").apply(self)
 		load("res://scripts/mind_spark/island_two_memory_campus.gd").apply(self)
@@ -361,6 +366,7 @@ func _build_district_foundation_content(parent: Node3D) -> void:
 	_build_district_hope_accents(_zone_nodes["04_hope_path_ridge"])
 	_build_district_storm_accents(_zone_nodes["05_thought_storm_arena"])
 	_build_district_sanctuary_accents(_zone_nodes["06_oldest_tree_sanctuary"])
+	_build_district_island_three_celestial_terraces(content)
 	_build_district_jump_course(_zone_nodes["04_hope_path_ridge"])
 	_build_weighted_memory_props(_zone_nodes["03_constellation_court"])
 
@@ -385,8 +391,12 @@ func _build_district_engineered_courts(parent: Node3D) -> void:
 		center.y = 2.06
 		_add_cylinder(courts, str(spec[1]), center, float(spec[2]), 0.32,
 			spec[4] as Material, true, int(spec[3]), 0.94, 0.0)
+		var kerb_material: Material = _materials.stone if index >= 4 else _materials.cyan
 		_add_torus(courts, "%sCircuitKerb" % spec[1], center + Vector3(0, 0.22, 0),
-			float(spec[2]) - 1.8, float(spec[2]), _materials.cyan)
+			float(spec[2]) - 1.8, float(spec[2]), kerb_material)
+		if index >= 4:
+			courts.get_node("%sCircuitKerb" % spec[1]).set_meta(
+				"replacement_finish", "recessed pearl-stone terrace joint")
 		var court_collision := courts.get_node("%sCollision" % spec[1]) as StaticBody3D
 		court_collision.set_meta("zone_order", index + 1)
 		court_collision.set_meta("load_class", "walkable_static_architecture")
@@ -415,7 +425,12 @@ func _build_district_story_route(parent: Node3D) -> void:
 	for segment_index in route_ids.size() - 1:
 		var start: Vector3 = DISTRICT_ROUTE_POINTS[route_ids[segment_index]]
 		var finish: Vector3 = DISTRICT_ROUTE_POINTS[route_ids[segment_index + 1]]
-		_add_district_route_pips(route, start, finish, segment_index)
+		if segment_index >= 5:
+			_add_district_celestial_terrace_pavers(route, start, finish, segment_index)
+		else:
+			_add_district_route_pips(route, start, finish, segment_index)
+	route.set_meta("island_three_surface_gold_lines_removed", true)
+	route.set_meta("island_three_route_finish", "ivory terrace pavers with discrete brass service studs")
 	var numbered_zones := [
 		["01_world_gate_landing", "01 • ARRIVAL"],
 		["02_living_network_forest", "02 • LIVING NETWORK"],
@@ -426,8 +441,9 @@ func _build_district_story_route(parent: Node3D) -> void:
 	]
 	for zone_data in numbered_zones:
 		var zone_position: Vector3 = DISTRICT_ROUTE_POINTS[zone_data[0]]
-		_add_torus(route, "%sRouteRing" % str(zone_data[0]).to_pascal_case(),
-			zone_position + Vector3(0, 2.15, 0), 12.0, 14.0, _materials.cyan)
+		if str(zone_data[0]) not in ["05_thought_storm_arena", "06_oldest_tree_sanctuary"]:
+			_add_torus(route, "%sRouteRing" % str(zone_data[0]).to_pascal_case(),
+				zone_position + Vector3(0, 2.15, 0), 12.0, 14.0, _materials.cyan)
 		_add_label(route, str(zone_data[1]), zone_position + Vector3(0, 15, 0),
 			Color("d8fbff"), 23)
 
@@ -447,6 +463,84 @@ func _add_district_route_pips(parent: Node3D, start: Vector3, finish: Vector3,
 		_add_box(parent, "StoryRoute_%02d_%02d" % [segment_index, pip_index], at,
 			Vector3(5.5, 0.12, 1.25), _materials.gold if pip_index % 4 == 0 else _materials.cyan,
 			false, yaw)
+
+
+func _add_district_celestial_terrace_pavers(parent: Node3D, start: Vector3,
+		finish: Vector3, segment_index: int) -> void:
+	# Island Three is read through architecture rather than a glowing route line.
+	# Individual pearl pavers sit flush with the court and remain legible without
+	# resembling a cable, waypoint strip, or painted gold instruction.
+	var direction := finish - start
+	var distance := direction.length()
+	var count := maxi(2, int(distance / 7.5))
+	var yaw := atan2(direction.x, direction.z)
+	for paver_index in count + 1:
+		var progress := float(paver_index) / float(count)
+		var at := start.lerp(finish, progress)
+		at.y = 2.09
+		var paver := _add_box(parent,
+			"IslandThreeTerracePaver_%02d_%02d" % [segment_index, paver_index], at,
+			Vector3(5.8, 0.10, 4.8),
+			_materials.celestial_floor if paver_index % 2 == 0 else _materials.sanctum_ivory,
+			false, yaw)
+		paver.set_meta("surface_role", "flush celestial terrace course")
+		if paver_index % 4 == 2:
+			_add_cylinder(parent,
+				"IslandThreeServiceStud_%02d_%02d" % [segment_index, paver_index],
+				at + Vector3.UP * 0.07, 0.24, 0.06, _materials.astral_brass, false, 8)
+
+
+func _build_district_island_three_celestial_terraces(parent: Node3D) -> void:
+	var terraces := Node3D.new()
+	terraces.name = "IslandThreeCelestialTerraceRevision"
+	terraces.set_meta("reference", "luminous ivory celestial terrace")
+	terraces.set_meta("continuous_gold_floor_lines", 0)
+	terraces.set_meta("raised_navigation_strips", 0)
+	terraces.set_meta("player_route_clear", true)
+	parent.add_child(terraces)
+	var specs := [
+		["05_thought_storm_arena", 23.0, 14],
+		["06_oldest_tree_sanctuary", 18.0, 12],
+	]
+	for spec_index in specs.size():
+		var center: Vector3 = DISTRICT_ROUTE_POINTS[str(specs[spec_index][0])]
+		var course_radius: float = float(specs[spec_index][1])
+		var course_count: int = int(specs[spec_index][2])
+		for paver_index in course_count:
+			var angle := TAU * float(paver_index) / float(course_count)
+			var at := center + Vector3(sin(angle) * course_radius, 2.13,
+				cos(angle) * course_radius)
+			var paver := _add_box(terraces,
+				"%sRadialPearlPaver_%02d" % ["Storm" if spec_index == 0 else "Sanctuary", paver_index + 1],
+				at, Vector3(5.4, 0.10, 8.2),
+				_materials.celestial_floor if paver_index % 2 == 0 else _materials.sanctum_ivory,
+				false, angle)
+			paver.set_meta("editable_terrace_component", true)
+
+	# Raised planting pockets soften the machinery without intruding into the
+	# combat apron, puzzle camera cone, or route between the paired districts.
+	var sanctuary_center: Vector3 = DISTRICT_ROUTE_POINTS["06_oldest_tree_sanctuary"]
+	var planter_offsets := [Vector3(-19, 0, 13), Vector3(18, 0, 15), Vector3(-17, 0, -16)]
+	for planter_index in planter_offsets.size():
+		var planter_at: Vector3 = sanctuary_center + planter_offsets[planter_index]
+		_add_cylinder(terraces, "PearlPlanter_%02d" % (planter_index + 1),
+			planter_at + Vector3.UP * 2.45, 4.4, 0.9, _materials.celestial_floor, true, 12)
+		_add_cylinder(terraces, "PlanterSoil_%02d" % (planter_index + 1),
+			planter_at + Vector3.UP * 2.94, 3.55, 0.16, _materials.hope_floor, false, 12)
+		for bloom_index in 5:
+			var bloom_angle := TAU * float(bloom_index) / 5.0
+			_add_sphere(terraces, "IvoryBloom_%02d_%02d" % [planter_index + 1, bloom_index + 1],
+				planter_at + Vector3(sin(bloom_angle) * 2.25,
+					3.75 + float(bloom_index % 2) * 0.35, cos(bloom_angle) * 2.25),
+				Vector3.ONE * 0.62, _materials.sanctum_ivory)
+
+	# A contained water instrument echoes the concept terrace basin and gives the
+	# restored sanctuary a calm visual destination after the storm machinery.
+	var basin_at := sanctuary_center + Vector3(18, 2.5, -14)
+	_add_cylinder(terraces, "CalmTerraceBasinCoping", basin_at, 5.8, 0.8,
+		_materials.celestial_floor, true, 16)
+	_add_cylinder(terraces, "CalmTerraceBasinWater", basin_at + Vector3.UP * 0.47,
+		4.9, 0.18, _materials.arrival_glass, false, 16)
 
 
 func _build_district_network_accents(zone: Node3D) -> void:
@@ -533,14 +627,29 @@ func _build_weighted_memory_props(zone: Node3D) -> void:
 
 
 func _build_district_storm_accents(zone: Node3D) -> void:
-	for index in 3:
-		_add_torus(zone, "QuestStormRing_%02d" % index, Vector3(0, 18 + index * 9, 0),
-			18 + index * 7, 20 + index * 7, _materials.violet)
-	_add_zone_light(zone, Vector3(0, 30, 0), Color("9a64ff"), 62.0, 3.2)
+	# Storm pressure is now carried by grounded conductors, not unsupported
+	# tornado rings. Their inward-facing lenses explain the energy path.
+	zone.set_meta("storm_landmark_design", "grounded_regulator_array")
+	zone.set_meta("storm_regulator_count", 6)
+	zone.set_meta("unsupported_tornado_rings", 0)
+	_build_storm_compass_floor(zone, 29.0, 2.28)
+	for index in 6:
+		var angle := TAU * float(index) / 6.0
+		var at := Vector3(cos(angle) * 25, 4.5, sin(angle) * 25)
+		_add_cylinder(zone, "RegulatorFoot_%02d" % index, Vector3(at.x, 0.7, at.z),
+			2.5, 1.4, _materials.floor_dark, true, 10)
+		_add_cylinder(zone, "StormRegulatorPylon_%02d" % index, at, 1.7, 9.0,
+			_materials.sanctum_ivory, true, 10)
+		for level in 3:
+			_add_torus(zone, "RegulatorCollar_%02d_%02d" % [index, level],
+				Vector3(at.x, 1.4 + level * 3.1, at.z), 1.65, 2.05, _materials.gold)
+		_add_torus(zone, "RegulatorLens_%02d" % index, at + Vector3.UP * 3.0,
+			1.8, 2.3, _materials.gold, Vector3(90, rad_to_deg(-angle), 0))
+	_add_zone_light(zone, Vector3(0, 24, 0), Color("75d9d0"), 58.0, 2.2)
 
 
 func _build_district_sanctuary_accents(zone: Node3D) -> void:
-	_build_bio_data_tree(zone, Vector3(0, 0, 0), 0.58, 6)
+	_build_wisdom_engine(zone, Vector3(0, 0, 0), 0.58)
 	for index in 8:
 		var angle := TAU * float(index) / 8.0
 		_add_sphere(zone, "SanctuaryFirefly_%02d" % index,
@@ -549,8 +658,14 @@ func _build_district_sanctuary_accents(zone: Node3D) -> void:
 	_add_cylinder(zone, "WisdomRewardPedestal", Vector3(-18, 2.5, -18), 7, 5,
 		_materials.stone, true, 16)
 	_add_star(zone, Vector3(-18, 12, -18), 4.5)
-	_add_zone_light(zone, Vector3(0, 28, 0), Color("8dffc5"), 52.0, 2.8)
+	_add_zone_light(zone, Vector3(0, 28, 0), Color("ffd58a"), 52.0, 2.4)
 	_add_zone_ambience(zone, "SanctuaryCalmAmbience", SanctuaryAmbience, -21.0, 240.0)
+
+
+func _build_island_three_experience() -> void:
+	_island_three_experience = IslandThreeExperienceScript.new()
+	add_child(_island_three_experience)
+	_island_three_experience.configure(self, _uses_existing_mind_district())
 
 
 func _bind_galaxy_route_anchors(parent: Node3D) -> void:
@@ -651,20 +766,30 @@ func _build_native_hope_ridge(zone: Node3D) -> void:
 
 
 func _build_native_storm_arena(zone: Node3D) -> void:
-	for index in 6:
-		_add_torus(zone, "AuthoredStormLayer_%02d" % index, Vector3(0, 28 + index * 12, 0),
-			38 + index * 12, 42 + index * 12, _materials.violet)
-	for index in 12:
-		var angle := TAU * float(index) / 12.0
-		_add_box(zone, "StormConductor_%02d" % index,
-			Vector3(cos(angle) * 112, 18, sin(angle) * 112), Vector3(3, 36, 3), _materials.cyan)
+	zone.set_meta("storm_landmark_design", "grounded_regulator_array")
+	zone.set_meta("storm_regulator_count", 8)
+	zone.set_meta("unsupported_tornado_rings", 0)
+	_build_storm_compass_floor(zone, 86.0, 0.24)
+	for index in 8:
+		var angle := TAU * float(index) / 8.0
+		var at := Vector3(cos(angle) * 92, 15, sin(angle) * 92)
+		_add_cylinder(zone, "StormRegulatorFoot_%02d" % index,
+			Vector3(at.x, 1.5, at.z), 7.0, 3.0, _materials.floor_dark, true, 12)
+		_add_cylinder(zone, "StormRegulatorTower_%02d" % index, at, 5.0, 30.0,
+			_materials.sanctum_ivory, true, 12)
+		for level in 3:
+			_add_torus(zone, "StormRegulatorCollar_%02d_%02d" % [index, level],
+				Vector3(at.x, 5.0 + level * 10.0, at.z), 4.9, 5.9, _materials.gold)
+		_add_torus(zone, "StormIntakeLens_%02d" % index, at + Vector3.UP * 8,
+			6.0, 8.0, _materials.gold, Vector3(90, rad_to_deg(-angle), 0))
+		_add_box(zone, "StormConduit_%02d" % index, at * 0.5 + Vector3.UP * -10,
+			Vector3(2.0, 1.0, at.length()), _materials.cyan, false, angle + PI * 0.5)
 	_add_label(zone, "THOUGHT STORM WARDEN", Vector3(0, 72, 0), Color("ffe4a0"), 38)
-	_add_zone_light(zone, Vector3(0, 55, 0), Color("9a64ff"), 155.0, 4.5)
+	_add_zone_light(zone, Vector3(0, 48, 0), Color("75d9d0"), 145.0, 3.5)
 
 
 func _build_native_sanctuary(zone: Node3D) -> void:
-	# The approved Bio-Data Tree replaces the former blocky root/trunk accents.
-	_build_bio_data_tree(zone, Vector3(0, 0, 18), 1.0, 6)
+	_build_wisdom_engine(zone, Vector3(0, 0, 18), 1.0)
 	for index in 12:
 		var angle := TAU * float(index) / 12.0
 		_add_sphere(zone, "SanctuaryFirefly_%02d" % index,
@@ -776,6 +901,19 @@ func _build_progression_gates(parent: Node3D) -> void:
 		gate.set_meta("gated_connection", "%s>%s" % [
 			ZONES[route_start_index].id, ZONES[route_start_index + 1].id])
 		gates.add_child(gate)
+		if quest_index == 0:
+			# Island One and Island Two already have a complete, collision-backed
+			# sky bridge. A generic wall across its centre made the route look
+			# unfinished and prevented free exploration. Keep this compatibility
+			# node in the quest-gate array so save IDs and later indices do not
+			# move, but make progression narrative-only: no visible barrier and no
+			# invisible collision may occupy the bridge lane.
+			gate.set_meta("open", true)
+			gate.set_meta("physical_barrier_removed", true)
+			gate.set_meta("progression_mode", "narrative_only_clear_crossing")
+			gate.set_meta("removal_reason", "Island One to Island Two bridge must remain physically unobstructed")
+			_quest_gates.append(gate)
+			continue
 		_add_box(gate, "Barrier", Vector3(0, 7, 0), Vector3(25, 14, 1.6), _materials.violet)
 		var collision := CollisionShape3D.new()
 		collision.name = "CollisionShape3D"
@@ -905,6 +1043,10 @@ func get_warden() -> Node:
 	return _warden
 
 
+func get_island_three_experience() -> MindSparkIslandThreeExperience:
+	return _island_three_experience
+
+
 func get_collectibles() -> Array[MindSparkCollectible]:
 	return _collectibles.duplicate()
 
@@ -953,6 +1095,7 @@ func set_station_spur_available(available: bool) -> void:
 func set_return_gate_enabled(available: bool) -> void:
 	if _return_gate != null:
 		_return_gate.set_gate_enabled(available)
+	_set_island_three_return_gate_open(available)
 
 
 func set_support_target_position(target_local: Vector3, target_label: String) -> void:
@@ -977,6 +1120,12 @@ func set_quest_gate_open(quest_index: int, open: bool) -> void:
 	if quest_index < 0 or quest_index >= _quest_gates.size():
 		return
 	var gate := _quest_gates[quest_index]
+	if bool(gate.get_meta("physical_barrier_removed", false)):
+		# The Island One -> Island Two crossing has no physical gate. Calls from
+		# legacy quest/save code are intentionally idempotent and cannot recreate
+		# an invisible blocker or report this open route as closed.
+		gate.set_meta("open", true)
+		return
 	if str(gate.get_meta("custom_gate_motion", "")) == "island_two_memory_hinges":
 		var motion := gate.get_node_or_null("IslandTwoMemoryGate/SafeMemoryGateMotion")
 		if motion != null:
@@ -1106,6 +1255,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	var quest_controller := get_node_or_null("QuestController")
 	if quest_controller != null and quest_controller.has_method("has_open_identity_reflection") \
 			and bool(quest_controller.call("has_open_identity_reflection")):
+		return
+	if _island_three_experience != null and _island_three_experience.handle_input(event, _player):
+		if get_viewport() != null:
+			get_viewport().set_input_as_handled()
 		return
 	if event.keycode == KEY_Q and _island_one_puzzle != null \
 			and _island_one_puzzle.nearest_control(_player) != null:
@@ -1345,12 +1498,28 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 	_add_box(fusion, "SharedIvorySaddle", Vector3(center.x,
 		shared_surface_y - 1.4, center.z), Vector3(saddle_width, 2.8, saddle_length),
 		_materials.celestial_floor, true, yaw)
-	_add_box(fusion, "InternalPromenadeInlay", Vector3(center.x,
-		shared_surface_y + 0.10, center.z), Vector3(10.0, 0.20, saddle_length - 12.0),
-		_materials.astral_brass, false, yaw)
-	_add_box(fusion, "AetherFlowChannel", Vector3(center.x,
-		shared_surface_y + 0.23, center.z), Vector3(2.2, 0.16, saddle_length - 18.0),
-		_materials.arrival_glass, false, yaw)
+	if pair_index == 2:
+		# The storm-to-sanctuary promenade uses architectural paving, not the old
+		# continuous gold/cyan route strips. Discrete stone courses communicate the
+		# direction while matching the luminous terrace reference.
+		var course_count := maxi(4, int(saddle_length / 9.0))
+		for course_index in course_count:
+			var along := lerpf(-saddle_length * 0.42, saddle_length * 0.42,
+				float(course_index) / float(course_count - 1))
+			var course_at: Vector3 = center + flat_direction * along
+			course_at.y = shared_surface_y + 0.10
+			_add_box(fusion, "IslandThreePearlCourse_%02d" % (course_index + 1),
+				course_at, Vector3(12.0, 0.16, 5.8),
+				_materials.celestial_floor if course_index % 2 == 0 else _materials.sanctum_ivory,
+				false, yaw)
+		fusion.set_meta("continuous_gold_promenade_removed", true)
+	else:
+		_add_box(fusion, "InternalPromenadeInlay", Vector3(center.x,
+			shared_surface_y + 0.10, center.z), Vector3(10.0, 0.20, saddle_length - 12.0),
+			_materials.astral_brass, false, yaw)
+		_add_box(fusion, "AetherFlowChannel", Vector3(center.x,
+			shared_surface_y + 0.23, center.z), Vector3(2.2, 0.16, saddle_length - 18.0),
+			_materials.arrival_glass, false, yaw)
 
 	# Mirrored safety rails and lamp pylons make the fused waist fully walkable.
 	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
@@ -1485,6 +1654,22 @@ func _build_modular_floating_foundation(zone: Node3D, info: Dictionary, zone_ind
 	var paving := paving_scene.instantiate() as Node3D
 	paving.name = "SharedCelestialPaving"
 	foundation.add_child(paving)
+	# Island One's source paving stores every long deck seam in one opaque gold
+	# material surface. At player height those seams read as unrelated lines drawn
+	# through the quest objects. Preserve the authored tile geometry but change
+	# that surface to warm pearl stone; sparse brass curb joints provide the metal
+	# hierarchy instead.
+	if zone_index in [0, 1, 4, 5]:
+		var ivory_deck := paving.find_child("CelestialIvoryDeck", true, false) as MeshInstance3D
+		if ivory_deck != null and ivory_deck.mesh.get_surface_count() >= 3:
+			# Island Three removes the line itself by merging that surface into the
+			# surrounding ivory deck. A darker "stone replacement" still read as a
+			# painted route under warm lighting, so it is intentionally not used here.
+			var seam_finish: Material = _materials.celestial_floor if zone_index >= 4 else _materials.stone
+			ivory_deck.set_surface_override_material(2, seam_finish)
+			ivory_deck.set_meta("continuous_gold_seams_removed", true)
+			ivory_deck.set_meta("replacement_finish",
+				"flush luminous-ivory paving" if zone_index >= 4 else "warm pearl-stone construction joint")
 	var variant_path := "res://assets3D/mind_spark/celestial_islands_v11/island_%02d.glb" % (zone_index + 1)
 	if zone_index == 1:
 		variant_path = "res://assets3D/mind_spark/celestial_verdant_v12/island_02.glb"
@@ -2829,14 +3014,33 @@ func _build_celestial_world_gate_arrival(zone: Node3D, scale_factor: float) -> N
 	# compass rose. These low visual pieces do not add obstacles to the route.
 	_add_cylinder(terrace, "ArrivalIvoryCourt", Vector3(0, 0.26, 8), 73.0, 0.52,
 		_materials.celestial_floor, false, 64)
-	_add_torus(terrace, "ArrivalCourtOuterGiltRing", Vector3(0, 0.58, 8),
-		66.0, 67.0, _materials.astral_brass)
-	_add_torus(terrace, "ArrivalCourtInnerAetherRing", Vector3(0, 0.60, 8),
-		39.0, 40.0, _materials.arrival_glass)
+	# Continuous gold and cyan rings made the court resemble a diagram drawn on
+	# the floor. Segmented stone curbs and broad fan panels now carry the same
+	# radial composition as built architecture.
+	for curb_index in 40:
+		var curb_angle := TAU * float(curb_index) / 40.0
+		var curb_at := Vector3(sin(curb_angle) * 66.5, 0.62,
+			8 + cos(curb_angle) * 66.5)
+		_add_box(terrace, "ArrivalCourtCurb_%02d" % (curb_index + 1), curb_at,
+			Vector3(9.1, 0.24, 1.75),
+			_materials.astral_brass if curb_index % 10 == 0 else _materials.sanctum_ivory,
+			false, curb_angle)
+	for fan_index in 20:
+		var fan_angle := TAU * float(fan_index) / 20.0
+		var fan_at := Vector3(sin(fan_angle) * 31.0, 0.60,
+			8 + cos(fan_angle) * 31.0)
+		_add_box(terrace, "ArrivalCourtFanPaver_%02d" % (fan_index + 1), fan_at,
+			Vector3(4.8, 0.08, 15.0),
+			_materials.stone if fan_index % 2 == 0 else _materials.celestial_floor,
+			false, fan_angle)
 	_add_box(terrace, "ProcessionalIvoryAxis", Vector3(0, 0.61, 20),
 		Vector3(19.0, 0.18, 112.0), _materials.celestial_floor, false)
-	_add_box(terrace, "ProcessionalGiltInlay", Vector3(0, 0.72, 20),
-		Vector3(1.2, 0.12, 109.0), _materials.astral_brass, false)
+	for course_index in 18:
+		var course_z := -31.0 + float(course_index) * 6.0
+		_add_box(terrace, "ProcessionalStoneCourse_%02d" % (course_index + 1),
+			Vector3(0, 0.72, course_z), Vector3(17.0, 0.08, 4.8),
+			_materials.sanctum_ivory if course_index % 2 == 0 else _materials.stone, false)
+	_build_arrival_reference_basin(terrace)
 
 	pavilion.set_meta("roof_type", "faceted barrel vault with open axial ends")
 	pavilion.set_meta("roof_triangle_count", 144)
@@ -2944,6 +3148,33 @@ func _build_celestial_world_gate_arrival(zone: Node3D, scale_factor: float) -> N
 	return arrival
 
 
+func _build_arrival_reference_basin(terrace: Node3D) -> void:
+	# A quiet contained water element and planted coping give the arrival court
+	# the inhabited celestial-terrace quality of the reference without blocking
+	# any puzzle approach or the central processional axis.
+	var center := Vector3(48.0, 0.72, 17.0)
+	_add_box(terrace, "ArrivalReflectionWater", center,
+		Vector3(20.0, 0.10, 10.0), _materials.arrival_glass, false)
+	for side in [-1.0, 1.0]:
+		_add_box(terrace, "ArrivalBasinLongCoping_%s" % str(side),
+			center + Vector3(side * 10.6, 0.16, 0), Vector3(1.1, 0.34, 11.2),
+			_materials.sanctum_ivory, false)
+		_add_box(terrace, "ArrivalBasinShortCoping_%s" % str(side),
+			center + Vector3(0, 0.16, side * 5.6), Vector3(20.2, 0.34, 1.1),
+			_materials.sanctum_ivory, false)
+	var planter_center := Vector3(48.0, 0.80, 33.0)
+	_add_box(terrace, "ArrivalGardenBedShell", planter_center,
+		Vector3(21.0, 0.50, 7.0), _materials.sanctum_ivory, false)
+	_add_box(terrace, "ArrivalGardenBedSoil", planter_center + Vector3.UP * 0.29,
+		Vector3(19.6, 0.10, 5.7), _materials.bio_gunmetal, false)
+	for plant_index in 9:
+		var plant_at := planter_center + Vector3(-8.0 + float(plant_index) * 2.0,
+			0.82, sin(float(plant_index) * 1.7) * 1.65)
+		_add_sphere(terrace, "ArrivalPearlPlant_%02d" % (plant_index + 1), plant_at,
+			Vector3(0.72, 0.48 + float(plant_index % 3) * 0.12, 0.72),
+			_materials.green_glow)
+
+
 func _create_island_one_gate_architecture_kit(arrival: Node3D) -> Node3D:
 	var kit := Node3D.new()
 	kit.name = "GateArchitectureKit"
@@ -2994,8 +3225,13 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 	arrival.add_child(machine)
 	_add_cylinder(machine, "CompassIvoryDais", Vector3(0, 1.05, 8), 24.0, 1.55,
 		_materials.celestial_floor, false, 48)
-	_add_torus(machine, "CompassOuterBrassKerb", Vector3(0, 1.88, 8), 22.0, 23.7,
-		_materials.astral_brass)
+	for kerb_index in 28:
+		var kerb_angle := TAU * float(kerb_index) / 28.0
+		_add_box(machine, "CompassStoneKerb_%02d" % (kerb_index + 1),
+			Vector3(sin(kerb_angle) * 22.8, 1.88, 8 + cos(kerb_angle) * 22.8),
+			Vector3(5.2, 0.30, 1.25),
+			_materials.astral_brass if kerb_index % 7 == 0 else _materials.sanctum_ivory,
+			false, kerb_angle)
 	_add_cylinder(machine, "CompassAetherLens", Vector3(0, 1.94, 8), 18.2, 0.20,
 		_materials.arrival_glass, false, 48)
 	_build_compass_ring(machine, "OuterCompassRing", 18.2, 20.4, 36, 0)
@@ -3033,8 +3269,10 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 		var angle := TAU * float(spoke_index) / 12.0
 		var start := Vector3(sin(angle) * 5.0, 2.42, 8 + cos(angle) * 5.0)
 		var finish := Vector3(sin(angle) * 21.6, 2.42, 8 + cos(angle) * 21.6)
-		_add_cable_between(machine, "CompassGiltSpoke_%02d" % (spoke_index + 1),
-			start, finish, 0.18, 0.10, _materials.astral_brass, 8)
+		_add_box(machine, "CompassSunrayPaver_%02d" % (spoke_index + 1),
+			start.lerp(finish, 0.5), Vector3(1.35, 0.08, start.distance_to(finish)),
+			_materials.stone if spoke_index % 2 == 0 else _materials.celestial_floor,
+			false, angle)
 
 	var controls := Node3D.new()
 	controls.name = "PuzzleControls"
@@ -3076,14 +3314,19 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 
 	var conduits := Node3D.new()
 	conduits.name = "PuzzlePowerConduits"
+	conduits.set_meta("surface_cables_removed", true)
+	conduits.set_meta("service_routing", "buried below removable ivory floor courses")
 	arrival.add_child(conduits)
 	for side in [-1.0, 1.0]:
 		var x: float = float(side) * 24.0
-		_add_cable_between(conduits, "PuzzlePowerConduitTower", Vector3(x, 4.0, -22),
-			Vector3(side * 22.0, 2.7, 8), 0.48, 0.30, _materials.astral_brass, 12)
-		_add_cable_between(conduits, "PuzzleAetherTubeTower", Vector3(x, 4.5, -20),
-			Vector3(side * 18.0, 2.9, 8), 0.25, 0.18, _materials.arrival_glass, 10)
-	# Paired floor circuits explain the coupling without relying on HUD text.
+		for endpoint_index in 2:
+			var port_at := Vector3(x if endpoint_index == 0 else side * 21.0,
+				2.18, -22.0 if endpoint_index == 0 else 8.0)
+			_add_cylinder(conduits, "BuriedServicePort_%s_%02d" % [str(side), endpoint_index + 1],
+				port_at, 0.72, 0.16, _materials.sanctum_ivory, false, 12)
+			_add_sphere(conduits, "ServicePortReading_%s_%02d" % [str(side), endpoint_index + 1],
+				port_at + Vector3.UP * 0.16, Vector3.ONE * 0.18, _materials.arrival_glass)
+	# Paired floor sockets explain coupling without drawing cables between them.
 	var selector_positions := [Vector3(-22, 3.3, 58), Vector3(0, 3.3, 64), Vector3(22, 3.3, 58)]
 	var coupled_ring_points := [
 		[Vector3(-18, 2.8, 22), Vector3(-9, 2.9, 18)],
@@ -3092,14 +3335,19 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 	]
 	for selector_index in 3:
 		for link_index in 2:
-			_add_cable_between(conduits,
-				"CoupledOrbit_%02d_%02d" % [selector_index + 1, link_index + 1],
-				selector_positions[selector_index], coupled_ring_points[selector_index][link_index],
-				0.25, 0.13, _materials.arrival_glass if link_index == 0 else _materials.gold, 10)
-	_add_cable_between(conduits, "PuzzlePowerConduitBridge", Vector3(0, 3.0, 28),
-		Vector3(0, 3.0, 73), 0.56, 0.38, _materials.astral_brass, 12)
-	_add_cable_between(conduits, "PuzzleAetherTubeBridge", Vector3(0, 3.4, 28),
-		Vector3(0, 3.4, 73), 0.28, 0.18, _materials.arrival_glass, 10)
+			for socket_at in [selector_positions[selector_index], coupled_ring_points[selector_index][link_index]]:
+				_add_cylinder(conduits,
+					"CouplingSocket_%02d_%02d" % [selector_index * 4 + link_index * 2 + 1,
+						1 if socket_at == selector_positions[selector_index] else 2],
+					Vector3(socket_at.x, 2.16, socket_at.z), 0.46, 0.12,
+					_materials.arrival_glass, false, 10)
+	# Removable transverse courses conceal the power trunk and read as a built
+	# promenade instead of the former thick gold line.
+	for panel_index in 12:
+		var panel_z := 29.5 + float(panel_index) * 3.8
+		_add_box(conduits, "BuriedPowerAccessCourse_%02d" % (panel_index + 1),
+			Vector3(0, 2.14, panel_z), Vector3(8.2, 0.08, 3.0),
+			_materials.sanctum_ivory if panel_index % 2 == 0 else _materials.stone, false)
 
 	var projection := Node3D.new()
 	projection.name = "SolvedRouteProjection"
@@ -3109,7 +3357,7 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 	for index in 15:
 		var z := 29.0 + float(index) * 3.0
 		var beacon := _add_sphere(projection, "RouteLight_%02d" % (index + 1),
-			Vector3(0, 4.1, z), Vector3(0.44, 0.20, 0.95), _materials.gold)
+			Vector3(0, 3.1, z), Vector3(0.30, 0.12, 0.42), _materials.arrival_glass)
 		beacon.rotation.y = float(index) * 0.42
 	var socket_glow := Node3D.new()
 	socket_glow.name = "BridgePowerSocketGlow"
@@ -3123,9 +3371,9 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 		_materials.arrival_glass)
 	for packet_index in 10:
 		var packet := _add_sphere(arrival, "BridgeEnergyPacket_%02d" % packet_index,
-			Vector3(0, 3.7, 28), Vector3.ONE * 0.38, _materials.gold)
-		packet.set_meta("path_start", Vector3(0, 3.7, 28))
-		packet.set_meta("path_end", Vector3(0, 3.7, 73))
+			Vector3(0, 2.48, 28), Vector3.ONE * 0.22, _materials.arrival_glass)
+		packet.set_meta("path_start", Vector3(0, 2.48, 28))
+		packet.set_meta("path_end", Vector3(0, 2.48, 73))
 		packet.set_meta("packet_phase", float(packet_index) / 10.0)
 		packet.set_meta("editable_component", true)
 
@@ -3905,8 +4153,11 @@ func _build_living_light_routes(parent: Node3D) -> void:
 		starts.append(parent.to_local(source.global_position))
 	var receivers := [Vector3(-52.0, 39.0, 24.0), Vector3(0, 20.0, 42.0),
 		Vector3(0, 7.0, 8.0)]
+	# Optical feedback remains light contained by the instruments. The earlier
+	# third channel used opaque gold and read as a solid line suspended over the
+	# floor; pearl glass keeps the path legible without becoming architecture.
 	var seed_materials := [_materials.arrival_glass, _materials.sanctum_lavender_glass,
-		_materials.gold]
+		_materials.astral_glass]
 	for prism_index in 3:
 		for seed_index in 3:
 			var beam_start: Vector3 = starts[prism_index]
@@ -4774,15 +5025,228 @@ func _build_hope_garden_terraces(parent: Node3D) -> void:
 
 
 func _build_storm_arena(zone: Node3D) -> void:
-	_add_cylinder(zone, "BossArenaCollision", Vector3(0, 1.0, 0), 155, 2.0, _materials.storm, true, 48)
-	for index in 5:
-		_add_torus(zone, "LayeredStormRing_%02d" % index, Vector3(0, 24 + index * 12, 0),
-			42 + index * 13, 47 + index * 13, _materials.violet)
+	zone.set_meta("storm_landmark_design", "grounded_regulator_array")
+	zone.set_meta("storm_regulator_count", 8)
+	zone.set_meta("unsupported_tornado_rings", 0)
+	zone.set_meta("shared_world_one_architecture", "celestial civic stormworks")
+	# Island Three is the damaged final chapter of the same kingdom, not a
+	# separate dark arena. Ivory remains the structural base while storm colour
+	# is confined to readable insets and machinery.
+	_add_cylinder(zone, "BossArenaCollision", Vector3(0, 1.0, 0), 155, 2.0,
+		_materials.celestial_floor, true, 48)
+	_build_storm_compass_floor(zone, 146.0, 2.06)
+	_build_stormworks_bastion_architecture(zone)
+	for index in 8:
+		var angle := TAU * float(index) / 8.0
+		var at := Vector3(cos(angle) * 116, 17, sin(angle) * 116)
+		_add_cylinder(zone, "StormRegulatorFoot_%02d" % index,
+			Vector3(at.x, 1.6, at.z), 7.4, 3.2, _materials.astral_brass, true, 12)
+		_add_tapered_cylinder(zone, "StormRegulatorTower_%02d" % index, at,
+			4.4, 5.2, 34.0, _materials.sanctum_ivory, 12)
+		_add_tapered_cylinder(zone, "StormRegulatorAetherCore_%02d" % index,
+			at + Vector3.UP * 0.5, 2.4, 2.8, 27.0, _materials.astral_glass, 10)
+		for level in 3:
+			_add_torus(zone, "StormRegulatorCollar_%02d_%02d" % [index, level],
+				Vector3(at.x, 5.0 + level * 11.5, at.z), 5.1, 6.2, _materials.gold)
+		_add_torus(zone, "StormIntakeLens_%02d" % index, at + Vector3.UP * 9,
+			6.0, 8.2, _materials.gold, Vector3(90, rad_to_deg(-angle), 0))
+		# Restrained paired inlays replace the earlier solid neon route bars.
+		for conduit_side in [-1.0, 1.0]:
+			var tangent := Vector3(-sin(angle), 0, cos(angle))
+			_add_box(zone, "StormEnergyConduit_%02d_%s" % [index,
+				"L" if conduit_side < 0 else "R"],
+				at * 0.5 + tangent * conduit_side * 1.15 + Vector3.UP * -14.7,
+				Vector3(0.42, 0.16, at.length()),
+				_materials.astral_glass, false, angle + PI * 0.5)
 	var checkpoint := Marker3D.new()
 	checkpoint.name = "BossRetryCheckpoint"
 	checkpoint.position = Vector3(0, 5, -168)
 	zone.add_child(checkpoint)
 	_add_label(zone, "BREAK THE SHELL • FREE THE STORM", Vector3(0, 68, 0), Color("ffd687"), 38)
+
+
+func _build_stormworks_bastion_architecture(zone: Node3D) -> void:
+	var bastion := Node3D.new()
+	bastion.name = "CelestialStormworksBastionArchitecture"
+	bastion.set_meta("purpose", "house storm machinery and frame the final arena")
+	bastion.set_meta("keeps_arrival_and_sanctuary_routes_open", true)
+	zone.add_child(bastion)
+	# Three arched service bays establish the same façade rhythm used beneath
+	# Islands One and Two. The western arrival and south-eastern sanctuary axes
+	# remain unobstructed.
+	for bay_index in 3:
+		var angle := deg_to_rad(-52.0 + float(bay_index) * 52.0)
+		var center := Vector3(sin(angle) * 126.0, 0, cos(angle) * 126.0)
+		var tangent := Vector3(cos(angle), 0, -sin(angle))
+		var inward := -Vector3(center.x, 0, center.z).normalized()
+		var left := center - tangent * 15.0
+		var right := center + tangent * 15.0
+		for side_data in [[left, "L"], [right, "R"]]:
+			var pier_at: Vector3 = side_data[0]
+			var suffix: String = side_data[1]
+			_add_box(bastion, "Bay%02d%sPierFoot" % [bay_index + 1, suffix],
+				pier_at + Vector3.UP * 2.0, Vector3(7.8, 4.0, 8.4),
+				_materials.celestial_floor, true)
+			_add_tapered_cylinder(bastion, "Bay%02d%sTaperedPier" % [bay_index + 1, suffix],
+				pier_at + Vector3.UP * 13.0, 2.6, 3.5, 22.0,
+				_materials.sanctum_ivory, 10)
+			_add_torus(bastion, "Bay%02d%sPierCrown" % [bay_index + 1, suffix],
+				pier_at + Vector3.UP * 24.2, 2.7, 3.7, _materials.astral_brass)
+		var crown := center + Vector3.UP * 34.0
+		_add_cable_between(bastion, "Bay%02dLeftArchOrder" % (bay_index + 1),
+			left + Vector3.UP * 24.0, crown, 1.65, 1.25,
+			_materials.celestial_floor, 10)
+		_add_cable_between(bastion, "Bay%02dRightArchOrder" % (bay_index + 1),
+			right + Vector3.UP * 24.0, crown, 1.65, 1.25,
+			_materials.celestial_floor, 10)
+		_add_cable_between(bastion, "Bay%02dLeftGiltOrder" % (bay_index + 1),
+			left + tangent * 1.9 + Vector3.UP * 24.0, crown + inward * 0.5,
+			0.52, 0.34, _materials.astral_brass, 8)
+		_add_cable_between(bastion, "Bay%02dRightGiltOrder" % (bay_index + 1),
+			right - tangent * 1.9 + Vector3.UP * 24.0, crown + inward * 0.5,
+			0.52, 0.34, _materials.astral_brass, 8)
+		# A housed pressure condenser supplies function and depth behind each arch.
+		var condenser := center - inward * 2.5 + Vector3.UP * 13.0
+		_add_tapered_cylinder(bastion, "Bay%02dPressureCondenser" % (bay_index + 1),
+			condenser, 5.0, 5.8, 20.0, _materials.floor_dark, 12)
+		for level in 3:
+			_add_torus(bastion, "Bay%02dCondenserCollar%02d" % [bay_index + 1, level + 1],
+				condenser + Vector3.UP * (-7.0 + level * 7.0), 5.0, 6.0,
+				_materials.astral_brass)
+		_add_box(bastion, "Bay%02dSightGlass" % (bay_index + 1),
+			condenser + inward * 5.15, Vector3(3.2, 11.5, 0.42),
+			_materials.astral_glass, false, angle)
+		_add_cylinder(bastion, "Bay%02dCrownLantern" % (bay_index + 1),
+			crown + Vector3.UP * 3.2, 1.5, 5.2, _materials.arrival_glass, false, 10)
+	# The outer service terrace visually joins the bays without enclosing the
+	# combat apron or becoming an invisible traversal obstacle.
+	for terrace_index in 12:
+		var start_angle := deg_to_rad(-66.0 + terrace_index * 11.0)
+		var end_angle := start_angle + deg_to_rad(9.5)
+		_add_radial_plate(bastion, "BastionServiceTerrace%02d" % (terrace_index + 1),
+			start_angle, end_angle, 105.0, 142.0, 2.16, 3.05,
+			_materials.celestial_floor)
+		_add_radial_plate(bastion, "BastionTerraceGiltEdge%02d" % (terrace_index + 1),
+			start_angle, end_angle, 104.0, 106.0, 3.06, 3.28,
+			_materials.astral_brass)
+
+
+func _build_wisdom_engine(parent: Node3D, at: Vector3, engine_scale: float) -> Node3D:
+	var engine := Node3D.new()
+	# Compatibility name keeps existing references and old capture tooling valid;
+	# metadata identifies the replacement visible design.
+	engine.name = "MindSparkBioDataTree"
+	engine.position = at
+	engine.scale = Vector3.ONE * engine_scale
+	engine.set_meta("preserve_authored_nodes", true)
+	engine.set_meta("visible_design", "Crown Wisdom Engine")
+	engine.set_meta("replaces_organic_tree", true)
+	parent.add_child(engine)
+	_add_cylinder(engine, "EngineFoundation", Vector3(0, 1.5, 0), 11.0, 3.0,
+		_materials.sanctum_ivory, true, 20)
+	_add_torus(engine, "FoundationLoadRing", Vector3(0, 3.0, 0), 8.4, 10.6,
+		_materials.gold)
+	_add_cylinder(engine, "AetherReactor", Vector3(0, 13.0, 0), 4.6, 22.0,
+		_materials.floor_dark, true, 14)
+	for level in 4:
+		_add_torus(engine, "ReactorCollar_%02d" % level, Vector3(0, 6.5 + level * 5.0, 0),
+			4.7, 5.5, _materials.gold)
+	for side in [-1.0, 1.0]:
+		_add_cylinder(engine, "MemoryPressureVessel", Vector3(side * 7.2, 9.0, 0),
+			2.8, 14.0, _materials.sanctum_ivory, true, 12)
+		_add_box(engine, "VesselDataWindow", Vector3(side * 7.2, 9.0, 2.82),
+			Vector3(1.4, 7.0, 0.28), _materials.cyan)
+	for spoke in 8:
+		var angle := TAU * float(spoke) / 8.0
+		_add_cable_between(engine, "CrownSpoke_%02d" % spoke,
+			Vector3(cos(angle) * 4.0, 27.0 + sin(angle) * 4.0, 0),
+			Vector3(cos(angle) * 11.0, 27.0 + sin(angle) * 11.0, 0),
+			0.48, 0.32, _materials.gold, 8)
+	_add_torus(engine, "WisdomCrownOuter", Vector3(0, 27, 0), 11.0, 13.0,
+		_materials.gold, Vector3(90, 0, 0))
+	_add_torus(engine, "WisdomCrownGlass", Vector3(0, 27.2, 0), 6.8, 9.2,
+		_materials.cyan, Vector3(90, 0, 0))
+	_add_cable_between(engine, "LeftCrownLoadBrace", Vector3(-7.2, 16, 0),
+		Vector3(-9.0, 21, 0), 0.62, 0.44, _materials.gold, 10)
+	_add_cable_between(engine, "RightCrownLoadBrace", Vector3(7.2, 16, 0),
+		Vector3(9.0, 21, 0), 0.62, 0.44, _materials.gold, 10)
+	_add_star(engine, Vector3(0, 27, 0.5), 3.4)
+	return engine
+
+
+func _build_storm_compass_floor(parent: Node3D, radius: float, surface_y: float) -> Node3D:
+	var floor_detail := Node3D.new()
+	floor_detail.name = "StormCompassCivicFloor"
+	floor_detail.set_meta("design_language", "celestial navigation instrument")
+	floor_detail.set_meta("replaces_electric_grid", true)
+	floor_detail.set_meta("collision_free_surface_detail", true)
+	floor_detail.set_meta("continuous_gold_floor_lines", 0)
+	floor_detail.set_meta("bearing_language", "radial pearl-stone mosaic with discrete brass studs")
+	parent.add_child(floor_detail)
+	# Eight broad ivory sectors preserve the kingdom's civic floor. Storm teal is
+	# reserved for a smaller pressure eye and inset channels, so the finale reads
+	# as the same place under stress rather than an unrelated dark platform.
+	for sector_index in 8:
+		var sector_start := TAU * float(sector_index) / 8.0 + 0.018
+		var sector_end := TAU * float(sector_index + 1) / 8.0 - 0.018
+		_add_radial_plate(floor_detail, "CompassStoneSector_%02d" % (sector_index + 1),
+			sector_start, sector_end, radius * 0.14, radius * 0.96,
+			surface_y + 0.01, surface_y + 0.055,
+			_materials.celestial_floor if sector_index % 2 == 0 else _materials.sanctum_ivory)
+	for ring_index in 3:
+		var ring_radius := radius * (0.34 + ring_index * 0.27)
+		_add_segmented_annulus(floor_detail, "InsetDistanceBand_%02d" % (ring_index + 1),
+			ring_radius - 0.72, ring_radius + 0.72, surface_y + 0.075,
+			24, 0.010, _materials.quest_ivory_inset)
+	for ray_index in 8:
+		var angle := TAU * float(ray_index) / 8.0
+		var ray := _add_box(floor_detail, "CompassBearingRay_%02d" % (ray_index + 1),
+			Vector3(sin(angle) * radius * 0.48, surface_y + 0.09,
+				cos(angle) * radius * 0.48),
+			Vector3(radius * 0.055, 0.055, radius * 0.76),
+			_materials.sanctum_ivory if ray_index % 2 == 0 else _materials.quest_ivory_inset)
+		ray.rotation.y = angle
+		var bearing_at := Vector3(sin(angle) * radius * 0.88,
+			surface_y + 0.12, cos(angle) * radius * 0.88)
+		_add_cylinder(floor_detail, "CompassBearingStud_%02d" % (ray_index + 1),
+			bearing_at, maxf(0.22, radius * 0.009), 0.10,
+			_materials.astral_brass, false, 8)
+	_add_cylinder(floor_detail, "CompassStormPressureEye", Vector3(0, surface_y + 0.08, 0),
+		radius * 0.20, 0.14, _materials.storm, false, 16)
+	_add_cylinder(floor_detail, "CompassCalmEye", Vector3(0, surface_y + 0.16, 0),
+		radius * 0.13, 0.16, _materials.sanctum_ivory, false, 12)
+	_add_torus(floor_detail, "CompassCalmEyeInlay", Vector3(0, surface_y + 0.18, 0),
+		radius * 0.07, radius * 0.095, _materials.cyan)
+	return floor_detail
+
+
+func _add_segmented_annulus(parent: Node3D, node_name: String, inner_radius: float,
+		outer_radius: float, surface_y: float, segments: int, gap_radians: float,
+		material: Material) -> MeshInstance3D:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for segment in segments:
+		var angle_start := TAU * float(segment) / float(segments) + gap_radians
+		var angle_end := TAU * float(segment + 1) / float(segments) - gap_radians
+		var inner_start := Vector3(sin(angle_start) * inner_radius, surface_y,
+			cos(angle_start) * inner_radius)
+		var outer_start := Vector3(sin(angle_start) * outer_radius, surface_y,
+			cos(angle_start) * outer_radius)
+		var outer_end := Vector3(sin(angle_end) * outer_radius, surface_y,
+			cos(angle_end) * outer_radius)
+		var inner_end := Vector3(sin(angle_end) * inner_radius, surface_y,
+			cos(angle_end) * inner_radius)
+		for point in [inner_start, outer_end, outer_start, inner_start, inner_end, outer_end]:
+			surface.set_normal(Vector3.UP)
+			surface.set_uv(Vector2(point.x / outer_radius * 0.5 + 0.5,
+				point.z / outer_radius * 0.5 + 0.5))
+			surface.add_vertex(point)
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	instance.mesh = surface.commit()
+	instance.material_override = material
+	parent.add_child(instance)
+	return instance
 
 
 func _build_bio_data_tree(parent: Node3D, at: Vector3, tree_scale: float,
@@ -5630,9 +6094,10 @@ func _add_bio_hanging_node(parent: Node3D, node_index: int, start: Vector3,
 
 
 func _build_oldest_tree(zone: Node3D) -> void:
-	_build_bio_data_tree(zone, Vector3(0, 0, 18), 1.0, 6)
-	# Preserve the original gameplay node contract while the visible tree is now
-	# assembled from the modular Bio-Data Tree pieces above.
+	_build_crownroot_sanctuary_architecture(zone)
+	_build_wisdom_engine(zone, Vector3(0, 0, 18), 1.0)
+	# Preserve the original gameplay collision alias for older traversal tests
+	# and saves while the visible landmark is now the Crown Wisdom Engine.
 	var legacy_trunk_collision := StaticBody3D.new()
 	legacy_trunk_collision.name = "OldestTreeTrunkCollision"
 	legacy_trunk_collision.position = Vector3(0, 36.0, 18)
@@ -5647,7 +6112,7 @@ func _build_oldest_tree(zone: Node3D) -> void:
 	zone.add_child(legacy_trunk_collision)
 	_add_cylinder(zone, "StarPedestal", Vector3(0, 5, -32), 18, 10, _materials.stone, true, 24)
 	_add_star(zone, Vector3(0, 24, -32), 10.0)
-	_build_arch(zone, Vector3(78, 0, 48), 40, 52, _materials.gold, "RETURN WORLD GATE")
+	_build_island_three_return_gate_architecture(zone, Vector3(78, 0, 48))
 	_return_gate = WorldGateScene.instantiate() as MindSparkWorldGate
 	_return_gate.name = "ReturnToArtCastleWorldGate"
 	_return_gate.position = Vector3(78, 1, 48)
@@ -5655,6 +6120,152 @@ func _build_oldest_tree(zone: Node3D) -> void:
 	_return_gate.prompt_text = "Q • RETURN TO ART CASTLE"
 	_return_gate.gate_enabled = false
 	zone.add_child(_return_gate)
+	_set_island_three_return_gate_open(false, true)
+
+
+func _build_crownroot_sanctuary_architecture(zone: Node3D) -> void:
+	var sanctuary := Node3D.new()
+	sanctuary.name = "CelestialCrownrootSanctuaryArchitecture"
+	sanctuary.set_meta("design_language", "mechanical botany within heavenly civic architecture")
+	sanctuary.set_meta("organic_silhouette_without_literal_tree", true)
+	zone.add_child(sanctuary)
+	_add_cylinder(sanctuary, "RaisedSanctuaryDais", Vector3(0, 1.1, 18), 46.0, 2.2,
+		_materials.celestial_floor, true, 32)
+	_add_torus(sanctuary, "SanctuaryDaisGiltOrder", Vector3(0, 2.25, 18),
+		42.5, 45.5, _materials.astral_brass)
+	# Branch-like load arms preserve the living visual rhythm of Islands One and
+	# Two while making every form a plausible conduit supporting the engine.
+	for branch_index in 8:
+		# The north-east sector is the physical return-gate approach. Leaving it
+		# clear prevents a decorative load arm from crossing the player's view or
+		# movement corridor.
+		if branch_index == 1:
+			continue
+		var angle := TAU * float(branch_index) / 8.0
+		var inner := Vector3(cos(angle) * 7.0, 11.0, 18 + sin(angle) * 7.0)
+		var elbow := Vector3(cos(angle) * 22.0, 15.0 + branch_index % 2 * 3.0,
+			18 + sin(angle) * 22.0)
+		var tip := Vector3(cos(angle) * 35.0, 9.0,
+			18 + sin(angle) * 35.0)
+		_add_cable_between(sanctuary, "CrownrootBranchInner%02d" % (branch_index + 1),
+			inner, elbow, 0.82, 0.56, _materials.astral_brass, 10)
+		_add_cable_between(sanctuary, "CrownrootBranchOuter%02d" % (branch_index + 1),
+			elbow, tip, 0.58, 0.34, _materials.astral_brass, 10)
+		_add_torus(sanctuary, "CrownrootLeafLens%02d" % (branch_index + 1), tip,
+			2.1, 3.1, _materials.astral_brass,
+			Vector3(62, -rad_to_deg(angle), 0))
+		_add_sphere(sanctuary, "CrownrootLeafGlass%02d" % (branch_index + 1),
+			tip, Vector3(1.8, 0.5, 2.7), _materials.astral_glass)
+	# Four restrained rain gardens make restoration visible without reintroducing
+	# a second literal hero tree.
+	for garden_index in 4:
+		if garden_index == 0:
+			continue
+		var angle := PI * 0.25 + TAU * float(garden_index) / 4.0
+		var garden_at := Vector3(cos(angle) * 52.0, 2.3,
+			18 + sin(angle) * 52.0)
+		_add_cylinder(sanctuary, "RainGardenPlanter%02d" % (garden_index + 1),
+			garden_at, 8.0, 1.5, _materials.astral_brass, false, 12)
+		_add_cylinder(sanctuary, "RainGardenBed%02d" % (garden_index + 1),
+			garden_at + Vector3.UP * 0.82, 6.8, 0.35, _materials.sanctuary_floor, false, 12)
+		for leaf_index in 5:
+			var leaf_angle := TAU * float(leaf_index) / 5.0
+			_add_sphere(sanctuary, "RainGardenLeaf%02d_%02d" % [garden_index + 1, leaf_index + 1],
+				garden_at + Vector3(cos(leaf_angle) * 3.6, 1.6, sin(leaf_angle) * 3.6),
+				Vector3(1.8, 0.55, 1.0), _materials.green_glow)
+
+
+func _build_island_three_return_gate_architecture(zone: Node3D, at: Vector3) -> void:
+	var gate := Node3D.new()
+	gate.name = "CrownrootHeavenlyReturnGate"
+	gate.position = at
+	var outward := Vector3(at.x, 0, at.z).normalized()
+	gate.rotation.y = atan2(outward.x, outward.z)
+	gate.set_meta("door_motion", "paired outward hinges")
+	gate.set_meta("clear_opening_width_m", 31.0)
+	zone.add_child(gate)
+	for side in [-1.0, 1.0]:
+		var suffix := "Left" if side < 0 else "Right"
+		_add_box(gate, "%sPierFoot" % suffix, Vector3(side * 20.0, 2.0, 0),
+			Vector3(9.0, 4.0, 11.0), _materials.celestial_floor, true)
+		_add_tapered_cylinder(gate, "%sTaperedPier" % suffix,
+			Vector3(side * 20.0, 19.0, 0), 3.4, 4.6, 30.0,
+			_materials.sanctum_ivory, 12)
+		for order in 3:
+			_add_torus(gate, "%sPierOrder%02d" % [suffix, order + 1],
+				Vector3(side * 20.0, 6.0 + order * 12.0, 0),
+				3.8, 4.8, _materials.astral_brass)
+		_add_cylinder(gate, "%sCrownLantern" % suffix,
+			Vector3(side * 20.0, 39.0, 0), 2.1, 6.8,
+			_materials.arrival_glass, false, 10)
+	# Segmented, layered arch orders echo the observatory and Memory Gate.
+	for segment_index in 12:
+		var a0 := PI - PI * float(segment_index) / 12.0
+		var a1 := PI - PI * float(segment_index + 1) / 12.0
+		var p0 := Vector3(cos(a0) * 20.0, 33.0 + sin(a0) * 17.0, 0)
+		var p1 := Vector3(cos(a1) * 20.0, 33.0 + sin(a1) * 17.0, 0)
+		_add_cable_between(gate, "IvoryArchVoussoir%02d" % (segment_index + 1),
+			p0, p1, 2.35, 2.35, _materials.celestial_floor, 10)
+		var q0 := Vector3(cos(a0) * 16.8, 33.0 + sin(a0) * 14.0, -0.7)
+		var q1 := Vector3(cos(a1) * 16.8, 33.0 + sin(a1) * 14.0, -0.7)
+		_add_cable_between(gate, "GiltArchOrder%02d" % (segment_index + 1),
+			q0, q1, 0.58, 0.58, _materials.astral_brass, 8)
+	_add_torus(gate, "StarOfWisdomCrest", Vector3(0, 48.5, -0.8),
+		3.6, 4.8, _materials.astral_brass, Vector3(90, 0, 0))
+	_add_star(gate, Vector3(0, 48.5, -1.0), 2.7)
+	for side in [-1.0, 1.0]:
+		_build_island_three_return_gate_leaf(gate, side)
+
+
+func _build_island_three_return_gate_leaf(gate: Node3D, side: float) -> void:
+	var leaf := AnimatableBody3D.new()
+	leaf.name = "CrownrootReturnGate%sLeaf" % ("Left" if side < 0 else "Right")
+	leaf.position = Vector3(side * 17.8, 0, 0)
+	leaf.set_meta("hinge_side", side)
+	leaf.set_meta("closed_rotation_y", 0.0)
+	leaf.set_meta("open_rotation_y", side * deg_to_rad(104.0))
+	gate.add_child(leaf)
+	_island_three_return_gate_leaves.append(leaf)
+	var leaf_center_x := -side * 8.0
+	_add_box(leaf, "OuterStile", Vector3(-side * 0.8, 17.0, 0),
+		Vector3(1.3, 29.0, 1.1), _materials.astral_brass)
+	_add_box(leaf, "MeetingStile", Vector3(leaf_center_x * 2.0, 17.0, 0),
+		Vector3(1.3, 29.0, 1.1), _materials.astral_brass)
+	for bar_index in 6:
+		var x := lerpf(-side * 1.7, leaf_center_x * 1.88, float(bar_index) / 5.0)
+		_add_tapered_cylinder(leaf, "HeavenlyBar%02d" % (bar_index + 1),
+			Vector3(x, 17.0, 0), 0.22, 0.34, 26.0,
+			_materials.astral_brass, 8)
+		var ornament_y := 10.0 + float(bar_index % 3) * 6.0
+		_add_torus(leaf, "AetherPearlSocket%02d" % (bar_index + 1),
+			Vector3(x, ornament_y, -0.35), 0.52, 0.82,
+			_materials.arrival_glass, Vector3(90, 0, 0))
+	_add_cable_between(leaf, "AscendingFiligree", Vector3(-side * 1.5, 5.0, -0.4),
+		Vector3(leaf_center_x * 1.9, 28.0, -0.4), 0.26, 0.16,
+		_materials.astral_brass, 8)
+	var collision := CollisionShape3D.new()
+	collision.name = "PhysicalDoorCollision"
+	collision.position = Vector3(leaf_center_x, 17.0, 0)
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(16.0, 29.0, 1.2)
+	collision.shape = shape
+	leaf.add_child(collision)
+
+
+func _set_island_three_return_gate_open(open: bool, immediate := false) -> void:
+	if _island_three_return_gate_tween != null and _island_three_return_gate_tween.is_valid():
+		_island_three_return_gate_tween.kill()
+	if not immediate:
+		_island_three_return_gate_tween = create_tween().set_parallel(true)
+	for leaf in _island_three_return_gate_leaves:
+		if not is_instance_valid(leaf):
+			continue
+		var target := float(leaf.get_meta("open_rotation_y" if open else "closed_rotation_y"))
+		if immediate:
+			leaf.rotation.y = target
+		else:
+			_island_three_return_gate_tween.tween_property(leaf, "rotation:y", target, 1.15) \
+				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 
 
 func _place_functional_objects() -> void:
@@ -5831,6 +6442,13 @@ func _update_hud() -> void:
 			panel.visible = true
 			_prompt.text = str(puzzle_prompt.prompt)
 			_status.text = str(puzzle_prompt.status)
+			return
+	if _island_three_experience != null:
+		var island_three_prompt := _island_three_experience.prompt_for_player(_player)
+		if not island_three_prompt.is_empty():
+			panel.visible = true
+			_prompt.text = str(island_three_prompt.prompt)
+			_status.text = str(island_three_prompt.status)
 			return
 	var object := _nearest_object()
 	panel.visible = object != null
@@ -6204,6 +6822,11 @@ func _build_grove_bio_tree(parent: Node3D, at: Vector3, tree_scale: float,
 	tree.set_meta("growth_scale", tree_scale)
 	tree.set_meta("visual_system", "nature bark + green nutrients + cyan data + violet magic")
 	parent.add_child(tree)
+	if str(parent.get_meta("zone_id", "")) == "06_oldest_tree_sanctuary":
+		tree.set_meta("visual_system", "ivory storm regulator + brass load collar + teal data lens")
+		tree.set_meta("replaces_organic_tree", true)
+		_build_grove_regulator(tree, variant)
+		return tree
 	if str(parent.get_meta("zone_id", "")) in ["01_world_gate_landing", "02_living_network_forest"]:
 		var sapling_models := [
 			preload("res://assets3D/mind_spark/echo_garden_benchmark/export/echo_sapling.glb"),
@@ -6302,6 +6925,27 @@ func _build_grove_bio_tree(parent: Node3D, at: Vector3, tree_scale: float,
 		Bricks.build_crystal(1.15, 3.2, 0.30, 6), _materials.bio_crown_crystal)
 	crystal.set_meta("editable_component", true)
 	return tree
+
+
+func _build_grove_regulator(parent: Node3D, variant: int) -> void:
+	_add_cylinder(parent, "RegulatorFoot", Vector3(0, 1.2, 0), 5.2, 2.4,
+		_materials.sanctum_ivory, true, 12)
+	_add_cylinder(parent, "RegulatorColumn", Vector3(0, 11.0, 0), 2.1, 18.0,
+		_materials.floor_dark, true, 10)
+	for level in 3:
+		_add_torus(parent, "RegulatorCollar_%02d" % level, Vector3(0, 5.0 + level * 6.0, 0),
+			2.25, 2.8, _materials.gold)
+	var wheel := _add_torus(parent, "RegulatorMemoryWheel", Vector3(0, 20.5, 0),
+		5.0, 6.2, _materials.gold, Vector3(90, 0, 0))
+	wheel.rotation.y = float(variant % 8) * PI / 8.0
+	for spoke in 6:
+		var angle := TAU * float(spoke) / 6.0
+		var arm := _add_box(parent, "RegulatorSpoke_%02d" % spoke,
+			Vector3(cos(angle) * 3.0, 20.5 + sin(angle) * 3.0, 0),
+			Vector3(0.42, 6.0, 0.42), _materials.cyan)
+		arm.rotation.z = -angle
+	_add_sphere(parent, "RegulatorAetherCore", Vector3(0, 20.5, 0),
+		Vector3.ONE * 1.4, _materials.cyan)
 
 
 func _build_grove_mushroom_mesh(at: Vector3, radius: float, height: float,
@@ -6439,8 +7083,10 @@ func _build_materials() -> void:
 	_materials.gold = _material(Color("f0c85a"), 0.22, Color("ffd56b"), 1.60)
 	_materials.gold.metallic = 0.78
 	_materials.gold.metallic_specular = 0.90
-	_materials.storm = _textured_material(
-		Color("28203c"), Color("3d3057"), Color("9b74e2"), 0.46, 10)
+	# The Storm Arena is architectural stone/metal, not an electric circuit
+	# board. Bearing information is supplied by authored compass geometry.
+	_materials.storm = _material(Color("173943"), 0.78)
+	_materials.storm_alt = _material(Color("204953"), 0.82)
 	_materials.trunk = _material(Color("654735"), 0.92)
 	_materials.constellation_floor = _textured_material(
 		Color("202746"), Color("34315e"), Color("8d63e0"), 0.52, 16)

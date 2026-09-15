@@ -30,34 +30,6 @@ static func box(parent: Node3D, label: String, at: Vector3, size: Vector3,
 	shape.size = size
 	return mesh(parent, label, shape, at, color, solid)
 
-
-static func box_collider(parent: Node3D, label: String, at: Vector3, size: Vector3) -> StaticBody3D:
-	var body := StaticBody3D.new()
-	body.name = label
-	body.position = at
-	var collision := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = size
-	collision.shape = shape
-	body.add_child(collision)
-	parent.add_child(body)
-	return body
-
-
-static func cylinder_collider(parent: Node3D, label: String, at: Vector3,
-		radius: float, height: float) -> StaticBody3D:
-	var body := StaticBody3D.new()
-	body.name = label
-	body.position = at
-	var collision := CollisionShape3D.new()
-	var shape := CylinderShape3D.new()
-	shape.radius = radius
-	shape.height = height
-	collision.shape = shape
-	body.add_child(collision)
-	parent.add_child(body)
-	return body
-
 static func cylinder(parent: Node3D, label: String, at: Vector3, radius: float,
 		height: float, color: String, solid := false, sides := 8, bottom := -1.0) -> MeshInstance3D:
 	var shape := CylinderMesh.new()
@@ -67,51 +39,6 @@ static func cylinder(parent: Node3D, label: String, at: Vector3, radius: float,
 	shape.radial_segments = sides
 	shape.rings = 1
 	return mesh(parent, label, shape, at, color, solid)
-
-
-static func ellipse_sector_mesh(radii: Vector2, height: float, start_angle: float,
-		end_angle: float, bottom_scale := 1.0, steps := 8) -> ArrayMesh:
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var top_y := height * 0.5
-	var bottom_y := -height * 0.5
-	for step in steps:
-		var a0 := lerpf(start_angle, end_angle, float(step) / steps)
-		var a1 := lerpf(start_angle, end_angle, float(step + 1) / steps)
-		var p0 := Vector3(cos(a0) * radii.x, top_y, sin(a0) * radii.y)
-		var p1 := Vector3(cos(a1) * radii.x, top_y, sin(a1) * radii.y)
-		var q0 := Vector3(cos(a0) * radii.x * bottom_scale, bottom_y,
-			sin(a0) * radii.y * bottom_scale)
-		var q1 := Vector3(cos(a1) * radii.x * bottom_scale, bottom_y,
-			sin(a1) * radii.y * bottom_scale)
-		for vertex in [Vector3(0, top_y, 0), p1, p0]:
-			surface.add_vertex(vertex)
-		for vertex in [Vector3(0, bottom_y, 0), q0, q1]:
-			surface.add_vertex(vertex)
-		for vertex in [p0, p1, q1, p0, q1, q0]:
-			surface.add_vertex(vertex)
-	# Close the radial sides so each sector remains a complete cullable module.
-	for angle in [start_angle, end_angle]:
-		var p := Vector3(cos(angle) * radii.x, top_y, sin(angle) * radii.y)
-		var q := Vector3(cos(angle) * radii.x * bottom_scale, bottom_y,
-			sin(angle) * radii.y * bottom_scale)
-		var flip: bool = is_equal_approx(angle, end_angle)
-		var vertices := [Vector3(0, top_y, 0), Vector3(0, bottom_y, 0), q,
-			Vector3(0, top_y, 0), q, p]
-		if flip:
-			vertices.reverse()
-		for vertex in vertices:
-			surface.add_vertex(vertex)
-	surface.generate_normals()
-	return surface.commit()
-
-
-static func ellipse_sector(parent: Node3D, label: String, at: Vector3, radii: Vector2,
-		height: float, start_angle: float, end_angle: float, color: String,
-		solid := false, bottom_scale := 1.0, steps := 8) -> MeshInstance3D:
-	return mesh(parent, label,
-		ellipse_sector_mesh(radii, height, start_angle, end_angle, bottom_scale, steps),
-		at, color, solid)
 
 static func facet_mesh(size: Vector3) -> ArrayMesh:
 	var points := [Vector3(0,1,0), Vector3(-1,0,0), Vector3(0,0,-1),

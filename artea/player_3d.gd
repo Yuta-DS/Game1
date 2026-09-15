@@ -226,7 +226,7 @@ func _update_combat(delta: float) -> void:
 		_finish_attack()
 		return
 
-	_set_blocking(Input.is_action_pressed("block") and not is_attacking)
+	_set_blocking(blocking_available and Input.is_action_pressed("block") and not is_attacking)
 	if Input.is_action_just_pressed("attack") and not is_blocking \
 			and _attack_cooldown_remaining <= 0.0:
 		_start_attack()

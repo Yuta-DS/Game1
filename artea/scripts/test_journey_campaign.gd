@@ -110,9 +110,12 @@ func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
 	assert(campaign.next_kingdom_id() == "heart", "Heart Melody is next")
 
 	state.record_emotion("hope", Color(0.4, 0.8, 0.6))
-	assert(not state.has_treasure("harmony_jewel"), "Island One emotion activity cannot finish Heart Melody")
-	assert(not campaign.can_enter_kingdom("creator"), "Creator remains locked during the Heart campaign")
-	state.treasures["harmony_jewel"] = true # Simulate the future full Heart-world reward.
+	assert(not state.has_treasure("harmony_jewel"), "new emotion choices cannot skip the Heart adventure")
+	assert(not campaign.can_enter_kingdom("creator"), "Island One cannot open Creator's Light")
+	# Continue the routing checks with an explicit legacy entitlement fixture.
+	state.heart_campaign_version = 1
+	state.record_emotion("peace", Color.GREEN)
+	assert(state.has_treasure("harmony_jewel"), "legacy emotion activity keeps its reward contract")
 	assert(campaign.can_enter_kingdom("creator"), "both earlier treasures open Creator's Light")
 	assert(campaign.next_kingdom_id() == "creator", "Creator's Light is next")
 

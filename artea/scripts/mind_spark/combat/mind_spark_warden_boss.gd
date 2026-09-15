@@ -206,12 +206,14 @@ func _build_storm_crown() -> void:
 	_storm_crown = Node3D.new()
 	_storm_crown.name = "StormCrown"
 	shell.add_child(_storm_crown)
-	var dark := _material(Color("171125"), Color("682f9a"), 1.15, 0.52)
-	var storm := _material(Color("36214f"), Color("b04cff"), 2.0, 0.28)
+	var dark := _material(Color("102f35"), Color("27606a"), 0.36, 0.56)
+	var storm := _material(Color("44334e"), Color("8d5aa6"), 0.72, 0.38)
+	var brass := _material(Color("b68a3b"), Color("d2aa58"), 0.16, 0.30)
 	var crystal := _material(Color("49e6ff"), Color("31d8ff"), 3.2, 0.18)
 
-	# Interlocked rings make the shield readable from every approach direction.
-	for index in 5:
+	# Three restrained casing orbits read as a damaged aether turbine shield;
+	# violet remains corruption feedback instead of becoming the whole landmark.
+	for index in 3:
 		var ring := MeshInstance3D.new()
 		ring.name = "ShieldOrbit%02d" % (index + 1)
 		var torus := TorusMesh.new()
@@ -220,7 +222,7 @@ func _build_storm_crown() -> void:
 		torus.rings = 32
 		torus.ring_segments = 8
 		ring.mesh = torus
-		ring.material_override = storm if index % 2 == 0 else dark
+		ring.material_override = storm if index == 1 else brass
 		ring.rotation = Vector3(deg_to_rad(24.0 + index * 19.0), deg_to_rad(index * 31.0), deg_to_rad(index * 13.0))
 		_storm_crown.add_child(ring)
 
@@ -232,7 +234,7 @@ func _build_storm_crown() -> void:
 		var shard_mesh := PrismMesh.new()
 		shard_mesh.size = Vector3(1.35, 5.5 + float(index % 3) * 1.2, 1.5)
 		shard.mesh = shard_mesh
-		shard.material_override = dark if index % 3 else crystal
+		shard.material_override = brass if index % 3 else crystal
 		shard.position = Vector3(cos(angle) * 6.2, 4.7 + float(index % 2), sin(angle) * 6.2)
 		shard.rotation = Vector3(0.0, -angle, -0.38)
 		_storm_crown.add_child(shard)
@@ -254,9 +256,9 @@ func _build_storm_crown() -> void:
 
 	var crown_light := OmniLight3D.new()
 	crown_light.name = "StormCrownLight"
-	crown_light.light_color = Color("b050ff")
-	crown_light.light_energy = 7.0
-	crown_light.omni_range = 30.0
+	crown_light.light_color = Color("70d7d6")
+	crown_light.light_energy = 2.2
+	crown_light.omni_range = 22.0
 	_storm_crown.add_child(crown_light)
 
 

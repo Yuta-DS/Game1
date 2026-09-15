@@ -23,12 +23,10 @@ var data: Dictionary = fresh()
 
 static func fresh() -> Dictionary:
 	return {"schema_version": 1, "world_id": "heart_melody", "planters": {},
-		"phrase": [], "rhythm_solved": false, "mistake_count": 0, "hint_level": 0,
-		"cleared_waves": [],
+		"phrase": [], "rhythm_solved": false, "cleared_waves": [],
 		"xp_receipts": {}, "completed_task_ids": [], "completed_quest_ids": [],
 		"checkpoint": "arrival", "identity_dismissed": [],
-		"settings": {"puzzle_help": true, "combat_assist": false, "reduced_motion": false,
-			"muted": false, "music_volume": 0.72, "effects_volume": 0.82}}
+		"settings": {"combat_assist": false, "reduced_motion": false, "muted": false}}
 
 
 func _init(path := SAVE_PATH, write_enabled := true) -> void:
@@ -72,7 +70,6 @@ func plant(index: int, choice: String) -> Dictionary:
 	next.planters[str(index)] = choice
 	if next.planters.size() == 3 and PLANT_TASK not in next.completed_task_ids:
 		next.completed_task_ids.append(PLANT_TASK)
-		next.checkpoint = "planter_court"
 	return _commit(next, "The seed has bloomed. %d/3 planted." % next.planters.size())
 
 
@@ -108,31 +105,11 @@ func confirm_phrase() -> Dictionary:
 		return _reply(false, "Plant all three seeds and arrange three notes first.")
 	for index in 3:
 		if data.phrase[index] != PHRASE[index]:
-			var next := data.duplicate(true)
-			next.mistake_count = int(next.get("mistake_count", 0)) + 1
-			var message := "Note %d should be the %s flower. Your arrangement is still here." % [index + 1, PHRASE[index].capitalize()]
-			if next.mistake_count >= 2 and bool(next.settings.get("puzzle_help", true)):
-				message += " The %s flower is glowing for the next step." % PHRASE[index].capitalize()
-			return _commit(next, message, false)
+			return _reply(false, "Note %d was the %s flower. Listen again or undo a note." % [index + 1, PHRASE[index].capitalize()])
 	var next := data.duplicate(true)
 	next.rhythm_solved = true
 	next.checkpoint = "drum_garden"
 	return _commit(next, "The flowers remember! Follow the path to the Blight clearing.")
-
-
-func request_hint() -> Dictionary:
-	if planted_count() < 3:
-		return _reply(false, "Plant all three seeds before asking the flowers for their phrase.")
-	if data.rhythm_solved:
-		return _reply(true, "The restored phrase is Leaf, Sun, Droplet. You may replay it freely.")
-	var next := data.duplicate(true)
-	next.hint_level = mini(3, int(next.get("hint_level", 0)) + 1)
-	var messages := [
-		"The three drum flowers are waiting in the circular clearing.",
-		"Watch and listen together: Leaf, then Sun, then Droplet.",
-		"The next needed flower will pulse during a slow demonstration.",
-	]
-	return _commit(next, messages[next.hint_level - 1])
 
 
 func record_defeat(enemy_id: String) -> Dictionary:
@@ -160,27 +137,11 @@ func finish_wave(defeated_this_attempt: Array) -> Dictionary:
 
 
 func set_setting(key: String, value: bool) -> Dictionary:
-	if key not in ["puzzle_help", "combat_assist", "reduced_motion", "muted"]:
+	if not data.settings.has(key):
 		return _reply(false, "Unknown setting.")
 	var next := data.duplicate(true)
 	next.settings[key] = value
 	return _commit(next, "Setting saved.")
-
-
-func set_volume(key: String, value: float) -> Dictionary:
-	if key not in ["music_volume", "effects_volume"]:
-		return _reply(false, "Unknown volume setting.")
-	var next := data.duplicate(true)
-	next.settings[key] = clampf(value, 0.0, 1.0)
-	return _commit(next, "Volume saved.")
-
-
-func set_checkpoint(id: String) -> Dictionary:
-	if id not in ["arrival", "planter_court", "drum_garden", "restored_garden"]:
-		return _reply(false, "Unknown checkpoint.")
-	var next := data.duplicate(true)
-	next.checkpoint = id
-	return _commit(next, "Checkpoint saved.")
 
 
 func dismiss_identity(id: String) -> Dictionary:
@@ -192,12 +153,12 @@ func dismiss_identity(id: String) -> Dictionary:
 	return _commit(next, "Your journey continues.")
 
 
-func _commit(next: Dictionary, message: String, accepted := true) -> Dictionary:
+func _commit(next: Dictionary, message: String) -> Dictionary:
 	if persistent and not _write_atomic(next):
 		return _reply(false, "Progress could not be saved. Your previous checkpoint is safe; try again.")
 	data = next
 	changed.emit()
-	return _reply(accepted, message)
+	return _reply(true, message)
 
 
 func _reply(accepted: bool, message: String) -> Dictionary:
@@ -240,12 +201,7 @@ func load_progress() -> bool:
 		loaded = _read_valid(save_path + ".bak")
 	if loaded == null:
 		return false
-	var normalized := fresh()
-	normalized.merge(loaded, true)
-	var normalized_settings: Dictionary = fresh().settings
-	normalized_settings.merge(normalized.settings, true)
-	normalized.settings = normalized_settings
-	data = normalized
+	data = loaded
 	changed.emit()
 	return true
 
@@ -268,14 +224,7 @@ static func valid(value: Variant) -> bool:
 	for key in ["phrase", "cleared_waves", "completed_task_ids", "completed_quest_ids", "identity_dismissed"]:
 		if not value.get(key) is Array: return false
 	if not value.get("rhythm_solved") is bool: return false
-	if value.get("checkpoint") not in ["arrival", "planter_court", "drum_garden", "restored_garden"]: return false
-	if int(value.get("mistake_count", 0)) < 0: return false
-	if int(value.get("hint_level", 0)) < 0 or int(value.get("hint_level", 0)) > 3: return false
-	for key in ["puzzle_help", "combat_assist", "reduced_motion", "muted"]:
-		if not value.settings.get(key) is bool: return false
-	for key in ["music_volume", "effects_volume"]:
-		var volume: Variant = value.settings.get(key)
-		if not (volume is float or volume is int) or float(volume) < 0.0 or float(volume) > 1.0: return false
+	if value.get("checkpoint") not in ["arrival", "drum_garden", "restored_garden"]: return false
 	for id in value.planters:
 		if id not in ["0", "1", "2"] or value.planters[id] not in CHOICES: return false
 	if value.phrase.size() > 3: return false

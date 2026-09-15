@@ -32,7 +32,7 @@ func _run() -> void:
 	parent.add_child(player)
 	var gate = GateScene.instantiate()
 	gate.target_world_path = NodePath("../HeartMelodyWorld")
-	gate.destination_world_local = heart.position+Vector3(-88,2,0)
+	gate.destination_world_local = heart.position+Vector3(-70,2,0)
 	parent.add_child(gate)
 	assert(not heart.built)
 	gate.set_gate_enabled(false)
@@ -40,7 +40,7 @@ func _run() -> void:
 	gate.set_gate_enabled(true)
 	assert(gate.teleport_player(player))
 	assert(heart.built and mind.build_calls == 0,"Heart travel must not construct World One")
-	assert(player.global_position.is_equal_approx(heart.to_global(Vector3(-88,2,0))))
+	assert(player.global_position.is_equal_approx(heart.to_global(Vector3(-70,2,0))))
 	await physics_frame
 	await physics_frame
 	var query := PhysicsRayQueryParameters3D.create(player.global_position+Vector3.UP*2,player.global_position-Vector3.UP*5,1,[player.get_rid()])

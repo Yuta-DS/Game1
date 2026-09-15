@@ -55,6 +55,7 @@ static func apply(world: MindSparkWorldOne) -> void:
 		control.set_meta("operator_clearance_met",control.position.distance_to(echo_approaches[id])>7.0)
 		control.set_meta("laboratory_department","Living Research Garden")
 	_connect_garden_services(world,echo,controls)
+	_build_celestial_garden_terrace(world,echo)
 	# Orient the complete assembly, not just the visible model. Its collision,
 	# state lamp, labels and western inspection marker rotate together.
 	var approaches := {
@@ -345,7 +346,8 @@ static func _connect_garden_services(world: MindSparkWorldOne, echo: Node3D, con
 	world.call("_add_torus",manifold,"BrassCrown",Vector3(0,2.1,0),2.1,2.45,mats.astral_brass)
 	world.call("_add_sphere",manifold,"ReceivingCrystal",Vector3(0,2.2,0),Vector3(.8,1.3,.8),mats.arrival_glass)
 	# Solid service drops stay behind each instrument. The interconnecting runs
-	# are buried below the deck; flush luminous tracers show their route instead.
+	# are buried below the deck. Keep a named logical route for puzzle state and
+	# animation, but do not draw exposed gold or teal cables across the civic floor.
 	for i in ECHO_IDS.size():
 		var control := controls.get_node("PuzzleControl_"+ECHO_IDS[i]) as Node3D
 		var anchor := Node3D.new()
@@ -365,8 +367,12 @@ static func _connect_garden_services(world: MindSparkWorldOne, echo: Node3D, con
 		old.queue_free()
 		world.call("_add_cable_between",echo,"GardenServiceDrop_%02d"%i,start,below,.16,.16,mats.astral_brass,8)
 		_solid_box(echo,"GardenServiceDropBody_%02d"%i,start.lerp(below,.5),Vector3(.38,maxf(.1,absf(start.y-below.y)),.38))
-		var tracer := world.call("_add_cable_between",echo,"EchoRootConduit_%02d"%(i+1),below,finish,.07,.07,mats.arrival_glass,8) as Node3D
-		tracer.set_meta("physical_role","flush non-solid light tracer above buried service")
+		var buried_route := Node3D.new()
+		buried_route.name="EchoRootConduit_%02d"%(i+1)
+		buried_route.set_meta("physical_role","buried non-rendered garden service")
+		buried_route.set_meta("path_start",below)
+		buried_route.set_meta("path_end",finish)
+		echo.add_child(buried_route)
 		for j in 3:
 			var pulse := echo.get_node("EchoRootPulse_%02d_%02d"%[i+1,j+1]) as Node3D
 			pulse.set_meta("path_start",below)
@@ -377,3 +383,53 @@ static func _connect_garden_services(world: MindSparkWorldOne, echo: Node3D, con
 	title.pixel_size=.014
 	title.outline_size=0
 	title.billboard=BaseMaterial3D.BILLBOARD_DISABLED
+
+
+static func _build_celestial_garden_terrace(world: MindSparkWorldOne, echo: Node3D) -> void:
+	# The garden's former route graphics read as lines painted over a prototype.
+	# This compact terrace gives the receiving manifold a believable architectural
+	# home using the layered civic language of the approved reference: warm ivory
+	# paving, broad fan-shaped bays, water, planting, and restrained metal joints.
+	var old := echo.get_node_or_null("CelestialGardenTerrace")
+	if old != null:
+		old.queue_free()
+	var terrace := Node3D.new()
+	terrace.name="CelestialGardenTerrace"
+	terrace.set_meta("design_reference","layered luminous-ivory celestial terrace")
+	terrace.set_meta("exposed_route_lines",0)
+	terrace.set_meta("services","buried below removable floor panels")
+	terrace.set_meta("player_clearance_preserved",true)
+	echo.add_child(terrace)
+	var mats: Dictionary=world.get("_materials")
+	var center := Vector3(-52,.015,24)
+	# Two shallow, non-colliding stone courses sit inside the existing walkable
+	# floor. Their height remains below the capsule's floor-snap tolerance.
+	world.call("_add_cylinder",terrace,"LowerIvoryTerrace",center,11.8,.12,mats.celestial_floor,false,32)
+	world.call("_add_cylinder",terrace,"UpperPearlTerrace",center+Vector3.UP*.075,9.9,.10,mats.sanctum_ivory,false,32)
+	# Broad alternating fan panels create crafted paving rather than thin guide
+	# lines. They stop outside the machine plinth and leave a continuous apron.
+	for panel_index in 16:
+		var angle:=TAU*float(panel_index)/16.0
+		var panel_material: Material=mats.celestial_floor if panel_index%2==0 else mats.stone
+		var panel := world.call("_add_box",terrace,"SunrayPavingPanel_%02d"%(panel_index+1),
+			center+Vector3(cos(angle)*7.45,.105,sin(angle)*7.45),
+			Vector3(2.55,.055,5.10),panel_material,false,PI*.5-angle) as Node3D
+		panel.set_meta("surface_detail","broad replaceable stone panel")
+	# A reference-style reflecting basin occupies the quiet rear edge, away from
+	# the six operator approaches. Ivory coping contains the water physically.
+	var basin_center:=Vector3(-52,.08,8.5)
+	world.call("_add_box",terrace,"ReflectingBasinWater",basin_center,Vector3(12.0,.08,5.2),mats.arrival_glass,false)
+	for side in [-1.0,1.0]:
+		world.call("_add_box",terrace,"BasinLongCoping_%s"%str(side),basin_center+Vector3(side*6.35,.18,0),Vector3(.58,.34,6.0),mats.sanctum_ivory,false)
+		world.call("_add_box",terrace,"BasinShortCoping_%s"%str(side),basin_center+Vector3(0,.18,side*2.85),Vector3(12.1,.34,.58),mats.sanctum_ivory,false)
+	# Paired low planter beds frame the terrace without entering interaction
+	# aprons. Their contained green modules replace loose decorative markers.
+	for side in [-1.0,1.0]:
+		var planter_at:=Vector3(-52+side*14.0,.22,8.5)
+		world.call("_add_box",terrace,"GardenPlanterShell_%s"%str(side),planter_at,Vector3(7.2,.44,5.6),mats.sanctum_ivory,false)
+		world.call("_add_box",terrace,"GardenPlanterSoil_%s"%str(side),planter_at+Vector3.UP*.24,Vector3(6.2,.10,4.6),mats.bio_gunmetal,false)
+		for plant_index in 5:
+			var x:=-2.4+float(plant_index)*1.2
+			world.call("_add_sphere",terrace,"GardenPlant_%s_%02d"%[str(side),plant_index+1],
+				planter_at+Vector3(x,.68,sin(float(plant_index)*1.8)*1.25),
+				Vector3(.48,.70,.48),mats.green_glow)

@@ -35,12 +35,12 @@ rotation_degrees = Vector3(-55, -35, 0)
 light_color = Color(1, 0.95, 0.85, 1)
 light_energy = 0.45
 shadow_enabled = true
-directional_shadow_max_distance = 520.0
+directional_shadow_max_distance = 250.0
 
 [node name="HeartMelodyWorld" parent="." instance=ExtResource("1")]
 
 [node name="Player3D" parent="." groups=["Player"] instance=ExtResource("2")]
-position = Vector3(-88, 2, 0)
+position = Vector3(-70, 2, 0)
 camera_path = NodePath("../Camera3D")
 
 [node name="FoxVisuals" type="Node3D" parent="Player3D"]

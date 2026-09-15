@@ -4,6 +4,9 @@ extends Node
 ## an evidence ID is kept. Skip/private choices deliberately write nothing.
 
 signal evidence_recorded(evidence_id: String, axis: String, choice: String)
+signal identity_previewed(code: String, friendly_name: String)
+signal identity_finalized(code: String, friendly_name: String)
+signal reveal_state_changed(seen: bool)
 
 const SAVE_PATH := "user://player_identity_evidence.json"
 const AXES := ["energy", "information", "decisions", "structure"]
@@ -44,14 +47,16 @@ func record_evidence(evidence_id: String, axis: String, choice: String,
 		return false
 	if evidence.has(evidence_id):
 		return true
+	if identity_locked:
+		return false
 	var side := _normalized_side(axis, choice)
 	if side.is_empty():
 		return false
 	var record := {"axis": axis, "choice": choice, "side": side, "world_id": world_id}
 	for field in ["canonical_quest_id", "save_alias", "task_id", "source"]:
-		var field_value := str(context.get(field, "")).strip_edges()
-		if not field_value.is_empty():
-			record[field] = field_value
+		var value := str(context.get(field, "")).strip_edges()
+		if not value.is_empty():
+			record[field] = value
 	evidence[evidence_id] = record
 	identity_axis_counts[side] = int(identity_axis_counts.get(side, 0)) + 1
 	identity_evidence_ids.append(evidence_id)
@@ -70,6 +75,30 @@ func record_evidence(evidence_id: String, axis: String, choice: String,
 
 func has_evidence(evidence_id: String) -> bool:
 	return evidence.has(evidence_id)
+
+
+func evidence_for_world(world_id: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for item in identity_answer_history:
+		if str(item.get("world_id", "")) == world_id:
+			result.append(item.duplicate(true))
+	return result
+
+
+func evidence_for_quest(canonical_quest_id: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for item in identity_answer_history:
+		if str(item.get("canonical_quest_id", "")) == canonical_quest_id:
+			result.append(item.duplicate(true))
+	return result
+
+
+func has_complete_axis_evidence() -> bool:
+	for axis in AXES:
+		var sides: Array = AXIS_SIDES[axis]
+		if int(identity_axis_counts[sides[0]]) + int(identity_axis_counts[sides[1]]) <= 0:
+			return false
+	return true
 
 
 func load_evidence() -> void:
@@ -103,7 +132,7 @@ func save() -> bool:
 	if file == null:
 		return false
 	file.store_string(JSON.stringify({
-		"schema_version": 2,
+		"schema_version": 3,
 		"evidence": evidence,
 		"identity_axis_counts": identity_axis_counts,
 		"identity_evidence_ids": Array(identity_evidence_ids),
@@ -123,13 +152,27 @@ func clear_evidence() -> void:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
 
 
+func preview_identity() -> String:
+	if not identity_result_code.is_empty():
+		return identity_result_code
+	if not has_complete_axis_evidence():
+		return ""
+	var code := _preferred_side("E", "I") + _preferred_side("S", "N") \
+		+ _preferred_side("T", "F") + _preferred_side("J", "P")
+	identity_previewed.emit(code, friendly_identity_name(code))
+	return code
+
+
 func finalize_identity() -> String:
 	if identity_locked and not identity_result_code.is_empty():
 		return identity_result_code
-	identity_result_code = _preferred_side("E", "I") + _preferred_side("S", "N") \
-		+ _preferred_side("T", "F") + _preferred_side("J", "P")
+	var preview := preview_identity()
+	if preview.is_empty():
+		return ""
+	identity_result_code = preview
 	identity_locked = true
 	save()
+	identity_finalized.emit(identity_result_code, friendly_identity_name(identity_result_code))
 	return identity_result_code
 
 
@@ -141,6 +184,7 @@ func friendly_identity_name(code := "") -> String:
 func mark_reveal_seen() -> void:
 	identity_reveal_seen = true
 	save()
+	reveal_state_changed.emit(true)
 
 
 func _normalized_side(axis: String, choice: String) -> String:

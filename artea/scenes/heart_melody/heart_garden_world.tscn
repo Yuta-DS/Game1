@@ -4,4 +4,3 @@
 
 [node name="HeartMelodyWorld" type="Node3D"]
 script = ExtResource("1")
-

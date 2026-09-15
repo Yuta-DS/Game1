@@ -158,7 +158,7 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 	}
 	var organized_trees := get_nodes_in_group("mind_spark_organized_tree")
 	_check(organized_trees.size() == 100,
-		"the authored Mind Spark landscape must contain exactly 100 bio-data trees")
+		"the authored Mind Spark landscape must contain exactly 100 organized environment modules")
 	_check(int(world.get_meta("organized_tree_count", 0)) == 100,
 		"world metadata must report the exact 100-tree population")
 	_check(str(world.get_meta("organized_tree_distribution", "")) == "10/30/14/14/8/24",
@@ -174,7 +174,7 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 			"every organized tree needs a stable index from 1 through 100")
 		world_indices[tree_index] = true
 		_check(not bool(tree.get_meta("randomized", false)),
-			"organized grove trees must never use random placement")
+			"organized environment modules must never use random placement")
 		if str(tree.get_meta("tree_lod", "")) == "gameplay_grove_editable":
 			var growth_scale := float(tree.get_meta("growth_scale", 0.0))
 			grove_scales.append(growth_scale)
@@ -184,7 +184,7 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 	_check(world_indices.size() == 100,
 		"all 100 organized trees need unique stable world indices")
 	_check(grove_scales.size() == 99,
-		"the population needs 99 variable-size grove trees plus one hero tree")
+		"the population needs 99 variable-size environment modules plus one hero landmark")
 	_check(distinct_grove_scales.size() >= 75,
 		"seeded growth must provide broad small-to-large size variation")
 	_check(grove_scales.min() < 0.32 and grove_scales.max() > 0.60,

@@ -38,4 +38,3 @@ func _init() -> void:
 	roundtrip.free()
 	print("HEART_GARDEN_MIGRATION: PASS — new reward guard, legacy entitlement and cross-world identity")
 	quit()
-

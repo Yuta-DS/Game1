@@ -10,40 +10,6 @@
     "timed_reasoning": false
   },
   "districts": ["quiet_meadow", "feeling_garden"],
-  "layout": {
-    "footprint_metres": [200, 120],
-    "quiet_meadow": {"centre": [-43, 0, 0], "radii": [53, 48], "sector_count": 6},
-    "feeling_garden": {"centre": [42, 0, 0], "radii": [60, 52], "sector_count": 6},
-    "main_route_width": 4.0,
-    "side_route_width": 3.0,
-    "bridge_width": 4.0,
-    "shortcuts": ["seed_canopy_cutthrough", "restored_root_crossing"]
-  },
-  "support_objects": [
-    {"id": "heart_melody.island_one.arrival_bloom", "kind": "checkpoint", "required": false},
-    {"id": "heart_melody.island_one.route_stone", "kind": "map", "required": false},
-    {"id": "heart_melody.island_one.lantern_arrival", "kind": "comfort_lantern", "required": false},
-    {"id": "heart_melody.island_one.lantern_mid", "kind": "comfort_lantern", "required": false},
-    {"id": "heart_melody.island_one.bench_arrival", "kind": "song_memory_bench", "required": false},
-    {"id": "heart_melody.island_one.bench_rhythm", "kind": "song_memory_bench", "required": false},
-    {"id": "heart_melody.island_one.phrase", "kind": "listening_blossom", "required": false},
-    {"id": "heart_melody.island_one.encounter_0", "kind": "combat_clearing", "required": false},
-    {"id": "heart_melody.island_one.encounter_1", "kind": "combat_clearing", "required": false}
-  ],
-  "identity_moments": [
-    {"id": "HM_ID_01", "axis": "energy", "choices": ["E", "I"], "required": false},
-    {"id": "HM_ID_02", "axis": "information", "choices": ["S", "N"], "required": false},
-    {"id": "HM_ID_03", "axis": "decisions", "choices": ["T", "F"], "required": false},
-    {"id": "HM_ID_04", "axis": "structure", "choices": ["J", "P"], "required": false}
-  ],
-  "combat": {
-    "max_active_enemies": 2,
-    "assist": {"damage_multiplier": 0.5, "warning_multiplier": 1.7, "recovery_multiplier": 1.5},
-    "enemies": {
-      "echo_moth": {"hp": 40, "xp": 12, "damage": 8, "warning_seconds": 1.0, "recovery_seconds": 1.5},
-      "pulse_slime": {"hp": 50, "xp": 15, "damage": 10, "warning_seconds": 1.2, "recovery_seconds": 1.8}
-    }
-  },
   "quest": {
     "id": "heart_melody.quest.wake_feeling_garden",
     "title": "Wake the Feeling Garden",

@@ -10,19 +10,13 @@ const Enemy := preload("res://scripts/heart_melody/heart_garden_enemy.gd")
 const GardenObject := preload("res://scripts/heart_melody/heart_garden_object.gd")
 const Catalog := preload("res://scripts/heart_melody/heart_garden_catalog.gd")
 const GardenMap := preload("res://scripts/heart_melody/heart_garden_map.gd")
-const Layout := preload("res://scripts/heart_melody/heart_garden_layout.gd")
 const TreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree.glb")
 const PlanterModel := preload("res://assets3D/heart_melody/island_one/glb/feeling_planter.glb")
 const DrumModel := preload("res://assets3D/heart_melody/island_one/glb/flower_drum.glb")
-const GateModel := preload("res://assets3D/heart_melody/island_one/glb/heart_gate_arch.glb")
-const RouteStoneModel := preload("res://assets3D/heart_melody/island_one/glb/heart_route_stone.glb")
-const BenchModel := preload("res://assets3D/heart_melody/island_one/glb/song_memory_bench.glb")
-const LanternModel := preload("res://assets3D/heart_melody/island_one/glb/comfort_lantern.glb")
-const BlossomModel := preload("res://assets3D/heart_melody/island_one/glb/listening_blossom.glb")
-const PLANTERS := [Vector3(-38,0,-19), Vector3(-24,0,19), Vector3(-6,0,-8)]
-const DRUMS := [Vector3(24,0,-16), Vector3(24,0,16), Vector3(38,0,0)]
-const ARRIVAL := Vector3(-88,2,0)
-const CLEARINGS := [Vector3(58,0,-20), Vector3(74,0,18)]
+const PLANTERS := [Vector3(-46,0,-22), Vector3(-24,0,-28), Vector3(-6,0,-16)]
+const DRUMS := [Vector3(4,0,5), Vector3(12,0,3), Vector3(20,0,5)]
+const ARRIVAL := Vector3(-70,2,0)
+const CLEARING := Vector3(54,0,0)
 const FEELING_COLORS := {"joy":"pink", "sadness":"blue", "frustration":"d78c6b",
 	"fear":"b7a2ce", "peace":"leaf_light", "hope":"gold", "sound":"ivory"}
 
@@ -47,15 +41,12 @@ var _selected := ""
 var _preview_choice := "sound"
 var _bridge: Node3D
 var _bridge_blocker: Node3D
-var _seed_shortcut: Node3D
-var _seed_shortcut_blocker: Node3D
 var _note_player: AudioStreamPlayer
 var _playing := false
 var _previous_speed := 10.0
 var _previous_blocking := true
 var _camera: Camera3D
 var _encounter: Node3D
-var _encounter_index := -1
 var _defeated: Array = []
 var _combat_paused := false
 var _restoration_seen := false
@@ -67,10 +58,6 @@ var route_segments: Array = []
 var _local_map: Control
 var _previous_maps: Dictionary = {}
 var _legacy_combat_help: CanvasLayer
-var _restored_dressing: Node3D
-var _seeded_dressing: Node3D
-var _grass_surfaces: Array[MeshInstance3D] = []
-var _restoration_glow: OmniLight3D
 
 
 func _ready() -> void:
@@ -98,7 +85,6 @@ func ensure_world_built() -> bool:
 	_ambience = AudioStreamPlayer.new()
 	_ambience.volume_db = -24
 	add_child(_ambience)
-	_apply_audio_settings()
 	if build_hud: _build_ui()
 	_restore()
 	return true
@@ -144,26 +130,55 @@ func deactivate() -> void:
 
 
 func checkpoint_position() -> Vector3:
-	match str(state.data.checkpoint):
-		"planter_court": return Vector3(-24, 2, 19)
-		"drum_garden": return Vector3(38, 2.6, 0)
-		"restored_garden": return Vector3(94, 2.6, 0)
-	return ARRIVAL
-
-
-func get_route_segments() -> Array:
-	return route_segments.duplicate(true)
+	return ARRIVAL if state.data.checkpoint == "arrival" else Vector3(12,2,17)
 
 
 func _build_ground() -> void:
-	var result := Layout.build(self)
-	route_segments = result.route_segments
-	_bridge = result.bridge
-	_bridge_blocker = result.bridge_blocker
-	_seed_shortcut = result.seed_shortcut
-	_seed_shortcut_blocker = result.seed_shortcut_blocker
-	for surface in result.root.find_children("ContinuousGrassTop", "MeshInstance3D", true, false):
-		_grass_surfaces.append(surface as MeshInstance3D)
+	var terrain := Node3D.new()
+	terrain.name = "TerrainAndPaths"
+	add_child(terrain)
+	for pair in [[Vector3(-36,0,0),52.0], [Vector3(42,0,0),60.0]]:
+		var at: Vector3 = pair[0]
+		var radius: float = pair[1]
+		Kit.cylinder(terrain,"IslandCliff",at+Vector3(0,-14,0),radius,27,"stone",false,14,radius*0.56)
+		Kit.cylinder(terrain,"GrassDeck",at+Vector3(0,-0.5,0),radius,1,"grass",true,14)
+		# Polygon rails match the same fourteen-sided foundation. Shared interior edges are omitted.
+		for i in 14:
+			var a := at + Vector3(sin(TAU*i/14.0),0,cos(TAU*i/14.0)) * (radius-1.0)
+			var b := at + Vector3(sin(TAU*(i+1)/14.0),0,cos(TAU*(i+1)/14.0)) * (radius-1.0)
+			var mid := (a+b)*0.5
+			var other: Vector3 = Vector3(42,0,0) if at.x < 0 else Vector3(-36,0,0)
+			var other_radius := 60.0 if at.x < 0 else 52.0
+			if mid.distance_to(other) < other_radius-1.0: continue
+			# East exit connects to the protected departure terrace below.
+			if mid.x > 94 and absf(mid.z) < 15: continue
+			Kit.branch(terrain,"RootRail",a+Vector3.UP*1.3,b+Vector3.UP*1.3,0.25,"wood",true)
+			Kit.branch(terrain,"RailPost",a,a+Vector3.UP*1.7,0.28,"wood",true)
+	for route in [[Vector3(-72,0,0),Vector3(-46,0,-22)],
+		[Vector3(-46,0,-22),Vector3(-24,0,-28)], [Vector3(-24,0,-28),Vector3(-6,0,-16)],
+		[Vector3(-6,0,-16),Vector3(-6,0,12)], [Vector3(-6,0,12),Vector3(12,0,18)],
+		[Vector3(12,0,18),Vector3(54,0,0)],
+		[Vector3(54,0,0),Vector3(96,0,0)], [Vector3(-70,0,0),Vector3(-42,0,16)],
+		[Vector3(-42,0,16),Vector3(12,0,12)]]:
+		_path(terrain,route[0],route[1],4.0)
+	# Deterministic sparse trees and stones, away from the control and combat aprons.
+	for at in [Vector3(-66,0,-24),Vector3(-57,0,29),Vector3(-32,0,34),
+		Vector3(-25,0,-43),Vector3(5,0,-36),Vector3(30,0,40),Vector3(72,0,33),Vector3(72,0,-34)]:
+		var tree := TreeModel.instantiate() as Node3D
+		tree.position = at
+		tree.scale = Vector3.ONE*0.9
+		terrain.add_child(tree)
+		if tree.find_children("*","CollisionShape3D",true,false).is_empty():
+			(tree.find_child("Trunk",true,false) as MeshInstance3D).create_trimesh_collision()
+	for at in [Vector3(-72,0,18),Vector3(-60,0,-36),Vector3(-8,0,38),Vector3(14,0,-32),
+		Vector3(83,0,24),Vector3(86,0,-22)]:
+		Kit.facet(terrain,"Stone",at+Vector3.UP*1.8,Vector3(3,2.5,2.2),"rock",true)
+	for i in 26:
+		var at := Vector3(-65+float(i%13)*11,0, -37 if i<13 else 31)
+		Kit.flower(terrain,at+Vector3.UP*0.45,0.55,"pink" if i%2 == 0 else "ivory")
+		Kit.facet(terrain,"GrassTuft",at+Vector3(1.3,0.5,1),Vector3(0.35,0.8,0.4),"leaf")
+	Kit.cylinder(terrain,"ShallowPool",Vector3(-48,0.035,8),4,0.04,"blue",false,10)
+	_build_departure(terrain)
 
 
 func _path(parent: Node3D,a: Vector3,b: Vector3,width: float) -> void:
@@ -194,70 +209,47 @@ func _build_garden() -> void:
 	var entry := Node3D.new()
 	entry.name = "ArrivalForecourt"
 	add_child(entry)
-	var gate := GateModel.instantiate() as Node3D
-	gate.name = "AuthoredHeartGate"
-	gate.position = Vector3(-94, 0, 0)
-	gate.scale = Vector3.ONE * 0.75
-	entry.add_child(gate)
-	for side in [-1.0, 1.0]:
-		Kit.box_collider(entry, "GatePierCollision", Vector3(-94, 2.5, side * 3.6),
-			Vector3(1.4, 5.0, 1.5))
-	_register("return_gate",Vector3(-88,0,0),"Return to the Castle")
-	Kit.sign_text(entry,"QUIET MEADOW",Vector3(-94,9.6,0),30)
-	_register("arrival_bloom",Vector3(-68,0,0),"Rest at the Arrival Bloom")
-	Kit.flower(entry,Vector3(-68,0.8,0),1.5,"ivory")
-	_register("route_stone",Vector3(-66,0,-7),"Open the Heart Garden map")
-	var route_stone := RouteStoneModel.instantiate() as Node3D
-	route_stone.position = Vector3(-66,0,-10)
-	route_stone.scale = Vector3.ONE * 0.75
-	entry.add_child(route_stone)
+	for side in [-1,1]:
+		Kit.branch(entry,"GateRoot",Vector3(-76,0,side*4),Vector3(-76,7,side*3),0.7,"wood",true)
+		Kit.branch(entry,"GateCrown",Vector3(-76,7,side*3),Vector3(-76,10,0),0.65)
+		Kit.flower(entry,Vector3(-76,8,side*2),1.0)
+	_register("return_gate",Vector3(-72,0,0),"Return to the Castle")
+	Kit.sign_text(entry,"QUIET MEADOW",Vector3(-76,10.5,0),40)
 	for i in 3:
 		var root := PlanterModel.instantiate() as Node3D
 		root.name = "FeelingPlanter%d" % i
 		root.position = PLANTERS[i]
-		root.scale = Vector3.ONE * 1.3
 		add_child(root)
-		Kit.cylinder_collider(self, "PlanterCollision%d" % i,
-			PLANTERS[i] + Vector3.UP * 0.65, 1.5, 1.3)
+		(root.find_child("StoneNest",true,false) as MeshInstance3D).create_trimesh_collision()
 		var bloom := root.find_child("GrowingBloom",true,false) as Node3D
 		blooms.append(bloom)
-		_register("planter_%d"%i,PLANTERS[i]+Vector3(0,0,3),"Plant a Feeling Seed %d"%(i+1))
-		Kit.sign_text(root,"SEED %d"%(i+1),Vector3(0,3.3,0),22)
+		_register("planter_%d"%i,PLANTERS[i]+Vector3(0,0,3.5),"Plant a Feeling Seed %d"%(i+1))
+		Kit.sign_text(root,"SEED %d"%(i+1),Vector3(0,3.3,0),26)
 	for i in 3:
 		var root := DrumModel.instantiate() as Node3D
 		root.name = "DrumFlower%d" % i
 		root.position = DRUMS[i]
-		root.scale = Vector3.ONE * 1.25
 		add_child(root)
-		Kit.cylinder_collider(self, "DrumCollision%d" % i,
-			DRUMS[i] + Vector3.UP * 0.45, 1.35, 0.9)
+		(root.find_child("LivingBase",true,false) as MeshInstance3D).create_trimesh_collision()
 		var petals := root.find_child("MovingPetals",true,false) as Node3D
 		for part in petals.get_children():
 			if part is MeshInstance3D and str(part.name).begins_with("Petal"):
 				part.material_override = Kit.material("pink" if i == 0 else ("blue" if i == 1 else "ivory"))
 		drums.append(petals)
 		Kit.sign_text(root,State.SYMBOLS[i].capitalize(),Vector3(0,3.5,0),30)
-		_register("drum_%d"%i,DRUMS[i]+Vector3(0,0,3),"Play the %s flower" % State.SYMBOLS[i])
-	_register("phrase",Vector3(10,0,3),"Arrange the garden phrase")
-	var blossom := BlossomModel.instantiate() as Node3D
-	blossom.name = "ListeningBlossom"
-	blossom.position = Vector3(10,0,0)
-	blossom.scale = Vector3.ONE * 1.15
-	add_child(blossom)
-	Kit.sign_text(self,"LISTEN • PLAY • CONFIRM",Vector3(10,4.6,0),22)
-	_build_bench(Vector3(-56,0,-11),"bench_arrival")
-	_build_bench(Vector3(15,0,25),"bench_rhythm")
-	_build_lantern(Vector3(-58,0,8),"lantern_arrival")
-	_build_lantern(Vector3(50,0,-5),"lantern_mid")
-	for index in 2:
-		var clearing: Vector3 = CLEARINGS[index]
-		_register("encounter_%d"%index,clearing+Vector3(0,0,-5),
-			"Enter Blight clearing %d"%(index+1))
-		Kit.sign_text(self,"BLIGHT CLEARING %d\nSTEP ASIDE • STRIKE DURING THE PAUSE"%(index+1),
-			clearing+Vector3(0,3.5,-10),18)
-		for side in [-1.0,1.0]:
-			Kit.flower(self,clearing+Vector3(side*7,0.8,8),1.1,"leaf_light")
-	_build_environment_dressing()
+		_register("drum_%d"%i,DRUMS[i]+Vector3(0,0,4),"Play the %s flower" % State.SYMBOLS[i])
+	_register("phrase",Vector3(12,0,18),"Arrange the garden phrase")
+	Kit.cylinder(self,"PhraseStone",Vector3(12,0.35,15),1.4,0.7,"rock",true,6)
+	Kit.sign_text(self,"LISTEN • PLAY • CONFIRM",Vector3(12,2.8,15),25)
+	Kit.box(self,"MemoryBench",Vector3(-42,1,16),Vector3(5,0.5,1.8),"wood",true)
+	for x in [-43.7,-40.3]: Kit.box(self,"BenchLeg",Vector3(x,0.5,16),Vector3(0.5,1,1.2),"stone",true)
+	_register("bench",Vector3(-42,0,19),"Song Memory Bench")
+	Kit.branch(self,"LanternBranch",Vector3(-49,0,18),Vector3(-49,4,18),0.25,"wood",true)
+	Kit.facet(self,"SeedpodLantern",Vector3(-49,3,18),Vector3(0.7,1.1,0.7),"gold")
+	_register("lantern",Vector3(-47,0,20),"Rest at the Comfort Lantern")
+	_register("encounter",Vector3(35,0,3),"Enter the Blight clearing")
+	Kit.sign_text(self,"BLIGHT CLEARING\nStep aside, then strike",Vector3(38,3,-7),28)
+	Kit.cylinder(self,"ClearingGround",CLEARING+Vector3.UP*0.035,17,0.05,"path",false,14)
 
 
 func _build_departure(parent: Node3D) -> void:
@@ -285,7 +277,7 @@ func _build_departure(parent: Node3D) -> void:
 
 
 func _build_cast() -> void:
-	for item in [["mayor_milo",Vector3(-78,0,5),"Milo"], ["guardian_angel",Vector3(-74,0,-7),"Mother Guardian"]]:
+	for item in [["mayor_milo",Vector3(-62,0,7),"Milo"], ["guardian_angel",Vector3(-59,0,-8),"Mother Guardian"]]:
 		var scene := load("res://scenes/mind_spark/cast/%s.tscn" % item[0]) as PackedScene
 		var guide := scene.instantiate() as Node3D
 		guide.position = item[1]
@@ -293,66 +285,6 @@ func _build_cast() -> void:
 		add_child(guide)
 		guide.get_node("DialogueLabel").visible = false
 		_register(str(item[0]),item[1]+Vector3(0,0,3),"Talk with %s"%item[2])
-
-
-func _build_bench(at: Vector3, id: String) -> void:
-	var bench := BenchModel.instantiate() as Node3D
-	bench.name = "SongMemoryBench"
-	bench.position = at
-	bench.scale = Vector3.ONE * 0.8
-	add_child(bench)
-	Kit.box_collider(self, "BenchCollision", at + Vector3(0,0.8,0), Vector3(5.0,1.6,1.8))
-	_register(id,at+Vector3(0,0,3.3),"Song Memory Bench")
-
-
-func _build_lantern(at: Vector3, id: String) -> void:
-	var lantern := LanternModel.instantiate() as Node3D
-	lantern.name = "ComfortLantern"
-	lantern.position = at
-	lantern.scale = Vector3.ONE * 0.8
-	add_child(lantern)
-	Kit.cylinder_collider(self, "LanternCollision", at + Vector3.UP * 1.7, 0.65, 3.4)
-	_register(id,at+Vector3(2.5,0,2.5),"Rest at the Comfort Lantern")
-
-
-func _build_environment_dressing() -> void:
-	_seeded_dressing = Node3D.new()
-	_seeded_dressing.name = "SeededGardenResponse"
-	add_child(_seeded_dressing)
-	_add_flower_multimesh(_seeded_dressing, "SeededFlowerBank", [Vector3(-44,0.7,-25),
-		Vector3(-31,0.7,27), Vector3(-10,0.7,-15), Vector3(15,0.7,-24),
-		Vector3(16,0.7,24)], "pink")
-	_restored_dressing = Node3D.new()
-	_restored_dressing.name = "RestoredGardenResponse"
-	add_child(_restored_dressing)
-	var restored_points: Array[Vector3] = []
-	for index in 16:
-		var x := lerpf(42.0, 94.0, float(index) / 15.0)
-		var side := -1.0 if index % 2 == 0 else 1.0
-		restored_points.append(Vector3(x, 0.7, side * (7.0 + float(index % 3) * 2.0)))
-	_add_flower_multimesh(_restored_dressing, "RestoredFlowerWave", restored_points, "leaf_light")
-	_restoration_glow = OmniLight3D.new()
-	_restoration_glow.name = "RestoredGardenGlow"
-	_restoration_glow.position = Vector3(38, 8, 0)
-	_restoration_glow.light_color = Color("ffd99a")
-	_restoration_glow.light_energy = 0.55
-	_restoration_glow.omni_range = 42.0
-	_restoration_glow.shadow_enabled = false
-	add_child(_restoration_glow)
-
-
-func _add_flower_multimesh(parent: Node3D, label: String, points: Array[Vector3], color: String) -> void:
-	var bank := MultiMeshInstance3D.new()
-	bank.name = label
-	var multimesh := MultiMesh.new()
-	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.mesh = Kit.facet_mesh(Vector3(0.65, 0.28, 0.48))
-	multimesh.instance_count = points.size()
-	for index in points.size():
-		multimesh.set_instance_transform(index, Transform3D(Basis.IDENTITY, points[index]))
-	bank.multimesh = multimesh
-	bank.material_override = Kit.material(color)
-	parent.add_child(bank)
 
 
 func _restore() -> void:
@@ -372,21 +304,6 @@ func _restore() -> void:
 				part.material_override = Kit.material(FEELING_COLORS[choice])
 	for drum in drums:
 		drum.scale = Vector3.ONE if state.planted_count() == 3 else Vector3(0.6,0.6,0.6)
-	var seed_route_ready := state.planted_count() == 3
-	if _seeded_dressing != null: _seeded_dressing.visible = state.planted_count() > 0
-	if _restored_dressing != null: _restored_dressing.visible = state.complete()
-	if _restoration_glow != null: _restoration_glow.visible = state.complete()
-	var grass_color := Color("a8ce69") if state.complete() else (
-		Color("9fc162") if state.planted_count() > 0 else Color("91ba59"))
-	for surface in _grass_surfaces:
-		if surface.material_override is StandardMaterial3D:
-			(surface.material_override as StandardMaterial3D).albedo_color = grass_color
-	_seed_shortcut.visible = seed_route_ready
-	for shape in _seed_shortcut.find_children("*","CollisionShape3D",true,false):
-		shape.set_deferred("disabled",not seed_route_ready)
-	_seed_shortcut_blocker.visible = not seed_route_ready
-	for shape in _seed_shortcut_blocker.find_children("*","CollisionShape3D",true,false):
-		shape.set_deferred("disabled",seed_route_ready)
 	if state.complete() and not _restoration_seen:
 		_restoration_seen = true
 		if not state.data.settings.reduced_motion:
@@ -428,15 +345,9 @@ func _process(delta: float) -> void:
 		player.call("heal",100)
 		_feedback(true,"You are safe. Your flowers and song are remembered.")
 	if _encounter != null:
-		var local_player := to_local(player.global_position)
-		var clearing_radius := 14.0
-		if local_player.distance_to(CLEARINGS[_encounter_index]) > clearing_radius + 12.0:
-			_clear_encounter()
-			_feedback(true,"The Blight settles when you leave. Return when you are ready.")
-			return
-		var resting := panel != null and panel.visible
+		var resting := to_local(player.global_position).x < 28
 		for enemy in _encounter.get_children():
-			enemy.suspended = resting
+			enemy.suspended = resting or (panel != null and panel.visible)
 			enemy.assist = bool(state.data.settings.combat_assist)
 	if panel != null and panel.visible: return
 	_selected = nearest_control(player.global_position)
@@ -458,7 +369,7 @@ func nearest_control(global_at: Vector3) -> String:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not active: return
-	if event.is_action_pressed("heart_help"):
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_H:
 		open_control("help")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel") and panel != null and panel.visible:
@@ -542,8 +453,7 @@ func _layout_ui() -> void:
 	panel.offset_right = -10
 	panel.offset_top = -minf(270,size.y*0.45)
 	panel.offset_bottom = minf(270,size.y*0.45)
-	if _local_map != null and not _local_map.expanded:
-		_local_map.visible = size.x >= 900
+	if _local_map != null: _local_map.visible = size.x >= 900
 
 
 func _build_touch_controls(parent: Control) -> void:
@@ -612,8 +522,8 @@ func open_control(id: String) -> void:
 			var result := use_object("drum_%d"%index,&"play")
 			if result.accepted: play_note(index))
 		_button("Arrange the full phrase",open_control.bind("phrase"))
-	elif id == "phrase" or id.begins_with("bench_"):
-		_heading("Song Memory\nLeaf • Sun • Droplet")
+	elif id in ["phrase","bench"]:
+		_heading("Song Memory\nLeaf • Droplet • Sun")
 		_button("Hear the garden phrase",play_phrase.bind(State.PHRASE))
 		_button("Hear my arrangement",func(): play_phrase(state.data.phrase.duplicate()))
 		for i in 3:
@@ -621,21 +531,15 @@ func open_control(id: String) -> void:
 		_button("Undo last note",func(): use_object("phrase",&"undo"))
 		_button("Reset arrangement",func(): use_object("phrase",&"reset"))
 		_button("Confirm phrase",func(): use_object("phrase",&"confirm"))
-		_button("Request a hint",_request_phrase_hint)
-		_button("Show a slow demonstration",play_phrase.bind(State.PHRASE, 1.15))
-	elif id.begins_with("lantern_") or id == "arrival_bloom":
+		_button("Show a slow demonstration",play_phrase.bind(State.PHRASE))
+	elif id == "lantern":
 		_heading("Comfort Lantern\nRest as often as you need.")
 		_button("Restore health",func():
 			if player != null: player.call("heal",100)
-			state.set_checkpoint("drum_garden" if id == "lantern_mid" else ("arrival" if id == "arrival_bloom" else str(state.data.checkpoint)))
 			_feedback(true,state.objective()))
-	elif id.begins_with("encounter_"):
-		var clearing_index := int(id.get_slice("_",1))
+	elif id == "encounter":
 		_heading("Release the Blight\nStep out of the marked attack, then strike during the pause.")
-		_button("Enter the clearing",_start_encounter.bind(clearing_index))
-	elif id == "route_stone":
-		_heading("Heart Garden Map\nThe gold trail leads from the World Gate to River Song.")
-		_button("Toggle full map",_toggle_map)
+		_button("Enter the clearing",_start_encounter)
 	elif id == "return_gate":
 		_heading("Return to the Castle\nYour garden progress will be remembered.")
 		_button("Save and return",func():
@@ -663,10 +567,8 @@ func open_control(id: String) -> void:
 	else:
 		_heading("Garden help\n%s"%state.objective())
 		_button("Replay the clue",play_phrase.bind(State.PHRASE))
-		for key in ["puzzle_help","combat_assist","reduced_motion","muted"]:
+		for key in ["combat_assist","reduced_motion","muted"]:
 			_button("%s: %s"%[key.replace("_"," ").capitalize(),"on" if state.data.settings[key] else "off"],_toggle_setting.bind(key))
-		_button("Music volume: %d%%"%roundi(float(state.data.settings.music_volume)*100.0),_cycle_volume.bind("music_volume"))
-		_button("Effects volume: %d%%"%roundi(float(state.data.settings.effects_volume)*100.0),_cycle_volume.bind("effects_volume"))
 	_button("Return to the garden",_close_panel)
 	for child in panel_content.get_children():
 		if child is Button:
@@ -676,94 +578,25 @@ func open_control(id: String) -> void:
 
 func _preview_seed(index: int, choice: String) -> void:
 	_preview_choice = choice
-	_preview_bloom(index, choice)
 	open_control("seed_preview")
 	for child in panel_content.get_children():
 		panel_content.remove_child(child)
 		child.queue_free()
 	_heading("%s seed\nListen, then plant when you are ready." % ("Sound" if choice == "sound" else choice.capitalize()))
-	var preview_symbol := Label.new()
-	preview_symbol.text = "◆  %s  •  %s note" % [choice.capitalize(), State.SYMBOLS[index].capitalize()]
-	preview_symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	preview_symbol.add_theme_font_size_override("font_size", 26)
-	preview_symbol.add_theme_color_override("font_color", Color(str(Kit.COLORS[FEELING_COLORS[choice]])))
-	panel_content.add_child(preview_symbol)
 	_button("Preview note",play_note.bind(index))
 	_button("Plant this seed",func():
 		var result := use_object("planter_%d"%index,&"plant",choice)
 		if result.accepted:
 			play_note(index)
 			_close_panel())
-	_button("Change choice",func():
-		_restore()
-		open_control("planter_%d"%index))
-	_button("Cancel",func():
-		_restore()
-		_close_panel())
-	for child in panel_content.get_children():
-		if child is Button:
-			child.grab_focus()
-			break
-
-
-func _preview_bloom(index: int, choice: String) -> void:
-	if index < 0 or index >= blooms.size(): return
-	blooms[index].scale = Vector3(0.72, 0.9, 0.72)
-	for part in blooms[index].get_children():
-		if part is MeshInstance3D and str(part.name).begins_with("Petal"):
-			part.material_override = Kit.material(FEELING_COLORS[choice])
-
-
-func _request_phrase_hint() -> void:
-	var result := use_object("phrase", &"hint")
-	if not result.accepted: return
-	var next_index := mini(state.data.phrase.size(), State.PHRASE.size() - 1)
-	var needed_symbol: String = State.PHRASE[next_index]
-	var drum_index := State.SYMBOLS.find(needed_symbol)
-	if drum_index >= 0:
-		play_note(drum_index)
-	if int(state.data.get("hint_level", 0)) >= 3:
-		play_phrase(State.PHRASE, 1.15)
+	_button("Change choice",open_control.bind("planter_%d"%index))
+	_button("Cancel",_close_panel)
+	(panel_content.get_child(1) as Button).grab_focus()
 
 
 func _toggle_setting(key: String) -> void:
 	state.set_setting(key,not state.data.settings[key])
-	_apply_audio_settings()
 	open_control("help")
-
-
-func _cycle_volume(key: String) -> void:
-	var current := float(state.data.settings[key])
-	state.set_volume(key, 0.0 if current >= 0.99 else minf(1.0, current + 0.1))
-	_apply_audio_settings()
-	open_control("help")
-
-
-func _apply_audio_settings() -> void:
-	if _note_player != null:
-		_note_player.volume_db = linear_to_db(maxf(0.001, float(state.data.settings.effects_volume)))
-	if _ambience != null:
-		_ambience.volume_db = linear_to_db(maxf(0.001, float(state.data.settings.music_volume))) - 12.0
-	if bool(state.data.settings.muted):
-		if _note_player != null: _note_player.stop()
-		if _ambience != null: _ambience.stop()
-
-
-func _toggle_map() -> void:
-	if _local_map == null:
-		return
-	_local_map.expanded = not _local_map.expanded
-	_local_map.visible = true
-	if _local_map.expanded:
-		_local_map.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-		_local_map.position = Vector2(-260,-170)
-		_local_map.size = Vector2(520,340)
-	else:
-		_local_map.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-		_local_map.offset_left = -240
-		_local_map.offset_right = -15
-		_local_map.offset_top = 15
-		_local_map.offset_bottom = 165
 
 
 func _close_panel() -> void:
@@ -810,32 +643,28 @@ func _tone(index: int,duration: float) -> AudioStreamWAV:
 	return stream
 
 
-func play_phrase(phrase: Array, spacing := 0.8) -> void:
+func play_phrase(phrase: Array) -> void:
 	if _playing: return
 	_playing = true
 	for symbol in phrase:
 		var index := State.SYMBOLS.find(symbol)
 		if index >= 0: play_note(index)
-		await get_tree().create_timer(spacing).timeout
+		await get_tree().create_timer(0.8).timeout
 	_playing = false
 
 
-func _start_encounter(clearing_index := -1) -> void:
+func _start_encounter() -> void:
 	if not state.data.rhythm_solved:
 		_feedback(false,"Wake the drum flowers before entering this clearing.")
 		return
 	if state.complete():
 		_feedback(true,"The garden is already safe.")
 		return
-	if clearing_index != state.current_wave():
-		_feedback(false,"Follow the gold trail to clearing %d."%(state.current_wave()+1))
-		return
 	_close_panel()
 	if _encounter != null: return
 	_encounter = Node3D.new()
 	_encounter.name = "GardenEncounter"
 	add_child(_encounter)
-	_encounter_index = clearing_index
 	_defeated.clear()
 	var ids: Array = State.WAVES[state.current_wave()]
 	for i in ids.size():
@@ -843,8 +672,7 @@ func _start_encounter(clearing_index := -1) -> void:
 		enemy.enemy_id = ids[i]
 		enemy.slime = str(ids[i]).contains("slime")
 		enemy.player = player
-		enemy.position = CLEARINGS[clearing_index]+Vector3(0,0,(-5 if i == 0 else 5))
-		enemy.leash_radius = 12.5
+		enemy.position = CLEARING+Vector3(0,0,(-5 if i == 0 else 5))
 		enemy.released.connect(_on_enemy_released)
 		_encounter.add_child(enemy)
 	_feedback(true,"Step aside from the marked attack, then strike the open shell.")
@@ -869,15 +697,13 @@ func _clear_encounter() -> void:
 	if _encounter != null:
 		_encounter.queue_free()
 		_encounter = null
-	_encounter_index = -1
 	_defeated.clear()
 
 
 func _identity(id: String, axis: String, side: String) -> void:
 	if not side.is_empty():
 		var tracker := get_node_or_null("/root/PlayerIdentityTracker")
-		var context := {"canonical_quest_id": State.QUEST_ID, "task_id": State.PLANT_TASK if id in ["HM_ID_01", "HM_ID_02"] else State.RHYTHM_TASK, "source": "island_one_reflection"}
-		if tracker == null or not tracker.record_evidence(id,axis,side,"heart_melody",context):
+		if tracker == null or not tracker.record_evidence(id,axis,side,"heart_melody"):
 			_feedback(false,"Your choice could not be saved. You can retry or keep it private.")
 			return
 	state.dismiss_identity(id)

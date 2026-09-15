@@ -30,23 +30,4 @@ static func validate(catalog: Dictionary) -> PackedStringArray:
 	var completion: Dictionary = catalog.get("completion",{})
 	if completion.get("awards_world_treasure",true) or completion.get("unlocks_train",true):
 		errors.append("Island One cannot award full-world completion.")
-	var layout: Dictionary = catalog.get("layout",{})
-	var footprint: Array = layout.get("footprint_metres",[])
-	if footprint.size() != 2 or int(footprint[0]) != 200 or int(footprint[1]) != 120:
-		errors.append("Island One must retain its approved compact 200 by 120 metre footprint.")
-	if float(layout.get("main_route_width", 0.0)) < 4.0 \
-		or float(layout.get("side_route_width", 0.0)) < 3.0 \
-		or float(layout.get("bridge_width", 0.0)) < 4.0:
-		errors.append("Island One routes must retain player-safe production widths.")
-	if int(layout.get("quiet_meadow",{}).get("sector_count",0)) + int(layout.get("feeling_garden",{}).get("sector_count",0)) != 12:
-		errors.append("Island One must contain twelve cullable terrain sectors.")
-	var support: Array = catalog.get("support_objects",[])
-	if support.size() != 9:
-		errors.append("Island One needs its nine approved support-object roles.")
-	for object in support:
-		if not object is Dictionary or bool(object.get("required",true)):
-			errors.append("Support objects must remain optional.")
-	var moments: Array = catalog.get("identity_moments",[])
-	if moments.size() != 4:
-		errors.append("Island One needs four optional identity moments.")
 	return errors
