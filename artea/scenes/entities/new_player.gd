@@ -333,14 +333,15 @@ func collect_item(item: itemData) -> bool:
 		return false
 	
 	if item.stackable:
-		for slot in inventory_data.slot_Data:
+		for i in range(inventory_data.slot_Data.size()):
+			var slot = inventory_data.slot_Data[i]
 			if slot != null and slot.item_Data != null:
 				if slot.item_Data.name == item.name:
 					slot.quantity += 1
 					if inventory_gui:
-						inventory_gui.refresh_slots()
+						inventory_gui.refresh_slots(i)
 					return true
-	
+
 	for i in range(inventory_data.slot_Data.size()):
 		if inventory_data.slot_Data[i] == null:
 			var new_slot = slotData.new()
@@ -348,7 +349,7 @@ func collect_item(item: itemData) -> bool:
 			new_slot.quantity = 1
 			inventory_data.slot_Data[i] = new_slot
 			if inventory_gui:
-				inventory_gui.refresh_slots()
+				inventory_gui.refresh_slots(i)
 			return true
 	
 	return false
