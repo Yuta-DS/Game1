@@ -1,7 +1,0 @@
-{
-  "native_triangles": 282662,
-  "runtime_triangles": 118670,
-  "native_meshes": 95,
-  "runtime_meshes": 23,
-  "note": "Native Blender sculpt unchanged. Procedural micro-bump stays in Blender; glTF uses PBR factors, vertex color and geometry."
-}
