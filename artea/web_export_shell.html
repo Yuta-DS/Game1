@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<title>Artea</title>
 		<style>
 html, body, #canvas {
@@ -24,24 +24,15 @@ body {
 	touch-action: none;
 }
 
-/* Force the canvas to always fill the browser viewport. Godot's own
-   "Adaptive" canvasResizePolicy JS is known to scale incorrectly when
-   combined with stretch/mode=canvas_items (this project's setting),
-   leaving dead space around the canvas - !important overrides the
-   inline width/height that JS sets on resize.
-
-   The override only fixes the CSS box. The GL drawing buffer
-   (canvas.width/height) is still whatever Godot's JS last wrote, so on
-   any resize the rendered image keeps the old size and the rest of the
-   stretched element is black. keepDrawingBufferInSync() below writes the
-   real size back into the buffer. */
+/* Use the visible mobile viewport, excluding notches and the home indicator.
+   One resize owner keeps the CSS box and WebGL buffer at the same aspect. */
 #canvas {
 	display: block;
 	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw !important;
-	height: 100vh !important;
+	top: calc(var(--view-top, 0px) + env(safe-area-inset-top, 0px));
+	left: calc(var(--view-left, 0px) + env(safe-area-inset-left, 0px));
+	width: calc(var(--view-width, 100vw) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+	height: calc(var(--view-height, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
 }
 
 #canvas:focus {
@@ -135,6 +126,8 @@ $GODOT_HEAD_INCLUDE
 		<script src="$GODOT_URL"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;
+// The shell owns resizing, including Safari's visual viewport and safe areas.
+GODOT_CONFIG.canvasResizePolicy = 0;
 const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -243,17 +236,19 @@ const engine = new Engine(GODOT_CONFIG);
 			say('UNHANDLED: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
 		});
 
-		// The CSS above stretches the canvas element to the viewport, but the
-		// GL drawing buffer is sized by Godot's own resize JS and does not
-		// follow. Whenever the two disagree the engine renders at the old
-		// buffer size and the rest of the element stays black, which looks
-		// like dead space down the right and bottom of the window. Writing
-		// the element's real pixel size back into width/height resizes the
-		// buffer; Godot picks the new size up on its next frame.
+		// Resize the visible box and drawing buffer together. Godot reads the
+		// new buffer size on its next frame; its adaptive resize is disabled
+		// so it cannot overwrite safe-area or mobile browser toolbar sizing.
 		function keepDrawingBufferInSync() {
 			const canvas = document.getElementById('canvas');
 
 			const sync = () => {
+				const view = window.visualViewport;
+				const style = document.documentElement.style;
+				style.setProperty('--view-width', (view ? view.width : window.innerWidth) + 'px');
+				style.setProperty('--view-height', (view ? view.height : window.innerHeight) + 'px');
+				style.setProperty('--view-left', (view ? view.offsetLeft : 0) + 'px');
+				style.setProperty('--view-top', (view ? view.offsetTop : 0) + 'px');
 				const dpr = window.devicePixelRatio || 1;
 				const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
 				const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
@@ -264,13 +259,17 @@ const engine = new Engine(GODOT_CONFIG);
 			};
 
 			sync();
-			// ResizeObserver catches the element changing size for any reason,
-			// including the inline width/height Godot writes on its own resize
-			// pass, which a window 'resize' listener alone would race with.
+			// Catch safe-area changes as well as browser and keyboard resizing.
 			new ResizeObserver(sync).observe(canvas);
 			window.addEventListener('resize', sync);
+			window.addEventListener('pageshow', sync);
+			if (window.visualViewport) {
+				window.visualViewport.addEventListener('resize', sync);
+				window.visualViewport.addEventListener('scroll', sync);
+			}
 		}
 
+		keepDrawingBufferInSync();
 		let lastPct = -1;
 		engine.startGame({
 			'onProgress': function (current, total) {
@@ -292,7 +291,6 @@ const engine = new Engine(GODOT_CONFIG);
 		}).then(() => {
 			setStatusMode('hidden');
 			say('engine started');
-			keepDrawingBufferInSync();
 			setTimeout(() => diag.remove(), 4000);
 		}, (err) => {
 			say('START FAILED: ' + err);
