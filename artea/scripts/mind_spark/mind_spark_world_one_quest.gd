@@ -61,6 +61,9 @@ var progress := {
 	"collected_spark_ids": [], "defeated_enemy_ids": [], "island_one_compass_solved": false,
 	"completed_island_one_quest_ids": [],
 	"island_two_invitation_received": false, "island_two_arrived": false,
+	"island_three": {"storm_preview_read": false, "rain_started": false,
+		"reader_direction": 2, "reader_phase": 0, "reader_aperture": 0,
+		"reader_attempts": 0, "recalled_lights": [], "constellation_links": [], "star_choice": ""},
 	"xp": 0, "completed": false,
 }
 var _current_task_index := 0
@@ -176,6 +179,9 @@ func _connect_world_events() -> void:
 	var boss := world.get_warden() as MindSparkWardenBoss
 	boss.defeated.connect(_on_boss_defeated)
 	boss.combat_stopped.connect(_on_boss_combat_stopped)
+	var island_three := world.get_island_three_experience()
+	if island_three != null and not island_three.progress_requested.is_connected(_on_island_three_progress_requested):
+		island_three.progress_requested.connect(_on_island_three_progress_requested)
 	var compass := world.get_island_one_puzzle()
 	if compass != null and not compass.quest_completed.is_connected(_on_island_one_subquest_completed):
 		compass.quest_completed.connect(_on_island_one_subquest_completed)
@@ -306,7 +312,14 @@ func _on_object_completed(save_id: String, _result: Dictionary) -> void:
 		"world_one.truth_bridge":
 			if _current_task_index == 6: _complete_current_task("form_truth_bridge")
 		"world_one.calm_rain_basin":
-			if _current_task_index == 9: _complete_current_task("place_final_spark")
+			if _current_task_index == 9:
+				var island_three := _island_three_state()
+				island_three.rain_started = true
+				progress.island_three = island_three
+				_save_progress()
+				_apply_task_gating()
+				if _dialogue_label != null:
+					_dialogue_label.text = "Everlasting Father: The storm has become gentle rain. Carry the four lights you earned to the Oldest Tree."
 
 
 func _on_linked_task_opened(save_id: String, task_id: String) -> void:
@@ -346,6 +359,74 @@ func _on_boss_defeated(xp_reward: int) -> void:
 	_save_progress()
 
 
+func _on_island_three_progress_requested(action: String, value: Variant) -> void:
+	var island_three := _island_three_state()
+	match action:
+		"adjust_storm_reader":
+			if _current_task_index != 8 or bool(island_three.storm_preview_read) or not value is Dictionary:
+				return
+			var control := str(value.get("control", ""))
+			if control not in ["direction", "phase", "aperture"]:
+				return
+			var limits := {"direction": 3, "phase": 2, "aperture": 2}
+			island_three["reader_" + control] = posmod(int(value.get("value", 0)), int(limits[control]))
+		"test_storm_reader":
+			if _current_task_index != 8 or bool(island_three.storm_preview_read) or not value is Dictionary:
+				return
+			island_three.reader_direction = int(value.get("direction", island_three.reader_direction))
+			island_three.reader_phase = int(value.get("phase", island_three.reader_phase))
+			island_three.reader_aperture = int(value.get("aperture", island_three.reader_aperture))
+			var mismatch := ""
+			if int(island_three.reader_direction) != 0:
+				mismatch = "The forecast trail crosses west to east. Rotate the direction selector until it follows that evidence."
+			elif int(island_three.reader_phase) != 1:
+				mismatch = "The safe gap opens while pressure is falling. Compare the gauge rhythm before testing again."
+			elif int(island_three.reader_aperture) != 1:
+				mismatch = "The wide aperture blends several trails. Narrow it to isolate one safe lane."
+			if not mismatch.is_empty():
+				island_three.reader_attempts = int(island_three.reader_attempts) + 1
+				if _dialogue_label != null:
+					_dialogue_label.text = "Everlasting Father: " + mismatch
+				step_feedback.emit("free_warden_core", false, mismatch)
+			else:
+				island_three.storm_preview_read = true
+				island_three.storm_direction = "west_to_east"
+				if _dialogue_label != null:
+					_dialogue_label.text = "Everlasting Father: The falling west-to-east trail is isolated. Cross outside its narrow lane, then repair each open anchor."
+				step_feedback.emit("free_warden_core", true, "Storm forecast verified")
+		"read_storm":
+			if _current_task_index != 8 or bool(island_three.storm_preview_read): return
+			island_three.storm_preview_read = true
+			island_three.storm_direction = str(value)
+			if _dialogue_label != null:
+				_dialogue_label.text = "Everlasting Father: The light crosses west to east. Step beyond its lane, then repair each open anchor."
+		"recall_light":
+			if _current_task_index != 9 or not bool(island_three.rain_started): return
+			var light_id := str(value)
+			if light_id not in MindSparkIslandThreeExperience.LIGHT_IDS: return
+			var recalled: Array = island_three.recalled_lights
+			if not recalled.has(light_id): recalled.append(light_id)
+		"connect_lights":
+			if _current_task_index != 9: return
+			var recalled: Array = island_three.recalled_lights
+			var links: Array = island_three.constellation_links
+			if recalled.size() < 4 or links.size() >= 3: return
+			links.append("%s>%s" % [recalled[links.size()], recalled[links.size() + 1]])
+		"choose_star":
+			if _current_task_index != 9 or str(value) not in ["receive", "carry_beside", "join_crown"]: return
+			if (island_three.constellation_links as Array).size() < 3: return
+			island_three.star_choice = str(value)
+			progress.island_three = island_three
+			_save_progress()
+			_complete_current_task("place_final_spark")
+			return
+		_:
+			return
+	progress.island_three = island_three
+	_save_progress()
+	_apply_task_gating()
+
+
 func _try_complete_network_quest_task() -> void:
 	var socket := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
 	if _current_task_index == 1 and socket != null and int(socket.current_state.get("progress", 0)) >= 2 \
@@ -371,6 +452,10 @@ func _complete_current_task(expected_id: String) -> bool:
 	_queue_identity_moment(task_index)
 	_current_task_index += 1
 	task_completed.emit(task_id)
+	if task_index == 8:
+		# The repaired core opens the physical route from the arena into the
+		# sanctuary; the final quest reward remains locked behind the constellation.
+		world.set_quest_gate_open(3, true)
 	var quest_index := int(TASKS[task_index].quest)
 	if int(QUESTS[quest_index].task_end) == task_index:
 		var completed_quests: Array = progress.completed_quest_ids
@@ -527,7 +612,8 @@ func _apply_task_gating() -> void:
 		7:
 			_enable_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
 		8:
-			_enable_kind(QuestObjectDefinition.ObjectKind.WARDEN_ANCHOR)
+			if bool(_island_three_state().storm_preview_read):
+				_enable_kind(QuestObjectDefinition.ObjectKind.WARDEN_ANCHOR)
 		9:
 			_enable_kind(QuestObjectDefinition.ObjectKind.CALM_RAIN_BASIN)
 	_update_spark_socket_inventory()
@@ -537,6 +623,9 @@ func _apply_task_gating() -> void:
 	if focus_bell != null:
 		focus_bell.arm_hint_timer()
 	_update_cast_for_task()
+	var island_three := world.get_island_three_experience()
+	if island_three != null:
+		island_three.restore_state(_island_three_state(), _current_task_index, bool(progress.completed))
 
 
 func _update_cast_for_task() -> void:
@@ -617,8 +706,11 @@ func _activate_current_combat() -> void:
 	if _current_task_index <= 1:
 		world.activate_enemy_wave("network")
 	elif _current_task_index == 8:
-		world.activate_enemy_wave("boss_adds")
-		(world.get_warden() as MindSparkWardenBoss).start_battle()
+		if bool(_island_three_state().storm_preview_read):
+			world.activate_enemy_wave("boss_adds")
+			(world.get_warden() as MindSparkWardenBoss).start_battle()
+		else:
+			world.activate_enemy_wave("")
 	else:
 		world.activate_enemy_wave("")
 
@@ -666,6 +758,13 @@ func _restore_runtime_state() -> void:
 	_sync_island_two_story_state()
 	if (progress.completed_task_ids as Array).has("free_warden_core"):
 		(world.get_warden() as MindSparkWardenBoss).restore_combat_stopped()
+		world.set_quest_gate_open(3, true)
+	if _current_task_index == 9:
+		var basin := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.CALM_RAIN_BASIN)
+		if basin != null and bool(basin.current_state.get("completed", false)):
+			var island_three := _island_three_state()
+			island_three.rain_started = true
+			progress.island_three = island_three
 	if bool(progress.completed):
 		(world.get_warden() as MindSparkWardenBoss).set_gentle_rain()
 		world.set_world_state("gentle_rain")
@@ -825,7 +924,18 @@ func _guardian_line_for_task(task_index: int) -> String:
 		return "Everlasting Father: Test a smaller bed, work with Ari, or restore cooling first. Each is a useful next step. Watch how your optical adjustments change the light."
 	if task_index == 7:
 		return "Ari: I still have something to learn. Now I know where to start. Share our discovery at the projector to reveal the storm beyond."
-	return "Everlasting Father: You found a way forward without every answer. Help the troubled storm release its anchors and become gentle rain."
+	if task_index == 8:
+		return "Everlasting Father: Rotate direction, phase and aperture. Test the forecast, then step outside its lane and repair each open anchor."
+	if task_index == 9:
+		var island_three := _island_three_state()
+		if not bool(island_three.rain_started):
+			return "Everlasting Father: The core is free. Hold at the Calm Rain Basin; there is no timer and nothing to prove."
+		if (island_three.recalled_lights as Array).size() < 4:
+			return "Everlasting Father: Recall noticing, evidence, perspective and choice around the Oldest Tree. Each light is something you already practiced."
+		if (island_three.constellation_links as Array).size() < 3:
+			return "Everlasting Father: Connect your four lights. There is no perfect drawing—only a shape that keeps them together."
+		return "Everlasting Father: Receive the Star, carry it beside you, or let it join the Crown. Your reward is equal in every choice."
+	return "Everlasting Father: The Star of Wisdom is ready."
 
 
 func _save_progress() -> bool:
@@ -843,3 +953,27 @@ func _load_progress() -> void:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path))
 	if parsed is Dictionary and parsed.get("progress", null) is Dictionary:
 		progress.merge(parsed.progress, true)
+	_normalize_island_three_progress()
+
+
+func _island_three_state() -> Dictionary:
+	if not progress.get("island_three", null) is Dictionary:
+		_normalize_island_three_progress()
+	return (progress.island_three as Dictionary).duplicate(true)
+
+
+func _normalize_island_three_progress() -> void:
+	var state := {"storm_preview_read": false, "rain_started": false,
+		"reader_direction": 2, "reader_phase": 0, "reader_aperture": 0,
+		"reader_attempts": 0, "recalled_lights": [], "constellation_links": [], "star_choice": ""}
+	if progress.get("island_three", null) is Dictionary:
+		state.merge(progress.island_three, true)
+	# Completed legacy saves remain complete without replaying the expanded finale.
+	if (progress.completed_task_ids as Array).has("free_warden_core"):
+		state.storm_preview_read = true
+	if (progress.completed_task_ids as Array).has("place_final_spark") or bool(progress.completed):
+		state.rain_started = true
+		state.recalled_lights = MindSparkIslandThreeExperience.LIGHT_IDS.duplicate()
+		state.constellation_links = ["notice>evidence", "evidence>perspective", "perspective>choice"]
+		if str(state.star_choice).is_empty(): state.star_choice = "legacy_complete"
+	progress.island_three = state

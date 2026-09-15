@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/mind_spark/combat/mind_spark_warden_boss.gd" id="1_boss"]
 
@@ -9,24 +9,39 @@ height = 13.0
 [sub_resource type="SphereMesh" id="ShellMesh"]
 radius = 6.5
 height = 13.0
+radial_segments = 12
+rings = 6
 
 [sub_resource type="StandardMaterial3D" id="ShellMaterial"]
-albedo_color = Color(0.13, 0.1, 0.22, 1)
+albedo_color = Color(0.075, 0.17, 0.19, 1)
 metallic = 0.45
 roughness = 0.32
 emission_enabled = true
-emission = Color(0.38, 0.22, 0.62, 1)
-emission_energy_multiplier = 0.75
+emission = Color(0.27, 0.13, 0.36, 1)
+emission_energy_multiplier = 0.28
 
 [sub_resource type="SphereMesh" id="CoreMesh"]
 radius = 2.8
 height = 5.6
+radial_segments = 10
+rings = 5
 
 [sub_resource type="StandardMaterial3D" id="CoreMaterial"]
 albedo_color = Color(0.37, 0.92, 1, 1)
 emission_enabled = true
 emission = Color(0.25, 0.9, 1, 1)
 emission_energy_multiplier = 1.8
+
+[sub_resource type="TorusMesh" id="CasingRingMesh"]
+inner_radius = 6.45
+outer_radius = 7.15
+rings = 12
+ring_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="CasingRingMaterial"]
+albedo_color = Color(0.72, 0.49, 0.18, 1)
+metallic = 0.82
+roughness = 0.24
 
 [sub_resource type="BoxMesh" id="StormLineMesh"]
 size = Vector3(72, 0.18, 8)
@@ -71,6 +86,21 @@ material_override = SubResource("ShellMaterial")
 position = Vector3(0, 7, 0)
 mesh = SubResource("CoreMesh")
 material_override = SubResource("CoreMaterial")
+
+[node name="LowerCasingRing" type="MeshInstance3D" parent="VisualRoot"]
+position = Vector3(0, 2.7, 0)
+mesh = SubResource("CasingRingMesh")
+material_override = SubResource("CasingRingMaterial")
+
+[node name="MiddleCasingRing" type="MeshInstance3D" parent="VisualRoot"]
+position = Vector3(0, 7, 0)
+mesh = SubResource("CasingRingMesh")
+material_override = SubResource("CasingRingMaterial")
+
+[node name="UpperCasingRing" type="MeshInstance3D" parent="VisualRoot"]
+position = Vector3(0, 11.3, 0)
+mesh = SubResource("CasingRingMesh")
+material_override = SubResource("CasingRingMaterial")
 
 [node name="CoreHurtbox" type="Area3D" parent="."]
 collision_layer = 1

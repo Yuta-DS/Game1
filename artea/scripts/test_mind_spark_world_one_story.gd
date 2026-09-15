@@ -120,6 +120,24 @@ func _run() -> void:
 	assert(bridge.interact(&"project").completed)
 	assert(quest.complete_garden_reflection(), "garden reflection completes the untimed investigation")
 	assert(world.is_quest_gate_open(2), "elite guard completion saves the pre-boss checkpoint")
+	var island_three := world.get_island_three_experience()
+	assert(island_three.interact_for_test("storm_reader", "test", {
+		"direction": 2, "phase": 0, "aperture": 0}),
+		"player can test an imperfect forecast without punishment")
+	assert(not bool(quest.progress.island_three.storm_preview_read) \
+		and int(quest.progress.island_three.reader_attempts) == 1,
+		"an incorrect forecast explains the mismatch and does not unlock combat")
+	for adjustment in [
+		{"control": "direction", "value": 0},
+		{"control": "phase", "value": 1},
+		{"control": "aperture", "value": 1},
+	]:
+		assert(island_three.interact_for_test("storm_reader", "adjust", adjustment))
+	assert(island_three.interact_for_test("storm_reader", "test", {
+		"direction": 0, "phase": 1, "aperture": 1}),
+		"player can verify the falling west-to-east trail through a narrow aperture")
+	assert(bool(quest.progress.island_three.storm_preview_read),
+		"only the evidence-matched three-control forecast unlocks the Warden sequence")
 	var boss := world.get_warden() as MindSparkWardenBoss
 	for anchor in world.get_quest_objects():
 		if anchor.definition.object_kind == QuestObjectDefinition.ObjectKind.WARDEN_ANCHOR:
@@ -127,9 +145,27 @@ func _run() -> void:
 			anchor.take_damage(25.0)
 	assert(boss.phase == MindSparkWardenBoss.Phase.PHASE_3)
 	assert(boss.take_damage(300.0) == 300.0)
+	assert(world.is_quest_gate_open(3), "repairing the core opens the physical sanctuary route")
 	var basin := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.CALM_RAIN_BASIN)
 	assert(basin.interact(&"hold").completed)
+	assert(not bool(quest.progress.completed), "rain begins before the Star of Wisdom is awarded")
+	for light_id in MindSparkIslandThreeExperience.LIGHT_IDS:
+		assert(island_three.interact_for_test("light_" + light_id), "each earned light can be recalled")
+	for connection in 3:
+		assert(island_three.interact_for_test("constellation"), "the player authors a valid free constellation")
+	assert(island_three.interact_for_test("star", "choose", "carry_beside"), "all three Star choices share one completion path")
 	assert(quest.completed_task_count() == 10 and bool(quest.progress.completed))
+	var return_arch := world.find_child("CrownrootHeavenlyReturnGate", true, false) as Node3D
+	assert(return_arch != null and str(return_arch.get_meta("door_motion", "")) == "paired outward hinges",
+		"Island Three finishes at the shared heavenly arch language, not a prototype frame")
+	var return_leaves := return_arch.find_children("CrownrootReturnGate*Leaf", "AnimatableBody3D", true, false)
+	assert(return_leaves.size() == 2,
+		"the return gate has two physical leaves with separate hinge pivots")
+	for leaf_node in return_leaves:
+		var leaf := leaf_node as AnimatableBody3D
+		assert(leaf.has_node("PhysicalDoorCollision") \
+			and absf(float(leaf.get_meta("open_rotation_y", 0.0))) > PI * 0.5,
+			"each return leaf carries its collision and swings fully outside the opening")
 	assert(completed_canonical_ids == [
 		"quest.signal_observatory",
 		"quest.echo_forest",

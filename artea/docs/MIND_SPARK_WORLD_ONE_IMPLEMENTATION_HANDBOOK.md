@@ -194,13 +194,13 @@ STAR OF WISDOM AND CASTLE RETURN
 
 ### Quest 5 The Wisdom Constellation
 
-**Island:** Three. **Districts:** Thought Storm Arena and Oldest Tree Sanctuary. **Runtime milestones:** free Warden core and change storm to gentle rain. **Status:** Core combat and rain transformation implemented; expanded storm-reading and authored finale are proposed.
+**Island:** Three. **Districts:** Thought Storm Arena and Oldest Tree Sanctuary. **Runtime milestones:** free Warden core and change storm to gentle rain. **Status:** Expanded storm-reading, Warden repair, rain transformation, four-light recall, authored constellation and equal Star-choice finale are implemented; Web performance and final audio remain release-verification work.
 
 **Story:** The final island externalizes the thought storm. The player applies the same skills under movement pressure, repairs rather than conquers the Warden mechanism, and turns four discoveries into a constellation that belongs to them.
 
 **Playable sequence:**
 
-1. Read a preview of the next storm line before moving.
+1. Use the Storm Reader's direction, pressure-phase, and aperture controls to isolate the next storm line. Testing an imperfect setting explains one mismatch and keeps every control available for revision.
 2. Dodge wide telegraphed lines and reach three Warden Anchors.
 3. Strike only while an anchor's ring is open; closed-ring strikes provide corrective feedback.
 4. Repair the exposed crystal core and stop the storm mechanism.
@@ -209,7 +209,7 @@ STAR OF WISDOM AND CASTLE RETURN
 7. Connect the four lights freely; connection is required, not one perfect drawing.
 8. Choose to receive the Star, carry it beside the player, or watch it join the Crown. Every choice grants the same reward.
 
-**World response:** Rain replaces hostile storm effects, the Oldest Tree awakens from root to crown, the Star of Wisdom forms, and the Castle return route opens.
+**World response:** Rain replaces hostile storm effects, the Crown Wisdom Engine awakens from reactor to crown, the Star of Wisdom forms, and the Castle return route opens. The internal `Oldest Tree Sanctuary` location alias remains unchanged for save compatibility.
 
 ## 5 Puzzle design contract
 
@@ -271,7 +271,7 @@ Every required puzzle uses this loop:
 
 ### Island 3 Storm to Sanctuary
 
-**Proposed production pass.** The arena begins dense and mechanical: storm harvesters, large foundation engines, protected service galleries, anchor conduits, and readable energy direction. Toward the sanctuary, the architecture becomes quieter and more organic. The Oldest Tree is the dominant landmark, surrounded by four memory-light stations and a final constellation dais.
+**Implemented gameplay pass.** The arena begins dense and mechanical: broad low-poly compass-stone sectors, three inset distance bands, eight restrained bearing rays, storm-pressure banks, protected service galleries, three visible anchor conduits, forecast lanes, a three-control Storm Line Reader, and eight grounded storm-regulator towers. The former electrical-grid floor and unsupported tornado-ring motif are absent. The Reader requires the player to compare direction, falling/rising pressure phase, and wide/narrow aperture; an imperfect test gives corrective evidence without punishment. Each tower has a visible intake lens and deck conduit, making the storm-energy route legible. Toward the sanctuary, the architecture becomes quieter without abandoning World One's engineering language. The Crown Wisdom Engine is the dominant landmark: an ivory foundation, brass load ring, teal aether reactor, paired memory-pressure vessels, radial transmission spokes, glass crown lens, and Star of Wisdom emitter. Twenty-four smaller grove regulators establish a consistent machinery rhythm around four persistent low-poly memory instruments, a player-authored constellation table, gentle rain system, and equal-choice Star pedestal. Organic tree names remain only as internal compatibility aliases for existing saves and tests.
 
 ### Spatial station blueprint
 
@@ -400,7 +400,7 @@ Spatial sounds must be attached to their real source. Completion audio plays onc
 - [ ] Verify correct path, incorrect path, hint ladder, undo, reset, replay, rapid input, partial reload, and completed reload for every puzzle.
 - [ ] Verify no early gate, duplicate XP, repeated reward, stale collision, or deadlock.
 - [ ] Verify all three valid Living Projector approaches.
-- [ ] Verify closed and open Warden Anchor feedback.
+- [x] Verify closed and open Warden Anchor feedback.
 
 ### Environment and physics
 
@@ -426,7 +426,7 @@ Spatial sounds must be attached to their real source. Completion audio plays onc
 2. Preserve canonical IDs and save aliases before changing presentation.
 3. Finish Island 1 visual and Web acceptance before altering its puzzle rules.
 4. Finish Island 2 player-camera, gate-sweep, collision, and Web acceptance.
-5. Build Island 3's expanded storm-reading and authored constellation sequence behind the existing Quest 5 save IDs.
+5. [Complete] Build Island 3's expanded storm-reading and authored constellation sequence behind the existing Quest 5 save IDs.
 6. Complete audio, accessibility, touch, performance, and full-route evidence.
 7. Record approved screenshots, videos, Blender sources, GLBs, metrics, and known limitations.
 
