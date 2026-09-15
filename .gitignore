@@ -46,3 +46,10 @@ build/
 
 # GLB colour-edit backups, regenerable via tools/recolour_tree_fibers.py --restore
 *.precolour
+
+# Local AnyCreature tooling and generated review artifacts are not game source.
+# Keep every casing out of commits while allowing final renamed/exported assets.
+.anycreature-runtime/
+**/*anycreature*
+**/*anyCreature*
+**/*AnyCreature*
