@@ -46,3 +46,8 @@ build/
 
 # GLB colour-edit backups, regenerable via tools/recolour_tree_fibers.py --restore
 *.precolour
+
+# Textures Godot extracts out of embedded glTF images (gltf/embedded_image_handling=1).
+# Regenerated on import from the .glb, which is the tracked source. Their .import
+# sidecars are already covered by the *.import rule above.
+artea/meshy ai/*_texture_Image_*.jpg
