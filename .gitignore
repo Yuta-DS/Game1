@@ -50,10 +50,8 @@ build/
 # Textures Godot extracts out of embedded glTF images (gltf/embedded_image_handling=1).
 # Regenerated on import from the .glb, which is the tracked source. Their .import
 # sidecars are already covered by the *.import rule above.
-artea/meshy ai/*_texture_Image_*.jpg
 
 # Godot also extracts these from the original (non-Blender) GLB naming.
-artea/meshy ai/*_texture_[0-9].jpg
 
 # Textures Godot extracts from GLBs that embed their own images
 # (gltf/embedded_image_handling=1). Regenerated on import from the .glb,
@@ -210,10 +208,4 @@ artea/assets3D/tree_of_life/leaves/reference_faithful/glb/solar_glass_science_le
 artea/assets3D/worlds/Floating_Cloud_1031084848_texture_0.jpg
 artea/assets3D/worlds/Floating_Cloud_1031084848_texture_1.jpg
 artea/assets3D/worlds/Floating_Cloud_1031084848_texture_2.jpg
-artea/meshy ai/Artéa_Signpost_1027230400_texture_0.jpg
-artea/meshy ai/Artéa_Signpost_1027230400_texture_1.jpg
-artea/meshy ai/Artéa_Signpost_1027230400_texture_2.jpg
-artea/meshy ai/Artéa_Signpost_1027230400_texture_Image_0.jpg
-artea/meshy ai/Artéa_Signpost_1027230400_texture_Image_1.jpg
-artea/meshy ai/Artéa_Signpost_1027230400_texture_Image_2.jpg
 artea/meshy ai/Milo_output_texture_0.png
