@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dxhdy2k35b8lh"
 path.s3tc="res://.godot/imported/pictureframeyay.png-3dab86448aa330313c83e1b714b228ca.s3tc.ctex"
-path.etc2="res://.godot/imported/pictureframeyay.png-3dab86448aa330313c83e1b714b228ca.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/ArtGallery/pictureframeyay.png"
-dest_files=["res://.godot/imported/pictureframeyay.png-3dab86448aa330313c83e1b714b228ca.s3tc.ctex", "res://.godot/imported/pictureframeyay.png-3dab86448aa330313c83e1b714b228ca.etc2.ctex"]
+dest_files=["res://.godot/imported/pictureframeyay.png-3dab86448aa330313c83e1b714b228ca.s3tc.ctex"]
 
 [params]
 

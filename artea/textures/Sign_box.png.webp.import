@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cc7haxr8tbq6n"
 path.s3tc="res://.godot/imported/Sign_box.png.webp-f5b13e3b58cd0178340c6f4ee6e36099.s3tc.ctex"
-path.etc2="res://.godot/imported/Sign_box.png.webp-f5b13e3b58cd0178340c6f4ee6e36099.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/Sign_box.png.webp"
-dest_files=["res://.godot/imported/Sign_box.png.webp-f5b13e3b58cd0178340c6f4ee6e36099.s3tc.ctex", "res://.godot/imported/Sign_box.png.webp-f5b13e3b58cd0178340c6f4ee6e36099.etc2.ctex"]
+dest_files=["res://.godot/imported/Sign_box.png.webp-f5b13e3b58cd0178340c6f4ee6e36099.s3tc.ctex"]
 
 [params]
 

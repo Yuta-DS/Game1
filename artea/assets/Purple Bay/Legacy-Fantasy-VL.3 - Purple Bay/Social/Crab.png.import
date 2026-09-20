@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ck758p8fl5xqv"
 path.s3tc="res://.godot/imported/Crab.png-86f447da2b7c4c44cd0f664c1c83935d.s3tc.ctex"
-path.etc2="res://.godot/imported/Crab.png-86f447da2b7c4c44cd0f664c1c83935d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Social/Crab.png"
-dest_files=["res://.godot/imported/Crab.png-86f447da2b7c4c44cd0f664c1c83935d.s3tc.ctex", "res://.godot/imported/Crab.png-86f447da2b7c4c44cd0f664c1c83935d.etc2.ctex"]
+dest_files=["res://.godot/imported/Crab.png-86f447da2b7c4c44cd0f664c1c83935d.s3tc.ctex"]
 
 [params]
 

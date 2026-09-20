@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://81wnn411hyf1"
 path.s3tc="res://.godot/imported/10305_picture_frame_V1_Diffuse.jpg-6726fd5367141d21789b269d0f5b2338.s3tc.ctex"
-path.etc2="res://.godot/imported/10305_picture_frame_V1_Diffuse.jpg-6726fd5367141d21789b269d0f5b2338.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/10305_picture_frame_V1_Diffuse.jpg"
-dest_files=["res://.godot/imported/10305_picture_frame_V1_Diffuse.jpg-6726fd5367141d21789b269d0f5b2338.s3tc.ctex", "res://.godot/imported/10305_picture_frame_V1_Diffuse.jpg-6726fd5367141d21789b269d0f5b2338.etc2.ctex"]
+dest_files=["res://.godot/imported/10305_picture_frame_V1_Diffuse.jpg-6726fd5367141d21789b269d0f5b2338.s3tc.ctex"]
 
 [params]
 
