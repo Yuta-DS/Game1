@@ -51,3 +51,6 @@ build/
 # Regenerated on import from the .glb, which is the tracked source. Their .import
 # sidecars are already covered by the *.import rule above.
 artea/meshy ai/*_texture_Image_*.jpg
+
+# Godot also extracts these from the original (non-Blender) GLB naming.
+artea/meshy ai/*_texture_[0-9].jpg
