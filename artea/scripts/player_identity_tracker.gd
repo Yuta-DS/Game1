@@ -36,7 +36,7 @@ func _ready() -> void:
 	load_evidence()
 
 
-func record_evidence(evidence_id: String, axis: String, choice: String) -> bool:
+func record_evidence(evidence_id: String, axis: String, choice: String, world_id: String = "mind_spark") -> bool:
 	if evidence_id.strip_edges().is_empty() or axis not in AXES or choice.strip_edges().is_empty():
 		return false
 	if evidence.has(evidence_id):
@@ -44,10 +44,10 @@ func record_evidence(evidence_id: String, axis: String, choice: String) -> bool:
 	var side := _normalized_side(axis, choice)
 	if side.is_empty():
 		return false
-	evidence[evidence_id] = {"axis": axis, "choice": choice, "side": side, "world_id": "mind_spark"}
+	evidence[evidence_id] = {"axis": axis, "choice": choice, "side": side, "world_id": world_id}
 	identity_axis_counts[side] = int(identity_axis_counts.get(side, 0)) + 1
 	identity_evidence_ids.append(evidence_id)
-	identity_answer_history.append({"evidence_id": evidence_id, "side": side, "world_id": "mind_spark"})
+	identity_answer_history.append({"evidence_id": evidence_id, "side": side, "world_id": world_id})
 	if not save():
 		evidence.erase(evidence_id)
 		identity_axis_counts[side] = maxi(0, int(identity_axis_counts[side]) - 1)
@@ -60,6 +60,23 @@ func record_evidence(evidence_id: String, axis: String, choice: String) -> bool:
 
 func has_evidence(evidence_id: String) -> bool:
 	return evidence.has(evidence_id)
+
+
+func clear_world_evidence(world_id: String) -> bool:
+	# Heart's journey erase must not remove or reinterpret existing Mind Spark
+	# answers, locked results, or reveal state.
+	var removed: Array[String] = []
+	for id in evidence:
+		if str(evidence[id].get("world_id", "mind_spark")) == world_id:
+			removed.append(str(id))
+	if removed.is_empty(): return true
+	for id in removed:
+		var side := str(evidence[id].get("side", ""))
+		if identity_axis_counts.has(side): identity_axis_counts[side] = maxi(0, int(identity_axis_counts[side]) - 1)
+		evidence.erase(id)
+		identity_evidence_ids.erase(id)
+	identity_answer_history = identity_answer_history.filter(func(item): return str(item.get("evidence_id", "")) not in removed)
+	return save()
 
 
 func load_evidence() -> void:

@@ -158,8 +158,8 @@ func _test_mode_never_gates_progress() -> void:
 
 	assert(faith.treasure_count() == universal.treasure_count(),
 		"both modes award the same number of treasures")
-	assert(faith.has_all_treasures() and universal.has_all_treasures(),
-		"both modes complete the Crown of Life")
+	assert(not faith.has_all_treasures() and not universal.has_all_treasures(),
+		"both modes keep the full Heart reward locked after feeling choices")
 	assert(faith.strengths.size() == universal.strengths.size(),
 		"both modes grant the same strengths")
 

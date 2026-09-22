@@ -748,6 +748,13 @@ func _build_mind_district() -> void:
 
 
 func _build_heart_district() -> void:
+	var heart_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
+	heart_gate.name = "HeartMelodyWorldGate"
+	heart_gate.position = HEART + Vector3(0, 4, 45)
+	heart_gate.target_kingdom_id = "heart"
+	heart_gate.target_world_path = NodePath()
+	heart_gate.prompt_text = "Q · HEART MELODY — QUIET MEADOW (Star of Wisdom required)"
+	add_child(heart_gate)
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
 	add_child(district)

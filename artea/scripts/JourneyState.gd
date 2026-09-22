@@ -19,6 +19,7 @@ const SAVE_PATH := "user://journey.json"
 var save_path: String = SAVE_PATH
 
 # 0 = not started, 1 = thoughts, 2 = emotions, 3 = creativity, 4 = identity
+var campaign_version: int = 2
 var stage: int = 0
 
 var thoughts: Array = []    # [{text, popped, emotion}]
@@ -149,7 +150,6 @@ func record_emotion(emotion_name: String, colour: Color) -> void:
 		"visited": true,
 	})
 	_grant("emotional-awareness")
-	_award_treasure("harmony_jewel")
 	save()
 
 
@@ -308,6 +308,7 @@ func save() -> void:
 		push_error("JourneyState: could not write %s" % save_path)
 		return
 	file.store_string(JSON.stringify({
+		"campaign_version": campaign_version,
 		"stage": stage,
 		"thoughts": thoughts,
 		"emotions": emotions,
@@ -360,7 +361,7 @@ func load_journey() -> void:
 	# evidence even though they predate explicit treasure ownership.
 	if popped_count() > 0:
 		treasures["star_of_wisdom"] = true
-	if not emotions.is_empty():
+	if int(data.get("campaign_version", 1)) < 2 and not emotions.is_empty():
 		treasures["harmony_jewel"] = true
 	# Before the Gallery Frame Ritual existed, saving an artwork immediately
 	# earned Creator's Light. Preserve those established journeys exactly once.
@@ -376,6 +377,14 @@ func load_journey() -> void:
 # The player can erase their journey at any time. No confirmation maze,
 # no partial wipe — the file goes and the state resets.
 func clear_journey() -> void:
+	campaign_version = 2
+	if save_path == SAVE_PATH and is_inside_tree():
+		var tracker := get_node_or_null("/root/PlayerIdentityTracker")
+		if tracker != null: tracker.clear_world_evidence("heart_melody")
+	for suffix in ["", ".bak", ".tmp"]:
+		var heart_path: String = "user://heart_melody_island_one.json" + suffix
+		if save_path == SAVE_PATH and FileAccess.file_exists(heart_path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(heart_path))
 	stage = 0
 	thoughts.clear()
 	emotions.clear()

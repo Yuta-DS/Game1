@@ -13,6 +13,18 @@ extends Node2D
 func _ready():
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
+	# Release Web templates reject scene paths in engine startup arguments.
+	# The local preview adapter requests a normal runtime scene transition.
+	if OS.has_feature("web") and JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW === true") == true:
+		JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW = false")
+		_open_heart_preview.call_deferred()
+
+func _open_heart_preview() -> void:
+	Global.current_user_name = "Guest_Player"
+	Global.auth_token = "OFFLINE_GUEST_TOKEN"
+	var result := get_tree().change_scene_to_file("res://scenes/heart_melody/heart_melody_world.tscn")
+	if result != OK:
+		show_message("The garden could not open. Please reload and try again.")
 
 # Helper utility to cleanly control status messages and alert color states
 func show_message(text: String, is_error: bool = true):

@@ -27,6 +27,10 @@ func _attach_to_current_scene() -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
+	if scene.get_meta("owns_companion_guidance", false):
+		active_milo = null
+		active_player = null
+		return
 	var player := _find_3d_player(scene)
 	if player == null:
 		return

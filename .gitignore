@@ -46,3 +46,6 @@ build/
 
 # GLB colour-edit backups, regenerable via tools/recolour_tree_fibers.py --restore
 *.precolour
+
+# Local implementation validation and capture artifacts
+/work/

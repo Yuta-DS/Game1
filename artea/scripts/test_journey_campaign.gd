@@ -39,7 +39,7 @@ func _test_scene_routes(campaign: Node) -> void:
 		"the optional guided Lens story remains available")
 	var expected := {
 		"mind": "res://scenes/popThoughtsMenu.tscn",
-		"heart": "res://scenes/music_minigame.tscn",
+		"heart": "res://scenes/heart_melody/heart_melody_world.tscn",
 		"creator": "res://scenes/drawing_tool.tscn",
 	}
 	for kingdom_id in expected:
@@ -110,7 +110,10 @@ func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
 	assert(campaign.next_kingdom_id() == "heart", "Heart Melody is next")
 
 	state.record_emotion("hope", Color(0.4, 0.8, 0.6))
-	assert(state.has_treasure("harmony_jewel"), "emotion activity earns Harmony Jewel")
+	assert(not state.has_treasure("harmony_jewel"), "Island 1 feelings cannot grant the Jewel")
+	assert(not campaign.can_enter_kingdom("creator"), "new Heart players remain on Island 1")
+	# Explicit legacy-completion fixture for the remaining route tests.
+	state.treasures["harmony_jewel"] = true
 	assert(campaign.can_enter_kingdom("creator"), "both earlier treasures open Creator's Light")
 	assert(campaign.next_kingdom_id() == "creator", "Creator's Light is next")
 

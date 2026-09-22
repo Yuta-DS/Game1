@@ -4,6 +4,8 @@ extends Area3D
 signal travelled(destination_world_local: Vector3)
 
 @export var destination_world_local := Vector3.ZERO
+@export var target_world_path: NodePath = NodePath("MindSparkWorldOne")
+@export var target_kingdom_id: String = ""
 @export var gate_enabled := true
 @export var prompt_text := "Q • ENTER MIND SPARK"
 
@@ -24,13 +26,19 @@ func set_gate_enabled(enabled: bool) -> void:
 func teleport_player(player: CharacterBody3D) -> bool:
 	if not gate_enabled or player == null:
 		return false
+	if not target_kingdom_id.is_empty():
+		var campaign := get_node("/root/JourneyCampaign")
+		if not campaign.can_enter_kingdom(target_kingdom_id):
+			$Prompt.text = "HEART MELODY · Earn the Star of Wisdom in Mind Spark first." if target_kingdom_id == "heart" else campaign.portal_status(target_kingdom_id)
+			return false
+		return campaign.enter_kingdom(target_kingdom_id)
 	var floating_world := _find_floating_world()
 	if floating_world == null:
 		return false
 	# World One may be built lazily to keep the art gallery within the web
 	# export's memory budget, so make sure it exists before travelling into it -
 	# otherwise the player lands in empty space where the world should be.
-	var world_one := floating_world.get_node_or_null("MindSparkWorldOne")
+	var world_one := floating_world.get_node_or_null(target_world_path)
 	if world_one != null and world_one.has_method("ensure_world_built"):
 		world_one.call("ensure_world_built")
 	player.global_position = floating_world.to_global(destination_world_local)
@@ -70,4 +78,3 @@ func _apply_enabled() -> void:
 	$Prompt.text = prompt_text if gate_enabled else "WORLD GATE • COMPLETE THE CURRENT QUEST"
 	$Portal.visible = gate_enabled
 	$Light.visible = gate_enabled
-
