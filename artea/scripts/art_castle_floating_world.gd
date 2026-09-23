@@ -1,6 +1,7 @@
 extends Node3D
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const StreamingDirector := preload("res://scripts/world_streaming_director.gd")
 
 const MindSparkWorldGateScene := preload("res://scenes/mind_spark/world_gate.tscn")
 const TreeOfLifeScene := preload("res://assets3D/tree_of_life/glb/artea_tree_of_life.glb")
@@ -170,6 +171,22 @@ func _ready() -> void:
 	if not embedded_in_gallery:
 		_build_standalone_minimap()
 		_build_return_gate()
+	_build_streaming_director()
+
+
+func _build_streaming_director() -> void:
+	# Everything above builds the full 2 km world up front and left it all
+	# drawing at once, wherever the player happened to be standing. This hides
+	# the parts that are too far away to read. It is attached here rather than
+	# only from art_gallery.gd so the scene costs the same when it is run
+	# directly from the editor as it does embedded in the gallery.
+	if get_node_or_null("WorldStreamingDirector") != null:
+		return
+	var streaming := StreamingDirector.new()
+	streaming.name = "WorldStreamingDirector"
+	streaming.world_root = self
+	streaming.player = _player
+	add_child(streaming)
 
 
 func _build_standalone_minimap() -> void:

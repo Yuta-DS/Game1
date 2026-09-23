@@ -22,6 +22,43 @@ const CASTLE_POSITION := Vector3(-51.4, 0.0, 27.41)
 const FACING_SPEED_THRESHOLD := 0.08
 const TELEPORT_DISTANCE := 100.0
 
+# The compact map used to queue a redraw on every single frame. Each redraw
+# samples ~530 landscape tiles, and _draw() is not cheap enough to be run 60
+# times a second for a 208 px circle - profiled inside the castle it was 12 ms
+# of a 15 ms frame, by far the largest single cost in the scene, and GDScript
+# costs several times that again under WASM in the Web export.
+#
+# Nothing on this map changes fast enough to need 60 Hz. It is refreshed on a
+# fixed cadence, and immediately when the player has actually moved far enough
+# to shift the view by a tile, so following the player still feels continuous
+# while a standing player costs almost nothing.
+const MAP_REFRESH_INTERVAL := 1.0 / 12.0
+const MAP_REFRESH_MOVE_METRES := 6.0
+
+# Static sampler data, hoisted out of _landscape_color so it is not rebuilt for
+# every one of the ~530 tiles the compact map draws.
+const MIND_ZONE_COLORS: Array[Color] = [
+	Color("35506a"), Color("315f70"), Color("3e4d75"),
+	Color("536d59"), Color("4c386a"), Color("3e6b5d"),
+]
+const KINGDOM_IDS: Array[String] = ["mind", "heart", "creator"]
+const KINGDOM_COLORS: Array[Color] = [
+	Color("28394d"), Color("5b4356"), Color("675c3e"),
+]
+const GALAXY_ISLAND_SPECS := [
+	[Vector2(0, 820), 160.0, Color("596d72")],
+	[Vector2(0, 1640), 225.0, Color("537d66")],
+	[Vector2(-600, 1640), 180.0, Color("315f70")],
+	[Vector2(0, 2290), 180.0, Color("79526d")],
+	[Vector2(600, 1640), 180.0, Color("806f49")],
+]
+const GALAXY_BRIDGE_SEGMENTS := [
+	[Vector2(0, 500), Vector2(0, 1422), 34.0],
+	[Vector2(-218, 1640), Vector2(-430, 1640), 34.0],
+	[Vector2(0, 1858), Vector2(0, 2120), 34.0],
+	[Vector2(218, 1640), Vector2(410, 1640), 34.0],
+]
+
 const HUB_RIVER := [
 	Vector3(-190, 0, -220), Vector3(-132, 0, -110), Vector3(-148, 0, 4),
 	Vector3(-108, 0, 102), Vector3(-82, 0, 220),
@@ -42,6 +79,22 @@ var _previous_mouse_mode := Input.MOUSE_MODE_VISIBLE
 var _facing_world := Vector2(0.0, 1.0) # World X/Z. +Z is north on this atlas.
 var _last_player_position := Vector3.ZERO
 var _has_last_player_position := false
+
+# Per-redraw sampler cache, filled by _refresh_landscape_sampling().
+var _sample_world_to_local := Transform3D.IDENTITY
+var _sample_blueprint_active := false
+var _sample_zone_centres: Array[Vector2] = []
+var _sample_zone_radii: Array[float] = []
+var _sample_spur_active := false
+var _sample_spur_start := Vector2.ZERO
+var _sample_station_centre := Vector2.ZERO
+var _sample_kingdom_centres: Array[Vector2] = []
+var _sample_kingdom_colors: Array[Color] = []
+
+# Redraw cadence state (see MAP_REFRESH_INTERVAL).
+var _redraw_cooldown := 0.0
+var _last_drawn_position := Vector3.ZERO
+var _last_drawn_facing := Vector2(0.0, 1.0)
 
 
 func _ready() -> void:
@@ -89,7 +142,24 @@ func _process(delta: float) -> void:
 		_player = _find_player()
 		_has_last_player_position = false
 	_update_player_facing(delta)
+	_redraw_cooldown -= delta
+	if _redraw_cooldown > 0.0 and not _view_moved():
+		return
+	_redraw_cooldown = MAP_REFRESH_INTERVAL
+	if _player != null and is_instance_valid(_player):
+		_last_drawn_position = _player.global_position
+	_last_drawn_facing = _facing_world
 	queue_redraw()
+
+
+## True when the player has moved or turned enough that the drawn map is out of
+## date, so movement is never visibly behind the cadence above.
+func _view_moved() -> bool:
+	if _player == null or not is_instance_valid(_player):
+		return false
+	if _player.global_position.distance_to(_last_drawn_position) >= MAP_REFRESH_MOVE_METRES:
+		return true
+	return _facing_world.dot(_last_drawn_facing) < 0.999
 
 
 # The authoritative facing is actual horizontal travel, not CharacterBody3D's
@@ -237,6 +307,12 @@ func _draw_compact_landscape() -> void:
 	# A sampled top-down terrain layer. Every sample is projected from the real
 	# player position, so it scrolls like a minimap camera while remaining cheap
 	# enough for the generated multi-kilometre galaxy.
+	#
+	# Everything the sampler needs that is the same for all ~530 tiles is
+	# resolved once, here. It used to be resolved per tile: two node-path
+	# lookups, a cross-script call returning a Dictionary, and a dozen array and
+	# Color allocations, 530 times a frame.
+	_refresh_landscape_sampling()
 	const TILE := 8.0
 	var scale := HUB_METERS_PER_PIXEL if map_context == CONTEXT_HUB else GALAXY_METERS_PER_PIXEL
 	for y in range(int(COMPACT_CENTER.y - COMPACT_RADIUS), int(COMPACT_CENTER.y + COMPACT_RADIUS), int(TILE)):
@@ -277,65 +353,83 @@ func _landscape_color(world_position: Vector3) -> Color:
 
 	if _world == null:
 		return Color("151934")
-	var local := _world.to_local(world_position)
-	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
-	if mind_world != null and mind_world.force_standalone_blueprint:
-		var mind_colors := [Color("35506a"), Color("315f70"), Color("3e4d75"),
-			Color("536d59"), Color("4c386a"), Color("3e6b5d")]
-		var mind_ids := mind_world.get_zone_ids()
-		for zone_index in mind_ids.size():
-			var zone_center := mind_world.position + mind_world.get_zone_position(mind_ids[zone_index])
-			if Vector2(local.x, local.z).distance_to(Vector2(zone_center.x, zone_center.z)) \
-					<= mind_world.get_zone_radius(mind_ids[zone_index]):
-				return mind_colors[zone_index].lightened(texture_wave * 0.055)
-		for route_index in mind_ids.size() - 1:
-			var route_start := mind_world.position + mind_world.get_zone_position(mind_ids[route_index])
-			var route_finish := mind_world.position + mind_world.get_zone_position(mind_ids[route_index + 1])
-			if _distance_to_segment(Vector2(local.x, local.z), Vector2(route_start.x, route_start.z),
-					Vector2(route_finish.x, route_finish.z)) <= 18.0:
+	# _sample_* are filled in by _refresh_landscape_sampling() once per redraw.
+	var local := _sample_world_to_local * world_position
+	var local_flat := Vector2(local.x, local.z)
+	if _sample_blueprint_active:
+		for zone_index in _sample_zone_centres.size():
+			if local_flat.distance_to(_sample_zone_centres[zone_index]) \
+					<= _sample_zone_radii[zone_index]:
+				return MIND_ZONE_COLORS[zone_index % MIND_ZONE_COLORS.size()] \
+					.lightened(texture_wave * 0.055)
+		for route_index in _sample_zone_centres.size() - 1:
+			if _distance_to_segment(local_flat, _sample_zone_centres[route_index],
+					_sample_zone_centres[route_index + 1]) <= 18.0:
 				return Color("72d6e8").lightened(texture_wave * 0.035)
-		var station_spur := mind_world.get_node_or_null(
-			"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D
-		if station_spur != null and station_spur.visible:
-			var spur_start: Vector3 = mind_world.position + station_spur.get_meta("branch_start", Vector3.ZERO)
-			var station_center: Vector3 = mind_world.position + station_spur.get_meta("station_center", Vector3.ZERO)
-			var point := Vector2(local.x, local.z)
-			if point.distance_to(Vector2(station_center.x, station_center.z)) <= 72.0 \
-					or _distance_to_segment(point, Vector2(spur_start.x, spur_start.z),
-						Vector2(station_center.x, station_center.z)) <= 12.0:
+		if _sample_spur_active:
+			if local_flat.distance_to(_sample_station_centre) <= 72.0 \
+					or _distance_to_segment(local_flat, _sample_spur_start,
+						_sample_station_centre) <= 12.0:
 				return Color("436b78").lightened(texture_wave * 0.04)
 	# The central galaxy uses real island centres/radii from
 	# art_castle_floating_world.gd. Water here is the surrounding star void.
-	var island_specs := [
-		[Vector2(0, 820), 160.0, Color("596d72")],
-		[Vector2(0, 1640), 225.0, Color("537d66")],
-		[Vector2(-600, 1640), 180.0, Color("315f70")],
-		[Vector2(0, 2290), 180.0, Color("79526d")],
-		[Vector2(600, 1640), 180.0, Color("806f49")],
-	]
-	var local_flat := Vector2(local.x, local.z)
-	for spec in island_specs:
+	for spec in GALAXY_ISLAND_SPECS:
 		if local_flat.distance_to(spec[0]) <= float(spec[1]):
 			return (spec[2] as Color).lightened(texture_wave * 0.06)
 	# Connected bridges and the long gallery approach remain visible as land.
-	for segment in [
-		[Vector2(0, 500), Vector2(0, 1422), 34.0],
-		[Vector2(-218, 1640), Vector2(-430, 1640), 34.0],
-		[Vector2(0, 1858), Vector2(0, 2120), 34.0],
-		[Vector2(218, 1640), Vector2(410, 1640), 34.0],
-	]:
+	for segment in GALAXY_BRIDGE_SEGMENTS:
 		if _distance_to_segment(local_flat, segment[0], segment[1]) <= float(segment[2]):
 			return Color("8d88a0").lightened(texture_wave * 0.035)
 	# Each 3 km kingdom is a real authored square region beyond the inner isles.
+	for index in _sample_kingdom_centres.size():
+		var centre: Vector2 = _sample_kingdom_centres[index]
+		if absf(local.x - centre.x) <= 1500.0 and absf(local.z - centre.y) <= 1500.0:
+			return _sample_kingdom_colors[index].lightened(texture_wave * 0.055)
+	return Color("101329").lightened(texture_wave * 0.018)
+
+
+## Resolve everything the per-tile sampler needs, once per redraw.
+func _refresh_landscape_sampling() -> void:
+	_sample_blueprint_active = false
+	_sample_spur_active = false
+	_sample_zone_centres.clear()
+	_sample_zone_radii.clear()
+	_sample_kingdom_centres.clear()
+	_sample_kingdom_colors.clear()
+	if _world == null:
+		return
+	_sample_world_to_local = _world.global_transform.affine_inverse()
+
+	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+	if mind_world != null and mind_world.force_standalone_blueprint:
+		_sample_blueprint_active = true
+		var mind_ids := mind_world.get_zone_ids()
+		for zone_id in mind_ids:
+			var centre: Vector3 = mind_world.position + mind_world.get_zone_position(zone_id)
+			_sample_zone_centres.append(Vector2(centre.x, centre.z))
+			_sample_zone_radii.append(mind_world.get_zone_radius(zone_id))
+		var station_spur := mind_world.get_node_or_null(
+			"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D
+		if station_spur != null and station_spur.visible:
+			var spur_start: Vector3 = mind_world.position \
+				+ station_spur.get_meta("branch_start", Vector3.ZERO)
+			var station_centre: Vector3 = mind_world.position \
+				+ station_spur.get_meta("station_center", Vector3.ZERO)
+			_sample_spur_active = true
+			_sample_spur_start = Vector2(spur_start.x, spur_start.z)
+			_sample_station_centre = Vector2(station_centre.x, station_centre.z)
+
 	if _regions != null:
 		var centres: Dictionary = _regions.call("get_kingdom_centers")
-		for kingdom_id in ["mind", "heart", "creator"]:
-			var centre: Vector3 = centres[kingdom_id]
-			if absf(local.x - centre.x) <= 1500.0 and absf(local.z - centre.z) <= 1500.0:
-				var colors := {"mind": Color("28394d"), "heart": Color("5b4356"),
-					"creator": Color("675c3e")}
-				return colors[kingdom_id].lightened(texture_wave * 0.055)
-	return Color("101329").lightened(texture_wave * 0.018)
+		for index in KINGDOM_IDS.size():
+			# Only kingdoms the regions node actually reports. Defaulting a
+			# missing one to Vector3.ZERO would paint its 3 km square over the
+			# world origin, which is the Tree of Life.
+			if not centres.has(KINGDOM_IDS[index]):
+				continue
+			var centre: Vector3 = centres[KINGDOM_IDS[index]]
+			_sample_kingdom_centres.append(Vector2(centre.x, centre.z))
+			_sample_kingdom_colors.append(KINGDOM_COLORS[index])
 
 
 func _distance_to_segment(point: Vector2, start: Vector2, finish: Vector2) -> float:
