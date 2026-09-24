@@ -1593,6 +1593,10 @@ func open_chatbot():
 
 	_set_player_interaction_locked(true)
 	_set_companion_state(CompanionState.TALKING)
+	# The 3D camera captures the mouse for look control during normal play, so
+	# without releasing it here the cursor stays hidden/locked and the chat
+	# panel's buttons cannot be clicked at all.
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func close_chatbot():
@@ -1601,6 +1605,7 @@ func close_chatbot():
 		chatbot_ui = null
 
 	_set_player_interaction_locked(false)
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_conversation_active = false
 	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_stop()
@@ -1644,6 +1649,7 @@ func _exit_tree() -> void:
 		chatbot_ui.queue_free()
 		chatbot_ui = null
 	_set_player_interaction_locked(false)
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _build_counsellor_props() -> void:

@@ -6,8 +6,9 @@
 # or uploaded; Web and unsupported builds retain the authored local response.
 extends Control
 
-@onready var chat_history: TextEdit = $VBoxContainer/ChatHistory
-@onready var content: VBoxContainer = $VBoxContainer
+@onready var chat_history: TextEdit = $Panel/VBoxContainer/ChatHistory
+@onready var content: VBoxContainer = $Panel/VBoxContainer
+@onready var choices_scroll: ScrollContainer = $Panel/VBoxContainer/ChoicesScroll
 
 signal chat_closed
 signal companion_pose_requested(pose_name: String)
@@ -328,7 +329,7 @@ func _show_choices() -> void:
 	var prompt := Label.new()
 	prompt.text = "How can Milo walk alongside you?"
 	prompt.add_theme_font_size_override("font_size", 18)
-	prompt.add_theme_color_override("font_color", Color(0.86, 0.91, 1.0))
+	prompt.add_theme_color_override("font_color", Color(0, 0, 0, 1))
 	_choices.add_child(prompt)
 
 	for path_spec in [
@@ -349,12 +350,13 @@ func _show_choices() -> void:
 	quiet_note.text = _local_llm_privacy_note()
 	quiet_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quiet_note.add_theme_font_size_override("font_size", 14)
-	quiet_note.add_theme_color_override("font_color", Color(0.70, 0.78, 0.92))
+	quiet_note.add_theme_color_override("font_color", Color(0, 0, 0, 1))
 	_choices.add_child(quiet_note)
 
 	_choices.add_child(_choice_button(SKIP_CHOICE))
 	_choices.add_child(_quiet_button("Need help", _show_support))
 	_choices.add_child(_quiet_button("Close", close_chat))
+	_focus_first_choice()
 
 
 func _show_stage_reflections() -> void:
@@ -406,6 +408,7 @@ func _add_message_input() -> void:
 	prompt.text = "Or tell Milo what is on your mind (up to 280 characters):"
 	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	prompt.add_theme_font_size_override("font_size", 16)
+	prompt.add_theme_color_override("font_color", Color(0, 0, 0, 1))
 	_choices.add_child(prompt)
 
 	var row := HBoxContainer.new()
@@ -528,9 +531,12 @@ func _begin_local_llm_response(message: String,
 	waiting.name = "MiloLocalModelStatus"
 	waiting.text = "Thinking locally… Your message stays on this device."
 	waiting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	waiting.add_theme_color_override("font_color", Color(0.78, 0.86, 1.0))
+	waiting.add_theme_color_override("font_color", Color(0, 0, 0, 1))
 	_choices.add_child(waiting)
-	_choices.add_child(_quiet_button("Close", close_chat))
+	var local_close_button := _quiet_button("Close", close_chat)
+	_choices.add_child(local_close_button)
+	user_input = local_close_button
+	_focus_first_choice()
 	_local_llm_chat.call("say", message)
 	get_tree().create_timer(LOCAL_LLM_TIMEOUT_SECONDS).timeout.connect(
 		_on_local_llm_timeout.bind(request_id))
@@ -623,9 +629,12 @@ func _begin_cloud_llm_response(message: String, authored_response: Dictionary) -
 	waiting.name = "MiloCloudModelStatus"
 	waiting.text = "Thinking… Your message is sent to Milo's AI service to generate a reply."
 	waiting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	waiting.add_theme_color_override("font_color", Color(0.78, 0.86, 1.0))
+	waiting.add_theme_color_override("font_color", Color(0, 0, 0, 1))
 	_choices.add_child(waiting)
-	_choices.add_child(_quiet_button("Close", close_chat))
+	var cloud_close_button := _quiet_button("Close", close_chat)
+	_choices.add_child(cloud_close_button)
+	user_input = cloud_close_button
+	_focus_first_choice()
 
 	var body := JSON.stringify({"message": message})
 	var headers := ["Content-Type: application/json"]
@@ -751,11 +760,13 @@ func _add_companion_navigation(destination_id := "") -> void:
 			_confirm_activity_travel.bind(destination_id))
 		travel_button.name = "MiloTravel_%s" % destination_id
 		_choices.add_child(travel_button)
+	_add_message_input()
 	var back_button := _quiet_button("Back to companion paths", _show_choices)
 	_choices.add_child(back_button)
 	user_input = back_button
 	_choices.add_child(_quiet_button("Need help", _show_support))
 	_choices.add_child(_quiet_button("Close", close_chat))
+	_focus_first_choice()
 
 
 func _confirm_activity_travel(destination_id: String) -> void:
@@ -778,9 +789,14 @@ func _confirm_activity_travel(destination_id: String) -> void:
 	var confirm_button := _quiet_button("Yes, go with Milo", _travel_to_activity.bind(destination_id))
 	confirm_button.name = "MiloTravelConfirm"
 	_choices.add_child(confirm_button)
-	user_input = confirm_button
 	_choices.add_child(_quiet_button("Stay here", _show_choices))
+	_add_message_input()
 	_choices.add_child(_quiet_button("Need help", _show_support))
+	# Re-asserted after _add_message_input(), which claims user_input for the
+	# typed-reply field: confirming travel is the primary action here and
+	# should keep initial keyboard focus, not the optional message box.
+	user_input = confirm_button
+	_focus_first_choice()
 
 
 func _travel_to_activity(destination_id: String) -> void:
@@ -819,9 +835,18 @@ func _choose_reflection(choice: Dictionary) -> void:
 	_clear_choices()
 	var continue_button := _quiet_button("Continue my adventure", close_chat)
 	_choices.add_child(continue_button)
-	user_input = continue_button
+	_add_message_input()
 	_choices.add_child(_quiet_button("Need help", _show_support))
 	_choices.add_child(_quiet_button("Close", close_chat))
+	# Re-asserted after _add_message_input() so the primary action keeps
+	# initial keyboard focus rather than the optional message box.
+	user_input = continue_button
+	_focus_first_choice()
+
+
+func _focus_first_choice() -> void:
+	if user_input != null and is_instance_valid(user_input):
+		user_input.grab_focus()
 
 
 func _clear_choices() -> void:
@@ -829,8 +854,9 @@ func _clear_choices() -> void:
 	if _choices == null:
 		_choices = VBoxContainer.new()
 		_choices.name = "CuratedChoices"
+		_choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_choices.add_theme_constant_override("separation", 8)
-		content.add_child(_choices)
+		choices_scroll.add_child(_choices)
 		return
 
 	for child in _choices.get_children():

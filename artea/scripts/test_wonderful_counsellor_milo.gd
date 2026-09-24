@@ -16,8 +16,8 @@ func _run() -> void:
 		requested_poses.append(pose_name)
 	)
 
-	var history := chat.get_node("VBoxContainer/ChatHistory") as TextEdit
-	var choices := chat.get_node("VBoxContainer/CuratedChoices") as VBoxContainer
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as TextEdit
+	var choices := chat.get_node("Panel/VBoxContainer/ChoicesScroll/CuratedChoices") as VBoxContainer
 	chat._show_choices()
 	assert(requested_poses.back() == "welcome",
 		"the companion menu uses Milo's welcoming cane pose")
