@@ -26,6 +26,16 @@ const LOCAL_LLM_PROMPT_PATH := "res://addons/nobodywho/milo_prompt.txt"
 const LOCAL_LLM_CONTEXT_LENGTH := 2048
 const LOCAL_LLM_TIMEOUT_SECONDS := 120.0
 const LOCAL_LLM_MAX_RESPONSE_CHARS := 720
+
+# Web ships without NobodyWho (no Web library for the native extension), so
+# Web builds talk to Milo's cloud proxy instead - a Cloudflare Worker that
+# holds the Gemini API key server-side and never exposes it to the browser.
+# The authored safety matcher above still runs first on every platform; this
+# is only reached for non-urgent messages.
+const CLOUD_LLM_ENDPOINT := "https://milo-dialogue-proxy.corey-thomas99.workers.dev"
+const CLOUD_LLM_TIMEOUT_SECONDS := 20.0
+const CLOUD_LLM_MAX_RESPONSE_CHARS := 720
+
 var _reflection_engine := ReflectionEngine.new()
 var _message_input: LineEdit
 var campaign_router: Node
@@ -35,6 +45,9 @@ var _local_llm_chat: Node
 var _local_llm_response := ""
 var _local_llm_generating := false
 var _local_llm_request_id := 0
+var _cloud_llm_request: HTTPRequest
+var _cloud_llm_generating := false
+var _cloud_llm_request_id := 0
 var _pending_authored_response: Dictionary = {}
 
 const ACTIVITY_DESTINATIONS := {
@@ -289,6 +302,7 @@ func _ready() -> void:
 	chat_history.selecting_enabled = true
 	_resolve_safe_context()
 	_initialize_local_llm()
+	_initialize_cloud_llm()
 	_show_choices()
 
 
@@ -437,6 +451,9 @@ func _submit_message(input: LineEdit) -> void:
 	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
 		_begin_local_llm_response(message, response)
 		return
+	if _cloud_llm_request != null and is_instance_valid(_cloud_llm_request):
+		_begin_cloud_llm_response(message, response)
+		return
 	_show_authored_message_response(response)
 
 
@@ -568,12 +585,98 @@ func _clean_local_llm_response(source: String) -> String:
 
 func _local_llm_privacy_note() -> String:
 	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
-		return "Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check. Milo does not diagnose or replace a trusted person."
-	return "Typed messages stay on this device and are not saved. This build uses Milo's authored local reflections. Milo does not diagnose or replace a trusted person."
+		return "Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check. Milo is an AI companion, not a therapist - this is not medical advice, and Milo does not diagnose or replace a trusted person."
+	if is_cloud_llm_active():
+		return "Typed messages pass an authored safety check, then are sent to Milo's AI service to generate a reply, and are not stored afterwards. Milo is an AI companion, not a therapist - this is not medical advice, and Milo does not diagnose or replace a trusted person."
+	return "Typed messages stay on this device and are not saved. This build uses Milo's authored local reflections. Milo is an AI companion, not a therapist - this is not medical advice, and Milo does not diagnose or replace a trusted person."
 
 
 func is_local_llm_active() -> bool:
 	return _local_llm_chat != null and is_instance_valid(_local_llm_chat)
+
+
+func _initialize_cloud_llm() -> void:
+	# Only Web reaches here: native builds use the local model above, and this
+	# never runs at all if that path is already active.
+	if not OS.has_feature("web") or DisplayServer.get_name() == "headless":
+		return
+	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
+		return
+	_cloud_llm_request = HTTPRequest.new()
+	_cloud_llm_request.name = "MiloCloudLLMRequest"
+	_cloud_llm_request.timeout = CLOUD_LLM_TIMEOUT_SECONDS
+	add_child(_cloud_llm_request)
+	_cloud_llm_request.request_completed.connect(_on_cloud_llm_request_completed)
+
+
+func _begin_cloud_llm_response(message: String, authored_response: Dictionary) -> void:
+	if _cloud_llm_generating:
+		return
+	_cloud_llm_generating = true
+	_pending_authored_response = authored_response.duplicate(true)
+	_cloud_llm_request_id += 1
+	var request_id := _cloud_llm_request_id
+	_request_companion_activity("LISTENING", "heart")
+	chat_history.text = "Wonderful Counsellor Milo · Listening\n\nMilo is thinking…"
+	_clear_choices()
+	var waiting := Label.new()
+	waiting.name = "MiloCloudModelStatus"
+	waiting.text = "Thinking… Your message is sent to Milo's AI service to generate a reply."
+	waiting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	waiting.add_theme_color_override("font_color", Color(0.78, 0.86, 1.0))
+	_choices.add_child(waiting)
+	_choices.add_child(_quiet_button("Close", close_chat))
+
+	var body := JSON.stringify({"message": message})
+	var headers := ["Content-Type: application/json"]
+	var error := _cloud_llm_request.request(CLOUD_LLM_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
+	if error != OK:
+		_finish_cloud_llm(request_id, "")
+		return
+	get_tree().create_timer(CLOUD_LLM_TIMEOUT_SECONDS + 5.0).timeout.connect(
+		_on_cloud_llm_timeout.bind(request_id))
+
+
+func _on_cloud_llm_request_completed(_result: int, response_code: int,
+		_headers: PackedStringArray, body: PackedByteArray) -> void:
+	var request_id := _cloud_llm_request_id
+	if not _cloud_llm_generating:
+		return
+	var reply := ""
+	if response_code == 200:
+		var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+		if parsed is Dictionary and parsed.has("reply"):
+			reply = str(parsed["reply"])
+	_finish_cloud_llm(request_id, reply)
+
+
+func _on_cloud_llm_timeout(request_id: int) -> void:
+	if not _cloud_llm_generating or request_id != _cloud_llm_request_id:
+		return
+	_finish_cloud_llm(request_id, "")
+
+
+func _finish_cloud_llm(request_id: int, reply: String) -> void:
+	if not _cloud_llm_generating or request_id != _cloud_llm_request_id:
+		return
+	_cloud_llm_generating = false
+	var clean_reply := reply.strip_edges()
+	if clean_reply.length() > CLOUD_LLM_MAX_RESPONSE_CHARS:
+		clean_reply = clean_reply.substr(0, CLOUD_LLM_MAX_RESPONSE_CHARS).strip_edges()
+		var last_space := clean_reply.rfind(" ")
+		if last_space > CLOUD_LLM_MAX_RESPONSE_CHARS / 2:
+			clean_reply = clean_reply.left(last_space)
+		clean_reply += "…"
+	if clean_reply.is_empty():
+		_show_authored_message_response(_pending_authored_response)
+	else:
+		_request_companion_activity("REFLECTING", "tablet")
+		_show_companion_response("Milo", clean_reply)
+	_pending_authored_response.clear()
+
+
+func is_cloud_llm_active() -> bool:
+	return _cloud_llm_request != null and is_instance_valid(_cloud_llm_request)
 
 
 func _show_strength_discoveries() -> void:
@@ -789,6 +892,11 @@ func close_chat() -> void:
 		_local_llm_chat.call("stop_generation")
 	_local_llm_generating = false
 	_local_llm_request_id += 1
+	if _cloud_llm_generating and _cloud_llm_request != null \
+			and is_instance_valid(_cloud_llm_request):
+		_cloud_llm_request.cancel_request()
+	_cloud_llm_generating = false
+	_cloud_llm_request_id += 1
 	emit_signal("chat_closed")
 
 
