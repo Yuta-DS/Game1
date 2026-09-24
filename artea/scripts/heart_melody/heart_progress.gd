@@ -9,7 +9,11 @@ var recovery_message := ""
 
 static func fresh() -> Dictionary:
 	return {"schema": 1, "campaign_version": 2, "planters": {}, "phrase": [], "solved": false,
-		"waves": [], "receipts": {}, "tasks": [], "checkpoint": "arrival", "complete": false, "xp": 0}
+		"waves": [], "receipts": {}, "tasks": [], "checkpoint": "arrival", "complete": false, "xp": 0,
+		"river": fresh_river()}
+
+static func fresh_river() -> Dictionary:
+	return {"valves": [], "bulbs": [], "boat": false, "chimes": [], "warning": false, "grove": false, "peace": false}
 
 func load_progress() -> void:
 	data = fresh()
@@ -31,6 +35,15 @@ func load_progress() -> void:
 
 static func normalize(value: Variant) -> Variant:
 	if value is Dictionary:
+		# Additive migration: existing Island 1 saves retain every earned reward.
+		if not value.has("river"): value["river"] = fresh_river()
+		if value.river is Dictionary:
+			for key in ["valves", "bulbs", "chimes"]:
+				if value.river.get(key) is Array:
+					for i in value.river[key].size():
+						var id: Variant = value.river[key][i]
+						if not (id is int or id is float) or not is_finite(float(id)) or float(id) != floor(float(id)): return null
+						value.river[key][i] = int(id)
 		for key in ["planters", "receipts"]:
 			if value.get(key) is Dictionary:
 				for id in value[key]:
@@ -89,7 +102,46 @@ static func valid(value: Variant) -> bool:
 		if int(note) not in range(3): return false
 	if value.get("solved", false) and value.phrase != Catalog.PHRASE: return false
 	if value.get("complete", false) and (value.planters.size() != 3 or not value.get("solved", false) or not value.waves.has(2)): return false
+	if not valid_river(value.get("river"), value.complete): return false
 	return true
+
+static func valid_river(river: Variant, garden_complete: bool) -> bool:
+	if not river is Dictionary: return false
+	for key in ["valves", "bulbs", "chimes"]:
+		if not river.get(key) is Array or river[key].size() > 3: return false
+		var seen := []
+		for id in river[key]:
+			if not (id is int or id is float) or id not in [0, 1, 2] or seen.has(id): return false
+			seen.append(id)
+	for key in ["boat", "warning", "grove", "peace"]:
+		if not river.get(key) is bool: return false
+	if not garden_complete and river != fresh_river(): return false
+	if not river.bulbs.is_empty() and river.valves.size() != 3: return false
+	if river.boat and river.bulbs.size() != 3: return false
+	if not river.chimes.is_empty() and not river.boat: return false
+	if river.chimes not in [[], [0], [0, 1], [0, 1, 2]]: return false
+	if river.warning and river.chimes.size() != 3: return false
+	if river.grove and not river.warning: return false
+	if river.peace and not river.grove: return false
+	return true
+
+func river_step(stage: String, index := -1) -> bool:
+	if not committed.complete: return false
+	var candidate: Dictionary = data.duplicate(true)
+	if stage in ["valves", "bulbs", "chimes"]:
+		if index not in range(3): return false
+		if not candidate.river[stage].has(index): candidate.river[stage].append(index)
+	elif stage in ["boat", "warning", "grove", "peace"]:
+		candidate.river[stage] = true
+	else: return false
+	# Failed writes may be retried, but cannot unlock dependent stages.
+	var prerequisites := {"bulbs": committed.river.valves.size() == 3,
+		"boat": committed.river.bulbs.size() == 3, "chimes": committed.river.boat,
+		"warning": committed.river.chimes.size() == 3, "grove": committed.river.warning,
+		"peace": committed.river.grove}
+	if not prerequisites.get(stage, true) or not valid(candidate): return false
+	data = candidate
+	return commit()
 
 func commit() -> bool:
 	dirty = true

@@ -1,5 +1,9 @@
 # Heart Melody Island 1 — audited local handoff
 
+## Latest update — River Song, 24 September 2026
+
+River Song / Island 2 is now playable and physically connected to the restored garden crossing, including in the station-03 overworld. See [RIVER_SONG.md](RIVER_SONG.md) for controls, progression, save migration, tests and export limitations. The earlier notes below describe the Island 1 delivery; their statements reserving all Island 2 gameplay are superseded by this update. Island 3 and full-world treasure rewards remain reserved.
+
 ## Current update: seamless station 03 integration — 22 September 2026
 
 The user requested that players **walk straight into Heart Melody on the same overworld**. The playable Island 1 is now physically attached beside Crown Line station 03. Disembark, descend the existing station ramp, then follow the marked garden slope and entrance bridge. No portal, loading screen, duplicate player or scene change is used on this route. The Star of Wisdom opens the physical path; travel does not award a Harmony Jewel or Creator access.
