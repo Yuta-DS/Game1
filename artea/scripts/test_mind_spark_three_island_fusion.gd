@@ -119,7 +119,7 @@ func _run() -> void:
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
 	var island_three := geometry.get_node("IslandThreeCivicSanctuary") as Node3D
-	assert(str(island_three.get_meta("design_revision", "")) == "living_quest_landmarks_v4")
+	assert(str(island_three.get_meta("design_revision", "")) == "living_quest_landmarks_v5")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
 	assert(island_three.has_node("StormworksArrivalPortico/IvoryArrivalTerraceCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/AetherArrivalArch"))
@@ -149,6 +149,15 @@ func _run() -> void:
 		"Island 3 contains no visible gold torus geometry")
 	assert(str(island_three.get_meta("gold_ring_policy", "")) \
 		== "no visible gold torus geometry")
+	assert(int(island_three.get_meta("gold_lines_removed", 0)) > 0)
+	assert(int(island_three.get_meta("visible_gold_line_count", -1)) == 0,
+		"Island 3 contains no visible elongated gold geometry")
+	assert(not (island_three.get_node(
+		"StormworksGrandCourt/BrassRadialInlay_01") as MeshInstance3D).visible)
+	assert(not (island_three.get_node(
+		"WisdomBasilicaPromenade/LeftBasilicaCornice") as MeshInstance3D).visible)
+	assert(not (island_three.get_node(
+		"WisdomBasilicaPromenade/LeftLivingRootRail") as MeshInstance3D).visible)
 	for removed_ring in geometry.find_children("*", "MeshInstance3D", true, false):
 		if bool(removed_ring.get_meta("island_three_gold_ring_removed", false)):
 			assert(not (removed_ring as MeshInstance3D).visible,

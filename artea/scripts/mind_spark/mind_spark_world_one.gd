@@ -5777,7 +5777,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "living_quest_landmarks_v4")
+	campus.set_meta("design_revision", "living_quest_landmarks_v5")
 	campus.set_meta("architectural_language",
 		"distinct ivory quest monuments, cyan aether glass and a living tree cathedral")
 	campus.set_meta("matches_previous_islands", true)
@@ -5950,6 +5950,8 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		if seam != null:
 			seam.material_override = _materials.island_cyan
 	_remove_island_three_gold_rings(geometry, campus, storm_zone,
+		sanctuary_zone)
+	_remove_island_three_gold_lines(geometry, campus, storm_zone,
 		sanctuary_zone)
 	set_meta("island_three_design", "distinct quest monuments and Oldest Tree living cathedral")
 	set_meta("island_three_masterplan",
@@ -6241,6 +6243,71 @@ func _remove_island_three_gold_rings(geometry: Node3D, campus: Node3D,
 	campus.set_meta("gold_ring_policy", "no visible gold torus geometry")
 	campus.set_meta("gold_rings_removed", removed_count)
 	campus.set_meta("visible_gold_ring_count", visible_gold_ring_count)
+
+
+func _remove_island_three_gold_lines(geometry: Node3D, campus: Node3D,
+		storm_zone: Node3D, sanctuary_zone: Node3D) -> void:
+	# Remove the long procedural brass strips and rods that crossed the quest
+	# courts in the previous revision. Compact capitals, plinths and quest bodies
+	# remain, so the architecture keeps its form without loose lines on the floor.
+	var roots: Array[Node3D] = [campus, storm_zone, sanctuary_zone]
+	var fusions := geometry.get_node_or_null("ThreeFusedSuperIslands") as Node3D
+	if fusions != null and fusions.get_child_count() >= 3:
+		roots.append(fusions.get_child(2) as Node3D)
+	var gold_materials: Array[Material] = [
+		_materials.astral_brass,
+		_materials.gold,
+		_materials.island_gold,
+		_materials.bio_socket_gold,
+	]
+	var removed_count := 0
+	var visited: Dictionary = {}
+	for search_root in roots:
+		for candidate in search_root.find_children("*", "MeshInstance3D", true, false):
+			var line := candidate as MeshInstance3D
+			if visited.has(line.get_instance_id()):
+				continue
+			visited[line.get_instance_id()] = true
+			var is_long_line := false
+			if line.mesh is CylinderMesh:
+				var cylinder := line.mesh as CylinderMesh
+				var widest_radius := maxf(cylinder.top_radius, cylinder.bottom_radius)
+				is_long_line = cylinder.height > 4.0 \
+					and cylinder.height > widest_radius * 6.0
+			elif line.mesh is BoxMesh:
+				var size := (line.mesh as BoxMesh).size
+				var dimensions := [size.x, size.y, size.z]
+				dimensions.sort()
+				is_long_line = float(dimensions[2]) > 8.0 \
+					and float(dimensions[1]) < 4.0
+			var is_obsolete_root_rail := line.name in [
+				&"LeftLivingRootRail", &"RightLivingRootRail",
+			]
+			if (is_long_line and gold_materials.has(line.material_override)) \
+					or is_obsolete_root_rail:
+				line.visible = false
+				line.set_meta("island_three_gold_line_removed", true)
+				removed_count += 1
+	var visible_gold_line_count := 0
+	for search_root in roots:
+		for candidate in search_root.find_children("*", "MeshInstance3D", true, false):
+			var line := candidate as MeshInstance3D
+			if not line.visible or not gold_materials.has(line.material_override):
+				continue
+			if line.mesh is CylinderMesh:
+				var cylinder := line.mesh as CylinderMesh
+				var widest_radius := maxf(cylinder.top_radius, cylinder.bottom_radius)
+				if cylinder.height > 4.0 and cylinder.height > widest_radius * 6.0:
+					visible_gold_line_count += 1
+			elif line.mesh is BoxMesh:
+				var size := (line.mesh as BoxMesh).size
+				var dimensions := [size.x, size.y, size.z]
+				dimensions.sort()
+				if float(dimensions[2]) > 8.0 and float(dimensions[1]) < 4.0:
+					visible_gold_line_count += 1
+	campus.set_meta("gold_line_policy", "no visible elongated gold geometry")
+	campus.set_meta("gold_lines_removed", removed_count)
+	campus.set_meta("visible_gold_line_count", visible_gold_line_count)
 
 
 func _place_combat_population() -> void:
