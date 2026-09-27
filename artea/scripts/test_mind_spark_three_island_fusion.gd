@@ -119,8 +119,10 @@ func _run() -> void:
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
 	var island_three := geometry.get_node("IslandThreeCivicSanctuary") as Node3D
-	assert(str(island_three.get_meta("design_revision", "")) == "celestial_civic_storm_sanctuary_v2")
+	assert(str(island_three.get_meta("design_revision", "")) == "celestial_civic_storm_sanctuary_v3")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
+	assert(island_three.has_node("StormworksArrivalPortico/IvoryArrivalTerraceCollision"))
+	assert(island_three.has_node("StormworksArrivalPortico/AetherArrivalArch"))
 	var storm_zone := geometry.get_node("05ThoughtStormArena") as Node3D
 	for retired_ring in storm_zone.find_children("LayeredStormRing_*", "MeshInstance3D", true, false):
 		assert(not retired_ring.visible, "the oversized legacy vortex must remain retired")
@@ -130,6 +132,7 @@ func _run() -> void:
 		assert(island_three.has_node("StormworksGrandCourt/ShieldPavilion_%02d/IvoryPavilionFloorCollision" % (anchor_index + 1)))
 	assert(island_three.has_node("CalmRainCloister/IvoryRainCourtCollision"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/OldestTreeReflectionApseCollision"))
+	assert(island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"))
 	assert(world.get_collectibles().size() == 2)
 	assert(world.get_island_one_puzzle() != null)
 	assert(world.get_warden() != null)

@@ -5777,7 +5777,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "celestial_civic_storm_sanctuary_v2")
+	campus.set_meta("design_revision", "celestial_civic_storm_sanctuary_v3")
 	campus.set_meta("architectural_language",
 		"ivory civic courts, brass colonnades, cyan aether glass and rooted sanctuary")
 	campus.set_meta("matches_previous_islands", true)
@@ -5806,6 +5806,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var arena_y: float = _zone_floor_surface_y(arena_origin) + 0.18
 	var sanctuary_y: float = _zone_floor_surface_y(sanctuary_origin) + 0.18
 	var arena_center := Vector3(arena_origin.x, arena_y, arena_origin.z)
+	var arrival_direction := Vector3(1, 0, 0)
+	var arrival_center := arena_center - arrival_direction * 135.0
+	_build_island_three_arrival_portico(campus, arrival_center, arrival_direction)
 
 	# A restrained open rotunda frames the boss encounter without hiding it.
 	var stormworks := Node3D.new()
@@ -5892,10 +5895,27 @@ func _redesign_island_three(geometry: Node3D) -> void:
 			_add_island_three_civic_column(basilica,
 				"BasilicaPier_%02d_%s" % [bay_index + 1, "L" if side < 0 else "R"],
 				pier_at, 8.5)
-		_add_cable_between(basilica, "BasilicaBrassLintel_%02d" % (bay_index + 1),
-			bay_center - side_axis * 9.0 + Vector3.UP * 8.8,
-			bay_center + side_axis * 9.0 + Vector3.UP * 8.8,
-			.62, .62, _materials.astral_brass, 10)
+		var left_capital := bay_center - side_axis * 9.0 + Vector3.UP * 8.8
+		var right_capital := bay_center + side_axis * 9.0 + Vector3.UP * 8.8
+		var vault_apex := bay_center + Vector3.UP * 13.8
+		_add_cable_between(basilica, "BasilicaVaultLeft_%02d" % (bay_index + 1),
+			left_capital, vault_apex, .62, .42, _materials.astral_brass, 10)
+		_add_cable_between(basilica, "BasilicaVaultRight_%02d" % (bay_index + 1),
+			right_capital, vault_apex, .62, .42, _materials.astral_brass, 10)
+		_add_sphere(basilica, "BasilicaVaultLight_%02d" % (bay_index + 1),
+			vault_apex, Vector3.ONE * .72, _materials.island_cyan)
+	_add_cable_between(basilica, "LeftBasilicaCornice",
+		promenade_start - side_axis * 9.0 + Vector3.UP * 9.1,
+		promenade_end - side_axis * 9.0 + Vector3.UP * 9.1,
+		.58, .58, _materials.astral_brass, 10)
+	_add_cable_between(basilica, "RightBasilicaCornice",
+		promenade_start + side_axis * 9.0 + Vector3.UP * 9.1,
+		promenade_end + side_axis * 9.0 + Vector3.UP * 9.1,
+		.58, .58, _materials.astral_brass, 10)
+	_add_cable_between(basilica, "CyanBasilicaRidge",
+		promenade_start + Vector3.UP * 13.8,
+		promenade_end + Vector3.UP * 13.8,
+		.38, .38, _materials.island_cyan, 10)
 	_add_cable_between(basilica, "LeftLivingRootRail",
 		promenade_start - side_axis * 7.2 + Vector3.UP * .8,
 		promenade_end - side_axis * 7.2 + Vector3.UP * .8,
@@ -5939,6 +5959,53 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		if seam != null:
 			seam.material_override = _materials.island_cyan
 	set_meta("island_three_design", "celestial civic stormworks and wisdom sanctuary")
+	set_meta("island_three_masterplan",
+		"arrival portico > shield forum > rain cloister > vaulted wisdom basilica > tree apse")
+
+
+func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
+		forward: Vector3) -> void:
+	var portico := Node3D.new()
+	portico.name = "StormworksArrivalPortico"
+	portico.set_meta("purpose", "monumental threshold from Island Two into the finale campus")
+	portico.set_meta("clear_opening_m", 24.0)
+	parent.add_child(portico)
+	var yaw := atan2(forward.x, forward.z)
+	var side := Vector3(forward.z, 0, -forward.x)
+	_add_box(portico, "IvoryArrivalTerrace", center - Vector3.UP * .12,
+		Vector3(38.0, .28, 34.0), _materials.celestial_floor, true, yaw)
+	_add_box(portico, "BrassArrivalAxis", center + Vector3.UP * .10,
+		Vector3(3.0, .18, 34.0), _materials.astral_brass, false, yaw)
+	var tower_points: Array[Vector3] = []
+	for forward_side in [-1.0, 1.0]:
+		for lateral_side in [-1.0, 1.0]:
+			var tower_at := center + forward * float(forward_side) * 10.0 \
+				+ side * float(lateral_side) * 15.0
+			tower_points.append(tower_at)
+			_add_island_three_civic_column(portico,
+				"ArrivalTower_%s_%s" % ["W" if forward_side < 0 else "E",
+					"South" if lateral_side < 0 else "North"], tower_at, 13.5)
+			_add_tapered_cylinder(portico,
+				"ArrivalSpire_%s_%s" % ["W" if forward_side < 0 else "E",
+					"South" if lateral_side < 0 else "North"],
+				tower_at + Vector3.UP * 16.4, .12, 1.55, 5.0,
+				_materials.arrival_glass, 12)
+	for end_index in 2:
+		var end_offset := -10.0 if end_index == 0 else 10.0
+		_add_cable_between(portico, "BrassPorticoEntablature_%02d" % (end_index + 1),
+			center + forward * end_offset - side * 15.0 + Vector3.UP * 14.0,
+			center + forward * end_offset + side * 15.0 + Vector3.UP * 14.0,
+			.78, .78, _materials.astral_brass, 12)
+	var gate_center := center + Vector3.UP * 8.0
+	_add_torus(portico, "AetherArrivalArch", gate_center, 7.0, 9.0,
+		_materials.island_cyan, Vector3(0, 0, 90))
+	var crown := center + Vector3.UP * 18.5
+	for tower_at in tower_points:
+		_add_cable_between(portico, "PorticoCrownRib_%02d" % (tower_points.find(tower_at) + 1),
+			tower_at + Vector3.UP * 14.0, crown, .46, .22,
+			_materials.astral_brass, 10)
+	_add_sphere(portico, "PorticoAetherCrown", crown,
+		Vector3(1.2, 2.0, 1.2), _materials.island_cyan)
 
 
 func _add_island_three_lane(parent: Node3D, node_name: String, start: Vector3,
