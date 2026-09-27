@@ -4254,10 +4254,10 @@ func _build_island_one_science_art_garden(parent: Node3D) -> void:
 func _unify_island_one_tree_and_quest_style() -> void:
 	if _island_one_puzzle == null:
 		return
-	var style_ivory := _material(Color("eadfc8"), .52, Color("fff3d8"), .34)
-	var style_charcoal := _material(Color("263443"), .62, Color("214e60"), .18)
-	var style_cyan := _material(Color("38bfd0"), .26, Color("54e5f2"), 1.05)
-	var style_lavender := _material(Color("9173b5"), .38, Color("c39aef"), .48)
+	var style_ivory: Material = _materials.shared_style_ivory
+	var style_charcoal: Material = _materials.shared_style_charcoal
+	var style_cyan: Material = _materials.shared_style_cyan
+	var style_lavender: Material = _materials.shared_style_lavender
 	var tree := _island_one_puzzle.get_node_or_null(
 		"ScienceArtGarden/CognitiveLightTree") as Node3D
 	if tree != null:
@@ -5854,9 +5854,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "low_poly_prototype_v6")
+	campus.set_meta("design_revision", "island_one_style_match_v7")
 	campus.set_meta("architectural_language",
-		"faceted ivory quest monuments, charcoal structure, cyan glass and a living tree cathedral")
+		"Island One ivory instrument family, charcoal mechanisms, cyan and lavender light, faceted light tree")
 	campus.set_meta("matches_previous_islands", true)
 	campus.set_meta("physical_island", 3)
 	campus.set_meta("story_sequence", PackedStringArray([
@@ -6014,6 +6014,8 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		reflection_court.set_meta("quest_architecture", "living root oratory")
 		reflection_court.set_meta("low_poly_landmark", true)
 		basilica.add_child(reflection_court)
+		_build_island_three_shared_instrument(reflection_court, mirror_at, -direction,
+			_materials.shared_style_lavender)
 		_add_cylinder(reflection_court, "ReflectionPool", mirror_at + Vector3.UP * .04,
 			13.0, .12, _materials.island_crystal_facet_dark, false, 12)
 		for apse_index in 8:
@@ -6063,13 +6065,14 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	_remove_island_three_gold_lines(geometry, campus, storm_zone,
 		sanctuary_zone)
 	_remove_island_three_route_barrier(geometry)
+	_unify_island_three_tree_and_quest_style(campus)
 	for object in _objects:
 		if int(object.get_meta("physical_island", 0)) != 3:
 			continue
 		if not object.completed.is_connected(_on_island_three_object_completed):
 			object.completed.connect(_on_island_three_object_completed)
 	_refresh_island_three_completion_visuals()
-	set_meta("island_three_design", "approved low-poly prototype with five distinct quest landmarks")
+	set_meta("island_three_design", "Island One-matched low-poly sanctuary with five distinct quest landmarks")
 	set_meta("island_three_masterplan",
 		"arrival portico > three unique storm instruments > rain observatory > wisdom basilica > living tree cathedral")
 
@@ -6092,6 +6095,55 @@ func _remove_island_three_route_barrier(geometry: Node3D) -> void:
 		gate.set_meta("physical_barrier_removed", true)
 		gate.set_meta("route_remains_open", "05_thought_storm_arena>06_oldest_tree_sanctuary")
 	set_meta("island_three_route_barriers_removed", removed_count)
+
+
+func _unify_island_three_tree_and_quest_style(campus: Node3D) -> void:
+	# Apply the same classification used by Island One's production instruments
+	# to the complete Island Three kit and its five authoritative quest objects.
+	for candidate in campus.find_children("*", "MeshInstance3D", true, false):
+		var part := candidate as MeshInstance3D
+		var key := part.name.to_lower()
+		if "terrace" in key or "ivory" in key or "tower" in key \
+				or "buttress" in key or "archivefin" in key or "pier" in key:
+			part.material_override = _materials.shared_style_ivory
+		elif "charcoal" in key or "mechanism" in key or "strut" in key \
+				or "lintel" in key or "undercroft" in key or "foot" in key:
+			part.material_override = _materials.shared_style_charcoal
+		elif "lavender" in key or "resonance" in key or "reflectionmemory" in key:
+			part.material_override = _materials.shared_style_lavender
+		elif "cyan" in key or "crystal" in key or "glass" in key or "lens" in key \
+				or "glyph" in key or "light" in key or "channel" in key \
+				or "vane" in key or "vein" in key or "rain" in key:
+			part.material_override = _materials.shared_style_cyan
+		part.set_meta("island_one_style_unified", true)
+
+	var styled_objects := 0
+	for object in _objects:
+		if int(object.get_meta("physical_island", 0)) != 3:
+			continue
+		var visual_root := object.get_node_or_null("VisualRoot") as Node3D
+		if visual_root == null:
+			continue
+		visual_root.scale = Vector3.ONE * 2.7
+		object.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
+		object.set_meta("island_one_scale_matched", true)
+		for mesh_candidate in visual_root.find_children("*", "MeshInstance3D", true, false):
+			var mesh_part := mesh_candidate as MeshInstance3D
+			var style_key := mesh_part.name.to_lower()
+			if "crystal" in style_key or "energy" in style_key or "light" in style_key \
+					or "core" in style_key or "rain" in style_key or "water" in style_key:
+				mesh_part.material_override = _materials.shared_style_cyan
+			elif "storm" in style_key or "echo" in style_key or "reflection" in style_key \
+					or "memory" in style_key:
+				mesh_part.material_override = _materials.shared_style_lavender
+			elif "mechanism" in style_key or "axle" in style_key or "strut" in style_key \
+					or "pipe" in style_key or "base" in style_key:
+				mesh_part.material_override = _materials.shared_style_charcoal
+			else:
+				mesh_part.material_override = _materials.shared_style_ivory
+			mesh_part.set_meta("island_one_style_unified", true)
+		styled_objects += 1
+	campus.set_meta("island_one_style_matched_quest_objects", styled_objects)
 
 
 func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
@@ -6197,6 +6249,55 @@ func _add_island_three_civic_column(parent: Node3D, node_name: String,
 		Vector3.ONE * .62, _materials.island_cyan)
 
 
+func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
+		operator_direction: Vector3, accent: Material) -> void:
+	# Island One's quest stations read as one family because they share a stacked
+	# plinth, tall ivory cabinet, round dial, dark mechanism and paired energy
+	# cells. Repeat that grammar here while leaving each landmark's puzzle parts
+	# and silhouette distinct.
+	var instrument := Node3D.new()
+	instrument.name = "IslandOneStyleQuestInstrument"
+	instrument.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
+	instrument.set_meta("design_revision", "shared_low_poly_instrument_v7")
+	parent.add_child(instrument)
+	var facing := operator_direction.normalized()
+	if facing.is_zero_approx():
+		facing = Vector3.FORWARD
+	var cabinet_at := center - facing * 5.6
+	var yaw := atan2(facing.x, facing.z)
+	_add_cylinder(instrument, "IvoryInstrumentPlinth", center + Vector3.UP * .45,
+		6.5, .9, _materials.shared_style_ivory, true, 16)
+	_add_cylinder(instrument, "CharcoalInstrumentFoot", center + Vector3.UP * 1.05,
+		5.5, .38, _materials.shared_style_charcoal, false, 16)
+	_add_box(instrument, "IvoryInstrumentCabinet", cabinet_at + Vector3.UP * 5.0,
+		Vector3(7.2, 8.0, 3.2), _materials.shared_style_ivory, true, yaw)
+	_add_box(instrument, "CharcoalInstrumentInset",
+		cabinet_at + facing * 1.64 + Vector3.UP * 5.0,
+		Vector3(5.7, 5.8, .24), _materials.shared_style_charcoal, false, yaw)
+	var dial_at := cabinet_at + facing * 1.82 + Vector3.UP * 7.0
+	var dial := _add_cylinder(instrument, "CyanInstrumentDial", dial_at,
+		2.45, .34, _materials.shared_style_cyan, false, 16)
+	dial.rotation = Vector3(PI * .5, yaw, 0)
+	var dial_frame := _add_torus(instrument, "IvoryInstrumentDialFrame", dial_at,
+		2.65, 3.05, _materials.shared_style_ivory,
+		Vector3(90, rad_to_deg(yaw), 0))
+	dial_frame.set_meta("decorative_ring_policy", "ivory machine frame; no gold")
+	_add_brick(instrument, "InstrumentCrownCrystal",
+		cabinet_at + Vector3.UP * 10.4,
+		Bricks.build_crystal(1.0, 3.0, .28, 6), accent)
+	var side_axis := Vector3(facing.z, 0, -facing.x)
+	for cell_side in [-1.0, 1.0]:
+		var cell_at := cabinet_at + side_axis * float(cell_side) * 4.5 + Vector3.UP * 3.4
+		_add_cylinder(instrument,
+			"EnergyCell%s" % ("Left" if cell_side < 0 else "Right"),
+			cell_at, 1.0, 5.0,
+			_materials.shared_style_cyan if cell_side < 0 else _materials.shared_style_lavender,
+			true, 10)
+		_add_sphere(instrument,
+			"EnergyCellLamp%s" % ("Left" if cell_side < 0 else "Right"),
+			cell_at + Vector3.UP * 3.1, Vector3.ONE * .72, accent)
+
+
 func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 		center: Vector3) -> void:
 	var landmark := Node3D.new()
@@ -6210,6 +6311,10 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 		Vector3(32.0, .28, 28.0), _materials.celestial_floor, true)
 	_add_box(landmark, "CharcoalTerraceFoot", center - Vector3.UP * .42,
 		Vector3(28.0, .34, 24.0), _materials.floor_dark, true)
+	var outward := Vector3(center.x - float(ZONES[4].position.x), 0,
+		center.z - float(ZONES[4].position.z)).normalized()
+	_build_island_three_shared_instrument(landmark, center, outward,
+		_materials.shared_style_cyan if landmark_index != 1 else _materials.shared_style_lavender)
 	if landmark_index == 0:
 		# A tall open survey instrument with one suspended lens crystal.
 		var apex := center + Vector3.UP * 26.0
@@ -6287,6 +6392,8 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 	observatory.set_meta("replaces", "CalmRainCloister")
 	observatory.set_meta("low_poly_landmark", true)
 	parent.add_child(observatory)
+	_build_island_three_shared_instrument(observatory, center, Vector3(0, 0, -1),
+		_materials.shared_style_cyan)
 	_add_box(observatory, "RainCollectorTerrace", center - Vector3.UP * .12,
 		Vector3(42.0, .28, 34.0), _materials.celestial_floor, true)
 	_add_box(observatory, "RainCollectorUndercroft", center - Vector3.UP * .54,
@@ -6349,6 +6456,9 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 	cathedral.set_meta("asymmetric_canopy", true)
 	cathedral.set_meta("camera_clearance_m", 38.0)
 	cathedral.set_meta("low_poly_landmark", true)
+	cathedral.set_meta("preserve_authored_nodes", true)
+	cathedral.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
+	cathedral.set_meta("matches_island_one_light_tree", true)
 	parent.add_child(cathedral)
 	# A square ivory clearing covers the obsolete concentric gold floor ornament
 	# and gives the roots a calm architectural foreground.
@@ -6361,7 +6471,7 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 			_materials.island_cyan)
 	# This collision-backed heartwood makes the redesigned hero tree physically solid.
 	_add_cylinder(cathedral, "LivingHeartwood", base + Vector3.UP * 26.0,
-		6.8, 52.0, _materials.bio_bark, true, 14)
+		6.8, 52.0, _materials.shared_style_ivory, true, 14)
 	for ribbon_index in 8:
 		var ribbon_angle := TAU * float(ribbon_index) / 8.0
 		var ribbon_start := base + Vector3(sin(ribbon_angle) * 6.9, 1.0,
@@ -6371,7 +6481,8 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 			cos(ribbon_finish_angle) * 6.3)
 		_add_cable_between(cathedral, "HeartwoodBarkRibbon_%02d" % (ribbon_index + 1),
 			ribbon_start, ribbon_finish, .72, .38,
-			_materials.bio_bark_highlight if ribbon_index % 3 == 0 else _materials.island_bark_root,
+			_materials.shared_style_cyan if ribbon_index % 3 == 0 \
+			else _materials.shared_style_charcoal,
 			10)
 	for root_index in 10:
 		var angle := TAU * float(root_index) / 10.0 + sin(float(root_index)) * .10
@@ -6379,10 +6490,10 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 		var start := base + radial * 4.2 + Vector3.UP * 5.5
 		var finish := base + radial * (22.0 + float(root_index % 3) * 3.0)
 		_add_cable_between(cathedral, "CathedralRoot_%02d" % (root_index + 1),
-			start, finish, 2.4, .45, _materials.island_bark_root, 12)
+			start, finish, 2.4, .45, _materials.shared_style_ivory, 12)
 		_add_cable_between(cathedral, "CathedralRootVein_%02d" % (root_index + 1),
 			start + Vector3.UP * .8, finish + Vector3.UP * .35,
-			.26, .09, _materials.green_glow, 8)
+			.26, .09, _materials.shared_style_cyan, 8)
 	# Five great boughs form an uneven nave and pull the silhouette toward the basilica.
 	var bough_lengths := [30.0, 38.0, 33.0, 42.0, 29.0]
 	var bough_heights := [67.0, 74.0, 70.0, 78.0, 72.0]
@@ -6395,12 +6506,12 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 		var branch_end := base + radial * float(bough_lengths[bough_index]) \
 			+ Vector3.UP * float(bough_heights[bough_index])
 		_add_cable_between(cathedral, "GreatBough_%02dA" % (bough_index + 1),
-			branch_start, branch_mid, 2.7, 1.4, _materials.bio_bark, 14)
+			branch_start, branch_mid, 2.7, 1.4, _materials.shared_style_ivory, 14)
 		_add_cable_between(cathedral, "GreatBough_%02dB" % (bough_index + 1),
-			branch_mid, branch_end, 1.4, .55, _materials.bio_bark, 12)
+			branch_mid, branch_end, 1.4, .55, _materials.shared_style_ivory, 12)
 		_add_cable_between(cathedral, "GreatBoughDataVein_%02d" % (bough_index + 1),
 			branch_start + Vector3.UP * 1.0, branch_end + Vector3.UP * .5,
-			.22, .08, _materials.island_cyan, 8)
+			.22, .08, _materials.shared_style_cyan, 8)
 		for leaf_cluster_index in 7:
 			var leaf_angle := TAU * float(leaf_cluster_index) / 7.0 + bough_index * .29
 			var leaf_offset := Vector3(sin(leaf_angle) * (7.0 + leaf_cluster_index % 2 * 3.0),
@@ -6412,8 +6523,9 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 				Vector3(6.8 + float(leaf_cluster_index % 2) * 1.8,
 					2.8 + float((leaf_cluster_index + bough_index) % 3),
 					5.6 + float((leaf_cluster_index + 1) % 3)),
-				_materials.green_glow if (leaf_cluster_index + bough_index) % 2 == 0 \
-				else _materials.bio_nutrient_glow)
+				_materials.shared_style_cyan \
+				if (leaf_cluster_index + bough_index) % 3 != 0 \
+				else _materials.shared_style_lavender)
 			var canopy_mesh := canopy.mesh as SphereMesh
 			canopy_mesh.radial_segments = 8
 			canopy_mesh.rings = 4
@@ -6423,9 +6535,10 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 			_add_brick(cathedral,
 				"MemoryFruit_%02d_%02d" % [bough_index + 1, fruit_index + 1],
 				branch_end + fruit_offset, Bricks.build_crystal(.7, 2.4, .2, 6),
-				_materials.island_cyan)
+				_materials.shared_style_lavender if fruit_index == 1 \
+				else _materials.shared_style_cyan)
 	_add_brick(cathedral, "LivingCathedralCrown", base + Vector3.UP * 91.0,
-		Bricks.build_crystal(3.8, 11.0, .8, 6), _materials.bio_crown_crystal)
+		Bricks.build_crystal(3.8, 11.0, .8, 6), _materials.shared_style_cyan)
 
 
 func _build_island_three_underside_accents(parent: Node3D, arena_center: Vector3,
@@ -7393,6 +7506,17 @@ func _build_materials() -> void:
 		Color("b89ad8", 0.38), 0.24, Color("d8b8ff"), 0.30)
 	_materials.sanctum_lavender_glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_materials.sanctum_lavender_glass.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# One exact palette is shared by Island One's light tree and quest machines
+	# and Island Three's sanctuary. Keeping the material resources identical
+	# prevents the later island from drifting into a separate visual language.
+	_materials.shared_style_ivory = _material(
+		Color("eadfc8"), .52, Color("fff3d8"), .34)
+	_materials.shared_style_charcoal = _material(
+		Color("263443"), .62, Color("214e60"), .18)
+	_materials.shared_style_cyan = _material(
+		Color("38bfd0"), .26, Color("54e5f2"), 1.05)
+	_materials.shared_style_lavender = _material(
+		Color("9173b5"), .38, Color("c39aef"), .48)
 	# Production quest props use a compact procedural PBR library. The albedo,
 	# roughness and normal maps are generated once at world build time, keeping
 	# the low-poly assets self-contained and Web-export safe while giving every

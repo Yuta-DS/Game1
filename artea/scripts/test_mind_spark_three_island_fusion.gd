@@ -119,7 +119,9 @@ func _run() -> void:
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
 	var island_three := geometry.get_node("IslandThreeCivicSanctuary") as Node3D
-	assert(str(island_three.get_meta("design_revision", "")) == "low_poly_prototype_v6")
+	assert(str(island_three.get_meta("design_revision", "")) == "island_one_style_match_v7")
+	assert(int(island_three.get_meta("island_one_style_matched_quest_objects", 0)) == 5,
+		"all five Island 3 quest objects use Island One's production style family")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
 	assert(island_three.has_node("IslandThreeStormDeck"))
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
@@ -145,6 +147,9 @@ func _run() -> void:
 		assert(island_three.has_node("StormworksGrandCourt/%s/SolidQuestTerraceCollision" % landmark_name),
 			"each Warden anchor has distinct, solid quest architecture")
 		assert(island_three.has_node("StormworksGrandCourt/%s/CompletionStateVisuals" % landmark_name))
+		assert(island_three.has_node(
+			"StormworksGrandCourt/%s/IslandOneStyleQuestInstrument/IvoryInstrumentCabinetCollision" % landmark_name),
+			"each storm landmark uses the same cabinet-and-dial grammar as Island One")
 	assert(island_three.has_node("StormworksGrandCourt/ShieldProcessional_01Collision"))
 	assert(island_three.get_node_or_null("CalmRainCloister") == null,
 		"the Calm-Rain Cloister is removed from the recovery sequence")
@@ -153,10 +158,14 @@ func _run() -> void:
 	assert(island_three.has_node("RainHarvestObservatory/FacetedRainDome"))
 	assert((island_three.get_node("RainHarvestObservatory/FacetedRainDome") as MeshInstance3D).mesh.radial_segments == 12)
 	assert(island_three.has_node("RainHarvestObservatory/CompletionStateVisuals/HarvestedRainWater"))
+	assert(island_three.has_node(
+		"RainHarvestObservatory/IslandOneStyleQuestInstrument/CyanInstrumentDial"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/OldestTreeReflectionApseCollision"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMemorySeed"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionPool"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMarker_01"))
+	assert(island_three.has_node(
+		"WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument/CyanInstrumentDial"))
 	assert(not island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"),
 		"the unsupported blue line over the Island 3 promenade is removed")
 	assert(int(world.get_meta("island_three_route_barriers_removed", 0)) > 0,
@@ -172,6 +181,13 @@ func _run() -> void:
 	assert(island_three.has_node("OldestTreeLivingCathedral/LivingHeartwoodCollision"),
 		"the redesigned Oldest Tree is a solid living landmark")
 	assert(island_three.has_node("OldestTreeLivingCathedral/GreatBough_01A"))
+	var shared_palette: Dictionary = world.get("_materials")
+	assert((island_three.get_node("OldestTreeLivingCathedral/LivingHeartwood") as MeshInstance3D).material_override \
+		== shared_palette.shared_style_ivory,
+		"the Oldest Tree uses the same ivory structure material as Island One's light tree")
+	assert((island_three.get_node("OldestTreeLivingCathedral/CanopyLeafMass_01_01") as MeshInstance3D).material_override \
+		in [shared_palette.shared_style_cyan, shared_palette.shared_style_lavender],
+		"the Oldest Tree canopy uses Island One's cyan and lavender light foliage")
 	assert(island_three.has_node("LowPolyUndersideAccents/EmbeddedAetherCrystal_01"))
 	var return_arch_left := geometry.get_node(
 		"06OldestTreeSanctuary/ReturnWorldGate/Left") as MeshInstance3D
