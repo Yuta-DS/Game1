@@ -119,10 +119,20 @@ func _run() -> void:
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
 	var island_three := geometry.get_node("IslandThreeCivicSanctuary") as Node3D
-	assert(str(island_three.get_meta("design_revision", "")) == "living_quest_landmarks_v5")
+	assert(str(island_three.get_meta("design_revision", "")) == "low_poly_prototype_v6")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
+	assert(island_three.has_node("IslandThreeStormDeck"))
+	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
 	assert(island_three.has_node("StormworksArrivalPortico/IvoryArrivalTerraceCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/AetherArrivalArch"))
+	assert((island_three.get_node("StormworksArrivalPortico/AetherArrivalArch") as MeshInstance3D).mesh is BoxMesh,
+		"the low-poly arrival uses an open lintel instead of another ring")
+	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerNorthCollision"))
+	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerSouthCollision"))
+	assert(island_three.get_node("StormworksGrandCourt").get_meta("clear_center_radius_m") == 34.0)
+	assert(island_three.has_node("StormworksGrandCourt/StormCourtCompass/CompassWedge_01"))
+	assert(island_three.get_node("StormworksGrandCourt").find_children(
+		"StormCourtGarden_*", "Node3D", false, false).size() == 8)
 	var storm_zone := geometry.get_node("05ThoughtStormArena") as Node3D
 	for retired_ring in storm_zone.find_children("LayeredStormRing_*", "MeshInstance3D", true, false):
 		assert(not retired_ring.visible, "the oversized legacy vortex must remain retired")
@@ -134,16 +144,28 @@ func _run() -> void:
 	for landmark_name in quest_landmarks:
 		assert(island_three.has_node("StormworksGrandCourt/%s/SolidQuestTerraceCollision" % landmark_name),
 			"each Warden anchor has distinct, solid quest architecture")
+		assert(island_three.has_node("StormworksGrandCourt/%s/CompletionStateVisuals" % landmark_name))
+	assert(island_three.has_node("StormworksGrandCourt/ShieldProcessional_01Collision"))
 	assert(island_three.get_node_or_null("CalmRainCloister") == null,
 		"the Calm-Rain Cloister is removed from the recovery sequence")
 	assert(island_three.has_node("RainHarvestObservatory/RainCollectorTerraceCollision"))
 	assert(island_three.has_node("RainHarvestObservatory/RainCrystalReservoir"))
+	assert(island_three.has_node("RainHarvestObservatory/FacetedRainDome"))
+	assert((island_three.get_node("RainHarvestObservatory/FacetedRainDome") as MeshInstance3D).mesh.radial_segments == 12)
+	assert(island_three.has_node("RainHarvestObservatory/CompletionStateVisuals/HarvestedRainWater"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/OldestTreeReflectionApseCollision"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMemorySeed"))
+	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionPool"))
+	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMarker_01"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"))
 	assert(island_three.has_node("OldestTreeLivingCathedral/LivingHeartwoodCollision"),
 		"the redesigned Oldest Tree is a solid living landmark")
 	assert(island_three.has_node("OldestTreeLivingCathedral/GreatBough_01A"))
+	assert(island_three.has_node("LowPolyUndersideAccents/EmbeddedAetherCrystal_01"))
+	var return_arch_left := geometry.get_node(
+		"06OldestTreeSanctuary/ReturnWorldGate/Left") as MeshInstance3D
+	assert(return_arch_left.material_override == world.get("_materials").celestial_floor,
+		"the old gold return arch is refinished in ivory")
 	assert(int(island_three.get_meta("gold_rings_removed", 0)) > 0)
 	assert(int(island_three.get_meta("visible_gold_ring_count", -1)) == 0,
 		"Island 3 contains no visible gold torus geometry")
@@ -152,8 +174,8 @@ func _run() -> void:
 	assert(int(island_three.get_meta("gold_lines_removed", 0)) > 0)
 	assert(int(island_three.get_meta("visible_gold_line_count", -1)) == 0,
 		"Island 3 contains no visible elongated gold geometry")
-	assert(not (island_three.get_node(
-		"StormworksGrandCourt/BrassRadialInlay_01") as MeshInstance3D).visible)
+	assert(island_three.get_node_or_null("StormworksGrandCourt/BrassRadialInlay_01") == null,
+		"the former gold radial floor lines are no longer constructed")
 	assert(not (island_three.get_node(
 		"WisdomBasilicaPromenade/LeftBasilicaCornice") as MeshInstance3D).visible)
 	assert(not (island_three.get_node(

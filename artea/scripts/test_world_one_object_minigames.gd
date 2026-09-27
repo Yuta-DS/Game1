@@ -35,6 +35,11 @@ func _run() -> void:
 		modes[str(spec.mode)] = true
 	assert(islands == {1: 5, 2: 5, 3: 5}, "five minigames belong to each island")
 	assert(modes.size() == 5, "the objects use five distinct playable mechanics")
+	var island_three_modes := {}
+	for save_id in EXPECTED_IDS.slice(10):
+		island_three_modes[str(Catalog.challenge(save_id).mode)] = true
+	assert(island_three_modes.size() == 5,
+		"Island 3 gives each of its five quest landmarks a distinct playable mechanic")
 
 	var world := WorldScript.new()
 	world.build_hud = false

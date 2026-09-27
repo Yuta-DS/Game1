@@ -940,6 +940,7 @@ func set_world_state(next_state: String) -> void:
 	_set_transit_enabled(next_state == "gentle_rain")
 	set_meta("world_state", next_state)
 	set_meta("transit_portals_enabled", next_state == "gentle_rain")
+	_refresh_island_three_completion_visuals()
 
 
 func get_transit_portals() -> Array[MindSparkWorldGate]:
@@ -5777,9 +5778,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "living_quest_landmarks_v5")
+	campus.set_meta("design_revision", "low_poly_prototype_v6")
 	campus.set_meta("architectural_language",
-		"distinct ivory quest monuments, cyan aether glass and a living tree cathedral")
+		"faceted ivory quest monuments, charcoal structure, cyan glass and a living tree cathedral")
 	campus.set_meta("matches_previous_islands", true)
 	campus.set_meta("physical_island", 3)
 	campus.set_meta("story_sequence", PackedStringArray([
@@ -5811,32 +5812,50 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var arena_y: float = _zone_floor_surface_y(arena_origin) + 0.18
 	var sanctuary_y: float = _zone_floor_surface_y(sanctuary_origin) + 0.18
 	var arena_center := Vector3(arena_origin.x, arena_y, arena_origin.z)
+	# Clean low-poly deck plates cover the former imported gold route graphics
+	# while retaining the proven floor collision directly beneath them.
+	_add_cylinder(campus, "IslandThreeStormDeck",
+		arena_center - Vector3.UP * .11, 165.0, .18,
+		_materials.celestial_floor, false, 48)
+	_add_cylinder(campus, "IslandThreeSanctuaryDeck",
+		Vector3(sanctuary_origin.x, sanctuary_y - .11, sanctuary_origin.z),
+		136.0, .18, _materials.celestial_floor, false, 48)
+	var perimeter_repair := geometry.get_node_or_null("IslandThreePerimeterRepairs") as Node3D
+	if perimeter_repair != null:
+		for imported_railing in perimeter_repair.find_children("*", "MeshInstance3D", true, false):
+			(imported_railing as MeshInstance3D).material_override = _materials.celestial_floor
+			(imported_railing as MeshInstance3D).set_meta("island_three_rail_restyled", "ivory")
+	var return_arch := sanctuary_zone.get_node_or_null("ReturnWorldGate") as Node3D
+	if return_arch != null:
+		for arch_piece in return_arch.find_children("*", "MeshInstance3D", true, false):
+			(arch_piece as MeshInstance3D).material_override = _materials.celestial_floor
+			(arch_piece as MeshInstance3D).set_meta("island_three_gold_removed", true)
+	var return_ring := sanctuary_zone.get_node_or_null(
+		"ReturnToArtCastleWorldGate/Portal/Ring") as MeshInstance3D
+	if return_ring != null:
+		return_ring.material_override = _materials.island_cyan
 	var arrival_direction := Vector3(1, 0, 0)
 	var arrival_center := arena_center - arrival_direction * 135.0
 	_build_island_three_arrival_portico(campus, arrival_center, arrival_direction)
 
-	# A restrained open rotunda frames the boss encounter without hiding it.
+	# The low-poly prototype uses one open navigation court.  Keep its centre clear
+	# for the Warden and put all scenery on the perimeter where it also points to
+	# the five playable landmarks.
 	var stormworks := Node3D.new()
 	stormworks.name = "StormworksGrandCourt"
-	stormworks.set_meta("purpose", "open civic boss court with three readable shield chapels")
+	stormworks.set_meta("purpose", "open low-poly navigation and boss court")
+	stormworks.set_meta("clear_center_radius_m", 34.0)
 	campus.add_child(stormworks)
 	_add_cylinder(stormworks, "IvoryStormCourt", arena_center - Vector3.UP * .16,
 		48.0, .32, _materials.celestial_floor, true, 48)
-	# The former gold reveal ring is replaced by three directional inlays that
-	# point to the actual quest monuments instead of decorating an empty circle.
-	_add_torus(stormworks, "CyanStormSeal", arena_center + Vector3.UP * .16,
-		17.0, 18.4, _materials.island_cyan)
-	for spoke_index in 3:
-		var spoke_angle := TAU * float(spoke_index) / 3.0
-		var spoke_end := arena_center + Vector3(sin(spoke_angle) * 42.0, 0,
-			cos(spoke_angle) * 42.0)
-		_add_island_three_lane(stormworks, "BrassRadialInlay_%02d" % (spoke_index + 1),
-			arena_center, spoke_end, 3.2, _materials.astral_brass)
-	for column_index in 12:
-		var angle := TAU * float(column_index) / 12.0
-		var column_at := arena_center + Vector3(sin(angle) * 58.0, 0, cos(angle) * 58.0)
-		_add_island_three_civic_column(stormworks,
-			"StormColonnade_%02d" % (column_index + 1), column_at, 9.5)
+	_build_island_three_compass(stormworks, arena_center)
+	var garden_angles_degrees := [20.0, 45.0, 120.0, 150.0, 210.0, 240.0, 315.0, 340.0]
+	for garden_index in garden_angles_degrees.size():
+		var angle := deg_to_rad(float(garden_angles_degrees[garden_index]))
+		var garden_at := arena_center + Vector3(sin(angle) * 57.0, 0,
+			cos(angle) * 57.0)
+		_build_island_three_perimeter_garden(stormworks, garden_index, garden_at,
+			angle + PI)
 
 	# Each Warden anchor gets a different silhouette and spatial puzzle language.
 	var anchor_offsets := [Vector3(-90, 0, 38), Vector3(0, 0, -105), Vector3(90, 0, 38)]
@@ -5919,7 +5938,10 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		var reflection_court := Node3D.new()
 		reflection_court.name = "RootboundReflectionCourt"
 		reflection_court.set_meta("quest_architecture", "living root oratory")
+		reflection_court.set_meta("low_poly_landmark", true)
 		basilica.add_child(reflection_court)
+		_add_cylinder(reflection_court, "ReflectionPool", mirror_at + Vector3.UP * .04,
+			13.0, .12, _materials.island_crystal_facet_dark, false, 12)
 		for apse_index in 8:
 			var apse_angle := TAU * float(apse_index) / 8.0
 			var apse_at := mirror_at + Vector3(sin(apse_angle) * 30.0, 0,
@@ -5932,12 +5954,25 @@ func _redesign_island_three(geometry: Node3D) -> void:
 				"ReflectionCyanVein_%02d" % (apse_index + 1),
 				apse_at + Vector3.UP * .5, root_apex, .20, .10,
 				_materials.island_cyan, 8)
+			_add_brick(reflection_court, "ReflectionMarker_%02d" % (apse_index + 1),
+				mirror_at + Vector3(sin(apse_angle) * 17.0, 2.2,
+					cos(apse_angle) * 17.0),
+				Bricks.build_crystal(.75, 4.4, .2, 6),
+				_materials.arrival_glass if apse_index % 2 == 0 \
+				else _materials.sanctum_lavender_glass)
 		_add_sphere(reflection_court, "ReflectionMemorySeed",
 			mirror_at + Vector3.UP * 16.8, Vector3(1.6, 2.8, 1.6),
 			_materials.sanctum_lavender_glass)
+		var reflection_completion := Node3D.new()
+		reflection_completion.name = "CompletionStateVisuals"
+		reflection_completion.set_meta("preserve_authored_nodes", true)
+		reflection_court.add_child(reflection_completion)
+		_add_cylinder(reflection_completion, "AwakenedReflectionWater",
+			mirror_at + Vector3.UP * .13, 11.5, .10, _materials.arrival_glass, false, 12)
 
 	_build_oldest_tree_living_cathedral(campus,
 		Vector3(sanctuary_origin.x, sanctuary_y, sanctuary_origin.z + 18.0))
+	_build_island_three_underside_accents(campus, arena_center, sanctuary_origin)
 
 	# Retain proven route collision while bringing its materials into the same kit.
 	var route := geometry.get_node("MainStoryCircuitRoute") as Node3D
@@ -5953,7 +5988,13 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		sanctuary_zone)
 	_remove_island_three_gold_lines(geometry, campus, storm_zone,
 		sanctuary_zone)
-	set_meta("island_three_design", "distinct quest monuments and Oldest Tree living cathedral")
+	for object in _objects:
+		if int(object.get_meta("physical_island", 0)) != 3:
+			continue
+		if not object.completed.is_connected(_on_island_three_object_completed):
+			object.completed.connect(_on_island_three_object_completed)
+	_refresh_island_three_completion_visuals()
+	set_meta("island_three_design", "approved low-poly prototype with five distinct quest landmarks")
 	set_meta("island_three_masterplan",
 		"arrival portico > three unique storm instruments > rain observatory > wisdom basilica > living tree cathedral")
 
@@ -5962,45 +6003,77 @@ func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
 		forward: Vector3) -> void:
 	var portico := Node3D.new()
 	portico.name = "StormworksArrivalPortico"
-	portico.set_meta("purpose", "monumental threshold from Island Two into the finale campus")
+	portico.set_meta("purpose", "low-poly cyan-glass threshold from Island Two")
 	portico.set_meta("clear_opening_m", 24.0)
+	portico.set_meta("prototype_fidelity", "gameplay_adapted")
 	parent.add_child(portico)
 	var yaw := atan2(forward.x, forward.z)
 	var side := Vector3(forward.z, 0, -forward.x)
 	_add_box(portico, "IvoryArrivalTerrace", center - Vector3.UP * .12,
 		Vector3(38.0, .28, 34.0), _materials.celestial_floor, true, yaw)
-	_add_box(portico, "BrassArrivalAxis", center + Vector3.UP * .10,
-		Vector3(3.0, .18, 34.0), _materials.astral_brass, false, yaw)
-	var tower_points: Array[Vector3] = []
-	for forward_side in [-1.0, 1.0]:
-		for lateral_side in [-1.0, 1.0]:
-			var tower_at := center + forward * float(forward_side) * 10.0 \
-				+ side * float(lateral_side) * 15.0
-			tower_points.append(tower_at)
-			_add_island_three_civic_column(portico,
-				"ArrivalTower_%s_%s" % ["W" if forward_side < 0 else "E",
-					"South" if lateral_side < 0 else "North"], tower_at, 13.5)
+	_add_box(portico, "CharcoalArrivalAxis", center + Vector3.UP * .10,
+		Vector3(2.4, .10, 30.0), _materials.floor_dark, false, yaw)
+	for lateral_side in [-1.0, 1.0]:
+		var side_name := "South" if lateral_side < 0 else "North"
+		var tower_height := 17.0 if lateral_side < 0 else 21.0
+		var tower_at := center + side * float(lateral_side) * 15.5
+		_add_box(portico, "ArrivalTower%s" % side_name,
+			tower_at + Vector3.UP * (tower_height * .5), Vector3(7.0, tower_height, 8.0),
+			_materials.celestial_floor, true, yaw)
+		_add_box(portico, "ArrivalGlass%s" % side_name,
+			tower_at - side * float(lateral_side) * 3.56 + Vector3.UP * (tower_height * .54),
+			Vector3(.28, tower_height * .55, 4.2), _materials.arrival_glass, false, yaw)
+		for spire_index in 2:
+			var spire_at := tower_at + forward * (-2.1 if spire_index == 0 else 2.1) \
+				+ Vector3.UP * (tower_height + 3.1)
 			_add_tapered_cylinder(portico,
-				"ArrivalSpire_%s_%s" % ["W" if forward_side < 0 else "E",
-					"South" if lateral_side < 0 else "North"],
-				tower_at + Vector3.UP * 16.4, .12, 1.55, 5.0,
-				_materials.arrival_glass, 12)
-	for end_index in 2:
-		var end_offset := -10.0 if end_index == 0 else 10.0
-		_add_cable_between(portico, "BrassPorticoEntablature_%02d" % (end_index + 1),
-			center + forward * end_offset - side * 15.0 + Vector3.UP * 14.0,
-			center + forward * end_offset + side * 15.0 + Vector3.UP * 14.0,
-			.78, .78, _materials.astral_brass, 12)
-	var gate_center := center + Vector3.UP * 8.0
-	_add_torus(portico, "AetherArrivalArch", gate_center, 7.0, 9.0,
-		_materials.island_cyan, Vector3(0, 0, 90))
-	var crown := center + Vector3.UP * 18.5
-	for tower_at in tower_points:
-		_add_cable_between(portico, "PorticoCrownRib_%02d" % (tower_points.find(tower_at) + 1),
-			tower_at + Vector3.UP * 14.0, crown, .46, .22,
-			_materials.astral_brass, 10)
-	_add_sphere(portico, "PorticoAetherCrown", crown,
-		Vector3(1.2, 2.0, 1.2), _materials.island_cyan)
+				"ArrivalSpire%s_%02d" % [side_name, spire_index + 1], spire_at,
+				.10, 1.3, 6.0, _materials.arrival_glass, 6)
+	# The named arch remains a lintel rather than a torus so the portal has no
+	# decorative ring and the full 24 m opening stays walkable.
+	_add_box(portico, "AetherArrivalArch", center + Vector3.UP * 18.0,
+		Vector3(24.0, 1.3, 2.0), _materials.island_cyan, false, yaw)
+	_add_brick(portico, "PorticoAetherCrown", center + Vector3.UP * 22.0,
+		Bricks.build_crystal(1.8, 5.5, .4, 6), _materials.island_cyan)
+
+
+func _build_island_three_compass(parent: Node3D, center: Vector3) -> void:
+	var compass := Node3D.new()
+	compass.name = "StormCourtCompass"
+	compass.set_meta("floor_motif", "faceted ivory charcoal and cyan wedges; no rings")
+	parent.add_child(compass)
+	_add_cylinder(compass, "CompassHub", center + Vector3.UP * .18,
+		4.2, .10, _materials.floor_dark, false, 8)
+	for point_index in 8:
+		var angle := TAU * float(point_index) / 8.0
+		var length := 14.0 if point_index % 2 == 0 else 9.0
+		var material: Material = _materials.island_cyan if point_index % 2 == 0 \
+			else _materials.floor_dark
+		var point_at := center + Vector3(sin(angle) * length * .52, .20,
+			cos(angle) * length * .52)
+		_add_box(compass, "CompassWedge_%02d" % (point_index + 1), point_at,
+			Vector3(2.4, .10, length), material, false, angle)
+
+
+func _build_island_three_perimeter_garden(parent: Node3D, index: int,
+		center: Vector3, facing: float) -> void:
+	var garden := Node3D.new()
+	garden.name = "StormCourtGarden_%02d" % (index + 1)
+	parent.add_child(garden)
+	_add_box(garden, "IvoryPlanter", center + Vector3.UP * .45,
+		Vector3(9.0, .9, 4.2), _materials.celestial_floor, true, facing)
+	var tree_at := center + Vector3.UP * 3.0
+	_add_cylinder(garden, "TreeTrunk", tree_at, .55, 5.0,
+		_materials.island_bark_root, true, 7)
+	var canopy := _add_sphere(garden, "FacetedCanopy", center + Vector3.UP * 7.1,
+		Vector3(3.1, 2.1, 3.1), _materials.bio_nutrient_glow)
+	(canopy.mesh as SphereMesh).radial_segments = 7
+	(canopy.mesh as SphereMesh).rings = 4
+	for shrub_index in 2:
+		var shrub_side := -1.0 if shrub_index == 0 else 1.0
+		_add_brick(garden, "VioletShrub_%02d" % (shrub_index + 1),
+			center + Vector3(shrub_side * 2.7, 1.3, 0),
+			Bricks.build_crystal(.65, 1.8, .2, 6), _materials.sanctum_lavender_glass)
 
 
 func _add_island_three_lane(parent: Node3D, node_name: String, start: Vector3,
@@ -6009,8 +6082,10 @@ func _add_island_three_lane(parent: Node3D, node_name: String, start: Vector3,
 	var length: float = flat.length()
 	var center := start.lerp(finish, .5)
 	center.y = minf(start.y, finish.y)
-	return _add_box(parent, node_name, center, Vector3(width, .18, length),
-		material, false, atan2(flat.x, flat.z))
+	var lane := _add_box(parent, node_name, center, Vector3(width, .18, length),
+		material, true, atan2(flat.x, flat.z))
+	lane.set_meta("clear_walkway_width_m", width)
+	return lane
 
 
 func _add_island_three_civic_column(parent: Node3D, node_name: String,
@@ -6020,9 +6095,9 @@ func _add_island_three_civic_column(parent: Node3D, node_name: String,
 	_add_cylinder(parent, "%sIvoryShaft" % node_name, at + Vector3.UP * (height * .5 + .55),
 		.78, height, _materials.celestial_floor, true, 12)
 	_add_cylinder(parent, "%sBrassBase" % node_name, at + Vector3.UP * .68,
-		1.08, .24, _materials.astral_brass, false, 8)
+		1.08, .24, _materials.floor_dark, false, 8)
 	_add_box(parent, "%sBrassCapital" % node_name, at + Vector3.UP * (height + .48),
-		Vector3(2.5, .34, 2.5), _materials.astral_brass)
+		Vector3(2.5, .34, 2.5), _materials.floor_dark)
 	_add_sphere(parent, "%sAetherLamp" % node_name, at + Vector3.UP * (height + 1.35),
 		Vector3.ONE * .62, _materials.island_cyan)
 
@@ -6034,27 +6109,34 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 	landmark.name = landmark_names[landmark_index]
 	landmark.set_meta("quest_architecture", landmark.name)
 	landmark.set_meta("warden_anchor_index", landmark_index + 1)
+	landmark.set_meta("low_poly_landmark", true)
 	parent.add_child(landmark)
 	_add_box(landmark, "SolidQuestTerrace", center - Vector3.UP * .12,
-		Vector3(28.0, .28, 24.0), _materials.celestial_floor, true)
+		Vector3(32.0, .28, 28.0), _materials.celestial_floor, true)
+	_add_box(landmark, "CharcoalTerraceFoot", center - Vector3.UP * .42,
+		Vector3(28.0, .34, 24.0), _materials.floor_dark, true)
 	if landmark_index == 0:
-		# A triangular survey tower makes the first anchor read as calibration.
-		var apex := center + Vector3.UP * 21.0
+		# A tall open survey instrument with one suspended lens crystal.
+		var apex := center + Vector3.UP * 26.0
 		for leg_index in 3:
 			var angle := TAU * float(leg_index) / 3.0
 			var foot := center + Vector3(sin(angle) * 10.5, 0, cos(angle) * 10.5)
 			_add_island_three_civic_column(landmark,
-				"LensTripod_%02d" % (leg_index + 1), foot, 8.0)
+				"LensTripod_%02d" % (leg_index + 1), foot, 11.0)
 			_add_cable_between(landmark, "LensStrut_%02d" % (leg_index + 1),
-				foot + Vector3.UP * 8.8, apex, .68, .26,
-				_materials.astral_brass, 10)
-		_add_brick(landmark, "StormLensPrism", center + Vector3.UP * 16.0,
-			Bricks.build_crystal(3.0, 8.0, .8, 6), _materials.island_violet_energy)
-		_add_cable_between(landmark, "LensSightline",
-			center + Vector3(-10, 10, 0), center + Vector3(10, 10, 0),
-			.20, .20, _materials.island_cyan, 8)
+				foot + Vector3.UP * 11.8, apex, .72, .24,
+				_materials.floor_dark, 8)
+		_add_brick(landmark, "StormLensPrism", center + Vector3.UP * 18.0,
+			Bricks.build_crystal(3.2, 9.0, .8, 6), _materials.arrival_glass)
+		for sight_index in 3:
+			var sight_angle := TAU * float(sight_index) / 3.0
+			var sight_center := center + Vector3.UP * (15.0 + sight_index * 2.5)
+			var sight := _add_cylinder(landmark, "LensSightFrame_%02d" % (sight_index + 1),
+				sight_center, 4.8 + sight_index * .8, .34, _materials.floor_dark, false, 8)
+			sight.rotation = Vector3(PI * .5, sight_angle, 0)
+			sight.set_meta("rotating_instrument", true)
 	elif landmark_index == 1:
-		# The forge is low and muscular: paired buttresses hold a suspended core.
+		# The forge is low and muscular: paired buttresses and tuned crystal pylons.
 		for side in [-1.0, 1.0]:
 			var pylon_at := center + Vector3(float(side) * 10.0, 0, 0)
 			_add_box(landmark, "ForgeButtress_%s" % ("L" if side < 0 else "R"),
@@ -6066,30 +6148,41 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 				_materials.island_cyan, 8)
 		_add_cable_between(landmark, "ForgeLintel",
 			center + Vector3(-10, 10.5, 0), center + Vector3(10, 10.5, 0),
-			.9, .9, _materials.astral_brass, 10)
+			.9, .9, _materials.floor_dark, 8)
 		_add_sphere(landmark, "SuspendedResonanceCore", center + Vector3.UP * 7.0,
 			Vector3(2.6, 3.6, 2.6), _materials.island_violet_energy)
-		for spark_index in 5:
-			var spark_angle := TAU * float(spark_index) / 5.0
-			_add_sphere(landmark, "ForgeSpark_%02d" % (spark_index + 1),
-				center + Vector3(sin(spark_angle) * 5.5, 7.0 + spark_index % 2,
-					cos(spark_angle) * 5.5), Vector3.ONE * .42, _materials.island_cyan)
+		for pylon_index in 4:
+			var pylon_angle := TAU * float(pylon_index) / 4.0 + PI * .25
+			var tuned_at := center + Vector3(sin(pylon_angle) * 8.0, 2.3,
+				cos(pylon_angle) * 8.0)
+			_add_brick(landmark, "TunedCrystalPylon_%02d" % (pylon_index + 1), tuned_at,
+				Bricks.build_crystal(1.0, 4.6, .3, 6),
+				_materials.island_cyan if pylon_index % 2 == 0 else _materials.sanctum_lavender_glass)
 	else:
 		# The archive uses staggered vertical fins like open illuminated pages.
-		for fin_index in 5:
+		for fin_index in 7:
 			var side := -1.0 if fin_index % 2 == 0 else 1.0
-			var depth := -8.0 + float(fin_index) * 4.0
+			var depth := -12.0 + float(fin_index) * 4.0
 			var fin_at := center + Vector3(side * (7.0 + absf(depth) * .25), 6.0, depth)
 			_add_box(landmark, "ArchiveFin_%02d" % (fin_index + 1), fin_at,
-				Vector3(1.4, 12.0 + fin_index, 3.0), _materials.celestial_floor, true)
+				Vector3(1.5, 12.0 + fin_index, 3.2), _materials.celestial_floor, true)
+			_add_box(landmark, "ArchiveCharcoalBase_%02d" % (fin_index + 1),
+				fin_at - Vector3.UP * 5.4, Vector3(2.4, 1.1, 4.2),
+				_materials.floor_dark, true)
 			_add_box(landmark, "ArchiveGlyph_%02d" % (fin_index + 1),
 				fin_at + Vector3(-side * .78, 0, 0), Vector3(.12, 7.0, 1.2),
-				_materials.island_cyan)
+				_materials.arrival_glass)
 		_add_cable_between(landmark, "ArchiveLightningBridge",
 			center + Vector3(-9, 14, -8), center + Vector3(9, 17, 8),
-			.42, .20, _materials.island_violet_energy, 8)
+			.42, .20, _materials.island_cyan, 6)
 		_add_brick(landmark, "ArchiveMemoryShard", center + Vector3.UP * 9.0,
 			Bricks.build_crystal(2.2, 6.0, .5, 6), _materials.island_cyan)
+	var completion_visuals := Node3D.new()
+	completion_visuals.name = "CompletionStateVisuals"
+	completion_visuals.set_meta("preserve_authored_nodes", true)
+	landmark.add_child(completion_visuals)
+	_add_brick(completion_visuals, "ActivatedQuestCrystal", center + Vector3.UP * 3.5,
+		Bricks.build_crystal(1.1, 4.2, .3, 6), _materials.green_glow)
 
 
 func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void:
@@ -6097,9 +6190,14 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 	observatory.name = "RainHarvestObservatory"
 	observatory.set_meta("quest_architecture", "open weather instrument")
 	observatory.set_meta("replaces", "CalmRainCloister")
+	observatory.set_meta("low_poly_landmark", true)
 	parent.add_child(observatory)
 	_add_box(observatory, "RainCollectorTerrace", center - Vector3.UP * .12,
 		Vector3(42.0, .28, 34.0), _materials.celestial_floor, true)
+	_add_box(observatory, "RainCollectorUndercroft", center - Vector3.UP * .54,
+		Vector3(37.0, .60, 29.0), _materials.floor_dark, true)
+	_add_cylinder(observatory, "RainPool", center + Vector3.UP * .12,
+		10.0, .12, _materials.island_crystal_facet_dark, false, 12)
 	var mast_top := center + Vector3.UP * 22.0
 	for corner_index in 4:
 		var x := -15.0 if corner_index % 2 == 0 else 15.0
@@ -6116,15 +6214,36 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 			_materials.island_cyan, false, float(corner_index) * PI * .25)
 	_add_tapered_cylinder(observatory, "CentralRainNeedle",
 		center + Vector3.UP * 14.0, .15, 1.0, 20.0,
-		_materials.astral_brass, 10)
+		_materials.floor_dark, 8)
 	_add_brick(observatory, "RainCrystalReservoir", center + Vector3.UP * 6.0,
 		Bricks.build_crystal(3.3, 8.0, .8, 8), _materials.arrival_glass)
+	var dome := _add_sphere(observatory, "FacetedRainDome", center + Vector3.UP * 8.0,
+		Vector3(10.5, 6.0, 10.5), _materials.arrival_glass)
+	var dome_mesh := dome.mesh as SphereMesh
+	dome_mesh.radial_segments = 12
+	dome_mesh.rings = 6
+	for channel_index in 4:
+		var channel_angle := TAU * float(channel_index) / 4.0
+		var channel_center := center + Vector3(sin(channel_angle) * 14.5, .19,
+			cos(channel_angle) * 14.5)
+		_add_box(observatory, "RainChannel_%02d" % (channel_index + 1), channel_center,
+			Vector3(2.1, .10, 19.0), _materials.island_cyan, false, channel_angle)
+	var completion_visuals := Node3D.new()
+	completion_visuals.name = "CompletionStateVisuals"
+	completion_visuals.set_meta("preserve_authored_nodes", true)
+	observatory.add_child(completion_visuals)
+	_add_cylinder(completion_visuals, "HarvestedRainWater", center + Vector3.UP * .22,
+		8.2, .14, _materials.arrival_glass, false, 12)
 	for stream_index in 6:
 		var angle := TAU * float(stream_index) / 6.0
-		_add_cable_between(observatory, "CapturedRainStream_%02d" % (stream_index + 1),
+		_add_cable_between(completion_visuals, "CapturedRainStream_%02d" % (stream_index + 1),
 			center + Vector3(sin(angle) * 9.0, 13.0, cos(angle) * 9.0),
 			center + Vector3(sin(angle) * 2.8, 7.0, cos(angle) * 2.8),
 			.18, .10, _materials.island_cyan, 8)
+	for fall_index in 2:
+		var fall_at := center + Vector3(-8.0 if fall_index == 0 else 8.0, -8.0, 19.0)
+		_add_tapered_cylinder(completion_visuals, "ObservatoryWaterfall_%02d" % (fall_index + 1),
+			fall_at, .22, 1.25, 18.0, _materials.arrival_glass, 6)
 
 
 func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
@@ -6133,6 +6252,8 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 	cathedral.set_meta("design_revision", "root_crown_cathedral_v1")
 	cathedral.set_meta("quest_architecture", "walkable living landmark")
 	cathedral.set_meta("asymmetric_canopy", true)
+	cathedral.set_meta("camera_clearance_m", 38.0)
+	cathedral.set_meta("low_poly_landmark", true)
 	parent.add_child(cathedral)
 	# A square ivory clearing covers the obsolete concentric gold floor ornament
 	# and gives the roots a calm architectural foreground.
@@ -6190,7 +6311,7 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 			var leaf_offset := Vector3(sin(leaf_angle) * (7.0 + leaf_cluster_index % 2 * 3.0),
 				float(leaf_cluster_index % 3) * 2.2 - 2.0,
 				cos(leaf_angle) * (6.0 + (leaf_cluster_index + 1) % 2 * 3.0))
-			_add_sphere(cathedral,
+			var canopy := _add_sphere(cathedral,
 				"CanopyLeafMass_%02d_%02d" % [bough_index + 1, leaf_cluster_index + 1],
 				branch_end + leaf_offset,
 				Vector3(6.8 + float(leaf_cluster_index % 2) * 1.8,
@@ -6198,6 +6319,9 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 					5.6 + float((leaf_cluster_index + 1) % 3)),
 				_materials.green_glow if (leaf_cluster_index + bough_index) % 2 == 0 \
 				else _materials.bio_nutrient_glow)
+			var canopy_mesh := canopy.mesh as SphereMesh
+			canopy_mesh.radial_segments = 8
+			canopy_mesh.rings = 4
 		for fruit_index in 3:
 			var fruit_offset := Vector3(float(fruit_index - 1) * 4.0,
 				-6.0 - float(fruit_index % 2) * 2.0, float((fruit_index + bough_index) % 2) * 3.0)
@@ -6209,18 +6333,101 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 		Bricks.build_crystal(3.8, 11.0, .8, 6), _materials.bio_crown_crystal)
 
 
+func _build_island_three_underside_accents(parent: Node3D, arena_center: Vector3,
+		sanctuary_origin: Vector3) -> void:
+	var underside := Node3D.new()
+	underside.name = "LowPolyUndersideAccents"
+	underside.set_meta("collision_policy", "decorative and unreachable")
+	underside.set_meta("render_budget", "24 faceted accents")
+	parent.add_child(underside)
+	for support_index in 6:
+		var angle := TAU * float(support_index) / 6.0
+		var support_at := arena_center + Vector3(sin(angle) * 62.0, -18.0,
+			cos(angle) * 62.0)
+		_add_tapered_cylinder(underside, "IvoryUndersidePier_%02d" % (support_index + 1),
+			support_at, 1.2, 3.3, 28.0, _materials.celestial_floor, 8)
+		_add_brick(underside, "EmbeddedAetherCrystal_%02d" % (support_index + 1),
+			support_at + Vector3.UP * (-15.0 - float(support_index % 2) * 4.0),
+			Bricks.build_crystal(1.4, 6.5, .4, 6), _materials.island_cyan)
+	for rock_index in 8:
+		var angle := TAU * float(rock_index) / 8.0 + .23
+		var rock_at := arena_center + Vector3(sin(angle) * (76.0 + rock_index % 3 * 5.0),
+			-25.0 - float(rock_index % 3) * 7.0,
+			cos(angle) * (76.0 + rock_index % 3 * 5.0))
+		_add_tapered_cylinder(underside, "FacetedFloatingRock_%02d" % (rock_index + 1),
+			rock_at, .35, 3.4 + float(rock_index % 2), 8.0 + rock_index % 3 * 3.0,
+			_materials.floor_dark, 6)
+	var tree_under_at := Vector3(sanctuary_origin.x, arena_center.y - 22.0,
+		sanctuary_origin.z + 18.0)
+	for brace_index in 4:
+		var brace_angle := TAU * float(brace_index) / 4.0 + PI * .25
+		_add_tapered_cylinder(underside, "TreeUndercroftBrace_%02d" % (brace_index + 1),
+			tree_under_at + Vector3(sin(brace_angle) * 20.0, 0,
+				cos(brace_angle) * 20.0), .9, 2.8, 30.0,
+			_materials.floor_dark, 8)
+
+
+func _on_island_three_object_completed(_save_id: String, _result: Dictionary) -> void:
+	_refresh_island_three_completion_visuals.call_deferred()
+
+
+func _refresh_island_three_completion_visuals() -> void:
+	var geometry := get_node_or_null("WorldOneGeometry") as Node3D
+	if geometry == null:
+		return
+	var campus := geometry.get_node_or_null("IslandThreeCivicSanctuary") as Node3D
+	if campus == null:
+		return
+	var object_states := {}
+	for object in _objects:
+		if int(object.get_meta("physical_island", 0)) == 3:
+			object_states[object.save_id] = bool(object.current_state.get("completed", false))
+	var anchor_ids := [
+		"world_one.warden_anchor.1",
+		"world_one.warden_anchor.2",
+		"world_one.warden_anchor.3",
+	]
+	var landmark_names := ["StormLensTower", "ResonanceForge", "LightningArchive"]
+	var completed_anchors := 0
+	for index in 3:
+		var completed := bool(object_states.get(anchor_ids[index], false))
+		if completed:
+			completed_anchors += 1
+		var state_node := campus.get_node_or_null(
+			"StormworksGrandCourt/%s/CompletionStateVisuals" % landmark_names[index]) as Node3D
+		if state_node != null:
+			state_node.visible = completed
+	var rain_complete := bool(object_states.get("world_one.calm_rain_basin", false))
+	var rain_state := campus.get_node_or_null("RainHarvestObservatory/CompletionStateVisuals") as Node3D
+	if rain_state != null:
+		rain_state.visible = rain_complete
+	var reflection_complete := bool(object_states.get("world_one.identity_reflection", false))
+	var reflection_state := campus.get_node_or_null(
+		"WisdomBasilicaPromenade/RootboundReflectionCourt/CompletionStateVisuals") as Node3D
+	if reflection_state != null:
+		reflection_state.visible = reflection_complete
+	var tree := campus.get_node_or_null("OldestTreeLivingCathedral") as Node3D
+	if tree != null:
+		for root_index in 10:
+			var vein := tree.get_node_or_null("CathedralRootVein_%02d" % (root_index + 1)) as Node3D
+			if vein != null:
+				vein.visible = root_index % 3 < completed_anchors
+		for fruit in tree.find_children("MemoryFruit_*", "MeshInstance3D", true, false):
+			(fruit as MeshInstance3D).visible = reflection_complete
+		var crown := tree.get_node_or_null("LivingCathedralCrown") as MeshInstance3D
+		if crown != null:
+			crown.visible = reflection_complete
+	campus.set_meta("completed_storm_landmarks", completed_anchors)
+	campus.set_meta("rain_observatory_active", rain_complete)
+	campus.set_meta("oldest_tree_awake", reflection_complete)
+
+
 func _remove_island_three_gold_rings(geometry: Node3D, campus: Node3D,
 		storm_zone: Node3D, sanctuary_zone: Node3D) -> void:
 	var roots: Array[Node3D] = [campus, storm_zone, sanctuary_zone]
 	var fusions := geometry.get_node_or_null("ThreeFusedSuperIslands") as Node3D
 	if fusions != null and fusions.get_child_count() >= 3:
 		roots.append(fusions.get_child(2) as Node3D)
-	var gold_materials: Array[Material] = [
-		_materials.astral_brass,
-		_materials.gold,
-		_materials.island_gold,
-		_materials.bio_socket_gold,
-	]
 	var removed_count := 0
 	var visited: Dictionary = {}
 	for search_root in roots:
@@ -6229,7 +6436,8 @@ func _remove_island_three_gold_rings(geometry: Node3D, campus: Node3D,
 			if visited.has(ring.get_instance_id()):
 				continue
 			visited[ring.get_instance_id()] = true
-			if ring.mesh is TorusMesh and gold_materials.has(ring.material_override):
+			if ring.mesh is TorusMesh and _is_island_three_gold_material(
+					_effective_mesh_material(ring)):
 				ring.visible = false
 				ring.set_meta("island_three_gold_ring_removed", true)
 				removed_count += 1
@@ -6238,7 +6446,7 @@ func _remove_island_three_gold_rings(geometry: Node3D, campus: Node3D,
 		for candidate in search_root.find_children("*", "MeshInstance3D", true, false):
 			var mesh_instance := candidate as MeshInstance3D
 			if mesh_instance.visible and mesh_instance.mesh is TorusMesh \
-					and gold_materials.has(mesh_instance.material_override):
+					and _is_island_three_gold_material(_effective_mesh_material(mesh_instance)):
 				visible_gold_ring_count += 1
 	campus.set_meta("gold_ring_policy", "no visible gold torus geometry")
 	campus.set_meta("gold_rings_removed", removed_count)
@@ -6254,12 +6462,6 @@ func _remove_island_three_gold_lines(geometry: Node3D, campus: Node3D,
 	var fusions := geometry.get_node_or_null("ThreeFusedSuperIslands") as Node3D
 	if fusions != null and fusions.get_child_count() >= 3:
 		roots.append(fusions.get_child(2) as Node3D)
-	var gold_materials: Array[Material] = [
-		_materials.astral_brass,
-		_materials.gold,
-		_materials.island_gold,
-		_materials.bio_socket_gold,
-	]
 	var removed_count := 0
 	var visited: Dictionary = {}
 	for search_root in roots:
@@ -6272,18 +6474,19 @@ func _remove_island_three_gold_lines(geometry: Node3D, campus: Node3D,
 			if line.mesh is CylinderMesh:
 				var cylinder := line.mesh as CylinderMesh
 				var widest_radius := maxf(cylinder.top_radius, cylinder.bottom_radius)
-				is_long_line = cylinder.height > 4.0 \
-					and cylinder.height > widest_radius * 6.0
+				is_long_line = cylinder.height > 1.5 \
+					and cylinder.height > widest_radius * 3.0
 			elif line.mesh is BoxMesh:
 				var size := (line.mesh as BoxMesh).size
 				var dimensions := [size.x, size.y, size.z]
 				dimensions.sort()
-				is_long_line = float(dimensions[2]) > 8.0 \
+				is_long_line = float(dimensions[2]) > 2.5 \
 					and float(dimensions[1]) < 4.0
 			var is_obsolete_root_rail := line.name in [
 				&"LeftLivingRootRail", &"RightLivingRootRail",
 			]
-			if (is_long_line and gold_materials.has(line.material_override)) \
+			if (is_long_line and _is_island_three_gold_material(
+					_effective_mesh_material(line))) \
 					or is_obsolete_root_rail:
 				line.visible = false
 				line.set_meta("island_three_gold_line_removed", true)
@@ -6292,22 +6495,48 @@ func _remove_island_three_gold_lines(geometry: Node3D, campus: Node3D,
 	for search_root in roots:
 		for candidate in search_root.find_children("*", "MeshInstance3D", true, false):
 			var line := candidate as MeshInstance3D
-			if not line.visible or not gold_materials.has(line.material_override):
+			if not line.visible or not _is_island_three_gold_material(
+					_effective_mesh_material(line)):
 				continue
 			if line.mesh is CylinderMesh:
 				var cylinder := line.mesh as CylinderMesh
 				var widest_radius := maxf(cylinder.top_radius, cylinder.bottom_radius)
-				if cylinder.height > 4.0 and cylinder.height > widest_radius * 6.0:
+				if cylinder.height > 1.5 and cylinder.height > widest_radius * 3.0:
 					visible_gold_line_count += 1
 			elif line.mesh is BoxMesh:
 				var size := (line.mesh as BoxMesh).size
 				var dimensions := [size.x, size.y, size.z]
 				dimensions.sort()
-				if float(dimensions[2]) > 8.0 and float(dimensions[1]) < 4.0:
+				if float(dimensions[2]) > 2.5 and float(dimensions[1]) < 4.0:
 					visible_gold_line_count += 1
 	campus.set_meta("gold_line_policy", "no visible elongated gold geometry")
 	campus.set_meta("gold_lines_removed", removed_count)
 	campus.set_meta("visible_gold_line_count", visible_gold_line_count)
+
+
+func _effective_mesh_material(mesh_instance: MeshInstance3D) -> Material:
+	if mesh_instance.material_override != null:
+		return mesh_instance.material_override
+	if mesh_instance.mesh != null and mesh_instance.mesh.get_surface_count() > 0:
+		return mesh_instance.get_active_material(0)
+	return null
+
+
+func _is_island_three_gold_material(material: Material) -> bool:
+	if material in [
+		_materials.astral_brass,
+		_materials.gold,
+		_materials.island_gold,
+		_materials.bio_socket_gold,
+		_materials.quest_brass,
+		_materials.quest_gold_leaf,
+	]:
+		return true
+	if not material is StandardMaterial3D:
+		return false
+	var colour := (material as StandardMaterial3D).albedo_color
+	return colour.r > .45 and colour.r > colour.b * 1.35 \
+		and colour.g > colour.b * 1.15
 
 
 func _place_combat_population() -> void:
