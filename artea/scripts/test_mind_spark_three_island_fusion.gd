@@ -157,7 +157,18 @@ func _run() -> void:
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMemorySeed"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionPool"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMarker_01"))
-	assert(island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"))
+	assert(not island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"),
+		"the unsupported blue line over the Island 3 promenade is removed")
+	assert(int(world.get_meta("island_three_route_barriers_removed", 0)) > 0,
+		"the Island 3 route cleanup finds and removes the former purple gate")
+	for candidate in geometry.find_children("QuestGate_4", "AnimatableBody3D", true, false):
+		var gate := candidate as AnimatableBody3D
+		var barrier := gate.get_node_or_null("Barrier") as MeshInstance3D
+		assert(barrier == null or not barrier.visible,
+			"the purple barrier between the storm court and tree sanctuary is removed")
+		var barrier_collision := gate.get_node_or_null("CollisionShape3D") as CollisionShape3D
+		assert(barrier_collision == null or barrier_collision.disabled,
+			"the removed purple barrier leaves no invisible collision")
 	assert(island_three.has_node("OldestTreeLivingCathedral/LivingHeartwoodCollision"),
 		"the redesigned Oldest Tree is a solid living landmark")
 	assert(island_three.has_node("OldestTreeLivingCathedral/GreatBough_01A"))

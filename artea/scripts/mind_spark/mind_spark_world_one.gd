@@ -5912,10 +5912,8 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		promenade_start + side_axis * 9.0 + Vector3.UP * 9.1,
 		promenade_end + side_axis * 9.0 + Vector3.UP * 9.1,
 		.58, .58, _materials.astral_brass, 10)
-	_add_cable_between(basilica, "CyanBasilicaRidge",
-		promenade_start + Vector3.UP * 13.8,
-		promenade_end + Vector3.UP * 13.8,
-		.38, .38, _materials.island_cyan, 10)
+	# Keep the nave open to the sky. The former cyan ridge read as a loose blue
+	# line crossing the island from the gameplay camera instead of architecture.
 	_add_cable_between(basilica, "LeftLivingRootRail",
 		promenade_start - side_axis * 7.2 + Vector3.UP * .8,
 		promenade_end - side_axis * 7.2 + Vector3.UP * .8,
@@ -5988,6 +5986,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		sanctuary_zone)
 	_remove_island_three_gold_lines(geometry, campus, storm_zone,
 		sanctuary_zone)
+	_remove_island_three_route_barrier(geometry)
 	for object in _objects:
 		if int(object.get_meta("physical_island", 0)) != 3:
 			continue
@@ -5997,6 +5996,26 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	set_meta("island_three_design", "approved low-poly prototype with five distinct quest landmarks")
 	set_meta("island_three_masterplan",
 		"arrival portico > three unique storm instruments > rain observatory > wisdom basilica > living tree cathedral")
+
+
+func _remove_island_three_route_barrier(geometry: Node3D) -> void:
+	# QuestGate_4 formerly placed a large violet slab between the Stormworks and
+	# the tree sanctuary. Progress remains save-driven, while the visible route
+	# and its collision now stay open as promised by the low-poly masterplan.
+	var removed_count := 0
+	for candidate in geometry.find_children("QuestGate_4", "AnimatableBody3D", true, false):
+		var gate := candidate as AnimatableBody3D
+		var barrier := gate.get_node_or_null("Barrier") as MeshInstance3D
+		if barrier != null:
+			barrier.visible = false
+			barrier.set_meta("island_three_purple_barrier_removed", true)
+			removed_count += 1
+		var collision := gate.get_node_or_null("CollisionShape3D") as CollisionShape3D
+		if collision != null:
+			collision.disabled = true
+		gate.set_meta("physical_barrier_removed", true)
+		gate.set_meta("route_remains_open", "05_thought_storm_arena>06_oldest_tree_sanctuary")
+	set_meta("island_three_route_barriers_removed", removed_count)
 
 
 func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
