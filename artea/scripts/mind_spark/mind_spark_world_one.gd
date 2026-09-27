@@ -217,6 +217,7 @@ func build_world() -> void:
 		load("res://scripts/mind_spark/island_two_memory_campus.gd").apply(self)
 		_finalize_quest_object_story_layout()
 		_redesign_island_three(geometry)
+		_unify_island_one_tree_and_quest_style()
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		# The optional station is deliberately the final standalone construction
 		# phase. It branches from Zone 05 and never participates in story routing.
@@ -4248,6 +4249,81 @@ func _build_island_one_science_art_garden(parent: Node3D) -> void:
 	# the garden read as scattered props rather than one coherent institution.
 	_build_living_light_atelier_architecture(parent)
 	_build_echo_garden_quest(parent)
+
+
+func _unify_island_one_tree_and_quest_style() -> void:
+	if _island_one_puzzle == null:
+		return
+	var style_ivory := _material(Color("eadfc8"), .52, Color("fff3d8"), .34)
+	var style_charcoal := _material(Color("263443"), .62, Color("214e60"), .18)
+	var style_cyan := _material(Color("38bfd0"), .26, Color("54e5f2"), 1.05)
+	var style_lavender := _material(Color("9173b5"), .38, Color("c39aef"), .48)
+	var tree := _island_one_puzzle.get_node_or_null(
+		"ScienceArtGarden/CognitiveLightTree") as Node3D
+	if tree != null:
+		tree.set_meta("design_revision", "unified_low_poly_light_tree_v43")
+		tree.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
+		tree.set_meta("quest_object_style_matched", true)
+		for candidate in tree.find_children("*", "MeshInstance3D", true, false):
+			var part := candidate as MeshInstance3D
+			var key := part.name.to_lower()
+			if "canopyobservationorbit" in key or "wisdomcrownhalo" in key \
+					or "rootgoldencollar" in key:
+				part.visible = false
+				part.set_meta("retired_for_low_poly_clarity", true)
+				continue
+			if part.mesh is SphereMesh:
+				var faceted := part.mesh.duplicate() as SphereMesh
+				faceted.radial_segments = 8
+				faceted.rings = 4
+				part.mesh = faceted
+			if "trunk" in key or "branch" in key or "structuralroot" in key:
+				part.material_override = style_ivory
+			elif "leaf" in key:
+				part.material_override = style_cyan \
+					if part.get_index() % 3 != 0 else style_lavender
+			elif "blossom" in key:
+				part.material_override = style_lavender \
+					if part.get_index() % 2 else style_cyan
+			elif "signalfibre" in key or "vein" in key or "crownray" in key \
+					or "crowncore" in key or "synapsepearl" in key:
+				part.material_override = style_cyan
+			elif "basin" in key:
+				part.material_override = style_ivory
+
+	var controls := _island_one_puzzle.get_node_or_null("PuzzleControls") as Node3D
+	if controls == null:
+		return
+	var styled_count := 0
+	for control_candidate in controls.get_children():
+		if not control_candidate is Node3D:
+			continue
+		var control := control_candidate as Node3D
+		var model := control.get_node_or_null("HeavenlyQuestInstrument") as Node3D
+		if model == null:
+			model = control.get_node_or_null("WeightPrismBenchmark") as Node3D
+		if model == null:
+			continue
+		control.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
+		model.set_meta("design_revision", "unified_low_poly_instrument_v43")
+		model.set_meta("tree_style_matched", true)
+		for mesh_candidate in model.find_children("*", "MeshInstance3D", true, false):
+			var mesh_part := mesh_candidate as MeshInstance3D
+			var style_key := mesh_part.name.to_lower()
+			if "lens" in style_key or "crystal" in style_key or "screen" in style_key \
+					or "light" in style_key or "energy" in style_key or "charge" in style_key \
+					or "core" in style_key or "prism" in style_key:
+				mesh_part.material_override = style_cyan
+			elif "card" in style_key or "echo" in style_key or "question" in style_key:
+				mesh_part.material_override = style_lavender
+			elif "mechanism" in style_key or "valve" in style_key or "gear" in style_key \
+					or "axle" in style_key or "pipe" in style_key:
+				mesh_part.material_override = style_charcoal
+			else:
+				mesh_part.material_override = style_ivory
+			mesh_part.set_meta("island_one_style_unified", true)
+		styled_count += 1
+	set_meta("island_one_styled_quest_object_count", styled_count)
 
 
 func _build_echo_garden_quest(parent: MindSparkIslandOnePuzzle) -> void:

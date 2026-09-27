@@ -28,15 +28,22 @@ func _run() -> void:
 	var puzzle := world.get_island_one_puzzle() as MindSparkIslandOnePuzzle
 	var controls := puzzle.get_node("PuzzleControls") as Node3D
 	for control_id: String in CONTROL_IDS:
-		var crown := controls.get_node(
-			"PuzzleControl_%s/QuestIdentityCrown" % control_id) as Node3D
+		var control := controls.get_node("PuzzleControl_%s" % control_id) as Node3D
+		var crown := control.get_node("QuestIdentityCrown") as Node3D
+		var art := control.get_node_or_null("HeavenlyQuestInstrument") as Node3D
+		if art == null:
+			art = control.get_node("WeightPrismBenchmark") as Node3D
+		assert(str(art.get_meta("design_revision", "")) == "unified_low_poly_instrument_v43")
+		assert(bool(art.get_meta("tree_style_matched", false)))
+		for styled_mesh in art.find_children("*", "MeshInstance3D", true, false):
+			assert((styled_mesh as MeshInstance3D).material_override != null,
+				"%s uses the shared Island 1 palette" % control_id)
 		if control_id == "weight_prism":
 			# Dedicated physical-balance regression covers the replacing GLB.
 			assert(crown.get_parent().has_node("WeightPrismBenchmark"))
 			continue
 		assert(crown.get_meta("design_revision") == "heavenly_kit_02")
 		assert(crown.get_meta("preserve_authored_nodes", false))
-		var art := crown.get_parent().get_node("HeavenlyQuestInstrument") as Node3D
 		var textured_surfaces := 0
 		for instance in art.find_children("*", "MeshInstance3D", true, false):
 			var mesh := (instance as MeshInstance3D).mesh

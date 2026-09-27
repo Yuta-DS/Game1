@@ -20,7 +20,17 @@ func _run() -> void:
 	var puzzle := world.get_island_one_puzzle() as MindSparkIslandOnePuzzle
 	var garden := puzzle.get_node("ScienceArtGarden") as Node3D
 	var tree := garden.get_node("CognitiveLightTree") as Node3D
+	assert(str(tree.get_meta("design_revision", "")) == "unified_low_poly_light_tree_v43")
+	assert(bool(tree.get_meta("quest_object_style_matched", false)))
 	assert(tree.find_children("PhyllotaxisLightLeaf_*", "MeshInstance3D", true, false).size() == 55)
+	var first_leaf := tree.get_node("PhyllotaxisLightLeaf_01") as MeshInstance3D
+	assert((first_leaf.mesh as SphereMesh).radial_segments == 8 \
+		and (first_leaf.mesh as SphereMesh).rings == 4,
+		"the Cognitive Light Tree uses the shared faceted low-poly silhouette")
+	for retired_orbit in ["CanopyObservationOrbitA", "CanopyObservationOrbitB",
+			"CanopyObservationOrbitC", "TreeWisdomCrownHalo"]:
+		assert(not (tree.get_node(retired_orbit) as MeshInstance3D).visible,
+			"decorative rings no longer separate the tree from the quest-object style")
 	assert(tree.find_children("TreeSignalFibre_*", "MeshInstance3D", true, false).size() == 36)
 	assert(tree.get_node("ElevatedTreeCrownLight").position.y >= 43.0)
 	assert(garden.find_children("GoldenAnglePavementPip_*", "MeshInstance3D", true, false).size() == 34)
