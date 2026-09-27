@@ -7,6 +7,8 @@ const SHOTS := [
 	{"name": "02_storm_court_and_three_landmarks", "eye": Vector3(220, 135, 260), "look": Vector3(440, 34, 0), "fov": 48.0},
 	{"name": "03_rain_harvest_observatory", "eye": Vector3(335, 105, 260), "look": Vector3(430, 38, 105), "fov": 45.0},
 	{"name": "04_reflection_court_and_oldest_tree", "eye": Vector3(520, 130, -250), "look": Vector3(650, 56, -55), "fov": 48.0},
+	{"name": "06_player_arrival", "eye": Vector3(300, 27, 28), "look": Vector3(420, 38, 0), "fov": 65.0},
+	{"name": "07_player_tree_garden", "eye": Vector3(602, 27, -20), "look": Vector3(660, 55, -68), "fov": 65.0},
 ]
 
 
@@ -29,27 +31,15 @@ func _capture() -> void:
 	for label in world.find_children("*", "Label3D", true, false):
 		(label as Label3D).visible = false
 
-	var environment_node := WorldEnvironment.new()
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("071126")
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("8fa9d0")
-	environment.ambient_light_energy = .52
-	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	environment_node.environment = environment
-	stage.add_child(environment_node)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, -42, 0)
-	sun.light_color = Color("fff0cf")
-	sun.light_energy = .92
-	sun.shadow_enabled = true
-	stage.add_child(sun)
-	var fill := DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(-28, 130, 0)
-	fill.light_color = Color("5edbf1")
-	fill.light_energy = .34
-	stage.add_child(fill)
+	# Use the real game's lighting, including the shared camera-local profile.
+	var containing := load("res://scenes/art_castle_floating_world.tscn").instantiate() as Node3D
+	for node_name in ["WorldEnvironment", "Sun", "FillLight"]:
+		var node := containing.get_node(node_name)
+		containing.remove_child(node)
+		node.owner = null
+		stage.add_child(node)
+	containing.free()
+	root.msaa_3d = Viewport.MSAA_4X
 	var camera := Camera3D.new()
 	camera.near = .5
 	camera.far = 5000.0
@@ -61,7 +51,7 @@ func _capture() -> void:
 		camera.position = shot.eye
 		camera.fov = float(shot.fov)
 		camera.look_at(shot.look, Vector3.UP)
-		for _frame in 4:
+		for _frame in 80:
 			await process_frame
 		_save_frame(str(shot.name))
 

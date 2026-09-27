@@ -5881,6 +5881,12 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var legacy_arena := storm_zone.get_node_or_null("BossArenaCollision") as MeshInstance3D
 	if legacy_arena != null:
 		legacy_arena.material_override = _materials.celestial_floor
+		# The legacy boss disc stood two metres above the shared floor, burying
+		# the new paths, planters and compass. Keep its mass level with the deck.
+		legacy_arena.position.y = -1.0
+		var arena_body := storm_zone.get_node_or_null("BossArenaCollisionCollision") as Node3D
+		if arena_body != null:
+			arena_body.position.y = -1.0
 		legacy_arena.set_meta("restyled_as", "IvoryStormworksCourt")
 
 	var arena_origin: Vector3 = ZONES[4].position
@@ -6069,6 +6075,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		sanctuary_zone)
 	_remove_island_three_route_barrier(geometry)
 	_unify_island_three_tree_and_quest_style(campus)
+	_finish_island_three_masonry(campus, geometry)
 	for object in _objects:
 		if int(object.get_meta("physical_island", 0)) != 3:
 			continue
@@ -6523,9 +6530,9 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 			var canopy := _add_sphere(cathedral,
 				"CanopyLeafMass_%02d_%02d" % [bough_index + 1, leaf_cluster_index + 1],
 				branch_end + leaf_offset,
-				Vector3(6.8 + float(leaf_cluster_index % 2) * 1.8,
-					2.8 + float((leaf_cluster_index + bough_index) % 3),
-					5.6 + float((leaf_cluster_index + 1) % 3)),
+				Vector3(11.0 + float(leaf_cluster_index % 2) * 2.8,
+					5.0 + float((leaf_cluster_index + bough_index) % 3),
+					10.0 + float((leaf_cluster_index + 1) % 3)),
 				_materials.shared_style_cyan \
 				if (leaf_cluster_index + bough_index) % 3 != 0 \
 				else _materials.shared_style_lavender)
@@ -6544,12 +6551,73 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 		Bricks.build_crystal(3.8, 11.0, .8, 6), _materials.shared_style_cyan)
 
 
+func _finish_island_three_masonry(campus: Node3D, geometry: Node3D) -> void:
+	var finishes := {}
+	for assembly_name in ["FusedSuperIsland_05_06", "IslandThreePerimeterRepairs"]:
+		var assembly := geometry.find_child(assembly_name, true, false)
+		if assembly != null:
+			_refine_island_one_scenery_node(assembly, finishes)
+	for candidate in campus.find_children("*", "MeshInstance3D", true, false):
+		var part := candidate as MeshInstance3D
+		var source := part.material_override as StandardMaterial3D
+		if source == null:
+			continue
+		var key := source.get_instance_id()
+		if not finishes.has(key):
+			var finish := source.duplicate() as StandardMaterial3D
+			finish.roughness = maxf(finish.roughness, .65)
+			finish.metallic = minf(finish.metallic, .12)
+			finish.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+			finish.emission_enabled = false
+			# Stone stays matte; the small lights remain visibly cyan by albedo.
+			finishes[key] = finish
+		part.material_override = finishes[key]
+	campus.set_meta("masonry_finish", "matte_non_emissive")
+
+
+func _build_island_three_paving(parent: Node3D, center: Vector3,
+		radius: float, district: String) -> void:
+	var paving := Node3D.new()
+	paving.name = district + "JointedStonePaving"
+	paving.set_meta("collision_policy", "flush finish over continuous foundation")
+	parent.add_child(paving)
+	var colors := [Color("c8bfa9"), Color("cfc5af"), Color("c1b8a4"), Color("d5cbb7")]
+	var materials: Array[StandardMaterial3D] = []
+	for color in colors:
+		var material := StandardMaterial3D.new()
+		material.albedo_color = color
+		material.roughness = .9
+		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		materials.append(material)
+	# Large masonry courses give the court human scale without luminous rings.
+	for course in 9:
+		var inner := float(course) * radius / 9.0 + .20
+		var outer := float(course + 1) * radius / 9.0 - .20
+		var divisions := maxi(12, 12 + course * 6)
+		for block in divisions:
+			var start := TAU * (float(block) + float(course % 2) * .5) / divisions + .001
+			var end := start + TAU / divisions - .002
+			var surface := SurfaceTool.new()
+			surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+			var a := Vector3(sin(start) * inner, 0, cos(start) * inner)
+			var b := Vector3(sin(end) * inner, 0, cos(end) * inner)
+			var c := Vector3(sin(end) * outer, 0, cos(end) * outer)
+			var d := Vector3(sin(start) * outer, 0, cos(start) * outer)
+			for vertex in [a, b, c, a, c, d]:
+				surface.set_normal(Vector3.UP)
+				surface.add_vertex(vertex)
+			_add_brick(paving, "Stone_%02d_%02d" % [course, block],
+				center + Vector3.UP * .025, surface.commit(),
+				materials[(course + block % 3) % materials.size()])
+
+
 func _build_island_three_matched_environment(parent: Node3D, arena_center: Vector3,
 		sanctuary_center: Vector3, arrival_center: Vector3,
 		anchor_offsets: Array, basin_at: Vector3) -> void:
 	# Islands One and Two read as finished places because their gameplay objects sit
 	# inside repeated civic bays, mature gardens and a layered perimeter. Give the
 	# third island that same hierarchy without narrowing any quest approach.
+	_materials.island_three_sage = _material(Color("71957b"), .88)
 	var environment := Node3D.new()
 	environment.name = "IslandThreeMatchedEnvironment"
 	environment.set_meta("design_reference", "Island One research gardens + Island Two observatory terraces")
@@ -6558,6 +6626,9 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 	environment.set_meta("no_gold_lines_or_route_barriers", true)
 	environment.set_meta("preserve_authored_nodes", true)
 	parent.add_child(environment)
+
+	_build_island_three_paving(environment, arena_center, 164.0, "Storm")
+	_build_island_three_paving(environment, sanctuary_center, 135.0, "Sanctuary")
 
 	var storm_gallery := Node3D.new()
 	storm_gallery.name = "StormworksPerimeterGardenGallery"
@@ -6645,8 +6716,16 @@ func _build_island_three_environment_bay(parent: Node3D, bay_name: String,
 		Vector3(15.8, .28, 8.2), _materials.shared_style_charcoal, false, tangent_yaw)
 	var radial := Vector3(sin(radial_angle), 0, cos(radial_angle))
 	var tangent := Vector3(radial.z, 0, -radial.x)
+	_add_box(bay, "RecessedPlantingSoil", center + Vector3.UP * .39,
+		Vector3(15.2, .10, 7.5), _materials.floor_dark, false, tangent_yaw)
+	for shrub_index in 5:
+		var shrub := _add_sphere(bay, "SageGroundCover_%02d" % shrub_index,
+			center + tangent * float(shrub_index - 2) * 2.7 + radial * 2.4 + Vector3.UP * 1.15,
+			Vector3(1.7, .9, 1.4), _materials.island_three_sage)
+		(shrub.mesh as SphereMesh).radial_segments = 7
+		(shrub.mesh as SphereMesh).rings = 4
 	_build_island_three_garden_tree(bay, "LivingGardenTree", center + radial * 1.0,
-		.82 + float(variant % 3) * .08, variant)
+		1.25 + float(variant % 3) * .12, variant)
 	for marker_side in [-1.0, 1.0]:
 		var marker_at := center + tangent * float(marker_side) * 6.8 + Vector3.UP * 1.4
 		_add_brick(bay, "GardenMarker%s" % ("Left" if marker_side < 0 else "Right"),
@@ -6694,7 +6773,7 @@ func _build_island_three_garden_tree(parent: Node3D, tree_name: String,
 			var crown_at := branch_end + Vector3(
 				(-1.0 if crown_index == 0 else 1.0) * 1.4 * tree_scale,
 				float(crown_index) * .7, 0)
-			var canopy_material: Material = _materials.bio_leaf_panel_alt \
+			var canopy_material: Material = _materials.island_three_sage \
 				if (variant + branch_index + crown_index) % 3 != 0 \
 				else _materials.shared_style_lavender
 			var canopy := _add_sphere(tree,
@@ -6727,16 +6806,22 @@ func _build_island_three_garden_pavilion(parent: Node3D, pavilion_name: String,
 			else _materials.shared_style_lavender)
 	_add_cylinder(pavilion, "IvoryPavilionEave", center + Vector3.UP * 11.7,
 		11.6, .72, _materials.shared_style_ivory, false, 16)
-	var dome := _add_sphere(pavilion, "FacetedPavilionDome", center + Vector3.UP * 14.0,
-		Vector3(10.8, 3.8, 10.8), _materials.shared_style_cyan)
+	var dome := _add_sphere(pavilion, "FacetedPavilionDome", center + Vector3.UP * 14.4,
+		Vector3(10.8, 7.2, 10.8), _materials.shared_style_cyan)
 	(dome.mesh as SphereMesh).radial_segments = 12
 	(dome.mesh as SphereMesh).rings = 5
-	_add_brick(pavilion, "PavilionCrownCrystal", center + Vector3.UP * 19.2,
+	_add_brick(pavilion, "PavilionCrownCrystal", center + Vector3.UP * 24.0,
 		Bricks.build_crystal(1.1, 4.6, .3, 6),
 		_materials.shared_style_lavender if variant % 2 == 0 \
 		else _materials.shared_style_cyan)
 	_build_island_three_garden_tree(pavilion, "PavilionLivingTree", center,
 		.72, variant + 40)
+	for child in pavilion.get_children():
+		if child is Node3D:
+			child.position -= center
+	pavilion.position = center
+	pavilion.scale = Vector3(1.55, 2.0, 1.55)
+
 
 
 func _build_island_three_underside_accents(parent: Node3D, arena_center: Vector3,

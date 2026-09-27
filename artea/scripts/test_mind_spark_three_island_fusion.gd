@@ -166,6 +166,12 @@ func _run() -> void:
 	assert(island_three.get_node("StormworksGrandCourt").find_children(
 		"StormCourtGarden_*", "Node3D", false, false).size() == 8)
 	var storm_zone := geometry.get_node("05ThoughtStormArena") as Node3D
+	assert(is_equal_approx((storm_zone.get_node("BossArenaCollision") as Node3D).position.y, -1.0),
+		"legacy boss floor must not bury the new paving and architecture")
+	assert(island_three.get_meta("masonry_finish") == "matte_non_emissive")
+	assert(not (island_three.get_node("IslandThreeStormDeck") as MeshInstance3D).material_override.emission_enabled,
+		"large masonry surfaces reflect light rather than washing out the courtyard")
+
 	for retired_ring in storm_zone.find_children("LayeredStormRing_*", "MeshInstance3D", true, false):
 		assert(not retired_ring.visible, "the oversized legacy vortex must remain retired")
 	assert(str((storm_zone.get_node("BossArenaCollision") as MeshInstance3D).get_meta(
@@ -213,10 +219,10 @@ func _run() -> void:
 	assert(island_three.has_node("OldestTreeLivingCathedral/GreatBough_01A"))
 	var shared_palette: Dictionary = world.get("_materials")
 	assert((island_three.get_node("OldestTreeLivingCathedral/LivingHeartwood") as MeshInstance3D).material_override \
-		== shared_palette.shared_style_ivory,
+		.albedo_color == shared_palette.shared_style_ivory.albedo_color,
 		"the Oldest Tree uses the same ivory structure material as Island One's light tree")
 	assert((island_three.get_node("OldestTreeLivingCathedral/CanopyLeafMass_01_01") as MeshInstance3D).material_override \
-		in [shared_palette.shared_style_cyan, shared_palette.shared_style_lavender],
+		.albedo_color in [shared_palette.shared_style_cyan.albedo_color, shared_palette.shared_style_lavender.albedo_color],
 		"the Oldest Tree canopy uses Island One's cyan and lavender light foliage")
 	assert(island_three.has_node("LowPolyUndersideAccents/EmbeddedAetherCrystal_01"))
 	var return_arch_left := geometry.get_node(

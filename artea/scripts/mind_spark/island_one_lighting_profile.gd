@@ -39,7 +39,7 @@ func _process(delta: float) -> void:
 		for station in world.get_quest_objects():
 			var station_distance: float = world.to_local(camera.global_position).distance_to(world.to_local(station.global_position))
 			target = maxf(target, 1.0-smoothstep(34.0,54.0,station_distance))
-		for id in ["01_world_gate_landing", "02_living_network_forest", "03_constellation_court", "04_hope_path_ridge"]:
+		for id in ["01_world_gate_landing", "02_living_network_forest", "03_constellation_court", "04_hope_path_ridge", "05_thought_storm_arena", "06_oldest_tree_sanctuary"]:
 			var center: Vector3 = world.get_zone_position(id)
 			var view_position: Vector3 = world.to_local(camera.global_position)
 			var direction: Vector3 = world.global_transform.basis.inverse() * -camera.global_basis.z
@@ -47,7 +47,7 @@ func _process(delta: float) -> void:
 				var t := (center.y-view_position.y)/direction.y
 				if t > 0:
 					view_position += direction*t
-			var radius := float({"01_world_gate_landing":125.0, "02_living_network_forest":155.0, "03_constellation_court":150.0, "04_hope_path_ridge":122.0}[id])
+			var radius := float({"01_world_gate_landing":125.0, "02_living_network_forest":155.0, "03_constellation_court":150.0, "04_hope_path_ridge":122.0, "05_thought_storm_arena":175.0, "06_oldest_tree_sanctuary":145.0}[id])
 			var edge_distance := Vector2(view_position.x-center.x,view_position.z-center.z).length()-radius
 			target = maxf(target,1.0-smoothstep(0,45,edge_distance))
 	if target <= 0.0 and _profile == null:

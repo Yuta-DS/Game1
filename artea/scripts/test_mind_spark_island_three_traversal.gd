@@ -39,6 +39,20 @@ func _run() -> void:
 	var player := PlayerScene.instantiate() as CharacterBody3D
 	root.add_child(player)
 	player.set_physics_process(false)
+	# Cross the former two-metre legacy arena lip with the real capsule.
+	# This fails if only the visible floor moves while its collider stays raised.
+	var rim_direction := Vector3(sin(PI + PI / 20.0), 0, cos(PI + PI / 20.0))
+	player.global_position = world.to_global(Vector3(430, 19.35, 25) + rim_direction * 159.0)
+	await physics_frame
+	var rim_hit := player.move_and_collide(-rim_direction * 7.0)
+	if rim_hit != null:
+		print("ARENA RIM HIT: ", rim_hit.get_collider().get_path(), " at ", rim_hit.get_position())
+		quit(1)
+		return
+	assert(rim_hit == null, "the arena rim must be level and traversable without jumping")
+	var arena_landing := player.move_and_collide(Vector3.DOWN * 2.0)
+	assert(arena_landing != null, "the corrected arena floor supports the production capsule")
+
 	for object in world.get_quest_objects():
 		if int(object.get_meta("physical_island", 0)) != 3:
 			continue
