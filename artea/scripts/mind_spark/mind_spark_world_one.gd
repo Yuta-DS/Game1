@@ -7022,11 +7022,13 @@ func _install_island_one_static_collisions(geometry: Node3D) -> void:
 		"02LivingNetworkForest",
 		"ThreeFusedSuperIslands/FusedSuperIsland_01_02",
 		"IslandOnePerimeterRepairs",
-		"IslandOneResearchCampus",
 	]:
 		var root_node := geometry.get_node_or_null(path)
 		if root_node != null:
 			roots.append(root_node)
+	var campus_root := get_node_or_null("IslandOneResearchCampus")
+	if campus_root != null:
+		roots.append(campus_root)
 
 	var seen := {}
 	var collision_count := 0
@@ -7059,11 +7061,12 @@ func _is_solid_island_one_mesh(mesh_instance: MeshInstance3D, collision_root: No
 		return false
 	if mesh_instance.has_meta("detail_packet") or mesh_instance.has_meta("detail_orbit_speed"):
 		return false
-	# A scripted or physics-owned ancestor moves independently. Those objects
-	# already own their runtime collision and must not receive a frozen duplicate.
+	# A physics-owned ancestor already resolves player contact. Area3D ancestors
+	# are interaction sensors rather than solid bodies, so their visible cabinets
+	# and instruments still need the Island One static collision layer.
 	var ancestor := mesh_instance.get_parent()
 	while ancestor != null and ancestor != collision_root.get_parent():
-		if ancestor is CollisionObject3D or ancestor.get_script() != null:
+		if ancestor is PhysicsBody3D:
 			return false
 		ancestor = ancestor.get_parent()
 	# Primitive builders put an optimized body beside the visible mesh.

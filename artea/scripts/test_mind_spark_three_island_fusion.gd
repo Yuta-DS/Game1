@@ -1,6 +1,7 @@
 extends SceneTree
 
 const WorldScene := preload("res://scenes/mind_spark/mind_spark_world_one.tscn")
+const PlayerScene := preload("res://scenes/player_3d.tscn")
 
 
 func _init() -> void:
@@ -105,7 +106,7 @@ func _run() -> void:
 		"the grey barrier beside the Island One garden trees is absent")
 	var island_one_collisions := geometry.get_node("IslandOneVisibleObjectCollisions") as StaticBody3D
 	assert(str(island_one_collisions.get_meta("mass_class", "")) == "infinite_static_mass")
-	assert(int(island_one_collisions.get_meta("collision_shape_count", 0)) > 0,
+	assert(int(island_one_collisions.get_meta("collision_shape_count", 0)) > 1000,
 		"Island One visible structures have static collision and cannot be walked through")
 	var visible_shape_node := island_one_collisions.get_child(0) as CollisionShape3D
 	var visible_faces := (visible_shape_node.shape as ConcavePolygonShape3D).get_faces()
@@ -120,6 +121,39 @@ func _run() -> void:
 	assert(visible_hits.any(func(hit: Dictionary) -> bool:
 		return hit.get("collider") == island_one_collisions),
 		"a player-layer probe is stopped by Island One visible-object collision")
+	# Use the production character capsule against a scripted quest machine. This
+	# guards the exact regression where those visuals rendered correctly but were
+	# omitted from the static scenery pass and could be walked through.
+	var quest_machine_shape: CollisionShape3D
+	for candidate in island_one_collisions.get_children():
+		if "/PuzzleControls/PuzzleControl_colour_prism/" \
+				in str(candidate.get_meta("source_mesh", "")):
+			quest_machine_shape = candidate as CollisionShape3D
+			break
+	assert(quest_machine_shape != null,
+		"scripted Island One quest machines are included in static collision")
+	var machine_faces := (quest_machine_shape.shape as ConcavePolygonShape3D).get_faces()
+	var machine_face_center := Vector3.ZERO
+	var machine_face_normal := Vector3.ZERO
+	for face_index in range(0, machine_faces.size(), 3):
+		var a := quest_machine_shape.to_global(machine_faces[face_index])
+		var b := quest_machine_shape.to_global(machine_faces[face_index + 1])
+		var c := quest_machine_shape.to_global(machine_faces[face_index + 2])
+		var candidate_normal := (b - a).cross(c - a).normalized()
+		if absf(candidate_normal.y) < 0.25:
+			machine_face_center = (a + b + c) / 3.0
+			machine_face_normal = Vector3(candidate_normal.x, 0, candidate_normal.z).normalized()
+			break
+	assert(not machine_face_normal.is_zero_approx())
+	var production_player := PlayerScene.instantiate() as CharacterBody3D
+	root.add_child(production_player)
+	production_player.set_physics_process(false)
+	production_player.global_position = machine_face_center + machine_face_normal * 2.0
+	await physics_frame
+	var player_collision := production_player.move_and_collide(-machine_face_normal * 4.0)
+	assert(player_collision != null and player_collision.get_collider() == island_one_collisions,
+		"the production player capsule cannot walk through an Island One quest machine")
+	production_player.queue_free()
 	print("MindSparkThreeIslandFusion: PASS — three fused foundations preserve all six quest districts")
 	world.queue_free()
 	await process_frame
