@@ -119,7 +119,7 @@ func _run() -> void:
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
 	var island_three := geometry.get_node("IslandThreeCivicSanctuary") as Node3D
-	assert(str(island_three.get_meta("design_revision", "")) == "celestial_civic_storm_sanctuary_v3")
+	assert(str(island_three.get_meta("design_revision", "")) == "living_quest_landmarks_v4")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
 	assert(island_three.has_node("StormworksArrivalPortico/IvoryArrivalTerraceCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/AetherArrivalArch"))
@@ -128,11 +128,31 @@ func _run() -> void:
 		assert(not retired_ring.visible, "the oversized legacy vortex must remain retired")
 	assert(str((storm_zone.get_node("BossArenaCollision") as MeshInstance3D).get_meta(
 		"restyled_as", "")) == "IvoryStormworksCourt")
-	for anchor_index in 3:
-		assert(island_three.has_node("StormworksGrandCourt/ShieldPavilion_%02d/IvoryPavilionFloorCollision" % (anchor_index + 1)))
-	assert(island_three.has_node("CalmRainCloister/IvoryRainCourtCollision"))
+	var quest_landmarks := PackedStringArray([
+		"StormLensTower", "ResonanceForge", "LightningArchive",
+	])
+	for landmark_name in quest_landmarks:
+		assert(island_three.has_node("StormworksGrandCourt/%s/SolidQuestTerraceCollision" % landmark_name),
+			"each Warden anchor has distinct, solid quest architecture")
+	assert(island_three.get_node_or_null("CalmRainCloister") == null,
+		"the Calm-Rain Cloister is removed from the recovery sequence")
+	assert(island_three.has_node("RainHarvestObservatory/RainCollectorTerraceCollision"))
+	assert(island_three.has_node("RainHarvestObservatory/RainCrystalReservoir"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/OldestTreeReflectionApseCollision"))
+	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMemorySeed"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"))
+	assert(island_three.has_node("OldestTreeLivingCathedral/LivingHeartwoodCollision"),
+		"the redesigned Oldest Tree is a solid living landmark")
+	assert(island_three.has_node("OldestTreeLivingCathedral/GreatBough_01A"))
+	assert(int(island_three.get_meta("gold_rings_removed", 0)) > 0)
+	assert(int(island_three.get_meta("visible_gold_ring_count", -1)) == 0,
+		"Island 3 contains no visible gold torus geometry")
+	assert(str(island_three.get_meta("gold_ring_policy", "")) \
+		== "no visible gold torus geometry")
+	for removed_ring in geometry.find_children("*", "MeshInstance3D", true, false):
+		if bool(removed_ring.get_meta("island_three_gold_ring_removed", false)):
+			assert(not (removed_ring as MeshInstance3D).visible,
+				"all Island 3 gold ring geometry remains hidden")
 	assert(world.get_collectibles().size() == 2)
 	assert(world.get_island_one_puzzle() != null)
 	assert(world.get_warden() != null)
