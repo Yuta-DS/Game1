@@ -119,7 +119,7 @@ func _run() -> void:
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
 	var island_three := geometry.get_node("IslandThreeCivicSanctuary") as Node3D
-	assert(str(island_three.get_meta("design_revision", "")) == "three_island_environment_match_v8")
+	assert(str(island_three.get_meta("design_revision", "")) == "composed_sanctuary_v9")
 	assert(int(island_three.get_meta("island_one_style_matched_quest_objects", 0)) == 5,
 		"all five Island 3 quest objects use Island One's production style family")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))

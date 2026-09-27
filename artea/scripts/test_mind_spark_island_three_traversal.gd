@@ -77,6 +77,17 @@ func _run() -> void:
 		return hit.get("collider") == heartwood),
 		"the production player capsule cannot walk through the Oldest Tree")
 
+	# New garden furniture is visibly solid, and the clear boss arena stays empty.
+	var gardens := campus.get_node("IslandThreeMatchedEnvironment")
+	for garden_index in 4:
+		var bed := gardens.get_node("PlantedCourt_%02d/IvoryPlantingBedCollision" % (garden_index + 1)) as StaticBody3D
+		player.global_position = bed.global_position + Vector3(0, 1.0, -12.0)
+		await physics_frame
+		var bed_hit := player.move_and_collide(Vector3(0, 0, 10.0))
+		assert(bed_hit != null, "the planted courtyard has solid visible furniture")
+		assert(bed.global_position.distance_to(world.to_global(Vector3(430, 18, 25))) > 65.0,
+			"new planting stays outside the Warden movement space")
+
 	var state_paths := [
 		"StormworksGrandCourt/StormLensTower/CompletionStateVisuals",
 		"StormworksGrandCourt/ResonanceForge/CompletionStateVisuals",

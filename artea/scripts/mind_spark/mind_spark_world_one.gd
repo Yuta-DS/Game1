@@ -5854,7 +5854,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "three_island_environment_match_v8")
+	campus.set_meta("design_revision", "composed_sanctuary_v9")
 	campus.set_meta("architectural_language",
 		"Island One and Two layered ivory terraces, garden arcades, charcoal machinery, cyan and lavender light, faceted living trees")
 	campus.set_meta("matches_previous_islands", true)
@@ -6134,7 +6134,7 @@ func _unify_island_three_tree_and_quest_style(campus: Node3D) -> void:
 		var visual_root := object.get_node_or_null("VisualRoot") as Node3D
 		if visual_root == null:
 			continue
-		visual_root.scale = Vector3.ONE * 2.7
+		visual_root.scale = Vector3.ONE * 1.25
 		object.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
 		object.set_meta("island_one_scale_matched", true)
 		for mesh_candidate in visual_root.find_children("*", "MeshInstance3D", true, false):
@@ -6273,27 +6273,27 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 	var facing := operator_direction.normalized()
 	if facing.is_zero_approx():
 		facing = Vector3.FORWARD
-	var cabinet_at := center - facing * 5.6
+	var cabinet_at := center + facing * 5.6
 	var yaw := atan2(facing.x, facing.z)
 	_add_cylinder(instrument, "IvoryInstrumentPlinth", center + Vector3.UP * .45,
 		6.5, .9, _materials.shared_style_ivory, true, 16)
 	_add_cylinder(instrument, "CharcoalInstrumentFoot", center + Vector3.UP * 1.05,
 		5.5, .38, _materials.shared_style_charcoal, false, 16)
-	_add_box(instrument, "IvoryInstrumentCabinet", cabinet_at + Vector3.UP * 5.0,
-		Vector3(7.2, 8.0, 3.2), _materials.shared_style_ivory, true, yaw)
+	_add_box(instrument, "IvoryInstrumentCabinet", cabinet_at + Vector3.UP * 2.8,
+		Vector3(6.4, 3.6, 3.2), _materials.shared_style_ivory, true, yaw)
 	_add_box(instrument, "CharcoalInstrumentInset",
-		cabinet_at + facing * 1.64 + Vector3.UP * 5.0,
-		Vector3(5.7, 5.8, .24), _materials.shared_style_charcoal, false, yaw)
-	var dial_at := cabinet_at + facing * 1.82 + Vector3.UP * 7.0
+		cabinet_at + facing * 1.64 + Vector3.UP * 2.8,
+		Vector3(5.2, 2.5, .24), _materials.shared_style_charcoal, false, yaw)
+	var dial_at := cabinet_at + facing * 1.82 + Vector3.UP * 3.0
 	var dial := _add_cylinder(instrument, "CyanInstrumentDial", dial_at,
-		2.45, .34, _materials.shared_style_cyan, false, 16)
+		1.15, .34, _materials.shared_style_cyan, false, 16)
 	dial.rotation = Vector3(PI * .5, yaw, 0)
 	var dial_frame := _add_torus(instrument, "IvoryInstrumentDialFrame", dial_at,
-		2.65, 3.05, _materials.shared_style_ivory,
+		1.25, 1.5, _materials.shared_style_ivory,
 		Vector3(90, rad_to_deg(yaw), 0))
 	dial_frame.set_meta("decorative_ring_policy", "ivory machine frame; no gold")
 	_add_brick(instrument, "InstrumentCrownCrystal",
-		cabinet_at + Vector3.UP * 10.4,
+		cabinet_at + Vector3.UP * 5.0,
 		Bricks.build_crystal(1.0, 3.0, .28, 6), accent)
 	var side_axis := Vector3(facing.z, 0, -facing.x)
 	for cell_side in [-1.0, 1.0]:
@@ -6341,8 +6341,9 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 		for sight_index in 3:
 			var sight_angle := TAU * float(sight_index) / 3.0
 			var sight_center := center + Vector3.UP * (15.0 + sight_index * 2.5)
-			var sight := _add_cylinder(landmark, "LensSightFrame_%02d" % (sight_index + 1),
-				sight_center, 4.8 + sight_index * .8, .34, _materials.floor_dark, false, 8)
+			var sight := _add_torus(landmark, "IvorySightFrame_%02d" % (sight_index + 1),
+				sight_center, 4.8 + sight_index * .8, 5.35 + sight_index * .8,
+				_materials.shared_style_ivory, Vector3.ZERO)
 			sight.rotation = Vector3(PI * .5, sight_angle, 0)
 			sight.set_meta("rotating_instrument", true)
 	elif landmark_index == 1:
@@ -6359,6 +6360,12 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 		_add_cable_between(landmark, "ForgeLintel",
 			center + Vector3(-10, 10.5, 0), center + Vector3(10, 10.5, 0),
 			.9, .9, _materials.floor_dark, 8)
+		for side in [-1.0, 1.0]:
+			_add_cable_between(landmark, "IvoryForgePediment_%s" % side,
+				center + Vector3(side * 11, 11, 0), center + Vector3(0, 20, 0),
+				1.5, 1.0, _materials.shared_style_ivory, 8)
+		_add_brick(landmark, "LavenderForgeKeystone", center + Vector3.UP * 19.5,
+			Bricks.build_crystal(1.8, 4.0, .6, 6), _materials.shared_style_lavender)
 		_add_sphere(landmark, "SuspendedResonanceCore", center + Vector3.UP * 7.0,
 			Vector3(2.6, 3.6, 2.6), _materials.island_violet_energy)
 		for pylon_index in 4:
@@ -6382,9 +6389,6 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 			_add_box(landmark, "ArchiveGlyph_%02d" % (fin_index + 1),
 				fin_at + Vector3(-side * .78, 0, 0), Vector3(.12, 7.0, 1.2),
 				_materials.arrival_glass)
-		_add_cable_between(landmark, "ArchiveLightningBridge",
-			center + Vector3(-9, 14, -8), center + Vector3(9, 17, 8),
-			.42, .20, _materials.island_cyan, 6)
 		_add_brick(landmark, "ArchiveMemoryShard", center + Vector3.UP * 9.0,
 			Bricks.build_crystal(2.2, 6.0, .5, 6), _materials.island_cyan)
 	var completion_visuals := Node3D.new()
@@ -6505,10 +6509,10 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 			start + Vector3.UP * .8, finish + Vector3.UP * .35,
 			.26, .09, _materials.shared_style_cyan, 8)
 	# Five great boughs form an uneven nave and pull the silhouette toward the basilica.
-	var bough_lengths := [30.0, 38.0, 33.0, 42.0, 29.0]
-	var bough_heights := [67.0, 74.0, 70.0, 78.0, 72.0]
+	var bough_lengths := [24.0, 32.0, 28.0, 35.0, 26.0]
+	var bough_heights := [63.0, 72.0, 68.0, 77.0, 70.0]
 	for bough_index in 5:
-		var angle := -1.1 + float(bough_index) * .58
+		var angle := -.8 + float(bough_index) * TAU / 5.0
 		var radial := Vector3(sin(angle), 0, cos(angle))
 		var branch_start := base + Vector3(0, 43.0 + bough_index * 1.8, 0)
 		var branch_mid := base + radial * (float(bough_lengths[bough_index]) * .48) \
@@ -6530,9 +6534,9 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 			var canopy := _add_sphere(cathedral,
 				"CanopyLeafMass_%02d_%02d" % [bough_index + 1, leaf_cluster_index + 1],
 				branch_end + leaf_offset,
-				Vector3(11.0 + float(leaf_cluster_index % 2) * 2.8,
-					5.0 + float((leaf_cluster_index + bough_index) % 3),
-					10.0 + float((leaf_cluster_index + 1) % 3)),
+				Vector3(23.0 + float(leaf_cluster_index % 2) * 4.0,
+					10.0 + float((leaf_cluster_index + bough_index) % 3) * 1.6,
+					21.0 + float((leaf_cluster_index + 1) % 3) * 2.0),
 				_materials.shared_style_cyan \
 				if (leaf_cluster_index + bough_index) % 3 != 0 \
 				else _materials.shared_style_lavender)
@@ -6700,6 +6704,41 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 			pavilion_centers[pavilion_index], pavilion_index)
 	pavilion_gallery.set_meta("pavilion_count", pavilion_centers.size())
 	environment.set_meta("total_environment_bays", storm_bay_count + sanctuary_bay_count)
+	var garden_offsets: Array[Vector3] = [Vector3(-51, 0, -66), Vector3(51, 0, -66),
+		Vector3(-45, 0, 76), Vector3(45, 0, 76)]
+	for garden_index in garden_offsets.size():
+		_build_island_three_planted_room(environment, arena_center + garden_offsets[garden_index], garden_index)
+
+
+
+func _build_island_three_planted_room(parent: Node3D, center: Vector3, index: int) -> void:
+	var garden := Node3D.new()
+	garden.name = "PlantedCourt_%02d" % (index + 1)
+	garden.set_meta("clear_boss_radius_m", 48.0)
+	parent.add_child(garden)
+	# Small, solid planting islands frame the circulation, never cross it.
+	_add_box(garden, "IvoryPlantingBed", center + Vector3.UP * .6,
+		Vector3(22, 1.2, 14), _materials.shared_style_ivory, true)
+	_add_box(garden, "RecessedEarth", center + Vector3.UP * 1.22,
+		Vector3(20.4, .12, 12.4), _materials.floor_dark)
+	for shrub_index in 9:
+		var shrub_at := center + Vector3(float(shrub_index % 3 - 1) * 6.2,
+			2.3, float(shrub_index / 3 - 1) * 3.5)
+		var shrub := _add_sphere(garden, "PlantingMass_%02d" % shrub_index,
+			shrub_at, Vector3(6.0, 2.5, 4.5), _materials.island_three_sage)
+		(shrub.mesh as SphereMesh).radial_segments = 7
+		(shrub.mesh as SphereMesh).rings = 3
+	_build_island_three_garden_tree(garden, "ShadeTree", center + Vector3(-5, 1.2, 0), 2.4, index)
+	_build_island_three_garden_tree(garden, "CompanionTree", center + Vector3(6, 1.2, 2), 1.7, index + 2)
+	# Benches sit outside the bed; their visible seats and feet are solid.
+	for side in [-1.0, 1.0]:
+		var seat_at := center + Vector3(side * 7, 1.1, -10)
+		_add_box(garden, "IvoryBench_%s" % side, seat_at,
+			Vector3(7, .65, 2.4), _materials.shared_style_ivory, true)
+		for foot in [-1.0, 1.0]:
+			_add_box(garden, "BenchFoot_%s_%s" % [side, foot],
+				seat_at + Vector3(foot * 2.3, -.65, 0), Vector3(.8, 1.1, 1.8),
+				_materials.shared_style_charcoal, true)
 
 
 func _build_island_three_environment_bay(parent: Node3D, bay_name: String,
@@ -6778,7 +6817,7 @@ func _build_island_three_garden_tree(parent: Node3D, tree_name: String,
 				else _materials.shared_style_lavender
 			var canopy := _add_sphere(tree,
 				"GardenCanopy_%02d_%02d" % [branch_index + 1, crown_index + 1],
-				crown_at, Vector3(2.7, 1.15, 2.25) * tree_scale, canopy_material)
+				crown_at, Vector3(5.8, 3.2, 5.0) * tree_scale, canopy_material)
 			(canopy.mesh as SphereMesh).radial_segments = 7
 			(canopy.mesh as SphereMesh).rings = 4
 
