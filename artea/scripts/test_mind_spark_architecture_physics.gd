@@ -98,8 +98,8 @@ func _run() -> void:
 			_fail("%s has no authored procedural surface texture" % zone_id)
 			return
 	var story_route := geometry.get_node("MainStoryCircuitRoute") as Node3D
-	if _story_route_collision_count(story_route) != 8:
-		_fail("four constructed links need eight walkway legs; route 01 uses the fused foundation")
+	if _story_route_collision_count(story_route) != 6:
+		_fail("three constructed links need six walkway legs; routes 01 and 05 use fused foundations")
 		return
 	var station := geometry.get_node("OptionalCompletedWorldStationSpur") as Node3D
 	if station.visible or bool(station.get_meta("blocks_story_route")):

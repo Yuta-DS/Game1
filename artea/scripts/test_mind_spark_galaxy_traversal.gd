@@ -41,8 +41,8 @@ func _run() -> void:
 			_fail("%s does not retain a physical floor" % zone_id)
 			return
 	var route := world.get_node("WorldOneGeometry/MainStoryCircuitRoute") as Node3D
-	if _story_route_collision_count(route) != 8:
-		_fail("four constructed story links must have eight collision-backed legs; route 01 uses the fused foundation")
+	if _story_route_collision_count(route) != 6:
+		_fail("three constructed links must have six collision-backed legs; routes 01 and 05 use fused foundations")
 		return
 	var return_gate := world.get_node("WorldOneGeometry/01WorldGateLanding/EntryWorldGate") as MindSparkWorldGate
 	if not return_gate.teleport_player(player):

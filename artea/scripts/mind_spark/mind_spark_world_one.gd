@@ -1929,7 +1929,6 @@ func _build_main_route(parent: Node3D) -> void:
 	route.set_meta("internal_promenade_pairs", PackedStringArray([
 		"01_world_gate_landing>02_living_network_forest",
 		"03_constellation_court>04_hope_path_ridge",
-		"05_thought_storm_arena>06_oldest_tree_sanctuary",
 	]))
 	route.set_meta("external_bridge_pairs", PackedStringArray([
 		"02_living_network_forest>03_constellation_court",
@@ -1981,6 +1980,12 @@ func _build_main_route(parent: Node3D) -> void:
 			# foundation. Route 01 therefore owns no duplicate bridge or deck: its
 			# progression is a physical threshold across the existing promenade.
 			_build_island_one_heavenly_star_gate(route, start, finish, horizontal)
+			continue
+		if index == 4:
+			# Districts 05 and 06 already share a collision-backed ivory saddle.
+			# The former grey-railed Route 05 duplicated that walkable surface and
+			# cluttered the Oldest Tree court, so this connection now uses only the
+			# fused foundation and its existing quest progression gate.
 			continue
 		_add_circuit_walkway(route, "CircuitRoute_%02d_A" % (index + 1), start, bend, 28.0)
 		_add_circuit_walkway(route, "CircuitRoute_%02d_B" % (index + 1), bend, finish, 28.0)

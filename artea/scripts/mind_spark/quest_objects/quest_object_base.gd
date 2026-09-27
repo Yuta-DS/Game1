@@ -681,6 +681,8 @@ func _attach_blender_model(kind: int) -> void:
 		# Match the former two-metre gameplay prop while retaining source detail.
 		imported.scale = Vector3.ONE * 0.30
 	visual_root.add_child(imported)
+	if kind == Definition.ObjectKind.IDENTITY_REFLECTION_MIRROR:
+		_install_identity_reflection_collision(imported)
 	if family:
 		imported.set_meta("memory_style_family", true)
 		set_meta("preserve_authored_nodes", true)
@@ -716,6 +718,44 @@ func _attach_blender_model(kind: int) -> void:
 	set_meta("blender_model_path", path)
 	set_meta("blender_lod", "LOD0")
 	set_meta("blender_rendering", true)
+
+
+func _install_identity_reflection_collision(imported: Node3D) -> void:
+	# Prefer convex UCX geometry when the selected Blender variant includes it.
+	# The memory-style World One mirror does not, so it receives a compact box
+	# around the reflective frame. Previously neither variant created physics,
+	# which let the player walk through the finished object by the Oldest Tree.
+	var proxy_count := 0
+	for proxy_node in imported.find_children("UCX_*", "MeshInstance3D", true, false):
+		var proxy := proxy_node as MeshInstance3D
+		if proxy.mesh == null:
+			continue
+		var body := StaticBody3D.new()
+		body.name = "%sCollision" % str(proxy.name).trim_prefix("UCX_")
+		body.collision_layer = 1
+		body.collision_mask = 1
+		proxy.add_child(body)
+		var shape := CollisionShape3D.new()
+		shape.name = "CollisionShape3D"
+		shape.shape = proxy.mesh.create_convex_shape(true, true)
+		body.add_child(shape)
+		proxy_count += 1
+	if proxy_count == 0:
+		var body := StaticBody3D.new()
+		body.name = "IdentityReflectionCollision"
+		body.position = Vector3(0.0, 1.0, 0.0)
+		body.collision_layer = 1
+		body.collision_mask = 1
+		imported.add_child(body)
+		var shape := CollisionShape3D.new()
+		shape.name = "CollisionShape3D"
+		var box := BoxShape3D.new()
+		box.size = Vector3(1.8, 2.0, 0.55)
+		shape.shape = box
+		body.add_child(shape)
+	set_meta("authored_collision_proxy_count", proxy_count)
+	set_meta("physical_collision_shape_count",
+		imported.find_children("CollisionShape3D", "CollisionShape3D", true, false).size())
 
 
 func _find_blender_part(part_name: String) -> Node3D:

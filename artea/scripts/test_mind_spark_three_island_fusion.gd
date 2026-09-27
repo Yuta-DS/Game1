@@ -50,7 +50,7 @@ func _run() -> void:
 	var route := geometry.get_node("MainStoryCircuitRoute") as Node3D
 	assert(int(route.get_meta("external_bridge_count", 0)) == 2)
 	assert(PackedStringArray(route.get_meta("external_bridge_pairs", [])).size() == 2)
-	assert(PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() == 3)
+	assert(PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() == 2)
 	assert(not bool(route.get_meta("ring_closed", true)),
 		"the obsolete sixth sky bridge is removed from the three-island silhouette")
 	for link_index in range(1, 6):
@@ -58,6 +58,12 @@ func _run() -> void:
 			assert(route.get_node_or_null("CircuitRoute_01_A") == null)
 			assert(route.get_node_or_null("CircuitRoute_01_B") == null)
 			assert(world.get_island_one_heavenly_star_gate() != null)
+			continue
+		if link_index == 5:
+			assert(route.get_node_or_null("CircuitRoute_05_A") == null)
+			assert(route.get_node_or_null("CircuitRoute_05_B") == null)
+			assert(route.get_node_or_null("CircuitRoute_05_ACollision") == null)
+			assert(route.get_node_or_null("CircuitRoute_05_BCollision") == null)
 			continue
 		var expected_kind := "internal_promenade" if link_index % 2 == 1 else "external_sky_bridge"
 		for leg in ["A", "B"]:
@@ -67,6 +73,20 @@ func _run() -> void:
 
 	assert(world.get_quest_objects().size() == 15,
 		"the complete object-driven mini-game remains installed")
+	var reflection := world.get_quest_objects().filter(func(object: QuestObjectBase) -> bool:
+		return object.save_id == "world_one.identity_reflection")[0] as QuestObjectBase
+	assert(int(reflection.get_meta("physical_collision_shape_count", 0)) > 0,
+		"the Oldest Tree reflection object creates physical collision")
+	var reflection_bodies := reflection.find_children("*Collision", "StaticBody3D", true, false)
+	assert(not reflection_bodies.is_empty(),
+		"the player cannot walk through the Oldest Tree reflection object")
+	var collision_probe := PhysicsRayQueryParameters3D.create(
+		reflection.to_global(Vector3(0, 1.0, 2.0)),
+		reflection.to_global(Vector3(0, 1.0, -2.0)))
+	collision_probe.collision_mask = 1
+	var reflection_hit := world.get_world_3d().direct_space_state.intersect_ray(collision_probe)
+	assert(not reflection_hit.is_empty() and reflection_hit.get("collider") in reflection_bodies,
+		"a player-layer probe cannot pass through the visible reflection frame")
 	assert(world.get_collectibles().size() == 2)
 	assert(world.get_island_one_puzzle() != null)
 	assert(world.get_warden() != null)

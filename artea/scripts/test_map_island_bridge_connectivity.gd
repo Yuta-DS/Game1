@@ -43,8 +43,8 @@ func _check_world_one_three_island_route() -> bool:
 			or int(route.get_meta("external_bridge_count", 0)) != 2:
 		_fail("World One does not expose three physical islands and two sky bridges")
 		return false
-	if PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() != 3:
-		_fail("World One does not retain all three paired-district promenades")
+	if PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() != 2:
+		_fail("World One does not retain the two required paired-district promenades")
 		return false
 	for link_index in range(1, 6):
 		if link_index == 1:
@@ -52,6 +52,13 @@ func _check_world_one_three_island_route() -> bool:
 					or world.get_island_one_heavenly_star_gate() == null:
 				_fail("World One route 01 must use its fused foundation and Heavenly Star Gate")
 				return false
+			continue
+		if link_index == 5:
+			for leg in ["A", "B"]:
+				if route.get_node_or_null("CircuitRoute_05_%s" % leg) != null \
+						or route.get_node_or_null("CircuitRoute_05_%sCollision" % leg) != null:
+					_fail("World One route 05 still duplicates the fused Oldest Tree foundation")
+					return false
 			continue
 		var expected_kind := "internal_promenade" if link_index % 2 == 1 else "external_sky_bridge"
 		for leg in ["A", "B"]:
