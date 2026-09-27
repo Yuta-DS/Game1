@@ -31,8 +31,22 @@ func _run() -> void:
 		assert(PackedStringArray(fusion.get_meta("legacy_zone_ids", [])) == expected_pairs[pair_index],
 			"super-island %d combines the approved legacy pair" % (pair_index + 1))
 		assert(bool(fusion.get_meta("continuous_foundation", false)))
-		assert(fusion.get_node_or_null("SharedIvorySaddleCollision") is StaticBody3D,
-			"each fused waist is a continuous walkable surface")
+		if pair_index == 2:
+			assert(fusion.get_node_or_null("SharedIvorySaddle") == null)
+			assert(fusion.get_node_or_null("SharedIvorySaddleCollision") == null)
+			assert(fusion.find_children("*PromenadeRail", "Node3D", true, false).is_empty())
+			assert(fusion.find_children("*PromenadeLamp*", "Node3D", true, false).is_empty())
+			assert(bool(fusion.get_meta("internal_promenade_removed", false)),
+				"the visible bridge and grey barriers beside the Oldest Tree are removed")
+			var storm_center := world.get_zone_position("05_thought_storm_arena")
+			var tree_center := world.get_zone_position("06_oldest_tree_sanctuary")
+			var centre_distance := Vector2(
+				tree_center.x - storm_center.x, tree_center.z - storm_center.z).length()
+			assert(centre_distance < 175.0 + 145.0,
+				"Storm Arena and Oldest Tree floors overlap without the bridge")
+		else:
+			assert(fusion.get_node_or_null("SharedIvorySaddleCollision") is StaticBody3D,
+				"the retained fused waist is a continuous walkable surface")
 		if pair_index == 0:
 			var authored := fusion.get_node("BlenderAuthoredIslandOneTopOverlay") as Node3D
 			assert(int(authored.get_meta("editable_source_parts", 0)) == 3000)
@@ -40,7 +54,7 @@ func _run() -> void:
 			assert(int(authored.get_meta("visible_overlay_batches", 0)) == 1)
 			assert(bool(authored.get_meta("existing_foundation_preserved", false)))
 			assert(str(authored.get_meta("application_mode", "")) == "additive_above_ground_only")
-		else:
+		elif pair_index == 1:
 			assert(fusion.find_children("FoundationPressureTank_*", "MeshInstance3D", true, false).size() == 4)
 			assert(fusion.find_children("FoundationFlywheel_*", "MeshInstance3D", true, false).size() == 2)
 			assert(fusion.find_children("TriangulatedKeelRib_*", "MeshInstance3D", true, false).size() == 12)
@@ -101,6 +115,23 @@ func _run() -> void:
 		assert(str(gates.get_child(gate_index).get_meta("gated_connection", "")) \
 			== expected_gated_connections[gate_index],
 			"quest gates follow the playable mini-game order without circular locks")
+	var removed_tree_barrier := gates.get_child(3) as AnimatableBody3D
+	assert(bool(removed_tree_barrier.get_meta("physical_barrier_removed", false)))
+	assert(removed_tree_barrier.get_node_or_null("Barrier") == null)
+	assert((removed_tree_barrier.get_node("CollisionShape3D") as CollisionShape3D).disabled,
+		"the bridge barrier beside the Oldest Tree is absent in the live scene")
+	var island_three_repairs := geometry.get_node("IslandThreePerimeterRepairs") as Node3D
+	var visible_posts := island_three_repairs.get_children().filter(func(child: Node) -> bool:
+		return child is Node3D and not child is StaticBody3D \
+			and str(child.name).begins_with("ReferencePost_") \
+			and (child as Node3D).visible)
+	assert(int(island_three_repairs.get_meta("solid_reference_post_count", 0)) == visible_posts.size(),
+		"every large Oldest Tree perimeter post has player collision")
+	for post: Node3D in visible_posts:
+		var post_collision := island_three_repairs.get_node_or_null(
+			"%sCollision" % post.name) as StaticBody3D
+		assert(post_collision != null and post_collision.collision_layer == 1,
+			"each visible Oldest Tree perimeter post blocks the player")
 	print("MindSparkThreeIslandFusion: PASS — three fused foundations preserve all six quest districts")
 	world.queue_free()
 	await process_frame

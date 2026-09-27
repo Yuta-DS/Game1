@@ -142,7 +142,9 @@ func _test_architecture(world: MindSparkWorldOne) -> void:
 	assert(geometry.get_node("03ConstellationCourt/ConstellationDaisCollision") is StaticBody3D)
 	assert(geometry.get_node("05ThoughtStormArena/BossArenaCollisionCollision") is StaticBody3D)
 	assert(geometry.get_node("05ThoughtStormArena/BossRetryCheckpoint") is Marker3D)
-	assert(geometry.get_node("06OldestTreeSanctuary/OldestTreeTrunkCollision") is StaticBody3D)
+	var oldest_tree_body := geometry.get_node("06OldestTreeSanctuary/OldestTreeTrunkCollision") as StaticBody3D
+	assert(oldest_tree_body != null and oldest_tree_body.collision_layer == 1,
+		"the Oldest Tree has a continuous player-blocking trunk")
 	assert(geometry.get_node("06OldestTreeSanctuary/StarOfWisdomReward") is Node3D)
 
 
