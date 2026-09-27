@@ -15,19 +15,19 @@ const Bricks := preload("res://scripts/altar/AltarParts.gd")
 const STATION_LAYOUT := {
 	"world_one.evidence_scanner": {
 		"zone":"03_constellation_court", "position":Vector3(-48,4,-10),
-		"approach":Vector3(-66,4,-10), "order":1, "chapter":"evidence",
+		"approach":Vector3(-60,4,-10), "order":1, "chapter":"evidence",
 	},
 	"world_one.memory_board": {
 		"zone":"03_constellation_court", "position":Vector3(0,4,10),
-		"approach":Vector3(-20,4,10), "order":2, "chapter":"evidence",
+		"approach":Vector3(-12,4,10), "order":2, "chapter":"evidence",
 	},
 	"world_one.focus_bell": {
-		"zone":"03_constellation_court", "position":Vector3(0,4,-42),
-		"approach":Vector3(0,4,-30), "order":0, "chapter":"optional_help",
+		"zone":"02_living_network_forest", "position":Vector3(72,.05,-74),
+		"approach":Vector3(61,.05,-70), "order":0, "chapter":"island_one_support",
 	},
 	"world_one.logic_gate": {
 		"zone":"03_constellation_court", "position":Vector3(58,4,6),
-		"approach":Vector3(38,4,6), "order":3, "chapter":"evidence",
+		"approach":Vector3(46,4,6), "order":3, "chapter":"evidence",
 	},
 	"world_one.perspective_lens": {
 		"zone":"04_hope_path_ridge", "position":Vector3(-24,3,6),
@@ -35,7 +35,7 @@ const STATION_LAYOUT := {
 	},
 	"world_one.truth_bridge": {
 		"zone":"04_hope_path_ridge", "position":Vector3(20,3,-12),
-		"approach":Vector3(32,3,5), "order":5, "chapter":"hope",
+		"approach":Vector3(28,3,-2), "order":5, "chapter":"hope",
 	},
 }
 
@@ -854,7 +854,6 @@ static func _build_evidence_aether_bus(world: MindSparkWorldOne, campus: Node3D,
 	var feed_specs := [
 		["Scanner", Vector3(-48, .30, -3), Vector3(-48, .30, 31.5)],
 		["Memory", Vector3(0, .30, 17), Vector3(0, .30, 31.5)],
-		["Bell", Vector3(0, .30, -35), Vector3(-18, .30, 31.5)],
 		["Verifier", Vector3(58, .30, 13), Vector3(54, .30, 31.5)],
 	]
 	for feed in feed_specs:
@@ -919,7 +918,11 @@ static func _build_station_courts(world: MindSparkWorldOne, campus: Node3D) -> v
 		court.set_meta("interaction_verb",str(spec[3]))
 		court.set_meta("route_order",int(STATION_LAYOUT[station.save_id].order))
 		court.rotation.y=station.rotation.y
-		campus.add_child(court)
+		var court_parent := campus
+		if station.save_id == "world_one.focus_bell" \
+				and world.has_node("IslandOneResearchCampus"):
+			court_parent = world.get_node("IslandOneResearchCampus") as Node3D
+		court_parent.add_child(court)
 		var optional := station.save_id=="world_one.focus_bell"
 		var apron_size := Vector3(10.0,.24,8.0) if optional else Vector3(15.0,.24,11.0)
 		world.call("_add_brick", court, "IvoryStationApron", Vector3(0,-.18,0),

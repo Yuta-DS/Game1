@@ -96,16 +96,32 @@ static func apply(world: MindSparkWorldOne) -> void:
 			# Keep the helper beside, not inside, the regulator's -34 -> -22
 			# operator approach. Move the whole assembly and its collision.
 			station.position=Vector3(-36,.05,-28)
-			station.look_at(arrival.to_global(Vector3(0,.05,-12)),Vector3.UP,true)
+			var target := Vector3(-25,.05,-23)
+			station.look_at(arrival.to_global(target),Vector3.UP,true)
+			station.set_meta("operator_approach_local",target)
 		elif station.save_id == "world_one.path_projector":
 			station.position=Vector3(36,.05,-28)
-			station.look_at(arrival.to_global(Vector3(0,.05,-12)),Vector3.UP,true)
+			var target := Vector3(25,.05,-23)
+			station.look_at(arrival.to_global(target),Vector3.UP,true)
+			station.set_meta("operator_approach_local",target)
 		elif station.save_id == "world_one.checkpoint.network":
-			station.position=station.get_parent().to_local(gate.global_position+Vector3(-10,0,8))
-			station.look_at(gate.global_position+Vector3(0,0,8),Vector3.UP,true)
+			var onward := (world.get_zone_position("03_constellation_court") \
+				- world.get_zone_position("02_living_network_forest")) * Vector3(1,0,1)
+			onward=onward.normalized()
+			var side := Vector3(-onward.z,0,onward.x)
+			station.position=onward*123.0-side*22.0+Vector3.UP*.05
+			var target := station.position-onward*12.0
+			station.look_at(garden.to_global(target),Vector3.UP,true)
+			station.set_meta("operator_approach_local",target)
 		elif station.save_id == "world_one.spark_socket":
-			station.position=station.get_parent().to_local(gate.global_position+Vector3(10,0,8))
-			station.look_at(gate.global_position+Vector3(0,0,8),Vector3.UP,true)
+			var onward := (world.get_zone_position("03_constellation_court") \
+				- world.get_zone_position("02_living_network_forest")) * Vector3(1,0,1)
+			onward=onward.normalized()
+			var side := Vector3(-onward.z,0,onward.x)
+			station.position=onward*123.0+side*22.0+Vector3.UP*.05
+			var target := station.position-onward*12.0
+			station.look_at(garden.to_global(target),Vector3.UP,true)
+			station.set_meta("operator_approach_local",target)
 		if station.get_parent() in [arrival,garden]:
 			station.position.y=.05
 			# Interaction Areas detect proximity; they are not solid collision.

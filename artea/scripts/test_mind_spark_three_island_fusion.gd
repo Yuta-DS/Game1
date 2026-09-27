@@ -85,6 +85,39 @@ func _run() -> void:
 
 	assert(world.get_quest_objects().size() == 15,
 		"the complete object-driven mini-game remains installed")
+	var objects_per_island := {1: 0, 2: 0, 3: 0}
+	var zones_per_island := {
+		1: PackedStringArray(["01_world_gate_landing", "02_living_network_forest"]),
+		2: PackedStringArray(["03_constellation_court", "04_hope_path_ridge"]),
+		3: PackedStringArray(["05_thought_storm_arena", "06_oldest_tree_sanctuary"]),
+	}
+	for object in world.get_quest_objects():
+		var physical_island := int(object.get_meta("physical_island", 0))
+		assert(physical_island in [1, 2, 3], "every quest object names its physical island")
+		objects_per_island[physical_island] += 1
+		assert(str(object.get_parent().get_meta("zone_id", "")) \
+			in zones_per_island[physical_island],
+			"quest object is parented to the district belonging to its physical island")
+		var operator_approach: Vector3 = object.get_meta("operator_approach_local")
+		assert(object.position.distance_to(operator_approach) <= 14.0,
+			"every operator point stays inside interaction range")
+		var intended := ((object.get_parent() as Node3D).global_basis \
+			* (operator_approach - object.position)).normalized()
+		assert(object.global_basis.z.normalized().dot(intended) > .99,
+			"each quest object faces its operator approach")
+		var approach_global := (object.get_parent() as Node3D).to_global(operator_approach)
+		var approach_ray := PhysicsRayQueryParameters3D.create(
+			approach_global + Vector3.UP * 8.0, approach_global + Vector3.DOWN * 12.0)
+		approach_ray.collision_mask = 1
+		assert(not world.get_world_3d().direct_space_state.intersect_ray(approach_ray).is_empty(),
+			"every quest object has a physically supported operator approach")
+		for other in world.get_quest_objects():
+			if other == object or other.get_parent() != object.get_parent():
+				continue
+			assert(object.position.distance_to(other.position) >= 20.0,
+				"quest objects in one district keep a clear walking apron")
+	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
+		"the 15 quest objects are distributed five per physical island")
 	assert(world.get_collectibles().size() == 2)
 	assert(world.get_island_one_puzzle() != null)
 	assert(world.get_warden() != null)

@@ -25,10 +25,12 @@ func _run() -> void:
 	assert(gallery.get_node("TruthFoundryLintel") is Node3D)
 	var landscape := campus.get_node("IslandTwoGroupedLandscaping") as Node3D
 	assert(landscape.find_children("ObservatoryCanopyTree_*","Node3D",false,false).size()==6)
-	for court_name in ["EvidenceReadingCourt","MemoryWeavingCourt","FocusBellAlcove",
+	for court_name in ["EvidenceReadingCourt","MemoryWeavingCourt",
 			"ArchiveLogicCourt","PerspectiveGallery","TruthMaterialisationCourt",
 			"EliteGuardianCourt"]:
 		assert(campus.get_node(court_name) is Node3D,"missing Island Two gameplay court: "+court_name)
+	assert(world.get_node("IslandOneResearchCampus/FocusBellAlcove") is Node3D,
+		"the optional Focus Bell belongs to Island One's support route")
 	var route := campus.get_node("IslandTwoQuestRoute") as Node3D
 	assert(route.find_children("*GuidanceFacet_*","Node3D",true,false).size()>=20,
 		"the two quest chapters require a continuous discrete guidance route")

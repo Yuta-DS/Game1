@@ -215,6 +215,7 @@ func build_world() -> void:
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		load("res://scripts/mind_spark/island_one_research_campus.gd").apply(self)
 		load("res://scripts/mind_spark/island_two_memory_campus.gd").apply(self)
+		_finalize_quest_object_story_layout()
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		# The optional station is deliberately the final standalone construction
 		# phase. It branches from Zone 05 and never participates in story routing.
@@ -5695,11 +5696,11 @@ func _place_functional_objects() -> void:
 		[6, "world_one.focus_bell", "03_constellation_court", Vector3(12, 4, -48)],
 		[2, "world_one.perspective_lens", "04_hope_path_ridge", Vector3(-45, 3, 10)],
 		[5, "world_one.truth_bridge", "04_hope_path_ridge", Vector3(45, 3, 10)],
-		[7, "world_one.warden_anchor.1", "05_thought_storm_arena", Vector3(-82, 3, 28)],
-		[7, "world_one.warden_anchor.2", "05_thought_storm_arena", Vector3(0, 3, -88)],
-		[7, "world_one.warden_anchor.3", "05_thought_storm_arena", Vector3(82, 3, 28)],
-		[8, "world_one.calm_rain_basin", "05_thought_storm_arena", Vector3(0, 3, 58)],
-		[9, "world_one.identity_reflection", "06_oldest_tree_sanctuary", Vector3(-52, 3, -28)],
+		[7, "world_one.warden_anchor.1", "05_thought_storm_arena", Vector3(-90, 3, 38)],
+		[7, "world_one.warden_anchor.2", "05_thought_storm_arena", Vector3(0, 3, -105)],
+		[7, "world_one.warden_anchor.3", "05_thought_storm_arena", Vector3(90, 3, 38)],
+		[8, "world_one.calm_rain_basin", "05_thought_storm_arena", Vector3(0, 3, 105)],
+		[9, "world_one.identity_reflection", "06_oldest_tree_sanctuary", Vector3(-72, 3, 32)],
 	]
 	if _uses_existing_mind_district():
 		specs = [
@@ -5731,6 +5732,60 @@ func _place_functional_objects() -> void:
 		object.add_to_group("mind_spark_world_one_object")
 		(_zone_nodes[str(spec[2])] as Node3D).add_child(object)
 		_objects.append(object)
+
+
+func _finalize_quest_object_story_layout() -> void:
+	# Every station receives one canonical chapter/order and a reachable operator
+	# point on its presentation side. The two campus builders own the first ten
+	# positions; this pass finishes their contract and authors the arena/sanctuary
+	# stations around the actual story approach.
+	var route_contract := {
+		"world_one.checkpoint.landing": [0, "arrival_support", 1],
+		"world_one.path_projector": [0, "arrival_support", 1],
+		"world_one.spark_socket": [1, "living_network", 1],
+		"world_one.checkpoint.network": [1, "living_network", 1],
+		"world_one.focus_bell": [0, "optional_help", 1],
+		"world_one.evidence_scanner": [2, "evidence", 2],
+		"world_one.memory_board": [3, "evidence", 2],
+		"world_one.logic_gate": [4, "evidence", 2],
+		"world_one.perspective_lens": [5, "hope", 2],
+		"world_one.truth_bridge": [6, "hope", 2],
+		"world_one.warden_anchor.1": [7, "storm_combat", 3],
+		"world_one.warden_anchor.2": [8, "storm_combat", 3],
+		"world_one.warden_anchor.3": [9, "storm_combat", 3],
+		"world_one.calm_rain_basin": [10, "storm_resolution", 3],
+		"world_one.identity_reflection": [11, "identity_epilogue", 3],
+	}
+	var arena := _zone_nodes["05_thought_storm_arena"] as Node3D
+	var sanctuary := _zone_nodes["06_oldest_tree_sanctuary"] as Node3D
+	var sanctuary_incoming := (ZONES[4].position - ZONES[5].position) * Vector3(1, 0, 1)
+	sanctuary_incoming = sanctuary_incoming.normalized()
+	for object in _objects:
+		if route_contract.has(object.save_id):
+			var contract: Array = route_contract[object.save_id]
+			object.set_meta("story_route_order", int(contract[0]))
+			object.set_meta("story_chapter", str(contract[1]))
+			object.set_meta("physical_island", int(contract[2]))
+			object.set_meta("canonical_story_placement", true)
+		if object.save_id.begins_with("world_one.warden_anchor."):
+			var outward := Vector3(object.position.x, 0, object.position.z).normalized()
+			var approach := object.position + outward * 12.0
+			object.look_at(arena.to_global(approach), Vector3.UP, true)
+			object.set_meta("operator_approach_local", approach)
+			object.set_meta("formation_role", "outward-facing triangular shield pylon")
+		elif object.save_id == "world_one.calm_rain_basin":
+			var approach := object.position + Vector3(0, 0, -12)
+			object.look_at(arena.to_global(approach), Vector3.UP, true)
+			object.set_meta("operator_approach_local", approach)
+			object.set_meta("formation_role", "safe resolution station beyond the boss ring")
+		elif object.save_id == "world_one.identity_reflection":
+			object.position = sanctuary_incoming * 79.0 + Vector3.UP * 3.0
+			var approach := object.position + sanctuary_incoming * 12.0
+			object.look_at(sanctuary.to_global(approach), Vector3.UP, true)
+			object.set_meta("operator_approach_local", approach)
+			object.set_meta("formation_role", "epilogue threshold between bridge landing and Oldest Tree")
+	set_meta("quest_object_layout", "canonical_story_route_v2")
+	set_meta("quest_object_count", _objects.size())
 
 
 func _place_combat_population() -> void:
