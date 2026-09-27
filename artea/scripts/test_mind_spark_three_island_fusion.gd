@@ -65,8 +65,8 @@ func _run() -> void:
 			"every foundation machine has a gameplay purpose")
 
 	var route := geometry.get_node("MainStoryCircuitRoute") as Node3D
-	assert(int(route.get_meta("external_bridge_count", 0)) == 1)
-	assert(PackedStringArray(route.get_meta("external_bridge_pairs", [])).size() == 1)
+	assert(int(route.get_meta("external_bridge_count", 0)) == 2)
+	assert(PackedStringArray(route.get_meta("external_bridge_pairs", [])).size() == 2)
 	assert(PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() == 3)
 	assert(not bool(route.get_meta("ring_closed", true)),
 		"the obsolete sixth sky bridge is removed from the three-island silhouette")
@@ -75,14 +75,6 @@ func _run() -> void:
 			assert(route.get_node_or_null("CircuitRoute_01_A") == null)
 			assert(route.get_node_or_null("CircuitRoute_01_B") == null)
 			assert(world.get_island_one_heavenly_star_gate() != null)
-			continue
-		if link_index == 2:
-			assert(bool(route.get_meta("island_one_tree_bridge_removed", false)))
-			for leg in ["A", "B"]:
-				assert(route.get_node_or_null("CircuitRoute_02_%s" % leg) == null)
-				assert(route.get_node_or_null("CircuitRoute_02_%sCollision" % leg) == null)
-				assert(route.get_node_or_null("CircuitRoute_02_%sLeftRail" % leg) == null)
-				assert(route.get_node_or_null("CircuitRoute_02_%sRightRail" % leg) == null)
 			continue
 		var expected_kind := "internal_promenade" if link_index % 2 == 1 else "external_sky_bridge"
 		for leg in ["A", "B"]:
@@ -111,6 +103,23 @@ func _run() -> void:
 	assert(removed_island_one_barrier.get_node_or_null("Barrier") == null)
 	assert((removed_island_one_barrier.get_node("CollisionShape3D") as CollisionShape3D).disabled,
 		"the grey barrier beside the Island One garden trees is absent")
+	var island_one_collisions := geometry.get_node("IslandOneVisibleObjectCollisions") as StaticBody3D
+	assert(str(island_one_collisions.get_meta("mass_class", "")) == "infinite_static_mass")
+	assert(int(island_one_collisions.get_meta("collision_shape_count", 0)) > 0,
+		"Island One visible structures have static collision and cannot be walked through")
+	var visible_shape_node := island_one_collisions.get_child(0) as CollisionShape3D
+	var visible_faces := (visible_shape_node.shape as ConcavePolygonShape3D).get_faces()
+	var visible_probe_shape := SphereShape3D.new()
+	visible_probe_shape.radius = 0.35
+	var visible_probe := PhysicsShapeQueryParameters3D.new()
+	visible_probe.shape = visible_probe_shape
+	visible_probe.transform = Transform3D(Basis.IDENTITY,
+		visible_shape_node.to_global(visible_faces[0]))
+	visible_probe.collision_mask = 1
+	var visible_hits := world.get_world_3d().direct_space_state.intersect_shape(visible_probe)
+	assert(visible_hits.any(func(hit: Dictionary) -> bool:
+		return hit.get("collider") == island_one_collisions),
+		"a player-layer probe is stopped by Island One visible-object collision")
 	print("MindSparkThreeIslandFusion: PASS — three fused foundations preserve all six quest districts")
 	world.queue_free()
 	await process_frame

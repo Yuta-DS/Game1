@@ -220,6 +220,7 @@ func build_world() -> void:
 		# phase. It branches from Zone 05 and never participates in story routing.
 		_build_station_spur(geometry)
 	_refine_island_one_surroundings()
+	_install_island_one_static_collisions(geometry)
 	_batch_static_geometry(self)
 	set_meta("world_identity", "living computer forest")
 	set_meta("lead_force", "technology_science")
@@ -1238,7 +1239,7 @@ func _build_three_fused_super_islands(parent: Node3D) -> void:
 	fusions.name = "ThreeFusedSuperIslands"
 	fusions.set_meta("physical_island_count", 3)
 	fusions.set_meta("district_count", 6)
-	fusions.set_meta("external_bridge_count", 1)
+	fusions.set_meta("external_bridge_count", 2)
 	fusions.set_meta("fusion_rule", "two legacy districts share one deck, engine hall and rock keel")
 	parent.add_child(fusions)
 	for pair_index in SUPER_ISLAND_PAIRS.size():
@@ -1956,10 +1957,11 @@ func _build_main_route(parent: Node3D) -> void:
 		"05_thought_storm_arena>06_oldest_tree_sanctuary",
 	]))
 	route.set_meta("external_bridge_pairs", PackedStringArray([
+		"02_living_network_forest>03_constellation_court",
 		"04_hope_path_ridge>05_thought_storm_arena",
 	]))
 	route.set_meta("physical_island_count", 3)
-	route.set_meta("external_bridge_count", 1)
+	route.set_meta("external_bridge_count", 2)
 	route.set_meta("route_01_surface_source",
 		"ThreeFusedSuperIslands/FusedSuperIsland_01_02/SharedIvorySaddleCollision")
 	route.set_meta("route_01_access_control", "IslandOneHeavenlyStarGate")
@@ -2004,12 +2006,6 @@ func _build_main_route(parent: Node3D) -> void:
 			# foundation. Route 01 therefore owns no duplicate bridge or deck: its
 			# progression is a physical threshold across the existing promenade.
 			_build_island_one_heavenly_star_gate(route, start, finish, horizontal)
-			continue
-		if index == 1:
-			# Remove the grey-railed bridge leaving Island One beside the Echo
-			# Garden trees. The paired route metadata and quest-state slot remain
-			# stable, but no deck, rails or collision are built in the live scene.
-			route.set_meta("island_one_tree_bridge_removed", true)
 			continue
 		_add_circuit_walkway(route, "CircuitRoute_%02d_A" % (index + 1), start, bend, 28.0)
 		_add_circuit_walkway(route, "CircuitRoute_%02d_B" % (index + 1), bend, finish, 28.0)
@@ -6998,6 +6994,93 @@ func _add_star(parent: Node3D, at: Vector3, radius: float) -> void:
 		var ray := _add_box(star, "StarRay", Vector3.ZERO, Vector3(radius * 2, 1.5, 3), _materials.gold)
 		ray.rotation.y = TAU * float(index) / 8.0
 	_add_sphere(star, "StarCore", Vector3.ZERO, Vector3.ONE * 5, _materials.gold)
+
+
+# --- Island One physical geometry --------------------------------------------
+
+
+func _install_island_one_static_collisions(geometry: Node3D) -> void:
+	# Imported art and the research-campus kit contain visible meshes which were
+	# authored as decoration only. Consolidate their collision into one static
+	# body before visual batching retires the individual MeshInstance3D nodes.
+	# StaticBody3D represents infinite mass, so the player cannot push or pass
+	# through these structures.
+	var collision_body := StaticBody3D.new()
+	collision_body.name = "IslandOneVisibleObjectCollisions"
+	collision_body.collision_layer = 1
+	collision_body.collision_mask = 1
+	collision_body.set_meta("mass_class", "infinite_static_mass")
+	collision_body.set_meta("collision_role", "island_one_visible_objects")
+	geometry.add_child(collision_body)
+	var station_spur := geometry.get_node_or_null("OptionalCompletedWorldStationSpur")
+	if station_spur != null:
+		geometry.move_child(collision_body, station_spur.get_index())
+
+	var roots: Array[Node] = []
+	for path in [
+		"01WorldGateLanding",
+		"02LivingNetworkForest",
+		"ThreeFusedSuperIslands/FusedSuperIsland_01_02",
+		"IslandOnePerimeterRepairs",
+		"IslandOneResearchCampus",
+	]:
+		var root_node := geometry.get_node_or_null(path)
+		if root_node != null:
+			roots.append(root_node)
+
+	var seen := {}
+	var collision_count := 0
+	for collision_root in roots:
+		for candidate in collision_root.find_children("*", "MeshInstance3D", true, false):
+			var mesh_instance := candidate as MeshInstance3D
+			if mesh_instance == null or seen.has(mesh_instance.get_instance_id()):
+				continue
+			seen[mesh_instance.get_instance_id()] = true
+			if not _is_solid_island_one_mesh(mesh_instance, collision_root):
+				continue
+			var collision_shape := mesh_instance.mesh.create_trimesh_shape()
+			if collision_shape == null:
+				continue
+			var shape_node := CollisionShape3D.new()
+			shape_node.name = "VisibleObjectShape_%04d" % collision_count
+			shape_node.shape = collision_shape
+			shape_node.transform = collision_body.global_transform.affine_inverse() \
+				* mesh_instance.global_transform
+			shape_node.set_meta("source_mesh", str(mesh_instance.get_path()))
+			collision_body.add_child(shape_node)
+			collision_count += 1
+
+	collision_body.set_meta("collision_shape_count", collision_count)
+	set_meta("island_one_visible_object_collision_count", collision_count)
+
+
+func _is_solid_island_one_mesh(mesh_instance: MeshInstance3D, collision_root: Node) -> bool:
+	if mesh_instance.mesh == null or not mesh_instance.is_visible_in_tree():
+		return false
+	if mesh_instance.has_meta("detail_packet") or mesh_instance.has_meta("detail_orbit_speed"):
+		return false
+	# A scripted or physics-owned ancestor moves independently. Those objects
+	# already own their runtime collision and must not receive a frozen duplicate.
+	var ancestor := mesh_instance.get_parent()
+	while ancestor != null and ancestor != collision_root.get_parent():
+		if ancestor is CollisionObject3D or ancestor.get_script() != null:
+			return false
+		ancestor = ancestor.get_parent()
+	# Primitive builders put an optimized body beside the visible mesh.
+	if mesh_instance.get_node_or_null("%sCollision" % mesh_instance.name) != null:
+		return false
+	var parent := mesh_instance.get_parent()
+	if parent != null and parent.get_node_or_null("%sCollision" % mesh_instance.name) != null:
+		return false
+	for child in mesh_instance.get_children():
+		if child is CollisionObject3D:
+			return false
+	# Ignore sub-centimetre light filaments and shader accents. They have no
+	# meaningful player-facing volume and would create snag points on walkways.
+	var bounds := mesh_instance.mesh.get_aabb().size * mesh_instance.scale.abs()
+	if maxf(bounds.x, maxf(bounds.y, bounds.z)) < 0.12:
+		return false
+	return mesh_instance.mesh.get_surface_count() > 0
 
 
 # --- Static geometry batching -------------------------------------------------
