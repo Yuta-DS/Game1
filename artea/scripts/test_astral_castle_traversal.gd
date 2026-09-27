@@ -19,17 +19,17 @@ func _run() -> void:
 	for _frame in 8:
 		await physics_frame
 	var route := world.get_node("WorldOneGeometry/MainStoryCircuitRoute") as Node3D
-	for restored_leg in ["A", "B"]:
-		if route.get_node_or_null("CircuitRoute_02_%s" % restored_leg) == null \
-				or route.get_node_or_null("CircuitRoute_02_%sCollision" % restored_leg) == null:
-			_fail("Island One bridge is missing its walkable deck collision")
+	for removed_leg in ["A", "B"]:
+		if route.get_node_or_null("CircuitRoute_02_%s" % removed_leg) != null \
+				or route.get_node_or_null("CircuitRoute_02_%sCollision" % removed_leg) != null:
+			_fail("the photographed Island One bridge was not removed")
 			return
 	for retained_leg in ["A", "B"]:
 		if route.get_node_or_null("CircuitRoute_03_%s" % retained_leg) == null \
 				or route.get_node_or_null("CircuitRoute_03_%sCollision" % retained_leg) == null:
 			_fail("the retained Island Two promenade is missing walkable collision")
 			return
-	print("ASTRAL_CASTLE_TRAVERSAL: PASS — Island One bridge and retained promenade are walkable")
+	print("ASTRAL_CASTLE_TRAVERSAL: PASS — Island One bridge removed; retained promenade is walkable")
 	world.queue_free()
 	await process_frame
 	quit()

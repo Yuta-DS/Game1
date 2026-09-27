@@ -216,6 +216,7 @@ func build_world() -> void:
 		load("res://scripts/mind_spark/island_one_research_campus.gd").apply(self)
 		load("res://scripts/mind_spark/island_two_memory_campus.gd").apply(self)
 		_finalize_quest_object_story_layout()
+		_redesign_island_three(geometry)
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		# The optional station is deliberately the final standalone construction
 		# phase. It branches from Zone 05 and never participates in story routing.
@@ -1222,7 +1223,7 @@ func _build_three_fused_super_islands(parent: Node3D) -> void:
 	fusions.name = "ThreeFusedSuperIslands"
 	fusions.set_meta("physical_island_count", 3)
 	fusions.set_meta("district_count", 6)
-	fusions.set_meta("external_bridge_count", 2)
+	fusions.set_meta("external_bridge_count", 1)
 	fusions.set_meta("fusion_rule", "two legacy districts share one deck, engine hall and rock keel")
 	parent.add_child(fusions)
 	for pair_index in SUPER_ISLAND_PAIRS.size():
@@ -1940,11 +1941,10 @@ func _build_main_route(parent: Node3D) -> void:
 		"05_thought_storm_arena>06_oldest_tree_sanctuary",
 	]))
 	route.set_meta("external_bridge_pairs", PackedStringArray([
-		"02_living_network_forest>03_constellation_court",
 		"04_hope_path_ridge>05_thought_storm_arena",
 	]))
 	route.set_meta("physical_island_count", 3)
-	route.set_meta("external_bridge_count", 2)
+	route.set_meta("external_bridge_count", 1)
 	route.set_meta("route_01_surface_source",
 		"ThreeFusedSuperIslands/FusedSuperIsland_01_02/SharedIvorySaddleCollision")
 	route.set_meta("route_01_access_control", "IslandOneHeavenlyStarGate")
@@ -1989,6 +1989,14 @@ func _build_main_route(parent: Node3D) -> void:
 			# foundation. Route 01 therefore owns no duplicate bridge or deck: its
 			# progression is a physical threshold across the existing promenade.
 			_build_island_one_heavenly_star_gate(route, start, finish, horizontal)
+			continue
+		if index == 1:
+			# The photographed grey-railed bridge beside Island One's Echo Garden
+			# is deliberately absent. Its route record remains for stable saved
+			# progress, but no deck, rail, seam or collision enters the live scene.
+			route.set_meta("island_one_tree_bridge_removed", true)
+			route.set_meta("removed_bridge_pair",
+				"02_living_network_forest>03_constellation_court")
 			continue
 		_add_circuit_walkway(route, "CircuitRoute_%02d_A" % (index + 1), start, bend, 28.0)
 		_add_circuit_walkway(route, "CircuitRoute_%02d_B" % (index + 1), bend, finish, 28.0)
@@ -5768,6 +5776,139 @@ func _finalize_quest_object_story_layout() -> void:
 			object.set_meta("formation_role", "epilogue threshold between bridge landing and Oldest Tree")
 	set_meta("quest_object_layout", "canonical_story_route_v2")
 	set_meta("quest_object_count", _objects.size())
+
+
+func _redesign_island_three(geometry: Node3D) -> void:
+	## Island Three reads as one authored finale: a triangular combat court,
+	## a quiet rain garden beyond the boss, then a root-lit walk to reflection.
+	var finale := Node3D.new()
+	finale.name = "IslandThreeStormSanctuary"
+	finale.set_meta("design_revision", "triune_storm_to_wisdom_v1")
+	finale.set_meta("story_sequence", PackedStringArray([
+		"enter through the storm threshold",
+		"break the three triangular anchors",
+		"stabilise the calm-rain basin",
+		"cross the root-light promenade",
+		"reflect before the Oldest Tree",
+	]))
+	finale.set_meta("physical_island", 3)
+	finale.set_meta("walkable_route_preserved", true)
+	geometry.add_child(finale)
+
+	var arena_origin: Vector3 = ZONES[4].position
+	var sanctuary_origin: Vector3 = ZONES[5].position
+	var arena_y := _zone_floor_surface_y(arena_origin) + 0.12
+	var sanctuary_y := _zone_floor_surface_y(sanctuary_origin) + 0.12
+	var arena_center := Vector3(arena_origin.x, arena_y, arena_origin.z)
+
+	var storm_court := Node3D.new()
+	storm_court.name = "TriuneStormCourt"
+	storm_court.set_meta("anchor_formation", "three shield pylons around one readable boss ring")
+	storm_court.set_meta("safe_lane_width_m", 14.0)
+	finale.add_child(storm_court)
+	_add_cylinder(storm_court, "CentralStormDais", arena_center - Vector3.UP * .18,
+		42.0, .36, _materials.floor_dark, false, 48)
+	_add_torus(storm_court, "CentralStormBoundary", arena_center + Vector3.UP * .08,
+		36.0, 39.0, _materials.astral_brass)
+	_add_torus(storm_court, "CentralCalmSignal", arena_center + Vector3.UP * .14,
+		14.0, 15.2, _materials.island_cyan)
+	var anchor_offsets := [Vector3(-90, 0, 38), Vector3(0, 0, -105), Vector3(90, 0, 38)]
+	for anchor_index in anchor_offsets.size():
+		var anchor_at: Vector3 = arena_center + anchor_offsets[anchor_index]
+		_add_island_three_lane(storm_court, "AnchorSafeLane_%02d" % (anchor_index + 1),
+			arena_center, anchor_at, 14.0, _materials.storm)
+		_add_cylinder(storm_court, "AnchorCourt_%02d" % (anchor_index + 1),
+			anchor_at - Vector3.UP * .10, 20.0, .28, _materials.storm, false, 32)
+		_add_torus(storm_court, "AnchorCourtRing_%02d" % (anchor_index + 1),
+			anchor_at + Vector3.UP * .12, 15.5, 17.5, _materials.violet)
+		for pylon_side in [-1.0, 1.0]:
+			var tangent := Vector3(-anchor_offsets[anchor_index].z, 0,
+				anchor_offsets[anchor_index].x).normalized()
+			var pylon_at: Vector3 = anchor_at + tangent * float(pylon_side) * 18.0
+			_add_tapered_cylinder(storm_court,
+				"AnchorBeacon_%02d_%s" % [anchor_index + 1, "L" if pylon_side < 0 else "R"],
+				pylon_at + Vector3.UP * 3.2, .55, 1.1, 6.4,
+				_materials.astral_brass, 12)
+			_add_sphere(storm_court,
+				"AnchorBeaconLight_%02d_%s" % [anchor_index + 1, "L" if pylon_side < 0 else "R"],
+				pylon_at + Vector3.UP * 7.0, Vector3.ONE * 1.1, _materials.island_violet_energy)
+
+	var rain_garden := Node3D.new()
+	rain_garden.name = "CalmRainGarden"
+	rain_garden.set_meta("purpose", "safe decompression space after the Warden fight")
+	finale.add_child(rain_garden)
+	var basin_at := arena_center + Vector3(0, 0, 105)
+	_add_island_three_lane(rain_garden, "CalmApproach", arena_center, basin_at,
+		16.0, _materials.sanctuary_floor)
+	_add_cylinder(rain_garden, "RainGardenCourt", basin_at - Vector3.UP * .12,
+		29.0, .32, _materials.sanctuary_floor, false, 40)
+	_add_torus(rain_garden, "RainGardenWaterRing", basin_at + Vector3.UP * .14,
+		22.0, 25.0, _materials.astral_glass)
+	for petal_index in 8:
+		var angle := TAU * float(petal_index) / 8.0
+		var petal_at := basin_at + Vector3(sin(angle) * 25.5, .28, cos(angle) * 25.5)
+		_add_sphere(rain_garden, "RainDropLight_%02d" % (petal_index + 1),
+			petal_at, Vector3(.7, 1.5, .7), _materials.island_cyan)
+
+	var sanctuary_walk := Node3D.new()
+	sanctuary_walk.name = "RootlightSanctuaryWalk"
+	sanctuary_walk.set_meta("purpose", "quiet epilogue route from storm to identity and wisdom")
+	finale.add_child(sanctuary_walk)
+	var flat_to_sanctuary := Vector3(sanctuary_origin.x - arena_origin.x, 0,
+		sanctuary_origin.z - arena_origin.z)
+	var start := arena_center + flat_to_sanctuary.normalized() * 62.0
+	var oldest_tree_at := Vector3(sanctuary_origin.x, sanctuary_y,
+		sanctuary_origin.z + 18.0)
+	_add_island_three_lane(sanctuary_walk, "WisdomRootPromenade", start,
+		oldest_tree_at, 12.0, _materials.sanctuary_floor)
+	_add_cable_between(sanctuary_walk, "LeftLivingRootRail",
+		start + Vector3(-7, .5, 0), oldest_tree_at + Vector3(-7, .5, 0),
+		.65, .95, _materials.island_bark_root, 16)
+	_add_cable_between(sanctuary_walk, "RightLivingRootRail",
+		start + Vector3(7, .5, 0), oldest_tree_at + Vector3(7, .5, 0),
+		.65, .95, _materials.island_bark_root, 16)
+	var mirror: QuestObjectBase
+	for object in _objects:
+		if object.save_id == "world_one.identity_reflection":
+			mirror = object
+			break
+	if mirror != null:
+		var mirror_at := geometry.to_local((mirror.get_parent() as Node3D).to_global(mirror.position))
+		mirror_at.y = sanctuary_y
+		_add_cylinder(sanctuary_walk, "ReflectionCourt", mirror_at - Vector3.UP * .10,
+			22.0, .28, _materials.sanctuary_floor, false, 32)
+		_add_torus(sanctuary_walk, "ReflectionCourtHalo", mirror_at + Vector3.UP * .12,
+			16.0, 18.0, _materials.sanctum_lavender_glass)
+	for lantern_index in 7:
+		var progress := float(lantern_index + 1) / 8.0
+		var light_at := start.lerp(oldest_tree_at, progress) + Vector3.UP * 2.8
+		var side := -1.0 if lantern_index % 2 == 0 else 1.0
+		light_at += Vector3(side * 8.0, 0, 0)
+		_add_sphere(sanctuary_walk, "Rootlight_%02d" % (lantern_index + 1),
+			light_at, Vector3.ONE * 1.25, _materials.green_glow)
+
+	# Keep the proven route-05 collision, but restyle its generic circuit deck as
+	# the root-light promenade that visually belongs to the sanctuary finale.
+	var route := geometry.get_node("MainStoryCircuitRoute") as Node3D
+	for leg in ["A", "B"]:
+		var deck := route.get_node_or_null("CircuitRoute_05_%s" % leg) as MeshInstance3D
+		if deck != null:
+			deck.material_override = _materials.sanctuary_floor
+			deck.set_meta("redesigned_as", "RootlightSanctuaryWalk")
+		var seam := route.get_node_or_null("CircuitRoute_05_%sCyanSeam" % leg) as MeshInstance3D
+		if seam != null:
+			seam.material_override = _materials.green_glow
+	set_meta("island_three_design", "triune storm court, calm-rain garden, root-light sanctuary")
+
+
+func _add_island_three_lane(parent: Node3D, node_name: String, start: Vector3,
+		finish: Vector3, width: float, material: Material) -> MeshInstance3D:
+	var flat := Vector3(finish.x - start.x, 0, finish.z - start.z)
+	var length: float = flat.length()
+	var center := start.lerp(finish, .5)
+	center.y = minf(start.y, finish.y)
+	return _add_box(parent, node_name, center, Vector3(width, .18, length),
+		material, false, atan2(flat.x, flat.z))
 
 
 func _place_combat_population() -> void:

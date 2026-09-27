@@ -66,8 +66,9 @@ func _run() -> void:
 			"every foundation machine has a gameplay purpose")
 
 	var route := geometry.get_node("MainStoryCircuitRoute") as Node3D
-	assert(int(route.get_meta("external_bridge_count", 0)) == 2)
-	assert(PackedStringArray(route.get_meta("external_bridge_pairs", [])).size() == 2)
+	assert(int(route.get_meta("external_bridge_count", 0)) == 1)
+	assert(PackedStringArray(route.get_meta("external_bridge_pairs", [])).size() == 1)
+	assert(bool(route.get_meta("island_one_tree_bridge_removed", false)))
 	assert(PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() == 3)
 	assert(not bool(route.get_meta("ring_closed", true)),
 		"the obsolete sixth sky bridge is removed from the three-island silhouette")
@@ -76,6 +77,10 @@ func _run() -> void:
 			assert(route.get_node_or_null("CircuitRoute_01_A") == null)
 			assert(route.get_node_or_null("CircuitRoute_01_B") == null)
 			assert(world.get_island_one_heavenly_star_gate() != null)
+			continue
+		if link_index == 2:
+			assert(route.get_node_or_null("CircuitRoute_02_A") == null)
+			assert(route.get_node_or_null("CircuitRoute_02_B") == null)
 			continue
 		var expected_kind := "internal_promenade" if link_index % 2 == 1 else "external_sky_bridge"
 		for leg in ["A", "B"]:
@@ -118,6 +123,12 @@ func _run() -> void:
 				"quest objects in one district keep a clear walking apron")
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
+	var island_three := geometry.get_node("IslandThreeStormSanctuary") as Node3D
+	assert(str(island_three.get_meta("design_revision", "")) == "triune_storm_to_wisdom_v1")
+	for anchor_index in 3:
+		assert(island_three.has_node("TriuneStormCourt/AnchorCourt_%02d" % (anchor_index + 1)))
+	assert(island_three.has_node("CalmRainGarden/RainGardenCourt"))
+	assert(island_three.has_node("RootlightSanctuaryWalk/ReflectionCourt"))
 	assert(world.get_collectibles().size() == 2)
 	assert(world.get_island_one_puzzle() != null)
 	assert(world.get_warden() != null)
