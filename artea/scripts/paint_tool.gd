@@ -69,8 +69,8 @@ func _ready() -> void:
     _setup_stamp_menu()
 
     # Attempt to enable emoji rendering if a font exists
-    if ResourceLoader.exists("res://assets/Fonts/NotoColorEmoji.ttf"):
-        _emoji_font = load("res://assets/Fonts/NotoColorEmoji.ttf")
+    if ResourceLoader.exists("res://assets/Fonts/NotoColorEmoji-Regular.ttf"):
+        _emoji_font = load("res://assets/Fonts/NotoColorEmoji-Regular.ttf")
         _emoji_enabled = _emoji_font != null
         if _emoji_enabled:
             _emoji_sv = SubViewport.new()
