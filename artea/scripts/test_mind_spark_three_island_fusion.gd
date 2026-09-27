@@ -119,12 +119,42 @@ func _run() -> void:
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
 	var island_three := geometry.get_node("IslandThreeCivicSanctuary") as Node3D
-	assert(str(island_three.get_meta("design_revision", "")) == "island_one_style_match_v7")
+	assert(str(island_three.get_meta("design_revision", "")) == "three_island_environment_match_v8")
 	assert(int(island_three.get_meta("island_one_style_matched_quest_objects", 0)) == 5,
 		"all five Island 3 quest objects use Island One's production style family")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
 	assert(island_three.has_node("IslandThreeStormDeck"))
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
+	var matched_environment := island_three.get_node("IslandThreeMatchedEnvironment") as Node3D
+	assert(str(matched_environment.get_meta("environment_revision", "")) \
+		== "layered_civic_gardens_v8")
+	assert(bool(matched_environment.get_meta("clear_routes_preserved", false)))
+	assert(int(matched_environment.get_meta("total_environment_bays", 0)) >= 20,
+		"Island 3 has the same dense, layered civic garden framing as Islands 1 and 2")
+	var storm_environment := matched_environment.get_node(
+		"StormworksPerimeterGardenGallery") as Node3D
+	var sanctuary_environment := matched_environment.get_node(
+		"OldestTreeTerracedGarden") as Node3D
+	assert(int(storm_environment.get_meta("garden_bay_count", 0)) >= 8)
+	assert(int(sanctuary_environment.get_meta("garden_bay_count", 0)) >= 8)
+	assert(storm_environment.find_children(
+		"IvoryGardenTerraceCollision", "StaticBody3D", true, false).size() >= 8,
+		"storm garden terraces are solid architecture")
+	assert(sanctuary_environment.find_children(
+		"GardenTrunkCollision", "StaticBody3D", true, false).size() >= 8,
+		"the Oldest Tree district has collision-backed mature garden trees")
+	assert(matched_environment.find_children(
+		"IvoryArcadeLintel", "MeshInstance3D", true, false).size() >= 4,
+		"repeated ivory garden arcades match the skyline rhythm of Islands 1 and 2")
+	var civic_pavilions := matched_environment.get_node(
+		"FourCivicGardenPavilions") as Node3D
+	assert(int(civic_pavilions.get_meta("pavilion_count", 0)) == 4)
+	assert(civic_pavilions.find_children(
+		"FacetedPavilionDome", "MeshInstance3D", true, false).size() == 4,
+		"four faceted observatory pavilions give Island 3 Island 2's architectural skyline")
+	assert(civic_pavilions.find_children(
+		"PavilionColumn_*", "MeshInstance3D", true, false).size() == 32,
+		"open pavilion colonnades repeat Island 1's civic rhythm without blocking routes")
 	assert(island_three.has_node("StormworksArrivalPortico/IvoryArrivalTerraceCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/AetherArrivalArch"))
 	assert((island_three.get_node("StormworksArrivalPortico/AetherArrivalArch") as MeshInstance3D).mesh is BoxMesh,

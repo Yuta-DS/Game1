@@ -5854,9 +5854,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "island_one_style_match_v7")
+	campus.set_meta("design_revision", "three_island_environment_match_v8")
 	campus.set_meta("architectural_language",
-		"Island One ivory instrument family, charcoal mechanisms, cyan and lavender light, faceted light tree")
+		"Island One and Two layered ivory terraces, garden arcades, charcoal machinery, cyan and lavender light, faceted living trees")
 	campus.set_meta("matches_previous_islands", true)
 	campus.set_meta("physical_island", 3)
 	campus.set_meta("story_sequence", PackedStringArray([
@@ -6048,6 +6048,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 
 	_build_oldest_tree_living_cathedral(campus,
 		Vector3(sanctuary_origin.x, sanctuary_y, sanctuary_origin.z + 18.0))
+	_build_island_three_matched_environment(campus, arena_center,
+		Vector3(sanctuary_origin.x, sanctuary_y, sanctuary_origin.z),
+		arrival_center, anchor_offsets, basin_at)
 	_build_island_three_underside_accents(campus, arena_center, sanctuary_origin)
 
 	# Retain proven route collision while bringing its materials into the same kit.
@@ -6072,9 +6075,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		if not object.completed.is_connected(_on_island_three_object_completed):
 			object.completed.connect(_on_island_three_object_completed)
 	_refresh_island_three_completion_visuals()
-	set_meta("island_three_design", "Island One-matched low-poly sanctuary with five distinct quest landmarks")
+	set_meta("island_three_design", "Island One and Two-matched layered low-poly sanctuary with five distinct quest landmarks")
 	set_meta("island_three_masterplan",
-		"arrival portico > three unique storm instruments > rain observatory > wisdom basilica > living tree cathedral")
+		"arrival portico > arcaded storm gardens > three unique storm instruments > rain observatory > wisdom basilica > terraced living tree cathedral")
 
 
 func _remove_island_three_route_barrier(geometry: Node3D) -> void:
@@ -6539,6 +6542,201 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 				else _materials.shared_style_cyan)
 	_add_brick(cathedral, "LivingCathedralCrown", base + Vector3.UP * 91.0,
 		Bricks.build_crystal(3.8, 11.0, .8, 6), _materials.shared_style_cyan)
+
+
+func _build_island_three_matched_environment(parent: Node3D, arena_center: Vector3,
+		sanctuary_center: Vector3, arrival_center: Vector3,
+		anchor_offsets: Array, basin_at: Vector3) -> void:
+	# Islands One and Two read as finished places because their gameplay objects sit
+	# inside repeated civic bays, mature gardens and a layered perimeter. Give the
+	# third island that same hierarchy without narrowing any quest approach.
+	var environment := Node3D.new()
+	environment.name = "IslandThreeMatchedEnvironment"
+	environment.set_meta("design_reference", "Island One research gardens + Island Two observatory terraces")
+	environment.set_meta("environment_revision", "layered_civic_gardens_v8")
+	environment.set_meta("clear_routes_preserved", true)
+	environment.set_meta("no_gold_lines_or_route_barriers", true)
+	environment.set_meta("preserve_authored_nodes", true)
+	parent.add_child(environment)
+
+	var storm_gallery := Node3D.new()
+	storm_gallery.name = "StormworksPerimeterGardenGallery"
+	storm_gallery.set_meta("spatial_role", "layered inhabited edge around the open boss court")
+	environment.add_child(storm_gallery)
+	var storm_blocked: Array[Vector3] = [arrival_center, basin_at]
+	for offset in anchor_offsets:
+		storm_blocked.append(arena_center + (offset as Vector3))
+	var storm_bay_count := 0
+	for bay_index in 20:
+		var angle := TAU * float(bay_index) / 20.0
+		var bay_center := arena_center + Vector3(sin(angle) * 145.0, 0,
+			cos(angle) * 145.0)
+		var clear := true
+		for blocked in storm_blocked:
+			if bay_center.distance_to(blocked) < 31.0:
+				clear = false
+				break
+		if not clear:
+			continue
+		_build_island_three_environment_bay(storm_gallery,
+			"StormGardenBay_%02d" % (storm_bay_count + 1), bay_center,
+			angle, storm_bay_count, storm_bay_count % 3 == 0)
+		storm_bay_count += 1
+	storm_gallery.set_meta("garden_bay_count", storm_bay_count)
+
+	# The tree district uses a quieter, greener terrace ring. Its opening toward
+	# the storm court and its return gate remain broad and visually obvious.
+	var sanctuary_gallery := Node3D.new()
+	sanctuary_gallery.name = "OldestTreeTerracedGarden"
+	sanctuary_gallery.set_meta("spatial_role", "mature garden frame around the living cathedral")
+	environment.add_child(sanctuary_gallery)
+	var incoming_direction := (arena_center - sanctuary_center).normalized()
+	var sanctuary_blocked: Array[Vector3] = [
+		sanctuary_center + incoming_direction * 108.0,
+		sanctuary_center + Vector3(78.0, 0, 48.0),
+	]
+	var sanctuary_bay_count := 0
+	for bay_index in 16:
+		var angle := TAU * float(bay_index) / 16.0 + PI / 16.0
+		var bay_center := sanctuary_center + Vector3(sin(angle) * 111.0, 0,
+			cos(angle) * 111.0)
+		var clear := true
+		for blocked in sanctuary_blocked:
+			if bay_center.distance_to(blocked) < 35.0:
+				clear = false
+				break
+		if not clear:
+			continue
+		_build_island_three_environment_bay(sanctuary_gallery,
+			"SanctuaryGardenBay_%02d" % (sanctuary_bay_count + 1), bay_center,
+			angle, sanctuary_bay_count + 20, sanctuary_bay_count % 4 == 1)
+		sanctuary_bay_count += 1
+	sanctuary_gallery.set_meta("garden_bay_count", sanctuary_bay_count)
+
+	var pavilion_gallery := Node3D.new()
+	pavilion_gallery.name = "FourCivicGardenPavilions"
+	pavilion_gallery.set_meta("design_reference", "Island Two domed observatories with Island One living-light machinery")
+	environment.add_child(pavilion_gallery)
+	var pavilion_centers: Array[Vector3] = [
+		arena_center + Vector3(-112.0, 0, -82.0),
+		arena_center + Vector3(112.0, 0, -82.0),
+		sanctuary_center + Vector3(-62.0, 0, -96.0),
+		sanctuary_center + Vector3(58.0, 0, -98.0),
+	]
+	for pavilion_index in pavilion_centers.size():
+		_build_island_three_garden_pavilion(pavilion_gallery,
+			"CivicGardenPavilion_%02d" % (pavilion_index + 1),
+			pavilion_centers[pavilion_index], pavilion_index)
+	pavilion_gallery.set_meta("pavilion_count", pavilion_centers.size())
+	environment.set_meta("total_environment_bays", storm_bay_count + sanctuary_bay_count)
+
+
+func _build_island_three_environment_bay(parent: Node3D, bay_name: String,
+		center: Vector3, radial_angle: float, variant: int, with_arcade: bool) -> void:
+	var bay := Node3D.new()
+	bay.name = bay_name
+	bay.set_meta("shared_environment_family", "island_one_two_civic_garden")
+	bay.set_meta("player_collision_backed", true)
+	parent.add_child(bay)
+	var tangent_yaw := radial_angle + PI * .5
+	_add_box(bay, "IvoryGardenTerrace", center + Vector3.UP * .18,
+		Vector3(18.0, .36, 10.0), _materials.shared_style_ivory, true, tangent_yaw)
+	_add_box(bay, "CharcoalTerraceReveal", center - Vector3.UP * .12,
+		Vector3(15.8, .28, 8.2), _materials.shared_style_charcoal, false, tangent_yaw)
+	var radial := Vector3(sin(radial_angle), 0, cos(radial_angle))
+	var tangent := Vector3(radial.z, 0, -radial.x)
+	_build_island_three_garden_tree(bay, "LivingGardenTree", center + radial * 1.0,
+		.82 + float(variant % 3) * .08, variant)
+	for marker_side in [-1.0, 1.0]:
+		var marker_at := center + tangent * float(marker_side) * 6.8 + Vector3.UP * 1.4
+		_add_brick(bay, "GardenMarker%s" % ("Left" if marker_side < 0 else "Right"),
+			marker_at, Bricks.build_crystal(.42, 2.8, .16, 6),
+			_materials.shared_style_cyan if variant % 2 == 0 \
+			else _materials.shared_style_lavender)
+	if not with_arcade:
+		return
+	for pier_side in [-1.0, 1.0]:
+		var pier_at := center + tangent * float(pier_side) * 7.0 - radial * 2.8
+		_add_cylinder(bay, "ArcadePier%s" % ("Left" if pier_side < 0 else "Right"),
+			pier_at + Vector3.UP * 4.7, .72, 8.8,
+			_materials.shared_style_ivory, true, 10)
+		_add_sphere(bay, "ArcadeLantern%s" % ("Left" if pier_side < 0 else "Right"),
+			pier_at + Vector3.UP * 10.0, Vector3(.55, .78, .55),
+			_materials.shared_style_cyan)
+	_add_box(bay, "IvoryArcadeLintel", center - radial * 2.8 + Vector3.UP * 9.0,
+		Vector3(15.2, .72, 1.0), _materials.shared_style_ivory, false, tangent_yaw)
+	_add_box(bay, "CyanArcadeClerestory", center - radial * 2.25 + Vector3.UP * 8.95,
+		Vector3(10.5, .20, .18), _materials.shared_style_cyan, false, tangent_yaw)
+
+
+func _build_island_three_garden_tree(parent: Node3D, tree_name: String,
+		base: Vector3, tree_scale: float, variant: int) -> void:
+	var tree := Node3D.new()
+	tree.name = tree_name
+	tree.set_meta("shared_tree_language", "faceted living-light garden tree")
+	parent.add_child(tree)
+	var trunk_height := 7.4 * tree_scale
+	_add_cylinder(tree, "GardenTrunk", base + Vector3.UP * trunk_height * .5,
+		.72 * tree_scale, trunk_height, _materials.island_bark_root, true, 7)
+	_add_cable_between(tree, "CyanNutrientVein", base + Vector3.UP * .4,
+		base + Vector3(.2, trunk_height + 2.8, -.15), .11, .06,
+		_materials.shared_style_cyan, 6)
+	for branch_index in 3:
+		var angle := TAU * float(branch_index) / 3.0 + float(variant) * .31
+		var branch_start := base + Vector3.UP * (trunk_height * .68)
+		var branch_end := base + Vector3(sin(angle) * 3.7 * tree_scale,
+			trunk_height + (1.0 + float(branch_index % 2)) * tree_scale,
+			cos(angle) * 3.7 * tree_scale)
+		_add_cable_between(tree, "GardenBranch_%02d" % (branch_index + 1),
+			branch_start, branch_end, .36 * tree_scale, .15 * tree_scale,
+			_materials.island_bark_root, 7)
+		for crown_index in 2:
+			var crown_at := branch_end + Vector3(
+				(-1.0 if crown_index == 0 else 1.0) * 1.4 * tree_scale,
+				float(crown_index) * .7, 0)
+			var canopy_material: Material = _materials.bio_leaf_panel_alt \
+				if (variant + branch_index + crown_index) % 3 != 0 \
+				else _materials.shared_style_lavender
+			var canopy := _add_sphere(tree,
+				"GardenCanopy_%02d_%02d" % [branch_index + 1, crown_index + 1],
+				crown_at, Vector3(2.7, 1.15, 2.25) * tree_scale, canopy_material)
+			(canopy.mesh as SphereMesh).radial_segments = 7
+			(canopy.mesh as SphereMesh).rings = 4
+
+
+func _build_island_three_garden_pavilion(parent: Node3D, pavilion_name: String,
+		center: Vector3, variant: int) -> void:
+	var pavilion := Node3D.new()
+	pavilion.name = pavilion_name
+	pavilion.set_meta("shared_architecture_family", "island_two_observatory_island_one_living_light")
+	pavilion.set_meta("open_walkable_pavilion", true)
+	parent.add_child(pavilion)
+	_add_cylinder(pavilion, "IvoryPavilionDais", center + Vector3.UP * .28,
+		13.0, .56, _materials.shared_style_ivory, true, 16)
+	_add_cylinder(pavilion, "CharcoalPavilionReveal", center + Vector3.UP * .62,
+		11.4, .20, _materials.shared_style_charcoal, false, 16)
+	for column_index in 8:
+		var angle := TAU * float(column_index) / 8.0
+		var column_at := center + Vector3(sin(angle) * 9.2, 0, cos(angle) * 9.2)
+		_add_cylinder(pavilion, "PavilionColumn_%02d" % (column_index + 1),
+			column_at + Vector3.UP * 6.2, .62, 11.2,
+			_materials.shared_style_ivory, true, 10)
+		_add_sphere(pavilion, "PavilionLamp_%02d" % (column_index + 1),
+			column_at + Vector3.UP * 12.3, Vector3(.52, .72, .52),
+			_materials.shared_style_cyan if column_index % 2 == 0 \
+			else _materials.shared_style_lavender)
+	_add_cylinder(pavilion, "IvoryPavilionEave", center + Vector3.UP * 11.7,
+		11.6, .72, _materials.shared_style_ivory, false, 16)
+	var dome := _add_sphere(pavilion, "FacetedPavilionDome", center + Vector3.UP * 14.0,
+		Vector3(10.8, 3.8, 10.8), _materials.shared_style_cyan)
+	(dome.mesh as SphereMesh).radial_segments = 12
+	(dome.mesh as SphereMesh).rings = 5
+	_add_brick(pavilion, "PavilionCrownCrystal", center + Vector3.UP * 19.2,
+		Bricks.build_crystal(1.1, 4.6, .3, 6),
+		_materials.shared_style_lavender if variant % 2 == 0 \
+		else _materials.shared_style_cyan)
+	_build_island_three_garden_tree(pavilion, "PavilionLivingTree", center,
+		.72, variant + 40)
 
 
 func _build_island_three_underside_accents(parent: Node3D, arena_center: Vector3,
