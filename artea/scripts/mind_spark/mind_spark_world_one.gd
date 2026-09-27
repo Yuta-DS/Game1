@@ -1130,31 +1130,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	var object := _nearest_object()
 	if object == null:
 		return
-	if object.save_id in ["world_one.evidence_scanner", "world_one.memory_board",
-			"world_one.logic_gate", "world_one.perspective_lens", "world_one.truth_bridge"]:
-		if event.keycode == KEY_Q and not has_node("QuestStationPanel"):
-			var panel := preload("res://scripts/mind_spark/island_two_station_panel.gd").new()
-			panel.name = "QuestStationPanel"
-			add_child(panel)
-			panel.open_object(object, _player, INTERACTION_RANGE)
-			get_viewport().set_input_as_handled()
-		return
-	var handled := false
-	if event.keycode == KEY_Q:
-		_handle_object_result(object, object.interact())
-		handled = true
-	elif event.keycode >= KEY_1 and event.keycode <= KEY_5:
-		var actions := object.available_actions()
-		var index := int(event.keycode - KEY_1)
-		if index < actions.size():
-			var action: StringName = actions[index]
-			var value: Variant = null
-			if action == &"answer_a": value = "outward"
-			elif action == &"answer_b": value = "inward"
-			_handle_object_result(object, object.interact(action, value))
-			handled = true
-	if handled and get_viewport() != null:
+	if event.keycode == KEY_Q and not has_node("QuestStationPanel"):
+		var panel := preload("res://scripts/mind_spark/world_one_object_minigame_panel.gd").new()
+		panel.name = "QuestStationPanel"
+		add_child(panel)
+		panel.open_object(object, _player)
 		get_viewport().set_input_as_handled()
+		return
 
 
 func _handle_object_result(object: QuestObjectBase, result: Dictionary) -> void:
