@@ -5728,8 +5728,19 @@ func _build_oldest_tree(zone: Node3D) -> void:
 	legacy_trunk_shape.shape = legacy_cylinder
 	legacy_trunk_collision.add_child(legacy_trunk_shape)
 	zone.add_child(legacy_trunk_collision)
-	_add_cylinder(zone, "StarPedestal", Vector3(0, 5, -32), 18, 10, _materials.stone, true, 24)
-	_add_star(zone, Vector3(0, 24, -32), 10.0)
+	_add_cylinder(zone, "StarPedestal", Vector3(0, .6, -32), 18, 1.2, _materials.shared_style_ivory, true, 12)
+	_add_cylinder(zone, "StarShrineInset", Vector3(0, 1.24, -32), 14.5, .08,
+		_materials.shared_style_charcoal, false, 12)
+	_add_cylinder(zone, "StarShrineUpperStep", Vector3(0, 1.6, -32), 7.0, .7,
+		_materials.shared_style_ivory, true, 12)
+	for shrine_index in 4:
+		var angle := PI * .25 + TAU * float(shrine_index) / 4.0
+		var at := Vector3(sin(angle) * 13, 0, -32 + cos(angle) * 13)
+		_add_cylinder(zone, "StarShrinePier_%02d" % shrine_index, at + Vector3.UP * 2.5,
+			1.0, 5.0, _materials.shared_style_ivory, true, 8)
+		_add_brick(zone, "StarShrineCrystal_%02d" % shrine_index, at + Vector3.UP * 6.2,
+			Bricks.build_crystal(.7, 2.4, .25, 6), _materials.shared_style_cyan)
+	_add_star(zone, Vector3(0, 7, -32), 6.0)
 	_build_arch(zone, Vector3(78, 0, 48), 40, 52, _materials.gold, "RETURN WORLD GATE")
 	_return_gate = WorldGateScene.instantiate() as MindSparkWorldGate
 	_return_gate.name = "ReturnToArtCastleWorldGate"
