@@ -99,7 +99,7 @@ func _run() -> void:
 			return
 	var story_route := geometry.get_node("MainStoryCircuitRoute") as Node3D
 	if _story_route_collision_count(story_route) != 6:
-		_fail("three constructed links need six walkway legs; routes 01 and 05 use fused foundations")
+		_fail("three retained links need six walkway legs; routes 01 and 02 have no bridge deck")
 		return
 	var station := geometry.get_node("OptionalCompletedWorldStationSpur") as Node3D
 	if station.visible or bool(station.get_meta("blocks_story_route")):

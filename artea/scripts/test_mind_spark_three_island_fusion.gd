@@ -31,22 +31,8 @@ func _run() -> void:
 		assert(PackedStringArray(fusion.get_meta("legacy_zone_ids", [])) == expected_pairs[pair_index],
 			"super-island %d combines the approved legacy pair" % (pair_index + 1))
 		assert(bool(fusion.get_meta("continuous_foundation", false)))
-		if pair_index == 2:
-			assert(fusion.get_node_or_null("SharedIvorySaddle") == null)
-			assert(fusion.get_node_or_null("SharedIvorySaddleCollision") == null)
-			assert(fusion.find_children("*PromenadeRail", "Node3D", true, false).is_empty())
-			assert(fusion.find_children("*PromenadeLamp*", "Node3D", true, false).is_empty())
-			assert(bool(fusion.get_meta("internal_promenade_removed", false)),
-				"the visible bridge and grey barriers beside the Oldest Tree are removed")
-			var storm_center := world.get_zone_position("05_thought_storm_arena")
-			var tree_center := world.get_zone_position("06_oldest_tree_sanctuary")
-			var centre_distance := Vector2(
-				tree_center.x - storm_center.x, tree_center.z - storm_center.z).length()
-			assert(centre_distance < 175.0 + 145.0,
-				"Storm Arena and Oldest Tree floors overlap without the bridge")
-		else:
-			assert(fusion.get_node_or_null("SharedIvorySaddleCollision") is StaticBody3D,
-				"the retained fused waist is a continuous walkable surface")
+		assert(fusion.get_node_or_null("SharedIvorySaddleCollision") is StaticBody3D,
+			"each fused waist is a continuous walkable surface")
 		if pair_index == 0:
 			var authored := fusion.get_node("BlenderAuthoredIslandOneTopOverlay") as Node3D
 			assert(int(authored.get_meta("editable_source_parts", 0)) == 3000)
@@ -54,7 +40,24 @@ func _run() -> void:
 			assert(int(authored.get_meta("visible_overlay_batches", 0)) == 1)
 			assert(bool(authored.get_meta("existing_foundation_preserved", false)))
 			assert(str(authored.get_meta("application_mode", "")) == "additive_above_ground_only")
-		elif pair_index == 1:
+			var echo_garden := authored.get_node("EchoGardenHeroBenchmark") as Node3D
+			var trunk_mesh := echo_garden.get_node("WarmBark") as MeshInstance3D
+			var tree_collision := trunk_mesh.get_node_or_null("WarmBarkCollision") as StaticBody3D
+			assert(tree_collision != null and tree_collision.collision_layer == 1,
+				"the Island One garden trees block the player")
+			var trunk_vertices: PackedVector3Array = trunk_mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+			var trunk_probe_shape := SphereShape3D.new()
+			trunk_probe_shape.radius = 0.35
+			var trunk_probe := PhysicsShapeQueryParameters3D.new()
+			trunk_probe.shape = trunk_probe_shape
+			trunk_probe.transform = Transform3D(Basis.IDENTITY,
+				trunk_mesh.to_global(trunk_vertices[0]))
+			trunk_probe.collision_mask = 1
+			var trunk_hits := world.get_world_3d().direct_space_state.intersect_shape(trunk_probe)
+			assert(trunk_hits.any(func(hit: Dictionary) -> bool:
+				return hit.get("collider") == tree_collision),
+				"a player-layer shape probe cannot pass through the Island One tree mesh")
+		else:
 			assert(fusion.find_children("FoundationPressureTank_*", "MeshInstance3D", true, false).size() == 4)
 			assert(fusion.find_children("FoundationFlywheel_*", "MeshInstance3D", true, false).size() == 2)
 			assert(fusion.find_children("TriangulatedKeelRib_*", "MeshInstance3D", true, false).size() == 12)
@@ -62,9 +65,9 @@ func _run() -> void:
 			"every foundation machine has a gameplay purpose")
 
 	var route := geometry.get_node("MainStoryCircuitRoute") as Node3D
-	assert(int(route.get_meta("external_bridge_count", 0)) == 2)
-	assert(PackedStringArray(route.get_meta("external_bridge_pairs", [])).size() == 2)
-	assert(PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() == 2)
+	assert(int(route.get_meta("external_bridge_count", 0)) == 1)
+	assert(PackedStringArray(route.get_meta("external_bridge_pairs", [])).size() == 1)
+	assert(PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() == 3)
 	assert(not bool(route.get_meta("ring_closed", true)),
 		"the obsolete sixth sky bridge is removed from the three-island silhouette")
 	for link_index in range(1, 6):
@@ -73,11 +76,13 @@ func _run() -> void:
 			assert(route.get_node_or_null("CircuitRoute_01_B") == null)
 			assert(world.get_island_one_heavenly_star_gate() != null)
 			continue
-		if link_index == 5:
-			assert(route.get_node_or_null("CircuitRoute_05_A") == null)
-			assert(route.get_node_or_null("CircuitRoute_05_B") == null)
-			assert(route.get_node_or_null("CircuitRoute_05_ACollision") == null)
-			assert(route.get_node_or_null("CircuitRoute_05_BCollision") == null)
+		if link_index == 2:
+			assert(bool(route.get_meta("island_one_tree_bridge_removed", false)))
+			for leg in ["A", "B"]:
+				assert(route.get_node_or_null("CircuitRoute_02_%s" % leg) == null)
+				assert(route.get_node_or_null("CircuitRoute_02_%sCollision" % leg) == null)
+				assert(route.get_node_or_null("CircuitRoute_02_%sLeftRail" % leg) == null)
+				assert(route.get_node_or_null("CircuitRoute_02_%sRightRail" % leg) == null)
 			continue
 		var expected_kind := "internal_promenade" if link_index % 2 == 1 else "external_sky_bridge"
 		for leg in ["A", "B"]:
@@ -87,20 +92,6 @@ func _run() -> void:
 
 	assert(world.get_quest_objects().size() == 15,
 		"the complete object-driven mini-game remains installed")
-	var reflection := world.get_quest_objects().filter(func(object: QuestObjectBase) -> bool:
-		return object.save_id == "world_one.identity_reflection")[0] as QuestObjectBase
-	assert(int(reflection.get_meta("physical_collision_shape_count", 0)) > 0,
-		"the Oldest Tree reflection object creates physical collision")
-	var reflection_bodies := reflection.find_children("*Collision", "StaticBody3D", true, false)
-	assert(not reflection_bodies.is_empty(),
-		"the player cannot walk through the Oldest Tree reflection object")
-	var collision_probe := PhysicsRayQueryParameters3D.create(
-		reflection.to_global(Vector3(0, 1.0, 2.0)),
-		reflection.to_global(Vector3(0, 1.0, -2.0)))
-	collision_probe.collision_mask = 1
-	var reflection_hit := world.get_world_3d().direct_space_state.intersect_ray(collision_probe)
-	assert(not reflection_hit.is_empty() and reflection_hit.get("collider") in reflection_bodies,
-		"a player-layer probe cannot pass through the visible reflection frame")
 	assert(world.get_collectibles().size() == 2)
 	assert(world.get_island_one_puzzle() != null)
 	assert(world.get_warden() != null)
@@ -115,23 +106,11 @@ func _run() -> void:
 		assert(str(gates.get_child(gate_index).get_meta("gated_connection", "")) \
 			== expected_gated_connections[gate_index],
 			"quest gates follow the playable mini-game order without circular locks")
-	var removed_tree_barrier := gates.get_child(3) as AnimatableBody3D
-	assert(bool(removed_tree_barrier.get_meta("physical_barrier_removed", false)))
-	assert(removed_tree_barrier.get_node_or_null("Barrier") == null)
-	assert((removed_tree_barrier.get_node("CollisionShape3D") as CollisionShape3D).disabled,
-		"the bridge barrier beside the Oldest Tree is absent in the live scene")
-	var island_three_repairs := geometry.get_node("IslandThreePerimeterRepairs") as Node3D
-	var visible_posts := island_three_repairs.get_children().filter(func(child: Node) -> bool:
-		return child is Node3D and not child is StaticBody3D \
-			and str(child.name).begins_with("ReferencePost_") \
-			and (child as Node3D).visible)
-	assert(int(island_three_repairs.get_meta("solid_reference_post_count", 0)) == visible_posts.size(),
-		"every large Oldest Tree perimeter post has player collision")
-	for post: Node3D in visible_posts:
-		var post_collision := island_three_repairs.get_node_or_null(
-			"%sCollision" % post.name) as StaticBody3D
-		assert(post_collision != null and post_collision.collision_layer == 1,
-			"each visible Oldest Tree perimeter post blocks the player")
+	var removed_island_one_barrier := gates.get_child(0) as AnimatableBody3D
+	assert(bool(removed_island_one_barrier.get_meta("physical_barrier_removed", false)))
+	assert(removed_island_one_barrier.get_node_or_null("Barrier") == null)
+	assert((removed_island_one_barrier.get_node("CollisionShape3D") as CollisionShape3D).disabled,
+		"the grey barrier beside the Island One garden trees is absent")
 	print("MindSparkThreeIslandFusion: PASS — three fused foundations preserve all six quest districts")
 	world.queue_free()
 	await process_frame

@@ -776,8 +776,8 @@ func _build_progression_gates(parent: Node3D) -> void:
 		gate.set_meta("gated_connection", "%s>%s" % [
 			ZONES[route_start_index].id, ZONES[route_start_index + 1].id])
 		gates.add_child(gate)
-		var remove_tree_bridge_barrier := quest_index == 3
-		if not remove_tree_bridge_barrier:
+		var remove_bridge_barrier := quest_index == 0
+		if not remove_bridge_barrier:
 			_add_box(gate, "Barrier", Vector3(0, 7, 0), Vector3(25, 14, 1.6), _materials.violet)
 		var collision := CollisionShape3D.new()
 		collision.name = "CollisionShape3D"
@@ -785,11 +785,11 @@ func _build_progression_gates(parent: Node3D) -> void:
 		shape.size = Vector3(25, 14, 1.6)
 		collision.shape = shape
 		collision.position.y = 7
-		collision.disabled = remove_tree_bridge_barrier
+		collision.disabled = remove_bridge_barrier
 		gate.add_child(collision)
-		if remove_tree_bridge_barrier:
-			# Keep the saved quest-state slot stable without rebuilding the removed
-			# bridge barrier beside the Oldest Tree.
+		if remove_bridge_barrier:
+			# Keep the saved quest-state slot stable after removing the physical
+			# fixture at the former Island One bridge entrance.
 			gate.set_meta("physical_barrier_removed", true)
 		else:
 			_add_label(gate, "QUEST %d SAVE GATE • LOCKED" % (quest_index + 1),
@@ -1231,13 +1231,14 @@ func _build_six_zones(parent: Node3D) -> void:
 
 func _build_three_fused_super_islands(parent: Node3D) -> void:
 	## Converts the six retained gameplay courts into three physical islands.
-	## Each pair keeps its own landmark and local puzzle space. The final pair's
-	## circular floors already overlap broadly, so it needs no added bridge deck.
+	## Each pair keeps its own landmark and local puzzle space, but the broad
+	## saddle, continuous collision deck and shared engine hull make it one
+	## believable load-bearing landmass rather than two discs touching in space.
 	var fusions := Node3D.new()
 	fusions.name = "ThreeFusedSuperIslands"
 	fusions.set_meta("physical_island_count", 3)
 	fusions.set_meta("district_count", 6)
-	fusions.set_meta("external_bridge_count", 2)
+	fusions.set_meta("external_bridge_count", 1)
 	fusions.set_meta("fusion_rule", "two legacy districts share one deck, engine hall and rock keel")
 	parent.add_child(fusions)
 	for pair_index in SUPER_ISLAND_PAIRS.size():
@@ -1325,6 +1326,22 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 		garden.set_meta("preserve_authored_nodes", true)
 		garden.set_meta("replaces_role", "Nature")
 		island_visual.add_child(garden)
+		# The benchmark batches every visible trunk into one WarmBark mesh. Give
+		# that exact static mesh collision so the white garden trees beside the
+		# former bridge entrance are solid at player height.
+		var garden_trunks := garden.find_child("WarmBark", true, false) as MeshInstance3D
+		if garden_trunks != null and garden_trunks.mesh != null:
+			var trunk_body := StaticBody3D.new()
+			trunk_body.name = "WarmBarkCollision"
+			trunk_body.collision_layer = 1
+			trunk_body.collision_mask = 1
+			trunk_body.set_meta("collision_role", "island_one_echo_garden_tree_trunks")
+			var trunk_shape := CollisionShape3D.new()
+			trunk_shape.name = "CollisionShape3D"
+			trunk_shape.shape = garden_trunks.mesh.create_trimesh_shape()
+			trunk_body.add_child(trunk_shape)
+			garden_trunks.add_child(trunk_body)
+			garden.set_meta("solid_tree_trunk_mesh", "WarmBark")
 
 		# The visible saddle lives in the GLB. This collision-only bridge closes
 		# the seam between the two retained circular gameplay floor colliders.
@@ -1345,16 +1362,6 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 		fusion.set_meta("runtime_render_batch_count", 9)
 		fusion.set_meta("visible_overlay_batch_count", 4)
 		fusion.set_meta("existing_foundations_preserved", true)
-		return
-
-	if pair_index == 2:
-		# The Storm Arena and Oldest Tree floors overlap by roughly 74 metres.
-		# Their former saddle, grey barrier rails and oversized lamps were a
-		# duplicate bridge across ground that is already continuous and walkable.
-		fusion.set_meta("continuous_foundation_source", "overlapping_zone_floors")
-		fusion.set_meta("internal_promenade_removed", true)
-		fusion.set_meta("gameplay_purpose", "shared storm-to-sanctuary court")
-		fusion.set_meta("foundation_machine_parts", 0)
 		return
 
 	# A wide collision-backed civic saddle seals the overlap between the two old
@@ -1946,13 +1953,13 @@ func _build_main_route(parent: Node3D) -> void:
 	route.set_meta("internal_promenade_pairs", PackedStringArray([
 		"01_world_gate_landing>02_living_network_forest",
 		"03_constellation_court>04_hope_path_ridge",
+		"05_thought_storm_arena>06_oldest_tree_sanctuary",
 	]))
 	route.set_meta("external_bridge_pairs", PackedStringArray([
-		"02_living_network_forest>03_constellation_court",
 		"04_hope_path_ridge>05_thought_storm_arena",
 	]))
 	route.set_meta("physical_island_count", 3)
-	route.set_meta("external_bridge_count", 2)
+	route.set_meta("external_bridge_count", 1)
 	route.set_meta("route_01_surface_source",
 		"ThreeFusedSuperIslands/FusedSuperIsland_01_02/SharedIvorySaddleCollision")
 	route.set_meta("route_01_access_control", "IslandOneHeavenlyStarGate")
@@ -1998,11 +2005,11 @@ func _build_main_route(parent: Node3D) -> void:
 			# progression is a physical threshold across the existing promenade.
 			_build_island_one_heavenly_star_gate(route, start, finish, horizontal)
 			continue
-		if index == 4:
-			# Districts 05 and 06 already share a collision-backed ivory saddle.
-			# The former grey-railed Route 05 duplicated that walkable surface and
-			# cluttered the Oldest Tree court, so this connection now uses only the
-			# fused foundation and its existing quest progression gate.
+		if index == 1:
+			# Remove the grey-railed bridge leaving Island One beside the Echo
+			# Garden trees. The paired route metadata and quest-state slot remain
+			# stable, but no deck, rails or collision are built in the live scene.
+			route.set_meta("island_one_tree_bridge_removed", true)
 			continue
 		_add_circuit_walkway(route, "CircuitRoute_%02d_A" % (index + 1), start, bend, 28.0)
 		_add_circuit_walkway(route, "CircuitRoute_%02d_B" % (index + 1), bend, finish, 28.0)
@@ -5650,14 +5657,13 @@ func _add_bio_hanging_node(parent: Node3D, node_index: int, start: Vector3,
 
 func _build_oldest_tree(zone: Node3D) -> void:
 	_build_bio_data_tree(zone, Vector3(0, 0, 18), 1.0, 6)
-	# Keep one continuous central body behind the segmented visible trunk. This
-	# closes any small gaps between modular slices at player height.
+	# Preserve the original gameplay node contract while the visible tree is now
+	# assembled from the modular Bio-Data Tree pieces above.
 	var legacy_trunk_collision := StaticBody3D.new()
 	legacy_trunk_collision.name = "OldestTreeTrunkCollision"
 	legacy_trunk_collision.position = Vector3(0, 36.0, 18)
-	legacy_trunk_collision.collision_layer = 1
-	legacy_trunk_collision.collision_mask = 1
-	legacy_trunk_collision.set_meta("collision_role", "continuous_oldest_tree_trunk")
+	legacy_trunk_collision.collision_layer = 0
+	legacy_trunk_collision.set_meta("compatibility_alias", "MindSparkBioDataTree/BioDataLivingCoreCollision")
 	var legacy_trunk_shape := CollisionShape3D.new()
 	var legacy_cylinder := CylinderShape3D.new()
 	legacy_cylinder.radius = 3.9
@@ -6081,33 +6087,6 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 			collision.visible = false
 	if first_zone == 2:
 		_consolidate_perimeter_posts(repairs)
-	_install_perimeter_post_collisions(repairs)
-
-
-func _install_perimeter_post_collisions(repairs: Node3D) -> void:
-	# The imported terminal posts are much wider than the slim collision panels
-	# between them. Give every visible post its own solid footprint so the player
-	# cannot step through the large lantern-like objects at the Oldest Tree rim.
-	var installed := 0
-	for child in repairs.get_children():
-		var post := child as Node3D
-		if post == null or not str(post.name).begins_with("ReferencePost_") or not post.visible:
-			continue
-		var body := StaticBody3D.new()
-		body.name = "%sCollision" % post.name
-		body.position = repairs.to_local(_perimeter_post_anchor(post))
-		body.collision_layer = 1
-		body.collision_mask = 1
-		var shape_node := CollisionShape3D.new()
-		shape_node.name = "CollisionShape3D"
-		var shape := CylinderShape3D.new()
-		shape.radius = 3.8
-		shape.height = 12.0
-		shape_node.shape = shape
-		body.add_child(shape_node)
-		repairs.add_child(body)
-		installed += 1
-	repairs.set_meta("solid_reference_post_count", installed)
 
 
 func _consolidate_perimeter_posts(repairs: Node3D) -> void:
