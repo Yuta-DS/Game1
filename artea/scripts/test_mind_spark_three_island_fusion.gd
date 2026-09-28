@@ -62,6 +62,13 @@ func _run() -> void:
 			assert(fusion.find_children("FoundationPressureTank_*", "MeshInstance3D", true, false).size() == 4)
 			assert(fusion.find_children("FoundationFlywheel_*", "MeshInstance3D", true, false).size() == 2)
 			assert(fusion.find_children("TriangulatedKeelRib_*", "MeshInstance3D", true, false).size() == 12)
+			if pair_index == 2:
+				assert(fusion.get_node_or_null("RightPromenadeRailCollision") == null
+					and fusion.get_node_or_null("LeftPromenadeRailCollision") == null,
+					"Island 3's interior saddle has no cross-court rail barrier")
+				assert(fusion.get_node_or_null("InternalPromenadeInlay") == null
+					and fusion.get_node_or_null("AetherFlowChannel") == null,
+					"Island 3's old gold and blue saddle lines are removed")
 		assert(not str(fusion.get_meta("gameplay_purpose", "")).is_empty(),
 			"every foundation machine has a gameplay purpose")
 
@@ -82,6 +89,10 @@ func _run() -> void:
 			var deck := route.get_node("CircuitRoute_%02d_%s" % [link_index, leg]) as MeshInstance3D
 			assert(str(deck.get_meta("route_kind", "")) == expected_kind)
 			assert(route.get_node_or_null("CircuitRoute_%02d_%sCollision" % [link_index, leg]) is StaticBody3D)
+			if link_index == 5:
+				assert(route.get_node_or_null("CircuitRoute_05_%sRightRailCollision" % leg) == null
+					and route.get_node_or_null("CircuitRoute_05_%sLeftRailCollision" % leg) == null,
+					"Island 3's interior route does not divide the walkable court")
 
 	assert(world.get_quest_objects().size() == 15,
 		"the complete object-driven mini-game remains installed")
@@ -119,7 +130,24 @@ func _run() -> void:
 	assert(objects_per_island == {1: 5, 2: 5, 3: 5},
 		"the 15 quest objects are distributed five per physical island")
 	var island_three := geometry.get_node("IslandThreeCivicSanctuary") as Node3D
-	assert(str(island_three.get_meta("design_revision", "")) == "composed_sanctuary_v9")
+	var storm_edge := geometry.get_node("IslandThreePerimeterRepairs") as Node3D
+	assert(storm_edge.find_children("StormEdgeStone_*", "MeshInstance3D", true, false).size() >= 40,
+		"Island 3 has a continuous low-poly stone parapet at exposed edges")
+	assert(storm_edge.find_children("StormEdgeStone_*SolidCollision", "StaticBody3D", true, false).size() >= 40,
+		"the visible Island 3 parapet blocks the player at its actual position")
+	assert(storm_edge.find_children("ReferenceScrollwork_*", "Node3D", true, false).is_empty()
+		and storm_edge.find_children("ReferencePost_*", "Node3D", true, false).is_empty(),
+		"the repeated ornate rail and lantern-post kit is retired on Island 3")
+	assert(storm_edge.find_children("RepairedBay_*Collision", "StaticBody3D", true, false).size() >= 100,
+		"the quieter Island 3 edge retains its player-blocking cliff collision")
+	var island_three_saplings := 0
+	for sapling in geometry.find_children("HeavenlySapling", "Node3D", true, false):
+		if str(sapling.get_parent().get_meta("zone_id", "")) in [
+			"05_thought_storm_arena", "06_oldest_tree_sanctuary"]:
+			island_three_saplings += 1
+	assert(island_three_saplings == 15,
+		"Island 3 uses fifteen restrained pale perimeter saplings around its hero tree")
+	assert(str(island_three.get_meta("design_revision", "")) == "landmark_hierarchy_v11")
 	assert(int(island_three.get_meta("island_one_style_matched_quest_objects", 0)) == 5,
 		"all five Island 3 quest objects use Island One's production style family")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
@@ -127,10 +155,11 @@ func _run() -> void:
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
 	var matched_environment := island_three.get_node("IslandThreeMatchedEnvironment") as Node3D
 	assert(str(matched_environment.get_meta("environment_revision", "")) \
-		== "layered_civic_gardens_v8")
+		== "open_civic_gardens_v9")
 	assert(bool(matched_environment.get_meta("clear_routes_preserved", false)))
-	assert(int(matched_environment.get_meta("total_environment_bays", 0)) >= 20,
-		"Island 3 has the same dense, layered civic garden framing as Islands 1 and 2")
+	assert(int(matched_environment.get_meta("total_environment_bays", 0)) >= 16 \
+		and int(matched_environment.get_meta("total_environment_bays", 0)) <= 24,
+		"Island 3 uses garden bays as a sparse frame around readable landmarks; found %d" % int(matched_environment.get_meta("total_environment_bays", 0)))
 	var storm_environment := matched_environment.get_node(
 		"StormworksPerimeterGardenGallery") as Node3D
 	var sanctuary_environment := matched_environment.get_node(
@@ -147,13 +176,13 @@ func _run() -> void:
 		"IvoryArcadeLintel", "MeshInstance3D", true, false).size() >= 4,
 		"repeated ivory garden arcades match the skyline rhythm of Islands 1 and 2")
 	var civic_pavilions := matched_environment.get_node(
-		"FourCivicGardenPavilions") as Node3D
-	assert(int(civic_pavilions.get_meta("pavilion_count", 0)) == 4)
+		"CivicGardenPavilions") as Node3D
+	assert(int(civic_pavilions.get_meta("pavilion_count", 0)) == 3)
 	assert(civic_pavilions.find_children(
-		"FacetedPavilionDome", "MeshInstance3D", true, false).size() == 4,
-		"four faceted observatory pavilions give Island 3 Island 2's architectural skyline")
+		"FacetedPavilionDome", "MeshInstance3D", true, false).size() == 3,
+		"three faceted observatory pavilions frame the quest district")
 	assert(civic_pavilions.find_children(
-		"PavilionColumn_*", "MeshInstance3D", true, false).size() == 32,
+		"PavilionColumn_*", "MeshInstance3D", true, false).size() == 24,
 		"open pavilion colonnades repeat Island 1's civic rhythm without blocking routes")
 	assert(island_three.has_node("StormworksArrivalPortico/IvoryArrivalTerraceCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/AetherArrivalArch"))
@@ -164,16 +193,41 @@ func _run() -> void:
 	assert(island_three.get_node("StormworksGrandCourt").get_meta("clear_center_radius_m") == 34.0)
 	assert(island_three.has_node("StormworksGrandCourt/StormCourtCompass/CompassWedge_01"))
 	assert(island_three.get_node("StormworksGrandCourt").find_children(
-		"StormCourtGarden_*", "Node3D", false, false).size() == 8)
+		"StormCourtGarden_*", "Node3D", false, false).size() == 4,
+		"the boss court uses four planted edges and leaves open views to its quest landmarks")
+	var lens := island_three.get_node("StormworksGrandCourt/StormLensTower") as Node3D
+	var forge := island_three.get_node("StormworksGrandCourt/ResonanceForge") as Node3D
+	var archive := island_three.get_node("StormworksGrandCourt/LightningArchive") as Node3D
+	assert((lens.get_node("StormLensPrism") as Node3D).position.y
+		> (lens.get_node("SolidQuestTerrace") as Node3D).position.y + 20.0,
+		"the northwest quest reads as a tower above the shared instrument")
+	assert(lens.has_node("OpenLensAlignmentFrame/IvoryAlignmentBeam_01")
+		and lens.find_children("IvorySightFrame_*", "MeshInstance3D", true, false).is_empty(),
+		"the Storm Lens keeps an open faceted sight, without oversized rings")
+	assert(lens.has_node("LensIvoryMast_01")
+		and lens.find_children("LensStrut_*", "MeshInstance3D", true, false).is_empty(),
+		"the lens tower uses upright ivory supports rather than a dark diagonal across arrival")
+	assert((forge.get_node("SuspendedResonanceCore") as MeshInstance3D).mesh != null,
+		"the north quest retains its broad, suspended forge core")
+	assert((archive.get_node("ArchiveFin_07") as MeshInstance3D).mesh != null,
+		"the northeast quest retains the staggered archive skyline")
 	var storm_zone := geometry.get_node("05ThoughtStormArena") as Node3D
 	assert(is_equal_approx((storm_zone.get_node("BossArenaCollision") as Node3D).position.y, -1.0),
 		"legacy boss floor must not bury the new paving and architecture")
 	assert(island_three.get_meta("masonry_finish") == "matte_non_emissive")
 	assert(not (island_three.get_node("IslandThreeStormDeck") as MeshInstance3D).material_override.emission_enabled,
 		"large masonry surfaces reflect light rather than washing out the courtyard")
+	assert((island_three.get_node(
+		"StormworksGrandCourt/StormLensTower/StormLensPrism") as MeshInstance3D
+		).material_override.emission_enabled,
+		"storm glass keeps its controlled glow after the masonry finish pass")
 
 	for retired_ring in storm_zone.find_children("LayeredStormRing_*", "MeshInstance3D", true, false):
 		assert(not retired_ring.visible, "the oversized legacy vortex must remain retired")
+	var retired_tree := geometry.get_node("06OldestTreeSanctuary/MindSparkBioDataTree") as Node3D
+	for old_body in retired_tree.find_children("*", "CollisionObject3D", true, false):
+		assert((old_body as CollisionObject3D).collision_layer == 0,
+			"the invisible retired Oldest Tree must not block the player")
 	assert(str((storm_zone.get_node("BossArenaCollision") as MeshInstance3D).get_meta(
 		"restyled_as", "")) == "IvoryStormworksCourt")
 	var quest_landmarks := PackedStringArray([
@@ -217,13 +271,18 @@ func _run() -> void:
 	assert(island_three.has_node("OldestTreeLivingCathedral/LivingHeartwoodCollision"),
 		"the redesigned Oldest Tree is a solid living landmark")
 	assert(island_three.has_node("OldestTreeLivingCathedral/GreatBough_01A"))
+	assert(island_three.find_children("RootNaveInlay_*", "MeshInstance3D", true, false).is_empty(),
+		"the Oldest Tree approach has no loose cyan floor bars")
+	assert(island_three.get_node("OldestTreeLivingCathedral").find_children(
+		"CanopyLeafMass_*", "MeshInstance3D", true, false).size() == 25,
+		"the Oldest Tree crown leaves space between its five primary boughs")
 	var shared_palette: Dictionary = world.get("_materials")
 	assert((island_three.get_node("OldestTreeLivingCathedral/LivingHeartwood") as MeshInstance3D).material_override \
-		.albedo_color == shared_palette.shared_style_ivory.albedo_color,
-		"the Oldest Tree uses the same ivory structure material as Island One's light tree")
+		.albedo_color == shared_palette.island_three_hero_bark.albedo_color,
+		"the Oldest Tree has a warm bark trunk like Island One's hero tree")
 	assert((island_three.get_node("OldestTreeLivingCathedral/CanopyLeafMass_01_01") as MeshInstance3D).material_override \
-		.albedo_color in [shared_palette.shared_style_cyan.albedo_color, shared_palette.shared_style_lavender.albedo_color],
-		"the Oldest Tree canopy uses Island One's cyan and lavender light foliage")
+		.albedo_color in [shared_palette.shared_style_ivory.albedo_color, shared_palette.island_three_sage.albedo_color],
+		"the Oldest Tree canopy uses Island One's pale foliage palette")
 	assert(island_three.has_node("LowPolyUndersideAccents/EmbeddedAetherCrystal_01"))
 	var return_arch_left := geometry.get_node(
 		"06OldestTreeSanctuary/ReturnWorldGate/Left") as MeshInstance3D

@@ -81,6 +81,10 @@ static func apply(world: MindSparkWorldOne) -> void:
 	garden.set_script(preload("res://scripts/mind_spark/unfinished_light_garden.gd"))
 	world.add_child(garden)
 	garden.call("build", world)
+	# The conservatory replaces this earlier combat court. Keeping its hidden
+	# masonry solid left invisible pillars and a reward plinth in the player route.
+	_retire_assembly(campus.get_node("EliteGuardianCourt"),
+		"GardenOfUnfinishedLight/ConservatoryOfPossibleTomorrow")
 	for station in world.get_quest_objects():
 		if station.save_id != "world_one.evidence_scanner": continue
 		_retire_assembly(campus.get_node("EvidenceReadingCourt"), "ProductionInspectionBay")
@@ -89,6 +93,7 @@ static func apply(world: MindSparkWorldOne) -> void:
 		bay.set_script(preload("res://scripts/mind_spark/inspection_bay_presenter.gd"))
 		station.add_child(bay)
 		bay.call("configure", station, world)
+		_build_production_station_marker(world, station, "EVIDENCE", 0)
 	for station in world.get_quest_objects():
 		if station.save_id != "world_one.memory_board": continue
 		_retire_assembly(campus.get_node("MemoryWeavingCourt"), "ProductionRecorderBay")
@@ -97,6 +102,7 @@ static func apply(world: MindSparkWorldOne) -> void:
 		recorder.set_script(preload("res://scripts/mind_spark/recorder_bay_presenter.gd"))
 		station.add_child(recorder)
 		recorder.call("configure", station, world)
+		_build_production_station_marker(world, station, "MEMORY", 1)
 	world.call("_repair_island_one_legacy_openings", geometry, 2)
 	for station in world.get_quest_objects():
 		if station.save_id != "world_one.logic_gate": continue
@@ -106,6 +112,7 @@ static func apply(world: MindSparkWorldOne) -> void:
 		tester.set_script(preload("res://scripts/mind_spark/tester_bay_presenter.gd"))
 		station.add_child(tester)
 		tester.call("configure",station,world)
+		_build_production_station_marker(world, station, "LOGIC", 3)
 	_build_departure_threshold(world, geometry)
 	for station in world.get_quest_objects():
 		if station.save_id != "world_one.perspective_lens": continue
@@ -114,6 +121,7 @@ static func apply(world: MindSparkWorldOne) -> void:
 		viewer.set_script(preload("res://scripts/mind_spark/perspective_bay_presenter.gd"))
 		station.add_child(viewer)
 		viewer.call("configure",station,world)
+		_build_production_station_marker(world, station, "PERSPECTIVE", 4)
 	_refine_external_bridges(world, geometry)
 	for station in world.get_quest_objects():
 		if station.save_id != "world_one.truth_bridge": continue
@@ -123,6 +131,7 @@ static func apply(world: MindSparkWorldOne) -> void:
 		projector.set_script(preload("res://scripts/mind_spark/projector_presenter.gd"))
 		station.add_child(projector)
 		projector.call("configure",station,world)
+		_build_production_station_marker(world, station, "TRUTH", 5)
 	world.set_meta("island_two_environment_style", "heavenly research observatory")
 	world.set_meta("island_two_layout_revision", "observatory_of_understanding_05_heavenly_hierarchy")
 	world.set_meta("island_two_style_alignment", "island_one_shared_grammar_v05_heavenly_hierarchy")
@@ -762,8 +771,8 @@ static func _build_evidence_observatory(world: MindSparkWorldOne, campus: Node3D
 	]))
 	campus.add_child(observatory)
 
-	# Six grounded buttresses carry three open ribs. The open eastern and western
-	# faces preserve the approach to Scanner and Verifier; no roof blankets the sky.
+	# Short perimeter ribs frame the court without drawing six long beams across
+	# the player camera or hiding the five working stations below them.
 	var rib_depths := [-34.0, 0.0, 34.0]
 	for rib_index in rib_depths.size():
 		var z := float(rib_depths[rib_index])
@@ -783,15 +792,18 @@ static func _build_evidence_observatory(world: MindSparkWorldOne, campus: Node3D
 				Vector3(90, 0, 0))
 		world.call("_add_cable_between", observatory,
 			"ArchiveCanopyRib_%02d_West" % (rib_index + 1),
-			Vector3(-74, 11.9, z), Vector3(0, 25.0, z),
+			Vector3(-74, 11.9, z), Vector3(-55, 16.0, z),
 			.64, .38, mats.sanctum_ivory, 12)
 		world.call("_add_cable_between", observatory,
 			"ArchiveCanopyRib_%02d_East" % (rib_index + 1),
-			Vector3(0, 25.0, z), Vector3(74, 11.9, z),
+			Vector3(55, 16.0, z), Vector3(74, 11.9, z),
 			.38, .64, mats.sanctum_ivory, 12)
-		world.call("_add_brick", observatory,
-			"ArchiveAquaKeystone_%02d" % (rib_index + 1), Vector3(0, 24.8, z),
-			Bricks.build_bevel_box(Vector3(7.0, 1.15, 2.0), .16), mats.arrival_glass)
+		for side in [-1.0, 1.0]:
+			world.call("_add_brick", observatory,
+				"ArchiveAquaKeystone_%02d_%s" % [rib_index + 1, side],
+				Vector3(float(side) * 55.0, 16.0, z),
+				Bricks.build_bevel_box(Vector3(3.0, .85, 1.6), .16),
+				mats.arrival_glass)
 
 	# A suspended landmark explains the chapter at overview scale without becoming
 	# another input. Rings are appropriate here because this is an orrery, not one
@@ -822,8 +834,59 @@ static func _build_evidence_observatory(world: MindSparkWorldOne, campus: Node3D
 			Vector3(sin(angle) * 5.8, 20.0, -7 + cos(angle) * 2.2),
 			.14, .08, mats.astral_brass, 8)
 
+	_build_evidence_synthesis_table(world, observatory)
 	_build_department_sign(world, observatory, Vector3(-68, 1.0, -54),
 		"EVIDENCE OBSERVATORY\nREAD • CONNECT • VERIFY", 0.18)
+
+
+static func _build_evidence_synthesis_table(world: MindSparkWorldOne,
+		observatory: Node3D) -> void:
+	var mats: Dictionary = world.get("_materials")
+	var table := Node3D.new()
+	table.name = "EvidenceSynthesisTable"
+	# The quest machines are spread across the forward half of the court. This
+	# table sits behind them and below the orrery, leaving every operator apron
+	# and the approach between scanner, recorder and verifier open.
+	table.position = Vector3(0, 0, -26)
+	table.set_meta("story_role", "three observations become one verified account")
+	table.set_meta("clear_operator_approaches", true)
+	observatory.add_child(table)
+	world.call("_add_box", table, "CharcoalTableFoot",
+		Vector3(0, .32, 0), Vector3(39.0, .64, 16.0),
+		mats.bio_gunmetal, true)
+	for side in [-1.0, 1.0]:
+		for end in [-1.0, 1.0]:
+			world.call("_add_box", table,
+				"IvoryTableLeg_%s_%s" % [side, end],
+				Vector3(float(side) * 18.0, 1.75, float(end) * 7.0),
+				Vector3(1.7, 2.9, 1.7), mats.sanctum_ivory, true)
+	world.call("_add_box", table, "IvoryWorktop",
+		Vector3(0, 3.45, 0), Vector3(42.0, .72, 18.0),
+		mats.sanctum_ivory, true)
+	world.call("_add_brick", table, "RecessedEvidenceSlate",
+		Vector3(0, 3.86, 0),
+		Bricks.build_bevel_box(Vector3(37.4, .08, 12.0), .06),
+		mats.bio_gunmetal)
+	for index in 3:
+		var x := float(index - 1) * 12.0
+		world.call("_add_brick", table,
+			"IvoryEvidenceFrame_%02d" % (index + 1),
+			Vector3(x, 4.06, 0),
+			Bricks.build_bevel_box(Vector3(9.2, .30, 9.0), .12),
+			mats.sanctum_ivory)
+		world.call("_add_box", table,
+			"CharcoalEvidencePage_%02d" % (index + 1),
+			Vector3(x, 7.35, -1.2), Vector3(8.4, 6.5, .8),
+			mats.bio_gunmetal, false)
+		var evidence_signal := world.call("_add_box", table,
+			"EvidenceSignal_%02d" % (index + 1),
+			Vector3(x, 7.35, -.68), Vector3(6.8, 4.9, .12),
+			mats.arrival_glass, false) as MeshInstance3D
+		evidence_signal.visible = false
+	var label := world.call("_add_label", table, "OBSERVE  •  CONNECT  •  VERIFY",
+		Vector3(0, 5.6, 9.15), Color("fff2d9"), 22) as Label3D
+	label.pixel_size = .012
+	label.outline_size = 2
 
 
 static func _build_evidence_aether_bus(world: MindSparkWorldOne, campus: Node3D,
@@ -944,6 +1007,34 @@ static func _build_station_courts(world: MindSparkWorldOne, campus: Node3D) -> v
 		label.pixel_size = .010
 		label.outline_size = 2
 		_add_court_emblem(world,court,int(spec[4]),mats)
+
+
+static func _build_production_station_marker(world: MindSparkWorldOne,
+		station: QuestObjectBase, title: String, emblem: int) -> void:
+	var mats: Dictionary = world.get("_materials")
+	var marker := Node3D.new()
+	marker.name = "ProductionStationMarker"
+	marker.set_meta("purpose", "grounded long-range silhouette for the live quest instrument")
+	station.add_child(marker)
+	for side in [-1.0, 1.0]:
+		world.call("_add_box", marker, "IvoryMarkerPier_%s" % side,
+			Vector3(float(side) * 5.5, 3.9, -4.8),
+			Vector3(.9, 7.8, .9), mats.sanctum_ivory, true)
+	world.call("_add_brick", marker, "IvoryMarkerHeader",
+		Vector3(0, 7.8, -4.8),
+		Bricks.build_bevel_box(Vector3(11.8, .8, 1.1), .14),
+		mats.sanctum_ivory)
+	world.call("_add_box", marker, "CharcoalMarkerSlate",
+		Vector3(0, 6.0, -4.65), Vector3(9.2, 3.3, .3),
+		mats.bio_gunmetal, false)
+	var label := world.call("_add_label", marker, title,
+		Vector3(0, 8.85, -4.05), Color("fff0c9"), 24) as Label3D
+	label.pixel_size = .012
+	label.outline_size = 2
+	_add_court_emblem(world, marker, emblem, mats)
+	var emblem_root := marker.get_node("QuestVerbEmblem") as Node3D
+	emblem_root.position = Vector3(0, 6.0, -4.36)
+	emblem_root.scale = Vector3(1.8, 1.8, 1.8)
 
 
 static func _add_court_emblem(world: MindSparkWorldOne, court: Node3D,

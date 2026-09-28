@@ -19,9 +19,10 @@ fi
 	npx vercel alias set "${project_alias}" "${public_alias}"
 )
 
-remote_manifest="$(curl -fsSL \
-	"https://${public_alias}/index.pck.parts.json?build=$(date +%s)")"
-python3 - "${local_manifest}" "${remote_manifest}" <<'PY'
+for attempt in {1..8}; do
+	remote_manifest="$(curl -fsSL \
+		"https://${public_alias}/index.pck.parts.json?build=$(date +%s)-${attempt}")"
+	if python3 - "${local_manifest}" "${remote_manifest}" <<'PY'
 import json
 import pathlib
 import sys
@@ -37,3 +38,12 @@ print(
     f"{remote['count']} parts, {remote['bytes']} bytes"
 )
 PY
+	then
+		exit 0
+	fi
+	if [[ "${attempt}" -lt 8 ]]; then
+		sleep 2
+	fi
+done
+echo "Production alias did not serve the new pack manifest after retrying." >&2
+exit 1

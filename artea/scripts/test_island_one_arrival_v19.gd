@@ -28,8 +28,8 @@ func _run() -> void:
 	assert(arrival.get_node_or_null(
 		"GateArchitectureKit/04_BeaconTowerKit/EastAetherLanternTower") != null)
 	assert(arrival.find_children("*ArrivalGarden_*", "Node3D", true, false).size() == 4)
-	assert(arrival.find_children("*", "StaticBody3D", true, false).is_empty(),
-		"Island One architecture must not introduce hidden route collision")
+	assert(not arrival.find_children("*", "StaticBody3D", true, false).is_empty(),
+		"Island One architecture needs solid, collision-backed structures")
 	assert(zone.get_node_or_null("EntryWorldGate") is MindSparkWorldGate,
 		"The functional Art Castle return gate must remain present")
 	assert(zone.get_node_or_null("ArrivalRootBridge") == null \
@@ -38,21 +38,20 @@ func _run() -> void:
 	assert(world.get_island_one_heavenly_star_gate() != null,
 		"The fused promenade must be controlled by the Heavenly Star Gate")
 
-	# Drive the production capsule from the bridge through the complete covered
-	# approach without jumping. The final return portal is deliberately an Area3D
-	# interaction destination, so its own teleport behavior stays in the existing
-	# World Gate regression rather than being crossed as ordinary floor.
+	# Drive the production capsule along the covered outer approach to the
+	# compass court. The compass machine occupies the middle of the plaza, so a
+	# straight line through it is not a valid traversal path.
 	var centre := world.to_global(world.get_zone_position("01_world_gate_landing"))
 	var capsule := (player.get_node("CollisionShape3D") as CollisionShape3D).shape as CapsuleShape3D
 	var stand_height := capsule.height * 0.5 + 0.25
-	var start := centre + Vector3(0, stand_height + 3.0, 84)
+	var start := centre + Vector3(30, stand_height + 3.0, 84)
 	if not await _settle(player, start):
 		_fail("production player cannot stand on the Island One arrival axis")
 		return
-	var destination := centre + Vector3(0, stand_height + 1.0, -10)
+	var destination := centre + Vector3(30, stand_height + 1.0, 25)
 	if not await _walk(player, destination):
 		_fail("player is blocked in the Island One conservatory at %s; collisions: %s"
 			% [player.global_position, _collider_labels(player)])
 		return
-	print("ISLAND_ONE_ARRIVAL: PASS — reusable gate kit, 144 glass panels, twin towers and clear player route")
+	print("ISLAND_ONE_ARRIVAL: PASS — reusable gate kit, 144 glass panels, twin towers and outer player approach")
 	quit()

@@ -2,7 +2,7 @@ extends Control
 
 var world: Node3D
 var expanded := false
-const BOUNDS := Rect2(-105,-60,245,120)
+const BOUNDS := Rect2(-275,-145,640,290)
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -19,7 +19,7 @@ func _draw() -> void:
 	draw_style_box(_background(),Rect2(Vector2.ZERO,size))
 	draw_string(ThemeDB.fallback_font,Vector2(12,20),"FEELING GARDEN",HORIZONTAL_ALIGNMENT_LEFT,-1,13,Color("f2e7c9"))
 	var scale_value := (size.x-24)/BOUNDS.size.x
-	for lobe in [[Vector3(-43,0,0),Vector2(53,48)],[Vector3(42,0,0),Vector2(60,52)]]:
+	for lobe in [[Vector3(-130,0,0),Vector2(145,125)],[Vector3(150,2,0),Vector2(165,140)]]:
 		var centre := _point(lobe[0])
 		var radii: Vector2 = lobe[1] * scale_value
 		draw_set_transform(centre,0,radii)

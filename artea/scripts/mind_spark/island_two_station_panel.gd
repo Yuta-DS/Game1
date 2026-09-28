@@ -299,4 +299,8 @@ func _build_garden_controls() -> void:
 			if child.get_meta("focus_action", "") == _focus_action and not _focus_action.is_empty():
 				next_focus = child
 				break
-	if next_focus != null: next_focus.grab_focus.call_deferred()
+	if next_focus != null: call_deferred("_focus_if_current", next_focus)
+
+func _focus_if_current(button: Button) -> void:
+	if is_instance_valid(button) and button.is_inside_tree() and button.is_visible_in_tree():
+		button.grab_focus()

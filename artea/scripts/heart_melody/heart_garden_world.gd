@@ -12,17 +12,29 @@ const Catalog := preload("res://scripts/heart_melody/heart_garden_catalog.gd")
 const GardenMap := preload("res://scripts/heart_melody/heart_garden_map.gd")
 const Layout := preload("res://scripts/heart_melody/heart_garden_layout.gd")
 const TreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree.glb")
-const PlanterModel := preload("res://assets3D/heart_melody/island_one/glb/feeling_planter.glb")
-const DrumModel := preload("res://assets3D/heart_melody/island_one/glb/flower_drum.glb")
+const BlossomTreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree_a.glb")
+const CypressTreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree_b.glb")
+const PlanterModels := [
+	preload("res://assets3D/heart_melody/island_one/glb/feeling_planter_a.glb"),
+	preload("res://assets3D/heart_melody/island_one/glb/feeling_planter_b.glb"),
+	preload("res://assets3D/heart_melody/island_one/glb/feeling_planter_c.glb"),
+]
+const DrumModels := [
+	preload("res://assets3D/heart_melody/island_one/glb/drum_leaf.glb"),
+	preload("res://assets3D/heart_melody/island_one/glb/drum_sun.glb"),
+	preload("res://assets3D/heart_melody/island_one/glb/drum_droplet.glb"),
+]
 const GateModel := preload("res://assets3D/heart_melody/island_one/glb/heart_gate_arch.glb")
 const RouteStoneModel := preload("res://assets3D/heart_melody/island_one/glb/heart_route_stone.glb")
 const BenchModel := preload("res://assets3D/heart_melody/island_one/glb/song_memory_bench.glb")
 const LanternModel := preload("res://assets3D/heart_melody/island_one/glb/comfort_lantern.glb")
 const BlossomModel := preload("res://assets3D/heart_melody/island_one/glb/listening_blossom.glb")
-const PLANTERS := [Vector3(-38,0,-19), Vector3(-24,0,19), Vector3(-6,0,-8)]
-const DRUMS := [Vector3(24,0,-16), Vector3(24,0,16), Vector3(38,0,0)]
-const ARRIVAL := Vector3(-88,2,0)
-const CLEARINGS := [Vector3(58,0,-20), Vector3(74,0,18)]
+const PLANTERS := [Vector3(-55,0,-62), Vector3(12,1,65), Vector3(68,2,-34)]
+# State.SYMBOLS is [leaf, droplet, sun], so this deliberately keeps droplet
+# north and sun east while still presenting the authored triangle in-world.
+const DRUMS := [Vector3(160,2,-58), Vector3(160,2,58), Vector3(205,2,0)]
+const ARRIVAL := Vector3(-250,2,0)
+const CLEARINGS := [Vector3(245,2,-76), Vector3(300,2,66)]
 const FEELING_COLORS := {"joy":"pink", "sadness":"blue", "frustration":"d78c6b",
 	"fear":"b7a2ce", "peace":"leaf_light", "hope":"gold", "sound":"ivory"}
 
@@ -145,9 +157,9 @@ func deactivate() -> void:
 
 func checkpoint_position() -> Vector3:
 	match str(state.data.checkpoint):
-		"planter_court": return Vector3(-24, 2, 19)
-		"drum_garden": return Vector3(38, 2.6, 0)
-		"restored_garden": return Vector3(94, 2.6, 0)
+		"planter_court": return Vector3(-8, 2, 0)
+		"drum_garden": return Vector3(105, 3, 0)
+		"restored_garden": return Vector3(285, 4, 0)
 	return ARRIVAL
 
 
@@ -196,67 +208,72 @@ func _build_garden() -> void:
 	add_child(entry)
 	var gate := GateModel.instantiate() as Node3D
 	gate.name = "AuthoredHeartGate"
-	gate.position = Vector3(-94, 0, 0)
-	gate.scale = Vector3.ONE * 0.75
+	gate.position = Vector3(-250, 0, 0)
+	gate.scale = Vector3.ONE * 1.85
 	entry.add_child(gate)
 	for side in [-1.0, 1.0]:
-		Kit.box_collider(entry, "GatePierCollision", Vector3(-94, 2.5, side * 3.6),
-			Vector3(1.4, 5.0, 1.5))
-	_register("return_gate",Vector3(-88,0,0),"Return to the Castle")
-	Kit.sign_text(entry,"QUIET MEADOW",Vector3(-94,9.6,0),30)
-	_register("arrival_bloom",Vector3(-68,0,0),"Rest at the Arrival Bloom")
-	Kit.flower(entry,Vector3(-68,0.8,0),1.5,"ivory")
-	_register("route_stone",Vector3(-66,0,-7),"Open the Heart Garden map")
+		Kit.box(entry, "HeartGatePier", Vector3(-250, 4.5, side * 5.6), Vector3(3.0, 9.0, 3.0), "ivory", true)
+		Kit.branch(entry, "GateFlowerVine", Vector3(-250, 6.5, side * 5.4), Vector3(-250, 10.0, side * 1.6), 0.28, "leaf")
+		Kit.flower(entry, Vector3(-250, 9.4, side * 1.9), 1.0, "pink")
+	_register("return_gate",Vector3(-244,0,0),"Return to the Castle")
+	Kit.sign_text(entry,"QUIET MEADOW",Vector3(-250,12.5,0),30)
+	_register("arrival_bloom",Vector3(-170,0,0),"Rest at the Arrival Bloom")
+	Kit.flower(entry,Vector3(-170,1.1,0),2.2,"ivory")
+	_register("route_stone",Vector3(-165,0,-20),"Open the Heart Garden map")
 	var route_stone := RouteStoneModel.instantiate() as Node3D
-	route_stone.position = Vector3(-66,0,-10)
-	route_stone.scale = Vector3.ONE * 0.75
+	route_stone.position = Vector3(-165,0,-23)
+	route_stone.scale = Vector3.ONE * 1.2
 	entry.add_child(route_stone)
 	for i in 3:
-		var root := PlanterModel.instantiate() as Node3D
+		var root := (PlanterModels[i] as PackedScene).instantiate() as Node3D
 		root.name = "FeelingPlanter%d" % i
 		root.position = PLANTERS[i]
-		root.scale = Vector3.ONE * 1.3
+		root.scale = Vector3.ONE * 2.4
 		add_child(root)
 		Kit.cylinder_collider(self, "PlanterCollision%d" % i,
-			PLANTERS[i] + Vector3.UP * 0.65, 1.5, 1.3)
+			PLANTERS[i] + Vector3.UP * 1.0, 3.0, 2.0)
 		var bloom := root.find_child("GrowingBloom",true,false) as Node3D
 		blooms.append(bloom)
-		_register("planter_%d"%i,PLANTERS[i]+Vector3(0,0,3),"Plant a Feeling Seed %d"%(i+1))
-		Kit.sign_text(root,"SEED %d"%(i+1),Vector3(0,3.3,0),22)
+		_register("planter_%d"%i,PLANTERS[i]+Vector3(0,0,5),"Plant a Feeling Seed %d"%(i+1))
+		for side in [-1.0, 1.0]:
+			Kit.flower(root, Vector3(side * 3.4, 0.3, 2.8), 0.7, ["gold", "blue", "pink"][i])
+		Kit.sign_text(root,["JOY • LEAF", "SADNESS • DROPLET", "HOPE • SUN"][i],Vector3(0,5.2,0),20)
 	for i in 3:
-		var root := DrumModel.instantiate() as Node3D
+		var root := (DrumModels[i] as PackedScene).instantiate() as Node3D
 		root.name = "DrumFlower%d" % i
 		root.position = DRUMS[i]
-		root.scale = Vector3.ONE * 1.25
+		root.scale = Vector3.ONE * 2.15
 		add_child(root)
 		Kit.cylinder_collider(self, "DrumCollision%d" % i,
-			DRUMS[i] + Vector3.UP * 0.45, 1.35, 0.9)
+			DRUMS[i] + Vector3.UP * 0.75, 2.2, 1.6)
 		var petals := root.find_child("MovingPetals",true,false) as Node3D
+		if petals == null: petals = root
 		for part in petals.get_children():
 			if part is MeshInstance3D and str(part.name).begins_with("Petal"):
-				part.material_override = Kit.material("pink" if i == 0 else ("blue" if i == 1 else "ivory"))
+				part.material_override = Kit.material("leaf_light" if i == 0 else ("blue" if i == 1 else "gold"))
 		drums.append(petals)
-		Kit.sign_text(root,State.SYMBOLS[i].capitalize(),Vector3(0,3.5,0),30)
-		_register("drum_%d"%i,DRUMS[i]+Vector3(0,0,3),"Play the %s flower" % State.SYMBOLS[i])
-	_register("phrase",Vector3(10,0,3),"Arrange the garden phrase")
+		Kit.sign_text(root,State.SYMBOLS[i].capitalize(),Vector3(0,5.0,0),26)
+		_register("drum_%d"%i,DRUMS[i]+Vector3(0,0,5),"Play the %s flower" % State.SYMBOLS[i])
+	_register("phrase",Vector3(105,2,5),"Arrange the garden phrase")
 	var blossom := BlossomModel.instantiate() as Node3D
 	blossom.name = "ListeningBlossom"
-	blossom.position = Vector3(10,0,0)
-	blossom.scale = Vector3.ONE * 1.15
+	blossom.position = Vector3(105,2,0)
+	blossom.scale = Vector3.ONE * 2.4
 	add_child(blossom)
-	Kit.sign_text(self,"LISTEN • PLAY • CONFIRM",Vector3(10,4.6,0),22)
-	_build_bench(Vector3(-56,0,-11),"bench_arrival")
-	_build_bench(Vector3(15,0,25),"bench_rhythm")
-	_build_lantern(Vector3(-58,0,8),"lantern_arrival")
-	_build_lantern(Vector3(50,0,-5),"lantern_mid")
+	Kit.sign_text(self,"LISTEN • PLAY • CONFIRM",Vector3(105,8.2,0),22)
+	_build_bench(Vector3(-135,0,-45),"bench_arrival")
+	_build_bench(Vector3(126,2,32),"bench_rhythm")
+	_build_bench(Vector3(285,3,11),"bench_overlook")
+	_build_lantern(Vector3(-135,0,42),"lantern_arrival")
+	_build_lantern(Vector3(230,2,-18),"lantern_mid")
 	for index in 2:
 		var clearing: Vector3 = CLEARINGS[index]
-		_register("encounter_%d"%index,clearing+Vector3(0,0,-5),
+		_register("encounter_%d"%index,clearing+Vector3(0,0,-9),
 			"Enter Blight clearing %d"%(index+1))
 		Kit.sign_text(self,"BLIGHT CLEARING %d\nSTEP ASIDE • STRIKE DURING THE PAUSE"%(index+1),
-			clearing+Vector3(0,3.5,-10),18)
+			clearing+Vector3(0,5.0,-14),18)
 		for side in [-1.0,1.0]:
-			Kit.flower(self,clearing+Vector3(side*7,0.8,8),1.1,"leaf_light")
+			Kit.flower(self,clearing+Vector3(side*15,0.8,13),1.5,"leaf_light")
 	_build_environment_dressing()
 
 
@@ -285,11 +302,11 @@ func _build_departure(parent: Node3D) -> void:
 
 
 func _build_cast() -> void:
-	for item in [["mayor_milo",Vector3(-78,0,5),"Milo"], ["guardian_angel",Vector3(-74,0,-7),"Mother Guardian"]]:
+	for item in [["mayor_milo",Vector3(-210,0,18),"Milo"], ["guardian_angel",Vector3(-200,0,-28),"Mother Guardian"]]:
 		var scene := load("res://scenes/mind_spark/cast/%s.tscn" % item[0]) as PackedScene
 		var guide := scene.instantiate() as Node3D
 		guide.position = item[1]
-		guide.scale = Vector3.ONE * 0.4
+		guide.scale = Vector3.ONE * 0.55
 		add_child(guide)
 		guide.get_node("DialogueLabel").visible = false
 		_register(str(item[0]),item[1]+Vector3(0,0,3),"Talk with %s"%item[2])
@@ -299,44 +316,44 @@ func _build_bench(at: Vector3, id: String) -> void:
 	var bench := BenchModel.instantiate() as Node3D
 	bench.name = "SongMemoryBench"
 	bench.position = at
-	bench.scale = Vector3.ONE * 0.8
+	bench.scale = Vector3.ONE * 1.25
 	add_child(bench)
-	Kit.box_collider(self, "BenchCollision", at + Vector3(0,0.8,0), Vector3(5.0,1.6,1.8))
-	_register(id,at+Vector3(0,0,3.3),"Song Memory Bench")
+	Kit.box_collider(self, "BenchCollision", at + Vector3(0,0.8,0), Vector3(6.5,1.6,2.4))
+	_register(id,at+Vector3(0,0,4.3),"Song Memory Bench")
 
 
 func _build_lantern(at: Vector3, id: String) -> void:
 	var lantern := LanternModel.instantiate() as Node3D
 	lantern.name = "ComfortLantern"
 	lantern.position = at
-	lantern.scale = Vector3.ONE * 0.8
+	lantern.scale = Vector3.ONE * 1.25
 	add_child(lantern)
-	Kit.cylinder_collider(self, "LanternCollision", at + Vector3.UP * 1.7, 0.65, 3.4)
-	_register(id,at+Vector3(2.5,0,2.5),"Rest at the Comfort Lantern")
+	Kit.cylinder_collider(self, "LanternCollision", at + Vector3.UP * 2.2, 0.85, 4.4)
+	_register(id,at+Vector3(3.5,0,3.5),"Rest at the Comfort Lantern")
 
 
 func _build_environment_dressing() -> void:
 	_seeded_dressing = Node3D.new()
 	_seeded_dressing.name = "SeededGardenResponse"
 	add_child(_seeded_dressing)
-	_add_flower_multimesh(_seeded_dressing, "SeededFlowerBank", [Vector3(-44,0.7,-25),
-		Vector3(-31,0.7,27), Vector3(-10,0.7,-15), Vector3(15,0.7,-24),
-		Vector3(16,0.7,24)], "pink")
+	_add_flower_multimesh(_seeded_dressing, "SeededFlowerBank", [Vector3(-76,0.7,-54),
+		Vector3(-44,0.7,33), Vector3(-8,1.7,-24), Vector3(28,2.7,-42),
+		Vector3(54,2.7,38), Vector3(94,2.7,-27), Vector3(128,2.7,42)], "pink")
 	_restored_dressing = Node3D.new()
 	_restored_dressing.name = "RestoredGardenResponse"
 	add_child(_restored_dressing)
 	var restored_points: Array[Vector3] = []
-	for index in 16:
-		var x := lerpf(42.0, 94.0, float(index) / 15.0)
+	for index in 28:
+		var x := lerpf(110.0, 302.0, float(index) / 27.0)
 		var side := -1.0 if index % 2 == 0 else 1.0
-		restored_points.append(Vector3(x, 0.7, side * (7.0 + float(index % 3) * 2.0)))
+		restored_points.append(Vector3(x, 2.7, side * (10.0 + float(index % 4) * 4.0)))
 	_add_flower_multimesh(_restored_dressing, "RestoredFlowerWave", restored_points, "leaf_light")
 	_restoration_glow = OmniLight3D.new()
 	_restoration_glow.name = "RestoredGardenGlow"
-	_restoration_glow.position = Vector3(38, 8, 0)
+	_restoration_glow.position = Vector3(205, 12, 0)
 	_restoration_glow.light_color = Color("ffd99a")
 	_restoration_glow.light_energy = 0.55
-	_restoration_glow.omni_range = 42.0
+	_restoration_glow.omni_range = 76.0
 	_restoration_glow.shadow_enabled = false
 	add_child(_restoration_glow)
 
@@ -429,7 +446,7 @@ func _process(delta: float) -> void:
 		_feedback(true,"You are safe. Your flowers and song are remembered.")
 	if _encounter != null:
 		var local_player := to_local(player.global_position)
-		var clearing_radius := 14.0
+		var clearing_radius := 28.0 if _encounter_index == 0 else 36.0
 		if local_player.distance_to(CLEARINGS[_encounter_index]) > clearing_radius + 12.0:
 			_clear_encounter()
 			_feedback(true,"The Blight settles when you leave. Return when you are ready.")
@@ -644,7 +661,7 @@ func open_control(id: String) -> void:
 				return_requested.emit()
 			else: _feedback(false,"Could not save. Please try again before leaving."))
 	elif id in ["mayor_milo","guardian_angel"]:
-		_heading("Milo: Let's help the garden find its song." if id == "mayor_milo" else "Mother Guardian: Every feeling may speak here. You can also choose a sound.")
+		_heading("Milo: This garden has become quiet. Its feelings are still here, but they have forgotten how to become music." if id == "mayor_milo" else "Mother Guardian: Every feeling may speak here. Joy, sadness, fear, peace, and hope all belong in the garden.")
 		_heading(state.objective())
 		_button("Optional ways to explore",open_control.bind("reflections"))
 	elif id == "reflections":
@@ -844,7 +861,7 @@ func _start_encounter(clearing_index := -1) -> void:
 		enemy.slime = str(ids[i]).contains("slime")
 		enemy.player = player
 		enemy.position = CLEARINGS[clearing_index]+Vector3(0,0,(-5 if i == 0 else 5))
-		enemy.leash_radius = 12.5
+		enemy.leash_radius = 28.0 if clearing_index == 0 else 36.0
 		enemy.released.connect(_on_enemy_released)
 		_encounter.add_child(enemy)
 	_feedback(true,"Step aside from the marked attack, then strike the open shell.")

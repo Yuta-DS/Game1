@@ -62,6 +62,14 @@ func run() -> void:
 	use(1, &"swap", 1)
 	use(1, &"replay")
 	assert(quest.current_task().id == "open_logic_gate")
+	for enemy in world.get_enemies():
+		if enemy.encounter_id == "constellation":
+			enemy.take_damage(999.0)
+	var socket := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.THOUGHT_SPARK_SOCKET)
+	socket.current_state.progress = 2
+	socket.current_state.completed = false
+	socket.set_meta("available_sparks", 3)
+	assert(socket.interact(&"place_spark").completed)
 	use(2, &"model", 0)
 	use(2, &"test", null, false)
 	use(2, &"model", 1)

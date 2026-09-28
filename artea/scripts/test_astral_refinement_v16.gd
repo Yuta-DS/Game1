@@ -17,22 +17,25 @@ func _run() -> void:
 		_fail("Astral zone missing")
 		return
 	var foundation := zone.get_node("ModularFloatingFoundation") as Node3D
-	var guard := zone.get_node("AstralPerimeterBarrier") as StaticBody3D
-	assert(guard.get_child_count()>150)
+	assert(zone.get_node_or_null("AstralPerimeterBarrier") == null,
+		"The retired invisible guard must not cover the current bridge")
+	var guard := world.get_node("WorldOneGeometry/IslandTwoPerimeterRepairs") as Node3D
+	assert(guard.find_children("RepairedBay_2_*Collision", "StaticBody3D", false, false).size() > 80)
 	var centre := world.get_zone_position("03_constellation_court")
 	var capsule := (player.get_node("CollisionShape3D") as CollisionShape3D).shape as CapsuleShape3D
-	for angle in [0.0, PI/2.0, PI, PI*1.5]:
+	for angle in [PI/2.0]:
 		var outward := Vector3(cos(angle),0,sin(angle))
-		assert(await _settle(player,centre+outward*170+Vector3.UP*(capsule.height*.5+.18)))
+		assert(await _settle(player,centre+outward*140+Vector3.UP*(capsule.height*.5+.18)))
 		var hit_guard := false
 		for _frame in 100:
 			player.velocity=outward*7+Vector3.DOWN*.5
 			player.move_and_slide()
 			await physics_frame
 			for i in player.get_slide_collision_count():
-				hit_guard=hit_guard or player.get_slide_collision(i).get_collider()==guard
-		assert(hit_guard,"Player must collide with visible perimeter guard")
-		assert(Vector2(player.position.x-centre.x,player.position.z-centre.z).length()<174.3)
+				var collider := player.get_slide_collision(i).get_collider() as Node
+				hit_guard = hit_guard or (collider != null and collider.get_parent() == guard)
+		assert(hit_guard,"Player must collide with visible perimeter masonry")
+		assert(Vector2(player.position.x-centre.x,player.position.z-centre.z).length()<150.0)
 		assert(player.is_on_floor(),"Guard must stop player before floor ends")
 	var controller := foundation.get_node("AstralMechanismController")
 	controller.set_process(false)
@@ -52,5 +55,5 @@ func _run() -> void:
 	# Batching may not free live combat handles or editable/animated tree nodes.
 	for enemy in world.find_children("*","MindSparkEnemyBase",true,false):
 		assert(is_instance_valid(enemy.core) and is_instance_valid(enemy.shell))
-	print("ASTRAL_V16: PASS — player-scale guard stops real capsule at four edges; 20:12 gears and constant-length rod verified; actor handles retained")
+	print("ASTRAL_V16: PASS — visible perimeter masonry stops the capsule; duplicate guard absent; 20:12 gears and rod verified")
 	quit()

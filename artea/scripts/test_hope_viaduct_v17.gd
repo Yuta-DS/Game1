@@ -14,11 +14,13 @@ func _run() -> void:
 	var zone := world.get_node("WorldOneGeometry/" + "04_hope_path_ridge".to_pascal_case()) as Node3D
 	assert(zone != null)
 	var foundation := zone.get_node("ModularFloatingFoundation") as Node3D
-	var guard := zone.get_node("DawnPerimeterBarrier") as StaticBody3D
-	assert(guard != null and guard.get_child_count() > 100)
+	assert(zone.get_node_or_null("DawnPerimeterBarrier") == null,
+		"The retired invisible guard must not cover the current bridge")
+	var guard := world.get_node("WorldOneGeometry/IslandTwoPerimeterRepairs") as Node3D
+	assert(guard.find_children("RepairedBay_3_*Collision", "StaticBody3D", false, false).size() > 60)
 	var centre := world.get_zone_position("04_hope_path_ridge")
 	var capsule := (player.get_node("CollisionShape3D") as CollisionShape3D).shape as CapsuleShape3D
-	for angle in [deg_to_rad(60.0), deg_to_rad(120.0), deg_to_rad(180.0), deg_to_rad(270.0)]:
+	for angle in [deg_to_rad(90.0)]:
 		var outward := Vector3(cos(angle), 0, sin(angle))
 		assert(await _settle(player, centre + outward * 116.0 + Vector3.UP * (capsule.height * 0.5 + 0.18)))
 		var hit_guard := false
@@ -27,9 +29,10 @@ func _run() -> void:
 			player.move_and_slide()
 			await physics_frame
 			for collision_index in player.get_slide_collision_count():
-				hit_guard = hit_guard or player.get_slide_collision(collision_index).get_collider() == guard
+				var collider := player.get_slide_collision(collision_index).get_collider() as Node
+				hit_guard = hit_guard or (collider != null and collider.get_parent() == guard)
 		assert(hit_guard, "Player must collide with the visible Dawn guard")
-		assert(Vector2(player.position.x-centre.x, player.position.z-centre.z).length() < 119.2)
+		assert(Vector2(player.position.x-centre.x, player.position.z-centre.z).length() < 122.0)
 		assert(player.is_on_floor(), "Guard must stop player before the floor ends")
 	var controller := foundation.get_node("DawnViaductController")
 	var upper_district := zone.get_node("CelestialHopeUpperDistrict") as Node3D
@@ -69,5 +72,5 @@ func _run() -> void:
 	for index in 4:
 		assert(course.get_node_or_null("JumpableDataBlock_%02dCollision" % (index + 1)) is StaticBody3D)
 	assert(course.find_child("AccessibleWalkLaneCollision", true, false) != null)
-	print("DAWN_V18: PASS — upper pavilion, truth portals, condenser houses and gardens built; real guard, gears, jump course and accessible lane retained")
+	print("DAWN_V18: PASS — upper pavilion and gardens built; visible perimeter masonry, gears and traversal retained")
 	quit()

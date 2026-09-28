@@ -7,6 +7,7 @@ signal state_changed(enemy: MindSparkEnemyBase, state: int)
 enum State { IDLE, NOTICE, TELEGRAPH, ATTACK, RECOVERY, DEFEATED }
 
 const Definition := preload("res://scripts/mind_spark/combat/mind_spark_enemy_definition.gd")
+const RootStalkerVisual := preload("res://assets3D/mind_spark/anycreature/root_stalker.glb")
 
 @export var definition: MindSparkEnemyDefinition
 @export var encounter_id := ""
@@ -24,6 +25,8 @@ var _state_time := 0.0
 var _player: CharacterBody3D
 var _attack_applied := false
 var _spawn_position := Vector3.ZERO
+var _authored_visual: Node3D
+var _authored_animation: AnimationPlayer
 
 
 func _ready() -> void:
@@ -50,7 +53,9 @@ func reset_enemy() -> void:
 	current_health = definition.max_health
 	global_position = _spawn_position
 	visible = true
-	shell.visible = true
+	shell.visible = _authored_visual == null
+	if _authored_visual != null:
+		_authored_visual.visible = true
 	core.visible = false
 	scale = Vector3.ONE
 	_set_state(State.IDLE, 0.0)
@@ -62,6 +67,8 @@ func restore_defeated() -> void:
 	active = false
 	state = State.DEFEATED
 	shell.visible = false
+	if _authored_visual != null:
+		_authored_visual.visible = false
 	core.visible = true
 	name_label.text = "%s • FREE" % definition.display_name.to_upper()
 
@@ -155,6 +162,12 @@ func _set_state(next_state: int, duration: float) -> void:
 	$VisualRoot/ProjectilePreview.visible = false
 	$VisualRoot/ProjectilePreview.position = Vector3(0, 1.0, 0)
 	core.visible = state == State.RECOVERY and definition.enemy_kind == Definition.EnemyKind.BLIGHT_SENTINEL
+	if _authored_animation != null:
+		var clip := "attack" if state == State.ATTACK else "move" if state == State.NOTICE else "idle"
+		for candidate in _authored_animation.get_animation_list():
+			if String(candidate).ends_with(clip) and _authored_animation.current_animation != candidate:
+				_authored_animation.play(candidate)
+				break
 	state_changed.emit(self, state)
 
 
@@ -163,6 +176,8 @@ func _defeat() -> void:
 	velocity = Vector3.ZERO
 	_set_state(State.DEFEATED, 0.0)
 	shell.visible = false
+	if _authored_visual != null:
+		_authored_visual.visible = false
 	core.visible = true
 	name_label.text = "%s • FREE" % definition.display_name.to_upper()
 	_show_feedback("BLIGHT SHELL RELEASED", Color("80efaa"))
@@ -229,13 +244,22 @@ func _build_enemy_shape() -> void:
 				_add_sphere_part("WispTail_%02d" % tail_index, Vector3(0, -0.7 - tail_index * 0.48, 0),
 					0.33 - tail_index * 0.07, core_material)
 		Definition.EnemyKind.ROOT_STALKER:
-			shell.scale = Vector3(1.6, 0.72, 2.1)
-			for root_index in 8:
-				var angle := TAU * float(root_index) / 8.0
-				var root := _add_box_part("StalkerRoot_%02d" % root_index,
-					Vector3(cos(angle) * 1.45, -0.55, sin(angle) * 1.45), Vector3(0.22, 0.20, 1.8), shell_material)
-				root.rotation.y = -angle
-				root.rotation.z = 0.22 if root_index % 2 == 0 else -0.22
+			_authored_visual = RootStalkerVisual.instantiate() as Node3D
+			_authored_visual.name = "RootStalkerCreature"
+			_authored_visual.scale = Vector3.ONE * 2.1
+			add_child(_authored_visual)
+			# The imported body surface can lose its COLOR_0 flag in Godot's GLB
+			# importer even though the other seven surfaces keep it. Restore the
+			# baked bark palette without changing the source animation or mesh.
+			for imported_mesh in _authored_visual.find_children("*", "MeshInstance3D", true, false):
+				for surface_index in imported_mesh.mesh.get_surface_count():
+					var imported_material := imported_mesh.mesh.surface_get_material(surface_index) as StandardMaterial3D
+					if imported_material != null and not imported_material.vertex_color_use_as_albedo:
+						var corrected_material := imported_material.duplicate() as StandardMaterial3D
+						corrected_material.vertex_color_use_as_albedo = true
+						imported_mesh.set_surface_override_material(surface_index, corrected_material)
+			_authored_animation = _authored_visual.find_child("AnimationPlayer", true, false) as AnimationPlayer
+			shell.visible = false
 			_add_weak_point("REAR ◇", Vector3(0, 0.7, -1.55))
 		Definition.EnemyKind.BLIGHT_SENTINEL:
 			shell.scale = Vector3(1.45, 2.1, 1.05)

@@ -46,6 +46,12 @@ func _test_world_geometry(world: MindSparkWorldOne) -> void:
 		"the six gameplay districts are combined into three physical islands")
 	assert(world.get_meta("world_identity") == "living computer forest")
 	var geometry := world.get_node("WorldOneGeometry")
+	assert(world.find_child("EchoListeningBranch_*", true, false) == null,
+		"Island One's crossing brass listening lines stay removed")
+	assert(world.find_child("EchoOrbCradle_*", true, false) == null,
+		"Island One's loose gold orb rings stay removed")
+	assert(world.find_child("EchoListeningOrb_01", true, false) != null,
+		"live echo classifier orbs remain in the quest")
 	for zone_id in world.get_zone_ids():
 		var zone := geometry.get_node(zone_id.to_pascal_case())
 		assert(zone.get_node_or_null("WalkableZoneFloorCollision") is StaticBody3D,
@@ -107,6 +113,10 @@ func _test_greybox_build_order(world: MindSparkWorldOne, geometry: Node,
 			checkpoint_count += 1
 	_check(checkpoint_count >= 5,
 		"arrival, network, constellation, hope and boss checkpoints must exist")
+	for name in ["ArrivalCheckpointPad", "NetworkCheckpointPad",
+			"ConstellationCheckpointPad", "HopePathCheckpointPad"]:
+		_check(geometry.find_child(name, true, false) == null,
+			"route checkpoints must not leave cyan greybox pads in the finished world")
 
 
 func _segment_distance_xz(a_start: Vector3, a_end: Vector3,
@@ -153,16 +163,16 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 		"02_living_network_forest": 30,
 		"03_constellation_court": 14,
 		"04_hope_path_ridge": 14,
-		"05_thought_storm_arena": 8,
-		"06_oldest_tree_sanctuary": 24,
+		"05_thought_storm_arena": 4,
+		"06_oldest_tree_sanctuary": 12,
 	}
 	var organized_trees := get_nodes_in_group("mind_spark_organized_tree")
-	_check(organized_trees.size() == 100,
-		"the authored Mind Spark landscape must contain exactly 100 bio-data trees")
-	_check(int(world.get_meta("organized_tree_count", 0)) == 100,
-		"world metadata must report the exact 100-tree population")
-	_check(str(world.get_meta("organized_tree_distribution", "")) == "10/30/14/14/8/24",
-		"tree distribution must remain the approved six-zone composition")
+	_check(organized_trees.size() == 84,
+		"the quieter three-island landscape has 84 deliberately placed trees")
+	_check(int(world.get_meta("organized_tree_count", 0)) == 84,
+		"world metadata must report the 84-tree composition")
+	_check(str(world.get_meta("organized_tree_distribution", "")) == "10/30/14/14/4/12",
+		"tree distribution must match the revised six-zone composition")
 	_check(geometry.find_children("ServerTree_*", "Node3D", true, false).is_empty(),
 		"legacy blocky server-tree instances must not remain in the redesigned world")
 	var world_indices := {}
@@ -170,8 +180,8 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 	var distinct_grove_scales := {}
 	for tree in organized_trees:
 		var tree_index := int(tree.get_meta("world_tree_index", 0))
-		_check(tree_index >= 1 and tree_index <= 100,
-			"every organized tree needs a stable index from 1 through 100")
+		_check(tree_index >= 1 and tree_index <= 84,
+			"every organized tree needs a stable index from 1 through 84")
 		world_indices[tree_index] = true
 		_check(not bool(tree.get_meta("randomized", false)),
 			"organized grove trees must never use random placement")
@@ -181,11 +191,11 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 			distinct_grove_scales[snappedf(growth_scale, 0.001)] = true
 			_check(bool(tree.get_meta("size_randomized", false)),
 				"each grove tree must record its seeded random growth scale")
-	_check(world_indices.size() == 100,
-		"all 100 organized trees need unique stable world indices")
-	_check(grove_scales.size() == 99,
-		"the population needs 99 variable-size grove trees plus one hero tree")
-	_check(distinct_grove_scales.size() >= 75,
+	_check(world_indices.size() == 84,
+		"all 84 organized trees need unique stable world indices")
+	_check(grove_scales.size() == 83,
+		"the population needs 83 variable-size grove trees plus one hero tree")
+	_check(distinct_grove_scales.size() >= 60,
 		"seeded growth must provide broad small-to-large size variation")
 	_check(grove_scales.min() < 0.32 and grove_scales.max() > 0.60,
 		"standalone groves must visibly span sapling through large-canopy scales")
@@ -237,6 +247,13 @@ func _test_combat_roster(world: MindSparkWorldOne) -> void:
 		assert(enemy.definition.validated_telegraph() >= 0.75, "every normal attack warns for at least 0.75 seconds")
 		kinds[enemy.definition.enemy_kind] = true
 	assert(kinds.size() == MindSparkEnemyDefinition.EnemyKind.size(), "all five approved enemy types are present")
+	var root_stalker := enemies.filter(func(enemy): return enemy.definition.enemy_kind == MindSparkEnemyDefinition.EnemyKind.ROOT_STALKER)[0] as MindSparkEnemyBase
+	var creature := root_stalker.get_node_or_null("RootStalkerCreature") as Node3D
+	assert(creature != null and creature.visible and not root_stalker.shell.visible,
+		"Hope Path root stalker uses the authored creature rather than placeholder spheres")
+	var animator := creature.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	assert(animator != null and animator.has_animation("idle") and animator.has_animation("move") and animator.has_animation("attack"),
+		"authored root stalker retains idle, move and attack clips")
 	assert(world.activate_enemy_wave("network") == 4)
 	assert(world.active_enemy_count() <= 4, "the encounter director never activates more than four normal enemies")
 	var mite := enemies[0] as MindSparkEnemyBase

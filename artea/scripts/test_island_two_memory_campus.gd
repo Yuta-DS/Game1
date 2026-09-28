@@ -20,6 +20,11 @@ func _run() -> void:
 	var observatory := campus.get_node("EvidenceObservatory") as Node3D
 	assert(observatory.get_node("CelestialArchiveOrrery") is Node3D)
 	assert(observatory.find_children("ArchiveCanopyRib_*","Node3D",true,false).size()==6)
+	var synthesis_table := observatory.get_node("EvidenceSynthesisTable") as Node3D
+	assert(synthesis_table.get_node("IvoryWorktopCollision") is StaticBody3D,
+		"the evidence court focal table must stop the player")
+	assert(synthesis_table.position.z < -20.0,
+		"the table stays behind the three evidence quest approaches")
 	var gallery := campus.get_node("HopeOpticsGallery") as Node3D
 	assert(gallery.find_children("PerspectiveRib_*","Node3D",true,false).size()==6)
 	assert(gallery.get_node("TruthFoundryLintel") is Node3D)
@@ -52,6 +57,11 @@ func _run() -> void:
 		assert(float(station.get_meta("minimum_operator_apron_m"))>=4.0)
 		assert(station.get_node("IslandTwoStationSolid") is StaticBody3D,
 			"every reachable Island Two station needs a simplified solid housing")
+		var marker := station.get_node("ProductionStationMarker") as Node3D
+		assert(marker.visible)
+		assert(marker.find_children("IvoryMarkerPier_*Collision", "StaticBody3D",
+			false, false).size() == 2,
+			"the visible station marker piers must stop the player")
 	for station in world.get_quest_objects():
 		if station.save_id.begins_with("world_one.") and station.has_meta("canonical_layout"):
 			assert(station.get_node("IslandTwoStationSolid") is StaticBody3D,
@@ -75,9 +85,14 @@ func _run() -> void:
 	assert(not (receiver.get_node("ReceivedEchoSeed") as MeshInstance3D).visible)
 	world.set_island_two_story_state("received")
 	assert((receiver.get_node("ReceivedEchoSeed") as MeshInstance3D).visible)
+	assert((synthesis_table.get_node("EvidenceSignal_01") as MeshInstance3D).visible)
+	assert(not (synthesis_table.get_node("EvidenceSignal_02") as MeshInstance3D).visible)
 	var bus := campus.get_node("EvidenceAetherBus") as Node3D
 	assert((bus.get_node("ArchiveBusReading_01") as Node3D).scale.x == 1.0)
 	assert((bus.get_node("ArchiveBusReading_02") as Node3D).scale.x < 0.5)
+	world.set_island_two_story_state("evidence_sorted")
+	assert((synthesis_table.get_node("EvidenceSignal_03") as MeshInstance3D).visible,
+		"the synthesis table shows three verified observations")
 	world.set_island_two_story_state("archive_open")
 	assert((bus.get_node("ArchiveBusReading_07") as Node3D).scale.x == 1.0)
 	var conduit := campus.get_node("HopeMaterialisationConduit") as Node3D
@@ -88,6 +103,11 @@ func _run() -> void:
 	world.set_island_two_story_state("truth_materialised")
 	assert((conduit.get_node("HopeSignalSegment_05") as Node3D).visible)
 	var reward := campus.get_node("EliteGuardianCourt/GuardianRewardSocket/RewardHopeCrystal") as Node3D
+	var retired_court := campus.get_node("EliteGuardianCourt") as Node3D
+	assert(not retired_court.visible)
+	for old_body in retired_court.find_children("*", "CollisionObject3D", true, false):
+		assert((old_body as CollisionObject3D).collision_layer == 0,
+			"hidden Guardian Court architecture must not collide with the player")
 	assert(not reward.visible)
 	world.set_island_two_story_state("guardian_freed")
 	assert(reward.visible)

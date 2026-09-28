@@ -51,9 +51,11 @@ func _capture() -> void:
 		sun.light_energy = 0.90
 		sun.shadow_enabled = true
 		root.add_child(sun)
-	for pattern in ["Inlay_v11_*", "SharedCelestialPaving", "MSI1_Runtime_*", "WalkableZoneFloor"]:
-		if "--hide=" + pattern in OS.get_cmdline_user_args():
-			for mesh in world.find_children(pattern,"Node3D",true,false):
+	var hidden_pattern := ""
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--hide="):
+			hidden_pattern = arg.trim_prefix("--hide=")
+			for mesh in world.find_children(hidden_pattern, "Node3D", true, false):
 				mesh.visible = false
 	# Presentation-only suppression of floating text for this overview.
 	for label in world.find_children("*", "Label3D", true, false):
@@ -75,6 +77,8 @@ func _capture() -> void:
 	var output := "res://artifacts/%s_overview" % capture_id
 	if "--diagnostic" in OS.get_cmdline_user_args():
 		output += "_diagnostic"
+		if not hidden_pattern.is_empty():
+			output += "_" + hidden_pattern.replace("*", "all")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output))
 	assert(root.get_texture().get_image().save_png(output + "/overview.png") == OK)
 	if not island_one:
@@ -167,6 +171,22 @@ func _capture() -> void:
 			RenderingServer.force_draw(false)
 			assert(root.get_texture().get_image().save_png(output + "/garden_player_height.png") == OK)
 	if not island_one:
+		for station_id in ["world_one.evidence_scanner", "world_one.memory_board",
+				"world_one.logic_gate", "world_one.perspective_lens",
+				"world_one.truth_bridge"]:
+			var station: QuestObjectBase = null
+			for candidate in world.get_quest_objects():
+				if candidate.save_id == station_id:
+					station = candidate
+					break
+			assert(station != null)
+			camera.fov = 62
+			camera.global_position = station.to_global(Vector3(0, 5.5, 23))
+			camera.look_at(station.to_global(Vector3(0, 4.2, 0)))
+			await create_timer(.45).timeout
+			RenderingServer.force_draw(false)
+			assert(root.get_texture().get_image().save_png(
+				output + "/station_%s.png" % station_id.trim_prefix("world_one.")) == OK)
 		var shared := world.get_node("WorldOneGeometry/IslandTwoPerimeterRepairs/ReferencePost_2_12") as Node3D
 		var anchor: Vector3 = world.call("_perimeter_post_anchor", shared)
 		camera.projection = Camera3D.PROJECTION_PERSPECTIVE

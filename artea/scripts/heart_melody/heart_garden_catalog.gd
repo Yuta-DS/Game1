@@ -32,11 +32,11 @@ static func validate(catalog: Dictionary) -> PackedStringArray:
 		errors.append("Island One cannot award full-world completion.")
 	var layout: Dictionary = catalog.get("layout",{})
 	var footprint: Array = layout.get("footprint_metres",[])
-	if footprint.size() != 2 or int(footprint[0]) != 200 or int(footprint[1]) != 120:
-		errors.append("Island One must retain its approved compact 200 by 120 metre footprint.")
-	if float(layout.get("main_route_width", 0.0)) < 4.0 \
-		or float(layout.get("side_route_width", 0.0)) < 3.0 \
-		or float(layout.get("bridge_width", 0.0)) < 4.0:
+	if footprint.size() != 2 or int(footprint[0]) != 640 or int(footprint[1]) != 290:
+		errors.append("Island One must retain its approved 640 by 290 metre garden footprint.")
+	if float(layout.get("main_route_width", 0.0)) < 6.0 \
+		or float(layout.get("side_route_width", 0.0)) < 4.0 \
+		or float(layout.get("bridge_width", 0.0)) < 6.0:
 		errors.append("Island One routes must retain player-safe production widths.")
 	if int(layout.get("quiet_meadow",{}).get("sector_count",0)) + int(layout.get("feeling_garden",{}).get("sector_count",0)) != 12:
 		errors.append("Island One must contain twelve cullable terrain sectors.")

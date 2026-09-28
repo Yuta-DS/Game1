@@ -15,14 +15,35 @@ func _run() -> void:
 	assert(hero != null)
 	assert(hero.position.is_equal_approx(Vector3(95, 0, -42.5)))
 	assert(hero.find_children("*", "MeshInstance3D", true, false).size() == 6)
+	var crescent := world.find_child("EchoTreeListeningCrescent", true, false) as Node3D
+	assert(crescent != null)
+	assert(crescent.get_child_count() == 3)
+	for bench in crescent.get_children():
+		assert(bench.name.begins_with("ListeningBench_"))
+		assert(bench.get_node_or_null("ListeningBenchCollision/CollisionShape3D") != null)
+		var foot := bench.get_node("StoneFoot_00") as Node3D
+		assert(absf(foot.to_global(Vector3.DOWN * 0.46).y -
+			world.get_zone_position("02_living_network_forest").y) < 0.15,
+			"Listening seat supports must meet the walking deck")
+		assert(Vector2(bench.position.x, bench.position.z).length() > 30.5,
+			"Listening seats stay outside the tree's central walking ring")
+		for control in world.get_island_one_puzzle().get_node("PuzzleControls").get_children():
+			if control is Node3D:
+				assert(bench.global_position.distance_to(control.global_position) > 15.0,
+					"Listening seats do not obstruct quest operators")
 	var old := world.find_child("MSI1_Runtime_Nature", true, false) as MeshInstance3D
 	assert(old != null and not old.visible)
 	assert(old.get_meta("preserve_authored_nodes", false))
 	assert(world.find_child("CognitiveLightTree", true, false) != null)
 	assert(world.find_child("SharedIvorySaddleCollision", true, false) != null)
-	assert(world.find_children("HeavenlySapling", "Node3D", true, false).size() == 40)
-	var saplings := world.find_children("HeavenlySapling", "Node3D", true, false)
+	var saplings: Array[Node] = []
+	for candidate in world.find_children("HeavenlySapling", "Node3D", true, false):
+		if str(candidate.get_parent().get_meta("zone_id", "")) in [
+			"01_world_gate_landing", "02_living_network_forest"]:
+			saplings.append(candidate)
+	assert(saplings.size() == 40)
 	var variants := {}
+	var planting_conflicts: Array[String] = []
 	for sapling in saplings:
 		var tree := sapling.get_parent() as Node3D
 		variants[tree.get_meta("garden_variant")] = true
@@ -32,10 +53,13 @@ func _run() -> void:
 			var other := other_sapling.get_parent() as Node3D
 			if other == tree:
 				continue
-			assert(Vector2(tree.global_position.x-other.global_position.x,tree.global_position.z-other.global_position.z).length() >= canopy + float(other.get_meta("garden_canopy_radius")) + 2.99,"Tree canopy envelopes remain separate")
+			assert(Vector2(tree.global_position.x-other.global_position.x,tree.global_position.z-other.global_position.z).length() >= canopy + float(other.get_meta("garden_canopy_radius")) + 2.99,
+				"Tree canopy envelopes remain separate: %s %s / %s %s" % [tree.name, tree.global_position, other.name, other.global_position])
 		for control in world.get_island_one_puzzle().get_node("PuzzleControls").get_children():
 			if control is Node3D:
-				assert(Vector2(tree.global_position.x-control.global_position.x,tree.global_position.z-control.global_position.z).length() >= canopy + 11.99,"Planting stays outside station operating envelope")
+				if Vector2(tree.global_position.x-control.global_position.x,tree.global_position.z-control.global_position.z).length() < canopy + 11.99:
+					planting_conflicts.append("%s at %s crowds %s at %s" % [tree.name, tree.global_position, control.name, control.global_position])
+	assert(planting_conflicts.is_empty(), "Planting clearance: " + "; ".join(planting_conflicts))
 	assert(variants.size() == 3)
 	var repairs := world.find_child("IslandOnePerimeterRepairs", true, false)
 	assert(repairs.find_children("ReferenceScrollwork_*","Node3D",true,false).size()>24)
@@ -63,8 +87,14 @@ func _run() -> void:
 		var hit := world.get_world_3d().direct_space_state.intersect_ray(query)
 		assert(not hit.is_empty(), "Exposed edge repair has real collision")
 		assert(hit.collider == part,"Ray hits intended perimeter collider")
-		var from := Transform3D(Basis.IDENTITY,part.to_global(Vector3(0,-3.0,-3)))
-		assert(walker.test_move(from,part.global_basis * Vector3(0,0,6)),"Player capsule cannot cross exposed perimeter")
+		var from := Transform3D(Basis.IDENTITY,part.to_global(Vector3(0,-3.0,-6)))
+		assert(walker.test_move(from,part.global_basis * Vector3(0,0,12)),
+			"Player capsule cannot cross exposed perimeter: %s at %s" % [part.name, part.global_position])
+	for bench in crescent.get_children():
+		var body := bench.get_node("ListeningBenchCollision") as StaticBody3D
+		var from := Transform3D(Basis.IDENTITY, bench.to_global(Vector3(0, 1.0, 4.0)))
+		assert(walker.test_move(from, bench.global_basis * Vector3(0, 0, -8.0)),
+			"Player capsule must meet the visible tree seat")
 	walker.queue_free()
 	var puzzle := world.get_island_one_puzzle()
 	assert(not puzzle.interact_control("echo_beacon").accepted)

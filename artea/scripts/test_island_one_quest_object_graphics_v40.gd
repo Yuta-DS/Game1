@@ -28,6 +28,10 @@ func _run() -> void:
 		await physics_frame
 
 	var puzzle := world.get_island_one_puzzle() as MindSparkIslandOnePuzzle
+	assert(puzzle.find_children("EchoRootConduit_*", "Node3D", true, false).is_empty(),
+		"Garden quest routes must not draw permanent lines across the court")
+	assert(puzzle.find_children("EchoRootPulse_*", "MeshInstance3D", true, false).size() == 18,
+		"Garden progress still has six three-step pulses")
 	var controls := puzzle.get_node("PuzzleControls") as Node3D
 	var roles := {}
 	for control_id: String in CONTROL_IDS:
@@ -42,6 +46,9 @@ func _run() -> void:
 		assert(not purpose_label.text.is_empty() and not str(
 			purpose_label.get_meta("interaction_verb", "")).is_empty(),
 			"%s has a readable name and physical interaction verb" % control_id)
+		if control.has_node("HeavenlyQuestInstrument"):
+			assert(purpose_label.pixel_size >= 0.0065,
+				"%s names must remain legible from the player approach" % control_id)
 		var role := str(crown.get_meta("graphic_role", ""))
 		assert(not role.is_empty() and not roles.has(role),
 			"%s has a unique visual-semantic role" % control_id)

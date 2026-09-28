@@ -20,7 +20,7 @@ func _run() -> void:
 	await physics_frame
 	assert(is_equal_approx(player.speed, 10.0), "Heart Melody keeps the approved normal speed")
 	player.speed = 40.0 # Accelerate only this automated traversal after checking runtime speed.
-	var targets: Array[Vector3] = [Vector3(-88,2,0)]
+	var targets: Array[Vector3] = [Vector3(-250,2,0)]
 	for point in Layout.ROUTE:
 		targets.append(point)
 	for index in range(Layout.ROUTE.size() - 1, -1, -1):

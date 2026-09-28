@@ -44,7 +44,10 @@ func _run() -> void:
 	for control in controls.get_children():
 		if not control.has_node("InspectionAnchor"): continue
 		var from := control.get_node("InspectionAnchor").global_position as Vector3
-		var floor_hit := world.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from+Vector3.UP*3,from-Vector3.UP*15))
+		# Test the final approach to each instrument. The longer route from its
+		# authored inspection marker can legitimately pass a garden boulder.
+		var approach := from.lerp(control.global_position, .65)
+		var floor_hit := world.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(approach+Vector3.UP*3,approach-Vector3.UP*15))
 		assert(not floor_hit.is_empty())
 		actor.global_position=floor_hit.position+Vector3.UP*1.1
 		await physics_frame
@@ -56,14 +59,23 @@ func _run() -> void:
 			if hit!=null: break
 			await physics_frame
 		assert(hit!=null,"Player passes through "+str(control.name))
-		assert(control.is_ancestor_of(hit.get_collider()),"Unexpected obstacle before "+str(control.name)+": "+str(hit.get_collider().get_path()))
+		var struck_control := control.is_ancestor_of(hit.get_collider())
+		if not struck_control:
+			var obstacle := hit.get_collider() as CollisionObject3D
+			var shape_owner := obstacle.shape_owner_get_owner(obstacle.shape_find_owner(
+				hit.get_collider_shape_index()))
+			var source_mesh := str(shape_owner.get_meta("source_mesh", ""))
+			struck_control = ("/PuzzleControls/%s/" % control.name) in source_mesh
+			assert(struck_control,"Unexpected obstacle before %s: %s" % [control.name, source_mesh])
 		walked+=1
 	assert(walked==16)
 	var cabinet_count := 0
 	for station in world.get_quest_objects():
 		if not station.has_node("CampusSolidCabinet"): continue
 		actor.global_position=Vector3(0,2000,0)
-		var start := station.to_global(Vector3(0,0,3))
+		# Cabinet solidity is checked from its immediate facing side. The
+		# separate operator test checks the authored standing positions.
+		var start := station.to_global(Vector3(0, 0, 1.7))
 		var floor_hit := world.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(start+Vector3.UP*6,start-Vector3.UP*15))
 		assert(not floor_hit.is_empty(),"Missing helper approach floor: "+station.save_id)
 		actor.global_position=floor_hit.position+Vector3.UP*1.1
@@ -75,7 +87,14 @@ func _run() -> void:
 			hit=actor.move_and_collide(direction.normalized()*.4)
 			if hit!=null: break
 			await physics_frame
-		assert(hit!=null and station.is_ancestor_of(hit.get_collider()),"Non-solid campus helper: "+station.save_id)
+		var cabinet_hit := hit != null and station.is_ancestor_of(hit.get_collider())
+		var helper_obstacle := "none"
+		if hit != null and not cabinet_hit:
+			var collider := hit.get_collider() as CollisionObject3D
+			var owner := collider.shape_owner_get_owner(collider.shape_find_owner(
+				hit.get_collider_shape_index()))
+			helper_obstacle = str(owner.get_meta("source_mesh", collider.get_path()))
+		assert(cabinet_hit,"Non-solid campus helper %s; first hit: %s" % [station.save_id, helper_obstacle])
 		cabinet_count+=1
 	assert(cabinet_count==4)
 	actor.global_position=controls.get_node("PuzzleControl_echo_signal_1/InspectionAnchor").global_position

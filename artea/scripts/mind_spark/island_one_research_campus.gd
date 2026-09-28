@@ -54,6 +54,13 @@ static func apply(world: MindSparkWorldOne) -> void:
 		control.set_meta("quest_route_order",route_index+5)
 		control.set_meta("operator_clearance_met",control.position.distance_to(echo_approaches[id])>7.0)
 		control.set_meta("laboratory_department","Living Research Garden")
+	# The grove is placed before the finished six-station layout. Its twentieth
+	# sapling otherwise stands in the Echo Question operator envelope.
+	var question_side_tree := garden.find_child("MindSparkGroveTree_020", true, false) as Node3D
+	if question_side_tree != null:
+		question_side_tree.position = world.call("_clear_garden_position", garden,
+			question_side_tree.position, float(question_side_tree.get_meta("growth_scale")),
+			question_side_tree)
 	_connect_garden_services(world,echo,controls)
 	# Orient the complete assembly, not just the visible model. Its collision,
 	# state lamp, labels and western inspection marker rotate together.
@@ -361,7 +368,7 @@ static func _connect_garden_services(world: MindSparkWorldOne, echo: Node3D, con
 	world.call("_add_torus",manifold,"BrassCrown",Vector3(0,2.1,0),2.1,2.45,mats.astral_brass)
 	world.call("_add_sphere",manifold,"ReceivingCrystal",Vector3(0,2.2,0),Vector3(.8,1.3,.8),mats.arrival_glass)
 	# Solid service drops stay behind each instrument. The interconnecting runs
-	# are buried below the deck; flush luminous tracers show their route instead.
+	# stay buried; progress pulses briefly reveal the route without floor lines.
 	for i in ECHO_IDS.size():
 		var control := controls.get_node("PuzzleControl_"+ECHO_IDS[i]) as Node3D
 		var anchor := Node3D.new()
@@ -376,13 +383,8 @@ static func _connect_garden_services(world: MindSparkWorldOne, echo: Node3D, con
 		var socket := world.call("_add_cylinder",manifold,"ChannelPort_%02d"%i,port_direction*2.45+Vector3.UP*1.4,.28,.32,mats.astral_brass,false,12) as Node3D
 		socket.quaternion=Quaternion(Vector3.UP,port_direction)
 		world.call("_add_sphere",manifold,"ChannelReading_%02d"%i,port_direction*2.63+Vector3.UP*1.4,Vector3.ONE*.14,mats.arrival_glass)
-		var old := echo.get_node("EchoRootConduit_%02d"%(i+1))
-		echo.remove_child(old)
-		old.queue_free()
 		world.call("_add_cable_between",echo,"GardenServiceDrop_%02d"%i,start,below,.16,.16,mats.astral_brass,8)
 		_solid_box(echo,"GardenServiceDropBody_%02d"%i,start.lerp(below,.5),Vector3(.38,maxf(.1,absf(start.y-below.y)),.38))
-		var tracer := world.call("_add_cable_between",echo,"EchoRootConduit_%02d"%(i+1),below,finish,.07,.07,mats.arrival_glass,8) as Node3D
-		tracer.set_meta("physical_role","flush non-solid light tracer above buried service")
 		for j in 3:
 			var pulse := echo.get_node("EchoRootPulse_%02d_%02d"%[i+1,j+1]) as Node3D
 			pulse.set_meta("path_start",below)

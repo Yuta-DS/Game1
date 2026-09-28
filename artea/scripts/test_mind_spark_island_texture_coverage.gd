@@ -46,10 +46,18 @@ func _run() -> void:
 			_fail("celestial visual shell must not introduce route obstacles")
 			return
 	var sanctuary := geometry.get_node("06OldestTreeSanctuary") as Node3D
-	var bio_tree := sanctuary.find_child("MindSparkBioDataTree", true, false) as Node3D
-	if bio_tree == null:
-		_fail("Oldest Tree sanctuary has no approved Bio-Data Tree assembly")
+	var retired_shell := sanctuary.get_node_or_null("MindSparkBioDataTree") as Node3D
+	if retired_shell == null or not retired_shell.get_meta("production_compatibility_shell", false) \
+			or not retired_shell.find_children("*", "MeshInstance3D", true, false).is_empty():
+		_fail("production sanctuary still constructs the retired Bio-Data Tree")
 		return
+	# Exercise the retained historical art generator as an isolated fixture;
+	# the shipped fused island uses OldestTreeLivingCathedral instead.
+	var legacy_fixture := Node3D.new()
+	legacy_fixture.name = "BioDataTreeTextureFixture"
+	world.add_child(legacy_fixture)
+	world.call("_build_bio_data_tree", legacy_fixture, Vector3.ZERO, 1.0, 6)
+	var bio_tree := legacy_fixture.get_node("MindSparkBioDataTree") as Node3D
 	var base_socket := bio_tree.find_child("BioTreeBaseSocketAssembly", true, false) as Node3D
 	if base_socket == null \
 			or base_socket.find_children("BioBaseArmorSector_*", "MeshInstance3D", true, false).size() != 12 \

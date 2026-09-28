@@ -26,9 +26,9 @@ debug/show_island_state_panel=false
 
 [audio]
 
+general/text_to_speech=true
 general/2d_panning_strength=1.0
 general/3d_panning_strength=1.0
-general/text_to_speech=true
 
 [autoload]
 
