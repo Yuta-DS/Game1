@@ -213,9 +213,17 @@ func _process(delta: float) -> void:
 		var regions := get_node_or_null("KingdomRegions3000m")
 		if regions != null and regions.has_method("get_safe_respawn"):
 			respawn = regions.call("get_safe_respawn", to_local(_player.global_position))
-		_player.global_position = to_global(respawn)
-		_player.velocity = Vector3.ZERO
+		if not _request_milo_rescue(to_global(respawn)):
+			_player.global_position = to_global(respawn)
+			_player.velocity = Vector3.ZERO
 	_update_tree_christmas_ambience(delta)
+
+
+# Milo flies the player back instead of a bare teleport. He is absent in
+# isolated test scenes, where the teleport still applies.
+func _request_milo_rescue(fallback: Vector3) -> bool:
+	var manager := get_node_or_null("/root/MiloCompanionManager")
+	return manager != null and bool(manager.call("request_fall_rescue", fallback))
 
 
 func get_exploration_size() -> Vector2:
@@ -707,6 +715,8 @@ func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vecto
 
 func _recover_approach_player(body: Node3D, safe_position: Vector3) -> void:
 	if body != _player or _player == null:
+		return
+	if _request_milo_rescue(to_global(safe_position)):
 		return
 	_player.global_position = to_global(safe_position)
 	_player.velocity = Vector3.ZERO
