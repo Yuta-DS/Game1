@@ -40,8 +40,14 @@ func _run() -> void:
 	assert(compass.find_children("ThoughtFrame*", "MeshInstance3D", true, false).size() == 3)
 	assert(compass.find_children("PuzzlePowerConduit*", "MeshInstance3D", true, false).is_empty(),
 		"regulator power stays in short floor markers instead of long crossing pipes")
+	assert(compass.find_children("CoupledOrbit_*", "MeshInstance3D", true, false).is_empty(),
+		"selector coupling no longer stretches cables across the playable court")
 	assert(compass.find_children("RegulatorFloorLink_*", "MeshInstance3D", true, false).size() == 12)
+	assert(compass.find_children("SelectorFloorLink_*", "MeshInstance3D", true, false).size() == 24)
 	assert(compass.find_children("MainFloorLink_*", "MeshInstance3D", true, false).size() == 10)
+	assert(compass.find_children("GovernorArm_*", "MeshInstance3D", true, false).is_empty(),
+		"rotating regulator feedback uses compact facets instead of propeller arms")
+	assert(compass.find_children("GovernorFacet_*", "MeshInstance3D", true, false).size() == 8)
 	assert(not compass.interact_control("outer_ring").accepted,
 		"rings cannot be guessed before the physical light laboratory is composed")
 	assert(compass.interact_control("colour_prism").accepted)

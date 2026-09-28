@@ -3185,24 +3185,28 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 	_build_living_light_routes(arrival)
 	_build_aether_analysis_console(controls)
 
-	_build_pressure_gauge(arrival, "WestPressureGauge", Vector3(-24.0, 12.5, -22.0), -0.18)
-	_build_pressure_gauge(arrival, "EastPressureGauge", Vector3(24.0, 12.5, -22.0), 0.18)
+	# Keep the two functional pressure readouts outside the processional aisle.
+	# Their former eye-level placement at x=±24 crowded the opening view and made
+	# the player appear to spawn inside machinery.
+	_build_pressure_gauge(arrival, "WestPressureGauge", Vector3(-31.0, 9.2, -22.0), -0.18)
+	_build_pressure_gauge(arrival, "EastPressureGauge", Vector3(31.0, 9.2, -22.0), 0.18)
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0 else "East"
 		var governor := Node3D.new()
 		governor.name = "%sGovernorRotor" % side_name
-		governor.position = Vector3(side * 16.0, 8.0, -16.0)
+		governor.position = Vector3(side * 27.0, 5.6, -16.0)
 		governor.set_meta("preserve_authored_nodes", true)
 		arrival.add_child(governor)
-		_add_cylinder(governor, "GovernorAxle", Vector3.ZERO, 0.65, 7.0,
-			_materials.astral_brass, false, 12)
+		# The controller still rotates this node as live regulator feedback, but a
+		# compact faceted pod replaces the long four-arm propeller that crossed the
+		# player's sightline.
+		_add_cylinder(governor, "GovernorCore", Vector3.ZERO, 1.45, 1.2,
+			_materials.sanctum_ivory, false, 8)
 		for arm_index in 4:
 			var arm_angle := TAU * float(arm_index) / 4.0
-			var arm_finish := Vector3(sin(arm_angle) * 4.2, 0, cos(arm_angle) * 4.2)
-			_add_cable_between(governor, "GovernorArm_%02d" % arm_index, Vector3.ZERO,
-				arm_finish, 0.25, 0.18, _materials.astral_brass, 8)
-			_add_sphere(governor, "GovernorWeight_%02d" % arm_index, arm_finish,
-				Vector3.ONE * 0.85, _materials.arrival_glass)
+			var facet_at := Vector3(sin(arm_angle) * 2.15, 0, cos(arm_angle) * 2.15)
+			_add_box(governor, "GovernorFacet_%02d" % (arm_index + 1), facet_at,
+				Vector3(0.72, 0.56, 1.35), _materials.arrival_glass, false, arm_angle)
 
 	var conduits := Node3D.new()
 	conduits.name = "PuzzlePowerConduits"
@@ -3228,10 +3232,15 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 	]
 	for selector_index in 3:
 		for link_index in 2:
-			_add_cable_between(conduits,
-				"CoupledOrbit_%02d_%02d" % [selector_index + 1, link_index + 1],
-				selector_positions[selector_index], coupled_ring_points[selector_index][link_index],
-				0.25, 0.13, _materials.arrival_glass if link_index == 0 else _materials.gold, 10)
+			var link_start: Vector3 = selector_positions[selector_index]
+			var link_finish: Vector3 = coupled_ring_points[selector_index][link_index]
+			for marker_index in 4:
+				var progress := float(marker_index + 1) / 5.0
+				var marker_at := link_start.lerp(link_finish, progress)
+				marker_at.y = 2.62
+				_add_box(conduits,
+					"SelectorFloorLink_%02d_%02d_%02d" % [selector_index + 1, link_index + 1, marker_index + 1],
+					marker_at, Vector3(0.86, 0.10, 1.35), _materials.arrival_glass, false)
 	for marker_index in 10:
 		_add_box(conduits, "MainFloorLink_%02d" % (marker_index + 1),
 			Vector3(0, 2.62, 31.0 + float(marker_index) * 4.2),
