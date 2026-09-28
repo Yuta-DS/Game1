@@ -6160,6 +6160,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var basilica := Node3D.new()
 	basilica.name = "WisdomBasilicaPromenade"
 	basilica.set_meta("purpose", "architectural epilogue from storm court to Oldest Tree")
+	basilica.set_meta("design_revision", "living_grove_processional_v3")
 	campus.add_child(basilica)
 	var to_sanctuary := Vector3(sanctuary_origin.x - arena_origin.x, 0,
 		sanctuary_origin.z - arena_origin.z)
@@ -6169,41 +6170,47 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var promenade_end := Vector3(sanctuary_origin.x, sanctuary_y, sanctuary_origin.z + 18.0)
 	_add_island_three_lane(basilica, "IvoryWisdomNave", promenade_start,
 		promenade_end, 14.0, _materials.celestial_floor)
-	for bay_index in 7:
-		var progress := float(bay_index + 1) / 8.0
+	# Six living bays replace the former line of thin white poles and long brass
+	# cornices.  Thick bark trunks and low canopies frame a 14 m clear nave, while
+	# ivory collars retain the civic language established on Islands One and Two.
+	for bay_index in 6:
+		var progress := float(bay_index + 1) / 7.0
 		var bay_center := promenade_start.lerp(promenade_end, progress)
 		for side in [-1.0, 1.0]:
-			var pier_at := bay_center + side_axis * float(side) * 9.0
-			_add_island_three_civic_column(basilica,
-				"BasilicaPier_%02d_%s" % [bay_index + 1, "L" if side < 0 else "R"],
-				pier_at, 8.5)
-		var left_capital := bay_center - side_axis * 9.0 + Vector3.UP * 8.8
-		var right_capital := bay_center + side_axis * 9.0 + Vector3.UP * 8.8
-		var vault_apex := bay_center + Vector3.UP * 13.8
-		_add_cable_between(basilica, "BasilicaVaultLeft_%02d" % (bay_index + 1),
-			left_capital, vault_apex, .62, .42, _materials.astral_brass, 10)
-		_add_cable_between(basilica, "BasilicaVaultRight_%02d" % (bay_index + 1),
-			right_capital, vault_apex, .62, .42, _materials.astral_brass, 10)
-		_add_sphere(basilica, "BasilicaVaultLight_%02d" % (bay_index + 1),
-			vault_apex, Vector3.ONE * .72, _materials.island_cyan)
-	_add_cable_between(basilica, "LeftBasilicaCornice",
-		promenade_start - side_axis * 9.0 + Vector3.UP * 9.1,
-		promenade_end - side_axis * 9.0 + Vector3.UP * 9.1,
-		.58, .58, _materials.astral_brass, 10)
-	_add_cable_between(basilica, "RightBasilicaCornice",
-		promenade_start + side_axis * 9.0 + Vector3.UP * 9.1,
-		promenade_end + side_axis * 9.0 + Vector3.UP * 9.1,
-		.58, .58, _materials.astral_brass, 10)
-	# Keep the nave open to the sky. The former cyan ridge read as a loose blue
-	# line crossing the island from the gameplay camera instead of architecture.
-	_add_cable_between(basilica, "LeftLivingRootRail",
-		promenade_start - side_axis * 7.2 + Vector3.UP * .8,
-		promenade_end - side_axis * 7.2 + Vector3.UP * .8,
-		.55, .80, _materials.island_bark_root, 12)
-	_add_cable_between(basilica, "RightLivingRootRail",
-		promenade_start + side_axis * 7.2 + Vector3.UP * .8,
-		promenade_end + side_axis * 7.2 + Vector3.UP * .8,
-		.55, .80, _materials.island_bark_root, 12)
+			var side_name := "Left" if side < 0 else "Right"
+			var trunk_at := bay_center + side_axis * float(side) * 10.5
+			_add_cylinder(basilica,
+				"WisdomGroveTrunk_%02d_%s" % [bay_index + 1, side_name],
+				trunk_at + Vector3.UP * 4.8, 1.05, 9.6,
+				_materials.island_three_hero_bark, true, 9)
+			_add_tapered_cylinder(basilica,
+				"WisdomGroveBarkFlare_%02d_%s" % [bay_index + 1, side_name],
+				trunk_at + Vector3.UP * 2.5, .75, 1.65, 5.0,
+				_materials.island_three_hero_bark_shadow, 9)
+			_add_cylinder(basilica,
+				"WisdomGroveIvoryCollar_%02d_%s" % [bay_index + 1, side_name],
+				trunk_at + Vector3.UP * .65, 1.48, .48,
+				_materials.shared_style_ivory, false, 10)
+			var crown_at := trunk_at + Vector3.UP * (11.2 + float(bay_index % 2) * .8)
+			var canopy := _add_sphere(basilica,
+				"WisdomGroveCanopy_%02d_%s" % [bay_index + 1, side_name],
+				crown_at + side_axis * float(side) * 1.2,
+				Vector3(6.4, 3.4, 5.4),
+				_island_three_canopy_material(bay_index + (0 if side < 0 else 2)))
+			(canopy.mesh as SphereMesh).radial_segments = 7
+			(canopy.mesh as SphereMesh).rings = 4
+			_add_cable_between(basilica,
+				"WisdomGroveBranch_%02d_%s" % [bay_index + 1, side_name],
+				trunk_at + Vector3.UP * 7.5,
+				crown_at - side_axis * float(side) * 1.4,
+				.78, .30, _materials.island_three_hero_bark, 9)
+		_add_brick(basilica, "WisdomGroveMemoryLight_%02d" % (bay_index + 1),
+			bay_center + Vector3.UP * 12.8,
+			Bricks.build_crystal(.48, 1.8, .12, 6),
+			_materials.shared_style_cyan if bay_index % 2 == 0 \
+			else _materials.shared_style_lavender)
+	basilica.set_meta("living_grove_bay_count", 6)
+	basilica.set_meta("clear_nave_width_m", 18.0)
 
 	var mirror: QuestObjectBase
 	for object in _objects:
@@ -6218,27 +6225,39 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		var reflection_court := Node3D.new()
 		reflection_court.name = "RootboundReflectionCourt"
 		reflection_court.set_meta("quest_architecture", "open living-root oratory")
-		reflection_court.set_meta("design_revision", "open_root_buttresses_v2")
+		reflection_court.set_meta("design_revision", "rootbound_grove_pavilion_v3")
+		reflection_court.set_meta("clear_story_entrance_m", 18.0)
 		reflection_court.set_meta("low_poly_landmark", true)
 		basilica.add_child(reflection_court)
 		_build_island_three_shared_instrument(reflection_court, mirror_at, -direction,
 			_materials.shared_style_lavender)
 		_add_cylinder(reflection_court, "ReflectionPool", mirror_at + Vector3.UP * .04,
 			13.0, .12, _materials.island_crystal_facet_dark, false, 12)
-		for apse_index in 8:
-			var apse_angle := TAU * float(apse_index) / 8.0
+		var entry_direction := -direction
+		var entry_angle := atan2(entry_direction.x, entry_direction.z)
+		for apse_index in 6:
+			# Half-step the six roots around the story axis, creating a broad entrance
+			# instead of planting a spike directly on the player's approach.
+			var apse_angle := entry_angle + PI / 6.0 + TAU * float(apse_index) / 6.0
 			var radial := Vector3(sin(apse_angle), 0, cos(apse_angle))
-			var apse_at := mirror_at + radial * 25.0
-			var root_shoulder := mirror_at + radial * 20.0 \
-				+ Vector3.UP * (7.0 + float(apse_index % 2))
-			var root_tip := mirror_at + radial * 15.5 \
-				+ Vector3.UP * (12.5 + float(apse_index % 2) * 1.5)
+			var tangent := Vector3(radial.z, 0, -radial.x)
+			var apse_at := mirror_at + radial * 25.5
+			var root_shoulder := mirror_at + radial * 21.0 \
+				+ tangent * (-1.4 if apse_index % 2 == 0 else 1.4) \
+				+ Vector3.UP * (7.2 + float(apse_index % 2))
+			var root_tip := mirror_at + radial * 16.5 \
+				+ tangent * (-2.4 if apse_index % 2 == 0 else 2.4) \
+				+ Vector3.UP * (13.0 + float(apse_index % 2) * 1.2)
+			_add_cylinder(reflection_court,
+				"ReflectionRootFoot_%02d" % (apse_index + 1),
+				apse_at + Vector3.UP * 2.6, 1.38, 5.2,
+				_materials.island_three_hero_bark, true, 9)
 			_add_cable_between(reflection_court,
 				"ReflectionRootRib_%02d" % (apse_index + 1), apse_at, root_shoulder,
-				1.10, .58, _materials.island_three_hero_bark, 10)
+				1.55, .82, _materials.island_three_hero_bark, 10)
 			_add_cable_between(reflection_court,
 				"ReflectionRootCrown_%02d" % (apse_index + 1), root_shoulder, root_tip,
-				.58, .24, _materials.island_three_hero_bark_highlight, 8)
+				.82, .34, _materials.island_three_hero_bark_highlight, 8)
 			var root_shoulder_joint := _add_sphere(reflection_court,
 				"ReflectionRootShoulder_%02d" % (apse_index + 1), root_shoulder,
 				Vector3(.72, .82, .72), _materials.shared_style_ivory)
@@ -6247,6 +6266,17 @@ func _redesign_island_three(geometry: Node3D) -> void:
 				"ReflectionCyanVein_%02d" % (apse_index + 1),
 				root_shoulder + radial * .30, root_tip + radial * .18, .16, .08,
 				_materials.island_cyan, 8)
+			var reflection_canopy := _add_sphere(reflection_court,
+				"ReflectionCanopyMass_%02d" % (apse_index + 1),
+				root_tip + radial * 2.2 + Vector3.UP * 1.8,
+				Vector3(6.6, 3.4, 5.8),
+				_island_three_canopy_material(apse_index + 2))
+			# Preserve each authored crown as a named pavilion component.  Without
+			# this marker the global Web geometry batcher folds the two sage crowns
+			# into a shared MultiMesh and removes their semantic scene nodes.
+			reflection_canopy.set_meta("editable_component", true)
+			(reflection_canopy.mesh as SphereMesh).radial_segments = 7
+			(reflection_canopy.mesh as SphereMesh).rings = 4
 			_add_brick(reflection_court, "ReflectionMarker_%02d" % (apse_index + 1),
 				mirror_at + Vector3(sin(apse_angle) * 17.0, 2.2,
 					cos(apse_angle) * 17.0),
@@ -6256,6 +6286,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		_add_sphere(reflection_court, "ReflectionMemorySeed",
 			mirror_at + Vector3.UP * 16.8, Vector3(1.6, 2.8, 1.6),
 			_materials.sanctum_lavender_glass)
+		reflection_court.set_meta("root_pavilion_bay_count", 6)
 		var reflection_completion := Node3D.new()
 		reflection_completion.name = "CompletionStateVisuals"
 		reflection_completion.set_meta("preserve_authored_nodes", true)

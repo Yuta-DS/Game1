@@ -280,14 +280,28 @@ func _run() -> void:
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMarker_01"))
 	var reflection_court := island_three.get_node(
 		"WisdomBasilicaPromenade/RootboundReflectionCourt") as Node3D
-	assert(str(reflection_court.get_meta("design_revision", "")) == "open_root_buttresses_v2")
+	assert(str(reflection_court.get_meta("design_revision", "")) \
+		== "rootbound_grove_pavilion_v3")
+	assert(float(reflection_court.get_meta("clear_story_entrance_m", 0.0)) >= 18.0)
 	assert(reflection_court.find_children(
-		"ReflectionRootRib_*", "MeshInstance3D", true, false).size() == 8)
+		"ReflectionRootRib_*", "MeshInstance3D", true, false).size() == 6)
 	assert(reflection_court.find_children(
-		"ReflectionRootCrown_*", "MeshInstance3D", true, false).size() == 8)
+		"ReflectionRootCrown_*", "MeshInstance3D", true, false).size() == 6)
 	assert(reflection_court.find_children(
-		"ReflectionRootShoulder_*", "MeshInstance3D", true, false).size() == 8,
+		"ReflectionRootShoulder_*", "MeshInstance3D", true, false).size() == 6,
 		"ivory shoulder joints tie the living roots into the civic architecture")
+	assert(reflection_court.find_children(
+		"ReflectionRootFoot_*Collision", "StaticBody3D", true, false).size() == 6,
+		"each visible reflection root has a matching player collision foot")
+	var reflection_canopy_count := reflection_court.find_children(
+		"ReflectionCanopyMass_*", "MeshInstance3D", true, false).size()
+	for canopy_index in 6:
+		assert(reflection_court.has_node(
+			"ReflectionCanopyMass_%02d" % (canopy_index + 1)),
+			"reflection canopy node %02d is preserved" % (canopy_index + 1))
+	assert(reflection_canopy_count == 6,
+		"the reflection pavilion has six low faceted canopy masses at player height; found %d" \
+		% reflection_canopy_count)
 	var reflection_center := (reflection_court.get_node("ReflectionPool") as Node3D).position
 	for root_rib in reflection_court.find_children(
 			"ReflectionRootRib_*", "MeshInstance3D", true, false):
@@ -299,6 +313,13 @@ func _run() -> void:
 		"WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument/CyanInstrumentDial"))
 	assert(not island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"),
 		"the unsupported blue line over the Island 3 promenade is removed")
+	var wisdom_basilica := island_three.get_node("WisdomBasilicaPromenade") as Node3D
+	assert(str(wisdom_basilica.get_meta("design_revision", "")) \
+		== "living_grove_processional_v3")
+	assert(int(wisdom_basilica.get_meta("living_grove_bay_count", 0)) == 6)
+	assert(wisdom_basilica.find_children(
+		"WisdomGroveTrunk_*Collision", "StaticBody3D", true, false).size() == 12,
+		"the living promenade uses twelve collision-backed trunks around its open nave")
 	assert(int(world.get_meta("island_three_route_barriers_removed", 0)) > 0,
 		"the Island 3 route cleanup finds and removes the former purple gate")
 	for candidate in geometry.find_children("QuestGate_4", "AnimatableBody3D", true, false):
@@ -382,12 +403,10 @@ func _run() -> void:
 		"Island 3 contains no visible elongated gold geometry")
 	assert(island_three.get_node_or_null("StormworksGrandCourt/BrassRadialInlay_01") == null,
 		"the former gold radial floor lines are no longer constructed")
-	var retired_cornice := island_three.get_node(
-		"WisdomBasilicaPromenade/LeftBasilicaCornice") as MeshInstance3D
-	var retired_root_rail := island_three.get_node(
-		"WisdomBasilicaPromenade/LeftLivingRootRail") as MeshInstance3D
-	assert(not retired_cornice.visible and retired_cornice.mesh == null)
-	assert(not retired_root_rail.visible and retired_root_rail.mesh == null)
+	assert(island_three.get_node_or_null(
+		"WisdomBasilicaPromenade/LeftBasilicaCornice") == null)
+	assert(island_three.get_node_or_null(
+		"WisdomBasilicaPromenade/LeftLivingRootRail") == null)
 	for removed_ring in geometry.find_children("*", "MeshInstance3D", true, false):
 		if bool(removed_ring.get_meta("island_three_gold_ring_removed", false)):
 			assert(not (removed_ring as MeshInstance3D).visible \
