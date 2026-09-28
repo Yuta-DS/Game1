@@ -6025,6 +6025,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	for legacy_ring in storm_zone.find_children("LayeredStormRing_*", "MeshInstance3D", true, false):
 		legacy_ring.visible = false
 		legacy_ring.set_meta("retired_by", "IslandThreeCivicSanctuary")
+		legacy_ring.mesh = null
+		legacy_ring.material_override = null
+		legacy_ring.set_meta("retired_geometry_purged", true)
 	var legacy_arena := storm_zone.get_node_or_null("BossArenaCollision") as MeshInstance3D
 	if legacy_arena != null:
 		legacy_arena.material_override = _materials.celestial_floor
@@ -7132,6 +7135,9 @@ func _remove_island_three_gold_rings(geometry: Node3D, campus: Node3D,
 					_effective_mesh_material(ring)):
 				ring.visible = false
 				ring.set_meta("island_three_gold_ring_removed", true)
+				ring.mesh = null
+				ring.material_override = null
+				ring.set_meta("retired_geometry_purged", true)
 				removed_count += 1
 	var visible_gold_ring_count := 0
 	for search_root in roots:
@@ -7182,6 +7188,9 @@ func _remove_island_three_gold_lines(geometry: Node3D, campus: Node3D,
 					or is_obsolete_root_rail:
 				line.visible = false
 				line.set_meta("island_three_gold_line_removed", true)
+				line.mesh = null
+				line.material_override = null
+				line.set_meta("retired_geometry_purged", true)
 				removed_count += 1
 	var visible_gold_line_count := 0
 	for search_root in roots:

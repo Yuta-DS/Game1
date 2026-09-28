@@ -2,6 +2,7 @@ extends SceneTree
 
 const STORE := "user://test_island_two_story_continuity_objects.json"
 const PROGRESS := "user://test_island_two_story_continuity_progress.json"
+const Rules := preload("res://scripts/mind_spark/unfinished_light_rules.gd")
 
 
 func _init() -> void:
@@ -30,15 +31,17 @@ func _run() -> void:
 	assert(str(world.get_meta("island_two_story_state")) == "received")
 
 	var scanner := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
-	for answer in [&"fact", &"fear", &"fact"]:
-		assert(scanner.interact(&"scan").accepted)
-		assert(scanner.interact(answer).accepted)
+	for channel in 3:
+		for _step in Rules.SCANNER_TARGETS[channel]:
+			assert(scanner.interact(&"adjust", channel).accepted)
+		assert(scanner.interact(&"capture", channel).accepted)
 	assert(quest.current_task().id == "restore_memory")
 	assert(str(world.get_meta("island_two_story_state")) == "evidence_sorted")
 
 	var board := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.MEMORY_CONSTELLATION)
-	for memory_step in ["notice", "name", "choose"]:
-		assert(board.interact(&"node", memory_step).accepted)
+	assert(board.interact(&"swap", 0).accepted)
+	assert(board.interact(&"swap", 1).accepted)
+	assert(board.interact(&"replay").completed)
 	assert(quest.current_task().id == "open_logic_gate")
 	assert(str(world.get_meta("island_two_story_state")) == "memory_woven")
 
@@ -52,25 +55,33 @@ func _run() -> void:
 	for enemy in world.get_enemies():
 		if enemy.encounter_id == "constellation":
 			enemy.take_damage(999.0)
-	assert(logic.interact(&"place_evidence").accepted)
-	assert(logic.interact(&"place_evidence").completed)
+	assert(logic.interact(&"trial", 0).accepted)
+	assert(logic.interact(&"trial", 1).accepted)
+	assert(logic.interact(&"model", 1).accepted)
+	assert(logic.interact(&"test").completed)
 	assert(world.is_quest_gate_open(1))
 	assert(str(world.get_meta("island_two_story_state")) == "archive_open")
 
 	var lens := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.PERSPECTIVE_LENS)
-	assert(lens.interact(&"turn").accepted)
-	assert(lens.interact(&"turn").accepted)
-	assert(lens.interact(&"turn").completed)
+	for view in 3:
+		assert(lens.interact(&"view", view).accepted)
+		assert(lens.interact(&"interpret", view).accepted)
 	assert(str(world.get_meta("island_two_story_state")) == "hope_reframed")
 
 	var truth := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.TRUTH_BRIDGE_TILE)
-	assert(not truth.interact(&"fear").accepted)
-	assert(not truth.interact(&"fantasy").accepted)
-	assert(truth.interact(&"true").completed)
+	assert(truth.interact(&"approach", 0).accepted)
+	var target: Array = Rules.TARGETS[0]
+	for _step in int(target[0]):
+		assert(truth.interact(&"tune", 0).accepted)
+	for _step in posmod(int(target[1]) - int(target[0]), 4):
+		assert(truth.interact(&"tune", 1).accepted)
+	var optics: Array = truth.current_state.optics
+	for _step in posmod(int(target[2]) - int(optics[2]), 4):
+		assert(truth.interact(&"tune", 2).accepted)
+	assert(truth.interact(&"project").completed)
 	assert(str(world.get_meta("island_two_story_state")) == "truth_materialised")
-	for enemy in world.get_enemies():
-		if enemy.encounter_id == "ridge":
-			enemy.take_damage(999.0)
+	assert(quest.complete_garden_reflection(),
+		"sharing the completed peaceful experiment must replace the retired combat handoff")
 	assert(quest.current_task().id == "free_warden_core")
 	assert(str(world.get_meta("island_two_story_state")) == "guardian_freed")
 	assert((world.get_node("IslandTwoMemoryCampus/EliteGuardianCourt/GuardianRewardSocket/RewardHopeCrystal") as Node3D).visible)

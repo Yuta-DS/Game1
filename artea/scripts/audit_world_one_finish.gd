@@ -29,6 +29,7 @@ func _audit() -> void:
 	var report := {"islands": {}, "objects": []}
 	for island_name in roots:
 		var tally := {"visible_meshes": 0, "hidden_meshes": 0,
+			"hidden_mesh_groups": {},
 			"active_colliders": 0, "hidden_parent_active_colliders": [],
 			"hidden_parent_active_bodies": [],
 			"retired_nodes": [], "lights": 0}
@@ -49,11 +50,14 @@ func _audit() -> void:
 
 
 func _scan(node: Node, tally: Dictionary) -> void:
-	if node is MeshInstance3D:
+	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
 		if _visible_in_tree(node):
 			tally.visible_meshes += 1
 		else:
 			tally.hidden_meshes += 1
+			var group_path := _hidden_group_path(node)
+			tally.hidden_mesh_groups[group_path] = int(
+				tally.hidden_mesh_groups.get(group_path, 0)) + 1
 	if node is Light3D:
 		tally.lights += 1
 	if node is CollisionObject3D and (node as CollisionObject3D).collision_layer & 1:
@@ -75,3 +79,15 @@ func _visible_in_tree(node: Node) -> bool:
 			return false
 		current = current.get_parent()
 	return true
+
+
+func _hidden_group_path(node: Node) -> String:
+	var current := node
+	var highest_hidden := node
+	while current != null:
+		if current is Node3D and not (current as Node3D).visible:
+			highest_hidden = current
+		current = current.get_parent()
+	if highest_hidden == node and node.get_parent() != null:
+		highest_hidden = node.get_parent()
+	return str(highest_hidden.get_path())

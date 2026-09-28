@@ -224,6 +224,8 @@ func _run() -> void:
 
 	for retired_ring in storm_zone.find_children("LayeredStormRing_*", "MeshInstance3D", true, false):
 		assert(not retired_ring.visible, "the oversized legacy vortex must remain retired")
+		assert(retired_ring.mesh == null and bool(retired_ring.get_meta("retired_geometry_purged", false)),
+			"the retired vortex must not retain Web render resources")
 	var retired_tree := geometry.get_node("06OldestTreeSanctuary/MindSparkBioDataTree") as Node3D
 	for old_body in retired_tree.find_children("*", "CollisionObject3D", true, false):
 		assert((old_body as CollisionObject3D).collision_layer == 0,
@@ -298,14 +300,21 @@ func _run() -> void:
 		"Island 3 contains no visible elongated gold geometry")
 	assert(island_three.get_node_or_null("StormworksGrandCourt/BrassRadialInlay_01") == null,
 		"the former gold radial floor lines are no longer constructed")
-	assert(not (island_three.get_node(
-		"WisdomBasilicaPromenade/LeftBasilicaCornice") as MeshInstance3D).visible)
-	assert(not (island_three.get_node(
-		"WisdomBasilicaPromenade/LeftLivingRootRail") as MeshInstance3D).visible)
+	var retired_cornice := island_three.get_node(
+		"WisdomBasilicaPromenade/LeftBasilicaCornice") as MeshInstance3D
+	var retired_root_rail := island_three.get_node(
+		"WisdomBasilicaPromenade/LeftLivingRootRail") as MeshInstance3D
+	assert(not retired_cornice.visible and retired_cornice.mesh == null)
+	assert(not retired_root_rail.visible and retired_root_rail.mesh == null)
 	for removed_ring in geometry.find_children("*", "MeshInstance3D", true, false):
 		if bool(removed_ring.get_meta("island_three_gold_ring_removed", false)):
-			assert(not (removed_ring as MeshInstance3D).visible,
-				"all Island 3 gold ring geometry remains hidden")
+			assert(not (removed_ring as MeshInstance3D).visible \
+				and (removed_ring as MeshInstance3D).mesh == null,
+				"all removed Island 3 gold rings release their render resources")
+		if bool(removed_ring.get_meta("island_three_gold_line_removed", false)):
+			assert(not (removed_ring as MeshInstance3D).visible \
+				and (removed_ring as MeshInstance3D).mesh == null,
+				"all removed Island 3 gold lines release their render resources")
 	assert(world.get_collectibles().size() == 2)
 	assert(world.get_island_one_puzzle() != null)
 	assert(world.get_warden() != null)

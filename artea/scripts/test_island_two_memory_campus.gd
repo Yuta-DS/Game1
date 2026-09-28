@@ -41,6 +41,17 @@ func _run() -> void:
 		var retained_meshes := retired.find_children("*", "MeshInstance3D", true, false)
 		assert(retained_meshes.size() == (1 if court_name == "EliteGuardianCourt" else 0),
 			"only the story reward may remain under a retired court: "+court_name)
+	var retired_enemy_count := 0
+	for enemy in world.get_enemies():
+		if enemy.encounter_id not in ["constellation", "ridge"]:
+			continue
+		retired_enemy_count += 1
+		assert(bool(enemy.get_meta("retired_geometry_purged", false)),
+			"peaceful Island Two encounters must release retired actors")
+		for retired_mesh in enemy.find_children("*", "MeshInstance3D", true, false):
+			assert((retired_mesh as MeshInstance3D).mesh == null,
+				"retired enemy render resources must be released")
+	assert(retired_enemy_count == 5, "all five replaced Island Two combat actors remain as compatibility markers")
 	assert(world.get_node("IslandOneResearchCampus/FocusBellAlcove") is Node3D,
 		"the optional Focus Bell belongs to Island One's support route")
 	var route := campus.get_node("IslandTwoQuestRoute") as Node3D

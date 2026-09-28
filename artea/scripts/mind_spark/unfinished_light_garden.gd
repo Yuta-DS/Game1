@@ -31,6 +31,7 @@ func build(source: MindSparkWorldOne) -> void:
 			if old is CollisionObject3D:
 				old.collision_layer = 0
 				old.collision_mask = 0
+			_release_replaced_resources(old)
 	for station in world.get_quest_objects():
 		if station.save_id in Rules.IDS:
 			station.set_meta("unfinished_light", true)
@@ -86,6 +87,24 @@ func _retire_replaced_enemy(enemy: MindSparkEnemyBase) -> void:
 			(body as Area3D).monitorable = false
 	for collision_shape in enemy.find_children("*", "CollisionShape3D", true, false):
 		(collision_shape as CollisionShape3D).disabled = true
+	_release_replaced_resources(enemy)
+
+
+func _release_replaced_resources(node: Node) -> void:
+	## Retain stable compatibility paths without keeping superseded GPU and
+	## physics resources resident in the large Web pack.
+	node.set_process(false)
+	node.set_physics_process(false)
+	if node is MeshInstance3D:
+		(node as MeshInstance3D).mesh = null
+		(node as MeshInstance3D).material_override = null
+	if node is MultiMeshInstance3D:
+		(node as MultiMeshInstance3D).multimesh = null
+	if node is CollisionShape3D:
+		(node as CollisionShape3D).shape = null
+	for child in node.get_children():
+		_release_replaced_resources(child)
+	node.set_meta("retired_geometry_purged", true)
 
 func _box(parent: Node3D, title: String, at: Vector3, size: Vector3, mat: Material, solid := false) -> Node3D:
 	return world.call("_add_box", parent, title, at, size, mat, solid) as Node3D
@@ -219,6 +238,7 @@ func _refine_terrace_planting(hope: Node3D) -> void:
 			var old := terraces.get_node(prefix+"%02d"%(index+1)) as Node3D
 			old.visible=false
 			old.set_meta("replaced_by","RootedTerraceFoliage_%02d"%(index+1))
+			_release_replaced_resources(old)
 		var surface := terraces.get_node("SunriseGiltPlanterCap_%02d"%(index+1)) as MeshInstance3D
 		surface.material_override=soil
 		var start := deg_to_rad(126.0+index*10.0)

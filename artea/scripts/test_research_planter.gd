@@ -38,7 +38,10 @@ func run() -> void:
 	assert(terraces.find_children("RootedTerraceFoliage_*","MultiMeshInstance3D",false,false).size()==12)
 	for index in 12:
 		for prefix in ["SunriseGardenCrown_","SunriseGardenBloom_"]:
-			assert(not terraces.get_node(prefix+"%02d"%(index+1)).is_visible_in_tree(),"No hovering decorative blooms")
+			var retired_bloom := terraces.get_node(prefix+"%02d"%(index+1)) as MeshInstance3D
+			assert(not retired_bloom.is_visible_in_tree(),"No hovering decorative blooms")
+			assert(retired_bloom.mesh == null and bool(retired_bloom.get_meta("retired_geometry_purged", false)),
+				"retired bloom markers must release their render resources")
 		var plants := terraces.get_node("RootedTerraceFoliage_%02d"%(index+1)) as MultiMeshInstance3D
 		assert(plants.multimesh.instance_count==72)
 		if DisplayServer.get_name()!="headless":
@@ -52,6 +55,16 @@ func run() -> void:
 					var angle := wrapf(rad_to_deg(atan2(point.x,point.z)),0,360)
 					assert(radius>79 and radius<98,"Leaves must remain inside curved bed")
 					assert(angle>126+index*10 and angle<134+index*10,"Leaves must not extend into terrace gaps")
+	var retired_path_parts: Array[Node] = []
+	for pattern in ["HopePathTile_*", "HopePathIvoryPlinth_*", "HopePathGiltReveal_*", "HopePathMeasure_*"]:
+		retired_path_parts.append_array((zones["04_hope_path_ridge"] as Node3D).find_children(
+			pattern, "Node3D", true, false))
+	assert(retired_path_parts.size() == 35, "the five replaced Hope Path modules retain stable markers")
+	for retired_part in retired_path_parts:
+		assert(bool(retired_part.get_meta("retired_geometry_purged", false)),
+			"replaced Hope Path resources must be purged: "+retired_part.name)
+		if retired_part is MeshInstance3D:
+			assert((retired_part as MeshInstance3D).mesh == null)
 	world.queue_free()
 	await process_frame
 	print("RESEARCH_PLANTER: PASS — nine beds, original solid footprints, 360 rooted instanced leaves inside soil, five feeds per bed")
