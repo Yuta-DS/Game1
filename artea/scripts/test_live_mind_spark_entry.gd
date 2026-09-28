@@ -29,13 +29,12 @@ func _run() -> void:
 		"the nearby blueprint retains a safe void buffer from the Art Castle districts")
 	assert(world_one.force_standalone_blueprint)
 	assert(world_one.get_meta("foundation_mode") == "standalone_preview")
-	var initial_landing := world_one.to_global(
-		world_one.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0))
+	var initial_landing := world_one.to_global(world_one.get_player_arrival_local())
 	var spawn_offset := Vector2(
 		player.global_position.x - initial_landing.x,
 		player.global_position.z - initial_landing.z).length()
 	assert(spawn_offset < 0.25,
-		"the live character starts over World One's arrival court: player=%s landing=%s" \
+		"the live character starts over World One's supported arrival apron: player=%s landing=%s" \
 		% [str(player.global_position), str(initial_landing)])
 	assert(world_one.has_node("WorldOneGeometry"),
 		"World One is built before the character is relocated into it")

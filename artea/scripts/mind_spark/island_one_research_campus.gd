@@ -100,15 +100,17 @@ static func apply(world: MindSparkWorldOne) -> void:
 	gate.set_meta("purpose","Signal Prism opens access to the Living Research Garden")
 	for station in world.get_quest_objects():
 		if station.save_id == "world_one.checkpoint.landing":
-			# Keep the helper beside, not inside, the regulator's -34 -> -22
-			# operator approach. Move the whole assembly and its collision.
+			# Keep the helper beside the signal laboratory. The former operator
+			# point at (-25, -23) sat on the west regulator's solid plinth. The
+			# obvious outer side is occupied by the lantern tower, so this diagonal
+			# apron preserves interaction range in the clear space between both.
 			station.position=Vector3(-36,.05,-28)
-			var target := Vector3(-25,.05,-23)
+			var target := Vector3(-44,.05,-17)
 			station.look_at(arrival.to_global(target),Vector3.UP,true)
 			station.set_meta("operator_approach_local",target)
 		elif station.save_id == "world_one.path_projector":
 			station.position=Vector3(36,.05,-28)
-			var target := Vector3(25,.05,-23)
+			var target := Vector3(44,.05,-17)
 			station.look_at(arrival.to_global(target),Vector3.UP,true)
 			station.set_meta("operator_approach_local",target)
 		elif station.save_id == "world_one.checkpoint.network":

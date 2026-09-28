@@ -735,8 +735,45 @@ static func _build_memory_promenade(world: MindSparkWorldOne, campus: Node3D,
 		var at := middle + flat * (float(section) - 1.0) * length / 3.0
 		world.call("_add_brick", bridge, "IvoryDeckModule_%02d" % (section + 1), world.to_local(at),
 			Bricks.build_bevel_box(Vector3(24, .32, length / 3.0 + .45), .12), mats.sanctum_ivory, yaw)
+		# Bevel bricks are visual meshes. Back every module with an invisible
+		# primitive floor so the production capsule is supported for the full span.
+		var deck_support := world.call("_add_box", bridge,
+			"IvoryDeckSupport_%02d" % (section + 1), world.to_local(at),
+			Vector3(24, .32, length / 3.0 + .45), mats.sanctum_ivory, true, yaw) as MeshInstance3D
+		deck_support.visible = false
 		world.call("_add_box", bridge, "BrassDeckReveal_%02d" % (section + 1),
 			world.to_local(at + Vector3.UP * .22), Vector3(1.18, .08, length / 3.0 - .40), mats.astral_brass, false, yaw)
+	# The raised Constellation Dais is 2.4 m above the promenade. Its old vertical
+	# rim allowed travel only in the downhill direction. This sloped transition
+	# begins at the real dais edge and supports travel in both directions.
+	var dais_edge := constellation.global_position + flat * 81.0
+	var access_span := 24.0
+	var access_finish := dais_edge + flat * access_span
+	var deck_surface_y := start.y + .16
+	var access_rise := constellation.global_position.y + 2.4 - deck_surface_y
+	var access_middle := dais_edge.lerp(access_finish, .5)
+	access_middle.y = (constellation.global_position.y + 2.4 + deck_surface_y) * .5
+	var access_thickness := .8
+	var access_ramp := world.call("_add_box", bridge, "EvidenceDaisAccessRamp",
+		world.to_local(access_middle - Vector3.UP * access_thickness * .5),
+		Vector3(20.0, access_thickness, sqrt(access_span * access_span + access_rise * access_rise)),
+		mats.sanctum_ivory, true, yaw) as MeshInstance3D
+	access_ramp.rotation.x = atan2(access_rise, access_span)
+	(bridge.get_node("EvidenceDaisAccessRampCollision") as StaticBody3D).rotation = access_ramp.rotation
+	# The deck also sat a few centimetres above the Hope floor. Add a short
+	# continuation so the controller can enter the promenade on the return trip.
+	var hope_surface_y := float(world.call("_zone_floor_surface_y", hope.global_position))
+	var hope_access_span := 10.0
+	var hope_access_finish := finish + flat * hope_access_span
+	var hope_access_rise := deck_surface_y - hope_surface_y
+	var hope_access_middle := finish.lerp(hope_access_finish, .5)
+	hope_access_middle.y = (deck_surface_y + hope_surface_y) * .5
+	var hope_ramp := world.call("_add_box", bridge, "HopeFloorAccessRamp",
+		world.to_local(hope_access_middle - Vector3.UP * .20),
+		Vector3(20.0, .40, sqrt(hope_access_span * hope_access_span \
+			+ hope_access_rise * hope_access_rise)), mats.sanctum_ivory, true, yaw) as MeshInstance3D
+	hope_ramp.rotation.x = atan2(hope_access_rise, hope_access_span)
+	(bridge.get_node("HopeFloorAccessRampCollision") as StaticBody3D).rotation = hope_ramp.rotation
 	for rail_side in [-1.0, 1.0]:
 		var rail_start: Vector3 = start + side * rail_side * 11.0 + Vector3.UP * .72
 		var rail_finish: Vector3 = finish + side * rail_side * 11.0 + Vector3.UP * .72
@@ -777,6 +814,11 @@ static func _build_evidence_observatory(world: MindSparkWorldOne, campus: Node3D
 	for rib_index in rib_depths.size():
 		var z := float(rib_depths[rib_index])
 		for side in [-1.0, 1.0]:
+			# The east rear bay is the authored entrance to Memory Promenade.
+			# A complete buttress assembly here previously stood on the deck
+			# centreline and made the Hope district unreachable by the player.
+			if side > 0.0 and rib_index == 2:
+				continue
 			var side_name := "West" if side < 0.0 else "East"
 			var x := float(side) * 74.0
 			world.call("_add_brick", observatory,
@@ -794,11 +836,14 @@ static func _build_evidence_observatory(world: MindSparkWorldOne, campus: Node3D
 			"ArchiveCanopyRib_%02d_West" % (rib_index + 1),
 			Vector3(-74, 11.9, z), Vector3(-55, 16.0, z),
 			.64, .38, mats.sanctum_ivory, 12)
-		world.call("_add_cable_between", observatory,
-			"ArchiveCanopyRib_%02d_East" % (rib_index + 1),
-			Vector3(55, 16.0, z), Vector3(74, 11.9, z),
-			.38, .64, mats.sanctum_ivory, 12)
+		if rib_index != 2:
+			world.call("_add_cable_between", observatory,
+				"ArchiveCanopyRib_%02d_East" % (rib_index + 1),
+				Vector3(55, 16.0, z), Vector3(74, 11.9, z),
+				.38, .64, mats.sanctum_ivory, 12)
 		for side in [-1.0, 1.0]:
+			if side > 0.0 and rib_index == 2:
+				continue
 			world.call("_add_brick", observatory,
 				"ArchiveAquaKeystone_%02d_%s" % [rib_index + 1, side],
 				Vector3(float(side) * 55.0, 16.0, z),

@@ -51,8 +51,6 @@ func _ready() -> void:
 # scene. The Crown Line follows the story in one open world: Gallery Station,
 # Mind Spark, Heart Melody, then Creator's Light.
 const FLOATING_WORLD_FRONT_OFFSET := Vector3(0.0, 0.0, -480.0)
-const WORLD_ONE_ARRIVAL_ZONE := "01_world_gate_landing"
-const WORLD_ONE_SPAWN_HEIGHT := 7.0
 
 
 func _report_galaxy_state() -> void:
@@ -164,8 +162,7 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 	if player == null or world_one == null:
 		return
 	world_one.ensure_world_built()
-	var arrival := world_one.get_zone_position(WORLD_ONE_ARRIVAL_ZONE) \
-		+ Vector3.UP * WORLD_ONE_SPAWN_HEIGHT
+	var arrival := world_one.get_player_arrival_local()
 	player.global_position = world_one.to_global(arrival)
 	player.velocity = Vector3.ZERO
 		

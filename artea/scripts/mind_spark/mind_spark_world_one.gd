@@ -72,6 +72,7 @@ const CIRCUIT_ROUTE_LANDING_LENGTH := 10.0
 const TRANSIT_PORTAL_PAIRS := [[0, 3], [1, 4], [2, 5]]
 const TRANSIT_PORTAL_EDGE_INSET := 30.0
 const TRANSIT_PORTAL_ARRIVAL_CLEARANCE := 18.0
+const PLAYER_ARRIVAL_CLEARANCE := 2.5
 static var GREYBOX_BUILD_SEQUENCE: PackedStringArray = [
 	"three_fused_super_island_foundations",
 	"main_story_route",
@@ -909,6 +910,21 @@ func get_zone_radius(zone_id: String) -> float:
 		if str(zone.id) == zone_id:
 			return float(zone.radius)
 	return 0.0
+
+
+func get_player_arrival_local() -> Vector3:
+	## Return the supported operator apron beside the first World One quest.
+	## The historical zone centre now contains the Signal Observatory's raised
+	## architecture, so using it as a player spawn leaves the fox on an upper
+	## ledge instead of at the beginning of the playable route.
+	ensure_world_built()
+	for object in _objects:
+		if object.save_id != "world_one.checkpoint.landing":
+			continue
+		var parent := object.get_parent() as Node3D
+		var approach: Vector3 = object.get_meta("operator_approach_local")
+		return to_local(parent.to_global(approach)) + Vector3.UP * PLAYER_ARRIVAL_CLEARANCE
+	return get_zone_position("01_world_gate_landing") + Vector3.UP * 7.0
 
 
 func get_quest_objects() -> Array[QuestObjectBase]:
@@ -4668,6 +4684,24 @@ func _build_network_forest(zone: Node3D) -> void:
 
 func _build_constellation_court(zone: Node3D) -> void:
 	_add_cylinder(zone, "ConstellationDais", Vector3(0, 1.2, 0), 82, 2.4, _materials.celestial_floor, true, 40)
+	# The evidence stations live on the 2.4 m dais, but the former court had no
+	# player-scale transition from the incoming bridge. A broad solid ramp now
+	# provides a readable entrance beside the scanner without relying on the
+	# character controller to climb vertical stair risers.
+	var stair_outward := Vector3(-60, 0, -10).normalized()
+	var stair_yaw := atan2(-stair_outward.x, -stair_outward.z)
+	var ramp_rise := 2.4
+	var ramp_span := 24.0
+	var ramp_thickness := 1.2
+	# The high end overlaps the dais rim at radius 81; centring the ramp on the
+	# rim would leave its midpoint below the vertical court wall.
+	var ramp_middle := stair_outward * 93.0 + Vector3.UP * ramp_rise * 0.5
+	var ramp := _add_box(zone, "ConstellationAccessRamp",
+		ramp_middle - Vector3.UP * ramp_thickness * 0.5,
+		Vector3(18.0, ramp_thickness, sqrt(ramp_span * ramp_span + ramp_rise * ramp_rise)),
+		_materials.celestial_floor, true, stair_yaw)
+	ramp.rotation.x = -atan2(ramp_rise, ramp_span)
+	(zone.get_node("ConstellationAccessRampCollision") as StaticBody3D).rotation = ramp.rotation
 	for radius in [24.0, 48.0, 76.0]:
 		var ring := _add_torus(zone, "AstralCourtGiltInlay", Vector3(0, 2.43, 0), radius - 0.10, radius + 0.10, _materials.astral_brass)
 		ring.scale.y = 0.22
@@ -8568,6 +8602,8 @@ func _is_solid_island_one_mesh(mesh_instance: MeshInstance3D, collision_root: No
 	var key := mesh_instance.name.to_lower()
 	if key == "celestialivorydeck" \
 			or key == "arrivalivorycourt" \
+			or key == "processionalivoryaxis" \
+			or key == "processionalgiltinlay" \
 			or key == "compassivorydais" \
 			or key == "compassouterbrasskerb" \
 			or key.begins_with("inlay_v11_") \
