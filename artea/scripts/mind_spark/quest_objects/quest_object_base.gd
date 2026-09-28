@@ -954,13 +954,16 @@ func _apply_authored_surface_texture(kind: int) -> void:
 	var texture: Texture2D
 	if OS.has_feature("editor"):
 		# Direct source loading keeps focused tooling usable while the large Godot
-		# import cache is absent. Exported builds use the normal imported resource.
-		var image := Image.new()
-		var image_error := image.load(ProjectSettings.globalize_path(texture_path))
-		if image_error == OK and not image.is_empty():
-			image.generate_mipmaps()
-			texture = ImageTexture.create_from_image(image)
-	else:
+		# import cache is absent. Clean-room pack tests have editor features but no
+		# source files, so fall back to the exported imported resource there.
+		var source_path := ProjectSettings.globalize_path(texture_path)
+		if FileAccess.file_exists(source_path):
+			var image := Image.new()
+			var image_error := image.load(source_path)
+			if image_error == OK and not image.is_empty():
+				image.generate_mipmaps()
+				texture = ImageTexture.create_from_image(image)
+	if texture == null:
 		texture = load(texture_path) as Texture2D
 	if texture == null:
 		push_error("Missing authored surface texture for %s: %s" % [definition.display_name, texture_path])

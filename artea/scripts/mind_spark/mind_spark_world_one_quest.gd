@@ -132,8 +132,9 @@ func _connect_world_events() -> void:
 	for enemy in world.get_enemies():
 		enemy.defeated.connect(_on_enemy_defeated)
 	var boss := world.get_warden() as MindSparkWardenBoss
-	boss.defeated.connect(_on_boss_defeated)
-	boss.combat_stopped.connect(_on_boss_combat_stopped)
+	if boss != null:
+		boss.defeated.connect(_on_boss_defeated)
+		boss.combat_stopped.connect(_on_boss_combat_stopped)
 	var compass := world.get_island_one_puzzle()
 	if compass != null and not compass.quest_completed.is_connected(_on_island_one_subquest_completed):
 		compass.quest_completed.connect(_on_island_one_subquest_completed)

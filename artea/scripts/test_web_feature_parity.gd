@@ -2,6 +2,8 @@ extends SceneTree
 
 
 const REQUIRED_WEB_RESOURCES := [
+	"res://default_bus_layout.tres",
+	"res://resources/web_hub_surface_map.png",
 	"res://assets3D/characters/milo_exact_target_parts.glb",
 	"res://assets3D/crown_line_train/crown_line_runtime_textured.glb",
 	"res://assets3D/mind_spark/celestial_islands_v08/shared_paving.glb",
@@ -34,8 +36,11 @@ func _init() -> void:
 		"Web feature parity: export_presets.cfg must load")
 	var web_section := _find_web_preset(config)
 	assert(not web_section.is_empty(), "Web feature parity: Web preset is missing")
-	assert(str(config.get_value(web_section, "export_filter", "")) == "all_resources",
-		"Web feature parity: Web must export all project resources")
+	assert(str(config.get_value(web_section, "export_filter", "")) == "scenes",
+		"Web pack scope: export selected playable scenes and their dependencies")
+	var exported_scenes: PackedStringArray = config.get_value(
+		web_section, "export_files", PackedStringArray())
+	var inclusions := str(config.get_value(web_section, "include_filter", ""))
 	var exclusions := str(config.get_value(web_section, "exclude_filter", ""))
 	for resource_path in REQUIRED_WEB_RESOURCES:
 		assert(ResourceLoader.exists(resource_path),
@@ -43,6 +48,9 @@ func _init() -> void:
 		var project_path: String = resource_path.trim_prefix("res://")
 		assert(not _matches_any_export_pattern(project_path, exclusions),
 			"Web feature parity: required local resource is excluded: %s" % resource_path)
+		assert(exported_scenes.has(resource_path)
+			or _matches_any_export_pattern(project_path, inclusions),
+			"Web feature parity: dynamic resource is outside the scoped pack: %s" % resource_path)
 	for retired_path in RETIRED_WEB_RESOURCES:
 		assert(_matches_any_export_pattern(retired_path, exclusions),
 			"Web pack scope: retired development asset should not ship: %s" % retired_path)
