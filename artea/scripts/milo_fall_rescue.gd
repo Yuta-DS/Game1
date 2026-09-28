@@ -33,20 +33,48 @@ const MAX_SAFE_FLOOR_ANGLE := 0.61
 
 # --- fall detection ---
 # A drop this far below the last safe ground, with nothing underneath, is a
-# fall off the world rather than a jump down to a lower walkway.
-const RESCUE_DROP := 10.0
+# fall off the world rather than a jump down to a lower walkway. Deep enough
+# that the player gets a real moment of falling before Milo swoops in. Scenes
+# with their own void check (station platforms, the approach bridge) use the
+# same depth so every fall feels alike.
+const RESCUE_DROP := 16.0
 const FLOORLESS_PROBE := 80.0
 # Past this any fall is rescued, even if there is a floor somewhere far below.
 const HARD_DROP := 60.0
-const MIN_AIRBORNE_SECONDS := 0.45
+const MIN_AIRBORNE_SECONDS := 0.7
 
 # --- the rescue ---
 const CATCH_SECONDS := 0.6
 const MILO_ARRIVAL_HEIGHT := 7.0
 # Milo hovers just above the bubble, holding the player up.
-const MILO_HOVER := Vector3(0.0, 2.6, 0.0)
-const BUBBLE_CENTRE := Vector3(0.0, 0.9, 0.0)
-const BUBBLE_RADIUS := 1.25
+const MILO_HOVER := Vector3(0.0, 3.3, 0.0)
+# Wide enough for the fox with its tail and sword out (about 1.9 m tall and
+# 1.7 m across), centred on the player's collision capsule.
+const BUBBLE_RADIUS := 1.7
+# Bright glassy rim, a see-through middle so the player stays visible, a
+# highlight to read as a bubble, and a slow pulse so it looks alive.
+const BUBBLE_SHADER := """
+shader_type spatial;
+render_mode unshaded, cull_back, depth_draw_never, blend_mix;
+
+uniform vec4 glow : source_color = vec4(0.53, 0.72, 1.0, 1.0);
+uniform float fill_alpha = 0.2;
+uniform float rim_alpha = 1.0;
+uniform float rim_power = 1.5;
+uniform float fade = 1.0;
+
+void fragment() {
+	float facing = clamp(dot(NORMAL, VIEW), 0.0, 1.0);
+	float rim = pow(1.0 - facing, rim_power);
+	float pulse = 0.85 + 0.15 * sin(TIME * 4.0);
+	vec3 shine_dir = normalize(vec3(-0.45, 0.6, 0.65));
+	float shine = pow(max(dot(reflect(-VIEW, NORMAL), shine_dir), 0.0), 28.0);
+	// The rim leans white so it still reads against a sky of the glow's colour.
+	ALBEDO = mix(glow.rgb, vec3(1.0), clamp(rim * 0.8 + shine, 0.0, 1.0));
+	ALPHA = clamp(fill_alpha + rim * rim_alpha * pulse + shine * 0.8, 0.0, 1.0) * fade;
+}
+"""
+const BUBBLE_LIGHT_ENERGY := 1.4
 const CARRY_SPEED := 22.0
 const MIN_CARRY_SECONDS := 1.4
 const MAX_CARRY_SECONDS := 3.2
@@ -77,7 +105,7 @@ var _airborne := 0.0
 var _rescuing := false
 var _rescues := 0
 var _bubble: MeshInstance3D
-var _bubble_material: StandardMaterial3D
+var _bubble_material: ShaderMaterial
 var _line_label: Label3D
 var _fade_rect: ColorRect
 
@@ -280,7 +308,9 @@ func _run_rescue(target: Vector3) -> void:
 	# Milo steps down beside them.
 	var release_tween := create_tween().set_parallel()
 	release_tween.tween_property(_bubble, "scale", Vector3.ONE * 1.35, RELEASE_SECONDS)
-	release_tween.tween_property(_bubble_material, "albedo_color:a", 0.0, RELEASE_SECONDS)
+	release_tween.tween_method(
+		func(value: float) -> void: _bubble_material.set_shader_parameter("fade", value),
+		1.0, 0.0, RELEASE_SECONDS)
 	if milo != null:
 		var side := milo.global_basis.x.normalized() * MILO_LANDING_OFFSET
 		release_tween.tween_property(milo, "global_position",
@@ -341,40 +371,45 @@ func _build_bubble() -> void:
 		var aura_light: Variant = milo.get("aura_light")
 		if aura_light is OmniLight3D:
 			glow = (aura_light as OmniLight3D).light_color
-	_bubble_material = StandardMaterial3D.new()
-	_bubble_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_bubble_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_bubble_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_bubble_material.albedo_color = Color(glow, 0.22)
-	_bubble_material.rim_enabled = true
-	_bubble_material.emission_enabled = true
-	_bubble_material.emission = glow
-	_bubble_material.emission_energy_multiplier = 0.6
+	var shader := Shader.new()
+	shader.code = BUBBLE_SHADER
+	_bubble_material = ShaderMaterial.new()
+	_bubble_material.shader = shader
+	_bubble_material.set_shader_parameter("glow", glow)
 	var sphere := SphereMesh.new()
 	sphere.radius = BUBBLE_RADIUS
 	sphere.height = BUBBLE_RADIUS * 2.0
-	sphere.radial_segments = 24
-	sphere.rings = 12
+	sphere.radial_segments = 32
+	sphere.rings = 16
 	_bubble = MeshInstance3D.new()
 	_bubble.name = "MiloRescueBubble"
 	_bubble.mesh = sphere
 	_bubble.material_override = _bubble_material
 	_bubble.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_bubble.position = BUBBLE_CENTRE
+	_bubble.position = _body_centre()
 	player.add_child(_bubble)
+
+	# Lights the player from inside so they glow in the dark of the void.
+	var light := OmniLight3D.new()
+	light.name = "Glow"
+	light.light_color = glow
+	light.light_energy = BUBBLE_LIGHT_ENERGY
+	light.omni_range = BUBBLE_RADIUS * 2.2
+	light.shadow_enabled = false
+	_bubble.add_child(light)
 
 	# CPU particles: the web export runs the Compatibility renderer.
 	var sparkles := CPUParticles3D.new()
 	sparkles.name = "Sparkles"
-	sparkles.amount = 24
+	sparkles.amount = 40
 	sparkles.lifetime = 0.9
 	sparkles.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE_SURFACE
 	sparkles.emission_sphere_radius = BUBBLE_RADIUS
 	sparkles.gravity = Vector3.ZERO
 	sparkles.initial_velocity_min = 0.2
 	sparkles.initial_velocity_max = 0.6
-	sparkles.scale_amount_min = 0.05
-	sparkles.scale_amount_max = 0.1
+	sparkles.scale_amount_min = 0.07
+	sparkles.scale_amount_max = 0.14
 	var sparkle_mesh := SphereMesh.new()
 	sparkle_mesh.radius = 0.5
 	sparkle_mesh.height = 1.0
@@ -386,6 +421,15 @@ func _build_bubble() -> void:
 	sparkle_mesh.material = sparkle_material
 	sparkles.mesh = sparkle_mesh
 	_bubble.add_child(sparkles)
+
+
+# The middle of the player's collision capsule: NewPlayer's origin is at its
+# feet, Player3D's at its middle.
+func _body_centre() -> Vector3:
+	for child in player.get_children():
+		if child is CollisionShape3D:
+			return (child as CollisionShape3D).position
+	return Vector3(0.0, 1.0, 0.0)
 
 
 func _say(milo: Node3D, line: String) -> void:

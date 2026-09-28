@@ -157,6 +157,11 @@ var _dark_metal_material: StandardMaterial3D
 var _station_rainbow_materials: Array[StandardMaterial3D] = []
 var _external_drive_commanded := false
 var _station_fall_recovery := -1
+# How far below a station platform a falling player drops before Milo catches
+# them. Matches milo_fall_rescue.gd's RESCUE_DROP. The general rescue cannot
+# cover stations alone: the ground 35 m below counts as a floor, so it would
+# let the player land there.
+const STATION_RESCUE_DROP := 16.0
 
 
 func get_station_disembark_position(index: int) -> Vector3:
@@ -188,8 +193,14 @@ func _physics_process(_delta: float) -> void:
 	var local := platform.to_local(_player.global_position)
 	if _player.is_on_floor() or absf(local.x) > 45.0 or absf(local.z) > 60.0:
 		_station_fall_recovery = -1
-	elif local.y < -6.0 and _player.velocity.y < 0.0:
-		_player.global_position = get_station_disembark_position(_station_fall_recovery)
+	elif local.y < -STATION_RESCUE_DROP and _player.velocity.y < 0.0:
+		# Milo flies the player back to the platform. Without him (isolated test
+		# scenes) the player is put back at the disembark point instead.
+		var fallback := get_station_disembark_position(_station_fall_recovery)
+		var manager := get_node_or_null("/root/MiloCompanionManager")
+		if manager != null and bool(manager.call("request_fall_rescue", fallback)):
+			return
+		_player.global_position = fallback
 		_player.velocity = Vector3.ZERO
 
 
