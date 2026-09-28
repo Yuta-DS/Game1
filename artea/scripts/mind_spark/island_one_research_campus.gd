@@ -103,9 +103,11 @@ static func apply(world: MindSparkWorldOne) -> void:
 			# Keep the helper beside the signal laboratory. The former operator
 			# point at (-25, -23) sat on the west regulator's solid plinth. The
 			# obvious outer side is occupied by the lantern tower, so this diagonal
-			# apron preserves interaction range in the clear space between both.
+			# apron stays in the clear space between both. Keep it comfortably
+			# inside the 14 m traversal contract so a walking controller can stop a
+			# little short without losing the interaction.
 			station.position=Vector3(-36,.05,-28)
-			var target := Vector3(-44,.05,-17)
+			var target := Vector3(-42,.05,-19)
 			station.look_at(arrival.to_global(target),Vector3.UP,true)
 			station.set_meta("operator_approach_local",target)
 		elif station.save_id == "world_one.path_projector":

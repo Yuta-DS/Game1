@@ -1,6 +1,6 @@
 extends SceneTree
 
-const GALLERY_SCENE := preload("res://scenes/art_gallery_3d_inprogress.tscn")
+const GALLERY_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 
 
 func _init() -> void:
@@ -8,7 +8,11 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var gallery := GALLERY_SCENE.instantiate()
+	# Load after SceneTree autoloads are registered. Preloading this large scene
+	# while the --script runner itself is still parsing makes scripts that refer
+	# to Global and MusicManager report false compile errors in headless CI.
+	var gallery_scene := load(GALLERY_SCENE_PATH) as PackedScene
+	var gallery := gallery_scene.instantiate()
 	root.add_child(gallery)
 	for _frame in 12:
 		await process_frame
@@ -33,6 +37,20 @@ func _run() -> void:
 			station = object
 			break
 	assert(station != null, "World One exposes its arrival quest station")
+	var station_distance := Vector2(
+		player.global_position.x - station.global_position.x,
+		player.global_position.z - station.global_position.z).length()
+	assert(station_distance >= 18.0 and station_distance <= 30.0,
+		"arrival keeps the player out of the crowded operator pocket while the first station remains nearby: %.2f m" \
+		% station_distance)
+	var floor_query := PhysicsRayQueryParameters3D.create(
+		player.global_position + Vector3.UP * 3.0,
+		player.global_position + Vector3.DOWN * 5.0)
+	floor_query.collision_mask = 1
+	floor_query.exclude = [player.get_rid()]
+	var floor_hit := world.get_world_3d().direct_space_state.intersect_ray(floor_query)
+	assert(not floor_hit.is_empty() and (floor_hit.normal as Vector3).y > 0.8,
+		"arrival aisle provides a level collision-backed floor")
 	var toward_station: Vector3 = camera.global_position.direction_to(station.global_position)
 	assert(forward.dot(toward_station) > 0.80,
 		"arrival camera presents the first quest station in front of the player")

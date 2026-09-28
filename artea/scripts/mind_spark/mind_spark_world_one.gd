@@ -73,6 +73,11 @@ const TRANSIT_PORTAL_PAIRS := [[0, 3], [1, 4], [2, 5]]
 const TRANSIT_PORTAL_EDGE_INSET := 30.0
 const TRANSIT_PORTAL_ARRIVAL_CLEARANCE := 18.0
 const PLAYER_ARRIVAL_CLEARANCE := 2.5
+## The standalone World One opens on the broad south aisle of the Signal
+## Laboratory. Keeping this separate from the checkpoint operator position
+## prevents the character, Mayor Milo and the station cabinet from stacking in
+## one cramped focal point while leaving the first objective clearly ahead.
+const STANDALONE_PLAYER_ARRIVAL := Vector3(-46.0, 0.05, -5.0)
 static var GREYBOX_BUILD_SEQUENCE: PackedStringArray = [
 	"three_fused_super_island_foundations",
 	"main_story_route",
@@ -913,11 +918,16 @@ func get_zone_radius(zone_id: String) -> float:
 
 
 func get_player_arrival_local() -> Vector3:
-	## Return the supported operator apron beside the first World One quest.
-	## The historical zone centre now contains the Signal Observatory's raised
-	## architecture, so using it as a player spawn leaves the fox on an upper
-	## ledge instead of at the beginning of the playable route.
+	## Return a supported arrival point at the beginning of the first route.
+	## The historical zone centre contains raised observatory architecture and
+	## the checkpoint operator apron is intentionally compact. The standalone
+	## world therefore starts on the broad aisle just south of both, where the
+	## player, guide and first objective remain readable as separate silhouettes.
 	ensure_world_built()
+	if not _uses_existing_mind_district():
+		var arrival_zone := _zone_nodes["01_world_gate_landing"] as Node3D
+		return to_local(arrival_zone.to_global(STANDALONE_PLAYER_ARRIVAL)) \
+			+ Vector3.UP * PLAYER_ARRIVAL_CLEARANCE
 	for object in _objects:
 		if object.save_id != "world_one.checkpoint.landing":
 			continue
