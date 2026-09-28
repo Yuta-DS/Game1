@@ -7,6 +7,16 @@ var user_email: String = ""
 var current_user_name = ""
 var auth_token = ""
 
+const OFFLINE_GUEST_TOKEN := "OFFLINE_GUEST_TOKEN"
+
+
+func is_offline_guest() -> bool:
+	return auth_token == OFFLINE_GUEST_TOKEN
+
+
+func has_authenticated_session() -> bool:
+	return not auth_token.is_empty() and not is_offline_guest()
+
 var painting_to_show: int
 
 # --- Scene-to-scene spawn handoff -------------------------------------

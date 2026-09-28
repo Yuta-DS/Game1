@@ -6,6 +6,10 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var global := root.get_node("Global")
+	global.auth_token = global.OFFLINE_GUEST_TOKEN
+	assert(global.is_offline_guest() and not global.has_authenticated_session(),
+		"the production guest sentinel is classified as an offline session")
 	var start_source := FileAccess.get_file_as_string("res://start_screen.gd")
 	var authentication_source := FileAccess.get_file_as_string("res://scripts/authentication.gd")
 	assert(start_source.contains(
@@ -22,6 +26,9 @@ func _run() -> void:
 
 	var floating_world := gallery.get_node("ArtCastleFloatingWorld") as Node3D
 	var player := gallery.get_node("Player3D") as CharacterBody3D
+	var list_request := gallery.get_node("GalleryManager/ListHTTPRequest") as HTTPRequest
+	assert(list_request.get_http_client_status() == HTTPClient.STATUS_DISCONNECTED,
+		"Offline Guest never contacts the gallery API")
 	var world_one := floating_world.get_node("MindSparkWorldOne") as MindSparkWorldOne
 	assert(world_one != null, "the normal gallery scene owns World One directly")
 	assert(world_one.get_parent() == floating_world)

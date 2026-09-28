@@ -161,7 +161,7 @@ func enter_game(username: String, is_guest: bool = false):
 	# Direct assignment block to separate your tracks completely
 	if is_guest:
 		Global.current_user_name = "Guest_Player"
-		Global.auth_token = "OFFLINE_GUEST_TOKEN"
+		Global.auth_token = Global.OFFLINE_GUEST_TOKEN
 		print("SESSION LOCKED: API Database completely bypassed.")
 	else:
 		Global.current_user_name = username

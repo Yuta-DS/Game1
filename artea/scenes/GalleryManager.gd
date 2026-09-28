@@ -219,9 +219,14 @@ func load_local_art_paths() -> void:
 # =========================================================
 
 func list_user_artworks() -> void:
-	
-	if Global.auth_token == "":
-		print("No authenticated user -> loading local gallery")
+
+	# Offline Guest deliberately carries a sentinel token so the rest of the
+	# game can distinguish it from an uninitialised session. It is not a bearer
+	# credential and must never be sent to the gallery API. Besides exposing a
+	# fake credential, doing so on Web attempts to contact localhost and produces
+	# an unhandled browser fetch error before the expected local fallback.
+	if not Global.has_authenticated_session():
+		print("Offline gallery session -> loading local gallery")
 
 		load_local_art_paths()
 		apply_local_art_over_online()

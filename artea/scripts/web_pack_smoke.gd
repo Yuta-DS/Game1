@@ -61,6 +61,8 @@ func _run() -> void:
 		"Web pack must contain all twelve quest definition resources")
 	var gallery_packed := load(GALLERY_SCENE) as PackedScene
 	assert(gallery_packed != null, "Web pack can load the production gallery entry")
+	var global := root.get_node("Global")
+	global.auth_token = global.OFFLINE_GUEST_TOKEN
 	var gallery := gallery_packed.instantiate()
 	root.add_child(gallery)
 	for _frame in 8:
@@ -68,6 +70,9 @@ func _run() -> void:
 	await physics_frame
 	var floating_world := gallery.get_node("ArtCastleFloatingWorld") as Node3D
 	var player := gallery.get_node("Player3D") as CharacterBody3D
+	var list_request := gallery.get_node("GalleryManager/ListHTTPRequest") as HTTPRequest
+	assert(list_request.get_http_client_status() == HTTPClient.STATUS_DISCONNECTED,
+		"exported Offline Guest never contacts the gallery API")
 	var world := floating_world.get_node("MindSparkWorldOne") as MindSparkWorldOne
 	assert(world != null, "exported gallery mounts World One")
 	var arrival := world.to_global(world.get_player_arrival_local())
