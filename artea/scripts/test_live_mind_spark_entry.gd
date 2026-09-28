@@ -26,6 +26,10 @@ func _run() -> void:
 
 	var floating_world := gallery.get_node("ArtCastleFloatingWorld") as Node3D
 	var player := gallery.get_node("Player3D") as CharacterBody3D
+	assert(gallery.get_node_or_null("CanvasLayer/RatingUI") == null,
+		"the empty legacy rating overlay must not cover the live World One view")
+	assert(not (gallery.get_node("CanvasLayer/RatingPanel") as Control).visible,
+		"the real rating controls stay hidden until the player approaches artwork")
 	var list_request := gallery.get_node("GalleryManager/ListHTTPRequest") as HTTPRequest
 	assert(list_request.get_http_client_status() == HTTPClient.STATUS_DISCONNECTED,
 		"Offline Guest never contacts the gallery API")

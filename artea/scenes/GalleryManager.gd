@@ -37,9 +37,8 @@ var current_frame_hovered := ""
 var current_rating := 0
 
 # The rating widgets live under CanvasLayer/RatingPanel, a sibling of this node.
-# RatingUI is a leftover empty PanelContainer — pointing at it (and omitting the
-# "../" on likebutton) made all three lookups fail, which aborted _ready() and
-# took the rest of the gallery's setup down with it.
+# Resolve all three controls from that one production panel so gallery setup
+# cannot be interrupted by stale or partial overlay paths.
 @onready var rating_ui = $"../CanvasLayer/RatingPanel"
 @onready var rating_label: Label = $"../CanvasLayer/RatingPanel/RatingLabel"
 @onready var likebutton: Button = $"../CanvasLayer/RatingPanel/HBoxContainer/LikeButton"

@@ -665,16 +665,37 @@ func _build_hud() -> void:
 	canvas.name = "MindSparkQuestHUD"
 	canvas.layer = 31
 	add_child(canvas)
-	_hud_root = ColorRect.new()
+	var panel := Panel.new()
+	_hud_root = panel
 	_hud_root.name = "QuestPanel"
-	_hud_root.color = Color(0.025, 0.05, 0.12, 0.88)
-	_hud_root.position = Vector2(22, 78)
-	_hud_root.size = Vector2(530, 184)
+	# The galaxy minimap occupies (18, 18)–(304, 304). The old quest panel
+	# started at (22, 78), covering the map and making both interfaces unreadable.
+	# Keep a deliberate 14 px gutter and align the objective card to the top.
+	_hud_root.position = Vector2(318, 18)
+	_hud_root.size = Vector2(560, 244)
+	_hud_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud_root.set_meta("minimap_clearance_px", 14.0)
+	_hud_root.set_meta("presentation", "finished celestial objective card")
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.018, 0.035, 0.075, 0.92)
+	panel_style.border_color = Color(0.35, 0.78, 0.92, 0.72)
+	panel_style.set_border_width_all(1)
+	panel_style.set_corner_radius_all(12)
+	panel_style.shadow_color = Color(0.0, 0.0, 0.0, 0.42)
+	panel_style.shadow_size = 8
+	panel.add_theme_stylebox_override("panel", panel_style)
 	canvas.add_child(_hud_root)
-	_quest_label = _hud_label(Vector2(16, 12), Vector2(498, 30), 20, Color("ffe27a"))
-	_task_label = _hud_label(Vector2(16, 48), Vector2(498, 58), 17, Color("e8f7ff"))
-	_dialogue_label = _hud_label(Vector2(16, 108), Vector2(498, 38), 15, Color("b8e9d0"))
-	_reflection_label = _hud_label(Vector2(16, 148), Vector2(498, 28), 14, Color("e6cfff"))
+	var accent := ColorRect.new()
+	accent.name = "CelestialAccent"
+	accent.position = Vector2(8, 12)
+	accent.size = Vector2(4, 220)
+	accent.color = Color("69d9ef")
+	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud_root.add_child(accent)
+	_quest_label = _hud_label(Vector2(22, 12), Vector2(520, 30), 20, Color("ffe27a"))
+	_task_label = _hud_label(Vector2(22, 48), Vector2(520, 76), 17, Color("e8f7ff"))
+	_dialogue_label = _hud_label(Vector2(22, 130), Vector2(520, 50), 15, Color("b8e9d0"))
+	_reflection_label = _hud_label(Vector2(22, 188), Vector2(520, 44), 14, Color("e6cfff"))
 
 
 func _hud_label(at: Vector2, size_value: Vector2, font_size: int, color: Color) -> Label:
@@ -684,6 +705,7 @@ func _hud_label(at: Vector2, size_value: Vector2, font_size: int, color: Color) 
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", font_size)
 	label.modulate = color
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud_root.add_child(label)
 	return label
 
