@@ -6047,7 +6047,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "landmark_hierarchy_v11")
+	campus.set_meta("design_revision", "landmark_hierarchy_v12_civic_backdrops")
 	campus.set_meta("architectural_language",
 		"Island One and Two layered ivory terraces, garden arcades, charcoal machinery, cyan and lavender light, faceted living trees")
 	campus.set_meta("matches_previous_islands", true)
@@ -6536,33 +6536,63 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 		Vector3(28.0, .34, 24.0), _materials.floor_dark, true)
 	var outward := Vector3(center.x - float(ZONES[4].position.x), 0,
 		center.z - float(ZONES[4].position.z)).normalized()
+	var side_axis := Vector3(outward.z, 0, -outward.x)
+	var landmark_yaw := atan2(outward.x, outward.z)
+	# QuestObjectBase places the operator twelve metres outward. Keep another
+	# sixteen metres of breathing room beyond that point so players arriving
+	# diagonally from the bridge can reach the console without clipping a wing.
+	var rear_center := center + outward * 28.0
+	landmark.set_meta("silhouette_revision", "human_scale_civic_backdrop_v1")
+	landmark.set_meta("interaction_forecourt_clear_m", 11.0)
 	_build_island_three_shared_instrument(landmark, center, outward,
 		_materials.shared_style_cyan if landmark_index != 1 else _materials.shared_style_lavender)
 	if landmark_index == 0:
-		# A tall open survey instrument with one suspended lens crystal.
-		var apex := center + Vector3.UP * 39.0
-		for leg_index in 3:
-			var angle := TAU * float(leg_index) / 3.0
-			var foot := center + Vector3(sin(angle) * 12.5, 0, cos(angle) * 12.5)
+		# A tall open survey instrument with one suspended lens crystal.  The
+		# stepped observatory backing sits behind the operator, giving the lens a
+		# readable mass from the arrival camera without closing its forecourt.
+		for buttress_side in [-1.0, 1.0]:
+			_add_box(landmark,
+				"LensCitadelPodium%s" % ("Left" if buttress_side < 0 else "Right"),
+				rear_center + side_axis * float(buttress_side) * 18.0 + Vector3.UP * 2.0,
+				Vector3(8.0, 4.0, 15.0), _materials.shared_style_ivory, true,
+				landmark_yaw)
+			var buttress_at := rear_center + side_axis * float(buttress_side) * 17.5 \
+				+ Vector3.UP * 12.0
+			_add_box(landmark,
+				"LensCivicButtress%s" % ("Left" if buttress_side < 0 else "Right"),
+				buttress_at, Vector3(5.0, 24.0, 7.0),
+				_materials.shared_style_ivory, true, landmark_yaw)
+			_add_brick(landmark,
+				"LensButtressCrystal%s" % ("Left" if buttress_side < 0 else "Right"),
+				buttress_at + Vector3.UP * 14.5,
+				Bricks.build_crystal(1.25, 5.0, .3, 6), _materials.shared_style_cyan)
+		var apex := rear_center + Vector3.UP * 50.0
+		var lens_feet: Array[Vector3] = [
+			rear_center - side_axis * 15.0,
+			rear_center + side_axis * 15.0,
+			rear_center + outward * 11.0,
+		]
+		for leg_index in lens_feet.size():
+			var foot := lens_feet[leg_index]
 			_add_island_three_civic_column(landmark,
-				"LensTripod_%02d" % (leg_index + 1), foot, 17.0)
+				"LensTripod_%02d" % (leg_index + 1), foot, 20.0)
 			_add_cable_between(landmark, "LensIvoryMast_%02d" % (leg_index + 1),
-				foot + Vector3.UP * 17.8, foot + Vector3.UP * 36.0,
+				foot + Vector3.UP * 20.8, foot + Vector3.UP * 46.0,
 				.65, .36, _materials.shared_style_ivory, 8)
 			_add_cable_between(landmark, "LensIvoryRoofBrace_%02d" % (leg_index + 1),
-				foot + Vector3.UP * 36.0, apex, .36, .20,
+				foot + Vector3.UP * 46.0, apex, .36, .20,
 				_materials.shared_style_ivory, 8)
-		_add_brick(landmark, "StormLensPrism", center + Vector3.UP * 26.0,
-			Bricks.build_crystal(4.4, 13.0, .8, 6), _materials.arrival_glass)
+		_add_brick(landmark, "StormLensPrism", rear_center + Vector3.UP * 33.0,
+			Bricks.build_crystal(5.2, 16.0, .8, 6), _materials.arrival_glass)
 		var sight_frame := Node3D.new()
 		sight_frame.name = "OpenLensAlignmentFrame"
-		sight_frame.position = center + Vector3.UP * 26.0
+		sight_frame.position = rear_center + Vector3.UP * 33.0
 		# Face the court; from the bridge this frame reads edge-on instead of
 		# filling the arrival camera with a cropped geometric outline.
 		sight_frame.rotation.y = PI * .75
 		landmark.add_child(sight_frame)
-		var sight_corners := [Vector3(0, 10, 0), Vector3(10, 0, 0),
-			Vector3(0, -10, 0), Vector3(-10, 0, 0)]
+		var sight_corners := [Vector3(0, 12, 0), Vector3(12, 0, 0),
+			Vector3(0, -12, 0), Vector3(-12, 0, 0)]
 		for side_index in 4:
 			_add_beam_between(sight_frame,
 				"IvoryAlignmentBeam_%02d" % (side_index + 1),
@@ -6570,42 +6600,79 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 				1.1, _materials.shared_style_ivory)
 		sight_frame.set_meta("sighting_role", "single faceted storm-band alignment frame")
 	elif landmark_index == 1:
-		# The forge is low and muscular: paired buttresses and tuned crystal pylons.
+		# The forge is low and muscular.  A broad pediment and rear furnace hall
+		# make it read as occupied architecture while its open front retains the
+		# rhythm-game interaction and boss-court sightline.
 		for side in [-1.0, 1.0]:
-			var pylon_at := center + Vector3(float(side) * 10.0, 0, 0)
+			_add_box(landmark,
+				"ForgeHallPlinth%s" % ("Left" if side < 0 else "Right"),
+				rear_center + side_axis * float(side) * 15.0 + Vector3.UP * 2.0,
+				Vector3(10.0, 4.0, 18.0), _materials.shared_style_charcoal, true,
+				landmark_yaw)
+			_add_box(landmark,
+				"ForgeFurnaceHall%s" % ("Left" if side < 0 else "Right"),
+				rear_center + side_axis * float(side) * 14.0 + Vector3.UP * 10.0,
+				Vector3(9.0, 16.0, 11.0), _materials.shared_style_ivory, true,
+				landmark_yaw)
+			var pylon_at := rear_center + side_axis * float(side) * 15.0
 			_add_box(landmark, "ForgeButtress_%s" % ("L" if side < 0 else "R"),
-				pylon_at + Vector3.UP * 9.0, Vector3(5.5, 18.0, 9.0),
-				_materials.celestial_floor, true)
+				pylon_at + Vector3.UP * 11.0, Vector3(7.0, 22.0, 10.0),
+				_materials.celestial_floor, true, landmark_yaw)
 			_add_tapered_cylinder(landmark,
 				"ForgeConductor_%s" % ("L" if side < 0 else "R"),
-				pylon_at + Vector3.UP * 21.0, .2, 1.6, 6.0,
+				pylon_at + Vector3.UP * 25.0, .2, 1.8, 7.0,
 				_materials.island_cyan, 8)
 		_add_cable_between(landmark, "ForgeLintel",
-			center + Vector3(-10, 18.5, 0), center + Vector3(10, 18.5, 0),
-			1.2, 1.2, _materials.floor_dark, 8)
+			rear_center - side_axis * 14.0 + Vector3.UP * 22.5,
+			rear_center + side_axis * 14.0 + Vector3.UP * 22.5,
+			1.4, 1.4, _materials.floor_dark, 8)
 		for side in [-1.0, 1.0]:
 			_add_cable_between(landmark, "IvoryForgePediment_%s" % side,
-				center + Vector3(side * 11, 19, 0), center + Vector3(0, 34, 0),
-				1.8, 1.2, _materials.shared_style_ivory, 8)
-		_add_brick(landmark, "LavenderForgeKeystone", center + Vector3.UP * 34.0,
+				rear_center + side_axis * side * 15.0 + Vector3.UP * 23.0,
+				rear_center + Vector3.UP * 36.0,
+				2.0, 1.3, _materials.shared_style_ivory, 8)
+		_add_brick(landmark, "LavenderForgeKeystone", rear_center + Vector3.UP * 36.0,
 			Bricks.build_crystal(2.8, 5.8, .6, 6), _materials.shared_style_lavender)
-		_add_sphere(landmark, "SuspendedResonanceCore", center + Vector3.UP * 13.0,
-			Vector3(5.4, 6.0, 5.4), _materials.island_violet_energy)
+		_add_sphere(landmark, "SuspendedResonanceCore", rear_center + Vector3.UP * 16.0,
+			Vector3(6.4, 7.0, 6.4), _materials.island_violet_energy)
 		for pylon_index in 4:
 			var pylon_angle := TAU * float(pylon_index) / 4.0 + PI * .25
-			var tuned_at := center + Vector3(sin(pylon_angle) * 8.0, 2.3,
+			var tuned_at := rear_center + Vector3(sin(pylon_angle) * 8.0, 2.3,
 				cos(pylon_angle) * 8.0)
 			_add_brick(landmark, "TunedCrystalPylon_%02d" % (pylon_index + 1), tuned_at,
 				Bricks.build_crystal(1.0, 4.6, .3, 6),
 				_materials.island_cyan if pylon_index % 2 == 0 else _materials.sanctum_lavender_glass)
 	else:
 		# The archive uses staggered vertical fins like open illuminated pages.
+		# Two tall bookends and a lintel make those pages read as a building from
+		# player height instead of a loose row of props. The whole page hall is
+		# offset to one side, leaving the authored archive-to-rain egress open.
+		var archive_center := rear_center + side_axis * 20.0
+		for bookend_side in [-1.0, 1.0]:
+			_add_box(landmark,
+				"ArchiveHallBase%s" % ("Left" if bookend_side < 0 else "Right"),
+				archive_center + side_axis * float(bookend_side) * 16.0 + Vector3.UP * 4.0,
+				Vector3(10.0, 8.0, 17.0), _materials.shared_style_charcoal, true,
+				landmark_yaw)
+			var bookend_at := archive_center + side_axis * float(bookend_side) * 17.0 \
+				+ Vector3.UP * 19.0
+			_add_box(landmark,
+				"ArchiveBookendTower%s" % ("Left" if bookend_side < 0 else "Right"),
+				bookend_at, Vector3(6.0, 38.0, 9.0),
+				_materials.shared_style_ivory, true, landmark_yaw)
+			_add_box(landmark,
+				"ArchiveBookendGlass%s" % ("Left" if bookend_side < 0 else "Right"),
+				bookend_at - outward * 4.6, Vector3(3.0, 24.0, .24),
+				_materials.shared_style_cyan, false, landmark_yaw)
+		_add_box(landmark, "ArchiveCrownLintel", archive_center + Vector3.UP * 37.0,
+			Vector3(36.0, 3.0, 8.0), _materials.shared_style_ivory, true,
+			landmark_yaw)
 		for fin_index in 7:
 			var side := -1.0 if fin_index % 2 == 0 else 1.0
 			var depth := -12.0 + float(fin_index) * 4.0
 			var fin_height := 24.0 + float(fin_index) * 1.3
-			var fin_at := center + Vector3(side * (7.0 + absf(depth) * .25),
-				fin_height * .5, depth)
+			var fin_at := archive_center + side_axis * side * (7.0 + absf(depth) * .25) \
+				+ outward * (depth * .45) + Vector3.UP * (fin_height * .5)
 			_add_box(landmark, "ArchiveFin_%02d" % (fin_index + 1), fin_at,
 				Vector3(1.8, fin_height, 3.8), _materials.celestial_floor, true)
 			_add_box(landmark, "ArchiveCharcoalBase_%02d" % (fin_index + 1),
@@ -6615,8 +6682,8 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 			_add_box(landmark, "ArchiveGlyph_%02d" % (fin_index + 1),
 				fin_at + Vector3(-side * .92, 2.5, 0), Vector3(.12, 15.0, 1.2),
 				_materials.arrival_glass)
-		_add_brick(landmark, "ArchiveMemoryShard", center + Vector3.UP * 20.0,
-			Bricks.build_crystal(3.8, 11.0, .5, 6), _materials.island_cyan)
+		_add_brick(landmark, "ArchiveMemoryShard", archive_center + Vector3.UP * 25.0,
+			Bricks.build_crystal(4.6, 14.0, .5, 6), _materials.island_cyan)
 	var completion_visuals := Node3D.new()
 	completion_visuals.name = "CompletionStateVisuals"
 	completion_visuals.set_meta("preserve_authored_nodes", true)
@@ -6875,7 +6942,7 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 	var environment := Node3D.new()
 	environment.name = "IslandThreeMatchedEnvironment"
 	environment.set_meta("design_reference", "Island One research gardens + Island Two observatory terraces")
-	environment.set_meta("environment_revision", "open_civic_gardens_v10_living_palette")
+	environment.set_meta("environment_revision", "open_civic_gardens_v11_quiet_ground")
 	environment.set_meta("foliage_palette", "deep sage, moss, muted sage, restrained ivory blossom")
 	environment.set_meta("clear_routes_preserved", true)
 	environment.set_meta("no_gold_lines_or_route_barriers", true)
@@ -6970,7 +7037,7 @@ func _build_island_three_planted_room(parent: Node3D, center: Vector3, index: in
 	_add_box(garden, "IvoryPlantingBed", center + Vector3.UP * .6,
 		Vector3(22, 1.2, 14), _materials.shared_style_ivory, true)
 	_add_box(garden, "RecessedEarth", center + Vector3.UP * 1.22,
-		Vector3(20.4, .12, 12.4), _materials.floor_dark)
+		Vector3(20.4, .12, 12.4), _materials.island_three_earth)
 	for shrub_index in 5:
 		var shrub_at := center + Vector3(float(shrub_index % 3 - 1) * 6.2,
 			2.3, float(shrub_index / 3 - 1) * 3.5)
@@ -7003,11 +7070,11 @@ func _build_island_three_environment_bay(parent: Node3D, bay_name: String,
 	_add_box(bay, "IvoryGardenTerrace", center + Vector3.UP * .18,
 		Vector3(18.0, .36, 10.0), _materials.shared_style_ivory, true, tangent_yaw)
 	_add_box(bay, "CharcoalTerraceReveal", center - Vector3.UP * .12,
-		Vector3(15.8, .28, 8.2), _materials.shared_style_charcoal, false, tangent_yaw)
+		Vector3(15.8, .28, 8.2), _materials.island_three_earth, false, tangent_yaw)
 	var radial := Vector3(sin(radial_angle), 0, cos(radial_angle))
 	var tangent := Vector3(radial.z, 0, -radial.x)
 	_add_box(bay, "RecessedPlantingSoil", center + Vector3.UP * .39,
-		Vector3(15.2, .10, 7.5), _materials.floor_dark, false, tangent_yaw)
+		Vector3(15.2, .10, 7.5), _materials.island_three_earth, false, tangent_yaw)
 	for shrub_index in 5:
 		var shrub := _add_sphere(bay, "SageGroundCover_%02d" % shrub_index,
 			center + tangent * float(shrub_index - 2) * 2.7 + radial * 2.4 + Vector3.UP * 1.15,
@@ -8218,6 +8285,7 @@ func _build_materials() -> void:
 	_materials.island_three_sage = _material(Color("71957b"), 0.88)
 	_materials.island_three_sage_deep = _material(Color("3f6654"), 0.92)
 	_materials.island_three_moss = _material(Color("9aab79"), 0.88)
+	_materials.island_three_earth = _material(Color("746f60"), 0.94)
 	_materials.island_three_canopy_ivory = _material(Color("e8ddc3"), 0.90)
 	_materials.island_three_roof = _material(Color("9ebdb8"), 0.58)
 	_materials.bio_bark = _material(Color("3b2724"), 0.88)

@@ -147,7 +147,8 @@ func _run() -> void:
 			island_three_saplings += 1
 	assert(island_three_saplings == 15,
 		"Island 3 uses fifteen restrained pale perimeter saplings around its hero tree")
-	assert(str(island_three.get_meta("design_revision", "")) == "landmark_hierarchy_v11")
+	assert(str(island_three.get_meta("design_revision", "")) \
+		== "landmark_hierarchy_v12_civic_backdrops")
 	assert(int(island_three.get_meta("island_one_style_matched_quest_objects", 0)) == 5,
 		"all five Island 3 quest objects use Island One's production style family")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
@@ -155,7 +156,7 @@ func _run() -> void:
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
 	var matched_environment := island_three.get_node("IslandThreeMatchedEnvironment") as Node3D
 	assert(str(matched_environment.get_meta("environment_revision", "")) \
-		== "open_civic_gardens_v10_living_palette")
+		== "open_civic_gardens_v11_quiet_ground")
 	assert(str(matched_environment.get_meta("foliage_palette", "")).contains("deep sage"))
 	assert(bool(matched_environment.get_meta("clear_routes_preserved", false)))
 	assert(int(matched_environment.get_meta("total_environment_bays", 0)) >= 16 \
@@ -208,10 +209,30 @@ func _run() -> void:
 	assert(lens.has_node("LensIvoryMast_01")
 		and lens.find_children("LensStrut_*", "MeshInstance3D", true, false).is_empty(),
 		"the lens tower uses upright ivory supports rather than a dark diagonal across arrival")
+	assert(lens.has_node("LensCitadelPodiumLeftCollision")
+		and lens.has_node("LensCitadelPodiumRightCollision")
+		and lens.has_node("LensCivicButtressLeftCollision")
+		and lens.has_node("LensCivicButtressRightCollision"),
+		"the lens has a collision-backed civic silhouette behind its clear forecourt")
 	assert((forge.get_node("SuspendedResonanceCore") as MeshInstance3D).mesh != null,
 		"the north quest retains its broad, suspended forge core")
+	assert(forge.has_node("ForgeFurnaceHallLeftCollision")
+		and forge.has_node("ForgeFurnaceHallRightCollision")
+		and forge.has_node("ForgeHallPlinthLeftCollision")
+		and forge.has_node("ForgeHallPlinthRightCollision"),
+		"the resonance forge has a broad collision-backed furnace hall")
 	assert((archive.get_node("ArchiveFin_07") as MeshInstance3D).mesh != null,
 		"the northeast quest retains the staggered archive skyline")
+	assert(archive.has_node("ArchiveBookendTowerLeftCollision")
+		and archive.has_node("ArchiveBookendTowerRightCollision")
+		and archive.has_node("ArchiveHallBaseLeftCollision")
+		and archive.has_node("ArchiveHallBaseRightCollision")
+		and archive.has_node("ArchiveCrownLintelCollision"),
+		"the archive pages sit inside a solid, recognizable civic hall")
+	for storm_landmark in [lens, forge, archive]:
+		assert(str(storm_landmark.get_meta("silhouette_revision", "")) \
+			== "human_scale_civic_backdrop_v1")
+		assert(float(storm_landmark.get_meta("interaction_forecourt_clear_m", 0.0)) >= 11.0)
 	var storm_zone := geometry.get_node("05ThoughtStormArena") as Node3D
 	assert(is_equal_approx((storm_zone.get_node("BossArenaCollision") as Node3D).position.y, -1.0),
 		"legacy boss floor must not bury the new paving and architecture")
