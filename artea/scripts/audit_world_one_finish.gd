@@ -30,11 +30,19 @@ func _audit() -> void:
 	for island_name in roots:
 		var tally := {"visible_meshes": 0, "hidden_meshes": 0,
 			"hidden_mesh_groups": {},
+			"dormant_hidden_meshes": 0, "retired_hidden_meshes": 0,
+			"retired_hidden_mesh_paths": [],
 			"active_colliders": 0, "hidden_parent_active_colliders": [],
 			"hidden_parent_active_bodies": [],
 			"retired_nodes": [], "lights": 0}
 		for source in roots[island_name]:
 			_scan(source as Node, tally)
+		assert(int(tally.hidden_meshes) == int(tally.dormant_hidden_meshes) \
+			+ int(tally.retired_hidden_meshes),
+			"every hidden mesh must have an audited runtime role on %s" % island_name)
+		assert(int(tally.retired_hidden_meshes) == 0,
+			"retired geometry remains resident on %s: %s" % [
+				island_name, str(tally.retired_hidden_mesh_paths)])
 		report.islands[island_name] = tally
 	for object in world.get_quest_objects():
 		report.objects.append({"save_id": object.save_id,
@@ -55,6 +63,12 @@ func _scan(node: Node, tally: Dictionary) -> void:
 			tally.visible_meshes += 1
 		else:
 			tally.hidden_meshes += 1
+			var retired_ancestor := _retired_ancestor(node)
+			if retired_ancestor != null:
+				tally.retired_hidden_meshes += 1
+				tally.retired_hidden_mesh_paths.append(str(node.get_path()))
+			else:
+				tally.dormant_hidden_meshes += 1
 			var group_path := _hidden_group_path(node)
 			tally.hidden_mesh_groups[group_path] = int(
 				tally.hidden_mesh_groups.get(group_path, 0)) + 1
@@ -79,6 +93,15 @@ func _visible_in_tree(node: Node) -> bool:
 			return false
 		current = current.get_parent()
 	return true
+
+
+func _retired_ancestor(node: Node) -> Node:
+	var current := node
+	while current != null:
+		if current.has_meta("replaced_by") or current.has_meta("retired_by"):
+			return current
+		current = current.get_parent()
+	return null
 
 
 func _hidden_group_path(node: Node) -> String:

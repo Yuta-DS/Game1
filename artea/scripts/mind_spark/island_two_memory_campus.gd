@@ -498,18 +498,11 @@ static func _retire_assembly(node: Node3D, replacement: String) -> void:
 		(body as CollisionObject3D).collision_mask = 0
 	# These assemblies are compatibility markers after their production
 	# replacements are installed. Hiding the old hierarchy still kept every mesh,
-	# material and collision resource resident in Web memory. Preserve only the
-	# guardian reward socket because story-state restoration still addresses that
-	# stable path; release every other retired child immediately.
-	var preserved_reward := node.get_node_or_null("GuardianRewardSocket") as Node
-	if preserved_reward != null:
-		for reward_child in preserved_reward.get_children():
-			if reward_child.name != "RewardHopeCrystal":
-				reward_child.free()
+	# material and collision resource resident in Web memory. All live stateful
+	# visuals now live under their production replacements, so release every
+	# retired child immediately.
 	var released_children := 0
 	for child in node.get_children():
-		if child == preserved_reward:
-			continue
 		child.free()
 		released_children += 1
 	if node is MeshInstance3D:
@@ -1321,12 +1314,12 @@ static func _build_hope_materialisation_conduit(world: MindSparkWorldOne,
 	conduit.name = "HopeMaterialisationConduit"
 	conduit.position = hope.position
 	conduit.set_meta("source", "Perspective Carousel and Truth Materialiser")
-	conduit.set_meta("destination", "Guardian Court reward socket")
+	conduit.set_meta("destination", "Conservatory Understanding Reward Shrine")
 	conduit.set_meta("path_class", "protected service edge plus non-solid floor signal")
 	campus.add_child(conduit)
 	var service_points: Array[Vector3] = [
 		Vector3(-62, .45, -8), Vector3(-30, .45, 18), Vector3(10, .45, 18),
-		Vector3(42, .45, 2), Vector3(42, .45, 38), Vector3(0, .45, 66),
+		Vector3(42, .45, 2), Vector3(30, .45, -30), Vector3(0, .45, -50),
 	]
 	for segment_index in service_points.size() - 1:
 		var channel := world.call("_add_cable_between", conduit,
@@ -1341,6 +1334,46 @@ static func _build_hope_materialisation_conduit(world: MindSparkWorldOne,
 			at, Bricks.build_bevel_box(Vector3(1.5, .50, 1.5), .10), mats.sanctum_ivory)
 		world.call("_add_sphere", conduit, "ConduitReading_%02d" % (support_index + 1),
 			at + Vector3.UP * .38, Vector3.ONE * .20, mats.arrival_glass)
+	_build_understanding_reward_shrine(world, conduit, service_points[-1])
+
+
+static func _build_understanding_reward_shrine(world: MindSparkWorldOne,
+		conduit: Node3D, at: Vector3) -> void:
+	## The chapter reward belongs to the live route rather than the invisible
+	## compatibility shell for the retired Guardian Court. The low exedra makes
+	## the conduit destination readable from the Hope district while retaining a
+	## broad, level approach to the bridge for Island Three.
+	var mats: Dictionary = world.get("_materials")
+	var shrine := Node3D.new()
+	shrine.name = "GuardianRewardSocket"
+	shrine.position = at + Vector3(0.0, -.45, 0.0)
+	shrine.set_meta("energy_source", "HopeMaterialisationConduit")
+	shrine.set_meta("reward_role", "visible Island Two chapter completion focus")
+	shrine.set_meta("production_replacement_for", "EliteGuardianCourt/GuardianRewardSocket")
+	shrine.set_meta("clear_player_approach_m", 8.0)
+	conduit.add_child(shrine)
+	world.call("_add_cylinder", shrine, "RewardIvoryCradle", Vector3(0, .36, 0),
+		3.6, .72, mats.sanctum_ivory, true, 12)
+	world.call("_add_cylinder", shrine, "RewardTealInset", Vector3(0, .74, 0),
+		2.8, .10, mats.arrival_glass, false, 12)
+	for side in [-1.0, 1.0]:
+		world.call("_add_cylinder", shrine,
+			"UnderstandingPier_%s" % ("West" if side < 0.0 else "East"),
+			Vector3(side * 4.8, 3.0, 1.6), .72, 5.4,
+			mats.sanctum_ivory, true, 10)
+		world.call("_add_brick", shrine,
+			"UnderstandingFin_%s" % ("West" if side < 0.0 else "East"),
+			Vector3(side * 4.8, 6.0, 1.6),
+			Bricks.build_crystal(.72, 2.0, .20, 6), mats.green_glow)
+	world.call("_add_brick", shrine, "UnderstandingLintel", Vector3(0, 5.65, 1.6),
+		Bricks.build_bevel_box(Vector3(11.2, .55, .70), .12), mats.sanctum_ivory)
+	var reward := world.call("_add_brick", shrine, "RewardHopeCrystal",
+		Vector3(0, 2.35, 0), Bricks.build_crystal(1.05, 3.8, .30, 8),
+		mats.green_glow) as Node3D
+	reward.visible = false
+	reward.set_meta("story_state", "guardian_freed")
+	world.call("_add_label", shrine, "UNDERSTANDING RESTORED",
+		Vector3(0, 7.5, 1.8), Color("eaffd9"), 17)
 
 
 static func _build_island_two_landscaping(world: MindSparkWorldOne,

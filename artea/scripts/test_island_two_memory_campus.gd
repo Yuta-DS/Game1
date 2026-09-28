@@ -57,8 +57,8 @@ func _run() -> void:
 		assert(bool(retired.get_meta("retired_geometry_purged", false)),
 			"retired prototype geometry must be released from memory: "+court_name)
 		var retained_meshes := retired.find_children("*", "MeshInstance3D", true, false)
-		assert(retained_meshes.size() == (1 if court_name == "EliteGuardianCourt" else 0),
-			"only the story reward may remain under a retired court: "+court_name)
+		assert(retained_meshes.is_empty(),
+			"retired prototype geometry must retain no render meshes: "+court_name)
 	var retired_enemy_count := 0
 	for enemy in world.get_enemies():
 		if enemy.encounter_id not in ["constellation", "ridge"]:
@@ -138,7 +138,13 @@ func _run() -> void:
 	assert(not (conduit.get_node("HopeSignalSegment_04") as Node3D).visible)
 	world.set_island_two_story_state("truth_materialised")
 	assert((conduit.get_node("HopeSignalSegment_05") as Node3D).visible)
-	var reward := campus.get_node("EliteGuardianCourt/GuardianRewardSocket/RewardHopeCrystal") as Node3D
+	assert(str(conduit.get_meta("destination")) ==
+		"Conservatory Understanding Reward Shrine")
+	var reward_socket := conduit.get_node("GuardianRewardSocket") as Node3D
+	assert(str(reward_socket.get_meta("production_replacement_for")) ==
+		"EliteGuardianCourt/GuardianRewardSocket")
+	assert(reward_socket.get_node("RewardIvoryCradle") is MeshInstance3D)
+	var reward := reward_socket.get_node("RewardHopeCrystal") as Node3D
 	var retired_court := campus.get_node("EliteGuardianCourt") as Node3D
 	assert(not retired_court.visible)
 	for old_body in retired_court.find_children("*", "CollisionObject3D", true, false):

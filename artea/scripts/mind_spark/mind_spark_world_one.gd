@@ -1161,7 +1161,8 @@ func set_island_two_story_state(state: String) -> void:
 			var segment := hope_conduit.get_node_or_null("HopeSignalSegment_%02d" % (index + 1)) as Node3D
 			if segment != null:
 				segment.visible = index < active_segments
-	var reward := get_node_or_null("IslandTwoMemoryCampus/EliteGuardianCourt/GuardianRewardSocket/RewardHopeCrystal") as Node3D
+	var reward := get_node_or_null(
+		"IslandTwoMemoryCampus/HopeMaterialisationConduit/GuardianRewardSocket/RewardHopeCrystal") as Node3D
 	if reward != null:
 		reward.visible = state == "guardian_freed"
 

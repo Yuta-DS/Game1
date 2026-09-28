@@ -58,7 +58,7 @@ The receiver on Island Two changes from dormant, to invited, to received. Mother
 6. **Certainty Guard — CARRY**
    - The Stalker and Sentinel challenge movement, timing, and attention.
    - This tests carrying the new truth under pressure; it never tests the player's worth.
-   - The Guardian Court’s hope crystal awakens and the onward route becomes meaningful.
+   - The Conservatory Understanding Shrine’s hope crystal awakens and the onward route becomes meaningful.
 
 ## Persistent story states
 

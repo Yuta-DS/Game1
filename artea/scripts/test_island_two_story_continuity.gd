@@ -84,7 +84,9 @@ func _run() -> void:
 		"sharing the completed peaceful experiment must replace the retired combat handoff")
 	assert(quest.current_task().id == "free_warden_core")
 	assert(str(world.get_meta("island_two_story_state")) == "guardian_freed")
-	assert((world.get_node("IslandTwoMemoryCampus/EliteGuardianCourt/GuardianRewardSocket/RewardHopeCrystal") as Node3D).visible)
+	var reward_path := NodePath(
+		"IslandTwoMemoryCampus/HopeMaterialisationConduit/GuardianRewardSocket/RewardHopeCrystal")
+	assert((world.get_node(reward_path) as Node3D).visible)
 	quest.call("_save_progress")
 
 	world.queue_free()
@@ -97,6 +99,8 @@ func _run() -> void:
 	assert(restored_quest.current_task().id == "free_warden_core")
 	assert(str(restored.get_meta("island_two_story_state")) == "guardian_freed")
 	assert(restored.is_quest_gate_open(1))
+	assert((restored.get_node(reward_path) as Node3D).visible,
+		"the live completion shrine restores after loading saved progress")
 	restored.queue_free()
 	await process_frame
 	_cleanup()

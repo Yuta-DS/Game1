@@ -54,7 +54,7 @@ Player story flow:
 - [x] Replace circular truth portals with a supported rectilinear Truth Foundry.
 - [x] Add the Hope Materialisation Conduit from perspective to truth to guardian.
 - [x] Combine six new framed canopy trees with the complete mature planting layer from the older groves.
-- [x] Add a guardian exedra and reward socket to clarify the chapter conclusion.
+- [x] Add a live Conservatory Understanding Shrine and reward socket to clarify the chapter conclusion.
 - [x] Keep collision enabled for restored heritage trees and disabled for removed halo/portal rings and the duplicate gate.
 - [x] Rotate and relocate the arrival portico so its opening faces the incoming bridge.
 - [x] Crown the arrival portico with a shallow sunrise arch and faceted Wisdom Beacon instead of another ring.
@@ -108,7 +108,7 @@ Player story flow:
 - [ ] Run `test_mind_spark_three_island_fusion.gd` in the restored full project.
 - [ ] Walk the complete route in player-camera view and inspect station facing, rail continuity, and clearance.
 - [ ] Verify the Memory Gate leaves a collision-free opening through its full inward/outward animation.
-- [ ] Capture overview and player-perspective screenshots of Evidence Court, Memory Gate, Hope Ridge, and Guardian Court.
+- [x] Capture overview and player-perspective screenshots of Evidence Court, Memory Gate, Hope Ridge, and the Understanding Shrine.
 - [ ] Run the web build and confirm background, lighting, audio, controls, and frame budget.
 
 ## Acceptance rule

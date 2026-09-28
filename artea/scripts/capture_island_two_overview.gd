@@ -152,6 +152,16 @@ func _capture() -> void:
 		await create_timer(1.5).timeout
 		RenderingServer.force_draw(false)
 		assert(root.get_texture().get_image().save_png(output + "/restored_conservatory.png") == OK)
+		world.set_island_two_story_state("guardian_freed")
+		var reward_shrine := world.get_node(
+			"IslandTwoMemoryCampus/HopeMaterialisationConduit/GuardianRewardSocket") as Node3D
+		camera.fov = 58
+		camera.global_position = reward_shrine.global_position + Vector3(0, 6.5, -19)
+		camera.look_at(reward_shrine.global_position + Vector3.UP * 3.2)
+		await create_timer(.8).timeout
+		RenderingServer.force_draw(false)
+		assert(root.get_texture().get_image().save_png(
+			output + "/understanding_reward_shrine.png") == OK)
 	if island_one:
 		var hero := world.find_child("EchoGardenHeroBenchmark", true, false) as Node3D
 		if hero != null:
