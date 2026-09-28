@@ -47,10 +47,18 @@ func _exit_tree() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	# The player may be absent (or still loading) in non-hub scenes; only
+	# block camera input when there is a player and it is mid-interaction
+	# (e.g. Milo's chat panel is open). Checked first so a click on a UI
+	# button while talking to Milo cannot recapture/hide the mouse out from
+	# under the player before the click even reaches the button.
+	var busy: bool = player != null and "interacting" in player and player.interacting
 	# Escape releases the pointer for menus and desktop use. Clicking the game
 	# recaptures it, matching the other third-person camera in this project.
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return
+	if busy:
 		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -62,11 +70,6 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed \
 			and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		return
-
-	# The player may be absent (or still loading) in non-hub scenes; only
-	# block input when there is a player and it is mid-interaction.
-	if player != null and "interacting" in player and player.interacting:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotateFromVector(event.relative * mouseAcceleration)
