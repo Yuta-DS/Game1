@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cklh7a28vdurc"
 path.s3tc="res://.godot/imported/square.png-6eb8c67c705df6365df32b6cb311a217.s3tc.ctex"
-path.etc2="res://.godot/imported/square.png-6eb8c67c705df6365df32b6cb311a217.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Paintingtool/square.png"
-dest_files=["res://.godot/imported/square.png-6eb8c67c705df6365df32b6cb311a217.s3tc.ctex", "res://.godot/imported/square.png-6eb8c67c705df6365df32b6cb311a217.etc2.ctex"]
+dest_files=["res://.godot/imported/square.png-6eb8c67c705df6365df32b6cb311a217.s3tc.ctex"]
 
 [params]
 

@@ -129,6 +129,11 @@ split_for_local() {
 	echo "  $(basename "${pck}"): ${idx} parts"
 }
 
+# The Web preset injects pck-loader.js through html/head_include, but a plain
+# export does not copy it - only the Vercel export script does. Without it the
+# page 404s the loader and the parts below go unused.
+cp "${project_dir}/tools/vercel-pack-split/pck-loader.js" "${build_dir}/pck-loader.js"
+
 echo "Checking split layout for local serving…"
 split_for_local "${build_dir}/index.pck"
 split_for_local "${build_dir}/index.side.wasm"

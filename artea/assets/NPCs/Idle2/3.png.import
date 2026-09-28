@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://tdf05t2j3ely"
 path.s3tc="res://.godot/imported/3.png-608dd78ce7f7fb9e3742ba7395d0ea89.s3tc.ctex"
-path.etc2="res://.godot/imported/3.png-608dd78ce7f7fb9e3742ba7395d0ea89.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/NPCs/Idle2/3.png"
-dest_files=["res://.godot/imported/3.png-608dd78ce7f7fb9e3742ba7395d0ea89.s3tc.ctex", "res://.godot/imported/3.png-608dd78ce7f7fb9e3742ba7395d0ea89.etc2.ctex"]
+dest_files=["res://.godot/imported/3.png-608dd78ce7f7fb9e3742ba7395d0ea89.s3tc.ctex"]
 
 [params]
 

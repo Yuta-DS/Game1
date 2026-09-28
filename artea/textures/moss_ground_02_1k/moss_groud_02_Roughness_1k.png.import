@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cv2idm52yigwt"
 path.s3tc="res://.godot/imported/moss_groud_02_Roughness_1k.png-9f72bcb88781e15d3e6247a1a55a7a4b.s3tc.ctex"
-path.etc2="res://.godot/imported/moss_groud_02_Roughness_1k.png-9f72bcb88781e15d3e6247a1a55a7a4b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/moss_ground_02_1k/moss_groud_02_Roughness_1k.png"
-dest_files=["res://.godot/imported/moss_groud_02_Roughness_1k.png-9f72bcb88781e15d3e6247a1a55a7a4b.s3tc.ctex", "res://.godot/imported/moss_groud_02_Roughness_1k.png-9f72bcb88781e15d3e6247a1a55a7a4b.etc2.ctex"]
+dest_files=["res://.godot/imported/moss_groud_02_Roughness_1k.png-9f72bcb88781e15d3e6247a1a55a7a4b.s3tc.ctex"]
 
 [params]
 

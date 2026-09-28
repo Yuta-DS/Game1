@@ -21,7 +21,7 @@ const BlossomBudClusterLeafStyle := preload(
 const GravityLeafReliefStyle := preload(
 	"res://scripts/tree_of_life/leaf_style_gravity_leaf_relief.gd")
 const TREE_CHRISTMAS_MELODY := preload(
-	"res://assets/audio/tree_of_life_christmas_ambience.wav")
+	"res://assets/audio/tree_of_life_christmas_ambience.ogg")
 const TREE_CHRISTMAS_BELLS := preload("res://assets/SFX/fairy dust.ogg")
 const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
 

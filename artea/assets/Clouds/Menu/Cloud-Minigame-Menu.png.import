@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://divem2bli6vuu"
 path.s3tc="res://.godot/imported/Cloud-Minigame-Menu.png-99cf8c6f2abc981b77037e64919c6c8b.s3tc.ctex"
-path.etc2="res://.godot/imported/Cloud-Minigame-Menu.png-99cf8c6f2abc981b77037e64919c6c8b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Clouds/Menu/Cloud-Minigame-Menu.png"
-dest_files=["res://.godot/imported/Cloud-Minigame-Menu.png-99cf8c6f2abc981b77037e64919c6c8b.s3tc.ctex", "res://.godot/imported/Cloud-Minigame-Menu.png-99cf8c6f2abc981b77037e64919c6c8b.etc2.ctex"]
+dest_files=["res://.godot/imported/Cloud-Minigame-Menu.png-99cf8c6f2abc981b77037e64919c6c8b.s3tc.ctex"]
 
 [params]
 
