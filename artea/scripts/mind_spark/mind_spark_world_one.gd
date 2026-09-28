@@ -3161,22 +3161,10 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 			false, petal_angle)
 		_add_sphere(machine, "CompassHeartPearl_%02d" % (petal_index + 1),
 			petal_at + Vector3.UP * 0.48, Vector3.ONE * 0.18, _materials.arrival_glass)
-	_add_torus(machine, "CompassHeartMeridianA", Vector3(0, 5.3, 8), 3.65, 4.05,
-		_materials.gold, Vector3(90, 0, 0))
-	_add_torus(machine, "CompassHeartMeridianB", Vector3(0, 5.3, 8), 3.65, 4.05,
-		_materials.astral_brass, Vector3(0, 0, 90))
-	_add_torus(machine, "CompassHeartMeridianC", Vector3(0, 5.3, 8), 4.10, 4.45,
-		_materials.arrival_glass, Vector3(0, 90, 0))
 	_build_thought_witness(machine)
 	_build_constellation_target_instrument(machine)
 	var puzzle_light := _add_zone_light(arrival, Vector3(0, 36.0, 42.0), Color("ffe9bd"), 68.0, 2.85)
 	puzzle_light.name = "HighPuzzleCompositionLight"
-	for spoke_index in 12:
-		var angle := TAU * float(spoke_index) / 12.0
-		var start := Vector3(sin(angle) * 5.0, 2.42, 8 + cos(angle) * 5.0)
-		var finish := Vector3(sin(angle) * 21.6, 2.42, 8 + cos(angle) * 21.6)
-		_add_cable_between(machine, "CompassGiltSpoke_%02d" % (spoke_index + 1),
-			start, finish, 0.18, 0.10, _materials.astral_brass, 8)
 
 	var controls := Node3D.new()
 	controls.name = "PuzzleControls"
@@ -3218,13 +3206,19 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 
 	var conduits := Node3D.new()
 	conduits.name = "PuzzlePowerConduits"
+	conduits.set_meta("preserve_authored_nodes", true)
 	arrival.add_child(conduits)
+	# Keep every energy path on the floor as a sequence of short low-poly
+	# markers. The former continuous brass/cyan pipes crossed the court at player
+	# height and collapsed the observatory into a web of unsupported lines.
 	for side in [-1.0, 1.0]:
-		var x: float = float(side) * 24.0
-		_add_cable_between(conduits, "PuzzlePowerConduitTower", Vector3(x, 4.0, -22),
-			Vector3(side * 22.0, 2.7, 8), 0.48, 0.30, _materials.astral_brass, 12)
-		_add_cable_between(conduits, "PuzzleAetherTubeTower", Vector3(x, 4.5, -20),
-			Vector3(side * 18.0, 2.9, 8), 0.25, 0.18, _materials.arrival_glass, 10)
+		for marker_index in 6:
+			var progress := float(marker_index + 1) / 7.0
+			var marker_at := Vector3(side * 24.0, 2.62, -22.0).lerp(
+				Vector3(side * 18.0, 2.62, 8.0), progress)
+			_add_box(conduits,
+				"RegulatorFloorLink_%s_%02d" % ["West" if side < 0 else "East", marker_index + 1],
+				marker_at, Vector3(1.15, 0.10, 1.65), _materials.arrival_glass, false)
 	# Paired floor circuits explain the coupling without relying on HUD text.
 	var selector_positions := [Vector3(-22, 3.3, 58), Vector3(0, 3.3, 64), Vector3(22, 3.3, 58)]
 	var coupled_ring_points := [
@@ -3238,10 +3232,10 @@ func _build_island_one_compass_gameplay(arrival: MindSparkIslandOnePuzzle) -> vo
 				"CoupledOrbit_%02d_%02d" % [selector_index + 1, link_index + 1],
 				selector_positions[selector_index], coupled_ring_points[selector_index][link_index],
 				0.25, 0.13, _materials.arrival_glass if link_index == 0 else _materials.gold, 10)
-	_add_cable_between(conduits, "PuzzlePowerConduitBridge", Vector3(0, 3.0, 28),
-		Vector3(0, 3.0, 73), 0.56, 0.38, _materials.astral_brass, 12)
-	_add_cable_between(conduits, "PuzzleAetherTubeBridge", Vector3(0, 3.4, 28),
-		Vector3(0, 3.4, 73), 0.28, 0.18, _materials.arrival_glass, 10)
+	for marker_index in 10:
+		_add_box(conduits, "MainFloorLink_%02d" % (marker_index + 1),
+			Vector3(0, 2.62, 31.0 + float(marker_index) * 4.2),
+			Vector3(1.20, 0.10, 2.15), _materials.arrival_glass, false)
 
 	var projection := Node3D.new()
 	projection.name = "SolvedRouteProjection"
@@ -3294,7 +3288,7 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 	instrument.name = "ThoughtConstellationTarget"
 	instrument.set_meta("preserve_authored_nodes", true)
 	instrument.set_meta("purpose", "sanctum gateway and physical goal display for the linked-ring puzzle")
-	instrument.set_meta("design_revision", "v31_science_art_harmony_sanctum")
+	instrument.set_meta("design_revision", "v32_low_poly_crown_sanctum")
 	instrument.set_meta("clear_opening_width_m", 20.0)
 	instrument.set_meta("reusable_component_families", 8)
 	parent.add_child(instrument)
@@ -3360,29 +3354,17 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 			Vector3(side * 11.0, 17.0, gateway_z - 1.15),
 			0.24, 0.16, _materials.astral_brass, 10)
 
-	# Two nested segmented curves give the gateway a heavenly silhouette while
-	# retaining a genuine 20 m x 14 m clear opening. Unlike the removed torus,
-	# the arch stops cleanly at its capitals and does not cross the puzzle heart.
-	var arch_segments := 20
-	for segment_index in arch_segments:
-		var angle_a := PI - PI * float(segment_index) / float(arch_segments)
-		var angle_b := PI - PI * float(segment_index + 1) / float(arch_segments)
-		var outer_a := Vector3(cos(angle_a) * pier_x,
-			15.5 + sin(angle_a) * 11.5, gateway_z)
-		var outer_b := Vector3(cos(angle_b) * pier_x,
-			15.5 + sin(angle_b) * 11.5, gateway_z)
-		_add_cable_between(instrument, "SanctumIvoryVoussoir_%02d" % (segment_index + 1),
-			outer_a, outer_b, 0.78, 0.78, _materials.sanctum_ivory, 12)
-		var light_a := Vector3(cos(angle_a) * 13.6,
-			15.5 + sin(angle_a) * 9.9, gateway_z - 0.62)
-		var light_b := Vector3(cos(angle_b) * 13.6,
-			15.5 + sin(angle_b) * 9.9, gateway_z - 0.62)
-		_add_cable_between(instrument, "SanctumAetherReveal_%02d" % (segment_index + 1),
-			light_a, light_b, 0.20, 0.20, _materials.arrival_glass, 8)
-		if segment_index % 2 == 0:
-			_add_brick(instrument, "SanctumGiltKey_%02d" % (segment_index + 1),
-				outer_a + Vector3(0, 0, -0.72),
-				Bricks.build_bevel_box(Vector3(0.62, 0.82, 0.34), 0.08), _materials.gold)
+	# A stepped crown replaces the former double semicircle. From the arrival
+	# camera it reads as one supported low-poly gateway instead of a second halo
+	# competing with the thought witness in front of it.
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		_add_brick(instrument, "SanctumCrownShoulder_%s" % side_name,
+			Vector3(side * 10.3, 20.7, gateway_z),
+			Bricks.build_bevel_box(Vector3(8.5, 2.2, 2.4), 0.30), _materials.sanctum_ivory)
+		_add_brick(instrument, "SanctumCrownAetherInset_%s" % side_name,
+			Vector3(side * 10.3, 20.65, gateway_z - 1.28),
+			Bricks.build_bevel_box(Vector3(5.6, 0.62, 0.22), 0.08), _materials.arrival_glass)
 
 	# The Wisdom Crown beam physically carries all three state instruments.
 	_add_brick(instrument, "WisdomCrownMainBeam", Vector3(0, 18.9, gateway_z + 0.18),
@@ -3514,19 +3496,19 @@ func _build_thought_witness(parent: Node3D) -> void:
 	parent.add_child(witness)
 	_add_sphere(witness, "LavenderThoughtCloud", Vector3(0, 10.2, 8),
 		Vector3(6.2, 3.4, 3.6), _materials.astral_lavender)
-	_add_torus(witness, "AwarenessOrbit", Vector3(0, 10.2, 8), 6.8, 7.25,
-		_materials.astral_brass, Vector3(90, 0, 0))
-	_add_torus(witness, "AwarenessInnerOrbit", Vector3(0, 10.2, 8), 5.6, 5.92,
-		_materials.arrival_glass, Vector3(90, 0, 0))
-	for petal_index in 12:
-		var petal_angle := TAU * float(petal_index) / 12.0
-		var petal_start := Vector3(sin(petal_angle) * 6.1, 10.2,
-			8 + cos(petal_angle) * 6.1)
-		var petal_end := Vector3(sin(petal_angle) * 7.8, 10.2,
-			8 + cos(petal_angle) * 7.8)
-		_add_cable_between(witness, "AwarenessPetal_%02d" % (petal_index + 1),
-			petal_start, petal_end, 0.20, 0.13,
-			_materials.gold if petal_index % 2 == 0 else _materials.arrival_glass, 8)
+	# A squared three-piece frame keeps the thought readable from the arrival
+	# aisle without adding another full ring to the already circular floor game.
+	_add_brick(witness, "ThoughtFrameLeft", Vector3(-7.0, 10.2, 8),
+		Bricks.build_bevel_box(Vector3(0.85, 10.4, 1.1), 0.18), _materials.sanctum_ivory)
+	_add_brick(witness, "ThoughtFrameRight", Vector3(7.0, 10.2, 8),
+		Bricks.build_bevel_box(Vector3(0.85, 10.4, 1.1), 0.18), _materials.sanctum_ivory)
+	_add_brick(witness, "ThoughtFrameCrown", Vector3(0, 15.35, 8),
+		Bricks.build_bevel_box(Vector3(14.8, 0.85, 1.1), 0.18), _materials.sanctum_ivory)
+	for anchor_index in 4:
+		var anchor_angle := TAU * float(anchor_index) / 4.0
+		_add_brick(witness, "ThoughtAnchorCrystal_%02d" % (anchor_index + 1),
+			Vector3(sin(anchor_angle) * 7.3, 10.2 + cos(anchor_angle) * 4.0, 8),
+			Bricks.build_crystal(0.48, 1.20, 0.18, 6), _materials.arrival_glass)
 	for index in 8:
 		var angle := TAU * float(index) / 8.0
 		var mote_at := Vector3(sin(angle) * 8.2, 10.2 + sin(angle * 2.0) * 1.2,

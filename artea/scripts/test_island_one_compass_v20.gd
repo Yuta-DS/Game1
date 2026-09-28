@@ -32,6 +32,16 @@ func _run() -> void:
 		"the three rings retain 84 individually editable bearing plaques")
 	assert(compass.find_children("CanopyGlassTriangle_*", "MeshInstance3D", true, false).size() == 144,
 		"the celestial canopy retains all independent triangular panes")
+	assert(compass.find_children("CompassGiltSpoke_*", "MeshInstance3D", true, false).is_empty(),
+		"the arrival court no longer uses thin radial brass lines")
+	assert(compass.find_children("CompassHeartMeridian*", "MeshInstance3D", true, false).is_empty(),
+		"the thought focus no longer stacks decorative rings")
+	assert(compass.find_children("AwarenessOrbit", "MeshInstance3D", true, false).is_empty())
+	assert(compass.find_children("ThoughtFrame*", "MeshInstance3D", true, false).size() == 3)
+	assert(compass.find_children("PuzzlePowerConduit*", "MeshInstance3D", true, false).is_empty(),
+		"regulator power stays in short floor markers instead of long crossing pipes")
+	assert(compass.find_children("RegulatorFloorLink_*", "MeshInstance3D", true, false).size() == 12)
+	assert(compass.find_children("MainFloorLink_*", "MeshInstance3D", true, false).size() == 10)
 	assert(not compass.interact_control("outer_ring").accepted,
 		"rings cannot be guessed before the physical light laboratory is composed")
 	assert(compass.interact_control("colour_prism").accepted)

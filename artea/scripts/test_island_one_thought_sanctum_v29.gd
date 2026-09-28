@@ -1,6 +1,7 @@
 extends SceneTree
 
 const WorldScene := preload("res://scenes/mind_spark/mind_spark_world_one.tscn")
+const TEST_OBJECTS := "user://test_island_one_thought_sanctum_v29_objects.json"
 
 
 func _init() -> void:
@@ -8,8 +9,10 @@ func _init() -> void:
 
 
 func _run() -> void:
+	_cleanup()
 	var world := WorldScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
+	world.object_state_store_path = TEST_OBJECTS
 	(world.get_node("QuestController") as MindSparkWorldOneQuest).enabled = false
 	root.add_child(world)
 	for _frame in 8:
@@ -18,10 +21,11 @@ func _run() -> void:
 	assert(puzzle != null)
 	var sanctum := puzzle.find_child("ThoughtConstellationTarget", true, false) as Node3D
 	assert(sanctum != null)
-	assert(str(sanctum.get_meta("design_revision")) == "v31_science_art_harmony_sanctum")
+	assert(str(sanctum.get_meta("design_revision")) == "v32_low_poly_crown_sanctum")
 	assert(float(sanctum.get_meta("clear_opening_width_m")) >= 20.0)
-	assert(sanctum.find_children("SanctumIvoryVoussoir_*", "MeshInstance3D", true, false).size() == 20)
-	assert(sanctum.find_children("SanctumAetherReveal_*", "MeshInstance3D", true, false).size() == 20)
+	assert(sanctum.find_children("SanctumIvoryVoussoir_*", "MeshInstance3D", true, false).is_empty())
+	assert(sanctum.find_children("SanctumAetherReveal_*", "MeshInstance3D", true, false).is_empty())
+	assert(sanctum.find_children("SanctumCrownShoulder_*", "MeshInstance3D", true, false).size() == 2)
 	assert(sanctum.find_children("SanctumGovernorSpoke_*", "MeshInstance3D", true, false).size() == 12)
 	assert(sanctum.find_children("SanctumPylonCapital_*", "MeshInstance3D", true, false).is_empty(),
 		"the overlapping arch-spring capital rings remain removed")
@@ -52,4 +56,10 @@ func _run() -> void:
 	print("ISLAND_ONE_THOUGHT_SANCTUM_V29: PASS — clean puzzle gateway, live indicators, clear threshold")
 	world.queue_free()
 	await process_frame
+	_cleanup()
 	quit()
+
+
+func _cleanup() -> void:
+	if FileAccess.file_exists(TEST_OBJECTS):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_OBJECTS))
