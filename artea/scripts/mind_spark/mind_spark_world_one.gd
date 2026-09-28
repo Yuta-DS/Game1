@@ -224,6 +224,7 @@ func build_world() -> void:
 		_finalize_quest_object_story_layout()
 		_redesign_island_three(geometry)
 		_unify_island_one_tree_and_quest_style()
+	_install_player_spawn_marker(geometry)
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		# The optional station is deliberately the final standalone construction
 		# phase. It branches from Zone 05 and never participates in story routing.
@@ -924,6 +925,13 @@ func get_player_arrival_local() -> Vector3:
 	## world therefore starts on the broad aisle just south of both, where the
 	## player, guide and first objective remain readable as separate silhouettes.
 	ensure_world_built()
+	var marker := get_node_or_null("WorldOneGeometry/PlayerSpawn") as Marker3D
+	if marker != null:
+		return marker.position
+	return _authored_player_arrival_local()
+
+
+func _authored_player_arrival_local() -> Vector3:
 	if not _uses_existing_mind_district():
 		var arrival_zone := _zone_nodes["01_world_gate_landing"] as Node3D
 		return to_local(arrival_zone.to_global(STANDALONE_PLAYER_ARRIVAL)) \
@@ -935,6 +943,20 @@ func get_player_arrival_local() -> Vector3:
 		var approach: Vector3 = object.get_meta("operator_approach_local")
 		return to_local(parent.to_global(approach)) + Vector3.UP * PLAYER_ARRIVAL_CLEARANCE
 	return get_zone_position("01_world_gate_landing") + Vector3.UP * 7.0
+
+
+func _install_player_spawn_marker(geometry: Node3D) -> void:
+	## Keep the live character spawn as an inspectable part of World One instead
+	## of leaving the only authored marker behind in the gallery. Runtime entry,
+	## traversal tests and future checkpoints can now share the same location.
+	var marker := Marker3D.new()
+	marker.name = "PlayerSpawn"
+	marker.position = _authored_player_arrival_local()
+	marker.set_meta("world", "world_one")
+	marker.set_meta("physical_island", 1)
+	marker.set_meta("district", "01_world_gate_landing")
+	marker.set_meta("supported_spawn", true)
+	geometry.add_child(marker)
 
 
 func get_quest_objects() -> Array[QuestObjectBase]:

@@ -37,12 +37,23 @@ func _run() -> void:
 	assert(world_one.force_standalone_blueprint)
 	assert(world_one.get_meta("foundation_mode") == "standalone_preview")
 	var initial_landing := world_one.to_global(world_one.get_player_arrival_local())
+	var world_one_spawn := world_one.get_node_or_null(
+		"WorldOneGeometry/PlayerSpawn") as Marker3D
+	assert(world_one_spawn != null,
+		"World One owns the live character spawn marker")
+	assert(world_one_spawn.get_meta("physical_island") == 1
+		and bool(world_one_spawn.get_meta("supported_spawn")),
+		"the marker identifies a supported Island One start")
 	var spawn_offset := Vector2(
 		player.global_position.x - initial_landing.x,
 		player.global_position.z - initial_landing.z).length()
 	assert(spawn_offset < 0.25,
 		"the live character starts over World One's supported arrival apron: player=%s landing=%s" \
 		% [str(player.global_position), str(initial_landing)])
+	var scene_spawn := gallery.get_node("SpawnPoint") as Node3D
+	assert(scene_spawn.global_position.distance_to(initial_landing) < 0.25
+		and scene_spawn.get_meta("world") == "world_one",
+		"the integrated scene spawn marker is relocated with the character")
 	assert(world_one.has_node("WorldOneGeometry"),
 		"World One is built before the character is relocated into it")
 	var source_gate := floating_world.get_node("MindSparkWorldGate") as MindSparkWorldGate

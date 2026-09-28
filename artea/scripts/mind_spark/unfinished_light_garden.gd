@@ -56,12 +56,36 @@ func build(source: MindSparkWorldOne) -> void:
 	_refine_terrace_planting(hope)
 	for enemy in world.get_enemies():
 		if enemy.encounter_id in ["constellation", "ridge"]:
-			enemy.visible = false
-			enemy.set_process(false)
-			enemy.set_physics_process(false)
-			enemy.collision_layer = 0
-			enemy.collision_mask = 0
+			_retire_replaced_enemy(enemy)
 	_sync()
+
+
+func _retire_replaced_enemy(enemy: MindSparkEnemyBase) -> void:
+	## Island Two's evidence and hope encounters are now peaceful research
+	## activities. Their former combat actors stay in the scene only for save
+	## compatibility, so every physics surface must retire with the visuals.
+	## Disabling just the CharacterBody left each invisible Hurtbox on layer 1.
+	enemy.visible = false
+	enemy.active = false
+	enemy.velocity = Vector3.ZERO
+	enemy.set_process(false)
+	enemy.set_physics_process(false)
+	enemy.collision_layer = 0
+	enemy.collision_mask = 0
+	enemy.set_meta("replaced_by", "GardenOfUnfinishedLight peaceful research sequence")
+	enemy.set_meta("retired_collision_disabled", true)
+	var navigation := enemy.get_node_or_null("NavigationAgent3D") as NavigationAgent3D
+	if navigation != null:
+		navigation.avoidance_enabled = false
+	for collision_object in enemy.find_children("*", "CollisionObject3D", true, false):
+		var body := collision_object as CollisionObject3D
+		body.collision_layer = 0
+		body.collision_mask = 0
+		if body is Area3D:
+			(body as Area3D).monitoring = false
+			(body as Area3D).monitorable = false
+	for collision_shape in enemy.find_children("*", "CollisionShape3D", true, false):
+		(collision_shape as CollisionShape3D).disabled = true
 
 func _box(parent: Node3D, title: String, at: Vector3, size: Vector3, mat: Material, solid := false) -> Node3D:
 	return world.call("_add_box", parent, title, at, size, mat, solid) as Node3D

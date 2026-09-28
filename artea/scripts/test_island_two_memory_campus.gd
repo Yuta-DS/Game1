@@ -19,7 +19,8 @@ func _run() -> void:
 			"missing Island Two style-alignment assembly: "+architecture_name)
 	var observatory := campus.get_node("EvidenceObservatory") as Node3D
 	assert(observatory.get_node("CelestialArchiveOrrery") is Node3D)
-	assert(observatory.find_children("ArchiveCanopyRib_*","Node3D",true,false).size()==6)
+	assert(observatory.find_children("ArchiveCanopyRib_*","Node3D",true,false).size()==5,
+		"five canopy ribs frame the observatory while the east rear promenade bay stays open")
 	var synthesis_table := observatory.get_node("EvidenceSynthesisTable") as Node3D
 	assert(synthesis_table.get_node("IvoryWorktopCollision") is StaticBody3D,
 		"the evidence court focal table must stop the player")
@@ -196,6 +197,23 @@ func _run() -> void:
 	for enemy in ridge_enemies:
 		assert(absf((enemy as Node3D).position.x)<=14.1)
 		assert(absf((enemy as Node3D).position.z-72.0)<.1)
+	for enemy in world.get_enemies().filter(func(candidate):
+			return candidate.encounter_id in ["constellation", "ridge"]):
+		assert(not enemy.visible and not enemy.active,
+			"replaced Island Two combat actors stay visually and logically retired")
+		assert(enemy.collision_layer == 0 and enemy.collision_mask == 0,
+			"retired enemy body cannot block the research route")
+		assert(bool(enemy.get_meta("retired_collision_disabled", false)))
+		for collision_object in enemy.find_children("*", "CollisionObject3D", true, false):
+			var body := collision_object as CollisionObject3D
+			assert(body.collision_layer == 0 and body.collision_mask == 0,
+				"hidden enemy child collision must be disabled: %s" % body.get_path())
+			if body is Area3D:
+				assert(not (body as Area3D).monitoring and not (body as Area3D).monitorable,
+					"hidden enemy areas cannot detect or be detected")
+		for collision_shape in enemy.find_children("*", "CollisionShape3D", true, false):
+			assert((collision_shape as CollisionShape3D).disabled,
+				"hidden enemy shapes remain physically disabled")
 	world.queue_free()
 	await process_frame
 	print("ISLAND_TWO_MEMORY_CAMPUS: PASS — revision 05 aligns the arrival portico, details the Memory Gate, applies the green heavenly tree palette and preserves the complete heritage layer")

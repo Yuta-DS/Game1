@@ -141,7 +141,11 @@ func _build_galaxy_transit() -> void:
 	# World One is the player's starting destination. Build its arrival court
 	# before moving the live character so Web players never spawn over the
 	# deferred, still-empty blueprint and fall through the world.
-	_place_player_in_world_one.call_deferred(floating_world)
+	# The game opens in World One, so complete the relocation in this same scene
+	# setup pass. A deferred move left the authored character and SpawnPoint at
+	# the old gallery start for a frame and made the actual start depend on a
+	# later callback.
+	_place_player_in_world_one(floating_world)
 
 	var map_canvas := CanvasLayer.new()
 	map_canvas.name = "WorldMapCanvas"
@@ -165,6 +169,11 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 	var arrival := world_one.get_player_arrival_local()
 	player.global_position = world_one.to_global(arrival)
 	player.velocity = Vector3.ZERO
+	var spawn_marker := get_node_or_null("SpawnPoint") as Node3D
+	if spawn_marker != null:
+		spawn_marker.global_position = player.global_position
+		spawn_marker.set_meta("world", "world_one")
+		spawn_marker.set_meta("physical_island", 1)
 	# Present the Signal Observatory immediately. The player has just moved more
 	# than two kilometres from the gallery spawn; letting CameraFollow ease from
 	# its old position makes the opening fly through unrelated districts and can
