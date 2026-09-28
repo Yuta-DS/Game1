@@ -58,11 +58,11 @@ func _run() -> void:
 	check(railway.STATIONS[2].id == "heart", "third station is Heart")
 	check(island.player == player, "island uses the overworld player")
 	check(not island.embedded_active and not island.get_node("HeartHUD").visible, "distant island does not take over HUD")
-	check(connection.barrier.get_parent().visible, "Star prerequisite blocks the garden path")
+	check(not connection.barrier.get_parent().visible, "Heart garden path is open without the Star")
 	state.treasures["star_of_wisdom"] = true
 	await process_frame
 	await physics_frame
-	check(not connection.barrier.get_parent().visible, "earned Star opens the physical path")
+	check(not connection.barrier.get_parent().visible, "legitimate Star progress leaves the independent path open")
 	# Start on the station access ramp and walk onto the arrival court.
 	player.global_position = railway.to_global(Vector3(1585, 25, 7640))
 	player.velocity = Vector3.ZERO

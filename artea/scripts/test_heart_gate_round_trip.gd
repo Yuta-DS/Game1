@@ -8,7 +8,7 @@ func check(ok: bool, label: String) -> void:
 func run() -> void:
 	create_timer(90).timeout.connect(func(): push_error("Heart gate test timed out"); quit(1))
 	var state = root.get_node("JourneyState")
-	state.treasures["star_of_wisdom"] = true
+	state.treasures["star_of_wisdom"] = false
 	var progress = load("res://scripts/heart_melody/heart_progress.gd").new()
 	progress.data = progress.fresh()
 	check(progress.plant(0, 6), "prepare committed seed")
@@ -22,6 +22,7 @@ func run() -> void:
 	var player := CharacterBody3D.new()
 	fixture.add_child(player)
 	check(gate.teleport_player(player), "real World Gate accepts Heart destination")
+	check(not state.has_treasure("star_of_wisdom"), "Heart entry does not fabricate Mind Spark completion")
 	# Allow the normal gravity contract to settle the capsule from its 2 m spawn.
 	for frame in 60: await physics_frame
 	var heart = current_scene

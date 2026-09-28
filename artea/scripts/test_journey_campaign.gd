@@ -89,23 +89,23 @@ func _test_scene_routes(campaign: Node) -> void:
 
 func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
 	assert(campaign.can_enter_kingdom("mind"), "Mind Spark starts the journey")
-	assert(not campaign.can_enter_kingdom("heart"), "Heart Melody waits for Star of Wisdom")
+	assert(campaign.can_enter_kingdom("heart"), "Heart Melody is independently available")
 	assert(not campaign.can_enter_kingdom("creator"), "Creator's Light waits for both earlier treasures")
 	assert(campaign.next_kingdom_id() == "mind", "Mind Spark is the first unfinished kingdom")
 
-	# Stage is decorative/wake state, never a shortcut through content.
+	# Stage is decorative/wake state and Heart remains open without mutating it.
 	state.stage = 3
-	assert(not campaign.can_enter_kingdom("heart"),
-		"stage alone cannot open Heart Melody")
+	assert(campaign.can_enter_kingdom("heart"),
+		"Heart access is independent of stage and treasure state")
 
 	state.record_thought_echo("I am learning and growing", "learning")
 	state.record_thought_echo("I can take one brave step", "brave_step")
 	state.mark_popped("I am learning and growing")
-	assert(not state.has_treasure("star_of_wisdom"), "one echo cannot open Heart Melody")
+	assert(not state.has_treasure("star_of_wisdom"), "one echo does not fabricate the Star")
 	state.mark_popped("I can take one brave step")
 	assert(state.complete_mind_spark(2), "two resolved curated echoes complete Mind Spark")
 	assert(state.has_treasure("star_of_wisdom"), "thought completion earns the Star")
-	assert(campaign.can_enter_kingdom("heart"), "Star of Wisdom opens Heart Melody")
+	assert(campaign.can_enter_kingdom("heart"), "Heart remains available after legitimate Mind progress")
 	assert(not campaign.can_enter_kingdom("creator"), "Creator still waits for Harmony Jewel")
 	assert(campaign.next_kingdom_id() == "heart", "Heart Melody is next")
 

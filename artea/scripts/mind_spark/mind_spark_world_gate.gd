@@ -29,7 +29,7 @@ func teleport_player(player: CharacterBody3D) -> bool:
 	if not target_kingdom_id.is_empty():
 		var campaign := get_node("/root/JourneyCampaign")
 		if not campaign.can_enter_kingdom(target_kingdom_id):
-			$Prompt.text = "HEART MELODY · Earn the Star of Wisdom in Mind Spark first." if target_kingdom_id == "heart" else campaign.portal_status(target_kingdom_id)
+			$Prompt.text = campaign.portal_status(target_kingdom_id)
 			return false
 		return campaign.enter_kingdom(target_kingdom_id)
 	var floating_world := _find_floating_world()

@@ -3,6 +3,7 @@ const Art = preload("res://scripts/heart_melody/heart_art.gd")
 const Catalog = preload("res://scripts/heart_melody/heart_catalog.gd")
 const Progress = preload("res://scripts/heart_melody/heart_progress.gd")
 const Enemy = preload("res://scripts/heart_melody/heart_enemy.gd")
+const MusicalGarden = preload("res://scripts/heart_melody/musical_garden.gd")
 const PlayerScene = preload("res://scenes/player_3d.tscn")
 @export var embedded_in_overworld := false
 var overworld_player: CharacterBody3D
@@ -55,6 +56,7 @@ var phrase_platform: Node3D
 var restored_creatures: Dictionary = {}
 var _view_garden := false
 var river: Node3D
+var musical_garden: Node3D
 
 func _ready() -> void:
 	# This island's authored guides share its single interaction owner. The
@@ -64,6 +66,8 @@ func _ready() -> void:
 	_load_settings()
 	_configure_controller()
 	_build_environment()
+	musical_garden = MusicalGarden.new()
+	add_child(musical_garden)
 	_build_player()
 	_build_hud()
 	_refresh_plants()
@@ -175,7 +179,9 @@ func _build_environment() -> void:
 		if pos.x > 62: continue
 		Art.cone(island, pos + Vector3(0, 0.7, 0), 1.7, 0.8, 1.4, Color("b8b2a2"), true, 5 + i % 3)
 		Art.flower(island, pos + Vector3(2, 0, 1), Color("d8b7ba"), 0.6)
-	# The saved garden restoration opens the crossing to River Song.
+	# The root crossing keeps every Heart Melody landform physically connected.
+	# River Song still waits for garden restoration, but exploration never
+	# depends on an invisible bridge or a precision jump.
 	Art.box(island, Vector3(66, 0.85, -21), Vector3(1, 1.7, 54), Color("796e56"), true)
 	Art.box(island, Vector3(66, 0.85, 30), Vector3(1, 1.7, 37), Color("796e56"), true)
 	Art.island(island, Vector3(94, 0, 8), 9, 12, Color("8fab88"))
@@ -236,7 +242,7 @@ func _build_environment() -> void:
 	add_child(bridge)
 	Art.box(bridge, Vector3(76, 0.1, 8), Vector3(24, 0.2, 4), Color("b19c79"), true)
 	for z in [5.7, 10.3]: Art.box(bridge, Vector3(76, 1, z), Vector3(24, 1.6, 0.5), Color("7e785a"), true)
-	var barrier_mesh := Art.box(self, Vector3(66, 1.5, 8), Vector3(0.7, 3, 4.5), Color("747357"), true)
+	var barrier_mesh := Art.box(self, Vector3(66, 4.2, 8), Vector3(0.7, 1.2, 7.0), Color("a6bd88"), true)
 	bridge_barrier = barrier_mesh.get_child(0)
 	bridge_barrier.name = "ClosedRootCollision"
 	bridge_barrier.set_meta("visual", barrier_mesh)
@@ -415,8 +421,8 @@ func _process(delta: float) -> void:
 			nearest = i
 	prompt.visible = nearest >= 0 and not modal_open
 	if nearest >= 0: prompt.text = "Q / A · " + str(interactables[nearest].title)
-	var heading := "River Song" if player_local_position().x > 104 else "Wake the Feeling Garden"
-	hud.text = "  HEART MELODY · " + heading + "\n  " + objective() + "\n  Seeds %d/3  ·  Health %d  ·  XP %d" % [progress.data.planters.size(), player.current_health, progress.data.xp]
+	var heading := "River Song" if player_local_position().x > 104 else "Musical Orchard"
+	hud.text = "  HEART MELODY · " + heading + "\n  " + objective() + "\n  %s  ·  %s  ·  Health %d" % [musical_garden.progress_text(), musical_garden.basket_summary(), player.current_health]
 	if progress.dirty: hud.text += "  ·  Save pending — retry in Help"
 	if not modal_open and progress.committed.solved and not progress.data.complete and active_wave == 0 and player_local_position().distance_to(encounter_center) < 13:
 		_start_wave(2 if progress.data.waves.has(1) else 1)
@@ -425,8 +431,12 @@ func _process(delta: float) -> void:
 		for i in plants.size(): plants[i].rotation.z = sin(_ambient_time * 1.3 + i) * 0.025
 
 func objective() -> String:
+	if musical_garden != null:
+		if player != null and player_local_position().x > 104 and progress.data.complete and river != null:
+			return river.objective()
+		return musical_garden.objective()
 	if progress.data.complete and not progress.committed.complete: return "Garden restored in this session. Retry saving in Help to open the crossing."
-	if progress.data.complete: return river.objective() if river != null else "Cross the restored bridge to River Song."
+	if progress.data.complete: return river.objective() if river != null else "Follow the connected root walk to River Song."
 	if progress.data.solved and not progress.committed.solved: return "Phrase solved in this session. Retry saving in Help before the encounter."
 	if progress.data.solved: return "Enter the Blight clearing. Step aside; strike during recovery."
 	if progress.data.planters.size() == 3 and progress.committed.planters.size() < 3: return "Three seeds planted in this session. Retry saving in Help to awaken the drums."
@@ -451,17 +461,21 @@ func _interact_nearest() -> void:
 	if str(item.kind).begins_with("river_"):
 		river.interact(item.kind, item.index)
 		return
+	if str(item.kind).begins_with("music_"):
+		musical_garden.interact(item.kind, item.index)
+		return
 	match item.kind:
 		"planter": _planter(item.index)
 		"drum":
-			if progress.committed.planters.size() < 3: _notice("The flowers are resting. Plant and save all three seeds first. Retry a pending save in Help.")
-			else:
-				note(item.index)
-				_pulse(drums[item.index])
-				if not progress.data.solved and progress.data.phrase.size() < 3:
-					var phrase: Array = progress.data.phrase.duplicate()
-					phrase.append(item.index)
-					progress.edit_phrase(phrase)
+			note(item.index, 0.2, musical_garden._drum_timbre(item.index))
+			_pulse(drums[item.index])
+			musical_garden.on_flower_play(item.index)
+			# The legacy Feeling Garden phrase still wakes only after its three
+			# planters are saved, while free musical play is independent.
+			if progress.committed.planters.size() == 3 and not progress.data.solved and progress.data.phrase.size() < 3:
+				var phrase: Array = progress.data.phrase.duplicate()
+				phrase.append(item.index)
+				progress.edit_phrase(phrase)
 		"phrase": _phrase_panel()
 		"bench": _bench()
 		"lantern":
@@ -525,12 +539,13 @@ func _notice(body: String) -> void:
 
 func _river_directions() -> String:
 	if progress.committed.complete:
-		return "River Song / Waterfall Organ is open! Follow the marked bridge beyond the Feeling Garden and walk straight across."
-	return "To reach River Song / Waterfall Organ:\n1. Plant all three seeds.\n2. Solve the flower phrase.\n3. Clear both Blight waves.\nYour progress saves automatically. Once the restored garden is saved, the bridge opens automatically. Walk across to the organ. If saving fails, open Help and choose Retry saving."
+		return "River Song / Waterfall Organ is awake! Follow the marked connected root walk beyond the Feeling Garden."
+	return "Every Heart Melody garden is joined by a safe root walk, so you may explore freely. To awaken River Song / Waterfall Organ:\n1. Plant all three seeds.\n2. Solve the flower phrase.\n3. Clear both Blight waves.\nYour progress saves automatically. If saving fails, open Help and choose Retry saving."
 
 func _intro() -> void:
-	_open("A garden waiting for its song", "Milo: The garden has gone quiet. Let's plant three seeds and help its flowers find their song.\n\nMother Guardian: Every feeling may speak here. You can choose a feeling, or simply choose a sound.\n\n" + _river_directions())
-	_button("Explore the garden", _close)
+	_open("Welcome to the Musical Orchard", "Milo: Four fruit trees are waiting nearby. Preview each voice, harvest it into your basket, then try it on the living instruments.\n\nMother Guardian: Instrument positions choose the notes. Fruit only changes their character, so experimentation can never become a wrong answer. The Feeling Seed planters remain optional and every feeling or neutral sound is equally welcome.\n\nYour basic strike is already available with F / controller X if you visit the older Blight clearing; no Mind Spark reward is needed.\n\n" + objective() + "\n\n" + _river_directions())
+	_button("Explore the orchard", _close)
+	_button("Replay controls and accessibility", _help)
 	_button("Optional greeting", func(): _identity(0))
 	_button("Skip introduction", _close)
 
@@ -700,7 +715,7 @@ func _identity(index: int) -> void:
 func _help() -> void:
 	if river != null and river.riding: return
 	_save_settings()
-	_open("Make yourself comfortable", "WASD / arrows: move · Q: interact · F: strike\nSpace: jump (never required) · Escape: close\n" + objective() + "\n\n" + _river_directions())
+	_open("Make yourself comfortable", "WASD / arrows: move · Q / controller A: interact\nF / controller X: basic strike · Escape / B: close\nTab / arrows move focus; Enter / A selects. Touch uses large buttons. Jump is never required.\n\nCurrent objective: " + objective() + "\n\nFruit changes timbre; instrument position changes pitch. All required musical activities are untimed.\n\n" + _river_directions())
 	_button("Combat assistance: " + ("on" if combat_assist else "off"), func(): combat_assist = not combat_assist; _help())
 	_button("Slow puzzle demonstrations: " + ("on" if puzzle_assist else "off"), func(): puzzle_assist = not puzzle_assist; _help())
 	_button("Reduced motion: " + ("on" if reduced_motion else "off"), func(): reduced_motion = not reduced_motion; _help())
@@ -741,15 +756,15 @@ func _enemy_released(enemy: Node) -> void:
 func _apply_restoration() -> void:
 	var restored: bool = progress.committed.complete
 	phrase_platform.position.y = 0 if progress.committed.solved else -0.6
-	bridge.visible = restored
-	river_route_sign.text = "RIVER SONG / ORGAN\nBridge open - walk across" if restored else "RIVER SONG / ORGAN\nRestore the garden to open the bridge"
+	bridge.visible = true
+	river_route_sign.text = "RIVER SONG / ORGAN\nGarden awake - follow the connected walk" if restored else "RIVER SONG / ORGAN\nConnected walk - restore the garden to awaken it"
 	soundscape.restore(progress.committed.planters.size() == 3, restored)
 	get_node("IslandOne/BlightCovering").visible = not restored
 	get_node("IslandOne/GardenHeartBlossom").scale = Vector3.ONE if restored else Vector3(0.4, 0.7, 0.4)
-	bridge_barrier.get_meta("visual").visible = not restored
+	bridge_barrier.get_meta("visual").visible = false
 	for child in bridge_barrier.get_children():
-		if child is CollisionShape3D: child.set_deferred("disabled", restored)
-	for body in bridge.find_children("*", "CollisionShape3D", true, false): body.set_deferred("disabled", not restored)
+		if child is CollisionShape3D: child.set_deferred("disabled", true)
+	for body in bridge.find_children("*", "CollisionShape3D", true, false): body.set_deferred("disabled", false)
 
 func _health_changed(current: float, _maximum: float) -> void:
 	if embedded_in_overworld and not embedded_active: return
@@ -784,7 +799,9 @@ func note(index: int, volume := 0.22, timbre := 6) -> void:
 	wave.mix_rate = 22050
 	var bytes := PackedByteArray()
 	bytes.resize(11025 * 2)
-	var frequency: float = [261.63, 329.63, 392.0][index]
+	var frequencies := [261.63, 293.66, 329.63, 392.0, 440.0]
+	var safe_index := clampi(index, 0, frequencies.size() - 1)
+	var frequency: float = frequencies[safe_index]
 	for i in 11025:
 		var t := i / 22050.0
 		var sample := (sin(TAU * frequency * t) + 0.18 * sin(TAU * frequency * (2 + timbre % 3) * t)) * exp(-t * (5 + timbre * 0.4)) * minf(t * 100, 1) * 0.7
@@ -823,7 +840,7 @@ func _exit_tree() -> void:
 	for action in ["move_left", "move_right", "move_forward", "move_backward", "attack"]: Input.action_release(action)
 
 func _present_restoration() -> void:
-	_notice("Feeling Garden restored — 80 XP\nMilo: You helped the garden find its song.\nYour garden is saved. The bridge to River Song / Waterfall Organ is now open! Follow the marked crossing.")
+	_notice("Feeling Garden restored — 80 XP\nMilo: You helped the garden find its song.\nYour garden is saved. The connected root walk now sings toward River Song / Waterfall Organ.")
 	_button("Skip celebration and explore", _close)
 	_apply_restoration()
 	if reduced_motion: return

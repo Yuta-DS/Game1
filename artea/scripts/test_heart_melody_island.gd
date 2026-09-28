@@ -65,8 +65,14 @@ func run() -> void:
 	check(not world.has_node("WonderfulCounsellorMilo"), "authored guides retain single interaction ownership")
 	await physics_frame
 	await physics_frame
-	var gap_query := PhysicsRayQueryParameters3D.create(Vector3(76, 5, 8), Vector3(76, -4, 8))
-	check(world.get_world_3d().direct_space_state.intersect_ray(gap_query).is_empty(), "unrestored crossing spans real void")
+	var crossing_query := PhysicsRayQueryParameters3D.create(Vector3(76, 5, 8), Vector3(76, -4, 8))
+	check(not world.get_world_3d().direct_space_state.intersect_ray(crossing_query).is_empty(),
+		"root crossing physically connects the garden before restoration")
+	for point in [Vector3(-60, 1, 8), Vector3(55, 1, 8), Vector3(94, 1, 8), Vector3(118, 1, 8)]:
+		await walk_to(point)
+	check(not world.progress.data.complete, "connected exploration does not auto-complete garden progress")
+	for point in [Vector3(94, 1, 8), Vector3(55, 1, 8), Vector3(-60, 1, 8), Vector3(-65, 1, 12)]:
+		await walk_to(point)
 	# Exercise the real player controller: continuous arrival-to-garden walking.
 	Input.action_press("move_right")
 	for frame in 240: await physics_frame

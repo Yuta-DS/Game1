@@ -76,6 +76,12 @@ func _run() -> void:
 	world._process(0)
 	check(await _walk(Vector3(118, 1, 8)), "walk restored garden crossing into River Song without jump")
 	check(current_scene == original_scene, "river is in the same scene")
+	check(await _walk(Vector3(178, 1, -8)), "near bank joins the flowering root walk")
+	check(await _walk(Vector3(226, 1, -8)), "flowering root walk crosses the river without the boat")
+	check(await _walk(Vector3(238, 1, -8)), "far bank joins the flowering root walk")
+	check(not world.progress.committed.river.boat, "connected exploration does not skip the Rain Boat activity")
+	check(await _walk(Vector3(178, 1, -8)), "connected river walk supports a safe return crossing")
+	check(await _walk(Vector3(179, 1, 12)), "connected river walk returns to the near dock")
 	world.river.interact("river_valve", 0)
 	world.options.get_child(3).pressed.emit() # Leaf is wrong for the first Sun pipe.
 	check(world.progress.data.river.valves.is_empty(), "wrong valve answer preserves work")

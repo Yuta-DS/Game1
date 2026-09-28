@@ -43,6 +43,14 @@ func _ready() -> void:
 		Art.label(self, "Hush Vine %d" % (index + 1), pos + Vector3.UP * 4, 25)
 	for pos in [Vector3(116,0,-17), Vector3(174,0,-17), Vector3(234,0,-10), Vector3(342,0,-13)]: Art.tree(self, pos, 1)
 	Art.box(self, Vector3(202, -3, 8), Vector3(36, 0.2, 44), Color("66aeba"))
+	# A permanent flowering root walk joins both river banks. The Rain Boat stays
+	# as a playful musical activity and shortcut, not the only route between land.
+	Art.box(self, Vector3(202, 0.0, -8), Vector3(40, 0.35, 5.5), Color("b89d72"), true)
+	for z in [-11.0, -5.0]:
+		Art.box(self, Vector3(202, 1.0, z), Vector3(40, 1.4, 0.45), Color("75684f"), true)
+	for x in [187.0, 195.0, 203.0, 211.0, 219.0]:
+		Art.flower(self, Vector3(x, 0.1, -4.4), Color("e6b4c8") if int(x) % 2 else Color("eed17f"), 0.65)
+	Art.label(self, "FLOWERING ROOT WALK\nAll gardens connected", Vector3(202, 5.2, -8), 25)
 	for x in [179, 225]:
 		Art.cone(self, Vector3(x, 2.5, 16), 0.45, 0.4, 5, Color("816e5a"), true)
 		Art.cone(self, Vector3(x, 4, 16), 1.1, 0.5, 1.4, Color("edcc7f"))
@@ -95,7 +103,10 @@ func refresh() -> void:
 	for index in 3:
 		channels[index].visible = saved.valves.has(index)
 		bulbs[index].scale = Vector3.ONE * (0.45 if saved.bulbs.has(index) else 1.0)
-		_show_solid(decks[index], saved.chimes.has(index))
+		# Keep essential terrain connected. Each completed chime raises its bridge
+		# to full visual strength instead of spawning a previously missing floor.
+		_show_solid(decks[index], true)
+		decks[index].scale = Vector3.ONE if saved.chimes.has(index) else Vector3(1.0, 0.75, 1.0)
 	_show_solid(warning_barrier, not saved.warning)
 	flower.scale = Vector3.ONE * (1.5 if saved.peace else 0.7)
 	if saved.grove:
@@ -115,7 +126,7 @@ func objective() -> String:
 
 func interact(kind: String, index: int) -> void:
 	if not world.progress.committed.complete:
-		world._notice("To reach River Song, plant three seeds, solve the flower phrase and clear both Blight waves in Feeling Garden. The bridge opens automatically when the restored garden is saved. If saving fails, use Help > Retry saving.")
+		world._notice("The connected root walk lets you explore every Heart Melody garden. To awaken River Song, plant three seeds, solve the flower phrase and clear both Blight waves in Feeling Garden. If saving fails, use Help > Retry saving.")
 		return
 	match kind:
 		"river_valve":

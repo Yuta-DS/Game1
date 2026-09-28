@@ -34,7 +34,7 @@ func _ready() -> void:
 		Vector3(12, 4, 0.5), Color("bc8cab"), true)
 	lock_mesh.look_at(to_global(lock_mesh.position + direction))
 	barrier = lock_mesh.get_child(0)
-	lock_label = Art.label(self, "Earn the Star of Wisdom in Mind Spark\nto awaken the Heart Melody path", WALK_START + Vector3(0, 7, -8), 28)
+	lock_label = Art.label(self, "HEART MELODY PATH OPEN\nNo other world is required", WALK_START + Vector3(0, 7, -8), 28)
 	_update_lock()
 
 func _process(_delta: float) -> void:
@@ -45,7 +45,7 @@ func _process(_delta: float) -> void:
 func _update_lock() -> void:
 	_unlocked = get_node("/root/JourneyCampaign").can_enter_kingdom("heart")
 	barrier.get_parent().visible = not _unlocked
-	lock_label.visible = not _unlocked
+	lock_label.visible = false
 	for shape in barrier.get_children():
 		if shape is CollisionShape3D:
 			shape.set_deferred("disabled", _unlocked)

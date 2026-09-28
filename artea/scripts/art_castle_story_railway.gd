@@ -3014,7 +3014,7 @@ func _update_prompt() -> void:
 
 func _locked_message(target: int) -> String:
 	if target == 2:
-		return "HEART MELODY IS LOCKED  •  Earn the Star of Wisdom in Mind Spark"
+		return "HEART MELODY IS OPEN  •  Musical Orchard available independently"
 	if target == 3:
 		return "CREATOR'S LIGHT IS LOCKED  •  Earn the Harmony Jewel in Heart Melody"
 	return "THIS STATION HAS NOT AWAKENED YET"
