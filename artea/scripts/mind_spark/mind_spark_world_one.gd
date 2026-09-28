@@ -6211,7 +6211,8 @@ func _redesign_island_three(geometry: Node3D) -> void:
 			27.0, .28, _materials.celestial_floor, true, 36)
 		var reflection_court := Node3D.new()
 		reflection_court.name = "RootboundReflectionCourt"
-		reflection_court.set_meta("quest_architecture", "living root oratory")
+		reflection_court.set_meta("quest_architecture", "open living-root oratory")
+		reflection_court.set_meta("design_revision", "open_root_buttresses_v2")
 		reflection_court.set_meta("low_poly_landmark", true)
 		basilica.add_child(reflection_court)
 		_build_island_three_shared_instrument(reflection_court, mirror_at, -direction,
@@ -6220,15 +6221,25 @@ func _redesign_island_three(geometry: Node3D) -> void:
 			13.0, .12, _materials.island_crystal_facet_dark, false, 12)
 		for apse_index in 8:
 			var apse_angle := TAU * float(apse_index) / 8.0
-			var apse_at := mirror_at + Vector3(sin(apse_angle) * 30.0, 0,
-				cos(apse_angle) * 30.0)
-			var root_apex := mirror_at + Vector3.UP * (15.0 + float(apse_index % 2) * 2.0)
+			var radial := Vector3(sin(apse_angle), 0, cos(apse_angle))
+			var apse_at := mirror_at + radial * 25.0
+			var root_shoulder := mirror_at + radial * 20.0 \
+				+ Vector3.UP * (7.0 + float(apse_index % 2))
+			var root_tip := mirror_at + radial * 15.5 \
+				+ Vector3.UP * (12.5 + float(apse_index % 2) * 1.5)
 			_add_cable_between(reflection_court,
-				"ReflectionRootRib_%02d" % (apse_index + 1), apse_at, root_apex,
-				1.15, .34, _materials.island_bark_root, 12)
+				"ReflectionRootRib_%02d" % (apse_index + 1), apse_at, root_shoulder,
+				1.10, .58, _materials.island_three_hero_bark, 10)
+			_add_cable_between(reflection_court,
+				"ReflectionRootCrown_%02d" % (apse_index + 1), root_shoulder, root_tip,
+				.58, .24, _materials.island_three_hero_bark_highlight, 8)
+			var root_shoulder_joint := _add_sphere(reflection_court,
+				"ReflectionRootShoulder_%02d" % (apse_index + 1), root_shoulder,
+				Vector3(.72, .82, .72), _materials.shared_style_ivory)
+			root_shoulder_joint.set_meta("editable_component", true)
 			_add_cable_between(reflection_court,
 				"ReflectionCyanVein_%02d" % (apse_index + 1),
-				apse_at + Vector3.UP * .5, root_apex, .20, .10,
+				root_shoulder + radial * .30, root_tip + radial * .18, .16, .08,
 				_materials.island_cyan, 8)
 			_add_brick(reflection_court, "ReflectionMarker_%02d" % (apse_index + 1),
 				mirror_at + Vector3(sin(apse_angle) * 17.0, 2.2,

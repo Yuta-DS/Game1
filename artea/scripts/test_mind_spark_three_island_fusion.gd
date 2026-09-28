@@ -257,6 +257,23 @@ func _run() -> void:
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMemorySeed"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionPool"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMarker_01"))
+	var reflection_court := island_three.get_node(
+		"WisdomBasilicaPromenade/RootboundReflectionCourt") as Node3D
+	assert(str(reflection_court.get_meta("design_revision", "")) == "open_root_buttresses_v2")
+	assert(reflection_court.find_children(
+		"ReflectionRootRib_*", "MeshInstance3D", true, false).size() == 8)
+	assert(reflection_court.find_children(
+		"ReflectionRootCrown_*", "MeshInstance3D", true, false).size() == 8)
+	assert(reflection_court.find_children(
+		"ReflectionRootShoulder_*", "MeshInstance3D", true, false).size() == 8,
+		"ivory shoulder joints tie the living roots into the civic architecture")
+	var reflection_center := (reflection_court.get_node("ReflectionPool") as Node3D).position
+	for root_rib in reflection_court.find_children(
+			"ReflectionRootRib_*", "MeshInstance3D", true, false):
+		var rib_finish: Vector3 = (root_rib as MeshInstance3D).get_meta("path_end")
+		assert(Vector2(rib_finish.x, rib_finish.z).distance_to(
+			Vector2(reflection_center.x, reflection_center.z)) >= 19.0,
+			"reflection roots stop at perimeter buttresses instead of converging into a black roof")
 	assert(island_three.has_node(
 		"WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument/CyanInstrumentDial"))
 	assert(not island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"),
