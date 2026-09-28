@@ -6691,10 +6691,11 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 	var cathedral := Node3D.new()
 	cathedral.name = "OldestTreeLivingCathedral"
-	cathedral.set_meta("design_revision", "root_crown_cathedral_v3_living_canopy")
+	cathedral.set_meta("design_revision", "root_crown_cathedral_v4_human_scale_canopy")
 	cathedral.set_meta("quest_architecture", "walkable living landmark")
 	cathedral.set_meta("asymmetric_canopy", true)
-	cathedral.set_meta("camera_clearance_m", 38.0)
+	cathedral.set_meta("camera_clearance_m", 30.0)
+	cathedral.set_meta("player_height_read", "tapered trunk, curved root flare and visible lower canopy")
 	cathedral.set_meta("low_poly_landmark", true)
 	cathedral.set_meta("preserve_authored_nodes", true)
 	cathedral.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
@@ -6706,16 +6707,25 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 		Vector3(62.0, .26, 58.0), _materials.celestial_floor, true)
 	# Leave the approach clear. The previous five cyan floor bars read as loose
 	# lines from the gameplay camera and competed with the reflection threshold.
-	# This collision-backed heartwood makes the redesigned hero tree physically solid.
+	# A narrow collision-backed heartwood keeps the tree physically authoritative.
+	# Two faceted tapered shells create the visible trunk.  The old single 52 m
+	# cylinder filled the gameplay camera with a flat brown wall and placed every
+	# branch above the player's view.
 	_add_cylinder(cathedral, "LivingHeartwood", base + Vector3.UP * 26.0,
-		6.8, 52.0, _materials.island_three_hero_bark, true, 14)
+		4.8, 52.0, _materials.island_three_hero_bark, true, 14)
+	_add_tapered_cylinder(cathedral, "HeartwoodLowerTrunk",
+		base + Vector3.UP * 14.0, 6.2, 9.8, 28.0,
+		_materials.island_three_hero_bark, 12)
+	_add_tapered_cylinder(cathedral, "HeartwoodUpperTrunk",
+		base + Vector3.UP * 39.0, 4.5, 6.4, 24.0,
+		_materials.island_three_hero_bark, 12)
 	for ribbon_index in 8:
 		var ribbon_angle := TAU * float(ribbon_index) / 8.0
-		var ribbon_start := base + Vector3(sin(ribbon_angle) * 6.9, 1.0,
-			cos(ribbon_angle) * 6.9)
+		var ribbon_start := base + Vector3(sin(ribbon_angle) * 9.4, 1.0,
+			cos(ribbon_angle) * 9.4)
 		var ribbon_finish_angle := ribbon_angle + .72
-		var ribbon_finish := base + Vector3(sin(ribbon_finish_angle) * 6.3, 50.0,
-			cos(ribbon_finish_angle) * 6.3)
+		var ribbon_finish := base + Vector3(sin(ribbon_finish_angle) * 4.7, 50.0,
+			cos(ribbon_finish_angle) * 4.7)
 		_add_cable_between(cathedral, "HeartwoodBarkRibbon_%02d" % (ribbon_index + 1),
 			ribbon_start, ribbon_finish, .72, .38,
 			_materials.island_three_hero_bark_highlight \
@@ -6723,28 +6733,46 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 	for root_index in 10:
 		var angle := TAU * float(root_index) / 10.0 + sin(float(root_index)) * .10
 		var radial := Vector3(sin(angle), 0, cos(angle))
-		var start := base + radial * 4.2 + Vector3.UP * 5.5
-		var finish := base + radial * (22.0 + float(root_index % 3) * 3.0)
+		var start := base + radial * 5.0 + Vector3.UP * 5.2
+		var shoulder := base + radial * (11.0 + float(root_index % 2) * 1.4) \
+			+ Vector3.UP * 1.7
+		var finish := base + radial * (18.0 + float(root_index % 3) * 2.2) \
+			+ Vector3.UP * .30
 		_add_cable_between(cathedral, "CathedralRoot_%02d" % (root_index + 1),
-			start, finish, 2.4, .45, _materials.island_three_hero_bark, 12)
+			start, shoulder, 3.0, 1.45, _materials.island_three_hero_bark, 12)
+		_add_cable_between(cathedral, "CathedralRootTip_%02d" % (root_index + 1),
+			shoulder, finish, 1.45, .55, _materials.island_three_hero_bark, 10)
 		_add_cable_between(cathedral, "CathedralRootVein_%02d" % (root_index + 1),
-			start + Vector3.UP * .8, finish + Vector3.UP * .35,
+			shoulder + Vector3.UP * .62, finish + Vector3.UP * .28,
 			.26, .09, _materials.shared_style_cyan, 8)
 	# Five great boughs form an uneven nave and pull the silhouette toward the basilica.
 	var bough_lengths := [24.0, 32.0, 28.0, 35.0, 26.0]
-	var bough_heights := [63.0, 72.0, 68.0, 77.0, 70.0]
+	var bough_heights := [58.0, 66.0, 62.0, 69.0, 64.0]
 	for bough_index in 5:
 		var angle := -.8 + float(bough_index) * TAU / 5.0
 		var radial := Vector3(sin(angle), 0, cos(angle))
-		var branch_start := base + Vector3(0, 43.0 + bough_index * 1.8, 0)
+		var branch_start := base + Vector3(0, 33.0 + bough_index * 1.7, 0)
 		var branch_mid := base + radial * (float(bough_lengths[bough_index]) * .48) \
-			+ Vector3.UP * (55.0 + bough_index * 2.2)
+			+ Vector3.UP * (46.0 + bough_index * 1.8)
 		var branch_end := base + radial * float(bough_lengths[bough_index]) \
 			+ Vector3.UP * float(bough_heights[bough_index])
 		_add_cable_between(cathedral, "GreatBough_%02dA" % (bough_index + 1),
 			branch_start, branch_mid, 2.7, 1.4, _materials.island_three_hero_bark, 14)
 		_add_cable_between(cathedral, "GreatBough_%02dB" % (bough_index + 1),
 			branch_mid, branch_end, 1.4, .55, _materials.island_three_hero_bark, 12)
+		# A pair of lower masses makes living foliage visible from the standard
+		# third-person camera, while the five airy crown clusters keep the aerial
+		# silhouette and memory-fruit spacing.
+		for lower_index in 2:
+			var lower_side := -1.0 if lower_index == 0 else 1.0
+			var lower_at := branch_mid + Vector3(lower_side * 5.2, 1.2 + lower_index * 1.6,
+				lower_side * 2.8)
+			var lower_canopy := _add_sphere(cathedral,
+				"LowerCanopyMass_%02d_%02d" % [bough_index + 1, lower_index + 1],
+				lower_at, Vector3(11.5, 6.2, 10.0),
+				_island_three_canopy_material(bough_index + lower_index + 1))
+			(lower_canopy.mesh as SphereMesh).radial_segments = 8
+			(lower_canopy.mesh as SphereMesh).rings = 4
 		for leaf_cluster_index in 5:
 			var leaf_angle := TAU * float(leaf_cluster_index) / 5.0 + bough_index * .29
 			var leaf_offset := Vector3(sin(leaf_angle) * (7.0 + leaf_cluster_index % 2 * 3.0),
@@ -6768,7 +6796,7 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 				branch_end + fruit_offset, Bricks.build_crystal(.7, 2.4, .2, 6),
 				_materials.shared_style_lavender if fruit_index == 1 \
 				else _materials.shared_style_cyan)
-	_add_brick(cathedral, "LivingCathedralCrown", base + Vector3.UP * 91.0,
+	_add_brick(cathedral, "LivingCathedralCrown", base + Vector3.UP * 79.0,
 		Bricks.build_crystal(3.8, 11.0, .8, 6), _materials.shared_style_cyan)
 
 

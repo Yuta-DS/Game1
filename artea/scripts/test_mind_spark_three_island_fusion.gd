@@ -301,7 +301,19 @@ func _run() -> void:
 		.albedo_color == shared_palette.island_three_hero_bark.albedo_color,
 		"the Oldest Tree has a warm bark trunk like Island One's hero tree")
 	var cathedral := island_three.get_node("OldestTreeLivingCathedral") as Node3D
-	assert(str(cathedral.get_meta("design_revision", "")) == "root_crown_cathedral_v3_living_canopy")
+	assert(str(cathedral.get_meta("design_revision", "")) == "root_crown_cathedral_v4_human_scale_canopy")
+	assert(cathedral.has_node("HeartwoodLowerTrunk") and cathedral.has_node("HeartwoodUpperTrunk"),
+		"the Oldest Tree uses a tapered two-stage visible trunk around its collision core")
+	assert(cathedral.find_children(
+		"CathedralRootTip_*", "MeshInstance3D", true, false).size() == 10,
+		"the root flare bends through shoulders instead of ending as ten straight spikes")
+	assert(cathedral.find_children(
+		"LowerCanopyMass_*", "MeshInstance3D", true, false).size() == 10,
+		"living foliage enters the normal player camera below the high crown")
+	var cathedral_base_y := (cathedral.get_node("LivingHeartwood") as Node3D).position.y - 26.0
+	assert((cathedral.get_node("LivingCathedralCrown") as Node3D).position.y \
+		- cathedral_base_y <= 79.1,
+		"the crown stays inside the human-scale tree silhouette")
 	var ivory_canopy_count := 0
 	var living_canopy_count := 0
 	var living_canopy_colors := [shared_palette.island_three_sage.albedo_color,
