@@ -4918,29 +4918,35 @@ func _build_hope_engine_towers(parent: Node3D) -> void:
 	var machinery := Node3D.new()
 	machinery.name = "TwinUpperPressureCondenserHouses"
 	machinery.set_meta("structural_purpose", "condense aether exhaust and feed the foundation lift manifold")
+	machinery.set_meta("facade_revision", "open_condenser_houses_v2")
+	machinery.set_meta("facade_depth_order", "rear recess, framed drum, front sight glass")
 	parent.add_child(machinery)
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0.0 else "East"
 		var tower_x := float(side) * 67.0
 		var tower_z := 18.0
+		var rear_frame_z := tower_z - 7.8
 		# Each machine is recessed in a monumental oval engine-house frame. The
 		# dark teal backing gives the ivory and brass enough depth at game scale.
+		# Keep the recess behind the drum.  The former +Z placement put a 22 x 24 m
+		# teal sheet in front of the complete machine from the playable garden and
+		# reduced both restored houses to flat prototype panels.
 		_add_box(machinery, "UpperEngineHouseTealRecess",
-			Vector3(tower_x, 12.0, tower_z + 6.6), Vector3(22.0, 24.0, 1.2),
+			Vector3(tower_x, 12.0, rear_frame_z), Vector3(22.0, 24.0, 1.2),
 			_materials.astral_glass, false)
-		_add_torus(machinery, "UpperEngineHouseIvoryArch", Vector3(tower_x, 12.0, tower_z + 5.8),
+		_add_torus(machinery, "UpperEngineHouseIvoryArch", Vector3(tower_x, 12.0, rear_frame_z + .7),
 			11.0, 13.0, _materials.celestial_floor, Vector3(90, 0, 0))
-		_add_torus(machinery, "UpperEngineHouseGiltReveal", Vector3(tower_x, 12.0, tower_z + 5.0),
+		_add_torus(machinery, "UpperEngineHouseGiltReveal", Vector3(tower_x, 12.0, rear_frame_z + 1.4),
 			10.4, 11.0, _materials.astral_brass, Vector3(90, 0, 0))
 		for pier_side in [-1.0, 1.0]:
 			var frame_x := tower_x + float(pier_side) * 11.7
-			_add_tapered_cylinder(machinery, "UpperEngineHousePier", Vector3(frame_x, 8.0, tower_z + 5.8),
+			_add_tapered_cylinder(machinery, "UpperEngineHousePier", Vector3(frame_x, 8.0, rear_frame_z + .7),
 				1.05, 1.55, 15.0, _materials.celestial_floor, 16)
-			_add_box(machinery, "UpperEngineHousePierInlay", Vector3(frame_x, 8.0, tower_z + 4.7),
+			_add_box(machinery, "UpperEngineHousePierInlay", Vector3(frame_x, 8.0, rear_frame_z + 1.9),
 				Vector3(0.7, 9.5, 0.24), _materials.astral_brass, false)
-		_add_box(machinery, "UpperEngineHouseCornice", Vector3(tower_x, 24.8, tower_z + 5.8),
+		_add_box(machinery, "UpperEngineHouseCornice", Vector3(tower_x, 24.8, rear_frame_z + .7),
 			Vector3(27.0, 1.6, 4.0), _materials.celestial_floor, false)
-		_add_box(machinery, "UpperEngineHouseCrownLine", Vector3(tower_x, 25.7, tower_z + 5.4),
+		_add_box(machinery, "UpperEngineHouseCrownLine", Vector3(tower_x, 25.7, rear_frame_z + 1.1),
 			Vector3(28.0, 0.35, 4.4), _materials.astral_brass, false)
 		_add_cylinder(machinery, "%sUpperCondenserIvoryDrum" % side_name, Vector3(tower_x, 11.0, tower_z),
 			7.2, 21.0, _materials.celestial_floor, false, 32)
@@ -4948,7 +4954,7 @@ func _build_hope_engine_towers(parent: Node3D) -> void:
 			_add_torus(machinery, "UpperCondenserGiltBand", Vector3(tower_x, band_y, tower_z),
 				6.9, 7.7, _materials.astral_brass)
 		_add_box(machinery, "UpperCondenserSightGlass",
-			Vector3(tower_x, 11.2, tower_z - 7.15), Vector3(3.0, 13.5, 0.50),
+			Vector3(tower_x, 11.2, tower_z + 7.15), Vector3(3.0, 13.5, 0.50),
 			_materials.astral_glass, false)
 		for fin_index in 11:
 			_add_box(machinery, "UpperCondenserCoolingFin_%02d" % (fin_index + 1),

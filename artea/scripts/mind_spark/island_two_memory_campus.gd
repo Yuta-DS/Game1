@@ -621,6 +621,8 @@ static func _build_memory_gate(world: MindSparkWorldOne, gate: AnimatableBody3D)
 	# otherwise leaves bars and seals suspended across the unlocked passage.
 	portal.set_meta("preserve_authored_nodes", true)
 	portal.set_meta("reusable_parts", PackedStringArray(["pier", "hinge leaf", "arch voussoir", "lantern", "aether panel"]))
+	portal.set_meta("gate_finish_revision", "framed_archive_leaves_v2")
+	portal.set_meta("cyan_surface_policy", "small inset memory panes only")
 	gate.add_child(portal)
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0.0 else "East"
@@ -659,11 +661,24 @@ static func _build_memory_gate(world: MindSparkWorldOne, gate: AnimatableBody3D)
 			Bricks.build_bevel_box(Vector3(8.1, 11.7, .48), .16), mats.sanctum_ivory)
 		# The route can be approached from either district. Finish both sides of each
 		# physical leaf so the closed gate never presents an untextured ivory slab.
+		# A full-height cyan sheet dominated the Hope district after the doors opened
+		# and read like detached prototype geometry.  The finished door is a dark
+		# archive lattice with six individually framed memory-glass panes instead.
 		for face in [-1.0, 1.0]:
 			var face_name := "Evidence" if face < 0.0 else "Hope"
 			world.call("_add_box", leaf, "%sTealMemoryPanel" % face_name,
 				Vector3(leaf_offset, 6.15, face * .30),
-				Vector3(6.85, 9.80, .10), mats.arrival_glass, false)
+				Vector3(6.85, 9.80, .10), mats.bio_gunmetal, false)
+			for pane_row in 3:
+				for pane_column in 2:
+					var pane_x := leaf_offset + (-1.62 if pane_column == 0 else 1.62)
+					var pane_y := 3.55 + float(pane_row) * 2.62
+					var pane := world.call("_add_brick", leaf,
+						"%sMemoryGlassPane_%02d" % [face_name, pane_row * 2 + pane_column + 1],
+						Vector3(pane_x, pane_y, face * .39),
+						Bricks.build_bevel_box(Vector3(2.50, 1.88, .10), .10),
+						mats.arrival_glass) as Node3D
+					pane.set_meta("decorative_glazing", true)
 			for bar_index in 3:
 				world.call("_add_box", leaf,
 					"%sBrassMemoryBar_%02d" % [face_name, bar_index + 1],

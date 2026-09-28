@@ -183,6 +183,19 @@ func _run() -> void:
 	assert((zones["04_hope_path_ridge"] as Node3D).get_node(
 		"CelestialHopeUpperDistrict/TwinUpperPressureCondenserHouses").visible,
 		"legacy foundation-power condenser houses remain visible")
+	var condenser_houses := (zones["04_hope_path_ridge"] as Node3D).get_node(
+		"CelestialHopeUpperDistrict/TwinUpperPressureCondenserHouses") as Node3D
+	assert(str(condenser_houses.get_meta("facade_revision")) == "open_condenser_houses_v2")
+	var condenser_recess := condenser_houses.find_child(
+		"UpperEngineHouseTealRecess", false, false) as Node3D
+	var condenser_drum := condenser_houses.find_child(
+		"WestUpperCondenserIvoryDrum", false, false) as Node3D
+	var condenser_glass := condenser_houses.find_child(
+		"UpperCondenserSightGlass", false, false) as Node3D
+	assert(condenser_recess.position.z < condenser_drum.position.z,
+		"engine-house recess must sit behind its drum instead of masking the machine")
+	assert(condenser_glass.position.z > condenser_drum.position.z,
+		"condenser sight glass must remain visible on the playable garden face")
 	assert((zones["04_hope_path_ridge"] as Node3D).get_node(
 		"CelestialHopeUpperDistrict/CurvedSunriseGardenTerraces").visible,
 		"the older curved garden frame must remain part of Island Two")
@@ -194,6 +207,16 @@ func _run() -> void:
 	assert(gate.has_node("IslandTwoMemoryGate/WestMemoryLeaf/HopeMemoryWingBraceUpper"))
 	assert(gate.has_node("IslandTwoMemoryGate/EastMemoryLeaf/EvidenceMemoryLeafJewel"))
 	assert(gate.has_node("IslandTwoMemoryGate/EastMemoryLeaf/HopeMemoryLeafJewel"))
+	var memory_portal := gate.get_node("IslandTwoMemoryGate") as Node3D
+	assert(str(memory_portal.get_meta("gate_finish_revision")) == "framed_archive_leaves_v2")
+	assert(str(memory_portal.get_meta("cyan_surface_policy")) == "small inset memory panes only")
+	for leaf_name in ["WestMemoryLeaf", "EastMemoryLeaf"]:
+		var leaf := memory_portal.get_node(leaf_name) as Node3D
+		for face_name in ["Evidence", "Hope"]:
+			assert(leaf.has_node("%sTealMemoryPanel" % face_name))
+			for pane_index in 6:
+				assert(leaf.has_node("%sMemoryGlassPane_%02d" % [face_name, pane_index + 1]),
+					"finished archive leaf must use six restrained cyan glass panes per face")
 	assert((gate.get_node("IslandTwoMemoryGate/WestMemoryLeaf") as Node3D).rotation.y == 0.0)
 	var brass_bar := gate.get_node("IslandTwoMemoryGate/WestMemoryLeaf/HopeBrassMemoryBar_01") as Node3D
 	var closed_bar_position := brass_bar.global_position
