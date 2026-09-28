@@ -80,6 +80,16 @@ func _run() -> void:
 	if stairs.get_node_or_null("StationStairRampCollision") == null:
 		_fail("stairs have no continuous walkable ramp collision")
 		return
+	var approach := spur.get_node_or_null("StationApproachDeck") as MeshInstance3D
+	var approach_collision := spur.get_node_or_null("StationApproachDeckCollision") as StaticBody3D
+	if approach == null or approach_collision == null:
+		_fail("station stairs have no collision-backed arena approach deck")
+		return
+	var branch_start: Vector3 = spur.get_meta("branch_start")
+	if Vector2(branch_start.x - arena_center.x, branch_start.z - arena_center.z).length() \
+			<= arena_radius:
+		_fail("station stair bottom remains buried inside the arena rim")
+		return
 
 	# --- Walk the stairs with no jump input --------------------------------
 	# Derive the run from the treads themselves: step 01 is the lowest tread and

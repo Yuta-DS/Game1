@@ -54,6 +54,11 @@ const STATION_ISLAND_HEIGHT := 6.0
 ## How far beyond the island rim the access flight lands, so the top step clears
 ## the rim face instead of ending buried inside the disc.
 const STATION_STAIR_LANDING_INSET := 1.5
+## Keep the first sloped stair surface beyond the arena cylinder's vertical
+## rim. A short level deck bridges this clearance so the player crosses above
+## the rim instead of driving the capsule into its side wall.
+const STATION_STAIR_BOTTOM_CLEARANCE := 4.0
+const STATION_APPROACH_OVERLAP := 14.0
 # A riser the production player controller can walk up without jumping.
 const STATION_STAIR_MAX_RISER := 0.34
 const STATION_STAIR_WIDTH := 18.0
@@ -855,8 +860,22 @@ func _build_station_spur(parent: Node3D) -> void:
 	var island_top_y := STATION_ISLAND_HEIGHT * 0.5
 	var stair_top := island_centre \
 		+ Vector3(0, island_top_y, -(STATION_ISLAND_RADIUS + STATION_STAIR_LANDING_INSET))
-	var stair_bottom := stair_top \
-		+ Vector3(0, -(island_centre.y - arena.y) - island_top_y, -46.0)
+	var stair_bottom := Vector3(
+		stair_top.x,
+		arena.y + 0.4,
+		arena.z + arena_radius + STATION_STAIR_BOTTOM_CLEARANCE)
+	# Meet the arena on a slightly raised level deck. Its inner end overlaps the
+	# floor by 14 m, giving the capsule enough support to step above the curved
+	# cylinder rim before it reaches the sloped flight.
+	var approach_start := Vector3(
+		stair_bottom.x,
+		stair_bottom.y,
+		arena.z + arena_radius - STATION_APPROACH_OVERLAP)
+	var approach_length := stair_bottom.z - approach_start.z
+	_add_box(_station_spur, "StationApproachDeck",
+		approach_start.lerp(stair_bottom, 0.5) - island_centre + Vector3.DOWN * 0.6,
+		Vector3(STATION_STAIR_WIDTH, 1.2, approach_length + 1.0),
+		_materials.floor_grid, true)
 	# Build the flight under the spur, not under the shared geometry root, so it
 	# hides and unhides with the rest of the optional station. The endpoints are
 	# world-local, so rebase them onto the spur's own origin.
@@ -868,6 +887,7 @@ func _build_station_spur(parent: Node3D) -> void:
 	# offsets them by the MindSpark world's own position.
 	_station_spur.set_meta("station_center", island_centre)
 	_station_spur.set_meta("branch_start", stair_bottom)
+	_station_spur.set_meta("approach_start", approach_start)
 	_station_spur.set_meta("station_island_radius", STATION_ISLAND_RADIUS)
 	_station_spur.set_meta("branches_from_zone", str(ZONES[4].id))
 
