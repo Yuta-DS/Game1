@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cahfa4lew7ks6"]
+[gd_scene format=3 uid="uid://b188a313idt4q"]
 
 [ext_resource type="Shader" uid="uid://bwec0cn7xsxjs" path="res://Water.gdshader" id="1_4nnwq"]
 [ext_resource type="PackedScene" uid="uid://bv7c61i5fe66r" path="res://scenes/ocean_sounds.tscn" id="2_716l7"]

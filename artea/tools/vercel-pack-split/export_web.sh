@@ -26,6 +26,10 @@ if "${godot_bin}" --version | grep -qi mono; then
 	exit 1
 fi
 
+# Duplicate resource identities can resolve to the wrong scene or script after
+# import. Catch them before Godot builds a production pack.
+python3 "${project_dir}/scripts/check_unique_resource_uids.py"
+
 # Keep player-facing resources in the Web pack. This runs before any existing
 # build is removed, so an accidental export exclusion cannot replace a known
 # playable production build.

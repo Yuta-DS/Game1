@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://dt24i278rqphc"]
+[gd_scene load_steps=14 format=3 uid="uid://bholg6f60l8jk"]
 
 [ext_resource type="Shader" uid="uid://b80li2r7qy7fh" path="res://scenes/stylizedsky.gdshader" id="1_e53rc"]
 [ext_resource type="Texture2D" uid="uid://dovfcxhu27760" path="res://assets3D/suntext.png" id="2_xglx6"]

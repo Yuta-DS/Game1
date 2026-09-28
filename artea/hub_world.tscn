@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://duyjccdsyvxn6"]
 
-[ext_resource type="PackedScene" uid="uid://cjp071clfyon5" path="res://scripts/cycle.tscn" id="1_e0qst"]
-[ext_resource type="Script" uid="uid://rtu7ectlsryj" path="res://scripts/simple_collectible_spawner.gd" id="2_spawner"]
+[ext_resource type="PackedScene" uid="uid://c80txgulck3dx" path="res://scripts/cycle.tscn" id="1_e0qst"]
+[ext_resource type="Script" uid="uid://simplespawner7q5r" path="res://scripts/simple_collectible_spawner.gd" id="2_spawner"]
 [ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_w1cbi"]
 [ext_resource type="PackedScene" uid="uid://xlc4qq0cvb1s" path="res://scenes/items/apple_collectible.tscn" id="3_apple"]
 [ext_resource type="PackedScene" uid="uid://bueqmdan8ll3o" path="res://textures/pebble_round_22.tscn" id="3_gdsyq"]
@@ -11,9 +11,9 @@
 [ext_resource type="PackedScene" uid="uid://qg3h6vqjxw7q" path="res://assets3D/mountains/rock_medium_14.tscn" id="6_g0dnx"]
 [ext_resource type="PackedScene" uid="uid://cdb2bek873oxe" path="res://assets3D/mountains/rock_medium_22.tscn" id="7_x5i7q"]
 [ext_resource type="PackedScene" uid="uid://mlmd0lmxrg8x" path="res://assets3D/houses/houseReal.tscn" id="58_8olsb"]
-[ext_resource type="PackedScene" uid="uid://dy41m6ln41a45" path="res://scripts/windshader.tscn" id="66_g7mik"]
-[ext_resource type="PackedScene" uid="uid://d16lvme5alg2l" path="res://scripts/area_3d.tscn" id="67_6acxu"]
-[ext_resource type="PackedScene" uid="uid://cahfa4lew7ks6" path="res://scripts/Water.tscn" id="85_y2odn"]
+[ext_resource type="PackedScene" uid="uid://bv8j65cqbdag0" path="res://scripts/windshader.tscn" id="66_g7mik"]
+[ext_resource type="PackedScene" uid="uid://t3153821rbjf" path="res://scripts/area_3d.tscn" id="67_6acxu"]
+[ext_resource type="PackedScene" uid="uid://b188a313idt4q" path="res://scripts/Water.tscn" id="85_y2odn"]
 
 [node name="HubWorld" type="Node3D" unique_id=1076746569]
 

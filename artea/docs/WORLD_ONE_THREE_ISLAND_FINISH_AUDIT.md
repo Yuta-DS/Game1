@@ -59,7 +59,7 @@ The latest player-height comparison (`artifacts/mind_spark_island_three_low_poly
 
 1. Run fresh, partial and completed-save playthroughs. Verify the fifteen individual mini-games, quest order, Warden shield/core, gentle rain, reflection choice and Oldest Tree completion through public inputs, not only direct state writes.
 2. Capture matched player-height, normal-camera views for all three islands. Review landmark readability, sign scale, occlusion, color/value hierarchy, environmental repetition and the quest interaction position in each view. Revise the actual scene based on those captures.
-3. Keep the role-aware retired-geometry gate at zero. The imported World One texture UIDs and Cloud Pop runtime references are fixed; remove the repository's duplicate-UID scan warnings and keep Web exports free of runtime resource and script errors.
+3. Keep the role-aware retired-geometry gate at zero. The imported World One texture UIDs and Cloud Pop runtime references are fixed. All 29 duplicate UID groups and the stale start-screen music UID are resolved; `scripts/check_unique_resource_uids.py` now blocks a Web export if duplicate identities return. Keep Web exports free of runtime resource and script errors.
 4. Benchmark the deployed WebGL2 build on the target hardware: startup memory, load time, frame rate in each district and during mini-games, and controller/touch usability. A native headless pass does not establish Web performance or visual quality.
 
 This audit intentionally separates demonstrated fixes from remaining art and playtest work. A numerical 10/10 claim needs those criteria and a real player review; procedural mesh count and passing hierarchy assertions alone cannot establish it.

@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=4 uid="uid://clpc8tj5u1yex"]
+[gd_scene load_steps=37 format=4 uid="uid://ba5b8qi0223h5"]
 
 [ext_resource type="Shader" uid="uid://g0eygardmb7f" path="res://assets3D/kkNatureForest/GrassShader.tres" id="1_y4k05"]
 [ext_resource type="PackedScene" uid="uid://bu7xabiu3yxhr" path="res://assets3D/kkNatureForest/grass.glb" id="2_wvhgk"]
