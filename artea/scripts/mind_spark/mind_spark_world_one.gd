@@ -5884,10 +5884,43 @@ func _build_oldest_tree(zone: Node3D) -> void:
 		_add_brick(zone, "StarShrineCrystal_%02d" % shrine_index, at + Vector3.UP * 6.2,
 			Bricks.build_crystal(.7, 2.4, .25, 6), _materials.shared_style_cyan)
 	_add_star(zone, Vector3(0, 7, -32), 6.0)
-	_build_arch(zone, Vector3(78, 0, 48), 40, 52, _materials.gold, "RETURN WORLD GATE")
+	var return_gate_at := Vector3(78, 0, 48)
+	var return_gate_yaw := atan2(return_gate_at.x, return_gate_at.z - 18.0)
+	var return_arch := _build_arch(zone, return_gate_at, 30, 30,
+		_materials.celestial_floor, "RETURN WORLD GATE")
+	return_arch.rotation.y = return_gate_yaw
+	return_arch.set_meta("design_revision", "sanctuary_portal_v2")
+	return_arch.set_meta("clear_opening_width_m", 25.0)
+	return_arch.set_meta("faces_oldest_tree_court", true)
+	# The former 52-metre three-box rectangle looked like an unfinished editor
+	# proxy beside the Oldest Tree. Layered feet, reveals and a faceted crown turn
+	# the same functional threshold into a supported sanctuary portal while the
+	# tree remains the district's tallest silhouette.
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		var x: float = float(side) * 15.0
+		_add_brick(return_arch, "ReturnGateSteppedFoot_%s" % side_name,
+			Vector3(x, 1.0, 0), Bricks.build_bevel_box(Vector3(8.0, 2.0, 10.0), .35),
+			_materials.shared_style_ivory)
+		_add_brick(return_arch, "ReturnGateButtress_%s" % side_name,
+			Vector3(side * 17.8, 9.0, 1.2),
+			Bricks.build_bevel_box(Vector3(4.5, 16.0, 7.0), .42),
+			_materials.shared_style_charcoal)
+		_add_box(return_arch, "ReturnGateCyanReveal_%s" % side_name,
+			Vector3(side * 12.35, 15.0, -3.62), Vector3(.38, 20.0, .22),
+			_materials.shared_style_cyan)
+		_add_brick(return_arch, "ReturnGateCrownShoulder_%s" % side_name,
+			Vector3(side * 9.0, 32.0, 0),
+			Bricks.build_bevel_box(Vector3(12.5, 2.6, 8.0), .38),
+			_materials.shared_style_ivory)
+	_add_box(return_arch, "ReturnGateThreshold", Vector3(0, .35, 0),
+		Vector3(24.0, .7, 9.0), _materials.shared_style_charcoal, true)
+	_add_brick(return_arch, "ReturnGateCrownCrystal", Vector3(0, 36.0, -.6),
+		Bricks.build_crystal(1.6, 5.5, .45, 6), _materials.shared_style_cyan)
 	_return_gate = WorldGateScene.instantiate() as MindSparkWorldGate
 	_return_gate.name = "ReturnToArtCastleWorldGate"
-	_return_gate.position = Vector3(78, 1, 48)
+	_return_gate.position = return_gate_at + Vector3.UP
+	_return_gate.rotation.y = return_gate_yaw
 	_return_gate.destination_world_local = return_destination_world_local
 	_return_gate.prompt_text = "Q • RETURN TO ART CASTLE"
 	_return_gate.gate_enabled = false
@@ -6641,7 +6674,7 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 	var cathedral := Node3D.new()
 	cathedral.name = "OldestTreeLivingCathedral"
-	cathedral.set_meta("design_revision", "root_crown_cathedral_v2")
+	cathedral.set_meta("design_revision", "root_crown_cathedral_v3_living_canopy")
 	cathedral.set_meta("quest_architecture", "walkable living landmark")
 	cathedral.set_meta("asymmetric_canopy", true)
 	cathedral.set_meta("camera_clearance_m", 38.0)
@@ -6668,7 +6701,8 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 			cos(ribbon_finish_angle) * 6.3)
 		_add_cable_between(cathedral, "HeartwoodBarkRibbon_%02d" % (ribbon_index + 1),
 			ribbon_start, ribbon_finish, .72, .38,
-			_materials.island_three_hero_bark, 10)
+			_materials.island_three_hero_bark_highlight \
+			if ribbon_index % 2 == 0 else _materials.island_three_hero_bark_shadow, 10)
 	for root_index in 10:
 		var angle := TAU * float(root_index) / 10.0 + sin(float(root_index)) * .10
 		var radial := Vector3(sin(angle), 0, cos(angle))
@@ -6705,9 +6739,7 @@ func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
 				Vector3(17.0 + float(leaf_cluster_index % 2) * 3.0,
 					8.5 + float((leaf_cluster_index + bough_index) % 3) * 1.2,
 					16.0 + float((leaf_cluster_index + 1) % 3) * 1.5),
-				_materials.shared_style_ivory \
-				if (leaf_cluster_index + bough_index) % 5 != 0 \
-				else _materials.island_three_sage)
+				_island_three_canopy_material(leaf_cluster_index + bough_index))
 			var canopy_mesh := canopy.mesh as SphereMesh
 			canopy_mesh.radial_segments = 8
 			canopy_mesh.rings = 4
@@ -6798,7 +6830,8 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 	var environment := Node3D.new()
 	environment.name = "IslandThreeMatchedEnvironment"
 	environment.set_meta("design_reference", "Island One research gardens + Island Two observatory terraces")
-	environment.set_meta("environment_revision", "open_civic_gardens_v9")
+	environment.set_meta("environment_revision", "open_civic_gardens_v10_living_palette")
+	environment.set_meta("foliage_palette", "deep sage, moss, muted sage, restrained ivory blossom")
 	environment.set_meta("clear_routes_preserved", true)
 	environment.set_meta("no_gold_lines_or_route_barriers", true)
 	environment.set_meta("preserve_authored_nodes", true)
@@ -6988,14 +7021,28 @@ func _build_island_three_garden_tree(parent: Node3D, tree_name: String,
 			var crown_at := branch_end + Vector3(
 				(-1.0 if crown_index == 0 else 1.0) * 1.4 * tree_scale,
 				float(crown_index) * .7, 0)
-			var canopy_material: Material = _materials.island_three_canopy_ivory \
-				if (variant + branch_index + crown_index) % 5 != 0 \
-				else _materials.island_three_sage
+			var canopy_material: Material = _island_three_canopy_material(
+				variant + branch_index + crown_index)
 			var canopy := _add_sphere(tree,
 				"GardenCanopy_%02d_%02d" % [branch_index + 1, crown_index + 1],
 				crown_at, Vector3(5.8, 3.2, 5.0) * tree_scale, canopy_material)
 			(canopy.mesh as SphereMesh).radial_segments = 7
 			(canopy.mesh as SphereMesh).rings = 4
+
+
+func _island_three_canopy_material(variant: int) -> Material:
+	# Ivory is a blossom accent, never the dominant leaf colour. The earlier
+	# four-to-one ivory ratio caused every tree to disappear into the masonry in
+	# both the gameplay camera and the island overview.
+	match posmod(variant, 5):
+		0:
+			return _materials.island_three_canopy_ivory
+		1, 4:
+			return _materials.island_three_sage
+		2:
+			return _materials.island_three_sage_deep
+		_:
+			return _materials.island_three_moss
 
 
 func _build_island_three_garden_pavilion(parent: Node3D, pavilion_name: String,
@@ -8119,7 +8166,13 @@ func _build_materials() -> void:
 	_materials.island_root = _material(Color("254d39"), 0.72, Color("3bd78a"), 0.72)
 	_materials.island_bark_root = _material(Color("241b19"), 0.92)
 	_materials.island_three_hero_bark = _material(Color("6b4b39"), 0.86)
+	# Keep the highlight cool-red enough that the Island 3 gold-line cleanup does
+	# not mistake this organic bark facet for brass and retire its mesh.
+	_materials.island_three_hero_bark_highlight = _material(Color("8a5450"), 0.82)
+	_materials.island_three_hero_bark_shadow = _material(Color("3f2d2a"), 0.92)
 	_materials.island_three_sage = _material(Color("71957b"), 0.88)
+	_materials.island_three_sage_deep = _material(Color("3f6654"), 0.92)
+	_materials.island_three_moss = _material(Color("9aab79"), 0.88)
 	_materials.island_three_canopy_ivory = _material(Color("e8ddc3"), 0.90)
 	_materials.island_three_roof = _material(Color("9ebdb8"), 0.58)
 	_materials.bio_bark = _material(Color("3b2724"), 0.88)

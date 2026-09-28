@@ -155,7 +155,8 @@ func _run() -> void:
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
 	var matched_environment := island_three.get_node("IslandThreeMatchedEnvironment") as Node3D
 	assert(str(matched_environment.get_meta("environment_revision", "")) \
-		== "open_civic_gardens_v9")
+		== "open_civic_gardens_v10_living_palette")
+	assert(str(matched_environment.get_meta("foliage_palette", "")).contains("deep sage"))
 	assert(bool(matched_environment.get_meta("clear_routes_preserved", false)))
 	assert(int(matched_environment.get_meta("total_environment_bays", 0)) >= 16 \
 		and int(matched_environment.get_meta("total_environment_bays", 0)) <= 24,
@@ -282,14 +283,45 @@ func _run() -> void:
 	assert((island_three.get_node("OldestTreeLivingCathedral/LivingHeartwood") as MeshInstance3D).material_override \
 		.albedo_color == shared_palette.island_three_hero_bark.albedo_color,
 		"the Oldest Tree has a warm bark trunk like Island One's hero tree")
-	assert((island_three.get_node("OldestTreeLivingCathedral/CanopyLeafMass_01_01") as MeshInstance3D).material_override \
-		.albedo_color in [shared_palette.shared_style_ivory.albedo_color, shared_palette.island_three_sage.albedo_color],
-		"the Oldest Tree canopy uses Island One's pale foliage palette")
+	var cathedral := island_three.get_node("OldestTreeLivingCathedral") as Node3D
+	assert(str(cathedral.get_meta("design_revision", "")) == "root_crown_cathedral_v3_living_canopy")
+	var ivory_canopy_count := 0
+	var living_canopy_count := 0
+	var living_canopy_colors := [shared_palette.island_three_sage.albedo_color,
+		shared_palette.island_three_sage_deep.albedo_color,
+		shared_palette.island_three_moss.albedo_color]
+	for leaf in cathedral.find_children("CanopyLeafMass_*", "MeshInstance3D", true, false):
+		var leaf_color: Color = (leaf as MeshInstance3D).material_override.albedo_color
+		if leaf_color == shared_palette.island_three_canopy_ivory.albedo_color:
+			ivory_canopy_count += 1
+		elif leaf_color in living_canopy_colors:
+			living_canopy_count += 1
+	assert(living_canopy_count >= 20 and ivory_canopy_count <= 5,
+		"the Oldest Tree reads as living foliage with ivory reserved for blossom accents")
+	var ribbon_colors: Array[Color] = []
+	for ribbon in cathedral.find_children("HeartwoodBarkRibbon_*", "MeshInstance3D", true, false):
+		var ribbon_material := (ribbon as MeshInstance3D).get_active_material(0) as StandardMaterial3D
+		if ribbon_material != null:
+			ribbon_colors.append(ribbon_material.albedo_color)
+	assert(shared_palette.island_three_hero_bark_highlight.albedo_color in ribbon_colors
+		and shared_palette.island_three_hero_bark_shadow.albedo_color in ribbon_colors,
+		"alternating bark facets give the hero trunk readable low-poly depth; got %s" % str(ribbon_colors))
 	assert(island_three.has_node("LowPolyUndersideAccents/EmbeddedAetherCrystal_01"))
 	var return_arch_left := geometry.get_node(
 		"06OldestTreeSanctuary/ReturnWorldGate/Left") as MeshInstance3D
 	assert(return_arch_left.material_override == world.get("_materials").celestial_floor,
 		"the old gold return arch is refinished in ivory")
+	var return_arch := geometry.get_node("06OldestTreeSanctuary/ReturnWorldGate") as Node3D
+	assert(str(return_arch.get_meta("design_revision", "")) == "sanctuary_portal_v2")
+	assert(float(return_arch.get_meta("clear_opening_width_m", 0.0)) >= 24.0)
+	assert(bool(return_arch.get_meta("faces_oldest_tree_court", false))
+		and absf(return_arch.rotation.y) > .8,
+		"the portal opening faces the sanctuary approach instead of reading edge-on")
+	assert(return_arch.has_node("ReturnGateSteppedFoot_West")
+		and return_arch.has_node("ReturnGateSteppedFoot_East")
+		and return_arch.has_node("ReturnGateCrownCrystal")
+		and return_arch.has_node("ReturnGateThresholdCollision"),
+		"the return threshold is a finished, collision-backed sanctuary portal")
 	assert(int(island_three.get_meta("gold_rings_removed", 0)) > 0)
 	assert(int(island_three.get_meta("visible_gold_ring_count", -1)) == 0,
 		"Island 3 contains no visible gold torus geometry")
