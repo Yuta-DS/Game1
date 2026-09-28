@@ -29,6 +29,24 @@ func _run() -> void:
 	var gallery := campus.get_node("HopeOpticsGallery") as Node3D
 	assert(gallery.find_children("PerspectiveRib_*","Node3D",true,false).size()==6)
 	assert(gallery.get_node("TruthFoundryLintel") is Node3D)
+	assert(str(gallery.get_meta("truth_foundry_revision")) == "rear_crystalline_frame_v2")
+	assert(float(gallery.get_meta("truth_foundry_clear_operator_apron_m")) >= 12.0)
+	assert(gallery.get_node("TruthFoundryFocusCrystal") is Node3D)
+	var truth_station: QuestObjectBase
+	for candidate in world.get_quest_objects():
+		if candidate.save_id == "world_one.truth_bridge":
+			truth_station = candidate
+			break
+	assert(truth_station != null)
+	var foundry_lintel := gallery.get_node("TruthFoundryLintel") as Node3D
+	var lintel_from_station := foundry_lintel.global_position - truth_station.global_position
+	lintel_from_station.y = 0.0
+	lintel_from_station = lintel_from_station.normalized()
+	var station_rear := -truth_station.global_basis.z.normalized()
+	station_rear.y = 0.0
+	station_rear = station_rear.normalized()
+	assert(lintel_from_station.dot(station_rear) > .98,
+		"Truth Foundry architecture must frame the rear of the machine, not the operator camera")
 	var landscape := campus.get_node("IslandTwoGroupedLandscaping") as Node3D
 	assert(landscape.find_children("ObservatoryCanopyTree_*","Node3D",false,false).size()==6)
 	for court_name in ["EvidenceReadingCourt","MemoryWeavingCourt",

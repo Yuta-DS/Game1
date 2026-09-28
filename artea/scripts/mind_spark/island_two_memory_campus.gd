@@ -1221,27 +1221,68 @@ static func _build_hope_optics_gallery(world: MindSparkWorldOne, campus: Node3D,
 		Bricks.build_crystal(1.15, 3.8, .28, 8), mats.arrival_glass)
 
 	# The Truth Materialiser is a supported foundry frame, not another portal ring.
+	# Build the architecture from the station's authored facing direction.  The
+	# previous frame sat eight metres toward the operator and its lintel/courses
+	# crossed the normal third-person camera.  This rear frame leaves the complete
+	# twelve-metre approach apron open while still giving the small instrument a
+	# landmark silhouette from the district route.
 	var foundry_center := Vector3(20, 0, -12)
+	var truth_station: QuestObjectBase
+	for candidate in world.get_quest_objects():
+		if candidate.save_id == "world_one.truth_bridge":
+			truth_station = candidate
+			break
+	var foundry_yaw := truth_station.rotation.y if truth_station != null else 0.0
+	var foundry_front := Vector3.BACK.rotated(Vector3.UP, foundry_yaw)
+	var foundry_side := Vector3.RIGHT.rotated(Vector3.UP, foundry_yaw)
+	var foundry_back := foundry_center - foundry_front * 8.5
+	gallery.set_meta("truth_foundry_revision", "rear_crystalline_frame_v2")
+	gallery.set_meta("truth_foundry_clear_operator_apron_m", 12.0)
 	for side in [-1.0, 1.0]:
-		var x := foundry_center.x + float(side) * 11.5
+		var pier_at: Vector3 = foundry_back + foundry_side * float(side) * 10.5
 		world.call("_add_brick", gallery, "TruthFoundryFoot_%s" % side,
-			Vector3(x, .48, foundry_center.z + 8),
+			pier_at + Vector3.UP * .48,
 			Bricks.build_bevel_box(Vector3(3.6, .96, 4.2), .16), mats.sanctum_ivory)
 		world.call("_add_cylinder", gallery, "TruthFoundryPier_%s" % side,
-			Vector3(x, 6.0, foundry_center.z + 8), .86, 10.4,
+			pier_at + Vector3.UP * 6.0, .86, 10.4,
 			mats.sanctum_ivory, true, 14)
-		world.call("_add_box", gallery, "TruthFoundryPierInlay_%s" % side,
-			Vector3(x, 6.2, foundry_center.z + 7.1), Vector3(.38, 6.2, .14),
-			mats.astral_brass, false)
-	world.call("_add_brick", gallery, "TruthFoundryLintel",
-		foundry_center + Vector3(0, 11.4, 8),
-		Bricks.build_bevel_box(Vector3(27.2, 1.8, 4.4), .18), mats.sanctum_ivory)
+		var pier_inlay := world.call("_add_box", gallery,
+			"TruthFoundryPierInlay_%s" % side,
+			pier_at + foundry_front * .92 + Vector3.UP * 6.2,
+			Vector3(.38, 6.2, .14), mats.astral_brass, false, foundry_yaw) as Node3D
+		pier_inlay.set_meta("frame_side", "west" if side < 0.0 else "east")
+	var lintel := world.call("_add_brick", gallery, "TruthFoundryLintel",
+		foundry_back + Vector3.UP * 11.4,
+		Bricks.build_bevel_box(Vector3(24.8, 1.8, 3.2), .18),
+		mats.sanctum_ivory, foundry_yaw) as Node3D
+	lintel.set_meta("behind_operator", true)
 	for course_index in 3:
-		world.call("_add_brick", gallery, "TruthFoundryCourse_%02d" % (course_index + 1),
-			foundry_center + Vector3(0, 3.0 + course_index * 2.2, 7.25),
-			Bricks.build_bevel_box(Vector3(15.0 - course_index * 2.4, 1.0, .34), .08),
+		var course := world.call("_add_brick", gallery,
+			"TruthFoundryCourse_%02d" % (course_index + 1),
+			foundry_back - foundry_front * .82 + Vector3.UP * (3.2 + course_index * 2.15),
+			Bricks.build_bevel_box(Vector3(12.4 - course_index * 1.8, .78, .28), .08),
 			mats.gold if course_index == 2 else (
-				mats.arrival_glass if course_index == 1 else mats.sanctum_ivory))
+				mats.arrival_glass if course_index == 1 else mats.sanctum_ivory),
+			foundry_yaw) as Node3D
+		course.set_meta("rear_display_course", true)
+	# A compact vertical crystal supplies the colour focus that the old long
+	# horizontal courses tried to provide, without becoming another barrier.
+	var truth_focus := world.call("_add_brick", gallery, "TruthFoundryFocusCrystal",
+		foundry_back - foundry_front * 1.0 + Vector3.UP * 8.2,
+		Bricks.build_crystal(1.15, 4.4, .28, 8), mats.arrival_glass,
+		foundry_yaw) as Node3D
+	truth_focus.set_meta("landmark_only", true)
+	for side in [-1.0, 1.0]:
+		var planter_at: Vector3 = foundry_back + foundry_side * float(side) * 15.0 \
+			+ foundry_front * 1.5
+		world.call("_add_brick", gallery, "TruthFoundryPlanter_%s" % side,
+			planter_at + Vector3.UP * .42,
+			Bricks.build_bevel_box(Vector3(5.8, .84, 4.2), .16), mats.sanctum_ivory,
+			foundry_yaw)
+		world.call("_add_brick", gallery, "TruthFoundryPlanting_%s" % side,
+			planter_at + Vector3.UP * .92,
+			Bricks.build_bevel_box(Vector3(4.7, .24, 3.1), .20), mats.green_glow,
+			foundry_yaw)
 
 	# Six low modules visually join the two research bays. They remain nearly
 	# flush with the deck and never become a mandatory jump course.
