@@ -82,7 +82,7 @@ const PLAYER_ARRIVAL_CLEARANCE := 2.5
 ## Laboratory. Keeping this separate from the checkpoint operator position
 ## prevents the character, Mayor Milo and the station cabinet from stacking in
 ## one cramped focal point while leaving the first objective clearly ahead.
-const STANDALONE_PLAYER_ARRIVAL := Vector3(-46.0, 0.05, -5.0)
+const STANDALONE_PLAYER_ARRIVAL := Vector3(-10.0, 0.05, -28.0)
 static var GREYBOX_BUILD_SEQUENCE: PackedStringArray = [
 	"three_fused_super_island_foundations",
 	"main_story_route",

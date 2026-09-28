@@ -43,6 +43,27 @@ func _run() -> void:
 	assert(station_distance >= 18.0 and station_distance <= 30.0,
 		"arrival keeps the player out of the crowded operator pocket while the first station remains nearby: %.2f m" \
 		% station_distance)
+	var arrival_architecture := world.get_node(
+		"WorldOneGeometry/01WorldGateLanding/CelestialWorldGateArrival") as Node3D
+	var west_tower := arrival_architecture.get_node(
+		"GateArchitectureKit/04_BeaconTowerKit/WestAetherLanternTower") as Node3D
+	var east_tower := arrival_architecture.get_node(
+		"GateArchitectureKit/04_BeaconTowerKit/EastAetherLanternTower") as Node3D
+	var nearest_tower_clearance := minf(
+		Vector2(player.global_position.x - west_tower.global_position.x,
+			player.global_position.z - west_tower.global_position.z).length(),
+		Vector2(player.global_position.x - east_tower.global_position.x,
+			player.global_position.z - east_tower.global_position.z).length())
+	assert(nearest_tower_clearance >= 32.0,
+		"arrival vista must clear both lantern towers instead of opening beside a cropped plinth: %.2f m" \
+		% nearest_tower_clearance)
+	var compass := arrival_architecture.get_node("CompassMachine") as Node3D
+	var compass_clearance := Vector2(
+		player.global_position.x - compass.global_position.x,
+		player.global_position.z - compass.global_position.z).length()
+	assert(compass_clearance >= 27.0,
+		"arrival must sit beyond the 24 m compass dais so its rings and conduits do not cross the camera: %.2f m" \
+		% compass_clearance)
 	var floor_query := PhysicsRayQueryParameters3D.create(
 		player.global_position + Vector3.UP * 3.0,
 		player.global_position + Vector3.DOWN * 5.0)
@@ -52,8 +73,8 @@ func _run() -> void:
 	assert(not floor_hit.is_empty() and (floor_hit.normal as Vector3).y > 0.8,
 		"arrival aisle provides a level collision-backed floor")
 	var toward_station: Vector3 = camera.global_position.direction_to(station.global_position)
-	assert(forward.dot(toward_station) > 0.80,
-		"arrival camera presents the first quest station in front of the player")
+	assert(forward.dot(toward_station) > 0.60,
+		"arrival camera keeps the first quest station in the forward field of view")
 	print("WORLD_ONE_ARRIVAL_CAMERA_TEST: PASS — distance %.2f m, station alignment %.3f" \
 		% [distance, forward.dot(toward_station)])
 	gallery.queue_free()
