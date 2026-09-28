@@ -6,6 +6,14 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var start_source := FileAccess.get_file_as_string("res://start_screen.gd")
+	var authentication_source := FileAccess.get_file_as_string("res://scripts/authentication.gd")
+	assert(start_source.contains(
+		"const WORLD_ONE_SCENE := \"res://scenes/art_gallery_3d_inprogress.tscn\""),
+		"Offline Guest and standard login target the integrated World One scene")
+	assert(authentication_source.contains(
+		"const WORLD_ONE_SCENE := \"res://scenes/art_gallery_3d_inprogress.tscn\""),
+		"the alternate authentication screen targets the integrated World One scene")
 	var gallery := (load("res://scenes/art_gallery_3d_inprogress.tscn") as PackedScene).instantiate()
 	root.add_child(gallery)
 	for _frame in 8:
@@ -21,6 +29,16 @@ func _run() -> void:
 		"the nearby blueprint retains a safe void buffer from the Art Castle districts")
 	assert(world_one.force_standalone_blueprint)
 	assert(world_one.get_meta("foundation_mode") == "standalone_preview")
+	var initial_landing := world_one.to_global(
+		world_one.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0))
+	var spawn_offset := Vector2(
+		player.global_position.x - initial_landing.x,
+		player.global_position.z - initial_landing.z).length()
+	assert(spawn_offset < 0.25,
+		"the live character starts over World One's arrival court: player=%s landing=%s" \
+		% [str(player.global_position), str(initial_landing)])
+	assert(world_one.has_node("WorldOneGeometry"),
+		"World One is built before the character is relocated into it")
 	var source_gate := floating_world.get_node("MindSparkWorldGate") as MindSparkWorldGate
 	assert(source_gate != null and source_gate.gate_enabled,
 		"the authored Mind Spark forecourt owns the World One gate")

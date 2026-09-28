@@ -1,5 +1,7 @@
 extends Node2D
 
+const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
+
 # Links to the intro music audio player node
 @onready var menu_music = $AudioStreamPlayer 
 
@@ -178,5 +180,7 @@ func enter_game(username: String, is_guest: bool = false):
 		var tween := create_tween()
 		tween.tween_property(menu_music, "volume_db", -80.0, 1.5)
 
-	# Open up the master integrated sandbox environment
-	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
+	# Begin directly in the integrated World One scene. Its gallery controller
+	# builds the Mind Spark land and places the character at Island One's arrival
+	# court before the first playable frame.
+	get_tree().change_scene_to_file(WORLD_ONE_SCENE)

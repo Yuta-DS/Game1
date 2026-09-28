@@ -51,6 +51,8 @@ func _ready() -> void:
 # scene. The Crown Line follows the story in one open world: Gallery Station,
 # Mind Spark, Heart Melody, then Creator's Light.
 const FLOATING_WORLD_FRONT_OFFSET := Vector3(0.0, 0.0, -480.0)
+const WORLD_ONE_ARRIVAL_ZONE := "01_world_gate_landing"
+const WORLD_ONE_SPAWN_HEIGHT := 7.0
 
 
 func _report_galaxy_state() -> void:
@@ -138,6 +140,11 @@ func _build_galaxy_transit() -> void:
 	story_director.set_script(load("res://scripts/art_castle_kingdom_story.gd"))
 	floating_world.add_child(story_director)
 
+	# World One is the player's starting destination. Build its arrival court
+	# before moving the live character so Web players never spawn over the
+	# deferred, still-empty blueprint and fall through the world.
+	_place_player_in_world_one.call_deferred(floating_world)
+
 	var map_canvas := CanvasLayer.new()
 	map_canvas.name = "WorldMapCanvas"
 	map_canvas.layer = 40
@@ -147,6 +154,20 @@ func _build_galaxy_transit() -> void:
 	minimap.set_script(load("res://scripts/art_castle_minimap.gd"))
 	minimap.set("map_context", "galaxy")
 	map_canvas.add_child(minimap)
+
+
+func _place_player_in_world_one(floating_world: Node3D) -> void:
+	if not is_instance_valid(floating_world):
+		return
+	var player := get_node_or_null("Player3D") as CharacterBody3D
+	var world_one := floating_world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+	if player == null or world_one == null:
+		return
+	world_one.ensure_world_built()
+	var arrival := world_one.get_zone_position(WORLD_ONE_ARRIVAL_ZONE) \
+		+ Vector3.UP * WORLD_ONE_SPAWN_HEIGHT
+	player.global_position = world_one.to_global(arrival)
+	player.velocity = Vector3.ZERO
 		
 		
 func _input(event):
