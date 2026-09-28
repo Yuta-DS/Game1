@@ -1,9 +1,42 @@
 [gd_scene format=3 uid="uid://sv4s22ki8dww"]
 
 [ext_resource type="Script" uid="uid://bslgdnvsaqhn2" path="res://scenes/chatbot.gd" id="1_7qo2j"]
-[ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="2_an77j"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_an77j"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_history"]
+bg_color = Color(0.964706, 0.894118, 0.784314, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.72549, 0.611765, 0.462745, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.945098, 0.835294, 0.662745, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.72549, 0.611765, 0.462745, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0, 0, 0, 0.25)
+shadow_size = 10
+content_margin_left = 28.0
+content_margin_top = 20.0
+content_margin_right = 28.0
+content_margin_bottom = 20.0
 
 [node name="chatbot" type="Control" unique_id=707514885]
 layout_mode = 3
@@ -16,51 +49,44 @@ grow_horizontal = 2
 grow_vertical = 0
 script = ExtResource("1_7qo2j")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=29689236]
+[node name="Panel" type="PanelContainer" parent="." unique_id=1581378263]
 z_index = 1
-layout_mode = 1
-offset_left = -683.0
-offset_top = -600.0
-offset_right = 617.0
-offset_bottom = -48.0
-
-[node name="ChatHistory" type="TextEdit" parent="VBoxContainer" unique_id=1121175732]
-custom_minimum_size = Vector2(800, 142)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxEmpty_an77j")
-editable = false
-wrap_mode = 1
-scroll_smooth = true
-
-[node name="TextureRect" type="TextureRect" parent="." unique_id=1581378263]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -847.9999
-offset_top = -722.99994
-offset_right = 152.00012
-offset_bottom = -122.99994
+offset_left = -683.0
+offset_top = -450.0
+offset_right = 617.0
+offset_bottom = -48.0
 grow_horizontal = 2
 grow_vertical = 0
-scale = Vector2(1.7, 1.7)
-mouse_filter = 2
-texture = ExtResource("2_an77j")
-stretch_mode = 6
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="MarginContainer" type="MarginContainer" parent="TextureRect" unique_id=916384367]
-layout_mode = 0
-offset_left = 219.99992
-offset_top = 202.94115
-offset_right = 898.99994
-offset_bottom = 342.94116
-
-[node name="RichTextLabel" type="RichTextLabel" parent="TextureRect/MarginContainer" unique_id=951159884]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=29689236]
 layout_mode = 2
-text = "Wonderful Counsellor Milo · Guided companion"
+
+[node name="ChatHistory" type="TextEdit" parent="Panel/VBoxContainer" unique_id=1121175732]
+custom_minimum_size = Vector2(800, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.35
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_readonly_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_history")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_history")
+editable = false
+wrap_mode = 1
+scroll_smooth = true
+
+[node name="ChoicesScroll" type="ScrollContainer" parent="Panel/VBoxContainer" unique_id=1121175733]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.65
+follow_focus = true
+horizontal_scroll_mode = 0
