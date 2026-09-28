@@ -177,11 +177,11 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 	# Present the Signal Observatory immediately. The player has just moved more
 	# than two kilometres from the gallery spawn; letting CameraFollow ease from
 	# its old position makes the opening fly through unrelated districts and can
-	# leave the view crowded by nearby architecture. The World One route begins
-	# toward local -Z, so a zero-yaw orbit frames its first station and court.
+	# leave the view crowded by nearby architecture. Face north into the Signal
+	# Observatory route; the return portal and threshold sit behind this view.
 	var camera := get_node_or_null("Camera3D") as Camera3D
 	if camera != null and camera.has_method("compose_arrival_view"):
-		camera.call("compose_arrival_view", 0.0, -10.0, 18.0)
+		camera.call("compose_arrival_view", 180.0, -10.0, 18.0)
 		
 		
 func _input(event):

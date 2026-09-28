@@ -2925,7 +2925,7 @@ func _build_landing(zone: Node3D) -> void:
 	_build_celestial_world_gate_arrival(zone, 1.0)
 	var entry_gate := WorldGateScene.instantiate() as MindSparkWorldGate
 	entry_gate.name = "EntryWorldGate"
-	entry_gate.position = Vector3(0, 1, -38)
+	entry_gate.position = Vector3(0, 1, -64)
 	entry_gate.destination_world_local = return_destination_world_local
 	entry_gate.prompt_text = "Q • RETURN TO ART CASTLE"
 	zone.add_child(entry_gate)
@@ -4159,7 +4159,7 @@ func _build_pressure_gauge(parent: Node3D, gauge_name: String, at: Vector3, yaw:
 func _build_celestial_arrival_arch(parent: Node3D) -> void:
 	var arch := Node3D.new()
 	arch.name = "WorldGateCelestialArch"
-	arch.position = Vector3(0, 0, -39)
+	arch.position = Vector3(0, 0, -64)
 	arch.set_meta("opening_width_m", 40.0)
 	arch.set_meta("opening_height_m", 24.0)
 	parent.add_child(arch)

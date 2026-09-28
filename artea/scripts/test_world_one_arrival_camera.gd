@@ -72,11 +72,16 @@ func _run() -> void:
 	var floor_hit := world.get_world_3d().direct_space_state.intersect_ray(floor_query)
 	assert(not floor_hit.is_empty() and (floor_hit.normal as Vector3).y > 0.8,
 		"arrival aisle provides a level collision-backed floor")
-	var toward_station: Vector3 = camera.global_position.direction_to(station.global_position)
-	assert(forward.dot(toward_station) > 0.60,
-		"arrival camera keeps the first quest station in the forward field of view")
-	print("WORLD_ONE_ARRIVAL_CAMERA_TEST: PASS — distance %.2f m, station alignment %.3f" \
-		% [distance, forward.dot(toward_station)])
+	var toward_compass: Vector3 = camera.global_position.direction_to(compass.global_position)
+	assert(forward.dot(toward_compass) > 0.92,
+		"arrival camera directly presents the Signal Observatory route")
+	var return_gate := world.get_node(
+		"WorldOneGeometry/01WorldGateLanding/EntryWorldGate") as Node3D
+	var toward_return_gate := camera.global_position.direction_to(return_gate.global_position)
+	assert(forward.dot(toward_return_gate) < -0.45,
+		"the return portal and threshold remain behind the opening camera")
+	print("WORLD_ONE_ARRIVAL_CAMERA_TEST: PASS — distance %.2f m, route alignment %.3f" \
+		% [distance, forward.dot(toward_compass)])
 	gallery.queue_free()
 	await process_frame
 	quit(0)
