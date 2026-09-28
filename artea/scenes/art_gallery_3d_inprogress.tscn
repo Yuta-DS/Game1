@@ -358,11 +358,6 @@ surface_material_override/1 = SubResource("StandardMaterial3D_bvso8")
 transform = Transform3D(60, 0, 0, 0, 60, 0, 0, 0, 60, 3.965, 4.785, 5.34)
 mesh = ExtResource("7_bvso8")
 
-[node name="Floor" type="MeshInstance3D" parent="." unique_id=1877290108]
-transform = Transform3D(60, 0, 0, 0, 1, 0, 0, 0, 10, 0, 0, 10.0039)
-mesh = SubResource("PlaneMesh_h6yu7")
-surface_material_override/0 = SubResource("StandardMaterial3D_3gi0n")
-
 [node name="20343VictorVPhonographV2Texture" parent="." unique_id=1943718135 instance=ExtResource("11_k4ey6")]
 transform = Transform3D(0.0249004, 0.0167323, 7.31394e-10, 0, -1.31134e-09, 0.03, 0.0167323, -0.0249004, -1.08843e-09, 15.061, 1.73945, 2.23497)
 
