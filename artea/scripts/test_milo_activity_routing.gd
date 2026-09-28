@@ -44,8 +44,8 @@ func _run() -> void:
 	chat.campaign_router = campaign
 	root.add_child(chat)
 	await process_frame
-	var choices := chat.get_node("VBoxContainer/CuratedChoices") as VBoxContainer
-	var history := chat.get_node("VBoxContainer/ChatHistory") as TextEdit
+	var choices := chat.get_node("Panel/VBoxContainer/ChoicesScroll/CuratedChoices") as VBoxContainer
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as TextEdit
 	var travel_requests: Array[String] = []
 	chat.activity_travel_requested.connect(func(activity_id: String) -> void:
 		travel_requests.append(activity_id)

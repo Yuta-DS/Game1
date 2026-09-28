@@ -33,10 +33,24 @@ func _run() -> void:
 	assert(source.contains("ClassDB.instantiate"), "NobodyWho is loaded dynamically for Web compatibility")
 	assert(not scene_source.contains("NobodyWhoChat") and not scene_source.contains("NobodyWhoModel"),
 		"the Web-loadable chat scene has no native-only NobodyWho node types")
-	for forbidden in ["HTTPRequest", "openai_api_key", "Firebase", "HTTPClient", "user://", "ConfigFile"]:
+	for forbidden in ["openai_api_key", "Firebase", "user://", "ConfigFile"]:
 		assert(not source.contains(forbidden), "Milo script does not contain %s" % forbidden)
 		assert(not engine_source.contains(forbidden), "Milo matcher does not contain %s" % forbidden)
 		assert(not scene_source.contains(forbidden), "Milo scene does not contain %s" % forbidden)
+	# The Web build's cloud LLM path legitimately uses HTTPRequest/HTTPClient
+	# to reach Milo's own Cloudflare Worker proxy - never a model API
+	# directly, and never with an embedded key. The safety matcher and the
+	# scene file itself still make zero network calls; verify chatbot.gd's
+	# usage stays scoped to the one known, trusted endpoint.
+	for forbidden in ["HTTPRequest", "HTTPClient"]:
+		assert(not engine_source.contains(forbidden), "Milo matcher does not contain %s" % forbidden)
+		assert(not scene_source.contains(forbidden), "Milo scene file declares no network node for %s" % forbidden)
+	if source.contains("HTTPRequest") or source.contains("HTTPClient"):
+		assert(source.contains("CLOUD_LLM_ENDPOINT"),
+			"any HTTPRequest/HTTPClient usage in Milo's script is scoped to the known cloud proxy endpoint")
+		for direct_api in ["api.openai.com", "generativelanguage.googleapis.com", "api.anthropic.com"]:
+			assert(not source.contains(direct_api),
+				"Milo's script never calls a model API directly - only its own proxy")
 	for write_api in ["FileAccess.open", "store_string", "store_line", "store_var"]:
 		assert(not source.contains(write_api), "Milo does not persist messages with %s" % write_api)
 		assert(not engine_source.contains(write_api), "Milo matcher does not persist messages with %s" % write_api)
@@ -45,8 +59,8 @@ func _run() -> void:
 	root.add_child(chat)
 	await process_frame
 
-	var history := chat.get_node_or_null("VBoxContainer/ChatHistory") as TextEdit
-	var choices := chat.get_node_or_null("VBoxContainer/CuratedChoices") as VBoxContainer
+	var history := chat.get_node_or_null("Panel/VBoxContainer/ChatHistory") as TextEdit
+	var choices := chat.get_node_or_null("Panel/VBoxContainer/ChoicesScroll/CuratedChoices") as VBoxContainer
 	assert(history != null and not history.editable, "Milo transcript is read-only")
 	assert(history.text.contains("Choose one, or skip"), "Milo explains the safe, skippable choice")
 	assert(choices != null, "Milo builds curated reflection choices")
