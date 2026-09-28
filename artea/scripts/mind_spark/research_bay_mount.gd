@@ -5,9 +5,32 @@ const APPROACH := Vector3(0,0,4.5)
 const SENSOR_RADIUS := 5.0
 const BENCH_WIDTH := 5.4
 const BENCH_DEPTH := 1.9
+const IMPORTED_TEXTURE_UID_ALIASES := {
+	"res://assets3D/mind_spark/unfinished_light/inspection_bay/inspection_bay.glb": {
+		"uid": "uid://1diuddxolsth",
+		"path": "res://assets3D/mind_spark/unfinished_light/inspection_bay/inspection_bay_quiet_surface_atlas.png",
+	},
+	"res://assets3D/mind_spark/unfinished_light/recorder_bay/recorder_bay.glb": {
+		"uid": "uid://c311injowp6iu",
+		"path": "res://assets3D/mind_spark/unfinished_light/recorder_bay/recorder_bay_quiet_surface_atlas.png",
+	},
+	"res://assets3D/mind_spark/unfinished_light/tester_bay/tester_bay.glb": {
+		"uid": "uid://bo2fe6lx50842",
+		"path": "res://assets3D/mind_spark/unfinished_light/tester_bay/tester_bay_quiet_surface_atlas.png",
+	},
+	"res://assets3D/mind_spark/unfinished_light/perspective_bay/perspective_bay.glb": {
+		"uid": "uid://bn0g16uhniluo",
+		"path": "res://assets3D/mind_spark/unfinished_light/perspective_bay/perspective_bay_quiet_surface_atlas.png",
+	},
+	"res://assets3D/mind_spark/unfinished_light/projector/projector.glb": {
+		"uid": "uid://dxh502c0co43g",
+		"path": "res://assets3D/mind_spark/unfinished_light/projector/projector_quiet_surface_atlas.png",
+	},
+}
 
 static func mount(bay: Node3D, station: QuestObjectBase, world: MindSparkWorldOne,
 		asset: String, housing_height: float, shell_present := true) -> Node3D:
+	_register_imported_texture_uid(asset)
 	bay.set_meta("preserve_authored_nodes",true)
 	station.scale=Vector3.ONE
 	var zone := station.get_parent() as Node3D
@@ -59,6 +82,19 @@ static func mount(bay: Node3D, station: QuestObjectBase, world: MindSparkWorldOn
 	var model := load(asset).instantiate() as Node3D
 	bay.add_child(model)
 	return model
+
+
+static func _register_imported_texture_uid(asset: String) -> void:
+	## These five Blender exports retained the atlas UID from the machine that
+	## authored them. The paths are stable project assets, so register the legacy
+	## identifiers before ResourceLoader resolves the imported PackedScene.
+	if not IMPORTED_TEXTURE_UID_ALIASES.has(asset):
+		return
+	var alias: Dictionary = IMPORTED_TEXTURE_UID_ALIASES[asset]
+	var uid := ResourceUID.text_to_id(str(alias.uid))
+	var texture_path := str(alias.path)
+	if not ResourceUID.has_id(uid):
+		ResourceUID.add_id(uid, texture_path)
 
 static func _solid(bay: Node3D, id: String, at: Vector3, size: Vector3) -> void:
 	var body := StaticBody3D.new()

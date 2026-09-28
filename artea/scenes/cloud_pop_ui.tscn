@@ -4,9 +4,9 @@
 [ext_resource type="Texture2D" uid="uid://b72ryhthaq71k" path="res://assets/Clouds/Clouds BG.png" id="2_lwtep"]
 [ext_resource type="PackedScene" uid="uid://dim1lk4t7o8jm" path="res://scenes/cloud.tscn" id="3_lwtep"]
 [ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="4_6iu6h"]
-[ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.ogg" id="4_hyv5u"]
+[ext_resource type="AudioStream" uid="uid://dgydqoer266ya" path="res://assets/SFX/formcloud.ogg" id="4_hyv5u"]
 [ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="5_xed2p"]
-[ext_resource type="AudioStream" uid="uid://bo2fecg6xsgkk" path="res://assets/SFX/Peace - David Lastra.ogg" id="6_gbrvk"]
+[ext_resource type="AudioStream" uid="uid://14baqk2fiiow" path="res://assets/SFX/Peace - David Lastra.ogg" id="6_gbrvk"]
 
 [node name="CloudPopUI" type="Control" unique_id=2139526021]
 layout_mode = 3

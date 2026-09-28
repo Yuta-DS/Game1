@@ -8,6 +8,7 @@
 extends SceneTree
 
 const CLOUD_SCENE_PATH := "res://scenes/Cloud_3d.tscn"
+const CLOUD_UI_SCENE_PATH := "res://scenes/cloud_pop_ui.tscn"
 
 
 func _init() -> void:
@@ -20,6 +21,8 @@ func _run() -> void:
 	var scene_source := FileAccess.get_file_as_string(CLOUD_SCENE_PATH)
 
 	assert(ResourceLoader.exists(CLOUD_SCENE_PATH), "the Cloud_3d scene exists")
+	assert(load(CLOUD_UI_SCENE_PATH) is PackedScene,
+		"the Cloud Pop UI and its campaign-return script parse as a production scene")
 	assert(scene_source.contains('[node name="CLoudMesh"'),
 		"the scene retains its authored CLoudMesh sprite node")
 	assert(cloud_source.contains("$CLoudMesh"),
@@ -37,6 +40,9 @@ func _run() -> void:
 		"Mind Spark builds a visible curated Thought Echo surface")
 	assert(ui_source.contains("Skip for now"),
 		"Mind Spark keeps an explicit no-progress skip path")
+	assert(ui_source.contains("func _return_to_campaign()")
+		and ui_source.contains('get_node_or_null("/root/JourneyCampaign")'),
+		"the no-progress skip returns through the canonical campaign router")
 	assert(ui_source.contains("input_field.editable = false")
 		and ui_source.contains("input_field.hide()"),
 		"legacy text entry is disabled and hidden by default")
