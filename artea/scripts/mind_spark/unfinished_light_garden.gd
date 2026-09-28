@@ -269,6 +269,15 @@ func _sync() -> void:
 	var state: Dictionary = stations["world_one.truth_bridge"].current_state
 	var solved := bool(state.get("completed", false))
 	var optics: Array = state.get("optics", [0, 0, 0])
+	# The production projector replaces and releases the prototype machine after
+	# this presenter is built. Drop those stale animation references before the
+	# periodic story-state refresh touches them.
+	for index in range(beams.size() - 1, -1, -1):
+		if not is_instance_valid(beams[index]):
+			beams.remove_at(index)
+	for index in range(leaves.size() - 1, -1, -1):
+		if not is_instance_valid(leaves[index]):
+			leaves.remove_at(index)
 	for i in beams.size():
 		beams[i].rotation.y = float(optics[i]) * PI / 8
 		beams[i].visible = state.has("approach") or solved

@@ -34,7 +34,13 @@ func _run() -> void:
 	for court_name in ["EvidenceReadingCourt","MemoryWeavingCourt",
 			"ArchiveLogicCourt","PerspectiveGallery","TruthMaterialisationCourt",
 			"EliteGuardianCourt"]:
-		assert(campus.get_node(court_name) is Node3D,"missing Island Two gameplay court: "+court_name)
+		var retired := campus.get_node(court_name) as Node3D
+		assert(retired != null,"missing Island Two compatibility marker: "+court_name)
+		assert(bool(retired.get_meta("retired_geometry_purged", false)),
+			"retired prototype geometry must be released from memory: "+court_name)
+		var retained_meshes := retired.find_children("*", "MeshInstance3D", true, false)
+		assert(retained_meshes.size() == (1 if court_name == "EliteGuardianCourt" else 0),
+			"only the story reward may remain under a retired court: "+court_name)
 	assert(world.get_node("IslandOneResearchCampus/FocusBellAlcove") is Node3D,
 		"the optional Focus Bell belongs to Island One's support route")
 	var route := campus.get_node("IslandTwoQuestRoute") as Node3D

@@ -488,12 +488,38 @@ static func _retire_assembly(node: Node3D, replacement: String) -> void:
 	node.visible = false
 	node.set_meta("replaced_by", replacement)
 	node.set_meta("retired_collision_disabled", true)
+	node.set_process(false)
+	node.set_physics_process(false)
 	if node is CollisionObject3D:
 		(node as CollisionObject3D).collision_layer = 0
 		(node as CollisionObject3D).collision_mask = 0
 	for body in node.find_children("*", "CollisionObject3D", true, false):
 		(body as CollisionObject3D).collision_layer = 0
 		(body as CollisionObject3D).collision_mask = 0
+	# These assemblies are compatibility markers after their production
+	# replacements are installed. Hiding the old hierarchy still kept every mesh,
+	# material and collision resource resident in Web memory. Preserve only the
+	# guardian reward socket because story-state restoration still addresses that
+	# stable path; release every other retired child immediately.
+	var preserved_reward := node.get_node_or_null("GuardianRewardSocket") as Node
+	if preserved_reward != null:
+		for reward_child in preserved_reward.get_children():
+			if reward_child.name != "RewardHopeCrystal":
+				reward_child.free()
+	var released_children := 0
+	for child in node.get_children():
+		if child == preserved_reward:
+			continue
+		child.free()
+		released_children += 1
+	if node is MeshInstance3D:
+		(node as MeshInstance3D).mesh = null
+	if node is MultiMeshInstance3D:
+		(node as MultiMeshInstance3D).multimesh = null
+	if node is CollisionShape3D:
+		(node as CollisionShape3D).shape = null
+	node.set_meta("retired_geometry_purged", true)
+	node.set_meta("released_child_count", released_children)
 
 
 static func _apply_station_finish_and_collision(world: MindSparkWorldOne) -> void:
