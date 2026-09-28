@@ -36,7 +36,7 @@ func _run() -> void:
 	root.add_child(chat)
 	await process_frame
 	var input := chat.user_input as LineEdit
-	var history := chat.get_node("VBoxContainer/ChatHistory") as TextEdit
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as TextEdit
 	assert(input != null and input.max_length == ReflectionEngine.MAX_MESSAGE_LENGTH,
 		"the live input enforces the engine's length boundary")
 	input.text = "Why am I always stressed?"

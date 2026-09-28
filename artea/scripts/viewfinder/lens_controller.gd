@@ -20,7 +20,7 @@ enum State { DOWN, RAISED, HOLDING }
 
 # Input is bound at runtime rather than requiring project.godot actions, so
 # dropping this node into a scene is all that is needed to play it.
-const KEY_TOGGLE := KEY_Q
+const KEY_TOGGLE := KEY_P
 const KEY_ACT := MOUSE_BUTTON_LEFT
 const KEY_CANCEL := KEY_ESCAPE
 const KEY_ROTATE := KEY_T
@@ -341,10 +341,10 @@ func _refresh() -> void:
 		return
 	match _state:
 		State.DOWN:
-			_hint.text = "Q — raise the Lens of Seeing"
+			_hint.text = "P — raise the Lens of Seeing"
 			_hint.visible = show_idle_hint
 		State.RAISED:
-			_hint.text = "Click — take what you see    Q — lower the lens"
+			_hint.text = "Click — take what you see    P — lower the lens"
 			_hint.visible = true
 		State.HOLDING:
 			_hint.text = "Click — place what you saw    T — turn it    Esc — put it back"
