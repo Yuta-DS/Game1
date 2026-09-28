@@ -236,6 +236,27 @@ func get_view_mode() -> String:
 	return _view
 
 
+## Recompose the third-person view after a long-distance teleport. Without an
+## explicit snap, the smoothing path crosses every district between the old and
+## new positions and can spend several seconds inside distant architecture.
+## The caller supplies the desired world-space orbit yaw so authored arrivals
+## can open toward their first landmark rather than inherit an unrelated view.
+func compose_arrival_view(yaw_degrees: float, pitch_degrees: float,
+		distance: float) -> void:
+	if _player == null:
+		_player = get_node_or_null(player_path)
+	if _player == null:
+		return
+	_mode = "follow"
+	_view = "third"
+	_yaw = deg_to_rad(yaw_degrees)
+	_pitch = clampf(deg_to_rad(pitch_degrees),
+		deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
+	follow_distance = clampf(distance, min_follow_distance, max_follow_distance)
+	_apply_character_visibility()
+	_snap_to_follow_target()
+
+
 # Called by the train when the player takes a seat or the driver cab. Riding
 # always begins in third person — the point of being on the train is seeing it —
 # and pulls the view out far enough to take in the carriage and the route.
