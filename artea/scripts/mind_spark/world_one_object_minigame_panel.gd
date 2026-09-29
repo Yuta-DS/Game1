@@ -101,10 +101,19 @@ var _finished := false
 var _last_result: Dictionary = {}
 var _left_held := false
 var _right_held := false
+var _joy_x_command := ""
+var _joy_y_command := ""
 var _board: ArcadeBoard
 var _status: Label
 var _progress: Label
 var _panel: PanelContainer
+var _panel_style: StyleBoxFlat
+var _body: VBoxContainer
+var _title: Label
+var _instruction: Label
+var _touch: GridContainer
+var _touch_buttons: Dictionary = {}
+var _close: Button
 var _player_physics := false
 var _mouse_mode := Input.MOUSE_MODE_CAPTURED
 var _rng := RandomNumberGenerator.new()
@@ -142,6 +151,10 @@ func _reset_round() -> void:
 	_ready_to_strike = false
 	_finished = false
 	_last_result = {}
+	_left_held = false
+	_right_held = false
+	_joy_x_command = ""
+	_joy_y_command = ""
 	if _mode == "route":
 		var route: Array = _spec.get("route", [])
 		if not route.is_empty() and _grid == route[0]:
@@ -160,91 +173,151 @@ func _build_ui() -> void:
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
 	_panel = PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("e9dfc6")
-	style.border_color = _accent
-	style.set_border_width_all(4)
-	style.set_corner_radius_all(14)
-	style.set_content_margin_all(20)
-	_panel.add_theme_stylebox_override("panel", style)
+	_panel_style = StyleBoxFlat.new()
+	_panel_style.bg_color = Color("e9dfc6")
+	_panel_style.border_color = _accent
+	_panel_style.set_border_width_all(4)
+	_panel_style.set_corner_radius_all(14)
+	_panel_style.set_content_margin_all(20)
+	_panel.add_theme_stylebox_override("panel", _panel_style)
 	add_child(_panel)
-	var body := VBoxContainer.new()
-	body.add_theme_constant_override("separation", 9)
-	_panel.add_child(body)
-	var title := Label.new()
-	title.text = str(_spec.title)
-	title.add_theme_font_size_override("font_size", 27)
-	title.add_theme_color_override("font_color", Color("183c42"))
-	body.add_child(title)
-	var instruction := Label.new()
-	instruction.text = str(_spec.instruction)
-	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	instruction.add_theme_font_size_override("font_size", 17)
-	instruction.add_theme_color_override("font_color", Color("315b5c"))
-	body.add_child(instruction)
+	_body = VBoxContainer.new()
+	_body.add_theme_constant_override("separation", 9)
+	_panel.add_child(_body)
+	_title = Label.new()
+	_title.text = str(_spec.title)
+	_title.add_theme_font_size_override("font_size", 27)
+	_title.add_theme_color_override("font_color", Color("183c42"))
+	_body.add_child(_title)
+	_instruction = Label.new()
+	_instruction.text = str(_spec.instruction)
+	_instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_instruction.add_theme_font_size_override("font_size", 17)
+	_instruction.add_theme_color_override("font_color", Color("315b5c"))
+	_body.add_child(_instruction)
 	_board = ArcadeBoard.new()
 	_board.host = self
 	_board.custom_minimum_size = Vector2(590, 330)
 	_board.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	body.add_child(_board)
+	_body.add_child(_board)
 	_progress = Label.new()
 	_progress.add_theme_font_size_override("font_size", 18)
 	_progress.add_theme_color_override("font_color", Color("183c42"))
-	body.add_child(_progress)
+	_body.add_child(_progress)
 	_status = Label.new()
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.add_theme_font_size_override("font_size", 16)
 	_status.add_theme_color_override("font_color", Color("704e35"))
-	body.add_child(_status)
-	var touch := HBoxContainer.new()
-	touch.alignment = BoxContainer.ALIGNMENT_CENTER
-	body.add_child(touch)
-	_add_touch_button(touch, "◀", "left")
-	_add_touch_button(touch, "▲", "up")
-	_add_touch_button(touch, "ACTION" if _mode in ["align", "dodge"] else "RESET", "action")
-	_add_touch_button(touch, "▼", "down")
-	_add_touch_button(touch, "▶", "right")
-	var close := Button.new()
-	close.text = "Return to World One · Esc"
-	close.custom_minimum_size.y = 42
-	close.pressed.connect(queue_free)
-	body.add_child(close)
+	_body.add_child(_status)
+	_touch = GridContainer.new()
+	_touch.columns = 5
+	_touch.add_theme_constant_override("h_separation", 8)
+	_touch.add_theme_constant_override("v_separation", 6)
+	_body.add_child(_touch)
+	_add_touch_button("left", "◀")
+	_add_touch_button("up", "▲")
+	_add_touch_button("action", "ACTION" if _mode in ["align", "dodge"] else "RESET")
+	_add_touch_button("down", "▼")
+	_add_touch_button("right", "▶")
+	_close = Button.new()
+	_close.text = "Return to World One · Esc / B"
+	_close.custom_minimum_size.y = 52
+	_close.focus_mode = Control.FOCUS_ALL
+	_close.pressed.connect(queue_free)
+	_body.add_child(_close)
 	get_viewport().size_changed.connect(_layout)
 	_layout()
 	_update_labels({
-		"align": "Move with Left/Right or A/D. Press Space inside each ring.",
-		"route": "Move through the grid with arrow keys or WASD. Space resets the route.",
-		"rhythm": "Repeat the glowing arrow sequence. Space resets the rhythm.",
-		"catch": "Move the receiver with Left/Right or A/D. Catch light; avoid static.",
-		"dodge": "Move with Left/Right or A/D. Press Space when the shield opens.",
+		"align": "Move with Left/Right, A/D, D-pad or left stick. Press Space/A inside each ring.",
+		"route": "Move with arrows, WASD, D-pad or left stick. Space/A resets the route.",
+		"rhythm": "Repeat the arrows with WASD, D-pad or left stick. Space/A resets.",
+		"catch": "Move with Left/Right, A/D, D-pad or left stick. Catch light; avoid static.",
+		"dodge": "Move with Left/Right, A/D, D-pad or left stick. Press Space/A when open.",
 	}.get(_mode, "Use arrow keys or WASD."))
 
 
-func _add_touch_button(row: HBoxContainer, caption: String, command: String) -> void:
+func _add_touch_button(command: String, caption: String) -> void:
 	var button := Button.new()
 	button.text = caption
 	button.set_meta("minigame_command", command)
-	button.custom_minimum_size = Vector2(82, 44)
+	button.tooltip_text = "%s control" % command.capitalize()
+	button.custom_minimum_size = Vector2(82, 52)
+	button.focus_mode = Control.FOCUS_ALL
+	button.add_theme_font_size_override("font_size", 18)
 	if command in ["left", "right"] and _mode in ["align", "catch", "dodge"]:
 		button.button_down.connect(func(): _set_direction_held(command, true))
 		button.button_up.connect(func(): _set_direction_held(command, false))
 	else:
 		button.pressed.connect(func(): _command(command))
-	row.add_child(button)
+	_touch.add_child(button)
+	_touch_buttons[command] = button
 
 
 func _layout() -> void:
-	var viewport := Vector2(get_window().size)
+	var viewport := get_viewport().get_visible_rect().size
+	if viewport.x <= 0.0 or viewport.y <= 0.0:
+		viewport = Vector2(get_window().size)
+	_layout_for_viewport(viewport)
+
+
+func _layout_for_viewport(viewport: Vector2) -> void:
 	var stretch := get_viewport().get_stretch_transform().get_scale()
 	if stretch.x > 0 and stretch.y > 0:
 		scale = Vector2.ONE / stretch
-	var width := minf(650, viewport.x - 24)
-	var height := minf(610, viewport.y - 24)
+	var width := minf(680.0, maxf(280.0, viewport.x - 24.0))
+	var height := minf(650.0, maxf(300.0, viewport.y - 24.0))
+	var narrow := width < 520.0
+	var short := height < 520.0
+	var margin := 10.0 if short else (14.0 if narrow else 20.0)
+	_panel_style.set_content_margin_all(margin)
+	_body.add_theme_constant_override("separation", 5 if short else 9)
+	_title.add_theme_font_size_override("font_size", 21 if short else (24 if narrow else 27))
+	_instruction.add_theme_font_size_override("font_size", 13 if short else (15 if narrow else 17))
+	_progress.add_theme_font_size_override("font_size", 15 if short else 18)
+	_status.add_theme_font_size_override("font_size", 13 if short else 16)
+	_configure_touch_layout(narrow, short)
+	var columns := 3 if narrow else (6 if short else 5)
+	var button_width := floorf((width - margin * 2.0 - float(columns - 1) * 8.0) / float(columns))
+	button_width = clampf(button_width, 56.0 if short else 64.0, 104.0)
+	for button in _touch_buttons.values():
+		(button as Button).custom_minimum_size = Vector2(button_width, 48.0 if short else 52.0)
+	_close.custom_minimum_size = Vector2(button_width if narrow or short else 0.0,
+		48.0 if short else 52.0)
 	if _board != null:
-		_board.custom_minimum_size = Vector2(width - 40, maxf(190, height - 270))
+		var board_height := height - (260.0 if short else (384.0 if narrow else 280.0))
+		_board.custom_minimum_size = Vector2(width - margin * 2.0,
+			clampf(board_height, 105.0 if short else 150.0, 350.0))
 	_panel.position = (viewport - Vector2(width, height)) * .5
 	_panel.size = Vector2(width, height)
 	_panel.set_deferred("size", Vector2(width, height))
+
+
+func _configure_touch_layout(narrow: bool, short: bool) -> void:
+	if _touch == null:
+		return
+	_touch.columns = 3 if narrow else (6 if short else 5)
+	var order: Array[Control]
+	if narrow:
+		if _close.get_parent() != _touch:
+			_close.reparent(_touch)
+		_close.text = "BACK · B"
+		order = [_touch_buttons.up, _touch_buttons.action, _touch_buttons.down,
+			_touch_buttons.left, _close, _touch_buttons.right]
+	elif short:
+		if _close.get_parent() != _touch:
+			_close.reparent(_touch)
+		_close.text = "BACK · B"
+		order = [_touch_buttons.left, _touch_buttons.up, _touch_buttons.action,
+			_touch_buttons.down, _touch_buttons.right, _close]
+	else:
+		if _close.get_parent() != _body:
+			_close.reparent(_body)
+		_body.move_child(_close, _touch.get_index() + 1)
+		_close.text = "Return to World One · Esc / B"
+		order = [_touch_buttons.left, _touch_buttons.up, _touch_buttons.action,
+			_touch_buttons.down, _touch_buttons.right]
+	for index in order.size():
+		_touch.move_child(order[index], index)
 
 
 func _process(delta: float) -> void:
@@ -296,11 +369,13 @@ func _update_falling(delta: float) -> void:
 			elif touched and bool(item.bad):
 				_mistakes += 1
 				_score = maxi(0, _score - 1)
+				_rumble_feedback(.45, .75, .12)
 				_update_labels("Static touched the receiver. Re-centre and continue.")
 		else:
 			if touched:
 				_mistakes += 1
 				_score = maxi(0, _score - 1)
+				_rumble_feedback(.45, .75, .12)
 				_update_labels("The storm line clipped you. Read the next lane.")
 			else:
 				_score += 1
@@ -313,14 +388,80 @@ func _update_falling(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and not event.echo:
 		var command := _key_command(event.keycode)
-		if command == "close" and event.pressed:
-			queue_free()
-		elif command in ["left", "right"]:
-			_set_direction_held(command, event.pressed)
-			if event.pressed and _mode in ["route", "rhythm"]: _command(command)
-		elif event.pressed and not command.is_empty():
+		_handle_digital_command(command, event.pressed)
+		if not command.is_empty():
+			get_viewport().set_input_as_handled()
+	elif event is InputEventJoypadButton:
+		var command := _joypad_button_command(event.button_index)
+		_handle_digital_command(command, event.pressed)
+		if not command.is_empty():
+			get_viewport().set_input_as_handled()
+	elif event is InputEventJoypadMotion:
+		if _handle_joypad_motion(event):
+			get_viewport().set_input_as_handled()
+
+
+func _handle_digital_command(command: String, pressed: bool) -> void:
+	if command == "close" and pressed:
+		queue_free()
+	elif command in ["left", "right"]:
+		_set_direction_held(command, pressed)
+		if pressed and _mode in ["route", "rhythm"]:
 			_command(command)
-		get_viewport().set_input_as_handled()
+	elif pressed and not command.is_empty():
+		_command(command)
+
+
+func _joypad_button_command(button_index: JoyButton) -> String:
+	match button_index:
+		JOY_BUTTON_DPAD_LEFT: return "left"
+		JOY_BUTTON_DPAD_RIGHT: return "right"
+		JOY_BUTTON_DPAD_UP: return "up"
+		JOY_BUTTON_DPAD_DOWN: return "down"
+		JOY_BUTTON_A: return "action"
+		JOY_BUTTON_B: return "close"
+	return ""
+
+
+func _handle_joypad_motion(event: InputEventJoypadMotion) -> bool:
+	const PRESS_THRESHOLD := 0.46
+	const RELEASE_THRESHOLD := 0.24
+	if event.axis == JOY_AXIS_LEFT_X:
+		var next := _axis_command(event.axis_value, "left", "right",
+			_joy_x_command, PRESS_THRESHOLD, RELEASE_THRESHOLD)
+		if next == _joy_x_command:
+			return not next.is_empty()
+		_set_direction_held("left", next == "left")
+		_set_direction_held("right", next == "right")
+		_joy_x_command = next
+		if not next.is_empty() and _mode in ["route", "rhythm"]:
+			_command(next)
+		return true
+	if event.axis == JOY_AXIS_LEFT_Y:
+		var next := _axis_command(event.axis_value, "up", "down",
+			_joy_y_command, PRESS_THRESHOLD, RELEASE_THRESHOLD)
+		if next == _joy_y_command:
+			return not next.is_empty()
+		_joy_y_command = next
+		if not next.is_empty() and _mode in ["route", "rhythm"]:
+			_command(next)
+		return true
+	return false
+
+
+func _axis_command(value: float, negative: String, positive: String,
+		current: String, press_threshold: float, release_threshold: float) -> String:
+	if current.is_empty():
+		if value <= -press_threshold: return negative
+		if value >= press_threshold: return positive
+		return ""
+	if absf(value) <= release_threshold:
+		return ""
+	if value <= -press_threshold:
+		return negative
+	if value >= press_threshold:
+		return positive
+	return current
 
 
 func _set_direction_held(command: String, held: bool) -> void:
@@ -371,6 +512,7 @@ func _lock_alignment() -> void:
 		if _score >= int(_spec.goal): _win()
 	else:
 		_mistakes += 1
+		_rumble_feedback(.35, .65, .1)
 		_update_labels("The pulse missed the ring. Adjust and try again.")
 
 
@@ -383,6 +525,7 @@ func _move_route(command: String) -> void:
 	var hazards: Array = _spec.get("hazards", [])
 	if _grid in hazards:
 		_mistakes += 1
+		_rumble_feedback(.4, .7, .12)
 		_grid = Vector2i(1, 2)
 		_score = 0
 		_update_labels("Storm cell. The route gently resets.")
@@ -404,6 +547,7 @@ func _play_rhythm(command: String) -> void:
 		if _score >= int(_spec.goal): _win()
 	else:
 		_mistakes += 1
+		_rumble_feedback(.35, .65, .1)
 		_score = 0
 		_update_labels("That tone broke the pattern. Listen from the beginning.")
 
@@ -414,9 +558,15 @@ func _win() -> void:
 	_finished = true
 	_left_held = false
 	_right_held = false
+	_rumble_feedback(.25, .8, .18)
 	_last_result = _apply_station_reward()
 	_update_labels("Challenge complete • " + str(_last_result.get("reason", "practice_complete")).replace("_", " ").capitalize() + "\nPress Space to replay, or Esc to return.")
 	if _board != null: _board.queue_redraw()
+
+
+func _rumble_feedback(weak: float, strong: float, duration: float) -> void:
+	for device in Input.get_connected_joypads():
+		Input.start_joy_vibration(device, weak, strong, duration)
 
 
 func _apply_station_reward() -> Dictionary:

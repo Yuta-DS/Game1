@@ -46,6 +46,9 @@ func _run() -> void:
 		"10 objects complete; two checkpoints, two utility tools and the incremental spark socket retain live state")
 	assert(int(report.get("modes", 0)) == 5 and int(report.get("touch_modes", 0)) == 5,
 		"every distinct game mode is driven through keyboard and touch paths")
+	assert(int(report.get("controller_modes", 0)) == 5
+		and bool(report.get("controller_close", false)),
+		"every distinct game mode supports D-pad/stick/A input and B maps to close")
 	var checkpoint: QuestObjectBase
 	for object in world.get_quest_objects():
 		if object.save_id == "world_one.checkpoint.landing":
@@ -59,5 +62,5 @@ func _run() -> void:
 		"normal production sessions keep the diagnostic dormant")
 	world.queue_free()
 	store.clear()
-	print("WORLD_ONE_WEB_QUALITY_PROBE_TEST: PASS — 15 rewards, fresh/partial/full saves, five keyboard and touch modes, and live-state restoration")
+	print("WORLD_ONE_WEB_QUALITY_PROBE_TEST: PASS — 15 rewards, saves, five keyboard/touch/controller modes, and live-state restoration")
 	quit()

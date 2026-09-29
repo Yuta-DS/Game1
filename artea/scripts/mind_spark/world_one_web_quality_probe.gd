@@ -56,6 +56,8 @@ func _begin() -> void:
 		"durable_completed": 0,
 		"modes": 0,
 		"touch_modes": 0,
+		"controller_modes": 0,
+		"controller_close": false,
 		"state_restored": false,
 		"identity_restored": false,
 		"errors": [],
@@ -67,6 +69,8 @@ func _begin() -> void:
 	_world.add_child(actor)
 	var modes := {}
 	var touch_modes := {}
+	var controller_modes := {}
+	var controller_close_mapped := false
 	var accepted_ids: Array[String] = []
 	for index in ordered_objects.size():
 		var object := ordered_objects[index] as QuestObjectBase
@@ -84,6 +88,14 @@ func _begin() -> void:
 				touch_modes[mode] = true
 			else:
 				(report.errors as Array).append("%s touch controls failed" % mode)
+		if not controller_modes.has(mode):
+			if _exercise_controller_controls(panel):
+				controller_modes[mode] = true
+			else:
+				(report.errors as Array).append("%s controller controls failed" % mode)
+		controller_close_mapped = controller_close_mapped or \
+			str(panel.call("_joypad_button_command", JOY_BUTTON_B)) == "close"
+		panel.call("_reset_round")
 		var completion := await _complete_through_player_input(panel)
 		var result: Dictionary = completion.get("result", {})
 		if bool(completion.get("finished", false)) and bool(result.get("accepted", false)):
@@ -98,6 +110,8 @@ func _begin() -> void:
 	report.durable_completed = _count_completed(ordered_objects)
 	report.modes = modes.size()
 	report.touch_modes = touch_modes.size()
+	report.controller_modes = controller_modes.size()
+	report.controller_close = controller_close_mapped
 	for object in ordered_objects:
 		var loaded := store.load_object(object.save_id)
 		if not _states_equal(loaded, object.current_state):
@@ -117,6 +131,7 @@ func _begin() -> void:
 		and int(report.saved_objects) == EXPECTED_IDS.size() \
 		and int(report.durable_completed) == 10 \
 		and int(report.modes) == 5 and int(report.touch_modes) == 5 \
+		and int(report.controller_modes) == 5 and bool(report.controller_close) \
 		and bool(report.state_restored) and bool(report.identity_restored)
 	_world.set_meta("web_quality_results", report.duplicate(true))
 	_world.set_meta("web_quality_probe_completed", true)
@@ -403,3 +418,64 @@ func _exercise_touch_controls(panel: CanvasLayer) -> bool:
 			(buttons.action as Button).pressed.emit()
 			return int(panel.get("_score")) <= 1
 	return false
+
+
+func _exercise_controller_controls(panel: CanvasLayer) -> bool:
+	match panel.call("challenge_mode"):
+		"align":
+			var before := float((panel.get("_cursor") as Vector2).x)
+			_send_joy_axis(panel, JOY_AXIS_LEFT_X, -1.0)
+			panel.call("_process", .12)
+			_send_joy_axis(panel, JOY_AXIS_LEFT_X, 0.0)
+			var moved := float((panel.get("_cursor") as Vector2).x) < before
+			var targets: Array = panel.get("_spec").get("targets", [])
+			if targets.is_empty():
+				return false
+			panel.set("_cursor", Vector2(float(targets[0]), .5))
+			_send_joy_button(panel, "action")
+			return moved and int(panel.get("_score")) == 1
+		"catch", "dodge":
+			var before := float((panel.get("_cursor") as Vector2).x)
+			_send_joy_axis(panel, JOY_AXIS_LEFT_X, -1.0)
+			panel.call("_process", .12)
+			_send_joy_axis(panel, JOY_AXIS_LEFT_X, 0.0)
+			return float((panel.get("_cursor") as Vector2).x) < before
+		"route":
+			var route: Array = panel.get("_spec").get("route", [])
+			var hazards: Array = panel.get("_spec").get("hazards", [])
+			if route.is_empty() or int(panel.get("_score")) >= route.size():
+				return false
+			var path := _grid_path(panel.get("_grid"), route[int(panel.get("_score"))], hazards)
+			if path.is_empty():
+				return false
+			var before: Vector2i = panel.get("_grid")
+			_send_joy_button(panel, path[0])
+			return (panel.get("_grid") as Vector2i) != before
+		"rhythm":
+			var sequence: Array = panel.get("_spec").get("sequence", [])
+			if sequence.is_empty():
+				return false
+			_send_joy_button(panel, str(sequence[0]))
+			return int(panel.get("_score")) == 1
+	return false
+
+
+func _send_joy_button(panel: CanvasLayer, command: String) -> void:
+	var buttons := {
+		"left": JOY_BUTTON_DPAD_LEFT, "right": JOY_BUTTON_DPAD_RIGHT,
+		"up": JOY_BUTTON_DPAD_UP, "down": JOY_BUTTON_DPAD_DOWN,
+		"action": JOY_BUTTON_A,
+	}
+	var event := InputEventJoypadButton.new()
+	event.button_index = buttons[command]
+	event.pressed = true
+	panel.call("_unhandled_input", event)
+	event.pressed = false
+	panel.call("_unhandled_input", event)
+
+
+func _send_joy_axis(panel: CanvasLayer, axis: JoyAxis, value: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.axis = axis
+	event.axis_value = value
+	panel.call("_unhandled_input", event)

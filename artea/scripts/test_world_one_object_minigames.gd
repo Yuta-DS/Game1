@@ -61,6 +61,16 @@ func _run() -> void:
 	world.add_child(panel)
 	panel.open_object(projector, actor)
 	assert(panel.challenge_mode() == "route", "Q opens the object's active game mechanic")
+	await _assert_responsive_controls(panel)
+	var route: Array = panel.get("_spec").get("route", [])
+	var hazards: Array = panel.get("_spec").get("hazards", [])
+	var controller_path := _grid_path(panel.get("_grid"), route[int(panel.get("_score"))], hazards)
+	assert(not controller_path.is_empty(), "controller has a safe route command")
+	var controller_start: Vector2i = panel.get("_grid")
+	_send_joy_button(panel, controller_path[0])
+	assert((panel.get("_grid") as Vector2i) != controller_start,
+		"D-pad commands drive the same route movement as keyboard input")
+	panel.call("_reset_round")
 	var reward: Dictionary = await _complete_through_player_input(panel)
 	assert(bool(reward.accepted) and bool(projector.current_state.guide_enabled),
 		"winning a minigame applies the existing quest-object reward")
@@ -74,6 +84,20 @@ func _run() -> void:
 		world.add_child(reward_panel)
 		reward_panel.open_object(object, actor)
 		var mode := reward_panel.challenge_mode()
+		if mode == "align":
+			var before_stick := float((reward_panel.get("_cursor") as Vector2).x)
+			_send_joy_axis(reward_panel, JOY_AXIS_LEFT_X, -1.0)
+			reward_panel.call("_process", .12)
+			_send_joy_axis(reward_panel, JOY_AXIS_LEFT_X, 0.0)
+			assert(float((reward_panel.get("_cursor") as Vector2).x) < before_stick,
+				"left stick continuously steers align, catch and dodge mechanics")
+			reward_panel.call("_reset_round")
+			var first_target := float((reward_panel.get("_spec").get("targets", []) as Array)[0])
+			reward_panel.set("_cursor", Vector2(first_target, .5))
+			_send_joy_button(reward_panel, "action")
+			assert(int(reward_panel.get("_score")) == 1,
+				"controller A confirms a timing action")
+			reward_panel.call("_reset_round")
 		if not touch_modes.has(mode):
 			_exercise_touch_controls(reward_panel)
 			touch_modes[mode] = true
@@ -86,6 +110,65 @@ func _run() -> void:
 	if FileAccess.file_exists("user://test_world_one_object_minigames.json"):
 		DirAccess.remove_absolute("user://test_world_one_object_minigames.json")
 	quit()
+
+
+func _assert_responsive_controls(panel: CanvasLayer) -> void:
+	panel.call("_layout_for_viewport", Vector2(320, 568))
+	await process_frame
+	var touch := panel.get("_touch") as GridContainer
+	var touch_buttons: Dictionary = panel.get("_touch_buttons")
+	assert(touch.columns == 3, "narrow phones use a three-column directional grid")
+	assert(touch.get_child(0) == touch_buttons.up
+		and touch.get_child(1) == touch_buttons.action
+		and touch.get_child(2) == touch_buttons.down
+		and touch.get_child(3) == touch_buttons.left
+		and touch.get_child(5) == touch_buttons.right
+		and str((touch.get_child(4) as Button).text).contains("BACK"),
+		"narrow touch controls group vertical, horizontal, action and back commands")
+	for button in touch_buttons.values():
+		assert((button as Button).custom_minimum_size.x >= 64.0
+			and (button as Button).custom_minimum_size.y >= 48.0,
+			"touch targets stay comfortably above the 44 px floor")
+		assert((button as Button).focus_mode == Control.FOCUS_ALL,
+			"touch actions remain keyboard/controller focusable")
+	var panel_control := panel.get("_panel") as PanelContainer
+	assert(panel_control.position.x >= 0.0 and panel_control.position.y >= 0.0
+		and panel_control.position.x + panel_control.size.x <= 320.0
+		and panel_control.position.y + panel_control.size.y <= 568.0,
+		"320×568 phone layout stays inside the visible viewport; pos=%s size=%s min=%s" \
+			% [panel_control.position, panel_control.size, panel_control.get_combined_minimum_size()])
+	panel.call("_layout_for_viewport", Vector2(844, 390))
+	await process_frame
+	assert(touch.columns == 6, "landscape phones keep all controls in one compact row")
+	assert((panel.get("_board") as Control).custom_minimum_size.y >= 105.0,
+		"short landscape layout keeps the game board playable")
+	assert(panel_control.position.x >= 0.0 and panel_control.position.y >= 0.0
+		and panel_control.position.x + panel_control.size.x <= 844.0
+		and panel_control.position.y + panel_control.size.y <= 390.0,
+		"844×390 landscape layout stays inside the visible viewport; pos=%s size=%s min=%s" \
+			% [panel_control.position, panel_control.size, panel_control.get_combined_minimum_size()])
+	panel.call("_layout")
+
+
+func _send_joy_button(panel: CanvasLayer, command: String) -> void:
+	var buttons := {
+		"left": JOY_BUTTON_DPAD_LEFT, "right": JOY_BUTTON_DPAD_RIGHT,
+		"up": JOY_BUTTON_DPAD_UP, "down": JOY_BUTTON_DPAD_DOWN,
+		"action": JOY_BUTTON_A,
+	}
+	var event := InputEventJoypadButton.new()
+	event.button_index = buttons[command]
+	event.pressed = true
+	panel.call("_unhandled_input", event)
+	event.pressed = false
+	panel.call("_unhandled_input", event)
+
+
+func _send_joy_axis(panel: CanvasLayer, axis: JoyAxis, value: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.axis = axis
+	event.axis_value = value
+	panel.call("_unhandled_input", event)
 
 
 func _complete_through_player_input(panel: CanvasLayer) -> Dictionary:
