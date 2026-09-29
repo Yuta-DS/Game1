@@ -9520,6 +9520,17 @@ func _uses_web_render_budget() -> bool:
 	return OS.has_feature("web") or OS.get_environment("ARTEA_FORCE_WEB_LOD") == "1"
 
 
+func _web_3d_scale_for_size(viewport_size: Vector2i) -> float:
+	# Match the actual render buffer to the documented 1.0 MP budget. A typical
+	# 2560x1440 browser canvas represents a roughly 1280x720 CSS viewport, so the
+	# 0.52 floor still supplies about one rendered 3D pixel per displayed pixel.
+	# Smaller canvases remain native resolution.
+	var pixels := float(viewport_size.x * viewport_size.y)
+	if pixels <= 1000000.0:
+		return 1.0
+	return clampf(sqrt(1000000.0 / pixels), 0.52, 1.0)
+
+
 func _configure_web_internal_resolution() -> void:
 	var viewport := get_viewport()
 	if viewport == null:
@@ -9527,10 +9538,7 @@ func _configure_web_internal_resolution() -> void:
 	# A retina browser canvas can contain four times as many pixels as the CSS
 	# display. Cap only the 3D render buffer near 1.0 MP; HUD text and controls
 	# stay at the browser's full native resolution.
-	var pixels := float(viewport.size.x * viewport.size.y)
-	var render_scale := 1.0
-	if pixels > 1000000.0:
-		render_scale = clampf(sqrt(1000000.0 / pixels), 0.62, 1.0)
+	var render_scale := _web_3d_scale_for_size(viewport.size)
 	viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
 	viewport.scaling_3d_scale = render_scale
 	# The project-wide desktop preset uses 8x MSAA. High-DPI WebGL already renders
