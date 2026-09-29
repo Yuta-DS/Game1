@@ -5,6 +5,7 @@ signal attack_started
 signal block_changed(active: bool)
 
 @export var speed: float = 10.0
+@export var run_speed_multiplier := 1.55
 @export var input_enabled: bool = true
 @export var ground_acceleration := 70.0
 @export var ground_deceleration := 85.0
@@ -21,6 +22,9 @@ signal block_changed(active: bool)
 @export var attack_active_time := 0.18
 @export var block_speed_multiplier := 0.38
 @export var blocking_available := true
+## Enables the production touch HUD on devices that report touch support. Tests
+## can force it without changing desktop presentation.
+@export var force_touch_controls := false
 
 ## The camera the player moves relative to. When unset, the player falls back to
 ## the viewport's active camera, so the gallery, the hub and any other scene all
@@ -45,6 +49,12 @@ var _attack_collision: CollisionShape3D
 var _attack_arc: MeshInstance3D
 var _shield_visual: Node3D
 var _combat_status: Label3D
+var _combat_help_panel: ColorRect
+var _combat_help_label: Label
+var _input_hint_mode := "keyboard"
+var _touch_hud: Control
+var _touch_buttons: Dictionary = {}
+var _touch_actions_held: Dictionary = {}
 var _hit_targets: Dictionary = {}
 var _coyote_remaining := 0.0
 var _jump_buffer_remaining := 0.0
@@ -78,7 +88,25 @@ func _ready() -> void:
 		_visual_base_scale = fox_visuals.scale
 	_build_combat_rig()
 	_build_combat_help()
+	_build_touch_controls()
 	_update_character_animation(0.0, false)
+
+
+func _exit_tree() -> void:
+	_release_all_touch_actions()
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton and event.pressed:
+		_set_input_hint_mode("controller")
+	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.35:
+		_set_input_hint_mode("controller")
+	elif event is InputEventScreenTouch or event is InputEventScreenDrag:
+		_set_input_hint_mode("touch")
+	elif event is InputEventKey and event.pressed:
+		_set_input_hint_mode("keyboard")
+	elif event is InputEventMouseButton and event.pressed:
+		_set_input_hint_mode("keyboard")
 
 
 func set_input_enabled(v: bool) -> void:
@@ -172,7 +200,7 @@ func _physics_process(delta: float) -> void:
 	var move_dir := get_camera_relative_move_direction(input_dir)
 
 	# Apply velocity based on input and speed
-	var movement_multiplier := block_speed_multiplier if is_blocking else 1.0
+	var movement_multiplier := get_input_speed_multiplier()
 	if is_attacking:
 		movement_multiplier *= 0.28
 	var target_velocity := Vector2(move_dir.x, move_dir.z) * speed * movement_multiplier
@@ -208,6 +236,12 @@ func _physics_process(delta: float) -> void:
 		_land_reaction_remaining = 0.16
 	_update_character_animation(delta, current_movement_length > RUNNING_SPEED_THRESHOLD)
 	_was_grounded = is_on_floor()
+
+
+func get_input_speed_multiplier() -> float:
+	if is_blocking:
+		return block_speed_multiplier
+	return run_speed_multiplier if Input.is_action_pressed("run") else 1.0
 
 
 func _update_combat(delta: float) -> void:
@@ -489,20 +523,173 @@ func _build_combat_help() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "CombatHelpHUD"
 	add_child(layer)
-	var panel := ColorRect.new()
-	panel.name = "CombatHelpPanel"
-	panel.color = Color(0.04, 0.04, 0.12, 0.72)
-	panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	panel.position = Vector2(22.0, -74.0)
-	panel.size = Vector2(405.0, 50.0)
-	layer.add_child(panel)
-	var label := Label.new()
-	label.name = "CombatHelpLabel"
-	label.text = "SPACE  JUMP     F  ATTACK     HOLD G  SHIELD"
-	label.position = Vector2(14.0, 13.0)
-	label.add_theme_font_size_override("font_size", 17)
-	label.modulate = Color("f3ecff")
-	panel.add_child(label)
+	_combat_help_panel = ColorRect.new()
+	_combat_help_panel.name = "CombatHelpPanel"
+	_combat_help_panel.color = Color(0.04, 0.04, 0.12, 0.72)
+	_combat_help_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_combat_help_panel.position = Vector2(22.0, -74.0)
+	_combat_help_panel.size = Vector2(510.0, 50.0)
+	layer.add_child(_combat_help_panel)
+	_combat_help_label = Label.new()
+	_combat_help_label.name = "CombatHelpLabel"
+	_combat_help_label.position = Vector2(14.0, 13.0)
+	_combat_help_label.add_theme_font_size_override("font_size", 17)
+	_combat_help_label.modulate = Color("f3ecff")
+	_combat_help_panel.add_child(_combat_help_label)
+	_set_input_hint_mode("touch" if _touch_controls_requested() else "keyboard")
+	get_viewport().size_changed.connect(func():
+		if _combat_help_panel != null:
+			_layout_combat_help(get_viewport().get_visible_rect().size))
+
+
+func _set_input_hint_mode(mode: String) -> void:
+	if mode not in ["keyboard", "controller", "touch"]:
+		return
+	_input_hint_mode = mode
+	if _combat_help_label == null or _combat_help_panel == null:
+		return
+	_layout_combat_help(get_viewport().get_visible_rect().size)
+
+
+func _layout_combat_help(viewport_size: Vector2) -> void:
+	if _combat_help_label == null or _combat_help_panel == null:
+		return
+	var compact := viewport_size.x < 700.0
+	match _input_hint_mode:
+		"controller":
+			_combat_help_label.text = "LS MOVE  A JUMP  X HIT  LB SHIELD" if compact \
+				else "LEFT STICK  MOVE   A  JUMP   X  ATTACK   HOLD LB  SHIELD   LS  RUN"
+		"touch":
+			_combat_help_label.text = "MOVE  JUMP  HIT  SHIELD  TALK" if compact \
+				else "TOUCH  MOVE   JUMP   ATTACK   SHIELD   TALK"
+		_:
+			_combat_help_label.text = "WASD MOVE  SPACE JUMP  F HIT  G SHIELD" if compact \
+				else "WASD  MOVE   SPACE  JUMP   F  ATTACK   HOLD G  SHIELD   SHIFT  RUN"
+	_combat_help_panel.position = Vector2(12.0 if compact else 22.0,
+		-146.0 if _input_hint_mode == "touch" else -62.0)
+	_combat_help_panel.size = Vector2(
+		maxf(220.0, viewport_size.x - 24.0) if compact else 610.0,
+		38.0 if compact else 50.0)
+	_combat_help_label.position = Vector2(9.0 if compact else 14.0,
+		8.0 if compact else 13.0)
+	_combat_help_label.add_theme_font_size_override("font_size", 13 if compact else 17)
+
+
+func get_input_hint_mode() -> String:
+	return _input_hint_mode
+
+
+func _touch_controls_requested() -> bool:
+	return force_touch_controls or DisplayServer.is_touchscreen_available()
+
+
+func _build_touch_controls() -> void:
+	if not _touch_controls_requested():
+		return
+	var layer := CanvasLayer.new()
+	layer.name = "TouchControlHUD"
+	layer.layer = 35
+	add_child(layer)
+	_touch_hud = Control.new()
+	_touch_hud.name = "TouchControls"
+	_touch_hud.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_touch_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(_touch_hud)
+
+	_add_touch_button("Up", "▲", "move_forward")
+	_add_touch_button("Left", "◀", "move_left")
+	_add_touch_button("Down", "▼", "move_backward")
+	_add_touch_button("Right", "▶", "move_right")
+	_add_touch_button("Jump", "JUMP", "jump")
+	_add_touch_button("Attack", "HIT", "attack")
+	_add_touch_button("Block", "HOLD\nSHIELD", "block")
+	_add_touch_button("Interact", "TALK", "interact")
+	_layout_touch_controls(get_viewport().get_visible_rect().size)
+	get_viewport().size_changed.connect(func():
+		if _touch_hud != null:
+			_layout_touch_controls(get_viewport().get_visible_rect().size))
+
+
+func _add_touch_button(node_name: String, caption: String, action: StringName) -> void:
+	var button := Button.new()
+	button.name = node_name
+	button.text = caption
+	button.custom_minimum_size = Vector2(52.0, 52.0)
+	button.focus_mode = Control.FOCUS_NONE
+	button.mouse_filter = Control.MOUSE_FILTER_STOP
+	button.add_theme_font_size_override("font_size", 15)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.035, 0.045, 0.11, 0.78)
+	normal.border_color = Color("55dce8")
+	normal.set_border_width_all(2)
+	normal.set_corner_radius_all(14)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.18, 0.55, 0.66, 0.92)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", normal)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.button_down.connect(func():
+		_press_touch_action(action)
+		if action == &"interact":
+			_press_touch_action(&"talk_to_milo"))
+	button.button_up.connect(func():
+		_release_touch_action(action)
+		if action == &"interact":
+			_release_touch_action(&"talk_to_milo"))
+	_touch_hud.add_child(button)
+	_touch_buttons[node_name] = button
+
+
+func _press_touch_action(action: StringName) -> void:
+	var count := int(_touch_actions_held.get(action, 0)) + 1
+	_touch_actions_held[action] = count
+	if count == 1:
+		Input.action_press(action)
+	_set_input_hint_mode("touch")
+
+
+func _release_touch_action(action: StringName) -> void:
+	var count := maxi(0, int(_touch_actions_held.get(action, 0)) - 1)
+	if count == 0:
+		_touch_actions_held.erase(action)
+		Input.action_release(action)
+	else:
+		_touch_actions_held[action] = count
+
+
+func _release_all_touch_actions() -> void:
+	for action: StringName in _touch_actions_held.keys():
+		Input.action_release(action)
+	_touch_actions_held.clear()
+
+
+func _layout_touch_controls(viewport_size: Vector2) -> void:
+	if _touch_hud == null:
+		return
+	var compact := viewport_size.x < 520.0
+	var button_size := Vector2(52.0, 52.0) if compact else Vector2(60.0, 60.0)
+	var gap := 4.0 if compact else 7.0
+	var margin := 10.0 if compact else 18.0
+	var bottom := viewport_size.y - margin - button_size.y
+	var row_above := bottom - button_size.y - gap
+	var left_x := margin
+	var action_x := viewport_size.x - margin - button_size.x * 2.0 - gap
+	_set_touch_button_rect("Up", Vector2(left_x + button_size.x + gap, row_above), button_size)
+	_set_touch_button_rect("Left", Vector2(left_x, bottom), button_size)
+	_set_touch_button_rect("Down", Vector2(left_x + button_size.x + gap, bottom), button_size)
+	_set_touch_button_rect("Right", Vector2(left_x + (button_size.x + gap) * 2.0, bottom), button_size)
+	_set_touch_button_rect("Jump", Vector2(action_x, row_above), button_size)
+	_set_touch_button_rect("Attack", Vector2(action_x + button_size.x + gap, row_above), button_size)
+	_set_touch_button_rect("Block", Vector2(action_x, bottom), button_size)
+	_set_touch_button_rect("Interact", Vector2(action_x + button_size.x + gap, bottom), button_size)
+
+
+func _set_touch_button_rect(node_name: String, position: Vector2, size: Vector2) -> void:
+	var button := _touch_buttons.get(node_name) as Button
+	if button == null:
+		return
+	button.position = position
+	button.size = size
 
 
 func _show_status(text: String, color: Color) -> void:
