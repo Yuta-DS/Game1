@@ -9279,7 +9279,9 @@ func _collect_static_render_leaves(node: Node, root: Node3D,
 
 func _static_render_branch_is_dynamic(node: Node, root: Node3D,
 		dynamic_ancestor: bool) -> bool:
-	return dynamic_ancestor or (node != root and (node.get_script() != null \
+	var scripted := node.get_script() != null \
+		and not bool(node.get_meta("allow_static_render_batching", false))
+	return dynamic_ancestor or (node != root and (scripted \
 		or node is MindSparkEnemyBase or node.has_meta("detail_orbit_speed")))
 
 

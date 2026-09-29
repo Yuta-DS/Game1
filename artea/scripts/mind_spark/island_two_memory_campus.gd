@@ -81,6 +81,11 @@ static func apply(world: MindSparkWorldOne) -> void:
 	garden.set_script(preload("res://scripts/mind_spark/unfinished_light_garden.gd"))
 	world.add_child(garden)
 	garden.call("build", world)
+	# The live projector below replaces and purges the garden script's only
+	# animated visual branch. Its remaining conservatory, court and planting are
+	# static architecture and may be spatially batched while this presenter node
+	# continues to synchronize story state.
+	garden.set_meta("allow_static_render_batching", true)
 	# The conservatory replaces this earlier combat court. Keeping its hidden
 	# masonry solid left invisible pillars and a reward plinth in the player route.
 	_retire_assembly(campus.get_node("EliteGuardianCourt"),

@@ -49,6 +49,14 @@ func _run() -> void:
 	assert(tagged_sources == merged_sources + repeated_sources \
 			and batched_sources == tagged_sources,
 		"every disabled source maps exactly once to a live spatial render batch")
+	var garden := world.get_node("GardenOfUnfinishedLight")
+	var garden_batched_sources := 0
+	for mesh_value in garden.find_children("*", "MeshInstance3D", true, false):
+		var mesh := mesh_value as MeshInstance3D
+		if mesh.layers == 0 and mesh.has_meta("render_merged_into"):
+			garden_batched_sources += 1
+	assert(garden_batched_sources > 300,
+		"the retired garden projector must not prevent its live static conservatory from batching")
 
 	for object in world.get_quest_objects():
 		var visible_meshes := 0
@@ -59,6 +67,7 @@ func _run() -> void:
 		assert(visible_meshes > 0,
 			"quest object %s must retain independently rendered feedback geometry" % object.save_id)
 
-	print("WORLD_ONE_RENDER_OPTIMIZATION: PASS — %d static sources -> %d spatial batches; %d meshes use distance ranges; all 15 quest visuals remain independent" % [
-		merged_sources + repeated_sources, merged_groups + repeated_groups, ranged_meshes])
+	print("WORLD_ONE_RENDER_OPTIMIZATION: PASS — %d static sources -> %d spatial batches, including %d conservatory sources; %d meshes use distance ranges; all 15 quest visuals remain independent" % [
+		merged_sources + repeated_sources, merged_groups + repeated_groups,
+		garden_batched_sources, ranged_meshes])
 	quit()
