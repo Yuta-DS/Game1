@@ -37,6 +37,7 @@ const NetworkAmbience := preload("res://assets/audio/Atmospheric-instrumental-mu
 const SanctuaryAmbience := preload("res://assets/audio/calm music.ogg")
 const IslandDetailAnimator := preload("res://scripts/mind_spark/mind_spark_island_detail_animator.gd")
 const IslandOnePuzzleScript := preload("res://scripts/mind_spark/mind_spark_island_one_puzzle.gd")
+const WebPerfProbeScript := preload("res://scripts/mind_spark/world_one_web_perf_probe.gd")
 const ENEMY_DEFINITIONS := {
 	"static_mite": preload("res://resources/mind_spark/enemies/static_mite.tres"),
 	"glitch_sprout": preload("res://resources/mind_spark/enemies/glitch_sprout.tres"),
@@ -240,6 +241,7 @@ func build_world() -> void:
 	_batch_repeated_static_render_geometry(self)
 	_merge_static_render_geometry(self)
 	_configure_world_one_visibility_ranges(self)
+	_install_web_perf_probe()
 	set_meta("world_identity", "living computer forest")
 	set_meta("lead_force", "technology_science")
 	set_meta("zone_count", 6)
@@ -255,6 +257,24 @@ func build_world() -> void:
 		foundation_mode = "authored_galaxy_land"
 	set_meta("foundation_mode", foundation_mode)
 	set_world_state("sleeping")
+
+
+func _install_web_perf_probe() -> void:
+	# Production diagnostics are opt-in and have no normal-player cost. The
+	# browser probe uses the same four review cameras as the native benchmark so
+	# WebGL results can be compared directly without automating the canvas.
+	var requested := OS.get_environment("ARTEA_WORLD_ONE_WEB_PERF") == "1"
+	if OS.has_feature("web"):
+		var query := str(JavaScriptBridge.eval("window.location.search", true))
+		requested = "world_one_perf=1" in query
+	if not requested or has_node("WorldOneWebPerfProbe"):
+		return
+	var probe := Node.new()
+	probe.name = "WorldOneWebPerfProbe"
+	probe.set_script(WebPerfProbeScript)
+	add_child(probe)
+	probe.call("configure", self)
+	set_meta("web_perf_probe_enabled", true)
 
 
 func _refine_island_one_surroundings() -> void:
