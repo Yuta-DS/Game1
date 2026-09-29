@@ -20,11 +20,19 @@ func _run() -> void:
 	var repeated_sources := int(world.get_meta("batched_static_render_sources", 0))
 	var ranged_meshes := int(world.get_meta("distance_culled_mesh_count", 0))
 	var storm_crown := world.get_warden().get_node("VisualRoot/BlightShell/StormCrown") as Node3D
+	var civic_sanctuary := world.get_node(
+		"WorldOneGeometry/IslandThreeCivicSanctuary") as Node3D
 	var animated_crown_sources := int(storm_crown.get_meta("merged_static_source_count", 0))
+	assert(is_equal_approx(float(civic_sanctuary.get_meta(
+		"static_render_merge_cell_size", 0.0)), 192.0),
+		"Island Three's compact civic architecture must use its wider local batch cells")
 	assert(merged_groups > 0 and merged_sources > merged_groups * 3,
 		"World One must consolidate meaningful groups of inert static render leaves")
 	assert(repeated_groups > 0 and repeated_sources > repeated_groups * 3,
 		"World One must instance repeated static meshes without deleting authored nodes")
+	assert(merged_sources + repeated_sources >= 5000 \
+			and merged_groups + repeated_groups <= 300,
+		"Island Three's wider civic cells must consolidate the finished world into no more than 300 spatial batches")
 	assert(ranged_meshes > 1000,
 		"World One must apply distance ranges broadly enough to cull distant trim")
 

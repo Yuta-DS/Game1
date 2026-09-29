@@ -32,6 +32,10 @@ func _run() -> void:
 		"World One meshes must stop submitting duplicate Web shadow passes")
 	assert(int(world.get_meta("web_island_two_foundation_lod_count", 0)) >= 8,
 		"Island Two's large imported foundations must use their generated Web LODs")
+	assert(int(world.get_meta("web_island_two_quest_detail_mesh_count", 0)) >= 80,
+		"Island Two's small production-bay controls must stream by player distance")
+	assert(int(world.get_meta("web_island_two_preserved_silhouette_mesh_count", 0)) >= 20,
+		"Island Two's long-range station silhouettes must remain outside detail streaming")
 	for path in [
 		"WorldOneGeometry/03ConstellationCourt/ModularFloatingFoundation/IslandArchitecture/Architecture_v11_03",
 		"WorldOneGeometry/04HopePathRidge/ModularFloatingFoundation/IslandArchitecture/Architecture_v17_04",
@@ -41,6 +45,19 @@ func _run() -> void:
 				and str(foundation_mesh.get_meta("web_lod_profile", "")) \
 				== "island_two_foundation_0.25",
 			"Island Two architecture must keep an explicit production Web LOD contract")
+	var memory := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.MEMORY_CONSTELLATION)
+	var memory_tile := memory.get_node("ProductionRecorderBay/recorder_bay/EventTile0") \
+		as MeshInstance3D
+	var memory_pavilion := memory.get_node("ProductionRecorderBay/recorder_bay/Pavilion") \
+		as MeshInstance3D
+	var memory_beacon := memory.get_node("ProductionStationMarker/MarkerStateBeacon") \
+		as MeshInstance3D
+	assert(is_equal_approx(memory_tile.visibility_range_end, 64.0)
+			and memory_tile.has_meta("web_quest_detail_range"),
+		"inactive memory controls must leave the Web render set outside their approach")
+	assert(memory_pavilion.visibility_range_end > 64.0 \
+			and memory_beacon.visibility_range_end > 64.0,
+		"the memory pavilion and state beacon must remain readable from the evidence court")
 	var render_scale := float(world.get_meta("web_3d_render_scale", 0.0))
 	assert(render_scale >= 0.62 and render_scale < 0.67,
 		"the 1444x1702 production canvas must render 3D near the 1.0 MP target")
@@ -81,7 +98,8 @@ func _run() -> void:
 		assert(object.visible and object.definition != null,
 			"the Web render budget must preserve all quest objects and their feedback")
 	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
-	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d mesh shadows, the world sun shadow pass, distant island detail removed, and %d Island Two foundation meshes use generated LODs; all 15 quest objects preserved" % [
+	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d mesh shadows, the world sun shadow pass, distant island detail removed, %d Island Two foundation meshes use generated LODs, and %d small quest controls stream by distance; all 15 quest objects preserved" % [
 		render_scale, int(world.get_meta("web_shadow_culled_mesh_count", 0)),
-		int(world.get_meta("web_island_two_foundation_lod_count", 0))])
+		int(world.get_meta("web_island_two_foundation_lod_count", 0)),
+		int(world.get_meta("web_island_two_quest_detail_mesh_count", 0))])
 	quit()

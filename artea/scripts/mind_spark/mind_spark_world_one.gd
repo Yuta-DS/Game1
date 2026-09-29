@@ -6097,6 +6097,11 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	# details. They share compact court cells and can be merged safely at a lower
 	# threshold without expanding the batching policy across Islands One or Two.
 	campus.set_meta("static_render_merge_min_group", 2)
+	# The complete civic sanctuary spans two adjoining districts but its static
+	# architecture is viewed as one composition. Wider local cells consolidate
+	# identical-material replacement surfaces without changing source geometry,
+	# collision, materials or stateful landmark branches.
+	campus.set_meta("static_render_merge_cell_size", 192.0)
 	campus.set_meta("story_sequence", PackedStringArray([
 		"enter the Stormworks portico",
 		"stabilise the lens tower, resonance forge and lightning archive",
@@ -9216,12 +9221,13 @@ func _collect_repeated_static_leaves(node: Node, root: Node3D,
 	if not _is_static_render_leaf(instance):
 		return
 	var local_origin := root.to_local(instance.global_position)
-	var cell := Vector2i(floori(local_origin.x / STATIC_RENDER_MERGE_CELL_SIZE),
-		floori(local_origin.z / STATIC_RENDER_MERGE_CELL_SIZE))
+	var cell_size := _static_render_cell_size(instance)
+	var cell := Vector2i(floori(local_origin.x / cell_size),
+		floori(local_origin.z / cell_size))
 	var material_id := 0 if instance.material_override == null \
 		else instance.material_override.get_instance_id()
-	var key := "%d,%d|mesh=%d|material=%d|shadow=%d|gi=%d" % [
-		cell.x, cell.y, instance.mesh.get_instance_id(), material_id,
+	var key := "%.0f:%d,%d|mesh=%d|material=%d|shadow=%d|gi=%d" % [
+		cell_size, cell.x, cell.y, instance.mesh.get_instance_id(), material_id,
 		instance.cast_shadow, instance.gi_mode,
 	]
 	if not groups.has(key):
@@ -9287,15 +9293,25 @@ func _collect_static_render_leaves(node: Node, root: Node3D,
 	if instance.mesh.get_surface_count() != 1 or instance.material_override == null:
 		return
 	var local_origin := root.to_local(instance.global_position)
-	var cell := Vector2i(floori(local_origin.x / STATIC_RENDER_MERGE_CELL_SIZE),
-		floori(local_origin.z / STATIC_RENDER_MERGE_CELL_SIZE))
-	var key := "%d,%d|material=%d|shadow=%d|gi=%d" % [
-		cell.x, cell.y, instance.material_override.get_instance_id(),
+	var cell_size := _static_render_cell_size(instance)
+	var cell := Vector2i(floori(local_origin.x / cell_size),
+		floori(local_origin.z / cell_size))
+	var key := "%.0f:%d,%d|material=%d|shadow=%d|gi=%d" % [
+		cell_size, cell.x, cell.y, instance.material_override.get_instance_id(),
 		instance.cast_shadow, instance.gi_mode,
 	]
 	if not groups.has(key):
 		groups[key] = []
 	groups[key].append(instance)
+
+
+func _static_render_cell_size(instance: Node) -> float:
+	var current := instance
+	while current != null and current != self:
+		if current.has_meta("static_render_merge_cell_size"):
+			return maxf(32.0, float(current.get_meta("static_render_merge_cell_size")))
+		current = current.get_parent()
+	return STATIC_RENDER_MERGE_CELL_SIZE
 
 
 func _static_render_branch_is_dynamic(node: Node, root: Node3D,
@@ -9405,6 +9421,7 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 	set_meta("web_shadow_culled_mesh_count", shadow_culled)
 	set_meta("web_island_two_foundation_lod_count", island_two_foundation_lods)
 	if web_budget:
+		_configure_web_island_two_quest_detail_ranges()
 		_configure_web_internal_resolution()
 		# The production sun's 1,600 m shadow range submits the complete three-
 		# island archipelago even when the camera sees only one court. WebGL then
@@ -9412,6 +9429,45 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 		# low-poly world keeps its faceted diffuse shading and two-directional-light
 		# modelling without this extra pass; native builds retain full shadows.
 		call_deferred("_configure_web_directional_shadows")
+
+
+func _configure_web_island_two_quest_detail_ranges() -> void:
+	# Each production research bay is a readable pavilion/cabinet silhouette with
+	# small controls inside it. Those controls remain independently animated but
+	# do not need to submit from the next station or district. Preserve crowns,
+	# state beacons and course silhouettes for long-range quest readability; bring
+	# the operational detail back well before the 14 m interaction threshold.
+	var configured := 0
+	var preserved_silhouettes := 0
+	for object in _objects:
+		if int(object.get_meta("physical_island", 0)) != 2:
+			continue
+		for mesh_value in object.find_children("*", "MeshInstance3D", true, false):
+			var mesh := mesh_value as MeshInstance3D
+			if mesh.mesh == null or mesh.layers == 0:
+				continue
+			var scale := mesh.global_transform.basis.get_scale().abs()
+			var bounds := mesh.mesh.get_aabb().size * scale
+			var extent := maxf(bounds.x, maxf(bounds.y, bounds.z))
+			var lower_name := str(mesh.name).to_lower()
+			var silhouette := "pavilion" in lower_name or "cabinet" in lower_name \
+				or "crown" in lower_name or "marker" in lower_name \
+				or "course" in lower_name
+			if silhouette:
+				preserved_silhouettes += 1
+				continue
+			if extent > 3.5:
+				continue
+			mesh.visibility_range_end = minf(
+				mesh.visibility_range_end if mesh.visibility_range_end > 0.0 else 64.0,
+				64.0)
+			mesh.visibility_range_end_margin = minf(
+				mesh.visibility_range_end_margin if mesh.visibility_range_end_margin > 0.0 else 8.0,
+				8.0)
+			mesh.set_meta("web_quest_detail_range", 64.0)
+			configured += 1
+	set_meta("web_island_two_quest_detail_mesh_count", configured)
+	set_meta("web_island_two_preserved_silhouette_mesh_count", preserved_silhouettes)
 
 
 func _uses_web_render_budget() -> bool:
