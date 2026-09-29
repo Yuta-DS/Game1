@@ -25,6 +25,9 @@ func _run() -> void:
 		"the 1444x1702 production canvas must render 3D near the 1.2 MP target")
 	assert(absf(root.scaling_3d_scale - render_scale) < 0.002,
 		"the measured render scale must be applied to the active viewport")
+	assert(root.msaa_3d == Viewport.MSAA_2X \
+			and int(world.get_meta("web_msaa_3d", -1)) == int(Viewport.MSAA_2X),
+		"Web must reduce the desktop 8x MSAA preset to a high-DPI-safe 2x budget")
 	for object in world.get_quest_objects():
 		assert(object.visible and object.definition != null,
 			"the Web render budget must preserve all quest objects and their feedback")

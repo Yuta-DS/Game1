@@ -104,6 +104,8 @@ func _finish_view() -> void:
 	print("WORLD_ONE_WEB_PERF: %s" % JSON.stringify({
 		"renderer": RenderingServer.get_current_rendering_method(),
 		"viewport": "%dx%d" % [get_viewport().size.x, get_viewport().size.y],
+		"render_scale": snappedf(get_viewport().scaling_3d_scale, 0.001),
+		"msaa_3d": int(get_viewport().msaa_3d),
 		"static_memory_mb": snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1),
 		"views": _results,
 	}))

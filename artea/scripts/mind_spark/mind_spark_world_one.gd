@@ -9328,7 +9328,8 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 		# Small fixtures contribute useful local colour and silhouette, but their
 		# individual shadow submissions dominate the Compatibility renderer. Major
 		# buildings, trees and machinery retain shadows.
-		if web_budget and extent <= 4.0 \
+		if web_budget and (extent <= 4.0 \
+				or instance.has_meta("merged_static_source_count")) \
 				and instance.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
 			instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			shadow_culled += 1
@@ -9365,5 +9366,10 @@ func _configure_web_internal_resolution() -> void:
 		render_scale = clampf(sqrt(1200000.0 / pixels), 0.67, 1.0)
 	viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
 	viewport.scaling_3d_scale = render_scale
+	# The project-wide desktop preset uses 8x MSAA. At high-DPI WebGL sizes that
+	# multiplies the already large 3D buffer eightfold. Two samples retain clean
+	# low-poly edges while avoiding the dominant browser fill-rate cost.
+	viewport.msaa_3d = Viewport.MSAA_2X
 	set_meta("web_3d_render_scale", snappedf(render_scale, 0.001))
 	set_meta("web_3d_target_pixels", 1200000)
+	set_meta("web_msaa_3d", int(viewport.msaa_3d))
