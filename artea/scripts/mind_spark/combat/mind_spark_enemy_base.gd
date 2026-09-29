@@ -7,7 +7,7 @@ signal state_changed(enemy: MindSparkEnemyBase, state: int)
 enum State { IDLE, NOTICE, TELEGRAPH, ATTACK, RECOVERY, DEFEATED }
 
 const Definition := preload("res://scripts/mind_spark/combat/mind_spark_enemy_definition.gd")
-const RootStalkerVisual := preload("res://assets3D/mind_spark/anycreature/root_stalker.glb")
+const ROOT_STALKER_VISUAL_PATH := "res://assets3D/mind_spark/anycreature/root_stalker.glb"
 
 @export var definition: MindSparkEnemyDefinition
 @export var encounter_id := ""
@@ -244,7 +244,11 @@ func _build_enemy_shape() -> void:
 				_add_sphere_part("WispTail_%02d" % tail_index, Vector3(0, -0.7 - tail_index * 0.48, 0),
 					0.33 - tail_index * 0.07, core_material)
 		Definition.EnemyKind.ROOT_STALKER:
-			_authored_visual = RootStalkerVisual.instantiate() as Node3D
+			# Kept as a native development fallback for old fixtures. The production
+			# three-island story no longer constructs this retired Island Two actor,
+			# so load its authored asset only when a fixture explicitly requests it.
+			var root_stalker_scene := load(ROOT_STALKER_VISUAL_PATH) as PackedScene
+			_authored_visual = root_stalker_scene.instantiate() as Node3D
 			_authored_visual.name = "RootStalkerCreature"
 			_authored_visual.scale = Vector3.ONE * 2.1
 			add_child(_authored_visual)

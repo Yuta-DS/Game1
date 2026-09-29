@@ -59,17 +59,9 @@ func _run() -> void:
 		var retained_meshes := retired.find_children("*", "MeshInstance3D", true, false)
 		assert(retained_meshes.is_empty(),
 			"retired prototype geometry must retain no render meshes: "+court_name)
-	var retired_enemy_count := 0
-	for enemy in world.get_enemies():
-		if enemy.encounter_id not in ["constellation", "ridge"]:
-			continue
-		retired_enemy_count += 1
-		assert(bool(enemy.get_meta("retired_geometry_purged", false)),
-			"peaceful Island Two encounters must release retired actors")
-		for retired_mesh in enemy.find_children("*", "MeshInstance3D", true, false):
-			assert((retired_mesh as MeshInstance3D).mesh == null,
-				"retired enemy render resources must be released")
-	assert(retired_enemy_count == 5, "all five replaced Island Two combat actors remain as compatibility markers")
+	assert(world.get_enemies().filter(func(enemy):
+		return enemy.encounter_id in ["constellation", "ridge"]).is_empty(),
+		"peaceful Island Two must not allocate hidden prototype combat actors")
 	assert(world.get_node("IslandOneResearchCampus/FocusBellAlcove") is Node3D,
 		"the optional Focus Bell belongs to Island One's support route")
 	var route := campus.get_node("IslandTwoQuestRoute") as Node3D
@@ -270,28 +262,9 @@ func _run() -> void:
 	assert(str(gate.get_node("IslandTwoMemoryGate").get_meta("gate_state")) == "open")
 	var old_bridge := world.get_node("WorldOneGeometry/MainStoryCircuitRoute/CircuitRoute_03_A") as MeshInstance3D
 	assert(not old_bridge.visible)
-	var ridge_enemies := world.get_enemies().filter(func(enemy): return enemy.encounter_id=="ridge")
-	assert(ridge_enemies.size()==2)
-	for enemy in ridge_enemies:
-		assert(absf((enemy as Node3D).position.x)<=14.1)
-		assert(absf((enemy as Node3D).position.z-72.0)<.1)
-	for enemy in world.get_enemies().filter(func(candidate):
-			return candidate.encounter_id in ["constellation", "ridge"]):
-		assert(not enemy.visible and not enemy.active,
-			"replaced Island Two combat actors stay visually and logically retired")
-		assert(enemy.collision_layer == 0 and enemy.collision_mask == 0,
-			"retired enemy body cannot block the research route")
-		assert(bool(enemy.get_meta("retired_collision_disabled", false)))
-		for collision_object in enemy.find_children("*", "CollisionObject3D", true, false):
-			var body := collision_object as CollisionObject3D
-			assert(body.collision_layer == 0 and body.collision_mask == 0,
-				"hidden enemy child collision must be disabled: %s" % body.get_path())
-			if body is Area3D:
-				assert(not (body as Area3D).monitoring and not (body as Area3D).monitorable,
-					"hidden enemy areas cannot detect or be detected")
-		for collision_shape in enemy.find_children("*", "CollisionShape3D", true, false):
-			assert((collision_shape as CollisionShape3D).disabled,
-				"hidden enemy shapes remain physically disabled")
+	assert(world.get_enemies().filter(func(enemy):
+		return enemy.encounter_id in ["constellation", "ridge"]).is_empty(),
+		"retired Island Two enemies cannot leave hidden bodies or hitboxes on the research route")
 	world.queue_free()
 	await process_frame
 	print("ISLAND_TWO_MEMORY_CAMPUS: PASS — revision 05 aligns the arrival portico, details the Memory Gate, applies the green heavenly tree palette and preserves the complete heritage layer")

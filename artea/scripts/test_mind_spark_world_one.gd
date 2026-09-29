@@ -241,19 +241,16 @@ func _test_object_coverage(world: MindSparkWorldOne) -> void:
 
 func _test_combat_roster(world: MindSparkWorldOne) -> void:
 	var enemies := world.get_enemies()
-	assert(enemies.size() == 11, "five enemy types are placed in bounded waves")
+	assert(enemies.size() == 6,
+		"production keeps four Island One teaching actors and two Island Three Warden adds")
 	var kinds := {}
 	for enemy in enemies:
 		assert(enemy.definition.validated_telegraph() >= 0.75, "every normal attack warns for at least 0.75 seconds")
 		kinds[enemy.definition.enemy_kind] = true
-	assert(kinds.size() == MindSparkEnemyDefinition.EnemyKind.size(), "all five approved enemy types are present")
-	var root_stalker := enemies.filter(func(enemy): return enemy.definition.enemy_kind == MindSparkEnemyDefinition.EnemyKind.ROOT_STALKER)[0] as MindSparkEnemyBase
-	var creature := root_stalker.get_node_or_null("RootStalkerCreature") as Node3D
-	assert(creature != null and creature.visible and not root_stalker.shell.visible,
-		"Hope Path root stalker uses the authored creature rather than placeholder spheres")
-	var animator := creature.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	assert(animator != null and animator.has_animation("idle") and animator.has_animation("move") and animator.has_animation("attack"),
-		"authored root stalker retains idle, move and attack clips")
+	assert(kinds.size() == 3,
+		"only Static Mites, Glitch Sprouts and Circuit Wisps remain in live bounded waves")
+	assert(enemies.filter(func(enemy): return enemy.encounter_id in ["constellation", "ridge"]).is_empty(),
+		"peaceful Island Two does not construct hidden prototype combat actors")
 	assert(world.activate_enemy_wave("network") == 4)
 	assert(world.active_enemy_count() <= 4, "the encounter director never activates more than four normal enemies")
 	var mite := enemies[0] as MindSparkEnemyBase

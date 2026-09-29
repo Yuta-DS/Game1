@@ -37,7 +37,6 @@ const REQUIRED_DYNAMIC_RESOURCES := [
 	"res://assets3D/mind_spark/celestial_dawn_v17/island_04.glb",
 	"res://assets3D/mind_spark/celestial_islands_v11/island_05.glb",
 	"res://assets3D/mind_spark/celestial_islands_v11/island_06.glb",
-	"res://assets3D/mind_spark/anycreature/root_stalker.glb",
 	"res://assets3D/mind_spark/unfinished_light/inspection_bay/inspection_bay.glb",
 	"res://assets3D/mind_spark/unfinished_light/recorder_bay/recorder_bay.glb",
 	"res://assets3D/mind_spark/unfinished_light/tester_bay/tester_bay.glb",

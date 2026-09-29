@@ -43,6 +43,9 @@ func _audit() -> void:
 		assert(int(tally.retired_hidden_meshes) == 0,
 			"retired geometry remains resident on %s: %s" % [
 				island_name, str(tally.retired_hidden_mesh_paths)])
+		assert((tally.hidden_parent_active_colliders as Array).is_empty(),
+			"hidden player-layer collision remains on %s: %s" % [
+				island_name, str(tally.hidden_parent_active_colliders)])
 		report.islands[island_name] = tally
 	for object in world.get_quest_objects():
 		report.objects.append({"save_id": object.save_id,

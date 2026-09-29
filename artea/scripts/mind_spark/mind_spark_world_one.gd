@@ -7451,25 +7451,21 @@ func _place_combat_population() -> void:
 		["static_mite", "network", "02_living_network_forest", Vector3(35, 3, 62)],
 		["glitch_sprout", "network", "02_living_network_forest", Vector3(-52, 3, -4)],
 		["glitch_sprout", "network", "02_living_network_forest", Vector3(58, 3, -18)],
-		["circuit_wisp", "constellation", "03_constellation_court", Vector3(-62, 4, 46)],
-		["circuit_wisp", "constellation", "03_constellation_court", Vector3(0, 4, 66)],
-		["circuit_wisp", "constellation", "03_constellation_court", Vector3(62, 4, 46)],
-		["root_stalker", "ridge", "04_hope_path_ridge", Vector3(-14, 4, 72)],
-		["blight_sentinel", "ridge", "04_hope_path_ridge", Vector3(14, 4, 72)],
 		["circuit_wisp", "boss_adds", "05_thought_storm_arena", Vector3(-48, 4, -54)],
 		["static_mite", "boss_adds", "05_thought_storm_arena", Vector3(48, 4, -54)],
 	]
+	# Island Two's completed story is a peaceful evidence and perspective chapter.
+	# Its five former combat actors were still built, hidden, stripped of their
+	# meshes and retained as empty compatibility nodes on every startup. No save
+	# data or active quest references those actors, so omit them at the source.
+	# Island One keeps its four teaching encounters and Island Three keeps its two
+	# Warden adds.
 	if _uses_existing_mind_district():
 		specs = [
 			["static_mite", "network", "02_living_network_forest", Vector3(-18, 1, 16)],
 			["static_mite", "network", "02_living_network_forest", Vector3(19, 1, 19)],
 			["glitch_sprout", "network", "02_living_network_forest", Vector3(-22, 1, -14)],
 			["glitch_sprout", "network", "02_living_network_forest", Vector3(24, 1, -12)],
-			["circuit_wisp", "constellation", "03_constellation_court", Vector3(-28, 2, 24)],
-			["circuit_wisp", "constellation", "03_constellation_court", Vector3(0, 2, 31)],
-			["circuit_wisp", "constellation", "03_constellation_court", Vector3(28, 2, 24)],
-			["root_stalker", "ridge", "04_hope_path_ridge", Vector3(-10, 1, 24)],
-			["blight_sentinel", "ridge", "04_hope_path_ridge", Vector3(10, 1, 24)],
 			["circuit_wisp", "boss_adds", "05_thought_storm_arena", Vector3(-20, 2, -18)],
 			["static_mite", "boss_adds", "05_thought_storm_arena", Vector3(20, 1, -18)],
 		]
