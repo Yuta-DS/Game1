@@ -30,6 +30,17 @@ func _run() -> void:
 		"Web must use the tighter distance profile measured against the production canvas")
 	assert(int(world.get_meta("web_shadow_culled_mesh_count", 0)) > 1000,
 		"World One meshes must stop submitting duplicate Web shadow passes")
+	assert(int(world.get_meta("web_island_two_foundation_lod_count", 0)) >= 8,
+		"Island Two's large imported foundations must use their generated Web LODs")
+	for path in [
+		"WorldOneGeometry/03ConstellationCourt/ModularFloatingFoundation/IslandArchitecture/Architecture_v11_03",
+		"WorldOneGeometry/04HopePathRidge/ModularFloatingFoundation/IslandArchitecture/Architecture_v17_04",
+	]:
+		var foundation_mesh := world.get_node(path) as MeshInstance3D
+		assert(is_equal_approx(foundation_mesh.lod_bias, 0.25)
+				and str(foundation_mesh.get_meta("web_lod_profile", "")) \
+				== "island_two_foundation_0.25",
+			"Island Two architecture must keep an explicit production Web LOD contract")
 	var render_scale := float(world.get_meta("web_3d_render_scale", 0.0))
 	assert(render_scale >= 0.62 and render_scale < 0.67,
 		"the 1444x1702 production canvas must render 3D near the 1.0 MP target")
@@ -70,6 +81,7 @@ func _run() -> void:
 		assert(object.visible and object.definition != null,
 			"the Web render budget must preserve all quest objects and their feedback")
 	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
-	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d mesh shadows, the world sun shadow pass, and distant island detail removed; all 15 quest objects preserved" % [
-		render_scale, int(world.get_meta("web_shadow_culled_mesh_count", 0))])
+	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d mesh shadows, the world sun shadow pass, distant island detail removed, and %d Island Two foundation meshes use generated LODs; all 15 quest objects preserved" % [
+		render_scale, int(world.get_meta("web_shadow_culled_mesh_count", 0)),
+		int(world.get_meta("web_island_two_foundation_lod_count", 0))])
 	quit()

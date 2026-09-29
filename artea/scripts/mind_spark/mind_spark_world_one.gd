@@ -9346,6 +9346,7 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 		range_profile = [60.0, 105.0, 175.0, 300.0, 720.0]
 	var configured := 0
 	var shadow_culled := 0
+	var island_two_foundation_lods := 0
 	for candidate in root.find_children("*", "MeshInstance3D", true, false):
 		var instance := candidate as MeshInstance3D
 		if instance.mesh == null or not instance.visible:
@@ -9364,6 +9365,22 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 			range_end = range_profile[3]
 		instance.visibility_range_end = range_end
 		instance.visibility_range_end_margin = minf(48.0, range_end * .12)
+		# Island Two's two imported foundations account for most of the remaining
+		# Web primitives: their architecture, rock and machinery meshes carry
+		# generated import LODs, but their very large bounds keep the default
+		# screen-space threshold at full detail from a player-height camera. Move
+		# only those foundations through their authored LOD chain sooner on Web.
+		# Collision is separate and unchanged, and near silhouettes retain the
+		# source mesh instead of being replaced with proxy geometry.
+		var instance_path := str(root.get_path_to(instance))
+		var island_two_foundation := instance_path.contains(
+			"03ConstellationCourt/ModularFloatingFoundation") \
+			or instance_path.contains("04HopePathRidge/ModularFloatingFoundation")
+		if web_budget and island_two_foundation and instance.mesh is ArrayMesh \
+				and extent >= 12.0:
+			instance.lod_bias = 0.25
+			instance.set_meta("web_lod_profile", "island_two_foundation_0.25")
+			island_two_foundation_lods += 1
 		# Compatibility redraws each visible surface into the directional shadow
 		# atlas. World One retains its low-poly diffuse modelling without those
 		# duplicate submissions; ambient occlusion and authored colour contrast
@@ -9386,6 +9403,7 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 	set_meta("distance_culled_mesh_count", configured)
 	set_meta("visibility_range_profile", "%d/%d/%d/%d/%dm by world-space extent" % range_profile)
 	set_meta("web_shadow_culled_mesh_count", shadow_culled)
+	set_meta("web_island_two_foundation_lod_count", island_two_foundation_lods)
 	if web_budget:
 		_configure_web_internal_resolution()
 		# The production sun's 1,600 m shadow range submits the complete three-
