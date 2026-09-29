@@ -6935,7 +6935,9 @@ func _build_island_three_paving(parent: Node3D, center: Vector3,
 	paving.name = district + "JointedStonePaving"
 	paving.set_meta("collision_policy", "flush finish over continuous foundation")
 	parent.add_child(paving)
-	var colors := [Color("c8bfa9"), Color("cfc5af"), Color("c1b8a4"), Color("d5cbb7")]
+	# Match the pearl-ivory paving used by Islands One and Two. The former tan
+	# courses made this district read as a separate prototype under the same sun.
+	var colors := [Color("e6dcc5"), Color("efe6d2"), Color("ded3bd"), Color("f5ecd8")]
 	var materials: Array[StandardMaterial3D] = []
 	for color in colors:
 		var material := StandardMaterial3D.new()
@@ -6974,8 +6976,8 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 	var environment := Node3D.new()
 	environment.name = "IslandThreeMatchedEnvironment"
 	environment.set_meta("design_reference", "Island One research gardens + Island Two observatory terraces")
-	environment.set_meta("environment_revision", "open_civic_gardens_v11_quiet_ground")
-	environment.set_meta("foliage_palette", "deep sage, moss, muted sage, restrained ivory blossom")
+	environment.set_meta("environment_revision", "open_civic_gardens_v12_pearl_sage")
+	environment.set_meta("foliage_palette", "pale sage, moss, muted evergreen, restrained ivory blossom")
 	environment.set_meta("clear_routes_preserved", true)
 	environment.set_meta("no_gold_lines_or_route_barriers", true)
 	environment.set_meta("preserve_authored_nodes", true)
@@ -7148,7 +7150,7 @@ func _build_island_three_garden_tree(parent: Node3D, tree_name: String,
 	parent.add_child(tree)
 	var trunk_height := 7.4 * tree_scale
 	_add_cylinder(tree, "GardenTrunk", base + Vector3.UP * trunk_height * .5,
-		.72 * tree_scale, trunk_height, _materials.island_bark_root, true, 7)
+		.72 * tree_scale, trunk_height, _materials.island_three_hero_bark, true, 7)
 	_add_cable_between(tree, "CyanNutrientVein", base + Vector3.UP * .4,
 		base + Vector3(.2, trunk_height + 2.8, -.15), .11, .06,
 		_materials.shared_style_cyan, 6)
@@ -7160,7 +7162,7 @@ func _build_island_three_garden_tree(parent: Node3D, tree_name: String,
 			cos(angle) * 3.7 * tree_scale)
 		_add_cable_between(tree, "GardenBranch_%02d" % (branch_index + 1),
 			branch_start, branch_end, .36 * tree_scale, .15 * tree_scale,
-			_materials.island_bark_root, 7)
+			_materials.island_three_hero_bark, 7)
 		for crown_index in 2:
 			var crown_at := branch_end + Vector3(
 				(-1.0 if crown_index == 0 else 1.0) * 1.4 * tree_scale,
@@ -8314,12 +8316,12 @@ func _build_materials() -> void:
 	# not mistake this organic bark facet for brass and retire its mesh.
 	_materials.island_three_hero_bark_highlight = _material(Color("8a5450"), 0.82)
 	_materials.island_three_hero_bark_shadow = _material(Color("3f2d2a"), 0.92)
-	_materials.island_three_sage = _material(Color("71957b"), 0.88)
-	_materials.island_three_sage_deep = _material(Color("3f6654"), 0.92)
-	_materials.island_three_moss = _material(Color("9aab79"), 0.88)
-	_materials.island_three_earth = _material(Color("746f60"), 0.94)
+	_materials.island_three_sage = _material(Color("a7b59b"), 0.88)
+	_materials.island_three_sage_deep = _material(Color("667b6a"), 0.92)
+	_materials.island_three_moss = _material(Color("c0c39a"), 0.88)
+	_materials.island_three_earth = _material(Color("6f6456"), 0.94)
 	_materials.island_three_canopy_ivory = _material(Color("e8ddc3"), 0.90)
-	_materials.island_three_roof = _material(Color("9ebdb8"), 0.58)
+	_materials.island_three_roof = _material(Color("b8cac3"), 0.58)
 	_materials.bio_bark = _material(Color("3b2724"), 0.88)
 	_materials.bio_bark_highlight = _material(Color("825542"), 0.78,
 		Color("5a3428"), 0.12)

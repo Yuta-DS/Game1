@@ -156,8 +156,8 @@ func _run() -> void:
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
 	var matched_environment := island_three.get_node("IslandThreeMatchedEnvironment") as Node3D
 	assert(str(matched_environment.get_meta("environment_revision", "")) \
-		== "open_civic_gardens_v11_quiet_ground")
-	assert(str(matched_environment.get_meta("foliage_palette", "")).contains("deep sage"))
+		== "open_civic_gardens_v12_pearl_sage")
+	assert(str(matched_environment.get_meta("foliage_palette", "")).contains("pale sage"))
 	assert(bool(matched_environment.get_meta("clear_routes_preserved", false)))
 	assert(int(matched_environment.get_meta("total_environment_bays", 0)) >= 16 \
 		and int(matched_environment.get_meta("total_environment_bays", 0)) <= 24,
@@ -186,6 +186,17 @@ func _run() -> void:
 	assert(civic_pavilions.find_children(
 		"PavilionColumn_*", "MeshInstance3D", true, false).size() == 24,
 		"open pavilion colonnades repeat Island 1's civic rhythm without blocking routes")
+	var garden_trunk := matched_environment.find_child(
+		"GardenTrunk", true, false) as MeshInstance3D
+	var island_three_palette: Dictionary = world.get("_materials")
+	assert(garden_trunk != null and garden_trunk.material_override \
+		== island_three_palette.island_three_hero_bark,
+		"Island 3 garden trees share the hero-tree bark instead of near-black prototype trunks")
+	var paving_stone := matched_environment.find_child("Stone_00_00", true, false) as MeshInstance3D
+	assert(paving_stone != null)
+	var paving_color := (paving_stone.material_override as StandardMaterial3D).albedo_color
+	assert(paving_color.get_luminance() >= .72,
+		"Island 3 paving stays in the pearl-ivory value range of Islands 1 and 2")
 	assert(island_three.has_node("StormworksArrivalPortico/IvoryArrivalTerraceCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/AetherArrivalArch"))
 	assert((island_three.get_node("StormworksArrivalPortico/AetherArrivalArch") as MeshInstance3D).mesh is BoxMesh,
