@@ -120,6 +120,12 @@ func _begin() -> void:
 		and bool(report.state_restored) and bool(report.identity_restored)
 	_world.set_meta("web_quality_results", report.duplicate(true))
 	_world.set_meta("web_quality_probe_completed", true)
+	if OS.has_feature("web"):
+		# Keep the result on the page as well as in the console. Browser tooling
+		# can reconnect after the heavy World One build and still read the exact
+		# result without repeating the 445 MB production download.
+		JavaScriptBridge.eval(
+			"window.__ARTEA_WORLD_ONE_QUALITY__ = %s;" % JSON.stringify(report), true)
 	print("WORLD_ONE_WEB_QUALITY: %s" % JSON.stringify(report))
 	queue_free()
 

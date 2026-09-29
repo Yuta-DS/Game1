@@ -292,6 +292,9 @@ func _install_web_quality_probe() -> void:
 		requested = "world_one_quality=1" in query
 	if not requested or has_node("WorldOneWebQualityProbe"):
 		return
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval(
+			"window.__ARTEA_WORLD_ONE_QUALITY__ = {status: 'running'};", true)
 	var probe := Node.new()
 	probe.name = "WorldOneWebQualityProbe"
 	probe.set_script(WebQualityProbeScript)
