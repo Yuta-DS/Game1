@@ -29,6 +29,7 @@ func _audit() -> void:
 	var report := {"islands": {}, "objects": []}
 	for island_name in roots:
 		var tally := {"visible_meshes": 0, "hidden_meshes": 0,
+			"rendered_meshes": 0, "merged_render_sources": 0,
 			"hidden_mesh_groups": {},
 			"dormant_hidden_meshes": 0, "retired_hidden_meshes": 0,
 			"retired_hidden_mesh_paths": [],
@@ -64,6 +65,11 @@ func _scan(node: Node, tally: Dictionary) -> void:
 	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
 		if _visible_in_tree(node):
 			tally.visible_meshes += 1
+			if (node as MeshInstance3D).layers == 0 \
+					and node.has_meta("render_merged_into"):
+				tally.merged_render_sources += 1
+			else:
+				tally.rendered_meshes += 1
 		else:
 			tally.hidden_meshes += 1
 			var retired_ancestor := _retired_ancestor(node)

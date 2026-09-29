@@ -148,7 +148,7 @@ func _run() -> void:
 	assert(island_three_saplings == 15,
 		"Island 3 uses fifteen restrained pale perimeter saplings around its hero tree")
 	assert(str(island_three.get_meta("design_revision", "")) \
-		== "landmark_hierarchy_v12_civic_backdrops")
+		== "landmark_hierarchy_v13_sky_gardens")
 	assert(int(island_three.get_meta("island_one_style_matched_quest_objects", 0)) == 5,
 		"all five Island 3 quest objects use Island One's production style family")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
@@ -156,7 +156,7 @@ func _run() -> void:
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
 	var matched_environment := island_three.get_node("IslandThreeMatchedEnvironment") as Node3D
 	assert(str(matched_environment.get_meta("environment_revision", "")) \
-		== "open_civic_gardens_v12_pearl_sage")
+		== "open_civic_gardens_v13_skyline_depth")
 	assert(str(matched_environment.get_meta("foliage_palette", "")).contains("pale sage"))
 	assert(bool(matched_environment.get_meta("clear_routes_preserved", false)))
 	assert(int(matched_environment.get_meta("total_environment_bays", 0)) >= 16 \

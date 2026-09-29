@@ -237,6 +237,9 @@ func build_world() -> void:
 	_refine_island_one_surroundings()
 	_install_island_one_static_collisions(geometry)
 	_batch_static_geometry(self)
+	_batch_repeated_static_render_geometry(self)
+	_merge_static_render_geometry(self)
+	_configure_world_one_visibility_ranges(self)
 	set_meta("world_identity", "living computer forest")
 	set_meta("lead_force", "technology_science")
 	set_meta("zone_count", 6)
@@ -9112,3 +9115,197 @@ func _material_signature(material: Material) -> String:
 			str(standard.emission if standard.emission_enabled else Color(0, 0, 0)),
 		]
 	return str(material.get_instance_id())
+
+
+# Retain authored nodes and collision while replacing safe static leaves with a
+# much smaller set of render surfaces. Keeping the source nodes makes landmark
+# paths, audit metadata and editor inspection stable; clearing only their visual
+# layer prevents duplicate drawing. Stateful/scripted branches are excluded.
+const STATIC_RENDER_MERGE_MIN_GROUP := 4
+const STATIC_RENDER_MERGE_CELL_SIZE := 96.0
+
+
+func _batch_repeated_static_render_geometry(root: Node3D) -> void:
+	var groups := {}
+	_collect_repeated_static_leaves(root, root, groups, false)
+	var batch_count := 0
+	var source_count := 0
+	for key in groups:
+		var members: Array = groups[key]
+		if members.size() < STATIC_RENDER_MERGE_MIN_GROUP:
+			continue
+		var first := members[0] as MeshInstance3D
+		var multi := MultiMesh.new()
+		multi.transform_format = MultiMesh.TRANSFORM_3D
+		multi.mesh = first.mesh
+		multi.instance_count = members.size()
+		for index in members.size():
+			var member := members[index] as MeshInstance3D
+			multi.set_instance_transform(index,
+				root.global_transform.affine_inverse() * member.global_transform)
+		var batch := MultiMeshInstance3D.new()
+		batch.name = "BatchedStaticRender_%04d" % batch_count
+		batch.multimesh = multi
+		batch.material_override = first.material_override
+		batch.cast_shadow = first.cast_shadow
+		batch.gi_mode = first.gi_mode
+		batch.set_meta("merged_static_source_count", members.size())
+		batch.set_meta("render_role", "spatial repeated static geometry batch")
+		root.add_child(batch)
+		for member_value in members:
+			var member := member_value as MeshInstance3D
+			member.layers = 0
+			member.set_meta("render_merged_into", batch.name)
+			source_count += 1
+		batch_count += 1
+	set_meta("batched_static_render_groups", batch_count)
+	set_meta("batched_static_render_sources", source_count)
+
+
+func _collect_repeated_static_leaves(node: Node, root: Node3D,
+		groups: Dictionary, dynamic_ancestor: bool) -> void:
+	if node is Node3D and not (node as Node3D).is_visible_in_tree():
+		return
+	var dynamic := _static_render_branch_is_dynamic(node, root, dynamic_ancestor)
+	for child in node.get_children():
+		_collect_repeated_static_leaves(child, root, groups, dynamic)
+	if dynamic or not (node is MeshInstance3D):
+		return
+	var instance := node as MeshInstance3D
+	if not _is_static_render_leaf(instance):
+		return
+	var local_origin := root.to_local(instance.global_position)
+	var cell := Vector2i(floori(local_origin.x / STATIC_RENDER_MERGE_CELL_SIZE),
+		floori(local_origin.z / STATIC_RENDER_MERGE_CELL_SIZE))
+	var material_id := 0 if instance.material_override == null \
+		else instance.material_override.get_instance_id()
+	var key := "%d,%d|mesh=%d|material=%d|shadow=%d|gi=%d" % [
+		cell.x, cell.y, instance.mesh.get_instance_id(), material_id,
+		instance.cast_shadow, instance.gi_mode,
+	]
+	if not groups.has(key):
+		groups[key] = []
+	groups[key].append(instance)
+
+
+func _merge_static_render_geometry(root: Node3D) -> void:
+	var groups := {}
+	_collect_static_render_leaves(root, root, groups, false)
+	var merged_groups := 0
+	var merged_sources := 0
+	for key in groups:
+		var members: Array = groups[key]
+		if members.size() < STATIC_RENDER_MERGE_MIN_GROUP:
+			continue
+		var first := members[0] as MeshInstance3D
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for member_value in members:
+			var member := member_value as MeshInstance3D
+			surface.append_from(member.mesh, 0,
+				root.global_transform.affine_inverse() * member.global_transform)
+		var combined := surface.commit()
+		if combined == null or combined.get_surface_count() == 0:
+			continue
+		var batch := MeshInstance3D.new()
+		batch.name = "MergedStaticRender_%04d" % merged_groups
+		batch.mesh = combined
+		batch.material_override = first.material_override
+		batch.cast_shadow = first.cast_shadow
+		batch.gi_mode = first.gi_mode
+		batch.set_meta("merged_static_source_count", members.size())
+		batch.set_meta("render_role", "spatial static geometry batch")
+		root.add_child(batch)
+		for member_value in members:
+			var member := member_value as MeshInstance3D
+			member.layers = 0
+			member.set_meta("render_merged_into", batch.name)
+			merged_sources += 1
+		merged_groups += 1
+	set_meta("merged_static_render_groups", merged_groups)
+	set_meta("merged_static_render_sources", merged_sources)
+
+
+func _collect_static_render_leaves(node: Node, root: Node3D,
+		groups: Dictionary, dynamic_ancestor: bool) -> void:
+	if node is Node3D and not (node as Node3D).is_visible_in_tree():
+		return
+	var dynamic := _static_render_branch_is_dynamic(node, root, dynamic_ancestor)
+	for child in node.get_children():
+		_collect_static_render_leaves(child, root, groups, dynamic)
+	if dynamic or not (node is MeshInstance3D):
+		return
+	var instance := node as MeshInstance3D
+	if not _is_static_render_leaf(instance):
+		return
+	if instance.mesh.get_surface_count() != 1 or instance.material_override == null:
+		return
+	var local_origin := root.to_local(instance.global_position)
+	var cell := Vector2i(floori(local_origin.x / STATIC_RENDER_MERGE_CELL_SIZE),
+		floori(local_origin.z / STATIC_RENDER_MERGE_CELL_SIZE))
+	var key := "%d,%d|material=%d|shadow=%d|gi=%d" % [
+		cell.x, cell.y, instance.material_override.get_instance_id(),
+		instance.cast_shadow, instance.gi_mode,
+	]
+	if not groups.has(key):
+		groups[key] = []
+	groups[key].append(instance)
+
+
+func _static_render_branch_is_dynamic(node: Node, root: Node3D,
+		dynamic_ancestor: bool) -> bool:
+	return dynamic_ancestor or (node != root and (node.get_script() != null \
+		or node is MindSparkEnemyBase or node.has_meta("detail_orbit_speed")))
+
+
+func _is_static_render_leaf(instance: MeshInstance3D) -> bool:
+	if instance.is_queued_for_deletion() or instance.mesh == null \
+			or instance.layers != 1 or instance.get_child_count() > 0 \
+			or not instance.get_groups().is_empty():
+		return false
+	if instance.has_meta("detail_packet") \
+			or instance.has_meta("detail_orbit_speed"):
+		return false
+	var lower_name := str(instance.name).to_lower()
+	for state_word in ["state", "signal", "packet", "pulse", "door", "gate", "reward", "memoryfruit"]:
+		if state_word in lower_name:
+			return false
+	return true
+
+
+
+# The three islands remain mounted as one continuous world so story state,
+# bridges and saves never unload. Their thousands of small decorative meshes do
+# not need to render across the entire archipelago, though. Give each visible
+# mesh a range based on its true world-space size. Nearby details remain exact;
+# distant sub-pixel trim stops consuming WebGL draw calls. Nodes, collisions,
+# scripts and all authored paths remain intact.
+func _configure_world_one_visibility_ranges(root: Node3D) -> void:
+	var configured := 0
+	for candidate in root.find_children("*", "MeshInstance3D", true, false):
+		var instance := candidate as MeshInstance3D
+		if instance.mesh == null or not instance.visible:
+			continue
+		var scale := instance.global_transform.basis.get_scale().abs()
+		var bounds := instance.mesh.get_aabb().size * scale
+		var extent := maxf(bounds.x, maxf(bounds.y, bounds.z))
+		var range_end := 1200.0
+		if extent <= 0.4:
+			range_end = 90.0
+		elif extent <= 1.6:
+			range_end = 150.0
+		elif extent <= 4.0:
+			range_end = 240.0
+		elif extent <= 12.0:
+			range_end = 420.0
+		instance.visibility_range_end = range_end
+		instance.visibility_range_end_margin = minf(48.0, range_end * .12)
+		configured += 1
+	for candidate in root.find_children("*", "MultiMeshInstance3D", true, false):
+		var instance := candidate as MultiMeshInstance3D
+		if instance.multimesh == null:
+			continue
+		instance.visibility_range_end = 560.0
+		instance.visibility_range_end_margin = 48.0
+	set_meta("distance_culled_mesh_count", configured)
+	set_meta("visibility_range_profile", "90/150/240/420/1200m by world-space extent")
