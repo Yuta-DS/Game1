@@ -7883,6 +7883,18 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 	var repairs := Node3D.new()
 	repairs.name = ["IslandOnePerimeterRepairs", "IslandTwoPerimeterRepairs", "IslandThreePerimeterRepairs"][first_zone / 2]
 	repairs.set_meta("preserve_authored_nodes", true)
+	var web_island_two_perimeter := first_zone == 2 and _uses_web_render_budget()
+	var rail_bay_scene: PackedScene = preload(
+		"res://assets3D/mind_spark/echo_garden_benchmark/export/rail_bay_web.glb") \
+		if web_island_two_perimeter else preload(
+		"res://assets3D/mind_spark/echo_garden_benchmark/export/rail_bay.glb")
+	var rail_post_scene: PackedScene = preload(
+		"res://assets3D/mind_spark/echo_garden_benchmark/export/rail_post_web.glb") \
+		if web_island_two_perimeter else preload(
+		"res://assets3D/mind_spark/echo_garden_benchmark/export/rail_post.glb")
+	if web_island_two_perimeter:
+		repairs.set_meta("web_low_poly_perimeter", true)
+		repairs.set_meta("web_rail_source_triangle_reduction", "6488->1167 bay; 4146->829 post")
 	parent.add_child(repairs)
 	for zone_index in range(first_zone, first_zone + 2):
 		var center: Vector3 = ZONES[zone_index].position
@@ -7908,7 +7920,7 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 						_build_island_three_edge_run(repairs, center, radius - 8.0, a, b,
 							zone_index, bay)
 					else:
-						var panel := preload("res://assets3D/mind_spark/echo_garden_benchmark/export/rail_bay.glb").instantiate() as Node3D
+						var panel := rail_bay_scene.instantiate() as Node3D
 						panel.name = "ReferenceScrollwork_%d_%d" % [zone_index,bay]
 						panel.position = center
 						panel.rotation.y = (a+b)*.5
@@ -7922,7 +7934,7 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 							var key := "ReferencePost_%d_%d" % [zone_index,roundi(fposmod(end,TAU)*144.0/TAU)%144]
 							if repairs.has_node(key):
 								continue
-							var post := preload("res://assets3D/mind_spark/echo_garden_benchmark/export/rail_post.glb").instantiate() as Node3D
+							var post := rail_post_scene.instantiate() as Node3D
 							post.name = key
 							post.position = center
 							post.rotation.y = end
