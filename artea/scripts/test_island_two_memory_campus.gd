@@ -87,9 +87,23 @@ func _run() -> void:
 			"every reachable Island Two station needs a simplified solid housing")
 		var marker := station.get_node("ProductionStationMarker") as Node3D
 		assert(marker.visible)
+		assert(not str(marker.get_meta("silhouette_profile", "")).is_empty(),
+			"every Island Two quest marker needs a distinct long-range silhouette")
+		assert(marker.has_node("MarkerStateBeacon")
+			and marker.has_node("ActiveStateWings")
+			and marker.has_node("CompletedStateWings"),
+			"every Island Two marker exposes inactive, active and completed feedback")
 		assert(marker.find_children("IvoryMarkerPier_*Collision", "StaticBody3D",
 			false, false).size() == 2,
 			"the visible station marker piers must stop the player")
+	var silhouettes := {}
+	for station in world.get_quest_objects():
+		if not station.has_node("ProductionStationMarker"):
+			continue
+		var marker := station.get_node("ProductionStationMarker") as Node3D
+		silhouettes[str(marker.get_meta("silhouette_profile"))] = true
+	assert(silhouettes.size() == 5,
+		"Island Two's five quest markers must have five readable silhouettes")
 	for station in world.get_quest_objects():
 		if station.save_id.begins_with("world_one.") and station.has_meta("canonical_layout"):
 			assert(station.get_node("IslandTwoStationSolid") is StaticBody3D,

@@ -1093,27 +1093,96 @@ static func _build_production_station_marker(world: MindSparkWorldOne,
 	var mats: Dictionary = world.get("_materials")
 	var marker := Node3D.new()
 	marker.name = "ProductionStationMarker"
-	marker.set_meta("purpose", "grounded long-range silhouette for the live quest instrument")
+	marker.set_script(preload("res://scripts/mind_spark/island_two_station_marker.gd"))
+	marker.set_meta("purpose", "distinct grounded silhouette and state beacon for the live quest instrument")
+	marker.set_meta("silhouette_profile", [
+		"split evidence lens", "stepped memory archive", "unused focus bell",
+		"logic roof", "asymmetric perspective fins", "ascending truth bridge"
+	][emblem])
 	station.add_child(marker)
 	for side in [-1.0, 1.0]:
 		world.call("_add_box", marker, "IvoryMarkerPier_%s" % side,
 			Vector3(float(side) * 5.5, 3.9, -4.8),
 			Vector3(.9, 7.8, .9), mats.sanctum_ivory, true)
-	world.call("_add_brick", marker, "IvoryMarkerHeader",
-		Vector3(0, 7.8, -4.8),
-		Bricks.build_bevel_box(Vector3(11.8, .8, 1.1), .14),
-		mats.sanctum_ivory)
 	world.call("_add_box", marker, "CharcoalMarkerSlate",
 		Vector3(0, 6.0, -4.65), Vector3(9.2, 3.3, .3),
 		mats.bio_gunmetal, false)
 	var label := world.call("_add_label", marker, title,
-		Vector3(0, 8.85, -4.05), Color("fff0c9"), 24) as Label3D
+		Vector3(0, 7.15, -4.02), Color("fff0c9"), 24) as Label3D
 	label.pixel_size = .012
 	label.outline_size = 2
 	_add_court_emblem(world, marker, emblem, mats)
 	var emblem_root := marker.get_node("QuestVerbEmblem") as Node3D
-	emblem_root.position = Vector3(0, 6.0, -4.36)
+	emblem_root.position = Vector3(0, 5.45, -4.36)
 	emblem_root.scale = Vector3(1.8, 1.8, 1.8)
+	_build_station_marker_crown(world, marker, emblem, mats)
+	marker.call("bind", station, mats)
+
+
+static func _build_station_marker_crown(world: MindSparkWorldOne, marker: Node3D,
+		emblem: int, mats: Dictionary) -> void:
+	match emblem:
+		0: # Evidence: two shutters focus on one raised lens.
+			for side in [-1.0, 1.0]:
+				var wing := world.call("_add_brick", marker, "EvidenceCrownWing_%s" % side,
+					Vector3(float(side) * 3.15, 8.25, -4.8),
+					Bricks.build_bevel_box(Vector3(5.2, .62, 1.0), .12),
+					mats.sanctum_ivory) as Node3D
+				wing.rotation.z = float(side) * -.16
+		1: # Memory: three ordered archive cards create a stepped skyline.
+			for card_index in 3:
+				world.call("_add_brick", marker, "MemoryCrownCard_%02d" % (card_index + 1),
+					Vector3((card_index - 1) * 3.25, 8.15 + float(card_index) * .48, -4.8),
+					Bricks.build_bevel_box(Vector3(2.65, 1.0 + float(card_index) * .18, .95), .12),
+					mats.sanctum_ivory)
+		3: # Logic: a peaked proof roof makes the station read as a gate.
+			for side in [-1.0, 1.0]:
+				var roof := world.call("_add_brick", marker, "LogicCrownSlope_%s" % side,
+					Vector3(float(side) * 2.8, 8.55, -4.8),
+					Bricks.build_bevel_box(Vector3(6.2, .68, 1.05), .12),
+					mats.sanctum_ivory) as Node3D
+				roof.rotation.z = float(side) * .25
+		4: # Perspective: unequal fins show the same scene from shifted viewpoints.
+			for fin_index in 3:
+				var fin_height: float = [2.2, 3.5, 1.5][fin_index]
+				var fin := world.call("_add_brick", marker,
+					"PerspectiveCrownFin_%02d" % (fin_index + 1),
+					Vector3(-3.5 + float(fin_index) * 3.5, 8.0 + fin_height * .5, -4.8),
+					Bricks.build_bevel_box(Vector3(1.05, fin_height, .95), .12),
+					mats.sanctum_ivory) as Node3D
+				fin.rotation.z = deg_to_rad(float([-8.0, 0.0, 11.0][fin_index]))
+		5: # Truth: three courses rise toward the onward bridge.
+			for step_index in 3:
+				world.call("_add_brick", marker, "TruthCrownStep_%02d" % (step_index + 1),
+					Vector3(-3.5 + float(step_index) * 3.5, 7.9 + float(step_index) * .62, -4.8),
+					Bricks.build_bevel_box(Vector3(3.25, .72, 1.0), .12),
+					mats.sanctum_ivory)
+		_:
+			world.call("_add_brick", marker, "IvoryMarkerHeader", Vector3(0, 8.0, -4.8),
+				Bricks.build_bevel_box(Vector3(11.8, .8, 1.1), .14), mats.sanctum_ivory)
+
+	# State feedback is inset into the readable slate instead of floating above
+	# the architecture. This keeps the crown silhouette clean at player height.
+	var beacon_y := 7.92
+	world.call("_add_brick", marker, "MarkerStateBeacon", Vector3(0, beacon_y, -4.30),
+		Bricks.build_crystal(.52, 1.15, .14, 6), mats.astral_lavender)
+	var active_wings := Node3D.new()
+	active_wings.name = "ActiveStateWings"
+	marker.add_child(active_wings)
+	for side in [-1.0, 1.0]:
+		world.call("_add_brick", active_wings, "ActiveWing_%s" % side,
+			Vector3(float(side) * 1.05, beacon_y - .10, -4.29),
+			Bricks.build_bevel_box(Vector3(1.4, .18, .34), .05), mats.arrival_glass)
+	active_wings.visible = false
+	var completed_wings := Node3D.new()
+	completed_wings.name = "CompletedStateWings"
+	marker.add_child(completed_wings)
+	for side in [-1.0, 1.0]:
+		var leaf := world.call("_add_brick", completed_wings, "CompletedLeaf_%s" % side,
+			Vector3(float(side) * 1.10, beacon_y - .06, -4.29),
+			Bricks.build_bevel_box(Vector3(1.8, .26, .48), .06), mats.green_glow) as Node3D
+		leaf.rotation.z = float(side) * .28
+	completed_wings.visible = false
 
 
 static func _add_court_emblem(world: MindSparkWorldOne, court: Node3D,

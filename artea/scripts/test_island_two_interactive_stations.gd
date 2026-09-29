@@ -15,6 +15,9 @@ func _run() -> void:
 	for frame in 8:
 		await process_frame
 	var scanner := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
+	var scanner_marker := scanner.get_node("ProductionStationMarker") as Node3D
+	assert(str(scanner_marker.get_meta("presentation_state")) == "inactive",
+		"a fresh Island Two station begins with a restrained inactive beacon")
 	scanner.interaction_enabled = false
 	assert(not scanner.interact(&"capture", 0).accepted)
 	scanner.interaction_enabled = true
@@ -50,9 +53,22 @@ func _run() -> void:
 	await process_frame
 	assert(scanner.current_state.get("adjustments", []) == [1, 0, 0],
 		"the same control must work when the player returns")
+	assert(str(scanner_marker.get_meta("presentation_state")) == "active",
+		"using a station activates its long-range beacon")
 	panel.queue_free()
 	await process_frame
 	assert(actor.is_physics_processing())
+	assert(scanner.interact(&"adjust", 0).accepted)
+	assert(scanner.interact(&"capture", 0).accepted)
+	assert(scanner.interact(&"adjust", 1).accepted)
+	assert(scanner.interact(&"capture", 1).accepted)
+	for adjustment in 3:
+		assert(scanner.interact(&"adjust", 2).accepted)
+	assert(scanner.interact(&"capture", 2).accepted)
+	await process_frame
+	assert(bool(scanner.current_state.get("completed", false)))
+	assert(str(scanner_marker.get_meta("presentation_state")) == "completed",
+		"completion changes the station beacon and crown state")
 	for id in ["world_one.evidence_scanner", "world_one.memory_board",
 			"world_one.logic_gate", "world_one.perspective_lens",
 			"world_one.truth_bridge"]:

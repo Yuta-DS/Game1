@@ -57,9 +57,12 @@ func _capture() -> void:
 			hidden_pattern = arg.trim_prefix("--hide=")
 			for mesh in world.find_children(hidden_pattern, "Node3D", true, false):
 				mesh.visible = false
-	# Presentation-only suppression of floating text for this overview.
-	for label in world.find_children("*", "Label3D", true, false):
-		label.visible = false
+	# The clean overview hides floating text by default. `--show-labels` keeps the
+	# real player-facing typography for interaction-readability reviews.
+	var show_labels := "--show-labels" in OS.get_cmdline_user_args()
+	if not show_labels:
+		for label in world.find_children("*", "Label3D", true, false):
+			label.visible = false
 	var camera := Camera3D.new()
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.size = 350
@@ -75,6 +78,8 @@ func _capture() -> void:
 	await create_timer(1.2).timeout
 	RenderingServer.force_draw(false)
 	var output := "res://artifacts/%s_overview" % capture_id
+	if show_labels:
+		output += "_labels"
 	if "--diagnostic" in OS.get_cmdline_user_args():
 		output += "_diagnostic"
 		if not hidden_pattern.is_empty():
@@ -212,5 +217,6 @@ func _capture() -> void:
 	var store := "user://capture_%s_overview.json" % capture_id
 	if FileAccess.file_exists(store):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(store))
-	print("%s_OVERVIEW: captured current local world; labels hidden" % capture_id.to_upper())
+	print("%s_OVERVIEW: captured current local world; labels %s" % [
+		capture_id.to_upper(), "shown" if show_labels else "hidden"])
 	quit()
