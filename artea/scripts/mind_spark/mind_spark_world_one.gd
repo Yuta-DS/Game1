@@ -856,6 +856,10 @@ func _build_station_spur(parent: Node3D) -> void:
 	_station_spur.name = "OptionalCompletedWorldStationSpur"
 	_station_spur.set_meta("optional_after_completion", true)
 	_station_spur.set_meta("blocks_story_route", false)
+	# This assembly is hidden until the epilogue, so the world-level static pass
+	# cannot see its repeated stair treads. Batch its inert render leaves while it
+	# is still visible; authored nodes and the continuous collision ramp remain.
+	_station_spur.set_meta("static_render_merge_min_group", 2)
 	parent.add_child(_station_spur)
 
 	# Branch sideways off the arena so the spur never overlaps the story route.
@@ -917,6 +921,7 @@ func _build_station_spur(parent: Node3D) -> void:
 	_station_spur.set_meta("station_island_radius", STATION_ISLAND_RADIUS)
 	_station_spur.set_meta("branches_from_zone", str(ZONES[4].id))
 
+	_merge_static_render_geometry(_station_spur)
 	set_station_spur_available(false)
 
 
@@ -1347,6 +1352,10 @@ func _build_three_fused_super_islands(parent: Node3D) -> void:
 	fusions.set_meta("district_count", 6)
 	fusions.set_meta("external_bridge_count", 2)
 	fusions.set_meta("fusion_rule", "two legacy districts share one deck, engine hall and rock keel")
+	# Fusion hulls repeat paired ribs, arches and engine braces in groups of two
+	# and three. Those pieces are static and can share a draw without changing
+	# their independently authored collision or inspection paths.
+	fusions.set_meta("static_render_merge_min_group", 2)
 	parent.add_child(fusions)
 	for pair_index in SUPER_ISLAND_PAIRS.size():
 		var pair: Array = SUPER_ISLAND_PAIRS[pair_index]
@@ -2083,6 +2092,9 @@ func _build_main_route(parent: Node3D) -> void:
 	var route := Node3D.new()
 	route.name = "MainStoryCircuitRoute"
 	route.set_meta("phase_02", "main_story_route")
+	# Each crossing uses paired edge courses and supports. Merge these small
+	# static families even when a 96 m render cell contains fewer than four.
+	route.set_meta("static_render_merge_min_group", 2)
 	route.set_meta("route_zone_ids", PackedStringArray([
 		"01_world_gate_landing",
 		"02_living_network_forest",
@@ -9251,8 +9263,13 @@ func _merge_static_render_geometry(root: Node3D) -> void:
 			member.set_meta("render_merged_into", batch.name)
 			merged_sources += 1
 		merged_groups += 1
-	set_meta("merged_static_render_groups", merged_groups)
-	set_meta("merged_static_render_sources", merged_sources)
+	# A dormant assembly such as the completed-world station may be merged in a
+	# local pass before the whole-world pass. Accumulate both so integrity tests
+	# can account for every disabled source and its live replacement exactly once.
+	set_meta("merged_static_render_groups",
+		int(get_meta("merged_static_render_groups", 0)) + merged_groups)
+	set_meta("merged_static_render_sources",
+		int(get_meta("merged_static_render_sources", 0)) + merged_sources)
 
 
 func _collect_static_render_leaves(node: Node, root: Node3D,

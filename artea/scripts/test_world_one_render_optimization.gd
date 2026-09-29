@@ -59,6 +59,19 @@ func _run() -> void:
 			garden_batched_sources += 1
 	assert(garden_batched_sources > 300,
 		"the retired garden projector must not prevent its live static conservatory from batching")
+	var station_spur := world.get_node(
+		"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D
+	world.set_station_spur_available(true)
+	var station_merged_sources := 0
+	var station_live_batches := 0
+	for mesh_value in station_spur.find_children("*", "MeshInstance3D", true, false):
+		var mesh := mesh_value as MeshInstance3D
+		if mesh.layers == 0 and mesh.has_meta("render_merged_into"):
+			station_merged_sources += 1
+		if mesh.has_meta("merged_static_source_count") and mesh.layers == 1:
+			station_live_batches += 1
+	assert(station_merged_sources >= 80 and station_live_batches > 0,
+		"the completed-world station must reveal batched stairs instead of 91 individual draws")
 
 	for object in world.get_quest_objects():
 		var visible_meshes := 0
