@@ -38,6 +38,7 @@ const SanctuaryAmbience := preload("res://assets/audio/calm music.ogg")
 const IslandDetailAnimator := preload("res://scripts/mind_spark/mind_spark_island_detail_animator.gd")
 const IslandOnePuzzleScript := preload("res://scripts/mind_spark/mind_spark_island_one_puzzle.gd")
 const WebPerfProbeScript := preload("res://scripts/mind_spark/world_one_web_perf_probe.gd")
+const WebQualityProbeScript := preload("res://scripts/mind_spark/world_one_web_quality_probe.gd")
 const ENEMY_DEFINITIONS := {
 	"static_mite": preload("res://resources/mind_spark/enemies/static_mite.tres"),
 	"glitch_sprout": preload("res://resources/mind_spark/enemies/glitch_sprout.tres"),
@@ -245,6 +246,7 @@ func build_world() -> void:
 	_configure_world_one_visibility_ranges(self)
 	_configure_web_island_detail_streaming()
 	_install_web_perf_probe()
+	_install_web_quality_probe()
 	set_meta("world_identity", "living computer forest")
 	set_meta("lead_force", "technology_science")
 	set_meta("zone_count", 6)
@@ -278,6 +280,24 @@ func _install_web_perf_probe() -> void:
 	add_child(probe)
 	probe.call("configure", self)
 	set_meta("web_perf_probe_enabled", true)
+
+
+func _install_web_quality_probe() -> void:
+	# This production-safe diagnostic is dormant unless explicitly requested.
+	# It verifies real mini-game input and temporary browser persistence without
+	# retaining any changes to the player's quest or identity saves.
+	var requested := OS.get_environment("ARTEA_WORLD_ONE_WEB_QUALITY") == "1"
+	if OS.has_feature("web"):
+		var query := str(JavaScriptBridge.eval("window.location.search", true))
+		requested = "world_one_quality=1" in query
+	if not requested or has_node("WorldOneWebQualityProbe"):
+		return
+	var probe := Node.new()
+	probe.name = "WorldOneWebQualityProbe"
+	probe.set_script(WebQualityProbeScript)
+	add_child(probe)
+	probe.call("configure", self)
+	set_meta("web_quality_probe_enabled", true)
 
 
 func _refine_island_one_surroundings() -> void:
