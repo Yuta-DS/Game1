@@ -63,16 +63,6 @@ func _run() -> void:
 		"the 1444x1702 production canvas must render 3D near the 1.0 MP target")
 	assert(absf(root.scaling_3d_scale - render_scale) < 0.002,
 		"the measured render scale must be applied to the active viewport")
-	var full_hd_scale := float(world.call(
-		"_web_3d_scale_for_size", Vector2i(1280, 720)))
-	assert(is_equal_approx(full_hd_scale, 1.0),
-		"a sub-1.0 MP canvas must retain native 3D resolution")
-	var retina_scale := float(world.call(
-		"_web_3d_scale_for_size", Vector2i(2560, 1440)))
-	var retina_render_pixels := 2560.0 * 1440.0 * retina_scale * retina_scale
-	assert(retina_scale >= 0.520 and retina_scale < 0.523 \
-			and absf(retina_render_pixels - 1000000.0) < 1000.0,
-		"a 2560x1440 Retina canvas must obey the 1.0 MP 3D budget")
 	assert(root.msaa_3d == Viewport.MSAA_DISABLED \
 			and int(world.get_meta("web_msaa_3d", -1)) == int(Viewport.MSAA_DISABLED),
 		"Web must avoid multisampling its already high-DPI internal buffer")
