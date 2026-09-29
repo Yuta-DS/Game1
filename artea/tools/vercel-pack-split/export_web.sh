@@ -62,8 +62,28 @@ if grep -Eq '^(SCRIPT ERROR:|ERROR:)' "${export_log}"; then
 fi
 rm -f "${export_log}"
 
+# Boot the exported pack itself before splitting it. This catches resources
+# that exist in the checkout but were omitted by the scoped Web preset, and it
+# proves Offline Guest still mounts World One with all fifteen quest objects.
+smoke_log="$(mktemp -t artea-web-smoke.XXXXXX)"
+if ! "${godot_bin}" --headless --main-pack "${output_dir}/index.pck" \
+		--script res://scripts/web_pack_smoke.gd 2>&1 | tee "${smoke_log}"; then
+	rm -f "${smoke_log}"
+	echo "Exported Web pack failed its runtime smoke test." >&2
+	exit 1
+fi
+if grep -Eq "invalid UID:|using text path instead:|^(SCRIPT ERROR:|ERROR:)" "${smoke_log}"; then
+	rm -f "${smoke_log}"
+	echo "Exported Web pack reported a missing or invalid runtime resource." >&2
+	exit 1
+fi
+rm -f "${smoke_log}"
+
 python3 "${script_dir}/../patch_web_release_loader.py" \
 	"${output_dir}/index.html"
+# The release loader never requests the debug side module. Godot may still copy
+# it beside the selected release library, so remove that redundant upload.
+rm -f "${output_dir}/libterrain.web.debug.wasm32.wasm"
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
 

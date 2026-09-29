@@ -26,6 +26,7 @@ const REQUIRED_WEB_RESOURCES := [
 ]
 
 const RETIRED_WEB_RESOURCES := [
+	"addons/terrain_3d/bin/libterrain.web.debug.wasm32.wasm",
 	"assets3D/crown_line_train/crown_line_lego_train.glb",
 	"assets3D/crown_line_train/crown_line_lego_train_aged_gold_albedo.png",
 	"assets3D/mind_spark/celestial_islands_v08/island_01.glb",
@@ -49,6 +50,9 @@ func _init() -> void:
 		web_section, "export_files", PackedStringArray())
 	var inclusions := str(config.get_value(web_section, "include_filter", ""))
 	var exclusions := str(config.get_value(web_section, "exclude_filter", ""))
+	assert(_matches_any_export_pattern(
+		"addons/terrain_3d/bin/libterrain.web.release.wasm32.wasm", inclusions),
+		"Web pack scope: the release Terrain3D side module must be included")
 	for resource_path in REQUIRED_WEB_RESOURCES:
 		assert(ResourceLoader.exists(resource_path),
 			"Web feature parity: required local resource is missing: %s" % resource_path)
