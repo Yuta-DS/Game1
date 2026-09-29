@@ -10,6 +10,8 @@
 	// turn, so one request that never settled meant the pack was never fetched
 	// and the engine sat at the loading screen with no error.
 	const MAX_PARTS = 128;
+	const PART_TIMEOUT_MS = 45000;
+	const PART_ATTEMPTS = 3;
 
 	const buildKey = new URL(window.location.href).searchParams.get("build");
 	const partUrl = (requestUrl, index) => {
@@ -60,10 +62,55 @@
 		return missing === -1 ? MAX_PARTS : missing;
 	};
 
-	// Fetch one at a time. Requesting all pack parts at once
-	// holds two copies of the pack in memory at peak and mobile Safari drops the
-	// tab under that pressure.
-	// Stream the parts instead of buffering them.
+	const pause = (milliseconds) => new Promise((resolve) =>
+		window.setTimeout(resolve, milliseconds),
+	);
+
+	const fetchPart = async (requestUrl, index) => {
+		const url = partUrl(requestUrl, index);
+		let lastError;
+		for (let attempt = 1; attempt <= PART_ATTEMPTS; attempt += 1) {
+			const abort = new AbortController();
+			const timeout = window.setTimeout(() => abort.abort(), PART_TIMEOUT_MS);
+			try {
+				const response = await nativeFetch(url, {
+					cache: "no-store",
+					signal: abort.signal,
+				});
+				if (!response.ok) {
+					throw new Error(`${url} returned ${response.status}`);
+				}
+				const bytes = new Uint8Array(await response.arrayBuffer());
+				const declaredLength = Number(response.headers.get("Content-Length"));
+				if (Number.isInteger(declaredLength) && declaredLength >= 0
+						&& bytes.byteLength !== declaredLength) {
+					throw new Error(
+						`${url} was truncated (${bytes.byteLength}/${declaredLength} bytes)`,
+					);
+				}
+				return bytes;
+			} catch (error) {
+				lastError = error;
+				if (attempt < PART_ATTEMPTS) {
+					console.warn(
+						`[ARTEA] retrying pack part ${index + 1}/${attempt + 1}`,
+					);
+					await pause(250 * attempt);
+				}
+			} finally {
+				window.clearTimeout(timeout);
+			}
+		}
+		throw new Error(
+			`Failed to download pack part ${index + 1} after ${PART_ATTEMPTS} attempts: ${lastError}`,
+		);
+	};
+
+	// Fetch one part at a time. Requesting all pack parts at once holds two
+	// copies of the pack in memory at peak and mobile Safari drops the tab under
+	// that pressure. An 8 MB part is buffered before it is enqueued so a stalled
+	// or truncated request can be retried without leaking partial bytes into the
+	// assembled PCK. Peak JS cost stays one part rather than the full pack.
 	//
 	// The previous version awaited response.arrayBuffer() for every part and
 	// kept them all, then copied the lot into a Blob - so a 748 MB pack existed
@@ -76,18 +123,7 @@
 		async start(controller) {
 			try {
 				for (let index = 0; index < partCount; index += 1) {
-					const url = partUrl(requestUrl, index);
-					const response = await nativeFetch(url, { cache: "no-store" });
-					if (!response.ok) {
-						throw new Error(`${url} returned ${response.status}`);
-					}
-					// Pump this part through without retaining it.
-					const reader = response.body.getReader();
-					for (;;) {
-						const { done, value } = await reader.read();
-						if (done) break;
-						controller.enqueue(value);
-					}
+					controller.enqueue(await fetchPart(requestUrl, index));
 				}
 				controller.close();
 			} catch (error) {
