@@ -14,6 +14,11 @@ func _run() -> void:
 	sun.name = "ProductionShadowSun"
 	sun.shadow_enabled = true
 	root.add_child(sun)
+	var camera := Camera3D.new()
+	camera.position = Vector3(-760, 8, 120)
+	camera.far = 5000.0
+	root.add_child(camera)
+	camera.make_current()
 	var world := WorldScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
 	world.object_state_store_path = "user://test_world_one_web_render_budget.json"
@@ -36,6 +41,15 @@ func _run() -> void:
 	assert(not sun.shadow_enabled \
 			and int(world.get_meta("web_directional_shadows_disabled", 0)) == 1,
 		"Web must remove the archipelago-wide directional shadow pass")
+	assert(is_equal_approx(camera.far, 900.0) \
+			and is_equal_approx(float(world.get_meta("web_camera_far", 0.0)), 900.0),
+		"the active World One Web camera must exclude unrelated galaxy geometry")
+	camera.position = Vector3(4000, 20, 4000)
+	await process_frame
+	assert(is_equal_approx(camera.far, 5000.0),
+		"the camera's authored far plane must restore after leaving World One")
+	camera.position = Vector3(-760, 8, 120)
+	await process_frame
 	assert(bool(world.get_meta("web_island_detail_streaming", false)),
 		"Web must stream stateful island detail branches by camera distance")
 	world.call("_update_web_island_detail_streaming_position", Vector3(-760, 8, 120))

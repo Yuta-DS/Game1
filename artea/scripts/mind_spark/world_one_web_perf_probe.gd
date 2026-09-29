@@ -52,7 +52,9 @@ func _begin() -> void:
 	_camera = Camera3D.new()
 	_camera.name = "WorldOneWebPerfCamera"
 	_camera.near = 0.1
-	_camera.far = 5000.0
+	# Match the production World One Web horizon. The galaxy sky is unaffected,
+	# while unrelated Castle Galaxy geometry beyond the route is clipped.
+	_camera.far = 900.0
 	_camera.fov = 62.0
 	_world.add_child(_camera)
 	_activate_view()

@@ -1224,6 +1224,7 @@ func interact_object_for_test(kind: int, action: StringName = &"primary", value:
 
 func _process(_delta: float) -> void:
 	_update_web_island_detail_streaming()
+	_update_web_camera_far_plane()
 	if _player == null:
 		return
 	var nearest_zone := _nearest_zone()
@@ -9470,3 +9471,29 @@ func _update_web_island_detail_streaming_position(focus_local: Vector3) -> void:
 				detail_root.visible = show_detail
 	_web_visible_detail_islands = visible_islands
 	set_meta("web_visible_detail_islands", visible_islands)
+
+
+# World One shares one scene with the full Castle Galaxy. The desktop camera's
+# multi-kilometre far plane therefore keeps unrelated kingdoms in the WebGL
+# render set behind these islands. Limit the active Web camera while it is near
+# this route, then restore its authored value as soon as the camera leaves.
+func _update_web_camera_far_plane() -> void:
+	if not _uses_web_render_budget() or get_viewport() == null:
+		return
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	if not camera.has_meta("world_one_original_far"):
+		camera.set_meta("world_one_original_far", camera.far)
+	var focus := to_local(camera.global_position)
+	var focus_2d := Vector2(focus.x, focus.z)
+	var nearest := INF
+	for zone_info in ZONES:
+		var zone_position := get_zone_position(str(zone_info.id))
+		nearest = minf(nearest,
+			focus_2d.distance_to(Vector2(zone_position.x, zone_position.z)))
+	var original_far := float(camera.get_meta("world_one_original_far", camera.far))
+	var target_far := 900.0 if nearest <= 500.0 else original_far
+	if not is_equal_approx(camera.far, target_far):
+		camera.far = target_far
+	set_meta("web_camera_far", camera.far)
