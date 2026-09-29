@@ -9347,6 +9347,12 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 	set_meta("web_shadow_culled_mesh_count", shadow_culled)
 	if web_budget:
 		_configure_web_internal_resolution()
+		# The production sun's 1,600 m shadow range submits the complete three-
+		# island archipelago even when the camera sees only one court. WebGL then
+		# redraws millions of off-camera primitives into cascaded shadow maps. The
+		# low-poly world keeps its faceted diffuse shading and two-directional-light
+		# modelling without this extra pass; native builds retain full shadows.
+		call_deferred("_configure_web_directional_shadows")
 
 
 func _uses_web_render_budget() -> bool:
@@ -9373,3 +9379,15 @@ func _configure_web_internal_resolution() -> void:
 	set_meta("web_3d_render_scale", snappedf(render_scale, 0.001))
 	set_meta("web_3d_target_pixels", 1200000)
 	set_meta("web_msaa_3d", int(viewport.msaa_3d))
+
+
+func _configure_web_directional_shadows() -> void:
+	if not _uses_web_render_budget() or get_tree() == null:
+		return
+	var disabled := 0
+	for candidate in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
+		var light := candidate as DirectionalLight3D
+		if light.shadow_enabled:
+			light.shadow_enabled = false
+			disabled += 1
+	set_meta("web_directional_shadows_disabled", disabled)
