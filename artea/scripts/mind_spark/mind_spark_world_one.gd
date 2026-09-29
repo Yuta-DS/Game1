@@ -9461,6 +9461,7 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 	var configured := 0
 	var shadow_culled := 0
 	var island_two_foundation_lods := 0
+	var island_three_foundation_lods := 0
 	for candidate in root.find_children("*", "MeshInstance3D", true, false):
 		var instance := candidate as MeshInstance3D
 		if instance.mesh == null or not instance.visible:
@@ -9490,11 +9491,19 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 		var island_two_foundation := instance_path.contains(
 			"03ConstellationCourt/ModularFloatingFoundation") \
 			or instance_path.contains("04HopePathRidge/ModularFloatingFoundation")
+		var island_three_foundation := instance_path.contains(
+			"05ThoughtStormArena/ModularFloatingFoundation") \
+			or instance_path.contains("06OldestTreeSanctuary/ModularFloatingFoundation")
 		if web_budget and island_two_foundation and instance.mesh is ArrayMesh \
 				and extent >= 12.0:
-			instance.lod_bias = 0.25
-			instance.set_meta("web_lod_profile", "island_two_foundation_0.25")
+			instance.lod_bias = 0.05
+			instance.set_meta("web_lod_profile", "island_two_foundation_0.05")
 			island_two_foundation_lods += 1
+		elif web_budget and island_three_foundation and instance.mesh is ArrayMesh \
+				and extent >= 12.0:
+			instance.lod_bias = 0.05
+			instance.set_meta("web_lod_profile", "island_three_foundation_0.05")
+			island_three_foundation_lods += 1
 		# Compatibility redraws each visible surface into the directional shadow
 		# atlas. World One retains its low-poly diffuse modelling without those
 		# duplicate submissions; ambient occlusion and authored colour contrast
@@ -9518,6 +9527,7 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 	set_meta("visibility_range_profile", "%d/%d/%d/%d/%dm by world-space extent" % range_profile)
 	set_meta("web_shadow_culled_mesh_count", shadow_culled)
 	set_meta("web_island_two_foundation_lod_count", island_two_foundation_lods)
+	set_meta("web_island_three_foundation_lod_count", island_three_foundation_lods)
 	if web_budget:
 		_configure_web_island_two_quest_detail_ranges()
 		_configure_web_internal_resolution()

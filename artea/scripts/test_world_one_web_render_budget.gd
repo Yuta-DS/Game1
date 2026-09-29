@@ -32,6 +32,8 @@ func _run() -> void:
 		"World One meshes must stop submitting duplicate Web shadow passes")
 	assert(int(world.get_meta("web_island_two_foundation_lod_count", 0)) >= 8,
 		"Island Two's large imported foundations must use their generated Web LODs")
+	assert(int(world.get_meta("web_island_three_foundation_lod_count", 0)) >= 8,
+		"Island Three's large imported foundations must use their generated Web LODs")
 	assert(int(world.get_meta("web_island_two_quest_detail_mesh_count", 0)) >= 80,
 		"Island Two's small production-bay controls must stream by player distance")
 	assert(int(world.get_meta("web_island_two_preserved_silhouette_mesh_count", 0)) >= 20,
@@ -44,10 +46,19 @@ func _run() -> void:
 		"WorldOneGeometry/04HopePathRidge/ModularFloatingFoundation/IslandArchitecture/Architecture_v17_04",
 	]:
 		var foundation_mesh := world.get_node(path) as MeshInstance3D
-		assert(is_equal_approx(foundation_mesh.lod_bias, 0.25)
+		assert(is_equal_approx(foundation_mesh.lod_bias, 0.05)
 				and str(foundation_mesh.get_meta("web_lod_profile", "")) \
-				== "island_two_foundation_0.25",
+				== "island_two_foundation_0.05",
 			"Island Two architecture must keep an explicit production Web LOD contract")
+	for path in [
+		"WorldOneGeometry/05ThoughtStormArena/ModularFloatingFoundation/IslandArchitecture/Architecture_v11_05",
+		"WorldOneGeometry/06OldestTreeSanctuary/ModularFloatingFoundation/IslandArchitecture/Architecture_v11_06",
+	]:
+		var foundation_mesh := world.get_node(path) as MeshInstance3D
+		assert(is_equal_approx(foundation_mesh.lod_bias, 0.05)
+				and str(foundation_mesh.get_meta("web_lod_profile", "")) \
+				== "island_three_foundation_0.05",
+			"Island Three architecture must keep an explicit production Web LOD contract")
 	var memory := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.MEMORY_CONSTELLATION)
 	var memory_tile := memory.get_node("ProductionRecorderBay/recorder_bay/EventTile0") \
 		as MeshInstance3D
