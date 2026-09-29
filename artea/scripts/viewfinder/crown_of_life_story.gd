@@ -727,6 +727,9 @@ func _build_player() -> void:
 	_player = CharacterBody3D.new()
 	_player.name = "StoryPlayer"
 	_player.add_to_group("player")
+	# This story drives the body itself and respawns at its chapter checkpoint,
+	# so the general Milo fall rescue (milo_fall_rescue.gd) stays out of it.
+	_player.set_meta(&"custom_fall_recovery", true)
 
 	var capsule := CollisionShape3D.new()
 	var capsule_shape := CapsuleShape3D.new()

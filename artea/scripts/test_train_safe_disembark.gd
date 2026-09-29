@@ -11,7 +11,9 @@ func _fail(message: String) -> void:
 
 
 func _settle(player: CharacterBody3D) -> bool:
-	for frame in 120:
+	# A missed jump now falls STATION_RESCUE_DROP (16 m) before recovery, which
+	# alone takes about 1.6 s. Settled players still return on landing.
+	for frame in 300:
 		await physics_frame
 		if frame > 5 and player.is_on_floor():
 			return true
@@ -51,6 +53,11 @@ func _run() -> void:
 			return
 		var station_nodes: Array = railway.get("_station_nodes")
 		var platform := station_nodes[station].get_node("WalkablePlatform") as Node3D
+		# A missed jump starts from rest. This test runs the train at
+		# ride_duration 0.05, so any contact with it in the frames below would
+		# hand the capsule the train's thousands of m/s on leaving and fling it
+		# across the map, a timing-dependent flake unrelated to recovery.
+		player.platform_on_leave = CharacterBody3D.PLATFORM_ON_LEAVE_DO_NOTHING
 		for side in [-1.0, 1.0]:
 			# Begin a missed jump beside either edge, then let actual player gravity
 			# and station recovery run until the capsule lands on a real collider.
@@ -66,6 +73,7 @@ func _run() -> void:
 			if platform.to_local(player.global_position).y < -1.5:
 				_fail("missed jump was not recovered to the station")
 				return
+		player.platform_on_leave = CharacterBody3D.PLATFORM_ON_LEAVE_ADD_VELOCITY
 		player.global_position = railway.call("get_passenger_seat_position", 0)
 		if not railway.call("sit_in_passenger_seat", 0):
 			_fail("cannot board passenger seat")
