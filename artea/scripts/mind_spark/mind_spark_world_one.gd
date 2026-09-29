@@ -9371,20 +9371,21 @@ func _configure_web_internal_resolution() -> void:
 	if viewport == null:
 		return
 	# A retina browser canvas can contain four times as many pixels as the CSS
-	# display. Cap only the 3D render buffer near 1.2 MP; HUD text and controls
+	# display. Cap only the 3D render buffer near 1.0 MP; HUD text and controls
 	# stay at the browser's full native resolution.
 	var pixels := float(viewport.size.x * viewport.size.y)
 	var render_scale := 1.0
-	if pixels > 1200000.0:
-		render_scale = clampf(sqrt(1200000.0 / pixels), 0.67, 1.0)
+	if pixels > 1000000.0:
+		render_scale = clampf(sqrt(1000000.0 / pixels), 0.62, 1.0)
 	viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
 	viewport.scaling_3d_scale = render_scale
-	# The project-wide desktop preset uses 8x MSAA. At high-DPI WebGL sizes that
-	# multiplies the already large 3D buffer eightfold. Two samples retain clean
-	# low-poly edges while avoiding the dominant browser fill-rate cost.
-	viewport.msaa_3d = Viewport.MSAA_2X
+	# The project-wide desktop preset uses 8x MSAA. High-DPI WebGL already renders
+	# close to one million internal pixels, and multisampling the three large
+	# courts pushes their p95 beyond a frame. Keep native 8x quality; Web uses the
+	# high-DPI buffer itself for edge definition.
+	viewport.msaa_3d = Viewport.MSAA_DISABLED
 	set_meta("web_3d_render_scale", snappedf(render_scale, 0.001))
-	set_meta("web_3d_target_pixels", 1200000)
+	set_meta("web_3d_target_pixels", 1000000)
 	set_meta("web_msaa_3d", int(viewport.msaa_3d))
 
 
@@ -9497,15 +9498,4 @@ func _update_web_camera_far_plane() -> void:
 	var target_far := 900.0 if inside_world_one else original_far
 	if not is_equal_approx(camera.far, target_far):
 		camera.far = target_far
-	# Compatibility renders an additional directional-light pass for affected
-	# geometry. The shared ambient sky already supplies cool fill at energy 0.82,
-	# so the second FillLight duplicates hundreds of court draws on Web without
-	# contributing a readable shadow or gameplay signal.
-	for candidate in get_tree().root.find_children("FillLight", "DirectionalLight3D", true, false):
-		var fill := candidate as DirectionalLight3D
-		if not fill.has_meta("world_one_original_visible"):
-			fill.set_meta("world_one_original_visible", fill.visible)
-		var original_visible := bool(fill.get_meta("world_one_original_visible", true))
-		fill.visible = false if inside_world_one else original_visible
 	set_meta("web_camera_far", camera.far)
-	set_meta("web_single_directional_light", inside_world_one)

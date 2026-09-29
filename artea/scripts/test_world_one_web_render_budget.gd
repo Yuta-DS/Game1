@@ -14,10 +14,6 @@ func _run() -> void:
 	sun.name = "ProductionShadowSun"
 	sun.shadow_enabled = true
 	root.add_child(sun)
-	var fill := DirectionalLight3D.new()
-	fill.name = "FillLight"
-	fill.shadow_enabled = false
-	root.add_child(fill)
 	var camera := Camera3D.new()
 	camera.position = Vector3(-760, 8, 120)
 	camera.far = 5000.0
@@ -35,25 +31,23 @@ func _run() -> void:
 	assert(int(world.get_meta("web_shadow_culled_mesh_count", 0)) > 1000,
 		"World One meshes must stop submitting duplicate Web shadow passes")
 	var render_scale := float(world.get_meta("web_3d_render_scale", 0.0))
-	assert(render_scale >= 0.67 and render_scale < 0.75,
-		"the 1444x1702 production canvas must render 3D near the 1.2 MP target")
+	assert(render_scale >= 0.62 and render_scale < 0.67,
+		"the 1444x1702 production canvas must render 3D near the 1.0 MP target")
 	assert(absf(root.scaling_3d_scale - render_scale) < 0.002,
 		"the measured render scale must be applied to the active viewport")
-	assert(root.msaa_3d == Viewport.MSAA_2X \
-			and int(world.get_meta("web_msaa_3d", -1)) == int(Viewport.MSAA_2X),
-		"Web must reduce the desktop 8x MSAA preset to a high-DPI-safe 2x budget")
+	assert(root.msaa_3d == Viewport.MSAA_DISABLED \
+			and int(world.get_meta("web_msaa_3d", -1)) == int(Viewport.MSAA_DISABLED),
+		"Web must avoid multisampling its already high-DPI internal buffer")
 	assert(not sun.shadow_enabled \
 			and int(world.get_meta("web_directional_shadows_disabled", 0)) == 1,
 		"Web must remove the archipelago-wide directional shadow pass")
 	assert(is_equal_approx(camera.far, 900.0) \
 			and is_equal_approx(float(world.get_meta("web_camera_far", 0.0)), 900.0),
 		"the active World One Web camera must exclude unrelated galaxy geometry")
-	assert(not fill.visible and bool(world.get_meta("web_single_directional_light", false)),
-		"World One Web must use one directional pass with ambient sky fill")
 	camera.position = Vector3(4000, 20, 4000)
 	await process_frame
-	assert(is_equal_approx(camera.far, 5000.0) and fill.visible,
-		"camera depth and shared fill light must restore after leaving World One")
+	assert(is_equal_approx(camera.far, 5000.0),
+		"camera depth must restore after leaving World One")
 	camera.position = Vector3(-760, 8, 120)
 	await process_frame
 	assert(bool(world.get_meta("web_island_detail_streaming", false)),
