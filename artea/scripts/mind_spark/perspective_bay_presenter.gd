@@ -5,6 +5,8 @@ var model: Node3D
 var heading: Label3D
 var description: Label3D
 var selected := -1
+var _state_hash := -1
+var _animation_remaining := 0.0
 func configure(source: QuestObjectBase, world: MindSparkWorldOne) -> void:
 	station=source
 	name="ProductionPerspectiveBay"
@@ -35,9 +37,19 @@ func _sync_text(view: int) -> void:
 	var answers: Array=station.current_state.get("view_answers",[false,false,false])
 	description.text=("RECORDED · " if answers[view] or station.current_state.get("completed",false) else "EXPLORE · ")+Evidence.CONTRIBUTIONS[view]
 func _process(delta: float) -> void:
+	if not is_visible_in_tree(): return
+	var next_hash := hash(station.current_state)
+	var state_changed := next_hash != _state_hash
+	if state_changed:
+		_state_hash = next_hash
+		_animation_remaining = 0.75
+	elif _animation_remaining <= 0.0:
+		return
+	_animation_remaining = maxf(0.0, _animation_remaining - delta)
 	var view := clampi(int(station.current_state.get("view",0)),0,2)
 	var target := Evidence.angle(view)
 	var carousel := model.get_node("Carousel") as Node3D
 	carousel.rotation.y=lerp_angle(carousel.rotation.y,target,minf(1,delta*6))
 	(model.get_node("Selector") as Node3D).rotation.y=carousel.rotation.y
-	_sync_text(view)
+	if state_changed or view != selected:
+		_sync_text(view)

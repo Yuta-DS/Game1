@@ -2,6 +2,9 @@ extends Node3D
 
 ## Camera-local environment with reversible sun/fill balance. The shared
 ## WorldEnvironment resource is never edited; leaving restores both lights.
+const SAMPLE_SECONDS := 0.1
+const ZONE_RADII := [125.0, 155.0, 150.0, 122.0, 175.0, 145.0]
+
 var _camera: Camera3D
 var _previous: Environment
 var _source: Environment
@@ -10,46 +13,81 @@ var _sky_material: ProceduralSkyMaterial
 var _original_sky: ProceduralSkyMaterial
 var _strength := 0.0
 var _directional_lights: Dictionary = {}
+var _world: MindSparkWorldOne
+var _control_positions := PackedVector3Array()
+var _station_positions := PackedVector3Array()
+var _zone_centres := PackedVector3Array()
+var _sample_elapsed := SAMPLE_SECONDS
+var _target_strength := 0.0
+
+
+func _ready() -> void:
+	call_deferred("_cache_scene_positions")
+
+
+func _cache_scene_positions() -> void:
+	var ancestor := get_parent()
+	while ancestor != null and not ancestor is MindSparkWorldOne:
+		ancestor = ancestor.get_parent()
+	_world = ancestor as MindSparkWorldOne
+	if _world == null:
+		return
+	_control_positions.clear()
+	var controls := get_parent().get_node_or_null("PuzzleControls")
+	if controls != null:
+		for control in controls.get_children():
+			if control is Node3D:
+				_control_positions.append(_world.to_local((control as Node3D).global_position))
+	_station_positions.clear()
+	for station in _world.get_quest_objects():
+		_station_positions.append(_world.to_local(station.global_position))
+	_zone_centres.clear()
+	for zone_info in MindSparkWorldOne.ZONES:
+		_zone_centres.append(_world.get_zone_position(str(zone_info.id)))
+	set_meta("cached_profile_control_count", _control_positions.size())
+	set_meta("cached_profile_station_count", _station_positions.size())
+	set_meta("profile_sample_seconds", SAMPLE_SECONDS)
+
+
+func _sample_target(camera: Camera3D) -> float:
+	if _world == null:
+		_cache_scene_positions()
+	if _world == null:
+		return 0.0
+	var view_position := _world.to_local(camera.global_position)
+	var distance := INF
+	for control_position in _control_positions:
+		distance = minf(distance, view_position.distance_to(control_position))
+	var target := 1.0 - smoothstep(30.0, 90.0, distance)
+	for station_position in _station_positions:
+		target = maxf(target, 1.0 - smoothstep(34.0, 54.0,
+			view_position.distance_to(station_position)))
+	var direction: Vector3 = _world.global_transform.basis.inverse() * -camera.global_basis.z
+	for index in _zone_centres.size():
+		var centre := _zone_centres[index]
+		var projected_view := view_position
+		if direction.y < -0.05:
+			var projection_time := (centre.y - projected_view.y) / direction.y
+			if projection_time > 0.0:
+				projected_view += direction * projection_time
+		var edge_distance: float = Vector2(projected_view.x - centre.x,
+			projected_view.z - centre.z).length() - float(ZONE_RADII[index])
+		target = maxf(target, 1.0 - smoothstep(0.0, 45.0, edge_distance))
+	return target
 
 func _process(delta: float) -> void:
 	var camera := get_viewport().get_camera_3d()
 	if camera != _camera:
 		_restore()
 		_camera = camera
+		_sample_elapsed = SAMPLE_SECONDS
 	if camera == null:
 		return
-	var controls := get_parent().get_node_or_null("PuzzleControls")
-	if controls == null:
-		return
-	var distance := INF
-	var local_camera := (get_parent() as Node3D).to_local(camera.global_position)
-	for control in controls.get_children():
-		if control is Node3D:
-			var local_control := (get_parent() as Node3D).to_local(control.global_position)
-			distance = minf(distance, local_camera.distance_to(local_control))
-	var target := 1.0 - smoothstep(30.0, 90.0, distance)
-	# The whole first island shares one atmosphere, not only instrument hotspots.
-	# An overview looking at this island receives the same palette as its player.
-	var world := get_parent()
-	while world != null and not world is MindSparkWorldOne:
-		world = world.get_parent()
-	if world is MindSparkWorldOne:
-		# The approved quest family needs the same readable material exposure on
-		# later islands, without replacing their whole ambient atmosphere.
-		for station in world.get_quest_objects():
-			var station_distance: float = world.to_local(camera.global_position).distance_to(world.to_local(station.global_position))
-			target = maxf(target, 1.0-smoothstep(34.0,54.0,station_distance))
-		for id in ["01_world_gate_landing", "02_living_network_forest", "03_constellation_court", "04_hope_path_ridge", "05_thought_storm_arena", "06_oldest_tree_sanctuary"]:
-			var center: Vector3 = world.get_zone_position(id)
-			var view_position: Vector3 = world.to_local(camera.global_position)
-			var direction: Vector3 = world.global_transform.basis.inverse() * -camera.global_basis.z
-			if direction.y < -.05:
-				var t := (center.y-view_position.y)/direction.y
-				if t > 0:
-					view_position += direction*t
-			var radius := float({"01_world_gate_landing":125.0, "02_living_network_forest":155.0, "03_constellation_court":150.0, "04_hope_path_ridge":122.0, "05_thought_storm_arena":175.0, "06_oldest_tree_sanctuary":145.0}[id])
-			var edge_distance := Vector2(view_position.x-center.x,view_position.z-center.z).length()-radius
-			target = maxf(target,1.0-smoothstep(0,45,edge_distance))
+	_sample_elapsed += delta
+	if _sample_elapsed >= SAMPLE_SECONDS:
+		_sample_elapsed = fmod(_sample_elapsed, SAMPLE_SECONDS)
+		_target_strength = _sample_target(camera)
+	var target := _target_strength
 	if target <= 0.0 and _profile == null:
 		return
 	if _profile == null:
@@ -105,6 +143,7 @@ func _restore() -> void:
 	_sky_material = null
 	_original_sky = null
 	_strength = 0.0
+	_target_strength = 0.0
 
 func _exit_tree() -> void:
 	_restore()

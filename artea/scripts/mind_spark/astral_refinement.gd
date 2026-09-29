@@ -21,6 +21,8 @@ func configure(zone: Node3D, foundation: Node3D) -> void:
 
 
 func _process(delta: float) -> void:
+	if not is_visible_in_tree():
+		return
 	advance(delta)
 
 

@@ -161,6 +161,11 @@ var _island_one_star_gate_leaves: Array[AnimatableBody3D] = []
 var _island_one_star_gate_tween: Tween
 var _web_island_detail_roots: Dictionary = {}
 var _web_visible_detail_islands := PackedInt32Array()
+var _web_last_detail_focus := Vector3.INF
+var _web_last_far_focus := Vector3.INF
+var _web_far_camera: Camera3D
+var _last_runtime_player_position := Vector3.INF
+var _hud_update_elapsed := 0.1
 
 
 ## When true, build_world() is not run on _ready and must be triggered by
@@ -1250,15 +1255,21 @@ func interact_object_for_test(kind: int, action: StringName = &"primary", value:
 	return object.interact(action, value) if object != null else {"accepted": false, "reason": "missing_object"}
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_update_web_island_detail_streaming()
 	_update_web_camera_far_plane()
 	if _player == null:
 		return
-	var nearest_zone := _nearest_zone()
-	if not nearest_zone.is_empty():
-		_last_safe_position = to_global(nearest_zone.position + Vector3(0, 7, 0))
-	_update_hud()
+	if _last_runtime_player_position == Vector3.INF \
+			or _last_runtime_player_position.distance_squared_to(_player.global_position) >= 1.0:
+		_last_runtime_player_position = _player.global_position
+		var nearest_zone := _nearest_zone()
+		if not nearest_zone.is_empty():
+			_last_safe_position = to_global(nearest_zone.position + Vector3(0, 7, 0))
+	_hud_update_elapsed += delta
+	if _hud_update_elapsed >= 0.1:
+		_hud_update_elapsed = fmod(_hud_update_elapsed, 0.1)
+		_update_hud()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -9682,6 +9693,11 @@ func _web_focus_position_local() -> Vector3:
 func _update_web_island_detail_streaming_position(focus_local: Vector3) -> void:
 	if _web_island_detail_roots.is_empty():
 		return
+	if _web_last_detail_focus != Vector3.INF \
+			and Vector2(_web_last_detail_focus.x - focus_local.x,
+				_web_last_detail_focus.z - focus_local.z).length_squared() < 4.0:
+		return
+	_web_last_detail_focus = focus_local
 	var visible_islands := PackedInt32Array()
 	var focus_2d := Vector2(focus_local.x, focus_local.z)
 	for island in [1, 2, 3]:
@@ -9699,8 +9715,9 @@ func _update_web_island_detail_streaming_position(focus_local: Vector3) -> void:
 			var detail_root := root_value as Node3D
 			if is_instance_valid(detail_root) and detail_root.visible != show_detail:
 				detail_root.visible = show_detail
-	_web_visible_detail_islands = visible_islands
-	set_meta("web_visible_detail_islands", visible_islands)
+	if _web_visible_detail_islands != visible_islands:
+		_web_visible_detail_islands = visible_islands
+		set_meta("web_visible_detail_islands", visible_islands)
 
 
 # World One shares one scene with the full Castle Galaxy. The desktop camera's
@@ -9713,9 +9730,17 @@ func _update_web_camera_far_plane() -> void:
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
 		return
+	if camera != _web_far_camera:
+		_web_far_camera = camera
+		_web_last_far_focus = Vector3.INF
 	if not camera.has_meta("world_one_original_far"):
 		camera.set_meta("world_one_original_far", camera.far)
 	var focus := to_local(camera.global_position)
+	if _web_last_far_focus != Vector3.INF \
+			and Vector2(_web_last_far_focus.x - focus.x,
+				_web_last_far_focus.z - focus.z).length_squared() < 16.0:
+		return
+	_web_last_far_focus = focus
 	var focus_2d := Vector2(focus.x, focus.z)
 	var nearest := INF
 	for zone_info in ZONES:

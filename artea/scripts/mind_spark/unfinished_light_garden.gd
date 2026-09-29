@@ -279,6 +279,8 @@ func _leaf_mesh() -> ArrayMesh:
 	return surface.commit()
 
 func _process(delta: float) -> void:
+	if not is_visible_in_tree():
+		return
 	_elapsed += delta
 	if _elapsed < .1: return
 	_elapsed = 0

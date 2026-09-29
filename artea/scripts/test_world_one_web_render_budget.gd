@@ -41,6 +41,12 @@ func _run() -> void:
 	assert(bool(world.get_meta("web_spatial_repeated_batching", false))
 			and int(world.get_meta("batched_geometry_groups", 0)) > 0,
 		"Web repeated geometry must use independently culled spatial batches")
+	var lighting_profile := world.find_child("IslandOneLightingProfile", true, false) as Node3D
+	assert(lighting_profile != null
+			and int(lighting_profile.get_meta("cached_profile_station_count", 0)) == 15
+			and int(lighting_profile.get_meta("cached_profile_control_count", 0)) >= 16
+			and is_equal_approx(float(lighting_profile.get_meta("profile_sample_seconds", 0.0)), 0.1),
+		"the shared lighting profile must sample cached positions instead of rebuilding scene queries every frame")
 	for path in [
 		"WorldOneGeometry/03ConstellationCourt/ModularFloatingFoundation/IslandArchitecture/Architecture_v11_03",
 		"WorldOneGeometry/04HopePathRidge/ModularFloatingFoundation/IslandArchitecture/Architecture_v17_04",

@@ -3,6 +3,8 @@ const Experiment := preload("res://scripts/mind_spark/causal_experiment.gd")
 var station: QuestObjectBase
 var model: Node3D
 var status: Label3D
+var _state_hash := -1
+var _animation_remaining := 0.0
 func configure(source: QuestObjectBase, world: MindSparkWorldOne) -> void:
 	station=source
 	name="ProductionTesterBay"
@@ -23,6 +25,14 @@ func _label(text: String, at: Vector3) -> Label3D:
 	label.modulate=Color("fff0d3")
 	return label
 func _process(delta: float) -> void:
+	if not is_visible_in_tree(): return
+	var next_hash := hash(station.current_state)
+	if next_hash != _state_hash:
+		_state_hash = next_hash
+		_animation_remaining = 0.75
+	elif _animation_remaining <= 0.0:
+		return
+	_animation_remaining = maxf(0.0, _animation_remaining - delta)
 	var trial := int(station.current_state.get("trial",1))
 	var selected := int(station.current_state.get("model",-1))
 	var result := Experiment.outcome(trial)

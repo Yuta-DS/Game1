@@ -8,6 +8,8 @@ var captions: Array[Label3D] = []
 var previous := ""
 var trace_material: StandardMaterial3D
 var shutters: Array[MeshInstance3D] = []
+var _state_hash := -1
+var _animation_remaining := 0.0
 
 func configure(source: QuestObjectBase, world: MindSparkWorldOne) -> void:
 	station = source
@@ -58,12 +60,19 @@ func configure(source: QuestObjectBase, world: MindSparkWorldOne) -> void:
 	_update()
 
 func _process(delta: float) -> void:
-	if not is_instance_valid(station): return
+	if not is_visible_in_tree() or not is_instance_valid(station): return
+	var next_hash := hash(station.current_state)
+	if next_hash != _state_hash:
+		_state_hash = next_hash
+		_animation_remaining = 0.75
+		_update()
+	elif _animation_remaining <= 0.0:
+		return
+	_animation_remaining = maxf(0.0, _animation_remaining - delta)
 	var settings: Array = station.current_state.get("adjustments", [0,0,0])
 	for i in 3:
 		var control := model.get_node_or_null("Control%d" % i) as Node3D
 		if control != null: control.rotation.y = lerp_angle(control.rotation.y, int(settings[i]) * PI * .5, minf(1, delta * 12))
-	_update()
 
 func _update() -> void:
 	var settings: Array = station.current_state.get("adjustments", [0,0,0])

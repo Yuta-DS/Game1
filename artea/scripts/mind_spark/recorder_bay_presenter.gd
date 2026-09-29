@@ -14,6 +14,7 @@ var shutter: MeshInstance3D
 var tile_labels: Array[Label3D] = []
 var displayed_order: Array = []
 var tile_motion: Tween
+var _state_hash := -1
 func configure(source: QuestObjectBase, world: MindSparkWorldOne) -> void:
 	station=source
 	name="ProductionRecorderBay"
@@ -31,6 +32,7 @@ func configure(source: QuestObjectBase, world: MindSparkWorldOne) -> void:
 	add_child(title)
 	serial=int(station.current_state.get("replay_serial",0))
 	displayed_order=Replay.order(station.current_state)
+	_state_hash=hash(station.current_state)
 	for slot in 3: tiles[int(displayed_order[slot])].position.x=(slot-1)*1.4
 	drift_bar=_bar("BeamDisplacement",Vector3(-1.3,2.98,-.50),Vector3(.45,.04,.04),Color("abe4ce"))
 	flow_bar=_bar("CoolingLevel",Vector3(0,2.98,-.50),Vector3(.4,.04,.04),Color("abe4ce"))
@@ -65,7 +67,14 @@ func replay_saved() -> void:
 	elapsed=-2
 
 func _process(delta: float) -> void:
-	if not is_instance_valid(station): return
+	if not is_visible_in_tree() or not is_instance_valid(station): return
+	var next_hash := hash(station.current_state)
+	var state_changed := next_hash != _state_hash
+	if state_changed:
+		_state_hash = next_hash
+	var tile_moving := tile_motion != null and tile_motion.is_running()
+	if not state_changed and not tile_moving and elapsed < 0.0:
+		return
 	var order := Replay.order(station.current_state)
 	for i in 3:
 		tile_labels[i].position=Vector3(tiles[i].position.x,tiles[i].position.y,.54)

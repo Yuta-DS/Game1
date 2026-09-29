@@ -24,6 +24,8 @@ func _cache_details() -> void:
 
 func _process(delta: float) -> void:
 	_elapsed += delta
+	if not is_visible_in_tree():
+		return
 	for orbiter in _orbiters:
 		if not is_instance_valid(orbiter):
 			continue

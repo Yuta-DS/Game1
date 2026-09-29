@@ -41,6 +41,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_visual_time += delta
+	if not is_visible_in_tree():
+		return
 	if _storm_crown != null:
 		_storm_crown.rotation.y = _visual_time * (0.22 if active else 0.08)
 		_storm_crown.position.y = sin(_visual_time * 1.15) * 0.35

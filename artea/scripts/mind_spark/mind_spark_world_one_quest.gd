@@ -67,6 +67,7 @@ var _quest_label: Label
 var _task_label: Label
 var _dialogue_label: Label
 var _reflection_label: Label
+var _hud_refresh_elapsed := 0.1
 
 
 func _ready() -> void:
@@ -164,7 +165,7 @@ func _on_island_one_puzzle_solved(_result: Dictionary) -> void:
 	_update_support_target()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not enabled:
 		return
 	if _player == null:
@@ -175,7 +176,10 @@ func _process(_delta: float) -> void:
 	if _hud_root == null:
 		return
 	_hud_root.visible = _player != null and _player.global_position.distance_to(world.global_position) < 2050.0
-	_render_hud()
+	_hud_refresh_elapsed += delta
+	if _hud_refresh_elapsed >= 0.1:
+		_hud_refresh_elapsed = fmod(_hud_refresh_elapsed, 0.1)
+		_render_hud()
 
 
 func _unhandled_input(event: InputEvent) -> void:

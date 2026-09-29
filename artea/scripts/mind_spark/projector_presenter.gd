@@ -7,6 +7,8 @@ var targets: Array[MeshInstance3D]=[]
 var target_labels: Array[Label3D]=[]
 var readouts: Array[Label3D]=[]
 var status: Label3D
+var _state_hash := -1
+var _animation_remaining := 0.0
 func configure(source: QuestObjectBase, world: MindSparkWorldOne) -> void:
 	station=source
 	name="ProductionLivingProjector"
@@ -86,6 +88,14 @@ func _label(text: String, at: Vector3, size: int, pixels: float) -> Label3D:
 	add_child(label)
 	return label
 func _process(delta: float) -> void:
+	if not is_visible_in_tree(): return
+	var next_hash := hash(station.current_state)
+	if next_hash != _state_hash:
+		_state_hash = next_hash
+		_animation_remaining = 0.9
+	elif _animation_remaining <= 0.0:
+		return
+	_animation_remaining = maxf(0.0, _animation_remaining - delta)
 	var state := Pattern.describe(station.current_state)
 	var mix := minf(1,delta*6)
 	(model.get_node("Mirror") as Node3D).rotation.y=lerp_angle((model.get_node("Mirror") as Node3D).rotation.y,int(state.optics[0])*PI/8,mix)
