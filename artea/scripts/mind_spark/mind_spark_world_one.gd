@@ -158,6 +158,8 @@ var _last_safe_position := Vector3(-960, 8, 420)
 var _island_one_puzzle: MindSparkIslandOnePuzzle
 var _island_one_star_gate_leaves: Array[AnimatableBody3D] = []
 var _island_one_star_gate_tween: Tween
+var _web_island_detail_roots: Dictionary = {}
+var _web_visible_detail_islands := PackedInt32Array()
 
 
 ## When true, build_world() is not run on _ready and must be triggered by
@@ -241,6 +243,7 @@ func build_world() -> void:
 	_batch_repeated_static_render_geometry(self)
 	_merge_static_render_geometry(self)
 	_configure_world_one_visibility_ranges(self)
+	_configure_web_island_detail_streaming()
 	_install_web_perf_probe()
 	set_meta("world_identity", "living computer forest")
 	set_meta("lead_force", "technology_science")
@@ -1220,6 +1223,7 @@ func interact_object_for_test(kind: int, action: StringName = &"primary", value:
 
 
 func _process(_delta: float) -> void:
+	_update_web_island_detail_streaming()
 	if _player == null:
 		return
 	var nearest_zone := _nearest_zone()
@@ -9391,3 +9395,76 @@ func _configure_web_directional_shadows() -> void:
 			light.shadow_enabled = false
 			disabled += 1
 	set_meta("web_directional_shadows_disabled", disabled)
+
+
+# The six authored districts contain several thousand stateful render nodes.
+# They cannot be folded into static batches because quest, enemy and restoration
+# scripts address them individually. On Web, hide only the detailed branches of
+# islands beyond the active camera's crossing distance. Foundations, bridges,
+# route geometry and collisions stay mounted, so silhouettes and traversal are
+# continuous while off-island scripted decoration stops submitting draw calls.
+func _configure_web_island_detail_streaming() -> void:
+	if not _uses_web_render_budget() or _uses_existing_mind_district() \
+			or _uses_galaxy_foundation():
+		return
+	_web_island_detail_roots = {1: [], 2: [], 3: []}
+	for index in ZONES.size():
+		var zone_id := str(ZONES[index].id)
+		var zone := _zone_nodes.get(zone_id) as Node3D
+		if zone != null:
+			(_web_island_detail_roots[int(ZONES[index].super_island)] as Array).append(zone)
+	var named_roots := {
+		1: ["IslandOneResearchCampus", "WorldOneGeometry/IslandOnePerimeterRepairs"],
+		2: ["IslandTwoMemoryCampus", "GardenOfUnfinishedLight",
+			"WorldOneGeometry/IslandTwoPerimeterRepairs"],
+		3: ["WorldOneGeometry/IslandThreeCivicSanctuary",
+			"WorldOneGeometry/IslandThreePerimeterRepairs",
+			"WorldOneGeometry/OptionalCompletedWorldStationSpur"],
+	}
+	for island_value in named_roots:
+		for path_value in named_roots[island_value]:
+			var detail_root := get_node_or_null(str(path_value)) as Node3D
+			if detail_root != null:
+				(_web_island_detail_roots[int(island_value)] as Array).append(detail_root)
+	set_meta("web_island_detail_streaming", true)
+	set_meta("web_island_detail_distance", 285.0)
+	_update_web_island_detail_streaming_position(_web_focus_position_local())
+
+
+func _update_web_island_detail_streaming() -> void:
+	if _web_island_detail_roots.is_empty():
+		return
+	_update_web_island_detail_streaming_position(_web_focus_position_local())
+
+
+func _web_focus_position_local() -> Vector3:
+	var camera := get_viewport().get_camera_3d() if get_viewport() != null else null
+	if camera != null:
+		return to_local(camera.global_position)
+	if _player != null:
+		return to_local(_player.global_position)
+	return get_player_arrival_local()
+
+
+func _update_web_island_detail_streaming_position(focus_local: Vector3) -> void:
+	if _web_island_detail_roots.is_empty():
+		return
+	var visible_islands := PackedInt32Array()
+	var focus_2d := Vector2(focus_local.x, focus_local.z)
+	for island in [1, 2, 3]:
+		var nearest := INF
+		for zone_info in ZONES:
+			if int(zone_info.super_island) != island:
+				continue
+			var zone_position := get_zone_position(str(zone_info.id))
+			nearest = minf(nearest,
+				focus_2d.distance_to(Vector2(zone_position.x, zone_position.z)))
+		var show_detail := nearest <= 285.0
+		if show_detail:
+			visible_islands.append(island)
+		for root_value in _web_island_detail_roots[island]:
+			var detail_root := root_value as Node3D
+			if is_instance_valid(detail_root) and detail_root.visible != show_detail:
+				detail_root.visible = show_detail
+	_web_visible_detail_islands = visible_islands
+	set_meta("web_visible_detail_islands", visible_islands)

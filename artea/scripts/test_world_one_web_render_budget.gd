@@ -36,10 +36,26 @@ func _run() -> void:
 	assert(not sun.shadow_enabled \
 			and int(world.get_meta("web_directional_shadows_disabled", 0)) == 1,
 		"Web must remove the archipelago-wide directional shadow pass")
+	assert(bool(world.get_meta("web_island_detail_streaming", false)),
+		"Web must stream stateful island detail branches by camera distance")
+	world.call("_update_web_island_detail_streaming_position", Vector3(-760, 8, 120))
+	assert(world.get_node("WorldOneGeometry/01WorldGateLanding").visible \
+			and not world.get_node("WorldOneGeometry/03ConstellationCourt").visible \
+			and not world.get_node("WorldOneGeometry/05ThoughtStormArena").visible,
+		"Island 1 focus must retire distant Island 2 and 3 detail")
+	world.call("_update_web_island_detail_streaming_position", Vector3(-440, 10, 0))
+	assert(world.get_node("WorldOneGeometry/02LivingNetworkForest").visible \
+			and world.get_node("WorldOneGeometry/03ConstellationCourt").visible,
+		"the Island 1-to-2 crossing must keep both shores visible")
+	world.call("_update_web_island_detail_streaming_position", Vector3(520, 22, -20))
+	assert(not world.get_node("WorldOneGeometry/03ConstellationCourt").visible \
+			and world.get_node("WorldOneGeometry/05ThoughtStormArena").visible \
+			and world.get_node("WorldOneGeometry/06OldestTreeSanctuary").visible,
+		"Island 3 focus must preserve both local districts while retiring Island 2 detail")
 	for object in world.get_quest_objects():
 		assert(object.visible and object.definition != null,
 			"the Web render budget must preserve all quest objects and their feedback")
 	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
-	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d small-mesh shadows and the world sun shadow pass removed; all 15 quest objects preserved" % [
+	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d small-mesh shadows, the world sun shadow pass, and distant island detail removed; all 15 quest objects preserved" % [
 		render_scale, int(world.get_meta("web_shadow_culled_mesh_count", 0))])
 	quit()
