@@ -197,59 +197,124 @@ func _build_storm_crown() -> void:
 		return
 	_storm_crown = Node3D.new()
 	_storm_crown.name = "StormCrown"
+	_storm_crown.set_meta("visual_revision", "island_three_civic_storm_engine_v2")
+	_storm_crown.set_meta("giant_ring_count", 0)
+	_storm_crown.set_meta("palette", "ivory_charcoal_cyan_lavender")
 	shell.add_child(_storm_crown)
-	var dark := _material(Color("171125"), Color("682f9a"), 1.15, 0.52)
-	var storm := _material(Color("36214f"), Color("b04cff"), 2.0, 0.28)
-	var crystal := _material(Color("49e6ff"), Color("31d8ff"), 3.2, 0.18)
+	var ivory := _material(Color("ded8ca"), Color("72d7df"), 0.16, 0.76)
+	var charcoal := _material(Color("222832"), Color("284b59"), 0.22, 0.58)
+	var storm := _material(Color("514661"), Color("8f78ae"), 0.58, 0.42)
+	var crystal := _material(Color("69dce6"), Color("38cbd9"), 1.8, 0.24)
 
-	# Interlocked rings make the shield readable from every approach direction.
-	for index in 5:
-		var ring := MeshInstance3D.new()
-		ring.name = "ShieldOrbit%02d" % (index + 1)
-		var torus := TorusMesh.new()
-		torus.inner_radius = 7.2 + index * 0.28
-		torus.outer_radius = torus.inner_radius + 0.28
-		torus.rings = 32
-		torus.ring_segments = 8
-		ring.mesh = torus
-		ring.material_override = storm if index % 2 == 0 else dark
-		ring.rotation = Vector3(deg_to_rad(24.0 + index * 19.0), deg_to_rad(index * 31.0), deg_to_rad(index * 13.0))
-		_storm_crown.add_child(ring)
+	# Four grounded pylons turn the boss into a piece of the Stormworks civic
+	# architecture. Their broad feet meet the arena floor while the inward braces
+	# frame the existing dark shell without obscuring the vulnerable cyan core.
+	for index in 4:
+		var angle := TAU * float(index) / 4.0 + PI * 0.25
+		var radial := Vector3(cos(angle), 0.0, sin(angle))
+		var pylon_root := radial * 8.8 + Vector3.DOWN * 3.2
+		_add_cylinder_part(_storm_crown, "IvoryPylon%02d" % (index + 1),
+			pylon_root, 0.85, 7.4, ivory, 8, 1.20)
+		_add_box_part(_storm_crown, "PylonFoot%02d" % (index + 1),
+			pylon_root + Vector3.DOWN * 3.55, Vector3(3.2, 0.7, 3.2), charcoal)
+		_add_beam(_storm_crown, "InwardBrace%02d" % (index + 1),
+			pylon_root + Vector3.UP * 2.2, radial * 4.8 + Vector3.UP * 4.0,
+			0.62, charcoal)
+		_add_beam(_storm_crown, "CyanConductor%02d" % (index + 1),
+			pylon_root + Vector3.UP * 3.0, radial * 5.4 + Vector3.UP * 4.8,
+			0.23, crystal)
+		var cap := _add_prism_part(_storm_crown, "PylonCap%02d" % (index + 1),
+			pylon_root + Vector3.UP * 4.5, Vector3(1.9, 2.8, 1.9), ivory)
+		cap.rotation.y = -angle
 
-	# A jagged crown distinguishes the Warden from normal round enemies.
+	# Short, faceted shield vanes replace the former giant luminous rings. The
+	# alternating height keeps the boss readable from every approach while the
+	# open gaps preserve sightlines through the Grand Court.
 	for index in 12:
 		var angle := TAU * float(index) / 12.0
-		var shard := MeshInstance3D.new()
-		shard.name = "CrownShard%02d" % (index + 1)
-		var shard_mesh := PrismMesh.new()
-		shard_mesh.size = Vector3(1.35, 5.5 + float(index % 3) * 1.2, 1.5)
-		shard.mesh = shard_mesh
-		shard.material_override = dark if index % 3 else crystal
-		shard.position = Vector3(cos(angle) * 6.2, 4.7 + float(index % 2), sin(angle) * 6.2)
-		shard.rotation = Vector3(0.0, -angle, -0.38)
-		_storm_crown.add_child(shard)
+		var height := 3.6 + float(index % 3) * 0.65
+		var shard := _add_prism_part(_storm_crown, "CrownFin%02d" % (index + 1),
+			Vector3(cos(angle) * 6.15, 4.1 + height * 0.5, sin(angle) * 6.15),
+			Vector3(0.82, height, 1.15), crystal if index % 3 == 0 else storm)
+		shard.rotation = Vector3(0.0, -angle, -0.20)
 
-	for index in 7:
-		var cloud := MeshInstance3D.new()
-		cloud.name = "StormCloud%02d" % (index + 1)
-		var cloud_mesh := SphereMesh.new()
-		cloud_mesh.radius = 2.8 + float(index % 3) * 0.55
-		cloud_mesh.height = cloud_mesh.radius * 1.45
-		cloud_mesh.radial_segments = 16
-		cloud_mesh.rings = 8
-		cloud.mesh = cloud_mesh
-		cloud.material_override = dark
-		var cloud_angle := TAU * float(index) / 7.0
-		cloud.position = Vector3(cos(cloud_angle) * 5.1, float(index % 2) * 2.1 - 1.0, sin(cloud_angle) * 5.1)
-		cloud.scale = Vector3(1.35, 0.65, 1.0)
-		_storm_crown.add_child(cloud)
+	# A restrained bank of low-poly storm masses supports the story state without
+	# becoming the dominant silhouette or washing the ivory court in purple.
+	for index in 5:
+		var cloud_angle := TAU * float(index) / 5.0
+		var cloud := _add_sphere_part(_storm_crown, "StormMass%02d" % (index + 1),
+			Vector3(cos(cloud_angle) * 4.4, -0.8 + float(index % 2) * 1.25,
+				sin(cloud_angle) * 4.4), 2.15 + float(index % 2) * 0.35, charcoal)
+		cloud.scale = Vector3(1.22, 0.62, 0.92)
+
+	_add_cylinder_part(_storm_crown, "StormEngineWaist", Vector3(0.0, -2.7, 0.0),
+		5.5, 1.15, charcoal, 12, 5.5)
+	for index in 4:
+		var angle := TAU * float(index) / 4.0
+		_add_box_part(_storm_crown, "CoreWindow%02d" % (index + 1),
+			Vector3(cos(angle) * 6.55, 0.35, sin(angle) * 6.55),
+			Vector3(1.85, 3.4, 0.22), crystal).rotation.y = -angle + PI * 0.5
 
 	var crown_light := OmniLight3D.new()
 	crown_light.name = "StormCrownLight"
-	crown_light.light_color = Color("b050ff")
-	crown_light.light_energy = 7.0
-	crown_light.omni_range = 30.0
+	crown_light.light_color = Color("79dbe5")
+	crown_light.light_energy = 2.4
+	crown_light.omni_range = 18.0
 	_storm_crown.add_child(crown_light)
+
+
+func _add_box_part(parent: Node3D, node_name: String, at: Vector3, size: Vector3,
+		material: Material) -> MeshInstance3D:
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	return _add_mesh_part(parent, node_name, at, mesh, material)
+
+
+func _add_cylinder_part(parent: Node3D, node_name: String, at: Vector3,
+		bottom_radius: float, height: float, material: Material, sides: int = 10,
+		top_radius: float = -1.0) -> MeshInstance3D:
+	var mesh := CylinderMesh.new()
+	mesh.bottom_radius = bottom_radius
+	mesh.top_radius = bottom_radius if top_radius < 0.0 else top_radius
+	mesh.height = height
+	mesh.radial_segments = sides
+	return _add_mesh_part(parent, node_name, at, mesh, material)
+
+
+func _add_prism_part(parent: Node3D, node_name: String, at: Vector3, size: Vector3,
+		material: Material) -> MeshInstance3D:
+	var mesh := PrismMesh.new()
+	mesh.size = size
+	return _add_mesh_part(parent, node_name, at, mesh, material)
+
+
+func _add_sphere_part(parent: Node3D, node_name: String, at: Vector3, radius: float,
+		material: Material) -> MeshInstance3D:
+	var mesh := SphereMesh.new()
+	mesh.radius = radius
+	mesh.height = radius * 1.65
+	mesh.radial_segments = 12
+	mesh.rings = 6
+	return _add_mesh_part(parent, node_name, at, mesh, material)
+
+
+func _add_mesh_part(parent: Node3D, node_name: String, at: Vector3,
+		mesh: PrimitiveMesh, material: Material) -> MeshInstance3D:
+	var part := MeshInstance3D.new()
+	part.name = node_name
+	part.position = at
+	part.mesh = mesh
+	part.material_override = material
+	parent.add_child(part)
+	return part
+
+
+func _add_beam(parent: Node3D, node_name: String, from: Vector3, to: Vector3,
+		width: float, material: Material) -> MeshInstance3D:
+	var beam := _add_box_part(parent, node_name, from.lerp(to, 0.5),
+		Vector3(width, width, from.distance_to(to)), material)
+	beam.look_at(to, Vector3.UP)
+	return beam
 
 
 func _material(albedo: Color, emission: Color, energy: float, roughness: float) -> StandardMaterial3D:

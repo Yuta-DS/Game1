@@ -261,6 +261,19 @@ func _test_combat_roster(world: MindSparkWorldOne) -> void:
 	assert(mite.state == MindSparkEnemyBase.State.DEFEATED and mite.core.visible,
 		"defeat removes the Blight shell and reveals the calm living core")
 	var boss := world.get_warden() as MindSparkWardenBoss
+	var storm_crown := boss.get_node("VisualRoot/BlightShell/StormCrown") as Node3D
+	assert(storm_crown.get_meta("visual_revision") == "island_three_civic_storm_engine_v2",
+		"Island Three Warden uses the restrained civic storm engine")
+	assert(int(storm_crown.get_meta("giant_ring_count", -1)) == 0,
+		"the prototype giant purple shield rings remain removed")
+	assert(storm_crown.find_children("IvoryPylon*", "MeshInstance3D", true, false).size() == 4,
+		"four grounded ivory pylons give the Warden an architectural silhouette")
+	for visual in storm_crown.find_children("*", "MeshInstance3D", true, false):
+		assert(not ((visual as MeshInstance3D).mesh is TorusMesh),
+			"the completed Warden contains no luminous torus geometry")
+	var crown_light := storm_crown.get_node("StormCrownLight") as OmniLight3D
+	assert(crown_light.light_energy <= 2.401 and crown_light.omni_range <= 18.001,
+		"the Warden light preserves the surrounding Island Three architecture")
 	boss.start_battle()
 	for anchor in world.get_quest_objects():
 		if anchor.definition.object_kind != Definition.ObjectKind.WARDEN_ANCHOR:
