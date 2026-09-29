@@ -9329,11 +9329,11 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 			range_end = range_profile[3]
 		instance.visibility_range_end = range_end
 		instance.visibility_range_end_margin = minf(48.0, range_end * .12)
-		# Small fixtures contribute useful local colour and silhouette, but their
-		# individual shadow submissions dominate the Compatibility renderer. Major
-		# buildings, trees and machinery retain shadows.
-		if web_budget and (extent <= 4.0 \
-				or instance.has_meta("merged_static_source_count")) \
+		# Compatibility redraws each visible surface into the directional shadow
+		# atlas. World One retains its low-poly diffuse modelling without those
+		# duplicate submissions; ambient occlusion and authored colour contrast
+		# continue to describe contact and depth on Web.
+		if web_budget \
 				and instance.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
 			instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			shadow_culled += 1
@@ -9344,8 +9344,10 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 			continue
 		instance.visibility_range_end = 380.0 if web_budget else 560.0
 		instance.visibility_range_end_margin = 36.0 if web_budget else 48.0
-		if web_budget:
+		if web_budget and instance.cast_shadow \
+				!= GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
 			instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			shadow_culled += 1
 	set_meta("distance_culled_mesh_count", configured)
 	set_meta("visibility_range_profile", "%d/%d/%d/%d/%dm by world-space extent" % range_profile)
 	set_meta("web_shadow_culled_mesh_count", shadow_culled)

@@ -24,7 +24,7 @@ func _run() -> void:
 		== "60/105/175/300/720m by world-space extent",
 		"Web must use the tighter distance profile measured against the production canvas")
 	assert(int(world.get_meta("web_shadow_culled_mesh_count", 0)) > 1000,
-		"small static/detail meshes must stop submitting individual Web shadow passes")
+		"World One meshes must stop submitting duplicate Web shadow passes")
 	var render_scale := float(world.get_meta("web_3d_render_scale", 0.0))
 	assert(render_scale >= 0.67 and render_scale < 0.75,
 		"the 1444x1702 production canvas must render 3D near the 1.2 MP target")
@@ -56,6 +56,6 @@ func _run() -> void:
 		assert(object.visible and object.definition != null,
 			"the Web render budget must preserve all quest objects and their feedback")
 	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
-	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d small-mesh shadows, the world sun shadow pass, and distant island detail removed; all 15 quest objects preserved" % [
+	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d mesh shadows, the world sun shadow pass, and distant island detail removed; all 15 quest objects preserved" % [
 		render_scale, int(world.get_meta("web_shadow_culled_mesh_count", 0))])
 	quit()
