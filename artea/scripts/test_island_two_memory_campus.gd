@@ -115,7 +115,21 @@ func _run() -> void:
 	for body in duplicate_arch.find_children("*","CollisionObject3D",true,false):
 		assert((body as CollisionObject3D).collision_layer==0)
 	var receiver := campus.get_node("EchoSeedArrivalReceiver") as Node3D
+	var evidence_station := world.get_object_by_kind(
+		QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER) as QuestObjectBase
+	assert(evidence_station != null)
 	assert(receiver.get_meta("story_role") != null)
+	assert(str(receiver.get_meta("design_revision")) == "open_ivory_echo_reliquary_v2")
+	var receiver_from_station := receiver.global_position - evidence_station.global_position
+	receiver_from_station.y = 0.0
+	assert(receiver_from_station.dot(evidence_station.global_basis.z.normalized()) < 0.0,
+		"the noninteractive receiver stays behind the evidence scanner presentation face")
+	assert(not receiver.has_node("BrassReceiverBody"),
+		"the old solid brass placeholder cone must not dominate the evidence camera")
+	assert(receiver.find_children("IvoryReliquaryArm_*", "MeshInstance3D", false, false).size() == 3,
+		"the Echo Seed receiver uses three open faceted support arms")
+	assert(not ((receiver.get_node("DormantHalo") as MeshInstance3D).mesh is TorusMesh),
+		"the receiver state indicator must not revert to a floating ring")
 	world.set_island_two_story_state("invited")
 	assert((receiver.get_node("InvitedHalo") as MeshInstance3D).visible)
 	assert(not (receiver.get_node("ReceivedEchoSeed") as MeshInstance3D).visible)

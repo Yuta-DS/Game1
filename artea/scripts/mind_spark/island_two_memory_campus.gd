@@ -1157,24 +1157,44 @@ static func _build_echo_seed_receiver(world: MindSparkWorldOne, campus: Node3D) 
 		return
 	var receiver := Node3D.new()
 	receiver.name = "EchoSeedArrivalReceiver"
-	receiver.position = (station.get_parent() as Node3D).position + station.position + Vector3(-9.2, 0, 4.6)
+	# Keep this noninteractive story prop in the station's rear side bay. Its old
+	# +Z placement sat between the normal camera and the scanner, turning a handoff
+	# detail into the largest foreground silhouette in the evidence court.
+	var receiver_offset := station.basis * Vector3(-12.0, 0, -5.5)
+	receiver.position = (station.get_parent() as Node3D).position + station.position + receiver_offset
 	receiver.set_meta("story_role", "receives the Echo Seed sent by Island One and makes the handoff visible")
 	receiver.set_meta("gameplay_collision", "clear of the main approach and station interaction radius")
+	receiver.set_meta("design_revision", "open_ivory_echo_reliquary_v2")
 	campus.add_child(receiver)
 	world.call("_add_brick", receiver, "IvoryReceiverPlinth", Vector3(0, .45, 0),
 		Bricks.build_bevel_box(Vector3(3.4, .9, 3.4), .18), mats.sanctum_ivory)
-	world.call("_add_tapered_cylinder", receiver, "BrassReceiverBody", Vector3(0, 2.25, 0),
-		.72, 1.02, 3.2, mats.astral_brass, 16)
-	world.call("_add_torus", receiver, "DormantHalo", Vector3(0, 4.25, 0),
-		1.10, 1.38, mats.sanctum_ivory, Vector3(90, 0, 0))
-	var invited := world.call("_add_torus", receiver, "InvitedHalo", Vector3(0, 4.25, 0),
-		1.13, 1.34, mats.astral_brass, Vector3(90, 0, 0)) as MeshInstance3D
+	world.call("_add_tapered_cylinder", receiver, "IvoryReceiverPedestal",
+		Vector3(0, 1.82, 0), .58, .96, 2.25, mats.sanctum_ivory, 10)
+	world.call("_add_cylinder", receiver, "CharcoalReceiverWaist", Vector3(0, 2.78, 0),
+		.70, .24, mats.bio_gunmetal, false, 10)
+	# Three open arms make the handoff read as a protected civic instrument rather
+	# than the former solid brass cone and floating ring. Their footprint stays
+	# inside the existing plinth, so the evidence-station approach remains clear.
+	for support_index in 3:
+		var angle := TAU * float(support_index) / 3.0 + PI / 6.0
+		var lower := Vector3(sin(angle) * .52, 2.72, cos(angle) * .52)
+		var upper := Vector3(sin(angle) * 1.05, 4.05, cos(angle) * 1.05)
+		world.call("_add_cable_between", receiver,
+			"IvoryReliquaryArm_%02d" % (support_index + 1), lower, upper,
+			.18, .12, mats.sanctum_ivory, 7)
+		world.call("_add_brick", receiver,
+			"LavenderReliquaryTip_%02d" % (support_index + 1), upper,
+			Bricks.build_crystal(.20, .72, .08, 5), mats.sanctum_lavender_glass)
+	world.call("_add_cylinder", receiver, "DormantHalo", Vector3(0, 3.92, 0),
+		.76, .14, mats.sanctum_ivory, false, 10)
+	var invited := world.call("_add_cylinder", receiver, "InvitedHalo", Vector3(0, 3.99, 0),
+		.88, .12, mats.arrival_glass, false, 10) as MeshInstance3D
 	var seed := world.call("_add_sphere", receiver, "ReceivedEchoSeed", Vector3(0, 4.25, 0),
 		Vector3(.62, .82, .62), mats.arrival_glass) as MeshInstance3D
 	invited.visible = false
 	seed.visible = false
 	var label := world.call("_add_label", receiver, "ECHO SEED RECEIVER • DORMANT",
-		Vector3(0, 6.15, 0), Color("fff0c9"), 14) as Label3D
+		Vector3(0, 5.72, 0), Color("fff0c9"), 14) as Label3D
 	label.name = "ReceiverStateLabel"
 	label.pixel_size = .009
 
