@@ -39,6 +39,7 @@ const IslandDetailAnimator := preload("res://scripts/mind_spark/mind_spark_islan
 const IslandOnePuzzleScript := preload("res://scripts/mind_spark/mind_spark_island_one_puzzle.gd")
 const WebPerfProbeScript := preload("res://scripts/mind_spark/world_one_web_perf_probe.gd")
 const WebQualityProbeScript := preload("res://scripts/mind_spark/world_one_web_quality_probe.gd")
+const WebStoryProbeScript := preload("res://scripts/mind_spark/world_one_web_story_probe.gd")
 const ENEMY_DEFINITIONS := {
 	"static_mite": preload("res://resources/mind_spark/enemies/static_mite.tres"),
 	"glitch_sprout": preload("res://resources/mind_spark/enemies/glitch_sprout.tres"),
@@ -252,6 +253,7 @@ func build_world() -> void:
 	_configure_web_island_detail_streaming()
 	_install_web_perf_probe()
 	_install_web_quality_probe()
+	_install_web_story_probe()
 	set_meta("world_identity", "living computer forest")
 	set_meta("lead_force", "technology_science")
 	set_meta("zone_count", 6)
@@ -306,6 +308,27 @@ func _install_web_quality_probe() -> void:
 	add_child(probe)
 	probe.call("configure", self)
 	set_meta("web_quality_probe_enabled", true)
+
+
+func _install_web_story_probe() -> void:
+	# This diagnostic exercises the connected production story with every save
+	# writer redirected to temporary files. It is intentionally separate from
+	# the isolated mini-game input probe so each failure has one clear cause.
+	var requested := OS.get_environment("ARTEA_WORLD_ONE_WEB_STORY") == "1"
+	if OS.has_feature("web"):
+		var query := str(JavaScriptBridge.eval("window.location.search", true))
+		requested = "world_one_story=1" in query
+	if not requested or has_node("WorldOneWebStoryProbe"):
+		return
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval(
+			"window.__ARTEA_WORLD_ONE_STORY__ = {status: 'running'};", true)
+	var probe := Node.new()
+	probe.name = "WorldOneWebStoryProbe"
+	probe.set_script(WebStoryProbeScript)
+	add_child(probe)
+	probe.call("configure", self)
+	set_meta("web_story_probe_enabled", true)
 
 
 func _refine_island_one_surroundings() -> void:
