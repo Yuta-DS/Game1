@@ -186,6 +186,17 @@ func _run() -> void:
 	assert(civic_pavilions.find_children(
 		"PavilionColumn_*", "MeshInstance3D", true, false).size() == 24,
 		"open pavilion colonnades repeat Island 1's civic rhythm without blocking routes")
+	var sky_fragments := matched_environment.get_node(
+		"DistantSkyGardenFragments") as Node3D
+	assert(int(sky_fragments.get_meta("fragment_count", 0)) == 2,
+		"two sparse sky gardens add depth behind the Stormworks skyline")
+	assert(sky_fragments.find_children(
+		"SkyGardenFragment_*", "Node3D", false, false).size() == 2)
+	assert(sky_fragments.find_children(
+		"SkyGardenCanopy_*", "MeshInstance3D", true, false).size() == 6)
+	assert(sky_fragments.find_children(
+		"*", "CollisionObject3D", true, false).is_empty(),
+		"distant fragments remain decorative and cannot create reachable ledges or blockers")
 	var garden_trunk := matched_environment.find_child(
 		"GardenTrunk", true, false) as MeshInstance3D
 	var island_three_palette: Dictionary = world.get("_materials")

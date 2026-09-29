@@ -6048,7 +6048,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "landmark_hierarchy_v12_civic_backdrops")
+	campus.set_meta("design_revision", "landmark_hierarchy_v13_sky_gardens")
 	campus.set_meta("architectural_language",
 		"Island One and Two layered ivory terraces, garden arcades, charcoal machinery, cyan and lavender light, faceted living trees")
 	campus.set_meta("matches_previous_islands", true)
@@ -6976,7 +6976,7 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 	var environment := Node3D.new()
 	environment.name = "IslandThreeMatchedEnvironment"
 	environment.set_meta("design_reference", "Island One research gardens + Island Two observatory terraces")
-	environment.set_meta("environment_revision", "open_civic_gardens_v12_pearl_sage")
+	environment.set_meta("environment_revision", "open_civic_gardens_v13_skyline_depth")
 	environment.set_meta("foliage_palette", "pale sage, moss, muted evergreen, restrained ivory blossom")
 	environment.set_meta("clear_routes_preserved", true)
 	environment.set_meta("no_gold_lines_or_route_barriers", true)
@@ -6985,6 +6985,7 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 
 	_build_island_three_paving(environment, arena_center, 164.0, "Storm")
 	_build_island_three_paving(environment, sanctuary_center, 135.0, "Sanctuary")
+	_build_island_three_sky_garden_fragments(environment, arena_center)
 
 	var storm_gallery := Node3D.new()
 	storm_gallery.name = "StormworksPerimeterGardenGallery"
@@ -7059,6 +7060,80 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 		Vector3(-45, 0, 76), Vector3(45, 0, 76)]
 	for garden_index in garden_offsets.size():
 		_build_island_three_planted_room(environment, arena_center + garden_offsets[garden_index], garden_index)
+
+
+func _build_island_three_sky_garden_fragments(parent: Node3D,
+		arena_center: Vector3) -> void:
+	# Two unreachable garden fragments break up the empty Stormworks horizon in
+	# the normal arrival camera. They repeat the solid-rock, ivory-terrace and
+	# living-tree language of the fused islands without creating another route.
+	var fragments := Node3D.new()
+	fragments.name = "DistantSkyGardenFragments"
+	fragments.set_meta("fragment_count", 2)
+	fragments.set_meta("collision_policy", "decorative and unreachable")
+	fragments.set_meta("camera_role", "sparse Stormworks skyline depth")
+	fragments.set_meta("preserve_authored_nodes", true)
+	parent.add_child(fragments)
+	var fragment_specs: Array = [
+		[arena_center + Vector3(205.0, 52.0, -78.0), 1.48, -0.18],
+		[arena_center + Vector3(236.0, 63.0, 82.0), 1.26, .27],
+	]
+	for fragment_index in fragment_specs.size():
+		var spec: Array = fragment_specs[fragment_index]
+		var fragment := Node3D.new()
+		fragment.name = "SkyGardenFragment_%02d" % (fragment_index + 1)
+		fragment.position = spec[0] as Vector3
+		fragment.rotation.y = float(spec[2])
+		fragment.set_meta("decorative_unreachable", true)
+		fragments.add_child(fragment)
+		var scale_factor := float(spec[1])
+		_add_tapered_cylinder(fragment, "FacetedRockCore", Vector3(0, -10.5, 0),
+			14.0 * scale_factor, 2.4 * scale_factor, 22.0 * scale_factor,
+			_materials.shared_style_charcoal, 7)
+		_add_tapered_cylinder(fragment, "FacetedRockShoulder", Vector3(-8.5, -6.5, 2.0),
+			7.5 * scale_factor, 1.3 * scale_factor, 13.0 * scale_factor,
+			_materials.island_three_earth, 6)
+		_add_tapered_cylinder(fragment, "FacetedRockShoulderEast", Vector3(8.0, -7.5, -2.5),
+			6.4 * scale_factor, 1.1 * scale_factor, 14.5 * scale_factor,
+			_materials.island_three_earth, 6)
+		_add_cylinder(fragment, "IvoryGardenCap", Vector3.ZERO,
+			16.5 * scale_factor, 1.25 * scale_factor,
+			_materials.shared_style_ivory, false, 12)
+		_add_cylinder(fragment, "SkyTreeTrunk", Vector3(-5.5, 6.0, 1.5) * scale_factor,
+			1.0 * scale_factor, 11.0 * scale_factor,
+			_materials.island_three_hero_bark, false, 7)
+		for crown_index in 3:
+			var crown_angle := TAU * float(crown_index) / 3.0 + .35
+			var crown_at := Vector3(-5.5 + sin(crown_angle) * 5.0,
+				13.0 + float(crown_index % 2),
+				cos(crown_angle) * 4.0) * scale_factor
+			var canopy := _add_sphere(fragment,
+				"SkyGardenCanopy_%02d" % (crown_index + 1), crown_at,
+				Vector3(6.8, 3.6, 5.5) * scale_factor,
+				_island_three_canopy_material(fragment_index + crown_index + 1))
+			(canopy.mesh as SphereMesh).radial_segments = 7
+			(canopy.mesh as SphereMesh).rings = 4
+		for beacon_index in 3:
+			var beacon_angle := TAU * float(beacon_index) / 3.0 + PI * .5
+			var beacon_at := Vector3(sin(beacon_angle) * 11.0, 2.3,
+				cos(beacon_angle) * 8.5) * scale_factor
+			_add_brick(fragment, "SkyBeacon_%02d" % (beacon_index + 1), beacon_at,
+				Bricks.build_crystal(.55 * scale_factor, 3.0 * scale_factor, .18, 6),
+				_materials.shared_style_cyan if beacon_index != 1 \
+				else _materials.shared_style_lavender)
+		for pier_side in [-1.0, 1.0]:
+			_add_box(fragment,
+				"SkyPorticoPier%s" % ("Left" if pier_side < 0 else "Right"),
+				Vector3(4.5, 4.2, float(pier_side) * 5.2) * scale_factor,
+				Vector3(2.2, 8.4, 2.2) * scale_factor,
+				_materials.shared_style_ivory, false)
+		_add_box(fragment, "SkyPorticoLintel", Vector3(4.5, 8.6, 0) * scale_factor,
+			Vector3(2.4, 1.2, 12.5) * scale_factor,
+			_materials.shared_style_ivory, false)
+		_add_brick(fragment, "SkyPorticoCrown", Vector3(4.5, 11.0, 0) * scale_factor,
+			Bricks.build_crystal(.75 * scale_factor, 3.6 * scale_factor, .2, 6),
+			_materials.shared_style_lavender if fragment_index == 0 \
+			else _materials.shared_style_cyan)
 
 
 
