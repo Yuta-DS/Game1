@@ -9197,6 +9197,9 @@ func _batch_repeated_static_render_geometry(root: Node3D) -> void:
 		batch.gi_mode = first.gi_mode
 		batch.set_meta("merged_static_source_count", members.size())
 		batch.set_meta("render_role", "spatial repeated static geometry batch")
+		var detail_island := _static_render_detail_island(members)
+		if detail_island > 0:
+			batch.set_meta("web_detail_island", detail_island)
 		root.add_child(batch)
 		for member_value in members:
 			var member := member_value as MeshInstance3D
@@ -9262,6 +9265,9 @@ func _merge_static_render_geometry(root: Node3D) -> void:
 		batch.gi_mode = first.gi_mode
 		batch.set_meta("merged_static_source_count", members.size())
 		batch.set_meta("render_role", "spatial static geometry batch")
+		var detail_island := _static_render_detail_island(members)
+		if detail_island > 0:
+			batch.set_meta("web_detail_island", detail_island)
 		root.add_child(batch)
 		for member_value in members:
 			var member := member_value as MeshInstance3D
@@ -9312,6 +9318,46 @@ func _static_render_cell_size(instance: Node) -> float:
 			return maxf(32.0, float(current.get_meta("static_render_merge_cell_size")))
 		current = current.get_parent()
 	return STATIC_RENDER_MERGE_CELL_SIZE
+
+
+func _static_render_detail_island(members: Array) -> int:
+	# Render replacements live at the World One root, outside the authored branch
+	# whose visibility they replace. Preserve that ownership explicitly so Web
+	# streaming cannot hide a distant island's sources while continuing to draw
+	# their merged copies. Mixed or unclassified groups stay globally visible.
+	var detail_island := 0
+	for member_value in members:
+		var member_island := _web_detail_island_for_node(member_value as Node)
+		if member_island == 0:
+			return 0
+		if detail_island == 0:
+			detail_island = member_island
+		elif detail_island != member_island:
+			return 0
+	return detail_island
+
+
+func _web_detail_island_for_node(node: Node) -> int:
+	var current := node
+	while current != null and current != self:
+		var physical_island := int(current.get_meta("physical_island", 0))
+		if physical_island in [1, 2, 3]:
+			return physical_island
+		var zone_id := str(current.get_meta("zone_id", ""))
+		for zone_info in ZONES:
+			if str(zone_info.id) == zone_id:
+				return int(zone_info.super_island)
+		match str(current.name):
+			"IslandOneResearchCampus", "IslandOnePerimeterRepairs":
+				return 1
+			"IslandTwoMemoryCampus", "GardenOfUnfinishedLight", \
+					"IslandTwoPerimeterRepairs":
+				return 2
+			"IslandThreeCivicSanctuary", "IslandThreePerimeterRepairs", \
+					"OptionalCompletedWorldStationSpur":
+				return 3
+		current = current.get_parent()
+	return 0
 
 
 func _static_render_branch_is_dynamic(node: Node, root: Node3D,
@@ -9538,8 +9584,21 @@ func _configure_web_island_detail_streaming() -> void:
 			var detail_root := get_node_or_null(str(path_value)) as Node3D
 			if detail_root != null:
 				(_web_island_detail_roots[int(island_value)] as Array).append(detail_root)
+	# Static replacement batches are rooted here for stable transforms. Attach
+	# them logically to their source island so the same visibility decision also
+	# controls the replacement geometry.
+	var streamed_batches := 0
+	for child in get_children():
+		if not (child is GeometryInstance3D) \
+				or not child.has_meta("web_detail_island"):
+			continue
+		var detail_island := int(child.get_meta("web_detail_island", 0))
+		if detail_island in [1, 2, 3]:
+			(_web_island_detail_roots[detail_island] as Array).append(child)
+			streamed_batches += 1
 	set_meta("web_island_detail_streaming", true)
 	set_meta("web_island_detail_distance", 285.0)
+	set_meta("web_streamed_static_batch_count", streamed_batches)
 	_update_web_island_detail_streaming_position(_web_focus_position_local())
 
 

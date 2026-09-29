@@ -80,6 +80,8 @@ func _run() -> void:
 	await process_frame
 	assert(bool(world.get_meta("web_island_detail_streaming", false)),
 		"Web must stream stateful island detail branches by camera distance")
+	assert(int(world.get_meta("web_streamed_static_batch_count", 0)) >= 100,
+		"static replacement batches must inherit the visibility of their source island")
 	world.call("_update_web_island_detail_streaming_position", Vector3(-760, 8, 120))
 	assert(world.get_node("WorldOneGeometry/01WorldGateLanding").visible \
 			and not world.get_node("WorldOneGeometry/03ConstellationCourt").visible \
@@ -89,11 +91,18 @@ func _run() -> void:
 	assert(world.get_node("WorldOneGeometry/02LivingNetworkForest").visible \
 			and world.get_node("WorldOneGeometry/03ConstellationCourt").visible,
 		"the Island 1-to-2 crossing must keep both shores visible")
+	var island_two_batch := _find_streamed_batch(world, 2)
+	var island_three_batch := _find_streamed_batch(world, 3)
+	assert(island_two_batch != null and island_two_batch.visible \
+			and island_three_batch != null and not island_three_batch.visible,
+		"replacement batches must follow the same crossing visibility contract")
 	world.call("_update_web_island_detail_streaming_position", Vector3(520, 22, -20))
 	assert(not world.get_node("WorldOneGeometry/03ConstellationCourt").visible \
 			and world.get_node("WorldOneGeometry/05ThoughtStormArena").visible \
 			and world.get_node("WorldOneGeometry/06OldestTreeSanctuary").visible,
 		"Island 3 focus must preserve both local districts while retiring Island 2 detail")
+	assert(not island_two_batch.visible and island_three_batch.visible,
+		"replacement batches must switch with the active island")
 	for object in world.get_quest_objects():
 		assert(object.visible and object.definition != null,
 			"the Web render budget must preserve all quest objects and their feedback")
@@ -103,3 +112,11 @@ func _run() -> void:
 		int(world.get_meta("web_island_two_foundation_lod_count", 0)),
 		int(world.get_meta("web_island_two_quest_detail_mesh_count", 0))])
 	quit()
+
+
+func _find_streamed_batch(world: MindSparkWorldOne, physical_island: int) -> GeometryInstance3D:
+	for child in world.get_children():
+		if child is GeometryInstance3D \
+				and int(child.get_meta("web_detail_island", 0)) == physical_island:
+			return child as GeometryInstance3D
+	return null
