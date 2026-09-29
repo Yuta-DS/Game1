@@ -261,6 +261,54 @@ func _build_storm_crown() -> void:
 	crown_light.light_energy = 2.4
 	crown_light.omni_range = 18.0
 	_storm_crown.add_child(crown_light)
+	_merge_crown_static_visuals()
+
+
+func _merge_crown_static_visuals() -> void:
+	# Every architectural part of the crown rotates and bobs as one assembly.
+	# Keeping its forty-two primitives as separate render submissions made the
+	# Stormworks court unnecessarily expensive on WebGL. Bake them into one mesh
+	# per material under the same animated parent: the silhouette, named source
+	# nodes and animation remain intact while the crown draws in four passes.
+	var groups := {}
+	for child in _storm_crown.get_children():
+		if not child is MeshInstance3D:
+			continue
+		var part := child as MeshInstance3D
+		if part.mesh == null or part.mesh.get_surface_count() != 1 \
+				or part.material_override == null:
+			continue
+		var material_id := part.material_override.get_instance_id()
+		if not groups.has(material_id):
+			groups[material_id] = []
+		groups[material_id].append(part)
+	var batch_index := 0
+	var source_count := 0
+	for material_id in groups:
+		var members: Array = groups[material_id]
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for member_value in members:
+			var member := member_value as MeshInstance3D
+			surface.append_from(member.mesh, 0, member.transform)
+		var combined := surface.commit()
+		if combined == null or combined.get_surface_count() == 0:
+			continue
+		var batch := MeshInstance3D.new()
+		batch.name = "CrownRenderBatch%02d" % (batch_index + 1)
+		batch.mesh = combined
+		batch.material_override = (members[0] as MeshInstance3D).material_override
+		batch.set_meta("render_role", "animated crown material batch")
+		batch.set_meta("merged_static_source_count", members.size())
+		_storm_crown.add_child(batch)
+		for member_value in members:
+			var member := member_value as MeshInstance3D
+			member.layers = 0
+			member.set_meta("render_merged_into", batch.name)
+			source_count += 1
+		batch_index += 1
+	_storm_crown.set_meta("render_batch_count", batch_index)
+	_storm_crown.set_meta("merged_static_source_count", source_count)
 
 
 func _add_box_part(parent: Node3D, node_name: String, at: Vector3, size: Vector3,

@@ -265,6 +265,9 @@ func _test_combat_roster(world: MindSparkWorldOne) -> void:
 		"the prototype giant purple shield rings remain removed")
 	assert(storm_crown.find_children("IvoryPylon*", "MeshInstance3D", true, false).size() == 4,
 		"four grounded ivory pylons give the Warden an architectural silhouette")
+	assert(int(storm_crown.get_meta("merged_static_source_count", 0)) == 42
+		and int(storm_crown.get_meta("render_batch_count", 0)) == 4,
+		"the animated Warden crown preserves its 42-part silhouette in four material batches")
 	for visual in storm_crown.find_children("*", "MeshInstance3D", true, false):
 		assert(not ((visual as MeshInstance3D).mesh is TorusMesh),
 			"the completed Warden contains no luminous torus geometry")

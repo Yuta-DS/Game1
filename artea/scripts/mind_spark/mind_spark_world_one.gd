@@ -6081,6 +6081,10 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		"Island One and Two layered ivory terraces, garden arcades, charcoal machinery, cyan and lavender light, faceted living trees")
 	campus.set_meta("matches_previous_islands", true)
 	campus.set_meta("physical_island", 3)
+	# Island Three contains many deliberate two- and three-piece repeating civic
+	# details. They share compact court cells and can be merged safely at a lower
+	# threshold without expanding the batching policy across Islands One or Two.
+	campus.set_meta("static_render_merge_min_group", 2)
 	campus.set_meta("story_sequence", PackedStringArray([
 		"enter the Stormworks portico",
 		"stabilise the lens tower, resonance forge and lightning archive",
@@ -9157,7 +9161,7 @@ func _batch_repeated_static_render_geometry(root: Node3D) -> void:
 	var source_count := 0
 	for key in groups:
 		var members: Array = groups[key]
-		if members.size() < STATIC_RENDER_MERGE_MIN_GROUP:
+		if members.size() < _static_render_merge_minimum(members):
 			continue
 		var first := members[0] as MeshInstance3D
 		var multi := MultiMesh.new()
@@ -9220,7 +9224,7 @@ func _merge_static_render_geometry(root: Node3D) -> void:
 	var merged_sources := 0
 	for key in groups:
 		var members: Array = groups[key]
-		if members.size() < STATIC_RENDER_MERGE_MIN_GROUP:
+		if members.size() < _static_render_merge_minimum(members):
 			continue
 		var first := members[0] as MeshInstance3D
 		var surface := SurfaceTool.new()
@@ -9283,6 +9287,17 @@ func _static_render_branch_is_dynamic(node: Node, root: Node3D,
 		and not bool(node.get_meta("allow_static_render_batching", false))
 	return dynamic_ancestor or (node != root and (scripted \
 		or node is MindSparkEnemyBase or node.has_meta("detail_orbit_speed")))
+
+
+func _static_render_merge_minimum(members: Array) -> int:
+	if members.is_empty():
+		return STATIC_RENDER_MERGE_MIN_GROUP
+	var current := members[0] as Node
+	while current != null and current != self:
+		if current.has_meta("static_render_merge_min_group"):
+			return maxi(2, int(current.get_meta("static_render_merge_min_group")))
+		current = current.get_parent()
+	return STATIC_RENDER_MERGE_MIN_GROUP
 
 
 func _is_static_render_leaf(instance: MeshInstance3D) -> bool:

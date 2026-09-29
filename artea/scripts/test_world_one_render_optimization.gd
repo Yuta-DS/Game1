@@ -19,6 +19,8 @@ func _run() -> void:
 	var repeated_groups := int(world.get_meta("batched_static_render_groups", 0))
 	var repeated_sources := int(world.get_meta("batched_static_render_sources", 0))
 	var ranged_meshes := int(world.get_meta("distance_culled_mesh_count", 0))
+	var storm_crown := world.get_warden().get_node("VisualRoot/BlightShell/StormCrown") as Node3D
+	var animated_crown_sources := int(storm_crown.get_meta("merged_static_source_count", 0))
 	assert(merged_groups > 0 and merged_sources > merged_groups * 3,
 		"World One must consolidate meaningful groups of inert static render leaves")
 	assert(repeated_groups > 0 and repeated_sources > repeated_groups * 3,
@@ -46,9 +48,9 @@ func _run() -> void:
 			assert(batch.layers == 1 and batch.multimesh != null,
 				"every repeated static batch remains drawable")
 			batched_sources += int(batch.get_meta("merged_static_source_count"))
-	assert(tagged_sources == merged_sources + repeated_sources \
+	assert(tagged_sources == merged_sources + repeated_sources + animated_crown_sources \
 			and batched_sources == tagged_sources,
-		"every disabled source maps exactly once to a live spatial render batch")
+		"every disabled source maps exactly once to a live static or animated render batch")
 	var garden := world.get_node("GardenOfUnfinishedLight")
 	var garden_batched_sources := 0
 	for mesh_value in garden.find_children("*", "MeshInstance3D", true, false):
@@ -67,7 +69,7 @@ func _run() -> void:
 		assert(visible_meshes > 0,
 			"quest object %s must retain independently rendered feedback geometry" % object.save_id)
 
-	print("WORLD_ONE_RENDER_OPTIMIZATION: PASS — %d static sources -> %d spatial batches, including %d conservatory sources; %d meshes use distance ranges; all 15 quest visuals remain independent" % [
+	print("WORLD_ONE_RENDER_OPTIMIZATION: PASS — %d static sources -> %d spatial batches, plus %d animated Warden crown sources -> 4 batches, including %d conservatory sources; %d meshes use distance ranges; all 15 quest visuals remain independent" % [
 		merged_sources + repeated_sources, merged_groups + repeated_groups,
-		garden_batched_sources, ranged_meshes])
+		animated_crown_sources, garden_batched_sources, ranged_meshes])
 	quit()
