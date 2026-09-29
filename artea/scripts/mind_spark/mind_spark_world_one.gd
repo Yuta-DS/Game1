@@ -9301,7 +9301,12 @@ func _is_static_render_leaf(instance: MeshInstance3D) -> bool:
 # distant sub-pixel trim stops consuming WebGL draw calls. Nodes, collisions,
 # scripts and all authored paths remain intact.
 func _configure_world_one_visibility_ranges(root: Node3D) -> void:
+	var web_budget := _uses_web_render_budget()
+	var range_profile: Array[float] = [90.0, 150.0, 240.0, 420.0, 1200.0]
+	if web_budget:
+		range_profile = [60.0, 105.0, 175.0, 300.0, 720.0]
 	var configured := 0
+	var shadow_culled := 0
 	for candidate in root.find_children("*", "MeshInstance3D", true, false):
 		var instance := candidate as MeshInstance3D
 		if instance.mesh == null or not instance.visible:
@@ -9309,23 +9314,56 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 		var scale := instance.global_transform.basis.get_scale().abs()
 		var bounds := instance.mesh.get_aabb().size * scale
 		var extent := maxf(bounds.x, maxf(bounds.y, bounds.z))
-		var range_end := 1200.0
+		var range_end: float = range_profile[4]
 		if extent <= 0.4:
-			range_end = 90.0
+			range_end = range_profile[0]
 		elif extent <= 1.6:
-			range_end = 150.0
+			range_end = range_profile[1]
 		elif extent <= 4.0:
-			range_end = 240.0
+			range_end = range_profile[2]
 		elif extent <= 12.0:
-			range_end = 420.0
+			range_end = range_profile[3]
 		instance.visibility_range_end = range_end
 		instance.visibility_range_end_margin = minf(48.0, range_end * .12)
+		# Small fixtures contribute useful local colour and silhouette, but their
+		# individual shadow submissions dominate the Compatibility renderer. Major
+		# buildings, trees and machinery retain shadows.
+		if web_budget and extent <= 4.0 \
+				and instance.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+			instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			shadow_culled += 1
 		configured += 1
 	for candidate in root.find_children("*", "MultiMeshInstance3D", true, false):
 		var instance := candidate as MultiMeshInstance3D
 		if instance.multimesh == null:
 			continue
-		instance.visibility_range_end = 560.0
-		instance.visibility_range_end_margin = 48.0
+		instance.visibility_range_end = 380.0 if web_budget else 560.0
+		instance.visibility_range_end_margin = 36.0 if web_budget else 48.0
+		if web_budget:
+			instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	set_meta("distance_culled_mesh_count", configured)
-	set_meta("visibility_range_profile", "90/150/240/420/1200m by world-space extent")
+	set_meta("visibility_range_profile", "%d/%d/%d/%d/%dm by world-space extent" % range_profile)
+	set_meta("web_shadow_culled_mesh_count", shadow_culled)
+	if web_budget:
+		_configure_web_internal_resolution()
+
+
+func _uses_web_render_budget() -> bool:
+	return OS.has_feature("web") or OS.get_environment("ARTEA_FORCE_WEB_LOD") == "1"
+
+
+func _configure_web_internal_resolution() -> void:
+	var viewport := get_viewport()
+	if viewport == null:
+		return
+	# A retina browser canvas can contain four times as many pixels as the CSS
+	# display. Cap only the 3D render buffer near 1.2 MP; HUD text and controls
+	# stay at the browser's full native resolution.
+	var pixels := float(viewport.size.x * viewport.size.y)
+	var render_scale := 1.0
+	if pixels > 1200000.0:
+		render_scale = clampf(sqrt(1200000.0 / pixels), 0.67, 1.0)
+	viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+	viewport.scaling_3d_scale = render_scale
+	set_meta("web_3d_render_scale", snappedf(render_scale, 0.001))
+	set_meta("web_3d_target_pixels", 1200000)
