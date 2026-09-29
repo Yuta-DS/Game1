@@ -29,6 +29,7 @@
 	// cost one round trip per part before the download could start.
 	// Byte totals from each manifest, keyed by request URL.
 	const manifestBytes = new Map();
+	const manifestPartBytes = new Map();
 
 	const countParts = async (requestUrl) => {
 		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
@@ -45,6 +46,9 @@
 					// from an assembled Blob any more.
 					if (Number.isInteger(manifest.bytes)) {
 						manifestBytes.set(requestUrl, manifest.bytes);
+					}
+					if (Number.isInteger(manifest.partBytes) && manifest.partBytes > 0) {
+						manifestPartBytes.set(requestUrl, manifest.partBytes);
 					}
 					return manifest.count;
 				}
@@ -81,11 +85,20 @@
 					throw new Error(`${url} returned ${response.status}`);
 				}
 				const bytes = new Uint8Array(await response.arrayBuffer());
-				const declaredLength = Number(response.headers.get("Content-Length"));
-				if (Number.isInteger(declaredLength) && declaredLength >= 0
-						&& bytes.byteLength !== declaredLength) {
+				const totalBytes = manifestBytes.get(requestUrl);
+				const partBytes = manifestPartBytes.get(requestUrl);
+				const expectedLength = Number.isInteger(totalBytes) && Number.isInteger(partBytes)
+					? Math.min(partBytes, totalBytes - index * partBytes)
+					: null;
+				const lengthHeader = response.headers.get("Content-Length");
+				const declaredLength = lengthHeader === null || lengthHeader === ""
+					? null : Number(lengthHeader);
+				const verifiedLength = Number.isInteger(expectedLength)
+					? expectedLength : declaredLength;
+				if (Number.isInteger(verifiedLength) && verifiedLength >= 0
+						&& bytes.byteLength !== verifiedLength) {
 					throw new Error(
-						`${url} was truncated (${bytes.byteLength}/${declaredLength} bytes)`,
+						`${url} was truncated (${bytes.byteLength}/${verifiedLength} bytes)`,
 					);
 				}
 				return bytes;

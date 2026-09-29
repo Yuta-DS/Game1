@@ -30,7 +30,9 @@ globalThis.window = {
 			return new Response("abc", { status: 200, headers: { "Content-Length": "3" } });
 		}
 		if (url.includes("part01")) {
-			return new Response("def", { status: 200, headers: { "Content-Length": "3" } });
+			// Some browser providers hide Content-Length. The manifest remains the
+			// authoritative integrity source in that environment.
+			return new Response("def", { status: 200 });
 		}
 		throw new Error(`Unexpected fetch ${url}`);
 	},
