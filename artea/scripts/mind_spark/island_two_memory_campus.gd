@@ -50,6 +50,11 @@ static func apply(world: MindSparkWorldOne) -> void:
 	var campus := Node3D.new()
 	campus.name = "IslandTwoMemoryCampus"
 	campus.set_meta("preserve_authored_nodes", true)
+	campus.set_meta("physical_island", 2)
+	# The observatory and Hope district form one compact composition. Wider
+	# spatial cells consolidate matching inert masonry without touching station
+	# controls, collision, saved state, or the independently animated bays.
+	campus.set_meta("static_render_merge_cell_size", 192.0)
 	campus.set_meta("style", "heavenly evidence observatory; ivory, brass, teal glass and restrained lavender")
 	campus.set_meta("story_sequence", ["Observe evidence", "Name the prediction", "Choose a useful next step", "Open the Hope Archive"])
 	campus.set_meta("architectural_rules", [
@@ -86,6 +91,8 @@ static func apply(world: MindSparkWorldOne) -> void:
 	# static architecture and may be spatially batched while this presenter node
 	# continues to synchronize story state.
 	garden.set_meta("allow_static_render_batching", true)
+	garden.set_meta("physical_island", 2)
+	garden.set_meta("static_render_merge_cell_size", 192.0)
 	# The conservatory replaces this earlier combat court. Keeping its hidden
 	# masonry solid left invisible pillars and a reward plinth in the player route.
 	_retire_assembly(campus.get_node("EliteGuardianCourt"),
