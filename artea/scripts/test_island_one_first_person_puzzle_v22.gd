@@ -26,6 +26,9 @@ func _run() -> void:
 
 	var puzzle := world.get_island_one_puzzle() as MindSparkIslandOnePuzzle
 	assert(puzzle != null, "Island One exposes its production puzzle controller")
+	assert(int(puzzle.get_meta("cached_visual_animation_node_count", 0)) >= 8
+			and int(puzzle.get_meta("per_frame_scene_tree_searches", -1)) == 0,
+		"Island One caches its visual animation nodes instead of rescanning the authored hierarchy every frame")
 	var player_proxy := Node3D.new()
 	player_proxy.name = "FirstPersonPlayerProxy"
 	world.add_child(player_proxy)

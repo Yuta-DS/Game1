@@ -81,6 +81,11 @@ var _feedback_seconds := 0.0
 var _feedback_text := ""
 var _rotor_phase := 0.0
 var _adjustment_history: Array[Dictionary] = []
+var _governor_rotors: Array[Node3D] = []
+var _bridge_energy_packets: Array[MeshInstance3D] = []
+var _light_beam_pulses: Array[MeshInstance3D] = []
+var _echo_root_pulses: Array[MeshInstance3D] = []
+var _analysis_rotor: Node3D
 
 
 func configure(custom_store_path: String, scale_factor: float) -> void:
@@ -111,8 +116,33 @@ func _setup() -> void:
 			var count := int(restored.get("echo_collected",0))
 			current_state.echo_captured = [count > 0,count > 1,count > 2]
 			current_state.prism_installed = count > 0 or bool(restored.get("echo_garden_complete",false))
+	_cache_animation_nodes()
 	_apply_state(false)
 	set_process(true)
+
+
+func _cache_animation_nodes() -> void:
+	## The arrival hierarchy contains thousands of authored parts. Recursively
+	## searching it four times per rendered frame caused a shared Web CPU cost in
+	## every district. These animated pieces are all constructed before configure,
+	## so resolve them once and keep their inspectable nodes intact.
+	_governor_rotors.clear()
+	_bridge_energy_packets.clear()
+	_light_beam_pulses.clear()
+	_echo_root_pulses.clear()
+	for candidate in find_children("*GovernorRotor", "Node3D", true, false):
+		_governor_rotors.append(candidate as Node3D)
+	for candidate in find_children("BridgeEnergyPacket_*", "MeshInstance3D", true, false):
+		_bridge_energy_packets.append(candidate as MeshInstance3D)
+	for candidate in find_children("LightBeamPulse_*", "MeshInstance3D", true, false):
+		_light_beam_pulses.append(candidate as MeshInstance3D)
+	for candidate in find_children("EchoRootPulse_*", "MeshInstance3D", true, false):
+		_echo_root_pulses.append(candidate as MeshInstance3D)
+	_analysis_rotor = find_child("AnalysisRotor", true, false) as Node3D
+	set_meta("cached_visual_animation_node_count", _governor_rotors.size()
+		+ _bridge_energy_packets.size() + _light_beam_pulses.size()
+		+ _echo_root_pulses.size() + int(_analysis_rotor != null))
+	set_meta("per_frame_scene_tree_searches", 0)
 
 
 func _default_state() -> Dictionary:
@@ -806,17 +836,26 @@ func _result(accepted: bool, reason: String) -> Dictionary:
 func _process(delta: float) -> void:
 	_feedback_seconds = maxf(0.0, _feedback_seconds - delta)
 	_rotor_phase = fposmod(_rotor_phase + delta * (1.8 if is_powered() else 0.32), TAU)
-	for rotor in find_children("*GovernorRotor", "Node3D", true, false):
-		(rotor as Node3D).rotation.y = _rotor_phase
-	for packet in find_children("BridgeEnergyPacket_*", "MeshInstance3D", true, false):
-		var mesh := packet as MeshInstance3D
-		mesh.visible = is_powered()
+	# Web island streaming hides this whole controller outside Island One. Keep
+	# state time moving, but do not animate invisible visual-only descendants.
+	if not is_visible_in_tree():
+		return
+	var powered := is_powered()
+	for rotor in _governor_rotors:
+		if not is_instance_valid(rotor):
+			continue
+		rotor.rotation.y = _rotor_phase
+	for mesh in _bridge_energy_packets:
+		if not is_instance_valid(mesh):
+			continue
+		mesh.visible = powered
 		var phase := fposmod(_rotor_phase / TAU + float(mesh.get_meta("packet_phase", 0.0)), 1.0)
 		var path_start: Vector3 = mesh.get_meta("path_start", Vector3.ZERO)
 		var path_end: Vector3 = mesh.get_meta("path_end", Vector3.ZERO)
 		mesh.position = path_start.lerp(path_end, phase)
-	for pulse in find_children("LightBeamPulse_*", "MeshInstance3D", true, false):
-		var light_pulse := pulse as MeshInstance3D
+	for light_pulse in _light_beam_pulses:
+		if not is_instance_valid(light_pulse):
+			continue
 		var source_prism := str(light_pulse.get_meta("source_prism", ""))
 		var selected_seed := int(current_state.get("%s_prism" % source_prism, -1))
 		var pulse_seed := int(light_pulse.get_meta("seed_index", -2))
@@ -827,8 +866,9 @@ func _process(delta: float) -> void:
 			var pulse_start: Vector3 = light_pulse.get_meta("path_start", Vector3.ZERO)
 			var pulse_end: Vector3 = light_pulse.get_meta("path_end", Vector3.ZERO)
 			light_pulse.position = pulse_start.lerp(pulse_end, pulse_phase)
-	for echo_pulse in find_children("EchoRootPulse_*", "MeshInstance3D", true, false):
-		var root_pulse := echo_pulse as MeshInstance3D
+	for root_pulse in _echo_root_pulses:
+		if not is_instance_valid(root_pulse):
+			continue
 		var route_index := int(root_pulse.get_meta("route_index", -1))
 		root_pulse.visible = _echo_route_active(route_index)
 		if root_pulse.visible:
@@ -837,10 +877,9 @@ func _process(delta: float) -> void:
 			var echo_start: Vector3 = root_pulse.get_meta("path_start", Vector3.ZERO)
 			var echo_end: Vector3 = root_pulse.get_meta("path_end", Vector3.ZERO)
 			root_pulse.position = echo_start.lerp(echo_end, echo_phase)
-	var analysis_rotor := find_child("AnalysisRotor", true, false) as Node3D
-	if analysis_rotor != null:
-		analysis_rotor.rotation.y = _rotor_phase * 0.4
-		analysis_rotor.rotation.x = sin(_rotor_phase) * 0.08
+	if is_instance_valid(_analysis_rotor):
+		_analysis_rotor.rotation.y = _rotor_phase * 0.4
+		_analysis_rotor.rotation.x = sin(_rotor_phase) * 0.08
 
 
 func _apply_state(animate: bool) -> void:
