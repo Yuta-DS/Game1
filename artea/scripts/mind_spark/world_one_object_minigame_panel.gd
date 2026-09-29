@@ -93,10 +93,12 @@ var _mistakes := 0
 var _cursor := Vector2(.5, .5)
 var _grid := Vector2i(1, 2)
 var _falling: Array[Dictionary] = []
+var _spawn_count := 0
 var _spawn_clock := 0.0
 var _elapsed := 0.0
 var _ready_to_strike := false
 var _finished := false
+var _last_result: Dictionary = {}
 var _left_held := false
 var _right_held := false
 var _board: ArcadeBoard
@@ -134,10 +136,12 @@ func _reset_round() -> void:
 	_cursor = Vector2(.5, .5)
 	_grid = Vector2i(1, 2)
 	_falling.clear()
+	_spawn_count = 0
 	_spawn_clock = 0.0
 	_elapsed = 0.0
 	_ready_to_strike = false
 	_finished = false
+	_last_result = {}
 	if _mode == "route":
 		var route: Array = _spec.get("route", [])
 		if not route.is_empty() and _grid == route[0]:
@@ -219,8 +223,13 @@ func _build_ui() -> void:
 func _add_touch_button(row: HBoxContainer, caption: String, command: String) -> void:
 	var button := Button.new()
 	button.text = caption
+	button.set_meta("minigame_command", command)
 	button.custom_minimum_size = Vector2(82, 44)
-	button.pressed.connect(func(): _command(command))
+	if command in ["left", "right"] and _mode in ["align", "catch", "dodge"]:
+		button.button_down.connect(func(): _set_direction_held(command, true))
+		button.button_up.connect(func(): _set_direction_held(command, false))
+	else:
+		button.pressed.connect(func(): _command(command))
 	row.add_child(button)
 
 
@@ -261,7 +270,11 @@ func _process(delta: float) -> void:
 
 
 func _spawn_falling() -> void:
-	var index := _score + _mistakes + _falling.size()
+	# Advance independently of score. Avoiding a harmful drop changes neither
+	# score nor mistakes, so deriving this index from those values repeated the
+	# same harmful drop forever and made catch games impossible to finish.
+	var index := _spawn_count
+	_spawn_count += 1
 	var x := .12 + fmod(float(index * 37 + int(_spec.get("pattern", 0)) * 19), 77.0) / 100.0
 	var bad := _mode == "dodge" or (_mode == "catch" and index % 3 == 2)
 	_falling.append({"x": x, "y": -.04, "bad": bad})
@@ -303,12 +316,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		if command == "close" and event.pressed:
 			queue_free()
 		elif command in ["left", "right"]:
-			if command == "left": _left_held = event.pressed
-			else: _right_held = event.pressed
+			_set_direction_held(command, event.pressed)
 			if event.pressed and _mode in ["route", "rhythm"]: _command(command)
 		elif event.pressed and not command.is_empty():
 			_command(command)
 		get_viewport().set_input_as_handled()
+
+
+func _set_direction_held(command: String, held: bool) -> void:
+	if command == "left":
+		_left_held = held
+	elif command == "right":
+		_right_held = held
 
 
 func _key_command(keycode: Key) -> String:
@@ -395,8 +414,8 @@ func _win() -> void:
 	_finished = true
 	_left_held = false
 	_right_held = false
-	var result := _apply_station_reward()
-	_update_labels("Challenge complete • " + str(result.get("reason", "practice_complete")).replace("_", " ").capitalize() + "\nPress Space to replay, or Esc to return.")
+	_last_result = _apply_station_reward()
+	_update_labels("Challenge complete • " + str(_last_result.get("reason", "practice_complete")).replace("_", " ").capitalize() + "\nPress Space to replay, or Esc to return.")
 	if _board != null: _board.queue_redraw()
 
 
@@ -492,7 +511,12 @@ func challenge_mode() -> String:
 
 func complete_for_test() -> Dictionary:
 	_finished = true
-	return _apply_station_reward()
+	_last_result = _apply_station_reward()
+	return _last_result
+
+
+func completion_result() -> Dictionary:
+	return _last_result.duplicate(true)
 
 
 func _exit_tree() -> void:
