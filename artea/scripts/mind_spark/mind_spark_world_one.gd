@@ -9493,7 +9493,19 @@ func _update_web_camera_far_plane() -> void:
 		nearest = minf(nearest,
 			focus_2d.distance_to(Vector2(zone_position.x, zone_position.z)))
 	var original_far := float(camera.get_meta("world_one_original_far", camera.far))
-	var target_far := 900.0 if nearest <= 500.0 else original_far
+	var inside_world_one := nearest <= 500.0
+	var target_far := 900.0 if inside_world_one else original_far
 	if not is_equal_approx(camera.far, target_far):
 		camera.far = target_far
+	# Compatibility renders an additional directional-light pass for affected
+	# geometry. The shared ambient sky already supplies cool fill at energy 0.82,
+	# so the second FillLight duplicates hundreds of court draws on Web without
+	# contributing a readable shadow or gameplay signal.
+	for candidate in get_tree().root.find_children("FillLight", "DirectionalLight3D", true, false):
+		var fill := candidate as DirectionalLight3D
+		if not fill.has_meta("world_one_original_visible"):
+			fill.set_meta("world_one_original_visible", fill.visible)
+		var original_visible := bool(fill.get_meta("world_one_original_visible", true))
+		fill.visible = false if inside_world_one else original_visible
 	set_meta("web_camera_far", camera.far)
+	set_meta("web_single_directional_light", inside_world_one)

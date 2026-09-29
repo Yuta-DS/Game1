@@ -14,6 +14,10 @@ func _run() -> void:
 	sun.name = "ProductionShadowSun"
 	sun.shadow_enabled = true
 	root.add_child(sun)
+	var fill := DirectionalLight3D.new()
+	fill.name = "FillLight"
+	fill.shadow_enabled = false
+	root.add_child(fill)
 	var camera := Camera3D.new()
 	camera.position = Vector3(-760, 8, 120)
 	camera.far = 5000.0
@@ -44,10 +48,12 @@ func _run() -> void:
 	assert(is_equal_approx(camera.far, 900.0) \
 			and is_equal_approx(float(world.get_meta("web_camera_far", 0.0)), 900.0),
 		"the active World One Web camera must exclude unrelated galaxy geometry")
+	assert(not fill.visible and bool(world.get_meta("web_single_directional_light", false)),
+		"World One Web must use one directional pass with ambient sky fill")
 	camera.position = Vector3(4000, 20, 4000)
 	await process_frame
-	assert(is_equal_approx(camera.far, 5000.0),
-		"the camera's authored far plane must restore after leaving World One")
+	assert(is_equal_approx(camera.far, 5000.0) and fill.visible,
+		"camera depth and shared fill light must restore after leaving World One")
 	camera.position = Vector3(-760, 8, 120)
 	await process_frame
 	assert(bool(world.get_meta("web_island_detail_streaming", false)),
