@@ -35,7 +35,27 @@ func run() -> void:
 	assert(retired.get_child_count()==8,"Retired source must stay available for recovery")
 	assert(not retired.is_visible_in_tree())
 	fixture.queue_free()
+	await process_frame
+	OS.set_environment("ARTEA_FORCE_WEB_LOD", "1")
+	var web_fixture := Node3D.new()
+	root.add_child(web_fixture)
+	for cell in 2:
+		for index in 8:
+			var part := MeshInstance3D.new()
+			part.mesh = mesh
+			part.position = Vector3(cell * 160.0 + index, 0, 0)
+			web_fixture.add_child(part)
+	world.call("_batch_static_geometry",web_fixture)
+	await process_frame
+	var web_batches := web_fixture.find_children(
+		"BatchedGeometry*","MultiMeshInstance3D",false,false)
+	assert(web_batches.size()==2,
+		"Web repeated geometry must split into independently culled spatial cells")
+	for batch in web_batches:
+		assert((batch as MultiMeshInstance3D).multimesh.instance_count==8)
+	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
+	web_fixture.queue_free()
 	world.free()
 	await process_frame
-	print("STATIC_BATCH_VISIBILITY: PASS — direct/inherited hidden meshes retained, only eight visible meshes batched")
+	print("STATIC_BATCH_VISIBILITY: PASS — hidden meshes retained; Web repeated geometry uses two independently culled spatial cells")
 	quit()

@@ -881,11 +881,71 @@ func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 		start + flat_direction * 40.0 + Vector3(0.0, 26.0, 0.0), Color("8df8ff"), 40)
 	_add_landmark_label(causeway, "WORLD ONE • MIND SPARK LANDING",
 		finish - flat_direction * 40.0 + Vector3(0.0, 26.0, 0.0), Color("bffbff"), 40)
+	if _use_web_lod():
+		_batch_world_one_causeway_visuals(causeway)
 	causeway.set_meta("span_metres", span)
 	causeway.set_meta("segment_count", segment_count)
 	causeway.set_meta("deck_y", CAUSEWAY_DECK_Y)
 	causeway.set_meta("walk_start", start)
 	causeway.set_meta("walk_finish", finish)
+
+
+func _batch_world_one_causeway_visuals(causeway: Node3D) -> void:
+	## Keep every authored causeway node and every collision body inspectable, but
+	## submit its static masonry in spatial material batches on Web. Without this
+	## pass the distant bridge contributes hundreds of individual draw calls even
+	## from Islands Two and Three. Cells retain camera-frustum culling along the
+	## kilometre-scale span, unlike one monolithic merged bridge mesh.
+	const CELL_SIZE := 192.0
+	var groups := {}
+	for value in causeway.find_children("*", "MeshInstance3D", true, false):
+		var instance := value as MeshInstance3D
+		if instance.mesh == null or instance.mesh.get_surface_count() != 1 \
+				or instance.material_override == null or not instance.visible:
+			continue
+		var local_origin := causeway.to_local(instance.global_position)
+		var cell := Vector2i(floori(local_origin.x / CELL_SIZE),
+			floori(local_origin.z / CELL_SIZE))
+		var key := "%d,%d|material=%d|shadow=%d|gi=%d" % [
+			cell.x, cell.y, instance.material_override.get_instance_id(),
+			instance.cast_shadow, instance.gi_mode]
+		if not groups.has(key):
+			groups[key] = []
+		groups[key].append(instance)
+	var batches := 0
+	var sources := 0
+	for key in groups:
+		var members := groups[key] as Array
+		if members.size() < 2:
+			continue
+		var first := members[0] as MeshInstance3D
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for member_value in members:
+			var member := member_value as MeshInstance3D
+			surface.append_from(member.mesh, 0,
+				causeway.global_transform.affine_inverse() * member.global_transform)
+		var combined := surface.commit()
+		if combined == null or combined.get_surface_count() == 0:
+			continue
+		var batch := MeshInstance3D.new()
+		batch.name = "WebCausewayBatch_%03d" % batches
+		batch.mesh = combined
+		batch.material_override = first.material_override
+		batch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		batch.gi_mode = first.gi_mode
+		batch.set_meta("render_role", "spatial World One causeway batch")
+		batch.set_meta("merged_static_source_count", members.size())
+		causeway.add_child(batch)
+		for member_value in members:
+			var member := member_value as MeshInstance3D
+			member.layers = 0
+			member.set_meta("render_merged_into", batch.name)
+			sources += 1
+		batches += 1
+	causeway.set_meta("web_visual_batch_count", batches)
+	causeway.set_meta("web_visual_source_count", sources)
+	causeway.set_meta("web_visual_batch_cell_size", CELL_SIZE)
 
 
 func _build_causeway_support_island(parent: Node3D, center: Vector3, index: int) -> void:

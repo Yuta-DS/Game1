@@ -36,6 +36,9 @@ func _run() -> void:
 		"Island Two's small production-bay controls must stream by player distance")
 	assert(int(world.get_meta("web_island_two_preserved_silhouette_mesh_count", 0)) >= 20,
 		"Island Two's long-range station silhouettes must remain outside detail streaming")
+	assert(bool(world.get_meta("web_spatial_repeated_batching", false))
+			and int(world.get_meta("batched_geometry_groups", 0)) > 0,
+		"Web repeated geometry must use independently culled spatial batches")
 	for path in [
 		"WorldOneGeometry/03ConstellationCourt/ModularFloatingFoundation/IslandArchitecture/Architecture_v11_03",
 		"WorldOneGeometry/04HopePathRidge/ModularFloatingFoundation/IslandArchitecture/Architecture_v17_04",

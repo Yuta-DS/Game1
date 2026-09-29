@@ -9072,8 +9072,10 @@ const BATCH_MIN_GROUP := 8
 func _batch_static_geometry(root: Node3D) -> void:
 	if root == null:
 		return
+	if _uses_web_render_budget():
+		set_meta("web_spatial_repeated_batching", true)
 	var groups := {}
-	_collect_batchable(root, groups)
+	_collect_batchable(root, groups, root)
 	var collapsed := 0
 	var removed := 0
 	for key in groups:
@@ -9111,7 +9113,10 @@ func _batch_static_geometry(root: Node3D) -> void:
 		set_meta("batched_geometry_nodes_removed", removed)
 
 
-func _collect_batchable(node: Node, groups: Dictionary) -> void:
+func _collect_batchable(node: Node, groups: Dictionary,
+		batch_root: Node3D = null) -> void:
+	if batch_root == null and node is Node3D:
+		batch_root = node as Node3D
 	# A root-level MultiMesh cannot inherit a retired assembly's visibility.
 	# Leave hidden source nodes untouched instead of resurrecting their geometry.
 	if node is Node3D and not (node as Node3D).is_visible_in_tree():
@@ -9121,7 +9126,7 @@ func _collect_batchable(node: Node, groups: Dictionary) -> void:
 	if node is MindSparkEnemyBase or node.get_meta("preserve_authored_nodes", false):
 		return
 	for child in node.get_children():
-		_collect_batchable(child, groups)
+		_collect_batchable(child, groups, batch_root)
 	if not (node is MeshInstance3D):
 		return
 	var instance := node as MeshInstance3D
@@ -9144,6 +9149,18 @@ func _collect_batchable(node: Node, groups: Dictionary) -> void:
 		_mesh_signature(instance.mesh),
 		_material_signature(instance.material_override),
 	]
+	# A single archipelago-wide MultiMesh keeps every instance resident whenever
+	# any part of its enormous AABB enters the camera. That saved draw calls but
+	# made Web render hundreds of thousands of off-screen repeated triangles.
+	# Split only the Web batches into the same spatial cells used by the later
+	# static merge pass, allowing frustum culling while retaining one draw per
+	# repeated mesh/material inside each visible cell.
+	if _uses_web_render_budget():
+		var local_origin := batch_root.to_local(instance.global_position)
+		var cell_size := _static_render_cell_size(instance)
+		var cell := Vector2i(floori(local_origin.x / cell_size),
+			floori(local_origin.z / cell_size))
+		key += "|cell=%.0f:%d,%d" % [cell_size, cell.x, cell.y]
 	if not groups.has(key):
 		groups[key] = []
 	groups[key].append(instance)
