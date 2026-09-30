@@ -18,9 +18,15 @@ func _run() -> void:
 		assert(campus.get_node(architecture_name) is Node3D,
 			"missing Island Two style-alignment assembly: "+architecture_name)
 	var observatory := campus.get_node("EvidenceObservatory") as Node3D
+	assert(bool(observatory.get_meta("evidence_camera_canopy_clear", false))
+		and str(observatory.get_meta("canopy_rib_composition", "")) \
+			== "alternating_open_sightline_v1",
+		"the Evidence Scanner production camera keeps an authored open canopy bay")
+	assert(observatory.get_node_or_null("ArchiveCanopyRib_02_West") == null,
+		"the former middle-west canopy rib must not clip the Evidence Scanner camera")
 	assert(observatory.get_node("CelestialArchiveOrrery") is Node3D)
-	assert(observatory.find_children("ArchiveCanopyRib_*","Node3D",true,false).size()==5,
-		"five canopy ribs frame the observatory while the east rear promenade bay stays open")
+	assert(observatory.find_children("ArchiveCanopyRib_*","Node3D",true,false).size()==4,
+		"four alternating canopy ribs frame the observatory while both player sightlines stay open")
 	var synthesis_table := observatory.get_node("EvidenceSynthesisTable") as Node3D
 	assert(synthesis_table.get_node("IvoryWorktopCollision") is StaticBody3D,
 		"the evidence court focal table must stop the player")

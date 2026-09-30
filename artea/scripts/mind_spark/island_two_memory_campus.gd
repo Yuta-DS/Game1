@@ -855,6 +855,8 @@ static func _build_evidence_observatory(world: MindSparkWorldOne, campus: Node3D
 	observatory.set_meta("architectural_role", "Island Two primary evidence department")
 	observatory.set_meta("dominant_landmark", "suspended celestial archive orrery")
 	observatory.set_meta("clear_working_aisle_m", 6.0)
+	observatory.set_meta("evidence_camera_canopy_clear", true)
+	observatory.set_meta("canopy_rib_composition", "alternating_open_sightline_v1")
 	observatory.set_meta("reusable_component_families", PackedStringArray([
 		"observatory buttress", "rib", "archive spindle", "department sign",
 	]))
@@ -884,10 +886,16 @@ static func _build_evidence_observatory(world: MindSparkWorldOne, campus: Node3D
 				"%sRibCollar_%02d" % [side_name, rib_index + 1],
 				Vector3(x, 11.9, z), .98, 1.38, mats.astral_brass,
 				Vector3(90, 0, 0))
-		world.call("_add_cable_between", observatory,
-			"ArchiveCanopyRib_%02d_West" % (rib_index + 1),
-			Vector3(-74, 11.9, z), Vector3(-55, 16.0, z),
-			.64, .38, mats.sanctum_ivory, 12)
+		# Leave the west middle bay open above the Evidence Scanner. Its short rib
+		# sat ten metres in front of the interaction camera and rendered as an
+		# unexplained ivory wedge across the top of every player-height view. The
+		# buttress remains, while alternating west/east ribs retain the archive
+		# rhythm without putting trim inside the camera frustum.
+		if rib_index != 1:
+			world.call("_add_cable_between", observatory,
+				"ArchiveCanopyRib_%02d_West" % (rib_index + 1),
+				Vector3(-74, 11.9, z), Vector3(-55, 16.0, z),
+				.64, .38, mats.sanctum_ivory, 12)
 		if rib_index != 2:
 			world.call("_add_cable_between", observatory,
 				"ArchiveCanopyRib_%02d_East" % (rib_index + 1),
