@@ -6656,6 +6656,15 @@ func _unify_island_three_tree_and_quest_style(campus: Node3D) -> void:
 			part.material_override = _materials.shared_style_charcoal
 		elif "raincollectorrib" in key:
 			part.material_override = _materials.shared_style_ivory
+		elif "raincatchmentbed" in key:
+			part.material_override = _materials.celestial_floor
+		elif "raincatchmentsoil" in key:
+			part.material_override = _materials.island_three_earth
+		elif "raingardenstem" in key:
+			part.material_override = _materials.island_three_hero_bark
+		elif "raingardenplanting" in key:
+			# Keep the deliberately varied sage/moss material assigned at build time.
+			pass
 		elif key in ["rainpool", "raincrystalreservoir", "facetedraindome"] \
 				or "rainvane" in key or "rainchannel" in key \
 				or "harvestedrainwater" in key or "capturedrainstream" in key \
@@ -7181,8 +7190,10 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 	observatory.set_meta("quest_architecture", "open weather instrument")
 	observatory.set_meta("replaces", "CalmRainCloister")
 	observatory.set_meta("low_poly_landmark", true)
-	observatory.set_meta("design_revision", "restrained_ivory_weather_house_v2")
+	observatory.set_meta("design_revision", "restrained_ivory_weather_house_v3_rain_garden")
 	observatory.set_meta("cyan_surface_policy", "water and small glass accents only")
+	observatory.set_meta("rain_garden_bed_count", 3)
+	observatory.set_meta("rain_garden_planting_count", 9)
 	parent.add_child(observatory)
 	_build_island_three_shared_instrument(observatory, center, Vector3(0, 0, -1),
 		_materials.shared_style_cyan, "catch")
@@ -7224,6 +7235,37 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 			cos(channel_angle) * 14.5)
 		_add_box(observatory, "RainChannel_%02d" % (channel_index + 1), channel_center,
 			Vector3(.72, .08, 17.0), _materials.rain_glass, false, channel_angle)
+	# Three low catchment gardens complete the rear half of the weather terrace.
+	# Their solid ivory beds repeat the environmental rhythm of Islands One and
+	# Two without closing the southern operator approach or crowding the pool.
+	for bed_index in 3:
+		var bed_angle := -.8 + float(bed_index) * .8
+		var bed_at := center + Vector3(sin(bed_angle) * 14.0, 0,
+			cos(bed_angle) * 12.8)
+		var bed_yaw := -bed_angle
+		_add_box(observatory, "RainCatchmentBed_%02d" % (bed_index + 1),
+			bed_at + Vector3.UP * .45, Vector3(7.0, .9, 4.4),
+			_materials.celestial_floor, true, bed_yaw)
+		_add_box(observatory, "RainCatchmentSoil_%02d" % (bed_index + 1),
+			bed_at + Vector3.UP * .94, Vector3(6.1, .10, 3.5),
+			_materials.island_three_earth, false, bed_yaw)
+		var bed_side := Vector3(cos(bed_yaw), 0, -sin(bed_yaw))
+		for planting_index in 3:
+			var planting_at := bed_at + bed_side * float(planting_index - 1) * 1.75
+			_add_cylinder(observatory,
+				"RainGardenStem_%02d_%02d" % [bed_index + 1, planting_index + 1],
+				planting_at + Vector3.UP * 1.55, .12, 1.3,
+				_materials.island_three_hero_bark, false, 7)
+			var planting := _add_sphere(observatory,
+				"RainGardenPlanting_%02d_%02d" % [bed_index + 1, planting_index + 1],
+				planting_at + Vector3.UP * (2.25 + float(planting_index % 2) * .28),
+				Vector3(1.0, .52, .78),
+				_island_three_canopy_material(bed_index + planting_index))
+			(planting.mesh as SphereMesh).radial_segments = 7
+			(planting.mesh as SphereMesh).rings = 3
+		_add_sphere(observatory, "RainGardenGauge_%02d" % (bed_index + 1),
+			bed_at + Vector3.UP * 1.55, Vector3(.34, .48, .34),
+			_materials.shared_style_cyan)
 	var completion_visuals := Node3D.new()
 	completion_visuals.name = "CompletionStateVisuals"
 	completion_visuals.set_meta("preserve_authored_nodes", true)

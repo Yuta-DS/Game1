@@ -367,10 +367,16 @@ func _run() -> void:
 	var rain_observatory := island_three.get_node("RainHarvestObservatory") as Node3D
 	var rain_dome := rain_observatory.get_node("FacetedRainDome") as MeshInstance3D
 	assert(str(rain_observatory.get_meta("design_revision", "")) \
-		== "restrained_ivory_weather_house_v2"
+		== "restrained_ivory_weather_house_v3_rain_garden"
 		and str(rain_observatory.get_meta("cyan_surface_policy", "")) \
 		== "water and small glass accents only",
 		"Rain Harvest uses restrained civic masonry instead of a neon cyan shell")
+	assert(int(rain_observatory.get_meta("rain_garden_bed_count", 0)) == 3
+		and int(rain_observatory.get_meta("rain_garden_planting_count", 0)) == 9,
+		"the observatory has a restrained rear catchment garden instead of an empty slab")
+	assert(rain_observatory.find_children(
+		"RainCatchmentBed_*Collision", "StaticBody3D", true, false).size() == 3,
+		"every rain-garden bed is solid while the southern operator approach stays open")
 	assert((rain_dome.mesh as SphereMesh).radial_segments == 12
 		and rain_dome.scale.x <= 9.5 and rain_dome.scale.y <= 5.5,
 		"the rain dome stays faceted and below the player-camera-dominating prototype size")
