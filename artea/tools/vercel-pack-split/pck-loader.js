@@ -11,7 +11,13 @@
 	// and the engine sat at the loading screen with no error.
 	const MAX_PARTS = 128;
 	const PART_TIMEOUT_MS = 45000;
-	const PART_ATTEMPTS = 3;
+	// Mobile connections and large cold-cache Vercel responses can fail after a
+	// part has already transferred most of its bytes. Three rapid retries were
+	// too short to outlive a transient edge failure and forced the player to
+	// restart the entire 445 MB download. Keep the attempts bounded, but spread
+	// them out enough for the route to recover.
+	const PART_ATTEMPTS = 6;
+	const MAX_RETRY_DELAY_MS = 8000;
 
 	const buildKey = new URL(window.location.href).searchParams.get("build");
 	const partUrl = (requestUrl, index) => {
@@ -78,7 +84,10 @@
 			const timeout = window.setTimeout(() => abort.abort(), PART_TIMEOUT_MS);
 			try {
 				const response = await nativeFetch(url, {
-					cache: "no-store",
+					// The build query makes every release immutable. Let a reload reuse
+					// parts that finished successfully, while a retry bypasses a failed
+					// edge response and refreshes that one cache entry.
+					cache: attempt === 1 ? "default" : "reload",
 					signal: abort.signal,
 				});
 				if (!response.ok) {
@@ -105,10 +114,14 @@
 			} catch (error) {
 				lastError = error;
 				if (attempt < PART_ATTEMPTS) {
-					console.warn(
-						`[ARTEA] retrying pack part ${index + 1}/${attempt + 1}`,
+					const retryDelay = Math.min(
+						MAX_RETRY_DELAY_MS,
+						500 * (2 ** (attempt - 1)),
 					);
-					await pause(250 * attempt);
+					console.warn(
+						`[ARTEA] retrying pack part ${index + 1}; attempt ${attempt + 1}/${PART_ATTEMPTS} in ${retryDelay}ms`,
+					);
+					await pause(retryDelay);
 				}
 			} finally {
 				window.clearTimeout(timeout);

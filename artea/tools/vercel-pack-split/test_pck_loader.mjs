@@ -3,12 +3,13 @@ import assert from "node:assert/strict";
 const originalFetch = globalThis.fetch;
 let firstPartAttempts = 0;
 const requestedUrls = [];
+const firstPartCacheModes = [];
 
 globalThis.window = {
 	location: { href: "https://example.test/?build=loader-test" },
 	setTimeout,
 	clearTimeout,
-	fetch: async (input) => {
+	fetch: async (input, init = {}) => {
 		const url = String(input);
 		requestedUrls.push(url);
 		if (url.includes(".parts.json")) {
@@ -19,6 +20,7 @@ globalThis.window = {
 		}
 		if (url.includes("part00")) {
 			firstPartAttempts += 1;
+			firstPartCacheModes.push(init.cache);
 			if (firstPartAttempts == 1) {
 				return {
 					ok: true,
@@ -44,6 +46,8 @@ const joined = new TextDecoder().decode(await response.arrayBuffer());
 
 assert.equal(joined, "abcdef", "retried parts must reassemble without partial bytes");
 assert.equal(firstPartAttempts, 2, "a failed part is retried exactly once before success");
+assert.deepEqual(firstPartCacheModes, ["default", "reload"],
+	"a retry bypasses the failed response while completed parts remain cacheable");
 assert.equal(response.headers.get("Content-Length"), "6");
 assert(requestedUrls.every((url) => url.includes("build=loader-test")),
 	"every manifest and part request keeps the cache-busting build identity");
