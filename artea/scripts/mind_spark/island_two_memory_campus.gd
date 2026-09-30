@@ -541,7 +541,10 @@ static func _apply_station_finish_and_collision(world: MindSparkWorldOne) -> voi
 			if _is_state_mesh_name(lower):
 				mesh.set_meta("finish_role", "state_feedback_preserved")
 				continue
-			if _contains_any(lower, ["brass", "gold", "trim", "band", "rim", "handle", "gear", "axle", "bolt", "rail", "pin"]):
+			if lower.contains("marker_slate"):
+				mesh.material_override = mats.quest_teal_enamel
+				mesh.set_meta("finish_role", "compact_teal_wayfinding_tablet")
+			elif _contains_any(lower, ["brass", "gold", "trim", "band", "rim", "handle", "gear", "axle", "bolt", "rail", "pin"]):
 				mesh.material_override = mats.astral_brass
 				mesh.set_meta("finish_role", "champagne_brass_mechanism")
 			elif _contains_any(lower, ["panel", "recess", "screen", "enamel"]):
@@ -941,6 +944,8 @@ static func _build_evidence_synthesis_table(world: MindSparkWorldOne,
 	table.position = Vector3(0, 0, -26)
 	table.set_meta("story_role", "three observations become one verified account")
 	table.set_meta("clear_operator_approaches", true)
+	table.set_meta("design_revision", "low_profile_evidence_tablets_v2")
+	table.set_meta("evidence_page_height_m", 2.2)
 	observatory.add_child(table)
 	world.call("_add_box", table, "CharcoalTableFoot",
 		Vector3(0, .32, 0), Vector3(39.0, .64, 16.0),
@@ -965,15 +970,30 @@ static func _build_evidence_synthesis_table(world: MindSparkWorldOne,
 			Vector3(x, 4.06, 0),
 			Bricks.build_bevel_box(Vector3(9.2, .30, 9.0), .12),
 			mats.sanctum_ivory)
-		world.call("_add_box", table,
+		var page := world.call("_add_brick", table,
 			"CharcoalEvidencePage_%02d" % (index + 1),
-			Vector3(x, 7.35, -1.2), Vector3(8.4, 6.5, .8),
-			mats.bio_gunmetal, false)
-		var evidence_signal := world.call("_add_box", table,
+			Vector3(x, 5.35, -1.52),
+			Bricks.build_bevel_box(Vector3(4.8, 2.2, .36), .12),
+			mats.quest_teal_enamel) as MeshInstance3D
+		page.rotation.x = deg_to_rad(-12.0)
+		var evidence_signal := world.call("_add_brick", table,
 			"EvidenceSignal_%02d" % (index + 1),
-			Vector3(x, 7.35, -.68), Vector3(6.8, 4.9, .12),
-			mats.arrival_glass, false) as MeshInstance3D
+			Vector3(x, 5.35, -1.30),
+			Bricks.build_bevel_box(Vector3(3.8, 1.15, .08), .04),
+			mats.arrival_glass) as MeshInstance3D
+		evidence_signal.rotation.x = page.rotation.x
 		evidence_signal.visible = false
+		world.call("_add_brick", table,
+			"IvoryEvidenceHeader_%02d" % (index + 1),
+			Vector3(x, 6.52, -1.76),
+			Bricks.build_bevel_box(Vector3(5.2, .26, .48), .08),
+			mats.sanctum_ivory)
+		for glyph_index in 3:
+			world.call("_add_brick", table,
+				"DormantEvidenceGlyph_%02d_%02d" % [index + 1, glyph_index + 1],
+				Vector3(x - .72 + float(glyph_index) * .72, 5.35, -1.27),
+				Bricks.build_bevel_box(Vector3(.30, .30, .06), .04),
+				mats.arrival_glass)
 	var label := world.call("_add_label", table, "OBSERVE  •  CONNECT  •  VERIFY",
 		Vector3(0, 5.6, 9.15), Color("fff2d9"), 22) as Label3D
 	label.pixel_size = .012
@@ -1107,6 +1127,7 @@ static func _build_production_station_marker(world: MindSparkWorldOne,
 	marker.name = "ProductionStationMarker"
 	marker.set_script(preload("res://scripts/mind_spark/island_two_station_marker.gd"))
 	marker.set_meta("purpose", "distinct grounded silhouette and state beacon for the live quest instrument")
+	marker.set_meta("design_revision", "open_teal_station_marker_v2")
 	marker.set_meta("silhouette_profile", [
 		"split evidence lens", "stepped memory archive", "unused focus bell",
 		"logic roof", "asymmetric perspective fins", "ascending truth bridge"
@@ -1116,11 +1137,12 @@ static func _build_production_station_marker(world: MindSparkWorldOne,
 		world.call("_add_box", marker, "IvoryMarkerPier_%s" % side,
 			Vector3(float(side) * 5.5, 3.9, -4.8),
 			Vector3(.9, 7.8, .9), mats.sanctum_ivory, true)
-	world.call("_add_box", marker, "CharcoalMarkerSlate",
-		Vector3(0, 6.0, -4.65), Vector3(9.2, 3.3, .3),
-		mats.bio_gunmetal, false)
+	world.call("_add_brick", marker, "CharcoalMarkerSlate",
+		Vector3(0, 6.0, -4.65),
+		Bricks.build_bevel_box(Vector3(6.8, 1.45, .24), .08),
+		mats.quest_teal_enamel)
 	var label := world.call("_add_label", marker, title,
-		Vector3(0, 7.15, -4.02), Color("fff0c9"), 24) as Label3D
+		Vector3(0, 6.15, -4.02), Color("fff0c9"), 24) as Label3D
 	label.pixel_size = .012
 	label.outline_size = 2
 	_add_court_emblem(world, marker, emblem, mats)

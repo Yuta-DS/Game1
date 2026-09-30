@@ -26,6 +26,22 @@ func _run() -> void:
 		"the evidence court focal table must stop the player")
 	assert(synthesis_table.position.z < -20.0,
 		"the table stays behind the three evidence quest approaches")
+	assert(str(synthesis_table.get_meta("design_revision")) ==
+		"low_profile_evidence_tablets_v2")
+	assert(float(synthesis_table.get_meta("evidence_page_height_m")) <= 2.2,
+		"evidence tablets must preserve the court horizon instead of becoming walls")
+	for page_index in 3:
+		var page := synthesis_table.get_node(
+			"CharcoalEvidencePage_%02d" % (page_index + 1)) as MeshInstance3D
+		var evidence_signal := synthesis_table.get_node(
+			"EvidenceSignal_%02d" % (page_index + 1)) as MeshInstance3D
+		assert(page.mesh.get_aabb().size.y <= 2.21,
+			"evidence tablet must remain below player-obscuring wall height")
+		assert(page.material_override == world.get("_materials").quest_teal_enamel,
+			"dormant evidence tablets use the finished Island Two enamel palette")
+		assert(evidence_signal.mesh.get_aabb().size.y <= 1.21)
+		assert(is_equal_approx(page.rotation.x, evidence_signal.rotation.x),
+			"story signal must sit flush with its evidence tablet")
 	var gallery := campus.get_node("HopeOpticsGallery") as Node3D
 	assert(gallery.find_children("PerspectiveRib_*","Node3D",true,false).size()==6)
 	assert(gallery.get_node("TruthFoundryLintel") is Node3D)
@@ -89,6 +105,14 @@ func _run() -> void:
 		assert(marker.visible)
 		assert(not str(marker.get_meta("silhouette_profile", "")).is_empty(),
 			"every Island Two quest marker needs a distinct long-range silhouette")
+		assert(str(marker.get_meta("design_revision")) == "open_teal_station_marker_v2")
+		var marker_slate := marker.get_node("CharcoalMarkerSlate") as MeshInstance3D
+		assert(marker_slate.mesh.get_aabb().size.y <= 1.46,
+			"station marker must remain an open frame rather than a blocking sign wall")
+		var marker_finish := marker_slate.material_override as StandardMaterial3D
+		var expected_finish := world.get("_materials").quest_teal_enamel as StandardMaterial3D
+		assert(marker_finish.albedo_color.is_equal_approx(expected_finish.albedo_color),
+			"station marker uses the finished teal enamel palette")
 		assert(marker.has_node("MarkerStateBeacon")
 			and marker.has_node("ActiveStateWings")
 			and marker.has_node("CompletedStateWings"),
