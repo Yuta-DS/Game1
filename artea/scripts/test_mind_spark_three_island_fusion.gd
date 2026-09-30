@@ -227,6 +227,14 @@ func _run() -> void:
 		"the low-poly arrival uses an open lintel instead of another ring")
 	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerNorthCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerSouthCollision"))
+	var arrival_gardens := island_three.get_node(
+		"StormworksArrivalGardenProcessional") as Node3D
+	assert(int(arrival_gardens.get_meta("garden_pair_count", 0)) == 3
+		and float(arrival_gardens.get_meta("clear_central_aisle_m", 0.0)) >= 27.0,
+		"the long Island 3 arrival uses three paired garden rooms around a broad clear aisle")
+	assert(arrival_gardens.find_children("*IvoryBed", "MeshInstance3D", true, false).size() == 6
+		and arrival_gardens.find_children("*IvoryBedCollision", "StaticBody3D", true, false).size() == 6,
+		"all six arrival garden beds are visible and collision-backed")
 	assert(island_three.get_node("StormworksGrandCourt").get_meta("clear_center_radius_m") == 34.0)
 	assert(island_three.has_node("StormworksGrandCourt/StormCourtCompass/CompassWedge_01"))
 	assert(island_three.get_node("StormworksGrandCourt").find_children(

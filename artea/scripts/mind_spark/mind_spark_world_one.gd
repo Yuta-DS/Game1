@@ -6348,6 +6348,8 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var arrival_direction := Vector3(1, 0, 0)
 	var arrival_center := arena_center - arrival_direction * 135.0
 	_build_island_three_arrival_portico(campus, arrival_center, arrival_direction)
+	_build_island_three_arrival_processional(campus, arrival_center,
+		arrival_direction)
 
 	# The low-poly prototype uses one open navigation court.  Keep its centre clear
 	# for the Warden and put all scenery on the perimeter where it also points to
@@ -6682,6 +6684,64 @@ func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
 		Vector3(24.0, 1.3, 2.0), _materials.island_cyan, false, yaw)
 	_add_brick(portico, "PorticoAetherCrown", center + Vector3.UP * 22.0,
 		Bricks.build_crystal(1.8, 5.5, .4, 6), _materials.island_cyan)
+
+
+func _build_island_three_arrival_processional(parent: Node3D, start: Vector3,
+		forward: Vector3) -> void:
+	## Turn the long bridge-to-court apron into a sequence of inhabited garden
+	## rooms. The paired beds borrow Island One's low planting courts and Island
+	## Two's lantern rhythm while preserving a broad, obstacle-free boss sightline.
+	var processional := Node3D.new()
+	processional.name = "StormworksArrivalGardenProcessional"
+	processional.set_meta("design_reference",
+		"Island One listening gardens + Island Two observatory lantern courts")
+	processional.set_meta("garden_pair_count", 3)
+	processional.set_meta("clear_central_aisle_m", 27.0)
+	processional.set_meta("collision_backed", true)
+	parent.add_child(processional)
+	var route_forward := forward.normalized()
+	var side_axis := Vector3(route_forward.z, 0, -route_forward.x)
+	var yaw := atan2(route_forward.x, route_forward.z)
+	var stations := [34.0, 68.0, 102.0]
+	for station_index in stations.size():
+		for side_value in [-1.0, 1.0]:
+			var side_name := "Left" if side_value < 0 else "Right"
+			# Stagger the middle-right bed toward the court so the existing direct
+			# west-garden bypass remains a straight, readable player route.
+			var station_distance: float = float(stations[station_index])
+			if station_index == 1 and side_value > 0:
+				station_distance += 13.0
+			var bed_center := start + route_forward * station_distance \
+				+ side_axis * float(side_value) * 19.5
+			var prefix := "ArrivalGarden_%02d_%s" % [station_index + 1, side_name]
+			_add_box(processional, "%sIvoryBed" % prefix,
+				bed_center + Vector3.UP * .45, Vector3(12.0, .9, 7.0),
+				_materials.shared_style_ivory, true, yaw)
+			_add_box(processional, "%sRecessedSoil" % prefix,
+				bed_center + Vector3.UP * .92, Vector3(10.6, .10, 5.7),
+				_materials.island_three_earth, false, yaw)
+			for shrub_index in 3:
+				var shrub_at := bed_center + route_forward * float(shrub_index - 1) * 2.0 \
+					+ side_axis * float(side_value) * .8 + Vector3.UP * 1.35
+				var shrub := _add_sphere(processional,
+					"%sSagePlanting_%02d" % [prefix, shrub_index + 1], shrub_at,
+					Vector3(1.75, .85, 1.35),
+					_island_three_canopy_material(station_index + shrub_index + 1))
+				(shrub.mesh as SphereMesh).radial_segments = 7
+				(shrub.mesh as SphereMesh).rings = 3
+			var tree_base := bed_center + route_forward * (-1.6 if station_index % 2 == 0 else 1.6) \
+				+ side_axis * float(side_value) * 1.2 + Vector3.UP * .92
+			_build_island_three_garden_tree(processional,
+				"%sFacetedTree" % prefix, tree_base, .62 + float(station_index) * .05,
+				station_index * 2 + (0 if side_value < 0 else 1))
+			var pier_at := bed_center - route_forward * 2.3 \
+				- side_axis * float(side_value) * 4.4
+			_add_cylinder(processional, "%sIvoryLanternPier" % prefix,
+				pier_at + Vector3.UP * 3.25, .52, 5.6,
+				_materials.shared_style_ivory, true, 9)
+			_add_sphere(processional, "%sCyanLantern" % prefix,
+				pier_at + Vector3.UP * 6.45, Vector3(.48, .68, .48),
+				_materials.shared_style_cyan)
 
 
 func _build_island_three_compass(parent: Node3D, center: Vector3) -> void:
