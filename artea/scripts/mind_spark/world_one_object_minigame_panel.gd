@@ -9,7 +9,9 @@ class ArcadeBoard extends Control:
 	func _draw() -> void:
 		if host == null:
 			return
-		var rect := Rect2(Vector2.ZERO, size)
+		var ui_scale := maxf(host._ui_scale, 1.0)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * ui_scale)
+		var rect := Rect2(Vector2.ZERO, size / ui_scale)
 		draw_rect(rect, Color("102f38"), true)
 		draw_rect(rect.grow(-3), Color("315b5c"), false, 3.0)
 		match host._mode:
@@ -20,20 +22,22 @@ class ArcadeBoard extends Control:
 			"dodge": _draw_fall(true)
 
 	func _draw_align() -> void:
-		var y := size.y * .55
-		draw_line(Vector2(35, y), Vector2(size.x - 35, y), Color("66878b"), 8, true)
+		var canvas := size / maxf(host._ui_scale, 1.0)
+		var y := canvas.y * .55
+		draw_line(Vector2(35, y), Vector2(canvas.x - 35, y), Color("66878b"), 8, true)
 		var targets: Array = host._spec.get("targets", [])
 		for i in targets.size():
-			var x := lerpf(40.0, size.x - 40.0, float(targets[i]))
+			var x := lerpf(40.0, canvas.x - 40.0, float(targets[i]))
 			var colour: Color = Color("6b735f") if i >= host._score else host._accent
 			draw_arc(Vector2(x, y), 18, 0, TAU, 30, colour, 5, true)
-		var marker_x := lerpf(40.0, size.x - 40.0, host._cursor.x)
+		var marker_x := lerpf(40.0, canvas.x - 40.0, host._cursor.x)
 		draw_line(Vector2(marker_x, y - 60), Vector2(marker_x, y + 60), host._accent, 6, true)
 		draw_circle(Vector2(marker_x, y), 9, Color("fff4dc"))
 
 	func _draw_route() -> void:
-		var cell := minf(size.x, size.y) / 4.1
-		var origin := (size - Vector2(cell * 3, cell * 3)) * .5
+		var canvas := size / maxf(host._ui_scale, 1.0)
+		var cell := minf(canvas.x, canvas.y) / 4.1
+		var origin := (canvas - Vector2(cell * 3, cell * 3)) * .5
 		var route: Array = host._spec.get("route", [])
 		var hazards: Array = host._spec.get("hazards", [])
 		for y in 3:
@@ -54,18 +58,20 @@ class ArcadeBoard extends Control:
 		draw_arc(player_box.get_center(), player_box.size.x * .36, 0, TAU, 24, host._accent, 4, true)
 
 	func _draw_rhythm() -> void:
+		var canvas := size / maxf(host._ui_scale, 1.0)
 		var sequence: Array = host._spec.get("sequence", [])
 		var names := {"left": "←", "right": "→", "up": "↑", "down": "↓"}
-		var width := size.x / maxf(1.0, sequence.size())
+		var width := canvas.x / maxf(1.0, sequence.size())
 		for i in sequence.size():
-			var center := Vector2(width * (i + .5), size.y * .53)
+			var center := Vector2(width * (i + .5), canvas.y * .53)
 			var colour: Color = host._accent if i < host._score else Color("66878b")
 			if i == host._score: draw_circle(center, 43, host._accent.darkened(.45))
 			draw_string(ThemeDB.fallback_font, center + Vector2(-16, 13), names[str(sequence[i])], HORIZONTAL_ALIGNMENT_LEFT, -1, 38, colour)
 
 	func _draw_fall(dodging: bool) -> void:
+		var canvas := size / maxf(host._ui_scale, 1.0)
 		for item in host._falling:
-			var pos := Vector2(float(item.x) * size.x, float(item.y) * size.y)
+			var pos := Vector2(float(item.x) * canvas.x, float(item.y) * canvas.y)
 			var harmful := bool(item.bad)
 			var colour: Color = Color("fa6f77") if harmful else host._accent
 			if dodging:
@@ -73,14 +79,14 @@ class ArcadeBoard extends Control:
 			else:
 				draw_circle(pos, 11, colour)
 				draw_arc(pos, 17, 0, TAU, 20, colour.lightened(.3), 2, true)
-		var paddle := Vector2(host._cursor.x * size.x, size.y - 28)
+		var paddle := Vector2(host._cursor.x * canvas.x, canvas.y - 28)
 		if dodging:
 			draw_circle(paddle, 14, Color("fff4dc"))
 			draw_arc(paddle, 20, 0, TAU, 24, host._accent, 4, true)
 		else:
 			draw_arc(paddle, 27, 0, PI, 24, host._accent, 8, true)
 		if dodging and host._ready_to_strike:
-			draw_string(ThemeDB.fallback_font, Vector2(size.x*.31, 45), "SHIELD OPEN • STRIKE!", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("fff4dc"))
+			draw_string(ThemeDB.fallback_font, Vector2(canvas.x*.31, 45), "SHIELD OPEN • STRIKE!", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("fff4dc"))
 
 
 var station: QuestObjectBase
@@ -118,6 +124,7 @@ var _player_physics := false
 var _mouse_mode := Input.MOUSE_MODE_CAPTURED
 var _rng := RandomNumberGenerator.new()
 var _accent := Color("72e6c5")
+var _ui_scale := 1.0
 
 
 func open_object(object: QuestObjectBase, actor: Node3D) -> void:
@@ -257,39 +264,92 @@ func _layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
 	if viewport.x <= 0.0 or viewport.y <= 0.0:
 		viewport = Vector2(get_window().size)
-	_layout_for_viewport(viewport)
+	_layout_for_viewport(viewport, _minigame_physical_size(viewport))
 
 
-func _layout_for_viewport(viewport: Vector2) -> void:
-	var stretch := get_viewport().get_stretch_transform().get_scale()
-	if stretch.x > 0 and stretch.y > 0:
-		scale = Vector2.ONE / stretch
-	var width := minf(680.0, maxf(280.0, viewport.x - 24.0))
-	var height := minf(650.0, maxf(300.0, viewport.y - 24.0))
-	var narrow := width < 520.0
-	var short := height < 520.0
-	var margin := 10.0 if short else (14.0 if narrow else 20.0)
+func _layout_for_viewport(viewport: Vector2,
+		physical_size: Vector2 = Vector2.ZERO) -> void:
+	if physical_size.is_zero_approx():
+		physical_size = viewport
+	_ui_scale = _minigame_interface_scale(viewport, physical_size)
+	scale = Vector2.ONE
+	var physical_width := minf(680.0, maxf(280.0, physical_size.x - 24.0))
+	var physical_height := minf(650.0, maxf(300.0, physical_size.y - 24.0))
+	var narrow := physical_width < 520.0
+	var short := physical_height < 520.0
+	var width := physical_width * _ui_scale
+	var height := physical_height * _ui_scale
+	var margin_px := 10.0 if short else (14.0 if narrow else 20.0)
+	var margin := margin_px * _ui_scale
+	_panel_style.set_border_width_all(maxi(2, roundi(4.0 * _ui_scale)))
+	_panel_style.set_corner_radius_all(roundi(14.0 * _ui_scale))
 	_panel_style.set_content_margin_all(margin)
-	_body.add_theme_constant_override("separation", 5 if short else 9)
-	_title.add_theme_font_size_override("font_size", 21 if short else (24 if narrow else 27))
-	_instruction.add_theme_font_size_override("font_size", 13 if short else (15 if narrow else 17))
-	_progress.add_theme_font_size_override("font_size", 15 if short else 18)
-	_status.add_theme_font_size_override("font_size", 13 if short else 16)
+	_body.add_theme_constant_override("separation",
+		roundi((5.0 if short else 9.0) * _ui_scale))
+	_title.add_theme_font_size_override("font_size",
+		roundi((21.0 if short else (24.0 if narrow else 27.0)) * _ui_scale))
+	_instruction.add_theme_font_size_override("font_size",
+		roundi((13.0 if short else (15.0 if narrow else 17.0)) * _ui_scale))
+	_progress.add_theme_font_size_override("font_size",
+		roundi((15.0 if short else 18.0) * _ui_scale))
+	_status.add_theme_font_size_override("font_size",
+		roundi((13.0 if short else 16.0) * _ui_scale))
 	_configure_touch_layout(narrow, short)
 	var columns := 3 if narrow else (6 if short else 5)
-	var button_width := floorf((width - margin * 2.0 - float(columns - 1) * 8.0) / float(columns))
-	button_width = clampf(button_width, 56.0 if short else 64.0, 104.0)
+	var button_width_px := floorf((physical_width - margin_px * 2.0 \
+		- float(columns - 1) * 8.0) / float(columns))
+	button_width_px = clampf(button_width_px, 56.0 if short else 64.0, 104.0)
+	_touch.add_theme_constant_override("h_separation", roundi(8.0 * _ui_scale))
+	_touch.add_theme_constant_override("v_separation", roundi(6.0 * _ui_scale))
 	for button in _touch_buttons.values():
-		(button as Button).custom_minimum_size = Vector2(button_width, 48.0 if short else 52.0)
-	_close.custom_minimum_size = Vector2(button_width if narrow or short else 0.0,
-		48.0 if short else 52.0)
+		(button as Button).custom_minimum_size = Vector2(button_width_px,
+			48.0 if short else 52.0) * _ui_scale
+		(button as Button).add_theme_font_size_override("font_size",
+			roundi(18.0 * _ui_scale))
+	_close.custom_minimum_size = Vector2(button_width_px if narrow or short else 0.0,
+		48.0 if short else 52.0) * _ui_scale
+	_close.add_theme_font_size_override("font_size", roundi(16.0 * _ui_scale))
 	if _board != null:
-		var board_height := height - (260.0 if short else (384.0 if narrow else 280.0))
-		_board.custom_minimum_size = Vector2(width - margin * 2.0,
-			clampf(board_height, 105.0 if short else 150.0, 350.0))
+		var board_height_px := physical_height \
+			- (260.0 if short else (384.0 if narrow else 280.0))
+		_board.custom_minimum_size = Vector2(physical_width - margin_px * 2.0,
+			clampf(board_height_px, 105.0 if short else 150.0, 350.0)) * _ui_scale
 	_panel.position = (viewport - Vector2(width, height)) * .5
 	_panel.size = Vector2(width, height)
 	_panel.set_deferred("size", Vector2(width, height))
+	set_meta("minigame_layout", "physical_viewport_v2")
+	set_meta("minigame_ui_scale", _ui_scale)
+	set_meta("minigame_physical_size", physical_size)
+
+
+func _minigame_physical_size(viewport_size: Vector2) -> Vector2:
+	var display_size := Vector2(DisplayServer.window_get_size())
+	var css_size := Vector2.ZERO
+	if OS.has_feature("web"):
+		var encoded := str(JavaScriptBridge.eval(
+			"JSON.stringify([window.innerWidth || 0, window.innerHeight || 0])", true))
+		if encoded.begins_with("["):
+			var decoded: Variant = JSON.parse_string(encoded)
+			if decoded is Array and decoded.size() >= 2:
+				css_size = Vector2(float(decoded[0]), float(decoded[1]))
+	return _select_minigame_physical_size(viewport_size, display_size, css_size)
+
+
+func _select_minigame_physical_size(viewport_size: Vector2,
+		display_size: Vector2, css_size: Vector2 = Vector2.ZERO) -> Vector2:
+	if css_size.x >= 240.0 and css_size.y >= 240.0:
+		return css_size
+	if display_size.x >= 240.0 and display_size.y >= 240.0:
+		return display_size
+	return viewport_size
+
+
+func _minigame_interface_scale(viewport_size: Vector2,
+		physical_size: Vector2) -> float:
+	if physical_size.x <= 0.0 or physical_size.y <= 0.0:
+		return 1.0
+	return maxf(1.0, maxf(viewport_size.x / physical_size.x,
+		viewport_size.y / physical_size.y))
 
 
 func _configure_touch_layout(narrow: bool, short: bool) -> void:

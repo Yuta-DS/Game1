@@ -147,6 +147,41 @@ func _assert_responsive_controls(panel: CanvasLayer) -> void:
 		and panel_control.position.y + panel_control.size.y <= 390.0,
 		"844×390 landscape layout stays inside the visible viewport; pos=%s size=%s min=%s" \
 			% [panel_control.position, panel_control.size, panel_control.get_combined_minimum_size()])
+
+	var logical_phone := Vector2(1710.0, 3700.0)
+	var physical_phone := Vector2(390.0, 844.0)
+	var selected: Vector2 = panel.call("_select_minigame_physical_size",
+		logical_phone, Vector2(710.0, 1536.0), physical_phone)
+	assert(selected == physical_phone,
+		"Web mini-games prefer the browser CSS viewport over backing-store dimensions")
+	panel.call("_layout_for_viewport", logical_phone, physical_phone)
+	await process_frame
+	var ui_scale := float(panel.get_meta("minigame_ui_scale", 0.0))
+	assert(ui_scale >= 4.0 and str(panel.get_meta("minigame_layout", "")) \
+		== "physical_viewport_v2", "portrait mini-game compensates for canvas scaling")
+	assert(panel_control.position.x >= 0.0 and panel_control.position.y >= 0.0
+		and panel_control.position.x + panel_control.size.x <= logical_phone.x
+		and panel_control.position.y + panel_control.size.y <= logical_phone.y,
+		"scaled portrait mini-game remains inside the logical Web viewport")
+	assert((panel.get("_title") as Label).get_theme_font_size("font_size") \
+		/ ui_scale >= 23.5, "portrait mini-game title remains at least 24 physical pixels")
+	for button in touch_buttons.values():
+		assert((button as Button).custom_minimum_size.y / ui_scale >= 51.5,
+			"portrait mini-game touch controls remain at least 52 physical pixels")
+	assert((panel.get("_board") as Control).custom_minimum_size.y / ui_scale >= 149.5,
+		"portrait mini-game board remains physically playable")
+
+	var logical_landscape := Vector2(2405.0, 1112.0)
+	var physical_landscape := Vector2(844.0, 390.0)
+	panel.call("_layout_for_viewport", logical_landscape, physical_landscape)
+	await process_frame
+	ui_scale = float(panel.get_meta("minigame_ui_scale", 0.0))
+	assert(touch.columns == 6, "physical landscape mini-games use one compact control row")
+	assert((panel.get("_board") as Control).custom_minimum_size.y / ui_scale >= 104.5,
+		"physical landscape mini-game board keeps a 105-pixel play area")
+	for button in touch_buttons.values():
+		assert((button as Button).custom_minimum_size.y / ui_scale >= 47.5,
+			"landscape mini-game controls remain at least 48 physical pixels")
 	panel.call("_layout")
 
 
