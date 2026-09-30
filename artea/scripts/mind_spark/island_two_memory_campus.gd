@@ -326,13 +326,16 @@ static func _restore_legacy_heritage_layer(world: MindSparkWorldOne,
 	# whole assemblies and made the gameplay deck feel unfinished. Revision 04
 	# restores every useful legacy environment part while suppressing only the
 	# actual oversized rings that compete with the authored quest instruments.
-	var memory_nodes := constellation.find_children("MemoryNode", "Node3D", true, false)
+	var memory_nodes := constellation.find_children("MemoryNode_*", "Node3D", true, false)
 	for index in memory_nodes.size():
 		var memory_node := memory_nodes[index] as Node3D
 		_set_heritage_visibility(memory_node, true, "restored archive memory lantern")
 		memory_node.scale = Vector3.ONE * 0.65
 		memory_node.position.y = 6.5 + float(index % 3) * 1.6
 		memory_node.set_meta("heritage_role", "archive memory lantern")
+	constellation.set_meta("restrained_memory_lantern_count", memory_nodes.size())
+	constellation.set_meta("memory_lantern_design_revision", "eight_compact_archive_lanterns_v1")
+	constellation.set_meta("memory_lantern_scale", .65)
 
 	var tree_palette := _build_island_two_tree_palette()
 	for grove in constellation.find_children("*DesignedBioTreeGrove", "Node3D", false, false):

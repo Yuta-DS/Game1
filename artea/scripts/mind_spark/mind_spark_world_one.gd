@@ -4945,7 +4945,8 @@ func _build_constellation_court(zone: Node3D) -> void:
 		ring.scale.y = 0.22
 	for index in 8:
 		var angle := TAU * float(index) / 8.0
-		_add_sphere(zone, "MemoryNode", Vector3(cos(angle) * 62, 8 + index % 3 * 5, sin(angle) * 62),
+		_add_sphere(zone, "MemoryNode_%02d" % (index + 1),
+			Vector3(cos(angle) * 62, 8 + index % 3 * 5, sin(angle) * 62),
 			Vector3.ONE * 4.0, _materials.astral_glass)
 	_build_astral_gate(zone, Vector3(-92, 0, 20), "FEAR GATE", _materials.astral_lavender)
 	_build_astral_gate(zone, Vector3(92, 0, 20), "PROOF / LOGIC GATE", _materials.astral_glass)

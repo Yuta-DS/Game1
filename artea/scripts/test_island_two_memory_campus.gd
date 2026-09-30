@@ -197,10 +197,12 @@ func _run() -> void:
 	assert(not reward.visible)
 	world.set_island_two_story_state("guardian_freed")
 	assert(reward.visible)
-	var memory_nodes := (zones["03_constellation_court"] as Node3D).find_children("MemoryNode","Node3D",true,false)
-	var visible_memory_nodes := memory_nodes.filter(func(node): return (node as Node3D).visible).size()
-	assert(visible_memory_nodes == memory_nodes.size(),
-		"all eight older memory lights should return as restrained archive lanterns")
+	var constellation_zone := zones["03_constellation_court"] as Node3D
+	assert(int(constellation_zone.get_meta("restrained_memory_lantern_count", 0)) == 8
+		and is_equal_approx(float(constellation_zone.get_meta("memory_lantern_scale", 0.0)), .65)
+		and str(constellation_zone.get_meta("memory_lantern_design_revision", "")) \
+			== "eight_compact_archive_lanterns_v1",
+		"all eight uniquely named memory lights must receive the restrained lantern pass")
 	for district_id in ["03_constellation_court","04_hope_path_ridge"]:
 		for heritage_grove in (zones[district_id] as Node3D).find_children(
 				"*DesignedBioTreeGrove","Node3D",false,false):
