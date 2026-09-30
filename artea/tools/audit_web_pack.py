@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize files in the split Godot 4 Web PCK without reconstructing it."""
+"""Summarize files in a monolithic or split Godot 4 Web PCK."""
 
 from __future__ import annotations
 
@@ -12,7 +12,15 @@ from pathlib import Path
 PART_SIZE = 8 * 1024 * 1024
 
 
-def read_at(build: Path, offset: int, length: int) -> bytes:
+def read_at(source: Path, offset: int, length: int) -> bytes:
+    if source.is_file():
+        with source.open("rb") as stream:
+            stream.seek(offset)
+            result = stream.read(length)
+        if len(result) != length:
+            raise ValueError(f"PCK ended while reading offset {offset}")
+        return result
+    build = source
     result = bytearray()
     while length:
         part_index, inner_offset = divmod(offset, PART_SIZE)
@@ -27,27 +35,30 @@ def read_at(build: Path, offset: int, length: int) -> bytes:
     return bytes(result)
 
 
-def audit(build: Path, top: int) -> None:
-    header = read_at(build, 0, 112)
+def audit(source: Path, top: int, rejected: list[str]) -> None:
+    header = read_at(source, 0, 112)
     if header[:4] != b"GDPC":
         raise ValueError("Not a Godot PCK")
     directory_offset = struct.unpack_from("<Q", header, 32)[0]
-    count = struct.unpack("<I", read_at(build, directory_offset, 4))[0]
+    count = struct.unpack("<I", read_at(source, directory_offset, 4))[0]
     cursor = directory_offset + 4
     files: list[tuple[int, str]] = []
     groups: dict[str, list[int]] = defaultdict(list)
     for _ in range(count):
-        path_length = struct.unpack("<I", read_at(build, cursor, 4))[0]
+        path_length = struct.unpack("<I", read_at(source, cursor, 4))[0]
         cursor += 4
-        path = read_at(build, cursor, path_length).rstrip(b"\0").decode("utf-8")
+        path = read_at(source, cursor, path_length).rstrip(b"\0").decode("utf-8")
         cursor += path_length
-        offset, size = struct.unpack("<QQ", read_at(build, cursor, 16))
+        offset, size = struct.unpack("<QQ", read_at(source, cursor, 16))
         cursor += 36  # offset, size, MD5, flags
         files.append((size, path))
         group = Path(path).suffix or "[none]"
         groups[group].append(size)
         if offset + size > directory_offset:
             raise ValueError(f"File overlaps PCK directory: {path}")
+    matches = [path for _size, path in files if any(token in path for token in rejected)]
+    if matches:
+        raise ValueError("Rejected packed resources:\n" + "\n".join(matches))
     print(f"Godot PCK: {count:,} files; {directory_offset:,} bytes of payload")
     print("Largest files:")
     for size, path in sorted(files, reverse=True)[:top]:
@@ -61,5 +72,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("build", type=Path, nargs="?", default=Path("builds/web"))
     parser.add_argument("--top", type=int, default=35)
+    parser.add_argument(
+        "--reject",
+        action="append",
+        default=[],
+        help="Fail when a packed path contains this text; may be repeated",
+    )
     args = parser.parse_args()
-    audit(args.build, args.top)
+    audit(args.build, args.top, args.reject)

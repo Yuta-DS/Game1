@@ -35,6 +35,10 @@ const RETIRED_WEB_RESOURCES := [
 	"assets3D/mind_spark/celestial_islands_v11/island_04.glb",
 	"assets3D/mind_spark/celestial_terrace_3000/celestial_terrace_3000.glb",
 	"assets3D/tree_of_life/leaves/glb/artea_leaf_library.glb",
+	"assets3D/Pink_Shell_Clip_1029042716_texture.glb",
+	"assets3D/Pink_Shell_Clip_1029042716_texture_0.jpg",
+	"assets3D/Pink_Shell_Clip_1029042716_texture_1.jpg",
+	"assets3D/Pink_Shell_Clip_1029042716_texture_2.jpg",
 ]
 
 

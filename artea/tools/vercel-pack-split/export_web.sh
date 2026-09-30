@@ -62,6 +62,12 @@ if grep -Eq '^(SCRIPT ERROR:|ERROR:)' "${export_log}"; then
 fi
 rm -f "${export_log}"
 
+# Reject heavyweight resources that have explicit production replacements.
+# ResourceLoader.exists() can remain true from a tiny packed .import remap, so
+# inspect the PCK directory itself and forbid the generated binary payload.
+python3 "${project_dir}/tools/audit_web_pack.py" "${output_dir}/index.pck" \
+	--top 0 --reject ".godot/imported/Pink_Shell_Clip_1029042716_texture"
+
 # Boot the exported pack itself before splitting it. This catches resources
 # that exist in the checkout but were omitted by the scoped Web preset, and it
 # proves Offline Guest still mounts World One with all fifteen quest objects.
