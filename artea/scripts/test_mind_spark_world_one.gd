@@ -259,15 +259,25 @@ func _test_combat_roster(world: MindSparkWorldOne) -> void:
 		"defeat removes the Blight shell and reveals the calm living core")
 	var boss := world.get_warden() as MindSparkWardenBoss
 	var storm_crown := boss.get_node("VisualRoot/BlightShell/StormCrown") as Node3D
-	assert(storm_crown.get_meta("visual_revision") == "island_three_civic_storm_engine_v2",
-		"Island Three Warden uses the restrained civic storm engine")
+	var shell_mesh := (boss.get_node("VisualRoot/BlightShell/Shell") as MeshInstance3D).mesh \
+		as SphereMesh
+	assert(shell_mesh.radial_segments == 12 and shell_mesh.rings == 6,
+		"the Warden shell itself uses a deliberately faceted low-poly surface")
+	assert(storm_crown.get_meta("visual_revision") == "island_three_civic_storm_engine_v3_faceted_shell",
+		"Island Three Warden uses the faceted civic storm engine")
 	assert(int(storm_crown.get_meta("giant_ring_count", -1)) == 0,
 		"the prototype giant purple shield rings remain removed")
 	assert(storm_crown.find_children("IvoryPylon*", "MeshInstance3D", true, false).size() == 4,
 		"four grounded ivory pylons give the Warden an architectural silhouette")
-	assert(int(storm_crown.get_meta("merged_static_source_count", 0)) == 42
+	assert(bool(storm_crown.get_meta("faceted_shell", false))
+		and int(storm_crown.get_meta("ivory_shell_panel_count", 0)) == 8
+		and storm_crown.find_children("IvoryShell*Panel*", "MeshInstance3D", true, false).size() == 8,
+		"eight ivory armor plates break up the dark shell without closing its core sightlines")
+	assert(storm_crown.find_children("CyanShellConductor*", "MeshInstance3D", true, false).size() == 4,
+		"each cardinal armor blade carries a restrained cyan conductor")
+	assert(int(storm_crown.get_meta("merged_static_source_count", 0)) == 54
 		and int(storm_crown.get_meta("render_batch_count", 0)) == 4,
-		"the animated Warden crown preserves its 42-part silhouette in four material batches")
+		"the animated Warden crown preserves its 54-part silhouette in four material batches")
 	for visual in storm_crown.find_children("*", "MeshInstance3D", true, false):
 		assert(not ((visual as MeshInstance3D).mesh is TorusMesh),
 			"the completed Warden contains no luminous torus geometry")

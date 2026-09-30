@@ -9,14 +9,16 @@ height = 13.0
 [sub_resource type="SphereMesh" id="ShellMesh"]
 radius = 6.5
 height = 13.0
+radial_segments = 12
+rings = 6
 
 [sub_resource type="StandardMaterial3D" id="ShellMaterial"]
-albedo_color = Color(0.13, 0.15, 0.18, 1)
+albedo_color = Color(0.18, 0.21, 0.24, 1)
 metallic = 0.45
-roughness = 0.48
+roughness = 0.62
 emission_enabled = true
-emission = Color(0.24, 0.36, 0.42, 1)
-emission_energy_multiplier = 0.3
+emission = Color(0.18, 0.34, 0.39, 1)
+emission_energy_multiplier = 0.22
 
 [sub_resource type="SphereMesh" id="CoreMesh"]
 radius = 2.8

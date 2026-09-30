@@ -199,9 +199,11 @@ func _build_storm_crown() -> void:
 		return
 	_storm_crown = Node3D.new()
 	_storm_crown.name = "StormCrown"
-	_storm_crown.set_meta("visual_revision", "island_three_civic_storm_engine_v2")
+	_storm_crown.set_meta("visual_revision", "island_three_civic_storm_engine_v3_faceted_shell")
 	_storm_crown.set_meta("giant_ring_count", 0)
 	_storm_crown.set_meta("palette", "ivory_charcoal_cyan_lavender")
+	_storm_crown.set_meta("faceted_shell", true)
+	_storm_crown.set_meta("ivory_shell_panel_count", 8)
 	shell.add_child(_storm_crown)
 	var ivory := _material(Color("ded8ca"), Color("72d7df"), 0.16, 0.76)
 	var charcoal := _material(Color("222832"), Color("284b59"), 0.22, 0.58)
@@ -239,6 +241,31 @@ func _build_storm_crown() -> void:
 			Vector3(cos(angle) * 6.15, 4.1 + height * 0.5, sin(angle) * 6.15),
 			Vector3(0.82, height, 1.15), crystal if index % 3 == 0 else storm)
 		shard.rotation = Vector3(0.0, -angle, -0.20)
+
+	# Eight open armor plates break up the former near-black sphere while leaving
+	# charcoal gaps for the storm state and a clear view of the vulnerable core.
+	# Their ivory masonry ties the boss to the three surrounding civic buildings;
+	# each plate remains part of the same four-pass animated crown batch.
+	for index in 4:
+		var angle := TAU * float(index) / 4.0
+		var radial := Vector3(cos(angle), 0.0, sin(angle))
+		var waist_panel := _add_prism_part(_storm_crown,
+			"IvoryShellWaistPanel%02d" % (index + 1),
+			radial * 6.48 + Vector3.UP * 0.25,
+			Vector3(2.2, 5.4, 0.72), ivory)
+		waist_panel.rotation.y = -angle + PI * 0.5
+		var conductor := _add_box_part(_storm_crown,
+			"CyanShellConductor%02d" % (index + 1),
+			radial * 6.88 + Vector3.UP * 0.25,
+			Vector3(0.48, 3.3, 0.16), crystal)
+		conductor.rotation.y = -angle + PI * 0.5
+		var shoulder_angle := angle + PI * 0.25
+		var shoulder_radial := Vector3(cos(shoulder_angle), 0.0, sin(shoulder_angle))
+		var shoulder_panel := _add_prism_part(_storm_crown,
+			"IvoryShellShoulderPanel%02d" % (index + 1),
+			shoulder_radial * 5.9 + Vector3.UP * 3.8,
+			Vector3(2.5, 3.8, 0.72), ivory)
+		shoulder_panel.rotation = Vector3(0.0, -shoulder_angle + PI * 0.5, -0.12)
 
 	# A restrained bank of low-poly storm masses supports the story state without
 	# becoming the dominant silhouette or washing the ivory court in purple.
