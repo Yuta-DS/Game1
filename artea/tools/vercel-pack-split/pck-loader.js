@@ -18,6 +18,10 @@
 	// them out enough for the route to recover.
 	const PART_ATTEMPTS = 6;
 	const MAX_RETRY_DELAY_MS = 8000;
+	// Three 8 MiB logical parts hide edge round trips while keeping the loader's
+	// extra memory bounded to 24 MiB. Fetching the whole pack concurrently used
+	// hundreds of MiB and caused mobile Safari to discard the tab.
+	const PART_PREFETCH = 3;
 
 	const buildKey = new URL(window.location.href).searchParams.get("build");
 	const partUrl = (requestUrl, index, extension = "") => {
@@ -152,24 +156,45 @@
 		);
 	};
 
-	// Fetch one part at a time. Requesting all pack parts at once holds two
-	// copies of the pack in memory at peak and mobile Safari drops the tab under
-	// that pressure. An 8 MB part is buffered before it is enqueued so a stalled
-	// or truncated request can be retried without leaking partial bytes into the
-	// assembled PCK. Peak JS cost stays one part rather than the full pack.
+	// Keep a small ordered prefetch window. Requesting all pack parts at once
+	// holds two copies of the pack in memory at peak and mobile Safari drops the
+	// tab under that pressure. Three 8 MiB logical parts overlap network latency
+	// while keeping JS overhead bounded to 24 MiB. Each part is verified before
+	// enqueueing, so a retry cannot leak partial bytes into the assembled PCK.
 	//
 	// The previous version awaited response.arrayBuffer() for every part and
 	// kept them all, then copied the lot into a Blob - so a 748 MB pack existed
 	// twice in JS memory (~1.5 GB) before Godot mounted its own copy. Against
 	// wasm32's 4 GB address space that was enough to hang or kill the tab.
 	//
-	// A ReadableStream hands each chunk straight to the consumer and drops it,
-	// so peak cost is one part (8 MB) rather than the whole pack.
+	// A ReadableStream hands each ordered chunk straight to the consumer and
+	// drops it, so peak cost is the prefetch window rather than the whole pack.
 	const streamParts = (requestUrl, partCount) => new ReadableStream({
 		async start(controller) {
+			const pending = new Map();
+			let nextIndex = 0;
+			const schedule = () => {
+				while (pending.size < PART_PREFETCH && nextIndex < partCount) {
+					const index = nextIndex;
+					nextIndex += 1;
+					// Convert rejection to data immediately so a later prefetched
+					// failure never becomes an unhandled promise rejection.
+					pending.set(index, fetchPart(requestUrl, index).then(
+						(bytes) => ({ bytes }),
+						(error) => ({ error }),
+					));
+				}
+			};
 			try {
+				schedule();
 				for (let index = 0; index < partCount; index += 1) {
-					controller.enqueue(await fetchPart(requestUrl, index));
+					const result = await pending.get(index);
+					pending.delete(index);
+					schedule();
+					if (result.error) {
+						throw result.error;
+					}
+					controller.enqueue(result.bytes);
 				}
 				controller.close();
 			} catch (error) {
