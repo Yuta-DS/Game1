@@ -396,10 +396,12 @@ func _run() -> void:
 		"the unsupported blue line over the Island 3 promenade is removed")
 	var wisdom_basilica := island_three.get_node("WisdomBasilicaPromenade") as Node3D
 	assert(str(wisdom_basilica.get_meta("design_revision", "")) \
-		== "living_grove_processional_v4")
+		== "living_grove_processional_v5_wide_nave")
 	assert(int(wisdom_basilica.get_meta("living_grove_bay_count", 0)) == 4)
 	assert(float(wisdom_basilica.get_meta("open_arrival_fraction", 0.0)) >= .40,
 		"the reflection promenade keeps its arrival sightline open before the grove bays")
+	assert(float(wisdom_basilica.get_meta("clear_nave_width_m", 0.0)) >= 25.0,
+		"the living-grove trunks leave a broad player and camera corridor")
 	var story_axis_start: Vector3 = wisdom_basilica.get_meta("story_axis_start")
 	var story_axis_end: Vector3 = wisdom_basilica.get_meta("story_axis_end")
 	var reflection_axis_point := Geometry3D.get_closest_point_to_segment_uncapped(

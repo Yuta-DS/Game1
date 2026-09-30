@@ -6401,7 +6401,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var basilica := Node3D.new()
 	basilica.name = "WisdomBasilicaPromenade"
 	basilica.set_meta("purpose", "architectural epilogue from storm court to Oldest Tree")
-	basilica.set_meta("design_revision", "living_grove_processional_v4")
+	basilica.set_meta("design_revision", "living_grove_processional_v5_wide_nave")
 	basilica.set_meta("open_arrival_fraction", .40)
 	campus.add_child(basilica)
 	var oldest_tree_base := Vector3(
@@ -6427,7 +6427,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		var bay_center := promenade_start.lerp(promenade_end, progress)
 		for side in [-1.0, 1.0]:
 			var side_name := "Left" if side < 0 else "Right"
-			var trunk_at := bay_center + side_axis * float(side) * 10.5
+			var trunk_at := bay_center + side_axis * float(side) * 14.0
 			_add_cylinder(basilica,
 				"WisdomGroveTrunk_%02d_%s" % [bay_index + 1, side_name],
 				trunk_at + Vector3.UP * 4.8, 1.05, 9.6,
@@ -6459,7 +6459,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 			_materials.shared_style_cyan if bay_index % 2 == 0 \
 			else _materials.shared_style_lavender)
 	basilica.set_meta("living_grove_bay_count", 4)
-	basilica.set_meta("clear_nave_width_m", 18.0)
+	basilica.set_meta("clear_nave_width_m", 25.0)
 
 	var mirror: QuestObjectBase
 	for object in _objects:
