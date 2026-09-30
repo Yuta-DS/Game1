@@ -40,6 +40,7 @@ python3 "${project_dir}/scripts/check_unique_resource_uids.py"
 # and byte-exact reassembly before replacing the previous build artifact.
 node "${script_dir}/test_pck_loader.mjs"
 node "${script_dir}/test_pck_loader_canonical.mjs"
+python3 "${project_dir}/tools/test_web_export_shell.py"
 
 # Fail before replacing any existing build if the public client config is absent.
 # The source .env may contain OAuth secrets and must never be packed wholesale.

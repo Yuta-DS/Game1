@@ -292,8 +292,12 @@ const engine = new Engine(GODOT_CONFIG);
 		}).then(() => {
 			setStatusMode('hidden');
 			say('engine started');
+			// The diagnostic is useful while the engine is genuinely loading, but
+			// it is release scaffolding rather than game UI. Remove it in the same
+			// task as the successful start so a busy first Godot frame cannot leave
+			// the black status badge over the title screen for several seconds.
+			diag.remove();
 			keepDrawingBufferInSync();
-			setTimeout(() => diag.remove(), 4000);
 		}, (err) => {
 			say('START FAILED: ' + err);
 			displayFailureNotice(err);
