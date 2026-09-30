@@ -122,6 +122,10 @@ func _run() -> void:
 	if touch == null or touch.get_child_count() != 8:
 		_fail("the playable character does not build eight touch controls")
 		return
+	for expected_label in {"Up": "UP", "Left": "LEFT", "Down": "DOWN", "Right": "RIGHT"}:
+		if (touch.get_node(expected_label) as Button).text != expected_label.to_upper():
+			_fail("touch direction %s does not use its portable ASCII label" % expected_label)
+			return
 	player.call("_layout_touch_controls", Vector2(320.0, 568.0))
 	for child in touch.get_children():
 		var button := child as Button
@@ -131,13 +135,61 @@ func _run() -> void:
 		if button.position.x < 0.0 or button.position.y < 0.0 \
 				or button.position.x + button.size.x > 320.0 \
 				or button.position.y + button.size.y > 568.0:
-			_fail("touch target %s leaves the 320×568 viewport" % child.name)
+			_fail("touch target %s leaves the 320×568 viewport: position=%s size=%s scale=%.3f" \
+				% [child.name, str(button.position), str(button.size),
+				float(player.get_meta("touch_control_ui_scale", 0.0))])
 			return
 	var right := touch.get_node("Right") as Button
 	var jump := touch.get_node("Jump") as Button
 	if right.get_global_rect().intersects(jump.get_global_rect()):
 		_fail("movement and action controls overlap on a narrow phone")
 		return
+
+	# Production uses canvas_items against a 1710×1112 design surface. A phone
+	# therefore exposes a much larger logical viewport than its CSS-pixel size;
+	# verify the real layout compensates instead of shrinking 52 logical pixels
+	# into a roughly 12-pixel control.
+	var logical_phone := Vector2(1710.0, 3700.0)
+	var physical_phone := Vector2(390.0, 844.0)
+	player.call("_layout_touch_controls", logical_phone, physical_phone)
+	var touch_scale := float(player.get_meta("touch_control_ui_scale", 0.0))
+	if touch_scale < 4.0 or str(player.get_meta("touch_control_layout", "")) \
+			!= "screen_pixel_safe_v2":
+		_fail("portrait Web layout does not compensate for canvas_items scaling")
+		return
+	for child in touch.get_children():
+		var scaled_button := child as Button
+		if scaled_button == null \
+				or scaled_button.size.x / touch_scale < 58.0 \
+				or scaled_button.size.y / touch_scale < 58.0:
+			_fail("portrait touch target %s is smaller than 58 physical pixels" % child.name)
+			return
+		if scaled_button.position.x < 0.0 or scaled_button.position.y < 0.0 \
+				or scaled_button.position.x + scaled_button.size.x > logical_phone.x \
+				or scaled_button.position.y + scaled_button.size.y > logical_phone.y:
+			_fail("scaled portrait touch target %s leaves the logical viewport" % child.name)
+			return
+	right = touch.get_node("Right") as Button
+	jump = touch.get_node("Jump") as Button
+	if right.get_global_rect().intersects(jump.get_global_rect()):
+		_fail("screen-pixel-safe movement and action controls overlap")
+		return
+	var logical_landscape := Vector2(2405.0, 1112.0)
+	var physical_landscape := Vector2(844.0, 390.0)
+	player.call("_layout_touch_controls", logical_landscape, physical_landscape)
+	touch_scale = float(player.get_meta("touch_control_ui_scale", 0.0))
+	for child in touch.get_children():
+		var landscape_button := child as Button
+		if landscape_button == null \
+				or landscape_button.size.x / touch_scale < 64.0 \
+				or landscape_button.get_theme_font_size("font_size") / touch_scale < 15.5:
+			_fail("landscape touch target %s is not readable at physical size" % child.name)
+			return
+		if landscape_button.position.x < 0.0 or landscape_button.position.y < 0.0 \
+				or landscape_button.position.x + landscape_button.size.x > logical_landscape.x \
+				or landscape_button.position.y + landscape_button.size.y > logical_landscape.y:
+			_fail("landscape touch target %s leaves the viewport" % child.name)
+			return
 
 	var touch_right := touch.get_node("Right") as Button
 	touch_right.button_down.emit()

@@ -596,10 +596,12 @@ func _build_touch_controls() -> void:
 	_touch_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(_touch_hud)
 
-	_add_touch_button("Up", "▲", "move_forward")
-	_add_touch_button("Left", "◀", "move_left")
-	_add_touch_button("Down", "▼", "move_backward")
-	_add_touch_button("Right", "▶", "move_right")
+	# Use short ASCII labels rather than triangle glyphs. The Web fallback font
+	# used by some phones renders those symbols as indistinct boxed characters.
+	_add_touch_button("Up", "UP", "move_forward")
+	_add_touch_button("Left", "LEFT", "move_left")
+	_add_touch_button("Down", "DOWN", "move_backward")
+	_add_touch_button("Right", "RIGHT", "move_right")
 	_add_touch_button("Jump", "JUMP", "jump")
 	_add_touch_button("Attack", "HIT", "attack")
 	_add_touch_button("Block", "HOLD\nSHIELD", "block")
@@ -663,13 +665,30 @@ func _release_all_touch_actions() -> void:
 	_touch_actions_held.clear()
 
 
-func _layout_touch_controls(viewport_size: Vector2) -> void:
+func _layout_touch_controls(viewport_size: Vector2,
+		physical_size: Vector2 = Vector2.ZERO) -> void:
 	if _touch_hud == null:
 		return
-	var compact := viewport_size.x < 520.0
-	var button_size := Vector2(52.0, 52.0) if compact else Vector2(60.0, 60.0)
-	var gap := 4.0 if compact else 7.0
-	var margin := 10.0 if compact else 18.0
+	# canvas_items keeps the authored 1710×1112 coordinate system and expands
+	# it to match the device aspect ratio. On a 390 px portrait browser this can
+	# make one logical pixel less than a quarter of a screen pixel, so a nominal
+	# 52 px button becomes a fingertip-unusable 12 px icon. Lay the controls out
+	# in logical coordinates, but derive every size from its real screen-pixel
+	# target so portrait and high-DPI Web canvases retain usable controls.
+	if physical_size.is_zero_approx():
+		physical_size = Vector2(DisplayServer.window_get_size())
+	# The headless display server reports a 1×1 placeholder window. Treat that
+	# as unavailable rather than magnifying controls hundreds of times in tests
+	# and server-side packaged smoke runs.
+	if physical_size.x < 240.0 or physical_size.y < 240.0:
+		physical_size = viewport_size
+	var ui_scale := _touch_interface_scale(viewport_size, physical_size)
+	var physical_width := viewport_size.x / ui_scale
+	var compact := physical_width < 520.0
+	var target_button_pixels := 52.0 if physical_width < 360.0 else (58.0 if compact else 64.0)
+	var button_size := Vector2.ONE * target_button_pixels * ui_scale
+	var gap := (5.0 if compact else 8.0) * ui_scale
+	var margin := (10.0 if physical_width < 360.0 else (12.0 if compact else 18.0)) * ui_scale
 	var bottom := viewport_size.y - margin - button_size.y
 	var row_above := bottom - button_size.y - gap
 	var left_x := margin
@@ -682,12 +701,27 @@ func _layout_touch_controls(viewport_size: Vector2) -> void:
 	_set_touch_button_rect("Attack", Vector2(action_x + button_size.x + gap, row_above), button_size)
 	_set_touch_button_rect("Block", Vector2(action_x, bottom), button_size)
 	_set_touch_button_rect("Interact", Vector2(action_x + button_size.x + gap, bottom), button_size)
+	for button_value in _touch_buttons.values():
+		var button := button_value as Button
+		button.custom_minimum_size = button_size
+		button.add_theme_font_size_override("font_size", roundi((14.0 if compact else 16.0) * ui_scale))
+	set_meta("touch_control_physical_button_pixels", target_button_pixels)
+	set_meta("touch_control_ui_scale", ui_scale)
+	set_meta("touch_control_layout", "screen_pixel_safe_v2")
+
+
+func _touch_interface_scale(viewport_size: Vector2, physical_size: Vector2) -> float:
+	if physical_size.x <= 0.0 or physical_size.y <= 0.0:
+		return 1.0
+	return maxf(1.0, maxf(viewport_size.x / physical_size.x,
+		viewport_size.y / physical_size.y))
 
 
 func _set_touch_button_rect(node_name: String, position: Vector2, size: Vector2) -> void:
 	var button := _touch_buttons.get(node_name) as Button
 	if button == null:
 		return
+	button.custom_minimum_size = Vector2.ZERO
 	button.position = position
 	button.size = size
 
