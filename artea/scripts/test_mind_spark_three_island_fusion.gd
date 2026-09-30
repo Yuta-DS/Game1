@@ -337,6 +337,27 @@ func _run() -> void:
 		assert(island_three.has_node(
 			"StormworksGrandCourt/%s/IslandOneStyleQuestInstrument/IvoryInstrumentCabinetCollision" % landmark_name),
 			"each storm landmark uses the same cabinet-and-dial grammar as Island One")
+	var mode_instruments := [
+		["StormworksGrandCourt/StormLensTower/IslandOneStyleQuestInstrument", "align", "ModeCrest_Align", 3],
+		["StormworksGrandCourt/ResonanceForge/IslandOneStyleQuestInstrument", "rhythm", "ModeCrest_Rhythm", 5],
+		["StormworksGrandCourt/LightningArchive/IslandOneStyleQuestInstrument", "dodge", "ModeCrest_Dodge", 3],
+		["RainHarvestObservatory/IslandOneStyleQuestInstrument", "catch", "ModeCrest_Catch", 4],
+		["WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument", "route", "ModeCrest_Route", 5],
+	]
+	var distinct_modes := {}
+	for mode_spec in mode_instruments:
+		var mode_instrument := island_three.get_node(str(mode_spec[0])) as Node3D
+		var mode_name := str(mode_spec[1])
+		var crest := mode_instrument.get_node(str(mode_spec[2])) as Node3D
+		assert(str(mode_instrument.get_meta("design_revision", "")) \
+			== "distinct_minigame_crest_v8"
+			and str(mode_instrument.get_meta("mini_game_identity", "")) == mode_name,
+			"each Island 3 instrument identifies its actual mini-game mode in the world art")
+		assert(crest.find_children("*", "MeshInstance3D", true, false).size() == int(mode_spec[3]),
+			"the %s console keeps its authored low-poly crest silhouette" % mode_name)
+		distinct_modes[mode_name] = true
+	assert(distinct_modes.size() == 5,
+		"Island 3 exposes five visibly distinct console identities for five mini-game modes")
 	assert(island_three.has_node("StormworksGrandCourt/ShieldProcessional_01Collision"))
 	assert(island_three.get_node_or_null("CalmRainCloister") == null,
 		"the Calm-Rain Cloister is removed from the recovery sequence")

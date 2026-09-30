@@ -6479,7 +6479,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		reflection_court.set_meta("low_poly_landmark", true)
 		basilica.add_child(reflection_court)
 		_build_island_three_shared_instrument(reflection_court, mirror_at, -direction,
-			_materials.shared_style_lavender)
+			_materials.shared_style_lavender, "route")
 		_add_cylinder(reflection_court, "ReflectionPool", mirror_at + Vector3.UP * .04,
 			13.0, .12, _materials.island_crystal_facet_dark, false, 12)
 		var entry_direction := -direction
@@ -6827,7 +6827,7 @@ func _add_island_three_civic_column(parent: Node3D, node_name: String,
 
 
 func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
-		operator_direction: Vector3, accent: Material) -> void:
+		operator_direction: Vector3, accent: Material, mini_game_mode: String) -> void:
 	# Island One's quest stations read as one family because they share a stacked
 	# plinth, tall ivory cabinet, round dial, dark mechanism and paired energy
 	# cells. Repeat that grammar here while leaving each landmark's puzzle parts
@@ -6835,7 +6835,8 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 	var instrument := Node3D.new()
 	instrument.name = "IslandOneStyleQuestInstrument"
 	instrument.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
-	instrument.set_meta("design_revision", "shared_low_poly_instrument_v7")
+	instrument.set_meta("design_revision", "distinct_minigame_crest_v8")
+	instrument.set_meta("mini_game_identity", mini_game_mode)
 	parent.add_child(instrument)
 	var facing := operator_direction.normalized()
 	if facing.is_zero_approx():
@@ -6859,10 +6860,73 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 		1.25, 1.5, _materials.shared_style_ivory,
 		Vector3(90, rad_to_deg(yaw), 0))
 	dial_frame.set_meta("decorative_ring_policy", "ivory machine frame; no gold")
-	_add_brick(instrument, "InstrumentCrownCrystal",
-		cabinet_at + Vector3.UP * 5.0,
-		Bricks.build_crystal(1.0, 3.0, .28, 6), accent)
 	var side_axis := Vector3(facing.z, 0, -facing.x)
+	var crest := Node3D.new()
+	crest.name = "ModeCrest_%s" % mini_game_mode.capitalize()
+	crest.set_meta("mini_game_mode", mini_game_mode)
+	crest.set_meta("preserve_authored_nodes", true)
+	instrument.add_child(crest)
+	# Retain one cabinet family while making the five interaction types readable
+	# before the panel opens.  Each crown uses a different silhouette and the
+	# same restrained ivory/cyan/lavender material vocabulary as the islands.
+	match mini_game_mode:
+		"align":
+			for marker_index in 3:
+				var marker_height := 3.6 if marker_index == 1 else 2.2
+				_add_box(crest, "AlignBand_%02d" % (marker_index + 1),
+					cabinet_at + side_axis * float(marker_index - 1) * 1.25
+					+ facing * 1.78 + Vector3.UP * (4.8 + marker_height * .5),
+					Vector3(.48, marker_height, .34),
+					accent if marker_index == 1 else _materials.shared_style_charcoal,
+					false, yaw)
+		"rhythm":
+			var beat_heights := [1.0, 1.8, 2.7, 1.8, 1.0]
+			for beat_index in beat_heights.size():
+				var beat_height: float = float(beat_heights[beat_index])
+				_add_box(crest, "RhythmBeat_%02d" % (beat_index + 1),
+					cabinet_at + side_axis * float(beat_index - 2) * .95
+					+ facing * 1.72 + Vector3.UP * (4.65 + beat_height * .5),
+					Vector3(.62, beat_height, .34),
+					accent if beat_index % 2 == 0 else _materials.shared_style_charcoal,
+					false, yaw)
+		"dodge":
+			for channel_index in 3:
+				var channel_height := 2.2 + float(channel_index) * .8
+				var channel := _add_box(crest, "DodgeChannel_%02d" % (channel_index + 1),
+					cabinet_at + side_axis * float(channel_index - 1) * 1.35
+					+ facing * 1.78 + Vector3.UP * (4.8 + channel_height * .5),
+					Vector3(.52, channel_height, .34),
+					_materials.shared_style_charcoal if channel_index == 1 else accent,
+					false, yaw)
+				channel.rotation.z = -.34 if channel_index % 2 == 0 else .34
+		"catch":
+			_add_box(crest, "CatchReservoir", cabinet_at + facing * 1.72
+				+ Vector3.UP * 5.05, Vector3(4.8, .38, .34),
+				_materials.shared_style_charcoal, false, yaw)
+			for drop_index in 3:
+				var drop_height := 1.5 + float(abs(drop_index - 1)) * .55
+				_add_sphere(crest, "CatchDroplet_%02d" % (drop_index + 1),
+					cabinet_at + side_axis * float(drop_index - 1) * 1.35
+					+ facing * 1.85 + Vector3.UP * (5.7 + drop_height),
+					Vector3(.55, .78, .40),
+					accent if drop_index != 1 else _materials.shared_style_lavender)
+		"route":
+			var route_points: Array[Vector3] = [
+				cabinet_at - side_axis * 1.7 + facing * 1.78 + Vector3.UP * 5.0,
+				cabinet_at + facing * 1.78 + Vector3.UP * 6.3,
+				cabinet_at + side_axis * 1.7 + facing * 1.78 + Vector3.UP * 5.35,
+			]
+			for route_index in route_points.size():
+				_add_sphere(crest, "RouteStar_%02d" % (route_index + 1),
+					route_points[route_index], Vector3(.68, .68, .42),
+					accent if route_index == 1 else _materials.shared_style_cyan)
+				if route_index > 0:
+					_add_cable_between(crest, "RouteLink_%02d" % route_index,
+						route_points[route_index - 1], route_points[route_index],
+						.20, .14, _materials.shared_style_charcoal, 6)
+		_:
+			_add_brick(crest, "UnknownModeCrystal", cabinet_at + Vector3.UP * 5.0,
+				Bricks.build_crystal(1.0, 3.0, .28, 6), accent)
 	for cell_side in [-1.0, 1.0]:
 		var cell_at := cabinet_at + side_axis * float(cell_side) * 4.5 + Vector3.UP * 3.4
 		_add_cylinder(instrument,
@@ -6905,8 +6969,10 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 	landmark.set_meta("silhouette_revision", "human_scale_civic_backdrop_v1")
 	landmark.set_meta("operator_backdrop_side", "court_inward")
 	landmark.set_meta("interaction_forecourt_clear_m", 11.0)
+	var mini_game_modes := ["align", "rhythm", "dodge"]
 	_build_island_three_shared_instrument(landmark, center, outward,
-		_materials.shared_style_cyan if landmark_index != 1 else _materials.shared_style_lavender)
+		_materials.shared_style_cyan if landmark_index != 1 else _materials.shared_style_lavender,
+		str(mini_game_modes[landmark_index]))
 	if landmark_index == 0:
 		# A tall open survey instrument with one suspended lens crystal.  The
 		# stepped observatory backing sits behind the operator, giving the lens a
@@ -7004,8 +7070,13 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 				2.0, 1.3, _materials.shared_style_ivory, 8)
 		_add_brick(landmark, "LavenderForgeKeystone", rear_center + Vector3.UP * 36.0,
 			Bricks.build_crystal(2.8, 5.8, .6, 6), _materials.shared_style_lavender)
-		_add_sphere(landmark, "SuspendedResonanceCore", rear_center + Vector3.UP * 16.0,
+		var resonance_core := _add_sphere(landmark, "SuspendedResonanceCore",
+			rear_center + Vector3.UP * 16.0,
 			Vector3(6.4, 7.0, 6.4), _materials.island_violet_energy)
+		# The state-driven forge core is a semantic landmark, not disposable static
+		# scenery. Keep its stable node path even when another lavender crest pushes
+		# the surrounding material group over the static-batch threshold.
+		resonance_core.set_meta("preserve_authored_nodes", true)
 		for pylon_index in 4:
 			var pylon_angle := TAU * float(pylon_index) / 4.0 + PI * .25
 			var tuned_at := rear_center + Vector3(sin(pylon_angle) * 8.0, 2.3,
@@ -7071,7 +7142,7 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 	observatory.set_meta("low_poly_landmark", true)
 	parent.add_child(observatory)
 	_build_island_three_shared_instrument(observatory, center, Vector3(0, 0, -1),
-		_materials.shared_style_cyan)
+		_materials.shared_style_cyan, "catch")
 	_add_box(observatory, "RainCollectorTerrace", center - Vector3.UP * .12,
 		Vector3(42.0, .28, 34.0), _materials.celestial_floor, true)
 	_add_box(observatory, "RainCollectorUndercroft", center - Vector3.UP * .54,
