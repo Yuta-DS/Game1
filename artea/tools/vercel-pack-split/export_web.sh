@@ -36,6 +36,10 @@ python3 "${project_dir}/scripts/check_unique_resource_uids.py"
 "${godot_bin}" --headless --path "${project_dir}" \
 	--script res://scripts/test_web_feature_parity.gd
 
+# The custom loader is part of the release path. Prove retries, gzip inflation
+# and byte-exact reassembly before replacing the previous build artifact.
+node "${script_dir}/test_pck_loader.mjs"
+
 # Fail before replacing any existing build if the public client config is absent.
 # The source .env may contain OAuth secrets and must never be packed wholesale.
 "${godot_bin}" --headless --path "${project_dir}" \
@@ -111,18 +115,32 @@ else
 fi
 part_index=$(((pck_size - 1) / part_size))
 part_count=$((part_index + 1))
+transfer_size=0
 while (( part_index >= 0 )); do
 	offset=$((part_index * part_size))
 	part_suffix=$(printf '%02d' "${part_index}")
-	dd if="${pck_path}" of="${pck_path}.part${part_suffix}" bs=1048576 \
+	part_path="${pck_path}.part${part_suffix}"
+	dd if="${pck_path}" of="${part_path}" bs=1048576 \
 		skip=$((offset / 1024 / 1024)) status=none
 	truncate -s "${offset}" "${pck_path}"
+	# Imported meshes and textures are already compact, while Godot's binary
+	# scene records compress well. Compress every independent part so the browser
+	# can retry and inflate one 8 MiB segment at a time without holding a second
+	# full pack in memory. -n removes filename/timestamp metadata for deterministic
+	# release artifacts.
+	gzip -1 -n "${part_path}"
+	if stat -f '%z' "${part_path}.gz" >/dev/null 2>&1; then
+		compressed_part_size=$(stat -f '%z' "${part_path}.gz")
+	else
+		compressed_part_size=$(stat -c '%s' "${part_path}.gz")
+	fi
+	transfer_size=$((transfer_size + compressed_part_size))
 	part_index=$((part_index - 1))
 done
 rm "${pck_path}"
 
-printf '{"count":%d,"bytes":%d,"partBytes":%d}\n' \
-	"${part_count}" "${pck_size}" "${part_size}" \
+printf '{"count":%d,"bytes":%d,"partBytes":%d,"encoding":"gzip","transferBytes":%d}\n' \
+	"${part_count}" "${pck_size}" "${part_size}" "${transfer_size}" \
 	> "${output_dir}/index.pck.parts.json"
 
-echo "Web build ready in ${output_dir} (${part_count} pack parts)"
+echo "Web build ready in ${output_dir} (${part_count} gzip pack parts, ${transfer_size} transfer bytes)"

@@ -20,9 +20,9 @@
 	const MAX_RETRY_DELAY_MS = 8000;
 
 	const buildKey = new URL(window.location.href).searchParams.get("build");
-	const partUrl = (requestUrl, index) => {
+	const partUrl = (requestUrl, index, extension = "") => {
 		const url = new URL(
-			`${requestUrl}.part${String(index).padStart(2, "0")}`,
+			`${requestUrl}.part${String(index).padStart(2, "0")}${extension}`,
 			window.location.href,
 		);
 		if (buildKey) {
@@ -36,6 +36,7 @@
 	// Byte totals from each manifest, keyed by request URL.
 	const manifestBytes = new Map();
 	const manifestPartBytes = new Map();
+	const manifestEncodings = new Map();
 
 	const countParts = async (requestUrl) => {
 		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
@@ -55,6 +56,12 @@
 					}
 					if (Number.isInteger(manifest.partBytes) && manifest.partBytes > 0) {
 						manifestPartBytes.set(requestUrl, manifest.partBytes);
+					}
+					if (manifest.encoding === "gzip") {
+						if (typeof DecompressionStream !== "function") {
+							throw new Error("This browser cannot decompress the Web game pack");
+						}
+						manifestEncodings.set(requestUrl, manifest.encoding);
 					}
 					return manifest.count;
 				}
@@ -77,7 +84,8 @@
 	);
 
 	const fetchPart = async (requestUrl, index) => {
-		const url = partUrl(requestUrl, index);
+		const encoding = manifestEncodings.get(requestUrl);
+		const url = partUrl(requestUrl, index, encoding === "gzip" ? ".gz" : "");
 		let lastError;
 		for (let attempt = 1; attempt <= PART_ATTEMPTS; attempt += 1) {
 			const abort = new AbortController();
@@ -93,13 +101,25 @@
 				if (!response.ok) {
 					throw new Error(`${url} returned ${response.status}`);
 				}
-				const bytes = new Uint8Array(await response.arrayBuffer());
+				let bytes;
+				if (encoding === "gzip") {
+					if (!response.body) {
+						throw new Error(`${url} returned no response body`);
+					}
+					const decompressed = response.body.pipeThrough(
+						new DecompressionStream("gzip"),
+					);
+					bytes = new Uint8Array(await new Response(decompressed).arrayBuffer());
+				} else {
+					bytes = new Uint8Array(await response.arrayBuffer());
+				}
 				const totalBytes = manifestBytes.get(requestUrl);
 				const partBytes = manifestPartBytes.get(requestUrl);
 				const expectedLength = Number.isInteger(totalBytes) && Number.isInteger(partBytes)
 					? Math.min(partBytes, totalBytes - index * partBytes)
 					: null;
-				const lengthHeader = response.headers.get("Content-Length");
+				const lengthHeader = encoding === "gzip"
+					? null : response.headers.get("Content-Length");
 				const declaredLength = lengthHeader === null || lengthHeader === ""
 					? null : Number(lengthHeader);
 				const verifiedLength = Number.isInteger(expectedLength)
