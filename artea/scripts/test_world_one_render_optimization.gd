@@ -46,9 +46,12 @@ func _run() -> void:
 	# Opening the reflection promenade removes four close trees and shifts the
 	# remaining grove into one additional material/cell group; this 0.3% increase
 	# is the measured cost of preserving the mirror and Oldest Tree sightline.
+	# The Storm Lens overhead framework now occupies one shadow-free batch so its
+	# 60-metre-high sight frame cannot stripe the arrival court. That deliberate
+	# separation adds one batch while preserving all authored source coverage.
 	assert(merged_sources + repeated_sources >= 5060 \
-			and merged_groups + repeated_groups <= 302,
-		"the compact civic campuses must consolidate at least 5,060 sources into no more than 302 spatial batches")
+			and merged_groups + repeated_groups <= 303,
+		"the compact civic campuses must consolidate at least 5,060 sources into no more than 303 spatial batches")
 	assert(ranged_meshes > 1000,
 		"World One must apply distance ranges broadly enough to cull distant trim")
 

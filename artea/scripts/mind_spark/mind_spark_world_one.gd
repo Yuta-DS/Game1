@@ -6815,12 +6815,22 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 			var foot := lens_feet[leg_index]
 			_add_island_three_civic_column(landmark,
 				"LensTripod_%02d" % (leg_index + 1), foot, 20.0)
-			_add_cable_between(landmark, "LensIvoryMast_%02d" % (leg_index + 1),
+			var lens_mast := _add_cable_between(landmark,
+				"LensIvoryMast_%02d" % (leg_index + 1),
 				foot + Vector3.UP * 20.8, foot + Vector3.UP * 46.0,
 				.65, .36, _materials.shared_style_ivory, 8)
-			_add_cable_between(landmark, "LensIvoryRoofBrace_%02d" % (leg_index + 1),
+			var roof_brace := _add_cable_between(landmark,
+				"LensIvoryRoofBrace_%02d" % (leg_index + 1),
 				foot + Vector3.UP * 46.0, apex, .36, .20,
 				_materials.shared_style_ivory, 8)
+			# These slim parts sit 45–65 metres above the court. Their projected sun
+			# shadows previously formed a huge dark lattice over the bridge arrival,
+			# although the tower itself was outside the player's view. Keep the
+			# readable ivory silhouette and let its solid buttresses cast the grounded
+			# architectural shadow.
+			for overhead_part in [lens_mast, roof_brace]:
+				overhead_part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				overhead_part.set_meta("arrival_foreground_shadow_disabled", true)
 		_add_brick(landmark, "StormLensPrism", rear_center + Vector3.UP * 33.0,
 			Bricks.build_crystal(5.2, 16.0, .8, 6), _materials.arrival_glass)
 		var sight_frame := Node3D.new()
@@ -6833,10 +6843,12 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 		var sight_corners := [Vector3(0, 12, 0), Vector3(12, 0, 0),
 			Vector3(0, -12, 0), Vector3(-12, 0, 0)]
 		for side_index in 4:
-			_add_beam_between(sight_frame,
+			var alignment_beam := _add_beam_between(sight_frame,
 				"IvoryAlignmentBeam_%02d" % (side_index + 1),
 				sight_corners[side_index], sight_corners[(side_index + 1) % 4],
 				1.1, _materials.shared_style_ivory)
+			alignment_beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			alignment_beam.set_meta("arrival_foreground_shadow_disabled", true)
 		sight_frame.set_meta("sighting_role", "single faceted storm-band alignment frame")
 	elif landmark_index == 1:
 		# The forge is low and muscular.  A broad pediment and rear furnace hall

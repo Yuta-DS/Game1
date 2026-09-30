@@ -244,6 +244,20 @@ func _run() -> void:
 	assert(lens.has_node("LensIvoryMast_01")
 		and lens.find_children("LensStrut_*", "MeshInstance3D", true, false).is_empty(),
 		"the lens tower uses upright ivory supports rather than a dark diagonal across arrival")
+	var high_lens_parts: Array[Node] = []
+	high_lens_parts.append_array(lens.find_children(
+		"LensIvoryMast_*", "MeshInstance3D", true, false))
+	high_lens_parts.append_array(lens.find_children(
+		"LensIvoryRoofBrace_*", "MeshInstance3D", true, false))
+	high_lens_parts.append_array(lens.find_children(
+		"IvoryAlignmentBeam_*", "MeshInstance3D", true, false))
+	assert(high_lens_parts.size() == 10,
+		"the Storm Lens retains three masts, three roof braces and four alignment beams")
+	for high_part_value in high_lens_parts:
+		var high_part := high_part_value as MeshInstance3D
+		assert(high_part.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			and bool(high_part.get_meta("arrival_foreground_shadow_disabled", false)),
+			"high Storm Lens framework stays visible without projecting a lattice over arrival")
 	assert(lens.has_node("LensCitadelPodiumLeftCollision")
 		and lens.has_node("LensCitadelPodiumRightCollision")
 		and lens.has_node("LensCivicButtressLeftCollision")
