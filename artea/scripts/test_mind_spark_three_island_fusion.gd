@@ -350,11 +350,13 @@ func _run() -> void:
 		"the unsupported blue line over the Island 3 promenade is removed")
 	var wisdom_basilica := island_three.get_node("WisdomBasilicaPromenade") as Node3D
 	assert(str(wisdom_basilica.get_meta("design_revision", "")) \
-		== "living_grove_processional_v3")
-	assert(int(wisdom_basilica.get_meta("living_grove_bay_count", 0)) == 6)
+		== "living_grove_processional_v4")
+	assert(int(wisdom_basilica.get_meta("living_grove_bay_count", 0)) == 4)
+	assert(float(wisdom_basilica.get_meta("open_arrival_fraction", 0.0)) >= .40,
+		"the reflection promenade keeps its arrival sightline open before the grove bays")
 	assert(wisdom_basilica.find_children(
-		"WisdomGroveTrunk_*Collision", "StaticBody3D", true, false).size() == 12,
-		"the living promenade uses twelve collision-backed trunks around its open nave")
+		"WisdomGroveTrunk_*Collision", "StaticBody3D", true, false).size() == 8,
+		"the living promenade uses eight collision-backed trunks around its open nave")
 	assert(int(world.get_meta("island_three_route_barriers_removed", 0)) > 0,
 		"the Island 3 route cleanup finds and removes the former purple gate")
 	for candidate in geometry.find_children("QuestGate_4", "AnimatableBody3D", true, false):

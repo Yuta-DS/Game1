@@ -43,9 +43,12 @@ func _run() -> void:
 	# The native-only sky gardens also keep seven material groups shadow-free so
 	# their distant geometry cannot stripe the playable court. Preserve the
 	# source coverage floor and cap the measured intentional replacement groups.
+	# Opening the reflection promenade removes four close trees and shifts the
+	# remaining grove into one additional material/cell group; this 0.3% increase
+	# is the measured cost of preserving the mirror and Oldest Tree sightline.
 	assert(merged_sources + repeated_sources >= 5060 \
-			and merged_groups + repeated_groups <= 301,
-		"the compact civic campuses must consolidate at least 5,060 sources into no more than 301 spatial batches")
+			and merged_groups + repeated_groups <= 302,
+		"the compact civic campuses must consolidate at least 5,060 sources into no more than 302 spatial batches")
 	assert(ranged_meshes > 1000,
 		"World One must apply distance ranges broadly enough to cull distant trim")
 

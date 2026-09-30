@@ -6364,7 +6364,8 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var basilica := Node3D.new()
 	basilica.name = "WisdomBasilicaPromenade"
 	basilica.set_meta("purpose", "architectural epilogue from storm court to Oldest Tree")
-	basilica.set_meta("design_revision", "living_grove_processional_v3")
+	basilica.set_meta("design_revision", "living_grove_processional_v4")
+	basilica.set_meta("open_arrival_fraction", .40)
 	campus.add_child(basilica)
 	var to_sanctuary := Vector3(sanctuary_origin.x - arena_origin.x, 0,
 		sanctuary_origin.z - arena_origin.z)
@@ -6374,11 +6375,13 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var promenade_end := Vector3(sanctuary_origin.x, sanctuary_y, sanctuary_origin.z + 18.0)
 	_add_island_three_lane(basilica, "IvoryWisdomNave", promenade_start,
 		promenade_end, 14.0, _materials.celestial_floor)
-	# Six living bays replace the former line of thin white poles and long brass
-	# cornices.  Thick bark trunks and low canopies frame a 14 m clear nave, while
-	# ivory collars retain the civic language established on Islands One and Two.
-	for bay_index in 6:
-		var progress := float(bay_index + 1) / 7.0
+	# Four broad living bays replace the former line of thin white poles and long
+	# brass cornices. Thick bark trunks frame an 18 m clear nave without placing a
+	# twelve-trunk screen in front of the reflection quest and Oldest Tree.
+	for bay_index in 4:
+		# Start beyond the normal player camera instead of placing the first crown
+		# directly above it; the four bays then lead evenly into the apse.
+		var progress := .42 + float(bay_index) * .14
 		var bay_center := promenade_start.lerp(promenade_end, progress)
 		for side in [-1.0, 1.0]:
 			var side_name := "Left" if side < 0 else "Right"
@@ -6413,7 +6416,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 			Bricks.build_crystal(.48, 1.8, .12, 6),
 			_materials.shared_style_cyan if bay_index % 2 == 0 \
 			else _materials.shared_style_lavender)
-	basilica.set_meta("living_grove_bay_count", 6)
+	basilica.set_meta("living_grove_bay_count", 4)
 	basilica.set_meta("clear_nave_width_m", 18.0)
 
 	var mirror: QuestObjectBase
