@@ -33,6 +33,13 @@ func _run() -> void:
 	map._refresh_landscape_sampling()
 	assert((map._sample_world_to_local * Vector3(123, 0, 0)).is_equal_approx(Vector3.ZERO))
 	assert(regions.queries == queries_before + 1, "Next redraw refreshes live world data")
+	map._refresh_compact_landscape_texture()
+	assert(map._compact_landscape_texture != null \
+		and map._compact_landscape_image.get_size() == Vector2i(26, 26),
+		"Compact terrain must reuse one small texture instead of hundreds of Canvas rectangles")
+	assert(int(map.get_meta("compact_landscape_canvas_submissions", 0)) == 1 \
+		and int(map.get_meta("compact_landscape_sample_cells", 0)) > 400,
+		"Compact terrain must preserve the circular sample coverage in one Canvas submission")
 	map._process(1.0 / 60.0)
 	var redraws := 0
 	for i in 60:
@@ -49,5 +56,5 @@ func _run() -> void:
 	assert(map._view_moved(), "Turning must bypass the cadence limit")
 	map.free()
 	world.free()
-	print("MINIMAP_RENDER_BUDGET: PASS — cached tile queries, refreshed transforms, bounded idle redraws, responsive movement/turns")
+	print("MINIMAP_RENDER_BUDGET: PASS — one-texture landscape, cached tile queries, refreshed transforms, bounded idle redraws, responsive movement/turns")
 	quit()

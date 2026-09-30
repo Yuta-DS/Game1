@@ -14,6 +14,8 @@ const COMPACT_SIZE := Vector2(286.0, 286.0)
 const COMPACT_CENTER := Vector2(143.0, 126.0)
 const COMPACT_RADIUS := 104.0
 const COMPACT_MAP_RECT := Rect2(39.0, 22.0, 208.0, 208.0)
+const COMPACT_LANDSCAPE_TILE := 8.0
+const COMPACT_LANDSCAPE_GRID := Vector2i(26, 26)
 const HUB_METERS_PER_PIXEL := 1.7
 const GALAXY_METERS_PER_PIXEL := 9.5
 const GALAXY_PADDING := 180.0
@@ -94,10 +96,13 @@ var _sample_kingdom_colors: Array[Color] = []
 var _redraw_cooldown := 0.0
 var _last_drawn_position := Vector3.ZERO
 var _last_drawn_facing := Vector2(0.0, 1.0)
+var _compact_landscape_image: Image
+var _compact_landscape_texture: ImageTexture
 
 
 func _ready() -> void:
 	name = "ArteaWorldMinimap"
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	set_process_unhandled_input(true)
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -311,19 +316,43 @@ func _draw_compact_landscape() -> void:
 	# resolved once, here. It used to be resolved per tile: two node-path
 	# lookups, a cross-script call returning a Dictionary, and a dozen array and
 	# Color allocations, 530 times a frame.
+	_refresh_compact_landscape_texture()
+	if _compact_landscape_texture == null:
+		return
+	# One tiny texture replaces roughly 530 individual CanvasItem rectangles.
+	# The sampled colors and player-centred projection are unchanged, but the
+	# refresh no longer creates a periodic render-thread submission spike.
+	draw_texture_rect(_compact_landscape_texture, COMPACT_MAP_RECT, false)
+
+
+func _refresh_compact_landscape_texture() -> void:
 	_refresh_landscape_sampling()
-	const TILE := 8.0
+	if _compact_landscape_image == null:
+		_compact_landscape_image = Image.create(COMPACT_LANDSCAPE_GRID.x,
+			COMPACT_LANDSCAPE_GRID.y, false, Image.FORMAT_RGBA8)
 	var scale := HUB_METERS_PER_PIXEL if map_context == CONTEXT_HUB else GALAXY_METERS_PER_PIXEL
-	for y in range(int(COMPACT_CENTER.y - COMPACT_RADIUS), int(COMPACT_CENTER.y + COMPACT_RADIUS), int(TILE)):
-		for x in range(int(COMPACT_CENTER.x - COMPACT_RADIUS), int(COMPACT_CENTER.x + COMPACT_RADIUS), int(TILE)):
-			var sample_screen := Vector2(x + TILE * 0.5, y + TILE * 0.5)
-			if sample_screen.distance_to(COMPACT_CENTER) > COMPACT_RADIUS - TILE * 0.42:
+	var sampled_cells := 0
+	for cell_y in COMPACT_LANDSCAPE_GRID.y:
+		for cell_x in COMPACT_LANDSCAPE_GRID.x:
+			var sample_screen := COMPACT_MAP_RECT.position + Vector2(
+				(float(cell_x) + 0.5) * COMPACT_LANDSCAPE_TILE,
+				(float(cell_y) + 0.5) * COMPACT_LANDSCAPE_TILE)
+			if sample_screen.distance_to(COMPACT_CENTER) \
+					> COMPACT_RADIUS - COMPACT_LANDSCAPE_TILE * 0.42:
+				_compact_landscape_image.set_pixel(cell_x, cell_y, Color.TRANSPARENT)
 				continue
 			var screen_delta := sample_screen - COMPACT_CENTER
 			var world_position := _player.global_position \
 				+ Vector3(screen_delta.x * scale, 0.0, -screen_delta.y * scale)
-			var color := _landscape_color(world_position)
-			draw_rect(Rect2(Vector2(x, y), Vector2(TILE + 0.6, TILE + 0.6)), color, true)
+			_compact_landscape_image.set_pixel(cell_x, cell_y,
+				_landscape_color(world_position))
+			sampled_cells += 1
+	if _compact_landscape_texture == null:
+		_compact_landscape_texture = ImageTexture.create_from_image(_compact_landscape_image)
+	else:
+		_compact_landscape_texture.update(_compact_landscape_image)
+	set_meta("compact_landscape_sample_cells", sampled_cells)
+	set_meta("compact_landscape_canvas_submissions", 1)
 
 
 func _landscape_color(world_position: Vector3) -> Color:
