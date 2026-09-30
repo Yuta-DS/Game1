@@ -6112,7 +6112,23 @@ func _build_oldest_tree(zone: Node3D) -> void:
 			1.0, 5.0, _materials.shared_style_ivory, true, 8)
 		_add_brick(zone, "StarShrineCrystal_%02d" % shrine_index, at + Vector3.UP * 6.2,
 			Bricks.build_crystal(.7, 2.4, .25, 6), _materials.shared_style_cyan)
-	_add_star(zone, Vector3(0, 7, -32), 6.0)
+	# The legacy gold StarCore survived the ring/line cleanup as a bright sphere
+	# and read as an unrelated pickup beside the final tree.  Finish this shrine
+	# in Island Three's memory palette with one faceted lavender seed and four
+	# small cyan satellites.
+	var memory_star_at := Vector3(0, 7, -32)
+	_add_brick(zone, "OldestTreeMemoryStar", memory_star_at,
+		Bricks.build_crystal(2.2, 5.5, .55, 6), _materials.shared_style_lavender)
+	for star_shard_index in 4:
+		var shard_angle := PI * .25 + TAU * float(star_shard_index) / 4.0
+		var shard := _add_brick(zone,
+			"OldestTreeMemoryShard_%02d" % (star_shard_index + 1),
+			memory_star_at + Vector3(sin(shard_angle) * 4.2,
+				float(star_shard_index % 2) * .7 - .35,
+				cos(shard_angle) * 4.2),
+			Bricks.build_crystal(.48, 1.8, .14, 5), _materials.shared_style_cyan)
+		shard.rotation_degrees.z = 28.0 if star_shard_index % 2 == 0 else -28.0
+	zone.set_meta("oldest_tree_shrine_palette", "lavender memory seed with cyan satellites; no gold star")
 	var return_gate_at := Vector3(78, 0, 48)
 	var return_gate_yaw := atan2(return_gate_at.x, return_gate_at.z - 18.0)
 	var return_arch := _build_arch(zone, return_gate_at, 30, 30,
@@ -6401,8 +6417,10 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	var basilica := Node3D.new()
 	basilica.name = "WisdomBasilicaPromenade"
 	basilica.set_meta("purpose", "architectural epilogue from storm court to Oldest Tree")
-	basilica.set_meta("design_revision", "living_grove_processional_v5_wide_nave")
+	basilica.set_meta("design_revision", "living_grove_processional_v6_crowned_arcade")
 	basilica.set_meta("open_arrival_fraction", .40)
+	basilica.set_meta("paired_canopy_count", 8)
+	basilica.set_meta("visible_fork_count", 8)
 	campus.add_child(basilica)
 	var oldest_tree_base := Vector3(
 		sanctuary_origin.x, sanctuary_y, sanctuary_origin.z + 18.0)
@@ -6434,25 +6452,38 @@ func _redesign_island_three(geometry: Node3D) -> void:
 				_materials.island_three_hero_bark, true, 9)
 			_add_tapered_cylinder(basilica,
 				"WisdomGroveBarkFlare_%02d_%s" % [bay_index + 1, side_name],
-				trunk_at + Vector3.UP * 2.5, .75, 1.65, 5.0,
-				_materials.island_three_hero_bark_shadow, 9)
+				trunk_at + Vector3.UP * 1.9, .62, 1.28, 3.8,
+				_materials.island_three_hero_bark_highlight, 9)
 			_add_cylinder(basilica,
 				"WisdomGroveIvoryCollar_%02d_%s" % [bay_index + 1, side_name],
 				trunk_at + Vector3.UP * .65, 1.48, .48,
 				_materials.shared_style_ivory, false, 10)
-			var crown_at := trunk_at + Vector3.UP * (11.2 + float(bay_index % 2) * .8)
+			var crown_at := trunk_at + Vector3.UP * (9.8 + float(bay_index % 2) * .6)
 			var canopy := _add_sphere(basilica,
 				"WisdomGroveCanopy_%02d_%s" % [bay_index + 1, side_name],
-				crown_at + side_axis * float(side) * 1.2,
-				Vector3(6.4, 3.4, 5.4),
+				crown_at + side_axis * float(side) * 1.0,
+				Vector3(7.6, 3.8, 6.6),
 				_island_three_canopy_material(bay_index + (0 if side < 0 else 2)))
 			(canopy.mesh as SphereMesh).radial_segments = 7
 			(canopy.mesh as SphereMesh).rings = 4
 			_add_cable_between(basilica,
 				"WisdomGroveBranch_%02d_%s" % [bay_index + 1, side_name],
-				trunk_at + Vector3.UP * 7.5,
-				crown_at - side_axis * float(side) * 1.4,
-				.78, .30, _materials.island_three_hero_bark, 9)
+				trunk_at + Vector3.UP * 6.6,
+				crown_at - side_axis * float(side) * 1.2,
+				.68, .28, _materials.island_three_hero_bark, 9)
+			var secondary_at := crown_at + direction \
+				* (-3.4 if (bay_index + (0 if side < 0 else 1)) % 2 == 0 else 3.4) \
+				- side_axis * float(side) * 1.4 + Vector3.UP * .6
+			_add_cable_between(basilica,
+				"WisdomGroveFork_%02d_%s" % [bay_index + 1, side_name],
+				trunk_at + Vector3.UP * 7.0, secondary_at - Vector3.UP * 1.0,
+				.56, .22, _materials.island_three_hero_bark_highlight, 8)
+			var secondary_canopy := _add_sphere(basilica,
+				"WisdomGroveCanopySecondary_%02d_%s" % [bay_index + 1, side_name],
+				secondary_at, Vector3(5.2, 2.8, 4.8),
+				_island_three_canopy_material(bay_index + (1 if side < 0 else 3)))
+			(secondary_canopy.mesh as SphereMesh).radial_segments = 7
+			(secondary_canopy.mesh as SphereMesh).rings = 4
 		_add_brick(basilica, "WisdomGroveMemoryLight_%02d" % (bay_index + 1),
 			bay_center + Vector3.UP * 12.8,
 			Bricks.build_crystal(.48, 1.8, .12, 6),
@@ -6474,8 +6505,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		var reflection_court := Node3D.new()
 		reflection_court.name = "RootboundReflectionCourt"
 		reflection_court.set_meta("quest_architecture", "open living-root oratory")
-		reflection_court.set_meta("design_revision", "rootbound_grove_pavilion_v4_flared_roots")
-		reflection_court.set_meta("clear_story_entrance_m", 18.0)
+		reflection_court.set_meta("design_revision", "rootbound_grove_pavilion_v5_clear_arcade")
+		reflection_court.set_meta("clear_story_entrance_m", 22.0)
+		reflection_court.set_meta("clear_inner_court_radius_m", 24.0)
 		reflection_court.set_meta("low_poly_landmark", true)
 		basilica.add_child(reflection_court)
 		_build_island_three_shared_instrument(reflection_court, mirror_at, -direction,
@@ -6490,42 +6522,42 @@ func _redesign_island_three(geometry: Node3D) -> void:
 			var apse_angle := entry_angle + PI / 6.0 + TAU * float(apse_index) / 6.0
 			var radial := Vector3(sin(apse_angle), 0, cos(apse_angle))
 			var tangent := Vector3(radial.z, 0, -radial.x)
-			var apse_at := mirror_at + radial * 25.5
-			var root_shoulder := mirror_at + radial * 21.0 \
+			var apse_at := mirror_at + radial * 29.0
+			var root_shoulder := mirror_at + radial * 27.0 \
+				+ tangent * (-.8 if apse_index % 2 == 0 else .8) \
+				+ Vector3.UP * (8.5 + float(apse_index % 2))
+			var root_tip := mirror_at + radial * 24.5 \
 				+ tangent * (-1.4 if apse_index % 2 == 0 else 1.4) \
-				+ Vector3.UP * (7.2 + float(apse_index % 2))
-			var root_tip := mirror_at + radial * 16.5 \
-				+ tangent * (-2.4 if apse_index % 2 == 0 else 2.4) \
-				+ Vector3.UP * (13.0 + float(apse_index % 2) * 1.2)
+				+ Vector3.UP * (14.5 + float(apse_index % 2))
 			# The former straight dark cylinders read as six loose rectangular
 			# prototype blocks from the promenade camera. A broad faceted root flare
 			# catches the warm light and flows into the rib, while a slightly slimmer
 			# primitive collider keeps the same solid player boundary.
 			_add_tapered_cylinder(reflection_court,
 				"ReflectionRootFoot_%02d" % (apse_index + 1),
-				apse_at + Vector3.UP * .55, .78, 1.82, 1.1,
+				apse_at + Vector3.UP * .42, .62, 1.50, .84,
 				_materials.island_three_hero_bark_highlight, 9)
 			var root_body := StaticBody3D.new()
 			root_body.name = "ReflectionRootFoot_%02dCollision" % (apse_index + 1)
-			root_body.position = apse_at + Vector3.UP * .45
+			root_body.position = apse_at + Vector3.UP * .35
 			root_body.set_meta("mass_class", "infinite_static_mass")
 			root_body.set_meta("collision_role", "simplified tapered root flare")
 			var root_shape_node := CollisionShape3D.new()
 			var root_shape := CylinderShape3D.new()
-			root_shape.radius = 1.18
-			root_shape.height = .9
+			root_shape.radius = .95
+			root_shape.height = .7
 			root_shape_node.shape = root_shape
 			root_body.add_child(root_shape_node)
 			reflection_court.add_child(root_body)
 			_add_cable_between(reflection_court,
 				"ReflectionRootRib_%02d" % (apse_index + 1), apse_at, root_shoulder,
-				1.55, .82, _materials.island_three_hero_bark, 10)
+				1.05, .55, _materials.island_three_hero_bark, 10)
 			_add_cable_between(reflection_court,
 				"ReflectionRootCrown_%02d" % (apse_index + 1), root_shoulder, root_tip,
-				.82, .34, _materials.island_three_hero_bark_highlight, 8)
+				.55, .24, _materials.island_three_hero_bark_highlight, 8)
 			var root_shoulder_joint := _add_sphere(reflection_court,
 				"ReflectionRootShoulder_%02d" % (apse_index + 1), root_shoulder,
-				Vector3(.72, .82, .72), _materials.shared_style_ivory)
+				Vector3(.55, .62, .55), _materials.shared_style_ivory)
 			root_shoulder_joint.set_meta("editable_component", true)
 			_add_cable_between(reflection_court,
 				"ReflectionCyanVein_%02d" % (apse_index + 1),
@@ -6533,8 +6565,8 @@ func _redesign_island_three(geometry: Node3D) -> void:
 				_materials.island_cyan, 8)
 			var reflection_canopy := _add_sphere(reflection_court,
 				"ReflectionCanopyMass_%02d" % (apse_index + 1),
-				root_tip + radial * 2.2 + Vector3.UP * 1.8,
-				Vector3(6.6, 3.4, 5.8),
+				root_tip + radial * 2.5 + Vector3.UP * 1.8,
+				Vector3(5.2, 2.8, 4.6),
 				_island_three_canopy_material(apse_index + 2))
 			# Preserve each authored crown as a named pavilion component.  Without
 			# this marker the global Web geometry batcher folds the two sage crowns

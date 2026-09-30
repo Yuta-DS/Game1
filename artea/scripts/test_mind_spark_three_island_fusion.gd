@@ -395,8 +395,10 @@ func _run() -> void:
 	var reflection_court := island_three.get_node(
 		"WisdomBasilicaPromenade/RootboundReflectionCourt") as Node3D
 	assert(str(reflection_court.get_meta("design_revision", "")) \
-		== "rootbound_grove_pavilion_v4_flared_roots")
-	assert(float(reflection_court.get_meta("clear_story_entrance_m", 0.0)) >= 18.0)
+		== "rootbound_grove_pavilion_v5_clear_arcade")
+	assert(float(reflection_court.get_meta("clear_story_entrance_m", 0.0)) >= 22.0)
+	assert(float(reflection_court.get_meta("clear_inner_court_radius_m", 0.0)) >= 24.0,
+		"the reflection console sits in an open court instead of a field of root stakes")
 	assert(reflection_court.find_children(
 		"ReflectionRootRib_*", "MeshInstance3D", true, false).size() == 6)
 	assert(reflection_court.find_children(
@@ -429,7 +431,7 @@ func _run() -> void:
 			"ReflectionRootRib_*", "MeshInstance3D", true, false):
 		var rib_finish: Vector3 = (root_rib as MeshInstance3D).get_meta("path_end")
 		assert(Vector2(rib_finish.x, rib_finish.z).distance_to(
-			Vector2(reflection_center.x, reflection_center.z)) >= 19.0,
+			Vector2(reflection_center.x, reflection_center.z)) >= 24.0,
 			"reflection roots stop at perimeter buttresses instead of converging into a black roof")
 	assert(island_three.has_node(
 		"WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument/CyanInstrumentDial"))
@@ -437,7 +439,7 @@ func _run() -> void:
 		"the unsupported blue line over the Island 3 promenade is removed")
 	var wisdom_basilica := island_three.get_node("WisdomBasilicaPromenade") as Node3D
 	assert(str(wisdom_basilica.get_meta("design_revision", "")) \
-		== "living_grove_processional_v5_wide_nave")
+		== "living_grove_processional_v6_crowned_arcade")
 	assert(int(wisdom_basilica.get_meta("living_grove_bay_count", 0)) == 4)
 	assert(float(wisdom_basilica.get_meta("open_arrival_fraction", 0.0)) >= .40,
 		"the reflection promenade keeps its arrival sightline open before the grove bays")
@@ -454,6 +456,10 @@ func _run() -> void:
 	assert(wisdom_basilica.find_children(
 		"WisdomGroveTrunk_*Collision", "StaticBody3D", true, false).size() == 8,
 		"the living promenade uses eight collision-backed trunks around its open nave")
+	assert(int(wisdom_basilica.get_meta("paired_canopy_count", 0)) == 8,
+		"every grove trunk has a paired low canopy instead of ending as a bare pole")
+	assert(int(wisdom_basilica.get_meta("visible_fork_count", 0)) == 8,
+		"visible bark forks connect the paired crowns to their trunks")
 	assert(int(world.get_meta("island_three_route_barriers_removed", 0)) > 0,
 		"the Island 3 route cleanup finds and removes the former purple gate")
 	for candidate in geometry.find_children("QuestGate_4", "AnimatableBody3D", true, false):
@@ -466,6 +472,14 @@ func _run() -> void:
 			"the removed purple barrier leaves no invisible collision")
 	assert(island_three.has_node("OldestTreeLivingCathedral/LivingHeartwoodCollision"),
 		"the redesigned Oldest Tree is a solid living landmark")
+	var oldest_tree_zone := geometry.get_node("06OldestTreeSanctuary") as Node3D
+	assert(oldest_tree_zone.has_node("OldestTreeMemoryStar")
+		and oldest_tree_zone.find_children(
+			"OldestTreeMemoryShard_*", "MeshInstance3D", true, false).size() == 4,
+		"the final shrine uses a faceted lavender memory seed with four cyan shards")
+	assert(oldest_tree_zone.find_child("StarCore", true, false) == null
+		and str(oldest_tree_zone.get_meta("oldest_tree_shrine_palette", "")).contains("no gold"),
+		"the legacy gold sphere is removed from Island 3's final tree court")
 	assert(island_three.has_node("OldestTreeLivingCathedral/GreatBough_01A"))
 	assert(island_three.find_children("RootNaveInlay_*", "MeshInstance3D", true, false).is_empty(),
 		"the Oldest Tree approach has no loose cyan floor bars")
