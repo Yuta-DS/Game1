@@ -19,8 +19,14 @@ func _run() -> void:
 	assert(crescent != null)
 	assert(crescent.get_child_count() == 3)
 	for bench in crescent.get_children():
-		assert(bench.name.begins_with("ListeningBench_"))
+		assert(bench.name.begins_with("ListeningPavilion_"))
 		assert(bench.get_node_or_null("ListeningBenchCollision/CollisionShape3D") != null)
+		assert(bench.get_node_or_null("ListeningBenchCollision/PavilionPierCollision_01") != null)
+		assert(bench.get_node_or_null("ListeningBenchCollision/PavilionPierCollision_02") != null)
+		assert(bench.get_node_or_null("IvoryPavilionLintel") != null)
+		assert(bench.get_node_or_null("SageListeningCanopy") != null)
+		assert(bench.get_node_or_null("IvoryCanopyCrown") != null)
+		assert(bool(bench.get_meta("open_sightline", false)))
 		var foot := bench.get_node("StoneFoot_00") as Node3D
 		assert(absf(foot.to_global(Vector3.DOWN * 0.46).y -
 			world.get_zone_position("02_living_network_forest").y) < 0.15,

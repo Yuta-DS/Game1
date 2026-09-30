@@ -1522,25 +1522,52 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 		listening_crescent.name = "EchoTreeListeningCrescent"
 		listening_crescent.position = garden.position
 		listening_crescent.set_meta("clear_tree_apron_m", 6.0)
+		listening_crescent.set_meta("architectural_role",
+			"three open listening pavilions frame the teaching tree without closing its apron")
+		listening_crescent.set_meta("material_language", "ivory stone, pale sage and charcoal feet")
 		island_visual.add_child(listening_crescent)
 		for bench_index in 3:
 			var angle := -0.52 + 0.52 * float(bench_index)
 			var bench := Node3D.new()
-			bench.name = "ListeningBench_%02d" % (bench_index + 1)
+			bench.name = "ListeningPavilion_%02d" % (bench_index + 1)
 			bench.position = Vector3(cos(angle) * 31.5, 0, sin(angle) * 31.5)
 			bench.rotation.y = -angle - PI / 2.0
+			bench.set_meta("open_sightline", true)
+			bench.set_meta("pavilion_index", bench_index + 1)
 			listening_crescent.add_child(bench)
 			_add_brick(bench, "IvorySeat", Vector3(0, 1.1, 0),
-				Bricks.build_bevel_box(Vector3(8.4, 0.58, 1.7), 0.18),
+				Bricks.build_bevel_box(Vector3(9.6, 0.58, 1.9), 0.18),
 				_materials.sanctum_ivory)
 			_add_brick(bench, "SageBack", Vector3(0, 1.83, -0.68),
-				Bricks.build_bevel_box(Vector3(8.0, 1.15, 0.48), 0.13),
+				Bricks.build_bevel_box(Vector3(9.1, 1.15, 0.48), 0.13),
 				_materials.island_three_sage)
 			for foot_index in 2:
 				_add_brick(bench, "StoneFoot_%02d" % foot_index,
-					Vector3(-3.05 if foot_index == 0 else 3.05, 0.51, 0),
+					Vector3(-3.6 if foot_index == 0 else 3.6, 0.51, 0),
 					Bricks.build_bevel_box(Vector3(0.85, 0.92, 1.35), 0.12),
 					_materials.bio_gunmetal)
+			# Tall side piers and a shallow stepped crown make each place legible
+			# from the normal player camera. They remain behind the seat, so the
+			# tree-facing side and the entire circular apron stay open.
+			for side_index in 2:
+				var side := -1.0 if side_index == 0 else 1.0
+				_add_brick(bench, "IvoryPavilionPier_%02d" % (side_index + 1),
+					Vector3(side * 4.45, 2.55, -0.92),
+					Bricks.build_bevel_box(Vector3(0.72, 4.7, 0.72), 0.16),
+					_materials.sanctum_ivory)
+				_add_brick(bench, "SageFinial_%02d" % (side_index + 1),
+					Vector3(side * 4.45, 5.16, -0.92),
+					Bricks.build_bevel_box(Vector3(1.12, 0.72, 1.12), 0.24),
+					_materials.island_three_sage)
+			_add_brick(bench, "IvoryPavilionLintel", Vector3(0, 4.68, -0.92),
+				Bricks.build_bevel_box(Vector3(9.62, 0.55, 0.72), 0.17),
+				_materials.sanctum_ivory)
+			_add_brick(bench, "SageListeningCanopy", Vector3(0, 5.03, -0.38),
+				Bricks.build_bevel_box(Vector3(9.85, 0.30, 3.25), 0.15),
+				_materials.island_three_sage)
+			_add_brick(bench, "IvoryCanopyCrown", Vector3(0, 5.27, -0.72),
+				Bricks.build_bevel_box(Vector3(6.9, 0.22, 2.05), 0.11),
+				_materials.sanctum_ivory)
 			var bench_body := StaticBody3D.new()
 			bench_body.name = "ListeningBenchCollision"
 			bench_body.collision_layer = 1
@@ -1548,10 +1575,18 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 			var bench_shape := CollisionShape3D.new()
 			bench_shape.name = "CollisionShape3D"
 			var bench_box := BoxShape3D.new()
-			bench_box.size = Vector3(8.4, 1.95, 1.7)
+			bench_box.size = Vector3(9.6, 1.95, 1.9)
 			bench_shape.shape = bench_box
 			bench_shape.position.y = 1.0
 			bench_body.add_child(bench_shape)
+			for side_index in 2:
+				var pier_shape := CollisionShape3D.new()
+				pier_shape.name = "PavilionPierCollision_%02d" % (side_index + 1)
+				var pier_box := BoxShape3D.new()
+				pier_box.size = Vector3(0.72, 4.7, 0.72)
+				pier_shape.shape = pier_box
+				pier_shape.position = Vector3(-4.45 if side_index == 0 else 4.45, 2.55, -0.92)
+				bench_body.add_child(pier_shape)
 			bench.add_child(bench_body)
 
 		# The visible saddle lives in the GLB. This collision-only bridge closes
