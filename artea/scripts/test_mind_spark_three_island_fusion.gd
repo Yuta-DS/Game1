@@ -472,8 +472,31 @@ func _run() -> void:
 		"the grey barrier beside the Island One garden trees is absent")
 	var island_one_collisions := geometry.get_node("IslandOneVisibleObjectCollisions") as StaticBody3D
 	assert(str(island_one_collisions.get_meta("mass_class", "")) == "infinite_static_mass")
-	assert(int(island_one_collisions.get_meta("collision_shape_count", 0)) > 1000,
-		"Island One visible structures have static collision and cannot be walked through")
+	assert(str(island_one_collisions.get_meta("inventory_revision", "")) \
+		== "explicit_architecture_v1")
+	var collision_shape_count := int(island_one_collisions.get_meta("collision_shape_count", 0))
+	assert(collision_shape_count >= 500 and collision_shape_count < 1000,
+		"Island One uses a reviewed solid-architecture inventory instead of every visible mesh")
+	var inventory_counts := island_one_collisions.get_meta("inventory_counts", {}) as Dictionary
+	for required_role in [
+		"learning_instrument", "quest_cabinet", "garden_tree_trunk",
+		"hero_tree_structure", "compass_structure", "arrival_architecture",
+		"quest_support", "perimeter_architecture",
+	]:
+		assert(int(inventory_counts.get(required_role, 0)) > 0,
+			"Island One collision inventory is missing %s" % required_role)
+	for selected_shape_value in island_one_collisions.get_children():
+		var selected_shape := selected_shape_value as CollisionShape3D
+		var selected_source := str(selected_shape.get_meta("source_mesh", ""))
+		assert(not selected_source.is_empty() \
+			and not str(selected_shape.get_meta("inventory_role", "")).is_empty())
+		for decorative_marker in [
+			"/PuzzlePowerConduits/", "/SolvedRouteProjection/RouteLight_",
+			"/ScienceArtGarden/GoldenAnglePavementPip_", "/ThoughtSpark_",
+			"/CompassToEchoTreeLearningPromenade/", "/EntryWorldGate/Portal/",
+		]:
+			assert(decorative_marker not in selected_source,
+				"decorative Island One mesh entered the solid inventory: %s" % selected_source)
 	var visible_shape_node := island_one_collisions.get_child(0) as CollisionShape3D
 	var visible_faces := (visible_shape_node.shape as ConcavePolygonShape3D).get_faces()
 	var visible_probe_shape := SphereShape3D.new()

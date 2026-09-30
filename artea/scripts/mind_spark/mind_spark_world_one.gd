@@ -9092,9 +9092,10 @@ func _add_star(parent: Node3D, at: Vector3, radius: float) -> void:
 
 
 func _install_island_one_static_collisions(geometry: Node3D) -> void:
-	# Imported art and the research-campus kit contain visible meshes which were
-	# authored as decoration only. Consolidate their collision into one static
-	# body before visual batching retires the individual MeshInstance3D nodes.
+	# Imported art and the research-campus kit mix large architecture with floor
+	# engraving, moving indicators, foliage and light effects. Only the explicit
+	# gameplay inventory below becomes solid. Consolidate those selected forms
+	# into one body before visual batching retires the source MeshInstance3D nodes.
 	# StaticBody3D represents infinite mass, so the player cannot push or pass
 	# through these structures.
 	var collision_body := StaticBody3D.new()
@@ -9103,6 +9104,7 @@ func _install_island_one_static_collisions(geometry: Node3D) -> void:
 	collision_body.collision_mask = 1
 	collision_body.set_meta("mass_class", "infinite_static_mass")
 	collision_body.set_meta("collision_role", "island_one_visible_objects")
+	collision_body.set_meta("inventory_revision", "explicit_architecture_v1")
 	geometry.add_child(collision_body)
 	var station_spur := geometry.get_node_or_null("OptionalCompletedWorldStationSpur")
 	if station_spur != null:
@@ -9124,6 +9126,7 @@ func _install_island_one_static_collisions(geometry: Node3D) -> void:
 
 	var seen := {}
 	var collision_count := 0
+	var inventory_counts := {}
 	for collision_root in roots:
 		for candidate in collision_root.find_children("*", "MeshInstance3D", true, false):
 			var mesh_instance := candidate as MeshInstance3D
@@ -9141,40 +9144,21 @@ func _install_island_one_static_collisions(geometry: Node3D) -> void:
 			shape_node.transform = collision_body.global_transform.affine_inverse() \
 				* mesh_instance.global_transform
 			shape_node.set_meta("source_mesh", str(mesh_instance.get_path()))
+			var inventory_role := _island_one_collision_inventory_role(mesh_instance)
+			shape_node.set_meta("inventory_role", inventory_role)
 			collision_body.add_child(shape_node)
 			collision_count += 1
+			inventory_counts[inventory_role] = int(inventory_counts.get(inventory_role, 0)) + 1
 
 	collision_body.set_meta("collision_shape_count", collision_count)
+	collision_body.set_meta("inventory_counts", inventory_counts)
 	set_meta("island_one_visible_object_collision_count", collision_count)
 
 
 func _is_solid_island_one_mesh(mesh_instance: MeshInstance3D, collision_root: Node) -> bool:
 	if mesh_instance.mesh == null or not mesh_instance.is_visible_in_tree():
 		return false
-	# These flush floor courses and engraved lines sit on an existing solid
-	# terrace. A concave shape for each small segment catches the player capsule
-	# before it reaches the real quest cabinet.
-	var key := mesh_instance.name.to_lower()
-	if key == "celestialivorydeck" \
-			or key == "arrivalivorycourt" \
-			or key == "processionalivoryaxis" \
-			or key == "processionalgiltinlay" \
-			or key == "compassivorydais" \
-			or key == "compassouterbrasskerb" \
-			or key.begins_with("inlay_v11_") \
-			or key.begins_with("atelierfoundationsector_") \
-			or key.begins_with("atelierfloorsector_") \
-			or key.begins_with("atelierradialinlay_") \
-			or key.begins_with("atelieroutergiltorder_") \
-			or key.begins_with("atelierinneraetherorder_") \
-			or key.ends_with("ivorymedallion") \
-			or key.ends_with("giltboundary") \
-			or key.begins_with("atelierburiedaetherconduit_") \
-			or (key.begins_with("arrivalcourt") and key.ends_with("ring")) \
-			or "sciencemarker_" in key \
-			or key.begins_with("heavenlybloom_"):
-		return false
-	if key == "sagefoliage":
+	if _island_one_collision_inventory_role(mesh_instance).is_empty():
 		return false
 	if mesh_instance.has_meta("detail_packet") or mesh_instance.has_meta("detail_orbit_speed"):
 		return false
@@ -9203,6 +9187,59 @@ func _is_solid_island_one_mesh(mesh_instance: MeshInstance3D, collision_root: No
 	if maxf(bounds.x, maxf(bounds.y, bounds.z)) < 0.12:
 		return false
 	return mesh_instance.mesh.get_surface_count() > 0
+
+
+func _island_one_collision_inventory_role(mesh_instance: MeshInstance3D) -> String:
+	# This allowlist is intentionally path and role based. Adding a decorative
+	# mesh anywhere on Island One must not silently make it a player obstacle.
+	# New solid families are reviewed here and exercised by the capsule tests.
+	if mesh_instance == null or bool(mesh_instance.get_meta("decorative_floor_inset", false)):
+		return ""
+	var source := str(mesh_instance.get_path())
+	var key := mesh_instance.name.to_lower()
+	if "/PuzzleControls/" in source:
+		return "learning_instrument"
+	if "/IslandOneResearchCampus/" in source:
+		return "quest_cabinet"
+	if "DesignedBioTreeGrove/" in source:
+		return "garden_tree_trunk" if key.ends_with("_warmbark") else ""
+	if "/ScienceArtGarden/CognitiveLightTree/" in source:
+		if key.begins_with("treeivorytrunk_") or key.begins_with("treestructuralroot_"):
+			return "hero_tree_structure"
+		return ""
+	if "/CompassMachine/" in source:
+		for solid_token in [
+			"ringbody", "compassheartivory", "compassheartaethercore",
+			"thoughtframe", "sanctumfoundation", "sanctumsteppedplinth",
+			"sanctumflutedpylon", "sanctumpylonfoot", "sanctumgovernorcase",
+		]:
+			if solid_token in key:
+				return "compass_structure"
+		return ""
+	if "/GateArchitectureKit/02_AetherConservatoryKit/" in source \
+			or "/GateArchitectureKit/03_ThresholdStructureKit/" in source \
+			or "/GateArchitectureKit/04_BeaconTowerKit/" in source:
+		return "arrival_architecture"
+	if "/LivingLightAtelierArchitecture/" in source:
+		if key.begins_with("atelierbalustraderail_") \
+				or key.begins_with("atelierbaluster_") \
+				or key.begins_with("atelierrootlightwell"):
+			return "atelier_architecture"
+		return ""
+	if "/EchoGardenQuestArchitecture/" in source \
+			or "/LivingLightLaboratoryRoutes/" in source:
+		return "quest_support"
+	if "/IslandOnePerimeterRepairs/" in source:
+		return "perimeter_architecture"
+	if "/ModularFloatingFoundation/IslandArchitecture/" in source:
+		return "foundation_architecture"
+	if "/EchoTreeListeningCrescent/" in source:
+		return "listening_pavilion"
+	if "/MSI1_Runtime_GameplayArchitecture/" in source:
+		return "authored_overlay_architecture"
+	if "/VisualRoot/BlenderModel/" in source:
+		return "quest_machine"
+	return ""
 
 
 # --- Static geometry batching -------------------------------------------------
