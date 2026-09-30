@@ -123,6 +123,11 @@ func _run() -> void:
 		"Island 3 focus must preserve both local districts while retiring Island 2 detail")
 	assert(not island_two_batch.visible and island_three_batch.visible,
 		"replacement batches must switch with the active island")
+	var sky_gardens := world.get_node(
+		"WorldOneGeometry/IslandThreeCivicSanctuary/IslandThreeMatchedEnvironment/DistantSkyGardenFragments") as Node3D
+	assert(not sky_gardens.visible \
+			and bool(sky_gardens.get_meta("web_scenery_retired", false)),
+		"Web omits native-only sky fragments before batching and keeps both Island 3 views clean")
 	for object in world.get_quest_objects():
 		assert(object.visible and object.definition != null,
 			"the Web render budget must preserve all quest objects and their feedback")

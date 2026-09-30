@@ -39,12 +39,13 @@ func _run() -> void:
 		"World One must instance repeated static meshes without deleting authored nodes")
 	print("WORLD_ONE_RENDER_OPTIMIZATION_METRICS: %d sources, %d batches" % [
 		merged_sources + repeated_sources, merged_groups + repeated_groups])
-	# Retiring the imported Echo Garden's island-wide shrub surface separates two
-	# nearby scenery cells that previously shared that broad source. Keep the
-	# source coverage floor and allow only those two intentional live batches.
+	# Retiring the imported Echo Garden shrub separates two nearby scenery cells.
+	# The native-only sky gardens also keep seven material groups shadow-free so
+	# their distant geometry cannot stripe the playable court. Preserve the
+	# source coverage floor and cap the measured intentional replacement groups.
 	assert(merged_sources + repeated_sources >= 5060 \
-			and merged_groups + repeated_groups <= 294,
-		"the compact civic campuses must consolidate at least 5,060 sources into no more than 294 spatial batches")
+			and merged_groups + repeated_groups <= 301,
+		"the compact civic campuses must consolidate at least 5,060 sources into no more than 301 spatial batches")
 	assert(ranged_meshes > 1000,
 		"World One must apply distance ranges broadly enough to cull distant trim")
 

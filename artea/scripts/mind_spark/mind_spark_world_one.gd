@@ -7239,6 +7239,11 @@ func _build_island_three_sky_garden_fragments(parent: Node3D,
 	fragments.set_meta("collision_policy", "decorative and unreachable")
 	fragments.set_meta("camera_role", "sparse Stormworks skyline depth")
 	fragments.set_meta("preserve_authored_nodes", true)
+	# The Web build already has the gallery's layered cosmic sky. These two
+	# non-gameplay silhouettes add draw submissions and read as stray inverted
+	# islands in the narrow reflection camera, so keep them as native scenery.
+	fragments.visible = not _uses_web_render_budget()
+	fragments.set_meta("web_scenery_retired", _uses_web_render_budget())
 	parent.add_child(fragments)
 	# Keep both fragments behind the Stormworks lateral skyline. The earlier
 	# near-right placement sat directly over the reflection grove and became a
