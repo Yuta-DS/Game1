@@ -24,13 +24,19 @@
 	const PART_PREFETCH = 3;
 
 	const buildKey = new URL(window.location.href).searchParams.get("build");
+	// Canonical visits do not carry the cache-busting `build` query used by the
+	// release verifier. Derive an equally stable identity from the fresh
+	// manifest so immutable part responses can never be reused across different
+	// packs while identical returning visits can skip all 53 network transfers.
+	const manifestCacheKeys = new Map();
 	const partUrl = (requestUrl, index, extension = "") => {
 		const url = new URL(
 			`${requestUrl}.part${String(index).padStart(2, "0")}${extension}`,
 			window.location.href,
 		);
-		if (buildKey) {
-			url.searchParams.set("build", buildKey);
+		const cacheKey = buildKey || manifestCacheKeys.get(requestUrl);
+		if (cacheKey) {
+			url.searchParams.set("build", cacheKey);
 		}
 		return url.toString();
 	};
@@ -52,6 +58,14 @@
 			if (manifestResponse.ok) {
 				const manifest = await manifestResponse.json();
 				if (Number.isInteger(manifest.count) && manifest.count > 0) {
+					const logicalBytes = Number.isInteger(manifest.bytes)
+						? manifest.bytes : "unknown";
+					const transferBytes = Number.isInteger(manifest.transferBytes)
+						? manifest.transferBytes : "unknown";
+					manifestCacheKeys.set(
+						requestUrl,
+						`pack-${manifest.count}-${logicalBytes}-${transferBytes}`,
+					);
 					// Keep the byte total: the streamed Response needs a
 					// Content-Length, and streaming means it cannot be measured
 					// from an assembled Blob any more.

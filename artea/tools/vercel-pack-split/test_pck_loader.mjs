@@ -28,6 +28,7 @@ globalThis.window = {
 				bytes: 9,
 				partBytes: 3,
 				encoding: "gzip",
+				transferBytes: 7,
 			}), {
 				status: 200,
 				headers: { "Content-Type": "application/json" },
@@ -68,13 +69,14 @@ assert.deepEqual(firstPartCacheModes, ["default", "reload"],
 	"a retry bypasses the failed response while completed parts remain cacheable");
 assert.equal(response.headers.get("Content-Length"), "9");
 assert(requestedUrls.every((url) => url.includes("build=loader-test")),
-	"every manifest and part request keeps the cache-busting build identity");
-assert(requestedUrls.filter((url) => url.includes(".part0")).every((url) => url.endsWith(".gz?build=loader-test")),
-	"gzip manifests must request compressed pack parts");
+	"every manifest and part request keeps the explicit deployment identity");
+assert(requestedUrls.filter((url) => url.includes(".part0")).every((url) =>
+	url.endsWith(".gz?build=loader-test")),
+	"gzip manifests request compressed pack parts with the deployment identity");
 const retryIndex = requestedUrls.findLastIndex((url) => url.includes("part00.gz"));
 assert(requestedUrls.findIndex((url) => url.includes("part01.gz")) < retryIndex
 	&& requestedUrls.findIndex((url) => url.includes("part02.gz")) < retryIndex,
 	"bounded prefetch must overlap later parts with an earlier part retry");
 
 globalThis.fetch = originalFetch;
-console.log("PCK_LOADER_TEST: PASS — three gzip parts prefetched, retried and reassembled exactly");
+console.log("PCK_LOADER_TEST: PASS — explicit identity, prefetch, retry and exact reassembly");

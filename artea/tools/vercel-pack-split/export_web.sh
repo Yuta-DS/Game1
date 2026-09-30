@@ -39,6 +39,7 @@ python3 "${project_dir}/scripts/check_unique_resource_uids.py"
 # The custom loader is part of the release path. Prove retries, gzip inflation
 # and byte-exact reassembly before replacing the previous build artifact.
 node "${script_dir}/test_pck_loader.mjs"
+node "${script_dir}/test_pck_loader_canonical.mjs"
 
 # Fail before replacing any existing build if the public client config is absent.
 # The source .env may contain OAuth secrets and must never be packed wholesale.
@@ -128,7 +129,10 @@ while (( part_index >= 0 )); do
 	# can retry and inflate one 8 MiB segment at a time without holding a second
 	# full pack in memory. -n removes filename/timestamp metadata for deterministic
 	# release artifacts.
-	gzip -1 -n "${part_path}"
+	# Maximum gzip effort reduces the measured production transfer by another
+	# 5.5 MB versus -1. This changes export CPU time only; browser inflation cost
+	# and the exact decompressed PCK remain unchanged.
+	gzip -9 -n "${part_path}"
 	if stat -f '%z' "${part_path}.gz" >/dev/null 2>&1; then
 		compressed_part_size=$(stat -f '%z' "${part_path}.gz")
 	else
@@ -142,5 +146,26 @@ rm "${pck_path}"
 printf '{"count":%d,"bytes":%d,"partBytes":%d,"encoding":"gzip","transferBytes":%d}\n' \
 	"${part_count}" "${pck_size}" "${part_size}" "${transfer_size}" \
 	> "${output_dir}/index.pck.parts.json"
+
+# The loader adds either the deployment build ID or a manifest-derived pack
+# identity to every part URL. Those URLs are content-stable, so returning
+# players can reuse completed parts without 53 conditional round trips. Keep
+# the manifest itself on Vercel's normal revalidation policy so a canonical
+# visit always discovers a newly deployed pack.
+cat > "${output_dir}/vercel.json" <<'JSON'
+{
+  "headers": [
+    {
+      "source": "/index.pck.part(.*).gz",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}
+JSON
 
 echo "Web build ready in ${output_dir} (${part_count} gzip pack parts, ${transfer_size} transfer bytes)"
