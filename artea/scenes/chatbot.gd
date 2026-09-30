@@ -9,6 +9,9 @@ extends Control
 @onready var chat_history: TextEdit = $MiloReplyCard/ChatHistory
 @onready var content: VBoxContainer = $InputContent
 @onready var milo_role: Label = $MiloReplyCard/MiloRole
+@onready var reply_card: Panel = $MiloReplyCard
+@onready var milo_name: Label = $MiloReplyCard/MiloName
+@onready var input_banner: TextureRect = $InputBanner
 
 signal chat_closed
 signal companion_pose_requested(pose_name: String)
@@ -47,6 +50,8 @@ var _pending_player_message := ""
 var _last_player_message := ""
 var _last_spoken_text := ""
 var _spoken_full_reply := ""
+var _chat_ui_scale := 1.0
+var _chat_phone_layout := false
 
 const ACTIVITY_DESTINATIONS := {
 	"mind": "Mind Spark Kingdom",
@@ -307,6 +312,10 @@ func _ready() -> void:
 	# This is a display transcript, not a text-input surface.
 	chat_history.editable = false
 	chat_history.selecting_enabled = true
+	_layout_for_viewport(get_viewport().get_visible_rect().size)
+	get_viewport().size_changed.connect(func():
+		if is_instance_valid(reply_card):
+			_layout_for_viewport(get_viewport().get_visible_rect().size))
 	_apply_banner_theme()
 	_resolve_safe_context()
 	var current_scene := get_tree().current_scene
@@ -316,8 +325,108 @@ func _ready() -> void:
 	_show_choices()
 
 
+func _layout_for_viewport(viewport_size: Vector2,
+		physical_size: Vector2 = Vector2.ZERO) -> void:
+	if physical_size.is_zero_approx():
+		physical_size = _chat_physical_size(viewport_size)
+	_chat_ui_scale = _chat_interface_scale(viewport_size, physical_size)
+	var physical_width := viewport_size.x / _chat_ui_scale
+	var physical_height := viewport_size.y / _chat_ui_scale
+	_chat_phone_layout = physical_width < 700.0 or physical_height < 650.0
+	if not _chat_phone_layout:
+		set_meta("chat_layout", "authored_desktop")
+		return
+
+	var portrait := physical_height >= physical_width
+	var margin := 12.0 * _chat_ui_scale
+	var gap := 8.0 * _chat_ui_scale
+	if portrait:
+		var input_height := 320.0 * _chat_ui_scale
+		var reply_height := 220.0 * _chat_ui_scale
+		_set_rect(reply_card, 0.0, 1.0, 1.0, 1.0,
+			margin, -(input_height + gap + margin + reply_height),
+			-margin, -(input_height + gap + margin))
+		_set_rect(input_banner, 0.0, 1.0, 1.0, 1.0,
+			margin, -(input_height + margin), -margin, -margin)
+		_set_rect(content, 0.0, 1.0, 1.0, 1.0,
+			margin + 18.0 * _chat_ui_scale,
+			-(input_height + margin) + 48.0 * _chat_ui_scale,
+			-(margin + 18.0 * _chat_ui_scale),
+			-(margin + 20.0 * _chat_ui_scale))
+	else:
+		# A side-by-side modal preserves usable reply and choice areas on short,
+		# wide phone screens without stacking them into less than 390 CSS pixels.
+		_set_rect(reply_card, 0.0, 0.0, 0.47, 1.0,
+			margin, margin, -gap * 0.5, -margin)
+		_set_rect(input_banner, 0.49, 0.0, 1.0, 1.0,
+			gap * 0.5, margin, -margin, -margin)
+		_set_rect(content, 0.49, 0.0, 1.0, 1.0,
+			gap * 0.5 + 16.0 * _chat_ui_scale,
+			margin + 42.0 * _chat_ui_scale,
+			-(margin + 16.0 * _chat_ui_scale),
+			-(margin + 18.0 * _chat_ui_scale))
+
+	milo_name.add_theme_font_size_override("font_size", roundi(22.0 * _chat_ui_scale))
+	milo_role.add_theme_font_size_override("font_size", roundi(14.0 * _chat_ui_scale))
+	_set_rect(milo_name, 0.03, 0.0, 0.24, 0.0,
+		0.0, 6.0 * _chat_ui_scale, 0.0, 48.0 * _chat_ui_scale)
+	_set_rect(milo_role, 0.24, 0.0, 0.96, 0.0,
+		0.0, 13.0 * _chat_ui_scale, 0.0, 45.0 * _chat_ui_scale)
+	_set_rect(chat_history, 0.0, 0.0, 1.0, 1.0,
+		14.0 * _chat_ui_scale, 56.0 * _chat_ui_scale,
+		-14.0 * _chat_ui_scale, -12.0 * _chat_ui_scale)
+	chat_history.add_theme_font_size_override("font_size", roundi(16.0 * _chat_ui_scale))
+	chat_history.add_theme_constant_override("line_spacing", roundi(4.0 * _chat_ui_scale))
+	content.add_theme_constant_override("separation", roundi(7.0 * _chat_ui_scale))
+	set_meta("chat_layout", "phone_readable_v1")
+	set_meta("chat_ui_scale", _chat_ui_scale)
+	set_meta("chat_physical_font_pixels", 16.0)
+
+
+func _set_rect(control: Control, left: float, top: float, right: float,
+		bottom: float, offset_left: float, offset_top: float,
+		offset_right: float, offset_bottom: float) -> void:
+	control.anchor_left = left
+	control.anchor_top = top
+	control.anchor_right = right
+	control.anchor_bottom = bottom
+	control.offset_left = offset_left
+	control.offset_top = offset_top
+	control.offset_right = offset_right
+	control.offset_bottom = offset_bottom
+
+
+func _chat_physical_size(viewport_size: Vector2) -> Vector2:
+	var display_size := Vector2(DisplayServer.window_get_size())
+	var css_size := Vector2.ZERO
+	if OS.has_feature("web"):
+		var encoded := str(JavaScriptBridge.eval(
+			"JSON.stringify([window.innerWidth || 0, window.innerHeight || 0])", true))
+		if encoded.begins_with("["):
+			var decoded: Variant = JSON.parse_string(encoded)
+			if decoded is Array and decoded.size() >= 2:
+				css_size = Vector2(float(decoded[0]), float(decoded[1]))
+	return _select_chat_physical_size(viewport_size, display_size, css_size)
+
+
+func _select_chat_physical_size(viewport_size: Vector2, display_size: Vector2,
+		css_size: Vector2 = Vector2.ZERO) -> Vector2:
+	if css_size.x >= 240.0 and css_size.y >= 240.0:
+		return css_size
+	if display_size.x >= 240.0 and display_size.y >= 240.0:
+		return display_size
+	return viewport_size
+
+
+func _chat_interface_scale(viewport_size: Vector2, physical_size: Vector2) -> float:
+	if physical_size.x <= 0.0 or physical_size.y <= 0.0:
+		return 1.0
+	return maxf(1.0, maxf(viewport_size.x / physical_size.x,
+		viewport_size.y / physical_size.y))
+
+
 func _apply_banner_theme() -> void:
-	content.add_theme_constant_override("separation", 7)
+	content.add_theme_constant_override("separation", roundi(7.0 * _chat_ui_scale))
 	chat_history.tooltip_text = "Milo's current reply"
 
 
@@ -431,10 +540,10 @@ func _add_message_input() -> void:
 		var player_echo := Label.new()
 		player_echo.name = "PlayerLastMessage"
 		player_echo.text = "YOU  •  %s" % _short_player_echo(_last_player_message)
-		player_echo.custom_minimum_size = Vector2(0, 25)
+		player_echo.custom_minimum_size = Vector2(0, 25.0 * _chat_ui_scale)
 		player_echo.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		player_echo.add_theme_font_override("font", UI_BODY_FONT)
-		player_echo.add_theme_font_size_override("font_size", 19)
+		player_echo.add_theme_font_size_override("font_size", roundi(16.0 * _chat_ui_scale))
 		player_echo.add_theme_color_override("font_color", Color(0.23, 0.145, 0.065, 1.0))
 		_choices.add_child(player_echo)
 
@@ -442,13 +551,13 @@ func _add_message_input() -> void:
 	prompt.text = "YOU  •  TYPE YOUR REPLY   ·   280 CHARACTERS MAX"
 	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	prompt.add_theme_font_override("font", UI_BODY_FONT)
-	prompt.add_theme_font_size_override("font_size", 16)
+	prompt.add_theme_font_size_override("font_size", roundi(14.0 * _chat_ui_scale))
 	prompt.add_theme_color_override("font_color", Color(0.30, 0.20, 0.105, 0.92))
 	_choices.add_child(prompt)
 
 	var row := HBoxContainer.new()
 	row.name = "LocalMessageRow"
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", roundi(8.0 * _chat_ui_scale))
 	_choices.add_child(row)
 	_message_input = LineEdit.new()
 	_message_input.name = "MiloMessageInput"
@@ -456,9 +565,9 @@ func _add_message_input() -> void:
 	_message_input.max_length = ReflectionEngine.MAX_MESSAGE_LENGTH
 	_message_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_input.tooltip_text = "This message is processed locally and is not saved."
-	_message_input.custom_minimum_size = Vector2(0, 48)
+	_message_input.custom_minimum_size = Vector2(0, 48.0 * _chat_ui_scale)
 	_message_input.add_theme_font_override("font", UI_BODY_FONT)
-	_message_input.add_theme_font_size_override("font_size", 20)
+	_message_input.add_theme_font_size_override("font_size", roundi(16.0 * _chat_ui_scale))
 	_message_input.add_theme_color_override("font_color", UI_PARCHMENT)
 	_message_input.add_theme_color_override("font_placeholder_color", Color(0.88, 0.82, 0.70, 0.86))
 	_message_input.add_theme_stylebox_override("normal", _input_style(false))
@@ -466,7 +575,8 @@ func _add_message_input() -> void:
 	row.add_child(_message_input)
 	_message_send_button = _quiet_button("Send", _submit_message.bind(_message_input))
 	_message_send_button.name = "MiloMessageSend"
-	_message_send_button.custom_minimum_size = Vector2(144, 48)
+	_message_send_button.custom_minimum_size = Vector2(92.0 * _chat_ui_scale,
+		48.0 * _chat_ui_scale)
 	_style_send_button(_message_send_button)
 	row.add_child(_message_send_button)
 	_message_input.text_submitted.connect(func(_submitted_text: String) -> void:
@@ -864,7 +974,7 @@ func _clear_choices() -> void:
 	if _choices == null:
 		_choices = VBoxContainer.new()
 		_choices.name = "CuratedChoices"
-		_choices.add_theme_constant_override("separation", 4)
+		_choices.add_theme_constant_override("separation", roundi(7.0 * _chat_ui_scale))
 		content.add_child(_choices)
 		return
 
@@ -883,9 +993,9 @@ func _quiet_button(text: String, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.focus_mode = Control.FOCUS_ALL
-	button.custom_minimum_size = Vector2(0, 25)
+	button.custom_minimum_size = Vector2(0, 46.0 * _chat_ui_scale)
 	button.add_theme_font_override("font", UI_BODY_FONT)
-	button.add_theme_font_size_override("font_size", 12)
+	button.add_theme_font_size_override("font_size", roundi(15.0 * _chat_ui_scale))
 	button.add_theme_color_override("font_color", UI_PARCHMENT)
 	button.add_theme_color_override("font_hover_color", Color.WHITE)
 	button.add_theme_color_override("font_focus_color", Color.WHITE)
@@ -894,9 +1004,9 @@ func _quiet_button(text: String, action: Callable) -> Button:
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = UI_NAVY
 	normal.border_color = UI_GOLD
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(7)
-	normal.set_content_margin_all(5)
+	normal.set_border_width_all(maxi(1, roundi(_chat_ui_scale)))
+	normal.set_corner_radius_all(roundi(7.0 * _chat_ui_scale))
+	normal.set_content_margin_all(5.0 * _chat_ui_scale)
 	button.add_theme_stylebox_override("normal", normal)
 
 	var hover := normal.duplicate() as StyleBoxFlat
@@ -912,19 +1022,19 @@ func _quiet_button(text: String, action: Callable) -> Button:
 
 
 func _style_send_button(button: Button) -> void:
-	button.add_theme_font_size_override("font_size", 20)
+	button.add_theme_font_size_override("font_size", roundi(16.0 * _chat_ui_scale))
 	button.add_theme_color_override("font_color", Color(0.06, 0.12, 0.18, 1.0))
 	button.add_theme_color_override("font_hover_color", Color(0.03, 0.07, 0.11, 1.0))
 	button.add_theme_color_override("font_focus_color", Color(0.03, 0.07, 0.11, 1.0))
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(0.80, 0.58, 0.22, 1.0)
 	normal.border_color = Color(1.0, 0.91, 0.64, 1.0)
-	normal.set_border_width_all(2)
-	normal.set_corner_radius_all(10)
-	normal.set_content_margin_all(8)
+	normal.set_border_width_all(maxi(2, roundi(2.0 * _chat_ui_scale)))
+	normal.set_corner_radius_all(roundi(10.0 * _chat_ui_scale))
+	normal.set_content_margin_all(8.0 * _chat_ui_scale)
 	normal.shadow_color = Color(0.10, 0.06, 0.02, 0.32)
-	normal.shadow_size = 3
-	normal.shadow_offset = Vector2(0, 2)
+	normal.shadow_size = roundi(3.0 * _chat_ui_scale)
+	normal.shadow_offset = Vector2(0, 2.0 * _chat_ui_scale)
 	button.add_theme_stylebox_override("normal", normal)
 	var active := normal.duplicate() as StyleBoxFlat
 	active.bg_color = Color(0.93, 0.75, 0.36, 1.0)
@@ -940,15 +1050,15 @@ func _input_style(focused: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.025, 0.06, 0.085, 0.97)
 	style.border_color = UI_GOLD_BRIGHT if focused else Color(0.42, 0.32, 0.18, 0.9)
-	style.set_border_width_all(2 if focused else 1)
-	style.set_corner_radius_all(10)
-	style.content_margin_left = 16.0
-	style.content_margin_right = 16.0
-	style.content_margin_top = 8.0
-	style.content_margin_bottom = 8.0
+	style.set_border_width_all(maxi(1, roundi((2.0 if focused else 1.0) * _chat_ui_scale)))
+	style.set_corner_radius_all(roundi(10.0 * _chat_ui_scale))
+	style.content_margin_left = 16.0 * _chat_ui_scale
+	style.content_margin_right = 16.0 * _chat_ui_scale
+	style.content_margin_top = 8.0 * _chat_ui_scale
+	style.content_margin_bottom = 8.0 * _chat_ui_scale
 	style.shadow_color = Color(0.10, 0.06, 0.02, 0.22)
-	style.shadow_size = 2
-	style.shadow_offset = Vector2(0, 2)
+	style.shadow_size = roundi(2.0 * _chat_ui_scale)
+	style.shadow_offset = Vector2(0, 2.0 * _chat_ui_scale)
 	return style
 
 
@@ -963,7 +1073,9 @@ func _show_support() -> void:
 
 func _speak(text: String, spoken_text := "") -> void:
 	_spoken_full_reply = text.strip_edges()
-	chat_history.add_theme_font_size_override("font_size", 24)
+	var readable_size := 16.0 if _chat_phone_layout else 24.0
+	chat_history.add_theme_font_size_override("font_size",
+		roundi(readable_size * _chat_ui_scale))
 	chat_history.text = _spoken_full_reply
 	_last_spoken_text = spoken_text.strip_edges() \
 		if not spoken_text.strip_edges().is_empty() else _spoken_full_reply
@@ -975,14 +1087,18 @@ func show_spoken_sentence(sentence: String, sentence_index: int,
 	if sentence.strip_edges().is_empty():
 		return
 	_spoken_full_reply = full_reply.strip_edges()
-	chat_history.add_theme_font_size_override("font_size", 32)
+	var reading_size := 20.0 if _chat_phone_layout else 32.0
+	chat_history.add_theme_font_size_override("font_size",
+		roundi(reading_size * _chat_ui_scale))
 	chat_history.text = sentence.strip_edges()
 	milo_role.text = "READING  ·  %d OF %d" % [sentence_index + 1,
 		maxi(sentence_count, 1)]
 
 
 func finish_spoken_reply() -> void:
-	chat_history.add_theme_font_size_override("font_size", 24)
+	var readable_size := 16.0 if _chat_phone_layout else 24.0
+	chat_history.add_theme_font_size_override("font_size",
+		roundi(readable_size * _chat_ui_scale))
 	if not _spoken_full_reply.is_empty():
 		chat_history.text = _spoken_full_reply
 	milo_role.text = "ART SCHOLAR  ·  READY"
