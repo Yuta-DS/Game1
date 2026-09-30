@@ -56,6 +56,25 @@ func _capture() -> void:
 			await process_frame
 		_save_frame(str(shot.name))
 
+	var operator_shots := {
+		"world_one.warden_anchor.1": "09_storm_lens_operator",
+		"world_one.warden_anchor.2": "10_resonance_forge_operator",
+		"world_one.warden_anchor.3": "11_lightning_archive_operator",
+		"world_one.calm_rain_basin": "12_rain_harvest_operator",
+		"world_one.identity_reflection": "13_reflection_operator",
+	}
+	for object in world.get_quest_objects():
+		if not operator_shots.has(object.save_id):
+			continue
+		var pose := world.get_quest_review_camera_pose(object)
+		assert(not pose.is_empty(), "%s has no production operator camera" % object.save_id)
+		camera.global_position = pose.eye
+		camera.fov = 62.0
+		camera.look_at(pose.target, Vector3.UP)
+		for _frame in 45:
+			await process_frame
+		_save_frame(str(operator_shots[object.save_id]))
+
 	for object in world.get_quest_objects():
 		if int(object.get_meta("physical_island", 0)) == 3:
 			object.current_state["completed"] = true

@@ -1093,9 +1093,12 @@ func get_quest_review_camera_pose(object: QuestObjectBase) -> Dictionary:
 		outward = object.global_basis.z
 		outward.y = 0.0
 	outward = outward.normalized()
+	var island_three := int(object.get_meta("physical_island", 0)) == 3
+	var camera_back := 16.0 if island_three else 8.0
+	var camera_height := 8.5 if island_three else 6.5
 	return {
 		"operator": operator,
-		"eye": operator + outward * 8.0 + Vector3.UP * 6.5,
+		"eye": operator + outward * camera_back + Vector3.UP * camera_height,
 		"target": object.global_position + Vector3.UP * 5.0,
 	}
 
@@ -6231,8 +6234,15 @@ func _finalize_quest_object_story_layout() -> void:
 	}
 	var arena := _zone_nodes["05_thought_storm_arena"] as Node3D
 	var sanctuary := _zone_nodes["06_oldest_tree_sanctuary"] as Node3D
-	var sanctuary_incoming := (ZONES[4].position - ZONES[5].position) * Vector3(1, 0, 1)
-	sanctuary_incoming = sanctuary_incoming.normalized()
+	# Align the epilogue station with the actual Oldest Tree base. The previous
+	# direction targeted the sanctuary zone origin while the tree stands 18 m
+	# north of it, so the operator camera cut diagonally through every right-hand
+	# grove branch instead of looking down the open nave.
+	var oldest_tree_local := Vector3(0, 3, 18)
+	var tree_story_direction := (ZONES[5].position + oldest_tree_local
+		- ZONES[4].position) * Vector3(1, 0, 1)
+	tree_story_direction = tree_story_direction.normalized()
+	var sanctuary_incoming := -tree_story_direction
 	for object in _objects:
 		if route_contract.has(object.save_id):
 			var contract: Array = route_contract[object.save_id]
@@ -6252,7 +6262,7 @@ func _finalize_quest_object_story_layout() -> void:
 			object.set_meta("operator_approach_local", approach)
 			object.set_meta("formation_role", "safe resolution station beyond the boss ring")
 		elif object.save_id == "world_one.identity_reflection":
-			object.position = sanctuary_incoming * 79.0 + Vector3.UP * 3.0
+			object.position = oldest_tree_local + sanctuary_incoming * 79.0
 			var approach := object.position + sanctuary_incoming * 12.0
 			object.look_at(sanctuary.to_global(approach), Vector3.UP, true)
 			object.set_meta("operator_approach_local", approach)
@@ -6394,12 +6404,17 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	basilica.set_meta("design_revision", "living_grove_processional_v4")
 	basilica.set_meta("open_arrival_fraction", .40)
 	campus.add_child(basilica)
-	var to_sanctuary := Vector3(sanctuary_origin.x - arena_origin.x, 0,
-		sanctuary_origin.z - arena_origin.z)
+	var oldest_tree_base := Vector3(
+		sanctuary_origin.x, sanctuary_y, sanctuary_origin.z + 18.0)
+	var to_sanctuary := oldest_tree_base - arena_center
+	to_sanctuary.y = 0.0
 	var direction: Vector3 = to_sanctuary.normalized()
 	var side_axis := Vector3(direction.z, 0, -direction.x)
 	var promenade_start := arena_center + direction * 60.0
-	var promenade_end := Vector3(sanctuary_origin.x, sanctuary_y, sanctuary_origin.z + 18.0)
+	var promenade_end := oldest_tree_base
+	basilica.set_meta("story_axis_start", promenade_start)
+	basilica.set_meta("story_axis_end", promenade_end)
+	basilica.set_meta("reflection_camera_axis_clear", true)
 	_add_island_three_lane(basilica, "IvoryWisdomNave", promenade_start,
 		promenade_end, 14.0, _materials.celestial_floor)
 	# Four broad living bays replace the former line of thin white poles and long
@@ -6880,8 +6895,15 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 	# QuestObjectBase places the operator twelve metres outward. Keep another
 	# sixteen metres of breathing room beyond that point so players arriving
 	# diagonally from the bridge can reach the console without clipping a wing.
-	var rear_center := center + outward * 28.0
+	# The player operates each instrument from the island-edge side and looks
+	# inward toward the boss court. Place the landmark mass behind the console in
+	# that view. The earlier outward offset put the tower, forge and archive
+	# behind the player's camera, leaving every interaction framed by the same
+	# generic cabinet and making the distinct architecture effectively invisible.
+	var backdrop_inset := 12.0 if landmark_index == 0 else 18.0
+	var rear_center := center - outward * backdrop_inset
 	landmark.set_meta("silhouette_revision", "human_scale_civic_backdrop_v1")
+	landmark.set_meta("operator_backdrop_side", "court_inward")
 	landmark.set_meta("interaction_forecourt_clear_m", 11.0)
 	_build_island_three_shared_instrument(landmark, center, outward,
 		_materials.shared_style_cyan if landmark_index != 1 else _materials.shared_style_lavender)
@@ -6892,56 +6914,54 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 		for buttress_side in [-1.0, 1.0]:
 			_add_box(landmark,
 				"LensCitadelPodium%s" % ("Left" if buttress_side < 0 else "Right"),
-				rear_center + side_axis * float(buttress_side) * 18.0 + Vector3.UP * 2.0,
-				Vector3(8.0, 4.0, 15.0), _materials.shared_style_ivory, true,
+				rear_center + side_axis * float(buttress_side) * 15.0 + Vector3.UP * 2.0,
+				Vector3(6.5, 4.0, 13.0), _materials.shared_style_ivory, true,
 				landmark_yaw)
-			var buttress_at := rear_center + side_axis * float(buttress_side) * 17.5 \
-				+ Vector3.UP * 12.0
+			var buttress_at := rear_center + side_axis * float(buttress_side) * 14.5 \
+				+ Vector3.UP * 10.0
 			_add_box(landmark,
 				"LensCivicButtress%s" % ("Left" if buttress_side < 0 else "Right"),
-				buttress_at, Vector3(5.0, 24.0, 7.0),
+				buttress_at, Vector3(4.2, 20.0, 6.0),
 				_materials.shared_style_ivory, true, landmark_yaw)
 			_add_brick(landmark,
 				"LensButtressCrystal%s" % ("Left" if buttress_side < 0 else "Right"),
-				buttress_at + Vector3.UP * 14.5,
-				Bricks.build_crystal(1.25, 5.0, .3, 6), _materials.shared_style_cyan)
-		var apex := rear_center + Vector3.UP * 50.0
+				buttress_at + Vector3.UP * 12.0,
+				Bricks.build_crystal(1.1, 4.2, .3, 6), _materials.shared_style_cyan)
+		var apex := rear_center + Vector3.UP * 36.0
 		var lens_feet: Array[Vector3] = [
-			rear_center - side_axis * 15.0,
-			rear_center + side_axis * 15.0,
-			rear_center + outward * 11.0,
+			rear_center - side_axis * 11.5,
+			rear_center + side_axis * 11.5,
+			rear_center + outward * 8.0,
 		]
 		for leg_index in lens_feet.size():
 			var foot := lens_feet[leg_index]
 			_add_island_three_civic_column(landmark,
-				"LensTripod_%02d" % (leg_index + 1), foot, 20.0)
+				"LensTripod_%02d" % (leg_index + 1), foot, 16.0)
 			var lens_mast := _add_cable_between(landmark,
 				"LensIvoryMast_%02d" % (leg_index + 1),
-				foot + Vector3.UP * 20.8, foot + Vector3.UP * 46.0,
+				foot + Vector3.UP * 16.8, foot + Vector3.UP * 32.0,
 				.65, .36, _materials.shared_style_ivory, 8)
 			var roof_brace := _add_cable_between(landmark,
 				"LensIvoryRoofBrace_%02d" % (leg_index + 1),
-				foot + Vector3.UP * 46.0, apex, .36, .20,
+				foot + Vector3.UP * 32.0, apex, .36, .20,
 				_materials.shared_style_ivory, 8)
-			# These slim parts sit 45–65 metres above the court. Their projected sun
-			# shadows previously formed a huge dark lattice over the bridge arrival,
-			# although the tower itself was outside the player's view. Keep the
-			# readable ivory silhouette and let its solid buttresses cast the grounded
-			# architectural shadow.
+			# These slim overhead parts previously projected a huge dark lattice over
+			# the bridge arrival. Keep the readable ivory silhouette and let the solid
+			# buttresses cast the grounded architectural shadow.
 			for overhead_part in [lens_mast, roof_brace]:
 				overhead_part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				overhead_part.set_meta("arrival_foreground_shadow_disabled", true)
-		_add_brick(landmark, "StormLensPrism", rear_center + Vector3.UP * 33.0,
-			Bricks.build_crystal(5.2, 16.0, .8, 6), _materials.arrival_glass)
+		_add_brick(landmark, "StormLensPrism", rear_center + Vector3.UP * 25.0,
+			Bricks.build_crystal(3.8, 11.0, .65, 6), _materials.arrival_glass)
 		var sight_frame := Node3D.new()
 		sight_frame.name = "OpenLensAlignmentFrame"
-		sight_frame.position = rear_center + Vector3.UP * 33.0
+		sight_frame.position = rear_center + Vector3.UP * 25.0
 		# Face the court; from the bridge this frame reads edge-on instead of
 		# filling the arrival camera with a cropped geometric outline.
 		sight_frame.rotation.y = PI * .75
 		landmark.add_child(sight_frame)
-		var sight_corners := [Vector3(0, 12, 0), Vector3(12, 0, 0),
-			Vector3(0, -12, 0), Vector3(-12, 0, 0)]
+		var sight_corners := [Vector3(0, 8, 0), Vector3(8, 0, 0),
+			Vector3(0, -8, 0), Vector3(-8, 0, 0)]
 		for side_index in 4:
 			var alignment_beam := _add_beam_between(sight_frame,
 				"IvoryAlignmentBeam_%02d" % (side_index + 1),

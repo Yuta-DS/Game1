@@ -243,6 +243,22 @@ func _run() -> void:
 	var lens := island_three.get_node("StormworksGrandCourt/StormLensTower") as Node3D
 	var forge := island_three.get_node("StormworksGrandCourt/ResonanceForge") as Node3D
 	var archive := island_three.get_node("StormworksGrandCourt/LightningArchive") as Node3D
+	var arena_center := MindSparkWorldOne.ZONES[4].position
+	var backdrop_parts := [
+		[lens, lens.get_node("StormLensPrism") as Node3D],
+		[forge, forge.get_node("SuspendedResonanceCore") as Node3D],
+		[archive, archive.get_node("ArchiveMemoryShard") as Node3D],
+	]
+	for backdrop_pair in backdrop_parts:
+		var landmark := backdrop_pair[0] as Node3D
+		var terrace := landmark.get_node("SolidQuestTerrace") as Node3D
+		var backdrop := backdrop_pair[1] as Node3D
+		var outward := Vector3(terrace.position.x - arena_center.x, 0,
+			terrace.position.z - arena_center.z).normalized()
+		var minimum_inset := 11.5 if landmark == lens else 17.5
+		assert((backdrop.position - terrace.position).dot(outward) < -minimum_inset
+			and str(landmark.get_meta("operator_backdrop_side", "")) == "court_inward",
+			"each storm landmark must frame its operator camera from the court side")
 	assert((lens.get_node("StormLensPrism") as Node3D).position.y
 		> (lens.get_node("SolidQuestTerrace") as Node3D).position.y + 20.0,
 		"the northwest quest reads as a tower above the shared instrument")
@@ -384,6 +400,14 @@ func _run() -> void:
 	assert(int(wisdom_basilica.get_meta("living_grove_bay_count", 0)) == 4)
 	assert(float(wisdom_basilica.get_meta("open_arrival_fraction", 0.0)) >= .40,
 		"the reflection promenade keeps its arrival sightline open before the grove bays")
+	var story_axis_start: Vector3 = wisdom_basilica.get_meta("story_axis_start")
+	var story_axis_end: Vector3 = wisdom_basilica.get_meta("story_axis_end")
+	var reflection_axis_point := Geometry3D.get_closest_point_to_segment_uncapped(
+		reflection_center, story_axis_start, story_axis_end)
+	assert(Vector2(reflection_center.x, reflection_center.z).distance_to(
+		Vector2(reflection_axis_point.x, reflection_axis_point.z)) < .25
+		and bool(wisdom_basilica.get_meta("reflection_camera_axis_clear", false)),
+		"the reflection station and its player camera stay on the open living-grove nave")
 	assert(wisdom_basilica.find_children(
 		"WisdomGroveTrunk_*Collision", "StaticBody3D", true, false).size() == 8,
 		"the living promenade uses eight collision-backed trunks around its open nave")
