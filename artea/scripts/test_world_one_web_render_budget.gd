@@ -47,6 +47,11 @@ func _run() -> void:
 			and int(lighting_profile.get_meta("cached_profile_control_count", 0)) >= 16
 			and is_equal_approx(float(lighting_profile.get_meta("profile_sample_seconds", 0.0)), 0.1),
 		"the shared lighting profile must sample cached positions instead of rebuilding scene queries every frame")
+	assert(str(lighting_profile.get_meta("atmosphere_revision", "")) \
+			== "warm_celestial_depth_v2"
+			and (lighting_profile.get_meta("sky_top_color") as Color).b > 0.60
+			and (lighting_profile.get_meta("sky_horizon_color") as Color).r > 0.85,
+		"World One must retain a blue upper sky and warm celestial horizon behind all three islands")
 	for path in [
 		"WorldOneGeometry/03ConstellationCourt/ModularFloatingFoundation/IslandArchitecture/Architecture_v11_03",
 		"WorldOneGeometry/04HopePathRidge/ModularFloatingFoundation/IslandArchitecture/Architecture_v17_04",

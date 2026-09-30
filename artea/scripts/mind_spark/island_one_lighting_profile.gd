@@ -4,6 +4,10 @@ extends Node3D
 ## WorldEnvironment resource is never edited; leaving restores both lights.
 const SAMPLE_SECONDS := 0.1
 const ZONE_RADII := [125.0, 155.0, 150.0, 122.0, 175.0, 145.0]
+const WORLD_ONE_SKY_TOP := Color("467aa7")
+const WORLD_ONE_SKY_HORIZON := Color("ead9c2")
+const WORLD_ONE_GROUND_HORIZON := Color("cfc4b4")
+const WORLD_ONE_FOG_LIGHT := Color("aec5cc")
 
 var _camera: Camera3D
 var _previous: Environment
@@ -22,6 +26,10 @@ var _target_strength := 0.0
 
 
 func _ready() -> void:
+	set_meta("atmosphere_revision", "warm_celestial_depth_v2")
+	set_meta("sky_top_color", WORLD_ONE_SKY_TOP)
+	set_meta("sky_horizon_color", WORLD_ONE_SKY_HORIZON)
+	set_meta("fog_light_color", WORLD_ONE_FOG_LIGHT)
 	call_deferred("_cache_scene_positions")
 
 
@@ -121,11 +129,11 @@ func _process(delta: float) -> void:
 			var daylight := .50 if compatibility else .78
 			light.light_energy = lerpf(float(original[0]),daylight if light.name == "Sun" else .12,_strength)
 			light.light_color = (original[1] as Color).lerp(Color("ffe8cd") if light.name == "Sun" else Color("d9dfeb"),_strength)
-	_profile.fog_light_color = _source.fog_light_color.lerp(Color("b8c6cf"), _strength)
+	_profile.fog_light_color = _source.fog_light_color.lerp(WORLD_ONE_FOG_LIGHT, _strength)
 	if _sky_material != null:
-		_sky_material.sky_top_color = _original_sky.sky_top_color.lerp(Color("708ba6"), _strength)
-		_sky_material.sky_horizon_color = _original_sky.sky_horizon_color.lerp(Color("e5d7c2"), _strength)
-		_sky_material.ground_horizon_color = _original_sky.ground_horizon_color.lerp(Color("d2c7b5"), _strength)
+		_sky_material.sky_top_color = _original_sky.sky_top_color.lerp(WORLD_ONE_SKY_TOP, _strength)
+		_sky_material.sky_horizon_color = _original_sky.sky_horizon_color.lerp(WORLD_ONE_SKY_HORIZON, _strength)
+		_sky_material.ground_horizon_color = _original_sky.ground_horizon_color.lerp(WORLD_ONE_GROUND_HORIZON, _strength)
 	if target == 0.0 and _strength == 0.0:
 		_restore()
 
