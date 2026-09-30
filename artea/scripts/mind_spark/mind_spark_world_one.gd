@@ -6433,7 +6433,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		var reflection_court := Node3D.new()
 		reflection_court.name = "RootboundReflectionCourt"
 		reflection_court.set_meta("quest_architecture", "open living-root oratory")
-		reflection_court.set_meta("design_revision", "rootbound_grove_pavilion_v3")
+		reflection_court.set_meta("design_revision", "rootbound_grove_pavilion_v4_flared_roots")
 		reflection_court.set_meta("clear_story_entrance_m", 18.0)
 		reflection_court.set_meta("low_poly_landmark", true)
 		basilica.add_child(reflection_court)
@@ -6456,10 +6456,26 @@ func _redesign_island_three(geometry: Node3D) -> void:
 			var root_tip := mirror_at + radial * 16.5 \
 				+ tangent * (-2.4 if apse_index % 2 == 0 else 2.4) \
 				+ Vector3.UP * (13.0 + float(apse_index % 2) * 1.2)
-			_add_cylinder(reflection_court,
+			# The former straight dark cylinders read as six loose rectangular
+			# prototype blocks from the promenade camera. A broad faceted root flare
+			# catches the warm light and flows into the rib, while a slightly slimmer
+			# primitive collider keeps the same solid player boundary.
+			_add_tapered_cylinder(reflection_court,
 				"ReflectionRootFoot_%02d" % (apse_index + 1),
-				apse_at + Vector3.UP * 2.6, 1.38, 5.2,
-				_materials.island_three_hero_bark, true, 9)
+				apse_at + Vector3.UP * .55, .78, 1.82, 1.1,
+				_materials.island_three_hero_bark_highlight, 9)
+			var root_body := StaticBody3D.new()
+			root_body.name = "ReflectionRootFoot_%02dCollision" % (apse_index + 1)
+			root_body.position = apse_at + Vector3.UP * .45
+			root_body.set_meta("mass_class", "infinite_static_mass")
+			root_body.set_meta("collision_role", "simplified tapered root flare")
+			var root_shape_node := CollisionShape3D.new()
+			var root_shape := CylinderShape3D.new()
+			root_shape.radius = 1.18
+			root_shape.height = .9
+			root_shape_node.shape = root_shape
+			root_body.add_child(root_shape_node)
+			reflection_court.add_child(root_body)
 			_add_cable_between(reflection_court,
 				"ReflectionRootRib_%02d" % (apse_index + 1), apse_at, root_shoulder,
 				1.55, .82, _materials.island_three_hero_bark, 10)

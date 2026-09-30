@@ -330,7 +330,7 @@ func _run() -> void:
 	var reflection_court := island_three.get_node(
 		"WisdomBasilicaPromenade/RootboundReflectionCourt") as Node3D
 	assert(str(reflection_court.get_meta("design_revision", "")) \
-		== "rootbound_grove_pavilion_v3")
+		== "rootbound_grove_pavilion_v4_flared_roots")
 	assert(float(reflection_court.get_meta("clear_story_entrance_m", 0.0)) >= 18.0)
 	assert(reflection_court.find_children(
 		"ReflectionRootRib_*", "MeshInstance3D", true, false).size() == 6)
@@ -342,6 +342,14 @@ func _run() -> void:
 	assert(reflection_court.find_children(
 		"ReflectionRootFoot_*Collision", "StaticBody3D", true, false).size() == 6,
 		"each visible reflection root has a matching player collision foot")
+	for root_index in 6:
+		var root_foot := reflection_court.get_node(
+			"ReflectionRootFoot_%02d" % (root_index + 1)) as MeshInstance3D
+		var root_mesh := root_foot.mesh as CylinderMesh
+		assert(root_mesh.bottom_radius > root_mesh.top_radius * 2.0,
+			"reflection root feet need a broad organic flare")
+		assert(root_mesh.height <= 1.11,
+			"reflection root feet stay low so the sloped living ribs own the silhouette")
 	var reflection_canopy_count := reflection_court.find_children(
 		"ReflectionCanopyMass_*", "MeshInstance3D", true, false).size()
 	for canopy_index in 6:
