@@ -51,11 +51,12 @@ func _run() -> void:
 	var island_one_hero := world.find_child("EchoGardenHeroBenchmark", true, false) as Node3D
 	var evidence := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
 	assert(island_one_hero != null and evidence != null)
+	var evidence_pose := world.get_quest_review_camera_pose(evidence)
+	assert(not evidence_pose.is_empty())
 	var views := [
 		["island_one_tree_court", island_one_hero.global_position + Vector3(50, 6, 100),
 			island_one_hero.global_position + Vector3(0, 18, 0)],
-		["island_two_evidence_court", evidence.to_global(Vector3(0, 5.5, 23)),
-			evidence.to_global(Vector3(0, 4.2, 0))],
+		["island_two_evidence_court", evidence_pose.eye, evidence_pose.target],
 		["island_three_stormworks", Vector3(300, 27, 28), Vector3(430, 35, 25)],
 		["island_three_reflection", Vector3(520, 27, 15), Vector3(650, 34, -58)],
 	]

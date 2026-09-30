@@ -33,6 +33,22 @@ func _begin() -> void:
 		print("WORLD_ONE_WEB_PERF_ERROR: review landmarks unavailable")
 		queue_free()
 		return
+	var evidence_pose := _world.get_quest_review_camera_pose(evidence)
+	if evidence_pose.is_empty():
+		print("WORLD_ONE_WEB_PERF_ERROR: Evidence Court operator pose unavailable")
+		queue_free()
+		return
+	var evidence_eye_local := _world.to_local(evidence_pose.eye)
+	var evidence_target_local := _world.to_local(evidence_pose.target)
+	var constellation_center := _world.get_zone_position("03_constellation_court")
+	var evidence_dais_distance := Vector2(evidence_eye_local.x,
+		evidence_eye_local.z).distance_to(Vector2(constellation_center.x,
+		constellation_center.z))
+	var evidence_on_dais := evidence_dais_distance < \
+		_world.get_zone_radius("03_constellation_court")
+	_world.set_meta("web_perf_evidence_camera_on_dais", evidence_on_dais)
+	_world.set_meta("web_perf_evidence_camera_distance",
+		evidence_eye_local.distance_to(_world.to_local(evidence.global_position)))
 	_views = [
 		{
 			"name": "island_one_tree_court",
@@ -41,8 +57,8 @@ func _begin() -> void:
 		},
 		{
 			"name": "island_two_evidence_court",
-			"position": _world.to_local(evidence.to_global(Vector3(0, 5.5, 23))),
-			"target": _world.to_local(evidence.to_global(Vector3(0, 4.2, 0))),
+			"position": evidence_eye_local,
+			"target": evidence_target_local,
 		},
 		{"name": "island_three_stormworks", "position": Vector3(300, 27, 28),
 			"target": Vector3(430, 35, 25)},

@@ -1076,6 +1076,30 @@ func get_quest_objects() -> Array[QuestObjectBase]:
 	return _objects.duplicate()
 
 
+func get_quest_review_camera_pose(object: QuestObjectBase) -> Dictionary:
+	## Return the production third-person review pose for a quest instrument.
+	## Quest models are intentionally scaled up for readability, so camera offsets
+	## must be based on the unscaled operator point stored in the district parent.
+	if object == null or not object.has_meta("operator_approach_local"):
+		return {}
+	var parent := object.get_parent() as Node3D
+	if parent == null:
+		return {}
+	var approach: Vector3 = object.get_meta("operator_approach_local")
+	var operator := parent.to_global(approach)
+	var outward := operator - object.global_position
+	outward.y = 0.0
+	if outward.length_squared() < .001:
+		outward = object.global_basis.z
+		outward.y = 0.0
+	outward = outward.normalized()
+	return {
+		"operator": operator,
+		"eye": operator + outward * 8.0 + Vector3.UP * 6.5,
+		"target": object.global_position + Vector3.UP * 5.0,
+	}
+
+
 func get_enemies() -> Array[MindSparkEnemyBase]:
 	return _enemies.duplicate()
 

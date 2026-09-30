@@ -55,21 +55,10 @@ func _capture() -> void:
 
 	var evidence := world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
 	assert(evidence != null)
-	var evidence_parent := evidence.get_parent() as Node3D
-	var evidence_approach: Vector3 = evidence.get_meta("operator_approach_local")
-	# Quest objects are enlarged presentation models. Applying a camera offset
-	# through the object's scaled transform put the review camera outside the
-	# raised evidence dais, where its vertical rim filled the lower third of the
-	# frame. Anchor the shot to the real, unscaled operator position used by the
-	# production player instead.
-	var evidence_operator := evidence_parent.to_global(evidence_approach)
-	var evidence_outward := evidence_operator - evidence.global_position
-	evidence_outward.y = 0.0
-	evidence_outward = evidence_outward.normalized()
-	# Match the production third-person boom: the camera sits behind the capsule,
-	# while the capsule itself remains at the authored interaction point.
-	var evidence_eye := evidence_operator + evidence_outward * 8.0 + Vector3.UP * 6.5
-	var evidence_target := evidence.global_position + Vector3.UP * 5.0
+	var evidence_pose := world.get_quest_review_camera_pose(evidence)
+	assert(not evidence_pose.is_empty())
+	var evidence_eye: Vector3 = evidence_pose.eye
+	var evidence_target: Vector3 = evidence_pose.target
 	var constellation_center := world.get_zone_position("03_constellation_court")
 	assert(Vector2(evidence_eye.x, evidence_eye.z).distance_to(
 		Vector2(constellation_center.x, constellation_center.z)) <

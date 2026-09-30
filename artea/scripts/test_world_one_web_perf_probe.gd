@@ -24,6 +24,9 @@ func _run() -> void:
 		waited += 1
 	assert(bool(world.get_meta("web_perf_probe_completed", false)),
 		"the benchmark must complete all production-camera samples")
+	assert(bool(world.get_meta("web_perf_evidence_camera_on_dais", false))
+			and float(world.get_meta("web_perf_evidence_camera_distance", INF)) < 30.0,
+		"the Evidence Court benchmark must use the unscaled production operator camera")
 	var results: Array = world.get_meta("web_perf_results", [])
 	assert(results.size() == 4,
 		"the benchmark must report Island 1, Island 2 and both Island 3 review views")
