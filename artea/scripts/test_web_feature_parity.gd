@@ -39,7 +39,14 @@ const RETIRED_WEB_RESOURCES := [
 	"assets3D/Pink_Shell_Clip_1029042716_texture_0.jpg",
 	"assets3D/Pink_Shell_Clip_1029042716_texture_1.jpg",
 	"assets3D/Pink_Shell_Clip_1029042716_texture_2.jpg",
+	"scripts/assets3D/Crescent_Moon_PNG_Clip_Art_Image.png",
 ]
+
+const WEB_TEXTURE_SIZE_LIMITS := {
+	"res://assets/Joystick/joyring.png.import": 256,
+	"res://assets/Joystick/joyknobpng.png.import": 256,
+	"res://assets3D/Crescent_Moon_PNG_Clip_Art_Image.png.import": 1024,
+}
 
 
 func _init() -> void:
@@ -69,6 +76,17 @@ func _init() -> void:
 	for retired_path in RETIRED_WEB_RESOURCES:
 		assert(_matches_any_export_pattern(retired_path, exclusions),
 			"Web pack scope: retired development asset should not ship: %s" % retired_path)
+	for import_path in WEB_TEXTURE_SIZE_LIMITS:
+		var import_config := ConfigFile.new()
+		assert(import_config.load(import_path) == OK,
+			"Web pack scope: texture import settings must load: %s" % import_path)
+		var actual_limit := int(import_config.get_value("params", "process/size_limit", 0))
+		assert(actual_limit == WEB_TEXTURE_SIZE_LIMITS[import_path],
+			"Web pack scope: %s must retain its %d px size limit (found %d)" % [
+				import_path,
+				WEB_TEXTURE_SIZE_LIMITS[import_path],
+				actual_limit,
+			])
 	print("WEB FEATURE PARITY TEST: PASS (%d required resources exported)" \
 		% REQUIRED_WEB_RESOURCES.size())
 	quit(0)
