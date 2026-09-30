@@ -144,14 +144,20 @@ func _active_camera() -> Camera3D:
 func get_camera_relative_move_direction(input_dir: Vector2) -> Vector3:
 	if input_dir.is_zero_approx():
 		return Vector3.ZERO
+	# Input.get_vector() has already applied the InputMap's circular deadzone and
+	# returns a useful 0..1 stick magnitude. Preserve it so a slight analog tilt
+	# walks gently instead of snapping to full speed. Keyboard and D-pad vectors
+	# still arrive at unit strength, including normalized diagonals.
+	var input_strength := minf(input_dir.length(), 1.0)
 	var normalized_input := input_dir.normalized()
 	var camera := _active_camera()
 	if camera:
 		var basis := camera.global_transform.basis
 		var camera_forward := Vector3(-basis.z.x, 0.0, -basis.z.z).normalized()
 		var camera_right := Vector3(basis.x.x, 0.0, basis.x.z).normalized()
-		return (camera_right * normalized_input.x + camera_forward * -normalized_input.y).normalized()
-	return Vector3(normalized_input.x, 0.0, normalized_input.y)
+		return (camera_right * normalized_input.x \
+			+ camera_forward * -normalized_input.y).normalized() * input_strength
+	return Vector3(normalized_input.x, 0.0, normalized_input.y) * input_strength
 
 
 func _physics_process(delta: float) -> void:

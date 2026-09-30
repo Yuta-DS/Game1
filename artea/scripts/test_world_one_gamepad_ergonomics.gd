@@ -118,6 +118,16 @@ func _run() -> void:
 	player.set("force_touch_controls", true)
 	root.add_child(player)
 	await process_frame
+	var gentle_stick := player.call("get_camera_relative_move_direction",
+		Vector2(0.35, 0.0)) as Vector3
+	if not is_equal_approx(gentle_stick.length(), 0.35):
+		_fail("a partial analog tilt does not preserve gradual walking speed")
+		return
+	var full_diagonal := player.call("get_camera_relative_move_direction",
+		Vector2.ONE.normalized()) as Vector3
+	if not is_equal_approx(full_diagonal.length(), 1.0):
+		_fail("full keyboard/D-pad diagonal movement loses unit speed")
+		return
 	var touch := player.get_node_or_null("TouchControlHUD/TouchControls") as Control
 	if touch == null or touch.get_child_count() != 8:
 		_fail("the playable character does not build eight touch controls")
@@ -258,5 +268,5 @@ func _run() -> void:
 	player.queue_free()
 	await process_frame
 
-	print("WORLD_ONE_GAMEPAD_ERGONOMICS_TEST: PASS — gamepad mappings, real run speed, adaptive HUD hints, and eight non-overlapping phone controls work")
+	print("WORLD_ONE_GAMEPAD_ERGONOMICS_TEST: PASS — gamepad mappings, analog walking, real run speed, adaptive HUD hints, and eight non-overlapping phone controls work")
 	quit(0)
