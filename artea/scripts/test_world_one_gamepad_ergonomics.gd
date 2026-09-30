@@ -151,6 +151,11 @@ func _run() -> void:
 	# into a roughly 12-pixel control.
 	var logical_phone := Vector2(1710.0, 3700.0)
 	var physical_phone := Vector2(390.0, 844.0)
+	var selected_phone_size: Vector2 = player.call("_select_touch_physical_size",
+		logical_phone, Vector2(710.0, 1536.0), physical_phone)
+	if selected_phone_size != physical_phone:
+		_fail("Web touch sizing does not prefer the stable CSS viewport")
+		return
 	player.call("_layout_touch_controls", logical_phone, physical_phone)
 	var touch_scale := float(player.get_meta("touch_control_ui_scale", 0.0))
 	if touch_scale < 4.0 or str(player.get_meta("touch_control_layout", "")) \
@@ -208,6 +213,15 @@ func _run() -> void:
 	touch_talk.button_up.emit()
 	if Input.is_action_pressed("interact") or Input.is_action_pressed("talk_to_milo"):
 		_fail("releasing the touch TALK control leaves interaction stuck")
+		return
+	touch_right.button_down.emit()
+	player.call("set_input_enabled", false)
+	if touch.visible or Input.is_action_pressed("move_right"):
+		_fail("dialogue/input lock does not hide the gameplay HUD and release held touch input")
+		return
+	player.call("set_input_enabled", true)
+	if not touch.visible:
+		_fail("touch gameplay HUD does not return when character input resumes")
 		return
 
 	Input.action_press("run")

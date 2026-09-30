@@ -111,7 +111,10 @@ func _input(event: InputEvent) -> void:
 
 func set_input_enabled(v: bool) -> void:
 	input_enabled = v
+	if _touch_hud != null:
+		_touch_hud.visible = v
 	if not v:
+		_release_all_touch_actions()
 		_set_blocking(false)
 		_finish_attack()
 		_jump_buffer_remaining = 0.0
@@ -676,7 +679,7 @@ func _layout_touch_controls(viewport_size: Vector2,
 	# in logical coordinates, but derive every size from its real screen-pixel
 	# target so portrait and high-DPI Web canvases retain usable controls.
 	if physical_size.is_zero_approx():
-		physical_size = Vector2(DisplayServer.window_get_size())
+		physical_size = _touch_physical_size(viewport_size)
 	# The headless display server reports a 1×1 placeholder window. Treat that
 	# as unavailable rather than magnifying controls hundreds of times in tests
 	# and server-side packaged smoke runs.
@@ -708,6 +711,33 @@ func _layout_touch_controls(viewport_size: Vector2,
 	set_meta("touch_control_physical_button_pixels", target_button_pixels)
 	set_meta("touch_control_ui_scale", ui_scale)
 	set_meta("touch_control_layout", "screen_pixel_safe_v2")
+
+
+func _touch_physical_size(viewport_size: Vector2) -> Vector2:
+	var display_size := Vector2(DisplayServer.window_get_size())
+	var css_size := Vector2.ZERO
+	if OS.has_feature("web"):
+		# DisplayServer may expose the Web canvas backing-store size, which varies
+		# with browser DPR and can change after Godot's first resize signal. CSS
+		# viewport pixels are the stable physical target for a fingertip control.
+		var encoded := str(JavaScriptBridge.eval(
+			"JSON.stringify([window.innerWidth || 0, window.innerHeight || 0])", true))
+		# Exported headless smoke carries the Web feature but no DOM. Avoid asking
+		# JSON to parse its empty/null bridge response and use DisplayServer below.
+		if encoded.begins_with("["):
+			var decoded: Variant = JSON.parse_string(encoded)
+			if decoded is Array and decoded.size() >= 2:
+				css_size = Vector2(float(decoded[0]), float(decoded[1]))
+	return _select_touch_physical_size(viewport_size, display_size, css_size)
+
+
+func _select_touch_physical_size(viewport_size: Vector2, display_size: Vector2,
+		css_size: Vector2 = Vector2.ZERO) -> Vector2:
+	if css_size.x >= 240.0 and css_size.y >= 240.0:
+		return css_size
+	if display_size.x >= 240.0 and display_size.y >= 240.0:
+		return display_size
+	return viewport_size
 
 
 func _touch_interface_scale(viewport_size: Vector2, physical_size: Vector2) -> float:
