@@ -6620,7 +6620,16 @@ func _unify_island_three_tree_and_quest_style(campus: Node3D) -> void:
 	for candidate in campus.find_children("*", "MeshInstance3D", true, false):
 		var part := candidate as MeshInstance3D
 		var key := part.name.to_lower()
-		if "terrace" in key or "ivory" in key or "tower" in key \
+		if "centralrainneedle" in key:
+			part.material_override = _materials.shared_style_charcoal
+		elif "raincollectorrib" in key:
+			part.material_override = _materials.shared_style_ivory
+		elif key in ["rainpool", "raincrystalreservoir", "facetedraindome"] \
+				or "rainvane" in key or "rainchannel" in key \
+				or "harvestedrainwater" in key or "capturedrainstream" in key \
+				or "observatorywaterfall" in key:
+			part.material_override = _materials.rain_glass
+		elif "terrace" in key or "ivory" in key or "tower" in key \
 				or "buttress" in key or "archivefin" in key or "pier" in key:
 			part.material_override = _materials.shared_style_ivory
 		elif "charcoal" in key or "mechanism" in key or "strut" in key \
@@ -7140,6 +7149,8 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 	observatory.set_meta("quest_architecture", "open weather instrument")
 	observatory.set_meta("replaces", "CalmRainCloister")
 	observatory.set_meta("low_poly_landmark", true)
+	observatory.set_meta("design_revision", "restrained_ivory_weather_house_v2")
+	observatory.set_meta("cyan_surface_policy", "water and small glass accents only")
 	parent.add_child(observatory)
 	_build_island_three_shared_instrument(observatory, center, Vector3(0, 0, -1),
 		_materials.shared_style_cyan, "catch")
@@ -7148,28 +7159,30 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 	_add_box(observatory, "RainCollectorUndercroft", center - Vector3.UP * .54,
 		Vector3(37.0, .60, 29.0), _materials.floor_dark, true)
 	_add_cylinder(observatory, "RainPool", center + Vector3.UP * .12,
-		10.0, .12, _materials.island_crystal_facet_dark, false, 12)
-	var mast_top := center + Vector3.UP * 29.0
+		9.0, .12, _materials.rain_glass, false, 12)
+	var mast_top := center + Vector3.UP * 24.0
 	for corner_index in 4:
 		var x := -15.0 if corner_index % 2 == 0 else 15.0
 		var z := -11.0 if corner_index < 2 else 11.0
 		var corner := center + Vector3(x, 0, z)
 		_add_island_three_civic_column(observatory,
 			"RainGaugeMast_%02d" % (corner_index + 1), corner, 14.0)
-		_add_cable_between(observatory,
+		var collector_rib := _add_cable_between(observatory,
 			"RainCollectorRib_%02d" % (corner_index + 1),
-			corner + Vector3.UP * 14.8, mast_top, .80, .24,
-			_materials.arrival_glass, 10)
+			corner + Vector3.UP * 14.8, mast_top, .64, .28,
+			_materials.shared_style_ivory, 10)
+		collector_rib.set_meta("finish_role", "ivory_weather_structure")
 		_add_box(observatory, "RainVane_%02d" % (corner_index + 1),
-			corner + Vector3.UP * 16.6, Vector3(5.0, .28, 2.0),
-			_materials.island_cyan, false, float(corner_index) * PI * .25)
-	_add_tapered_cylinder(observatory, "CentralRainNeedle",
-		center + Vector3.UP * 17.0, .15, 1.0, 26.0,
-		_materials.floor_dark, 8)
-	_add_brick(observatory, "RainCrystalReservoir", center + Vector3.UP * 8.0,
-		Bricks.build_crystal(3.8, 10.0, .8, 8), _materials.arrival_glass)
-	var dome := _add_sphere(observatory, "FacetedRainDome", center + Vector3.UP * 10.0,
-		Vector3(13.5, 8.0, 13.5), _materials.arrival_glass)
+			corner + Vector3.UP * 16.6, Vector3(3.2, .22, 1.2),
+			_materials.rain_glass, false, float(corner_index) * PI * .25)
+	var rain_needle := _add_cylinder(observatory, "CentralRainNeedle",
+		center + Vector3.UP * 16.0, .18, 13.0,
+		_materials.floor_dark, false, 8)
+	rain_needle.set_meta("finish_role", "charcoal_weather_needle")
+	_add_brick(observatory, "RainCrystalReservoir", center + Vector3.UP * 6.0,
+		Bricks.build_crystal(2.2, 6.0, .55, 8), _materials.rain_glass)
+	var dome := _add_sphere(observatory, "FacetedRainDome", center + Vector3.UP * 7.2,
+		Vector3(9.5, 5.5, 9.5), _materials.rain_glass)
 	var dome_mesh := dome.mesh as SphereMesh
 	dome_mesh.radial_segments = 12
 	dome_mesh.rings = 6
@@ -7178,23 +7191,23 @@ func _build_rain_harvesting_observatory(parent: Node3D, center: Vector3) -> void
 		var channel_center := center + Vector3(sin(channel_angle) * 14.5, .19,
 			cos(channel_angle) * 14.5)
 		_add_box(observatory, "RainChannel_%02d" % (channel_index + 1), channel_center,
-			Vector3(2.1, .10, 19.0), _materials.island_cyan, false, channel_angle)
+			Vector3(.72, .08, 17.0), _materials.rain_glass, false, channel_angle)
 	var completion_visuals := Node3D.new()
 	completion_visuals.name = "CompletionStateVisuals"
 	completion_visuals.set_meta("preserve_authored_nodes", true)
 	observatory.add_child(completion_visuals)
 	_add_cylinder(completion_visuals, "HarvestedRainWater", center + Vector3.UP * .22,
-		8.2, .14, _materials.arrival_glass, false, 12)
+		8.2, .14, _materials.rain_glass, false, 12)
 	for stream_index in 6:
 		var angle := TAU * float(stream_index) / 6.0
 		_add_cable_between(completion_visuals, "CapturedRainStream_%02d" % (stream_index + 1),
 			center + Vector3(sin(angle) * 9.0, 13.0, cos(angle) * 9.0),
 			center + Vector3(sin(angle) * 2.8, 7.0, cos(angle) * 2.8),
-			.18, .10, _materials.island_cyan, 8)
+			.15, .08, _materials.rain_glass, 8)
 	for fall_index in 2:
 		var fall_at := center + Vector3(-8.0 if fall_index == 0 else 8.0, -8.0, 19.0)
 		_add_tapered_cylinder(completion_visuals, "ObservatoryWaterfall_%02d" % (fall_index + 1),
-			fall_at, .22, 1.25, 18.0, _materials.arrival_glass, 6)
+			fall_at, .22, 1.25, 18.0, _materials.rain_glass, 6)
 
 
 func _build_oldest_tree_living_cathedral(parent: Node3D, base: Vector3) -> void:
@@ -8731,6 +8744,10 @@ func _build_materials() -> void:
 	arrival_glass.cull_mode = BaseMaterial3D.CULL_DISABLED
 	arrival_glass.metallic = 0.18
 	arrival_glass.metallic_specular = 0.72
+	# Rain Harvest shares the production teal glass used by the other islands.
+	# Reusing the material keeps its broad dome translucent without introducing
+	# an extra Web spatial batch for a one-landmark finish.
+	_materials.rain_glass = _materials.arrival_glass
 	_materials.astral_lavender = _material(Color("82788e"), 0.42, Color("ad9cbe"), 0.08)
 	_materials.cyan = _material(Color("2cd7e8"), 0.28, Color("27def2"), 1.7)
 	_materials.violet = _material(Color("7755b8"), 0.55, Color("8d63e0"), 0.8)

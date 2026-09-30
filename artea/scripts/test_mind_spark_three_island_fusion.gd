@@ -364,10 +364,30 @@ func _run() -> void:
 	assert(island_three.has_node("RainHarvestObservatory/RainCollectorTerraceCollision"))
 	assert(island_three.has_node("RainHarvestObservatory/RainCrystalReservoir"))
 	assert(island_three.has_node("RainHarvestObservatory/FacetedRainDome"))
-	assert((island_three.get_node("RainHarvestObservatory/FacetedRainDome") as MeshInstance3D).mesh.radial_segments == 12)
+	var rain_observatory := island_three.get_node("RainHarvestObservatory") as Node3D
+	var rain_dome := rain_observatory.get_node("FacetedRainDome") as MeshInstance3D
+	assert(str(rain_observatory.get_meta("design_revision", "")) \
+		== "restrained_ivory_weather_house_v2"
+		and str(rain_observatory.get_meta("cyan_surface_policy", "")) \
+		== "water and small glass accents only",
+		"Rain Harvest uses restrained civic masonry instead of a neon cyan shell")
+	assert((rain_dome.mesh as SphereMesh).radial_segments == 12
+		and rain_dome.scale.x <= 9.5 and rain_dome.scale.y <= 5.5,
+		"the rain dome stays faceted and below the player-camera-dominating prototype size")
+	for rib in rain_observatory.find_children("RainCollectorRib_*", "MeshInstance3D", true, false):
+		assert(str((rib as MeshInstance3D).get_meta("finish_role", "")) \
+			== "ivory_weather_structure",
+			"the weather-house structure is ivory; cyan is reserved for water and glass")
+	assert(str(rain_observatory.get_node("CentralRainNeedle").get_meta("finish_role", "")) \
+		== "charcoal_weather_needle",
+		"the central weather needle remains charcoal instead of becoming another cyan line")
 	assert(island_three.has_node("RainHarvestObservatory/CompletionStateVisuals/HarvestedRainWater"))
 	assert(island_three.has_node(
 		"RainHarvestObservatory/IslandOneStyleQuestInstrument/CyanInstrumentDial"))
+	var rain_definition := load(
+		"res://resources/mind_spark/quest_objects/09_calm_rain_basin.tres") as QuestObjectDefinition
+	assert(rain_definition.display_name == "Rain Harvest Observatory",
+		"the preserved calm-rain save object uses the finished architecture's player-facing name")
 	assert(island_three.has_node("WisdomBasilicaPromenade/OldestTreeReflectionApseCollision"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMemorySeed"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionPool"))

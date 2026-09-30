@@ -26,7 +26,7 @@ const TASKS := [
 	{"id": "form_truth_bridge", "quest": 3, "title": "Restore the living projection", "zone": "04", "prompt": "Choose a useful approach, adjust the coupled optics and project the leaf pattern"},
 	{"id": "clear_elite_guard", "quest": 3, "title": "Share what changed with Ari", "zone": "04", "prompt": "Return to the completed projector and share the discovery to reveal Island Three"},
 	{"id": "free_warden_core", "quest": 4, "title": "Break three anchors and free the core", "zone": "05", "prompt": "Dodge wide lines, strike open rings, then attack the crystal core"},
-	{"id": "place_final_spark", "quest": 4, "title": "Change the storm into gentle rain", "zone": "05–06", "prompt": "HOLD at the Calm Rain Basin; there is no timed input"},
+	{"id": "place_final_spark", "quest": 4, "title": "Change the storm into gentle rain", "zone": "05–06", "prompt": "Fill the Rain Harvest Observatory; there is no timed input"},
 ]
 const ISLAND_TWO_STORY_ORDER := {
 	"dormant": 0, "invited": 1, "received": 2, "evidence_sorted": 3,
