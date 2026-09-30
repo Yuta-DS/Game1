@@ -112,6 +112,38 @@ func _run() -> void:
 	first.pressed.emit()
 	for i in 3: await process_frame
 	assert(root.gui_get_focus_owner().get_meta("focus_action","")=="classify0")
+	var logical_phone := Vector2(1710.0,3700.0)
+	var physical_phone := Vector2(390.0,844.0)
+	var selected: Vector2 = panel.call("_select_quest_panel_physical_size",
+		logical_phone,Vector2(710.0,1536.0),physical_phone)
+	assert(selected==physical_phone,"Island One panel prefers the browser CSS viewport")
+	panel.call("_layout_panel",logical_phone,physical_phone)
+	for i in 2: await process_frame
+	var ui_scale := float(panel.get_meta("quest_panel_ui_scale",0.0))
+	assert(ui_scale>=4.0 and str(panel.get_meta("quest_panel_layout",""))=="physical_viewport_v2")
+	assert(panel._panel.position.x>=0.0 and panel._panel.position.y>=0.0
+		and panel._panel.get_rect().end.x<=logical_phone.x
+		and panel._panel.get_rect().end.y<=logical_phone.y,
+		"390×844 Island One machinery panel stays within the logical Web viewport")
+	var phone_buttons: Array = panel._body.get_children().filter(func(node): return node is Button)
+	assert(not phone_buttons.is_empty())
+	assert((phone_buttons[0] as Button).custom_minimum_size.y/ui_scale>=43.5
+		and (phone_buttons[0] as Button).get_theme_font_size("font_size")/ui_scale>=16.5,
+		"portrait machinery actions remain 44 physical pixels with readable labels")
+	var title := panel._body.get_child(0) as Label
+	assert(title.get_theme_font_size("font_size")/ui_scale>=23.5,
+		"portrait machinery title remains at least 24 physical pixels")
+	var logical_landscape := Vector2(2405.0,1112.0)
+	var physical_landscape := Vector2(844.0,390.0)
+	panel.call("_layout_panel",logical_landscape,physical_landscape)
+	for i in 2: await process_frame
+	ui_scale=float(panel.get_meta("quest_panel_ui_scale",0.0))
+	assert(panel._panel.position.x>=0.0 and panel._panel.position.y>=0.0
+		and panel._panel.get_rect().end.x<=logical_landscape.x
+		and panel._panel.get_rect().end.y<=logical_landscape.y,
+		"844×390 machinery panel stays within the landscape Web viewport")
+	assert(panel._scroll.custom_minimum_size.y/ui_scale>=119.5,
+		"landscape machinery choices keep a scrollable physical reading area")
 	panel.queue_free()
 	await process_frame
 	world.queue_free()

@@ -78,7 +78,12 @@ if ! "${godot_bin}" --headless --main-pack "${output_dir}/index.pck" \
 	echo "Exported Web pack failed its runtime smoke test." >&2
 	exit 1
 fi
-if grep -Eq "invalid UID:|using text path instead:|^(SCRIPT ERROR:|ERROR:)" "${smoke_log}"; then
+# Godot 4.7 can intermittently report one cached DummyShader RID while the
+# headless dummy renderer shuts down immediately after this smoke scene. It is
+# not packed content and an isolated rerun is clean. Keep rejecting every real
+# script/resource error while allowing only that exact engine cleanup message.
+if grep -E "invalid UID:|using text path instead:|^(SCRIPT ERROR:|ERROR:)" "${smoke_log}" \
+		| grep -Ev "^ERROR: [0-9]+ RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit\\.$"; then
 	rm -f "${smoke_log}"
 	echo "Exported Web pack reported a missing or invalid runtime resource." >&2
 	exit 1
