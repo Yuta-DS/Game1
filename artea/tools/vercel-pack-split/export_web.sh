@@ -35,6 +35,8 @@ python3 "${project_dir}/scripts/check_unique_resource_uids.py"
 # playable production build.
 "${godot_bin}" --headless --path "${project_dir}" \
 	--script res://scripts/test_web_feature_parity.gd
+"${godot_bin}" --headless --path "${project_dir}" \
+	--script res://scripts/test_start_screen_quality.gd
 
 # The custom loader is part of the release path. Prove retries, gzip inflation
 # and byte-exact reassembly before replacing the previous build artifact.

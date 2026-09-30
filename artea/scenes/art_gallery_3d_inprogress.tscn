@@ -208,7 +208,10 @@ script = ExtResource("1_h6yu7")
 environment = SubResource("Environment_6ynge")
 
 [node name="SpawnPoint" type="Node3D" parent="." unique_id=689881371]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, 5)
+; World One Island One supported arrival. This matches the runtime marker at
+; ArtCastleFloatingWorld/MindSparkWorldOne/WorldOneGeometry/PlayerSpawn so the
+; authored scene, first frame and fall-recovery origin all agree.
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3070, 4.55, 1302)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=884368238]
 light_angular_distance = 1.0
@@ -260,14 +263,10 @@ surface_material_override/0 = SubResource("StandardMaterial3D_k4ey6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3, 8)
 
 [node name="Player3D" parent="." unique_id=1983107366 groups=["Player"] instance=ExtResource("2_3gi0n")]
-; The player spawned rotated 180 degrees (-1 on X and Z), facing +z. The galaxy
-; world is built at z=-480, directly behind that, and the camera follows the
-; player's back - so the gallery opened looking away from the world and it
-; appeared to be missing entirely. Facing -z puts the world in front on spawn.
-;
-; Spawn is also moved back from z=12 to z=26: the follow camera sits 7 m behind
-; the player, which at z=12 put it inside the gallery's rear wall.
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 26)
+; Author the character directly on World One's supported Island One arrival.
+; art_gallery.gd resolves the same marker again after procedural construction,
+; keeping this exact if the World One layout is revised later.
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3070, 4.55, 1302)
 camera_path = NodePath("../Camera3D")
 
 [node name="FoxVisuals" type="Node3D" parent="Player3D" unique_id=124633337]

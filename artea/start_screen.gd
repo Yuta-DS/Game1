@@ -15,6 +15,11 @@ const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 func _ready():
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
+	# Keyboard users can advance through the form without reaching for the
+	# pointer. Do not grab focus automatically because that would open the soft
+	# keyboard over the artwork on phones before the player asks for it.
+	user_node.text_submitted.connect(func(_value: String): pass_node.grab_focus())
+	pass_node.text_submitted.connect(func(_value: String): _on_button_pressed())
 
 # Helper utility to cleanly control status messages and alert color states
 func show_message(text: String, is_error: bool = true):

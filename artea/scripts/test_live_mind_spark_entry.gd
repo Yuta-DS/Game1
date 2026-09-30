@@ -19,6 +19,13 @@ func _run() -> void:
 		"const WORLD_ONE_SCENE := \"res://scenes/art_gallery_3d_inprogress.tscn\""),
 		"the alternate authentication screen targets the integrated World One scene")
 	var gallery := (load("res://scenes/art_gallery_3d_inprogress.tscn") as PackedScene).instantiate()
+	var authored_player := gallery.get_node("Player3D") as CharacterBody3D
+	var authored_spawn := gallery.get_node("SpawnPoint") as Node3D
+	var authored_world_one_arrival := Vector3(-3070.0, 4.55, 1302.0)
+	assert(authored_player.position.distance_to(authored_world_one_arrival) < 0.01,
+		"the character is authored at World One before the first scene-tree frame")
+	assert(authored_spawn.position.distance_to(authored_world_one_arrival) < 0.01,
+		"the authored spawn marker starts with the character in World One")
 	root.add_child(gallery)
 	for _frame in 8:
 		await process_frame
