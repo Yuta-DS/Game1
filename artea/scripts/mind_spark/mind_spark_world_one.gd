@@ -6205,7 +6205,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "landmark_hierarchy_v13_sky_gardens")
+	campus.set_meta("design_revision", "landmark_hierarchy_v14_distant_sky_gardens")
 	campus.set_meta("architectural_language",
 		"Island One and Two layered ivory terraces, garden arcades, charcoal machinery, cyan and lavender light, faceted living trees")
 	campus.set_meta("matches_previous_islands", true)
@@ -7142,7 +7142,7 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 	var environment := Node3D.new()
 	environment.name = "IslandThreeMatchedEnvironment"
 	environment.set_meta("design_reference", "Island One research gardens + Island Two observatory terraces")
-	environment.set_meta("environment_revision", "open_civic_gardens_v13_skyline_depth")
+	environment.set_meta("environment_revision", "open_civic_gardens_v14_reflection_sightline")
 	environment.set_meta("foliage_palette", "pale sage, moss, muted evergreen, restrained ivory blossom")
 	environment.set_meta("clear_routes_preserved", true)
 	environment.set_meta("no_gold_lines_or_route_barriers", true)
@@ -7240,9 +7240,12 @@ func _build_island_three_sky_garden_fragments(parent: Node3D,
 	fragments.set_meta("camera_role", "sparse Stormworks skyline depth")
 	fragments.set_meta("preserve_authored_nodes", true)
 	parent.add_child(fragments)
+	# Keep both fragments behind the Stormworks lateral skyline. The earlier
+	# near-right placement sat directly over the reflection grove and became a
+	# foreground object in that district's normal player camera.
 	var fragment_specs: Array = [
-		[arena_center + Vector3(205.0, 52.0, -78.0), 1.48, -0.18],
-		[arena_center + Vector3(236.0, 63.0, 82.0), 1.26, .27],
+		[arena_center + Vector3(265.0, 78.0, -170.0), .82, -0.18],
+		[arena_center + Vector3(285.0, 88.0, 168.0), .72, .27],
 	]
 	for fragment_index in fragment_specs.size():
 		var spec: Array = fragment_specs[fragment_index]
@@ -7251,6 +7254,8 @@ func _build_island_three_sky_garden_fragments(parent: Node3D,
 		fragment.position = spec[0] as Vector3
 		fragment.rotation.y = float(spec[2])
 		fragment.set_meta("decorative_unreachable", true)
+		fragment.set_meta("background_scale", float(spec[1]))
+		fragment.set_meta("storm_horizon_offset", fragment.position - arena_center)
 		fragments.add_child(fragment)
 		var scale_factor := float(spec[1])
 		_add_tapered_cylinder(fragment, "FacetedRockCore", Vector3(0, -10.5, 0),
@@ -7300,6 +7305,13 @@ func _build_island_three_sky_garden_fragments(parent: Node3D,
 			Bricks.build_crystal(.75 * scale_factor, 3.6 * scale_factor, .2, 6),
 			_materials.shared_style_lavender if fragment_index == 0 \
 			else _materials.shared_style_cyan)
+		# These distant silhouettes never touch the player route. Their long sun
+		# shadows previously crossed the court even after the geometry moved out of
+		# the reflection sightline, making the clean paving look obstructed.
+		for mesh_value in fragment.find_children("*", "MeshInstance3D", true, false):
+			var mesh := mesh_value as MeshInstance3D
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mesh.set_meta("decorative_sky_shadow_disabled", true)
 
 
 
