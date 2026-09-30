@@ -102,6 +102,12 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.35:
 		_set_input_hint_mode("controller")
 	elif event is InputEventScreenTouch or event is InputEventScreenDrag:
+		# Some hybrid desktop browsers report touch hardware even while their
+		# primary pointer is a mouse. Keep the wide desktop view clean initially,
+		# then honour an actual touch immediately if capability detection was
+		# inconclusive.
+		if _touch_hud == null:
+			_build_touch_controls(true)
 		_set_input_hint_mode("touch")
 	elif event is InputEventKey and event.pressed:
 		_set_input_hint_mode("keyboard")
@@ -589,11 +595,40 @@ func get_input_hint_mode() -> String:
 
 
 func _touch_controls_requested() -> bool:
-	return force_touch_controls or DisplayServer.is_touchscreen_available()
+	if force_touch_controls:
+		return true
+	if not DisplayServer.is_touchscreen_available():
+		return false
+	if not OS.has_feature("web"):
+		return true
+	var encoded := str(JavaScriptBridge.eval(
+		"JSON.stringify([window.matchMedia && window.matchMedia('(pointer: coarse)').matches, navigator.maxTouchPoints || 0, window.innerWidth || 0])",
+		true))
+	if not encoded.begins_with("["):
+		# A Web-feature headless smoke has no DOM. Preserve DisplayServer's answer
+		# there; it never becomes player-facing UI.
+		return true
+	var decoded: Variant = JSON.parse_string(encoded)
+	if decoded is not Array or decoded.size() < 3:
+		return true
+	return _web_touch_interface_likely(bool(decoded[0]), int(decoded[1]),
+		float(decoded[2]))
 
 
-func _build_touch_controls() -> void:
-	if not _touch_controls_requested():
+func _web_touch_interface_likely(coarse_pointer: bool, max_touch_points: int,
+		physical_width: float) -> bool:
+	# Coarse primary pointers are phones/tablets. A narrow hybrid device may
+	# expose a fine pointer and touch points together, so retain its controls.
+	# Wide fine-pointer laptops reveal the HUD on their first real touch instead
+	# of covering the game for mouse and keyboard users.
+	return coarse_pointer or (max_touch_points > 0 and physical_width > 0.0 \
+		and physical_width <= 1024.0)
+
+
+func _build_touch_controls(from_touch_event := false) -> void:
+	if _touch_hud != null:
+		return
+	if not from_touch_event and not _touch_controls_requested():
 		return
 	var layer := CanvasLayer.new()
 	layer.name = "TouchControlHUD"

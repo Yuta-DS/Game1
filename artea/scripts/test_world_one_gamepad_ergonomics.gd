@@ -118,6 +118,18 @@ func _run() -> void:
 	player.set("force_touch_controls", true)
 	root.add_child(player)
 	await process_frame
+	if not bool(player.call("_web_touch_interface_likely", true, 1, 1366.0)):
+		_fail("a coarse-pointer tablet does not request touch controls")
+		return
+	if not bool(player.call("_web_touch_interface_likely", false, 1, 390.0)):
+		_fail("a narrow hybrid touch device does not request touch controls")
+		return
+	if bool(player.call("_web_touch_interface_likely", false, 1, 1256.0)):
+		_fail("a wide fine-pointer browser incorrectly starts with the phone HUD")
+		return
+	if bool(player.call("_web_touch_interface_likely", false, 0, 390.0)):
+		_fail("a browser without touch hardware incorrectly requests touch controls")
+		return
 	var gentle_stick := player.call("get_camera_relative_move_direction",
 		Vector2(0.35, 0.0)) as Vector3
 	if not is_equal_approx(gentle_stick.length(), 0.35):
@@ -267,6 +279,23 @@ func _run() -> void:
 		return
 	player.queue_free()
 	await process_frame
+	var detected_player := PlayerScene.instantiate() as CharacterBody3D
+	root.add_child(detected_player)
+	await process_frame
+	# The native headless DisplayServer reports touch support, so remove its
+	# eagerly built fixture and exercise the ambiguous-Web recovery path in
+	# isolation. The policy function above covers the real wide-browser choice.
+	var detected_layer := detected_player.get_node_or_null("TouchControlHUD")
+	if detected_layer != null:
+		detected_layer.free()
+	detected_player.set("_touch_hud", null)
+	detected_player.set("_touch_buttons", {})
+	detected_player.call("_input", screen_touch)
+	if detected_player.get_node_or_null("TouchControlHUD/TouchControls") == null:
+		_fail("a first real touch does not reveal controls after ambiguous detection")
+		return
+	detected_player.queue_free()
+	await process_frame
 
-	print("WORLD_ONE_GAMEPAD_ERGONOMICS_TEST: PASS — gamepad mappings, analog walking, real run speed, adaptive HUD hints, and eight non-overlapping phone controls work")
+	print("WORLD_ONE_GAMEPAD_ERGONOMICS_TEST: PASS — gamepad mappings, analog walking, real run speed, adaptive HUD hints, clean desktop detection, and eight non-overlapping phone controls work")
 	quit(0)
