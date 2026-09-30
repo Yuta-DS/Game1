@@ -23,6 +23,17 @@ func _run() -> void:
 	for retained_layer in ["PearlFoliage", "WarmBark", "GardenSoil", "IvoryStone"]:
 		assert((hero.find_child(retained_layer, true, false) as MeshInstance3D).visible,
 			"sightline cleanup preserves the hero garden layer: %s" % retained_layer)
+	var learning_walk := world.find_child("CompassToEchoTreeLearningPromenade", true, false) as Node3D
+	assert(learning_walk != null)
+	assert(float(learning_walk.get_meta("clear_width_m", 0.0)) >= 12.0
+		and bool(learning_walk.get_meta("collision_free_paving", false)),
+		"the compass and teaching tree share one broad, snag-free processional walk")
+	var promenade_mesh := learning_walk.get_node("LearningPromenadeLeaves") as MeshInstance3D
+	assert(promenade_mesh != null and promenade_mesh.mesh != null
+		and int(promenade_mesh.get_meta("authored_leaf_count", 0)) == 11,
+		"eleven authored paving leaves render through one consolidated mesh")
+	assert(learning_walk.find_children("*", "CollisionObject3D", true, false).is_empty(),
+		"decorative promenade insets must not duplicate the fused deck collision")
 	var crescent := world.find_child("EchoTreeListeningCrescent", true, false) as Node3D
 	assert(crescent != null)
 	assert(crescent.get_child_count() == 3)

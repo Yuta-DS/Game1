@@ -1524,6 +1524,43 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 			broad_ground_cover.set_meta("retired_reason",
 				"single broad batch occluded multiple Island One instrument cameras")
 		garden.set_meta("broad_ground_cover_retired", broad_ground_cover != null)
+		# Join the compass district to the teaching tree with one broad sequence of
+		# flush stone leaves. The original uninterrupted ivory slab made the two
+		# landmarks read as unrelated rooms even though they share one fused island.
+		# These are low, collision-free paving insets over the existing solid deck:
+		# no rail, route line, ring, or invisible obstacle is introduced.
+		var learning_walk := Node3D.new()
+		learning_walk.name = "CompassToEchoTreeLearningPromenade"
+		learning_walk.set_meta("design_revision", "broad_ivory_sage_processional_walk_v1")
+		learning_walk.set_meta("clear_width_m", 12.0)
+		learning_walk.set_meta("collision_free_paving", true)
+		learning_walk.set_meta("connects_landmarks", PackedStringArray([
+			"Aether Compass", "Echo Garden Teaching Tree"
+		]))
+		island_visual.add_child(learning_walk)
+		var walk_start := Vector3(-65.0, 0.09, 32.5)
+		var walk_finish := Vector3(66.0, 0.09, -27.5)
+		var walk_direction := walk_start.direction_to(walk_finish)
+		var walk_yaw := atan2(walk_direction.x, walk_direction.z)
+		var walk_piece_count := 11
+		var walk_piece_length := walk_start.distance_to(walk_finish) / float(walk_piece_count) - 0.7
+		var promenade_surface := SurfaceTool.new()
+		promenade_surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var promenade_leaf_mesh := Bricks.build_bevel_box(
+			Vector3(12.0, 0.14, walk_piece_length), 0.24)
+		for piece_index in walk_piece_count:
+			var progress := (float(piece_index) + 0.5) / float(walk_piece_count)
+			var piece_transform := Transform3D(Basis(Vector3.UP, walk_yaw),
+				walk_start.lerp(walk_finish, progress))
+			promenade_surface.append_from(promenade_leaf_mesh, 0, piece_transform)
+		var promenade_mesh := MeshInstance3D.new()
+		promenade_mesh.name = "LearningPromenadeLeaves"
+		promenade_mesh.mesh = promenade_surface.commit()
+		promenade_mesh.material_override = _materials.island_three_sage
+		promenade_mesh.set_meta("decorative_floor_inset", true)
+		promenade_mesh.set_meta("authored_leaf_count", walk_piece_count)
+		learning_walk.add_child(promenade_mesh)
+		learning_walk.set_meta("paving_piece_count", walk_piece_count)
 		# The benchmark batches every visible trunk into one WarmBark mesh. Give
 		# that exact static mesh collision so the white garden trees beside the
 		# former bridge entrance are solid at player height.
