@@ -15,6 +15,14 @@ func _run() -> void:
 	assert(hero != null)
 	assert(hero.position.is_equal_approx(Vector3(95, 0, -42.5)))
 	assert(hero.find_children("*", "MeshInstance3D", true, false).size() == 6)
+	var broad_ground_cover := hero.find_child("SageFoliage", true, false) as MeshInstance3D
+	assert(broad_ground_cover != null and not broad_ground_cover.visible,
+		"the indivisible broad shrub batch must not cover quest approach cameras")
+	assert(broad_ground_cover.get_meta("retired_by", "") ==
+		"quest_approach_sightline_cleanup")
+	for retained_layer in ["PearlFoliage", "WarmBark", "GardenSoil", "IvoryStone"]:
+		assert((hero.find_child(retained_layer, true, false) as MeshInstance3D).visible,
+			"sightline cleanup preserves the hero garden layer: %s" % retained_layer)
 	var crescent := world.find_child("EchoTreeListeningCrescent", true, false) as Node3D
 	assert(crescent != null)
 	assert(crescent.get_child_count() == 3)
@@ -110,5 +118,5 @@ func _run() -> void:
 	var store := "user://test_echo_garden_hero_benchmark.json"
 	if FileAccess.file_exists(store):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(store))
-	print("ECHO_GARDEN_HERO: PASS — six meshes, original layer hidden, teaching tree retained, bridge collision and quest lock preserved")
+	print("ECHO_GARDEN_HERO: PASS — broad shrub occlusion retired; hero trees, listening court, bridge collision and quest lock preserved")
 	quit()

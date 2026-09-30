@@ -26,7 +26,9 @@ func _run() -> void:
 	var puzzle := world.get_island_one_puzzle()
 	assert(puzzle.find_children("QuestPurposeLabel", "Label3D", true, false).size() == 16)
 	for label in puzzle.find_children("QuestPurposeLabel", "Label3D", true, false):
-		assert(label.visibility_range_end == 24.0)
+		assert(label.visibility_range_end == 28.0)
+		assert(label.font_size == 42 and is_equal_approx(label.pixel_size, 0.008))
+		assert(label.outline_size == 14 and bool(label.get_meta("player_camera_readable", false)))
 	var refined := 0
 	for mesh in world.find_children("*", "GeometryInstance3D", true, false):
 		var material := mesh.material_override as StandardMaterial3D
@@ -61,7 +63,10 @@ func _capture(world: Node3D, puzzle: Node3D) -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output))
 	for id in ["weight_prism", "echo_question", "middle_ring"]:
 		var control := puzzle.get_node("PuzzleControls/PuzzleControl_%s" % id) as Node3D
-		camera.global_position = control.to_global(Vector3(-7.5, 3.2, -.3))
+		# Inspect from the real interaction distance. The broad imported shrub
+		# batch used to fill this frame; keeping this close composition makes the
+		# capture a regression image for both the machine and its readable label.
+		camera.global_position = control.to_global(Vector3(-7.5, 3.2, -0.3))
 		camera.look_at(control.to_global(Vector3(0, 2.9, 0)))
 		await create_timer(1.0).timeout
 		for frame in 12:

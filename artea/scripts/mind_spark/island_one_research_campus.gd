@@ -263,9 +263,15 @@ static func _add_role_silhouette(world: MindSparkWorldOne, control: Node3D,
 	# A front-facing role plaque is the only text repeated across the family.
 	var plaque := world.call("_add_label",crown,"%02d • %s"%[role_index+1,verb],Vector3(0,-.12,-.82),Color("214f5c"),18) as Label3D
 	plaque.name="QuestRolePlaque"
-	plaque.pixel_size=.011
-	plaque.outline_size=1
+	# This is the machine's short visual verb.  Keep it readable on the physical
+	# crown at normal player distance instead of relying on the floating purpose
+	# label alone.
+	plaque.font_size=28
+	plaque.pixel_size=.012
+	plaque.outline_size=3
+	plaque.outline_modulate=Color("f8f0dd")
 	plaque.billboard=BaseMaterial3D.BILLBOARD_ENABLED
+	plaque.set_meta("player_camera_readable",true)
 
 static func _face(control: Node3D, approach: Vector3) -> void:
 	var direction := approach-control.position

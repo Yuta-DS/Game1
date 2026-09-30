@@ -46,9 +46,14 @@ func _run() -> void:
 		assert(not purpose_label.text.is_empty() and not str(
 			purpose_label.get_meta("interaction_verb", "")).is_empty(),
 			"%s has a readable name and physical interaction verb" % control_id)
-		if control.has_node("HeavenlyQuestInstrument"):
-			assert(purpose_label.pixel_size >= 0.0065,
-				"%s names must remain legible from the player approach" % control_id)
+		assert(purpose_label.font_size >= 42 and purpose_label.pixel_size >= 0.008
+			and purpose_label.outline_size >= 14,
+			"%s names must remain legible from the player approach" % control_id)
+		assert(purpose_label.visibility_range_end == 28.0
+			and purpose_label.visibility_range_end_margin == 3.0,
+			"%s labels must remain near-field guidance instead of horizon clutter" % control_id)
+		assert(bool(purpose_label.get_meta("player_camera_readable", false)),
+			"%s records the production-camera readability contract" % control_id)
 		var role := str(crown.get_meta("graphic_role", ""))
 		assert(not role.is_empty() and not roles.has(role),
 			"%s has a unique visual-semantic role" % control_id)

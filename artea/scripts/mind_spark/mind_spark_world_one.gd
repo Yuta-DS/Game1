@@ -362,9 +362,20 @@ func _refine_island_one_surroundings() -> void:
 		profile.set_script(preload("res://scripts/mind_spark/island_one_lighting_profile.gd"))
 		_island_one_puzzle.add_child(profile)
 		for label in _island_one_puzzle.find_children("QuestPurposeLabel", "Label3D", true, false):
-			label.visibility_range_end = 24.0
-			label.visibility_range_end_margin = 4.0
-	set_meta("island_one_environment_revision", "warm_scenery_01")
+			# The original labels were technically present but only a few pixels
+			# high from the production third-person camera.  Render the nearby
+			# instruction at a larger font atlas and a consistent physical size,
+			# then fade it before neighbouring stations enter the same view.  This
+			# keeps the campus readable without filling the horizon with text.
+			label.font_size = 42
+			label.pixel_size = 0.008
+			label.outline_size = 14
+			label.outline_modulate = Color("172c35")
+			label.visibility_range_end = 28.0
+			label.visibility_range_end_margin = 3.0
+			label.set_meta("player_camera_readable", true)
+			label.set_meta("readability_revision", "island_one_near_field_02")
+	set_meta("island_one_environment_revision", "warm_scenery_readable_controls_02")
 
 
 func _refine_island_one_scenery_node(node: Node, finishes: Dictionary) -> void:
@@ -1499,6 +1510,20 @@ func _build_super_island_fusion(parent: Node3D, pair_index: int,
 		garden.set_meta("preserve_authored_nodes", true)
 		garden.set_meta("replaces_role", "Nature")
 		island_visual.add_child(garden)
+		# This imported batch combined every low shrub across a roughly 149 m
+		# square. Several masses sat directly between the production player
+		# approach and the Echo Question instrument, filling the camera with sage
+		# polygons. Individual shrubs cannot be relocated because they are one
+		# mesh, so retire this ground-cover layer and keep the benchmark's hero
+		# tree, pearl canopy trees, bark, soil and ivory stone. The controlled
+		# campus saplings and listening pavilions still supply the lower landscape.
+		var broad_ground_cover := garden.find_child("SageFoliage", true, false) as MeshInstance3D
+		if broad_ground_cover != null:
+			broad_ground_cover.visible = false
+			broad_ground_cover.set_meta("retired_by", "quest_approach_sightline_cleanup")
+			broad_ground_cover.set_meta("retired_reason",
+				"single broad batch occluded multiple Island One instrument cameras")
+		garden.set_meta("broad_ground_cover_retired", broad_ground_cover != null)
 		# The benchmark batches every visible trunk into one WarmBark mesh. Give
 		# that exact static mesh collision so the white garden trees beside the
 		# former bridge entrance are solid at player height.
