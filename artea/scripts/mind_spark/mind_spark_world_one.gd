@@ -6980,7 +6980,7 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 	var instrument := Node3D.new()
 	instrument.name = "IslandOneStyleQuestInstrument"
 	instrument.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
-	instrument.set_meta("design_revision", "consolidated_authoritative_crest_v9")
+	instrument.set_meta("design_revision", "consolidated_authoritative_crest_v10")
 	instrument.set_meta("mini_game_identity", mini_game_mode)
 	instrument.set_meta("visual_role", "mode crest overlay on authoritative quest object")
 	instrument.set_meta("duplicate_cabinet_removed", true)
@@ -7002,13 +7002,27 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 	collision_body.add_child(collision_shape)
 	instrument.add_child(collision_body)
 
-	# The memory-style quest models are scaled to 6.25× in the standalone world;
-	# their authored display centre therefore sits about 10.6 m above the deck.
-	# Matching that centre turns the crest into the machine's screen instead of a
-	# second low medallion at its feet.
-	var dial_at := center + facing * 3.38 + Vector3.UP * 10.6
+	# The three Warden machines and the reflection mirror use the tall memory-style
+	# display, while Rain Harvest's authoritative basin is only five metres high.
+	# Mounting every crest at the tall-machine height left the catch symbol floating
+	# above the observatory like a detached black face. Seat that one in the basin's
+	# front panel and retain the high mount for the four genuinely tall displays.
+	var basin_mount := mini_game_mode == "catch"
+	var crest_height := 3.55 if basin_mount else 10.6
+	var crest_depth := 4.78 if basin_mount else 3.38
+	var crest_radius := 1.72 if basin_mount else 2.12
+	instrument.set_meta("crest_mount",
+		"authoritative_basin_front" if basin_mount else "authoritative_tall_display")
+	instrument.set_meta("crest_center_height_m", crest_height)
+	var dial_at := center + facing * crest_depth + Vector3.UP * crest_height
+	if basin_mount:
+		var basin_frame := _add_cylinder(instrument, "BasinCrestIvoryFrame",
+			dial_at - facing * .04, 2.04, .15,
+			_materials.shared_style_ivory, false, 16)
+		basin_frame.rotation = Vector3(PI * .5, yaw, 0)
+		basin_frame.set_meta("integrates_with", "QuestObjectBase/VisualRoot/BlenderModel")
 	var dial_back := _add_cylinder(instrument, "ModeCrestBacking", dial_at,
-		2.12, .12, _materials.shared_style_charcoal, false, 16)
+		crest_radius, .12, _materials.shared_style_charcoal, false, 16)
 	dial_back.rotation = Vector3(PI * .5, yaw, 0)
 	dial_back.set_meta("integrates_with", "QuestObjectBase/VisualRoot/BlenderModel")
 	var side_axis := Vector3(facing.z, 0, -facing.x)
@@ -7054,11 +7068,12 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 			_add_box(crest, "CatchReservoir", dial_at + facing * .12
 				- Vector3.UP * 1.35, Vector3(3.35, .32, .24),
 				_materials.shared_style_charcoal, false, yaw)
+			var drop_heights := [.92, .10, -.68]
 			for drop_index in 3:
 				_add_sphere(crest, "CatchDroplet_%02d" % (drop_index + 1),
 					dial_at + side_axis * float(drop_index - 1) * 1.05
-					+ facing * .18 + Vector3.UP * (.25 + float(abs(drop_index - 1)) * .48),
-					Vector3(.44, .68, .30),
+					+ facing * .18 + Vector3.UP * float(drop_heights[drop_index]),
+					Vector3(.34, .56, .24),
 					accent if drop_index != 1 else _materials.shared_style_lavender)
 		"route":
 			var route_points: Array[Vector3] = [

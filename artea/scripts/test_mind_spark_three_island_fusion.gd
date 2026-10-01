@@ -406,7 +406,7 @@ func _run() -> void:
 		var mode_name := str(mode_spec[1])
 		var crest := mode_instrument.get_node(str(mode_spec[2])) as Node3D
 		assert(str(mode_instrument.get_meta("design_revision", "")) \
-			== "consolidated_authoritative_crest_v9"
+			== "consolidated_authoritative_crest_v10"
 			and str(mode_instrument.get_meta("mini_game_identity", "")) == mode_name,
 			"each Island 3 instrument identifies its actual mini-game mode in the world art")
 		assert(bool(mode_instrument.get_meta("duplicate_cabinet_removed", false))
@@ -458,6 +458,12 @@ func _run() -> void:
 		"res://resources/mind_spark/quest_objects/09_calm_rain_basin.tres") as QuestObjectDefinition
 	assert(rain_definition.display_name == "Rain Harvest Observatory",
 		"the preserved calm-rain save object uses the finished architecture's player-facing name")
+	var rain_instrument := island_three.get_node(
+		"RainHarvestObservatory/IslandOneStyleQuestInstrument") as Node3D
+	assert(str(rain_instrument.get_meta("crest_mount", "")) == "authoritative_basin_front"
+		and float(rain_instrument.get_meta("crest_center_height_m", 0.0)) < 5.0
+		and rain_instrument.has_node("BasinCrestIvoryFrame"),
+		"Rain Harvest mounts its catch crest in the low basin face instead of floating overhead")
 	assert(island_three.has_node("WisdomBasilicaPromenade/OldestTreeReflectionApseCollision"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionMemorySeed"))
 	assert(island_three.has_node("WisdomBasilicaPromenade/RootboundReflectionCourt/ReflectionPool"))
