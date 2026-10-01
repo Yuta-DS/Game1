@@ -60,7 +60,9 @@ class ArcadeBoard extends Control:
 	func _draw_rhythm() -> void:
 		var canvas := size / maxf(host._ui_scale, 1.0)
 		var sequence: Array = host._spec.get("sequence", [])
-		var names := {"left": "←", "right": "→", "up": "↑", "down": "↓"}
+		# Direction letters remain legible in the compact Web font. The former
+		# Unicode arrows degraded into missing-glyph squares on the live build.
+		var names := {"left": "L", "right": "R", "up": "U", "down": "D"}
 		var width := canvas.x / maxf(1.0, sequence.size())
 		for i in sequence.size():
 			var center := Vector2(width * (i + .5), canvas.y * .53)
@@ -221,11 +223,11 @@ func _build_ui() -> void:
 	_touch.add_theme_constant_override("h_separation", 8)
 	_touch.add_theme_constant_override("v_separation", 6)
 	_body.add_child(_touch)
-	_add_touch_button("left", "◀")
-	_add_touch_button("up", "▲")
-	_add_touch_button("action", "ACTION" if _mode in ["align", "dodge"] else "RESET")
-	_add_touch_button("down", "▼")
-	_add_touch_button("right", "▶")
+	_add_touch_button("left", "LEFT")
+	_add_touch_button("up", "UP")
+	_add_touch_button("action", _action_caption())
+	_add_touch_button("down", "DOWN")
+	_add_touch_button("right", "RIGHT")
 	_close = Button.new()
 	_close.text = "Return to World One · Esc / B"
 	_close.custom_minimum_size.y = 52
@@ -241,6 +243,15 @@ func _build_ui() -> void:
 		"catch": "Move with Left/Right, A/D, D-pad or left stick. Catch light; avoid static.",
 		"dodge": "Move with Left/Right, A/D, D-pad or left stick. Press Space/A when open.",
 	}.get(_mode, "Use arrow keys or WASD."))
+
+
+func _action_caption() -> String:
+	match _mode:
+		"align": return "LOCK"
+		"dodge": return "STRIKE"
+		"catch": return "RESTART"
+		"route", "rhythm": return "RESET"
+	return "ACTION"
 
 
 func _add_touch_button(command: String, caption: String) -> void:
@@ -295,13 +306,15 @@ func _layout_for_viewport(viewport: Vector2,
 	_status.add_theme_font_size_override("font_size",
 		roundi((13.0 if short else 16.0) * _ui_scale))
 	_configure_touch_layout(narrow, short)
-	var columns := 3 if narrow else (6 if short else 5)
+	var columns := _touch.columns
 	var button_width_px := floorf((physical_width - margin_px * 2.0 \
 		- float(columns - 1) * 8.0) / float(columns))
 	button_width_px = clampf(button_width_px, 56.0 if short else 64.0, 104.0)
 	_touch.add_theme_constant_override("h_separation", roundi(8.0 * _ui_scale))
 	_touch.add_theme_constant_override("v_separation", roundi(6.0 * _ui_scale))
 	for button in _touch_buttons.values():
+		if not (button as Button).visible:
+			continue
 		(button as Button).custom_minimum_size = Vector2(button_width_px,
 			48.0 if short else 52.0) * _ui_scale
 		(button as Button).add_theme_font_size_override("font_size",
@@ -355,21 +368,41 @@ func _minigame_interface_scale(viewport_size: Vector2,
 func _configure_touch_layout(narrow: bool, short: bool) -> void:
 	if _touch == null:
 		return
-	_touch.columns = 3 if narrow else (6 if short else 5)
+	var uses_vertical := _mode in ["route", "rhythm"]
+	(_touch_buttons.up as Button).visible = uses_vertical
+	(_touch_buttons.down as Button).visible = uses_vertical
 	var order: Array[Control]
-	if narrow:
+	if not uses_vertical:
+		if narrow or short:
+			if _close.get_parent() != _touch:
+				_close.reparent(_touch)
+			_close.text = "BACK · B"
+			_touch.columns = 4
+			order = [_touch_buttons.left, _touch_buttons.action,
+				_touch_buttons.right, _close]
+		else:
+			if _close.get_parent() != _body:
+				_close.reparent(_body)
+			_body.move_child(_close, _touch.get_index() + 1)
+			_close.text = "Return to World One · Esc / B"
+			_touch.columns = 3
+			order = [_touch_buttons.left, _touch_buttons.action, _touch_buttons.right]
+	elif narrow:
+		_touch.columns = 3
 		if _close.get_parent() != _touch:
 			_close.reparent(_touch)
 		_close.text = "BACK · B"
 		order = [_touch_buttons.up, _touch_buttons.action, _touch_buttons.down,
 			_touch_buttons.left, _close, _touch_buttons.right]
 	elif short:
+		_touch.columns = 6
 		if _close.get_parent() != _touch:
 			_close.reparent(_touch)
 		_close.text = "BACK · B"
 		order = [_touch_buttons.left, _touch_buttons.up, _touch_buttons.action,
 			_touch_buttons.down, _touch_buttons.right, _close]
 	else:
+		_touch.columns = 5
 		if _close.get_parent() != _body:
 			_close.reparent(_body)
 		_body.move_child(_close, _touch.get_index() + 1)

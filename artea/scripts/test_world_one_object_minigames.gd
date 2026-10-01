@@ -84,6 +84,22 @@ func _run() -> void:
 		world.add_child(reward_panel)
 		reward_panel.open_object(object, actor)
 		var mode := reward_panel.challenge_mode()
+		var mode_touch_buttons: Dictionary = reward_panel.get("_touch_buttons")
+		assert((mode_touch_buttons.left as Button).text == "LEFT"
+			and (mode_touch_buttons.up as Button).text == "UP"
+			and (mode_touch_buttons.down as Button).text == "DOWN"
+			and (mode_touch_buttons.right as Button).text == "RIGHT",
+			"touch directions use portable text instead of unsupported Web glyphs")
+		var uses_vertical_controls := mode in ["route", "rhythm"]
+		assert((mode_touch_buttons.up as Button).visible == uses_vertical_controls
+			and (mode_touch_buttons.down as Button).visible == uses_vertical_controls,
+			"%s exposes only controls used by its mechanic" % mode)
+		var expected_action_caption: String = str({
+			"align": "LOCK", "dodge": "STRIKE", "catch": "RESTART",
+			"route": "RESET", "rhythm": "RESET",
+		}.get(mode, "ACTION"))
+		assert((mode_touch_buttons.action as Button).text == expected_action_caption,
+			"%s uses a specific action verb instead of a generic button" % mode)
 		if mode == "align":
 			var before_stick := float((reward_panel.get("_cursor") as Vector2).x)
 			_send_joy_axis(reward_panel, JOY_AXIS_LEFT_X, -1.0)
