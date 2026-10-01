@@ -34,12 +34,6 @@ func _ready() -> void:
 	likebutton.text = "♥"
 
 	
-	print("RatingPanel = ", ratingpanel)
-	print("RatingLabel = ", ratinglabel)
-	print("likebutton = ", likebutton)
-	
-	
-			
 	likebutton.pressed.connect(func(): _on_rate_button_pressed(1))
 	
 
@@ -232,9 +226,6 @@ func _open_quest_journal() -> void:
 		get_tree().change_scene_to_file(QUEST_JOURNAL_PATH)
 
 func show_rating_panel(frame_name: String, current_rating: int) -> void:
-	print("Frame:", frame_name)
-	print("Current rating:", current_rating)
-
 	selected_frame_name = frame_name
 	ratingpanel.visible = true
 
@@ -303,10 +294,6 @@ func _request_castle_front_door_spawn() -> void:
 		global.request_spawn_at("castle_front_door")
 
 
-func _on_open_test_button_pressed() -> void:
-	print("Test button pressed")
-
-
 func _on_interaction_area_body_entered(body, frame_name):
 
 	if body.name != "Player3D":
@@ -317,9 +304,6 @@ func _on_interaction_area_body_entered(body, frame_name):
 
 	var rating = $GalleryManager.get_frame_rating(frame_name)
 
-	print("Entered:", frame_name)
-	print("Rating returned:", rating)
-
 	show_rating_panel(frame_name, rating)
 	
 
@@ -327,8 +311,6 @@ func _on_interaction_area_body_exited(body, frame_name):
 
 	if body.name != "Player3D":
 		return
-
-	print("Exited:", frame_name)
 
 	player_near_artwork = false
 	current_frame_name = ""

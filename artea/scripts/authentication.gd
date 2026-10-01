@@ -47,7 +47,6 @@ func _on_signup_button_pressed():
 
 # Called when login is successful
 func on_login_succeeded(auth):
-	print(auth)
 	%StateLabel.text = "Login success!"
 	Firebase.Auth.save_auth(auth)
 	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
@@ -63,7 +62,6 @@ func on_login_succeeded(auth):
 	
 # Called when sign up is successful	
 func on_signup_succeeded(auth):
-	print(auth)
 	%StateLabel.text = "Sign up success!"
 	Firebase.Auth.save_auth(auth)
 	# Was res://Game.tscn, which does not exist: a player who registered a new
@@ -72,14 +70,10 @@ func on_signup_succeeded(auth):
 
 # Called if login fails	
 func on_login_failed(error_code, message):
-	print(error_code)
-	print(message)
 	%StateLabel.text = "Login failed. Error: %s" % message
 
 # Called if sign-up fails	
 func on_signup_failed(error_code, message):
-	print(error_code)
-	print(message)
 	%StateLabel.text = "Sign up failed. Error: %s" % message
 
 

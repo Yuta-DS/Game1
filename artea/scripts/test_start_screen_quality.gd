@@ -8,6 +8,13 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var start_source := FileAccess.get_file_as_string("res://start_screen.gd")
+	var alternate_auth_source := FileAccess.get_file_as_string(
+		"res://scripts/authentication.gd")
+	assert(not start_source.contains("Backend response data content")
+		and not start_source.contains("SESSION LOCKED")
+		and not alternate_auth_source.contains("print(auth)"),
+		"production authentication must not print response or session payloads")
 	# Load after the deferred entry point so project autoload names used by the
 	# screen controller are registered before its script is compiled.
 	var screen := (load(START_SCREEN_PATH) as PackedScene).instantiate()

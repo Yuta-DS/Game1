@@ -31,8 +31,6 @@ func show_message(text: String, is_error: bool = true):
 
 # Connected to the 'Login' Button's pressed() signal
 func _on_button_pressed():
-	print("START pressed")
-	
 	# 1. Check network connectivity status
 	if not check_internet_connection():
 		show_message("No internet connection! Use Guest Mode.")
@@ -54,14 +52,9 @@ func _on_button_pressed():
 		entered_pass,
 		func(success, data):
 			if success:
-				print("LOGIN GRANTED")
 				show_message("Login granted! Loading...", false)
 				enter_game(entered_user, false)
 			else:
-				print("LOGIN FAILED")
-				print("Backend response data type: ", typeof(data))
-				print("Backend response data content: ", data)
-				
 				# SAFE INTERCEPT TYPE A: Server returned a data Dictionary (Rafa's API)
 				if typeof(data) == TYPE_DICTIONARY:
 					if data.has("error"):
@@ -89,8 +82,6 @@ func _on_button_pressed():
 
 # Connected to the 'Register' Button's pressed() signal
 func _on_register_button_pressed() -> void:
-	print("REGISTER pressed")
-	
 	if not check_internet_connection():
 		show_message("No internet connection to register!")
 		return
@@ -109,7 +100,6 @@ func _on_register_button_pressed() -> void:
 		entered_pass,
 		func(success, data):
 			if success:
-				print("REGISTER SUCCESS")
 				show_message("Account created! Auto-logging in...", false)
 				
 				# Trigger auto-login loop so the player bypasses double entry
@@ -123,15 +113,12 @@ func _on_register_button_pressed() -> void:
 							show_message("Auto-login failed. Try logging in manually.")
 				)
 			else:
-				print("REGISTER FAILED")
 				pass_node.text = ""
 				show_message("Username already exists!")
 	)
 
 # Connected to your physical 'GuestButton' (Play Offline as Guest)
 func _on_guest_button_pressed() -> void:
-	print("GUEST access selected - Cleaning input boxes completely")
-	
 	# FORCE WIPE FIELDS: This guarantees the text fields are blanked out 
 	# before the engine moves scenes, cutting any accidental link to input tracking.
 	user_node.text = ""
@@ -167,11 +154,9 @@ func enter_game(username: String, is_guest: bool = false):
 	if is_guest:
 		Global.current_user_name = "Guest_Player"
 		Global.auth_token = Global.OFFLINE_GUEST_TOKEN
-		print("SESSION LOCKED: API Database completely bypassed.")
 	else:
 		Global.current_user_name = username
 		Global.auth_token = APIManager.auth_token
-		print("SESSION LOCKED: Connected to live API Server for user: ", username)
 	
 	# Fade the menu music out, but do not wait on it.
 	#
