@@ -10075,7 +10075,7 @@ func _configure_web_internal_resolution() -> void:
 	var pixels := float(viewport.size.x * viewport.size.y)
 	var render_scale := 1.0
 	if pixels > 1000000.0:
-		render_scale = clampf(sqrt(1000000.0 / pixels), 0.62, 1.0)
+		render_scale = clampf(sqrt(1000000.0 / pixels), 0.50, 1.0)
 	viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
 	viewport.scaling_3d_scale = render_scale
 	# The project-wide desktop preset uses 8x MSAA. High-DPI WebGL already renders

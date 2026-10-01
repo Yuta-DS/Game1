@@ -136,6 +136,13 @@ func _run() -> void:
 	for object in world.get_quest_objects():
 		assert(object.visible and object.definition != null,
 			"the Web render budget must preserve all quest objects and their feedback")
+	root.size = Vector2i(2560, 1440)
+	world.call("_configure_web_internal_resolution")
+	var high_dpi_scale := root.scaling_3d_scale
+	var high_dpi_pixels := 2560.0 * 1440.0 * high_dpi_scale * high_dpi_scale
+	assert(high_dpi_scale > 0.51 and high_dpi_scale < 0.53 \
+			and high_dpi_pixels <= 1010000.0,
+		"a 2560x1440 high-DPI canvas must keep the 3D buffer near one million pixels")
 	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
 	print("WORLD_ONE_WEB_RENDER_BUDGET: PASS — scale %.3f; %d mesh shadows, the world sun shadow pass, distant island detail removed, %d Island Two foundation meshes use generated LODs, and %d small quest controls stream by distance; all 15 quest objects preserved" % [
 		render_scale, int(world.get_meta("web_shadow_culled_mesh_count", 0)),
