@@ -10063,6 +10063,7 @@ func _configure_world_one_visibility_ranges(root: Node3D) -> void:
 	set_meta("web_island_three_foundation_lod_count", island_three_foundation_lods)
 	if web_budget:
 		_configure_web_island_two_quest_detail_ranges()
+		_configure_web_island_three_quest_detail_ranges()
 		_configure_web_internal_resolution()
 		# The production sun's 1,600 m shadow range submits the complete three-
 		# island archipelago even when the camera sees only one court. WebGL then
@@ -10109,6 +10110,53 @@ func _configure_web_island_two_quest_detail_ranges() -> void:
 			configured += 1
 	set_meta("web_island_two_quest_detail_mesh_count", configured)
 	set_meta("web_island_two_preserved_silhouette_mesh_count", preserved_silhouettes)
+
+
+func _configure_web_island_three_quest_detail_ranges() -> void:
+	# Island Three's five authored quest models contain many independent pedestal
+	# armour plates and circuit studs. They are useful at interaction distance but
+	# become sub-pixel draw calls across the broad Stormworks and Reflection Court
+	# cameras. Keep the functional object and its readable core silhouette mounted,
+	# then retire only small trim beyond 72 m. The 14 m interaction contract brings
+	# every part back long before the player can operate the station.
+	const DETAIL_RANGE := 72.0
+	var configured := 0
+	var preserved_silhouettes := 0
+	for object in _objects:
+		if int(object.get_meta("physical_island", 0)) != 3:
+			continue
+		for mesh_value in object.find_children("*", "MeshInstance3D", true, false):
+			var mesh := mesh_value as MeshInstance3D
+			if mesh.mesh == null or mesh.layers == 0:
+				continue
+			var scale := mesh.global_transform.basis.get_scale().abs()
+			var bounds := mesh.mesh.get_aabb().size * scale
+			var extent := maxf(bounds.x, maxf(bounds.y, bounds.z))
+			var lower_name := str(mesh.name).to_lower()
+			var silhouette := "stonebase" in lower_name or "stonecrown" in lower_name \
+				or "anchorbody" in lower_name or "crystalspine" in lower_name \
+				or "rainbasin" in lower_name or "basinwater" in lower_name \
+				or "reflectionsurface" in lower_name or "mirrorframe" in lower_name \
+				or "mirrorinnerframe" in lower_name
+			if silhouette:
+				mesh.visibility_range_end = maxf(mesh.visibility_range_end, 300.0)
+				mesh.visibility_range_end_margin = maxf(
+					mesh.visibility_range_end_margin, 24.0)
+				mesh.set_meta("web_quest_silhouette_range", 300.0)
+				preserved_silhouettes += 1
+				continue
+			if extent > 3.5:
+				continue
+			mesh.visibility_range_end = minf(
+				mesh.visibility_range_end if mesh.visibility_range_end > 0.0 else DETAIL_RANGE,
+				DETAIL_RANGE)
+			mesh.visibility_range_end_margin = minf(
+				mesh.visibility_range_end_margin if mesh.visibility_range_end_margin > 0.0 else 9.0,
+				9.0)
+			mesh.set_meta("web_quest_detail_range", DETAIL_RANGE)
+			configured += 1
+	set_meta("web_island_three_quest_detail_mesh_count", configured)
+	set_meta("web_island_three_preserved_silhouette_mesh_count", preserved_silhouettes)
 
 
 func _uses_web_render_budget() -> bool:

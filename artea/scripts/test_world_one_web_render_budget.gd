@@ -38,6 +38,10 @@ func _run() -> void:
 		"Island Two's small production-bay controls must stream by player distance")
 	assert(int(world.get_meta("web_island_two_preserved_silhouette_mesh_count", 0)) >= 20,
 		"Island Two's long-range station silhouettes must remain outside detail streaming")
+	assert(int(world.get_meta("web_island_three_quest_detail_mesh_count", 0)) >= 60,
+		"Island Three's small quest trim must stream outside its interaction approach")
+	assert(int(world.get_meta("web_island_three_preserved_silhouette_mesh_count", 0)) >= 12,
+		"Island Three's pedestal and quest cores must remain readable across its courts")
 	assert(bool(world.get_meta("web_spatial_repeated_batching", false))
 			and int(world.get_meta("batched_geometry_groups", 0)) > 0,
 		"Web repeated geometry must use independently culled spatial batches")
@@ -83,6 +87,15 @@ func _run() -> void:
 	assert(memory_pavilion.visibility_range_end > 64.0 \
 			and memory_beacon.visibility_range_end > 64.0,
 		"the memory pavilion and state beacon must remain readable from the evidence court")
+	var reflection := world.get_object_by_kind(
+		QuestObjectDefinition.ObjectKind.IDENTITY_REFLECTION_MIRROR)
+	var reflection_trim := reflection.find_child("PedestalArmor00", true, false) as MeshInstance3D
+	var reflection_frame := reflection.find_child("MirrorFrame", true, false) as MeshInstance3D
+	assert(reflection_trim != null and is_equal_approx(reflection_trim.visibility_range_end, 72.0)
+			and reflection_trim.has_meta("web_quest_detail_range"),
+		"Reflection Court trim must leave the Web render set outside its approach")
+	assert(reflection_frame != null and reflection_frame.visibility_range_end > 72.0,
+		"the reflection mirror silhouette must remain visible across the sanctuary")
 	var render_scale := float(world.get_meta("web_3d_render_scale", 0.0))
 	assert(render_scale >= 0.62 and render_scale < 0.67,
 		"the 1444x1702 production canvas must render 3D near the 1.0 MP target")
