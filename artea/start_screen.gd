@@ -11,6 +11,9 @@ const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 
 # Dynamic visual feedback label for formatting error reporting
 @onready var status_label = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/StatusLabel
+@onready var background: Sprite2D = $Background
+@onready var form_host: CenterContainer = $AnimationParent/CenterContainer
+@onready var form: VBoxContainer = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer
 
 func _ready():
 	# Clean out any old error text when the start scene boots up
@@ -20,6 +23,108 @@ func _ready():
 	# keyboard over the artwork on phones before the player asks for it.
 	user_node.text_submitted.connect(func(_value: String): pass_node.grab_focus())
 	pass_node.text_submitted.connect(func(_value: String): _on_button_pressed())
+	_layout_for_viewport(get_viewport().get_visible_rect().size)
+	get_viewport().size_changed.connect(func():
+		_layout_for_viewport(get_viewport().get_visible_rect().size))
+
+
+func _layout_for_viewport(viewport_size: Vector2,
+		physical_size: Vector2 = Vector2.ZERO) -> void:
+	## Keep the illustrated entry screen and authentication controls usable in
+	## real CSS pixels. With canvas_items, a 390×844 phone exposes roughly
+	## 1710×3700 logical pixels; fixed authored offsets therefore used only the
+	## top quarter and shrank the form below fingertip size.
+	if viewport_size.x < 1.0 or viewport_size.y < 1.0:
+		return
+	if physical_size.is_zero_approx():
+		physical_size = _start_physical_size(viewport_size)
+	if physical_size.x < 240.0 or physical_size.y < 240.0:
+		physical_size = viewport_size
+	var ui_scale := _start_interface_scale(viewport_size, physical_size)
+	var physical_width := viewport_size.x / ui_scale
+	var physical_height := viewport_size.y / ui_scale
+	var portrait := physical_height > physical_width * 1.15
+
+	# Cover the complete viewport rather than preserving the old 1710×1112
+	# rectangle and leaving a large blank area below it. Sprite2D uses its texture
+	# centre as the focal point, retaining the mascot on narrow crops.
+	if background != null and background.texture != null:
+		var texture_size := Vector2(background.texture.get_size())
+		var cover := maxf(viewport_size.x / texture_size.x,
+			viewport_size.y / texture_size.y)
+		background.position = viewport_size * 0.5
+		background.scale = Vector2.ONE * cover
+
+	# PanelContainer contributes 25 px on each side. Reserve those margins here
+	# so the complete panel, rather than only its VBox, fits a 320–390 px phone.
+	var form_width_px := clampf(physical_width - 82.0, 250.0, 360.0) if portrait \
+		else clampf(physical_width * 0.30, 360.0, 460.0)
+	form.custom_minimum_size = Vector2(form_width_px, 0.0)
+	form.add_theme_constant_override("separation", 9)
+	(form.get_node("Username") as Label).add_theme_font_size_override(
+		"font_size", 24 if portrait else 26)
+	for input_name in ["UsernameInput", "PasswordInput"]:
+		var input := form.get_node(input_name) as LineEdit
+		input.custom_minimum_size.y = 50.0
+		input.add_theme_font_size_override("font_size", 22 if portrait else 24)
+	for button_name in ["Button", "RegisterButton", "GuestButton"]:
+		var button := form.get_node(button_name) as Button
+		button.custom_minimum_size.y = 50.0
+		button.add_theme_font_size_override("font_size", 22 if portrait else 24)
+	status_label.add_theme_font_size_override("font_size", 16 if portrait else 18)
+
+	# The host and all its children remain authored in physical-pixel units, then
+	# this single scale maps them into the expanded logical canvas.
+	form_host.scale = Vector2.ONE * ui_scale
+	form_host.reset_size()
+	var base_size := form_host.get_combined_minimum_size()
+	form_host.size = base_size
+	var physical_form_size := base_size
+	var physical_position := Vector2.ZERO
+	if portrait:
+		physical_position.x = (physical_width - physical_form_size.x) * 0.5
+		physical_position.y = maxf(20.0,
+			physical_height - physical_form_size.y - 28.0)
+	else:
+		physical_position.x = clampf(physical_width * 0.055, 36.0, 76.0)
+		physical_position.y = clampf(
+			(physical_height - physical_form_size.y) * 0.58,
+			24.0, physical_height - physical_form_size.y - 24.0)
+	form_host.position = physical_position * ui_scale
+	set_meta("start_screen_layout", "physical_viewport_v1")
+	set_meta("start_screen_ui_scale", ui_scale)
+	set_meta("start_screen_physical_size", physical_size)
+	set_meta("start_screen_portrait", portrait)
+
+
+func _start_physical_size(viewport_size: Vector2) -> Vector2:
+	var display_size := Vector2(DisplayServer.window_get_size())
+	var css_size := Vector2.ZERO
+	if OS.has_feature("web"):
+		var encoded := str(JavaScriptBridge.eval(
+			"JSON.stringify([window.innerWidth || 0, window.innerHeight || 0])", true))
+		if encoded.begins_with("["):
+			var decoded: Variant = JSON.parse_string(encoded)
+			if decoded is Array and decoded.size() >= 2:
+				css_size = Vector2(float(decoded[0]), float(decoded[1]))
+	return _select_start_physical_size(viewport_size, display_size, css_size)
+
+
+func _select_start_physical_size(viewport_size: Vector2, display_size: Vector2,
+		css_size: Vector2 = Vector2.ZERO) -> Vector2:
+	if css_size.x >= 240.0 and css_size.y >= 240.0:
+		return css_size
+	if display_size.x >= 240.0 and display_size.y >= 240.0:
+		return display_size
+	return viewport_size
+
+
+func _start_interface_scale(viewport_size: Vector2,
+		physical_size: Vector2) -> float:
+	if physical_size.x <= 0.0 or physical_size.y <= 0.0:
+		return 1.0
+	return maxf(1.0, maxf(viewport_size.x / physical_size.x,
+		viewport_size.y / physical_size.y))
 
 # Helper utility to cleanly control status messages and alert color states
 func show_message(text: String, is_error: bool = true):

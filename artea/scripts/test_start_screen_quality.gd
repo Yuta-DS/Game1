@@ -41,8 +41,10 @@ func _run() -> void:
 	var username := form.get_node("UsernameInput") as LineEdit
 	var password := form.get_node("PasswordInput") as LineEdit
 	var status := form.get_node("StatusLabel") as Label
-	assert(form.custom_minimum_size.x >= 520.0,
-		"the login form must be wide enough to show its complete placeholders")
+	assert(str(screen.get_meta("start_screen_layout", "")) == "physical_viewport_v1",
+		"the start screen must use the physical-pixel-aware responsive layout")
+	assert(form.custom_minimum_size.x >= 360.0,
+		"the desktop login form must be wide enough to show its complete placeholders")
 	assert(form.get_theme_constant("separation") >= 8,
 		"the login controls need deliberate vertical breathing room")
 	assert(username.placeholder_text == "Enter username"
@@ -63,6 +65,32 @@ func _run() -> void:
 		var button := form.get_node(button_name) as Button
 		assert(button.get_theme_stylebox("focus") is StyleBoxFlat,
 			"%s needs a visible keyboard-focus state" % button_name)
+		assert(button.custom_minimum_size.y >= 50.0,
+			"%s must remain a comfortable pointer and touch target" % button_name)
+
+	# Exercise the exact logical/CSS relationship produced by canvas_items on a
+	# 390×844 portrait phone. The background must cover the whole viewport and
+	# the form must stay inside it at a readable physical scale.
+	var logical_phone := Vector2(1710.0, 3700.0)
+	var physical_phone := Vector2(390.0, 844.0)
+	screen.call("_layout_for_viewport", logical_phone, physical_phone)
+	var host := screen.get_node("AnimationParent/CenterContainer") as CenterContainer
+	var background := screen.get_node("Background") as Sprite2D
+	var texture_size := Vector2(background.texture.get_size()) * background.scale
+	assert(texture_size.x >= logical_phone.x and texture_size.y >= logical_phone.y,
+		"the portrait artwork must cover the full phone canvas")
+	assert(bool(screen.get_meta("start_screen_portrait", false))
+		and float(screen.get_meta("start_screen_ui_scale", 0.0)) >= 4.0,
+		"portrait layout must compensate for expanded logical canvas scaling")
+	var scaled_position := host.position
+	var scaled_size := host.size * host.scale
+	assert(scaled_position.x >= 0.0 and scaled_position.y >= 0.0
+		and scaled_position.x + scaled_size.x <= logical_phone.x + 0.5
+		and scaled_position.y + scaled_size.y <= logical_phone.y + 0.5,
+		"the portrait login form must stay fully inside the visible phone viewport")
+	assert((form.get_node("UsernameInput") as LineEdit).get_theme_font_size(
+		"font_size") >= 22,
+		"portrait authentication text must remain readable")
 	var music := screen.get_node_or_null("AudioStreamPlayer") as AudioStreamPlayer
 	if music != null:
 		music.stop()
