@@ -55,6 +55,19 @@ func _init() -> void:
 		"Web feature parity: export_presets.cfg must load")
 	var web_section := _find_web_preset(config)
 	assert(not web_section.is_empty(), "Web feature parity: Web preset is missing")
+	var web_options := "%s.options" % web_section
+	assert(str(config.get_value(web_options, "html/custom_html_shell", "")) \
+		== "res://web_export_shell.html",
+		"Web presentation: the maintained full-viewport shell must be exported")
+	assert(int(config.get_value(web_options, "html/canvas_resize_policy", -1)) == 2,
+		"Web presentation: Godot adaptive canvas resizing must remain enabled")
+	var shell := FileAccess.get_file_as_string("res://web_export_shell.html")
+	assert(not shell.is_empty(), "Web presentation: custom HTML shell must be readable")
+	assert(shell.contains("width: 100vw !important;") \
+		and shell.contains("height: 100vh !important;"),
+		"Web presentation: canvas CSS must fill the browser viewport")
+	assert(not shell.contains("canvas.width =") and not shell.contains("canvas.height ="),
+		"Web presentation: custom JS must not desynchronise Godot's WebGL viewport")
 	assert(str(config.get_value(web_section, "export_filter", "")) == "scenes",
 		"Web pack scope: export selected playable scenes and their dependencies")
 	var exported_scenes: PackedStringArray = config.get_value(

@@ -24,17 +24,9 @@ body {
 	touch-action: none;
 }
 
-/* Force the canvas to always fill the browser viewport. Godot's own
-   "Adaptive" canvasResizePolicy JS is known to scale incorrectly when
-   combined with stretch/mode=canvas_items (this project's setting),
-   leaving dead space around the canvas - !important overrides the
-   inline width/height that JS sets on resize.
-
-   The override only fixes the CSS box. The GL drawing buffer
-   (canvas.width/height) is still whatever Godot's JS last wrote, so on
-   any resize the rendered image keeps the old size and the rest of the
-   stretched element is black. keepDrawingBufferInSync() below writes the
-   real size back into the buffer. */
+/* Keep the canvas box pinned to the browser viewport. Godot's adaptive
+   resize policy remains the sole owner of the WebGL drawing buffer and
+   renderer viewport, so CSS and engine resizing cannot drift apart. */
 #canvas {
 	display: block;
 	position: fixed;
@@ -260,34 +252,6 @@ const engine = new Engine(GODOT_CONFIG);
 			say('UNHANDLED: ' + message);
 		});
 
-		// The CSS above stretches the canvas element to the viewport, but the
-		// GL drawing buffer is sized by Godot's own resize JS and does not
-		// follow. Whenever the two disagree the engine renders at the old
-		// buffer size and the rest of the element stays black, which looks
-		// like dead space down the right and bottom of the window. Writing
-		// the element's real pixel size back into width/height resizes the
-		// buffer; Godot picks the new size up on its next frame.
-		function keepDrawingBufferInSync() {
-			const canvas = document.getElementById('canvas');
-
-			const sync = () => {
-				const dpr = window.devicePixelRatio || 1;
-				const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
-				const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
-				if (canvas.width !== w || canvas.height !== h) {
-					canvas.width = w;
-					canvas.height = h;
-				}
-			};
-
-			sync();
-			// ResizeObserver catches the element changing size for any reason,
-			// including the inline width/height Godot writes on its own resize
-			// pass, which a window 'resize' listener alone would race with.
-			new ResizeObserver(sync).observe(canvas);
-			window.addEventListener('resize', sync);
-		}
-
 		let lastPct = -1;
 		engine.startGame({
 			'onProgress': function (current, total) {
@@ -314,7 +278,6 @@ const engine = new Engine(GODOT_CONFIG);
 			// task as the successful start so a busy first Godot frame cannot leave
 			// the black status badge over the title screen for several seconds.
 			diag.remove();
-			keepDrawingBufferInSync();
 		}, (err) => {
 			say('START FAILED: ' + err);
 			displayFailureNotice(err);
