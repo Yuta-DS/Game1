@@ -6774,6 +6774,8 @@ func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
 	portico.set_meta("prototype_fidelity", "gameplay_adapted")
 	portico.set_meta("architectural_finish", "layered_ivory_gatehouse_with_inset_aether_glass")
 	portico.set_meta("shared_detail_language", "island_one_plinths_island_two_clerestory")
+	portico.set_meta("design_revision", "faceted_pointed_gateway_v2")
+	portico.set_meta("arrival_silhouette", "asymmetric_towers_with_segmented_ivory_arch")
 	parent.add_child(portico)
 	var yaw := atan2(forward.x, forward.z)
 	var side := Vector3(forward.z, 0, -forward.x)
@@ -6819,20 +6821,59 @@ func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
 		_add_box(portico, "ArrivalCrownReveal%s" % side_name,
 			tower_at + Vector3.UP * (tower_height + 1.25), Vector3(7.9, .32, 8.9),
 			_materials.shared_style_charcoal, false, yaw)
+		# Two facade pilasters break the old single-box tower silhouette into the
+		# same base / shaft / crown rhythm used by the observatory architecture.
+		# They remain decorative and sit against the tower face, outside the clear
+		# bridge opening and player route.
+		var facade_at := tower_at - forward * 4.12
+		for pilaster_index in 2:
+			var pilaster_side := -1.0 if pilaster_index == 0 else 1.0
+			var pilaster_at := facade_at + side * pilaster_side * 2.35
+			_add_cylinder(portico,
+				"ArrivalPilasterFoot%s_%02d" % [side_name, pilaster_index + 1],
+				pilaster_at + Vector3.UP * .72, .82, 1.44,
+				_materials.shared_style_charcoal, false, 8)
+			_add_tapered_cylinder(portico,
+				"ArrivalPilasterShaft%s_%02d" % [side_name, pilaster_index + 1],
+				pilaster_at + Vector3.UP * (tower_height * .48), .48, .66,
+				tower_height - 4.0, _materials.shared_style_ivory, 8)
+			_add_cylinder(portico,
+				"ArrivalPilasterCapital%s_%02d" % [side_name, pilaster_index + 1],
+				pilaster_at + Vector3.UP * (tower_height - 1.35), .92, .82,
+				_materials.shared_style_ivory, false, 8)
 		for spire_index in 2:
 			var spire_at := tower_at + forward * (-2.1 if spire_index == 0 else 2.1) \
 				+ Vector3.UP * (tower_height + 3.1)
 			_add_tapered_cylinder(portico,
 				"ArrivalSpire%s_%02d" % [side_name, spire_index + 1], spire_at,
 				.10, 1.3, 6.0, _materials.arrival_glass, 6)
-	# The named arch remains a lintel rather than a torus so the portal has no
-	# decorative ring and the full 24 m opening stays walkable.
-	_add_box(portico, "AetherArrivalArch", center + Vector3.UP * 18.0,
-		Vector3(24.0, 1.3, 2.0), _materials.shared_style_ivory, false, yaw)
-	_add_box(portico, "ArrivalLintelUndersill", center + Vector3.UP * 17.22,
-		Vector3(21.5, .24, 2.18), _materials.shared_style_charcoal, false, yaw)
-	_add_box(portico, "ArrivalUpperLintel", center + Vector3.UP * 19.18,
-		Vector3(27.0, 1.0, 2.7), _materials.shared_style_ivory, false, yaw)
+	# Keep the named BoxMesh as a thin structural tie while a six-piece pointed
+	# arch supplies the finished silhouette. Straight faceted voussoirs avoid a
+	# torus/ring and leave the exact 24 m ground opening unobstructed.
+	_add_box(portico, "AetherArrivalArch", center + Vector3.UP * 14.1,
+		Vector3(24.0, .58, 1.5), _materials.shared_style_ivory, false, yaw)
+	_add_box(portico, "ArrivalLintelUndersill", center + Vector3.UP * 13.72,
+		Vector3(21.5, .18, 1.72), _materials.shared_style_charcoal, false, yaw)
+	var arch_points: Array[Vector3] = [
+		center - side * 12.0 + Vector3.UP * 14.25,
+		center - side * 8.0 + Vector3.UP * 17.25,
+		center - side * 4.0 + Vector3.UP * 19.25,
+		center + Vector3.UP * 20.15,
+		center + side * 4.0 + Vector3.UP * 19.25,
+		center + side * 8.0 + Vector3.UP * 17.25,
+		center + side * 12.0 + Vector3.UP * 14.25,
+	]
+	for arch_index in arch_points.size() - 1:
+		_add_beam_between(portico,
+			"FacetedIvoryArchOrder_%02d" % (arch_index + 1),
+			arch_points[arch_index], arch_points[arch_index + 1], 1.42,
+			_materials.shared_style_ivory)
+	# Short stepped shoulders join the arch to each tower without recreating the
+	# previous long horizontal bar across the skyline.
+	_add_box(portico, "ArrivalUpperLintel", center - side * 9.7 + Vector3.UP * 16.2,
+		Vector3(5.4, .72, 2.15), _materials.shared_style_ivory, false, yaw)
+	_add_box(portico, "ArrivalUpperLintelMirror", center + side * 9.7 + Vector3.UP * 16.2,
+		Vector3(5.4, .72, 2.15), _materials.shared_style_ivory, false, yaw)
 	for clerestory_index in 3:
 		var inset_offset := float(clerestory_index - 1) * 5.7
 		_add_box(portico, "ArrivalClerestory_%02d" % (clerestory_index + 1),

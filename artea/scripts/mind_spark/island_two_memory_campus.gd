@@ -176,6 +176,10 @@ static func _refine_external_bridges(world: MindSparkWorldOne, geometry: Node3D)
 	var fittings := Node3D.new()
 	fittings.name = "IslandTwoBridgeFittings"
 	fittings.set_meta("preserve_authored_nodes", true)
+	fittings.set_meta("design_revision", "continuous_ivory_balustrade_v2")
+	fittings.set_meta("duplicate_joint_piers_removed", true)
+	fittings.set_meta("gold_route_handrails_removed", true)
+	fittings.set_meta("bridge_joint_sightline_clear", true)
 	geometry.add_child(fittings)
 	for route_index in [2, 4]:
 		for half in ["A", "B"]:
@@ -197,10 +201,18 @@ static func _refine_external_bridges(world: MindSparkWorldOne, geometry: Node3D)
 				# Solid infill matches the visible safety envelope; no invisible tall wall.
 				world.call("_add_box", assembly, "TealInfill%d" % side,
 					Vector3(side * 13.3, 4.3, 0), Vector3(.65, 3.2, length), mats.astral_glass, true)
-				world.call("_add_box", assembly, "BrassHandrail%d" % side,
-					Vector3(side * 13.3, 6, 0), Vector3(.95, .35, length), mats.astral_brass)
+				world.call("_add_box", assembly, "IvoryHandrail%d" % side,
+					Vector3(side * 13.3, 6, 0), Vector3(.95, .35, length), mats.sanctum_ivory)
 				var bays := maxi(1, int(ceil(length / 12.0)))
-				for i in range(bays + 1):
+				# Adjacent A/B bridge halves share an endpoint. Building both endpoint
+				# piers in exactly the same place produced z-fighting wire baskets and
+				# detached-looking lantern fragments in the Island 3 arrival camera.
+				# Leave the shared joint itself clear. A lantern exactly at this point
+				# sits inside the normal over-shoulder camera as the player crosses
+				# between halves, so both halves begin with their nearest interior bay.
+				var first_bay := 1 if half == "B" else 0
+				var past_last_bay := bays + 1 if half == "B" else bays
+				for i in range(first_bay, past_last_bay):
 					var z := lerpf(-length * .5, length * .5, float(i) / bays)
 					world.call("_add_box", assembly, "Pier%d_%d" % [side, i],
 						Vector3(side * 13.3, 3.6, z), Vector3(1.3, 5.2, 1.3), mats.sanctum_ivory)

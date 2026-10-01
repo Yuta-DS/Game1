@@ -43,6 +43,17 @@ func _run() -> void:
 			checked += 1
 	var fittings := world.get_node("WorldOneGeometry/IslandTwoBridgeFittings")
 	assert(fittings.get_child_count() == 4)
+	assert(str(fittings.get_meta("design_revision", "")) \
+			== "continuous_ivory_balustrade_v2"
+			and bool(fittings.get_meta("duplicate_joint_piers_removed", false))
+			and bool(fittings.get_meta("gold_route_handrails_removed", false))
+			and bool(fittings.get_meta("bridge_joint_sightline_clear", false)),
+		"external bridges use continuous ivory rails without doubled seam ornaments")
+	for assembly in fittings.get_children():
+		assert(assembly.find_children("BrassHandrail*", "MeshInstance3D", true, false).is_empty(),
+			"external bridges must not restore long gold handrails")
+		assert(assembly.find_children("IvoryHandrail*", "MeshInstance3D", true, false).size() == 2,
+			"each bridge half needs two finished ivory handrails")
 	var actor := load("res://scenes/player_3d.tscn").instantiate() as CharacterBody3D
 	world.add_child(actor)
 	actor.set_physics_process(false)

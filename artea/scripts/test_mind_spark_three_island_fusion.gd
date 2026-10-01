@@ -238,15 +238,23 @@ func _run() -> void:
 	assert(arrival_portico.get_meta("architectural_finish", "") \
 			== "layered_ivory_gatehouse_with_inset_aether_glass"
 			and arrival_portico.get_meta("shared_detail_language", "") \
-			== "island_one_plinths_island_two_clerestory",
+			== "island_one_plinths_island_two_clerestory"
+			and arrival_portico.get_meta("design_revision", "") \
+			== "faceted_pointed_gateway_v2",
 		"Island 3's first silhouette must use the finished architectural language of Islands 1 and 2")
+	for arch_index in 6:
+		assert(arrival_portico.has_node(
+			"FacetedIvoryArchOrder_%02d" % (arch_index + 1)),
+			"the arrival threshold needs a complete six-piece faceted arch order")
 	for side_name in ["North", "South"]:
 		assert(arrival_portico.has_node("ArrivalPlinth%s" % side_name)
 				and arrival_portico.has_node("ArrivalLowerCourse%s" % side_name)
 				and arrival_portico.has_node("ArrivalGlassFrame%s" % side_name)
 				and arrival_portico.has_node("ArrivalGlassFace%s" % side_name)
 				and arrival_portico.has_node("ArrivalCrownCourse%s" % side_name)
-				and arrival_portico.has_node("ArrivalCrownReveal%s" % side_name),
+				and arrival_portico.has_node("ArrivalCrownReveal%s" % side_name)
+				and arrival_portico.has_node("ArrivalPilasterShaft%s_01" % side_name)
+				and arrival_portico.has_node("ArrivalPilasterShaft%s_02" % side_name),
 			"each arrival tower needs a plinth, framed glass bay, and stepped crown")
 	var arrival_gardens := island_three.get_node(
 		"StormworksArrivalGardenProcessional") as Node3D
