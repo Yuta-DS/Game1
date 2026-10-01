@@ -14,6 +14,7 @@ const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 @onready var background: Sprite2D = $Background
 @onready var form_host: CenterContainer = $AnimationParent/CenterContainer
 @onready var form: VBoxContainer = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer
+@onready var guest_button: Button = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/GuestButton
 
 func _ready():
 	# Clean out any old error text when the start scene boots up
@@ -26,6 +27,39 @@ func _ready():
 	_layout_for_viewport(get_viewport().get_visible_rect().size)
 	get_viewport().size_changed.connect(func():
 		_layout_for_viewport(get_viewport().get_visible_rect().size))
+
+
+func _input(event: InputEvent) -> void:
+	# Keep the phone artwork free of an unsolicited software keyboard, while
+	# still giving a controller-only player a usable first action. Godot sends
+	# _input before Control._gui_input, so the same D-pad/stick event that creates
+	# focus is consumed once; later events follow the normal GUI navigation path.
+	if _is_gamepad_navigation(event) and _focus_gamepad_entry_if_needed():
+		get_viewport().set_input_as_handled()
+
+
+func _is_gamepad_navigation(event: InputEvent) -> bool:
+	if event is InputEventJoypadButton:
+		return event.pressed and event.button_index in [
+			JOY_BUTTON_A,
+			JOY_BUTTON_DPAD_UP,
+			JOY_BUTTON_DPAD_DOWN,
+			JOY_BUTTON_DPAD_LEFT,
+			JOY_BUTTON_DPAD_RIGHT,
+		]
+	if event is InputEventJoypadMotion:
+		return event.axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y] \
+			and absf(event.axis_value) >= 0.55
+	return false
+
+
+func _focus_gamepad_entry_if_needed() -> bool:
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner != null and form.is_ancestor_of(focus_owner):
+		return false
+	guest_button.grab_focus()
+	set_meta("start_screen_gamepad_ready", true)
+	return true
 
 
 func _layout_for_viewport(viewport_size: Vector2,

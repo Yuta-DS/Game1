@@ -143,6 +143,8 @@ horizontal_alignment = 1
 
 [node name="UsernameInput" type="LineEdit" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=1266025154]
 layout_mode = 2
+focus_neighbor_top = NodePath("../GuestButton")
+focus_neighbor_bottom = NodePath("../PasswordInput")
 theme_override_colors/font_placeholder_color = Color(0.82, 0.78, 0.72, 0.78)
 theme_override_font_sizes/font_size = 42
 theme_override_styles/normal = SubResource("StyleBoxFlat_input")
@@ -151,6 +153,8 @@ placeholder_text = "Enter username"
 
 [node name="PasswordInput" type="LineEdit" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=1171476167]
 layout_mode = 2
+focus_neighbor_top = NodePath("../UsernameInput")
+focus_neighbor_bottom = NodePath("../Button")
 theme_override_colors/font_placeholder_color = Color(0.82, 0.78, 0.72, 0.78)
 theme_override_font_sizes/font_size = 42
 theme_override_styles/normal = SubResource("StyleBoxFlat_input")
@@ -160,6 +164,8 @@ secret = true
 
 [node name="Button" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=56447978]
 layout_mode = 2
+focus_neighbor_top = NodePath("../PasswordInput")
+focus_neighbor_bottom = NodePath("../RegisterButton")
 theme_override_font_sizes/font_size = 42
 theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
@@ -168,6 +174,8 @@ text = "Start Game"
 
 [node name="RegisterButton" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=2004161624]
 layout_mode = 2
+focus_neighbor_top = NodePath("../Button")
+focus_neighbor_bottom = NodePath("../GuestButton")
 theme_override_font_sizes/font_size = 42
 theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
@@ -176,6 +184,8 @@ text = "Register"
 
 [node name="GuestButton" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=895124456]
 layout_mode = 2
+focus_neighbor_top = NodePath("../RegisterButton")
+focus_neighbor_bottom = NodePath("../UsernameInput")
 theme_override_font_sizes/font_size = 42
 theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")

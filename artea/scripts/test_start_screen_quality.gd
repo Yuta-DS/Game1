@@ -67,6 +67,18 @@ func _run() -> void:
 			"%s needs a visible keyboard-focus state" % button_name)
 		assert(button.custom_minimum_size.y >= 50.0,
 			"%s must remain a comfortable pointer and touch target" % button_name)
+	var guest := form.get_node("GuestButton") as Button
+	var stick_event := InputEventJoypadMotion.new()
+	stick_event.axis = JOY_AXIS_LEFT_Y
+	stick_event.axis_value = 0.8
+	screen.call("_input", stick_event)
+	assert(guest.has_focus() and bool(screen.get_meta(
+		"start_screen_gamepad_ready", false)),
+		"the first controller navigation must focus Offline Guest without focusing a text field")
+	assert(guest.focus_neighbor_top == NodePath("../RegisterButton")
+		and guest.focus_neighbor_bottom == NodePath("../UsernameInput")
+		and username.focus_neighbor_top == NodePath("../GuestButton"),
+		"controller navigation must wrap through the complete entry form")
 
 	# Exercise the exact logical/CSS relationship produced by canvas_items on a
 	# 390×844 portrait phone. The background must cover the whole viewport and
@@ -95,6 +107,7 @@ func _run() -> void:
 	if music != null:
 		music.stop()
 		music.stream = null
+	guest.release_focus()
 	screen.queue_free()
 	await process_frame
 	await process_frame
