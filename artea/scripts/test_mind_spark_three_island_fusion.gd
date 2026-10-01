@@ -457,10 +457,30 @@ func _run() -> void:
 	var reflection_court := island_three.get_node(
 		"WisdomBasilicaPromenade/RootboundReflectionCourt") as Node3D
 	assert(str(reflection_court.get_meta("design_revision", "")) \
-		== "rootbound_grove_pavilion_v5_clear_arcade")
-	assert(float(reflection_court.get_meta("clear_story_entrance_m", 0.0)) >= 22.0)
+		== "rootbound_grove_pavilion_v6_wide_aperture")
+	assert(float(reflection_court.get_meta("clear_story_entrance_m", 0.0)) >= 38.0
+			and float(reflection_court.get_meta("entry_aperture_degrees", 0.0)) >= 120.0,
+		"the root pavilion must frame a broad unobstructed arrival view")
 	assert(float(reflection_court.get_meta("clear_inner_court_radius_m", 0.0)) >= 24.0,
 		"the reflection console sits in an open court instead of a field of root stakes")
+	assert(float(reflection_court.get_meta("clear_apron_radius_m", 0.0)) >= 24.0
+			and int(reflection_court.get_meta("retired_overlapping_legacy_trees", 0)) >= 1,
+		"generic biome trees cannot overlap the authored reflection apron")
+	var retired_apron_trees := world.find_children(
+		"MindSparkGroveTree_*", "Node3D", true, false).filter(
+			func(tree: Node3D) -> bool:
+				return bool(tree.get_meta("retired_for_reflection_apron", false)))
+	assert(not retired_apron_trees.is_empty())
+	for tree_value in retired_apron_trees:
+		var retired_apron_tree_node := tree_value as Node3D
+		assert(not retired_apron_tree_node.visible
+				and retired_apron_tree_node.process_mode == Node.PROCESS_MODE_DISABLED,
+			"retired apron trees must stop rendering and processing")
+		for body_value in retired_apron_tree_node.find_children(
+				"*", "CollisionObject3D", true, false):
+			var retired_body := body_value as CollisionObject3D
+			assert(retired_body.collision_layer == 0 and retired_body.collision_mask == 0,
+				"hidden apron trees cannot leave invisible collision behind")
 	assert(reflection_court.find_children(
 		"ReflectionRootRib_*", "MeshInstance3D", true, false).size() == 6)
 	assert(reflection_court.find_children(

@@ -6515,8 +6515,9 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		var reflection_court := Node3D.new()
 		reflection_court.name = "RootboundReflectionCourt"
 		reflection_court.set_meta("quest_architecture", "open living-root oratory")
-		reflection_court.set_meta("design_revision", "rootbound_grove_pavilion_v5_clear_arcade")
-		reflection_court.set_meta("clear_story_entrance_m", 22.0)
+		reflection_court.set_meta("design_revision", "rootbound_grove_pavilion_v6_wide_aperture")
+		reflection_court.set_meta("clear_story_entrance_m", 38.0)
+		reflection_court.set_meta("entry_aperture_degrees", 120.0)
 		reflection_court.set_meta("clear_inner_court_radius_m", 24.0)
 		reflection_court.set_meta("low_poly_landmark", true)
 		basilica.add_child(reflection_court)
@@ -6527,9 +6528,12 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		var entry_direction := -direction
 		var entry_angle := atan2(entry_direction.x, entry_direction.z)
 		for apse_index in 6:
-			# Half-step the six roots around the story axis, creating a broad entrance
-			# instead of planting a spike directly on the player's approach.
-			var apse_angle := entry_angle + PI / 6.0 + TAU * float(apse_index) / 6.0
+			# Six roots occupy a 240-degree rear arc, leaving a deliberate 120-degree
+			# aperture toward the promenade. The former evenly spaced ring technically
+			# left a route, but its two front crowns visually pinched the quest object.
+			var rear_arc_step := deg_to_rad(240.0) / 5.0
+			var apse_angle := entry_angle + PI / 3.0 \
+				+ rear_arc_step * float(apse_index)
 			var radial := Vector3(sin(apse_angle), 0, cos(apse_angle))
 			var tangent := Vector3(radial.z, 0, -radial.x)
 			var apse_at := mirror_at + radial * 29.0
@@ -6600,6 +6604,10 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		reflection_court.add_child(reflection_completion)
 		_add_cylinder(reflection_completion, "AwakenedReflectionWater",
 			mirror_at + Vector3.UP * .13, 11.5, .10, _materials.arrival_glass, false, 12)
+		var retired_overlap_trees := _retire_legacy_reflection_apron_trees(
+			mirror.global_position, 24.0)
+		reflection_court.set_meta("clear_apron_radius_m", 24.0)
+		reflection_court.set_meta("retired_overlapping_legacy_trees", retired_overlap_trees)
 
 	_build_oldest_tree_living_cathedral(campus,
 		Vector3(sanctuary_origin.x, sanctuary_y, sanctuary_origin.z + 18.0))
@@ -6634,6 +6642,31 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	set_meta("island_three_design", "Island One and Two-matched layered low-poly sanctuary with five distinct quest landmarks")
 	set_meta("island_three_masterplan",
 		"arrival portico > arcaded storm gardens > three unique storm instruments > rain observatory > wisdom basilica > terraced living tree cathedral")
+
+
+func _retire_legacy_reflection_apron_trees(center_global: Vector3,
+		clear_radius: float) -> int:
+	# The organized biome is built before the civic sanctuary. One of its generic
+	# saplings previously landed inside the authored Reflection Court, hiding the
+	# route instrument behind an unrelated trunk and adding invisible collision to
+	# the promised clear apron. Keep the wider grove, but retire any legacy tree
+	# whose root is actually inside this court.
+	var retired := 0
+	for candidate in find_children("MindSparkGroveTree_*", "Node3D", true, false):
+		var tree := candidate as Node3D
+		var offset := tree.global_position - center_global
+		if Vector2(offset.x, offset.z).length() > clear_radius:
+			continue
+		tree.visible = false
+		tree.process_mode = Node.PROCESS_MODE_DISABLED
+		tree.set_meta("retired_for_reflection_apron", true)
+		for body_value in tree.find_children("*", "CollisionObject3D", true, false):
+			var body := body_value as CollisionObject3D
+			body.collision_layer = 0
+			body.collision_mask = 0
+			body.set_meta("retired_for_reflection_apron", true)
+		retired += 1
+	return retired
 
 
 func _remove_island_three_route_barrier(geometry: Node3D) -> void:
