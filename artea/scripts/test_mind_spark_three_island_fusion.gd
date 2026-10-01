@@ -148,7 +148,7 @@ func _run() -> void:
 	assert(island_three_saplings == 15,
 		"Island 3 uses fifteen restrained pale perimeter saplings around its hero tree")
 	assert(str(island_three.get_meta("design_revision", "")) \
-		== "landmark_hierarchy_v14_distant_sky_gardens")
+		== "landmark_hierarchy_v15_clear_reflection_skyline")
 	assert(int(island_three.get_meta("island_one_style_matched_quest_objects", 0)) == 5,
 		"all five Island 3 quest objects use Island One's production style family")
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
@@ -156,7 +156,7 @@ func _run() -> void:
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
 	var matched_environment := island_three.get_node("IslandThreeMatchedEnvironment") as Node3D
 	assert(str(matched_environment.get_meta("environment_revision", "")) \
-		== "open_civic_gardens_v14_reflection_sightline")
+		== "open_civic_gardens_v15_clear_reflection_skyline")
 	assert(str(matched_environment.get_meta("foliage_palette", "")).contains("pale sage"))
 	assert(bool(matched_environment.get_meta("clear_routes_preserved", false)))
 	assert(int(matched_environment.get_meta("total_environment_bays", 0)) >= 16 \
@@ -192,14 +192,21 @@ func _run() -> void:
 		"two sparse sky gardens add depth behind the Stormworks skyline")
 	assert(sky_fragments.find_children(
 		"SkyGardenFragment_*", "Node3D", false, false).size() == 2)
+	var reflection_eye := Vector3(520.0, 27.0, 15.0)
+	var reflection_forward := Vector3(650.0, 34.0, -58.0) - reflection_eye
+	reflection_forward.y = 0.0
+	reflection_forward = reflection_forward.normalized()
 	for fragment_value in sky_fragments.find_children(
 			"SkyGardenFragment_*", "Node3D", false, false):
 		var fragment := fragment_value as Node3D
 		var horizon_offset := fragment.get_meta("storm_horizon_offset", Vector3.ZERO) as Vector3
+		var from_reflection_camera := fragment.global_position - reflection_eye
+		from_reflection_camera.y = 0.0
 		assert(float(fragment.get_meta("background_scale", 1.0)) <= .82,
 			"sky gardens remain background accents rather than island-sized foreground props")
-		assert(horizon_offset.x >= 260.0 and absf(horizon_offset.z) >= 160.0,
-			"sky gardens stay outside the reflection-grove sightline")
+		assert(absf(horizon_offset.z) >= 160.0
+			and reflection_forward.dot(from_reflection_camera.normalized()) < .80,
+			"sky gardens stay outside the actual Reflection Court camera cone")
 	assert(sky_fragments.find_children(
 		"SkyGardenCanopy_*", "MeshInstance3D", true, false).size() == 6)
 	for mesh_value in sky_fragments.find_children("*", "MeshInstance3D", true, false):

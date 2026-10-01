@@ -6302,7 +6302,7 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	## human-scale pavilions. Its storm-to-wisdom gameplay sequence is preserved.
 	var campus := Node3D.new()
 	campus.name = "IslandThreeCivicSanctuary"
-	campus.set_meta("design_revision", "landmark_hierarchy_v14_distant_sky_gardens")
+	campus.set_meta("design_revision", "landmark_hierarchy_v15_clear_reflection_skyline")
 	campus.set_meta("architectural_language",
 		"Island One and Two layered ivory terraces, garden arcades, charcoal machinery, cyan and lavender light, faceted living trees")
 	campus.set_meta("matches_previous_islands", true)
@@ -7517,7 +7517,7 @@ func _build_island_three_matched_environment(parent: Node3D, arena_center: Vecto
 	var environment := Node3D.new()
 	environment.name = "IslandThreeMatchedEnvironment"
 	environment.set_meta("design_reference", "Island One research gardens + Island Two observatory terraces")
-	environment.set_meta("environment_revision", "open_civic_gardens_v14_reflection_sightline")
+	environment.set_meta("environment_revision", "open_civic_gardens_v15_clear_reflection_skyline")
 	environment.set_meta("foliage_palette", "pale sage, moss, muted evergreen, restrained ivory blossom")
 	environment.set_meta("clear_routes_preserved", true)
 	environment.set_meta("no_gold_lines_or_route_barriers", true)
@@ -7620,11 +7620,12 @@ func _build_island_three_sky_garden_fragments(parent: Node3D,
 	fragments.visible = not _uses_web_render_budget()
 	fragments.set_meta("web_scenery_retired", _uses_web_render_budget())
 	parent.add_child(fragments)
-	# Keep both fragments behind the Stormworks lateral skyline. The earlier
-	# near-right placement sat directly over the reflection grove and became a
-	# foreground object in that district's normal player camera.
+	# Keep both fragments behind the Stormworks lateral skyline. The first v14
+	# placement still aligned with the Reflection Court camera and showed its dark
+	# keel directly over the quest instrument. Shift it far south-west and reduce
+	# its scale so both fragments stay peripheral background accents.
 	var fragment_specs: Array = [
-		[arena_center + Vector3(265.0, 78.0, -170.0), .82, -0.18],
+		[arena_center + Vector3(120.0, 82.0, -260.0), .68, -0.18],
 		[arena_center + Vector3(285.0, 88.0, 168.0), .72, .27],
 	]
 	for fragment_index in fragment_specs.size():
