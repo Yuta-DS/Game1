@@ -253,9 +253,26 @@ func _run() -> void:
 	assert(int(arrival_gardens.get_meta("garden_pair_count", 0)) == 3
 		and float(arrival_gardens.get_meta("clear_central_aisle_m", 0.0)) >= 27.0,
 		"the long Island 3 arrival uses three paired garden rooms around a broad clear aisle")
+	assert(str(arrival_gardens.get_meta("design_revision", "")) \
+		== "mature_canopy_grounded_lanterns_v2"
+		and str(arrival_gardens.get_meta("arrival_view_readability", "")) \
+		== "continuous_tree_crowns_no_floating_orbs",
+		"the arrival gardens use mature readable crowns and grounded lanterns")
 	assert(arrival_gardens.find_children("*IvoryBed", "MeshInstance3D", true, false).size() == 6
 		and arrival_gardens.find_children("*IvoryBedCollision", "StaticBody3D", true, false).size() == 6,
 		"all six arrival garden beds are visible and collision-backed")
+	var arrival_trees := arrival_gardens.find_children(
+		"*FacetedTree", "Node3D", true, false)
+	assert(arrival_trees.size() == 6
+		and arrival_trees.all(func(tree: Node3D) -> bool:
+			return float(tree.get_meta("tree_scale", 0.0)) >= .9 \
+				and int(tree.get_meta("branch_count", 0)) == 3 \
+				and int(tree.get_meta("canopy_cluster_count", 0)) == 6),
+		"all six arrival gardens use mature trees instead of unreadable saplings")
+	assert(int(arrival_gardens.get_meta("grounded_lantern_count", 0)) == 6
+		and arrival_gardens.find_children(
+			"*LanternFootCollision", "StaticBody3D", true, false).size() == 6,
+		"each faceted cyan arrival lantern has a collision-backed charcoal foot")
 	assert(island_three.get_node("StormworksGrandCourt").get_meta("clear_center_radius_m") == 34.0)
 	assert(island_three.has_node("StormworksGrandCourt/StormCourtCompass/CompassWedge_01"))
 	assert(island_three.get_node("StormworksGrandCourt").find_children(

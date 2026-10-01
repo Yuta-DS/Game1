@@ -6857,6 +6857,9 @@ func _build_island_three_arrival_processional(parent: Node3D, start: Vector3,
 	processional.set_meta("garden_pair_count", 3)
 	processional.set_meta("clear_central_aisle_m", 27.0)
 	processional.set_meta("collision_backed", true)
+	processional.set_meta("design_revision", "mature_canopy_grounded_lanterns_v2")
+	processional.set_meta("arrival_view_readability", "continuous_tree_crowns_no_floating_orbs")
+	processional.set_meta("grounded_lantern_count", 6)
 	parent.add_child(processional)
 	var route_forward := forward.normalized()
 	var side_axis := Vector3(route_forward.z, 0, -route_forward.x)
@@ -6890,16 +6893,27 @@ func _build_island_three_arrival_processional(parent: Node3D, start: Vector3,
 				(shrub.mesh as SphereMesh).rings = 3
 			var tree_base := bed_center + route_forward * (-1.6 if station_index % 2 == 0 else 1.6) \
 				+ side_axis * float(side_value) * 1.2 + Vector3.UP * .92
+			# The former 0.62-scale saplings collapsed into isolated spheres and
+			# wire-like branches in the playable arrival view. These are mature
+			# garden trees like the framed courts on Islands 1 and 2. Their trunks
+			# remain inside the solid beds and the 27 m central aisle stays clear.
 			_build_island_three_garden_tree(processional,
-				"%sFacetedTree" % prefix, tree_base, .62 + float(station_index) * .05,
+				"%sFacetedTree" % prefix, tree_base, .92 + float(station_index) * .12,
 				station_index * 2 + (0 if side_value < 0 else 1))
 			var pier_at := bed_center - route_forward * 2.3 \
 				- side_axis * float(side_value) * 4.4
+			_add_cylinder(processional, "%sLanternFoot" % prefix,
+				pier_at + Vector3.UP * .28, .88, .56,
+				_materials.shared_style_charcoal, true, 9)
 			_add_cylinder(processional, "%sIvoryLanternPier" % prefix,
 				pier_at + Vector3.UP * 3.25, .52, 5.6,
 				_materials.shared_style_ivory, true, 9)
-			_add_sphere(processional, "%sCyanLantern" % prefix,
-				pier_at + Vector3.UP * 6.45, Vector3(.48, .68, .48),
+			_add_cylinder(processional, "%sLanternCap" % prefix,
+				pier_at + Vector3.UP * 6.12, .76, .34,
+				_materials.shared_style_charcoal, false, 9)
+			_add_brick(processional, "%sCyanLantern" % prefix,
+				pier_at + Vector3.UP * 7.05,
+				Bricks.build_crystal(.62, 1.85, .18, 6),
 				_materials.shared_style_cyan)
 
 
@@ -7868,6 +7882,9 @@ func _build_island_three_garden_tree(parent: Node3D, tree_name: String,
 	var tree := Node3D.new()
 	tree.name = tree_name
 	tree.set_meta("shared_tree_language", "faceted living-light garden tree")
+	tree.set_meta("tree_scale", tree_scale)
+	tree.set_meta("branch_count", 3)
+	tree.set_meta("canopy_cluster_count", 6)
 	parent.add_child(tree)
 	var trunk_height := 7.4 * tree_scale
 	_add_cylinder(tree, "GardenTrunk", base + Vector3.UP * trunk_height * .5,
