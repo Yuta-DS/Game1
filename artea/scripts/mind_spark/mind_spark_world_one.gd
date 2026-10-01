@@ -6675,6 +6675,14 @@ func _unify_island_three_tree_and_quest_style(campus: Node3D) -> void:
 		elif "raingardenplanting" in key:
 			# Keep the deliberately varied sage/moss material assigned at build time.
 			pass
+		elif "lenscitadelpodium" in key or "lenscivicbuttress" in key \
+				or "lensinstrumentsupport" in key:
+			# The lens name identifies the instrument, not its structural material.
+			# Keep its plinths, buttresses and load-bearing uprights in the shared
+			# ivory masonry kit instead of turning them into cyan arrival barriers.
+			part.material_override = _materials.shared_style_ivory
+		elif "lenssupportjoint" in key or "lenssightbrace" in key:
+			part.material_override = _materials.shared_style_charcoal
 		elif key in ["rainpool", "raincrystalreservoir", "facetedraindome"] \
 				or "rainvane" in key or "rainchannel" in key \
 				or "harvestedrainwater" in key or "capturedrainstream" in key \
@@ -7053,30 +7061,35 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 				"LensButtressCrystal%s" % ("Left" if buttress_side < 0 else "Right"),
 				buttress_at + Vector3.UP * 12.0,
 				Bricks.build_crystal(1.1, 4.2, .3, 6), _materials.shared_style_cyan)
-		var apex := rear_center + Vector3.UP * 36.0
-		var lens_feet: Array[Vector3] = [
-			rear_center - side_axis * 11.5,
-			rear_center + side_axis * 11.5,
-			rear_center + outward * 8.0,
+		# Three slim survey supports carry the lens without recreating the former
+		# 36 m scaffold or a second arrival gate. Their short upper braces terminate
+		# below the compact sight, keeping the boss court and horizon visible.
+		var support_offsets: Array[Vector3] = [
+			-side_axis * 5.2,
+			side_axis * 5.2,
+			outward * 4.2,
 		]
-		for leg_index in lens_feet.size():
-			var foot := lens_feet[leg_index]
-			_add_island_three_civic_column(landmark,
-				"LensTripod_%02d" % (leg_index + 1), foot, 16.0)
-			var lens_mast := _add_cable_between(landmark,
-				"LensIvoryMast_%02d" % (leg_index + 1),
-				foot + Vector3.UP * 16.8, foot + Vector3.UP * 32.0,
-				.65, .36, _materials.shared_style_ivory, 8)
-			var roof_brace := _add_cable_between(landmark,
-				"LensIvoryRoofBrace_%02d" % (leg_index + 1),
-				foot + Vector3.UP * 32.0, apex, .36, .20,
-				_materials.shared_style_ivory, 8)
-			# These slim overhead parts previously projected a huge dark lattice over
-			# the bridge arrival. Keep the readable ivory silhouette and let the solid
-			# buttresses cast the grounded architectural shadow.
-			for overhead_part in [lens_mast, roof_brace]:
-				overhead_part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-				overhead_part.set_meta("arrival_foreground_shadow_disabled", true)
+		for support_index in support_offsets.size():
+			var support_at := rear_center + support_offsets[support_index]
+			_add_cylinder(landmark,
+				"LensInstrumentSupport_%02d" % (support_index + 1),
+				support_at + Vector3.UP * 9.2, .66, 18.4,
+				_materials.shared_style_ivory, true, 8)
+			_add_sphere(landmark,
+				"LensSupportJoint_%02d" % (support_index + 1),
+				support_at + Vector3.UP * 18.6, Vector3.ONE * .82,
+				_materials.shared_style_charcoal)
+			var brace_target := rear_center + Vector3.UP * 20.0
+			if support_index < 2:
+				brace_target += side_axis * (-3.7 if support_index == 0 else 3.7)
+			else:
+				brace_target -= outward * 1.2
+			var support_brace := _add_cable_between(landmark,
+				"LensSightBrace_%02d" % (support_index + 1),
+				support_at + Vector3.UP * 18.6, brace_target,
+				.30, .22, _materials.shared_style_charcoal, 8)
+			support_brace.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			support_brace.set_meta("arrival_foreground_shadow_disabled", true)
 		_add_brick(landmark, "StormLensPrism", rear_center + Vector3.UP * 25.0,
 			Bricks.build_crystal(3.8, 11.0, .65, 6), _materials.arrival_glass)
 		var sight_frame := Node3D.new()
@@ -7086,15 +7099,36 @@ func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,
 		# filling the arrival camera with a cropped geometric outline.
 		sight_frame.rotation.y = PI * .75
 		landmark.add_child(sight_frame)
-		var sight_corners := [Vector3(0, 8, 0), Vector3(8, 0, 0),
-			Vector3(0, -8, 0), Vector3(-8, 0, 0)]
-		for side_index in 4:
+		# The earlier sixteen-metre diamond was mostly empty outline and read like
+		# an unfinished construction frame beside the more detailed Island 1 and 2
+		# instruments. A tighter vertical hexagon now hugs the prism and uses short
+		# calibration tabs instead of another ring or a route-like cyan line.
+		var sight_corners := [
+			Vector3(-4.0, 5.2, 0), Vector3(4.0, 5.2, 0),
+			Vector3(5.4, 0, 0), Vector3(4.0, -5.2, 0),
+			Vector3(-4.0, -5.2, 0), Vector3(-5.4, 0, 0),
+		]
+		for side_index in sight_corners.size():
 			var alignment_beam := _add_beam_between(sight_frame,
 				"IvoryAlignmentBeam_%02d" % (side_index + 1),
-				sight_corners[side_index], sight_corners[(side_index + 1) % 4],
-				1.1, _materials.shared_style_ivory)
+				sight_corners[side_index],
+				sight_corners[(side_index + 1) % sight_corners.size()],
+				.66, _materials.shared_style_ivory)
 			alignment_beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			alignment_beam.set_meta("arrival_foreground_shadow_disabled", true)
+		for marker_index in 3:
+			var marker_y := -2.6 + float(marker_index) * 2.6
+			for marker_side in [-1.0, 1.0]:
+				var marker := _add_box(sight_frame,
+					"CyanAlignmentIndex_%02d_%s" % [marker_index + 1,
+						"Left" if marker_side < 0 else "Right"],
+					Vector3(float(marker_side) * 4.65, marker_y, .18),
+					Vector3(.58, .74, .32), _materials.shared_style_cyan)
+				marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				marker.set_meta("storm_band_calibration", marker_index + 1)
+		sight_frame.set_meta("design_revision", "compact_hexagonal_calibrated_sight_v2")
+		sight_frame.set_meta("frame_span_m", 10.8)
+		sight_frame.set_meta("alignment_index_count", 6)
 		sight_frame.set_meta("sighting_role", "single faceted storm-band alignment frame")
 	elif landmark_index == 1:
 		# The forge is low and muscular.  A broad pediment and rear furnace hall

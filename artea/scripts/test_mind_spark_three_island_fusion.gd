@@ -262,26 +262,61 @@ func _run() -> void:
 	assert((lens.get_node("StormLensPrism") as Node3D).position.y
 		> (lens.get_node("SolidQuestTerrace") as Node3D).position.y + 20.0,
 		"the northwest quest reads as a tower above the shared instrument")
-	assert(lens.has_node("OpenLensAlignmentFrame/IvoryAlignmentBeam_01")
+	var lens_sight := lens.get_node("OpenLensAlignmentFrame") as Node3D
+	assert(lens_sight.find_children(
+		"IvoryAlignmentBeam_*", "MeshInstance3D", false, false).size() == 6
+		and lens_sight.find_children(
+			"CyanAlignmentIndex_*", "MeshInstance3D", false, false).size() == 6
+		and str(lens_sight.get_meta("design_revision", ""))
+			== "compact_hexagonal_calibrated_sight_v2"
+		and float(lens_sight.get_meta("frame_span_m", 0.0)) <= 10.8
 		and lens.find_children("IvorySightFrame_*", "MeshInstance3D", true, false).is_empty(),
-		"the Storm Lens keeps an open faceted sight, without oversized rings")
-	assert(lens.has_node("LensIvoryMast_01")
-		and lens.find_children("LensStrut_*", "MeshInstance3D", true, false).is_empty(),
-		"the lens tower uses upright ivory supports rather than a dark diagonal across arrival")
+		"the Storm Lens uses one compact calibrated sight instead of an oversized empty frame")
+	assert(lens.find_children("LensIvoryMast_*", "MeshInstance3D", true, false).is_empty()
+		and lens.find_children("LensIvoryRoofBrace_*", "MeshInstance3D", true, false).is_empty()
+		and lens.find_children(
+			"LensInstrumentSupport_*Collision", "StaticBody3D", true, false).size() == 3,
+		"the lens tower uses three solid survey supports rather than an empty mast scaffold")
+	var island_three_materials: Dictionary = world.get("_materials")
+	var ivory_support_color: Color = (island_three_materials.shared_style_ivory \
+		as StandardMaterial3D).albedo_color
+	var charcoal_support_color: Color = (island_three_materials.shared_style_charcoal \
+		as StandardMaterial3D).albedo_color
+	for masonry_pattern in ["LensCitadelPodium*", "LensCivicButtress*"]:
+		for masonry_value in lens.find_children(
+				masonry_pattern, "MeshInstance3D", true, false):
+			var masonry := masonry_value as MeshInstance3D
+			assert((masonry.material_override as StandardMaterial3D).albedo_color \
+				.is_equal_approx(ivory_support_color),
+				"Storm Lens plinths and buttresses remain ivory masonry, never cyan slabs")
+	for support_value in lens.find_children(
+			"LensInstrumentSupport_*", "MeshInstance3D", true, false):
+		var support := support_value as MeshInstance3D
+		assert((support.material_override as StandardMaterial3D).albedo_color \
+			.is_equal_approx(ivory_support_color),
+			"Storm Lens structural supports stay ivory instead of reading as cyan barriers")
+	for joint_value in lens.find_children(
+			"LensSupportJoint_*", "MeshInstance3D", true, false):
+		var joint := joint_value as MeshInstance3D
+		assert((joint.material_override as StandardMaterial3D).albedo_color \
+			.is_equal_approx(charcoal_support_color),
+			"Storm Lens support joints use the restrained charcoal structural accent")
 	var high_lens_parts: Array[Node] = []
 	high_lens_parts.append_array(lens.find_children(
-		"LensIvoryMast_*", "MeshInstance3D", true, false))
-	high_lens_parts.append_array(lens.find_children(
-		"LensIvoryRoofBrace_*", "MeshInstance3D", true, false))
-	high_lens_parts.append_array(lens.find_children(
 		"IvoryAlignmentBeam_*", "MeshInstance3D", true, false))
-	assert(high_lens_parts.size() == 10,
-		"the Storm Lens retains three masts, three roof braces and four alignment beams")
+	high_lens_parts.append_array(lens.find_children(
+		"LensSightBrace_*", "MeshInstance3D", true, false))
+	assert(high_lens_parts.size() == 9,
+		"the Storm Lens retains six compact alignment beams and three short support braces")
 	for high_part_value in high_lens_parts:
 		var high_part := high_part_value as MeshInstance3D
 		assert(high_part.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			and bool(high_part.get_meta("arrival_foreground_shadow_disabled", false)),
 			"high Storm Lens framework stays visible without projecting a lattice over arrival")
+		if high_part.name.begins_with("LensSightBrace_"):
+			assert((high_part.material_override as StandardMaterial3D).albedo_color \
+				.is_equal_approx(charcoal_support_color),
+				"Storm Lens braces remain charcoal instead of becoming long cyan lines")
 	assert(lens.has_node("LensCitadelPodiumLeftCollision")
 		and lens.has_node("LensCitadelPodiumRightCollision")
 		and lens.has_node("LensCivicButtressLeftCollision")
