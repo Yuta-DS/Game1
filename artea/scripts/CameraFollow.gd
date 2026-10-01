@@ -16,6 +16,10 @@ extends Camera3D
 ## small residual, and a slow rate there reads as the view sloshing behind.
 @export var ride_lerp_speed := 14.0
 @export var collision_margin := 0.35
+## Radius of the volume swept from the player focus to the desired camera.
+## A centre ray can miss the edge of a pillar while that pillar still fills a
+## wide third-person frame; this volume keeps the whole camera aperture clear.
+@export var collision_radius := 0.58
 
 ## Scroll-wheel zoom bounds for the third-person view. The far end is wide
 ## enough to take in the train and the sky islands around it while riding.
@@ -53,6 +57,7 @@ var _view := "third"
 ## with 1, but boarding always starts from the third-person view.
 var _ride_collision_rids: Array[RID] = []
 var _ride_view_active := false
+var _collision_probe := SphereShape3D.new()
 
 ## Last frame's focus point, used to carry the train's motion into the camera
 ## before smoothing so a fast-moving ride does not leave the view trailing.
@@ -307,23 +312,36 @@ func _snap_to_follow_target() -> void:
 
 
 func _collision_safe_target(focus: Vector3, target: Vector3) -> Vector3:
-	# Keep the third-person camera on the player's side of walls, islands and
-	# large props. Without this cast the camera crossed geometry and the whole
-	# screen could be hidden by the object behind the player.
+	# Keep the whole third-person camera aperture on the player's side of walls,
+	# islands and large props. The former centre ray could pass beside a pillar
+	# while its edge still occupied a third of the frame. Sweep a sphere instead
+	# so both the camera centre and its near-plane neighbourhood stay clear.
 	var space := get_world_3d().direct_space_state
-	var query := PhysicsRayQueryParameters3D.create(focus, target)
+	var motion := target - focus
+	if motion.length_squared() < .000001:
+		return target
+	_collision_probe.radius = maxf(collision_radius, .05)
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = _collision_probe
+	query.transform = Transform3D(Basis.IDENTITY, focus)
+	query.motion = motion
+	query.margin = .02
+	query.collision_mask = 1
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
 	if _player is CollisionObject3D:
 		query.exclude = [(_player as CollisionObject3D).get_rid()]
 	if _ride_view_active:
 		var excluded := query.exclude
 		excluded.append_array(_ride_collision_rids)
 		query.exclude = excluded
-	var hit := space.intersect_ray(query)
-	if hit.is_empty():
+	var cast := space.cast_motion(query)
+	if cast.size() < 2 or float(cast[0]) >= .9999:
 		return target
-	var hit_position: Vector3 = hit.position
-	var toward_focus := hit_position.direction_to(focus)
-	return hit_position + toward_focus * collision_margin
+	var safe_distance := motion.length() * clampf(float(cast[0]), 0.0, 1.0)
+	var backed_distance := maxf(0.0, safe_distance - minf(collision_margin,
+		safe_distance * .45))
+	return focus + motion.normalized() * backed_distance
 
 func enter_inspect(target: Node3D) -> void:
 	_mode = "inspect"
