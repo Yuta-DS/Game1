@@ -6368,10 +6368,10 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	# while retaining the proven floor collision directly beneath them.
 	_add_cylinder(campus, "IslandThreeStormDeck",
 		arena_center - Vector3.UP * .11, 165.0, .18,
-		_materials.celestial_floor, false, 48)
+		_materials.island_three_paving_base, false, 48)
 	_add_cylinder(campus, "IslandThreeSanctuaryDeck",
 		Vector3(sanctuary_origin.x, sanctuary_y - .11, sanctuary_origin.z),
-		136.0, .18, _materials.celestial_floor, false, 48)
+		136.0, .18, _materials.island_three_paving_base, false, 48)
 	var perimeter_repair := geometry.get_node_or_null("IslandThreePerimeterRepairs") as Node3D
 	if perimeter_repair != null:
 		for imported_railing in perimeter_repair.find_children("*", "MeshInstance3D", true, false):
@@ -8273,9 +8273,19 @@ func _remove_island_three_gold_lines(geometry: Node3D, campus: Node3D,
 			var is_obsolete_root_rail := line.name in [
 				&"LeftLivingRootRail", &"RightLivingRootRail",
 			]
+			# The two imported v11 floor inlays are authored in normalised asset
+			# space and inherit the island foundation's large scale. Their raw mesh
+			# is only 2.19 units wide, so the old local-size heuristic missed the
+			# screen-wide gold wedges visible at the Storm Lens and sanctuary. The
+			# replacement ivory decks already cover their gameplay role.
+			var is_imported_foundation_inlay := line.name in [
+				&"Inlay_v11_05", &"Inlay_v11_06",
+			] and "/ModularFloatingFoundation/IslandArchitecture/" in str(line.get_path())
 			if (is_long_line and _is_island_three_gold_material(
 					_effective_mesh_material(line))) \
-					or is_obsolete_root_rail:
+					or is_obsolete_root_rail \
+					or (is_imported_foundation_inlay and _is_island_three_gold_material(
+						_effective_mesh_material(line))):
 				line.visible = false
 				line.set_meta("island_three_gold_line_removed", true)
 				line.mesh = null
@@ -8289,7 +8299,12 @@ func _remove_island_three_gold_lines(geometry: Node3D, campus: Node3D,
 			if not line.visible or not _is_island_three_gold_material(
 					_effective_mesh_material(line)):
 				continue
-			if line.mesh is CylinderMesh:
+			var is_imported_foundation_inlay := line.name in [
+				&"Inlay_v11_05", &"Inlay_v11_06",
+			] and "/ModularFloatingFoundation/IslandArchitecture/" in str(line.get_path())
+			if is_imported_foundation_inlay:
+				visible_gold_line_count += 1
+			elif line.mesh is CylinderMesh:
 				var cylinder := line.mesh as CylinderMesh
 				var widest_radius := maxf(cylinder.top_radius, cylinder.bottom_radius)
 				if cylinder.height > 1.5 and cylinder.height > widest_radius * 3.0:
@@ -9226,6 +9241,10 @@ func _build_materials() -> void:
 	_materials.island_three_sage_deep = _material(Color("667b6a"), 0.92)
 	_materials.island_three_moss = _material(Color("c0c39a"), 0.88)
 	_materials.island_three_earth = _material(Color("6f6456"), 0.94)
+	# The jointed paving deliberately leaves hairline mortar gaps. A flat pearl
+	# base keeps those gaps quiet; the shared celestial floor's procedural gold
+	# flecks previously appeared as detached route-line shards in quest cameras.
+	_materials.island_three_paving_base = _material(Color("e9dfcb"), 0.94)
 	_materials.island_three_canopy_ivory = _material(Color("e8ddc3"), 0.90)
 	_materials.island_three_roof = _material(Color("b8cac3"), 0.58)
 	_materials.bio_bark = _material(Color("3b2724"), 0.88)

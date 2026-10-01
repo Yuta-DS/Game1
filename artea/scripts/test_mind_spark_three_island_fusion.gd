@@ -177,6 +177,12 @@ func _run() -> void:
 	assert(bool(island_three.get_meta("matches_previous_islands", false)))
 	assert(island_three.has_node("IslandThreeStormDeck"))
 	assert(island_three.has_node("IslandThreeSanctuaryDeck"))
+	for deck_name in ["IslandThreeStormDeck", "IslandThreeSanctuaryDeck"]:
+		var deck := island_three.get_node(deck_name) as MeshInstance3D
+		var deck_material := deck.material_override as StandardMaterial3D
+		assert(deck_material == world.get("_materials").island_three_paving_base
+			and deck_material.albedo_texture == null,
+			"Island 3 mortar gaps use a plain pearl base without procedural gold flecks")
 	var matched_environment := island_three.get_node("IslandThreeMatchedEnvironment") as Node3D
 	assert(str(matched_environment.get_meta("environment_revision", "")) \
 		== "open_civic_gardens_v15_clear_reflection_skyline")
@@ -708,6 +714,14 @@ func _run() -> void:
 	assert(int(island_three.get_meta("gold_lines_removed", 0)) > 0)
 	assert(int(island_three.get_meta("visible_gold_line_count", -1)) == 0,
 		"Island 3 contains no visible elongated gold geometry")
+	for inlay_path in [
+		"05ThoughtStormArena/ModularFloatingFoundation/IslandArchitecture/Inlay_v11_05",
+		"06OldestTreeSanctuary/ModularFloatingFoundation/IslandArchitecture/Inlay_v11_06",
+	]:
+		var imported_inlay := geometry.get_node(inlay_path) as MeshInstance3D
+		assert(not imported_inlay.visible and imported_inlay.mesh == null
+			and bool(imported_inlay.get_meta("island_three_gold_line_removed", false)),
+			"Island 3 purges the foundation-scale imported gold floor inlay: %s" % inlay_path)
 	assert(island_three.get_node_or_null("StormworksGrandCourt/BrassRadialInlay_01") == null,
 		"the former gold radial floor lines are no longer constructed")
 	assert(island_three.get_node_or_null(
