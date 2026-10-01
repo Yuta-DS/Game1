@@ -302,28 +302,38 @@ func get_location_title() -> String:
 	## happened. Keep the atlas context while reporting the active destination.
 	if map_context == CONTEXT_HUB:
 		return "OUTSIDE • ARTÉA KINGDOM"
-	if _player_is_in_world_one():
-		return "WORLD ONE • MIND SPARK"
+	var world_one_island := _world_one_island_index()
+	if world_one_island > 0:
+		return "WORLD ONE • ISLAND %d" % world_one_island
 	return "INSIDE • CASTLE GALAXY"
 
 
-func _player_is_in_world_one() -> bool:
+func _world_one_island_index() -> int:
 	if _player == null or not is_instance_valid(_player) or _world == null:
-		return false
+		return 0
 	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
 	if mind_world == null or not mind_world.force_standalone_blueprint:
-		return false
+		return 0
 	var player_local := mind_world.to_local(_player.global_position)
 	var player_flat := Vector2(player_local.x, player_local.z)
 	# The extra margin covers the collision-backed promenades between paired
 	# districts and the broad arrival apron while remaining far inside the void
 	# separating World One from the Castle Galaxy hub.
-	for zone_id in mind_world.get_zone_ids():
+	var nearest_island := 0
+	var nearest_edge_distance := INF
+	var zone_ids := mind_world.get_zone_ids()
+	for zone_index in zone_ids.size():
+		var zone_id := zone_ids[zone_index]
 		var centre := mind_world.get_zone_position(zone_id)
-		if player_flat.distance_to(Vector2(centre.x, centre.z)) \
-				<= mind_world.get_zone_radius(zone_id) + 100.0:
-			return true
-	return false
+		var radius := mind_world.get_zone_radius(zone_id)
+		var centre_distance := player_flat.distance_to(Vector2(centre.x, centre.z))
+		if centre_distance > radius + 100.0:
+			continue
+		var edge_distance := maxf(0.0, centre_distance - radius)
+		if edge_distance < nearest_edge_distance:
+			nearest_edge_distance = edge_distance
+			nearest_island = int(zone_index / 2) + 1
+	return nearest_island
 
 
 func _draw_local_grid() -> void:

@@ -62,8 +62,24 @@ func _run() -> void:
 	assert(spawn_offset < 0.25,
 		"the live character starts over World One's supported arrival apron: player=%s landing=%s" \
 		% [str(player.global_position), str(initial_landing)])
-	assert(minimap.call("get_location_title") == "WORLD ONE • MIND SPARK",
-		"the relocated start identifies World One instead of the enclosing Castle Galaxy scene")
+	assert(minimap.call("get_location_title") == "WORLD ONE • ISLAND 1",
+		"the relocated start identifies World One Island 1 instead of the enclosing Castle Galaxy scene")
+	for island_index in [2, 3]:
+		var zone_id: String = world_one.get_zone_ids()[(island_index - 1) * 2]
+		player.global_position = world_one.to_global(
+			world_one.get_zone_position(zone_id) + Vector3.UP * 3.0)
+		assert(minimap.call("get_location_title") == "WORLD ONE • ISLAND %d" % island_index,
+			"the compact location title follows the player onto Island %d" % island_index)
+	var zone_ids := world_one.get_zone_ids()
+	for bridge_pair in [[1, 2], [3, 4]]:
+		var bridge_midpoint := world_one.get_zone_position(zone_ids[bridge_pair[0]]).lerp(
+			world_one.get_zone_position(zone_ids[bridge_pair[1]]), .5)
+		player.global_position = world_one.to_global(bridge_midpoint + Vector3.UP * 3.0)
+		assert(str(minimap.call("get_location_title")).begins_with("WORLD ONE • ISLAND "),
+			"the location title stays in World One while crossing bridge %d" \
+			% (int(bridge_pair[0] / 2) + 1))
+	player.global_position = initial_landing
+	player.velocity = Vector3.ZERO
 	var scene_spawn := gallery.get_node("SpawnPoint") as Node3D
 	assert(scene_spawn.global_position.distance_to(initial_landing) < 0.25
 		and scene_spawn.get_meta("world") == "world_one",
