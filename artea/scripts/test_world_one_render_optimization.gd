@@ -24,15 +24,24 @@ func _run() -> void:
 		"WorldOneGeometry/IslandThreeCivicSanctuary") as Node3D
 	var island_two_campus := world.get_node("IslandTwoMemoryCampus") as Node3D
 	var unfinished_garden := world.get_node("GardenOfUnfinishedLight") as Node3D
+	var arrival_kit := world.get_node(
+		"WorldOneGeometry/01WorldGateLanding/CelestialWorldGateArrival/GateArchitectureKit") as Node3D
 	var animated_crown_sources := int(storm_crown.get_meta("merged_static_source_count", 0))
 	assert(is_equal_approx(float(civic_sanctuary.get_meta(
-		"static_render_merge_cell_size", 0.0)), 192.0),
-		"Island Three's compact civic architecture must use its wider local batch cells")
+		"static_render_merge_cell_size", 0.0)), 384.0),
+		"Island Three's compact civic architecture must use its island-scale batch cells")
 	assert(is_equal_approx(float(island_two_campus.get_meta(
-		"static_render_merge_cell_size", 0.0)), 192.0) \
+		"static_render_merge_cell_size", 0.0)), 384.0) \
 			and is_equal_approx(float(unfinished_garden.get_meta(
-				"static_render_merge_cell_size", 0.0)), 192.0),
-		"Island Two's observatory and conservatory must use wider local batch cells")
+				"static_render_merge_cell_size", 0.0)), 384.0),
+		"Island Two's observatory and conservatory must use island-scale batch cells")
+	for zone_id in ["01_world_gate_landing", "02_living_network_forest",
+			"03_constellation_court", "04_hope_path_ridge",
+			"05_thought_storm_arena", "06_oldest_tree_sanctuary"]:
+		var zone := world.get_node("WorldOneGeometry/%s" % str(zone_id).to_pascal_case())
+		assert(is_equal_approx(float(zone.get_meta(
+			"static_render_merge_cell_size", 0.0)), 384.0),
+			"each district must consolidate inert masonry at court scale")
 	assert(merged_groups > 0 and merged_sources > merged_groups * 3,
 		"World One must consolidate meaningful groups of inert static render leaves")
 	assert(repeated_groups > 0 and repeated_sources > repeated_groups * 3,
@@ -49,9 +58,9 @@ func _run() -> void:
 	# The Storm Lens overhead framework now occupies one shadow-free batch so its
 	# 60-metre-high sight frame cannot stripe the arrival court. That deliberate
 	# separation adds one batch while preserving all authored source coverage.
-	assert(merged_sources + repeated_sources >= 5060 \
-			and merged_groups + repeated_groups <= 304,
-		"the compact civic campuses must consolidate at least 5,060 sources into no more than 304 spatial batches")
+	assert(merged_sources + repeated_sources >= 5800 \
+			and merged_groups + repeated_groups <= 260,
+		"court-scale cells must consolidate at least 5,800 sources into no more than 260 spatial batches")
 	assert(ranged_meshes > 1000,
 		"World One must apply distance ranges broadly enough to cull distant trim")
 
@@ -86,6 +95,13 @@ func _run() -> void:
 			garden_batched_sources += 1
 	assert(garden_batched_sources > 300,
 		"the retired garden projector must not prevent its live static conservatory from batching")
+	var arrival_kit_batched_sources := 0
+	for mesh_value in arrival_kit.find_children("*", "MeshInstance3D", true, false):
+		var mesh := mesh_value as MeshInstance3D
+		if mesh.layers == 0 and mesh.has_meta("render_merged_into"):
+			arrival_kit_batched_sources += 1
+	assert(arrival_kit_batched_sources >= 350,
+		"the inert arrival conservatory must not inherit the compass controller's dynamic render cost")
 	var station_spur := world.get_node(
 		"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D
 	world.set_station_spur_available(true)

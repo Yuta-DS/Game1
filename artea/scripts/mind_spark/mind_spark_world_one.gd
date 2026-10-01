@@ -1418,6 +1418,10 @@ func _build_six_zones(parent: Node3D) -> void:
 		zone.position = info.position
 		zone.set_meta("zone_id", info.id)
 		zone.set_meta("route_order", index + 1)
+		# A district is always viewed as one court on Web. Consolidate its inert
+		# masonry at district scale; island streaming and the 900 m camera horizon
+		# still retire courts outside the active route.
+		zone.set_meta("static_render_merge_cell_size", 384.0)
 		parent.add_child(zone)
 		_zone_nodes[info.id] = zone
 		var floor_shell := _add_cylinder(zone, "WalkableZoneFloor", Vector3(0, ZONE_FLOOR_CENTER_Y, 0),
@@ -3311,6 +3315,11 @@ func _build_celestial_world_gate_arrival(zone: Node3D, scale_factor: float) -> N
 func _create_island_one_gate_architecture_kit(arrival: Node3D) -> Node3D:
 	var kit := Node3D.new()
 	kit.name = "GateArchitectureKit"
+	# The arrival puzzle controller animates the separate CompassMachine branch;
+	# this kit is inert architecture. Let the static render pass consolidate its
+	# hundreds of editable ribs, panes and masonry pieces without treating them
+	# as puzzle state. Source nodes remain mounted for tests and editor inspection.
+	kit.set_meta("static_render_branch_independent", true)
 	kit.set_meta("kit_revision", "v21")
 	kit.set_meta("component_family_count", 22)
 	kit.set_meta("reusable_variant_count", 39)
@@ -6303,10 +6312,11 @@ func _redesign_island_three(geometry: Node3D) -> void:
 	# threshold without expanding the batching policy across Islands One or Two.
 	campus.set_meta("static_render_merge_min_group", 2)
 	# The complete civic sanctuary spans two adjoining districts but its static
-	# architecture is viewed as one composition. Wider local cells consolidate
-	# identical-material replacement surfaces without changing source geometry,
-	# collision, materials or stateful landmark branches.
-	campus.set_meta("static_render_merge_cell_size", 192.0)
+	# architecture is viewed as one composition. One island-scale Web cell keeps
+	# equivalent materials together instead of submitting four adjacent batches
+	# that are all visible from either district. Island streaming still retires
+	# the sanctuary as a unit when the player leaves it.
+	campus.set_meta("static_render_merge_cell_size", 384.0)
 	campus.set_meta("story_sequence", PackedStringArray([
 		"enter the Stormworks portico",
 		"stabilise the lens tower, resonance forge and lightning archive",
@@ -9897,6 +9907,11 @@ func _web_detail_island_for_node(node: Node) -> int:
 
 func _static_render_branch_is_dynamic(node: Node, root: Node3D,
 		dynamic_ancestor: bool) -> bool:
+	# A scripted landmark may own both animated gameplay and a separately marked
+	# inert architecture kit. The marker deliberately ends inherited dynamism at
+	# that boundary; scripts below it still re-establish their own exclusion.
+	if node != root and bool(node.get_meta("static_render_branch_independent", false)):
+		dynamic_ancestor = false
 	var scripted := node.get_script() != null \
 		and not bool(node.get_meta("allow_static_render_batching", false))
 	return dynamic_ancestor or (node != root and (scripted \
