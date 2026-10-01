@@ -176,10 +176,13 @@ static func _refine_external_bridges(world: MindSparkWorldOne, geometry: Node3D)
 	var fittings := Node3D.new()
 	fittings.name = "IslandTwoBridgeFittings"
 	fittings.set_meta("preserve_authored_nodes", true)
-	fittings.set_meta("design_revision", "continuous_ivory_balustrade_v2")
+	fittings.set_meta("design_revision", "continuous_ivory_parapet_v3")
 	fittings.set_meta("duplicate_joint_piers_removed", true)
 	fittings.set_meta("gold_route_handrails_removed", true)
 	fittings.set_meta("bridge_joint_sightline_clear", true)
+	fittings.set_meta("detached_bridge_ornaments_removed", true)
+	fittings.set_meta("decorative_lantern_count", 0)
+	fittings.set_meta("island_three_arrival_uses_authored_solid_rails", true)
 	geometry.add_child(fittings)
 	for route_index in [2, 4]:
 		for half in ["A", "B"]:
@@ -194,30 +197,30 @@ static func _refine_external_bridges(world: MindSparkWorldOne, geometry: Node3D)
 			fittings.add_child(assembly)
 			assembly.global_transform = deck.global_transform
 			var length := (deck.mesh as BoxMesh).size.z
+			var clear_island_three_arrival: bool = route_index == 4 and half == "B"
+			assembly.set_meta("arrival_sightline_clear", clear_island_three_arrival)
 			for side in [-1, 1]:
 				var old_name := key + ("LeftRail" if side < 0 else "RightRail")
 				var old := deck.get_parent().get_node_or_null(old_name) as MeshInstance3D
 				if old != null: old.material_override = mats.sanctum_ivory
-				# Solid infill matches the visible safety envelope; no invisible tall wall.
-				world.call("_add_box", assembly, "TealInfill%d" % side,
-					Vector3(side * 13.3, 4.3, 0), Vector3(.65, 3.2, length), mats.astral_glass, true)
+				# The final authored bridge half already has two collision-backed solid
+				# rails. Extra parapet end caps sit directly inside the normal arrival
+				# camera and read as detached baskets at the edge of the frame. Let those
+				# original ivory rails carry this short threshold without a duplicate
+				# cosmetic layer; every earlier bridge half keeps the civic parapet.
+				if clear_island_three_arrival:
+					continue
+				# A low matte parapet reads as one complete bridge edge from the player
+				# camera. The former transparent infill plus repeated piers and lanterns
+				# became detached wire baskets and floating shadows when viewed edge-on
+				# during the Island 3 arrival. Keep the same side clearance and physical
+				# safety envelope with one simple collision-backed civic wall.
+				world.call("_add_box", assembly, "IvoryParapet%d" % side,
+					Vector3(side * 13.3, 3.45, 0), Vector3(.80, 2.5, length),
+					mats.sanctum_ivory, true)
 				world.call("_add_box", assembly, "IvoryHandrail%d" % side,
-					Vector3(side * 13.3, 6, 0), Vector3(.95, .35, length), mats.sanctum_ivory)
-				var bays := maxi(1, int(ceil(length / 12.0)))
-				# Adjacent A/B bridge halves share an endpoint. Building both endpoint
-				# piers in exactly the same place produced z-fighting wire baskets and
-				# detached-looking lantern fragments in the Island 3 arrival camera.
-				# Leave the shared joint itself clear. A lantern exactly at this point
-				# sits inside the normal over-shoulder camera as the player crosses
-				# between halves, so both halves begin with their nearest interior bay.
-				var first_bay := 1 if half == "B" else 0
-				var past_last_bay := bays + 1 if half == "B" else bays
-				for i in range(first_bay, past_last_bay):
-					var z := lerpf(-length * .5, length * .5, float(i) / bays)
-					world.call("_add_box", assembly, "Pier%d_%d" % [side, i],
-						Vector3(side * 13.3, 3.6, z), Vector3(1.3, 5.2, 1.3), mats.sanctum_ivory)
-					world.call("_add_sphere", assembly, "Lantern%d_%d" % [side, i],
-						Vector3(side * 13.3, 6.6, z), Vector3(.5, .7, .5), mats.arrival_glass)
+					Vector3(side * 13.3, 4.88, 0), Vector3(1.05, .38, length),
+					mats.sanctum_ivory)
 
 
 static func _relocate_quest_stations(world: MindSparkWorldOne, zones: Dictionary) -> void:

@@ -44,27 +44,48 @@ func _run() -> void:
 	var fittings := world.get_node("WorldOneGeometry/IslandTwoBridgeFittings")
 	assert(fittings.get_child_count() == 4)
 	assert(str(fittings.get_meta("design_revision", "")) \
-			== "continuous_ivory_balustrade_v2"
+			== "continuous_ivory_parapet_v3"
 			and bool(fittings.get_meta("duplicate_joint_piers_removed", false))
 			and bool(fittings.get_meta("gold_route_handrails_removed", false))
-			and bool(fittings.get_meta("bridge_joint_sightline_clear", false)),
-		"external bridges use continuous ivory rails without doubled seam ornaments")
+			and bool(fittings.get_meta("bridge_joint_sightline_clear", false))
+			and bool(fittings.get_meta("detached_bridge_ornaments_removed", false))
+			and int(fittings.get_meta("decorative_lantern_count", -1)) == 0
+			and bool(fittings.get_meta(
+				"island_three_arrival_uses_authored_solid_rails", false)),
+		"external bridges use continuous ivory parapets without detached ornaments")
 	for assembly in fittings.get_children():
 		assert(assembly.find_children("BrassHandrail*", "MeshInstance3D", true, false).is_empty(),
 			"external bridges must not restore long gold handrails")
+		if bool(assembly.get_meta("arrival_sightline_clear", false)):
+			assert(assembly.name == "CircuitRoute_04_BCivicBalustrade"
+					and assembly.find_children("*", "MeshInstance3D", true, false).is_empty(),
+				"the short Island 3 threshold must use only its authored solid rails")
+			continue
 		assert(assembly.find_children("IvoryHandrail*", "MeshInstance3D", true, false).size() == 2,
 			"each bridge half needs two finished ivory handrails")
+		assert(assembly.find_children("IvoryParapet*", "MeshInstance3D", true, false).size() == 2
+				and assembly.find_children("IvoryParapet*Collision", "StaticBody3D", true, false).size() == 2,
+			"each bridge half needs two visible collision-backed ivory parapets")
+		assert(assembly.find_children("TealInfill*", "MeshInstance3D", true, false).is_empty()
+				and assembly.find_children("Pier*", "MeshInstance3D", true, false).is_empty()
+				and assembly.find_children("Lantern*", "MeshInstance3D", true, false).is_empty(),
+			"bridge edges must not restore translucent infill or repeated detached ornaments")
+	var story_route := world.get_node("WorldOneGeometry/MainStoryCircuitRoute") as Node3D
+	assert(story_route.has_node("CircuitRoute_04_BLeftRailCollision")
+			and story_route.has_node("CircuitRoute_04_BRightRailCollision"),
+		"the clean Island 3 arrival still has two visible collision-backed authored rails")
 	var actor := load("res://scenes/player_3d.tscn").instantiate() as CharacterBody3D
 	world.add_child(actor)
 	actor.set_physics_process(false)
 	actor.global_position = Vector3(0, 2000, 0)
 	await physics_frame
 	for assembly in fittings.get_children():
+		var rail_height := 2.0 if bool(assembly.get_meta("arrival_sightline_clear", false)) else 4.3
 		for side in [-1, 1]:
-			var start: Vector3 = assembly.to_global(Vector3(side * 11, 4.3, 0))
-			var finish: Vector3 = assembly.to_global(Vector3(side * 15, 4.3, 0))
+			var start: Vector3 = assembly.to_global(Vector3(side * 11, rail_height, 0))
+			var finish: Vector3 = assembly.to_global(Vector3(side * 15, rail_height, 0))
 			assert(not physics.intersect_ray(PhysicsRayQueryParameters3D.create(start, finish, 1)).is_empty())
-			actor.global_position = assembly.to_global(Vector3(side * 10, 4.3, 0))
+			actor.global_position = assembly.to_global(Vector3(side * 10, rail_height, 0))
 			var contact := actor.move_and_collide(assembly.global_basis.x * side * 6)
 			assert(contact != null, "Player passed through bridge parapet")
 		actor.global_position = assembly.to_global(Vector3(0, 2.3, -4))
