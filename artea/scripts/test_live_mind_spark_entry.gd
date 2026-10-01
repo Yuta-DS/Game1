@@ -33,6 +33,7 @@ func _run() -> void:
 
 	var floating_world := gallery.get_node("ArtCastleFloatingWorld") as Node3D
 	var player := gallery.get_node("Player3D") as CharacterBody3D
+	var minimap := gallery.get_node("WorldMapCanvas/ArteaWorldMinimap") as Control
 	assert(gallery.get_node_or_null("CanvasLayer/RatingUI") == null,
 		"the empty legacy rating overlay must not cover the live World One view")
 	assert(not (gallery.get_node("CanvasLayer/RatingPanel") as Control).visible,
@@ -61,6 +62,8 @@ func _run() -> void:
 	assert(spawn_offset < 0.25,
 		"the live character starts over World One's supported arrival apron: player=%s landing=%s" \
 		% [str(player.global_position), str(initial_landing)])
+	assert(minimap.call("get_location_title") == "WORLD ONE • MIND SPARK",
+		"the relocated start identifies World One instead of the enclosing Castle Galaxy scene")
 	var scene_spawn := gallery.get_node("SpawnPoint") as Node3D
 	assert(scene_spawn.global_position.distance_to(initial_landing) < 0.25
 		and scene_spawn.get_meta("world") == "world_one",
@@ -85,6 +88,8 @@ func _run() -> void:
 	var entry_return := world_one.get_node("WorldOneGeometry/01WorldGateLanding/EntryWorldGate") as MindSparkWorldGate
 	assert(entry_return.teleport_player(player), "Zone 01 gate returns to the Art Castle forecourt")
 	assert(player.global_position.distance_to(floating_world.to_global(Vector3(-650, 7, 1575))) < 0.25)
+	assert(minimap.call("get_location_title") == "INSIDE • CASTLE GALAXY",
+		"the compact location title returns to Castle Galaxy after leaving World One")
 	assert(world_one.get_quest_objects().size() == 15, "all functional objects live on the six-island world")
 	print("LIVE_MIND_SPARK_ENTRY_TEST: PASS — Art Castle gate enters full six-island World One and returns")
 	quit()

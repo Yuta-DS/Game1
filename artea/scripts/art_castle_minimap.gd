@@ -288,11 +288,42 @@ func _draw_compact_map() -> void:
 		_draw_galaxy_compact()
 	_draw_player(COMPACT_CENTER, true)
 	_draw_compact_compass()
-	var title := "OUTSIDE • ARTÉA KINGDOM" if map_context == CONTEXT_HUB else "INSIDE • CASTLE GALAXY"
+	var title := get_location_title()
 	draw_string(ThemeDB.fallback_font, Vector2(18, 254), title,
 		HORIZONTAL_ALIGNMENT_CENTER, COMPACT_SIZE.x - 36, 14, _accent())
 	draw_string(ThemeDB.fallback_font, Vector2(18, 278), "CLICK OR PRESS M  •  FULL MAP",
 		HORIZONTAL_ALIGNMENT_CENTER, COMPACT_SIZE.x - 36, 11, Color("e9eef7"))
+
+
+func get_location_title() -> String:
+	## The compact footer describes the place under the player. World One is a
+	## large authored world mounted inside the Castle Galaxy scene, so using the
+	## scene-wide label there made the relocated start look as though it had not
+	## happened. Keep the atlas context while reporting the active destination.
+	if map_context == CONTEXT_HUB:
+		return "OUTSIDE • ARTÉA KINGDOM"
+	if _player_is_in_world_one():
+		return "WORLD ONE • MIND SPARK"
+	return "INSIDE • CASTLE GALAXY"
+
+
+func _player_is_in_world_one() -> bool:
+	if _player == null or not is_instance_valid(_player) or _world == null:
+		return false
+	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+	if mind_world == null or not mind_world.force_standalone_blueprint:
+		return false
+	var player_local := mind_world.to_local(_player.global_position)
+	var player_flat := Vector2(player_local.x, player_local.z)
+	# The extra margin covers the collision-backed promenades between paired
+	# districts and the broad arrival apron while remaining far inside the void
+	# separating World One from the Castle Galaxy hub.
+	for zone_id in mind_world.get_zone_ids():
+		var centre := mind_world.get_zone_position(zone_id)
+		if player_flat.distance_to(Vector2(centre.x, centre.z)) \
+				<= mind_world.get_zone_radius(zone_id) + 100.0:
+			return true
+	return false
 
 
 func _draw_local_grid() -> void:
