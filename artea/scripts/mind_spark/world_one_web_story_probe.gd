@@ -54,11 +54,11 @@ func _begin() -> void:
 		_finish({"ok": false, "errors": ["missing quest controller or identity tracker"]})
 		return
 	var nonce := "%d_%d" % [Time.get_ticks_msec(), randi()]
-	var progress_path := "user://world_one_web_story_progress_%s.json" % nonce
-	var object_path := "user://world_one_web_story_objects_%s.json" % nonce
-	var identity_path := "user://world_one_web_story_identity_%s.json" % nonce
-	var puzzle_path := "user://world_one_web_story_puzzle_%s.json" % nonce
-	_paths.assign([progress_path, object_path, identity_path, puzzle_path])
+	_paths = isolated_story_paths(nonce, OS.has_feature("web"))
+	var progress_path := _paths[0]
+	var object_path := _paths[1]
+	var identity_path := _paths[2]
+	var puzzle_path := _paths[3]
 	_prepare_isolated_story(progress_path, object_path, identity_path, puzzle_path)
 	var checkpoints := _objects_of_kind(QuestObjectDefinition.ObjectKind.CHECKPOINT_SERVER_ROOT)
 	var puzzle := _world.get_island_one_puzzle()
@@ -197,15 +197,22 @@ func _begin() -> void:
 		"temporary_save_isolation": true,
 		"errors": _errors.duplicate(),
 	}
-	_cleanup_temporary_files()
+	# Web FileAccess writes flush asynchronously through IDBFS. Removing four
+	# freshly written files here races that flush and produces a deterministic
+	# `Failed to save IDB file system` error after an otherwise successful probe.
+	# Reuse the same synthetic paths on the next opt-in run instead; native tests
+	# keep their nonce files and remove them immediately.
+	if not OS.has_feature("web"):
+		_cleanup_temporary_files()
 	_finish(report)
 
 
 func _prepare_isolated_story(progress_path: String, object_path: String,
 		identity_path: String, puzzle_path: String) -> void:
-	for path in _paths:
-		if FileAccess.file_exists(path):
-			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	if not OS.has_feature("web"):
+		for path in _paths:
+			if FileAccess.file_exists(path):
+				DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	_journey = ProbeJourney.new()
 	_journey.name = "WorldOneStoryProbeJourney"
 	add_child(_journey)
@@ -218,6 +225,7 @@ func _prepare_isolated_story(progress_path: String, object_path: String,
 	_quest.set("_reflection_queue", [])
 	_quest.set("_reflection_open", false)
 	var store := StateStore.new(object_path)
+	store.clear()
 	for object in _world.get_quest_objects():
 		object.persist_state = true
 		object.state_store_path = object_path
@@ -256,6 +264,16 @@ func _fresh_progress() -> Dictionary:
 		"island_two_invitation_received": false, "island_two_arrived": false,
 		"xp": 0, "completed": false,
 	}
+
+
+static func isolated_story_paths(nonce: String, web: bool) -> Array[String]:
+	var suffix := "browser_probe" if web else nonce
+	return [
+		"user://world_one_web_story_progress_%s.json" % suffix,
+		"user://world_one_web_story_objects_%s.json" % suffix,
+		"user://world_one_web_story_identity_%s.json" % suffix,
+		"user://world_one_web_story_puzzle_%s.json" % suffix,
+	]
 
 
 func _object(kind: int) -> QuestObjectBase:

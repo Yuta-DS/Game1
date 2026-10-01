@@ -3,6 +3,7 @@ extends SceneTree
 const WorldScene := preload("res://scenes/mind_spark/mind_spark_world_one.tscn")
 const PlayerScene := preload("res://scenes/player_3d.tscn")
 const IdentityTrackerScript := preload("res://scripts/player_identity_tracker.gd")
+const StoryProbeScript := preload("res://scripts/mind_spark/world_one_web_story_probe.gd")
 
 
 func _init() -> void:
@@ -10,6 +11,14 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var first_web_paths: Array[String] = StoryProbeScript.isolated_story_paths("first", true)
+	var second_web_paths: Array[String] = StoryProbeScript.isolated_story_paths("second", true)
+	var native_paths: Array[String] = StoryProbeScript.isolated_story_paths("native_nonce", false)
+	assert(first_web_paths == second_web_paths and first_web_paths.size() == 4,
+		"browser diagnostics must reuse a bounded set of isolated IDB files")
+	assert(native_paths != first_web_paths
+		and native_paths.all(func(path: String): return "native_nonce" in path),
+		"native diagnostics retain unique temporary paths for immediate cleanup")
 	OS.set_environment("ARTEA_WORLD_ONE_WEB_STORY", "1")
 	var player := PlayerScene.instantiate() as CharacterBody3D
 	player.add_to_group("Player")
