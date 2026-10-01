@@ -6779,15 +6779,22 @@ func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
 	portico.set_meta("prototype_fidelity", "gameplay_adapted")
 	portico.set_meta("architectural_finish", "layered_ivory_gatehouse_with_inset_aether_glass")
 	portico.set_meta("shared_detail_language", "island_one_plinths_island_two_clerestory")
-	portico.set_meta("design_revision", "faceted_pointed_gateway_v2")
+	portico.set_meta("design_revision", "faceted_pointed_gateway_v3_broad_paving")
 	portico.set_meta("arrival_silhouette", "asymmetric_towers_with_segmented_ivory_arch")
+	portico.set_meta("route_surface", "three broad flush ivory paving courses; no centre stripe")
 	parent.add_child(portico)
 	var yaw := atan2(forward.x, forward.z)
 	var side := Vector3(forward.z, 0, -forward.x)
 	_add_box(portico, "IvoryArrivalTerrace", center - Vector3.UP * .12,
 		Vector3(38.0, .28, 34.0), _materials.celestial_floor, true, yaw)
-	_add_box(portico, "CharcoalArrivalAxis", center + Vector3.UP * .10,
-		Vector3(2.4, .10, 30.0), _materials.floor_dark, false, yaw)
+	# The former narrow charcoal strip stopped abruptly at both ends of the
+	# terrace and read as unfinished guide geometry from the production arrival
+	# camera. Three broad flush courses now continue the masonry rhythm through
+	# the opening without drawing a route line across the player's path.
+	for paving_index in 3:
+		_add_box(portico, "ArrivalPavingCourse_%02d" % (paving_index + 1),
+			center + forward * float(paving_index - 1) * 9.0 + Vector3.UP * .045,
+			Vector3(18.0, .045, 7.2), _materials.shared_style_ivory, false, yaw)
 	for lateral_side in [-1.0, 1.0]:
 		var side_name := "South" if lateral_side < 0 else "North"
 		var tower_height := 17.0 if lateral_side < 0 else 21.0

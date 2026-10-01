@@ -258,12 +258,20 @@ func _run() -> void:
 	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerNorthCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerSouthCollision"))
 	var arrival_portico := island_three.get_node("StormworksArrivalPortico") as Node3D
+	assert(not arrival_portico.has_node("CharcoalArrivalAxis"),
+		"Island 3 arrival must not retain the abrupt prototype centre stripe")
+	assert(arrival_portico.get_meta("route_surface") ==
+		"three broad flush ivory paving courses; no centre stripe")
+	for paving_index in 3:
+		assert(arrival_portico.has_node(
+			"ArrivalPavingCourse_%02d" % (paving_index + 1)),
+			"Island 3 arrival keeps all three broad processional paving courses")
 	assert(arrival_portico.get_meta("architectural_finish", "") \
 			== "layered_ivory_gatehouse_with_inset_aether_glass"
 			and arrival_portico.get_meta("shared_detail_language", "") \
 			== "island_one_plinths_island_two_clerestory"
 			and arrival_portico.get_meta("design_revision", "") \
-			== "faceted_pointed_gateway_v2",
+			== "faceted_pointed_gateway_v3_broad_paving",
 		"Island 3's first silhouette must use the finished architectural language of Islands 1 and 2")
 	for arch_index in 6:
 		assert(arrival_portico.has_node(
