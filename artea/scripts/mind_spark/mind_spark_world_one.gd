@@ -6738,6 +6738,8 @@ func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
 	portico.set_meta("purpose", "low-poly cyan-glass threshold from Island Two")
 	portico.set_meta("clear_opening_m", 24.0)
 	portico.set_meta("prototype_fidelity", "gameplay_adapted")
+	portico.set_meta("architectural_finish", "layered_ivory_gatehouse_with_inset_aether_glass")
+	portico.set_meta("shared_detail_language", "island_one_plinths_island_two_clerestory")
 	parent.add_child(portico)
 	var yaw := atan2(forward.x, forward.z)
 	var side := Vector3(forward.z, 0, -forward.x)
@@ -6752,9 +6754,37 @@ func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
 		_add_box(portico, "ArrivalTower%s" % side_name,
 			tower_at + Vector3.UP * (tower_height * .5), Vector3(7.0, tower_height, 8.0),
 			_materials.celestial_floor, true, yaw)
+		# Layer the collision-backed tower mass with the same readable plinth,
+		# reveal and crown hierarchy used by the first two islands. These trims are
+		# shallow, non-colliding facade pieces, so the 24 m route remains exact.
+		_add_box(portico, "ArrivalPlinth%s" % side_name,
+			tower_at + Vector3.UP * .65, Vector3(8.8, 1.3, 9.8),
+			_materials.shared_style_charcoal, false, yaw)
+		_add_box(portico, "ArrivalLowerCourse%s" % side_name,
+			tower_at + Vector3.UP * 1.55, Vector3(8.1, .65, 9.1),
+			_materials.shared_style_ivory, false, yaw)
+		for band_index in 2:
+			_add_box(portico, "ArrivalReveal%s_%02d" % [side_name, band_index + 1],
+				tower_at + Vector3.UP * (5.5 + float(band_index) * 6.0),
+				Vector3(7.45, .34, 8.45), _materials.shared_style_charcoal,
+				false, yaw)
 		_add_box(portico, "ArrivalGlass%s" % side_name,
 			tower_at - side * float(lateral_side) * 3.56 + Vector3.UP * (tower_height * .54),
 			Vector3(.28, tower_height * .55, 4.2), _materials.arrival_glass, false, yaw)
+		_add_box(portico, "ArrivalGlassFrame%s" % side_name,
+			tower_at - side * float(lateral_side) * 3.72 + Vector3.UP * (tower_height * .54),
+			Vector3(.18, tower_height * .68, 5.25), _materials.shared_style_charcoal,
+			false, yaw)
+		_add_box(portico, "ArrivalGlassFace%s" % side_name,
+			tower_at - side * float(lateral_side) * 3.83 + Vector3.UP * (tower_height * .54),
+			Vector3(.12, tower_height * .54, 4.05), _materials.arrival_glass,
+			false, yaw)
+		_add_box(portico, "ArrivalCrownCourse%s" % side_name,
+			tower_at + Vector3.UP * (tower_height + .55), Vector3(8.7, 1.1, 9.7),
+			_materials.shared_style_ivory, false, yaw)
+		_add_box(portico, "ArrivalCrownReveal%s" % side_name,
+			tower_at + Vector3.UP * (tower_height + 1.25), Vector3(7.9, .32, 8.9),
+			_materials.shared_style_charcoal, false, yaw)
 		for spire_index in 2:
 			var spire_at := tower_at + forward * (-2.1 if spire_index == 0 else 2.1) \
 				+ Vector3.UP * (tower_height + 3.1)
@@ -6764,7 +6794,19 @@ func _build_island_three_arrival_portico(parent: Node3D, center: Vector3,
 	# The named arch remains a lintel rather than a torus so the portal has no
 	# decorative ring and the full 24 m opening stays walkable.
 	_add_box(portico, "AetherArrivalArch", center + Vector3.UP * 18.0,
-		Vector3(24.0, 1.3, 2.0), _materials.island_cyan, false, yaw)
+		Vector3(24.0, 1.3, 2.0), _materials.shared_style_ivory, false, yaw)
+	_add_box(portico, "ArrivalLintelUndersill", center + Vector3.UP * 17.22,
+		Vector3(21.5, .24, 2.18), _materials.shared_style_charcoal, false, yaw)
+	_add_box(portico, "ArrivalUpperLintel", center + Vector3.UP * 19.18,
+		Vector3(27.0, 1.0, 2.7), _materials.shared_style_ivory, false, yaw)
+	for clerestory_index in 3:
+		var inset_offset := float(clerestory_index - 1) * 5.7
+		_add_box(portico, "ArrivalClerestory_%02d" % (clerestory_index + 1),
+			center + side * inset_offset + Vector3.UP * 18.08,
+			Vector3(2.3, .44, 2.16), _materials.arrival_glass, false, yaw)
+	_add_tapered_cylinder(portico, "PorticoCrownPedestal",
+		center + Vector3.UP * 20.72, .78, 1.28, 2.08,
+		_materials.shared_style_ivory, 8)
 	_add_brick(portico, "PorticoAetherCrown", center + Vector3.UP * 22.0,
 		Bricks.build_crystal(1.8, 5.5, .4, 6), _materials.island_cyan)
 

@@ -234,6 +234,20 @@ func _run() -> void:
 		"the low-poly arrival uses an open lintel instead of another ring")
 	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerNorthCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerSouthCollision"))
+	var arrival_portico := island_three.get_node("StormworksArrivalPortico") as Node3D
+	assert(arrival_portico.get_meta("architectural_finish", "") \
+			== "layered_ivory_gatehouse_with_inset_aether_glass"
+			and arrival_portico.get_meta("shared_detail_language", "") \
+			== "island_one_plinths_island_two_clerestory",
+		"Island 3's first silhouette must use the finished architectural language of Islands 1 and 2")
+	for side_name in ["North", "South"]:
+		assert(arrival_portico.has_node("ArrivalPlinth%s" % side_name)
+				and arrival_portico.has_node("ArrivalLowerCourse%s" % side_name)
+				and arrival_portico.has_node("ArrivalGlassFrame%s" % side_name)
+				and arrival_portico.has_node("ArrivalGlassFace%s" % side_name)
+				and arrival_portico.has_node("ArrivalCrownCourse%s" % side_name)
+				and arrival_portico.has_node("ArrivalCrownReveal%s" % side_name),
+			"each arrival tower needs a plinth, framed glass bay, and stepped crown")
 	var arrival_gardens := island_three.get_node(
 		"StormworksArrivalGardenProcessional") as Node3D
 	assert(int(arrival_gardens.get_meta("garden_pair_count", 0)) == 3

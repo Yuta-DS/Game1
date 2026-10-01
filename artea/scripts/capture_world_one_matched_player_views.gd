@@ -69,7 +69,7 @@ func _capture() -> void:
 		return
 
 	if not await _capture_view(camera, "03_island_three_stormworks_arrival",
-		Vector3(300, 27, 28), Vector3(430, 35, 25)):
+		Vector3(245, 27, 25), Vector3(360, 34, 25)):
 		return
 
 	if not await _capture_view(camera, "04_island_three_reflection_grove",
