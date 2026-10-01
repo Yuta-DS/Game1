@@ -249,6 +249,8 @@ func _run() -> void:
 			or not christmas_melody.stream is AudioStreamWAV \
 			or (christmas_melody.stream as AudioStreamWAV).loop_mode \
 				!= AudioStreamWAV.LOOP_FORWARD \
+			or christmas_melody.playback_type != AudioServer.PLAYBACK_TYPE_STREAM \
+			or christmas_bells.playback_type != AudioServer.PLAYBACK_TYPE_STREAM \
 			or christmas_melody.attenuation_model \
 				!= AudioStreamPlayer3D.ATTENUATION_DISABLED \
 			or christmas_melody.max_distance != 0.0 \

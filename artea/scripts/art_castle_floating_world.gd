@@ -1441,6 +1441,10 @@ func _new_tree_christmas_source(node_name: String, source_stream: AudioStream,
 	elif looping_stream is AudioStreamOggVorbis:
 		(looping_stream as AudioStreamOggVorbis).loop = true
 	source.stream = looping_stream
+	# These are 32-second ambience beds, not short one-shot effects. Automatic
+	# selection can route WAVs through sample playback, which is unsupported by
+	# some Web/headless drivers and produces silence plus a runtime warning.
+	source.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	# Custom distance gain below replaces Godot's hard max-distance cutoff. The
 	# player therefore hears a long, smooth tail rather than sound disappearing.
 	source.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
