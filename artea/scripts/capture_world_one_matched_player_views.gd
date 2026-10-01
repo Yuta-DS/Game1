@@ -76,10 +76,34 @@ func _capture() -> void:
 		Vector3(520, 27, 15), Vector3(650, 34, -58)):
 		return
 
+	var island_three_views := [
+		["05_island_three_storm_lens", "world_one.warden_anchor.1"],
+		["06_island_three_resonance_forge", "world_one.warden_anchor.2"],
+		["07_island_three_lightning_archive", "world_one.warden_anchor.3"],
+		["08_island_three_rain_harvest", "world_one.calm_rain_basin"],
+		["09_island_three_reflection_operator", "world_one.identity_reflection"],
+	]
+	for view_spec in island_three_views:
+		var quest_object := _find_quest_object(world, str(view_spec[1]))
+		assert(quest_object != null, "missing Island 3 review object: %s" % view_spec[1])
+		var review_pose := world.get_quest_review_camera_pose(quest_object)
+		assert(not review_pose.is_empty(),
+			"missing Island 3 review camera pose: %s" % view_spec[1])
+		if not await _capture_view(camera, str(view_spec[0]),
+			review_pose.eye as Vector3, review_pose.target as Vector3):
+			return
+
 	if FileAccess.file_exists(STATE_PATH):
 		DirAccess.remove_absolute(STATE_PATH)
 	print("WorldOneMatchedPlayerViews: PASS")
 	quit()
+
+
+func _find_quest_object(world: MindSparkWorldOne, save_id: String) -> QuestObjectBase:
+	for quest_object in world.get_quest_objects():
+		if quest_object.save_id == save_id:
+			return quest_object
+	return null
 
 
 func _capture_view(camera: Camera3D, file_name: String,

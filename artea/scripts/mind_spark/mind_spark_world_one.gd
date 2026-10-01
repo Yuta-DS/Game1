@@ -6751,7 +6751,8 @@ func _unify_island_three_tree_and_quest_style(campus: Node3D) -> void:
 			if "crystal" in style_key or "energy" in style_key or "light" in style_key \
 					or "core" in style_key or "rain" in style_key or "water" in style_key:
 				mesh_part.material_override = _materials.shared_style_cyan
-			elif "storm" in style_key or "echo" in style_key or "reflection" in style_key \
+			elif "storm" in style_key or "shield" in style_key or "echo" in style_key \
+					or "reflection" in style_key \
 					or "memory" in style_key:
 				mesh_part.material_override = _materials.shared_style_lavender
 			elif "mechanism" in style_key or "axle" in style_key or "strut" in style_key \
@@ -6971,38 +6972,45 @@ func _add_island_three_civic_column(parent: Node3D, node_name: String,
 
 func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 		operator_direction: Vector3, accent: Material, mini_game_mode: String) -> void:
-	# Island One's quest stations read as one family because they share a stacked
-	# plinth, tall ivory cabinet, round dial, dark mechanism and paired energy
-	# cells. Repeat that grammar here while leaving each landmark's puzzle parts
-	# and silhouette distinct.
+	# The authoritative QuestObjectBase model already supplies the machine body,
+	# state feedback and save-backed interaction. Earlier revisions placed a second
+	# complete cabinet in front of it, producing two overlapping consoles at every
+	# Island 3 landmark. Keep only a collision volume around the real machine and
+	# inset one mode-specific crest into its existing circular face.
 	var instrument := Node3D.new()
 	instrument.name = "IslandOneStyleQuestInstrument"
 	instrument.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
-	instrument.set_meta("design_revision", "distinct_minigame_crest_v8")
+	instrument.set_meta("design_revision", "consolidated_authoritative_crest_v9")
 	instrument.set_meta("mini_game_identity", mini_game_mode)
+	instrument.set_meta("visual_role", "mode crest overlay on authoritative quest object")
+	instrument.set_meta("duplicate_cabinet_removed", true)
 	parent.add_child(instrument)
 	var facing := operator_direction.normalized()
 	if facing.is_zero_approx():
 		facing = Vector3.FORWARD
-	var cabinet_at := center + facing * 5.6
 	var yaw := atan2(facing.x, facing.z)
-	_add_cylinder(instrument, "IvoryInstrumentPlinth", center + Vector3.UP * .45,
-		6.5, .9, _materials.shared_style_ivory, true, 16)
-	_add_cylinder(instrument, "CharcoalInstrumentFoot", center + Vector3.UP * 1.05,
-		5.5, .38, _materials.shared_style_charcoal, false, 16)
-	_add_box(instrument, "IvoryInstrumentCabinet", cabinet_at + Vector3.UP * 2.8,
-		Vector3(6.4, 3.6, 3.2), _materials.shared_style_ivory, true, yaw)
-	_add_box(instrument, "CharcoalInstrumentInset",
-		cabinet_at + facing * 1.64 + Vector3.UP * 2.8,
-		Vector3(5.2, 2.5, .24), _materials.shared_style_charcoal, false, yaw)
-	var dial_at := cabinet_at + facing * 1.82 + Vector3.UP * 3.0
-	var dial := _add_cylinder(instrument, "CyanInstrumentDial", dial_at,
-		1.15, .34, _materials.shared_style_cyan, false, 16)
-	dial.rotation = Vector3(PI * .5, yaw, 0)
-	var dial_frame := _add_torus(instrument, "IvoryInstrumentDialFrame", dial_at,
-		1.25, 1.5, _materials.shared_style_ivory,
-		Vector3(90, rad_to_deg(yaw), 0))
-	dial_frame.set_meta("decorative_ring_policy", "ivory machine frame; no gold")
+	var collision_body := StaticBody3D.new()
+	collision_body.name = "AuthoritativeQuestObjectCollision"
+	collision_body.position = center + Vector3.UP * 3.6
+	collision_body.rotation.y = yaw
+	collision_body.set_meta("mass_class", "infinite_static_mass")
+	collision_body.set_meta("collision_role", "authoritative quest machine envelope")
+	var collision_shape := CollisionShape3D.new()
+	var collision_box := BoxShape3D.new()
+	collision_box.size = Vector3(10.0, 7.2, 5.2)
+	collision_shape.shape = collision_box
+	collision_body.add_child(collision_shape)
+	instrument.add_child(collision_body)
+
+	# The memory-style quest models are scaled to 6.25× in the standalone world;
+	# their authored display centre therefore sits about 10.6 m above the deck.
+	# Matching that centre turns the crest into the machine's screen instead of a
+	# second low medallion at its feet.
+	var dial_at := center + facing * 3.38 + Vector3.UP * 10.6
+	var dial_back := _add_cylinder(instrument, "ModeCrestBacking", dial_at,
+		2.12, .12, _materials.shared_style_charcoal, false, 16)
+	dial_back.rotation = Vector3(PI * .5, yaw, 0)
+	dial_back.set_meta("integrates_with", "QuestObjectBase/VisualRoot/BlenderModel")
 	var side_axis := Vector3(facing.z, 0, -facing.x)
 	var crest := Node3D.new()
 	crest.name = "ModeCrest_%s" % mini_game_mode.capitalize()
@@ -7015,71 +7023,60 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 	match mini_game_mode:
 		"align":
 			for marker_index in 3:
-				var marker_height := 3.6 if marker_index == 1 else 2.2
+				var marker_height := 2.65 if marker_index == 1 else 1.55
 				_add_box(crest, "AlignBand_%02d" % (marker_index + 1),
-					cabinet_at + side_axis * float(marker_index - 1) * 1.25
-					+ facing * 1.78 + Vector3.UP * (4.8 + marker_height * .5),
-					Vector3(.48, marker_height, .34),
-					accent if marker_index == 1 else _materials.shared_style_charcoal,
+					dial_at + side_axis * float(marker_index - 1) * 1.05
+					+ facing * .12 + Vector3.UP * (-marker_height * .5),
+					Vector3(.42, marker_height, .24),
+					accent if marker_index == 1 else _materials.shared_style_ivory,
 					false, yaw)
 		"rhythm":
-			var beat_heights := [1.0, 1.8, 2.7, 1.8, 1.0]
+			var beat_heights := [.75, 1.35, 2.15, 1.35, .75]
 			for beat_index in beat_heights.size():
 				var beat_height: float = float(beat_heights[beat_index])
 				_add_box(crest, "RhythmBeat_%02d" % (beat_index + 1),
-					cabinet_at + side_axis * float(beat_index - 2) * .95
-					+ facing * 1.72 + Vector3.UP * (4.65 + beat_height * .5),
-					Vector3(.62, beat_height, .34),
-					accent if beat_index % 2 == 0 else _materials.shared_style_charcoal,
+					dial_at + side_axis * float(beat_index - 2) * .68
+					+ facing * .12 + Vector3.UP * (-1.18 + beat_height * .5),
+					Vector3(.46, beat_height, .24),
+					accent if beat_index % 2 == 0 else _materials.shared_style_ivory,
 					false, yaw)
 		"dodge":
 			for channel_index in 3:
-				var channel_height := 2.2 + float(channel_index) * .8
+				var channel_height := 1.7 + float(channel_index) * .34
 				var channel := _add_box(crest, "DodgeChannel_%02d" % (channel_index + 1),
-					cabinet_at + side_axis * float(channel_index - 1) * 1.35
-					+ facing * 1.78 + Vector3.UP * (4.8 + channel_height * .5),
-					Vector3(.52, channel_height, .34),
-					_materials.shared_style_charcoal if channel_index == 1 else accent,
+					dial_at + side_axis * float(channel_index - 1) * 1.0
+					+ facing * .12 + Vector3.UP * (-.55 + channel_height * .5),
+					Vector3(.42, channel_height, .24),
+					_materials.shared_style_ivory if channel_index == 1 else accent,
 					false, yaw)
 				channel.rotation.z = -.34 if channel_index % 2 == 0 else .34
 		"catch":
-			_add_box(crest, "CatchReservoir", cabinet_at + facing * 1.72
-				+ Vector3.UP * 5.05, Vector3(4.8, .38, .34),
+			_add_box(crest, "CatchReservoir", dial_at + facing * .12
+				- Vector3.UP * 1.35, Vector3(3.35, .32, .24),
 				_materials.shared_style_charcoal, false, yaw)
 			for drop_index in 3:
-				var drop_height := 1.5 + float(abs(drop_index - 1)) * .55
 				_add_sphere(crest, "CatchDroplet_%02d" % (drop_index + 1),
-					cabinet_at + side_axis * float(drop_index - 1) * 1.35
-					+ facing * 1.85 + Vector3.UP * (5.7 + drop_height),
-					Vector3(.55, .78, .40),
+					dial_at + side_axis * float(drop_index - 1) * 1.05
+					+ facing * .18 + Vector3.UP * (.25 + float(abs(drop_index - 1)) * .48),
+					Vector3(.44, .68, .30),
 					accent if drop_index != 1 else _materials.shared_style_lavender)
 		"route":
 			var route_points: Array[Vector3] = [
-				cabinet_at - side_axis * 1.7 + facing * 1.78 + Vector3.UP * 5.0,
-				cabinet_at + facing * 1.78 + Vector3.UP * 6.3,
-				cabinet_at + side_axis * 1.7 + facing * 1.78 + Vector3.UP * 5.35,
+				dial_at - side_axis * 1.35 + facing * .14 - Vector3.UP * .75,
+				dial_at + facing * .14 + Vector3.UP * .75,
+				dial_at + side_axis * 1.35 + facing * .14 - Vector3.UP * .40,
 			]
 			for route_index in route_points.size():
 				_add_sphere(crest, "RouteStar_%02d" % (route_index + 1),
-					route_points[route_index], Vector3(.68, .68, .42),
+					route_points[route_index], Vector3(.48, .48, .28),
 					accent if route_index == 1 else _materials.shared_style_cyan)
 				if route_index > 0:
 					_add_cable_between(crest, "RouteLink_%02d" % route_index,
 						route_points[route_index - 1], route_points[route_index],
 						.20, .14, _materials.shared_style_charcoal, 6)
 		_:
-			_add_brick(crest, "UnknownModeCrystal", cabinet_at + Vector3.UP * 5.0,
+			_add_brick(crest, "UnknownModeCrystal", dial_at + facing * .14,
 				Bricks.build_crystal(1.0, 3.0, .28, 6), accent)
-	for cell_side in [-1.0, 1.0]:
-		var cell_at := cabinet_at + side_axis * float(cell_side) * 4.5 + Vector3.UP * 3.4
-		_add_cylinder(instrument,
-			"EnergyCell%s" % ("Left" if cell_side < 0 else "Right"),
-			cell_at, 1.0, 5.0,
-			_materials.shared_style_cyan if cell_side < 0 else _materials.shared_style_lavender,
-			true, 10)
-		_add_sphere(instrument,
-			"EnergyCellLamp%s" % ("Left" if cell_side < 0 else "Right"),
-			cell_at + Vector3.UP * 3.1, Vector3.ONE * .72, accent)
 
 
 func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,

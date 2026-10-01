@@ -391,8 +391,8 @@ func _run() -> void:
 			"each Warden anchor has distinct, solid quest architecture")
 		assert(island_three.has_node("StormworksGrandCourt/%s/CompletionStateVisuals" % landmark_name))
 		assert(island_three.has_node(
-			"StormworksGrandCourt/%s/IslandOneStyleQuestInstrument/IvoryInstrumentCabinetCollision" % landmark_name),
-			"each storm landmark uses the same cabinet-and-dial grammar as Island One")
+			"StormworksGrandCourt/%s/IslandOneStyleQuestInstrument/AuthoritativeQuestObjectCollision" % landmark_name),
+			"each storm landmark keeps its authoritative quest machine physically solid")
 	var mode_instruments := [
 		["StormworksGrandCourt/StormLensTower/IslandOneStyleQuestInstrument", "align", "ModeCrest_Align", 3],
 		["StormworksGrandCourt/ResonanceForge/IslandOneStyleQuestInstrument", "rhythm", "ModeCrest_Rhythm", 5],
@@ -406,9 +406,17 @@ func _run() -> void:
 		var mode_name := str(mode_spec[1])
 		var crest := mode_instrument.get_node(str(mode_spec[2])) as Node3D
 		assert(str(mode_instrument.get_meta("design_revision", "")) \
-			== "distinct_minigame_crest_v8"
+			== "consolidated_authoritative_crest_v9"
 			and str(mode_instrument.get_meta("mini_game_identity", "")) == mode_name,
 			"each Island 3 instrument identifies its actual mini-game mode in the world art")
+		assert(bool(mode_instrument.get_meta("duplicate_cabinet_removed", false))
+			and mode_instrument.has_node("AuthoritativeQuestObjectCollision")
+			and mode_instrument.has_node("ModeCrestBacking")
+			and mode_instrument.get_node_or_null("IvoryInstrumentCabinet") == null
+			and mode_instrument.get_node_or_null("EnergyCellLeft") == null
+			and mode_instrument.get_node_or_null("EnergyCellRight") == null,
+			"the %s landmark presents one solid authoritative machine without a duplicate cabinet" \
+			% mode_name)
 		assert(crest.find_children("*", "MeshInstance3D", true, false).size() == int(mode_spec[3]),
 			"the %s console keeps its authored low-poly crest silhouette" % mode_name)
 		distinct_modes[mode_name] = true
@@ -445,7 +453,7 @@ func _run() -> void:
 		"the central weather needle remains charcoal instead of becoming another cyan line")
 	assert(island_three.has_node("RainHarvestObservatory/CompletionStateVisuals/HarvestedRainWater"))
 	assert(island_three.has_node(
-		"RainHarvestObservatory/IslandOneStyleQuestInstrument/CyanInstrumentDial"))
+		"RainHarvestObservatory/IslandOneStyleQuestInstrument/ModeCrestBacking"))
 	var rain_definition := load(
 		"res://resources/mind_spark/quest_objects/09_calm_rain_basin.tres") as QuestObjectDefinition
 	assert(rain_definition.display_name == "Rain Harvest Observatory",
@@ -516,7 +524,7 @@ func _run() -> void:
 			Vector2(reflection_center.x, reflection_center.z)) >= 24.0,
 			"reflection roots stop at perimeter buttresses instead of converging into a black roof")
 	assert(island_three.has_node(
-		"WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument/CyanInstrumentDial"))
+		"WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument/ModeCrestBacking"))
 	assert(not island_three.has_node("WisdomBasilicaPromenade/CyanBasilicaRidge"),
 		"the unsupported blue line over the Island 3 promenade is removed")
 	var wisdom_basilica := island_three.get_node("WisdomBasilicaPromenade") as Node3D
