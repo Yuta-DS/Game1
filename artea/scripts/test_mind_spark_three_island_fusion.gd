@@ -135,6 +135,29 @@ func _run() -> void:
 		"Island 3 has a continuous low-poly stone parapet at exposed edges")
 	assert(storm_edge.find_children("StormEdgeStone_*SolidCollision", "StaticBody3D", true, false).size() >= 40,
 		"the visible Island 3 parapet blocks the player at its actual position")
+	assert(storm_edge.get_meta("arrival_safe_shadowing", "") \
+		== "offscreen_edge_facets_do_not_cast",
+		"Island 3 edge pieces cannot cast detached shadows into the arrival view")
+	var storm_center := world.get_zone_position("05_thought_storm_arena")
+	var island_two_center := world.get_zone_position("04_hope_path_ridge")
+	var arrival_direction := Vector2(island_two_center.x - storm_center.x,
+		island_two_center.z - storm_center.z).normalized()
+	for value in storm_edge.find_children("StormEdge*", "MeshInstance3D", true, false):
+		var edge_visual := value as MeshInstance3D
+		if not edge_visual.visible:
+			continue
+		assert(edge_visual.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+			"low Island 3 edge facets do not project ownerless foreground shadows")
+		if not str(edge_visual.name).contains("_4_"):
+			continue
+		var from_storm := Vector2(edge_visual.position.x - storm_center.x,
+			edge_visual.position.z - storm_center.z)
+		if from_storm.dot(arrival_direction) <= 0.0:
+			continue
+		assert(absf(from_storm.cross(arrival_direction)) \
+			>= MindSparkWorldOne.ISLAND_THREE_ARRIVAL_EDGE_OPENING_HALF_WIDTH - 4.0,
+			"the storm parapet leaves a clean, unclipped bridge-arrival threshold: %s at %.2f m" \
+			% [edge_visual.name, absf(from_storm.cross(arrival_direction))])
 	assert(storm_edge.find_children("ReferenceScrollwork_*", "Node3D", true, false).is_empty()
 		and storm_edge.find_children("ReferencePost_*", "Node3D", true, false).is_empty(),
 		"the repeated ornate rail and lantern-post kit is retired on Island 3")

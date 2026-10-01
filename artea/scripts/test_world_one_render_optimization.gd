@@ -58,9 +58,13 @@ func _run() -> void:
 	# The Storm Lens overhead framework now occupies one shadow-free batch so its
 	# 60-metre-high sight frame cannot stripe the arrival court. That deliberate
 	# separation adds one batch while preserving all authored source coverage.
-	assert(merged_sources + repeated_sources >= 5800 \
+	# The finished Stormworks threshold deliberately omits seven near-camera rim
+	# facets that appeared as detached foreground debris. The lower source count
+	# is a geometry reduction; the batch ceiling and one-to-one accounting below
+	# still guard the optimization contract.
+	assert(merged_sources + repeated_sources >= 5790 \
 			and merged_groups + repeated_groups <= 260,
-		"court-scale cells must consolidate at least 5,800 sources into no more than 260 spatial batches")
+		"court-scale cells must consolidate at least 5,790 sources into no more than 260 spatial batches")
 	assert(ranged_meshes > 1000,
 		"World One must apply distance ranges broadly enough to cull distant trim")
 

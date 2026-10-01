@@ -81,6 +81,11 @@ const TRANSIT_PORTAL_PAIRS := [[0, 3], [1, 4], [2, 5]]
 const TRANSIT_PORTAL_EDGE_INSET := 30.0
 const TRANSIT_PORTAL_ARRIVAL_CLEARANCE := 18.0
 const PLAYER_ARRIVAL_CLEARANCE := 2.5
+## The Island Three camera arrives almost tangent to the storm arena rim. Give
+## that processional route a broad architectural threshold so circular parapet
+## facets never clip into disconnected foreground fragments during the bridge
+## handoff. The arrival portico narrows the playable axis again inside the court.
+const ISLAND_THREE_ARRIVAL_EDGE_OPENING_HALF_WIDTH := 42.0
 ## The standalone World One opens on the broad south aisle of the Signal
 ## Laboratory. Keeping this separate from the checkpoint operator position
 ## prevents the character, Mayor Milo and the station cabinet from stacking in
@@ -8602,7 +8607,8 @@ func _is_exposed_garden_edge(zone_index: int, angle: float) -> bool:
 	var exit_index := (5 if zone_index == 0 else 2) if zone_index < 2 else (zone_index - 1 if zone_index % 2 == 0 else zone_index + 1)
 	var exit: Vector3 = ZONES[exit_index].position - center
 	var direction := Vector2(exit.x,exit.z).normalized()
-	var opening_half_width := 30.0 if zone_index < 2 else 18.0
+	var opening_half_width := ISLAND_THREE_ARRIVAL_EDGE_OPENING_HALF_WIDTH \
+		if zone_index == 4 else (30.0 if zone_index < 2 else 18.0)
 	return not (radial.dot(direction) > 0 and absf(radial.cross(direction))*radius < opening_half_width)
 
 
@@ -8681,6 +8687,13 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 			var collision := _add_box(repairs, name, at + Vector3.UP * 5.0,
 				Vector3(length, 10.0, .8), _materials.sanctum_ivory, true, yaw)
 			collision.visible = false
+	if first_zone == 4:
+		# The arrival camera travels tangent to this low rim. Shadows cast by
+		# off-screen parapet facets otherwise detach from their owners and read as
+		# floating black bars across the clean threshold paving.
+		for edge_visual in repairs.find_children("*", "MeshInstance3D", true, false):
+			(edge_visual as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		repairs.set_meta("arrival_safe_shadowing", "offscreen_edge_facets_do_not_cast")
 	if first_zone == 2:
 		_consolidate_perimeter_posts(repairs)
 
