@@ -12,10 +12,7 @@ var active_npc = null
 
 func _ready():
 	randomize()
-	print("Loading dialogue from: HubworldDialogue.dialogue")
-	
 	load_dialogue_file("res://dialogue/artea_park_dialogues.txt")
-	#print("Loaded dialogue nodes:", dialogue_data.keys())
 	
 	#var dialogue = load("res://dialogue/HubworldDialogue.dialogue")
 	#DialogueManager.get_next_dialogue_line(dialogue)
@@ -79,8 +76,6 @@ func resolve_audience_node(node_name: String) -> String:
 	return node_name
 
 func load_dialogue_file(path: String):
-	print("Attempting to open: ", path)
-	print("File exists: ", FileAccess.file_exists(path))
 	var file = FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		push_error("Failed to open dialogue file")

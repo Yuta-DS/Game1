@@ -239,8 +239,25 @@ const engine = new Engine(GODOT_CONFIG);
 		window.addEventListener('error', (e) => {
 			say('ERROR: ' + (e.message || e.error) + '\n' + (e.filename || '') + ':' + (e.lineno || ''));
 		});
+		let lastPointerLockErrorAt = -Infinity;
+		document.addEventListener('pointerlockerror', () => {
+			lastPointerLockErrorAt = performance.now();
+		});
 		window.addEventListener('unhandledrejection', (e) => {
-			say('UNHANDLED: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+			const reason = e.reason;
+			const message = reason && reason.message ? reason.message : String(reason);
+			// Chromium automation can reject Godot's pointer-lock promise with
+			// this browser-owned message even though keyboard, controller and touch
+			// input remain usable. Suppress only that rejection when the browser has
+			// also emitted pointerlockerror; every other rejection stays visible.
+			const expectedPointerLockRejection = performance.now() - lastPointerLockErrorAt < 1500
+				&& reason && reason.name === 'UnknownError'
+				&& message === 'If you see this error we have a bug. Please report this bug to chromium.';
+			if (expectedPointerLockRejection) {
+				e.preventDefault();
+				return;
+			}
+			say('UNHANDLED: ' + message);
 		});
 
 		// The CSS above stretches the canvas element to the viewport, but the

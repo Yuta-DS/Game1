@@ -99,9 +99,6 @@ func prepare_frame_for_world(frame_name: String) -> String:
 # =========================================================
 
 func _ready() -> void:
-
-	print(OS.get_user_data_dir())
-
 	list_request.request_completed.connect(_on_list_request_completed)
 	download_request.request_completed.connect(_on_download_request_completed)
 
@@ -160,9 +157,6 @@ func load_local_art_paths() -> void:
 	var dir = DirAccess.open(LOCAL_ART_PATH)
 
 	if dir == null:
-
-		print("No local artworks found.")
-
 		return
 
 	var art_files: Array[Dictionary] = []
@@ -206,8 +200,6 @@ func load_local_art_paths() -> void:
 
 		local_art_paths.append(item["path"])
 
-	print("Player artworks found: ", local_art_paths.size())
-
 	for i in range(local_art_paths.size()):
 
 		print("Local order ", i, ": ", local_art_paths[i])
@@ -225,8 +217,6 @@ func list_user_artworks() -> void:
 	# fake credential, doing so on Web attempts to contact localhost and produces
 	# an unhandled browser fetch error before the expected local fallback.
 	if not Global.has_authenticated_session():
-		print("Offline gallery session -> loading local gallery")
-
 		load_local_art_paths()
 		apply_local_art_over_online()
 		return
@@ -421,12 +411,8 @@ func _on_download_request_completed(
 func apply_local_art_over_online() -> void:
 
 	if local_art_paths.is_empty():
-
-		print("No player artworks to replace online gallery.")
 		local_gallery_ready = true
 		return
-
-	print("Applying player artworks over online gallery...")
 
 	for i in range(
 		min(local_art_paths.size(), MAX_FRAMES_TO_LOAD)

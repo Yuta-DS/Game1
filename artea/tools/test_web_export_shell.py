@@ -25,6 +25,14 @@ class WebExportShellTests(unittest.TestCase):
 		self.assertIn("say('START FAILED: ' + err);", html)
 		self.assertIn("displayFailureNotice(err);", html)
 
+	def test_only_confirmed_chromium_pointer_lock_rejection_is_suppressed(self) -> None:
+		html = SHELL.read_text(encoding="utf-8")
+		self.assertIn("document.addEventListener('pointerlockerror'", html)
+		self.assertIn("reason.name === 'UnknownError'", html)
+		self.assertIn("performance.now() - lastPointerLockErrorAt < 1500", html)
+		self.assertIn("e.preventDefault();", html)
+		self.assertIn("say('UNHANDLED: ' + message);", html)
+
 
 if __name__ == "__main__":
 	unittest.main()
