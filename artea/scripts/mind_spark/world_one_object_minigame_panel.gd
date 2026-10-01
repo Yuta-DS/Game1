@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const Catalog := preload("res://scripts/mind_spark/world_one_object_minigame_catalog.gd")
 const GardenRules := preload("res://scripts/mind_spark/unfinished_light_rules.gd")
+const ResearchSound := preload("res://scripts/mind_spark/research_sound_cues.gd")
 
 class ArcadeBoard extends Control:
 	var host: CanvasLayer
@@ -122,6 +123,8 @@ var _instruction: Label
 var _touch: GridContainer
 var _touch_buttons: Dictionary = {}
 var _close: Button
+var _feedback_audio: AudioStreamPlayer
+var _audio_cache: Dictionary = {}
 var _player_physics := false
 var _mouse_mode := Input.MOUSE_MODE_CAPTURED
 var _rng := RandomNumberGenerator.new()
@@ -218,6 +221,10 @@ func _build_ui() -> void:
 	_status.add_theme_font_size_override("font_size", 16)
 	_status.add_theme_color_override("font_color", Color("704e35"))
 	_body.add_child(_status)
+	_feedback_audio = AudioStreamPlayer.new()
+	_feedback_audio.name = "MiniGameFeedbackAudio"
+	_feedback_audio.volume_db = -11.0
+	add_child(_feedback_audio)
 	_touch = GridContainer.new()
 	_touch.columns = 5
 	_touch.add_theme_constant_override("h_separation", 8)
@@ -458,20 +465,24 @@ func _update_falling(delta: float) -> void:
 		if _mode == "catch":
 			if touched and not bool(item.bad):
 				_score += 1
+				_play_feedback(&"record")
 				_update_labels("Spark captured. Keep tracking the signal.")
 			elif touched and bool(item.bad):
 				_mistakes += 1
 				_score = maxi(0, _score - 1)
+				_play_feedback(&"revise")
 				_rumble_feedback(.45, .75, .12)
 				_update_labels("Static touched the receiver. Re-centre and continue.")
 		else:
 			if touched:
 				_mistakes += 1
 				_score = maxi(0, _score - 1)
+				_play_feedback(&"revise")
 				_rumble_feedback(.45, .75, .12)
 				_update_labels("The storm line clipped you. Read the next lane.")
 			else:
 				_score += 1
+				_play_feedback(&"detent")
 		_falling.remove_at(index)
 		if _mode == "catch" and _score >= int(_spec.goal):
 			_win()
@@ -582,6 +593,7 @@ func _command(command: String) -> void:
 		return
 	if command == "action" and _mode in ["route", "rhythm", "catch"]:
 		_reset_round()
+		_play_feedback(&"replay")
 		_update_labels("Challenge reset. Try the pattern again.")
 		if _board != null: _board.queue_redraw()
 		return
@@ -601,10 +613,12 @@ func _lock_alignment() -> void:
 		return
 	if absf(_cursor.x - float(targets[_score])) <= .075:
 		_score += 1
+		_play_feedback(&"align")
 		_update_labels("Signal locked. Find the next ring.")
 		if _score >= int(_spec.goal): _win()
 	else:
 		_mistakes += 1
+		_play_feedback(&"revise")
 		_rumble_feedback(.35, .65, .1)
 		_update_labels("The pulse missed the ring. Adjust and try again.")
 
@@ -618,6 +632,7 @@ func _move_route(command: String) -> void:
 	var hazards: Array = _spec.get("hazards", [])
 	if _grid in hazards:
 		_mistakes += 1
+		_play_feedback(&"revise")
 		_rumble_feedback(.4, .7, .12)
 		_grid = Vector2i(1, 2)
 		_score = 0
@@ -626,6 +641,7 @@ func _move_route(command: String) -> void:
 	var route: Array = _spec.get("route", [])
 	if _score < route.size() and _grid == route[_score]:
 		_score += 1
+		_play_feedback(&"detent")
 		_update_labels("Star %d connected." % _score)
 		if _score >= int(_spec.goal): _win()
 
@@ -636,10 +652,12 @@ func _play_rhythm(command: String) -> void:
 	var sequence: Array = _spec.get("sequence", [])
 	if command == str(sequence[_score]):
 		_score += 1
+		_play_feedback(&"align")
 		_update_labels("Tone %d is clear." % _score)
 		if _score >= int(_spec.goal): _win()
 	else:
 		_mistakes += 1
+		_play_feedback(&"revise")
 		_rumble_feedback(.35, .65, .1)
 		_score = 0
 		_update_labels("That tone broke the pattern. Listen from the beginning.")
@@ -653,6 +671,7 @@ func _win() -> void:
 	_right_held = false
 	_rumble_feedback(.25, .8, .18)
 	_last_result = _apply_station_reward()
+	_play_feedback(&"complete")
 	_update_labels("Challenge complete • " + str(_last_result.get("reason", "practice_complete")).replace("_", " ").capitalize() + "\nPress Space to replay, or Esc to return.")
 	if _board != null: _board.queue_redraw()
 
@@ -660,6 +679,21 @@ func _win() -> void:
 func _rumble_feedback(weak: float, strong: float, duration: float) -> void:
 	for device in Input.get_connected_joypads():
 		Input.start_joy_vibration(device, weak, strong, duration)
+
+
+func _play_feedback(cue: StringName) -> void:
+	# Reuse the physical research stations' deterministic cues so keyboard and
+	# touch players receive feedback equivalent to controller rumble. The clips
+	# are generated once per panel, add no Web download, and never carry puzzle
+	# information that is absent from the board and status text.
+	if not is_instance_valid(_feedback_audio):
+		return
+	if not _audio_cache.has(cue):
+		_audio_cache[cue] = ResearchSound.make(cue)
+	_feedback_audio.stop()
+	_feedback_audio.stream = _audio_cache[cue]
+	_feedback_audio.play()
+	set_meta("last_minigame_audio_cue", cue)
 
 
 func _apply_station_reward() -> Dictionary:
@@ -764,5 +798,9 @@ func completion_result() -> Dictionary:
 
 func _exit_tree() -> void:
 	Input.mouse_mode = _mouse_mode
+	if is_instance_valid(_feedback_audio):
+		_feedback_audio.stop()
+		_feedback_audio.stream = null
+	_audio_cache.clear()
 	if is_instance_valid(player):
 		player.set_physics_process(_player_physics)

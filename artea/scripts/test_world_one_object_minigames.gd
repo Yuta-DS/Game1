@@ -84,6 +84,8 @@ func _run() -> void:
 		world.add_child(reward_panel)
 		reward_panel.open_object(object, actor)
 		var mode := reward_panel.challenge_mode()
+		assert(reward_panel.get_node_or_null("MiniGameFeedbackAudio") is AudioStreamPlayer,
+			"%s provides Web-safe audio feedback for keyboard and touch play" % mode)
 		var mode_touch_buttons: Dictionary = reward_panel.get("_touch_buttons")
 		assert((mode_touch_buttons.left as Button).text == "LEFT"
 			and (mode_touch_buttons.up as Button).text == "UP"
@@ -119,6 +121,8 @@ func _run() -> void:
 			touch_modes[mode] = true
 		var result: Dictionary = await _complete_through_player_input(reward_panel)
 		assert(bool(result.get("accepted", false)), "%s minigame applies a valid gameplay action" % object.save_id)
+		assert(reward_panel.get_meta("last_minigame_audio_cue", &"") == &"complete",
+			"%s reports an audible completion cue without making audio authoritative" % mode)
 		reward_panel.free()
 	assert(touch_modes.size() == 5, "touch buttons drive every mini-game mode")
 	print("WorldOneObjectMinigames: PASS — 15 objects, 5 per island, 5 active mechanics")
