@@ -245,7 +245,8 @@ func _run() -> void:
 	var christmas_bells := tree.get_node_or_null(
 		"ChristmasTreeBells3D") as AudioStreamPlayer3D
 	if christmas_melody == null or christmas_bells == null \
-			or not christmas_melody.playing or not christmas_bells.playing \
+			or (not christmas_melody.playing and not christmas_melody.stream_paused) \
+			or (not christmas_bells.playing and not christmas_bells.stream_paused) \
 			or not christmas_melody.stream is AudioStreamWAV \
 			or (christmas_melody.stream as AudioStreamWAV).loop_mode \
 				!= AudioStreamWAV.LOOP_FORWARD \
@@ -264,8 +265,11 @@ func _run() -> void:
 				"christmas_full_volume_distance", 0.0)), 70.0) \
 			or not is_equal_approx(float(tree.get_meta(
 				"christmas_silent_distance", 0.0)), 620.0) \
+			or not is_equal_approx(float(tree.get_meta(
+				"christmas_resume_distance", 0.0)), 580.0) \
 			or not bool(tree.get_meta("christmas_fade_uses_player_distance", false)) \
 			or not bool(tree.get_meta("christmas_fade_out_is_gradual", false)) \
+			or not bool(tree.get_meta("christmas_far_streams_pause", false)) \
 			or float(tree.get_meta("christmas_fade_out_speed", 1.0)) > 0.28:
 		_fail("Tree of Life Christmas ambience is missing its gradual distance fade")
 		return
@@ -288,6 +292,14 @@ func _run() -> void:
 	world.call("_update_tree_christmas_ambience", 40.0)
 	if christmas_melody.volume_db > -75.0:
 		_fail("Christmas ambience does not eventually fade to silence at long range")
+		return
+	if not christmas_melody.stream_paused or not christmas_bells.stream_paused:
+		_fail("silent Christmas ambience keeps decoding outside its audible range")
+		return
+	audio_test_player.global_position = christmas_melody.global_position + Vector3(5.0, 0.0, 0.0)
+	world.call("_update_tree_christmas_ambience", 0.1)
+	if christmas_melody.stream_paused or christmas_bells.stream_paused:
+		_fail("Christmas ambience does not resume before the player reaches the tree")
 		return
 	audio_test_player.global_position = audio_test_origin
 	var canopy := tree.get_node_or_null("LaptopGravityBoughCanopy") as Node3D

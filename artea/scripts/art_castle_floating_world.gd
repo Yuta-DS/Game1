@@ -138,6 +138,7 @@ var _tree_christmas_bells: AudioStreamPlayer3D
 
 const TREE_CHRISTMAS_FULL_VOLUME_DISTANCE := 70.0
 const TREE_CHRISTMAS_SILENT_DISTANCE := 620.0
+const TREE_CHRISTMAS_RESUME_DISTANCE := 580.0
 const TREE_CHRISTMAS_NEAR_VOLUME_DB := -5.0
 const TREE_CHRISTMAS_SILENT_VOLUME_DB := -80.0
 const TREE_CHRISTMAS_FADE_IN_SPEED := 1.60
@@ -1423,8 +1424,10 @@ func _build_tree_christmas_ambience(tree: Node3D) -> void:
 		["glockenspiel", "celesta", "sleigh_bells", "warm_strings", "soft_bass"])
 	tree.set_meta("christmas_full_volume_distance", TREE_CHRISTMAS_FULL_VOLUME_DISTANCE)
 	tree.set_meta("christmas_silent_distance", TREE_CHRISTMAS_SILENT_DISTANCE)
+	tree.set_meta("christmas_resume_distance", TREE_CHRISTMAS_RESUME_DISTANCE)
 	tree.set_meta("christmas_fade_uses_player_distance", true)
 	tree.set_meta("christmas_fade_out_is_gradual", true)
+	tree.set_meta("christmas_far_streams_pause", true)
 	tree.set_meta("christmas_fade_out_speed", TREE_CHRISTMAS_FADE_OUT_SPEED)
 
 
@@ -1461,6 +1464,15 @@ func _update_tree_christmas_ambience(delta: float) -> void:
 		return
 	var distance := _player.global_position.distance_to(
 		_tree_christmas_melody.global_position)
+	# A paused stream retains its playback position without decoding silent audio.
+	# Resume before entering the audible falloff and use a 40 m hysteresis band so
+	# walking along the boundary cannot repeatedly pause and resume both decoders.
+	if _tree_christmas_melody.stream_paused:
+		if distance >= TREE_CHRISTMAS_RESUME_DISTANCE:
+			return
+		_tree_christmas_melody.stream_paused = false
+		if is_instance_valid(_tree_christmas_bells):
+			_tree_christmas_bells.stream_paused = false
 	var distance_ratio := smoothstep(TREE_CHRISTMAS_FULL_VOLUME_DISTANCE,
 		TREE_CHRISTMAS_SILENT_DISTANCE, distance)
 	# Work in linear amplitude so the perceived fade remains gentle near its far
@@ -1479,6 +1491,11 @@ func _update_tree_christmas_ambience(delta: float) -> void:
 		_tree_christmas_bells.volume_db = maxf(
 			TREE_CHRISTMAS_SILENT_VOLUME_DB,
 			_tree_christmas_melody.volume_db - 15.0)
+	if distance >= TREE_CHRISTMAS_SILENT_DISTANCE \
+			and _tree_christmas_melody.volume_db <= TREE_CHRISTMAS_SILENT_VOLUME_DB + 0.1:
+		_tree_christmas_melody.stream_paused = true
+		if is_instance_valid(_tree_christmas_bells):
+			_tree_christmas_bells.stream_paused = true
 
 
 func _build_blender_blueprint_trunk_root(tree: Node3D) -> void:
