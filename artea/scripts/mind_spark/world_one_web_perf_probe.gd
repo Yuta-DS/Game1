@@ -13,6 +13,9 @@ var _views: Array = []
 var _view_index := 0
 var _frame_index := 0
 var _samples: Array[float] = []
+var _process_samples: Array[float] = []
+var _spike_frames: Array[Dictionary] = []
+var _spike_count := 0
 var _draw_total := 0.0
 var _primitive_total := 0.0
 var _results: Array[Dictionary] = []
@@ -81,7 +84,20 @@ func _process(delta: float) -> void:
 	if _frame_index < WARMUP_FRAMES:
 		_frame_index += 1
 		return
-	_samples.append(delta * 1000.0)
+	var frame_ms := delta * 1000.0
+	var process_ms := Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	_samples.append(frame_ms)
+	_process_samples.append(process_ms)
+	if frame_ms >= 25.0:
+		_spike_count += 1
+		# A compact first-spike trace distinguishes engine work from browser or
+		# compositor stalls without flooding the production console.
+		if _spike_frames.size() < 12:
+			_spike_frames.append({
+				"frame": _samples.size() - 1,
+				"frame_ms": snappedf(frame_ms, 0.001),
+				"process_ms": snappedf(process_ms, 0.001),
+			})
 	_draw_total += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
 	_primitive_total += Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)
 	_frame_index += 1
@@ -96,15 +112,23 @@ func _activate_view() -> void:
 	_camera.make_current()
 	_frame_index = 0
 	_samples.clear()
+	_process_samples.clear()
+	_spike_frames.clear()
+	_spike_count = 0
 	_draw_total = 0.0
 	_primitive_total = 0.0
 
 
 func _finish_view() -> void:
 	_samples.sort()
+	var ordered_process := _process_samples.duplicate()
+	ordered_process.sort()
 	var total := 0.0
+	var process_total := 0.0
 	for value in _samples:
 		total += value
+	for value in ordered_process:
+		process_total += value
 	_results.append({
 		"view": _views[_view_index].name,
 		"frames": SAMPLE_FRAMES,
@@ -112,6 +136,11 @@ func _finish_view() -> void:
 		"p50_ms": snappedf(_samples[SAMPLE_FRAMES / 2], 0.001),
 		"p95_ms": snappedf(_samples[int(SAMPLE_FRAMES * 0.95)], 0.001),
 		"p99_ms": snappedf(_samples[int(SAMPLE_FRAMES * 0.99)], 0.001),
+		"process_mean_ms": snappedf(process_total / SAMPLE_FRAMES, 0.001),
+		"process_p95_ms": snappedf(ordered_process[int(SAMPLE_FRAMES * 0.95)], 0.001),
+		"process_max_ms": snappedf(ordered_process[-1], 0.001),
+		"spike_count": _spike_count,
+		"spike_frames": _spike_frames.duplicate(true),
 		"mean_draws": roundi(_draw_total / SAMPLE_FRAMES),
 		"mean_primitives": roundi(_primitive_total / SAMPLE_FRAMES),
 	})

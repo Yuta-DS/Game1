@@ -117,6 +117,18 @@ if stat -f '%z' "${pck_path}" >/dev/null 2>&1; then
 else
 	pck_size=$(stat -c '%s' "${pck_path}")
 fi
+pck_sha256="$(python3 - "${pck_path}" <<'PY'
+import hashlib
+import pathlib
+import sys
+
+digest = hashlib.sha256()
+with pathlib.Path(sys.argv[1]).open("rb") as stream:
+    for block in iter(lambda: stream.read(1024 * 1024), b""):
+        digest.update(block)
+print(digest.hexdigest())
+PY
+)"
 part_index=$(((pck_size - 1) / part_size))
 part_count=$((part_index + 1))
 transfer_size=0
@@ -146,9 +158,36 @@ while (( part_index >= 0 )); do
 done
 rm "${pck_path}"
 
-printf '{"count":%d,"bytes":%d,"partBytes":%d,"encoding":"gzip","transferBytes":%d}\n' \
-	"${part_count}" "${pck_size}" "${part_size}" "${transfer_size}" \
-	> "${output_dir}/index.pck.parts.json"
+# Length checks detect truncation, but cannot detect a same-sized part left in
+# an edge cache while the production alias is moving between deployments. Give
+# the browser an authoritative digest for the complete pack and every transfer
+# part so it can reject and reload mixed-release bytes before Godot mounts them.
+python3 - "${output_dir}" "${part_count}" "${pck_size}" "${part_size}" \
+		"${transfer_size}" "${pck_sha256}" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+output_dir = pathlib.Path(sys.argv[1])
+part_count = int(sys.argv[2])
+manifest = {
+    "count": part_count,
+    "bytes": int(sys.argv[3]),
+    "partBytes": int(sys.argv[4]),
+    "encoding": "gzip",
+    "transferBytes": int(sys.argv[5]),
+    "sha256": sys.argv[6],
+    "hashes": [],
+}
+for index in range(part_count):
+    path = output_dir / f"index.pck.part{index:02d}.gz"
+    manifest["hashes"].append(hashlib.sha256(path.read_bytes()).hexdigest())
+(output_dir / "index.pck.parts.json").write_text(
+    json.dumps(manifest, separators=(",", ":")) + "\n",
+    encoding="utf-8",
+)
+PY
 
 # The loader adds either the deployment build ID or a manifest-derived pack
 # identity to every part URL. Those URLs are content-stable, so returning

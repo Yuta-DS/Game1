@@ -32,8 +32,11 @@ func _run() -> void:
 		"the benchmark must report Island 1, Island 2 and both Island 3 review views")
 	for result in results:
 		assert(int(result.get("frames", 0)) == 240 \
-				and float(result.get("mean_ms", 0.0)) > 0.0,
-			"every review view must contain a complete, non-zero frame sample")
+				and float(result.get("mean_ms", 0.0)) > 0.0 \
+				and float(result.get("process_mean_ms", 0.0)) > 0.0 \
+				and int(result.get("spike_count", -1)) >= 0 \
+				and result.has("spike_frames"),
+			"every review view must contain complete frame, process and spike evidence")
 	OS.set_environment("ARTEA_WORLD_ONE_WEB_PERF", "")
 	print("WORLD_ONE_WEB_PERF_PROBE: PASS — four production-camera samples completed; normal URL remains dormant")
 	quit()

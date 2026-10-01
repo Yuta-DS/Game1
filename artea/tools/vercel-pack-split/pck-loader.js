@@ -47,6 +47,7 @@
 	const manifestBytes = new Map();
 	const manifestPartBytes = new Map();
 	const manifestEncodings = new Map();
+	const manifestPartHashes = new Map();
 
 	const countParts = async (requestUrl) => {
 		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
@@ -62,10 +63,11 @@
 						? manifest.bytes : "unknown";
 					const transferBytes = Number.isInteger(manifest.transferBytes)
 						? manifest.transferBytes : "unknown";
-					manifestCacheKeys.set(
-						requestUrl,
-						`pack-${manifest.count}-${logicalBytes}-${transferBytes}`,
-					);
+					const packIdentity = typeof manifest.sha256 === "string"
+						&& /^[0-9a-f]{64}$/i.test(manifest.sha256)
+						? manifest.sha256.toLowerCase()
+						: `${manifest.count}-${logicalBytes}-${transferBytes}`;
+					manifestCacheKeys.set(requestUrl, `pack-${packIdentity}`);
 					// Keep the byte total: the streamed Response needs a
 					// Content-Length, and streaming means it cannot be measured
 					// from an assembled Blob any more.
@@ -80,6 +82,15 @@
 							throw new Error("This browser cannot decompress the Web game pack");
 						}
 						manifestEncodings.set(requestUrl, manifest.encoding);
+					}
+					if (Array.isArray(manifest.hashes)
+							&& manifest.hashes.length === manifest.count
+							&& manifest.hashes.every((value) =>
+								typeof value === "string" && /^[0-9a-f]{64}$/i.test(value))) {
+						manifestPartHashes.set(
+							requestUrl,
+							manifest.hashes.map((value) => value.toLowerCase()),
+						);
 					}
 					return manifest.count;
 				}
@@ -100,6 +111,11 @@
 	const pause = (milliseconds) => new Promise((resolve) =>
 		window.setTimeout(resolve, milliseconds),
 	);
+	const sha256Hex = async (bytes) => {
+		const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+		return Array.from(new Uint8Array(digest), (value) =>
+			value.toString(16).padStart(2, "0")).join("");
+	};
 
 	const fetchPart = async (requestUrl, index) => {
 		const encoding = manifestEncodings.get(requestUrl);
@@ -119,17 +135,23 @@
 				if (!response.ok) {
 					throw new Error(`${url} returned ${response.status}`);
 				}
+				const transferBuffer = await response.arrayBuffer();
+				const expectedHashes = manifestPartHashes.get(requestUrl);
+				if (expectedHashes) {
+					const actualHash = await sha256Hex(transferBuffer);
+					if (actualHash !== expectedHashes[index]) {
+						throw new Error(`${url} failed SHA-256 integrity verification`);
+					}
+				}
 				let bytes;
 				if (encoding === "gzip") {
-					if (!response.body) {
-						throw new Error(`${url} returned no response body`);
-					}
-					const decompressed = response.body.pipeThrough(
+					const compressed = new Blob([transferBuffer]).stream();
+					const decompressed = compressed.pipeThrough(
 						new DecompressionStream("gzip"),
 					);
 					bytes = new Uint8Array(await new Response(decompressed).arrayBuffer());
 				} else {
-					bytes = new Uint8Array(await response.arrayBuffer());
+					bytes = new Uint8Array(transferBuffer);
 				}
 				const totalBytes = manifestBytes.get(requestUrl);
 				const partBytes = manifestPartBytes.get(requestUrl);

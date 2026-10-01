@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 
 const originalFetch = globalThis.fetch;
 const requestedUrls = [];
+const abcHash = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
 globalThis.window = {
 	location: { href: "https://example.test/" },
@@ -16,6 +17,8 @@ globalThis.window = {
 				bytes: 3,
 				partBytes: 3,
 				transferBytes: 2,
+				sha256: abcHash,
+				hashes: [abcHash],
 			}), { status: 200 });
 		}
 		if (url.includes("part00")) {
@@ -32,7 +35,7 @@ assert.equal(requestedUrls[0], "https://example.test/index.pck.parts.json",
 	"the authoritative manifest stays fresh on a canonical visit");
 assert.equal(
 	requestedUrls[1],
-	"https://example.test/index.pck.part00?build=pack-1-3-2",
+	`https://example.test/index.pck.part00?build=pack-${abcHash}`,
 	"the part URL receives the manifest-derived immutable identity",
 );
 
