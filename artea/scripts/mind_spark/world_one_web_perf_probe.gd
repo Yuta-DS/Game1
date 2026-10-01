@@ -2,13 +2,21 @@ extends Node
 
 ## Opt-in production WebGL benchmark. Enable with `?world_one_perf=1`.
 ## The probe owns a temporary camera, samples the same four views as the native
-## benchmark, prints one machine-readable result, then removes itself.
+## benchmark plus one live panel for every mini-game mode, prints one
+## machine-readable result, then removes itself.
 
+const Catalog := preload("res://scripts/mind_spark/world_one_object_minigame_catalog.gd")
+const PanelScript := preload("res://scripts/mind_spark/world_one_object_minigame_panel.gd")
 const WARMUP_FRAMES := 90
 const SAMPLE_FRAMES := 240
+const ACTIVE_WARMUP_FRAMES := 60
+const ACTIVE_SAMPLE_FRAMES := 120
+const ACTIVE_MODES := ["align", "route", "rhythm", "catch", "dodge"]
 
 var _world: MindSparkWorldOne
 var _camera: Camera3D
+var _actor: Node3D
+var _active_panel: CanvasLayer
 var _views: Array = []
 var _view_index := 0
 var _frame_index := 0
@@ -55,19 +63,27 @@ func _begin() -> void:
 	_views = [
 		{
 			"name": "island_one_tree_court",
+			"kind": "environment",
 			"position": _world.to_local(island_one_hero.to_global(Vector3(50, 6, 100))),
 			"target": _world.to_local(island_one_hero.to_global(Vector3(0, 18, 0))),
 		},
 		{
 			"name": "island_two_evidence_court",
+			"kind": "environment",
 			"position": evidence_eye_local,
 			"target": evidence_target_local,
 		},
-		{"name": "island_three_stormworks", "position": Vector3(300, 27, 28),
+		{"name": "island_three_stormworks", "kind": "environment",
+			"position": Vector3(300, 27, 28),
 			"target": Vector3(430, 35, 25)},
-		{"name": "island_three_reflection", "position": Vector3(520, 27, 15),
+		{"name": "island_three_reflection", "kind": "environment",
+			"position": Vector3(520, 27, 15),
 			"target": Vector3(650, 34, -58)},
 	]
+	_append_active_minigame_views()
+	_actor = Node3D.new()
+	_actor.name = "WorldOneWebPerfActor"
+	_world.add_child(_actor)
 	_camera = Camera3D.new()
 	_camera.name = "WorldOneWebPerfCamera"
 	_camera.near = 0.1
@@ -81,7 +97,7 @@ func _begin() -> void:
 
 
 func _process(delta: float) -> void:
-	if _frame_index < WARMUP_FRAMES:
+	if _frame_index < _warmup_frame_count():
 		_frame_index += 1
 		return
 	var frame_ms := delta * 1000.0
@@ -101,12 +117,22 @@ func _process(delta: float) -> void:
 	_draw_total += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
 	_primitive_total += Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)
 	_frame_index += 1
-	if _samples.size() >= SAMPLE_FRAMES:
+	if _samples.size() >= _sample_frame_count():
 		_finish_view()
 
 
 func _activate_view() -> void:
+	_clear_active_panel()
 	var view: Dictionary = _views[_view_index]
+	var object := view.get("object") as QuestObjectBase
+	if object != null:
+		_active_panel = PanelScript.new()
+		_active_panel.name = "WorldOneWebPerfMinigame"
+		_world.add_child(_active_panel)
+		_active_panel.call("open_object", object, _actor)
+		# The benchmark owns presentation only. It never completes a challenge or
+		# writes quest/story state while the live panel animates.
+		_active_panel.set("world", null)
 	_camera.position = view.position
 	_camera.look_at(_world.to_global(view.target), Vector3.UP)
 	_camera.make_current()
@@ -120,6 +146,7 @@ func _activate_view() -> void:
 
 
 func _finish_view() -> void:
+	var sample_frames := _sample_frame_count()
 	_samples.sort()
 	var ordered_process := _process_samples.duplicate()
 	ordered_process.sort()
@@ -131,18 +158,20 @@ func _finish_view() -> void:
 		process_total += value
 	_results.append({
 		"view": _views[_view_index].name,
-		"frames": SAMPLE_FRAMES,
-		"mean_ms": snappedf(total / SAMPLE_FRAMES, 0.001),
-		"p50_ms": snappedf(_samples[SAMPLE_FRAMES / 2], 0.001),
-		"p95_ms": snappedf(_samples[int(SAMPLE_FRAMES * 0.95)], 0.001),
-		"p99_ms": snappedf(_samples[int(SAMPLE_FRAMES * 0.99)], 0.001),
-		"process_mean_ms": snappedf(process_total / SAMPLE_FRAMES, 0.001),
-		"process_p95_ms": snappedf(ordered_process[int(SAMPLE_FRAMES * 0.95)], 0.001),
+		"kind": str(_views[_view_index].get("kind", "environment")),
+		"mode": str(_views[_view_index].get("mode", "")),
+		"frames": sample_frames,
+		"mean_ms": snappedf(total / sample_frames, 0.001),
+		"p50_ms": snappedf(_samples[sample_frames / 2], 0.001),
+		"p95_ms": snappedf(_samples[int(sample_frames * 0.95)], 0.001),
+		"p99_ms": snappedf(_samples[int(sample_frames * 0.99)], 0.001),
+		"process_mean_ms": snappedf(process_total / sample_frames, 0.001),
+		"process_p95_ms": snappedf(ordered_process[int(sample_frames * 0.95)], 0.001),
 		"process_max_ms": snappedf(ordered_process[-1], 0.001),
 		"spike_count": _spike_count,
 		"spike_frames": _spike_frames.duplicate(true),
-		"mean_draws": roundi(_draw_total / SAMPLE_FRAMES),
-		"mean_primitives": roundi(_primitive_total / SAMPLE_FRAMES),
+		"mean_draws": roundi(_draw_total / sample_frames),
+		"mean_primitives": roundi(_primitive_total / sample_frames),
 	})
 	_view_index += 1
 	if _view_index < _views.size():
@@ -159,5 +188,52 @@ func _finish_view() -> void:
 	_world.set_meta("web_perf_results", _results.duplicate(true))
 	_world.set_meta("web_perf_probe_completed", true)
 	set_process(false)
+	_clear_active_panel()
+	if _actor != null and is_instance_valid(_actor):
+		_actor.free()
 	_camera.queue_free()
 	queue_free()
+
+
+func _append_active_minigame_views() -> void:
+	var representatives := {}
+	for object in _world.get_quest_objects():
+		var spec := Catalog.challenge(object.save_id)
+		var mode := str(spec.get("mode", ""))
+		if mode in ACTIVE_MODES and not representatives.has(mode):
+			representatives[mode] = object
+	for mode in ACTIVE_MODES:
+		var object := representatives.get(mode) as QuestObjectBase
+		if object == null:
+			continue
+		var pose := _world.get_quest_review_camera_pose(object)
+		if pose.is_empty():
+			continue
+		_views.append({
+			"name": "minigame_%s" % mode,
+			"kind": "active_minigame",
+			"mode": mode,
+			"object": object,
+			"position": _world.to_local(pose.eye),
+			"target": _world.to_local(pose.target),
+		})
+	_world.set_meta("web_perf_active_modes", PackedStringArray(representatives.keys()))
+
+
+func _clear_active_panel() -> void:
+	if _active_panel != null and is_instance_valid(_active_panel):
+		_active_panel.free()
+	_active_panel = null
+
+
+func _active_view() -> bool:
+	return _view_index < _views.size() \
+		and str(_views[_view_index].get("kind", "")) == "active_minigame"
+
+
+func _warmup_frame_count() -> int:
+	return ACTIVE_WARMUP_FRAMES if _active_view() else WARMUP_FRAMES
+
+
+func _sample_frame_count() -> int:
+	return ACTIVE_SAMPLE_FRAMES if _active_view() else SAMPLE_FRAMES
