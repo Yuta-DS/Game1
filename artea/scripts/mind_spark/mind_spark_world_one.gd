@@ -6994,7 +6994,7 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 	var instrument := Node3D.new()
 	instrument.name = "IslandOneStyleQuestInstrument"
 	instrument.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
-	instrument.set_meta("design_revision", "consolidated_authoritative_crest_v10")
+	instrument.set_meta("design_revision", "mode_specific_operator_controls_v11")
 	instrument.set_meta("mini_game_identity", mini_game_mode)
 	instrument.set_meta("visual_role", "mode crest overlay on authoritative quest object")
 	instrument.set_meta("duplicate_cabinet_removed", true)
@@ -7024,7 +7024,7 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 	var basin_mount := mini_game_mode == "catch"
 	var crest_height := 3.55 if basin_mount else 10.6
 	var crest_depth := 4.78 if basin_mount else 3.38
-	var crest_radius := 1.72 if basin_mount else 2.12
+	var crest_radius := 1.50 if basin_mount else 1.90
 	instrument.set_meta("crest_mount",
 		"authoritative_basin_front" if basin_mount else "authoritative_tall_display")
 	instrument.set_meta("crest_center_height_m", crest_height)
@@ -7036,7 +7036,7 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 		basin_frame.rotation = Vector3(PI * .5, yaw, 0)
 		basin_frame.set_meta("integrates_with", "QuestObjectBase/VisualRoot/BlenderModel")
 	var dial_back := _add_cylinder(instrument, "ModeCrestBacking", dial_at,
-		crest_radius, .12, _materials.shared_style_charcoal, false, 16)
+		crest_radius, .12, _materials.shared_style_charcoal, false, 10)
 	dial_back.rotation = Vector3(PI * .5, yaw, 0)
 	dial_back.set_meta("integrates_with", "QuestObjectBase/VisualRoot/BlenderModel")
 	var side_axis := Vector3(facing.z, 0, -facing.x)
@@ -7106,6 +7106,101 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 		_:
 			_add_brick(crest, "UnknownModeCrystal", dial_at + facing * .14,
 				Bricks.build_crystal(1.0, 3.0, .28, 6), accent)
+	_build_island_three_operator_controls(instrument, center, facing, yaw,
+		side_axis, accent, mini_game_mode)
+
+
+func _build_island_three_operator_controls(instrument: Node3D, center: Vector3,
+		facing: Vector3, yaw: float, side_axis: Vector3, accent: Material,
+		mini_game_mode: String) -> void:
+	## Give each authoritative quest machine a readable player-scale task surface.
+	## The earlier badge-only treatment changed the logo but left the physical
+	## station as the same blank cabinet in all five review cameras.
+	var controls := Node3D.new()
+	controls.name = "OperatorControls_%s" % mini_game_mode.capitalize()
+	controls.set_meta("mini_game_mode", mini_game_mode)
+	controls.set_meta("preserve_authored_nodes", true)
+	controls.set_meta("design_language", "island_two_research_bench_with_island_one_facets")
+	instrument.add_child(controls)
+	var basin_mount := mini_game_mode == "catch"
+	var deck_height := 1.85 if basin_mount else 6.55
+	var deck_depth := 5.20 if basin_mount else 4.55
+	var deck_at := center + facing * deck_depth + Vector3.UP * deck_height
+	_add_box(controls, "IvoryControlDeck", deck_at,
+		Vector3(7.4, .38, 2.25), _materials.shared_style_ivory, false, yaw)
+	_add_box(controls, "CharcoalControlInset", deck_at + Vector3.UP * .24,
+		Vector3(6.55, .12, 1.55), _materials.shared_style_charcoal, false, yaw)
+	for rail_side in [-1.0, 1.0]:
+		_add_box(controls,
+			"ControlDeckEnd%s" % ("Left" if rail_side < 0 else "Right"),
+			deck_at + side_axis * float(rail_side) * 3.55 + Vector3.UP * .34,
+			Vector3(.38, .68, 2.35), _materials.shared_style_ivory, false, yaw)
+	var task_piece_count := 0
+	match mini_game_mode:
+		"align":
+			for control_index in 3:
+				var control_at := deck_at + side_axis * float(control_index - 1) * 1.75 \
+					+ facing * .05 + Vector3.UP * .52
+				_add_box(controls, "AlignmentRail_%02d" % (control_index + 1),
+					control_at, Vector3(1.05, .16, 1.18),
+					_materials.shared_style_ivory, false, yaw)
+				_add_brick(controls, "AlignmentHandle_%02d" % (control_index + 1),
+					control_at + Vector3.UP * (.42 + float(control_index) * .16),
+					Bricks.build_crystal(.34, .82, .14, 6),
+					accent if control_index == 1 else _materials.shared_style_cyan)
+				task_piece_count += 2
+		"rhythm":
+			for key_index in 5:
+				var key_at := deck_at + side_axis * float(key_index - 2) * 1.25 \
+					+ facing * .02 + Vector3.UP * .50
+				_add_box(controls, "ResonanceKey_%02d" % (key_index + 1), key_at,
+					Vector3(.86, .28 + float(key_index % 2) * .14, 1.08),
+					accent if key_index % 2 == 0 else _materials.shared_style_ivory,
+					false, yaw)
+				task_piece_count += 1
+		"dodge":
+			for channel_index in 3:
+				var channel_at := deck_at + side_axis * float(channel_index - 1) * 1.85 \
+					+ facing * .04 + Vector3.UP * .62
+				_add_box(controls, "SafeChannel_%02d" % (channel_index + 1), channel_at,
+					Vector3(1.18, .34, 1.18),
+					_materials.shared_style_ivory if channel_index == 1 else accent,
+					false, yaw)
+				_add_brick(controls, "LightningRecord_%02d" % (channel_index + 1),
+					channel_at + Vector3.UP * (.72 + float(channel_index % 2) * .32),
+					Bricks.build_crystal(.28, 1.05, .12, 5),
+					accent if channel_index != 1 else _materials.shared_style_cyan)
+				task_piece_count += 2
+		"catch":
+			for reservoir_index in 3:
+				var reservoir_at := deck_at + side_axis * float(reservoir_index - 1) * 1.72 \
+					+ facing * .03 + Vector3.UP * .58
+				_add_cylinder(controls, "RainGauge_%02d" % (reservoir_index + 1),
+					reservoir_at, .48, .56, _materials.shared_style_ivory, false, 8)
+				_add_brick(controls, "RainDropMarker_%02d" % (reservoir_index + 1),
+					reservoir_at + Vector3.UP * .78,
+					Bricks.build_crystal(.30, .88, .12, 6),
+					accent if reservoir_index != 1 else _materials.shared_style_lavender)
+				task_piece_count += 2
+		"route":
+			var route_controls: Array[Vector3] = [
+				deck_at - side_axis * 2.15 + Vector3.UP * .62,
+				deck_at + facing * .02 + Vector3.UP * .86,
+				deck_at + side_axis * 2.15 + Vector3.UP * .62,
+			]
+			for route_index in route_controls.size():
+				_add_brick(controls, "RouteNode_%02d" % (route_index + 1),
+					route_controls[route_index], Bricks.build_crystal(.42, .92, .14, 6),
+					accent if route_index == 1 else _materials.shared_style_cyan)
+				task_piece_count += 1
+				if route_index > 0:
+					_add_cable_between(controls, "RouteTrace_%02d" % route_index,
+						route_controls[route_index - 1], route_controls[route_index],
+						.11, .08, _materials.shared_style_ivory, 6)
+					task_piece_count += 1
+		_:
+			pass
+	controls.set_meta("task_piece_count", task_piece_count)
 
 
 func _build_island_three_quest_landmark(parent: Node3D, landmark_index: int,

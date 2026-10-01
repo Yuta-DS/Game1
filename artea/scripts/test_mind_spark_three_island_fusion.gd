@@ -411,19 +411,21 @@ func _run() -> void:
 			"StormworksGrandCourt/%s/IslandOneStyleQuestInstrument/AuthoritativeQuestObjectCollision" % landmark_name),
 			"each storm landmark keeps its authoritative quest machine physically solid")
 	var mode_instruments := [
-		["StormworksGrandCourt/StormLensTower/IslandOneStyleQuestInstrument", "align", "ModeCrest_Align", 3],
-		["StormworksGrandCourt/ResonanceForge/IslandOneStyleQuestInstrument", "rhythm", "ModeCrest_Rhythm", 5],
-		["StormworksGrandCourt/LightningArchive/IslandOneStyleQuestInstrument", "dodge", "ModeCrest_Dodge", 3],
-		["RainHarvestObservatory/IslandOneStyleQuestInstrument", "catch", "ModeCrest_Catch", 4],
-		["WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument", "route", "ModeCrest_Route", 5],
+		["StormworksGrandCourt/StormLensTower/IslandOneStyleQuestInstrument", "align", "ModeCrest_Align", 3, 6],
+		["StormworksGrandCourt/ResonanceForge/IslandOneStyleQuestInstrument", "rhythm", "ModeCrest_Rhythm", 5, 5],
+		["StormworksGrandCourt/LightningArchive/IslandOneStyleQuestInstrument", "dodge", "ModeCrest_Dodge", 3, 6],
+		["RainHarvestObservatory/IslandOneStyleQuestInstrument", "catch", "ModeCrest_Catch", 4, 6],
+		["WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument", "route", "ModeCrest_Route", 5, 5],
 	]
 	var distinct_modes := {}
 	for mode_spec in mode_instruments:
 		var mode_instrument := island_three.get_node(str(mode_spec[0])) as Node3D
 		var mode_name := str(mode_spec[1])
 		var crest := mode_instrument.get_node(str(mode_spec[2])) as Node3D
+		var operator_controls := mode_instrument.get_node(
+			"OperatorControls_%s" % mode_name.capitalize()) as Node3D
 		assert(str(mode_instrument.get_meta("design_revision", "")) \
-			== "consolidated_authoritative_crest_v10"
+			== "mode_specific_operator_controls_v11"
 			and str(mode_instrument.get_meta("mini_game_identity", "")) == mode_name,
 			"each Island 3 instrument identifies its actual mini-game mode in the world art")
 		assert(bool(mode_instrument.get_meta("duplicate_cabinet_removed", false))
@@ -436,6 +438,11 @@ func _run() -> void:
 			% mode_name)
 		assert(crest.find_children("*", "MeshInstance3D", true, false).size() == int(mode_spec[3]),
 			"the %s console keeps its authored low-poly crest silhouette" % mode_name)
+		assert(str(operator_controls.get_meta("mini_game_mode", "")) == mode_name
+			and int(operator_controls.get_meta("task_piece_count", 0)) == int(mode_spec[4])
+			and operator_controls.has_node("IvoryControlDeck")
+			and operator_controls.has_node("CharcoalControlInset"),
+			"the %s machine has a distinct player-scale physical control surface" % mode_name)
 		distinct_modes[mode_name] = true
 	assert(distinct_modes.size() == 5,
 		"Island 3 exposes five visibly distinct console identities for five mini-game modes")
