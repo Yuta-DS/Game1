@@ -39,6 +39,17 @@ func _run() -> void:
 	state.grant_item("signal_glass", 1, "craft:material")
 	assert(state.craft_upgrade("upgrade_signal_blade_1", 1).accepted,
 		"an unlocked recipe consumes its authored currency and material cost")
+	var assistance_prompts := [0]
+	state.assistance_suggested.connect(func(_context_id: String, _failures: int):
+		assistance_prompts[0] += 1)
+	assert(state.record_failed_attempt("world_one.test_encounter") == 1)
+	assert(state.record_failed_attempt("world_one.test_encounter") == 2 \
+		and assistance_prompts[0] == 1,
+		"the optional adaptive-assistance prompt appears after two failures")
+	assert(state.set_assistance(true) \
+		and is_equal_approx(float(state.assist_settings.telegraph_multiplier), 1.25) \
+		and is_equal_approx(float(state.assist_settings.incoming_damage_multiplier), 0.85),
+		"assistance applies the authored telegraph and incoming-damage modifiers")
 
 	for index in 35:
 		state.grant_item("signal_blade" if index % 2 == 0 else "signal_shield", 1,

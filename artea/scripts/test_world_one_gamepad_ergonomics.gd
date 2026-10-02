@@ -10,6 +10,7 @@ const BUTTON_X := 2
 const BUTTON_Y := 3
 const BUTTON_LEFT_STICK := 7
 const BUTTON_LEFT_SHOULDER := 9
+const BUTTON_RIGHT_SHOULDER := 10
 const DPAD_UP := 11
 const DPAD_DOWN := 12
 const DPAD_LEFT := 13
@@ -81,6 +82,8 @@ func _run() -> void:
 	var buttons := {
 		"jump": BUTTON_A,
 		"attack": BUTTON_X,
+		"charged_attack": BUTTON_RIGHT_SHOULDER,
+		"dodge": BUTTON_B,
 		"block": BUTTON_LEFT_SHOULDER,
 		"interact": BUTTON_Y,
 		"talk_to_milo": BUTTON_Y,
@@ -106,6 +109,8 @@ func _run() -> void:
 		"talk_to_milo": _button_event(BUTTON_Y),
 		"ui_cancel": _button_event(BUTTON_B),
 		"attack": _button_event(BUTTON_X),
+		"charged_attack": _button_event(BUTTON_RIGHT_SHOULDER),
+		"dodge": _button_event(BUTTON_B),
 		"block": _button_event(BUTTON_LEFT_SHOULDER),
 		"run": _button_event(BUTTON_LEFT_STICK),
 	}
@@ -141,8 +146,8 @@ func _run() -> void:
 		_fail("full keyboard/D-pad diagonal movement loses unit speed")
 		return
 	var touch := player.get_node_or_null("TouchControlHUD/TouchControls") as Control
-	if touch == null or touch.get_child_count() != 8:
-		_fail("the playable character does not build eight touch controls")
+	if touch == null or touch.get_child_count() != 10:
+		_fail("the playable character does not build ten complete touch controls")
 		return
 	for expected_label in {"Up": "UP", "Left": "LEFT", "Down": "DOWN", "Right": "RIGHT"}:
 		if (touch.get_node(expected_label) as Button).text != expected_label.to_upper():
@@ -297,5 +302,5 @@ func _run() -> void:
 	detected_player.queue_free()
 	await process_frame
 
-	print("WORLD_ONE_GAMEPAD_ERGONOMICS_TEST: PASS — gamepad mappings, analog walking, real run speed, adaptive HUD hints, clean desktop detection, and eight non-overlapping phone controls work")
+	print("WORLD_ONE_GAMEPAD_ERGONOMICS_TEST: PASS — gamepad mappings, analog walking, combat actions, adaptive HUD hints, and ten non-overlapping phone controls work")
 	quit(0)

@@ -306,6 +306,10 @@ func _on_enemy_defeated(enemy: MindSparkEnemyBase, xp_reward: int) -> void:
 	if not defeated_ids.has(enemy.name):
 		defeated_ids.append(enemy.name)
 		progress.xp = int(progress.xp) + xp_reward
+		var progression := get_node_or_null("/root/WorldOneProgression")
+		if progression != null and enemy.definition != null:
+			progression.call("grant_reward_bundle", enemy.definition.reward_bundle(),
+				"enemy:%s:%s" % [enemy.encounter_id, enemy.name])
 	_save_progress()
 	if _current_task_index == 1:
 		_try_complete_network_quest_task()
@@ -324,6 +328,11 @@ func _on_boss_combat_stopped() -> void:
 
 func _on_boss_defeated(xp_reward: int) -> void:
 	progress.xp = int(progress.xp) + xp_reward
+	var progression := get_node_or_null("/root/WorldOneProgression")
+	var boss := world.get_warden() as MindSparkWardenBoss
+	if progression != null and boss != null and boss.definition != null:
+		progression.call("grant_reward_bundle", boss.definition.reward_bundle(),
+			"enemy:boss:thought_storm_warden")
 	_save_progress()
 
 

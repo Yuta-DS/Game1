@@ -72,7 +72,7 @@ func start_battle() -> void:
 		return
 	active = true
 	_set_phase(Phase.PHASE_1)
-	_cycle_time = definition.telegraph_seconds
+	_cycle_time = _assisted_telegraph_seconds()
 	storm_line.visible = true
 	core_label.text = "DODGE THE WIDE STORM LINE"
 
@@ -137,7 +137,7 @@ func _physics_process(delta: float) -> void:
 		if bool(result.get("accepted", false)):
 			anchor_window_opened.emit(next_anchor)
 			core_label.text = "ANCHOR %d OPEN • STRIKE THE CRYSTAL RING" % (next_anchor + 1)
-	_cycle_time = definition.recovery_seconds + definition.telegraph_seconds
+	_cycle_time = definition.recovery_seconds + _assisted_telegraph_seconds()
 	_damage_applied = false
 
 
@@ -190,6 +190,15 @@ func _find_player() -> void:
 	var players := get_tree().get_nodes_in_group("Player")
 	if not players.is_empty():
 		_player = players[0] as CharacterBody3D
+
+
+func _assisted_telegraph_seconds() -> float:
+	var multiplier := 1.0
+	var progression := get_node_or_null("/root/WorldOneProgression")
+	if progression != null:
+		var settings: Dictionary = progression.get("assist_settings")
+		multiplier = float(settings.get("telegraph_multiplier", 1.0))
+	return float(definition.telegraph_seconds) * multiplier
 
 
 func _reset_anchor(anchor: QuestObjectBase) -> void:

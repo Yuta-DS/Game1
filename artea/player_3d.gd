@@ -1,8 +1,14 @@
 extends CharacterBody3D
 
+const COMBAT_BALANCE_PATH := "res://resources/mind_spark/player_combat_balance.json"
+
 signal health_changed(current: float, maximum: float)
+signal focus_changed(current: float, maximum: float)
 signal attack_started
 signal block_changed(active: bool)
+signal dodge_started
+signal perfect_blocked
+signal combo_changed(stage: int)
 
 @export var speed: float = 10.0
 @export var run_speed_multiplier := 1.55
@@ -22,6 +28,19 @@ signal block_changed(active: bool)
 @export var attack_active_time := 0.18
 @export var block_speed_multiplier := 0.38
 @export var blocking_available := true
+@export_group("Production combat")
+@export var max_focus := 100.0
+@export var focus_recovery_per_second := 18.0
+@export var focus_recovery_delay := 0.7
+@export var dodge_focus_cost := 25.0
+@export var block_focus_cost_per_second := 15.0
+@export var dodge_duration := 0.28
+@export var dodge_invulnerability := 0.22
+@export var dodge_speed := 18.0
+@export var perfect_block_window := 0.18
+@export var combo_window := 0.78
+@export var charged_attack_damage_multiplier := 2.15
+@export var aerial_attack_damage_multiplier := 1.45
 ## Enables the production touch HUD on devices that report touch support. Tests
 ## can force it without changing desktop presentation.
 @export var force_touch_controls := false
@@ -65,9 +84,67 @@ var _hit_reaction_remaining := 0.0
 var _visual_base_position := Vector3.ZERO
 var _visual_base_scale := Vector3.ONE
 var _train_seated_pose := false
+var current_focus := 100.0
+var is_dodging := false
+var _dodge_remaining := 0.0
+var _dodge_cooldown_remaining := 0.0
+var _invulnerability_remaining := 0.0
+var _dodge_direction := Vector3.ZERO
+var _perfect_block_remaining := 0.0
+var _counter_ready_remaining := 0.0
+var _focus_recovery_delay_remaining := 0.0
+var _combo_stage := 0
+var _combo_window_remaining := 0.0
+var _current_attack_damage := 25.0
+var _current_attack_kind := "light"
+var _equipment_attack_bonus := 0.0
+var _equipment_guard_efficiency := 0.0
+var _equipment_counter_bonus := 0.0
+var _equipment_focus_bonus := 0.0
+var _skill_effects: Dictionary = {}
+var _health_bar: ProgressBar
+var _focus_bar: ProgressBar
+var _combo_label: Label
+var _impact_particles: GPUParticles3D
+var _combat_balance: Dictionary = {}
+var _assist_panel: PanelContainer
+var _assist_context := ""
+var _input_before_assist := true
+
+
+func _load_combat_balance() -> void:
+	var parser := JSON.new()
+	if parser.parse(FileAccess.get_file_as_string(COMBAT_BALANCE_PATH)) != OK \
+			or not parser.data is Dictionary:
+		push_error("Player combat balance catalog could not be parsed")
+		return
+	_combat_balance = (parser.data as Dictionary).duplicate(true)
+	var focus := _combat_balance.get("focus", {}) as Dictionary
+	max_focus = maxf(1.0, float(focus.get("maximum", max_focus)))
+	focus_recovery_per_second = maxf(0.0,
+		float(focus.get("recovery_per_second", focus_recovery_per_second)))
+	focus_recovery_delay = maxf(0.0, float(focus.get("recovery_delay", focus_recovery_delay)))
+	dodge_focus_cost = clampf(float(focus.get("dodge_cost", dodge_focus_cost)), 0.0, max_focus)
+	block_focus_cost_per_second = maxf(0.0,
+		float(focus.get("block_cost_per_second", block_focus_cost_per_second)))
+	var dodge := _combat_balance.get("dodge", {}) as Dictionary
+	dodge_duration = maxf(0.05, float(dodge.get("duration", dodge_duration)))
+	dodge_invulnerability = clampf(float(dodge.get("invulnerability", dodge_invulnerability)),
+		0.0, dodge_duration)
+	dodge_speed = maxf(1.0, float(dodge.get("speed", dodge_speed)))
+	var attack := _combat_balance.get("attack", {}) as Dictionary
+	combo_window = maxf(0.1, float(attack.get("combo_window", combo_window)))
+	charged_attack_damage_multiplier = maxf(1.0,
+		float(attack.get("charged_damage", charged_attack_damage_multiplier)))
+	aerial_attack_damage_multiplier = maxf(1.0,
+		float(attack.get("aerial_damage", aerial_attack_damage_multiplier)))
+	var defense := _combat_balance.get("defense", {}) as Dictionary
+	perfect_block_window = clampf(float(defense.get("perfect_block_window",
+		perfect_block_window)), 0.05, 0.5)
 
 
 func _ready() -> void:
+	_load_combat_balance()
 	# Stairs are built as a stack of boxes (see hub_castle_stairs.gd), so the
 	# capsule catches on every riser edge unless the body is allowed to step up
 	# over them. 0.6 m clears the 0.42 m risers with margin to spare.
@@ -83,12 +160,15 @@ func _ready() -> void:
 	if camera_path:
 		_camera = get_node_or_null(camera_path) as Camera3D
 	current_health = max_health
+	current_focus = max_focus
 	if fox_visuals != null:
 		_visual_base_position = fox_visuals.position
 		_visual_base_scale = fox_visuals.scale
 	_build_combat_rig()
 	_build_combat_help()
 	_build_touch_controls()
+	_bind_progression()
+	_update_combat_hud()
 	_update_character_animation(0.0, false)
 
 
@@ -123,6 +203,8 @@ func set_input_enabled(v: bool) -> void:
 		_release_all_touch_actions()
 		_set_blocking(false)
 		_finish_attack()
+		is_dodging = false
+		_dodge_remaining = 0.0
 		_jump_buffer_remaining = 0.0
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -219,6 +301,8 @@ func _physics_process(delta: float) -> void:
 	if is_attacking:
 		movement_multiplier *= 0.28
 	var target_velocity := Vector2(move_dir.x, move_dir.z) * speed * movement_multiplier
+	if is_dodging:
+		target_velocity = Vector2(_dodge_direction.x, _dodge_direction.z) * dodge_speed
 	var horizontal := Vector2(velocity.x, velocity.z)
 	var acceleration := air_acceleration
 	if was_grounded:
@@ -261,38 +345,142 @@ func get_input_speed_multiplier() -> float:
 
 func _update_combat(delta: float) -> void:
 	_attack_cooldown_remaining = maxf(0.0, _attack_cooldown_remaining - delta)
+	_dodge_cooldown_remaining = maxf(0.0, _dodge_cooldown_remaining - delta)
+	_invulnerability_remaining = maxf(0.0, _invulnerability_remaining - delta)
+	_perfect_block_remaining = maxf(0.0, _perfect_block_remaining - delta)
+	_counter_ready_remaining = maxf(0.0, _counter_ready_remaining - delta)
+	_combo_window_remaining = maxf(0.0, _combo_window_remaining - delta)
+	_focus_recovery_delay_remaining = maxf(0.0, _focus_recovery_delay_remaining - delta)
+	if _combo_window_remaining <= 0.0 and not is_attacking and _combo_stage != 0:
+		_combo_stage = 0
+		combo_changed.emit(_combo_stage)
+
 	if not input_enabled:
 		_set_blocking(false)
 		_finish_attack()
 		return
 
-	_set_blocking(Input.is_action_pressed("block") and not is_attacking)
-	if Input.is_action_just_pressed("attack") and not is_blocking \
-			and _attack_cooldown_remaining <= 0.0:
-		_start_attack()
+	if is_dodging:
+		_dodge_remaining -= delta
+		if _dodge_remaining <= 0.0:
+			is_dodging = false
+			_show_status("", Color.WHITE)
+	else:
+		if Input.is_action_just_pressed("dodge"):
+			_start_dodge()
+		if not is_dodging:
+			_update_block(delta)
+			if Input.is_action_just_pressed("charged_attack") and not is_blocking \
+					and _attack_cooldown_remaining <= 0.0:
+				_start_attack("charged")
+			elif Input.is_action_just_pressed("attack") and not is_blocking \
+					and _attack_cooldown_remaining <= 0.0:
+				_start_attack("aerial" if not is_on_floor() else "light")
+
+	if not is_blocking and not is_dodging and _focus_recovery_delay_remaining <= 0.0 \
+			and current_focus < max_focus:
+		var recovery := focus_recovery_per_second * (1.0 + _equipment_focus_bonus \
+			+ float(_skill_effects.get("focus_recovery", 0.0)))
+		_set_focus(current_focus + recovery * delta)
 
 	if not is_attacking:
 		return
 	_attack_active_remaining -= delta
 	if _attack_arc != null:
-		_attack_arc.rotation.z += delta * 12.0
+		_attack_arc.rotation.z += delta * (15.0 if _current_attack_kind == "charged" else 12.0)
 	if _attack_active_remaining > 0.0:
 		_apply_attack_hits()
 	else:
 		_finish_attack()
 
 
-func _start_attack() -> void:
+func _update_block(delta: float) -> void:
+	var wants_block := Input.is_action_pressed("block") and not is_attacking
+	if wants_block and current_focus > 0.0:
+		_set_blocking(true)
+		var efficiency := clampf(_equipment_guard_efficiency \
+			+ float(_skill_effects.get("guard_cost", 0.0)), 0.0, 0.65)
+		_spend_focus(block_focus_cost_per_second * (1.0 - efficiency) * delta)
+		if current_focus <= 0.0:
+			_set_blocking(false)
+	else:
+		_set_blocking(false)
+
+
+func _start_dodge() -> bool:
+	if is_attacking or is_blocking or is_dodging or _dodge_cooldown_remaining > 0.0 \
+			or current_focus < dodge_focus_cost:
+		return false
+	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
+	_dodge_direction = get_camera_relative_move_direction(input_dir)
+	if _dodge_direction.length_squared() < 0.01:
+		var visual_forward := fox_visuals.global_basis.z if fox_visuals != null else global_basis.z
+		_dodge_direction = Vector3(visual_forward.x, 0.0, visual_forward.z).normalized()
+	_spend_focus(dodge_focus_cost)
+	is_dodging = true
+	_dodge_remaining = dodge_duration * (1.0 + float(_skill_effects.get("dodge_distance", 0.0)))
+	_dodge_cooldown_remaining = float((_combat_balance.get("dodge", {}) as Dictionary).get(
+		"cooldown", 0.42))
+	_invulnerability_remaining = dodge_invulnerability
+	_finish_attack()
+	_show_status("DODGE", Color("8eefff"))
+	dodge_started.emit()
+	return true
+
+
+func _start_attack(kind := "light") -> void:
 	is_attacking = true
-	_attack_cooldown_remaining = attack_cooldown
-	_attack_active_remaining = attack_active_time
+	_current_attack_kind = str(kind)
+	var damage_multiplier := 1.0
+	match _current_attack_kind:
+		"charged":
+			_combo_stage = 0
+			damage_multiplier = charged_attack_damage_multiplier
+			_attack_cooldown_remaining = attack_cooldown * 1.55
+			_attack_active_remaining = attack_active_time * 1.55
+		"aerial":
+			_combo_stage = 0
+			damage_multiplier = aerial_attack_damage_multiplier \
+				* (1.0 + float(_skill_effects.get("aerial_damage", 0.0)))
+			_attack_cooldown_remaining = attack_cooldown * 1.15
+			_attack_active_remaining = attack_active_time * 1.25
+			velocity.y = minf(velocity.y, -4.0)
+		_:
+			_combo_stage = _combo_stage + 1 if _combo_window_remaining > 0.0 else 1
+			_combo_stage = clampi(_combo_stage, 1, 3)
+			var attack_config := _combat_balance.get("attack", {}) as Dictionary
+			var damage_steps := attack_config.get("combo_damage", [0.82, 1.0, 1.38]) as Array
+			var cooldown_steps := attack_config.get("combo_cooldown", [0.72, 0.76, 1.0]) as Array
+			var active_steps := attack_config.get("combo_active_time", [0.85, 0.95, 1.2]) as Array
+			damage_multiplier = float(damage_steps[_combo_stage - 1])
+			_attack_cooldown_remaining = attack_cooldown * float(cooldown_steps[_combo_stage - 1])
+			_attack_active_remaining = attack_active_time * float(active_steps[_combo_stage - 1])
+			_combo_window_remaining = combo_window
+			combo_changed.emit(_combo_stage)
+	var counter_multiplier := 1.0
+	var used_counter := false
+	if _counter_ready_remaining > 0.0:
+		used_counter = true
+		counter_multiplier = float((_combat_balance.get("attack", {}) as Dictionary).get(
+			"counter_damage", 1.6)) + _equipment_counter_bonus \
+			+ float(_skill_effects.get("counter_damage", 0.0))
+		_counter_ready_remaining = 0.0
+		_show_status("COUNTER!", Color("fff19a"))
+	_current_attack_damage = (attack_damage + _equipment_attack_bonus) \
+		* damage_multiplier * counter_multiplier
 	_hit_targets.clear()
 	if _attack_collision != null:
 		_attack_collision.disabled = false
 	if _attack_arc != null:
 		_attack_arc.visible = true
 	_play_first_available(["Attack", "attack", "Attack1", "SwordAttack", "Idle"])
-	_show_status("ATTACK", Color("ffd36e"))
+	if _current_attack_kind == "charged":
+		_show_status("CHARGED STRIKE", Color("ffe58a"))
+	elif _current_attack_kind == "aerial":
+		_show_status("FALLING STRIKE", Color("a8efff"))
+	elif not used_counter:
+		_show_status("COMBO %d" % _combo_stage, Color("ffd36e"))
+	_update_combat_hud()
 	attack_started.emit()
 
 
@@ -314,14 +502,18 @@ func _apply_attack_hits() -> void:
 		if body == self or _hit_targets.has(body):
 			continue
 		if body.has_method("take_damage"):
-			body.call("take_damage", attack_damage, self)
+			var applied := float(body.call("take_damage", _current_attack_damage, self))
+			if applied > 0.0:
+				_apply_impact_feedback(body)
 			_hit_targets[body] = true
 	for area in _attack_area.get_overlapping_areas():
 		if _hit_targets.has(area):
 			continue
 		var target := _find_damage_receiver(area)
 		if target != null and target != self and target.has_method("take_damage"):
-			target.call("take_damage", attack_damage, self)
+			var applied := float(target.call("take_damage", _current_attack_damage, self))
+			if applied > 0.0:
+				_apply_impact_feedback(target)
 			_hit_targets[area] = true
 
 
@@ -341,6 +533,9 @@ func _set_blocking(active: bool) -> void:
 	if is_blocking == active:
 		return
 	is_blocking = active
+	if active:
+		_perfect_block_remaining = perfect_block_window \
+			+ float(_skill_effects.get("perfect_block_window", 0.0))
 	if _shield_visual != null:
 		_shield_visual.visible = active
 	_show_status("SHIELD" if active else "", Color("79e8ff"))
@@ -431,25 +626,170 @@ func _play_character_clip(candidates: Array[String], speed_scale: float) -> void
 			return
 
 
-# Shared damage contract for future enemies, hazards and projectiles. A held
-# shield fully absorbs the hit; otherwise health is reduced and emitted.
+# Shared damage contract for enemies, hazards and projectiles. Dodge immunity,
+# perfect-block timing, equipment and optional assistance all resolve here so
+# every encounter uses one authoritative rule set.
 func take_damage(amount: float, _source: Node = null) -> float:
 	if amount <= 0.0:
 		return 0.0
-	if is_blocking:
-		_show_status("BLOCKED!", Color("79e8ff"))
+	if _invulnerability_remaining > 0.0:
+		_show_status("EVADE", Color("8eefff"))
 		return 0.0
+	if is_blocking:
+		if _perfect_block_remaining > 0.0:
+			var defense := _combat_balance.get("defense", {}) as Dictionary
+			_counter_ready_remaining = float(defense.get("counter_window", 1.25))
+			_set_focus(current_focus + float(defense.get("perfect_block_focus_refund", 8.0)))
+			_show_status("PERFECT • COUNTER READY", Color("fff19a"))
+			perfect_blocked.emit()
+			Input.start_joy_vibration(0, 0.22, 0.34, 0.09)
+		else:
+			_show_status("BLOCKED", Color("79e8ff"))
+		return 0.0
+	var progression := get_node_or_null("/root/WorldOneProgression")
+	if progression != null:
+		var settings: Dictionary = progression.get("assist_settings")
+		amount *= float(settings.get("incoming_damage_multiplier", 1.0))
 	var applied := minf(amount, current_health)
 	current_health = maxf(0.0, current_health - applied)
 	_hit_reaction_remaining = 0.32
 	_show_status("-%d HP" % int(applied), Color("ff786f"))
 	health_changed.emit(current_health, max_health)
+	if current_health <= 0.0 and progression != null \
+			and progression.has_method("record_failed_attempt"):
+		progression.call("record_failed_attempt", "world_one.combat")
+	_update_combat_hud()
 	return applied
 
 
 func heal(amount: float) -> void:
 	current_health = clampf(current_health + maxf(amount, 0.0), 0.0, max_health)
 	health_changed.emit(current_health, max_health)
+	_update_combat_hud()
+
+
+func _spend_focus(amount: float) -> bool:
+	if amount <= 0.0:
+		return true
+	if current_focus + 0.001 < amount:
+		_set_focus(0.0)
+		_focus_recovery_delay_remaining = focus_recovery_delay
+		return false
+	_set_focus(current_focus - amount)
+	_focus_recovery_delay_remaining = focus_recovery_delay
+	return true
+
+
+func _set_focus(value: float) -> void:
+	var next := clampf(value, 0.0, max_focus)
+	if is_equal_approx(next, current_focus):
+		return
+	current_focus = next
+	focus_changed.emit(current_focus, max_focus)
+	_update_combat_hud()
+
+
+func _apply_impact_feedback(target: Node) -> void:
+	if target.has_method("receive_knockback") and target is Node3D:
+		var target_3d := target as Node3D
+		var direction: Vector3 = (target_3d.global_position - global_position).normalized()
+		target.call("receive_knockback", direction,
+			8.5 if _current_attack_kind == "charged" else 4.5)
+	if _impact_particles != null:
+		_impact_particles.restart()
+	Input.start_joy_vibration(0, 0.18, 0.28 if _current_attack_kind == "charged" else 0.18, 0.07)
+	var camera := _active_camera()
+	if camera != null and not bool(ProjectSettings.get_setting(
+			"accessibility/reduced_camera_shake", false)):
+		var original := camera.h_offset
+		camera.h_offset = original + (0.06 if _current_attack_kind == "charged" else 0.035)
+		var tween := create_tween()
+		tween.tween_property(camera, "h_offset", original, 0.11)
+
+
+func _bind_progression() -> void:
+	var progression := get_node_or_null("/root/WorldOneProgression")
+	if progression == null:
+		return
+	var loadout_callable := Callable(self, "_on_progression_loadout_changed")
+	var skill_callable := Callable(self, "_on_progression_skill_changed")
+	var assist_callable := Callable(self, "_on_assistance_suggested")
+	if not progression.is_connected("equipment_changed", loadout_callable):
+		progression.connect("equipment_changed", loadout_callable)
+	if not progression.is_connected("skill_unlocked", skill_callable):
+		progression.connect("skill_unlocked", skill_callable)
+	if not progression.is_connected("assistance_suggested", assist_callable):
+		progression.connect("assistance_suggested", assist_callable)
+	_apply_progression_effects()
+
+
+func _on_progression_loadout_changed(_slot: String, _item_id: String) -> void:
+	_apply_progression_effects()
+
+
+func _on_progression_skill_changed(_skill_id: String) -> void:
+	_apply_progression_effects()
+
+
+func _on_assistance_suggested(context_id: String, _failures: int) -> void:
+	_assist_context = context_id
+	if _assist_panel != null:
+		_input_before_assist = input_enabled
+		set_input_enabled(false)
+		_assist_panel.visible = true
+		var enable := _assist_panel.get_node("Body/Actions/Enable") as Button
+		enable.grab_focus()
+
+
+func _enable_adaptive_assistance() -> void:
+	var progression := get_node_or_null("/root/WorldOneProgression")
+	if progression != null:
+		progression.call("set_assistance", true)
+	if _assist_panel != null:
+		_assist_panel.visible = false
+	set_input_enabled(_input_before_assist)
+	_show_status("ASSISTANCE ON • REWARDS UNCHANGED", Color("9ef3c0"))
+
+
+func _dismiss_assistance_prompt() -> void:
+	if _assist_panel != null:
+		_assist_panel.visible = false
+	set_input_enabled(_input_before_assist)
+
+
+func _apply_progression_effects() -> void:
+	var progression := get_node_or_null("/root/WorldOneProgression")
+	if progression == null:
+		return
+	_equipment_attack_bonus = 0.0
+	_equipment_guard_efficiency = 0.0
+	_equipment_counter_bonus = 0.0
+	_equipment_focus_bonus = 0.0
+	var health_bonus := 0.0
+	var equipped: Dictionary = progression.get("equipped")
+	for slot in equipped:
+		var item_id := str(equipped[slot])
+		if item_id.is_empty():
+			continue
+		var definition: Dictionary = progression.call("get_item_definition", item_id)
+		var stats := definition.get("stats", {}) as Dictionary
+		_equipment_attack_bonus += float(stats.get("attack", 0.0))
+		_equipment_guard_efficiency += float(stats.get("guard", 0.0)) / 100.0
+		_equipment_counter_bonus += float(stats.get("counter", 0.0)) / 100.0
+		_equipment_focus_bonus += float(stats.get("focus_recovery", 0.0)) / 100.0
+		health_bonus += float(stats.get("health", 0.0))
+	_skill_effects.clear()
+	for skill_id in progression.get("unlocked_skills"):
+		var skill: Dictionary = progression.call("get_skill_definition", str(skill_id))
+		var effect := skill.get("effect", {}) as Dictionary
+		for key in effect:
+			_skill_effects[key] = float(_skill_effects.get(key, 0.0)) + float(effect[key])
+	var old_max := max_health
+	max_health = 100.0 + health_bonus + float(_skill_effects.get("health", 0.0))
+	if old_max > 0.0:
+		current_health = clampf(current_health + (max_health - old_max), 0.0, max_health)
+	health_changed.emit(current_health, max_health)
+	_update_combat_hud()
 
 
 func _play_first_available(candidates: Array[String]) -> void:
@@ -533,11 +873,56 @@ func _build_combat_rig() -> void:
 	_combat_status.visible = false
 	add_child(_combat_status)
 
+	_impact_particles = GPUParticles3D.new()
+	_impact_particles.name = "ImpactParticles"
+	_impact_particles.amount = 12
+	_impact_particles.lifetime = 0.34
+	_impact_particles.one_shot = true
+	_impact_particles.explosiveness = 0.92
+	var particle_mesh := SphereMesh.new()
+	particle_mesh.radius = 0.055
+	particle_mesh.height = 0.11
+	particle_mesh.radial_segments = 6
+	particle_mesh.rings = 3
+	particle_mesh.material = _combat_material(Color("80ecff"), 1.2)
+	_impact_particles.draw_pass_1 = particle_mesh
+	var particle_process := ParticleProcessMaterial.new()
+	particle_process.direction = Vector3(0.0, 1.0, 0.0)
+	particle_process.spread = 80.0
+	particle_process.initial_velocity_min = 3.5
+	particle_process.initial_velocity_max = 7.0
+	particle_process.gravity = Vector3(0.0, -9.0, 0.0)
+	_impact_particles.process_material = particle_process
+	_impact_particles.position = Vector3(0.0, 1.15, 2.8)
+	rig_parent.add_child(_impact_particles)
+
 
 func _build_combat_help() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "CombatHelpHUD"
 	add_child(layer)
+	var vitals := PanelContainer.new()
+	vitals.name = "CombatVitals"
+	vitals.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	vitals.position = Vector2(22.0, -154.0)
+	vitals.size = Vector2(276.0, 84.0)
+	vitals.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var vitals_body := VBoxContainer.new()
+	vitals_body.name = "Bars"
+	vitals_body.add_theme_constant_override("separation", 4)
+	vitals.add_child(vitals_body)
+	_health_bar = _combat_bar("HEALTH", Color("e86d73"))
+	_focus_bar = _combat_bar("FOCUS", Color("58ddec"))
+	vitals_body.add_child(_health_bar)
+	vitals_body.add_child(_focus_bar)
+	_combo_label = Label.new()
+	_combo_label.text = "COMBO READY"
+	_combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_combo_label.add_theme_font_size_override("font_size", 12)
+	_combo_label.modulate = Color("ffe28a")
+	vitals_body.add_child(_combo_label)
+	layer.add_child(vitals)
+	_build_assistance_prompt(layer)
 	_combat_help_panel = ColorRect.new()
 	_combat_help_panel.name = "CombatHelpPanel"
 	_combat_help_panel.color = Color(0.04, 0.04, 0.12, 0.72)
@@ -557,6 +942,83 @@ func _build_combat_help() -> void:
 			_layout_combat_help(get_viewport().get_visible_rect().size))
 
 
+func _build_assistance_prompt(layer: CanvasLayer) -> void:
+	_assist_panel = PanelContainer.new()
+	_assist_panel.name = "AdaptiveAssistancePrompt"
+	_assist_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_assist_panel.position = Vector2(-250.0, -120.0)
+	_assist_panel.size = Vector2(500.0, 240.0)
+	_assist_panel.visible = false
+	var body := VBoxContainer.new()
+	body.name = "Body"
+	body.add_theme_constant_override("separation", 12)
+	_assist_panel.add_child(body)
+	var title := Label.new()
+	title.text = "TRY ADAPTIVE ASSISTANCE?"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+	title.modulate = Color("8eefff")
+	body.add_child(title)
+	var detail := Label.new()
+	detail.text = "Telegraphs last 25% longer and incoming damage is 15% lower.\nStory rewards, equipment, XP and identity evidence stay unchanged."
+	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.add_theme_font_size_override("font_size", 16)
+	body.add_child(detail)
+	var actions := HBoxContainer.new()
+	actions.name = "Actions"
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	body.add_child(actions)
+	var enable := Button.new()
+	enable.name = "Enable"
+	enable.text = "ENABLE ASSISTANCE"
+	enable.custom_minimum_size = Vector2(210.0, 46.0)
+	enable.pressed.connect(_enable_adaptive_assistance)
+	actions.add_child(enable)
+	var standard := Button.new()
+	standard.name = "Standard"
+	standard.text = "KEEP STANDARD"
+	standard.custom_minimum_size = Vector2(180.0, 46.0)
+	standard.pressed.connect(_dismiss_assistance_prompt)
+	actions.add_child(standard)
+	layer.add_child(_assist_panel)
+
+
+func _combat_bar(caption: String, color: Color) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.name = caption.capitalize() + "Bar"
+	bar.max_value = 100.0
+	bar.value = 100.0
+	bar.show_percentage = true
+	bar.custom_minimum_size = Vector2(260.0, 22.0)
+	var background := StyleBoxFlat.new()
+	background.bg_color = Color(0.015, 0.03, 0.06, 0.9)
+	background.set_corner_radius_all(7)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = color
+	fill.set_corner_radius_all(7)
+	bar.add_theme_stylebox_override("background", background)
+	bar.add_theme_stylebox_override("fill", fill)
+	bar.tooltip_text = caption
+	return bar
+
+
+func _update_combat_hud() -> void:
+	if _health_bar != null:
+		_health_bar.max_value = max_health
+		_health_bar.value = current_health
+	if _focus_bar != null:
+		_focus_bar.max_value = max_focus
+		_focus_bar.value = current_focus
+	if _combo_label != null:
+		if _counter_ready_remaining > 0.0:
+			_combo_label.text = "PERFECT COUNTER READY"
+		elif _combo_stage > 0 and _combo_window_remaining > 0.0:
+			_combo_label.text = "LIGHT COMBO  %d / 3" % _combo_stage
+		else:
+			_combo_label.text = "COMBO READY"
+
+
 func _set_input_hint_mode(mode: String) -> void:
 	if mode not in ["keyboard", "controller", "touch"]:
 		return
@@ -572,14 +1034,14 @@ func _layout_combat_help(viewport_size: Vector2) -> void:
 	var compact := viewport_size.x < 700.0
 	match _input_hint_mode:
 		"controller":
-			_combat_help_label.text = "LS MOVE  A JUMP  X HIT  LB SHIELD" if compact \
-				else "LEFT STICK  MOVE   A  JUMP   X  ATTACK   HOLD LB  SHIELD   LS  RUN"
+			_combat_help_label.text = "LS MOVE  A JUMP  X COMBO  B DODGE" if compact \
+				else "LEFT STICK MOVE   A JUMP   X COMBO   RB CHARGE   B DODGE   HOLD LB BLOCK"
 		"touch":
-			_combat_help_label.text = "MOVE  JUMP  HIT  SHIELD  TALK" if compact \
-				else "TOUCH  MOVE   JUMP   ATTACK   SHIELD   TALK"
+			_combat_help_label.text = "MOVE  JUMP  COMBO  DODGE  BLOCK" if compact \
+				else "TOUCH MOVE   JUMP   COMBO   CHARGE   DODGE   BLOCK   TALK"
 		_:
-			_combat_help_label.text = "WASD MOVE  SPACE JUMP  F HIT  G SHIELD" if compact \
-				else "WASD  MOVE   SPACE  JUMP   F  ATTACK   HOLD G  SHIELD   SHIFT  RUN"
+			_combat_help_label.text = "WASD  SPACE JUMP  F COMBO  C DODGE" if compact \
+				else "WASD MOVE   SPACE JUMP   F COMBO   R CHARGE   C DODGE   HOLD G BLOCK"
 	_combat_help_panel.position = Vector2(12.0 if compact else 22.0,
 		-146.0 if _input_hint_mode == "touch" else -62.0)
 	_combat_help_panel.size = Vector2(
@@ -647,7 +1109,9 @@ func _build_touch_controls(from_touch_event := false) -> void:
 	_add_touch_button("Down", "DOWN", "move_backward")
 	_add_touch_button("Right", "RIGHT", "move_right")
 	_add_touch_button("Jump", "JUMP", "jump")
-	_add_touch_button("Attack", "HIT", "attack")
+	_add_touch_button("Attack", "COMBO", "attack")
+	_add_touch_button("Charged", "CHARGE", "charged_attack")
+	_add_touch_button("Dodge", "DODGE", "dodge")
 	_add_touch_button("Block", "HOLD\nSHIELD", "block")
 	_add_touch_button("Interact", "TALK", "interact")
 	_layout_touch_controls(get_viewport().get_visible_rect().size)
@@ -660,6 +1124,7 @@ func _add_touch_button(node_name: String, caption: String, action: StringName) -
 	var button := Button.new()
 	button.name = node_name
 	button.text = caption
+	button.clip_text = true
 	button.custom_minimum_size = Vector2(52.0, 52.0)
 	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -735,12 +1200,15 @@ func _layout_touch_controls(viewport_size: Vector2,
 	var margin := (10.0 if physical_width < 360.0 else (12.0 if compact else 18.0)) * ui_scale
 	var bottom := viewport_size.y - margin - button_size.y
 	var row_above := bottom - button_size.y - gap
+	var row_upper := row_above - button_size.y - gap
 	var left_x := margin
 	var action_x := viewport_size.x - margin - button_size.x * 2.0 - gap
 	_set_touch_button_rect("Up", Vector2(left_x + button_size.x + gap, row_above), button_size)
 	_set_touch_button_rect("Left", Vector2(left_x, bottom), button_size)
 	_set_touch_button_rect("Down", Vector2(left_x + button_size.x + gap, bottom), button_size)
 	_set_touch_button_rect("Right", Vector2(left_x + (button_size.x + gap) * 2.0, bottom), button_size)
+	_set_touch_button_rect("Charged", Vector2(action_x, row_upper), button_size)
+	_set_touch_button_rect("Dodge", Vector2(action_x + button_size.x + gap, row_upper), button_size)
 	_set_touch_button_rect("Jump", Vector2(action_x, row_above), button_size)
 	_set_touch_button_rect("Attack", Vector2(action_x + button_size.x + gap, row_above), button_size)
 	_set_touch_button_rect("Block", Vector2(action_x, bottom), button_size)

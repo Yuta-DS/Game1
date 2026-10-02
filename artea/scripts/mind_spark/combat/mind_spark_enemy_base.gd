@@ -27,6 +27,7 @@ var _attack_applied := false
 var _spawn_position := Vector3.ZERO
 var _authored_visual: Node3D
 var _authored_animation: AnimationPlayer
+var _knockback_velocity := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -88,7 +89,15 @@ func take_damage(amount: float, source: Node = null) -> float:
 		_defeat()
 	else:
 		_set_state(State.RECOVERY, definition.recovery_seconds)
+	_flash_on_hit()
 	return applied
+
+
+func receive_knockback(direction: Vector3, strength: float) -> void:
+	if state == State.DEFEATED:
+		return
+	var planar := Vector3(direction.x, 0.0, direction.z).normalized()
+	_knockback_velocity = planar * clampf(strength, 0.0, 12.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -120,6 +129,8 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector3.ZERO
 			if _state_time <= 0.0:
 				_set_state(State.TELEGRAPH, definition.validated_telegraph())
+	velocity += _knockback_velocity
+	_knockback_velocity = _knockback_velocity.move_toward(Vector3.ZERO, 24.0 * delta)
 	move_and_slide()
 
 
@@ -156,6 +167,11 @@ func _set_state(next_state: int, duration: float) -> void:
 	if state == next_state and duration <= 0.0:
 		return
 	state = next_state
+	if state == State.TELEGRAPH:
+		var progression := get_node_or_null("/root/WorldOneProgression")
+		if progression != null:
+			var settings: Dictionary = progression.get("assist_settings")
+			duration *= float(settings.get("telegraph_multiplier", 1.0))
 	_state_time = duration
 	_attack_applied = false
 	telegraph.visible = state == State.TELEGRAPH
@@ -169,6 +185,16 @@ func _set_state(next_state: int, duration: float) -> void:
 				_authored_animation.play(candidate)
 				break
 	state_changed.emit(self, state)
+
+
+func _flash_on_hit() -> void:
+	var target := _authored_visual if _authored_visual != null else shell
+	if target == null:
+		return
+	var original := target.scale
+	target.scale = original * 1.06
+	var tween := create_tween()
+	tween.tween_property(target, "scale", original, 0.12)
 
 
 func _defeat() -> void:

@@ -8,6 +8,7 @@ signal equipment_changed(slot: String, item_id: String)
 signal currency_changed(currency_id: String, amount: int)
 signal skill_unlocked(skill_id: String)
 signal assist_changed(settings: Dictionary)
+signal assistance_suggested(context_id: String, failures: int)
 
 const SAVE_PATH := "user://world_one_progression.json"
 const CATALOG_PATH := "res://resources/mind_spark/progression_catalog.json"
@@ -29,6 +30,7 @@ var unlocked_recipes := PackedStringArray()
 var unlocked_skills := PackedStringArray()
 var reward_receipts := PackedStringArray()
 var mastery_records: Dictionary = {}
+var failure_counts: Dictionary = {}
 var assist_settings := {
 	"enabled": false,
 	"telegraph_multiplier": 1.0,
@@ -66,6 +68,7 @@ func reset_new_save(write := false) -> void:
 	unlocked_skills = PackedStringArray()
 	reward_receipts = PackedStringArray()
 	mastery_records.clear()
+	failure_counts.clear()
 	assist_settings = {
 		"enabled": false,
 		"telegraph_multiplier": 1.0,
@@ -297,6 +300,21 @@ func set_assistance(enabled: bool) -> bool:
 	return true
 
 
+func record_failed_attempt(context_id: String) -> int:
+	var safe_id := context_id.strip_edges()
+	if safe_id.is_empty() or safe_id.length() > 120:
+		return 0
+	var before := snapshot()
+	var failures := clampi(int(failure_counts.get(safe_id, 0)) + 1, 1, 99)
+	failure_counts[safe_id] = failures
+	if not save_progress():
+		_apply_snapshot(before)
+		return 0
+	if failures >= 2 and not bool(assist_settings.get("enabled", false)):
+		assistance_suggested.emit(safe_id, failures)
+	return failures
+
+
 func has_item(item_id: String) -> bool:
 	return item_quantity(item_id) > 0
 
@@ -324,6 +342,7 @@ func snapshot() -> Dictionary:
 		"unlocked_skills": Array(unlocked_skills),
 		"reward_receipts": Array(reward_receipts),
 		"mastery_records": mastery_records.duplicate(true),
+		"failure_counts": failure_counts.duplicate(true),
 		"assist_settings": assist_settings.duplicate(true),
 	}
 
@@ -435,6 +454,12 @@ func _apply_snapshot(data: Dictionary) -> bool:
 	reward_receipts = _valid_receipts(data.get("reward_receipts", []))
 	mastery_records = (data.get("mastery_records", {}) as Dictionary).duplicate(true) \
 		if data.get("mastery_records", {}) is Dictionary else {}
+	failure_counts.clear()
+	var loaded_failures := data.get("failure_counts", {}) as Dictionary
+	for context_id in loaded_failures:
+		var safe_id := str(context_id).strip_edges()
+		if not safe_id.is_empty() and safe_id.length() <= 120:
+			failure_counts[safe_id] = clampi(int(loaded_failures[context_id]), 0, 99)
 	var loaded_assist := data.get("assist_settings", {}) as Dictionary
 	set_assistance_fields(bool(loaded_assist.get("enabled", false)))
 	_recalculate_level(false)
