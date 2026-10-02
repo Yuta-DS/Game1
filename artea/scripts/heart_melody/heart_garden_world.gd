@@ -29,7 +29,7 @@ const RouteStoneModel := preload("res://assets3D/heart_melody/island_one/glb/hea
 const BenchModel := preload("res://assets3D/heart_melody/island_one/glb/song_memory_bench.glb")
 const LanternModel := preload("res://assets3D/heart_melody/island_one/glb/comfort_lantern.glb")
 const BlossomModel := preload("res://assets3D/heart_melody/island_one/glb/listening_blossom.glb")
-const PLANTERS := [Vector3(-55,0,-62), Vector3(12,1,65), Vector3(68,2,-34)]
+const PLANTERS := [Vector3(-55,0,-62), Vector3(12,2,65), Vector3(68,2,-34)]
 # State.SYMBOLS is [leaf, droplet, sun], so this deliberately keeps droplet
 # north and sun east while still presenting the authored triangle in-world.
 const DRUMS := [Vector3(160,2,-58), Vector3(160,2,58), Vector3(205,2,0)]
@@ -83,6 +83,7 @@ var _restored_dressing: Node3D
 var _seeded_dressing: Node3D
 var _grass_surfaces: Array[MeshInstance3D] = []
 var _restoration_glow: OmniLight3D
+var _echo_berry_fruit: Array[MeshInstance3D] = []
 
 
 func _ready() -> void:
@@ -224,6 +225,7 @@ func _build_garden() -> void:
 	route_stone.position = Vector3(-165,0,-23)
 	route_stone.scale = Vector3.ONE * 1.2
 	entry.add_child(route_stone)
+	_build_echo_berry_grove(entry)
 	for i in 3:
 		var root := (PlanterModels[i] as PackedScene).instantiate() as Node3D
 		root.name = "FeelingPlanter%d" % i
@@ -263,7 +265,9 @@ func _build_garden() -> void:
 	Kit.sign_text(self,"LISTEN • PLAY • CONFIRM",Vector3(105,8.2,0),22)
 	_build_bench(Vector3(-135,0,-45),"bench_arrival")
 	_build_bench(Vector3(126,2,32),"bench_rhythm")
-	_build_bench(Vector3(285,3,11),"bench_overlook")
+	# Keep the optional replay bench beside the overlook approach instead of
+	# directly across the required return line from the second clearing.
+	_build_bench(Vector3(274,3,13),"bench_overlook")
 	_build_lantern(Vector3(-135,0,42),"lantern_arrival")
 	_build_lantern(Vector3(230,2,-18),"lantern_mid")
 	for index in 2:
@@ -275,6 +279,27 @@ func _build_garden() -> void:
 		for side in [-1.0,1.0]:
 			Kit.flower(self,clearing+Vector3(side*15,0.8,13),1.5,"leaf_light")
 	_build_environment_dressing()
+
+
+func _build_echo_berry_grove(parent: Node3D) -> void:
+	var grove := Node3D.new()
+	grove.name = "EchoBerryListeningGrove"
+	grove.position = Vector3(-112, 0, -28)
+	parent.add_child(grove)
+	for bush_index in 3:
+		var x := float(bush_index - 1) * 4.2
+		Kit.branch(grove, "EchoBerryStem_%02d" % (bush_index + 1),
+			Vector3(x, 0, 0), Vector3(x, 3.2, 0), 0.28, "wood")
+		Kit.facet(grove, "EchoBerryLeaves_%02d" % (bush_index + 1),
+			Vector3(x, 3.4, 0), Vector3(2.7, 1.9, 2.4), "leaf")
+		var fruit := Kit.facet(grove, "EchoBerryFruit_%02d" % (bush_index + 1),
+			Vector3(x, 3.0, 2.0), Vector3(0.75, 0.95, 0.75), "blue")
+		fruit.set_meta("fruit_id", "echo_berry")
+		fruit.set_meta("note_role", "repeat")
+		_echo_berry_fruit.append(fruit)
+	Kit.sign_text(grove, "ECHO BERRIES\nLISTEN • HARVEST • PLANT", Vector3(0, 6.6, 0), 22)
+	_register("echo_berry_grove", grove.position + Vector3(0, 0, 5),
+		"Harvest three Echo Berries")
 
 
 func _build_departure(parent: Node3D) -> void:
@@ -393,6 +418,9 @@ func _restore() -> void:
 	if _seeded_dressing != null: _seeded_dressing.visible = state.planted_count() > 0
 	if _restored_dressing != null: _restored_dressing.visible = state.complete()
 	if _restoration_glow != null: _restoration_glow.visible = state.complete()
+	var echo_harvested := state.story_fruit_count("echo_berry") >= 3
+	for fruit in _echo_berry_fruit:
+		fruit.visible = not echo_harvested
 	var grass_color := Color("a8ce69") if state.complete() else (
 		Color("9fc162") if state.planted_count() > 0 else Color("91ba59"))
 	for surface in _grass_surfaces:
@@ -620,8 +648,23 @@ func open_control(id: String) -> void:
 	if id.begins_with("planter_"):
 		var index := int(id.get_slice("_",1))
 		_heading("Feeling Seed %d\nEvery choice can bloom."%(index+1))
-		for choice in State.CHOICES:
-			_button("Choose a sound instead" if choice == "sound" else choice.capitalize(),_preview_seed.bind(index,choice))
+		if state.story_fruit_count("echo_berry") < 3:
+			_heading("The celesta needs three Echo Berries. Follow the repeating blue notes in Quiet Meadow.")
+			_button("Close and find the Echo Berry grove", _close_panel)
+		else:
+			for choice in State.CHOICES:
+				_button("Choose a sound instead" if choice == "sound" else choice.capitalize(),_preview_seed.bind(index,choice))
+	elif id == "echo_berry_grove":
+		_heading("Echo Berry Listening Grove\nEach berry repeats a short blue note and is protected for the story.")
+		if state.story_fruit_count("echo_berry") < 3:
+			_button("Listen to the three repeating notes", play_phrase.bind(["leaf", "leaf", "leaf"], 0.55))
+			_button("Harvest three Echo Berries", func():
+				var result := state.grant_story_fruit("echo_berry", 3, "story.echo.intro")
+				_feedback(result.accepted, result.message)
+				open_control("echo_berry_grove"))
+		else:
+			_heading("3/3 Echo Berries are safe in the quest pouch. Take them to the three Feeling Seed celestas.")
+			_button("Replay their repeating note", play_phrase.bind(["leaf", "leaf", "leaf"], 0.55))
 	elif id.begins_with("drum_"):
 		var index := int(id.get_slice("_",1))
 		_heading("%s flower"%State.SYMBOLS[index].capitalize())

@@ -78,7 +78,12 @@ func _walk(target: Vector3) -> bool:
 		" on_floor=", player.is_on_floor())
 	for collision_index in player.get_slide_collision_count():
 		var collision := player.get_slide_collision(collision_index)
-		print("  COLLIDER ", collision.get_collider().get_path(), " normal=", collision.get_normal())
+		var collider := collision.get_collider() as Node
+		var source := collider.get_parent() if collider != null else null
+		print("  COLLIDER ", collider.get_path() if collider != null else "missing",
+			" source=", source.name if source != null else "missing",
+			" source_position=", source.global_position if source is Node3D else Vector3.ZERO,
+			" normal=", collision.get_normal())
 	return false
 
 func _release() -> void:

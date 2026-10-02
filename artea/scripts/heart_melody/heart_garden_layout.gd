@@ -14,8 +14,12 @@ const QUIET_CENTER := Vector3(-130, 0, 0)
 const QUIET_RADII := Vector2(145, 125)
 const GARDEN_CENTER := Vector3(150, 2, 0)
 const GARDEN_RADII := Vector2(165, 140)
-const ARRIVAL := Vector3(-250, 2, 0)
-const PLANTER_COURT := Vector3(-8, 1, 0)
+# Route geometry follows the Quiet Meadow floor at y=0. The player spawn remains
+# two metres above it in HeartGardenWorld so the production capsule settles
+# safely; using that spawn height here created a solid stair riser across the
+# first walking line.
+const ARRIVAL := Vector3(-250, 0, 0)
+const PLANTER_COURT := Vector3(-8, 2, 0)
 const DRUM_LAWN := Vector3(175, 2, 0)
 const CLEARING_A := Vector3(245, 2, -76)
 const CLEARING_B := Vector3(300, 2, 66)
@@ -51,6 +55,7 @@ static func build(parent: Node3D) -> Dictionary:
 		for index in branch.size() - 1:
 			_add_path(root, branch[index], branch[index + 1], 4.0, routes)
 	_build_landmark_terraces(root)
+	_build_district_transition_collision(root)
 	_build_perimeter(root, QUIET_CENTER, QUIET_RADII, GARDEN_CENTER, GARDEN_RADII, false)
 	_build_perimeter(root, GARDEN_CENTER, GARDEN_RADII, QUIET_CENTER, QUIET_RADII, true)
 	_build_waterfalls(root)
@@ -94,10 +99,12 @@ static func _add_ellipse_collision(parent: Node3D, center: Vector3, radii: Vecto
 		var half_width := radii.x * sqrt(maxf(0.10, 1.0 - z_fraction * z_fraction))
 		var body := StaticBody3D.new()
 		body.name = "ContinuousDeckCollision"
-		body.position = Vector3(center.x, top_y - 0.5, center.z + z_fraction * radii.y)
+		body.position = Vector3(center.x, top_y - 0.10, center.z + z_fraction * radii.y)
 		var collision := CollisionShape3D.new()
 		var slab := BoxShape3D.new()
-		slab.size = Vector3(half_width * 2.0, 1.0, radii.y * 0.43)
+		# Thin support slabs keep their side faces below the capsule's step height;
+		# the continuous terrace ramps own every district height transition.
+		slab.size = Vector3(half_width * 2.0, 0.20, radii.y * 0.43)
 		collision.shape = slab
 		body.add_child(collision)
 		parent.add_child(body)
@@ -116,6 +123,9 @@ static func _build_perimeter(parent: Node3D, center: Vector3, radii: Vector2,
 		var middle := (a + b) * 0.5
 		if _inside_ellipse(middle, other_center, other_radii, 0.91): continue
 		if east_exit and middle.x > 304 and absf(middle.z) < 10: continue
+		if east_exit and (middle.distance_to(CLEARING_A) < 18.0 \
+				or middle.distance_to(CLEARING_B) < 18.0):
+			continue
 		Kit.branch(parent, "GoldRailCap", a + Vector3.UP * 1.25, b + Vector3.UP * 1.25,
 			0.16, "gold", true)
 		if index % 2 == 0:
@@ -168,8 +178,24 @@ static func _add_stair_ramp(parent: Node3D, a: Vector3, b: Vector3, width: float
 		var height := lerpf(0.1, high.y - low.y + 0.12, progress)
 		var point := low + direction * length * (float(index) + 0.5) / 8.0
 		var step := Kit.box(parent, "IvoryTerraceStep", point + Vector3(0, -0.05 + height * 0.5, 0),
-			Vector3(width, height, length / 8.0 + 0.14), "ivory", true)
+			Vector3(width, height, length / 8.0 + 0.14), "ivory", false)
 		step.basis = Basis(right, Vector3.UP, direction)
+	# A single shallow collision ramp runs through both floor slabs. Decorative
+	# risers remain visible, but they cannot trap the production capsule against
+	# the raised district's vertical slab edge.
+	var slope := (high - low).normalized()
+	var slope_right := Vector3.UP.cross(slope).normalized()
+	var slope_up := slope.cross(slope_right).normalized()
+	var body := StaticBody3D.new()
+	body.name = "ContinuousTerraceRampCollision"
+	body.position = (low + high) * 0.5 - slope_up * 0.28
+	body.basis = Basis(slope_right, slope_up, slope)
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(width, 0.56, low.distance_to(high) + 5.0)
+	collision.shape = shape
+	body.add_child(collision)
+	parent.add_child(body)
 
 
 static func _build_landmark_terraces(parent: Node3D) -> void:
@@ -199,6 +225,33 @@ static func _build_landmark_terraces(parent: Node3D) -> void:
 			Kit.facet(parent, "PetalMosaic", spec[0] + Vector3(cos(angle) * float(spec[1]), 0.42,
 				sin(angle) * float(spec[1])), Vector3(0.72, 0.18, 0.46),
 				"pink" if index % 2 == 0 else "leaf_light")
+
+
+static func _build_district_transition_collision(parent: Node3D) -> void:
+	# The two broad districts overlap visually, but their simplified support slabs
+	# differ by two metres. This wide approach lifts the player before the raised
+	# slab begins, so every authored route into the planter court stays walkable.
+	var slope_body := StaticBody3D.new()
+	slope_body.name = "QuietToGardenSlopeCollision"
+	var slope_angle := atan2(2.0, 24.0)
+	var slope_normal := Vector3(-sin(slope_angle), cos(slope_angle), 0.0)
+	slope_body.position = Vector3(-30.0, 1.0, 0.0) - slope_normal * 0.24
+	slope_body.rotation.z = slope_angle
+	var slope_collision := CollisionShape3D.new()
+	var slope_shape := BoxShape3D.new()
+	slope_shape.size = Vector3(24.5, 0.48, 90.0)
+	slope_collision.shape = slope_shape
+	slope_body.add_child(slope_collision)
+	parent.add_child(slope_body)
+	var landing := StaticBody3D.new()
+	landing.name = "GardenTransitionLandingCollision"
+	landing.position = Vector3(-11.0, 1.90, 0.0)
+	var landing_collision := CollisionShape3D.new()
+	var landing_shape := BoxShape3D.new()
+	landing_shape.size = Vector3(15.0, 0.20, 90.0)
+	landing_collision.shape = landing_shape
+	landing.add_child(landing_collision)
+	parent.add_child(landing)
 
 
 static func _court(parent: Node3D, label: String, at: Vector3, radius: float, color: String, sides: int) -> void:
@@ -240,7 +293,10 @@ static func _build_dressing(parent: Node3D) -> void:
 	for point in [Vector3(-226,0.8,25), Vector3(-186,0.8,-34), Vector3(-137,0.8,42),
 		Vector3(-76,0.8,-50), Vector3(-42,0.8,54), Vector3(5,1.8,-42), Vector3(38,2.8,52),
 		Vector3(82,2.8,-54), Vector3(126,2.8,52), Vector3(218,2.8,20), Vector3(275,2.8,-42), Vector3(288,2.8,38)]:
-		Kit.facet(parent, "GardenRock", point, Vector3(2.4, 1.5, 1.9), "rock", true)
+		# These small rocks frame routes but are not architectural barriers. Keeping
+		# them non-solid prevents the player capsule from being wedged between a
+		# decorative facet and the nearby court or floor collision.
+		Kit.facet(parent, "GardenRock", point, Vector3(2.4, 1.5, 1.9), "rock", false)
 
 
 static func _add_foliage_cell(parent: Node3D, center: Vector3, seed: int) -> void:

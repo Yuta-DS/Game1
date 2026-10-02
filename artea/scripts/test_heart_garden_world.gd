@@ -27,6 +27,14 @@ func _run() -> void:
 	player = scene.get_node("Player3D")
 	await process_frame
 	await physics_frame
+	var echo_anchor: Marker3D = world.controls["echo_berry_grove"].anchor
+	player.global_position = echo_anchor.global_position + Vector3.UP
+	assert(world.nearest_control(player.global_position) == "echo_berry_grove")
+	world.open_control("echo_berry_grove")
+	_press("Harvest three Echo Berries")
+	assert(world.state.story_fruit_count("echo_berry") == 3,
+		"the protected story fruit is harvested before planting")
+	world._close_panel()
 	for i in 3:
 		var anchor: Marker3D = world.controls["planter_%d"%i].anchor
 		player.global_position = anchor.global_position+Vector3.UP

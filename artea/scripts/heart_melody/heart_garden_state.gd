@@ -6,6 +6,8 @@ signal changed
 signal feedback(accepted: bool, message: String)
 
 const SAVE_PATH := "user://heart_melody_island_one.json"
+const ChapterCatalog := preload("res://scripts/heart_melody/heart_melody_chapter_catalog.gd")
+const SCHEMA_VERSION := 2
 const PLANT_TASK := "heart_melody.task.plant_feeling_seeds"
 const RHYTHM_TASK := "heart_melody.task.restore_garden_rhythm"
 const QUEST_ID := "heart_melody.quest.wake_feeling_garden"
@@ -22,11 +24,13 @@ var data: Dictionary = fresh()
 
 
 static func fresh() -> Dictionary:
-	return {"schema_version": 1, "world_id": "heart_melody", "planters": {},
+	return {"schema_version": SCHEMA_VERSION, "world_id": "heart_melody", "planters": {},
 		"phrase": [], "rhythm_solved": false, "mistake_count": 0, "hint_level": 0,
 		"cleared_waves": [],
 		"xp_receipts": {}, "completed_task_ids": [], "completed_quest_ids": [],
 		"checkpoint": "arrival", "identity_dismissed": [],
+		"quest_fruit_pouch": {}, "fruit_inventory": {}, "checkpoint_storage": {},
+		"fruit_receipt_ids": [], "crafted_recipe_ids": [],
 		"settings": {"puzzle_help": true, "combat_assist": false, "reduced_motion": false,
 			"muted": false, "music_volume": 0.72, "effects_volume": 0.82}}
 
@@ -192,6 +196,67 @@ func dismiss_identity(id: String) -> Dictionary:
 	return _commit(next, "Your journey continues.")
 
 
+func grant_story_fruit(fruit_id: String, amount := 1, receipt_id := "") -> Dictionary:
+	if not _valid_fruit_id(fruit_id) or amount <= 0:
+		return _reply(false, "That musical fruit cannot be stored.")
+	var next := data.duplicate(true)
+	var receipt := receipt_id if not receipt_id.is_empty() else "story.%s" % fruit_id
+	if receipt in next.fruit_receipt_ids:
+		return _reply(true, "This story fruit is already safe in the quest pouch.")
+	next.quest_fruit_pouch[fruit_id] = int(next.quest_fruit_pouch.get(fruit_id, 0)) + amount
+	next.fruit_receipt_ids.append(receipt)
+	return _commit(next, "%s added to the protected quest pouch." % _fruit_label(fruit_id))
+
+
+func grant_crafting_fruit(fruit_id: String, amount := 1, receipt_id := "") -> Dictionary:
+	if not _valid_fruit_id(fruit_id) or amount <= 0:
+		return _reply(false, "That musical fruit cannot be stored.")
+	var next := data.duplicate(true)
+	if not receipt_id.is_empty() and receipt_id in next.fruit_receipt_ids:
+		return _reply(true, "This harvest has already been collected.")
+	var current := int(next.fruit_inventory.get(fruit_id, 0))
+	var stored := mini(99, current + amount)
+	var overflow := current + amount - stored
+	next.fruit_inventory[fruit_id] = stored
+	if overflow > 0:
+		next.checkpoint_storage[fruit_id] = int(next.checkpoint_storage.get(fruit_id, 0)) + overflow
+	if not receipt_id.is_empty():
+		next.fruit_receipt_ids.append(receipt_id)
+	var message := "%s stored for crafting." % _fruit_label(fruit_id)
+	if overflow > 0:
+		message += " %d moved to checkpoint storage." % overflow
+	return _commit(next, message)
+
+
+func craft_recipe(recipe_id: String) -> Dictionary:
+	var chapter := ChapterCatalog.read()
+	var recipe := _recipe(chapter, recipe_id)
+	if recipe.is_empty():
+		return _reply(false, "That Heart Melody recipe is unknown.")
+	if recipe_id in data.crafted_recipe_ids:
+		return _reply(true, "This recipe has already been crafted.")
+	var fruit_id := str(recipe.get("fruit", ""))
+	var cost := int(recipe.get("cost", 0))
+	if int(data.fruit_inventory.get(fruit_id, 0)) < cost:
+		return _reply(false, "Collect %d %s for this recipe." % [cost, _fruit_label(fruit_id)])
+	var next := data.duplicate(true)
+	next.fruit_inventory[fruit_id] = int(next.fruit_inventory.get(fruit_id, 0)) - cost
+	next.crafted_recipe_ids.append(recipe_id)
+	return _commit(next, "Crafted %s." % recipe_id.replace("_", " ").capitalize())
+
+
+func story_fruit_count(fruit_id: String) -> int:
+	return int(data.quest_fruit_pouch.get(fruit_id, 0))
+
+
+func crafting_fruit_count(fruit_id: String) -> int:
+	return int(data.fruit_inventory.get(fruit_id, 0))
+
+
+func checkpoint_fruit_count(fruit_id: String) -> int:
+	return int(data.checkpoint_storage.get(fruit_id, 0))
+
+
 func _commit(next: Dictionary, message: String, accepted := true) -> Dictionary:
 	if persistent and not _write_atomic(next):
 		return _reply(false, "Progress could not be saved. Your previous checkpoint is safe; try again.")
@@ -240,11 +305,21 @@ func load_progress() -> bool:
 		loaded = _read_valid(save_path + ".bak")
 	if loaded == null:
 		return false
+	var was_legacy := int(loaded.get("schema_version", 1)) == 1
 	var normalized := fresh()
 	normalized.merge(loaded, true)
+	normalized.schema_version = SCHEMA_VERSION
 	var normalized_settings: Dictionary = fresh().settings
 	normalized_settings.merge(normalized.settings, true)
 	normalized.settings = normalized_settings
+	for dictionary_key in ["quest_fruit_pouch", "fruit_inventory", "checkpoint_storage"]:
+		if not normalized.get(dictionary_key) is Dictionary:
+			normalized[dictionary_key] = {}
+	for array_key in ["fruit_receipt_ids", "crafted_recipe_ids"]:
+		if not normalized.get(array_key) is Array:
+			normalized[array_key] = []
+	if was_legacy and persistent and not _write_atomic(normalized):
+		return false
 	data = normalized
 	changed.emit()
 	return true
@@ -261,7 +336,8 @@ func _read_valid(path: String) -> Variant:
 
 
 static func valid(value: Variant) -> bool:
-	if not value is Dictionary or value.get("schema_version") != 1 or value.get("world_id") != "heart_melody":
+	if not value is Dictionary or int(value.get("schema_version", 0)) not in [1, SCHEMA_VERSION] \
+			or value.get("world_id") != "heart_melody":
 		return false
 	for key in ["planters", "xp_receipts", "settings"]:
 		if not value.get(key) is Dictionary: return false
@@ -276,6 +352,30 @@ static func valid(value: Variant) -> bool:
 	for key in ["music_volume", "effects_volume"]:
 		var volume: Variant = value.settings.get(key)
 		if not (volume is float or volume is int) or float(volume) < 0.0 or float(volume) > 1.0: return false
+	if int(value.get("schema_version", 1)) == SCHEMA_VERSION:
+		for key in ["quest_fruit_pouch", "fruit_inventory", "checkpoint_storage"]:
+			if not value.get(key) is Dictionary: return false
+		for key in ["fruit_receipt_ids", "crafted_recipe_ids"]:
+			if not value.get(key) is Array: return false
+		for fruit_id in ChapterCatalog.EXPECTED_FRUIT_IDS:
+			var story_count := int(value.quest_fruit_pouch.get(fruit_id, 0))
+			var inventory_count := int(value.fruit_inventory.get(fruit_id, 0))
+			var storage_count := int(value.checkpoint_storage.get(fruit_id, 0))
+			if story_count < 0 or inventory_count < 0 or inventory_count > 99 or storage_count < 0:
+				return false
+		for dictionary_key in ["quest_fruit_pouch", "fruit_inventory", "checkpoint_storage"]:
+			for fruit_id in value[dictionary_key]:
+				if fruit_id not in ChapterCatalog.EXPECTED_FRUIT_IDS: return false
+		var receipt_set := {}
+		for receipt_id in value.fruit_receipt_ids:
+			if not receipt_id is String or receipt_id.is_empty() or receipt_id in receipt_set: return false
+			receipt_set[receipt_id] = true
+		var chapter := ChapterCatalog.read()
+		var recipe_ids := {}
+		for recipe_value in chapter.get("recipes", []):
+			recipe_ids[str(recipe_value.get("id", ""))] = true
+		for recipe_id in value.crafted_recipe_ids:
+			if recipe_id not in recipe_ids: return false
 	for id in value.planters:
 		if id not in ["0", "1", "2"] or value.planters[id] not in CHOICES: return false
 	if value.phrase.size() > 3: return false
@@ -300,3 +400,19 @@ static func valid(value: Variant) -> bool:
 		for id in WAVES[int(wave)]:
 			if not value.xp_receipts.has(id): return false
 	return value.completed_task_ids == expected_tasks and value.completed_quest_ids == expected_quests
+
+
+static func _recipe(chapter: Dictionary, recipe_id: String) -> Dictionary:
+	for recipe_value in chapter.get("recipes", []):
+		if recipe_value is Dictionary and str(recipe_value.get("id", "")) == recipe_id:
+			return recipe_value
+	return {}
+
+
+static func _valid_fruit_id(fruit_id: String) -> bool:
+	return fruit_id in ChapterCatalog.EXPECTED_FRUIT_IDS
+
+
+static func _fruit_label(fruit_id: String) -> String:
+	var fruit_value := ChapterCatalog.fruit(ChapterCatalog.read(), fruit_id)
+	return str(fruit_value.get("label", fruit_id.replace("_", " ").capitalize()))

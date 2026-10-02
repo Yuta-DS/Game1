@@ -25,6 +25,11 @@ func _run() -> void:
 	assert(world.find_child("AuthoredHeartGate", true, false) != null)
 	assert(world.find_child("SongMemoryBench", true, false) != null)
 	assert(world.find_child("ComfortLantern", true, false) != null)
+	var echo_grove := world.find_child("EchoBerryListeningGrove", true, false)
+	assert(echo_grove != null and world.controls.has("echo_berry_grove"),
+		"Quiet Meadow contains the playable Echo Berry grove")
+	assert(echo_grove.find_children("EchoBerryFruit_*", "MeshInstance3D", true, false).size() == 3,
+		"the grove presents three low-poly story fruits")
 	await physics_frame
 	for point in [Vector3(-250, 4, 0), Vector3(-130, 4, 112), Vector3(-130, 4, -112),
 		Vector3(150, 6, 126), Vector3(150, 6, -126), Vector3(305, 6, 0)]:
