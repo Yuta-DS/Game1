@@ -1,6 +1,7 @@
 extends Node3D
 
 const MindSparkWorldGateScene := preload("res://scenes/mind_spark/world_gate.tscn")
+const Bricks := preload("res://scripts/altar/AltarParts.gd")
 const TreeOfLifeScene := preload("res://assets3D/tree_of_life/glb/artea_tree_of_life.glb")
 const BlueprintTrunkRootScene := preload(
 	"res://assets3D/tree_of_life/trunk_core/glb/simple_trunk_core.glb")
@@ -284,6 +285,11 @@ func _build_materials() -> void:
 	_materials.passage_roof = _make_material(Color("344c64"), 0.66)
 	_materials.passage_bronze = _make_material(Color("aa8249"), 0.54)
 	_materials.passage_light = _make_glow(Color("65e6ef"), 0.82)
+	_materials.forecourt_ivory = _make_material(Color("eadfc9"), 0.82)
+	# Keep the long approach calm and legible. The earlier procedural grid read
+	# like a construction overlay at player height and competed with the portal.
+	_materials.forecourt_paver = _make_material(Color("9c9484"), 0.92)
+	_materials.forecourt_soil = _make_material(Color("3f5148"), 0.96)
 
 
 func _build_central_sanctuary() -> void:
@@ -751,7 +757,9 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 	var outward := Vector3(MIND_GATE_POSITION.x - MIND.x, 0.0,
 		MIND_GATE_POSITION.z - MIND.z).normalized()
 	forecourt.rotation.y = atan2(outward.x, outward.z)
-	forecourt.set_meta("design_revision", "celestial_gate_garden_v3")
+	forecourt.set_meta("design_revision", "celestial_gate_garden_v4")
+	forecourt.set_meta("production_quality_target", "10_of_10_graphic_design_pass")
+	forecourt.set_meta("lighting_layers", 3)
 	forecourt.set_meta("footprint_m", Vector2(64.0, 54.0))
 	forecourt.set_meta("clear_processional_lane_m", 18.0)
 	forecourt.set_meta("functional_gate_transform_preserved", true)
@@ -778,9 +786,9 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			Vector3(0.25, 0.10, 52.5), _materials.ivory, false)
 	for paver_index in 7:
 		var paver_z := -42.0 + float(paver_index) * 8.0
-		_add_box(processional, "FacetedPaver_%02d" % (paver_index + 1),
-			Vector3(0, 0.13, paver_z), Vector3(18.0, 0.15, 7.72),
-			_materials.passage_stone, false)
+		_add_bevel_box(processional, "FacetedPaver_%02d" % (paver_index + 1),
+			Vector3(0, 0.13, paver_z), Vector3(18.0, 0.15, 7.72), 0.12,
+			_materials.forecourt_paver)
 		if paver_index in [0, 3, 6]:
 			for side in [-1.0, 1.0]:
 				_add_box(processional, "CyanThreshold_%02d_%s" % [paver_index + 1,
@@ -837,9 +845,9 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			_add_box(gatehouse, "%sPilaster_%s" % [side_name, "L" if corner_x < 0 else "R"],
 				Vector3(x + float(corner_x) * 3.35, shaft_center_y, -3.72),
 				Vector3(0.72, shaft_height - 1.2, 0.55), _materials.ivory, false)
-		_add_box(gatehouse, "%sTowerShoulder" % side_name,
-			Vector3(x, shoulder_y, 0), Vector3(10.6, 1.8, 9.8),
-			_materials.ivory, false)
+		_add_bevel_box(gatehouse, "%sTowerShoulder" % side_name,
+			Vector3(x, shoulder_y, 0), Vector3(10.6, 1.8, 9.8), 0.38,
+			_materials.forecourt_ivory)
 		_add_box(gatehouse, "%sCyanWindow" % side_name,
 			Vector3(x, shaft_center_y + 1.0, -4.22), Vector3(1.45, 6.5, 0.24),
 			_materials.passage_light, false)
@@ -851,6 +859,15 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			_add_box(gatehouse, "%sTowerBelt_%02d" % [side_name, belt_index + 1],
 				Vector3(x, 6.4 + float(belt_index) * 7.0, -0.15),
 				Vector3(8.35, 0.48, 8.15), _materials.ivory, false)
+		# Outer buttresses widen the silhouette at ground level and make the tower
+		# read as load-bearing architecture instead of a decorated box.
+		var outer_side := -1.0 if side < 0 else 1.0
+		_add_bevel_box(gatehouse, "%sOuterButtress" % side_name,
+			Vector3(x + outer_side * 4.65, 5.2, 0.65),
+			Vector3(2.15, 8.4, 5.8), 0.28, _materials.forecourt_ivory)
+		_add_box(gatehouse, "%sButtressAetherCut" % side_name,
+			Vector3(x + outer_side * 4.68, 5.8, -2.32),
+			Vector3(0.70, 3.8, 0.18), _materials.passage_light, false)
 		var spire_height := 10.5 if side < 0 else 8.0
 		_add_cylinder(gatehouse, "%sSpireEave" % side_name,
 			Vector3(x, shoulder_y + 1.05, 0), 4.25, 0.52,
@@ -871,46 +888,54 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 	portal_cradle.set_meta("opening_collision_free", true)
 	gatehouse.add_child(portal_cradle)
 	_add_cylinder(portal_cradle, "PortalDaisShadow", Vector3(0, 0.24, 0.35),
-		9.4, 0.38, _materials.bridge_structure, false, 12)
+		10.3, 0.38, _materials.bridge_structure, false, 12)
 	_add_cylinder(portal_cradle, "PortalDaisIvory", Vector3(0, 0.47, 0.35),
-		8.35, 0.18, _materials.ivory, false, 12)
+		9.3, 0.18, _materials.forecourt_ivory, false, 12)
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0 else "East"
-		_add_box(portal_cradle, "%sPortalSocket" % side_name,
-			Vector3(float(side) * 7.55, 1.20, 0.45),
-			Vector3(2.25, 1.65, 3.30), _materials.ivory, false)
+		_add_bevel_box(portal_cradle, "%sPortalSocket" % side_name,
+			Vector3(float(side) * 8.55, 1.20, 0.45),
+			Vector3(2.35, 1.65, 3.30), 0.24, _materials.forecourt_ivory)
 		var brace := _add_box(portal_cradle, "%sPortalButtress" % side_name,
-			Vector3(float(side) * 7.05, 5.55, 0.60),
-			Vector3(1.15, 8.75, 1.65), _materials.passage_stone, false)
-		brace.rotation.z = float(side) * 0.20
+			Vector3(float(side) * 8.10, 6.15, 0.60),
+			Vector3(1.25, 9.85, 1.75), _materials.passage_stone, false)
+		brace.rotation.z = float(side) * 0.18
 		_build_faceted_ceremonial_crystal(portal_cradle,
 			"%sPortalAetherKey" % side_name,
-			Vector3(float(side) * 8.0, 3.05, -0.55), 1.8, 0.48,
+			Vector3(float(side) * 9.05, 3.05, -0.55), 1.8, 0.48,
 			_materials.aqua if side < 0 else _materials.purple)
-	_add_box(portal_cradle, "PortalKeystone", Vector3(0, 11.75, 0.55),
-		Vector3(3.6, 1.25, 1.9), _materials.ivory, false)
+	_add_bevel_box(portal_cradle, "PortalKeystone", Vector3(0, 13.45, 0.55),
+		Vector3(3.8, 1.35, 2.0), 0.26, _materials.forecourt_ivory)
 	_build_faceted_ceremonial_crystal(portal_cradle, "PortalKeystoneCrystal",
-		Vector3(0, 12.9, -0.45), 2.7, 0.78, _materials.purple)
+		Vector3(0, 14.75, -0.45), 2.9, 0.82, _materials.purple)
 	_add_torus(portal_cradle, "PortalArchitecturalBezel", Vector3(0, 5.5, 0.72),
-		6.0, 6.65, _materials.ivory, Vector3(90, 0, 0))
+		6.72, 7.48, _materials.forecourt_ivory, Vector3(90, 0, 0))
 	for clamp_index in 3:
 		var clamp_angle: float = float([-1.02, 0.0, 1.02][clamp_index])
 		var clamp := _add_box(portal_cradle,
 			"PortalBezelClamp_%02d" % (clamp_index + 1),
-			Vector3(sin(clamp_angle) * 6.34,
-				5.5 + cos(clamp_angle) * 6.34, 0.18),
+			Vector3(sin(clamp_angle) * 7.10,
+				5.5 + cos(clamp_angle) * 7.10, 0.18),
 			Vector3(0.75, 1.75, 1.25), _materials.bridge_structure, false)
 		clamp.rotation.z = PI * 0.5 + clamp_angle
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		_add_bevel_box(portal_cradle, "%sPortalWingWall" % side_name,
+			Vector3(float(side) * 11.55, 3.1, 3.3),
+			Vector3(6.4, 5.6, 1.25), 0.34, _materials.bridge_structure)
+		_add_box(portal_cradle, "%sPortalWingInlay" % side_name,
+			Vector3(float(side) * 11.55, 3.4, 2.62),
+			Vector3(2.9, 0.35, 0.16), _materials.passage_light, false)
 	# A stepped crown reads as architecture at distance while preserving the
 	# complete 28-metre opening around the independently functional portal.
-	_add_box(gatehouse, "GatehouseCrownBeam", Vector3(0, 21.55, 0),
-		Vector3(25.0, 1.25, 2.6), _materials.ivory, false)
-	_add_box(gatehouse, "GatehouseCrownLedge", Vector3(0, 22.35, 0),
-		Vector3(30.0, 0.55, 3.45), _materials.passage_stone, false)
+	_add_bevel_box(gatehouse, "GatehouseCrownBeam", Vector3(0, 21.55, 0),
+		Vector3(25.0, 1.25, 2.6), 0.30, _materials.forecourt_ivory)
+	_add_bevel_box(gatehouse, "GatehouseCrownLedge", Vector3(0, 22.35, 0),
+		Vector3(30.0, 0.55, 3.45), 0.18, _materials.passage_stone)
 	for shoulder_side in [-1.0, 1.0]:
-		_add_box(gatehouse, "CrownShoulder_%s" % ("L" if shoulder_side < 0 else "R"),
+		_add_bevel_box(gatehouse, "CrownShoulder_%s" % ("L" if shoulder_side < 0 else "R"),
 			Vector3(float(shoulder_side) * 10.5, 23.15, 0),
-			Vector3(7.0, 0.9, 4.1), _materials.passage_stone, false)
+			Vector3(7.0, 0.9, 4.1), 0.22, _materials.passage_stone)
 	_add_box(gatehouse, "GatehouseCrownInset", Vector3(0, 21.5, -1.72),
 		Vector3(12.0, 0.45, 0.24), _materials.passage_light, false)
 	_build_faceted_ceremonial_crystal(gatehouse, "LavenderCrownCrystal",
@@ -975,10 +1000,10 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 		var side_name := "West" if side < 0 else "East"
 		_add_box(rear_garden, "%sRearGardenBed" % side_name,
 			Vector3(float(side) * 13.5, 0.28, 18.0),
-			Vector3(10.0, 0.50, 25.0), _materials.bridge_structure, false)
-		_add_box(rear_garden, "%sRearGardenIvoryCap" % side_name,
+			Vector3(10.0, 0.50, 25.0), _materials.forecourt_soil, false)
+		_add_bevel_box(rear_garden, "%sRearGardenIvoryCap" % side_name,
 			Vector3(float(side) * 13.5, 0.57, 18.0),
-			Vector3(9.2, 0.10, 24.2), _materials.ivory, false)
+			Vector3(9.2, 0.10, 24.2), 0.08, _materials.forecourt_ivory)
 		for marker_index in 2:
 			var marker_z := 11.0 + float(marker_index) * 14.0
 			_build_faceted_ceremonial_crystal(rear_garden,
@@ -987,6 +1012,18 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 				0.82 if marker_index == 0 else 0.62,
 				_materials.purple if (marker_index + (0 if side < 0 else 1)) % 2 == 0 \
 				else _materials.aqua)
+
+	var lighting := Node3D.new()
+	lighting.name = "CeremonialLightingRig"
+	lighting.set_meta("warm_key_count", 2)
+	lighting.set_meta("cool_fill_count", 1)
+	forecourt.add_child(lighting)
+	for side in [-1.0, 1.0]:
+		_add_forecourt_omni(lighting,
+			"%sTowerWarmKey" % ("West" if side < 0 else "East"),
+			Vector3(float(side) * 18.0, 8.0, -3.5), Color("ffd5a3"), 1.35, 20.0)
+	_add_forecourt_omni(lighting, "ProcessionalCoolFill",
+		Vector3(0, 3.0, -20.0), Color("75e9f1"), 0.72, 25.0)
 
 
 func _build_faceted_ceremonial_crystal(parent: Node3D, crystal_name: String,
@@ -1002,6 +1039,21 @@ func _build_faceted_ceremonial_crystal(parent: Node3D, crystal_name: String,
 	_add_tapered_cylinder(parent, "%sCrown" % crystal_name,
 		center + Vector3.UP * (height * 0.5 - upper_height * 0.5),
 		radius, radius * 0.18, upper_height, material, 8)
+
+
+func _add_forecourt_omni(parent: Node3D, light_name: String, at: Vector3,
+		color: Color, energy: float, range_m: float) -> void:
+	var light := OmniLight3D.new()
+	light.name = light_name
+	light.position = at
+	light.light_color = color
+	light.light_energy = energy
+	light.omni_range = range_m
+	light.shadow_enabled = false
+	light.distance_fade_enabled = true
+	light.distance_fade_begin = 38.0
+	light.distance_fade_length = 18.0
+	parent.add_child(light)
 
 
 func _build_ceremonial_faceted_tree(parent: Node3D, tree_name: String,
@@ -1140,6 +1192,13 @@ func _build_mind_spark_world_one_gameplay() -> void:
 	source_gate.destination_world_local = MIND_WORLD_ONE_ORIGIN \
 		+ world_one.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0)
 	source_gate.prompt_text = "Q • ENTER WORLD ONE: MIND SPARK"
+	var portal_visual := source_gate.get_node("Portal") as Node3D
+	portal_visual.scale = Vector3.ONE * 1.18
+	var portal_light := source_gate.get_node("Light") as OmniLight3D
+	portal_light.light_color = Color("6de5ef")
+	portal_light.light_energy = 3.2
+	portal_light.omni_range = 26.0
+	source_gate.set_meta("ceremonial_visual_scale", 1.18)
 	add_child(source_gate)
 	_build_world_one_causeway(world_one)
 	if world_one.defer_world_build:
@@ -5612,6 +5671,17 @@ func _add_landmark_label(parent: Node3D, text: String, position: Vector3,
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = false
 	parent.add_child(label)
+
+
+func _add_bevel_box(parent: Node3D, node_name: String, position: Vector3,
+		size: Vector3, bevel: float, material: Material) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	instance.mesh = Bricks.build_bevel_box(size, bevel)
+	instance.position = position
+	instance.material_override = material
+	parent.add_child(instance)
+	return instance
 
 
 func _add_box(parent: Node3D, node_name: String, position: Vector3, size: Vector3,

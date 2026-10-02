@@ -19,7 +19,7 @@ func _run() -> void:
 	assert(world.get_node("WorldOneGeometry/MainStoryCircuitRoute") is Node3D)
 	assert(world.find_children("WalkableZoneFloor", "MeshInstance3D", true, false).size() == 6)
 	var forecourt := district.get_node("MindSparkCeremonialForecourt") as Node3D
-	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v3")
+	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v4")
 	assert(forecourt.get_meta("footprint_m") == Vector2(64.0, 54.0))
 	assert(float(forecourt.get_meta("clear_processional_lane_m", 0.0)) >= 18.0)
 	assert(bool(forecourt.get_meta("functional_gate_transform_preserved", false)))
@@ -46,6 +46,9 @@ func _run() -> void:
 	assert(plinths.find_children("ConstellationPlinth_*Collision", "StaticBody3D", true, false).size() == 3)
 	var rear_garden := forecourt.get_node("RearConstellationGarden") as Node3D
 	assert(float(rear_garden.get_meta("central_axis_clear_width_m", 0.0)) >= 14.0)
+	var lighting := forecourt.get_node("CeremonialLightingRig") as Node3D
+	assert(lighting.find_children("*WarmKey", "OmniLight3D", true, false).size() == 2)
+	assert(lighting.get_node_or_null("ProcessionalCoolFill") is OmniLight3D)
 	assert(not bool(district.get_meta("requires_jump_from_mind_bridge")))
 	var bridge_walkway := floating_world.get_node("MindBridge/Walkway") as MeshInstance3D
 	var island_deck := district.get_node("WalkableDeck") as MeshInstance3D
@@ -53,7 +56,9 @@ func _run() -> void:
 	var island_top := island_deck.position.y + (island_deck.mesh as CylinderMesh).height * 0.5
 	assert(is_equal_approx(bridge_top, island_top) and is_equal_approx(island_top, 0.0),
 		"Mind Bridge and island collision deck must share the exact y=0 datum")
-	assert(floating_world.get_node("MindSparkWorldGate") is MindSparkWorldGate)
+	var mind_gate := floating_world.get_node("MindSparkWorldGate") as MindSparkWorldGate
+	assert(mind_gate != null)
+	assert(is_equal_approx(float(mind_gate.get_meta("ceremonial_visual_scale", 0.0)), 1.18))
 	assert(world.get_quest_objects().size() == 15)
 	assert(world.get_node("WorldOneGeometry/05ThoughtStormArena/BossArenaCollisionCollision") is StaticBody3D)
 	assert(world.get_node("WorldOneGeometry/06OldestTreeSanctuary/OldestTreeTrunkCollision") is StaticBody3D)
