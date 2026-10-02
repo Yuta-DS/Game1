@@ -9899,6 +9899,7 @@ func _add_zone_ambience(parent: Node3D, node_name: String, stream: AudioStream,
 	audio.volume_db = volume_db_value
 	audio.max_distance = max_distance_value
 	audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	audio.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	audio.autoplay = true
 	audio.set_meta("continuous_loop", true)
 	parent.add_child(audio)

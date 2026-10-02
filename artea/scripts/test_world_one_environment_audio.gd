@@ -34,6 +34,8 @@ func _run() -> void:
 			"%s has a playable 3D stream" % source_name)
 		assert(source.autoplay and bool(source.get_meta("continuous_loop", false)),
 			"%s remains active for the whole district visit" % source_name)
+		assert(source.playback_type == AudioServer.PLAYBACK_TYPE_STREAM,
+			"%s uses the portable Web streaming path" % source_name)
 		assert(source.max_distance >= 150.0 and source.unit_size == 34.0,
 			"%s uses bounded positional falloff" % source_name)
 		assert(int(source.get_meta("physical_island", 0)) == int(expected[source_name][0]))
