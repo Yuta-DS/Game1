@@ -69,10 +69,12 @@ func _run() -> void:
 		assert(pod.get_node_or_null("MutedCyanFace") is MeshInstance3D)
 		assert(pod.get_node_or_null("CharcoalInnerBezel") is MeshInstance3D)
 		assert(pod.get_node_or_null("IntegratedNameplate") is MeshInstance3D)
+		assert(pod.get_node_or_null("PodMountSpine") is MeshInstance3D)
 		assert(pod.find_children("DialTick_*", "MeshInstance3D", true, false).size() == 8)
 	assert(instrument.find_children("ConstellationActual_*", "Node3D", true, false).size() == 3)
 	assert(instrument.find_children("ConstellationTarget_*", "Node3D", true, false).size() == 3)
 	assert(instrument.find_children("ConstellationGiltBezel_*", "MeshInstance3D", true, false).is_empty())
+	assert(instrument.get_node_or_null("CrownDormantCrystal") is MeshInstance3D)
 	var completion_crystal := instrument.get_node("CrownCompletionCrystal") as MeshInstance3D
 	assert(not completion_crystal.visible)
 	var targets := puzzle._active_ring_targets()

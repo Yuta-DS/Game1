@@ -3858,7 +3858,7 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 	instrument.name = "ThoughtConstellationTarget"
 	instrument.set_meta("preserve_authored_nodes", true)
 	instrument.set_meta("purpose", "sanctum gateway and physical goal display for the linked-ring puzzle")
-	instrument.set_meta("design_revision", "v32_low_poly_crown_sanctum")
+	instrument.set_meta("design_revision", "v33_low_poly_crown_instrument")
 	instrument.set_meta("clear_opening_width_m", 20.0)
 	instrument.set_meta("reusable_component_families", 8)
 	parent.add_child(instrument)
@@ -3924,29 +3924,38 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 			Vector3(side * 11.0, 17.0, gateway_z - 1.15),
 			0.24, 0.16, _materials.astral_brass, 10)
 
-	# A stepped crown replaces the former double semicircle. From the arrival
-	# camera it reads as one supported low-poly gateway instead of a second halo
-	# competing with the thought witness in front of it.
+	# Compact shoulders transfer the crown into the two pylons without creating
+	# another pair of broad panels behind the dial faces.
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0 else "East"
 		_add_brick(instrument, "SanctumCrownShoulder_%s" % side_name,
-			Vector3(side * 10.3, 20.7, gateway_z),
-			Bricks.build_bevel_box(Vector3(8.5, 2.2, 2.4), 0.30), _materials.sanctum_ivory)
+			Vector3(side * 11.9, 19.25, gateway_z),
+			Bricks.build_bevel_box(Vector3(4.8, 0.82, 1.55), 0.24), _materials.sanctum_ivory)
 		_add_brick(instrument, "SanctumCrownAetherInset_%s" % side_name,
-			Vector3(side * 10.3, 20.65, gateway_z - 1.28),
-			Bricks.build_bevel_box(Vector3(5.6, 0.62, 0.22), 0.08), _materials.arrival_glass)
+			Vector3(side * 11.9, 19.25, gateway_z - 0.83),
+			Bricks.build_bevel_box(Vector3(3.1, 0.24, 0.16), 0.06), _materials.arrival_glass)
 
-	# The Wisdom Crown beam physically carries all three state instruments.
-	_add_brick(instrument, "WisdomCrownMainBeam", Vector3(0, 18.9, gateway_z + 0.18),
-		Bricks.build_bevel_box(Vector3(23.8, 1.45, 1.25), 0.30), _materials.sanctum_ivory)
-	_add_box(instrument, "WisdomCrownUpperCharcoalOrder", Vector3(0, 19.72, gateway_z - 0.05),
-		Vector3(24.8, 0.20, 1.48), _materials.shared_style_charcoal)
-	_add_box(instrument, "WisdomCrownLowerAetherOrder", Vector3(0, 18.08, gateway_z - 0.08),
-		Vector3(22.8, 0.16, 1.44), _materials.arrival_glass)
+	# A narrow load beam and open triangular truss replace the old solid slab.
+	# The opening below the dials keeps the central court and player readable.
+	_add_brick(instrument, "WisdomCrownMainBeam", Vector3(0, 18.85, gateway_z + 0.12),
+		Bricks.build_bevel_box(Vector3(23.4, 0.66, 0.82), 0.20), _materials.sanctum_ivory)
+	_add_box(instrument, "WisdomCrownUpperCharcoalOrder", Vector3(0, 19.24, gateway_z - 0.03),
+		Vector3(23.8, 0.14, 0.98), _materials.shared_style_charcoal)
+	_add_box(instrument, "WisdomCrownLowerAetherOrder", Vector3(0, 18.47, gateway_z - 0.05),
+		Vector3(21.8, 0.10, 0.94), _materials.arrival_glass)
+	for truss_side in [-1.0, 1.0]:
+		var truss_label := "West" if truss_side < 0 else "East"
+		_add_cable_between(instrument, "WisdomCrownTruss_%s" % truss_label,
+			Vector3(truss_side * 11.4, 19.25, gateway_z - 0.55),
+			Vector3(truss_side * 4.0, 23.0, gateway_z - 0.55),
+			0.22, 0.14, _materials.shared_style_charcoal, 8)
+		_add_sphere(instrument, "WisdomCrownJoint_%s" % truss_label,
+			Vector3(truss_side * 4.0, 23.0, gateway_z - 0.55),
+			Vector3.ONE * 0.30, _materials.shared_style_cyan)
 	for boss_index in 7:
 		_add_sphere(instrument, "WisdomCrownBoss_%02d" % (boss_index + 1),
-			Vector3(-10.5 + float(boss_index) * 3.5, 19.74, gateway_z - 0.88),
-			Vector3.ONE * (0.25 if boss_index != 3 else 0.38),
+			Vector3(-10.5 + float(boss_index) * 3.5, 19.27, gateway_z - 0.58),
+			Vector3.ONE * (0.18 if boss_index != 3 else 0.28),
 			_materials.shared_style_charcoal if boss_index % 2 == 0 else _materials.shared_style_cyan)
 
 	# Six triangular stained-aether panes form a restrained fanlight above the
@@ -3975,61 +3984,83 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 	dial_array.set_meta("preserve_authored_nodes", true)
 	dial_array.set_meta("dial_count", 3)
 	dial_array.set_meta("equal_spacing_m", 7.6)
-	dial_array.set_meta("beam_clearance_m", 0.65)
+	dial_array.set_meta("beam_clearance_m", 1.35)
 	dial_array.set_meta("collision_free", true)
 	instrument.add_child(dial_array)
 	var target_names := ["NOTICE", "UNDERSTAND", "CHOOSE"]
 	var target_angles := [-PI * 0.25, 0.0, -PI * 1.25]
 	for index in 3:
 		var x := -7.6 + float(index) * 7.6
-		var socket_at := Vector3(x, 23.05, gateway_z + 0.65)
+		var socket_at := Vector3(x, 23.85, gateway_z + 0.65)
 		var pod := Node3D.new()
 		pod.name = "%sInstrumentPod" % target_names[index]
 		pod.position = socket_at
 		dial_array.add_child(pod)
+		_add_cable_between(pod, "PodMountSpine", Vector3(0, -4.34, -0.56),
+			Vector3(0, -2.32, -0.56), 0.26, 0.18,
+			_materials.shared_style_charcoal, 8)
+		_add_brick(pod, "PodMountFoot", Vector3(0, -4.28, -0.50),
+			Bricks.build_bevel_box(Vector3(1.45, 0.42, 0.70), 0.12),
+			_materials.sanctum_ivory)
 		var indicator_case := _add_cylinder(pod, "IvoryOuterCase", Vector3(0, 0, -0.30),
-			2.62, 0.58, _materials.sanctum_ivory, false, 12)
+			2.56, 0.46, _materials.sanctum_ivory, false, 12)
 		indicator_case.rotation_degrees.x = 90.0
 		var indicator_face := _add_cylinder(pod, "MutedCyanFace", Vector3(0, 0, 0.14),
-			2.05, 0.18, _materials.sanctum_dial, false, 12)
+			2.08, 0.16, _materials.sanctum_dial, false, 12)
 		indicator_face.rotation_degrees.x = 90.0
-		_add_torus(pod, "CharcoalInnerBezel", Vector3(0, 0, 0.27),
-			1.92, 2.34, _materials.shared_style_charcoal, Vector3(90, 0, 0))
+		_add_torus(pod, "CharcoalInnerBezel", Vector3(0, 0, 0.29),
+			2.02, 2.30, _materials.shared_style_charcoal, Vector3(90, 0, 0))
+		_add_torus(pod, "CyanFaceRegister", Vector3(0, 0, 0.34),
+			1.77, 1.87, _materials.shared_style_cyan, Vector3(90, 0, 0))
 		var pointer := Node3D.new()
 		pointer.name = "ConstellationActual_%s" % target_names[index]
 		pointer.position = Vector3(0, 0, 0.48)
 		pod.add_child(pointer)
-		_add_box(pointer, "ActualNeedle", Vector3(0, 1.02, 0),
-			Vector3(0.34, 2.04, 0.22), _materials.shared_style_cyan)
+		_add_cable_between(pointer, "ActualNeedle", Vector3(0, 0.20, 0),
+			Vector3(0, 1.66, 0), 0.22, 0.11, _materials.shared_style_cyan, 8)
+		_add_brick(pointer, "ActualNeedleTip", Vector3(0, 1.77, 0),
+			Bricks.build_crystal(0.22, 0.46, 0.06, 6), _materials.shared_style_cyan)
 		_add_sphere(pointer, "ActualHub", Vector3.ZERO,
-			Vector3.ONE * 0.48, _materials.shared_style_charcoal)
+			Vector3.ONE * 0.42, _materials.shared_style_cyan)
+		_add_sphere(pointer, "ActualHubCap", Vector3(0, 0, 0.11),
+			Vector3.ONE * 0.18, _materials.sanctum_ivory)
 		var target := Node3D.new()
 		target.name = "ConstellationTarget_%s" % target_names[index]
 		target.position = Vector3(0, 0, 0.56)
 		target.rotation.z = target_angles[index]
 		pod.add_child(target)
-		_add_box(target, "LavenderTargetWedge", Vector3(0, 1.62, 0),
-			Vector3(0.24, 0.72, 0.16), _materials.shared_style_lavender)
+		_add_triangle_patch(target, "LavenderTargetWedge",
+			Vector3(-0.26, 1.62, 0), Vector3(0.26, 1.62, 0),
+			Vector3(0, 2.02, 0), _materials.shared_style_lavender)
 		for tick_index in 8:
 			var tick_angle := TAU * float(tick_index) / 8.0
-			var tick_at := Vector3(sin(tick_angle) * 2.23,
-				cos(tick_angle) * 2.23, 0.50)
-			_add_box(pod, "DialTick_%02d" % (tick_index + 1), tick_at,
-				Vector3(0.18, 0.48 if tick_index % 2 else 0.68, 0.12),
-				_materials.shared_style_charcoal, false, -tick_angle)
-		_add_brick(pod, "IntegratedNameplate", Vector3(0, -3.10, 0.04),
-			Bricks.build_bevel_box(Vector3(5.2, 0.82, 0.28), 0.12),
+			var tick_at := Vector3(sin(tick_angle) * 1.72,
+				cos(tick_angle) * 1.72, 0.48)
+			_add_sphere(pod, "DialTick_%02d" % (tick_index + 1), tick_at,
+				Vector3.ONE * (0.14 if tick_index % 2 else 0.20),
+				_materials.sanctum_ivory if tick_index % 2 else _materials.shared_style_cyan)
+		_add_brick(pod, "IntegratedNameplate", Vector3(0, -3.02, 0.02),
+			Bricks.build_bevel_box(Vector3(4.30, 0.56, 0.24), 0.10),
 			_materials.sanctum_ivory)
 		var nameplate := _add_label(pod, target_names[index],
-			Vector3(0, -3.13, 0.25), Color("24313b"), 14)
+			Vector3(0, -3.04, 0.22), Color("24313b"), 16)
 		nameplate.name = "%sNameplateLabel" % target_names[index]
 		nameplate.pixel_size = 0.024
 		nameplate.outline_size = 2
 		nameplate.no_depth_test = true
 
+	# The completion crystal now grows from a visible central mast instead of
+	# floating between unrelated roof ribs.
+	_add_cable_between(instrument, "CrownCrystalMast",
+		Vector3(0, 26.2, gateway_z - 0.45), Vector3(0, 28.15, gateway_z - 0.45),
+		0.24, 0.16, _materials.shared_style_charcoal, 8)
+	_add_brick(instrument, "CrownCrystalSocket", Vector3(0, 28.05, gateway_z - 0.44),
+		Bricks.build_bevel_box(Vector3(1.30, 0.46, 0.62), 0.14), _materials.sanctum_ivory)
+	_add_brick(instrument, "CrownDormantCrystal", Vector3(0, 28.28, gateway_z - 0.44),
+		Bricks.build_crystal(0.82, 3.05, 0.30, 6), _materials.sanctum_lavender_glass)
 	var completion_crystal := _add_brick(instrument, "CrownCompletionCrystal",
-		Vector3(0, 29.0, gateway_z - 0.05),
-		Bricks.build_crystal(1.15, 3.6, 0.40, 6), _materials.shared_style_cyan)
+		Vector3(0, 28.28, gateway_z - 0.42),
+		Bricks.build_crystal(1.05, 3.4, 0.34, 6), _materials.shared_style_cyan)
 	completion_crystal.visible = false
 	completion_crystal.set_meta("activation", "all three state dials match")
 	var harmony_display := _add_label(instrument,
@@ -4054,7 +4085,7 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 		Vector3(0, 2.87, gateway_z), Vector3(1.0, 0.12, 5.5),
 		_materials.arrival_glass)
 	_add_label(instrument, "THOUGHT SANCTUM  •  ALIGN THREE STATES",
-		Vector3(0, 31.8, gateway_z), Color("fff1bf"), 18)
+		Vector3(0, 33.0, gateway_z), Color("fff1bf"), 18)
 
 
 func _build_thought_witness(parent: Node3D) -> void:
