@@ -8,6 +8,7 @@ signal island_transition_started(from_island: int, to_island: int)
 signal island_arrived(island_index: int)
 
 const SAVE_PATH := "user://mind_spark_walkable_world_one_progress.json"
+const IDENTITY_EVIDENCE_PATH := "res://resources/mind_spark/identity_evidence.json"
 const ECHO_IDS := ["world_one.fact_and_fear", "world_one.hope_path"]
 const QUESTS := [
 	{"id": "notice_signal", "title": "NOTICE THE SIGNAL", "task_end": 0, "xp": 0, "target_minutes": 10},
@@ -33,17 +34,6 @@ const ISLAND_TWO_STORY_ORDER := {
 	"memory_woven": 4, "archive_open": 5, "hope_reframed": 6,
 	"truth_materialised": 7, "guardian_freed": 8,
 }
-const IDENTITY_MOMENTS := {
-	0: {"id": "MS_ID_01", "axis": "energy", "a": "E • Talk and act with others", "b": "I • Think and act quietly", "side_a": "E", "side_b": "I"},
-	1: {"id": "MS_ID_02", "axis": "information", "a": "S • Notice clear details", "b": "N • Notice patterns and possibilities", "side_a": "S", "side_b": "N"},
-	2: {"id": "MS_ID_03", "axis": "decisions", "a": "T • Use reason and rules", "b": "F • Use care and personal values", "side_a": "T", "side_b": "F"},
-	3: {"id": "MS_ID_04", "axis": "structure", "a": "J • Plan the order", "b": "P • Explore and adapt", "side_a": "J", "side_b": "P"},
-	4: {"id": "MS_ID_05", "axis": "energy", "a": "E • Ask for help", "b": "I • Try quietly first", "side_a": "E", "side_b": "I"},
-	5: {"id": "MS_ID_06", "axis": "information", "a": "S • Follow one pattern detail", "b": "N • Follow the big picture", "side_a": "S", "side_b": "N"},
-	8: {"id": "MS_ID_07", "axis": "decisions", "a": "T • Follow the safe rule", "b": "F • Protect the living storm", "side_a": "T", "side_b": "F"},
-	9: {"id": "MS_ID_08", "axis": "structure", "a": "J • Reflect in order", "b": "P • Replay what stood out", "side_a": "J", "side_b": "P"},
-}
-
 @export var enabled := true
 @export var force_enable_without_world_hud := false
 @export var save_path := SAVE_PATH
@@ -61,6 +51,7 @@ var progress := {
 var _current_task_index := 0
 var _reflection_queue: Array[Dictionary] = []
 var _reflection_open := false
+var _identity_moments: Dictionary = {}
 var _player: CharacterBody3D
 var _hud_root: Control
 var _quest_label: Label
@@ -71,7 +62,42 @@ var _hud_refresh_elapsed := 0.1
 
 
 func _ready() -> void:
+	_identity_moments = load_identity_moments()
 	call_deferred("_bind_world")
+
+
+static func load_identity_moments(path := IDENTITY_EVIDENCE_PATH) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		push_error("Mind Spark identity evidence data is missing: %s" % path)
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not parsed is Dictionary or not parsed.get("moments", null) is Array:
+		push_error("Mind Spark identity evidence data is invalid: %s" % path)
+		return {}
+	var moments := {}
+	var seen_ids := {}
+	var valid_axes := {"energy": ["E", "I"], "information": ["S", "N"],
+		"decisions": ["T", "F"], "structure": ["J", "P"]}
+	for raw_moment in parsed.moments:
+		if not raw_moment is Dictionary:
+			return {}
+		var moment: Dictionary = raw_moment
+		var task_index := int(moment.get("task_index", -1))
+		var evidence_id := str(moment.get("id", ""))
+		var axis := str(moment.get("axis", ""))
+		var sides: Array = valid_axes.get(axis, [])
+		if task_index < 0 or moments.has(task_index) or evidence_id.is_empty() \
+				or seen_ids.has(evidence_id) or sides.is_empty() \
+				or str(moment.get("side_a", "")) != sides[0] \
+				or str(moment.get("side_b", "")) != sides[1] \
+				or str(moment.get("a", "")).is_empty() or str(moment.get("b", "")).is_empty():
+			push_error("Mind Spark identity evidence entry is invalid: %s" % evidence_id)
+			return {}
+		seen_ids[evidence_id] = true
+		var runtime_moment := moment.duplicate(true)
+		runtime_moment.erase("task_index")
+		moments[task_index] = runtime_moment
+	return moments
 
 
 func inject_dependencies(new_journey_state: Node, new_identity_tracker: Node = null) -> void:
@@ -612,9 +638,9 @@ func _restore_runtime_state() -> void:
 
 
 func _queue_identity_moment(task_index: int) -> void:
-	if not IDENTITY_MOMENTS.has(task_index):
+	if not _identity_moments.has(task_index):
 		return
-	var moment: Dictionary = IDENTITY_MOMENTS[task_index]
+	var moment: Dictionary = _identity_moments[task_index]
 	if identity_tracker != null and identity_tracker.has_method("has_evidence") and bool(identity_tracker.call("has_evidence", moment.id)):
 		return
 	_reflection_queue.append(moment.duplicate(true))

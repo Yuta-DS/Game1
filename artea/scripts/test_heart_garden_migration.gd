@@ -32,10 +32,17 @@ func _init() -> void:
 	assert(tracker.record_evidence("MS_ID_01","energy","E"))
 	assert(tracker.identity_answer_history[1].world_id == "mind_spark")
 	assert(tracker.identity_result_code.is_empty())
+	var saved_counts: Dictionary = tracker.identity_axis_counts.duplicate(true)
+	assert(tracker.save(), "identity save can make a validated recovery checkpoint")
+	var corrupt := FileAccess.open(path, FileAccess.WRITE)
+	corrupt.store_string("{interrupted")
+	corrupt.close()
+	tracker.load_evidence()
+	assert(tracker.identity_axis_counts == saved_counts,
+		"an interrupted identity save recovers the previous atomic backup")
 	tracker.clear_evidence()
 	tracker.free()
 	journey.free()
 	roundtrip.free()
 	print("HEART_GARDEN_MIGRATION: PASS — new reward guard, legacy entitlement and cross-world identity")
 	quit()
-

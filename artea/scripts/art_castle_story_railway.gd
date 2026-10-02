@@ -201,6 +201,17 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_refresh_station_lights()
+	if _seated_passenger and _player != null and _train != null and _passenger_seat_index >= 0:
+		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
+	_update_train_mechanisms(delta)
+	_update_island_power_effect(delta)
+	_update_prompt()
+
+
+func _physics_process(delta: float) -> void:
+	# The train carries a CharacterBody and owns an AnimatableBody collision shell.
+	# Advance it on Godot's fixed clock so acceleration, docking and passenger
+	# collision do not change with browser render rate.
 	if _manual_driving:
 		var throttle := Input.get_action_strength("move_forward") \
 			- Input.get_action_strength("move_backward")
@@ -210,9 +221,6 @@ func _process(delta: float) -> void:
 		_train.position.y = ROUTE_HEIGHT
 	if _seated_passenger and _player != null and _train != null and _passenger_seat_index >= 0:
 		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
-	_update_train_mechanisms(delta)
-	_update_island_power_effect(delta)
-	_update_prompt()
 
 
 func _unhandled_input(event: InputEvent) -> void:

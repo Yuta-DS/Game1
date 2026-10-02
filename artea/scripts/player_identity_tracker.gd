@@ -75,31 +75,28 @@ func has_evidence(evidence_id: String) -> bool:
 func load_evidence() -> void:
 	evidence.clear()
 	_reset_summary()
-	if not FileAccess.file_exists(save_path):
+	var parsed := _read_save_dictionary(save_path)
+	if parsed.is_empty():
+		parsed = _read_save_dictionary(save_path + ".bak")
+	if parsed.is_empty() or not parsed.get("evidence", null) is Dictionary:
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path))
-	if parsed is Dictionary and parsed.get("evidence", null) is Dictionary:
-		evidence = (parsed["evidence"] as Dictionary).duplicate(true)
-		var loaded_counts: Variant = parsed.get("identity_axis_counts", {})
-		if loaded_counts is Dictionary:
-			for side in identity_axis_counts:
-				identity_axis_counts[side] = int(loaded_counts.get(side, 0))
-		var loaded_ids: Variant = parsed.get("identity_evidence_ids", [])
-		if loaded_ids is Array:
-			identity_evidence_ids = PackedStringArray(loaded_ids)
-		var loaded_history: Variant = parsed.get("identity_answer_history", [])
-		if loaded_history is Array:
-			for item in loaded_history:
-				if item is Dictionary: identity_answer_history.append(item.duplicate(true))
-		identity_result_code = str(parsed.get("identity_result_code", ""))
-		identity_locked = bool(parsed.get("identity_locked", false))
+	evidence = (parsed["evidence"] as Dictionary).duplicate(true)
+	# Counts, IDs and history are derived from canonical first answers. Rebuild
+	# them instead of trusting duplicate summary fields from an interrupted or
+	# manually edited save.
+	_rebuild_summary_from_evidence()
+	var loaded_code := str(parsed.get("identity_result_code", ""))
+	var loaded_locked := bool(parsed.get("identity_locked", false))
+	if loaded_locked and FRIENDLY_NAMES.has(loaded_code):
+		identity_result_code = loaded_code
+		identity_locked = true
 		identity_reveal_seen = bool(parsed.get("identity_reveal_seen", false))
-		if identity_evidence_ids.is_empty() and not evidence.is_empty():
-			_rebuild_summary_from_evidence()
 
 
 func save() -> bool:
-	var file := FileAccess.open(save_path, FileAccess.WRITE)
+	var temporary_path := save_path + ".tmp"
+	var backup_path := save_path + ".bak"
+	var file := FileAccess.open(temporary_path, FileAccess.WRITE)
 	if file == null:
 		return false
 	file.store_string(JSON.stringify({
@@ -112,8 +109,22 @@ func save() -> bool:
 		"identity_locked": identity_locked,
 		"identity_reveal_seen": identity_reveal_seen,
 	}))
+	file.flush()
 	file.close()
-	return true
+	var target_absolute := ProjectSettings.globalize_path(save_path)
+	var temporary_absolute := ProjectSettings.globalize_path(temporary_path)
+	var backup_absolute := ProjectSettings.globalize_path(backup_path)
+	if FileAccess.file_exists(backup_path):
+		DirAccess.remove_absolute(backup_absolute)
+	if FileAccess.file_exists(save_path) \
+			and DirAccess.rename_absolute(target_absolute, backup_absolute) != OK:
+		DirAccess.remove_absolute(temporary_absolute)
+		return false
+	if DirAccess.rename_absolute(temporary_absolute, target_absolute) == OK:
+		return true
+	if FileAccess.file_exists(backup_path):
+		DirAccess.rename_absolute(backup_absolute, target_absolute)
+	return false
 
 
 func clear_evidence() -> void:
@@ -121,6 +132,10 @@ func clear_evidence() -> void:
 	_reset_summary()
 	if FileAccess.file_exists(save_path):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
+	for suffix: String in [".tmp", ".bak"]:
+		var extra_path: String = save_path + suffix
+		if FileAccess.file_exists(extra_path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(extra_path))
 
 
 func finalize_identity() -> String:
@@ -183,3 +198,13 @@ func _rebuild_summary_from_evidence() -> void:
 		history_record["side"] = side
 		history_record["world_id"] = str(item.get("world_id", "mind_spark"))
 		identity_answer_history.append(history_record)
+
+
+func _read_save_dictionary(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var parser := JSON.new()
+	if parser.parse(FileAccess.get_file_as_string(path)) != OK:
+		return {}
+	var parsed: Variant = parser.data
+	return parsed if parsed is Dictionary else {}
