@@ -3,6 +3,7 @@ extends CanvasLayer
 const Catalog := preload("res://scripts/mind_spark/world_one_object_minigame_catalog.gd")
 const GardenRules := preload("res://scripts/mind_spark/unfinished_light_rules.gd")
 const ResearchSound := preload("res://scripts/mind_spark/research_sound_cues.gd")
+const AMBIENCE_FOCUS_DB := -12.0
 
 class ArcadeBoard extends Control:
 	var host: CanvasLayer
@@ -130,6 +131,9 @@ var _mouse_mode := Input.MOUSE_MODE_CAPTURED
 var _rng := RandomNumberGenerator.new()
 var _accent := Color("72e6c5")
 var _ui_scale := 1.0
+var _ambience_bus_index := -1
+var _ambience_restore_db := 0.0
+var _ambience_mix_tween: Tween
 
 
 func open_object(object: QuestObjectBase, actor: Node3D) -> void:
@@ -144,7 +148,40 @@ func open_object(object: QuestObjectBase, actor: Node3D) -> void:
 	_accent = _spec.accent
 	_rng.seed = hash(object.save_id)
 	_reset_round()
+	_duck_ambience_for_focus()
 	_build_ui()
+
+
+func _duck_ambience_for_focus() -> void:
+	if _ambience_bus_index >= 0:
+		return
+	_ambience_bus_index = AudioServer.get_bus_index(&"Ambience")
+	if _ambience_bus_index < 0:
+		return
+	_ambience_restore_db = AudioServer.get_bus_volume_db(_ambience_bus_index)
+	var target_db := minf(_ambience_restore_db, AMBIENCE_FOCUS_DB)
+	set_meta("ambience_focus_target_db", target_db)
+	if AudioServer.get_driver_name() == "Dummy" or not is_inside_tree():
+		AudioServer.set_bus_volume_db(_ambience_bus_index, target_db)
+		return
+	_ambience_mix_tween = create_tween()
+	_ambience_mix_tween.tween_method(_set_ambience_bus_db,
+		_ambience_restore_db, target_db, .22).set_trans(Tween.TRANS_SINE) \
+		.set_ease(Tween.EASE_OUT)
+
+
+func _restore_ambience_mix() -> void:
+	if _ambience_bus_index < 0:
+		return
+	if _ambience_mix_tween != null and _ambience_mix_tween.is_valid():
+		_ambience_mix_tween.kill()
+	AudioServer.set_bus_volume_db(_ambience_bus_index, _ambience_restore_db)
+	_ambience_bus_index = -1
+
+
+func _set_ambience_bus_db(value: float) -> void:
+	if _ambience_bus_index >= 0:
+		AudioServer.set_bus_volume_db(_ambience_bus_index, value)
 
 
 func _ready() -> void:
@@ -797,6 +834,7 @@ func completion_result() -> Dictionary:
 
 
 func _exit_tree() -> void:
+	_restore_ambience_mix()
 	Input.mouse_mode = _mouse_mode
 	if is_instance_valid(_feedback_audio):
 		_feedback_audio.stop()

@@ -9857,7 +9857,7 @@ func _configure_environment_audio_source(audio: AudioStreamPlayer3D,
 		physical_island: int, sound_role: String) -> void:
 	audio.unit_size = 34.0
 	audio.max_db = -9.0
-	audio.panning_strength = .72
+	audio.panning_strength = 1.0
 	audio.set_meta("physical_island", physical_island)
 	audio.set_meta("sound_role", sound_role)
 	audio.set_meta("non_blocking_environment_layer", true)
@@ -9900,6 +9900,7 @@ func _add_zone_ambience(parent: Node3D, node_name: String, stream: AudioStream,
 	audio.max_distance = max_distance_value
 	audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 	audio.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
+	audio.bus = &"Ambience"
 	audio.autoplay = true
 	audio.set_meta("continuous_loop", true)
 	parent.add_child(audio)

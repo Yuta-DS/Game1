@@ -1,6 +1,7 @@
 extends SceneTree
 
 const WorldScene := preload("res://scenes/mind_spark/mind_spark_world_one.tscn")
+const MiniGamePanel := preload("res://scripts/mind_spark/world_one_object_minigame_panel.gd")
 
 
 func _init() -> void:
@@ -8,6 +9,23 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var ambience_bus := AudioServer.get_bus_index(&"Ambience")
+	assert(ambience_bus >= 0, "World One has a dedicated ambience mix bus")
+	assert(AudioServer.get_bus_send(ambience_bus) == &"SFX",
+		"the ambience bus follows the existing SFX mute path")
+	assert(AudioServer.get_bus_volume_db(ambience_bus) <= -4.0,
+		"the ambience bus keeps headroom for dialogue and quest feedback")
+	var normal_ambience_db := AudioServer.get_bus_volume_db(ambience_bus)
+	var focus_panel := MiniGamePanel.new()
+	root.add_child(focus_panel)
+	focus_panel.call("_duck_ambience_for_focus")
+	assert(AudioServer.get_bus_volume_db(ambience_bus) <= -12.0,
+		"opening a quest game protects its instructions and feedback from ambience")
+	focus_panel.call("_restore_ambience_mix")
+	assert(is_equal_approx(AudioServer.get_bus_volume_db(ambience_bus), normal_ambience_db),
+		"closing a quest game restores the player's ambience mix exactly")
+	focus_panel.queue_free()
+	await process_frame
 	var world := WorldScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
 	root.add_child(world)
@@ -36,6 +54,8 @@ func _run() -> void:
 			"%s remains active for the whole district visit" % source_name)
 		assert(source.playback_type == AudioServer.PLAYBACK_TYPE_STREAM,
 			"%s uses the portable Web streaming path" % source_name)
+		assert(source.bus == &"Ambience" and source.panning_strength == 1.0,
+			"%s uses the bounded surround/stereo ambience mix" % source_name)
 		assert(source.max_distance >= 150.0 and source.unit_size == 34.0,
 			"%s uses bounded positional falloff" % source_name)
 		assert(int(source.get_meta("physical_island", 0)) == int(expected[source_name][0]))
