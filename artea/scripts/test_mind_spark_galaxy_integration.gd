@@ -19,7 +19,7 @@ func _run() -> void:
 	assert(world.get_node("WorldOneGeometry/MainStoryCircuitRoute") is Node3D)
 	assert(world.find_children("WalkableZoneFloor", "MeshInstance3D", true, false).size() == 6)
 	var forecourt := district.get_node("MindSparkCeremonialForecourt") as Node3D
-	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v1")
+	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v2")
 	assert(forecourt.get_meta("footprint_m") == Vector2(64.0, 54.0))
 	assert(float(forecourt.get_meta("clear_processional_lane_m", 0.0)) >= 18.0)
 	assert(bool(forecourt.get_meta("functional_gate_transform_preserved", false)))

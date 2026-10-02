@@ -66,10 +66,12 @@ func _run() -> void:
 	# and unsupported orbit lines. Their replacement gatehouse, observatory and
 	# landscape are stateful puzzle scenery and intentionally remain outside the
 	# inert static merge pass. Preserve the new measured source floor while the
-	# batch ceiling continues to guard the draw-call budget.
-	assert(merged_sources + repeated_sources >= 5745 \
+	# batch ceiling continues to guard the draw-call budget. The final Observatory
+	# palette cleanup changes one eight-piece legacy-metal grouping while keeping
+	# the total batch count below the same production ceiling.
+	assert(merged_sources + repeated_sources >= 5730 \
 			and merged_groups + repeated_groups <= 260,
-		"court-scale cells must consolidate at least 5,745 sources into no more than 260 spatial batches")
+		"court-scale cells must consolidate at least 5,730 sources into no more than 260 spatial batches")
 	assert(ranged_meshes > 1000,
 		"World One must apply distance ranges broadly enough to cull distant trim")
 
@@ -109,9 +111,10 @@ func _run() -> void:
 		var mesh := mesh_value as MeshInstance3D
 		if mesh.layers == 0 and mesh.has_meta("render_merged_into"):
 			arrival_kit_batched_sources += 1
-	# Twenty-seven decorative gold rings and unsupported line segments were
-	# deliberately removed from this kit by the finished campus palette.
-	assert(arrival_kit_batched_sources >= 323,
+	# Thirty-five decorative gold rings, fittings and unsupported line segments
+	# are now absorbed by the finished campus palette instead of surviving as
+	# separate prototype-colour sources.
+	assert(arrival_kit_batched_sources >= 315,
 		"the inert arrival conservatory must not inherit the compass controller's dynamic render cost")
 	var station_spur := world.get_node(
 		"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D

@@ -3630,8 +3630,15 @@ func _apply_island_one_low_poly_architecture_palette(arrival: Node3D) -> void:
 			mesh.set_meta("retired_for_low_poly_clarity", true)
 			continue
 		var key := mesh.name.to_lower()
-		if "gilt" in key or "brass" in key or "golden" in key:
+		var legacy_metal: bool = mesh.material_override == _materials.gold \
+			or mesh.material_override == _materials.astral_brass \
+			or mesh.material_override == _materials.quest_brass \
+			or mesh.material_override == _materials.quest_gold_leaf \
+			or mesh.material_override == _materials.island_gold \
+			or mesh.material_override == _materials.bio_socket_gold
+		if legacy_metal or "gilt" in key or "brass" in key or "golden" in key:
 			mesh.material_override = _materials.shared_style_charcoal
+			mesh.set_meta("restyled_for_low_poly_clarity", true)
 
 
 
@@ -3984,7 +3991,7 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 			2.62, 0.58, _materials.sanctum_ivory, false, 12)
 		indicator_case.rotation_degrees.x = 90.0
 		var indicator_face := _add_cylinder(pod, "MutedCyanFace", Vector3(0, 0, 0.14),
-			2.05, 0.18, _materials.shared_style_cyan, false, 12)
+			2.05, 0.18, _materials.sanctum_dial, false, 12)
 		indicator_face.rotation_degrees.x = 90.0
 		_add_torus(pod, "CharcoalInnerBezel", Vector3(0, 0, 0.27),
 			1.92, 2.34, _materials.shared_style_charcoal, Vector3(90, 0, 0))
@@ -9638,7 +9645,8 @@ func _build_materials() -> void:
 	_materials.sanctum_ivory.metallic_specular = 0.58
 	_materials.sanctum_dial = _material(
 		Color("214f5c"), 0.22, Color("70e3db"), 0.52)
-	_materials.sanctum_dial.metallic = 0.36
+	_materials.sanctum_dial.metallic = 0.10
+	_materials.sanctum_dial.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_materials.sanctum_lavender_glass = _material(
 		Color("b89ad8", 0.38), 0.24, Color("d8b8ff"), 0.30)
 	_materials.sanctum_lavender_glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
