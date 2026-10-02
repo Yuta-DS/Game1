@@ -12,6 +12,9 @@ const Catalog := preload("res://scripts/heart_melody/heart_garden_catalog.gd")
 const GardenMap := preload("res://scripts/heart_melody/heart_garden_map.gd")
 const Layout := preload("res://scripts/heart_melody/heart_garden_layout.gd")
 const RiverRegion := preload("res://scripts/heart_melody/heart_melody_river_region.gd")
+const BellRegion := preload("res://scripts/heart_melody/heart_melody_bell_grove_region.gd")
+const SharedRegion := preload("res://scripts/heart_melody/heart_melody_shared_song_region.gd")
+const ChapterCatalog := preload("res://scripts/heart_melody/heart_melody_chapter_catalog.gd")
 const TreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree.glb")
 const BlossomTreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree_a.glb")
 const CypressTreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree_b.glb")
@@ -90,6 +93,20 @@ var _organ_water: Array = []
 var _harp_strings: Array = []
 var _rain_bells: Array = []
 var _rain_boat: Node3D
+var _moon_melon_fruit: Array = []
+var _chime_heads: Array = []
+var _bridge_growth: Array = []
+var _warning_pulses: Array = []
+var _loom_tracks: Array = []
+var _harmony_fig_fruit: Array = []
+var _beat_anchor_cores: Array = []
+var _beat_anchor_pulses: Array = []
+var _orchestra_sockets: Array = []
+var _shell_sections: Array = []
+var _stage_blooms: Array = []
+var _harmony_jewel: MeshInstance3D
+var _harmony_shield: MeshInstance3D
+var _creator_gate_light: MeshInstance3D
 
 
 func _ready() -> void:
@@ -112,6 +129,8 @@ func ensure_world_built() -> bool:
 	_build_ground()
 	_build_garden()
 	_build_river_voice()
+	_build_bell_grove()
+	_build_shared_song()
 	_build_cast()
 	_note_player = AudioStreamPlayer.new()
 	add_child(_note_player)
@@ -171,6 +190,12 @@ func checkpoint_position() -> Vector3:
 		"river_organ": return RiverRegion.ORGAN + Vector3(0, 1, 12)
 		"river_harp": return RiverRegion.HARP + Vector3(0, 1, 12)
 		"bell_grove": return RiverRegion.BELLS + Vector3(0, 1, -14)
+		"chime_bridge": return BellRegion.CHIMES + Vector3(0, 1, -12)
+		"peace_garden": return BellRegion.WARNING_PATH + Vector3(0, 1, -14)
+		"heart_song_loom": return BellRegion.LOOM + Vector3(0, 1, -14)
+		"harmony_stage": return SharedRegion.STAGE + Vector3(0, 1, -34)
+		"harmony_orchestra": return SharedRegion.STAGE + Vector3(0, 1, -14)
+		"harmony_sanctuary": return SharedRegion.SANCTUARY + Vector3(0, 1, -18)
 	return ARRIVAL
 
 
@@ -231,6 +256,15 @@ func _build_garden() -> void:
 	_register("arrival_bloom",Vector3(-170,0,0),"Rest at the Arrival Bloom")
 	Kit.flower(entry,Vector3(-170,1.1,0),2.2,"ivory")
 	_register("route_stone",Vector3(-165,0,-20),"Open the Heart Garden map")
+	var craft_station := Node3D.new()
+	craft_station.name = "MusicalFruitCraftingStation"
+	entry.add_child(craft_station)
+	Kit.box(craft_station, "RootWorkbench", Vector3(-150, 1.0, 22), Vector3(7, 2, 4), "wood", true)
+	for index in 3:
+		Kit.facet(craft_station, "RecipeBowl%02d" % index, Vector3(-152 + index * 2.2, 2.5, 22),
+			Vector3(0.75, 0.5, 0.75), ["blue", "pink", "gold"][index])
+	Kit.sign_text(craft_station, "MUSICAL FRUIT CRAFTING", Vector3(-150, 6, 22), 18)
+	_register("fruit_crafting", Vector3(-150, 0, 17), "Craft musical fruit recipes")
 	var route_stone := RouteStoneModel.instantiate() as Node3D
 	route_stone.position = Vector3(-165,0,-23)
 	route_stone.scale = Vector3.ONE * 1.2
@@ -305,6 +339,39 @@ func _build_river_voice() -> void:
 	_register("hush_vine_harp", RiverRegion.HARP + Vector3(0, 0, 9), "Release the Hush Vine Harp")
 	_register("bell_apple_grove", RiverRegion.BELL_GROVE + Vector3(0, 0, 7), "Harvest four Bell Apples")
 	_register("rain_boat_bells", RiverRegion.BELLS + Vector3(0, 0, -13), "Call the Rain Boat")
+
+
+func _build_bell_grove() -> void:
+	var result := BellRegion.build(self)
+	route_segments.append_array(result.route_segments)
+	_moon_melon_fruit = result.moon_fruit
+	_chime_heads = result.chime_heads
+	_bridge_growth = result.bridge_growth
+	_warning_pulses = result.warning_pulses
+	_loom_tracks = result.loom_tracks
+	_register("harmony_bridge_chimes", BellRegion.CHIMES + Vector3(0, 0, -12), "Restore the Harmony Bridge Chimes")
+	_register("moon_melon_grove", BellRegion.MOON_GROVE + Vector3(0, 0, 7), "Harvest three Moon Melons")
+	_register("warning_bell_path", BellRegion.WARNING_PATH + Vector3(0, 0, -14), "Cross the Warning Bell Path")
+	_register("heart_song_loom", BellRegion.LOOM + Vector3(0, 0, -14), "Assemble the Heart Song")
+
+
+func _build_shared_song() -> void:
+	var result := SharedRegion.build(self)
+	route_segments.append_array(result.route_segments)
+	_harmony_fig_fruit = result.fig_fruit
+	_beat_anchor_cores = result.anchor_cores
+	_beat_anchor_pulses = result.anchor_pulses
+	_orchestra_sockets = result.orchestra_sockets
+	_shell_sections = result.shell_sections
+	_stage_blooms = result.stage_blooms
+	_harmony_jewel = result.jewel
+	_harmony_shield = result.shield
+	_creator_gate_light = result.gate_light
+	_register("conductor_beat_anchors", SharedRegion.STAGE + Vector3(0, 0, -34), "Join the three Conductor Beat Anchors")
+	_register("harmony_fig_grove", SharedRegion.FIG_GROVE + Vector3(0, 0, 8), "Harvest six Harmony Figs")
+	_register("harmony_fruit_orchestra", SharedRegion.STAGE + Vector3(0, 0, -14), "Play the Harmony Fruit Orchestra")
+	_register("harmony_sanctuary", SharedRegion.SANCTUARY + Vector3(0, 0, -18), "Receive the Harmony Jewel and Shield")
+	_register("creator_light_gate", SharedRegion.GATE + Vector3(0, 0, -10), "Continue to Creator's Light")
 
 
 func _build_echo_berry_grove(parent: Node3D) -> void:
@@ -466,6 +533,45 @@ func _restore() -> void:
 		bell.scale = Vector3.ONE * (1.14 if index < state.data.rain_bells.size() else 1.0)
 	if _rain_boat != null:
 		_rain_boat.visible = state.river_complete()
+	for fruit in _moon_melon_fruit:
+		fruit.visible = state.story_fruit_count("moon_melon") < 3
+	for index in _chime_heads.size():
+		var restored := bool(state.data.bridge_chimes[index])
+		_chime_heads[index].material_override = Kit.material("blue" if restored else "gold")
+		_chime_heads[index].scale = Vector3.ONE * (1.16 if restored else 1.0)
+	for index in _bridge_growth.size():
+		var grown := bool(state.data.bridge_chimes[index])
+		_bridge_growth[index].visible = grown
+		for shape in _bridge_growth[index].find_children("*", "CollisionShape3D", true, false):
+			shape.set_deferred("disabled", not grown)
+	for pulse in _warning_pulses:
+		var step := int(pulse.get_meta("step", 0))
+		var lane := int(pulse.get_meta("lane", 0))
+		var safe_lane: int = int([0, 1, 2, 1][step])
+		pulse.material_override = Kit.material("leaf_light" if state.task_complete(State.CHIME_TASK) and lane == safe_lane else "blue")
+	for index in _loom_tracks.size():
+		var active: bool = index < state.data.loom_motifs.size()
+		_loom_tracks[index].scale.y = 1.7 if active else 1.0
+		if state.heart_song_complete(): _loom_tracks[index].material_override = Kit.material("gold")
+	for fruit in _harmony_fig_fruit:
+		fruit.visible = state.story_fruit_count("harmony_fig") < 6
+	for index in _beat_anchor_cores.size():
+		var joined := bool(state.data.beat_anchors[index])
+		_beat_anchor_cores[index].material_override = Kit.material("leaf_light" if joined else ["pink", "blue", "gold"][index])
+		_beat_anchor_cores[index].scale = Vector3.ONE * (1.18 if joined else 1.0)
+		_beat_anchor_pulses[index].visible = state.heart_song_complete() and not joined
+	for index in _orchestra_sockets.size():
+		var filled: bool = index < state.data.orchestra_fruits.size()
+		_orchestra_sockets[index].material_override = Kit.material(["blue", "gold", "leaf_light", "pink", "ivory", "pink"][index] if filled else "rock")
+		_shell_sections[index].visible = not state.harmony_complete() and not filled
+	for bloom in _stage_blooms:
+		bloom.material_override = Kit.material("pink" if state.harmony_complete() else ("leaf_light" if state.task_complete(State.ANCHOR_TASK) else "leaf"))
+	if _harmony_jewel != null:
+		_harmony_jewel.visible = state.harmony_complete()
+		_harmony_jewel.material_override = Kit.material("blue")
+	if _harmony_shield != null: _harmony_shield.visible = state.harmony_complete()
+	if _creator_gate_light != null:
+		_creator_gate_light.visible = state.harmony_complete()
 	var grass_color := Color("a8ce69") if state.complete() else (
 		Color("9fc162") if state.planted_count() > 0 else Color("91ba59"))
 	for surface in _grass_surfaces:
@@ -487,7 +593,8 @@ func _restore() -> void:
 	_bridge_blocker.visible = not crossing_ready
 	for shape in _bridge_blocker.find_children("*","CollisionShape3D",true,false): shape.set_deferred("disabled",crossing_ready)
 	if objective_label != null:
-		objective_label.text = "HEART MELODY • %s\n%s\nGarden XP: %d" % ["RIVER VOICE" if state.complete() else "FEELING GARDEN", state.objective(),state.xp()]
+		var region_name := "HARMONY SANCTUARY" if state.harmony_complete() else ("SHARED SONG" if state.heart_song_complete() else ("BELL GROVE" if state.river_complete() else ("RIVER VOICE" if state.complete() else "FEELING GARDEN")))
+		objective_label.text = "HEART MELODY • %s\n%s\nGarden XP: %d" % [region_name, state.objective(),state.xp()]
 	if state.data.settings.muted:
 		if _note_player != null: _note_player.stop()
 		if _ambience != null: _ambience.stop()
@@ -710,6 +817,7 @@ func open_control(id: String) -> void:
 		else:
 			_heading("3/3 Echo Berries are safe in the quest pouch. Take them to the three Feeling Seed celestas.")
 			_button("Replay their repeating note", play_phrase.bind(["leaf", "leaf", "leaf"], 0.55))
+			_add_crafting_harvest("echo_berry", 2, id)
 	elif id in ["dew_pear_grove", "sun_plum_grove", "bell_apple_grove"]:
 		var fruit_id: String = str({"dew_pear_grove": "dew_pear", "sun_plum_grove": "sun_plum", "bell_apple_grove": "bell_apple"}[id])
 		var required: int = int({"dew_pear": 3, "sun_plum": 5, "bell_apple": 4}[fruit_id])
@@ -723,6 +831,7 @@ func open_control(id: String) -> void:
 		else:
 			_heading("%d/%d %s are safe. Their sound is ready for the next instrument." % [required, required, label])
 			_button("Replay the fruit pattern", _play_river_pattern.bind(fruit_id))
+			_add_crafting_harvest(fruit_id, 3 if fruit_id == "bell_apple" else 2, id)
 	elif id == "waterfall_organ":
 		_heading("Waterfall Organ\nMatch the visible water pitches: low • high • calm.")
 		_heading("Dew Pear resonators: %d/3\nWater levels: %s" % [state.story_fruit_count("dew_pear"), _display_levels(state.data.river_organ)])
@@ -744,6 +853,97 @@ func open_control(id: String) -> void:
 		_button("Undo last bell", _revise_rain_bells.bind(false))
 		_button("Reset call", _revise_rain_bells.bind(true))
 		_button("Confirm Rain Boat call", _confirm_rain_bells)
+	elif id == "harmony_bridge_chimes":
+		_heading("Harmony Bridge Chimes\nAim each striker at its bright wind phase, then ring it.")
+		_heading("Wind phases: %s\nRestored: %d/3" % [_display_levels(state.data.chime_wind), state.data.bridge_chimes.count(true)])
+		for index in 3:
+			_button("Aim chime %d" % (index + 1), _cycle_chime_wind.bind(index))
+			_button("Strike chime %d" % (index + 1), _strike_chime.bind(index))
+	elif id == "moon_melon_grove":
+		_heading("Moon Melon Peace Grove\nEach fruit sustains the warning signal long enough to read it.")
+		if not state.river_complete():
+			_heading("Restore the River Song before entering Peace Garden.")
+		elif state.story_fruit_count("moon_melon") < 3:
+			_button("Hear the sustained Moon Melon tone", play_phrase.bind(["droplet", "droplet", "droplet"], 0.9))
+			_button("Harvest 3 Moon Melon", _harvest_river_fruit.bind("moon_melon", 3, id))
+		else:
+			_heading("3/3 Moon Melons are safe in the story pouch.")
+			_add_crafting_harvest("moon_melon", 3, id)
+	elif id == "warning_bell_path":
+		_heading("Fear Warning Bell Path\nMove through four quiet gaps. Shapes and ground ripples repeat every sound cue.")
+		_heading("Moon Melons: %d/3\nCrossing: %s" % [state.story_fruit_count("moon_melon"), " • ".join(state.data.warning_path) if not state.data.warning_path.is_empty() else "waiting"])
+		for channel in ["left", "centre", "right"]:
+			_button("Move %s" % channel.capitalize(), _enter_warning_channel.bind(channel))
+		_button("Undo last crossing", _revise_warning_path.bind(false))
+		_button("Return to Peace Flower", _revise_warning_path.bind(true))
+		_button("Confirm safe crossing", _confirm_warning_path)
+	elif id == "heart_song_loom":
+		_heading("Heart Song Loom\nArrange the four recovered lessons into a shape-coded score.")
+		_heading("Score: %s" % [" • ".join(state.data.loom_motifs) if not state.data.loom_motifs.is_empty() else "waiting"])
+		for motif in State.LOOM_TARGET:
+			_button("Add %s motif" % motif.capitalize(), _enter_loom_motif.bind(motif))
+		_button("Audition my score", _play_loom_score)
+		_button("Undo last motif", _revise_loom.bind(false))
+		_button("Reset score", _revise_loom.bind(true))
+		_button("Confirm Heart Song", _confirm_loom)
+	elif id == "conductor_beat_anchors":
+		_heading("Conductor Beat Anchors\nComplete three short physical music lessons. Finished anchors stay safe after retries.")
+		for index in 3:
+			var lesson: String = ["Rhythm", "Pitch", "Direction"][index]
+			var progress: Array = state.data.beat_anchor_steps[index]
+			_heading("%s Anchor — %s" % [lesson, "joined" if state.data.beat_anchors[index] else "%d/3" % progress.size()])
+			if not state.data.beat_anchors[index]:
+				for step in State.ANCHOR_TARGETS[index]:
+					_button("%s: %s" % [lesson, str(step).capitalize()], _enter_beat_anchor_step.bind(index, str(step)))
+				_button("Replay %s phase" % lesson, _reset_beat_anchor.bind(index))
+	elif id == "harmony_fig_grove":
+		_heading("Harmony Fig Grove\nSix blended voices prepare the final orchestra layer.")
+		if not state.task_complete(State.ANCHOR_TASK):
+			_heading("Join the three Beat Anchors before harvesting the sanctuary fruit.")
+		elif state.story_fruit_count("harmony_fig") < 6:
+			_button("Hear the blended fig chord", play_phrase.bind(["leaf", "sun", "droplet", "leaf", "droplet", "sun"], 0.42))
+			_button("Harvest six Harmony Figs", _harvest_harmony_figs)
+		else:
+			_heading("6/6 Harmony Figs are protected in the quest pouch.")
+			_add_crafting_harvest("harmony_fig", 4, id)
+	elif id == "fruit_crafting":
+		_heading("Musical Fruit Crafting\nStory fruit stays protected. These recipes only use separate crafting harvests.")
+		var chapter := ChapterCatalog.read()
+		for recipe_value in chapter.get("recipes", []):
+			var recipe: Dictionary = recipe_value
+			var recipe_id := str(recipe.id)
+			var fruit_id := str(recipe.fruit)
+			var owned := state.crafting_fruit_count(fruit_id)
+			var status := "crafted" if recipe_id in state.data.crafted_recipe_ids else "%d/%d %s" % [owned, int(recipe.cost), fruit_id.replace("_", " ")]
+			_button("%s — %s" % [recipe_id.replace("_", " ").capitalize(), status], _craft_recipe.bind(recipe_id))
+	elif id == "harmony_fruit_orchestra":
+		_heading("Harmony Fruit Orchestra\nPlace the six fruit families in the order taught across the valley, then conduct the stage lights.")
+		_heading("Orchestra: %s\nConducting: %s" % [" • ".join(state.data.orchestra_fruits) if not state.data.orchestra_fruits.is_empty() else "waiting",
+			" • ".join(state.data.conducting_steps) if not state.data.conducting_steps.is_empty() else "waiting"])
+		for fruit_id in State.ORCHESTRA_TARGET:
+			_button("Place %s" % str(fruit_id).replace("_", " ").capitalize(), _place_orchestra_fruit.bind(str(fruit_id)))
+		_button("Undo latest fruit layer", _revise_orchestra)
+		for direction in State.CONDUCT_TARGET:
+			_button("Conduct %s" % str(direction).capitalize(), _enter_conduct_direction.bind(str(direction)))
+		_button("Replay conducting phrase", _play_conducting_phrase)
+		_button("Reset conducting", _reset_conducting)
+		_button("Complete the Heart Melody finale", _confirm_orchestra)
+	elif id == "harmony_sanctuary":
+		_heading("Harmony Jewel Sanctuary\nThe valley's restored voices gather here without ranking any feeling or choice.")
+		if state.harmony_complete():
+			_heading("Harmony Jewel formed • Harmony Shield equipped • Creator's Light route open")
+			_button("Replay the restored valley song", play_phrase.bind(["leaf", "sun", "droplet", "leaf", "droplet", "sun"], 0.45))
+		else:
+			_heading("Free the Silent Conductor at Harmony Stage to awaken the sanctuary.")
+	elif id == "creator_light_gate":
+		_heading("Creator's Light Gate\nThe next kingdom opens after Heart Melody is fully restored.")
+		if state.harmony_complete():
+			_button("Save and return to the Castle railway", func():
+				if state.save():
+					deactivate()
+					return_requested.emit())
+		else:
+			_heading("The gate is quiet. Complete the Harmony Fruit Orchestra first.")
 	elif id.begins_with("drum_"):
 		var index := int(id.get_slice("_",1))
 		_heading("%s flower"%State.SYMBOLS[index].capitalize())
@@ -792,7 +992,11 @@ func open_control(id: String) -> void:
 			["HM_ID_01","energy","Greet Milo together","E","Listen quietly first","I"],
 			["HM_ID_02","information","Listen to one note","S","Hear the whole garden","N"],
 			["HM_ID_03","decisions","Follow the seed instructions","T","Imagine what would comfort the garden","F"],
-			["HM_ID_04","structure","Plan my phrase first","J","Explore the flowers first","P"]]
+			["HM_ID_04","structure","Plan my phrase first","J","Explore the flowers first","P"],
+			["HM_ID_05","energy","Join the group rhythm","E","Practice one anchor quietly","I"],
+			["HM_ID_06","information","Track each visible cue","S","Follow the whole musical pattern","N"],
+			["HM_ID_07","decisions","Use the taught safe rule","T","Protect the frightened creature first","F"],
+			["HM_ID_08","structure","Conduct in the planned order","J","Adapt to the living stage","P"]]
 		for moment in moments:
 			if moment[0] in state.data.identity_dismissed: continue
 			_button(moment[2],_identity.bind(moment[0],moment[1],moment[3]))
@@ -824,6 +1028,25 @@ func _harvest_river_fruit(fruit_id: String, amount: int, control_id: String) -> 
 	var result := state.grant_story_fruit(fruit_id, amount, "story.river.%s" % fruit_id)
 	_feedback(result.accepted, result.message)
 	open_control(control_id)
+
+
+func _add_crafting_harvest(fruit_id: String, amount: int, control_id: String) -> void:
+	var receipt := "crafting.first.%s" % fruit_id
+	if receipt not in state.data.fruit_receipt_ids:
+		_button("Harvest %d regrown %s for crafting" % [amount, fruit_id.replace("_", " ").capitalize()],
+			_harvest_crafting_fruit.bind(fruit_id, amount, control_id))
+
+
+func _harvest_crafting_fruit(fruit_id: String, amount: int, control_id: String) -> void:
+	var result := state.grant_crafting_fruit(fruit_id, amount, "crafting.first.%s" % fruit_id)
+	_feedback(result.accepted, result.message)
+	open_control(control_id)
+
+
+func _craft_recipe(recipe_id: String) -> void:
+	var result := state.craft_recipe(recipe_id)
+	_feedback(result.accepted, result.message)
+	open_control("fruit_crafting")
 
 
 func _play_river_pattern(fruit_id: String) -> void:
@@ -881,6 +1104,140 @@ func _confirm_rain_bells() -> void:
 		play_phrase(["leaf", "droplet", "sun", "leaf"], 0.55)
 		if not was_complete: quest_completed.emit()
 	open_control("rain_boat_bells")
+
+
+func _cycle_chime_wind(index: int) -> void:
+	var phase := (int(state.data.chime_wind[index]) + 1) % 3
+	var result := state.set_chime_wind(index, phase)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note(phase)
+	open_control("harmony_bridge_chimes")
+
+
+func _strike_chime(index: int) -> void:
+	var result := state.strike_bridge_chime(index)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note(index)
+	open_control("harmony_bridge_chimes")
+
+
+func _enter_warning_channel(channel: String) -> void:
+	var result := state.enter_warning_channel(channel)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note(["left", "centre", "right"].find(channel))
+	open_control("warning_bell_path")
+
+
+func _revise_warning_path(reset: bool) -> void:
+	var result := state.revise_warning_path(reset)
+	_feedback(result.accepted, result.message)
+	open_control("warning_bell_path")
+
+
+func _confirm_warning_path() -> void:
+	var result := state.confirm_warning_path()
+	_feedback(result.accepted, result.message)
+	open_control("warning_bell_path")
+
+
+func _enter_loom_motif(motif: String) -> void:
+	var result := state.enter_loom_motif(motif)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note(State.LOOM_TARGET.find(motif) % 3)
+	open_control("heart_song_loom")
+
+
+func _play_loom_score() -> void:
+	var phrase: Array = []
+	for motif in state.data.loom_motifs:
+		phrase.append(State.SYMBOLS[State.LOOM_TARGET.find(motif) % 3])
+	play_phrase(phrase, 0.62)
+
+
+func _revise_loom(reset: bool) -> void:
+	var result := state.revise_loom(reset)
+	_feedback(result.accepted, result.message)
+	open_control("heart_song_loom")
+
+
+func _confirm_loom() -> void:
+	var was_complete := state.heart_song_complete()
+	var result := state.confirm_loom()
+	_feedback(result.accepted, result.message)
+	if result.accepted:
+		_play_loom_score()
+		if not was_complete: quest_completed.emit()
+	open_control("heart_song_loom")
+
+
+func _enter_beat_anchor_step(index: int, step: String) -> void:
+	var result := state.enter_beat_anchor_step(index, step)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note((index + State.ANCHOR_TARGETS[index].find(step)) % 3)
+	open_control("conductor_beat_anchors")
+
+
+func _reset_beat_anchor(index: int) -> void:
+	var result := state.reset_beat_anchor(index)
+	_feedback(result.accepted, result.message)
+	open_control("conductor_beat_anchors")
+
+
+func _harvest_harmony_figs() -> void:
+	var result := state.grant_story_fruit("harmony_fig", 6, "story.shared.harmony_fig")
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_phrase(["leaf", "sun", "droplet", "leaf", "droplet", "sun"], 0.42)
+	open_control("harmony_fig_grove")
+
+
+func _place_orchestra_fruit(fruit_id: String) -> void:
+	var result := state.place_orchestra_fruit(fruit_id)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note(State.ORCHESTRA_TARGET.find(fruit_id) % 3)
+	open_control("harmony_fruit_orchestra")
+
+
+func _revise_orchestra() -> void:
+	var result := state.revise_orchestra()
+	_feedback(result.accepted, result.message)
+	open_control("harmony_fruit_orchestra")
+
+
+func _enter_conduct_direction(direction: String) -> void:
+	var result := state.enter_conduct_direction(direction)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note(State.CONDUCT_TARGET.find(direction) % 3)
+	open_control("harmony_fruit_orchestra")
+
+
+func _play_conducting_phrase() -> void:
+	var phrase: Array = []
+	for direction in state.data.conducting_steps:
+		phrase.append(State.SYMBOLS[State.CONDUCT_TARGET.find(direction) % 3])
+	play_phrase(phrase, 0.52)
+
+
+func _reset_conducting() -> void:
+	var result := state.reset_conducting()
+	_feedback(result.accepted, result.message)
+	open_control("harmony_fruit_orchestra")
+
+
+func _confirm_orchestra() -> void:
+	var was_complete := state.harmony_complete()
+	var result := state.confirm_orchestra()
+	_feedback(result.accepted, result.message)
+	if result.accepted:
+		play_phrase(["leaf", "sun", "droplet", "leaf", "droplet", "sun"], 0.42)
+		if not was_complete:
+			var journey := get_node_or_null("/root/JourneyState")
+			if journey != null and journey.has_method("complete_heart_melody"):
+				journey.call("complete_heart_melody")
+			if player != null:
+				player.set("blocking_available", true)
+				player.set_meta("harmony_shield_equipped", true)
+			quest_completed.emit()
+	open_control("harmony_fruit_orchestra")
 
 
 func _preview_seed(index: int, choice: String) -> void:
@@ -1085,7 +1442,12 @@ func _clear_encounter() -> void:
 func _identity(id: String, axis: String, side: String) -> void:
 	if not side.is_empty():
 		var tracker := get_node_or_null("/root/PlayerIdentityTracker")
-		var context := {"canonical_quest_id": State.QUEST_ID, "task_id": State.PLANT_TASK if id in ["HM_ID_01", "HM_ID_02"] else State.RHYTHM_TASK, "source": "island_one_reflection"}
+		var task_id := State.PLANT_TASK
+		if id in ["HM_ID_03", "HM_ID_04"]: task_id = State.RHYTHM_TASK
+		elif id in ["HM_ID_05", "HM_ID_06"]: task_id = State.LOOM_TASK
+		elif id == "HM_ID_07": task_id = State.ANCHOR_TASK
+		elif id == "HM_ID_08": task_id = State.ORCHESTRA_TASK
+		var context := {"canonical_quest_id": State.FINAL_QUEST_ID if id in ["HM_ID_07", "HM_ID_08"] else (State.HEART_QUEST_ID if id in ["HM_ID_05", "HM_ID_06"] else State.QUEST_ID), "task_id": task_id, "source": "heart_melody_reflection"}
 		if tracker == null or not tracker.record_evidence(id,axis,side,"heart_melody",context):
 			_feedback(false,"Your choice could not be saved. You can retry or keep it private.")
 			return

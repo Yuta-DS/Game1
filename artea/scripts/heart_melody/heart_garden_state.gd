@@ -7,7 +7,7 @@ signal feedback(accepted: bool, message: String)
 
 const SAVE_PATH := "user://heart_melody_island_one.json"
 const ChapterCatalog := preload("res://scripts/heart_melody/heart_melody_chapter_catalog.gd")
-const SCHEMA_VERSION := 3
+const SCHEMA_VERSION := 5
 const PLANT_TASK := "heart_melody.task.plant_feeling_seeds"
 const RHYTHM_TASK := "heart_melody.task.restore_garden_rhythm"
 const QUEST_ID := "heart_melody.quest.wake_feeling_garden"
@@ -15,11 +15,29 @@ const RIVER_QUEST_ID := "heart_melody.quest.restore_river_song"
 const ORGAN_TASK := "heart_melody.task.tune_waterfall_organ"
 const VINE_TASK := "heart_melody.task.release_hush_vines"
 const BOAT_TASK := "heart_melody.task.call_rain_boat"
+const HEART_QUEST_ID := "heart_melody.quest.build_heart_song"
+const CHIME_TASK := "heart_melody.task.restore_bridge_chimes"
+const WARNING_TASK := "heart_melody.task.cross_warning_bells"
+const LOOM_TASK := "heart_melody.task.assemble_heart_song"
+const FINAL_QUEST_ID := "heart_melody.quest.free_silent_conductor"
+const ANCHOR_TASK := "heart_melody.task.join_beat_anchors"
+const ORCHESTRA_TASK := "heart_melody.task.free_silent_conductor"
+const CONDUCTOR_XP_ID := "heart_melody.boss.silent_conductor"
 const SYMBOLS := ["leaf", "droplet", "sun"]
 const PHRASE := ["leaf", "sun", "droplet"]
 const ORGAN_TARGET := [1, 2, 0]
 const VINE_TARGET := [0, 1, 2, 3, 4]
 const BELL_TARGET := ["north", "east", "south", "west"]
+const CHIME_TARGET := [1, 2, 0]
+const WARNING_TARGET := ["left", "centre", "right", "centre"]
+const LOOM_TARGET := ["drum", "water", "harp", "chime"]
+const ANCHOR_TARGETS := [
+	["leaf", "sun", "droplet"],
+	["low", "high", "calm"],
+	["left", "centre", "right"],
+]
+const ORCHESTRA_TARGET := ["echo_berry", "sun_plum", "dew_pear", "bell_apple", "moon_melon", "harmony_fig"]
+const CONDUCT_TARGET := ["up", "left", "right", "down"]
 const CHOICES := ["joy", "sadness", "frustration", "fear", "peace", "hope", "sound"]
 const ENEMY_XP := {"garden.moth.1": 12, "garden.moth.2": 12, "garden.slime.1": 15}
 const WAVES := [["garden.moth.1"], ["garden.moth.2", "garden.slime.1"]]
@@ -40,6 +58,10 @@ static func fresh() -> Dictionary:
 		"fruit_receipt_ids": [], "crafted_recipe_ids": [],
 		"river_organ": [0, 0, 0], "hush_vines": [0, 0, 0, 0, 0],
 		"rain_bells": [], "river_attempts": {},
+		"chime_wind": [0, 0, 0], "bridge_chimes": [false, false, false],
+		"warning_path": [], "loom_motifs": [],
+		"beat_anchor_steps": [[], [], []], "beat_anchors": [false, false, false],
+		"orchestra_fruits": [], "conducting_steps": [], "harmony_rewards_claimed": false,
 		"settings": {"puzzle_help": true, "combat_assist": false, "reduced_motion": false,
 			"muted": false, "music_volume": 0.72, "effects_volume": 0.82}}
 
@@ -61,6 +83,14 @@ func river_complete() -> bool:
 	return RIVER_QUEST_ID in data.completed_quest_ids
 
 
+func heart_song_complete() -> bool:
+	return HEART_QUEST_ID in data.completed_quest_ids
+
+
+func harmony_complete() -> bool:
+	return FINAL_QUEST_ID in data.completed_quest_ids
+
+
 func task_complete(task_id: String) -> bool:
 	return task_id in data.completed_task_ids
 
@@ -77,8 +107,18 @@ func current_wave() -> int:
 
 
 func objective() -> String:
+	if harmony_complete():
+		return "Heart Melody is restored. The Creator's Light gate is open."
+	if heart_song_complete():
+		if not task_complete(ANCHOR_TASK):
+			return "Join the Rhythm, Pitch, and Direction Beat Anchors."
+		return "Harvest Harmony Figs, fill the six orchestra sockets, and conduct the finale."
 	if river_complete():
-		return "River Song restored. The Bell Grove is ready for the Heart Song."
+		if not task_complete(CHIME_TASK):
+			return "Restore the three Harmony Bridge Chimes."
+		if not task_complete(WARNING_TASK):
+			return "Harvest three Moon Melons and cross the Warning Bell Path."
+		return "Arrange the four recovered motifs at the Heart Song Loom."
 	if complete():
 		if not task_complete(ORGAN_TASK):
 			return "Harvest three Dew Pears and tune the Waterfall Organ."
@@ -204,7 +244,8 @@ func set_volume(key: String, value: float) -> Dictionary:
 
 func set_checkpoint(id: String) -> Dictionary:
 	if id not in ["arrival", "planter_court", "drum_garden", "restored_garden",
-			"river_organ", "river_harp", "bell_grove"]:
+			"river_organ", "river_harp", "bell_grove", "chime_bridge", "peace_garden",
+			"heart_song_loom", "harmony_stage", "harmony_orchestra", "harmony_sanctuary"]:
 		return _reply(false, "Unknown checkpoint.")
 	var next := data.duplicate(true)
 	next.checkpoint = id
@@ -212,7 +253,8 @@ func set_checkpoint(id: String) -> Dictionary:
 
 
 func dismiss_identity(id: String) -> Dictionary:
-	if id not in ["HM_ID_01", "HM_ID_02", "HM_ID_03", "HM_ID_04"]:
+	if id not in ["HM_ID_01", "HM_ID_02", "HM_ID_03", "HM_ID_04",
+			"HM_ID_05", "HM_ID_06", "HM_ID_07", "HM_ID_08"]:
 		return _reply(false, "Unknown reflection.")
 	var next := data.duplicate(true)
 	if id not in next.identity_dismissed:
@@ -371,6 +413,205 @@ func confirm_rain_bells() -> Dictionary:
 	return _commit(next, "River Song restored — 105 quest XP! The Rain Boat is waiting.")
 
 
+func set_chime_wind(index: int, phase: int) -> Dictionary:
+	if not river_complete():
+		return _reply(false, "Call the Rain Boat before restoring the bridge chimes.")
+	if index < 0 or index >= 3 or phase < 0 or phase > 2:
+		return _reply(false, "Choose one of the three visible wind phases.")
+	if bool(data.bridge_chimes[index]):
+		return _reply(true, "That chime arch is already singing.")
+	var next := data.duplicate(true)
+	next.chime_wind[index] = phase
+	return _commit(next, "Chime %d striker aimed at wind phase %d." % [index + 1, phase + 1])
+
+
+func strike_bridge_chime(index: int) -> Dictionary:
+	if not river_complete() or story_fruit_count("bell_apple") < 4:
+		return _reply(false, "River Song and the four Bell Apple clappers are required.")
+	if index < 0 or index >= 3:
+		return _reply(false, "Choose one of the three chime arches.")
+	if bool(data.bridge_chimes[index]):
+		return _reply(true, "That chime arch is already restored.")
+	if int(data.chime_wind[index]) != CHIME_TARGET[index]:
+		return _record_river_attempt("chime_%d" % index, "The striker missed the bright wind window; the completed chimes stay safe.")
+	var next := data.duplicate(true)
+	next.bridge_chimes[index] = true
+	if false not in next.bridge_chimes:
+		next.completed_task_ids.append(CHIME_TASK)
+		next.checkpoint = "chime_bridge"
+	return _commit(next, "Harmony Chime %d restored%s" % [index + 1, ". The Peace Garden path has grown." if false not in next.bridge_chimes else "."])
+
+
+func enter_warning_channel(channel: String) -> Dictionary:
+	if not task_complete(CHIME_TASK) or story_fruit_count("moon_melon") < 3:
+		return _reply(false, "Restore the chimes and harvest three Moon Melons first.")
+	if channel not in ["left", "centre", "right"]:
+		return _reply(false, "Move into a marked quiet channel.")
+	if task_complete(WARNING_TASK):
+		return _reply(true, "The quiet route remains open.")
+	if data.warning_path.size() >= 4:
+		return _reply(false, "Four crossings are ready. Confirm, undo, or reset them.")
+	var next := data.duplicate(true)
+	next.warning_path.append(channel)
+	return _commit(next, "%d/4 quiet gaps crossed." % next.warning_path.size())
+
+
+func revise_warning_path(reset := false) -> Dictionary:
+	if task_complete(WARNING_TASK):
+		return _reply(true, "The safe crossing remains remembered.")
+	var next := data.duplicate(true)
+	if reset: next.warning_path.clear()
+	elif not next.warning_path.is_empty(): next.warning_path.pop_back()
+	return _commit(next, "The nearby Peace Flower keeps every completed section safe.")
+
+
+func confirm_warning_path() -> Dictionary:
+	if task_complete(WARNING_TASK):
+		return _reply(true, "The Warning Bell Path is already calm.")
+	if data.warning_path != WARNING_TARGET:
+		return _record_river_attempt("warning", "Follow the ground ripples: Left • Centre • Right • Centre.")
+	var next := data.duplicate(true)
+	next.completed_task_ids.append(WARNING_TASK)
+	next.checkpoint = "peace_garden"
+	return _commit(next, "The Warning Bell Path is calm. The Heart Song Loom is awake.")
+
+
+func enter_loom_motif(motif: String) -> Dictionary:
+	if not task_complete(WARNING_TASK):
+		return _reply(false, "Cross the Warning Bell Path before arranging the recovered song.")
+	if motif not in LOOM_TARGET:
+		return _reply(false, "Choose Drum, Water, Harp, or Chime.")
+	if task_complete(LOOM_TASK):
+		return _reply(true, "The completed Heart Song is ready to replay.")
+	if data.loom_motifs.size() >= 4:
+		return _reply(false, "Four motifs are ready. Confirm, undo, or reset them.")
+	var next := data.duplicate(true)
+	next.loom_motifs.append(motif)
+	return _commit(next, "%d/4 motifs arranged." % next.loom_motifs.size())
+
+
+func revise_loom(reset := false) -> Dictionary:
+	if task_complete(LOOM_TASK):
+		return _reply(true, "The completed Heart Song remains saved.")
+	var next := data.duplicate(true)
+	if reset: next.loom_motifs.clear()
+	elif not next.loom_motifs.is_empty(): next.loom_motifs.pop_back()
+	return _commit(next, "Adjust the four-track score when you are ready.")
+
+
+func confirm_loom() -> Dictionary:
+	if task_complete(LOOM_TASK):
+		return _reply(true, "The Heart Song remains assembled.")
+	if data.loom_motifs != LOOM_TARGET:
+		return _record_river_attempt("loom", "Build outward from the first lesson: Drum • Water • Harp • Chime.")
+	var next := data.duplicate(true)
+	next.completed_task_ids.append(LOOM_TASK)
+	next.completed_quest_ids.append(HEART_QUEST_ID)
+	next.xp_receipts[HEART_QUEST_ID] = 130
+	next.checkpoint = "heart_song_loom"
+	return _commit(next, "Heart Song assembled — 130 quest XP! Harmony Stage is listening.")
+
+
+func enter_beat_anchor_step(index: int, step: String) -> Dictionary:
+	if not heart_song_complete():
+		return _reply(false, "Assemble the Heart Song before joining the Beat Anchors.")
+	if index < 0 or index >= ANCHOR_TARGETS.size() or step not in ANCHOR_TARGETS[index]:
+		return _reply(false, "Choose one of this anchor's visible lesson symbols.")
+	if bool(data.beat_anchors[index]):
+		return _reply(true, "That Beat Anchor is already joined to the song.")
+	var next := data.duplicate(true)
+	var expected: String = str(ANCHOR_TARGETS[index][next.beat_anchor_steps[index].size()])
+	if step != expected:
+		next.beat_anchor_steps[index] = []
+		return _commit(next, "The anchor releases a broad wave. Its short lesson has reset.", false)
+	next.beat_anchor_steps[index].append(step)
+	if next.beat_anchor_steps[index].size() == ANCHOR_TARGETS[index].size():
+		next.beat_anchors[index] = true
+		if false not in next.beat_anchors:
+			next.completed_task_ids.append(ANCHOR_TASK)
+			next.checkpoint = "harmony_stage"
+	return _commit(next, "Beat Anchor %d joined%s" % [index + 1,
+		". The Harmony Fruit Orchestra is exposed." if false not in next.beat_anchors else "."])
+
+
+func reset_beat_anchor(index: int) -> Dictionary:
+	if index < 0 or index >= ANCHOR_TARGETS.size():
+		return _reply(false, "Choose a Beat Anchor.")
+	if bool(data.beat_anchors[index]):
+		return _reply(true, "Completed Beat Anchors stay safe after retries.")
+	var next := data.duplicate(true)
+	next.beat_anchor_steps[index] = []
+	return _commit(next, "This anchor phase is ready to replay.")
+
+
+func place_orchestra_fruit(fruit_id: String) -> Dictionary:
+	if not task_complete(ANCHOR_TASK):
+		return _reply(false, "Join all three Beat Anchors before filling the orchestra.")
+	if fruit_id not in ORCHESTRA_TARGET:
+		return _reply(false, "Choose one of the six musical fruit families.")
+	if data.orchestra_fruits.size() >= ORCHESTRA_TARGET.size():
+		return _reply(false, "All six orchestra sockets are filled. Conduct or revise the score.")
+	var needed := 6 if fruit_id == "harmony_fig" else 1
+	if story_fruit_count(fruit_id) < needed:
+		return _reply(false, "The protected quest pouch does not yet hold the required %s." % _fruit_label(fruit_id))
+	var next := data.duplicate(true)
+	var expected: String = ORCHESTRA_TARGET[next.orchestra_fruits.size()]
+	if fruit_id != expected:
+		return _commit(next, "That layer belongs later. The filled sockets stay safe.", false)
+	next.orchestra_fruits.append(fruit_id)
+	if next.orchestra_fruits.size() == ORCHESTRA_TARGET.size():
+		next.checkpoint = "harmony_orchestra"
+	return _commit(next, "%s joins the orchestra — %d/6 layers." % [_fruit_label(fruit_id), next.orchestra_fruits.size()])
+
+
+func revise_orchestra() -> Dictionary:
+	if task_complete(ORCHESTRA_TASK):
+		return _reply(true, "The restored orchestra remains complete for replay.")
+	var next := data.duplicate(true)
+	if not next.orchestra_fruits.is_empty(): next.orchestra_fruits.pop_back()
+	next.conducting_steps.clear()
+	return _commit(next, "The latest orchestra layer has returned to the protected pouch.")
+
+
+func enter_conduct_direction(direction: String) -> Dictionary:
+	if data.orchestra_fruits != ORCHESTRA_TARGET:
+		return _reply(false, "Fill all six fruit sockets before conducting.")
+	if direction not in CONDUCT_TARGET:
+		return _reply(false, "Conduct with Up, Left, Right, or Down.")
+	if task_complete(ORCHESTRA_TASK):
+		return _reply(true, "The living amphitheatre can replay the completed finale.")
+	if data.conducting_steps.size() >= CONDUCT_TARGET.size():
+		return _reply(false, "The four gestures are ready. Confirm or reset the finale.")
+	var next := data.duplicate(true)
+	next.conducting_steps.append(direction)
+	return _commit(next, "%d/4 conducting gestures shaped." % next.conducting_steps.size())
+
+
+func reset_conducting() -> Dictionary:
+	if task_complete(ORCHESTRA_TASK):
+		return _reply(true, "The completed finale remains available for replay.")
+	var next := data.duplicate(true)
+	next.conducting_steps.clear()
+	return _commit(next, "The conducting phrase is ready to replay.")
+
+
+func confirm_orchestra() -> Dictionary:
+	if task_complete(ORCHESTRA_TASK):
+		return _reply(true, "The Silent Conductor is free and the sanctuary remains open.")
+	if data.orchestra_fruits != ORCHESTRA_TARGET:
+		return _reply(false, "Place the six musical fruit families in their taught order.")
+	if data.conducting_steps != CONDUCT_TARGET:
+		return _record_river_attempt("conductor", "Follow the stage lights: Up • Left • Right • Down.")
+	var next := data.duplicate(true)
+	next.completed_task_ids.append(ORCHESTRA_TASK)
+	next.completed_quest_ids.append(FINAL_QUEST_ID)
+	next.xp_receipts[CONDUCTOR_XP_ID] = 160
+	next.xp_receipts[FINAL_QUEST_ID] = 205
+	next.harmony_rewards_claimed = true
+	next.checkpoint = "harmony_sanctuary"
+	return _commit(next, "Silent Conductor freed — Harmony Jewel and Harmony Shield restored! 365 XP awarded.")
+
+
 func _record_river_attempt(challenge_id: String, message: String) -> Dictionary:
 	var next := data.duplicate(true)
 	next.river_attempts[challenge_id] = int(next.river_attempts.get(challenge_id, 0)) + 1
@@ -437,7 +678,9 @@ func load_progress() -> bool:
 		if not normalized.get(dictionary_key) is Dictionary:
 			normalized[dictionary_key] = {}
 	for array_key in ["fruit_receipt_ids", "crafted_recipe_ids", "river_organ",
-			"hush_vines", "rain_bells"]:
+			"hush_vines", "rain_bells", "chime_wind", "bridge_chimes", "warning_path",
+			"loom_motifs", "beat_anchor_steps", "beat_anchors", "orchestra_fruits",
+			"conducting_steps"]:
 		if not normalized.get(array_key) is Array:
 			normalized[array_key] = []
 	if was_legacy and persistent and not _write_atomic(normalized):
@@ -458,7 +701,7 @@ func _read_valid(path: String) -> Variant:
 
 
 static func valid(value: Variant) -> bool:
-	if not value is Dictionary or int(value.get("schema_version", 0)) not in [1, 2, SCHEMA_VERSION] \
+	if not value is Dictionary or int(value.get("schema_version", 0)) not in [1, 2, 3, 4, SCHEMA_VERSION] \
 			or value.get("world_id") != "heart_melody":
 		return false
 	for key in ["planters", "xp_receipts", "settings"]:
@@ -467,7 +710,8 @@ static func valid(value: Variant) -> bool:
 		if not value.get(key) is Array: return false
 	if not value.get("rhythm_solved") is bool: return false
 	if value.get("checkpoint") not in ["arrival", "planter_court", "drum_garden", "restored_garden",
-			"river_organ", "river_harp", "bell_grove"]: return false
+			"river_organ", "river_harp", "bell_grove", "chime_bridge", "peace_garden",
+			"heart_song_loom", "harmony_stage", "harmony_orchestra", "harmony_sanctuary"]: return false
 	if int(value.get("mistake_count", 0)) < 0: return false
 	if int(value.get("hint_level", 0)) < 0 or int(value.get("hint_level", 0)) > 3: return false
 	for key in ["puzzle_help", "combat_assist", "reduced_motion", "muted"]:
@@ -480,7 +724,7 @@ static func valid(value: Variant) -> bool:
 			if not value.get(key) is Dictionary: return false
 		for key in ["fruit_receipt_ids", "crafted_recipe_ids"]:
 			if not value.get(key) is Array: return false
-	if int(value.get("schema_version", 1)) == SCHEMA_VERSION:
+	if int(value.get("schema_version", 1)) >= 3:
 		if not value.get("river_attempts") is Dictionary: return false
 		for key in ["river_organ", "hush_vines", "rain_bells"]:
 			if not value.get(key) is Array: return false
@@ -497,6 +741,35 @@ static func valid(value: Variant) -> bool:
 		for attempt_value in value.river_attempts.values():
 			if not (attempt_value is int or attempt_value is float) or int(attempt_value) != attempt_value \
 					or attempt_value < 0: return false
+	if int(value.get("schema_version", 1)) >= 4:
+		for key in ["chime_wind", "bridge_chimes", "warning_path", "loom_motifs"]:
+			if not value.get(key) is Array: return false
+		if value.chime_wind.size() != 3 or value.bridge_chimes.size() != 3 \
+				or value.warning_path.size() > 4 or value.loom_motifs.size() > 4: return false
+		for phase in value.chime_wind:
+			if not (phase is int or phase is float) or int(phase) != phase or phase < 0 or phase > 2: return false
+		for restored in value.bridge_chimes:
+			if not restored is bool: return false
+		for channel in value.warning_path:
+			if channel not in ["left", "centre", "right"]: return false
+		for motif in value.loom_motifs:
+			if motif not in LOOM_TARGET: return false
+	if int(value.get("schema_version", 1)) == SCHEMA_VERSION:
+		for key in ["beat_anchor_steps", "beat_anchors", "orchestra_fruits", "conducting_steps"]:
+			if not value.get(key) is Array: return false
+		if value.beat_anchor_steps.size() != 3 or value.beat_anchors.size() != 3 \
+				or value.orchestra_fruits.size() > 6 or value.conducting_steps.size() > 4: return false
+		for index in 3:
+			if not value.beat_anchor_steps[index] is Array \
+					or value.beat_anchor_steps[index].size() > ANCHOR_TARGETS[index].size(): return false
+			for step in value.beat_anchor_steps[index]:
+				if step not in ANCHOR_TARGETS[index]: return false
+			if not value.beat_anchors[index] is bool: return false
+		for fruit_id in value.orchestra_fruits:
+			if fruit_id not in ORCHESTRA_TARGET: return false
+		for direction in value.conducting_steps:
+			if direction not in CONDUCT_TARGET: return false
+		if not value.get("harmony_rewards_claimed") is bool: return false
 	if int(value.get("schema_version", 1)) >= 2:
 		for fruit_id in ChapterCatalog.EXPECTED_FRUIT_IDS:
 			var story_count := int(value.quest_fruit_pouch.get(fruit_id, 0))
@@ -528,7 +801,7 @@ static func valid(value: Variant) -> bool:
 		if value.cleared_waves[index] != index: return false
 	if not value.cleared_waves.is_empty() and not value.rhythm_solved: return false
 	for id in value.xp_receipts:
-		var expected: int = 80 if id == QUEST_ID else (105 if id == RIVER_QUEST_ID else int(ENEMY_XP.get(id, -1)))
+		var expected: int = 80 if id == QUEST_ID else (105 if id == RIVER_QUEST_ID else (130 if id == HEART_QUEST_ID else (205 if id == FINAL_QUEST_ID else (160 if id == CONDUCTOR_XP_ID else int(ENEMY_XP.get(id, -1))))))
 		if expected < 0 or value.xp_receipts[id] != expected: return false
 	var expected_tasks: Array = [PLANT_TASK] if value.planters.size() == 3 else []
 	var expected_quests: Array = []
@@ -551,6 +824,41 @@ static func valid(value: Variant) -> bool:
 		if value.rain_bells != BELL_TARGET or value.xp_receipts.get(RIVER_QUEST_ID) != 105: return false
 		expected_quests.append(RIVER_QUEST_ID)
 	elif value.xp_receipts.has(RIVER_QUEST_ID): return false
+	var heart_task_order := [CHIME_TASK, WARNING_TASK, LOOM_TASK]
+	var seen_incomplete_heart_task := false
+	for heart_task in heart_task_order:
+		if heart_task in value.completed_task_ids:
+			if seen_incomplete_heart_task or RIVER_QUEST_ID not in expected_quests: return false
+			expected_tasks.append(heart_task)
+		else:
+			seen_incomplete_heart_task = true
+	if CHIME_TASK in value.completed_task_ids:
+		if false in value.bridge_chimes or value.chime_wind != CHIME_TARGET: return false
+	if WARNING_TASK in value.completed_task_ids and value.warning_path != WARNING_TARGET: return false
+	if LOOM_TASK in value.completed_task_ids:
+		if value.loom_motifs != LOOM_TARGET or value.xp_receipts.get(HEART_QUEST_ID) != 130: return false
+		expected_quests.append(HEART_QUEST_ID)
+	elif value.xp_receipts.has(HEART_QUEST_ID): return false
+	var final_task_order := [ANCHOR_TASK, ORCHESTRA_TASK]
+	var seen_incomplete_final_task := false
+	for final_task in final_task_order:
+		if final_task in value.completed_task_ids:
+			if seen_incomplete_final_task or HEART_QUEST_ID not in expected_quests: return false
+			expected_tasks.append(final_task)
+		else:
+			seen_incomplete_final_task = true
+	if ANCHOR_TASK in value.completed_task_ids:
+		if false in value.beat_anchors: return false
+		for index in 3:
+			if value.beat_anchor_steps[index] != ANCHOR_TARGETS[index]: return false
+	if ORCHESTRA_TASK in value.completed_task_ids:
+		if value.orchestra_fruits != ORCHESTRA_TARGET or value.conducting_steps != CONDUCT_TARGET \
+				or not value.harmony_rewards_claimed: return false
+		if value.xp_receipts.get(CONDUCTOR_XP_ID) != 160 \
+				or value.xp_receipts.get(FINAL_QUEST_ID) != 205: return false
+		expected_quests.append(FINAL_QUEST_ID)
+	elif value.xp_receipts.has(CONDUCTOR_XP_ID) or value.xp_receipts.has(FINAL_QUEST_ID) \
+			or bool(value.harmony_rewards_claimed): return false
 	for wave in value.cleared_waves:
 		for id in WAVES[int(wave)]:
 			if not value.xp_receipts.has(id): return false

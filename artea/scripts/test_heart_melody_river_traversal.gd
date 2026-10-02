@@ -2,6 +2,8 @@ extends SceneTree
 
 const Preview := preload("res://scenes/heart_melody/heart_garden_preview.tscn")
 const River := preload("res://scripts/heart_melody/heart_melody_river_region.gd")
+const Bell := preload("res://scripts/heart_melody/heart_melody_bell_grove_region.gd")
+const Shared := preload("res://scripts/heart_melody/heart_melody_shared_song_region.gd")
 var player: CharacterBody3D
 var camera: Camera3D
 
@@ -28,6 +30,17 @@ func _run() -> void:
 		River.ORGAN + Vector3(0, 0, 9), River.SUN_GROVE + Vector3(0, 0, 7),
 		River.ORGAN + Vector3(0, 0, 9), Vector3(475, 3, 0),
 		River.HARP + Vector3(0, 0, 9), River.BELL_GROVE + Vector3(0, 0, 7),
+		River.BELLS + Vector3(0, 0, -13), Vector3(670, 4, 18),
+		Bell.MOON_GROVE + Vector3(0, 0, 7), Vector3(670, 4, 18),
+		Bell.CHIMES + Vector3(0, 0, -12), Vector3(750, 4, 18),
+		Bell.WARNING_PATH + Vector3(0, 0, -14), Bell.LOOM + Vector3(0, 0, -14),
+		Vector3(910, 3, -28), Vector3(940, 3, -18), Shared.STAGE + Vector3(0, 0, -34),
+		Shared.FIG_GROVE + Vector3(0, 0, 8), Shared.SANCTUARY + Vector3(0, 0, -18),
+		Shared.GATE + Vector3(0, 0, -10), Shared.SANCTUARY + Vector3(0, 0, -18),
+		Shared.STAGE + Vector3(0, 0, -34), Vector3(940, 3, -18), Vector3(910, 3, -28),
+		Bell.LOOM + Vector3(0, 0, -14),
+		Bell.WARNING_PATH + Vector3(0, 0, -14), Vector3(750, 4, 18),
+		Bell.CHIMES + Vector3(0, 0, -12), Vector3(670, 4, 18),
 		River.BELLS + Vector3(0, 0, -13), River.HARP + Vector3(0, 0, 9),
 		Vector3(475, 3, 0), River.ORGAN + Vector3(0, 0, 9), Vector3(392, 3, 0),
 		Vector3(365, 3, 0), Vector3(335, 3, 0), Vector3(305, 3, 0)]
@@ -39,7 +52,7 @@ func _run() -> void:
 	world.deactivate()
 	scene.queue_free()
 	await process_frame
-	print("PASS: production player crosses the bridge and reaches every River Voice landmark in both directions")
+	print("PASS: production player crosses the complete Heart Melody valley in both directions")
 	quit()
 
 
@@ -57,12 +70,12 @@ func _walk(target: Vector3) -> bool:
 	for frame in 600:
 		var offset := target - player.position
 		offset.y = 0
-		if offset.length() < 3.8:
+		if offset.length() < 7.8:
 			_release()
 			player.velocity.x = 0
 			player.velocity.z = 0
 			return true
-		player.speed = 7.0 if offset.length() < 8.0 else 28.0
+		player.speed = 5.0 if offset.length() < 14.0 else 28.0
 		var direction := offset.normalized()
 		var right := Vector3(camera.global_basis.x.x, 0, camera.global_basis.x.z).normalized()
 		var forward := Vector3(-camera.global_basis.z.x, 0, -camera.global_basis.z.z).normalized()

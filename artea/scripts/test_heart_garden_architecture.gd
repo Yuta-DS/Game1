@@ -49,12 +49,14 @@ func _run() -> void:
 			triangles += (indices.size() if indices is PackedInt32Array and not indices.is_empty() else vertices.size()) / 3
 	print("HEART_GARDEN_METRICS triangles=", triangles, " surfaces=", surfaces)
 	assert(triangles <= 400000, "static triangle budget")
-	# River Voice adds a third complete district with three readable instruments;
-	# keep the expanded chapter bounded while the camera-local budget below guards play.
-	assert(surfaces <= 1250, "expanded chapter modular surface budget")
+	# River Voice and Bell Grove now form two complete connected production regions.
+	# Keep the whole chapter bounded while the camera-local budget below guards play.
+	assert(surfaces <= 1800, "complete chapter modular surface budget")
 	var peak_local_surfaces := 0
 	for viewpoint in [Vector3(-250,2,0), Vector3(-8,2,0), Vector3(105,3,0),
-		Vector3(245,3,-76), Vector3(300,3,66), Vector3(285,4,0)]:
+		Vector3(245,3,-76), Vector3(300,3,66), Vector3(285,4,0),
+		Vector3(700,3,20), Vector3(795,3,20), Vector3(885,3,0),
+		Vector3(1010,3,16), Vector3(1090,3,-58), Vector3(1170,3,10)]:
 		var local_surfaces := 0
 		for item in world.find_children("*", "MeshInstance3D", true, false):
 			if item.global_position.distance_to(viewpoint) <= 42.0 and item.mesh != null:

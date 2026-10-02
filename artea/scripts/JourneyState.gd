@@ -157,6 +157,15 @@ func record_emotion(emotion_name: String, colour: Color) -> void:
 	save()
 
 
+func complete_heart_melody() -> bool:
+	# The production Heart Melody finale is the canonical version-two reward
+	# boundary. Replays are idempotent and never manufacture extra progress.
+	var already_owned := has_treasure("harmony_jewel")
+	_award_treasure("harmony_jewel")
+	save()
+	return not already_owned and has_treasure("harmony_jewel")
+
+
 func record_creation(path: String, title: String) -> String:
 	var creation_id := "creation_%d_%d" % [Time.get_ticks_usec(), creations.size()]
 	creations.append({
