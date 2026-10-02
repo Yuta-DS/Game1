@@ -7047,7 +7047,7 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 	var instrument := Node3D.new()
 	instrument.name = "IslandOneStyleQuestInstrument"
 	instrument.set_meta("shared_style_family", "island_one_ivory_cyan_lavender")
-	instrument.set_meta("design_revision", "mode_specific_operator_controls_v11")
+	instrument.set_meta("design_revision", "mode_specific_operator_controls_v12_identity_frames")
 	instrument.set_meta("mini_game_identity", mini_game_mode)
 	instrument.set_meta("visual_role", "mode crest overlay on authoritative quest object")
 	instrument.set_meta("duplicate_cabinet_removed", true)
@@ -7161,6 +7161,149 @@ func _build_island_three_shared_instrument(parent: Node3D, center: Vector3,
 				Bricks.build_crystal(1.0, 3.0, .28, 6), accent)
 	_build_island_three_operator_controls(instrument, center, facing, yaw,
 		side_axis, accent, mini_game_mode)
+	_build_island_three_instrument_identity_frame(instrument, center, facing,
+		yaw, side_axis, accent, mini_game_mode)
+
+
+func _build_island_three_instrument_identity_frame(instrument: Node3D,
+		center: Vector3, facing: Vector3, yaw: float, side_axis: Vector3,
+		accent: Material, mini_game_mode: String) -> void:
+	## Give each Island Three machine a different silhouette at interaction range.
+	## The authoritative quest models intentionally share one save-backed cabinet
+	## family, but a crest alone still made all five close views read as the same
+	## white bench and dark round display. These sparse, non-colliding frames sit
+	## around that cabinet: they keep the proven interaction envelope and route
+	## clearance while making the task legible before the mini-game panel opens.
+	var frame := Node3D.new()
+	frame.name = "ModeIdentityFrame_%s" % mini_game_mode.capitalize()
+	frame.set_meta("mini_game_mode", mini_game_mode)
+	frame.set_meta("preserve_authored_nodes", true)
+	frame.set_meta("collision_policy", "decorative outside authoritative machine envelope")
+	instrument.add_child(frame)
+	var part_count := 0
+	match mini_game_mode:
+		"align":
+			# A tall open calibration yoke belongs to the Storm Lens. Its broken
+			# outline avoids reintroducing the ring motif removed from this island.
+			var lower_y := 6.8
+			var shoulder_y := 13.1
+			var crown_y := 15.3
+			for side in [-1.0, 1.0]:
+				var side_name := "Left" if side < 0 else "Right"
+				var lower: Vector3 = center + side_axis * side * 3.75 + facing * 3.02 \
+					+ Vector3.UP * lower_y
+				var shoulder: Vector3 = center + side_axis * side * 3.75 + facing * 3.02 \
+					+ Vector3.UP * shoulder_y
+				var crown: Vector3 = center + side_axis * side * 1.85 + facing * 3.02 \
+					+ Vector3.UP * crown_y
+				_add_cable_between(frame, "AlignmentYoke%s" % side_name,
+					lower, shoulder, .34, .26, _materials.shared_style_ivory, 8)
+				_add_cable_between(frame, "AlignmentShoulder%s" % side_name,
+					shoulder, crown, .28, .22, accent, 8)
+				_add_brick(frame, "AlignmentIndex%s" % side_name,
+					lower + Vector3.UP * 1.1,
+					Bricks.build_crystal(.34, 1.15, .12, 6), accent)
+				part_count += 3
+			_add_cable_between(frame, "AlignmentOpenVisor",
+				center - side_axis * 1.85 + facing * 3.02 + Vector3.UP * crown_y,
+				center + side_axis * 1.85 + facing * 3.02 + Vector3.UP * crown_y,
+				.24, .24, _materials.shared_style_charcoal, 8)
+			part_count += 1
+			frame.set_meta("silhouette_identity", "open storm calibration yoke")
+		"rhythm":
+			# Five unequal resonance reeds turn the forge console into a low organ
+			# rather than another circular scanner.
+			var reed_heights := [2.0, 3.0, 4.2, 3.0, 2.0]
+			for reed_index in reed_heights.size():
+				var reed_height: float = float(reed_heights[reed_index])
+				_add_cylinder(frame, "ResonanceReed_%02d" % (reed_index + 1),
+					center + side_axis * float(reed_index - 2) * 1.35 + facing * 2.82
+					+ Vector3.UP * (12.35 + reed_height * .5),
+					.24, reed_height,
+					accent if reed_index % 2 == 0 else _materials.shared_style_ivory,
+					false, 7)
+				part_count += 1
+			for side in [-1.0, 1.0]:
+				_add_brick(frame, "ForgeSoundChest%s" % ("Left" if side < 0 else "Right"),
+					center + side_axis * side * 4.45 + facing * 2.76 + Vector3.UP * 8.7,
+					Bricks.build_bevel_box(Vector3(1.55, 3.2, 1.35), .22),
+					_materials.shared_style_charcoal)
+				part_count += 1
+			frame.set_meta("silhouette_identity", "five-reed resonance organ")
+		"dodge":
+			# Staggered archive leaves make the safe-channel instrument asymmetric
+			# and echo the tall illuminated pages behind it.
+			var page_heights := [4.2, 6.5, 5.2, 7.4]
+			var page_offsets := [-4.8, -3.45, 3.45, 4.8]
+			for page_index in page_heights.size():
+				var page_height: float = float(page_heights[page_index])
+				_add_box(frame, "ArchiveLeaf_%02d" % (page_index + 1),
+					center + side_axis * float(page_offsets[page_index]) + facing * 2.88
+					+ Vector3.UP * (7.4 + page_height * .5),
+					Vector3(.82, page_height, .42),
+					_materials.shared_style_ivory \
+					if absf(float(page_offsets[page_index])) > 4.0 else accent,
+					false, yaw)
+				part_count += 1
+			for record_index in 3:
+				_add_brick(frame, "DescendingRecord_%02d" % (record_index + 1),
+					center + side_axis * float(record_index - 1) * 3.65 + facing * 3.18
+					+ Vector3.UP * (13.8 - float(record_index % 2) * 1.2),
+					Bricks.build_crystal(.28, 1.25, .12, 5), accent)
+				part_count += 1
+			frame.set_meta("silhouette_identity", "staggered lightning archive leaves")
+		"catch":
+			# An open collection cradle follows the low basin instead of borrowing
+			# the tall cabinet proportions used by the three Warden anchors.
+			var cradle_y := 1.25
+			for side in [-1.0, 1.0]:
+				var side_name := "Left" if side < 0 else "Right"
+				var foot: Vector3 = center + side_axis * side * 3.2 + facing * 4.84 \
+					+ Vector3.UP * cradle_y
+				var shoulder: Vector3 = center + side_axis * side * 3.2 + facing * 4.84 \
+					+ Vector3.UP * 4.5
+				var lip: Vector3 = center + side_axis * side * 1.75 + facing * 4.84 \
+					+ Vector3.UP * 5.55
+				_add_cable_between(frame, "RainCradle%s" % side_name,
+					foot, shoulder, .30, .22, _materials.shared_style_ivory, 8)
+				_add_cable_between(frame, "RainLip%s" % side_name,
+					shoulder, lip, .24, .16, accent, 8)
+				part_count += 2
+			for drop_index in 3:
+				_add_brick(frame, "HarvestDrop_%02d" % (drop_index + 1),
+					center + side_axis * float(drop_index - 1) * 1.4 + facing * 4.98
+					+ Vector3.UP * (6.35 + float(drop_index % 2) * .65),
+					Bricks.build_crystal(.32, 1.05, .12, 6),
+					accent if drop_index != 1 else _materials.shared_style_lavender)
+				part_count += 1
+			frame.set_meta("silhouette_identity", "open rain collection cradle")
+		"route":
+			# Warm root forks make the final mirror part of the living grove and
+			# clearly separate it from the mechanical storm instruments.
+			for side in [-1.0, 1.0]:
+				var side_name := "Left" if side < 0 else "Right"
+				var root: Vector3 = center + side_axis * side * 4.0 + facing * 2.92 \
+					+ Vector3.UP * 5.0
+				var fork: Vector3 = center + side_axis * side * 3.15 + facing * 2.92 \
+					+ Vector3.UP * 11.4
+				var crown: Vector3 = center + side_axis * side * 1.45 + facing * 2.92 \
+					+ Vector3.UP * 14.4
+				_add_cable_between(frame, "ReflectionRoot%s" % side_name,
+					root, fork, .48, .28, _materials.island_three_hero_bark, 8)
+				_add_cable_between(frame, "ReflectionFork%s" % side_name,
+					fork, crown, .30, .16, _materials.island_three_hero_bark_highlight, 8)
+				part_count += 2
+			for star_index in 3:
+				_add_brick(frame, "ReflectionMemory_%02d" % (star_index + 1),
+					center + side_axis * float(star_index - 1) * 1.8 + facing * 3.05
+					+ Vector3.UP * (14.8 + float(star_index % 2) * .75),
+					Bricks.build_crystal(.34, 1.18, .12, 6),
+					accent if star_index == 1 else _materials.shared_style_cyan)
+				part_count += 1
+			frame.set_meta("silhouette_identity", "living root reflection fork")
+		_:
+			pass
+	frame.set_meta("identity_part_count", part_count)
 
 
 func _build_island_three_operator_controls(instrument: Node3D, center: Vector3,

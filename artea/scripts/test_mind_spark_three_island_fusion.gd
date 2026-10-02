@@ -456,11 +456,11 @@ func _run() -> void:
 			"StormworksGrandCourt/%s/IslandOneStyleQuestInstrument/AuthoritativeQuestObjectCollision" % landmark_name),
 			"each storm landmark keeps its authoritative quest machine physically solid")
 	var mode_instruments := [
-		["StormworksGrandCourt/StormLensTower/IslandOneStyleQuestInstrument", "align", "ModeCrest_Align", 3, 6],
-		["StormworksGrandCourt/ResonanceForge/IslandOneStyleQuestInstrument", "rhythm", "ModeCrest_Rhythm", 5, 5],
-		["StormworksGrandCourt/LightningArchive/IslandOneStyleQuestInstrument", "dodge", "ModeCrest_Dodge", 3, 6],
-		["RainHarvestObservatory/IslandOneStyleQuestInstrument", "catch", "ModeCrest_Catch", 4, 6],
-		["WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument", "route", "ModeCrest_Route", 5, 5],
+		["StormworksGrandCourt/StormLensTower/IslandOneStyleQuestInstrument", "align", "ModeCrest_Align", 3, 6, "ModeIdentityFrame_Align", "open storm calibration yoke"],
+		["StormworksGrandCourt/ResonanceForge/IslandOneStyleQuestInstrument", "rhythm", "ModeCrest_Rhythm", 5, 5, "ModeIdentityFrame_Rhythm", "five-reed resonance organ"],
+		["StormworksGrandCourt/LightningArchive/IslandOneStyleQuestInstrument", "dodge", "ModeCrest_Dodge", 3, 6, "ModeIdentityFrame_Dodge", "staggered lightning archive leaves"],
+		["RainHarvestObservatory/IslandOneStyleQuestInstrument", "catch", "ModeCrest_Catch", 4, 6, "ModeIdentityFrame_Catch", "open rain collection cradle"],
+		["WisdomBasilicaPromenade/RootboundReflectionCourt/IslandOneStyleQuestInstrument", "route", "ModeCrest_Route", 5, 5, "ModeIdentityFrame_Route", "living root reflection fork"],
 	]
 	var distinct_modes := {}
 	for mode_spec in mode_instruments:
@@ -469,8 +469,9 @@ func _run() -> void:
 		var crest := mode_instrument.get_node(str(mode_spec[2])) as Node3D
 		var operator_controls := mode_instrument.get_node(
 			"OperatorControls_%s" % mode_name.capitalize()) as Node3D
+		var identity_frame := mode_instrument.get_node(str(mode_spec[5])) as Node3D
 		assert(str(mode_instrument.get_meta("design_revision", "")) \
-			== "mode_specific_operator_controls_v11"
+			== "mode_specific_operator_controls_v12_identity_frames"
 			and str(mode_instrument.get_meta("mini_game_identity", "")) == mode_name,
 			"each Island 3 instrument identifies its actual mini-game mode in the world art")
 		assert(bool(mode_instrument.get_meta("duplicate_cabinet_removed", false))
@@ -488,6 +489,13 @@ func _run() -> void:
 			and operator_controls.has_node("IvoryControlDeck")
 			and operator_controls.has_node("CharcoalControlInset"),
 			"the %s machine has a distinct player-scale physical control surface" % mode_name)
+		assert(str(identity_frame.get_meta("mini_game_mode", "")) == mode_name
+			and str(identity_frame.get_meta("silhouette_identity", "")) == str(mode_spec[6])
+			and int(identity_frame.get_meta("identity_part_count", 0)) == 7
+			and identity_frame.find_children("*", "MeshInstance3D", true, false).size() == 7
+			and identity_frame.find_children("*", "CollisionObject3D", true, false).is_empty(),
+			"the %s machine has a unique seven-part silhouette without adding a route obstacle" \
+			% mode_name)
 		distinct_modes[mode_name] = true
 	assert(distinct_modes.size() == 5,
 		"Island 3 exposes five visibly distinct console identities for five mini-game modes")
