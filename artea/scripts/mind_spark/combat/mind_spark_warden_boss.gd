@@ -8,10 +8,9 @@ signal defeated(xp_reward: int)
 
 enum Phase { INTRO, PHASE_1, TRANSITION, PHASE_2, PHASE_3, COMPLETE }
 
-const MAX_HEALTH := 300.0
-const XP_REWARD := 150
-const TELEGRAPH_SECONDS := 1.15
-const RECOVERY_SECONDS := 4.0
+const DEFAULT_DEFINITION := preload("res://resources/mind_spark/enemies/thought_storm_warden.tres")
+
+@export var definition: Resource = DEFAULT_DEFINITION
 
 @onready var shell: Node3D = $VisualRoot/BlightShell
 @onready var core: MeshInstance3D = $VisualRoot/CrystalCore
@@ -20,11 +19,11 @@ const RECOVERY_SECONDS := 4.0
 @onready var rain: GPUParticles3D = $GentleRain
 
 var phase := Phase.INTRO
-var current_health := MAX_HEALTH
+var current_health := 300.0
 var active := false
 var anchors: Array[QuestObjectBase] = []
 var broken_anchor_count := 0
-var _cycle_time := TELEGRAPH_SECONDS
+var _cycle_time := 1.15
 var _damage_applied := false
 var _player: CharacterBody3D
 var _storm_crown: Node3D
@@ -32,6 +31,11 @@ var _visual_time := 0.0
 
 
 func _ready() -> void:
+	if definition == null or not definition.is_valid():
+		push_error("MindSparkWardenBoss requires a valid balance definition")
+		set_physics_process(false)
+		return
+	current_health = definition.max_health
 	_build_storm_crown()
 	core.visible = false
 	storm_line.visible = false
@@ -68,13 +72,13 @@ func start_battle() -> void:
 		return
 	active = true
 	_set_phase(Phase.PHASE_1)
-	_cycle_time = TELEGRAPH_SECONDS
+	_cycle_time = definition.telegraph_seconds
 	storm_line.visible = true
 	core_label.text = "DODGE THE WIDE STORM LINE"
 
 
 func reset_battle() -> void:
-	current_health = MAX_HEALTH
+	current_health = definition.max_health
 	active = false
 	broken_anchor_count = 0
 	shell.visible = true
@@ -92,7 +96,7 @@ func take_damage(amount: float, _source: Node = null) -> float:
 		return 0.0
 	var applied := minf(current_health, amount)
 	current_health -= applied
-	core_label.text = "OPEN CORE • %d / 300" % ceili(current_health)
+	core_label.text = "OPEN CORE • %d / %d" % [ceili(current_health), ceili(definition.max_health)]
 	if current_health <= 0.0:
 		_free_warden()
 	return applied
@@ -123,8 +127,9 @@ func _physics_process(delta: float) -> void:
 		storm_line.visible = true
 		return
 	storm_line.visible = false
-	if not _damage_applied and _player != null and _player.global_position.distance_to(global_position) < 38.0:
-		_player.call("take_damage", 16.0, self)
+	if not _damage_applied and _player != null \
+			and _player.global_position.distance_to(global_position) < definition.storm_radius:
+		_player.call("take_damage", definition.storm_damage, self)
 		_damage_applied = true
 	var next_anchor := _next_unbroken_anchor()
 	if next_anchor >= 0:
@@ -132,7 +137,7 @@ func _physics_process(delta: float) -> void:
 		if bool(result.get("accepted", false)):
 			anchor_window_opened.emit(next_anchor)
 			core_label.text = "ANCHOR %d OPEN • STRIKE THE CRYSTAL RING" % (next_anchor + 1)
-	_cycle_time = RECOVERY_SECONDS + TELEGRAPH_SECONDS
+	_cycle_time = definition.recovery_seconds + definition.telegraph_seconds
 	_damage_applied = false
 
 
@@ -154,7 +159,8 @@ func _open_core() -> void:
 	storm_line.visible = false
 	core.visible = true
 	_set_phase(Phase.PHASE_3)
-	core_label.text = "OPEN CRYSTAL CORE • 300 / 300"
+	core_label.text = "OPEN CRYSTAL CORE • %d / %d" \
+		% [ceili(definition.max_health), ceili(definition.max_health)]
 
 
 func _free_warden() -> void:
@@ -165,7 +171,7 @@ func _free_warden() -> void:
 	core_label.text = "COMBAT STOPPED • PLACE THE FINAL SPARK"
 	_set_phase(Phase.COMPLETE)
 	combat_stopped.emit()
-	defeated.emit(XP_REWARD)
+	defeated.emit(definition.xp_reward)
 
 
 func _next_unbroken_anchor() -> int:

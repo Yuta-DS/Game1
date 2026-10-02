@@ -162,4 +162,7 @@ func _new_world(journey: Node, identity: Node) -> MindSparkWorldOne:
 
 func _cleanup() -> void:
 	for path in [TEST_PROGRESS, TEST_OBJECTS, TEST_IDENTITY]:
-		if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+		for suffix: String in ["", ".tmp", ".bak"]:
+			var candidate: String = path + suffix
+			if FileAccess.file_exists(candidate):
+				DirAccess.remove_absolute(ProjectSettings.globalize_path(candidate))
