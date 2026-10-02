@@ -120,13 +120,13 @@ func _process(delta: float) -> void:
 		return
 	_profile.ambient_light_color = _source.ambient_light_color.lerp(Color("f0dfc8"), _strength)
 	var compatibility := RenderingServer.get_current_rendering_method() == "gl_compatibility"
-	_profile.ambient_light_energy = lerpf(_source.ambient_light_energy, .30 if compatibility else .48, _strength)
+	_profile.ambient_light_energy = lerpf(_source.ambient_light_energy, .24 if compatibility else .40, _strength)
 	_profile.ambient_light_sky_contribution = lerpf(_source.ambient_light_sky_contribution, 0.0, _strength)
-	_profile.tonemap_exposure = lerpf(_source.tonemap_exposure, .82, _strength)
+	_profile.tonemap_exposure = lerpf(_source.tonemap_exposure, .70, _strength)
 	for light in _directional_lights:
 		if is_instance_valid(light):
 			var original: Array = _directional_lights[light]
-			var daylight := .50 if compatibility else .78
+			var daylight := .42 if compatibility else .68
 			light.light_energy = lerpf(float(original[0]),daylight if light.name == "Sun" else .12,_strength)
 			light.light_color = (original[1] as Color).lerp(Color("ffe8cd") if light.name == "Sun" else Color("d9dfeb"),_strength)
 	_profile.fog_light_color = _source.fog_light_color.lerp(WORLD_ONE_FOG_LIGHT, _strength)

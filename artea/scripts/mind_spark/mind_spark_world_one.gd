@@ -3230,14 +3230,16 @@ func _build_celestial_world_gate_arrival(zone: Node3D, scale_factor: float) -> N
 	# compass rose. These low visual pieces do not add obstacles to the route.
 	_add_cylinder(terrace, "ArrivalIvoryCourt", Vector3(0, 0.26, 8), 73.0, 0.52,
 		_materials.celestial_floor, false, 64)
-	_add_torus(terrace, "ArrivalCourtOuterGiltRing", Vector3(0, 0.58, 8),
-		66.0, 67.0, _materials.astral_brass)
-	_add_torus(terrace, "ArrivalCourtInnerAetherRing", Vector3(0, 0.60, 8),
-		39.0, 40.0, _materials.arrival_glass)
+	# Matte stone joints define the court without the long gold/cyan rings that
+	# previously read as temporary route guides from the gameplay camera.
+	_add_torus(terrace, "ArrivalCourtOuterStoneJoint", Vector3(0, 0.58, 8),
+		66.0, 66.55, _materials.quest_ivory_inset)
+	_add_torus(terrace, "ArrivalCourtInnerSageJoint", Vector3(0, 0.60, 8),
+		39.0, 39.42, _materials.island_three_sage_deep)
 	_add_box(terrace, "ProcessionalIvoryAxis", Vector3(0, 0.61, 20),
 		Vector3(19.0, 0.18, 112.0), _materials.celestial_floor, false)
-	_add_box(terrace, "ProcessionalGiltInlay", Vector3(0, 0.72, 20),
-		Vector3(1.2, 0.12, 109.0), _materials.astral_brass, false)
+	_add_box(terrace, "ProcessionalStoneJoint", Vector3(0, 0.70, 20),
+		Vector3(0.62, 0.08, 109.0), _materials.quest_ivory_inset, false)
 
 	pavilion.set_meta("roof_type", "faceted barrel vault with open axial ends")
 	pavilion.set_meta("roof_triangle_count", 144)
@@ -3260,9 +3262,6 @@ func _build_celestial_world_gate_arrival(zone: Node3D, scale_factor: float) -> N
 				spring_height + sin(angle_b) * crown_rise, z)
 			_add_cable_between(pavilion, "IvoryVaultRib_%02d_%02d" % [rib_index + 1, arc_index + 1],
 				point_a, point_b, 0.58, 0.58, _materials.celestial_floor, 12)
-			_add_cable_between(pavilion, "GiltVaultReveal_%02d_%02d" % [rib_index + 1, arc_index + 1],
-				point_a + Vector3(0, 0.34, 0), point_b + Vector3(0, 0.34, 0),
-				0.15, 0.15, _materials.astral_brass, 10)
 
 	# Six longitudinal bays x twelve curved bays x two triangles = 144 small,
 	# editable glass panels. Their real triangle seams make the roof read clearly
@@ -9331,8 +9330,9 @@ func _build_materials() -> void:
 	# Only the six land-floor backing shells change palette. The original
 	# island_deck material remains available to existing Bio-Data Tree parts.
 	_materials.celestial_floor = _textured_material(
-		Color("eee5d2"), Color("fff8e9"), Color("c6aa72"), 0.58, 32)
-	_materials.celestial_floor.metallic_specular = 0.44
+		Color("d9d0bd"), Color("eee6d5"), Color("a88f6b"), 0.76, 28)
+	_materials.celestial_floor.metallic = 0.02
+	_materials.celestial_floor.metallic_specular = 0.22
 	# A warmer, softly luminous finish keeps the Thought Sanctum distinct and
 	# readable beneath the glass conservatory without turning it into neon.
 	_materials.sanctum_ivory = _material(
@@ -9348,8 +9348,8 @@ func _build_materials() -> void:
 	# One exact palette is shared by Island One's light tree and quest machines
 	# and Island Three's sanctuary. Keeping the material resources identical
 	# prevents the later island from drifting into a separate visual language.
-	_materials.shared_style_ivory = _material(
-		Color("eadfc8"), .52, Color("fff3d8"), .34)
+	_materials.shared_style_ivory = _low_poly_surface_material(
+		Color("d8ccb5"), Color("ede2cc"), Color("a78d68"), .78, .02, 71, 18)
 	_materials.shared_style_charcoal = _material(
 		Color("263443"), .62, Color("214e60"), .18)
 	_materials.shared_style_cyan = _material(
