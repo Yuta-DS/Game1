@@ -37,6 +37,16 @@ func _run() -> void:
 	assert(bool(follow_camera.call("try_capture_pointer"))
 		and bool(spring_camera.call("try_capture_pointer")),
 		"a later gameplay click still enables normal mouse-look")
+	var follow_source := FileAccess.get_file_as_string("res://scripts/CameraFollow.gd")
+	var spring_source := FileAccess.get_file_as_string(
+		"res://scenes/Camera/camera_controller.gd")
+	assert(follow_source.contains('if OS.has_feature("web"):'),
+		"the follow camera must avoid pointer lock in Web exports")
+	assert(spring_source.contains('if OS.has_feature("web"):'),
+		"the spring camera must avoid pointer lock in Web exports")
+	assert(follow_source.contains("_web_orbit_dragging")
+		and spring_source.contains("_web_orbit_dragging"),
+		"both Web camera paths must provide drag-to-orbit controls")
 
 	print("CAMERA_POINTER_CAPTURE_TRANSITION: PASS — scene-swap click ignored, gameplay click armed")
 	player.queue_free()

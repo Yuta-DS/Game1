@@ -67,6 +67,7 @@ var _yaw := 0.0
 var _pitch := 0.0
 var _touch_emulation_was_on := false
 var _pointer_capture_ready := false
+var _web_orbit_dragging := false
 
 func _ready() -> void:
 	_player = get_node_or_null(player_path)
@@ -106,6 +107,12 @@ func _arm_pointer_capture() -> void:
 func try_capture_pointer() -> bool:
 	if not capture_mouse or not _pointer_capture_ready or _mode != "follow":
 		return false
+	# Browser pointer lock can target the document that owned the click before a
+	# scene transition and throw WrongDocumentError. Web uses deliberate
+	# left-drag orbit instead, which is predictable and keeps menus reachable.
+	if OS.has_feature("web"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	return true
 
@@ -120,7 +127,9 @@ func _input(event: InputEvent) -> void:
 	# require MOUSE_MODE_CAPTURED: capture can silently fail to apply (it does
 	# on a headless run, and can lag by a frame after an alt-tab), and gating on
 	# it meant the view froze with no way to recover.
-	if event is InputEventMouseMotion and _mode == "follow":
+	if event is InputEventMouseMotion and _mode == "follow" \
+			and (not OS.has_feature("web") or _web_orbit_dragging \
+			or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
 		# Wrapped rather than left to accumulate: yaw turns freely through a
 		# full circle in both directions, and wrapping keeps it from drifting
 		# into large float values over a long session.
@@ -149,10 +158,13 @@ func _input(event: InputEvent) -> void:
 	# Escape releases the cursor so the player can reach menus; clicking back in
 	# the window recaptures it.
 	if event.is_action_pressed("ui_cancel"):
+		_web_orbit_dragging = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif event is InputEventMouseButton and event.pressed and capture_mouse and _mode == "follow" \
-			and event.button_index == MOUSE_BUTTON_LEFT:
-		try_capture_pointer()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		_web_orbit_dragging = event.pressed and OS.has_feature("web") \
+			and capture_mouse and _mode == "follow"
+		if event.pressed and capture_mouse and _mode == "follow":
+			try_capture_pointer()
 
 func _process(delta: float) -> void:
 	if _mode == "follow" and _player and _view == "first":
@@ -378,4 +390,4 @@ func exit_inspect() -> void:
 	if _tween: _tween.kill()
 
 	if capture_mouse:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		try_capture_pointer()

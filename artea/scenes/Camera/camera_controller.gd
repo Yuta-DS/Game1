@@ -24,6 +24,7 @@ extends SpringArm3D
 @export var maxZoom := 9.2
 @export var zoomStep := 0.7
 var _pointer_capture_ready := false
+var _web_orbit_dragging := false
 
 func _ready() -> void:
 	# Nested PackedScene transform overrides have been lost on some imports of
@@ -50,6 +51,11 @@ func _arm_pointer_capture() -> void:
 func try_capture_pointer() -> bool:
 	if not _pointer_capture_ready:
 		return false
+	# Pointer lock is fragile across Web scene/document swaps. Browser players
+	# orbit with a held left mouse button, leaving the pointer visible for UI.
+	if OS.has_feature("web"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	return true
 
@@ -63,11 +69,13 @@ func _input(event: InputEvent) -> void:
 	# Escape releases the pointer for menus and desktop use. Clicking the game
 	# recaptures it, matching the other third-person camera in this project.
 	if event.is_action_pressed("ui_cancel"):
+		_web_orbit_dragging = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
 	# Modal UI owns the pointer. This must run before generic click capture;
 	# otherwise clicking a Milo option re-locks the mouse to camera look.
 	if player != null and "interacting" in player and player.interacting:
+		_web_orbit_dragging = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
 	if event is InputEventMouseButton and event.pressed:
@@ -77,12 +85,14 @@ func _input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			spring_length = minf(maxZoom, spring_length + zoomStep)
 			return
-	if event is InputEventMouseButton and event.pressed \
-			and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		try_capture_pointer()
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		_web_orbit_dragging = event.pressed and OS.has_feature("web")
+		if event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+			try_capture_pointer()
 		return
 
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if event is InputEventMouseMotion and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED \
+			or (OS.has_feature("web") and _web_orbit_dragging)):
 		rotateFromVector(event.relative * mouseAcceleration)
 
 func rotateFromVector(v: Vector2):
