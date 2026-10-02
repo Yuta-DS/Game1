@@ -62,8 +62,12 @@ func _ready() -> void:
 	floor_detector.add_exception(self)
 	
 func _input(event: InputEvent) -> void:
-	# Toggle inventory with I key
 	if event.is_action_pressed("toggle_Inventory"):
+		# World One uses the unified field kit, which includes equipment,
+		# materials, crafting, quest items and collection progress. Let that
+		# overlay own the shared inventory action so two panels never overlap.
+		if not get_tree().get_nodes_in_group("world_one_progression_hud").is_empty():
+			return
 		_on_inventory_pressed()
 			
 func _on_inventory_pressed() -> void:

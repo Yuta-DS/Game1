@@ -1397,6 +1397,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _handle_object_result(object: QuestObjectBase, result: Dictionary) -> void:
 	quest_object_used.emit(object.save_id, result)
+	if bool(object.current_state.get("completed", false)):
+		var progression := get_node_or_null("/root/WorldOneProgression")
+		if progression != null and progression.has_method("grant_quest_reward"):
+			progression.call("grant_quest_reward", object.save_id)
 	if _status != null:
 		_status.text = "%s • %s" % [object.definition.display_name.to_upper(),
 			str(result.get("reason", "ready")).replace("_", " ").to_upper()]
@@ -8619,6 +8623,10 @@ func _build_hud() -> void:
 	_status.modulate = Color("bff8ff")
 	_status.add_theme_font_size_override("font_size", 17)
 	panel.add_child(_status)
+	var progression_hud := preload(
+		"res://scripts/mind_spark/world_one_progression_hud.gd").new()
+	progression_hud.name = "WorldOneProgressionHUD"
+	canvas.add_child(progression_hud)
 
 
 func _update_hud() -> void:

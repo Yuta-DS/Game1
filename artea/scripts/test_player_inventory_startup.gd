@@ -10,6 +10,9 @@ func _run() -> void:
 	root.add_child(player)
 	var gui := player.get_node("InventoryGUI")
 	assert(gui.inventory_data == player.inventory_data, "inventory binds before the first physics frame")
+	assert(player.inventory_data.slot_Data.size() == 30 \
+		and gui.get_node("NinePatchRect/GridContainer").get_child_count() == 30,
+		"the repaired inventory exposes all thirty production slots")
 	var item := itemData.new()
 	item.name = "Startup collectible"
 	item.stackable = true
