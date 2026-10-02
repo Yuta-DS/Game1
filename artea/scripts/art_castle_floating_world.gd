@@ -221,8 +221,13 @@ func _process(delta: float) -> void:
 		node.rotation.y += delta * (0.10 + float(index % 5) * 0.018)
 	if _player != null and _player.global_position.y < -120.0:
 		var respawn := PLAYER_SPAWN
+		var world_one := get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+		var fell_from_world_one := world_one != null \
+			and world_one.owns_horizontal_position(_player.global_position)
+		if fell_from_world_one:
+			respawn = to_local(world_one.get_safe_respawn_global())
 		var regions := get_node_or_null("KingdomRegions3000m")
-		if regions != null and regions.has_method("get_safe_respawn"):
+		if not fell_from_world_one and regions != null and regions.has_method("get_safe_respawn"):
 			respawn = regions.call("get_safe_respawn", to_local(_player.global_position))
 		_player.global_position = to_global(respawn)
 		_player.velocity = Vector3.ZERO

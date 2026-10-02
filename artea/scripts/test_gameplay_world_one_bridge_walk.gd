@@ -2,7 +2,7 @@ extends SceneTree
 
 # Exercise the Island One -> Island Two crossing inside the real gallery scene.
 # The standalone World One fixture cannot detect overlapping gallery geometry.
-const GalleryScene := preload("res://scenes/art_gallery_3d_inprogress.tscn")
+const GALLERY_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 const WALK_SPEED := 10.0
 const GRAVITY := 28.0
 
@@ -12,7 +12,7 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var gallery := GalleryScene.instantiate() as Node3D
+	var gallery := (load(GALLERY_SCENE) as PackedScene).instantiate() as Node3D
 	root.add_child(gallery)
 	current_scene = gallery
 	for _frame in 15:

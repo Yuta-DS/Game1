@@ -1055,6 +1055,27 @@ func get_player_arrival_local() -> Vector3:
 	return _authored_player_arrival_local()
 
 
+func owns_horizontal_position(global_position: Vector3) -> bool:
+	## Identify falls that belong to World One even after the player's vertical
+	## coordinate has dropped below every island. The six district centres span
+	## the three fused islands and their two bridges; the same 500 m envelope is
+	## used by Web camera streaming, so recovery and presentation agree about
+	## when the player is inside this world.
+	var local_position := to_local(global_position)
+	var flat_position := Vector2(local_position.x, local_position.z)
+	for zone_info in ZONES:
+		var zone_position := get_zone_position(str(zone_info.id))
+		if flat_position.distance_to(Vector2(zone_position.x, zone_position.z)) <= 500.0:
+			return true
+	return false
+
+
+func get_safe_respawn_global() -> Vector3:
+	## Return the most recent supported World One district, falling back to the
+	## authored Island One arrival before the first movement sample.
+	return _last_safe_position
+
+
 func _authored_player_arrival_local() -> Vector3:
 	if not _uses_existing_mind_district():
 		var arrival_zone := _zone_nodes["01_world_gate_landing"] as Node3D
@@ -8649,13 +8670,7 @@ func _build_recovery_volume(zone: Node3D, radius: float) -> void:
 
 func _on_recovery_body_entered(body: Node3D) -> void:
 	if body == _player and _player != null:
-		var regions := get_parent().get_parent() if get_parent() != null and get_parent().get_parent() != null else null
-		var floating_world := regions.get_parent() if regions != null else null
-		if regions != null and floating_world != null and regions.has_method("get_safe_respawn"):
-			var safe_local: Vector3 = regions.call("get_safe_respawn", floating_world.to_local(_player.global_position))
-			_player.global_position = floating_world.to_global(safe_local)
-		else:
-			_player.global_position = _last_safe_position
+		_player.global_position = _last_safe_position
 		_player.velocity = Vector3.ZERO
 
 
