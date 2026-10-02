@@ -3354,6 +3354,7 @@ func _build_celestial_world_gate_arrival(zone: Node3D, scale_factor: float) -> N
 			_build_arrival_garden_planter(landscape, side, garden_index)
 	_build_island_one_compass_gameplay(arrival)
 	_build_island_one_science_art_garden(arrival)
+	_build_island_one_low_poly_environment_finish(arrival)
 	_island_one_puzzle = arrival
 	arrival.puzzle_solved.connect(_on_island_one_puzzle_solved)
 	arrival.configure(object_state_store_path, scale_factor)
@@ -3361,6 +3362,238 @@ func _build_celestial_world_gate_arrival(zone: Node3D, scale_factor: float) -> N
 	var arrival_light := _add_zone_light(arrival, Vector3(0, 42, -2), Color("ffe3ad"), 112.0, 3.15)
 	arrival_light.name = "HighHeavenlyArrivalLight"
 	return arrival
+
+
+func _build_island_one_low_poly_environment_finish(arrival: MindSparkIslandOnePuzzle) -> void:
+	# One deliberate landscape layer ties the return threshold, quest court and
+	# observatory skyline together.  It stays clear of every operator position and
+	# uses collision only where a visible wall, planter or trunk occupies space.
+	var environment := Node3D.new()
+	environment.name = "LowPolyCelestialEnvironment"
+	environment.set_meta("design_revision", "island_one_celestial_campus_v44")
+	environment.set_meta("style", "faceted ivory observatory garden")
+	environment.set_meta("clear_route_width_m", 18.0)
+	environment.set_meta("player_height_authored", true)
+	environment.set_meta("prototype_lines_retired", true)
+	environment.set_meta("collision_readable", true)
+	arrival.add_child(environment)
+
+	var gateway := Node3D.new()
+	gateway.name = "AstralReturnGatehouse"
+	gateway.set_meta("purpose", "grounded return threshold and arrival landmark")
+	gateway.set_meta("opening_width_m", 42.0)
+	environment.add_child(gateway)
+	_build_island_one_low_poly_gatehouse(gateway)
+
+	var campus := Node3D.new()
+	campus.name = "SignalObservatoryCampus"
+	campus.set_meta("purpose", "frame the existing quest machinery without replacing it")
+	campus.set_meta("operator_clearance_preserved", true)
+	environment.add_child(campus)
+	_build_island_one_low_poly_campus(campus)
+
+	var landscape := Node3D.new()
+	landscape.name = "PurposefulLandscape"
+	landscape.set_meta("planting_rule", "frame routes and island edges; never occupy the aisle")
+	landscape.set_meta("tree_count", 6)
+	landscape.set_meta("canopy_cluster_count", 36)
+	environment.add_child(landscape)
+	var tree_positions := [
+		Vector3(-50, 0.8, -42), Vector3(50, 0.8, -42),
+		Vector3(-56, 0.8, -8), Vector3(56, 0.8, -8),
+		Vector3(-54, 0.8, 52), Vector3(54, 0.8, 52),
+	]
+	for tree_index in tree_positions.size():
+		_build_island_one_faceted_tree(landscape,
+			"CampusTree_%02d" % (tree_index + 1), tree_positions[tree_index],
+			0.82 + float(tree_index % 3) * 0.08, tree_index)
+
+	_build_island_one_environment_status(environment)
+	_apply_island_one_low_poly_architecture_palette(arrival)
+
+
+func _build_island_one_low_poly_gatehouse(parent: Node3D) -> void:
+	var gate_z := -64.0
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		var x := float(side) * 27.0
+		_add_box(parent, "%sGateFoundation" % side_name,
+			Vector3(x, 1.0, gate_z), Vector3(11.0, 2.0, 12.0),
+			_materials.shared_style_charcoal, true)
+		_add_brick(parent, "%sGateButtress" % side_name,
+			Vector3(x, 10.5, gate_z), Bricks.build_bevel_box(Vector3(8.4, 19.0, 8.4), 0.72),
+			_materials.shared_style_ivory)
+		_add_box(parent, "%sGateShoulder" % side_name,
+			Vector3(x, 20.4, gate_z), Vector3(11.0, 1.8, 10.0),
+			_materials.shared_style_ivory, false)
+		_add_tapered_cylinder(parent, "%sGateSpire" % side_name,
+			Vector3(x, 27.0, gate_z), 0.55, 3.2, 11.0,
+			_materials.shared_style_ivory, 8)
+		_add_brick(parent, "%sGateWindow" % side_name,
+			Vector3(x, 12.0, gate_z - 4.25), Bricks.build_crystal(1.05, 5.5, 0.42, 6),
+			_materials.shared_style_cyan)
+	var west_arch := Vector3(-23.0, 20.0, gate_z)
+	var crown := Vector3(0, 30.0, gate_z)
+	var east_arch := Vector3(23.0, 20.0, gate_z)
+	_add_cable_between(parent, "WestFacetedArch", west_arch, crown,
+		1.45, 1.05, _materials.shared_style_ivory, 8)
+	_add_cable_between(parent, "EastFacetedArch", crown, east_arch,
+		1.05, 1.45, _materials.shared_style_ivory, 8)
+	_add_brick(parent, "GateKeystoneCrystal", crown + Vector3(0, -1.0, -1.0),
+		Bricks.build_crystal(1.35, 4.8, 0.52, 6), _materials.shared_style_cyan)
+
+	# Short, grounded parapets define the void edge beside the threshold.  The
+	# forty-two-metre opening remains completely unobstructed.
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		var x := float(side) * 37.0
+		_add_box(parent, "%sGateParapetFoundation" % side_name, Vector3(x, 0.7, -59.0),
+			Vector3(2.0, 1.4, 26.0), _materials.shared_style_charcoal, true)
+		_add_box(parent, "%sGateParapetCoping" % side_name, Vector3(x, 1.65, -59.0),
+			Vector3(2.8, 0.55, 26.0), _materials.shared_style_ivory, false)
+
+
+func _build_island_one_low_poly_campus(parent: Node3D) -> void:
+	# Flush stone modules replace the single neon route stripe.  They are visual
+	# paving over the already tested continuous collision floor.
+	for paving_index in 7:
+		var z := -43.0 + float(paving_index) * 17.0
+		_add_brick(parent, "ProcessionalPaver_%02d" % (paving_index + 1),
+			Vector3(0, 0.78, z), Bricks.build_bevel_box(Vector3(18.0, 0.16, 13.5), 0.34),
+			_materials.shared_style_ivory)
+		if paving_index in [0, 3, 6]:
+			for marker_side in [-1.0, 1.0]:
+				_add_box(parent, "ThresholdMarker_%02d" % (paving_index * 2 + (0 if marker_side < 0 else 1)),
+					Vector3(float(marker_side) * 6.2, 0.90, z), Vector3(2.2, 0.08, 0.75),
+					_materials.shared_style_cyan, false)
+
+	# A high, simple crown gives the observatory a readable silhouette from the
+	# spawn while the original compass and all sixteen controls remain untouched.
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		var x := float(side) * 32.0
+		_add_tapered_cylinder(parent, "%sObservatoryMast" % side_name,
+			Vector3(x, 16.0, 8.0), 1.4, 2.6, 28.0,
+			_materials.shared_style_ivory, 8)
+		_add_box(parent, "%sMastFoot" % side_name,
+			Vector3(x, 1.5, 8.0), Vector3(7.0, 3.0, 8.0),
+			_materials.shared_style_charcoal, true)
+		_add_brick(parent, "%sMastLens" % side_name,
+			Vector3(x, 17.0, 5.9), Bricks.build_crystal(0.72, 3.8, 0.30, 6),
+			_materials.shared_style_cyan)
+	_add_cable_between(parent, "ObservatoryCrownWest",
+		Vector3(-32, 28, 8), Vector3(0, 36, 8),
+		0.72, 0.48, _materials.shared_style_ivory, 8)
+	_add_cable_between(parent, "ObservatoryCrownEast",
+		Vector3(0, 36, 8), Vector3(32, 28, 8),
+		0.48, 0.72, _materials.shared_style_ivory, 8)
+	_add_brick(parent, "ObservatoryCrownPrism", Vector3(0, 34.0, 8),
+		Bricks.build_crystal(1.7, 6.8, 0.62, 6), _materials.shared_style_cyan)
+
+	# Low architectural backdrops make the three instrument families read as
+	# purposeful rooms while leaving their player-facing sides open.
+	var bay_specs := [
+		["LightInstrumentBay", Vector3(-69, 6.0, 24), Vector3(4.0, 11.0, 34.0)],
+		["PressureInstrumentBayWest", Vector3(-28, 5.0, -34), Vector3(18.0, 9.0, 3.0)],
+		["PressureInstrumentBayEast", Vector3(28, 5.0, -34), Vector3(18.0, 9.0, 3.0)],
+		["AlignmentInstrumentBayWest", Vector3(-28, 5.0, 80), Vector3(18.0, 9.0, 3.0)],
+		["AlignmentInstrumentBayEast", Vector3(28, 5.0, 80), Vector3(18.0, 9.0, 3.0)],
+	]
+	for bay_spec in bay_specs:
+		var bay_name := str(bay_spec[0])
+		var bay_at := bay_spec[1] as Vector3
+		var bay_size := bay_spec[2] as Vector3
+		_add_brick(parent, "%sBackdrop" % bay_name, bay_at,
+			Bricks.build_bevel_box(bay_size, 0.52), _materials.shared_style_ivory)
+		_add_box(parent, "%sCharcoalSill" % bay_name,
+			bay_at - Vector3.UP * (bay_size.y * 0.5 - 0.7),
+			Vector3(bay_size.x + 0.5, 1.4, bay_size.z + 0.5),
+			_materials.shared_style_charcoal, false)
+
+
+func _build_island_one_faceted_tree(parent: Node3D, tree_name: String,
+		base: Vector3, tree_scale: float, variant: int) -> void:
+	var tree := Node3D.new()
+	tree.name = tree_name
+	tree.set_meta("purpose", "frame the processional route")
+	tree.set_meta("canopy_cluster_count", 6)
+	parent.add_child(tree)
+	var trunk_height := 8.2 * tree_scale
+	_add_cylinder(tree, "FacetedTrunk", base + Vector3.UP * trunk_height * 0.5,
+		0.72 * tree_scale, trunk_height, _materials.island_three_hero_bark, true, 7)
+	for branch_index in 3:
+		var angle := TAU * float(branch_index) / 3.0 + float(variant) * 0.37
+		var start := base + Vector3.UP * trunk_height * 0.68
+		var finish := base + Vector3(sin(angle) * 3.4 * tree_scale,
+			trunk_height + 1.2 * tree_scale + float(branch_index % 2),
+			cos(angle) * 3.4 * tree_scale)
+		_add_cable_between(tree, "FacetedBranch_%02d" % (branch_index + 1),
+			start, finish, 0.34 * tree_scale, 0.14 * tree_scale,
+			_materials.island_three_hero_bark, 7)
+		for crown_index in 2:
+			var crown := _add_sphere(tree, "Canopy_%02d_%02d" % [branch_index + 1, crown_index + 1],
+				finish + Vector3((float(crown_index) - 0.5) * 2.4 * tree_scale,
+					float(crown_index) * 0.65, 0),
+				Vector3(3.8, 2.3, 3.4) * tree_scale,
+				_materials.island_three_sage_deep if (variant + branch_index + crown_index) % 3 \
+					else _materials.shared_style_lavender)
+			(crown.mesh as SphereMesh).radial_segments = 7
+			(crown.mesh as SphereMesh).rings = 4
+
+
+func _build_island_one_environment_status(parent: Node3D) -> void:
+	var status := Node3D.new()
+	status.name = "EnvironmentStatusSystem"
+	status.set_meta("preserve_authored_nodes", true)
+	status.set_meta("states", ["available", "analyzed", "complete"])
+	parent.add_child(status)
+	var available := Node3D.new()
+	available.name = "StatusAvailable"
+	available.set_meta("preserve_authored_nodes", true)
+	status.add_child(available)
+	for side in [-1.0, 1.0]:
+		_add_brick(available, "AvailableGateBeacon",
+			Vector3(float(side) * 27.0, 31.0, -64.0),
+			Bricks.build_crystal(0.45, 1.9, 0.18, 6), _materials.shared_style_cyan)
+	var analyzed := Node3D.new()
+	analyzed.name = "StatusAnalyzed"
+	analyzed.visible = false
+	analyzed.set_meta("preserve_authored_nodes", true)
+	status.add_child(analyzed)
+	for side in [-1.0, 1.0]:
+		_add_brick(analyzed, "AnalyzedMastBeacon",
+			Vector3(float(side) * 32.0, 31.0, 8.0),
+			Bricks.build_crystal(0.52, 2.3, 0.20, 6), _materials.shared_style_lavender)
+	var complete := Node3D.new()
+	complete.name = "StatusComplete"
+	complete.visible = false
+	complete.set_meta("preserve_authored_nodes", true)
+	status.add_child(complete)
+	_add_brick(complete, "CompletedCrownBeacon", Vector3(0, 39.0, 8.0),
+		Bricks.build_crystal(0.70, 3.2, 0.28, 6), _materials.shared_style_cyan)
+
+
+func _apply_island_one_low_poly_architecture_palette(arrival: Node3D) -> void:
+	var hide_patterns := [
+		"ArrivalCourtOuterStoneJoint", "ArrivalCourtInnerSageJoint",
+		"VaultRidgeGiltCollar", "CanopyObservationOrbit", "TreeWisdomCrownHalo",
+		"TreeGoldenBranchVein", "TreeCrownRay",
+	]
+	for candidate in arrival.find_children("*", "MeshInstance3D", true, false):
+		var mesh := candidate as MeshInstance3D
+		var should_hide := false
+		for pattern in hide_patterns:
+			if pattern in mesh.name:
+				should_hide = true
+				break
+		if should_hide:
+			mesh.visible = false
+			mesh.set_meta("retired_for_low_poly_clarity", true)
+			continue
+		var key := mesh.name.to_lower()
+		if "gilt" in key or "brass" in key or "golden" in key:
+			mesh.material_override = _materials.shared_style_charcoal
+
 
 
 func _create_island_one_gate_architecture_kit(arrival: Node3D) -> Node3D:

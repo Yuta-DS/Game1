@@ -62,9 +62,14 @@ func _run() -> void:
 	# facets that appeared as detached foreground debris. The lower source count
 	# is a geometry reduction; the batch ceiling and one-to-one accounting below
 	# still guard the optimization contract.
-	assert(merged_sources + repeated_sources >= 5790 \
+	# Island One's final low-poly pass retires 45 gold court rings, branch rays
+	# and unsupported orbit lines. Their replacement gatehouse, observatory and
+	# landscape are stateful puzzle scenery and intentionally remain outside the
+	# inert static merge pass. Preserve the new measured source floor while the
+	# batch ceiling continues to guard the draw-call budget.
+	assert(merged_sources + repeated_sources >= 5745 \
 			and merged_groups + repeated_groups <= 260,
-		"court-scale cells must consolidate at least 5,790 sources into no more than 260 spatial batches")
+		"court-scale cells must consolidate at least 5,745 sources into no more than 260 spatial batches")
 	assert(ranged_meshes > 1000,
 		"World One must apply distance ranges broadly enough to cull distant trim")
 
@@ -104,7 +109,9 @@ func _run() -> void:
 		var mesh := mesh_value as MeshInstance3D
 		if mesh.layers == 0 and mesh.has_meta("render_merged_into"):
 			arrival_kit_batched_sources += 1
-	assert(arrival_kit_batched_sources >= 350,
+	# Twenty-seven decorative gold rings and unsupported line segments were
+	# deliberately removed from this kit by the finished campus palette.
+	assert(arrival_kit_batched_sources >= 323,
 		"the inert arrival conservatory must not inherit the compass controller's dynamic render cost")
 	var station_spur := world.get_node(
 		"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D

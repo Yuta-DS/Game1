@@ -1007,6 +1007,23 @@ func _apply_state(animate: bool) -> void:
 	_apply_echo_garden_state(animate)
 	_apply_analysis_console_state()
 	_apply_quest_identity_state()
+	_apply_environment_status()
+
+
+func _apply_environment_status() -> void:
+	# The architecture communicates progression at long range: the gatehouse is
+	# available from the start, the observatory masts answer after analysis, and
+	# the crown lights only when the Signal Prism has been secured.
+	var available := find_child("StatusAvailable", true, false) as Node3D
+	if available != null:
+		available.visible = true
+	var analyzed := find_child("StatusAnalyzed", true, false) as Node3D
+	if analyzed != null:
+		analyzed.visible = bool(current_state.get("composition_analyzed", false)) \
+			or is_signal_observatory_complete()
+	var complete := find_child("StatusComplete", true, false) as Node3D
+	if complete != null:
+		complete.visible = is_signal_observatory_complete()
 
 
 func _apply_echo_garden_state(animate: bool) -> void:
