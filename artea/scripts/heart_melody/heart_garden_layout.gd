@@ -340,7 +340,11 @@ static func _build_departure(parent: Node3D) -> Array:
 	authored.scale = Vector3.ONE * 1.85
 	bridge.add_child(authored)
 	for index in 15:
-		Kit.box(bridge, "IvoryRootBridgeDeck", Vector3(305 + float(index) * 4.0, 3.0, 0), Vector3(4.15, 0.55, 6.0), "ivory", true)
+		Kit.box(bridge, "IvoryRootBridgeDeck", Vector3(305 + float(index) * 4.0, 2.70, 0), Vector3(4.15, 0.55, 6.0), "ivory")
+	# One continuous primitive prevents the production capsule catching on the
+	# decorative plank seams and keeps both bridge thresholds flush with the lawns.
+	Kit.box_collider(bridge, "ContinuousRootBridgeCollision", Vector3(335, 2.70, 0),
+		Vector3(130.0, 0.55, 6.0))
 	for side in [-1.0, 1.0]:
 		Kit.branch(bridge, "BridgeRootRail", Vector3(305, 4.7, side * 2.45), Vector3(365, 4.7, side * 2.45), 0.32, "wood", true)
 		for index in 5:
@@ -349,12 +353,7 @@ static func _build_departure(parent: Node3D) -> Array:
 	var blocker := Kit.box(parent, "FutureRiverBarrier", Vector3(367, 5.3, 0), Vector3(1.0, 5.0, 8.0), "leaf", true)
 	for side in [-1.0, 1.0]:
 		Kit.branch(parent, "ClosedVineArch", Vector3(367, 3.0, side * 3.5), Vector3(367, 8.4, 0), 0.48, "wood", true)
-	Kit.sign_text(parent, "RIVER SONG\nCOMING NEXT", Vector3(350, 8.6, 0), 24)
-	Kit.cylinder(parent, "DistantRiverIsland", Vector3(470, -25, 0), 58, 35, "stone", false, 14, 22)
-	Kit.cylinder(parent, "DistantRiverGarden", Vector3(470, -7, 0), 58, 1.0, "grass", false, 20)
-	for index in 5:
-		Kit.box(parent, "DistantWaterfall", Vector3(444 + float(index) * 12.0, 7.0, -14 + float(index % 3) * 14), Vector3(3.5, 27.0, 0.4), "blue")
-		Kit.branch(parent, "DistantBellReed", Vector3(450 + float(index) * 9.0, -3.0, 18.0), Vector3(450 + float(index) * 9.0, 14.0, 18.0), 0.5, "leaf")
+	Kit.sign_text(parent, "RIVER VOICE", Vector3(350, 8.6, 0), 24)
 	return [bridge, blocker]
 
 

@@ -11,6 +11,7 @@ const GardenObject := preload("res://scripts/heart_melody/heart_garden_object.gd
 const Catalog := preload("res://scripts/heart_melody/heart_garden_catalog.gd")
 const GardenMap := preload("res://scripts/heart_melody/heart_garden_map.gd")
 const Layout := preload("res://scripts/heart_melody/heart_garden_layout.gd")
+const RiverRegion := preload("res://scripts/heart_melody/heart_melody_river_region.gd")
 const TreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree.glb")
 const BlossomTreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree_a.glb")
 const CypressTreeModel := preload("res://assets3D/heart_melody/island_one/glb/faceted_tree_b.glb")
@@ -84,6 +85,11 @@ var _seeded_dressing: Node3D
 var _grass_surfaces: Array[MeshInstance3D] = []
 var _restoration_glow: OmniLight3D
 var _echo_berry_fruit: Array[MeshInstance3D] = []
+var _river_fruit: Dictionary = {}
+var _organ_water: Array = []
+var _harp_strings: Array = []
+var _rain_bells: Array = []
+var _rain_boat: Node3D
 
 
 func _ready() -> void:
@@ -105,6 +111,7 @@ func ensure_world_built() -> bool:
 	built = true
 	_build_ground()
 	_build_garden()
+	_build_river_voice()
 	_build_cast()
 	_note_player = AudioStreamPlayer.new()
 	add_child(_note_player)
@@ -161,6 +168,9 @@ func checkpoint_position() -> Vector3:
 		"planter_court": return Vector3(-8, 2, 0)
 		"drum_garden": return Vector3(105, 3, 0)
 		"restored_garden": return Vector3(285, 4, 0)
+		"river_organ": return RiverRegion.ORGAN + Vector3(0, 1, 12)
+		"river_harp": return RiverRegion.HARP + Vector3(0, 1, 12)
+		"bell_grove": return RiverRegion.BELLS + Vector3(0, 1, -14)
 	return ARRIVAL
 
 
@@ -279,6 +289,22 @@ func _build_garden() -> void:
 		for side in [-1.0,1.0]:
 			Kit.flower(self,clearing+Vector3(side*15,0.8,13),1.5,"leaf_light")
 	_build_environment_dressing()
+
+
+func _build_river_voice() -> void:
+	var result := RiverRegion.build(self)
+	route_segments.append_array(result.route_segments)
+	_river_fruit = result.fruit
+	_organ_water = result.organ_water
+	_harp_strings = result.harp_strings
+	_rain_bells = result.rain_bells
+	_rain_boat = result.rain_boat
+	_register("dew_pear_grove", RiverRegion.DEW_GROVE + Vector3(0, 0, 7), "Harvest three Dew Pears")
+	_register("waterfall_organ", RiverRegion.ORGAN + Vector3(0, 0, 9), "Tune the Waterfall Organ")
+	_register("sun_plum_grove", RiverRegion.SUN_GROVE + Vector3(0, 0, 7), "Harvest five Sun Plums")
+	_register("hush_vine_harp", RiverRegion.HARP + Vector3(0, 0, 9), "Release the Hush Vine Harp")
+	_register("bell_apple_grove", RiverRegion.BELL_GROVE + Vector3(0, 0, 7), "Harvest four Bell Apples")
+	_register("rain_boat_bells", RiverRegion.BELLS + Vector3(0, 0, -13), "Call the Rain Boat")
 
 
 func _build_echo_berry_grove(parent: Node3D) -> void:
@@ -421,6 +447,25 @@ func _restore() -> void:
 	var echo_harvested := state.story_fruit_count("echo_berry") >= 3
 	for fruit in _echo_berry_fruit:
 		fruit.visible = not echo_harvested
+	for fruit_id in _river_fruit:
+		var needed: int = int({"dew_pear": 3, "sun_plum": 5, "bell_apple": 4}.get(fruit_id, 1))
+		for fruit in _river_fruit[fruit_id]:
+			fruit.visible = state.story_fruit_count(str(fruit_id)) < needed
+	for index in _organ_water.size():
+		var ribbon := _organ_water[index] as MeshInstance3D
+		var level := int(state.data.river_organ[index])
+		ribbon.scale.y = 0.55 + float(level) * 0.28
+		ribbon.material_override = Kit.material("leaf_light" if state.task_complete(State.ORGAN_TASK) else "blue")
+	for index in _harp_strings.size():
+		var string := _harp_strings[index] as MeshInstance3D
+		string.material_override = Kit.material("gold" if state.task_complete(State.VINE_TASK) else "leaf_light")
+		string.scale.x = 1.0 + float(state.data.hush_vines[index]) * 0.10
+	for index in _rain_bells.size():
+		var bell := _rain_bells[index] as MeshInstance3D
+		bell.material_override = Kit.material("blue" if state.task_complete(State.BOAT_TASK) else "gold")
+		bell.scale = Vector3.ONE * (1.14 if index < state.data.rain_bells.size() else 1.0)
+	if _rain_boat != null:
+		_rain_boat.visible = state.river_complete()
 	var grass_color := Color("a8ce69") if state.complete() else (
 		Color("9fc162") if state.planted_count() > 0 else Color("91ba59"))
 	for surface in _grass_surfaces:
@@ -442,7 +487,7 @@ func _restore() -> void:
 	_bridge_blocker.visible = not crossing_ready
 	for shape in _bridge_blocker.find_children("*","CollisionShape3D",true,false): shape.set_deferred("disabled",crossing_ready)
 	if objective_label != null:
-		objective_label.text = "HEART MELODY • FEELING GARDEN\n%s\nGarden XP: %d" % [state.objective(),state.xp()]
+		objective_label.text = "HEART MELODY • %s\n%s\nGarden XP: %d" % ["RIVER VOICE" if state.complete() else "FEELING GARDEN", state.objective(),state.xp()]
 	if state.data.settings.muted:
 		if _note_player != null: _note_player.stop()
 		if _ambience != null: _ambience.stop()
@@ -665,6 +710,40 @@ func open_control(id: String) -> void:
 		else:
 			_heading("3/3 Echo Berries are safe in the quest pouch. Take them to the three Feeling Seed celestas.")
 			_button("Replay their repeating note", play_phrase.bind(["leaf", "leaf", "leaf"], 0.55))
+	elif id in ["dew_pear_grove", "sun_plum_grove", "bell_apple_grove"]:
+		var fruit_id: String = str({"dew_pear_grove": "dew_pear", "sun_plum_grove": "sun_plum", "bell_apple_grove": "bell_apple"}[id])
+		var required: int = int({"dew_pear": 3, "sun_plum": 5, "bell_apple": 4}[fruit_id])
+		var label: String = fruit_id.replace("_", " ").capitalize()
+		_heading("%s Grove\nMusical fruit is protected in the story pouch." % label)
+		if not state.complete():
+			_heading("Restore the Feeling Garden to open the River Voice path.")
+		elif state.story_fruit_count(fruit_id) < required:
+			_button("Listen to the %s pattern" % label, _play_river_pattern.bind(fruit_id))
+			_button("Harvest %d %s" % [required, label], _harvest_river_fruit.bind(fruit_id, required, id))
+		else:
+			_heading("%d/%d %s are safe. Their sound is ready for the next instrument." % [required, required, label])
+			_button("Replay the fruit pattern", _play_river_pattern.bind(fruit_id))
+	elif id == "waterfall_organ":
+		_heading("Waterfall Organ\nMatch the visible water pitches: low • high • calm.")
+		_heading("Dew Pear resonators: %d/3\nWater levels: %s" % [state.story_fruit_count("dew_pear"), _display_levels(state.data.river_organ)])
+		for index in 3:
+			_button("Raise channel %d" % (index + 1), _cycle_organ.bind(index))
+		_button("Hear the target chord", play_phrase.bind(["leaf", "sun", "droplet"], 0.7))
+		_button("Confirm Waterfall chord", _confirm_organ)
+	elif id == "hush_vine_harp":
+		_heading("Hush Vine Harp\nGive the five healthy strings a gentle rising tension.")
+		_heading("Sun Plums: %d/5\nTensions: %s" % [state.story_fruit_count("sun_plum"), _display_levels(state.data.hush_vines)])
+		for index in 5:
+			_button("Tighten string %d" % (index + 1), _cycle_vine.bind(index))
+		_button("Confirm the rising harmony", _confirm_vines)
+	elif id == "rain_boat_bells":
+		_heading("Rain Boat Bells\nRead the ripple clockwise and echo four directions.")
+		_heading("Bell Apples: %d/4\nYour call: %s" % [state.story_fruit_count("bell_apple"), " • ".join(state.data.rain_bells) if not state.data.rain_bells.is_empty() else "waiting"])
+		for direction in ["north", "east", "south", "west"]:
+			_button("Ring %s bell" % direction.capitalize(), _ring_rain_bell.bind(direction))
+		_button("Undo last bell", _revise_rain_bells.bind(false))
+		_button("Reset call", _revise_rain_bells.bind(true))
+		_button("Confirm Rain Boat call", _confirm_rain_bells)
 	elif id.begins_with("drum_"):
 		var index := int(id.get_slice("_",1))
 		_heading("%s flower"%State.SYMBOLS[index].capitalize())
@@ -732,6 +811,76 @@ func open_control(id: String) -> void:
 		if child is Button:
 			child.grab_focus()
 			break
+
+
+func _display_levels(values: Array) -> String:
+	var display: PackedStringArray = []
+	for value in values:
+		display.append(str(int(value) + 1))
+	return " • ".join(display)
+
+
+func _harvest_river_fruit(fruit_id: String, amount: int, control_id: String) -> void:
+	var result := state.grant_story_fruit(fruit_id, amount, "story.river.%s" % fruit_id)
+	_feedback(result.accepted, result.message)
+	open_control(control_id)
+
+
+func _play_river_pattern(fruit_id: String) -> void:
+	var phrase := ["droplet", "sun", "leaf"]
+	if fruit_id == "sun_plum": phrase = ["leaf", "droplet", "sun", "droplet", "sun"]
+	elif fruit_id == "bell_apple": phrase = ["sun", "droplet", "leaf", "droplet"]
+	play_phrase(phrase, 0.62)
+
+
+func _cycle_organ(index: int) -> void:
+	var result := state.set_organ_valve(index, (int(state.data.river_organ[index]) + 1) % 3)
+	_feedback(result.accepted, result.message)
+	open_control("waterfall_organ")
+
+
+func _confirm_organ() -> void:
+	var result := state.confirm_organ()
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_phrase(["leaf", "sun", "droplet"], 0.65)
+	open_control("waterfall_organ")
+
+
+func _cycle_vine(index: int) -> void:
+	var result := state.set_vine_tension(index, (int(state.data.hush_vines[index]) + 1) % 5)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note(index % 3)
+	open_control("hush_vine_harp")
+
+
+func _confirm_vines() -> void:
+	var result := state.confirm_vines()
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_phrase(["leaf", "droplet", "sun", "droplet", "sun"], 0.48)
+	open_control("hush_vine_harp")
+
+
+func _ring_rain_bell(direction: String) -> void:
+	var result := state.enter_rain_bell(direction)
+	_feedback(result.accepted, result.message)
+	if result.accepted: play_note(["north", "east", "south", "west"].find(direction) % 3)
+	open_control("rain_boat_bells")
+
+
+func _revise_rain_bells(reset: bool) -> void:
+	var result := state.revise_rain_bells(reset)
+	_feedback(result.accepted, result.message)
+	open_control("rain_boat_bells")
+
+
+func _confirm_rain_bells() -> void:
+	var was_complete := state.river_complete()
+	var result := state.confirm_rain_bells()
+	_feedback(result.accepted, result.message)
+	if result.accepted:
+		play_phrase(["leaf", "droplet", "sun", "leaf"], 0.55)
+		if not was_complete: quest_completed.emit()
+	open_control("rain_boat_bells")
 
 
 func _preview_seed(index: int, choice: String) -> void:

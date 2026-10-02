@@ -7,12 +7,19 @@ signal feedback(accepted: bool, message: String)
 
 const SAVE_PATH := "user://heart_melody_island_one.json"
 const ChapterCatalog := preload("res://scripts/heart_melody/heart_melody_chapter_catalog.gd")
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 const PLANT_TASK := "heart_melody.task.plant_feeling_seeds"
 const RHYTHM_TASK := "heart_melody.task.restore_garden_rhythm"
 const QUEST_ID := "heart_melody.quest.wake_feeling_garden"
+const RIVER_QUEST_ID := "heart_melody.quest.restore_river_song"
+const ORGAN_TASK := "heart_melody.task.tune_waterfall_organ"
+const VINE_TASK := "heart_melody.task.release_hush_vines"
+const BOAT_TASK := "heart_melody.task.call_rain_boat"
 const SYMBOLS := ["leaf", "droplet", "sun"]
 const PHRASE := ["leaf", "sun", "droplet"]
+const ORGAN_TARGET := [1, 2, 0]
+const VINE_TARGET := [0, 1, 2, 3, 4]
+const BELL_TARGET := ["north", "east", "south", "west"]
 const CHOICES := ["joy", "sadness", "frustration", "fear", "peace", "hope", "sound"]
 const ENEMY_XP := {"garden.moth.1": 12, "garden.moth.2": 12, "garden.slime.1": 15}
 const WAVES := [["garden.moth.1"], ["garden.moth.2", "garden.slime.1"]]
@@ -31,6 +38,8 @@ static func fresh() -> Dictionary:
 		"checkpoint": "arrival", "identity_dismissed": [],
 		"quest_fruit_pouch": {}, "fruit_inventory": {}, "checkpoint_storage": {},
 		"fruit_receipt_ids": [], "crafted_recipe_ids": [],
+		"river_organ": [0, 0, 0], "hush_vines": [0, 0, 0, 0, 0],
+		"rain_bells": [], "river_attempts": {},
 		"settings": {"puzzle_help": true, "combat_assist": false, "reduced_motion": false,
 			"muted": false, "music_volume": 0.72, "effects_volume": 0.82}}
 
@@ -48,6 +57,14 @@ func complete() -> bool:
 	return QUEST_ID in data.completed_quest_ids
 
 
+func river_complete() -> bool:
+	return RIVER_QUEST_ID in data.completed_quest_ids
+
+
+func task_complete(task_id: String) -> bool:
+	return task_id in data.completed_task_ids
+
+
 func xp() -> int:
 	var total := 0
 	for value in data.xp_receipts.values():
@@ -60,8 +77,14 @@ func current_wave() -> int:
 
 
 func objective() -> String:
+	if river_complete():
+		return "River Song restored. The Bell Grove is ready for the Heart Song."
 	if complete():
-		return "Feeling Garden restored. Explore, replay the song, or return to the Castle."
+		if not task_complete(ORGAN_TASK):
+			return "Harvest three Dew Pears and tune the Waterfall Organ."
+		if not task_complete(VINE_TASK):
+			return "Harvest five Sun Plums and tune the Hush Vine Harp."
+		return "Harvest four Bell Apples and call the Rain Boat."
 	if planted_count() < 3:
 		return "Plant three Feeling Seeds — %d/3" % planted_count()
 	if not data.rhythm_solved:
@@ -180,7 +203,8 @@ func set_volume(key: String, value: float) -> Dictionary:
 
 
 func set_checkpoint(id: String) -> Dictionary:
-	if id not in ["arrival", "planter_court", "drum_garden", "restored_garden"]:
+	if id not in ["arrival", "planter_court", "drum_garden", "restored_garden",
+			"river_organ", "river_harp", "bell_grove"]:
 		return _reply(false, "Unknown checkpoint.")
 	var next := data.duplicate(true)
 	next.checkpoint = id
@@ -257,6 +281,102 @@ func checkpoint_fruit_count(fruit_id: String) -> int:
 	return int(data.checkpoint_storage.get(fruit_id, 0))
 
 
+func set_organ_valve(index: int, value: int) -> Dictionary:
+	if not complete() or story_fruit_count("dew_pear") < 3:
+		return _reply(false, "Restore the garden and harvest three Dew Pears first.")
+	if index < 0 or index >= 3 or value < 0 or value > 2:
+		return _reply(false, "Choose one of the three visible water levels.")
+	if task_complete(ORGAN_TASK):
+		return _reply(true, "The Waterfall Organ chord is already restored.")
+	var next := data.duplicate(true)
+	next.river_organ[index] = value
+	return _commit(next, "Organ channel %d set to level %d." % [index + 1, value + 1])
+
+
+func confirm_organ() -> Dictionary:
+	if task_complete(ORGAN_TASK):
+		return _reply(true, "The Waterfall Organ chord is already restored.")
+	if not complete() or story_fruit_count("dew_pear") < 3:
+		return _reply(false, "Three Dew Pear resonators are needed first.")
+	if data.river_organ != ORGAN_TARGET:
+		return _record_river_attempt("organ", "The water heights do not yet form low, high, calm: 2 • 3 • 1.")
+	var next := data.duplicate(true)
+	next.completed_task_ids.append(ORGAN_TASK)
+	next.checkpoint = "river_organ"
+	return _commit(next, "The Waterfall Organ is in tune. The Hush Vines are listening.")
+
+
+func set_vine_tension(index: int, value: int) -> Dictionary:
+	if not task_complete(ORGAN_TASK) or story_fruit_count("sun_plum") < 5:
+		return _reply(false, "Tune the organ and harvest five Sun Plums first.")
+	if index < 0 or index >= 5 or value < 0 or value > 4:
+		return _reply(false, "Choose one of the five visible vine tensions.")
+	if task_complete(VINE_TASK):
+		return _reply(true, "The healthy harp vines are already released.")
+	var next := data.duplicate(true)
+	next.hush_vines[index] = value
+	return _commit(next, "Harp string %d set to tension %d." % [index + 1, value + 1])
+
+
+func confirm_vines() -> Dictionary:
+	if task_complete(VINE_TASK):
+		return _reply(true, "The healthy harp vines are already released.")
+	if not task_complete(ORGAN_TASK) or story_fruit_count("sun_plum") < 5:
+		return _reply(false, "The organ and five Sun Plums must reveal the safe tensions first.")
+	if data.hush_vines != VINE_TARGET:
+		return _record_river_attempt("vines", "The harp needs a gentle five-step rise: 1 • 2 • 3 • 4 • 5.")
+	var next := data.duplicate(true)
+	next.completed_task_ids.append(VINE_TASK)
+	next.checkpoint = "river_harp"
+	return _commit(next, "The Hush Vines are free and the Rain Boat dock is open.")
+
+
+func enter_rain_bell(direction: String) -> Dictionary:
+	if not task_complete(VINE_TASK) or story_fruit_count("bell_apple") < 4:
+		return _reply(false, "Release the harp and harvest four Bell Apples first.")
+	if direction not in ["north", "east", "south", "west"]:
+		return _reply(false, "Ring one of the four directional bell flowers.")
+	if task_complete(BOAT_TASK):
+		return _reply(true, "The Rain Boat already knows this call.")
+	if data.rain_bells.size() >= 4:
+		return _reply(false, "Four calls are ready. Confirm, undo, or reset them.")
+	var next := data.duplicate(true)
+	next.rain_bells.append(direction)
+	return _commit(next, "%d/4 directional calls arranged." % next.rain_bells.size())
+
+
+func revise_rain_bells(reset := false) -> Dictionary:
+	if task_complete(BOAT_TASK):
+		return _reply(true, "The Rain Boat call remains restored.")
+	var next := data.duplicate(true)
+	if reset:
+		next.rain_bells.clear()
+	elif not next.rain_bells.is_empty():
+		next.rain_bells.pop_back()
+	return _commit(next, "Adjust the directional call when you are ready.")
+
+
+func confirm_rain_bells() -> Dictionary:
+	if task_complete(BOAT_TASK):
+		return _reply(true, "The Rain Boat call remains restored.")
+	if not task_complete(VINE_TASK) or story_fruit_count("bell_apple") < 4:
+		return _reply(false, "The released harp and four Bell Apples are needed first.")
+	if data.rain_bells != BELL_TARGET:
+		return _record_river_attempt("bells", "Read the ripples clockwise: North • East • South • West.")
+	var next := data.duplicate(true)
+	next.completed_task_ids.append(BOAT_TASK)
+	next.completed_quest_ids.append(RIVER_QUEST_ID)
+	next.xp_receipts[RIVER_QUEST_ID] = 105
+	next.checkpoint = "bell_grove"
+	return _commit(next, "River Song restored — 105 quest XP! The Rain Boat is waiting.")
+
+
+func _record_river_attempt(challenge_id: String, message: String) -> Dictionary:
+	var next := data.duplicate(true)
+	next.river_attempts[challenge_id] = int(next.river_attempts.get(challenge_id, 0)) + 1
+	return _commit(next, message, false)
+
+
 func _commit(next: Dictionary, message: String, accepted := true) -> Dictionary:
 	if persistent and not _write_atomic(next):
 		return _reply(false, "Progress could not be saved. Your previous checkpoint is safe; try again.")
@@ -305,17 +425,19 @@ func load_progress() -> bool:
 		loaded = _read_valid(save_path + ".bak")
 	if loaded == null:
 		return false
-	var was_legacy := int(loaded.get("schema_version", 1)) == 1
+	var was_legacy := int(loaded.get("schema_version", 1)) < SCHEMA_VERSION
 	var normalized := fresh()
 	normalized.merge(loaded, true)
 	normalized.schema_version = SCHEMA_VERSION
 	var normalized_settings: Dictionary = fresh().settings
 	normalized_settings.merge(normalized.settings, true)
 	normalized.settings = normalized_settings
-	for dictionary_key in ["quest_fruit_pouch", "fruit_inventory", "checkpoint_storage"]:
+	for dictionary_key in ["quest_fruit_pouch", "fruit_inventory", "checkpoint_storage",
+			"river_attempts"]:
 		if not normalized.get(dictionary_key) is Dictionary:
 			normalized[dictionary_key] = {}
-	for array_key in ["fruit_receipt_ids", "crafted_recipe_ids"]:
+	for array_key in ["fruit_receipt_ids", "crafted_recipe_ids", "river_organ",
+			"hush_vines", "rain_bells"]:
 		if not normalized.get(array_key) is Array:
 			normalized[array_key] = []
 	if was_legacy and persistent and not _write_atomic(normalized):
@@ -336,7 +458,7 @@ func _read_valid(path: String) -> Variant:
 
 
 static func valid(value: Variant) -> bool:
-	if not value is Dictionary or int(value.get("schema_version", 0)) not in [1, SCHEMA_VERSION] \
+	if not value is Dictionary or int(value.get("schema_version", 0)) not in [1, 2, SCHEMA_VERSION] \
 			or value.get("world_id") != "heart_melody":
 		return false
 	for key in ["planters", "xp_receipts", "settings"]:
@@ -344,7 +466,8 @@ static func valid(value: Variant) -> bool:
 	for key in ["phrase", "cleared_waves", "completed_task_ids", "completed_quest_ids", "identity_dismissed"]:
 		if not value.get(key) is Array: return false
 	if not value.get("rhythm_solved") is bool: return false
-	if value.get("checkpoint") not in ["arrival", "planter_court", "drum_garden", "restored_garden"]: return false
+	if value.get("checkpoint") not in ["arrival", "planter_court", "drum_garden", "restored_garden",
+			"river_organ", "river_harp", "bell_grove"]: return false
 	if int(value.get("mistake_count", 0)) < 0: return false
 	if int(value.get("hint_level", 0)) < 0 or int(value.get("hint_level", 0)) > 3: return false
 	for key in ["puzzle_help", "combat_assist", "reduced_motion", "muted"]:
@@ -352,11 +475,29 @@ static func valid(value: Variant) -> bool:
 	for key in ["music_volume", "effects_volume"]:
 		var volume: Variant = value.settings.get(key)
 		if not (volume is float or volume is int) or float(volume) < 0.0 or float(volume) > 1.0: return false
-	if int(value.get("schema_version", 1)) == SCHEMA_VERSION:
+	if int(value.get("schema_version", 1)) >= 2:
 		for key in ["quest_fruit_pouch", "fruit_inventory", "checkpoint_storage"]:
 			if not value.get(key) is Dictionary: return false
 		for key in ["fruit_receipt_ids", "crafted_recipe_ids"]:
 			if not value.get(key) is Array: return false
+	if int(value.get("schema_version", 1)) == SCHEMA_VERSION:
+		if not value.get("river_attempts") is Dictionary: return false
+		for key in ["river_organ", "hush_vines", "rain_bells"]:
+			if not value.get(key) is Array: return false
+		if value.river_organ.size() != 3 or value.hush_vines.size() != 5 or value.rain_bells.size() > 4:
+			return false
+		for organ_value in value.river_organ:
+			if not (organ_value is int or organ_value is float) or int(organ_value) != organ_value \
+					or organ_value < 0 or organ_value > 2: return false
+		for vine_value in value.hush_vines:
+			if not (vine_value is int or vine_value is float) or int(vine_value) != vine_value \
+					or vine_value < 0 or vine_value > 4: return false
+		for direction in value.rain_bells:
+			if direction not in ["north", "east", "south", "west"]: return false
+		for attempt_value in value.river_attempts.values():
+			if not (attempt_value is int or attempt_value is float) or int(attempt_value) != attempt_value \
+					or attempt_value < 0: return false
+	if int(value.get("schema_version", 1)) >= 2:
 		for fruit_id in ChapterCatalog.EXPECTED_FRUIT_IDS:
 			var story_count := int(value.quest_fruit_pouch.get(fruit_id, 0))
 			var inventory_count := int(value.fruit_inventory.get(fruit_id, 0))
@@ -387,7 +528,7 @@ static func valid(value: Variant) -> bool:
 		if value.cleared_waves[index] != index: return false
 	if not value.cleared_waves.is_empty() and not value.rhythm_solved: return false
 	for id in value.xp_receipts:
-		var expected: int = 80 if id == QUEST_ID else int(ENEMY_XP.get(id, -1))
+		var expected: int = 80 if id == QUEST_ID else (105 if id == RIVER_QUEST_ID else int(ENEMY_XP.get(id, -1)))
 		if expected < 0 or value.xp_receipts[id] != expected: return false
 	var expected_tasks: Array = [PLANT_TASK] if value.planters.size() == 3 else []
 	var expected_quests: Array = []
@@ -396,6 +537,20 @@ static func valid(value: Variant) -> bool:
 		expected_quests.append(QUEST_ID)
 		if value.xp_receipts.get(QUEST_ID) != 80: return false
 	elif value.xp_receipts.has(QUEST_ID): return false
+	var river_task_order := [ORGAN_TASK, VINE_TASK, BOAT_TASK]
+	var seen_incomplete_river_task := false
+	for river_task in river_task_order:
+		if river_task in value.completed_task_ids:
+			if seen_incomplete_river_task or QUEST_ID not in expected_quests: return false
+			expected_tasks.append(river_task)
+		else:
+			seen_incomplete_river_task = true
+	if ORGAN_TASK in value.completed_task_ids and value.river_organ != ORGAN_TARGET: return false
+	if VINE_TASK in value.completed_task_ids and value.hush_vines != VINE_TARGET: return false
+	if BOAT_TASK in value.completed_task_ids:
+		if value.rain_bells != BELL_TARGET or value.xp_receipts.get(RIVER_QUEST_ID) != 105: return false
+		expected_quests.append(RIVER_QUEST_ID)
+	elif value.xp_receipts.has(RIVER_QUEST_ID): return false
 	for wave in value.cleared_waves:
 		for id in WAVES[int(wave)]:
 			if not value.xp_receipts.has(id): return false

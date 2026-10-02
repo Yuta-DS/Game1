@@ -49,7 +49,9 @@ func _run() -> void:
 			triangles += (indices.size() if indices is PackedInt32Array and not indices.is_empty() else vertices.size()) / 3
 	print("HEART_GARDEN_METRICS triangles=", triangles, " surfaces=", surfaces)
 	assert(triangles <= 400000, "static triangle budget")
-	assert(surfaces <= 1000, "total modular surface budget")
+	# River Voice adds a third complete district with three readable instruments;
+	# keep the expanded chapter bounded while the camera-local budget below guards play.
+	assert(surfaces <= 1250, "expanded chapter modular surface budget")
 	var peak_local_surfaces := 0
 	for viewpoint in [Vector3(-250,2,0), Vector3(-8,2,0), Vector3(105,3,0),
 		Vector3(245,3,-76), Vector3(300,3,66), Vector3(285,4,0)]:
