@@ -59,6 +59,7 @@ var _task_label: Label
 var _dialogue_label: Label
 var _reflection_label: Label
 var _hud_refresh_elapsed := 0.1
+var _combat_recovery_pending := false
 
 
 func _ready() -> void:
@@ -167,6 +168,40 @@ func _connect_world_events() -> void:
 		compass.quest_completed.connect(_on_island_one_subquest_completed)
 	if compass != null and compass.is_powered():
 		progress.island_one_compass_solved = true
+	if _player != null and _player.has_signal("combat_failed"):
+		var failure_handler := Callable(self, "_on_player_combat_failed")
+		if not _player.is_connected("combat_failed", failure_handler):
+			_player.connect("combat_failed", failure_handler)
+
+
+func _on_player_combat_failed(_source: Node) -> void:
+	if _combat_recovery_pending or _player == null:
+		return
+	_combat_recovery_pending = true
+	var previous_input := bool(_player.get("input_enabled"))
+	_player.call("set_input_enabled", false)
+	if _dialogue_label != null:
+		_dialogue_label.text = "Everlasting Father: Breathe. Return to the last safe ground and read the warning again."
+	var progression := get_node_or_null("/root/WorldOneProgression")
+	var phase_restart := false
+	if progression != null:
+		var settings: Dictionary = progression.get("assist_settings")
+		phase_restart = bool(settings.get("boss_phase_restart", false))
+	var boss := world.get_warden() as MindSparkWardenBoss
+	world.restart_active_encounter()
+	if boss != null and boss.active:
+		if phase_restart:
+			boss.restart_current_phase()
+		else:
+			boss.reset_battle()
+			boss.start_battle()
+	await get_tree().create_timer(1.1).timeout
+	if is_instance_valid(_player):
+		_player.global_position = world.get_safe_respawn_global()
+		_player.velocity = Vector3.ZERO
+		_player.call("recover_from_combat_failure")
+		_player.call("set_input_enabled", previous_input)
+	_combat_recovery_pending = false
 
 
 func _on_island_one_subquest_completed(quest_id: String, reward: Dictionary) -> void:

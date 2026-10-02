@@ -257,6 +257,10 @@ func _test_combat_roster(world: MindSparkWorldOne) -> void:
 	assert(mite.take_damage(999.0) == 25.0)
 	assert(mite.state == MindSparkEnemyBase.State.DEFEATED and mite.core.visible,
 		"defeat removes the Blight shell and reveals the calm living core")
+	assert(world.restart_active_encounter() == 4 \
+		and mite.active and mite.state == MindSparkEnemyBase.State.IDLE \
+		and is_equal_approx(mite.current_health, mite.definition.max_health),
+		"combat failure restarts only the current bounded wave at full health")
 	var boss := world.get_warden() as MindSparkWardenBoss
 	var storm_crown := boss.get_node("VisualRoot/BlightShell/StormCrown") as Node3D
 	var shell_mesh := (boss.get_node("VisualRoot/BlightShell/Shell") as MeshInstance3D).mesh \

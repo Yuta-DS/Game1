@@ -87,7 +87,45 @@ func reset_battle() -> void:
 	rain.emitting = false
 	_set_phase(Phase.INTRO)
 	for anchor in anchors:
-		anchor.reset_sequence() if anchor.definition.object_kind == 3 else _reset_anchor(anchor)
+		anchor.reset_warden_anchor(false)
+
+
+func restart_current_phase() -> int:
+	## Adaptive assistance restarts the current phase rather than erasing the
+	## whole encounter. Broken anchors remain authoritative; unfinished anchors
+	## return to their readable telegraph state and the open core restarts with
+	## full health when phase three was reached.
+	if phase == Phase.COMPLETE:
+		return phase
+	broken_anchor_count = 0
+	for anchor in anchors:
+		anchor.reset_warden_anchor(true)
+		if bool(anchor.current_state.get("completed", false)):
+			broken_anchor_count += 1
+	active = true
+	_damage_applied = false
+	_cycle_time = _assisted_telegraph_seconds()
+	shell.visible = true
+	rain.emitting = false
+	if broken_anchor_count >= 3:
+		current_health = definition.max_health
+		core.visible = true
+		storm_line.visible = false
+		_set_phase(Phase.PHASE_3)
+		core_label.text = "PHASE RESTART • OPEN CORE • %d / %d" \
+			% [ceili(current_health), ceili(definition.max_health)]
+	elif broken_anchor_count > 0:
+		core.visible = false
+		storm_line.visible = true
+		_set_phase(Phase.PHASE_2)
+		core_label.text = "PHASE RESTART • SHIELD LAYERS %d/3" % broken_anchor_count
+	else:
+		current_health = definition.max_health
+		core.visible = false
+		storm_line.visible = true
+		_set_phase(Phase.PHASE_1)
+		core_label.text = "PHASE RESTART • DODGE THE WIDE STORM LINE"
+	return phase
 
 
 func take_damage(amount: float, _source: Node = null) -> float:
@@ -199,13 +237,6 @@ func _assisted_telegraph_seconds() -> float:
 		var settings: Dictionary = progression.get("assist_settings")
 		multiplier = float(settings.get("telegraph_multiplier", 1.0))
 	return float(definition.telegraph_seconds) * multiplier
-
-
-func _reset_anchor(anchor: QuestObjectBase) -> void:
-	anchor.current_state["completed"] = false
-	anchor.current_state["progress"] = 0
-	anchor.current_state["anchor_state"] = QuestObjectBase.AnchorState.TELEGRAPH
-	anchor.call("_apply_visual_state", false)
 
 
 func _build_storm_crown() -> void:

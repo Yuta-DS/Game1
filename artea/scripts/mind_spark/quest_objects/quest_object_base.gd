@@ -243,6 +243,25 @@ func reset_sequence() -> bool:
 	return true
 
 
+func reset_warden_anchor(preserve_completed := false) -> bool:
+	## Boss retries use the quest object's normal persistence path so a reload
+	## cannot resurrect a stale vulnerable window. Assisted phase restarts keep
+	## already broken layers; a standard encounter restart clears all layers.
+	if definition == null or definition.object_kind != Definition.ObjectKind.WARDEN_ANCHOR:
+		return false
+	if preserve_completed and bool(current_state.get("completed", false)):
+		current_state["anchor_state"] = AnchorState.BROKEN
+		_apply_visual_state(false)
+		return true
+	current_state["progress"] = 0
+	current_state["completed"] = false
+	current_state["anchor_state"] = AnchorState.TELEGRAPH
+	_completion_emitted = false
+	_save_and_feedback("STORM LINE READY • DODGE TO OPEN", "⟳")
+	_apply_visual_state(false)
+	return true
+
+
 func available_actions() -> Array[StringName]:
 	match definition.object_kind:
 		Definition.ObjectKind.EVIDENCE_SCANNER:

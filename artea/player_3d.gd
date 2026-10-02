@@ -9,6 +9,8 @@ signal block_changed(active: bool)
 signal dodge_started
 signal perfect_blocked
 signal combo_changed(stage: int)
+signal combat_failed(source: Node)
+signal combat_recovered
 
 @export var speed: float = 10.0
 @export var run_speed_multiplier := 1.55
@@ -110,6 +112,7 @@ var _combat_balance: Dictionary = {}
 var _assist_panel: PanelContainer
 var _assist_context := ""
 var _input_before_assist := true
+var _combat_failure_emitted := false
 
 
 func _load_combat_balance() -> void:
@@ -655,9 +658,11 @@ func take_damage(amount: float, _source: Node = null) -> float:
 	_hit_reaction_remaining = 0.32
 	_show_status("-%d HP" % int(applied), Color("ff786f"))
 	health_changed.emit(current_health, max_health)
-	if current_health <= 0.0 and progression != null \
-			and progression.has_method("record_failed_attempt"):
-		progression.call("record_failed_attempt", "world_one.combat")
+	if current_health <= 0.0 and not _combat_failure_emitted:
+		_combat_failure_emitted = true
+		if progression != null and progression.has_method("record_failed_attempt"):
+			progression.call("record_failed_attempt", "world_one.combat")
+		combat_failed.emit(_source)
 	_update_combat_hud()
 	return applied
 
@@ -666,6 +671,36 @@ func heal(amount: float) -> void:
 	current_health = clampf(current_health + maxf(amount, 0.0), 0.0, max_health)
 	health_changed.emit(current_health, max_health)
 	_update_combat_hud()
+
+
+func recover_from_combat_failure() -> void:
+	## Restore the runtime player state after an encounter retry. World One owns
+	## the respawn position and encounter reset; the player owns its health,
+	## Focus, transient attack state and invulnerability contract.
+	current_health = max_health
+	_set_focus(max_focus)
+	_combat_failure_emitted = false
+	_hit_reaction_remaining = 0.0
+	_attack_cooldown_remaining = 0.0
+	_attack_active_remaining = 0.0
+	_combo_stage = 0
+	_combo_window_remaining = 0.0
+	_counter_ready_remaining = 0.0
+	_perfect_block_remaining = 0.0
+	_focus_recovery_delay_remaining = 0.0
+	_set_blocking(false)
+	_finish_attack()
+	is_dodging = false
+	_dodge_remaining = 0.0
+	_dodge_cooldown_remaining = 0.0
+	# A brief grace window prevents the telegraph that triggered the defeat from
+	# immediately hitting again on the first controllable frame.
+	_invulnerability_remaining = 1.0
+	velocity = Vector3.ZERO
+	health_changed.emit(current_health, max_health)
+	combo_changed.emit(0)
+	_update_combat_hud()
+	combat_recovered.emit()
 
 
 func _spend_focus(amount: float) -> bool:

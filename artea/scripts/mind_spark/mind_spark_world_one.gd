@@ -152,6 +152,7 @@ var _materials: Dictionary = {}
 var _objects: Array[QuestObjectBase] = []
 var _enemies: Array[MindSparkEnemyBase] = []
 var _enemy_waves: Dictionary = {}
+var _active_encounter_id := ""
 var _warden: Node
 var _collectibles: Array[MindSparkCollectible] = []
 var _quest_gates: Array[AnimatableBody3D] = []
@@ -1321,12 +1322,26 @@ func set_island_two_story_state(state: String) -> void:
 
 
 func activate_enemy_wave(encounter_id: String) -> int:
+	_active_encounter_id = encounter_id
 	for enemy in _enemies:
 		enemy.set_active(false)
 	var wave: Array = _enemy_waves.get(encounter_id, [])
 	for index in mini(4, wave.size()):
 		(wave[index] as MindSparkEnemyBase).set_active(true)
 	return mini(4, wave.size())
+
+
+func restart_active_encounter() -> int:
+	## A defeat restarts only the current bounded wave. One-time reward receipts
+	## remain in WorldOneProgression, so a retry cannot duplicate its economy.
+	if _active_encounter_id.is_empty():
+		return 0
+	var wave: Array = _enemy_waves.get(_active_encounter_id, [])
+	for enemy_value in wave:
+		var enemy := enemy_value as MindSparkEnemyBase
+		enemy.reset_enemy()
+		enemy.set_active(true)
+	return wave.size()
 
 
 func active_enemy_count() -> int:
