@@ -35,6 +35,9 @@ const AetherAnalysisConsoleScene := preload(
 const Bricks := preload("res://scripts/altar/AltarParts.gd")
 const NetworkAmbience := preload("res://assets/audio/Atmospheric-instrumental-music.ogg")
 const SanctuaryAmbience := preload("res://assets/audio/calm music.ogg")
+const AetherPowerAmbience := preload("res://assets/audio/world_objects/aether_power_loop.wav")
+const TreeWindAmbience := preload("res://assets/audio/world_objects/tree_wind_loop.wav")
+const RainWaterAmbience := preload("res://assets/audio/waterfall_ambient_loop.ogg")
 const IslandDetailAnimator := preload("res://scripts/mind_spark/mind_spark_island_detail_animator.gd")
 const IslandOnePuzzleScript := preload("res://scripts/mind_spark/mind_spark_island_one_puzzle.gd")
 const WebPerfProbeScript := preload("res://scripts/mind_spark/world_one_web_perf_probe.gd")
@@ -154,6 +157,8 @@ var _collectibles: Array[MindSparkCollectible] = []
 var _quest_gates: Array[AnimatableBody3D] = []
 var _cast: Dictionary = {}
 var _world_state := "sleeping"
+var _gentle_rain_ambience: AudioStreamPlayer3D
+var _gentle_rain_fade_tween: Tween
 var _station_spur: Node3D
 var _return_gate: MindSparkWorldGate
 var _transit_portals: Array[MindSparkWorldGate] = []
@@ -244,6 +249,7 @@ func build_world() -> void:
 		_finalize_quest_object_story_layout()
 		_redesign_island_three(geometry)
 		_unify_island_one_tree_and_quest_style()
+		_install_three_island_environment_audio(geometry)
 	_install_player_spawn_marker(geometry)
 	if not _uses_existing_mind_district() and not _uses_galaxy_foundation():
 		# The optional station is deliberately the final standalone construction
@@ -1140,6 +1146,7 @@ func set_world_state(next_state: String) -> void:
 	_set_transit_enabled(next_state == "gentle_rain")
 	set_meta("world_state", next_state)
 	set_meta("transit_portals_enabled", next_state == "gentle_rain")
+	_refresh_environment_audio(next_state)
 	_refresh_island_three_completion_visuals()
 
 
@@ -9799,15 +9806,101 @@ func _add_zone_light(parent: Node3D, at: Vector3, color: Color, range_value: flo
 	return light
 
 
+func _install_three_island_environment_audio(geometry: Node3D) -> void:
+	## Give each fused island a quiet local acoustic identity. These are positional
+	## environment layers, not replacement music, and stay beneath interaction,
+	## dialogue and combat cues. Rain is present in the soundscape from startup so
+	## its playback head can fade in smoothly when recovery changes the world state.
+	var soundscape := Node3D.new()
+	soundscape.name = "ThreeIslandEnvironmentAudio"
+	soundscape.set_meta("design_revision", "district_soundscape_v1")
+	soundscape.set_meta("physical_island_count", 3)
+	soundscape.set_meta("quest_evidence_audio_only", false)
+	geometry.add_child(soundscape)
+
+	var island_one_midpoint: Vector3 = ZONES[0].position.lerp(ZONES[1].position, .58)
+	var island_two_midpoint: Vector3 = ZONES[2].position.lerp(ZONES[3].position, .50)
+	var stormworks_center: Vector3 = ZONES[4].position + Vector3.UP * 5.0
+	var oldest_tree_center: Vector3 = ZONES[5].position + Vector3(0, 6.0, 18.0)
+	var rain_observatory_center := stormworks_center + Vector3(0, 0, 105.0)
+
+	var island_one_wind := _add_zone_ambience(soundscape, "IslandOneCanopyWind",
+		TreeWindAmbience, -31.0, 210.0)
+	island_one_wind.position = island_one_midpoint
+	_configure_environment_audio_source(island_one_wind, 1, "living canopy")
+
+	var island_two_engine := _add_zone_ambience(soundscape, "IslandTwoMemoryEngine",
+		AetherPowerAmbience, -29.0, 215.0)
+	island_two_engine.position = island_two_midpoint
+	_configure_environment_audio_source(island_two_engine, 2, "memory observatory machinery")
+
+	var stormworks_engine := _add_zone_ambience(soundscape, "IslandThreeStormworksEngine",
+		AetherPowerAmbience, -27.0, 220.0)
+	stormworks_engine.position = stormworks_center
+	_configure_environment_audio_source(stormworks_engine, 3, "stormworks civic machinery")
+
+	var oldest_tree_wind := _add_zone_ambience(soundscape, "IslandThreeOldestTreeWind",
+		TreeWindAmbience, -28.0, 190.0)
+	oldest_tree_wind.position = oldest_tree_center
+	_configure_environment_audio_source(oldest_tree_wind, 3, "oldest tree canopy")
+
+	_gentle_rain_ambience = _add_zone_ambience(soundscape, "RainHarvestRecoveryWater",
+		RainWaterAmbience, -80.0, 150.0)
+	_gentle_rain_ambience.position = rain_observatory_center
+	_configure_environment_audio_source(_gentle_rain_ambience, 3, "recovered rain water")
+	_gentle_rain_ambience.set_meta("unlocks_on_world_state", "gentle_rain")
+	_gentle_rain_ambience.set_meta("inactive_volume_db", -80.0)
+	_gentle_rain_ambience.set_meta("active_volume_db", -24.0)
+
+
+func _configure_environment_audio_source(audio: AudioStreamPlayer3D,
+		physical_island: int, sound_role: String) -> void:
+	audio.unit_size = 34.0
+	audio.max_db = -9.0
+	audio.panning_strength = .72
+	audio.set_meta("physical_island", physical_island)
+	audio.set_meta("sound_role", sound_role)
+	audio.set_meta("non_blocking_environment_layer", true)
+
+
+func _refresh_environment_audio(world_state: String) -> void:
+	if not is_instance_valid(_gentle_rain_ambience):
+		return
+	var target_db := -24.0 if world_state == "gentle_rain" else -80.0
+	_gentle_rain_ambience.set_meta("target_volume_db", target_db)
+	if AudioServer.get_driver_name() == "Dummy" \
+			or not is_inside_tree() or not _gentle_rain_ambience.is_inside_tree():
+		_gentle_rain_ambience.volume_db = target_db
+		return
+	if _gentle_rain_fade_tween != null and _gentle_rain_fade_tween.is_valid():
+		_gentle_rain_fade_tween.kill()
+	_gentle_rain_fade_tween = create_tween()
+	_gentle_rain_fade_tween.tween_property(
+		_gentle_rain_ambience, "volume_db", target_db, 1.6) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
 func _add_zone_ambience(parent: Node3D, node_name: String, stream: AudioStream,
 		volume_db_value: float, max_distance_value: float) -> AudioStreamPlayer3D:
 	var audio := AudioStreamPlayer3D.new()
 	audio.name = node_name
-	audio.stream = stream
+	# Imported ambience files are intentionally shared by several worlds and are
+	# not globally marked to loop. Duplicate them here so World One's local beds
+	# continue for the whole visit without mutating another scene's resource.
+	var local_stream := stream.duplicate() as AudioStream
+	if local_stream is AudioStreamOggVorbis:
+		(local_stream as AudioStreamOggVorbis).loop = true
+	elif local_stream is AudioStreamWAV:
+		var wav := local_stream as AudioStreamWAV
+		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		wav.loop_begin = 0
+		wav.loop_end = int(round(wav.get_length() * float(wav.mix_rate)))
+	audio.stream = local_stream
 	audio.volume_db = volume_db_value
 	audio.max_distance = max_distance_value
 	audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 	audio.autoplay = true
+	audio.set_meta("continuous_loop", true)
 	parent.add_child(audio)
 	return audio
 
