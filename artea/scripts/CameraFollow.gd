@@ -66,6 +66,7 @@ var _previous_focus := Vector3.ZERO
 var _yaw := 0.0
 var _pitch := 0.0
 var _touch_emulation_was_on := false
+var _pointer_capture_ready := false
 
 func _ready() -> void:
 	_player = get_node_or_null(player_path)
@@ -90,8 +91,23 @@ func _ready() -> void:
 	if _player:
 		_snap_to_follow_target()
 
-	if capture_mouse:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# The scene is commonly created by the same click that leaves the start
+	# screen. A Web pointer-lock request during that scene swap targets the old
+	# document and produces WrongDocumentError. Keep the cursor visible for the
+	# transition and arm click-to-look after the current input dispatch ends.
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	call_deferred("_arm_pointer_capture")
+
+
+func _arm_pointer_capture() -> void:
+	_pointer_capture_ready = true
+
+
+func try_capture_pointer() -> bool:
+	if not capture_mouse or not _pointer_capture_ready or _mode != "follow":
+		return false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	return true
 
 func _exit_tree() -> void:
 	Input.set_emulate_touch_from_mouse(_touch_emulation_was_on)
@@ -136,7 +152,7 @@ func _input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.pressed and capture_mouse and _mode == "follow" \
 			and event.button_index == MOUSE_BUTTON_LEFT:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		try_capture_pointer()
 
 func _process(delta: float) -> void:
 	if _mode == "follow" and _player and _view == "first":

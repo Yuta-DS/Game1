@@ -23,6 +23,7 @@ extends SpringArm3D
 @export var minZoom := 4.8
 @export var maxZoom := 9.2
 @export var zoomStep := 0.7
+var _pointer_capture_ready := false
 
 func _ready() -> void:
 	# Nested PackedScene transform overrides have been lost on some imports of
@@ -39,6 +40,18 @@ func _ready() -> void:
 	# steals focus turns the user's movement away from the terminal into a huge
 	# orbit and can leave them staring at empty sky. A click below opts into look.
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	call_deferred("_arm_pointer_capture")
+
+
+func _arm_pointer_capture() -> void:
+	_pointer_capture_ready = true
+
+
+func try_capture_pointer() -> bool:
+	if not _pointer_capture_ready:
+		return false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	return true
 
 
 func _exit_tree() -> void:
@@ -66,7 +79,7 @@ func _input(event: InputEvent) -> void:
 			return
 	if event is InputEventMouseButton and event.pressed \
 			and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		try_capture_pointer()
 		return
 
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
