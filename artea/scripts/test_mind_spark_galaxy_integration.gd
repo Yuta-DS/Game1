@@ -18,24 +18,27 @@ func _run() -> void:
 	assert(world.position == Vector3(-2200, 0, 1640))
 	assert(world.get_node("WorldOneGeometry/MainStoryCircuitRoute") is Node3D)
 	assert(world.find_children("WalkableZoneFloor", "MeshInstance3D", true, false).size() == 6)
-	var rune_tiles := district.find_children("RuneTile_*", "MeshInstance3D", true, false)
-	assert(rune_tiles.size() == 81,
-		"the Mind district uses a centered 9x9 cyan-grid forecourt")
-	assert(district.find_children("RuneTile_*Collision", "StaticBody3D", true, false).is_empty(),
-		"rune inlays must not introduce collision seams over the continuous deck")
-	assert(district.get_meta("rune_grid_size") == 9)
+	var forecourt := district.get_node("MindSparkCeremonialForecourt") as Node3D
+	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v1")
+	assert(forecourt.get_meta("footprint_m") == Vector2(64.0, 54.0))
+	assert(float(forecourt.get_meta("clear_processional_lane_m", 0.0)) >= 18.0)
+	assert(bool(forecourt.get_meta("functional_gate_transform_preserved", false)))
+	assert(district.find_children("RuneTile_*", "MeshInstance3D", true, false).is_empty())
+	assert(district.find_children("*RuinWall*", "MeshInstance3D", true, false).is_empty())
+	var processional := forecourt.get_node("IvoryProcessionalWalk") as Node3D
+	assert(processional.find_children("FacetedPaver_*", "MeshInstance3D", true, false).size() == 7)
+	assert(processional.find_children("CyanThreshold_*", "MeshInstance3D", true, false).size() == 6)
+	var gatehouse := forecourt.get_node("CelestialGatehouse") as Node3D
+	assert(float(gatehouse.get_meta("clear_opening_width_m", 0.0)) >= 28.0)
+	assert(gatehouse.find_children("*TowerFoundationCollision", "StaticBody3D", true, false).size() == 2)
+	assert(gatehouse.find_children("*TowerShaftCollision", "StaticBody3D", true, false).size() == 2)
+	var terraces := forecourt.get_node("SideTerraceGardens") as Node3D
+	assert(terraces.find_children("*GardenTerraceCollision", "StaticBody3D", true, false).size() == 2)
+	assert(terraces.find_children("SolidWarmTrunkCollision", "StaticBody3D", true, false).size() == 6)
+	var plinths := forecourt.get_node("ConstellationPlinths") as Node3D
+	assert(plinths.find_children("ConstellationPlinth_*", "MeshInstance3D", true, false).size() == 3)
+	assert(plinths.find_children("ConstellationPlinth_*Collision", "StaticBody3D", true, false).size() == 3)
 	assert(not bool(district.get_meta("requires_jump_from_mind_bridge")))
-	var center_tile := district.get_node("RuneTile_04_04") as MeshInstance3D
-	assert(is_equal_approx(center_tile.position.x, -600.0))
-	assert(is_equal_approx(center_tile.position.z, 1640.0),
-		"the central rune tile must lie exactly on the Mind Bridge axis")
-	for row in 9:
-		for column in 9:
-			var tile := district.get_node("RuneTile_%02d_%02d" % [row, column]) as MeshInstance3D
-			var mirror := district.get_node("RuneTile_%02d_%02d" % [8 - row, 8 - column]) as MeshInstance3D
-			assert(is_equal_approx(tile.position.x + mirror.position.x, -1200.0))
-			assert(is_equal_approx(tile.position.z + mirror.position.z, 3280.0),
-				"every rune tile needs an exact point-reflected partner")
 	var bridge_walkway := floating_world.get_node("MindBridge/Walkway") as MeshInstance3D
 	var island_deck := district.get_node("WalkableDeck") as MeshInstance3D
 	var bridge_top := bridge_walkway.position.y + (bridge_walkway.mesh as BoxMesh).size.y * 0.5

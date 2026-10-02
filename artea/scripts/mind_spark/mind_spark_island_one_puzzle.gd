@@ -968,10 +968,17 @@ func _apply_state(animate: bool) -> void:
 			actual.rotation.z = actual_rotation
 		var correct: bool = int(values[index]) == int(targets[index])
 		for jewel in actual.find_children("*", "MeshInstance3D", true, false):
-			(jewel as MeshInstance3D).material_override = _feedback_material(correct, is_powered())
+			(jewel as MeshInstance3D).material_override = _crown_dial_feedback_material(correct)
 		var target := find_child("ConstellationTarget_%s" % target_names[index], true, false) as Node3D
 		if target != null:
 			target.rotation.z = -float(targets[index]) * PI * 0.25
+	var all_crown_dials_match := true
+	for dial_index in 3:
+		all_crown_dials_match = all_crown_dials_match \
+			and int(values[dial_index]) == int(targets[dial_index])
+	var crown_crystal := find_child("CrownCompletionCrystal", true, false) as MeshInstance3D
+	if crown_crystal != null:
+		crown_crystal.visible = all_crown_dials_match
 	_apply_gauge("WestPressureGauge", int(current_state.west_regulator), REGULATOR_TARGETS[0])
 	_apply_gauge("EastPressureGauge", int(current_state.east_regulator), REGULATOR_TARGETS[1])
 	var powered := is_powered()
@@ -1233,6 +1240,17 @@ func _apply_gauge(gauge_name: String, value: int, target: int) -> void:
 	var lamp := gauge.get_node_or_null("GaugeStateLamp") as MeshInstance3D
 	if lamp != null:
 		lamp.material_override = _feedback_material(value == target, is_powered())
+
+
+func _crown_dial_feedback_material(correct: bool) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color("79c88c") if correct else Color("74c7d4")
+	material.emission_enabled = true
+	material.emission = Color("80e39b") if correct else Color("7edce7")
+	material.emission_energy_multiplier = 0.82 if correct else 0.28
+	material.metallic = 0.12
+	material.roughness = 0.42
+	return material
 
 
 func _feedback_material(correct: bool, powered: bool) -> StandardMaterial3D:

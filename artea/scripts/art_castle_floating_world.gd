@@ -737,30 +737,137 @@ func _build_mind_district() -> void:
 	district.set_meta("bridge_surface_y", MIND.y)
 	district.set_meta("ground_surface_y", MIND.y)
 	district.set_meta("ground_collision_source", "WalkableDeckCollision")
-	district.set_meta("rune_grid_size", MIND_RUNE_GRID_SIZE)
 	district.set_meta("requires_jump_from_mind_bridge", false)
+	_build_mind_spark_ceremonial_forecourt(district)
 
-	# An odd grid places one tile exactly on the bridge centerline. The shallow
-	# visual inlays sit over the island's continuous deck collision rather than
-	# creating 81 raised collision blocks.
-	var half_grid := float(MIND_RUNE_GRID_SIZE - 1) * 0.5
-	for row in MIND_RUNE_GRID_SIZE:
-		for column in MIND_RUNE_GRID_SIZE:
-			var tile_pos := MIND + Vector3(
-				(float(column) - half_grid) * MIND_RUNE_TILE_SPACING,
-				MIND_RUNE_TILE_HEIGHT * 0.5,
-				(float(row) - half_grid) * MIND_RUNE_TILE_SPACING)
-			var tile_mat: Material = _materials.aqua_glass if (row + column) % 2 == 0 else _materials.stone
-			_add_box(district, "RuneTile_%02d_%02d" % [row, column], tile_pos,
-				Vector3(MIND_RUNE_TILE_SIZE, MIND_RUNE_TILE_HEIGHT, MIND_RUNE_TILE_SIZE),
-				tile_mat, false)
 
-	_build_frame(district, MIND + Vector3(-92.0, 0.0, -96.0), 58.0, 76.0,
-		_materials.aqua, "MIND SPARK")
-	_build_ruin_wall(district, MIND + Vector3(-112.0, 0.0, 96.0), 150.0, 48.0, 0.0, _materials.ivory)
-	for index in 24:
-		var angle := TAU * float(index) / 24.0
-		_add_flower_cluster(district, MIND + Vector3(cos(angle) * 148.0, 2.0, sin(angle) * 148.0), false)
+func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
+	# The functional World Gate keeps its established transform. This architecture
+	# wraps that portal in a grounded, readable court instead of a checkerboard,
+	# freestanding rectangle and unrelated ruin wall.
+	var forecourt := Node3D.new()
+	forecourt.name = "MindSparkCeremonialForecourt"
+	forecourt.position = MIND_GATE_POSITION
+	var outward := Vector3(MIND_GATE_POSITION.x - MIND.x, 0.0,
+		MIND_GATE_POSITION.z - MIND.z).normalized()
+	forecourt.rotation.y = atan2(outward.x, outward.z)
+	forecourt.set_meta("design_revision", "celestial_gate_garden_v1")
+	forecourt.set_meta("footprint_m", Vector2(64.0, 54.0))
+	forecourt.set_meta("clear_processional_lane_m", 18.0)
+	forecourt.set_meta("functional_gate_transform_preserved", true)
+	forecourt.set_meta("placeholder_rune_grid_removed", true)
+	forecourt.set_meta("collision_policy",
+		"architecture and trunks are solid; inlays and planting are pass-through")
+	district.add_child(forecourt)
+
+	# Seven broad leaves give the final approach a human rhythm without creating
+	# raised collision seams over the district's continuous walkable deck.
+	var processional := Node3D.new()
+	processional.name = "IvoryProcessionalWalk"
+	processional.set_meta("clear_width_m", 18.0)
+	processional.set_meta("paver_count", 7)
+	forecourt.add_child(processional)
+	for paver_index in 7:
+		var paver_z := -42.0 + float(paver_index) * 8.0
+		_add_box(processional, "FacetedPaver_%02d" % (paver_index + 1),
+			Vector3(0, 0.10, paver_z), Vector3(18.0, 0.20, 6.5),
+			_materials.passage_stone, false)
+		if paver_index in [0, 3, 6]:
+			for side in [-1.0, 1.0]:
+				_add_box(processional, "CyanThreshold_%02d_%s" % [paver_index + 1,
+					"L" if side < 0 else "R"],
+					Vector3(float(side) * 6.4, 0.22, paver_z),
+					Vector3(2.2, 0.08, 0.65), _materials.passage_light, false)
+
+	var gatehouse := Node3D.new()
+	gatehouse.name = "CelestialGatehouse"
+	gatehouse.set_meta("clear_opening_width_m", 28.0)
+	gatehouse.set_meta("tower_count", 2)
+	forecourt.add_child(gatehouse)
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		var x := float(side) * 19.0
+		_add_box(gatehouse, "%sTowerFoundation" % side_name,
+			Vector3(x, 1.2, 0), Vector3(10.0, 2.4, 12.0),
+			_materials.bridge_structure, true)
+		_add_box(gatehouse, "%sTowerShaft" % side_name,
+			Vector3(x, 10.8, 0), Vector3(7.8, 18.0, 7.8),
+			_materials.passage_stone, true)
+		_add_box(gatehouse, "%sTowerShoulder" % side_name,
+			Vector3(x, 20.1, 0), Vector3(10.4, 1.8, 9.6),
+			_materials.ivory, false)
+		_add_box(gatehouse, "%sCyanWindow" % side_name,
+			Vector3(x, 12.0, -4.05), Vector3(1.5, 7.2, 0.34),
+			_materials.passage_light, false)
+		_add_cylinder(gatehouse, "%sOctagonalSpire" % side_name,
+			Vector3(x, 26.0, 0), 2.35, 10.0,
+			_materials.passage_roof, false, 8)
+	# A stepped crown reads as architecture at distance while preserving the
+	# complete 28-metre opening around the independently functional portal.
+	_add_box(gatehouse, "GatehouseCrownBeam", Vector3(0, 21.7, 0),
+		Vector3(28.0, 2.0, 3.2), _materials.ivory, false)
+	_add_box(gatehouse, "GatehouseCrownInset", Vector3(0, 21.5, -1.72),
+		Vector3(12.0, 0.45, 0.24), _materials.passage_light, false)
+	_add_sphere(gatehouse, "LavenderCrownCrystal", Vector3(0, 25.5, -0.5),
+		Vector3(1.6, 3.0, 1.0), _materials.purple)
+
+	var terraces := Node3D.new()
+	terraces.name = "SideTerraceGardens"
+	terraces.set_meta("central_lane_clearance_m", 18.0)
+	forecourt.add_child(terraces)
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		var x := float(side) * 25.5
+		_add_box(terraces, "%sGardenTerrace" % side_name,
+			Vector3(x, 0.65, -18.0), Vector3(13.0, 1.3, 35.0),
+			_materials.stone, true)
+		_add_box(terraces, "%sCliffParapet" % side_name,
+			Vector3(float(side) * 32.0, 1.8, -16.0), Vector3(1.6, 3.6, 39.0),
+			_materials.passage_stone_shadow, true)
+		for tree_index in 3:
+			_build_ceremonial_faceted_tree(terraces,
+				"%sCourtTree_%02d" % [side_name, tree_index + 1],
+				Vector3(x, 1.35, -36.0 + float(tree_index) * 14.0),
+				10.0 + float((tree_index + (0 if side < 0 else 1)) % 2) * 1.8)
+
+	var plinths := Node3D.new()
+	plinths.name = "ConstellationPlinths"
+	plinths.set_meta("count", 3)
+	forecourt.add_child(plinths)
+	var plinth_positions := [Vector3(-24.0, 1.5, -43.0),
+		Vector3(24.0, 1.5, -29.0), Vector3(-24.0, 1.5, -15.0)]
+	for plinth_index in 3:
+		var plinth_at: Vector3 = plinth_positions[plinth_index]
+		var plinth_name := "ConstellationPlinth_%02d" % (plinth_index + 1)
+		_add_cylinder(plinths, plinth_name, plinth_at, 2.4, 3.0,
+			_materials.bridge_structure, true, 8)
+		var plinth_collision := plinths.get_child(plinths.get_child_count() - 1) as StaticBody3D
+		plinth_collision.name = "%sCollision" % plinth_name
+		_add_sphere(plinths, "ConstellationCrystal_%02d" % (plinth_index + 1),
+			plinth_at + Vector3.UP * 4.1, Vector3(1.05, 2.3, 1.05),
+			_materials.aqua if plinth_index != 1 else _materials.purple)
+
+
+func _build_ceremonial_faceted_tree(parent: Node3D, tree_name: String,
+		base: Vector3, height: float) -> void:
+	var tree := Node3D.new()
+	tree.name = tree_name
+	tree.position = base
+	tree.set_meta("low_poly_canopy_clusters", 5)
+	parent.add_child(tree)
+	_add_cylinder(tree, "SolidWarmTrunk", Vector3(0, height * 0.40, 0),
+		height * 0.075, height * 0.80, _materials.wood, true, 7)
+	var trunk_collision := tree.get_child(tree.get_child_count() - 1) as StaticBody3D
+	trunk_collision.name = "SolidWarmTrunkCollision"
+	for crown_index in 5:
+		var crown_angle := TAU * float(crown_index) / 5.0
+		var crown_radius := 2.6 if crown_index < 4 else 0.0
+		_add_sphere(tree, "FacetedCanopy_%02d" % (crown_index + 1),
+			Vector3(cos(crown_angle) * crown_radius,
+				height * (0.82 if crown_index < 4 else 1.04),
+				sin(crown_angle) * crown_radius),
+			Vector3(3.2, 2.2, 3.2),
+			_materials.green if crown_index % 3 else _materials.purple_leaf)
 
 
 func _build_heart_district() -> void:
@@ -984,7 +1091,13 @@ func _build_world_one_walk_route() -> void:
 		MIND_GATE_POSITION + Vector3.UP * 0.95,
 	]
 	for index in points.size() - 1:
-		_add_walk_route_dots(route, points[index], points[index + 1], index)
+		var finish: Vector3 = points[index + 1]
+		# The ceremonial paving owns the final forty-four metres. Stopping the old
+		# dotted guide at its threshold removes the bright line that formerly ran
+		# through the gate court while preserving the complete causeway route.
+		if index == points.size() - 2:
+			finish = MIND_GATE_POSITION + (points[index] - MIND_GATE_POSITION).normalized() * 44.0
+		_add_walk_route_dots(route, points[index], finish, index)
 	_add_landmark_label(route, "WORLD ONE • MIND SPARK  ←  WALK LEFT",
 		Vector3(-92, 24, 1518), Color("8df8ff"), 42)
 	_add_landmark_label(route, "MIND SPARK WORLD GATE • QUESTS BEYOND",

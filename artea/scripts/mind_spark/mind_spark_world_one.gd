@@ -3370,7 +3370,7 @@ func _build_island_one_low_poly_environment_finish(arrival: MindSparkIslandOnePu
 	# uses collision only where a visible wall, planter or trunk occupies space.
 	var environment := Node3D.new()
 	environment.name = "LowPolyCelestialEnvironment"
-	environment.set_meta("design_revision", "island_one_celestial_campus_v44")
+	environment.set_meta("design_revision", "island_one_celestial_campus_v45")
 	environment.set_meta("style", "faceted ivory observatory garden")
 	environment.set_meta("clear_route_width_m", 18.0)
 	environment.set_meta("player_height_authored", true)
@@ -3490,25 +3490,64 @@ func _build_island_one_low_poly_campus(parent: Node3D) -> void:
 	_add_brick(parent, "ObservatoryCrownPrism", Vector3(0, 34.0, 8),
 		Bricks.build_crystal(1.7, 6.8, 0.62, 6), _materials.shared_style_cyan)
 
-	# Low architectural backdrops make the three instrument families read as
-	# purposeful rooms while leaving their player-facing sides open.
-	var bay_specs := [
-		["LightInstrumentBay", Vector3(-69, 6.0, 24), Vector3(4.0, 11.0, 34.0)],
-		["PressureInstrumentBayWest", Vector3(-28, 5.0, -34), Vector3(18.0, 9.0, 3.0)],
-		["PressureInstrumentBayEast", Vector3(28, 5.0, -34), Vector3(18.0, 9.0, 3.0)],
-		["AlignmentInstrumentBayWest", Vector3(-28, 5.0, 80), Vector3(18.0, 9.0, 3.0)],
-		["AlignmentInstrumentBayEast", Vector3(28, 5.0, 80), Vector3(18.0, 9.0, 3.0)],
+	# The central apron remains open for movement and lets the three instrument
+	# families read from the arrival threshold. A shallow faceted disc gives the
+	# court a deliberate centre without adding a collision seam.
+	var court := Node3D.new()
+	court.name = "CentralObservatoryCourt"
+	court.set_meta("preserve_authored_nodes", true)
+	court.set_meta("clear_movement_diameter_m", 40.0)
+	court.set_meta("station_clearance_m", 8.0)
+	parent.add_child(court)
+	_add_cylinder(court, "FacetedCourtApron", Vector3(0, 0.82, 22),
+		20.0, 0.12, _materials.shared_style_ivory, false, 16)
+	for wedge_index in 8:
+		var wedge_angle := TAU * float(wedge_index) / 8.0
+		_add_box(court, "CyanCompassWedge_%02d" % (wedge_index + 1),
+			Vector3(sin(wedge_angle) * 16.8, 0.91, 22 + cos(wedge_angle) * 16.8),
+			Vector3(0.55, 0.06, 2.3), _materials.shared_style_cyan, false, -wedge_angle)
+
+	# Open instrument gardens replace the five flat backdrop walls. Each garden
+	# uses two grounded outer posts, a low planter and a raised cyan name crystal;
+	# player-facing and lateral sides remain open around every operator.
+	var gardens := Node3D.new()
+	gardens.name = "OpenInstrumentGardens"
+	gardens.set_meta("preserve_authored_nodes", true)
+	gardens.set_meta("garden_count", 5)
+	gardens.set_meta("backdrop_walls_removed", true)
+	gardens.set_meta("minimum_operator_clearance_m", 8.0)
+	parent.add_child(gardens)
+	var garden_specs := [
+		["LightGarden", Vector3(-75, 0.8, 24), Vector3(1, 0, 0)],
+		["PressureWestGarden", Vector3(-42, 0.8, -36), Vector3(0, 0, 1)],
+		["PressureEastGarden", Vector3(42, 0.8, -36), Vector3(0, 0, 1)],
+		["AlignmentWestGarden", Vector3(-42, 0.8, 82), Vector3(0, 0, 1)],
+		["AlignmentEastGarden", Vector3(42, 0.8, 82), Vector3(0, 0, 1)],
 	]
-	for bay_spec in bay_specs:
-		var bay_name := str(bay_spec[0])
-		var bay_at := bay_spec[1] as Vector3
-		var bay_size := bay_spec[2] as Vector3
-		_add_brick(parent, "%sBackdrop" % bay_name, bay_at,
-			Bricks.build_bevel_box(bay_size, 0.52), _materials.shared_style_ivory)
-		_add_box(parent, "%sCharcoalSill" % bay_name,
-			bay_at - Vector3.UP * (bay_size.y * 0.5 - 0.7),
-			Vector3(bay_size.x + 0.5, 1.4, bay_size.z + 0.5),
-			_materials.shared_style_charcoal, false)
+	for garden_spec in garden_specs:
+		var garden_name := str(garden_spec[0])
+		var centre := garden_spec[1] as Vector3
+		var axis := garden_spec[2] as Vector3
+		var garden := Node3D.new()
+		garden.name = garden_name
+		garden.set_meta("open_sides", 3)
+		gardens.add_child(garden)
+		var cross_axis := Vector3(axis.z, 0, axis.x)
+		for post_side in [-1.0, 1.0]:
+			var post_at := centre + cross_axis * float(post_side) * 8.0
+			_add_box(garden, "GardenPost_%s" % ("L" if post_side < 0 else "R"),
+				post_at + Vector3.UP * 3.2, Vector3(1.4, 6.4, 1.4),
+				_materials.shared_style_ivory, true)
+			_add_brick(garden, "GardenCrystal_%s" % ("L" if post_side < 0 else "R"),
+				post_at + Vector3.UP * 7.0, Bricks.build_crystal(0.62, 2.4, 0.22, 6),
+				_materials.shared_style_cyan if post_side < 0 else _materials.shared_style_lavender)
+		var planter_at := centre - axis * 6.5
+		_add_box(garden, "CharcoalPlanterFoundation", planter_at,
+			Vector3(12.0, 1.6, 2.2) if absf(axis.z) > 0.5 else Vector3(2.2, 1.6, 12.0),
+			_materials.shared_style_charcoal, true)
+		_add_box(garden, "IvoryPlanterCoping", planter_at + Vector3.UP * 1.05,
+			Vector3(12.8, 0.5, 3.0) if absf(axis.z) > 0.5 else Vector3(3.0, 0.5, 12.8),
+			_materials.shared_style_ivory, false)
 
 
 func _build_island_one_faceted_tree(parent: Node3D, tree_name: String,
@@ -3893,15 +3932,15 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 	# The Wisdom Crown beam physically carries all three state instruments.
 	_add_brick(instrument, "WisdomCrownMainBeam", Vector3(0, 18.9, gateway_z + 0.18),
 		Bricks.build_bevel_box(Vector3(23.8, 1.45, 1.25), 0.30), _materials.sanctum_ivory)
-	_add_box(instrument, "WisdomCrownUpperGiltOrder", Vector3(0, 19.72, gateway_z - 0.05),
-		Vector3(24.8, 0.20, 1.48), _materials.gold)
+	_add_box(instrument, "WisdomCrownUpperCharcoalOrder", Vector3(0, 19.72, gateway_z - 0.05),
+		Vector3(24.8, 0.20, 1.48), _materials.shared_style_charcoal)
 	_add_box(instrument, "WisdomCrownLowerAetherOrder", Vector3(0, 18.08, gateway_z - 0.08),
 		Vector3(22.8, 0.16, 1.44), _materials.arrival_glass)
 	for boss_index in 7:
 		_add_sphere(instrument, "WisdomCrownBoss_%02d" % (boss_index + 1),
 			Vector3(-10.5 + float(boss_index) * 3.5, 19.74, gateway_z - 0.88),
 			Vector3.ONE * (0.25 if boss_index != 3 else 0.38),
-			_materials.gold if boss_index % 2 == 0 else _materials.arrival_glass)
+			_materials.shared_style_charcoal if boss_index % 2 == 0 else _materials.shared_style_cyan)
 
 	# Six triangular stained-aether panes form a restrained fanlight above the
 	# console. The panes are independently editable and echo the glass roof.
@@ -3919,70 +3958,73 @@ func _build_constellation_target_instrument(parent: Node3D) -> void:
 		_add_cable_between(instrument, "WisdomFanlightRib_%02d" % (pane_index + 1),
 			Vector3(0, 20.0, gateway_z - 0.18),
 			fanlight_points[pane_index + 1] - Vector3(0, 0, 0.70),
-			0.12, 0.09, _materials.gold, 6)
+			0.12, 0.09, _materials.shared_style_charcoal, 6)
 
-	# A restrained star keystone is the sole crown ornament. Its vertical finial
-	# marks the puzzle threshold without copying the inter-island gate's sunburst.
-	_add_sphere(instrument, "SanctumWisdomKeystone",
-		Vector3(0, 28.2, gateway_z - 0.45), Vector3(1.45, 1.85, 0.82),
-		_materials.gold)
-	for ray_index in 4:
-		var ray_angle := TAU * float(ray_index) / 4.0
-		_add_box(instrument, "SanctumWisdomRay_%02d" % (ray_index + 1),
-			Vector3(sin(ray_angle) * 2.05, 28.2 + cos(ray_angle) * 2.05, gateway_z - 0.6),
-			Vector3(0.28, 2.0, 0.26), _materials.astral_brass, false, -ray_angle)
-
-	# The three animated puzzle states are grouped into a single crown console.
-	# Their repeated bezel/needle/jewel assembly is reusable elsewhere, and the
-	# spatial order matches the three concentric floor rings seen through the arch.
+	# Three raised, evenly spaced pods present the state target as a readable
+	# instrument. Their lower edges clear the crown beam, and their restrained
+	# cyan/lavender feedback remains legible against the ivory case.
+	var dial_array := Node3D.new()
+	dial_array.name = "StateDialArray"
+	dial_array.set_meta("preserve_authored_nodes", true)
+	dial_array.set_meta("dial_count", 3)
+	dial_array.set_meta("equal_spacing_m", 7.6)
+	dial_array.set_meta("beam_clearance_m", 0.65)
+	dial_array.set_meta("collision_free", true)
+	instrument.add_child(dial_array)
 	var target_names := ["NOTICE", "UNDERSTAND", "CHOOSE"]
 	var target_angles := [-PI * 0.25, 0.0, -PI * 1.25]
 	for index in 3:
-		var x := -7.0 + float(index) * 7.0
-		# Positive Z faces the selector gallery where the player reads the goal.
-		var socket_at := Vector3(x, 19.2, gateway_z + 0.65)
-		var indicator_case := _add_cylinder(instrument,
-			"SanctumIndicatorCase_%s" % target_names[index],
-			socket_at + Vector3(0, 0, -0.28), 2.72, 0.52,
-			_materials.sanctum_ivory, false, 24)
+		var x := -7.6 + float(index) * 7.6
+		var socket_at := Vector3(x, 23.05, gateway_z + 0.65)
+		var pod := Node3D.new()
+		pod.name = "%sInstrumentPod" % target_names[index]
+		pod.position = socket_at
+		dial_array.add_child(pod)
+		var indicator_case := _add_cylinder(pod, "IvoryOuterCase", Vector3(0, 0, -0.30),
+			2.62, 0.58, _materials.sanctum_ivory, false, 12)
 		indicator_case.rotation_degrees.x = 90.0
-		var indicator_face := _add_cylinder(instrument,
-			"SanctumIndicatorFace_%s" % target_names[index],
-			socket_at + Vector3(0, 0, 0.18), 1.72, 0.18,
-			_materials.green_glow, false, 24)
+		var indicator_face := _add_cylinder(pod, "MutedCyanFace", Vector3(0, 0, 0.14),
+			2.05, 0.18, _materials.shared_style_cyan, false, 12)
 		indicator_face.rotation_degrees.x = 90.0
-		_add_torus(instrument, "ConstellationSocket_%s" % target_names[index], socket_at,
-			1.75, 2.48, _materials.sanctum_ivory, Vector3(90, 0, 0))
-		_add_torus(instrument, "ConstellationGiltBezel_%s" % target_names[index],
-			socket_at + Vector3(0, 0, 0.16), 1.95, 2.45, _materials.gold,
-			Vector3(90, 0, 0))
+		_add_torus(pod, "CharcoalInnerBezel", Vector3(0, 0, 0.27),
+			1.92, 2.34, _materials.shared_style_charcoal, Vector3(90, 0, 0))
 		var pointer := Node3D.new()
 		pointer.name = "ConstellationActual_%s" % target_names[index]
-		pointer.position = socket_at + Vector3(0, 0, 0.42)
-		instrument.add_child(pointer)
-		_add_box(pointer, "ActualNeedle", Vector3(0, 0.88, 0),
-			Vector3(0.30, 1.76, 0.24), _materials.green_glow)
-		_add_sphere(pointer, "ActualJewel", Vector3(0, 1.82, 0),
-			Vector3.ONE * 0.34, _materials.green_glow)
+		pointer.position = Vector3(0, 0, 0.48)
+		pod.add_child(pointer)
+		_add_box(pointer, "ActualNeedle", Vector3(0, 1.02, 0),
+			Vector3(0.34, 2.04, 0.22), _materials.shared_style_cyan)
+		_add_sphere(pointer, "ActualHub", Vector3.ZERO,
+			Vector3.ONE * 0.48, _materials.shared_style_charcoal)
 		var target := Node3D.new()
 		target.name = "ConstellationTarget_%s" % target_names[index]
-		target.position = socket_at + Vector3(0, 0, 0.50)
+		target.position = Vector3(0, 0, 0.56)
 		target.rotation.z = target_angles[index]
-		instrument.add_child(target)
-		_add_box(target, "TargetRay", Vector3(0, 1.56, 0),
-			Vector3(0.14, 0.94, 0.14), _materials.gold)
+		pod.add_child(target)
+		_add_box(target, "LavenderTargetWedge", Vector3(0, 1.62, 0),
+			Vector3(0.24, 0.72, 0.16), _materials.shared_style_lavender)
 		for tick_index in 8:
 			var tick_angle := TAU * float(tick_index) / 8.0
-			var tick_at := socket_at + Vector3(sin(tick_angle) * 2.05,
-				cos(tick_angle) * 2.05, 0.48)
-			_add_box(instrument,
-				"SanctumDialTick_%s_%02d" % [target_names[index], tick_index + 1],
-				tick_at, Vector3(0.15 if tick_index % 3 else 0.23,
-					0.62 if tick_index % 3 else 0.82, 0.12),
-				_materials.gold if tick_index % 3 == 0 else _materials.arrival_glass,
-				false, -tick_angle)
-		_add_label(instrument, target_names[index],
-			socket_at + Vector3(0, -3.65, -0.18), Color("ffe5a4"), 14)
+			var tick_at := Vector3(sin(tick_angle) * 2.23,
+				cos(tick_angle) * 2.23, 0.50)
+			_add_box(pod, "DialTick_%02d" % (tick_index + 1), tick_at,
+				Vector3(0.18, 0.48 if tick_index % 2 else 0.68, 0.12),
+				_materials.shared_style_charcoal, false, -tick_angle)
+		_add_brick(pod, "IntegratedNameplate", Vector3(0, -3.10, 0.04),
+			Bricks.build_bevel_box(Vector3(5.2, 0.82, 0.28), 0.12),
+			_materials.sanctum_ivory)
+		var nameplate := _add_label(pod, target_names[index],
+			Vector3(0, -3.13, 0.25), Color("24313b"), 14)
+		nameplate.name = "%sNameplateLabel" % target_names[index]
+		nameplate.pixel_size = 0.024
+		nameplate.outline_size = 2
+		nameplate.no_depth_test = true
+
+	var completion_crystal := _add_brick(instrument, "CrownCompletionCrystal",
+		Vector3(0, 29.0, gateway_z - 0.05),
+		Bricks.build_crystal(1.15, 3.6, 0.40, 6), _materials.shared_style_cyan)
+	completion_crystal.visible = false
+	completion_crystal.set_meta("activation", "all three state dials match")
 	var harmony_display := _add_label(instrument,
 		"SEEK A HARMONY\nLIGHT • RHYTHM • VISUAL WEIGHT",
 		Vector3(0, 13.8, gateway_z - 0.9), Color("d9fff8"), 15)
