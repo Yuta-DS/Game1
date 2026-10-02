@@ -19,7 +19,7 @@ func _run() -> void:
 	assert(world.get_node("WorldOneGeometry/MainStoryCircuitRoute") is Node3D)
 	assert(world.find_children("WalkableZoneFloor", "MeshInstance3D", true, false).size() == 6)
 	var forecourt := district.get_node("MindSparkCeremonialForecourt") as Node3D
-	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v2")
+	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v3")
 	assert(forecourt.get_meta("footprint_m") == Vector2(64.0, 54.0))
 	assert(float(forecourt.get_meta("clear_processional_lane_m", 0.0)) >= 18.0)
 	assert(bool(forecourt.get_meta("functional_gate_transform_preserved", false)))
@@ -32,12 +32,20 @@ func _run() -> void:
 	assert(float(gatehouse.get_meta("clear_opening_width_m", 0.0)) >= 28.0)
 	assert(gatehouse.find_children("*TowerFoundationCollision", "StaticBody3D", true, false).size() == 2)
 	assert(gatehouse.find_children("*TowerShaftCollision", "StaticBody3D", true, false).size() == 2)
+	var portal_cradle := gatehouse.get_node("WorldGatePortalCradle") as Node3D
+	assert(bool(portal_cradle.get_meta("functional_portal_remains_independent", false)))
+	assert(bool(portal_cradle.get_meta("opening_collision_free", false)))
+	assert(portal_cradle.find_children("*PortalButtress", "MeshInstance3D", true, false).size() == 2)
+	assert(portal_cradle.get_node_or_null("PortalArchitecturalBezel") is MeshInstance3D)
+	assert(portal_cradle.find_children("PortalBezelClamp_*", "MeshInstance3D", true, false).size() == 3)
 	var terraces := forecourt.get_node("SideTerraceGardens") as Node3D
 	assert(terraces.find_children("*GardenTerraceCollision", "StaticBody3D", true, false).size() == 2)
 	assert(terraces.find_children("SolidWarmTrunkCollision", "StaticBody3D", true, false).size() == 6)
 	var plinths := forecourt.get_node("ConstellationPlinths") as Node3D
 	assert(plinths.find_children("ConstellationPlinth_*", "MeshInstance3D", true, false).size() == 3)
 	assert(plinths.find_children("ConstellationPlinth_*Collision", "StaticBody3D", true, false).size() == 3)
+	var rear_garden := forecourt.get_node("RearConstellationGarden") as Node3D
+	assert(float(rear_garden.get_meta("central_axis_clear_width_m", 0.0)) >= 14.0)
 	assert(not bool(district.get_meta("requires_jump_from_mind_bridge")))
 	var bridge_walkway := floating_world.get_node("MindBridge/Walkway") as MeshInstance3D
 	var island_deck := district.get_node("WalkableDeck") as MeshInstance3D

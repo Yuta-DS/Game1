@@ -751,7 +751,7 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 	var outward := Vector3(MIND_GATE_POSITION.x - MIND.x, 0.0,
 		MIND_GATE_POSITION.z - MIND.z).normalized()
 	forecourt.rotation.y = atan2(outward.x, outward.z)
-	forecourt.set_meta("design_revision", "celestial_gate_garden_v2")
+	forecourt.set_meta("design_revision", "celestial_gate_garden_v3")
 	forecourt.set_meta("footprint_m", Vector2(64.0, 54.0))
 	forecourt.set_meta("clear_processional_lane_m", 18.0)
 	forecourt.set_meta("functional_gate_transform_preserved", true)
@@ -769,6 +769,13 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 	forecourt.add_child(processional)
 	_add_box(processional, "ProcessionalFoundation", Vector3(0, 0.055, -18.0),
 		Vector3(20.0, 0.11, 54.0), _materials.passage_stone_shadow, false)
+	for side in [-1.0, 1.0]:
+		_add_box(processional, "ProcessionalCharcoalEdge_%s" % ("L" if side < 0 else "R"),
+			Vector3(float(side) * 9.65, 0.14, -18.0),
+			Vector3(0.55, 0.18, 54.0), _materials.bridge_structure, false)
+		_add_box(processional, "ProcessionalIvoryEdge_%s" % ("L" if side < 0 else "R"),
+			Vector3(float(side) * 9.24, 0.23, -18.0),
+			Vector3(0.25, 0.10, 52.5), _materials.ivory, false)
 	for paver_index in 7:
 		var paver_z := -42.0 + float(paver_index) * 8.0
 		_add_box(processional, "FacetedPaver_%02d" % (paver_index + 1),
@@ -780,15 +787,23 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 					"L" if side < 0 else "R"],
 					Vector3(float(side) * 6.4, 0.22, paver_z),
 					Vector3(2.2, 0.08, 0.65), _materials.passage_light, false)
+		else:
+			_add_box(processional, "CyanWayfinder_%02d" % (paver_index + 1),
+				Vector3(0, 0.22, paver_z), Vector3(0.52, 0.07, 1.35),
+				_materials.passage_light, false)
 
 	var compass_court := Node3D.new()
 	compass_court.name = "FacetedCompassCourt"
 	compass_court.set_meta("clear_movement_diameter_m", 26.0)
 	forecourt.add_child(compass_court)
-	_add_cylinder(compass_court, "CharcoalCourtShadow", Vector3(0, 0.06, -1.0),
-		18.0, 0.12, _materials.bridge_structure, false, 12)
+	_add_cylinder(compass_court, "IvoryCourtApron", Vector3(0, 0.04, -1.0),
+		19.1, 0.08, _materials.ivory, false, 12)
+	_add_cylinder(compass_court, "CharcoalCourtShadow", Vector3(0, 0.09, -1.0),
+		18.25, 0.10, _materials.bridge_structure, false, 12)
 	_add_cylinder(compass_court, "IvoryCourtField", Vector3(0, 0.15, -1.0),
 		16.8, 0.10, _materials.passage_stone, false, 12)
+	_add_cylinder(compass_court, "CyanCourtHeart", Vector3(0, 0.22, -1.0),
+		3.4, 0.06, _materials.passage_light, false, 12)
 	for point_index in 8:
 		var point_angle := TAU * float(point_index) / 8.0
 		_add_box(compass_court, "CyanCompassPoint_%02d" % (point_index + 1),
@@ -815,6 +830,9 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 		_add_box(gatehouse, "%sTowerShaft" % side_name,
 			Vector3(x, shaft_center_y, 0), Vector3(7.8, shaft_height, 7.8),
 			_materials.passage_stone, true)
+		_add_box(gatehouse, "%sFacadeRecess" % side_name,
+			Vector3(x, shaft_center_y + 0.65, -4.02), Vector3(4.25, shaft_height - 3.4, 0.26),
+			_materials.bridge_structure, false)
 		for corner_x in [-1.0, 1.0]:
 			_add_box(gatehouse, "%sPilaster_%s" % [side_name, "L" if corner_x < 0 else "R"],
 				Vector3(x + float(corner_x) * 3.35, shaft_center_y, -3.72),
@@ -823,33 +841,80 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			Vector3(x, shoulder_y, 0), Vector3(10.6, 1.8, 9.8),
 			_materials.ivory, false)
 		_add_box(gatehouse, "%sCyanWindow" % side_name,
-			Vector3(x, shaft_center_y + 1.0, -4.05), Vector3(1.65, 6.8, 0.34),
+			Vector3(x, shaft_center_y + 1.0, -4.22), Vector3(1.45, 6.5, 0.24),
 			_materials.passage_light, false)
 		for window_band in [-1.0, 1.0]:
 			_add_box(gatehouse, "%sWindowBand_%s" % [side_name, "Low" if window_band < 0 else "High"],
 				Vector3(x, shaft_center_y + 1.0 + float(window_band) * 2.4, -4.26),
 				Vector3(2.4, 0.42, 0.28), _materials.ivory, false)
+		for belt_index in 2:
+			_add_box(gatehouse, "%sTowerBelt_%02d" % [side_name, belt_index + 1],
+				Vector3(x, 6.4 + float(belt_index) * 7.0, -0.15),
+				Vector3(8.35, 0.48, 8.15), _materials.ivory, false)
 		var spire_height := 10.5 if side < 0 else 8.0
+		_add_cylinder(gatehouse, "%sSpireEave" % side_name,
+			Vector3(x, shoulder_y + 1.05, 0), 4.25, 0.52,
+			_materials.bridge_structure, false, 8)
 		var spire := _add_tapered_cylinder(gatehouse, "%sOctagonalSpire" % side_name,
-			Vector3(x, shoulder_y + 0.9 + spire_height * 0.5, 0),
+			Vector3(x, shoulder_y + 1.30 + spire_height * 0.5, 0),
 			2.75, 0.32, spire_height, _materials.passage_roof, 8)
 		spire.set_meta("architectural_role", "faceted tapered roof")
-		_add_sphere(gatehouse, "%sSpireCrystal" % side_name,
-			Vector3(x, shoulder_y + spire_height + 2.2, 0),
-			Vector3(0.62, 1.25, 0.62),
+		_build_faceted_ceremonial_crystal(gatehouse, "%sSpireCrystal" % side_name,
+			Vector3(x, shoulder_y + spire_height + 2.25, 0), 2.25, 0.70,
 			_materials.aqua if side < 0 else _materials.purple)
+
+	# The functional portal stays at its original transform. These open supports
+	# visually seat its purple ring without adding collision across the opening.
+	var portal_cradle := Node3D.new()
+	portal_cradle.name = "WorldGatePortalCradle"
+	portal_cradle.set_meta("functional_portal_remains_independent", true)
+	portal_cradle.set_meta("opening_collision_free", true)
+	gatehouse.add_child(portal_cradle)
+	_add_cylinder(portal_cradle, "PortalDaisShadow", Vector3(0, 0.24, 0.35),
+		9.4, 0.38, _materials.bridge_structure, false, 12)
+	_add_cylinder(portal_cradle, "PortalDaisIvory", Vector3(0, 0.47, 0.35),
+		8.35, 0.18, _materials.ivory, false, 12)
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		_add_box(portal_cradle, "%sPortalSocket" % side_name,
+			Vector3(float(side) * 7.55, 1.20, 0.45),
+			Vector3(2.25, 1.65, 3.30), _materials.ivory, false)
+		var brace := _add_box(portal_cradle, "%sPortalButtress" % side_name,
+			Vector3(float(side) * 7.05, 5.55, 0.60),
+			Vector3(1.15, 8.75, 1.65), _materials.passage_stone, false)
+		brace.rotation.z = float(side) * 0.20
+		_build_faceted_ceremonial_crystal(portal_cradle,
+			"%sPortalAetherKey" % side_name,
+			Vector3(float(side) * 8.0, 3.05, -0.55), 1.8, 0.48,
+			_materials.aqua if side < 0 else _materials.purple)
+	_add_box(portal_cradle, "PortalKeystone", Vector3(0, 11.75, 0.55),
+		Vector3(3.6, 1.25, 1.9), _materials.ivory, false)
+	_build_faceted_ceremonial_crystal(portal_cradle, "PortalKeystoneCrystal",
+		Vector3(0, 12.9, -0.45), 2.7, 0.78, _materials.purple)
+	_add_torus(portal_cradle, "PortalArchitecturalBezel", Vector3(0, 5.5, 0.72),
+		6.0, 6.65, _materials.ivory, Vector3(90, 0, 0))
+	for clamp_index in 3:
+		var clamp_angle: float = float([-1.02, 0.0, 1.02][clamp_index])
+		var clamp := _add_box(portal_cradle,
+			"PortalBezelClamp_%02d" % (clamp_index + 1),
+			Vector3(sin(clamp_angle) * 6.34,
+				5.5 + cos(clamp_angle) * 6.34, 0.18),
+			Vector3(0.75, 1.75, 1.25), _materials.bridge_structure, false)
+		clamp.rotation.z = PI * 0.5 + clamp_angle
 	# A stepped crown reads as architecture at distance while preserving the
 	# complete 28-metre opening around the independently functional portal.
-	_add_box(gatehouse, "GatehouseCrownBeam", Vector3(0, 21.7, 0),
-		Vector3(28.0, 2.0, 3.2), _materials.ivory, false)
+	_add_box(gatehouse, "GatehouseCrownBeam", Vector3(0, 21.55, 0),
+		Vector3(25.0, 1.25, 2.6), _materials.ivory, false)
+	_add_box(gatehouse, "GatehouseCrownLedge", Vector3(0, 22.35, 0),
+		Vector3(30.0, 0.55, 3.45), _materials.passage_stone, false)
 	for shoulder_side in [-1.0, 1.0]:
 		_add_box(gatehouse, "CrownShoulder_%s" % ("L" if shoulder_side < 0 else "R"),
 			Vector3(float(shoulder_side) * 10.5, 23.15, 0),
 			Vector3(7.0, 0.9, 4.1), _materials.passage_stone, false)
 	_add_box(gatehouse, "GatehouseCrownInset", Vector3(0, 21.5, -1.72),
 		Vector3(12.0, 0.45, 0.24), _materials.passage_light, false)
-	_add_sphere(gatehouse, "LavenderCrownCrystal", Vector3(0, 25.5, -0.5),
-		Vector3(1.6, 3.0, 1.0), _materials.purple)
+	_build_faceted_ceremonial_crystal(gatehouse, "LavenderCrownCrystal",
+		Vector3(0, 25.65, -0.5), 4.6, 1.45, _materials.purple)
 
 	var terraces := Node3D.new()
 	terraces.name = "SideTerraceGardens"
@@ -867,10 +932,15 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 		_add_box(terraces, "%sIvoryParapetCoping" % side_name,
 			Vector3(float(side) * 32.0, 3.8, -16.0), Vector3(2.5, 0.45, 39.5),
 			_materials.ivory, false)
+		_add_box(terraces, "%sGardenInnerBorder" % side_name,
+			Vector3(float(side) * 19.35, 1.45, -18.0), Vector3(0.45, 1.0, 34.0),
+			_materials.ivory, false)
 		for tree_index in 3:
+			var stagger := float(tree_index % 2) * 1.6
 			_build_ceremonial_faceted_tree(terraces,
 				"%sCourtTree_%02d" % [side_name, tree_index + 1],
-				Vector3(x, 1.35, -36.0 + float(tree_index) * 14.0),
+				Vector3(x + float(side) * stagger, 1.35,
+					-36.0 + float(tree_index) * 14.0),
 				10.0 + float((tree_index + (0 if side < 0 else 1)) % 2) * 1.8)
 
 	var plinths := Node3D.new()
@@ -886,9 +956,52 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			_materials.bridge_structure, true, 8)
 		var plinth_collision := plinths.get_child(plinths.get_child_count() - 1) as StaticBody3D
 		plinth_collision.name = "%sCollision" % plinth_name
-		_add_sphere(plinths, "ConstellationCrystal_%02d" % (plinth_index + 1),
-			plinth_at + Vector3.UP * 4.1, Vector3(1.05, 2.3, 1.05),
+		_build_faceted_ceremonial_crystal(plinths,
+			"ConstellationCrystal_%02d" % (plinth_index + 1),
+			plinth_at + Vector3.UP * 4.0, 3.2, 1.08,
 			_materials.aqua if plinth_index != 1 else _materials.purple)
+
+	# A quiet rear axis gives the gate depth from the bridge and fills the broad
+	# island surface seen from overhead without competing with the portal itself.
+	var rear_garden := Node3D.new()
+	rear_garden.name = "RearConstellationGarden"
+	rear_garden.set_meta("central_axis_clear_width_m", 14.0)
+	forecourt.add_child(rear_garden)
+	_add_box(rear_garden, "RearProcessionalAxis", Vector3(0, 0.12, 18.0),
+		Vector3(14.0, 0.14, 30.0), _materials.passage_stone, false)
+	_add_box(rear_garden, "RearAxisCyanSeam", Vector3(0, 0.22, 18.0),
+		Vector3(0.42, 0.05, 27.0), _materials.passage_light, false)
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		_add_box(rear_garden, "%sRearGardenBed" % side_name,
+			Vector3(float(side) * 13.5, 0.28, 18.0),
+			Vector3(10.0, 0.50, 25.0), _materials.bridge_structure, false)
+		_add_box(rear_garden, "%sRearGardenIvoryCap" % side_name,
+			Vector3(float(side) * 13.5, 0.57, 18.0),
+			Vector3(9.2, 0.10, 24.2), _materials.ivory, false)
+		for marker_index in 2:
+			var marker_z := 11.0 + float(marker_index) * 14.0
+			_build_faceted_ceremonial_crystal(rear_garden,
+				"%sRearStar_%02d" % [side_name, marker_index + 1],
+				Vector3(float(side) * 13.5, 2.0, marker_z), 2.8,
+				0.82 if marker_index == 0 else 0.62,
+				_materials.purple if (marker_index + (0 if side < 0 else 1)) % 2 == 0 \
+				else _materials.aqua)
+
+
+func _build_faceted_ceremonial_crystal(parent: Node3D, crystal_name: String,
+		center: Vector3, height: float, radius: float, material: Material) -> void:
+	# Two low-sided tapered drums meet at the girdle, producing a proper cut-gem
+	# silhouette rather than a stretched sphere. The first mesh retains the stable
+	# public node name used by visual inspection and future art passes.
+	var lower_height := height * 0.44
+	var upper_height := height - lower_height
+	_add_tapered_cylinder(parent, crystal_name,
+		center + Vector3.DOWN * (height * 0.5 - lower_height * 0.5),
+		radius * 0.28, radius, lower_height, material, 8)
+	_add_tapered_cylinder(parent, "%sCrown" % crystal_name,
+		center + Vector3.UP * (height * 0.5 - upper_height * 0.5),
+		radius, radius * 0.18, upper_height, material, 8)
 
 
 func _build_ceremonial_faceted_tree(parent: Node3D, tree_name: String,
@@ -896,12 +1009,16 @@ func _build_ceremonial_faceted_tree(parent: Node3D, tree_name: String,
 	var tree := Node3D.new()
 	tree.name = tree_name
 	tree.position = base
-	tree.set_meta("low_poly_canopy_clusters", 7)
+	tree.set_meta("low_poly_canopy_clusters", 9)
 	parent.add_child(tree)
-	_add_cylinder(tree, "CharcoalPlanter", Vector3(0, 0.35, 0),
-		2.35, 0.70, _materials.bridge_structure, false, 8)
-	_add_cylinder(tree, "IvoryPlanterCoping", Vector3(0, 0.78, 0),
-		2.62, 0.22, _materials.ivory, false, 8)
+	_add_cylinder(tree, "CharcoalPlanterFoot", Vector3(0, 0.24, 0),
+		2.55, 0.48, _materials.bridge_structure, false, 8)
+	_add_tapered_cylinder(tree, "IvoryPlanterBowl", Vector3(0, 0.70, 0),
+		2.25, 1.85, 0.72, _materials.passage_stone, 8)
+	_add_cylinder(tree, "IvoryPlanterCoping", Vector3(0, 1.10, 0),
+		2.42, 0.20, _materials.ivory, false, 8)
+	_add_cylinder(tree, "LavenderPlantingBed", Vector3(0, 1.22, 0),
+		1.78, 0.08, _materials.purple_leaf, false, 8)
 	_add_cylinder(tree, "SolidWarmTrunk", Vector3(0, height * 0.40, 0),
 		height * 0.07, height * 0.80, _materials.wood, true, 7)
 	var trunk_collision := tree.get_child(tree.get_child_count() - 1) as StaticBody3D
@@ -917,16 +1034,18 @@ func _build_ceremonial_faceted_tree(parent: Node3D, tree_name: String,
 			(branch_start + branch_end) * 0.5, 0.30, 0.15,
 			branch_direction.length(), _materials.wood, 6)
 		branch.quaternion = Quaternion(Vector3.UP, branch_direction.normalized())
-	for crown_index in 7:
-		var crown_angle := TAU * float(crown_index) / 6.0
-		var crown_radius := 2.65 if crown_index < 6 else 0.0
+	for crown_index in 9:
+		var crown_angle := TAU * float(crown_index) / 8.0 + 0.18
+		var crown_radius := 2.75 if crown_index < 8 else 0.0
 		var crown := _add_sphere(tree, "FacetedCanopy_%02d" % (crown_index + 1),
 			Vector3(cos(crown_angle) * crown_radius,
-				height * (0.82 + 0.035 * float(crown_index % 2)) if crown_index < 6 else height * 1.04,
+				height * (0.80 + 0.045 * float(crown_index % 3)) if crown_index < 8 else height * 1.05,
 				sin(crown_angle) * crown_radius),
-			Vector3(2.55, 1.75, 2.55), _materials.green)
-		(crown.mesh as SphereMesh).radial_segments = 7
-		(crown.mesh as SphereMesh).rings = 4
+			Vector3(2.35 + 0.22 * float(crown_index % 2),
+				1.55 + 0.16 * float((crown_index + 1) % 3),
+				2.25 + 0.18 * float((crown_index + 2) % 2)), _materials.green)
+		(crown.mesh as SphereMesh).radial_segments = 6
+		(crown.mesh as SphereMesh).rings = 3
 	for bloom_index in 3:
 		var bloom_angle := TAU * float(bloom_index) / 3.0 + 0.7
 		var bloom := _add_sphere(tree, "LavenderBloom_%02d" % (bloom_index + 1),
@@ -934,6 +1053,11 @@ func _build_ceremonial_faceted_tree(parent: Node3D, tree_name: String,
 			Vector3(0.72, 0.52, 0.72), _materials.purple_leaf)
 		(bloom.mesh as SphereMesh).radial_segments = 6
 		(bloom.mesh as SphereMesh).rings = 3
+	for seed_index in 2:
+		_build_faceted_ceremonial_crystal(tree, "HangingAetherSeed_%02d" % (seed_index + 1),
+			Vector3((-1.0 if seed_index == 0 else 1.0) * 1.55,
+				height * (0.68 + 0.04 * float(seed_index)), -1.65),
+			0.85, 0.24, _materials.aqua)
 
 
 func _build_heart_district() -> void:
