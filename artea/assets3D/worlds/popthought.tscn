@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://cgeda5dtrbndg"]
+[gd_scene format=3 uid="uid://cgeda5dtrbndg"]
 
 [ext_resource type="PackedScene" path="res://assets3D/worlds/low_poly_cloud.glb" id="1_icfa2"]
 

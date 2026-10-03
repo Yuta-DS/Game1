@@ -4,9 +4,8 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b1na7v2ahpxrc"
 path.s3tc="res://.godot/imported/Artéa_Signpost_1027230400_texture_2.jpg-22887294ac4556f600e99b24c2aa91e4.s3tc.ctex"
-path.etc2="res://.godot/imported/Artéa_Signpost_1027230400_texture_2.jpg-22887294ac4556f600e99b24c2aa91e4.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -16,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://meshy ai/Artéa_Signpost_1027230400_texture_2.jpg"
-dest_files=["res://.godot/imported/Artéa_Signpost_1027230400_texture_2.jpg-22887294ac4556f600e99b24c2aa91e4.s3tc.ctex", "res://.godot/imported/Artéa_Signpost_1027230400_texture_2.jpg-22887294ac4556f600e99b24c2aa91e4.etc2.ctex"]
+dest_files=["res://.godot/imported/Artéa_Signpost_1027230400_texture_2.jpg-22887294ac4556f600e99b24c2aa91e4.s3tc.ctex"]
 
 [params]
 

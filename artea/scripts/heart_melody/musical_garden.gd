@@ -8,6 +8,9 @@ var fruit_visuals: Dictionary = {}
 var instrument_visuals: Dictionary = {"drums": [], "marimba": [], "harp": [], "bells": []}
 var garden_blooms: Array[Node3D] = []
 var garden_lights: Array[Node3D] = []
+var basket: Node3D
+var basket_fruit: Dictionary = {}
+var harvested: Dictionary = {}
 var recording := false
 var rhythm_assist := true
 var rhythm_speed := 0.8
@@ -25,9 +28,14 @@ func _build_island_spaces() -> void:
 		[Vector3(-66, 0.09, -8), Vector3(-48, 0.09, -28)],
 		[Vector3(-48, 0.09, -28), Vector3(-21, 0.09, -31)],
 		[Vector3(-21, 0.09, -31), Vector3(8, 0.09, -34)],
-		[Vector3(8, 0.09, -34), Vector3(15, 0.09, 4)],
-		[Vector3(15, 0.09, 4), Vector3(15, 0.09, 24)],
-		[Vector3(15, 0.09, 24), Vector3(42, 0.09, 28)],
+		[Vector3(8, 0.09, -34), Vector3(21, 0.09, -29)],
+		[Vector3(21, 0.09, -29), Vector3(23, 0.09, -10)],
+		[Vector3(23, 0.09, -10), Vector3(15, 0.09, 4)],
+		[Vector3(15, 0.09, 4), Vector3(8, 0.09, 20)],
+		[Vector3(8, 0.09, 20), Vector3(8, 0.09, 29)],
+		[Vector3(8, 0.09, 29), Vector3(15, 0.09, 29)],
+		[Vector3(8, 0.09, 20), Vector3(26, 0.09, 20)],
+		[Vector3(26, 0.09, 20), Vector3(42, 0.09, 24)],
 		[Vector3(15, 0.09, 4), Vector3(42, 0.09, 28)],
 		[Vector3(42, 0.09, 28), Vector3(30, 0.09, 43)],
 		[Vector3(30, 0.09, 43), Vector3(-12, 0.09, 26)],
@@ -40,7 +48,7 @@ func _build_island_spaces() -> void:
 	for i in Catalog.FRUIT_ORDER.size():
 		_build_fruit_tree(Catalog.FRUIT_ORDER[i], positions[i], i)
 	for i in 7:
-		var bloom := Art.flower(self, Vector3(-68 + i * 7, 0, -21 - (i % 2) * 8), Color("efb5c7") if i % 2 == 0 else Color("f0cf79"), 1.25)
+		var bloom := Art.garden_flower(self, Vector3(-68 + i * 7, 0, -21 - (i % 2) * 8), i % 3, Color("efb5c7") if i % 2 == 0 else Color("f0cf79"))
 		garden_blooms.append(bloom)
 
 	# Shallow pool and a compact, non-blocking waterfall landmark.
@@ -54,47 +62,128 @@ func _build_island_spaces() -> void:
 	_build_bells(Vector3(42, 0, 28))
 	_build_ensemble(Vector3(30, 0, 43))
 	_build_flower_activity(Vector3(15, 0, 29))
+	_build_basket()
+	# Small satellite beds outside playing positions, with an open path in front.
+	for spec in [["marimba_pear", Vector3(-30, 0, -39)], ["shaker_berry", Vector3(23, 0, 33)], ["bell_apple", Vector3(51, 0, 24)], ["bass_melon", Vector3(19, 0, 43)]]:
+		_build_fruit_tree(spec[0], spec[1], Catalog.FRUIT_ORDER.find(spec[0]), false)
+
 
 func _path(a: Vector3, b: Vector3, width: float, colour: Color) -> void:
 	var path := Art.box(self, (a + b) * 0.5, Vector3(width, 0.05, a.distance_to(b) + 0.6), colour)
 	path.look_at_from_position((a + b) * 0.5, b)
 
-func _build_fruit_tree(fruit_id: String, pos: Vector3, variant: int) -> void:
+func _build_fruit_tree(fruit_id: String, pos: Vector3, variant: int, primary := true) -> void:
 	var tree := Node3D.new()
-	tree.name = "FruitTree_" + fruit_id
+	tree.name = ("FruitTree_" if primary else "FruitBed_") + fruit_id
 	tree.position = pos
 	add_child(tree)
-	Art.cone(tree, Vector3(0, 3.5, 0), 1.1, 0.65, 7, Color("765c45"), true, 7)
-	for offset in [Vector3(-2.0, 7.0, 0), Vector3(2.0, 7.8, 0.5), Vector3(0, 9.0, -1.0)]:
-		Art.cone(tree, offset, 4.1, 1.4, 3.7, Color("5f9a70") if variant % 2 == 0 else Color("75aa72"), false, 7)
+	var fruit_height := 3.6
+	if variant < 2:
+		Art.cone(tree, Vector3(0, 3.4, -0.8), 0.65, 0.3, 6.8, Color("765c45"), true, 7)
+		for offset in [Vector3(-1.7, 6.5, -0.8), Vector3(1.8, 7.0, -1.0)]:
+			var canopy := Art.cone(tree, offset, 2.8, 0.7, 3.0, Color("6c9e73"), false, 7)
+			Art.camera_obstacle(canopy)
+		# A real branch joins the fruit stem to the crown.
+		Art.box(tree, Vector3(0, 5.35, 0.5), Vector3(0.22, 0.22, 2.8), Color("765c45"))
+	else:
+		fruit_height = 0.9 if variant == 3 else 2.0
+		if variant == 2:
+			Art.cone(tree, Vector3(-0.8, 1.6, 1.8), 0.14, 0.08, 3.2, Color("53805b"), false, 5)
+			Art.box(tree, Vector3(-0.4, 3.2, 1.8), Vector3(0.95, 0.13, 0.13), Color("53805b"))
+		for side in [-1, 1]:
+			Art.cone(tree, Vector3(side * 1.5, 0.7, -0.4), 1.0, 0.35, 1.4, Color("578664"), false, 7)
+		Art.box(tree, Vector3(0, 0.18, 0.6), Vector3(3.8, 0.22, 0.28), Color("53805b"))
 	var fruit := Node3D.new()
 	fruit.name = "Harvestable_" + fruit_id
-	fruit.position = Vector3(0, 4.7, 2.5)
+	fruit.position = Vector3(0, fruit_height, 1.8)
 	tree.add_child(fruit)
-	_build_fruit_shape(fruit, fruit_id, Vector3.ZERO, 1.5)
-	fruit_visuals[fruit_id] = fruit
-	Art.label(tree, Catalog.fruit_name(fruit_id) + "\n" + Catalog.fruit_symbol(fruit_id), Vector3(0, 8.0, 3.0), 25)
-	world._object("music_fruit", variant, pos + Vector3(0, 1, 3.3), "Listen / harvest " + Catalog.fruit_name(fruit_id))
+	_build_fruit_shape(fruit, fruit_id, Vector3.ZERO, 1.0)
+	# Stem/vine naturally attaches the primary fruit, without hiding its silhouette.
+	Art.box(tree, Vector3(0, fruit_height + 1.25, 1.8), Vector3(0.12, 0.6, 0.12), Color("64764a"))
+	if primary: fruit_visuals[fruit_id] = fruit
+	else:
+		fruit.scale = Vector3.ONE * 0.8
+		Art.label(tree, Catalog.fruit_symbol(fruit_id), Vector3(0, 4.5, 0), 18)
+	world._object("music_fruit", variant, pos + Vector3(0, 1, 3.6), "Listen / harvest " + Catalog.fruit_name(fruit_id))
+	if primary: Art.label(tree, Catalog.fruit_name(fruit_id), Vector3(0, 7.8 if variant < 2 else 4.6, 0), 25)
+	for j in 5:
+		var flower_pos := Vector3(-3.1 + j * 1.5, 0, -2.8 - (j % 2) * 0.6)
+		garden_blooms.append(Art.garden_flower(tree, flower_pos, (j + variant) % 3, [Color("efb5c7"), Color("ebd085"), Color("b6aed6")][variant % 3]))
 
 func _build_fruit_shape(parent: Node3D, fruit_id: String, pos: Vector3, scale_value := 1.0) -> void:
+	var root := Node3D.new()
+	root.position = pos
+	root.scale = Vector3.ONE * scale_value
+	parent.add_child(root)
 	var colour: Color = Catalog.FRUITS[fruit_id].colour
 	match fruit_id:
 		"bell_apple":
-			Art.cone(parent, pos, 1.0 * scale_value, 0.82 * scale_value, 1.55 * scale_value, colour, false, 8)
-			Art.box(parent, pos + Vector3(0, 1.0, 0) * scale_value, Vector3(0.18, 0.7, 0.18) * scale_value, Color("6e4d37"))
-			var leaf := Art.cone(parent, pos + Vector3(0.45, 1.15, 0) * scale_value, 0.5 * scale_value, 0.1, 0.18, Color("4d855d"), false, 4)
-			leaf.scale.z = 0.55
+			Art.fruit_body(root, Vector3.ZERO, [Vector2(0,-0.7), Vector2(0.55,-0.8), Vector2(0.95,-0.35), Vector2(1,0.3), Vector2(0.72,0.75), Vector2(0,0.55)], colour)
 		"marimba_pear":
-			Art.cone(parent, pos, 1.05 * scale_value, 0.42 * scale_value, 1.9 * scale_value, colour, false, 8)
-			Art.box(parent, pos + Vector3(0, 1.15, 0) * scale_value, Vector3(0.16, 0.65, 0.16) * scale_value, Color("6e4d37"))
+			Art.fruit_body(root, Vector3.ZERO, [Vector2(0,-0.8), Vector2(0.6,-0.8), Vector2(1,-0.3), Vector2(0.85,0.3), Vector2(0.4,0.85), Vector2(0.23,1.25), Vector2(0,1.3)], colour)
 		"shaker_berry":
-			for offset in [Vector3(-0.55, 0, 0), Vector3(0.55, 0, 0), Vector3(0, 0.55, 0), Vector3(0, -0.55, 0)]:
-				Art.cone(parent, pos + offset * scale_value, 0.55 * scale_value, 0.42 * scale_value, 0.85 * scale_value, colour, false, 7)
+			for offset in [Vector3(-0.45,0.3,0), Vector3(0.45,0.3,0), Vector3(0,0.3,-0.55), Vector3(0,0.3,0.55), Vector3(-0.25,-0.35,0.2), Vector3(0.3,-0.35,-0.15), Vector3(0,-0.85,0)]:
+				Art.fruit_body(root, offset, [Vector2(0,-0.45),Vector2(0.4,-0.2),Vector2(0.46,0.16),Vector2(0.28,0.4),Vector2(0,0.46)], colour)
 		"bass_melon":
-			Art.cone(parent, pos, 1.25 * scale_value, 1.25 * scale_value, 1.65 * scale_value, colour, false, 10)
-			for angle in [0.0, PI * 0.5]:
-				var stripe := Art.box(parent, pos + Vector3(0, 0, 1.27 * scale_value), Vector3(0.13, 1.45, 0.08) * scale_value, Color("40724b"))
-				stripe.rotation.y = angle
+			Art.fruit_body(root, Vector3.ZERO, [Vector2(0,-0.9),Vector2(0.7,-0.78),Vector2(1.2,-0.35),Vector2(1.3,0.2),Vector2(0.95,0.75),Vector2(0,0.95)], colour, true)
+	var stem_height := 1.3 if fruit_id == "marimba_pear" else 0.95
+	Art.box(root, Vector3(0, stem_height, 0), Vector3(0.13, 0.65, 0.13), Color("6e4d37"))
+	var leaf := Art.cone(root, Vector3(0.4, stem_height + 0.2, 0), 0.6, 0.05, 0.13, Color("4d855d"), false, 4)
+	leaf.scale.z = 0.5
+	leaf.rotation.z = 0.2
+	Art.merge_coloured(root)
+
+func _build_basket() -> void:
+	basket = Node3D.new()
+	basket.name = "MusicalBasket"
+	add_child(basket)
+	# Carried beside the player; four visible slots use persistent discoveries.
+	Art.cone(basket, Vector3.ZERO, 0.35, 0.52, 0.5, Color("aa8052"), false, 8)
+	for side in [-1, 1]: Art.box(basket, Vector3(side * 0.44, 0.4, 0), Vector3(0.07, 0.65, 0.07), Color("795a3a"))
+	Art.box(basket, Vector3(0, 0.7, 0), Vector3(0.95, 0.07, 0.07), Color("795a3a"))
+	for i in Catalog.FRUIT_ORDER.size():
+		var fruit := Node3D.new()
+		basket.add_child(fruit)
+		fruit.position = Vector3(-0.23 + (i % 2) * 0.46, 0.3, -0.2 + (i / 2) * 0.4)
+		_build_fruit_shape(fruit, Catalog.FRUIT_ORDER[i], Vector3.ZERO, 0.2)
+		basket_fruit[Catalog.FRUIT_ORDER[i]] = fruit
+
+func _process(_delta: float) -> void:
+	if basket != null and world.player != null:
+		basket.global_position = world.player.global_position + Vector3(0.9, 0.1, 0)
+		basket.visible = not world.embedded_in_overworld or world.embedded_active
+
+func _harvest_visual(fruit_id: String) -> void:
+	var source: Node3D = fruit_visuals[fruit_id]
+	if harvested.has(fruit_id): return
+	harvested[fruit_id] = true
+	source.hide()
+	if world.reduced_motion:
+		basket_fruit[fruit_id].show()
+		return
+	var flying := Node3D.new()
+	add_child(flying)
+	flying.global_position = source.global_position
+	_build_fruit_shape(flying, fruit_id, Vector3.ZERO)
+	basket_fruit[fruit_id].hide()
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(flying, "global_position", basket.global_position + Vector3.UP * 0.35, 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(flying, "scale", Vector3.ONE * 0.2, 0.8)
+	tween.chain().tween_callback(func(): flying.queue_free(); basket_fruit[fruit_id].show())
+	_respond_flowers(source.global_position)
+
+func _respond_flowers(at: Vector3) -> void:
+	for bloom in garden_blooms:
+		if bloom.global_position.distance_to(at) > 18: continue
+		# Stop/restart from a fixed rest pose to avoid cumulative scale drift.
+		if bloom.has_meta("response_tween"):
+			var previous: Tween = bloom.get_meta("response_tween")
+			if previous.is_valid(): previous.kill()
+		if world.reduced_motion: continue
+		var tween := create_tween()
+		bloom.set_meta("response_tween", tween)
+		tween.tween_property(bloom, "rotation:z", 0.12, 0.4)
+		tween.tween_property(bloom, "rotation:z", 0.0, 0.8)
 
 func _build_marimba(pos: Vector3) -> void:
 	var root := Node3D.new(); root.name = "FruitMarimba"; root.position = pos; add_child(root)
@@ -137,7 +226,7 @@ func _build_bells(pos: Vector3) -> void:
 
 func _build_ensemble(pos: Vector3) -> void:
 	var root := Node3D.new(); root.name = "GardenEnsembleStage"; root.position = pos; add_child(root)
-	Art.cone(root, Vector3(0, 0.35, 0), 10, 10, 0.7, Color("b99674"), true, 16)
+	Art.cone(root, Vector3(0, 0.35, 0), 11, 9, 0.7, Color("b99674"), true, 16)
 	for i in 8:
 		var angle := TAU * i / 8.0
 		var light := Art.cone(root, Vector3(cos(angle) * 8, 1.3, sin(angle) * 8), 0.55, 0.35, 2.4, Color("e7c56f"), false, 7)
@@ -172,7 +261,7 @@ func interact(kind: String, index: int) -> void:
 
 func _fruit_panel(fruit_id: String) -> void:
 	var info: Dictionary = Catalog.FRUITS[fruit_id]
-	world._open(str(info.name), "%s\n%s\n\nListen first, then harvest. Fruit never decays and required fruit always remains on its tree." % [info.symbol, info.role])
+	world._open(str(info.name), "%s\n%s\n\nListen first, then harvest. Fruit never decays and harvested fruit stays in your basket, ready for every instrument." % [info.symbol, info.role])
 	world._button("Preview sound", func():
 		world.note(Catalog.FRUIT_ORDER.find(fruit_id), 0.18, int(info.timbre)); _pulse(fruit_visuals[fruit_id])
 		world.message.text = "%s sounds like %s. Pitch will come from an instrument slot." % [info.name, info.role]
@@ -180,9 +269,10 @@ func _fruit_panel(fruit_id: String) -> void:
 	world._button("Harvest into musical basket", func():
 		var first: bool = not world.progress.data.music.discovered.has(fruit_id)
 		if world.progress.discover_fruit(fruit_id):
-			world.note(Catalog.FRUIT_ORDER.find(fruit_id), 0.20, int(info.timbre)); _pulse(fruit_visuals[fruit_id]); refresh()
-			world.message.text = "%s added to the basket%s. It remains available here." % [info.name, " for the first time" if first else " again"]
+			world.note(Catalog.FRUIT_ORDER.find(fruit_id), 0.20, int(info.timbre)); refresh(); _harvest_visual(fruit_id)
+			world.message.text = "%s added to the basket%s. It is always available in your basket." % [info.name, " for the first time" if first else " again"]
 			_check_orchard_activity()
+			world._close()
 		else: world.message.text = "The fruit is safe in this session. Saving is pending; retry from Help."
 	)
 	world._button("Back to orchard", world._close)
@@ -199,7 +289,9 @@ func play_note(instrument: String, note_index: int, record_event := true) -> voi
 	var timbre := Catalog.timbre(fruit_id) if not fruit_id.is_empty() else 0
 	world.note(note_index, 0.20, timbre)
 	var visuals: Array = instrument_visuals[instrument]
-	if note_index < visuals.size(): _pulse(visuals[note_index])
+	if note_index < visuals.size():
+		_pulse(visuals[note_index])
+		_respond_flowers(visuals[note_index].global_position)
 	if recording and record_event:
 		var events: Array = world.progress.data.music.phrases.recording.duplicate(true)
 		if events.size() < Catalog.MAX_RECORDED_EVENTS:
@@ -399,7 +491,9 @@ func refresh() -> void:
 	for light in garden_lights:
 		light.visible = level >= 4
 	for fruit_id in fruit_visuals:
-		fruit_visuals[fruit_id].scale = Vector3.ONE * (1.08 if world.progress.data.music.discovered.has(fruit_id) else 1.0)
+		var collected: bool = world.progress.data.music.discovered.has(fruit_id)
+		fruit_visuals[fruit_id].visible = not collected
+		basket_fruit[fruit_id].visible = collected
 
 func _pulse(node: Node3D) -> void:
 	if world.reduced_motion: return

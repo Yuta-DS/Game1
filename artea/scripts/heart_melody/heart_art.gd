@@ -127,6 +127,7 @@ static func tree(parent: Node3D, pos: Vector3, variant: int) -> void:
 	for i in 3:
 		var offset := Vector3(cos(i * 2.1) * 2.2, 7.5 + i, sin(i * 2.1) * 2.2)
 		cone(parent, pos + offset, 4.5 - i * 0.4, 1.1, 4.5, Color("94b696") if variant == 0 else Color("d4a9bd"), false, 6)
+		camera_obstacle(parent.get_child(parent.get_child_count() - 1))
 
 static func island(parent: Node3D, pos: Vector3, radius: float, depth: float, grass: Color) -> void:
 	var top := cone(parent, pos + Vector3(0, -1, 0), radius * 0.98, radius, 2, grass, true, 16)
@@ -176,4 +177,96 @@ static func paired_island(parent: Node3D, open_station_entrance := false) -> voi
 		for vertex in [a, c, b, b, c, d]: side.add_vertex(vertex)
 		side.generate_normals()
 		mesh(parent, side.commit(), Vector3.ZERO, Color("ac9e8e").darkened((i % 3) * 0.06))
+		var underside := SurfaceTool.new()
+		underside.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for vertex in [c, d, Vector3(0, -30, 0)]: underside.add_vertex(vertex)
+		underside.generate_normals()
+		mesh(parent, underside.commit(), Vector3.ZERO, Color("887d70"))
 		if i % 3 == 0: cone(parent, c + Vector3(0, -5, 0), 0.1, 1.2, 13, Color("7e7461"), false, 5)
+
+# Camera-only convex hulls keep high foliage out of the view without blocking
+# walking below it. The shared player only collides with world layer 1.
+static func camera_obstacle(item: MeshInstance3D) -> void:
+	var body := StaticBody3D.new()
+	body.collision_layer = 1 << 19
+	body.collision_mask = 0
+	var collider := CollisionShape3D.new()
+	collider.shape = item.mesh.create_convex_shape()
+	body.add_child(collider)
+	item.add_child(body)
+
+# Closed radial profile, with clockwise outward faces and explicit pole caps.
+# Profiles support sculpted silhouettes; melon stripes wrap around every side.
+static func fruit_body(parent: Node3D, pos: Vector3, profile: Array, colour: Color, striped := false) -> MeshInstance3D:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var sides := 12
+	for ring in range(profile.size() - 1):
+		for sector in sides:
+			var a := sector * TAU / sides
+			var b := (sector + 1) * TAU / sides
+			var low: Vector2 = profile[ring]
+			var high: Vector2 = profile[ring + 1]
+			var v0 := Vector3(cos(a) * low.x, low.y, sin(a) * low.x)
+			var v1 := Vector3(cos(b) * low.x, low.y, sin(b) * low.x)
+			var v2 := Vector3(cos(a) * high.x, high.y, sin(a) * high.x)
+			var v3 := Vector3(cos(b) * high.x, high.y, sin(b) * high.x)
+			for triangle in [[v0, v1, v2], [v1, v3, v2]]:
+				var normal: Vector3 = (triangle[2] - triangle[0]).cross(triangle[1] - triangle[0]).normalized()
+				if normal.is_zero_approx(): continue
+				for vertex in triangle:
+					surface.set_normal(normal)
+					surface.set_color(colour.darkened(0.32) if striped and sector % 3 == 0 else colour)
+					surface.add_vertex(vertex)
+	var item := mesh(parent, surface.commit(), pos, Color.WHITE)
+	var mat := material(Color.WHITE).duplicate() as StandardMaterial3D
+	mat.vertex_color_use_as_albedo = true
+	item.material_override = mat
+	return item
+
+static func garden_flower(parent: Node3D, pos: Vector3, variety: int, colour: Color) -> Node3D:
+	var root := Node3D.new()
+	root.name = "GardenBloom"
+	root.position = pos
+	root.set_meta("flower_variety", variety)
+	parent.add_child(root)
+	var height := 0.65 + variety * 0.28
+	cone(root, Vector3(0, height / 2, 0), 0.055, 0.035, height, Color("48745a"), false, 5)
+	var petals: int = [6, 8, 4][variety]
+	for i in petals:
+		var angle := TAU * i / petals
+		var petal := cone(root, Vector3(cos(angle) * 0.38, height, sin(angle) * 0.38), 0.34, 0.22, 0.16 if variety != 2 else 0.45, colour, false, 5)
+		petal.scale.z = 0.65 if variety == 1 else 1.0
+		petal.rotation = Vector3(sin(angle) * 0.28, -angle, cos(angle) * 0.28)
+	cone(root, Vector3(0, height + 0.09, 0), 0.21, 0.15, 0.18, Color("eacb79"), false, 8)
+	for side in [-1, 1]:
+		var leaf := cone(root, Vector3(side * 0.19, height * 0.45, 0), 0.32, 0.04, 0.1, Color("588666"), false, 4)
+		leaf.scale.z = 0.45
+	merge_coloured(root)
+	return root
+
+# A flower/fruit animates as one object. Bake its opaque coloured pieces into
+# one surface to avoid one Web draw call per petal, stem, leaf or berry.
+static func merge_coloured(root: Node3D) -> void:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for child in root.get_children():
+		if not child is MeshInstance3D: continue
+		var mat := child.material_override as StandardMaterial3D
+		for index in child.mesh.get_surface_count():
+			var arrays: Array = child.mesh.surface_get_arrays(index)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			var colours = arrays[Mesh.ARRAY_COLOR]
+			if indices.is_empty():
+				for j in vertices.size(): indices.append(j)
+			for j in indices:
+				surface.set_normal((child.transform.basis.inverse().transposed() * normals[j]).normalized())
+				surface.set_color(colours[j] if mat.vertex_color_use_as_albedo and colours != null and colours.size() > j else mat.albedo_color)
+				surface.add_vertex(child.transform * vertices[j])
+		child.free()
+	var merged := mesh(root, surface.commit(), Vector3.ZERO, Color.WHITE)
+	var mat := material(Color.WHITE).duplicate() as StandardMaterial3D
+	mat.vertex_color_use_as_albedo = true
+	merged.material_override = mat

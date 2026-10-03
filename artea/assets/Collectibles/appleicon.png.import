@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwyu3aru0pbrn"
 path.s3tc="res://.godot/imported/appleicon.png-231eb2ac73fea3abe9bda6b2ed6aa193.s3tc.ctex"
-path.etc2="res://.godot/imported/appleicon.png-231eb2ac73fea3abe9bda6b2ed6aa193.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Collectibles/appleicon.png"
-dest_files=["res://.godot/imported/appleicon.png-231eb2ac73fea3abe9bda6b2ed6aa193.s3tc.ctex", "res://.godot/imported/appleicon.png-231eb2ac73fea3abe9bda6b2ed6aa193.etc2.ctex"]
+dest_files=["res://.godot/imported/appleicon.png-231eb2ac73fea3abe9bda6b2ed6aa193.s3tc.ctex"]
 
 [params]
 

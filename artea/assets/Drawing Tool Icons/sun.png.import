@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cr6f30upan6ou"
 path.s3tc="res://.godot/imported/sun.png-5f6beafccfcd6f7e9ff73663f4e316a5.s3tc.ctex"
-path.etc2="res://.godot/imported/sun.png-5f6beafccfcd6f7e9ff73663f4e316a5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Drawing Tool Icons/sun.png"
-dest_files=["res://.godot/imported/sun.png-5f6beafccfcd6f7e9ff73663f4e316a5.s3tc.ctex", "res://.godot/imported/sun.png-5f6beafccfcd6f7e9ff73663f4e316a5.etc2.ctex"]
+dest_files=["res://.godot/imported/sun.png-5f6beafccfcd6f7e9ff73663f4e316a5.s3tc.ctex"]
 
 [params]
 

@@ -175,7 +175,7 @@ func _build_environment() -> void:
 		Art.tree(island, pos, int(absf(pos.x)) % 2)
 	for i in 24:
 		var angle := TAU * i / 24.0
-		var pos := Vector3(cos(angle) * 78, 0, sin(angle) * 42)
+		var pos := Vector3(cos(angle) * 78, 0, sin(angle) * 53)
 		if pos.x > 62: continue
 		Art.cone(island, pos + Vector3(0, 0.7, 0), 1.7, 0.8, 1.4, Color("b8b2a2"), true, 5 + i % 3)
 		Art.flower(island, pos + Vector3(2, 0, 1), Color("d8b7ba"), 0.6)
@@ -288,7 +288,7 @@ func _build_environment() -> void:
 
 func _gate(parent: Node3D, pos: Vector3, words: String) -> void:
 	for z in [-3, 3]: Art.cone(parent, pos + Vector3(0, 3, z), 0.9, 0.5, 6, Color("84775d"), true)
-	Art.box(parent, pos + Vector3(0, 6, 0), Vector3(1, 0.8, 7), Color("84775d"))
+	Art.box(parent, pos + Vector3(0, 6, 0), Vector3(1, 0.8, 7), Color("84775d"), true)
 	Art.flower(parent, pos + Vector3(0, 5.5, 0), Color("e7b8c2"), 1.4)
 	Art.label(parent, words, pos + Vector3(0, 8, 0), 30)
 
@@ -299,7 +299,7 @@ func _build_player() -> void:
 	if embedded_in_overworld:
 		player = overworld_player
 		player.health_changed.connect(_health_changed)
-		camera = Camera3D.new()
+		camera = preload("res://scripts/heart_melody/heart_camera.gd").new()
 		camera.fov = 62
 		add_child(camera)
 		camera.current = false
@@ -322,7 +322,7 @@ func _build_player() -> void:
 	add_child(player)
 	player.get_node("CombatHelpHUD").queue_free()
 	player.health_changed.connect(_health_changed)
-	camera = Camera3D.new()
+	camera = preload("res://scripts/heart_melody/heart_camera.gd").new()
 	camera.fov = 62
 	camera.current = true
 	camera.attributes = CameraAttributesPractical.new()
@@ -330,9 +330,7 @@ func _build_player() -> void:
 	_camera_update(1)
 
 func _camera_update(delta: float) -> void:
-	var target := player.global_position + Vector3(8 if _view_garden and modal_open else 0, 15, 21)
-	camera.global_position = camera.global_position.lerp(target, minf(delta * 7, 1))
-	camera.look_at(camera.global_position + Vector3(0, -14, -21))
+	camera.update_camera(delta)
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
@@ -715,7 +713,7 @@ func _identity(index: int) -> void:
 func _help() -> void:
 	if river != null and river.riding: return
 	_save_settings()
-	_open("Make yourself comfortable", "WASD / arrows: move · Q / controller A: interact\nF / controller X: basic strike · Escape / B: close\nTab / arrows move focus; Enter / A selects. Touch uses large buttons. Jump is never required.\n\nCurrent objective: " + objective() + "\n\nFruit changes timbre; instrument position changes pitch. All required musical activities are untimed.\n\n" + _river_directions())
+	_open("Make yourself comfortable", "WASD / arrows: move · Q / controller A: interact\nF / controller X: basic strike · Escape / B: close\nTab / arrows move focus; Enter / A selects. Camera: click + mouse, I/J/K/L, right stick, or drag the right half of the screen. Wheel zooms; Escape releases the pointer. Touch uses large buttons. Jump is never required.\n\nCurrent objective: " + objective() + "\n\nFruit changes timbre; instrument position changes pitch. All required musical activities are untimed.\n\n" + _river_directions())
 	_button("Combat assistance: " + ("on" if combat_assist else "off"), func(): combat_assist = not combat_assist; _help())
 	_button("Slow puzzle demonstrations: " + ("on" if puzzle_assist else "off"), func(): puzzle_assist = not puzzle_assist; _help())
 	_button("Reduced motion: " + ("on" if reduced_motion else "off"), func(): reduced_motion = not reduced_motion; _help())

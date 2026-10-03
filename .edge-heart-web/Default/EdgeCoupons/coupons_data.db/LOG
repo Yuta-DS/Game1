@@ -1,0 +1,5 @@
+2026/09/27-23:49:56.338 98b8 Creating DB C:\Users\Javid\Desktop\Artéa-phase3\S2603\.edge-heart-web\Default\EdgeCoupons/coupons_data.db since it was missing.
+2026/09/27-23:49:56.369 98b8 Reusing MANIFEST C:\Users\Javid\Desktop\Artéa-phase3\S2603\.edge-heart-web\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/09/27-23:50:02.563 9364 Level-0 table #5: started
+2026/09/27-23:50:02.570 9364 Level-0 table #5: 683284 bytes OK
+2026/09/27-23:50:02.572 9364 Delete type=0 #3

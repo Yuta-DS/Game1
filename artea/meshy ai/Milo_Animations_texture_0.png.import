@@ -4,9 +4,8 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://00c1s8cxx6l"
 path.s3tc="res://.godot/imported/Milo_Animations_texture_0.png-faad71b361522b68e3bbaa6880e382ff.s3tc.ctex"
-path.etc2="res://.godot/imported/Milo_Animations_texture_0.png-faad71b361522b68e3bbaa6880e382ff.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -16,7 +15,7 @@ generator_parameters={
 [deps]
 
 source_file="res://meshy ai/Milo_Animations_texture_0.png"
-dest_files=["res://.godot/imported/Milo_Animations_texture_0.png-faad71b361522b68e3bbaa6880e382ff.s3tc.ctex", "res://.godot/imported/Milo_Animations_texture_0.png-faad71b361522b68e3bbaa6880e382ff.etc2.ctex"]
+dest_files=["res://.godot/imported/Milo_Animations_texture_0.png-faad71b361522b68e3bbaa6880e382ff.s3tc.ctex"]
 
 [params]
 
