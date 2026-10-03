@@ -30,7 +30,7 @@ func _run() -> void:
 			_fail("missing explorable district %s" % district)
 			return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
-	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v4" \
+	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v5" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):
 		_fail("Heart Melody still uses its placeholder rectangular facade")
 		return
@@ -80,7 +80,8 @@ func _run() -> void:
 		_fail("the conservatory gardens are not fully connected and grounded")
 		return
 	if heart.find_children("MelodyPad_*", "MeshInstance3D", true, false).size() != 0 \
-			or heart.find_children("LivingEdgeCollisionCore_*", "MeshInstance3D", true, false).size() != 13:
+			or heart.find_children("LivingEdgeRock_*", "MeshInstance3D", true, false).size() != 19 \
+			or heart.find_children("LivingEdgeCollision_*", "StaticBody3D", true, false).size() != 19:
 		_fail("prototype pads or unfinished conservatory-facing island edges remain")
 		return
 	var song := world.get_node_or_null(
