@@ -1611,9 +1611,34 @@ func _build_ceremonial_faceted_tree(parent: Node3D, tree_name: String,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
+	district.set_meta("design_revision", "celestial_conservatory_v2")
+	district.set_meta("flat_rectangle_facade_removed", true)
+	district.set_meta("clear_central_approach_m", 18.0)
 	add_child(district)
 	_build_island_foundation(district, HEART, 175.0, 55.0, 32)
-	_add_cylinder(district, "MelodyStage", HEART + Vector3(0.0, 2.0, 0.0), 118.0, 4.0, _materials.pink, true, 40)
+	_add_cylinder(district, "MelodyStage", HEART + Vector3(0.0, 2.0, 0.0), 118.0, 4.0,
+		_materials.passage_stone_shadow, true, 40)
+	_add_cylinder(district, "FacetedHeartGardenDeck", HEART + Vector3(0.0, 4.04, 0.0),
+		114.0, 0.10, _materials.forecourt_paver, false, 32)
+	_add_cylinder(district, "HeartGardenLawn", HEART + Vector3(0.0, 4.11, 0.0),
+		103.0, 0.05, _materials.forecourt_lawn, false, 32)
+	var melody_paths := Node3D.new()
+	melody_paths.name = "SixMelodyGardenPaths"
+	district.add_child(melody_paths)
+	for path_index in 6:
+		var path_angle := TAU * float(path_index) / 6.0
+		var path_direction := Vector3(sin(path_angle), 0.0, cos(path_angle))
+		var path := _add_bevel_box(melody_paths, "MelodyGardenPath_%02d" % (path_index + 1),
+			HEART + path_direction * 55.0 + Vector3.UP * 4.18,
+			Vector3(12.0, 0.06, 102.0), 0.24, _materials.passage_stone)
+		path.rotation.y = path_angle
+		for note_index in 3:
+			var note_radius := 30.0 + float(note_index) * 27.0
+			_add_bevel_box(melody_paths,
+				"CyanNoteInlay_%02d_%02d" % [path_index + 1, note_index + 1],
+				HEART + path_direction * note_radius + Vector3.UP * 4.24,
+				Vector3(3.0, 0.03, 0.75), 0.05,
+				_materials.passage_light).rotation.y = path_angle
 
 	# Seven playable-looking note pads arranged as a melody constellation.
 	for index in 7:
@@ -1623,14 +1648,136 @@ func _build_heart_district() -> void:
 		_add_cylinder(district, "MelodyPad_%02d" % index, pad_pos, 17.0, 2.0,
 			_materials.pink if index % 2 == 0 else _materials.purple, true, 24)
 
-	# Temple arcade and central open doorway.
-	for index in 7:
-		var x := -108.0 + float(index) * 36.0
-		_build_arch(district, HEART + Vector3(x, 2.0, -105.0), 26.0, 62.0, 10.0, _materials.ivory)
-	_build_frame(district, HEART + Vector3(0.0, 2.0, -118.0), 44.0, 64.0, _materials.pink, "HEART MELODY")
+	_build_heart_melody_celestial_conservatory(district)
 	for index in 34:
 		var angle := TAU * float(index) / 34.0
 		_add_flower_cluster(district, HEART + Vector3(cos(angle) * 147.0, 3.0, sin(angle) * 147.0), true)
+
+
+func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
+	var conservatory := Node3D.new()
+	conservatory.name = "HeartMelodyCelestialConservatory"
+	conservatory.position = HEART + Vector3(0.0, 4.12, -108.0)
+	conservatory.set_meta("resonance_bay_count", 6)
+	conservatory.set_meta("central_opening_width_m", 48.0)
+	conservatory.set_meta("orchard_tree_count", 8)
+	conservatory.set_meta("architecture_collision_backed", true)
+	district.add_child(conservatory)
+
+	# A layered stone terrace grounds the building and removes the floating-wall
+	# appearance of the former gray and pink rectangles.
+	_add_bevel_box(conservatory, "ConservatoryFoundation",
+		Vector3(0.0, 0.42, 0.0), Vector3(258.0, 0.84, 38.0), 1.2,
+		_materials.bridge_structure)
+	_add_bevel_box(conservatory, "ConservatoryIvoryTerrace",
+		Vector3(0.0, 0.94, -8.0), Vector3(242.0, 0.18, 50.0), 1.0,
+		_materials.forecourt_ivory)
+	_add_bevel_box(conservatory, "CentralArrivalCarpet",
+		Vector3(0.0, 1.06, -34.0), Vector3(20.0, 0.06, 64.0), 0.34,
+		_materials.passage_stone)
+	for marker_index in 5:
+		_add_bevel_box(conservatory, "ArrivalNote_%02d" % (marker_index + 1),
+			Vector3(0.0, 1.12, -11.0 - float(marker_index) * 11.0),
+			Vector3(4.8, 0.035, 0.80), 0.06, _materials.passage_light)
+
+	# The central entrance is open and clearly taller than the six study bays.
+	var entrance := Node3D.new()
+	entrance.name = "GrandResonanceEntrance"
+	entrance.set_meta("clear_opening_width_m", 48.0)
+	conservatory.add_child(entrance)
+	for side in [-1.0, 1.0]:
+		var side_name := "Left" if side < 0 else "Right"
+		var tower_x := float(side) * 30.0
+		_add_box(entrance, "%sTowerFoundation" % side_name,
+			Vector3(tower_x, 2.2, 0.0), Vector3(16.0, 4.4, 18.0),
+			_materials.bridge_structure, true)
+		_add_bevel_box(entrance, "%sTowerShaft" % side_name,
+			Vector3(tower_x, 18.0, 0.0), Vector3(13.0, 28.0, 15.0),
+			0.85, _materials.forecourt_ivory)
+		_add_box(entrance, "%sTowerCollision" % side_name,
+			Vector3(tower_x, 18.0, 0.0), Vector3(12.0, 28.0, 14.0),
+			_materials.forecourt_ivory, true)
+		_add_bevel_box(entrance, "%sCyanGlass" % side_name,
+			Vector3(tower_x, 19.0, -7.62), Vector3(5.0, 15.0, 0.28),
+			0.22, _materials.aqua)
+		_add_tapered_cylinder(entrance, "%sFacetedSpire" % side_name,
+			Vector3(tower_x, 37.5, 0.0), 7.4, 0.65, 13.0,
+			_materials.passage_roof, 8)
+		_build_faceted_ceremonial_crystal(entrance, "%sSpireStar" % side_name,
+			Vector3(tower_x, 45.5, 0.0), 3.6, 0.82,
+			_materials.aqua if side < 0 else _materials.purple)
+	var left_pediment := _add_box(entrance, "LeftPediment",
+		Vector3(-14.0, 35.2, 0.0), Vector3(36.0, 3.2, 12.0),
+		_materials.forecourt_ivory, false)
+	left_pediment.rotation.z = deg_to_rad(18.0)
+	var right_pediment := _add_box(entrance, "RightPediment",
+		Vector3(14.0, 35.2, 0.0), Vector3(36.0, 3.2, 12.0),
+		_materials.forecourt_ivory, false)
+	right_pediment.rotation.z = deg_to_rad(-18.0)
+	_add_tapered_cylinder(entrance, "EntranceCrown",
+		Vector3(0.0, 40.0, 0.0), 5.8, 3.8, 2.6,
+		_materials.passage_roof, 8)
+	_build_faceted_ceremonial_crystal(entrance, "HarmonyCrownStar",
+		Vector3(0.0, 45.0, 0.0), 6.2, 1.4, _materials.purple)
+
+	# Six recessed bays retain the recognizable circular music motif, but place
+	# it inside real framed architecture with depth and a stepped roofline.
+	var bays := Node3D.new()
+	bays.name = "SixResonanceBays"
+	conservatory.add_child(bays)
+	var bay_positions := [-108.0, -80.0, -52.0, 52.0, 80.0, 108.0]
+	for bay_index in 6:
+		var bay_x: float = bay_positions[bay_index]
+		var bay_height := 23.0 + float((bay_index + 1) % 3) * 2.4
+		_add_box(bays, "SolidBayBody_%02d" % (bay_index + 1),
+			Vector3(bay_x, bay_height * 0.5 + 1.0, 0.0),
+			Vector3(24.0, bay_height, 13.0), _materials.passage_stone_shadow, true)
+		_add_bevel_box(bays, "BayIvoryFrame_%02d" % (bay_index + 1),
+			Vector3(bay_x, bay_height * 0.5 + 1.0, -6.7),
+			Vector3(20.5, bay_height - 3.0, 0.7), 0.75,
+			_materials.forecourt_ivory)
+		_add_bevel_box(bays, "BayCharcoalRecess_%02d" % (bay_index + 1),
+			Vector3(bay_x, bay_height * 0.5 + 1.0, -7.15),
+			Vector3(14.2, bay_height - 9.0, 0.28), 0.45,
+			_materials.bridge_structure)
+		_add_torus(bays, "ResonanceRing_%02d" % (bay_index + 1),
+			Vector3(bay_x, bay_height * 0.55 + 1.0, -7.7),
+			4.3, 5.1,
+			_materials.purple if bay_index % 2 == 0 else _materials.aqua,
+			Vector3(90.0, 0.0, 0.0))
+		_add_tapered_cylinder(bays, "BayRoof_%02d" % (bay_index + 1),
+			Vector3(bay_x, bay_height + 2.0, 0.0),
+			12.8, 10.2, 2.6, _materials.passage_roof, 8)
+		_build_faceted_ceremonial_crystal(bays, "BayNoteStar_%02d" % (bay_index + 1),
+			Vector3(bay_x, bay_height + 5.3, 0.0), 3.3, 0.78,
+			_materials.aqua if bay_index % 2 == 0 else _materials.purple)
+
+	# Two shallow pools and planted fruit groves soften the broad stage and make
+	# the conservatory read as a destination from all surrounding districts.
+	var gardens := Node3D.new()
+	gardens.name = "ResonanceOrchardGardens"
+	conservatory.add_child(gardens)
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		var pool_center := Vector3(float(side) * 73.0, 1.15, -32.0)
+		_add_cylinder(gardens, "%sPoolShadow" % side_name, pool_center,
+			15.0, 0.24, _materials.bridge_structure, false, 12)
+		_add_cylinder(gardens, "%sSingingPool" % side_name,
+			pool_center + Vector3.UP * 0.16, 13.4, 0.08,
+			_materials.forecourt_water, false, 12)
+		for tree_index in 4:
+			var tree_x := float(side) * (48.0 + float(tree_index % 2) * 25.0)
+			var tree_z := -55.0 - float(tree_index / 2) * 24.0
+			_build_ceremonial_faceted_tree(gardens,
+				"%sOrchardTree_%02d" % [side_name, tree_index + 1],
+				Vector3(tree_x, 0.42, tree_z),
+				8.8 + float((tree_index + (0 if side < 0 else 1)) % 3) * 1.2)
+		for crystal_index in 2:
+			_build_faceted_ceremonial_crystal(gardens,
+				"%sGardenNote_%02d" % [side_name, crystal_index + 1],
+				Vector3(float(side) * (91.0 + float(crystal_index) * 14.0),
+					3.0, -24.0 - float(crystal_index) * 27.0),
+				4.2, 1.0, _materials.purple if crystal_index == 0 else _materials.aqua)
 
 
 func _build_creator_district() -> void:
@@ -1907,9 +2054,9 @@ func _build_heart_story_landmarks() -> void:
 	# Seven emotional places circle the Personal Song amphitheatre.
 	var places := [
 		{"name": "JoyGarden", "text": "JOY GARDEN", "offset": Vector3(-125.0, 0.0, 42.0), "mat": _materials.gold},
-		{"name": "FrustrationDrums", "text": "FRUSTRATION DRUMS", "offset": Vector3(-92.0, 0.0, -80.0), "mat": _materials.pink},
-		{"name": "SadnessRainBoat", "text": "SADNESS RAIN BOAT", "offset": Vector3(-8.0, 0.0, -135.0), "mat": _materials.aqua},
-		{"name": "FearWarningBells", "text": "FEAR WARNING BELLS", "offset": Vector3(95.0, 0.0, -82.0), "mat": _materials.purple},
+		{"name": "FrustrationDrums", "text": "FRUSTRATION DRUMS", "offset": Vector3(-118.0, 0.0, -34.0), "mat": _materials.pink},
+		{"name": "SadnessRainBoat", "text": "SADNESS RAIN BOAT", "offset": Vector3(-61.0, 0.0, -64.0), "mat": _materials.aqua},
+		{"name": "FearWarningBells", "text": "FEAR WARNING BELLS", "offset": Vector3(61.0, 0.0, -64.0), "mat": _materials.purple},
 		{"name": "PeaceFlowers", "text": "PEACE FLOWERS", "offset": Vector3(132.0, 0.0, 20.0), "mat": _materials.green},
 		{"name": "HopeMorningStage", "text": "HOPE MORNING STAGE", "offset": Vector3(70.0, 0.0, 118.0), "mat": _materials.gold},
 	]
@@ -1919,8 +2066,18 @@ func _build_heart_story_landmarks() -> void:
 		landmark.name = info.name
 		story.add_child(landmark)
 		var position_value: Vector3 = HEART + info.offset
-		_add_cylinder(landmark, "EmotionInstrument", position_value + Vector3(0.0, 8.0, 0.0),
-			12.0 + float(index % 2) * 4.0, 16.0, info.mat, true, 20)
+		_add_cylinder(landmark, "SolidInstrumentFoundation",
+			position_value + Vector3(0.0, 4.65, 0.0),
+			8.2 + float(index % 2), 1.3, _materials.bridge_structure, true, 12)
+		_add_tapered_cylinder(landmark, "EmotionInstrument",
+			position_value + Vector3(0.0, 8.2, 0.0),
+			5.8 + float(index % 2), 3.2, 6.5, info.mat, 10)
+		_add_torus(landmark, "EmotionResonanceRing",
+			position_value + Vector3(0.0, 13.5, 0.0),
+			4.8, 5.7, info.mat, Vector3(90.0, 0.0, 0.0))
+		_build_faceted_ceremonial_crystal(landmark, "EmotionNoteStar",
+			position_value + Vector3(0.0, 17.0, 0.0),
+			4.2, 1.0, info.mat)
 		_add_landmark_label(landmark, info.text, position_value + Vector3(0.0, 31.0, 0.0), Color("ffe5f4"), 31)
 	var song := Node3D.new()
 	song.name = "PersonalSongAmphitheatre"

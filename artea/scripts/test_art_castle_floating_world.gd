@@ -29,6 +29,25 @@ func _run() -> void:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
+	var heart := world.get_node("HeartMelodyTemple") as Node3D
+	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v2" \
+			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):
+		_fail("Heart Melody still uses its placeholder rectangular facade")
+		return
+	var conservatory := heart.get_node_or_null(
+		"HeartMelodyCelestialConservatory") as Node3D
+	if conservatory == null \
+			or float(conservatory.get_meta("central_opening_width_m", 0.0)) < 48.0:
+		_fail("Heart Melody conservatory or its clear entrance is missing")
+		return
+	if conservatory.find_children("SolidBayBody_*", "MeshInstance3D", true, false).size() != 6 \
+			or conservatory.find_children("ResonanceRing_*", "MeshInstance3D", true, false).size() != 6:
+		_fail("Heart Melody conservatory does not have six finished resonance bays")
+		return
+	if conservatory.find_children("*OrchardTree_*", "Node3D", true, false).size() != 8 \
+			or conservatory.find_children("*TowerCollisionCollision", "StaticBody3D", true, false).size() != 2:
+		_fail("Heart Melody conservatory landscaping or collision is incomplete")
+		return
 
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
 			"WestObservatoryBridge", "NorthObservatoryBridge", "EastObservatoryBridge",
