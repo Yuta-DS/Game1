@@ -747,6 +747,7 @@ func _build_mind_district() -> void:
 	district.set_meta("ground_collision_source", "WalkableDeckCollision")
 	district.set_meta("requires_jump_from_mind_bridge", false)
 	_build_mind_spark_ceremonial_forecourt(district)
+	_build_mind_spark_celestial_commons(district)
 
 
 func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
@@ -759,7 +760,7 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 	var outward := Vector3(MIND_GATE_POSITION.x - MIND.x, 0.0,
 		MIND_GATE_POSITION.z - MIND.z).normalized()
 	forecourt.rotation.y = atan2(outward.x, outward.z)
-	forecourt.set_meta("design_revision", "celestial_gate_garden_v5")
+	forecourt.set_meta("design_revision", "celestial_gate_garden_v6")
 	forecourt.set_meta("production_quality_target", "10_of_10_graphic_design_pass")
 	forecourt.set_meta("lighting_layers", 3)
 	forecourt.set_meta("footprint_m", Vector2(64.0, 54.0))
@@ -1149,6 +1150,163 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			Vector3(float(side) * 18.0, 8.0, -3.5), Color("ffd5a3"), 1.35, 20.0)
 	_add_forecourt_omni(lighting, "ProcessionalCoolFill",
 		Vector3(0, 3.0, -20.0), Color("75e9f1"), 0.72, 25.0)
+
+
+func _build_mind_spark_celestial_commons(district: Node3D) -> void:
+	# The gate forecourt occupies the southwest rim of a much larger circular
+	# island. Finish the complete walkable surface so turning away from the gate
+	# reveals a coherent district instead of the foundation's default grey cap.
+	var commons := Node3D.new()
+	commons.name = "MindSparkCelestialCommons"
+	commons.set_meta("design_revision", "complete_surroundings_v1")
+	commons.set_meta("covered_foundation_radius_m", 160.0)
+	commons.set_meta("outward_view_landmarks", 8)
+	commons.set_meta("clear_radial_paths", 8)
+	commons.set_meta("pavilion_count", 4)
+	commons.set_meta("grove_count", 4)
+	district.add_child(commons)
+
+	# Layered 32-sided fields preserve the low-poly island silhouette while
+	# replacing the featureless deck across every compass direction.
+	_add_cylinder(commons, "IvoryDistrictApron", MIND + Vector3(0, 0.035, 0),
+		160.0, 0.07, _materials.passage_stone_shadow, false, 32)
+	_add_cylinder(commons, "FacetedCommonsLawn", MIND + Vector3(0, 0.085, 0),
+		149.0, 0.08, _materials.forecourt_lawn, false, 32)
+	_add_cylinder(commons, "InnerCommonsStone", MIND + Vector3(0, 0.14, 0),
+		66.0, 0.07, _materials.forecourt_paver, false, 24)
+	var outer_ring := Node3D.new()
+	outer_ring.name = "OuterProcessionalRing"
+	commons.add_child(outer_ring)
+	for ring_index in 32:
+		var ring_angle := TAU * float(ring_index) / 32.0
+		var ring_segment := _add_bevel_box(outer_ring,
+			"RingPaver_%02d" % (ring_index + 1),
+			MIND + Vector3(sin(ring_angle) * 122.0, 0.205,
+				cos(ring_angle) * 122.0),
+			Vector3(24.0, 0.08, 9.0), 0.20, _materials.forecourt_ivory)
+		ring_segment.rotation.y = ring_angle + PI * 0.5
+
+	var paths := Node3D.new()
+	paths.name = "EightWayProcessionalPaths"
+	commons.add_child(paths)
+	for path_index in 8:
+		var angle := TAU * float(path_index) / 8.0
+		var direction := Vector3(sin(angle), 0, cos(angle))
+		var path_center := MIND + direction * 93.0 + Vector3(0, 0.205, 0)
+		var path := _add_bevel_box(paths, "RadialPath_%02d" % (path_index + 1),
+			path_center, Vector3(13.0, 0.08, 168.0), 0.28,
+			_materials.passage_stone)
+		path.rotation.y = angle
+		for marker_index in 3:
+			var marker_radius := 48.0 + float(marker_index) * 39.0
+			_add_bevel_box(paths,
+				"PathMarker_%02d_%02d" % [path_index + 1, marker_index + 1],
+				MIND + direction * marker_radius + Vector3(0, 0.27, 0),
+				Vector3(2.8, 0.05, 0.62), 0.05,
+				_materials.passage_light).rotation.y = angle
+
+	# A central oculus gives all eight paths a visible destination and provides
+	# a calm counterpoint to the gate's vertical silhouette.
+	var oculus := Node3D.new()
+	oculus.name = "ConstellationOculusCourt"
+	oculus.set_meta("clear_movement_diameter_m", 52.0)
+	commons.add_child(oculus)
+	_add_cylinder(oculus, "OculusShadow", MIND + Vector3(0, 0.28, 0),
+		29.0, 0.32, _materials.bridge_structure, false, 16)
+	_add_cylinder(oculus, "OculusIvoryRim", MIND + Vector3(0, 0.47, 0),
+		26.5, 0.12, _materials.forecourt_ivory, false, 16)
+	_add_cylinder(oculus, "OculusWater", MIND + Vector3(0, 0.56, 0),
+		21.5, 0.06, _materials.forecourt_water, false, 16)
+	_build_faceted_ceremonial_crystal(oculus, "CommonsHeartCrystal",
+		MIND + Vector3(0, 6.2, 0), 9.0, 2.15, _materials.aqua)
+	for obelisk_index in 8:
+		var angle := TAU * float(obelisk_index) / 8.0
+		var at := MIND + Vector3(sin(angle) * 32.5, 3.4,
+			cos(angle) * 32.5)
+		_add_tapered_cylinder(oculus, "OculusObelisk_%02d" % (obelisk_index + 1),
+			at, 1.35, 0.70, 6.0, _materials.forecourt_ivory, 8)
+		_build_faceted_ceremonial_crystal(oculus,
+			"OculusStar_%02d" % (obelisk_index + 1), at + Vector3.UP * 4.3,
+			2.0, 0.52, _materials.purple if obelisk_index % 2 == 0 else _materials.aqua)
+
+	# Four roofed study pavilions terminate diagonal sightlines. Their bases and
+	# columns are solid, while the broad openings remain walkable from both sides.
+	var pavilions := Node3D.new()
+	pavilions.name = "FourConstellationPavilions"
+	commons.add_child(pavilions)
+	var pavilion_angles := [deg_to_rad(20.0), deg_to_rad(100.0),
+		deg_to_rad(180.0), deg_to_rad(300.0)]
+	for pavilion_index in 4:
+		var angle: float = pavilion_angles[pavilion_index]
+		var centre := MIND + Vector3(sin(angle) * 91.0, 0,
+			cos(angle) * 91.0)
+		var pavilion := Node3D.new()
+		pavilion.name = "ConstellationPavilion_%02d" % (pavilion_index + 1)
+		pavilions.add_child(pavilion)
+		_add_cylinder(pavilion, "SolidPavilionBase", centre + Vector3(0, 0.26, 0),
+			10.8, 0.52, _materials.passage_stone_shadow, true, 12)
+		_add_cylinder(pavilion, "IvoryPavilionFloor", centre + Vector3(0, 0.64, 0),
+			9.8, 0.12, _materials.forecourt_ivory, false, 12)
+		for column_index in 4:
+			var column_angle := PI * 0.25 + TAU * float(column_index) / 4.0
+			var column_at := centre + Vector3(sin(column_angle) * 6.7, 4.6,
+				cos(column_angle) * 6.7)
+			_add_cylinder(pavilion, "SolidColumn_%02d" % (column_index + 1),
+				column_at, 0.82, 7.8, _materials.forecourt_ivory, true, 8)
+			_add_cylinder(pavilion, "ColumnCapital_%02d" % (column_index + 1),
+				column_at + Vector3.UP * 4.10, 1.35, 0.42,
+				_materials.ivory, false, 8)
+		_add_tapered_cylinder(pavilion, "FacetedCanopy",
+			centre + Vector3(0, 9.15, 0), 10.4, 7.6, 1.05,
+			_materials.passage_roof, 12)
+		_add_cylinder(pavilion, "CanopyIvoryCrown", centre + Vector3(0, 9.78, 0),
+			7.9, 0.30, _materials.forecourt_ivory, false, 12)
+		_build_faceted_ceremonial_crystal(pavilion, "PavilionCrownStar",
+			centre + Vector3(0, 12.0, 0), 3.2, 0.82,
+			_materials.purple if pavilion_index % 2 == 0 else _materials.aqua)
+		_add_torus(pavilion, "ConstellationTable", centre + Vector3(0, 2.0, 0),
+			3.0, 4.8, _materials.passage_light)
+
+	# Groves occupy the remaining cardinal quadrants and vary in height and
+	# setback so the skyline does not repeat as a straight row of cloned trees.
+	var groves := Node3D.new()
+	groves.name = "FourMemoryGroves"
+	commons.add_child(groves)
+	var grove_angles := [deg_to_rad(55.0), deg_to_rad(145.0),
+		deg_to_rad(260.0), deg_to_rad(340.0)]
+	for grove_index in 4:
+		var angle: float = grove_angles[grove_index]
+		var centre := MIND + Vector3(sin(angle) * 94.0, 0,
+			cos(angle) * 94.0)
+		_add_cylinder(groves, "GroveSoil_%02d" % (grove_index + 1),
+			centre + Vector3(0, 0.25, 0), 17.0, 0.30,
+			_materials.forecourt_soil, false, 12)
+		_add_torus(groves, "GroveIvoryEdge_%02d" % (grove_index + 1),
+			centre + Vector3(0, 0.44, 0), 15.9, 17.6,
+			_materials.forecourt_ivory)
+		for tree_index in 3:
+			var tree_angle := angle + (-0.34 + float(tree_index) * 0.34)
+			var tree_radius := 88.0 + float(tree_index % 2) * 9.0
+			_build_ceremonial_faceted_tree(groves,
+				"MemoryGrove_%02d_Tree_%02d" % [grove_index + 1, tree_index + 1],
+				MIND + Vector3(sin(tree_angle) * tree_radius, 0.55,
+					cos(tree_angle) * tree_radius),
+				9.0 + float((grove_index + tree_index) % 3) * 1.65)
+
+	# Low perimeter lanterns finish the outer ring while remaining below the
+	# camera and keeping every visible opening genuinely traversable.
+	var perimeter := Node3D.new()
+	perimeter.name = "CelestialPerimeterLanterns"
+	commons.add_child(perimeter)
+	for lantern_index in 16:
+		var angle := TAU * float(lantern_index) / 16.0 + PI / 16.0
+		var at := MIND + Vector3(sin(angle) * 142.0, 2.35,
+			cos(angle) * 142.0)
+		_add_tapered_cylinder(perimeter, "LanternPlinth_%02d" % (lantern_index + 1),
+			at, 1.15, 0.82, 3.8, _materials.forecourt_ivory, 8)
+		_build_faceted_ceremonial_crystal(perimeter,
+			"LanternStar_%02d" % (lantern_index + 1), at + Vector3.UP * 2.8,
+			1.8, 0.48, _materials.aqua if lantern_index % 2 == 0 else _materials.purple)
 
 
 func _build_faceted_ceremonial_crystal(parent: Node3D, crystal_name: String,

@@ -19,7 +19,7 @@ func _run() -> void:
 	assert(world.get_node("WorldOneGeometry/MainStoryCircuitRoute") is Node3D)
 	assert(world.find_children("WalkableZoneFloor", "MeshInstance3D", true, false).size() == 6)
 	var forecourt := district.get_node("MindSparkCeremonialForecourt") as Node3D
-	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v5")
+	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v6")
 	assert(forecourt.get_meta("footprint_m") == Vector2(64.0, 54.0))
 	assert(float(forecourt.get_meta("clear_processional_lane_m", 0.0)) >= 18.0)
 	assert(bool(forecourt.get_meta("functional_gate_transform_preserved", false)))
@@ -55,6 +55,13 @@ func _run() -> void:
 	var backdrop := forecourt.get_node("CelestialGardenBackdrop") as Node3D
 	assert(int(backdrop.get_meta("landscape_layers", 0)) == 3)
 	assert(backdrop.find_children("*GardenColumn_*", "MeshInstance3D", true, false).size() == 6)
+	var commons := district.get_node("MindSparkCelestialCommons") as Node3D
+	assert(float(commons.get_meta("covered_foundation_radius_m", 0.0)) >= 160.0)
+	assert(int(commons.get_meta("outward_view_landmarks", 0)) == 8)
+	assert(commons.find_children("RadialPath_*", "MeshInstance3D", true, false).size() == 8)
+	assert(commons.find_children("ConstellationPavilion_*", "Node3D", true, false).size() == 4)
+	assert(commons.find_children("FacetedCanopy", "MeshInstance3D", true, false).size() == 4)
+	assert(commons.find_children("MemoryGrove_*_Tree_*", "Node3D", true, false).size() == 12)
 	assert(not bool(district.get_meta("requires_jump_from_mind_bridge")))
 	var bridge_walkway := floating_world.get_node("MindBridge/Walkway") as MeshInstance3D
 	var island_deck := district.get_node("WalkableDeck") as MeshInstance3D
