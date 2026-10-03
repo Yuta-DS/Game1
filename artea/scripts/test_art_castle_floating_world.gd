@@ -30,7 +30,7 @@ func _run() -> void:
 			_fail("missing explorable district %s" % district)
 			return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
-	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v8" \
+	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v9" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):
 		_fail("Heart Melody still uses its placeholder rectangular facade")
 		return
@@ -114,8 +114,15 @@ func _run() -> void:
 	var tree_bridge := world.get_node_or_null("SouthArrivalBridge") as Node3D
 	var heart_bridge := world.get_node_or_null("HeartBridge") as Node3D
 	if not bool(heart_bridge.get_meta("continuous_finish_deck", false)) \
-			or int(heart_bridge.get_meta("smooth_landing_count", 0)) != 2 \
-			or heart_bridge.get_node_or_null("HeartBridgeFinishDeck") == null:
+			or int(heart_bridge.get_meta("smooth_landing_count", -1)) != 0 \
+			or int(heart_bridge.get_meta("finished_fascia_count", 0)) != 2 \
+			or int(heart_bridge.get_meta("arrival_pylon_count", 0)) != 4 \
+			or int(heart_bridge.get_meta("parapet_panel_count", 0)) != 22 \
+			or heart_bridge.get_node_or_null("HeartBridgeFinishDeck") == null \
+			or heart_bridge.find_children("HeartBridgeLanding_*", "MeshInstance3D", true, false).size() != 0 \
+			or int(heart_bridge.get_meta("heart_arch_support_count", 0)) != 3 \
+			or heart_bridge.find_children("HeartBridgeArchSupport_*", "Node3D", true, false).size() != 3 \
+			or heart_bridge.find_children("HeartBridgeParapetPanel_*", "MeshInstance3D", true, false).size() != 22:
 		_fail("Heart Melody bridge still has a fragmented prototype surface")
 		return
 	if tree_bridge.get_meta("visual_style", "") != \

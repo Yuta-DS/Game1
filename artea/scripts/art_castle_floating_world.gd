@@ -1694,7 +1694,7 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v8")
+	district.set_meta("design_revision", "celestial_conservatory_v9")
 	district.set_meta("finished_product_lighting", true)
 	district.set_meta("production_material_palette", true)
 	district.set_meta("flat_rectangle_facade_removed", true)
@@ -2993,7 +2993,10 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	for step in range(45, int(length), 90):
 		var t := float(step) / length
 		var support_pos := start.lerp(end, t) + Vector3(0.0, -24.0, 0.0)
-		_add_arch_support(bridge, support_pos, width, yaw)
+		if heart_processional:
+			_add_heart_bridge_support(bridge, support_pos, width, yaw)
+		else:
+			_add_arch_support(bridge, support_pos, width, yaw)
 	if tree_processional:
 		_build_tree_of_life_processional_style(bridge, start, end, width, yaw, side_axis)
 	elif heart_processional:
@@ -3007,21 +3010,36 @@ func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
 	bridge.set_meta("clear_gameplay_lane_m", 34.0)
 	bridge.set_meta("lantern_post_count", 24)
 	bridge.set_meta("continuous_finish_deck", true)
-	bridge.set_meta("smooth_landing_count", 2)
-	var direction := (end - start).normalized()
+	bridge.set_meta("smooth_landing_count", 0)
+	bridge.set_meta("finished_fascia_count", 2)
+	bridge.set_meta("arrival_pylon_count", 4)
+	bridge.set_meta("heart_arch_support_count", 3)
+	bridge.set_meta("parapet_panel_count", 22)
 	var finish_deck := _add_bevel_box(bridge, "HeartBridgeFinishDeck",
 		(start + end) * 0.5 + Vector3.UP * 0.10,
 		Vector3(width - 8.0, 0.18, length - 1.0), 0.72,
 		_materials.heart_path)
 	finish_deck.rotation.y = yaw
-	for landing_index in 2:
-		var landing_center: Vector3 = (start if landing_index == 0 else end) \
-			+ direction * (-4.5 if landing_index == 0 else 4.5) + Vector3.UP * 0.11
-		var landing := _add_bevel_box(bridge,
-			"HeartBridgeLanding_%s" % ("Galaxy" if landing_index == 0 else "Melody"),
-			landing_center, Vector3(width + 6.0, 0.20, 10.0), 1.25,
-			_materials.heart_path)
-		landing.rotation.y = yaw
+	# Continuous longitudinal fascia replaces the overlapping crosswise landing
+	# aprons that produced a gray seam across the bridge deck.
+	for side in [-1.0, 1.0]:
+		var fascia_center := (start + end) * 0.5 \
+			+ side_axis * float(side) * (width * 0.5 - 1.2) + Vector3.DOWN * 0.95
+		var fascia := _add_bevel_box(bridge,
+			"HeartBridgeFascia_%s" % ("West" if side < 0 else "East"),
+			fascia_center, Vector3(2.4, 1.9, length - 1.0), 0.45,
+			_materials.heart_charcoal)
+		fascia.rotation.y = yaw
+		var fascia_cap := _add_bevel_box(bridge,
+			"HeartBridgeFasciaCap_%s" % ("West" if side < 0 else "East"),
+			fascia_center + Vector3.UP * 1.04,
+			Vector3(3.0, 0.22, length - 1.0), 0.22, _materials.heart_ivory)
+		fascia_cap.rotation.y = yaw
+		var light_inset := _add_bevel_box(bridge,
+			"HeartBridgeFasciaLight_%s" % ("West" if side < 0 else "East"),
+			fascia_center + Vector3.UP * 0.40,
+			Vector3(2.48, 0.16, length - 4.0), 0.10, _materials.heart_cyan)
+		light_inset.rotation.y = yaw
 	for note_index in 12:
 		var note_t := (float(note_index) + 0.5) / 12.0
 		var inlay := _add_bevel_box(bridge, "HeartBridgeNote_%02d" % (note_index + 1),
@@ -3032,10 +3050,29 @@ func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
 		var side_value: float = side
 		var previous_low := Vector3.ZERO
 		var previous_high := Vector3.ZERO
+		for panel_index in 11:
+			var panel_t := (float(panel_index) + 0.5) / 11.0
+			var panel_center: Vector3 = start.lerp(end, panel_t) \
+				+ side_axis * side_value * (width * 0.5 - 2.55) + Vector3.UP * 1.02
+			var panel := _add_bevel_box(bridge, "HeartBridgeParapetPanel_%s_%02d" % [
+				"W" if side < 0 else "E", panel_index + 1],
+				panel_center, Vector3(0.95, 1.32, length / 11.0 - 2.6),
+				0.30, _materials.heart_ivory)
+			panel.rotation.y = yaw
+			var panel_inset := _add_bevel_box(bridge, "HeartBridgeParapetInset_%s_%02d" % [
+				"W" if side < 0 else "E", panel_index + 1],
+				panel_center + side_axis * side_value * 0.52 + Vector3.UP * 0.08,
+				Vector3(0.10, 0.22, length / 11.0 - 5.2),
+				0.08, _materials.heart_cyan)
+			panel_inset.rotation.y = yaw
 		for post_index in 12:
 			var post_t := float(post_index) / 11.0
 			var foot: Vector3 = start.lerp(end, post_t) \
 				+ side_axis * side_value * (width * 0.5 - 3.2) + Vector3.UP * 0.25
+			_add_cylinder(bridge, "HeartBridgePostBase", foot + Vector3.UP * 0.18,
+				1.15, 0.36, _materials.heart_charcoal, false, 8)
+			_add_cylinder(bridge, "HeartBridgePostPlinth", foot + Vector3.UP * 0.48,
+				0.88, 0.24, _materials.heart_ivory, false, 8)
 			_add_tapered_cylinder(bridge, "HeartBridgePost", foot + Vector3.UP * 2.4,
 				0.62, 0.46, 4.8, _materials.heart_ivory, 8)
 			_add_bevel_box(bridge, "HeartBridgePostCap", foot + Vector3.UP * 4.85,
@@ -3048,11 +3085,26 @@ func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
 			var high_point: Vector3 = foot + Vector3.UP * 3.9
 			if post_index > 0:
 				_add_reference_beam(bridge, previous_low, low_point, 0.24,
-					_materials.heart_ivory_shadow).name = "HeartBridgeLowRail"
+					_materials.heart_ivory).name = "HeartBridgeLowRail"
 				_add_reference_beam(bridge, previous_high, high_point, 0.20,
 					_materials.heart_cyan).name = "HeartBridgeLightRail"
 			previous_low = low_point
 			previous_high = high_point
+	# Four short ceremonial pylons finish both thresholds without spanning or
+	# narrowing the 34 metre gameplay lane.
+	for threshold_index in 2:
+		var threshold_point: Vector3 = start if threshold_index == 0 else end
+		for side in [-1.0, 1.0]:
+			var pylon_foot := threshold_point \
+				+ side_axis * float(side) * (width * 0.5 - 6.0)
+			_add_bevel_box(bridge, "HeartBridgeArrivalPylonBase", pylon_foot + Vector3.UP * 0.8,
+				Vector3(5.8, 1.6, 5.8), 0.72, _materials.heart_charcoal)
+			_add_tapered_cylinder(bridge, "HeartBridgeArrivalPylon",
+				pylon_foot + Vector3.UP * 6.2, 2.05, 1.35, 10.4,
+				_materials.heart_ivory, 8)
+			_build_faceted_ceremonial_crystal(bridge, "HeartBridgeArrivalCrown",
+				pylon_foot + Vector3.UP * 12.6, 3.8, 0.78,
+				_materials.heart_cyan if side < 0 else _materials.heart_lavender)
 
 
 func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
@@ -7015,6 +7067,31 @@ func _add_arch_support(parent: Node3D, position: Vector3, width: float, yaw: flo
 	_add_box(support, "LeftPier", Vector3(-width * 0.38, 0.0, 0.0), Vector3(7.0, 48.0, 8.0), _materials.ivory_shadow)
 	_add_box(support, "RightPier", Vector3(width * 0.38, 0.0, 0.0), Vector3(7.0, 48.0, 8.0), _materials.ivory_shadow)
 	_add_box(support, "SupportBeam", Vector3(0.0, 22.0, 0.0), Vector3(width, 6.0, 8.0), _materials.ivory_shadow)
+
+
+func _add_heart_bridge_support(parent: Node3D, position: Vector3,
+		width: float, yaw: float) -> void:
+	var support := Node3D.new()
+	support.name = "HeartBridgeArchSupport_%02d" % (
+		parent.find_children("HeartBridgeArchSupport_*", "Node3D", false, false).size() + 1)
+	support.position = position
+	support.rotation.y = yaw
+	parent.add_child(support)
+	for side in [-1.0, 1.0]:
+		var pier_x := float(side) * width * 0.39
+		_add_tapered_cylinder(support, "HeartSupportPier", Vector3(pier_x, 0.0, 0.0),
+			3.6, 2.7, 44.0, _materials.heart_ivory, 8)
+		_add_tapered_cylinder(support, "HeartSupportPierFoot", Vector3(pier_x, -20.6, 0.0),
+			4.4, 3.6, 3.0, _materials.heart_charcoal, 8)
+		_add_bevel_box(support, "HeartSupportCapital", Vector3(pier_x, 21.2, 0.0),
+			Vector3(7.2, 2.0, 7.2), 0.65, _materials.heart_ivory)
+		_add_reference_beam(support, Vector3(pier_x, 17.0, 0.0),
+			Vector3(float(side) * width * 0.18, 23.0, 0.0), 1.35,
+			_materials.heart_ivory).name = "HeartSupportBrace"
+	_add_bevel_box(support, "HeartSupportCrossbeam", Vector3(0.0, 22.2, 0.0),
+		Vector3(width - 3.0, 3.0, 7.0), 0.75, _materials.heart_charcoal)
+	_add_bevel_box(support, "HeartSupportLight", Vector3(0.0, 23.78, 0.0),
+		Vector3(width - 9.0, 0.16, 5.4), 0.10, _materials.heart_cyan)
 
 
 func _add_world_label(node_name: String, text: String, position: Vector3,
