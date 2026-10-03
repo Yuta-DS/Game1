@@ -1694,7 +1694,7 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v11")
+	district.set_meta("design_revision", "celestial_conservatory_v12")
 	district.set_meta("finished_product_lighting", true)
 	district.set_meta("production_material_palette", true)
 	district.set_meta("flat_rectangle_facade_removed", true)
@@ -1880,13 +1880,16 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	entrance.set_meta("clear_opening_width_m", 48.0)
 	entrance.set_meta("principal_route_width_m", 18.0)
 	entrance.set_meta("complete_front_side_rear", true)
-	entrance.set_meta("design_revision", "grand_resonance_gate_v2")
+	entrance.set_meta("design_revision", "grand_resonance_gate_v3")
 	entrance.set_meta("barrier_like_gate_removed", true)
 	entrance.set_meta("portal_arch_ring_count", 2)
 	entrance.set_meta("finished_bridge_landing", true)
 	entrance.set_meta("tower_facade_depth_layers", 6)
 	entrance.set_meta("vaulted_glass_canopy_panels", 4)
 	entrance.set_meta("framed_tower_window_count", 4)
+	entrance.set_meta("musical_focal_monument", true)
+	entrance.set_meta("sculpted_bridge_transition", true)
+	entrance.set_meta("asymmetric_landing_gardens", true)
 	conservatory.add_child(entrance)
 
 	# A broad, layered landing resolves the abrupt bridge-to-building joint and
@@ -1905,6 +1908,27 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 			Vector3(marker_x, 1.44, -22.0), Vector3(1.8, 0.035, 8.0),
 			0.12, _materials.heart_cyan if marker_index % 2 == 0 else _materials.heart_lavender)
 		marker.rotation.y = deg_to_rad((float(marker_index) - 3.0) * 1.8)
+	# Three shallow fan terraces make the bridge arrive through a gradual stone
+	# threshold instead of terminating against one rectangular slab. The centre
+	# remains flat and wide enough for the production player capsule.
+	for terrace_index in 3:
+		var terrace_width := 58.0 - float(terrace_index) * 7.0
+		_add_bevel_box(entrance,
+			"BridgeTransitionTerrace_%02d" % (terrace_index + 1),
+			Vector3(0.0, 0.82 + float(terrace_index) * 0.12,
+				-40.0 + float(terrace_index) * 6.0),
+			Vector3(terrace_width, 0.22, 6.4), 0.72,
+			_materials.heart_ivory_shadow)
+	for side in [-1.0, 1.0]:
+		var transition_side := "West" if side < 0 else "East"
+		for rail_index in 3:
+			var rail_z := -42.0 + float(rail_index) * 7.2
+			var rail_x: float = side * (29.0 - float(rail_index) * 2.6)
+			var transition_rail := _add_bevel_box(entrance,
+				"%sTransitionWing_%02d" % [transition_side, rail_index + 1],
+				Vector3(rail_x, 2.0 + float(rail_index) * 0.18, rail_z),
+				Vector3(9.0, 1.15, 2.2), 0.46, _materials.heart_ivory)
+			transition_rail.rotation.y = deg_to_rad(side * (12.0 + float(rail_index) * 4.0))
 	for side in [-1.0, 1.0]:
 		var landing_side := "West" if side < 0 else "East"
 		_add_bevel_box(entrance, "%sLandingPlanter" % landing_side,
@@ -1921,6 +1945,25 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 			"%sLandingLantern" % landing_side,
 			Vector3(side * 24.0, 5.0, -33.0), 3.8, 0.72,
 			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
+	# The two sides intentionally carry different landmarks: a listening tree
+	# and a crystalline tuning sculpture. This avoids the copied garden look
+	# while balancing mass and colour across the processional axis.
+	_build_heart_faceted_tree(entrance, "WestLandingListeningTree",
+		Vector3(-39.0, 3.0, -19.0), 13.5)
+	var tuning_grove := Node3D.new()
+	tuning_grove.name = "EastLandingTuningSculpture"
+	tuning_grove.position = Vector3(39.0, 3.0, -19.0)
+	entrance.add_child(tuning_grove)
+	for tuning_index in 3:
+		var tuning_x := -3.0 + float(tuning_index) * 3.0
+		var tuning_height := 5.5 + float(tuning_index) * 2.8
+		_build_faceted_ceremonial_crystal(tuning_grove,
+			"TuningCrystal_%02d" % (tuning_index + 1),
+			Vector3(tuning_x, tuning_height * 0.48, float(tuning_index % 2) * 1.4),
+			tuning_height, 0.72,
+			_materials.heart_cyan if tuning_index == 1 else _materials.heart_lavender)
+	_add_forecourt_omni(entrance, "TuningSculptureLight", Vector3(39.0, 8.0, -19.0),
+		Color("8cefff"), 0.58, 18.0)
 
 	for side in [-1.0, 1.0]:
 		var side_name := "Left" if side < 0 else "Right"
@@ -1993,6 +2036,25 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 			_add_bevel_box(entrance, "%sTowerBelt_%02d" % [side_name, belt_index + 1],
 				Vector3(tower_x, 10.5 + float(belt_index) * 17.0, 0.0),
 				Vector3(17.6, 1.15, 20.2), 0.38, _materials.heart_ivory_shadow)
+		# Stepped side buttresses visually carry the tower weight into the landing.
+		# Their descending profiles add depth at the bridge camera angle.
+		for buttress_index in 3:
+			var buttress_height := 19.0 - float(buttress_index) * 4.2
+			var buttress_x: float = tower_x + side * (9.2 + float(buttress_index) * 2.1)
+			_add_bevel_box(entrance,
+				"%sProcessionalButtress_%02d" % [side_name, buttress_index + 1],
+				Vector3(buttress_x, 3.0 + buttress_height * 0.5,
+					-5.8 + float(buttress_index) * 1.8),
+				Vector3(3.4, buttress_height, 8.0 - float(buttress_index) * 1.1),
+				0.48, _materials.heart_ivory_shadow)
+		# A vertical sequence of projecting music ledges gives the otherwise broad
+		# shaft a readable human scale without turning it into surface noise.
+		for ledge_index in 4:
+			_add_bevel_box(entrance,
+				"%sMusicLedge_%02d" % [side_name, ledge_index + 1],
+				Vector3(tower_x, 8.4 + float(ledge_index) * 7.1, -10.55),
+				Vector3(12.6 - float(ledge_index % 2) * 1.8, 0.55, 1.35),
+				0.20, _materials.heart_ivory)
 		_add_bevel_box(entrance, "%sTowerShoulder" % side_name,
 			Vector3(tower_x, 34.4, 0.0), Vector3(20.0, 2.4, 22.2),
 			0.72, _materials.heart_ivory)
@@ -2019,6 +2081,56 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	# wall or barrier across the opening.
 	_build_heart_resonance_gate_arch(entrance, "Front", -10.8, true)
 	_build_heart_resonance_gate_arch(entrance, "Rear", 10.8, false)
+	# Five inner ribs reveal the actual depth of the gateway when viewed from the
+	# bridge. They join the two façades into one vaulted building rather than two
+	# towers connected by thin decoration.
+	for depth_index in 5:
+		var depth_z := -7.2 + float(depth_index) * 3.6
+		var rib_material: StandardMaterial3D = _materials.heart_ivory_shadow \
+			if depth_index % 2 == 0 else _materials.heart_charcoal
+		_add_reference_beam(entrance, Vector3(-19.0, 24.5, depth_z),
+			Vector3(0.0, 42.0, depth_z), 0.62, rib_material).name = \
+			"InnerVaultRibWest_%02d" % (depth_index + 1)
+		_add_reference_beam(entrance, Vector3(19.0, 24.5, depth_z),
+			Vector3(0.0, 42.0, depth_z), 0.62, rib_material).name = \
+			"InnerVaultRibEast_%02d" % (depth_index + 1)
+	# A single large lyre-sun emblem gives the entrance a memorable musical
+	# identity from long range. All components stay above the camera clearance.
+	var grand_emblem := Node3D.new()
+	grand_emblem.name = "GrandHarmonyLyreEmblem"
+	grand_emblem.set_meta("primary_gate_focal_point", true)
+	entrance.add_child(grand_emblem)
+	var emblem_center := Vector3(0.0, 36.2, -12.0)
+	for ray_index in 7:
+		# All rays open upward like a musical fan. Downward rays previously read
+		# as unsupported cables when the gate was viewed from the bridge.
+		var ray_angle := deg_to_rad(25.0 + float(ray_index) * (130.0 / 6.0))
+		var ray_end := emblem_center + Vector3(cos(ray_angle) * 8.8,
+			sin(ray_angle) * 8.8, 0.0)
+		_add_reference_beam(grand_emblem, emblem_center, ray_end, 0.34,
+			_materials.heart_ivory).name = "HarmonyRay_%02d" % (ray_index + 1)
+		_build_faceted_ceremonial_crystal(grand_emblem,
+			"HarmonyRayNote_%02d" % (ray_index + 1), ray_end, 1.35, 0.27,
+			_materials.heart_cyan if ray_index % 2 == 0 else _materials.heart_lavender)
+	_add_reference_beam(grand_emblem, emblem_center + Vector3(-5.2, -1.2, 0.0),
+		emblem_center + Vector3(0.0, 7.8, 0.0), 0.82,
+		_materials.heart_ivory).name = "LyreFrameWest"
+	_add_reference_beam(grand_emblem, emblem_center + Vector3(5.2, -1.2, 0.0),
+		emblem_center + Vector3(0.0, 7.8, 0.0), 0.82,
+		_materials.heart_ivory).name = "LyreFrameEast"
+	_add_reference_beam(grand_emblem, emblem_center + Vector3(-5.2, -1.2, 0.0),
+		emblem_center + Vector3(5.2, -1.2, 0.0), 0.82,
+		_materials.heart_ivory).name = "LyreFrameBase"
+	for emblem_string_index in 5:
+		var emblem_x := -3.2 + float(emblem_string_index) * 1.6
+		var emblem_top_y: float = 41.3 + (3.0 - abs(float(emblem_string_index) - 2.0)) * 0.72
+		_add_reference_beam(grand_emblem,
+			Vector3(emblem_x, 35.5, -12.05),
+			Vector3(emblem_x, emblem_top_y, -12.05), 0.18,
+			_materials.heart_light).name = "LyreLightString_%02d" % (emblem_string_index + 1)
+	_build_faceted_ceremonial_crystal(grand_emblem, "HarmonyHeart",
+		emblem_center + Vector3(0.0, 1.0, -0.15), 4.2, 0.88,
+		_materials.heart_cyan)
 	# Four faceted glass roof plates turn the pair of arch rings into one deep
 	# pavilion. The plates are thin, translucent and collision-free so the sky,
 	# crown and player remain visible through the structure.
@@ -2087,22 +2199,22 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	resonator.set_meta("oversized_ring_removed", true)
 	resonator.set_meta("suspended_above_route", true)
 	entrance.add_child(resonator)
-	_add_reference_beam(resonator, Vector3(-10.0, 18.5, 6.6),
-		Vector3(10.0, 18.5, 6.6), 1.35, _materials.heart_ivory).name = "HarpFrameBase"
-	_add_reference_beam(resonator, Vector3(-10.0, 18.5, 6.6),
-		Vector3(-6.0, 32.0, 6.6), 1.35, _materials.heart_ivory).name = "HarpFrameWest"
-	_add_reference_beam(resonator, Vector3(-6.0, 32.0, 6.6),
-		Vector3(10.0, 18.5, 6.6), 1.35, _materials.heart_ivory).name = "HarpFrameCrown"
+	_add_reference_beam(resonator, Vector3(-8.0, 20.5, 7.6),
+		Vector3(8.0, 20.5, 7.6), 1.10, _materials.heart_ivory).name = "HarpFrameBase"
+	_add_reference_beam(resonator, Vector3(-8.0, 20.5, 7.6),
+		Vector3(-4.8, 31.0, 7.6), 1.10, _materials.heart_ivory).name = "HarpFrameWest"
+	_add_reference_beam(resonator, Vector3(-4.8, 31.0, 7.6),
+		Vector3(8.0, 20.5, 7.6), 1.10, _materials.heart_ivory).name = "HarpFrameCrown"
 	for string_index in 7:
-		var string_x := -4.8 + float(string_index) * 1.6
-		var string_height := 10.5 - float(string_index) * 0.72
+		var string_x := -3.8 + float(string_index) * 1.25
+		var string_height := 8.0 - float(string_index) * 0.52
 		_add_reference_beam(resonator,
-			Vector3(string_x, 19.4, 6.6),
-			Vector3(string_x, 19.4 + string_height, 6.6),
+			Vector3(string_x, 21.2, 7.6),
+			Vector3(string_x, 21.2 + string_height, 7.6),
 			0.25, _materials.heart_light).name = "HarmonyString_%02d" % (string_index + 1)
 	_build_faceted_ceremonial_crystal(resonator, "ResonatorHeart",
-		Vector3(0.0, 26.0, 7.1), 5.0, 1.05, _materials.heart_lavender)
-	_add_forecourt_omni(entrance, "HarmonyResonatorLight", Vector3(0.0, 25.0, 5.0),
+		Vector3(0.0, 26.0, 8.1), 4.2, 0.88, _materials.heart_lavender)
+	_add_forecourt_omni(entrance, "HarmonyResonatorLight", Vector3(0.0, 26.0, 6.0),
 		Color("62c9d2"), 1.0, 34.0)
 
 	# Six complete instrument halls form a connected conservatory wing. Each one
