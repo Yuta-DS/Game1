@@ -30,7 +30,7 @@ func _run() -> void:
 			_fail("missing explorable district %s" % district)
 			return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
-	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v7" \
+	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v8" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):
 		_fail("Heart Melody still uses its placeholder rectangular facade")
 		return
@@ -77,9 +77,13 @@ func _run() -> void:
 		_fail("the central music pavilion remains a prototype")
 		return
 	if gardens == null or not bool(gardens.get_meta("grounded_landscaping", false)) \
-			or gardens.find_children("*CurvedGardenPath_*", "MeshInstance3D", true, false).size() != 14 \
-			or gardens.find_children("*WaterSpillway", "MeshInstance3D", true, false).size() != 2 \
-			or gardens.find_children("*PoolRimStone_*", "MeshInstance3D", true, false).size() != 32:
+			or gardens.find_children("*CurvedGardenPath_*", "MeshInstance3D", true, false).size() != 12 \
+			or gardens.find_children("*WaterSpillway*", "MeshInstance3D", true, false).size() != 0 \
+			or gardens.find_children("*PoolShadow", "MeshInstance3D", true, false).size() != 0 \
+			or gardens.find_children("*PoolRimStone_*", "MeshInstance3D", true, false).size() != 32 \
+			or gardens.find_children("*PoolSanctum", "MeshInstance3D", true, false).size() != 2 \
+			or gardens.find_children("*GardenWall_*", "MeshInstance3D", true, false).size() != 0 \
+			or gardens.find_children("*ListeningSeat", "MeshInstance3D", true, false).size() != 2:
 		_fail("the conservatory gardens are not fully connected and grounded")
 		return
 	if heart.find_children("MelodyPad_*", "MeshInstance3D", true, false).size() != 0 \

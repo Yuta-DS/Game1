@@ -1694,7 +1694,7 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v7")
+	district.set_meta("design_revision", "celestial_conservatory_v8")
 	district.set_meta("finished_product_lighting", true)
 	district.set_meta("production_material_palette", true)
 	district.set_meta("flat_rectangle_facade_removed", true)
@@ -2011,7 +2011,7 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	var gardens := Node3D.new()
 	gardens.name = "ResonanceOrchardGardens"
 	gardens.set_meta("grounded_landscaping", true)
-	gardens.set_meta("curved_path_count", 14)
+	gardens.set_meta("curved_path_count", 12)
 	conservatory.add_child(gardens)
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0 else "East"
@@ -2019,8 +2019,8 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 		_add_cylinder(gardens, "%sMossTerrace" % side_name,
 			pool_center + Vector3.UP * -0.16, 18.0, 0.46,
 			_materials.heart_lawn, false, 12)
-		_add_cylinder(gardens, "%sPoolShadow" % side_name, pool_center,
-			15.0, 0.24, _materials.heart_charcoal, false, 12)
+		_add_cylinder(gardens, "%sPoolFoundation" % side_name, pool_center,
+			15.0, 0.24, _materials.heart_ivory_shadow, false, 12)
 		_add_cylinder(gardens, "%sSingingPool" % side_name,
 			pool_center + Vector3.UP * 0.16, 13.4, 0.08,
 			_materials.heart_water, false, 12)
@@ -2032,14 +2032,20 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 					sin(rim_angle) * 14.55), Vector3(5.8, 0.58, 2.35), 0.32,
 				_materials.heart_ivory)
 			rim_stone.rotation.y = -rim_angle + PI * 0.5
+		_add_cylinder(gardens, "%sPoolSanctum" % side_name,
+			pool_center + Vector3.UP * 0.38, 2.8, 0.42,
+			_materials.heart_lawn, false, 10)
+		_add_cylinder(gardens, "%sPoolCrystalPlinth" % side_name,
+			pool_center + Vector3.UP * 0.72, 1.35, 0.30,
+			_materials.heart_ivory, false, 10)
 		_build_faceted_ceremonial_crystal(gardens, "%sPoolSongCrystal" % side_name,
-			pool_center + Vector3.UP * 4.2, 6.0, 1.05,
+			pool_center + Vector3.UP * 3.5, 4.5, 0.78,
 			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
-		for flower_index in 4:
-			var flower_angle := TAU * float(flower_index) / 4.0 + 0.55
+		for flower_index in 2:
+			var flower_angle := PI * float(flower_index) + 0.72
 			_add_heart_planting_cluster(gardens, pool_center + Vector3(
-				cos(flower_angle) * 18.6, 0.5, sin(flower_angle) * 18.6),
-				(flower_index + (0 if side < 0 else 1)) % 2 == 0, 0.72)
+				cos(flower_angle) * 19.2, 0.5, sin(flower_angle) * 19.2),
+				(flower_index + (0 if side < 0 else 1)) % 2 == 0, 0.62)
 		for tree_index in 5:
 			var tree_x := float(side) * (45.0 + float(tree_index % 2) * 23.0)
 			var tree_z := -22.0 + float(tree_index / 2) * 20.0
@@ -2053,40 +2059,32 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 				Vector3(float(side) * (88.0 + float(crystal_index) * 8.0),
 					3.0, -17.0 + float(crystal_index) * 21.0),
 				4.2, 1.0, _materials.heart_lavender if crystal_index == 0 else _materials.heart_cyan)
-		# One straight spillway replaces the three scattered diagonal strips. It
-		# aligns with the bridge landing and leaves the whole central route legible.
-		_add_bevel_box(gardens, "%sWaterSpillwayBed" % side_name,
-			Vector3(float(side) * 56.0, 1.02, -32.0), Vector3(22.0, 0.22, 3.4),
-			0.42, _materials.heart_charcoal)
-		_add_bevel_box(gardens, "%sWaterSpillway" % side_name,
-			Vector3(float(side) * 56.0, 1.17, -32.0), Vector3(19.5, 0.05, 1.45),
-			0.20, _materials.heart_water)
+		# Keep the basin uninterrupted. Earlier channel and spillway pieces read as
+		# loose bridges crossing the water from elevated gameplay cameras.
 
 	# Curved-looking planter chains, benches and lamps connect the architecture
 	# to the surrounding stage instead of allowing the gardens to stop abruptly.
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0 else "East"
-		# Seven tangent segments read as one broad garden curve while remaining
-		# inexpensive box geometry for the Web renderer.
-		for curve_index in 7:
-			var curve_t := float(curve_index) / 6.0
-			var curve_angle := lerpf(-56.0, 32.0, curve_t)
+		# Six short tangent segments arc behind each basin. Their radius and angle
+		# keep every piece outside the water and its stone rim from all views.
+		for curve_index in 6:
+			var curve_t := float(curve_index) / 5.0
+			var curve_angle := lerpf(-25.0, 55.0, curve_t)
 			var curve_rad := deg_to_rad(curve_angle)
-			var curve_position := Vector3(float(side) * (54.0 + cos(curve_rad) * 27.0),
-				1.12, -4.0 + sin(curve_rad) * 25.0)
+			var curve_position := Vector3(float(side) * (60.0 + cos(curve_rad) * 30.0),
+				1.12, 2.0 + sin(curve_rad) * 30.0)
 			var curve_piece := _add_bevel_box(gardens,
 				"%sCurvedGardenPath_%02d" % [side_name, curve_index + 1],
-				curve_position, Vector3(10.5, 0.12, 7.0), 0.5,
+				curve_position, Vector3(8.2, 0.12, 5.2), 0.46,
 				_materials.heart_ivory)
 			curve_piece.rotation.y = float(side) * curve_rad
-		for planter_index in 3:
-			var planter_x := float(side) * (42.0 + float(planter_index) * 23.0)
-			_add_bevel_box(gardens, "%sGardenWall_%02d" % [side_name, planter_index + 1],
-				Vector3(planter_x, 1.55, -31.0 + float(planter_index % 2) * 13.0),
-				Vector3(20.0, 1.4, 2.2), 0.55, _materials.heart_ivory)
-			_add_bevel_box(gardens, "%sListeningBench_%02d" % [side_name, planter_index + 1],
-				Vector3(planter_x, 2.0, -16.0 - float(planter_index) * 7.0),
-				Vector3(10.0, 0.8, 2.5), 0.35, _materials.heart_stone)
+		# One compact seat remains beside each approach. The former three long
+		# walls and benches intersected the circular basins and looked like gray
+		# bridge lines laid across the water.
+		_add_bevel_box(gardens, "%sListeningSeat" % side_name,
+			Vector3(float(side) * 41.0, 1.75, -8.0),
+			Vector3(7.0, 0.7, 2.4), 0.38, _materials.heart_stone)
 		_build_faceted_ceremonial_crystal(gardens, "%sPathLight" % side_name,
 			Vector3(float(side) * 39.0, 4.4, -28.0), 3.2, 0.62, _materials.heart_cyan)
 		_add_forecourt_omni(gardens, "%sGardenLight" % side_name,
