@@ -18,7 +18,7 @@
 [ext_resource type="Script" uid="uid://fggwgtmoslkc" path="res://scripts/gallery_ceremony.gd" id="25_crown"]
 
 [ext_resource type="Script" uid="uid://hepts2s0eon3" path="res://scripts/gallery_rotunda.gd" id="30_rotunda"]
-[ext_resource type="Script" path="res://scripts/gallery_piano.gd" id="31_piano"]
+[ext_resource type="Script" uid="uid://b6snhxhx7jy2s" path="res://scripts/gallery_piano.gd" id="31_piano"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_48g0v"]
 panorama = ExtResource("2_dw71r")
