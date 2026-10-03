@@ -1694,7 +1694,7 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v10")
+	district.set_meta("design_revision", "celestial_conservatory_v11")
 	district.set_meta("finished_product_lighting", true)
 	district.set_meta("production_material_palette", true)
 	district.set_meta("flat_rectangle_facade_removed", true)
@@ -1880,41 +1880,178 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	entrance.set_meta("clear_opening_width_m", 48.0)
 	entrance.set_meta("principal_route_width_m", 18.0)
 	entrance.set_meta("complete_front_side_rear", true)
+	entrance.set_meta("design_revision", "grand_resonance_gate_v2")
+	entrance.set_meta("barrier_like_gate_removed", true)
+	entrance.set_meta("portal_arch_ring_count", 2)
+	entrance.set_meta("finished_bridge_landing", true)
+	entrance.set_meta("tower_facade_depth_layers", 6)
+	entrance.set_meta("vaulted_glass_canopy_panels", 4)
+	entrance.set_meta("framed_tower_window_count", 4)
 	conservatory.add_child(entrance)
+
+	# A broad, layered landing resolves the abrupt bridge-to-building joint and
+	# gives the portal a deliberate foreground composition. All ornament stays
+	# outside the clear central aisle.
+	_add_bevel_box(entrance, "ResonanceBridgeLanding",
+		Vector3(0.0, 1.18, -22.0), Vector3(48.0, 0.34, 30.0), 1.15,
+		_materials.heart_ivory)
+	_add_bevel_box(entrance, "ResonanceLandingInlay",
+		Vector3(0.0, 1.38, -22.0), Vector3(34.0, 0.055, 24.0), 0.75,
+		_materials.heart_path)
+	for marker_index in 7:
+		var marker_x := -12.0 + float(marker_index) * 4.0
+		var marker := _add_bevel_box(entrance,
+			"LandingHarmonyKey_%02d" % (marker_index + 1),
+			Vector3(marker_x, 1.44, -22.0), Vector3(1.8, 0.035, 8.0),
+			0.12, _materials.heart_cyan if marker_index % 2 == 0 else _materials.heart_lavender)
+		marker.rotation.y = deg_to_rad((float(marker_index) - 3.0) * 1.8)
+	for side in [-1.0, 1.0]:
+		var landing_side := "West" if side < 0 else "East"
+		_add_bevel_box(entrance, "%sLandingPlanter" % landing_side,
+			Vector3(side * 30.0, 2.0, -22.0), Vector3(10.0, 1.7, 22.0),
+			0.85, _materials.heart_ivory)
+		_add_bevel_box(entrance, "%sLandingSoil" % landing_side,
+			Vector3(side * 30.0, 2.9, -22.0), Vector3(7.6, 0.12, 18.8),
+			0.55, _materials.heart_soil)
+		for planting_index in 2:
+			_add_heart_planting_cluster(entrance,
+				Vector3(side * 30.0, 3.0, -28.0 + float(planting_index) * 12.0),
+				(planting_index + (0 if side < 0 else 1)) % 2 == 0, 0.62)
+		_build_faceted_ceremonial_crystal(entrance,
+			"%sLandingLantern" % landing_side,
+			Vector3(side * 24.0, 5.0, -33.0), 3.8, 0.72,
+			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
+
 	for side in [-1.0, 1.0]:
 		var side_name := "Left" if side < 0 else "Right"
 		var tower_x := float(side) * 30.0
-		_add_box(entrance, "%sTowerFoundation" % side_name,
-			Vector3(tower_x, 2.2, 0.0), Vector3(16.0, 4.4, 18.0),
-			_materials.heart_charcoal, true)
+		_add_bevel_box(entrance, "%sTowerFoundation" % side_name,
+			Vector3(tower_x, 1.6, 0.0), Vector3(21.0, 3.2, 24.0), 0.85,
+			_materials.heart_charcoal)
+		_add_bevel_box(entrance, "%sTowerLowerPlinth" % side_name,
+			Vector3(tower_x, 3.55, 0.0), Vector3(18.8, 1.35, 21.8), 0.65,
+			_materials.heart_ivory)
 		_add_bevel_box(entrance, "%sTowerShaft" % side_name,
-			Vector3(tower_x, 18.0, 0.0), Vector3(13.0, 28.0, 15.0),
+			Vector3(tower_x, 19.0, 0.0), Vector3(16.2, 30.0, 19.0),
 			0.85, _materials.heart_ivory)
 		_add_box(entrance, "%sTowerCollision" % side_name,
-			Vector3(tower_x, 18.0, 0.0), Vector3(12.0, 28.0, 14.0),
+			Vector3(tower_x, 19.0, 0.0), Vector3(15.2, 30.0, 18.0),
 			_materials.heart_ivory, true)
+		_add_bevel_box(entrance, "%sFacadeRecess" % side_name,
+			Vector3(tower_x, 19.0, -9.72), Vector3(10.0, 23.0, 0.52),
+			0.42, _materials.heart_charcoal)
 		_add_bevel_box(entrance, "%sCyanGlass" % side_name,
-			Vector3(tower_x, 19.0, -7.62), Vector3(5.0, 15.0, 0.28),
+			Vector3(tower_x, 19.0, -10.02), Vector3(4.8, 14.0, 0.26),
 			0.22, _materials.heart_cyan)
+		_add_bevel_box(entrance, "%sRearRecess" % side_name,
+			Vector3(tower_x, 19.0, 9.72), Vector3(10.0, 23.0, 0.52),
+			0.42, _materials.heart_charcoal)
+		_add_bevel_box(entrance, "%sRearGlass" % side_name,
+			Vector3(tower_x, 19.0, 10.02), Vector3(4.8, 14.0, 0.26),
+			0.22, _materials.heart_glass)
+		for face_side in [-1.0, 1.0]:
+			var face_name := "Front" if face_side < 0 else "Rear"
+			var face_z: float = float(face_side) * 10.32
+			for frame_side in [-1.0, 1.0]:
+				_add_bevel_box(entrance,
+					"%s%sWindowFrameSide_%s" % [side_name, face_name,
+						"L" if frame_side < 0 else "R"],
+					Vector3(tower_x + frame_side * 3.25, 19.0, face_z),
+					Vector3(0.72, 16.8, 0.72), 0.22, _materials.heart_ivory)
+			for frame_level in [-1.0, 1.0]:
+				_add_bevel_box(entrance,
+					"%s%sWindowFrame_%s" % [side_name, face_name,
+						"Lower" if frame_level < 0 else "Upper"],
+					Vector3(tower_x, 19.0 + frame_level * 8.1, face_z),
+					Vector3(7.2, 0.72, 0.72), 0.22, _materials.heart_ivory)
+		# Three internal strings make each cyan bay a musical stained-glass
+		# window instead of a single glowing rectangle.
+		for string_index in 3:
+			_add_bevel_box(entrance,
+				"%sWindowString_%02d" % [side_name, string_index + 1],
+				Vector3(tower_x - 1.55 + float(string_index) * 1.55, 19.0, -10.38),
+				Vector3(0.18, 12.6 - float(string_index % 2) * 2.2, 0.16),
+				0.05, _materials.heart_lavender if string_index == 1 else _materials.heart_light)
+		for note_index in 3:
+			_build_faceted_ceremonial_crystal(entrance,
+				"%sFacadeNote_%02d" % [side_name, note_index + 1],
+				Vector3(tower_x - 3.2 + float(note_index) * 3.2,
+					29.4 + float(note_index % 2) * 0.45, -10.45),
+				1.35, 0.27,
+				_materials.heart_cyan if (note_index + (0 if side < 0 else 1)) % 2 == 0
+				else _materials.heart_lavender)
+		for pilaster_side in [-1.0, 1.0]:
+			_add_bevel_box(entrance,
+				"%sFrontPilaster_%s" % [side_name, "L" if pilaster_side < 0 else "R"],
+				Vector3(tower_x + pilaster_side * 7.4, 19.0, -9.7),
+				Vector3(1.55, 31.0, 1.65), 0.34, _materials.heart_ivory_shadow)
+			_add_bevel_box(entrance,
+				"%sRearPilaster_%s" % [side_name, "L" if pilaster_side < 0 else "R"],
+				Vector3(tower_x + pilaster_side * 7.4, 19.0, 9.7),
+				Vector3(1.55, 31.0, 1.65), 0.34, _materials.heart_ivory_shadow)
+		for belt_index in 2:
+			_add_bevel_box(entrance, "%sTowerBelt_%02d" % [side_name, belt_index + 1],
+				Vector3(tower_x, 10.5 + float(belt_index) * 17.0, 0.0),
+				Vector3(17.6, 1.15, 20.2), 0.38, _materials.heart_ivory_shadow)
+		_add_bevel_box(entrance, "%sTowerShoulder" % side_name,
+			Vector3(tower_x, 34.4, 0.0), Vector3(20.0, 2.4, 22.2),
+			0.72, _materials.heart_ivory)
+		_add_cylinder(entrance, "%sSpireEave" % side_name,
+			Vector3(tower_x, 36.2, 0.0), 10.8, 1.3,
+			_materials.heart_charcoal, false, 8)
 		_add_tapered_cylinder(entrance, "%sFacetedSpire" % side_name,
-			Vector3(tower_x, 37.5, 0.0), 7.4, 0.65, 13.0,
+			Vector3(tower_x, 43.0, 0.0), 9.2, 0.75, 13.5,
 			_materials.heart_roof, 8)
 		_build_faceted_ceremonial_crystal(entrance, "%sSpireStar" % side_name,
-			Vector3(tower_x, 45.5, 0.0), 3.6, 0.82,
+			Vector3(tower_x, 51.4, 0.0), 3.9, 0.84,
 			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
-	var left_pediment := _add_box(entrance, "LeftPediment",
-		Vector3(-14.0, 35.2, 0.0), Vector3(36.0, 3.2, 12.0),
-		_materials.heart_ivory, false)
-	left_pediment.rotation.z = deg_to_rad(18.0)
-	var right_pediment := _add_box(entrance, "RightPediment",
-		Vector3(14.0, 35.2, 0.0), Vector3(36.0, 3.2, 12.0),
-		_materials.heart_ivory, false)
-	right_pediment.rotation.z = deg_to_rad(-18.0)
-	_add_tapered_cylinder(entrance, "EntranceCrown",
-		Vector3(0.0, 40.0, 0.0), 5.8, 3.8, 2.6,
-		_materials.heart_roof, 8)
+		# Narrow side windows add scale and break the remaining box silhouette.
+		for side_window_index in 2:
+			var side_window := _add_bevel_box(entrance,
+				"%sAcousticSideWindow_%02d" % [side_name, side_window_index + 1],
+				Vector3(tower_x + side * 8.25, 15.0 + float(side_window_index) * 10.0,
+					-3.8 + float(side_window_index) * 7.6),
+				Vector3(6.2, 4.4, 0.24), 0.24, _materials.heart_glass)
+			side_window.rotation.y = PI * 0.5
+
+	# Two complete pointed arch rings create a deep, readable gateway from both
+	# approaches. Their cyan inner tracer identifies the portal without forming a
+	# wall or barrier across the opening.
+	_build_heart_resonance_gate_arch(entrance, "Front", -10.8, true)
+	_build_heart_resonance_gate_arch(entrance, "Rear", 10.8, false)
+	# Four faceted glass roof plates turn the pair of arch rings into one deep
+	# pavilion. The plates are thin, translucent and collision-free so the sky,
+	# crown and player remain visible through the structure.
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		var lower_canopy := _add_bevel_box(entrance,
+			"%sLowerVaultCanopy" % side_name,
+			Vector3(side * 15.2, 31.6, 0.0), Vector3(20.4, 0.28, 19.6),
+			0.20, _materials.heart_glass)
+		lower_canopy.rotation.z = deg_to_rad(-side * 48.0)
+		var upper_canopy := _add_bevel_box(entrance,
+			"%sUpperVaultCanopy" % side_name,
+			Vector3(side * 4.35, 41.1, 0.0), Vector3(9.6, 0.26, 19.6),
+			0.18, _materials.heart_glass)
+		upper_canopy.rotation.z = deg_to_rad(-side * 24.0)
+		_add_reference_beam(entrance, Vector3(side * 11.2, 36.8, -10.0),
+			Vector3(side * 11.2, 36.8, 10.0), 0.52,
+			_materials.heart_charcoal).name = "%sVaultPurlin" % side_name
+	_add_reference_beam(entrance, Vector3(0.0, 43.15, -10.4),
+		Vector3(0.0, 43.15, 10.4), 0.78,
+		_materials.heart_ivory).name = "PortalCanopyRidge"
+	for rib_index in 3:
+		var rib_x := -14.0 + float(rib_index) * 14.0
+		var rib_y := 35.0 if rib_index != 1 else 43.0
+		_add_reference_beam(entrance, Vector3(rib_x, rib_y, -10.2),
+			Vector3(rib_x, rib_y, 10.2), 1.05,
+			_materials.heart_ivory).name = "PortalVaultRib_%02d" % (rib_index + 1)
+	_add_bevel_box(entrance, "HarmonyCrestBase", Vector3(0.0, 44.1, 0.0),
+		Vector3(10.0, 2.4, 8.0), 0.65, _materials.heart_charcoal)
 	_build_faceted_ceremonial_crystal(entrance, "HarmonyCrownStar",
-		Vector3(0.0, 45.0, 0.0), 6.2, 1.4, _materials.heart_lavender)
+		Vector3(0.0, 49.2, 0.0), 7.0, 1.5, _materials.heart_lavender)
+	_add_forecourt_omni(entrance, "PortalCrownLight", Vector3(0.0, 42.0, -4.0),
+		Color("86eaf0"), 0.78, 31.0)
 
 	# A shallow walkable stage and rear arcade turn the central opening into a
 	# complete pavilion without interrupting the 18 metre processional route.
@@ -1946,25 +2083,26 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	# the oversized ring while retaining the seven readable melody strings.
 	var resonator := Node3D.new()
 	resonator.name = "SuspendedHarmonyResonator"
-	resonator.set_meta("camera_clearance_m", 12.0)
+	resonator.set_meta("camera_clearance_m", 18.0)
 	resonator.set_meta("oversized_ring_removed", true)
+	resonator.set_meta("suspended_above_route", true)
 	entrance.add_child(resonator)
-	_add_reference_beam(resonator, Vector3(-14.0, 5.2, 6.6),
-		Vector3(14.0, 5.2, 6.6), 1.75, _materials.heart_ivory).name = "HarpFrameBase"
-	_add_reference_beam(resonator, Vector3(-14.0, 5.2, 6.6),
-		Vector3(-8.8, 31.0, 6.6), 1.65, _materials.heart_ivory).name = "HarpFrameWest"
-	_add_reference_beam(resonator, Vector3(-8.8, 31.0, 6.6),
-		Vector3(14.0, 5.2, 6.6), 1.65, _materials.heart_ivory).name = "HarpFrameCrown"
+	_add_reference_beam(resonator, Vector3(-10.0, 18.5, 6.6),
+		Vector3(10.0, 18.5, 6.6), 1.35, _materials.heart_ivory).name = "HarpFrameBase"
+	_add_reference_beam(resonator, Vector3(-10.0, 18.5, 6.6),
+		Vector3(-6.0, 32.0, 6.6), 1.35, _materials.heart_ivory).name = "HarpFrameWest"
+	_add_reference_beam(resonator, Vector3(-6.0, 32.0, 6.6),
+		Vector3(10.0, 18.5, 6.6), 1.35, _materials.heart_ivory).name = "HarpFrameCrown"
 	for string_index in 7:
-		var string_x := -7.2 + float(string_index) * 2.4
-		var string_height := 20.8 - float(string_index) * 1.85
+		var string_x := -4.8 + float(string_index) * 1.6
+		var string_height := 10.5 - float(string_index) * 0.72
 		_add_reference_beam(resonator,
-			Vector3(string_x, 6.4, 6.6),
-			Vector3(string_x, 6.4 + string_height, 6.6),
-			0.34, _materials.heart_light).name = "HarmonyString_%02d" % (string_index + 1)
+			Vector3(string_x, 19.4, 6.6),
+			Vector3(string_x, 19.4 + string_height, 6.6),
+			0.25, _materials.heart_light).name = "HarmonyString_%02d" % (string_index + 1)
 	_build_faceted_ceremonial_crystal(resonator, "ResonatorHeart",
-		Vector3(0.0, 18.0, 7.1), 6.5, 1.42, _materials.heart_lavender)
-	_add_forecourt_omni(entrance, "HarmonyResonatorLight", Vector3(0.0, 16.0, 5.0),
+		Vector3(0.0, 26.0, 7.1), 5.0, 1.05, _materials.heart_lavender)
+	_add_forecourt_omni(entrance, "HarmonyResonatorLight", Vector3(0.0, 25.0, 5.0),
 		Color("62c9d2"), 1.0, 34.0)
 
 	# Six complete instrument halls form a connected conservatory wing. Each one
@@ -2089,6 +2227,63 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 			Vector3(float(side) * 39.0, 4.4, -28.0), 3.2, 0.62, _materials.heart_cyan)
 		_add_forecourt_omni(gardens, "%sGardenLight" % side_name,
 			Vector3(float(side) * 39.0, 5.0, -28.0), Color("8cefff"), 0.9, 24.0)
+
+
+func _build_heart_resonance_gate_arch(parent: Node3D, prefix: String,
+		z_position: float, include_light_tracer: bool) -> void:
+	# The profile uses straight low-poly voussoirs rather than a smooth curve.
+	# Its spring points sit beyond the 18 metre player aisle and every part is
+	# overhead or embedded in the tower face.
+	var profile: Array[Vector2] = [
+		Vector2(-22.0, 7.0),
+		Vector2(-22.0, 24.0),
+		Vector2(-20.0, 29.0),
+		Vector2(-15.0, 35.0),
+		Vector2(-8.5, 39.2),
+		Vector2(0.0, 43.0),
+	]
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		for segment_index in profile.size() - 1:
+			var point_a := profile[segment_index]
+			var point_b := profile[segment_index + 1]
+			var a := Vector3(point_a.x * -side, point_a.y, z_position)
+			var b := Vector3(point_b.x * -side, point_b.y, z_position)
+			_add_reference_beam(parent, a, b, 2.15,
+				_materials.heart_ivory).name = "%sOuterArch_%s_%02d" % [
+					prefix, side_name, segment_index + 1]
+			# Short charcoal shadow stones give the arch depth and make each
+			# voussoir readable against the pale tower façade.
+			var shadow_offset := Vector3(0.0, -0.24,
+				0.42 if z_position < 0.0 else -0.42)
+			_add_reference_beam(parent, a + shadow_offset,
+				b + shadow_offset, 0.72,
+				_materials.heart_charcoal).name = "%sArchShadow_%s_%02d" % [
+					prefix, side_name, segment_index + 1]
+	if include_light_tracer:
+		var tracer_profile: Array[Vector2] = [
+			Vector2(-19.0, 12.0), Vector2(-19.0, 24.0),
+			Vector2(-16.5, 29.0), Vector2(-11.5, 34.0),
+			Vector2(-5.5, 38.0), Vector2(0.0, 40.5),
+		]
+		for side in [-1.0, 1.0]:
+			var side_name := "West" if side < 0 else "East"
+			for segment_index in tracer_profile.size() - 1:
+				var point_a := tracer_profile[segment_index]
+				var point_b := tracer_profile[segment_index + 1]
+				_add_reference_beam(parent,
+					Vector3(point_a.x * -side, point_a.y, z_position - 0.52),
+					Vector3(point_b.x * -side, point_b.y, z_position - 0.52),
+					0.34, _materials.heart_cyan).name = "%sLightTracer_%s_%02d" % [
+						prefix, side_name, segment_index + 1]
+	for key_index in 5:
+		var key_x := -13.5 + float(key_index) * 6.75
+		_build_faceted_ceremonial_crystal(parent,
+			"%sCrownKey_%02d" % [prefix, key_index + 1],
+			Vector3(key_x, 35.0 + (1.0 - abs(key_x) / 13.5) * 7.2,
+				z_position - (0.7 if z_position < 0.0 else -0.7)),
+			1.45, 0.30,
+			_materials.heart_cyan if key_index % 2 == 0 else _materials.heart_lavender)
 
 
 func _build_heart_instrument_hall(parent: Node3D, hall_index: int,
