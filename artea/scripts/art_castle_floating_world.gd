@@ -1694,7 +1694,7 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v9")
+	district.set_meta("design_revision", "celestial_conservatory_v10")
 	district.set_meta("finished_product_lighting", true)
 	district.set_meta("production_material_palette", true)
 	district.set_meta("flat_rectangle_facade_removed", true)
@@ -2993,9 +2993,10 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	for step in range(45, int(length), 90):
 		var t := float(step) / length
 		var support_pos := start.lerp(end, t) + Vector3(0.0, -24.0, 0.0)
-		if heart_processional:
-			_add_heart_bridge_support(bridge, support_pos, width, yaw)
-		else:
+		# HeartBridge crosses the open celestial void as a light, self-supporting
+		# span. The exposed pier assemblies read as unfinished columns from the
+		# island camera, so only the other bridges receive underside supports.
+		if not heart_processional:
 			_add_arch_support(bridge, support_pos, width, yaw)
 	if tree_processional:
 		_build_tree_of_life_processional_style(bridge, start, end, width, yaw, side_axis)
@@ -3013,7 +3014,7 @@ func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
 	bridge.set_meta("smooth_landing_count", 0)
 	bridge.set_meta("finished_fascia_count", 2)
 	bridge.set_meta("arrival_pylon_count", 4)
-	bridge.set_meta("heart_arch_support_count", 3)
+	bridge.set_meta("heart_arch_support_count", 0)
 	bridge.set_meta("parapet_panel_count", 22)
 	var finish_deck := _add_bevel_box(bridge, "HeartBridgeFinishDeck",
 		(start + end) * 0.5 + Vector3.UP * 0.10,
