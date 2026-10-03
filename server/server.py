@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import (
     JWTManager,
@@ -105,11 +106,39 @@ os.makedirs(AI_CACHE_DIR, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+_DEFAULT_JWT_SECRET = 'dev_secret_change_later_12345'
 app.config['JWT_SECRET_KEY'] = os.environ.get(
     "JWT_SECRET_KEY",
-    'dev_secret_change_later_12345'
+    _DEFAULT_JWT_SECRET
 )
+if app.config['JWT_SECRET_KEY'] == _DEFAULT_JWT_SECRET:
+    print(
+        "[server] WARNING: JWT_SECRET_KEY is not set - using the public "
+        "default from source. Anyone who has read this repository can "
+        "forge a valid login token. Set a real JWT_SECRET_KEY before "
+        "deploying anywhere reachable by players."
+    )
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
+
+# A browser-hosted export talks to this API from a different origin than
+# the one serving the game, so without CORS every request gets blocked
+# client-side regardless of whether the server itself responds correctly.
+# Comma-separated so a deploy can lock this down to the real game origin
+# (e.g. "https://play.example.com") instead of leaving it wide open.
+_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "*")
+CORS(
+    app,
+    origins=[o.strip() for o in _cors_origins.split(",")] if _cors_origins != "*" else "*",
+    supports_credentials=False
+)
+
+# Standard fix for an unauthenticated client filling the server disk via
+# /upload_artwork: reject the request before it's fully read, rather than
+# after it's already on disk.
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get(
+    "MAX_UPLOAD_BYTES",
+    20 * 1024 * 1024
+))
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
@@ -136,6 +165,13 @@ class Artwork(db.Model):
     title = db.Column(db.String(100), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
     is_public = db.Column(db.Boolean, default=False)
+
+# Runs at import time, not just under `if __name__ == '__main__'`: a
+# production WSGI server (gunicorn) imports this module and calls the `app`
+# object directly, it never executes the __main__ block, so table creation
+# has to happen here or a fresh deploy has no `user`/`artwork` tables at all.
+with app.app_context():
+    db.create_all()
 
 # =========================
 # REGISTER
@@ -1338,12 +1374,10 @@ def home():
 # =========================
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-
-    # Port 80 is the production default (systemd runs as root and can
-    # bind it). On macOS/Linux dev machines binding 80 needs root, so
-    # override with e.g. PORT=8000 instead of running the server as root.
+    # This is Flask's own dev server - single-threaded, no hardening, and
+    # its own startup banner says not to use it in production. Production
+    # deploys run this module under gunicorn instead (see flaskapp.service),
+    # which never reaches this block at all.
     app.run(
         host=os.environ.get('HOST', '0.0.0.0'),
         port=int(os.environ.get('PORT', 80)),

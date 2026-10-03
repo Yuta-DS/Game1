@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://i4mvuq140ahc"]
 
-[ext_resource type="Script" uid="uid://bxc1qvcw6eumb" path="res://authentication.gd" id="1_sh67b"]
+[ext_resource type="Script" path="res://scripts/authentication.gd" id="1_sh67b"]
 [ext_resource type="Texture2D" uid="uid://bev35lbg44liq" path="res://assets/Game Start/Opening.png" id="2_nytem"]
 [ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="3_g1eqt"]
 [ext_resource type="FontFile" uid="uid://edkftpy6phlo" path="res://assets/Fonts/VCR_OSD_MONO_1.001.ttf" id="4_d5hwv"]
