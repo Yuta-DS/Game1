@@ -30,7 +30,7 @@ func _run() -> void:
 			_fail("missing explorable district %s" % district)
 			return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
-	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v3" \
+	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v4" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):
 		_fail("Heart Melody still uses its placeholder rectangular facade")
 		return
@@ -40,9 +40,18 @@ func _run() -> void:
 			or float(conservatory.get_meta("central_opening_width_m", 0.0)) < 48.0:
 		_fail("Heart Melody conservatory or its clear entrance is missing")
 		return
-	if conservatory.find_children("SolidBayBody_*", "MeshInstance3D", true, false).size() != 6 \
-			or conservatory.find_children("ResonanceRing_*", "MeshInstance3D", true, false).size() != 6:
-		_fail("Heart Melody conservatory does not have six finished resonance bays")
+	var bays := conservatory.get_node_or_null("SixResonanceBays") as Node3D
+	if bays == null or not bool(bays.get_meta("complete_360_architecture", false)) \
+			or bays.find_children("InstrumentHall_*", "Node3D", true, false).size() != 6 \
+			or bays.find_children("RearCyanWindow", "MeshInstance3D", true, false).size() != 6 \
+			or bays.find_children("HallCollisionCollision", "StaticBody3D", true, false).size() != 6:
+		_fail("Heart Melody conservatory does not have six complete 360-degree instrument halls")
+		return
+	var hall_types: Dictionary = {}
+	for hall in bays.find_children("InstrumentHall_*", "Node3D", true, false):
+		hall_types[str(hall.get_meta("instrument_type", ""))] = true
+	if hall_types.size() != 6:
+		_fail("the instrument halls do not have six distinct musical identities")
 		return
 	if conservatory.find_children("*OrchardTree_*", "Node3D", true, false).size() != 8 \
 			or conservatory.find_children("*TowerCollisionCollision", "StaticBody3D", true, false).size() != 2:
@@ -55,6 +64,24 @@ func _run() -> void:
 	if conservatory.find_children("TerraceButtress_*", "MeshInstance3D", true, false).size() != 9 \
 			or not bool(conservatory.get_meta("finished_platform_edges", false)):
 		_fail("Heart Melody terrace edges and underside remain unfinished")
+		return
+	var entrance := conservatory.get_node_or_null("GrandResonanceEntrance") as Node3D
+	var resonator := entrance.get_node_or_null("SuspendedHarmonyResonator") as Node3D if entrance else null
+	var gardens := conservatory.get_node_or_null("ResonanceOrchardGardens") as Node3D
+	if entrance == null or float(entrance.get_meta("principal_route_width_m", 0.0)) < 18.0 \
+			or entrance.get_node_or_null("WalkablePerformanceStage") == null \
+			or resonator == null or not bool(resonator.get_meta("oversized_ring_removed", false)) \
+			or resonator.get_node_or_null("ResonatorHalo") != null:
+		_fail("the central music pavilion remains a prototype")
+		return
+	if gardens == null or not bool(gardens.get_meta("grounded_landscaping", false)) \
+			or gardens.find_children("*CurvedGardenPath_*", "MeshInstance3D", true, false).size() != 14 \
+			or gardens.find_children("*WaterChannel_*", "MeshInstance3D", true, false).size() != 6:
+		_fail("the conservatory gardens are not fully connected and grounded")
+		return
+	if heart.find_children("MelodyPad_*", "MeshInstance3D", true, false).size() != 0 \
+			or heart.find_children("LivingEdgeCollisionCore_*", "MeshInstance3D", true, false).size() != 13:
+		_fail("prototype pads or unfinished conservatory-facing island edges remain")
 		return
 	var song := world.get_node_or_null(
 		"HeartMelodyQuestLandmarks/PersonalSongAmphitheatre") as Node3D
