@@ -1694,7 +1694,7 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v6")
+	district.set_meta("design_revision", "celestial_conservatory_v7")
 	district.set_meta("finished_product_lighting", true)
 	district.set_meta("production_material_palette", true)
 	district.set_meta("flat_rectangle_facade_removed", true)
@@ -1823,6 +1823,7 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	conservatory.set_meta("finished_platform_edges", true)
 	conservatory.set_meta("authored_processional_forecourt", true)
 	conservatory.set_meta("distinct_silhouette_count", 6)
+	conservatory.set_meta("clean_pool_courts", true)
 	district.add_child(conservatory)
 
 	# A layered stone terrace grounds the building and removes the floating-wall
@@ -2004,8 +2005,9 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 			_add_bevel_box(links, "ArcadeCanopy", Vector3(x, 14.2, 5.0),
 				Vector3(7.5, 1.3, 16.0), 0.5, _materials.heart_roof)
 
-	# Two shallow pools and planted fruit groves soften the broad stage and make
-	# the conservatory read as a destination from all surrounding districts.
+	# Two calm water courts and planted fruit groves soften the broad stage. The
+	# rim blocks follow the pool tangent so they read as one clean basin instead
+	# of the old starburst of ivory bars shown from elevated camera angles.
 	var gardens := Node3D.new()
 	gardens.name = "ResonanceOrchardGardens"
 	gardens.set_meta("grounded_landscaping", true)
@@ -2022,22 +2024,22 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 		_add_cylinder(gardens, "%sSingingPool" % side_name,
 			pool_center + Vector3.UP * 0.16, 13.4, 0.08,
 			_materials.heart_water, false, 12)
-		for rim_index in 12:
-			var rim_angle := TAU * float(rim_index) / 12.0
+		for rim_index in 16:
+			var rim_angle := TAU * float(rim_index) / 16.0
 			var rim_stone := _add_bevel_box(gardens,
 				"%sPoolRimStone_%02d" % [side_name, rim_index + 1],
-				pool_center + Vector3(cos(rim_angle) * 14.5, 0.42,
-					sin(rim_angle) * 14.5), Vector3(7.2, 0.65, 2.2), 0.38,
+				pool_center + Vector3(cos(rim_angle) * 14.55, 0.42,
+					sin(rim_angle) * 14.55), Vector3(5.8, 0.58, 2.35), 0.32,
 				_materials.heart_ivory)
-			rim_stone.rotation.y = -rim_angle
+			rim_stone.rotation.y = -rim_angle + PI * 0.5
 		_build_faceted_ceremonial_crystal(gardens, "%sPoolSongCrystal" % side_name,
 			pool_center + Vector3.UP * 4.2, 6.0, 1.05,
 			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
-		for flower_index in 5:
-			var flower_angle := TAU * float(flower_index) / 5.0 + 0.35
+		for flower_index in 4:
+			var flower_angle := TAU * float(flower_index) / 4.0 + 0.55
 			_add_heart_planting_cluster(gardens, pool_center + Vector3(
-				cos(flower_angle) * 16.0, 0.5, sin(flower_angle) * 16.0),
-				(flower_index + (0 if side < 0 else 1)) % 2 == 0)
+				cos(flower_angle) * 18.6, 0.5, sin(flower_angle) * 18.6),
+				(flower_index + (0 if side < 0 else 1)) % 2 == 0, 0.72)
 		for tree_index in 5:
 			var tree_x := float(side) * (45.0 + float(tree_index % 2) * 23.0)
 			var tree_z := -22.0 + float(tree_index / 2) * 20.0
@@ -2051,21 +2053,14 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 				Vector3(float(side) * (88.0 + float(crystal_index) * 8.0),
 					3.0, -17.0 + float(crystal_index) * 21.0),
 				4.2, 1.0, _materials.heart_lavender if crystal_index == 0 else _materials.heart_cyan)
-		# Short water channels lead rain and melody from each pool toward the
-		# performance pavilion. They sit inside masonry beds and never block play.
-		for channel_index in 3:
-			var channel_x := float(side) * (57.0 - float(channel_index) * 9.0)
-			var channel_z := -27.0 + float(channel_index) * 7.0
-			var channel := _add_bevel_box(gardens,
-				"%sWaterChannelBed_%02d" % [side_name, channel_index + 1],
-				Vector3(channel_x, 1.02, channel_z), Vector3(13.0, 0.22, 3.2),
-				0.35, _materials.heart_ivory)
-			channel.rotation.y = float(side) * deg_to_rad(18.0)
-			var water := _add_bevel_box(gardens,
-				"%sWaterChannel_%02d" % [side_name, channel_index + 1],
-				Vector3(channel_x, 1.17, channel_z), Vector3(10.8, 0.05, 1.15),
-				0.18, _materials.heart_water)
-			water.rotation.y = float(side) * deg_to_rad(18.0)
+		# One straight spillway replaces the three scattered diagonal strips. It
+		# aligns with the bridge landing and leaves the whole central route legible.
+		_add_bevel_box(gardens, "%sWaterSpillwayBed" % side_name,
+			Vector3(float(side) * 56.0, 1.02, -32.0), Vector3(22.0, 0.22, 3.4),
+			0.42, _materials.heart_charcoal)
+		_add_bevel_box(gardens, "%sWaterSpillway" % side_name,
+			Vector3(float(side) * 56.0, 1.17, -32.0), Vector3(19.5, 0.05, 1.45),
+			0.20, _materials.heart_water)
 
 	# Curved-looking planter chains, benches and lamps connect the architecture
 	# to the surrounding stage instead of allowing the gardens to stop abruptly.
@@ -3013,19 +3008,28 @@ func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
 	bridge.set_meta("visual_style", "heart_melody_living_music_processional")
 	bridge.set_meta("clear_gameplay_lane_m", 34.0)
 	bridge.set_meta("lantern_post_count", 24)
+	bridge.set_meta("continuous_finish_deck", true)
+	bridge.set_meta("smooth_landing_count", 2)
 	var direction := (end - start).normalized()
-	for slab_index in 18:
-		var slab_t := (float(slab_index) + 0.5) / 18.0
-		var slab := _add_bevel_box(bridge, "HeartPaver_%02d" % (slab_index + 1),
-			start.lerp(end, slab_t) + Vector3.UP * 0.10,
-			Vector3(width - 9.0, 0.16, length / 18.0 - 0.32), 0.28,
+	var finish_deck := _add_bevel_box(bridge, "HeartBridgeFinishDeck",
+		(start + end) * 0.5 + Vector3.UP * 0.10,
+		Vector3(width - 8.0, 0.18, length - 1.0), 0.72,
+		_materials.heart_path)
+	finish_deck.rotation.y = yaw
+	for landing_index in 2:
+		var landing_center: Vector3 = (start if landing_index == 0 else end) \
+			+ direction * (-4.5 if landing_index == 0 else 4.5) + Vector3.UP * 0.11
+		var landing := _add_bevel_box(bridge,
+			"HeartBridgeLanding_%s" % ("Galaxy" if landing_index == 0 else "Melody"),
+			landing_center, Vector3(width + 6.0, 0.20, 10.0), 1.25,
 			_materials.heart_path)
-		slab.rotation.y = yaw
-		if slab_index % 2 == 0:
-			var inlay := _add_bevel_box(bridge, "HeartPaverNote_%02d" % (slab_index + 1),
-				start.lerp(end, slab_t) + Vector3.UP * 0.205,
-				Vector3(3.2, 0.035, 0.75), 0.08, _materials.heart_light)
-			inlay.rotation.y = yaw
+		landing.rotation.y = yaw
+	for note_index in 12:
+		var note_t := (float(note_index) + 0.5) / 12.0
+		var inlay := _add_bevel_box(bridge, "HeartBridgeNote_%02d" % (note_index + 1),
+			start.lerp(end, note_t) + Vector3.UP * 0.205,
+			Vector3(3.2, 0.035, 0.68), 0.08, _materials.heart_light)
+		inlay.rotation.y = yaw
 	for side in [-1.0, 1.0]:
 		var side_value: float = side
 		var previous_low := Vector3.ZERO
@@ -3051,9 +3055,6 @@ func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
 					_materials.heart_cyan).name = "HeartBridgeLightRail"
 			previous_low = low_point
 			previous_high = high_point
-			if post_index > 0 and post_index < 11 and post_index % 3 == 0:
-				_add_heart_planting_cluster(bridge,
-					foot - direction * 2.6 + Vector3.UP * 0.2, post_index % 2 == 0, 0.65)
 
 
 func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
