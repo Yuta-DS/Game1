@@ -30,7 +30,7 @@ func _run() -> void:
 			_fail("missing explorable district %s" % district)
 			return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
-	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v2" \
+	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v3" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):
 		_fail("Heart Melody still uses its placeholder rectangular facade")
 		return
@@ -47,6 +47,21 @@ func _run() -> void:
 	if conservatory.find_children("*OrchardTree_*", "Node3D", true, false).size() != 8 \
 			or conservatory.find_children("*TowerCollisionCollision", "StaticBody3D", true, false).size() != 2:
 		_fail("Heart Melody conservatory landscaping or collision is incomplete")
+		return
+	if conservatory.find_children("Instrument_*", "Node3D", true, false).size() != 6 \
+			or conservatory.find_children("HarmonyString_*", "MeshInstance3D", true, false).size() != 7:
+		_fail("Heart Melody musical storytelling remains incomplete")
+		return
+	if conservatory.find_children("TerraceButtress_*", "MeshInstance3D", true, false).size() != 9 \
+			or not bool(conservatory.get_meta("finished_platform_edges", false)):
+		_fail("Heart Melody terrace edges and underside remain unfinished")
+		return
+	var song := world.get_node_or_null(
+		"HeartMelodyQuestLandmarks/PersonalSongAmphitheatre") as Node3D
+	if song == null or not bool(song.get_meta("gold_ring_removed", false)) \
+			or song.get_node_or_null("HarmonyJewelRing") != null \
+			or song.find_children("ListeningSeat_*", "MeshInstance3D", true, false).size() != 12:
+		_fail("Heart Melody still contains the oversized gold ring or an unfinished amphitheatre")
 		return
 
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
