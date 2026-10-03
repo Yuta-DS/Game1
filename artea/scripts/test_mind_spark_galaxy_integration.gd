@@ -62,6 +62,18 @@ func _run() -> void:
 	assert(commons.find_children("ConstellationPavilion_*", "Node3D", true, false).size() == 4)
 	assert(commons.find_children("FacetedCanopy", "MeshInstance3D", true, false).size() == 4)
 	assert(commons.find_children("MemoryGrove_*_Tree_*", "Node3D", true, false).size() == 12)
+	assert(int(commons.get_meta("finished_southern_view_count", 0)) == 3)
+	var southern_quarter := commons.get_node("SouthernCelestialQuarter") as Node3D
+	assert(southern_quarter.get_meta("completed_view_numbers") == PackedInt32Array([4, 5, 6]))
+	assert(southern_quarter.get_node_or_null("View04SoutheastSkySurveyTerrace") is Node3D)
+	assert(southern_quarter.get_node_or_null("View05SouthConstellationAmphitheatre") is Node3D)
+	assert(southern_quarter.get_node_or_null("View06SouthwestMemoryArcade") is Node3D)
+	assert(southern_quarter.find_children("ArrivalView*ForegroundGarden", "Node3D", true, false).size() == 3)
+	assert(southern_quarter.find_children("StarMapInlay_*", "MeshInstance3D", true, false).size() == 12)
+	assert(southern_quarter.find_children("ConstellationStar_*", "MeshInstance3D", true, false).size() == 12)
+	assert(southern_quarter.find_children("SolidSurveyFin_*Collision", "StaticBody3D", true, false).size() == 5)
+	assert(southern_quarter.find_children("SolidFacetedSeat_*Collision", "StaticBody3D", true, false).size() == 7)
+	assert(southern_quarter.find_children("*SolidArcadeColumn_*", "StaticBody3D", true, false).size() == 6)
 	assert(not bool(district.get_meta("requires_jump_from_mind_bridge")))
 	var bridge_walkway := floating_world.get_node("MindBridge/Walkway") as MeshInstance3D
 	var island_deck := district.get_node("WalkableDeck") as MeshInstance3D

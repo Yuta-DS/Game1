@@ -1164,6 +1164,7 @@ func _build_mind_spark_celestial_commons(district: Node3D) -> void:
 	commons.set_meta("clear_radial_paths", 8)
 	commons.set_meta("pavilion_count", 4)
 	commons.set_meta("grove_count", 4)
+	commons.set_meta("finished_southern_view_count", 3)
 	district.add_child(commons)
 
 	# Layered 32-sided fields preserve the low-poly island silhouette while
@@ -1293,6 +1294,8 @@ func _build_mind_spark_celestial_commons(district: Node3D) -> void:
 					cos(tree_angle) * tree_radius),
 				9.0 + float((grove_index + tree_index) % 3) * 1.65)
 
+	_build_southern_celestial_quarter(commons)
+
 	# Low perimeter lanterns finish the outer ring while remaining below the
 	# camera and keeping every visible opening genuinely traversable.
 	var perimeter := Node3D.new()
@@ -1307,6 +1310,216 @@ func _build_mind_spark_celestial_commons(district: Node3D) -> void:
 		_build_faceted_ceremonial_crystal(perimeter,
 			"LanternStar_%02d" % (lantern_index + 1), at + Vector3.UP * 2.8,
 			1.8, 0.48, _materials.aqua if lantern_index % 2 == 0 else _materials.purple)
+
+
+func _build_southern_celestial_quarter(commons: Node3D) -> void:
+	# These three compositions finish the southeast, south and southwest views
+	# from the arrival court. Each has a different silhouette and leaves the
+	# existing radial walks and the World Gate approach visibly open.
+	var quarter := Node3D.new()
+	quarter.name = "SouthernCelestialQuarter"
+	quarter.set_meta("completed_view_numbers", PackedInt32Array([4, 5, 6]))
+	quarter.set_meta("clear_gateway_route_m", 18.0)
+	quarter.set_meta("major_architecture_collision_backed", true)
+	commons.add_child(quarter)
+
+	# Low constellation gardens give the three formerly blank foregrounds useful
+	# detail while preserving their routes as broad, readable walking space.
+	var foreground_gardens := Node3D.new()
+	foreground_gardens.name = "ThreeArrivalViewConstellationGardens"
+	quarter.add_child(foreground_gardens)
+	var arrival_view_angles := [0.0, 45.0, 90.0]
+	for view_index in 3:
+		var view_angle := deg_to_rad(arrival_view_angles[view_index])
+		var view_direction := Vector3(sin(view_angle), 0.0, cos(view_angle))
+		var view_side := Vector3(-view_direction.z, 0.0, view_direction.x)
+		var garden := Node3D.new()
+		garden.name = "ArrivalView%02dForegroundGarden" % (view_index + 4)
+		foreground_gardens.add_child(garden)
+		for marker_index in 4:
+			var marker := _add_bevel_box(garden,
+				"StarMapInlay_%02d" % (marker_index + 1),
+				MIND + view_direction * (43.0 + float(marker_index) * 8.2) + Vector3.UP * 0.255,
+				Vector3(4.8 - float(marker_index) * 0.35, 0.035, 1.25),
+				0.06, _materials.passage_light)
+			marker.rotation.y = view_angle
+		for side_index in [-1, 1]:
+			var plinth_at := MIND + view_direction * 66.0 + view_side * float(side_index) * 14.5
+			_add_tapered_cylinder(garden,
+				"ConstellationPlinth_%s" % ("L" if side_index < 0 else "R"),
+				plinth_at + Vector3.UP * 1.15, 2.7, 2.1, 1.9,
+				_materials.forecourt_ivory, 8)
+			_build_faceted_ceremonial_crystal(garden,
+				"ConstellationStar_%s" % ("L" if side_index < 0 else "R"),
+				plinth_at + Vector3.UP * 4.0, 3.8, 0.92,
+				_materials.aqua if (view_index + side_index) % 2 == 0 else _materials.purple)
+
+	# View 4 — a stepped sky-survey terrace creates a strong endpoint in the
+	# arrival camera's southeast view (the district's physical north rim).
+	var southeast := Node3D.new()
+	southeast.name = "View04SoutheastSkySurveyTerrace"
+	southeast.set_meta("arrival_view_sector", "southeast")
+	southeast.set_meta("district_bearing_degrees", 0.0)
+	southeast.set_meta("clear_apron_m", 14.0)
+	quarter.add_child(southeast)
+	var southeast_angle := deg_to_rad(0.0)
+	var southeast_center := MIND + Vector3(sin(southeast_angle) * 128.0, 0.0,
+		cos(southeast_angle) * 128.0)
+	_add_cylinder(southeast, "SurveyTerraceShadow", southeast_center + Vector3.UP * 0.32,
+		18.5, 0.48, _materials.bridge_structure, true, 12)
+	(southeast.get_child(southeast.get_child_count() - 1) as StaticBody3D).name = \
+		"SurveyTerraceCollision"
+	_add_cylinder(southeast, "SurveyTerraceIvoryDeck", southeast_center + Vector3.UP * 0.63,
+		17.2, 0.14, _materials.forecourt_ivory, false, 12)
+	_add_cylinder(southeast, "SurveyTerraceCyanInlay", southeast_center + Vector3.UP * 0.72,
+		11.0, 0.04, _materials.forecourt_water, false, 12)
+	for instrument_index in 3:
+		var instrument_angle := southeast_angle + deg_to_rad(-24.0 + float(instrument_index) * 24.0)
+		var instrument_at := southeast_center + Vector3(sin(instrument_angle) * 10.2, 3.3,
+			cos(instrument_angle) * 10.2)
+		_add_tapered_cylinder(southeast, "SolidSurveyPedestal_%02d" % (instrument_index + 1),
+			instrument_at, 1.55, 1.05, 5.2, _materials.forecourt_ivory, 8)
+		_add_cylinder(southeast, "SurveyPedestalCore_%02d" % (instrument_index + 1),
+			instrument_at, 1.02, 5.15, _materials.forecourt_ivory, true, 8)
+		(southeast.get_child(southeast.get_child_count() - 1) as StaticBody3D).name = \
+			"SurveyPedestal_%02d_Collision" % (instrument_index + 1)
+		_add_cylinder(southeast, "SurveyBezel_%02d" % (instrument_index + 1),
+			instrument_at + Vector3.UP * 3.3, 2.0, 0.38,
+			_materials.bridge_structure, false, 10)
+		_build_faceted_ceremonial_crystal(southeast,
+			"SurveyLens_%02d" % (instrument_index + 1),
+			instrument_at + Vector3.UP * 5.0, 3.2, 0.78,
+			_materials.aqua if instrument_index != 1 else _materials.purple)
+	for fin_index in 5:
+		var fin_angle := southeast_angle + deg_to_rad(-48.0 + float(fin_index) * 24.0)
+		var fin_at := southeast_center + Vector3(sin(fin_angle) * 16.0, 4.1,
+			cos(fin_angle) * 16.0)
+		var fin := _add_box(southeast, "SolidSurveyFin_%02d" % (fin_index + 1), fin_at,
+			Vector3(1.2, 7.0, 3.0), _materials.passage_stone, true, fin_angle)
+		fin.rotation.z = deg_to_rad(-5.0 + float(fin_index % 3) * 5.0)
+	_build_faceted_ceremonial_crystal(southeast, "SurveyCrownStar",
+		southeast_center + Vector3.UP * 8.2, 7.5, 1.65, _materials.aqua)
+	_add_tapered_cylinder(southeast, "SurveyNeedleSpire",
+		southeast_center + Vector3.UP * 10.0, 2.1, 0.72, 18.0,
+		_materials.passage_roof, 8)
+	_add_cylinder(southeast, "SurveyNeedleCollisionCore",
+		southeast_center + Vector3.UP * 9.4, 0.72, 16.8,
+		_materials.passage_roof, true, 8)
+	(southeast.get_child(southeast.get_child_count() - 1) as StaticBody3D).name = \
+		"SurveyNeedleCollision"
+	_build_faceted_ceremonial_crystal(southeast, "SurveyZenithStar",
+		southeast_center + Vector3.UP * 20.7, 4.0, 0.95, _materials.purple)
+	for garden_index in 2:
+		var garden_side := -1.0 if garden_index == 0 else 1.0
+		_build_ceremonial_faceted_tree(southeast, "SurveyGardenTree_%02d" % (garden_index + 1),
+			southeast_center + Vector3(garden_side * 22.0, 0.48, 5.0),
+			8.8 + float(garden_index) * 1.4)
+
+	# View 5 — a broad, low amphitheatre fills the arrival camera's south view
+	# without turning the open plaza into another wall. Its northeast mouth is clear.
+	var south := Node3D.new()
+	south.name = "View05SouthConstellationAmphitheatre"
+	south.set_meta("arrival_view_sector", "south")
+	south.set_meta("district_bearing_degrees", 45.0)
+	south.set_meta("open_mouth_width_m", 22.0)
+	quarter.add_child(south)
+	var south_angle := deg_to_rad(45.0)
+	var south_center := MIND + Vector3(sin(south_angle) * 125.0, 0.0,
+		cos(south_angle) * 125.0)
+	_add_cylinder(south, "AmphitheatreStageShadow", south_center + Vector3.UP * 0.30,
+		15.0, 0.42, _materials.bridge_structure, true, 16)
+	(south.get_child(south.get_child_count() - 1) as StaticBody3D).name = \
+		"AmphitheatreStageCollision"
+	_add_cylinder(south, "AmphitheatreStage", south_center + Vector3.UP * 0.58,
+		13.8, 0.14, _materials.forecourt_paver, false, 16)
+	_add_cylinder(south, "StageConstellationPool", south_center + Vector3.UP * 0.67,
+		7.2, 0.04, _materials.forecourt_water, false, 12)
+	for seat_index in 7:
+		var seat_angle := deg_to_rad(120.0 + float(seat_index) * 20.0)
+		var seat_at := south_center + Vector3(sin(seat_angle) * 20.5,
+			1.25 + float(seat_index % 2) * 0.28,
+			cos(seat_angle) * 20.5)
+		_add_box(south, "SolidFacetedSeat_%02d" % (seat_index + 1), seat_at,
+			Vector3(7.4, 2.2 + float(seat_index % 2) * 0.55, 4.8),
+			_materials.passage_stone, true, -seat_angle)
+	for beacon_index in 3:
+		var beacon_x := -10.0 + float(beacon_index) * 10.0
+		var beacon_at := south_center + Vector3(beacon_x, 4.3, -17.0)
+		_add_tapered_cylinder(south, "SouthBeacon_%02d" % (beacon_index + 1),
+			beacon_at, 1.05, 0.55, 7.2, _materials.forecourt_ivory, 8)
+		_build_faceted_ceremonial_crystal(south, "SouthBeaconStar_%02d" % (beacon_index + 1),
+			beacon_at + Vector3.UP * 4.8, 2.8, 0.68,
+			_materials.purple if beacon_index == 1 else _materials.aqua)
+	var southern_back := Vector3(sin(south_angle), 0.0, cos(south_angle))
+	var southern_side := Vector3(-southern_back.z, 0.0, southern_back.x)
+	for arch_index in 5:
+		var arch_offset := -18.0 + float(arch_index) * 9.0
+		var arch_height := 9.5 + float(2 - abs(arch_index - 2)) * 2.1
+		var arch_at := south_center + southern_back * 22.0 + southern_side * arch_offset
+		_add_tapered_cylinder(south, "AmphitheatrePillar_%02d" % (arch_index + 1),
+			arch_at + Vector3.UP * (arch_height * 0.5), 1.25, 0.82,
+			arch_height, _materials.forecourt_ivory, 8)
+		_add_cylinder(south, "AmphitheatrePillarCore_%02d" % (arch_index + 1),
+			arch_at + Vector3.UP * (arch_height * 0.5), 0.80, arch_height,
+			_materials.forecourt_ivory, true, 8)
+		(south.get_child(south.get_child_count() - 1) as StaticBody3D).name = \
+			"AmphitheatrePillar_%02d_Collision" % (arch_index + 1)
+		_build_faceted_ceremonial_crystal(south,
+			"AmphitheatrePillarStar_%02d" % (arch_index + 1),
+			arch_at + Vector3.UP * (arch_height + 1.8), 2.7, 0.65,
+			_materials.aqua if arch_index % 2 == 0 else _materials.purple)
+	for garden_index in 2:
+		var garden_side := -1.0 if garden_index == 0 else 1.0
+		_build_ceremonial_faceted_tree(south, "AmphitheatreGardenTree_%02d" % (garden_index + 1),
+			south_center - southern_back * 3.0 + southern_side * garden_side * 25.0 + Vector3.UP * 0.48,
+			9.4 + float(garden_index) * 1.2)
+
+	# View 6 — two short colonnades and planted courts frame the eastern radial
+	# walk, which occupies the arrival camera's southwest view. Their 20-metre
+	# opening remains a real route with no invisible or decorative blockage.
+	var southwest := Node3D.new()
+	southwest.name = "View06SouthwestMemoryArcade"
+	southwest.set_meta("arrival_view_sector", "southwest")
+	southwest.set_meta("district_bearing_degrees", 90.0)
+	southwest.set_meta("clear_central_opening_m", 20.0)
+	quarter.add_child(southwest)
+	var arcade_angle := deg_to_rad(90.0)
+	var arcade_direction := Vector3(sin(arcade_angle), 0.0, cos(arcade_angle))
+	var arcade_side := Vector3(-arcade_direction.z, 0.0, arcade_direction.x)
+	var arcade_anchor := MIND + arcade_direction * 128.0
+	for side_index in [-1, 1]:
+		var side_name := "East" if side_index < 0 else "West"
+		var wing_center := arcade_anchor + arcade_side * float(side_index) * 19.0
+		_add_bevel_box(southwest, "%sMemoryGarden" % side_name,
+			wing_center + Vector3.UP * 0.27, Vector3(14.0, 0.18, 28.0),
+			0.65, _materials.forecourt_soil).rotation.y = atan2(arcade_direction.x, arcade_direction.z)
+		for column_index in 3:
+			var along := -9.0 + float(column_index) * 9.0
+			var column_at := wing_center + arcade_direction * along + Vector3.UP * 6.15
+			_add_cylinder(southwest,
+				"%sSolidArcadeColumn_%02d" % [side_name, column_index + 1],
+				column_at, 1.05, 11.3, _materials.forecourt_ivory, true, 8)
+			(southwest.get_child(southwest.get_child_count() - 1) as StaticBody3D).name = \
+				"%sSolidArcadeColumn_%02d_Collision" % [side_name, column_index + 1]
+			_add_cylinder(southwest,
+				"%sArcadeCapital_%02d" % [side_name, column_index + 1],
+				column_at + Vector3.UP * 5.85, 1.58, 0.46,
+				_materials.ivory, false, 8)
+		var lintel := _add_box(southwest, "%sSolidArcadeLintel" % side_name,
+			wing_center + Vector3.UP * 12.25, Vector3(3.2, 1.1, 25.0),
+			_materials.passage_stone, true, atan2(arcade_direction.x, arcade_direction.z))
+		lintel.set_meta("supports_gateway_sightline", true)
+		_add_tapered_cylinder(southwest, "%sArcadeCanopy" % side_name,
+			wing_center + Vector3.UP * 13.45, 9.5, 6.7, 1.45,
+			_materials.passage_roof, 8)
+		_build_faceted_ceremonial_crystal(southwest, "%sArcadeCrown" % side_name,
+			wing_center + Vector3.UP * 16.5, 3.5, 0.85,
+			_materials.purple if side_index < 0 else _materials.aqua)
+		_build_ceremonial_faceted_tree(southwest, "%sArcadeTree" % side_name,
+			wing_center - arcade_direction * 13.5 + Vector3.UP * 0.45, 8.6)
+		_build_faceted_ceremonial_crystal(southwest, "%sArcadeStar" % side_name,
+			wing_center + arcade_direction * 13.0 + Vector3.UP * 2.9,
+			4.6, 1.05, _materials.aqua if side_index < 0 else _materials.purple)
 
 
 func _build_faceted_ceremonial_crystal(parent: Node3D, crystal_name: String,
