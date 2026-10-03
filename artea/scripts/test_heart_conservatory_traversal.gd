@@ -42,8 +42,8 @@ func _run() -> void:
 	if bays.find_children("HallCollisionCollision", "StaticBody3D", true, false).size() != 6:
 		_fail("not every instrument hall blocks the production player capsule")
 		return
-	if heart.find_children("LivingEdgeRock_*", "MeshInstance3D", true, false).size() != 19 \
-			or heart.find_children("LivingEdgeCollision_*", "StaticBody3D", true, false).size() != 19:
+	if heart.find_children("LivingEdgeLookout_*", "MeshInstance3D", true, false).size() != 10 \
+			or heart.get_node_or_null("WalkableDeck") == null:
 		_fail("the planted platform boundary is not collision-backed")
 		return
 	print("HEART_CONSERVATORY_TRAVERSAL: PASS — approach, pavilion, gardens and six halls are supported")
