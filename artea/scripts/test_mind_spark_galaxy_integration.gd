@@ -19,10 +19,13 @@ func _run() -> void:
 	assert(world.get_node("WorldOneGeometry/MainStoryCircuitRoute") is Node3D)
 	assert(world.find_children("WalkableZoneFloor", "MeshInstance3D", true, false).size() == 6)
 	var forecourt := district.get_node("MindSparkCeremonialForecourt") as Node3D
-	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v4")
+	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v5")
 	assert(forecourt.get_meta("footprint_m") == Vector2(64.0, 54.0))
 	assert(float(forecourt.get_meta("clear_processional_lane_m", 0.0)) >= 18.0)
 	assert(bool(forecourt.get_meta("functional_gate_transform_preserved", false)))
+	var landscape_frame := forecourt.get_node("DistrictLandscapeFrame") as Node3D
+	assert(bool(landscape_frame.get_meta("grey_foundation_visually_covered", false)))
+	assert(landscape_frame.find_children("*LandscapeLawn", "MeshInstance3D", true, false).size() == 2)
 	assert(district.find_children("RuneTile_*", "MeshInstance3D", true, false).is_empty())
 	assert(district.find_children("*RuinWall*", "MeshInstance3D", true, false).is_empty())
 	var processional := forecourt.get_node("IvoryProcessionalWalk") as Node3D
@@ -49,6 +52,9 @@ func _run() -> void:
 	var lighting := forecourt.get_node("CeremonialLightingRig") as Node3D
 	assert(lighting.find_children("*WarmKey", "OmniLight3D", true, false).size() == 2)
 	assert(lighting.get_node_or_null("ProcessionalCoolFill") is OmniLight3D)
+	var backdrop := forecourt.get_node("CelestialGardenBackdrop") as Node3D
+	assert(int(backdrop.get_meta("landscape_layers", 0)) == 3)
+	assert(backdrop.find_children("*GardenColumn_*", "MeshInstance3D", true, false).size() == 6)
 	assert(not bool(district.get_meta("requires_jump_from_mind_bridge")))
 	var bridge_walkway := floating_world.get_node("MindBridge/Walkway") as MeshInstance3D
 	var island_deck := district.get_node("WalkableDeck") as MeshInstance3D
@@ -58,7 +64,7 @@ func _run() -> void:
 		"Mind Bridge and island collision deck must share the exact y=0 datum")
 	var mind_gate := floating_world.get_node("MindSparkWorldGate") as MindSparkWorldGate
 	assert(mind_gate != null)
-	assert(is_equal_approx(float(mind_gate.get_meta("ceremonial_visual_scale", 0.0)), 1.18))
+	assert(is_equal_approx(float(mind_gate.get_meta("ceremonial_visual_scale", 0.0)), 1.26))
 	assert(world.get_quest_objects().size() == 15)
 	assert(world.get_node("WorldOneGeometry/05ThoughtStormArena/BossArenaCollisionCollision") is StaticBody3D)
 	assert(world.get_node("WorldOneGeometry/06OldestTreeSanctuary/OldestTreeTrunkCollision") is StaticBody3D)

@@ -290,6 +290,8 @@ func _build_materials() -> void:
 	# like a construction overlay at player height and competed with the portal.
 	_materials.forecourt_paver = _make_material(Color("9c9484"), 0.92)
 	_materials.forecourt_soil = _make_material(Color("3f5148"), 0.96)
+	_materials.forecourt_lawn = _make_material(Color("456d59"), 0.94)
+	_materials.forecourt_water = _make_glow(Color(0.20, 0.82, 0.88, 0.72), 0.86, true)
 
 
 func _build_central_sanctuary() -> void:
@@ -757,7 +759,7 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 	var outward := Vector3(MIND_GATE_POSITION.x - MIND.x, 0.0,
 		MIND_GATE_POSITION.z - MIND.z).normalized()
 	forecourt.rotation.y = atan2(outward.x, outward.z)
-	forecourt.set_meta("design_revision", "celestial_gate_garden_v4")
+	forecourt.set_meta("design_revision", "celestial_gate_garden_v5")
 	forecourt.set_meta("production_quality_target", "10_of_10_graphic_design_pass")
 	forecourt.set_meta("lighting_layers", 3)
 	forecourt.set_meta("footprint_m", Vector2(64.0, 54.0))
@@ -768,6 +770,35 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 		"architecture and trunks are solid; inlays and planting are pass-through")
 	district.add_child(forecourt)
 
+	# A broad planted carpet ties the architecture into the district island. The
+	# previous court ended abruptly at its props and exposed the default grey
+	# foundation across most camera angles.
+	var landscape_frame := Node3D.new()
+	landscape_frame.name = "DistrictLandscapeFrame"
+	landscape_frame.set_meta("grey_foundation_visually_covered", true)
+	landscape_frame.set_meta("planted_wing_count", 2)
+	forecourt.add_child(landscape_frame)
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		_add_bevel_box(landscape_frame, "%sLandscapeStoneBed" % side_name,
+			Vector3(float(side) * 26.0, 0.07, -2.0),
+			Vector3(29.0, 0.12, 82.0), 0.70, _materials.passage_stone_shadow)
+		_add_bevel_box(landscape_frame, "%sLandscapeLawn" % side_name,
+			Vector3(float(side) * 26.0, 0.15, -2.0),
+			Vector3(26.5, 0.08, 78.5), 0.62, _materials.forecourt_lawn)
+		_add_box(landscape_frame, "%sInnerIvoryBorder" % side_name,
+			Vector3(float(side) * 12.25, 0.23, -2.0),
+			Vector3(0.55, 0.10, 77.0), _materials.forecourt_ivory, false)
+		for star_index in 4:
+			var star_z := -34.0 + float(star_index) * 21.0
+			_build_faceted_ceremonial_crystal(landscape_frame,
+				"%sGroundStar_%02d" % [side_name, star_index + 1],
+				Vector3(float(side) * (35.0 - float(star_index % 2) * 3.0),
+					1.7, star_z),
+				2.3 + float(star_index % 2) * 0.55, 0.58,
+				_materials.aqua if (star_index + (0 if side < 0 else 1)) % 2 == 0 \
+				else _materials.purple)
+
 	# A continuous foundation and tightly jointed faceted slabs make the approach
 	# read as one finished ceremonial walk rather than separated prototype steps.
 	var processional := Node3D.new()
@@ -775,8 +806,8 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 	processional.set_meta("clear_width_m", 18.0)
 	processional.set_meta("paver_count", 7)
 	forecourt.add_child(processional)
-	_add_box(processional, "ProcessionalFoundation", Vector3(0, 0.055, -18.0),
-		Vector3(20.0, 0.11, 54.0), _materials.passage_stone_shadow, false)
+	_add_bevel_box(processional, "ProcessionalFoundation", Vector3(0, 0.055, -18.0),
+		Vector3(20.0, 0.11, 54.0), 0.05, _materials.passage_stone_shadow)
 	for side in [-1.0, 1.0]:
 		_add_box(processional, "ProcessionalCharcoalEdge_%s" % ("L" if side < 0 else "R"),
 			Vector3(float(side) * 9.65, 0.14, -18.0),
@@ -799,6 +830,17 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			_add_box(processional, "CyanWayfinder_%02d" % (paver_index + 1),
 				Vector3(0, 0.22, paver_z), Vector3(0.52, 0.07, 1.35),
 				_materials.passage_light, false)
+	# Three low-relief compass medallions break up the long aisle without
+	# creating a collision or another glowing route line.
+	for medallion_index in 3:
+		var medallion_z := -34.0 + float(medallion_index) * 16.0
+		for wing in [-1.0, 1.0]:
+			_add_bevel_box(processional,
+				"IvoryAisleChevron_%02d_%s" % [medallion_index + 1,
+					"L" if wing < 0 else "R"],
+				Vector3(float(wing) * 3.0, 0.225, medallion_z),
+				Vector3(3.4, 0.045, 0.34), 0.04, _materials.forecourt_ivory).rotation.y = \
+				float(wing) * 0.42
 
 	var compass_court := Node3D.new()
 	compass_court.name = "FacetedCompassCourt"
@@ -859,6 +901,18 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			_add_box(gatehouse, "%sTowerBelt_%02d" % [side_name, belt_index + 1],
 				Vector3(x, 6.4 + float(belt_index) * 7.0, -0.15),
 				Vector3(8.35, 0.48, 8.15), _materials.ivory, false)
+		# Layered corner fins catch light independently from the shaft and remove
+		# the flat rectangular silhouette visible from the bridge.
+		for fin_side in [-1.0, 1.0]:
+			_add_bevel_box(gatehouse,
+				"%sFacadeFin_%s" % [side_name, "L" if fin_side < 0 else "R"],
+				Vector3(x + float(fin_side) * 4.15, shaft_center_y - 0.35, -2.65),
+				Vector3(1.15, shaft_height - 2.0, 2.75), 0.20,
+				_materials.forecourt_ivory)
+			_add_box(gatehouse,
+				"%sFinCyanCut_%s" % [side_name, "L" if fin_side < 0 else "R"],
+				Vector3(x + float(fin_side) * 4.18, shaft_center_y + 1.1, -4.06),
+				Vector3(0.25, 4.8, 0.12), _materials.passage_light, false)
 		# Outer buttresses widen the silhouette at ground level and make the tower
 		# read as load-bearing architecture instead of a decorated box.
 		var outer_side := -1.0 if side < 0 else 1.0
@@ -908,21 +962,35 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 		Vector3(3.8, 1.35, 2.0), 0.26, _materials.forecourt_ivory)
 	_build_faceted_ceremonial_crystal(portal_cradle, "PortalKeystoneCrystal",
 		Vector3(0, 14.75, -0.45), 2.9, 0.82, _materials.purple)
-	_add_torus(portal_cradle, "PortalArchitecturalBezel", Vector3(0, 5.5, 0.72),
-		6.72, 7.48, _materials.forecourt_ivory, Vector3(90, 0, 0))
+	_add_torus(portal_cradle, "PortalArchitecturalBezel", Vector3(0, 6.15, 0.72),
+		7.35, 8.25, _materials.forecourt_ivory, Vector3(90, 0, 0))
+	# Twelve separate arch stones give the gate a hand-built low-poly rhythm.
+	# Their shallow depth keeps the active portal and player opening unobstructed.
+	for arch_index in 12:
+		var arch_angle := TAU * float(arch_index) / 12.0
+		var arch_stone := _add_bevel_box(portal_cradle,
+			"PortalArchStone_%02d" % (arch_index + 1),
+			Vector3(sin(arch_angle) * 7.82,
+				6.15 + cos(arch_angle) * 7.82, 0.18),
+			Vector3(1.45, 2.05, 1.75), 0.20,
+			_materials.forecourt_ivory)
+		arch_stone.rotation.z = -arch_angle
 	for clamp_index in 3:
 		var clamp_angle: float = float([-1.02, 0.0, 1.02][clamp_index])
 		var clamp := _add_box(portal_cradle,
 			"PortalBezelClamp_%02d" % (clamp_index + 1),
-			Vector3(sin(clamp_angle) * 7.10,
-				5.5 + cos(clamp_angle) * 7.10, 0.18),
+			Vector3(sin(clamp_angle) * 7.82,
+				6.15 + cos(clamp_angle) * 7.82, 0.18),
 			Vector3(0.75, 1.75, 1.25), _materials.bridge_structure, false)
 		clamp.rotation.z = PI * 0.5 + clamp_angle
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0 else "East"
 		_add_bevel_box(portal_cradle, "%sPortalWingWall" % side_name,
 			Vector3(float(side) * 11.55, 3.1, 3.3),
-			Vector3(6.4, 5.6, 1.25), 0.34, _materials.bridge_structure)
+			Vector3(6.4, 5.6, 1.25), 0.34, _materials.forecourt_ivory)
+		_add_bevel_box(portal_cradle, "%sPortalWingRecess" % side_name,
+			Vector3(float(side) * 11.55, 3.15, 2.62),
+			Vector3(4.7, 3.75, 0.20), 0.08, _materials.bridge_structure)
 		_add_box(portal_cradle, "%sPortalWingInlay" % side_name,
 			Vector3(float(side) * 11.55, 3.4, 2.62),
 			Vector3(2.9, 0.35, 0.16), _materials.passage_light, false)
@@ -938,6 +1006,12 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			Vector3(7.0, 0.9, 4.1), 0.22, _materials.passage_stone)
 	_add_box(gatehouse, "GatehouseCrownInset", Vector3(0, 21.5, -1.72),
 		Vector3(12.0, 0.45, 0.24), _materials.passage_light, false)
+	_add_bevel_box(gatehouse, "CrownCentralPylon", Vector3(0, 18.55, 0),
+		Vector3(2.25, 5.9, 2.35), 0.28, _materials.forecourt_ivory)
+	_add_box(gatehouse, "CrownCentralAetherCut", Vector3(0, 18.65, -1.24),
+		Vector3(0.48, 3.6, 0.16), _materials.passage_light, false)
+	_build_faceted_ceremonial_crystal(gatehouse, "CrownPendant",
+		Vector3(0, 15.6, -0.45), 2.4, 0.66, _materials.aqua)
 	_build_faceted_ceremonial_crystal(gatehouse, "LavenderCrownCrystal",
 		Vector3(0, 25.65, -0.5), 4.6, 1.45, _materials.purple)
 
@@ -951,6 +1025,12 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 		_add_box(terraces, "%sGardenTerrace" % side_name,
 			Vector3(x, 0.65, -18.0), Vector3(13.0, 1.3, 35.0),
 			_materials.stone, true)
+		_add_bevel_box(terraces, "%sGardenSoilInset" % side_name,
+			Vector3(x, 1.34, -18.0), Vector3(10.4, 0.12, 31.8), 0.08,
+			_materials.forecourt_soil)
+		_add_bevel_box(terraces, "%sAetherReflectingPool" % side_name,
+			Vector3(x - float(side) * 3.35, 1.43, -18.0),
+			Vector3(2.1, 0.06, 23.0), 0.10, _materials.forecourt_water)
 		_add_box(terraces, "%sCliffParapet" % side_name,
 			Vector3(float(side) * 32.0, 1.8, -16.0), Vector3(1.6, 3.6, 39.0),
 			_materials.passage_stone_shadow, true)
@@ -961,12 +1041,12 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 			Vector3(float(side) * 19.35, 1.45, -18.0), Vector3(0.45, 1.0, 34.0),
 			_materials.ivory, false)
 		for tree_index in 3:
-			var stagger := float(tree_index % 2) * 1.6
+			var stagger := (float(tree_index % 2) * 2.6) - 1.0
 			_build_ceremonial_faceted_tree(terraces,
 				"%sCourtTree_%02d" % [side_name, tree_index + 1],
 				Vector3(x + float(side) * stagger, 1.35,
-					-36.0 + float(tree_index) * 14.0),
-				10.0 + float((tree_index + (0 if side < 0 else 1)) % 2) * 1.8)
+					-36.0 + float(tree_index) * 14.0 + float(side) * float(tree_index - 1)),
+				9.2 + float((tree_index + (0 if side < 0 else 1)) % 3) * 1.45)
 
 	var plinths := Node3D.new()
 	plinths.name = "ConstellationPlinths"
@@ -1012,6 +1092,51 @@ func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
 				0.82 if marker_index == 0 else 0.62,
 				_materials.purple if (marker_index + (0 if side < 0 else 1)) % 2 == 0 \
 				else _materials.aqua)
+
+	# Finish the view beyond the portal with a layered garden and a shallow
+	# colonnade. This replaces the broad empty grey island surface that made the
+	# entrance look like an isolated prototype dropped onto a test platform.
+	var backdrop := Node3D.new()
+	backdrop.name = "CelestialGardenBackdrop"
+	backdrop.set_meta("landscape_layers", 3)
+	backdrop.set_meta("repeated_row_layout_removed", true)
+	forecourt.add_child(backdrop)
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		_add_bevel_box(backdrop, "%sUpperGardenFoundation" % side_name,
+			Vector3(float(side) * 22.0, 0.45, 22.5),
+			Vector3(25.0, 0.85, 36.0), 0.50, _materials.passage_stone_shadow)
+		_add_bevel_box(backdrop, "%sUpperGardenLawn" % side_name,
+			Vector3(float(side) * 22.0, 0.92, 22.5),
+			Vector3(21.8, 0.12, 32.2), 0.45, _materials.forecourt_lawn)
+		_add_bevel_box(backdrop, "%sConstellationPool" % side_name,
+			Vector3(float(side) * 16.4, 1.03, 22.5),
+			Vector3(5.6, 0.06, 21.0), 0.26, _materials.forecourt_water)
+		for column_index in 3:
+			var column_z := 10.0 + float(column_index) * 12.5
+			var column_x := float(side) * (29.0 - float(column_index % 2) * 2.0)
+			_add_cylinder(backdrop,
+				"%sGardenColumn_%02d" % [side_name, column_index + 1],
+				Vector3(column_x, 5.0, column_z), 1.35, 8.0,
+				_materials.forecourt_ivory, true, 8)
+			_add_cylinder(backdrop,
+				"%sGardenColumnCapital_%02d" % [side_name, column_index + 1],
+				Vector3(column_x, 9.25, column_z), 2.1, 0.55,
+				_materials.ivory, false, 8)
+			_build_faceted_ceremonial_crystal(backdrop,
+				"%sColumnStar_%02d" % [side_name, column_index + 1],
+				Vector3(column_x, 11.1, column_z), 2.2, 0.60,
+				_materials.aqua if column_index == 1 else _materials.purple)
+	# A low stepped horizon terminates the composition without blocking the
+	# playable central axis or pretending an opening is traversable.
+	for step_index in 3:
+		_add_bevel_box(backdrop, "HorizonStep_%02d" % (step_index + 1),
+			Vector3(0, 0.45 + float(step_index) * 0.34,
+				37.0 + float(step_index) * 2.5),
+			Vector3(14.0 - float(step_index) * 2.0, 0.42, 3.0), 0.15,
+			_materials.passage_stone if step_index != 1 else _materials.forecourt_ivory)
+	_build_faceted_ceremonial_crystal(backdrop, "GardenAxisStar",
+		Vector3(0, 4.1, 42.0), 5.4, 1.25, _materials.aqua)
 
 	var lighting := Node3D.new()
 	lighting.name = "CeremonialLightingRig"
@@ -1193,12 +1318,12 @@ func _build_mind_spark_world_one_gameplay() -> void:
 		+ world_one.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0)
 	source_gate.prompt_text = "Q • ENTER WORLD ONE: MIND SPARK"
 	var portal_visual := source_gate.get_node("Portal") as Node3D
-	portal_visual.scale = Vector3.ONE * 1.18
+	portal_visual.scale = Vector3.ONE * 1.26
 	var portal_light := source_gate.get_node("Light") as OmniLight3D
 	portal_light.light_color = Color("6de5ef")
 	portal_light.light_energy = 3.2
 	portal_light.omni_range = 26.0
-	source_gate.set_meta("ceremonial_visual_scale", 1.18)
+	source_gate.set_meta("ceremonial_visual_scale", 1.26)
 	add_child(source_gate)
 	_build_world_one_causeway(world_one)
 	if world_one.defer_world_build:
