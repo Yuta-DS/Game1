@@ -30,7 +30,7 @@ func _run() -> void:
 			_fail("missing explorable district %s" % district)
 			return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
-	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v12" \
+	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v13" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):
 		_fail("Heart Melody still uses its placeholder rectangular facade")
 		return
@@ -59,8 +59,7 @@ func _run() -> void:
 			or conservatory.find_children("*TowerCollisionCollision", "StaticBody3D", true, false).size() != 2:
 		_fail("Heart Melody conservatory landscaping or collision is incomplete")
 		return
-	if conservatory.find_children("Instrument_*", "Node3D", true, false).size() != 6 \
-			or conservatory.find_children("HarmonyString_*", "MeshInstance3D", true, false).size() != 7:
+	if conservatory.find_children("Instrument_*", "Node3D", true, false).size() != 6:
 		_fail("Heart Melody musical storytelling remains incomplete")
 		return
 	if conservatory.find_children("TerraceButtress_*", "MeshInstance3D", true, false).size() != 9 \
@@ -68,15 +67,15 @@ func _run() -> void:
 		_fail("Heart Melody terrace edges and underside remain unfinished")
 		return
 	var entrance := conservatory.get_node_or_null("GrandResonanceEntrance") as Node3D
-	var resonator := entrance.get_node_or_null("SuspendedHarmonyResonator") as Node3D if entrance else null
 	var gardens := conservatory.get_node_or_null("ResonanceOrchardGardens") as Node3D
 	if entrance == null or float(entrance.get_meta("principal_route_width_m", 0.0)) < 18.0 \
-			or str(entrance.get_meta("design_revision", "")) != "grand_resonance_gate_v3" \
+			or str(entrance.get_meta("design_revision", "")) != "grand_resonance_gate_v4" \
 			or not bool(entrance.get_meta("barrier_like_gate_removed", false)) \
 			or not bool(entrance.get_meta("finished_bridge_landing", false)) \
 			or not bool(entrance.get_meta("musical_focal_monument", false)) \
 			or not bool(entrance.get_meta("sculpted_bridge_transition", false)) \
 			or not bool(entrance.get_meta("asymmetric_landing_gardens", false)) \
+			or not bool(entrance.get_meta("suspended_gate_harp_removed", false)) \
 			or int(entrance.get_meta("portal_arch_ring_count", 0)) != 2 \
 			or int(entrance.get_meta("vaulted_glass_canopy_panels", 0)) != 4 \
 			or int(entrance.get_meta("framed_tower_window_count", 0)) != 4 \
@@ -102,10 +101,9 @@ func _run() -> void:
 			or entrance.get_node_or_null("EastLandingTuningSculpture") == null \
 			or entrance.get_node_or_null("LeftPediment") != null \
 			or entrance.get_node_or_null("RightPediment") != null \
-			or resonator == null or not bool(resonator.get_meta("oversized_ring_removed", false)) \
-			or not bool(resonator.get_meta("suspended_above_route", false)) \
-			or (resonator.get_node("HarpFrameBase") as MeshInstance3D).position.y < 15.0 \
-			or resonator.get_node_or_null("ResonatorHalo") != null:
+			or entrance.get_node_or_null("SuspendedHarmonyResonator") != null \
+			or entrance.find_children("HarpFrame*", "MeshInstance3D", true, false).size() != 0 \
+			or entrance.find_children("HarmonyString_*", "MeshInstance3D", true, false).size() != 0:
 		_fail("the central music pavilion remains a prototype")
 		return
 	if conservatory.find_children("CourageFrontGable*", "MeshInstance3D", true, false).size() != 0 \

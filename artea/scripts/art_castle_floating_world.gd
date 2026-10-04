@@ -1694,7 +1694,7 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v12")
+	district.set_meta("design_revision", "celestial_conservatory_v13")
 	district.set_meta("finished_product_lighting", true)
 	district.set_meta("production_material_palette", true)
 	district.set_meta("flat_rectangle_facade_removed", true)
@@ -1880,7 +1880,7 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	entrance.set_meta("clear_opening_width_m", 48.0)
 	entrance.set_meta("principal_route_width_m", 18.0)
 	entrance.set_meta("complete_front_side_rear", true)
-	entrance.set_meta("design_revision", "grand_resonance_gate_v3")
+	entrance.set_meta("design_revision", "grand_resonance_gate_v4")
 	entrance.set_meta("barrier_like_gate_removed", true)
 	entrance.set_meta("portal_arch_ring_count", 2)
 	entrance.set_meta("finished_bridge_landing", true)
@@ -1890,6 +1890,7 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	entrance.set_meta("musical_focal_monument", true)
 	entrance.set_meta("sculpted_bridge_transition", true)
 	entrance.set_meta("asymmetric_landing_gardens", true)
+	entrance.set_meta("suspended_gate_harp_removed", true)
 	conservatory.add_child(entrance)
 
 	# A broad, layered landing resolves the abrupt bridge-to-building joint and
@@ -2183,32 +2184,6 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
 	_add_bevel_box(entrance, "PavilionRearLintel", Vector3(0.0, 19.8, 13.0),
 		Vector3(32.0, 2.0, 4.0), 0.65, _materials.heart_ivory)
-
-	# A crystalline harp is the primary focal object. Its faceted frame replaces
-	# the oversized ring while retaining the seven readable melody strings.
-	var resonator := Node3D.new()
-	resonator.name = "SuspendedHarmonyResonator"
-	resonator.set_meta("camera_clearance_m", 18.0)
-	resonator.set_meta("oversized_ring_removed", true)
-	resonator.set_meta("suspended_above_route", true)
-	entrance.add_child(resonator)
-	_add_reference_beam(resonator, Vector3(-8.0, 20.5, 7.6),
-		Vector3(8.0, 20.5, 7.6), 1.10, _materials.heart_ivory).name = "HarpFrameBase"
-	_add_reference_beam(resonator, Vector3(-8.0, 20.5, 7.6),
-		Vector3(-4.8, 31.0, 7.6), 1.10, _materials.heart_ivory).name = "HarpFrameWest"
-	_add_reference_beam(resonator, Vector3(-4.8, 31.0, 7.6),
-		Vector3(8.0, 20.5, 7.6), 1.10, _materials.heart_ivory).name = "HarpFrameCrown"
-	for string_index in 7:
-		var string_x := -3.8 + float(string_index) * 1.25
-		var string_height := 8.0 - float(string_index) * 0.52
-		_add_reference_beam(resonator,
-			Vector3(string_x, 21.2, 7.6),
-			Vector3(string_x, 21.2 + string_height, 7.6),
-			0.25, _materials.heart_light).name = "HarmonyString_%02d" % (string_index + 1)
-	_build_faceted_ceremonial_crystal(resonator, "ResonatorHeart",
-		Vector3(0.0, 26.0, 8.1), 4.2, 0.88, _materials.heart_lavender)
-	_add_forecourt_omni(entrance, "HarmonyResonatorLight", Vector3(0.0, 26.0, 6.0),
-		Color("62c9d2"), 1.0, 34.0)
 
 	# Six complete instrument halls form a connected conservatory wing. Each one
 	# has a different footprint, roof and musical identity, with finished side
