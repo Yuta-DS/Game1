@@ -33,9 +33,9 @@ func _run() -> void:
 			"EastObservatory", "SouthObservatory"]:
 		var observatory := world.get_node(observatory_name) as Node3D
 		var tower_shell := observatory.get_node_or_null("ObservatoryTower") as MeshInstance3D
-		if str(observatory.get_meta("architecture_revision", "")) != "faceted_observatory_v2" \
+		if str(observatory.get_meta("architecture_revision", "")) != "faceted_observatory_v3" \
 				or not bool(observatory.get_meta("placeholder_rectangle_removed", false)) \
-				or tower_shell == null or tower_shell.visible \
+				or tower_shell == null or tower_shell.visible or tower_shell.mesh != null \
 				or observatory.get_node_or_null("ObservatoryTowerCollision") == null \
 				or observatory.find_children("Observatory*FacetedBody", "MeshInstance3D", true, false).size() != 2 \
 				or observatory.find_children("ObservatoryWindowFrame*", "MeshInstance3D", true, false).size() != 4 \
@@ -43,6 +43,11 @@ func _run() -> void:
 				or observatory.find_children("*ObservatoryButtress_*", "MeshInstance3D", true, false).size() != 4:
 			_fail("%s still uses the gray rectangular tower prototype" % observatory_name)
 			return
+	var north_observatory := world.get_node("NorthObservatory") as Node3D
+	if not bool(north_observatory.get_meta("clear_of_primary_gate_sightline", false)) \
+			or absf(north_observatory.get_node("WalkableDeck").position.x) < 200.0:
+		_fail("north observatory still blocks the Heart gate sightline")
+		return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
 	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v14" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):

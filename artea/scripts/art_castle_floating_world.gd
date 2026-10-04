@@ -3075,7 +3075,10 @@ func _build_boundary_observatories() -> void:
 		# no longer passes through the station platform and crystal canopy.
 		{"name": "WestObservatory", "center": Vector3(-920.0, 0.0, 1430.0),
 			"source_center": MIND, "source_radius": MIND_DISTRICT_RADIUS},
-		{"name": "NorthObservatory", "center": Vector3(0.0, 0.0, 2565.0),
+		# Keep the northern observatory out of the straight Heart gate sightline.
+		# The former centred placement read as a giant gray rectangle behind the
+		# entrance whenever the elevated Crown Line crossed in front of it.
+		{"name": "NorthObservatory", "center": Vector3(-255.0, 0.0, 2525.0),
 			"source_center": HEART, "source_radius": 175.0},
 		{"name": "EastObservatory", "center": Vector3(920.0, 0.0, 1640.0),
 			"source_center": CREATOR, "source_radius": 195.0},
@@ -3087,8 +3090,9 @@ func _build_boundary_observatories() -> void:
 		lookout.name = info.name
 		add_child(lookout)
 		var center: Vector3 = info.center
-		lookout.set_meta("architecture_revision", "faceted_observatory_v2")
+		lookout.set_meta("architecture_revision", "faceted_observatory_v3")
 		lookout.set_meta("placeholder_rectangle_removed", true)
+		lookout.set_meta("clear_of_primary_gate_sightline", info.name == "NorthObservatory")
 		_build_island_foundation(lookout, center, 70.0, 38.0, 20)
 		_add_torus(lookout, "CompassRing", center + Vector3(0.0, 1.0, 0.0), 33.0, 38.0, _materials.gold)
 		_build_tower(lookout, center, 34.0, 112.0, _materials.ivory)
@@ -7283,6 +7287,10 @@ func _build_tower(parent: Node3D, base: Vector3, width: float, height: float, ma
 	var collision_shell := _add_box(parent, "ObservatoryTower",
 		tower_center + Vector3.UP * height * 0.5, Vector3(width, height, width),
 		material, true)
+	# The node name is retained for integrations that resolve it as a
+	# MeshInstance3D, but it owns no renderable geometry. This makes it
+	# impossible for the old rectangular prototype to reappear in Web builds.
+	collision_shell.mesh = null
 	collision_shell.visible = false
 	_add_tapered_cylinder(parent, "ObservatoryFoundationPlinth",
 		tower_center + Vector3.UP * 4.0, width * 0.72, width * 0.62, 8.0,
