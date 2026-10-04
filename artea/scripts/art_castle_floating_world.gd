@@ -1881,7 +1881,7 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	entrance.set_meta("clear_opening_width_m", 48.0)
 	entrance.set_meta("principal_route_width_m", 18.0)
 	entrance.set_meta("complete_front_side_rear", true)
-	entrance.set_meta("design_revision", "grand_resonance_gate_v5")
+	entrance.set_meta("design_revision", "grand_resonance_gate_v6")
 	entrance.set_meta("barrier_like_gate_removed", true)
 	entrance.set_meta("portal_arch_ring_count", 2)
 	entrance.set_meta("finished_bridge_landing", true)
@@ -1893,6 +1893,8 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	entrance.set_meta("asymmetric_landing_gardens", true)
 	entrance.set_meta("suspended_gate_harp_removed", true)
 	entrance.set_meta("loose_crest_spokes_removed", true)
+	entrance.set_meta("crest_strings_removed", true)
+	entrance.set_meta("crest_form", "single_prism_keystone")
 	conservatory.add_child(entrance)
 
 	# A broad, layered landing resolves the abrupt bridge-to-building joint and
@@ -2090,8 +2092,8 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 		_add_reference_beam(entrance, Vector3(19.0, 24.5, depth_z),
 			Vector3(0.0, 42.0, depth_z), 0.62, rib_material).name = \
 			"InnerVaultRibEast_%02d" % (depth_index + 1)
-	# A single large lyre-sun emblem gives the entrance a memorable musical
-	# identity from long range. All components stay above the camera clearance.
+	# A single prism keystone gives the entrance a clean celestial focal point.
+	# All components stay above the camera clearance.
 	var grand_emblem := Node3D.new()
 	grand_emblem.name = "GrandHarmonyLyreEmblem"
 	grand_emblem.set_meta("primary_gate_focal_point", true)
@@ -2108,15 +2110,13 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	_add_reference_beam(grand_emblem, emblem_center + Vector3(-5.2, -1.2, 0.0),
 		emblem_center + Vector3(5.2, -1.2, 0.0), 0.82,
 		_materials.heart_ivory).name = "LyreFrameBase"
-	for emblem_string_index in 5:
-		var emblem_x := -3.2 + float(emblem_string_index) * 1.6
-		var emblem_top_y: float = 41.3 + (3.0 - abs(float(emblem_string_index) - 2.0)) * 0.72
-		_add_reference_beam(grand_emblem,
-			Vector3(emblem_x, 35.5, -12.05),
-			Vector3(emblem_x, emblem_top_y, -12.05), 0.18,
-			_materials.heart_light).name = "LyreLightString_%02d" % (emblem_string_index + 1)
+	# A compact charcoal socket grounds the crystal without thin strings or
+	# unsupported lines crossing the open triangle.
+	_add_bevel_box(grand_emblem, "HarmonyPrismSocket",
+		emblem_center + Vector3(0.0, 1.0, 0.18), Vector3(3.2, 3.2, 0.72),
+		0.52, _materials.heart_charcoal)
 	_build_faceted_ceremonial_crystal(grand_emblem, "HarmonyHeart",
-		emblem_center + Vector3(0.0, 1.0, -0.15), 4.2, 0.88,
+		emblem_center + Vector3(0.0, 1.0, -0.35), 5.0, 1.05,
 		_materials.heart_cyan)
 	# Four faceted glass roof plates turn the pair of arch rings into one deep
 	# pavilion. The plates are thin, translucent and collision-free so the sky,
