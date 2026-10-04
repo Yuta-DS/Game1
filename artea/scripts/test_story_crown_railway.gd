@@ -232,10 +232,11 @@ func _run() -> void:
 				return
 		if station_index == 1:
 			if station.get_node_or_null("KingdomAccessSkybridge") != null \
-					or station.get_node_or_null("AccessRamp") != null \
+					or station.get_node_or_null("MindSparkStationAccessStairs") == null \
 					or station.get_node_or_null("MindSparkLongAccessBridgeRemoved") == null \
-					or not bool(station.get_meta("long_access_bridge_removed", false)):
-				_fail("Mind Spark station did not completely remove its longest access bridge")
+					or not bool(station.get_meta("long_access_bridge_removed", false)) \
+					or not bool(station.get_meta("grounded_station_stair_added", false)):
+				_fail("Mind Spark station did not replace its longest bridge with a grounded stair")
 				return
 		else:
 			for access_part in ["AccessRamp", "KingdomAccessSkybridge"]:

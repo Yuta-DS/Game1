@@ -203,6 +203,15 @@ func _run() -> void:
 			return
 	right = touch.get_node("Right") as Button
 	jump = touch.get_node("Jump") as Button
+	var vitals := player.get_node_or_null("CombatHelpHUD/CombatVitals") as Control
+	var up := touch.get_node("Up") as Button
+	if vitals == null or vitals.get_global_rect().intersects(up.get_global_rect()) \
+			or vitals.get_global_rect().intersects((touch.get_node("Left") as Button).get_global_rect()) \
+			or vitals.get_global_rect().intersects((touch.get_node("Down") as Button).get_global_rect()) \
+			or vitals.get_global_rect().intersects(right.get_global_rect()) \
+			or str(vitals.get_meta("touch_layout", "")) != "above_direction_controls":
+		_fail("health/focus bars overlap the portrait movement controls")
+		return
 	if right.get_global_rect().intersects(jump.get_global_rect()):
 		_fail("screen-pixel-safe movement and action controls overlap")
 		return

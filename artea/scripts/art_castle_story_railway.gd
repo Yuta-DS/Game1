@@ -1265,25 +1265,42 @@ func _build_canonical_station(station: Node3D, station_index: int,
 	(station.get_node("KingdomAccessSkybridge") as Node3D).basis = access_basis
 	(station.get_node("AccessRamp") as Node3D).basis = access_basis
 	if station_index == 1:
-		_remove_mind_spark_long_access_bridge(station)
+		_remove_mind_spark_long_access_bridge(station, dock_sign)
 
 
-func _remove_mind_spark_long_access_bridge(station: Node3D) -> void:
+func _remove_mind_spark_long_access_bridge(station: Node3D, dock_sign: float) -> void:
 	# Mind Spark is now entered through its world gate and railway platform. The
 	# former 116 m station-to-park span was the longest local bridge and hung on
 	# tall exposed piers in front of the station. Retire the entire bridge and its
-	# dead-end arrival flight together so no visual or invisible collision remains.
-	for node_name in ["KingdomAccessSkybridge", "AccessRamp"]:
-		var retired := station.get_node_or_null(node_name) as Node3D
-		if retired != null:
-			retired.free()
+	# long access span. Keep a compact, grounded flight from the circular station
+	# court to the raised train platform so boarding remains readable and walkable.
+	var retired_bridge := station.get_node_or_null("KingdomAccessSkybridge") as Node3D
+	if retired_bridge != null:
+		retired_bridge.free()
+	# Rebuild the flight with a collision that begins at the station court rather
+	# than at the removed kingdom bridge landing hundreds of metres away.
+	var retired_stairs := station.get_node_or_null("AccessRamp") as Node3D
+	if retired_stairs != null:
+		retired_stairs.free()
+	var stair_start_x := -STAIR_START_X * dock_sign
+	var local_ground_landing := Vector3(
+		stair_start_x + dock_sign * 1.2, STAIR_BOTTOM_TOP_Y - 0.10, 0.0)
+	_build_dock_arrival_stairs(station, dock_sign, local_ground_landing)
+	var stairs := station.get_node("AccessRamp") as Node3D
+	stairs.basis = station.get_meta("access_basis", Basis.IDENTITY)
+	stairs.name = "MindSparkStationAccessStairs"
+	stairs.set_meta("grounded_to_station_court", true)
+	stairs.set_meta("clear_centre_lane_m", 5.4)
+	stairs.set_meta("long_bridge_dependency", false)
 	var marker := Node3D.new()
 	marker.name = "MindSparkLongAccessBridgeRemoved"
 	marker.set_meta("removed_structure", "KingdomAccessSkybridge")
 	marker.set_meta("collision_removed", true)
-	marker.set_meta("travel_preserved_by", "Crown Line platform and Mind Spark world gate")
+	marker.set_meta("travel_preserved_by",
+		"grounded station stair, Crown Line platform and Mind Spark world gate")
 	station.add_child(marker)
 	station.set_meta("long_access_bridge_removed", true)
+	station.set_meta("grounded_station_stair_added", true)
 
 
 func _install_mind_spark_station_object_collisions(station: Node3D) -> void:

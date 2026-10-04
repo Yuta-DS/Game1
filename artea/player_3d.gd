@@ -72,6 +72,7 @@ var _shield_visual: Node3D
 var _combat_status: Label3D
 var _combat_help_panel: ColorRect
 var _combat_help_label: Label
+var _combat_vitals: PanelContainer
 var _input_hint_mode := "keyboard"
 var _touch_hud: Control
 var _touch_buttons: Dictionary = {}
@@ -936,16 +937,16 @@ func _build_combat_help() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "CombatHelpHUD"
 	add_child(layer)
-	var vitals := PanelContainer.new()
-	vitals.name = "CombatVitals"
-	vitals.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	vitals.position = Vector2(22.0, -154.0)
-	vitals.size = Vector2(276.0, 84.0)
-	vitals.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_combat_vitals = PanelContainer.new()
+	_combat_vitals.name = "CombatVitals"
+	_combat_vitals.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_combat_vitals.position = Vector2(22.0, -154.0)
+	_combat_vitals.size = Vector2(276.0, 84.0)
+	_combat_vitals.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var vitals_body := VBoxContainer.new()
 	vitals_body.name = "Bars"
 	vitals_body.add_theme_constant_override("separation", 4)
-	vitals.add_child(vitals_body)
+	_combat_vitals.add_child(vitals_body)
 	_health_bar = _combat_bar("HEALTH", Color("e86d73"))
 	_focus_bar = _combat_bar("FOCUS", Color("58ddec"))
 	vitals_body.add_child(_health_bar)
@@ -956,7 +957,7 @@ func _build_combat_help() -> void:
 	_combo_label.add_theme_font_size_override("font_size", 12)
 	_combo_label.modulate = Color("ffe28a")
 	vitals_body.add_child(_combo_label)
-	layer.add_child(vitals)
+	layer.add_child(_combat_vitals)
 	_build_assistance_prompt(layer)
 	_combat_help_panel = ColorRect.new()
 	_combat_help_panel.name = "CombatHelpPanel"
@@ -1085,6 +1086,23 @@ func _layout_combat_help(viewport_size: Vector2) -> void:
 	_combat_help_label.position = Vector2(9.0 if compact else 14.0,
 		8.0 if compact else 13.0)
 	_combat_help_label.add_theme_font_size_override("font_size", 13 if compact else 17)
+	# On touch screens the movement cluster owns the bottom-left corner. Place
+	# the health/focus (XP-style) bars above its highest button with a real gap,
+	# instead of leaving the fixed desktop offset on top of UP/LEFT/DOWN/RIGHT.
+	if _combat_vitals != null:
+		if _input_hint_mode == "touch" and _touch_hud != null:
+			var up_button := _touch_buttons.get("Up") as Button
+			if up_button != null:
+				var clearance := maxf(12.0,
+					float(get_meta("touch_control_ui_scale", 1.0)) * 8.0)
+				var vitals_top := up_button.position.y \
+					- _combat_vitals.size.y - clearance
+				_combat_vitals.position = Vector2(up_button.position.x,
+					vitals_top - viewport_size.y)
+				_combat_vitals.set_meta("touch_clearance_px", clearance)
+				_combat_vitals.set_meta("touch_layout", "above_direction_controls")
+		else:
+			_combat_vitals.position = Vector2(22.0, -154.0)
 
 
 func get_input_hint_mode() -> String:
@@ -1255,6 +1273,9 @@ func _layout_touch_controls(viewport_size: Vector2,
 	set_meta("touch_control_physical_button_pixels", target_button_pixels)
 	set_meta("touch_control_ui_scale", ui_scale)
 	set_meta("touch_control_layout", "screen_pixel_safe_v2")
+	# Reflow the bars after the buttons have their final screen-safe positions.
+	# _build_combat_help runs before touch controls exist during player startup.
+	_layout_combat_help(viewport_size)
 
 
 func _touch_physical_size(viewport_size: Vector2) -> Vector2:

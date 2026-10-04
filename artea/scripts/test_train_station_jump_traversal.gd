@@ -178,13 +178,45 @@ func _run() -> void:
 		_fail("player cannot walk through the pictured long station stair " \
 			+ "(reached %s)" % player_after_long_stair)
 		return
-	# Mind Spark remains reachable by train, while its former longest bridge and
-	# the matching dead-end stair are completely absent from play and physics.
+	# Mind Spark keeps a compact stair between its circular court and train deck,
+	# while the former longest bridge remains absent from play and physics.
 	var mind_station := railway.get_node("StoryStations/Station_02_mind") as Node3D
 	if mind_station.get_node_or_null("KingdomAccessSkybridge") != null \
-			or mind_station.get_node_or_null("AccessRamp") != null \
+			or mind_station.get_node_or_null("MindSparkStationAccessStairs") == null \
 			or mind_station.get_node_or_null("MindSparkLongAccessBridgeRemoved") == null:
-		_fail("Mind Spark station still contains its retired longest bridge or stair")
+		_fail("Mind Spark station lacks its grounded stair or still contains the retired bridge")
+		return
+	var mind_stairs := mind_station.get_node("MindSparkStationAccessStairs") as Node3D
+	if mind_stairs.get_node_or_null("WalkableStairRampCollision") == null \
+			or not bool(mind_stairs.get_meta("grounded_to_station_court", false)) \
+			or float(mind_stairs.get_meta("clear_centre_lane_m", 0.0)) < 5.4:
+		_fail("Mind Spark train stair is not grounded, collision-backed, and player-clear")
+		return
+	var mind_first := mind_stairs.get_node("DockStep_01") as MeshInstance3D
+	var mind_last := mind_stairs.get_node("DockStep_16") as MeshInstance3D
+	player.global_position = mind_first.to_global(Vector3.UP * 2.8)
+	player.velocity = Vector3.ZERO
+	if not await _settle(player):
+		_fail("player cannot stand at the foot of the Mind Spark train stair")
+		return
+	var mind_target := mind_last.global_position
+	var reached_mind_platform := false
+	Input.action_press("move_forward")
+	Input.action_press("run")
+	for _frame in 500:
+		var flat_target := Vector3(mind_target.x, player.global_position.y + 4.0,
+			mind_target.z)
+		test_camera.global_position = player.global_position + Vector3.UP * 5.0
+		test_camera.look_at(flat_target, Vector3.UP)
+		await physics_frame
+		if Vector2(mind_target.x - player.global_position.x,
+				mind_target.z - player.global_position.z).length() < 2.5:
+			reached_mind_platform = true
+			break
+	Input.action_release("run")
+	Input.action_release("move_forward")
+	if not reached_mind_platform or mind_station.to_local(player.global_position).y < 0.7:
+		_fail("player cannot walk the restored Mind Spark station stair onto the platform")
 		return
 	var west_removal := world.get_node_or_null("WestObservatoryRemoved") as Node3D
 	if world.get_node_or_null("WestObservatory") != null \
