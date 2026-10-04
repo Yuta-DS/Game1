@@ -2272,7 +2272,15 @@ func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
 		landing.y = landing_surface_y - bridge_basis.y.y * ACCESS_DECK_THICKNESS * 0.5
 	_add_walkway_between(bridge, "FloatingAccessDeck", dock_edge, landing, 16.0,
 		ACCESS_DECK_THICKNESS, _piltover_pixel_floor_material, false)
-	_build_bridge_ceremonial_ascent(bridge, dock_edge, landing)
+	if station.name == "Station_02_mind":
+		bridge.set_meta("processional_bridge_location",
+			"mind_spark_train_station_front")
+		bridge.set_meta("relocated_processional_design", true)
+		bridge.set_meta("smooth_forebridge", true)
+		bridge.set_meta("clear_walkable_width_m", 12.0)
+		_build_mind_spark_processional_forebridge(bridge, dock_edge, landing)
+	else:
+		_build_bridge_ceremonial_ascent(bridge, dock_edge, landing)
 	_build_dock_arrival_stairs(station, dock_sign,
 		Vector3(landing.x, landing_surface_y, landing.z))
 	var direction := landing - dock_edge
@@ -2293,6 +2301,11 @@ func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
 		_add_purpose_barrier_segment(skybridge_guard, "GlassBarrier",
 			guard_start, guard_finish,
 			"protects the elevated station approach with a clear view")
+		if station.name == "Station_02_mind":
+			skybridge_guard.set_meta("barrier_plan", "cyan_glass_gold_frame")
+			for window in skybridge_guard.find_children(
+					"GlassWindow_*", "MeshInstance3D", true, false):
+				(window as MeshInstance3D).material_override = _glass_material
 		var shared_posts := {}
 		var span_count := maxi(1, ceili(guard_start.distance_to(guard_finish) / 6.5))
 		for post_index in span_count + 1:
@@ -2300,6 +2313,75 @@ func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
 			_add_unique_barrier_post(skybridge_guard, shared_posts,
 				guard_start.lerp(guard_finish, ratio))
 		skybridge_guard.set_meta("shared_connection_post_count", shared_posts.size())
+
+
+func _build_mind_spark_processional_forebridge(parent: Node3D,
+		start: Vector3, finish: Vector3) -> void:
+	# The Mind Spark arrival is a calm, continuous station forecourt. The former
+	# 96-piece stair treatment made the route shimmer at distance and hid its
+	# walkable line. One broad upper skin now follows the proven collision slope.
+	const SURFACE_WIDTH := 15.20
+	const CLEAR_ROUTE_WIDTH := 12.0
+	const EDGE_OFFSET := 7.22
+	var direction := finish - start
+	var horizontal_run := Vector3(direction.x, 0.0, direction.z)
+	if horizontal_run.length() < 0.01:
+		return
+	var forward := horizontal_run.normalized()
+	var side_axis := Vector3(-forward.z, 0.0, forward.x)
+	var surface_start := start + Vector3.UP * 0.54
+	var surface_finish := finish + Vector3.UP * 0.54
+	_add_walkway_between(parent, "MindSparkForebridgeSurface",
+		surface_start, surface_finish, SURFACE_WIDTH, 0.18,
+		_piltover_ivory_material, false)
+	# Charcoal fascia gives the long floating span a deliberate architectural
+	# silhouette. The thin gold and cyan lines sit inside the safety glass and
+	# never narrow the twelve-metre player route.
+	for side in [-1.0, 1.0]:
+		var offset := side_axis * float(side) * EDGE_OFFSET
+		_add_walkway_between(parent,
+			"MindSparkForebridgeFasciaLeft" if side < 0.0 \
+			else "MindSparkForebridgeFasciaRight",
+			start + offset - Vector3.UP * 0.08,
+			finish + offset - Vector3.UP * 0.08,
+			0.42, 1.02, _dark_metal_material, false)
+		_add_walkway_between(parent,
+			"MindSparkForebridgeGoldEdgeLeft" if side < 0.0 \
+			else "MindSparkForebridgeGoldEdgeRight",
+			surface_start + offset + Vector3.UP * 0.06,
+			surface_finish + offset + Vector3.UP * 0.06,
+			0.24, 0.14, _gold_material, false)
+		var circuit_offset := side_axis * float(side) * (CLEAR_ROUTE_WIDTH * 0.5)
+		_add_walkway_between(parent,
+			"MindSparkCircuitGuideLeft" if side < 0.0 \
+			else "MindSparkCircuitGuideRight",
+			surface_start + circuit_offset + Vector3.UP * 0.12,
+			surface_finish + circuit_offset + Vector3.UP * 0.12,
+			0.16, 0.08, _glass_material, false)
+	# Seven paired inlays lead the eye from the Mind Spark garden to the station.
+	# They are short and flush, avoiding the old repeated step silhouette.
+	for marker_index in 7:
+		var ratio := 0.10 + float(marker_index) * 0.80 / 6.0
+		var centre := surface_start.lerp(surface_finish, ratio) + Vector3.UP * 0.14
+		for side in [-1.0, 1.0]:
+			var marker_centre := centre + side_axis * float(side) * 4.65
+			_add_box(parent,
+				"MindSparkWayfinder_%s_%02d" % [
+					"L" if side < 0.0 else "R", marker_index],
+				marker_centre, Vector3(1.35, 0.08, 0.34), _glass_material,
+				false, 0.0, atan2(forward.x, forward.z))
+	# A broad threshold at each end makes both joins read as intentional plazas
+	# and masks the last small seam between the island, deck and station stair.
+	for threshold_spec in [["Garden", surface_finish], ["Station", surface_start]]:
+		var threshold_position: Vector3 = threshold_spec[1]
+		_add_box(parent, "MindSpark%sThreshold" % threshold_spec[0],
+			threshold_position + Vector3.UP * 0.10,
+			Vector3(13.8, 0.18, 2.4), _piltover_ivory_material, false,
+			0.0, atan2(forward.x, forward.z))
+		_add_box(parent, "MindSpark%sThresholdGlass" % threshold_spec[0],
+			threshold_position + Vector3.UP * 0.20,
+			Vector3(11.8, 0.08, 1.38), _glass_material, false,
+			0.0, atan2(forward.x, forward.z))
 
 
 func _build_bridge_ceremonial_ascent(parent: Node3D, start: Vector3, finish: Vector3) -> void:

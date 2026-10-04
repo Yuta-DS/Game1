@@ -519,8 +519,30 @@ func _run() -> void:
 				!= "arcane_pixel_deco_floor_gold_edge":
 			_fail("station %d skybridge does not share the platform ground style" % (station_index + 1))
 			return
-		for bridge_surface_name in ["FloatingAccessDeck", "CentralLumenRamp",
-				"CeremonialStep_L_00", "CeremonialStep_R_47"]:
+		var expected_bridge_surfaces := ["FloatingAccessDeck"]
+		if station_index == 1:
+			if String(skybridge.get_meta("processional_bridge_location", "")) \
+					!= "mind_spark_train_station_front" \
+					or not bool(skybridge.get_meta("relocated_processional_design", false)) \
+					or not bool(skybridge.get_meta("smooth_forebridge", false)) \
+					or absf(float(skybridge.get_meta("clear_walkable_width_m", 0.0)) - 12.0) > 0.01:
+				_fail("Mind Spark station front lacks its relocated smooth processional bridge")
+				return
+			if not skybridge.find_children("CeremonialStep_*", "MeshInstance3D", false, false).is_empty():
+				_fail("Mind Spark station front still contains the fragmented ceremonial steps")
+				return
+			if skybridge.find_children("MindSparkWayfinder_*", "MeshInstance3D", false, false).size() != 14:
+				_fail("Mind Spark processional bridge does not have seven paired wayfinders")
+				return
+			var mind_surface := skybridge.get_node(
+				"MindSparkForebridgeSurface") as MeshInstance3D
+			if mind_surface.material_override != railway.get("_piltover_ivory_material"):
+				_fail("Mind Spark forebridge does not use its calm ivory arrival surface")
+				return
+		else:
+			expected_bridge_surfaces.append_array(["CentralLumenRamp",
+				"CeremonialStep_L_00", "CeremonialStep_R_47"])
+		for bridge_surface_name in expected_bridge_surfaces:
 			var bridge_surface := skybridge.get_node(bridge_surface_name) as MeshInstance3D
 			if bridge_surface.material_override != station_ground.material_override:
 				_fail("station %d bridge surface %s does not match the platform ground" % [
@@ -528,8 +550,10 @@ func _run() -> void:
 				return
 		for sky_guard_name in ["SkybridgeGuardLeft", "SkybridgeGuardRight"]:
 			var sky_guard := skybridge.get_node_or_null(sky_guard_name) as Node3D
+			var expected_barrier_plan := "cyan_glass_gold_frame" \
+				if station_index == 1 else "rainbow_glass_gold_frame"
 			if sky_guard == null \
-					or String(sky_guard.get_meta("barrier_plan", "")) != "rainbow_glass_gold_frame" \
+					or String(sky_guard.get_meta("barrier_plan", "")) != expected_barrier_plan \
 					or sky_guard.find_children("GlassWindow_*", "MeshInstance3D", true, false).is_empty() \
 					or not sky_guard.find_children("SkybridgeRailPost", "MeshInstance3D", true, false).is_empty():
 				_fail("station %d skybridge still uses the chaotic rail barrier" % (station_index + 1))
