@@ -46,6 +46,16 @@ func _test_world_geometry(world: MindSparkWorldOne) -> void:
 		"the six gameplay districts are combined into three physical islands")
 	assert(world.get_meta("world_identity") == "living computer forest")
 	var geometry := world.get_node("WorldOneGeometry")
+	var object_collisions := geometry.get_node_or_null(
+		"ThreeIslandVisibleObjectCollisions") as StaticBody3D
+	assert(object_collisions != null,
+		"all three islands share one reviewed infinite-mass object collision body")
+	var collision_inventory: Dictionary = world.get_meta(
+		"three_island_collision_counts", {})
+	for island_index in [1, 2, 3]:
+		assert(int(collision_inventory.get(
+			"island_%d_visible_object" % island_index, 0)) > 0,
+			"Island %d visible architecture has reviewed collision" % island_index)
 	assert(world.find_child("EchoListeningBranch_*", true, false) == null,
 		"Island One's crossing brass listening lines stay removed")
 	assert(world.find_child("EchoOrbCradle_*", true, false) == null,

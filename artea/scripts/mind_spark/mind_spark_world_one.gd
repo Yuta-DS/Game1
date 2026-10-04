@@ -257,7 +257,7 @@ func build_world() -> void:
 		# phase. It branches from Zone 05 and never participates in story routing.
 		_build_station_spur(geometry)
 	_refine_island_one_surroundings()
-	_install_island_one_static_collisions(geometry)
+	_install_three_island_static_collisions(geometry)
 	_batch_static_geometry(self)
 	_batch_repeated_static_render_geometry(self)
 	_merge_static_render_geometry(self)
@@ -10300,10 +10300,10 @@ func _add_star(parent: Node3D, at: Vector3, radius: float) -> void:
 	_add_sphere(star, "StarCore", Vector3.ZERO, Vector3.ONE * 5, _materials.gold)
 
 
-# --- Island One physical geometry --------------------------------------------
+# --- Three-island physical geometry ------------------------------------------
 
 
-func _install_island_one_static_collisions(geometry: Node3D) -> void:
+func _install_three_island_static_collisions(geometry: Node3D) -> void:
 	# Imported art and the research-campus kit mix large architecture with floor
 	# engraving, moving indicators, foliage and light effects. Only the explicit
 	# gameplay inventory below becomes solid. Consolidate those selected forms
@@ -10311,12 +10311,12 @@ func _install_island_one_static_collisions(geometry: Node3D) -> void:
 	# StaticBody3D represents infinite mass, so the player cannot push or pass
 	# through these structures.
 	var collision_body := StaticBody3D.new()
-	collision_body.name = "IslandOneVisibleObjectCollisions"
+	collision_body.name = "ThreeIslandVisibleObjectCollisions"
 	collision_body.collision_layer = 1
 	collision_body.collision_mask = 1
 	collision_body.set_meta("mass_class", "infinite_static_mass")
-	collision_body.set_meta("collision_role", "island_one_visible_objects")
-	collision_body.set_meta("inventory_revision", "explicit_architecture_v1")
+	collision_body.set_meta("collision_role", "three_island_visible_objects")
+	collision_body.set_meta("inventory_revision", "reviewed_architecture_v2")
 	geometry.add_child(collision_body)
 	var station_spur := geometry.get_node_or_null("OptionalCompletedWorldStationSpur")
 	if station_spur != null:
@@ -10326,8 +10326,17 @@ func _install_island_one_static_collisions(geometry: Node3D) -> void:
 	for path in [
 		"01WorldGateLanding",
 		"02LivingNetworkForest",
+		"03ConstellationCourt",
+		"04HopePathRidge",
+		"05ThoughtStormArena",
+		"06OldestTreeSanctuary",
 		"ThreeFusedSuperIslands/FusedSuperIsland_01_02",
+		"ThreeFusedSuperIslands/FusedSuperIsland_03_04",
+		"ThreeFusedSuperIslands/FusedSuperIsland_05_06",
 		"IslandOnePerimeterRepairs",
+		"IslandTwoPerimeterRepairs",
+		"IslandThreePerimeterRepairs",
+		"IslandThreeCivicSanctuary",
 	]:
 		var root_node := geometry.get_node_or_null(path)
 		if root_node != null:
@@ -10335,17 +10344,26 @@ func _install_island_one_static_collisions(geometry: Node3D) -> void:
 	var campus_root := get_node_or_null("IslandOneResearchCampus")
 	if campus_root != null:
 		roots.append(campus_root)
+	for campus_path in ["IslandTwoMemoryCampus", "GardenOfUnfinishedLight"]:
+		var island_root := get_node_or_null(campus_path)
+		if island_root != null:
+			roots.append(island_root)
 
 	var seen := {}
 	var collision_count := 0
 	var inventory_counts := {}
+	var island_counts := {}
 	for collision_root in roots:
 		for candidate in collision_root.find_children("*", "MeshInstance3D", true, false):
 			var mesh_instance := candidate as MeshInstance3D
 			if mesh_instance == null or seen.has(mesh_instance.get_instance_id()):
 				continue
 			seen[mesh_instance.get_instance_id()] = true
-			if not _is_solid_island_one_mesh(mesh_instance, collision_root):
+			var physical_island := _web_detail_island_for_node(mesh_instance)
+			if physical_island == 0 and collision_root.has_meta("super_island_index"):
+				physical_island = int(collision_root.get_meta("super_island_index", 0))
+			if not _is_solid_three_island_mesh(mesh_instance, collision_root,
+					physical_island):
 				continue
 			var collision_shape := mesh_instance.mesh.create_trimesh_shape()
 			if collision_shape == null:
@@ -10356,21 +10374,29 @@ func _install_island_one_static_collisions(geometry: Node3D) -> void:
 			shape_node.transform = collision_body.global_transform.affine_inverse() \
 				* mesh_instance.global_transform
 			shape_node.set_meta("source_mesh", str(mesh_instance.get_path()))
-			var inventory_role := _island_one_collision_inventory_role(mesh_instance)
+			var inventory_role := _three_island_collision_inventory_role(
+				mesh_instance, physical_island)
 			shape_node.set_meta("inventory_role", inventory_role)
 			collision_body.add_child(shape_node)
 			collision_count += 1
 			inventory_counts[inventory_role] = int(inventory_counts.get(inventory_role, 0)) + 1
+			var island_key := "island_%d_visible_object" % physical_island
+			island_counts[island_key] = int(island_counts.get(island_key, 0)) + 1
 
 	collision_body.set_meta("collision_shape_count", collision_count)
 	collision_body.set_meta("inventory_counts", inventory_counts)
-	set_meta("island_one_visible_object_collision_count", collision_count)
+	set_meta("three_island_visible_object_collision_count", collision_count)
+	set_meta("island_one_visible_object_collision_count",
+		int(island_counts.get("island_1_visible_object", 0)))
+	set_meta("three_island_collision_inventory", inventory_counts)
+	set_meta("three_island_collision_counts", island_counts)
 
 
-func _is_solid_island_one_mesh(mesh_instance: MeshInstance3D, collision_root: Node) -> bool:
+func _is_solid_three_island_mesh(mesh_instance: MeshInstance3D,
+		collision_root: Node, physical_island: int) -> bool:
 	if mesh_instance.mesh == null or not mesh_instance.is_visible_in_tree():
 		return false
-	if _island_one_collision_inventory_role(mesh_instance).is_empty():
+	if _three_island_collision_inventory_role(mesh_instance, physical_island).is_empty():
 		return false
 	if mesh_instance.has_meta("detail_packet") or mesh_instance.has_meta("detail_orbit_speed"):
 		return false
@@ -10452,6 +10478,35 @@ func _island_one_collision_inventory_role(mesh_instance: MeshInstance3D) -> Stri
 	if "/VisualRoot/BlenderModel/" in source:
 		return "quest_machine"
 	return ""
+
+
+func _three_island_collision_inventory_role(mesh_instance: MeshInstance3D,
+		physical_island: int) -> String:
+	var island_one_role := _island_one_collision_inventory_role(mesh_instance)
+	if not island_one_role.is_empty():
+		return island_one_role
+	if physical_island not in [2, 3] or mesh_instance == null:
+		return ""
+	if bool(mesh_instance.get_meta("decorative_floor_inset", false)) \
+			or bool(mesh_instance.get_meta("intentionally_non_solid", false)) \
+			or bool(mesh_instance.get_meta("non_solid_guidance", false)):
+		return ""
+	var key := mesh_instance.name.to_lower()
+	# Existing island floors, approaches and water are already backed by simple
+	# collision. Signals, foliage and flush trim remain pass-through so a visible
+	# route never gains hidden ankle-height blockers.
+	for token in ["floor", "deck", "court", "path", "route", "lane", "walk",
+			"promenade", "approach", "landing", "terrace", "dais", "threshold", "paving", "inlay", "channel",
+			"water", "pool", "basin", "ripple", "line", "ribbon", "marker",
+			"glow", "light", "halo", "aura", "ring", "orbit", "beam",
+			"canopy", "leaf", "foliage", "flower", "petal", "grass",
+			"gate", "portal", "door", "conduit", "socket"]:
+		if token in key:
+			return ""
+	var bounds := mesh_instance.mesh.get_aabb().size * mesh_instance.scale.abs()
+	if maxf(bounds.x, maxf(bounds.y, bounds.z)) < 0.18:
+		return ""
+	return "island_%d_visible_object" % physical_island
 
 
 # --- Static geometry batching -------------------------------------------------

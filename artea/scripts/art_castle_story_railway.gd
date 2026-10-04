@@ -1230,6 +1230,8 @@ func _build_stations() -> void:
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = false
 		station.add_child(label)
+		if index == 1:
+			_install_mind_spark_station_object_collisions(station)
 		_apply_web_station_performance_profile(station)
 
 
@@ -1262,6 +1264,84 @@ func _build_canonical_station(station: Node3D, station_index: int,
 	_build_world_access_bridge(station, landing_local, dock_sign)
 	(station.get_node("KingdomAccessSkybridge") as Node3D).basis = access_basis
 	(station.get_node("AccessRamp") as Node3D).basis = access_basis
+	if station_index == 1:
+		_remove_mind_spark_long_access_bridge(station)
+
+
+func _remove_mind_spark_long_access_bridge(station: Node3D) -> void:
+	# Mind Spark is now entered through its world gate and railway platform. The
+	# former 116 m station-to-park span was the longest local bridge and hung on
+	# tall exposed piers in front of the station. Retire the entire bridge and its
+	# dead-end arrival flight together so no visual or invisible collision remains.
+	for node_name in ["KingdomAccessSkybridge", "AccessRamp"]:
+		var retired := station.get_node_or_null(node_name) as Node3D
+		if retired != null:
+			retired.free()
+	var marker := Node3D.new()
+	marker.name = "MindSparkLongAccessBridgeRemoved"
+	marker.set_meta("removed_structure", "KingdomAccessSkybridge")
+	marker.set_meta("collision_removed", true)
+	marker.set_meta("travel_preserved_by", "Crown Line platform and Mind Spark world gate")
+	station.add_child(marker)
+	station.set_meta("long_access_bridge_removed", true)
+
+
+func _install_mind_spark_station_object_collisions(station: Node3D) -> void:
+	# Visible station architecture behaves as fixed, infinite-mass scenery. Keep
+	# flush floor graphics and light strips non-solid so the platform remains
+	# smooth, but make every substantial cabinet, column, crystal, planter,
+	# barrier and canopy member physically block the player.
+	var body := StaticBody3D.new()
+	body.name = "MindSparkStationVisibleObjectCollisions"
+	body.collision_layer = 1
+	body.collision_mask = 1
+	body.set_meta("mass_class", "infinite_static_mass")
+	body.set_meta("collision_scope", "mind_spark_station_forecourt")
+	station.add_child(body)
+	var shape_count := 0
+	for candidate in station.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := candidate as MeshInstance3D
+		if not _station_mesh_needs_object_collision(mesh_instance, body):
+			continue
+		var collision_shape := mesh_instance.mesh.create_trimesh_shape()
+		if collision_shape == null:
+			continue
+		var shape_node := CollisionShape3D.new()
+		shape_node.name = "StationObjectShape_%04d" % shape_count
+		shape_node.shape = collision_shape
+		shape_node.transform = body.global_transform.affine_inverse() \
+			* mesh_instance.global_transform
+		shape_node.set_meta("source_mesh", str(mesh_instance.get_path()))
+		body.add_child(shape_node)
+		shape_count += 1
+	body.set_meta("collision_shape_count", shape_count)
+	station.set_meta("visible_object_collision_count", shape_count)
+
+
+func _station_mesh_needs_object_collision(mesh_instance: MeshInstance3D,
+		collision_body: StaticBody3D) -> bool:
+	if mesh_instance == null or mesh_instance.mesh == null \
+			or not mesh_instance.is_visible_in_tree():
+		return false
+	var key := mesh_instance.name.to_lower()
+	# These are flush walk surfaces or visual signals. Their supporting decks
+	# already own optimized collision and duplicating them creates step-snags.
+	for token in ["floor", "ground", "deck", "platform", "walkway", "step",
+			"ramp", "track", "railbeam", "wheelrail", "circuit", "inset",
+			"marker", "light", "ribbon", "ring", "glow", "trail", "stripe"]:
+		if token in key:
+			return false
+	var ancestor := mesh_instance.get_parent()
+	while ancestor != null and ancestor != collision_body.get_parent():
+		if ancestor is PhysicsBody3D or ancestor == collision_body:
+			return false
+		ancestor = ancestor.get_parent()
+	# Primitive builders place an optimized collision body beside the mesh.
+	var parent := mesh_instance.get_parent()
+	if parent != null and parent.get_node_or_null("%sCollision" % mesh_instance.name) != null:
+		return false
+	var bounds := mesh_instance.mesh.get_aabb().size * mesh_instance.scale.abs()
+	return maxf(bounds.x, maxf(bounds.y, bounds.z)) >= 0.18
 
 
 func _uses_web_station_performance_profile() -> bool:

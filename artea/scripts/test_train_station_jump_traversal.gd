@@ -178,27 +178,13 @@ func _run() -> void:
 		_fail("player cannot walk through the pictured long station stair " \
 			+ "(reached %s)" % player_after_long_stair)
 		return
-	# Mind Spark remains around its original west-side location. Its one centred
-	# entrance now faces the main park island and consumes only the clear gap
-	# between the circular platform and island rim.
+	# Mind Spark remains reachable by train, while its former longest bridge and
+	# the matching dead-end stair are completely absent from play and physics.
 	var mind_station := railway.get_node("StoryStations/Station_02_mind") as Node3D
-	var mind_stairs := mind_station.get_node("AccessRamp") as Node3D
-	var mind_first_step := mind_stairs.get_node("DockStep_01") as MeshInstance3D
-	var mind_last_step := mind_stairs.get_node("DockStep_16") as MeshInstance3D
-	var mind_access_deck := mind_station.get_node(
-		"KingdomAccessSkybridge/FloatingAccessDeck") as MeshInstance3D
-	var mind_deck_size := mind_access_deck.mesh as BoxMesh
-	var mind_deck_min_x := mind_access_deck.position.x \
-		- absf(mind_access_deck.basis.z.x) * mind_deck_size.size.z * 0.5
-	if mind_first_step.position.x < 30.0 or mind_last_step.position.x < 6.0 \
-			or mind_deck_min_x < 36.0:
-		_fail("Mind Spark station stair is not centred toward the main park island")
-		return
-	var mind_left_guard := mind_station.get_node_or_null("PlatformGuardLeft") as Node3D
-	var mind_right_guard := mind_station.get_node_or_null("PlatformGuardRight") as Node3D
-	if (mind_left_guard == null or not mind_left_guard.has_meta("entrance_gate_clear_z")) \
-			and (mind_right_guard == null or not mind_right_guard.has_meta("entrance_gate_clear_z")):
-		_fail("Mind Spark station has no stair-aligned platform entrance opening")
+	if mind_station.get_node_or_null("KingdomAccessSkybridge") != null \
+			or mind_station.get_node_or_null("AccessRamp") != null \
+			or mind_station.get_node_or_null("MindSparkLongAccessBridgeRemoved") == null:
+		_fail("Mind Spark station still contains its retired longest bridge or stair")
 		return
 	var west_observatory_tower := world.get_node_or_null(
 		"WestObservatory/ObservatoryTower") as MeshInstance3D
@@ -210,47 +196,6 @@ func _run() -> void:
 		mind_station.global_position.z - west_observatory_tower.global_position.z).length()
 	if station_to_tower < 150.0:
 		_fail("West Observatory big block still overlaps the Mind Spark train station")
-		return
-	var mind_landing: Vector3 = railway.call("get_station_landing", 1)
-	const MIND_ISLAND_CENTER := Vector3(-600.0, 0.0, 1640.0)
-	const MIND_ISLAND_RADIUS := 175.0
-	var island_west_rim_x := MIND_ISLAND_CENTER.x - MIND_ISLAND_RADIUS
-	var platform_east_rim_x := mind_station.position.x + 38.0
-	var clear_gap := island_west_rim_x - platform_east_rim_x
-	if absf(mind_landing.z - MIND_ISLAND_CENTER.z) > 0.01 \
-			or mind_landing.x < island_west_rim_x \
-			or mind_landing.x - island_west_rim_x > 10.0:
-		_fail("Mind Spark station landing is not centred just inside the main park island")
-		return
-	if clear_gap < 70.0 or clear_gap > 85.0:
-		_fail("Mind Spark station-to-island gap is not one ceremonial-stair length (%.1fm)" % clear_gap)
-		return
-	# Walk straight from the park ground through the entire station stair and onto
-	# the train platform with normal controls and no jump or direction change.
-	player.global_position = railway.to_global(mind_landing + Vector3(5.0, 2.0, 0.0))
-	player.velocity = Vector3.ZERO
-	if not await _settle(player):
-		_fail("player cannot stand on the Mind Spark park-island stair landing")
-		return
-	test_camera.global_rotation.y = 0.0
-	Input.action_press("move_left")
-	Input.action_press("run")
-	var reached_mind_platform := false
-	for _frame in 600:
-		await physics_frame
-		if mind_station.to_local(player.global_position).x <= 12.0:
-			reached_mind_platform = true
-			break
-	Input.action_release("run")
-	Input.action_release("move_left")
-	var player_at_mind_station := mind_station.to_local(player.global_position)
-	if not reached_mind_platform or player_at_mind_station.y < -4.0:
-		var mind_collision_names: Array[String] = []
-		for collision_index in player.get_slide_collision_count():
-			var collider := player.get_slide_collision(collision_index).get_collider() as Node
-			mind_collision_names.append(str(collider.get_path()) if collider != null else "unknown")
-		_fail("player cannot walk from the Mind Spark park island through the station entrance " \
-			+ "(reached %s, collisions %s)" % [player_at_mind_station, mind_collision_names])
 		return
 	# Start on the Heart arrival court, not above the bridge: its instrument
 	# ring previously put a solid 18 m column directly across the ascent.

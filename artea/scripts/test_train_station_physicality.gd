@@ -78,13 +78,26 @@ func _run() -> void:
 				_fail("station %d %s crystals are ghost objects" % [
 					station_index + 1, planter_name])
 				return
-		var bridge := station.get_node("KingdomAccessSkybridge") as Node3D
-		for crystal_node in bridge.find_children(
-				"AscentCrystalNode_*", "Node3D", false, false):
-			if crystal_node.get_node_or_null("GardenPlinthCollision") == null \
-					or crystal_node.get_node_or_null("WayfindingCrystalCollision") == null:
-				_fail("station %d bridge crystal garden is not physical" % (station_index + 1))
+		if station_index == 1:
+			if station.get_node_or_null("KingdomAccessSkybridge") != null \
+					or station.get_node_or_null("AccessRamp") != null \
+					or not bool(station.get_meta("long_access_bridge_removed", false)):
+				_fail("Mind Spark station still contains the retired longest bridge")
 				return
+			var station_solids := station.get_node_or_null(
+				"MindSparkStationVisibleObjectCollisions") as StaticBody3D
+			if station_solids == null \
+					or int(station_solids.get_meta("collision_shape_count", 0)) < 20:
+				_fail("Mind Spark station forecourt objects are not comprehensively physical")
+				return
+		else:
+			var bridge := station.get_node("KingdomAccessSkybridge") as Node3D
+			for crystal_node in bridge.find_children(
+					"AscentCrystalNode_*", "Node3D", false, false):
+				if crystal_node.get_node_or_null("GardenPlinthCollision") == null \
+						or crystal_node.get_node_or_null("WayfindingCrystalCollision") == null:
+					_fail("station %d bridge crystal garden is not physical" % (station_index + 1))
+					return
 
 	var space := world.get_world_3d().direct_space_state
 	var first_support := railway.get_node(

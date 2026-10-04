@@ -764,13 +764,13 @@ func _run() -> void:
 	assert(removed_island_one_barrier.get_node_or_null("Barrier") == null)
 	assert((removed_island_one_barrier.get_node("CollisionShape3D") as CollisionShape3D).disabled,
 		"the grey barrier beside the Island One garden trees is absent")
-	var island_one_collisions := geometry.get_node("IslandOneVisibleObjectCollisions") as StaticBody3D
+	var island_one_collisions := geometry.get_node("ThreeIslandVisibleObjectCollisions") as StaticBody3D
 	assert(str(island_one_collisions.get_meta("mass_class", "")) == "infinite_static_mass")
 	assert(str(island_one_collisions.get_meta("inventory_revision", "")) \
-		== "explicit_architecture_v1")
+		== "reviewed_architecture_v2")
 	var collision_shape_count := int(island_one_collisions.get_meta("collision_shape_count", 0))
-	assert(collision_shape_count >= 500 and collision_shape_count < 1000,
-		"Island One uses a reviewed solid-architecture inventory instead of every visible mesh")
+	assert(collision_shape_count >= 500,
+		"all three islands use a reviewed solid-architecture inventory")
 	var inventory_counts := island_one_collisions.get_meta("inventory_counts", {}) as Dictionary
 	for required_role in [
 		"learning_instrument", "quest_cabinet", "garden_tree_trunk",
