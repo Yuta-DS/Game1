@@ -35,10 +35,12 @@ func _run() -> void:
 			or world.position != Vector3(-2200, 0, 1640):
 		_fail("live World One is not using the nearby collision-safe full blueprint")
 		return
-	var expected_arrival := world.position \
-		+ world.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0)
+	var expected_arrival := world.position + world.get_player_arrival_local()
 	if source.destination_world_local.distance_to(expected_arrival) > 0.01:
-		_fail("source gate destination does not match Zone 01 arrival")
+		_fail("source gate destination does not match the supported arrival marker")
+		return
+	if not source.use_target_world_arrival:
+		_fail("source gate does not resolve the supported arrival after deferred loading")
 		return
 	var geometry := world.get_node("WorldOneGeometry") as Node3D
 	if geometry.find_children("WalkableZoneFloorCollision", "StaticBody3D", true, false).size() != 6:

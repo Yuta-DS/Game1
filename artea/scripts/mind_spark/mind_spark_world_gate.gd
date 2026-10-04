@@ -8,6 +8,7 @@ signal travelled(destination_world_local: Vector3)
 @export var prompt_text := "Q • ENTER MIND SPARK"
 @export var target_world_path: NodePath
 @export var build_world_on_travel := true
+@export var use_target_world_arrival := false
 
 var _player_inside: CharacterBody3D
 
@@ -38,6 +39,16 @@ func teleport_player(player: CharacterBody3D) -> bool:
 		var result: Variant = destination_world.call("ensure_world_built")
 		if result is bool and not result:
 			return false
+	# World One's supported entrance is deliberately offset from the district
+	# centre to clear the Observatory architecture and checkpoint machinery. The
+	# old gate stored the zone centre before the deferred world existed, landing
+	# the player hundreds of metres away from the authored arrival marker.
+	if use_target_world_arrival and destination_world != null \
+			and destination_world.has_method("get_player_arrival_local"):
+		destination_world_local = destination_world.position \
+			+ destination_world.call("get_player_arrival_local")
+	if floating_world.has_method("remove_pink_purple_sphere_placeholders"):
+		floating_world.call("remove_pink_purple_sphere_placeholders")
 	player.global_position = floating_world.to_global(destination_world_local)
 	player.velocity = Vector3.ZERO
 	if build_world_on_travel and destination_world != null and destination_world.has_method("activate"):

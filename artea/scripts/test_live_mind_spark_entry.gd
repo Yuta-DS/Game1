@@ -89,6 +89,12 @@ func _run() -> void:
 	var source_gate := floating_world.get_node("MindSparkWorldGate") as MindSparkWorldGate
 	assert(source_gate != null and source_gate.gate_enabled,
 		"the authored Mind Spark forecourt owns the World One gate")
+	assert(bool(floating_world.get_meta("pink_purple_sphere_cleanup", false)),
+		"the complete loaded Galaxy map runs the coloured sphere cleanup")
+	for candidate in floating_world.find_children("*", "MeshInstance3D", true, false):
+		var instance := candidate as MeshInstance3D
+		if instance.mesh is SphereMesh and _is_pink_or_purple_sphere(instance):
+			assert(false, "pink/purple sphere remains at %s" % instance.get_path())
 	var route := floating_world.get_node("WalkRouteToMindSparkWorldGate") as Node3D
 	assert(route.find_children("MindRoute_*", "MeshInstance3D", true, false).size() >= 50,
 		"a cyan ground route leads from the gallery walkway to the World Gate")
@@ -109,3 +115,14 @@ func _run() -> void:
 	assert(world_one.get_quest_objects().size() == 15, "all functional objects live on the six-island world")
 	print("LIVE_MIND_SPARK_ENTRY_TEST: PASS — Art Castle gate enters full six-island World One and returns")
 	quit()
+
+
+func _is_pink_or_purple_sphere(instance: MeshInstance3D) -> bool:
+	var material := instance.material_override as StandardMaterial3D
+	if material == null and instance.mesh.get_surface_count() > 0:
+		material = instance.mesh.surface_get_material(0) as StandardMaterial3D
+	if material == null:
+		return false
+	var colour := material.albedo_color
+	return colour.s >= 0.08 and colour.v >= 0.25 \
+		and ((colour.h >= 0.68 and colour.h <= 0.86) or colour.h >= 0.88)

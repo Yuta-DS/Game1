@@ -2677,6 +2677,8 @@ func _build_mind_spark_world_one_gameplay() -> void:
 	var source_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
 	source_gate.name = "MindSparkWorldGate"
 	source_gate.position = MIND_GATE_POSITION
+	source_gate.target_world_path = NodePath("../MindSparkWorldOne")
+	source_gate.use_target_world_arrival = true
 	source_gate.destination_world_local = MIND_WORLD_ONE_ORIGIN \
 		+ world_one.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0)
 	source_gate.prompt_text = "Q • ENTER WORLD ONE: MIND SPARK"
@@ -2691,6 +2693,38 @@ func _build_mind_spark_world_one_gameplay() -> void:
 	_build_world_one_causeway(world_one)
 	if world_one.defer_world_build:
 		_add_world_one_build_trigger(world_one)
+
+
+func remove_pink_purple_sphere_placeholders() -> int:
+	## Remove the legacy coloured ball dressing from every loaded Galaxy World
+	## district, bridge, remote kingdom and destination world. Purpose-built
+	## crystals, rings, foliage meshes and interaction logic remain intact.
+	var removed := 0
+	var candidates := find_children("*", "MeshInstance3D", true, false)
+	for candidate in candidates:
+		var instance := candidate as MeshInstance3D
+		if instance == null or not instance.mesh is SphereMesh:
+			continue
+		var material := instance.material_override as StandardMaterial3D
+		if material == null and instance.mesh.get_surface_count() > 0:
+			material = instance.mesh.surface_get_material(0) as StandardMaterial3D
+		if material == null or not _is_pink_or_purple_placeholder_colour(
+				material.albedo_color):
+			continue
+		instance.free()
+		removed += 1
+	set_meta("pink_purple_sphere_cleanup", true)
+	set_meta("pink_purple_spheres_removed",
+		int(get_meta("pink_purple_spheres_removed", 0)) + removed)
+	return removed
+
+
+func _is_pink_or_purple_placeholder_colour(colour: Color) -> bool:
+	# The value floor protects the near-black guide character and structural
+	# charcoal. Cyan glass, green planting and warm lights sit outside this hue.
+	if colour.s < 0.08 or colour.v < 0.25:
+		return false
+	return (colour.h >= 0.68 and colour.h <= 0.86) or colour.h >= 0.88
 
 
 func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:

@@ -163,6 +163,10 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 	var arrival := world_one.get_player_arrival_local()
 	player.global_position = world_one.to_global(arrival)
 	player.velocity = Vector3.ZERO
+	var source_gate := floating_world.get_node_or_null(
+		"MindSparkWorldGate") as MindSparkWorldGate
+	if source_gate != null:
+		source_gate.destination_world_local = world_one.position + arrival
 	var spawn_marker := get_node_or_null("SpawnPoint") as Node3D
 	if spawn_marker != null:
 		spawn_marker.global_position = player.global_position
@@ -176,6 +180,8 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 	var camera := get_node_or_null("Camera3D") as Camera3D
 	if camera != null and camera.has_method("compose_arrival_view"):
 		camera.call("compose_arrival_view", 180.0, -10.0, 18.0)
+	if floating_world.has_method("remove_pink_purple_sphere_placeholders"):
+		floating_world.call("remove_pink_purple_sphere_placeholders")
 		
 		
 func _input(event):
