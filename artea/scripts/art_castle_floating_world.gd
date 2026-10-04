@@ -2728,124 +2728,20 @@ func _is_pink_or_purple_placeholder_colour(colour: Color) -> bool:
 
 
 func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
-	## A physically walkable route from the Mind Spark district out to the
-	## relocated World One landing, so the new land is reachable on foot and not
-	## only through the world gate. The span crosses open void, so it is built as
-	## a piered causeway resting on intermediate support islands rather than as a
-	## single unsupported deck.
-	if has_node("MindSparkWorldOneCauseway"):
+	# The kilometre-long secondary causeway duplicated the functional World Gate
+	# route and cluttered the Mind Spark skyline. Keep a non-rendering marker for
+	# regression checks while removing every deck, rail, pier, support island,
+	# render batch and collision body from play.
+	if has_node("MindSparkWorldOneCausewayRemoved"):
 		return
-	var causeway := Node3D.new()
-	causeway.name = "MindSparkWorldOneCauseway"
-	add_child(causeway)
-	var landing := MIND_WORLD_ONE_ORIGIN \
-		+ world_one.get_zone_position("01_world_gate_landing")
-	var flat_direction := Vector3(landing.x - MIND.x, 0.0, landing.z - MIND.z).normalized()
-	# Start on the district rim and finish on the Zone 01 floor, both slightly
-	# inside the islands so neither joint leaves a gap the player can fall through.
-	var start: Vector3 = MIND + flat_direction * (MIND_DISTRICT_RADIUS - 8.0)
-	# The train landing shares this island rim. Offset the causeway entrance
-	# around the rim so its raised threshold and rails do not cross that lane.
-	start = MIND + (start - MIND + Vector3(0.0, 0.0, 36.0)).normalized() \
-		* (MIND_DISTRICT_RADIUS - 8.0)
-	start.y = CAUSEWAY_DECK_Y
-	var finish: Vector3 = landing - flat_direction * 118.0
-	finish.y = CAUSEWAY_DECK_Y
-	var span := start.distance_to(finish)
-	var segment_count := maxi(2, int(round(span / CAUSEWAY_SEGMENT_LENGTH)))
-	# Support islands sit between segments and carry the piers of both neighbours.
-	for index in range(1, segment_count):
-		var pier_center: Vector3 = start.lerp(finish, float(index) / float(segment_count))
-		_build_causeway_support_island(causeway, pier_center, index)
-	for index in segment_count:
-		var leg_start: Vector3 = start.lerp(finish, float(index) / float(segment_count))
-		var leg_finish: Vector3 = start.lerp(finish, float(index + 1) / float(segment_count))
-		_add_bridge_between(causeway, leg_start, leg_finish, CAUSEWAY_WIDTH)
-	_add_landmark_label(causeway, "CAUSEWAY • WALK TO WORLD ONE: MIND SPARK",
-		start + flat_direction * 40.0 + Vector3(0.0, 26.0, 0.0), Color("8df8ff"), 40)
-	_add_landmark_label(causeway, "WORLD ONE • MIND SPARK LANDING",
-		finish - flat_direction * 40.0 + Vector3(0.0, 26.0, 0.0), Color("bffbff"), 40)
-	if _use_web_lod():
-		_batch_world_one_causeway_visuals(causeway)
-	causeway.set_meta("span_metres", span)
-	causeway.set_meta("segment_count", segment_count)
-	causeway.set_meta("deck_y", CAUSEWAY_DECK_Y)
-	causeway.set_meta("walk_start", start)
-	causeway.set_meta("walk_finish", finish)
-
-
-func _batch_world_one_causeway_visuals(causeway: Node3D) -> void:
-	## Keep every authored causeway node and every collision body inspectable, but
-	## submit its static masonry in spatial material batches on Web. Without this
-	## pass the distant bridge contributes hundreds of individual draw calls even
-	## from Islands Two and Three. Cells retain camera-frustum culling along the
-	## kilometre-scale span, unlike one monolithic merged bridge mesh.
-	const CELL_SIZE := 192.0
-	var groups := {}
-	for value in causeway.find_children("*", "MeshInstance3D", true, false):
-		var instance := value as MeshInstance3D
-		if instance.mesh == null or instance.mesh.get_surface_count() != 1 \
-				or instance.material_override == null or not instance.visible:
-			continue
-		var local_origin := causeway.to_local(instance.global_position)
-		var cell := Vector2i(floori(local_origin.x / CELL_SIZE),
-			floori(local_origin.z / CELL_SIZE))
-		var key := "%d,%d|material=%d|shadow=%d|gi=%d" % [
-			cell.x, cell.y, instance.material_override.get_instance_id(),
-			instance.cast_shadow, instance.gi_mode]
-		if not groups.has(key):
-			groups[key] = []
-		groups[key].append(instance)
-	var batches := 0
-	var sources := 0
-	for key in groups:
-		var members := groups[key] as Array
-		if members.size() < 2:
-			continue
-		var first := members[0] as MeshInstance3D
-		var surface := SurfaceTool.new()
-		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-		for member_value in members:
-			var member := member_value as MeshInstance3D
-			surface.append_from(member.mesh, 0,
-				causeway.global_transform.affine_inverse() * member.global_transform)
-		var combined := surface.commit()
-		if combined == null or combined.get_surface_count() == 0:
-			continue
-		var batch := MeshInstance3D.new()
-		batch.name = "WebCausewayBatch_%03d" % batches
-		batch.mesh = combined
-		batch.material_override = first.material_override
-		batch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		batch.gi_mode = first.gi_mode
-		batch.set_meta("render_role", "spatial World One causeway batch")
-		batch.set_meta("merged_static_source_count", members.size())
-		causeway.add_child(batch)
-		for member_value in members:
-			var member := member_value as MeshInstance3D
-			member.layers = 0
-			member.set_meta("render_merged_into", batch.name)
-			sources += 1
-		batches += 1
-	causeway.set_meta("web_visual_batch_count", batches)
-	causeway.set_meta("web_visual_source_count", sources)
-	causeway.set_meta("web_visual_batch_cell_size", CELL_SIZE)
-
-
-func _build_causeway_support_island(parent: Node3D, center: Vector3, index: int) -> void:
-	var island := Node3D.new()
-	island.name = "CausewaySupportIsland_%02d" % index
-	parent.add_child(island)
-	# The deck lands on top of the island, so the walk stays level across it.
-	_build_island_foundation(island, center, CAUSEWAY_ISLAND_RADIUS, 44.0, 24)
-	_add_cylinder(island, "RestPlaza", center + Vector3(0.0, 0.15, 0.0),
-		CAUSEWAY_ISLAND_RADIUS * 0.66, 0.3, _materials.aqua_glass, false, 24)
-	for lamp in 4:
-		var angle := TAU * float(lamp) / 4.0
-		_add_cylinder(island, "CausewayLamp_%02d" % lamp,
-			center + Vector3(cos(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72, 7.0,
-				sin(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72), 1.1, 14.0,
-			_materials.aqua, false, 8)
+	var removed := Node3D.new()
+	removed.name = "MindSparkWorldOneCausewayRemoved"
+	removed.set_meta("design_revision", "world_gate_only_v1")
+	removed.set_meta("all_visuals_removed", true)
+	removed.set_meta("all_collision_removed", true)
+	removed.set_meta("support_islands_removed", true)
+	removed.set_meta("world_gate_preserved", world_one != null)
+	add_child(removed)
 
 
 func _build_world_one_walk_route() -> void:
