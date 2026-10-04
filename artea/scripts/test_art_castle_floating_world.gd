@@ -96,6 +96,7 @@ func _run() -> void:
 			or entrance.find_children("InnerVaultRib*", "MeshInstance3D", true, false).size() != 10 \
 			or entrance.find_children("HarmonyRay_*", "MeshInstance3D", true, false).size() != 7 \
 			or entrance.find_children("LyreLightString_*", "MeshInstance3D", true, false).size() != 5 \
+			or entrance.find_children("LandingHarmonyKey_*", "MeshInstance3D", true, false).size() != 0 \
 			or entrance.get_node_or_null("GrandHarmonyLyreEmblem") == null \
 			or entrance.get_node_or_null("WestLandingListeningTree") == null \
 			or entrance.get_node_or_null("EastLandingTuningSculpture") == null \
@@ -106,6 +107,11 @@ func _run() -> void:
 			or (resonator.get_node("HarpFrameBase") as MeshInstance3D).position.y < 15.0 \
 			or resonator.get_node_or_null("ResonatorHalo") != null:
 		_fail("the central music pavilion remains a prototype")
+		return
+	if conservatory.find_children("CourageFrontGable*", "MeshInstance3D", true, false).size() != 0 \
+			or conservatory.find_children("MemoryRoofHarp*", "MeshInstance3D", true, false).size() != 0 \
+			or conservatory.find_children("MemoryRoofRib*", "MeshInstance3D", true, false).size() != 0:
+		_fail("removed open roof frames were rebuilt")
 		return
 	if gardens == null or not bool(gardens.get_meta("grounded_landscaping", false)) \
 			or gardens.find_children("*CurvedGardenPath_*", "MeshInstance3D", true, false).size() != 12 \

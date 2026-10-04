@@ -1901,13 +1901,6 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	_add_bevel_box(entrance, "ResonanceLandingInlay",
 		Vector3(0.0, 1.38, -22.0), Vector3(34.0, 0.055, 24.0), 0.75,
 		_materials.heart_path)
-	for marker_index in 7:
-		var marker_x := -12.0 + float(marker_index) * 4.0
-		var marker := _add_bevel_box(entrance,
-			"LandingHarmonyKey_%02d" % (marker_index + 1),
-			Vector3(marker_x, 1.44, -22.0), Vector3(1.8, 0.035, 8.0),
-			0.12, _materials.heart_cyan if marker_index % 2 == 0 else _materials.heart_lavender)
-		marker.rotation.y = deg_to_rad((float(marker_index) - 3.0) * 1.8)
 	# Three shallow fan terraces make the bridge arrive through a gradual stone
 	# threshold instead of terminating against one rectangular slab. The centre
 	# remains flat and wide enough for the production player capsule.
@@ -2545,32 +2538,17 @@ func _build_heart_instrument_hall(parent: Node3D, hall_index: int,
 					Vector3(-5.0 + float(pipe_index) * 5.0, height + 14.0, -4.0),
 					1.3, 0.8, 8.0 + float(pipe_index % 2) * 3.0, accent, 8)
 		2:
-			# Courage has a forward gable and horn-like wings, breaking the flat frontage.
-			_add_reference_beam(hall, Vector3(-half_width, height - 1.0, -half_depth - 2.0),
-				Vector3(0.0, height + 10.0, -half_depth - 4.5), 1.15,
-				_materials.heart_ivory).name = "CourageFrontGableWest"
-			_add_reference_beam(hall, Vector3(half_width, height - 1.0, -half_depth - 2.0),
-				Vector3(0.0, height + 10.0, -half_depth - 4.5), 1.15,
-				_materials.heart_ivory).name = "CourageFrontGableEast"
+			# Keep the courage roof as a clean faceted mass. The former open gable
+			# looked like an unsupported construction frame from the gate approach.
 			for side in [-1.0, 1.0]:
 				var wing := _add_bevel_box(hall, "CourageRoofWing",
 					Vector3(side * 8.0, height + 8.5, -1.0),
 					Vector3(9.0, 1.3, 5.0), 0.4, accent)
 				wing.rotation.z = deg_to_rad(side * 24.0)
 		3:
-			# Memory carries a full external harp frame rather than a token roof symbol.
-			_add_reference_beam(hall, Vector3(-9.0, height + 5.5, -half_depth - 1.0),
-				Vector3(-5.0, height + 16.0, -half_depth - 1.0), 0.75,
-				_materials.heart_ivory).name = "MemoryRoofHarpWest"
-			_add_reference_beam(hall, Vector3(-5.0, height + 16.0, -half_depth - 1.0),
-				Vector3(9.0, height + 5.5, -half_depth - 1.0), 0.75,
-				_materials.heart_ivory).name = "MemoryRoofHarpCrown"
-			for rib_index in 3:
-				_add_reference_beam(hall, Vector3(-2.5 + rib_index * 2.5,
-					height + 7.0, -half_depth - 1.0),
-					Vector3(-2.5 + rib_index * 2.5, height + 13.0 - rib_index,
-					-half_depth - 1.0), 0.32,
-					accent).name = "MemoryRoofRib"
+			# The memory instrument remains on the façade; the former open roof harp
+			# and hanging bars have been removed to keep the skyline clean.
+			pass
 		4:
 			# Hope is the unmistakable vertical landmark of the wing.
 			_add_tapered_cylinder(hall, "HopeBellTower", Vector3(0.0, height + 12.0, 2.0),
