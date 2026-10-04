@@ -29,8 +29,22 @@ func _run() -> void:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
+	for observatory_name in ["WestObservatory", "NorthObservatory",
+			"EastObservatory", "SouthObservatory"]:
+		var observatory := world.get_node(observatory_name) as Node3D
+		var tower_shell := observatory.get_node_or_null("ObservatoryTower") as MeshInstance3D
+		if str(observatory.get_meta("architecture_revision", "")) != "faceted_observatory_v2" \
+				or not bool(observatory.get_meta("placeholder_rectangle_removed", false)) \
+				or tower_shell == null or tower_shell.visible \
+				or observatory.get_node_or_null("ObservatoryTowerCollision") == null \
+				or observatory.find_children("Observatory*FacetedBody", "MeshInstance3D", true, false).size() != 2 \
+				or observatory.find_children("ObservatoryWindowFrame*", "MeshInstance3D", true, false).size() != 4 \
+				or observatory.find_children("ObservatorySignalString_*", "MeshInstance3D", true, false).size() != 5 \
+				or observatory.find_children("*ObservatoryButtress_*", "MeshInstance3D", true, false).size() != 4:
+			_fail("%s still uses the gray rectangular tower prototype" % observatory_name)
+			return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
-	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v13" \
+	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v14" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):
 		_fail("Heart Melody still uses its placeholder rectangular facade")
 		return
@@ -39,6 +53,7 @@ func _run() -> void:
 	if conservatory == null \
 			or float(conservatory.get_meta("central_opening_width_m", 0.0)) < 48.0 \
 			or not bool(conservatory.get_meta("authored_processional_forecourt", false)) \
+			or not bool(conservatory.get_meta("layered_hall_side_facades", false)) \
 			or int(conservatory.get_meta("distinct_silhouette_count", 0)) != 6:
 		_fail("Heart Melody conservatory or its clear entrance is missing")
 		return
@@ -46,6 +61,10 @@ func _run() -> void:
 	if bays == null or not bool(bays.get_meta("complete_360_architecture", false)) \
 			or bays.find_children("InstrumentHall_*", "Node3D", true, false).size() != 6 \
 			or bays.find_children("RearCyanWindow", "MeshInstance3D", true, false).size() != 6 \
+			or bays.find_children("*SideFacadeFrame", "MeshInstance3D", true, false).size() != 12 \
+			or bays.find_children("*SideFacadeRecess", "MeshInstance3D", true, false).size() != 12 \
+			or bays.find_children("*SidePilaster_*", "MeshInstance3D", true, false).size() != 36 \
+			or bays.find_children("*MemoryRegister_*", "MeshInstance3D", true, false).size() != 10 \
 			or bays.find_children("HallCollisionCollision", "StaticBody3D", true, false).size() != 6:
 		_fail("Heart Melody conservatory does not have six complete 360-degree instrument halls")
 		return

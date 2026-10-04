@@ -1694,7 +1694,7 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 func _build_heart_district() -> void:
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v13")
+	district.set_meta("design_revision", "celestial_conservatory_v14")
 	district.set_meta("finished_product_lighting", true)
 	district.set_meta("production_material_palette", true)
 	district.set_meta("flat_rectangle_facade_removed", true)
@@ -1824,6 +1824,7 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	conservatory.set_meta("authored_processional_forecourt", true)
 	conservatory.set_meta("distinct_silhouette_count", 6)
 	conservatory.set_meta("clean_pool_courts", true)
+	conservatory.set_meta("layered_hall_side_facades", true)
 	district.add_child(conservatory)
 
 	# A layered stone terrace grounds the building and removes the floating-wall
@@ -2438,6 +2439,19 @@ func _build_heart_instrument_hall(parent: Node3D, hall_index: int,
 	# Both side elevations receive windows, planted buttresses and roof drainage.
 	for side in [-1.0, 1.0]:
 		var side_name := "West" if side < 0 else "East"
+		# A full-height framed bay replaces the exposed gray side slab. The broad
+		# ivory surround, charcoal recess and projecting pilasters keep every hall
+		# readable from the gate's oblique camera angles.
+		var side_frame := _add_bevel_box(hall, "%sSideFacadeFrame" % side_name,
+			Vector3(side * (half_width + 0.38), height * 0.51 + 3.0, 2.0),
+			Vector3(depth - 3.2, height * 0.77, 0.72), 0.48,
+			_materials.heart_ivory_shadow)
+		side_frame.rotation.y = PI * 0.5
+		var side_recess := _add_bevel_box(hall, "%sSideFacadeRecess" % side_name,
+			Vector3(side * (half_width + 0.79), height * 0.51 + 3.0, 2.0),
+			Vector3(depth - 6.4, height * 0.61, 0.24), 0.34,
+			_materials.heart_charcoal)
+		side_recess.rotation.y = PI * 0.5
 		var side_cornice := _add_bevel_box(hall, "%sSideCornice" % side_name,
 			Vector3(side * (half_width + 0.22), height - 0.5, 2.0),
 			Vector3(depth + 1.8, 1.4, 1.2), 0.38, _materials.heart_ivory)
@@ -2445,16 +2459,36 @@ func _build_heart_instrument_hall(parent: Node3D, hall_index: int,
 		for window_index in 2:
 			var side_window := _add_bevel_box(hall,
 				"%sSideWindow_%02d" % [side_name, window_index + 1],
-				Vector3(side * (half_width + 0.08), 10.0 + float(window_index) * 7.4,
+				Vector3(side * (half_width + 0.96), 10.0 + float(window_index) * 7.4,
 					-2.0 + float(window_index) * 7.0),
 				Vector3(6.0, 4.4, 0.24), 0.28, _materials.heart_glass)
 			side_window.rotation.y = PI * 0.5
 			var window_canopy := _add_bevel_box(hall,
 				"%sWindowCanopy_%02d" % [side_name, window_index + 1],
-				Vector3(side * (half_width + 0.68), 13.0 + float(window_index) * 7.4,
+				Vector3(side * (half_width + 1.18), 13.0 + float(window_index) * 7.4,
 					-2.0 + float(window_index) * 7.0),
 				Vector3(7.4, 0.8, 1.3), 0.28, accent)
 			window_canopy.rotation.y = PI * 0.5
+		for pilaster_index in 3:
+			var pilaster_z := -half_depth + 3.0 + float(pilaster_index) * \
+				((depth - 6.0) * 0.5)
+			_add_bevel_box(hall,
+				"%sSidePilaster_%02d" % [side_name, pilaster_index + 1],
+				Vector3(side * (half_width + 1.12), height * 0.48 + 3.0, pilaster_z + 2.0),
+				Vector3(1.15, height * 0.68, 1.15), 0.28,
+				_materials.heart_ivory)
+		# The Memory hall receives a five-string side register so its long wall
+		# reads as an instrument façade instead of another blank building panel.
+		if hall_index == 3:
+			for register_index in 5:
+				var register_z := -4.0 + float(register_index) * 2.0
+				var register := _add_bevel_box(hall,
+					"%sMemoryRegister_%02d" % [side_name, register_index + 1],
+					Vector3(side * (half_width + 1.16), height * 0.69 + 2.5, register_z),
+					Vector3(0.30, 7.5 - abs(float(register_index) - 2.0) * 0.55, 0.30),
+					0.08, _materials.heart_cyan if register_index % 2 == 0 \
+					else _materials.heart_lavender)
+				register.rotation.y = PI * 0.5
 		for buttress_z in [-half_depth + 2.0, half_depth + 1.0]:
 			_add_tapered_cylinder(hall, "%sLivingButtress" % side_name,
 				Vector3(side * (half_width + 1.1), 6.1, buttress_z + 2.0),
@@ -3053,6 +3087,8 @@ func _build_boundary_observatories() -> void:
 		lookout.name = info.name
 		add_child(lookout)
 		var center: Vector3 = info.center
+		lookout.set_meta("architecture_revision", "faceted_observatory_v2")
+		lookout.set_meta("placeholder_rectangle_removed", true)
 		_build_island_foundation(lookout, center, 70.0, 38.0, 20)
 		_add_torus(lookout, "CompassRing", center + Vector3(0.0, 1.0, 0.0), 33.0, 38.0, _materials.gold)
 		_build_tower(lookout, center, 34.0, 112.0, _materials.ivory)
@@ -7240,8 +7276,75 @@ func _build_cloud_tower(parent: Node3D, base: Vector3, width: float, height: flo
 
 
 func _build_tower(parent: Node3D, base: Vector3, width: float, height: float, material: Material) -> void:
-	_add_box(parent, "ObservatoryTower", base + Vector3(0.0, height * 0.5, 18.0), Vector3(width, height, width), material, true)
-	_add_box(parent, "ObservatoryWindow", base + Vector3(0.0, height * 0.62, 0.5), Vector3(width * 0.28, height * 0.34, 3.0), _materials.window)
+	var tower_center := base + Vector3(0.0, 0.0, 18.0)
+	# Preserve the stable collision-backed tower node while hiding its former
+	# visible rectangular mesh. The authored faceted shell below now defines the
+	# silhouette from every island and bridge camera.
+	var collision_shell := _add_box(parent, "ObservatoryTower",
+		tower_center + Vector3.UP * height * 0.5, Vector3(width, height, width),
+		material, true)
+	collision_shell.visible = false
+	_add_tapered_cylinder(parent, "ObservatoryFoundationPlinth",
+		tower_center + Vector3.UP * 4.0, width * 0.72, width * 0.62, 8.0,
+		_materials.heart_charcoal, 8)
+	_add_tapered_cylinder(parent, "ObservatoryLowerFacetedBody",
+		tower_center + Vector3.UP * 31.0, width * 0.58, width * 0.49, 50.0,
+		material, 8)
+	_add_cylinder(parent, "ObservatoryLowerCollar",
+		tower_center + Vector3.UP * 57.0, width * 0.58, 3.0,
+		_materials.heart_ivory_shadow, false, 8)
+	_add_tapered_cylinder(parent, "ObservatoryUpperFacetedBody",
+		tower_center + Vector3.UP * 78.0, width * 0.47, width * 0.36, 39.0,
+		_materials.heart_stone, 8)
+	_add_cylinder(parent, "ObservatoryCrownGallery",
+		tower_center + Vector3.UP * 99.0, width * 0.50, 4.0,
+		_materials.heart_ivory, false, 8)
+	_add_tapered_cylinder(parent, "ObservatoryFacetedRoof",
+		tower_center + Vector3.UP * 107.0, width * 0.49, width * 0.08, 13.0,
+		_materials.heart_roof, 8)
+	_build_faceted_ceremonial_crystal(parent, "ObservatoryCrownCrystal",
+		tower_center + Vector3.UP * 116.0, 5.0, 1.0,
+		_materials.heart_cyan)
+	# A deep framed cyan instrument window replaces the lone glowing rectangle.
+	_add_bevel_box(parent, "ObservatoryWindowRecess",
+		base + Vector3(0.0, height * 0.60, 0.55),
+		Vector3(width * 0.48, height * 0.43, 2.4), 0.7,
+		_materials.heart_charcoal)
+	_add_bevel_box(parent, "ObservatoryWindow",
+		base + Vector3(0.0, height * 0.60, -0.78),
+		Vector3(width * 0.27, height * 0.32, 0.42), 0.34,
+		_materials.window)
+	for frame_side in [-1.0, 1.0]:
+		_add_bevel_box(parent,
+			"ObservatoryWindowFrameSide_%s" % ("L" if frame_side < 0 else "R"),
+			base + Vector3(frame_side * width * 0.18, height * 0.60, -1.16),
+			Vector3(1.25, height * 0.38, 1.1), 0.28,
+			_materials.heart_ivory)
+	for frame_level in [-1.0, 1.0]:
+		_add_bevel_box(parent,
+			"ObservatoryWindowFrame_%s" % ("Lower" if frame_level < 0 else "Upper"),
+			base + Vector3(0.0, height * 0.60 + frame_level * height * 0.19, -1.16),
+			Vector3(width * 0.39, 1.25, 1.1), 0.28,
+			_materials.heart_ivory)
+	for string_index in 5:
+		_add_bevel_box(parent, "ObservatorySignalString_%02d" % (string_index + 1),
+			base + Vector3(-width * 0.09 + float(string_index) * width * 0.045,
+				height * 0.60, -1.48),
+			Vector3(0.26, height * (0.20 + float(string_index % 2) * 0.035), 0.18),
+			0.06, _materials.heart_light)
+	# Four stepped buttresses and side glass slots break the remaining long walls.
+	for side in [-1.0, 1.0]:
+		var side_name := "West" if side < 0 else "East"
+		for buttress_index in 2:
+			_add_tapered_cylinder(parent,
+				"%sObservatoryButtress_%02d" % [side_name, buttress_index + 1],
+				tower_center + Vector3(side * width * 0.55, 22.0,
+					-8.0 + float(buttress_index) * 16.0),
+				3.4, 2.1, 42.0, _materials.heart_ivory_shadow, 6)
+		var side_slot := _add_bevel_box(parent, "%sObservatoryGlassSlot" % side_name,
+			tower_center + Vector3(side * width * 0.50, 67.0, 0.0),
+			Vector3(12.0, 19.0, 0.38), 0.28, _materials.heart_glass)
+		side_slot.rotation.y = PI * 0.5
 	_build_cypress(parent, base + Vector3(width * 0.75, 2.0, -18.0), 28.0, _materials.purple_leaf)
 
 
