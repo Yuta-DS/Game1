@@ -186,16 +186,13 @@ func _run() -> void:
 			or mind_station.get_node_or_null("MindSparkLongAccessBridgeRemoved") == null:
 		_fail("Mind Spark station still contains its retired longest bridge or stair")
 		return
-	var west_observatory_tower := world.get_node_or_null(
-		"WestObservatory/ObservatoryTower") as MeshInstance3D
-	if west_observatory_tower == null:
-		_fail("West Observatory tower is missing")
-		return
-	var station_to_tower := Vector2(mind_station.global_position.x \
-		- west_observatory_tower.global_position.x,
-		mind_station.global_position.z - west_observatory_tower.global_position.z).length()
-	if station_to_tower < 150.0:
-		_fail("West Observatory big block still overlaps the Mind Spark train station")
+	var west_removal := world.get_node_or_null("WestObservatoryRemoved") as Node3D
+	if world.get_node_or_null("WestObservatory") != null \
+			or world.get_node_or_null("WestObservatoryBridge") != null \
+			or west_removal == null \
+			or not bool(west_removal.get_meta("tower_removed", false)) \
+			or not bool(west_removal.get_meta("island_foundation_removed", false)):
+		_fail("West Observatory tower or its detached land still crowds the Mind station")
 		return
 	# Start on the Heart arrival court, not above the bridge: its instrument
 	# ring previously put a solid 18 m column directly across the ascent.

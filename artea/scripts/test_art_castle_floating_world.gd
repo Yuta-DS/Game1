@@ -24,12 +24,12 @@ func _run() -> void:
 		_fail("world is not exactly 2000m x 2000m")
 		return
 	for district in ["CentralSanctuary", "ArrivalIsland", "MindSparkDistrict",
-			"HeartMelodyTemple", "CreatorsLightStudio", "WestObservatory",
+			"HeartMelodyTemple", "CreatorsLightStudio",
 			"NorthObservatory", "EastObservatory", "SouthObservatory"]:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
-	for observatory_name in ["WestObservatory", "NorthObservatory",
+	for observatory_name in ["NorthObservatory",
 			"EastObservatory", "SouthObservatory"]:
 		var observatory := world.get_node(observatory_name) as Node3D
 		var tower_shell := observatory.get_node_or_null("ObservatoryTower") as MeshInstance3D
@@ -47,6 +47,16 @@ func _run() -> void:
 	if not bool(north_observatory.get_meta("clear_of_primary_gate_sightline", false)) \
 			or absf(north_observatory.get_node("WalkableDeck").position.x) < 200.0:
 		_fail("north observatory still blocks the Heart gate sightline")
+		return
+	var west_removal := world.get_node_or_null("WestObservatoryRemoved") as Node3D
+	if world.get_node_or_null("WestObservatory") != null \
+			or world.get_node_or_null("WestObservatoryBridge") != null \
+			or world.get_node_or_null("WestObservatoryBridgeTwin") != null \
+			or west_removal == null \
+			or not bool(west_removal.get_meta("tower_removed", false)) \
+			or not bool(west_removal.get_meta("island_foundation_removed", false)) \
+			or not bool(west_removal.get_meta("dead_end_bridges_removed", false)):
+		_fail("the West watchtower, its land, or its dead-end bridges remain")
 		return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
 	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v14" \
@@ -169,14 +179,27 @@ func _run() -> void:
 		return
 
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
-			"WestObservatoryBridge", "NorthObservatoryBridge", "EastObservatoryBridge",
+			"NorthObservatoryBridge", "EastObservatoryBridge",
 			"SouthObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
 		if bridge_node == null or bridge_node.get_node_or_null("Walkway") == null:
 			_fail("missing connected walkway %s" % bridge)
 			return
 	var tree_bridge := world.get_node_or_null("SouthArrivalBridge") as Node3D
+	var mind_bridge := world.get_node_or_null("MindBridge") as Node3D
 	var heart_bridge := world.get_node_or_null("HeartBridge") as Node3D
+	if str(mind_bridge.get_meta("visual_style", "")) != \
+			"mind_spark_celestial_glass_bridge_v2" \
+			or not bool(mind_bridge.get_meta("finished_deck", false)) \
+			or not bool(mind_bridge.get_meta("watchtower_route_removed", false)) \
+			or int(mind_bridge.get_meta("cyan_glass_guard_count", 0)) != 2 \
+			or mind_bridge.get_node_or_null("MindBridgeStructuralSpine") == null \
+			or mind_bridge.find_children("MindBridgeGuardGlass*", "MeshInstance3D", true, false).size() != 2 \
+			or mind_bridge.find_children("MindBridgeTopRail*", "MeshInstance3D", true, false).size() != 2 \
+			or mind_bridge.find_children("MindBridgeWayfinding_*", "MeshInstance3D", true, false).size() < 10 \
+			or mind_bridge.find_children("ArchSupport*", "Node3D", true, false).size() != 0:
+		_fail("Mind Bridge does not use its finished celestial glass design")
+		return
 	if not bool(heart_bridge.get_meta("continuous_finish_deck", false)) \
 			or int(heart_bridge.get_meta("smooth_landing_count", -1)) != 0 \
 			or not bool(heart_bridge.get_meta("inclined_to_heart_ground", false)) \

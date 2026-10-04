@@ -3099,11 +3099,6 @@ func _build_creator_story_landmarks() -> void:
 
 func _build_boundary_observatories() -> void:
 	var points := [
-		# The Crown Line Mind station occupies the former (-920, 0, 1640) site.
-		# Move this 112 m tower south with its own approach so its giant solid body
-		# no longer passes through the station platform and crystal canopy.
-		{"name": "WestObservatory", "center": Vector3(-920.0, 0.0, 1430.0),
-			"source_center": MIND, "source_radius": MIND_DISTRICT_RADIUS},
 		# Keep the northern observatory out of the straight Heart gate sightline.
 		# The former centred placement read as a giant gray rectangle behind the
 		# entrance whenever the elevated Crown Line crossed in front of it.
@@ -3127,6 +3122,15 @@ func _build_boundary_observatories() -> void:
 		_build_tower(lookout, center, 34.0, 112.0, _materials.ivory)
 		_add_exact_twin_island_bridges("%sBridge" % info.name,
 			info.source_center, float(info.source_radius), center, 70.0)
+	# The former West Observatory was a detached watchtower island behind Mind
+	# Spark. Its large round foundation and twin dead-end bridges crowded the
+	# district silhouette, so the complete structure and all collision are gone.
+	var removed_west_observatory := Node3D.new()
+	removed_west_observatory.name = "WestObservatoryRemoved"
+	removed_west_observatory.set_meta("tower_removed", true)
+	removed_west_observatory.set_meta("island_foundation_removed", true)
+	removed_west_observatory.set_meta("dead_end_bridges_removed", true)
+	add_child(removed_west_observatory)
 
 
 func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
@@ -3285,6 +3289,7 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	add_child(bridge)
 	var tree_processional := node_name == "SouthArrivalBridge"
 	var heart_processional := node_name == "HeartBridge"
+	var mind_processional := node_name == "MindBridge"
 	var direction := end - start
 	var length := direction.length()
 	var yaw := atan2(direction.x, direction.z)
@@ -3294,7 +3299,8 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var bridge_basis := Basis(side_axis, surface_normal, forward_axis)
 	var midpoint := (start + end) * 0.5 - surface_normal * 2.0
 	var walkway_material: Material = _materials.passage_stone if tree_processional \
-		else (_materials.heart_path if heart_processional else _materials.stone)
+		else (_materials.heart_path if heart_processional \
+		else (_materials.bridge_deck if mind_processional else _materials.stone))
 	var walkway := _add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
 		walkway_material, true, yaw)
 	walkway.basis = bridge_basis
@@ -3304,7 +3310,8 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 		var rail_height := 5.0 if tree_processional else (5.5 if heart_processional else 10.0)
 		var rail_y := 2.5 if tree_processional else (2.75 if heart_processional else 5.0)
 		var rail_material: Material = _materials.passage_stone_shadow \
-			if tree_processional else (_materials.heart_ivory if heart_processional else _materials.ivory)
+			if tree_processional else (_materials.heart_ivory if heart_processional \
+			else (_materials.bridge_edge if mind_processional else _materials.ivory))
 		var edge_position: Vector3 = midpoint \
 			+ side_axis * float(side) * (width * 0.5 - 2.0) \
 			+ surface_normal * rail_y
@@ -3316,8 +3323,8 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 		safety_collision.basis = bridge_basis
 		# Retain the original continuous fall-prevention collision, but let the
 		# lightweight botanical lattice carry the visible silhouette.
-		safety_rail.visible = not tree_processional and not heart_processional
-		if not tree_processional:
+		safety_rail.visible = not tree_processional and not heart_processional and not mind_processional
+		if not tree_processional and not mind_processional:
 			for step in range(0, int(length), 55):
 				var t := float(step) / length
 				var planter_pos: Vector3 = start.lerp(end, t) \
@@ -3334,12 +3341,73 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 		# HeartBridge crosses the open celestial void as a light, self-supporting
 		# span. The exposed pier assemblies read as unfinished columns from the
 		# island camera, so only the other bridges receive underside supports.
-		if not heart_processional:
+		if not heart_processional and not mind_processional:
 			_add_arch_support(bridge, support_pos, width, yaw)
 	if tree_processional:
 		_build_tree_of_life_processional_style(bridge, start, end, width, yaw, side_axis)
 	elif heart_processional:
 		_build_heart_processional_bridge_style(bridge, start, end, width, yaw, side_axis)
+	elif mind_processional:
+		_build_mind_bridge_style(bridge, start, end, width, yaw, side_axis)
+
+
+func _build_mind_bridge_style(bridge: Node3D, start: Vector3, end: Vector3,
+		width: float, yaw: float, side_axis: Vector3) -> void:
+	var length := start.distance_to(end)
+	var forward_axis := (end - start).normalized()
+	var surface_normal := forward_axis.cross(side_axis).normalized()
+	var bridge_basis := Basis(side_axis, surface_normal, forward_axis)
+	var midpoint := start.lerp(end, 0.5)
+	bridge.set_meta("visual_style", "mind_spark_celestial_glass_bridge_v2")
+	bridge.set_meta("watchtower_route_removed", true)
+	bridge.set_meta("finished_deck", true)
+	bridge.set_meta("cyan_glass_guard_count", 2)
+	bridge.set_meta("clear_gameplay_lane_m", width - 8.0)
+	# A charcoal spine and ivory edge beams give the wide span a finished
+	# underside without the exposed pier forest used by the retired prototype.
+	var spine := _add_bevel_box(bridge, "MindBridgeStructuralSpine",
+		midpoint - surface_normal * 4.1, Vector3(10.0, 3.4, length - 2.0),
+		0.75, _materials.bridge_structure)
+	spine.basis = bridge_basis
+	for side_value in [-1.0, 1.0]:
+		var side: float = side_value
+		var side_name := "Left" if side < 0.0 else "Right"
+		var edge_origin := midpoint + side_axis * side * (width * 0.5 - 1.7)
+		var edge_beam := _add_bevel_box(bridge, "MindBridgeEdge%s" % side_name,
+			edge_origin - surface_normal * 0.55,
+			Vector3(2.4, 1.5, length), 0.42, _materials.bridge_edge)
+		edge_beam.basis = bridge_basis
+		var glass := _add_bevel_box(bridge, "MindBridgeGuardGlass%s" % side_name,
+			edge_origin + surface_normal * 2.15,
+			Vector3(0.34, 3.7, length - 3.0), 0.14, _materials.bridge_glass)
+		glass.basis = bridge_basis
+		var top_rail := _add_bevel_box(bridge, "MindBridgeTopRail%s" % side_name,
+			edge_origin + surface_normal * 4.25,
+			Vector3(1.1, 0.65, length), 0.22, _materials.bridge_edge)
+		top_rail.basis = bridge_basis
+		for metre in range(0, int(length) + 1, 12):
+			var t := minf(1.0, float(metre) / length)
+			var post_position := start.lerp(end, t) \
+				+ side_axis * side * (width * 0.5 - 1.7) \
+				+ surface_normal * 2.15
+			var post := _add_bevel_box(bridge,
+				"MindBridgeGuardPost%s_%03d" % [side_name, metre], post_position,
+				Vector3(0.86, 4.4, 0.86), 0.18, _materials.bridge_edge)
+			post.basis = bridge_basis
+	# Short inset lights replace the loose dotted route with a measured centre
+	# rhythm that matches the other finished celestial bridge decks.
+	for metre in range(12, int(length), 18):
+		var t := float(metre) / length
+		var marker := _add_bevel_box(bridge, "MindBridgeWayfinding_%03d" % metre,
+			start.lerp(end, t) + surface_normal * 0.10,
+			Vector3(3.2, 0.12, 7.0), 0.25, _materials.bridge_glass)
+		marker.basis = bridge_basis
+	for endpoint_data in [[start, "Sanctuary"], [end, "MindSpark"]]:
+		var threshold := _add_bevel_box(bridge,
+			"MindBridge%sThreshold" % endpoint_data[1],
+			(endpoint_data[0] as Vector3) + surface_normal * 0.10,
+			Vector3(width - 4.0, 0.20, 7.0), 0.40, _materials.bridge_edge)
+		threshold.basis = bridge_basis
 
 
 func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
