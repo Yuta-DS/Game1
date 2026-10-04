@@ -3300,7 +3300,7 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var midpoint := (start + end) * 0.5 - surface_normal * 2.0
 	var walkway_material: Material = _materials.passage_stone if tree_processional \
 		else (_materials.heart_path if heart_processional \
-		else (_materials.bridge_deck if mind_processional else _materials.stone))
+		else (_materials.heart_path if mind_processional else _materials.stone))
 	var walkway := _add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
 		walkway_material, true, yaw)
 	walkway.basis = bridge_basis
@@ -3311,7 +3311,7 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 		var rail_y := 2.5 if tree_processional else (2.75 if heart_processional else 5.0)
 		var rail_material: Material = _materials.passage_stone_shadow \
 			if tree_processional else (_materials.heart_ivory if heart_processional \
-			else (_materials.bridge_edge if mind_processional else _materials.ivory))
+			else (_materials.heart_ivory if mind_processional else _materials.ivory))
 		var edge_position: Vector3 = midpoint \
 			+ side_axis * float(side) * (width * 0.5 - 2.0) \
 			+ surface_normal * rail_y
@@ -3358,10 +3358,11 @@ func _build_mind_bridge_style(bridge: Node3D, start: Vector3, end: Vector3,
 	var surface_normal := forward_axis.cross(side_axis).normalized()
 	var bridge_basis := Basis(side_axis, surface_normal, forward_axis)
 	var midpoint := start.lerp(end, 0.5)
-	bridge.set_meta("visual_style", "mind_spark_celestial_glass_bridge_v2")
+	bridge.set_meta("visual_style", "mind_spark_ivory_processional_bridge_v3")
 	bridge.set_meta("watchtower_route_removed", true)
 	bridge.set_meta("finished_deck", true)
-	bridge.set_meta("cyan_glass_guard_count", 2)
+	bridge.set_meta("cyan_rail_count", 4)
+	bridge.set_meta("full_width_cross_lines_removed", true)
 	bridge.set_meta("clear_gameplay_lane_m", width - 8.0)
 	# A charcoal spine and ivory edge beams give the wide span a finished
 	# underside without the exposed pier forest used by the retired prototype.
@@ -3375,16 +3376,16 @@ func _build_mind_bridge_style(bridge: Node3D, start: Vector3, end: Vector3,
 		var edge_origin := midpoint + side_axis * side * (width * 0.5 - 1.7)
 		var edge_beam := _add_bevel_box(bridge, "MindBridgeEdge%s" % side_name,
 			edge_origin - surface_normal * 0.55,
-			Vector3(2.4, 1.5, length), 0.42, _materials.bridge_edge)
+			Vector3(2.4, 1.5, length), 0.42, _materials.heart_ivory)
 		edge_beam.basis = bridge_basis
-		var glass := _add_bevel_box(bridge, "MindBridgeGuardGlass%s" % side_name,
-			edge_origin + surface_normal * 2.15,
-			Vector3(0.34, 3.7, length - 3.0), 0.14, _materials.bridge_glass)
-		glass.basis = bridge_basis
-		var top_rail := _add_bevel_box(bridge, "MindBridgeTopRail%s" % side_name,
-			edge_origin + surface_normal * 4.25,
-			Vector3(1.1, 0.65, length), 0.22, _materials.bridge_edge)
-		top_rail.basis = bridge_basis
+		# Match the neighboring finished bridge: two restrained cyan rails sit
+		# between ivory posts instead of a large glass wall or gray cross-bracing.
+		for rail_level in 2:
+			var cyan_rail := _add_bevel_box(bridge,
+				"MindBridgeCyanRail%s_%s" % [side_name, "Lower" if rail_level == 0 else "Upper"],
+				edge_origin + surface_normal * (1.65 + float(rail_level) * 1.55),
+				Vector3(0.30, 0.30, length - 3.0), 0.10, _materials.heart_cyan)
+			cyan_rail.basis = bridge_basis
 		for metre in range(0, int(length) + 1, 12):
 			var t := minf(1.0, float(metre) / length)
 			var post_position := start.lerp(end, t) \
@@ -3392,7 +3393,7 @@ func _build_mind_bridge_style(bridge: Node3D, start: Vector3, end: Vector3,
 				+ surface_normal * 2.15
 			var post := _add_bevel_box(bridge,
 				"MindBridgeGuardPost%s_%03d" % [side_name, metre], post_position,
-				Vector3(0.86, 4.4, 0.86), 0.18, _materials.bridge_edge)
+				Vector3(0.86, 4.4, 0.86), 0.18, _materials.heart_ivory)
 			post.basis = bridge_basis
 	# Short inset lights replace the loose dotted route with a measured centre
 	# rhythm that matches the other finished celestial bridge decks.
@@ -3400,14 +3401,8 @@ func _build_mind_bridge_style(bridge: Node3D, start: Vector3, end: Vector3,
 		var t := float(metre) / length
 		var marker := _add_bevel_box(bridge, "MindBridgeWayfinding_%03d" % metre,
 			start.lerp(end, t) + surface_normal * 0.10,
-			Vector3(3.2, 0.12, 7.0), 0.25, _materials.bridge_glass)
+			Vector3(2.2, 0.12, 5.0), 0.25, _materials.heart_cyan)
 		marker.basis = bridge_basis
-	for endpoint_data in [[start, "Sanctuary"], [end, "MindSpark"]]:
-		var threshold := _add_bevel_box(bridge,
-			"MindBridge%sThreshold" % endpoint_data[1],
-			(endpoint_data[0] as Vector3) + surface_normal * 0.10,
-			Vector3(width - 4.0, 0.20, 7.0), 0.40, _materials.bridge_edge)
-		threshold.basis = bridge_basis
 
 
 func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,

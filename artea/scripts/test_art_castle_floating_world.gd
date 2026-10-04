@@ -189,13 +189,15 @@ func _run() -> void:
 	var mind_bridge := world.get_node_or_null("MindBridge") as Node3D
 	var heart_bridge := world.get_node_or_null("HeartBridge") as Node3D
 	if str(mind_bridge.get_meta("visual_style", "")) != \
-			"mind_spark_celestial_glass_bridge_v2" \
+			"mind_spark_ivory_processional_bridge_v3" \
 			or not bool(mind_bridge.get_meta("finished_deck", false)) \
 			or not bool(mind_bridge.get_meta("watchtower_route_removed", false)) \
-			or int(mind_bridge.get_meta("cyan_glass_guard_count", 0)) != 2 \
+			or int(mind_bridge.get_meta("cyan_rail_count", 0)) != 4 \
+			or not bool(mind_bridge.get_meta("full_width_cross_lines_removed", false)) \
 			or mind_bridge.get_node_or_null("MindBridgeStructuralSpine") == null \
-			or mind_bridge.find_children("MindBridgeGuardGlass*", "MeshInstance3D", true, false).size() != 2 \
-			or mind_bridge.find_children("MindBridgeTopRail*", "MeshInstance3D", true, false).size() != 2 \
+			or mind_bridge.find_children("MindBridgeGuardGlass*", "MeshInstance3D", true, false).size() != 0 \
+			or mind_bridge.find_children("MindBridgeCyanRail*", "MeshInstance3D", true, false).size() != 4 \
+			or mind_bridge.find_children("MindBridge*Threshold", "MeshInstance3D", true, false).size() != 0 \
 			or mind_bridge.find_children("MindBridgeWayfinding_*", "MeshInstance3D", true, false).size() < 10 \
 			or mind_bridge.find_children("ArchSupport*", "Node3D", true, false).size() != 0:
 		_fail("Mind Bridge does not use its finished celestial glass design")
