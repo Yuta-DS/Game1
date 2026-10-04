@@ -1881,7 +1881,7 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	entrance.set_meta("clear_opening_width_m", 48.0)
 	entrance.set_meta("principal_route_width_m", 18.0)
 	entrance.set_meta("complete_front_side_rear", true)
-	entrance.set_meta("design_revision", "grand_resonance_gate_v4")
+	entrance.set_meta("design_revision", "grand_resonance_gate_v5")
 	entrance.set_meta("barrier_like_gate_removed", true)
 	entrance.set_meta("portal_arch_ring_count", 2)
 	entrance.set_meta("finished_bridge_landing", true)
@@ -1892,6 +1892,7 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	entrance.set_meta("sculpted_bridge_transition", true)
 	entrance.set_meta("asymmetric_landing_gardens", true)
 	entrance.set_meta("suspended_gate_harp_removed", true)
+	entrance.set_meta("loose_crest_spokes_removed", true)
 	conservatory.add_child(entrance)
 
 	# A broad, layered landing resolves the abrupt bridge-to-building joint and
@@ -2096,17 +2097,8 @@ func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
 	grand_emblem.set_meta("primary_gate_focal_point", true)
 	entrance.add_child(grand_emblem)
 	var emblem_center := Vector3(0.0, 36.2, -12.0)
-	for ray_index in 7:
-		# All rays open upward like a musical fan. Downward rays previously read
-		# as unsupported cables when the gate was viewed from the bridge.
-		var ray_angle := deg_to_rad(25.0 + float(ray_index) * (130.0 / 6.0))
-		var ray_end := emblem_center + Vector3(cos(ray_angle) * 8.8,
-			sin(ray_angle) * 8.8, 0.0)
-		_add_reference_beam(grand_emblem, emblem_center, ray_end, 0.34,
-			_materials.heart_ivory).name = "HarmonyRay_%02d" % (ray_index + 1)
-		_build_faceted_ceremonial_crystal(grand_emblem,
-			"HarmonyRayNote_%02d" % (ray_index + 1), ray_end, 1.35, 0.27,
-			_materials.heart_cyan if ray_index % 2 == 0 else _materials.heart_lavender)
+	# Keep the crest as one clean lyre triangle. The former seven thin radial
+	# beams and floating notes crossed the arch and read as loose gray wires.
 	_add_reference_beam(grand_emblem, emblem_center + Vector3(-5.2, -1.2, 0.0),
 		emblem_center + Vector3(0.0, 7.8, 0.0), 0.82,
 		_materials.heart_ivory).name = "LyreFrameWest"

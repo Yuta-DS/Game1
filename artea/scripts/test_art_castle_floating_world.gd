@@ -93,13 +93,14 @@ func _run() -> void:
 	var entrance := conservatory.get_node_or_null("GrandResonanceEntrance") as Node3D
 	var gardens := conservatory.get_node_or_null("ResonanceOrchardGardens") as Node3D
 	if entrance == null or float(entrance.get_meta("principal_route_width_m", 0.0)) < 18.0 \
-			or str(entrance.get_meta("design_revision", "")) != "grand_resonance_gate_v4" \
+			or str(entrance.get_meta("design_revision", "")) != "grand_resonance_gate_v5" \
 			or not bool(entrance.get_meta("barrier_like_gate_removed", false)) \
 			or not bool(entrance.get_meta("finished_bridge_landing", false)) \
 			or not bool(entrance.get_meta("musical_focal_monument", false)) \
 			or not bool(entrance.get_meta("sculpted_bridge_transition", false)) \
 			or not bool(entrance.get_meta("asymmetric_landing_gardens", false)) \
 			or not bool(entrance.get_meta("suspended_gate_harp_removed", false)) \
+			or not bool(entrance.get_meta("loose_crest_spokes_removed", false)) \
 			or int(entrance.get_meta("portal_arch_ring_count", 0)) != 2 \
 			or int(entrance.get_meta("vaulted_glass_canopy_panels", 0)) != 4 \
 			or int(entrance.get_meta("framed_tower_window_count", 0)) != 4 \
@@ -117,7 +118,8 @@ func _run() -> void:
 			or entrance.find_children("*ProcessionalButtress_*", "MeshInstance3D", true, false).size() != 6 \
 			or entrance.find_children("*MusicLedge_*", "MeshInstance3D", true, false).size() != 8 \
 			or entrance.find_children("InnerVaultRib*", "MeshInstance3D", true, false).size() != 10 \
-			or entrance.find_children("HarmonyRay_*", "MeshInstance3D", true, false).size() != 7 \
+			or entrance.find_children("HarmonyRay_*", "MeshInstance3D", true, false).size() != 0 \
+			or entrance.find_children("HarmonyRayNote_*", "MeshInstance3D", true, false).size() != 0 \
 			or entrance.find_children("LyreLightString_*", "MeshInstance3D", true, false).size() != 5 \
 			or entrance.find_children("LandingHarmonyKey_*", "MeshInstance3D", true, false).size() != 0 \
 			or entrance.get_node_or_null("GrandHarmonyLyreEmblem") == null \
