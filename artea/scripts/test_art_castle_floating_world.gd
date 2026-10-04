@@ -179,6 +179,8 @@ func _run() -> void:
 	var heart_bridge := world.get_node_or_null("HeartBridge") as Node3D
 	if not bool(heart_bridge.get_meta("continuous_finish_deck", false)) \
 			or int(heart_bridge.get_meta("smooth_landing_count", -1)) != 0 \
+			or not bool(heart_bridge.get_meta("inclined_to_heart_ground", false)) \
+			or absf(float(heart_bridge.get_meta("finish_surface_y_m", 0.0)) - 5.21) > 0.02 \
 			or int(heart_bridge.get_meta("finished_fascia_count", 0)) != 2 \
 			or int(heart_bridge.get_meta("arrival_pylon_count", 0)) != 4 \
 			or int(heart_bridge.get_meta("parapet_panel_count", 0)) != 22 \

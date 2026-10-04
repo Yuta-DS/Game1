@@ -338,7 +338,10 @@ func _build_central_sanctuary() -> void:
 
 	_add_bridge("SouthArrivalBridge", Vector3(0.0, 0.0, 1422.0), Vector3(0.0, 0.0, 975.0), 62.0)
 	_add_bridge("MindBridge", Vector3(-218.0, 0.0, 1640.0), Vector3(-430.0, 0.0, 1640.0), 58.0)
-	_add_bridge("HeartBridge", Vector3(0.0, 0.0, 1858.0), Vector3(0.0, 0.0, 2120.0), 58.0)
+	# The Heart court is raised by its garden deck. Incline the processional
+	# bridge gently so its finished surface meets the arrival carpet without the
+	# deep step that previously exposed the dark island edge.
+	_add_bridge("HeartBridge", Vector3(0.0, 0.0, 1858.0), Vector3(0.0, 5.02, 2120.0), 58.0)
 	_add_bridge("CreatorBridge", Vector3(218.0, 0.0, 1640.0), Vector3(410.0, 0.0, 1640.0), 58.0)
 
 
@@ -3250,13 +3253,19 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var heart_processional := node_name == "HeartBridge"
 	var direction := end - start
 	var length := direction.length()
-	var midpoint := (start + end) * 0.5 + Vector3(0.0, -2.0, 0.0)
 	var yaw := atan2(direction.x, direction.z)
+	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
+	var forward_axis := direction.normalized()
+	var surface_normal := forward_axis.cross(side_axis).normalized()
+	var bridge_basis := Basis(side_axis, surface_normal, forward_axis)
+	var midpoint := (start + end) * 0.5 - surface_normal * 2.0
 	var walkway_material: Material = _materials.passage_stone if tree_processional \
 		else (_materials.heart_path if heart_processional else _materials.stone)
-	_add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
+	var walkway := _add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
 		walkway_material, true, yaw)
-	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
+	walkway.basis = bridge_basis
+	var walkway_collision := bridge.get_child(bridge.get_child_count() - 1) as StaticBody3D
+	walkway_collision.basis = bridge_basis
 	for side in [-1.0, 1.0]:
 		var rail_height := 5.0 if tree_processional else (5.5 if heart_processional else 10.0)
 		var rail_y := 2.5 if tree_processional else (2.75 if heart_processional else 5.0)
@@ -3264,10 +3273,13 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 			if tree_processional else (_materials.heart_ivory if heart_processional else _materials.ivory)
 		var edge_position: Vector3 = midpoint \
 			+ side_axis * float(side) * (width * 0.5 - 2.0) \
-			+ Vector3(0.0, rail_y, 0.0)
+			+ surface_normal * rail_y
 		var safety_rail := _add_box(bridge, "SafetyRail", edge_position,
 			Vector3(2.4 if tree_processional else 3.0, rail_height, length),
 			rail_material, true, yaw)
+		safety_rail.basis = bridge_basis
+		var safety_collision := bridge.get_child(bridge.get_child_count() - 1) as StaticBody3D
+		safety_collision.basis = bridge_basis
 		# Retain the original continuous fall-prevention collision, but let the
 		# lightweight botanical lattice carry the visible silhouette.
 		safety_rail.visible = not tree_processional and not heart_processional
@@ -3308,37 +3320,43 @@ func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
 	bridge.set_meta("arrival_pylon_count", 4)
 	bridge.set_meta("heart_arch_support_count", 0)
 	bridge.set_meta("parapet_panel_count", 22)
+	bridge.set_meta("inclined_to_heart_ground", true)
+	bridge.set_meta("finish_surface_y_m", end.y + 0.19)
+	var direction := end - start
+	var forward_axis := direction.normalized()
+	var surface_normal := forward_axis.cross(side_axis).normalized()
+	var bridge_basis := Basis(side_axis, surface_normal, forward_axis)
 	var finish_deck := _add_bevel_box(bridge, "HeartBridgeFinishDeck",
-		(start + end) * 0.5 + Vector3.UP * 0.10,
+		(start + end) * 0.5 + surface_normal * 0.10,
 		Vector3(width - 8.0, 0.18, length - 1.0), 0.72,
 		_materials.heart_path)
-	finish_deck.rotation.y = yaw
+	finish_deck.basis = bridge_basis
 	# Continuous longitudinal fascia replaces the overlapping crosswise landing
 	# aprons that produced a gray seam across the bridge deck.
 	for side in [-1.0, 1.0]:
 		var fascia_center := (start + end) * 0.5 \
-			+ side_axis * float(side) * (width * 0.5 - 1.2) + Vector3.DOWN * 0.95
+			+ side_axis * float(side) * (width * 0.5 - 1.2) - surface_normal * 0.95
 		var fascia := _add_bevel_box(bridge,
 			"HeartBridgeFascia_%s" % ("West" if side < 0 else "East"),
 			fascia_center, Vector3(2.4, 1.9, length - 1.0), 0.45,
 			_materials.heart_charcoal)
-		fascia.rotation.y = yaw
+		fascia.basis = bridge_basis
 		var fascia_cap := _add_bevel_box(bridge,
 			"HeartBridgeFasciaCap_%s" % ("West" if side < 0 else "East"),
 			fascia_center + Vector3.UP * 1.04,
 			Vector3(3.0, 0.22, length - 1.0), 0.22, _materials.heart_ivory)
-		fascia_cap.rotation.y = yaw
+		fascia_cap.basis = bridge_basis
 		var light_inset := _add_bevel_box(bridge,
 			"HeartBridgeFasciaLight_%s" % ("West" if side < 0 else "East"),
 			fascia_center + Vector3.UP * 0.40,
 			Vector3(2.48, 0.16, length - 4.0), 0.10, _materials.heart_cyan)
-		light_inset.rotation.y = yaw
+		light_inset.basis = bridge_basis
 	for note_index in 12:
 		var note_t := (float(note_index) + 0.5) / 12.0
 		var inlay := _add_bevel_box(bridge, "HeartBridgeNote_%02d" % (note_index + 1),
-			start.lerp(end, note_t) + Vector3.UP * 0.205,
+			start.lerp(end, note_t) + surface_normal * 0.205,
 			Vector3(3.2, 0.035, 0.68), 0.08, _materials.heart_light)
-		inlay.rotation.y = yaw
+		inlay.basis = bridge_basis
 	for side in [-1.0, 1.0]:
 		var side_value: float = side
 		var previous_low := Vector3.ZERO

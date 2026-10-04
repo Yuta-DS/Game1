@@ -31,6 +31,21 @@ func _run() -> void:
 	for hall_x in [-111.0, -79.0, -50.0, 50.0, 80.0, 112.0]:
 		local_points.append(Vector3(hall_x, 0, -18))
 	var space := world.get_world_3d().direct_space_state
+	# The Heart bridge now rises continuously from the central island to the
+	# elevated garden carpet. Probe its physical surface along the whole span so
+	# the visual alignment cannot hide a collision step or gap.
+	for bridge_step in range(1, 10):
+		var bridge_t := float(bridge_step) / 10.0
+		var expected_height := lerpf(0.0, 5.02, bridge_t)
+		var bridge_point := Vector3(0.0, expected_height,
+			lerpf(1858.0, 2120.0, bridge_t))
+		var bridge_query := PhysicsRayQueryParameters3D.create(
+			bridge_point + Vector3.UP * 3.0, bridge_point + Vector3.DOWN * 3.0, 1)
+		var bridge_hit := space.intersect_ray(bridge_query)
+		if bridge_hit.is_empty() \
+				or absf((bridge_hit.position as Vector3).y - expected_height) > 0.12:
+			_fail("Heart bridge is not continuously aligned at %.1f%%" % (bridge_t * 100.0))
+			return
 	for local_point in local_points:
 		var point := conservatory.to_global(local_point)
 		var query := PhysicsRayQueryParameters3D.create(
