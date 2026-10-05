@@ -161,7 +161,7 @@ var _station_fall_recovery := -1
 # them. Matches milo_fall_rescue.gd's RESCUE_DROP. The general rescue cannot
 # cover stations alone: the ground 35 m below counts as a floor, so it would
 # let the player land there.
-const STATION_RESCUE_DROP := 16.0
+const STATION_RESCUE_DROP := 28.0
 
 
 func get_station_disembark_position(index: int) -> Vector3:
