@@ -274,6 +274,11 @@ func build_world() -> void:
 	set_meta("legacy_fusion_pairs", PackedStringArray(["01+02", "03+04", "05+06"]))
 	set_meta("story_route_required", true)
 	set_meta("greybox_build_sequence", GREYBOX_BUILD_SEQUENCE)
+	# Courts and landmark builders may replace the surface beneath a station
+	# after its initial authored placement. Resolve every live quest object
+	# against the final physics world so none of the fifteen instruments retain a
+	# legacy vertical offset and appear to float above its Island 1–3 support.
+	_ground_all_quest_objects.call_deferred()
 	var foundation_mode := "standalone_preview"
 	if _uses_existing_mind_district():
 		foundation_mode = "walkable_mind_district"
@@ -793,8 +798,11 @@ func _build_native_sanctuary(zone: Node3D) -> void:
 	_return_gate.name = "ReturnToArtCastleWorldGate"
 	_return_gate.position = Vector3(76, 1, 50)
 	_return_gate.destination_world_local = return_destination_world_local
-	_return_gate.prompt_text = "Q • RETURN TO ART CASTLE"
-	_return_gate.gate_enabled = false
+	_return_gate.prompt_text = "Q • RETURN TO MIND SPARK TRAIN STATION"
+	_return_gate.gate_enabled = true
+	_return_gate.set_meta("travel_role", "island_three_to_mind_spark_train_station")
+	_return_gate.set_meta("destination_landmark", "Mind Spark Train Station")
+	_return_gate.set_meta("always_available_return", true)
 	zone.add_child(_return_gate)
 	_add_zone_light(zone, Vector3(0, 58, 18), Color("8dffc5"), 145.0, 4.2)
 	_add_zone_ambience(zone, "SanctuaryCalmAmbience", SanctuaryAmbience, -19.0, 460.0)
@@ -1107,6 +1115,45 @@ func _install_player_spawn_marker(geometry: Node3D) -> void:
 
 func get_quest_objects() -> Array[QuestObjectBase]:
 	return _objects.duplicate()
+
+
+func _ground_all_quest_objects() -> void:
+	# StaticBody3D additions become queryable on the next physics step. Waiting
+	# here also ensures the final Island Three decks and both research campuses
+	# have finished replacing their prototype floors.
+	await get_tree().physics_frame
+	var grounded_count := 0
+	for object in _objects:
+		if not is_instance_valid(object) or not object.is_inside_tree():
+			continue
+		var excluded_rids: Array[RID] = []
+		for collision_object in object.find_children("*", "CollisionObject3D", true, false):
+			excluded_rids.append((collision_object as CollisionObject3D).get_rid())
+		var query := PhysicsRayQueryParameters3D.create(
+			object.global_position + Vector3.UP * 6.0,
+			object.global_position + Vector3.DOWN * 30.0)
+		query.collision_mask = 1
+		query.exclude = excluded_rids
+		var hit := get_world_3d().direct_space_state.intersect_ray(query)
+		if hit.is_empty():
+			object.set_meta("ground_snap_status", "missing_support")
+			continue
+		var previous_local_y := object.position.y
+		var grounded_global := object.global_position
+		grounded_global.y = (hit.position as Vector3).y + 0.03
+		object.global_position = grounded_global
+		var local_delta_y := object.position.y - previous_local_y
+		if object.has_meta("operator_approach_local"):
+			var approach: Vector3 = object.get_meta("operator_approach_local")
+			approach.y += local_delta_y
+			object.set_meta("operator_approach_local", approach)
+		object.set_meta("ground_snap_status", "grounded")
+		object.set_meta("ground_clearance_m", 0.03)
+		object.set_meta("ground_support", str((hit.collider as Node).get_path()))
+		object.set_meta("grounded_after_final_architecture", true)
+		grounded_count += 1
+	set_meta("grounded_quest_object_count", grounded_count)
+	set_meta("quest_object_grounding_revision", "final_physics_support_v1")
 
 
 func get_quest_review_camera_pose(object: QuestObjectBase) -> Dictionary:
@@ -6540,8 +6587,11 @@ func _build_oldest_tree(zone: Node3D) -> void:
 	_return_gate.position = return_gate_at + Vector3.UP
 	_return_gate.rotation.y = return_gate_yaw
 	_return_gate.destination_world_local = return_destination_world_local
-	_return_gate.prompt_text = "Q • RETURN TO ART CASTLE"
-	_return_gate.gate_enabled = false
+	_return_gate.prompt_text = "Q • RETURN TO MIND SPARK TRAIN STATION"
+	_return_gate.gate_enabled = true
+	_return_gate.set_meta("travel_role", "island_three_to_mind_spark_train_station")
+	_return_gate.set_meta("destination_landmark", "Mind Spark Train Station")
+	_return_gate.set_meta("always_available_return", true)
 	zone.add_child(_return_gate)
 
 

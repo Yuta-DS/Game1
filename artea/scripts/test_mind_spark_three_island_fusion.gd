@@ -122,6 +122,11 @@ func _run() -> void:
 		approach_ray.collision_mask = 1
 		assert(not world.get_world_3d().direct_space_state.intersect_ray(approach_ray).is_empty(),
 			"every quest object has a physically supported operator approach")
+		assert(str(object.get_meta("ground_snap_status", "")) == "grounded"
+				and bool(object.get_meta("grounded_after_final_architecture", false)),
+			"every Island 1–3 quest object is snapped to its final physical support")
+		assert(absf(float(object.get_meta("ground_clearance_m", 99.0)) - 0.03) < 0.001,
+			"quest objects keep only a three-centimetre anti-z-fighting clearance")
 		for other in world.get_quest_objects():
 			if other == object or other.get_parent() != object.get_parent():
 				continue

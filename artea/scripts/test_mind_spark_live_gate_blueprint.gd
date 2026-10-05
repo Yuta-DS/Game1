@@ -81,21 +81,23 @@ func _run() -> void:
 
 	var final_return := geometry.get_node(
 		"06OldestTreeSanctuary/ReturnToArtCastleWorldGate") as MindSparkWorldGate
-	if final_return.gate_enabled or final_return.teleport_player(player):
-		_fail("final sanctuary return gate is usable before completion")
+	if not final_return.gate_enabled \
+			or str(final_return.get_meta("destination_landmark", "")) != "Mind Spark Train Station" \
+			or not bool(final_return.get_meta("always_available_return", false)):
+		_fail("Island 3 does not provide an always-available Mind Spark station return")
 		return
-	world.set_return_gate_enabled(true)
-	world.set_station_spur_available(true)
 	player.velocity = Vector3(-4, 2, 8)
 	if not final_return.teleport_player(player) \
 			or player.global_position.distance_to(safe_return) > 0.05 \
 			or not player.velocity.is_zero_approx():
-		_fail("completed sanctuary gate does not return safely")
+		_fail("Island 3 station portal does not return safely")
 		return
+	world.set_return_gate_enabled(true)
+	world.set_station_spur_available(true)
 	if not station.visible:
 		_fail("completion did not reveal the optional Zone 05 station spur")
 		return
-	print("MIND_SPARK_LIVE_GATE_BLUEPRINT: PASS — source, abort, completion return, floors, route, and station policy verified")
+	print("MIND_SPARK_LIVE_GATE_BLUEPRINT: PASS — source, abort, Island 3 station return, floors, route, and station policy verified")
 	gallery.queue_free()
 	await process_frame
 	await process_frame
