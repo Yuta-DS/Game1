@@ -420,27 +420,126 @@ func _build_tree_of_life_ground_finish(island: Node3D) -> void:
 func _build_arrival_island() -> void:
 	var island := Node3D.new()
 	island.name = "ArrivalIsland"
+	island.set_meta("design_revision", "grand_garden_gate_v1")
+	island.set_meta("south_watchtower_removed", true)
+	island.set_meta("garden_surrounds_gate", true)
 	add_child(island)
 	_build_island_foundation(island, SOUTH_GATE, 155.0, 42.0, 28)
 	_add_box(island, "ArrivalPromenade", Vector3(0.0, 0.3, 760.0), Vector3(86.0, 1.0, 180.0), _materials.stone, true)
-	_add_box(island, "ArrivalMosaic", Vector3(0.0, 1.0, 760.0), Vector3(38.0, 0.8, 118.0), _materials.aqua_glass, false)
+	_add_box(island, "ArrivalMosaic", Vector3(0.0, 1.0, 786.0), Vector3(38.0, 0.8, 66.0), _materials.aqua_glass, false)
 	for step in 6:
-		var z := 710.0 + float(step) * 20.0
+		var z := 774.0 + float(step) * 14.0
 		_add_box(island, "MosaicRune_%02d" % step, Vector3(0.0, 1.7, z),
-			Vector3(24.0, 0.35, 3.0), _materials.gold, false)
-		_add_flower_cluster(island, Vector3(-47.0, 2.5, z), step % 2 == 0)
-		_add_flower_cluster(island, Vector3(47.0, 2.5, z), step % 2 != 0)
-	# Give the enlarged Blender gate a clean silhouette. The former z=715 frame
-	# sat only 52 m behind its facade and visually collapsed into it. Placing the
-	# frame at the island centre creates a measured 157 m gate-to-wall setback
-	# without changing the arrival promenade or the playable route.
-	_build_frame(island, Vector3(0.0, 0.0, 820.0), 48.0, 62.0, _materials.gold, "ART CASTLE GALAXY")
-	for side in [-1.0, 1.0]:
-		_build_cypress(island, Vector3(side * 82.0, 2.0, 785.0), 34.0, _materials.purple_leaf)
-		_build_cypress(island, Vector3(side * 108.0, 2.0, 865.0), 28.0, _materials.pink_leaf)
-	for index in 18:
-		var angle := TAU * float(index) / 18.0
-		_add_flower_cluster(island, SOUTH_GATE + Vector3(cos(angle) * 125.0, 2.0, sin(angle) * 125.0), index % 2 == 0)
+			Vector3(18.0, 0.35, 2.1), _materials.gold, false)
+	_build_arrival_grand_gate(island)
+	_build_arrival_gate_garden(island)
+
+
+func _build_arrival_grand_gate(parent: Node3D) -> void:
+	var gate := Node3D.new()
+	gate.name = "ArtCastleGalaxyGrandGate"
+	gate.position = SOUTH_GATE
+	gate.set_meta("replaces_gold_rectangle", true)
+	gate.set_meta("clear_opening_width_m", 42.0)
+	gate.set_meta("architectural_height_m", 74.0)
+	gate.set_meta("watchtower_silhouette_removed", true)
+	gate.set_meta("walkthrough_opening", true)
+	parent.add_child(gate)
+
+	# Two substantial gate towers turn the old flat rectangle into a readable
+	# destination. All collision stays outside the 42 m central opening.
+	for side_value in [-1.0, 1.0]:
+		var side: float = side_value
+		var side_name := "West" if side < 0.0 else "East"
+		var x := side * 29.0
+		_add_bevel_box(gate, "%sGateFoundation" % side_name,
+			Vector3(x, 3.0, 0.0), Vector3(16.0, 6.0, 16.0), 1.4,
+			_materials.heart_ivory_shadow)
+		_add_bevel_box(gate, "%sGateTower" % side_name,
+			Vector3(x, 28.0, 0.0), Vector3(13.0, 48.0, 13.0), 1.1,
+			_materials.heart_ivory)
+		var tower_collision_visual := _add_box(gate, "%sGateTowerSolid" % side_name,
+			Vector3(x, 27.0, 0.0), Vector3(16.0, 54.0, 16.0),
+			_materials.heart_ivory, true)
+		tower_collision_visual.visible = false
+		_add_bevel_box(gate, "%sGateTowerInset" % side_name,
+			Vector3(x - side * 6.62, 29.0, -6.56), Vector3(0.26, 25.0, 7.0), 0.10,
+			_materials.heart_cyan)
+		for band_index in 3:
+			_add_bevel_box(gate, "%sTowerBand_%02d" % [side_name, band_index + 1],
+				Vector3(x, 13.0 + float(band_index) * 15.0, -0.2),
+				Vector3(15.2, 1.5, 14.4), 0.35, _materials.gold)
+		_add_bevel_box(gate, "%sTowerCrown" % side_name,
+			Vector3(x, 53.0, 0.0), Vector3(18.0, 4.0, 16.0), 1.0,
+			_materials.gold)
+		_build_faceted_ceremonial_crystal(gate, "%sCrownCrystal" % side_name,
+			Vector3(x, 61.0, 0.0), 8.0, 1.6,
+			_materials.heart_cyan if side < 0.0 else _materials.heart_lavender)
+
+	# A segmented double arch creates a strong gateway silhouette without the
+	# flat gold lintel or opaque portal panel that hid the route beyond.
+	for ring_index in 2:
+		var radius := 29.0 + float(ring_index) * 3.8
+		var ring_y := 37.0
+		for segment_index in 12:
+			var angle_a := PI * float(segment_index) / 12.0
+			var angle_b := PI * float(segment_index + 1) / 12.0
+			var start := Vector3(cos(angle_a) * radius, ring_y + sin(angle_a) * radius, 0.0)
+			var finish := Vector3(cos(angle_b) * radius, ring_y + sin(angle_b) * radius, 0.0)
+			_add_reference_beam(gate, start, finish,
+				1.6 if ring_index == 0 else 0.9,
+				_materials.heart_ivory if ring_index == 0 else _materials.gold).name = \
+					"GrandGateArch_%02d_%02d" % [ring_index + 1, segment_index + 1]
+	_build_faceted_ceremonial_crystal(gate, "GrandGateKeystone",
+		Vector3(0.0, 71.0, 0.0), 9.0, 1.7, _materials.heart_cyan)
+	_add_landmark_label(gate, "ART CASTLE GALAXY • GRAND GARDEN GATE",
+		Vector3(0.0, 82.0, 0.0), Color("fff1c4"), 34)
+
+
+func _build_arrival_gate_garden(parent: Node3D) -> void:
+	var garden := Node3D.new()
+	garden.name = "GrandGateGarden"
+	garden.set_meta("symmetrical_bed_count", 8)
+	garden.set_meta("central_fountain", true)
+	garden.set_meta("clear_route_width_m", 18.0)
+	garden.set_meta("grounded_landscaping", true)
+	parent.add_child(garden)
+
+	# A low fountain forms the garden centre while two broad paths remain open.
+	_add_cylinder(garden, "FountainOuterBasin", Vector3(0.0, 1.25, 742.0),
+		13.0, 2.5, _materials.heart_ivory_shadow, false, 18)
+	_add_cylinder(garden, "FountainWater", Vector3(0.0, 2.55, 742.0),
+		10.6, 0.22, _materials.aqua_glass, false, 18)
+	_add_cylinder(garden, "FountainPedestal", Vector3(0.0, 5.1, 742.0),
+		2.2, 5.0, _materials.heart_ivory, false, 10)
+	_build_faceted_ceremonial_crystal(garden, "FountainCrown",
+		Vector3(0.0, 10.5, 742.0), 6.2, 1.1, _materials.heart_cyan)
+
+	for side_value in [-1.0, 1.0]:
+		var side: float = side_value
+		var side_name := "West" if side < 0.0 else "East"
+		for bed_index in 4:
+			var bed_position := Vector3(side * (42.0 + float(bed_index % 2) * 20.0),
+				1.2, 748.0 + float(bed_index) * 33.0)
+			_add_bevel_box(garden, "%sGardenBorder_%02d" % [side_name, bed_index + 1],
+				bed_position, Vector3(24.0, 1.2, 18.0), 2.8, _materials.heart_ivory)
+			_add_bevel_box(garden, "%sGardenSoil_%02d" % [side_name, bed_index + 1],
+				bed_position + Vector3.UP * 0.72, Vector3(20.5, 0.32, 14.5), 2.2,
+				_materials.forecourt_soil)
+			for shrub_index in 3:
+				var shrub := _add_sphere(garden,
+					"%sGardenShrub_%02d_%02d" % [side_name, bed_index + 1, shrub_index + 1],
+					bed_position + Vector3(-6.0 + float(shrub_index) * 6.0, 2.5, 0.0),
+					Vector3(2.8, 1.8, 2.6), _materials.forecourt_lawn)
+				(shrub.mesh as SphereMesh).radial_segments = 6
+				(shrub.mesh as SphereMesh).rings = 2
+			if bed_index % 2 == 0:
+				_build_faceted_ceremonial_crystal(garden,
+					"%sGardenCrystal_%02d" % [side_name, bed_index + 1],
+					bed_position + Vector3.UP * 3.8, 4.3, 0.65,
+					_materials.heart_lavender if side < 0.0 else _materials.heart_cyan)
+		_build_cypress(garden, Vector3(side * 91.0, 2.0, 790.0),
+			28.0, _materials.purple_leaf if side < 0.0 else _materials.pink_leaf)
 
 
 func _build_castle_approach_bridge() -> void:
@@ -3074,8 +3173,6 @@ func _build_boundary_observatories() -> void:
 			"source_center": HEART, "source_radius": 175.0},
 		{"name": "EastObservatory", "center": Vector3(920.0, 0.0, 1640.0),
 			"source_center": CREATOR, "source_radius": 195.0},
-		{"name": "SouthObservatory", "center": Vector3(0.0, 0.0, 710.0),
-			"source_center": SOUTH_GATE, "source_radius": 155.0},
 	]
 	for info in points:
 		var lookout := Node3D.new()
@@ -3090,6 +3187,16 @@ func _build_boundary_observatories() -> void:
 		_build_tower(lookout, center, 34.0, 112.0, _materials.ivory)
 		_add_exact_twin_island_bridges("%sBridge" % info.name,
 			info.source_center, float(info.source_radius), center, 70.0)
+	# The South Observatory sat directly behind the old gold rectangle and read
+	# as a watchtower growing out of the entrance. The garden gate now owns this
+	# sightline, so the tower, foundation and redundant bridge pair are absent.
+	var removed_south_observatory := Node3D.new()
+	removed_south_observatory.name = "SouthObservatoryRemoved"
+	removed_south_observatory.set_meta("tower_removed", true)
+	removed_south_observatory.set_meta("island_foundation_removed", true)
+	removed_south_observatory.set_meta("dead_end_bridges_removed", true)
+	removed_south_observatory.set_meta("replaced_by", "ArrivalIsland/ArtCastleGalaxyGrandGate")
+	add_child(removed_south_observatory)
 	# The former West Observatory was a detached watchtower island behind Mind
 	# Spark. Its large round foundation and twin dead-end bridges crowded the
 	# district silhouette, so the complete structure and all collision are gone.

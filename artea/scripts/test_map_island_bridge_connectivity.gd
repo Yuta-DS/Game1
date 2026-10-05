@@ -24,7 +24,7 @@ func _run() -> void:
 	if not await _check_kingdom_shelf_grids():
 		return
 	print("MAP_ISLAND_BRIDGE_CONNECTIVITY: PASS — Island One tree bridge restored; " \
-		+ "3 observatory twin pairs; retired West lookout absent; " \
+		+ "2 observatory twin pairs; retired South and West lookouts absent; " \
 		+ "120 shelf bridges with >=2 routes/island; " \
 		+ "steepest legal shelf bridge walked by production player")
 	quit()
@@ -73,8 +73,7 @@ func _check_observatory_twins() -> bool:
 	root.add_child(world)
 	for _frame in 4:
 		await physics_frame
-	for base_name in ["NorthObservatoryBridge",
-			"EastObservatoryBridge", "SouthObservatoryBridge"]:
+	for base_name in ["NorthObservatoryBridge", "EastObservatoryBridge"]:
 		var left := world.get_node_or_null(base_name) as Node3D
 		var right := world.get_node_or_null("%sTwin" % base_name) as Node3D
 		if left == null or right == null:
@@ -102,6 +101,11 @@ func _check_observatory_twins() -> bool:
 			or world.get_node_or_null("WestObservatoryBridge") != null \
 			or world.get_node_or_null("WestObservatoryBridgeTwin") != null:
 		_fail("retired West Observatory geometry still participates in the island map")
+		return false
+	if world.get_node_or_null("SouthObservatory") != null \
+			or world.get_node_or_null("SouthObservatoryBridge") != null \
+			or world.get_node_or_null("SouthObservatoryBridgeTwin") != null:
+		_fail("retired South watchtower geometry still participates in the island map")
 		return false
 	world.queue_free()
 	await process_frame

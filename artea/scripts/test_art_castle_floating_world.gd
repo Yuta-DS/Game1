@@ -25,7 +25,7 @@ func _run() -> void:
 		return
 	for district in ["CentralSanctuary", "ArrivalIsland", "MindSparkDistrict",
 			"HeartMelodyTemple", "CreatorsLightStudio",
-			"NorthObservatory", "EastObservatory", "SouthObservatory"]:
+			"NorthObservatory", "EastObservatory"]:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
@@ -51,8 +51,7 @@ func _run() -> void:
 	if tree_court.material_override != world.get("_materials").heart_path:
 		_fail("Tree Court still uses the flat gray prototype material")
 		return
-	for observatory_name in ["NorthObservatory",
-			"EastObservatory", "SouthObservatory"]:
+	for observatory_name in ["NorthObservatory", "EastObservatory"]:
 		var observatory := world.get_node(observatory_name) as Node3D
 		var tower_shell := observatory.get_node_or_null("ObservatoryTower") as MeshInstance3D
 		if str(observatory.get_meta("architecture_revision", "")) != "faceted_observatory_v3" \
@@ -79,6 +78,24 @@ func _run() -> void:
 			or not bool(west_removal.get_meta("island_foundation_removed", false)) \
 			or not bool(west_removal.get_meta("dead_end_bridges_removed", false)):
 		_fail("the West watchtower, its land, or its dead-end bridges remain")
+		return
+	var arrival := world.get_node("ArrivalIsland") as Node3D
+	var grand_gate := arrival.get_node_or_null("ArtCastleGalaxyGrandGate") as Node3D
+	var gate_garden := arrival.get_node_or_null("GrandGateGarden") as Node3D
+	var south_removal := world.get_node_or_null("SouthObservatoryRemoved") as Node3D
+	if grand_gate == null or gate_garden == null or south_removal == null \
+			or arrival.get_node_or_null("ARTCASTLEGALAXYPortalFrame") != null \
+			or world.get_node_or_null("SouthObservatory") != null \
+			or world.get_node_or_null("SouthObservatoryBridge") != null \
+			or world.get_node_or_null("SouthObservatoryBridgeTwin") != null \
+			or not bool(grand_gate.get_meta("replaces_gold_rectangle", false)) \
+			or float(grand_gate.get_meta("clear_opening_width_m", 0.0)) < 40.0 \
+			or grand_gate.find_children("GrandGateArch_*", "MeshInstance3D", true, false).size() != 24 \
+			or not bool(south_removal.get_meta("tower_removed", false)) \
+			or int(gate_garden.get_meta("symmetrical_bed_count", 0)) != 8 \
+			or gate_garden.find_children("*GardenSoil_*", "MeshInstance3D", true, false).size() != 8 \
+			or gate_garden.get_node_or_null("FountainWater") == null:
+		_fail("arrival gold rectangle, watchtower, or surrounding gate garden is unfinished")
 		return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
 	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v14" \
@@ -201,8 +218,7 @@ func _run() -> void:
 		return
 
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
-			"NorthObservatoryBridge", "EastObservatoryBridge",
-			"SouthObservatoryBridge"]:
+			"NorthObservatoryBridge", "EastObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
 		if bridge_node == null or bridge_node.get_node_or_null("Walkway") == null:
 			_fail("missing connected walkway %s" % bridge)
