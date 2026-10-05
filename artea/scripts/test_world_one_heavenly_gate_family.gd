@@ -28,12 +28,12 @@ func _run() -> void:
 		assert(perimeter.get_node("%sIvoryDefenceWallCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sWingFoundationCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sConnectedBoundaryOuterWallCollision" % side) is StaticBody3D)
-		assert(perimeter.get_node("%sGardenPassageTowerJambCollision" % side) is StaticBody3D)
-		assert(perimeter.get_node("%sGardenPassageBoundaryJambCollision" % side) is StaticBody3D)
-		assert(perimeter.get_node("%sGardenPassageLintelCollision" % side) is StaticBody3D)
+		assert(perimeter.get_node("%sBoundaryReturnWallCollision" % side) is StaticBody3D)
 	assert(bool(perimeter.get_meta("covers_gate_flanks", false)))
 	assert(bool(perimeter.get_meta("continuous_ground_to_coping", false)))
-	assert(float(perimeter.get_meta("covered_garden_passage_width_m", 0.0)) >= 6.0)
+	assert(bool(perimeter.get_meta("full_frontage_enclosure", false)))
+	assert(bool(perimeter.get_meta("side_passages_removed", false)))
+	assert(float(perimeter.get_meta("connected_boundary_span_m", 0.0)) >= 132.0)
 
 	var geometry := world.get_node("WorldOneGeometry") as Node3D
 	assert(int(world.get_meta("standardized_heavenly_star_gate_count", 0)) == 2)

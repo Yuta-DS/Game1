@@ -37,13 +37,16 @@ func _run() -> void:
 	_player.global_position = _world.to_global(_world.get_player_arrival_local())
 	if not await _land():
 		return _fail("World One spawn has no supporting floor")
+	var island_one_gate := _world.get_island_one_heavenly_star_gate() as Node3D
 
 	var route: Array = [
 		_operator("world_one.checkpoint.landing"),
 		["arrival south aisle", _world.to_global(Vector3(-860, 2, 138))],
 		_operator("world_one.path_projector"),
 		["Island One west saddle", _world.to_global(Vector3(-790, 2, 142))],
-		["Island One garden-side saddle", _world.to_global(Vector3(-735, 2, 145))],
+		["Island One gate approach", island_one_gate.to_global(Vector3(0, 2, -20))],
+		["Island One gate threshold", island_one_gate.to_global(Vector3(0, 2, 0))],
+		["Island One gate garden landing", island_one_gate.to_global(Vector3(0, 2, 20))],
 		["Island One garden bypass", _world.to_global(Vector3(-735, 2, 170))],
 		["living network outer promenade", _world.to_global(Vector3(-600, 2, 170))],
 		["living network eastern aisle", _world.to_global(Vector3(-540, 2, 100))],
@@ -172,7 +175,9 @@ func _run() -> void:
 		["living network return aisle", _world.to_global(Vector3(-540, 2, 100))],
 		["living network return promenade", _world.to_global(Vector3(-600, 2, 170))],
 		["Island One garden return bypass", _world.to_global(Vector3(-735, 2, 170))],
-		["Island One garden return saddle", _world.to_global(Vector3(-735, 2, 145))],
+		["Island One gate garden return", island_one_gate.to_global(Vector3(0, 2, 20))],
+		["Island One gate return threshold", island_one_gate.to_global(Vector3(0, 2, 0))],
+		["Island One gate return approach", island_one_gate.to_global(Vector3(0, 2, -20))],
 		["Island One west return saddle", _world.to_global(Vector3(-790, 2, 142))],
 		["arrival return aisle", _world.to_global(Vector3(-860, 2, 138))],
 		["World One return spawn", _world.to_global(_world.get_player_arrival_local())],

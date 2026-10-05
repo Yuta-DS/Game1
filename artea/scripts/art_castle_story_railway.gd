@@ -1265,10 +1265,11 @@ func _build_canonical_station(station: Node3D, station_index: int,
 	(station.get_node("KingdomAccessSkybridge") as Node3D).basis = access_basis
 	(station.get_node("AccessRamp") as Node3D).basis = access_basis
 	if station_index == 1:
-		_remove_mind_spark_long_access_bridge(station, dock_sign)
+		_remove_mind_spark_long_access_bridge(station, dock_sign, landing_local)
 
 
-func _remove_mind_spark_long_access_bridge(station: Node3D, dock_sign: float) -> void:
+func _remove_mind_spark_long_access_bridge(station: Node3D, dock_sign: float,
+		island_landing_local: Vector3) -> void:
 	# Mind Spark is now entered through its world gate and railway platform. The
 	# former 116 m station-to-park span was the longest local bridge and hung on
 	# tall exposed piers in front of the station. Retire the entire bridge and its
@@ -1303,6 +1304,8 @@ func _remove_mind_spark_long_access_bridge(station: Node3D, dock_sign: float) ->
 	stairs.set_meta("visible_from_island_one_approach", true)
 	stairs.set_meta("clear_centre_lane_m", 5.4)
 	stairs.set_meta("long_bridge_dependency", false)
+	_build_mind_spark_island_connection_stair(station, dock_sign,
+		island_landing_local)
 	var marker := Node3D.new()
 	marker.name = "MindSparkLongAccessBridgeRemoved"
 	marker.set_meta("removed_structure", "KingdomAccessSkybridge")
@@ -1312,6 +1315,81 @@ func _remove_mind_spark_long_access_bridge(station: Node3D, dock_sign: float) ->
 	station.add_child(marker)
 	station.set_meta("long_access_bridge_removed", true)
 	station.set_meta("grounded_station_stair_added", true)
+	station.set_meta("station_stair_connected_to_island_ground", true)
+
+
+func _build_mind_spark_island_connection_stair(station: Node3D, dock_sign: float,
+		island_landing_local: Vector3) -> void:
+	# Replace the removed long bridge with a true processional stair whose lowest
+	# tread overlaps the nearby Mind Spark island. It rises continuously into the
+	# existing compact platform stair, so there is no floating deck or gap.
+	const ISLAND_STEP_COUNT := 72
+	const STAIR_WIDTH := 15.6
+	const TREAD_THICKNESS := 0.14
+	var connection := Node3D.new()
+	connection.name = "MindSparkIslandConnectionStair"
+	connection.set_meta("preserve_authored_nodes", true)
+	connection.set_meta("connects_island_ground_to_station", true)
+	connection.set_meta("visible_step_count", ISLAND_STEP_COUNT)
+	connection.set_meta("clear_width_m", STAIR_WIDTH)
+	station.add_child(connection)
+	connection.basis = station.get_meta("access_basis", Basis.IDENTITY)
+	var island_surface := Vector3(island_landing_local.x,
+		island_landing_local.y - LANDING_PLAYER_CLEARANCE, island_landing_local.z)
+	var upper_surface := Vector3(-STAIR_START_X * dock_sign + dock_sign * 1.2,
+		STAIR_BOTTOM_TOP_Y - 0.10, 0.0)
+	var horizontal_run := Vector3(upper_surface.x - island_surface.x, 0.0,
+		upper_surface.z - island_surface.z)
+	var forward := horizontal_run.normalized()
+	var step_depth := horizontal_run.length() / float(ISLAND_STEP_COUNT - 1) + 0.10
+	var yaw := atan2(forward.x, forward.z)
+	for index in ISLAND_STEP_COUNT:
+		var ratio := float(index) / float(ISLAND_STEP_COUNT - 1)
+		var top := island_surface.lerp(upper_surface, ratio)
+		_add_box(connection, "IslandGroundStep_%02d" % (index + 1),
+			Vector3(top.x, top.y - TREAD_THICKNESS * 0.5, top.z),
+			Vector3(STAIR_WIDTH, TREAD_THICKNESS, step_depth),
+			_piltover_pixel_floor_material, false, 0.0, yaw)
+		if index > 0:
+			var previous_ratio := float(index - 1) / float(ISLAND_STEP_COUNT - 1)
+			var previous_top := island_surface.lerp(upper_surface, previous_ratio)
+			var riser_midpoint := previous_top.lerp(top, 0.5)
+			_add_box(connection, "IslandGroundRiser_%02d" % (index + 1),
+				Vector3(riser_midpoint.x, riser_midpoint.y, riser_midpoint.z),
+				Vector3(STAIR_WIDTH, top.y - previous_top.y + 0.06, 0.16),
+				_piltover_ivory_material, false, 0.0, yaw)
+	_add_surface_ramp_collision(connection, "WalkableIslandGroundRamp",
+		island_surface, upper_surface, STAIR_WIDTH, 0.48)
+	var side_axis := Vector3(-forward.z, 0.0, forward.x)
+	for side in [-1.0, 1.0]:
+		var side_offset := side_axis * float(side) * (STAIR_WIDTH * 0.5 - 0.26)
+		_add_walkway_between(connection,
+			"IslandStairIvoryCurbLeft" if side < 0.0 else "IslandStairIvoryCurbRight",
+			island_surface + side_offset + Vector3.UP * 0.20,
+			upper_surface + side_offset + Vector3.UP * 0.20,
+			0.52, 0.46, _piltover_ivory_material, false)
+		_add_walkway_between(connection,
+			"IslandStairGoldEdgeLeft" if side < 0.0 else "IslandStairGoldEdgeRight",
+			island_surface + side_offset + Vector3.UP * 0.48,
+			upper_surface + side_offset + Vector3.UP * 0.48,
+			0.18, 0.10, _gold_material, false)
+	# A narrow cyan centre guide repeats the station's navigation language while
+	# leaving the full stair visually calm and unobstructed.
+	_add_walkway_between(connection, "IslandStairCyanGuide",
+		island_surface + Vector3.UP * 0.12,
+		upper_surface + Vector3.UP * 0.12,
+		0.22, 0.06, _glass_material, false)
+	# Broad landings overlap both physical surfaces and hide even sub-pixel seams.
+	_add_box(connection, "IslandGroundLanding",
+		island_surface - forward * 1.8 - Vector3.UP * 0.10,
+		Vector3(STAIR_WIDTH + 1.2, 0.20, 4.8),
+		_piltover_pixel_floor_material, false, 0.0, yaw)
+	_add_box(connection, "StationCourtLanding",
+		upper_surface + forward * 1.2 - Vector3.UP * 0.10,
+		Vector3(STAIR_WIDTH + 1.2, 0.20, 4.0),
+		_piltover_pixel_floor_material, false, 0.0, yaw)
+	connection.set_meta("island_surface", island_surface)
+	connection.set_meta("station_surface", upper_surface)
 
 
 func _install_mind_spark_station_object_collisions(station: Node3D) -> void:

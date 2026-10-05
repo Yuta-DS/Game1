@@ -2914,46 +2914,56 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 		_add_brick(walls, "%sBoundaryCrystal" % suffix,
 			Vector3(side * 13.7, 9.0, 13.2), Bricks.build_crystal(0.9, 3.2, 0.28, 8),
 			_materials.arrival_glass)
-		# Continue the wall laterally from each gate tower into the island boundary.
-		# The former depth-only wing left a large open gap when viewed from either
-		# side and made the portal read as a freestanding prop rather than an entry.
-		var outer_x: float = float(side) * 34.0
-		for section in [
-			["Outer", outer_x, 16.0],
-		]:
-			var section_name: String = str(section[0])
-			var section_x: float = float(section[1])
-			var section_width: float = float(section[2])
-			_add_box(walls, "%sConnectedBoundary%sFoundation" % [suffix, section_name],
-				Vector3(section_x, 0.58, 0.35), Vector3(section_width, 1.16, 3.2),
-				_materials.shared_style_charcoal, true)
-			_add_box(walls, "%sConnectedBoundary%sWall" % [suffix, section_name],
-				Vector3(section_x, 4.05, 0.35), Vector3(section_width, 6.2, 2.25),
-				_materials.sanctum_ivory, true)
-			_add_brick(walls, "%sConnectedBoundary%sCoping" % [suffix, section_name],
-				Vector3(section_x, 7.35, 0.35),
-				Bricks.build_bevel_box(Vector3(section_width + 0.7, 0.55, 2.75), 0.16),
-				_materials.sanctum_ivory)
-		# Frame the garden saddle with two solid jambs and a high lintel. The wall
-		# reads as one complete boundary from either side while the authored six
-		# metre pedestrian passage remains continuously walkable beneath the cover.
-		_add_box(walls, "%sGardenPassageTowerJamb" % suffix,
-			Vector3(side * 15.5, 3.55, 0.35), Vector3(3.0, 6.2, 2.25),
+		# Form one uninterrupted wall from the gate tower to the outer edge of the
+		# Island One court. The former short outer panel and covered side opening
+		# still left most of the frontage visually open. This wider span makes the
+		# main gate the single deliberate entrance and encloses the complete garden.
+		const BOUNDARY_INNER_EDGE := 8.1
+		const BOUNDARY_OUTER_EDGE := 66.0
+		var boundary_width: float = BOUNDARY_OUTER_EDGE - BOUNDARY_INNER_EDGE
+		var boundary_x: float = float(side) * (
+			BOUNDARY_INNER_EDGE + boundary_width * 0.5)
+		_add_box(walls, "%sConnectedBoundaryOuterFoundation" % suffix,
+			Vector3(boundary_x, 0.72, 0.35), Vector3(boundary_width, 1.44, 4.2),
+			_materials.shared_style_charcoal, true)
+		_add_box(walls, "%sConnectedBoundaryOuterWall" % suffix,
+			Vector3(boundary_x, 4.75, 0.35), Vector3(boundary_width, 7.0, 3.0),
 			_materials.sanctum_ivory, true)
-		_add_box(walls, "%sGardenPassageBoundaryJamb" % suffix,
-			Vector3(side * 24.5, 3.55, 0.35), Vector3(3.0, 6.2, 2.25),
+		_add_brick(walls, "%sConnectedBoundaryOuterCoping" % suffix,
+			Vector3(boundary_x, 8.48, 0.35),
+			Bricks.build_bevel_box(Vector3(boundary_width + 0.9, 0.72, 3.65), 0.20),
+			_materials.sanctum_ivory)
+		# Regular piers, glass inlays and lantern crystals keep the long wall tied
+		# to the heavenly-star gate instead of reading as one blank slab.
+		for bay_index in 7:
+			var bay_distance := BOUNDARY_INNER_EDGE + 4.4 + float(bay_index) * 8.0
+			var bay_x := float(side) * bay_distance
+			_add_box(walls, "%sBoundaryPier_%02d" % [suffix, bay_index + 1],
+				Vector3(bay_x, 4.3, 0.35), Vector3(1.05, 7.7, 3.55),
+				_materials.celestial_floor, true)
+			_add_box(walls, "%sBoundaryAetherInlay_%02d" % [suffix, bay_index + 1],
+				Vector3(float(side) * (bay_distance + 3.5), 4.85, 1.88),
+				Vector3(5.6, 2.65, 0.12), _materials.arrival_glass, false)
+			_add_box(walls, "%sBoundaryInnerAetherInlay_%02d" % [suffix, bay_index + 1],
+				Vector3(float(side) * (bay_distance + 3.5), 4.85, -1.18),
+				Vector3(5.6, 2.65, 0.12), _materials.arrival_glass, false)
+			_add_brick(walls, "%sBoundaryLanternCrystal_%02d" % [suffix, bay_index + 1],
+				Vector3(bay_x, 10.1, 0.35), Bricks.build_crystal(0.58, 2.5, 0.22, 8),
+				_materials.arrival_glass)
+		# Turn the boundary back at both outer ends so side views also show a
+		# closed enclosure rather than another unfinished cut edge.
+		_add_box(walls, "%sBoundaryReturnWall" % suffix,
+			Vector3(side * BOUNDARY_OUTER_EDGE, 4.75, 8.1), Vector3(3.0, 7.0, 16.5),
 			_materials.sanctum_ivory, true)
-		_add_box(walls, "%sGardenPassageLintel" % suffix,
-			Vector3(side * 20.0, 7.25, 0.35), Vector3(12.0, 0.75, 2.55),
-			_materials.sanctum_ivory, true)
-		for panel_index in 3:
-			_add_box(walls, "%sBoundaryAetherInlay_%02d" % [suffix, panel_index + 1],
-				Vector3(side * (27.5 + float(panel_index) * 3.75), 4.3, -0.81),
-				Vector3(2.7, 2.2, 0.10), _materials.arrival_glass, false)
-	walls.set_meta("connected_boundary_span_m", 84.0)
+		_add_brick(walls, "%sBoundaryReturnCoping" % suffix,
+			Vector3(side * BOUNDARY_OUTER_EDGE, 8.48, 8.1),
+			Bricks.build_bevel_box(Vector3(3.65, 0.72, 17.2), 0.20),
+			_materials.sanctum_ivory)
+	walls.set_meta("connected_boundary_span_m", 132.0)
 	walls.set_meta("covers_gate_flanks", true)
 	walls.set_meta("continuous_ground_to_coping", true)
-	walls.set_meta("covered_garden_passage_width_m", 6.0)
+	walls.set_meta("full_frontage_enclosure", true)
+	walls.set_meta("side_passages_removed", true)
 
 
 func _standardize_world_one_gate_family(geometry: Node3D) -> void:

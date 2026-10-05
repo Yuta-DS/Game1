@@ -187,7 +187,15 @@ func _run() -> void:
 		_fail("Mind Spark station lacks its grounded stair or still contains the retired bridge")
 		return
 	var mind_stairs := mind_station.get_node("MindSparkStationAccessStairs") as Node3D
+	var island_connection := mind_station.get_node_or_null(
+		"MindSparkIslandConnectionStair") as Node3D
 	if mind_stairs.get_node_or_null("WalkableStairRampCollision") == null \
+			or island_connection == null \
+			or island_connection.get_node_or_null("WalkableIslandGroundRampCollision") == null \
+			or island_connection.get_node_or_null("IslandGroundLanding") == null \
+			or island_connection.get_node_or_null("StationCourtLanding") == null \
+			or not bool(island_connection.get_meta("connects_island_ground_to_station", false)) \
+			or int(island_connection.get_meta("visible_step_count", 0)) < 64 \
 			or not bool(mind_stairs.get_meta("grounded_to_station_court", false)) \
 			or not bool(mind_stairs.get_meta("station_one_stair_restored", false)) \
 			or mind_stairs.get_node_or_null("StationOneGroundLanding") == null \
@@ -198,12 +206,42 @@ func _run() -> void:
 			or float(mind_stairs.get_meta("clear_centre_lane_m", 0.0)) < 5.4:
 		_fail("Mind Spark train stair is not restored, grounded, collision-backed, and player-clear")
 		return
+	var mind_first := mind_stairs.get_node("DockStep_01") as MeshInstance3D
+	var mind_last := mind_stairs.get_node("DockStep_16") as MeshInstance3D
+	var island_first := island_connection.get_node("IslandGroundStep_01") as MeshInstance3D
+	var island_last := island_connection.get_node("IslandGroundStep_72") as MeshInstance3D
+	if island_first.global_position.y > 1.0 \
+			or island_last.global_position.distance_to(mind_first.global_position) > 8.0:
+		_fail("Mind Spark station stair does not connect the nearby island ground to its upper flight")
+		return
+	player.global_position = island_first.to_global(Vector3.UP * 2.8)
+	player.velocity = Vector3.ZERO
+	if not await _settle(player):
+		_fail("player cannot stand on the Mind Spark island-ground stair landing")
+		return
+	var island_stair_target := island_last.global_position
+	var reached_station_court := false
+	Input.action_press("move_forward")
+	Input.action_press("run")
+	for _frame in 900:
+		var flat_island_target := Vector3(island_stair_target.x,
+			player.global_position.y + 5.0, island_stair_target.z)
+		test_camera.global_position = player.global_position + Vector3.UP * 6.0
+		test_camera.look_at(flat_island_target, Vector3.UP)
+		await physics_frame
+		if Vector2(island_stair_target.x - player.global_position.x,
+				island_stair_target.z - player.global_position.z).length() < 3.0:
+			reached_station_court = true
+			break
+	Input.action_release("run")
+	Input.action_release("move_forward")
+	if not reached_station_court:
+		_fail("player cannot walk from the nearby island ground to the Mind Spark station court")
+		return
 	for step_index in 16:
 		if mind_stairs.get_node_or_null("CentralDockStep_%02d" % (step_index + 1)) == null:
 			_fail("Mind Spark train stair is missing visible central tread %d" % (step_index + 1))
 			return
-	var mind_first := mind_stairs.get_node("DockStep_01") as MeshInstance3D
-	var mind_last := mind_stairs.get_node("DockStep_16") as MeshInstance3D
 	player.global_position = mind_first.to_global(Vector3.UP * 2.8)
 	player.velocity = Vector3.ZERO
 	if not await _settle(player):
