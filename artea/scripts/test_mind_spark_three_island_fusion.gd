@@ -148,9 +148,9 @@ func _run() -> void:
 		"ReferencePost_*", "Node3D", false, false)
 	print("ISLAND_THREE_BARRIER_COUNTS: ", island_three_barrier_bays.size(), " bays, ",
 		island_three_barrier_posts.size(), " posts")
-	assert(island_three_barrier_bays.size() >= 40,
+	assert(island_three_barrier_bays.size() >= 35,
 		"Island 3 has a complete run of shared civic scrollwork bays")
-	assert(island_three_barrier_posts.size() >= 40,
+	assert(island_three_barrier_posts.size() >= 35,
 		"Island 3 has matching pillar and lantern modules around its exposed edge")
 	assert(bool(storm_edge.get_meta("route_openings_preserved", false)),
 		"the shared barrier preserves the bridge and sanctuary travel openings")

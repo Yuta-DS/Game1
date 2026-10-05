@@ -51,7 +51,7 @@ func _run() -> void:
 		"rail_bay", "MeshInstance3D", true, false)
 	var island_three_posts := island_three_repairs.find_children(
 		"rail_post", "MeshInstance3D", true, false)
-	assert(island_three_bays.size() >= 40 and island_three_posts.size() >= 40,
+	assert(island_three_bays.size() >= 35 and island_three_posts.size() >= 35,
 		"Island Three keeps the complete shared civic barrier silhouette on Web")
 	assert(_mesh_triangles((island_three_bays[0] as MeshInstance3D).mesh) <= 1200 \
 			and _mesh_triangles((island_three_posts[0] as MeshInstance3D).mesh) <= 850,

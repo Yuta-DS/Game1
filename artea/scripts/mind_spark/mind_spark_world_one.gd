@@ -89,10 +89,6 @@ const PLAYER_ARRIVAL_CLEARANCE := 2.5
 ## facets never clip into disconnected foreground fragments during the bridge
 ## handoff. The arrival portico narrows the playable axis again inside the court.
 const ISLAND_THREE_ARRIVAL_EDGE_OPENING_HALF_WIDTH := 42.0
-## The two Island Three courts meet along a broad overlap, but their authored
-## promenade needs only a focused player/camera opening. Rail the remaining
-## sanctuary edge so the fused seam does not read as an unfinished cliff.
-const ISLAND_THREE_SANCTUARY_ROUTE_OPENING_HALF_WIDTH := 60.0
 ## The standalone World One opens on the broad south aisle of the Signal
 ## Laboratory. Keeping this separate from the checkpoint operator position
 ## prevents the character, Mayor Milo and the station cabinet from stacking in
@@ -9558,11 +9554,6 @@ func _is_exposed_garden_edge(zone_index: int, angle: float) -> bool:
 	var paired_index := zone_index ^ 1
 	var other: Vector3 = ZONES[paired_index].position
 	if at.distance_to(Vector2(other.x,other.z)) < float(ZONES[paired_index].radius) + 2.0:
-		if zone_index == 5:
-			var route_direction := Vector2(other.x-center.x, other.z-center.z).normalized()
-			return not (radial.dot(route_direction) > 0.0 \
-				and absf(radial.cross(route_direction)) * radius \
-				< ISLAND_THREE_SANCTUARY_ROUTE_OPENING_HALF_WIDTH)
 		return false
 	if zone_index == 5:
 		return true # Sanctuary is the terminal district, with no sixth sky bridge.
