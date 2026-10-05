@@ -43,12 +43,12 @@ func _run() -> void:
 	for button in geometry.find_children("*GateControl*", "Node3D", true, false):
 		assert(bool((button as Node3D).get_meta("ground_contact", false)))
 		assert((button as Node3D).has_node("GroundedButtonPlinthCollision"))
-	assert(geometry.find_children("*GateControl*", "Node3D", true, false).size() == 4)
+	assert(geometry.find_children("*GateControl*", "Node3D", true, false).size() == 3)
 	var environment_collision := geometry.get_node("ThreeIslandVisibleObjectCollisions") as StaticBody3D
 	assert(int(environment_collision.get_meta("collision_shape_count", 0)) >= 500,
 		"the wider Island 1–3 environment audit lost substantial grounded-object collision")
 
-	print("WorldOneGroundContactAudit: PASS — 15 quest objects and 4 gate controls match physical ground across Islands 1–3")
+	print("WorldOneGroundContactAudit: PASS — 15 quest objects and 3 active gate controls match physical ground across Islands 1–3")
 	world.queue_free()
 	await process_frame
 	quit()

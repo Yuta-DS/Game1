@@ -258,57 +258,33 @@ func _run() -> void:
 		"CelestialHopeUpperDistrict/CurvedSunriseGardenTerraces").visible,
 		"the older curved garden frame must remain part of Island Two")
 	var gate := world.get_node("WorldOneGeometry/SavedQuestProgressionGates/QuestGate_2") as AnimatableBody3D
-	assert(str(gate.get_meta("custom_gate_motion")) == "island_two_memory_hinges")
+	assert(str(gate.get_meta("custom_gate_motion")) == "heavenly_star_hinges")
 	assert(str(gate.get_meta("gate_visual_family", "")) == "heavenly_star_gate")
 	assert(gate.has_node("HeavenlyStarGateFamilyFacade/HeavenlyStarKeystone"),
 		"Island Two's arrival gate uses the Island One heavenly-star gate family")
 	assert(not (gate.get_node("Barrier") as MeshInstance3D).visible)
-	assert(gate.has_node("IslandTwoMemoryGate/ArchiveWisdomKeystone"))
-	assert(gate.has_node("IslandTwoMemoryGate/WestMemoryLeaf/EvidenceMemoryWingBraceUpper"))
-	assert(gate.has_node("IslandTwoMemoryGate/WestMemoryLeaf/HopeMemoryWingBraceUpper"))
-	assert(gate.has_node("IslandTwoMemoryGate/EastMemoryLeaf/EvidenceMemoryLeafJewel"))
-	assert(gate.has_node("IslandTwoMemoryGate/EastMemoryLeaf/HopeMemoryLeafJewel"))
 	var memory_portal := gate.get_node("IslandTwoMemoryGate") as Node3D
-	assert(str(memory_portal.get_meta("gate_finish_revision")) == "framed_archive_leaves_v2")
-	assert(str(memory_portal.get_meta("cyan_surface_policy")) == "small inset memory panes only")
-	for leaf_name in ["WestMemoryLeaf", "EastMemoryLeaf"]:
-		var leaf := memory_portal.get_node(leaf_name) as Node3D
-		for face_name in ["Evidence", "Hope"]:
-			assert(leaf.has_node("%sTealMemoryPanel" % face_name))
-			for pane_index in 6:
-				assert(leaf.has_node("%sMemoryGlassPane_%02d" % [face_name, pane_index + 1]),
-					"finished archive leaf must use six restrained cyan glass panes per face")
-	assert((gate.get_node("IslandTwoMemoryGate/WestMemoryLeaf") as Node3D).rotation.y == 0.0)
-	var brass_bar := gate.get_node("IslandTwoMemoryGate/WestMemoryLeaf/HopeBrassMemoryBar_01") as Node3D
-	var closed_bar_position := brass_bar.global_position
+	assert(not memory_portal.visible)
+	assert(bool(memory_portal.get_meta("retired_for_island_one_gate_match", false)))
+	var shared_leaves := gate.get_node(
+		"HeavenlyStarGateFamilyFacade/SharedHeavenlyGateLeaves") as Node3D
+	var west_leaf := shared_leaves.get_node("WestCelestialLeaf") as Node3D
+	var east_leaf := shared_leaves.get_node("EastCelestialLeaf") as Node3D
+	for leaf in [west_leaf, east_leaf]:
+		assert(leaf.has_node("UpperFiligreeScroll"))
+		assert(leaf.has_node("LeafAstrolabeMedallion"))
+		assert(leaf.has_node("LeafCollision"))
+	var jewel := west_leaf.get_node("LeafAetherJewel") as Node3D
+	var closed_jewel_position := jewel.global_position
 	world.set_quest_gate_open(1, true)
-	await create_timer(2.4).timeout
-	print("GATE_SWEEP: ", gate.get_node("IslandTwoMemoryGate").get_meta("last_obstruction", "clear"))
-	assert(brass_bar.global_position.distance_to(closed_bar_position) > 4.0,
-		"Door ornament must move with the leaf after static geometry batching")
-	assert((gate.get_node("CollisionShape3D") as CollisionShape3D).disabled)
-	assert(absf((gate.get_node("IslandTwoMemoryGate/WestMemoryLeaf") as Node3D).rotation.y) > 1.5)
-	world.set_quest_gate_open(1, false)
-	await create_timer(2.4).timeout
-	assert(is_zero_approx((gate.get_node("IslandTwoMemoryGate/WestMemoryLeaf") as Node3D).rotation.y))
-	assert(not (gate.get_node("IslandTwoMemoryGate/WestMemoryLeaf/GateLeafCollision") as CollisionShape3D).disabled)
-	var obstruction := StaticBody3D.new()
-	obstruction.name = "TestPlayerInDoorSweep"
-	var obstruction_shape := CollisionShape3D.new()
-	var obstruction_box := BoxShape3D.new()
-	obstruction_box.size = Vector3(1.5, 3, 1.5)
-	obstruction_shape.shape = obstruction_box
-	obstruction.add_child(obstruction_shape)
-	world.add_child(obstruction)
-	obstruction.global_position = gate.to_global(Vector3(-5.3, 6, 2.9))
 	await physics_frame
-	world.set_quest_gate_open(1, true)
-	await create_timer(2.4).timeout
-	assert(str(gate.get_node("IslandTwoMemoryGate").get_meta("gate_state")) == "obstructed")
-	obstruction.queue_free()
-	await process_frame
-	await create_timer(2.4).timeout
-	assert(str(gate.get_node("IslandTwoMemoryGate").get_meta("gate_state")) == "open")
+	assert(jewel.global_position.distance_to(closed_jewel_position) > 4.0,
+		"Island One filigree ornament must move with the Island Two leaf")
+	assert((gate.get_node("CollisionShape3D") as CollisionShape3D).disabled)
+	assert(absf(west_leaf.rotation.y) > 1.5 and absf(east_leaf.rotation.y) > 1.5)
+	world.set_quest_gate_open(1, false)
+	await physics_frame
+	assert(is_zero_approx(west_leaf.rotation.y) and is_zero_approx(east_leaf.rotation.y))
 	var old_bridge := world.get_node("WorldOneGeometry/MainStoryCircuitRoute/CircuitRoute_03_A") as MeshInstance3D
 	assert(not old_bridge.visible)
 	assert(world.get_enemies().filter(func(enemy):

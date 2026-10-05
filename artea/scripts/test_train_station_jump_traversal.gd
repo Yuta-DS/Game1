@@ -192,9 +192,16 @@ func _run() -> void:
 			or not bool(mind_stairs.get_meta("station_one_stair_restored", false)) \
 			or mind_stairs.get_node_or_null("StationOneGroundLanding") == null \
 			or mind_stairs.get_node_or_null("StationOnePlatformLanding") == null \
+			or int(mind_stairs.get_meta("visible_central_step_count", 0)) != 16 \
+			or int(mind_stairs.get_meta("visible_full_width_riser_count", 0)) != 15 \
+			or not bool(mind_stairs.get_meta("full_width_stair_read", false)) \
 			or float(mind_stairs.get_meta("clear_centre_lane_m", 0.0)) < 5.4:
 		_fail("Mind Spark train stair is not restored, grounded, collision-backed, and player-clear")
 		return
+	for step_index in 16:
+		if mind_stairs.get_node_or_null("CentralDockStep_%02d" % (step_index + 1)) == null:
+			_fail("Mind Spark train stair is missing visible central tread %d" % (step_index + 1))
+			return
 	var mind_first := mind_stairs.get_node("DockStep_01") as MeshInstance3D
 	var mind_last := mind_stairs.get_node("DockStep_16") as MeshInstance3D
 	player.global_position = mind_first.to_global(Vector3.UP * 2.8)

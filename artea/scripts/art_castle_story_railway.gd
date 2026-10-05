@@ -2574,6 +2574,25 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 			Vector3(x, top_y - TREAD_THICKNESS * 0.5, SIDE_STAIR_Z),
 			Vector3(STEP_DEPTH, TREAD_THICKNESS, SIDE_STAIR_WIDTH),
 			_piltover_pixel_floor_material, false)
+		# Continue the same visible tread across the centre lane. The smooth ramp
+		# collision remains underneath for reliable capsule movement, while these
+		# caps make the access read unmistakably as a staircase from the court.
+		_add_box(stairs, "CentralDockStep_%02d" % (index + 1),
+			Vector3(x, top_y - TREAD_THICKNESS * 0.5, 0.0),
+			Vector3(STEP_DEPTH, TREAD_THICKNESS, CENTRAL_RAMP_WIDTH),
+			_piltover_pixel_floor_material, false)
+		if index > 0:
+			var previous_top_y := lerpf(STAIR_BOTTOM_TOP_Y, STAIR_TOP_TOP_Y,
+				float(index - 1) / float(STAIR_STEP_COUNT - 1))
+			var riser_height := top_y - previous_top_y
+			_add_box(stairs, "FullWidthStairRiser_%02d" % (index + 1),
+				Vector3(x + dock_sign * STEP_DEPTH * 0.48,
+					top_y - riser_height * 0.5, 0.0),
+				Vector3(0.16, riser_height + 0.04, 15.2),
+				_piltover_ivory_material, false)
+	stairs.set_meta("visible_central_step_count", STAIR_STEP_COUNT)
+	stairs.set_meta("visible_full_width_riser_count", STAIR_STEP_COUNT - 1)
+	stairs.set_meta("full_width_stair_read", true)
 	var ramp_start := Vector3(stair_start_x + dock_sign * STEP_DEPTH * 0.5,
 		STAIR_BOTTOM_TOP_Y - 0.04, 0.0)
 	var ramp_finish := Vector3(stair_end_x - dock_sign * STEP_DEPTH * 0.5,

@@ -2917,9 +2917,9 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 		# Continue the wall laterally from each gate tower into the island boundary.
 		# The former depth-only wing left a large open gap when viewed from either
 		# side and made the portal read as a freestanding prop rather than an entry.
-		var outer_x: float = float(side) * 31.25
+		var outer_x: float = float(side) * 34.0
 		for section in [
-			["Outer", outer_x, 12.5],
+			["Outer", outer_x, 16.0],
 		]:
 			var section_name: String = str(section[0])
 			var section_x: float = float(section[1])
@@ -2934,8 +2934,15 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 				Vector3(section_x, 7.35, 0.35),
 				Bricks.build_bevel_box(Vector3(section_width + 0.7, 0.55, 2.75), 0.16),
 				_materials.sanctum_ivory)
-		# A high lintel keeps the wall visually connected while preserving the
-		# existing garden-side pedestrian saddle below it.
+		# Frame the garden saddle with two solid jambs and a high lintel. The wall
+		# reads as one complete boundary from either side while the authored six
+		# metre pedestrian passage remains continuously walkable beneath the cover.
+		_add_box(walls, "%sGardenPassageTowerJamb" % suffix,
+			Vector3(side * 15.5, 3.55, 0.35), Vector3(3.0, 6.2, 2.25),
+			_materials.sanctum_ivory, true)
+		_add_box(walls, "%sGardenPassageBoundaryJamb" % suffix,
+			Vector3(side * 24.5, 3.55, 0.35), Vector3(3.0, 6.2, 2.25),
+			_materials.sanctum_ivory, true)
 		_add_box(walls, "%sGardenPassageLintel" % suffix,
 			Vector3(side * 20.0, 7.25, 0.35), Vector3(12.0, 0.75, 2.55),
 			_materials.sanctum_ivory, true)
@@ -2943,16 +2950,18 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 			_add_box(walls, "%sBoundaryAetherInlay_%02d" % [suffix, panel_index + 1],
 				Vector3(side * (27.5 + float(panel_index) * 3.75), 4.3, -0.81),
 				Vector3(2.7, 2.2, 0.10), _materials.arrival_glass, false)
-	walls.set_meta("connected_boundary_span_m", 74.0)
+	walls.set_meta("connected_boundary_span_m", 84.0)
 	walls.set_meta("covers_gate_flanks", true)
+	walls.set_meta("continuous_ground_to_coping", true)
+	walls.set_meta("covered_garden_passage_width_m", 6.0)
 
 
 func _standardize_world_one_gate_family(geometry: Node3D) -> void:
 	# Quest state and motion stay on the existing gate bodies. This pass gives the
-	# Island Two and Three thresholds the same readable ivory/gold/cyan family as
-	# Island One instead of reintroducing a second progression system.
+	# Island Two thresholds the same complete ivory/gold/cyan family as Island
+	# One. Island Three is intentionally an open sanctuary route with no gate.
 	var standardized := 0
-	for gate_number in [2, 3, 4]:
+	for gate_number in [2, 3]:
 		var gate := geometry.get_node_or_null(
 			"SavedQuestProgressionGates/QuestGate_%d" % gate_number) as AnimatableBody3D
 		if gate == null:
@@ -2960,7 +2969,8 @@ func _standardize_world_one_gate_family(geometry: Node3D) -> void:
 		_build_heavenly_star_gate_family_facade(gate, gate_number)
 		standardized += 1
 	set_meta("standardized_heavenly_star_gate_count", standardized)
-	set_meta("world_one_gate_family_revision", "heavenly_star_gate_family_v1")
+	set_meta("world_one_gate_family_revision", "heavenly_star_gate_family_v2")
+	set_meta("island_three_gate_removed", true)
 
 
 func _build_heavenly_star_gate_family_facade(gate: AnimatableBody3D,
@@ -2975,7 +2985,14 @@ func _build_heavenly_star_gate_family_facade(gate: AnimatableBody3D,
 	facade.set_meta("preserves_gate_controller", true)
 	facade.set_meta("clear_opening_width_m", 16.0)
 	facade.set_meta("gate_number", gate_number)
+	facade.set_meta("design_match", "complete Island One astrolabe, filigree leaves and hinged threshold")
 	gate.add_child(facade)
+	var old_memory_gate := gate.get_node_or_null("IslandTwoMemoryGate") as Node3D
+	if old_memory_gate != null:
+		old_memory_gate.visible = false
+		old_memory_gate.set_meta("retired_for_island_one_gate_match", true)
+		for old_collision in old_memory_gate.find_children("*", "CollisionShape3D", true, false):
+			(old_collision as CollisionShape3D).disabled = true
 
 	# Gate Two and Three already own physical hinged archive leaves. Gate Four is
 	# an always-clear sanctuary threshold, so this shared frame adds no blocker.
@@ -3014,8 +3031,12 @@ func _build_heavenly_star_gate_family_facade(gate: AnimatableBody3D,
 		1.55, 1.92, _materials.astral_brass, Vector3(90, 0, 0))
 	_add_brick(facade, "HeavenlyThresholdSill", Vector3(0, 0.30, 0.15),
 		Bricks.build_bevel_box(Vector3(18.0, 0.32, 3.2), 0.12), _materials.sanctum_ivory)
-	if gate_number == 4:
-		_build_shared_heavenly_gate_leaves(gate, facade)
+	var halo := Node3D.new()
+	halo.name = "SharedHeavenlyStarHalo"
+	halo.set_meta("design_revision", "island_one_astrolabe_match_v2")
+	facade.add_child(halo)
+	_build_gate_astrolabe_crest(halo, facade)
+	_build_shared_heavenly_gate_leaves(gate, facade)
 	gate.set_meta("gate_visual_family", "heavenly_star_gate")
 	gate.set_meta("visual_standardized_from", "IslandOneHeavenlyStarGate")
 
@@ -3035,24 +3056,14 @@ func _build_shared_heavenly_gate_leaves(gate: AnimatableBody3D, facade: Node3D) 
 		var leaf := AnimatableBody3D.new()
 		leaf.name = "WestCelestialLeaf" if side < 0.0 else "EastCelestialLeaf"
 		leaf.sync_to_physics = true
-		leaf.position = Vector3(side * 8.0, 0.45, -0.75)
+		leaf.position = Vector3(side * 5.70, 0.0, -0.75)
 		leaves.add_child(leaf)
-		_add_brick(leaf, "IvoryLeafFrame", Vector3(-side * 4.0, 5.8, 0),
-			Bricks.build_bevel_box(Vector3(7.75, 11.1, 0.70), 0.18), _materials.sanctum_ivory)
-		_add_box(leaf, "CharcoalLeafRecess", Vector3(-side * 4.0, 5.8, -0.39),
-			Vector3(6.65, 9.9, 0.12), _materials.shared_style_charcoal, false)
-		for rib_index in 4:
-			var rib_x: float = -float(side) * (1.35 + float(rib_index) * 1.75)
-			_add_box(leaf, "AetherLeafRib_%02d" % (rib_index + 1),
-				Vector3(rib_x, 5.8, -0.48), Vector3(0.14, 8.8, 0.10),
-				_materials.arrival_glass, false)
-		_add_brick(leaf, "CelestialLeafHeart", Vector3(-side * 4.0, 5.8, -0.62),
-			Bricks.build_crystal(0.72, 2.4, 0.18, 6), _materials.green_glow)
+		_build_heavenly_gate_leaf_visual(leaf, side)
 		var collision := CollisionShape3D.new()
 		collision.name = "LeafCollision"
-		collision.position = Vector3(-side * 4.0, 5.8, 0)
+		collision.position = Vector3(-side * 2.68, 10.5, 0)
 		var shape := BoxShape3D.new()
-		shape.size = Vector3(7.75, 11.1, 0.85)
+		shape.size = Vector3(5.9, 17.2, 1.10)
 		collision.shape = shape
 		leaf.add_child(collision)
 	gate.get_node("CollisionShape3D").disabled = true
@@ -3068,7 +3079,7 @@ func _build_gate_interaction_buttons(_geometry: Node3D) -> void:
 	if island_gate != null:
 		_add_gate_interaction_button(island_gate, Vector3(15.3, 0.0, -5.0),
 			"IslandOneGateControl", "island_one", -1)
-	for gate_number in [2, 3, 4]:
+	for gate_number in [2, 3]:
 		if gate_number - 1 >= _quest_gates.size():
 			continue
 		_add_gate_interaction_button(_quest_gates[gate_number - 1],
@@ -7418,9 +7429,8 @@ func _retire_legacy_reflection_apron_trees(center_global: Vector3,
 
 
 func _remove_island_three_route_barrier(geometry: Node3D) -> void:
-	# Retire only the prototype violet slab. The shared heavenly-gate pass installs
-	# proper paired leaves and collision in this same controller slot afterward,
-	# so Island Three has a complete, operable threshold instead of an empty arch.
+	# Island Three is an open sanctuary transition. Retain the save-state controller
+	# node for compatibility, but remove every visible and physical gate component.
 	var removed_count := 0
 	for candidate in geometry.find_children("QuestGate_4", "AnimatableBody3D", true, false):
 		var gate := candidate as AnimatableBody3D
@@ -7432,9 +7442,11 @@ func _remove_island_three_route_barrier(geometry: Node3D) -> void:
 		var collision := gate.get_node_or_null("CollisionShape3D") as CollisionShape3D
 		if collision != null:
 			collision.disabled = true
-		gate.set_meta("physical_barrier_removed", false)
+		gate.visible = false
+		gate.set_meta("physical_barrier_removed", true)
 		gate.set_meta("prototype_violet_barrier_retired", true)
-		gate.set_meta("route_remains_open", false)
+		gate.set_meta("route_remains_open", true)
+		gate.set_meta("island_three_gate_removed", true)
 	set_meta("island_three_route_barriers_removed", removed_count)
 
 
