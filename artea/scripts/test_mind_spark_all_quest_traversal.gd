@@ -155,6 +155,8 @@ func _run() -> void:
 	_append_bridge(return_route, 3, "Island Three return bridge", true)
 	return_route.append_array([
 		["truth station return aisle", _world.to_global(Vector3(-10, 10, 45))],
+		["hope pavilion south return", _world.to_global(Vector3(-10, 10, 65))],
+		["hope pavilion west return", _world.to_global(Vector3(-45, 10, 65))],
 		["perspective return bypass", _world.to_global(Vector3(-45, 10, 45))],
 		["memory promenade return entry", _world.to_global(Vector3(-45, 10, 1))],
 		["memory promenade return midpoint", _world.to_global(Vector3(-110, 10, -30))],

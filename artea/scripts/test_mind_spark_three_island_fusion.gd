@@ -125,8 +125,11 @@ func _run() -> void:
 		assert(str(object.get_meta("ground_snap_status", "")) == "grounded"
 				and bool(object.get_meta("grounded_after_final_architecture", false)),
 			"every Island 1–3 quest object is snapped to its final physical support")
-		assert(absf(float(object.get_meta("ground_clearance_m", 99.0)) - 0.03) < 0.001,
-			"quest objects keep only a three-centimetre anti-z-fighting clearance")
+		assert(absf(float(object.get_meta("ground_clearance_m", 99.0)) - 0.005) < 0.001,
+			"quest objects keep only a five-millimetre anti-z-fighting clearance")
+		assert(object.has_node("GroundContactPlinth") \
+			and bool(object.get_meta("visible_ground_contact", false)),
+			"every quest object visibly overlaps its final support")
 		for other in world.get_quest_objects():
 			if other == object or other.get_parent() != object.get_parent():
 				continue

@@ -1289,7 +1289,18 @@ func _remove_mind_spark_long_access_bridge(station: Node3D, dock_sign: float) ->
 	var stairs := station.get_node("AccessRamp") as Node3D
 	stairs.basis = station.get_meta("access_basis", Basis.IDENTITY)
 	stairs.name = "MindSparkStationAccessStairs"
+	# Re-establish a clearly visible landing at both ends. The continuous ramp was
+	# walkable, but from the Island One lawn its first narrow tread disappeared
+	# against the station court and made the entire stair read as missing.
+	_add_box(stairs, "StationOneGroundLanding",
+		Vector3(stair_start_x + dock_sign * 1.2, STAIR_BOTTOM_TOP_Y - 0.08, 0.0),
+		Vector3(4.8, 0.18, 15.6), _piltover_pixel_floor_material, false)
+	_add_box(stairs, "StationOnePlatformLanding",
+		Vector3(-STAIR_END_X * dock_sign, STAIR_TOP_TOP_Y - 0.08, 0.0),
+		Vector3(4.8, 0.18, 15.6), _piltover_pixel_floor_material, false)
 	stairs.set_meta("grounded_to_station_court", true)
+	stairs.set_meta("station_one_stair_restored", true)
+	stairs.set_meta("visible_from_island_one_approach", true)
 	stairs.set_meta("clear_centre_lane_m", 5.4)
 	stairs.set_meta("long_bridge_dependency", false)
 	var marker := Node3D.new()

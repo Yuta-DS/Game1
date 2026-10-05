@@ -8,6 +8,10 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var player := CharacterBody3D.new()
+	player.name = "GateInteractionTestPlayer"
+	player.add_to_group("Player")
+	root.add_child(player)
 	var world := WorldScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
 	(world.get_node("QuestController") as MindSparkWorldOneQuest).enabled = false
@@ -23,6 +27,9 @@ func _run() -> void:
 	for side in ["West", "East"]:
 		assert(perimeter.get_node("%sIvoryDefenceWallCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sWingFoundationCollision" % side) is StaticBody3D)
+		assert(perimeter.get_node("%sConnectedBoundaryOuterWallCollision" % side) is StaticBody3D)
+		assert(perimeter.get_node("%sGardenPassageLintelCollision" % side) is StaticBody3D)
+	assert(bool(perimeter.get_meta("covers_gate_flanks", false)))
 
 	var geometry := world.get_node("WorldOneGeometry") as Node3D
 	assert(int(world.get_meta("standardized_heavenly_star_gate_count", 0)) == 3)
@@ -43,10 +50,28 @@ func _run() -> void:
 		"island_two_memory_hinges")
 	var island_three_gate := geometry.get_node(
 		"SavedQuestProgressionGates/QuestGate_4") as AnimatableBody3D
-	assert(bool(island_three_gate.get_meta("physical_barrier_removed", false)))
+	assert(not bool(island_three_gate.get_meta("physical_barrier_removed", true)))
 	assert((island_three_gate.get_node("CollisionShape3D") as CollisionShape3D).disabled)
+	assert(str(island_three_gate.get_meta("custom_gate_motion", "")) == "heavenly_star_hinges")
+	var shared_leaves := island_three_gate.get_node(
+		"HeavenlyStarGateFamilyFacade/SharedHeavenlyGateLeaves") as Node3D
+	assert(shared_leaves.get_node("WestCelestialLeaf/LeafCollision") is CollisionShape3D)
+	assert(shared_leaves.get_node("EastCelestialLeaf/LeafCollision") is CollisionShape3D)
+	assert(int(world.get_meta("nearby_q_gate_control_count", 0)) == 4)
+	var button := island_three_gate.get_node("IslandGateControl_4") as Node3D
+	assert(str(button.get_meta("interaction_key", "")) == "Q")
+	world.set_quest_gate_open(3, true)
+	assert(world.operate_gate_button_for_test(button))
+	assert(not world.is_quest_gate_open(3))
+	player.global_position = button.global_position
+	var q_event := InputEventKey.new()
+	q_event.keycode = KEY_Q
+	q_event.pressed = true
+	world._unhandled_input(q_event)
+	assert(world.is_quest_gate_open(3))
 
-	print("WorldOneHeavenlyGateFamily: PASS — Island One walls and shared Island Two/Three gate architecture")
+	print("WorldOneHeavenlyGateFamily: PASS — connected walls, shared leaves and nearby Q controls")
 	world.queue_free()
+	player.queue_free()
 	await process_frame
 	quit()

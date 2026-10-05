@@ -189,8 +189,11 @@ func _run() -> void:
 	var mind_stairs := mind_station.get_node("MindSparkStationAccessStairs") as Node3D
 	if mind_stairs.get_node_or_null("WalkableStairRampCollision") == null \
 			or not bool(mind_stairs.get_meta("grounded_to_station_court", false)) \
+			or not bool(mind_stairs.get_meta("station_one_stair_restored", false)) \
+			or mind_stairs.get_node_or_null("StationOneGroundLanding") == null \
+			or mind_stairs.get_node_or_null("StationOnePlatformLanding") == null \
 			or float(mind_stairs.get_meta("clear_centre_lane_m", 0.0)) < 5.4:
-		_fail("Mind Spark train stair is not grounded, collision-backed, and player-clear")
+		_fail("Mind Spark train stair is not restored, grounded, collision-backed, and player-clear")
 		return
 	var mind_first := mind_stairs.get_node("DockStep_01") as MeshInstance3D
 	var mind_last := mind_stairs.get_node("DockStep_16") as MeshInstance3D

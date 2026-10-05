@@ -171,6 +171,7 @@ var _last_safe_position := Vector3(-960, 8, 420)
 var _island_one_puzzle: MindSparkIslandOnePuzzle
 var _island_one_star_gate_leaves: Array[AnimatableBody3D] = []
 var _island_one_star_gate_tween: Tween
+var _gate_interaction_buttons: Array[Node3D] = []
 var _web_island_detail_roots: Dictionary = {}
 var _web_visible_detail_islands := PackedInt32Array()
 var _web_last_detail_focus := Vector3.INF
@@ -250,6 +251,7 @@ func build_world() -> void:
 		_finalize_quest_object_story_layout()
 		_redesign_island_three(geometry)
 		_standardize_world_one_gate_family(geometry)
+		_build_gate_interaction_buttons(geometry)
 		_unify_island_one_tree_and_quest_style()
 		_install_three_island_environment_audio(geometry)
 	_install_player_spawn_marker(geometry)
@@ -1130,9 +1132,18 @@ func _ground_all_quest_objects() -> void:
 		var excluded_rids: Array[RID] = []
 		for collision_object in object.find_children("*", "CollisionObject3D", true, false):
 			excluded_rids.append((collision_object as CollisionObject3D).get_rid())
+		# Probe the clear operator apron instead of the model centre. Large quest
+		# machines often overlap decorative stages, canopies or railings at their
+		# centre; those secondary colliders previously lifted the entire object up
+		# to 8 m above the walkable court. The operator point is authored on the
+		# intended floor and therefore supplies the correct common ground datum.
+		var support_probe := object.global_position
+		if object.has_meta("operator_approach_local"):
+			var parent := object.get_parent() as Node3D
+			support_probe = parent.to_global(object.get_meta("operator_approach_local"))
 		var query := PhysicsRayQueryParameters3D.create(
-			object.global_position + Vector3.UP * 6.0,
-			object.global_position + Vector3.DOWN * 30.0)
+			support_probe + Vector3.UP * 20.0,
+			support_probe + Vector3.DOWN * 60.0)
 		query.collision_mask = 1
 		query.exclude = excluded_rids
 		var hit := get_world_3d().direct_space_state.intersect_ray(query)
@@ -1141,20 +1152,47 @@ func _ground_all_quest_objects() -> void:
 			continue
 		var previous_local_y := object.position.y
 		var grounded_global := object.global_position
-		grounded_global.y = (hit.position as Vector3).y + 0.03
+		grounded_global.y = (hit.position as Vector3).y + 0.005
 		object.global_position = grounded_global
+		_install_quest_object_contact_plinth(object)
 		var local_delta_y := object.position.y - previous_local_y
 		if object.has_meta("operator_approach_local"):
 			var approach: Vector3 = object.get_meta("operator_approach_local")
 			approach.y += local_delta_y
 			object.set_meta("operator_approach_local", approach)
 		object.set_meta("ground_snap_status", "grounded")
-		object.set_meta("ground_clearance_m", 0.03)
+		object.set_meta("ground_clearance_m", 0.005)
 		object.set_meta("ground_support", str((hit.collider as Node).get_path()))
+		object.set_meta("ground_support_probe", "operator_apron")
 		object.set_meta("grounded_after_final_architecture", true)
 		grounded_count += 1
 	set_meta("grounded_quest_object_count", grounded_count)
-	set_meta("quest_object_grounding_revision", "final_physics_support_v1")
+	set_meta("quest_object_grounding_revision", "visible_contact_plinth_v2")
+
+
+func _install_quest_object_contact_plinth(object: QuestObjectBase) -> void:
+	# Imported quest models start exactly at their scene origin. A ray-aligned
+	# origin is physically correct but, against pale terraces and low camera
+	# angles, the first visible pixel can still read as a floating cabinet. Give
+	# every instrument a shallow faceted shoe that overlaps the supporting floor
+	# by 7.5 cm. It makes contact explicit without changing the interaction or
+	# adding another collision lip across the walking route.
+	if object.has_node("GroundContactPlinth"):
+		return
+	var plinth := Node3D.new()
+	plinth.name = "GroundContactPlinth"
+	plinth.scale = Vector3(
+		1.0 / maxf(absf(object.scale.x), 0.001),
+		1.0 / maxf(absf(object.scale.y), 0.001),
+		1.0 / maxf(absf(object.scale.z), 0.001))
+	plinth.set_meta("ground_contact_overlap_m", 0.075)
+	plinth.set_meta("purpose", "visible structural contact between quest instrument and final island surface")
+	object.add_child(plinth)
+	_add_cylinder(plinth, "IvoryContactShoe", Vector3(0, 0.045, 0),
+		3.45, 0.24, _materials.sanctum_ivory, false, 10)
+	_add_cylinder(plinth, "CharcoalContactShadow", Vector3(0, -0.055, 0),
+		3.20, 0.14, _materials.shared_style_charcoal, false, 10)
+	object.set_meta("visible_ground_contact", true)
 
 
 func get_quest_review_camera_pose(object: QuestObjectBase) -> Dictionary:
@@ -1266,6 +1304,11 @@ func set_quest_gate_open(quest_index: int, open: bool) -> void:
 	if quest_index < 0 or quest_index >= _quest_gates.size():
 		return
 	var gate := _quest_gates[quest_index]
+	gate.set_meta("gate_interaction_unlocked", open)
+	_apply_quest_gate_motion(gate, open)
+
+
+func _apply_quest_gate_motion(gate: AnimatableBody3D, open: bool) -> void:
 	if bool(gate.get_meta("physical_barrier_removed", false)):
 		gate.get_node("CollisionShape3D").set_deferred("disabled", true)
 		gate.set_meta("open", open)
@@ -1286,6 +1329,18 @@ func set_quest_gate_open(quest_index: int, open: bool) -> void:
 		if east_leaf != null:
 			east_leaf.rotation.y = PI * 0.5 if open else 0.0
 		gate.get_node("CollisionShape3D").disabled = open
+		gate.set_meta("open", open)
+		return
+	if str(gate.get_meta("custom_gate_motion", "")) == "heavenly_star_hinges":
+		gate.get_node("CollisionShape3D").set_deferred("disabled", true)
+		var leaves := gate.get_node_or_null("HeavenlyStarGateFamilyFacade/SharedHeavenlyGateLeaves")
+		if leaves != null:
+			var west := leaves.get_node_or_null("WestCelestialLeaf") as AnimatableBody3D
+			var east := leaves.get_node_or_null("EastCelestialLeaf") as AnimatableBody3D
+			if west != null:
+				west.rotation.y = -deg_to_rad(96.0) if open else 0.0
+			if east != null:
+				east.rotation.y = deg_to_rad(96.0) if open else 0.0
 		gate.set_meta("open", open)
 		return
 	var closed_position: Vector3 = gate.get_meta("closed_position")
@@ -1436,6 +1491,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if quest_controller != null and quest_controller.has_method("has_open_identity_reflection") \
 			and bool(quest_controller.call("has_open_identity_reflection")):
 		return
+	if event.keycode == KEY_Q:
+		var gate_button := _nearest_gate_interaction_button()
+		if gate_button != null:
+			_operate_gate_interaction_button(gate_button)
+			if get_viewport() != null:
+				get_viewport().set_input_as_handled()
+			return
 	if event.keycode == KEY_Q and _island_one_puzzle != null \
 			and _island_one_puzzle.nearest_control(_player) != null:
 		if not has_node("QuestStationPanel"):
@@ -1490,6 +1552,47 @@ func _nearest_object() -> QuestObjectBase:
 			best = object
 			best_distance = distance
 	return best
+
+
+func _nearest_gate_interaction_button() -> Node3D:
+	if _player == null:
+		return null
+	var nearest: Node3D
+	var nearest_distance := 8.5
+	for button in _gate_interaction_buttons:
+		if not is_instance_valid(button) or not button.is_inside_tree():
+			continue
+		var distance := _player.global_position.distance_to(button.global_position)
+		if distance < nearest_distance:
+			nearest = button
+			nearest_distance = distance
+	return nearest
+
+
+func _operate_gate_interaction_button(button: Node3D) -> bool:
+	var gate_kind := str(button.get_meta("gate_kind", "quest"))
+	if gate_kind == "island_one":
+		var island_gate := get_island_one_heavenly_star_gate()
+		if island_gate == null or not bool(island_gate.get_meta("gate_interaction_unlocked", false)):
+			button.set_meta("last_interaction_result", "locked")
+			return false
+		_set_island_one_star_gate_open(not is_island_one_star_gate_open(), true)
+		button.set_meta("last_interaction_result", "opened" if is_island_one_star_gate_open() else "closed")
+		return true
+	var gate_index := int(button.get_meta("quest_gate_index", -1))
+	if gate_index < 0 or gate_index >= _quest_gates.size():
+		return false
+	var gate := _quest_gates[gate_index]
+	if not bool(gate.get_meta("gate_interaction_unlocked", false)):
+		button.set_meta("last_interaction_result", "locked")
+		return false
+	_apply_quest_gate_motion(gate, not bool(gate.get_meta("open", false)))
+	button.set_meta("last_interaction_result", "opened" if bool(gate.get_meta("open", false)) else "closed")
+	return true
+
+
+func operate_gate_button_for_test(button: Node3D) -> bool:
+	return _operate_gate_interaction_button(button)
 
 
 func _nearest_zone() -> Dictionary:
@@ -2811,6 +2914,37 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 		_add_brick(walls, "%sBoundaryCrystal" % suffix,
 			Vector3(side * 13.7, 9.0, 13.2), Bricks.build_crystal(0.9, 3.2, 0.28, 8),
 			_materials.arrival_glass)
+		# Continue the wall laterally from each gate tower into the island boundary.
+		# The former depth-only wing left a large open gap when viewed from either
+		# side and made the portal read as a freestanding prop rather than an entry.
+		var outer_x: float = float(side) * 31.25
+		for section in [
+			["Outer", outer_x, 12.5],
+		]:
+			var section_name: String = str(section[0])
+			var section_x: float = float(section[1])
+			var section_width: float = float(section[2])
+			_add_box(walls, "%sConnectedBoundary%sFoundation" % [suffix, section_name],
+				Vector3(section_x, 0.58, 0.35), Vector3(section_width, 1.16, 3.2),
+				_materials.shared_style_charcoal, true)
+			_add_box(walls, "%sConnectedBoundary%sWall" % [suffix, section_name],
+				Vector3(section_x, 4.05, 0.35), Vector3(section_width, 6.2, 2.25),
+				_materials.sanctum_ivory, true)
+			_add_brick(walls, "%sConnectedBoundary%sCoping" % [suffix, section_name],
+				Vector3(section_x, 7.35, 0.35),
+				Bricks.build_bevel_box(Vector3(section_width + 0.7, 0.55, 2.75), 0.16),
+				_materials.sanctum_ivory)
+		# A high lintel keeps the wall visually connected while preserving the
+		# existing garden-side pedestrian saddle below it.
+		_add_box(walls, "%sGardenPassageLintel" % suffix,
+			Vector3(side * 20.0, 7.25, 0.35), Vector3(12.0, 0.75, 2.55),
+			_materials.sanctum_ivory, true)
+		for panel_index in 3:
+			_add_box(walls, "%sBoundaryAetherInlay_%02d" % [suffix, panel_index + 1],
+				Vector3(side * (27.5 + float(panel_index) * 3.75), 4.3, -0.81),
+				Vector3(2.7, 2.2, 0.10), _materials.arrival_glass, false)
+	walls.set_meta("connected_boundary_span_m", 74.0)
+	walls.set_meta("covers_gate_flanks", true)
 
 
 func _standardize_world_one_gate_family(geometry: Node3D) -> void:
@@ -2880,8 +3014,90 @@ func _build_heavenly_star_gate_family_facade(gate: AnimatableBody3D,
 		1.55, 1.92, _materials.astral_brass, Vector3(90, 0, 0))
 	_add_brick(facade, "HeavenlyThresholdSill", Vector3(0, 0.30, 0.15),
 		Bricks.build_bevel_box(Vector3(18.0, 0.32, 3.2), 0.12), _materials.sanctum_ivory)
+	if gate_number == 4:
+		_build_shared_heavenly_gate_leaves(gate, facade)
 	gate.set_meta("gate_visual_family", "heavenly_star_gate")
 	gate.set_meta("visual_standardized_from", "IslandOneHeavenlyStarGate")
+
+
+func _build_shared_heavenly_gate_leaves(gate: AnimatableBody3D, facade: Node3D) -> void:
+	var prototype_barrier := gate.get_node_or_null("Barrier") as MeshInstance3D
+	if prototype_barrier != null:
+		prototype_barrier.visible = false
+		prototype_barrier.set_meta("retired_for_shared_heavenly_leaves", true)
+	var leaves := Node3D.new()
+	leaves.name = "SharedHeavenlyGateLeaves"
+	leaves.set_meta("barrier_coverage_width_m", 16.0)
+	leaves.set_meta("same_concept_as", "IslandOneHeavenlyStarGate")
+	leaves.set_meta("preserve_authored_nodes", true)
+	facade.add_child(leaves)
+	for side in [-1.0, 1.0]:
+		var leaf := AnimatableBody3D.new()
+		leaf.name = "WestCelestialLeaf" if side < 0.0 else "EastCelestialLeaf"
+		leaf.sync_to_physics = true
+		leaf.position = Vector3(side * 8.0, 0.45, -0.75)
+		leaves.add_child(leaf)
+		_add_brick(leaf, "IvoryLeafFrame", Vector3(-side * 4.0, 5.8, 0),
+			Bricks.build_bevel_box(Vector3(7.75, 11.1, 0.70), 0.18), _materials.sanctum_ivory)
+		_add_box(leaf, "CharcoalLeafRecess", Vector3(-side * 4.0, 5.8, -0.39),
+			Vector3(6.65, 9.9, 0.12), _materials.shared_style_charcoal, false)
+		for rib_index in 4:
+			var rib_x: float = -float(side) * (1.35 + float(rib_index) * 1.75)
+			_add_box(leaf, "AetherLeafRib_%02d" % (rib_index + 1),
+				Vector3(rib_x, 5.8, -0.48), Vector3(0.14, 8.8, 0.10),
+				_materials.arrival_glass, false)
+		_add_brick(leaf, "CelestialLeafHeart", Vector3(-side * 4.0, 5.8, -0.62),
+			Bricks.build_crystal(0.72, 2.4, 0.18, 6), _materials.green_glow)
+		var collision := CollisionShape3D.new()
+		collision.name = "LeafCollision"
+		collision.position = Vector3(-side * 4.0, 5.8, 0)
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(7.75, 11.1, 0.85)
+		collision.shape = shape
+		leaf.add_child(collision)
+	gate.get_node("CollisionShape3D").disabled = true
+	gate.set_meta("custom_gate_motion", "heavenly_star_hinges")
+	gate.set_meta("physical_barrier_removed", false)
+	gate.set_meta("route_remains_open", false)
+	gate.set_meta("barrier_covers_threshold", true)
+
+
+func _build_gate_interaction_buttons(_geometry: Node3D) -> void:
+	_gate_interaction_buttons.clear()
+	var island_gate := get_island_one_heavenly_star_gate()
+	if island_gate != null:
+		_add_gate_interaction_button(island_gate, Vector3(15.3, 0.0, -5.0),
+			"IslandOneGateControl", "island_one", -1)
+	for gate_number in [2, 3, 4]:
+		if gate_number - 1 >= _quest_gates.size():
+			continue
+		_add_gate_interaction_button(_quest_gates[gate_number - 1],
+			Vector3(14.6, 0.0, -4.8), "IslandGateControl_%d" % gate_number,
+			"quest", gate_number - 1)
+	set_meta("nearby_q_gate_control_count", _gate_interaction_buttons.size())
+
+
+func _add_gate_interaction_button(parent: Node3D, at: Vector3, node_name: String,
+		gate_kind: String, quest_gate_index: int) -> void:
+	var button := Node3D.new()
+	button.name = node_name
+	button.position = at
+	button.set_meta("preserve_authored_nodes", true)
+	button.set_meta("gate_kind", gate_kind)
+	button.set_meta("quest_gate_index", quest_gate_index)
+	button.set_meta("interaction_key", "Q")
+	button.set_meta("interaction_range_m", 8.5)
+	button.set_meta("ground_contact", true)
+	parent.add_child(button)
+	_add_cylinder(button, "GroundedButtonPlinth", Vector3(0, 0.45, 0),
+		1.65, 0.90, _materials.shared_style_charcoal, true, 10)
+	_add_cylinder(button, "IvoryButtonPedestal", Vector3(0, 1.35, 0),
+		1.10, 1.15, _materials.sanctum_ivory, true, 10)
+	var key := _add_cylinder(button, "AetherQButton", Vector3(0, 2.05, 0),
+		0.72, 0.24, _materials.arrival_glass, false, 10)
+	key.rotation_degrees.x = 0.0
+	_add_label(button, "Q", Vector3(0, 2.75, 0), Color("dffcff"), 23)
+	_gate_interaction_buttons.append(button)
 
 
 func _build_reference_heavenly_slide_portal(court: Node3D) -> void:
@@ -3149,6 +3365,8 @@ func _set_island_one_star_gate_open(open: bool, animate: bool) -> void:
 	if _island_one_star_gate_tween != null and _island_one_star_gate_tween.is_valid():
 		_island_one_star_gate_tween.kill()
 	gate.set_meta("gate_open", open)
+	if open:
+		gate.set_meta("gate_interaction_unlocked", true)
 	gate.set_meta("gate_state", "opening" if open and animate else ("open" if open else "sealed"))
 	var motion := gate.get_node_or_null("SafeGateMotion")
 	if motion == null:
@@ -7200,9 +7418,9 @@ func _retire_legacy_reflection_apron_trees(center_global: Vector3,
 
 
 func _remove_island_three_route_barrier(geometry: Node3D) -> void:
-	# QuestGate_4 formerly placed a large violet slab between the Stormworks and
-	# the tree sanctuary. Progress remains save-driven, while the visible route
-	# and its collision now stay open as promised by the low-poly masterplan.
+	# Retire only the prototype violet slab. The shared heavenly-gate pass installs
+	# proper paired leaves and collision in this same controller slot afterward,
+	# so Island Three has a complete, operable threshold instead of an empty arch.
 	var removed_count := 0
 	for candidate in geometry.find_children("QuestGate_4", "AnimatableBody3D", true, false):
 		var gate := candidate as AnimatableBody3D
@@ -7214,8 +7432,9 @@ func _remove_island_three_route_barrier(geometry: Node3D) -> void:
 		var collision := gate.get_node_or_null("CollisionShape3D") as CollisionShape3D
 		if collision != null:
 			collision.disabled = true
-		gate.set_meta("physical_barrier_removed", true)
-		gate.set_meta("route_remains_open", "05_thought_storm_arena>06_oldest_tree_sanctuary")
+		gate.set_meta("physical_barrier_removed", false)
+		gate.set_meta("prototype_violet_barrier_retired", true)
+		gate.set_meta("route_remains_open", false)
 	set_meta("island_three_route_barriers_removed", removed_count)
 
 
@@ -9127,6 +9346,25 @@ func _update_hud() -> void:
 	if _prompt == null:
 		return
 	var panel := _prompt.get_parent() as Control
+	var gate_button := _nearest_gate_interaction_button()
+	if gate_button != null:
+		panel.visible = true
+		var gate_kind := str(gate_button.get_meta("gate_kind", "quest"))
+		var unlocked := false
+		var opened := false
+		if gate_kind == "island_one":
+			var island_gate := get_island_one_heavenly_star_gate()
+			unlocked = island_gate != null and bool(island_gate.get_meta("gate_interaction_unlocked", false))
+			opened = is_island_one_star_gate_open()
+		else:
+			var gate_index := int(gate_button.get_meta("quest_gate_index", -1))
+			if gate_index >= 0 and gate_index < _quest_gates.size():
+				var gate := _quest_gates[gate_index]
+				unlocked = bool(gate.get_meta("gate_interaction_unlocked", false))
+				opened = bool(gate.get_meta("open", false))
+		_prompt.text = "Q • %s CELESTIAL GATE" % ("CLOSE" if opened else "OPEN")
+		_status.text = "GATE CONTROL READY" if unlocked else "LOCKED • COMPLETE THIS ISLAND'S QUEST"
+		return
 	if _island_one_puzzle != null:
 		var puzzle_prompt := _island_one_puzzle.prompt_for_player(_player)
 		if not puzzle_prompt.is_empty():
