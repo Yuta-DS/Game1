@@ -2886,6 +2886,7 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 	walls.set_meta("purpose", "protective side walls around the Island One gate without narrowing its route")
 	walls.set_meta("wall_coping_height_m", 13.72)
 	walls.set_meta("gate_tower_connection", "continuous on west and east sides")
+	walls.set_meta("wall_visual_family", "island_one_two_civic_railing")
 	court.add_child(walls)
 	for side in [-1.0, 1.0]:
 		var suffix := "West" if side < 0.0 else "East"
@@ -2944,40 +2945,25 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 			BOUNDARY_INNER_EDGE + boundary_width * 0.5)
 		_add_box(walls, "%sConnectedBoundaryOuterFoundation" % suffix,
 			Vector3(boundary_x, 0.72, 0.35), Vector3(boundary_width, 1.44, 4.2),
-			_materials.shared_style_charcoal, true)
-		_add_box(walls, "%sConnectedBoundaryOuterWall" % suffix,
-			Vector3(boundary_x, 7.37, 0.35), Vector3(boundary_width, 11.86, 3.0),
 			_materials.sanctum_ivory, true)
-		_add_brick(walls, "%sConnectedBoundaryOuterCoping" % suffix,
-			Vector3(boundary_x, 13.72, 0.35),
-			Bricks.build_bevel_box(Vector3(boundary_width + 0.9, 0.72, 3.65), 0.20),
-			_materials.sanctum_ivory)
-		# Regular piers, glass inlays and lantern crystals keep the long wall tied
-		# to the heavenly-star gate instead of reading as one blank slab.
+		var boundary_collision := _add_box(walls, "%sConnectedBoundaryOuterWall" % suffix,
+			Vector3(boundary_x, 7.37, 0.35), Vector3(boundary_width, 11.86, 3.0),
+			_materials.sanctum_ivory, true) as MeshInstance3D
+		boundary_collision.visible = false
+		# Open scrollwork bays reproduce the civic railing already used around the
+		# rear garden: ivory lantern piers, dark rails, brass curls and a low curb.
+		# The hidden wall behind them retains the required physical barrier.
 		for bay_index in 7:
 			var bay_distance := BOUNDARY_INNER_EDGE + 4.4 + float(bay_index) * 8.0
 			var bay_x := float(side) * bay_distance
-			_add_box(walls, "%sBoundaryPier_%02d" % [suffix, bay_index + 1],
-				Vector3(bay_x, 7.35, 0.35), Vector3(1.05, 12.4, 3.55),
-				_materials.celestial_floor, true)
-			_add_box(walls, "%sBoundaryAetherInlay_%02d" % [suffix, bay_index + 1],
-				Vector3(float(side) * (bay_distance + 3.5), 7.55, 1.88),
-				Vector3(5.6, 5.9, 0.12), _materials.arrival_glass, false)
-			_add_box(walls, "%sBoundaryInnerAetherInlay_%02d" % [suffix, bay_index + 1],
-				Vector3(float(side) * (bay_distance + 3.5), 7.55, -1.18),
-				Vector3(5.6, 5.9, 0.12), _materials.arrival_glass, false)
-			_add_brick(walls, "%sBoundaryLanternCrystal_%02d" % [suffix, bay_index + 1],
-				Vector3(bay_x, 15.3, 0.35), Bricks.build_crystal(0.58, 2.5, 0.22, 8),
-				_materials.arrival_glass)
-		# Turn the boundary back at both outer ends so side views also show a
-		# closed enclosure rather than another unfinished cut edge.
-		_add_box(walls, "%sBoundaryReturnWall" % suffix,
-			Vector3(side * BOUNDARY_OUTER_EDGE, 7.37, 8.1), Vector3(3.0, 11.86, 16.5),
-			_materials.sanctum_ivory, true)
-		_add_brick(walls, "%sBoundaryReturnCoping" % suffix,
-			Vector3(side * BOUNDARY_OUTER_EDGE, 13.72, 8.1),
-			Bricks.build_bevel_box(Vector3(3.65, 0.72, 17.2), 0.20),
-			_materials.sanctum_ivory)
+			_add_heavenly_civic_railing_pier(walls,
+				"%sBoundaryPier_%02d" % [suffix, bay_index + 1],
+				Vector3(bay_x, 0.0, 0.35))
+			_add_heavenly_civic_railing_bay(walls,
+				"%sBoundaryScrollwork_%02d" % [suffix, bay_index + 1],
+				float(side) * (bay_distance + 3.5), 7.0, 0.35)
+		_add_heavenly_civic_railing_pier(walls, "%sBoundaryEndPier" % suffix,
+			Vector3(float(side) * BOUNDARY_OUTER_EDGE, 0.0, 0.35))
 	walls.set_meta("connected_boundary_span_m", 132.0)
 	walls.set_meta("covers_gate_flanks", true)
 	walls.set_meta("continuous_ground_to_coping", true)
@@ -2985,6 +2971,113 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 	walls.set_meta("side_passages_removed", true)
 	walls.set_meta("connected_to_both_gate_towers", true)
 	walls.set_meta("height_matches_gate_tower_capitals", true)
+	walls.set_meta("styled_to_match_gate_barrier", true)
+	walls.set_meta("outer_end_returns_removed", true)
+
+
+func _add_heavenly_civic_railing_bay(parent: Node3D, prefix: String,
+		center_x: float, width: float, center_z: float) -> void:
+	var half_width := width * 0.5
+	_add_brick(parent, prefix + "IvoryCurb", Vector3(center_x, 1.05, center_z),
+		Bricks.build_bevel_box(Vector3(width + 0.35, 2.10, 2.25), 0.16),
+		_materials.sanctum_ivory)
+	for rail_y in [3.0, 10.8]:
+		_add_cable_between(parent, prefix + "DarkRail_%s" % str(rail_y),
+			Vector3(center_x - half_width, rail_y, center_z),
+			Vector3(center_x + half_width, rail_y, center_z),
+			0.22, 0.22, _materials.bio_gunmetal, 8)
+	_add_cable_between(parent, prefix + "WestScroll",
+		Vector3(center_x - half_width + 0.35, 3.25, center_z),
+		Vector3(center_x, 9.8, center_z), 0.16, 0.13,
+		_materials.astral_brass, 8)
+	_add_cable_between(parent, prefix + "EastScroll",
+		Vector3(center_x + half_width - 0.35, 3.25, center_z),
+		Vector3(center_x, 9.8, center_z), 0.16, 0.13,
+		_materials.astral_brass, 8)
+	_add_cable_between(parent, prefix + "CenterDrop",
+		Vector3(center_x, 9.8, center_z), Vector3(center_x, 4.0, center_z),
+		0.13, 0.11, _materials.bio_gunmetal, 8)
+	_add_torus(parent, prefix + "BrassMedallion", Vector3(center_x, 6.4, center_z),
+		0.48, 0.78, _materials.astral_brass, Vector3(90, 0, 0))
+	_add_brick(parent, prefix + "WisdomDrop", Vector3(center_x, 6.4, center_z - 0.08),
+		Bricks.build_crystal(0.26, 0.92, 0.10, 6), _materials.green_glow)
+
+
+func _add_heavenly_civic_railing_pier(parent: Node3D, prefix: String,
+		at: Vector3) -> void:
+	_add_brick(parent, prefix + "Foot", at + Vector3.UP * 0.65,
+		Bricks.build_bevel_box(Vector3(2.15, 1.30, 2.65), 0.18),
+		_materials.sanctum_ivory)
+	_add_brick(parent, prefix + "Shaft", at + Vector3.UP * 6.75,
+		Bricks.build_bevel_box(Vector3(1.45, 11.0, 1.75), 0.14),
+		_materials.sanctum_ivory)
+	_add_brick(parent, prefix + "Capital", at + Vector3.UP * 12.35,
+		Bricks.build_bevel_box(Vector3(2.35, 0.75, 2.75), 0.16),
+		_materials.sanctum_ivory)
+	_add_cylinder(parent, prefix + "LanternBase", at + Vector3.UP * 13.05,
+		0.72, 0.42, _materials.bio_gunmetal, false, 10)
+	_add_sphere(parent, prefix + "WarmLantern", at + Vector3.UP * 14.28,
+		Vector3(0.72, 2.05, 0.72), _materials.sanctum_ivory)
+	for cage_index in 4:
+		var cage_angle := TAU * float(cage_index) / 4.0
+		var cage_offset := Vector3(sin(cage_angle) * 0.72, 0,
+			cos(cage_angle) * 0.72)
+		_add_cable_between(parent, "%sLanternCage_%02d" % [prefix, cage_index + 1],
+			at + cage_offset + Vector3.UP * 13.18,
+			at + cage_offset + Vector3.UP * 15.38,
+			0.09, 0.07, _materials.bio_gunmetal, 6)
+	_add_cylinder(parent, prefix + "LanternCap", at + Vector3.UP * 15.52,
+		0.76, 0.42, _materials.bio_gunmetal, false, 10)
+	_add_cylinder(parent, prefix + "LanternFinial", at + Vector3.UP * 16.05,
+		0.20, 0.65, _materials.astral_brass, false, 8)
+
+
+func _build_island_two_styled_gate_walls(gate: AnimatableBody3D,
+		facade: Node3D) -> void:
+	var walls := Node3D.new()
+	walls.name = "SharedStyledSideWalls"
+	walls.set_meta("preserve_authored_nodes", true)
+	walls.set_meta("architectural_family", "island_one_two_civic_railing")
+	walls.set_meta("connected_to_gate_towers", true)
+	walls.set_meta("wall_coping_height_m", 13.72)
+	walls.set_meta("collision_backed", true)
+	facade.add_child(walls)
+	const WALL_INNER_EDGE := 13.25
+	for side in [-1.0, 1.0]:
+		var suffix := "West" if side < 0.0 else "East"
+		var boundary := 40.0
+		for zone_id in ["03_constellation_court", "04_hope_path_ridge"]:
+			var center := gate.to_local(to_global(get_zone_position(zone_id)))
+			var radius := get_zone_radius(zone_id)
+			if absf(center.z) < radius:
+				boundary = maxf(boundary,
+					float(side) * center.x
+					+ sqrt(radius * radius - center.z * center.z) + 1.0)
+		var wall_width := maxf(24.0, boundary - WALL_INNER_EDGE)
+		var wall_x := float(side) * (WALL_INNER_EDGE + wall_width * 0.5)
+		_add_box(walls, "%sStyledWallFoundation" % suffix,
+			Vector3(wall_x, 0.72, 0.0), Vector3(wall_width, 1.44, 4.2),
+			_materials.sanctum_ivory, true)
+		var wall_collision := _add_box(walls, "%sStyledWallMass" % suffix,
+			Vector3(wall_x, 7.37, 0.0), Vector3(wall_width, 11.86, 3.0),
+			_materials.sanctum_ivory, true) as MeshInstance3D
+		wall_collision.visible = false
+		var bay_count := maxi(3, floori(wall_width / 8.0))
+		var bay_width := wall_width / float(bay_count)
+		for bay_index in bay_count:
+			var bay_x := float(side) * (
+				WALL_INNER_EDGE + (float(bay_index) + 0.5) * bay_width)
+			_add_heavenly_civic_railing_bay(walls,
+				"%sGateTwoScrollwork_%02d" % [suffix, bay_index + 1],
+				bay_x, bay_width - 0.70, 0.0)
+			var pier_x := float(side) * (WALL_INNER_EDGE + float(bay_index) * bay_width)
+			_add_heavenly_civic_railing_pier(walls,
+				"%sGateTwoWallPier_%02d" % [suffix, bay_index + 1],
+				Vector3(pier_x, 0.0, 0.0))
+		_add_heavenly_civic_railing_pier(walls, "%sGateTwoEndPier" % suffix,
+			Vector3(float(side) * (WALL_INNER_EDGE + wall_width), 0.0, 0.0))
+	walls.set_meta("styled_wall_side_count", 2)
+	walls.set_meta("solid_outer_end_returns_removed", true)
 
 
 func _standardize_world_one_gate_family(geometry: Node3D) -> void:
@@ -3068,6 +3161,8 @@ func _build_heavenly_star_gate_family_facade(gate: AnimatableBody3D,
 	facade.add_child(halo)
 	_build_gate_astrolabe_crest(halo, facade)
 	_build_shared_heavenly_gate_leaves(gate, facade)
+	if gate_number == 2:
+		_build_island_two_styled_gate_walls(gate, facade)
 	gate.set_meta("gate_visual_family", "heavenly_star_gate")
 	gate.set_meta("visual_standardized_from", "IslandOneHeavenlyStarGate")
 

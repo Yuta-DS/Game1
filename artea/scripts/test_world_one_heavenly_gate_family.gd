@@ -30,13 +30,18 @@ func _run() -> void:
 		assert(perimeter.get_node("%sGateTowerConnectorWallCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sGateTowerConnectorFoundationCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sConnectedBoundaryOuterWallCollision" % side) is StaticBody3D)
-		assert(perimeter.get_node("%sBoundaryReturnWallCollision" % side) is StaticBody3D)
+		assert(perimeter.get_node_or_null("%sBoundaryReturnWallCollision" % side) == null)
 	assert(bool(perimeter.get_meta("covers_gate_flanks", false)))
 	assert(bool(perimeter.get_meta("continuous_ground_to_coping", false)))
 	assert(bool(perimeter.get_meta("full_frontage_enclosure", false)))
 	assert(bool(perimeter.get_meta("side_passages_removed", false)))
 	assert(bool(perimeter.get_meta("connected_to_both_gate_towers", false)))
 	assert(bool(perimeter.get_meta("height_matches_gate_tower_capitals", false)))
+	assert(bool(perimeter.get_meta("styled_to_match_gate_barrier", false)))
+	assert(str(perimeter.get_meta("wall_visual_family", "")) == "island_one_two_civic_railing")
+	assert(perimeter.has_node("WestBoundaryScrollwork_01BrassMedallion"))
+	assert(perimeter.has_node("EastBoundaryPier_01WarmLantern"))
+	assert(bool(perimeter.get_meta("outer_end_returns_removed", false)))
 	assert(float(perimeter.get_meta("wall_coping_height_m", 0.0)) >= 13.7)
 	assert(float(perimeter.get_meta("connected_boundary_span_m", 0.0)) >= 132.0)
 
@@ -60,6 +65,15 @@ func _run() -> void:
 
 	var island_two_gate := geometry.get_node(
 		"SavedQuestProgressionGates/QuestGate_2") as AnimatableBody3D
+	var island_two_walls := island_two_gate.get_node(
+		"HeavenlyStarGateFamilyFacade/SharedStyledSideWalls") as Node3D
+	assert(bool(island_two_walls.get_meta("connected_to_gate_towers", false)))
+	assert(float(island_two_walls.get_meta("wall_coping_height_m", 0.0)) >= 13.7)
+	assert(island_two_walls.get_node("WestStyledWallMassCollision") is StaticBody3D)
+	assert(island_two_walls.get_node("EastStyledWallMassCollision") is StaticBody3D)
+	assert(island_two_walls.has_node("WestGateTwoScrollwork_01BrassMedallion"))
+	assert(island_two_walls.has_node("EastGateTwoWallPier_01WarmLantern"))
+	assert(bool(island_two_walls.get_meta("solid_outer_end_returns_removed", false)))
 	assert(not (island_two_gate.get_node("IslandTwoMemoryGate") as Node3D).visible)
 	var island_three_gate := geometry.get_node(
 		"SavedQuestProgressionGates/QuestGate_4") as AnimatableBody3D
