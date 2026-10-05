@@ -175,8 +175,13 @@ func _physics_process(delta: float) -> void:
 	var expired: Array[int] = []
 	for instance_id in _footstep_states:
 		var state: Dictionary = _footstep_states[instance_id]
+		# Validity is checked before the cast: casting a freed object with `as`
+		# is itself an error, and players are freed whenever the scene changes.
+		if not is_instance_valid(state.player):
+			expired.append(instance_id)
+			continue
 		var player := state.player as CharacterBody3D
-		if not is_instance_valid(player) or not player.is_inside_tree():
+		if player == null or not player.is_inside_tree():
 			expired.append(instance_id)
 			continue
 		_update_player_footsteps(state, player, delta)
@@ -414,8 +419,14 @@ func _update_train_audio(delta: float) -> void:
 	var expired: Array[int] = []
 	for instance_id in _train_states:
 		var state: Dictionary = _train_states[instance_id]
+		# Validity is checked before the cast: casting a freed object with `as`
+		# is itself an error. Leaving a scene frees its trains a frame or more
+		# before current_scene changes and _refresh_scene clears this table.
+		if not is_instance_valid(state.train):
+			expired.append(instance_id)
+			continue
 		var train := state.train as Node3D
-		if not is_instance_valid(train) or not train.is_inside_tree():
+		if train == null or not train.is_inside_tree():
 			expired.append(instance_id)
 			continue
 		var raw_speed := train.global_position.distance_to(state.last_position) / delta

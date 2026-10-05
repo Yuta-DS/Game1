@@ -36,9 +36,12 @@ func _run() -> void:
 	root.add_child(chat)
 	await process_frame
 	var input := chat.user_input as LineEdit
-	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as TextEdit
-	assert(input != null and input.max_length == ReflectionEngine.MAX_MESSAGE_LENGTH,
-		"the live input enforces the engine's length boundary")
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as RichTextLabel
+	assert(input != null and input.max_length == 0,
+		"the live input has no length limit")
+	var long_urgent: Dictionary = engine.reflect("%s I want to die" % "word ".repeat(200))
+	assert(bool(long_urgent.get("urgent", false)),
+		"urgent cues are found even at the end of a very long message")
 	input.text = "Why am I always stressed?"
 	chat._submit_message(input)
 	assert(input.text.is_empty(), "the private message is cleared immediately after local processing")

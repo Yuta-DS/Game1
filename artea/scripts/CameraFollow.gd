@@ -57,6 +57,9 @@ var _ride_view_active := false
 ## before smoothing so a fast-moving ride does not leave the view trailing.
 var _previous_focus := Vector3.ZERO
 
+## UI that owns the mouse while it is open (Milo's chat) joins this group.
+const CAMERA_INPUT_BLOCKERS_GROUP := "camera_input_blockers"
+
 var _yaw := 0.0
 var _pitch := 0.0
 var _touch_emulation_was_on := false
@@ -98,6 +101,13 @@ func _exit_tree() -> void:
 # _input rather than _unhandled_input: the rating UI is a Control layer, and
 # once it has focus it consumes events before they reach the unhandled stage.
 func _input(event: InputEvent) -> void:
+	# While a menu such as Milo's chat is open the cursor belongs to the UI:
+	# moving it must not turn the view, the wheel must only scroll the panel,
+	# and clicks must not recapture the mouse. Checked before Escape so closing
+	# the chat cannot leave the cursor released after the chat recaptures it.
+	if not get_tree().get_nodes_in_group(CAMERA_INPUT_BLOCKERS_GROUP).is_empty():
+		return
+
 	# Orbit whenever the camera is in follow mode. This deliberately does not
 	# require MOUSE_MODE_CAPTURED: capture can silently fail to apply (it does
 	# on a headless run, and can lag by a frame after an alt-tab), and gating on
