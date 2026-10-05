@@ -159,6 +159,18 @@ func _run() -> void:
 	gallery_player.name = "Player3D"
 	gallery_player.add_to_group("Player")
 	gallery_like_world.add_child(gallery_player)
+	var fox_visuals := Node3D.new()
+	fox_visuals.name = "FoxVisuals"
+	gallery_player.add_child(fox_visuals)
+	var fox := Node3D.new()
+	fox.name = "Fox"
+	fox_visuals.add_child(fox)
+	var fox_mesh := MeshInstance3D.new()
+	fox_mesh.name = "FoxSizeReference"
+	var fox_box := BoxMesh.new()
+	fox_box.size = Vector3(1.0, 3.25, 1.0)
+	fox_mesh.mesh = fox_box
+	fox.add_child(fox_mesh)
 	current_scene = gallery_like_world
 	if manager != null:
 		manager.call("refresh_companion")
@@ -170,10 +182,15 @@ func _run() -> void:
 			"a 3D scene without an authored Milo receives the companion")
 		_check(spawned != null and spawned.get("player") == gallery_player,
 			"the scene-spawned companion adopts that scene's player")
-		_check(spawned != null and spawned.scale.is_equal_approx(Vector3.ONE * 1.40) \
+		var fox_height := float(spawned.get_meta("matched_fox_visual_height_m", 0.0)) \
+			if spawned != null else 0.0
+		var milo_height := float(spawned.get_meta("milo_native_visual_height_m", 0.0)) \
+			* spawned.scale.y if spawned != null else 0.0
+		var calibrated_ratio := milo_height / fox_height if fox_height > 0.001 else 0.0
+		_check(spawned != null and absf(calibrated_ratio - 0.88) < 0.001 \
 				and str(spawned.get_meta("scene_scale_profile", "")) \
-					== "art_galaxy_outside_size_match",
-			"Galaxy Milo receives the larger outside-world size match")
+					== "art_galaxy_fox_perceived_height_match",
+			"Galaxy Milo uses the fox idle-pose height calibration")
 
 	gallery_like_world.queue_free()
 	await process_frame

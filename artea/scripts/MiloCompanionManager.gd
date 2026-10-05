@@ -8,7 +8,12 @@ extends Node
 
 const MILO_SCENE := preload("res://milo2/godot/milo2_game_character.tscn")
 const ConversationContext := preload("res://scripts/MiloConversationContext.gd")
-const ART_GALAXY_MILO_SCALE := 1.40
+const ART_GALAXY_FALLBACK_SCALE := 1.40
+# The fox GLB's static AABB includes extra animation space beyond its ordinary
+# upright silhouette. This side-by-side calibrated ratio makes Milo and the
+# fox equal in their standing gameplay pose while retaining dynamic sizing if
+# either source asset changes later.
+const ART_GALAXY_PERCEIVED_HEIGHT_CALIBRATION := 0.88
 
 var active_milo: CharacterBody3D
 var active_player: CharacterBody3D
@@ -52,10 +57,56 @@ func _apply_scene_scale(milo: CharacterBody3D, scene: Node) -> void:
 	if milo == null:
 		return
 	var in_art_galaxy := scene.find_child("ArtCastleFloatingWorld", true, false) != null
-	milo.scale = Vector3.ONE * (ART_GALAXY_MILO_SCALE if in_art_galaxy else 1.0)
+	var target_scale := 1.0
+	var fox_height := 0.0
+	var milo_native_height := 0.0
+	if in_art_galaxy:
+		# Compare the rendered meshes, not the two collision capsules. The Galaxy
+		# fox is authored at a different child scale, so a fixed Milo multiplier
+		# only approximates the match and drifts whenever either asset changes.
+		milo.scale = Vector3.ONE
+		var fox_visual := _galaxy_fox_visual(active_player)
+		var milo_visual := milo.get_node_or_null("Model") as Node3D
+		fox_height = _visual_height(active_player, fox_visual)
+		milo_native_height = _visual_height(milo, milo_visual)
+		if fox_height > 0.001 and milo_native_height > 0.001:
+			target_scale = fox_height / milo_native_height \
+				* ART_GALAXY_PERCEIVED_HEIGHT_CALIBRATION
+		else:
+			target_scale = ART_GALAXY_FALLBACK_SCALE
+	milo.scale = Vector3.ONE * target_scale
 	milo.set_meta("scene_scale_profile",
-		"art_galaxy_outside_size_match" if in_art_galaxy else "native_world_scale")
+		"art_galaxy_fox_perceived_height_match" if in_art_galaxy else "native_world_scale")
 	milo.set_meta("scene_scale_multiplier", milo.scale.x)
+	milo.set_meta("matched_fox_visual_height_m", fox_height)
+	milo.set_meta("milo_native_visual_height_m", milo_native_height)
+	milo.set_meta("fox_idle_pose_calibration", ART_GALAXY_PERCEIVED_HEIGHT_CALIBRATION)
+
+
+func _galaxy_fox_visual(player: CharacterBody3D) -> Node3D:
+	if player == null:
+		return null
+	var fox := player.get_node_or_null("FoxVisuals/Fox") as Node3D
+	if fox != null:
+		return fox
+	return player.get_node_or_null("RogueSkin") as Node3D
+
+
+func _visual_height(character: Node3D, visual_root: Node3D) -> float:
+	if character == null or visual_root == null:
+		return 0.0
+	var combined := AABB()
+	var has_bounds := false
+	for node in visual_root.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := node as MeshInstance3D
+		if mesh_instance.mesh == null or not mesh_instance.visible:
+			continue
+		var character_local := character.global_transform.affine_inverse() \
+			* mesh_instance.global_transform
+		var bounds := character_local * mesh_instance.get_aabb()
+		combined = combined.merge(bounds) if has_bounds else bounds
+		has_bounds = true
+	return combined.size.y if has_bounds else 0.0
 
 
 func _find_3d_player(scene: Node) -> CharacterBody3D:
