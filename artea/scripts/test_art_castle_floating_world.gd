@@ -94,28 +94,45 @@ func _run() -> void:
 			or float(grand_gate.get_meta("clear_opening_width_m", 0.0)) < 40.0 \
 			or grand_gate.find_children("GrandGateArch_*", "MeshInstance3D", true, false).size() != 24 \
 			or not bool(south_removal.get_meta("tower_removed", false)) \
-			or str(arrival.get_meta("design_revision", "")) != "grand_garden_gate_v3_complete_island_court" \
+			or str(arrival.get_meta("design_revision", "")) != "grand_garden_gate_v4_formal_full_island_court" \
 			or not bool(arrival.get_meta("visible_ground_fully_finished", false)) \
 			or not bool(arrival.get_meta("unfinished_white_margin_removed", false)) \
+			or not bool(arrival.get_meta("ordered_mirrored_garden_wings", false)) \
 			or int(gate_garden.get_meta("symmetrical_bed_count", 0)) != 12 \
+			or str(gate_garden.get_meta("design_revision", "")) != "ordered_mirrored_botanical_court_v4" \
+			or int(gate_garden.get_meta("formal_row_count_per_side", 0)) != 3 \
+			or int(gate_garden.get_meta("formal_column_count_per_side", 0)) != 2 \
 			or not bool(gate_garden.get_meta("continuous_garden_ribbons", false)) \
 			or not bool(gate_garden.get_meta("landscaped_perimeter", false)) \
 			or gate_garden.find_children("*ConnectedGardenRibbon", "MeshInstance3D", true, false).size() != 2 \
+			or gate_garden.find_children("*GardenWingIvoryFrame", "MeshInstance3D", true, false).size() != 2 \
+			or gate_garden.find_children("*FormalGardenPath_*", "MeshInstance3D", true, false).size() != 6 \
 			or gate_garden.find_children("*GardenSoil_*", "MeshInstance3D", true, false).size() != 12 \
 			or gate_garden.find_children("*GardenLawn_*", "MeshInstance3D", true, false).size() != 12 \
-			or gate_garden.find_children("*GardenFlower_*", "MeshInstance3D", true, false).size() != 48 \
+			or gate_garden.find_children("*GardenFlower_*", "MeshInstance3D", true, false).size() != 72 \
 			or gate_garden.find_children("*GardenTree_*", "Node3D", true, false).size() != 12 \
 			or gate_garden.find_children("*FountainWater", "MeshInstance3D", true, false).size() != 2 \
 			or int(patterned_court.get_meta("paving_panel_count", 0)) != 89 \
 			or float(patterned_court.get_meta("finished_court_radius_m", 0.0)) < 149.0 \
+			or float(patterned_court.get_meta("landscape_coverage_ratio", 0.0)) < 0.90 \
 			or bool(patterned_court.get_meta("raw_deck_visible_inside_court", true)) \
 			or patterned_court.find_children("CourtPaver_*", "MeshInstance3D", true, false).size() != 89 \
 			or patterned_court.get_node_or_null("ProcessionalCyanSeam") == null \
 			or patterned_court.get_node_or_null("ArrivalCourtPlantedRim") == null \
 			or patterned_court.get_node_or_null("ArrivalCourtIvoryCoping") == null \
-			or patterned_court.get_node_or_null("ArrivalCourtStoneField") == null:
+			or patterned_court.get_node_or_null("ArrivalCourtStoneField") == null \
+			or patterned_court.get_node_or_null("ArrivalCourtGardenField") == null:
 		_fail("arrival gold rectangle, watchtower, or surrounding gate garden is unfinished")
 		return
+	for bed_index in 6:
+		var west_bed := gate_garden.get_node("WestGardenRoom_%02d" % (bed_index + 1)) as Node3D
+		var east_bed := gate_garden.get_node("EastGardenRoom_%02d" % (bed_index + 1)) as Node3D
+		if not is_equal_approx(west_bed.position.x, -east_bed.position.x) \
+				or not is_equal_approx(west_bed.position.z, east_bed.position.z) \
+				or not west_bed.rotation.is_equal_approx(Vector3.ZERO) \
+				or not east_bed.rotation.is_equal_approx(Vector3.ZERO):
+			_fail("garden room %d is not aligned in the ordered mirrored grid" % (bed_index + 1))
+			return
 	var heart := world.get_node("HeartMelodyTemple") as Node3D
 	if str(heart.get_meta("design_revision", "")) != "celestial_conservatory_v14" \
 			or not bool(heart.get_meta("flat_rectangle_facade_removed", false)):

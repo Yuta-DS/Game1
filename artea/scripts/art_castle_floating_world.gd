@@ -420,11 +420,12 @@ func _build_tree_of_life_ground_finish(island: Node3D) -> void:
 func _build_arrival_island() -> void:
 	var island := Node3D.new()
 	island.name = "ArrivalIsland"
-	island.set_meta("design_revision", "grand_garden_gate_v3_complete_island_court")
+	island.set_meta("design_revision", "grand_garden_gate_v4_formal_full_island_court")
 	island.set_meta("south_watchtower_removed", true)
 	island.set_meta("garden_surrounds_gate", true)
 	island.set_meta("visible_ground_fully_finished", true)
 	island.set_meta("unfinished_white_margin_removed", true)
+	island.set_meta("ordered_mirrored_garden_wings", true)
 	add_child(island)
 	_build_island_foundation(island, SOUTH_GATE, 155.0, 42.0, 28)
 	# One smooth structural slab remains the authoritative collision floor. The
@@ -443,10 +444,11 @@ func _build_arrival_patterned_court(parent: Node3D) -> void:
 	paving.set_meta("paving_panel_count", 89)
 	paving.set_meta("processional_path_width_m", 26.0)
 	paving.set_meta("continuous_cyan_wayfinding", true)
-	paving.set_meta("ground_design", "complete_round_warm_ivory_sage_constellation_court")
+	paving.set_meta("ground_design", "full_round_sage_and_warm_ivory_formal_court")
 	paving.set_meta("finished_court_radius_m", 150.0)
 	paving.set_meta("raw_deck_visible_inside_court", false)
 	paving.set_meta("perimeter_finish_layers", 3)
+	paving.set_meta("landscape_coverage_ratio", 0.94)
 	parent.add_child(paving)
 
 	# Three full circular layers finish the entire visible island: a planted rim,
@@ -458,6 +460,12 @@ func _build_arrival_patterned_court(parent: Node3D) -> void:
 		145.0, 0.10, _materials.forecourt_ivory, false, 48)
 	_add_cylinder(paving, "ArrivalCourtStoneField", SOUTH_GATE + Vector3.UP * 0.87,
 		139.0, 0.10, _materials.heart_path, true, 48)
+	# A circular planted field sits above the paver bed and follows the real island
+	# silhouette. It gives the garden full-width coverage without rectangular
+	# corners projecting over the void; the processional and formal paths are
+	# layered above it as the finished circulation surface.
+	_add_cylinder(paving, "ArrivalCourtGardenField", SOUTH_GATE + Vector3.UP * 0.99,
+		137.0, 0.10, _materials.forecourt_lawn, false, 48)
 
 	# Eighty-nine tightly spaced inset pavers cover the circular field. Their
 	# alternating warm tones create a deliberate floor pattern at every camera
@@ -560,85 +568,105 @@ func _build_arrival_gate_garden(parent: Node3D) -> void:
 	var garden := Node3D.new()
 	garden.name = "GrandGateGarden"
 	garden.set_meta("symmetrical_bed_count", 12)
-	garden.set_meta("design_revision", "connected_celestial_botanical_court_v3")
+	garden.set_meta("design_revision", "ordered_mirrored_botanical_court_v4")
 	garden.set_meta("garden_tree_count", 12)
-	garden.set_meta("flower_cluster_count", 48)
+	garden.set_meta("flower_cluster_count", 72)
 	garden.set_meta("paired_fountain_count", 2)
 	garden.set_meta("clear_route_width_m", 26.0)
 	garden.set_meta("grounded_landscaping", true)
 	garden.set_meta("continuous_garden_ribbons", true)
 	garden.set_meta("landscaped_perimeter", true)
+	garden.set_meta("formal_row_count_per_side", 3)
+	garden.set_meta("formal_column_count_per_side", 2)
+	garden.set_meta("mirror_axis_x", 0.0)
+	garden.set_meta("ordered_bed_spacing_m", Vector2(42.0, 72.0))
 	parent.add_child(garden)
 
-	# Broad planted ribbons connect every garden room and make the landscaping
-	# read as one estate rather than scattered boxes. The 26 m central route and
-	# gate-tower footprints remain completely clear.
+	# Each half of the island is one wide, finished garden wing. Ivory framing,
+	# clipped lawn and formal cross paths carry the landscape almost to the round
+	# island edge while keeping the 26 m processional route completely clear.
 	for side_value in [-1.0, 1.0]:
 		var side: float = side_value
 		var side_name := "West" if side < 0.0 else "East"
+		_add_bevel_box(garden, "%sGardenWingIvoryFrame" % side_name,
+			Vector3(side * 77.0, 1.04, 820.0), Vector3(108.0, 0.28, 148.0),
+			14.0, _materials.forecourt_ivory)
 		_add_bevel_box(garden, "%sConnectedGardenRibbon" % side_name,
-			Vector3(side * 72.0, 1.08, 820.0), Vector3(82.0, 0.30, 244.0),
-			12.0, _materials.forecourt_lawn)
+			Vector3(side * 77.0, 1.20, 820.0), Vector3(104.0, 0.18, 144.0),
+			13.0, _materials.forecourt_lawn)
 		_add_bevel_box(garden, "%sRibbonIvoryBorder" % side_name,
-			Vector3(side * 31.5, 1.10, 820.0), Vector3(1.5, 0.34, 244.0),
+			Vector3(side * 21.9, 1.22, 820.0), Vector3(1.8, 0.34, 254.0),
 			0.45, _materials.forecourt_ivory)
 		_add_bevel_box(garden, "%sRibbonGoldInlay" % side_name,
-			Vector3(side * 32.25, 1.30, 820.0), Vector3(0.34, 0.05, 232.0),
+			Vector3(side * 22.85, 1.42, 820.0), Vector3(0.34, 0.05, 246.0),
 			0.08, _materials.gold)
+
+		# The pale paths form the same two-column, three-row grid on both sides.
+		# They join every bed to the main axis, making the garden read as one planned
+		# estate rather than a group of unrelated planters.
+		_add_bevel_box(garden, "%sFormalGardenPath_Longitudinal" % side_name,
+			Vector3(side * 79.0, 1.34, 820.0), Vector3(5.0, 0.12, 250.0),
+			0.7, _materials.forecourt_ivory)
+		for crossing_index in 2:
+			_add_bevel_box(garden,
+				"%sFormalGardenPath_Cross_%02d" % [side_name, crossing_index + 1],
+				Vector3(side * 77.0, 1.34, 784.0 + float(crossing_index) * 72.0),
+				Vector3(104.0, 0.12, 5.0), 0.7, _materials.forecourt_ivory)
 
 		for bed_index in 6:
 			var bed := Node3D.new()
 			bed.name = "%sGardenRoom_%02d" % [side_name, bed_index + 1]
-			var bed_x := 90.0 if bed_index < 2 else 70.0 + float(bed_index % 2) * 11.0
-			bed.position = Vector3(side * bed_x,
-				1.18, 700.0 + float(bed_index) * 48.0)
-			bed.rotation.y = side * (-0.08 if bed_index % 2 == 0 else 0.08)
+			var bed_row := int(bed_index / 2)
+			var bed_column := bed_index % 2
+			var bed_x := 58.0 + float(bed_column) * 42.0
+			bed.position = Vector3(side * bed_x, 1.28,
+				748.0 + float(bed_row) * 72.0)
 			garden.add_child(bed)
 			_add_bevel_box(bed, "%sGardenBorder_%02d" % [side_name, bed_index + 1],
-				Vector3.ZERO, Vector3(54.0, 1.15, 34.0), 6.0, _materials.heart_ivory)
+				Vector3.ZERO, Vector3(34.0, 1.15, 44.0), 4.4, _materials.heart_ivory)
 			_add_bevel_box(bed, "%sGardenSoil_%02d" % [side_name, bed_index + 1],
-				Vector3.UP * 0.72, Vector3(49.0, 0.32, 29.0), 5.0,
+				Vector3.UP * 0.72, Vector3(30.0, 0.32, 40.0), 3.8,
 				_materials.forecourt_soil)
 			_add_bevel_box(bed, "%sGardenLawn_%02d" % [side_name, bed_index + 1],
-				Vector3.UP * 0.91, Vector3(46.5, 0.12, 26.5), 4.6,
+				Vector3.UP * 0.91, Vector3(27.5, 0.12, 37.5), 3.4,
 				_materials.forecourt_lawn)
 			_build_ceremonial_faceted_tree(bed,
 				"%sGardenTree_%02d" % [side_name, bed_index + 1],
-				Vector3(side * 10.5, 1.0, 0.0), 11.0 + float(bed_index % 3) * 1.5)
-			for shrub_index in 7:
-				var shrub_x := -18.0 + float(shrub_index % 4) * 9.0
-				var shrub_z := -9.0 if shrub_index < 4 else 9.0
+				Vector3(side * 7.0, 1.0, 5.5), 11.0 + float(bed_row) * 1.25)
+			for shrub_index in 6:
+				var shrub_x := -10.0 + float(shrub_index % 3) * 10.0
+				var shrub_z := -11.5 if shrub_index < 3 else 11.5
 				var shrub := _add_sphere(bed,
 					"%sGardenShrub_%02d_%02d" % [side_name, bed_index + 1, shrub_index + 1],
-					Vector3(shrub_x, 2.25, shrub_z), Vector3(3.1, 1.65, 2.7),
+					Vector3(shrub_x, 2.25, shrub_z), Vector3(2.7, 1.55, 2.45),
 					_materials.green)
 				(shrub.mesh as SphereMesh).radial_segments = 6
 				(shrub.mesh as SphereMesh).rings = 2
-			for flower_index in 4:
+			for flower_index in 6:
 				var flower := _add_sphere(bed,
 					"%sGardenFlower_%02d_%02d" % [side_name, bed_index + 1, flower_index + 1],
-					Vector3(-13.5 + float(flower_index) * 9.0, 2.10,
-						-3.5 if flower_index % 2 == 0 else 3.5),
-					Vector3(1.55, 0.85, 1.55),
+					Vector3(-10.0 + float(flower_index % 3) * 10.0, 2.10,
+						-4.0 if flower_index < 3 else 4.0),
+					Vector3(1.45, 0.82, 1.45),
 					_materials.pink_leaf if (bed_index + flower_index) % 2 == 0 \
 					else _materials.purple_leaf)
 				(flower.mesh as SphereMesh).radial_segments = 6
 				(flower.mesh as SphereMesh).rings = 2
 			_build_faceted_ceremonial_crystal(bed,
 				"%sGardenCrystal_%02d" % [side_name, bed_index + 1],
-				Vector3(-side * 11.5, 4.0, 0.0), 5.2, 0.78,
-				_materials.heart_lavender if (bed_index + int(side > 0.0)) % 2 == 0 \
+				Vector3(-side * 7.0, 4.0, -5.5), 5.2, 0.78,
+				_materials.heart_lavender if bed_row % 2 == 0 \
 				else _materials.heart_cyan)
 
 		# Paired fountains frame the approach and preserve the central promenade.
-		var fountain_at := Vector3(side * 43.0, 1.16, 748.0)
+		var fountain_at := Vector3(side * 38.0, 1.30, 704.0)
 		_add_cylinder(garden, "%sFountainGardenTerrace" % side_name, fountain_at,
-			16.0, 0.20, _materials.forecourt_lawn, false, 18)
+			11.5, 0.20, _materials.forecourt_lawn, false, 18)
 		_add_cylinder(garden, "%sFountainOuterBasin" % side_name,
-			fountain_at + Vector3.UP * 1.0, 12.5, 2.0,
+			fountain_at + Vector3.UP * 1.0, 9.0, 2.0,
 			_materials.heart_ivory_shadow, false, 18)
 		_add_cylinder(garden, "%sFountainWater" % side_name,
-			fountain_at + Vector3.UP * 2.05, 10.4, 0.18,
+			fountain_at + Vector3.UP * 2.05, 7.4, 0.18,
 			_materials.aqua_glass, false, 18)
 		_add_cylinder(garden, "%sFountainPedestal" % side_name,
 			fountain_at + Vector3.UP * 4.2, 2.0, 4.2,
@@ -646,10 +674,6 @@ func _build_arrival_gate_garden(parent: Node3D) -> void:
 		_build_faceted_ceremonial_crystal(garden, "%sFountainCrown" % side_name,
 			fountain_at + Vector3.UP * 9.3, 6.0, 1.05, _materials.heart_cyan)
 
-		for cypress_index in 2:
-			_build_cypress(garden,
-				Vector3(side * 118.0, 1.15, 760.0 + float(cypress_index) * 120.0),
-				24.0, _materials.purple_leaf if side < 0.0 else _materials.pink_leaf)
 
 
 func _build_castle_approach_bridge() -> void:

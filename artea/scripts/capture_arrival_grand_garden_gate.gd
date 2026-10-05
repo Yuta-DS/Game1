@@ -45,9 +45,9 @@ func _capture() -> void:
 	camera.look_at(Vector3(0.0, 34.0, 820.0), Vector3.UP)
 	await _save("01_grand_gate_approach")
 
-	camera.fov = 55.0
-	camera.position = Vector3(112.0, 80.0, 686.0)
-	camera.look_at(Vector3(0.0, 14.0, 805.0), Vector3.UP)
+	camera.fov = 58.0
+	camera.position = Vector3(118.0, 108.0, 642.0)
+	camera.look_at(Vector3(0.0, 12.0, 820.0), Vector3.UP)
 	await _save("02_gate_garden_overview")
 
 	camera.fov = 50.0
