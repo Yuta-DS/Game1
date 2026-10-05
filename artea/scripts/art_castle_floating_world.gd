@@ -420,19 +420,58 @@ func _build_tree_of_life_ground_finish(island: Node3D) -> void:
 func _build_arrival_island() -> void:
 	var island := Node3D.new()
 	island.name = "ArrivalIsland"
-	island.set_meta("design_revision", "grand_garden_gate_v1")
+	island.set_meta("design_revision", "grand_garden_gate_v2_patterned_court")
 	island.set_meta("south_watchtower_removed", true)
 	island.set_meta("garden_surrounds_gate", true)
 	add_child(island)
 	_build_island_foundation(island, SOUTH_GATE, 155.0, 42.0, 28)
-	_add_box(island, "ArrivalPromenade", Vector3(0.0, 0.3, 760.0), Vector3(86.0, 1.0, 180.0), _materials.stone, true)
-	_add_box(island, "ArrivalMosaic", Vector3(0.0, 1.0, 786.0), Vector3(38.0, 0.8, 66.0), _materials.aqua_glass, false)
-	for step in 6:
-		var z := 774.0 + float(step) * 14.0
-		_add_box(island, "MosaicRune_%02d" % step, Vector3(0.0, 1.7, z),
-			Vector3(18.0, 0.35, 2.1), _materials.gold, false)
+	_add_box(island, "ArrivalPromenade", Vector3(0.0, 0.3, 760.0),
+		Vector3(86.0, 1.0, 180.0), _materials.forecourt_ivory, true)
+	_build_arrival_patterned_court(island)
 	_build_arrival_grand_gate(island)
 	_build_arrival_gate_garden(island)
+
+
+func _build_arrival_patterned_court(parent: Node3D) -> void:
+	var paving := Node3D.new()
+	paving.name = "GrandGatePatternedCourt"
+	paving.set_meta("paving_panel_count", 32)
+	paving.set_meta("processional_path_width_m", 26.0)
+	paving.set_meta("continuous_cyan_wayfinding", true)
+	paving.set_meta("ground_design", "warm_ivory_and_sage_constellation_paving")
+	parent.add_child(paving)
+
+	# A warm stone processional path now joins the bridge directly to the gate.
+	# The former single cyan rectangle becomes a restrained centre seam, keeping
+	# the celestial wayfinding language without washing out the whole plaza.
+	_add_bevel_box(paving, "ArrivalMosaic", Vector3(0.0, 0.88, 755.0),
+		Vector3(26.0, 0.12, 170.0), 1.0, _materials.heart_path)
+	_add_box(paving, "ProcessionalCyanSeam", Vector3(0.0, 0.97, 755.0),
+		Vector3(1.15, 0.07, 170.0), _materials.heart_cyan, false)
+	for marker_index in 9:
+		var marker_z := 680.0 + float(marker_index) * 19.0
+		_add_bevel_box(paving, "MosaicRune_%02d" % (marker_index + 1),
+			Vector3(0.0, 1.04, marker_z), Vector3(12.0, 0.10, 1.25),
+			0.24, _materials.gold)
+
+	# Large inset pavers give the garden rooms a readable floor and expose slim
+	# seams of the original structural slab. They are visual-only so the player
+	# keeps one smooth collision surface across the entire court.
+	for row_index in 8:
+		for column_index in 4:
+			var x := -55.5 + float(column_index) * 37.0
+			var z := 686.0 + float(row_index) * 23.0
+			var panel_material: Material = _materials.forecourt_ivory \
+				if (row_index + column_index) % 2 == 0 else _materials.heart_path
+			_add_bevel_box(paving,
+				"CourtPaver_%02d_%02d" % [row_index + 1, column_index + 1],
+				Vector3(x, 0.86, z), Vector3(33.0, 0.08, 19.0), 0.65,
+				panel_material)
+	for side_value in [-1.0, 1.0]:
+		var side: float = side_value
+		_add_box(paving, "CourtGoldEdge_%s" % ("West" if side < 0.0 else "East"),
+			Vector3(side * 14.6, 0.99, 755.0), Vector3(0.38, 0.09, 170.0),
+			_materials.gold, false)
 
 
 func _build_arrival_grand_gate(parent: Node3D) -> void:
@@ -500,12 +539,17 @@ func _build_arrival_gate_garden(parent: Node3D) -> void:
 	var garden := Node3D.new()
 	garden.name = "GrandGateGarden"
 	garden.set_meta("symmetrical_bed_count", 8)
+	garden.set_meta("design_revision", "layered_celestial_garden_v2")
+	garden.set_meta("garden_tree_count", 4)
+	garden.set_meta("flower_cluster_count", 16)
 	garden.set_meta("central_fountain", true)
 	garden.set_meta("clear_route_width_m", 18.0)
 	garden.set_meta("grounded_landscaping", true)
 	parent.add_child(garden)
 
 	# A low fountain forms the garden centre while two broad paths remain open.
+	_add_cylinder(garden, "FountainGardenTerrace", Vector3(0.0, 0.98, 742.0),
+		17.0, 0.18, _materials.forecourt_lawn, false, 18)
 	_add_cylinder(garden, "FountainOuterBasin", Vector3(0.0, 1.25, 742.0),
 		13.0, 2.5, _materials.heart_ivory_shadow, false, 18)
 	_add_cylinder(garden, "FountainWater", Vector3(0.0, 2.55, 742.0),
@@ -526,18 +570,37 @@ func _build_arrival_gate_garden(parent: Node3D) -> void:
 			_add_bevel_box(garden, "%sGardenSoil_%02d" % [side_name, bed_index + 1],
 				bed_position + Vector3.UP * 0.72, Vector3(20.5, 0.32, 14.5), 2.2,
 				_materials.forecourt_soil)
-			for shrub_index in 3:
+			_add_bevel_box(garden, "%sGardenLawn_%02d" % [side_name, bed_index + 1],
+				bed_position + Vector3.UP * 0.91, Vector3(18.8, 0.12, 12.8), 2.0,
+				_materials.forecourt_lawn)
+			for shrub_index in 5:
+				var shrub_x := -6.4 + float(shrub_index % 3) * 6.4
+				var shrub_z := -3.2 if shrub_index < 3 else 3.2
 				var shrub := _add_sphere(garden,
 					"%sGardenShrub_%02d_%02d" % [side_name, bed_index + 1, shrub_index + 1],
-					bed_position + Vector3(-6.0 + float(shrub_index) * 6.0, 2.5, 0.0),
-					Vector3(2.8, 1.8, 2.6), _materials.forecourt_lawn)
+					bed_position + Vector3(shrub_x, 2.35, shrub_z),
+					Vector3(2.5, 1.55, 2.3), _materials.green)
 				(shrub.mesh as SphereMesh).radial_segments = 6
 				(shrub.mesh as SphereMesh).rings = 2
+			for flower_index in 2:
+				var flower := _add_sphere(garden,
+					"%sGardenFlower_%02d_%02d" % [side_name, bed_index + 1, flower_index + 1],
+					bed_position + Vector3(-4.0 + float(flower_index) * 8.0, 2.05,
+						0.8 if flower_index == 0 else -0.8),
+					Vector3(1.25, 0.72, 1.25),
+					_materials.pink_leaf if (bed_index + flower_index) % 2 == 0 \
+					else _materials.purple_leaf)
+				(flower.mesh as SphereMesh).radial_segments = 6
+				(flower.mesh as SphereMesh).rings = 2
 			if bed_index % 2 == 0:
 				_build_faceted_ceremonial_crystal(garden,
 					"%sGardenCrystal_%02d" % [side_name, bed_index + 1],
 					bed_position + Vector3.UP * 3.8, 4.3, 0.65,
 					_materials.heart_lavender if side < 0.0 else _materials.heart_cyan)
+			else:
+				_build_ceremonial_faceted_tree(garden,
+					"%sGardenTree_%02d" % [side_name, bed_index + 1],
+					bed_position + Vector3(0.0, 1.0, 0.0), 12.0)
 		_build_cypress(garden, Vector3(side * 91.0, 2.0, 790.0),
 			28.0, _materials.purple_leaf if side < 0.0 else _materials.pink_leaf)
 

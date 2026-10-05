@@ -82,8 +82,10 @@ func _run() -> void:
 	var arrival := world.get_node("ArrivalIsland") as Node3D
 	var grand_gate := arrival.get_node_or_null("ArtCastleGalaxyGrandGate") as Node3D
 	var gate_garden := arrival.get_node_or_null("GrandGateGarden") as Node3D
+	var patterned_court := arrival.get_node_or_null("GrandGatePatternedCourt") as Node3D
 	var south_removal := world.get_node_or_null("SouthObservatoryRemoved") as Node3D
-	if grand_gate == null or gate_garden == null or south_removal == null \
+	if grand_gate == null or gate_garden == null or patterned_court == null \
+			or south_removal == null \
 			or arrival.get_node_or_null("ARTCASTLEGALAXYPortalFrame") != null \
 			or world.get_node_or_null("SouthObservatory") != null \
 			or world.get_node_or_null("SouthObservatoryBridge") != null \
@@ -94,6 +96,12 @@ func _run() -> void:
 			or not bool(south_removal.get_meta("tower_removed", false)) \
 			or int(gate_garden.get_meta("symmetrical_bed_count", 0)) != 8 \
 			or gate_garden.find_children("*GardenSoil_*", "MeshInstance3D", true, false).size() != 8 \
+			or gate_garden.find_children("*GardenLawn_*", "MeshInstance3D", true, false).size() != 8 \
+			or gate_garden.find_children("*GardenFlower_*", "MeshInstance3D", true, false).size() != 16 \
+			or gate_garden.find_children("*GardenTree_*", "Node3D", true, false).size() != 4 \
+			or int(patterned_court.get_meta("paving_panel_count", 0)) != 32 \
+			or patterned_court.find_children("CourtPaver_*", "MeshInstance3D", true, false).size() != 32 \
+			or patterned_court.get_node_or_null("ProcessionalCyanSeam") == null \
 			or gate_garden.get_node_or_null("FountainWater") == null:
 		_fail("arrival gold rectangle, watchtower, or surrounding gate garden is unfinished")
 		return
