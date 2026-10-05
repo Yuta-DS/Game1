@@ -259,6 +259,9 @@ func _run() -> void:
 		"the older curved garden frame must remain part of Island Two")
 	var gate := world.get_node("WorldOneGeometry/SavedQuestProgressionGates/QuestGate_2") as AnimatableBody3D
 	assert(str(gate.get_meta("custom_gate_motion")) == "island_two_memory_hinges")
+	assert(str(gate.get_meta("gate_visual_family", "")) == "heavenly_star_gate")
+	assert(gate.has_node("HeavenlyStarGateFamilyFacade/HeavenlyStarKeystone"),
+		"Island Two's arrival gate uses the Island One heavenly-star gate family")
 	assert(not (gate.get_node("Barrier") as MeshInstance3D).visible)
 	assert(gate.has_node("IslandTwoMemoryGate/ArchiveWisdomKeystone"))
 	assert(gate.has_node("IslandTwoMemoryGate/WestMemoryLeaf/EvidenceMemoryWingBraceUpper"))

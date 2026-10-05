@@ -38,6 +38,15 @@ func _run() -> void:
 	var east_closed := east.position
 	assert(str(gate.get_node("HeavenlyThresholdCourt").get_meta("mass_clearance_rule", "")).contains(
 		"reserved inward swing envelope"))
+	var perimeter := gate.get_node(
+		"HeavenlyThresholdCourt/CollisionBackedGatePerimeter") as Node3D
+	assert(float(perimeter.get_meta("clear_opening_width_m", 0.0)) >= 11.8,
+		"the Island One gate walls preserve the full principal passage")
+	for side in ["West", "East"]:
+		assert(perimeter.get_node_or_null("%sIvoryDefenceWallCollision" % side) is StaticBody3D,
+			"both perimeter wings must carry primitive collision")
+		assert(perimeter.get_node_or_null("%sWingFoundationCollision" % side) is StaticBody3D,
+			"both wall foundations must stop the player")
 
 	# Exercise the eight-bearing composition. The +1/+2/−2 couplings require
 	# observation and planning; this six-move route discovers Calm Contrast.

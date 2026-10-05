@@ -642,6 +642,9 @@ func _run() -> void:
 		"the Island 3 route cleanup finds and removes the former purple gate")
 	for candidate in geometry.find_children("QuestGate_4", "AnimatableBody3D", true, false):
 		var gate := candidate as AnimatableBody3D
+		assert(str(gate.get_meta("gate_visual_family", "")) == "heavenly_star_gate")
+		assert(gate.has_node("HeavenlyStarGateFamilyFacade/HeavenlyStarKeystone"),
+			"Island Three's sanctuary threshold uses the Island One gate family")
 		var barrier := gate.get_node_or_null("Barrier") as MeshInstance3D
 		assert(barrier == null or not barrier.visible,
 			"the purple barrier between the storm court and tree sanctuary is removed")

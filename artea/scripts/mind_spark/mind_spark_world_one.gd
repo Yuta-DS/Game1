@@ -249,6 +249,7 @@ func build_world() -> void:
 		load("res://scripts/mind_spark/island_two_memory_campus.gd").apply(self)
 		_finalize_quest_object_story_layout()
 		_redesign_island_three(geometry)
+		_standardize_world_one_gate_family(geometry)
 		_unify_island_one_tree_and_quest_style()
 		_install_three_island_environment_audio(geometry)
 	_install_player_spawn_marker(geometry)
@@ -2635,6 +2636,7 @@ func _build_heavenly_gate_surroundings(gate: Node3D) -> void:
 	court.set_meta("mass_clearance_rule", "each moving leaf stays inside its reserved inward swing envelope and outside the stone piers")
 	court.set_meta("door_configuration", "two opposed inward-swinging hinged leaves")
 	gate.add_child(court)
+	_build_heavenly_gate_perimeter_walls(court)
 	_add_brick(court, "CelestialThresholdSlab", Vector3(0, 0.20, 0.45),
 		Bricks.build_bevel_box(Vector3(14.2, 0.42, 5.4), 0.18), _materials.sanctum_ivory)
 	_add_brick(court, "ThresholdGiltLeadingEdge", Vector3(0, 0.46, -2.18),
@@ -2766,6 +2768,120 @@ func _build_heavenly_gate_surroundings(gate: Node3D) -> void:
 				stem_top, Vector3(0.42, 0.28, 0.42),
 				_materials.arrival_glass if stem_index % 2 == 0 else _materials.sanctum_ivory)
 		_add_zone_light(court, Vector3(garden_x, 4.0, -3.4), Color("dffcff"), 8.0, 0.65)
+
+
+func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
+	# The gate used to stand as an isolated machine on the open promenade. These
+	# solid, stepped wings make it a defended threshold while stopping well clear
+	# of the moving leaves and the full 11.8 m player/camera opening.
+	var walls := Node3D.new()
+	walls.name = "CollisionBackedGatePerimeter"
+	walls.set_meta("preserve_authored_nodes", true)
+	walls.set_meta("clear_opening_width_m", 11.8)
+	walls.set_meta("collision_backed", true)
+	walls.set_meta("architectural_family", "heavenly_star_gate")
+	walls.set_meta("purpose", "protective side walls around the Island One gate without narrowing its route")
+	court.add_child(walls)
+	for side in [-1.0, 1.0]:
+		var suffix := "West" if side < 0.0 else "East"
+		var yaw: float = 0.0
+		var wing_x: float = float(side) * 13.7
+		# Step the wings behind the leaf plane. The garden-side saddle crosses the
+		# outer diagonal of this court and must remain continuously walkable.
+		var wing_z: float = 7.0
+		_add_box(walls, "%sWingFoundation" % suffix,
+			Vector3(wing_x, 0.65, wing_z), Vector3(3.0, 1.30, 14.0),
+			_materials.shared_style_charcoal, true, yaw)
+		_add_box(walls, "%sIvoryDefenceWall" % suffix,
+			Vector3(wing_x, 4.25, wing_z), Vector3(2.35, 6.0, 13.2),
+			_materials.sanctum_ivory, true, yaw)
+		_add_brick(walls, "%sWallCoping" % suffix,
+			Vector3(wing_x, 7.42, wing_z),
+			Bricks.build_bevel_box(Vector3(2.8, 0.55, 13.7), 0.16),
+			_materials.sanctum_ivory, yaw)
+		_add_box(walls, "%sAetherInset" % suffix,
+			Vector3(wing_x - side * 1.22, 4.35, wing_z),
+			Vector3(0.12, 2.8, 6.4), _materials.arrival_glass, false, yaw)
+		for buttress_index in 2:
+			var buttress_x: float = wing_x + float(side) * 1.25
+			_add_box(walls, "%sWallButtress_%02d" % [suffix, buttress_index + 1],
+				Vector3(buttress_x, 2.65, wing_z - 4.0 + float(buttress_index) * 8.0),
+				Vector3(1.05, 4.1, 1.4),
+				_materials.celestial_floor, true, yaw)
+		_add_brick(walls, "%sBoundaryCrystal" % suffix,
+			Vector3(side * 13.7, 9.0, 13.2), Bricks.build_crystal(0.9, 3.2, 0.28, 8),
+			_materials.arrival_glass)
+
+
+func _standardize_world_one_gate_family(geometry: Node3D) -> void:
+	# Quest state and motion stay on the existing gate bodies. This pass gives the
+	# Island Two and Three thresholds the same readable ivory/gold/cyan family as
+	# Island One instead of reintroducing a second progression system.
+	var standardized := 0
+	for gate_number in [2, 3, 4]:
+		var gate := geometry.get_node_or_null(
+			"SavedQuestProgressionGates/QuestGate_%d" % gate_number) as AnimatableBody3D
+		if gate == null:
+			continue
+		_build_heavenly_star_gate_family_facade(gate, gate_number)
+		standardized += 1
+	set_meta("standardized_heavenly_star_gate_count", standardized)
+	set_meta("world_one_gate_family_revision", "heavenly_star_gate_family_v1")
+
+
+func _build_heavenly_star_gate_family_facade(gate: AnimatableBody3D,
+		gate_number: int) -> void:
+	if gate.has_node("HeavenlyStarGateFamilyFacade"):
+		return
+	var facade := Node3D.new()
+	facade.name = "HeavenlyStarGateFamilyFacade"
+	facade.set_meta("preserve_authored_nodes", true)
+	facade.set_meta("source_gate", "IslandOneHeavenlyStarGate")
+	facade.set_meta("architectural_family", "heavenly_star_gate")
+	facade.set_meta("preserves_gate_controller", true)
+	facade.set_meta("clear_opening_width_m", 16.0)
+	facade.set_meta("gate_number", gate_number)
+	gate.add_child(facade)
+
+	# Gate Two and Three already own physical hinged archive leaves. Gate Four is
+	# an always-clear sanctuary threshold, so this shared frame adds no blocker.
+	for side in [-1.0, 1.0]:
+		var suffix := "West" if side < 0.0 else "East"
+		var x: float = float(side) * 11.35
+		_add_brick(facade, "%sHeavenlyPlinth" % suffix, Vector3(x, 0.68, 0.55),
+			Bricks.build_bevel_box(Vector3(4.1, 1.35, 4.2), 0.24), _materials.sanctum_ivory)
+		_add_box(facade, "%sCharcoalRecess" % suffix, Vector3(x, 7.15, 0.35),
+			Vector3(3.0, 11.8, 2.25), _materials.shared_style_charcoal, false)
+		_add_brick(facade, "%sIvoryTower" % suffix, Vector3(x, 7.2, 0.65),
+			Bricks.build_bevel_box(Vector3(3.8, 12.4, 3.4), 0.28), _materials.sanctum_ivory)
+		_add_box(facade, "%sAetherWindow" % suffix, Vector3(x, 7.4, -1.10),
+			Vector3(0.65, 6.6, 0.12), _materials.arrival_glass, false)
+		_add_brick(facade, "%sTowerCapital" % suffix, Vector3(x, 13.70, 0.55),
+			Bricks.build_bevel_box(Vector3(4.7, 0.85, 4.0), 0.20), _materials.sanctum_ivory)
+		_add_brick(facade, "%sTowerFinial" % suffix, Vector3(x, 15.25, 0.30),
+			Bricks.build_crystal(0.62, 2.2, 0.22, 8),
+			_materials.astral_lavender if side < 0.0 else _materials.arrival_glass)
+
+	var arch_center := Vector3(0, 13.35, -0.25)
+	for segment in 14:
+		var a := PI - PI * float(segment) / 14.0
+		var b := PI - PI * float(segment + 1) / 14.0
+		var start := arch_center + Vector3(cos(a) * 10.7, sin(a) * 7.2, 0)
+		var finish := arch_center + Vector3(cos(b) * 10.7, sin(b) * 7.2, 0)
+		_add_cable_between(facade, "IvoryCrownArch_%02d" % (segment + 1),
+			start, finish, 0.58, 0.58, _materials.sanctum_ivory, 8)
+		if segment % 2 == 0:
+			_add_cable_between(facade, "GiltCrownReveal_%02d" % (segment + 1),
+				start + Vector3(0, 0, -0.38), finish + Vector3(0, 0, -0.38),
+				0.14, 0.14, _materials.gold, 6)
+	_add_brick(facade, "HeavenlyStarKeystone", Vector3(0, 21.35, -0.55),
+		Bricks.build_crystal(1.15, 3.1, 0.24, 8), _materials.green_glow)
+	_add_torus(facade, "HeavenlyStarBearing", Vector3(0, 19.85, -0.35),
+		1.55, 1.92, _materials.astral_brass, Vector3(90, 0, 0))
+	_add_brick(facade, "HeavenlyThresholdSill", Vector3(0, 0.30, 0.15),
+		Bricks.build_bevel_box(Vector3(18.0, 0.32, 3.2), 0.12), _materials.sanctum_ivory)
+	gate.set_meta("gate_visual_family", "heavenly_star_gate")
+	gate.set_meta("visual_standardized_from", "IslandOneHeavenlyStarGate")
 
 
 func _build_reference_heavenly_slide_portal(court: Node3D) -> void:
