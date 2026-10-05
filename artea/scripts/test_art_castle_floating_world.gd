@@ -29,6 +29,28 @@ func _run() -> void:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
+	var sanctuary := world.get_node("CentralSanctuary") as Node3D
+	var tree_ground := sanctuary.get_node_or_null("TreeOfLifeGroundFinish") as Node3D
+	if not bool(sanctuary.get_meta("black_cat_removed", false)) \
+			or sanctuary.get_node_or_null("BlackCatGuide") != null \
+			or sanctuary.get_node_or_null("OuterGardenRing") != null \
+			or sanctuary.get_node_or_null("InnerGardenRing") != null \
+			or not sanctuary.find_children("OpenArch", "Node3D", true, false).is_empty():
+		_fail("Tree of Life still contains the black cat, prototype rings, or gray/pink arches")
+		return
+	if tree_ground == null \
+			or str(tree_ground.get_meta("design_revision", "")) != "faceted_processional_ground_v2" \
+			or not bool(tree_ground.get_meta("matches_neighboring_ground_palette", false)) \
+			or tree_ground.find_children("TreeProcessionalPath_*", "MeshInstance3D", false, false).size() != 4 \
+			or tree_ground.find_children("TreeGardenIvoryBorder_*", "MeshInstance3D", false, false).size() != 8 \
+			or tree_ground.find_children("TreeGardenPlantingBed_*", "MeshInstance3D", false, false).size() != 8 \
+			or tree_ground.find_children("TreeWayfinding_*", "MeshInstance3D", false, false).size() != 16:
+		_fail("Tree of Life ground does not use the finished neighboring plaza language")
+		return
+	var tree_court := sanctuary.get_node("TreeCourt") as MeshInstance3D
+	if tree_court.material_override != world.get("_materials").heart_path:
+		_fail("Tree Court still uses the flat gray prototype material")
+		return
 	for observatory_name in ["NorthObservatory",
 			"EastObservatory", "SouthObservatory"]:
 		var observatory := world.get_node(observatory_name) as Node3D

@@ -318,13 +318,25 @@ func _build_materials() -> void:
 func _build_central_sanctuary() -> void:
 	var island := Node3D.new()
 	island.name = "CentralSanctuary"
+	island.set_meta("design_revision", "tree_court_faceted_plaza_v2")
+	island.set_meta("black_cat_removed", true)
+	island.set_meta("prototype_garden_rings_removed", true)
+	island.set_meta("gray_pink_radial_arches_removed", true)
 	add_child(island)
 	_build_island_foundation(island, HUB, 220.0, 58.0, 40)
 
-	# Concentric paths and planted rings reproduce the round garden composition.
-	_add_torus(island, "OuterGardenRing", HUB + Vector3(0.0, 0.35, 0.0), 153.0, 165.0, _materials.purple)
-	_add_cylinder(island, "TreeCourt", HUB + Vector3(0.0, 0.1, 0.0), 108.0, 1.4, _materials.stone, true, 48)
-	_add_torus(island, "InnerGardenRing", HUB + Vector3(0.0, 1.0, 0.0), 62.0, 68.0, _materials.aqua)
+	# The original court was a broad gray disc between two luminous rings. Use the
+	# same calm stone, ivory, planted green and cyan-inlay language as the finished
+	# neighboring districts while preserving the existing walkable collision.
+	var sanctuary_deck := island.get_node_or_null("WalkableDeck") as MeshInstance3D
+	if sanctuary_deck != null:
+		sanctuary_deck.material_override = _materials.forecourt_lawn
+	var sanctuary_underside := island.get_node_or_null("FloatingUnderside") as MeshInstance3D
+	if sanctuary_underside != null:
+		sanctuary_underside.material_override = _materials.heart_rock_mid
+	_add_cylinder(island, "TreeCourt", HUB + Vector3(0.0, 0.1, 0.0), 108.0, 1.4,
+		_materials.heart_path, true, 48)
+	_build_tree_of_life_ground_finish(island)
 
 	for index in 72:
 		var angle := TAU * float(index) / 72.0
@@ -333,8 +345,6 @@ func _build_central_sanctuary() -> void:
 			index % 3 == 0)
 
 	_build_life_tree(island, HUB)
-	_build_cat_companion(island, HUB + Vector3(-18.0, 2.0, -68.0))
-	_build_radial_arches(island)
 
 	_add_bridge("SouthArrivalBridge", Vector3(0.0, 0.0, 1422.0), Vector3(0.0, 0.0, 975.0), 62.0)
 	_add_bridge("MindBridge", Vector3(-218.0, 0.0, 1640.0), Vector3(-430.0, 0.0, 1640.0), 58.0)
@@ -343,6 +353,68 @@ func _build_central_sanctuary() -> void:
 	# deep step that previously exposed the dark island edge.
 	_add_bridge("HeartBridge", Vector3(0.0, 0.0, 1858.0), Vector3(0.0, 5.02, 2120.0), 58.0)
 	_add_bridge("CreatorBridge", Vector3(218.0, 0.0, 1640.0), Vector3(410.0, 0.0, 1640.0), 58.0)
+
+
+func _build_tree_of_life_ground_finish(island: Node3D) -> void:
+	var ground := Node3D.new()
+	ground.name = "TreeOfLifeGroundFinish"
+	ground.set_meta("design_revision", "faceted_processional_ground_v2")
+	ground.set_meta("matches_neighboring_ground_palette", true)
+	ground.set_meta("ring_geometry_removed", true)
+	ground.set_meta("clear_tree_door_axis_m", 24.0)
+	ground.set_meta("processional_path_count", 4)
+	ground.set_meta("planted_terrace_count", 8)
+	island.add_child(ground)
+
+	# Four broad axes connect the Tree Court to every bridge without drawing a
+	# replacement circle around the landmark. Their collision comes from the
+	# unchanged island deck and TreeCourt, so the surface stays seam-free.
+	for path_index in 4:
+		var angle := TAU * float(path_index) / 4.0
+		var direction := Vector3(sin(angle), 0.0, cos(angle))
+		var path := _add_bevel_box(ground,
+			"TreeProcessionalPath_%02d" % (path_index + 1),
+			HUB + direction * 160.0 + Vector3.UP * 0.84,
+			Vector3(26.0, 0.10, 104.0), 0.75, _materials.heart_path)
+		path.rotation.y = angle
+		for marker_index in 4:
+			var marker_distance := 119.0 + float(marker_index) * 23.0
+			var marker := _add_bevel_box(ground,
+				"TreeWayfinding_%02d_%02d" % [path_index + 1, marker_index + 1],
+				HUB + direction * marker_distance + Vector3.UP * 0.92,
+				Vector3(4.2, 0.035, 0.72), 0.06, _materials.heart_light)
+			marker.rotation.y = angle
+
+	# Eight offset planting terraces fill the former ring zone as individual
+	# gardens. Their gaps keep every bridge approach and the tree doorway legible.
+	for terrace_index in 8:
+		var angle := deg_to_rad(22.5 + float(terrace_index) * 45.0)
+		var radial := Vector3(sin(angle), 0.0, cos(angle))
+		var center := HUB + radial * 145.0
+		var border := _add_bevel_box(ground,
+			"TreeGardenIvoryBorder_%02d" % (terrace_index + 1),
+			center + Vector3.UP * 0.88, Vector3(34.0, 0.50, 19.0),
+			1.25, _materials.forecourt_ivory)
+		border.rotation.y = angle + PI * 0.5
+		var soil := _add_bevel_box(ground,
+			"TreeGardenPlantingBed_%02d" % (terrace_index + 1),
+			center + Vector3.UP * 1.16, Vector3(30.5, 0.10, 15.5),
+			1.05, _materials.forecourt_soil)
+		soil.rotation.y = angle + PI * 0.5
+		for planting_index in 3:
+			var tangent := Vector3(radial.z, 0.0, -radial.x)
+			var planting_at := center + tangent * (-8.0 + float(planting_index) * 8.0)
+			var shrub := _add_sphere(ground,
+				"TreeGardenShrub_%02d_%02d" % [terrace_index + 1, planting_index + 1],
+				planting_at + Vector3.UP * 2.0, Vector3(3.1, 1.65, 2.4),
+				_materials.forecourt_lawn)
+			(shrub.mesh as SphereMesh).radial_segments = 6
+			(shrub.mesh as SphereMesh).rings = 2
+		if terrace_index % 2 == 0:
+			_build_faceted_ceremonial_crystal(ground,
+				"TreeGardenCrystal_%02d" % (terrace_index + 1),
+				center + Vector3.UP * 3.2, 3.4, 0.52,
+				_materials.heart_cyan if terrace_index % 4 == 0 else _materials.heart_lavender)
 
 
 func _build_arrival_island() -> void:
@@ -7207,31 +7279,6 @@ func _add_trunk_collision_box(parent: Node3D, body_name: String,
 	shape_node.shape = shape
 	body.add_child(shape_node)
 	parent.add_child(body)
-
-
-func _build_cat_companion(parent: Node3D, position: Vector3) -> void:
-	var cat := Node3D.new()
-	cat.name = "BlackCatGuide"
-	cat.position = position
-	parent.add_child(cat)
-	_add_sphere(cat, "Body", Vector3(0.0, 5.0, 0.0), Vector3(5.5, 7.0, 4.5), _materials.black)
-	_add_sphere(cat, "Head", Vector3(0.0, 12.0, 0.0), Vector3(4.8, 4.8, 4.8), _materials.black)
-	for side in [-1.0, 1.0]:
-		var ear := MeshInstance3D.new()
-		var mesh := PrismMesh.new()
-		mesh.size = Vector3(3.5, 5.0, 2.5)
-		ear.mesh = mesh
-		ear.position = Vector3(side * 2.7, 16.0, 0.0)
-		ear.material_override = _materials.black
-		cat.add_child(ear)
-		_add_sphere(cat, "Eye", Vector3(side * 1.8, 12.7, -4.2), Vector3(0.75, 1.0, 0.45), _materials.gold)
-
-
-func _build_radial_arches(parent: Node3D) -> void:
-	var configs := [HUB + Vector3(-145.0, 0.0, -145.0), HUB + Vector3(145.0, 0.0, -145.0),
-		HUB + Vector3(-145.0, 0.0, 145.0), HUB + Vector3(145.0, 0.0, 145.0)]
-	for index in configs.size():
-		_build_arch(parent, configs[index], 34.0, 58.0, 12.0, _materials.ivory)
 
 
 func _build_easel(parent: Node3D, position: Vector3, index: int) -> void:
