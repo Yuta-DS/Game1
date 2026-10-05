@@ -43,6 +43,19 @@ func _run() -> void:
 	assert(repairs.find_children("RepairedBay_*", "MeshInstance3D", true, false).size() >= 100 \
 			and repairs.find_children("RepairedBay_*Collision", "StaticBody3D", true, false).size() >= 100,
 		"the independent invisible cliff boundary collision must remain complete")
+	var island_three_repairs := world.get_node(
+		"WorldOneGeometry/IslandThreePerimeterRepairs") as Node3D
+	assert(bool(island_three_repairs.get_meta("web_low_poly_perimeter", false)),
+		"Island Three must use the same reduced Web railing kit as Island Two")
+	var island_three_bays := island_three_repairs.find_children(
+		"rail_bay", "MeshInstance3D", true, false)
+	var island_three_posts := island_three_repairs.find_children(
+		"rail_post", "MeshInstance3D", true, false)
+	assert(island_three_bays.size() >= 20 and island_three_posts.size() >= 20,
+		"Island Three keeps the complete shared civic barrier silhouette on Web")
+	assert(_mesh_triangles((island_three_bays[0] as MeshInstance3D).mesh) <= 1200 \
+			and _mesh_triangles((island_three_posts[0] as MeshInstance3D).mesh) <= 850,
+		"Island Three's shared barrier uses the reduced Web meshes")
 	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
 	if FileAccess.file_exists(world.object_state_store_path):
 		DirAccess.remove_absolute(world.object_state_store_path)

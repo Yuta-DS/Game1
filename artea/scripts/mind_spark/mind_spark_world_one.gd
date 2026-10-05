@@ -7138,9 +7138,14 @@ func _redesign_island_three(geometry: Node3D) -> void:
 		136.0, .18, _materials.island_three_paving_base, false, 48)
 	var perimeter_repair := geometry.get_node_or_null("IslandThreePerimeterRepairs") as Node3D
 	if perimeter_repair != null:
+		# Keep the authored ivory, gold-scrollwork and warm-lantern materials from
+		# the same railing kit used on Islands One and Two. Earlier code flattened
+		# every surface to ivory, which erased the shared architectural language.
 		for imported_railing in perimeter_repair.find_children("*", "MeshInstance3D", true, false):
-			(imported_railing as MeshInstance3D).material_override = _materials.celestial_floor
-			(imported_railing as MeshInstance3D).set_meta("island_three_rail_restyled", "ivory")
+			(imported_railing as MeshInstance3D).set_meta(
+				"island_three_rail_restyled", "shared_ivory_gold_lantern_kit")
+		perimeter_repair.set_meta("barrier_style", "island_one_two_civic_railing")
+		perimeter_repair.set_meta("continuous_exposed_edge_coverage", true)
 	var return_arch := sanctuary_zone.get_node_or_null("ReturnWorldGate") as Node3D
 	if return_arch != null:
 		for arch_piece in return_arch.find_children("*", "MeshInstance3D", true, false):
@@ -9564,16 +9569,16 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 	var repairs := Node3D.new()
 	repairs.name = ["IslandOnePerimeterRepairs", "IslandTwoPerimeterRepairs", "IslandThreePerimeterRepairs"][first_zone / 2]
 	repairs.set_meta("preserve_authored_nodes", true)
-	var web_island_two_perimeter := first_zone == 2 and _uses_web_render_budget()
+	var web_shared_perimeter := first_zone >= 2 and _uses_web_render_budget()
 	var rail_bay_scene: PackedScene = preload(
 		"res://assets3D/mind_spark/echo_garden_benchmark/export/rail_bay_web.glb") \
-		if web_island_two_perimeter else preload(
+		if web_shared_perimeter else preload(
 		"res://assets3D/mind_spark/echo_garden_benchmark/export/rail_bay.glb")
 	var rail_post_scene: PackedScene = preload(
 		"res://assets3D/mind_spark/echo_garden_benchmark/export/rail_post_web.glb") \
-		if web_island_two_perimeter else preload(
+		if web_shared_perimeter else preload(
 		"res://assets3D/mind_spark/echo_garden_benchmark/export/rail_post.glb")
-	if web_island_two_perimeter:
+	if web_shared_perimeter:
 		repairs.set_meta("web_low_poly_perimeter", true)
 		repairs.set_meta("web_rail_source_triangle_reduction", "6488->1167 bay; 4146->829 post")
 	parent.add_child(repairs)
@@ -9597,30 +9602,26 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 				if not exposed and run_start >= 0:
 					var a := start + float(run_start)*TAU/144.0
 					var b := start + float(step)*TAU/144.0
-					if first_zone == 4:
-						_build_island_three_edge_run(repairs, center, radius - 8.0, a, b,
-							zone_index, bay)
-					else:
-						var panel := rail_bay_scene.instantiate() as Node3D
-						panel.name = "ReferenceScrollwork_%d_%d" % [zone_index,bay]
-						panel.position = center
-						panel.rotation.y = (a+b)*.5
-						panel.scale = Vector3.ONE * float(ZONES[zone_index].radius)
-						# Short terminal bays are regenerated in polar coordinates, so
-						# their scrollwork follows the same curvature without shear.
-						if step-run_start != 6:
-							_compress_railing_arc(panel,float(step-run_start)/6.0)
-						repairs.add_child(panel)
-						for end in [a,b]:
-							var key := "ReferencePost_%d_%d" % [zone_index,roundi(fposmod(end,TAU)*144.0/TAU)%144]
-							if repairs.has_node(key):
-								continue
-							var post := rail_post_scene.instantiate() as Node3D
-							post.name = key
-							post.position = center
-							post.rotation.y = end
-							post.scale = Vector3.ONE * float(ZONES[zone_index].radius)
-							repairs.add_child(post)
+					var panel := rail_bay_scene.instantiate() as Node3D
+					panel.name = "ReferenceScrollwork_%d_%d" % [zone_index,bay]
+					panel.position = center
+					panel.rotation.y = (a+b)*.5
+					panel.scale = Vector3.ONE * float(ZONES[zone_index].radius)
+					# Short terminal bays are regenerated in polar coordinates, so
+					# their scrollwork follows the same curvature without shear.
+					if step-run_start != 6:
+						_compress_railing_arc(panel,float(step-run_start)/6.0)
+					repairs.add_child(panel)
+					for end in [a,b]:
+						var key := "ReferencePost_%d_%d" % [zone_index,roundi(fposmod(end,TAU)*144.0/TAU)%144]
+						if repairs.has_node(key):
+							continue
+						var post := rail_post_scene.instantiate() as Node3D
+						post.name = key
+						post.position = center
+						post.rotation.y = end
+						post.scale = Vector3.ONE * float(ZONES[zone_index].radius)
+						repairs.add_child(post)
 					run_start = -1
 		for segment in 144:
 			var angle := TAU * (float(segment) + .5) / 144.0
@@ -9636,13 +9637,9 @@ func _repair_island_one_legacy_openings(parent: Node3D, first_zone := 0) -> void
 				Vector3(length, 10.0, .8), _materials.sanctum_ivory, true, yaw)
 			collision.visible = false
 	if first_zone == 4:
-		# The arrival camera travels tangent to this low rim. Shadows cast by
-		# off-screen parapet facets otherwise detach from their owners and read as
-		# floating black bars across the clean threshold paving.
-		for edge_visual in repairs.find_children("*", "MeshInstance3D", true, false):
-			(edge_visual as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		repairs.set_meta("arrival_safe_shadowing", "offscreen_edge_facets_do_not_cast")
-	if first_zone == 2:
+		repairs.set_meta("barrier_style", "island_one_two_civic_railing")
+		repairs.set_meta("route_openings_preserved", true)
+	if first_zone >= 2:
 		_consolidate_perimeter_posts(repairs)
 
 
