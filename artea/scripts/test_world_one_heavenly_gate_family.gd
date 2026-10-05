@@ -27,12 +27,17 @@ func _run() -> void:
 	for side in ["West", "East"]:
 		assert(perimeter.get_node("%sIvoryDefenceWallCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sWingFoundationCollision" % side) is StaticBody3D)
+		assert(perimeter.get_node("%sGateTowerConnectorWallCollision" % side) is StaticBody3D)
+		assert(perimeter.get_node("%sGateTowerConnectorFoundationCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sConnectedBoundaryOuterWallCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sBoundaryReturnWallCollision" % side) is StaticBody3D)
 	assert(bool(perimeter.get_meta("covers_gate_flanks", false)))
 	assert(bool(perimeter.get_meta("continuous_ground_to_coping", false)))
 	assert(bool(perimeter.get_meta("full_frontage_enclosure", false)))
 	assert(bool(perimeter.get_meta("side_passages_removed", false)))
+	assert(bool(perimeter.get_meta("connected_to_both_gate_towers", false)))
+	assert(bool(perimeter.get_meta("height_matches_gate_tower_capitals", false)))
+	assert(float(perimeter.get_meta("wall_coping_height_m", 0.0)) >= 13.7)
 	assert(float(perimeter.get_meta("connected_boundary_span_m", 0.0)) >= 132.0)
 
 	var geometry := world.get_node("WorldOneGeometry") as Node3D

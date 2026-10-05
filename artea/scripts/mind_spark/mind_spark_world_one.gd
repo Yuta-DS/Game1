@@ -2884,6 +2884,8 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 	walls.set_meta("collision_backed", true)
 	walls.set_meta("architectural_family", "heavenly_star_gate")
 	walls.set_meta("purpose", "protective side walls around the Island One gate without narrowing its route")
+	walls.set_meta("wall_coping_height_m", 13.72)
+	walls.set_meta("gate_tower_connection", "continuous on west and east sides")
 	court.add_child(walls)
 	for side in [-1.0, 1.0]:
 		var suffix := "West" if side < 0.0 else "East"
@@ -2896,23 +2898,23 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 			Vector3(wing_x, 0.65, wing_z), Vector3(3.0, 1.30, 14.0),
 			_materials.shared_style_charcoal, true, yaw)
 		_add_box(walls, "%sIvoryDefenceWall" % suffix,
-			Vector3(wing_x, 4.25, wing_z), Vector3(2.35, 6.0, 13.2),
+			Vector3(wing_x, 7.25, wing_z), Vector3(2.35, 12.0, 13.2),
 			_materials.sanctum_ivory, true, yaw)
 		_add_brick(walls, "%sWallCoping" % suffix,
-			Vector3(wing_x, 7.42, wing_z),
+			Vector3(wing_x, 13.52, wing_z),
 			Bricks.build_bevel_box(Vector3(2.8, 0.55, 13.7), 0.16),
 			_materials.sanctum_ivory, yaw)
 		_add_box(walls, "%sAetherInset" % suffix,
-			Vector3(wing_x - side * 1.22, 4.35, wing_z),
-			Vector3(0.12, 2.8, 6.4), _materials.arrival_glass, false, yaw)
+			Vector3(wing_x - side * 1.22, 7.35, wing_z),
+			Vector3(0.12, 7.2, 6.4), _materials.arrival_glass, false, yaw)
 		for buttress_index in 2:
 			var buttress_x: float = wing_x + float(side) * 1.25
 			_add_box(walls, "%sWallButtress_%02d" % [suffix, buttress_index + 1],
-				Vector3(buttress_x, 2.65, wing_z - 4.0 + float(buttress_index) * 8.0),
-				Vector3(1.05, 4.1, 1.4),
+				Vector3(buttress_x, 5.1, wing_z - 4.0 + float(buttress_index) * 8.0),
+				Vector3(1.05, 9.0, 1.4),
 				_materials.celestial_floor, true, yaw)
 		_add_brick(walls, "%sBoundaryCrystal" % suffix,
-			Vector3(side * 13.7, 9.0, 13.2), Bricks.build_crystal(0.9, 3.2, 0.28, 8),
+			Vector3(side * 13.7, 15.25, 13.2), Bricks.build_crystal(0.9, 3.2, 0.28, 8),
 			_materials.arrival_glass)
 		# Form one uninterrupted wall from the gate tower to the outer edge of the
 		# Island One court. The former short outer panel and covered side opening
@@ -2920,6 +2922,23 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 		# main gate the single deliberate entrance and encloses the complete garden.
 		const BOUNDARY_INNER_EDGE := 8.1
 		const BOUNDARY_OUTER_EDGE := 66.0
+		const GATE_OPENING_HALF_WIDTH := 5.9
+		var connector_width: float = BOUNDARY_INNER_EDGE - GATE_OPENING_HALF_WIDTH
+		var connector_x: float = float(side) * (
+			GATE_OPENING_HALF_WIDTH + connector_width * 0.5)
+		# Bridge the last seam between the perimeter and each gate tower. The
+		# connector begins exactly at the authored 11.8 m opening, so the wall now
+		# reads as one structure without stealing any player clearance.
+		_add_box(walls, "%sGateTowerConnectorFoundation" % suffix,
+			Vector3(connector_x, 0.72, 0.35), Vector3(connector_width, 1.44, 4.2),
+			_materials.shared_style_charcoal, true)
+		_add_box(walls, "%sGateTowerConnectorWall" % suffix,
+			Vector3(connector_x, 7.37, 0.35), Vector3(connector_width, 11.86, 3.0),
+			_materials.sanctum_ivory, true)
+		_add_brick(walls, "%sGateTowerConnectorCoping" % suffix,
+			Vector3(connector_x, 13.72, 0.35),
+			Bricks.build_bevel_box(Vector3(connector_width + 0.45, 0.72, 3.65), 0.20),
+			_materials.sanctum_ivory)
 		var boundary_width: float = BOUNDARY_OUTER_EDGE - BOUNDARY_INNER_EDGE
 		var boundary_x: float = float(side) * (
 			BOUNDARY_INNER_EDGE + boundary_width * 0.5)
@@ -2927,10 +2946,10 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 			Vector3(boundary_x, 0.72, 0.35), Vector3(boundary_width, 1.44, 4.2),
 			_materials.shared_style_charcoal, true)
 		_add_box(walls, "%sConnectedBoundaryOuterWall" % suffix,
-			Vector3(boundary_x, 4.75, 0.35), Vector3(boundary_width, 7.0, 3.0),
+			Vector3(boundary_x, 7.37, 0.35), Vector3(boundary_width, 11.86, 3.0),
 			_materials.sanctum_ivory, true)
 		_add_brick(walls, "%sConnectedBoundaryOuterCoping" % suffix,
-			Vector3(boundary_x, 8.48, 0.35),
+			Vector3(boundary_x, 13.72, 0.35),
 			Bricks.build_bevel_box(Vector3(boundary_width + 0.9, 0.72, 3.65), 0.20),
 			_materials.sanctum_ivory)
 		# Regular piers, glass inlays and lantern crystals keep the long wall tied
@@ -2939,24 +2958,24 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 			var bay_distance := BOUNDARY_INNER_EDGE + 4.4 + float(bay_index) * 8.0
 			var bay_x := float(side) * bay_distance
 			_add_box(walls, "%sBoundaryPier_%02d" % [suffix, bay_index + 1],
-				Vector3(bay_x, 4.3, 0.35), Vector3(1.05, 7.7, 3.55),
+				Vector3(bay_x, 7.35, 0.35), Vector3(1.05, 12.4, 3.55),
 				_materials.celestial_floor, true)
 			_add_box(walls, "%sBoundaryAetherInlay_%02d" % [suffix, bay_index + 1],
-				Vector3(float(side) * (bay_distance + 3.5), 4.85, 1.88),
-				Vector3(5.6, 2.65, 0.12), _materials.arrival_glass, false)
+				Vector3(float(side) * (bay_distance + 3.5), 7.55, 1.88),
+				Vector3(5.6, 5.9, 0.12), _materials.arrival_glass, false)
 			_add_box(walls, "%sBoundaryInnerAetherInlay_%02d" % [suffix, bay_index + 1],
-				Vector3(float(side) * (bay_distance + 3.5), 4.85, -1.18),
-				Vector3(5.6, 2.65, 0.12), _materials.arrival_glass, false)
+				Vector3(float(side) * (bay_distance + 3.5), 7.55, -1.18),
+				Vector3(5.6, 5.9, 0.12), _materials.arrival_glass, false)
 			_add_brick(walls, "%sBoundaryLanternCrystal_%02d" % [suffix, bay_index + 1],
-				Vector3(bay_x, 10.1, 0.35), Bricks.build_crystal(0.58, 2.5, 0.22, 8),
+				Vector3(bay_x, 15.3, 0.35), Bricks.build_crystal(0.58, 2.5, 0.22, 8),
 				_materials.arrival_glass)
 		# Turn the boundary back at both outer ends so side views also show a
 		# closed enclosure rather than another unfinished cut edge.
 		_add_box(walls, "%sBoundaryReturnWall" % suffix,
-			Vector3(side * BOUNDARY_OUTER_EDGE, 4.75, 8.1), Vector3(3.0, 7.0, 16.5),
+			Vector3(side * BOUNDARY_OUTER_EDGE, 7.37, 8.1), Vector3(3.0, 11.86, 16.5),
 			_materials.sanctum_ivory, true)
 		_add_brick(walls, "%sBoundaryReturnCoping" % suffix,
-			Vector3(side * BOUNDARY_OUTER_EDGE, 8.48, 8.1),
+			Vector3(side * BOUNDARY_OUTER_EDGE, 13.72, 8.1),
 			Bricks.build_bevel_box(Vector3(3.65, 0.72, 17.2), 0.20),
 			_materials.sanctum_ivory)
 	walls.set_meta("connected_boundary_span_m", 132.0)
@@ -2964,6 +2983,8 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 	walls.set_meta("continuous_ground_to_coping", true)
 	walls.set_meta("full_frontage_enclosure", true)
 	walls.set_meta("side_passages_removed", true)
+	walls.set_meta("connected_to_both_gate_towers", true)
+	walls.set_meta("height_matches_gate_tower_capitals", true)
 
 
 func _standardize_world_one_gate_family(geometry: Node3D) -> void:

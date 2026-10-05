@@ -47,6 +47,11 @@ func _run() -> void:
 			"both perimeter wings must carry primitive collision")
 		assert(perimeter.get_node_or_null("%sWingFoundationCollision" % side) is StaticBody3D,
 			"both wall foundations must stop the player")
+		assert(perimeter.get_node_or_null("%sGateTowerConnectorWallCollision" % side) is StaticBody3D,
+			"each raised perimeter wall must join its gate tower")
+	assert(bool(perimeter.get_meta("connected_to_both_gate_towers", false)))
+	assert(float(perimeter.get_meta("wall_coping_height_m", 0.0)) >= 13.7,
+		"the perimeter coping must align with the gate tower capitals")
 
 	# Exercise the eight-bearing composition. The +1/+2/−2 couplings require
 	# observation and planning; this six-move route discovers Calm Contrast.
