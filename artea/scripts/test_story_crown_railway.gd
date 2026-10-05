@@ -238,6 +238,15 @@ func _run() -> void:
 					or not bool(station.get_meta("grounded_station_stair_added", false)):
 				_fail("Mind Spark station did not replace its longest bridge with a grounded stair")
 				return
+			var island_stair := station.get_node_or_null(
+				"MindSparkIslandConnectionStair") as Node3D
+			if island_stair == null \
+					or str(island_stair.get_meta("style_revision", "")) \
+						!= "rainbow_civic_station_processional_stair_v2" \
+					or island_stair.find_children("IslandStairRainbowGuard*", "Node3D", false, false).size() != 2 \
+					or island_stair.find_children("RainbowGlassBarrier", "Node3D", true, false).size() != 2:
+				_fail("Mind Spark station stair does not match the canonical rainbow station style")
+				return
 		else:
 			for access_part in ["AccessRamp", "KingdomAccessSkybridge"]:
 				if station.get_node_or_null(access_part) == null:

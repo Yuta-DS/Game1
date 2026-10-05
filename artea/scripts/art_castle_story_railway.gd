@@ -1332,6 +1332,10 @@ func _build_mind_spark_island_connection_stair(station: Node3D, dock_sign: float
 	connection.set_meta("connects_island_ground_to_station", true)
 	connection.set_meta("visible_step_count", ISLAND_STEP_COUNT)
 	connection.set_meta("clear_width_m", STAIR_WIDTH)
+	connection.set_meta("style_revision", "rainbow_civic_station_processional_stair_v2")
+	connection.set_meta("matches_station_two_reference", true)
+	connection.set_meta("rainbow_glass_guard_count", 2)
+	connection.set_meta("gold_frame_layout", true)
 	station.add_child(connection)
 	connection.basis = station.get_meta("access_basis", Basis.IDENTITY)
 	var island_surface := Vector3(island_landing_local.x,
@@ -1360,19 +1364,47 @@ func _build_mind_spark_island_connection_stair(station: Node3D, dock_sign: float
 				_piltover_ivory_material, false, 0.0, yaw)
 	_add_surface_ramp_collision(connection, "WalkableIslandGroundRamp",
 		island_surface, upper_surface, STAIR_WIDTH, 0.48)
+	# Carry the platform's dark Piltover structure beneath the full flight. This
+	# replaces the pale unsupported slab silhouette while keeping the authored
+	# stair and its continuous walk collision unchanged.
+	_add_walkway_between(connection, "IslandStairStructuralSpine",
+		island_surface + Vector3.DOWN * 0.72,
+		upper_surface + Vector3.DOWN * 0.72,
+		STAIR_WIDTH - 1.4, 1.05, _piltover_navy_material, false)
 	var side_axis := Vector3(-forward.z, 0.0, forward.x)
 	for side in [-1.0, 1.0]:
 		var side_offset := side_axis * float(side) * (STAIR_WIDTH * 0.5 - 0.26)
+		var side_name := "Left" if side < 0.0 else "Right"
 		_add_walkway_between(connection,
-			"IslandStairIvoryCurbLeft" if side < 0.0 else "IslandStairIvoryCurbRight",
+			"IslandStairIvoryCurb%s" % side_name,
 			island_surface + side_offset + Vector3.UP * 0.20,
 			upper_surface + side_offset + Vector3.UP * 0.20,
 			0.52, 0.46, _piltover_ivory_material, false)
 		_add_walkway_between(connection,
-			"IslandStairGoldEdgeLeft" if side < 0.0 else "IslandStairGoldEdgeRight",
+			"IslandStairGoldEdge%s" % side_name,
 			island_surface + side_offset + Vector3.UP * 0.48,
 			upper_surface + side_offset + Vector3.UP * 0.48,
 			0.18, 0.10, _gold_material, false)
+		# Match the second station reference: small rainbow-glass panes are held by
+		# slim gold frames and follow the complete stair slope. They protect both
+		# edges without narrowing the 15.6 m walking surface.
+		var stair_guard := Node3D.new()
+		stair_guard.name = "IslandStairRainbowGuard%s" % side_name
+		stair_guard.set_meta("barrier_plan", "rainbow_glass_gold_frame")
+		stair_guard.set_meta("connected_to_platform_style", true)
+		connection.add_child(stair_guard)
+		var guard_start := island_surface + side_offset + Vector3.UP * 0.38
+		var guard_finish := upper_surface + side_offset + Vector3.UP * 0.38
+		_add_purpose_barrier_segment(stair_guard, "RainbowGlassBarrier",
+			guard_start, guard_finish,
+			"protects the Island One station stair in the canonical station style")
+		var shared_posts := {}
+		var span_count := maxi(1, ceili(guard_start.distance_to(guard_finish) / 6.5))
+		for post_index in span_count + 1:
+			var post_ratio := float(post_index) / float(span_count)
+			_add_unique_barrier_post(stair_guard, shared_posts,
+				guard_start.lerp(guard_finish, post_ratio))
+		stair_guard.set_meta("shared_connection_post_count", shared_posts.size())
 	# A narrow cyan centre guide repeats the station's navigation language while
 	# leaving the full stair visually calm and unobstructed.
 	_add_walkway_between(connection, "IslandStairCyanGuide",

@@ -194,7 +194,12 @@ func _run() -> void:
 			or island_connection.get_node_or_null("WalkableIslandGroundRampCollision") == null \
 			or island_connection.get_node_or_null("IslandGroundLanding") == null \
 			or island_connection.get_node_or_null("StationCourtLanding") == null \
+			or island_connection.get_node_or_null("IslandStairStructuralSpine") == null \
+			or island_connection.get_node_or_null("IslandStairRainbowGuardLeft") == null \
+			or island_connection.get_node_or_null("IslandStairRainbowGuardRight") == null \
 			or not bool(island_connection.get_meta("connects_island_ground_to_station", false)) \
+			or not bool(island_connection.get_meta("matches_station_two_reference", false)) \
+			or int(island_connection.get_meta("rainbow_glass_guard_count", 0)) != 2 \
 			or int(island_connection.get_meta("visible_step_count", 0)) < 64 \
 			or not bool(mind_stairs.get_meta("grounded_to_station_court", false)) \
 			or not bool(mind_stairs.get_meta("station_one_stair_restored", false)) \
