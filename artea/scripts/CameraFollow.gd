@@ -57,6 +57,10 @@ var _ride_view_active := false
 ## before smoothing so a fast-moving ride does not leave the view trailing.
 var _previous_focus := Vector3.ZERO
 
+## How much taller than the picture itself the painting close-up shows, so a
+## band of the gold frame stays in view around the artwork.
+const INSPECT_FRAME_MARGIN := 1.3
+
 ## UI that owns the mouse while it is open (Milo's chat) joins this group.
 const CAMERA_INPUT_BLOCKERS_GROUP := "camera_input_blockers"
 
@@ -324,6 +328,15 @@ func enter_inspect(target: Node3D) -> void:
 
 	var forward := target.global_transform.basis.z.normalized()
 	var cam_pos := _inspect_focus + (forward * 2.2) + Vector3(0, 1.4, 0)
+	# A gallery painting is framed whole: back off until the picture and a band
+	# of its gold frame fill the view, however large the painting is scaled.
+	var painting := target as Sprite3D
+	if painting != null and painting.texture != null:
+		var picture_height := painting.texture.get_height() * painting.pixel_size \
+			* target.global_transform.basis.y.length()
+		var shown_height := picture_height * INSPECT_FRAME_MARGIN
+		var distance := (shown_height * 0.5) / tan(deg_to_rad(fov) * 0.5)
+		cam_pos = _inspect_focus + forward * distance
 
 	if _tween: _tween.kill()
 	_tween = create_tween()

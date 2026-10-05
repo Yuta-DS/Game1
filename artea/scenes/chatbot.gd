@@ -27,6 +27,13 @@ const CASTLE_ARROW_NAME := "CastleGuideArrow"
 const REPLY_TITLE_COLOR := "#9a6a1c"
 const REPLY_SECTION_COLOR := "#2b4f8f"
 const REPLY_HIGHLIGHT_COLOR := "#b5482f"
+# Emoji in replies are drawn as icons: the Web export has no emoji font, so
+# the characters themselves render blank there.
+const REPLY_ICONS := {
+	"✨": "res://assets/UI/icons/sparkle.svg",
+	"⭐": "res://assets/UI/icons/star.svg",
+	"🎉": "res://assets/UI/icons/sparkle.svg",
+}
 # The hub castle's door trigger (teleport_Art_Gallery.gd) in New_Hub_World.
 const CASTLE_DOOR_NODE := "Art_Gallery"
 const MILO_DISCLAIMER := "Milo is an AI friend, not a real counsellor. If something is really bothering you, talk to a grown-up you trust or tap Need help."
@@ -1096,17 +1103,23 @@ func _format_reply(text: String) -> String:
 				continue
 		if line.begins_with("✨") and line.ends_with("✨") and line.length() > 2:
 			paragraphs.append("[center][font_size=28][color=%s][b]%s[/b][/color][/font_size][/center]" % [
-				REPLY_HIGHLIGHT_COLOR, safe])
+				REPLY_HIGHLIGHT_COLOR, _with_icons(safe, 30)])
 		elif _is_section_label(line):
 			pending_label = safe
 		else:
 			if not pending_label.is_empty():
 				safe = "[color=%s][b]%s[/b][/color]   %s" % [REPLY_SECTION_COLOR, pending_label, safe]
 				pending_label = ""
-			paragraphs.append(safe)
+			paragraphs.append(_with_icons(safe, 20))
 	if not pending_label.is_empty():
 		paragraphs.append("[color=%s][b]%s[/b][/color]" % [REPLY_SECTION_COLOR, pending_label])
 	return "\n".join(paragraphs)
+
+
+func _with_icons(bbcode: String, size: int) -> String:
+	for glyph in REPLY_ICONS:
+		bbcode = bbcode.replace(glyph, "[img=%dx%d]%s[/img]" % [size, size, REPLY_ICONS[glyph]])
+	return bbcode
 
 
 func _is_section_label(line: String) -> bool:
