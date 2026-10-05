@@ -152,6 +152,9 @@ func _run() -> void:
 	var gallery_like_world := Node3D.new()
 	gallery_like_world.name = "GalleryLikeWorld"
 	root.add_child(gallery_like_world)
+	var floating_world_marker := Node3D.new()
+	floating_world_marker.name = "ArtCastleFloatingWorld"
+	gallery_like_world.add_child(floating_world_marker)
 	var gallery_player := CharacterBody3D.new()
 	gallery_player.name = "Player3D"
 	gallery_player.add_to_group("Player")
@@ -167,6 +170,10 @@ func _run() -> void:
 			"a 3D scene without an authored Milo receives the companion")
 		_check(spawned != null and spawned.get("player") == gallery_player,
 			"the scene-spawned companion adopts that scene's player")
+		_check(spawned != null and spawned.scale.is_equal_approx(Vector3.ONE * 1.40) \
+				and str(spawned.get_meta("scene_scale_profile", "")) \
+					== "art_galaxy_outside_size_match",
+			"Galaxy Milo receives the larger outside-world size match")
 
 	gallery_like_world.queue_free()
 	await process_frame

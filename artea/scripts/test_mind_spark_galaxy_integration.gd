@@ -84,6 +84,15 @@ func _run() -> void:
 	var mind_gate := floating_world.get_node("MindSparkWorldGate") as MindSparkWorldGate
 	assert(mind_gate != null)
 	assert(is_equal_approx(float(mind_gate.get_meta("ceremonial_visual_scale", 0.0)), 1.26))
+	var instrument := mind_gate.get_node(
+		"Portal/FinishedPortalInstrument") as Node3D
+	assert(str(instrument.get_meta("design_revision", "")) == "celestial_instrument_ring_v2")
+	assert(bool(instrument.get_meta("collision_free", false)))
+	assert(instrument.find_children("IvoryCaseSegment_*", "MeshInstance3D", false, false).size() == 12)
+	assert(instrument.find_children("ApertureTick_*", "MeshInstance3D", false, false).size() == 8)
+	assert(instrument.get_node_or_null("IvoryOuterCase") is MeshInstance3D)
+	assert(instrument.get_node_or_null("CharcoalInnerBezel") is MeshInstance3D)
+	assert(instrument.get_node_or_null("LavenderCrownCrystal") is MeshInstance3D)
 	assert(world.get_quest_objects().size() == 15)
 	assert(world.get_node("WorldOneGeometry/05ThoughtStormArena/BossArenaCollisionCollision") is StaticBody3D)
 	assert(world.get_node("WorldOneGeometry/06OldestTreeSanctuary/OldestTreeTrunkCollision") is StaticBody3D)

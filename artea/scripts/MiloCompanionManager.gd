@@ -8,6 +8,7 @@ extends Node
 
 const MILO_SCENE := preload("res://milo2/godot/milo2_game_character.tscn")
 const ConversationContext := preload("res://scripts/MiloConversationContext.gd")
+const ART_GALAXY_MILO_SCALE := 1.40
 
 var active_milo: CharacterBody3D
 var active_player: CharacterBody3D
@@ -42,8 +43,19 @@ func _attach_to_current_scene() -> void:
 		scene.add_child(milo)
 	active_player = player
 	active_milo = milo
+	_apply_scene_scale(active_milo, scene)
 	if active_milo.has_method("set_companion_player"):
 		active_milo.call("set_companion_player", active_player, true)
+
+
+func _apply_scene_scale(milo: CharacterBody3D, scene: Node) -> void:
+	if milo == null:
+		return
+	var in_art_galaxy := scene.find_child("ArtCastleFloatingWorld", true, false) != null
+	milo.scale = Vector3.ONE * (ART_GALAXY_MILO_SCALE if in_art_galaxy else 1.0)
+	milo.set_meta("scene_scale_profile",
+		"art_galaxy_outside_size_match" if in_art_galaxy else "native_world_scale")
+	milo.set_meta("scene_scale_multiplier", milo.scale.x)
 
 
 func _find_3d_player(scene: Node) -> CharacterBody3D:
