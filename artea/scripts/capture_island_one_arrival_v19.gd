@@ -39,4 +39,8 @@ func _run() -> void:
 	camera.position = centre + Vector3(72, 42, 130)
 	camera.look_at(centre + Vector3(0, 14, -20))
 	await _save_view("03_processional_arrival_axis")
+	camera.size = 56.0
+	camera.position = centre + Vector3(-10, 16, -24)
+	camera.look_at(centre + Vector3(0, 8, -64))
+	await _save_view("04_teleport_facing_arrival")
 	quit()

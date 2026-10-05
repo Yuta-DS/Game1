@@ -3722,6 +3722,15 @@ func _build_landing(zone: Node3D) -> void:
 	var entry_gate := WorldGateScene.instantiate() as MindSparkWorldGate
 	entry_gate.name = "EntryWorldGate"
 	entry_gate.position = Vector3(0, 1, -64)
+	# The live arrival is deliberately offset ten metres west of the centreline
+	# to clear the first quest station. Aim the complete teleport instrument at
+	# that real approach instead of leaving it on the zone's generic zero yaw;
+	# the ring then meets the player squarely rather than reading as a skewed oval.
+	var entry_approach := STANDALONE_PLAYER_ARRIVAL
+	var approach_delta := entry_approach - entry_gate.position
+	entry_gate.rotation.y = atan2(approach_delta.x, approach_delta.z)
+	entry_gate.set_meta("faces_player_approach", true)
+	entry_gate.set_meta("approach_yaw_degrees", rad_to_deg(entry_gate.rotation.y))
 	entry_gate.destination_world_local = return_destination_world_local
 	entry_gate.prompt_text = "Q • RETURN TO ART CASTLE"
 	zone.add_child(entry_gate)

@@ -30,8 +30,17 @@ func _run() -> void:
 	assert(arrival.find_children("*ArrivalGarden_*", "Node3D", true, false).size() == 4)
 	assert(not arrival.find_children("*", "StaticBody3D", true, false).is_empty(),
 		"Island One architecture needs solid, collision-backed structures")
-	assert(zone.get_node_or_null("EntryWorldGate") is MindSparkWorldGate,
+	var entry_gate := zone.get_node_or_null("EntryWorldGate") as MindSparkWorldGate
+	assert(entry_gate != null,
 		"The functional Art Castle return gate must remain present")
+	var gate_to_arrival := (world.STANDALONE_PLAYER_ARRIVAL - entry_gate.position)
+	gate_to_arrival.y = 0.0
+	var gate_facing := entry_gate.basis.z
+	gate_facing.y = 0.0
+	assert(gate_facing.normalized().dot(gate_to_arrival.normalized()) > 0.999,
+		"The Island One teleport ring must face the real player approach")
+	assert(bool(entry_gate.get_meta("faces_player_approach", false)),
+		"The teleport alignment must remain an explicit authored decision")
 	assert(zone.get_node_or_null("ArrivalRootBridge") == null \
 		and zone.get_node_or_null("ArrivalRootBridgeCollision") == null,
 		"The obsolete static bridge must no longer occupy the gate centre")
