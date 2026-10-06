@@ -2,6 +2,7 @@ extends RefCounted
 # One atomic record owns both XP receipts and progression: no cross-file reward window.
 const Catalog = preload("res://scripts/heart_melody/heart_catalog.gd")
 const Music = preload("res://scripts/heart_melody/musical_fruit_catalog.gd")
+const Chapter = preload("res://scripts/heart_melody/heart_melody_chapter_state.gd")
 var path := "user://heart_melody_island_one.json"
 var dirty := false
 var data: Dictionary = fresh()
@@ -11,7 +12,7 @@ var recovery_message := ""
 static func fresh() -> Dictionary:
 	return {"schema": 2, "campaign_version": 2, "planters": {}, "phrase": [], "solved": false,
 		"waves": [], "receipts": {}, "tasks": [], "checkpoint": "arrival", "complete": false, "xp": 0,
-		"river": fresh_river(), "music": fresh_music()}
+		"river": fresh_river(), "music": fresh_music(), "chapter": Chapter.fresh()}
 
 static func fresh_river() -> Dictionary:
 	return {"valves": [], "bulbs": [], "boat": false, "chimes": [], "warning": false, "grove": false, "peace": false}
@@ -36,7 +37,7 @@ func load_progress() -> void:
 		if not FileAccess.file_exists(candidate): continue
 		var raw: Variant = read_record(candidate)
 		var raw_schema: Variant = raw.get("schema", 1) if raw is Dictionary else null
-		var migrated: bool = raw is Dictionary and (raw_schema is int or raw_schema is float) and int(raw_schema) == 1
+		var migrated: bool = raw is Dictionary and ((raw_schema is int or raw_schema is float) and raw_schema == 1 or not raw.has("chapter"))
 		var parsed: Variant = normalize(raw)
 		if valid(parsed):
 			data = parsed
@@ -57,7 +58,7 @@ static func normalize(value: Variant) -> Variant:
 		# Schema 1 contained the complete original Feeling Garden / River record.
 		# Add the new musical garden without fabricating any new activity completion.
 		var schema_value: Variant = value.get("schema", 1)
-		if (schema_value is int or schema_value is float) and int(schema_value) == 1:
+		if (schema_value is int or schema_value is float) and schema_value == 1:
 			value["schema"] = 2
 			value["music"] = fresh_music()
 		# Additive migration: existing Island 1 saves retain every earned reward.
@@ -151,6 +152,9 @@ static func valid(value: Variant) -> bool:
 	if value.get("complete", false) and (value.planters.size() != 3 or not value.get("solved", false) or not value.waves.has(2)): return false
 	if not valid_river(value.get("river"), value.complete): return false
 	if not valid_music(value.get("music")): return false
+	# Validate the legacy record before deriving migration data from it.
+	if not value.has("chapter"): value["chapter"] = Chapter.migrate(value)
+	if not Chapter.valid(value.chapter, value): return false
 	return true
 
 static func valid_music(music: Variant) -> bool:
@@ -233,12 +237,19 @@ func river_step(stage: String, index := -1) -> bool:
 		"boat": committed.river.bulbs.size() == 3, "chimes": committed.river.boat,
 		"warning": committed.river.chimes.size() == 3, "grove": committed.river.warning,
 		"peace": committed.river.grove}
+	var earned := Chapter.legacy_tasks(candidate)
+	if candidate.chapter.tasks.size() <= earned.size(): candidate.chapter.tasks = earned
 	if not prerequisites.get(stage, true) or not valid(candidate): return false
 	data = candidate
 	return commit()
 
 func commit() -> bool:
 	dirty = true
+	# The legacy garden/river API remains authoritative for its seven earned tasks.
+	if data.get("chapter") is Dictionary:
+		var earned := Chapter.legacy_tasks(data)
+		var previous: Variant = data.chapter.get("tasks", [])
+		if previous is Array and previous.size() <= earned.size(): data.chapter.tasks = earned
 	if not valid(data): return false
 	var file := FileAccess.open(path + ".tmp", FileAccess.WRITE)
 	if file == null: return false

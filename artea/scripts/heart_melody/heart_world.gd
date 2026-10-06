@@ -40,6 +40,7 @@ var preview_choice := 6
 var preview_planter := 0
 var hint_level := 0
 var audio: AudioStreamPlayer
+var audio_director = preload("res://scripts/heart_melody/heart_melody_audio_director.gd").new()
 var demonstration := false
 var scene_ready := false
 var test_mode := false
@@ -57,6 +58,7 @@ var restored_creatures: Dictionary = {}
 var _view_garden := false
 var river: Node3D
 var musical_garden: Node3D
+var chapter_world: Node3D
 
 func _ready() -> void:
 	# This island's authored guides share its single interaction owner. The
@@ -70,6 +72,9 @@ func _ready() -> void:
 	add_child(musical_garden)
 	_build_player()
 	_build_hud()
+	chapter_world = preload("res://scripts/heart_melody/heart_chapter_world.gd").new()
+	add_child(chapter_world)
+	chapter_world.install_hud()
 	_refresh_plants()
 	_apply_restoration()
 	scene_ready = true
@@ -280,6 +285,7 @@ func _build_environment() -> void:
 	audio = AudioStreamPlayer.new()
 	audio.bus = "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"
 	add_child(audio)
+	audio_director.player = audio
 	soundscape = preload("res://scripts/heart_melody/heart_soundscape.gd").new()
 	add_child(soundscape)
 	for spec in Catalog.ENEMIES:
@@ -401,13 +407,14 @@ func _process(delta: float) -> void:
 			_recover()
 			local = player_local_position()
 		# Hysteresis keeps the camera steady at the foot of the entrance arch.
-		var inside := local.x > (-100 if embedded_active else -88) and local.x < 365 and absf(local.z) < 66 and local.y < 24 and local.y > -12
+		var inside := local.x > (-100 if embedded_active else -88) and local.x < 490 and absf(local.z) < 66 and local.y < 24 and local.y > -12
 		if inside and not embedded_active and get_node("/root/JourneyCampaign").can_enter_kingdom("heart"):
 			_set_embedded_active(true)
 		elif not inside and embedded_active:
 			_set_embedded_active(false)
 		if not embedded_active: return
 	river.tick(delta)
+	chapter_world.tick(delta)
 	_camera_update(delta)
 	if player_local_position().y < -15: _recover()
 	nearest = -1
@@ -429,6 +436,7 @@ func _process(delta: float) -> void:
 		for i in plants.size(): plants[i].rotation.z = sin(_ambient_time * 1.3 + i) * 0.025
 
 func objective() -> String:
+	if chapter_world != null: return chapter_world.objective()
 	if musical_garden != null:
 		if player != null and player_local_position().x > 104 and progress.data.complete and river != null:
 			return river.objective()
@@ -456,7 +464,17 @@ func _interact_nearest() -> void:
 	if nearest < 0 or modal_open: return
 	var item: Dictionary = interactables[nearest]
 	if player_local_position().distance_to(item.pos) >= 5 or not _clear_sight(item.pos): return
+	if str(item.kind).begins_with("chapter_"):
+		chapter_world.interact(item.kind, item.index)
+		return
 	if str(item.kind).begins_with("river_"):
+		var upgraded := {"river_valve": 2, "river_bulb": 3, "river_chime": 5, "river_warning": 6}
+		if item.kind in upgraded:
+			chapter_world.open_instrument(upgraded[item.kind])
+			return
+		if item.kind == "river_boat" and not progress.committed.river.boat:
+			chapter_world.open_instrument(4)
+			return
 		river.interact(item.kind, item.index)
 		return
 	if str(item.kind).begins_with("music_"):
@@ -522,6 +540,8 @@ func _button(title: String, action: Callable) -> Button:
 	return button
 
 func _close() -> void:
+	if chapter_world != null: chapter_world.challenge.cancel_playback()
+	if demonstration: audio_director.cancel()
 	_panel_generation += 1
 	demonstration = false
 	if _restoring: _finish_restoration()
@@ -541,13 +561,16 @@ func _river_directions() -> String:
 	return "Every Heart Melody garden is joined by a safe root walk, so you may explore freely. To awaken River Song / Waterfall Organ:\n1. Plant all three seeds.\n2. Solve the flower phrase.\n3. Clear both Blight waves.\nYour progress saves automatically. If saving fails, open Help and choose Retry saving."
 
 func _intro() -> void:
-	_open("Welcome to the Musical Orchard", "Milo: Four fruit trees are waiting nearby. Preview each voice, harvest it into your basket, then try it on the living instruments.\n\nMother Guardian: Instrument positions choose the notes. Fruit only changes their character, so experimentation can never become a wrong answer. The Feeling Seed planters remain optional and every feeling or neutral sound is equally welcome.\n\nYour basic strike is already available with F / controller X if you visit the older Blight clearing; no Mind Spark reward is needed.\n\n" + objective() + "\n\n" + _river_directions())
+	_open("Heart Melody · First Breath", "Milo: The valley has lost its song. Harvest Echo Berries beside the entrance, plant three feeling seeds, then answer the flower drums.\n\nMother Guardian: Every feeling and neutral sound belongs. Your seed choice never changes a reward. Follow the river's instruments to the Silent Conductor and help every voice return.\n\nSix fruit families support ten living instruments. Story fruit is protected; extra fruit is for crafting. The musical orchard remains available for free play.\n\nMove with WASD or the left stick; Q / A interacts. F / X releases exposed silencing shells. The Valley journal has fruit directions and assistance.\n\n" + objective())
 	_button("Explore the orchard", _close)
 	_button("Replay controls and accessibility", _help)
 	_button("Optional greeting", func(): _identity(0))
 	_button("Skip introduction", _close)
 
 func _planter(index: int) -> void:
+	if chapter_world != null and not progress.data.planters.has(str(index)) and progress.data.chapter.quest_pouch.get("echo_berry", 0) < 1:
+		_notice("Harvest Echo Berries from the labelled grove beside the meadow. The protected quest pouch has room for every story seed.")
+		return
 	preview_planter = index
 	_open(Catalog.SYMBOLS[index] + " planter", "Choose an appearance and sound. All choices succeed. Nothing is saved until you confirm.")
 	if progress.data.planters.has(str(index)):
@@ -572,6 +595,8 @@ func _planter(index: int) -> void:
 		message.text = "Preview: " + Catalog.CHOICES[preview_choice] + " · " + Catalog.SYMBOLS[index] + ". Confirm to grow this flower."
 	)
 	_button("Confirm planting / appearance", func():
+		if not progress.data.planters.has(str(index)) and chapter_world != null:
+			progress.data.chapter.quest_pouch.echo_berry -= 1
 		progress.plant(index, preview_choice)
 		_refresh_plants()
 		note(index, 0.22, preview_choice)
@@ -769,6 +794,7 @@ func _health_changed(current: float, _maximum: float) -> void:
 	if current <= 0: call_deferred("_recover")
 
 func _recover() -> void:
+	var in_stage := player_local_position().x > 350
 	var in_river: bool = player_local_position().x > 104 and progress.committed.complete
 	if river != null: river.reset_encounter()
 	for enemy in enemies:
@@ -781,34 +807,17 @@ func _recover() -> void:
 			restored_creatures.erase(id)
 	active_wave = 0
 	player.global_position = to_global(river.recovery_position() if in_river else Vector3(-56, 2, 17))
+	if in_stage and chapter_world != null:
+		player.global_position = to_global(Vector3(359, 2, 16))
+		chapter_world.encounter.retry()
+		chapter_world.caption = "Rest at the Peace Flower. Completed anchors are safe." + (" Assistance is available in Valley map." if chapter_world.encounter.failures >= 2 else "")
 	player.velocity = Vector3.ZERO
 	player.heal(100)
 	if not modal_open: player.set_input_enabled(true)
 
 func note(index: int, volume := 0.22, timbre := 6) -> void:
-	var cache_key := str(index) + ":" + str(timbre)
-	if _note_cache.has(cache_key):
-		audio.stream = _note_cache[cache_key]
-		audio.volume_db = linear_to_db(volume)
-		audio.play()
-		return
-	var wave := AudioStreamWAV.new()
-	wave.format = AudioStreamWAV.FORMAT_16_BITS
-	wave.mix_rate = 22050
-	var bytes := PackedByteArray()
-	bytes.resize(11025 * 2)
-	var frequencies := [261.63, 293.66, 329.63, 392.0, 440.0]
-	var safe_index := clampi(index, 0, frequencies.size() - 1)
-	var frequency: float = frequencies[safe_index]
-	for i in 11025:
-		var t := i / 22050.0
-		var sample := (sin(TAU * frequency * t) + 0.18 * sin(TAU * frequency * (2 + timbre % 3) * t)) * exp(-t * (5 + timbre * 0.4)) * minf(t * 100, 1) * 0.7
-		bytes.encode_s16(i * 2, int(sample * 32767))
-	wave.data = bytes
-	_note_cache[cache_key] = wave
-	audio.volume_db = linear_to_db(volume)
-	audio.stream = wave
-	audio.play()
+	audio_director.muted = chapter_world.muted if chapter_world != null else false
+	audio_director.play_note(index, volume, timbre)
 
 
 

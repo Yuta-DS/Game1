@@ -11,6 +11,7 @@ var world: Node3D
 var _yaw := 0.0
 var _pitch := -0.24
 var _touch := -1
+var _web_drag := false
 var _probe := SphereShape3D.new()
 
 func _ready() -> void:
@@ -31,13 +32,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		_touch = -1
+		_web_drag = false
 	if world.modal_open: return
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP: distance = maxf(4.8, distance - 0.7)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN: distance = minf(9.2, distance + 0.7)
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed: distance = maxf(4.8, distance - 0.7)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed: distance = minf(9.2, distance + 0.7)
 		elif event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			if OS.has_feature("web"): _web_drag = event.pressed
+			elif event.pressed: Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if event is InputEventMouseMotion and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or _web_drag):
 		orbit(event.relative * 0.005)
 	if event is InputEventScreenTouch:
 		if event.pressed and event.position.x > get_viewport().get_visible_rect().size.x * 0.5 and _touch < 0:
@@ -51,6 +54,7 @@ func update_camera(delta: float) -> void:
 	if world.modal_open:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		_touch = -1
+		_web_drag = false
 	else:
 		var stick := Vector2.ZERO
 		for device in Input.get_connected_joypads():

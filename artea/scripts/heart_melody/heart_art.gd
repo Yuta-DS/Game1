@@ -257,7 +257,7 @@ static func merge_coloured(root: Node3D) -> void:
 			var arrays: Array = child.mesh.surface_get_arrays(index)
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
 			var colours = arrays[Mesh.ARRAY_COLOR]
 			if indices.is_empty():
 				for j in vertices.size(): indices.append(j)

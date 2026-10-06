@@ -84,8 +84,7 @@ func _ready() -> void:
 	flower = Art.flower(self, Vector3(343, 0, 8), Color("e7d68f"), 3)
 	world._object("river_peace", 0, Vector3(339, 1, 8), "Awaken the Peace Flower")
 	Art.label(self, "PEACE FLOWER", Vector3(343, 6, 8), 30)
-	world._gate(self, Vector3(350, 0, 8), "Harmony Stage · coming next")
-	Art.box(self, Vector3(351, 2, 8), Vector3(0.5, 4, 6), Color("799d72"), true)
+	world._gate(self, Vector3(350, 0, 8), "Harmony Stage · Shared Song")
 	refresh()
 
 func _land(at: Vector3, size: Vector3) -> void:

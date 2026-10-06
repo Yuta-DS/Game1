@@ -32,7 +32,14 @@ rm -f "${output_dir}/index.pck"
 rm -f "${output_dir}/index.pck.parts.json"
 
 "${godot_bin}" --headless --path "${project_dir}" \
-	--export-release Web "${output_dir}/index.html"
+	--export-release Web "${output_dir}/index.html" 2>&1 | tee "${output_dir}/export.log"
+
+# Godot can return zero despite resource/customization failures. Do not split or
+# publish that pack as a successful build; retain the complete diagnostic log.
+if grep -Eq '(^|[[:space:]])(ERROR:|SCRIPT ERROR:|Parse Error:)' "${output_dir}/export.log"; then
+	echo "Web export contains errors; see ${output_dir}/export.log" >&2
+	exit 1
+fi
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
 
