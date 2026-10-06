@@ -30,10 +30,14 @@ const KINGDOMS := {
 	},
 	"heart": {
 		"label": "Heart Melody Kingdom",
+		"scene_path": "res://scenes/music_minigame.tscn",
+		"treasure": "harmony_jewel",
+		"requires": ["star_of_wisdom"],
+	},
+	"heart_melody": {
+		"label": "Heart Melody Musical Valley",
 		"scene_path": "res://scenes/heart_melody/heart_melody_world.tscn",
 		"treasure": "harmony_jewel",
-		# Heart Melody is an independent destination. Entering it never awards
-		# Mind Spark progress, and Creator's Light retains its treasure rules.
 		"requires": [],
 	},
 	"creator": {

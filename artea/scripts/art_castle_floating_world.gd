@@ -21,7 +21,7 @@ const BlossomBudClusterLeafStyle := preload(
 const GravityLeafReliefStyle := preload(
 	"res://scripts/tree_of_life/leaf_style_gravity_leaf_relief.gd")
 const TREE_CHRISTMAS_MELODY := preload(
-	"res://assets/audio/tree_of_life_christmas_ambience.wav")
+	"res://assets/audio/tree_of_life_christmas_ambience.ogg")
 const TREE_CHRISTMAS_BELLS := preload("res://assets/SFX/fairy dust.ogg")
 const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
 
@@ -213,9 +213,17 @@ func _process(delta: float) -> void:
 		var regions := get_node_or_null("KingdomRegions3000m")
 		if regions != null and regions.has_method("get_safe_respawn"):
 			respawn = regions.call("get_safe_respawn", to_local(_player.global_position))
-		_player.global_position = to_global(respawn)
-		_player.velocity = Vector3.ZERO
+		if not _request_milo_rescue(to_global(respawn)):
+			_player.global_position = to_global(respawn)
+			_player.velocity = Vector3.ZERO
 	_update_tree_christmas_ambience(delta)
+
+
+# Milo flies the player back instead of a bare teleport. He is absent in
+# isolated test scenes, where the teleport still applies.
+func _request_milo_rescue(fallback: Vector3) -> bool:
+	var manager := get_node_or_null("/root/MiloCompanionManager")
+	return manager != null and bool(manager.call("request_fall_rescue", fallback))
 
 
 func get_exploration_size() -> Vector2:
@@ -693,7 +701,9 @@ func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width:
 func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vector3) -> void:
 	var recovery := Area3D.new()
 	recovery.name = "ApproachFallRecovery"
-	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -22, 0)
+	# Top of the box sits 16 m under the bridge, milo_fall_rescue.gd's
+	# RESCUE_DROP, so this fall feels like every other one.
+	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -26, 0)
 	recovery.collision_layer = 0
 	recovery.collision_mask = 1
 	var shape_node := CollisionShape3D.new()
@@ -707,6 +717,8 @@ func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vecto
 
 func _recover_approach_player(body: Node3D, safe_position: Vector3) -> void:
 	if body != _player or _player == null:
+		return
+	if _request_milo_rescue(to_global(safe_position)):
 		return
 	_player.global_position = to_global(safe_position)
 	_player.velocity = Vector3.ZERO
@@ -751,7 +763,7 @@ func _build_heart_district() -> void:
 	var heart_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
 	heart_gate.name = "HeartMelodyWorldGate"
 	heart_gate.position = HEART + Vector3(0, 4, 45)
-	heart_gate.target_kingdom_id = "heart"
+	heart_gate.target_kingdom_id = "heart_melody"
 	heart_gate.target_world_path = NodePath()
 	heart_gate.prompt_text = "Q · VISIT HEART MELODY — MUSICAL ORCHARD (open journey)"
 	add_child(heart_gate)

@@ -4,7 +4,7 @@ const ChatbotScene := preload("res://scenes/chatbot.tscn")
 
 
 class FakeCampaign extends Node:
-	var unlocked := {"mind": true, "heart": true, "creator": false}
+	var unlocked := {"mind": true, "heart": false, "creator": false}
 	var entered: Array[String] = []
 	var campaign_starts := 0
 
@@ -44,8 +44,8 @@ func _run() -> void:
 	chat.campaign_router = campaign
 	root.add_child(chat)
 	await process_frame
-	var choices := chat.get_node("VBoxContainer/CuratedChoices") as VBoxContainer
-	var history := chat.get_node("VBoxContainer/ChatHistory") as TextEdit
+	var choices := chat.get_node("Panel/VBoxContainer/ChoicesScroll/CuratedChoices") as VBoxContainer
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as TextEdit
 	var travel_requests: Array[String] = []
 	chat.activity_travel_requested.connect(func(activity_id: String) -> void:
 		travel_requests.append(activity_id)
@@ -68,10 +68,9 @@ func _run() -> void:
 
 	chat._respond_with_activity(chat.ACTIVITY_GUIDES[1])
 	chat._confirm_activity_travel("heart")
-	assert(history.text.contains("Ready to travel") and _has_button(choices, "Yes, go with Milo"),
-		"Heart Melody recommendation is independently available")
-	chat._travel_to_activity("heart")
-	assert(campaign.entered == ["mind", "heart"], "Heart recommendation enters its canonical scene")
+	assert(history.text.contains("still locked") and history.text.contains("will not skip or invent progress"),
+		"a locked recommendation explains the journey gate without changing progress")
+	assert(campaign.entered == ["mind"], "locked Heart Melody never enters a scene")
 
 	chat._respond_with_activity(chat.ACTIVITY_GUIDES[3])
 	chat._confirm_activity_travel("crown")

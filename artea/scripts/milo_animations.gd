@@ -13,6 +13,7 @@ enum CompanionState {
 	ENCOURAGING,
 	CELEBRATING,
 	SUPPORTING,
+	RESCUING,
 }
 
 @export var walk_speed := 1.10
@@ -129,6 +130,10 @@ var _cane_was_planted := false
 var _cane_rest_tip_local := Vector3.ZERO
 var _cane_recovery_start_tip_local := Vector3.ZERO
 var _grounding_targets: Node3D
+# Set while milo_fall_rescue.gd flies Milo and the player back to safe ground.
+# The rescue owns his position, so following, gravity and foot grounding stand
+# down until it hands him back.
+var _fall_rescue_active := false
 
 const CANE_GAIT_CYCLE_SECONDS := 1.28
 const CANE_GAIT_STRIDE_METRES := 1.40
@@ -300,11 +305,42 @@ func set_companion_player(next_player: CharacterBody3D,
 
 
 func _set_companion_state(next_state: CompanionState) -> void:
+	# Speech starting and ending mid-flight must not report Milo as idle.
+	if _fall_rescue_active and next_state != CompanionState.RESCUING:
+		return
 	companion_state = next_state
 
 
 func get_companion_state_name() -> String:
 	return CompanionState.keys()[companion_state]
+
+
+func begin_fall_rescue() -> void:
+	_fall_rescue_active = true
+	velocity = Vector3.ZERO
+	_breadcrumbs.clear()
+	_follow_active = false
+	_catch_up_active = false
+	_set_companion_state(CompanionState.RESCUING)
+	_play_animation("Wave_One_Hand")
+
+
+func end_fall_rescue() -> void:
+	if not _fall_rescue_active:
+		return
+	_fall_rescue_active = false
+	_play_animation("Idle_3")
+	# Re-adopting the player grounds Milo beside them and resets his trail, so
+	# he does not walk back along the route he just flew.
+	set_companion_player(player, true)
+
+
+func is_fall_rescue_active() -> bool:
+	return _fall_rescue_active
+
+
+func say_line(line: String) -> void:
+	_on_companion_speech_requested(line)
 
 
 func _resolve_mouth_shapes() -> void:
@@ -1003,6 +1039,9 @@ func _reset_mayor_arm_pose() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _fall_rescue_active:
+		velocity = Vector3.ZERO
+		return
 	if gravity_enabled and not is_on_floor():
 		velocity.y -= 20.0 * delta
 	else:
@@ -1235,10 +1274,13 @@ func _process(delta):
 	_update_speaking(delta)
 	_update_eye_animation(delta)
 	_update_secondary_motion(delta)
-	_update_terrain_grounding(delta)
+	if not _fall_rescue_active:
+		_update_terrain_grounding(delta)
 	_apply_journey_stage()
 	if aura != null:
 		aura.rotate_y(delta * (0.18 + max(journey_stage, 0) * 0.08))
+	if _fall_rescue_active:
+		return
 
 	# Outside the interaction zone, locomotion owns Milo's facing and animation.
 	if not player_in_range:
@@ -1593,6 +1635,10 @@ func open_chatbot():
 
 	_set_player_interaction_locked(true)
 	_set_companion_state(CompanionState.TALKING)
+	# The 3D camera captures the mouse for look control during normal play, so
+	# without releasing it here the cursor stays hidden/locked and the chat
+	# panel's buttons cannot be clicked at all.
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func close_chatbot():
@@ -1601,6 +1647,7 @@ func close_chatbot():
 		chatbot_ui = null
 
 	_set_player_interaction_locked(false)
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_conversation_active = false
 	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_stop()
@@ -1644,6 +1691,7 @@ func _exit_tree() -> void:
 		chatbot_ui.queue_free()
 		chatbot_ui = null
 	_set_player_interaction_locked(false)
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _build_counsellor_props() -> void:

@@ -92,33 +92,33 @@ func _ready() -> void:
 			_vegetation_brush_streams.append(ProceduralFoleyScript.make_vegetation_brush(variant))
 	_world_loop_streams = {
 		&"windmill": _load_looping_recording(
-			"res://assets/audio/world_objects/tree_wind_loop.wav",
+			"res://assets/audio/world_objects/tree_wind_loop.ogg",
 			ProceduralFoleyScript.make_world_object_loop(&"mechanism")),
 		&"watermill": _load_looping_recording(
-			"res://assets/audio/world_objects/watermill_loop.wav",
+			"res://assets/audio/world_objects/watermill_loop.ogg",
 			ProceduralFoleyScript.make_world_object_loop(&"mechanism")),
 		&"lumbermill": _load_looping_recording(
-			"res://assets/audio/world_objects/sawmill_loop.wav",
+			"res://assets/audio/world_objects/sawmill_loop.ogg",
 			ProceduralFoleyScript.make_world_object_loop(&"mechanism")),
 		&"forge": _load_looping_recording(
 			"res://assets/audio/Campfire.ogg",
 			ProceduralFoleyScript.make_world_object_loop(&"forge")),
 		&"cave_air": _load_looping_recording(
-			"res://assets/audio/world_objects/cave_air_loop.wav",
+			"res://assets/audio/world_objects/cave_air_loop.ogg",
 			ProceduralFoleyScript.make_world_object_loop(&"cavern")),
 		&"aether_power": _load_looping_recording(
-			"res://assets/audio/world_objects/aether_power_loop.wav",
+			"res://assets/audio/world_objects/aether_power_loop.ogg",
 			ProceduralFoleyScript.make_world_object_loop(&"magic")),
 	}
 	_train_loop_streams = {
 		&"engine": _load_looping_recording(
-			"res://assets/audio/pro_train/royal_hudson_engine_loop.wav",
+			"res://assets/audio/pro_train/royal_hudson_engine_loop.ogg",
 			ProceduralFoleyScript.make_train_loop(&"engine")),
-		&"rail": _load_looping_recording("res://assets/audio/pro_train/royal_hudson_rail_loop.wav",
+		&"rail": _load_looping_recording("res://assets/audio/pro_train/royal_hudson_rail_loop.ogg",
 			ProceduralFoleyScript.make_train_loop(&"rail")),
 		&"rush": ProceduralFoleyScript.make_wind_loop(31415, false),
 	}
-	var power_whistle := load("res://assets/audio/pro_train/royal_hudson_whistle.wav")
+	var power_whistle := load("res://assets/audio/pro_train/royal_hudson_whistle.ogg")
 	_train_event_streams = {
 		# Automatic departures previously replayed the same long locomotive
 		# whistle as the manual horn. Moving trains could therefore fill the hub
@@ -872,7 +872,7 @@ func _add_recorded_wind(node_name: String, position_value: Vector3,
 	var source := _new_spatial_source(node_name, position_value, -25.0,
 		max_distance_value, max_distance_value * 0.12)
 	source.stream = _load_looping_recording(
-		"res://assets/audio/world_objects/tree_wind_loop.wav",
+		"res://assets/audio/world_objects/tree_wind_loop.ogg",
 		ProceduralFoleyScript.make_wind_loop(2603, true))
 	source.play()
 

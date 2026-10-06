@@ -39,7 +39,7 @@ func _test_scene_routes(campaign: Node) -> void:
 		"the optional guided Lens story remains available")
 	var expected := {
 		"mind": "res://scenes/popThoughtsMenu.tscn",
-		"heart": "res://scenes/heart_melody/heart_melody_world.tscn",
+		"heart": "res://scenes/music_minigame.tscn",
 		"creator": "res://scenes/drawing_tool.tscn",
 	}
 	for kingdom_id in expected:
@@ -89,31 +89,28 @@ func _test_scene_routes(campaign: Node) -> void:
 
 func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
 	assert(campaign.can_enter_kingdom("mind"), "Mind Spark starts the journey")
-	assert(campaign.can_enter_kingdom("heart"), "Heart Melody is independently available")
+	assert(not campaign.can_enter_kingdom("heart"), "Heart Melody waits for Star of Wisdom")
 	assert(not campaign.can_enter_kingdom("creator"), "Creator's Light waits for both earlier treasures")
 	assert(campaign.next_kingdom_id() == "mind", "Mind Spark is the first unfinished kingdom")
 
-	# Stage is decorative/wake state and Heart remains open without mutating it.
+	# Stage is decorative/wake state, never a shortcut through content.
 	state.stage = 3
-	assert(campaign.can_enter_kingdom("heart"),
-		"Heart access is independent of stage and treasure state")
+	assert(not campaign.can_enter_kingdom("heart"),
+		"stage alone cannot open Heart Melody")
 
 	state.record_thought_echo("I am learning and growing", "learning")
 	state.record_thought_echo("I can take one brave step", "brave_step")
 	state.mark_popped("I am learning and growing")
-	assert(not state.has_treasure("star_of_wisdom"), "one echo does not fabricate the Star")
+	assert(not state.has_treasure("star_of_wisdom"), "one echo cannot open Heart Melody")
 	state.mark_popped("I can take one brave step")
 	assert(state.complete_mind_spark(2), "two resolved curated echoes complete Mind Spark")
 	assert(state.has_treasure("star_of_wisdom"), "thought completion earns the Star")
-	assert(campaign.can_enter_kingdom("heart"), "Heart remains available after legitimate Mind progress")
+	assert(campaign.can_enter_kingdom("heart"), "Star of Wisdom opens Heart Melody")
 	assert(not campaign.can_enter_kingdom("creator"), "Creator still waits for Harmony Jewel")
 	assert(campaign.next_kingdom_id() == "heart", "Heart Melody is next")
 
 	state.record_emotion("hope", Color(0.4, 0.8, 0.6))
-	assert(not state.has_treasure("harmony_jewel"), "Island 1 feelings cannot grant the Jewel")
-	assert(not campaign.can_enter_kingdom("creator"), "new Heart players remain on Island 1")
-	# Explicit legacy-completion fixture for the remaining route tests.
-	state.treasures["harmony_jewel"] = true
+	assert(state.has_treasure("harmony_jewel"), "emotion activity earns Harmony Jewel")
 	assert(campaign.can_enter_kingdom("creator"), "both earlier treasures open Creator's Light")
 	assert(campaign.next_kingdom_id() == "creator", "Creator's Light is next")
 

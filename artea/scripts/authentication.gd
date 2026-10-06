@@ -62,14 +62,19 @@ func on_login_succeeded(auth):
 	get_tree().current_scene.queue_free() 
 	#get_tree().change_scene_to_file("res://Game.tscn")
 	
-# Called when sign up is successful	
+# Called when sign up is successful
 func on_signup_succeeded(auth):
 	print(auth)
 	%StateLabel.text = "Sign up success!"
 	Firebase.Auth.save_auth(auth)
-	# Was res://Game.tscn, which does not exist: a player who registered a new
-	# account landed nowhere.
-	get_tree().change_scene_to_file(HUB_SCENE)
+	# change_scene_to_file() loads and builds the hub synchronously on the main
+	# thread, so the window sat frozen through shader compilation and grass
+	# placement with no feedback. Route through the loading screen like login
+	# does, so that cost is hidden behind a progress bar instead.
+	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
+	loading_screen.next_scene_path = HUB_SCENE
+	get_tree().root.add_child(loading_screen)
+	get_tree().current_scene.queue_free()
 
 # Called if login fails	
 func on_login_failed(error_code, message):

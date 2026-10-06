@@ -311,7 +311,13 @@ func moveLogic(delta) -> void:
 			_play_locomotion_animation(locomotion, 1.05 if isRunning else 0.72)
 		
 		var targetAngle = -movementInput.angle() + PI/2
-		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
+		# Guarded like every other skin lookup here: this runs before
+		# move_and_slide(), so a missing RogueSkin -- an unimported fox.glb on a
+		# clone without Git LFS -- would abort _physics_process and freeze the
+		# player outright rather than just leaving them unrendered.
+		var visual := get_node_or_null("RogueSkin") as Node3D
+		if visual != null:
+			visual.rotation.y = rotate_toward(visual.rotation.y, targetAngle, 6.0 * delta)
 	else:
 		velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
 		velocity.x = velocity2D.x

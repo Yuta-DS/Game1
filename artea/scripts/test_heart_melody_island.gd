@@ -42,7 +42,11 @@ func run() -> void:
 	var js = load("res://scripts/JourneyState.gd").new()
 	js.save_path = "user://heart_journey_test.json"
 	js.record_emotion("hope", Color.PINK)
-	check(not js.has_treasure("harmony_jewel"), "new emotion cannot grant jewel")
+	check(js.has_treasure("harmony_jewel"), "main canonical music reward remains available")
+	# The chapter never calls record_emotion. Its existing version-2 saves
+	# cannot infer a reward from an optional old emotion record.
+	js.treasures.erase("harmony_jewel")
+	js.save()
 	var js2 = load("res://scripts/JourneyState.gd").new()
 	js2.save_path = js.save_path
 	js2.load_journey()
@@ -79,6 +83,9 @@ func run() -> void:
 	Input.action_release("move_right")
 	check(world.player.position.x > -35 and world.player.position.y > -2, "real player crosses connected meadow without falling")
 	# Real UI buttons, including cancellation and retained mismatch.
+	world.chapter_world.harvest(0)
+	press("Harvest protected story allotment")
+	world._close()
 	world._planter(0)
 	world.preview_choice = 0
 	press("Preview sound and symbol")

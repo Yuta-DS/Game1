@@ -16,7 +16,7 @@ func run() -> void:
 	root.add_child(fixture)
 	current_scene = fixture
 	var gate = load("res://scenes/mind_spark/world_gate.tscn").instantiate()
-	gate.target_kingdom_id = "heart"
+	gate.target_kingdom_id = "heart_melody"
 	gate.target_world_path = NodePath()
 	fixture.add_child(gate)
 	var player := CharacterBody3D.new()

@@ -2903,11 +2903,15 @@ func _on_recovery_body_entered(body: Node3D) -> void:
 	if body == _player and _player != null:
 		var regions := get_parent().get_parent() if get_parent() != null and get_parent().get_parent() != null else null
 		var floating_world := regions.get_parent() if regions != null else null
+		var respawn := _last_safe_position
 		if regions != null and floating_world != null and regions.has_method("get_safe_respawn"):
 			var safe_local: Vector3 = regions.call("get_safe_respawn", floating_world.to_local(_player.global_position))
-			_player.global_position = floating_world.to_global(safe_local)
-		else:
-			_player.global_position = _last_safe_position
+			respawn = floating_world.to_global(safe_local)
+		# Milo flies the player back when he is around; otherwise teleport.
+		var manager := get_node_or_null("/root/MiloCompanionManager")
+		if manager != null and bool(manager.call("request_fall_rescue", respawn)):
+			return
+		_player.global_position = respawn
 		_player.velocity = Vector3.ZERO
 
 

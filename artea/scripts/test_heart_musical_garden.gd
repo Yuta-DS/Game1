@@ -21,7 +21,7 @@ func run() -> void:
 	var state := get_root().get_node("JourneyState")
 	state.treasures["star_of_wisdom"] = false
 	state.treasures["harmony_jewel"] = false
-	check(get_root().get_node("JourneyCampaign").can_enter_kingdom("heart"), "Heart entry is open on a new journey")
+	check(get_root().get_node("JourneyCampaign").can_enter_kingdom("heart_melody"), "Heart entry is open on a new journey")
 	check(not get_root().get_node("JourneyCampaign").can_enter_kingdom("creator"), "independent Heart access does not open Creator")
 	var start_scene := FileAccess.get_file_as_string("res://scenes/start_screen.tscn")
 	check(not start_scene.contains("Visit Heart Melody") and not start_scene.contains("VisitHeartMelodyButton"),

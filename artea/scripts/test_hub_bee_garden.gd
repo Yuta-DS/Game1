@@ -12,12 +12,33 @@ func _init() -> void:
 	var garden := BeeGarden.new()
 	garden.call("_build_shared_materials")
 	garden.call("_build_batched_bees")
+	garden.call("_build_batched_butterflies")
 	if garden.bee_count != garden.ORIGINAL_BEE_COUNT * garden.POPULATION_MULTIPLIER:
-		_fail("bee population is not exactly 18 times the original swarm")
+		_fail("bee population is not a whole multiple of the original swarm")
 		return
 	var batched := garden.get_node_or_null("BatchedBees") as MultiMeshInstance3D
-	if batched == null or batched.multimesh.instance_count != 252:
-		_fail("252 bees must share one Web-safe MultiMesh")
+	if batched == null or batched.multimesh.instance_count != garden.bee_count:
+		_fail("every bee must share one Web-safe MultiMesh")
+		return
+	if garden.bee_count > 120:
+		_fail("the swarm is back to crowding the approach to town")
+		return
+
+	# The meadow was thinned and slowed deliberately; both are easy to undo by
+	# retuning one number, so both are pinned here.
+	if garden.call("bee_flight_duration", 0) < 6.0:
+		_fail("bees are darting between flowers again")
+		return
+	if garden.call("butterfly_flight_duration", 0) 			<= garden.call("bee_flight_duration", 0):
+		_fail("butterflies must drift more slowly than the bees")
+		return
+
+	var fluttering := garden.get_node_or_null("BatchedButterflies") as MultiMeshInstance3D
+	if fluttering == null or fluttering.multimesh.instance_count != garden.butterfly_count:
+		_fail("every butterfly must share one Web-safe MultiMesh")
+		return
+	if not fluttering.multimesh.use_colors:
+		_fail("butterflies are tinted per instance, so the MultiMesh needs colours")
 		return
 
 	var flower_points: Array[Vector3] = [
@@ -43,11 +64,34 @@ func _init() -> void:
 			_fail("every bee size must be 50 to 60 percent smaller")
 			return
 
+	garden.call("_seed_butterfly_paths")
+	var butterflies: Array = garden.get("_butterflies")
+	if butterflies.size() != garden.butterfly_count:
+		_fail("butterflies were not given flight paths")
+		return
+	# Checked through butterfly_wing_colour rather than the MultiMesh: headless
+	# runs on the dummy renderer, which does not retain instance colours, so
+	# get_instance_color would read black back for every one of them.
+	var wing_colours := {}
+	for butterfly_index in butterflies.size():
+		wing_colours[garden.call("butterfly_wing_colour", butterfly_index)] = true
+		if butterflies[butterfly_index]["source"] == butterflies[butterfly_index]["target"]:
+			_fail("a butterfly must have a different destination flower")
+			return
+	if wing_colours.size() < 3:
+		_fail("butterflies must not all come out the same colour")
+		return
+
 	var before_progress: float = bees[0]["progress"]
+	var before_butterfly: float = butterflies[0]["progress"]
 	garden.call("_process", 0.5)
 	var moved_bees: Array = garden.get("_bees")
 	if float(moved_bees[0]["progress"]) <= before_progress:
 		_fail("batched bee did not travel toward another flower")
+		return
+	var moved_butterflies: Array = garden.get("_butterflies")
+	if float(moved_butterflies[0]["progress"]) <= before_butterfly:
+		_fail("batched butterfly did not travel toward another flower")
 		return
 
 	var tree_points: Array[Vector3] = [Vector3.ZERO, Vector3(3, 0, 0)]
@@ -58,7 +102,9 @@ func _init() -> void:
 		_fail("bee homes were not mounted at available tree positions")
 		return
 
-	print("HUB_BEE_GARDEN_TEST: PASS — 252 batched bees, three 50–60 percent smaller sizes, flower travel, and tree homes")
+	print("HUB_BEE_GARDEN_TEST: PASS — %d batched bees at %.1fs a trip, %d tinted butterflies at %.1fs, three sizes, flower travel, and tree homes" % [
+		garden.bee_count, garden.call("bee_flight_duration", 0),
+		garden.butterfly_count, garden.call("butterfly_flight_duration", 0)])
 	quit(0)
 
 

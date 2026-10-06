@@ -133,8 +133,25 @@ func _on_register_button_pressed() -> void:
 				)
 			else:
 				print("REGISTER FAILED")
+				print("Backend response data type: ", typeof(data))
+				print("Backend response data content: ", data)
 				pass_node.text = ""
-				show_message("Username already exists!")
+
+				# This used to unconditionally say "Username already exists!"
+				# regardless of what actually went wrong - including a plain
+				# connection failure (data is null, not a real server error),
+				# which made an unreachable backend indistinguishable from a
+				# real duplicate account.
+				if typeof(data) == TYPE_DICTIONARY and data.has("error"):
+					var error_msg = str(data["error"]).to_upper()
+					if "EXIST" in error_msg:
+						show_message("Username already exists!")
+					elif "MISSING" in error_msg:
+						show_message("Fields cannot be empty!")
+					else:
+						show_message("Registration failed: " + str(data["error"]))
+				else:
+					show_message("Could not reach the server. Check your connection and try again.")
 	)
 
 # Connected to your physical 'GuestButton' (Play Offline as Guest)

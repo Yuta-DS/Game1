@@ -405,7 +405,7 @@ func _process(delta: float) -> void:
 			local = player_local_position()
 		# Hysteresis keeps the camera steady at the foot of the entrance arch.
 		var inside := local.x > (-100 if embedded_active else -88) and local.x < 490 and absf(local.z) < 66 and local.y < 24 and local.y > -12
-		if inside and not embedded_active and get_node("/root/JourneyCampaign").can_enter_kingdom("heart"):
+		if inside and not embedded_active and get_node("/root/JourneyCampaign").can_enter_kingdom("heart_melody"):
 			_set_embedded_active(true)
 		elif not inside and embedded_active:
 			_set_embedded_active(false)

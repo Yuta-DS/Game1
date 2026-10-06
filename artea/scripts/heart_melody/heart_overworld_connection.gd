@@ -38,12 +38,12 @@ func _ready() -> void:
 	_update_lock()
 
 func _process(_delta: float) -> void:
-	var unlocked: bool = get_node("/root/JourneyCampaign").can_enter_kingdom("heart")
+	var unlocked: bool = get_node("/root/JourneyCampaign").can_enter_kingdom("heart_melody")
 	if unlocked != _unlocked:
 		_update_lock()
 
 func _update_lock() -> void:
-	_unlocked = get_node("/root/JourneyCampaign").can_enter_kingdom("heart")
+	_unlocked = get_node("/root/JourneyCampaign").can_enter_kingdom("heart_melody")
 	barrier.get_parent().visible = not _unlocked
 	lock_label.visible = false
 	for shape in barrier.get_children():

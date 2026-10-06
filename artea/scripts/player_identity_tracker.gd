@@ -62,23 +62,6 @@ func has_evidence(evidence_id: String) -> bool:
 	return evidence.has(evidence_id)
 
 
-func clear_world_evidence(world_id: String) -> bool:
-	# Heart's journey erase must not remove or reinterpret existing Mind Spark
-	# answers, locked results, or reveal state.
-	var removed: Array[String] = []
-	for id in evidence:
-		if str(evidence[id].get("world_id", "mind_spark")) == world_id:
-			removed.append(str(id))
-	if removed.is_empty(): return true
-	for id in removed:
-		var side := str(evidence[id].get("side", ""))
-		if identity_axis_counts.has(side): identity_axis_counts[side] = maxi(0, int(identity_axis_counts[side]) - 1)
-		evidence.erase(id)
-		identity_evidence_ids.erase(id)
-	identity_answer_history = identity_answer_history.filter(func(item): return str(item.get("evidence_id", "")) not in removed)
-	return save()
-
-
 func load_evidence() -> void:
 	evidence.clear()
 	_reset_summary()
@@ -187,3 +170,20 @@ func _rebuild_summary_from_evidence() -> void:
 		identity_evidence_ids.append(str(evidence_id))
 		identity_answer_history.append({"evidence_id": str(evidence_id), "side": side,
 			"world_id": str(item.get("world_id", "mind_spark"))})
+
+
+func clear_world_evidence(world_id: String) -> bool:
+	# Heart's journey erase must not remove or reinterpret existing Mind Spark
+	# answers, locked results, or reveal state.
+	var removed: Array[String] = []
+	for id in evidence:
+		if str(evidence[id].get("world_id", "mind_spark")) == world_id:
+			removed.append(str(id))
+	if removed.is_empty(): return true
+	for id in removed:
+		var side := str(evidence[id].get("side", ""))
+		if identity_axis_counts.has(side): identity_axis_counts[side] = maxi(0, int(identity_axis_counts[side]) - 1)
+		evidence.erase(id)
+		identity_evidence_ids.erase(id)
+	identity_answer_history = identity_answer_history.filter(func(item): return str(item.get("evidence_id", "")) not in removed)
+	return save()

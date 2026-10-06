@@ -8,6 +8,9 @@ The old GitLab project is kept around as a secondary/backup remote — it
 isn't going away, but **GitHub is where you should push and pull from now
 on.**
 
+(Maintainers: the full repository migration runbook is in
+[MIGRATION_GITLAB_TO_GITHUB.md](./MIGRATION_GITLAB_TO_GITHUB.md).)
+
 ## If you already have a local clone (most people)
 
 Run these from inside your existing clone:
