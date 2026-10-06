@@ -4,11 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cjyonviflkdc3"
-valid=false
+path="res://.godot/imported/crown_line_runtime_textured.glb-26227d3d75a31bbda322f98c59cfc82a.scn"
 
 [deps]
 
 source_file="res://assets3D/crown_line_train/crown_line_runtime_textured.glb"
+dest_files=["res://.godot/imported/crown_line_runtime_textured.glb-26227d3d75a31bbda322f98c59cfc82a.scn"]
 
 [params]
 
