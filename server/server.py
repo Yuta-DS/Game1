@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import (
     JWTManager,
@@ -90,7 +91,10 @@ AI_HEALTH_CHECK_SECONDS = float(os.environ.get(
 ))
 AI_UPSTREAM_TIMEOUT_SECONDS = float(os.environ.get(
     "AI_UPSTREAM_TIMEOUT_SECONDS",
-    "25"
+    # Vision world manifests are larger than guide responses and routinely need
+    # more than 25 seconds. Keep two-route failover inside the game's 90-second
+    # wait while allowing either route enough time to return valid schema JSON.
+    "40"
 ))
 AI_CACHE_MAX_AGE_SECONDS = int(os.environ.get(
     "AI_CACHE_MAX_AGE_SECONDS",
@@ -102,11 +106,39 @@ os.makedirs(AI_CACHE_DIR, exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+_DEFAULT_JWT_SECRET = 'dev_secret_change_later_12345'
 app.config['JWT_SECRET_KEY'] = os.environ.get(
     "JWT_SECRET_KEY",
-    'dev_secret_change_later_12345'
+    _DEFAULT_JWT_SECRET
 )
+if app.config['JWT_SECRET_KEY'] == _DEFAULT_JWT_SECRET:
+    print(
+        "[server] WARNING: JWT_SECRET_KEY is not set - using the public "
+        "default from source. Anyone who has read this repository can "
+        "forge a valid login token. Set a real JWT_SECRET_KEY before "
+        "deploying anywhere reachable by players."
+    )
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
+
+# A browser-hosted export talks to this API from a different origin than
+# the one serving the game, so without CORS every request gets blocked
+# client-side regardless of whether the server itself responds correctly.
+# Comma-separated so a deploy can lock this down to the real game origin
+# (e.g. "https://play.example.com") instead of leaving it wide open.
+_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "*")
+CORS(
+    app,
+    origins=[o.strip() for o in _cors_origins.split(",")] if _cors_origins != "*" else "*",
+    supports_credentials=False
+)
+
+# Standard fix for an unauthenticated client filling the server disk via
+# /upload_artwork: reject the request before it's fully read, rather than
+# after it's already on disk.
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get(
+    "MAX_UPLOAD_BYTES",
+    20 * 1024 * 1024
+))
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
@@ -133,6 +165,13 @@ class Artwork(db.Model):
     title = db.Column(db.String(100), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
     is_public = db.Column(db.Boolean, default=False)
+
+# Runs at import time, not just under `if __name__ == '__main__'`: a
+# production WSGI server (gunicorn) imports this module and calls the `app`
+# object directly, it never executes the __main__ block, so table creation
+# has to happen here or a fresh deploy has no `user`/`artwork` tables at all.
+with app.app_context():
+    db.create_all()
 
 # =========================
 # REGISTER
@@ -774,6 +813,62 @@ def _offline_world_manifest(title, creative_brief, existing_manifest):
     }
 
 
+def _world_manifest_from_vision_brief(title, creative_brief):
+    """Recover a semantic world from the successful vision-guide response.
+
+    The creative guide and world builder use separate circuits. If the larger
+    world request times out after vision already identified concrete subjects,
+    preserve that AI result as a validated cache fallback instead of replacing
+    it with an unrelated two-object meadow.
+    """
+    if not isinstance(creative_brief, dict) or not creative_brief:
+        return None
+    searchable = json.dumps(creative_brief, ensure_ascii=False).lower()
+    subject_specs = (
+        ("person", ("person", "girl", "boy", "child", "woman", "man"), "foreground center"),
+        ("boat", ("boat", "canoe", "ship"), "foreground left"),
+        ("pagoda", ("pagoda", "temple"), "background left"),
+        ("tree", ("tree", "willow"), "midground right"),
+        ("water", ("water", "lake", "river", "sea", "pond"), "foreground center"),
+        ("mountain", ("mountain", "hill", "foothill"), "background center"),
+        ("bridge", ("bridge",), "midground center"),
+        ("house", ("house", "home", "cottage"), "midground left"),
+        ("cloud", ("cloud",), "sky"),
+        ("sun", ("sun",), "sky right"),
+        ("flower", ("flower",), "foreground right"),
+        ("bird", ("bird",), "sky left"),
+    )
+    objects = []
+    for subject_type, aliases, position_hint in subject_specs:
+        if not any(alias in searchable for alias in aliases):
+            continue
+        objects.append({
+            "id": f"vision_{subject_type}_{len(objects) + 1}",
+            "type": subject_type,
+            "description": f"the {subject_type} identified by the creative vision guide",
+            "position_hint": position_hint,
+            "depth_layer": (
+                "far" if "background" in position_hint or "sky" in position_hint
+                else "near" if "foreground" in position_hint else "middle"
+            ),
+            "scale_hint": "large" if subject_type in {"water", "mountain"} else "medium",
+            "source": "vision_guide_cache",
+        })
+    if len(objects) < 3:
+        return None
+    recovered = _upgrade_legacy_semantic_manifest({
+        "world_title": title or creative_brief.get("title") or "My Living Artwork",
+        "celebration": creative_brief.get("celebration", "Your artwork has opened into a world."),
+        "environment": creative_brief.get("scene_description", ""),
+        "visual_style": "faithful reconstruction from the creative vision guide",
+        "objects": objects,
+        "characters": [],
+        "animations": [],
+        "interactions": [],
+    })
+    return recovered if _semantic_world_manifest_is_complete(recovered) else None
+
+
 def _probe_open_circuits_once():
     checked_keys = set()
     for service in ("creative_guide", "world_builder"):
@@ -1233,13 +1328,21 @@ def ai_world_builder():
                 ai_source = "cache"
                 status = "cached_fallback"
             else:
-                manifest = _offline_world_manifest(
-                    title,
-                    creative_brief or {},
-                    existing_manifest or {}
+                manifest = _world_manifest_from_vision_brief(
+                    title, creative_brief or {}
                 )
-                ai_source = "offline"
-                status = "offline_fallback"
+                if manifest:
+                    ai_source = "cache"
+                    status = "vision_brief_cache_fallback"
+                    _save_ai_cache("world_builder", fingerprint, manifest)
+                else:
+                    manifest = _offline_world_manifest(
+                        title,
+                        creative_brief or {},
+                        existing_manifest or {}
+                    )
+                    ai_source = "offline"
+                    status = "offline_fallback"
 
         return jsonify({
             "status": status,
@@ -1271,12 +1374,10 @@ def home():
 # =========================
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-
-    # Port 80 is the production default (systemd runs as root and can
-    # bind it). On macOS/Linux dev machines binding 80 needs root, so
-    # override with e.g. PORT=8000 instead of running the server as root.
+    # This is Flask's own dev server - single-threaded, no hardening, and
+    # its own startup banner says not to use it in production. Production
+    # deploys run this module under gunicorn instead (see flaskapp.service),
+    # which never reaches this block at all.
     app.run(
         host=os.environ.get('HOST', '0.0.0.0'),
         port=int(os.environ.get('PORT', 80)),

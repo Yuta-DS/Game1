@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dosihts7jrqpx"
 path.s3tc="res://.godot/imported/Red-Tree.png-9b495b2feb70d2d548e225701e39466c.s3tc.ctex"
-path.etc2="res://.godot/imported/Red-Tree.png-9b495b2feb70d2d548e225701e39466c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/Trees/Red-Tree.png"
-dest_files=["res://.godot/imported/Red-Tree.png-9b495b2feb70d2d548e225701e39466c.s3tc.ctex", "res://.godot/imported/Red-Tree.png-9b495b2feb70d2d548e225701e39466c.etc2.ctex"]
+dest_files=["res://.godot/imported/Red-Tree.png-9b495b2feb70d2d548e225701e39466c.s3tc.ctex"]
 
 [params]
 

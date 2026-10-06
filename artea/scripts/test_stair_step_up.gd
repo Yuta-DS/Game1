@@ -68,12 +68,19 @@ func _run() -> void:
 
 	var player: CharacterBody3D = PLAYER.instantiate()
 	root.add_child(player)
+	player.set_physics_process(false)
+	player.set_process_input(false)
 	# Start on the ground slab, just short of the first riser.
 	player.global_position = Vector3(0.0, 1.2, -1.0)
 
-	# Let the body settle onto the ground before driving it.
-	for _i in 20:
+	# Settle with the same explicit motion loop used by the traversal below. The
+	# packed controller is disabled so it cannot apply a second move_and_slide().
+	for _i in 120:
+		player.velocity.y -= 20.0 * (1.0 / 60.0)
+		player.move_and_slide()
 		await physics_frame
+		if player.is_on_floor():
+			break
 
 	var start_y := player.global_position.y
 	var start_z := player.global_position.z
@@ -94,6 +101,11 @@ func _run() -> void:
 		player._try_step_up(was_on_floor, pre, intended, 1.0 / 60.0)
 		walked_frames += 1
 		await physics_frame
+		# Stop on the last tread. The former test kept walking far beyond the
+		# isolated flight, fell into empty space, and reported that fall as a stair
+		# failure even after the player had climbed successfully.
+		if player.global_position.z >= STEP_SPACING * float(STEP_COUNT - 1):
+			break
 
 	var climbed := player.global_position.y - start_y
 	var advanced := player.global_position.z - start_z
@@ -122,4 +134,4 @@ func _run() -> void:
 
 
 func _init() -> void:
-	_run()
+	call_deferred("_run")

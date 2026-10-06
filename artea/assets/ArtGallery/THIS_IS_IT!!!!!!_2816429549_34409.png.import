@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bv1h6q28sqeht"
 path.s3tc="res://.godot/imported/THIS_IS_IT!!!!!!_2816429549_34409.png-f78a150fd888d5b4f2f0749da27ddd69.s3tc.ctex"
-path.etc2="res://.godot/imported/THIS_IS_IT!!!!!!_2816429549_34409.png-f78a150fd888d5b4f2f0749da27ddd69.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/ArtGallery/THIS_IS_IT!!!!!!_2816429549_34409.png"
-dest_files=["res://.godot/imported/THIS_IS_IT!!!!!!_2816429549_34409.png-f78a150fd888d5b4f2f0749da27ddd69.s3tc.ctex", "res://.godot/imported/THIS_IS_IT!!!!!!_2816429549_34409.png-f78a150fd888d5b4f2f0749da27ddd69.etc2.ctex"]
+dest_files=["res://.godot/imported/THIS_IS_IT!!!!!!_2816429549_34409.png-f78a150fd888d5b4f2f0749da27ddd69.s3tc.ctex"]
 
 [params]
 

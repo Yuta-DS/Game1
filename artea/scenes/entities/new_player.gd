@@ -23,6 +23,26 @@ var interacting := false  # Critical fix for team's grass shader
 # --- INVENTORY SYSTEM ---
 @export var inventory_data: inventoryData
 @onready var inventory_gui: Control = $InventoryGUI
+
+# Per-spawn idle facing override, in radians. Only affects the visual model's
+# rotation before the player first moves -- moveLogic() below recomputes
+# RogueSkin's rotation from movement input every frame once input arrives, so
+# this must stay a LOCAL rotation on RogueSkin rather than a rotation on this
+# root node. Rotating the root instead would silently break moveLogic()'s
+# movement-relative facing everywhere (not just at spawn), since that code
+# derives RogueSkin's target rotation from camera-relative input assuming the
+# root itself never rotates.
+@export var override_initial_facing: bool = false
+@export_range(-360.0, 360.0, 0.1, "radians_as_degrees") var initial_facing_radians: float = 0.0
+# Per-spawn initial camera yaw override, in radians, applied to CameraController
+# (a SpringArm3D) after its own _ready() runs (children ready before parents,
+# so this always wins over its startYawY default). Independent of
+# initial_facing_radians above -- set both explicitly to keep the camera and
+# the visual model's spawn facing in agreement. Both overrides are gated by
+# their own bool rather than "value != 0.0", since 0 radians (due +Z) is a
+# perfectly valid angle a scene may legitimately want.
+@export var override_initial_camera_yaw: bool = false
+@export_range(-360.0, 360.0, 0.1, "radians_as_degrees") var initial_camera_yaw_radians: float = 0.0
 @onready var camera = $CameraController/Camera3D
 
 var movementInput := Vector2.ZERO
@@ -45,8 +65,30 @@ const MIN_STEP_FORWARD := 0.08
 # little lower than the near side.
 const STEP_DOWN_PROBE := 0.1
 
+# The imported fox mesh extends roughly 0.05 m below its root pivot. Nested
+# PackedScene transform overrides have also proved unreliable after reimport,
+# so establish both the authored scale and a small visual-only foot lift here.
+# The CharacterBody and capsule are unchanged: physics stays on the floor while
+# the rendered feet sit on top of it instead of being depth-clipped by paving.
+const VISUAL_MODEL_SCALE := 1.5
+# Keep enough render clearance for the skinned boot animation. The former
+# 0.055 m correction left the mesh bounds just 5 mm above the plane, which can
+# still depth-clip at normal camera distance even though physics is grounded.
+const VISUAL_FOOT_LIFT := 0.105
+
 
 func _ready() -> void:
+	var visual := get_node_or_null("RogueSkin") as Node3D
+	if visual != null:
+		visual.scale = Vector3.ONE * VISUAL_MODEL_SCALE
+		visual.position.y = VISUAL_FOOT_LIFT
+		visual.set_meta("ground_alignment", "feet_on_rendered_surface")
+		if override_initial_facing:
+			visual.rotation.y = initial_facing_radians
+	if override_initial_camera_yaw:
+		var cam_rig := get_node_or_null("CameraController")
+		if cam_rig:
+			cam_rig.rotation.y = initial_camera_yaw_radians
 	# The stair treads are separate boxes, so the body needs to stay attached to
 	# them on the way down instead of launching off each edge.
 	floor_snap_length = 0.7
@@ -273,7 +315,13 @@ func moveLogic(delta) -> void:
 			_play_locomotion_animation(locomotion, 1.05 if isRunning else 0.72)
 		
 		var targetAngle = -movementInput.angle() + PI/2
-		$RogueSkin.rotation.y = rotate_toward($RogueSkin.rotation.y, targetAngle, 6.0 * delta)
+		# Guarded like every other skin lookup here: this runs before
+		# move_and_slide(), so a missing RogueSkin -- an unimported fox.glb on a
+		# clone without Git LFS -- would abort _physics_process and freeze the
+		# player outright rather than just leaving them unrendered.
+		var visual := get_node_or_null("RogueSkin") as Node3D
+		if visual != null:
+			visual.rotation.y = rotate_toward(visual.rotation.y, targetAngle, 6.0 * delta)
 	else:
 		velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
 		velocity.x = velocity2D.x

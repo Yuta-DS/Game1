@@ -1,6 +1,41 @@
 # Realistic field-recorded foley
 
-The surface footsteps in `footsteps/grass`, `footsteps/earth`,
+## Active professional Foley upgrade
+
+The active grass, brick/stone masonry, gravel, and metal footsteps under
+`pro_footsteps/` use high-resolution masters selected from Sonniss's
+**#GameAudioGDC** bundles. The sources are licensed worldwide, non-exclusively,
+and royalty-free for games and other synchronized media. Attribution is not
+required, but the provenance is retained here for auditability.
+
+- `pro_footsteps/grass`: 192 kHz/24-bit **STEPS Dry Grass & Shrubs** recordings
+  by PMSFX (GDC 2020), supplemented with 96 kHz/24-bit grass gait takes from
+  Tovusound's **Edward – Foleyart Collection Add-On Extended Footsteps**
+  (GDC 2017).
+- `pro_footsteps/brick` and `pro_footsteps/stone`: separate impact selections
+  from Tovusound's 96 kHz/24-bit close asphalt-boot session. The brick set has
+  a restrained upper transient while the stone set retains more low impact;
+  neither set contains a metal recording.
+- `pro_footsteps/gravel` and `pro_footsteps/metal`: distinct 96 kHz/24-bit
+  performances from Studio 23's **Ultimate Footstep Collection** (GDC 2019).
+- `pro_vegetation`: separate passes through the PMSFX dry-grass skid/drag
+  master, kept independent from underfoot grass impacts.
+- `pro_train`: a 48 kHz/24-bit Royal Hudson steam-train ride and whistle by
+  Airborne Sound (GDC 2019). The ride is crossfaded into one seamless master,
+  then split into complementary engine/steam and rail-clatter frequency bands
+  so the two spatial layers do not duplicate or phase against one another.
+
+Source archive: https://sonniss.com/gameaudiogdc/
+
+Bundle license: https://sonniss.com/gdc-bundle-license/
+
+Game-ready footsteps are peak-safe, loudness matched, and encoded at 48 kHz
+Vorbis quality 8. Positional train layers are 48 kHz mono PCM so Godot, rather
+than a baked stereo image, controls listener-relative azimuth and distance.
+
+## Retained legacy recordings
+
+The earlier surface footsteps in `footsteps/grass`, `footsteps/earth`,
 `footsteps/gravel`, `footsteps/brick`, `footsteps/wood`, and
 `footsteps/metal` are selected and renamed excerpts from **Footsteps on
 Different Surfaces** by congusbongus:

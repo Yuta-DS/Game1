@@ -1,5 +1,7 @@
 extends Node3D
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 const PlayerScript := preload("res://scripts/creation_world/creation_world_player.gd")
 const LensControllerScript := preload("res://scripts/viewfinder/lens_controller.gd")
 const SketchCanvasScript := preload("res://scripts/creation_world/world_sketch_canvas.gd")
@@ -1287,7 +1289,7 @@ func _request_fresh_manifest() -> void:
 
 func _return_to_gallery() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
 
 
 func _load_artwork_texture() -> Texture2D:

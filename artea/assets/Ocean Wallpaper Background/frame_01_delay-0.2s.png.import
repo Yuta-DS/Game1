@@ -4,16 +4,15 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://0cjwhwk25stb"
 path.s3tc="res://.godot/imported/frame_01_delay-0.2s.png-d109d9b110ef678f23bd64e7c5b37f11.s3tc.ctex"
-path.etc2="res://.godot/imported/frame_01_delay-0.2s.png-d109d9b110ef678f23bd64e7c5b37f11.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Ocean Wallpaper Background/frame_01_delay-0.2s.png"
-dest_files=["res://.godot/imported/frame_01_delay-0.2s.png-d109d9b110ef678f23bd64e7c5b37f11.s3tc.ctex", "res://.godot/imported/frame_01_delay-0.2s.png-d109d9b110ef678f23bd64e7c5b37f11.etc2.ctex"]
+dest_files=["res://.godot/imported/frame_01_delay-0.2s.png-d109d9b110ef678f23bd64e7c5b37f11.s3tc.ctex"]
 
 [params]
 

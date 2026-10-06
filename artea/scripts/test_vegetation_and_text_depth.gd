@@ -50,15 +50,29 @@ func _run() -> void:
 			return
 	var grass_stack = grass.get("modifier_stack")
 	if grass_stack == null or grass_stack.stack.is_empty() \
-			or int(grass_stack.stack[0].amount) < 50000:
+			or int(grass_stack.stack[0].amount) < 120000:
 		_fail("desktop grass density is too low to cover the expanded island lawn")
 		return
+	var terrain_ground_filter_found := false
 	for modifier in grass_stack.stack:
 		var modifier_script = modifier.get_script() if modifier != null else null
 		if modifier_script != null and modifier_script.resource_path.ends_with("relax.gd") \
 				and int(modifier.iterations) != 0:
 			_fail("dense grass must not run the quadratic relax pass during hub load")
 			return
+		if modifier_script != null \
+				and modifier_script.resource_path.ends_with("project_on_terrain3d.gd"):
+			terrain_ground_filter_found = true
+			if not bool(modifier.enable_texture_filtering) \
+					or int(modifier.target_texture_id) != 0 \
+					or bool(modifier.not_target_texture) \
+					or not is_equal_approx(float(modifier.texture_threshold), 0.5) \
+					or float(modifier.max_slope) > 55.0:
+				_fail("3D grass and flowers must stay on gently sloped grassy ground")
+				return
+	if not terrain_ground_filter_found:
+		_fail("grass scatter must retain its Terrain3D ground filter")
+		return
 	for item in trees.get_children():
 		if not ("path" in item and "source_scale_multiplier" in item):
 			continue
@@ -97,6 +111,9 @@ func _run() -> void:
 		if flower_item == null or String(flower_item.path) != expected_path:
 			_fail("the lawn must scatter the %s 3D rainbow flower" % color_name)
 			return
+		if int(flower_item.proportion) != 36:
+			_fail("the %s flower density must remain at the requested 3x level" % color_name)
+			return
 		flower_proportion += int(flower_item.proportion)
 		var color_scene := load(expected_path) as PackedScene
 		if color_scene == null:
@@ -109,8 +126,8 @@ func _run() -> void:
 			return
 		petal_colors[north_petal.material_override.albedo_color] = true
 		color_flower.free()
-	if flower_proportion < 84 or petal_colors.size() != 7:
-		_fail("the lawn must contain all seven distinct rainbow flower colors")
+	if flower_proportion != 252 or petal_colors.size() != 7:
+		_fail("the lawn must contain all seven distinct rainbow flower colors at 3x density")
 		return
 	var grass_model := load("res://scenes/vegetation/grass_clump_3d.tscn") as PackedScene
 	var flower_model := load("res://scenes/vegetation/wildflower_3d.tscn") as PackedScene

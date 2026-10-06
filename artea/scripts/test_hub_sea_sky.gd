@@ -11,7 +11,7 @@ func _fail(message: String) -> void:
 
 
 func _run() -> void:
-	var water_scene := load("res://scripts/Water.tscn") as PackedScene
+	var water_scene := load("res://scenes/Water.tscn") as PackedScene
 	if water_scene == null:
 		_fail("water scene must load")
 		return
@@ -22,14 +22,16 @@ func _run() -> void:
 		_fail("sea must retain one continuous plane surface")
 		return
 	var plane := surface.mesh as PlaneMesh
-	if surface.position.y < 0.5:
+	# Water.tscn raises the complete water system at its root so the mesh,
+	# ambience, and effects stay aligned. Validate the composed transform.
+	if water.position.y + surface.position.y < 0.5:
 		_fail("sea must sit above the zero-height terrain shelf to prevent sand holes")
 		return
 	if plane.subdivide_width < 96 or plane.subdivide_depth < 96:
 		_fail("sea needs enough subdivisions for smooth vertex waves")
 		return
-	if old_torus == null or old_torus.visible:
-		_fail("the floating decorative water torus must remain hidden")
+	if old_torus != null and old_torus.visible:
+		_fail("the retired decorative water torus must stay removed or hidden")
 		return
 	var water_material := surface.get_surface_override_material(0) as ShaderMaterial
 	var water_code := water_material.shader.code if water_material != null else ""

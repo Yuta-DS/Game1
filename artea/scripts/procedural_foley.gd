@@ -173,14 +173,21 @@ static func make_train_event(event_name: StringName) -> AudioStreamWAV:
 		var progress := time / duration
 		var value := 0.0
 		if event_name == &"departure":
-			# A friendly two-note Crown Line departure call rather than a harsh
-			# real-world locomotive horn.
-			var note_envelope := sin(PI * clampf(progress, 0.0, 1.0))
-			var second_note := smoothstep(0.34, 0.48, progress)
-			value = sin(TAU * 293.66 * time) * (1.0 - second_note) * 0.44
-			value += sin(TAU * 392.0 * time) * second_note * 0.38
-			value += sin(TAU * 587.33 * time) * note_envelope * 0.08
-			value *= note_envelope
+			# Three irregular, airy chirps read as nearby bird life instead of the
+			# repeating two-note vehicle/bus call this event used to produce.
+			for chirp_start in [0.10, 0.43, 0.72]:
+				var local: float = progress - float(chirp_start)
+				if local < 0.0 or local > 0.18:
+					continue
+				var chirp_progress: float = local / 0.18
+				var envelope: float = sin(PI * chirp_progress)
+				var frequency: float = lerpf(1850.0, 2850.0, chirp_progress) \
+					+ sin(chirp_progress * PI * 3.0) * 240.0
+				value += sin(TAU * frequency * time) * envelope * 0.20
+				value += sin(TAU * frequency * 1.47 * time) * envelope * 0.045
+			var raw := random.randf_range(-1.0, 1.0)
+			hiss = lerpf(hiss, raw, 0.035)
+			value += hiss * sin(PI * progress) * 0.045
 		else:
 			# Brake shoe shimmer, followed by a pneumatic release at the dock.
 			var squeal_envelope := pow(maxf(0.0, 1.0 - progress), 1.7)

@@ -1,5 +1,7 @@
 extends Node
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 @export var painting_title: String = "artwork_1.png"
 
 
@@ -286,7 +288,11 @@ func go_to_scene(path: String) -> void:
 		if path == HUB_WORLD_PATH:
 			_request_castle_front_door_spawn()
 		print("TRAVELING to: ", path)
-		get_tree().change_scene_to_file(path)
+		# The hub is the heaviest scene in the project (its ProtonScatter grass
+		# alone places tens of thousands of instances), so leaving the gallery
+		# goes through the loading screen rather than freezing on a synchronous
+		# swap -- the same route used coming the other way.
+		SceneLoader.change_scene_with_loading(get_tree(), path)
 	else:
 		print("ERROR: Target scene file not found at path:", path)
 
