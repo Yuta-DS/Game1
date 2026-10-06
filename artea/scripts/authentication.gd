@@ -19,7 +19,7 @@ func _ready():
 		
 	if OS.get_name() == "Web":
 		var provider: AuthProvider = Firebase.Auth.get_GoogleProvider()
-		Firebase.Auth.set_redirect_uri("http://localhost:8060/index.html")
+		Firebase.Auth.set_redirect_uri(_get_web_redirect_uri())
 		var token = Firebase.Auth.get_token_from_url(provider)
 		if token:
 			Firebase.Auth.login_with_oauth(token, provider)
@@ -82,11 +82,17 @@ func _on_sign_in_google_button_pressed():
 	
 	if OS.get_name() == "Web":
 		# For web
-		Firebase.Auth.set_redirect_uri("http://localhost:8060/index.html")
+		Firebase.Auth.set_redirect_uri(_get_web_redirect_uri())
 		Firebase.Auth.get_auth_with_redirect(provider)
 	else:
 		# For desktop
 		Firebase.Auth.get_auth_localhost(provider, 8060)
+
+func _get_web_redirect_uri() -> String:
+	var redirect_uri = JavaScriptBridge.eval("window.location.origin + window.location.pathname", true)
+	if redirect_uri is String and not redirect_uri.is_empty():
+		return redirect_uri
+	return "http://localhost:8060/index.html"
 
 func _on_d_button_pressed() -> void:
 	# Was res://scenes/3DScenes.tscn, which does not exist.
