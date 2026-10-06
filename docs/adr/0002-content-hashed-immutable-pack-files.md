@@ -1,0 +1,3 @@
+# Packs and Parts use content-hashed filenames with immutable caching
+
+Production serves every Web build file with `no-store`, so each visit re-downloads everything; the setting was added to stop stale modules mixing with a new pack after a re-export. We instead name Packs and Parts by content hash, serve them with long-lived immutable cache headers on both Cloudflare Pages (`_headers`) and Vercel (`vercel.json`), and keep the HTML and a small manifest uncached. A new export produces new filenames, so stale mixes cannot happen and repeat visits cost almost nothing. Local `./web` keeps `no-store`.
