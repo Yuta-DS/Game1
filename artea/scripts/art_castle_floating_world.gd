@@ -1073,9 +1073,9 @@ func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width:
 func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vector3) -> void:
 	var recovery := Area3D.new()
 	recovery.name = "ApproachFallRecovery"
-	# Top of the box sits 16 m under the bridge, milo_fall_rescue.gd's
+	# Top of the box sits 28 m under the bridge, milo_fall_rescue.gd's
 	# RESCUE_DROP, so this fall feels like every other one.
-	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -26, 0)
+	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -38, 0)
 	recovery.collision_layer = 0
 	recovery.collision_mask = 1
 	var shape_node := CollisionShape3D.new()
