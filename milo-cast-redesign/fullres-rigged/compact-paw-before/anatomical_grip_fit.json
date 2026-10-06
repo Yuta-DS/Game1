@@ -1,0 +1,42 @@
+{
+  "settings": {
+    "mcp": [
+      36.0,
+      27.5,
+      19.5
+    ],
+    "pip": [
+      57.5,
+      60.0,
+      60.0
+    ],
+    "spread": 0,
+    "cup": 0.5000000000000001,
+    "thumb": [
+      17.5,
+      15.0,
+      10.889128053399872,
+      25.45050329334819,
+      13.244955072356305
+    ],
+    "cane_shift": [
+      -0.067,
+      0.062,
+      0
+    ]
+  },
+  "cost": 2.3366863619140594e-07,
+  "approximate_radial_gaps": {
+    "finger0": 0.001223848624538778,
+    "finger1": 0.0014516309217601428,
+    "finger2": 0.0012430653584804604,
+    "thumb": 0.0010263691020842378
+  },
+  "surface_intersections": {
+    "Cane_Gold_Collar": 0,
+    "Cane_Gold_Crook": 0,
+    "Cane_Gold_Ferrule": 0,
+    "Cane_Shaft": 0
+  },
+  "note": "Angle-limited coordinate descent, DIP=0.65 PIP; exact all-frame check still required after rebuilding."
+}

@@ -13,7 +13,6 @@
 extends Node3D
 
 const CrystalShader := preload("res://shaders/artea_crystal.gdshader")
-const HubLightFade := preload("res://scripts/hub_light_fade.gd")
 const CASTLE_NAME := "building_castle_red2"
 
 const BRASS := Color(0.72, 0.52, 0.24)
@@ -126,7 +125,6 @@ func _build_crown() -> void:
 		lamp.light_energy = 0.9
 		lamp.omni_range = 4.0
 		lamp.shadow_enabled = false
-		HubLightFade.apply(lamp)
 		arm.add_child(lamp)
 
 	var crown_jewel := MeshInstance3D.new()
@@ -153,7 +151,6 @@ func _build_crown() -> void:
 	_spire_lamp.light_energy = 1.4
 	_spire_lamp.omni_range = 7.0
 	_spire_lamp.shadow_enabled = false
-	HubLightFade.apply(_spire_lamp)
 	rig.add_child(_spire_lamp)
 
 	var bob := create_tween().set_loops()

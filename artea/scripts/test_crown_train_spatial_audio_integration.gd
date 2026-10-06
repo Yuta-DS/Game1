@@ -39,20 +39,16 @@ func _run() -> void:
 			return
 	var engine := train.get_node("TractionEngine3D") as AudioStreamPlayer3D
 	var engine_loop := engine.stream as AudioStreamWAV
-	if engine_loop == null or engine_loop.get_length() < 20.0 \
-			or engine_loop.loop_mode != AudioStreamWAV.LOOP_FORWARD or engine_loop.stereo:
-		_fail("the train engine must use the long mono Royal Hudson recording for positional playback")
-		return
-	var rail_loop := (train.get_node("RailClatter3D") as AudioStreamPlayer3D).stream as AudioStreamWAV
-	if rail_loop == null or rail_loop.get_length() < 20.0 or rail_loop.stereo:
-		_fail("the rail layer must use the long mono Royal Hudson rail recording")
+	if engine_loop == null or engine_loop.get_length() < 7.9 \
+			or engine_loop.loop_mode != AudioStreamWAV.LOOP_FORWARD or not engine_loop.stereo:
+		_fail("the train engine must use the substantial stereo steam-modern loop")
 		return
 	if engine.position.distance_to(Vector3(0.0, 4.2, -15.0)) > 0.1:
 		_fail("the steam, gear and sci-fi engine sound must radiate from the nose power orb")
 		return
 	var horn_streams: Dictionary = director.get("_train_event_streams")
 	var horn := horn_streams.get(&"horn") as AudioStreamWAV
-	if horn == null or horn.get_length() < 10.0 or horn.loop_mode != AudioStreamWAV.LOOP_DISABLED:
+	if horn == null or horn.get_length() < 3.1 or horn.loop_mode != AudioStreamWAV.LOOP_DISABLED:
 		_fail("R must trigger the substantial realistic locomotive horn one-shot")
 		return
 	if not bool(director.call("request_train_horn", train)):

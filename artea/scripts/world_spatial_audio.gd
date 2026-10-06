@@ -27,9 +27,11 @@ var _web_surface_map: Image
 const FOOTSTEP_SURFACES := [&"grass", &"earth", &"sand", &"gravel", &"brick", &"stone", &"wood", &"metal"]
 const RECORDED_FOOTSTEP_PATHS := {
 	&"grass": [
-		"res://assets/audio/pro_footsteps/grass/0.ogg", "res://assets/audio/pro_footsteps/grass/1.ogg",
-		"res://assets/audio/pro_footsteps/grass/2.ogg", "res://assets/audio/pro_footsteps/grass/3.ogg",
-		"res://assets/audio/pro_footsteps/grass/4.ogg", "res://assets/audio/pro_footsteps/grass/5.ogg"],
+		"res://assets/audio/footsteps/grass/0.ogg", "res://assets/audio/footsteps/grass/1.ogg",
+		"res://assets/audio/footsteps/grass/2.ogg", "res://assets/audio/footsteps/grass/3.ogg",
+		"res://assets/audio/footsteps/grass/4.ogg", "res://assets/audio/footsteps/grass/5.ogg",
+		"res://assets/audio/footsteps/grass/6.ogg", "res://assets/audio/footsteps/grass/7.ogg",
+		"res://assets/audio/footsteps/grass/8.ogg"],
 	&"earth": [
 		"res://assets/audio/footsteps/earth/0.ogg", "res://assets/audio/footsteps/earth/1.ogg",
 		"res://assets/audio/footsteps/earth/2.ogg", "res://assets/audio/footsteps/earth/3.ogg",
@@ -39,17 +41,21 @@ const RECORDED_FOOTSTEP_PATHS := {
 		"res://assets/audio/footsteps/sand/Fantozzi-SandL2.ogg", "res://assets/audio/footsteps/sand/Fantozzi-SandR2.ogg",
 		"res://assets/audio/footsteps/sand/Fantozzi-SandL3.ogg", "res://assets/audio/footsteps/sand/Fantozzi-SandR3.ogg"],
 	&"gravel": [
-		"res://assets/audio/pro_footsteps/gravel/0.ogg", "res://assets/audio/pro_footsteps/gravel/1.ogg",
-		"res://assets/audio/pro_footsteps/gravel/2.ogg", "res://assets/audio/pro_footsteps/gravel/3.ogg",
-		"res://assets/audio/pro_footsteps/gravel/4.ogg", "res://assets/audio/pro_footsteps/gravel/5.ogg"],
+		"res://assets/audio/footsteps/gravel/0.ogg", "res://assets/audio/footsteps/gravel/1.ogg",
+		"res://assets/audio/footsteps/gravel/2.ogg", "res://assets/audio/footsteps/gravel/3.ogg",
+		"res://assets/audio/footsteps/gravel/4.ogg", "res://assets/audio/footsteps/gravel/5.ogg",
+		"res://assets/audio/footsteps/gravel/6.ogg", "res://assets/audio/footsteps/gravel/7.ogg",
+		"res://assets/audio/footsteps/gravel/8.ogg", "res://assets/audio/footsteps/gravel/9.ogg"],
 	&"brick": [
-		"res://assets/audio/pro_footsteps/brick/0.ogg", "res://assets/audio/pro_footsteps/brick/1.ogg",
-		"res://assets/audio/pro_footsteps/brick/2.ogg", "res://assets/audio/pro_footsteps/brick/3.ogg",
-		"res://assets/audio/pro_footsteps/brick/4.ogg", "res://assets/audio/pro_footsteps/brick/5.ogg"],
+		"res://assets/audio/footsteps/brick/0.ogg", "res://assets/audio/footsteps/brick/1.ogg",
+		"res://assets/audio/footsteps/brick/2.ogg", "res://assets/audio/footsteps/brick/3.ogg",
+		"res://assets/audio/footsteps/brick/4.ogg", "res://assets/audio/footsteps/brick/5.ogg",
+		"res://assets/audio/footsteps/brick/6.ogg", "res://assets/audio/footsteps/brick/7.ogg",
+		"res://assets/audio/footsteps/brick/8.ogg"],
 	&"stone": [
-		"res://assets/audio/pro_footsteps/stone/0.ogg", "res://assets/audio/pro_footsteps/stone/1.ogg",
-		"res://assets/audio/pro_footsteps/stone/2.ogg", "res://assets/audio/pro_footsteps/stone/3.ogg",
-		"res://assets/audio/pro_footsteps/stone/4.ogg", "res://assets/audio/pro_footsteps/stone/5.ogg"],
+		"res://assets/audio/footsteps/stone/Fantozzi-StoneL1.ogg", "res://assets/audio/footsteps/stone/Fantozzi-StoneR1.ogg",
+		"res://assets/audio/footsteps/stone/Fantozzi-StoneL2.ogg", "res://assets/audio/footsteps/stone/Fantozzi-StoneR2.ogg",
+		"res://assets/audio/footsteps/stone/Fantozzi-StoneL3.ogg", "res://assets/audio/footsteps/stone/Fantozzi-StoneR3.ogg"],
 	&"wood": [
 		"res://assets/audio/footsteps/wood/0.ogg", "res://assets/audio/footsteps/wood/1.ogg",
 		"res://assets/audio/footsteps/wood/2.ogg", "res://assets/audio/footsteps/wood/3.ogg",
@@ -57,13 +63,14 @@ const RECORDED_FOOTSTEP_PATHS := {
 		"res://assets/audio/footsteps/wood/6.ogg", "res://assets/audio/footsteps/wood/7.ogg",
 		"res://assets/audio/footsteps/wood/8.ogg"],
 	&"metal": [
-		"res://assets/audio/pro_footsteps/metal/0.ogg", "res://assets/audio/pro_footsteps/metal/1.ogg",
-		"res://assets/audio/pro_footsteps/metal/2.ogg", "res://assets/audio/pro_footsteps/metal/3.ogg",
-		"res://assets/audio/pro_footsteps/metal/4.ogg", "res://assets/audio/pro_footsteps/metal/5.ogg"],
+		"res://assets/audio/footsteps/metal/0.ogg", "res://assets/audio/footsteps/metal/1.ogg",
+		"res://assets/audio/footsteps/metal/2.ogg", "res://assets/audio/footsteps/metal/3.ogg",
+		"res://assets/audio/footsteps/metal/4.ogg", "res://assets/audio/footsteps/metal/5.ogg",
+		"res://assets/audio/footsteps/metal/6.ogg", "res://assets/audio/footsteps/metal/7.ogg"],
 }
 const RECORDED_BRUSH_PATHS := [
-	"res://assets/audio/pro_vegetation/foliage_brush_0.ogg",
-	"res://assets/audio/pro_vegetation/foliage_brush_1.ogg",
+	"res://assets/audio/vegetation/leaves01.ogg",
+	"res://assets/audio/vegetation/leaves02.ogg",
 ]
 const WEB_TERRAIN_HALF_EXTENT := 2048.0
 const SURROUND_READY_META := &"surround_7_1_ready"
@@ -92,52 +99,37 @@ func _ready() -> void:
 			_vegetation_brush_streams.append(ProceduralFoleyScript.make_vegetation_brush(variant))
 	_world_loop_streams = {
 		&"windmill": _load_looping_recording(
-			"res://assets/audio/world_objects/tree_wind_loop.ogg",
+			"res://assets/audio/world_objects/tree_wind_loop.wav",
 			ProceduralFoleyScript.make_world_object_loop(&"mechanism")),
 		&"watermill": _load_looping_recording(
-			"res://assets/audio/world_objects/watermill_loop.ogg",
+			"res://assets/audio/world_objects/watermill_loop.wav",
 			ProceduralFoleyScript.make_world_object_loop(&"mechanism")),
 		&"lumbermill": _load_looping_recording(
-			"res://assets/audio/world_objects/sawmill_loop.ogg",
+			"res://assets/audio/world_objects/sawmill_loop.wav",
 			ProceduralFoleyScript.make_world_object_loop(&"mechanism")),
 		&"forge": _load_looping_recording(
 			"res://assets/audio/Campfire.ogg",
 			ProceduralFoleyScript.make_world_object_loop(&"forge")),
 		&"cave_air": _load_looping_recording(
-			"res://assets/audio/world_objects/cave_air_loop.ogg",
+			"res://assets/audio/world_objects/cave_air_loop.wav",
 			ProceduralFoleyScript.make_world_object_loop(&"cavern")),
 		&"aether_power": _load_looping_recording(
-			"res://assets/audio/world_objects/aether_power_loop.ogg",
+			"res://assets/audio/world_objects/aether_power_loop.wav",
 			ProceduralFoleyScript.make_world_object_loop(&"magic")),
 	}
 	_train_loop_streams = {
 		&"engine": _load_looping_recording(
-			"res://assets/audio/pro_train/royal_hudson_engine_loop.ogg",
+			"res://assets/audio/train/crown_train_steam_modern_loop.wav",
 			ProceduralFoleyScript.make_train_loop(&"engine")),
-		&"rail": _load_looping_recording("res://assets/audio/pro_train/royal_hudson_rail_loop.ogg",
+		&"rail": _load_looping_recording("res://assets/audio/train/real_train_rail.wav",
 			ProceduralFoleyScript.make_train_loop(&"rail")),
 		&"rush": ProceduralFoleyScript.make_wind_loop(31415, false),
 	}
-	var power_whistle := load("res://assets/audio/pro_train/royal_hudson_whistle.ogg")
+	var power_whistle := load("res://assets/audio/train/crown_train_power_whistle_horn.wav")
 	_train_event_streams = {
-		# Automatic departures previously replayed the same long locomotive
-		# whistle as the manual horn. Moving trains could therefore fill the hub
-		# with repeated "doo doo" calls even when the player never requested one.
-		# Keep the realistic whistle on the explicit R control and use a short,
-		# gentle bird chorus for unattended departures.
-		&"departure": ProceduralFoleyScript.make_train_event(&"departure"),
+		&"departure": power_whistle,
 		&"horn": power_whistle,
 		&"brake": ProceduralFoleyScript.make_train_event(&"brake"),
-		&"power_on": ProceduralFoleyScript.make_train_event(&"power_on"),
-		&"reverser": ProceduralFoleyScript.make_train_event(&"reverser"),
-		&"throttle": ProceduralFoleyScript.make_train_event(&"throttle"),
-		&"valve": ProceduralFoleyScript.make_train_event(&"valve"),
-		&"board": ProceduralFoleyScript.make_train_event(&"board"),
-		&"seat": ProceduralFoleyScript.make_train_event(&"seat"),
-		&"arrival": ProceduralFoleyScript.make_train_event(&"arrival"),
-		&"ui_confirm": ProceduralFoleyScript.make_train_event(&"ui_confirm"),
-		&"door": ProceduralFoleyScript.make_train_event(&"door"),
-		&"brake_release": ProceduralFoleyScript.make_train_event(&"brake_release"),
 	}
 	get_tree().node_added.connect(_on_tree_node_added)
 	process_physics_priority = 80
@@ -303,7 +295,8 @@ func _default_surround_distance(source: AudioStreamPlayer3D) -> float:
 func _source_moves_through_world(source: AudioStreamPlayer3D) -> bool:
 	var current: Node = source
 	while current != null and current != _active_scene:
-		if current is Node3D and _is_train_root(current as Node3D):
+		var label := String(current.name).to_lower()
+		if label == "rainbowgalaxytrain" or label.begins_with("train_"):
 			return true
 		current = current.get_parent()
 	return false
@@ -372,19 +365,12 @@ func _consider_world_audio_node(node: Node) -> void:
 
 func _is_train_root(node: Node3D) -> bool:
 	var label := String(node.name).to_lower()
-	# Imported Crown Line meshes intentionally use names such as TRAIN_Boiler and
-	# TRAIN_Wheel. Name-prefix matching attached a complete four-source sound rig
-	# to every one of those visual children. Real procedural trains mark their
-	# root explicitly; the unique story train name remains supported for scenes
-	# authored before that marker existed.
-	return label == "rainbowgalaxytrain" or bool(node.get_meta("spatial_train_root", false))
+	return label == "rainbowgalaxytrain" or label.begins_with("train_")
 
 
 func _has_managed_train_ancestor(node: Node) -> bool:
 	var current := node.get_parent()
 	while current != null and current != _active_scene:
-		if not is_instance_valid(current):
-			return false
 		if current.has_meta("spatial_train_audio"):
 			return true
 		current = current.get_parent()
@@ -410,22 +396,18 @@ func _register_train(train: Node3D) -> void:
 	rush.play()
 	var events := _new_attached_source(train, "TrainEvents3D", -8.0, 340.0, 28.0)
 	events.position = Vector3(0.0, 5.2, -15.0)
-	var controls := _new_attached_source(train, "TrainControls3D", -11.0, 85.0, 4.0)
-	controls.position = Vector3(0.0, 3.2, -15.8)
 	_train_states[instance_id] = {
 		"train": train,
 		"engine": engine,
 		"rail": rail,
 		"rush": rush,
 		"events": events,
-		"controls": controls,
 		"last_position": train.global_position,
 		"speed": 0.0,
 		"moving": false,
 		"stationary_time": 2.0,
 		"event_cooldown": 0.0,
 		"horn_cooldown": 0.0,
-		"event_history": [],
 	}
 
 
@@ -435,15 +417,8 @@ func _update_train_audio(delta: float) -> void:
 	var expired: Array[int] = []
 	for instance_id in _train_states:
 		var state: Dictionary = _train_states[instance_id]
-		# A Dictionary can retain a freed Object reference for one frame after a
-		# railway is replaced. Validate the Variant before casting it: casting a
-		# freed reference emits an error even though is_instance_valid would reject it.
-		var train_value: Variant = state.get("train")
-		if not is_instance_valid(train_value):
-			expired.append(instance_id)
-			continue
-		var train := train_value as Node3D
-		if train == null or not train.is_inside_tree():
+		var train := state.train as Node3D
+		if not is_instance_valid(train) or not train.is_inside_tree():
 			expired.append(instance_id)
 			continue
 		var raw_speed := train.global_position.distance_to(state.last_position) / delta
@@ -483,14 +458,7 @@ func _update_train_audio(delta: float) -> void:
 
 
 func request_train_horn(train: Node3D) -> bool:
-	return request_train_event(train, &"horn")
-
-
-func request_train_event(train: Node3D, event_name: StringName) -> bool:
 	if train == null or not is_instance_valid(train):
-		return false
-	if not _train_event_streams.has(event_name) \
-			or _train_event_streams[event_name] == null:
 		return false
 	var instance_id := train.get_instance_id()
 	if not _train_states.has(instance_id):
@@ -498,36 +466,19 @@ func request_train_event(train: Node3D, event_name: StringName) -> bool:
 	if not _train_states.has(instance_id):
 		return false
 	var state: Dictionary = _train_states[instance_id]
-	if event_name == &"horn" and float(state.horn_cooldown) > 0.0:
+	if float(state.horn_cooldown) > 0.0:
 		return false
-	_play_train_event(state, event_name)
-	if event_name == &"horn":
-		state.horn_cooldown = 0.55
+	_play_train_event(state, &"horn")
+	state.horn_cooldown = 0.55
 	_train_states[instance_id] = state
 	return true
 
 
 func _play_train_event(state: Dictionary, event_name: StringName) -> void:
-	var close_events := [&"power_on", &"reverser", &"throttle", &"valve",
-		&"board", &"seat", &"ui_confirm", &"brake_release"]
 	var events := state.events as AudioStreamPlayer3D
-	if event_name in close_events:
-		events = state.controls as AudioStreamPlayer3D
 	events.stream = _train_event_streams[event_name]
-	var event_levels := {
-		&"horn": -7.0, &"departure": -15.0, &"brake": -11.0,
-		&"power_on": -12.0, &"reverser": -9.0, &"throttle": -11.0,
-		&"valve": -13.0, &"board": -10.0, &"seat": -14.0,
-		&"arrival": -12.0, &"ui_confirm": -15.0, &"door": -12.0,
-		&"brake_release": -12.0,
-	}
-	events.volume_db = float(event_levels.get(event_name, -12.0))
-	events.set_meta("last_train_event", event_name)
-	var history: Array = state.get("event_history", [])
-	history.append(event_name)
-	if history.size() > 32:
-		history.pop_front()
-	state.event_history = history
+	events.volume_db = -7.0 if event_name == &"horn" else -15.0 \
+		if event_name == &"departure" else -11.0
 	events.play()
 
 
@@ -784,13 +735,8 @@ func classify_surface(collider: Node) -> StringName:
 			if tagged in FOOTSTEP_SURFACES:
 				return tagged
 		var label := String(current.name).to_lower()
-		# Do not use a raw `"rail" in label` check: it also matches "trail" and
-		# previously routed ordinary meadow/dirt trail colliders to metal Foley.
-		var is_rail_hardware := label == "rail" or label.begins_with("rail_") \
-				or label.ends_with("_rail") or "railtrack" in label \
-				or "rail_track" in label or "railway" in label
 		if "metal" in label or "iron" in label or "brass" in label \
-				or is_rail_hardware or "deckplate" in label:
+				or "rail" in label or "deckplate" in label:
 			return &"metal"
 		if "timber" in label or "plank" in label or "wood" in label or "pier" in label:
 			return &"wood"
@@ -927,7 +873,7 @@ func _add_recorded_wind(node_name: String, position_value: Vector3,
 	var source := _new_spatial_source(node_name, position_value, -25.0,
 		max_distance_value, max_distance_value * 0.12)
 	source.stream = _load_looping_recording(
-		"res://assets/audio/world_objects/tree_wind_loop.ogg",
+		"res://assets/audio/world_objects/tree_wind_loop.wav",
 		ProceduralFoleyScript.make_wind_loop(2603, true))
 	source.play()
 

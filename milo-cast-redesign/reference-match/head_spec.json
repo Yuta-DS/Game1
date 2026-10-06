@@ -1,0 +1,10 @@
+{
+ "name":"Milo supplied-sheet broad cat head",
+ "qa_isolate":true,
+ "palette":{"fur":{"color":"#BCAE96","rough":0.9}},
+ "smooth_angle":32,
+ "shading":{"gradient":{"top":0.12,"bottom":-0.13},"noise":{"size":0.08,"amount":0.012}},
+ "joints":{"Chin":[0,1.22,0],"Cheek":[0,1.46,0.015],"Brow":[0,1.74,0],"Crown":[0,1.99,-0.015]},
+ "chains":{"head":["Chin","Cheek","Brow","Crown"]},
+ "volumes":[{"chain":"head","material":"fur","sides":24,"frame":"up","ring_step":0.055,"caps":["dome","dome"],"profile":[[0,0.15,0.14],[0.08,0.29,0.24],[0.23,0.405,0.31],[0.40,0.472,0.354],[0.55,0.473,0.356],[0.70,0.436,0.329],[0.84,0.34,0.272],[0.94,0.208,0.185],[1,0.035,0.038]]}]
+}

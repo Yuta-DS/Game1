@@ -1,5 +1,5 @@
 {
-  "authoring": "Blender 5.2 direct scripting; reuses the existing stylized carp asset",
+  "authoring": "Blender 5.2 direct scripting; reuses existing anyCreature carp asset",
   "units": "metres; game Y-up",
   "water_loop_seconds": 4,
   "fountain_diameter": 3.304,

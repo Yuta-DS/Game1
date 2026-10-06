@@ -127,6 +127,7 @@ position = Vector2(640, 474)
 rotation = -0.00125291
 stream = ExtResource("6_gbrvk")
 volume_db = -20.0
+autoplay = true
 
 [node name="ErrorLabel" type="Label" parent="." unique_id=1858009231]
 layout_mode = 0

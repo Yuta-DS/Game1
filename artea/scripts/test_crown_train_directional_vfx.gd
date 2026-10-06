@@ -57,8 +57,7 @@ func _run() -> void:
 	# an extra zero-throttle command after every commanded frame.
 	railway.set_process(false)
 
-	# Include the 1.8 s cab preparation and stopped direction-selection sequence.
-	for _frame in 240:
+	for _frame in 120:
 		railway.call("drive_manual", 1.0, 1.0 / 60.0)
 		railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame

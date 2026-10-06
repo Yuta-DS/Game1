@@ -7,15 +7,10 @@
 # corresponding real kingdom and back to the Art Castle Galaxy.
 extends Node
 
-const SceneLoader := preload("res://scripts/scene_loader.gd")
-
 signal kingdom_entered(kingdom_id: String)
 signal returned_to_castle
 
 const CAMPAIGN_HOME_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
-# Artéa Park is the hub village the minigames' "Return to Artéa Park" buttons
-# lead back to, as opposed to the Art Castle gallery above.
-const PARK_SCENE := "res://scenes/New_Hub_World.tscn"
 const OPTIONAL_GUIDED_STORY_SCENE := "res://scenes/viewfinder/crown_of_life_story.tscn"
 const QUEST_JOURNAL_SCENE := "res://scenes/crown_quest_journal.tscn"
 
@@ -115,11 +110,8 @@ func portal_status(kingdom_id: String) -> String:
 	return "CROWN JOURNEY\nFOLLOW THE LIGHT TO %s" % next_label.to_upper()
 
 
-# ignore_lock is for Milo's strength-finder suggestion only: it opens a world
-# early but still never awards a treasure, so the journey's record stays true.
-func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null,
-		ignore_lock := false) -> bool:
-	if not ignore_lock and not can_enter_kingdom(kingdom_id):
+func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null) -> bool:
+	if not can_enter_kingdom(kingdom_id):
 		return false
 	var scene_path := kingdom_scene_path(kingdom_id)
 	if scene_path.is_empty() or not ResourceLoader.exists(scene_path):
@@ -144,21 +136,10 @@ func start_campaign(scene_tree: SceneTree = null) -> bool:
 
 func return_to_campaign(scene_tree: SceneTree = null) -> bool:
 	active_kingdom_id = ""
-	# The castle is a large scene, so it goes through the loading screen rather
-	# than freezing on a synchronous swap. The quest journal and guided-story
-	# routes below stay on the direct path in _change_scene: they are light
-	# enough that a loading screen would only flash in front of them.
-	var returned := _change_scene_with_loading(CAMPAIGN_HOME_SCENE, scene_tree)
+	var returned := _change_scene(CAMPAIGN_HOME_SCENE, scene_tree)
 	if returned:
 		returned_to_castle.emit()
 	return returned
-
-
-# "Return to Artéa Park" in the minigames: back to the hub village rather
-# than the Art Castle gallery that return_to_campaign() leads to.
-func return_to_park(scene_tree: SceneTree = null) -> bool:
-	active_kingdom_id = ""
-	return _change_scene_with_loading(PARK_SCENE, scene_tree)
 
 
 func open_quest_journal(scene_tree: SceneTree = null) -> bool:
@@ -170,16 +151,6 @@ func open_quest_journal(scene_tree: SceneTree = null) -> bool:
 # simplified path.
 func open_guided_lens_story(scene_tree: SceneTree = null) -> bool:
 	return _change_scene(OPTIONAL_GUIDED_STORY_SCENE, scene_tree)
-
-
-func _change_scene_with_loading(scene_path: String, scene_tree: SceneTree = null) -> bool:
-	if not ResourceLoader.exists(scene_path):
-		push_error("JourneyCampaign: missing scene %s" % scene_path)
-		return false
-	var tree := _scene_tree(scene_tree)
-	if tree == null:
-		return false
-	return SceneLoader.change_scene_with_loading(tree, scene_path)
 
 
 func _change_scene(scene_path: String, scene_tree: SceneTree = null) -> bool:

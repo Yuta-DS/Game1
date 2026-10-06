@@ -1,9 +1,5 @@
 extends Node
 
-const SceneLoader := preload("res://scripts/scene_loader.gd")
-const RatingHeart := preload("res://scripts/rating_heart.gd")
-const STAR_ICON := preload("res://assets/UI/icons/star.svg")
-
 @export var painting_title: String = "artwork_1.png"
 
 
@@ -34,7 +30,8 @@ func _ready() -> void:
 	_report_galaxy_state()
 	_build_quest_journal_button()
 	likebutton.visible = true
-	RatingHeart.apply_to_button(likebutton, false)
+	
+	likebutton.text = "♥"
 
 	
 	likebutton.pressed.connect(func(): _on_rate_button_pressed(1))
@@ -190,9 +187,6 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 func _input(event):
 	if not is_inside_tree() or get_viewport() == null:
 		return
-	var active_player := get_node_or_null("Player3D")
-	if active_player != null and active_player.get_meta("heart_melody_active", false):
-		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_J:
 		_open_quest_journal()
 		var viewport := get_viewport()
@@ -218,10 +212,7 @@ func _input(event):
 func _build_quest_journal_button() -> void:
 	var button := Button.new()
 	button.name = "CrownJourneyJournalButton"
-	button.text = "Crown Journey  [J]"
-	button.icon = STAR_ICON
-	button.expand_icon = false
-	button.add_theme_constant_override("icon_max_width", 22)
+	button.text = "✦ Crown Journey  [J]"
 	button.tooltip_text = "Open the Crown of Life quest journal"
 	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	button.position = Vector2(-250.0, 24.0)
@@ -244,9 +235,14 @@ func show_rating_panel(frame_name: String, current_rating: int) -> void:
 	selected_frame_name = frame_name
 	ratingpanel.visible = true
 
-	var liked := current_rating > 0
-	RatingHeart.apply_to_label(ratinglabel, liked, "\nEnter / Space — explore this artwork")
-	RatingHeart.apply_to_button(likebutton, liked)
+	if current_rating > 0:
+		ratinglabel.text = "Artwork Rating: ♥\nEnter / Space — explore this artwork"
+		ratinglabel.modulate = Color.RED
+		likebutton.modulate = Color.RED
+	else:
+		ratinglabel.text = "Artwork Rating: ♡\nEnter / Space — explore this artwork"
+		ratinglabel.modulate = Color.WHITE
+		likebutton.modulate = Color.WHITE
 		
 func hide_rating_panel() -> void:
 	ratingpanel.visible = false
@@ -261,10 +257,19 @@ func _on_rate_button_pressed(value: int) -> void:
 	if gallery_manager:
 		var current_rating = gallery_manager.get_frame_rating(selected_frame_name)
 
-		var liked: bool = current_rating <= 0
-		gallery_manager.rate_frame(selected_frame_name, 1 if liked else 0)
-		RatingHeart.apply_to_label(ratinglabel, liked)
-		RatingHeart.apply_to_button(likebutton, liked)			
+		if current_rating > 0:
+			gallery_manager.rate_frame(selected_frame_name, 0)
+
+			ratinglabel.text = "Artwork Rating:\n♡"
+			ratinglabel.modulate = Color.WHITE
+			likebutton.modulate = Color.WHITE
+
+		else:
+			gallery_manager.rate_frame(selected_frame_name, 1)
+
+			ratinglabel.text = "Artwork Rating:\n♥"
+			ratinglabel.modulate = Color.RED
+			likebutton.modulate = Color.RED			
 func _on_body_entered(body: Node3D) -> void:
 	if body is CharacterBody3D:
 		go_to_scene(HUB_WORLD_PATH)
@@ -281,11 +286,7 @@ func go_to_scene(path: String) -> void:
 		if path == HUB_WORLD_PATH:
 			_request_castle_front_door_spawn()
 		print("TRAVELING to: ", path)
-		# The hub is the heaviest scene in the project (its ProtonScatter grass
-		# alone places tens of thousands of instances), so leaving the gallery
-		# goes through the loading screen rather than freezing on a synchronous
-		# swap -- the same route used coming the other way.
-		SceneLoader.change_scene_with_loading(get_tree(), path)
+		get_tree().change_scene_to_file(path)
 	else:
 		print("ERROR: Target scene file not found at path:", path)
 

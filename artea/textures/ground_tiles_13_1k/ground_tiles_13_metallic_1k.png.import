@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b7x6wg5jf08r1"
 path.s3tc="res://.godot/imported/ground_tiles_13_metallic_1k.png-30be1b845f26336c0cb637fa2a6e6ebe.s3tc.ctex"
+path.etc2="res://.godot/imported/ground_tiles_13_metallic_1k.png-30be1b845f26336c0cb637fa2a6e6ebe.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ground_tiles_13_1k/ground_tiles_13_metallic_1k.png"
-dest_files=["res://.godot/imported/ground_tiles_13_metallic_1k.png-30be1b845f26336c0cb637fa2a6e6ebe.s3tc.ctex"]
+dest_files=["res://.godot/imported/ground_tiles_13_metallic_1k.png-30be1b845f26336c0cb637fa2a6e6ebe.s3tc.ctex", "res://.godot/imported/ground_tiles_13_metallic_1k.png-30be1b845f26336c0cb637fa2a6e6ebe.etc2.ctex"]
 
 [params]
 

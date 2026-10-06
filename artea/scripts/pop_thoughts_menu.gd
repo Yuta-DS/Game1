@@ -1,8 +1,6 @@
 # Entry to the connected Mind Spark: The Two Lenses of Wisdom.
 extends Control
 
-const SceneLoader := preload("res://scripts/scene_loader.gd")
-
 const TWO_LENSES_SCENE := "res://scenes/mind_spark/mind_spark_chapter_world.tscn"
 
 
@@ -25,7 +23,7 @@ func _return_to_campaign() -> void:
 	if campaign != null and campaign.has_method("return_to_campaign"):
 		campaign.call("return_to_campaign")
 	else:
-		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
+		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
 	
 
 

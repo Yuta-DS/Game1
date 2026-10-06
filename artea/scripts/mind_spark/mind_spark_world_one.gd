@@ -3688,11 +3688,8 @@ func _build_station_access_stairs(parent: Node3D, bottom: Vector3, top: Vector3)
 		# box turns every riser edge into a wall the player walks straight into,
 		# because the box is centred on the ramp surface rather than resting on
 		# it. The continuous ramp below carries all of the walking collision.
-		var tread := _add_box(stairs, "StationStep_%02d" % (index + 1), tread_center,
+		_add_box(stairs, "StationStep_%02d" % (index + 1), tread_center,
 			Vector3(STATION_STAIR_WIDTH, 0.14, tread_depth), _materials.stone, false, yaw)
-		# Tests and traversal diagnostics resolve every named tread at runtime.
-		# Keep these real nodes while the repeated decorative geometry is batched.
-		tread.set_meta("preserve_runtime_node", true)
 	# The continuous under-ramp is the only walking surface, so the climb stays
 	# smooth while the treads above it still read as a flight of stairs.
 	var ramp_middle := bottom.lerp(top, 0.5)
@@ -11155,16 +11152,6 @@ func _collect_batchable(node: Node, groups: Dictionary,
 		return
 	if instance.get_groups().size() > 0:
 		return
-	if bool(instance.get_meta("preserve_runtime_node", false)):
-		return
-	# A script on an ancestor may cache or animate this mesh. Collapsing such a
-	# descendant into a MultiMesh leaves the script holding a freed node (enemy
-	# telegraphs/cores and animated island packets were the visible failures).
-	var ancestor := instance.get_parent()
-	while ancestor != null and ancestor != self:
-		if ancestor.get_script() != null:
-			return
-		ancestor = ancestor.get_parent()
 	if instance.mesh == null:
 		return
 	# Group by what is actually drawn: identical primitive parameters and the

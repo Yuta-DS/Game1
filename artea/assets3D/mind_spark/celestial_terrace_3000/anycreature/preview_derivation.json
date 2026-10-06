@@ -1,0 +1,15 @@
+{
+  "scope": "Derived preview only; master Blender and GLB are unchanged",
+  "part_count": 3000,
+  "master_triangles": 2237308,
+  "preview_triangles": 1103088,
+  "preview_bytes": 54784548,
+  "plugin_limit_bytes": 67108864,
+  "master_glb_sha256": "b6106485345b1c10a07e7cd0e784eb1828b6b802e5ee41115428e76ad16bd566",
+  "preview_glb_sha256": "0e57d7ad5f4a7492ed59e77da2439d029439657a71ce574272788efd3e757feb",
+  "method": "Collapse decimation ratio 0.48 only for parts with more than 96 faces; preserve all 3000 objects",
+  "not_verified": [
+    "Full-detail GLB in anyCreature",
+    "Game-ready LOD quality or collision integration"
+  ]
+}

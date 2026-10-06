@@ -37,29 +37,6 @@ pip install -r requirements.txt
 python server.py
 ```
 
-**Windows / PowerShell:**
-
-```powershell
-cd server
-python -m venv venv
-.\venv\Scripts\python.exe -m pip install -r requirements.txt
-$env:HOST = "127.0.0.1"
-$env:PORT = "8000"
-$env:JWT_SECRET_KEY = "local-dev-test-secret"
-.\venv\Scripts\python.exe server.py
-```
-
-Leave that running in its own terminal - it's the server, not a one-shot
-command - and launch the game from a separate terminal/window. The Godot
-client's `APIManager.BASE_URL` (`artea/scripts/API_Manager.gd`) is hardcoded
-to `http://127.0.0.1:8000`, so `HOST`/`PORT` must stay exactly that for the
-game to find it. Verify it's up with `curl http://127.0.0.1:8000/` -
-`{"status":"server running"}` means it's ready. `Ctrl+C` stops it.
-
-First run creates `server/database.db` and `server/uploads/` automatically
-(both gitignored). That file persists across restarts - stopping the server
-does not erase registered accounts, only deleting `database.db` does.
-
 The API listens on port 80 by default. In production it runs via the
 `flaskapp.service` systemd unit (`sudo systemctl restart flaskapp`
 after code changes).
@@ -110,13 +87,3 @@ scene-scoped suites.
 - The in-game chatbot uses a local LLM via `nobodywho`. `server.py` has
   a test OpenRouter path under `/ai/chat` intended as a starting point
   for swapping in a cloud model provider later.
-
-## Agent skills
-
-### Issue tracker
-
-Issues are tracked in this repo's GitHub Issues (wsu-comp3018/COMP3018-S26-G3), via the `gh` CLI. See `docs/agents/issue-tracker.md`.
-
-### Domain docs
-
-Single-context layout (no CONTEXT-MAP.md). See `docs/agents/domain.md`.

@@ -12,27 +12,6 @@ config_version=5
 
 compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
-[importer_defaults]
-
-texture={
-"compress/mode": 2,
-"compress/high_quality": false,
-"compress/lossy_quality": 0.7,
-"compress/hdr_compression": 1,
-"compress/normal_map": 0,
-"compress/channel_pack": 0,
-"mipmaps/generate": false,
-"mipmaps/limit": -1,
-"roughness/mode": 0,
-"process/fix_alpha_border": true,
-"process/premult_alpha": false,
-"process/normal_map_invert_y": false,
-"process/hdr_as_srgb": false,
-"process/hdr_clamp_exposure": false,
-"process/size_limit": 0,
-"detect_3d/compress_to": 1
-}
-
 [application]
 
 config/name="Artea"
@@ -209,7 +188,7 @@ pointing/emulate_touch_from_mouse=true
 
 [internationalization]
 
-locale/translations_pot_files=PackedStringArray("res://dialogue/HubworldDialogue.dialogue", "res://assets/dialogue/main.dialogue")
+locale/translations_pot_files=PackedStringArray("res://dialogue/HubworldDialogue.dialogue", "res://assets/dialogue/main.dialogue", "res://dialogue/main.dialogue")
 
 [layer_names]
 
@@ -219,8 +198,7 @@ locale/translations_pot_files=PackedStringArray("res://dialogue/HubworldDialogue
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=3
 

@@ -1,0 +1,11 @@
+{
+  "revision": "echo_garden_01",
+  "source_meshes": 102,
+  "runtime_meshes": 6,
+  "triangles": 6644,
+  "materials": 6,
+  "root_radius": 21,
+  "basin_radius": 25,
+  "planter_pockets": 8,
+  "canopy_clusters": 19
+}

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dpo0405o7c1qo"
 path.s3tc="res://.godot/imported/moss_groud_02_Ambient_Occlusion_1k.png-18c99093d10e11cd8de7c0a887a9af10.s3tc.ctex"
+path.etc2="res://.godot/imported/moss_groud_02_Ambient_Occlusion_1k.png-18c99093d10e11cd8de7c0a887a9af10.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/moss_ground_02_1k/moss_groud_02_Ambient_Occlusion_1k.png"
-dest_files=["res://.godot/imported/moss_groud_02_Ambient_Occlusion_1k.png-18c99093d10e11cd8de7c0a887a9af10.s3tc.ctex"]
+dest_files=["res://.godot/imported/moss_groud_02_Ambient_Occlusion_1k.png-18c99093d10e11cd8de7c0a887a9af10.s3tc.ctex", "res://.godot/imported/moss_groud_02_Ambient_Occlusion_1k.png-18c99093d10e11cd8de7c0a887a9af10.etc2.ctex"]
 
 [params]
 

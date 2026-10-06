@@ -42,12 +42,9 @@ func _run() -> void:
 		assert(asset.find_child(group_name, true, false) != null,
 			"Tree bridge GLB is missing %s" % group_name)
 	var bounds := _bounds(meshes)
-	assert(absf(bounds.size.x - 62.15) < 0.05,
-		"Tree bridge width changed from Blender: %s" % bounds.size)
-	assert(absf(bounds.size.y - 42.696) < 0.05,
-		"Tree bridge vertical extent changed from Blender: %s" % bounds.size)
-	assert(absf(bounds.size.z - 447.0) < 0.05,
-		"Tree bridge route length changed from Blender: %s" % bounds.size)
+	assert(absf(bounds.size.x - 62.15) < 0.05, "Tree bridge width changed from Blender")
+	assert(absf(bounds.size.y - 42.696) < 0.05, "Tree bridge vertical extent changed from Blender")
+	assert(absf(bounds.size.z - 447.0) < 0.05, "Tree bridge route length changed from Blender")
 	print("TREE_PROCESSIONAL_BLENDER_BRIDGE_TEST: PASS — bounds=%s modules=689 groups=9 triangles=26116" % bounds.size)
 	quit()
 

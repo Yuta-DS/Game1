@@ -7,8 +7,6 @@
 # to edit in Godot.
 extends Node3D
 
-const HubLightFade := preload("res://scripts/hub_light_fade.gd")
-
 const THOUGHTS_PORTAL := Vector3(90.3, 15.0, -83.0)
 const CASTLE_NAME := "building_castle_red2"
 const STAGE_COLOURS := [
@@ -162,15 +160,9 @@ func _build_castle_foundation() -> void:
 	_castle_fill.position = Vector3(9.0, 18.0, 8.0)
 	_castle_fill.light_color = Color(1.0, 0.78, 0.48)
 	_castle_fill.light_energy = 1.05
-	# Was 58.0 - a "detail fill" light doesn't need to reach the surrounding
-	# terrain and village; that range put it overlapping every other castle
-	# light (citadel_lamp, core_light, lens_light, both buttress lights) on
-	# any mesh near the castle, stacking 5-6 lights in one fragment's lighting
-	# loop under the non-clustered Compatibility renderer.
-	_castle_fill.omni_range = 22.0
+	_castle_fill.omni_range = 58.0
 	_castle_fill.omni_attenuation = 1.25
 	_castle_fill.shadow_enabled = false
-	HubLightFade.apply(_castle_fill)
 	_foundation.add_child(_castle_fill)
 
 
@@ -281,24 +273,9 @@ func _build_giant_tree_foundation() -> void:
 			sin(angle - 0.05) * length)
 		var ground_points: Array[Vector3] = [
 			start, start.lerp(elbow, 0.55) + Vector3.UP * 1.0, elbow, tip]
-		var ground_root := _add_curved_root(tree,
-			"GroundButtressRoot_%02d" % (root_index + 1),
+		_add_curved_root(tree, "GroundButtressRoot_%02d" % (root_index + 1),
 			ground_points, PackedFloat32Array([4.4, 3.4, 2.5, 0.35]),
 			bark_shadow if root_index % 3 == 0 else bark, 8)
-		# These exposed roots read as small ground mountains. A single simplified
-		# convex hull closes the underside and gives the player one continuous,
-		# climbable surface instead of detailed triangle seams or a hollow arch.
-		ground_root.create_convex_collision(true, true)
-		var collision_bodies := ground_root.find_children(
-			"*", "StaticBody3D", false, false)
-		var collision_body := collision_bodies[0] as StaticBody3D \
-			if not collision_bodies.is_empty() else null
-		if collision_body != null:
-			collision_body.name = "WalkableRootBody"
-		ground_root.set_meta("walkable_ground_mound", true)
-		ground_root.set_meta("closed_underside_collision", true)
-		ground_root.set_meta("root_tip", tip)
-		ground_root.set_meta("root_elbow", elbow)
 		if root_index % 2 == 0:
 			_add_tree_leaf_cluster(tree, "Ground_%02d" % (root_index + 1),
 				elbow + Vector3.UP * 0.8, angle, leaf_green, leaf_olive, 3)
@@ -683,7 +660,6 @@ func _build_high_aether_facade() -> void:
 		lamp.light_energy = 0.65
 		lamp.omni_range = 10.0
 		lamp.shadow_enabled = false
-		HubLightFade.apply(lamp)
 		buttress.add_child(lamp)
 
 	# A complete aperture is scientific enough to read as a calibration device,
@@ -785,7 +761,6 @@ func _build_astral_observatory_crown() -> void:
 	lens_light.light_energy = 0.9
 	lens_light.omni_range = 16.0
 	lens_light.shadow_enabled = false
-	HubLightFade.apply(lens_light)
 	lens.add_child(lens_light)
 
 
@@ -885,7 +860,6 @@ func _build_reference_astral_machine() -> void:
 	core_light.light_energy = 0.45
 	core_light.omni_range = 18.0
 	core_light.shadow_enabled = false
-	HubLightFade.apply(core_light)
 	core.add_child(core_light)
 
 	# Twin articulated skyline arms frame the tower like enormous telescope
@@ -1215,7 +1189,6 @@ func _build_citadel_rig() -> void:
 	_citadel_lamp.position = Vector3(0.0, -0.2, 0.0)
 	_citadel_lamp.omni_range = 18.0
 	_citadel_lamp.shadow_enabled = false
-	HubLightFade.apply(_citadel_lamp)
 	engine.add_child(_citadel_lamp)
 
 	# Four articulated stabilisers read as a travelling machine, not a static
@@ -1284,7 +1257,6 @@ func _build_skyway() -> void:
 		lamp.omni_range = 7.5
 		lamp.light_energy = 0.8
 		lamp.shadow_enabled = false
-		HubLightFade.apply(lamp)
 		map.add_child(lamp)
 		_waypoint_lights.append(lamp)
 

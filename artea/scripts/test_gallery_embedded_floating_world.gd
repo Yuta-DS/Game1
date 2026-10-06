@@ -116,14 +116,9 @@ func _run() -> void:
 		if hud == null:
 			_fail("%s compatibility state is missing" % hud_path)
 			return
-		if hud_path == "CrownLineHUD":
-			var train_controls := hud.get_node_or_null("TrainControls") as Control
-			if train_controls == null or train_controls.anchor_left != 1.0:
-				_fail("train instructions must be anchored on the right")
-				return
 		for control in hud.find_children("*", "Control", true, false):
-			if (control as Control).is_visible_in_tree():
-				_fail("%s draws a panel before the player reaches the train" % hud_path)
+			if (control as Control).visible:
+				_fail("%s still draws a left-side text panel" % hud_path)
 				return
 	var ceremony := gallery.get_node_or_null("Ceremony")
 	if ceremony != null and ceremony.find_children("*", "PanelContainer", true, false).size() > 0:

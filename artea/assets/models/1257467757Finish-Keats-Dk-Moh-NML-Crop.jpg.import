@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmac1y5j1g7xe"
 path.s3tc="res://.godot/imported/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg-881671e7cf0bde5b900f604e5e6f7916.s3tc.ctex"
+path.etc2="res://.godot/imported/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg-881671e7cf0bde5b900f604e5e6f7916.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg"
-dest_files=["res://.godot/imported/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg-881671e7cf0bde5b900f604e5e6f7916.s3tc.ctex"]
+dest_files=["res://.godot/imported/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg-881671e7cf0bde5b900f604e5e6f7916.s3tc.ctex", "res://.godot/imported/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg-881671e7cf0bde5b900f604e5e6f7916.etc2.ctex"]
 
 [params]
 

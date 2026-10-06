@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cjv03sr07rw8n"
 path.s3tc="res://.godot/imported/purple crystal.png-30fa9dba37bc71d3ca12751e0d22b7d1.s3tc.ctex"
+path.etc2="res://.godot/imported/purple crystal.png-30fa9dba37bc71d3ca12751e0d22b7d1.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Collectibles/purple crystal.png"
-dest_files=["res://.godot/imported/purple crystal.png-30fa9dba37bc71d3ca12751e0d22b7d1.s3tc.ctex"]
+dest_files=["res://.godot/imported/purple crystal.png-30fa9dba37bc71d3ca12751e0d22b7d1.s3tc.ctex", "res://.godot/imported/purple crystal.png-30fa9dba37bc71d3ca12751e0d22b7d1.etc2.ctex"]
 
 [params]
 

@@ -15,8 +15,6 @@
 # process and the ride drives global_position directly.
 extends Node3D
 
-const HubLightFade := preload("res://scripts/hub_light_fade.gd")
-
 # How long a ride takes, castle to island. Slow enough to see the world
 # from above, short enough not to become a loading screen.
 const RIDE_SECONDS := 10.0
@@ -361,7 +359,6 @@ func _build_station_marker(station_id: String, line_id: String,
 	lamp.light_energy = 1.4
 	lamp.omni_range = 8.0
 	lamp.shadow_enabled = false
-	HubLightFade.apply(lamp)
 	marker.add_child(lamp)
 
 

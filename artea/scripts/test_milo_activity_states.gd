@@ -48,9 +48,7 @@ func _run() -> void:
 	milo._stop_speaking()
 	assert(milo.get_companion_activity_name() == "GUIDING",
 		"activity selection gives Milo a distinct guiding activity")
-	chat._show_strength_discoveries()
-	for _question in chat.STRENGTH_QUESTIONS:
-		chat._answer_strength_question("perseverance")
+	chat._respond_to_strength(chat.STRENGTH_DISCOVERIES[0])
 	milo._stop_speaking()
 	assert(milo.get_companion_activity_name() == "ENCOURAGING",
 		"strength response gives Milo a distinct encouraging activity")

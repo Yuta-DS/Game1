@@ -1,0 +1,25 @@
+{
+  "rendered_frames": 232,
+  "fps": 24,
+  "non_finite_face_paw_vertices": 0,
+  "bounds": {
+    "Milo_Facial_Features": {
+      "min_z": 1.312703251838684,
+      "max_z": 2.166388988494873
+    },
+    "Milo_Rounded_Paw_l": {
+      "min_z": 0.48719143867492676,
+      "max_z": 1.0360209941864014
+    },
+    "Milo_Rounded_Paw_r": {
+      "min_z": 0.624889612197876,
+      "max_z": 0.9366927146911621
+    },
+    "Milo_Statue_Face": {
+      "min_z": 1.1604894399642944,
+      "max_z": 1.970858097076416
+    }
+  },
+  "terrain_contact": "not tested in Godot",
+  "finger_articulation": "sculpted static fingers, existing hand-bone attachment"
+}

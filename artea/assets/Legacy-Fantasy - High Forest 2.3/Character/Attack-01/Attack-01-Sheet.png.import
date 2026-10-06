@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkk0ul4eyucdf"
 path.s3tc="res://.godot/imported/Attack-01-Sheet.png-4a6e967a61f5817d644bde0ba071e9ef.s3tc.ctex"
+path.etc2="res://.godot/imported/Attack-01-Sheet.png-4a6e967a61f5817d644bde0ba071e9ef.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/Character/Attack-01/Attack-01-Sheet.png"
-dest_files=["res://.godot/imported/Attack-01-Sheet.png-4a6e967a61f5817d644bde0ba071e9ef.s3tc.ctex"]
+dest_files=["res://.godot/imported/Attack-01-Sheet.png-4a6e967a61f5817d644bde0ba071e9ef.s3tc.ctex", "res://.godot/imported/Attack-01-Sheet.png-4a6e967a61f5817d644bde0ba071e9ef.etc2.ctex"]
 
 [params]
 

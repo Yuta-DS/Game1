@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bev35lbg44liq"
 path.s3tc="res://.godot/imported/Opening.png-c65c90106ac31600787f2668eac28a95.s3tc.ctex"
+path.etc2="res://.godot/imported/Opening.png-c65c90106ac31600787f2668eac28a95.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Game Start/Opening.png"
-dest_files=["res://.godot/imported/Opening.png-c65c90106ac31600787f2668eac28a95.s3tc.ctex"]
+dest_files=["res://.godot/imported/Opening.png-c65c90106ac31600787f2668eac28a95.s3tc.ctex", "res://.godot/imported/Opening.png-c65c90106ac31600787f2668eac28a95.etc2.ctex"]
 
 [params]
 

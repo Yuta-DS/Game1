@@ -1,0 +1,69 @@
+{
+  "passed": true,
+  "sha256": "2b0df04a1705f731a0d118d49c82182ffb2251f683366d201b767cf79d577bd8",
+  "proportions": {
+    "L": {
+      "palm_length_m": 0.08800991624593735,
+      "middle_toe_length_m": 0.047573335468769073,
+      "toe_to_palm_ratio": 0.5405451737487038,
+      "color_samples": 168960
+    },
+    "R": {
+      "palm_length_m": 0.08800987899303436,
+      "middle_toe_length_m": 0.047573357820510864,
+      "toe_to_palm_ratio": 0.5405456565197199,
+      "color_samples": 168960
+    }
+  },
+  "topology": {
+    "Milo_Articulated_Paw.L": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "coincident_material_seam_vertices": 0
+    },
+    "Milo_Articulated_Paw.R": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "coincident_material_seam_vertices": 0
+    },
+    "Moustache_1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "coincident_material_seam_vertices": 0,
+      "skull_attachment_intersections": 52
+    },
+    "Moustache_-1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "coincident_material_seam_vertices": 0,
+      "skull_attachment_intersections": 47
+    },
+    "Cheek_Tuft_Upper_-1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "coincident_material_seam_vertices": 0,
+      "skull_attachment_intersections": 187
+    },
+    "Cheek_Tuft_Lower_-1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "coincident_material_seam_vertices": 0,
+      "skull_attachment_intersections": 183
+    },
+    "Cheek_Tuft_Upper_1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "coincident_material_seam_vertices": 0,
+      "skull_attachment_intersections": 182
+    },
+    "Cheek_Tuft_Lower_1": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "coincident_material_seam_vertices": 0,
+      "skull_attachment_intersections": 178
+    }
+  },
+  "protected_rest_bones": 31,
+  "max_rest_error": 2.384185791015625e-07,
+  "total_bones": 61
+}

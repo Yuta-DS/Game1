@@ -8,22 +8,13 @@
 
 [node name="Loading Scene" type="Control"]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 0
 script = ExtResource("1_o5idu")
 
-[node name="Background" type="TextureRect" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(616.427, 361)
+scale = Vector2(0.916031, 0.916031)
 texture = ExtResource("2_7vner")
-expand_mode = 1
-stretch_mode = 6
 
 [node name="progress_bar" type="TextureProgressBar" parent="."]
 layout_mode = 0

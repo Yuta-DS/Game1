@@ -1,7 +1,5 @@
 extends Control
 
-const SceneLoader := preload("res://scripts/scene_loader.gd")
-
 const ArtEnhancer := preload("res://scripts/creation_world/art_enhancer.gd")
 
 const CREATIVE_PROMPTS := [
@@ -868,18 +866,10 @@ func _on_local_button_pressed() -> void:
 
 
 func _on_back_to_hub_button_pressed() -> void:
-	_return_to_park()
+	_return_to_campaign()
 	
 func _on_art_gallery_button_pressed() -> void:
 	_return_to_campaign()
-
-
-func _return_to_park() -> void:
-	var campaign := get_node_or_null("/root/JourneyCampaign")
-	if campaign != null and campaign.has_method("return_to_park"):
-		campaign.call("return_to_park")
-	else:
-		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")
 
 
 func _return_to_campaign() -> void:
@@ -887,12 +877,12 @@ func _return_to_campaign() -> void:
 	if campaign != null and campaign.has_method("return_to_campaign"):
 		campaign.call("return_to_campaign")
 	else:
-		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
+		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
 	
 # REMOTE GALLERY - SAVE/UPLOAD TO SERVER
 func upload_artwork_to_server() -> void:
 	
-	if not Global.has_online_session():
+	if Global.auth_token == "" or Global.auth_token == "invalid_token":
 		print("Upload blocked: invalid auth token")
 		return
 
@@ -913,7 +903,7 @@ func upload_artwork_to_server() -> void:
 	]
 
 	var err = http_request.request_raw(
-		APIManager.get_upload_artwork_url(),
+		APIManager.UPLOAD_ARTWORK_URL,
 		headers,
 		HTTPClient.METHOD_POST,
 		byte_data

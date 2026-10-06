@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://7dd7orqwit0e"
 path.s3tc="res://.godot/imported/ground_tiles_13_roughness_1k.png-6d8a9be51421eec616bb6c7767f33757.s3tc.ctex"
+path.etc2="res://.godot/imported/ground_tiles_13_roughness_1k.png-6d8a9be51421eec616bb6c7767f33757.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ground_tiles_13_1k/ground_tiles_13_roughness_1k.png"
-dest_files=["res://.godot/imported/ground_tiles_13_roughness_1k.png-6d8a9be51421eec616bb6c7767f33757.s3tc.ctex"]
+dest_files=["res://.godot/imported/ground_tiles_13_roughness_1k.png-6d8a9be51421eec616bb6c7767f33757.s3tc.ctex", "res://.godot/imported/ground_tiles_13_roughness_1k.png-6d8a9be51421eec616bb6c7767f33757.etc2.ctex"]
 
 [params]
 

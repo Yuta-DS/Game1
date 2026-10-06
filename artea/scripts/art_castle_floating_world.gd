@@ -1,8 +1,5 @@
 extends Node3D
 
-const SceneLoader := preload("res://scripts/scene_loader.gd")
-const StreamingDirector := preload("res://scripts/world_streaming_director.gd")
-
 const MindSparkWorldGateScene := preload("res://scenes/mind_spark/world_gate.tscn")
 const Bricks := preload("res://scripts/altar/AltarParts.gd")
 const TreeOfLifeScene := preload("res://assets3D/tree_of_life/glb/artea_tree_of_life.glb")
@@ -22,7 +19,7 @@ const BlossomBudClusterLeafStyle := preload(
 const GravityLeafReliefStyle := preload(
 	"res://scripts/tree_of_life/leaf_style_gravity_leaf_relief.gd")
 const TREE_CHRISTMAS_MELODY := preload(
-	"res://assets/audio/tree_of_life_christmas_ambience.ogg")
+	"res://assets/audio/tree_of_life_christmas_ambience.wav")
 const TREE_CHRISTMAS_BELLS := preload("res://assets/SFX/fairy dust.ogg")
 const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
 
@@ -174,22 +171,6 @@ func _ready() -> void:
 	if not embedded_in_gallery:
 		_build_standalone_minimap()
 		_build_return_gate()
-	_build_streaming_director()
-
-
-func _build_streaming_director() -> void:
-	# Everything above builds the full 2 km world up front and left it all
-	# drawing at once, wherever the player happened to be standing. This hides
-	# the parts that are too far away to read. It is attached here rather than
-	# only from art_gallery.gd so the scene costs the same when it is run
-	# directly from the editor as it does embedded in the gallery.
-	if get_node_or_null("WorldStreamingDirector") != null:
-		return
-	var streaming := StreamingDirector.new()
-	streaming.name = "WorldStreamingDirector"
-	streaming.world_root = self
-	streaming.player = _player
-	add_child(streaming)
 
 
 func _build_heart_melody_island_one() -> void:
@@ -249,17 +230,9 @@ func _process(delta: float) -> void:
 		var regions := get_node_or_null("KingdomRegions3000m")
 		if not fell_from_world_one and regions != null and regions.has_method("get_safe_respawn"):
 			respawn = regions.call("get_safe_respawn", to_local(_player.global_position))
-		if not _request_milo_rescue(to_global(respawn)):
-			_player.global_position = to_global(respawn)
-			_player.velocity = Vector3.ZERO
+		_player.global_position = to_global(respawn)
+		_player.velocity = Vector3.ZERO
 	_update_tree_christmas_ambience(delta)
-
-
-# Milo flies the player back instead of a bare teleport. He is absent in
-# isolated test scenes, where the teleport still applies.
-func _request_milo_rescue(fallback: Vector3) -> bool:
-	var manager := get_node_or_null("/root/MiloCompanionManager")
-	return manager != null and bool(manager.call("request_fall_rescue", fallback))
 
 
 func get_exploration_size() -> Vector2:
@@ -1073,9 +1046,7 @@ func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width:
 func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vector3) -> void:
 	var recovery := Area3D.new()
 	recovery.name = "ApproachFallRecovery"
-	# Top of the box sits 28 m under the bridge, milo_fall_rescue.gd's
-	# RESCUE_DROP, so this fall feels like every other one.
-	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -38, 0)
+	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -22, 0)
 	recovery.collision_layer = 0
 	recovery.collision_mask = 1
 	var shape_node := CollisionShape3D.new()
@@ -1089,8 +1060,6 @@ func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vecto
 
 func _recover_approach_player(body: Node3D, safe_position: Vector3) -> void:
 	if body != _player or _player == null:
-		return
-	if _request_milo_rescue(to_global(safe_position)):
 		return
 	_player.global_position = to_global(safe_position)
 	_player.velocity = Vector3.ZERO
@@ -2031,13 +2000,6 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 
 
 func _build_heart_district() -> void:
-	var heart_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
-	heart_gate.name = "HeartMelodyWorldGate"
-	heart_gate.position = HEART + Vector3(0, 4, 45)
-	heart_gate.target_kingdom_id = "heart"
-	heart_gate.target_world_path = NodePath()
-	heart_gate.prompt_text = "Q · VISIT HEART MELODY — MUSICAL ORCHARD (open journey)"
-	add_child(heart_gate)
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
 	district.set_meta("design_revision", "celestial_conservatory_v14")
@@ -3497,13 +3459,7 @@ func _on_return_gate_entered(body: Node3D) -> void:
 	if not ResourceLoader.exists(RETURN_SCENE_PATH):
 		return
 	_travelling = true
-	# Deferred: swapping scenes inside the Area3D's body_entered callback frees
-	# this node while the physics server is still iterating it.
-	_return_to_gallery.call_deferred()
-
-
-func _return_to_gallery() -> void:
-	SceneLoader.change_scene_with_loading(get_tree(), RETURN_SCENE_PATH)
+	get_tree().change_scene_to_file.call_deferred(RETURN_SCENE_PATH)
 
 
 func _build_island_foundation(parent: Node3D, center: Vector3, radius: float,

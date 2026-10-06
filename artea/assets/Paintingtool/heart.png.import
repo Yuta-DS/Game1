@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bsh6lr02v2gjv"
 path.s3tc="res://.godot/imported/heart.png-89e749433675ba0d5ec74f8cfc56fe08.s3tc.ctex"
+path.etc2="res://.godot/imported/heart.png-89e749433675ba0d5ec74f8cfc56fe08.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Paintingtool/heart.png"
-dest_files=["res://.godot/imported/heart.png-89e749433675ba0d5ec74f8cfc56fe08.s3tc.ctex"]
+dest_files=["res://.godot/imported/heart.png-89e749433675ba0d5ec74f8cfc56fe08.s3tc.ctex", "res://.godot/imported/heart.png-89e749433675ba0d5ec74f8cfc56fe08.etc2.ctex"]
 
 [params]
 

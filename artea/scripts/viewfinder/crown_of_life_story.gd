@@ -17,8 +17,6 @@
 # gallery_ceremony.gd's evidentiary standard.
 extends Node3D
 
-const SceneLoader := preload("res://scripts/scene_loader.gd")
-
 const ControllerScript := preload("res://scripts/viewfinder/lens_controller.gd")
 const FrustumCutterScript := preload("res://scripts/viewfinder/frustum_cutter.gd")
 
@@ -727,9 +725,6 @@ func _build_player() -> void:
 	_player = CharacterBody3D.new()
 	_player.name = "StoryPlayer"
 	_player.add_to_group("player")
-	# This story drives the body itself and respawns at its chapter checkpoint,
-	# so the general Milo fall rescue (milo_fall_rescue.gd) stays out of it.
-	_player.set_meta(&"custom_fall_recovery", true)
 
 	var capsule := CollisionShape3D.new()
 	var capsule_shape := CapsuleShape3D.new()
@@ -2034,7 +2029,7 @@ func _return_to_castle() -> void:
 	if OS.has_feature("crown_story"):
 		get_tree().quit()
 	else:
-		SceneLoader.change_scene_with_loading(get_tree(), HUB_SCENE_PATH)
+		get_tree().change_scene_to_file(HUB_SCENE_PATH)
 
 
 func _return_label() -> String:

@@ -1,0 +1,50 @@
+{
+	"Cane_Hold": {
+		"duration": 4.0,
+		"sampled_joint_travel": 0.00780890416353941,
+		"tracks": 56
+	},
+	"Greet": {
+		"duration": 3.0,
+		"sampled_joint_travel": 0.424839049577713,
+		"tracks": 56
+	},
+	"Guide": {
+		"duration": 3.0,
+		"sampled_joint_travel": 0.390620321035385,
+		"tracks": 56
+	},
+	"Hand_Mechanics": {
+		"duration": 6.0,
+		"finger_hinge_rotation_deg": 9.90460587204994,
+		"sampled_joint_travel": 0.000570797419641167,
+		"tracks": 56
+	},
+	"Idle": {
+		"duration": 4.0,
+		"sampled_joint_travel": 0.00780890416353941,
+		"tracks": 56
+	},
+	"Speak": {
+		"duration": 4.0,
+		"sampled_joint_travel": 0.165804162621498,
+		"tracks": 56
+	},
+	"Walking_A": {
+		"duration": 2.0,
+		"sampled_joint_travel": 0.11856684088707,
+		"tracks": 56
+	},
+	"face_blink": {
+		"passed": true,
+		"sample_time": 2.56,
+		"vertical_scales": {
+			"L": 0.270560026168823,
+			"R": 0.270560026168823
+		}
+	},
+	"paw_vertex_colors": {
+		"passed": true,
+		"paws": 2
+	}
+}

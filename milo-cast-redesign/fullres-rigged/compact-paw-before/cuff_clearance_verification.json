@@ -1,0 +1,497 @@
+{
+  "sha256": "fc3c32cc2c104c55970e3bbabb21006d9e0d20f52e036b348b0b4c3b6b8ee9ea",
+  "samples": [
+    {
+      "clip": "Cane_Hold",
+      "frame": 0,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 0,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 24,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 24,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 48,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 48,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 72,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 72,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 96,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 96,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 0,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 0,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 18,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 18,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 36,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 36,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 54,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 54,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 72,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Greet",
+      "frame": 72,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 0,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 0,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 18,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 18,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 36,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 36,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 54,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 54,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 72,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Guide",
+      "frame": 72,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 0,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 0,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 36,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 36,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 72,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 72,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 108,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 108,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 144,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 144,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 0,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 0,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 24,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 24,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 48,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 48,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 72,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 72,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 96,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Idle",
+      "frame": 96,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 0,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 0,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 24,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 24,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 48,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 48,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 72,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 72,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 96,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Speak",
+      "frame": 96,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 0,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 0,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 12,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 12,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 24,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 24,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 36,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 36,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 48,
+      "side": "L",
+      "intersections": 0,
+      "cuffs": []
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 48,
+      "side": "R",
+      "intersections": 0,
+      "cuffs": []
+    }
+  ],
+  "scope": "Five frames per clip per hand; palm/finger region beyond 25mm from wrist joint only. Buried wrist attachment is intentionally excluded.",
+  "passed": true
+}

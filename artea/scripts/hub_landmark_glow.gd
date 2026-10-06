@@ -11,7 +11,6 @@
 extends Node3D
 
 const CrystalShader := preload("res://shaders/artea_crystal.gdshader")
-const HubLightFade := preload("res://scripts/hub_light_fade.gd")
 
 const LANDMARKS := [
 	{
@@ -146,7 +145,6 @@ func _build_lantern(landmark: Dictionary) -> void:
 	lamp.light_energy = 1.1
 	lamp.omni_range = 6.0
 	lamp.shadow_enabled = false
-	HubLightFade.apply(lamp)
 	holder.add_child(lamp)
 
 	var phase := fmod(landmark["pos"].x + landmark["pos"].z, 3.0)

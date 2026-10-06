@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://df6dvqrx6c43r"
 path.s3tc="res://.godot/imported/Jump-Start-Sheet.png-204907ac7dbe5b276be2c0cbbad29e5b.s3tc.ctex"
+path.etc2="res://.godot/imported/Jump-Start-Sheet.png-204907ac7dbe5b276be2c0cbbad29e5b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/Character/Jump-Start/Jump-Start-Sheet.png"
-dest_files=["res://.godot/imported/Jump-Start-Sheet.png-204907ac7dbe5b276be2c0cbbad29e5b.s3tc.ctex"]
+dest_files=["res://.godot/imported/Jump-Start-Sheet.png-204907ac7dbe5b276be2c0cbbad29e5b.s3tc.ctex", "res://.godot/imported/Jump-Start-Sheet.png-204907ac7dbe5b276be2c0cbbad29e5b.etc2.ctex"]
 
 [params]
 

@@ -30,6 +30,7 @@ func interact(action: StringName = &"open", value: Variant = null) -> Dictionary
 			if action == &"confirm": result = state.confirm_phrase()
 			elif action == &"undo": result = state.revise()
 			elif action == &"reset": result = state.revise(true)
+			elif action == &"hint": result = state.request_hint()
 			else: result = {"accepted": true, "message": "Leaf → Sun → Droplet"}
 		_: result = {"accepted": true, "message": "Open this interaction."}
 	used.emit(save_id,result)

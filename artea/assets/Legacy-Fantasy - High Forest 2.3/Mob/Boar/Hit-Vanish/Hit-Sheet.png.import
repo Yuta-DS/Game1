@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dqflulvstlat4"
 path.s3tc="res://.godot/imported/Hit-Sheet.png-1a98d2f8f83324fca763ff2c7c0d1443.s3tc.ctex"
+path.etc2="res://.godot/imported/Hit-Sheet.png-1a98d2f8f83324fca763ff2c7c0d1443.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Hit-Vanish/Hit-Sheet.png"
-dest_files=["res://.godot/imported/Hit-Sheet.png-1a98d2f8f83324fca763ff2c7c0d1443.s3tc.ctex"]
+dest_files=["res://.godot/imported/Hit-Sheet.png-1a98d2f8f83324fca763ff2c7c0d1443.s3tc.ctex", "res://.godot/imported/Hit-Sheet.png-1a98d2f8f83324fca763ff2c7c0d1443.etc2.ctex"]
 
 [params]
 

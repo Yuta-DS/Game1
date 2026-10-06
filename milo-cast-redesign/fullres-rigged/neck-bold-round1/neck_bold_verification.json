@@ -1,0 +1,3312 @@
+{
+  "passed": false,
+  "sha256": "5e5bafc888df51862eb414e0e2b2ebd12bef47f652c72d7cb7ea48d7f3daff04",
+  "moustache_before": {
+    "width_m": 0.4899730086326599,
+    "height_m": 0.11864125728607178,
+    "volume_m3": 0.0016339345816814184
+  },
+  "moustache_after": {
+    "width_m": 0.5899661183357239,
+    "height_m": 0.1708390712738037,
+    "volume_m3": 0.004333081961816112
+  },
+  "moustache_ratios": {
+    "width_m": 1.2040788123862356,
+    "height_m": 1.4399634257235727,
+    "volume_m3": 2.651931117925851
+  },
+  "topology": {
+    "Neck_Transition": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "bones": [
+        "chest",
+        "head",
+        "neck"
+      ]
+    },
+    "Chin": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "bones": [
+        "head",
+        "jaw"
+      ]
+    },
+    "Mouth": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "bones": [
+        "jaw"
+      ]
+    }
+  },
+  "animations": {
+    "Hand_Mechanics": {
+      "frames": 145,
+      "minimum_attachment_pairs": {
+        "neck_head": 538,
+        "neck_chin": 655,
+        "chin_head": 375,
+        "mouth_chin": 90
+      },
+      "maximum_neck_collar_intersections": 270,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0140906910458227,
+        "Chin": 1.0000460465816834,
+        "Mouth": 1.0001429070695091
+      }
+    },
+    "Cane_Hold": {
+      "frames": 97,
+      "minimum_attachment_pairs": {
+        "neck_head": 538,
+        "neck_chin": 655,
+        "chin_head": 375,
+        "mouth_chin": 90
+      },
+      "maximum_neck_collar_intersections": 270,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0140906910458227,
+        "Chin": 1.0000461349564493,
+        "Mouth": 1.0001434602046597
+      }
+    },
+    "Speak": {
+      "frames": 97,
+      "minimum_attachment_pairs": {
+        "neck_head": 538,
+        "neck_chin": 655,
+        "chin_head": 369,
+        "mouth_chin": 90
+      },
+      "maximum_neck_collar_intersections": 270,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0140906910458227,
+        "Chin": 1.0428790968517299,
+        "Mouth": 1.0001504935619014
+      }
+    },
+    "Guide": {
+      "frames": 73,
+      "minimum_attachment_pairs": {
+        "neck_head": 538,
+        "neck_chin": 655,
+        "chin_head": 375,
+        "mouth_chin": 90
+      },
+      "maximum_neck_collar_intersections": 269,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.014818752418293,
+        "Chin": 1.0000514569139232,
+        "Mouth": 1.0001447583630454
+      }
+    },
+    "Greet": {
+      "frames": 73,
+      "minimum_attachment_pairs": {
+        "neck_head": 538,
+        "neck_chin": 655,
+        "chin_head": 375,
+        "mouth_chin": 90
+      },
+      "maximum_neck_collar_intersections": 269,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0140906910458227,
+        "Chin": 1.000045662478862,
+        "Mouth": 1.000139248428693
+      }
+    },
+    "Walking_A": {
+      "frames": 49,
+      "minimum_attachment_pairs": {
+        "neck_head": 538,
+        "neck_chin": 655,
+        "chin_head": 375,
+        "mouth_chin": 90
+      },
+      "maximum_neck_collar_intersections": 269,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0140910598884667,
+        "Chin": 1.0000503329269221,
+        "Mouth": 1.0001371442457296
+      }
+    },
+    "Idle": {
+      "frames": 97,
+      "minimum_attachment_pairs": {
+        "neck_head": 538,
+        "neck_chin": 655,
+        "chin_head": 375,
+        "mouth_chin": 90
+      },
+      "maximum_neck_collar_intersections": 270,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0140906910458227,
+        "Chin": 1.0000461349564493,
+        "Mouth": 1.0001434602046597
+      }
+    }
+  },
+  "failures": [
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 0,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 1,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 2,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 3,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 4,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 5,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 6,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 7,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 8,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 9,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 10,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 11,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 12,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 13,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 14,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 15,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 16,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 17,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 18,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 19,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 20,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 21,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 22,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 23,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 24,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 25,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 26,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 27,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 28,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 29,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 30,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 31,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 32,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 33,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 34,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 35,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 36,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 37,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 38,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 39,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 40,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 41,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 42,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 43,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 44,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 45,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 46,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 47,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 48,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 49,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 50,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 51,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 52,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 53,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 54,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 55,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 56,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 57,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 58,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 59,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 60,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 61,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 62,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 63,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 64,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 65,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 66,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 67,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 68,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 69,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 70,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 71,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 72,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 73,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 74,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 75,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 76,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 77,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 78,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 79,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 80,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 81,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 82,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 83,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 84,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 85,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 86,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 87,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 88,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 89,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 90,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 91,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 92,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 93,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 94,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 95,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 96,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 97,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 98,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 99,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 100,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 101,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 102,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 103,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 104,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 105,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 106,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 107,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 108,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 109,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 110,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 111,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 112,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 113,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 114,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 115,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 116,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 117,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 118,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 119,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 120,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 121,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 122,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 123,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 124,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 125,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 126,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 127,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 128,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 129,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 130,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 131,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 132,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 133,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 134,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 135,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 136,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 137,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 138,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 139,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 140,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 141,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 142,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 143,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Hand_Mechanics",
+      "frame": 144,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 0,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 1,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 2,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 3,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 4,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 5,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 6,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 7,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 8,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 9,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 10,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 11,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 12,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 13,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 14,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 15,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 16,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 17,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 18,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 19,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 20,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 21,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 22,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 23,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 24,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 25,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 26,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 27,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 28,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 29,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 30,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 31,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 32,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 33,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 34,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 35,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 36,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 37,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 38,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 39,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 40,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 41,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 42,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 43,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 44,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 45,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 46,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 47,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 48,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 49,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 50,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 51,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 52,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 53,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 54,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 55,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 56,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 57,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 58,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 59,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 60,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 61,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 62,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 63,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 64,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 65,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 66,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 67,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 68,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 69,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 70,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 71,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 72,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 73,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 74,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 75,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 76,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 77,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 78,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 79,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 80,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 81,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 82,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 83,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 84,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 85,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 86,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 87,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 88,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 89,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 90,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 91,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 92,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 93,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 94,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 95,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Cane_Hold",
+      "frame": 96,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Speak",
+      "frame": 0,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Speak",
+      "frame": 1,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 2,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 3,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 4,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 5,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 6,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 7,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 8,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 9,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 10,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 11,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 12,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 13,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 14,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 15,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Speak",
+      "frame": 16,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 17,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 18,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 19,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 20,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 21,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 22,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 23,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 24,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 25,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 26,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 27,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 28,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Speak",
+      "frame": 29,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 30,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 31,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 32,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 33,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Speak",
+      "frame": 34,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 35,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 36,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 37,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 38,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 39,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 40,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 41,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 42,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 43,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 44,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 45,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 46,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 47,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 48,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Speak",
+      "frame": 49,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 50,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 51,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 52,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 53,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 54,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 55,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 56,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 57,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 58,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 59,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 60,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 61,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 62,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 63,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 64,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 65,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 66,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 67,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 68,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 69,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 70,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 71,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 72,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 73,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 74,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 75,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 76,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 77,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 78,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 79,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 80,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 81,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 82,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 83,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 84,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 85,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 86,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 87,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 88,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 89,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 90,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 91,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 92,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 93,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 94,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 95,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Speak",
+      "frame": 96,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Guide",
+      "frame": 0,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Guide",
+      "frame": 1,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 2,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 3,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 4,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 5,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 6,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 7,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 8,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 9,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 10,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 11,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 12,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 13,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 14,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 15,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 16,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 17,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 18,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 19,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 20,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 21,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 22,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 23,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 24,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 25,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 26,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 27,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 28,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 29,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 30,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 31,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 32,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 33,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 34,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 35,
+      "neck_collar_triangle_pairs": 265
+    },
+    {
+      "clip": "Guide",
+      "frame": 36,
+      "neck_collar_triangle_pairs": 265
+    },
+    {
+      "clip": "Guide",
+      "frame": 37,
+      "neck_collar_triangle_pairs": 265
+    },
+    {
+      "clip": "Guide",
+      "frame": 38,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 39,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 40,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 41,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 42,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 43,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 44,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 45,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 46,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 47,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 48,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 49,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 50,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 51,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Guide",
+      "frame": 52,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 53,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 54,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 55,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 56,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 57,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 58,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 59,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 60,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 61,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 62,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 63,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 64,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 65,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 66,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 67,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 68,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 69,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 70,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 71,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Guide",
+      "frame": 72,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Greet",
+      "frame": 0,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Greet",
+      "frame": 1,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 2,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 3,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 4,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 5,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 6,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 7,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 8,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 9,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 10,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 11,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 12,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 13,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 14,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 15,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Greet",
+      "frame": 16,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Greet",
+      "frame": 17,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Greet",
+      "frame": 18,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Greet",
+      "frame": 19,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Greet",
+      "frame": 20,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Greet",
+      "frame": 21,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Greet",
+      "frame": 22,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 23,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 24,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 25,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 26,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 27,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 28,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 29,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 30,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 31,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 32,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 33,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 34,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 35,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 36,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Greet",
+      "frame": 37,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 38,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 39,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 40,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 41,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 42,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 43,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 44,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 45,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 46,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 47,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 48,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 49,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 50,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 51,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 52,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 53,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 54,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 55,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 56,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 57,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 58,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 59,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 60,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 61,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 62,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 63,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 64,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 65,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 66,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 67,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 68,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 69,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 70,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 71,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Greet",
+      "frame": 72,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 0,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 1,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 2,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 3,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 4,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 5,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 6,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 7,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 8,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 9,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 10,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 11,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 12,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 13,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 14,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 15,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 16,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 17,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 18,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 19,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 20,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 21,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 22,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 23,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 24,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 25,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 26,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 27,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 28,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 29,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 30,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 31,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 32,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 33,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 34,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 35,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 36,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 37,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 38,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 39,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 40,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 41,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 42,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 43,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 44,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 45,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 46,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 47,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Walking_A",
+      "frame": 48,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Idle",
+      "frame": 0,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Idle",
+      "frame": 1,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 2,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 3,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 4,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 5,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 6,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 7,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 8,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 9,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 10,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 11,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 12,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 13,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 14,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 15,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Idle",
+      "frame": 16,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 17,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 18,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 19,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 20,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 21,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 22,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 23,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 24,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 25,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 26,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 27,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 28,
+      "neck_collar_triangle_pairs": 267
+    },
+    {
+      "clip": "Idle",
+      "frame": 29,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 30,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 31,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 32,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 33,
+      "neck_collar_triangle_pairs": 270
+    },
+    {
+      "clip": "Idle",
+      "frame": 34,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 35,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 36,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 37,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 38,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 39,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 40,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 41,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 42,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 43,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 44,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 45,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 46,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 47,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 48,
+      "neck_collar_triangle_pairs": 268
+    },
+    {
+      "clip": "Idle",
+      "frame": 49,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 50,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 51,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 52,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 53,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 54,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 55,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 56,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 57,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 58,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 59,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 60,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 61,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 62,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 63,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 64,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 65,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 66,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 67,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 68,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 69,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 70,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 71,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 72,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 73,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 74,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 75,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 76,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 77,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 78,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 79,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 80,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 81,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 82,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 83,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 84,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 85,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 86,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 87,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 88,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 89,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 90,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 91,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 92,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 93,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 94,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 95,
+      "neck_collar_triangle_pairs": 269
+    },
+    {
+      "clip": "Idle",
+      "frame": 96,
+      "neck_collar_triangle_pairs": 268
+    }
+  ]
+}

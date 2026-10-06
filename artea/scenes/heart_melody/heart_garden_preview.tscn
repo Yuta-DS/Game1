@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player_3d.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://assets3D/characters/fox.glb" id="3"]
 [ext_resource type="Script" path="res://scripts/CameraFollow.gd" id="4"]
-[ext_resource type="Script" uid="uid://c6br2wbqx2j8j" path="res://scripts/heart_melody/heart_garden_preview.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/heart_melody/heart_garden_preview.gd" id="5"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.49, 0.72, 0.85, 1)

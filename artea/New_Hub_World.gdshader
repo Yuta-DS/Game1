@@ -1,4 +1,5 @@
 shader_type spatial;
+render_mode cull_disabled;
 
 // Base gradient
 uniform vec3 bottom_color : source_color;
@@ -90,7 +91,8 @@ void vertex() {
 
     // Wind sway
     float shapedNoise = 0.0;
-    float bias = windNoiseVal - 0.5;
+    float noiseVal = texture(wind_noise, windNoiseUV).r;
+    float bias = noiseVal - 0.5;
     if (bias < 0.0) {
         shapedNoise = mix(0.0, noiseFloor - 0.5, -bias * 2.0);
     } else {

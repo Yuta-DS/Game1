@@ -1,0 +1,35 @@
+{
+  "sha256": "de1d2689fd6d082d0bebb63c26ed7447a13f10676c24a865f2dbc374a8a13150",
+  "passed": false,
+  "checks": [
+    {
+      "script": "verify_compact_paws.py",
+      "passed": true
+    },
+    {
+      "script": "verify.py",
+      "passed": true
+    },
+    {
+      "script": "verify_hand_contacts.py",
+      "passed": false,
+      "error": "A fingertip pad is not close to the cane"
+    },
+    {
+      "script": "verify_hand_mechanics.py",
+      "passed": true
+    },
+    {
+      "script": "verify_palm_orientation.py",
+      "passed": true
+    },
+    {
+      "script": "verify_cuff_clearance.py",
+      "passed": true
+    },
+    {
+      "script": "verify_head_style.py",
+      "passed": true
+    }
+  ]
+}

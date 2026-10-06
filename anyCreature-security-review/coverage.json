@@ -1,0 +1,170 @@
+{
+  "completeness": "partial",
+  "deferred": [
+    {
+      "id": "gap-1",
+      "paths": [
+        "harness/assets/three-bundle.js"
+      ],
+      "reason": "Sensitive loaders and whole-file indicators reviewed; not a full semantic audit or authenticated upstream build comparison."
+    },
+    {
+      "id": "gap-2",
+      "paths": [
+        "assets/hero.png",
+        "assets/silhouettes.png",
+        "example/wolf.glb",
+        "example/wolf_beauty.png",
+        "example/wolf_silhouette.png",
+        "example/wolf_thumb24.png"
+      ],
+      "reason": "Binary assets not deeply audited; example GLB metadata has no external URIs."
+    },
+    {
+      "id": "gap-3",
+      "paths": [
+        "CHANGELOG.md"
+      ],
+      "reason": "Release history not reviewed end-to-end; current executable implementation is authoritative."
+    },
+    {
+      "candidate": {
+        "paths": [
+          "harness/hero.mjs:75",
+          "harness/silmetrics.mjs:83",
+          "harness/judge.mjs:190"
+        ],
+        "title": "Renderer sandbox is disabled despite opt-in-only claim"
+      },
+      "candidateId": "chromium-sandbox-default",
+      "id": "chromium-sandbox-default",
+      "reason": "Parent validating dependency default against official API documentation."
+    },
+    {
+      "candidate": {
+        "paths": [
+          "harness/hero.mjs:28",
+          "harness/silmetrics.mjs:49",
+          "harness/assets/showroom.html:148"
+        ],
+        "title": "Imported models can cause unconsented network requests"
+      },
+      "candidateId": "external-model-uris",
+      "id": "external-model-uris",
+      "reason": "Independent bundled-loader investigation still running."
+    }
+  ],
+  "documentType": "codex-security.coverage",
+  "excludePaths": [],
+  "explicitExclusions": [
+    {
+      "pattern": ".git/history",
+      "reason": "Historical commits and future updates"
+    },
+    {
+      "pattern": "external/Gobkit",
+      "reason": "Gobkit server implementation and actual anonymous-key permissions"
+    },
+    {
+      "pattern": "external/dependencies",
+      "reason": "Registry dependencies and downloaded Chromium not present during source audit"
+    }
+  ],
+  "includePaths": [
+    "."
+  ],
+  "inventoryStrategy": "repository",
+  "mode": "repository",
+  "openQuestions": [
+    {
+      "question": "No antivirus signature scan or dynamic malware detonation performed; no installed ClamAV found."
+    },
+    {
+      "question": "Future dependency downloads and updates require separate trust review."
+    },
+    {
+      "question": "No runtime reproduction during source-only audit."
+    }
+  ],
+  "scanId": "51b6b2a7-9d08-47e7-abd0-ffe046c15cd6",
+  "schemaVersion": "1.0",
+  "surfaces": [
+    {
+      "disposition": "no_issue_found",
+      "id": "surface_first-party-executable-code-and-agent-workflow",
+      "label": "First-party executable code and agent workflow",
+      "notes": "Independent auditor fully reviewed every engine and harness source file and all workflow cards. No supported malware, credential harvesting, persistence, covert upload or shell injection found. JSON is parsed as data; subprocesses use fixed argv. User CLI paths retain operator authority.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_imported-glb-resource-loading",
+      "label": "Imported GLB resource loading",
+      "notes": "One low-severity source-validated external-resource request issue. Baseline low and focused medium observations share same control; reconciled to low due metadata-only demonstrated impact and browser restrictions.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "needs_follow_up",
+      "id": "surface_renderer-sandbox-default",
+      "label": "Renderer sandbox default",
+      "notes": "All three launches omit chromiumSandbox:true; official Playwright BrowserType.launch docs confirm false default. Contrary to SECURITY.md claim; fix before local integration. No standalone browser exploit proven.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "needs_follow_up",
+      "id": "surface_setup-and-publication",
+      "label": "Setup and publication",
+      "notes": "Avoid upstream setup.sh: unpinned deps, npm lifecycle scripts, system pip --break-system-packages. Use isolated runtime. Publisher not automatically invoked; explicit caller consent required and CC0 written before POST; disable in installed integration unless separately authorized.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "surface_local-http-confinement-and-html-escaping",
+      "label": "Local HTTP confinement and HTML escaping",
+      "notes": "All servers bind loopback/port 0. Hero/silhouette fixed routes. Judge lexical containment + extension allowlist; no proven independent privilege gain from broad roots/symlink behavior. Narrow installed copy. Display strings escaped, model base64, labels textContent.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "needs_follow_up",
+      "id": "surface_source-inventory-and-bundled-assets",
+      "label": "Source inventory and bundled assets",
+      "notes": "52 tracked regular files, no submodules/symlinks/hooks/compiled executables. Bundle partial review found normal Three.js r180 loaders, no obvious malicious payload. Bundle SHA256 6e1f3d3b6cc6f84a84e11479ce00272c065014818509da595512ece82a463bfa. JSON fixtures parsed as data; no code-execution sink established.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_installer-publication-delivery-and-renderer-entry-points-2",
+      "label": "Installer, publication, delivery, and renderer entry points",
+      "notes": "No hidden credential collection, persistence or shell execution observed in reviewed entry points. setup.sh installs unpinned dependencies and attempts --break-system-packages. publish.mjs is explicitly documented but only caller-gated; not invoked.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_independent-baseline-and-focused-bundled-loader-review-2",
+      "label": "Independent baseline and focused bundled-loader review",
+      "notes": "All first-party executable source and workflow cards reviewed. No malware evidence found. Bundle partial only. Original candidates retained pending reconciliation; broad judge roots and symlink following do not establish attacker privilege gain. Unpinned installs, caller-only publication consent and unknown anonymous-key server authority recorded.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "surface_sandbox-configuration-and-setup-hardening",
+      "label": "Sandbox configuration and setup hardening",
+      "notes": "Sandbox disabled by Playwright default despite repository claims; record as hardening risk, not proven standalone browser exploit. Unpinned dependency installs/system pip, broad judge roots and caller-only publication consent are setup risks; no independent credential theft/backdoor found.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "needs_follow_up",
+      "id": "surface_installer-publication-delivery-and-renderer-entry-points",
+      "label": "Installer, publication, delivery, and renderer entry points",
+      "notes": "No hidden credential collection, persistence or shell execution observed in reviewed entry points. setup.sh installs unpinned dependencies and attempts --break-system-packages. publish.mjs is explicitly documented but only caller-gated; not invoked.",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "needs_follow_up",
+      "id": "surface_independent-baseline-and-focused-bundled-loader-review",
+      "label": "Independent baseline and focused bundled-loader review",
+      "notes": "All first-party executable source and workflow cards reviewed. No malware evidence found. Bundle partial only. Original candidates retained pending reconciliation; broad judge roots and symlink following do not establish attacker privilege gain. Unpinned installs, caller-only publication consent and unknown anonymous-key server authority recorded.",
+      "receiptRefs": []
+    }
+  ]
+}

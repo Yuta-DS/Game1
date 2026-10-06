@@ -1,0 +1,90 @@
+{
+  "passed": false,
+  "asset": "milo_fullres.glb",
+  "sha256": "2b0df04a1705f731a0d118d49c82182ffb2251f683366d201b767cf79d577bd8",
+  "scope": "Local cat-paw and DOCX cheek-tuft candidate; not a live-game replacement or exact-match approval.",
+  "checks": [
+    {
+      "name": "verify_cat_paws.py",
+      "passed": true
+    },
+    {
+      "name": "check_cat_paw_scope.py",
+      "passed": true
+    },
+    {
+      "name": "verify.py",
+      "passed": true
+    },
+    {
+      "name": "verify_hand_contacts.py",
+      "passed": false,
+      "error": "Hand self-intersection in sampled pose"
+    },
+    {
+      "name": "verify_hand_mechanics.py",
+      "passed": true
+    },
+    {
+      "name": "verify_palm_orientation.py",
+      "passed": true
+    },
+    {
+      "name": "verify_cuff_clearance.py",
+      "passed": true
+    },
+    {
+      "name": "verify_head_style.py",
+      "passed": true
+    },
+    {
+      "name": "hand_edge_stretch_under_3x",
+      "passed": true,
+      "observed": 1.7388925010542666
+    },
+    {
+      "name": "full_character_edge_stretch_under_3x",
+      "passed": false,
+      "observed": 3.259505199316752,
+      "note": "Pre-existing raised-arm sleeve distortion remains outside this edit."
+    },
+    {
+      "name": "sampled_hand_self_intersection",
+      "passed": false,
+      "samples": 1262,
+      "failing_samples": 22
+    },
+    {
+      "name": "all_cane_pad_clearances_under_3mm",
+      "passed": false,
+      "clearances_m": {
+        "finger0": 0.0010524728568270802,
+        "finger1": 0.005663942079991102,
+        "finger2": 0.010082590393722057,
+        "thumb": 0.0037848814390599728
+      }
+    },
+    {
+      "name": "godot_seven_clip_import",
+      "passed": true,
+      "evidence": "preview/godot_import_verification.json"
+    },
+    {
+      "name": "fresh_actual_model_media",
+      "passed": true,
+      "files": 40,
+      "evidence": "delivery_media_manifest.json"
+    }
+  ],
+  "visual_review": "CAT_PAW_DOCX_REVIEW.md",
+  "regression_summary": "cat_regression_summary.json",
+  "not_claimed": [
+    "full AnyCreature quality-gate pass",
+    "exact reference match or user approval",
+    "force-solved grasp",
+    "arbitrary-pose or full-character collision freedom",
+    "production LOD or live-game integration",
+    "Blender MCP execution",
+    "commit, push, upload or deployment"
+  ]
+}

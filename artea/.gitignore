@@ -14,6 +14,3 @@
 
 # Scene saves that were interrupted leave these behind
 *.tscn[0-9]*.tmp
-
-# Local output from the F12 coordinate-probe debug tool
-tools/coordinate_log.txt

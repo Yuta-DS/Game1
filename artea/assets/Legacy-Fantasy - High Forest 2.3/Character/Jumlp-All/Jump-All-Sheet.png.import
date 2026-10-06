@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c8saivej5v6nn"
 path.s3tc="res://.godot/imported/Jump-All-Sheet.png-c08582213388d70b93629d14d8b36820.s3tc.ctex"
+path.etc2="res://.godot/imported/Jump-All-Sheet.png-c08582213388d70b93629d14d8b36820.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/Character/Jumlp-All/Jump-All-Sheet.png"
-dest_files=["res://.godot/imported/Jump-All-Sheet.png-c08582213388d70b93629d14d8b36820.s3tc.ctex"]
+dest_files=["res://.godot/imported/Jump-All-Sheet.png-c08582213388d70b93629d14d8b36820.s3tc.ctex", "res://.godot/imported/Jump-All-Sheet.png-c08582213388d70b93629d14d8b36820.etc2.ctex"]
 
 [params]
 

@@ -2838,9 +2838,6 @@ func _build_bridge(parent: Node3D, base: Vector2, top_y: float) -> void:
 	beacon.light_energy = 1.7
 	beacon.omni_range = 10.0
 	beacon.shadow_enabled = false
-	beacon.distance_fade_enabled = true
-	beacon.distance_fade_begin = 45.0
-	beacon.distance_fade_length = 15.0
 	parent.add_child(beacon)
 	beacon.global_position = target + Vector3(0.0, 1.4, 0.0)
 
@@ -2993,9 +2990,6 @@ func _build_lumen_ceremony(parent: Node3D, start: Vector3, target: Vector3,
 		arch_lamp.light_energy = 1.5
 		arch_lamp.omni_range = 9.0
 		arch_lamp.shadow_enabled = false
-		arch_lamp.distance_fade_enabled = true
-		arch_lamp.distance_fade_begin = 45.0
-		arch_lamp.distance_fade_length = 15.0
 		parent.add_child(arch_lamp)
 		arch_lamp.global_position = arch_centre + Vector3(0.0, 4.2, 0.0)
 
@@ -3292,9 +3286,6 @@ func _add_lantern(parent: Node3D, base: Vector2, angle: float, y: float) -> void
 	lamp.light_energy = 1.2
 	lamp.omni_range = 9.0
 	lamp.shadow_enabled = false
-	lamp.distance_fade_enabled = true
-	lamp.distance_fade_begin = 45.0
-	lamp.distance_fade_length = 15.0
 	bulb.add_child(lamp)
 
 

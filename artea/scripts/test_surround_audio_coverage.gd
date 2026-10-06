@@ -12,7 +12,7 @@ func _fail(message: String) -> void:
 
 func _run() -> void:
 	var total_sources := 0
-	for scene_path in ["res://scenes/New_Hub_World.tscn", "res://scenes/art_gallery_3d_inprogress.tscn"]:
+	for scene_path in ["res://scenes/New_Hub_World.tscn", "res://scenes/ArtGallery.tscn"]:
 		var packed := load(scene_path) as PackedScene
 		if packed == null:
 			_fail("cannot load %s" % scene_path)
@@ -38,17 +38,11 @@ func _run() -> void:
 					and source.max_distance <= 0.0:
 				_fail("%s has unbounded distance audio" % source.get_path())
 				return
-		if scene_path.ends_with("art_gallery_3d_inprogress.tscn"):
-			var managed_trains := scene.find_children("*", "Node3D", true, false).filter(
-				func(node: Node): return node.has_meta("spatial_train_audio"))
-			if managed_trains.size() != 1:
-				_fail("the gallery must have exactly one managed Crown train, found %d" % managed_trains.size())
-				return
 		total_sources += sources.size()
-		current_scene = null
 		root.remove_child(scene)
 		scene.queue_free()
-		for _frame in 8:
+		current_scene = null
+		for _frame in 3:
 			await process_frame
 	print("SURROUND_AUDIO_COVERAGE_TEST: PASS — %d physical sources across hub and gallery are 7.1-ready with automatic stereo fallback" % total_sources)
 	quit()

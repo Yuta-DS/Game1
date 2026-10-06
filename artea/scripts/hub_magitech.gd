@@ -12,7 +12,6 @@
 extends Node3D
 
 const CrystalShader := preload("res://shaders/artea_crystal.gdshader")
-const HubLightFade := preload("res://scripts/hub_light_fade.gd")
 
 # Where the journey's doorways are. Positions read from the Area3D teleports
 # in New_Hub_World.tscn — the hub's ground sits at Y=15-20, not 0, so these
@@ -135,7 +134,6 @@ func _build_pylon(portal: Dictionary) -> void:
 	lamp.light_energy = 1.6
 	lamp.omni_range = 9.0
 	lamp.shadow_enabled = false
-	HubLightFade.apply(lamp)
 	pylon.add_child(lamp)
 
 

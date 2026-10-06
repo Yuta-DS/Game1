@@ -1,6 +1,4 @@
 extends Control
-
-const SceneLoader := preload("res://scripts/scene_loader.gd")
 @onready var label = $Label
 
 # Dynamic messages after completion
@@ -87,12 +85,12 @@ func _on_play_again_pressed() -> void:
 
 # Return to Hubworld button
 func _on_return_to_hubworld_pressed():
-	_return_to_park()
+	_return_to_campaign()
 
 
-func _return_to_park() -> void:
+func _return_to_campaign() -> void:
 	var campaign := get_node_or_null("/root/JourneyCampaign")
-	if campaign != null and campaign.has_method("return_to_park"):
-		campaign.call("return_to_park")
+	if campaign != null and campaign.has_method("return_to_campaign"):
+		campaign.call("return_to_campaign")
 	else:
-		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")
+		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")

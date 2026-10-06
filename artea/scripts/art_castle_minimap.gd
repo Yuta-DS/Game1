@@ -540,9 +540,6 @@ func _draw_galaxy_compact() -> void:
 		var station_color := Color("f8f2ff") if bool(_railway.call("is_station_unlocked", index)) \
 			else Color("646679")
 		_draw_compact_marker(_world.to_global(stations[station_id]), "", station_color, "station")
-	var heart := _railway.get_node_or_null("HeartMelodyConnection/HeartMelodyIslandOne") as Node3D
-	if heart != null:
-		_draw_compact_marker(heart.global_position, "QUIET MEADOW", Color("ff91c9"), "place")
 
 
 func _draw_compact_route(world_points: Array, color: Color, width: float) -> void:
@@ -801,9 +798,6 @@ func _draw_galaxy_full(rect: Rect2) -> void:
 		var unlocked := bool(_railway.call("is_station_unlocked", index))
 		draw_circle(point, 5.0, Color("f8f2ff") if unlocked else Color("55576b"))
 		draw_arc(point, 8.0, 0, TAU, 18, Color("6deaff") if unlocked else Color("77798b"), 1.5)
-	var heart := _railway.get_node_or_null("HeartMelodyConnection/HeartMelodyIslandOne") as Node3D
-	if heart != null:
-		_draw_full_landmark(_map_global(heart.global_position, rect), "QUIET MEADOW · ISLAND 1", Color("ff91c9"))
 
 
 func _draw_full_kingdom(point: Vector2, color: Color, label: String) -> void:

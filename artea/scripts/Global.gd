@@ -43,5 +43,9 @@ func consume_spawn_point() -> String:
 	pending_spawn_point = ""
 	return point
 
-func has_online_session() -> bool:
-	return not auth_token.is_empty() and auth_token != "OFFLINE_GUEST_TOKEN" and auth_token != "invalid_token"
+const SERVER_BASE = "http://54.252.162.122"
+
+const LOGIN_URL = SERVER_BASE + "/login"
+const REGISTER_URL = SERVER_BASE + "/register"
+const MY_ARTWORKS_URL = SERVER_BASE + "/my_artworks"
+const UPLOAD_ARTWORK_URL = SERVER_BASE + "/upload_artwork"

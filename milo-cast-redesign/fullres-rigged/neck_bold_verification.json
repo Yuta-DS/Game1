@@ -1,0 +1,156 @@
+{
+  "passed": true,
+  "sha256": "5903108205e37a60d467d6d96c17b3b7982b068d5b1d7b574489f3c0699fdf1f",
+  "moustache_before": {
+    "width_m": 0.4899730086326599,
+    "height_m": 0.11864125728607178,
+    "volume_m3": 0.0016339345816814184
+  },
+  "moustache_after": {
+    "width_m": 0.6199610233306885,
+    "height_m": 0.18369698524475098,
+    "volume_m3": 0.005165126595192374
+  },
+  "moustache_ratios": {
+    "width_m": 1.2652962763413822,
+    "height_m": 1.5483398393344285,
+    "volume_m3": 3.161158747174041
+  },
+  "topology": {
+    "Neck_Transition": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "bones": [
+        "chest",
+        "head",
+        "neck"
+      ]
+    },
+    "Chin": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "bones": [
+        "head",
+        "jaw"
+      ]
+    },
+    "Mouth": {
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonadjacent_self_intersections": 0,
+      "bones": [
+        "jaw"
+      ]
+    }
+  },
+  "animations": {
+    "Hand_Mechanics": {
+      "frames": 145,
+      "minimum_attachment_pairs": {
+        "neck_head": 626,
+        "neck_chin": 682,
+        "chin_head": 474,
+        "mouth_chin": 88
+      },
+      "maximum_neck_collar_intersections": 0,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0118451413830412,
+        "Chin": 1.0000431997439705,
+        "Mouth": 1.0001400793002881
+      }
+    },
+    "Cane_Hold": {
+      "frames": 97,
+      "minimum_attachment_pairs": {
+        "neck_head": 626,
+        "neck_chin": 682,
+        "chin_head": 474,
+        "mouth_chin": 88
+      },
+      "maximum_neck_collar_intersections": 0,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0118451413830412,
+        "Chin": 1.0000429490879004,
+        "Mouth": 1.0001400793002881
+      }
+    },
+    "Speak": {
+      "frames": 97,
+      "minimum_attachment_pairs": {
+        "neck_head": 626,
+        "neck_chin": 682,
+        "chin_head": 472,
+        "mouth_chin": 88
+      },
+      "maximum_neck_collar_intersections": 0,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0118451413830412,
+        "Chin": 1.0456017947986231,
+        "Mouth": 1.0001567143240366
+      }
+    },
+    "Guide": {
+      "frames": 73,
+      "minimum_attachment_pairs": {
+        "neck_head": 626,
+        "neck_chin": 682,
+        "chin_head": 474,
+        "mouth_chin": 88
+      },
+      "maximum_neck_collar_intersections": 0,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0199494811604006,
+        "Chin": 1.0000393631974278,
+        "Mouth": 1.0001304360901726
+      }
+    },
+    "Greet": {
+      "frames": 73,
+      "minimum_attachment_pairs": {
+        "neck_head": 626,
+        "neck_chin": 682,
+        "chin_head": 474,
+        "mouth_chin": 88
+      },
+      "maximum_neck_collar_intersections": 0,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0118451413830412,
+        "Chin": 1.0000423297520198,
+        "Mouth": 1.0001394254477474
+      }
+    },
+    "Walking_A": {
+      "frames": 49,
+      "minimum_attachment_pairs": {
+        "neck_head": 626,
+        "neck_chin": 682,
+        "chin_head": 474,
+        "mouth_chin": 88
+      },
+      "maximum_neck_collar_intersections": 0,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.011841309475918,
+        "Chin": 1.0000442182927347,
+        "Mouth": 1.0001400793002881
+      }
+    },
+    "Idle": {
+      "frames": 97,
+      "minimum_attachment_pairs": {
+        "neck_head": 626,
+        "neck_chin": 682,
+        "chin_head": 474,
+        "mouth_chin": 88
+      },
+      "maximum_neck_collar_intersections": 0,
+      "max_edge_stretch": {
+        "Neck_Transition": 1.0118451413830412,
+        "Chin": 1.0000429490879004,
+        "Mouth": 1.0001400793002881
+      }
+    }
+  },
+  "failures": []
+}

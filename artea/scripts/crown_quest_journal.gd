@@ -1,8 +1,6 @@
 class_name CrownQuestJournal
 extends Control
 
-const SceneLoader := preload("res://scripts/scene_loader.gd")
-
 const CatalogScript := preload("res://scripts/crown_story_catalog.gd")
 const CASTLE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 
@@ -351,7 +349,7 @@ func _on_back_pressed() -> bool:
 		if bool(_campaign.call("return_to_campaign")):
 			return true
 	if ResourceLoader.exists(CASTLE_SCENE) and get_tree() != null:
-		return SceneLoader.change_scene_with_loading(get_tree(), CASTLE_SCENE)
+		return get_tree().change_scene_to_file(CASTLE_SCENE) == OK
 	return false
 
 

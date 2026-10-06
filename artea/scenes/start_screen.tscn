@@ -111,7 +111,7 @@ corner_radius_bottom_left = 9
 script = ExtResource("1_pevhg")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=2082080412]
-position = Vector2(821.00006, 498.99997)
+position = Vector2(953.25, 530.064)
 scale = Vector2(1.27572, 1.19519)
 texture = ExtResource("2_afy8x")
 
@@ -121,10 +121,10 @@ libraries/ = SubResource("AnimationLibrary_r2jwc")
 [node name="AnimationParent" type="Node2D" parent="." unique_id=700868099]
 
 [node name="CenterContainer" type="CenterContainer" parent="AnimationParent" unique_id=1695625190]
-offset_left = -27.0
-offset_top = 417.0
-offset_right = 633.0
-offset_bottom = 1079.0
+offset_left = 89.0
+offset_top = 489.0
+offset_right = 749.0
+offset_bottom = 1151.0
 
 [node name="PanelContainer" type="PanelContainer" parent="AnimationParent/CenterContainer" unique_id=675696548]
 layout_mode = 2

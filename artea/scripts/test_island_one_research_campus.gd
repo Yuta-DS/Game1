@@ -91,8 +91,7 @@ func _run() -> void:
 		for press in int(operation[1]):
 			assert(puzzle.interact_nearest(actor).accepted)
 	assert(world.is_island_one_star_gate_open())
-	assert(world.is_quest_gate_open(0),
-		"Island One to Island Two bridge remains physically unobstructed")
+	assert(not world.is_quest_gate_open(0))
 	actor.global_position=controls.get_node("PuzzleControl_echo_collector/InspectionAnchor").global_position
 	assert(puzzle.interact_nearest(actor).accepted)
 	assert(puzzle.get_puzzle_state().prism_installed)
@@ -121,7 +120,7 @@ func _run() -> void:
 	# Let the audio mixer consume deferred playback releases after scene teardown.
 	await create_timer(.2).timeout
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(STORE))
-	print("ISLAND_ONE_RESEARCH_CAMPUS: PASS — 16 oriented stations, operator floor support/proximity, garden relocation, beam endpoints, Q1-to-Q2 access, clear inter-island bridge")
+	print("ISLAND_ONE_RESEARCH_CAMPUS: PASS — 16 oriented stations, operator floor support/proximity, garden relocation, beam endpoints, Q1-to-Q2 access, external gate locked")
 	quit()
 
 func _screenshots(world: Node3D, arrival: Node3D, garden: Node3D, puzzle: Node3D) -> bool:

@@ -1,0 +1,218 @@
+[
+  {
+    "dx": 0.0,
+    "dy": 0.0,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.013202742265358084,
+      "finger1": 0.0056867287531677715,
+      "finger2": 0.010598844138182706,
+      "thumb": -0.00012247076194956373
+    },
+    "contact_cost": 0.027610785918658128
+  },
+  {
+    "dx": -0.004,
+    "dy": 0.002,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.013380138550140261,
+      "finger1": 0.005381610866772192,
+      "finger2": 0.010125916232859975,
+      "thumb": 0.004224922060984225
+    },
+    "contact_cost": 0.029112587710756657
+  },
+  {
+    "dx": -0.002,
+    "dy": 0.002,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.014132090483762629,
+      "finger1": 0.0063542069587999,
+      "finger2": 0.011127494642143116,
+      "thumb": 0.0026794948718234287
+    },
+    "contact_cost": 0.030293286956529074
+  },
+  {
+    "dx": 0.0,
+    "dy": 0.002,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.01500270751065043,
+      "finger1": 0.007387064315025909,
+      "finger2": 0.012243516149839482,
+      "thumb": 0.0011500377055322763
+    },
+    "contact_cost": 0.0317833256810481
+  },
+  {
+    "dx": -0.01,
+    "dy": 0.004,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.013629349608681661,
+      "finger1": 0.005138716765339455,
+      "finger2": 0.009530307048381174,
+      "thumb": 0.010177458053937419
+    },
+    "contact_cost": 0.03447583147633971
+  },
+  {
+    "dx": -0.008,
+    "dy": 0.004,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.01407696175108889,
+      "finger1": 0.005709151612436616,
+      "finger2": 0.01023352890475378,
+      "thumb": 0.0085785192412342
+    },
+    "contact_cost": 0.03459816150951349
+  },
+  {
+    "dx": -0.012,
+    "dy": 0.004,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.013303640928751184,
+      "finger1": 0.004691853319261452,
+      "finger2": 0.008960093126377607,
+      "thumb": 0.011661826756787381
+    },
+    "contact_cost": 0.03461741413117762
+  },
+  {
+    "dx": -0.006,
+    "dy": 0.004,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.0146148811272528,
+      "finger1": 0.006404204504947152,
+      "finger2": 0.011013168729220426,
+      "thumb": 0.007048267964458807
+    },
+    "contact_cost": 0.03508052232587919
+  },
+  {
+    "dx": -0.004,
+    "dy": 0.004,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.015265743191695323,
+      "finger1": 0.007189633854017078,
+      "finger2": 0.01190856978564273,
+      "thumb": 0.005489106716456334
+    },
+    "contact_cost": 0.035853053547811466
+  },
+  {
+    "dx": 0.002,
+    "dy": 0.002,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.015899459542160467,
+      "finger1": 0.008463456850285796,
+      "finger2": 0.013387523699167138,
+      "thumb": -0.00025803013469628475
+    },
+    "contact_cost": 0.03600847022630969
+  },
+  {
+    "dx": -0.002,
+    "dy": 0.004,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.015970422962046968,
+      "finger1": 0.008082741768131578,
+      "finger2": 0.012843716979089802,
+      "thumb": 0.0039761890818184546
+    },
+    "contact_cost": 0.0368730707910868
+  },
+  {
+    "dx": 0.0,
+    "dy": 0.004,
+    "pairs": 0,
+    "parts": {
+      "Cane_Gold_Collar": 0,
+      "Cane_Gold_Crook": 0,
+      "Cane_Gold_Ferrule": 0,
+      "Cane_Shaft": 0
+    },
+    "approx_shaft_gaps": {
+      "finger0": 0.01678910165116422,
+      "finger1": 0.009114808784168196,
+      "finger2": 0.013891150821890243,
+      "thumb": 0.0025668786198594067
+    },
+    "contact_cost": 0.038361939877082064
+  }
+]

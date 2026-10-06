@@ -199,44 +199,29 @@ game, not a macOS fix. Worth raising with the team separately.
 
 ## Outstanding security issues
 
-Flagging for the team before the next deploy. Items 2-4 now have the code/
-config fix in place; someone still needs to actually roll it out on the
-Ubuntu box (restart the systemd unit, generate a real secret) before it
-does anything.
+Not fixed here because they are deployment decisions, not local-setup
+problems. Flagging for the team before the next deploy:
 
 1. **Default JWT secret is public.** `dev_secret_change_later_12345` is in
    the repository. Anyone who reads it can mint a token for any user id and
    access that user's artworks. Set `JWT_SECRET_KEY` to a real random value
-   in the systemd unit before deploying — `flaskapp.service` now has a
-   `CHANGE_ME_BEFORE_DEPLOY` placeholder for this specifically, and
-   `server.py` prints a startup warning to the log if it's still running on
-   the in-source default, so this can no longer fail silently.
+   in the systemd unit before deploying. The environment hook is now in place
+   (change 2 above) — it just needs a value.
 
-2. **~~`flaskapp.service` runs as `User=root`~~ — fixed.** Now `User=ubuntu`.
-   Since a non-root process can't bind port 80/443 directly, gunicorn now
-   binds `127.0.0.1:8000` instead (see item 3) — a reverse proxy (nginx or
-   similar) still needs to sit in front for the public port and HTTPS. That
-   reverse proxy is also the fix for mixed content once the game is a
-   browser export talking to this API: a page served over HTTPS can't call
-   a plain-HTTP endpoint.
+2. **`flaskapp.service` runs as `User=root`.** Any remote-code-execution bug
+   in the Flask app gives an attacker the whole machine. Should be
+   `User=ubuntu`. Note that dropping from root means port 80 can no longer be
+   bound directly — the usual fix is to run the app on a high port and put
+   nginx in front, or grant the binary `CAP_NET_BIND_SERVICE`.
 
-3. **~~The Flask development server is serving production~~ — fixed.**
-   `flaskapp.service` now runs `gunicorn server:app` instead of
-   `python server.py`. `db.create_all()` was moved out of the `__main__`
-   guard to module level for this reason: gunicorn imports the module and
-   calls the `app` object directly, it never executes `__main__`, so table
-   creation has to happen at import time or a fresh deploy has no tables.
+3. **The Flask development server is serving production.** The startup banner
+   says so explicitly: *"This is a development server. Do not use it in a
+   production deployment."* It is single-threaded and has no hardening. A
+   production WSGI server (gunicorn, waitress) should run it instead.
 
-4. **~~No upload size limit~~ — fixed.** `MAX_CONTENT_LENGTH` is now set
-   (default 20 MB, override via `MAX_UPLOAD_BYTES`).
-
-5. **No CORS configuration.** Not in the original list, but blocks a
-   browser-hosted export outright: without CORS headers, the browser
-   rejects the response client-side even when the server answers correctly,
-   because the game's page origin differs from the API's origin. Now
-   handled via `flask-cors`, configurable with `CORS_ALLOWED_ORIGINS`
-   (comma-separated origins; defaults to `*`, which should be locked down to
-   the real game origin once that's known).
+4. **No upload size limit.** A client can POST an arbitrarily large body to
+   `/upload_artwork` and fill the server disk. Flask's
+   `MAX_CONTENT_LENGTH` config setting is the standard fix.
 
 ---
 

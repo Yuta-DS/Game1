@@ -19,3 +19,4 @@ for glb in sorted((root / "glb").glob("*.glb")):
                 polygon.use_smooth = False
     bpy.ops.wm.save_as_mainfile(filepath=str(destination / (glb.stem + ".blend")))
     print("HEART_BLENDER_SOURCE", glb.stem)
+

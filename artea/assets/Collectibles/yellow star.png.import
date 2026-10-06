@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dganfoxw15diy"
 path.s3tc="res://.godot/imported/yellow star.png-bab9b25899853c96d719fdfdf7314297.s3tc.ctex"
+path.etc2="res://.godot/imported/yellow star.png-bab9b25899853c96d719fdfdf7314297.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Collectibles/yellow star.png"
-dest_files=["res://.godot/imported/yellow star.png-bab9b25899853c96d719fdfdf7314297.s3tc.ctex"]
+dest_files=["res://.godot/imported/yellow star.png-bab9b25899853c96d719fdfdf7314297.s3tc.ctex", "res://.godot/imported/yellow star.png-bab9b25899853c96d719fdfdf7314297.etc2.ctex"]
 
 [params]
 

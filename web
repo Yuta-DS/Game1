@@ -54,21 +54,7 @@ url="http://localhost:${port}/index.html"
 pid_file="${repo_dir}/.web-server-${port}.pid"
 
 serving_pid() {
-	# No match is the normal "not serving" answer, not an error. Under
-	# `set -euo pipefail` a grep/lsof that finds nothing would otherwise fail
-	# the pipeline and silently kill `pid="$(serving_pid)"` callers.
-	if command -v lsof >/dev/null 2>&1; then
-		lsof -tiTCP:"${port}" -sTCP:LISTEN 2>/dev/null | head -1 || true
-	elif command -v netstat >/dev/null 2>&1; then
-		# Git Bash / Windows has no lsof; netstat -ano's last column is the PID.
-		netstat -ano 2>/dev/null | grep -E "[:.]${port}[[:space:]].*LISTENING" | awk '{print $NF}' | head -1 || true
-	fi
-}
-
-kill_server() {
-	# netstat reports a Windows PID, which Git Bash's kill does not know about,
-	# so fall back to taskkill there.
-	kill "$1" 2>/dev/null || taskkill //PID "$1" //F >/dev/null 2>&1
+	lsof -tiTCP:"${port}" -sTCP:LISTEN 2>/dev/null | head -1
 }
 
 serve_background() {
@@ -112,7 +98,7 @@ case "${command}" in
 		set -e
 		if [[ "${started_here}" == 1 ]]; then
 			pid="$(serving_pid)"
-			[[ -n "${pid}" ]] && { kill_server "${pid}" || true; }
+			[[ -n "${pid}" ]] && kill "${pid}" 2>/dev/null
 			rm -f "${pid_file}"
 		fi
 		exit "${result}"
@@ -120,8 +106,8 @@ case "${command}" in
 
 	status)
 		if [[ -f "${build_dir}/index.pck" ]]; then
-			size=$(stat -c '%s' "${build_dir}/index.pck" 2>/dev/null || stat -f '%z' "${build_dir}/index.pck")
-			when=$(stat -c '%y' "${build_dir}/index.pck" 2>/dev/null || stat -f '%Sm' -t '%Y-%m-%d %H:%M' "${build_dir}/index.pck")
+			size=$(stat -f '%z' "${build_dir}/index.pck" 2>/dev/null || stat -c '%s' "${build_dir}/index.pck")
+			when=$(stat -f '%Sm' -t '%Y-%m-%d %H:%M' "${build_dir}/index.pck" 2>/dev/null || stat -c '%y' "${build_dir}/index.pck")
 			printf 'build   %s  (%.1f MB, %s)\n' "${build_dir}" "$((size / 1048576))" "${when}"
 			if [[ -f "${build_dir}/index.pck.parts.json" ]]; then
 				manifest=$(sed -E 's/.*"bytes":([0-9]+).*/\1/' "${build_dir}/index.pck.parts.json")
@@ -147,7 +133,7 @@ case "${command}" in
 	stop)
 		pid="$(serving_pid)"
 		if [[ -n "${pid}" ]]; then
-			kill_server "${pid}"
+			kill "${pid}"
 			rm -f "${pid_file}"
 			echo "Stopped server on ${port} (pid ${pid})"
 		else

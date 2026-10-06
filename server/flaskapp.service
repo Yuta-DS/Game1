@@ -3,20 +3,9 @@ Description=Flask Game Backend
 After=network.target
 
 [Service]
-# Not root: a remote-code-execution bug in the Flask app used to hand an
-# attacker the whole machine. Binds a high port instead of 80/443 - put
-# nginx (or another TLS-terminating reverse proxy) in front for the public
-# port and HTTPS; a browser-hosted game export can't call a plain-HTTP API
-# anyway once the game itself is served over HTTPS (mixed content).
-User=ubuntu
+User=root
 WorkingDirectory=/home/ubuntu/server
-# Fill in with a real random value before deploying - do not use the
-# in-source default. `openssl rand -hex 32` is a reasonable way to generate
-# one. Loopback-only bind: nothing outside this machine talks to gunicorn
-# directly, only through the reverse proxy.
-Environment=JWT_SECRET_KEY=CHANGE_ME_BEFORE_DEPLOY
-Environment=CORS_ALLOWED_ORIGINS=*
-ExecStart=/home/ubuntu/server/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 server:app
+ExecStart=/home/ubuntu/server/venv/bin/python server.py
 Restart=always
 
 [Install]

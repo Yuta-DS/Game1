@@ -1,0 +1,12 @@
+{
+  "id": "inner_ring",
+  "revision": "heavenly_kit_02",
+  "triangles": 2792,
+  "runtime_mesh_nodes": 3,
+  "editable_source_meshes": 31,
+  "materials": 4,
+  "atlas_size": 1024,
+  "moving_groups": [
+    "Mechanism"
+  ]
+}
