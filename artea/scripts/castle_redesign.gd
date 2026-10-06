@@ -6,6 +6,8 @@
 # astral machinery, and adds grounded castle detail around the authored player route.
 extends Node3D
 
+const HubCastleStairs := preload("res://scripts/hub_castle_stairs.gd")
+
 const CASTLE_NAME := "building_castle_red2"
 var _stone: StandardMaterial3D
 var _stone_light: StandardMaterial3D
@@ -255,27 +257,44 @@ func _build_village_style_stair_tower() -> void:
 	var top_y := float(stair.get_meta("tower_top_y"))
 	var facade_height := top_y - ground
 	const ROW_HEIGHT := 2.20
+	# Match the real MasonryTower cone: an 8-sided CylinderMesh from ground - 5
+	# up to top_y. Godot puts its corners at multiples of 45 deg, so face centres
+	# sit half a side further round, at the apothem (corner radius * cos 22.5).
+	var sides := HubCastleStairs.TOWER_SIDES
+	var shaft_bottom := ground - 5.0
+	var shaft_height := top_y - shaft_bottom
+	var apothem_scale := cos(PI / float(sides))
+	# Inward lean of each face per metre climbed; tilts strips onto the wall.
+	var lean := (HubCastleStairs.TOWER_BOTTOM_RADIUS - HubCastleStairs.TOWER_TOP_RADIUS) \
+		* apothem_scale / shaft_height
 	var row_count := maxi(4, int(floor((facade_height - 3.0) / ROW_HEIGHT)))
+	# Spread the rows evenly from just above the ground up to the CrownDeck
+	# underside, so the top strip meets the ceiling instead of stopping short.
+	var strip_bottom := ground + 0.45
+	var strip_top := top_y + HubCastleStairs.CROWN_SURFACE_OFFSET 		- HubCastleStairs.CROWN_SLAB_HEIGHT
+	var row_height := (strip_top - strip_bottom) / float(row_count)
 	for row_index in row_count:
-		var y := ground + 1.55 + float(row_index) * ROW_HEIGHT
-		var height_ratio := clampf((y - ground) / maxf(facade_height, 0.1), 0.0, 1.0)
-		var wall_radius := lerpf(3.88, 3.08, height_ratio) + 0.018
-		for face_index in 8:
-			var angle := TAU * float(face_index) / 8.0
+		var y := strip_bottom + (float(row_index) + 0.5) * row_height
+		var corner_radius := lerpf(HubCastleStairs.TOWER_BOTTOM_RADIUS,
+			HubCastleStairs.TOWER_TOP_RADIUS, (y - shaft_bottom) / shaft_height)
+		var wall_radius := corner_radius * apothem_scale + 0.018
+		for face_index in sides:
+			var angle := TAU * (float(face_index) + 0.5) / float(sides)
 			var radial := Vector3(cos(angle), 0.0, sin(angle))
 			var tangent := Vector3(-radial.z, 0.0, radial.x)
-			var stagger := 0.28 if row_index % 2 == 1 else 0.0
+			var up_wall := (Vector3.UP - radial * lean).normalized()
 			for block_index in 2:
-				var lateral := (float(block_index) - 0.5) * 1.30 + stagger
-				# The staggered end block wraps naturally onto the next octagonal
-				# face; clipping it would create a repeated vertical seam.
+				# Rows line up and touch, so each strip column reads as one
+				# continuous vertical line hugging the leaning wall.
+				var lateral := (float(block_index) - 0.5) * 1.30
 				var position := Vector3(base.x, y, base.y) + radial * wall_radius \
 					+ tangent * lateral
 				var block := _add_mesh(overlay,
-					_box(Vector3(1.10, 0.18, 0.036)), _stone_course, position)
+					_box(Vector3(0.036, row_height / up_wall.y, 0.18)), _stone_course,
+					position)
 				block.name = "VillageMasonryBlock_%02d_%d_%d" % [
 					row_index, face_index, block_index]
-				block.rotation.y = -angle
+				block.basis = Basis(up_wall.cross(tangent), up_wall, tangent)
 				block.set_meta("visual_only", true)
 
 
@@ -518,6 +537,9 @@ func _build_full_castle_ascent(parent: Node3D) -> void:
 				_box(Vector3(run + 0.22, 1.12, 0.68)), _stone,
 				Vector3(centre.x, surface_y + 0.28, top.z + lateral * 2.92))
 			cheek.name = "GrandAscentCheek"
+			# Inner face (2.58 m) is outside the 2.4 m hidden ramp, so this never
+			# narrows the route. 3 m tall so the player can't hop the 0.84 m wall.
+			_add_box_body(cheek, Vector3(run + 0.22, 3.0, 0.68), "SolidAscentCheek")
 			if step_index % 3 == 0:
 				var merlon := _add_mesh(ascent, _box(Vector3(0.52, 0.72, 0.78)),
 					_stone_light,

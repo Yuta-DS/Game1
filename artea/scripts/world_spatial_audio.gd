@@ -495,7 +495,9 @@ func classify_world_emitter(node: Node) -> StringName:
 	if label in ["msmine", "clextmine", "hmextmine", "mineentrance", "cavern"] \
 			or label.begins_with("buildingmine"):
 		return &"cave_air"
-	if label in ["treeoflife", "crownrig", "crownoflife", "wisdomheartshrine",
+	# "crownrig" (the small crystal accent on the hub castle roof) is left out:
+	# its hum carried 92 m and read as an unexplained buzz at the castle door.
+	if label in ["treeoflife", "crownoflife", "wisdomheartshrine",
 			"treeofimagination", "reactorcore", "destinationwheel",
 			"thresholdruneseal", "celestialcore", "referenceastralmachine",
 			"lumenenginerig", "heartengine", "midspanresonanceframe"]:
@@ -520,7 +522,12 @@ func _register_world_emitter(node: Node3D, kind: StringName) -> void:
 	var source := _new_attached_source(node, "ObjectAmbience_%s" % String(kind),
 		-25.0, max_distance_value, max_distance_value * 0.14)
 	source.stream = _world_loop_streams[kind]
-	source.play()
+	# Hidden landmarks (e.g. the castle redesign hides ReferenceAstralMachine)
+	# must not keep humming. Visibility changes propagate to Node3D children.
+	source.playing = node.is_visible_in_tree()
+	node.visibility_changed.connect(func() -> void:
+		if is_instance_valid(source) and is_instance_valid(node):
+			source.playing = node.is_visible_in_tree())
 
 
 func _has_same_profile_ancestor(node: Node, kind: StringName) -> bool:
