@@ -128,6 +128,16 @@ func _ready() -> void:
 		&"departure": ProceduralFoleyScript.make_train_event(&"departure"),
 		&"horn": power_whistle,
 		&"brake": ProceduralFoleyScript.make_train_event(&"brake"),
+		&"power_on": ProceduralFoleyScript.make_train_event(&"power_on"),
+		&"reverser": ProceduralFoleyScript.make_train_event(&"reverser"),
+		&"throttle": ProceduralFoleyScript.make_train_event(&"throttle"),
+		&"valve": ProceduralFoleyScript.make_train_event(&"valve"),
+		&"board": ProceduralFoleyScript.make_train_event(&"board"),
+		&"seat": ProceduralFoleyScript.make_train_event(&"seat"),
+		&"arrival": ProceduralFoleyScript.make_train_event(&"arrival"),
+		&"ui_confirm": ProceduralFoleyScript.make_train_event(&"ui_confirm"),
+		&"door": ProceduralFoleyScript.make_train_event(&"door"),
+		&"brake_release": ProceduralFoleyScript.make_train_event(&"brake_release"),
 	}
 	get_tree().node_added.connect(_on_tree_node_added)
 	process_physics_priority = 80
@@ -400,18 +410,22 @@ func _register_train(train: Node3D) -> void:
 	rush.play()
 	var events := _new_attached_source(train, "TrainEvents3D", -8.0, 340.0, 28.0)
 	events.position = Vector3(0.0, 5.2, -15.0)
+	var controls := _new_attached_source(train, "TrainControls3D", -11.0, 85.0, 4.0)
+	controls.position = Vector3(0.0, 3.2, -15.8)
 	_train_states[instance_id] = {
 		"train": train,
 		"engine": engine,
 		"rail": rail,
 		"rush": rush,
 		"events": events,
+		"controls": controls,
 		"last_position": train.global_position,
 		"speed": 0.0,
 		"moving": false,
 		"stationary_time": 2.0,
 		"event_cooldown": 0.0,
 		"horn_cooldown": 0.0,
+		"event_history": [],
 	}
 
 
@@ -421,8 +435,15 @@ func _update_train_audio(delta: float) -> void:
 	var expired: Array[int] = []
 	for instance_id in _train_states:
 		var state: Dictionary = _train_states[instance_id]
-		var train := state.train as Node3D
-		if not is_instance_valid(train) or not train.is_inside_tree():
+		# A Dictionary can retain a freed Object reference for one frame after a
+		# railway is replaced. Validate the Variant before casting it: casting a
+		# freed reference emits an error even though is_instance_valid would reject it.
+		var train_value: Variant = state.get("train")
+		if not is_instance_valid(train_value):
+			expired.append(instance_id)
+			continue
+		var train := train_value as Node3D
+		if train == null or not train.is_inside_tree():
 			expired.append(instance_id)
 			continue
 		var raw_speed := train.global_position.distance_to(state.last_position) / delta
@@ -462,7 +483,14 @@ func _update_train_audio(delta: float) -> void:
 
 
 func request_train_horn(train: Node3D) -> bool:
+	return request_train_event(train, &"horn")
+
+
+func request_train_event(train: Node3D, event_name: StringName) -> bool:
 	if train == null or not is_instance_valid(train):
+		return false
+	if not _train_event_streams.has(event_name) \
+			or _train_event_streams[event_name] == null:
 		return false
 	var instance_id := train.get_instance_id()
 	if not _train_states.has(instance_id):
@@ -470,19 +498,36 @@ func request_train_horn(train: Node3D) -> bool:
 	if not _train_states.has(instance_id):
 		return false
 	var state: Dictionary = _train_states[instance_id]
-	if float(state.horn_cooldown) > 0.0:
+	if event_name == &"horn" and float(state.horn_cooldown) > 0.0:
 		return false
-	_play_train_event(state, &"horn")
-	state.horn_cooldown = 0.55
+	_play_train_event(state, event_name)
+	if event_name == &"horn":
+		state.horn_cooldown = 0.55
 	_train_states[instance_id] = state
 	return true
 
 
 func _play_train_event(state: Dictionary, event_name: StringName) -> void:
+	var close_events := [&"power_on", &"reverser", &"throttle", &"valve",
+		&"board", &"seat", &"ui_confirm", &"brake_release"]
 	var events := state.events as AudioStreamPlayer3D
+	if event_name in close_events:
+		events = state.controls as AudioStreamPlayer3D
 	events.stream = _train_event_streams[event_name]
-	events.volume_db = -7.0 if event_name == &"horn" else -15.0 \
-		if event_name == &"departure" else -11.0
+	var event_levels := {
+		&"horn": -7.0, &"departure": -15.0, &"brake": -11.0,
+		&"power_on": -12.0, &"reverser": -9.0, &"throttle": -11.0,
+		&"valve": -13.0, &"board": -10.0, &"seat": -14.0,
+		&"arrival": -12.0, &"ui_confirm": -15.0, &"door": -12.0,
+		&"brake_release": -12.0,
+	}
+	events.volume_db = float(event_levels.get(event_name, -12.0))
+	events.set_meta("last_train_event", event_name)
+	var history: Array = state.get("event_history", [])
+	history.append(event_name)
+	if history.size() > 32:
+		history.pop_front()
+	state.event_history = history
 	events.play()
 
 
