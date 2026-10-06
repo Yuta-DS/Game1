@@ -24,7 +24,8 @@ const outDir = (() => {
 	return i === -1 ? fs.mkdtempSync(path.join(os.tmpdir(), 'artea-smoke-')) : args[i + 1];
 })();
 const keepOpen = args.includes('--keep-open');
-const DEBUG_PORT = 9222;
+const heartPreview = args.includes('--heart');
+const DEBUG_PORT = 9337;
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates.
 const VIEWPORT = { width: 1280, height: 800 };
@@ -37,6 +38,8 @@ const CHROME_PATHS = [
 	'/usr/bin/chromium',
 	'C:/Program Files/Google/Chrome/Application/chrome.exe',
 	'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+	'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+	'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -63,7 +66,7 @@ async function startChrome() {
 		`--user-data-dir=${profile}`,
 		'--no-first-run',
 		'--enable-unsafe-swiftshader',
-	], { stdio: 'ignore', detached: true });
+	], { stdio: 'ignore', detached: true, windowsHide: true });
 	for (let i = 0; i < 30; i += 1) {
 		await sleep(500);
 		if (await chromeIsUp()) return child;
@@ -89,6 +92,7 @@ async function connect() {
 		}
 		if (m.method === 'Runtime.consoleAPICalled') {
 			consoleLines.push((m.params.args || []).map((a) => a.value ?? a.description ?? a.type).join(' '));
+			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		}
 		if (m.method === 'Runtime.exceptionThrown') {
 			consoleLines.push('EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text));
@@ -111,7 +115,7 @@ async function connect() {
 	const say = (msg) => console.log(stamp() + msg);
 
 	fs.mkdirSync(outDir, { recursive: true });
-	await startChrome();
+	const browserProcess = await startChrome();
 	const { send, consoleLines, crashed, targetId } = await connect();
 
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
@@ -155,11 +159,22 @@ async function connect() {
 		await waitForLog(/engine started/, 'engine started', 180000);
 		await sleep(4000);
 		await shot('01-start-screen');
+		const previewState = await send('Runtime.evaluate', { expression: 'String(window.ARTEA_HEART_PREVIEW)', returnByValue: true });
+		say('preview flag: ' + previewState.result.value);
 
-		say('clicking Offline Guest');
-		await click(GUEST_BUTTON.x, GUEST_BUTTON.y);
-		await waitForLog(/GUEST access selected/, 'guest login accepted', 20000);
-		await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
+		if (heartPreview) {
+			await waitForLog(/HEART CHAPTER READY/, 'Heart Melody chapter ready', 120000);
+			await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+			await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+		} else {
+			say('clicking Offline Guest');
+			await click(GUEST_BUTTON.x, GUEST_BUTTON.y);
+			await waitForLog(/GUEST access selected/, 'guest login accepted', 20000);
+			await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
+		}
+		const webgl = await send('Runtime.evaluate', { expression: "!!document.createElement('canvas').getContext('webgl2')", returnByValue: true });
+		if (webgl.result.value !== true) throw new Error('WebGL2 unavailable');
+		say('WebGL2 available');
 		await sleep(8000);
 		const before = await shot('02-in-hub');
 
@@ -176,7 +191,7 @@ async function connect() {
 
 		const identical = (a, b) => a.length === b.length && a.equals(b);
 		const moved = !identical(before, during) || !identical(during, after);
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SCRIPT ERROR|Parse Error|EXCEPTION/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		say('frame changed while moving: ' + moved);
@@ -187,6 +202,7 @@ async function connect() {
 		console.log('\nscreenshots: ' + outDir);
 		console.log('RESULT: ' + (pass ? 'PLAYABLE' : 'NOT PLAYABLE'));
 		if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+		if (!keepOpen && browserProcess) browserProcess.kill();
 		process.exit(pass ? 0 : 1);
 	} catch (err) {
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
@@ -195,6 +211,7 @@ async function connect() {
 		consoleLines.slice(-15).forEach((l) => console.log('    ' + l.slice(0, 200)));
 		console.log('screenshots: ' + outDir);
 		if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+		if (!keepOpen && browserProcess) browserProcess.kill();
 		process.exit(2);
 	}
 })();

@@ -16,7 +16,8 @@ var _probe := SphereShape3D.new()
 
 func _ready() -> void:
 	world = get_parent()
-	near = 0.08
+	near = 0.12
+	far = 650.0
 	fov = 62
 	_probe.radius = 0.32
 
@@ -81,8 +82,21 @@ func update_camera(delta: float) -> void:
 	var safe_distance := maxf(0.12, distance * fractions[0] - 0.12)
 	# Immediate safety clamp prevents smoothing THROUGH a wall; release is damped.
 	actual_distance = minf(safe_distance, lerpf(actual_distance, safe_distance, 1.0 - exp(-5.0 * delta)))
+	# Recheck the final volume, including contact at the sweep's start. Small
+	# offsets and fast camera turns must not leave a near-plane corner in scenery.
+	query.motion = Vector3.ZERO
+	query.transform.origin = pivot + direction * actual_distance
+	for attempt in 32:
+		if world.get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty(): break
+		actual_distance = maxf(0.14, actual_distance - 0.25)
+		query.transform.origin = pivot + direction * actual_distance
 	global_position = pivot + direction * actual_distance
 	look_at(pivot)
+	var avatar: Node3D = world.player.get_node_or_null("FoxVisuals")
+	if avatar != null: avatar.visible = actual_distance > 1.25
 
 func _exit_tree() -> void:
+	if is_instance_valid(world) and is_instance_valid(world.player):
+		var avatar: Node3D = world.player.get_node_or_null("FoxVisuals")
+		if avatar != null: avatar.visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

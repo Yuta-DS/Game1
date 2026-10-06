@@ -43,7 +43,7 @@ func _build_island_spaces() -> void:
 		_path(segment[0], segment[1], 3.2, Color("6f9b74"))
 
 	# Orchard: four strong canopy silhouettes and fruit at ordinary camera height.
-	Art.label(self, "MUSICAL ORCHARD\nListen before you harvest", Vector3(-54, 7, -16), 35)
+	Art.banner(self, "MUSICAL ORCHARD\nListen before you harvest", Vector3(-54, 7, -16), 32)
 	var positions := [Vector3(-70, 0, -13), Vector3(-58, 0, -28), Vector3(-40, 0, -33), Vector3(-27, 0, -26)]
 	for i in Catalog.FRUIT_ORDER.size():
 		_build_fruit_tree(Catalog.FRUIT_ORDER[i], positions[i], i)
@@ -103,9 +103,7 @@ func _build_fruit_tree(fruit_id: String, pos: Vector3, variant: int, primary := 
 	if primary: fruit_visuals[fruit_id] = fruit
 	else:
 		fruit.scale = Vector3.ONE * 0.8
-		Art.label(tree, Catalog.fruit_symbol(fruit_id), Vector3(0, 4.5, 0), 18)
 	world._object("music_fruit", variant, pos + Vector3(0, 1, 3.6), "Listen / harvest " + Catalog.fruit_name(fruit_id))
-	if primary: Art.label(tree, Catalog.fruit_name(fruit_id), Vector3(0, 7.8 if variant < 2 else 4.6, 0), 25)
 	for j in 5:
 		var flower_pos := Vector3(-3.1 + j * 1.5, 0, -2.8 - (j % 2) * 0.6)
 		garden_blooms.append(Art.garden_flower(tree, flower_pos, (j + variant) % 3, [Color("efb5c7"), Color("ebd085"), Color("b6aed6")][variant % 3]))
@@ -187,18 +185,17 @@ func _respond_flowers(at: Vector3) -> void:
 
 func _build_marimba(pos: Vector3) -> void:
 	var root := Node3D.new(); root.name = "FruitMarimba"; root.position = pos; add_child(root)
-	Art.label(root, "FRUIT MARIMBA\nFive fixed notes / fruit changes tone", Vector3(0, 7, 0), 31)
+	Art.banner(root, "FRUIT MARIMBA\nFive notes, many voices", Vector3(0, 7, 0), 30)
 	for x in [-6.2, 6.2]: Art.cone(root, Vector3(x, 1.2, 0), 0.65, 0.9, 2.4, Color("73563e"), true, 7)
 	for i in 5:
 		var bar := Art.box(root, Vector3(-4.4 + i * 2.2, 2.2, 0), Vector3(1.75, 0.45, 5.0 - i * 0.35), Color("c18a55") if i % 2 == 0 else Color("a66f49"), true)
 		instrument_visuals.marimba.append(bar)
-		Art.label(root, str(i + 1), Vector3(-4.4 + i * 2.2, 3.2, 1.8), 22)
 		world._object("music_marimba", i, pos + Vector3(-4.4 + i * 2.2, 1, 3.1), "Play marimba note %d" % (i + 1))
 	world._object("music_marimba_panel", -1, pos + Vector3(0, 1, -3.5), "Fruit Marimba controls")
 
 func _build_harp(pos: Vector3) -> void:
 	var root := Node3D.new(); root.name = "VineHarp"; root.position = pos; add_child(root)
-	Art.label(root, "VINE HARP\nRest / play / record", Vector3(0, 8, 0), 31)
+	Art.banner(root, "VINE HARP\nRest · play · record", Vector3(0, 8, 0), 30)
 	for x in [-5.0, 5.0]:
 		var branch := Art.cone(root, Vector3(x, 3.5, 0), 0.8, 0.45, 7, Color("725940"), true, 7)
 		branch.rotation.z = -0.18 * signf(x)
@@ -206,13 +203,12 @@ func _build_harp(pos: Vector3) -> void:
 	for i in 5:
 		var string := Art.box(root, Vector3(-3.6 + i * 1.8, 4.2, 0), Vector3(0.09, 5.0, 0.09), Color("e7cf96"))
 		instrument_visuals.harp.append(string)
-		Art.label(root, ["LEAF", "DROP", "SUN", "MOON", "STAR"][i], Vector3(-3.6 + i * 1.8, 1.1, 0.3), 16)
 		world._object("music_harp", i, pos + Vector3(-3.6 + i * 1.8, 1, 1.8), "Pluck harp string %d" % (i + 1))
 	world._object("music_harp_panel", -1, pos + Vector3(0, 1, -2.5), "Vine Harp controls")
 
 func _build_bells(pos: Vector3) -> void:
 	var root := Node3D.new(); root.name = "HangingBellGarden"; root.position = pos; add_child(root)
-	Art.label(root, "HANGING BELL GARDEN\nFind the missing note", Vector3(0, 9, 0), 31)
+	Art.banner(root, "HANGING BELL GARDEN\nFind the missing note", Vector3(0, 9, 0), 30)
 	for x in [-6.0, 6.0]: Art.cone(root, Vector3(x, 3.5, 0), 0.8, 0.55, 7, Color("725940"), true, 7)
 	Art.box(root, Vector3(0, 7, 0), Vector3(13, 0.8, 0.8), Color("725940"), true)
 	for i in 5:
@@ -220,7 +216,6 @@ func _build_bells(pos: Vector3) -> void:
 		Art.box(bell, Vector3(0, 1.2, 0), Vector3(0.09, 2.4, 0.09), Color("d5c493"))
 		Art.cone(bell, Vector3(0, 0, 0), 0.8 + i * 0.06, 0.35, 1.5, Color("e2b866"), false, 8)
 		instrument_visuals.bells.append(bell)
-		Art.label(root, str(i + 1), Vector3(-4.8 + i * 2.4, 2.8, 0.4), 22)
 		world._object("music_bell", i, pos + Vector3(-4.8 + i * 2.4, 1, 2.0), "Ring bell %d" % (i + 1))
 	world._object("music_bell_panel", -1, pos + Vector3(0, 1, -3.0), "Bell Grove activity")
 
@@ -231,18 +226,17 @@ func _build_ensemble(pos: Vector3) -> void:
 		var angle := TAU * i / 8.0
 		var light := Art.cone(root, Vector3(cos(angle) * 8, 1.3, sin(angle) * 8), 0.55, 0.35, 2.4, Color("e7c56f"), false, 7)
 		garden_lights.append(light)
-	Art.label(root, "GARDEN ENSEMBLE\nLayer the island's song", Vector3(0, 8, 0), 34)
+	Art.banner(root, "GARDEN ENSEMBLE\nLayer the valley's song", Vector3(0, 8, 0), 32)
 	world._object("music_ensemble", -1, pos + Vector3(0, 1, 7), "Open the Garden Ensemble")
 
 func _build_flower_activity(pos: Vector3) -> void:
-	Art.label(self, "FLOWER DRUM CLEARING\nQ plays each bloom / circle opens guided play", pos + Vector3(0, 7, 0), 27)
+	Art.banner(self, "FLOWER DRUM CLEARING\nAnswer the garden's rhythm", pos + Vector3(0, 7, 0), 30)
 	for i in 4:
 		var angle := TAU * i / 4.0
 		var drum_pos := pos + Vector3(cos(angle) * 5.0, 0, sin(angle) * 5.0)
 		Art.cone(self, drum_pos + Vector3(0, 0.45, 0), 1.7, 1.4, 0.9, Color("6f8066"), true, 8)
 		var drum := Art.flower(self, drum_pos + Vector3(0, 0.8, 0), [Color("ef8f9f"), Color("8fcad0"), Color("f2ca6f"), Color("b89bd7")][i], 2.1)
 		instrument_visuals.drums.append(drum)
-		Art.label(self, ["LEAF", "DROPLET", "SUN", "MOON"][i], drum_pos + Vector3(0, 4.2, 0), 20)
 		world._object("music_drum", i, drum_pos + Vector3(0, 1, 2.8), "Play %s flower drum" % ["Leaf", "Droplet", "Sun", "Moon"][i])
 	world._object("music_flowers", -1, pos + Vector3(0, 1, 5), "Flower Drum play mode")
 

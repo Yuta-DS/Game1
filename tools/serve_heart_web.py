@@ -24,6 +24,11 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_error(500, "Export configuration has changed; refresh the preview adapter.")
                 return
             html = html.replace(marker, 'window.ARTEA_HEART_PREVIEW = true;\n\t\t' + marker, 1)
+            # User arguments are supported by release templates. Scene-path
+            # startup arguments are not; transition through the normal menu.
+            html = html.replace('const engine = new Engine(GODOT_CONFIG);',
+                                'GODOT_CONFIG.args = (GODOT_CONFIG.args || []).concat(["--", "--heart-preview"]);\n'
+                                'const engine = new Engine(GODOT_CONFIG);', 1)
             payload = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")

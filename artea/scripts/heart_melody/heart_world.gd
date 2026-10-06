@@ -78,6 +78,7 @@ func _ready() -> void:
 	_refresh_plants()
 	_apply_restoration()
 	scene_ready = true
+	print("HEART CHAPTER READY · ", progress.committed.chapter.tasks.size(), " / 10 instruments")
 	if embedded_in_overworld:
 		get_node("HeartHUD").hide()
 		for layer in soundscape.layers: layer.stream_paused = true
@@ -132,6 +133,8 @@ func _set_embedded_active(active: bool) -> void:
 		player.speed = _previous_speed
 		player.blocking_enabled = _previous_blocking
 		player.set("_camera", _previous_player_camera)
+		var avatar := player.get_node_or_null("FoxVisuals") as Node3D
+		if avatar != null: avatar.visible = true
 		if is_instance_valid(_previous_camera):
 			_previous_camera.make_current()
 			if _previous_camera.has_method("_snap_to_follow_target"):
@@ -197,8 +200,8 @@ func _build_environment() -> void:
 		var rail := Art.box(island, pos, Vector3(4.2, 1.6, 0.7), Color("796e56"), true)
 		rail.rotation.y = -angle + PI / 2
 	Art.cone(island, Vector3(-35, 0.06, -16), 9, 9, 0.07, Color("8fc5c4"), false, 16)
-	Art.label(island, "QUIET MEADOW", Vector3(-53, 6, -6), 45)
-	Art.label(island, "FEELING GARDEN", Vector3(8, 7, -10), 45)
+	Art.banner(island, "QUIET MEADOW\nFeeling Seed Celesta", Vector3(-53, 6, -6), 32)
+	Art.banner(island, "FEELING GARDEN\nEcho Drum Garden", Vector3(8, 7, -10), 32)
 	var landmark := Art.flower(island, Vector3(8, 0, -23), Color("dba0b2"), 6.0)
 	landmark.name = "GardenHeartBlossom"
 	landmark.scale = Vector3(0.4, 0.7, 0.4)
@@ -214,29 +217,23 @@ func _build_environment() -> void:
 	Art.box(island, Vector3(-60, 1, 23), Vector3(5, 0.5, 1.5), Color("816c5a"), true)
 	for x in [-62, -58]: Art.box(island, Vector3(x, 0.4, 23), Vector3(0.5, 0.8, 1.2), Color("b5aa95"), true)
 	_object("bench", -1, Vector3(-60, 1, 21), "Song Memory Bench")
-	Art.label(island, "SONG MEMORY BENCH", Vector3(-60, 3, 23), 26)
 	Art.cone(island, Vector3(-54, 1.5, 23), 0.7, 0.3, 3, Color("85765b"), true)
 	Art.cone(island, Vector3(-54, 3.4, 23), 1.1, 0.5, 1.6, Color("f1cf88"))
 	_object("lantern", -1, Vector3(-54, 1, 21), "Comfort Lantern · heal and rest")
-	Art.label(island, "COMFORT LANTERN", Vector3(-54, 5, 23), 26)
 	for i in 3:
 		var pos := Vector3(-40 + i * 14, 0, 3 if i != 1 else 22)
 		var bloom := Art.planter(island, pos, i)
 		plants.append(bloom)
-		Art.label(island, Catalog.SYMBOLS[i] + " seed", pos + Vector3(0, 4.8, 0), 30)
 		_object("planter", i, pos + Vector3(0, 1, 3.2), "Plant / replay " + Catalog.SYMBOLS[i] + " seed")
 	for i in 3:
 		var pos := Vector3(0 + i * 7, 0, 0)
 		Art.cone(island, pos + Vector3(0, 0.5, 0), 1.5, 1.2, 1, Color("879477"), true)
 		drums.append(Art.flower(island, pos + Vector3(0, 0.8, 0), Catalog.COLOURS[i * 2], 2.2))
 		Art.symbol(island, pos + Vector3(0, 0.9, 2), i)
-		Art.label(island, Catalog.SYMBOLS[i], pos + Vector3(0, 5, 0), 34)
 		_object("drum", i, pos + Vector3(0, 1, 3.2), "Play " + Catalog.SYMBOLS[i])
 	_object("phrase", -1, Vector3(7, 1, 9), "Arrange the garden phrase")
-	Art.label(island, "LISTENING CIRCLE", Vector3(7, 0.4, 12), 24)
 	Art.cone(island, Vector3(44, 0.06, -16), 14, 14, 0.08, Color("b6b292"), false, 20)
-	Art.label(island, "BLIGHT CLEARING\nEnter when the flowers are singing", Vector3(44, 5, -29), 32)
-	Art.label(island, "SHELTER · return towards the lantern to rest", Vector3(27, 2, 7), 25)
+	Art.banner(island, "BLIGHT CLEARING\nRelease the silenced creatures", Vector3(44, 5, -29), 30)
 	phrase_platform = Node3D.new()
 	phrase_platform.name = "SettledSongPlatform"
 	island.add_child(phrase_platform)
@@ -252,7 +249,7 @@ func _build_environment() -> void:
 	bridge_barrier.name = "ClosedRootCollision"
 	bridge_barrier.set_meta("visual", barrier_mesh)
 	_gate(island, Vector3(88, 0, 8), "River Song / Waterfall Organ")
-	river_route_sign = Art.label(island, "", Vector3(57, 5, 8), 30)
+	river_route_sign = Art.banner(island, "RIVER SONG", Vector3(57, 5, 8), 30)
 	river = Node3D.new()
 	river.name = "RiverSong"
 	river.set_script(load("res://scripts/heart_melody/river_song.gd"))
@@ -296,7 +293,7 @@ func _gate(parent: Node3D, pos: Vector3, words: String) -> void:
 	for z in [-3, 3]: Art.cone(parent, pos + Vector3(0, 3, z), 0.9, 0.5, 6, Color("84775d"), true)
 	Art.box(parent, pos + Vector3(0, 6, 0), Vector3(1, 0.8, 7), Color("84775d"), true)
 	Art.flower(parent, pos + Vector3(0, 5.5, 0), Color("e7b8c2"), 1.4)
-	Art.label(parent, words, pos + Vector3(0, 8, 0), 30)
+	Art.banner(parent, words, pos + Vector3(0, 8, 0), 30)
 
 func _object(kind: String, index: int, pos: Vector3, title: String) -> void:
 	interactables.append({"kind": kind, "index": index, "pos": pos, "title": title})
@@ -388,7 +385,7 @@ func _build_hud() -> void:
 	scroll.add_child(options)
 	panel.hide()
 	if DisplayServer.is_touchscreen_available():
-		for entry in [["←", "move_left", Vector2(24, -230)], ["↑", "move_forward", Vector2(128, -334)], ["↓", "move_backward", Vector2(128, -230)], ["→", "move_right", Vector2(232, -230)], ["Strike", "attack", Vector2(350, -230)]]:
+		for entry in [["Left", "move_left", Vector2(24, -230)], ["Up", "move_forward", Vector2(128, -334)], ["Down", "move_backward", Vector2(128, -230)], ["Right", "move_right", Vector2(232, -230)], ["Strike", "attack", Vector2(350, -230)]]:
 			var button := Button.new()
 			button.text = entry[0]
 			button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
@@ -882,7 +879,6 @@ func restore_creature(spec: Dictionary, at: Vector3) -> void:
 				Art.cone(creature, Vector3(x * 1.3, 1.3, z * 0.7), 1.1, 0.6, 0.2, Color("f2c5a8"), false, 5)
 	else:
 		Art.cone(creature, Vector3(0.3, 2.1, 0), 0.5, 0, 0.8, Color("53876a"), false, 4)
-	Art.label(creature, "Moth restored" if spec.kind == "moth" else "Slime restored", Vector3(0, 3, 0), 22)
 
 func _load_settings() -> void:
 	if test_mode: return

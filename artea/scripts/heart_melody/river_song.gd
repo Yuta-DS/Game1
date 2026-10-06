@@ -26,21 +26,18 @@ func _ready() -> void:
 	_land(Vector3(327, 0, 8), Vector3(54, 2, 58))
 	Art.box(self, Vector3(106, -0.1, 8), Vector3(28, 0.2, 6), Color("bdac90"), true)
 	for z in [4.7, 11.3]: Art.box(self, Vector3(106, 0.85, z), Vector3(26, 1.6, 0.4), Color("816e5a"), true)
-	Art.label(self, "FEELING GARDEN\nReturn across this bridge", Vector3(115, 5, 12), 28)
-	Art.label(self, "RIVER SONG · WATERFALL ORGAN", Vector3(146, 15, -12), 40)
+	Art.banner(self, "WATERFALL ORGAN\nRestore the river's chord", Vector3(146, 10, -12), 32)
 	Art.box(self, Vector3(146, 0.06, -9), Vector3(58, 0.1, 19), Color("74b9c4"))
 	for index in 3:
 		var x := 126.0 + index * 17.0
 		Art.cone(self, Vector3(x, 6 + index, -15), 2, 1.7, 12 + index * 2, Color("789d83"), true)
 		Art.flower(self, Vector3(x, 3, 0), Color("e9c891"), 1.6)
 		Art.symbol(self, Vector3(x, 3, 1), NOTES[index])
-		Art.label(self, "Valve %d · %s" % [index + 1, SYMBOLS[NOTES[index]]], Vector3(x, 5, 0), 27)
 		world._object("river_valve", index, Vector3(x, 1, 3), "Tune organ valve %d" % (index + 1))
 		channels.append(Art.box(self, Vector3(x, 5 + index, -12.8), Vector3(1.8, 10 + index * 2, 0.2), Color("86d4df")))
 		var pos := Vector3(140 + index * 12, 1, 23)
 		bulbs.append(Art.flower(self, pos, Color("755b82"), 1.9))
 		world._object("river_bulb", index, pos + Vector3(0, 0, -3), "Release Hush Vine bulb %d" % (index + 1))
-		Art.label(self, "Hush Vine %d" % (index + 1), pos + Vector3.UP * 4, 25)
 	for pos in [Vector3(116,0,-17), Vector3(174,0,-17), Vector3(234,0,-10), Vector3(342,0,-13)]: Art.tree(self, pos, 1)
 	Art.box(self, Vector3(202, -3, 8), Vector3(36, 0.2, 44), Color("66aeba"))
 	# A permanent flowering root walk joins both river banks. The Rain Boat stays
@@ -50,13 +47,12 @@ func _ready() -> void:
 		Art.box(self, Vector3(202, 1.0, z), Vector3(40, 1.4, 0.45), Color("75684f"), true)
 	for x in [187.0, 195.0, 203.0, 211.0, 219.0]:
 		Art.flower(self, Vector3(x, 0.1, -4.4), Color("e6b4c8") if int(x) % 2 else Color("eed17f"), 0.65)
-	Art.label(self, "FLOWERING ROOT WALK\nAll gardens connected", Vector3(202, 5.2, -8), 25)
 	for x in [179, 225]:
 		Art.cone(self, Vector3(x, 2.5, 16), 0.45, 0.4, 5, Color("816e5a"), true)
 		Art.cone(self, Vector3(x, 4, 16), 1.1, 0.5, 1.4, Color("edcc7f"))
 	world._object("river_boat", 0, Vector3(179, 1, 12), "Call / board Rain Boat")
 	world._object("river_boat", 1, Vector3(225, 1, 12), "Return by Rain Boat")
-	Art.label(self, "RAIN BOAT · ring the dock bell", Vector3(181, 7, 15), 26)
+	Art.banner(self, "RAIN BOAT\nRing the call bells, then board", Vector3(184, 7, 15), 28)
 	boat = Node3D.new()
 	boat.name = "RainBoat"
 	add_child(boat)
@@ -65,7 +61,7 @@ func _ready() -> void:
 	for z in [-2.8, 2.8]: Art.box(boat, Vector3(0, 0.7, z), Vector3(8, 1, 0.3), Color("799d72"), true)
 	for x in [-3, 3]: Art.cone(boat, Vector3(x, 2, 2.3), 0.2, 0.2, 4, Color("816e5a"))
 	Art.cone(boat, Vector3(0, 4, 0), 4.6, 1, 0.7, Color("8db884"), false, 8)
-	Art.label(self, "BELL GROVE", Vector3(248, 8, -5), 38)
+	Art.banner(self, "BELL GROVE", Vector3(248, 8, -5), 32)
 	for index in 3:
 		var x := 262.0 + index * 12.0
 		world._object("river_chime", index, Vector3(x, 1, 8), "Restore bridge chime %d" % (index + 1))
@@ -78,12 +74,11 @@ func _ready() -> void:
 		Art.box(deck, Vector3(x + 8, -0.1, 8), Vector3(12, 0.2, 8), Color("bdac90"), true)
 		for z in [3.8, 12.2]: Art.box(deck, Vector3(x + 8, 0.8, z), Vector3(12, 1.5, 0.4), Color("816e5a"), true)
 	world._object("river_warning", 0, Vector3(298, 1, 8), "Read the warning bells")
-	Art.label(self, "WARNING BELLS\nCircle: SAFE · Triangle: WARNING · Diamond: NEEDS CARE", Vector3(301, 7, 8), 26)
+	Art.banner(self, "WARNING BELLS\nFollow the quiet gaps", Vector3(301, 7, 8), 28)
 	warning_barrier = Art.box(self, Vector3(302, 1.5, 8), Vector3(0.5, 3, 8), Color("a887ad"), true)
-	Art.label(self, "GROVE CLEARING\nRead the bells, then release the Blight", Vector3(322, 6, -12), 30)
+	Art.banner(self, "PEACE GARDEN\nA safe place to listen", Vector3(322, 6, -12), 30)
 	flower = Art.flower(self, Vector3(343, 0, 8), Color("e7d68f"), 3)
 	world._object("river_peace", 0, Vector3(339, 1, 8), "Awaken the Peace Flower")
-	Art.label(self, "PEACE FLOWER", Vector3(343, 6, 8), 30)
 	world._gate(self, Vector3(350, 0, 8), "Harmony Stage · Shared Song")
 	refresh()
 
@@ -121,7 +116,7 @@ func objective() -> String:
 	if not r.warning: return "Read the warning bells and choose the safe route."
 	if not r.grove: return "Enter the grove. Step aside, then strike exposed shells."
 	if not r.peace: return "Awaken the Peace Flower to complete the Heart Song."
-	return "River Song restored! Peace Flower checkpoint active. Harmony Stage is coming next."
+	return "River Song restored! Peace Flower checkpoint active. Follow the path onward to Harmony Stage."
 
 func interact(kind: String, index: int) -> void:
 	if not world.progress.committed.complete:
@@ -160,7 +155,7 @@ func interact(kind: String, index: int) -> void:
 			world._button("Diamond · use the damaged path", func(): world.message.text = "This path needs repair. Choose the quiet, open path.")
 			world._button("Leave bells", world._close)
 		"river_peace":
-			if _save("peace", -1, "River Song restored!\nThe Peace Flower is now your resting checkpoint.\nThe organ, bells and garden sing together.\nHarmony Stage is coming next."):
+			if _save("peace", -1, "River Song restored!\nThe Peace Flower is now your resting checkpoint.\nThe organ, bells and garden sing together.\nFollow the path onward to Harmony Stage."):
 				world.player.heal(100)
 				world._demonstrate([2, 0, 1, 0, 2, 1])
 

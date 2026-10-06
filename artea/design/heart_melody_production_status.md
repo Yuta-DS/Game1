@@ -1,79 +1,67 @@
-# Heart Melody production upgrade — implementation status
+﻿# Heart Melody playable chapter status
 
-This is an incomplete implementation of the production brief. The current
-playable world has not become the requested finished 2–4 hour adventure.
+Updated 6 October 2026. Vercel deployment is intentionally skipped at the user's request.
 
-## Implemented compatibility foundation
+## Play locally
 
-- Stable catalog entries for four quests, ten tasks, six zones, three regions,
-  prerequisites, checkpoints, and finale entitlement identifiers.
-- Six story fruit definitions, visual profile metadata, protected authored
-  harvest identifiers, and six recipe definitions.
-- An additive, versioned `chapter` record in the existing garden save. The outer
-  schema remains 2 so the existing garden and musical garden readers retain their
-  record structure. Chapter version 1 is validated independently.
-- Schema 1 and schema 2 saves without a chapter migrate after legacy validation.
-  Planters, partial phrases, river stages, enemy receipts, XP, musical garden data,
-  and legacy checkpoint values remain intact. Existing settings and identity stores
-  are not modified. Migration does not grant fruit or finale rewards.
-- The existing garden/river APIs synchronize their seven task IDs into the chapter
-  transaction. The three finale tasks are never inferred from prior progress.
-- Chapter state validates ordered prerequisites, quantities, receipt uniqueness,
-  settings, saved attempts, anchor IDs, motifs, and finale reward prerequisites.
-- A transaction API supports protected story harvests, material stacks of 99,
-  overflow storage, withdrawal, and crafting from materials only. Failed writes
-  roll back; chapter edits cannot overwrite pending legacy saves.
-- A shared challenge controller supports editable sequences, pitch edits, timing,
-  undo, reset, cancellable demonstrations, progressive hints, pause, and assistance
-  timing. It has not replaced the existing instruments' interaction code.
+Run `Play Heart Melody.cmd` from the repository root, then open
+http://127.0.0.1:8772/heart.html. Keep the server running while playing.
+The direct entry uses supported release-template user arguments and transitions
+through the normal start scene. `/index.html` retains the regular game entry.
+The first download is approximately 848 MiB.
 
-The chapter uses the existing temporary-write/rename and persistent `.bak` save
-path. First-clear legacy XP remains owned by the original receipt transaction.
-Neither new catalog nor controller calls identity APIs.
+## Implemented
 
-## Integration still required
+- Connected chapter extension with six zones, ten required instrument tasks,
+  fruit groves, crafting/storage UI, restoration, song assembly, three persistent
+  Beat Anchors, final fruit/conducting sequence, Jewel and Shield reward handling.
+- Six protected story fruit families, authored supplies, separate crafting fruit,
+  stacking/overflow, recipes, regrowth and first-clear reward receipts.
+- Versioned chapter save migration preserving the original garden IDs and progress,
+  temporary-write/rename with backup, validation and corrupt-primary recovery.
+- Shared challenge, quest, encounter, environment, audio and HUD components, with
+  the original garden/river interfaces retained for compatibility.
+- Final island gate returns to the actual Art Castle and saves partial progress.
+- Small flower, fruit and decorative floating names removed. Major instruments,
+  zones and gates use bordered sage/ivory banners without collision.
+- Camera collision volume checks, close-camera avatar hiding, avatar restoration
+  when leaving the embedded world, and flush traversal across the chapter extension.
+- Browser drag-to-orbit and readable text labels on touch movement buttons.
+- Existing optional/private identity rules retained; fruit and assistance do not
+  contribute identity evidence or alter rewards.
 
-The fruit/recipe transaction API and challenge controller are tested foundations,
-not player-accessible production systems. They still need physical fruit assets,
-harvest interactions, the normal inventory adapter, crafting UI and consumable
-effects, checkpoint storage UI, regrowth, and instrument integration.
+## Verification
 
-The full controller split is unfinished: environment, encounter, audio, quest
-objects, and HUD still live in the existing implementation. The new quest director
-does not yet own task completion or gameplay reward delivery.
+Standard non-Mono Godot 4.7.1:
 
-Region A still needs its production art/collision pass and celesta/flower challenge
-upgrades. Region B still uses the existing simpler river activities. Region C,
-the song loom, Beat Anchors encounter, final conducting sequence, Conductor
-release, sanctuary, and chapter finale rewards are not implemented. The existing
-Castle entry, identity, campaign gates, and station logic were left intact.
+- Complete chapter regression passes: fruit, seed/drum interactions, all later
+  task proofs, persistent anchors, finale rewards, reload and replay receipts.
+- Final gate/signage regression passes: reachable gate with the player capsule,
+  transition to the real Castle, partial-save preservation and no reward changes.
+- 3D environment regression passes: physical traversal, 72-angle camera sweeps,
+  wall retraction/release, roof clearance and fall recovery.
+- Chapter migration, progress safety, musical garden, river song, identity consent,
+  safe Heart Melody, gate round-trip and station integration regressions pass.
+- Maintained Web export succeeds; missing model sources were repaired. The exporter
+  now rejects error diagnostics even if Godot returns a zero exit code.
+- Real Chromium WebGL2 smoke check reaches `HEART CHAPTER READY`, closes the intro,
+  moves the player and captures the changed scene without script/scene errors.
+- Zone, instrument, fruit and restored-world native captures are in
+  `work/heart-production-captures`; browser captures/logs are in
+  `work/heart-browser-final3` (and subsequent final checks).
 
-Full keyboard/controller/touch walkthroughs, accessibility verification, six-zone
-captures, physical traversal at multiple frame rates, production deployment, and
-public WebGL2 verification remain outstanding.
+## Remaining production limitations
 
-## Validation performed
+This is a playable chapter implementation, not a verified completion of every
+item in the original 2-4 hour production brief. Full-duration pacing and the
+complete physical controller/touch and 30/60/120 FPS acceptance matrix have not
+been verified. Some later instrument mechanics use the shared sequence/timing
+interface rather than all bespoke physical interactions described in the brief.
+Crafting materials currently use chapter inventory/storage rather than the global
+inventory adapter. Full four-track mixing and the complete accessibility/remapping
+matrix remain unfinished. Further art, sensory-setting and performance polish is
+needed before calling this a finished production release.
 
-Godot 4.7.1 standard, non-Mono:
-
-- `test_heart_chapter_migration.gd`: legacy migration, receipts, fruit protection,
-  overflow, crafting isolation, pending/failed writes, invalid records, partial
-  attempts, undo, pitch, pause, timing at 30/60/120 FPS, and corrupt-primary backup
-  recovery passed.
-- Existing `test_heart_progress_safety`, `test_river_song`,
-  `test_heart_musical_garden`, `test_heart_identity_consent`,
-  `test_safe_heart_melody`, `test_heart_gate_round_trip`, and
-  `test_heart_station_integration` passed.
-- The initial maintained export returned zero and produced 106 split pack parts,
-  887,397,664 pack bytes, but log review found missing-resource errors for
-  `assets3D/worlds/low_poly_cloud.glb`,
-  `assets3D/stylizedNature/Grass_Common_Short.gltf`, and
-  `assets3D/stylizedNature/CommonTree_1.gltf`. None of those source assets is
-  present in this checkout. This package is not a verified release.
-- The maintained exporter now retains `builds/web/export.log` and rejects
-  Godot error diagnostics even when the process returns zero.
-
-Existing UID fallback/duplicate warnings and exit resource-leak warnings appeared
-in the tests/export. A successful headless export is not browser verification.
-No production deployment was made. The expected `builds/web/.vercel` project link
-is absent, and the Vercel CLI is not installed in the local npm cache.
+The local browser reports existing asset UID fallback warnings and an offline
+Firebase `.env` notice, but no chapter script or scene-loading errors. Headless
+shutdown reports existing ObjectDB leak warnings. No public deployment was made.

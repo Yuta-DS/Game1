@@ -70,6 +70,43 @@ static func label(parent: Node3D, words: String, pos: Vector3, size := 40) -> La
 	parent.add_child(text)
 	return text
 
+static func banner(parent: Node3D, words: String, pos: Vector3, size := 30) -> Label3D:
+	# A single cloth sign with a quiet ivory border. All surfaces face together;
+	# it has no physics and fades before distant signs stack over the landscape.
+	var sign := Node3D.new()
+	sign.name = "LandmarkBanner"
+	sign.position = pos
+	parent.add_child(sign)
+	for layer in 1:
+		var shape := QuadMesh.new()
+		shape.size = Vector2(10.2, 2.8)
+		var surface := MeshInstance3D.new()
+		surface.mesh = shape
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		var cloth := Image.create(256, 80, false, Image.FORMAT_RGBA8)
+		cloth.fill(Color("cfbf8d"))
+		cloth.fill_rect(Rect2i(3, 3, 250, 74), Color("29463e"))
+		mat.albedo_texture = ImageTexture.create_from_image(cloth)
+		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mat.render_priority = layer
+		surface.material_override = mat
+		surface.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		surface.visibility_range_end = 55
+		surface.visibility_range_end_margin = 10
+		sign.add_child(surface)
+	var text := label(sign, words, Vector3.ZERO, 44 if size >= 30 else 40)
+	text.name = "BannerText"
+	text.pixel_size = 0.018
+	text.width = 540
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.outline_size = 2
+	text.render_priority = 3
+	text.visibility_range_end = 55
+	text.visibility_range_end_margin = 10
+	return text
+
 static func flower(parent: Node3D, pos: Vector3, colour: Color, radius := 1.0) -> Node3D:
 	var root := Node3D.new()
 	root.position = pos

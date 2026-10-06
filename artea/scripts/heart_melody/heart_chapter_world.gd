@@ -86,10 +86,10 @@ func _build_valley() -> void:
 	for x in [359.0, 431.0, 459.0]:
 		Art.flower(self, Vector3(x, 0, 18), Color("e8d489"), 2.0)
 		world._object("chapter_checkpoint", int(x), Vector3(x, 1, 16), "Rest at Peace Flower · craft")
-	Art.label(self, "HARMONY STAGE", Vector3(397, 14, -7), 42)
-	Art.label(self, "JEWEL SANCTUARY", Vector3(463, 12, 8), 38)
-	world._gate(self, Vector3(477, 0, 8), "Creator's Light")
-	world._object("chapter_gate", 0, Vector3(474, 1, 8), "Creator's Light gate")
+	Art.banner(self, "HARMONY STAGE\nBring the valley's voices together", Vector3(397, 10, -7), 32)
+	Art.banner(self, "JEWEL SANCTUARY", Vector3(460, 7, -1), 32)
+	world._gate(self, Vector3(477, 0, 8), "RETURN TO ART CASTLE")
+	world._object("chapter_gate", 0, Vector3(474, 1, 8), "Return to the Art Castle")
 	for index in 4:
 		var pos := Vector3(353 + index * 35, 1, 30)
 		Art.flower(self, pos - Vector3.UP, Color("b5b1d8"), 0.9)
@@ -119,7 +119,6 @@ func _build_fruit() -> void:
 			Art.cone(fruit, Vector3.ZERO, 0.65 + index * 0.06, 0.16 if index in [2, 5] else 0.55, 1.2 if index != 4 else 0.9, Color(spec.colour), false, 5 + index)
 			if index == 4:
 				for rib in 5: Art.box(fruit, Vector3((rib - 2) * 0.25, 0.48, 0), Vector3(0.07, 0.06, 1.1), Color("e3dba6"))
-		Art.label(grove, spec.label + "\n" + spec.icon + " · " + spec.shape, Vector3(0, 5, 0), 25)
 		world._object("chapter_fruit", index, FRUIT_POS[index] + Vector3(0, 1, -2), "Harvest " + spec.label)
 
 func _build_instruments() -> void:
@@ -128,8 +127,10 @@ func _build_instruments() -> void:
 		world._object("chapter_instrument", task, centre + Vector3(0, 1, 0), Catalog.TITLES[task])
 		if task < 7: continue # Original organ, harp roots, docks and chime arches remain.
 		Art.cone(self, centre + Vector3(0, 0.08, 0), 6.5, 6.5, 0.08, Color("dfd7c3"), false, 16)
-		Art.label(self, Catalog.TITLES[task], centre + Vector3(0, 6.5, 0), 28)
+		if task != 9: Art.banner(self, Catalog.TITLES[task], centre + Vector3(0, 6.5, 0), 28)
 	# Five actual strings; changing tension changes their visible height and curve.
+	Art.banner(self, "HUSH VINE STRING HARP", Vector3(153, 7, 27), 30)
+	Art.banner(self, "HARMONY BRIDGE CHIMES", Vector3(275, 7, 15), 30)
 	for string_index in 5:
 		var string_node := Art.box(self, Vector3(145 + string_index * 3, 3, 23), Vector3(0.10, 5, 0.10), Color("e7d7ae"))
 		note_visuals[30 + string_index] = string_node
@@ -141,12 +142,10 @@ func _build_instruments() -> void:
 			if task == 6: pos = Vector3(299 + i * 4, 0, 8 + (i - 1) * 3)
 			var bloom := Art.flower(self, pos, Color(Fruit.FRUITS[Fruit.IDS[i]].colour), 0.8)
 			note_visuals[task * 100 + i] = bloom
-			Art.label(self, str(i + 1) + " · " + NOTE_NAMES[i], pos + Vector3(0, 3, 0), 18)
 			world._object("chapter_note", task * 10 + i, pos + Vector3(0, 1, 1.5), "Play " + NOTE_NAMES[i])
 	for i in 3:
 		Art.cone(self, ANCHORS[i] + Vector3(0, 1, 0), 1.8, 1.1, 2, Color("e5d9be"), true)
 		Art.flower(self, ANCHORS[i] + Vector3(0, 1, 0), Color("b4c7ae"), 1.3)
-		Art.label(self, ANCHOR_IDS[i].capitalize() + " anchor", ANCHORS[i] + Vector3(0, 5, 0), 25)
 		world._object("chapter_anchor", i, ANCHORS[i] + Vector3(0, 1, 2.5), "Join " + ANCHOR_IDS[i] + " anchor")
 	stage_shell = Node3D.new()
 	stage_shell.position = Vector3(399, 0, 8)
@@ -156,7 +155,7 @@ func _build_instruments() -> void:
 		Art.cone(stage_shell, Vector3(sin(angle) * 4, 3, cos(angle) * 4), 1.0, 0.1, 6, Color("6a6175"))
 	Art.cone(self, Vector3(399, 2.1, 8), 1.2, 0.5, 3.8, Color("ddcbbb"))
 	Art.cone(self, Vector3(399, 4.3, 8), 0.65, 0.3, 1, Color("d3bd8b"))
-	stage_label = Art.label(self, "The Silent Conductor\nListen before you answer", Vector3(399, 8, 8), 30)
+	stage_label = Art.banner(self, "The Silent Conductor\nListen before you answer", Vector3(399, 7, 8), 30)
 	wave_marker = Art.cone(self, Vector3(399, 0.2, 8), 12, 12, 0.12, Color("e3b882"), false, 24)
 	wave_marker.visible = false
 	timing_label = Art.label(self, "", Vector3(395, 6, -2), 26)
@@ -168,7 +167,7 @@ func _build_instruments() -> void:
 func objective() -> String:
 	var id := Catalog.next_task(director.snapshot().tasks)
 	if id.is_empty(): return "The valley sings again. Visit the Jewel Sanctuary or return to the Castle railway."
-	return Catalog.TITLES[Catalog.TASKS.find(id)] + " · follow the valley path and harvest labelled fruit."
+	return Catalog.TITLES[Catalog.TASKS.find(id)] + " · follow the valley path; find fruit directions in the journal."
 
 func interact(kind: String, index: int) -> void:
 	match kind:
@@ -187,9 +186,8 @@ func interact(kind: String, index: int) -> void:
 			journal()
 		"chapter_reflect": reflect(index)
 		"chapter_gate":
-			if Catalog.TASKS[9] not in director.snapshot().tasks: world._notice("The Conductor's song will kindle this gate. " + objective())
-			elif not world.get_node("/root/JourneyCampaign").can_enter_kingdom("creator"): world._notice("The Harmony Jewel is yours. Creator's Light also awaits the Star of Wisdom. Return through the Castle to complete Mind Spark.")
-			else: world.get_node("/root/JourneyCampaign").enter_kingdom("creator")
+			if world.progress.commit(): world.get_node("/root/JourneyCampaign").return_to_campaign()
+			else: world._notice("Your progress is still here. Retry saving in Help before returning to the Castle.")
 		"chapter_sanctuary":
 			world._open("Harmony Jewel Sanctuary", "Every feeling belonged in the song. The Guardian thanks you for listening.\n" + ("Harmony Jewel and Harmony Shield earned. The completed-world railway remains available at the Castle entrance." if Catalog.TASKS[9] in director.snapshot().tasks else "The Jewel forms when the Conductor is free."))
 			world._button("Return to the valley", world._close)
