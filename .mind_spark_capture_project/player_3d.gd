@@ -1,1 +1,0 @@
-/Users/davidsovann/S2603/artea/player_3d.gd

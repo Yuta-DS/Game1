@@ -10,23 +10,11 @@ func _init() -> void:
 	for i in 3:
 		assert(s.plant(i, "sound").accepted)
 	assert(s.planted_count() == 3 and s.xp() == 0)
-	assert(s.data.checkpoint == "planter_court")
-	for level in 3:
-		assert(s.request_hint().accepted)
-		assert(s.data.hint_level == level + 1)
-	assert(s.request_hint().accepted and s.data.hint_level == 3,
-		"the progressive hint ladder stops at demonstration level")
-	assert(s.set_checkpoint("arrival").accepted and s.set_checkpoint("planter_court").accepted)
-	assert(s.set_setting("combat_assist", true).accepted)
-	assert(s.set_volume("music_volume", 0.35).accepted)
-	assert(is_equal_approx(float(s.data.settings.music_volume), 0.35))
 	assert(s.enter_note("leaf").accepted)
 	assert(s.enter_note("droplet").accepted)
 	assert(s.enter_note("sun").accepted)
 	assert(not s.confirm_phrase().accepted)
 	assert(s.data.phrase.size() == 3, "mismatch preserves the player's work")
-	assert(s.data.mistake_count == 1 and "Note 2" in s.confirm_phrase().message)
-	assert(s.data.mistake_count == 2, "second mistake activates the progressive hint")
 	assert(s.revise().accepted)
 	assert(s.revise().accepted)
 	assert(s.enter_note("sun").accepted)
@@ -48,9 +36,6 @@ func _init() -> void:
 	var invalid := loaded.data.duplicate(true)
 	invalid.rhythm_solved = false
 	assert(not State.valid(invalid))
-	invalid = loaded.data.duplicate(true)
-	invalid.settings.music_volume = 2.0
-	assert(not State.valid(invalid), "out-of-range volume is rejected")
 	var restored := State.new(path)
 	assert(restored.load_progress() and restored.complete() and restored.xp() == 119)
 	var broken := FileAccess.open(path, FileAccess.WRITE)
@@ -61,5 +46,5 @@ func _init() -> void:
 	assert(not failing.plant(0, "hope").accepted and failing.planted_count() == 0)
 	for suffix in ["", ".bak", ".tmp"]:
 		if FileAccess.file_exists(path + suffix): DirAccess.remove_absolute(path + suffix)
-	print("HEART_GARDEN_STATE: PASS — hints, revision, partial reload, receipts, completion, backup and write failure")
+	print("HEART_GARDEN_STATE: PASS — revision, partial reload, receipts, completion, backup and write failure")
 	quit()

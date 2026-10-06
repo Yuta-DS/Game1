@@ -13,7 +13,6 @@ var phase := Phase.NOTICE
 var remaining := 1.0
 var assist := false
 var suspended := false
-var leash_radius := 28.0
 var home := Vector3.ZERO
 var target := Vector3.ZERO
 var attack_start := Vector3.ZERO
@@ -56,11 +55,6 @@ func _exit_tree() -> void:
 
 func _physics_process(delta: float) -> void:
 	if suspended or player == null or phase == Phase.RELEASED: return
-	if global_position.distance_to(home) > leash_radius:
-		global_position = home
-		velocity = Vector3.ZERO
-		phase = Phase.NOTICE
-		remaining = 0.8
 	remaining -= delta
 	if phase == Phase.NOTICE:
 		var offset := player.global_position-global_position
@@ -106,10 +100,6 @@ func _warn() -> void:
 	var reach := minf(direction.length(),8.0) if slime else 10.0
 	target = attack_start+direction.normalized()*reach
 	target.y = home.y
-	var from_home := target-home
-	from_home.y = 0
-	if from_home.length() > leash_radius:
-		target = home+from_home.normalized()*leash_radius
 	telegraph.global_position = (target if slime else (attack_start+target)*0.5)+Vector3.UP*0.04
 	if not slime: telegraph.rotation.y = atan2(direction.x,direction.z)
 	telegraph.visible = true

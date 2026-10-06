@@ -747,6 +747,15 @@ func _run() -> void:
 	assert(world.get_island_one_puzzle() != null)
 	assert(world.get_warden() != null)
 	var gates := geometry.get_node("SavedQuestProgressionGates") as Node3D
+	var island_one_to_two := gates.get_node("QuestGate_1") as AnimatableBody3D
+	assert(bool(island_one_to_two.get_meta("physical_barrier_removed", false)))
+	assert(str(island_one_to_two.get_meta("progression_mode", "")) \
+		== "narrative_only_clear_crossing")
+	assert(island_one_to_two.get_node_or_null("Barrier") == null \
+		and island_one_to_two.get_node_or_null("CollisionShape3D") == null,
+		"Island One to Island Two bridge must not contain a visible or invisible barrier")
+	assert(world.is_quest_gate_open(0),
+		"the unobstructed Island One to Island Two crossing always reports open")
 	var expected_gated_connections := PackedStringArray([
 		"02_living_network_forest>03_constellation_court",
 		"03_constellation_court>04_hope_path_ridge",

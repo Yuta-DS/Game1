@@ -61,8 +61,8 @@ func _run() -> void:
 	assert(world.state.data.rhythm_solved)
 	world._close_panel()
 	for wave in 2:
-		player.global_position = world.to_global(world.CLEARINGS[wave]+Vector3(0,1,8))
-		world.open_control("encounter_%d"%wave)
+		player.global_position = Vector3(54,1,8)
+		world.open_control("encounter")
 		_press("Enter the clearing")
 		assert(world._encounter != null)
 		await physics_frame
@@ -72,8 +72,8 @@ func _run() -> void:
 			# Set a long recovery window, then exercise the actual player's sword volume.
 			enemy.phase = Enemy.Phase.RECOVERY
 			enemy.remaining = 60.0
-			enemy.global_position = world.to_global(world.CLEARINGS[wave])
-			player.global_position = enemy.global_position+Vector3(0,1,-2.5)
+			enemy.global_position = Vector3(54,0,0)
+			player.global_position = Vector3(54,1,-2.5)
 			player.get_node("FoxVisuals").rotation.y = 0
 			for hit in 2:
 				player.call("_finish_attack")
@@ -88,8 +88,7 @@ func _run() -> void:
 		assert(world._bridge_blocker.visible,"crossing stays blocked until growth finishes")
 		await create_timer(1.2).timeout
 	assert(world._bridge.visible and not world._bridge_blocker.visible)
-	player.global_position = world.to_global(Vector3(38,-25,0))
-	await process_frame
+	player.global_position = Vector3(12,-25,15)
 	await process_frame
 	assert(player.global_position.y > 0 and world.state.complete(),"fall recovery preserves completion")
 	world.deactivate()

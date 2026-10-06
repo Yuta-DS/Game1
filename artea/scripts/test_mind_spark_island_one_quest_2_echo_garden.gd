@@ -19,7 +19,8 @@ func _run() -> void:
 	assert(puzzle.get_puzzle_state().colour_prism == initial.colour_prism)
 	_solve_signal_observatory(puzzle)
 	assert(world.is_island_one_star_gate_open())
-	assert(not world.is_quest_gate_open(0))
+	assert(world.is_quest_gate_open(0),
+		"Island One to Island Two bridge remains physically unobstructed")
 	assert(not puzzle.station_action("colour_prism", "undo").accepted)
 
 	var completed_ids: Array[String] = []

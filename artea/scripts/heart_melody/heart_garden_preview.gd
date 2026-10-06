@@ -14,4 +14,3 @@ func _ready() -> void:
 			return
 		$HeartMelodyWorld.activate($Player3D)
 		$HeartMelodyWorld._feedback(true,"Standalone preview: Castle return is available in the full game."))
-

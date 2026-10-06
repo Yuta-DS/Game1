@@ -6,6 +6,7 @@ signal travelled(destination_world_local: Vector3)
 @export var destination_world_local := Vector3.ZERO
 @export var gate_enabled := true
 @export var prompt_text := "Q • ENTER MIND SPARK"
+## Empty preserves the original Mind Spark destination contract.
 @export var target_world_path: NodePath
 @export var build_world_on_travel := true
 @export var use_target_world_arrival := false

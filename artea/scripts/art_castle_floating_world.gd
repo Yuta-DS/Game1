@@ -220,6 +220,35 @@ func _build_heart_melody_island_one() -> void:
 			gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel")))
 
 
+func _build_heart_melody_island_one() -> void:
+	if has_node("HeartMelodyWorld"):
+		return
+	var scene := load("res://scenes/heart_melody/heart_garden_world.tscn") as PackedScene
+	var heart := scene.instantiate() as Node3D
+	heart.name = "HeartMelodyWorld"
+	heart.position = Vector3(6000, 0, 2290)
+	heart.set("defer_build", true)
+	add_child(heart)
+	var gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
+	gate.name = "HeartMelodyWorldGate"
+	gate.position = HEART + Vector3(-95, 4, 10)
+	gate.target_world_path = NodePath("../HeartMelodyWorld")
+	gate.destination_world_local = heart.position + Vector3(-70, 2, 0)
+	gate.prompt_text = "Q • ENTER HEART MELODY: FEELING GARDEN"
+	add_child(gate)
+	heart.connect("return_requested", func():
+		var body = heart.get("player") as CharacterBody3D
+		if body != null:
+			body.global_position = to_global(HEART + Vector3(-83, 6, 10))
+			body.velocity = Vector3.ZERO)
+	# Keep completion requirements on the entry, independent of legacy train entitlement.
+	var journey := get_node_or_null("/root/JourneyState")
+	if journey != null:
+		gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel"))
+		journey.treasure_awarded.connect(func(_id: String):
+			gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel")))
+
+
 func _build_standalone_minimap() -> void:
 	# This scene is also useful as a directly runnable gameplay scene. The
 	# embedded gallery supplies its own map, but the standalone scene must create

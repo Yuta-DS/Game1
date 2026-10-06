@@ -1,5 +1,5 @@
 {
-  "authoring": "Blender 5.2 direct scripting; anyCreature local plugin compiler",
+  "authoring": "Blender 5.2 direct scripting",
   "units": "metres; game Y-up",
   "water_loop_seconds": 4,
   "assets": {
