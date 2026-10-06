@@ -1,88 +1,58 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/boat.gd" id="1_boat"]
-[ext_resource type="PackedScene" path="res://assets3D/coastal_harbour/artea_sailing_boat.glb" id="2_model"]
 
-[sub_resource type="BoxShape3D" id="BoxShape_hull"]
-size = Vector3(2.8, 1.1, 6.4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_hull"]
+size = Vector3(2.2, 1.0, 4.5)
 
-[sub_resource type="BoxShape3D" id="BoxShape_board"]
-size = Vector3(4.2, 2.5, 9)
+[sub_resource type="BoxMesh" id="BoxMesh_hull"]
+size = Vector3(2.2, 0.9, 4.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial_wake"]
-transparency = 1
-shading_mode = 0
-albedo_color = Color(0.72, 0.92, 0.95, 0.38)
-emission_enabled = true
-emission = Color(0.32, 0.72, 0.82, 1)
-emission_energy_multiplier = 0.35
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.55, 0.36, 0.2, 1)
+roughness = 0.85
 
-[sub_resource type="BoxMesh" id="BoxMesh_wake"]
-size = Vector3(0.24, 0.025, 2.8)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial_shadow"]
-transparency = 1
-shading_mode = 0
-albedo_color = Color(0.01, 0.09, 0.13, 0.3)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_shadow"]
-top_radius = 1.65
-bottom_radius = 1.65
-height = 0.025
-radial_segments = 24
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sail"]
+albedo_color = Color(0.95, 0.92, 0.85, 1)
+roughness = 0.7
+cull_mode = 2
 
 [node name="Boat" type="CharacterBody3D"]
 script = ExtResource("1_boat")
-water_level = 0.92
+water_level = 0.0
 collision_layer = 3
 collision_mask = 3
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-position = Vector3(0, 0.42, 0)
-shape = SubResource("BoxShape_hull")
+shape = SubResource("BoxShape3D_hull")
 
-[node name="VisualPivot" type="Node3D" parent="."]
+[node name="Hull" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_hull")
+surface_material_override/0 = SubResource("StandardMaterial3D_wood")
 
-[node name="ArteaSailingBoat" parent="VisualPivot" instance=ExtResource("2_model")]
+[node name="BowTip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -2.55)
+mesh = SubResource("BoxMesh_hull")
+surface_material_override/0 = SubResource("StandardMaterial3D_wood")
+scale = Vector3(0.75, 0.6, 0.5)
 
-[node name="BoatShadow" type="MeshInstance3D" parent="VisualPivot"]
-position = Vector3(0, -0.72, 0.2)
-scale = Vector3(1, 1, 1.8)
-mesh = SubResource("CylinderMesh_shadow")
-surface_material_override/0 = SubResource("StandardMaterial_shadow")
+[node name="Mast" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.1, 0, 0, 0, 3, 0, 0, 0, 0.1, 0, 2.0, 0)
+mesh = SubResource("BoxMesh_hull")
+surface_material_override/0 = SubResource("StandardMaterial3D_wood")
 
-[node name="WakeLeft" type="MeshInstance3D" parent="."]
-position = Vector3(-0.82, -0.42, 3.45)
-rotation = Vector3(0, -0.16, 0)
-visible = false
-mesh = SubResource("BoxMesh_wake")
-surface_material_override/0 = SubResource("StandardMaterial_wake")
-
-[node name="WakeRight" type="MeshInstance3D" parent="."]
-position = Vector3(0.82, -0.42, 3.45)
-rotation = Vector3(0, 0.16, 0)
-visible = false
-mesh = SubResource("BoxMesh_wake")
-surface_material_override/0 = SubResource("StandardMaterial_wake")
+[node name="Sail" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.4, 0, 0, 0, 1.6, 0, 0, 0, 0.05, 0, 3.2, 0.3)
+mesh = SubResource("BoxMesh_hull")
+surface_material_override/0 = SubResource("StandardMaterial3D_sail")
+scale = Vector3(0.5, 0.5, 1.0)
 
 [node name="Seat" type="Marker3D" parent="."]
-position = Vector3(0, 1.04, 1.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.3)
 
 [node name="BoardTrigger" type="Area3D" parent="."]
-collision_layer = 0
-collision_mask = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="BoardTrigger"]
-position = Vector3(0, 0.65, 0)
-shape = SubResource("BoxShape_board")
-
-[node name="SailingHelp" type="Label3D" parent="."]
-position = Vector3(0, 3.1, 0)
-billboard = 1
-modulate = Color(0.88, 0.96, 0.92, 0.92)
-outline_modulate = Color(0.02, 0.13, 0.18, 1)
-text = "Walk aboard • WASD sail • SPACE leave"
-font_size = 27
-outline_size = 8
+shape = SubResource("BoxShape3D_hull")
 
 [connection signal="body_entered" from="BoardTrigger" to="." method="_on_body_entered"]

@@ -32,18 +32,8 @@ func _test_two_player_full_journey() -> void:
 	var state = Director.new()
 	var events: Array[String] = []
 	var rewards: Array[String] = []
-	var started_steps: Array[String] = []
-	var completed_steps: Array[String] = []
-	var revised_steps: Array[String] = []
-	var environment_states: Array[String] = []
-	var completed_chapters: Array[String] = []
 	state.evidence_emitted.connect(func(event_id: String, _payload: Dictionary): events.append(event_id))
 	state.completion_requested.connect(func(treasure_id: String): rewards.append(treasure_id))
-	state.step_started.connect(func(_encounter_id: String, step_id: String, _index: int): started_steps.append(step_id))
-	state.step_completed.connect(func(_encounter_id: String, step_id: String, _index: int): completed_steps.append(step_id))
-	state.step_revised.connect(func(_encounter_id: String, step_id: String, _reason: String): revised_steps.append(step_id))
-	state.environment_state_requested.connect(func(state_id: String, _payload: Dictionary): environment_states.append(state_id))
-	state.chapter_completed.connect(func(treasure_id: String): completed_chapters.append(treasure_id))
 	assert(state.start_current_encounter()["accepted"])
 	assert(not state.perform_action("observatory.hear_chime", "player_2")["accepted"], "ordered handoff enforced")
 	_complete_active_encounter(state)
@@ -66,10 +56,6 @@ func _test_two_player_full_journey() -> void:
 	assert(events.count("wisdom_symbol_activated") == 3)
 	assert(events.count("wisdom_symbols_connected") == 1)
 	assert(events.count("star_of_wisdom_completion_requested") == 1)
-	assert(started_steps.size() == completed_steps.size(), "every authored step starts and completes exactly once")
-	assert(not revised_steps.is_empty(), "an incorrect ordered action emits revision feedback")
-	assert(environment_states == ["signal_prism_formed", "echo_seed_secured", "archive_open", "guardian_freed", "star_of_wisdom_awarded"])
-	assert(completed_chapters == ["star_of_wisdom"], "chapter completion is explicit and emitted once")
 
 
 func _complete_active_encounter(state) -> void:

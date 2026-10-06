@@ -1024,19 +1024,6 @@ func _add_curved_root(parent: Node3D, root_name: String, points: Array[Vector3],
 	var root := _add_mesh(parent, _curved_root_mesh(points, radii, radial_segments),
 		material, Vector3.ZERO)
 	root.name = root_name
-	# The exposed roots are part of the terrain silhouette, so their visible
-	# closed surface must also be the surface the player walks over. Interior
-	# roots stay visual-only to avoid needless collision complexity inside the
-	# castle foundation.
-	if root_name.begins_with("GroundButtressRoot_"):
-		root.set_meta("walkable_ground_mound", true)
-		var body := StaticBody3D.new()
-		body.name = "WalkableRootBody"
-		root.add_child(body)
-		var collision := CollisionShape3D.new()
-		collision.name = "WalkableRootShape"
-		collision.shape = root.mesh.create_trimesh_shape()
-		body.add_child(collision)
 	return root
 
 

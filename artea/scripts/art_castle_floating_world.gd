@@ -4,7 +4,6 @@ const SceneLoader := preload("res://scripts/scene_loader.gd")
 const StreamingDirector := preload("res://scripts/world_streaming_director.gd")
 
 const MindSparkWorldGateScene := preload("res://scenes/mind_spark/world_gate.tscn")
-const Bricks := preload("res://scripts/altar/AltarParts.gd")
 const TreeOfLifeScene := preload("res://assets3D/tree_of_life/glb/artea_tree_of_life.glb")
 const BlueprintTrunkRootScene := preload(
 	"res://assets3D/tree_of_life/trunk_core/glb/simple_trunk_core.glb")
@@ -142,7 +141,6 @@ var _tree_christmas_bells: AudioStreamPlayer3D
 
 const TREE_CHRISTMAS_FULL_VOLUME_DISTANCE := 70.0
 const TREE_CHRISTMAS_SILENT_DISTANCE := 620.0
-const TREE_CHRISTMAS_RESUME_DISTANCE := 580.0
 const TREE_CHRISTMAS_NEAR_VOLUME_DB := -5.0
 const TREE_CHRISTMAS_SILENT_VOLUME_DB := -80.0
 const TREE_CHRISTMAS_FADE_IN_SPEED := 1.60
@@ -165,7 +163,6 @@ func _ready() -> void:
 	_build_creator_district()
 	_build_story_landmarks()
 	_build_mind_spark_world_one_gameplay()
-	_build_heart_melody_island_one()
 	_build_world_one_walk_route()
 	_build_boundary_observatories()
 	_build_skyline()
@@ -192,34 +189,6 @@ func _build_streaming_director() -> void:
 	add_child(streaming)
 
 
-func _build_heart_melody_island_one() -> void:
-	if has_node("HeartMelodyWorld"):
-		return
-	var scene := load("res://scenes/heart_melody/heart_garden_world.tscn") as PackedScene
-	var heart := scene.instantiate() as Node3D
-	heart.name = "HeartMelodyWorld"
-	heart.position = Vector3(6000, 0, 2290)
-	heart.set("defer_build", true)
-	add_child(heart)
-	var gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
-	gate.name = "HeartMelodyWorldGate"
-	gate.position = HEART + Vector3(-95, 4, 10)
-	gate.target_world_path = NodePath("../HeartMelodyWorld")
-	gate.destination_world_local = heart.position + HeartGardenWorld.ARRIVAL
-	gate.prompt_text = "Q • ENTER HEART MELODY: FEELING GARDEN"
-	add_child(gate)
-	heart.connect("return_requested", func():
-		var body = heart.get("player") as CharacterBody3D
-		if body != null:
-			body.global_position = to_global(HEART + Vector3(-83, 6, 10))
-			body.velocity = Vector3.ZERO)
-	var journey := get_node_or_null("/root/JourneyState")
-	if journey != null:
-		gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel"))
-		journey.treasure_awarded.connect(func(_id: String):
-			gate.set_gate_enabled(journey.has_treasure("star_of_wisdom") or journey.has_treasure("harmony_jewel")))
-
-
 func _build_standalone_minimap() -> void:
 	# This scene is also useful as a directly runnable gameplay scene. The
 	# embedded gallery supplies its own map, but the standalone scene must create
@@ -241,13 +210,8 @@ func _process(delta: float) -> void:
 		node.rotation.y += delta * (0.10 + float(index % 5) * 0.018)
 	if _player != null and _player.global_position.y < -120.0:
 		var respawn := PLAYER_SPAWN
-		var world_one := get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
-		var fell_from_world_one := world_one != null \
-			and world_one.owns_horizontal_position(_player.global_position)
-		if fell_from_world_one:
-			respawn = to_local(world_one.get_safe_respawn_global())
 		var regions := get_node_or_null("KingdomRegions3000m")
-		if not fell_from_world_one and regions != null and regions.has_method("get_safe_respawn"):
+		if regions != null and regions.has_method("get_safe_respawn"):
 			respawn = regions.call("get_safe_respawn", to_local(_player.global_position))
 		if not _request_milo_rescue(to_global(respawn)):
 			_player.global_position = to_global(respawn)
@@ -312,58 +276,18 @@ func _build_materials() -> void:
 	_materials.passage_roof = _make_material(Color("344c64"), 0.66)
 	_materials.passage_bronze = _make_material(Color("aa8249"), 0.54)
 	_materials.passage_light = _make_glow(Color("65e6ef"), 0.82)
-	_materials.forecourt_ivory = _make_material(Color("eadfc9"), 0.82)
-	# Keep the long approach calm and legible. The earlier procedural grid read
-	# like a construction overlay at player height and competed with the portal.
-	_materials.forecourt_paver = _make_material(Color("9c9484"), 0.92)
-	_materials.forecourt_soil = _make_material(Color("3f5148"), 0.96)
-	_materials.forecourt_lawn = _make_material(Color("456d59"), 0.94)
-	_materials.forecourt_water = _make_glow(Color(0.20, 0.82, 0.88, 0.72), 0.86, true)
-	# Heart Melody uses a deeper production palette than the bright Galaxy
-	# wayfinding materials. The darker values preserve form beneath the gallery's
-	# panoramic sky and keep ivory, glass and vegetation visually separate.
-	_materials.heart_ivory = _make_material(Color("d8c9aa"), 0.88)
-	_materials.heart_ivory_shadow = _make_material(Color("aa987c"), 0.94)
-	_materials.heart_stone = _make_material(Color("777a78"), 0.96)
-	_materials.heart_charcoal = _make_material(Color("26313d"), 0.86)
-	_materials.heart_rock_mid = _make_material(Color("44505a"), 0.94)
-	_materials.heart_rock_light = _make_material(Color("626966"), 0.96)
-	_materials.heart_roof = _make_material(Color("2e4357"), 0.78)
-	_materials.heart_path = _make_material(Color("bcb19a"), 0.92)
-	_materials.heart_soil = _make_material(Color("35463d"), 0.98)
-	_materials.heart_lawn = _make_material(Color("315b49"), 0.96)
-	_materials.heart_wood = _make_material(Color("745039"), 0.92)
-	_materials.heart_cyan = _make_glow(Color("35b8c7"), 0.30)
-	_materials.heart_light = _make_glow(Color("78dce2"), 0.42)
-	_materials.heart_glass = _make_glow(Color(0.16, 0.66, 0.72, 0.62), 0.26, true)
-	_materials.heart_water = _make_glow(Color(0.10, 0.55, 0.63, 0.78), 0.22, true)
-	_materials.heart_lavender = _make_material(Color("7457a6"), 0.82)
-	_materials.heart_bloom = _make_material(Color("8b6db5"), 0.90)
-	_materials.heart_bloom_pink = _make_material(Color("b86f9f"), 0.90)
 
 
 func _build_central_sanctuary() -> void:
 	var island := Node3D.new()
 	island.name = "CentralSanctuary"
-	island.set_meta("design_revision", "tree_court_faceted_plaza_v2")
-	island.set_meta("black_cat_removed", true)
-	island.set_meta("prototype_garden_rings_removed", true)
-	island.set_meta("gray_pink_radial_arches_removed", true)
 	add_child(island)
 	_build_island_foundation(island, HUB, 220.0, 58.0, 40)
 
-	# The original court was a broad gray disc between two luminous rings. Use the
-	# same calm stone, ivory, planted green and cyan-inlay language as the finished
-	# neighboring districts while preserving the existing walkable collision.
-	var sanctuary_deck := island.get_node_or_null("WalkableDeck") as MeshInstance3D
-	if sanctuary_deck != null:
-		sanctuary_deck.material_override = _materials.forecourt_lawn
-	var sanctuary_underside := island.get_node_or_null("FloatingUnderside") as MeshInstance3D
-	if sanctuary_underside != null:
-		sanctuary_underside.material_override = _materials.heart_rock_mid
-	_add_cylinder(island, "TreeCourt", HUB + Vector3(0.0, 0.1, 0.0), 108.0, 1.4,
-		_materials.heart_path, true, 48)
-	_build_tree_of_life_ground_finish(island)
+	# Concentric paths and planted rings reproduce the round garden composition.
+	_add_torus(island, "OuterGardenRing", HUB + Vector3(0.0, 0.35, 0.0), 153.0, 165.0, _materials.purple)
+	_add_cylinder(island, "TreeCourt", HUB + Vector3(0.0, 0.1, 0.0), 108.0, 1.4, _materials.stone, true, 48)
+	_add_torus(island, "InnerGardenRing", HUB + Vector3(0.0, 1.0, 0.0), 62.0, 68.0, _materials.aqua)
 
 	for index in 72:
 		var angle := TAU * float(index) / 72.0
@@ -372,335 +296,39 @@ func _build_central_sanctuary() -> void:
 			index % 3 == 0)
 
 	_build_life_tree(island, HUB)
+	_build_cat_companion(island, HUB + Vector3(-18.0, 2.0, -68.0))
+	_build_radial_arches(island)
 
 	_add_bridge("SouthArrivalBridge", Vector3(0.0, 0.0, 1422.0), Vector3(0.0, 0.0, 975.0), 62.0)
 	_add_bridge("MindBridge", Vector3(-218.0, 0.0, 1640.0), Vector3(-430.0, 0.0, 1640.0), 58.0)
-	# The Heart court is raised by its garden deck. Incline the processional
-	# bridge gently so its finished surface meets the arrival carpet without the
-	# deep step that previously exposed the dark island edge.
-	_add_bridge("HeartBridge", Vector3(0.0, 0.0, 1858.0), Vector3(0.0, 5.02, 2120.0), 58.0)
+	_add_bridge("HeartBridge", Vector3(0.0, 0.0, 1858.0), Vector3(0.0, 0.0, 2120.0), 58.0)
 	_add_bridge("CreatorBridge", Vector3(218.0, 0.0, 1640.0), Vector3(410.0, 0.0, 1640.0), 58.0)
-
-
-func _build_tree_of_life_ground_finish(island: Node3D) -> void:
-	var ground := Node3D.new()
-	ground.name = "TreeOfLifeGroundFinish"
-	ground.set_meta("design_revision", "faceted_processional_ground_v2")
-	ground.set_meta("matches_neighboring_ground_palette", true)
-	ground.set_meta("ring_geometry_removed", true)
-	ground.set_meta("clear_tree_door_axis_m", 24.0)
-	ground.set_meta("processional_path_count", 4)
-	ground.set_meta("planted_terrace_count", 8)
-	island.add_child(ground)
-
-	# Four broad axes connect the Tree Court to every bridge without drawing a
-	# replacement circle around the landmark. Their collision comes from the
-	# unchanged island deck and TreeCourt, so the surface stays seam-free.
-	for path_index in 4:
-		var angle := TAU * float(path_index) / 4.0
-		var direction := Vector3(sin(angle), 0.0, cos(angle))
-		var path := _add_bevel_box(ground,
-			"TreeProcessionalPath_%02d" % (path_index + 1),
-			HUB + direction * 160.0 + Vector3.UP * 0.84,
-			Vector3(26.0, 0.10, 104.0), 0.75, _materials.heart_path)
-		path.rotation.y = angle
-		for marker_index in 4:
-			var marker_distance := 119.0 + float(marker_index) * 23.0
-			var marker := _add_bevel_box(ground,
-				"TreeWayfinding_%02d_%02d" % [path_index + 1, marker_index + 1],
-				HUB + direction * marker_distance + Vector3.UP * 0.92,
-				Vector3(4.2, 0.035, 0.72), 0.06, _materials.heart_light)
-			marker.rotation.y = angle
-
-	# Eight offset planting terraces fill the former ring zone as individual
-	# gardens. Their gaps keep every bridge approach and the tree doorway legible.
-	for terrace_index in 8:
-		var angle := deg_to_rad(22.5 + float(terrace_index) * 45.0)
-		var radial := Vector3(sin(angle), 0.0, cos(angle))
-		var center := HUB + radial * 145.0
-		var border := _add_bevel_box(ground,
-			"TreeGardenIvoryBorder_%02d" % (terrace_index + 1),
-			center + Vector3.UP * 0.88, Vector3(34.0, 0.50, 19.0),
-			1.25, _materials.forecourt_ivory)
-		border.rotation.y = angle + PI * 0.5
-		var soil := _add_bevel_box(ground,
-			"TreeGardenPlantingBed_%02d" % (terrace_index + 1),
-			center + Vector3.UP * 1.16, Vector3(30.5, 0.10, 15.5),
-			1.05, _materials.forecourt_soil)
-		soil.rotation.y = angle + PI * 0.5
-		for planting_index in 3:
-			var tangent := Vector3(radial.z, 0.0, -radial.x)
-			var planting_at := center + tangent * (-8.0 + float(planting_index) * 8.0)
-			var shrub := _add_sphere(ground,
-				"TreeGardenShrub_%02d_%02d" % [terrace_index + 1, planting_index + 1],
-				planting_at + Vector3.UP * 2.0, Vector3(3.1, 1.65, 2.4),
-				_materials.forecourt_lawn)
-			(shrub.mesh as SphereMesh).radial_segments = 6
-			(shrub.mesh as SphereMesh).rings = 2
-		if terrace_index % 2 == 0:
-			_build_faceted_ceremonial_crystal(ground,
-				"TreeGardenCrystal_%02d" % (terrace_index + 1),
-				center + Vector3.UP * 3.2, 3.4, 0.52,
-				_materials.heart_cyan if terrace_index % 4 == 0 else _materials.heart_lavender)
 
 
 func _build_arrival_island() -> void:
 	var island := Node3D.new()
 	island.name = "ArrivalIsland"
-	island.set_meta("design_revision", "grand_garden_gate_v4_formal_full_island_court")
-	island.set_meta("south_watchtower_removed", true)
-	island.set_meta("garden_surrounds_gate", true)
-	island.set_meta("visible_ground_fully_finished", true)
-	island.set_meta("unfinished_white_margin_removed", true)
-	island.set_meta("ordered_mirrored_garden_wings", true)
 	add_child(island)
 	_build_island_foundation(island, SOUTH_GATE, 155.0, 42.0, 28)
-	# One smooth structural slab remains the authoritative collision floor. The
-	# complete visual court above it reaches the island rim, so no raw white deck
-	# reads as an unfinished area from the arrival bridge or aerial views.
-	_add_box(island, "ArrivalPromenade", Vector3(0.0, 0.3, 820.0),
-		Vector3(104.0, 1.0, 292.0), _materials.forecourt_ivory, true)
-	_build_arrival_patterned_court(island)
-	_build_arrival_grand_gate(island)
-	_build_arrival_gate_garden(island)
-
-
-func _build_arrival_patterned_court(parent: Node3D) -> void:
-	var paving := Node3D.new()
-	paving.name = "GrandGatePatternedCourt"
-	paving.set_meta("paving_panel_count", 89)
-	paving.set_meta("processional_path_width_m", 26.0)
-	paving.set_meta("continuous_cyan_wayfinding", true)
-	paving.set_meta("ground_design", "full_round_sage_and_warm_ivory_formal_court")
-	paving.set_meta("finished_court_radius_m", 150.0)
-	paving.set_meta("raw_deck_visible_inside_court", false)
-	paving.set_meta("perimeter_finish_layers", 3)
-	paving.set_meta("landscape_coverage_ratio", 0.94)
-	parent.add_child(paving)
-
-	# Three full circular layers finish the entire visible island: a planted rim,
-	# an ivory coping and a warm inset court. The layered disks leave only a slim,
-	# intentional ivory structural edge instead of the former empty white field.
-	_add_cylinder(paving, "ArrivalCourtPlantedRim", SOUTH_GATE + Vector3.UP * 0.73,
-		150.0, 0.10, _materials.forecourt_lawn, false, 48)
-	_add_cylinder(paving, "ArrivalCourtIvoryCoping", SOUTH_GATE + Vector3.UP * 0.80,
-		145.0, 0.10, _materials.forecourt_ivory, false, 48)
-	_add_cylinder(paving, "ArrivalCourtStoneField", SOUTH_GATE + Vector3.UP * 0.87,
-		139.0, 0.10, _materials.heart_path, true, 48)
-	# A circular planted field sits above the paver bed and follows the real island
-	# silhouette. It gives the garden full-width coverage without rectangular
-	# corners projecting over the void; the processional and formal paths are
-	# layered above it as the finished circulation surface.
-	_add_cylinder(paving, "ArrivalCourtGardenField", SOUTH_GATE + Vector3.UP * 0.99,
-		137.0, 0.10, _materials.forecourt_lawn, false, 48)
-
-	# Eighty-nine tightly spaced inset pavers cover the circular field. Their
-	# alternating warm tones create a deliberate floor pattern at every camera
-	# angle while the continuous disk beneath closes all gaps near the curved rim.
-	var panel_count := 0
-	for row_index in 11:
-		for column_index in 11:
-			var x := -120.0 + float(column_index) * 24.0
-			var z := 700.0 + float(row_index) * 24.0
-			if Vector2(x, z - SOUTH_GATE.z).length() > 126.0:
-				continue
-			panel_count += 1
-			var panel_material: Material = _materials.forecourt_ivory \
-				if (row_index + column_index) % 2 == 0 else _materials.forecourt_paver
-			_add_bevel_box(paving, "CourtPaver_%02d" % panel_count,
-				Vector3(x, 0.96, z), Vector3(21.8, 0.08, 21.8), 0.78,
-				panel_material)
-	paving.set_meta("paving_panel_count", panel_count)
-
-	# The processional carpet stays visually dominant and fully walkable from the
-	# bridge landing, through the grand gate, and onward to the central sanctuary.
-	_add_bevel_box(paving, "ArrivalMosaic", Vector3(0.0, 1.04, 820.0),
-		Vector3(27.0, 0.11, 292.0), 1.0, _materials.heart_path)
-	_add_box(paving, "ProcessionalCyanSeam", Vector3(0.0, 1.12, 820.0),
-		Vector3(1.15, 0.06, 292.0), _materials.heart_cyan, false)
-	for marker_index in 15:
-		var marker_z := 682.0 + float(marker_index) * 19.7
-		_add_bevel_box(paving, "MosaicRune_%02d" % (marker_index + 1),
-			Vector3(0.0, 1.18, marker_z), Vector3(12.0, 0.08, 1.25),
-			0.24, _materials.gold)
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		_add_box(paving, "CourtGoldEdge_%s" % ("West" if side < 0.0 else "East"),
-			Vector3(side * 14.9, 1.13, 820.0), Vector3(0.38, 0.07, 292.0),
-			_materials.gold, false)
-
-
-func _build_arrival_grand_gate(parent: Node3D) -> void:
-	var gate := Node3D.new()
-	gate.name = "ArtCastleGalaxyGrandGate"
-	gate.position = SOUTH_GATE
-	gate.set_meta("replaces_gold_rectangle", true)
-	gate.set_meta("clear_opening_width_m", 42.0)
-	gate.set_meta("architectural_height_m", 74.0)
-	gate.set_meta("watchtower_silhouette_removed", true)
-	gate.set_meta("walkthrough_opening", true)
-	parent.add_child(gate)
-
-	# Two substantial gate towers turn the old flat rectangle into a readable
-	# destination. All collision stays outside the 42 m central opening.
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		var side_name := "West" if side < 0.0 else "East"
-		var x := side * 29.0
-		_add_bevel_box(gate, "%sGateFoundation" % side_name,
-			Vector3(x, 3.0, 0.0), Vector3(16.0, 6.0, 16.0), 1.4,
-			_materials.heart_ivory_shadow)
-		_add_bevel_box(gate, "%sGateTower" % side_name,
-			Vector3(x, 28.0, 0.0), Vector3(13.0, 48.0, 13.0), 1.1,
-			_materials.heart_ivory)
-		var tower_collision_visual := _add_box(gate, "%sGateTowerSolid" % side_name,
-			Vector3(x, 27.0, 0.0), Vector3(16.0, 54.0, 16.0),
-			_materials.heart_ivory, true)
-		tower_collision_visual.visible = false
-		_add_bevel_box(gate, "%sGateTowerInset" % side_name,
-			Vector3(x - side * 6.62, 29.0, -6.56), Vector3(0.26, 25.0, 7.0), 0.10,
-			_materials.heart_cyan)
-		for band_index in 3:
-			_add_bevel_box(gate, "%sTowerBand_%02d" % [side_name, band_index + 1],
-				Vector3(x, 13.0 + float(band_index) * 15.0, -0.2),
-				Vector3(15.2, 1.5, 14.4), 0.35, _materials.gold)
-		_add_bevel_box(gate, "%sTowerCrown" % side_name,
-			Vector3(x, 53.0, 0.0), Vector3(18.0, 4.0, 16.0), 1.0,
-			_materials.gold)
-		_build_faceted_ceremonial_crystal(gate, "%sCrownCrystal" % side_name,
-			Vector3(x, 61.0, 0.0), 8.0, 1.6,
-			_materials.heart_cyan if side < 0.0 else _materials.heart_lavender)
-
-	# A segmented double arch creates a strong gateway silhouette without the
-	# flat gold lintel or opaque portal panel that hid the route beyond.
-	for ring_index in 2:
-		var radius := 29.0 + float(ring_index) * 3.8
-		var ring_y := 37.0
-		for segment_index in 12:
-			var angle_a := PI * float(segment_index) / 12.0
-			var angle_b := PI * float(segment_index + 1) / 12.0
-			var start := Vector3(cos(angle_a) * radius, ring_y + sin(angle_a) * radius, 0.0)
-			var finish := Vector3(cos(angle_b) * radius, ring_y + sin(angle_b) * radius, 0.0)
-			_add_reference_beam(gate, start, finish,
-				1.6 if ring_index == 0 else 0.9,
-				_materials.heart_ivory if ring_index == 0 else _materials.gold).name = \
-					"GrandGateArch_%02d_%02d" % [ring_index + 1, segment_index + 1]
-	_build_faceted_ceremonial_crystal(gate, "GrandGateKeystone",
-		Vector3(0.0, 71.0, 0.0), 9.0, 1.7, _materials.heart_cyan)
-	_add_landmark_label(gate, "ART CASTLE GALAXY • GRAND GARDEN GATE",
-		Vector3(0.0, 82.0, 0.0), Color("fff1c4"), 34)
-
-
-func _build_arrival_gate_garden(parent: Node3D) -> void:
-	var garden := Node3D.new()
-	garden.name = "GrandGateGarden"
-	garden.set_meta("symmetrical_bed_count", 12)
-	garden.set_meta("design_revision", "ordered_mirrored_botanical_court_v4")
-	garden.set_meta("garden_tree_count", 12)
-	garden.set_meta("flower_cluster_count", 72)
-	garden.set_meta("paired_fountain_count", 2)
-	garden.set_meta("clear_route_width_m", 26.0)
-	garden.set_meta("grounded_landscaping", true)
-	garden.set_meta("continuous_garden_ribbons", true)
-	garden.set_meta("landscaped_perimeter", true)
-	garden.set_meta("formal_row_count_per_side", 3)
-	garden.set_meta("formal_column_count_per_side", 2)
-	garden.set_meta("mirror_axis_x", 0.0)
-	garden.set_meta("ordered_bed_spacing_m", Vector2(42.0, 72.0))
-	parent.add_child(garden)
-
-	# Each half of the island is one wide, finished garden wing. Ivory framing,
-	# clipped lawn and formal cross paths carry the landscape almost to the round
-	# island edge while keeping the 26 m processional route completely clear.
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		var side_name := "West" if side < 0.0 else "East"
-		_add_bevel_box(garden, "%sGardenWingIvoryFrame" % side_name,
-			Vector3(side * 77.0, 1.04, 820.0), Vector3(108.0, 0.28, 148.0),
-			14.0, _materials.forecourt_ivory)
-		_add_bevel_box(garden, "%sConnectedGardenRibbon" % side_name,
-			Vector3(side * 77.0, 1.20, 820.0), Vector3(104.0, 0.18, 144.0),
-			13.0, _materials.forecourt_lawn)
-		_add_bevel_box(garden, "%sRibbonIvoryBorder" % side_name,
-			Vector3(side * 21.9, 1.22, 820.0), Vector3(1.8, 0.34, 254.0),
-			0.45, _materials.forecourt_ivory)
-		_add_bevel_box(garden, "%sRibbonGoldInlay" % side_name,
-			Vector3(side * 22.85, 1.42, 820.0), Vector3(0.34, 0.05, 246.0),
-			0.08, _materials.gold)
-
-		# The pale paths form the same two-column, three-row grid on both sides.
-		# They join every bed to the main axis, making the garden read as one planned
-		# estate rather than a group of unrelated planters.
-		_add_bevel_box(garden, "%sFormalGardenPath_Longitudinal" % side_name,
-			Vector3(side * 79.0, 1.34, 820.0), Vector3(5.0, 0.12, 250.0),
-			0.7, _materials.forecourt_ivory)
-		for crossing_index in 2:
-			_add_bevel_box(garden,
-				"%sFormalGardenPath_Cross_%02d" % [side_name, crossing_index + 1],
-				Vector3(side * 77.0, 1.34, 784.0 + float(crossing_index) * 72.0),
-				Vector3(104.0, 0.12, 5.0), 0.7, _materials.forecourt_ivory)
-
-		for bed_index in 6:
-			var bed := Node3D.new()
-			bed.name = "%sGardenRoom_%02d" % [side_name, bed_index + 1]
-			var bed_row := int(bed_index / 2)
-			var bed_column := bed_index % 2
-			var bed_x := 58.0 + float(bed_column) * 42.0
-			bed.position = Vector3(side * bed_x, 1.28,
-				748.0 + float(bed_row) * 72.0)
-			garden.add_child(bed)
-			_add_bevel_box(bed, "%sGardenBorder_%02d" % [side_name, bed_index + 1],
-				Vector3.ZERO, Vector3(34.0, 1.15, 44.0), 4.4, _materials.heart_ivory)
-			_add_bevel_box(bed, "%sGardenSoil_%02d" % [side_name, bed_index + 1],
-				Vector3.UP * 0.72, Vector3(30.0, 0.32, 40.0), 3.8,
-				_materials.forecourt_soil)
-			_add_bevel_box(bed, "%sGardenLawn_%02d" % [side_name, bed_index + 1],
-				Vector3.UP * 0.91, Vector3(27.5, 0.12, 37.5), 3.4,
-				_materials.forecourt_lawn)
-			_build_ceremonial_faceted_tree(bed,
-				"%sGardenTree_%02d" % [side_name, bed_index + 1],
-				Vector3(side * 7.0, 1.0, 5.5), 11.0 + float(bed_row) * 1.25)
-			for shrub_index in 6:
-				var shrub_x := -10.0 + float(shrub_index % 3) * 10.0
-				var shrub_z := -11.5 if shrub_index < 3 else 11.5
-				var shrub := _add_sphere(bed,
-					"%sGardenShrub_%02d_%02d" % [side_name, bed_index + 1, shrub_index + 1],
-					Vector3(shrub_x, 2.25, shrub_z), Vector3(2.7, 1.55, 2.45),
-					_materials.green)
-				(shrub.mesh as SphereMesh).radial_segments = 6
-				(shrub.mesh as SphereMesh).rings = 2
-			for flower_index in 6:
-				var flower := _add_sphere(bed,
-					"%sGardenFlower_%02d_%02d" % [side_name, bed_index + 1, flower_index + 1],
-					Vector3(-10.0 + float(flower_index % 3) * 10.0, 2.10,
-						-4.0 if flower_index < 3 else 4.0),
-					Vector3(1.45, 0.82, 1.45),
-					_materials.pink_leaf if (bed_index + flower_index) % 2 == 0 \
-					else _materials.purple_leaf)
-				(flower.mesh as SphereMesh).radial_segments = 6
-				(flower.mesh as SphereMesh).rings = 2
-			_build_faceted_ceremonial_crystal(bed,
-				"%sGardenCrystal_%02d" % [side_name, bed_index + 1],
-				Vector3(-side * 7.0, 4.0, -5.5), 5.2, 0.78,
-				_materials.heart_lavender if bed_row % 2 == 0 \
-				else _materials.heart_cyan)
-
-		# Paired fountains frame the approach and preserve the central promenade.
-		var fountain_at := Vector3(side * 38.0, 1.30, 704.0)
-		_add_cylinder(garden, "%sFountainGardenTerrace" % side_name, fountain_at,
-			11.5, 0.20, _materials.forecourt_lawn, false, 18)
-		_add_cylinder(garden, "%sFountainOuterBasin" % side_name,
-			fountain_at + Vector3.UP * 1.0, 9.0, 2.0,
-			_materials.heart_ivory_shadow, false, 18)
-		_add_cylinder(garden, "%sFountainWater" % side_name,
-			fountain_at + Vector3.UP * 2.05, 7.4, 0.18,
-			_materials.aqua_glass, false, 18)
-		_add_cylinder(garden, "%sFountainPedestal" % side_name,
-			fountain_at + Vector3.UP * 4.2, 2.0, 4.2,
-			_materials.heart_ivory, false, 10)
-		_build_faceted_ceremonial_crystal(garden, "%sFountainCrown" % side_name,
-			fountain_at + Vector3.UP * 9.3, 6.0, 1.05, _materials.heart_cyan)
-
+	_add_box(island, "ArrivalPromenade", Vector3(0.0, 0.3, 760.0), Vector3(86.0, 1.0, 180.0), _materials.stone, true)
+	_add_box(island, "ArrivalMosaic", Vector3(0.0, 1.0, 760.0), Vector3(38.0, 0.8, 118.0), _materials.aqua_glass, false)
+	for step in 6:
+		var z := 710.0 + float(step) * 20.0
+		_add_box(island, "MosaicRune_%02d" % step, Vector3(0.0, 1.7, z),
+			Vector3(24.0, 0.35, 3.0), _materials.gold, false)
+		_add_flower_cluster(island, Vector3(-47.0, 2.5, z), step % 2 == 0)
+		_add_flower_cluster(island, Vector3(47.0, 2.5, z), step % 2 != 0)
+	# Give the enlarged Blender gate a clean silhouette. The former z=715 frame
+	# sat only 52 m behind its facade and visually collapsed into it. Placing the
+	# frame at the island centre creates a measured 157 m gate-to-wall setback
+	# without changing the arrival promenade or the playable route.
+	_build_frame(island, Vector3(0.0, 0.0, 820.0), 48.0, 62.0, _materials.gold, "ART CASTLE GALAXY")
+	for side in [-1.0, 1.0]:
+		_build_cypress(island, Vector3(side * 82.0, 2.0, 785.0), 34.0, _materials.purple_leaf)
+		_build_cypress(island, Vector3(side * 108.0, 2.0, 865.0), 28.0, _materials.pink_leaf)
+	for index in 18:
+		var angle := TAU * float(index) / 18.0
+		_add_flower_cluster(island, SOUTH_GATE + Vector3(cos(angle) * 125.0, 2.0, sin(angle) * 125.0), index % 2 == 0)
 
 
 func _build_castle_approach_bridge() -> void:
@@ -1073,9 +701,9 @@ func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width:
 func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vector3) -> void:
 	var recovery := Area3D.new()
 	recovery.name = "ApproachFallRecovery"
-	# Top of the box sits 28 m under the bridge, milo_fall_rescue.gd's
+	# Top of the box sits 16 m under the bridge, milo_fall_rescue.gd's
 	# RESCUE_DROP, so this fall feels like every other one.
-	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -38, 0)
+	recovery.position = start.lerp(finish, 0.5) + Vector3(0, -26, 0)
 	recovery.collision_layer = 0
 	recovery.collision_mask = 1
 	var shape_node := CollisionShape3D.new()
@@ -1105,1867 +733,55 @@ func _build_mind_district() -> void:
 	district.set_meta("bridge_surface_y", MIND.y)
 	district.set_meta("ground_surface_y", MIND.y)
 	district.set_meta("ground_collision_source", "WalkableDeckCollision")
+	district.set_meta("rune_grid_size", MIND_RUNE_GRID_SIZE)
 	district.set_meta("requires_jump_from_mind_bridge", false)
-	_build_mind_spark_ceremonial_forecourt(district)
-	_build_mind_spark_celestial_commons(district)
 
+	# An odd grid places one tile exactly on the bridge centerline. The shallow
+	# visual inlays sit over the island's continuous deck collision rather than
+	# creating 81 raised collision blocks.
+	var half_grid := float(MIND_RUNE_GRID_SIZE - 1) * 0.5
+	for row in MIND_RUNE_GRID_SIZE:
+		for column in MIND_RUNE_GRID_SIZE:
+			var tile_pos := MIND + Vector3(
+				(float(column) - half_grid) * MIND_RUNE_TILE_SPACING,
+				MIND_RUNE_TILE_HEIGHT * 0.5,
+				(float(row) - half_grid) * MIND_RUNE_TILE_SPACING)
+			var tile_mat: Material = _materials.aqua_glass if (row + column) % 2 == 0 else _materials.stone
+			_add_box(district, "RuneTile_%02d_%02d" % [row, column], tile_pos,
+				Vector3(MIND_RUNE_TILE_SIZE, MIND_RUNE_TILE_HEIGHT, MIND_RUNE_TILE_SIZE),
+				tile_mat, false)
 
-func _build_mind_spark_ceremonial_forecourt(district: Node3D) -> void:
-	# The functional World Gate keeps its established transform. This architecture
-	# wraps that portal in a grounded, readable court instead of a checkerboard,
-	# freestanding rectangle and unrelated ruin wall.
-	var forecourt := Node3D.new()
-	forecourt.name = "MindSparkCeremonialForecourt"
-	forecourt.position = MIND_GATE_POSITION
-	var outward := Vector3(MIND_GATE_POSITION.x - MIND.x, 0.0,
-		MIND_GATE_POSITION.z - MIND.z).normalized()
-	forecourt.rotation.y = atan2(outward.x, outward.z)
-	forecourt.set_meta("design_revision", "celestial_gate_garden_v6")
-	forecourt.set_meta("production_quality_target", "10_of_10_graphic_design_pass")
-	forecourt.set_meta("lighting_layers", 3)
-	forecourt.set_meta("footprint_m", Vector2(64.0, 54.0))
-	forecourt.set_meta("clear_processional_lane_m", 18.0)
-	forecourt.set_meta("functional_gate_transform_preserved", true)
-	forecourt.set_meta("placeholder_rune_grid_removed", true)
-	forecourt.set_meta("collision_policy",
-		"architecture and trunks are solid; inlays and planting are pass-through")
-	district.add_child(forecourt)
-
-	# A broad planted carpet ties the architecture into the district island. The
-	# previous court ended abruptly at its props and exposed the default grey
-	# foundation across most camera angles.
-	var landscape_frame := Node3D.new()
-	landscape_frame.name = "DistrictLandscapeFrame"
-	landscape_frame.set_meta("grey_foundation_visually_covered", true)
-	landscape_frame.set_meta("planted_wing_count", 2)
-	forecourt.add_child(landscape_frame)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		_add_bevel_box(landscape_frame, "%sLandscapeStoneBed" % side_name,
-			Vector3(float(side) * 26.0, 0.07, -2.0),
-			Vector3(29.0, 0.12, 82.0), 0.70, _materials.passage_stone_shadow)
-		_add_bevel_box(landscape_frame, "%sLandscapeLawn" % side_name,
-			Vector3(float(side) * 26.0, 0.15, -2.0),
-			Vector3(26.5, 0.08, 78.5), 0.62, _materials.forecourt_lawn)
-		_add_box(landscape_frame, "%sInnerIvoryBorder" % side_name,
-			Vector3(float(side) * 12.25, 0.23, -2.0),
-			Vector3(0.55, 0.10, 77.0), _materials.forecourt_ivory, false)
-		for star_index in 4:
-			var star_z := -34.0 + float(star_index) * 21.0
-			_build_faceted_ceremonial_crystal(landscape_frame,
-				"%sGroundStar_%02d" % [side_name, star_index + 1],
-				Vector3(float(side) * (35.0 - float(star_index % 2) * 3.0),
-					1.7, star_z),
-				2.3 + float(star_index % 2) * 0.55, 0.58,
-				_materials.aqua if (star_index + (0 if side < 0 else 1)) % 2 == 0 \
-				else _materials.purple)
-
-	# A continuous foundation and tightly jointed faceted slabs make the approach
-	# read as one finished ceremonial walk rather than separated prototype steps.
-	var processional := Node3D.new()
-	processional.name = "IvoryProcessionalWalk"
-	processional.set_meta("clear_width_m", 18.0)
-	processional.set_meta("paver_count", 7)
-	forecourt.add_child(processional)
-	_add_bevel_box(processional, "ProcessionalFoundation", Vector3(0, 0.055, -18.0),
-		Vector3(20.0, 0.11, 54.0), 0.05, _materials.passage_stone_shadow)
-	for side in [-1.0, 1.0]:
-		_add_box(processional, "ProcessionalCharcoalEdge_%s" % ("L" if side < 0 else "R"),
-			Vector3(float(side) * 9.65, 0.14, -18.0),
-			Vector3(0.55, 0.18, 54.0), _materials.bridge_structure, false)
-		_add_box(processional, "ProcessionalIvoryEdge_%s" % ("L" if side < 0 else "R"),
-			Vector3(float(side) * 9.24, 0.23, -18.0),
-			Vector3(0.25, 0.10, 52.5), _materials.ivory, false)
-	for paver_index in 7:
-		var paver_z := -42.0 + float(paver_index) * 8.0
-		_add_bevel_box(processional, "FacetedPaver_%02d" % (paver_index + 1),
-			Vector3(0, 0.13, paver_z), Vector3(18.0, 0.15, 7.72), 0.12,
-			_materials.forecourt_paver)
-		if paver_index in [0, 3, 6]:
-			for side in [-1.0, 1.0]:
-				_add_box(processional, "CyanThreshold_%02d_%s" % [paver_index + 1,
-					"L" if side < 0 else "R"],
-					Vector3(float(side) * 6.4, 0.22, paver_z),
-					Vector3(2.2, 0.08, 0.65), _materials.passage_light, false)
-		else:
-			_add_box(processional, "CyanWayfinder_%02d" % (paver_index + 1),
-				Vector3(0, 0.22, paver_z), Vector3(0.52, 0.07, 1.35),
-				_materials.passage_light, false)
-	# Three low-relief compass medallions break up the long aisle without
-	# creating a collision or another glowing route line.
-	for medallion_index in 3:
-		var medallion_z := -34.0 + float(medallion_index) * 16.0
-		for wing in [-1.0, 1.0]:
-			_add_bevel_box(processional,
-				"IvoryAisleChevron_%02d_%s" % [medallion_index + 1,
-					"L" if wing < 0 else "R"],
-				Vector3(float(wing) * 3.0, 0.225, medallion_z),
-				Vector3(3.4, 0.045, 0.34), 0.04, _materials.forecourt_ivory).rotation.y = \
-				float(wing) * 0.42
-
-	var compass_court := Node3D.new()
-	compass_court.name = "FacetedCompassCourt"
-	compass_court.set_meta("clear_movement_diameter_m", 26.0)
-	forecourt.add_child(compass_court)
-	_add_cylinder(compass_court, "IvoryCourtApron", Vector3(0, 0.04, -1.0),
-		19.1, 0.08, _materials.ivory, false, 12)
-	_add_cylinder(compass_court, "CharcoalCourtShadow", Vector3(0, 0.09, -1.0),
-		18.25, 0.10, _materials.bridge_structure, false, 12)
-	_add_cylinder(compass_court, "IvoryCourtField", Vector3(0, 0.15, -1.0),
-		16.8, 0.10, _materials.passage_stone, false, 12)
-	_add_cylinder(compass_court, "CyanCourtHeart", Vector3(0, 0.22, -1.0),
-		3.4, 0.06, _materials.passage_light, false, 12)
-	for point_index in 8:
-		var point_angle := TAU * float(point_index) / 8.0
-		_add_box(compass_court, "CyanCompassPoint_%02d" % (point_index + 1),
-			Vector3(sin(point_angle) * 13.8, 0.25, -1.0 + cos(point_angle) * 13.8),
-			Vector3(0.65, 0.05, 2.8), _materials.passage_light, false, -point_angle)
-
-	var gatehouse := Node3D.new()
-	gatehouse.name = "CelestialGatehouse"
-	gatehouse.set_meta("clear_opening_width_m", 28.0)
-	gatehouse.set_meta("tower_count", 2)
-	forecourt.add_child(gatehouse)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		var x := float(side) * 19.0
-		var shaft_height := 18.0 if side < 0 else 21.0
-		var shaft_center_y := 2.0 + shaft_height * 0.5
-		var shoulder_y := 2.0 + shaft_height + 0.9
-		_add_box(gatehouse, "%sTowerFoundation" % side_name,
-			Vector3(x, 1.2, 0), Vector3(11.0, 2.4, 12.5),
-			_materials.bridge_structure, true)
-		_add_box(gatehouse, "%sTowerLowerPlinth" % side_name,
-			Vector3(x, 2.75, 0), Vector3(9.4, 0.8, 10.6),
-			_materials.ivory, false)
-		_add_box(gatehouse, "%sTowerShaft" % side_name,
-			Vector3(x, shaft_center_y, 0), Vector3(7.8, shaft_height, 7.8),
-			_materials.passage_stone, true)
-		_add_box(gatehouse, "%sFacadeRecess" % side_name,
-			Vector3(x, shaft_center_y + 0.65, -4.02), Vector3(4.25, shaft_height - 3.4, 0.26),
-			_materials.bridge_structure, false)
-		for corner_x in [-1.0, 1.0]:
-			_add_box(gatehouse, "%sPilaster_%s" % [side_name, "L" if corner_x < 0 else "R"],
-				Vector3(x + float(corner_x) * 3.35, shaft_center_y, -3.72),
-				Vector3(0.72, shaft_height - 1.2, 0.55), _materials.ivory, false)
-		_add_bevel_box(gatehouse, "%sTowerShoulder" % side_name,
-			Vector3(x, shoulder_y, 0), Vector3(10.6, 1.8, 9.8), 0.38,
-			_materials.forecourt_ivory)
-		_add_box(gatehouse, "%sCyanWindow" % side_name,
-			Vector3(x, shaft_center_y + 1.0, -4.22), Vector3(1.45, 6.5, 0.24),
-			_materials.passage_light, false)
-		for window_band in [-1.0, 1.0]:
-			_add_box(gatehouse, "%sWindowBand_%s" % [side_name, "Low" if window_band < 0 else "High"],
-				Vector3(x, shaft_center_y + 1.0 + float(window_band) * 2.4, -4.26),
-				Vector3(2.4, 0.42, 0.28), _materials.ivory, false)
-		for belt_index in 2:
-			_add_box(gatehouse, "%sTowerBelt_%02d" % [side_name, belt_index + 1],
-				Vector3(x, 6.4 + float(belt_index) * 7.0, -0.15),
-				Vector3(8.35, 0.48, 8.15), _materials.ivory, false)
-		# Layered corner fins catch light independently from the shaft and remove
-		# the flat rectangular silhouette visible from the bridge.
-		for fin_side in [-1.0, 1.0]:
-			_add_bevel_box(gatehouse,
-				"%sFacadeFin_%s" % [side_name, "L" if fin_side < 0 else "R"],
-				Vector3(x + float(fin_side) * 4.15, shaft_center_y - 0.35, -2.65),
-				Vector3(1.15, shaft_height - 2.0, 2.75), 0.20,
-				_materials.forecourt_ivory)
-			_add_box(gatehouse,
-				"%sFinCyanCut_%s" % [side_name, "L" if fin_side < 0 else "R"],
-				Vector3(x + float(fin_side) * 4.18, shaft_center_y + 1.1, -4.06),
-				Vector3(0.25, 4.8, 0.12), _materials.passage_light, false)
-		# Outer buttresses widen the silhouette at ground level and make the tower
-		# read as load-bearing architecture instead of a decorated box.
-		var outer_side := -1.0 if side < 0 else 1.0
-		_add_bevel_box(gatehouse, "%sOuterButtress" % side_name,
-			Vector3(x + outer_side * 4.65, 5.2, 0.65),
-			Vector3(2.15, 8.4, 5.8), 0.28, _materials.forecourt_ivory)
-		_add_box(gatehouse, "%sButtressAetherCut" % side_name,
-			Vector3(x + outer_side * 4.68, 5.8, -2.32),
-			Vector3(0.70, 3.8, 0.18), _materials.passage_light, false)
-		var spire_height := 10.5 if side < 0 else 8.0
-		_add_cylinder(gatehouse, "%sSpireEave" % side_name,
-			Vector3(x, shoulder_y + 1.05, 0), 4.25, 0.52,
-			_materials.bridge_structure, false, 8)
-		var spire := _add_tapered_cylinder(gatehouse, "%sOctagonalSpire" % side_name,
-			Vector3(x, shoulder_y + 1.30 + spire_height * 0.5, 0),
-			2.75, 0.32, spire_height, _materials.passage_roof, 8)
-		spire.set_meta("architectural_role", "faceted tapered roof")
-		_build_faceted_ceremonial_crystal(gatehouse, "%sSpireCrystal" % side_name,
-			Vector3(x, shoulder_y + spire_height + 2.25, 0), 2.25, 0.70,
-			_materials.aqua if side < 0 else _materials.purple)
-
-	# The functional portal stays at its original transform. These open supports
-	# visually seat its purple ring without adding collision across the opening.
-	var portal_cradle := Node3D.new()
-	portal_cradle.name = "WorldGatePortalCradle"
-	portal_cradle.set_meta("functional_portal_remains_independent", true)
-	portal_cradle.set_meta("opening_collision_free", true)
-	gatehouse.add_child(portal_cradle)
-	_add_cylinder(portal_cradle, "PortalDaisShadow", Vector3(0, 0.24, 0.35),
-		10.3, 0.38, _materials.bridge_structure, false, 12)
-	_add_cylinder(portal_cradle, "PortalDaisIvory", Vector3(0, 0.47, 0.35),
-		9.3, 0.18, _materials.forecourt_ivory, false, 12)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		_add_bevel_box(portal_cradle, "%sPortalSocket" % side_name,
-			Vector3(float(side) * 8.55, 1.20, 0.45),
-			Vector3(2.35, 1.65, 3.30), 0.24, _materials.forecourt_ivory)
-		var brace := _add_box(portal_cradle, "%sPortalButtress" % side_name,
-			Vector3(float(side) * 8.10, 6.15, 0.60),
-			Vector3(1.25, 9.85, 1.75), _materials.passage_stone, false)
-		brace.rotation.z = float(side) * 0.18
-		_build_faceted_ceremonial_crystal(portal_cradle,
-			"%sPortalAetherKey" % side_name,
-			Vector3(float(side) * 9.05, 3.05, -0.55), 1.8, 0.48,
-			_materials.aqua if side < 0 else _materials.purple)
-	_add_bevel_box(portal_cradle, "PortalKeystone", Vector3(0, 13.45, 0.55),
-		Vector3(3.8, 1.35, 2.0), 0.26, _materials.forecourt_ivory)
-	_build_faceted_ceremonial_crystal(portal_cradle, "PortalKeystoneCrystal",
-		Vector3(0, 14.75, -0.45), 2.9, 0.82, _materials.purple)
-	_add_torus(portal_cradle, "PortalArchitecturalBezel", Vector3(0, 6.15, 0.72),
-		7.35, 8.25, _materials.forecourt_ivory, Vector3(90, 0, 0))
-	# Twelve separate arch stones give the gate a hand-built low-poly rhythm.
-	# Their shallow depth keeps the active portal and player opening unobstructed.
-	for arch_index in 12:
-		var arch_angle := TAU * float(arch_index) / 12.0
-		var arch_stone := _add_bevel_box(portal_cradle,
-			"PortalArchStone_%02d" % (arch_index + 1),
-			Vector3(sin(arch_angle) * 7.82,
-				6.15 + cos(arch_angle) * 7.82, 0.18),
-			Vector3(1.45, 2.05, 1.75), 0.20,
-			_materials.forecourt_ivory)
-		arch_stone.rotation.z = -arch_angle
-	for clamp_index in 3:
-		var clamp_angle: float = float([-1.02, 0.0, 1.02][clamp_index])
-		var clamp := _add_box(portal_cradle,
-			"PortalBezelClamp_%02d" % (clamp_index + 1),
-			Vector3(sin(clamp_angle) * 7.82,
-				6.15 + cos(clamp_angle) * 7.82, 0.18),
-			Vector3(0.75, 1.75, 1.25), _materials.bridge_structure, false)
-		clamp.rotation.z = PI * 0.5 + clamp_angle
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		_add_bevel_box(portal_cradle, "%sPortalWingWall" % side_name,
-			Vector3(float(side) * 11.55, 3.1, 3.3),
-			Vector3(6.4, 5.6, 1.25), 0.34, _materials.forecourt_ivory)
-		_add_bevel_box(portal_cradle, "%sPortalWingRecess" % side_name,
-			Vector3(float(side) * 11.55, 3.15, 2.62),
-			Vector3(4.7, 3.75, 0.20), 0.08, _materials.bridge_structure)
-		_add_box(portal_cradle, "%sPortalWingInlay" % side_name,
-			Vector3(float(side) * 11.55, 3.4, 2.62),
-			Vector3(2.9, 0.35, 0.16), _materials.passage_light, false)
-	# A stepped crown reads as architecture at distance while preserving the
-	# complete 28-metre opening around the independently functional portal.
-	_add_bevel_box(gatehouse, "GatehouseCrownBeam", Vector3(0, 21.55, 0),
-		Vector3(25.0, 1.25, 2.6), 0.30, _materials.forecourt_ivory)
-	_add_bevel_box(gatehouse, "GatehouseCrownLedge", Vector3(0, 22.35, 0),
-		Vector3(30.0, 0.55, 3.45), 0.18, _materials.passage_stone)
-	for shoulder_side in [-1.0, 1.0]:
-		_add_bevel_box(gatehouse, "CrownShoulder_%s" % ("L" if shoulder_side < 0 else "R"),
-			Vector3(float(shoulder_side) * 10.5, 23.15, 0),
-			Vector3(7.0, 0.9, 4.1), 0.22, _materials.passage_stone)
-	_add_box(gatehouse, "GatehouseCrownInset", Vector3(0, 21.5, -1.72),
-		Vector3(12.0, 0.45, 0.24), _materials.passage_light, false)
-	_add_bevel_box(gatehouse, "CrownCentralPylon", Vector3(0, 18.55, 0),
-		Vector3(2.25, 5.9, 2.35), 0.28, _materials.forecourt_ivory)
-	_add_box(gatehouse, "CrownCentralAetherCut", Vector3(0, 18.65, -1.24),
-		Vector3(0.48, 3.6, 0.16), _materials.passage_light, false)
-	_build_faceted_ceremonial_crystal(gatehouse, "CrownPendant",
-		Vector3(0, 15.6, -0.45), 2.4, 0.66, _materials.aqua)
-	_build_faceted_ceremonial_crystal(gatehouse, "LavenderCrownCrystal",
-		Vector3(0, 25.65, -0.5), 4.6, 1.45, _materials.purple)
-
-	var terraces := Node3D.new()
-	terraces.name = "SideTerraceGardens"
-	terraces.set_meta("central_lane_clearance_m", 18.0)
-	forecourt.add_child(terraces)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		var x := float(side) * 25.5
-		_add_box(terraces, "%sGardenTerrace" % side_name,
-			Vector3(x, 0.65, -18.0), Vector3(13.0, 1.3, 35.0),
-			_materials.stone, true)
-		_add_bevel_box(terraces, "%sGardenSoilInset" % side_name,
-			Vector3(x, 1.34, -18.0), Vector3(10.4, 0.12, 31.8), 0.08,
-			_materials.forecourt_soil)
-		_add_bevel_box(terraces, "%sAetherReflectingPool" % side_name,
-			Vector3(x - float(side) * 3.35, 1.43, -18.0),
-			Vector3(2.1, 0.06, 23.0), 0.10, _materials.forecourt_water)
-		_add_box(terraces, "%sCliffParapet" % side_name,
-			Vector3(float(side) * 32.0, 1.8, -16.0), Vector3(1.6, 3.6, 39.0),
-			_materials.passage_stone_shadow, true)
-		_add_box(terraces, "%sIvoryParapetCoping" % side_name,
-			Vector3(float(side) * 32.0, 3.8, -16.0), Vector3(2.5, 0.45, 39.5),
-			_materials.ivory, false)
-		_add_box(terraces, "%sGardenInnerBorder" % side_name,
-			Vector3(float(side) * 19.35, 1.45, -18.0), Vector3(0.45, 1.0, 34.0),
-			_materials.ivory, false)
-		for tree_index in 3:
-			var stagger := (float(tree_index % 2) * 2.6) - 1.0
-			_build_ceremonial_faceted_tree(terraces,
-				"%sCourtTree_%02d" % [side_name, tree_index + 1],
-				Vector3(x + float(side) * stagger, 1.35,
-					-36.0 + float(tree_index) * 14.0 + float(side) * float(tree_index - 1)),
-				9.2 + float((tree_index + (0 if side < 0 else 1)) % 3) * 1.45)
-
-	var plinths := Node3D.new()
-	plinths.name = "ConstellationPlinths"
-	plinths.set_meta("count", 3)
-	forecourt.add_child(plinths)
-	var plinth_positions := [Vector3(-24.0, 1.5, -43.0),
-		Vector3(24.0, 1.5, -29.0), Vector3(-24.0, 1.5, -15.0)]
-	for plinth_index in 3:
-		var plinth_at: Vector3 = plinth_positions[plinth_index]
-		var plinth_name := "ConstellationPlinth_%02d" % (plinth_index + 1)
-		_add_cylinder(plinths, plinth_name, plinth_at, 2.4, 3.0,
-			_materials.bridge_structure, true, 8)
-		var plinth_collision := plinths.get_child(plinths.get_child_count() - 1) as StaticBody3D
-		plinth_collision.name = "%sCollision" % plinth_name
-		_build_faceted_ceremonial_crystal(plinths,
-			"ConstellationCrystal_%02d" % (plinth_index + 1),
-			plinth_at + Vector3.UP * 4.0, 3.2, 1.08,
-			_materials.aqua if plinth_index != 1 else _materials.purple)
-
-	# A quiet rear axis gives the gate depth from the bridge and fills the broad
-	# island surface seen from overhead without competing with the portal itself.
-	var rear_garden := Node3D.new()
-	rear_garden.name = "RearConstellationGarden"
-	rear_garden.set_meta("central_axis_clear_width_m", 14.0)
-	forecourt.add_child(rear_garden)
-	_add_box(rear_garden, "RearProcessionalAxis", Vector3(0, 0.12, 18.0),
-		Vector3(14.0, 0.14, 30.0), _materials.passage_stone, false)
-	_add_box(rear_garden, "RearAxisCyanSeam", Vector3(0, 0.22, 18.0),
-		Vector3(0.42, 0.05, 27.0), _materials.passage_light, false)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		_add_box(rear_garden, "%sRearGardenBed" % side_name,
-			Vector3(float(side) * 13.5, 0.28, 18.0),
-			Vector3(10.0, 0.50, 25.0), _materials.forecourt_soil, false)
-		_add_bevel_box(rear_garden, "%sRearGardenIvoryCap" % side_name,
-			Vector3(float(side) * 13.5, 0.57, 18.0),
-			Vector3(9.2, 0.10, 24.2), 0.08, _materials.forecourt_ivory)
-		for marker_index in 2:
-			var marker_z := 11.0 + float(marker_index) * 14.0
-			_build_faceted_ceremonial_crystal(rear_garden,
-				"%sRearStar_%02d" % [side_name, marker_index + 1],
-				Vector3(float(side) * 13.5, 2.0, marker_z), 2.8,
-				0.82 if marker_index == 0 else 0.62,
-				_materials.purple if (marker_index + (0 if side < 0 else 1)) % 2 == 0 \
-				else _materials.aqua)
-
-	# Finish the view beyond the portal with a layered garden and a shallow
-	# colonnade. This replaces the broad empty grey island surface that made the
-	# entrance look like an isolated prototype dropped onto a test platform.
-	var backdrop := Node3D.new()
-	backdrop.name = "CelestialGardenBackdrop"
-	backdrop.set_meta("landscape_layers", 3)
-	backdrop.set_meta("repeated_row_layout_removed", true)
-	forecourt.add_child(backdrop)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		_add_bevel_box(backdrop, "%sUpperGardenFoundation" % side_name,
-			Vector3(float(side) * 22.0, 0.45, 22.5),
-			Vector3(25.0, 0.85, 36.0), 0.50, _materials.passage_stone_shadow)
-		_add_bevel_box(backdrop, "%sUpperGardenLawn" % side_name,
-			Vector3(float(side) * 22.0, 0.92, 22.5),
-			Vector3(21.8, 0.12, 32.2), 0.45, _materials.forecourt_lawn)
-		_add_bevel_box(backdrop, "%sConstellationPool" % side_name,
-			Vector3(float(side) * 16.4, 1.03, 22.5),
-			Vector3(5.6, 0.06, 21.0), 0.26, _materials.forecourt_water)
-		for column_index in 3:
-			var column_z := 10.0 + float(column_index) * 12.5
-			var column_x := float(side) * (29.0 - float(column_index % 2) * 2.0)
-			_add_cylinder(backdrop,
-				"%sGardenColumn_%02d" % [side_name, column_index + 1],
-				Vector3(column_x, 5.0, column_z), 1.35, 8.0,
-				_materials.forecourt_ivory, true, 8)
-			_add_cylinder(backdrop,
-				"%sGardenColumnCapital_%02d" % [side_name, column_index + 1],
-				Vector3(column_x, 9.25, column_z), 2.1, 0.55,
-				_materials.ivory, false, 8)
-			_build_faceted_ceremonial_crystal(backdrop,
-				"%sColumnStar_%02d" % [side_name, column_index + 1],
-				Vector3(column_x, 11.1, column_z), 2.2, 0.60,
-				_materials.aqua if column_index == 1 else _materials.purple)
-	# A low stepped horizon terminates the composition without blocking the
-	# playable central axis or pretending an opening is traversable.
-	for step_index in 3:
-		_add_bevel_box(backdrop, "HorizonStep_%02d" % (step_index + 1),
-			Vector3(0, 0.45 + float(step_index) * 0.34,
-				37.0 + float(step_index) * 2.5),
-			Vector3(14.0 - float(step_index) * 2.0, 0.42, 3.0), 0.15,
-			_materials.passage_stone if step_index != 1 else _materials.forecourt_ivory)
-	_build_faceted_ceremonial_crystal(backdrop, "GardenAxisStar",
-		Vector3(0, 4.1, 42.0), 5.4, 1.25, _materials.aqua)
-
-	var lighting := Node3D.new()
-	lighting.name = "CeremonialLightingRig"
-	lighting.set_meta("warm_key_count", 2)
-	lighting.set_meta("cool_fill_count", 1)
-	forecourt.add_child(lighting)
-	for side in [-1.0, 1.0]:
-		_add_forecourt_omni(lighting,
-			"%sTowerWarmKey" % ("West" if side < 0 else "East"),
-			Vector3(float(side) * 18.0, 8.0, -3.5), Color("ffd5a3"), 1.35, 20.0)
-	_add_forecourt_omni(lighting, "ProcessionalCoolFill",
-		Vector3(0, 3.0, -20.0), Color("75e9f1"), 0.72, 25.0)
-
-
-func _build_mind_spark_celestial_commons(district: Node3D) -> void:
-	# The gate forecourt occupies the southwest rim of a much larger circular
-	# island. Finish the complete walkable surface so turning away from the gate
-	# reveals a coherent district instead of the foundation's default grey cap.
-	var commons := Node3D.new()
-	commons.name = "MindSparkCelestialCommons"
-	commons.set_meta("design_revision", "complete_surroundings_v1")
-	commons.set_meta("covered_foundation_radius_m", 160.0)
-	commons.set_meta("outward_view_landmarks", 8)
-	commons.set_meta("clear_radial_paths", 8)
-	commons.set_meta("pavilion_count", 4)
-	commons.set_meta("grove_count", 4)
-	commons.set_meta("finished_southern_view_count", 3)
-	district.add_child(commons)
-
-	# Layered 32-sided fields preserve the low-poly island silhouette while
-	# replacing the featureless deck across every compass direction.
-	_add_cylinder(commons, "IvoryDistrictApron", MIND + Vector3(0, 0.035, 0),
-		160.0, 0.07, _materials.passage_stone_shadow, false, 32)
-	_add_cylinder(commons, "FacetedCommonsLawn", MIND + Vector3(0, 0.085, 0),
-		149.0, 0.08, _materials.forecourt_lawn, false, 32)
-	_add_cylinder(commons, "InnerCommonsStone", MIND + Vector3(0, 0.14, 0),
-		66.0, 0.07, _materials.forecourt_paver, false, 24)
-	var outer_ring := Node3D.new()
-	outer_ring.name = "OuterProcessionalRing"
-	commons.add_child(outer_ring)
-	for ring_index in 32:
-		var ring_angle := TAU * float(ring_index) / 32.0
-		var ring_segment := _add_bevel_box(outer_ring,
-			"RingPaver_%02d" % (ring_index + 1),
-			MIND + Vector3(sin(ring_angle) * 122.0, 0.205,
-				cos(ring_angle) * 122.0),
-			Vector3(24.0, 0.08, 9.0), 0.20, _materials.forecourt_ivory)
-		ring_segment.rotation.y = ring_angle + PI * 0.5
-
-	var paths := Node3D.new()
-	paths.name = "EightWayProcessionalPaths"
-	commons.add_child(paths)
-	for path_index in 8:
-		var angle := TAU * float(path_index) / 8.0
-		var direction := Vector3(sin(angle), 0, cos(angle))
-		var path_center := MIND + direction * 93.0 + Vector3(0, 0.205, 0)
-		var path := _add_bevel_box(paths, "RadialPath_%02d" % (path_index + 1),
-			path_center, Vector3(13.0, 0.08, 168.0), 0.28,
-			_materials.passage_stone)
-		path.rotation.y = angle
-		for marker_index in 3:
-			var marker_radius := 48.0 + float(marker_index) * 39.0
-			_add_bevel_box(paths,
-				"PathMarker_%02d_%02d" % [path_index + 1, marker_index + 1],
-				MIND + direction * marker_radius + Vector3(0, 0.27, 0),
-				Vector3(2.8, 0.05, 0.62), 0.05,
-				_materials.passage_light).rotation.y = angle
-
-	# A central oculus gives all eight paths a visible destination and provides
-	# a calm counterpoint to the gate's vertical silhouette.
-	var oculus := Node3D.new()
-	oculus.name = "ConstellationOculusCourt"
-	oculus.set_meta("clear_movement_diameter_m", 52.0)
-	commons.add_child(oculus)
-	_add_cylinder(oculus, "OculusShadow", MIND + Vector3(0, 0.28, 0),
-		29.0, 0.32, _materials.bridge_structure, false, 16)
-	_add_cylinder(oculus, "OculusIvoryRim", MIND + Vector3(0, 0.47, 0),
-		26.5, 0.12, _materials.forecourt_ivory, false, 16)
-	_add_cylinder(oculus, "OculusWater", MIND + Vector3(0, 0.56, 0),
-		21.5, 0.06, _materials.forecourt_water, false, 16)
-	_build_faceted_ceremonial_crystal(oculus, "CommonsHeartCrystal",
-		MIND + Vector3(0, 6.2, 0), 9.0, 2.15, _materials.aqua)
-	for obelisk_index in 8:
-		var angle := TAU * float(obelisk_index) / 8.0
-		var at := MIND + Vector3(sin(angle) * 32.5, 3.4,
-			cos(angle) * 32.5)
-		_add_tapered_cylinder(oculus, "OculusObelisk_%02d" % (obelisk_index + 1),
-			at, 1.35, 0.70, 6.0, _materials.forecourt_ivory, 8)
-		_build_faceted_ceremonial_crystal(oculus,
-			"OculusStar_%02d" % (obelisk_index + 1), at + Vector3.UP * 4.3,
-			2.0, 0.52, _materials.purple if obelisk_index % 2 == 0 else _materials.aqua)
-
-	# Four roofed study pavilions terminate diagonal sightlines. Their bases and
-	# columns are solid, while the broad openings remain walkable from both sides.
-	var pavilions := Node3D.new()
-	pavilions.name = "FourConstellationPavilions"
-	commons.add_child(pavilions)
-	var pavilion_angles := [deg_to_rad(20.0), deg_to_rad(100.0),
-		deg_to_rad(180.0), deg_to_rad(300.0)]
-	for pavilion_index in 4:
-		var angle: float = pavilion_angles[pavilion_index]
-		var centre := MIND + Vector3(sin(angle) * 91.0, 0,
-			cos(angle) * 91.0)
-		var pavilion := Node3D.new()
-		pavilion.name = "ConstellationPavilion_%02d" % (pavilion_index + 1)
-		pavilions.add_child(pavilion)
-		_add_cylinder(pavilion, "SolidPavilionBase", centre + Vector3(0, 0.26, 0),
-			10.8, 0.52, _materials.passage_stone_shadow, true, 12)
-		_add_cylinder(pavilion, "IvoryPavilionFloor", centre + Vector3(0, 0.64, 0),
-			9.8, 0.12, _materials.forecourt_ivory, false, 12)
-		for column_index in 4:
-			var column_angle := PI * 0.25 + TAU * float(column_index) / 4.0
-			var column_at := centre + Vector3(sin(column_angle) * 6.7, 4.6,
-				cos(column_angle) * 6.7)
-			_add_cylinder(pavilion, "SolidColumn_%02d" % (column_index + 1),
-				column_at, 0.82, 7.8, _materials.forecourt_ivory, true, 8)
-			_add_cylinder(pavilion, "ColumnCapital_%02d" % (column_index + 1),
-				column_at + Vector3.UP * 4.10, 1.35, 0.42,
-				_materials.ivory, false, 8)
-		_add_tapered_cylinder(pavilion, "FacetedCanopy",
-			centre + Vector3(0, 9.15, 0), 10.4, 7.6, 1.05,
-			_materials.passage_roof, 12)
-		_add_cylinder(pavilion, "CanopyIvoryCrown", centre + Vector3(0, 9.78, 0),
-			7.9, 0.30, _materials.forecourt_ivory, false, 12)
-		_build_faceted_ceremonial_crystal(pavilion, "PavilionCrownStar",
-			centre + Vector3(0, 12.0, 0), 3.2, 0.82,
-			_materials.purple if pavilion_index % 2 == 0 else _materials.aqua)
-		_add_torus(pavilion, "ConstellationTable", centre + Vector3(0, 2.0, 0),
-			3.0, 4.8, _materials.passage_light)
-
-	# Groves occupy the remaining cardinal quadrants and vary in height and
-	# setback so the skyline does not repeat as a straight row of cloned trees.
-	var groves := Node3D.new()
-	groves.name = "FourMemoryGroves"
-	commons.add_child(groves)
-	var grove_angles := [deg_to_rad(55.0), deg_to_rad(145.0),
-		deg_to_rad(260.0), deg_to_rad(340.0)]
-	for grove_index in 4:
-		var angle: float = grove_angles[grove_index]
-		var centre := MIND + Vector3(sin(angle) * 94.0, 0,
-			cos(angle) * 94.0)
-		_add_cylinder(groves, "GroveSoil_%02d" % (grove_index + 1),
-			centre + Vector3(0, 0.25, 0), 17.0, 0.30,
-			_materials.forecourt_soil, false, 12)
-		_add_torus(groves, "GroveIvoryEdge_%02d" % (grove_index + 1),
-			centre + Vector3(0, 0.44, 0), 15.9, 17.6,
-			_materials.forecourt_ivory)
-		for tree_index in 3:
-			var tree_angle := angle + (-0.34 + float(tree_index) * 0.34)
-			var tree_radius := 88.0 + float(tree_index % 2) * 9.0
-			_build_ceremonial_faceted_tree(groves,
-				"MemoryGrove_%02d_Tree_%02d" % [grove_index + 1, tree_index + 1],
-				MIND + Vector3(sin(tree_angle) * tree_radius, 0.55,
-					cos(tree_angle) * tree_radius),
-				9.0 + float((grove_index + tree_index) % 3) * 1.65)
-
-	_build_southern_celestial_quarter(commons)
-
-	# Low perimeter lanterns finish the outer ring while remaining below the
-	# camera and keeping every visible opening genuinely traversable.
-	var perimeter := Node3D.new()
-	perimeter.name = "CelestialPerimeterLanterns"
-	commons.add_child(perimeter)
-	for lantern_index in 16:
-		var angle := TAU * float(lantern_index) / 16.0 + PI / 16.0
-		var at := MIND + Vector3(sin(angle) * 142.0, 2.35,
-			cos(angle) * 142.0)
-		_add_tapered_cylinder(perimeter, "LanternPlinth_%02d" % (lantern_index + 1),
-			at, 1.15, 0.82, 3.8, _materials.forecourt_ivory, 8)
-		_build_faceted_ceremonial_crystal(perimeter,
-			"LanternStar_%02d" % (lantern_index + 1), at + Vector3.UP * 2.8,
-			1.8, 0.48, _materials.aqua if lantern_index % 2 == 0 else _materials.purple)
-
-
-func _build_southern_celestial_quarter(commons: Node3D) -> void:
-	# These three compositions finish the southeast, south and southwest views
-	# from the arrival court. Each has a different silhouette and leaves the
-	# existing radial walks and the World Gate approach visibly open.
-	var quarter := Node3D.new()
-	quarter.name = "SouthernCelestialQuarter"
-	quarter.set_meta("completed_view_numbers", PackedInt32Array([4, 5, 6]))
-	quarter.set_meta("clear_gateway_route_m", 18.0)
-	quarter.set_meta("major_architecture_collision_backed", true)
-	commons.add_child(quarter)
-
-	# Low constellation gardens give the three formerly blank foregrounds useful
-	# detail while preserving their routes as broad, readable walking space.
-	var foreground_gardens := Node3D.new()
-	foreground_gardens.name = "ThreeArrivalViewConstellationGardens"
-	quarter.add_child(foreground_gardens)
-	var arrival_view_angles := [0.0, 45.0, 90.0]
-	for view_index in 3:
-		var view_angle := deg_to_rad(arrival_view_angles[view_index])
-		var view_direction := Vector3(sin(view_angle), 0.0, cos(view_angle))
-		var view_side := Vector3(-view_direction.z, 0.0, view_direction.x)
-		var garden := Node3D.new()
-		garden.name = "ArrivalView%02dForegroundGarden" % (view_index + 4)
-		foreground_gardens.add_child(garden)
-		for marker_index in 4:
-			var marker := _add_bevel_box(garden,
-				"StarMapInlay_%02d" % (marker_index + 1),
-				MIND + view_direction * (43.0 + float(marker_index) * 8.2) + Vector3.UP * 0.255,
-				Vector3(4.8 - float(marker_index) * 0.35, 0.035, 1.25),
-				0.06, _materials.passage_light)
-			marker.rotation.y = view_angle
-		for side_index in [-1, 1]:
-			var plinth_at := MIND + view_direction * 66.0 + view_side * float(side_index) * 14.5
-			_add_tapered_cylinder(garden,
-				"ConstellationPlinth_%s" % ("L" if side_index < 0 else "R"),
-				plinth_at + Vector3.UP * 1.15, 2.7, 2.1, 1.9,
-				_materials.forecourt_ivory, 8)
-			_build_faceted_ceremonial_crystal(garden,
-				"ConstellationStar_%s" % ("L" if side_index < 0 else "R"),
-				plinth_at + Vector3.UP * 4.0, 3.8, 0.92,
-				_materials.aqua if (view_index + side_index) % 2 == 0 else _materials.purple)
-
-	# View 4 — a stepped sky-survey terrace creates a strong endpoint in the
-	# arrival camera's southeast view (the district's physical north rim).
-	var southeast := Node3D.new()
-	southeast.name = "View04SoutheastSkySurveyTerrace"
-	southeast.set_meta("arrival_view_sector", "southeast")
-	southeast.set_meta("district_bearing_degrees", 0.0)
-	southeast.set_meta("clear_apron_m", 14.0)
-	quarter.add_child(southeast)
-	var southeast_angle := deg_to_rad(0.0)
-	var southeast_center := MIND + Vector3(sin(southeast_angle) * 128.0, 0.0,
-		cos(southeast_angle) * 128.0)
-	_add_cylinder(southeast, "SurveyTerraceShadow", southeast_center + Vector3.UP * 0.32,
-		18.5, 0.48, _materials.bridge_structure, true, 12)
-	(southeast.get_child(southeast.get_child_count() - 1) as StaticBody3D).name = \
-		"SurveyTerraceCollision"
-	_add_cylinder(southeast, "SurveyTerraceIvoryDeck", southeast_center + Vector3.UP * 0.63,
-		17.2, 0.14, _materials.forecourt_ivory, false, 12)
-	_add_cylinder(southeast, "SurveyTerraceCyanInlay", southeast_center + Vector3.UP * 0.72,
-		11.0, 0.04, _materials.forecourt_water, false, 12)
-	for instrument_index in 3:
-		var instrument_angle := southeast_angle + deg_to_rad(-24.0 + float(instrument_index) * 24.0)
-		var instrument_at := southeast_center + Vector3(sin(instrument_angle) * 10.2, 3.3,
-			cos(instrument_angle) * 10.2)
-		_add_tapered_cylinder(southeast, "SolidSurveyPedestal_%02d" % (instrument_index + 1),
-			instrument_at, 1.55, 1.05, 5.2, _materials.forecourt_ivory, 8)
-		_add_cylinder(southeast, "SurveyPedestalCore_%02d" % (instrument_index + 1),
-			instrument_at, 1.02, 5.15, _materials.forecourt_ivory, true, 8)
-		(southeast.get_child(southeast.get_child_count() - 1) as StaticBody3D).name = \
-			"SurveyPedestal_%02d_Collision" % (instrument_index + 1)
-		_add_cylinder(southeast, "SurveyBezel_%02d" % (instrument_index + 1),
-			instrument_at + Vector3.UP * 3.3, 2.0, 0.38,
-			_materials.bridge_structure, false, 10)
-		_build_faceted_ceremonial_crystal(southeast,
-			"SurveyLens_%02d" % (instrument_index + 1),
-			instrument_at + Vector3.UP * 5.0, 3.2, 0.78,
-			_materials.aqua if instrument_index != 1 else _materials.purple)
-	for fin_index in 5:
-		var fin_angle := southeast_angle + deg_to_rad(-48.0 + float(fin_index) * 24.0)
-		var fin_at := southeast_center + Vector3(sin(fin_angle) * 16.0, 4.1,
-			cos(fin_angle) * 16.0)
-		var fin := _add_box(southeast, "SolidSurveyFin_%02d" % (fin_index + 1), fin_at,
-			Vector3(1.2, 7.0, 3.0), _materials.passage_stone, true, fin_angle)
-		fin.rotation.z = deg_to_rad(-5.0 + float(fin_index % 3) * 5.0)
-	_build_faceted_ceremonial_crystal(southeast, "SurveyCrownStar",
-		southeast_center + Vector3.UP * 8.2, 7.5, 1.65, _materials.aqua)
-	_add_tapered_cylinder(southeast, "SurveyNeedleSpire",
-		southeast_center + Vector3.UP * 10.0, 2.1, 0.72, 18.0,
-		_materials.passage_roof, 8)
-	_add_cylinder(southeast, "SurveyNeedleCollisionCore",
-		southeast_center + Vector3.UP * 9.4, 0.72, 16.8,
-		_materials.passage_roof, true, 8)
-	(southeast.get_child(southeast.get_child_count() - 1) as StaticBody3D).name = \
-		"SurveyNeedleCollision"
-	_build_faceted_ceremonial_crystal(southeast, "SurveyZenithStar",
-		southeast_center + Vector3.UP * 20.7, 4.0, 0.95, _materials.purple)
-	for garden_index in 2:
-		var garden_side := -1.0 if garden_index == 0 else 1.0
-		_build_ceremonial_faceted_tree(southeast, "SurveyGardenTree_%02d" % (garden_index + 1),
-			southeast_center + Vector3(garden_side * 22.0, 0.48, 5.0),
-			8.8 + float(garden_index) * 1.4)
-
-	# View 5 — a broad, low amphitheatre fills the arrival camera's south view
-	# without turning the open plaza into another wall. Its northeast mouth is clear.
-	var south := Node3D.new()
-	south.name = "View05SouthConstellationAmphitheatre"
-	south.set_meta("arrival_view_sector", "south")
-	south.set_meta("district_bearing_degrees", 45.0)
-	south.set_meta("open_mouth_width_m", 22.0)
-	quarter.add_child(south)
-	var south_angle := deg_to_rad(45.0)
-	var south_center := MIND + Vector3(sin(south_angle) * 125.0, 0.0,
-		cos(south_angle) * 125.0)
-	_add_cylinder(south, "AmphitheatreStageShadow", south_center + Vector3.UP * 0.30,
-		15.0, 0.42, _materials.bridge_structure, true, 16)
-	(south.get_child(south.get_child_count() - 1) as StaticBody3D).name = \
-		"AmphitheatreStageCollision"
-	_add_cylinder(south, "AmphitheatreStage", south_center + Vector3.UP * 0.58,
-		13.8, 0.14, _materials.forecourt_paver, false, 16)
-	_add_cylinder(south, "StageConstellationPool", south_center + Vector3.UP * 0.67,
-		7.2, 0.04, _materials.forecourt_water, false, 12)
-	for seat_index in 7:
-		var seat_angle := deg_to_rad(120.0 + float(seat_index) * 20.0)
-		var seat_at := south_center + Vector3(sin(seat_angle) * 20.5,
-			1.25 + float(seat_index % 2) * 0.28,
-			cos(seat_angle) * 20.5)
-		_add_box(south, "SolidFacetedSeat_%02d" % (seat_index + 1), seat_at,
-			Vector3(7.4, 2.2 + float(seat_index % 2) * 0.55, 4.8),
-			_materials.passage_stone, true, -seat_angle)
-	for beacon_index in 3:
-		var beacon_x := -10.0 + float(beacon_index) * 10.0
-		var beacon_at := south_center + Vector3(beacon_x, 4.3, -17.0)
-		_add_tapered_cylinder(south, "SouthBeacon_%02d" % (beacon_index + 1),
-			beacon_at, 1.05, 0.55, 7.2, _materials.forecourt_ivory, 8)
-		_build_faceted_ceremonial_crystal(south, "SouthBeaconStar_%02d" % (beacon_index + 1),
-			beacon_at + Vector3.UP * 4.8, 2.8, 0.68,
-			_materials.purple if beacon_index == 1 else _materials.aqua)
-	var southern_back := Vector3(sin(south_angle), 0.0, cos(south_angle))
-	var southern_side := Vector3(-southern_back.z, 0.0, southern_back.x)
-	for arch_index in 5:
-		var arch_offset := -18.0 + float(arch_index) * 9.0
-		var arch_height := 9.5 + float(2 - abs(arch_index - 2)) * 2.1
-		var arch_at := south_center + southern_back * 22.0 + southern_side * arch_offset
-		_add_tapered_cylinder(south, "AmphitheatrePillar_%02d" % (arch_index + 1),
-			arch_at + Vector3.UP * (arch_height * 0.5), 1.25, 0.82,
-			arch_height, _materials.forecourt_ivory, 8)
-		_add_cylinder(south, "AmphitheatrePillarCore_%02d" % (arch_index + 1),
-			arch_at + Vector3.UP * (arch_height * 0.5), 0.80, arch_height,
-			_materials.forecourt_ivory, true, 8)
-		(south.get_child(south.get_child_count() - 1) as StaticBody3D).name = \
-			"AmphitheatrePillar_%02d_Collision" % (arch_index + 1)
-		_build_faceted_ceremonial_crystal(south,
-			"AmphitheatrePillarStar_%02d" % (arch_index + 1),
-			arch_at + Vector3.UP * (arch_height + 1.8), 2.7, 0.65,
-			_materials.aqua if arch_index % 2 == 0 else _materials.purple)
-	for garden_index in 2:
-		var garden_side := -1.0 if garden_index == 0 else 1.0
-		_build_ceremonial_faceted_tree(south, "AmphitheatreGardenTree_%02d" % (garden_index + 1),
-			south_center - southern_back * 3.0 + southern_side * garden_side * 25.0 + Vector3.UP * 0.48,
-			9.4 + float(garden_index) * 1.2)
-
-	# View 6 — two short colonnades and planted courts frame the eastern radial
-	# walk, which occupies the arrival camera's southwest view. Their 20-metre
-	# opening remains a real route with no invisible or decorative blockage.
-	var southwest := Node3D.new()
-	southwest.name = "View06SouthwestMemoryArcade"
-	southwest.set_meta("arrival_view_sector", "southwest")
-	southwest.set_meta("district_bearing_degrees", 90.0)
-	southwest.set_meta("clear_central_opening_m", 20.0)
-	quarter.add_child(southwest)
-	var arcade_angle := deg_to_rad(90.0)
-	var arcade_direction := Vector3(sin(arcade_angle), 0.0, cos(arcade_angle))
-	var arcade_side := Vector3(-arcade_direction.z, 0.0, arcade_direction.x)
-	var arcade_anchor := MIND + arcade_direction * 128.0
-	for side_index in [-1, 1]:
-		var side_name := "East" if side_index < 0 else "West"
-		var wing_center := arcade_anchor + arcade_side * float(side_index) * 19.0
-		_add_bevel_box(southwest, "%sMemoryGarden" % side_name,
-			wing_center + Vector3.UP * 0.27, Vector3(14.0, 0.18, 28.0),
-			0.65, _materials.forecourt_soil).rotation.y = atan2(arcade_direction.x, arcade_direction.z)
-		for column_index in 3:
-			var along := -9.0 + float(column_index) * 9.0
-			var column_at := wing_center + arcade_direction * along + Vector3.UP * 6.15
-			_add_cylinder(southwest,
-				"%sSolidArcadeColumn_%02d" % [side_name, column_index + 1],
-				column_at, 1.05, 11.3, _materials.forecourt_ivory, true, 8)
-			(southwest.get_child(southwest.get_child_count() - 1) as StaticBody3D).name = \
-				"%sSolidArcadeColumn_%02d_Collision" % [side_name, column_index + 1]
-			_add_cylinder(southwest,
-				"%sArcadeCapital_%02d" % [side_name, column_index + 1],
-				column_at + Vector3.UP * 5.85, 1.58, 0.46,
-				_materials.ivory, false, 8)
-		var lintel := _add_box(southwest, "%sSolidArcadeLintel" % side_name,
-			wing_center + Vector3.UP * 12.25, Vector3(3.2, 1.1, 25.0),
-			_materials.passage_stone, true, atan2(arcade_direction.x, arcade_direction.z))
-		lintel.set_meta("supports_gateway_sightline", true)
-		_add_tapered_cylinder(southwest, "%sArcadeCanopy" % side_name,
-			wing_center + Vector3.UP * 13.45, 9.5, 6.7, 1.45,
-			_materials.passage_roof, 8)
-		_build_faceted_ceremonial_crystal(southwest, "%sArcadeCrown" % side_name,
-			wing_center + Vector3.UP * 16.5, 3.5, 0.85,
-			_materials.purple if side_index < 0 else _materials.aqua)
-		_build_ceremonial_faceted_tree(southwest, "%sArcadeTree" % side_name,
-			wing_center - arcade_direction * 13.5 + Vector3.UP * 0.45, 8.6)
-		_build_faceted_ceremonial_crystal(southwest, "%sArcadeStar" % side_name,
-			wing_center + arcade_direction * 13.0 + Vector3.UP * 2.9,
-			4.6, 1.05, _materials.aqua if side_index < 0 else _materials.purple)
-
-
-func _build_faceted_ceremonial_crystal(parent: Node3D, crystal_name: String,
-		center: Vector3, height: float, radius: float, material: Material) -> void:
-	# Two low-sided tapered drums meet at the girdle, producing a proper cut-gem
-	# silhouette rather than a stretched sphere. The first mesh retains the stable
-	# public node name used by visual inspection and future art passes.
-	var lower_height := height * 0.44
-	var upper_height := height - lower_height
-	_add_tapered_cylinder(parent, crystal_name,
-		center + Vector3.DOWN * (height * 0.5 - lower_height * 0.5),
-		radius * 0.28, radius, lower_height, material, 8)
-	_add_tapered_cylinder(parent, "%sCrown" % crystal_name,
-		center + Vector3.UP * (height * 0.5 - upper_height * 0.5),
-		radius, radius * 0.18, upper_height, material, 8)
-
-
-func _add_forecourt_omni(parent: Node3D, light_name: String, at: Vector3,
-		color: Color, energy: float, range_m: float) -> void:
-	var light := OmniLight3D.new()
-	light.name = light_name
-	light.position = at
-	light.light_color = color
-	light.light_energy = energy
-	light.omni_range = range_m
-	light.shadow_enabled = false
-	light.distance_fade_enabled = true
-	light.distance_fade_begin = 38.0
-	light.distance_fade_length = 18.0
-	parent.add_child(light)
-
-
-func _build_ceremonial_faceted_tree(parent: Node3D, tree_name: String,
-		base: Vector3, height: float) -> void:
-	var tree := Node3D.new()
-	tree.name = tree_name
-	tree.position = base
-	tree.set_meta("low_poly_canopy_clusters", 9)
-	parent.add_child(tree)
-	_add_cylinder(tree, "CharcoalPlanterFoot", Vector3(0, 0.24, 0),
-		2.55, 0.48, _materials.bridge_structure, false, 8)
-	_add_tapered_cylinder(tree, "IvoryPlanterBowl", Vector3(0, 0.70, 0),
-		2.25, 1.85, 0.72, _materials.passage_stone, 8)
-	_add_cylinder(tree, "IvoryPlanterCoping", Vector3(0, 1.10, 0),
-		2.42, 0.20, _materials.ivory, false, 8)
-	_add_cylinder(tree, "LavenderPlantingBed", Vector3(0, 1.22, 0),
-		1.78, 0.08, _materials.purple_leaf, false, 8)
-	_add_cylinder(tree, "SolidWarmTrunk", Vector3(0, height * 0.40, 0),
-		height * 0.07, height * 0.80, _materials.wood, true, 7)
-	var trunk_collision := tree.get_child(tree.get_child_count() - 1) as StaticBody3D
-	trunk_collision.name = "SolidWarmTrunkCollision"
-	for branch_index in 4:
-		var branch_angle := TAU * float(branch_index) / 4.0 + 0.35
-		var branch_end := Vector3(cos(branch_angle) * 2.45, height * 0.80,
-			sin(branch_angle) * 2.45)
-		var branch_start := Vector3(0, height * 0.57, 0)
-		var branch_direction := branch_end - branch_start
-		var branch := _add_tapered_cylinder(tree,
-			"AngularBranch_%02d" % (branch_index + 1),
-			(branch_start + branch_end) * 0.5, 0.30, 0.15,
-			branch_direction.length(), _materials.wood, 6)
-		branch.quaternion = Quaternion(Vector3.UP, branch_direction.normalized())
-	for crown_index in 9:
-		var crown_angle := TAU * float(crown_index) / 8.0 + 0.18
-		var crown_radius := 2.75 if crown_index < 8 else 0.0
-		var crown := _add_sphere(tree, "FacetedCanopy_%02d" % (crown_index + 1),
-			Vector3(cos(crown_angle) * crown_radius,
-				height * (0.80 + 0.045 * float(crown_index % 3)) if crown_index < 8 else height * 1.05,
-				sin(crown_angle) * crown_radius),
-			Vector3(2.35 + 0.22 * float(crown_index % 2),
-				1.55 + 0.16 * float((crown_index + 1) % 3),
-				2.25 + 0.18 * float((crown_index + 2) % 2)), _materials.green)
-		(crown.mesh as SphereMesh).radial_segments = 6
-		(crown.mesh as SphereMesh).rings = 3
-	for bloom_index in 3:
-		var bloom_angle := TAU * float(bloom_index) / 3.0 + 0.7
-		var bloom := _add_sphere(tree, "LavenderBloom_%02d" % (bloom_index + 1),
-			Vector3(cos(bloom_angle) * 3.0, height * 0.86, sin(bloom_angle) * 3.0),
-			Vector3(0.72, 0.52, 0.72), _materials.purple_leaf)
-		(bloom.mesh as SphereMesh).radial_segments = 6
-		(bloom.mesh as SphereMesh).rings = 3
-	for seed_index in 2:
-		_build_faceted_ceremonial_crystal(tree, "HangingAetherSeed_%02d" % (seed_index + 1),
-			Vector3((-1.0 if seed_index == 0 else 1.0) * 1.55,
-				height * (0.68 + 0.04 * float(seed_index)), -1.65),
-			0.85, 0.24, _materials.aqua)
-
-
-func _build_heart_faceted_tree(parent: Node3D, tree_name: String,
-		position: Vector3, height: float) -> void:
-	var tree := Node3D.new()
-	tree.name = tree_name
-	tree.position = position
-	tree.set_meta("grounded", true)
-	parent.add_child(tree)
-	_add_cylinder(tree, "StonePlanter", Vector3(0.0, 0.42, 0.0),
-		3.4, 0.84, _materials.heart_charcoal, true, 10)
-	_add_cylinder(tree, "LivingSoil", Vector3(0.0, 0.88, 0.0),
-		2.75, 0.12, _materials.heart_soil, false, 10)
-	_add_tapered_cylinder(tree, "WarmFacetedTrunk", Vector3(0.0, height * 0.42, 0.0),
-		height * 0.085, height * 0.055, height * 0.78,
-		_materials.heart_wood, 7)
-	_add_cylinder(tree, "WarmTrunkCollision", Vector3(0.0, height * 0.42, 0.0),
-		height * 0.075, height * 0.78, _materials.heart_wood, true, 7)
-	for crown_index in 11:
-		var angle := TAU * float(crown_index) / 10.0 + 0.2
-		var radius := height * 0.24 if crown_index < 10 else 0.0
-		var crown := _add_sphere(tree, "LayeredCanopy_%02d" % (crown_index + 1),
-			Vector3(cos(angle) * radius,
-				height * (0.78 + 0.045 * float(crown_index % 3)) if crown_index < 10 else height * 1.08,
-				sin(angle) * radius),
-			Vector3(height * 0.22, height * 0.13, height * 0.20),
-			_materials.heart_lawn)
-		(crown.mesh as SphereMesh).radial_segments = 6
-		(crown.mesh as SphereMesh).rings = 3
-	for bloom_index in 4:
-		var bloom_angle := TAU * float(bloom_index) / 4.0 + 0.5
-		var bloom := _add_sphere(tree, "CanopyBloom_%02d" % (bloom_index + 1),
-			Vector3(cos(bloom_angle) * height * 0.28, height * 0.86,
-				sin(bloom_angle) * height * 0.28),
-			Vector3.ONE * height * 0.055,
-			_materials.heart_bloom_pink if bloom_index % 2 == 0 else _materials.heart_bloom)
-		(bloom.mesh as SphereMesh).radial_segments = 6
-		(bloom.mesh as SphereMesh).rings = 2
-
-
-func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
-		pink: bool, scale_factor: float = 1.0) -> void:
-	var cluster := Node3D.new()
-	cluster.name = "HeartPlantingCluster"
-	cluster.position = position
-	parent.add_child(cluster)
-	for shrub_index in 3:
-		var angle := TAU * float(shrub_index) / 3.0 + 0.3
-		var shrub := _add_sphere(cluster, "FacetedShrub_%02d" % (shrub_index + 1),
-			Vector3(cos(angle) * 1.8, 0.85 + 0.15 * float(shrub_index),
-				sin(angle) * 1.8) * scale_factor,
-			Vector3(2.1, 1.1, 1.8) * scale_factor, _materials.heart_lawn)
-		(shrub.mesh as SphereMesh).radial_segments = 6
-		(shrub.mesh as SphereMesh).rings = 2
-	for bloom_index in 4:
-		var bloom_angle := TAU * float(bloom_index) / 4.0
-		var bloom := _add_sphere(cluster, "LowBloom_%02d" % (bloom_index + 1),
-			Vector3(cos(bloom_angle) * 2.0, 1.45, sin(bloom_angle) * 2.0) * scale_factor,
-			Vector3(0.55, 0.42, 0.55) * scale_factor,
-			_materials.heart_bloom_pink if pink else _materials.heart_bloom)
-		(bloom.mesh as SphereMesh).radial_segments = 6
-		(bloom.mesh as SphereMesh).rings = 2
+	_build_frame(district, MIND + Vector3(-92.0, 0.0, -96.0), 58.0, 76.0,
+		_materials.aqua, "MIND SPARK")
+	_build_ruin_wall(district, MIND + Vector3(-112.0, 0.0, 96.0), 150.0, 48.0, 0.0, _materials.ivory)
+	for index in 24:
+		var angle := TAU * float(index) / 24.0
+		_add_flower_cluster(district, MIND + Vector3(cos(angle) * 148.0, 2.0, sin(angle) * 148.0), false)
 
 
 func _build_heart_district() -> void:
-	var heart_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
-	heart_gate.name = "HeartMelodyWorldGate"
-	heart_gate.position = HEART + Vector3(0, 4, 45)
-	heart_gate.target_kingdom_id = "heart"
-	heart_gate.target_world_path = NodePath()
-	heart_gate.prompt_text = "Q · VISIT HEART MELODY — MUSICAL ORCHARD (open journey)"
-	add_child(heart_gate)
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
-	district.set_meta("design_revision", "celestial_conservatory_v14")
-	district.set_meta("finished_product_lighting", true)
-	district.set_meta("production_material_palette", true)
-	district.set_meta("flat_rectangle_facade_removed", true)
-	district.set_meta("clear_central_approach_m", 18.0)
 	add_child(district)
 	_build_island_foundation(district, HEART, 175.0, 55.0, 32)
-	# Restyle the generic island shell for Heart Melody and remove the twelve
-	# downward construction spikes used by the older hub prototype.
-	var heart_deck := district.get_node_or_null("WalkableDeck") as MeshInstance3D
-	if heart_deck:
-		heart_deck.material_override = _materials.heart_stone
-	var heart_underside := district.get_node_or_null("FloatingUnderside") as MeshInstance3D
-	if heart_underside:
-		heart_underside.material_override = _materials.heart_rock_mid
-	for foundation_crystal in district.find_children("FoundationCrystal_*", "MeshInstance3D", false, false):
-		(foundation_crystal as MeshInstance3D).visible = false
-	_add_cylinder(district, "MelodyStage", HEART + Vector3(0.0, 2.0, 0.0), 118.0, 4.0,
-		_materials.heart_stone, true, 40)
-	_add_cylinder(district, "FacetedHeartGardenDeck", HEART + Vector3(0.0, 4.04, 0.0),
-		114.0, 0.10, _materials.heart_path, false, 32)
-	_add_cylinder(district, "HeartGardenLawn", HEART + Vector3(0.0, 4.11, 0.0),
-		103.0, 0.05, _materials.heart_lawn, false, 32)
-	# A continuous faceted stone mantle hides the pale construction slab and
-	# gives the floating island one readable geological silhouette from every
-	# railway and free-camera angle.
-	_add_tapered_cylinder(district, "HeartIslandRockMantle",
-		HEART + Vector3(0.0, -5.2, 0.0), 148.0, 171.0, 18.0,
-		_materials.heart_rock_mid, 32)
-	var melody_paths := Node3D.new()
-	melody_paths.name = "SixMelodyGardenPaths"
-	district.add_child(melody_paths)
-	for path_index in 6:
-		var path_angle := TAU * float(path_index) / 6.0
-		var path_direction := Vector3(sin(path_angle), 0.0, cos(path_angle))
-		var path := _add_bevel_box(melody_paths, "MelodyGardenPath_%02d" % (path_index + 1),
-			HEART + path_direction * 55.0 + Vector3.UP * 4.18,
-			Vector3(12.0, 0.06, 102.0), 0.24, _materials.heart_path)
-		path.rotation.y = path_angle
-		for note_index in 3:
-			var note_radius := 30.0 + float(note_index) * 27.0
-			_add_bevel_box(melody_paths,
-				"CyanNoteInlay_%02d_%02d" % [path_index + 1, note_index + 1],
-				HEART + path_direction * note_radius + Vector3.UP * 4.24,
-				Vector3(3.0, 0.03, 0.75), 0.05,
-				_materials.heart_light).rotation.y = path_angle
+	_add_cylinder(district, "MelodyStage", HEART + Vector3(0.0, 2.0, 0.0), 118.0, 4.0, _materials.pink, true, 40)
 
-	# Seven planted listening gardens replace the former prototype colour pads.
+	# Seven playable-looking note pads arranged as a melody constellation.
 	for index in 7:
 		var angle := -PI * 0.8 + float(index) * PI * 0.27
 		var radius := 65.0 + float(index % 2) * 24.0
-		var pad_pos := HEART + Vector3(cos(angle) * radius, 4.55, sin(angle) * radius)
-		_add_cylinder(district, "ListeningGardenBase_%02d" % index, pad_pos, 9.0, 0.7,
-			_materials.heart_charcoal, true, 12)
-		_add_cylinder(district, "ListeningGardenSoil_%02d" % index,
-			pad_pos + Vector3.UP * 0.42, 7.8, 0.16, _materials.heart_soil, false, 12)
-		for flower_index in 3:
-			var flower_angle := TAU * float(flower_index) / 3.0 + float(index) * 0.4
-			_add_heart_planting_cluster(district, pad_pos + Vector3(cos(flower_angle) * 4.6,
-				0.62, sin(flower_angle) * 4.6), (index + flower_index) % 2 == 0)
-		_build_faceted_ceremonial_crystal(district, "MelodyGardenNote_%02d" % index,
-			pad_pos + Vector3.UP * 3.2, 3.6, 0.68,
-			_materials.heart_cyan if index % 3 == 0 else _materials.heart_lavender)
+		var pad_pos := HEART + Vector3(cos(angle) * radius, 5.0, sin(angle) * radius)
+		_add_cylinder(district, "MelodyPad_%02d" % index, pad_pos, 17.0, 2.0,
+			_materials.pink if index % 2 == 0 else _materials.purple, true, 24)
 
-	# A finished rim gives the island a designed edge from bridge and railway views.
-	var finished_rim := Node3D.new()
-	finished_rim.name = "FinishedHeartIslandRim"
-	district.add_child(finished_rim)
-	for rim_index in 24:
-		var rim_angle := TAU * float(rim_index) / 24.0
-		var rim_piece := _add_bevel_box(finished_rim,
-			"IvoryRimPiece_%02d" % (rim_index + 1),
-			HEART + Vector3(sin(rim_angle) * 113.0, 3.92, cos(rim_angle) * 113.0),
-			Vector3(28.0, 0.72, 2.6), 0.45, _materials.heart_rock_light)
-		rim_piece.rotation.y = rim_angle
-	# Small planted lookouts sit on the finished edge. They replace the former
-	# row of hanging black blocks; the continuous mantle now carries the island.
-	for lookout_index in 10:
-		var lookout_angle := deg_to_rad(126.0 + float(lookout_index) * 12.0)
-		var lookout_position := HEART + Vector3(sin(lookout_angle) * 157.0, 4.5,
-			cos(lookout_angle) * 157.0)
-		_add_cylinder(finished_rim, "LivingEdgeLookout_%02d" % (lookout_index + 1),
-			lookout_position, 5.2, 0.75, _materials.heart_rock_light, false, 8)
-		_add_heart_planting_cluster(finished_rim, lookout_position + Vector3.UP * 0.5,
-			lookout_index % 2 == 0, 0.65)
-
-	_build_heart_melody_celestial_conservatory(district)
-	# A low rear orchard completes the formerly empty northern half while keeping
-	# the central sightline open toward the Tree of Life.
-	var rear_orchard := Node3D.new()
-	rear_orchard.name = "RearSymphonyOrchard"
-	district.add_child(rear_orchard)
-	for orchard_index in 9:
-		var orchard_t := float(orchard_index) / 8.0
-		var orchard_angle := deg_to_rad(18.0 + orchard_t * 144.0)
-		var orchard_radius := 82.0 + float(orchard_index % 2) * 12.0
-		var orchard_position := HEART + Vector3(cos(orchard_angle) * orchard_radius,
-			4.45, sin(orchard_angle) * orchard_radius)
-		_build_heart_faceted_tree(rear_orchard,
-			"SymphonyOrchardTree_%02d" % (orchard_index + 1), orchard_position,
-			12.5 + float(orchard_index % 3) * 1.5)
-		var terrace_piece := _add_bevel_box(rear_orchard,
-			"OrchardTerrace_%02d" % (orchard_index + 1),
-			orchard_position + Vector3.DOWN * 0.2, Vector3(13.0, 0.55, 9.0),
-			0.75, _materials.heart_lawn)
-		terrace_piece.rotation.y = -orchard_angle
-		if orchard_index % 2 == 0:
-			_build_faceted_ceremonial_crystal(rear_orchard,
-				"OrchardLantern_%02d" % (orchard_index + 1),
-				orchard_position + Vector3(cos(orchard_angle) * 7.0, 3.4,
-					sin(orchard_angle) * 7.0), 3.4, 0.55,
-				_materials.heart_cyan if orchard_index % 4 == 0 else _materials.heart_lavender)
+	# Temple arcade and central open doorway.
+	for index in 7:
+		var x := -108.0 + float(index) * 36.0
+		_build_arch(district, HEART + Vector3(x, 2.0, -105.0), 26.0, 62.0, 10.0, _materials.ivory)
+	_build_frame(district, HEART + Vector3(0.0, 2.0, -118.0), 44.0, 64.0, _materials.pink, "HEART MELODY")
 	for index in 34:
 		var angle := TAU * float(index) / 34.0
-		_add_heart_planting_cluster(district, HEART + Vector3(cos(angle) * 147.0, 3.0, sin(angle) * 147.0), true)
-
-
-func _build_heart_melody_celestial_conservatory(district: Node3D) -> void:
-	var conservatory := Node3D.new()
-	conservatory.name = "HeartMelodyCelestialConservatory"
-	conservatory.position = HEART + Vector3(0.0, 4.12, -108.0)
-	conservatory.set_meta("resonance_bay_count", 6)
-	conservatory.set_meta("central_opening_width_m", 48.0)
-	conservatory.set_meta("orchard_tree_count", 10)
-	conservatory.set_meta("architecture_collision_backed", true)
-	conservatory.set_meta("unique_instrument_bay_count", 6)
-	conservatory.set_meta("finished_platform_edges", true)
-	conservatory.set_meta("authored_processional_forecourt", true)
-	conservatory.set_meta("distinct_silhouette_count", 6)
-	conservatory.set_meta("clean_pool_courts", true)
-	conservatory.set_meta("layered_hall_side_facades", true)
-	district.add_child(conservatory)
-
-	# A layered stone terrace grounds the building and removes the floating-wall
-	# appearance of the former gray and pink rectangles.
-	_add_bevel_box(conservatory, "ConservatoryFoundation",
-		Vector3(0.0, 0.42, 0.0), Vector3(258.0, 0.84, 38.0), 1.2,
-		_materials.heart_charcoal)
-	_add_bevel_box(conservatory, "ConservatoryIvoryTerrace",
-		Vector3(0.0, 0.94, -8.0), Vector3(242.0, 0.18, 50.0), 1.0,
-		_materials.heart_ivory)
-	for buttress_index in 9:
-		var buttress_x := -112.0 + float(buttress_index) * 28.0
-		_add_tapered_cylinder(conservatory, "TerraceButtress_%02d" % (buttress_index + 1),
-			Vector3(buttress_x, -2.2, 7.0), 3.8, 2.5, 5.4,
-			_materials.heart_charcoal, 6)
-	_add_bevel_box(conservatory, "CentralArrivalCarpet",
-		Vector3(0.0, 1.06, -34.0), Vector3(20.0, 0.06, 64.0), 0.34,
-		_materials.heart_path)
-	for marker_index in 5:
-		_add_bevel_box(conservatory, "ArrivalNote_%02d" % (marker_index + 1),
-			Vector3(0.0, 1.12, -11.0 - float(marker_index) * 11.0),
-			Vector3(4.8, 0.035, 0.80), 0.06, _materials.heart_light)
-
-	# The approach is composed as a garden promenade instead of a broad empty
-	# beige strip. Everything stays outside the 20 metre central clear lane.
-	var forecourt := Node3D.new()
-	forecourt.name = "MelodyProcessionalForecourt"
-	conservatory.add_child(forecourt)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		_add_bevel_box(forecourt, "%sPlantingSpine" % side_name,
-			Vector3(side * 19.5, 1.10, -38.0), Vector3(13.0, 0.42, 54.0),
-			0.9, _materials.heart_ivory_shadow)
-		_add_bevel_box(forecourt, "%sPlantingSoil" % side_name,
-			Vector3(side * 19.5, 1.34, -38.0), Vector3(10.5, 0.08, 49.0),
-			0.7, _materials.heart_soil)
-		for garden_index in 4:
-			var garden_z := -57.0 + float(garden_index) * 13.0
-			_add_heart_planting_cluster(forecourt,
-				Vector3(side * (18.0 + float(garden_index % 2) * 2.5), 1.5, garden_z),
-				(garden_index + (0 if side < 0 else 1)) % 2 == 0, 0.78)
-			if garden_index % 2 == 0:
-				_build_faceted_ceremonial_crystal(forecourt,
-					"%sForecourtNote_%02d" % [side_name, garden_index + 1],
-					Vector3(side * 19.5, 3.2, garden_z + 3.5), 2.8, 0.48,
-					_materials.heart_cyan if side < 0 else _materials.heart_lavender)
-		_add_bevel_box(forecourt, "%sListeningSeat" % side_name,
-			Vector3(side * 29.0, 2.0, -35.0), Vector3(7.5, 1.0, 3.0),
-			0.55, _materials.heart_wood)
-
-	# The central entrance is open and clearly taller than the six study bays.
-	var entrance := Node3D.new()
-	entrance.name = "GrandResonanceEntrance"
-	entrance.set_meta("clear_opening_width_m", 48.0)
-	entrance.set_meta("principal_route_width_m", 18.0)
-	entrance.set_meta("complete_front_side_rear", true)
-	entrance.set_meta("design_revision", "grand_resonance_gate_v6")
-	entrance.set_meta("barrier_like_gate_removed", true)
-	entrance.set_meta("portal_arch_ring_count", 2)
-	entrance.set_meta("finished_bridge_landing", true)
-	entrance.set_meta("tower_facade_depth_layers", 6)
-	entrance.set_meta("vaulted_glass_canopy_panels", 4)
-	entrance.set_meta("framed_tower_window_count", 4)
-	entrance.set_meta("musical_focal_monument", true)
-	entrance.set_meta("sculpted_bridge_transition", true)
-	entrance.set_meta("asymmetric_landing_gardens", true)
-	entrance.set_meta("suspended_gate_harp_removed", true)
-	entrance.set_meta("loose_crest_spokes_removed", true)
-	entrance.set_meta("crest_strings_removed", true)
-	entrance.set_meta("crest_form", "single_prism_keystone")
-	conservatory.add_child(entrance)
-
-	# A broad, layered landing resolves the abrupt bridge-to-building joint and
-	# gives the portal a deliberate foreground composition. All ornament stays
-	# outside the clear central aisle.
-	_add_bevel_box(entrance, "ResonanceBridgeLanding",
-		Vector3(0.0, 1.18, -22.0), Vector3(48.0, 0.34, 30.0), 1.15,
-		_materials.heart_ivory)
-	_add_bevel_box(entrance, "ResonanceLandingInlay",
-		Vector3(0.0, 1.38, -22.0), Vector3(34.0, 0.055, 24.0), 0.75,
-		_materials.heart_path)
-	# Three shallow fan terraces make the bridge arrive through a gradual stone
-	# threshold instead of terminating against one rectangular slab. The centre
-	# remains flat and wide enough for the production player capsule.
-	for terrace_index in 3:
-		var terrace_width := 58.0 - float(terrace_index) * 7.0
-		_add_bevel_box(entrance,
-			"BridgeTransitionTerrace_%02d" % (terrace_index + 1),
-			Vector3(0.0, 0.82 + float(terrace_index) * 0.12,
-				-40.0 + float(terrace_index) * 6.0),
-			Vector3(terrace_width, 0.22, 6.4), 0.72,
-			_materials.heart_ivory_shadow)
-	for side in [-1.0, 1.0]:
-		var transition_side := "West" if side < 0 else "East"
-		for rail_index in 3:
-			var rail_z := -42.0 + float(rail_index) * 7.2
-			var rail_x: float = side * (29.0 - float(rail_index) * 2.6)
-			var transition_rail := _add_bevel_box(entrance,
-				"%sTransitionWing_%02d" % [transition_side, rail_index + 1],
-				Vector3(rail_x, 2.0 + float(rail_index) * 0.18, rail_z),
-				Vector3(9.0, 1.15, 2.2), 0.46, _materials.heart_ivory)
-			transition_rail.rotation.y = deg_to_rad(side * (12.0 + float(rail_index) * 4.0))
-	for side in [-1.0, 1.0]:
-		var landing_side := "West" if side < 0 else "East"
-		_add_bevel_box(entrance, "%sLandingPlanter" % landing_side,
-			Vector3(side * 30.0, 2.0, -22.0), Vector3(10.0, 1.7, 22.0),
-			0.85, _materials.heart_ivory)
-		_add_bevel_box(entrance, "%sLandingSoil" % landing_side,
-			Vector3(side * 30.0, 2.9, -22.0), Vector3(7.6, 0.12, 18.8),
-			0.55, _materials.heart_soil)
-		for planting_index in 2:
-			_add_heart_planting_cluster(entrance,
-				Vector3(side * 30.0, 3.0, -28.0 + float(planting_index) * 12.0),
-				(planting_index + (0 if side < 0 else 1)) % 2 == 0, 0.62)
-		_build_faceted_ceremonial_crystal(entrance,
-			"%sLandingLantern" % landing_side,
-			Vector3(side * 24.0, 5.0, -33.0), 3.8, 0.72,
-			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
-	# The two sides intentionally carry different landmarks: a listening tree
-	# and a crystalline tuning sculpture. This avoids the copied garden look
-	# while balancing mass and colour across the processional axis.
-	_build_heart_faceted_tree(entrance, "WestLandingListeningTree",
-		Vector3(-39.0, 3.0, -19.0), 13.5)
-	var tuning_grove := Node3D.new()
-	tuning_grove.name = "EastLandingTuningSculpture"
-	tuning_grove.position = Vector3(39.0, 3.0, -19.0)
-	entrance.add_child(tuning_grove)
-	for tuning_index in 3:
-		var tuning_x := -3.0 + float(tuning_index) * 3.0
-		var tuning_height := 5.5 + float(tuning_index) * 2.8
-		_build_faceted_ceremonial_crystal(tuning_grove,
-			"TuningCrystal_%02d" % (tuning_index + 1),
-			Vector3(tuning_x, tuning_height * 0.48, float(tuning_index % 2) * 1.4),
-			tuning_height, 0.72,
-			_materials.heart_cyan if tuning_index == 1 else _materials.heart_lavender)
-	_add_forecourt_omni(entrance, "TuningSculptureLight", Vector3(39.0, 8.0, -19.0),
-		Color("8cefff"), 0.58, 18.0)
-
-	for side in [-1.0, 1.0]:
-		var side_name := "Left" if side < 0 else "Right"
-		var tower_x := float(side) * 30.0
-		_add_bevel_box(entrance, "%sTowerFoundation" % side_name,
-			Vector3(tower_x, 1.6, 0.0), Vector3(21.0, 3.2, 24.0), 0.85,
-			_materials.heart_charcoal)
-		_add_bevel_box(entrance, "%sTowerLowerPlinth" % side_name,
-			Vector3(tower_x, 3.55, 0.0), Vector3(18.8, 1.35, 21.8), 0.65,
-			_materials.heart_ivory)
-		_add_bevel_box(entrance, "%sTowerShaft" % side_name,
-			Vector3(tower_x, 19.0, 0.0), Vector3(16.2, 30.0, 19.0),
-			0.85, _materials.heart_ivory)
-		_add_box(entrance, "%sTowerCollision" % side_name,
-			Vector3(tower_x, 19.0, 0.0), Vector3(15.2, 30.0, 18.0),
-			_materials.heart_ivory, true)
-		_add_bevel_box(entrance, "%sFacadeRecess" % side_name,
-			Vector3(tower_x, 19.0, -9.72), Vector3(10.0, 23.0, 0.52),
-			0.42, _materials.heart_charcoal)
-		_add_bevel_box(entrance, "%sCyanGlass" % side_name,
-			Vector3(tower_x, 19.0, -10.02), Vector3(4.8, 14.0, 0.26),
-			0.22, _materials.heart_cyan)
-		_add_bevel_box(entrance, "%sRearRecess" % side_name,
-			Vector3(tower_x, 19.0, 9.72), Vector3(10.0, 23.0, 0.52),
-			0.42, _materials.heart_charcoal)
-		_add_bevel_box(entrance, "%sRearGlass" % side_name,
-			Vector3(tower_x, 19.0, 10.02), Vector3(4.8, 14.0, 0.26),
-			0.22, _materials.heart_glass)
-		for face_side in [-1.0, 1.0]:
-			var face_name := "Front" if face_side < 0 else "Rear"
-			var face_z: float = float(face_side) * 10.32
-			for frame_side in [-1.0, 1.0]:
-				_add_bevel_box(entrance,
-					"%s%sWindowFrameSide_%s" % [side_name, face_name,
-						"L" if frame_side < 0 else "R"],
-					Vector3(tower_x + frame_side * 3.25, 19.0, face_z),
-					Vector3(0.72, 16.8, 0.72), 0.22, _materials.heart_ivory)
-			for frame_level in [-1.0, 1.0]:
-				_add_bevel_box(entrance,
-					"%s%sWindowFrame_%s" % [side_name, face_name,
-						"Lower" if frame_level < 0 else "Upper"],
-					Vector3(tower_x, 19.0 + frame_level * 8.1, face_z),
-					Vector3(7.2, 0.72, 0.72), 0.22, _materials.heart_ivory)
-		# Three internal strings make each cyan bay a musical stained-glass
-		# window instead of a single glowing rectangle.
-		for string_index in 3:
-			_add_bevel_box(entrance,
-				"%sWindowString_%02d" % [side_name, string_index + 1],
-				Vector3(tower_x - 1.55 + float(string_index) * 1.55, 19.0, -10.38),
-				Vector3(0.18, 12.6 - float(string_index % 2) * 2.2, 0.16),
-				0.05, _materials.heart_lavender if string_index == 1 else _materials.heart_light)
-		for note_index in 3:
-			_build_faceted_ceremonial_crystal(entrance,
-				"%sFacadeNote_%02d" % [side_name, note_index + 1],
-				Vector3(tower_x - 3.2 + float(note_index) * 3.2,
-					29.4 + float(note_index % 2) * 0.45, -10.45),
-				1.35, 0.27,
-				_materials.heart_cyan if (note_index + (0 if side < 0 else 1)) % 2 == 0
-				else _materials.heart_lavender)
-		for pilaster_side in [-1.0, 1.0]:
-			_add_bevel_box(entrance,
-				"%sFrontPilaster_%s" % [side_name, "L" if pilaster_side < 0 else "R"],
-				Vector3(tower_x + pilaster_side * 7.4, 19.0, -9.7),
-				Vector3(1.55, 31.0, 1.65), 0.34, _materials.heart_ivory_shadow)
-			_add_bevel_box(entrance,
-				"%sRearPilaster_%s" % [side_name, "L" if pilaster_side < 0 else "R"],
-				Vector3(tower_x + pilaster_side * 7.4, 19.0, 9.7),
-				Vector3(1.55, 31.0, 1.65), 0.34, _materials.heart_ivory_shadow)
-		for belt_index in 2:
-			_add_bevel_box(entrance, "%sTowerBelt_%02d" % [side_name, belt_index + 1],
-				Vector3(tower_x, 10.5 + float(belt_index) * 17.0, 0.0),
-				Vector3(17.6, 1.15, 20.2), 0.38, _materials.heart_ivory_shadow)
-		# Stepped side buttresses visually carry the tower weight into the landing.
-		# Their descending profiles add depth at the bridge camera angle.
-		for buttress_index in 3:
-			var buttress_height := 19.0 - float(buttress_index) * 4.2
-			var buttress_x: float = tower_x + side * (9.2 + float(buttress_index) * 2.1)
-			_add_bevel_box(entrance,
-				"%sProcessionalButtress_%02d" % [side_name, buttress_index + 1],
-				Vector3(buttress_x, 3.0 + buttress_height * 0.5,
-					-5.8 + float(buttress_index) * 1.8),
-				Vector3(3.4, buttress_height, 8.0 - float(buttress_index) * 1.1),
-				0.48, _materials.heart_ivory_shadow)
-		# A vertical sequence of projecting music ledges gives the otherwise broad
-		# shaft a readable human scale without turning it into surface noise.
-		for ledge_index in 4:
-			_add_bevel_box(entrance,
-				"%sMusicLedge_%02d" % [side_name, ledge_index + 1],
-				Vector3(tower_x, 8.4 + float(ledge_index) * 7.1, -10.55),
-				Vector3(12.6 - float(ledge_index % 2) * 1.8, 0.55, 1.35),
-				0.20, _materials.heart_ivory)
-		_add_bevel_box(entrance, "%sTowerShoulder" % side_name,
-			Vector3(tower_x, 34.4, 0.0), Vector3(20.0, 2.4, 22.2),
-			0.72, _materials.heart_ivory)
-		_add_cylinder(entrance, "%sSpireEave" % side_name,
-			Vector3(tower_x, 36.2, 0.0), 10.8, 1.3,
-			_materials.heart_charcoal, false, 8)
-		_add_tapered_cylinder(entrance, "%sFacetedSpire" % side_name,
-			Vector3(tower_x, 43.0, 0.0), 9.2, 0.75, 13.5,
-			_materials.heart_roof, 8)
-		_build_faceted_ceremonial_crystal(entrance, "%sSpireStar" % side_name,
-			Vector3(tower_x, 51.4, 0.0), 3.9, 0.84,
-			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
-		# Narrow side windows add scale and break the remaining box silhouette.
-		for side_window_index in 2:
-			var side_window := _add_bevel_box(entrance,
-				"%sAcousticSideWindow_%02d" % [side_name, side_window_index + 1],
-				Vector3(tower_x + side * 8.25, 15.0 + float(side_window_index) * 10.0,
-					-3.8 + float(side_window_index) * 7.6),
-				Vector3(6.2, 4.4, 0.24), 0.24, _materials.heart_glass)
-			side_window.rotation.y = PI * 0.5
-
-	# Two complete pointed arch rings create a deep, readable gateway from both
-	# approaches. Their cyan inner tracer identifies the portal without forming a
-	# wall or barrier across the opening.
-	_build_heart_resonance_gate_arch(entrance, "Front", -10.8, true)
-	_build_heart_resonance_gate_arch(entrance, "Rear", 10.8, false)
-	# Five inner ribs reveal the actual depth of the gateway when viewed from the
-	# bridge. They join the two façades into one vaulted building rather than two
-	# towers connected by thin decoration.
-	for depth_index in 5:
-		var depth_z := -7.2 + float(depth_index) * 3.6
-		var rib_material: StandardMaterial3D = _materials.heart_ivory_shadow \
-			if depth_index % 2 == 0 else _materials.heart_charcoal
-		_add_reference_beam(entrance, Vector3(-19.0, 24.5, depth_z),
-			Vector3(0.0, 42.0, depth_z), 0.62, rib_material).name = \
-			"InnerVaultRibWest_%02d" % (depth_index + 1)
-		_add_reference_beam(entrance, Vector3(19.0, 24.5, depth_z),
-			Vector3(0.0, 42.0, depth_z), 0.62, rib_material).name = \
-			"InnerVaultRibEast_%02d" % (depth_index + 1)
-	# A single prism keystone gives the entrance a clean celestial focal point.
-	# All components stay above the camera clearance.
-	var grand_emblem := Node3D.new()
-	grand_emblem.name = "GrandHarmonyLyreEmblem"
-	grand_emblem.set_meta("primary_gate_focal_point", true)
-	entrance.add_child(grand_emblem)
-	var emblem_center := Vector3(0.0, 36.2, -12.0)
-	# Keep the crest as one clean lyre triangle. The former seven thin radial
-	# beams and floating notes crossed the arch and read as loose gray wires.
-	_add_reference_beam(grand_emblem, emblem_center + Vector3(-5.2, -1.2, 0.0),
-		emblem_center + Vector3(0.0, 7.8, 0.0), 0.82,
-		_materials.heart_ivory).name = "LyreFrameWest"
-	_add_reference_beam(grand_emblem, emblem_center + Vector3(5.2, -1.2, 0.0),
-		emblem_center + Vector3(0.0, 7.8, 0.0), 0.82,
-		_materials.heart_ivory).name = "LyreFrameEast"
-	_add_reference_beam(grand_emblem, emblem_center + Vector3(-5.2, -1.2, 0.0),
-		emblem_center + Vector3(5.2, -1.2, 0.0), 0.82,
-		_materials.heart_ivory).name = "LyreFrameBase"
-	# A compact charcoal socket grounds the crystal without thin strings or
-	# unsupported lines crossing the open triangle.
-	_add_bevel_box(grand_emblem, "HarmonyPrismSocket",
-		emblem_center + Vector3(0.0, 1.0, 0.18), Vector3(3.2, 3.2, 0.72),
-		0.52, _materials.heart_charcoal)
-	_build_faceted_ceremonial_crystal(grand_emblem, "HarmonyHeart",
-		emblem_center + Vector3(0.0, 1.0, -0.35), 5.0, 1.05,
-		_materials.heart_cyan)
-	# Four faceted glass roof plates turn the pair of arch rings into one deep
-	# pavilion. The plates are thin, translucent and collision-free so the sky,
-	# crown and player remain visible through the structure.
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		var lower_canopy := _add_bevel_box(entrance,
-			"%sLowerVaultCanopy" % side_name,
-			Vector3(side * 15.2, 31.6, 0.0), Vector3(20.4, 0.28, 19.6),
-			0.20, _materials.heart_glass)
-		lower_canopy.rotation.z = deg_to_rad(-side * 48.0)
-		var upper_canopy := _add_bevel_box(entrance,
-			"%sUpperVaultCanopy" % side_name,
-			Vector3(side * 4.35, 41.1, 0.0), Vector3(9.6, 0.26, 19.6),
-			0.18, _materials.heart_glass)
-		upper_canopy.rotation.z = deg_to_rad(-side * 24.0)
-		_add_reference_beam(entrance, Vector3(side * 11.2, 36.8, -10.0),
-			Vector3(side * 11.2, 36.8, 10.0), 0.52,
-			_materials.heart_charcoal).name = "%sVaultPurlin" % side_name
-	_add_reference_beam(entrance, Vector3(0.0, 43.15, -10.4),
-		Vector3(0.0, 43.15, 10.4), 0.78,
-		_materials.heart_ivory).name = "PortalCanopyRidge"
-	for rib_index in 3:
-		var rib_x := -14.0 + float(rib_index) * 14.0
-		var rib_y := 35.0 if rib_index != 1 else 43.0
-		_add_reference_beam(entrance, Vector3(rib_x, rib_y, -10.2),
-			Vector3(rib_x, rib_y, 10.2), 1.05,
-			_materials.heart_ivory).name = "PortalVaultRib_%02d" % (rib_index + 1)
-	_add_bevel_box(entrance, "HarmonyCrestBase", Vector3(0.0, 44.1, 0.0),
-		Vector3(10.0, 2.4, 8.0), 0.65, _materials.heart_charcoal)
-	_build_faceted_ceremonial_crystal(entrance, "HarmonyCrownStar",
-		Vector3(0.0, 49.2, 0.0), 7.0, 1.5, _materials.heart_lavender)
-	_add_forecourt_omni(entrance, "PortalCrownLight", Vector3(0.0, 42.0, -4.0),
-		Color("86eaf0"), 0.78, 31.0)
-
-	# A shallow walkable stage and rear arcade turn the central opening into a
-	# complete pavilion without interrupting the 18 metre processional route.
-	_add_cylinder(entrance, "WalkablePerformanceStage", Vector3(0.0, 1.35, 7.0),
-		14.0, 0.60, _materials.heart_path, true, 12)
-	_add_cylinder(entrance, "PerformanceStageInlay", Vector3(0.0, 1.69, 7.0),
-		11.6, 0.08, _materials.heart_lawn, false, 12)
-	for step_index in 3:
-		_add_bevel_box(entrance, "PavilionStep_%02d" % (step_index + 1),
-			Vector3(0.0, 1.10 + float(step_index) * 0.16,
-				-3.0 + float(step_index) * 1.25),
-			Vector3(18.0 - float(step_index) * 1.7, 0.28, 2.4), 0.22,
-			_materials.heart_ivory)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		_add_tapered_cylinder(entrance, "%sPavilionColumn" % side_name,
-			Vector3(side * 13.5, 10.5, 11.0), 2.0, 1.55, 18.0,
-			_materials.heart_ivory, 8)
-		_add_bevel_box(entrance, "%sPavilionWing" % side_name,
-			Vector3(side * 18.0, 19.6, 10.5), Vector3(14.0, 1.7, 8.0),
-			0.55, _materials.heart_roof)
-		_build_faceted_ceremonial_crystal(entrance, "%sPavilionLantern" % side_name,
-			Vector3(side * 13.5, 22.0, 11.0), 3.0, 0.62,
-			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
-	_add_bevel_box(entrance, "PavilionRearLintel", Vector3(0.0, 19.8, 13.0),
-		Vector3(32.0, 2.0, 4.0), 0.65, _materials.heart_ivory)
-
-	# Six complete instrument halls form a connected conservatory wing. Each one
-	# has a different footprint, roof and musical identity, with finished side
-	# and rear elevations for the free camera and Crown Line views.
-	var bays := Node3D.new()
-	bays.name = "SixResonanceBays"
-	bays.set_meta("complete_360_architecture", true)
-	bays.set_meta("distinct_hall_count", 6)
-	conservatory.add_child(bays)
-	var hall_specs := [
-		{"x": -111.0, "z": -8.0, "yaw": -12.0, "title": "RHYTHM", "type": "rhythm_drums",
-			"width": 30.0, "depth": 25.0, "height": 23.0, "roof": 8},
-		{"x": -79.0, "z": -1.0, "yaw": -7.0, "title": "RAIN", "type": "rain_chimes",
-			"width": 24.0, "depth": 33.0, "height": 32.0, "roof": 10},
-		{"x": -49.0, "z": 5.0, "yaw": -3.0, "title": "COURAGE", "type": "courage_horn",
-			"width": 27.0, "depth": 22.0, "height": 27.0, "roof": 6},
-		{"x": 49.0, "z": 5.0, "yaw": 3.0, "title": "MEMORY", "type": "memory_harp",
-			"width": 23.0, "depth": 31.0, "height": 29.0, "roof": 8},
-		{"x": 80.0, "z": -1.0, "yaw": 7.0, "title": "HOPE", "type": "hope_bells",
-			"width": 28.0, "depth": 23.0, "height": 34.0, "roof": 10},
-		{"x": 113.0, "z": -8.0, "yaw": 12.0, "title": "HARMONY", "type": "harmony_orbit",
-			"width": 31.0, "depth": 29.0, "height": 24.0, "roof": 12},
-	]
-	for hall_index in hall_specs.size():
-		_build_heart_instrument_hall(bays, hall_index, hall_specs[hall_index])
-	var links := Node3D.new()
-	links.name = "LivingArcadeLinks"
-	bays.add_child(links)
-	for side in [-1.0, 1.0]:
-		for link_index in 2:
-			var x := float(side) * (64.5 + float(link_index) * 30.8)
-			_add_bevel_box(links, "ArcadeDeck", Vector3(x, 2.2, 5.0),
-				Vector3(7.0, 1.0, 15.0), 0.45, _materials.heart_path)
-			for pillar_side in [-1.0, 1.0]:
-				_add_tapered_cylinder(links, "ArcadePillar", Vector3(x + pillar_side * 2.5,
-					8.0, 5.0), 0.9, 0.72, 12.0, _materials.heart_ivory, 8)
-			_add_bevel_box(links, "ArcadeCanopy", Vector3(x, 14.2, 5.0),
-				Vector3(7.5, 1.3, 16.0), 0.5, _materials.heart_roof)
-
-	# Two calm water courts and planted fruit groves soften the broad stage. The
-	# rim blocks follow the pool tangent so they read as one clean basin instead
-	# of the old starburst of ivory bars shown from elevated camera angles.
-	var gardens := Node3D.new()
-	gardens.name = "ResonanceOrchardGardens"
-	gardens.set_meta("grounded_landscaping", true)
-	gardens.set_meta("curved_path_count", 12)
-	conservatory.add_child(gardens)
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		var pool_center := Vector3(float(side) * 73.0, 1.15, -32.0)
-		_add_cylinder(gardens, "%sMossTerrace" % side_name,
-			pool_center + Vector3.UP * -0.16, 18.0, 0.46,
-			_materials.heart_lawn, false, 12)
-		_add_cylinder(gardens, "%sPoolFoundation" % side_name, pool_center,
-			15.0, 0.24, _materials.heart_ivory_shadow, false, 12)
-		_add_cylinder(gardens, "%sSingingPool" % side_name,
-			pool_center + Vector3.UP * 0.16, 13.4, 0.08,
-			_materials.heart_water, false, 12)
-		for rim_index in 16:
-			var rim_angle := TAU * float(rim_index) / 16.0
-			var rim_stone := _add_bevel_box(gardens,
-				"%sPoolRimStone_%02d" % [side_name, rim_index + 1],
-				pool_center + Vector3(cos(rim_angle) * 14.55, 0.42,
-					sin(rim_angle) * 14.55), Vector3(5.8, 0.58, 2.35), 0.32,
-				_materials.heart_ivory)
-			rim_stone.rotation.y = -rim_angle + PI * 0.5
-		_add_cylinder(gardens, "%sPoolSanctum" % side_name,
-			pool_center + Vector3.UP * 0.38, 2.8, 0.42,
-			_materials.heart_lawn, false, 10)
-		_add_cylinder(gardens, "%sPoolCrystalPlinth" % side_name,
-			pool_center + Vector3.UP * 0.72, 1.35, 0.30,
-			_materials.heart_ivory, false, 10)
-		_build_faceted_ceremonial_crystal(gardens, "%sPoolSongCrystal" % side_name,
-			pool_center + Vector3.UP * 3.5, 4.5, 0.78,
-			_materials.heart_cyan if side < 0 else _materials.heart_lavender)
-		for flower_index in 2:
-			var flower_angle := PI * float(flower_index) + 0.72
-			_add_heart_planting_cluster(gardens, pool_center + Vector3(
-				cos(flower_angle) * 19.2, 0.5, sin(flower_angle) * 19.2),
-				(flower_index + (0 if side < 0 else 1)) % 2 == 0, 0.62)
-		for tree_index in 5:
-			var tree_x := float(side) * (45.0 + float(tree_index % 2) * 23.0)
-			var tree_z := -22.0 + float(tree_index / 2) * 20.0
-			_build_heart_faceted_tree(gardens,
-				"%sOrchardTree_%02d" % [side_name, tree_index + 1],
-				Vector3(tree_x, 0.42, tree_z),
-				16.0 + float((tree_index + (0 if side < 0 else 1)) % 3) * 2.2)
-		for crystal_index in 2:
-			_build_faceted_ceremonial_crystal(gardens,
-				"%sGardenNote_%02d" % [side_name, crystal_index + 1],
-				Vector3(float(side) * (88.0 + float(crystal_index) * 8.0),
-					3.0, -17.0 + float(crystal_index) * 21.0),
-				4.2, 1.0, _materials.heart_lavender if crystal_index == 0 else _materials.heart_cyan)
-		# Keep the basin uninterrupted. Earlier channel and spillway pieces read as
-		# loose bridges crossing the water from elevated gameplay cameras.
-
-	# Curved-looking planter chains, benches and lamps connect the architecture
-	# to the surrounding stage instead of allowing the gardens to stop abruptly.
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		# Six short tangent segments arc behind each basin. Their radius and angle
-		# keep every piece outside the water and its stone rim from all views.
-		for curve_index in 6:
-			var curve_t := float(curve_index) / 5.0
-			var curve_angle := lerpf(-25.0, 55.0, curve_t)
-			var curve_rad := deg_to_rad(curve_angle)
-			var curve_position := Vector3(float(side) * (60.0 + cos(curve_rad) * 30.0),
-				1.12, 2.0 + sin(curve_rad) * 30.0)
-			var curve_piece := _add_bevel_box(gardens,
-				"%sCurvedGardenPath_%02d" % [side_name, curve_index + 1],
-				curve_position, Vector3(8.2, 0.12, 5.2), 0.46,
-				_materials.heart_ivory)
-			curve_piece.rotation.y = float(side) * curve_rad
-		# One compact seat remains beside each approach. The former three long
-		# walls and benches intersected the circular basins and looked like gray
-		# bridge lines laid across the water.
-		_add_bevel_box(gardens, "%sListeningSeat" % side_name,
-			Vector3(float(side) * 41.0, 1.75, -8.0),
-			Vector3(7.0, 0.7, 2.4), 0.38, _materials.heart_stone)
-		_build_faceted_ceremonial_crystal(gardens, "%sPathLight" % side_name,
-			Vector3(float(side) * 39.0, 4.4, -28.0), 3.2, 0.62, _materials.heart_cyan)
-		_add_forecourt_omni(gardens, "%sGardenLight" % side_name,
-			Vector3(float(side) * 39.0, 5.0, -28.0), Color("8cefff"), 0.9, 24.0)
-
-
-func _build_heart_resonance_gate_arch(parent: Node3D, prefix: String,
-		z_position: float, include_light_tracer: bool) -> void:
-	# The profile uses straight low-poly voussoirs rather than a smooth curve.
-	# Its spring points sit beyond the 18 metre player aisle and every part is
-	# overhead or embedded in the tower face.
-	var profile: Array[Vector2] = [
-		Vector2(-22.0, 7.0),
-		Vector2(-22.0, 24.0),
-		Vector2(-20.0, 29.0),
-		Vector2(-15.0, 35.0),
-		Vector2(-8.5, 39.2),
-		Vector2(0.0, 43.0),
-	]
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		for segment_index in profile.size() - 1:
-			var point_a := profile[segment_index]
-			var point_b := profile[segment_index + 1]
-			var a := Vector3(point_a.x * -side, point_a.y, z_position)
-			var b := Vector3(point_b.x * -side, point_b.y, z_position)
-			_add_reference_beam(parent, a, b, 2.15,
-				_materials.heart_ivory).name = "%sOuterArch_%s_%02d" % [
-					prefix, side_name, segment_index + 1]
-			# Short charcoal shadow stones give the arch depth and make each
-			# voussoir readable against the pale tower façade.
-			var shadow_offset := Vector3(0.0, -0.24,
-				0.42 if z_position < 0.0 else -0.42)
-			_add_reference_beam(parent, a + shadow_offset,
-				b + shadow_offset, 0.72,
-				_materials.heart_charcoal).name = "%sArchShadow_%s_%02d" % [
-					prefix, side_name, segment_index + 1]
-	if include_light_tracer:
-		var tracer_profile: Array[Vector2] = [
-			Vector2(-19.0, 12.0), Vector2(-19.0, 24.0),
-			Vector2(-16.5, 29.0), Vector2(-11.5, 34.0),
-			Vector2(-5.5, 38.0), Vector2(0.0, 40.5),
-		]
-		for side in [-1.0, 1.0]:
-			var side_name := "West" if side < 0 else "East"
-			for segment_index in tracer_profile.size() - 1:
-				var point_a := tracer_profile[segment_index]
-				var point_b := tracer_profile[segment_index + 1]
-				_add_reference_beam(parent,
-					Vector3(point_a.x * -side, point_a.y, z_position - 0.52),
-					Vector3(point_b.x * -side, point_b.y, z_position - 0.52),
-					0.34, _materials.heart_cyan).name = "%sLightTracer_%s_%02d" % [
-						prefix, side_name, segment_index + 1]
-	for key_index in 5:
-		var key_x := -13.5 + float(key_index) * 6.75
-		_build_faceted_ceremonial_crystal(parent,
-			"%sCrownKey_%02d" % [prefix, key_index + 1],
-			Vector3(key_x, 35.0 + (1.0 - abs(key_x) / 13.5) * 7.2,
-				z_position - (0.7 if z_position < 0.0 else -0.7)),
-			1.45, 0.30,
-			_materials.heart_cyan if key_index % 2 == 0 else _materials.heart_lavender)
-
-
-func _build_heart_instrument_hall(parent: Node3D, hall_index: int,
-		spec: Dictionary) -> void:
-	var hall := Node3D.new()
-	var title: String = str(spec["title"])
-	var hall_type: String = str(spec["type"])
-	hall.name = "InstrumentHall_%02d_%s" % [hall_index + 1, title.capitalize()]
-	hall.position = Vector3(float(spec["x"]), 0.0, float(spec["z"]))
-	hall.rotation.y = deg_to_rad(float(spec["yaw"]))
-	hall.set_meta("instrument_type", hall_type)
-	hall.set_meta("complete_front_side_rear", true)
-	hall.set_meta("collision_backed", true)
-	hall.set_meta("minimum_operator_clearance_m", 8.0)
-	parent.add_child(hall)
-	var width := float(spec["width"])
-	var depth := float(spec["depth"])
-	var height := float(spec["height"])
-	var roof_segments := int(spec["roof"])
-	var accent: Material = _materials.heart_cyan if hall_index % 2 == 0 else _materials.heart_lavender
-	var half_width := width * 0.5
-	var half_depth := depth * 0.5
-
-	# The visible shell and primitive collision share the same footprint. Closed
-	# glass doors prevent an apparently walkable opening from hiding a solid wall.
-	_add_box(hall, "HallFoundation", Vector3(0.0, 1.4, 2.0),
-		Vector3(width + 4.0, 2.8, depth + 5.0), _materials.heart_charcoal, true)
-	_add_bevel_box(hall, "HallBody", Vector3(0.0, height * 0.5 + 2.7, 2.0),
-		Vector3(width, height, depth), 1.0, _materials.heart_stone)
-	_add_box(hall, "HallCollision", Vector3(0.0, height * 0.5 + 2.7, 2.0),
-		Vector3(width - 0.8, height, depth - 0.8), _materials.heart_stone, true)
-
-	# Deep front portico, readable entrance and musical relief.
-	for side in [-1.0, 1.0]:
-		_add_bevel_box(hall, "FrontPier", Vector3(side * (half_width - 2.0),
-			height * 0.5 + 2.2, -half_depth - 0.8),
-			Vector3(3.2, height - 2.0, 2.0), 0.5, _materials.heart_ivory)
-	_add_bevel_box(hall, "FrontLintel", Vector3(0.0, height - 1.0, -half_depth - 0.8),
-		Vector3(width - 2.2, 3.0, 2.0), 0.55, _materials.heart_ivory)
-	_add_bevel_box(hall, "ClosedCyanEntrance", Vector3(0.0, 7.0, -half_depth - 1.05),
-		Vector3(6.4, 9.0, 0.24), 0.3, _materials.heart_glass)
-	for door_side in [-1.0, 1.0]:
-		_add_bevel_box(hall, "EntranceFrameSide", Vector3(door_side * 3.8, 7.0,
-			-half_depth - 1.32), Vector3(1.0, 10.8, 0.65), 0.24,
-			_materials.heart_ivory)
-	_add_bevel_box(hall, "EntranceFrameLintel", Vector3(0.0, 12.5,
-		-half_depth - 1.32), Vector3(8.6, 1.1, 0.65), 0.24,
-		_materials.heart_ivory)
-	_add_bevel_box(hall, "EntranceThreshold", Vector3(0.0, 2.45,
-		-half_depth - 1.65), Vector3(9.2, 0.55, 1.8), 0.30,
-		_materials.heart_ivory_shadow)
-	_add_bevel_box(hall, "EntranceDoorSplit", Vector3(0.0, 7.0,
-		-half_depth - 1.48), Vector3(0.22, 8.0, 0.22), 0.05,
-		_materials.heart_charcoal)
-	for handle_side in [-1.0, 1.0]:
-		_build_faceted_ceremonial_crystal(hall, "DoorHandle",
-			Vector3(handle_side * 0.72, 6.7, -half_depth - 1.72), 0.8, 0.16, accent)
-	for step_index in 2:
-		_add_bevel_box(hall, "HallFrontStep_%02d" % (step_index + 1),
-			Vector3(0.0, 1.65 + float(step_index) * 0.3,
-				-half_depth - 4.0 + float(step_index) * 1.25),
-			Vector3(11.0 - float(step_index) * 1.4, 0.55, 2.6), 0.35,
-			_materials.heart_ivory_shadow)
-	_add_bevel_box(hall, "InstrumentReliefPanel",
-		Vector3(0.0, height * 0.66, -half_depth - 1.2),
-		Vector3(width - 9.0, height * 0.32, 0.18), 0.45, _materials.heart_charcoal)
-	_build_heart_resonance_instrument(hall, hall_index,
-		Vector3(0.0, height * 0.66, -half_depth - 1.7))
-	_add_landmark_label(hall, title, Vector3(0.0, height - 4.3, -half_depth - 1.55),
-		Color("d8f8ff"), 20)
-
-	# Both side elevations receive windows, planted buttresses and roof drainage.
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		# A full-height framed bay replaces the exposed gray side slab. The broad
-		# ivory surround, charcoal recess and projecting pilasters keep every hall
-		# readable from the gate's oblique camera angles.
-		var side_frame := _add_bevel_box(hall, "%sSideFacadeFrame" % side_name,
-			Vector3(side * (half_width + 0.38), height * 0.51 + 3.0, 2.0),
-			Vector3(depth - 3.2, height * 0.77, 0.72), 0.48,
-			_materials.heart_ivory_shadow)
-		side_frame.rotation.y = PI * 0.5
-		var side_recess := _add_bevel_box(hall, "%sSideFacadeRecess" % side_name,
-			Vector3(side * (half_width + 0.79), height * 0.51 + 3.0, 2.0),
-			Vector3(depth - 6.4, height * 0.61, 0.24), 0.34,
-			_materials.heart_charcoal)
-		side_recess.rotation.y = PI * 0.5
-		var side_cornice := _add_bevel_box(hall, "%sSideCornice" % side_name,
-			Vector3(side * (half_width + 0.22), height - 0.5, 2.0),
-			Vector3(depth + 1.8, 1.4, 1.2), 0.38, _materials.heart_ivory)
-		side_cornice.rotation.y = PI * 0.5
-		for window_index in 2:
-			var side_window := _add_bevel_box(hall,
-				"%sSideWindow_%02d" % [side_name, window_index + 1],
-				Vector3(side * (half_width + 0.96), 10.0 + float(window_index) * 7.4,
-					-2.0 + float(window_index) * 7.0),
-				Vector3(6.0, 4.4, 0.24), 0.28, _materials.heart_glass)
-			side_window.rotation.y = PI * 0.5
-			var window_canopy := _add_bevel_box(hall,
-				"%sWindowCanopy_%02d" % [side_name, window_index + 1],
-				Vector3(side * (half_width + 1.18), 13.0 + float(window_index) * 7.4,
-					-2.0 + float(window_index) * 7.0),
-				Vector3(7.4, 0.8, 1.3), 0.28, accent)
-			window_canopy.rotation.y = PI * 0.5
-		for pilaster_index in 3:
-			var pilaster_z := -half_depth + 3.0 + float(pilaster_index) * \
-				((depth - 6.0) * 0.5)
-			_add_bevel_box(hall,
-				"%sSidePilaster_%02d" % [side_name, pilaster_index + 1],
-				Vector3(side * (half_width + 1.12), height * 0.48 + 3.0, pilaster_z + 2.0),
-				Vector3(1.15, height * 0.68, 1.15), 0.28,
-				_materials.heart_ivory)
-		# The Memory hall receives a five-string side register so its long wall
-		# reads as an instrument façade instead of another blank building panel.
-		if hall_index == 3:
-			for register_index in 5:
-				var register_z := -4.0 + float(register_index) * 2.0
-				var register := _add_bevel_box(hall,
-					"%sMemoryRegister_%02d" % [side_name, register_index + 1],
-					Vector3(side * (half_width + 1.16), height * 0.69 + 2.5, register_z),
-					Vector3(0.30, 7.5 - abs(float(register_index) - 2.0) * 0.55, 0.30),
-					0.08, _materials.heart_cyan if register_index % 2 == 0 \
-					else _materials.heart_lavender)
-				register.rotation.y = PI * 0.5
-		for buttress_z in [-half_depth + 2.0, half_depth + 1.0]:
-			_add_tapered_cylinder(hall, "%sLivingButtress" % side_name,
-				Vector3(side * (half_width + 1.1), 6.1, buttress_z + 2.0),
-				2.1, 1.25, 11.0, _materials.heart_ivory, 6)
-
-	# The rear is an authored garden elevation rather than the previous blank box.
-	_add_bevel_box(hall, "RearIvoryFrame", Vector3(0.0, height * 0.55 + 2.0,
-		half_depth + 2.12), Vector3(width - 5.0, height * 0.62, 0.7),
-		0.55, _materials.heart_ivory)
-	_add_bevel_box(hall, "RearCyanWindow", Vector3(0.0, height * 0.58 + 2.0,
-		half_depth + 2.5), Vector3(width - 10.0, height * 0.38, 0.18),
-		0.42, _materials.heart_glass)
-	_add_bevel_box(hall, "RearWindowCanopy", Vector3(0.0, height * 0.82 + 2.0,
-		half_depth + 3.0), Vector3(width - 6.0, 1.0, 2.4),
-		0.34, _materials.heart_roof)
-	_add_bevel_box(hall, "RearGardenPlanter", Vector3(0.0, 2.2, half_depth + 4.0),
-		Vector3(width - 5.0, 2.0, 4.2), 0.52, _materials.heart_ivory)
-	_add_bevel_box(hall, "RearGardenSoil", Vector3(0.0, 3.24, half_depth + 4.0),
-		Vector3(width - 7.0, 0.10, 2.8), 0.24, _materials.heart_soil)
-	for flower_index in 3:
-		_add_heart_planting_cluster(hall, Vector3(-half_width + 5.0 + float(flower_index) *
-			(width - 10.0) * 0.5, 3.5, half_depth + 4.0),
-			(hall_index + flower_index) % 2 == 0)
-	for rear_crystal_side in [-1.0, 1.0]:
-		_build_faceted_ceremonial_crystal(hall, "RearGardenCrystal",
-			Vector3(rear_crystal_side * (half_width - 3.2), 5.0, half_depth + 4.2),
-			4.0, 0.72, accent)
-
-	# Varied roof profiles give each hall an individual silhouette.
-	_add_bevel_box(hall, "RoofCornice", Vector3(0.0, height + 3.1, 2.0),
-		Vector3(width + 2.0, 1.6, depth + 2.0), 0.65, _materials.heart_ivory)
-	_add_tapered_cylinder(hall, "FacetedHallRoof", Vector3(0.0, height + 6.0, 2.0),
-		half_width + 1.0, half_width * 0.78, 5.0 + float(hall_index % 2) * 2.0,
-		_materials.heart_roof, roof_segments)
-	match hall_index:
-		0:
-			# Rhythm is a low drum house with two massive resonating side towers.
-			for side in [-1.0, 1.0]:
-				_add_cylinder(hall, "RhythmSideTower", Vector3(side * (half_width + 3.6),
-					10.5, -half_depth * 0.15), 5.1, 17.0,
-					_materials.heart_stone, false, 10)
-				var drum_face := _add_cylinder(hall, "RhythmTowerDrumFace",
-					Vector3(side * (half_width + 3.8), 12.0, -half_depth - 0.6),
-					4.4, 1.2, accent, false, 10)
-				drum_face.rotation_degrees.x = 90.0
-				_add_cylinder(hall, "RhythmRoofDrum", Vector3(side * 6.0,
-					height + 9.0, 2.0), 3.1, 2.0, accent, false, 10)
-		1:
-			# Rain rises as a glass chime lantern with staggered roof pipes.
-			_add_bevel_box(hall, "RainGlassLantern", Vector3(0.0, height + 10.0, 2.0),
-				Vector3(11.0, 15.0, 11.0), 0.75, _materials.heart_glass)
-			_add_tapered_cylinder(hall, "RainLanternRoof", Vector3(0.0, height + 19.0, 2.0),
-				7.0, 0.8, 5.0, _materials.heart_roof, 8)
-			for pipe_index in 3:
-				_add_tapered_cylinder(hall, "RainRoofPipe_%02d" % (pipe_index + 1),
-					Vector3(-5.0 + float(pipe_index) * 5.0, height + 14.0, -4.0),
-					1.3, 0.8, 8.0 + float(pipe_index % 2) * 3.0, accent, 8)
-		2:
-			# Keep the courage roof as a clean faceted mass. The former open gable
-			# looked like an unsupported construction frame from the gate approach.
-			for side in [-1.0, 1.0]:
-				var wing := _add_bevel_box(hall, "CourageRoofWing",
-					Vector3(side * 8.0, height + 8.5, -1.0),
-					Vector3(9.0, 1.3, 5.0), 0.4, accent)
-				wing.rotation.z = deg_to_rad(side * 24.0)
-		3:
-			# The memory instrument remains on the façade; the former open roof harp
-			# and hanging bars have been removed to keep the skyline clean.
-			pass
-		4:
-			# Hope is the unmistakable vertical landmark of the wing.
-			_add_tapered_cylinder(hall, "HopeBellTower", Vector3(0.0, height + 12.0, 2.0),
-				5.0, 2.1, 11.0, _materials.heart_ivory, 10)
-			_add_tapered_cylinder(hall, "HopeBellCanopy", Vector3(0.0, height + 18.0, 2.0),
-				5.8, 0.4, 4.0, _materials.heart_roof, 10)
-		5:
-			# Harmony is a round observatory with a supported cyan dome.
-			_add_sphere(hall, "HarmonyRoofDome", Vector3(0.0, height + 10.0, 2.0),
-				Vector3(10.0, 5.8, 10.0), _materials.heart_glass)
-			for column_index in 6:
-				var column_angle := TAU * float(column_index) / 6.0
-				_add_tapered_cylinder(hall, "HarmonyDomeColumn_%02d" % (column_index + 1),
-					Vector3(cos(column_angle) * 9.0, height + 4.5,
-						2.0 + sin(column_angle) * 9.0), 0.7, 0.5, 9.0,
-					_materials.heart_ivory, 6)
-	_build_faceted_ceremonial_crystal(hall, "HallCrownCrystal",
-		Vector3(0.0, height + 15.0 + (7.0 if hall_index == 4 else 0.0), 2.0),
-		3.8, 0.82, accent)
-	_add_forecourt_omni(hall, "HallGlow", Vector3(0.0, 12.0, -half_depth - 2.5),
-		Color("9eeeff") if hall_index % 2 == 0 else Color("caa6ff"), 0.65, 18.0)
-
-
-func _build_heart_resonance_instrument(parent: Node3D, bay_index: int,
-		centre: Vector3) -> void:
-	var instrument := Node3D.new()
-	instrument.name = "Instrument_%02d" % (bay_index + 1)
-	instrument.set_meta("instrument_type", ["drum", "rain_chimes", "horn",
-		"memory_harp", "hope_bells", "harmony_orbit"][bay_index])
-	parent.add_child(instrument)
-	var cyan: Material = _materials.heart_cyan
-	var violet: Material = _materials.heart_lavender
-	match bay_index:
-		0: # Paired rhythm drums.
-			for side in [-1.0, 1.0]:
-				var drum := _add_cylinder(instrument, "RhythmDrum", centre + Vector3(side * 2.2, 0.0, -0.3),
-					1.65, 4.2, violet if side < 0 else cyan, false, 10)
-				drum.rotation_degrees.x = 90.0
-		1: # Descending rain chimes.
-			for chime_index in 5:
-				var x := -3.2 + float(chime_index) * 1.6
-				_add_reference_beam(instrument, centre + Vector3(x, 2.8, 0.0),
-					centre + Vector3(x, -2.2 + float(chime_index % 2), 0.0),
-					0.34, cyan).name = "RainChime_%02d" % (chime_index + 1)
-		2: # Courage horn with a bright bell.
-			var horn := _add_tapered_cylinder(instrument, "CourageHorn", centre,
-				1.1, 3.3, 7.5, violet, 10)
-			horn.rotation_degrees.z = 90.0
-		3: # Memory harp with seven readable strings.
-			for string_index in 5:
-				_add_reference_beam(instrument,
-					centre + Vector3(-3.0 + float(string_index) * 1.5, -3.0, 0.0),
-					centre + Vector3(-2.2 + float(string_index) * 1.1, 3.0, 0.0),
-					0.22, cyan).name = "MemoryString_%02d" % (string_index + 1)
-			_add_reference_beam(instrument, centre + Vector3(-4.0, -3.2, 0.0),
-				centre + Vector3(4.0, -3.2, 0.0), 0.48, violet).name = "HarpBase"
-		4: # Three hope bells at different pitches.
-			for bell_index in 3:
-				_add_tapered_cylinder(instrument, "HopeBell_%02d" % (bell_index + 1),
-					centre + Vector3(-2.8 + float(bell_index) * 2.8, 0.0, 0.0),
-					1.7, 0.65, 4.2 + float(bell_index),
-					cyan if bell_index == 1 else violet, 8)
-		5: # Small orbiting harmony notes.
-			_add_sphere(instrument, "HarmonyCore", centre, Vector3.ONE * 2.3, cyan)
-			for orbit_index in 4:
-				var angle := TAU * float(orbit_index) / 4.0
-				_build_faceted_ceremonial_crystal(instrument,
-					"OrbitNote_%02d" % (orbit_index + 1),
-					centre + Vector3(cos(angle) * 4.1, sin(angle) * 4.1, 0.0),
-					1.5, 0.35, violet)
+		_add_flower_cluster(district, HEART + Vector3(cos(angle) * 147.0, 3.0, sin(angle) * 147.0), true)
 
 
 func _build_creator_district() -> void:
@@ -3020,71 +836,70 @@ func _build_mind_spark_world_one_gameplay() -> void:
 	var source_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
 	source_gate.name = "MindSparkWorldGate"
 	source_gate.position = MIND_GATE_POSITION
-	source_gate.target_world_path = NodePath("../MindSparkWorldOne")
-	source_gate.use_target_world_arrival = true
 	source_gate.destination_world_local = MIND_WORLD_ONE_ORIGIN \
 		+ world_one.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0)
 	source_gate.prompt_text = "Q • ENTER WORLD ONE: MIND SPARK"
-	var portal_visual := source_gate.get_node("Portal") as Node3D
-	portal_visual.scale = Vector3.ONE * 1.26
-	var portal_light := source_gate.get_node("Light") as OmniLight3D
-	portal_light.light_color = Color("6de5ef")
-	portal_light.light_energy = 3.2
-	portal_light.omni_range = 26.0
-	source_gate.set_meta("ceremonial_visual_scale", 1.26)
 	add_child(source_gate)
 	_build_world_one_causeway(world_one)
 	if world_one.defer_world_build:
 		_add_world_one_build_trigger(world_one)
 
 
-func remove_pink_purple_sphere_placeholders() -> int:
-	## Remove the legacy coloured ball dressing from every loaded Galaxy World
-	## district, bridge, remote kingdom and destination world. Purpose-built
-	## crystals, rings, foliage meshes and interaction logic remain intact.
-	var removed := 0
-	var candidates := find_children("*", "MeshInstance3D", true, false)
-	for candidate in candidates:
-		var instance := candidate as MeshInstance3D
-		if instance == null or not instance.mesh is SphereMesh:
-			continue
-		var material := instance.material_override as StandardMaterial3D
-		if material == null and instance.mesh.get_surface_count() > 0:
-			material = instance.mesh.surface_get_material(0) as StandardMaterial3D
-		if material == null or not _is_pink_or_purple_placeholder_colour(
-				material.albedo_color):
-			continue
-		instance.free()
-		removed += 1
-	set_meta("pink_purple_sphere_cleanup", true)
-	set_meta("pink_purple_spheres_removed",
-		int(get_meta("pink_purple_spheres_removed", 0)) + removed)
-	return removed
-
-
-func _is_pink_or_purple_placeholder_colour(colour: Color) -> bool:
-	# The value floor protects the near-black guide character and structural
-	# charcoal. Cyan glass, green planting and warm lights sit outside this hue.
-	if colour.s < 0.08 or colour.v < 0.25:
-		return false
-	return (colour.h >= 0.68 and colour.h <= 0.86) or colour.h >= 0.88
-
-
 func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
-	# The kilometre-long secondary causeway duplicated the functional World Gate
-	# route and cluttered the Mind Spark skyline. Keep a non-rendering marker for
-	# regression checks while removing every deck, rail, pier, support island,
-	# render batch and collision body from play.
-	if has_node("MindSparkWorldOneCausewayRemoved"):
+	## A physically walkable route from the Mind Spark district out to the
+	## relocated World One landing, so the new land is reachable on foot and not
+	## only through the world gate. The span crosses open void, so it is built as
+	## a piered causeway resting on intermediate support islands rather than as a
+	## single unsupported deck.
+	if has_node("MindSparkWorldOneCauseway"):
 		return
-	var removed := Node3D.new()
-	removed.name = "MindSparkWorldOneCausewayRemoved"
-	removed.set_meta("design_revision", "world_gate_only_v1")
-	removed.set_meta("all_visuals_removed", true)
-	removed.set_meta("all_collision_removed", true)
-	removed.set_meta("support_islands_removed", true)
-	removed.set_meta("world_gate_preserved", world_one != null)
-	add_child(removed)
+	var causeway := Node3D.new()
+	causeway.name = "MindSparkWorldOneCauseway"
+	add_child(causeway)
+	var landing := MIND_WORLD_ONE_ORIGIN \
+		+ world_one.get_zone_position("01_world_gate_landing")
+	var flat_direction := Vector3(landing.x - MIND.x, 0.0, landing.z - MIND.z).normalized()
+	# Start on the district rim and finish on the Zone 01 floor, both slightly
+	# inside the islands so neither joint leaves a gap the player can fall through.
+	var start: Vector3 = MIND + flat_direction * (MIND_DISTRICT_RADIUS - 8.0)
+	start.y = CAUSEWAY_DECK_Y
+	var finish: Vector3 = landing - flat_direction * 118.0
+	finish.y = CAUSEWAY_DECK_Y
+	var span := start.distance_to(finish)
+	var segment_count := maxi(2, int(round(span / CAUSEWAY_SEGMENT_LENGTH)))
+	# Support islands sit between segments and carry the piers of both neighbours.
+	for index in range(1, segment_count):
+		var pier_center: Vector3 = start.lerp(finish, float(index) / float(segment_count))
+		_build_causeway_support_island(causeway, pier_center, index)
+	for index in segment_count:
+		var leg_start: Vector3 = start.lerp(finish, float(index) / float(segment_count))
+		var leg_finish: Vector3 = start.lerp(finish, float(index + 1) / float(segment_count))
+		_add_bridge_between(causeway, leg_start, leg_finish, CAUSEWAY_WIDTH)
+	_add_landmark_label(causeway, "CAUSEWAY • WALK TO WORLD ONE: MIND SPARK",
+		start + flat_direction * 40.0 + Vector3(0.0, 26.0, 0.0), Color("8df8ff"), 40)
+	_add_landmark_label(causeway, "WORLD ONE • MIND SPARK LANDING",
+		finish - flat_direction * 40.0 + Vector3(0.0, 26.0, 0.0), Color("bffbff"), 40)
+	causeway.set_meta("span_metres", span)
+	causeway.set_meta("segment_count", segment_count)
+	causeway.set_meta("deck_y", CAUSEWAY_DECK_Y)
+	causeway.set_meta("walk_start", start)
+	causeway.set_meta("walk_finish", finish)
+
+
+func _build_causeway_support_island(parent: Node3D, center: Vector3, index: int) -> void:
+	var island := Node3D.new()
+	island.name = "CausewaySupportIsland_%02d" % index
+	parent.add_child(island)
+	# The deck lands on top of the island, so the walk stays level across it.
+	_build_island_foundation(island, center, CAUSEWAY_ISLAND_RADIUS, 44.0, 24)
+	_add_cylinder(island, "RestPlaza", center + Vector3(0.0, 0.15, 0.0),
+		CAUSEWAY_ISLAND_RADIUS * 0.66, 0.3, _materials.aqua_glass, false, 24)
+	for lamp in 4:
+		var angle := TAU * float(lamp) / 4.0
+		_add_cylinder(island, "CausewayLamp_%02d" % lamp,
+			center + Vector3(cos(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72, 7.0,
+				sin(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72), 1.1, 14.0,
+			_materials.aqua, false, 8)
 
 
 func _build_world_one_walk_route() -> void:
@@ -3101,13 +916,7 @@ func _build_world_one_walk_route() -> void:
 		MIND_GATE_POSITION + Vector3.UP * 0.95,
 	]
 	for index in points.size() - 1:
-		var finish: Vector3 = points[index + 1]
-		# The ceremonial paving owns the final forty-four metres. Stopping the old
-		# dotted guide at its threshold removes the bright line that formerly ran
-		# through the gate court while preserving the complete causeway route.
-		if index == points.size() - 2:
-			finish = MIND_GATE_POSITION + (points[index] - MIND_GATE_POSITION).normalized() * 44.0
-		_add_walk_route_dots(route, points[index], finish, index)
+		_add_walk_route_dots(route, points[index], points[index + 1], index)
 	_add_landmark_label(route, "WORLD ONE • MIND SPARK  ←  WALK LEFT",
 		Vector3(-92, 24, 1518), Color("8df8ff"), 42)
 	_add_landmark_label(route, "MIND SPARK WORLD GATE • QUESTS BEYOND",
@@ -3171,12 +980,12 @@ func _build_heart_story_landmarks() -> void:
 	add_child(story)
 	# Seven emotional places circle the Personal Song amphitheatre.
 	var places := [
-		{"name": "JoyGarden", "text": "JOY GARDEN", "offset": Vector3(-125.0, 0.0, 42.0), "mat": _materials.pink},
-		{"name": "FrustrationDrums", "text": "FRUSTRATION DRUMS", "offset": Vector3(-118.0, 0.0, -34.0), "mat": _materials.pink},
-		{"name": "SadnessRainBoat", "text": "SADNESS RAIN BOAT", "offset": Vector3(-61.0, 0.0, -64.0), "mat": _materials.aqua},
-		{"name": "FearWarningBells", "text": "FEAR WARNING BELLS", "offset": Vector3(61.0, 0.0, -64.0), "mat": _materials.purple},
+		{"name": "JoyGarden", "text": "JOY GARDEN", "offset": Vector3(-125.0, 0.0, 42.0), "mat": _materials.gold},
+		{"name": "FrustrationDrums", "text": "FRUSTRATION DRUMS", "offset": Vector3(-92.0, 0.0, -80.0), "mat": _materials.pink},
+		{"name": "SadnessRainBoat", "text": "SADNESS RAIN BOAT", "offset": Vector3(-8.0, 0.0, -135.0), "mat": _materials.aqua},
+		{"name": "FearWarningBells", "text": "FEAR WARNING BELLS", "offset": Vector3(95.0, 0.0, -82.0), "mat": _materials.purple},
 		{"name": "PeaceFlowers", "text": "PEACE FLOWERS", "offset": Vector3(132.0, 0.0, 20.0), "mat": _materials.green},
-		{"name": "HopeMorningStage", "text": "HOPE MORNING STAGE", "offset": Vector3(70.0, 0.0, 118.0), "mat": _materials.aqua},
+		{"name": "HopeMorningStage", "text": "HOPE MORNING STAGE", "offset": Vector3(70.0, 0.0, 118.0), "mat": _materials.gold},
 	]
 	for index in places.size():
 		var info: Dictionary = places[index]
@@ -3184,123 +993,14 @@ func _build_heart_story_landmarks() -> void:
 		landmark.name = info.name
 		story.add_child(landmark)
 		var position_value: Vector3 = HEART + info.offset
-		_add_cylinder(landmark, "SolidInstrumentFoundation",
-			position_value + Vector3(0.0, 4.65, 0.0),
-			10.2 + float(index % 2), 1.3, _materials.heart_charcoal, true, 12)
-		_add_cylinder(landmark, "InstrumentGardenTop",
-			position_value + Vector3(0.0, 5.38, 0.0),
-			9.0 + float(index % 2), 0.16, _materials.heart_lawn, false, 12)
-		match index:
-			0: # Joy garden: a singing tree surrounded by six bell flowers.
-				_build_heart_faceted_tree(landmark, "JoySingingTree",
-					position_value + Vector3.UP * 5.5, 12.0)
-				for flower_index in 6:
-					var flower_angle := TAU * float(flower_index) / 6.0
-					var flower_pos := position_value + Vector3(cos(flower_angle) * 7.0,
-						7.2, sin(flower_angle) * 7.0)
-					_add_reference_beam(landmark, flower_pos, flower_pos + Vector3.UP * 3.0,
-						0.22, _materials.heart_wood).name = "JoyFlowerStem"
-					_build_faceted_ceremonial_crystal(landmark, "JoyBellFlower",
-						flower_pos + Vector3.UP * 3.6, 2.2, 0.42,
-						_materials.heart_bloom_pink if flower_index % 2 == 0 else _materials.heart_cyan)
-			1: # Frustration becomes a grounded three-drum release circle.
-				for drum_index in 3:
-					var drum_angle := -0.65 + float(drum_index) * 0.65
-					var drum := _add_cylinder(landmark, "FrustrationDrum_%02d" % (drum_index + 1),
-						position_value + Vector3(sin(drum_angle) * 5.2, 9.5,
-							cos(drum_angle) * 2.5), 2.6 + float(drum_index % 2) * 0.6,
-						5.0, _materials.heart_bloom, false, 10)
-					drum.rotation_degrees.x = 90.0
-					_add_reference_beam(landmark,
-						position_value + Vector3(-6.0 + drum_index * 4.2, 12.5, -2.0),
-						position_value + Vector3(-3.0 + drum_index * 4.2, 16.5, -1.0),
-						0.32, _materials.heart_wood).name = "DrumMallet"
-			2: # Sadness is held by a small rain boat and descending chimes.
-				_add_bevel_box(landmark, "RainBoatHull", position_value + Vector3(0.0, 7.0, 0.0),
-					Vector3(13.0, 2.4, 5.5), 1.8, _materials.heart_roof)
-				_add_reference_beam(landmark, position_value + Vector3(-5.0, 10.0, 0.0),
-					position_value + Vector3(5.0, 10.0, 0.0), 0.45,
-					_materials.heart_ivory).name = "RainChimeCanopy"
-				for chime_index in 5:
-					_add_reference_beam(landmark,
-						position_value + Vector3(-4.0 + chime_index * 2.0, 9.8, 0.0),
-						position_value + Vector3(-4.0 + chime_index * 2.0,
-							5.7 + float(chime_index % 2), 0.0), 0.24,
-						_materials.heart_cyan).name = "RainBoatChime"
-			3: # Fear uses a readable warning-bell arch.
-				for side in [-1.0, 1.0]:
-					_add_tapered_cylinder(landmark, "WarningBellColumn",
-						position_value + Vector3(side * 6.0, 11.0, 0.0), 1.1, 0.75,
-						11.0, _materials.heart_ivory, 8)
-				_add_reference_beam(landmark, position_value + Vector3(-7.0, 16.5, 0.0),
-					position_value + Vector3(7.0, 16.5, 0.0), 0.72,
-					_materials.heart_roof).name = "WarningBellLintel"
-				for bell_index in 3:
-					_add_tapered_cylinder(landmark, "WarningBell_%02d" % (bell_index + 1),
-						position_value + Vector3(-3.8 + bell_index * 3.8, 13.5, 0.0),
-						1.6, 0.55, 3.8, _materials.heart_lavender, 8)
-			4: # Peace is an actual planted court with a quiet water prism.
-				for flower_index in 7:
-					var flower_angle := TAU * float(flower_index) / 7.0
-					_add_heart_planting_cluster(landmark,
-						position_value + Vector3(cos(flower_angle) * 6.5, 5.6,
-							sin(flower_angle) * 6.5), flower_index % 2 == 0, 0.62)
-				_build_faceted_ceremonial_crystal(landmark, "PeaceWaterPrism",
-					position_value + Vector3.UP * 10.0, 5.8, 1.1, _materials.heart_cyan)
-			5: # Hope is an east-facing sunrise stage with five ascending rays.
-				_add_bevel_box(landmark, "HopeStage", position_value + Vector3(0.0, 6.2, 0.0),
-					Vector3(16.0, 1.4, 9.0), 1.2, _materials.heart_ivory_shadow)
-				for ray_index in 5:
-					var ray_x := -6.0 + float(ray_index) * 3.0
-					_add_reference_beam(landmark,
-						position_value + Vector3(0.0, 7.0, 1.0),
-						position_value + Vector3(ray_x, 12.0 + absf(ray_x) * 0.45, 1.0),
-						0.34, _materials.heart_light).name = "HopeRay_%02d" % (ray_index + 1)
-		_add_landmark_label(landmark, info.text,
-			position_value + Vector3(0.0, 23.0, 0.0), Color("d8f8ff"), 25)
+		_add_cylinder(landmark, "EmotionInstrument", position_value + Vector3(0.0, 8.0, 0.0),
+			12.0 + float(index % 2) * 4.0, 16.0, info.mat, true, 20)
+		_add_landmark_label(landmark, info.text, position_value + Vector3(0.0, 31.0, 0.0), Color("ffe5f4"), 31)
 	var song := Node3D.new()
 	song.name = "PersonalSongAmphitheatre"
-	song.set_meta("gold_ring_removed", true)
 	story.add_child(song)
-	_add_cylinder(song, "PersonalSongFoundation", HEART + Vector3(0.0, 4.55, 0.0),
-		34.0, 1.1, _materials.heart_charcoal, true, 20)
-	_add_cylinder(song, "PersonalSongStage", HEART + Vector3(0.0, 5.18, 0.0),
-		27.0, 0.18, _materials.heart_path, false, 20)
-	_add_cylinder(song, "PersonalSongInnerLight", HEART + Vector3(0.0, 5.31, 0.0),
-		10.0, 0.08, _materials.heart_water, false, 16)
-	for seat_index in 12:
-		var seat_angle := TAU * float(seat_index) / 12.0
-		var seat := _add_bevel_box(song, "ListeningSeat_%02d" % (seat_index + 1),
-			HEART + Vector3(sin(seat_angle) * 29.5, 6.2, cos(seat_angle) * 29.5),
-			Vector3(7.2, 1.6, 3.2), 0.4, _materials.heart_ivory_shadow)
-		seat.rotation.y = seat_angle
-	_build_faceted_ceremonial_crystal(song, "HarmonyJewel",
-		HEART + Vector3(0.0, 12.0, 0.0), 7.2, 1.55, _materials.heart_lavender)
-	_add_reference_beam(song, HEART + Vector3(-7.5, 6.1, 3.0),
-		HEART + Vector3(7.5, 6.1, 3.0), 0.72,
-		_materials.heart_ivory).name = "PersonalSongHarpBase"
-	_add_reference_beam(song, HEART + Vector3(-7.5, 6.1, 3.0),
-		HEART + Vector3(-5.5, 18.0, 3.0), 0.68,
-		_materials.heart_ivory).name = "PersonalSongHarpWest"
-	_add_reference_beam(song, HEART + Vector3(-5.5, 18.0, 3.0),
-		HEART + Vector3(7.5, 6.1, 3.0), 0.68,
-		_materials.heart_ivory).name = "PersonalSongHarpCrown"
-	for string_index in 5:
-		var string_x := -5.0 + float(string_index) * 2.5
-		_add_reference_beam(song, HEART + Vector3(string_x, 6.3, 3.0),
-			HEART + Vector3(string_x, 15.5 - absf(string_x) * 0.55, 3.0),
-			0.22, _materials.heart_light).name = "PersonalSongString_%02d" % (string_index + 1)
-	for channel_index in 8:
-		var channel_angle := TAU * float(channel_index) / 8.0
-		var channel := _add_bevel_box(song, "SongChannel_%02d" % (channel_index + 1),
-			HEART + Vector3(cos(channel_angle) * 18.0, 5.46,
-				sin(channel_angle) * 18.0), Vector3(10.0, 0.06, 1.2), 0.12,
-			_materials.heart_cyan)
-		channel.rotation.y = -channel_angle
-	_add_forecourt_omni(song, "PersonalSongLight", HEART + Vector3(0.0, 13.0, 0.0),
-		Color("b993ff"), 0.7, 25.0)
-	_add_landmark_label(song, "RAPHAEL • PERSONAL SONG • HARMONY JEWEL",
-		HEART + Vector3(0.0, 34.0, 0.0), Color("e8d9ff"), 34)
+	_add_torus(song, "HarmonyJewelRing", HEART + Vector3(0.0, 9.0, 0.0), 32.0, 39.0, _materials.gold)
+	_add_landmark_label(song, "RAPHAEL • PERSONAL SONG • HARMONY JEWEL", HEART + Vector3(0.0, 58.0, 0.0), Color("fff0b0"), 34)
 
 
 func _build_creator_story_landmarks() -> void:
@@ -3338,46 +1038,28 @@ func _build_creator_story_landmarks() -> void:
 
 func _build_boundary_observatories() -> void:
 	var points := [
-		# Keep the northern observatory out of the straight Heart gate sightline.
-		# The former centred placement read as a giant gray rectangle behind the
-		# entrance whenever the elevated Crown Line crossed in front of it.
-		{"name": "NorthObservatory", "center": Vector3(-255.0, 0.0, 2525.0),
+		# The Crown Line Mind station occupies the former (-920, 0, 1640) site.
+		# Move this 112 m tower south with its own approach so its giant solid body
+		# no longer passes through the station platform and crystal canopy.
+		{"name": "WestObservatory", "center": Vector3(-920.0, 0.0, 1430.0),
+			"source_center": MIND, "source_radius": MIND_DISTRICT_RADIUS},
+		{"name": "NorthObservatory", "center": Vector3(0.0, 0.0, 2565.0),
 			"source_center": HEART, "source_radius": 175.0},
 		{"name": "EastObservatory", "center": Vector3(920.0, 0.0, 1640.0),
 			"source_center": CREATOR, "source_radius": 195.0},
+		{"name": "SouthObservatory", "center": Vector3(0.0, 0.0, 710.0),
+			"source_center": SOUTH_GATE, "source_radius": 155.0},
 	]
 	for info in points:
 		var lookout := Node3D.new()
 		lookout.name = info.name
 		add_child(lookout)
 		var center: Vector3 = info.center
-		lookout.set_meta("architecture_revision", "faceted_observatory_v3")
-		lookout.set_meta("placeholder_rectangle_removed", true)
-		lookout.set_meta("clear_of_primary_gate_sightline", info.name == "NorthObservatory")
 		_build_island_foundation(lookout, center, 70.0, 38.0, 20)
 		_add_torus(lookout, "CompassRing", center + Vector3(0.0, 1.0, 0.0), 33.0, 38.0, _materials.gold)
 		_build_tower(lookout, center, 34.0, 112.0, _materials.ivory)
 		_add_exact_twin_island_bridges("%sBridge" % info.name,
 			info.source_center, float(info.source_radius), center, 70.0)
-	# The South Observatory sat directly behind the old gold rectangle and read
-	# as a watchtower growing out of the entrance. The garden gate now owns this
-	# sightline, so the tower, foundation and redundant bridge pair are absent.
-	var removed_south_observatory := Node3D.new()
-	removed_south_observatory.name = "SouthObservatoryRemoved"
-	removed_south_observatory.set_meta("tower_removed", true)
-	removed_south_observatory.set_meta("island_foundation_removed", true)
-	removed_south_observatory.set_meta("dead_end_bridges_removed", true)
-	removed_south_observatory.set_meta("replaced_by", "ArrivalIsland/ArtCastleGalaxyGrandGate")
-	add_child(removed_south_observatory)
-	# The former West Observatory was a detached watchtower island behind Mind
-	# Spark. Its large round foundation and twin dead-end bridges crowded the
-	# district silhouette, so the complete structure and all collision are gone.
-	var removed_west_observatory := Node3D.new()
-	removed_west_observatory.name = "WestObservatoryRemoved"
-	removed_west_observatory.set_meta("tower_removed", true)
-	removed_west_observatory.set_meta("island_foundation_removed", true)
-	removed_west_observatory.set_meta("dead_end_bridges_removed", true)
-	add_child(removed_west_observatory)
 
 
 func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
@@ -3524,7 +1206,6 @@ func _build_island_foundation(parent: Node3D, center: Vector3, radius: float,
 	for index in 12:
 		var angle := TAU * float(index) / 12.0
 		var crystal := MeshInstance3D.new()
-		crystal.name = "FoundationCrystal_%02d" % (index + 1)
 		var crystal_mesh := CylinderMesh.new()
 		crystal_mesh.top_radius = radius * 0.035
 		crystal_mesh.bottom_radius = radius * 0.006
@@ -3541,231 +1222,41 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	bridge.name = node_name
 	add_child(bridge)
 	var tree_processional := node_name == "SouthArrivalBridge"
-	var heart_processional := node_name == "HeartBridge"
-	var mind_processional := node_name == "MindBridge"
 	var direction := end - start
 	var length := direction.length()
+	var midpoint := (start + end) * 0.5 + Vector3(0.0, -2.0, 0.0)
 	var yaw := atan2(direction.x, direction.z)
-	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
-	var forward_axis := direction.normalized()
-	var surface_normal := forward_axis.cross(side_axis).normalized()
-	var bridge_basis := Basis(side_axis, surface_normal, forward_axis)
-	var midpoint := (start + end) * 0.5 - surface_normal * 2.0
-	var walkway_material: Material = _materials.passage_stone if tree_processional \
-		else (_materials.heart_path if heart_processional \
-		else (_materials.heart_path if mind_processional else _materials.stone))
-	var walkway := _add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
+	var walkway_material: Material = _materials.passage_stone if tree_processional else _materials.stone
+	_add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
 		walkway_material, true, yaw)
-	walkway.basis = bridge_basis
-	var walkway_collision := bridge.get_child(bridge.get_child_count() - 1) as StaticBody3D
-	walkway_collision.basis = bridge_basis
+	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
 	for side in [-1.0, 1.0]:
-		var rail_height := 5.0 if tree_processional else (5.5 if heart_processional else 10.0)
-		var rail_y := 2.5 if tree_processional else (2.75 if heart_processional else 5.0)
+		var rail_height := 5.0 if tree_processional else 10.0
+		var rail_y := 2.5 if tree_processional else 5.0
 		var rail_material: Material = _materials.passage_stone_shadow \
-			if tree_processional else (_materials.heart_ivory if heart_processional \
-			else (_materials.heart_ivory if mind_processional else _materials.ivory))
+			if tree_processional else _materials.ivory
 		var edge_position: Vector3 = midpoint \
 			+ side_axis * float(side) * (width * 0.5 - 2.0) \
-			+ surface_normal * rail_y
+			+ Vector3(0.0, rail_y, 0.0)
 		var safety_rail := _add_box(bridge, "SafetyRail", edge_position,
 			Vector3(2.4 if tree_processional else 3.0, rail_height, length),
 			rail_material, true, yaw)
-		safety_rail.basis = bridge_basis
-		var safety_collision := bridge.get_child(bridge.get_child_count() - 1) as StaticBody3D
-		safety_collision.basis = bridge_basis
 		# Retain the original continuous fall-prevention collision, but let the
 		# lightweight botanical lattice carry the visible silhouette.
-		safety_rail.visible = not tree_processional and not heart_processional and not mind_processional
-		if not tree_processional and not mind_processional:
+		safety_rail.visible = not tree_processional
+		if not tree_processional:
 			for step in range(0, int(length), 55):
 				var t := float(step) / length
 				var planter_pos: Vector3 = start.lerp(end, t) \
 					+ side_axis * float(side) * (width * 0.5 - 7.0) \
 					+ Vector3(0.0, 3.0, 0.0)
-				if heart_processional:
-					_add_heart_planting_cluster(bridge, planter_pos - Vector3.UP * 1.4,
-						(step / 55) % 2 == 0, 0.58)
-				else:
-					_add_flower_cluster(bridge, planter_pos, (step / 55) % 2 == 0)
+				_add_flower_cluster(bridge, planter_pos, (step / 55) % 2 == 0)
 	for step in range(45, int(length), 90):
 		var t := float(step) / length
 		var support_pos := start.lerp(end, t) + Vector3(0.0, -24.0, 0.0)
-		# HeartBridge crosses the open celestial void as a light, self-supporting
-		# span. The exposed pier assemblies read as unfinished columns from the
-		# island camera, so only the other bridges receive underside supports.
-		if not heart_processional and not mind_processional:
-			_add_arch_support(bridge, support_pos, width, yaw)
+		_add_arch_support(bridge, support_pos, width, yaw)
 	if tree_processional:
 		_build_tree_of_life_processional_style(bridge, start, end, width, yaw, side_axis)
-	elif heart_processional:
-		_build_heart_processional_bridge_style(bridge, start, end, width, yaw, side_axis)
-	elif mind_processional:
-		_build_mind_bridge_style(bridge, start, end, width, yaw, side_axis)
-
-
-func _build_mind_bridge_style(bridge: Node3D, start: Vector3, end: Vector3,
-		width: float, yaw: float, side_axis: Vector3) -> void:
-	var length := start.distance_to(end)
-	var forward_axis := (end - start).normalized()
-	var surface_normal := forward_axis.cross(side_axis).normalized()
-	var bridge_basis := Basis(side_axis, surface_normal, forward_axis)
-	var midpoint := start.lerp(end, 0.5)
-	bridge.set_meta("visual_style", "mind_spark_ivory_processional_bridge_v3")
-	bridge.set_meta("watchtower_route_removed", true)
-	bridge.set_meta("finished_deck", true)
-	bridge.set_meta("cyan_rail_count", 4)
-	bridge.set_meta("full_width_cross_lines_removed", true)
-	bridge.set_meta("clear_gameplay_lane_m", width - 8.0)
-	# A charcoal spine and ivory edge beams give the wide span a finished
-	# underside without the exposed pier forest used by the retired prototype.
-	var spine := _add_bevel_box(bridge, "MindBridgeStructuralSpine",
-		midpoint - surface_normal * 4.1, Vector3(10.0, 3.4, length - 2.0),
-		0.75, _materials.bridge_structure)
-	spine.basis = bridge_basis
-	for side_value in [-1.0, 1.0]:
-		var side: float = side_value
-		var side_name := "Left" if side < 0.0 else "Right"
-		var edge_origin := midpoint + side_axis * side * (width * 0.5 - 1.7)
-		var edge_beam := _add_bevel_box(bridge, "MindBridgeEdge%s" % side_name,
-			edge_origin - surface_normal * 0.55,
-			Vector3(2.4, 1.5, length), 0.42, _materials.heart_ivory)
-		edge_beam.basis = bridge_basis
-		# Match the neighboring finished bridge: two restrained cyan rails sit
-		# between ivory posts instead of a large glass wall or gray cross-bracing.
-		for rail_level in 2:
-			var cyan_rail := _add_bevel_box(bridge,
-				"MindBridgeCyanRail%s_%s" % [side_name, "Lower" if rail_level == 0 else "Upper"],
-				edge_origin + surface_normal * (1.65 + float(rail_level) * 1.55),
-				Vector3(0.30, 0.30, length - 3.0), 0.10, _materials.heart_cyan)
-			cyan_rail.basis = bridge_basis
-		for metre in range(0, int(length) + 1, 12):
-			var t := minf(1.0, float(metre) / length)
-			var post_position := start.lerp(end, t) \
-				+ side_axis * side * (width * 0.5 - 1.7) \
-				+ surface_normal * 2.15
-			var post := _add_bevel_box(bridge,
-				"MindBridgeGuardPost%s_%03d" % [side_name, metre], post_position,
-				Vector3(0.86, 4.4, 0.86), 0.18, _materials.heart_ivory)
-			post.basis = bridge_basis
-	# Short inset lights replace the loose dotted route with a measured centre
-	# rhythm that matches the other finished celestial bridge decks.
-	for metre in range(12, int(length), 18):
-		var t := float(metre) / length
-		var marker := _add_bevel_box(bridge, "MindBridgeWayfinding_%03d" % metre,
-			start.lerp(end, t) + surface_normal * 0.10,
-			Vector3(2.2, 0.12, 5.0), 0.25, _materials.heart_cyan)
-		marker.basis = bridge_basis
-
-
-func _build_heart_processional_bridge_style(bridge: Node3D, start: Vector3,
-		end: Vector3, width: float, yaw: float, side_axis: Vector3) -> void:
-	var length := start.distance_to(end)
-	bridge.set_meta("visual_style", "heart_melody_living_music_processional")
-	bridge.set_meta("clear_gameplay_lane_m", 34.0)
-	bridge.set_meta("lantern_post_count", 24)
-	bridge.set_meta("continuous_finish_deck", true)
-	bridge.set_meta("smooth_landing_count", 0)
-	bridge.set_meta("finished_fascia_count", 2)
-	bridge.set_meta("arrival_pylon_count", 4)
-	bridge.set_meta("heart_arch_support_count", 0)
-	bridge.set_meta("parapet_panel_count", 22)
-	bridge.set_meta("inclined_to_heart_ground", true)
-	bridge.set_meta("finish_surface_y_m", end.y + 0.19)
-	var direction := end - start
-	var forward_axis := direction.normalized()
-	var surface_normal := forward_axis.cross(side_axis).normalized()
-	var bridge_basis := Basis(side_axis, surface_normal, forward_axis)
-	var finish_deck := _add_bevel_box(bridge, "HeartBridgeFinishDeck",
-		(start + end) * 0.5 + surface_normal * 0.10,
-		Vector3(width - 8.0, 0.18, length - 1.0), 0.72,
-		_materials.heart_path)
-	finish_deck.basis = bridge_basis
-	# Continuous longitudinal fascia replaces the overlapping crosswise landing
-	# aprons that produced a gray seam across the bridge deck.
-	for side in [-1.0, 1.0]:
-		var fascia_center := (start + end) * 0.5 \
-			+ side_axis * float(side) * (width * 0.5 - 1.2) - surface_normal * 0.95
-		var fascia := _add_bevel_box(bridge,
-			"HeartBridgeFascia_%s" % ("West" if side < 0 else "East"),
-			fascia_center, Vector3(2.4, 1.9, length - 1.0), 0.45,
-			_materials.heart_charcoal)
-		fascia.basis = bridge_basis
-		var fascia_cap := _add_bevel_box(bridge,
-			"HeartBridgeFasciaCap_%s" % ("West" if side < 0 else "East"),
-			fascia_center + Vector3.UP * 1.04,
-			Vector3(3.0, 0.22, length - 1.0), 0.22, _materials.heart_ivory)
-		fascia_cap.basis = bridge_basis
-		var light_inset := _add_bevel_box(bridge,
-			"HeartBridgeFasciaLight_%s" % ("West" if side < 0 else "East"),
-			fascia_center + Vector3.UP * 0.40,
-			Vector3(2.48, 0.16, length - 4.0), 0.10, _materials.heart_cyan)
-		light_inset.basis = bridge_basis
-	for note_index in 12:
-		var note_t := (float(note_index) + 0.5) / 12.0
-		var inlay := _add_bevel_box(bridge, "HeartBridgeNote_%02d" % (note_index + 1),
-			start.lerp(end, note_t) + surface_normal * 0.205,
-			Vector3(3.2, 0.035, 0.68), 0.08, _materials.heart_light)
-		inlay.basis = bridge_basis
-	for side in [-1.0, 1.0]:
-		var side_value: float = side
-		var previous_low := Vector3.ZERO
-		var previous_high := Vector3.ZERO
-		for panel_index in 11:
-			var panel_t := (float(panel_index) + 0.5) / 11.0
-			var panel_center: Vector3 = start.lerp(end, panel_t) \
-				+ side_axis * side_value * (width * 0.5 - 2.55) + Vector3.UP * 1.02
-			var panel := _add_bevel_box(bridge, "HeartBridgeParapetPanel_%s_%02d" % [
-				"W" if side < 0 else "E", panel_index + 1],
-				panel_center, Vector3(0.95, 1.32, length / 11.0 - 2.6),
-				0.30, _materials.heart_ivory)
-			panel.rotation.y = yaw
-			var panel_inset := _add_bevel_box(bridge, "HeartBridgeParapetInset_%s_%02d" % [
-				"W" if side < 0 else "E", panel_index + 1],
-				panel_center + side_axis * side_value * 0.52 + Vector3.UP * 0.08,
-				Vector3(0.10, 0.22, length / 11.0 - 5.2),
-				0.08, _materials.heart_cyan)
-			panel_inset.rotation.y = yaw
-		for post_index in 12:
-			var post_t := float(post_index) / 11.0
-			var foot: Vector3 = start.lerp(end, post_t) \
-				+ side_axis * side_value * (width * 0.5 - 3.2) + Vector3.UP * 0.25
-			_add_cylinder(bridge, "HeartBridgePostBase", foot + Vector3.UP * 0.18,
-				1.15, 0.36, _materials.heart_charcoal, false, 8)
-			_add_cylinder(bridge, "HeartBridgePostPlinth", foot + Vector3.UP * 0.48,
-				0.88, 0.24, _materials.heart_ivory, false, 8)
-			_add_tapered_cylinder(bridge, "HeartBridgePost", foot + Vector3.UP * 2.4,
-				0.62, 0.46, 4.8, _materials.heart_ivory, 8)
-			_add_bevel_box(bridge, "HeartBridgePostCap", foot + Vector3.UP * 4.85,
-				Vector3(1.45, 0.45, 1.45), 0.25, _materials.heart_roof)
-			_build_faceted_ceremonial_crystal(bridge, "HeartBridgeLantern",
-				foot + Vector3.UP * 6.0, 2.1, 0.42,
-				_materials.heart_cyan if (post_index + (0 if side < 0 else 1)) % 2 == 0 \
-				else _materials.heart_lavender)
-			var low_point: Vector3 = foot + Vector3.UP * 2.1
-			var high_point: Vector3 = foot + Vector3.UP * 3.9
-			if post_index > 0:
-				_add_reference_beam(bridge, previous_low, low_point, 0.24,
-					_materials.heart_ivory).name = "HeartBridgeLowRail"
-				_add_reference_beam(bridge, previous_high, high_point, 0.20,
-					_materials.heart_cyan).name = "HeartBridgeLightRail"
-			previous_low = low_point
-			previous_high = high_point
-	# Four short ceremonial pylons finish both thresholds without spanning or
-	# narrowing the 34 metre gameplay lane.
-	for threshold_index in 2:
-		var threshold_point: Vector3 = start if threshold_index == 0 else end
-		for side in [-1.0, 1.0]:
-			var pylon_foot := threshold_point \
-				+ side_axis * float(side) * (width * 0.5 - 6.0)
-			_add_bevel_box(bridge, "HeartBridgeArrivalPylonBase", pylon_foot + Vector3.UP * 0.8,
-				Vector3(5.8, 1.6, 5.8), 0.72, _materials.heart_charcoal)
-			_add_tapered_cylinder(bridge, "HeartBridgeArrivalPylon",
-				pylon_foot + Vector3.UP * 6.2, 2.05, 1.35, 10.4,
-				_materials.heart_ivory, 8)
-			_build_faceted_ceremonial_crystal(bridge, "HeartBridgeArrivalCrown",
-				pylon_foot + Vector3.UP * 12.6, 3.8, 0.78,
-				_materials.heart_cyan if side < 0 else _materials.heart_lavender)
 
 
 func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
@@ -3876,10 +1367,8 @@ func _build_tree_christmas_ambience(tree: Node3D) -> void:
 		["glockenspiel", "celesta", "sleigh_bells", "warm_strings", "soft_bass"])
 	tree.set_meta("christmas_full_volume_distance", TREE_CHRISTMAS_FULL_VOLUME_DISTANCE)
 	tree.set_meta("christmas_silent_distance", TREE_CHRISTMAS_SILENT_DISTANCE)
-	tree.set_meta("christmas_resume_distance", TREE_CHRISTMAS_RESUME_DISTANCE)
 	tree.set_meta("christmas_fade_uses_player_distance", true)
 	tree.set_meta("christmas_fade_out_is_gradual", true)
-	tree.set_meta("christmas_far_streams_pause", true)
 	tree.set_meta("christmas_fade_out_speed", TREE_CHRISTMAS_FADE_OUT_SPEED)
 
 
@@ -3896,10 +1385,6 @@ func _new_tree_christmas_source(node_name: String, source_stream: AudioStream,
 	elif looping_stream is AudioStreamOggVorbis:
 		(looping_stream as AudioStreamOggVorbis).loop = true
 	source.stream = looping_stream
-	# These are 32-second ambience beds, not short one-shot effects. Automatic
-	# selection can route WAVs through sample playback, which is unsupported by
-	# some Web/headless drivers and produces silence plus a runtime warning.
-	source.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	# Custom distance gain below replaces Godot's hard max-distance cutoff. The
 	# player therefore hears a long, smooth tail rather than sound disappearing.
 	source.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
@@ -3916,15 +1401,6 @@ func _update_tree_christmas_ambience(delta: float) -> void:
 		return
 	var distance := _player.global_position.distance_to(
 		_tree_christmas_melody.global_position)
-	# A paused stream retains its playback position without decoding silent audio.
-	# Resume before entering the audible falloff and use a 40 m hysteresis band so
-	# walking along the boundary cannot repeatedly pause and resume both decoders.
-	if _tree_christmas_melody.stream_paused:
-		if distance >= TREE_CHRISTMAS_RESUME_DISTANCE:
-			return
-		_tree_christmas_melody.stream_paused = false
-		if is_instance_valid(_tree_christmas_bells):
-			_tree_christmas_bells.stream_paused = false
 	var distance_ratio := smoothstep(TREE_CHRISTMAS_FULL_VOLUME_DISTANCE,
 		TREE_CHRISTMAS_SILENT_DISTANCE, distance)
 	# Work in linear amplitude so the perceived fade remains gentle near its far
@@ -3943,11 +1419,6 @@ func _update_tree_christmas_ambience(delta: float) -> void:
 		_tree_christmas_bells.volume_db = maxf(
 			TREE_CHRISTMAS_SILENT_VOLUME_DB,
 			_tree_christmas_melody.volume_db - 15.0)
-	if distance >= TREE_CHRISTMAS_SILENT_DISTANCE \
-			and _tree_christmas_melody.volume_db <= TREE_CHRISTMAS_SILENT_VOLUME_DB + 0.1:
-		_tree_christmas_melody.stream_paused = true
-		if is_instance_valid(_tree_christmas_bells):
-			_tree_christmas_bells.stream_paused = true
 
 
 func _build_blender_blueprint_trunk_root(tree: Node3D) -> void:
@@ -7566,6 +5037,31 @@ func _add_trunk_collision_box(parent: Node3D, body_name: String,
 	parent.add_child(body)
 
 
+func _build_cat_companion(parent: Node3D, position: Vector3) -> void:
+	var cat := Node3D.new()
+	cat.name = "BlackCatGuide"
+	cat.position = position
+	parent.add_child(cat)
+	_add_sphere(cat, "Body", Vector3(0.0, 5.0, 0.0), Vector3(5.5, 7.0, 4.5), _materials.black)
+	_add_sphere(cat, "Head", Vector3(0.0, 12.0, 0.0), Vector3(4.8, 4.8, 4.8), _materials.black)
+	for side in [-1.0, 1.0]:
+		var ear := MeshInstance3D.new()
+		var mesh := PrismMesh.new()
+		mesh.size = Vector3(3.5, 5.0, 2.5)
+		ear.mesh = mesh
+		ear.position = Vector3(side * 2.7, 16.0, 0.0)
+		ear.material_override = _materials.black
+		cat.add_child(ear)
+		_add_sphere(cat, "Eye", Vector3(side * 1.8, 12.7, -4.2), Vector3(0.75, 1.0, 0.45), _materials.gold)
+
+
+func _build_radial_arches(parent: Node3D) -> void:
+	var configs := [HUB + Vector3(-145.0, 0.0, -145.0), HUB + Vector3(145.0, 0.0, -145.0),
+		HUB + Vector3(-145.0, 0.0, 145.0), HUB + Vector3(145.0, 0.0, 145.0)]
+	for index in configs.size():
+		_build_arch(parent, configs[index], 34.0, 58.0, 12.0, _materials.ivory)
+
+
 func _build_easel(parent: Node3D, position: Vector3, index: int) -> void:
 	var easel := Node3D.new()
 	easel.name = "PaintingEasel_%02d" % index
@@ -7615,79 +5111,8 @@ func _build_cloud_tower(parent: Node3D, base: Vector3, width: float, height: flo
 
 
 func _build_tower(parent: Node3D, base: Vector3, width: float, height: float, material: Material) -> void:
-	var tower_center := base + Vector3(0.0, 0.0, 18.0)
-	# Preserve the stable collision-backed tower node while hiding its former
-	# visible rectangular mesh. The authored faceted shell below now defines the
-	# silhouette from every island and bridge camera.
-	var collision_shell := _add_box(parent, "ObservatoryTower",
-		tower_center + Vector3.UP * height * 0.5, Vector3(width, height, width),
-		material, true)
-	# The node name is retained for integrations that resolve it as a
-	# MeshInstance3D, but it owns no renderable geometry. This makes it
-	# impossible for the old rectangular prototype to reappear in Web builds.
-	collision_shell.mesh = null
-	collision_shell.visible = false
-	_add_tapered_cylinder(parent, "ObservatoryFoundationPlinth",
-		tower_center + Vector3.UP * 4.0, width * 0.72, width * 0.62, 8.0,
-		_materials.heart_charcoal, 8)
-	_add_tapered_cylinder(parent, "ObservatoryLowerFacetedBody",
-		tower_center + Vector3.UP * 31.0, width * 0.58, width * 0.49, 50.0,
-		material, 8)
-	_add_cylinder(parent, "ObservatoryLowerCollar",
-		tower_center + Vector3.UP * 57.0, width * 0.58, 3.0,
-		_materials.heart_ivory_shadow, false, 8)
-	_add_tapered_cylinder(parent, "ObservatoryUpperFacetedBody",
-		tower_center + Vector3.UP * 78.0, width * 0.47, width * 0.36, 39.0,
-		_materials.heart_stone, 8)
-	_add_cylinder(parent, "ObservatoryCrownGallery",
-		tower_center + Vector3.UP * 99.0, width * 0.50, 4.0,
-		_materials.heart_ivory, false, 8)
-	_add_tapered_cylinder(parent, "ObservatoryFacetedRoof",
-		tower_center + Vector3.UP * 107.0, width * 0.49, width * 0.08, 13.0,
-		_materials.heart_roof, 8)
-	_build_faceted_ceremonial_crystal(parent, "ObservatoryCrownCrystal",
-		tower_center + Vector3.UP * 116.0, 5.0, 1.0,
-		_materials.heart_cyan)
-	# A deep framed cyan instrument window replaces the lone glowing rectangle.
-	_add_bevel_box(parent, "ObservatoryWindowRecess",
-		base + Vector3(0.0, height * 0.60, 0.55),
-		Vector3(width * 0.48, height * 0.43, 2.4), 0.7,
-		_materials.heart_charcoal)
-	_add_bevel_box(parent, "ObservatoryWindow",
-		base + Vector3(0.0, height * 0.60, -0.78),
-		Vector3(width * 0.27, height * 0.32, 0.42), 0.34,
-		_materials.window)
-	for frame_side in [-1.0, 1.0]:
-		_add_bevel_box(parent,
-			"ObservatoryWindowFrameSide_%s" % ("L" if frame_side < 0 else "R"),
-			base + Vector3(frame_side * width * 0.18, height * 0.60, -1.16),
-			Vector3(1.25, height * 0.38, 1.1), 0.28,
-			_materials.heart_ivory)
-	for frame_level in [-1.0, 1.0]:
-		_add_bevel_box(parent,
-			"ObservatoryWindowFrame_%s" % ("Lower" if frame_level < 0 else "Upper"),
-			base + Vector3(0.0, height * 0.60 + frame_level * height * 0.19, -1.16),
-			Vector3(width * 0.39, 1.25, 1.1), 0.28,
-			_materials.heart_ivory)
-	for string_index in 5:
-		_add_bevel_box(parent, "ObservatorySignalString_%02d" % (string_index + 1),
-			base + Vector3(-width * 0.09 + float(string_index) * width * 0.045,
-				height * 0.60, -1.48),
-			Vector3(0.26, height * (0.20 + float(string_index % 2) * 0.035), 0.18),
-			0.06, _materials.heart_light)
-	# Four stepped buttresses and side glass slots break the remaining long walls.
-	for side in [-1.0, 1.0]:
-		var side_name := "West" if side < 0 else "East"
-		for buttress_index in 2:
-			_add_tapered_cylinder(parent,
-				"%sObservatoryButtress_%02d" % [side_name, buttress_index + 1],
-				tower_center + Vector3(side * width * 0.55, 22.0,
-					-8.0 + float(buttress_index) * 16.0),
-				3.4, 2.1, 42.0, _materials.heart_ivory_shadow, 6)
-		var side_slot := _add_bevel_box(parent, "%sObservatoryGlassSlot" % side_name,
-			tower_center + Vector3(side * width * 0.50, 67.0, 0.0),
-			Vector3(12.0, 19.0, 0.38), 0.28, _materials.heart_glass)
-		side_slot.rotation.y = PI * 0.5
+	_add_box(parent, "ObservatoryTower", base + Vector3(0.0, height * 0.5, 18.0), Vector3(width, height, width), material, true)
+	_add_box(parent, "ObservatoryWindow", base + Vector3(0.0, height * 0.62, 0.5), Vector3(width * 0.28, height * 0.34, 3.0), _materials.window)
 	_build_cypress(parent, base + Vector3(width * 0.75, 2.0, -18.0), 28.0, _materials.purple_leaf)
 
 
@@ -7776,31 +5201,6 @@ func _add_arch_support(parent: Node3D, position: Vector3, width: float, yaw: flo
 	_add_box(support, "SupportBeam", Vector3(0.0, 22.0, 0.0), Vector3(width, 6.0, 8.0), _materials.ivory_shadow)
 
 
-func _add_heart_bridge_support(parent: Node3D, position: Vector3,
-		width: float, yaw: float) -> void:
-	var support := Node3D.new()
-	support.name = "HeartBridgeArchSupport_%02d" % (
-		parent.find_children("HeartBridgeArchSupport_*", "Node3D", false, false).size() + 1)
-	support.position = position
-	support.rotation.y = yaw
-	parent.add_child(support)
-	for side in [-1.0, 1.0]:
-		var pier_x := float(side) * width * 0.39
-		_add_tapered_cylinder(support, "HeartSupportPier", Vector3(pier_x, 0.0, 0.0),
-			3.6, 2.7, 44.0, _materials.heart_ivory, 8)
-		_add_tapered_cylinder(support, "HeartSupportPierFoot", Vector3(pier_x, -20.6, 0.0),
-			4.4, 3.6, 3.0, _materials.heart_charcoal, 8)
-		_add_bevel_box(support, "HeartSupportCapital", Vector3(pier_x, 21.2, 0.0),
-			Vector3(7.2, 2.0, 7.2), 0.65, _materials.heart_ivory)
-		_add_reference_beam(support, Vector3(pier_x, 17.0, 0.0),
-			Vector3(float(side) * width * 0.18, 23.0, 0.0), 1.35,
-			_materials.heart_ivory).name = "HeartSupportBrace"
-	_add_bevel_box(support, "HeartSupportCrossbeam", Vector3(0.0, 22.2, 0.0),
-		Vector3(width - 3.0, 3.0, 7.0), 0.75, _materials.heart_charcoal)
-	_add_bevel_box(support, "HeartSupportLight", Vector3(0.0, 23.78, 0.0),
-		Vector3(width - 9.0, 0.16, 5.4), 0.10, _materials.heart_cyan)
-
-
 func _add_world_label(node_name: String, text: String, position: Vector3,
 		color: Color, font_size: int) -> void:
 	var label := Label3D.new()
@@ -7827,17 +5227,6 @@ func _add_landmark_label(parent: Node3D, text: String, position: Vector3,
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = false
 	parent.add_child(label)
-
-
-func _add_bevel_box(parent: Node3D, node_name: String, position: Vector3,
-		size: Vector3, bevel: float, material: Material) -> MeshInstance3D:
-	var instance := MeshInstance3D.new()
-	instance.name = node_name
-	instance.mesh = Bricks.build_bevel_box(size, bevel)
-	instance.position = position
-	instance.material_override = material
-	parent.add_child(instance)
-	return instance
 
 
 func _add_box(parent: Node3D, node_name: String, position: Vector3, size: Vector3,
@@ -7873,23 +5262,6 @@ func _add_box(parent: Node3D, node_name: String, position: Vector3, size: Vector
 	return instance
 
 
-func _add_tapered_cylinder(parent: Node3D, node_name: String, position: Vector3,
-		bottom_radius: float, top_radius: float, height: float, material: Material,
-		segments: int) -> MeshInstance3D:
-	var instance := MeshInstance3D.new()
-	instance.name = node_name
-	var mesh := CylinderMesh.new()
-	mesh.top_radius = top_radius
-	mesh.bottom_radius = bottom_radius
-	mesh.height = height
-	mesh.radial_segments = segments
-	instance.mesh = mesh
-	instance.position = position
-	instance.material_override = material
-	parent.add_child(instance)
-	return instance
-
-
 func _add_cylinder(parent: Node3D, node_name: String, position: Vector3,
 		radius: float, height: float, material: Material, collision_enabled: bool,
 		segments: int) -> MeshInstance3D:
@@ -7915,23 +5287,6 @@ func _add_cylinder(parent: Node3D, node_name: String, position: Vector3,
 		body.position = position
 		parent.add_child(body)
 	return instance
-
-
-func _add_cylinder_collision_only(parent: Node3D, node_name: String,
-		position: Vector3, radius: float, height: float, segments: int) -> StaticBody3D:
-	var body := StaticBody3D.new()
-	body.name = node_name
-	body.set_meta("mass_class", "infinite_static_mass")
-	var shape_node := CollisionShape3D.new()
-	var shape := CylinderShape3D.new()
-	shape.radius = radius
-	shape.height = height
-	shape_node.shape = shape
-	body.add_child(shape_node)
-	body.position = position
-	body.set_meta("visual_segments", segments)
-	parent.add_child(body)
-	return body
 
 
 func _add_torus(parent: Node3D, node_name: String, position: Vector3,
@@ -8029,10 +5384,3 @@ func _add_world_one_build_trigger(world_one: MindSparkWorldOne) -> void:
 		if body is CharacterBody3D:
 			world_one.ensure_world_built())
 	add_child(trigger)
-
-
-func _exit_tree() -> void:
-	for source in [_tree_christmas_melody, _tree_christmas_bells]:
-		if is_instance_valid(source):
-			source.stop()
-			source.stream = null

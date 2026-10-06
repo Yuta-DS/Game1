@@ -66,10 +66,6 @@ func _run() -> void:
 		_fail("could not board as driver")
 		return
 
-	# Advance train and camera with the same 60 Hz step. Automatic processing
-	# would otherwise brake between manual steps using unrelated host delta.
-	railway.set_process(false)
-	camera.set_process(false)
 	var worst_train_turn_jump := 0.0
 	var worst_camera_turn := 0.0
 	var worst_camera_step_jump := 0.0
@@ -82,13 +78,12 @@ func _run() -> void:
 
 	for _frame in 400:
 		railway.call("drive_manual", 1.0, 1.0 / 60.0)
-		camera.call("_process", 1.0 / 60.0)
+		await process_frame
 
 		var step := train.global_position.distance_to(previous_position)
 		# Ignore the acceleration ramp and the docking teleport: neither is the
 		# steady-state motion this test is about.
-		var progress := float(railway.get("_drive_progress"))
-		if step > 0.001 and step < 40.0 and progress > 0.001 and progress < 0.995:
+		if step > 0.001 and step < 40.0:
 			var forward := -train.global_transform.basis.z
 			var turn := rad_to_deg(previous_forward.angle_to(forward))
 			worst_train_turn_jump = maxf(worst_train_turn_jump,

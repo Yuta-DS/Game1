@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://dy6mw3hrtlagf"]
 
 [ext_resource type="Script" uid="uid://br2as6kqpsaj7" path="res://scripts/credit_section.gd" id="1_etfq1"]
-[ext_resource type="Texture2D" uid="uid://bev35lbg44liq" path="res://assets/Game Start/Opening.png" id="1_pxekp"]
+[ext_resource type="Texture2D" uid="uid://cpjl1weoj861k" path="res://assets/Loading Screen/loadscreenBG.png" id="1_pxekp"]
 [ext_resource type="Texture2D" uid="uid://5syxlarhmc24" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/lightSquare.png" id="2_sgykx"]
 [ext_resource type="Texture2D" uid="uid://cww4ac07g2iva" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/red rect.png" id="3_fycop"]
 [ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="4_su8v1"]

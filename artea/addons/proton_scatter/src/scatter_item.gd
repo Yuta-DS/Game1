@@ -91,8 +91,8 @@ var source_data_ready := false
 var _target_scene: PackedScene
 
 
-func _get_property_list() -> Array[Dictionary]:
-	var list: Array[Dictionary] = []
+func _get_property_list() -> Array:
+	var list := []
 
 	if source == 0:
 		list.push_back({
