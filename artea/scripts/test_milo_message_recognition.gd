@@ -37,8 +37,8 @@ func _run() -> void:
 	await process_frame
 	var input := chat.user_input as LineEdit
 	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
-	assert(input != null and input.max_length == ReflectionEngine.MAX_MESSAGE_LENGTH,
-		"the live input enforces the engine's length boundary")
+	assert(input != null and input.max_length == 0,
+		"the live input preserves the engine's unlimited message handling")
 	input.text = "Why am I always stressed?"
 	chat._submit_message(input)
 	assert(input.text.is_empty(), "the private message is cleared immediately after local processing")

@@ -548,7 +548,7 @@ func _add_message_input() -> void:
 		_choices.add_child(player_echo)
 
 	var prompt := Label.new()
-	prompt.text = "YOU  •  TYPE YOUR REPLY   ·   280 CHARACTERS MAX"
+	prompt.text = "YOU  •  TYPE YOUR REPLY"
 	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	prompt.add_theme_font_override("font", UI_BODY_FONT)
 	prompt.add_theme_font_size_override("font_size", roundi(14.0 * _chat_ui_scale))
@@ -562,7 +562,6 @@ func _add_message_input() -> void:
 	_message_input = LineEdit.new()
 	_message_input.name = "MiloMessageInput"
 	_message_input.placeholder_text = "Share a thought, a question, or something you noticed…"
-	_message_input.max_length = ReflectionEngine.MAX_MESSAGE_LENGTH
 	_message_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_input.tooltip_text = "This message is processed locally and is not saved."
 	_message_input.custom_minimum_size = Vector2(0, 48.0 * _chat_ui_scale)
@@ -599,7 +598,7 @@ func _short_player_echo(message: String) -> String:
 func _submit_message(input: LineEdit) -> void:
 	if input == null:
 		return
-	var message := input.text.substr(0, ReflectionEngine.MAX_MESSAGE_LENGTH).strip_edges()
+	var message := input.text.strip_edges()
 	input.clear()
 	if message.is_empty():
 		input.placeholder_text = "Write a few words for Milo first."

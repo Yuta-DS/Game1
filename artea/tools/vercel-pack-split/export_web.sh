@@ -63,7 +63,12 @@ if ! "${godot_bin}" --headless --path "${project_dir}" \
 	rm -f "${export_log}"
 	exit 1
 fi
-if grep -Eq '^(SCRIPT ERROR:|ERROR:)' "${export_log}"; then
+# Godot 4.7's headless dummy renderer can retain a resource wrapper and dummy
+# shader or texture RIDs while it shuts down after a successful export. These lines
+# describe editor-process cleanup, not exported content. Keep rejecting every
+# script/runtime error and allow only those two exact shutdown signatures.
+if grep -E '^(SCRIPT ERROR:|ERROR:)' "${export_log}" \
+		| grep -Ev "^ERROR: [0-9]+ resources? still in use at exit \(run with --verbose for details\)\.$|^ERROR: [0-9]+ RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit\.$|^ERROR: [0-9]+ RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit\.$"; then
 	echo "Web export emitted runtime resource or script errors." >&2
 	rm -f "${export_log}"
 	exit 1

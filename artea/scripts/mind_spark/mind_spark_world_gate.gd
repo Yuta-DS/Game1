@@ -8,6 +8,8 @@ signal travelled(destination_world_local: Vector3)
 @export var prompt_text := "Q • ENTER MIND SPARK"
 ## Empty preserves the original Mind Spark destination contract.
 @export var target_world_path: NodePath
+## Optional campaign destination for gates that leave the embedded galaxy.
+@export var target_kingdom_id := ""
 @export var build_world_on_travel := true
 @export var use_target_world_arrival := false
 
@@ -142,6 +144,14 @@ func set_gate_enabled(enabled: bool) -> void:
 func teleport_player(player: CharacterBody3D) -> bool:
 	if not gate_enabled or player == null:
 		return false
+	if not target_kingdom_id.is_empty():
+		var campaign := get_node_or_null("/root/JourneyCampaign")
+		if campaign == null:
+			return false
+		if not campaign.can_enter_kingdom(target_kingdom_id):
+			$Prompt.text = campaign.portal_status(target_kingdom_id)
+			return false
+		return campaign.enter_kingdom(target_kingdom_id)
 	var floating_world := _find_floating_world()
 	if floating_world == null:
 		return false

@@ -17,13 +17,15 @@ func _init() -> void:
 	_check(presets.contains('name="Web"')
 		and presets.contains('export_filter="all_resources"'),
 		"Web export packages all runtime Godot resources")
-	_check(presets.contains("**/*.json") and presets.contains("**/*.txt")
+	_check(presets.contains("data/*.json")
+		and presets.contains("data/scripture/**")
 		and presets.contains("dialogue/**"),
 		"dynamically read data and dialogue files are explicitly packaged")
 	_check(presets.contains("vram_texture_compression/for_desktop=true")
 		and presets.contains("vram_texture_compression/for_mobile=true"),
 		"Web textures are exported for desktop and mobile browser GPUs")
-	_check(presets.contains("libterrain.web.*.wasm")
+	_check(presets.contains("addons/terrain_3d/bin/libterrain.web.release.wasm32.wasm")
+		and presets.contains("addons/terrain_3d/bin/libterrain.web.debug.wasm32.wasm")
 		and presets.contains("addons/terrain_3d/bin/*windows*")
 		and presets.contains("addons/terrain_3d/bin/*macos*")
 		and presets.contains("addons/terrain_3d/bin/*linux*"),

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://milo2/godot/milo2_game_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" path="res://milo2/godot/milo2_skin.tscn" id="2_skin"]
 [ext_resource type="Script" path="res://scenes/chat_detection_area_3d.gd" id="3_detection"]
-[ext_resource type="AudioStream" path="res://assets/audio/milo/milo_voice.ogg" id="4_voice"]
+[ext_resource type="AudioStream" uid="uid://brtvlhma8c5c" path="res://assets/audio/milo/milo_voice.ogg" id="4_voice"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_milo2_game"]
 radius = 0.5
