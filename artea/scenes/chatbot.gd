@@ -1,12 +1,12 @@
 # Milo's child-safe, offline reflection panel.
 #
-# Typed reflection is bounded to 280 characters and always passes through the
-# authored safety matcher first. Supported desktop builds may then answer with
+# Typed reflection has no length limit and always passes through the authored
+# safety matcher first. Supported desktop builds may then answer with
 # the bundled local Gemma model through NobodyWho. No message is saved, logged,
 # or uploaded; Web and unsupported builds retain the authored local response.
 extends Control
 
-@onready var chat_history: TextEdit = $Panel/VBoxContainer/ChatHistory
+@onready var chat_history: RichTextLabel = $Panel/VBoxContainer/ChatHistory
 @onready var content: VBoxContainer = $Panel/VBoxContainer
 @onready var choices_scroll: ScrollContainer = $Panel/VBoxContainer/ChoicesScroll
 
@@ -22,6 +22,21 @@ var user_input: Control
 
 const ReflectionEngine := preload("res://scripts/MiloReflectionEngine.gd")
 const SupportCard := preload("res://scripts/support_card.gd")
+const CastleGuideArrow := preload("res://scripts/castle_guide_arrow.gd")
+const CASTLE_ARROW_NAME := "CastleGuideArrow"
+const REPLY_TITLE_COLOR := "#9a6a1c"
+const REPLY_SECTION_COLOR := "#2b4f8f"
+const REPLY_HIGHLIGHT_COLOR := "#b5482f"
+# Emoji in replies are drawn as icons: the Web export has no emoji font, so
+# the characters themselves render blank there.
+const REPLY_ICONS := {
+	"✨": "res://assets/UI/icons/sparkle.svg",
+	"⭐": "res://assets/UI/icons/star.svg",
+	"🎉": "res://assets/UI/icons/sparkle.svg",
+}
+# The hub castle's door trigger (teleport_Art_Gallery.gd) in New_Hub_World.
+const CASTLE_DOOR_NODE := "Art_Gallery"
+const MILO_DISCLAIMER := "Milo is an AI friend, not a real counsellor. If something is really bothering you, talk to a grown-up you trust or tap Need help."
 const LOCAL_LLM_MODEL_PATH := "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
 const LOCAL_LLM_PROMPT_PATH := "res://addons/nobodywho/milo_prompt.txt"
 const LOCAL_LLM_CONTEXT_LENGTH := 2048
@@ -55,7 +70,6 @@ const ACTIVITY_DESTINATIONS := {
 	"mind": "Mind Spark Kingdom",
 	"heart": "Heart Melody Kingdom",
 	"creator": "Creator's Light Kingdom",
-	"crown": "Crown of Life",
 }
 
 const MODE_INTROS := {
@@ -196,8 +210,8 @@ const EMOTION_CHECK_INS := [
 		"reflection": "It sounds like something you chose or created has brought energy and pride.",
 		"strength": "You are more than one achievement. Recognising progress can build confidence and gratitude.",
 		"question": "Let's explore this together. What choice or effort helped create this moment?",
-		"activity": "Would you like to revisit your current ARTÉA space and make a small celebration mark, sound, or reflection?",
-		"activity_id": "crown",
+		"activity": "Would you like to visit Creator's Light and make a small celebration mark for the effort you want to remember?",
+		"activity_id": "creator",
 	},
 	{
 		"label": "I am not sure what I feel",
@@ -210,30 +224,77 @@ const EMOTION_CHECK_INS := [
 	},
 ]
 
-const STRENGTH_DISCOVERIES := [
+# A concise, playful strength finder. Each answer points to one of four
+# strengths; Milo names the one the player chose most often. It reflects only
+# the player's own button presses and is never saved, scored, or rewarded.
+const STRENGTHS := {
+	"creativity": {
+		"name": "Creativity",
+		"reveal": "You love turning ideas into something new. You see possibilities other people might miss.",
+		"activity_id": "creator",
+	},
+	"kindness": {
+		"name": "Kindness",
+		"reveal": "You notice how others feel and you help them feel less alone. People are lucky to have you nearby.",
+		"activity_id": "heart",
+	},
+	"curiosity": {
+		"name": "Curiosity",
+		"reveal": "You love asking questions and figuring out how things work. Your wondering helps you learn and grow.",
+		"activity_id": "mind",
+	},
+	"perseverance": {
+		"name": "Perseverance",
+		"reveal": "You keep going even when things are hard. Every time you try again, you grow a little stronger.",
+		"activity_id": "mind",
+	},
+}
+
+const STRENGTH_QUESTIONS := [
 	{
-		"label": "I kept trying",
-		"strength": "Perseverance",
-		"reflection": "You continued even when the result was not immediate.",
-		"question": "What helped you return for one more step?",
+		"question": "When you have free time, what do you enjoy most?",
+		"answers": [
+			["Making or drawing something", "creativity"],
+			["Spending time with friends or family", "kindness"],
+			["Learning how things work", "curiosity"],
+			["Practising something until I get better", "perseverance"],
+		],
 	},
 	{
-		"label": "I asked for help",
-		"strength": "Connection",
-		"reflection": "Asking for support can be a wise and courageous choice.",
-		"question": "Who or what helped the task feel more possible?",
+		"question": "When a friend is having a hard day, you usually…",
+		"answers": [
+			["Make something to cheer them up", "creativity"],
+			["Listen and stay with them", "kindness"],
+			["Ask questions to understand what happened", "curiosity"],
+			["Help them keep going, one step at a time", "perseverance"],
+		],
 	},
 	{
-		"label": "I made or imagined something",
-		"strength": "Creativity",
-		"reflection": "You turned an idea into something you could explore.",
-		"question": "Which part feels most like your own voice?",
+		"question": "When something feels tricky, you…",
+		"answers": [
+			["Try a totally new way", "creativity"],
+			["Ask someone to work on it with me", "kindness"],
+			["Look for clues and figure it out", "curiosity"],
+			["Keep trying until it works", "perseverance"],
+		],
 	},
 	{
-		"label": "I noticed what was happening inside",
-		"strength": "Self-awareness",
-		"reflection": "Pausing to notice can help you choose your next step with care.",
-		"question": "What did noticing help you understand or choose?",
+		"question": "Which adventure sounds best?",
+		"answers": [
+			["Painting a giant castle wall", "creativity"],
+			["Helping a village get ready for a festival", "kindness"],
+			["Exploring a hidden cave", "curiosity"],
+			["Climbing the tallest mountain", "perseverance"],
+		],
+	},
+	{
+		"question": "What would you most like people to say about you?",
+		"answers": [
+			["\"You have amazing ideas!\"", "creativity"],
+			["\"You always make people feel welcome.\"", "kindness"],
+			["\"You ask the best questions!\"", "curiosity"],
+			["\"You never give up.\"", "perseverance"],
+		],
 	},
 ]
 
@@ -256,51 +317,34 @@ const ACTIVITY_GUIDES := [
 		"activity_id": "creator",
 		"guide": "Make one mark, shape, or colour choice that belongs to you. There is no perfect result.",
 	},
-	{
-		"label": "Look back at my growth",
-		"activity": "Crown of Life",
-		"activity_id": "crown",
-		"guide": "Review choices and discoveries already recorded by your journey, without adding a new reward.",
-	},
 ]
 
-const STAGE_PROGRESS := {
-	0: {
-		"evidence": "You arrived and made space for a first choice.",
-		"strength": "Curiosity",
-		"next": "Explore at your own pace and choose one small beginning.",
-	},
-	1: {
-		"evidence": "You reached Mind Spark and practised meeting a thought with choice.",
-		"strength": "Perspective",
-		"next": "Notice which response helps you take the next grounded step.",
-	},
-	2: {
-		"evidence": "You continued into Heart Melody and explored experience through sound.",
-		"strength": "Emotional awareness",
-		"next": "Let a rhythm or quiet moment show you what you want to carry forward.",
-	},
-	3: {
-		"evidence": "You reached Creator's Light and gave an idea a visible form.",
-		"strength": "Creative courage",
-		"next": "Choose one part of your creation that feels meaningful to you.",
-	},
-	4: {
-		"evidence": "You brought discoveries from across the journey toward the Crown of Life.",
-		"strength": "Integration",
-		"next": "Pause to recognise how your choices, not perfection, shaped the journey.",
-	},
+# Each completed world is evidenced by its treasure in JourneyState, read
+# through JourneyCampaign. Milo celebrates only what the journey recorded.
+# Short world names for Milo's spoken suggestions ("Try the Mind Spark world").
+const WORLD_SHORT_NAMES := {
+	"mind": "Mind Spark",
+	"heart": "Heart Melody",
+	"creator": "Creator's Light",
+}
+
+const WORLD_STRENGTHS := {
+	"mind": "Perspective",
+	"heart": "Emotional awareness",
+	"creator": "Creative courage",
 }
 
 var _stage := 0
 var _mode := "faith"
 var _choices: VBoxContainer
+var _strength_question_index := 0
+var _reply_plain_text := ""
+var _strength_tally: Dictionary = {}
 
 
 func _ready() -> void:
-	# This is a display transcript, not a text-input surface.
-	chat_history.editable = false
-	chat_history.selecting_enabled = true
+	# Third-person cameras stop orbiting and zooming while Milo's chat is open.
+	add_to_group("camera_input_blockers")
 	_resolve_safe_context()
 	_initialize_local_llm()
 	_initialize_cloud_llm()
@@ -320,9 +364,8 @@ func _resolve_safe_context() -> void:
 func _show_choices() -> void:
 	_request_companion_activity("GREETING", "welcome")
 	var reflection: Dictionary = CURATED_REFLECTIONS.get(_stage, CURATED_REFLECTIONS[0])
-	_speak("Wonderful Counsellor Milo · %s\n\n%s\n\nChoose one, or skip. Nothing you choose here changes your progress." % [
+	_speak("Wonderful Counsellor Milo · %s\n\nHi, I'm Milo! Choose what you'd like to do, or tell me what's on your mind. Nothing you choose here changes your progress." % [
 		reflection["title"],
-		MODE_INTROS[_mode],
 	])
 	_clear_choices()
 
@@ -333,11 +376,9 @@ func _show_choices() -> void:
 	_choices.add_child(prompt)
 
 	for path_spec in [
-		["Check in with a feeling", _show_emotion_check_ins],
-		["Reflect with Milo", _show_stage_reflections],
 		["Discover a strength", _show_strength_discoveries],
 		["Celebrate my progress", _show_progress_celebration],
-		["Choose an ARTÉA activity", _show_activity_guides],
+		["Choose an activity", _show_activity_guides],
 	]:
 		var path_button := _quiet_button(path_spec[0], path_spec[1])
 		_choices.add_child(path_button)
@@ -347,13 +388,15 @@ func _show_choices() -> void:
 	_add_message_input()
 
 	var quiet_note := Label.new()
-	quiet_note.text = _local_llm_privacy_note()
-	quiet_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# One line by design: the full privacy detail lives in the tooltip.
+	quiet_note.text = MILO_DISCLAIMER
+	quiet_note.tooltip_text = _local_llm_privacy_note()
+	quiet_note.mouse_filter = Control.MOUSE_FILTER_PASS
+	quiet_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	quiet_note.add_theme_font_size_override("font_size", 14)
 	quiet_note.add_theme_color_override("font_color", Color(0, 0, 0, 1))
 	_choices.add_child(quiet_note)
 
-	_choices.add_child(_choice_button(SKIP_CHOICE))
 	_choices.add_child(_quiet_button("Need help", _show_support))
 	_choices.add_child(_quiet_button("Close", close_chat))
 	_focus_first_choice()
@@ -405,7 +448,7 @@ func _respond_to_emotion(check_in: Dictionary) -> void:
 
 func _add_message_input() -> void:
 	var prompt := Label.new()
-	prompt.text = "Or tell Milo what is on your mind (up to 280 characters):"
+	prompt.text = "Or tell Milo what is on your mind:"
 	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	prompt.add_theme_font_size_override("font_size", 16)
 	prompt.add_theme_color_override("font_color", Color(0, 0, 0, 1))
@@ -417,9 +460,23 @@ func _add_message_input() -> void:
 	_message_input = LineEdit.new()
 	_message_input.name = "MiloMessageInput"
 	_message_input.placeholder_text = "For example: Why am I always stressed?"
-	_message_input.max_length = ReflectionEngine.MAX_MESSAGE_LENGTH
+	# 0 = no limit. The safety matcher scans the whole message.
+	_message_input.max_length = 0
 	_message_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_input.tooltip_text = "This message is processed locally and is not saved."
+	var field := StyleBoxFlat.new()
+	field.bg_color = Color(1.0, 1.0, 1.0)
+	field.border_color = Color(0.86, 0.74, 0.53)
+	field.set_border_width_all(2)
+	field.set_corner_radius_all(9)
+	field.set_content_margin_all(8)
+	_message_input.add_theme_stylebox_override("normal", field)
+	var field_focus := field.duplicate() as StyleBoxFlat
+	field_focus.border_color = Color(0.48, 0.73, 1.0)
+	_message_input.add_theme_stylebox_override("focus", field_focus)
+	_message_input.add_theme_color_override("font_color", Color(0.1, 0.1, 0.15))
+	_message_input.add_theme_color_override("font_placeholder_color", Color(0.1, 0.1, 0.15, 0.5))
+	_message_input.add_theme_color_override("caret_color", Color(0.1, 0.1, 0.15))
 	row.add_child(_message_input)
 	var send_button := _quiet_button("Ask Milo", _submit_message.bind(_message_input))
 	send_button.name = "MiloMessageSend"
@@ -433,7 +490,7 @@ func _add_message_input() -> void:
 func _submit_message(input: LineEdit) -> void:
 	if input == null:
 		return
-	var message := input.text.substr(0, ReflectionEngine.MAX_MESSAGE_LENGTH).strip_edges()
+	var message := input.text.strip_edges()
 	input.clear()
 	if message.is_empty():
 		input.placeholder_text = "Write a few words first—or choose a path above."
@@ -525,7 +582,7 @@ func _begin_local_llm_response(message: String,
 	_local_llm_request_id += 1
 	var request_id := _local_llm_request_id
 	_request_companion_activity("LISTENING", "heart")
-	chat_history.text = "Wonderful Counsellor Milo · Listening\n\nMilo is thinking with the local model…"
+	_show_reply("Wonderful Counsellor Milo · Listening\n\nMilo is thinking with the local model…")
 	_clear_choices()
 	var waiting := Label.new()
 	waiting.name = "MiloLocalModelStatus"
@@ -548,7 +605,7 @@ func _on_local_llm_response_updated(new_token: String) -> void:
 	_local_llm_response += new_token
 	var preview := _clean_local_llm_response(_local_llm_response)
 	if not preview.is_empty():
-		chat_history.text = "Wonderful Counsellor Milo · Thinking locally\n\n%s" % preview
+		_show_reply("Wonderful Counsellor Milo · Thinking locally\n\n%s" % preview)
 
 
 func _on_local_llm_response_finished(response: String) -> void:
@@ -591,10 +648,10 @@ func _clean_local_llm_response(source: String) -> String:
 
 func _local_llm_privacy_note() -> String:
 	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
-		return "Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check. Milo is an AI companion, not a therapist - this is not medical advice, and Milo does not diagnose or replace a trusted person."
+		return "Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check."
 	if is_cloud_llm_active():
-		return "Typed messages pass an authored safety check, then are sent to Milo's AI service to generate a reply, and are not stored afterwards. Milo is an AI companion, not a therapist - this is not medical advice, and Milo does not diagnose or replace a trusted person."
-	return "Typed messages stay on this device and are not saved. This build uses Milo's authored local reflections. Milo is an AI companion, not a therapist - this is not medical advice, and Milo does not diagnose or replace a trusted person."
+		return "Typed messages pass an authored safety check, then are sent to Milo's AI service to generate a reply, and are not stored afterwards."
+	return "Typed messages stay on this device and are not saved. This build uses Milo's authored local reflections."
 
 
 func is_local_llm_active() -> bool:
@@ -623,7 +680,7 @@ func _begin_cloud_llm_response(message: String, authored_response: Dictionary) -
 	_cloud_llm_request_id += 1
 	var request_id := _cloud_llm_request_id
 	_request_companion_activity("LISTENING", "heart")
-	chat_history.text = "Wonderful Counsellor Milo · Listening\n\nMilo is thinking…"
+	_show_reply("Wonderful Counsellor Milo · Listening\n\nMilo is thinking…")
 	_clear_choices()
 	var waiting := Label.new()
 	waiting.name = "MiloCloudModelStatus"
@@ -689,37 +746,152 @@ func is_cloud_llm_active() -> bool:
 
 
 func _show_strength_discoveries() -> void:
+	_strength_question_index = 0
+	_strength_tally.clear()
+	_show_strength_question()
+
+
+func _show_strength_question() -> void:
 	_request_companion_activity("REFLECTING", "encourage")
-	_speak("Wonderful Counsellor Milo · Strength Discoverer\n\nChoose something you actually did. Milo will name a possible strength without turning it into a score or reward.")
+	var step: Dictionary = STRENGTH_QUESTIONS[_strength_question_index]
+	_speak("Wonderful Counsellor Milo · Strength Finder
+
+Question %d of %d
+
+%s" % [
+		_strength_question_index + 1, STRENGTH_QUESTIONS.size(), str(step.question),
+	])
 	_clear_choices()
-	for discovery in STRENGTH_DISCOVERIES:
-		var button := _quiet_button(str(discovery.label), _respond_to_strength.bind(discovery))
+	for answer in step.answers:
+		var button := _quiet_button(str(answer[0]), _answer_strength_question.bind(str(answer[1])))
 		_choices.add_child(button)
 		if user_input == null:
 			user_input = button
-	_add_companion_navigation()
+	var back_button := _quiet_button("Back to companion paths", _show_choices)
+	_choices.add_child(back_button)
+	_choices.add_child(_quiet_button("Close", close_chat))
+	_focus_first_choice()
 
 
-func _respond_to_strength(discovery: Dictionary) -> void:
+func _answer_strength_question(strength_id: String) -> void:
+	_strength_tally[strength_id] = int(_strength_tally.get(strength_id, 0)) + 1
+	_strength_question_index += 1
+	if _strength_question_index < STRENGTH_QUESTIONS.size():
+		_show_strength_question()
+	else:
+		_reveal_strength()
+
+
+func _top_strength_id() -> String:
+	# Ties go to the strength listed first in STRENGTHS, so the result is stable.
+	var best_id := ""
+	var best_count := 0
+	for strength_id in STRENGTHS:
+		var count := int(_strength_tally.get(strength_id, 0))
+		if count > best_count:
+			best_id = strength_id
+			best_count = count
+	return best_id
+
+
+func _reveal_strength() -> void:
 	_request_companion_activity("ENCOURAGING", "encourage")
-	_show_companion_response(
-		"Strength Discoverer",
-		"You chose: %s\n\nPossible strength: %s\n\n%s\n\nReflection: %s" % [
-			str(discovery.label), str(discovery.strength),
-			str(discovery.reflection), str(discovery.question),
-		]
-	)
+	var strength: Dictionary = STRENGTHS.get(_top_strength_id(), STRENGTHS["curiosity"])
+	var world_id := str(strength.get("activity_id", ""))
+	var message := "From your answers, one of your strengths is...\n\n✨ %s ✨\n\n%s\n\nTry the %s world! It is a great fit for your %s." % [
+		str(strength.name), str(strength.reveal),
+		str(WORLD_SHORT_NAMES.get(world_id, "next")), str(strength.name).to_lower(),
+	]
+	# Only the overworld has the castle the other worlds are reached through.
+	if _castle_door() != null:
+		message += "\n\nOther worlds also await you! Choose Try other worlds and Milo will show you the way."
+	_show_companion_response("Strength Finder", message, world_id, true)
+	_add_other_worlds_button()
 
 
 func _show_progress_celebration() -> void:
 	_request_companion_activity("CELEBRATING", "encourage")
-	var progress: Dictionary = STAGE_PROGRESS.get(_stage, STAGE_PROGRESS[0])
-	_show_companion_response(
-		"Encourager",
-		"What the journey records: %s\n\nStrength reflected in that step: %s\n\nA possible next step: %s\n\nYour progress comes from the choices you made; this reflection does not add or remove rewards." % [
-			str(progress.evidence), str(progress.strength), str(progress.next),
-		]
-	)
+	var campaign := _campaign()
+	var completed: Array[String] = []
+	var world_ids: Array = WORLD_STRENGTHS.keys()
+	if campaign != null and campaign.has_method("is_kingdom_complete"):
+		for world_id in world_ids:
+			if bool(campaign.call("is_kingdom_complete", world_id)):
+				completed.append(world_id)
+	var total := world_ids.size()
+
+	var lines: Array[String] = []
+	var next_id := ""
+	if completed.is_empty():
+		lines.append("You haven't completed a world yet, and that's okay! Every journey begins with one small step.")
+		next_id = "mind"
+	else:
+		lines.append("You've completed %d of %d worlds! 🎉" % [completed.size(), total])
+		for world_id in completed:
+			lines.append("⭐ %s · you showed %s" % [
+				str(ACTIVITY_DESTINATIONS[world_id]), str(WORLD_STRENGTHS[world_id]).to_lower(),
+			])
+	if completed.size() >= total:
+		lines.append("You finished every world. That took real effort, and Milo is so proud of you. You can revisit any of them whenever you like.")
+	elif next_id.is_empty() and campaign != null and campaign.has_method("next_kingdom_id"):
+		next_id = str(campaign.call("next_kingdom_id"))
+	if next_id in WORLD_STRENGTHS:
+		lines.append("Next adventure: %s, whenever you are ready." % str(ACTIVITY_DESTINATIONS[next_id]))
+
+	_show_companion_response("Celebrate My Progress", "\n\n".join(lines), next_id)
+	if next_id in WORLD_STRENGTHS:
+		_add_other_worlds_button()
+
+
+# Milo has just said new worlds await at the top of the castle: point the way
+# to the hub castle's door, which leads into the Art Castle and its worlds.
+# Only the hub has that door, so elsewhere this does nothing.
+func _show_castle_arrow() -> void:
+	var castle_door := _castle_door()
+	if castle_door == null:
+		return
+	var scene := get_tree().current_scene
+	if scene.get_node_or_null(CASTLE_ARROW_NAME) != null:
+		return
+	var arrow := CastleGuideArrow.new()
+	arrow.name = CASTLE_ARROW_NAME
+	arrow.target_node = castle_door
+	arrow.target = castle_door.global_position
+	scene.add_child(arrow)
+
+
+# The hub castle's door, or null anywhere else (the gallery is inside the
+# castle already, so "the top of the castle" means nothing there).
+func _castle_door() -> Area3D:
+	if not is_inside_tree():
+		return null
+	var scene := get_tree().current_scene
+	if scene == null:
+		return null
+	return scene.get_node_or_null(CASTLE_DOOR_NODE) as Area3D
+
+
+# Offered beside a world suggestion, only where the castle exists. It is placed
+# straight after the travel button so the two world choices sit together.
+func _add_other_worlds_button() -> void:
+	if _castle_door() == null:
+		return
+	var button := _quiet_button("Try other worlds", _show_other_worlds)
+	button.name = "MiloTryOtherWorlds"
+	_choices.add_child(button)
+	var after := 0
+	for child in _choices.get_children():
+		if child.name.begins_with("MiloTravel_"):
+			after = child.get_index() + 1
+			break
+	_choices.move_child(button, after)
+
+
+func _show_other_worlds() -> void:
+	_request_companion_activity("GUIDING", "guide")
+	_show_castle_arrow()
+	_show_companion_response("Journey Guide",
+		"New worlds await you at the top of the castle!\n\nFollow the golden arrow up the castle stair, then step through the castle door to choose your next world.")
 
 
 func _show_activity_guides() -> void:
@@ -745,19 +917,21 @@ func _respond_with_activity(guide: Dictionary) -> void:
 	)
 
 
+# allow_locked lets a suggestion (the strength finder's) open a world the
+# journey has not unlocked yet. Visiting never awards that world's treasure.
 func _show_companion_response(title: String, message: String,
-		destination_id := "") -> void:
+		destination_id := "", allow_locked := false) -> void:
 	_speak("Wonderful Counsellor Milo · %s\n\n%s" % [title, message])
 	_clear_choices()
-	_add_companion_navigation(destination_id)
+	_add_companion_navigation(destination_id, allow_locked)
 
 
-func _add_companion_navigation(destination_id := "") -> void:
+func _add_companion_navigation(destination_id := "", allow_locked := false) -> void:
 	if ACTIVITY_DESTINATIONS.has(destination_id):
 		var destination_name := str(ACTIVITY_DESTINATIONS[destination_id])
 		var travel_button := _quiet_button(
 			"Go with Milo to %s" % destination_name,
-			_confirm_activity_travel.bind(destination_id))
+			_confirm_activity_travel.bind(destination_id, allow_locked))
 		travel_button.name = "MiloTravel_%s" % destination_id
 		_choices.add_child(travel_button)
 	_add_message_input()
@@ -769,50 +943,37 @@ func _add_companion_navigation(destination_id := "") -> void:
 	_focus_first_choice()
 
 
-func _confirm_activity_travel(destination_id: String) -> void:
+func _confirm_activity_travel(destination_id: String, allow_locked := false) -> void:
 	var destination_name := str(ACTIVITY_DESTINATIONS.get(destination_id, "ARTÉA activity"))
-	_request_companion_activity("GUIDING", "map")
-	_clear_choices()
 	var campaign := _campaign()
-	if destination_id != "crown" and (campaign == null \
+	if not allow_locked and (campaign == null \
 			or not bool(campaign.call("can_enter_kingdom", destination_id))):
 		var next_name := "the next available activity"
 		if campaign != null and campaign.has_method("next_kingdom_id"):
 			var next_id := str(campaign.call("next_kingdom_id"))
 			next_name = str(ACTIVITY_DESTINATIONS.get(next_id, next_name))
+		_request_companion_activity("GUIDING", "map")
+		_clear_choices()
 		_speak("Wonderful Counsellor Milo · Journey Guide\n\n%s is still locked by your journey. Milo will not skip or invent progress. Your next available path is %s." % [
 			destination_name, next_name,
 		])
 		_add_companion_navigation()
 		return
-	_speak("Wonderful Counsellor Milo · Journey Guide\n\nReady to travel to %s? Your reflection is not saved, and travelling does not award progress by itself." % destination_name)
-	var confirm_button := _quiet_button("Yes, go with Milo", _travel_to_activity.bind(destination_id))
-	confirm_button.name = "MiloTravelConfirm"
-	_choices.add_child(confirm_button)
-	_choices.add_child(_quiet_button("Stay here", _show_choices))
-	_add_message_input()
-	_choices.add_child(_quiet_button("Need help", _show_support))
-	# Re-asserted after _add_message_input(), which claims user_input for the
-	# typed-reply field: confirming travel is the primary action here and
-	# should keep initial keyboard focus, not the optional message box.
-	user_input = confirm_button
-	_focus_first_choice()
+	_travel_to_activity(destination_id, allow_locked)
 
 
-func _travel_to_activity(destination_id: String) -> void:
+func _travel_to_activity(destination_id: String, allow_locked := false) -> void:
 	var campaign := _campaign()
 	if campaign == null:
 		_speak("Wonderful Counsellor Milo · Journey Guide\n\nThat path is unavailable right now. You can stay with Milo or continue your adventure.")
 		_clear_choices()
 		_add_companion_navigation()
 		return
-	var route_method := "start_campaign" if destination_id == "crown" else "enter_kingdom"
-	if not campaign.has_method(route_method):
+	if not campaign.has_method("enter_kingdom"):
 		return
 	activity_travel_requested.emit(destination_id)
 	chat_closed.emit()
-	campaign.call(route_method, destination_id) if route_method == "enter_kingdom" \
-		else campaign.call(route_method)
+	campaign.call("enter_kingdom", destination_id, null, allow_locked)
 
 
 func _campaign() -> Node:
@@ -878,7 +1039,7 @@ func _quiet_button(text: String, action: Callable) -> Button:
 	button.tooltip_text = "This choice is local and does not change your rewards."
 
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0.11, 0.16, 0.32, 0.94)
+	normal.bg_color = Color(0.15, 0.26, 0.50, 0.96)
 	normal.border_color = Color(0.48, 0.73, 1.0, 0.82)
 	normal.set_border_width_all(1)
 	normal.set_corner_radius_all(9)
@@ -886,7 +1047,7 @@ func _quiet_button(text: String, action: Callable) -> Button:
 	button.add_theme_stylebox_override("normal", normal)
 
 	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color(0.18, 0.28, 0.49, 0.98)
+	hover.bg_color = Color(0.22, 0.36, 0.63, 0.98)
 	hover.border_color = Color(0.83, 0.70, 1.0, 0.96)
 	button.add_theme_stylebox_override("hover", hover)
 	button.pressed.connect(action)
@@ -903,13 +1064,67 @@ func _show_support() -> void:
 
 
 func _speak(text: String) -> void:
-	chat_history.text = text
+	_show_reply(text)
 	companion_speech_requested.emit(text)
 
 
 func replay_current_speech() -> void:
-	if chat_history != null and not chat_history.text.is_empty():
-		companion_speech_requested.emit(chat_history.text)
+	if not _reply_plain_text.is_empty():
+		companion_speech_requested.emit(_reply_plain_text)
+
+
+# Every reply is written as plain text and styled only for display, so speech
+# and the transcript never diverge and no markup is ever read aloud.
+func _show_reply(text: String) -> void:
+	_reply_plain_text = text
+	chat_history.text = _format_reply(text)
+	chat_history.scroll_to_line(0)
+
+
+# Layout for Milo's replies: a small gold title line, then compact paragraphs
+# spaced by the panel's paragraph_separation instead of blank lines. A revealed
+# strength (✨ Name ✨) is shown large, and ALL-CAPS section labels such as
+# VALIDATE run inline at the start of the paragraph they introduce.
+func _format_reply(text: String) -> String:
+	var paragraphs: Array[String] = []
+	var pending_label := ""
+	var is_first_line := true
+	for raw_line in text.split("\n"):
+		var line := raw_line.strip_edges()
+		if line.is_empty():
+			continue
+		# Typed and model text can contain "[", which would otherwise be BBCode.
+		var safe := line.replace("[", "[lb]")
+		if is_first_line:
+			is_first_line = false
+			if line.begins_with("Wonderful Counsellor Milo"):
+				paragraphs.append("[font_size=15][color=%s][b]%s[/b][/color][/font_size]" % [
+					REPLY_TITLE_COLOR, safe])
+				continue
+		if line.begins_with("✨") and line.ends_with("✨") and line.length() > 2:
+			paragraphs.append("[center][font_size=28][color=%s][b]%s[/b][/color][/font_size][/center]" % [
+				REPLY_HIGHLIGHT_COLOR, _with_icons(safe, 30)])
+		elif _is_section_label(line):
+			pending_label = safe
+		else:
+			if not pending_label.is_empty():
+				safe = "[color=%s][b]%s[/b][/color]   %s" % [REPLY_SECTION_COLOR, pending_label, safe]
+				pending_label = ""
+			paragraphs.append(_with_icons(safe, 20))
+	if not pending_label.is_empty():
+		paragraphs.append("[color=%s][b]%s[/b][/color]" % [REPLY_SECTION_COLOR, pending_label])
+	return "\n".join(paragraphs)
+
+
+func _with_icons(bbcode: String, size: int) -> String:
+	for glyph in REPLY_ICONS:
+		bbcode = bbcode.replace(glyph, "[img=%dx%d]%s[/img]" % [size, size, REPLY_ICONS[glyph]])
+	return bbcode
+
+
+func _is_section_label(line: String) -> bool:
+	return line.length() <= 28 and line == line.to_upper() and line != line.to_lower() \
+		and not line.ends_with(".") and not line.ends_with("!") and not line.ends_with("?")
 
 
 func close_chat() -> void:

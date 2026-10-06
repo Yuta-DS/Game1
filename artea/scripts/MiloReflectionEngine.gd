@@ -3,8 +3,8 @@ extends RefCounted
 
 # A deliberately small, local-language matcher. It recognises only words the
 # player actually typed and describes every result as a possibility, never as
-# a diagnosis or a hidden-emotion claim.
-const MAX_MESSAGE_LENGTH := 280
+# a diagnosis or a hidden-emotion claim. Messages have no length limit, so
+# urgent cues are found anywhere in what the player typed.
 
 const URGENT_CUES := [
 	"kill myself", "suicide", "end my life", "hurt myself", "harm myself",
@@ -132,7 +132,7 @@ func _needs_urgent_support(message: String) -> bool:
 
 
 func _normalise(raw_message: String) -> String:
-	return raw_message.substr(0, MAX_MESSAGE_LENGTH).strip_edges().to_lower()
+	return raw_message.strip_edges().to_lower()
 
 
 func _best_profile(message: String) -> Dictionary:

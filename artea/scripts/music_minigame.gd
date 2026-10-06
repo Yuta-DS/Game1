@@ -630,8 +630,12 @@ func start_color_loop(colors: Array, speed):
 		)
 	
 func _on_return_button_pressed() -> void:
+	_return_to_park()
+
+
+func _return_to_park() -> void:
 	var campaign := get_node_or_null("/root/JourneyCampaign")
-	if campaign != null and campaign.has_method("return_to_campaign"):
-		campaign.call("return_to_campaign")
+	if campaign != null and campaign.has_method("return_to_park"):
+		campaign.call("return_to_park")
 	else:
-		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
+		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")
