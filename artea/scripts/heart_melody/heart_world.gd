@@ -93,9 +93,9 @@ func _set_embedded_active(active: bool) -> void:
 		_previous_camera = get_viewport().get_camera_3d()
 		_previous_player_camera = player.get("_camera")
 		_previous_speed = player.speed
-		_previous_blocking = player.blocking_enabled
+		_previous_blocking = player.blocking_available
 		player.speed = 10.0
-		player.blocking_enabled = get_node("/root/JourneyState").has_treasure("harmony_jewel")
+		player.blocking_available = get_node("/root/JourneyState").has_treasure("harmony_jewel")
 		player.set("_camera", camera)
 		camera.make_current()
 		_camera_update(1)
@@ -125,7 +125,7 @@ func _set_embedded_active(active: bool) -> void:
 		audio.stop()
 		progress.commit()
 		player.speed = _previous_speed
-		player.blocking_enabled = _previous_blocking
+		player.blocking_available = _previous_blocking
 		player.set("_camera", _previous_player_camera)
 		if is_instance_valid(_previous_camera):
 			_previous_camera.make_current()
@@ -306,7 +306,7 @@ func _build_player() -> void:
 		return
 	player = PlayerScene.instantiate()
 	player.name = "Player"
-	player.blocking_enabled = get_node("/root/JourneyState").has_treasure("harmony_jewel")
+	player.blocking_available = get_node("/root/JourneyState").has_treasure("harmony_jewel")
 	player.add_to_group("Player")
 	player.position = Vector3(-65, 2, 12) if progress.data.checkpoint == "arrival" else Vector3(20, 2, 12)
 	if progress.committed.river.peace: player.position = river.recovery_position()

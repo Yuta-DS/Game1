@@ -27,6 +27,9 @@ const ReflectionEngine := preload("res://scripts/MiloReflectionEngine.gd")
 const WisdomEngine := preload("res://scripts/MiloWisdomEngine.gd")
 const ConversationContext := preload("res://scripts/MiloConversationContext.gd")
 const SupportCard := preload("res://scripts/support_card.gd")
+const CastleGuideArrow := preload("res://scripts/castle_guide_arrow.gd")
+const CASTLE_ARROW_NAME := "CastleGuideArrow"
+const CASTLE_DOOR_NODE := "Art_Gallery"
 const LOCAL_LLM_MODEL_PATH := "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
 const LOCAL_LLM_PROMPT_PATH := "res://addons/nobodywho/milo_prompt.txt"
 const LOCAL_LLM_CONTEXT_LENGTH := 2048
@@ -43,6 +46,8 @@ var _local_llm_model: Node
 var _local_llm_chat: Node
 var _local_llm_response := ""
 var _local_llm_generating := false
+var _strength_question_index := 0
+var _strength_tally: Dictionary = {}
 var _local_llm_request_id := 0
 var _pending_authored_response: Dictionary = {}
 var _pending_grounded_response: Dictionary = {}
@@ -236,6 +241,61 @@ const STRENGTH_DISCOVERIES := [
 		"strength": "Self-awareness",
 		"reflection": "Pausing to notice can help you choose your next step with care.",
 		"question": "What did noticing help you understand or choose?",
+	},
+]
+
+const STRENGTHS := {
+	"creativity": {"name": "Creativity", "reveal": "You love turning ideas into something new. You see possibilities other people might miss.", "activity_id": "creator"},
+	"kindness": {"name": "Kindness", "reveal": "You notice how others feel and help them feel less alone.", "activity_id": "heart"},
+	"curiosity": {"name": "Curiosity", "reveal": "You love asking questions and figuring out how things work.", "activity_id": "mind"},
+	"perseverance": {"name": "Perseverance", "reveal": "You keep going even when things are hard. Every attempt helps you grow.", "activity_id": "mind"},
+}
+
+const STRENGTH_QUESTIONS := [
+	{
+		"question": "When you have free time, what do you enjoy most?",
+		"answers": [
+			["Making or drawing something", "creativity"],
+			["Spending time with friends or family", "kindness"],
+			["Learning how things work", "curiosity"],
+			["Practising something until I get better", "perseverance"],
+		],
+	},
+	{
+		"question": "When a friend is having a hard day, you usually…",
+		"answers": [
+			["Make something to cheer them up", "creativity"],
+			["Listen and stay with them", "kindness"],
+			["Ask questions to understand what happened", "curiosity"],
+			["Help them keep going, one step at a time", "perseverance"],
+		],
+	},
+	{
+		"question": "When something feels tricky, you…",
+		"answers": [
+			["Try a totally new way", "creativity"],
+			["Ask someone to work on it with me", "kindness"],
+			["Look for clues and figure it out", "curiosity"],
+			["Keep trying until it works", "perseverance"],
+		],
+	},
+	{
+		"question": "Which adventure sounds best?",
+		"answers": [
+			["Painting a giant castle wall", "creativity"],
+			["Helping a village get ready for a festival", "kindness"],
+			["Exploring a hidden cave", "curiosity"],
+			["Climbing the tallest mountain", "perseverance"],
+		],
+	},
+	{
+		"question": "What would you most like people to say about you?",
+		"answers": [
+			["\"You have amazing ideas!\"", "creativity"],
+			["\"You always make people feel welcome.\"", "kindness"],
+			["\"You ask the best questions!\"", "curiosity"],
+			["\"You never give up.\"", "perseverance"],
+		],
 	},
 ]
 
@@ -803,15 +863,60 @@ func is_local_llm_active() -> bool:
 
 
 func _show_strength_discoveries() -> void:
+	_strength_question_index = 0
+	_strength_tally.clear()
+	_show_strength_question()
+
+
+func _show_strength_question() -> void:
 	_request_companion_activity("REFLECTING", "encourage")
-	_speak("Wonderful Counsellor Milo · Strength Discoverer\n\nChoose something you actually did. Milo will name a possible strength without turning it into a score or reward.")
+	var step: Dictionary = STRENGTH_QUESTIONS[_strength_question_index]
+	_speak("Wonderful Counsellor Milo · Strength Finder\n\nQuestion %d of %d\n\n%s" % [
+		_strength_question_index + 1, STRENGTH_QUESTIONS.size(), str(step.question),
+	])
 	_clear_choices()
-	for discovery in STRENGTH_DISCOVERIES:
-		var button := _quiet_button(str(discovery.label), _respond_to_strength.bind(discovery))
+	for answer in step.answers:
+		var button := _quiet_button(str(answer[0]),
+			_answer_strength_question.bind(str(answer[1])))
 		_choices.add_child(button)
 		if user_input == null:
 			user_input = button
 	_add_companion_navigation()
+
+
+func _answer_strength_question(strength_id: String) -> void:
+	_strength_tally[strength_id] = int(_strength_tally.get(strength_id, 0)) + 1
+	_strength_question_index += 1
+	if _strength_question_index < STRENGTH_QUESTIONS.size():
+		_show_strength_question()
+	else:
+		_reveal_strength()
+
+
+func _top_strength_id() -> String:
+	var best_id := ""
+	var best_count := 0
+	for strength_id in STRENGTHS:
+		var count := int(_strength_tally.get(strength_id, 0))
+		if count > best_count:
+			best_id = strength_id
+			best_count = count
+	return best_id
+
+
+func _reveal_strength() -> void:
+	_request_companion_activity("ENCOURAGING", "encourage")
+	var strength: Dictionary = STRENGTHS.get(_top_strength_id(), STRENGTHS.curiosity)
+	var world_id := str(strength.get("activity_id", ""))
+	var message := "From your answers, one of your strengths is...\n\n✨ %s ✨\n\n%s\n\nTry the %s world! It is a great fit for your %s." % [
+		str(strength.name), str(strength.reveal),
+		str(ACTIVITY_DESTINATIONS.get(world_id, "next")),
+		str(strength.name).to_lower(),
+	]
+	if _castle_door() != null:
+		message += "\n\nOther worlds also await you! Choose Try other worlds and Milo will show you the way."
+	_show_companion_response("Strength Finder", message, world_id)
+	_add_other_worlds_button()
 
 
 func _respond_to_strength(discovery: Dictionary) -> void:
@@ -823,6 +928,48 @@ func _respond_to_strength(discovery: Dictionary) -> void:
 			str(discovery.reflection), str(discovery.question),
 		]
 	)
+
+
+func _show_castle_arrow() -> void:
+	var castle_door := _castle_door()
+	if castle_door == null:
+		return
+	var scene := get_tree().current_scene
+	if scene.get_node_or_null(CASTLE_ARROW_NAME) != null:
+		return
+	var arrow := CastleGuideArrow.new()
+	arrow.name = CASTLE_ARROW_NAME
+	arrow.target_node = castle_door
+	arrow.target = castle_door.global_position
+	scene.add_child(arrow)
+
+
+func _castle_door() -> Area3D:
+	if not is_inside_tree():
+		return null
+	var scene := get_tree().current_scene
+	return scene.get_node_or_null(CASTLE_DOOR_NODE) as Area3D if scene != null else null
+
+
+func _add_other_worlds_button() -> void:
+	if _castle_door() == null:
+		return
+	var button := _quiet_button("Try other worlds", _show_other_worlds)
+	button.name = "MiloTryOtherWorlds"
+	_choices.add_child(button)
+	var after := 0
+	for child in _choices.get_children():
+		if child.name.begins_with("MiloTravel_"):
+			after = child.get_index() + 1
+			break
+	_choices.move_child(button, after)
+
+
+func _show_other_worlds() -> void:
+	_request_companion_activity("GUIDING", "guide")
+	_show_castle_arrow()
+	_show_companion_response("Journey Guide",
+		"New worlds await you at the top of the castle!\n\nFollow the golden arrow up the castle stair, then step through the castle door to choose your next world.")
 
 
 func _show_progress_celebration() -> void:

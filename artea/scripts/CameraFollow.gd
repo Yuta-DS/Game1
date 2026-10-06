@@ -408,6 +408,20 @@ func enter_inspect(target: Node3D) -> void:
 	_tween = create_tween()
 	_tween.tween_property(self, "global_transform:origin", cam_pos, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
+
+func enter_inspect_framed(target: Node3D, focus_offset: Vector3,
+		view_offset: Vector3, duration := 0.55) -> void:
+	_mode = "inspect"
+	var basis := target.global_transform.basis
+	_inspect_focus = target.global_transform.origin + basis * focus_offset
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	var cam_pos := _inspect_focus + basis * view_offset
+	if _tween:
+		_tween.kill()
+	_tween = create_tween()
+	_tween.tween_property(self, "global_transform:origin", cam_pos, duration) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
 func exit_inspect() -> void:
 	_mode = "follow"
 	if _tween: _tween.kill()

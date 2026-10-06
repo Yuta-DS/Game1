@@ -331,6 +331,11 @@ func _find_terrain_sources() -> void:
 	var map_texture := load("res://resources/web_hub_surface_map.png") as Texture2D
 	if map_texture != null:
 		_web_surface_map = map_texture.get_image()
+		# Imported textures may keep GPU compression in native and Web builds.
+		# Pixel sampling rejects compressed Images and previously spammed runtime
+		# errors every physics frame, which could stall the rendered canvas.
+		if _web_surface_map != null and _web_surface_map.is_compressed():
+			_web_surface_map.decompress()
 
 
 func _is_vegetation_anchor(node: Node3D) -> bool:

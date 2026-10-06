@@ -7,6 +7,7 @@
 extends Node
 
 const MILO_SCENE := preload("res://milo2/godot/milo2_game_character.tscn")
+const FALL_RESCUE_SCRIPT := preload("res://scripts/milo_fall_rescue.gd")
 const ConversationContext := preload("res://scripts/MiloConversationContext.gd")
 const ART_GALAXY_FALLBACK_SCALE := 1.40
 # The fox GLB's static AABB includes extra animation space beyond its ordinary
@@ -17,6 +18,7 @@ const ART_GALAXY_PERCEIVED_HEIGHT_CALIBRATION := 0.88
 
 var active_milo: CharacterBody3D
 var active_player: CharacterBody3D
+var active_fall_rescue: Node
 var conversation_context := ConversationContext.new()
 
 
@@ -28,6 +30,7 @@ func _ready() -> void:
 func _on_scene_changed() -> void:
 	active_milo = null
 	active_player = null
+	active_fall_rescue = null
 	call_deferred("_attach_to_current_scene")
 
 
@@ -51,6 +54,17 @@ func _attach_to_current_scene() -> void:
 	_apply_scene_scale(active_milo, scene)
 	if active_milo.has_method("set_companion_player"):
 		active_milo.call("set_companion_player", active_player, true)
+	_attach_fall_rescue(scene)
+
+
+func _attach_fall_rescue(scene: Node) -> void:
+	var rescue := scene.get_node_or_null("MiloFallRescue")
+	if rescue == null:
+		rescue = FALL_RESCUE_SCRIPT.new()
+		rescue.name = "MiloFallRescue"
+		scene.add_child(rescue)
+	rescue.call("set_player", active_player, active_milo)
+	active_fall_rescue = rescue
 
 
 func _apply_scene_scale(milo: CharacterBody3D, scene: Node) -> void:
@@ -150,6 +164,12 @@ func refresh_companion() -> void:
 
 func get_active_milo() -> CharacterBody3D:
 	return active_milo if is_instance_valid(active_milo) else null
+
+
+func request_fall_rescue(fallback := Vector3.INF) -> bool:
+	if not is_instance_valid(active_fall_rescue):
+		return false
+	return bool(active_fall_rescue.call("rescue", fallback))
 
 
 func get_conversation_context() -> MiloConversationContext:

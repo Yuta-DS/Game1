@@ -118,6 +118,7 @@ const STAIR_START_X := -35.8
 const STAIR_END_X := -7.5
 const STAIR_BOTTOM_TOP_Y := -0.65
 const STAIR_TOP_TOP_Y := 1.10
+const STATION_RESCUE_DROP := 16.0
 const DETAILED_TRAIN_MODEL_PATH := "res://assets3D/crown_line_train/crown_line_runtime_textured.glb"
 const DETAILED_TRAIN_EDITABLE_PARTS := 13000
 const GODOT_ENGINE_COVER_SCRIPT := "res://scripts/crown_line_godot_engine_cover.gd"
@@ -185,6 +186,19 @@ var _piltover_pixel_floor_material: StandardMaterial3D
 var _station_rainbow_materials: Array[StandardMaterial3D] = []
 var _station_rainbow_glass_materials: Array[StandardMaterial3D] = []
 var _barrier_rainbow_cursor := 0
+var _station_fall_recovery := -1
+
+
+func get_station_disembark_position(index: int) -> Vector3:
+	var platform := _station_nodes[posmod(index, STATIONS.size())] \
+		.get_node("WalkablePlatform") as Node3D
+	return platform.to_global(Vector3(8.75, 3.0, 0.0))
+
+
+func _place_player_on_station() -> void:
+	_player.global_position = get_station_disembark_position(_current_station)
+	_player.velocity = Vector3.ZERO
+	_station_fall_recovery = _current_station
 
 
 func _ready() -> void:
@@ -232,6 +246,33 @@ func _physics_process(delta: float) -> void:
 		_train.position.y = ROUTE_HEIGHT
 	if _seated_passenger and _player != null and _train != null and _passenger_seat_index >= 0:
 		_player.global_position = _train.to_global(BENCH_SEATS[_passenger_seat_index])
+	_update_station_fall_recovery()
+
+
+func _update_station_fall_recovery() -> void:
+	if _player == null or _riding:
+		return
+	for index in _station_nodes.size():
+		var walkable := _station_nodes[index].get_node("WalkablePlatform") as Node3D
+		var station_local := walkable.to_local(_player.global_position)
+		if absf(station_local.x) < 18.0 and absf(station_local.z) < 34.0 \
+				and station_local.y >= -1.5 and station_local.y < 16.0:
+			_station_fall_recovery = index
+			return
+	if _station_fall_recovery < 0:
+		return
+	var platform := _station_nodes[_station_fall_recovery] \
+		.get_node("WalkablePlatform") as Node3D
+	var local := platform.to_local(_player.global_position)
+	if local.y < -1.5 and (_player.velocity.y < 0.0 or _player.is_on_floor()):
+		var fallback := get_station_disembark_position(_station_fall_recovery)
+		var manager := get_node_or_null("/root/MiloCompanionManager")
+		if manager != null and bool(manager.call("request_fall_rescue", fallback)):
+			return
+		_player.global_position = fallback
+		_player.velocity = Vector3.ZERO
+	elif absf(local.x) > 45.0 or absf(local.z) > 60.0:
+		_station_fall_recovery = -1
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -670,13 +711,11 @@ func sit_in_passenger_seat(seat_index: int) -> bool:
 func leave_passenger_seat() -> bool:
 	if not _seated_passenger or _player == null:
 		return false
-	var seat_position := _train.to_global(BENCH_SEATS[_passenger_seat_index])
 	_seated_passenger = false
 	_passenger_in_motion = false
 	_passenger_seat_index = -1
 	_riding = false
-	_player.global_position = seat_position + Vector3(0.0, 0.2, 2.2)
-	_player.velocity = Vector3.ZERO
+	_place_player_on_station()
 	_player.call("set_input_enabled", true)
 	_end_ride_camera()
 	_status.text = "CROWN LINE PASSENGER SEAT RELEASED"
@@ -839,8 +878,7 @@ func _disembark_driver() -> void:
 	_display_speed_kph = 0.0
 	if _player != null:
 		_player.call("set_train_seated_pose", false)
-		_player.global_position = to_global(STATIONS[_current_station].position + Vector3(25.0, 2.0, 0.0))
-		_player.velocity = Vector3.ZERO
+		_place_player_on_station()
 		_player.call("set_input_enabled", true)
 	_end_ride_camera()
 	_status.text = "ARRIVED  •  Explore %s" % STATIONS[_current_station].title

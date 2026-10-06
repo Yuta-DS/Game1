@@ -120,7 +120,7 @@ func _run() -> void:
 	assert(bridge.interact(&"project").completed)
 	assert(quest.complete_garden_reflection(), "garden reflection completes the untimed investigation")
 	assert(world.is_quest_gate_open(2), "elite guard completion saves the pre-boss checkpoint")
-	var island_three := world.get_island_three_experience()
+	var island_three: MindSparkIslandThreeExperience = world.get_island_three_experience()
 	assert(island_three.interact_for_test("storm_reader", "test", {
 		"direction": 2, "phase": 0, "aperture": 0}),
 		"player can test an imperfect forecast without punishment")
@@ -188,7 +188,7 @@ func _run() -> void:
 		"Wisdom Blade is a visual socket upgrade with the documented 30 damage")
 	assert(boss.rain.emitting and not boss.active, "combat remains stopped and the storm becomes gentle rain")
 	assert(quest.pending_identity_count() == 8, "all eight optional identity evidence moments are queued")
-	var identity_contract := quest.identity_tracking_contract()
+	var identity_contract: Array = quest.identity_tracking_contract()
 	assert(identity_contract.size() == 8 and identity_contract[0].evidence_id == "MS_ID_01" \
 		and identity_contract[7].evidence_id == "MS_ID_08",
 		"the public identity contract exposes all eight stable Mind Spark evidence IDs")
@@ -200,7 +200,7 @@ func _run() -> void:
 	assert(identity.evidence_for_quest("quest.cross_seam_relay").size() == 3)
 	assert(identity.evidence_for_quest("quest.role_exchange_storm").size() == 1)
 	assert(identity.evidence_for_quest("quest.constellation_synthesis").size() == 2)
-	var tracked_progress := quest.identity_progress_by_quest()
+	var tracked_progress: Dictionary = quest.identity_progress_by_quest()
 	assert(int(tracked_progress["quest.cross_seam_relay"].recorded) == 3,
 		"quest-level identity progress reports recorded optional evidence without changing completion")
 	world.queue_free()

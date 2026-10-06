@@ -3,6 +3,8 @@ extends Node
 
 signal task_completed(task_id: String)
 signal quest_completed(quest_id: String)
+signal canonical_quest_completed(canonical_id: String, save_alias: String)
+signal environment_state_requested(state_id: String, payload: Dictionary)
 signal world_completed
 signal island_transition_started(from_island: int, to_island: int)
 signal island_arrived(island_index: int)
@@ -60,6 +62,15 @@ var _dialogue_label: Label
 var _reflection_label: Label
 var _hud_refresh_elapsed := 0.1
 var _combat_recovery_pending := false
+
+const CANONICAL_QUEST_IDS := [
+	"quest.signal_observatory", "quest.echo_forest", "quest.cross_seam_relay",
+	"quest.role_exchange_storm", "quest.constellation_synthesis",
+]
+const CANONICAL_ENVIRONMENT_STATES := {
+	0: "signal_prism_formed", 1: "echo_seed_secured", 4: "archive_open",
+	7: "guardian_freed", 9: "star_of_wisdom_awarded",
+}
 
 
 func _ready() -> void:
@@ -396,6 +407,10 @@ func _complete_current_task(expected_id: String) -> bool:
 	_queue_identity_moment(task_index)
 	_current_task_index += 1
 	task_completed.emit(task_id)
+	if CANONICAL_ENVIRONMENT_STATES.has(task_index):
+		environment_state_requested.emit(CANONICAL_ENVIRONMENT_STATES[task_index], {
+			"task_id": task_id, "task_index": task_index,
+		})
 	var quest_index := int(TASKS[task_index].quest)
 	if int(QUESTS[quest_index].task_end) == task_index:
 		var completed_quests: Array = progress.completed_quest_ids
@@ -409,6 +424,7 @@ func _complete_current_task(expected_id: String) -> bool:
 		if quest_index == 1:
 			_begin_island_two_handoff()
 		quest_completed.emit(quest_id)
+		canonical_quest_completed.emit(CANONICAL_QUEST_IDS[quest_index], quest_id)
 		if quest_index == 4:
 			_complete_world()
 	else:

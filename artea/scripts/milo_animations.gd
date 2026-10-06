@@ -13,6 +13,7 @@ enum CompanionState {
 	ENCOURAGING,
 	CELEBRATING,
 	SUPPORTING,
+	RESCUING,
 }
 
 @export var walk_speed := 1.10
@@ -153,6 +154,7 @@ var _free_wrist_from_shoulder_local := Vector3.ZERO
 var _free_arm_constraint_weight := 1.0
 var _free_arm_chain_markers: Dictionary = {}
 var _grounding_targets: Node3D
+var _fall_rescue_active := false
 
 const CANE_GAIT_CYCLE_SECONDS := 1.28
 # Runtime samples show each donor stance foot travelling about 0.38 m from heel
@@ -315,11 +317,35 @@ func set_companion_player(next_player: CharacterBody3D,
 
 
 func _set_companion_state(next_state: CompanionState) -> void:
+	if _fall_rescue_active and next_state != CompanionState.RESCUING:
+		return
 	companion_state = next_state
 
 
 func get_companion_state_name() -> String:
 	return CompanionState.keys()[companion_state]
+
+
+func begin_fall_rescue() -> void:
+	_fall_rescue_active = true
+	velocity = Vector3.ZERO
+	_breadcrumbs.clear()
+	_follow_active = false
+	_catch_up_active = false
+	_set_companion_state(CompanionState.RESCUING)
+	_play_animation("Wave_One_Hand")
+
+
+func end_fall_rescue() -> void:
+	if not _fall_rescue_active:
+		return
+	_fall_rescue_active = false
+	_play_animation("Idle_3")
+	set_companion_player(player, true)
+
+
+func is_fall_rescue_active() -> bool:
+	return _fall_rescue_active
 
 
 func _resolve_mouth_shapes() -> void:
@@ -1269,6 +1295,9 @@ func _reset_mayor_arm_pose() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _fall_rescue_active:
+		velocity = Vector3.ZERO
+		return
 	if gravity_enabled and not is_on_floor():
 		velocity.y -= 20.0 * delta
 	else:
@@ -1520,7 +1549,8 @@ func _process(delta):
 	_update_speaking(delta)
 	_update_eye_animation(delta)
 	_update_secondary_motion(delta)
-	_update_terrain_grounding(delta)
+	if not _fall_rescue_active:
+		_update_terrain_grounding(delta)
 	# Keep hands on the prop as the animated chest continues breathing.
 	if _active_counsellor_pose in ["map", "tablet", "heart"]:
 		_apply_counsellor_arm_pose(_active_counsellor_pose)
@@ -1532,6 +1562,8 @@ func _process(delta):
 	if mayor_name_label != null:
 		mayor_name_label.text = "Mayor Milo\nPress %s to chat" % MILO_CHAT_KEY_LABEL \
 			if player_in_range and chatbot_ui == null else "Mayor Milo"
+	if _fall_rescue_active:
+		return
 	# Outside the interaction zone, locomotion owns Milo's facing and animation.
 	if not player_in_range:
 		return
@@ -2252,4 +2284,3 @@ void fragment() {
 		GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	cane_contact_shadow.material_override = shadow_material
 	add_child(cane_contact_shadow)
-

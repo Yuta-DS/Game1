@@ -20,6 +20,8 @@
 [ext_resource type="PackedScene" uid="uid://bc4s70tkatf44" path="res://assets/models/Low-Poly Plant_.fbx" id="22_8fcft"]
 [ext_resource type="Script" uid="uid://eraeiu6qk3vg" path="res://scenes/GalleryManager.gd" id="24_3btdo"]
 [ext_resource type="Script" uid="uid://fggwgtmoslkc" path="res://scripts/gallery_ceremony.gd" id="25_crown"]
+[ext_resource type="Script" uid="uid://hepts2s0eon3" path="res://scripts/gallery_rotunda.gd" id="30_rotunda"]
+[ext_resource type="Script" uid="uid://b6snhxhx7jy2s" path="res://scripts/gallery_piano.gd" id="31_piano"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_48g0v"]
 panorama = ExtResource("2_dw71r")
@@ -216,6 +218,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3070, 4.55, 1302)
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=884368238]
 light_angular_distance = 1.0
 
+[node name="GalleryRotunda" type="Node3D" parent="."]
+script = ExtResource("30_rotunda")
+
 [node name="Soldiers BG" type="Sprite3D" parent="." unique_id=486340956]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
 
@@ -226,6 +231,7 @@ transform = Transform3D(9.84808, -1.73648, 0, 1.73648, 9.84808, 0, 0, 0, 10, 0, 
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
 
 [node name="Ground" type="StaticBody3D" parent="." unique_id=789791239]
+collision_layer = 0
 transform = Transform3D(1.14641e-13, 2.62268e-06, 60, 60, -2.62268e-06, 0, 2.62268e-06, 60, -2.62268e-06, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=862617273]
@@ -237,6 +243,7 @@ mesh = SubResource("PlaneMesh_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_k4ey6")
 
 [node name="Ground2" type="StaticBody3D" parent="." unique_id=1597447497]
+collision_layer = 0
 transform = Transform3D(-1.31134e-06, 30, -1.31134e-06, 0, -1.31134e-06, -30, -30, -1.31134e-06, 5.73206e-14, -58.9283, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Ground2" unique_id=514267859]
@@ -248,6 +255,7 @@ mesh = SubResource("PlaneMesh_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_k4ey6")
 
 [node name="Ground3" type="StaticBody3D" parent="." unique_id=2055773531]
+collision_layer = 0
 transform = Transform3D(3.57746e-07, -30, 1.31134e-06, 0, -1.31134e-06, -30, 30, 3.57746e-07, -1.56376e-14, 59.7503, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Ground3" unique_id=612494537]
@@ -628,6 +636,11 @@ text = "Artwork Rating:
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
+
+[node name="GrandPiano" type="Node3D" parent="."]
+transform = Transform3D(1.52554, 0, 1.29334, 0, 2, 0, -1.29334, 0, 1.52554, 15.061, 0.25, 2.23497)
+script = ExtResource("31_piano")
+camera_path = NodePath("../Camera3D")
 
 [connection signal="body_entered" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_01"]]
 [connection signal="body_exited" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_01"]]
