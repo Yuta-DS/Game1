@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "focus": {
+    "maximum": 100.0,
+    "recovery_per_second": 18.0,
+    "recovery_delay": 0.7,
+    "dodge_cost": 25.0,
+    "block_cost_per_second": 15.0
+  },
+  "dodge": {
+    "duration": 0.28,
+    "invulnerability": 0.22,
+    "speed": 18.0,
+    "cooldown": 0.42
+  },
+  "attack": {
+    "combo_window": 0.78,
+    "combo_damage": [0.82, 1.0, 1.38],
+    "combo_cooldown": [0.72, 0.76, 1.0],
+    "combo_active_time": [0.85, 0.95, 1.2],
+    "charged_damage": 2.15,
+    "aerial_damage": 1.45,
+    "counter_damage": 1.6
+  },
+  "defense": {
+    "perfect_block_window": 0.18,
+    "perfect_block_focus_refund": 8.0,
+    "counter_window": 1.25
+  }
+}

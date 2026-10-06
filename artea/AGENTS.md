@@ -76,11 +76,12 @@ assets or scripts; do not ignore missing-resource or parse warnings.
 ## Required production deployment
 
 The Vercel project is already linked from `builds/web`. After a successful
-export, deploy that directory to production:
+export, use the maintained deployment script. It deploys the directory, moves
+the canonical public alias, and verifies that the public pack manifest matches
+the local export:
 
 ```bash
-cd builds/web
-rtk npx vercel --prod --yes
+rtk bash scripts/deploy_web.sh
 ```
 
 If the installed Vercel command is elsewhere, locate and use it rather than
@@ -121,4 +122,3 @@ Do not instruct the user to rebuild, export, upload, or deploy work that the
 agent can complete. Do not claim production completion without performing the
 export, production deployment, and browser verification in the same delivery
 cycle.
-

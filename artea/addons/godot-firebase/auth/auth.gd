@@ -691,3 +691,8 @@ func get_GitHubProvider() -> GitHubProvider:
 
 func get_TwitterProvider() -> TwitterProvider:
 	return TwitterProvider.new(_config.auth_providers.twitter_id, _config.auth_providers.twitter_secret)
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(tcp_timer) and tcp_timer.get_parent() == null:
+		tcp_timer.free()

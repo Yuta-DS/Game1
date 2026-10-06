@@ -130,6 +130,7 @@ func _next_world(js) -> String:
 # galaxy, and one train becomes the rainbow celebration train.
 func _build_finale(js) -> void:
 	var gallery := get_parent() as Node3D
+	var identity_name := _finalize_identity_name()
 	var player := gallery.get_node_or_null("Player3D") as Node3D
 	if player != null and player.get_node_or_null("CrownOfLife") == null:
 		var crown := Node3D.new()
@@ -177,6 +178,8 @@ func _build_finale(js) -> void:
 	if global_node != null and not str(global_node.current_user_name).strip_edges().is_empty():
 		who = str(global_node.current_user_name).strip_edges().to_upper() + "'S"
 	star_label.text = "%s STAR\nYOUR STORY MATTERS" % who
+	if not identity_name.is_empty():
+		star_label.text += "\n%s" % identity_name
 	star_label.position.y = 1.6
 	star_label.font_size = 34
 	star_label.outline_size = 10
@@ -196,6 +199,17 @@ func _build_finale(js) -> void:
 			var parts := parade.find_children("*", "MeshInstance3D", true, false)
 			for i in parts.size():
 				(parts[i] as MeshInstance3D).material_override = _finale_material(rainbow[i % rainbow.size()], 1.35)
+
+
+func _finalize_identity_name() -> String:
+	var tracker := get_node_or_null("/root/PlayerIdentityTracker")
+	if tracker == null or not tracker.has_method("finalize_identity"):
+		return ""
+	var code := str(tracker.call("finalize_identity"))
+	var friendly_name := str(tracker.call("friendly_identity_name", code))
+	if not friendly_name.is_empty():
+		tracker.call("mark_reveal_seen")
+	return friendly_name
 
 
 func _finale_material(color: Color, energy: float) -> StandardMaterial3D:

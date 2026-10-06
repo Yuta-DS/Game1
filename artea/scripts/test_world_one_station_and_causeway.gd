@@ -3,8 +3,8 @@ extends SceneTree
 ## Verifies the two navigation changes on the relocated World One:
 ##   1. The optional station spur sits clear of and above the Zone 05 arena, and
 ##      its access stairs can be climbed with ordinary walking, no jump.
-##   2. A continuous causeway physically connects the Mind Spark district to the
-##      World One landing, so the new land is reachable on foot.
+##   2. The redundant kilometre causeway is completely absent while the
+##      functional World Gate remains available for World One travel.
 
 
 func _init() -> void:
@@ -80,6 +80,16 @@ func _run() -> void:
 	if stairs.get_node_or_null("StationStairRampCollision") == null:
 		_fail("stairs have no continuous walkable ramp collision")
 		return
+	var approach := spur.get_node_or_null("StationApproachDeck") as MeshInstance3D
+	var approach_collision := spur.get_node_or_null("StationApproachDeckCollision") as StaticBody3D
+	if approach == null or approach_collision == null:
+		_fail("station stairs have no collision-backed arena approach deck")
+		return
+	var branch_start: Vector3 = spur.get_meta("branch_start")
+	if Vector2(branch_start.x - arena_center.x, branch_start.z - arena_center.z).length() \
+			<= arena_radius:
+		_fail("station stair bottom remains buried inside the arena rim")
+		return
 
 	# --- Walk the stairs with no jump input --------------------------------
 	# Derive the run from the treads themselves: step 01 is the lowest tread and
@@ -125,56 +135,19 @@ func _run() -> void:
 			% [climbed, total_rise])
 		return
 
-	# --- Causeway continuity ----------------------------------------------
-	var causeway := world.get_node_or_null("MindSparkWorldOneCauseway") as Node3D
-	if causeway == null:
-		_fail("causeway to World One was not built")
-		return
-	# Sibling decks share a base name, so Godot renames the duplicates to
-	# generated ids. Identify them by their deck-shaped mesh instead of by name.
-	var segment_count := int(causeway.get_meta("segment_count"))
-	var deck_count := 0
-	for child in causeway.get_children():
-		if not (child is MeshInstance3D):
-			continue
-		var mesh := (child as MeshInstance3D).mesh
-		var deck_width := float(world.get("CAUSEWAY_WIDTH"))
-		if mesh is BoxMesh and absf((mesh as BoxMesh).size.x - deck_width) < 0.01 \
-				and (mesh as BoxMesh).size.z > 100.0:
-			deck_count += 1
-	if deck_count != segment_count:
-		_fail("causeway has %d decks for %d segments" % [deck_count, segment_count])
-		return
-	for index in range(1, segment_count):
-		if causeway.get_node_or_null("CausewaySupportIsland_%02d" % index) == null:
-			_fail("causeway support island %d is missing" % index)
-			return
-
-	# Ray-sample along the causeway centre line: every sample must hit floor, so
-	# there is no gap the player can fall through.
-	var space := world.get_world_3d().direct_space_state
-	var span := float(causeway.get_meta("span_metres"))
-	var walk_start: Vector3 = world.to_global(causeway.get_meta("walk_start"))
-	var walk_finish: Vector3 = world.to_global(causeway.get_meta("walk_finish"))
-	var samples := maxi(24, int(span / 40.0))
-	for index in samples + 1:
-		var point: Vector3 = walk_start.lerp(walk_finish, float(index) / float(samples))
-		var ray := PhysicsRayQueryParameters3D.create(
-			point + Vector3.UP * 12.0, point + Vector3.DOWN * 14.0)
-		ray.collision_mask = 1
-		if space.intersect_ray(ray).is_empty():
-			_fail("causeway has an unwalkable gap at %s" % point)
-			return
-
-	# The player can physically stand on the causeway deck.
-	player.global_position = walk_start + Vector3.UP * 4.0
-	player.velocity = Vector3.ZERO
-	if not await _settle(player):
-		_fail("causeway deck does not physically support the player")
+	# --- Redundant causeway removal ---------------------------------------
+	var removal := world.get_node_or_null("MindSparkWorldOneCausewayRemoved") as Node3D
+	if world.get_node_or_null("MindSparkWorldOneCauseway") != null \
+			or removal == null \
+			or not bool(removal.get_meta("all_visuals_removed", false)) \
+			or not bool(removal.get_meta("all_collision_removed", false)) \
+			or not bool(removal.get_meta("support_islands_removed", false)) \
+			or world.get_node_or_null("MindSparkWorldGate") == null:
+		_fail("the redundant causeway remains or the functional World Gate was lost")
 		return
 
 	print("WORLD_ONE_STATION_CAUSEWAY: PASS — station clear of arena at %.0f m gap, "
 		% flat_gap
-		+ "stairs climbed %.1f m with no jump (riser %.2f m), causeway %.0f m continuous"
-		% [climbed, max_riser, span])
+		+ "stairs climbed %.1f m with no jump (riser %.2f m), redundant causeway removed"
+		% [climbed, max_riser])
 	quit()

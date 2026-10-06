@@ -61,6 +61,9 @@ var story_chapters: Dictionary = {
 # settings that need the same dignity/purpose message without explicit faith
 # language; progression and rewards never change between modes.
 var audience_mode: String = "faith"
+## Version 2 earns Heart's treasure through the adventure, never a feeling choice.
+## Loading a pre-version save retains that journey's established entitlement.
+var heart_campaign_version: int = 2
 
 
 func _ready() -> void:
@@ -149,8 +152,18 @@ func record_emotion(emotion_name: String, colour: Color) -> void:
 		"visited": true,
 	})
 	_grant("emotional-awareness")
+	if heart_campaign_version < 2:
+		_award_treasure("harmony_jewel")
+	save()
+
+
+func complete_heart_melody() -> bool:
+	# The production Heart Melody finale is the canonical version-two reward
+	# boundary. Replays are idempotent and never manufacture extra progress.
+	var already_owned := has_treasure("harmony_jewel")
 	_award_treasure("harmony_jewel")
 	save()
+	return not already_owned and has_treasure("harmony_jewel")
 
 
 func record_creation(path: String, title: String) -> String:
@@ -308,6 +321,7 @@ func save() -> void:
 		push_error("JourneyState: could not write %s" % save_path)
 		return
 	file.store_string(JSON.stringify({
+		"heart_campaign_version": heart_campaign_version,
 		"stage": stage,
 		"thoughts": thoughts,
 		"emotions": emotions,
@@ -336,6 +350,7 @@ func load_journey() -> void:
 		return
 
 	stage = int(data.get("stage", 0))
+	heart_campaign_version = int(data.get("heart_campaign_version", 1))
 	thoughts = data.get("thoughts", [])
 	emotions = data.get("emotions", [])
 	creations = data.get("creations", [])
@@ -360,7 +375,7 @@ func load_journey() -> void:
 	# evidence even though they predate explicit treasure ownership.
 	if popped_count() > 0:
 		treasures["star_of_wisdom"] = true
-	if not emotions.is_empty():
+	if heart_campaign_version < 2 and not emotions.is_empty():
 		treasures["harmony_jewel"] = true
 	# Before the Gallery Frame Ritual existed, saving an artwork immediately
 	# earned Creator's Light. Preserve those established journeys exactly once.
@@ -377,6 +392,7 @@ func load_journey() -> void:
 # no partial wipe — the file goes and the state resets.
 func clear_journey() -> void:
 	stage = 0
+	heart_campaign_version = 2
 	thoughts.clear()
 	emotions.clear()
 	creations.clear()

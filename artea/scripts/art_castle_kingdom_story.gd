@@ -47,6 +47,10 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _active_kingdom.is_empty() or _player == null:
 		return
+	# The embedded island owns Heart gameplay; decorative roadmap checkpoints
+	# must not consume Q or imply that Island 1 awards the full-world Jewel.
+	if _active_kingdom == "heart":
+		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Q:
 		var expected := int(_progress[_active_kingdom])
 		var route: Array = _routes[_active_kingdom]
@@ -94,6 +98,10 @@ func _update_hud() -> void:
 	if _active_kingdom.is_empty():
 		_prompt.text = "CROWN JOURNEY • Ride the Rainbow Galaxy Train to a kingdom"
 		_story.text = "Mind → Heart → Creator → Crown of Life"
+		return
+	if _active_kingdom == "heart":
+		_prompt.text = "HEART MELODY · Walk up the garden path beside station 03"
+		_story.text = "Island 1: seeds, flower music and the Blight clearing. River Song is coming next."
 		return
 	var route: Array = _routes[_active_kingdom]
 	var expected := int(_progress[_active_kingdom])

@@ -48,12 +48,9 @@ func _capture() -> void:
 		(layer as CanvasLayer).visible = false
 	for label in world.find_children("*", "Label3D", true, false):
 		(label as Label3D).visible = false
-	var gallery_station := railway.get_node_or_null(
-		"StoryStations/Station_01_gallery") as Node3D
-	if gallery_station != null:
-		var pavilion := gallery_station.get_node_or_null("BioMagitechPavilion") as Node3D
-		if pavilion != null:
-			pavilion.visible = false
+	# Keep the restored old station roof visible in every proof image. Earlier
+	# captures hid the complete pavilion to isolate the train, which made the
+	# redesigned station incorrectly appear roofless.
 
 	var environment := WorldEnvironment.new()
 	var environment_resource := Environment.new()
@@ -110,6 +107,11 @@ func _capture() -> void:
 	camera.look_at(train.to_global(Vector3(0.0, 4.5, -3.0)), Vector3.UP)
 	print("CROWN_LINE_INGAME_CAPTURE: rendering station view")
 	await _save(OUTPUT_DIR + "/crown_line_train_ingame_station.png")
+	camera.fov = 58.0
+	camera.global_position = train.to_global(Vector3(52.0, 24.0, -58.0))
+	camera.look_at(train.to_global(Vector3(0.0, 7.0, -1.0)), Vector3.UP)
+	print("CROWN_LINE_INGAME_CAPTURE: rendering restored old station roof")
+	await _save(OUTPUT_DIR + "/crown_line_station_old_roof_restored.png")
 
 	camera.fov = 65.0
 	camera.global_position = train.to_global(Vector3(14.0, 7.0, -42.0))
@@ -204,8 +206,8 @@ func _capture() -> void:
 	player.visible = true
 	player.global_position = railway.call("get_driver_interaction_position") \
 		+ train.global_basis.x.normalized() * 1.8
-	var driver_q := InputEventKey.new()
-	driver_q.keycode = KEY_Q
+	var driver_q := InputEventAction.new()
+	driver_q.action = "interact"
 	driver_q.pressed = true
 	railway.call("_unhandled_input", driver_q)
 	if not bool(railway.call("is_driving")):
@@ -228,8 +230,8 @@ func _capture() -> void:
 	player.visible = true
 	player.global_position = railway.call("get_passenger_seat_position", 0) \
 		+ train.global_basis.x.normalized() * 1.8
-	var passenger_q := InputEventKey.new()
-	passenger_q.keycode = KEY_Q
+	var passenger_q := InputEventAction.new()
+	passenger_q.action = "interact"
 	passenger_q.pressed = true
 	railway.call("_unhandled_input", passenger_q)
 	if not bool(railway.call("is_passenger_seated")):

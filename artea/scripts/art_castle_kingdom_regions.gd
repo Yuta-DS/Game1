@@ -356,7 +356,14 @@ func _decorate_mind(parent: Node3D, checkpoint_id: String, index: int) -> void:
 func _decorate_heart(parent: Node3D, checkpoint_id: String, index: int) -> void:
 	var emotional_materials := [_materials.gold, _materials.coral, _materials.blue,
 		_materials.purple, _materials.green, _materials.gold, _materials.pink, _materials.gold]
-	if checkpoint_id == "sadness":
+	if checkpoint_id == "arrival":
+		# A clear east-west avenue connects the station ramp to the playable gate.
+		# The old ring of solid instruments put an 18 m pillar across that route.
+		for side in [-1.0, 1.0]:
+			for flower in 4:
+				_add_sphere(parent, "ArrivalBlossom", Vector3(-32 + flower * 18, 2, side * 17),
+					Vector3(2.4, 1.5, 2.4), _materials.pink)
+	elif checkpoint_id == "sadness":
 		_add_cylinder(parent, "RainLake", Vector3(0, 0, 0), 54, 3, _materials.blue, true, 32)
 		_add_box(parent, "GentleBoat", Vector3(0, 7, 0), Vector3(28, 5, 12), _materials.wood)
 	elif checkpoint_id == "frustration":
@@ -381,6 +388,10 @@ func _decorate_heart(parent: Node3D, checkpoint_id: String, index: int) -> void:
 	else:
 		for instrument in 7:
 			var angle := TAU * instrument / 7.0
+			# The arrival bridge leaves the court toward +X. Keep the full
+			# instrument ring, but put its opening on that walking route.
+			if checkpoint_id == "arrival":
+				angle += PI / 7.0
 			_add_cylinder(parent, "EmotionInstrument", Vector3(cos(angle) * 42, 10, sin(angle) * 42),
 				8 + instrument % 2 * 4, 18, emotional_materials[index], true, 16)
 

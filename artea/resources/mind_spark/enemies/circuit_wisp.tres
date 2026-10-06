@@ -8,10 +8,13 @@ enemy_kind = 2
 display_name = "Circuit Wisp"
 max_health = 50.0
 xp_reward = 20
+spark_shard_reward = 10
+guaranteed_material_id = "memory_thread"
+encounter_tier = 2
+animation_profile = "flying_ranged"
 attack_damage = 10.0
 attack_range = 22.0
 move_speed = 3.2
 telegraph_seconds = 1.0
 recovery_seconds = 1.5
 shell_color = Color(0.56, 0.35, 0.84, 1)
-

@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://csdqfvlq73qrb"
+path="res://.godot/imported/Connecting Rainbows.ogg-cd9dc60ca8fa6a99c04c58a5f8827520.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/SFX/Connecting Rainbows.ogg"
+dest_files=["res://.godot/imported/Connecting Rainbows.ogg-cd9dc60ca8fa6a99c04c58a5f8827520.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

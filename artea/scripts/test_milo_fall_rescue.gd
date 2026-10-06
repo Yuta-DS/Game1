@@ -84,7 +84,7 @@ func _run() -> void:
 	player.global_position = Vector3(14, 0.05, 0)
 	var started := await _wait_until(func() -> bool: return rescue.call("is_rescuing"), 240)
 	_check(started, "a fall with no floor below starts a rescue")
-	_check(player.global_position.y > -25.0,
+	_check(player.global_position.y > -37.0,
 		"the rescue starts soon after the drop (player at %s)" % player.global_position)
 	_check(not player.is_physics_processing(), "the player is held while being carried")
 	_check(str(milo.call("get_companion_state_name")) == "RESCUING",

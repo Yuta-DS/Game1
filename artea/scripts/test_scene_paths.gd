@@ -84,8 +84,8 @@ func _check_file(path: String, offenders: Array[String]) -> void:
 
 		for found in regex.search_all(line):
 			var scene_path := found.get_string()
-			# Formatted templates are resolved only after their `%s` substitution;
-			# ResourceLoader cannot validate the unexpanded template itself.
+			# Formatted templates are completed at runtime and are not literal
+			# resource paths. Their concrete variants have their own fixtures.
 			if scene_path.contains("%"):
 				continue
 			if not ResourceLoader.exists(scene_path):

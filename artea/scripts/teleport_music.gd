@@ -1,7 +1,7 @@
 extends Area3D
 
-const TARGET_SCENE_PATH = "res://scenes/music_minigame.tscn"
+const TARGET_SCENE_PATH = "res://scenes/heart_melody/heart_melody_world.tscn"
 
 func _on_body_entered(body: Node3D) -> void:
 	if body is CharacterBody3D:
-		get_tree().change_scene_to_file(TARGET_SCENE_PATH)
+		get_node("/root/JourneyCampaign").enter_kingdom("heart")

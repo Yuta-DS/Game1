@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dqlbcmf8trwul"]
 
-[ext_resource type="PackedScene" uid="uid://dv2pbiga30clj" path="res://assets3D/characters/NPCs/Animated Animal Pack-glb/Wolf.glb" id="1_7by53"]
+[ext_resource type="PackedScene" uid="uid://bby3hln067j8r" path="res://assets3D/characters/NPCs/Animated Animal Pack-glb/Wolf.glb" id="1_7by53"]
 
 [node name="Root Scene" instance=ExtResource("1_7by53")]
 

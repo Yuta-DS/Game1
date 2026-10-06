@@ -868,10 +868,18 @@ func _on_local_button_pressed() -> void:
 
 
 func _on_back_to_hub_button_pressed() -> void:
-	_return_to_campaign()
+	_return_to_park()
 	
 func _on_art_gallery_button_pressed() -> void:
 	_return_to_campaign()
+
+
+func _return_to_park() -> void:
+	var campaign := get_node_or_null("/root/JourneyCampaign")
+	if campaign != null and campaign.has_method("return_to_park"):
+		campaign.call("return_to_park")
+	else:
+		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")
 
 
 func _return_to_campaign() -> void:
@@ -884,7 +892,7 @@ func _return_to_campaign() -> void:
 # REMOTE GALLERY - SAVE/UPLOAD TO SERVER
 func upload_artwork_to_server() -> void:
 	
-	if Global.auth_token == "" or Global.auth_token == "invalid_token":
+	if not Global.has_online_session():
 		print("Upload blocked: invalid auth token")
 		return
 
@@ -905,7 +913,7 @@ func upload_artwork_to_server() -> void:
 	]
 
 	var err = http_request.request_raw(
-		APIManager.UPLOAD_ARTWORK_URL,
+		APIManager.get_upload_artwork_url(),
 		headers,
 		HTTPClient.METHOD_POST,
 		byte_data

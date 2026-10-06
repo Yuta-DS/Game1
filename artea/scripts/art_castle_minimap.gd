@@ -14,6 +14,8 @@ const COMPACT_SIZE := Vector2(286.0, 286.0)
 const COMPACT_CENTER := Vector2(143.0, 126.0)
 const COMPACT_RADIUS := 104.0
 const COMPACT_MAP_RECT := Rect2(39.0, 22.0, 208.0, 208.0)
+const COMPACT_LANDSCAPE_TILE := 8.0
+const COMPACT_LANDSCAPE_GRID := Vector2i(26, 26)
 const HUB_METERS_PER_PIXEL := 1.7
 const GALAXY_METERS_PER_PIXEL := 9.5
 const GALAXY_PADDING := 180.0
@@ -23,10 +25,9 @@ const FACING_SPEED_THRESHOLD := 0.08
 const TELEPORT_DISTANCE := 100.0
 
 # The compact map used to queue a redraw on every single frame. Each redraw
-# samples ~530 landscape tiles, and _draw() is not cheap enough to be run 60
-# times a second for a 208 px circle - profiled inside the castle it was 12 ms
-# of a 15 ms frame, by far the largest single cost in the scene, and GDScript
-# costs several times that again under WASM in the Web export.
+# samples ~530 landscape tiles. The current native castle benchmark measured
+# 23.5 ms/frame with these updates and 12.0 ms with only the updates paused.
+# Cache per-redraw data and avoid rebuilding this 208 px circle every frame.
 #
 # Nothing on this map changes fast enough to need 60 Hz. It is refreshed on a
 # fixed cadence, and immediately when the player has actually moved far enough
@@ -95,10 +96,13 @@ var _sample_kingdom_colors: Array[Color] = []
 var _redraw_cooldown := 0.0
 var _last_drawn_position := Vector3.ZERO
 var _last_drawn_facing := Vector2(0.0, 1.0)
+var _compact_landscape_image: Image
+var _compact_landscape_texture: ImageTexture
 
 
 func _ready() -> void:
 	name = "ArteaWorldMinimap"
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	set_process_unhandled_input(true)
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -284,11 +288,52 @@ func _draw_compact_map() -> void:
 		_draw_galaxy_compact()
 	_draw_player(COMPACT_CENTER, true)
 	_draw_compact_compass()
-	var title := "OUTSIDE • ARTÉA KINGDOM" if map_context == CONTEXT_HUB else "INSIDE • CASTLE GALAXY"
+	var title := get_location_title()
 	draw_string(ThemeDB.fallback_font, Vector2(18, 254), title,
 		HORIZONTAL_ALIGNMENT_CENTER, COMPACT_SIZE.x - 36, 14, _accent())
 	draw_string(ThemeDB.fallback_font, Vector2(18, 278), "CLICK OR PRESS M  •  FULL MAP",
 		HORIZONTAL_ALIGNMENT_CENTER, COMPACT_SIZE.x - 36, 11, Color("e9eef7"))
+
+
+func get_location_title() -> String:
+	## The compact footer describes the place under the player. World One is a
+	## large authored world mounted inside the Castle Galaxy scene, so using the
+	## scene-wide label there made the relocated start look as though it had not
+	## happened. Keep the atlas context while reporting the active destination.
+	if map_context == CONTEXT_HUB:
+		return "OUTSIDE • ARTÉA KINGDOM"
+	var world_one_island := _world_one_island_index()
+	if world_one_island > 0:
+		return "WORLD ONE • ISLAND %d" % world_one_island
+	return "INSIDE • CASTLE GALAXY"
+
+
+func _world_one_island_index() -> int:
+	if _player == null or not is_instance_valid(_player) or _world == null:
+		return 0
+	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+	if mind_world == null or not mind_world.force_standalone_blueprint:
+		return 0
+	var player_local := mind_world.to_local(_player.global_position)
+	var player_flat := Vector2(player_local.x, player_local.z)
+	# The extra margin covers the collision-backed promenades between paired
+	# districts and the broad arrival apron while remaining far inside the void
+	# separating World One from the Castle Galaxy hub.
+	var nearest_island := 0
+	var nearest_edge_distance := INF
+	var zone_ids := mind_world.get_zone_ids()
+	for zone_index in zone_ids.size():
+		var zone_id := zone_ids[zone_index]
+		var centre := mind_world.get_zone_position(zone_id)
+		var radius := mind_world.get_zone_radius(zone_id)
+		var centre_distance := player_flat.distance_to(Vector2(centre.x, centre.z))
+		if centre_distance > radius + 100.0:
+			continue
+		var edge_distance := maxf(0.0, centre_distance - radius)
+		if edge_distance < nearest_edge_distance:
+			nearest_edge_distance = edge_distance
+			nearest_island = int(zone_index / 2) + 1
+	return nearest_island
 
 
 func _draw_local_grid() -> void:
@@ -312,19 +357,43 @@ func _draw_compact_landscape() -> void:
 	# resolved once, here. It used to be resolved per tile: two node-path
 	# lookups, a cross-script call returning a Dictionary, and a dozen array and
 	# Color allocations, 530 times a frame.
+	_refresh_compact_landscape_texture()
+	if _compact_landscape_texture == null:
+		return
+	# One tiny texture replaces roughly 530 individual CanvasItem rectangles.
+	# The sampled colors and player-centred projection are unchanged, but the
+	# refresh no longer creates a periodic render-thread submission spike.
+	draw_texture_rect(_compact_landscape_texture, COMPACT_MAP_RECT, false)
+
+
+func _refresh_compact_landscape_texture() -> void:
 	_refresh_landscape_sampling()
-	const TILE := 8.0
+	if _compact_landscape_image == null:
+		_compact_landscape_image = Image.create(COMPACT_LANDSCAPE_GRID.x,
+			COMPACT_LANDSCAPE_GRID.y, false, Image.FORMAT_RGBA8)
 	var scale := HUB_METERS_PER_PIXEL if map_context == CONTEXT_HUB else GALAXY_METERS_PER_PIXEL
-	for y in range(int(COMPACT_CENTER.y - COMPACT_RADIUS), int(COMPACT_CENTER.y + COMPACT_RADIUS), int(TILE)):
-		for x in range(int(COMPACT_CENTER.x - COMPACT_RADIUS), int(COMPACT_CENTER.x + COMPACT_RADIUS), int(TILE)):
-			var sample_screen := Vector2(x + TILE * 0.5, y + TILE * 0.5)
-			if sample_screen.distance_to(COMPACT_CENTER) > COMPACT_RADIUS - TILE * 0.42:
+	var sampled_cells := 0
+	for cell_y in COMPACT_LANDSCAPE_GRID.y:
+		for cell_x in COMPACT_LANDSCAPE_GRID.x:
+			var sample_screen := COMPACT_MAP_RECT.position + Vector2(
+				(float(cell_x) + 0.5) * COMPACT_LANDSCAPE_TILE,
+				(float(cell_y) + 0.5) * COMPACT_LANDSCAPE_TILE)
+			if sample_screen.distance_to(COMPACT_CENTER) \
+					> COMPACT_RADIUS - COMPACT_LANDSCAPE_TILE * 0.42:
+				_compact_landscape_image.set_pixel(cell_x, cell_y, Color.TRANSPARENT)
 				continue
 			var screen_delta := sample_screen - COMPACT_CENTER
 			var world_position := _player.global_position \
 				+ Vector3(screen_delta.x * scale, 0.0, -screen_delta.y * scale)
-			var color := _landscape_color(world_position)
-			draw_rect(Rect2(Vector2(x, y), Vector2(TILE + 0.6, TILE + 0.6)), color, true)
+			_compact_landscape_image.set_pixel(cell_x, cell_y,
+				_landscape_color(world_position))
+			sampled_cells += 1
+	if _compact_landscape_texture == null:
+		_compact_landscape_texture = ImageTexture.create_from_image(_compact_landscape_image)
+	else:
+		_compact_landscape_texture.update(_compact_landscape_image)
+	set_meta("compact_landscape_sample_cells", sampled_cells)
+	set_meta("compact_landscape_canvas_submissions", 1)
 
 
 func _landscape_color(world_position: Vector3) -> Color:
@@ -471,6 +540,9 @@ func _draw_galaxy_compact() -> void:
 		var station_color := Color("f8f2ff") if bool(_railway.call("is_station_unlocked", index)) \
 			else Color("646679")
 		_draw_compact_marker(_world.to_global(stations[station_id]), "", station_color, "station")
+	var heart := _railway.get_node_or_null("HeartMelodyConnection/HeartMelodyIslandOne") as Node3D
+	if heart != null:
+		_draw_compact_marker(heart.global_position, "QUIET MEADOW", Color("ff91c9"), "place")
 
 
 func _draw_compact_route(world_points: Array, color: Color, width: float) -> void:
@@ -729,6 +801,9 @@ func _draw_galaxy_full(rect: Rect2) -> void:
 		var unlocked := bool(_railway.call("is_station_unlocked", index))
 		draw_circle(point, 5.0, Color("f8f2ff") if unlocked else Color("55576b"))
 		draw_arc(point, 8.0, 0, TAU, 18, Color("6deaff") if unlocked else Color("77798b"), 1.5)
+	var heart := _railway.get_node_or_null("HeartMelodyConnection/HeartMelodyIslandOne") as Node3D
+	if heart != null:
+		_draw_full_landmark(_map_global(heart.global_position, rect), "QUIET MEADOW · ISLAND 1", Color("ff91c9"))
 
 
 func _draw_full_kingdom(point: Vector2, color: Color, label: String) -> void:

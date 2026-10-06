@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://csqtbu457hur7" path="res://scripts/cloud_pop_ui.gd" id="1_4xkxp"]
 [ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="1_bq4c8"]
-[ext_resource type="AudioStream" uid="uid://dm2w2bghasjgl" path="res://assets/SFX/formcloud.ogg" id="2_4xkxp"]
+[ext_resource type="AudioStream" uid="uid://dgydqoer266ya" path="res://assets/SFX/formcloud.ogg" id="2_4xkxp"]
 [ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="2_f75l6"]
 [ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="3_vt6wo"]
 [ext_resource type="PackedScene" uid="uid://duelwtfern64x" path="res://assets3D/kkNatureForest/gltf/Tree_1_A_Color1.gltf" id="4_bjlxx"]
-[ext_resource type="AudioStream" uid="uid://ddtvr45ydfv7l" path="res://assets/audio/calm music.ogg" id="6_utney"]
+[ext_resource type="AudioStream" uid="uid://3c4ph0ogta1w" path="res://assets/audio/calm music.ogg" id="6_utney"]
 [ext_resource type="PackedScene" uid="uid://xen2qn2unprq" path="res://assets3D/houses/gltf/house.gltf" id="7_f75l6"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_4xkxp"]
