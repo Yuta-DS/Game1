@@ -4,23 +4,13 @@ const ChatbotScene := preload("res://scenes/chatbot.tscn")
 
 
 class FakeCampaign extends Node:
-	var unlocked := {"mind": true, "heart": false, "creator": false}
 	var entered: Array[String] = []
 	var campaign_starts := 0
-	var last_ignore_lock := false
-
-	func can_enter_kingdom(kingdom_id: String) -> bool:
-		return bool(unlocked.get(kingdom_id, false))
 
 	func next_kingdom_id() -> String:
-		for kingdom_id in ["mind", "heart", "creator"]:
-			if bool(unlocked.get(kingdom_id, false)):
-				return kingdom_id
-		return ""
+		return "mind"
 
-	func enter_kingdom(kingdom_id: String, _scene_tree: SceneTree = null,
-			ignore_lock := false) -> bool:
-		last_ignore_lock = ignore_lock
+	func enter_kingdom(kingdom_id: String, _scene_tree: SceneTree = null) -> bool:
 		entered.append(kingdom_id)
 		return true
 
@@ -70,15 +60,14 @@ func _run() -> void:
 	chat._respond_with_activity(chat.ACTIVITY_GUIDES[0])
 	(choices.get_node("MiloTravel_mind") as Button).pressed.emit()
 	assert(campaign.entered == ["mind"] and travel_requests == ["mind"],
-		"choosing an unlocked world goes straight there without a confirmation step")
+		"choosing a world goes straight there without a confirmation step")
 
 	chat._respond_with_activity(chat.ACTIVITY_GUIDES[1])
-	chat._confirm_activity_travel("heart")
-	assert(history.text.contains("still locked") and history.text.contains("will not skip or invent progress"),
-		"a locked recommendation explains the journey gate without changing progress")
-	assert(campaign.entered == ["mind"], "locked Heart Melody never enters a scene")
+	(choices.get_node("MiloTravel_heart") as Button).pressed.emit()
+	assert(campaign.entered == ["mind", "heart"],
+		"every world is open, so a later world goes straight there too")
 
-	# The strength finder's suggestion opens its world even while locked.
+	# The strength finder's suggestion opens its world.
 	chat._show_strength_discoveries()
 	for _question in chat.STRENGTH_QUESTIONS:
 		chat._answer_strength_question("kindness")
@@ -90,13 +79,13 @@ func _run() -> void:
 			and not _has_button(choices, "Try other worlds"),
 		"away from the hub castle Milo never mentions the top of the castle")
 	(choices.get_node("MiloTravel_heart") as Button).pressed.emit()
-	assert(campaign.entered == ["mind", "heart"] and campaign.last_ignore_lock,
-		"a strength suggestion goes straight into its world, even while locked")
+	assert(campaign.entered == ["mind", "heart", "heart"],
+		"a strength suggestion goes straight into its world")
 	assert(campaign.campaign_starts == 0, "Milo never routes to the Crown of Life")
 
 	chat.queue_free()
 	campaign.queue_free()
-	print("MILO_ACTIVITY_ROUTING_TEST: PASS — three minigame destinations, direct travel, canonical routes, and unlock protection")
+	print("MILO_ACTIVITY_ROUTING_TEST: PASS — three minigame destinations, direct travel to every world, and canonical routes")
 	quit()
 
 

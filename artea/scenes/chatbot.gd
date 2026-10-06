@@ -136,8 +136,8 @@ const CURATED_REFLECTIONS := {
 			},
 			{
 				"label": "Choose what I like",
-				"faith": "You get to decide what matters in your creation. Milo will not judge it.",
-				"universal": "You get to decide what matters in your creation. Milo will not judge it.",
+				"faith": "You get to decide what matters in your creation. I will not judge it.",
+				"universal": "You get to decide what matters in your creation. I will not judge it.",
 			},
 		],
 	},
@@ -252,7 +252,7 @@ const STRENGTHS := {
 
 const STRENGTH_QUESTIONS := [
 	{
-		"question": "When you have free time, what do you enjoy most?",
+		"question": "What do you enjoy doing most?",
 		"answers": [
 			["Making or drawing something", "creativity"],
 			["Spending time with friends or family", "kindness"],
@@ -423,7 +423,7 @@ func _show_stage_reflections() -> void:
 
 func _show_emotion_check_ins() -> void:
 	_request_companion_activity("LISTENING", "heart")
-	_speak("Wonderful Counsellor Milo · Emotional Companion\n\nChoose words that feel closest, or return without choosing. Milo will respond to your choice—not guess what you feel.")
+	_speak("Wonderful Counsellor Milo · Emotional Companion\n\nChoose words that feel closest, or return without choosing. I will respond to your choice—not guess what you feel.")
 	_clear_choices()
 	for check_in in EMOTION_CHECK_INS:
 		var button := _quiet_button(str(check_in.label), _respond_to_emotion.bind(check_in))
@@ -582,7 +582,7 @@ func _begin_local_llm_response(message: String,
 	_local_llm_request_id += 1
 	var request_id := _local_llm_request_id
 	_request_companion_activity("LISTENING", "heart")
-	_show_reply("Wonderful Counsellor Milo · Listening\n\nMilo is thinking with the local model…")
+	_show_reply("Wonderful Counsellor Milo · Listening\n\nI am thinking with the local model…")
 	_clear_choices()
 	var waiting := Label.new()
 	waiting.name = "MiloLocalModelStatus"
@@ -617,7 +617,7 @@ func _on_local_llm_response_finished(response: String) -> void:
 		_show_authored_message_response(_pending_authored_response)
 	else:
 		_request_companion_activity("REFLECTING", "tablet")
-		_show_companion_response("Local Reflection", clean_response)
+		_show_companion_response("Local Reflection", clean_response, "", false)
 	_pending_authored_response.clear()
 
 
@@ -680,7 +680,7 @@ func _begin_cloud_llm_response(message: String, authored_response: Dictionary) -
 	_cloud_llm_request_id += 1
 	var request_id := _cloud_llm_request_id
 	_request_companion_activity("LISTENING", "heart")
-	_show_reply("Wonderful Counsellor Milo · Listening\n\nMilo is thinking…")
+	_show_reply("Wonderful Counsellor Milo · Listening\n\nI am thinking…")
 	_clear_choices()
 	var waiting := Label.new()
 	waiting.name = "MiloCloudModelStatus"
@@ -737,7 +737,7 @@ func _finish_cloud_llm(request_id: int, reply: String) -> void:
 		_show_authored_message_response(_pending_authored_response)
 	else:
 		_request_companion_activity("REFLECTING", "tablet")
-		_show_companion_response("Milo", clean_reply)
+		_show_companion_response("Milo", clean_reply, "", false)
 	_pending_authored_response.clear()
 
 
@@ -804,8 +804,8 @@ func _reveal_strength() -> void:
 	]
 	# Only the overworld has the castle the other worlds are reached through.
 	if _castle_door() != null:
-		message += "\n\nOther worlds also await you! Choose Try other worlds and Milo will show you the way."
-	_show_companion_response("Strength Finder", message, world_id, true)
+		message += "\n\nOther worlds also await you! Tap \"Try other worlds\" and I'll show you the way."
+	_show_companion_response("Strength Finder", message, world_id)
 	_add_other_worlds_button()
 
 
@@ -832,7 +832,7 @@ func _show_progress_celebration() -> void:
 				str(ACTIVITY_DESTINATIONS[world_id]), str(WORLD_STRENGTHS[world_id]).to_lower(),
 			])
 	if completed.size() >= total:
-		lines.append("You finished every world. That took real effort, and Milo is so proud of you. You can revisit any of them whenever you like.")
+		lines.append("You finished every world. That took real effort, and I am so proud of you. You can revisit any of them whenever you like.")
 	elif next_id.is_empty() and campaign != null and campaign.has_method("next_kingdom_id"):
 		next_id = str(campaign.call("next_kingdom_id"))
 	if next_id in WORLD_STRENGTHS:
@@ -896,7 +896,7 @@ func _show_other_worlds() -> void:
 
 func _show_activity_guides() -> void:
 	_request_companion_activity("GUIDING", "map")
-	_speak("Wonderful Counsellor Milo · Journey Guide\n\nChoose what would help now. Milo will suggest an ARTÉA activity without changing your progress.")
+	_speak("Wonderful Counsellor Milo · Journey Guide\n\nChoose what would help now. I will suggest an ARTÉA activity without changing your progress.")
 	_clear_choices()
 	for guide in ACTIVITY_GUIDES:
 		var button := _quiet_button(str(guide.label), _respond_with_activity.bind(guide))
@@ -917,21 +917,27 @@ func _respond_with_activity(guide: Dictionary) -> void:
 	)
 
 
-# allow_locked lets a suggestion (the strength finder's) open a world the
-# journey has not unlocked yet. Visiting never awards that world's treasure.
+# spoken = false shows the reply as text only (used for AI replies, which have
+# no recording and shouldn't fall back to the platform voice).
 func _show_companion_response(title: String, message: String,
-		destination_id := "", allow_locked := false) -> void:
-	_speak("Wonderful Counsellor Milo · %s\n\n%s" % [title, message])
+		destination_id := "", spoken := true) -> void:
+	var text := "Wonderful Counsellor Milo · %s
+
+%s" % [title, message]
+	if spoken:
+		_speak(text)
+	else:
+		_show_reply(text)
 	_clear_choices()
-	_add_companion_navigation(destination_id, allow_locked)
+	_add_companion_navigation(destination_id)
 
 
-func _add_companion_navigation(destination_id := "", allow_locked := false) -> void:
+func _add_companion_navigation(destination_id := "") -> void:
 	if ACTIVITY_DESTINATIONS.has(destination_id):
 		var destination_name := str(ACTIVITY_DESTINATIONS[destination_id])
 		var travel_button := _quiet_button(
 			"Go with Milo to %s" % destination_name,
-			_confirm_activity_travel.bind(destination_id, allow_locked))
+			_travel_to_activity.bind(destination_id))
 		travel_button.name = "MiloTravel_%s" % destination_id
 		_choices.add_child(travel_button)
 	_add_message_input()
@@ -943,29 +949,10 @@ func _add_companion_navigation(destination_id := "", allow_locked := false) -> v
 	_focus_first_choice()
 
 
-func _confirm_activity_travel(destination_id: String, allow_locked := false) -> void:
-	var destination_name := str(ACTIVITY_DESTINATIONS.get(destination_id, "ARTÉA activity"))
-	var campaign := _campaign()
-	if not allow_locked and (campaign == null \
-			or not bool(campaign.call("can_enter_kingdom", destination_id))):
-		var next_name := "the next available activity"
-		if campaign != null and campaign.has_method("next_kingdom_id"):
-			var next_id := str(campaign.call("next_kingdom_id"))
-			next_name = str(ACTIVITY_DESTINATIONS.get(next_id, next_name))
-		_request_companion_activity("GUIDING", "map")
-		_clear_choices()
-		_speak("Wonderful Counsellor Milo · Journey Guide\n\n%s is still locked by your journey. Milo will not skip or invent progress. Your next available path is %s." % [
-			destination_name, next_name,
-		])
-		_add_companion_navigation()
-		return
-	_travel_to_activity(destination_id, allow_locked)
-
-
-func _travel_to_activity(destination_id: String, allow_locked := false) -> void:
+func _travel_to_activity(destination_id: String) -> void:
 	var campaign := _campaign()
 	if campaign == null:
-		_speak("Wonderful Counsellor Milo · Journey Guide\n\nThat path is unavailable right now. You can stay with Milo or continue your adventure.")
+		_speak("Wonderful Counsellor Milo · Journey Guide\n\nThat path is unavailable right now. You can stay with me or continue your adventure.")
 		_clear_choices()
 		_add_companion_navigation()
 		return
@@ -973,7 +960,7 @@ func _travel_to_activity(destination_id: String, allow_locked := false) -> void:
 		return
 	activity_travel_requested.emit(destination_id)
 	chat_closed.emit()
-	campaign.call("enter_kingdom", destination_id, null, allow_locked)
+	campaign.call("enter_kingdom", destination_id)
 
 
 func _campaign() -> Node:

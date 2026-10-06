@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://sv4s22ki8dww"]
 
 [ext_resource type="Script" uid="uid://bslgdnvsaqhn2" path="res://scenes/chatbot.gd" id="1_7qo2j"]
+[ext_resource type="Theme" path="res://assets/Fonts/opendyslexic_theme.tres" id="2_odtheme"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_an77j"]
 
@@ -47,6 +48,7 @@ anchor_right = 0.5
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 0
+theme = ExtResource("2_odtheme")
 script = ExtResource("1_7qo2j")
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=1581378263]
