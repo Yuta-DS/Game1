@@ -8,14 +8,10 @@ enemy_kind = 3
 display_name = "Root Stalker"
 max_health = 75.0
 xp_reward = 30
-spark_shard_reward = 14
-guaranteed_material_id = "memory_thread"
-encounter_tier = 2
-animation_profile = "ground_stalker"
-resistances = {"front": 0.55}
 attack_damage = 14.0
 attack_range = 5.2
 move_speed = 7.0
 telegraph_seconds = 1.1
 recovery_seconds = 1.8
 shell_color = Color(0.33, 0.27, 0.43, 1)
+

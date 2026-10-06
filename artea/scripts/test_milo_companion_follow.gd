@@ -75,14 +75,6 @@ func _run() -> void:
 	_check(str(milo.call("get_companion_state_name")) == "IDLE_NEAR_PLAYER",
 		"Milo stops instead of crowding the player (got %s)" % str(
 			milo.call("get_companion_state_name")))
-	_check(followed_distance >= float(milo.get("follow_stop_distance")) - 0.2,
-		"Milo preserves visible personal space instead of overlapping the player (%.2fm)" \
-		% followed_distance)
-	_check(bool(milo.get("first_wave")), "Milo still greets the player on arrival")
-	milo.call("_process", 5.1)
-	_check(str(milo.call("get_companion_state_name")) == "IDLE_NEAR_PLAYER" \
-			and locomotion_player.current_animation == "Idle_3",
-		"the completed arrival greeting does not restart every five seconds")
 
 	# Stopping also eases out instead of zeroing the body velocity in one frame.
 	milo.velocity = Vector3(1.5, 0.0, 0.0)
@@ -116,22 +108,8 @@ func _run() -> void:
 	var repaired_distance := milo.global_position.distance_to(player.global_position)
 	_check(repaired_distance < 4.0,
 		"Milo safely reappears near the player after a teleport")
-	_check(repaired_distance >= float(milo.get("follow_stop_distance")) - 0.2,
-		"teleport recovery places Milo beside the player rather than inside their silhouette")
 	_check(milo.velocity.length() < 0.01,
 		"safe repositioning clears stale movement velocity")
-
-	var shore_wait_position := milo.global_position
-	player.set_meta("sailing_boat", true)
-	player.position += Vector3(35, 0, 0)
-	for frame in 12:
-		await physics_frame
-	_check(milo.global_position.distance_to(shore_wait_position) < 0.01,
-		"Milo waits ashore rather than following the sailing player over water")
-	player.remove_meta("sailing_boat")
-	await physics_frame
-	_check(milo.global_position.distance_to(player.global_position) < 4.0,
-		"safe disembarking resumes the companion's normal catch-up")
 
 	_check(ProjectSettings.has_setting("autoload/MiloCompanionManager"),
 		"the scene-lifecycle companion manager is registered as an autoload")
@@ -152,25 +130,10 @@ func _run() -> void:
 	var gallery_like_world := Node3D.new()
 	gallery_like_world.name = "GalleryLikeWorld"
 	root.add_child(gallery_like_world)
-	var floating_world_marker := Node3D.new()
-	floating_world_marker.name = "ArtCastleFloatingWorld"
-	gallery_like_world.add_child(floating_world_marker)
 	var gallery_player := CharacterBody3D.new()
 	gallery_player.name = "Player3D"
 	gallery_player.add_to_group("Player")
 	gallery_like_world.add_child(gallery_player)
-	var fox_visuals := Node3D.new()
-	fox_visuals.name = "FoxVisuals"
-	gallery_player.add_child(fox_visuals)
-	var fox := Node3D.new()
-	fox.name = "Fox"
-	fox_visuals.add_child(fox)
-	var fox_mesh := MeshInstance3D.new()
-	fox_mesh.name = "FoxSizeReference"
-	var fox_box := BoxMesh.new()
-	fox_box.size = Vector3(1.0, 3.25, 1.0)
-	fox_mesh.mesh = fox_box
-	fox.add_child(fox_mesh)
 	current_scene = gallery_like_world
 	if manager != null:
 		manager.call("refresh_companion")
@@ -182,15 +145,6 @@ func _run() -> void:
 			"a 3D scene without an authored Milo receives the companion")
 		_check(spawned != null and spawned.get("player") == gallery_player,
 			"the scene-spawned companion adopts that scene's player")
-		var fox_height := float(spawned.get_meta("matched_fox_visual_height_m", 0.0)) \
-			if spawned != null else 0.0
-		var milo_height := float(spawned.get_meta("milo_native_visual_height_m", 0.0)) \
-			* spawned.scale.y if spawned != null else 0.0
-		var calibrated_ratio := milo_height / fox_height if fox_height > 0.001 else 0.0
-		_check(spawned != null and absf(calibrated_ratio - 0.88) < 0.001 \
-				and str(spawned.get_meta("scene_scale_profile", "")) \
-					== "art_galaxy_fox_perceived_height_match",
-			"Galaxy Milo uses the fox idle-pose height calibration")
 
 	gallery_like_world.queue_free()
 	await process_frame

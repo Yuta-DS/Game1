@@ -1,8 +1,6 @@
 const GEMINI_MODEL = "gemini-3.5-flash-lite";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-// The game itself has no message limit; this only guards the public endpoint
-// against abuse and is far longer than anything a player would type.
-const MAX_MESSAGE_LENGTH = 4000;
+const MAX_MESSAGE_LENGTH = 280;
 const MAX_OUTPUT_TOKENS = 200;
 
 // Milo stays a warm, clearly-AI companion. He never claims to be human or

@@ -8,7 +8,6 @@ extends Node3D
 
 #const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
 #const SERVER_BASE = "http://54.252.162.122"
-const RatingHeart := preload("res://scripts/rating_heart.gd")
 const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
 const SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
@@ -38,8 +37,9 @@ var current_frame_hovered := ""
 var current_rating := 0
 
 # The rating widgets live under CanvasLayer/RatingPanel, a sibling of this node.
-# Resolve all three controls from that one production panel so gallery setup
-# cannot be interrupted by stale or partial overlay paths.
+# RatingUI is a leftover empty PanelContainer — pointing at it (and omitting the
+# "../" on likebutton) made all three lookups fail, which aborted _ready() and
+# took the rest of the gallery's setup down with it.
 @onready var rating_ui = $"../CanvasLayer/RatingPanel"
 @onready var rating_label: Label = $"../CanvasLayer/RatingPanel/RatingLabel"
 @onready var likebutton: Button = $"../CanvasLayer/RatingPanel/HBoxContainer/LikeButton"
@@ -100,6 +100,9 @@ func prepare_frame_for_world(frame_name: String) -> String:
 # =========================================================
 
 func _ready() -> void:
+
+	print(OS.get_user_data_dir())
+
 	list_request.request_completed.connect(_on_list_request_completed)
 	download_request.request_completed.connect(_on_download_request_completed)
 
@@ -136,13 +139,7 @@ func one_placeholder(frame_node: Sprite3D, texture: Texture2D) -> void:
 		return
 
 	var image: Image = texture.get_image()
-	if image == null or image.is_empty():
-		frame_node.texture = texture
-		return
-	if image.is_compressed() and image.decompress() != OK:
-		# Retain the original playable artwork if a platform cannot decode it.
-		frame_node.texture = texture
-		return
+
 	image.resize(512, 512, Image.INTERPOLATE_BILINEAR)
 
 	var resized_texture = ImageTexture.create_from_image(image)
@@ -158,6 +155,9 @@ func load_local_art_paths() -> void:
 	var dir = DirAccess.open(LOCAL_ART_PATH)
 
 	if dir == null:
+
+		print("No local artworks found.")
+
 		return
 
 	var art_files: Array[Dictionary] = []
@@ -201,6 +201,8 @@ func load_local_art_paths() -> void:
 
 		local_art_paths.append(item["path"])
 
+	print("Player artworks found: ", local_art_paths.size())
+
 	for i in range(local_art_paths.size()):
 
 		print("Local order ", i, ": ", local_art_paths[i])
@@ -211,13 +213,10 @@ func load_local_art_paths() -> void:
 # =========================================================
 
 func list_user_artworks() -> void:
+	
+	if Global.auth_token == "":
+		print("No authenticated user -> loading local gallery")
 
-	# Offline Guest deliberately carries a sentinel token so the rest of the
-	# game can distinguish it from an uninitialised session. It is not a bearer
-	# credential and must never be sent to the gallery API. Besides exposing a
-	# fake credential, doing so on Web attempts to contact localhost and produces
-	# an unhandled browser fetch error before the expected local fallback.
-	if not Global.has_authenticated_session():
 		load_local_art_paths()
 		apply_local_art_over_online()
 		return
@@ -412,8 +411,12 @@ func _on_download_request_completed(
 func apply_local_art_over_online() -> void:
 
 	if local_art_paths.is_empty():
+
+		print("No player artworks to replace online gallery.")
 		local_gallery_ready = true
 		return
+
+	print("Applying player artworks over online gallery...")
 
 	for i in range(
 		min(local_art_paths.size(), MAX_FRAMES_TO_LOAD)
@@ -724,8 +727,14 @@ func show_rating_ui(frame_name: String) -> void:
 	print("Showing rating for:", frame_name)
 	print("Saved rating:", rating)
 
-	RatingHeart.apply_to_label(rating_label, rating > 0)
-	RatingHeart.apply_to_button(likebutton, rating > 0)		
+	if rating > 0:
+		rating_label.text = "Artwork Rating:\n♥"
+		rating_label.modulate = Color.RED
+		likebutton.modulate = Color.RED
+	else:
+		rating_label.text = "Artwork Rating:\n♡"
+		rating_label.modulate = Color.WHITE
+		likebutton.modulate = Color.WHITE		
 
 
 func hide_rating_ui() -> void:

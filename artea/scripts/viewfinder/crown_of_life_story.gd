@@ -65,7 +65,7 @@ const GUARDIAN_MODELS := [
 	"res://assets3D/characters/Knight.glb",
 	"res://assets3D/characters/Mage.glb",
 ]
-const MILO_MODEL := "res://milo2/godot/milo2_skin.tscn"
+const MILO_MODEL := "res://meshy ai/Milo_Animations.glb"
 
 # One entry per kingdom, in play order. Zone N is not enterable (its gap
 # Area3D stays inert) until zone N-1's chapter has been recorded, so the
@@ -1796,30 +1796,15 @@ func _show_finale_message(js: Node) -> void:
 	var named := "The sky over Artéa knows your name now%s." % (
 		"" if who.is_empty() else ", %s" % who)
 
-	var identity_line := _finalize_identity_line()
 	var message: String
 	if str(js.audience_mode) == "faith":
-		message = "The Maker: You are known. You are loved. You have been uniquely created with gifts and purpose.\n%s%s\nYour light has a place in this universe." % [named, identity_line]
+		message = "The Maker: You are known. You are loved. You have been uniquely created with gifts and purpose.\n%s\nYour light has a place in this universe." % named
 	else:
-		message = "Milo: You are known. You are valued. Your gifts, purpose, and story are uniquely yours.\n%s%s\nYour light has a place in this universe." % [named, identity_line]
+		message = "Milo: You are known. You are valued. Your gifts, purpose, and story are uniquely yours.\n%s\nYour light has a place in this universe." % named
 
 	_show_guardian_line(message)
 	_update_progress_hud()
 	_build_finale_ui(named)
-
-
-func _finalize_identity_line() -> String:
-	var tracker := get_node_or_null("/root/PlayerIdentityTracker")
-	if tracker == null or not tracker.has_method("finalize_identity"):
-		return ""
-	var code := str(tracker.call("finalize_identity"))
-	var friendly_name := str(tracker.call("friendly_identity_name", code))
-	if friendly_name.is_empty():
-		return ""
-	tracker.call("mark_reveal_seen")
-	# The four-letter implementation code remains private save data. The finale
-	# presents only the warm, non-ranked identity name promised to the player.
-	return "\nYour story reflects %s." % friendly_name
 
 
 # --- finale replay / return / credits -------------------------------------

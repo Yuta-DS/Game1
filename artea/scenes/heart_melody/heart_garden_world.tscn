@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://scripts/heart_melody/heart_garden_world.gd" id="1"]
-
-[node name="HeartMelodyWorld" type="Node3D"]
-script = ExtResource("1")

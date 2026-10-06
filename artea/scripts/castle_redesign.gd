@@ -7,8 +7,6 @@
 extends Node3D
 
 const CASTLE_NAME := "building_castle_red2"
-const ReferenceStyle := preload("res://scripts/castle_reference_style.gd")
-const RoyalBotanicals := preload("res://scripts/castle_royal_botanicals.gd")
 var _stone: StandardMaterial3D
 var _stone_light: StandardMaterial3D
 var _stone_course: StandardMaterial3D
@@ -40,10 +38,8 @@ func _ready() -> void:
 	_remove_reference_technology()
 	_restyle_castle_approach()
 	_build_castle_architecture(castle)
-	_clear_royal_stair_foliage()
+	_build_village_style_stair_tower()
 	_position_castle_commander()
-	ReferenceStyle.apply_route(get_parent())
-	RoyalBotanicals.build(get_parent())
 
 
 func _create_materials() -> void:
@@ -51,10 +47,10 @@ func _create_materials() -> void:
 	# village homes. The imported castle already uses their hexagons_castle atlas;
 	# these flat procedural materials reproduce its rendered value hierarchy so
 	# added architecture no longer looks like a different graphics pack.
-	_stone = ReferenceStyle.material("wall")
-	_stone_light = ReferenceStyle.material("floor")
-	_stone_course = ReferenceStyle.material("trim")
-	_slate = ReferenceStyle.material("roof")
+	_stone = _material(Color("8399a6"), 0.92)
+	_stone_light = _material(Color("c7d2d2"), 0.90)
+	_stone_course = _material(Color("9aabb2"), 0.91)
+	_slate = _material(Color("ef443d"), 0.88)
 	_timber = _material(Color("7f4628"), 0.91)
 	_timber_light = _material(Color("a96032"), 0.90)
 	_timber_dark = _material(Color("4d2d20"), 0.94)
@@ -131,18 +127,15 @@ func _restyle_castle_approach() -> void:
 func _restyle_approach_tree(node: Node) -> void:
 	# Authored organic dressing already carries its low-poly bark/leaf palette.
 	# Repainting this subtree as generic castle stone turns fibres into blue trim.
-	if node.name == "LowPolyStairGrowth" or node.name == "CrownRoofGarden":
+	if node.name == "LowPolyStairGrowth":
 		return
 	for child in node.get_children():
 		var child_name := String(child.name).to_lower()
-		# The palace finish includes a non-emissive paving shader and authored
-		# stone/garden colours. Do not classify these as old technical glow strips.
-		if bool(child.get_meta("preserve_castle_finish", false)):
-			continue
 		# The simplified castle deliberately keeps this one warm, non-technical
 		# light source. Do not recurse into it and hide its emissive fire or lamp.
 		if child is Node3D and (child_name == "castlecourtyardfire"
-				or child_name.begins_with("castlestairtorch")):
+				or child_name.begins_with("castlestairtorch")
+				or child_name == "castleballista"):
 			continue
 		if child is Node3D and _name_has_any(child_name,
 				["resonanceframe", "aetherlensgate", "aethergear"]):
@@ -166,14 +159,9 @@ func _restyle_approach_tree(node: Node) -> void:
 					"astrolabe", "tracery", "underbrace", "tensionrib", "tensioncollar",
 					"aetherbridgekeel", "lumenbridgesurfaceplank", "safetypost",
 					"safetyplinth", "terracelevitationring", "handrail", "castleascentramp",
-					"castledoortread", "castledoornosing"]) \
-					or (thin_technology_strip and "masonryjoint" not in lower_name):
+					"castledoortread", "castledoornosing"]) or thin_technology_strip:
 				mesh.visible = false
 				mesh.set_meta("removed_for_castle_redesign", true)
-			elif _name_has_any(lower_name, ["lancetjamb", "lancetarch"]):
-				mesh.material_override = _stone_light
-			elif "lancetwindowrecess" in lower_name:
-				mesh.material_override = _iron
 			elif "aetherwindowframe" in lower_name:
 				mesh.material_override = _stone_light
 			elif "aetherwindow" in lower_name:
@@ -181,23 +169,6 @@ func _restyle_approach_tree(node: Node) -> void:
 			elif _name_has_any(lower_name, ["stonecourse", "foundationbuttress",
 					"buttresspier", "cornice", "masonryblock"]):
 				mesh.material_override = _stone_course
-			elif "masonryjoint" in lower_name:
-				mesh.material_override = _iron
-			elif "parapetmortar" in lower_name:
-				var mortar_material := _material(Color("687f91"), 0.95)
-				mortar_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-				mesh.material_override = mortar_material
-			elif "parapetbricklight" in lower_name:
-				var light_brick := _stone.duplicate() as StandardMaterial3D
-				light_brick.cull_mode = BaseMaterial3D.CULL_DISABLED
-				mesh.material_override = light_brick
-			elif "parapetbrickmid" in lower_name:
-				var mid_brick := _stone.duplicate() as StandardMaterial3D
-				mid_brick.cull_mode = BaseMaterial3D.CULL_DISABLED
-				mesh.material_override = mid_brick
-			elif "parapetcoping" in lower_name \
-					or bool(mesh.get_meta("castle_stone_coping", false)):
-				mesh.material_override = _stone_light
 			elif _name_has_any(lower_name, ["roof", "banner", "shield", "pennant"]):
 				mesh.material_override = _slate
 			elif _name_has_any(lower_name, ["guardcap", "continuouscap", "nosing",
@@ -210,26 +181,8 @@ func _restyle_approach_tree(node: Node) -> void:
 				mesh.material_override = _timber
 			elif _name_has_any(lower_name, ["keel", "collar", "hinge", "bracket"]):
 				mesh.material_override = _iron
-			elif "roadbed" in lower_name:
-				# The roadbed is the parapet's structural underside. Painting it as
-				# highlight stone produces a bright stripe and square end cap that
-				# reads like another tread passing through the wall.
-				var roadbed_stone := _stone.duplicate() as StandardMaterial3D
-				# The generated band is inspected from below as a finished soffit.
-				# Preserve both face directions when applying the castle palette.
-				roadbed_stone.cull_mode = BaseMaterial3D.CULL_DISABLED
-				mesh.material_override = roadbed_stone
-			elif "terrainfoundation" in lower_name:
-				# Generated retaining faces are inspected from both sides as the
-				# hillside rolls beneath them. Preserve two-sided rendering when the
-				# castle palette replaces their original private material.
-				var foundation_stone := _stone.duplicate() as StandardMaterial3D
-				foundation_stone.cull_mode = BaseMaterial3D.CULL_DISABLED
-				mesh.material_override = foundation_stone
-			elif "underside" in lower_name or "sidebarrier" in lower_name:
-				mesh.material_override = _stone
 			elif _name_has_any(lower_name, ["tread", "step", "paving", "court",
-					"deck", "landing", "walksurface", "walksurface"]):
+					"deck", "landing", "roadbed", "walksurface", "walksurface"]):
 				mesh.material_override = _stone_light
 			else:
 				mesh.material_override = _stone
@@ -257,8 +210,8 @@ func _position_castle_commander() -> void:
 		push_warning("Castle Castle: animated commander not found")
 		return
 	commander.visible = true
-	commander.global_position = CASTLE_DOOR_WORLD + Vector3(1.25, 0.02, 3.55)
-	commander.rotation.y = 0.0
+	commander.global_position = CASTLE_DOOR_WORLD + Vector3(1.9, 0.18, 3.55)
+	commander.rotation.y = -PI * 0.5
 	commander.set_meta("castle_role", "upper_court_commander")
 	commander.set_meta("route_policy", "outside_central_stair_lane")
 
@@ -276,20 +229,54 @@ func _build_castle_architecture(castle: Node3D) -> void:
 	_build_turret_roofs(architecture)
 	_build_gothic_keep_details(architecture)
 	_build_castle_bridge(architecture)
-	preload("res://scripts/castle_royal_courtyard.gd").build(architecture)
+	_build_bridge_barbican(architecture)
+	_build_front_gatehouse(architecture)
+	_build_full_castle_ascent(architecture)
 
 
-func _clear_royal_stair_foliage() -> void:
-	# Move only decorative tree leaves whose bounds intrude into the stair
-	# corridor. Keep the living tree and structural roots intact.
-	var clearance := AABB(Vector3(-40.1, 69.0, 24.95), Vector3(9.1, 12.0, 4.92))
-	for leaf: MeshInstance3D in get_parent().find_children("TreeLeaf_*", "MeshInstance3D", true, false):
-		var bounds := leaf.global_transform * leaf.mesh.get_aabb()
-		if bounds.intersects(clearance):
-			var sign_z := -1.0 if bounds.get_center().z < 27.41 else 1.0
-			var delta := (29.95 - bounds.position.z) if sign_z > 0 else (24.87 - bounds.end.z)
-			leaf.global_position.z += delta
-			leaf.set_meta("kept_clear_of_royal_stair", true)
+# The separate spiral stair tower was the last large smooth surface in the
+# castle precinct. Reference tower_B and the catapult tower break their walls
+# into many small low-poly faces; this staggered veneer gives the stair tower
+# the same apparent mesh density, scale and light response without replacing
+# its authoritative collision cylinder or narrowing the route.
+func _build_village_style_stair_tower() -> void:
+	var stair := get_parent().get_node_or_null("CastleStairs/CastleStair") as Node3D
+	if stair == null:
+		return
+	var overlay := Node3D.new()
+	overlay.name = "VillageStyleStairTowerMasonry"
+	overlay.set_meta("style_reference", "tower_B_and_tower_catapult")
+	overlay.set_meta("render_family", "red_village_hexagons_castle")
+	overlay.set_meta("collision_policy", "visual_only")
+	get_parent().add_child(overlay)
+
+	var base: Vector2 = stair.get_meta("tower_base")
+	var ground := float(stair.get_meta("terrain_ground_y"))
+	var top_y := float(stair.get_meta("tower_top_y"))
+	var facade_height := top_y - ground
+	const ROW_HEIGHT := 2.20
+	var row_count := maxi(4, int(floor((facade_height - 3.0) / ROW_HEIGHT)))
+	for row_index in row_count:
+		var y := ground + 1.55 + float(row_index) * ROW_HEIGHT
+		var height_ratio := clampf((y - ground) / maxf(facade_height, 0.1), 0.0, 1.0)
+		var wall_radius := lerpf(3.88, 3.08, height_ratio) + 0.018
+		for face_index in 8:
+			var angle := TAU * float(face_index) / 8.0
+			var radial := Vector3(cos(angle), 0.0, sin(angle))
+			var tangent := Vector3(-radial.z, 0.0, radial.x)
+			var stagger := 0.28 if row_index % 2 == 1 else 0.0
+			for block_index in 2:
+				var lateral := (float(block_index) - 0.5) * 1.30 + stagger
+				# The staggered end block wraps naturally onto the next octagonal
+				# face; clipping it would create a repeated vertical seam.
+				var position := Vector3(base.x, y, base.y) + radial * wall_radius \
+					+ tangent * lateral
+				var block := _add_mesh(overlay,
+					_box(Vector3(1.10, 0.18, 0.036)), _stone_course, position)
+				block.name = "VillageMasonryBlock_%02d_%d_%d" % [
+					row_index, face_index, block_index]
+				block.rotation.y = -angle
+				block.set_meta("visual_only", true)
 
 
 func _build_turret_roofs(parent: Node3D) -> void:
@@ -332,8 +319,30 @@ func _build_gothic_keep_details(parent: Node3D) -> void:
 				Vector3(0.0, y + height * 0.5 + 0.34, 0.0))
 			weathering.name = "ButtressWeathering_%02d" % (tier_index + 1)
 
-	# The imported rounded windows are the style reference. Do not cover them
-	# with a second set of pointed frames; retain their authored recess/trim.
+	# Pointed lancet frames sit proud of each face. They do not replace the
+	# imported arched windows; they make those openings read as Gothic masonry
+	# from the same low upward angle as the supplied screenshot.
+	var faces := [
+		[Vector3(0.0, 22.2, -4.76), Vector3.RIGHT],
+		[Vector3(0.0, 22.2, 4.76), Vector3.RIGHT],
+		[Vector3(-4.92, 22.2, 0.0), Vector3.FORWARD],
+		[Vector3(4.92, 22.2, 0.0), Vector3.FORWARD],
+	]
+	for face_index in faces.size():
+		var lancet := Node3D.new()
+		lancet.name = "GothicLancet_%02d" % (face_index + 1)
+		parent.add_child(lancet)
+		var centre := faces[face_index][0] as Vector3
+		var tangent := faces[face_index][1] as Vector3
+		var left_base := centre - tangent * 1.32 + Vector3.DOWN * 2.7
+		var right_base := centre + tangent * 1.32 + Vector3.DOWN * 2.7
+		var left_shoulder := centre - tangent * 1.32 + Vector3.UP * 0.35
+		var right_shoulder := centre + tangent * 1.32 + Vector3.UP * 0.35
+		var apex := centre + Vector3.UP * 3.25
+		for segment in [[left_base, left_shoulder], [right_base, right_shoulder],
+				[left_shoulder, apex], [right_shoulder, apex]]:
+			_add_beam_between(lancet, segment[0], segment[1], 0.30, _stone)
+
 
 func _build_timber_hoarding(parent: Node3D, hoarding_name: String,
 		y: float, footprint: Vector2) -> void:
@@ -385,31 +394,236 @@ func _build_timber_hoarding(parent: Node3D, hoarding_name: String,
 
 
 func _build_castle_bridge(parent: Node3D) -> void:
-	var bridge := (load("res://assets3D/royal_garden/glb/MasonryBridge.glb") as PackedScene).instantiate() as Node3D
-	bridge.name = "CastleMasonryCauseway"
+	var bridge := Node3D.new()
+	bridge.name = "CastleTimberCauseway"
 	parent.add_child(bridge)
-	var roadbed := get_parent().get_node("CastleStairs/CastleStair/LumenBridgeRoadbed") as MeshInstance3D
-	bridge.global_transform = roadbed.global_transform
-	# Follow the generated collider, not the obsolete longer timber coordinates.
-	bridge.scale.z *= ((roadbed.mesh as BoxMesh).size.z - 1.0) / 8.6
-	roadbed.hide() # Keep its StaticBody3D; only remove the coplanar duplicate mesh.
-	bridge.set_meta("preserve_castle_finish", true)
-	bridge.set_meta("surface_policy", "stone_finish_matches_existing_roadbed_collider")
-	bridge.set_meta("authoring", "modular_blender_masonry")
-	# Finish the existing end aprons too. They retain their own collider heights;
-	# do not cover them with another mesh just to add a brick pattern.
-	var stair := get_parent().get_node("CastleStairs/CastleStair") as Node3D
-	var base: Vector2 = stair.get_meta("tower_base")
-	var paving := ShaderMaterial.new()
-	paving.shader = load("res://shaders/castle_palace_paving.gdshader")
-	paving.set_shader_parameter("roof_origin", Vector3(base.x,
-		float(stair.get_meta("tower_top_y")) + 0.17, base.y))
-	for label in ["LumenBridgeLaunch", "CastleDoorLanding"]:
-		var apron := stair.get_node(label) as MeshInstance3D
-		apron.material_override = paving
-		apron.set_meta("preserve_castle_finish", true)
-	# The existing continuous roadbed/launch/landing and six flared safety-wall
-	# colliders are retained. No plank overlay sits above the player's feet.
+	var start := parent.to_local(BRIDGE_START_WORLD)
+	var finish := parent.to_local(BRIDGE_END_WORLD)
+	var direction := (finish - start).normalized()
+	var side := direction.cross(Vector3.UP).normalized()
+	for plank_index in 14:
+		var t := (float(plank_index) + 0.5) / 14.0
+		var plank := _add_mesh(bridge, _box(Vector3(4.65, 0.18, 0.76)),
+			_timber_light if plank_index % 3 == 1 else _timber,
+			start.lerp(finish, t) + Vector3.UP * 0.33)
+		plank.name = "OakDrawbridgePlank_%02d" % (plank_index + 1)
+		plank.basis = Basis.looking_at(direction, Vector3.UP)
+		for nail_side in [-1.0, 1.0]:
+			var nail := _add_mesh(bridge, _cylinder(0.07, 0.07, 0.05, 8), _iron,
+				plank.position + side * nail_side * 1.72 + Vector3.UP * 0.11)
+			nail.name = "WroughtNail"
+	for beam_index in 6:
+		var beam_t := float(beam_index) / 5.0
+		var crossbeam := _add_mesh(bridge, _box(Vector3(5.45, 0.34, 0.38)),
+			_timber_dark, start.lerp(finish, beam_t) + Vector3.DOWN * 0.42)
+		crossbeam.name = "DrawbridgeCrossbeam_%02d" % (beam_index + 1)
+		crossbeam.basis = Basis.looking_at(direction, Vector3.UP)
+	for side_value in [-1.0, 1.0]:
+		var lateral: float = side_value
+		var side_offset := side * lateral * 2.15
+		_add_beam_between(bridge, start + side_offset + Vector3.DOWN * 0.79,
+			finish + side_offset + Vector3.DOWN * 0.79, 0.34, _timber_dark).name = \
+			"OakSideStringer"
+		var previous_low := Vector3.ZERO
+		var previous_high := Vector3.ZERO
+		for post_index in 6:
+			var post_t := float(post_index) / 5.0
+			var foot := start.lerp(finish, post_t) + side_offset + Vector3.UP * 0.48
+			var post_top := foot + Vector3.UP * 1.72
+			var rail_post := _add_beam_between(bridge, foot, post_top, 0.24, _timber_dark)
+			rail_post.name = "CarvedRailPost"
+			# Rail posts mark the causeway edge, so solid collision here is the
+			# normal expected behaviour of a railing (it should stop a player
+			# from walking through it, not just decorate the drop-off).
+			_add_box_body(rail_post, Vector3(0.24, 0.24, 1.72), "SolidCarvedRailPost")
+			var cap := _add_mesh(bridge, _cone(0.28, 0.46, 4), _slate,
+				post_top + Vector3.UP * 0.22)
+			cap.name = "RailPostCap"
+			if post_index > 0:
+				_add_beam_between(bridge, previous_high, post_top, 0.22,
+					_timber).name = "OakTopRail"
+				var current_low := foot + Vector3.UP * 0.50
+				_add_beam_between(bridge,
+					previous_low if post_index % 2 == 0 else previous_high,
+					post_top if post_index % 2 == 0 else current_low,
+					0.17, _timber_light).name = "DrawbridgeDiagonalBrace"
+			previous_low = foot + Vector3.UP * 0.50
+			previous_high = post_top
+	for chain_side_value in [-1.0, 1.0]:
+		var chain_side: float = chain_side_value
+		var chain_anchor := finish + side * chain_side * 2.25 + Vector3.UP * 5.25
+		var chain_deck := finish - direction * 3.15 + side * chain_side * 2.05 \
+			+ Vector3.UP * 0.88
+		_add_beam_between(bridge, chain_anchor, chain_deck, 0.13, _iron).name = \
+			"WroughtDrawbridgeChain"
+
+
+func _build_bridge_barbican(parent: Node3D) -> void:
+	var barbican := Node3D.new()
+	barbican.name = "CastleBridgeBarbican"
+	barbican.position = parent.to_local(BRIDGE_END_WORLD)
+	barbican.set_meta("route_policy", "solid_towers_clear_central_court_lane")
+	parent.add_child(barbican)
+	for side_value in [-1.0, 1.0]:
+		var lateral: float = side_value
+		# The former +/-3.25 m placement left less than one capsule width between
+		# a tower and the central fire. Because the towers were also visual-only,
+		# the fox appeared to solve that impossible gap by walking through stone.
+		# Moving them to the terrace shoulders creates a broad real route while
+		# keeping the bridge framed by the same two-tower silhouette.
+		var tower_size := Vector3(2.2, 5.2, 2.2)
+		var tower_lateral := lateral * 4.2
+		var pier := _add_mesh(barbican, _box(tower_size), _stone,
+			Vector3(0.0, 2.6, tower_lateral))
+		pier.name = "BarbicanTower"
+		pier.set_meta("collision_policy", "solid_simple_box_no_mesh_tunnelling")
+		_add_box_body(pier, tower_size, "SolidBarbicanTower")
+		var roof := _add_mesh(barbican, _cone(1.75, 2.4, 8), _slate,
+			Vector3(0.0, 6.35, tower_lateral))
+		roof.name = "BarbicanSlateRoof"
+	var left_shoulder := Vector3(0.0, 4.6, -2.3)
+	var right_shoulder := Vector3(0.0, 4.6, 2.3)
+	var apex := Vector3(0.0, 7.4, 0.0)
+	_add_beam_between(barbican, left_shoulder, apex, 0.52, _stone).name = "BarbicanPointedArch"
+	_add_beam_between(barbican, right_shoulder, apex, 0.52, _stone).name = "BarbicanPointedArch"
+
+
+func _build_full_castle_ascent(parent: Node3D) -> void:
+	var ascent := Node3D.new()
+	ascent.name = "CastleGrandCastleAscent"
+	parent.add_child(ascent)
+	var top := parent.to_local(CASTLE_DOOR_WORLD)
+	var bottom := parent.to_local(CASTLE_DOOR_WORLD + Vector3(8.4, -9.0, 0.0))
+	const STEP_COUNT := 18
+	var run := absf(top.x - bottom.x) / float(STEP_COUNT)
+	var rise := (top.y - bottom.y) / float(STEP_COUNT)
+
+	# Eighteen overlapping masonry blocks replace the single steep grey slab.
+	# Their 0.5 m visual rise matches the controller's safe step language while
+	# the original hidden ramp remains the authoritative collision surface.
+	for step_index in STEP_COUNT:
+		var t := (float(step_index) + 0.5) / float(STEP_COUNT)
+		var surface_y := bottom.y + rise * float(step_index + 1)
+		var centre := Vector3(lerpf(bottom.x, top.x, t), surface_y - 0.27, top.z)
+		var tread := _add_mesh(ascent,
+			_box(Vector3(run + 0.20, 0.54, 5.25)),
+			_stone_light if step_index % 3 == 1 else _stone, centre)
+		tread.name = "GrandAscentTread_%02d" % (step_index + 1)
+
+		# Stepped cheek walls turn the climb into a defensible castle stair and
+		# visually connect each tread to the gatehouse foundations above.
+		for side_value in [-1.0, 1.0]:
+			var lateral: float = side_value
+			var cheek := _add_mesh(ascent,
+				_box(Vector3(run + 0.22, 1.12, 0.68)), _stone,
+				Vector3(centre.x, surface_y + 0.28, top.z + lateral * 2.92))
+			cheek.name = "GrandAscentCheek"
+			if step_index % 3 == 0:
+				var merlon := _add_mesh(ascent, _box(Vector3(0.52, 0.72, 0.78)),
+					_stone_light,
+					Vector3(centre.x, surface_y + 1.18, top.z + lateral * 2.92))
+				merlon.name = "GrandAscentMerlon"
+
+	# Broad landings and square newels mark both ends, making the whole climb
+	# read as one route from the lower court to the upper oak gate.
+	for landing_index in 2:
+		var at_top := landing_index == 1
+		var anchor := top if at_top else bottom
+		var landing := _add_mesh(ascent, _box(Vector3(2.1, 0.46, 6.2)),
+			_stone_light, anchor + Vector3(0.0, -0.23, 0.0))
+		landing.name = "UpperGateLanding" if at_top else "LowerCourtLanding"
+		for side_value in [-1.0, 1.0]:
+			var lateral: float = side_value
+			var newel := _add_mesh(ascent, _box(Vector3(1.05, 2.0, 1.05)), _stone,
+				anchor + Vector3(0.0, 0.76, lateral * 3.05))
+			newel.name = "AscentNewelTower"
+			var cap := _add_mesh(ascent, _cone(0.78, 1.15, 4), _slate,
+				anchor + Vector3(0.0, 2.28, lateral * 3.05))
+			cap.name = "AscentNewelRedCap"
+
+	# Four red heraldic shields repeat the original castle's red accents down
+	# the climb, tying the new stair visually to the restored roof colour.
+	for shield_index in 4:
+		var shield_t := (float(shield_index) + 0.5) / 4.0
+		var shield_y := lerpf(bottom.y, top.y, shield_t) + 1.12
+		var shield_x := lerpf(bottom.x, top.x, shield_t)
+		for side_value in [-1.0, 1.0]:
+			var shield := _add_mesh(ascent, _box(Vector3(0.10, 0.92, 0.62)), _slate,
+				Vector3(shield_x, shield_y, top.z + float(side_value) * 3.29))
+			shield.name = "AscentHeraldicShield"
+
+
+func _build_front_gatehouse(parent: Node3D) -> void:
+	var gatehouse := Node3D.new()
+	gatehouse.name = "CastleFrontGatehouse"
+	gatehouse.position = parent.to_local(CASTLE_DOOR_WORLD)
+	parent.add_child(gatehouse)
+
+	# A battered plinth and shallow stepped sill carry the doorway down into the
+	# castle threshold. These replace the removed floating circular platform.
+	for side_value in [-1.0, 1.0]:
+		var foundation_side: float = side_value
+		var foundation := _add_mesh(gatehouse, _box(Vector3(3.8, 2.6, 3.8)),
+			_stone, Vector3(-0.45, -1.3, foundation_side * 4.0))
+		foundation.name = "GatehouseGroundFoundation"
+		var footing := _add_mesh(gatehouse, _box(Vector3(4.35, 0.42, 4.35)),
+			_stone, Vector3(-0.45, -2.78, foundation_side * 4.0))
+		footing.name = "GatehouseSpreadFooting"
+	for step_index in 3:
+		var step_width := 5.45 + float(step_index) * 0.34
+		var step := _add_mesh(gatehouse,
+			_box(Vector3(0.78, 0.28, step_width)), _stone,
+			Vector3(0.25 + float(step_index) * 0.58,
+				-0.14 - float(step_index) * 0.20, 0.0))
+		step.name = "GateThresholdStep_%02d" % (step_index + 1)
+	var retaining_wall := _add_mesh(gatehouse, _box(Vector3(1.35, 1.7, 5.8)),
+		_stone, Vector3(-0.35, -0.85, 0.0))
+	retaining_wall.name = "GateThresholdRetainingWall"
+	for corbel_side_value in [-1.0, 1.0]:
+		var corbel_side: float = corbel_side_value
+		var corbel := _add_mesh(gatehouse, _box(Vector3(1.75, 0.62, 0.72)),
+			_stone, Vector3(0.18, -0.38, corbel_side * 2.45))
+		corbel.name = "GateThresholdCorbel"
+	for side_value in [-1.0, 1.0]:
+		var lateral: float = side_value
+		var tower := _add_mesh(gatehouse, _box(Vector3(3.1, 8.0, 3.1)), _stone,
+			Vector3(-0.35, 4.0, lateral * 4.0))
+		tower.name = "GatehouseTower"
+		var roof := _add_mesh(gatehouse, _cone(2.35, 3.4, 10), _slate,
+			Vector3(-0.35, 9.7, lateral * 4.0))
+		roof.name = "GatehouseSlateRoof"
+		for merlon_index in 3:
+			var merlon := _add_mesh(gatehouse, _box(Vector3(0.72, 0.9, 0.72)), _stone,
+				Vector3(-0.35, 8.38, lateral * (2.9 + float(merlon_index) * 1.1)))
+			merlon.name = "GatehouseMerlon"
+
+	var left_shoulder := Vector3(-0.15, 5.2, -2.65)
+	var right_shoulder := Vector3(-0.15, 5.2, 2.65)
+	var apex := Vector3(-0.15, 9.0, 0.0)
+	_add_beam_between(gatehouse, Vector3(-0.15, 0.0, -2.65), left_shoulder,
+		0.64, _stone).name = "GatePierLeft"
+	_add_beam_between(gatehouse, Vector3(-0.15, 0.0, 2.65), right_shoulder,
+		0.64, _stone).name = "GatePierRight"
+	_add_beam_between(gatehouse, left_shoulder, apex, 0.64, _stone).name = "PointedGateArch"
+	_add_beam_between(gatehouse, right_shoulder, apex, 0.64, _stone).name = "PointedGateArch"
+	for leaf_index in 2:
+		var side_sign := -1.0 if leaf_index == 0 else 1.0
+		var door := _add_mesh(gatehouse, _box(Vector3(0.28, 4.8, 2.35)), _timber,
+			Vector3(0.08, 2.4, side_sign * 1.2))
+		door.name = "OakGateLeaf_%02d" % (leaf_index + 1)
+		for board_index in 3:
+			var board := _add_mesh(gatehouse, _box(Vector3(0.08, 4.46, 0.62)),
+				_timber_light, door.position + Vector3(0.18, 0.0,
+					-0.68 + float(board_index) * 0.68))
+			board.name = "OakGateBoard"
+		for band_index in 3:
+			var band := _add_mesh(gatehouse, _box(Vector3(0.34, 0.18, 2.28)), _iron,
+				door.position + Vector3(-0.02, -1.45 + float(band_index) * 1.45, 0.0))
+			band.name = "WroughtIronDoorBand"
+	var handle := _add_mesh(gatehouse, _torus(0.23, 0.32), _iron,
+		Vector3(0.29, 2.35, 0.0))
+	handle.name = "WroughtIronGateHandle"
+	handle.rotation.z = PI * 0.5
 
 
 func _add_mesh(parent: Node3D, mesh: Mesh, material: Material,

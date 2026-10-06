@@ -229,14 +229,6 @@ func _update_thought_echo_status() -> void:
 		_thought_echo_status.text = "Your Thought Echoes are ready. Select Start Popping when you want to begin."
 
 
-func _return_to_campaign() -> void:
-	var campaign := get_node_or_null("/root/JourneyCampaign")
-	if campaign != null and campaign.has_method("return_to_campaign"):
-		campaign.call("return_to_campaign")
-	else:
-		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
-
-
 func _spawn_curated_cloud(echo_text: String, echo_id: String) -> bool:
 	if used_positions.size() >= available_positions.size():
 		errorLabel.visible = true

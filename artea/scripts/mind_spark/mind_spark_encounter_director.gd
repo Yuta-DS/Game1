@@ -5,12 +5,6 @@ signal phase_changed(phase_id: String)
 signal encounter_started(encounter_id: String, index: int)
 signal evidence_emitted(event_id: String, payload: Dictionary)
 signal action_rejected(action_id: String, reason: String)
-signal step_started(encounter_id: String, step_id: String, index: int)
-signal step_feedback(action_id: String, accepted: bool, reason: String)
-signal step_revised(encounter_id: String, step_id: String, reason: String)
-signal step_completed(encounter_id: String, step_id: String, index: int)
-signal chapter_completed(treasure_id: String)
-signal environment_state_requested(state_id: String, payload: Dictionary)
 signal roles_swapped(alarm_controller: String, hope_controller: String)
 signal companion_ping_completed(action_id: String, accepted: bool, reason: String)
 signal completion_requested(treasure_id: String)
@@ -24,13 +18,6 @@ const PHASE_BETWEEN := "between_encounters"
 const PHASE_COMPLETION_READY := "completion_ready"
 const PHASE_COMPLETE := "complete"
 const PHASE_SKIPPED := "skipped"
-const QUEST_ENVIRONMENT_STATES := {
-	"quest.signal_observatory": "signal_prism_formed",
-	"quest.echo_forest": "echo_seed_secured",
-	"quest.cross_seam_relay": "archive_open",
-	"quest.role_exchange_storm": "guardian_freed",
-	"quest.constellation_synthesis": "star_of_wisdom_awarded",
-}
 
 var catalog: Dictionary = {}
 var catalog_errors := PackedStringArray()
@@ -155,9 +142,7 @@ func start_current_encounter() -> Dictionary:
 	if not is_valid():
 		return _reject("start_current_encounter", "invalid_catalog")
 	_set_phase(PHASE_ACTIVE)
-	var encounter_id := str(current_encounter().get("id", ""))
-	encounter_started.emit(encounter_id, current_encounter_index)
-	_emit_current_step_started()
+	encounter_started.emit(str(current_encounter().get("id", "")), current_encounter_index)
 	return _result(true, "started")
 
 
@@ -180,8 +165,6 @@ func perform_action(action_id: String, actor_id: String) -> Dictionary:
 		return _reject(action_id, "%s_lens_required" % lens)
 	_receipts[receipt] = true
 	_emit_step_evidence(step)
-	step_feedback.emit(action_id, true, "completed")
-	step_completed.emit(encounter_id, action_id, current_step_index)
 	_advance_step()
 	return _result(true, "completed", action_id)
 
@@ -202,8 +185,6 @@ func exchange_roles(action_id: String = "storm.exchange_lenses") -> Dictionary:
 	_update_controllers()
 	_receipts[receipt] = true
 	roles_swapped.emit(alarm_controller, hope_controller)
-	step_feedback.emit(action_id, true, "roles_swapped")
-	step_completed.emit(encounter_id, action_id, current_step_index)
 	_advance_step()
 	return _result(true, "roles_swapped", action_id)
 
@@ -238,7 +219,6 @@ func request_completion() -> Dictionary:
 	var treasure_id := str(catalog.get("reward_request", "star_of_wisdom"))
 	evidence_emitted.emit("star_of_wisdom_completion_requested", {"treasure_id": treasure_id})
 	completion_requested.emit(treasure_id)
-	chapter_completed.emit(treasure_id)
 	_set_phase(PHASE_COMPLETE)
 	return _result(true, "completed", "star_of_wisdom_completion_requested")
 
@@ -254,16 +234,9 @@ func _advance_step() -> void:
 	current_step_index += 1
 	var steps: Array = current_encounter().get("steps", [])
 	if current_step_index < steps.size():
-		_emit_current_step_started()
 		return
 	var encounter_id := str(current_encounter().get("id", ""))
 	completed_encounter_ids[encounter_id] = true
-	var environment_state := str(QUEST_ENVIRONMENT_STATES.get(encounter_id, ""))
-	if not environment_state.is_empty():
-		environment_state_requested.emit(environment_state, {
-			"canonical_quest_id": encounter_id,
-			"encounter_index": current_encounter_index,
-		})
 	if current_encounter_index + 1 < catalog.get("encounters", []).size():
 		_set_phase(PHASE_BETWEEN)
 	else:
@@ -299,19 +272,7 @@ func _set_phase(next_phase: String) -> void:
 
 func _reject(action_id: String, reason: String) -> Dictionary:
 	action_rejected.emit(action_id, reason)
-	step_feedback.emit(action_id, false, reason)
-	if phase == PHASE_ACTIVE:
-		step_revised.emit(str(current_encounter().get("id", "")),
-			str(current_step().get("id", "")), reason)
 	return _result(false, reason)
-
-
-func _emit_current_step_started() -> void:
-	var step := current_step()
-	if step.is_empty():
-		return
-	step_started.emit(str(current_encounter().get("id", "")),
-		str(step.get("id", "")), current_step_index)
 
 
 func _result(accepted: bool, reason: String, event_id: String = "") -> Dictionary:

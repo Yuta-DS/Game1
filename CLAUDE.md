@@ -1,3 +1,3 @@
-﻿# CLAUDE.md
+# CLAUDE.md
 
-See [AGENTS.md](./AGENTS.md) for project guidance.
+See [AGENT.md](./AGENT.md) for project guidance.

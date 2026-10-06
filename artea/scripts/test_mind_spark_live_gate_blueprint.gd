@@ -35,12 +35,10 @@ func _run() -> void:
 			or world.position != Vector3(-2200, 0, 1640):
 		_fail("live World One is not using the nearby collision-safe full blueprint")
 		return
-	var expected_arrival := world.position + world.get_player_arrival_local()
+	var expected_arrival := world.position \
+		+ world.get_zone_position("01_world_gate_landing") + Vector3(0, 7, 0)
 	if source.destination_world_local.distance_to(expected_arrival) > 0.01:
-		_fail("source gate destination does not match the supported arrival marker")
-		return
-	if not source.use_target_world_arrival:
-		_fail("source gate does not resolve the supported arrival after deferred loading")
+		_fail("source gate destination does not match Zone 01 arrival")
 		return
 	var geometry := world.get_node("WorldOneGeometry") as Node3D
 	if geometry.find_children("WalkableZoneFloorCollision", "StaticBody3D", true, false).size() != 6:
@@ -81,24 +79,19 @@ func _run() -> void:
 
 	var final_return := geometry.get_node(
 		"06OldestTreeSanctuary/ReturnToArtCastleWorldGate") as MindSparkWorldGate
-	if not final_return.gate_enabled \
-			or str(final_return.get_meta("destination_landmark", "")) != "Mind Spark Train Station" \
-			or not bool(final_return.get_meta("always_available_return", false)):
-		_fail("Island 3 does not provide an always-available Mind Spark station return")
+	if final_return.gate_enabled or final_return.teleport_player(player):
+		_fail("final sanctuary return gate is usable before completion")
 		return
+	world.set_return_gate_enabled(true)
+	world.set_station_spur_available(true)
 	player.velocity = Vector3(-4, 2, 8)
 	if not final_return.teleport_player(player) \
 			or player.global_position.distance_to(safe_return) > 0.05 \
 			or not player.velocity.is_zero_approx():
-		_fail("Island 3 station portal does not return safely")
+		_fail("completed sanctuary gate does not return safely")
 		return
-	world.set_return_gate_enabled(true)
-	world.set_station_spur_available(true)
 	if not station.visible:
 		_fail("completion did not reveal the optional Zone 05 station spur")
 		return
-	print("MIND_SPARK_LIVE_GATE_BLUEPRINT: PASS — source, abort, Island 3 station return, floors, route, and station policy verified")
-	gallery.queue_free()
-	await process_frame
-	await process_frame
+	print("MIND_SPARK_LIVE_GATE_BLUEPRINT: PASS — source, abort, completion return, floors, route, and station policy verified")
 	quit()

@@ -148,53 +148,12 @@ Typical values:
 
 Replace YOUR_SERVER_IP with the public IP or domain name of the server.
 
-## AI integration
+## Future AI Integration
 
-Desktop uses the local NobodyWho model when its native extension is available.
-The Flask `/ai/chat` route provides the browser-compatible provider and can use
-OpenRouter or be replaced with another server-side model provider.
+The current project uses a local LLM inside Godot.
 
-## Web architecture
+A test OpenRouter implementation exists in server.py under:
 
-The `Web_Version` preset exports generated files to the repository-level
-`web-build/` directory. Do not edit those generated files; change source under
-`artea/` and create a fresh export instead.
+@app.route('/ai/chat')
 
-Desktop builds prefer the bundled NobodyWho/GGUF model for Milo and emotion
-analysis. Web builds exclude that native extension and model, and send the same
-prompts through the Flask `/ai/chat` endpoint. If `OPENROUTER_API_KEY` is not
-configured, the server provides a limited local fallback so both features remain
-usable without placing a provider secret in the game or browser.
-
-The web client uses the page's own origin for API calls by default, which avoids
-HTTPS mixed-content errors when the game and API are served behind the same
-domain. For a separate API origin, define `window.ARTEA_API_BASE_URL` in the
-hosting page before the Godot loader starts, or set the Godot project setting
-`artea/network/api_base_url`. The API URL must use HTTPS when the game uses HTTPS.
-
-For cross-origin hosting, set `ARTEA_ALLOWED_ORIGINS` on the Flask server to a
-comma-separated list of exact web origins. For example:
-
-    ARTEA_ALLOWED_ORIGINS=https://game.example.com,https://staging.example.com
-
-Server secrets and optional model configuration are supplied through environment
-variables rather than source files:
-
-    ARTEA_JWT_SECRET_KEY=<random-production-secret>
-    OPENROUTER_API_KEY=<provider-key>
-    OPENROUTER_MODEL=openai/gpt-oss-20b:free
-
-Google/Firebase sign-in derives its browser redirect from the deployed page.
-That exact deployed URL still needs to be registered as an authorized redirect
-with the Firebase/Google project.
-
-Terrain3D remains enabled on desktop and web. Its checked-in GDExtension includes
-both debug and release WebAssembly libraries. The web host must serve `.wasm`
-files with the correct MIME type. Browser `user://` artwork and ratings use
-Godot's persistent browser storage and therefore remain local to that browser
-origin.
-
-The hub's Proton Scatter nodes use the add-on's synchronous rebuild path only on
-Web because the preset intentionally does not require browser
-`SharedArrayBuffer` threads. Desktop retains Proton Scatter's normal threaded
-path, and both paths generate the same scene instances.
+Future teams may replace this implementation with another cloud model provider or a self-hosted model.

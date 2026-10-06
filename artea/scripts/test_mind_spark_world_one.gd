@@ -11,7 +11,6 @@ func _init() -> void:
 		DirAccess.remove_absolute(TEST_STORE)
 	var world := WorldScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
-	world.get_node("QuestController").enabled = false
 	world.object_state_store_path = TEST_STORE
 	root.add_child(world)
 	await process_frame
@@ -41,27 +40,9 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _test_world_geometry(world: MindSparkWorldOne) -> void:
-	assert(world.get_zone_ids().size() == 6, "World One preserves the required six gameplay districts")
-	assert(int(world.get_meta("physical_island_count", 0)) == 3,
-		"the six gameplay districts are combined into three physical islands")
+	assert(world.get_zone_ids().size() == 6, "World One has the required six zones")
 	assert(world.get_meta("world_identity") == "living computer forest")
 	var geometry := world.get_node("WorldOneGeometry")
-	var object_collisions := geometry.get_node_or_null(
-		"ThreeIslandVisibleObjectCollisions") as StaticBody3D
-	assert(object_collisions != null,
-		"all three islands share one reviewed infinite-mass object collision body")
-	var collision_inventory: Dictionary = world.get_meta(
-		"three_island_collision_counts", {})
-	for island_index in [1, 2, 3]:
-		assert(int(collision_inventory.get(
-			"island_%d_visible_object" % island_index, 0)) > 0,
-			"Island %d visible architecture has reviewed collision" % island_index)
-	assert(world.find_child("EchoListeningBranch_*", true, false) == null,
-		"Island One's crossing brass listening lines stay removed")
-	assert(world.find_child("EchoOrbCradle_*", true, false) == null,
-		"Island One's loose gold orb rings stay removed")
-	assert(world.find_child("EchoListeningOrb_01", true, false) != null,
-		"live echo classifier orbs remain in the quest")
 	for zone_id in world.get_zone_ids():
 		var zone := geometry.get_node(zone_id.to_pascal_case())
 		assert(zone.get_node_or_null("WalkableZoneFloorCollision") is StaticBody3D,
@@ -80,7 +61,7 @@ func _test_world_geometry(world: MindSparkWorldOne) -> void:
 func _test_greybox_build_order(world: MindSparkWorldOne, geometry: Node,
 		route: Node, spur: Node) -> void:
 	var expected_order := PackedStringArray([
-		"three_fused_super_island_foundations",
+		"six_zone_floors",
 		"main_story_route",
 		"world_gate_checkpoints_boss_sanctuary",
 		"optional_station_spur",
@@ -123,10 +104,6 @@ func _test_greybox_build_order(world: MindSparkWorldOne, geometry: Node,
 			checkpoint_count += 1
 	_check(checkpoint_count >= 5,
 		"arrival, network, constellation, hope and boss checkpoints must exist")
-	for name in ["ArrivalCheckpointPad", "NetworkCheckpointPad",
-			"ConstellationCheckpointPad", "HopePathCheckpointPad"]:
-		_check(geometry.find_child(name, true, false) == null,
-			"route checkpoints must not leave cyan greybox pads in the finished world")
 
 
 func _segment_distance_xz(a_start: Vector3, a_end: Vector3,
@@ -173,16 +150,16 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 		"02_living_network_forest": 30,
 		"03_constellation_court": 14,
 		"04_hope_path_ridge": 14,
-		"05_thought_storm_arena": 4,
-		"06_oldest_tree_sanctuary": 12,
+		"05_thought_storm_arena": 8,
+		"06_oldest_tree_sanctuary": 24,
 	}
 	var organized_trees := get_nodes_in_group("mind_spark_organized_tree")
-	_check(organized_trees.size() == 84,
-		"the quieter three-island landscape has 84 deliberately placed trees")
-	_check(int(world.get_meta("organized_tree_count", 0)) == 84,
-		"world metadata must report the 84-tree composition")
-	_check(str(world.get_meta("organized_tree_distribution", "")) == "10/30/14/14/4/12",
-		"tree distribution must match the revised six-zone composition")
+	_check(organized_trees.size() == 100,
+		"the authored Mind Spark landscape must contain exactly 100 bio-data trees")
+	_check(int(world.get_meta("organized_tree_count", 0)) == 100,
+		"world metadata must report the exact 100-tree population")
+	_check(str(world.get_meta("organized_tree_distribution", "")) == "10/30/14/14/8/24",
+		"tree distribution must remain the approved six-zone composition")
 	_check(geometry.find_children("ServerTree_*", "Node3D", true, false).is_empty(),
 		"legacy blocky server-tree instances must not remain in the redesigned world")
 	var world_indices := {}
@@ -190,8 +167,8 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 	var distinct_grove_scales := {}
 	for tree in organized_trees:
 		var tree_index := int(tree.get_meta("world_tree_index", 0))
-		_check(tree_index >= 1 and tree_index <= 84,
-			"every organized tree needs a stable index from 1 through 84")
+		_check(tree_index >= 1 and tree_index <= 100,
+			"every organized tree needs a stable index from 1 through 100")
 		world_indices[tree_index] = true
 		_check(not bool(tree.get_meta("randomized", false)),
 			"organized grove trees must never use random placement")
@@ -201,11 +178,11 @@ func _test_organized_tree_world(world: MindSparkWorldOne) -> void:
 			distinct_grove_scales[snappedf(growth_scale, 0.001)] = true
 			_check(bool(tree.get_meta("size_randomized", false)),
 				"each grove tree must record its seeded random growth scale")
-	_check(world_indices.size() == 84,
-		"all 84 organized trees need unique stable world indices")
-	_check(grove_scales.size() == 83,
-		"the population needs 83 variable-size grove trees plus one hero tree")
-	_check(distinct_grove_scales.size() >= 60,
+	_check(world_indices.size() == 100,
+		"all 100 organized trees need unique stable world indices")
+	_check(grove_scales.size() == 99,
+		"the population needs 99 variable-size grove trees plus one hero tree")
+	_check(distinct_grove_scales.size() >= 75,
 		"seeded growth must provide broad small-to-large size variation")
 	_check(grove_scales.min() < 0.32 and grove_scales.max() > 0.60,
 		"standalone groves must visibly span sapling through large-canopy scales")
@@ -235,12 +212,8 @@ func _test_object_coverage(world: MindSparkWorldOne) -> void:
 		kinds[object.definition.object_kind] = true
 	assert(kinds.size() == Definition.ObjectKind.size(), "all twelve approved functional object types are present")
 	var scanner := world.get_object_by_kind(Definition.ObjectKind.EVIDENCE_SCANNER)
-	assert(not scanner.interact(&"capture", 0).accepted, "observation needs a clear instrument reading")
-	for channel in 3:
-		for adjustment in [2, 1, 3][channel]:
-			assert(scanner.interact(&"adjust", channel).accepted)
-		assert(scanner.interact(&"capture", channel).accepted)
-	assert(scanner.current_state.completed, "physical scanner saves all three observations")
+	assert(scanner.interact()["reason"] == "choose_fact_or_fear")
+	assert(scanner.interact(&"fact")["completed"], "physical scanner completes a saved FACT/FEAR choice")
 	var anchor := world.get_object_by_kind(Definition.ObjectKind.WARDEN_ANCHOR)
 	assert(anchor.interact()["reason"] == "vulnerable")
 	assert(anchor.interact(&"strike")["completed"], "physical Warden anchor has dodge and strike states")
@@ -251,53 +224,19 @@ func _test_object_coverage(world: MindSparkWorldOne) -> void:
 
 func _test_combat_roster(world: MindSparkWorldOne) -> void:
 	var enemies := world.get_enemies()
-	assert(enemies.size() == 6,
-		"production keeps four Island One teaching actors and two Island Three Warden adds")
+	assert(enemies.size() == 11, "five enemy types are placed in bounded waves")
 	var kinds := {}
 	for enemy in enemies:
 		assert(enemy.definition.validated_telegraph() >= 0.75, "every normal attack warns for at least 0.75 seconds")
 		kinds[enemy.definition.enemy_kind] = true
-	assert(kinds.size() == 3,
-		"only Static Mites, Glitch Sprouts and Circuit Wisps remain in live bounded waves")
-	assert(enemies.filter(func(enemy): return enemy.encounter_id in ["constellation", "ridge"]).is_empty(),
-		"peaceful Island Two does not construct hidden prototype combat actors")
+	assert(kinds.size() == MindSparkEnemyDefinition.EnemyKind.size(), "all five approved enemy types are present")
 	assert(world.activate_enemy_wave("network") == 4)
 	assert(world.active_enemy_count() <= 4, "the encounter director never activates more than four normal enemies")
 	var mite := enemies[0] as MindSparkEnemyBase
 	assert(mite.take_damage(999.0) == 25.0)
 	assert(mite.state == MindSparkEnemyBase.State.DEFEATED and mite.core.visible,
 		"defeat removes the Blight shell and reveals the calm living core")
-	assert(world.restart_active_encounter() == 4 \
-		and mite.active and mite.state == MindSparkEnemyBase.State.IDLE \
-		and is_equal_approx(mite.current_health, mite.definition.max_health),
-		"combat failure restarts only the current bounded wave at full health")
 	var boss := world.get_warden() as MindSparkWardenBoss
-	var storm_crown := boss.get_node("VisualRoot/BlightShell/StormCrown") as Node3D
-	var shell_mesh := (boss.get_node("VisualRoot/BlightShell/Shell") as MeshInstance3D).mesh \
-		as SphereMesh
-	assert(shell_mesh.radial_segments == 12 and shell_mesh.rings == 6,
-		"the Warden shell itself uses a deliberately faceted low-poly surface")
-	assert(storm_crown.get_meta("visual_revision") == "island_three_civic_storm_engine_v3_faceted_shell",
-		"Island Three Warden uses the faceted civic storm engine")
-	assert(int(storm_crown.get_meta("giant_ring_count", -1)) == 0,
-		"the prototype giant purple shield rings remain removed")
-	assert(storm_crown.find_children("IvoryPylon*", "MeshInstance3D", true, false).size() == 4,
-		"four grounded ivory pylons give the Warden an architectural silhouette")
-	assert(bool(storm_crown.get_meta("faceted_shell", false))
-		and int(storm_crown.get_meta("ivory_shell_panel_count", 0)) == 8
-		and storm_crown.find_children("IvoryShell*Panel*", "MeshInstance3D", true, false).size() == 8,
-		"eight ivory armor plates break up the dark shell without closing its core sightlines")
-	assert(storm_crown.find_children("CyanShellConductor*", "MeshInstance3D", true, false).size() == 4,
-		"each cardinal armor blade carries a restrained cyan conductor")
-	assert(int(storm_crown.get_meta("merged_static_source_count", 0)) == 54
-		and int(storm_crown.get_meta("render_batch_count", 0)) == 4,
-		"the animated Warden crown preserves its 54-part silhouette in four material batches")
-	for visual in storm_crown.find_children("*", "MeshInstance3D", true, false):
-		assert(not ((visual as MeshInstance3D).mesh is TorusMesh),
-			"the completed Warden contains no luminous torus geometry")
-	var crown_light := storm_crown.get_node("StormCrownLight") as OmniLight3D
-	assert(crown_light.light_energy <= 2.401 and crown_light.omni_range <= 18.001,
-		"the Warden light preserves the surrounding Island Three architecture")
 	boss.start_battle()
 	for anchor in world.get_quest_objects():
 		if anchor.definition.object_kind != Definition.ObjectKind.WARDEN_ANCHOR:

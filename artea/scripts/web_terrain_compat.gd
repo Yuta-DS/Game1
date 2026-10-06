@@ -8,7 +8,7 @@ const WEB_SURFACE_MAP_PATH := "res://resources/web_hub_surface_map.png"
 const WEB_GRASS_ALBEDO_PATH := "res://textures/moss_ground_02_1k/moss_groud_02_Base_Color_1k.png"
 const WEB_SAND_ALBEDO_PATH := "res://textures/sand_01_2k/sand_01_1k/sand_01_color_1k.png"
 const WEB_BRICK_ALBEDO_PATH := "res://textures/ground_tiles_13_1k/ground_tiles_13_baseColor_1k.png"
-const WebNaturalSoilSurfaceFilter := preload("res://scripts/web_grass_surface_filter.gd")
+const WebGrassSurfaceFilter := preload("res://scripts/web_grass_surface_filter.gd")
 
 # An additional physics layer used only by ProtonScatter. The player continues
 # to collide through layers 1/2, while this bit lets grass rays ignore houses,
@@ -117,18 +117,17 @@ func _apply_web_scatter_tuning() -> void:
 						if script != null:
 							if script.resource_path.ends_with("relax.gd"):
 								modifier.iterations = 0
-							elif child_name in ["Grass", "Objects"] \
-									and script.resource_path.ends_with("project_on_geometry.gd"):
+							elif child_name == "Grass" and script.resource_path.ends_with("project_on_geometry.gd"):
 								modifier.collision_mask = WEB_TERRAIN_SCATTER_LAYER
 								modifier.remove_points_on_miss = true
-								modifier.max_slope = 52.0 if child_name == "Grass" else 35.0
+								modifier.max_slope = 52.0
 							elif script.resource_path.ends_with("project_on_terrain3d.gd"):
 								# The native Terrain3D node is absent on Web. The preceding
 								# collider projection modifier hits WebTerrainCollision and
 								# supplies the same height placement.
 								stack.stack.erase(modifier)
-								if child_name in ["Grass", "Objects"]:
-									stack.stack.append(WebNaturalSoilSurfaceFilter.new())
+								if child_name == "Grass":
+									stack.stack.append(WebGrassSurfaceFilter.new())
 								continue
 						# Thin the grass field. 60500 instances is a desktop
 						# figure; on the single-threaded Web runtime it is both
@@ -230,19 +229,6 @@ func _apply_web_environment() -> void:
 	environment.sky = null
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color(0.72, 0.82, 0.92)
-	# Compatibility/WebGL drivers must not blend this explicit colour toward
-	# the procedural sky we deliberately removed above. A non-zero sky share
-	# makes ambient lighting collapse toward black on affected browsers, leaving
-	# only the shadowed outline of imported models visible.
-	environment.ambient_light_energy = 1.25
-	environment.ambient_light_sky_contribution = 0.0
-	environment.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
-	environment.fog_enabled = false
-	# Keep the authored journey saturation, but guarantee a readable baseline
-	# even if a browser initializes the duplicated Environment before
-	# HubAwakening has applied its stage values.
-	environment.adjustment_enabled = true
-	environment.adjustment_brightness = maxf(environment.adjustment_brightness, 1.05)
 
 
 func _add_web_sky_dome() -> void:

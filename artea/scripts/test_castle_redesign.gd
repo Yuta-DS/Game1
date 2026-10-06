@@ -1,9 +1,10 @@
 extends SceneTree
 
+const HUB_SCENE := preload("res://scenes/New_Hub_World.tscn")
+
+
 func _run() -> void:
-	# Load after autoloads exist; preloading the complete hub while this test
-	# compiles makes its NPC scripts resolve Global/GameManager too early.
-	var hub := (load("res://scenes/New_Hub_World.tscn") as PackedScene).instantiate() as Node3D
+	var hub := HUB_SCENE.instantiate() as Node3D
 	root.add_child(hub)
 	for _frame in 20:
 		await process_frame
@@ -30,8 +31,12 @@ func _run() -> void:
 		assert(absf(tower.position.z) >= 4.19,
 			"solid barbican tower %s leaves a full player lane beside the fire" % tower.name)
 	var village_masonry := hub.get_node_or_null("VillageStyleStairTowerMasonry") as Node3D
-	assert(village_masonry == null,
-		"thin protruding masonry lines are removed from around the stair tower")
+	assert(village_masonry != null
+		and village_masonry.find_children("VillageMasonryBlock_*", "MeshInstance3D",
+			true, false).size() >= 128,
+		"plain stair tower receives reference-density staggered village masonry")
+	assert(village_masonry.find_children("*", "StaticBody3D", true, false).is_empty(),
+		"village-style masonry is visual-only and cannot snag the player")
 
 	var palette_found := false
 	for mesh_candidate in castle.find_children("*", "MeshInstance3D", true, false):
@@ -53,24 +58,24 @@ func _run() -> void:
 			"added turret roofs match the original red castle roofs")
 	assert(architecture.find_children("GothicButtress_*", "Node3D", true, false).size() == 4,
 		"castle-only redesign retains detailed Gothic buttresses")
-	assert(architecture.find_children("GothicLancet_*", "Node3D", true, false).is_empty(),
-		"original rounded windows are not covered by mismatched pointed frames")
+	assert(architecture.find_children("GothicLancet_*", "Node3D", true, false).size() == 4,
+		"castle-only redesign retains pointed lancet frames")
 	assert(architecture.get_node_or_null("LowerKeepHoarding") == null
 		and architecture.get_node_or_null("UpperKeepHoarding") == null,
 		"both wooden rings around the upper castle are removed")
-	assert(hub.find_children("RoyalTread_*", "MeshInstance3D", true, false).size() == 18,
+	assert(architecture.find_children("GrandAscentTread_*", "MeshInstance3D", true, false).size() == 18,
 		"continuous castle stair reaches from lower court to upper door")
-	assert(hub.find_children("RoyalStairNewel*", "MeshInstance3D", true, false).size() == 4,
+	assert(architecture.find_children("AscentNewelTower*", "MeshInstance3D", true, false).size() == 4,
 		"lower and upper stair landings are framed by grounded newel towers")
-	assert(hub.find_children("AscentRoyalShield*", "MeshInstance3D", true, false).size() == 6,
+	assert(architecture.find_children("AscentHeraldicShield*", "MeshInstance3D", true, false).size() == 8,
 		"original red accents repeat along the full castle ascent")
 	var architecture_bodies := architecture.find_children(
 		"*", "StaticBody3D", true, false)
-	assert(architecture_bodies.size() >= 12,
-		"wide gate, continuous courtyard barriers and stone planters are solid")
+	assert(architecture_bodies.size() == 2,
+		"only the two requested barbican towers add castle-detail collision")
 	for body_candidate in architecture_bodies:
-		assert((body_candidate as StaticBody3D).name in ["SolidBarbicanTower", "CourtyardSolidBody"],
-			"only authored courtyard structures add collision, not tiny decorative details")
+		assert((body_candidate as StaticBody3D).name == "SolidBarbicanTower",
+			"no decorative castle detail except the barbican towers becomes solid")
 
 	for technology_path in ["ReferenceAstralMachine", "HighAetherFacade",
 			"AstralObservatoryCrown", "AetherCalibrationBand"]:
@@ -110,20 +115,18 @@ func _run() -> void:
 			"tree-root-adjacent ring %s is removed" % terrace_ring.name)
 	var receiving_court := entrance.get_node_or_null(
 		"CastleArrivalTerrace") as MeshInstance3D
-	assert(not entrance.has_node("CastleBridgeReceivingCourt"),
-		"the raised receiving rectangle is removed in favour of one continuous floor")
-	var masonry_bridge := architecture.get_node_or_null("CastleMasonryCauseway") as Node3D
-	assert(receiving_court != null and masonry_bridge != null,
+	var final_bridge_plank := architecture.get_node_or_null(
+		"CastleTimberCauseway/OakDrawbridgePlank_14") as MeshInstance3D
+	assert(receiving_court != null and final_bridge_plank != null,
 		"bridge meets the single solid arrival floor")
 	assert(receiving_court.visible
 		and String(receiving_court.get_meta("surface_policy", "")) \
 			== "single_collision_backed_floor_no_overlay",
 		"arrival court keeps only its thin visible collision-backed surface")
 	var receiving_bounds := receiving_court.global_transform * receiving_court.mesh.get_aabb()
-	assert(absf(receiving_bounds.end.y - (masonry_bridge.global_position.y + 0.22)) <= 0.04,
-		"arrival floor meets the masonry deck's actual walkable top")
-	assert(architecture.get_node_or_null("CastleTimberCauseway") == null,
-		"raised wooden plank overlay is removed")
+	var final_plank_bounds := final_bridge_plank.global_transform * final_bridge_plank.mesh.get_aabb()
+	assert(absf(receiving_bounds.end.y - final_plank_bounds.position.y) <= 0.02,
+		"single arrival floor top meets the timber bridge underside without a vertical gap")
 	var fire := entrance.get_node_or_null("CastleCourtyardFire") as Node3D
 	var live_flames := fire.get_node_or_null("CourtyardLiveFlames") as Node3D \
 		if fire != null else null
@@ -161,7 +164,7 @@ func _run() -> void:
 	assert(commander != null and commander.visible
 		and commander.get_meta("castle_role", "") == "upper_court_commander",
 		"animated commander is moved to the castle's raised upper court")
-	assert(absf(commander.global_position.y - 78.33) < 0.08 and absf(commander.global_position.z - 27.41) > 2.4,
+	assert(commander.global_position.y >= 78.4 and absf(commander.global_position.z - 27.41) > 2.4,
 		"commander stands at the top while remaining outside the central stair lane")
 	for cap_candidate in stair.find_children("*Cap*", "MeshInstance3D", true, false):
 		var cap := cap_candidate as MeshInstance3D
@@ -194,8 +197,6 @@ func _run() -> void:
 	var tower_base: Vector2 = stair.get_meta("tower_base")
 	var inner_guard_face := float(stair.get_meta("inner_guard_lane_face_radius"))
 	var outer_guard_face := float(stair.get_meta("outer_guard_lane_face_radius"))
-	var visible_inner_clearance := float(stair.get_meta(
-		"visible_tread_inner_clearance"))
 	for tread_candidate in stair.find_children("StairTread_*", "MeshInstance3D",
 			true, false):
 		var tread := tread_candidate as MeshInstance3D
@@ -208,23 +209,10 @@ func _run() -> void:
 		var tread_outer_corner_radius := sqrt(pow(
 			tread_radius + tread_mesh.size.x * 0.5, 2.0)
 			+ pow(tread_mesh.size.z * 0.5, 2.0))
-		assert(tread_inner_radius >= inner_guard_face + visible_inner_clearance - 0.01,
-			"%s stops before the inner masonry instead of clipping through it" \
-			% tread.name)
-		assert(tread_outer_corner_radius <= outer_guard_face - 0.03,
-			"%s stops cleanly behind the outer masonry without clipping through it" % tread.name)
-	var finished_roadbed := stair.get_node_or_null("AscentRoadbed") as MeshInstance3D
-	var hidden_walk_inner_radius := float(stair.get_meta("stair_tread_inner_radius"))
-	assert(hidden_walk_inner_radius <= inner_guard_face - 0.04,
-		"hidden continuous walk surface still overlaps inner guard with no trap seam")
-	var inner_skirting := stair.get_node_or_null("InnerParapetLaneSkirting") \
-		as MeshInstance3D
-	assert(inner_skirting != null and inner_skirting.visible \
-		and bool(inner_skirting.get_meta("closes_visible_tread_seam", false)),
-		"dressed inner skirting closes the visual stair-to-parapet joint")
-	assert(finished_roadbed != null \
-		and bool(finished_roadbed.get_meta("covers_riser_bottoms", false)),
-		"continuous stone roadbed closes the tread-to-barrier seam and finished underside")
+		assert(tread_inner_radius <= inner_guard_face - 0.04,
+			"%s tucks beneath the inner barrier without a visible gap" % tread.name)
+		assert(tread_outer_corner_radius >= outer_guard_face + 0.02,
+			"%s tucks beneath the outer barrier without a visible gap" % tread.name)
 	var last_tread_candidates := stair.find_children("StairTread_*", "MeshInstance3D",
 		true, false)
 	var last_tread := last_tread_candidates[last_tread_candidates.size() - 1] \
@@ -249,42 +237,22 @@ func _run() -> void:
 		"first stair flight has a terrain-fitted low-poly foundation")
 	assert(entry_foundation.find_children("*", "StaticBody3D", true, false).size() == 1,
 		"ground transition is solid and leaves no walk-under gap")
-	var medieval_details := stair.get_node_or_null("MedievalStairDetails") as Node3D
-	assert(medieval_details != null
-		and medieval_details.get_meta("render_family", "") \
-			== "red_village_hexagons_castle",
-		"spiral stair uses the same medieval render family as the castle and village")
-	assert(medieval_details.find_children("OuterStoneNewel_*", "MeshInstance3D",
-		true, false).size() >= 10,
-		"regular stone newels break up the long spiral silhouette")
-	assert(medieval_details.find_children("NewelRedRoof_*", "MeshInstance3D",
-		true, false).size() >= 10,
-		"red roof caps repeat the nearby castle tower language")
-	assert(medieval_details.find_children("UndersideCorbel_*", "MeshInstance3D",
-		true, false).is_empty(),
-		"no decorative corbel ends project below the continuous stair soffit")
-	assert(medieval_details.find_children("*", "StaticBody3D", true, false).is_empty(),
-		"medieval stair dressing remains visual-only outside the proven route")
-	assert(stair.get_node_or_null("LowPolyStairGrowth") == null,
-		"green vine and fibre stripes are removed from the castle stair")
-	assert(stair.find_children("AetherWindow_*", "MeshInstance3D", true, false).is_empty(),
-		"arcane tower windows are removed from the medieval stair tower")
-	assert(stair.find_children("ReferenceRoundArchWindow*", "Node3D",
-		true, false).size() >= 20,
-		"rounded stone-framed windows match the original castle tower")
-	var outer_parapet := stair.get_node_or_null("OuterStoneParapet") as MeshInstance3D
-	var inner_parapet := stair.get_node_or_null("InnerStoneParapet") as MeshInstance3D
-	assert(outer_parapet != null and outer_parapet.visible
-		and inner_parapet != null and inner_parapet.visible,
-		"finished stone parapets replace the oversized dark ribbon walls")
-	assert(bool(outer_parapet.get_meta("full_height_closed_barrier", false))
-		and bool(inner_parapet.get_meta("full_height_closed_barrier", false)),
-		"solid-looking stone barriers cover the complete stair edge")
-	assert(stair.get_node_or_null("OuterContinuousCap") == null
-		and stair.get_node_or_null("InnerContinuousCap") == null
-		and medieval_details.find_children("OuterOakRailBay_*", "MeshInstance3D",
-			true, false).is_empty(),
-		"thin continuous lines are removed from around the castle stair")
+	var stair_growth := stair.get_node_or_null("LowPolyStairGrowth") as Node3D
+	assert(stair_growth != null, "low-poly tree growth is installed on the stair")
+	assert(stair_growth.find_children("StairTreeFiber_*", "MeshInstance3D",
+		true, false).size() == 88,
+		"two continuous woody fibres grow along the castle stair")
+	assert(stair_growth.find_children("StairTreeLeaf_*", "MeshInstance3D",
+		true, false).size() >= 16,
+		"low-poly leaves surround the stair fibres")
+	assert(stair_growth.find_children("*", "StaticBody3D", true, false).is_empty(),
+		"stair tree growth remains visual-only outside the walking lane")
+	var sample_fibre := stair_growth.get_node("StairTreeFiber_0_00") as MeshInstance3D
+	var sample_leaf := stair_growth.get_node("StairTreeLeaf_0_02") as MeshInstance3D
+	var fibre_colour := (sample_fibre.material_override as StandardMaterial3D).albedo_color
+	var leaf_colour := (sample_leaf.material_override as StandardMaterial3D).albedo_color
+	assert(fibre_colour.r > fibre_colour.g and leaf_colour.g > leaf_colour.r,
+		"palette pass preserves brown bark and green low-poly leaves")
 	for duplicate_visual in stair.find_children("LumenBridgeSurfacePlank_*",
 			"MeshInstance3D", true, false) \
 			+ stair.find_children("AetherTensionCollar_*", "MeshInstance3D", true, false) \
@@ -292,14 +260,20 @@ func _run() -> void:
 		assert(not (duplicate_visual as MeshInstance3D).visible,
 			"duplicate bridge visual %s is hidden" % duplicate_visual.name)
 	var roadbed := stair.get_node_or_null("LumenBridgeRoadbed") as MeshInstance3D
-	assert(roadbed != null and not roadbed.visible
-		and roadbed.find_children("*", "StaticBody3D", true, false).size() == 1,
-		"one authoritative bridge collider remains without a coplanar duplicate floor")
-	assert(architecture.find_children("DrawbridgeCrossbeam_*", "MeshInstance3D", true, false).is_empty()
-		and architecture.find_children("OakSideStringer*", "MeshInstance3D", true, false).is_empty(),
-		"timber crossbeams and stringers are replaced by the closed stone vault")
-	assert(masonry_bridge.find_children("*", "MeshInstance3D", true, false).size() == 1,
-		"editable Blender bridge is batched into one runtime mesh")
+	assert(roadbed != null and roadbed.visible, "one authoritative bridge roadbed remains")
+	var roadbed_bounds := roadbed.global_transform * roadbed.mesh.get_aabb()
+	for crossbeam_candidate in architecture.find_children("DrawbridgeCrossbeam_*",
+			"MeshInstance3D", true, false):
+		var crossbeam := crossbeam_candidate as MeshInstance3D
+		var crossbeam_bounds := crossbeam.global_transform * crossbeam.mesh.get_aabb()
+		assert(not roadbed_bounds.intersects(crossbeam_bounds),
+			"%s stays below the roadbed without clipping" % crossbeam.name)
+	for stringer_candidate in architecture.find_children("OakSideStringer*",
+			"MeshInstance3D", true, false):
+		var stringer := stringer_candidate as MeshInstance3D
+		var stringer_bounds := stringer.global_transform * stringer.mesh.get_aabb()
+		assert(not roadbed_bounds.intersects(stringer_bounds),
+			"%s stays below the roadbed without clipping" % stringer.name)
 
 	print("CASTLE_REDESIGN_TEST: PASS — castle palette, grounded architecture, and full door ascent installed")
 	hub.queue_free()

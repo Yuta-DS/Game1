@@ -2,10 +2,8 @@ extends SceneTree
 
 const MILO_SCENE := preload("res://scenes/milo_animations.tscn")
 const FRAME_DIRECTORY := "/tmp/artea_milo_polish_frames"
-const FRAME_COUNT := 240
-# Frames are encoded and reviewed at 30 fps. Advance simulation at that same
-# cadence so the preview shows real gameplay speed instead of 2x slow motion.
-const FRAME_RATE := 30.0
+const FRAME_COUNT := 96
+const FRAME_RATE := 24.0
 
 
 func _init() -> void:
@@ -45,20 +43,9 @@ func _capture() -> void:
 	var aura := milo.find_child("JourneyAura", true, false) as Node3D
 	if aura != null:
 		aura.visible = false
-	if "--hide-free-arm" in OS.get_cmdline_user_args():
-		for part_name in ["Sleeve_L", "Cuff_L", "CuffAccent_L", "Paw_L"]:
-			var free_arm_part := milo.find_child(part_name, true, false) as Node3D
-			if free_arm_part != null:
-				free_arm_part.visible = false
 
 	var camera := Camera3D.new()
-	# True cane-side orthographic-like profile: no front-view foreshortening hides
-	# the shoulder, elbow, wrist, hook, or ground-tip relationship.
-	var front_view := "--front-view" in OS.get_cmdline_user_args()
-	var camera_side := -1.0 if "--opposite-side" in OS.get_cmdline_user_args() \
-		else 1.0
-	camera.position = Vector3(0.0, 1.55, 5.9) if front_view \
-		else Vector3(5.9 * camera_side, 1.55, 0.0)
+	camera.position = Vector3(2.65, 1.55, 5.9)
 	camera.fov = 30.0
 	stage.add_child(camera)
 	camera.look_at(Vector3(0.0, 1.05, 0.0), Vector3.UP)
@@ -68,15 +55,15 @@ func _capture() -> void:
 		as AnimationPlayer
 	for frame_index in FRAME_COUNT:
 		var delta := 1.0 / FRAME_RATE
-		if frame_index < 40:
+		if frame_index < 16:
 			milo.call("_set_companion_state", 1) # IDLE_NEAR_PLAYER
 			milo.velocity = Vector3.ZERO
-			if frame_index == 18:
+			if frame_index == 7:
 				milo.call("trigger_blink")
 			if animation_player != null:
 				animation_player.play("Idle_3", 0.0)
 				animation_player.seek(float(frame_index) * delta, true)
-		elif frame_index < 200:
+		elif frame_index < 80:
 			milo.call("_set_companion_state", 2) # FOLLOWING
 			milo.velocity = Vector3(0.0, 0.0, 1.10)
 			milo.position.z += milo.velocity.z * delta
@@ -85,7 +72,7 @@ func _capture() -> void:
 				milo.call("_play_animation", "Cane_Walk")
 				milo.call("_update_locomotion_playback", 1.10, 1.10)
 		else:
-			var stop_weight := 1.0 - float(frame_index - 200) / 39.0
+			var stop_weight := 1.0 - float(frame_index - 80) / 15.0
 			milo.call("_set_companion_state", 2) # FOLLOWING while settling
 			milo.velocity = Vector3(0.0, 0.0, 1.10 * maxf(stop_weight, 0.0))
 			milo.position.z += milo.velocity.z * delta
@@ -95,10 +82,7 @@ func _capture() -> void:
 		milo.call("_update_secondary_motion", delta)
 		milo.call("_update_terrain_grounding", delta)
 		milo.call("_update_speaking", delta)
-		if front_view:
-			camera.position.z = milo.position.z + 5.9
-		else:
-			camera.position.z = milo.position.z
+		camera.position.z = 5.9 + milo.position.z
 		camera.look_at(milo.position + Vector3(0.0, 1.05, 0.0), Vector3.UP)
 		await process_frame
 		await process_frame

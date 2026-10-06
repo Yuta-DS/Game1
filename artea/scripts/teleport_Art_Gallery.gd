@@ -10,6 +10,9 @@ const CASTLE_NODE_NAME := "building_castle_red2"
 const DOOR_LOCAL_ANCHOR := Vector3(0.0, 0.38, 1.16)
 const DOOR_TRIGGER_SIZE := Vector3(2.8, 7.0, 4.8)
 
+const BRASS := Color(0.76, 0.52, 0.20)
+const DOOR_GLOW := Color(1.0, 0.76, 0.32)
+
 ## The trigger now lives only at the real castle doorway, safely beyond the
 ## completed stair landing. Crossing that threshold should feel like walking
 ## into a building, so it enters automatically; trains remain explicit Q choices.
@@ -89,16 +92,79 @@ func _build_art_explore_marker() -> void:
 	_prompt.outline_modulate = Color(0.12, 0.16, 0.25, 0.95)
 	_prompt.outline_size = 10
 	_prompt.font_size = 36
-	_prompt.pixel_size = 0.010
+	_prompt.pixel_size = 0.012
 	add_child(_prompt)
 	# The Area uses an identity global basis at the doorway, so +Y is reliably
 	# above the threshold even though the imported castle is rotated and 10x.
-	_prompt.position = Vector3(0.75, 9.05, 0.0)
+	_prompt.position = Vector3(0.0, 4.0, 0.0)
 
 
-# The royal stone arch and oak leaves follow the live gallery entrance.
+# A readable entrance rather than an invisible trigger: stone doorway, brass
+# mechanism, a rune aperture and warm light. It deliberately stays inexpensive
+# (primitive meshes, one unshadowed light) while carrying Artéa's science/magic
+# language all the way to the castle door.
 func _build_door_dressing() -> void:
-	preload("res://scripts/castle_royal_entry.gd").build_door(self)
+	var rig := Node3D.new()
+	rig.name = "GalleryDoorRig"
+	add_child(rig)
+
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = BRASS
+	brass.metallic = 0.84
+	brass.roughness = 0.28
+
+	var glow := StandardMaterial3D.new()
+	glow.albedo_color = DOOR_GLOW
+	glow.emission_enabled = true
+	glow.emission = DOOR_GLOW
+	glow.emission_energy_multiplier = 2.1
+	glow.roughness = 0.2
+
+	_add_box(rig, Vector3(0.34, 6.4, 0.42), Vector3(0.0, 0.0, -2.65), brass)
+	_add_box(rig, Vector3(0.34, 6.4, 0.42), Vector3(0.0, 0.0, 2.65), brass)
+	_add_box(rig, Vector3(0.34, 0.55, 5.75), Vector3(0.0, 3.2, 0.0), brass)
+
+	var rune := MeshInstance3D.new()
+	var rune_mesh := TorusMesh.new()
+	rune_mesh.inner_radius = 2.15
+	rune_mesh.outer_radius = 2.42
+	rune_mesh.rings = 16
+	rune_mesh.ring_segments = 5
+	rune.mesh = rune_mesh
+	rune.rotation_degrees.z = 90.0
+	rune.material_override = glow
+	rig.add_child(rune)
+
+	for z in [-3.05, 3.05]:
+		var crystal := MeshInstance3D.new()
+		var crystal_mesh := SphereMesh.new()
+		crystal_mesh.radius = 0.34
+		crystal_mesh.height = 1.15
+		crystal_mesh.radial_segments = 6
+		crystal_mesh.rings = 3
+		crystal.mesh = crystal_mesh
+		crystal.position = Vector3(0.0, 2.45, z)
+		crystal.material_override = glow
+		rig.add_child(crystal)
+
+	var lamp := OmniLight3D.new()
+	lamp.position = Vector3(1.5, 1.0, 0.0)
+	lamp.light_color = Color(1.0, 0.82, 0.52)
+	lamp.light_energy = 3.2
+	lamp.omni_range = 15.0
+	lamp.shadow_enabled = false
+	rig.add_child(lamp)
+
+
+func _add_box(parent: Node3D, size: Vector3, position: Vector3,
+		material: Material) -> void:
+	var part := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	part.mesh = mesh
+	part.position = position
+	part.material_override = material
+	parent.add_child(part)
 
 
 func _on_body_entered(body: Node3D) -> void:
