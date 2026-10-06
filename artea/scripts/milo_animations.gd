@@ -38,14 +38,6 @@ enum CompanionState {
 # generation remain available without playing the recorded greeting or TTS.
 @export var voice_enabled := false
 
-const STAGE_GLOW := [
-	Color("7896c8"),
-	Color("86b7ff"),
-	Color("f5a95e"),
-	Color("d98cff"),
-	Color("ffd66e"),
-]
-const STAGE_ENERGY := [0.18, 0.55, 0.85, 1.2, 1.65]
 const COUNSELLOR_ANIMATIONS := {
 	"welcome": "Counsellor_Welcome",
 	"guide": "Counsellor_Guide",
@@ -122,10 +114,6 @@ var _procedural_gait_angles: Dictionary = {}
 
 var wave_timer := 0.0
 var first_wave := false
-var journey_stage := -1
-var aura: Node3D
-var aura_light: OmniLight3D
-var aura_material: StandardMaterial3D
 var anim_player: AnimationPlayer
 var counsellor_props: Node3D
 var map_prop: Node3D
@@ -286,8 +274,6 @@ func _ready():
 	_resolve_gait_rig()
 	_build_contact_shadow()
 	_setup_terrain_grounding()
-	_build_journey_aura()
-	_apply_journey_stage()
 	var initial_player := _find_player()
 	if initial_player != null:
 		set_companion_player(initial_player, false)
@@ -1538,7 +1524,6 @@ func _process(delta):
 	# Keep hands on the prop as the animated chest continues breathing.
 	if _active_counsellor_pose in ["map", "tablet", "heart"]:
 		_apply_counsellor_arm_pose(_active_counsellor_pose)
-	_apply_journey_stage()
 	# The mayor nameplate is the single interaction cue. The older standalone
 	# prompt is retained only for scene compatibility and stays hidden so Web
 	# builds never stack duplicate Q/T labels above Milo.
@@ -1547,9 +1532,6 @@ func _process(delta):
 	if mayor_name_label != null:
 		mayor_name_label.text = "Mayor Milo\nPress %s to chat" % MILO_CHAT_KEY_LABEL \
 			if player_in_range and chatbot_ui == null else "Mayor Milo"
-	if aura != null:
-		aura.rotate_y(delta * (0.18 + max(journey_stage, 0) * 0.08))
-
 	# Outside the interaction zone, locomotion owns Milo's facing and animation.
 	if not player_in_range:
 		return
@@ -2271,70 +2253,3 @@ void fragment() {
 	cane_contact_shadow.material_override = shadow_material
 	add_child(cane_contact_shadow)
 
-
-# Milo's glow is evidence of the journey, not a generic NPC highlight. The
-# orbital bands pick up the same colour as the castle's current stage, so he
-# remains the player's visual companion even before they open the chat.
-func _build_journey_aura() -> void:
-	aura = Node3D.new()
-	aura.name = "JourneyAura"
-	# Keep the journey glow grounded around Milo's feet. A floating ring above
-	# his head made the neutral standing pose read like a prototype gizmo.
-	aura.position = Vector3(0.0, 0.10, 0.0)
-	add_child(aura)
-
-	var halo := MeshInstance3D.new()
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.50
-	ring.outer_radius = 0.54
-	ring.rings = 16
-	ring.ring_segments = 8
-	halo.mesh = ring
-	aura_material = StandardMaterial3D.new()
-	aura_material.emission_enabled = true
-	aura_material.metallic = 0.5
-	aura_material.roughness = 0.25
-	halo.material_override = aura_material
-	aura.add_child(halo)
-
-	for i in range(3):
-		var star := MeshInstance3D.new()
-		var gem := SphereMesh.new()
-		gem.radius = 0.075
-		gem.height = 0.15
-		gem.radial_segments = 6
-		gem.rings = 3
-		star.mesh = gem
-		star.position = Vector3(cos(TAU * i / 3.0) * 0.56, 0.0,
-			sin(TAU * i / 3.0) * 0.56)
-		star.material_override = aura_material
-		aura.add_child(star)
-
-	aura_light = OmniLight3D.new()
-	aura_light.position = Vector3(0.0, 0.55, 0.0)
-	aura_light.omni_range = 5.5
-	aura_light.shadow_enabled = false
-	aura.add_child(aura_light)
-
-
-func _apply_journey_stage() -> void:
-	var js := get_node_or_null("/root/JourneyState")
-	var next_stage := clampi(js.stage, 0, STAGE_GLOW.size() - 1) if js != null else 0
-	if next_stage == journey_stage:
-		return
-
-	journey_stage = next_stage
-	if aura == null:
-		return
-	# Let Milo read as a natural character at the opening stage. The evidence
-	# aura appears only after the player has actually advanced their journey.
-	aura.visible = journey_stage > 0
-
-	var glow: Color = STAGE_GLOW[journey_stage]
-	aura_material.albedo_color = glow
-	aura_material.emission = glow
-	aura_material.emission_energy_multiplier = STAGE_ENERGY[journey_stage]
-	aura_light.light_color = glow
-	aura_light.light_energy = STAGE_ENERGY[journey_stage]
-	var scale_factor := 0.72 + journey_stage * 0.12
-	aura.scale = Vector3.ONE * scale_factor
