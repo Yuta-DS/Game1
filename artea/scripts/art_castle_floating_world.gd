@@ -2031,6 +2031,13 @@ func _add_heart_planting_cluster(parent: Node3D, position: Vector3,
 
 
 func _build_heart_district() -> void:
+	var heart_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
+	heart_gate.name = "HeartMelodyWorldGate"
+	heart_gate.position = HEART + Vector3(0, 4, 45)
+	heart_gate.target_kingdom_id = "heart"
+	heart_gate.target_world_path = NodePath()
+	heart_gate.prompt_text = "Q · VISIT HEART MELODY — MUSICAL ORCHARD (open journey)"
+	add_child(heart_gate)
 	var district := Node3D.new()
 	district.name = "HeartMelodyTemple"
 	district.set_meta("design_revision", "celestial_conservatory_v14")

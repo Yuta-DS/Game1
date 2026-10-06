@@ -329,7 +329,7 @@ func resolve_variants(text: String) -> String:
 func request_music_minigame():
 	print("DEBUG: MUSIC MINIGAME REQUESTED")
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("res://scenes/music_minigame.tscn")
+	get_node("/root/JourneyCampaign").enter_kingdom("heart")
 
 # Milo speaks to where the player actually is in the journey — and, where a
 # more specific node exists, to *what they actually did* to get there.

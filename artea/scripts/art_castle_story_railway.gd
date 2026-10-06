@@ -194,9 +194,20 @@ func _ready() -> void:
 	_build_materials()
 	_build_route()
 	_build_stations()
+	_build_heart_melody_entrance()
 	_build_train()
 	_build_hud()
 	_refresh_station_lights()
+
+
+func _build_heart_melody_entrance() -> void:
+	if _player == null:
+		return
+	var connection := Node3D.new()
+	connection.name = "HeartMelodyConnection"
+	connection.set_script(load("res://scripts/heart_melody/heart_overworld_connection.gd"))
+	connection.set("player", _player)
+	add_child(connection)
 
 
 func _process(delta: float) -> void:
@@ -3855,7 +3866,7 @@ func _update_prompt() -> void:
 
 func _locked_message(target: int) -> String:
 	if target == 2:
-		return "HEART MELODY IS LOCKED  •  Earn the Star of Wisdom in Mind Spark"
+		return "HEART MELODY IS OPEN  •  Musical Orchard available independently"
 	if target == 3:
 		return "CREATOR'S LIGHT IS LOCKED  •  Earn the Harmony Jewel in Heart Melody"
 	return "THIS STATION HAS NOT AWAKENED YET"

@@ -190,6 +190,9 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 func _input(event):
 	if not is_inside_tree() or get_viewport() == null:
 		return
+	var active_player := get_node_or_null("Player3D")
+	if active_player != null and active_player.get_meta("heart_melody_active", false):
+		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_J:
 		_open_quest_journal()
 		var viewport := get_viewport()
