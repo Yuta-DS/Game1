@@ -3,6 +3,9 @@
 /android/
 .vercel
 
+# Generated per-environment public Firebase identifiers (not private credentials).
+/data/firebase_client_config.json
+
 # Godot leaves these behind when an import is interrupted
 *.png.import-*
 

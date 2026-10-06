@@ -10,7 +10,7 @@ var _surface_map: Image
 
 
 func _init() -> void:
-	display_name = "Keep On Web Grass Soil"
+	display_name = "Keep On Web Natural Soil"
 	category = "Remove"
 	can_restrict_height = false
 	global_reference_frame_available = true
@@ -28,7 +28,7 @@ func _process_transforms(transforms, domain, _seed) -> void:
 		return
 	if _surface_map == null or _surface_map.is_empty():
 		transforms.list.clear()
-		warning = "Web grass surface map is unavailable; grass was removed for safe placement."
+		warning = "Web surface map is unavailable; vegetation was removed for safe placement."
 		return
 
 	var root_transform: Transform3D = domain.get_global_transform()

@@ -1,0 +1,77 @@
+{
+  "revision": "v12",
+  "island_id": 2,
+  "name": "Verdant Engine Gardens",
+  "source_checksums": {
+    "assets3D/mind_spark/celestial_islands_v11/source/island_02_3000.blend": "de1b080641cfb1a5f00f3035e7d2a751fe06ca6a9267c605980bdaa3c302e603",
+    "assets3D/mind_spark/celestial_islands_v11/island_02.glb": "646803e8b467b451a560e200f0c0265fb4d0871f3144ca709c882fb2ca0b0e55",
+    "assets3D/mind_spark/celestial_islands_v08/shared_paving.glb": "8e0c17195863e6306da95915cd2dd1b754f98056898575d4394e85546d4e93eb"
+  },
+  "shared_paving": "res://assets3D/mind_spark/celestial_islands_v08/shared_paving.glb",
+  "variant": {
+    "id": 2,
+    "name": "Verdant Engine Gardens",
+    "file": "island_02.glb",
+    "source": "source/island_02_3000.blend",
+    "bom": "bom/island_02_parts.csv",
+    "editable_mesh_parts": 3000,
+    "runtime_meshes": 5,
+    "runtime_triangles": 531836,
+    "natural_components": 3393,
+    "related_fitting_merges": 393,
+    "surface_patch_splits": 0,
+    "component_kinds": {
+      "connected_component": 2295,
+      "constructed_component": 668,
+      "grouped_related_fittings": 37
+    },
+    "enginehouse_count": 2,
+    "arch_bays": 4,
+    "retained_railing_groups": [
+      "Post_06",
+      "Post_05",
+      "Post_04",
+      "Post_03",
+      "Post_02",
+      "Post_12",
+      "Post_11",
+      "Post_10",
+      "Post_09",
+      "Post_08",
+      "Panel_08",
+      "Panel_06",
+      "Panel_05",
+      "Panel_04",
+      "Panel_03",
+      "Panel_02"
+    ],
+    "omitted_railing_groups": [
+      "Post_01",
+      "Post_07",
+      "Panel_07",
+      "Panel_01"
+    ],
+    "route_directions_blender": [
+      [
+        -0.44721361994743347,
+        -0.8944272398948669,
+        0.0
+      ],
+      [
+        0.8422714471817017,
+        0.539053738117218,
+        0.0
+      ]
+    ],
+    "route_half_width": 0.11578947368421053,
+    "radius": 190,
+    "facade_depth_factor": 0.88,
+    "recessed_rock_parts": 65,
+    "revision": "v12",
+    "silhouette": "split asymmetric hanging-garden keels",
+    "planting_terraces": 4,
+    "pressure_suspension_stays": 4,
+    "gameplay_policy": "Original circular collision/paving and bridges unchanged; side gardens are inaccessible scenic ledges below gameplay.",
+    "machinery_policy": "Static fictional steam lift architecture, no physical levitation simulation."
+  }
+}

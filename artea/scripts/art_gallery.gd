@@ -1,6 +1,8 @@
 extends Node
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const RatingHeart := preload("res://scripts/rating_heart.gd")
+const STAR_ICON := preload("res://assets/UI/icons/star.svg")
 
 @export var painting_title: String = "artwork_1.png"
 
@@ -32,16 +34,9 @@ func _ready() -> void:
 	_report_galaxy_state()
 	_build_quest_journal_button()
 	likebutton.visible = true
-	
-	likebutton.text = "♥"
+	RatingHeart.apply_to_button(likebutton, false)
 
 	
-	print("RatingPanel = ", ratingpanel)
-	print("RatingLabel = ", ratinglabel)
-	print("likebutton = ", likebutton)
-	
-	
-			
 	likebutton.pressed.connect(func(): _on_rate_button_pressed(1))
 	
 
@@ -140,6 +135,15 @@ func _build_galaxy_transit() -> void:
 	story_director.set_script(load("res://scripts/art_castle_kingdom_story.gd"))
 	floating_world.add_child(story_director)
 
+	# World One is the player's starting destination. Build its arrival court
+	# before moving the live character so Web players never spawn over the
+	# deferred, still-empty blueprint and fall through the world.
+	# The game opens in World One, so complete the relocation in this same scene
+	# setup pass. A deferred move left the authored character and SpawnPoint at
+	# the old gallery start for a frame and made the actual start depend on a
+	# later callback.
+	_place_player_in_world_one(floating_world)
+
 	var map_canvas := CanvasLayer.new()
 	map_canvas.name = "WorldMapCanvas"
 	map_canvas.layer = 40
@@ -149,10 +153,45 @@ func _build_galaxy_transit() -> void:
 	minimap.set_script(load("res://scripts/art_castle_minimap.gd"))
 	minimap.set("map_context", "galaxy")
 	map_canvas.add_child(minimap)
+
+
+func _place_player_in_world_one(floating_world: Node3D) -> void:
+	if not is_instance_valid(floating_world):
+		return
+	var player := get_node_or_null("Player3D") as CharacterBody3D
+	var world_one := floating_world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
+	if player == null or world_one == null:
+		return
+	world_one.ensure_world_built()
+	var arrival := world_one.get_player_arrival_local()
+	player.global_position = world_one.to_global(arrival)
+	player.velocity = Vector3.ZERO
+	var source_gate := floating_world.get_node_or_null(
+		"MindSparkWorldGate") as MindSparkWorldGate
+	if source_gate != null:
+		source_gate.destination_world_local = world_one.position + arrival
+	var spawn_marker := get_node_or_null("SpawnPoint") as Node3D
+	if spawn_marker != null:
+		spawn_marker.global_position = player.global_position
+		spawn_marker.set_meta("world", "world_one")
+		spawn_marker.set_meta("physical_island", 1)
+	# Present the Signal Observatory immediately. The player has just moved more
+	# than two kilometres from the gallery spawn; letting CameraFollow ease from
+	# its old position makes the opening fly through unrelated districts and can
+	# leave the view crowded by nearby architecture. Face north into the Signal
+	# Observatory route; the return portal and threshold sit behind this view.
+	var camera := get_node_or_null("Camera3D") as Camera3D
+	if camera != null and camera.has_method("compose_arrival_view"):
+		camera.call("compose_arrival_view", 180.0, -10.0, 18.0)
+	if floating_world.has_method("remove_pink_purple_sphere_placeholders"):
+		floating_world.call("remove_pink_purple_sphere_placeholders")
 		
 		
 func _input(event):
 	if not is_inside_tree() or get_viewport() == null:
+		return
+	var active_player := get_node_or_null("Player3D")
+	if active_player != null and active_player.get_meta("heart_melody_active", false):
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_J:
 		_open_quest_journal()
@@ -179,7 +218,10 @@ func _input(event):
 func _build_quest_journal_button() -> void:
 	var button := Button.new()
 	button.name = "CrownJourneyJournalButton"
-	button.text = "✦ Crown Journey  [J]"
+	button.text = "Crown Journey  [J]"
+	button.icon = STAR_ICON
+	button.expand_icon = false
+	button.add_theme_constant_override("icon_max_width", 22)
 	button.tooltip_text = "Open the Crown of Life quest journal"
 	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	button.position = Vector2(-250.0, 24.0)
@@ -199,20 +241,12 @@ func _open_quest_journal() -> void:
 		get_tree().change_scene_to_file(QUEST_JOURNAL_PATH)
 
 func show_rating_panel(frame_name: String, current_rating: int) -> void:
-	print("Frame:", frame_name)
-	print("Current rating:", current_rating)
-
 	selected_frame_name = frame_name
 	ratingpanel.visible = true
 
-	if current_rating > 0:
-		ratinglabel.text = "Artwork Rating: ♥\nEnter / Space — explore this artwork"
-		ratinglabel.modulate = Color.RED
-		likebutton.modulate = Color.RED
-	else:
-		ratinglabel.text = "Artwork Rating: ♡\nEnter / Space — explore this artwork"
-		ratinglabel.modulate = Color.WHITE
-		likebutton.modulate = Color.WHITE
+	var liked := current_rating > 0
+	RatingHeart.apply_to_label(ratinglabel, liked, "\nEnter / Space — explore this artwork")
+	RatingHeart.apply_to_button(likebutton, liked)
 		
 func hide_rating_panel() -> void:
 	ratingpanel.visible = false
@@ -227,19 +261,10 @@ func _on_rate_button_pressed(value: int) -> void:
 	if gallery_manager:
 		var current_rating = gallery_manager.get_frame_rating(selected_frame_name)
 
-		if current_rating > 0:
-			gallery_manager.rate_frame(selected_frame_name, 0)
-
-			ratinglabel.text = "Artwork Rating:\n♡"
-			ratinglabel.modulate = Color.WHITE
-			likebutton.modulate = Color.WHITE
-
-		else:
-			gallery_manager.rate_frame(selected_frame_name, 1)
-
-			ratinglabel.text = "Artwork Rating:\n♥"
-			ratinglabel.modulate = Color.RED
-			likebutton.modulate = Color.RED			
+		var liked: bool = current_rating <= 0
+		gallery_manager.rate_frame(selected_frame_name, 1 if liked else 0)
+		RatingHeart.apply_to_label(ratinglabel, liked)
+		RatingHeart.apply_to_button(likebutton, liked)			
 func _on_body_entered(body: Node3D) -> void:
 	if body is CharacterBody3D:
 		go_to_scene(HUB_WORLD_PATH)
@@ -274,10 +299,6 @@ func _request_castle_front_door_spawn() -> void:
 		global.request_spawn_at("castle_front_door")
 
 
-func _on_open_test_button_pressed() -> void:
-	print("Test button pressed")
-
-
 func _on_interaction_area_body_entered(body, frame_name):
 
 	if body.name != "Player3D":
@@ -288,9 +309,6 @@ func _on_interaction_area_body_entered(body, frame_name):
 
 	var rating = $GalleryManager.get_frame_rating(frame_name)
 
-	print("Entered:", frame_name)
-	print("Rating returned:", rating)
-
 	show_rating_panel(frame_name, rating)
 	
 
@@ -298,8 +316,6 @@ func _on_interaction_area_body_exited(body, frame_name):
 
 	if body.name != "Player3D":
 		return
-
-	print("Exited:", frame_name)
 
 	player_near_artwork = false
 	current_frame_name = ""

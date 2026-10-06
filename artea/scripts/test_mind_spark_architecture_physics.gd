@@ -98,8 +98,8 @@ func _run() -> void:
 			_fail("%s has no authored procedural surface texture" % zone_id)
 			return
 	var story_route := geometry.get_node("MainStoryCircuitRoute") as Node3D
-	if _story_route_collision_count(story_route) != 10:
-		_fail("the five required links do not retain ten physical walkway legs")
+	if _story_route_collision_count(story_route) != 8:
+		_fail("four retained links need eight walkway legs; route 01 uses its fused foundation")
 		return
 	var station := geometry.get_node("OptionalCompletedWorldStationSpur") as Node3D
 	if station.visible or bool(station.get_meta("blocks_story_route")):
@@ -133,4 +133,7 @@ func _run() -> void:
 		return
 
 	print("MIND_SPARK_ARCHITECTURE_PHYSICS: PASS — bridge, six islands, story decks, textures, and real remote jump verified")
+	gallery.queue_free()
+	await process_frame
+	await process_frame
 	quit()

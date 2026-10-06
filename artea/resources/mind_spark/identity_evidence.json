@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "moments": [
+    {"task_index": 0, "id": "MS_ID_01", "axis": "energy", "a": "E • Talk and act with others", "b": "I • Think and act quietly", "side_a": "E", "side_b": "I"},
+    {"task_index": 1, "id": "MS_ID_02", "axis": "information", "a": "S • Notice clear details", "b": "N • Notice patterns and possibilities", "side_a": "S", "side_b": "N"},
+    {"task_index": 2, "id": "MS_ID_03", "axis": "decisions", "a": "T • Use reason and rules", "b": "F • Use care and personal values", "side_a": "T", "side_b": "F"},
+    {"task_index": 3, "id": "MS_ID_04", "axis": "structure", "a": "J • Plan the order", "b": "P • Explore and adapt", "side_a": "J", "side_b": "P"},
+    {"task_index": 4, "id": "MS_ID_05", "axis": "energy", "a": "E • Ask for help", "b": "I • Try quietly first", "side_a": "E", "side_b": "I"},
+    {"task_index": 5, "id": "MS_ID_06", "axis": "information", "a": "S • Follow one pattern detail", "b": "N • Follow the big picture", "side_a": "S", "side_b": "N"},
+    {"task_index": 8, "id": "MS_ID_07", "axis": "decisions", "a": "T • Follow the safe rule", "b": "F • Protect the living storm", "side_a": "T", "side_b": "F"},
+    {"task_index": 9, "id": "MS_ID_08", "axis": "structure", "a": "J • Reflect in order", "b": "P • Replay what stood out", "side_a": "J", "side_b": "P"}
+  ]
+}

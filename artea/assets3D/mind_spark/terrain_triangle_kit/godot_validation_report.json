@@ -1,0 +1,7 @@
+{
+  "assets_loaded": 58,
+  "errors": [],
+  "passed": true,
+  "scope": "isolated import and physics geometry; not live gameplay or deployment",
+  "surface_ray_checks": 103
+}

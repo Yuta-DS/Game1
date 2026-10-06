@@ -17,6 +17,7 @@
       <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#071016" flood-opacity="0.55"/>
     </filter>
   </defs>
+
   <rect x="5" y="5" width="118" height="118" rx="26" fill="url(#panel)"/>
   <rect x="7" y="7" width="114" height="114" rx="24" stroke="#84C9A6" stroke-width="3" stroke-opacity="0.8"/>
   <path d="M31 51C31 36.6 42.6 25 57 25H71C85.4 25 97 36.6 97 51V101H31V51Z" fill="#4D291E" filter="url(#shadow)"/>

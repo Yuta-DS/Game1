@@ -124,8 +124,8 @@ func _run() -> void:
 		stair.get_node_or_null("CastleDoorLanding"),
 		entrance.get_node_or_null("CastleArrivalTerrace"),
 		entrance.get_node_or_null("CastleUpperCourt"),
-		entrance.get_node_or_null("CastleAscentRamp"),
-		entrance.get_node_or_null("RaisedCastleThreshold"),
+		entrance.get_node_or_null("RoyalCastleStair/RoyalTread_00"),
+		entrance.get_node_or_null("RoyalCastleStair/RoyalDoorLanding"),
 	]
 	for walkable in required_walkables:
 		if not _has_static_collision(walkable):
@@ -166,12 +166,8 @@ func _run() -> void:
 	var landing := stair.get_node("CastleDoorLanding") as MeshInstance3D
 	var crown_point := Vector3(launch.global_position.x + 5.0, 72.0, ROUTE_Z)
 	var terrace_point := Vector3(landing.global_position.x - 2.2, 72.0, ROUTE_Z)
-	# The original fire pedestal intentionally remains solid on the court
-	# centreline. Use the authored open lane around it before rejoining the final
-	# castle approach, matching the dedicated courtyard traversal test.
-	var fire_bypass_far := Vector3(-25.5, 72.0, ROUTE_Z + 1.75)
-	var fire_bypass_near := Vector3(-18.0, 72.0, ROUTE_Z + 1.75)
-	var castle_threshold_point := Vector3(-39.8, 82.0, ROUTE_Z)
+	# Stop in front of the redesigned solid oak door, not inside its leaf.
+	var castle_threshold_point := Vector3(-39.0, 82.0, ROUTE_Z)
 
 	if not await _settle(player, crown_point):
 		_fail("player did not stand on crown interior; at %s, collisions: %s" % [
@@ -181,10 +177,14 @@ func _run() -> void:
 		_fail("player stuck crown-to-terrace at %s; collisions: %s" % [
 			player.global_position, _collider_label(player)])
 		return
-	if not await _walk(player, fire_bypass_near) \
-			or not await _walk(player, fire_bypass_far) \
-			or not await _walk(player, castle_threshold_point) \
-			or player.global_position.x > -39.4:
+	# The approved layout deliberately places a solid fire stand on the axis.
+	# Walk the open right-hand aisle; never expect movement through its pedestal.
+	for waypoint: Vector3 in [Vector3(-20.5, 68, ROUTE_Z + 2.2),
+			Vector3(-26.5, 68, ROUTE_Z + 2.2), Vector3(-28.0, 69, ROUTE_Z)]:
+		if not await _walk(player, waypoint):
+			_fail("right-hand courtyard aisle is blocked at %s" % player.global_position)
+			return
+	if not await _walk(player, castle_threshold_point) or player.global_position.x > -38.7:
 		_fail("player stuck terrace-to-castle-threshold at %s; collisions: %s" % [
 			player.global_position, _collider_label(player)])
 		return
@@ -192,10 +192,13 @@ func _run() -> void:
 	if not await _settle(player, castle_threshold_point):
 		_fail("player did not stand on the raised castle threshold")
 		return
-	if not await _walk(player, fire_bypass_far) \
-			or not await _walk(player, fire_bypass_near) \
-			or not await _walk(player, terrace_point) \
-			or player.global_position.x < -20.5:
+	# Return by the other side of the fire to prove both circulation lanes.
+	for waypoint: Vector3 in [Vector3(-27.0, 68, ROUTE_Z - 2.2),
+			Vector3(-20.5, 68, ROUTE_Z - 2.2)]:
+		if not await _walk(player, waypoint):
+			_fail("left-hand courtyard aisle is blocked at %s" % player.global_position)
+			return
+	if not await _walk(player, terrace_point) or player.global_position.x < -20.5:
 		_fail("player stuck castle-threshold-to-terrace at %s; collisions: %s" % [
 			player.global_position, _collider_label(player)])
 		return
@@ -210,11 +213,8 @@ func _run() -> void:
 	# even though the centreline route above passed.
 	for lane_sign in [-1.0, 1.0]:
 		var signed_lane: float = lane_sign
-		# Stay in the authored inner walk-around lane. The paired solid barbican
-		# towers frame the shoulders at +/-4.2 m; aiming at +/-4.0 m correctly hits
-		# stone rather than exercising the open bridge route.
 		var wide_terrace := Vector3(terrace_point.x, 72.0,
-			ROUTE_Z + signed_lane * 1.65)
+			ROUTE_Z + signed_lane * 4.0)
 		var bridge_lane := Vector3(landing.global_position.x + 1.0, 72.0,
 			ROUTE_Z + signed_lane * 1.5)
 		var crown_lane := Vector3(launch.global_position.x + 1.0, 72.0,

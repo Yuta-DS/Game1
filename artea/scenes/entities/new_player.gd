@@ -97,15 +97,19 @@ func _ready() -> void:
 	floor_max_angle = deg_to_rad(50.0)
 	floor_block_on_wall = false
 
-	await get_tree().process_frame
+	# Child controls are already ready here; bind before physics can collect.
 	if inventory_data and inventory_gui:
 		inventory_gui.set_inventory_data(inventory_data)
 	
 	floor_detector.add_exception(self)
 	
 func _input(event: InputEvent) -> void:
-	# Toggle inventory with I key
 	if event.is_action_pressed("toggle_Inventory"):
+		# World One uses the unified field kit, which includes equipment,
+		# materials, crafting, quest items and collection progress. Let that
+		# overlay own the shared inventory action so two panels never overlap.
+		if not get_tree().get_nodes_in_group("world_one_progression_hud").is_empty():
+			return
 		_on_inventory_pressed()
 			
 func _on_inventory_pressed() -> void:
@@ -339,14 +343,15 @@ func collect_item(item: itemData) -> bool:
 		return false
 	
 	if item.stackable:
-		for slot in inventory_data.slot_Data:
+		for i in range(inventory_data.slot_Data.size()):
+			var slot = inventory_data.slot_Data[i]
 			if slot != null and slot.item_Data != null:
 				if slot.item_Data.name == item.name:
 					slot.quantity += 1
 					if inventory_gui:
-						inventory_gui.refresh_slots()
+						inventory_gui.refresh_slots(i)
 					return true
-	
+
 	for i in range(inventory_data.slot_Data.size()):
 		if inventory_data.slot_Data[i] == null:
 			var new_slot = slotData.new()
@@ -354,7 +359,7 @@ func collect_item(item: itemData) -> bool:
 			new_slot.quantity = 1
 			inventory_data.slot_Data[i] = new_slot
 			if inventory_gui:
-				inventory_gui.refresh_slots()
+				inventory_gui.refresh_slots(i)
 			return true
 	
 	return false

@@ -7,7 +7,7 @@ signal state_changed(enemy: MindSparkEnemyBase, state: int)
 enum State { IDLE, NOTICE, TELEGRAPH, ATTACK, RECOVERY, DEFEATED }
 
 const Definition := preload("res://scripts/mind_spark/combat/mind_spark_enemy_definition.gd")
-const Foley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
+const ROOT_STALKER_VISUAL_PATH := "res://assets3D/mind_spark/anycreature/root_stalker.glb"
 
 @export var definition: MindSparkEnemyDefinition
 @export var encounter_id := ""
@@ -25,11 +25,12 @@ var _state_time := 0.0
 var _player: CharacterBody3D
 var _attack_applied := false
 var _spawn_position := Vector3.ZERO
-var _combat_audio: AudioStreamPlayer3D
+var _authored_visual: Node3D
+var _authored_animation: AnimationPlayer
+var _knockback_velocity := Vector3.ZERO
 
 
 func _ready() -> void:
-	_build_combat_audio()
 	if definition == null:
 		push_error("MindSparkEnemyBase requires a definition")
 		set_physics_process(false)
@@ -53,7 +54,9 @@ func reset_enemy() -> void:
 	current_health = definition.max_health
 	global_position = _spawn_position
 	visible = true
-	shell.visible = true
+	shell.visible = _authored_visual == null
+	if _authored_visual != null:
+		_authored_visual.visible = true
 	core.visible = false
 	scale = Vector3.ONE
 	_set_state(State.IDLE, 0.0)
@@ -65,6 +68,8 @@ func restore_defeated() -> void:
 	active = false
 	state = State.DEFEATED
 	shell.visible = false
+	if _authored_visual != null:
+		_authored_visual.visible = false
 	core.visible = true
 	name_label.text = "%s • FREE" % definition.display_name.to_upper()
 
@@ -74,19 +79,25 @@ func take_damage(amount: float, source: Node = null) -> float:
 		return 0.0
 	var multiplier := _damage_multiplier(source)
 	if multiplier <= 0.0:
-		_play_combat_sound(&"enemy_block")
 		_show_feedback("BLOCKED • WAIT FOR CYAN", Color("74e8ff"))
 		return 0.0
 	var applied := minf(current_health, amount * multiplier)
 	current_health -= applied
-	_play_combat_sound(&"enemy_hit")
 	name_label.text = "%s • %d HP" % [definition.display_name.to_upper(), ceili(current_health)]
 	_show_feedback("-%d SHELL" % int(applied), Color("ffd36b"))
 	if current_health <= 0.0:
 		_defeat()
 	else:
 		_set_state(State.RECOVERY, definition.recovery_seconds)
+	_flash_on_hit()
 	return applied
+
+
+func receive_knockback(direction: Vector3, strength: float) -> void:
+	if state == State.DEFEATED:
+		return
+	var planar := Vector3(direction.x, 0.0, direction.z).normalized()
+	_knockback_velocity = planar * clampf(strength, 0.0, 12.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -118,6 +129,8 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector3.ZERO
 			if _state_time <= 0.0:
 				_set_state(State.TELEGRAPH, definition.validated_telegraph())
+	velocity += _knockback_velocity
+	_knockback_velocity = _knockback_velocity.move_toward(Vector3.ZERO, 24.0 * delta)
 	move_and_slide()
 
 
@@ -153,21 +166,35 @@ func _damage_multiplier(source: Node) -> float:
 func _set_state(next_state: int, duration: float) -> void:
 	if state == next_state and duration <= 0.0:
 		return
-	var state_changed_now := state != next_state
 	state = next_state
+	if state == State.TELEGRAPH:
+		var progression := get_node_or_null("/root/WorldOneProgression")
+		if progression != null:
+			var settings: Dictionary = progression.get("assist_settings")
+			duration *= float(settings.get("telegraph_multiplier", 1.0))
 	_state_time = duration
 	_attack_applied = false
 	telegraph.visible = state == State.TELEGRAPH
 	$VisualRoot/ProjectilePreview.visible = false
 	$VisualRoot/ProjectilePreview.position = Vector3(0, 1.0, 0)
 	core.visible = state == State.RECOVERY and definition.enemy_kind == Definition.EnemyKind.BLIGHT_SENTINEL
-	if state_changed_now:
-		match state:
-			State.NOTICE: _play_combat_sound(&"enemy_notice")
-			State.TELEGRAPH: _play_combat_sound(&"enemy_telegraph")
-			State.ATTACK: _play_combat_sound(&"enemy_attack")
-			State.DEFEATED: _play_combat_sound(&"enemy_defeat")
+	if _authored_animation != null:
+		var clip := "attack" if state == State.ATTACK else "move" if state == State.NOTICE else "idle"
+		for candidate in _authored_animation.get_animation_list():
+			if String(candidate).ends_with(clip) and _authored_animation.current_animation != candidate:
+				_authored_animation.play(candidate)
+				break
 	state_changed.emit(self, state)
+
+
+func _flash_on_hit() -> void:
+	var target := _authored_visual if _authored_visual != null else shell
+	if target == null:
+		return
+	var original := target.scale
+	target.scale = original * 1.06
+	var tween := create_tween()
+	tween.tween_property(target, "scale", original, 0.12)
 
 
 func _defeat() -> void:
@@ -175,6 +202,8 @@ func _defeat() -> void:
 	velocity = Vector3.ZERO
 	_set_state(State.DEFEATED, 0.0)
 	shell.visible = false
+	if _authored_visual != null:
+		_authored_visual.visible = false
 	core.visible = true
 	name_label.text = "%s • FREE" % definition.display_name.to_upper()
 	_show_feedback("BLIGHT SHELL RELEASED", Color("80efaa"))
@@ -241,13 +270,26 @@ func _build_enemy_shape() -> void:
 				_add_sphere_part("WispTail_%02d" % tail_index, Vector3(0, -0.7 - tail_index * 0.48, 0),
 					0.33 - tail_index * 0.07, core_material)
 		Definition.EnemyKind.ROOT_STALKER:
-			shell.scale = Vector3(1.6, 0.72, 2.1)
-			for root_index in 8:
-				var angle := TAU * float(root_index) / 8.0
-				var root := _add_box_part("StalkerRoot_%02d" % root_index,
-					Vector3(cos(angle) * 1.45, -0.55, sin(angle) * 1.45), Vector3(0.22, 0.20, 1.8), shell_material)
-				root.rotation.y = -angle
-				root.rotation.z = 0.22 if root_index % 2 == 0 else -0.22
+			# Kept as a native development fallback for old fixtures. The production
+			# three-island story no longer constructs this retired Island Two actor,
+			# so load its authored asset only when a fixture explicitly requests it.
+			var root_stalker_scene := load(ROOT_STALKER_VISUAL_PATH) as PackedScene
+			_authored_visual = root_stalker_scene.instantiate() as Node3D
+			_authored_visual.name = "RootStalkerCreature"
+			_authored_visual.scale = Vector3.ONE * 2.1
+			add_child(_authored_visual)
+			# The imported body surface can lose its COLOR_0 flag in Godot's GLB
+			# importer even though the other seven surfaces keep it. Restore the
+			# baked bark palette without changing the source animation or mesh.
+			for imported_mesh in _authored_visual.find_children("*", "MeshInstance3D", true, false):
+				for surface_index in imported_mesh.mesh.get_surface_count():
+					var imported_material := imported_mesh.mesh.surface_get_material(surface_index) as StandardMaterial3D
+					if imported_material != null and not imported_material.vertex_color_use_as_albedo:
+						var corrected_material := imported_material.duplicate() as StandardMaterial3D
+						corrected_material.vertex_color_use_as_albedo = true
+						imported_mesh.set_surface_override_material(surface_index, corrected_material)
+			_authored_animation = _authored_visual.find_child("AnimationPlayer", true, false) as AnimationPlayer
+			shell.visible = false
 			_add_weak_point("REAR ◇", Vector3(0, 0.7, -1.55))
 		Definition.EnemyKind.BLIGHT_SENTINEL:
 			shell.scale = Vector3(1.45, 2.1, 1.05)
@@ -327,22 +369,3 @@ func _show_feedback(text: String, color: Color) -> void:
 	var tween := create_tween()
 	tween.tween_interval(0.55)
 	tween.tween_callback(func(): $Feedback.visible = false)
-
-
-func _build_combat_audio() -> void:
-	_combat_audio = AudioStreamPlayer3D.new()
-	_combat_audio.name = "CombatFoley3D"
-	_combat_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
-	_combat_audio.unit_size = 3.0
-	_combat_audio.max_distance = 46.0
-	_combat_audio.volume_db = -5.0
-	_combat_audio.panning_strength = 1.0
-	_combat_audio.bus = &"SFX"
-	add_child(_combat_audio)
-
-
-func _play_combat_sound(event: StringName) -> void:
-	if _combat_audio == null:
-		return
-	_combat_audio.stream = Foley.make_combat_event(event)
-	_combat_audio.play()
