@@ -503,7 +503,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="GrandPiano" type="Node3D" parent="."]
-transform = Transform3D(1.52554, 0, 1.29334, 0, 2, 0, -1.29334, 0, 1.52554, 15.061, 0.25, 2.23497)
+transform = Transform3D(3.81385, 0, 3.23335, 0, 5, 0, -3.23335, 0, 3.81385, 15.061, 0.25, 2.23497)
 script = ExtResource("31_piano")
 camera_path = NodePath("../Camera3D")
 
