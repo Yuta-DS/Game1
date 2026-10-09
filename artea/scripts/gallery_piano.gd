@@ -937,8 +937,15 @@ func _build_case_collision() -> void:
 	body.collision_mask = 0
 	add_child(body)
 
+	# Only the front-left corner (index 0) and the Catmull-Rom control points
+	# (every 4th point from index 1, the last one included). The full smoothed
+	# outline gave the hull dozens of sliver facets along the bent side, and at
+	# the gallery's 5x scale the player capsule snagged on them.
+	# ponytail: chords sit a few cm inside the curve; fine for a walk-around.
+	var outline := _case_outline()
 	var points := PackedVector3Array()
-	for point in _case_outline():
+	for index in [0] + range(1, outline.size(), 4):
+		var point := outline[index]
 		points.append(Vector3(point.x, 0.0, point.y))
 		points.append(Vector3(point.x, RIM_TOP, point.y))
 
