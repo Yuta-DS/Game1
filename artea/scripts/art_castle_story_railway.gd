@@ -2047,16 +2047,23 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 			STAIR_TOP_TOP_Y + 0.10, 0.0), 15.6, 0.42)
 	# Open rails replace the previous 2.6 m solid yellow walls, which filled the
 	# camera and visually hid the stairs in the Web build.
+	# The stairs follow the station's axes but the track crosses each station at
+	# an angle, so the rails' upper ends ran into the docked train. Stop every
+	# rail at the train corridor and drop posts that would stand inside it.
+	var to_route := (station.get_node("WalkablePlatform") as Node3D).transform.affine_inverse()
 	for side in [-1.0, 1.0]:
 		var side_z := float(side) * 7.55
 		for post_index in 7:
 			var ratio := float(post_index) / 6.0
 			var x := lerpf(stair_start_x, stair_end_x, ratio)
 			var tread_y := lerpf(STAIR_BOTTOM_TOP_Y, STAIR_TOP_TOP_Y, ratio)
+			if _in_train_corridor(to_route, Vector3(x, tread_y, side_z)):
+				continue
 			_add_box(stairs, "StairRailPost", Vector3(x, tread_y + 1.25, side_z),
 				Vector3(0.38, 2.5, 0.38), _gold_material, true)
 		var rail_start := Vector3(stair_start_x, STAIR_BOTTOM_TOP_Y + 2.15, side_z)
-		var rail_finish := Vector3(stair_end_x, STAIR_TOP_TOP_Y + 2.15, side_z)
+		var rail_finish := _clip_out_of_train_corridor(to_route, rail_start,
+			Vector3(stair_end_x, STAIR_TOP_TOP_Y + 2.15, side_z))
 		_add_walkway_between(stairs,
 			"StairGuardLeft" if side < 0 else "StairGuardRight",
 			rail_start, rail_finish, 0.38, 0.38, _gold_material, true)
@@ -2064,10 +2071,30 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 	# accessible luminous centre ramp.
 	for side in [-1.0, 1.0]:
 		var inner_z := float(side) * (CENTRAL_RAMP_WIDTH * 0.5 + 0.18)
+		var inner_start := Vector3(stair_start_x, STAIR_BOTTOM_TOP_Y + 1.05, inner_z)
 		_add_walkway_between(stairs, "InnerRampGuardLeft" if side < 0 else "InnerRampGuardRight",
-			Vector3(stair_start_x, STAIR_BOTTOM_TOP_Y + 1.05, inner_z),
-			Vector3(stair_end_x, STAIR_TOP_TOP_Y + 1.05, inner_z),
+			inner_start, _clip_out_of_train_corridor(to_route, inner_start,
+				Vector3(stair_end_x, STAIR_TOP_TOP_Y + 1.05, inner_z)),
 			0.24, 0.24, _gold_material, false)
+
+
+## True when a station-local point lies where the docked train and its inner
+## platform fences stand: within the 7.4 m fence line, along the train's length.
+func _in_train_corridor(to_route: Transform3D, station_point: Vector3) -> bool:
+	var p := to_route * station_point
+	return absf(p.x) < 7.4 and absf(p.z) < 30.0
+
+
+## Pull `finish` back towards `start` until the rail stays out of the train
+## corridor. Returns `finish` unchanged when the rail never enters it.
+func _clip_out_of_train_corridor(to_route: Transform3D, start: Vector3,
+		finish: Vector3) -> Vector3:
+	const SAMPLES := 200
+	for i in SAMPLES + 1:
+		var t := float(i) / float(SAMPLES)
+		if _in_train_corridor(to_route, start.lerp(finish, t)):
+			return start.lerp(finish, maxf(0.0, t - 1.0 / float(SAMPLES)))
+	return finish
 
 
 func _add_surface_ramp_collision(parent: Node3D, node_name: String, start_surface: Vector3,
@@ -2157,15 +2184,18 @@ func _build_platform_guardrails(station: Node3D, route_basis: Basis,
 	# Every barrier has one safety job and shares its corner posts with adjoining
 	# sections. The inner rails protect the empty track/engine area while their
 	# two deliberate gaps line up with the train's driver and passenger steps.
-	# The collision shell is 6 m from centre and the detailed gears project a
-	# little farther. At x=6.8 the 0.32 m rail keeps 0.64 m of true air clearance.
-	const INNER_EDGE_X := 6.80
+	# The collision shell is 6 m from centre, but the textured train body reaches
+	# 6.4 m at rail height. At x=6.8 the rail's inner face (6.64) all but touched
+	# it; at 7.4 it clears the body by ~0.84 m and leaves a 4.1 m walkway.
+	const INNER_EDGE_X := 7.40
 	const OUTER_EDGE_X := 11.50
 	const PLATFORM_FRONT_Z := -16.0
 	const PLATFORM_REAR_Z := 24.0
-	const DRIVER_GATE_HALF_LENGTH := 2.3
+	# 6.4 m openings (were 4.6 m) so the player can step through without
+	# snagging on the gate posts; the 4.2 m boarding bridges sit well inside.
+	const DRIVER_GATE_HALF_LENGTH := 3.2
 	const PASSENGER_GATE_Z := 15.0
-	const PASSENGER_GATE_HALF_LENGTH := 2.3
+	const PASSENGER_GATE_HALF_LENGTH := 3.2
 	const ENTRANCE_GATE_HALF_LENGTH := 2.6
 	# Preserve the direct opening marker used by traversal checks and older scene
 	# integrations. The detailed guard sections now live under PlatformGuard*,
@@ -2778,6 +2808,11 @@ func _register_train_mechanisms(detailed_train: Node3D) -> void:
 			_steam_valve_parts.append(part)
 			if part_name.contains("Engine_SteamChimneyEnergyRing"):
 				_build_steam_exhaust(part)
+			else:
+				# The pipe runs sideways through these rings' holes, so they sat
+				# skewered on it. Turn each a quarter about the vertical: the pipe
+				# then crosses the ring as a diameter and the ring whirls round it.
+				part.rotate_y(PI * 0.5)
 		elif part_name.contains("Engine_CelestialHaloOuterMechanism") \
 			or part_name.contains("Engine_CelestialHaloInnerMechanism"):
 			_celestial_halo_parts.append(part)
@@ -2820,7 +2855,11 @@ func _update_train_mechanisms(delta: float) -> void:
 		wheel_part.rotate_x(signed_spin)
 	for steam_gear in _steam_gear_parts:
 		var gear_ratio: float = steam_gear.get_meta("mechanism_spin_ratio", 1.0)
-		steam_gear.rotate_z(signed_spin * gear_ratio * 1.22)
+		# rotate_* turns about the PARENT's axis. The gears' parent X is their
+		# axle (the same axis the wheels spin about above); Z is the direction of
+		# travel, which spun them like propellers. Same sign as the wheels, so the
+		# drive gear rolls with them and the valve gear (negative ratio) counters.
+		steam_gear.rotate_x(signed_spin * gear_ratio * 1.22)
 	var steam_phase := _mechanism_time * (2.6 + speed_ratio * 8.4)
 	for rod_part in _steam_rod_parts:
 		var rod_phase: float = rod_part.get_meta("mechanism_phase", 0.0)
@@ -2838,7 +2877,14 @@ func _update_train_mechanisms(delta: float) -> void:
 			* (.035 + speed_ratio * .075)
 		pressure_part.scale = base_pressure_scale * pressure_pulse
 	for valve_part in _steam_valve_parts:
-		valve_part.rotate_z(delta * (.35 + speed_ratio * 5.8))
+		# rotate_* uses the parent's axes. The pipe rings whirl about the
+		# sideways pipe (parent X) they are mounted across; the chimney ring
+		# faces up and spins flat about the vertical (parent Y).
+		var valve_spin := delta * (.35 + speed_ratio * 5.8)
+		if valve_part.name.contains("ChimneyEnergyRing"):
+			valve_part.rotate_y(valve_spin)
+		else:
+			valve_part.rotate_x(valve_spin)
 	for halo_part in _celestial_halo_parts:
 		var halo_ratio: float = halo_part.get_meta("mechanism_spin_ratio", 1.0)
 		halo_part.rotate_y(delta * (.22 + speed_ratio * 2.25) * halo_ratio)
