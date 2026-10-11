@@ -89,3 +89,57 @@ What this says:
   to under 7 MiB with brotli, so serving it compressed is an easy win wherever
   the host allows it (`pck-loader.js` notes Cloudflare strips a manually set
   Content-Encoding).
+
+## Web-only texture re-encoding (issue #39)
+
+`addons/web_asset_slimmer` is an `EditorExportPlugin` that only acts when the
+export platform is Web. It re-stores large textures as lossy WebP
+(`PortableCompressedTexture2D`, quality 0.85), capped at 2048 px. A texture
+qualifies if it is a standalone file stored lossless or lossy (not
+VRAM-compressed) and is either a 3D texture (has mipmaps) or larger than
+1024 px. Small UI icons and pixel art are left alone. Nothing is dropped.
+
+The export scripts (`./web rebuild`, `artea/tools/web.sh`,
+`vercel-pack-split/export_web.sh`) enable it for the length of the export
+through `artea/tools/with-web-export-plugins.sh`. It is not enabled in
+`project.godot`, because every project setting is baked into the exported pack
+as `project.binary`, and enabling it there changes the desktop pack by 48
+bytes.
+
+Pack contents by asset type, from `python artea/tools/pck-contents.py`
+(same project, before and after the plugin):
+
+| Asset type | Before MiB | After MiB | Change |
+|---|---:|---:|---:|
+| texture | 359.0 | 220.7 | -138.3 (-39%) |
+| 3D scene (glb/fbx) | 192.5 | 192.5 | 0 |
+| audio | 78.2 | 78.2 | 0 |
+| scene/resource | 17.7 | 17.7 | 0 |
+| other | 12.4 | 12.4 | 0 |
+| mesh | 5.3 | 5.3 | 0 |
+| font | 3.9 | 3.9 | 0 |
+| script | 2.3 | 2.3 | 0 |
+| shader | 0.1 | 0.1 | 0 |
+| **Total** | **671.5** | **533.1** | **-138.4 (-21%)** |
+
+129 of the 589 non-VRAM textures were re-encoded, and 10 of those were
+downscaled. Cold first load (`./web verify`): 755.1 MB → 610.1 MB, still
+PLAYABLE.
+
+Desktop output is unaffected. `pck-contents.py A.pck --compare B.pck` compares
+packs by file and MD5, ignoring storage order, which Godot does not keep
+stable. With a warm export cache, the Windows Desktop pack before and after
+this change has identical content (4,701 files). From an empty cache, Godot's
+`.tscn` → `.scn` conversion is not deterministic: two exports of the *same*
+code differ in the same 212 converted scenes as an export with and without
+this change, and in nothing else.
+
+Not done yet:
+
+- **Audio** (78 MiB) is unchanged. Godot cannot encode Ogg Vorbis, so
+  re-encoding at a lower bitrate needs an external encoder such as ffmpeg at
+  export time.
+- **VRAM formats for mobile browsers** (ETC2/ASTC) would change project-wide
+  import settings, and so desktop imports too. Left out to keep desktop
+  unchanged.
+- **Visual check** in the Hub, Art Castle and each Kingdom (issue #39 acceptance).

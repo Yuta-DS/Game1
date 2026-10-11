@@ -31,7 +31,10 @@ find "${output_dir}" -maxdepth 1 -type f -name 'index.pck.part[0-9][0-9]' -delet
 rm -f "${output_dir}/index.pck"
 rm -f "${output_dir}/index.pck.parts.json"
 
-"${godot_bin}" --headless --path "${project_dir}" \
+# The wrapper turns on the Web-only export plugins (texture slimming, issue
+# #39) without enabling them for desktop exports.
+"${project_dir}/tools/with-web-export-plugins.sh" \
+	"${godot_bin}" --headless --path "${project_dir}" \
 	--export-release Web "${output_dir}/index.html"
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
