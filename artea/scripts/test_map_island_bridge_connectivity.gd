@@ -96,8 +96,10 @@ func _check_observatory_twins() -> bool:
 			return false
 		var left_walkway := left.get_node("Walkway") as MeshInstance3D
 		var right_walkway := right.get_node("Walkway") as MeshInstance3D
-		if not is_equal_approx(left_walkway.position.y + 2.0, 0.0) \
-				or not is_equal_approx(right_walkway.position.y + 2.0, 0.0):
+		# Within 5 cm of the island top: the walkway sits 2 cm low on purpose so
+		# it does not z-fight with the island deck it starts on.
+		if absf(left_walkway.position.y + 2.0) > 0.05 \
+				or absf(right_walkway.position.y + 2.0) > 0.05:
 			_fail("%s decks do not share the island top plane" % base_name)
 			return false
 	world.queue_free()

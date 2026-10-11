@@ -1018,7 +1018,10 @@ func _build_track_mesh(parent: Node3D, curve: Curve3D, segment_index: int) -> vo
 		var distance := length * float(sample_index) / float(sample_count)
 		var centre := curve.sample_baked(distance) - Vector3.UP * 1.4
 		beam_points.append(centre)
-		ribbon_points.append(centre + Vector3.UP * 0.87)
+		# 0.89, not 0.87: the 0.14 m ribbon's underside then clears the beam
+		# top (centre + 0.8) by 2 cm instead of sharing its plane and z-fighting
+		# with the cull-disabled rainbow rail shader.
+		ribbon_points.append(centre + Vector3.UP * 0.89)
 	_add_continuous_curve_prism(parent, "CenterMonorailBeam", beam_points,
 		3.2, 1.6, _rail_material, true, true)
 	_add_continuous_curve_prism(parent, "CrownLineEnergyRibbon", ribbon_points,
@@ -1218,18 +1221,22 @@ func _build_station_platform_from_scratch(station: Node3D,
 			_stone_material, true)
 		# The 2.3 m riser carries the colored driver/passenger walking surfaces at
 		# train-step height instead of leaving those floors floating above the base.
+		# Top at 1.08, 2 cm under the 1.1 m driver/passenger walkways laid on
+		# it; flush, the two z-fought (the navy/cyan hatching on the platform).
 		_add_box(platform, "%sRaisedBoardingBase" % side_name,
-			Vector3(float(side) * RAISED_BOARDING_X, -0.05,
+			Vector3(float(side) * RAISED_BOARDING_X, -0.06,
 				RAISED_BOARDING_CENTRE_Z),
-			Vector3(5.5, 2.3, RAISED_BOARDING_LENGTH),
+			# 2 cm inside the walkways' footprint on every side, so the base's
+			# side and end faces are not in the same planes as theirs.
+			Vector3(5.46, 2.28, RAISED_BOARDING_LENGTH - 0.04),
 			_dark_metal_material, true)
 		_add_segment_box(platform, "%sInnerGoldSafetyEdge" % side_name,
-			Vector3(float(side) * 6.0, -1.0, -30.0),
-			Vector3(float(side) * 6.0, -1.0, 27.0),
+			Vector3(float(side) * 6.0, -1.0, -30.02),
+			Vector3(float(side) * 6.0, -1.0, 27.02),
 			Vector2(0.28, 0.42), _gold_material)
 		_add_segment_box(platform, "%sOuterGoldFascia" % side_name,
-			Vector3(float(side) * 14.0, -1.0, -30.0),
-			Vector3(float(side) * 14.0, -1.0, 27.0),
+			Vector3(float(side) * 14.0, -1.0, -30.02),
+			Vector3(float(side) * 14.0, -1.0, 27.02),
 			Vector2(0.32, 0.58), _gold_material)
 		# Seven non-overlapping eight-metre light panels make the platform itself
 		# rainbow while the continuous gold fascia keeps the station hierarchy.
@@ -1298,14 +1305,18 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 		_add_box(layout, "DriverWalkway%s" % side_name,
 			Vector3(float(side) * 8.75, 0.8, -7.0), Vector3(5.5, 0.6, 18.0),
 			_violet_material, true)
+		# Starts 2 cm after the driver walkway ends, so the two do not share an
+		# end face (visible through this see-through glass floor).
 		_add_box(layout, "PassengerWalkway%s" % side_name,
-			Vector3(float(side) * 8.75, 0.8, 13.0), Vector3(5.5, 0.6, 22.0),
+			Vector3(float(side) * 8.75, 0.8, 13.01), Vector3(5.5, 0.6, 21.98),
 			_glass_material, true)
+		# Boarding bridges sit 4 cm below the walkway tops they overlap (and 2 cm
+		# below the raised base top at 1.08).
 		_add_box(layout, "DriverBoardingBridge%s" % side_name,
-			Vector3(float(side) * 6.0, 0.8, 0.0), Vector3(1.2, 0.6, 4.2),
+			Vector3(float(side) * 6.0, 0.76, 0.0), Vector3(1.2, 0.6, 4.2),
 			_gold_material, true)
 		_add_box(layout, "PassengerBoardingBridge%s" % side_name,
-			Vector3(float(side) * 6.0, 0.8, 15.0), Vector3(1.2, 0.6, 4.2),
+			Vector3(float(side) * 6.0, 0.76, 15.0), Vector3(1.2, 0.6, 4.2),
 			_gold_material, true)
 
 	# Join the top of the arrival stair to the nearest train-side platform. The
@@ -1990,7 +2001,10 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 	var stair_end_x := -STAIR_END_X * dock_sign
 	for index in STAIR_STEP_COUNT:
 		var ratio := float(index) / float(STAIR_STEP_COUNT - 1)
-		var top_y := lerpf(STAIR_BOTTOM_TOP_Y, STAIR_TOP_TOP_Y, ratio)
+		# Visual treads only (the ramp carries the player), so drop them 5 cm:
+		# flush, the top tread z-fought the walkway (1.1); 5 cm also clears the
+		# raised base top (1.08) beneath it.
+		var top_y := lerpf(STAIR_BOTTOM_TOP_Y, STAIR_TOP_TOP_Y, ratio) - 0.05
 		var x := lerpf(stair_start_x, stair_end_x, ratio)
 		_add_box(stairs, "DockStep_%02d" % (index + 1),
 			Vector3(x, top_y - TREAD_THICKNESS * 0.5, -SIDE_STAIR_Z),
@@ -2012,11 +2026,14 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 		CENTRAL_RAMP_WIDTH, 0.24, _dark_metal_material)
 	_add_surface_ramp_mesh(stairs, "CentralAccessLanding", ramp_plateau_start, ramp_finish,
 		CENTRAL_RAMP_WIDTH, 0.24, _dark_metal_material)
+	# 0.18 lift, not 0.15: at 0.15 the conduit top (1.41) shared the plane of
+	# the guard rails' LowerRail tops it runs through and sat 1 cm over the gold
+	# entrance walkway (1.40), and both z-fought.
 	_add_surface_ramp_mesh(stairs, "CrystalEnergyConduit",
-		ramp_start + Vector3.UP * 0.15, ramp_plateau_start + Vector3.UP * 0.15,
+		ramp_start + Vector3.UP * 0.18, ramp_plateau_start + Vector3.UP * 0.18,
 		1.05, 0.08, _glass_material)
 	_add_surface_ramp_mesh(stairs, "CrystalEnergyLandingConduit",
-		ramp_plateau_start + Vector3.UP * 0.15, ramp_finish + Vector3.UP * 0.15,
+		ramp_plateau_start + Vector3.UP * 0.18, ramp_finish + Vector3.UP * 0.18,
 		1.05, 0.08, _glass_material)
 	# One convex body carries the complete landing-to-platform route. Two boxes
 	# that only touched at the stair foot exposed an internal end face, so the
