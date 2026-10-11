@@ -181,8 +181,15 @@ HOW TO VERIFY
 
 MANUAL RECOVERY (if it ever happens again)
     cd artea/builds/web
-    rm -f index.pck.part?? index.pck.parts.json
+    rm -rf parts index.pck.parts.json index.side.wasm.parts.json
     ./artea/tools/web.sh --serve-only
+
+SUPERSEDED BY CONTENT HASHES (#33, ADR-0002)
+  The size check above missed any re-export that kept the same size. Every
+  deploy path now splits through artea/tools/split-pack.sh, which names each
+  part after the SHA-256 of the whole file (parts/index.pck.<hash>.partNN) and
+  re-splits whenever the hash changes, deleting every other export's parts. A
+  manifest can only ever list parts cut from its own export.
 
 
 --------------------------------------------------------------------------------
@@ -211,6 +218,15 @@ FIX APPLIED
       Pragma: no-cache
 
   Nothing from a previous export can be reused now, on any port.
+
+  DEPLOYED HOSTS (#33, ADR-0002): parts/ is content-hashed, so Vercel
+  (vercel.json) and Cloudflare (_headers) serve it immutable. Everything with a
+  fixed name - index.html, index.js, the wasm files, the part manifests - is
+  no-cache: revalidated on every visit (a ~130 byte 304 when unchanged), so a
+  new export can never pair old modules with a new pack. Local ./web keeps
+  no-store; artea/tools/web.sh --serve-only --prod-cache applies the deployed
+  rules locally, and ./web verify --repeat uses that to measure what a repeat
+  visit downloads.
 
 HOW TO VERIFY
       curl -sI http://127.0.0.1:8801/index.js | grep -i cache-control

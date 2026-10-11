@@ -11,7 +11,10 @@
 // the hub reports itself built is recorded. Those two numbers are the baseline
 // load-time work is measured against (docs/web-baseline.md).
 //
-//   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open]
+//   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open] [--repeat]
+//
+// --repeat loads the page a second time with the cache on and reports what
+// that repeat visit transferred.
 //
 // Chrome is driven over CDP. Node 22+ ships a global WebSocket, so this needs
 // no npm packages at all: the only requirement is a Chrome that can be started
@@ -29,6 +32,7 @@ const outDir = (() => {
 	return i === -1 ? fs.mkdtempSync(path.join(os.tmpdir(), 'artea-smoke-')) : args[i + 1];
 })();
 const keepOpen = args.includes('--keep-open');
+const repeat = args.includes('--repeat');
 const DEBUG_PORT = 9222;
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
@@ -70,6 +74,7 @@ async function startChrome() {
 		`--user-data-dir=${profile}`,
 		'--no-first-run',
 		'--enable-unsafe-swiftshader',
+		...(process.env.SMOKE_CACHE_BYTES ? [`--disk-cache-size=${process.env.SMOKE_CACHE_BYTES}`] : []),
 	], { stdio: 'ignore', detached: true });
 	for (let i = 0; i < 30; i += 1) {
 		await sleep(500);
@@ -91,7 +96,7 @@ async function connect() {
 	// exact total including headers. A request that ends in loadingFailed never
 	// gets a loadingFinished, so without dataReceived its bytes would vanish.
 	const net = {
-		perRequest: new Map(), urls: new Map(), failures: [],
+		perRequest: new Map(), urls: new Map(), failures: [], cached: new Set(),
 		requests: 0, failed: 0, hubAt: null, bytesAtHub: null, requestsAtHub: null, engineAt: null,
 		// Each source is tallied on its own and the largest wins: adding them
 		// into one slot would count every streamed part twice.
@@ -101,7 +106,12 @@ async function connect() {
 		},
 		of(id) {
 			const t = this.perRequest.get(id);
-			return Math.max(t.streamed, t.finished, t.length);
+			// Content-Length is only a floor when a body actually streamed in (the
+			// aborted-part case). A revalidated 304 is reported as the cached 200
+			// with its original Content-Length but moves no body bytes at all.
+			return t.streamed > 0
+				? Math.max(t.streamed, t.finished, t.length)
+				: Math.max(t.streamed, t.finished);
 		},
 		get bytes() {
 			let total = 0;
@@ -123,14 +133,21 @@ async function connect() {
 		// events catch up, undercounting by ~1%. Content-Length is the exact
 		// on-the-wire body size (after Content-Encoding), so it is the floor.
 		if (m.method === 'Network.responseReceived') {
-			const headers = m.params.response.headers || {};
-			const lengthKey = Object.keys(headers).find((k) => k.toLowerCase() === 'content-length');
-			const length = lengthKey ? Number(headers[lengthKey]) : NaN;
-			if (Number.isFinite(length)) {
-				const id = m.params.requestId;
-				net.tally(id).length = length;
+			const response = m.params.response;
+			const id = m.params.requestId;
+			net.tally(id).status = response.status;
+			// A cache hit still carries its original Content-Length, but nothing
+			// crossed the wire; only real transfers get the floor.
+			if (response.fromDiskCache || response.fromMemoryCache || response.fromPrefetchCache) {
+				net.cached.add(id);
+			} else {
+				const headers = response.headers || {};
+				const lengthKey = Object.keys(headers).find((k) => k.toLowerCase() === 'content-length');
+				const length = lengthKey ? Number(headers[lengthKey]) : NaN;
+				if (Number.isFinite(length) && response.status !== 304) net.tally(id).length = length;
 			}
 		}
+		if (m.method === 'Network.requestServedFromCache') net.cached.add(m.params.requestId);
 		if (m.method === 'Network.dataReceived') {
 			const id = m.params.requestId;
 			net.tally(id).streamed += m.params.encodedDataLength;
@@ -179,15 +196,24 @@ async function connect() {
 	const say = (msg) => console.log(stamp() + msg);
 
 	fs.mkdirSync(outDir, { recursive: true });
-	await startChrome();
+	// A Chrome this script started is closed again at the end. It used to be
+	// left running detached, and every later run silently reused it - with its
+	// old flags and cache - instead of getting the fresh profile it expects.
+	const ownChrome = await startChrome();
+	const closeOwnChrome = async () => {
+		if (keepOpen || !ownChrome) return;
+		try { process.kill(ownChrome.pid); } catch { /* already gone */ }
+	};
 	const { send, consoleLines, crashed, targetId, net } = await connect();
 
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
 	await send('Runtime.enable');
 	await send('Page.enable');
-	// Cold load every run, even against a Chrome the user started themselves.
 	await send('Network.enable');
-	await send('Network.setCacheDisabled', { cacheDisabled: true });
+	// Cold load every run, even against a Chrome the user started themselves.
+	// --repeat needs the cache on so the second visit can use it; the first
+	// load is still cold because startChrome() uses a fresh profile.
+	if (!repeat) await send('Network.setCacheDisabled', { cacheDisabled: true });
 	let navigatedAt = null;
 
 	// Plain KEY=value lines so CI and later tickets can grep the numbers.
@@ -195,7 +221,7 @@ async function connect() {
 		const mb = (b) => (b / 1048576).toFixed(1);
 		const reached = net.hubAt !== null;
 		const hubSeconds = reached ? ((net.hubAt - navigatedAt) / 1000).toFixed(1) : null;
-		console.log('\nfirst load (cache disabled):');
+		console.log(`\nfirst load (${repeat ? 'cold, fresh profile' : 'cache disabled'}):`);
 		console.log(`  bytes transferred to hub: ${reached ? `${net.bytesAtHub} (${mb(net.bytesAtHub)} MiB, ${net.requestsAtHub} requests)` : 'hub not reached'}`);
 		const engineSeconds = net.engineAt !== null ? ((net.engineAt - navigatedAt) / 1000).toFixed(1) : null;
 		console.log(`  time to engine started:   ${engineSeconds !== null ? `${engineSeconds} s` : 'not started'}`);
@@ -219,11 +245,13 @@ async function connect() {
 		fs.writeFileSync(path.join(outDir, `${name}.png`), buf);
 		return buf;
 	};
-	const waitForLog = async (re, label, timeoutMs) => {
+	// `from` skips lines logged before it, so a second visit waits for its own
+	// "engine started" rather than matching the first visit's.
+	const waitForLog = async (re, label, timeoutMs, from = 0) => {
 		const until = Date.now() + timeoutMs;
 		while (Date.now() < until) {
 			if (crashed()) throw new Error('renderer crashed (out of memory is the usual cause)');
-			if (consoleLines.some((l) => re.test(l))) {
+			if (consoleLines.slice(from).some((l) => re.test(l))) {
 				say('OK  ' + label);
 				return;
 			}
@@ -289,9 +317,43 @@ async function connect() {
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
 
 		const pass = moved && !crashed() && fatal.length === 0;
+
+		if (repeat) {
+			// Same page again with the cache on: with content-hashed parts served
+			// immutable, only what must be revalidated should come back over the
+			// wire (docs/web-baseline.md, issue #33).
+			const seenRequests = new Set(net.perRequest.keys());
+			const fromLine = consoleLines.length;
+			const started = Date.now();
+			say('second visit, cache on');
+			await send('Page.navigate', { url });
+			await waitForLog(/engine started/, 'engine started again', 900000, fromLine);
+			await sleep(3000);
+			const visit = [...net.perRequest.keys()].filter((id) => !seenRequests.has(id))
+				.map((id) => [net.of(id), net.urls.get(id) || id]).sort((a, c) => c[0] - a[0]);
+			const bytes = visit.reduce((sum, [b]) => sum + b, 0);
+			console.log('\nsecond visit (cache on):');
+			const fromCache = [...net.perRequest.keys()].filter((id) => !seenRequests.has(id) && net.cached.has(id)).length
+				+ [...net.cached].filter((id) => !seenRequests.has(id) && !net.perRequest.has(id)).length;
+			console.log(`  bytes transferred:        ${bytes} (${(bytes / 1048576).toFixed(2)} MiB, ${visit.length} requests, ${fromCache} served from cache)`);
+			console.log(`  time to engine started:   ${((Date.now() - started - 3000) / 1000).toFixed(1)} s`);
+			// Per-request detail for the repeat visit: what was revalidated, what
+			// came over again, and from which byte source each count was taken.
+			fs.writeFileSync(path.join(outDir, 'repeat-requests.log'), [...net.perRequest.keys()]
+				.filter((id) => !seenRequests.has(id))
+				.map((id) => {
+					const t = net.perRequest.get(id);
+					return [net.of(id), `status=${t.status} streamed=${t.streamed} finished=${t.finished} length=${t.length}`, net.urls.get(id) || id].join('\t');
+				}).join('\n'));
+			console.log('  largest:');
+			visit.slice(0, 6).forEach(([b, u]) => console.log(`    ${String(b).padStart(10)}  ${u}`));
+			console.log(`METRIC repeat_bytes=${bytes}`);
+		}
+
 		console.log('\nscreenshots: ' + outDir);
 		console.log('RESULT: ' + (pass ? 'PLAYABLE' : 'NOT PLAYABLE'));
 		if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+		await closeOwnChrome();
 		process.exit(pass ? 0 : 1);
 	} catch (err) {
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
@@ -302,6 +364,7 @@ async function connect() {
 		consoleLines.slice(-15).forEach((l) => console.log('    ' + l.slice(0, 200)));
 		console.log('screenshots: ' + outDir);
 		if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+		await closeOwnChrome();
 		process.exit(2);
 	}
 })();
