@@ -265,6 +265,91 @@ def login():
     return jsonify({"token": token})
 
 # =========================
+# SELF-SERVICE PASSWORD RESET
+# =========================
+
+# Keyed on username rather than IP, unlike the admin lockout below: this
+# project is used in schools and community programs (see
+# facilitator_settings.gd), so many players can share one IP behind a
+# school's NAT. Locking by IP would lock out a whole classroom after one
+# kid mistypes a code a few times; locking by username only blocks further
+# attempts against the one account actually being guessed at.
+RECOVERY_RESET_LOCK = threading.Lock()
+RECOVERY_RESET_ATTEMPTS = {}
+RECOVERY_RESET_MAX_ATTEMPTS = 5
+RECOVERY_RESET_LOCKOUT_SECONDS = 15 * 60
+
+
+def _recovery_reset_is_locked_out(username):
+    with RECOVERY_RESET_LOCK:
+        state = RECOVERY_RESET_ATTEMPTS.get(username)
+        if not state:
+            return False
+        return (
+            state["failures"] >= RECOVERY_RESET_MAX_ATTEMPTS
+            and time.monotonic() < state["locked_until"]
+        )
+
+
+def _record_recovery_reset_failure(username):
+    with RECOVERY_RESET_LOCK:
+        state = RECOVERY_RESET_ATTEMPTS.setdefault(
+            username, {"failures": 0, "locked_until": 0.0}
+        )
+        state["failures"] += 1
+        if state["failures"] >= RECOVERY_RESET_MAX_ATTEMPTS:
+            state["locked_until"] = time.monotonic() + RECOVERY_RESET_LOCKOUT_SECONDS
+
+
+def _clear_recovery_reset_failures(username):
+    with RECOVERY_RESET_LOCK:
+        RECOVERY_RESET_ATTEMPTS.pop(username, None)
+
+
+@app.route('/reset-password-with-code', methods=['POST'])
+def reset_password_with_code():
+    data = request.json
+
+    username = data.get("username")
+    recovery_code = data.get("recovery_code")
+    new_password = data.get("new_password")
+
+    if not username or not recovery_code or not new_password:
+        return jsonify({"error": "Missing username, recovery_code, or new_password"}), 400
+
+    if _recovery_reset_is_locked_out(username):
+        return jsonify({"error": "Too many attempts. Try again later."}), 429
+
+    user = User.query.filter_by(username=username).first()
+
+    # Same error for "no such user" and "wrong code" - a distinct "user not
+    # found" response would let an attacker enumerate valid usernames just by
+    # probing this endpoint.
+    if not user or not user.recovery_code_hash or not bcrypt.checkpw(
+        recovery_code.encode('utf-8'), user.recovery_code_hash
+    ):
+        _record_recovery_reset_failure(username)
+        return jsonify({"error": "Invalid username or recovery code"}), 401
+
+    _clear_recovery_reset_failures(username)
+
+    user.password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+    # One-time use: the code just spent is replaced with a fresh one, handed
+    # back the same way the original was at registration.
+    new_recovery_code, new_recovery_code_hash = _generate_recovery_code()
+    user.recovery_code_hash = new_recovery_code_hash
+
+    db.session.commit()
+
+    print(f"[server] Self-service password reset for user '{username}'")
+
+    return jsonify({
+        "message": "Password reset successfully",
+        "recovery_code": new_recovery_code
+    }), 200
+
+# =========================
 # ADMIN PASSWORD RESET
 # =========================
 
