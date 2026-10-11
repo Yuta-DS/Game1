@@ -1,7 +1,9 @@
 extends Node2D
 
+const AdminResetPanel := preload("res://scripts/admin_reset_panel.gd")
+
 # Links to the intro music audio player node
-@onready var menu_music = $AudioStreamPlayer 
+@onready var menu_music = $AudioStreamPlayer
 
 # Grab the UI Input Fields
 @onready var user_node = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/UsernameInput
@@ -10,9 +12,38 @@ extends Node2D
 # Dynamic visual feedback label for formatting error reporting
 @onready var status_label = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/StatusLabel
 
+var _admin_panel: Node
+
 func _ready():
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
+
+	# Built here rather than added to the .tscn - runtime-built UI is this
+	# project's house style for anything that isn't the primary scene content
+	# (see facilitator_settings.gd), and keeps a support tool out of the
+	# scene diff entirely.
+	_admin_panel = AdminResetPanel.new()
+	add_child(_admin_panel)
+	_build_admin_button()
+
+
+# Small and tucked in a corner on purpose - this is a support tool for
+# whoever holds the server's admin key, not a player-facing feature.
+#
+# Top-right rather than top-left: the always-on FPS counter (fps_counter.gd)
+# sits at (16, 16) on its own CanvasLayer above everything, which otherwise
+# covers this button entirely.
+func _build_admin_button() -> void:
+	var button := Button.new()
+	button.text = "Admin"
+	button.custom_minimum_size = Vector2(90, 30)
+	button.add_theme_font_size_override("font_size", 14)
+	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	# PRESET_TOP_RIGHT anchors the corner at the right edge, so x must be
+	# negative to pull the button back onto the screen.
+	button.position = Vector2(-102, 12)
+	button.pressed.connect(_admin_panel.show_panel)
+	add_child(button)
 
 # Helper utility to cleanly control status messages and alert color states
 func show_message(text: String, is_error: bool = true):

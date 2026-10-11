@@ -14,6 +14,7 @@ import copy
 import hashlib
 import json
 import os
+import secrets
 import threading
 import time
 from datetime import timedelta, datetime, timezone
@@ -120,6 +121,20 @@ if app.config['JWT_SECRET_KEY'] == _DEFAULT_JWT_SECRET:
     )
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 
+# There's no player-facing password reset (no email on file for accounts),
+# so a forgotten password is recovered by whoever holds this key running
+# the /admin/reset-password endpoint below. Same env-var-with-dev-fallback
+# pattern as JWT_SECRET_KEY above.
+_DEFAULT_ADMIN_RESET_KEY = 'dev_admin_reset_change_later_12345'
+ADMIN_RESET_KEY = os.environ.get("ADMIN_RESET_KEY", _DEFAULT_ADMIN_RESET_KEY)
+if ADMIN_RESET_KEY == _DEFAULT_ADMIN_RESET_KEY:
+    print(
+        "[server] WARNING: ADMIN_RESET_KEY is not set - using the public "
+        "default from source. Anyone who has read this repository can "
+        "reset any player's password. Set a real ADMIN_RESET_KEY before "
+        "deploying anywhere reachable by players."
+    )
+
 # A browser-hosted export talks to this API from a different origin than
 # the one serving the game, so without CORS every request gets blocked
 # client-side regardless of whether the server itself responds correctly.
@@ -220,6 +235,90 @@ def login():
     token = create_access_token(identity=str(user.id))
 
     return jsonify({"token": token})
+
+# =========================
+# ADMIN PASSWORD RESET
+# =========================
+
+# A wrong-but-unlimited admin_key guess is a brute-forceable key with no
+# lockout - the thing /login already avoids via bcrypt being slow, but a
+# plain secrets.compare_digest has no such cost. Locked out per source IP
+# after a handful of failures, same in-memory dict+lock shape as the AI
+# circuit breaker above rather than pulling in a rate-limiting dependency
+# for one endpoint.
+#
+# Keyed on request.remote_addr, which is the real caller's address only as
+# long as nothing between it and gunicorn rewrites the source IP. Once a
+# reverse proxy sits in front in production (see MACOS_SETUP.md), every
+# request will arrive from that proxy's own address and this degrades to a
+# single shared lockout bucket for all callers - still fails closed, but
+# worth revisiting alongside whatever proxy/X-Forwarded-For trust config
+# lands then.
+ADMIN_RESET_LOCK = threading.Lock()
+ADMIN_RESET_ATTEMPTS = {}
+ADMIN_RESET_MAX_ATTEMPTS = 5
+ADMIN_RESET_LOCKOUT_SECONDS = 15 * 60
+
+
+def _admin_reset_is_locked_out(ip):
+    with ADMIN_RESET_LOCK:
+        state = ADMIN_RESET_ATTEMPTS.get(ip)
+        if not state:
+            return False
+        return (
+            state["failures"] >= ADMIN_RESET_MAX_ATTEMPTS
+            and time.monotonic() < state["locked_until"]
+        )
+
+
+def _record_admin_reset_failure(ip):
+    with ADMIN_RESET_LOCK:
+        state = ADMIN_RESET_ATTEMPTS.setdefault(
+            ip, {"failures": 0, "locked_until": 0.0}
+        )
+        state["failures"] += 1
+        if state["failures"] >= ADMIN_RESET_MAX_ATTEMPTS:
+            state["locked_until"] = time.monotonic() + ADMIN_RESET_LOCKOUT_SECONDS
+
+
+def _clear_admin_reset_failures(ip):
+    with ADMIN_RESET_LOCK:
+        ADMIN_RESET_ATTEMPTS.pop(ip, None)
+
+
+@app.route('/admin/reset-password', methods=['POST'])
+def admin_reset_password():
+    client_ip = request.remote_addr
+
+    if _admin_reset_is_locked_out(client_ip):
+        return jsonify({"error": "Too many attempts. Try again later."}), 429
+
+    data = request.json
+
+    admin_key = data.get("admin_key")
+    username = data.get("username")
+    new_password = data.get("new_password")
+
+    if not admin_key or not secrets.compare_digest(admin_key, ADMIN_RESET_KEY):
+        _record_admin_reset_failure(client_ip)
+        print(f"[server] WARNING: failed admin password reset attempt from {client_ip}")
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    _clear_admin_reset_failures(client_ip)
+
+    if not username or not new_password:
+        return jsonify({"error": "Missing username or new_password"}), 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+    db.session.commit()
+
+    print(f"[server] Admin password reset for user '{username}' from {client_ip}")
+
+    return jsonify({"message": "Password reset successfully"}), 200
 
 # =========================
 # UPLOAD ARTWORK
