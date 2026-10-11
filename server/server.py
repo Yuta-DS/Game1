@@ -169,6 +169,13 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.LargeBinary, nullable=False)
+    # Hashed the same way as password_hash (bcrypt) - never stored or logged
+    # in plaintext after it's shown to the player once at issuance. Nullable
+    # because db.create_all() only creates missing tables, it never alters
+    # existing ones - any account already in a live database.db has no
+    # recovery code until a migration backfills this column, and self-reset
+    # can't work for that account until a code is actually issued.
+    recovery_code_hash = db.Column(db.LargeBinary, nullable=True)
 
 class Artwork(db.Model):
     id = db.Column(db.Integer, primary_key=True)
