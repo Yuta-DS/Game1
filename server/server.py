@@ -199,6 +199,19 @@ with app.app_context():
 # REGISTER
 # =========================
 
+# Players have no email on file, so a lost password otherwise means the
+# admin-key tool is the only way back into an account. This code is the
+# self-service alternative: returned in plaintext exactly once, in the
+# /register response below, and never stored or logged anywhere after that -
+# only its bcrypt hash lives in recovery_code_hash. If the player doesn't
+# save it, they're back to the admin tool anyway.
+def _generate_recovery_code():
+    raw = secrets.token_hex(5).upper()
+    formatted = f"{raw[0:4]}-{raw[4:8]}-{raw[8:10]}"
+    hashed = bcrypt.hashpw(formatted.encode('utf-8'), bcrypt.gensalt())
+    return formatted, hashed
+
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
@@ -213,12 +226,20 @@ def register():
         return jsonify({"error": "Username already exists"}), 400
 
     hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    recovery_code, recovery_code_hash = _generate_recovery_code()
 
-    user = User(username=username, password_hash=hashed)
+    user = User(
+        username=username,
+        password_hash=hashed,
+        recovery_code_hash=recovery_code_hash
+    )
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"message": "User registered successfully"}), 201
+    return jsonify({
+        "message": "User registered successfully",
+        "recovery_code": recovery_code
+    }), 201
 
 # =========================
 # LOGIN
