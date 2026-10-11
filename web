@@ -4,13 +4,16 @@
 #   ./web                 export if needed, serve, open a browser
 #   ./web rebuild         force a fresh export first
 #   ./web serve           serve whatever is already built
-#   ./web verify          headless check that Offline Guest reaches the hub
+#   ./web verify          headless check that Offline Guest reaches the hub,
+#                         plus first-load bytes transferred and time-to-hub
 #   ./web status          what is built, what is serving
 #   ./web stop            stop the local server
 #
 # Options (any command):
 #   --port N              default 8801, or PORT in .webrc
 #   --no-open             do not launch a browser
+#   --url URL             verify: check URL (e.g. a deployment) instead of
+#                         serving the local build
 #   -h, --help            this text
 #
 # Settings live in .webrc next to this script if you want different defaults:
@@ -39,13 +42,15 @@ open_browser=1
 port="${PORT:-${port}}"
 
 command=run
+target_url=""
 [[ $# -gt 0 && "$1" != -* ]] && { command="$1"; shift; }
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--port)    port="${2:?--port needs a number}"; shift 2 ;;
 		--no-open) open_browser=0; shift ;;
-		-h|--help) sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+		--url)     target_url="${2:?--url needs a URL}"; shift 2 ;;
+		-h|--help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 		*) echo "Unknown option: $1 (try --help)" >&2; exit 1 ;;
 	esac
 done
@@ -99,9 +104,12 @@ case "${command}" in
 
 	verify)
 		# Verification needs a server but should not leave one behind, so start
-		# one only when nothing is already listening on the port.
+		# one only when nothing is already listening on the port. A --url
+		# target (a deployment) needs no local server at all.
 		started_here=0
-		if [[ -z "$(serving_pid)" ]]; then
+		if [[ -n "${target_url}" ]]; then
+			url="${target_url}"
+		elif [[ -z "$(serving_pid)" ]]; then
 			echo "Starting a server on ${port} for the check…"
 			serve_background --serve-only
 			started_here=1
