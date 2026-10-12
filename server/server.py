@@ -427,11 +427,23 @@ def admin_reset_password():
         return jsonify({"error": "User not found"}), 404
 
     user.password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+    # An admin reset is also the moment to (re)issue a recovery code: the
+    # player needed help getting back in at all, so handing them a fresh
+    # self-service code now means next time they might not need to. This
+    # also backfills accounts from before this feature existed, which
+    # otherwise have recovery_code_hash = NULL forever.
+    new_recovery_code, new_recovery_code_hash = _generate_recovery_code()
+    user.recovery_code_hash = new_recovery_code_hash
+
     db.session.commit()
 
     print(f"[server] Admin password reset for user '{username}' from {client_ip}")
 
-    return jsonify({"message": "Password reset successfully"}), 200
+    return jsonify({
+        "message": "Password reset successfully",
+        "recovery_code": new_recovery_code
+    }), 200
 
 # =========================
 # UPLOAD ARTWORK

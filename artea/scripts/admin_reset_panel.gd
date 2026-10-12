@@ -8,14 +8,19 @@
 # for the other half of this.
 extends Node
 
+const RecoveryCodeModal := preload("res://scripts/recovery_code_modal.gd")
+
 var _layer: CanvasLayer
 var _admin_key_input: LineEdit
 var _username_input: LineEdit
 var _new_password_input: LineEdit
 var _status: Label
+var _code_modal: Node
 
 
 func _ready() -> void:
+	_code_modal = RecoveryCodeModal.new()
+	add_child(_code_modal)
 	_build_ui()
 	_hide()
 
@@ -57,6 +62,17 @@ func _submit() -> void:
 				_status.add_theme_color_override("font_color", Color.GREEN)
 				_status.text = "Password reset for " + username + "."
 				_new_password_input.text = ""
+
+				# The reset also issues the player a fresh recovery code
+				# (server.py rotates it on every admin reset too) - shown
+				# here so the admin can hand it over, same modal the player
+				# sees it in themselves at registration.
+				var new_code = ""
+				if typeof(data) == TYPE_DICTIONARY:
+					new_code = str(data.get("recovery_code", ""))
+				if new_code != "":
+					_hide()
+					_code_modal.show_code(new_code, func(): pass)
 			else:
 				_status.add_theme_color_override("font_color", Color.RED)
 				if typeof(data) == TYPE_DICTIONARY and data.has("error"):
