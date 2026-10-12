@@ -61,7 +61,12 @@ HOW TO RUN AND VERIFY THE WEB BUILD
 
   Run it against any URL, including a deployed one:
 
-      node artea/tools/web-smoke.js https://artea-web.vercel.app/ --out /tmp/x
+      ./web verify --url https://artea-web.vercel.app/
+
+  It also measures the cold first load (cache disabled): bytes transferred
+  and time until the hub is built, printed as numbers and as grep-able
+  METRIC lines. Baseline figures, and the gzip/brotli compression report
+  (node artea/tools/web-compression-report.js), are in docs/web-baseline.md.
 
   Last verified run:
 

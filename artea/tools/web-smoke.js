@@ -6,6 +6,11 @@
 // the real thing - loads the page, clicks Offline Guest, waits for the hub to
 // report itself built, then holds a movement key and checks the frame changed.
 //
+// It also measures the cold first load: the browser cache is disabled, every
+// byte that crosses the network is counted, and the time from navigation until
+// the hub reports itself built is recorded. Those two numbers are the baseline
+// load-time work is measured against (docs/web-baseline.md).
+//
 //   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open]
 //
 // Chrome is driven over CDP. Node 22+ ships a global WebSocket, so this needs
@@ -26,9 +31,11 @@ const outDir = (() => {
 const keepOpen = args.includes('--keep-open');
 const DEBUG_PORT = 9222;
 
-// The Offline Guest button, in the 1280x800 viewport the script emulates.
+// The Offline Guest button, in the 1280x800 viewport the script emulates. The
+// current login screen puts it at y=726; deployments still running the older,
+// shorter login panel have it at y=568. Tried in order until one is accepted.
 const VIEWPORT = { width: 1280, height: 800 };
-const GUEST_BUTTON = { x: 300, y: 726 };
+const GUEST_BUTTONS = [{ x: 300, y: 726 }, { x: 287, y: 568 }];
 
 const CHROME_PATHS = [
 	'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -79,6 +86,29 @@ async function connect() {
 	const pending = new Map();
 	const consoleLines = [];
 	let crashed = false;
+	// Bytes that crossed the wire (after any Content-Encoding), per request.
+	// dataReceived counts as the body streams in; loadingFinished then gives the
+	// exact total including headers. A request that ends in loadingFailed never
+	// gets a loadingFinished, so without dataReceived its bytes would vanish.
+	const net = {
+		perRequest: new Map(), urls: new Map(), failures: [],
+		requests: 0, failed: 0, hubAt: null, bytesAtHub: null, requestsAtHub: null, engineAt: null,
+		// Each source is tallied on its own and the largest wins: adding them
+		// into one slot would count every streamed part twice.
+		tally(id) {
+			if (!this.perRequest.has(id)) this.perRequest.set(id, { streamed: 0, finished: 0, length: 0 });
+			return this.perRequest.get(id);
+		},
+		of(id) {
+			const t = this.perRequest.get(id);
+			return Math.max(t.streamed, t.finished, t.length);
+		},
+		get bytes() {
+			let total = 0;
+			for (const id of this.perRequest.keys()) total += this.of(id);
+			return total;
+		},
+	};
 
 	ws.addEventListener('message', (ev) => {
 		const m = JSON.parse(ev.data);
@@ -87,8 +117,46 @@ async function connect() {
 			pending.delete(m.id);
 			return m.error ? reject(new Error(JSON.stringify(m.error))) : resolve(m.result);
 		}
+		if (m.method === 'Network.requestWillBeSent') net.urls.set(m.params.requestId, m.params.request.url);
+		// pck-loader.js hands each part's body to a stream, and Chrome reports
+		// many of those requests as net::ERR_ABORTED before its dataReceived
+		// events catch up, undercounting by ~1%. Content-Length is the exact
+		// on-the-wire body size (after Content-Encoding), so it is the floor.
+		if (m.method === 'Network.responseReceived') {
+			const headers = m.params.response.headers || {};
+			const lengthKey = Object.keys(headers).find((k) => k.toLowerCase() === 'content-length');
+			const length = lengthKey ? Number(headers[lengthKey]) : NaN;
+			if (Number.isFinite(length)) {
+				const id = m.params.requestId;
+				net.tally(id).length = length;
+			}
+		}
+		if (m.method === 'Network.dataReceived') {
+			const id = m.params.requestId;
+			net.tally(id).streamed += m.params.encodedDataLength;
+		}
+		if (m.method === 'Network.loadingFinished') {
+			const id = m.params.requestId;
+			net.tally(id).finished = m.params.encodedDataLength;
+			net.requests += 1;
+		}
+		if (m.method === 'Network.loadingFailed') {
+			// ERR_ABORTED is the streamed-part hand-off above, not a failure.
+			if (m.params.errorText !== 'net::ERR_ABORTED') net.failed += 1;
+			net.failures.push(`${m.params.errorText} ${net.urls.get(m.params.requestId) || m.params.requestId}`);
+		}
 		if (m.method === 'Runtime.consoleAPICalled') {
-			consoleLines.push((m.params.args || []).map((a) => a.value ?? a.description ?? a.type).join(' '));
+			const line = (m.params.args || []).map((a) => a.value ?? a.description ?? a.type).join(' ');
+			consoleLines.push(line);
+			// Stamp the hub the moment its log arrives, not at the next 1 s poll.
+			// The pack is fully downloaded by the time the engine starts, and
+			// every build logs this, including deployments older than the hub log.
+			if (net.engineAt === null && /engine started/.test(line)) net.engineAt = Date.now();
+			if (net.hubAt === null && /Successfully spawned/.test(line)) {
+				net.hubAt = Date.now();
+				net.bytesAtHub = net.bytes;
+				net.requestsAtHub = net.requests;
+			}
 		}
 		if (m.method === 'Runtime.exceptionThrown') {
 			consoleLines.push('EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text));
@@ -102,7 +170,7 @@ async function connect() {
 		pending.set(msgId, { resolve, reject });
 		ws.send(JSON.stringify({ id: msgId, method, params }));
 	});
-	return { send, consoleLines, crashed: () => crashed, targetId: target.id };
+	return { send, consoleLines, crashed: () => crashed, targetId: target.id, net };
 }
 
 (async () => {
@@ -112,11 +180,38 @@ async function connect() {
 
 	fs.mkdirSync(outDir, { recursive: true });
 	await startChrome();
-	const { send, consoleLines, crashed, targetId } = await connect();
+	const { send, consoleLines, crashed, targetId, net } = await connect();
 
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
 	await send('Runtime.enable');
 	await send('Page.enable');
+	// Cold load every run, even against a Chrome the user started themselves.
+	await send('Network.enable');
+	await send('Network.setCacheDisabled', { cacheDisabled: true });
+	let navigatedAt = null;
+
+	// Plain KEY=value lines so CI and later tickets can grep the numbers.
+	const reportMetrics = () => {
+		const mb = (b) => (b / 1048576).toFixed(1);
+		const reached = net.hubAt !== null;
+		const hubSeconds = reached ? ((net.hubAt - navigatedAt) / 1000).toFixed(1) : null;
+		console.log('\nfirst load (cache disabled):');
+		console.log(`  bytes transferred to hub: ${reached ? `${net.bytesAtHub} (${mb(net.bytesAtHub)} MiB, ${net.requestsAtHub} requests)` : 'hub not reached'}`);
+		const engineSeconds = net.engineAt !== null ? ((net.engineAt - navigatedAt) / 1000).toFixed(1) : null;
+		console.log(`  time to engine started:   ${engineSeconds !== null ? `${engineSeconds} s` : 'not started'}`);
+		console.log(`  time to hub:              ${reached ? `${hubSeconds} s` : 'hub not reached'}`);
+		console.log(`  bytes transferred total:  ${net.bytes} (${mb(net.bytes)} MiB, ${net.requests} requests, ${net.failed} failed)`);
+		console.log(`METRIC bytes_to_hub=${reached ? net.bytesAtHub : -1}`);
+		console.log(`METRIC time_to_engine_s=${engineSeconds ?? -1}`);
+		console.log(`METRIC time_to_hub_s=${reached ? hubSeconds : -1}`);
+		console.log(`METRIC bytes_total=${net.bytes}`);
+		// Per-request bytes, largest first: where the download actually goes.
+		const rows = [...net.perRequest.keys()].map((id) => [net.of(id), net.urls.get(id) || id]).sort((a, c) => c[0] - a[0]);
+		fs.writeFileSync(path.join(outDir, 'requests.log'), rows.map(([b, u]) => `${b}\t${u}`).join('\n'));
+		if (net.failures.length) {
+			fs.writeFileSync(path.join(outDir, 'failed-requests.log'), net.failures.join('\n'));
+		}
+	};
 
 	const shot = async (name) => {
 		const s = await send('Page.captureScreenshot', { format: 'png' });
@@ -151,14 +246,23 @@ async function connect() {
 
 	try {
 		say('loading ' + url);
+		navigatedAt = Date.now();
 		await send('Page.navigate', { url });
-		await waitForLog(/engine started/, 'engine started', 180000);
+		// Generous: a deployed cold load pulls the whole pack over the internet.
+		await waitForLog(/engine started/, 'engine started', 900000);
 		await sleep(4000);
 		await shot('01-start-screen');
 
-		say('clicking Offline Guest');
-		await click(GUEST_BUTTON.x, GUEST_BUTTON.y);
-		await waitForLog(/GUEST access selected/, 'guest login accepted', 20000);
+		for (const [index, button] of GUEST_BUTTONS.entries()) {
+			say(`clicking Offline Guest at (${button.x}, ${button.y})`);
+			await click(button.x, button.y);
+			try {
+				await waitForLog(/GUEST access selected/, 'guest login accepted', 20000);
+				break;
+			} catch (err) {
+				if (index === GUEST_BUTTONS.length - 1) throw err;
+			}
+		}
 		await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
 		await sleep(8000);
 		const before = await shot('02-in-hub');
@@ -179,6 +283,7 @@ async function connect() {
 		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+		reportMetrics();
 		say('frame changed while moving: ' + moved);
 		say('fatal resource errors: ' + fatal.length);
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
@@ -190,6 +295,8 @@ async function connect() {
 		process.exit(pass ? 0 : 1);
 	} catch (err) {
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+		if (navigatedAt !== null) reportMetrics();
+		await shot('99-failure').catch(() => {});
 		console.log('\nFAILED: ' + err.message);
 		console.log('console tail:');
 		consoleLines.slice(-15).forEach((l) => console.log('    ' + l.slice(0, 200)));
