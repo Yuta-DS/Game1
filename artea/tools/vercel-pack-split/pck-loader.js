@@ -27,6 +27,9 @@
 	// cost one round trip per part before the download could start.
 	// Byte totals from each manifest, keyed by request URL.
 	const manifestBytes = new Map();
+	// Content-hashed part paths from each manifest (split-pack.sh), keyed by
+	// request URL. Absent for the older count-only manifest.
+	const manifestParts = new Map();
 
 	const countParts = async (requestUrl) => {
 		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
@@ -34,9 +37,14 @@
 			manifestUrl.searchParams.set("build", buildKey);
 		}
 		try {
+			// The manifest is the one file that must never come from a cache: it
+			// is what points the build at its own export's parts.
 			const manifestResponse = await nativeFetch(manifestUrl, { cache: "no-store" });
 			if (manifestResponse.ok) {
 				const manifest = await manifestResponse.json();
+				if (Array.isArray(manifest.parts) && manifest.parts.length > 0) {
+					manifestParts.set(requestUrl, manifest.parts.map((part) => part.name));
+				}
 				if (Number.isInteger(manifest.count) && manifest.count > 0) {
 					// Keep the byte total: the streamed Response needs a
 					// Content-Length, and streaming means it cannot be measured
@@ -75,9 +83,17 @@
 	const streamParts = (requestUrl, partCount) => new ReadableStream({
 		async start(controller) {
 			try {
+				const hashed = manifestParts.get(requestUrl);
 				for (let index = 0; index < partCount; index += 1) {
-					const url = partUrl(requestUrl, index);
-					const response = await nativeFetch(url, { cache: "no-store" });
+					// Hashed parts are named by content, so the browser's normal
+					// HTTP cache is safe for them and the host marks them immutable:
+					// a repeat visit re-downloads none. No ?build= key either, which
+					// would only stop identical parts being reused across deploys.
+					// The older unhashed layout keeps its no-store fetch.
+					const url = hashed
+						? new URL(hashed[index], window.location.href).toString()
+						: partUrl(requestUrl, index);
+					const response = await nativeFetch(url, hashed ? {} : { cache: "no-store" });
 					if (!response.ok) {
 						throw new Error(`${url} returned ${response.status}`);
 					}

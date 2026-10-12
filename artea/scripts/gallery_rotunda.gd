@@ -18,6 +18,18 @@ const WALL_THICKNESS := 2.0
 const WALL_HEIGHT := 17.0
 const FLOOR_TOP := 0.25
 const DOME_RISE := 12.0
+# Wall sconces hung between the paintings (see _build_lighting for the light
+# budget). Every sconce glows; only every other one casts light.
+const LAMP_HEIGHT := 9.5
+const LAMP_SCALE := 2.0
+# Amber rather than the light colour itself: the ivory walls are so bright that
+# a near-white globe or halo disappears against them.
+const LAMP_GLASS_COLOR := Color("ffb040")
+const LAMP_FALLBACK_COUNT := 11  # used when no paintings hang in the room
+const LAMP_LIGHT_LIMIT := 6
+const LAMP_RANGE := 24.0
+const LAMP_ENERGY := 1.1
+const LAMP_COLOR := Color("ffd9a0")
 const SEGMENTS := 128
 const DOME_RINGS := 12
 const DOME_RIBS := 24
@@ -571,6 +583,150 @@ func _build_lighting() -> void:
 	light.light_color = Color("fff4e0")
 	light.shadow_enabled = false
 	add_child(light)
+
+	# Wall sconces in the gaps between the paintings: a gold backplate, a
+	# short arm, an upturned gold bowl and a warm glowing bulb.
+	#
+	# The Web build's Compatibility renderer lights each mesh with at most 8
+	# omni/spot lights, and the walls and floor are each one mesh, so every
+	# light here touches them all. The roof glow plus LAMP_LIGHT_LIMIT stays
+	# under 8, so only every other sconce casts light; each one's range reaches
+	# its unlit neighbours, so the wall still reads as evenly lit.
+	var angles := _lamp_angles()
+	var lit := 0
+	for i in angles.size():
+		var casts_light := i % 2 == 0 and lit < LAMP_LIGHT_LIMIT
+		_build_sconce(i, angles[i], casts_light)
+		if casts_light:
+			lit += 1
+
+
+## Wall angles halfway between neighbouring paintings, skipping the wide gap
+## across the entrance. Falls back to even spacing when no paintings hang here.
+func _lamp_angles() -> Array[float]:
+	var span := _wall_span()
+	var painting_angles: Array[float] = []
+	var parent := get_parent()
+	if parent != null and is_inside_tree():
+		for child in parent.get_children():
+			if child is Sprite3D and str(child.name).begins_with("Frame_"):
+				var local := to_local((child as Node3D).global_position) - CENTRE
+				var t := atan2(local.z / RADIUS_Z, local.x / RADIUS_X)
+				# Unwrap into the wall's own angle range.
+				while t < span.x:
+					t += TAU
+				painting_angles.append(t)
+	var angles: Array[float] = []
+	if painting_angles.size() < 2:
+		for i in LAMP_FALLBACK_COUNT:
+			angles.append(_wall_t(i * 2 + 1, LAMP_FALLBACK_COUNT * 2))
+		return angles
+	painting_angles.sort()
+	for i in painting_angles.size() - 1:
+		angles.append((painting_angles[i] + painting_angles[i + 1]) * 0.5)
+	return angles
+
+
+func _build_sconce(index: int, t: float, casts_light: bool) -> void:
+	# Local +z points out through the wall, so the fixture builds along -z.
+	# A gold backplate and arm hold a glowing frosted globe in a gold cup, with
+	# a soft halo of light painted on the wall behind it.
+	var sconce := Node3D.new()
+	sconce.name = "WallSconce_%d" % index
+	sconce.transform = Transform3D(_wall_basis(t), _ellipse(t, 0.0, LAMP_HEIGHT))
+	sconce.scale = Vector3.ONE * LAMP_SCALE
+	add_child(sconce)
+
+	var halo := QuadMesh.new()
+	halo.size = Vector2(5.5, 5.5)
+	var halo_part := _add_sconce_part(sconce, "WallGlow", halo, _sconce_halo_material(),
+		Vector3(0.0, 0.3, -0.03))
+	# QuadMesh faces +z; turn it to face into the room.
+	halo_part.rotation_degrees.y = 180.0
+
+	var backplate := BoxMesh.new()
+	backplate.size = Vector3(0.9, 1.8, 0.16)
+	_add_sconce_part(sconce, "Backplate", backplate, _materials.gold,
+		Vector3(0.0, -0.1, -0.08))
+
+	var arm := CylinderMesh.new()
+	arm.top_radius = 0.08
+	arm.bottom_radius = 0.08
+	arm.height = 0.95
+	var arm_part := _add_sconce_part(sconce, "Arm", arm, _materials.gold,
+		Vector3(0.0, -0.45, -0.55))
+	arm_part.rotation_degrees.x = 90.0
+
+	var cup := CylinderMesh.new()
+	cup.top_radius = 0.42
+	cup.bottom_radius = 0.18
+	cup.height = 0.3
+	cup.radial_segments = 20
+	_add_sconce_part(sconce, "Cup", cup, _materials.gold, Vector3(0.0, -0.35, -1.05))
+
+	var globe := SphereMesh.new()
+	globe.radius = 0.55
+	globe.height = 1.1
+	globe.radial_segments = 20
+	globe.rings = 10
+	var globe_position := Vector3(0.0, 0.2, -1.05)
+	_add_sconce_part(sconce, "Globe", globe, _make_glow(LAMP_GLASS_COLOR, 0.9), globe_position)
+
+	var finial := CylinderMesh.new()
+	finial.top_radius = 0.02
+	finial.bottom_radius = 0.16
+	finial.height = 0.32
+	finial.radial_segments = 12
+	_add_sconce_part(sconce, "Finial", finial, _materials.gold, Vector3(0.0, 0.88, -1.05))
+
+	if casts_light:
+		# Parented to the hall rather than the scaled fixture, so LAMP_RANGE is
+		# in plain metres.
+		var light := OmniLight3D.new()
+		light.name = "WallSconceLight_%d" % index
+		light.position = sconce.transform * (globe_position + Vector3(0.0, 0.0, -0.5))
+		light.omni_range = LAMP_RANGE
+		light.omni_attenuation = 1.0
+		light.light_energy = LAMP_ENERGY
+		light.light_color = LAMP_COLOR
+		light.shadow_enabled = false
+		add_child(light)
+
+
+# A warm radial glow drawn on the wall behind each sconce. Shared by all of
+# them; it is an unshaded tint, so it costs no lights.
+func _sconce_halo_material() -> StandardMaterial3D:
+	if _materials.has("sconce_halo"):
+		return _materials.sconce_halo
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(LAMP_GLASS_COLOR, 0.42))
+	gradient.set_color(1, Color(LAMP_GLASS_COLOR, 0.0))
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(0.5, 0.0)
+	texture.width = 128
+	texture.height = 128
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_texture = texture
+	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	_materials.sconce_halo = material
+	return material
+
+
+func _add_sconce_part(sconce: Node3D, part_name: String, mesh: Mesh,
+		material: Material, position: Vector3) -> MeshInstance3D:
+	var part := MeshInstance3D.new()
+	part.name = part_name
+	part.mesh = mesh
+	part.material_override = material
+	part.position = position
+	part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sconce.add_child(part)
+	return part
 
 
 func _emit_mesh(node_name: String, st: SurfaceTool, material: Material,

@@ -14,6 +14,9 @@
 #   --no-open             do not launch a browser
 #   --url URL             verify: check URL (e.g. a deployment) instead of
 #                         serving the local build
+#   --repeat              verify: load twice with the cache on and report what
+#                         the second visit downloads (serves the local build
+#                         with the deployed cache headers)
 #   -h, --help            this text
 #
 # Settings live in .webrc next to this script if you want different defaults:
@@ -43,6 +46,7 @@ port="${PORT:-${port}}"
 
 command=run
 target_url=""
+repeat=0
 [[ $# -gt 0 && "$1" != -* ]] && { command="$1"; shift; }
 
 while [[ $# -gt 0 ]]; do
@@ -50,7 +54,8 @@ while [[ $# -gt 0 ]]; do
 		--port)    port="${2:?--port needs a number}"; shift 2 ;;
 		--no-open) open_browser=0; shift ;;
 		--url)     target_url="${2:?--url needs a URL}"; shift 2 ;;
-		-h|--help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+		--repeat)  repeat=1; shift ;;
+		-h|--help) sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 		*) echo "Unknown option: $1 (try --help)" >&2; exit 1 ;;
 	esac
 done
@@ -78,9 +83,9 @@ kill_server() {
 
 serve_background() {
 	# Serving is exec'd by web.sh, so the recorded pid is the server itself.
-	local mode_flag="$1"
+	# Arguments are web.sh flags, e.g. --serve-only --prod-cache.
 	[[ -n "$(serving_pid)" ]] && { echo "Already serving on ${port} (pid $(serving_pid))"; return 0; }
-	"${web_sh}" "${mode_flag}" --port "${port}" --no-open >"${repo_dir}/.web-server-${port}.log" 2>&1 &
+	"${web_sh}" "$@" --port "${port}" --no-open >"${repo_dir}/.web-server-${port}.log" 2>&1 &
 	echo $! > "${pid_file}"
 	disown %% 2>/dev/null || true
 	for _ in $(seq 60); do
@@ -107,15 +112,26 @@ case "${command}" in
 		# one only when nothing is already listening on the port. A --url
 		# target (a deployment) needs no local server at all.
 		started_here=0
+		smoke_args=(--out "${smoke_dir}")
+		[[ "${repeat}" == 1 ]] && smoke_args+=(--repeat)
 		if [[ -n "${target_url}" ]]; then
 			url="${target_url}"
 		elif [[ -z "$(serving_pid)" ]]; then
 			echo "Starting a server on ${port} for the check…"
-			serve_background --serve-only
+			if [[ "${repeat}" == 1 ]]; then
+				# A repeat visit is only meaningful with the deployed cache rules.
+				serve_background --serve-only --prod-cache
+			else
+				serve_background --serve-only
+			fi
 			started_here=1
+		elif [[ "${repeat}" == 1 ]]; then
+			echo "A server is already running on ${port} with its own cache headers;" >&2
+			echo "stop it (./web stop) so --repeat can serve with the deployed ones." >&2
+			exit 1
 		fi
 		set +e
-		node "${smoke_js}" "${url}" --out "${smoke_dir}"
+		node "${smoke_js}" "${url}" "${smoke_args[@]}"
 		result=$?
 		set -e
 		if [[ "${started_here}" == 1 ]]; then

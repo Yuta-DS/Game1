@@ -1224,7 +1224,9 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var tree_processional := node_name == "SouthArrivalBridge"
 	var direction := end - start
 	var length := direction.length()
-	var midpoint := (start + end) * 0.5 + Vector3(0.0, -2.0, 0.0)
+	# Top at -0.02, not 0: bridges start on island decks whose tops are at 0,
+	# and the flush walkway z-fought with them across the whole overlap.
+	var midpoint := (start + end) * 0.5 + Vector3(0.0, -2.02, 0.0)
 	var yaw := atan2(direction.x, direction.z)
 	var walkway_material: Material = _materials.passage_stone if tree_processional else _materials.stone
 	_add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
@@ -1238,8 +1240,10 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 		var edge_position: Vector3 = midpoint \
 			+ side_axis * float(side) * (width * 0.5 - 2.0) \
 			+ Vector3(0.0, rail_y, 0.0)
+		# 4 cm shorter than the walkway so the rail's end faces are not in the
+		# walkway's end planes (they overlap where the rail sinks into it).
 		var safety_rail := _add_box(bridge, "SafetyRail", edge_position,
-			Vector3(2.4 if tree_processional else 3.0, rail_height, length),
+			Vector3(2.4 if tree_processional else 3.0, rail_height, length - 0.04),
 			rail_material, true, yaw)
 		# Retain the original continuous fall-prevention collision, but let the
 		# lightweight botanical lattice carry the visible silhouette.
@@ -5196,9 +5200,13 @@ func _add_arch_support(parent: Node3D, position: Vector3, width: float, yaw: flo
 	support.position = position
 	support.rotation.y = yaw
 	parent.add_child(support)
-	_add_box(support, "LeftPier", Vector3(-width * 0.38, 0.0, 0.0), Vector3(7.0, 48.0, 8.0), _materials.ivory_shadow)
-	_add_box(support, "RightPier", Vector3(width * 0.38, 0.0, 0.0), Vector3(7.0, 48.0, 8.0), _materials.ivory_shadow)
-	_add_box(support, "SupportBeam", Vector3(0.0, 22.0, 0.0), Vector3(width, 6.0, 8.0), _materials.ivory_shadow)
+	# Piers and beam stop at the walkway's underside (support y + 20, i.e. 4 m
+	# below the deck). They used to reach the deck surface: the pier tops
+	# z-fought with it, and the beam's ends shared the walkway's side planes
+	# while poking a metre up through the bridge.
+	_add_box(support, "LeftPier", Vector3(-width * 0.38, -2.0, 0.0), Vector3(7.0, 44.0, 8.0), _materials.ivory_shadow)
+	_add_box(support, "RightPier", Vector3(width * 0.38, -2.0, 0.0), Vector3(7.0, 44.0, 8.0), _materials.ivory_shadow)
+	_add_box(support, "SupportBeam", Vector3(0.0, 17.0, 0.0), Vector3(width - 0.04, 6.0, 8.0), _materials.ivory_shadow)
 
 
 func _add_world_label(node_name: String, text: String, position: Vector3,
