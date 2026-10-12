@@ -50,6 +50,17 @@ func _ready():
 # sits at (16, 16) on its own CanvasLayer above everything, which otherwise
 # covers this button entirely.
 func _build_admin_button() -> void:
+	# A Control's anchors resolve against the viewport only when its parent
+	# is not itself a CanvasItem - StartScreen is a Node2D, which is one, so
+	# anchoring the button straight onto it resolves against the wrong rect
+	# and the button ends up off-screen. Every other overlay in this project
+	# (facilitator_settings.gd, JourneySafeguards, admin_reset_panel.gd)
+	# avoids this by wrapping in its own CanvasLayer first; this needs the
+	# same fix.
+	var layer := CanvasLayer.new()
+	layer.layer = 14
+	add_child(layer)
+
 	var button := Button.new()
 	button.text = "Admin"
 	button.custom_minimum_size = Vector2(90, 30)
@@ -59,7 +70,7 @@ func _build_admin_button() -> void:
 	# negative to pull the button back onto the screen.
 	button.position = Vector2(-102, 12)
 	button.pressed.connect(_admin_panel.show_panel)
-	add_child(button)
+	layer.add_child(button)
 
 
 # Joins the real login panel rather than floating separately, since this is
