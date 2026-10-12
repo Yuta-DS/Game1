@@ -52,9 +52,9 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(520, 0)
+	panel.custom_minimum_size = Vector2(680, 0)
 	# PRESET_CENTER anchors the corner, not the middle - offset by half.
-	panel.position = Vector2(-260, -180)
+	panel.position = Vector2(-340, -235)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.10, 0.09, 0.16, 0.98)
@@ -65,23 +65,24 @@ func _build_ui() -> void:
 	panel.add_theme_stylebox_override("panel", style)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
+	box.add_theme_constant_override("separation", 18)
 
 	box.add_child(_heading("Save your recovery code"))
 	box.add_child(_body(
 		"If you ever forget your password, this code is the only way to reset it yourself. It will not be shown again after you continue - write it down now.",
-		Color(0.90, 0.92, 0.97), 16
+		Color(0.90, 0.92, 0.97), 20
 	))
 
 	_code_label = Label.new()
 	_code_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_code_label.add_theme_font_size_override("font_size", 28)
+	_code_label.add_theme_font_size_override("font_size", 36)
 	_code_label.add_theme_color_override("font_color", Color(0.65, 1.0, 0.75))
 	box.add_child(_code_label)
 
 	var continue_button := Button.new()
 	continue_button.text = "I've saved it - Continue"
-	continue_button.custom_minimum_size = Vector2(0, 46)
+	continue_button.custom_minimum_size = Vector2(0, 60)
+	continue_button.add_theme_font_size_override("font_size", 20)
 	continue_button.pressed.connect(_continue_pressed)
 	box.add_child(continue_button)
 
@@ -93,7 +94,7 @@ func _heading(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_font_size_override("font_size", 30)
 	label.add_theme_color_override("font_color", Color(1.0, 0.93, 0.72))
 	return label
 
@@ -102,7 +103,7 @@ func _body(text: String, colour: Color, size: int) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(464, 0)
+	label.custom_minimum_size = Vector2(600, 0)
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", colour)
 	return label

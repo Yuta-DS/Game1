@@ -79,9 +79,9 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(520, 0)
+	panel.custom_minimum_size = Vector2(680, 0)
 	# PRESET_CENTER anchors the corner, not the middle - offset by half.
-	panel.position = Vector2(-260, -200)
+	panel.position = Vector2(-340, -260)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.10, 0.09, 0.16, 0.97)
@@ -92,12 +92,12 @@ func _build_ui() -> void:
 	panel.add_theme_stylebox_override("panel", style)
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 13)
 
 	box.add_child(_heading("Admin: Reset Password"))
 	box.add_child(_body(
 		"For support use only. Requires the server's admin key.",
-		Color(0.80, 0.82, 0.88), 15
+		Color(0.80, 0.82, 0.88), 20
 	))
 
 	_admin_key_input = _field("Admin key", true)
@@ -109,18 +109,20 @@ func _build_ui() -> void:
 	_new_password_input = _field("New password", true)
 	box.add_child(_new_password_input)
 
-	_status = _body("", Color.WHITE, 15)
+	_status = _body("", Color.WHITE, 20)
 	box.add_child(_status)
 
 	var submit := Button.new()
 	submit.text = "Reset Password"
-	submit.custom_minimum_size = Vector2(0, 42)
+	submit.custom_minimum_size = Vector2(0, 55)
+	submit.add_theme_font_size_override("font_size", 20)
 	submit.pressed.connect(_submit)
 	box.add_child(submit)
 
 	var close := Button.new()
 	close.text = "Close"
-	close.custom_minimum_size = Vector2(0, 42)
+	close.custom_minimum_size = Vector2(0, 55)
+	close.add_theme_font_size_override("font_size", 20)
 	close.pressed.connect(_hide)
 	box.add_child(close)
 
@@ -131,7 +133,7 @@ func _build_ui() -> void:
 func _heading(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_font_size_override("font_size", 30)
 	label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.80))
 	return label
 
@@ -140,7 +142,7 @@ func _body(text: String, colour: Color, size: int) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(464, 0)
+	label.custom_minimum_size = Vector2(600, 0)
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", colour)
 	return label
@@ -150,5 +152,6 @@ func _field(placeholder: String, secret: bool) -> LineEdit:
 	var field := LineEdit.new()
 	field.placeholder_text = placeholder
 	field.secret = secret
-	field.custom_minimum_size = Vector2(0, 40)
+	field.custom_minimum_size = Vector2(0, 50)
+	field.add_theme_font_size_override("font_size", 20)
 	return field
