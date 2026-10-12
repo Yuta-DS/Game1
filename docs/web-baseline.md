@@ -59,6 +59,21 @@ current `main` is deployed, `--url` reports time-to-hub there too.
 ² The deployment serves the pack compressed in transit, which is why it moves
 less than its 424 MB pack.
 
+## Repeat visit (issue #33)
+
+`./web verify --repeat` serves the local build with the deployed cache headers
+(content-hashed `parts/` immutable, everything else `no-cache`), loads it once
+cold, then loads it again with the cache on.
+
+| Measure | Before #33 (`no-store`) | After #33 |
+|---|---:|---:|
+| First visit | 755 MB | 755 MB |
+| Second visit, unchanged build | 755 MB | 7,367 bytes |
+| Second visit, parts from cache | 0 of 90 | 90 of 90 |
+
+The 7.4 KB is the two part manifests (never cached) plus ~130-byte `304`
+revalidations of the HTML, js and wasm.
+
 ## Compression (local build, 2026-10-11)
 
 From `node artea/tools/web-compression-report.js` (2 m 43 s). gzip at level 6,
