@@ -13,6 +13,9 @@ signal kingdom_entered(kingdom_id: String)
 signal returned_to_castle
 
 const CAMPAIGN_HOME_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
+# Artéa Park is the hub village the minigames' "Return to Artéa Park" buttons
+# lead back to, as opposed to the Art Castle gallery above.
+const PARK_SCENE := "res://scenes/New_Hub_World.tscn"
 const OPTIONAL_GUIDED_STORY_SCENE := "res://scenes/viewfinder/crown_of_life_story.tscn"
 const QUEST_JOURNAL_SCENE := "res://scenes/crown_quest_journal.tscn"
 
@@ -26,19 +29,16 @@ const KINGDOMS := {
 		"label": "Mind Spark Kingdom",
 		"scene_path": "res://scenes/popThoughtsMenu.tscn",
 		"treasure": "star_of_wisdom",
-		"requires": [],
 	},
 	"heart": {
 		"label": "Heart Melody Kingdom",
 		"scene_path": "res://scenes/music_minigame.tscn",
 		"treasure": "harmony_jewel",
-		"requires": ["star_of_wisdom"],
 	},
 	"creator": {
 		"label": "Creator's Light Kingdom",
 		"scene_path": "res://scenes/drawing_tool.tscn",
 		"treasure": "creators_light",
-		"requires": ["star_of_wisdom", "harmony_jewel"],
 	},
 }
 
@@ -61,22 +61,10 @@ func kingdom_scene_path(kingdom_id: String) -> String:
 	return str(get_kingdom(kingdom_id).get("scene_path", ""))
 
 
+# Every kingdom is open from the start; only unknown ids are refused. Entering
+# never awards a treasure, so the journey's record stays true.
 func can_enter_kingdom(kingdom_id: String) -> bool:
-	return can_enter_kingdom_with(kingdom_id, _journey_state())
-
-
-# Pure route policy seam. It never calls JourneyState mutators, so tests can
-# prove that navigation itself cannot award a treasure or invent a reflection.
-func can_enter_kingdom_with(kingdom_id: String, state: Node = null) -> bool:
-	var kingdom := get_kingdom(kingdom_id)
-	if kingdom.is_empty():
-		return false
-	for treasure_id in kingdom.get("requires", []):
-		if state == null or not state.has_method("has_treasure"):
-			return false
-		if not bool(state.call("has_treasure", str(treasure_id))):
-			return false
-	return true
+	return not get_kingdom(kingdom_id).is_empty()
 
 
 func is_kingdom_complete(kingdom_id: String, state: Node = null) -> bool:
@@ -105,11 +93,7 @@ func portal_status(kingdom_id: String) -> String:
 	var state := _journey_state()
 	if is_kingdom_complete(kingdom_id, state):
 		return "CROWN JOURNEY\nREVISIT %s" % str(kingdom["label"]).to_upper()
-	if can_enter_kingdom_with(kingdom_id, state):
-		return "CROWN JOURNEY\nENTER %s" % str(kingdom["label"]).to_upper()
-	var next_id := next_kingdom_id(state)
-	var next_label := str(get_kingdom(next_id).get("label", "the next light"))
-	return "CROWN JOURNEY\nFOLLOW THE LIGHT TO %s" % next_label.to_upper()
+	return "CROWN JOURNEY\nENTER %s" % str(kingdom["label"]).to_upper()
 
 
 func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null) -> bool:
@@ -146,6 +130,13 @@ func return_to_campaign(scene_tree: SceneTree = null) -> bool:
 	if returned:
 		returned_to_castle.emit()
 	return returned
+
+
+# "Return to Artéa Park" in the minigames: back to the hub village rather
+# than the Art Castle gallery that return_to_campaign() leads to.
+func return_to_park(scene_tree: SceneTree = null) -> bool:
+	active_kingdom_id = ""
+	return _change_scene_with_loading(PARK_SCENE, scene_tree)
 
 
 func open_quest_journal(scene_tree: SceneTree = null) -> bool:

@@ -8,6 +8,7 @@ extends Node3D
 
 #const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
 #const SERVER_BASE = "http://54.252.162.122"
+const RatingHeart := preload("res://scripts/rating_heart.gd")
 const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
 const SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
@@ -727,14 +728,8 @@ func show_rating_ui(frame_name: String) -> void:
 	print("Showing rating for:", frame_name)
 	print("Saved rating:", rating)
 
-	if rating > 0:
-		rating_label.text = "Artwork Rating:\n♥"
-		rating_label.modulate = Color.RED
-		likebutton.modulate = Color.RED
-	else:
-		rating_label.text = "Artwork Rating:\n♡"
-		rating_label.modulate = Color.WHITE
-		likebutton.modulate = Color.WHITE		
+	RatingHeart.apply_to_label(rating_label, rating > 0)
+	RatingHeart.apply_to_button(likebutton, rating > 0)		
 
 
 func hide_rating_ui() -> void:

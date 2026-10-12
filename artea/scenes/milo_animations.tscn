@@ -28,6 +28,7 @@ font_size = 44
 stream = ExtResource("4_milo_voice")
 unit_size = 2.0
 max_distance = 24.0
+bus = &"MiloVoice"
 
 [node name="Area3D" type="Area3D" parent="."]
 script = ExtResource("3_detection")

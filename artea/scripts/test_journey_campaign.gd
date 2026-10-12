@@ -8,6 +8,7 @@
 extends SceneTree
 
 const TEST_SAVE := "user://test_journey_campaign.json"
+const JourneyCampaignScript := preload("res://scripts/journey_campaign.gd")
 
 
 func _init() -> void:
@@ -20,7 +21,7 @@ func _init() -> void:
 	campaign.journey_state = state
 
 	_test_scene_routes(campaign)
-	_test_treasure_gated_order(campaign, state)
+	_test_treasure_order(campaign, state)
 	_test_router_never_mutates_progress(campaign, state)
 
 	state.clear_journey()
@@ -56,16 +57,28 @@ func _test_scene_routes(campaign: Node) -> void:
 	var portal := FileAccess.get_file_as_string("res://scripts/viewfinder/crown_story_portal.gd")
 	assert(portal.contains("\"/root/JourneyCampaign\"") and portal.contains("\"start_campaign\""),
 		"the Crown portal starts the connected campaign")
+	# "Return to Art Castle" routes (Mind Spark's menu, the drawing tool's
+	# gallery button) go to the campaign home.
 	for source_path in [
-		"res://scripts/cloud_pop_finish.gd",
 		"res://scripts/pop_thoughts_menu.gd",
-		"res://scripts/music_minigame.gd",
 		"res://scripts/drawing_tool.gd",
 	]:
 		var source := FileAccess.get_file_as_string(source_path)
 		assert(source.contains("\"/root/JourneyCampaign\"")
 			and source.contains("\"return_to_campaign\""),
 			"%s returns to the Art Castle campaign" % source_path)
+	# "Return to Artéa Park" buttons go to the hub village, not the gallery.
+	assert(str(JourneyCampaignScript.PARK_SCENE) == "res://scenes/New_Hub_World.tscn",
+		"Artéa Park is the hub village")
+	for source_path in [
+		"res://scripts/cloud_pop_finish.gd",
+		"res://scripts/music_minigame.gd",
+		"res://scripts/drawing_tool.gd",
+	]:
+		var source := FileAccess.get_file_as_string(source_path)
+		assert(source.contains("\"/root/JourneyCampaign\"")
+			and source.contains("\"return_to_park\""),
+			"%s returns to Artéa Park" % source_path)
 
 	var ritual_path := "res://scenes/gallery_frame_ritual.tscn"
 	assert(ResourceLoader.exists(ritual_path), "the Creator ritual scene exists")
@@ -87,16 +100,11 @@ func _test_scene_routes(campaign: Node) -> void:
 		"Art Castle artworks open their walkable interactive 3D worlds")
 
 
-func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
-	assert(campaign.can_enter_kingdom("mind"), "Mind Spark starts the journey")
-	assert(not campaign.can_enter_kingdom("heart"), "Heart Melody waits for Star of Wisdom")
-	assert(not campaign.can_enter_kingdom("creator"), "Creator's Light waits for both earlier treasures")
+func _test_treasure_order(campaign: Node, state: Node) -> void:
+	for kingdom_id in campaign.CAMPAIGN_ORDER:
+		assert(campaign.can_enter_kingdom(kingdom_id), "%s is open from the start" % kingdom_id)
+	assert(not campaign.can_enter_kingdom("crown"), "unknown kingdoms are refused")
 	assert(campaign.next_kingdom_id() == "mind", "Mind Spark is the first unfinished kingdom")
-
-	# Stage is decorative/wake state, never a shortcut through content.
-	state.stage = 3
-	assert(not campaign.can_enter_kingdom("heart"),
-		"stage alone cannot open Heart Melody")
 
 	state.record_thought_echo("I am learning and growing", "learning")
 	state.record_thought_echo("I can take one brave step", "brave_step")
@@ -105,13 +113,10 @@ func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
 	state.mark_popped("I can take one brave step")
 	assert(state.complete_mind_spark(2), "two resolved curated echoes complete Mind Spark")
 	assert(state.has_treasure("star_of_wisdom"), "thought completion earns the Star")
-	assert(campaign.can_enter_kingdom("heart"), "Star of Wisdom opens Heart Melody")
-	assert(not campaign.can_enter_kingdom("creator"), "Creator still waits for Harmony Jewel")
 	assert(campaign.next_kingdom_id() == "heart", "Heart Melody is next")
 
 	state.record_emotion("hope", Color(0.4, 0.8, 0.6))
 	assert(state.has_treasure("harmony_jewel"), "emotion activity earns Harmony Jewel")
-	assert(campaign.can_enter_kingdom("creator"), "both earlier treasures open Creator's Light")
 	assert(campaign.next_kingdom_id() == "creator", "Creator's Light is next")
 
 	var creation_id: String = str(state.record_creation("user://art/campaign.png", "A light bridge"))
@@ -120,7 +125,7 @@ func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
 	assert(state.complete_creator_frame_ritual(creation_id, "star_bridge"),
 		"the Gallery Frame Ritual completes the Creator kingdom")
 	assert(state.has_all_treasures(), "three real activities complete the treasure set")
-	assert(campaign.next_kingdom_id().is_empty(), "no kingdom remains locked after completion")
+	assert(campaign.next_kingdom_id().is_empty(), "no kingdom remains unfinished after completion")
 
 
 func _test_router_never_mutates_progress(campaign: Node, state: Node) -> void:

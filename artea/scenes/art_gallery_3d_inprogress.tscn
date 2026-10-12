@@ -16,7 +16,6 @@
 [ext_resource type="PackedScene" uid="uid://bc4s70tkatf44" path="res://assets/models/Low-Poly Plant_.fbx" id="22_8fcft"]
 [ext_resource type="Script" uid="uid://eraeiu6qk3vg" path="res://scenes/GalleryManager.gd" id="24_3btdo"]
 [ext_resource type="Script" uid="uid://fggwgtmoslkc" path="res://scripts/gallery_ceremony.gd" id="25_crown"]
-
 [ext_resource type="Script" uid="uid://hepts2s0eon3" path="res://scripts/gallery_rotunda.gd" id="30_rotunda"]
 [ext_resource type="Script" uid="uid://b6snhxhx7jy2s" path="res://scripts/gallery_piano.gd" id="31_piano"]
 
@@ -30,7 +29,7 @@ sky_material = SubResource("PanoramaSkyMaterial_48g0v")
 background_mode = 2
 sky = SubResource("Sky_a2hqd")
 ambient_light_source = 2
-ambient_light_color = Color(0.796243, 0.796243, 0.796243, 1)
+ambient_light_color = Color(0.88, 0.84, 0.77, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3btdo"]
 size = Vector3(5, 10, 5)
@@ -185,7 +184,7 @@ script = ExtResource("5_n1pvk")
 player_path = NodePath("../Player3D")
 
 [node name="Frame_01" type="Sprite3D" parent="." unique_id=657278325]
-transform = Transform3D(-0.3678198, 0, 0.9298971, 0, 1, 0, -0.9298971, 0, -0.3678198, -61.86668, 6, -9.414707)
+transform = Transform3D(-0.5517297, 0, 1.3948457, 0, 1.5, 0, -1.3948457, 0, -0.5517297, -61.86668, 7, -9.414707)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -198,7 +197,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.3736, 2.37134)
 shape = SubResource("BoxShape3D_3btdo")
 
 [node name="Frame_02" type="Sprite3D" parent="." unique_id=145011599]
-transform = Transform3D(0.8758101, 0, 0.4826558, 0, 1, 0, -0.4826558, 0, 0.8758101, -43.23244, 6, -45.52201)
+transform = Transform3D(1.3137151, 0, 0.7239837, 0, 1.5, 0, -0.7239837, 0, 1.3137151, -43.23244, 7, -45.52201)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -211,7 +210,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.19075, 2.56661)
 shape = SubResource("BoxShape3D_j2nib")
 
 [node name="Frame_03" type="Sprite3D" parent="." unique_id=1292516066]
-transform = Transform3D(-0.834111, 0, 0.5515967, 0, 1, 0, -0.5515967, 0, -0.834111, -47.28676, 6, 7.086483)
+transform = Transform3D(-1.2511665, 0, 0.8273951, 0, 1.5, 0, -0.8273951, 0, -1.2511665, -47.28676, 7, 7.086483)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -224,7 +223,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.10188675, -1.0208597, 2.534
 shape = SubResource("BoxShape3D_ybvl3")
 
 [node name="Frame_04" type="Sprite3D" parent="." unique_id=2031884334]
-transform = Transform3D(0.9762479, 0, -0.2166565, 0, 1, 0, 0.2166565, 0, 0.9762479, 22.24985, 6, -53.17333)
+transform = Transform3D(1.4643719, 0, -0.32498476, 0, 1.5, 0, 0.32498476, 0, 1.4643719, 22.24985, 7, -53.17333)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -237,7 +236,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.60651)
 shape = SubResource("BoxShape3D_8fcft")
 
 [node name="Frame_05" type="Sprite3D" parent="." unique_id=1524334476]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -55.55)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 7, -55.55)
 script = ExtResource("7_dw71r")
 
 [node name="InteractionArea" type="Area3D" parent="Frame_05" unique_id=1806469537]
@@ -249,7 +248,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.994211, 2.36117)
 shape = SubResource("BoxShape3D_rh7pn")
 
 [node name="Frame_06" type="Sprite3D" parent="." unique_id=1090085584]
-transform = Transform3D(0.9762479, 0, 0.2166565, 0, 1, 0, -0.2166565, 0, 0.9762479, -22.24985, 6, -53.17333)
+transform = Transform3D(1.4643719, 0, 0.32498476, 0, 1.5, 0, -0.32498476, 0, 1.4643719, -22.24985, 7, -53.17333)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -262,7 +261,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.90738)
 shape = SubResource("BoxShape3D_2mqet")
 
 [node name="Frame_07" type="Sprite3D" parent="." unique_id=1562772621]
-transform = Transform3D(0.5210078, 0, 0.8535519, 0, 1, 0, -0.8535519, 0, 0.5210078, -59.74709, 6, -30.79467)
+transform = Transform3D(0.78151166, 0, 1.2803279, 0, 1.5, 0, -1.2803279, 0, 0.78151166, -59.74709, 7, -30.79467)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -275,7 +274,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.55271)
 shape = SubResource("BoxShape3D_a185g")
 
 [node name="Frame_08" type="Sprite3D" parent="." unique_id=1087075147]
-transform = Transform3D(0.5210078, 0, -0.8535519, 0, 1, 0, 0.8535519, 0, 0.5210078, 59.74709, 6, -30.79467)
+transform = Transform3D(0.78151166, 0, -1.2803279, 0, 1.5, 0, 1.2803279, 0, 0.78151166, 59.74709, 7, -30.79467)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -288,7 +287,7 @@ transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 2.52149)
 shape = SubResource("BoxShape3D_0fngp")
 
 [node name="Frame_09" type="Sprite3D" parent="." unique_id=622447233]
-transform = Transform3D(0.8758101, 0, -0.4826558, 0, 1, 0, 0.4826558, 0, 0.8758101, 43.23244, 6, -45.52201)
+transform = Transform3D(1.3137151, 0, -0.7239837, 0, 1.5, 0, 0.7239837, 0, 1.3137151, 43.23244, 7, -45.52201)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -301,7 +300,7 @@ transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 2.79949)
 shape = SubResource("BoxShape3D_3gi0n")
 
 [node name="Frame_10" type="Sprite3D" parent="." unique_id=1243461044]
-transform = Transform3D(-0.834111, 0, -0.5515967, 0, 1, 0, 0.5515967, 0, -0.834111, 47.28676, 6, 7.086483)
+transform = Transform3D(-1.2511665, 0, -0.8273951, 0, 1.5, 0, 0.8273951, 0, -1.2511665, 47.28676, 7, 7.086483)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -314,7 +313,7 @@ transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 2.66039)
 shape = SubResource("BoxShape3D_k2ron")
 
 [node name="Frame_11" type="Sprite3D" parent="." unique_id=956446842]
-transform = Transform3D(-0.3678198, 0, -0.9298971, 0, 1, 0, 0.9298971, 0, -0.3678198, 61.86668, 6, -9.414707)
+transform = Transform3D(-0.5517297, 0, -1.3948457, 0, 1.5, 0, 1.3948457, 0, -0.5517297, 61.86668, 7, -9.414707)
 script = ExtResource("7_dw71r")
 
 [node name="InteractionArea" type="Area3D" parent="Frame_11" unique_id=1157437581]
@@ -326,7 +325,7 @@ transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 0)
 shape = SubResource("BoxShape3D_6ynge")
 
 [node name="Frame_12" type="Sprite3D" parent="." unique_id=600983952]
-transform = Transform3D(-0.9637781, 0, -0.2667053, 0, 1, 0, 0.2667053, 0, -0.9637781, 26.84614, 6, 16.03496)
+transform = Transform3D(-1.4456671, 0, -0.40005797, 0, 1.5, 0, 0.40005797, 0, -1.4456671, 30.836275, 7, 14.568604)
 script = ExtResource("7_dw71r")
 camera_path = NodePath("../Camera3D")
 
@@ -369,7 +368,7 @@ script = ExtResource("24_3btdo")
 [node name="DownloadHTTPRequest" type="HTTPRequest" parent="GalleryManager" unique_id=1433679892]
 
 [node name="Frame_Asset01" type="MeshInstance3D" parent="." unique_id=1407208292]
-transform = Transform3D(-0.2752566, 0.05515967, -5.545543e-09, 0, -4.371139e-09, -0.23, -0.1820269, -0.0834111, 8.385834e-09, -47.29481, 9.991684, 6.907535)
+transform = Transform3D(-0.4128849, 0.0827395, -8.318315e-09, 0, -6.5567085e-09, -0.345, -0.27304035, -0.12511665, 1.2578751e-08, -47.298836, 12.987526, 6.818061)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_6ynge")
 
@@ -381,57 +380,57 @@ text = "Rating: ****"
 font_size = 1
 
 [node name="Frame_Asset02" type="MeshInstance3D" parent="." unique_id=425683593]
-transform = Transform3D(-0.1213806, 0.0929897, -9.348831e-09, 0, -4.371139e-09, -0.23, -0.306866, -0.03678199, 3.697921e-09, -61.82759, 10.14788, -9.415028)
+transform = Transform3D(-0.1820709, 0.13948455, -1.4023247e-08, 0, -6.5567085e-09, -0.345, -0.460299, -0.055172984, 5.5468816e-09, -61.808044, 13.221819, -9.415188)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_48g0v")
 
 [node name="Frame_Asset10" type="MeshInstance3D" parent="." unique_id=1046826393]
-transform = Transform3D(0.2890173, 0.04826559, -4.852439e-09, 0, -4.371139e-09, -0.23, -0.1592764, 0.08758101, -8.805061e-09, -43.22717, 10.14788, -45.48327)
+transform = Transform3D(0.43352592, 0.07239839, -7.2786586e-09, 0, -6.5567085e-09, -0.345, -0.2389146, 0.13137151, -1.32075915e-08, -43.224533, 13.221819, -45.463898)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_48g0v")
 
 [node name="Frame_Asset03" type="MeshInstance3D" parent="." unique_id=1252198632]
-transform = Transform3D(0.1719326, 0.08535521, -8.581286e-09, 0, -4.371139e-09, -0.23, -0.2816721, 0.0521008, -5.238015e-09, -59.40013, 10, -30.60663)
+transform = Transform3D(0.2578989, 0.1280328, -1.2871929e-08, 0, -6.5567085e-09, -0.345, -0.42250812, 0.078151196, -7.857023e-09, -59.226654, 13, -30.512611)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_a2hqd")
 
 [node name="Frame_Asset04" type="MeshInstance3D" parent="." unique_id=1481843272]
-transform = Transform3D(0.3221618, 0.02166565, -2.178182e-09, 0, -4.371139e-09, -0.23, -0.07149666, 0.0976248, -9.814825e-09, -22.25336, 10.2009, -53.07545)
+transform = Transform3D(0.4832427, 0.032498475, -3.2672731e-09, 0, -6.5567085e-09, -0.345, -0.10724498, 0.1464372, -1.4722238e-08, -22.255116, 13.30135, -53.026512)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_n1pvk")
 
 [node name="Frame_Asset05" type="MeshInstance3D" parent="." unique_id=898501516]
-transform = Transform3D(0.33, 0, 0, 0, -4.371139e-09, -0.23, -1.167291e-09, 0.1, -1.005362e-08, -0.0112732, 10.13302, -55.36541)
+transform = Transform3D(0.495, 0, 0, 0, -6.5567085e-09, -0.345, -1.7509365e-09, 0.15, -1.5080431e-08, -0.0169098, 13.199531, -55.273117)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_j2nib")
 
 [node name="Frame_Asset06" type="MeshInstance3D" parent="." unique_id=1797407532]
-transform = Transform3D(0.3221618, -0.02166565, 2.178182e-09, 0, -4.371139e-09, -0.23, 0.07149665, 0.09762479, -9.814825e-09, 22.19608, 10.12054, -53.17497)
+transform = Transform3D(0.4832427, -0.032498475, 3.2672731e-09, 0, -6.5567085e-09, -0.345, 0.107244976, 0.1464372, -1.4722238e-08, 22.169193, 13.180809, -53.17579)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_3btdo")
 
 [node name="Frame_Asset07" type="MeshInstance3D" parent="." unique_id=1178215650]
-transform = Transform3D(0.2884596, -0.04857101, 4.883144e-09, 0, -4.371139e-09, -0.23, 0.1602843, 0.08741201, -8.788071e-09, 43.24899, 10.11029, -45.6073)
+transform = Transform3D(0.4326894, -0.072856516, 7.324716e-09, 0, -6.5567085e-09, -0.345, 0.24042645, 0.13111801, -1.3182106e-08, 43.257263, 13.165434, -45.649944)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_ybvl3")
 
 [node name="Frame_Asset08" type="MeshInstance3D" parent="." unique_id=746042058]
-transform = Transform3D(0.1719326, -0.08535519, 8.581286e-09, 0, -4.371139e-09, -0.23, 0.2816721, 0.05210078, -5.238014e-09, 59.47985, 10.06446, -30.72821)
+transform = Transform3D(0.2578989, -0.12803279, 1.2871929e-08, 0, -6.5567085e-09, -0.345, 0.42250812, 0.078151174, -7.857021e-09, 59.34623, 13.096689, -30.69498)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_8fcft")
 
 [node name="Frame_Asset09" type="MeshInstance3D" parent="." unique_id=1325763105]
-transform = Transform3D(0.1213805, 0.09298971, -9.348831e-09, 0, -4.371139e-09, -0.23, -0.306866, 0.03678198, -3.69792e-09, 61.93422, 10.10097, -9.399719)
+transform = Transform3D(0.18207075, 0.13948457, -1.4023247e-08, 0, -6.5567085e-09, -0.345, -0.460299, 0.055172972, -5.54688e-09, 61.967987, 13.151455, -9.392225)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_rh7pn")
 
 [node name="Frame_Asset11" type="MeshInstance3D" parent="." unique_id=978016162]
-transform = Transform3D(0.2752566, 0.05515967, -5.545543e-09, 0, -4.371139e-09, -0.23, -0.1820269, 0.0834111, -8.385834e-09, 47.25675, 10.1298, 7.057088)
+transform = Transform3D(0.4128849, 0.0827395, -8.318315e-09, 0, -6.5567085e-09, -0.345, -0.27304035, 0.12511665, -1.2578751e-08, 47.241745, 13.1947, 7.0423903)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_2mqet")
 
 [node name="Frame_Asset12" type="MeshInstance3D" parent="." unique_id=659578068]
-transform = Transform3D(0.3180468, 0.02667053, -2.681354e-09, 0, -4.371139e-09, -0.23, -0.08801276, 0.09637781, -9.689458e-09, 26.72647, 9.93892, 15.29984)
+transform = Transform3D(0.4770702, 0.040005796, -4.022031e-09, 0, -6.5567085e-09, -0.345, -0.13201915, 0.14456671, -1.4534187e-08, 30.840595, 12.9083805, 14.344366)
 mesh = ExtResource("14_6ynge")
 surface_material_override/0 = SubResource("StandardMaterial3D_a185g")
 
@@ -502,8 +501,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="GrandPiano" type="Node3D" parent="."]
-transform = Transform3D(3.81385, 0, 3.23335, 0, 5, 0, -3.23335, 0, 3.81385, 15.061, 0.25, 2.23497)
+[node name="GrandPiano" type="Node3D" parent="." unique_id=467563158]
+transform = Transform3D(1.52554, 0, 1.29334, 0, 2, 0, -1.29334, 0, 1.52554, 15.061, 0.25, 2.23497)
 script = ExtResource("31_piano")
 camera_path = NodePath("../Camera3D")
 
