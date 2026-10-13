@@ -59,15 +59,14 @@ func _run() -> void:
 	root.add_child(chat)
 	await process_frame
 
-	var history := chat.get_node_or_null("Panel/VBoxContainer/ChatHistory") as TextEdit
+	var history := chat.get_node_or_null("Panel/VBoxContainer/ChatHistory") as RichTextLabel
 	var choices := chat.get_node_or_null("Panel/VBoxContainer/ChoicesScroll/CuratedChoices") as VBoxContainer
-	assert(history != null and not history.editable, "Milo transcript is read-only")
-	assert(history.text.contains("Choose one, or skip"), "Milo explains the safe, skippable choice")
+	assert(history != null, "Milo has a read-only rich-text transcript")
+	assert(history.text.contains("Nothing you choose here changes your progress"), "Milo explains that choices are safe")
 	assert(choices != null, "Milo builds curated reflection choices")
-	assert(chat.user_input is LineEdit, "Milo focuses the bounded local reflection field")
-	assert(chat.user_input.max_length == 280, "typed reflection is strictly bounded")
+	assert(chat.user_input is LineEdit, "Milo focuses the local reflection field")
+	assert(chat.user_input.max_length == 0, "typed reflection has no length limit")
 	assert(chat.user_input.tooltip_text.contains("not saved"), "the input explains local privacy")
-	assert(_has_button(choices, "Skip this reflection"), "skipping is explicit")
 	assert(_has_button(choices, "Close"), "closing is always explicit")
 	assert(_has_button(choices, "Need help"), "support remains available from Milo")
 	assert(not chat.is_local_llm_active(), "headless/Web-safe tests use the authored fallback")

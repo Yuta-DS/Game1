@@ -40,6 +40,11 @@ const STAGE_GLOW := [
 	Color("ffd66e"),
 ]
 const STAGE_ENERGY := [0.18, 0.55, 0.85, 1.2, 1.65]
+# Recorded lines in the dialogue box play this much louder than the proximity
+# greeting. Tune by ear; max_db is raised with it so it isn't capped at +3 dB.
+# All of Milo's voice also gets +6 dB on the MiloVoice bus, whose limiter
+# (default_bus_layout.tres) keeps the boosted peaks from clipping.
+const DIALOGUE_VOICE_DB := 5.0
 const COUNSELLOR_ANIMATIONS := {
 	"welcome": "Counsellor_Welcome",
 	"guide": "Counsellor_Guide",
@@ -69,6 +74,7 @@ var _mouth_shape := "closed"
 var _tts_voice_id := ""
 var _tts_voice_resolved := false
 var greeting_voice: AudioStreamPlayer3D
+var _greeting_stream: AudioStream
 var _recorded_greeting_played := false
 var _conversation_state := CompanionState.GREETING
 var _conversation_active := false
@@ -259,6 +265,8 @@ func _ready():
 	_build_counsellor_props()
 	_resolve_mouth_shapes()
 	greeting_voice = get_node_or_null("MiloGreetingVoice") as AudioStreamPlayer3D
+	if greeting_voice != null:
+		_greeting_stream = greeting_voice.stream
 	_resolve_eye_system()
 	_resolve_secondary_parts()
 	_resolve_gait_rig()
@@ -488,7 +496,26 @@ func _on_companion_speech_requested(spoken_text: String) -> void:
 	_set_mouth_shape("small")
 	if greeting_voice != null and greeting_voice.playing:
 		greeting_voice.stop()
-	_speak_with_platform_voice(_spoken_version(clean_text))
+	var spoken := _spoken_version(clean_text)
+	var recording := recorded_line_path(spoken)
+	if greeting_voice != null and ResourceLoader.exists(recording):
+		if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+			DisplayServer.tts_stop()
+		greeting_voice.stream = load(recording)
+		greeting_voice.volume_db = DIALOGUE_VOICE_DB
+		greeting_voice.max_db = maxf(3.0, DIALOGUE_VOICE_DB)
+		_speech_remaining = greeting_voice.stream.get_length()
+		greeting_voice.play()
+		return
+	_speak_with_platform_voice(spoken)
+
+
+# Scripted lines recorded in Milo's greeting voice live at
+# assets/audio/milo/lines/<md5 of spoken text>.ogg; anything without a
+# recording (e.g. live chatbot replies) falls back to platform TTS.
+# tools/list_milo_lines.gd lists every scripted line with its file name.
+static func recorded_line_path(spoken_text: String) -> String:
+	return "res://assets/audio/milo/lines/%s.ogg" % spoken_text.md5_text()
 
 
 func _play_recorded_greeting() -> void:
@@ -496,6 +523,9 @@ func _play_recorded_greeting() -> void:
 			or greeting_voice.playing or _recorded_greeting_played:
 		return
 	_recorded_greeting_played = true
+	greeting_voice.stream = _greeting_stream
+	greeting_voice.volume_db = 0.0
+	greeting_voice.max_db = 3.0
 	_speech_elapsed = 0.0
 	_speech_remaining = greeting_voice.stream.get_length()
 	_set_companion_state(CompanionState.TALKING)
@@ -503,8 +533,17 @@ func _play_recorded_greeting() -> void:
 	greeting_voice.play()
 
 
-func _spoken_version(source_text: String) -> String:
-	var spoken := source_text.replace("Wonderful Counsellor Milo ·", "")
+static func _spoken_version(source_text: String) -> String:
+	var spoken := source_text
+	# Scripted panels open with "Wonderful Counsellor Milo · <Title>"; the title
+	# stays on screen but isn't spoken, so panels sharing a body share a recording.
+	if spoken.begins_with("Wonderful Counsellor Milo ·") and "\n\n" in spoken:
+		spoken = spoken.substr(spoken.find("\n\n") + 2)
+	# Likewise the strength finder's "Question 2 of 5" counter is shown, not said.
+	if spoken.begins_with("Question ") and "\n\n" in spoken \
+			and " of " in spoken.get_slice("\n\n", 0):
+		spoken = spoken.substr(spoken.find("\n\n") + 2)
+	spoken = spoken.replace("Wonderful Counsellor Milo ·", "")
 	spoken = spoken.replace("Milo:", "")
 	spoken = spoken.replace("·", ".")
 	# UI layout uses blank lines and bullets; TTS reads more naturally when they
@@ -521,13 +560,15 @@ func _speak_with_platform_voice(spoken_text: String) -> void:
 	if not _tts_voice_resolved:
 		_tts_voice_resolved = true
 		var voices := DisplayServer.tts_get_voices()
-		# Milo has one recognisable voice across supported platforms. Prefer a
-		# warm male English voice by name, then fall back by English locale.
-		for voice_data in voices:
-			var voice_name := str(voice_data.get("name", "")).to_lower()
-			var voice_id := str(voice_data.get("id", "")).to_lower()
-			if voice_name.contains("daniel") or voice_id.contains("daniel"):
-				_tts_voice_id = str(voice_data.get("id", ""))
+		# Milo has one recognisable voice across supported platforms. Prefer the
+		# male English voice closest to his recordings (~118 Hz): Windows George
+		# measured 114 Hz, macOS Daniel is similar. Then fall back by locale.
+		for preferred_name in ["george", "daniel"]:
+			for voice_data in voices:
+				if str(voice_data.get("name", "")).to_lower().contains(preferred_name):
+					_tts_voice_id = str(voice_data.get("id", ""))
+					break
+			if not _tts_voice_id.is_empty():
 				break
 		for preferred_prefix in ["en_GB", "en_AU", "en_US", "en"]:
 			if not _tts_voice_id.is_empty():
@@ -540,11 +581,11 @@ func _speak_with_platform_voice(spoken_text: String) -> void:
 				break
 	if _tts_voice_id.is_empty():
 		return
-	var voice_volume := 82
+	var voice_volume := 100
 	if player != null:
 		var distance := global_position.distance_to(player.global_position)
-		voice_volume = int(round(lerpf(86.0, 24.0, clampf(distance / 30.0, 0.0, 1.0))))
-	DisplayServer.tts_speak(spoken_text, _tts_voice_id, voice_volume, 0.90, 0.96, 2603, true)
+		voice_volume = int(round(lerpf(100.0, 30.0, clampf(distance / 30.0, 0.0, 1.0))))
+	DisplayServer.tts_speak(spoken_text, _tts_voice_id, voice_volume, 1.0, 1.0, 2603, true)
 
 
 func _on_companion_activity_state_requested(state_name: String) -> void:
@@ -576,6 +617,8 @@ func _update_speaking(delta: float) -> void:
 
 
 func _stop_speaking() -> void:
+	if greeting_voice != null and greeting_voice.playing:
+		greeting_voice.stop()
 	_speech_remaining = 0.0
 	_speech_elapsed = 0.0
 	_set_mouth_shape("closed")
