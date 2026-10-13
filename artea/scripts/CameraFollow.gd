@@ -66,6 +66,7 @@ func _ready() -> void:
 	# This is especially important for sync-to-physics train platforms, whose
 	# rider position otherwise reaches the camera one render frame late.
 	process_priority = 100
+	process_physics_priority = 100
 	_player = get_node_or_null(player_path)
 	current = true  # make this the active camera
 
@@ -155,55 +156,71 @@ func _process(delta: float) -> void:
 		return
 
 	if _mode == "follow" and _player:
-		var focus := _player.global_transform.origin + follow_look_at_offset
-
-		# Orbit around the player using the mouse-driven yaw/pitch instead of
-		# the player's own facing, which is what made the view unturnable.
-		var offset := Vector3(
-			sin(_yaw) * cos(_pitch),
-			sin(-_pitch),
-			cos(_yaw) * cos(_pitch)
-		) * follow_distance
-
-		var target := focus + offset
-		target.y += follow_height
-		target += Vector3(cos(_yaw), 0.0, -sin(_yaw)) * follow_side
-		target = _collision_safe_target(focus, target)
-
-		# Exponential smoothing rather than `lerp_speed * delta` used directly as
-		# a weight: the raw form is framerate-dependent (and above 1/lerp_speed
-		# seconds per frame it overshoots outright), which made the view judder
-		# whenever the frame time moved.
-		var smoothing := 1.0 - pow(2.0, -lerp_speed * delta)
-
-		# While riding, the focus is bolted to a train covering several metres per
-		# frame. A camera that eases toward it from behind can never catch up, so
-		# it lags and then over-corrects — measured at 7.4 degrees of swing in a
-		# single frame, far rougher than the train itself. Carrying the ride's own
-		# motion forward first means the smoothing only has to absorb the small
-		# residual, not the whole distance the train travelled.
+		# On foot the follow runs in _physics_process instead (see there).
 		if _ride_view_active:
-			var ride_motion := focus - _previous_focus
-			global_transform.origin += ride_motion
-			smoothing = 1.0 - pow(2.0, -ride_lerp_speed * delta)
-
-		global_transform.origin = global_transform.origin.lerp(
-			target, clampf(smoothing, 0.0, 1.0))
-		_previous_focus = focus
-
-		# Looking straight up or down leaves the view direction parallel to
-		# Vector3.UP, where look_at() has no valid basis and the camera snaps.
-		# Tilting the up-vector along the view's own horizontal heading keeps
-		# a stable basis all the way to the poles, so the player can look
-		# fully overhead or straight down without the view breaking.
-		var to_focus := focus - global_transform.origin
-		var up_hint := Vector3.UP
-		if absf(to_focus.normalized().dot(Vector3.UP)) > 0.999:
-			up_hint = Vector3(sin(_yaw), 0.0, cos(_yaw))
-		look_at(focus, up_hint)
+			_follow(delta)
 
 	elif _mode == "inspect":
 		look_at(_inspect_focus, Vector3.UP)
+
+
+# On foot, follow on the same physics tick the player moves on. Easing here every
+# render frame while the player only moves per tick made the view creep and snap
+# back each tick, which read as a constant shake whenever the frame rate ran above
+# the physics rate (vsync is off). Riding stays in _process: the train places its
+# rider there.
+func _physics_process(delta: float) -> void:
+	if _mode == "follow" and _player and _view == "third" and not _ride_view_active:
+		_follow(delta)
+
+
+func _follow(delta: float) -> void:
+	var focus := _player.global_transform.origin + follow_look_at_offset
+
+	# Orbit around the player using the mouse-driven yaw/pitch instead of
+	# the player's own facing, which is what made the view unturnable.
+	var offset := Vector3(
+		sin(_yaw) * cos(_pitch),
+		sin(-_pitch),
+		cos(_yaw) * cos(_pitch)
+	) * follow_distance
+
+	var target := focus + offset
+	target.y += follow_height
+	target += Vector3(cos(_yaw), 0.0, -sin(_yaw)) * follow_side
+	target = _collision_safe_target(focus, target)
+
+	# Exponential smoothing rather than `lerp_speed * delta` used directly as
+	# a weight: the raw form is framerate-dependent (and above 1/lerp_speed
+	# seconds per frame it overshoots outright), which made the view judder
+	# whenever the frame time moved.
+	var smoothing := 1.0 - pow(2.0, -lerp_speed * delta)
+
+	# While riding, the focus is bolted to a train covering several metres per
+	# frame. A camera that eases toward it from behind can never catch up, so
+	# it lags and then over-corrects — measured at 7.4 degrees of swing in a
+	# single frame, far rougher than the train itself. Carrying the ride's own
+	# motion forward first means the smoothing only has to absorb the small
+	# residual, not the whole distance the train travelled.
+	if _ride_view_active:
+		var ride_motion := focus - _previous_focus
+		global_transform.origin += ride_motion
+		smoothing = 1.0 - pow(2.0, -ride_lerp_speed * delta)
+
+	global_transform.origin = global_transform.origin.lerp(
+		target, clampf(smoothing, 0.0, 1.0))
+	_previous_focus = focus
+
+	# Looking straight up or down leaves the view direction parallel to
+	# Vector3.UP, where look_at() has no valid basis and the camera snaps.
+	# Tilting the up-vector along the view's own horizontal heading keeps
+	# a stable basis all the way to the poles, so the player can look
+	# fully overhead or straight down without the view breaking.
+	var to_focus := focus - global_transform.origin
+	var up_hint := Vector3.UP
+	if absf(to_focus.normalized().dot(Vector3.UP)) > 0.999:
+		up_hint = Vector3(sin(_yaw), 0.0, cos(_yaw))
+	look_at(focus, up_hint)
 
 
 func _zoom_by(amount: float) -> void:

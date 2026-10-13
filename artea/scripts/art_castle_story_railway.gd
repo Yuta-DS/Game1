@@ -179,11 +179,16 @@ var _dark_metal_material: StandardMaterial3D
 var _station_rainbow_materials: Array[StandardMaterial3D] = []
 var _external_drive_commanded := false
 var _station_fall_recovery := -1
+var _island_rescue_cooldown := 0.0
+# Station node -> station-local safe point at the foot of its arrival stairs.
+var _station_safe_points := {}
 # How far below a station platform a falling player drops before Milo catches
 # them. Matches milo_fall_rescue.gd's RESCUE_DROP. The general rescue cannot
 # cover stations alone: the ground 35 m below counts as a floor, so it would
 # let the player land there.
 const STATION_RESCUE_DROP := 16.0
+# Seconds before a player still on a station island can be rescued again.
+const ISLAND_RESCUE_COOLDOWN := 3.0
 
 
 func get_station_disembark_position(index: int) -> Vector3:
@@ -197,8 +202,18 @@ func _place_player_on_station() -> void:
 	_station_fall_recovery = _current_station
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if _player == null or _riding:
+		return
+	# A station's island is solid but has no way back up to the platform, so a
+	# player standing on one is brought back to that station's platform. The
+	# cooldown lets one rescue finish before another can start; triggering on
+	# every frame spent on the island looped the rescue.
+	_island_rescue_cooldown = maxf(0.0, _island_rescue_cooldown - delta)
+	var island_station := _station_island_under_player()
+	if island_station >= 0 and _island_rescue_cooldown <= 0.0:
+		_island_rescue_cooldown = ISLAND_RESCUE_COOLDOWN
+		_rescue_to_station(island_station)
 		return
 	# Arm only after reaching an elevated station or its docked train. Walking
 	# down the access stairs or leaving the station clears the recovery region.
@@ -218,12 +233,43 @@ func _physics_process(_delta: float) -> void:
 	elif local.y < -STATION_RESCUE_DROP and _player.velocity.y < 0.0:
 		# Milo flies the player back to the platform. Without him (isolated test
 		# scenes) the player is put back at the disembark point instead.
-		var fallback := get_station_disembark_position(_station_fall_recovery)
-		var manager := get_node_or_null("/root/MiloCompanionManager")
-		if manager != null and bool(manager.call("request_fall_rescue", fallback)):
-			return
-		_player.global_position = fallback
-		_player.velocity = Vector3.ZERO
+		_rescue_to_station(_station_fall_recovery)
+
+
+## Brings a player who fell off a station (off the platform, or onto its
+## island) to that station's safe point at the foot of its stairs. Only
+## station falls come here; Milo's general rescue elsewhere is unchanged.
+func _rescue_to_station(station_index: int) -> void:
+	var station := _station_nodes[station_index]
+	var fallback := station.to_global(_station_safe_points[station]) \
+		if _station_safe_points.has(station) else get_station_disembark_position(station_index)
+	var manager := get_node_or_null("/root/MiloCompanionManager")
+	if manager != null and bool(manager.call("request_fall_rescue", fallback)):
+		return
+	_player.global_position = fallback
+	_player.velocity = Vector3.ZERO
+
+
+## Tags an island's collision body with its station, for the island rescue.
+func _mark_station_island(body: Node) -> void:
+	var node := body
+	while node != null and not _station_nodes.has(node):
+		node = node.get_parent()
+	if body is StaticBody3D and node != null:
+		body.set_meta("station_island", _station_nodes.find(node))
+
+
+## The station whose island the player is standing on, or -1.
+func _station_island_under_player() -> int:
+	if not _player.is_on_floor():
+		return -1
+	for index in _player.get_slide_collision_count():
+		var contact := _player.get_slide_collision(index)
+		var collider := contact.get_collider()
+		if collider != null and collider.has_meta("station_island") \
+				and contact.get_normal().y > 0.5:
+			return int(collider.get_meta("station_island"))
+	return -1
 
 
 func _ready() -> void:
@@ -1489,7 +1535,8 @@ func _build_mind_spark_floating_ground(upgrade: Node3D) -> void:
 
 	# Layered circular deck based on the supplied top/front orthographic views.
 	_add_cylinder(ground, "WalkableCircuitFloor", Vector3(0.0, -1.02, 0.0),
-		37.2, 0.30, floor_blue, false, 32)
+		37.2, 0.30, floor_blue, true, 32)
+	_mark_station_island(ground.get_child(ground.get_child_count() - 1))
 	_add_torus(ground, "SegmentedOuterStoneRim", Vector3(0.0, -0.82, 0.0),
 		35.8, 37.8, floor_light)
 	_add_cylinder(ground, "CentralCircuitDisc", Vector3(0.0, -0.78, 0.0),
@@ -1751,8 +1798,12 @@ func _build_floating_dock_structure(station: Node3D) -> void:
 	var structure := Node3D.new()
 	structure.name = "FloatingDockStructure"
 	station.add_child(structure)
+	# Solid: it reads as the station's ground, and a player who slips off the
+	# platform or through the train lands on it instead of falling through. The
+	# station rescue in _physics_process brings them back up from there.
 	_add_cylinder(structure, "SuspendedFoundation", Vector3(0, -8.0, 0), 32.0, 10.0,
-		_stone_material, false, 16)
+		_stone_material, true, 16)
+	_mark_station_island(structure.get_child(structure.get_child_count() - 1))
 	for index in 8:
 		var angle := TAU * float(index) / 8.0
 		var anchor := MeshInstance3D.new()
@@ -2025,6 +2076,9 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 			Vector3(STEP_DEPTH, TREAD_THICKNESS, SIDE_STAIR_WIDTH), _stone_material, false)
 	var ramp_start := Vector3(stair_start_x + dock_sign * STEP_DEPTH * 0.5,
 		STAIR_BOTTOM_TOP_Y - 0.04, 0.0)
+	# Where Milo brings a player who fell off this station: the foot of its
+	# arrival stairs, beside the station but outside its island.
+	_station_safe_points[station] = ramp_start + Vector3.UP * 1.2
 	# Reach platform height before its rotated outer edge crosses the access lane.
 	# Continuing the old slope through that edge left a short riser in the centre
 	# lane; the platform collision then deflected an ordinary straight walk into
@@ -2078,15 +2132,8 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 		_add_walkway_between(stairs,
 			"StairGuardLeft" if side < 0 else "StairGuardRight",
 			rail_start, rail_finish, 0.38, 0.38, _gold_material, true)
-	# Inner handrails clearly separate the ceremonial side stairs from the
-	# accessible luminous centre ramp.
-	for side in [-1.0, 1.0]:
-		var inner_z := float(side) * (CENTRAL_RAMP_WIDTH * 0.5 + 0.18)
-		var inner_start := Vector3(stair_start_x, STAIR_BOTTOM_TOP_Y + 1.05, inner_z)
-		_add_walkway_between(stairs, "InnerRampGuardLeft" if side < 0 else "InnerRampGuardRight",
-			inner_start, _clip_out_of_train_corridor(to_route, inner_start,
-				Vector3(stair_end_x, STAIR_TOP_TOP_Y + 1.05, inner_z)),
-			0.24, 0.24, _gold_material, false)
+	# No inner handrails between the side stairs and the centre ramp: they were
+	# visual only, and read as two stray yellow lines down the ramp.
 
 
 ## True when a station-local point lies where the docked train and its inner
@@ -3634,6 +3681,9 @@ func _add_faceted_floating_island(parent: Node3D) -> void:
 	instance.mesh = mesh
 	instance.material_override = material
 	parent.add_child(instance)
+	# The station's island is solid ground like every other station island.
+	instance.create_trimesh_collision()
+	_mark_station_island(instance.get_child(instance.get_child_count() - 1))
 
 
 func _add_colored_surface_triangle(surface: SurfaceTool, a: Vector3,
