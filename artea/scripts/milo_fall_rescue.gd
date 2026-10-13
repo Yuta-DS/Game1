@@ -88,7 +88,7 @@ const MILO_LANDING_OFFSET := 1.6
 const LINE_SECONDS := 2.4
 const RESCUE_LINES := [
 	"Gotcha! Let's get you back on solid ground.",
-	"Whoops! Milo's got you.",
+	"Whoops! I've got you.",
 	"Up we go. Hold on tight!",
 	"Careful there! Back you go.",
 	"I'll always catch you.",
