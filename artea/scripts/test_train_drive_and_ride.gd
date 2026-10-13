@@ -13,6 +13,13 @@ func _fail(message: String) -> void:
 	quit(1)
 
 
+func _has_live_collision(body: Node) -> bool:
+	for shape in body.find_children("*", "CollisionShape3D", false, false):
+		if not (shape as CollisionShape3D).disabled:
+			return true
+	return false
+
+
 func _point_is_inside_solid(space: PhysicsDirectSpaceState3D, point: Vector3) -> bool:
 	var query := PhysicsPointQueryParameters3D.new()
 	query.position = point
@@ -67,13 +74,12 @@ func _run() -> void:
 	# 1. The cab and every seat must be air the player can stand in. A boarding
 	#    point inside a collision box teleports the player into the geometry.
 	var driver_point: Vector3 = railway.call("get_driver_interaction_position")
-	var driver_seat: Vector3 = railway.call("get_driver_seat_position")
 	if _point_is_inside_solid(space, driver_point):
 		_fail("driver interaction point is buried inside the train collision shell")
 		return
-	if _point_is_inside_solid(space, driver_seat):
-		_fail("driver seat is buried inside the train collision shell")
-		return
+	# The driver's seat is in the engine's open cab, inside the engine's
+	# collision shell. That is safe only because a seated rider has no collision
+	# of their own; checked in section 3 once the player is driving.
 	for seat_index in int(railway.call("get_passenger_seat_count")):
 		var seat: Vector3 = railway.call("get_passenger_seat_position", seat_index)
 		if _point_is_inside_solid(space, seat):
@@ -113,6 +119,9 @@ func _run() -> void:
 	_press_train_mode(railway, KEY_1)
 	if not bool(railway.call("is_driving")):
 		_fail("pressing 1 at the train did not take control of the train")
+		return
+	if not bool(player.call("is_seated")) or _has_live_collision(player):
+		_fail("the driver is not seated with collision off inside the engine cab")
 		return
 	var horn_count := int(railway.call("get_horn_request_count"))
 	_press_train_mode(railway, KEY_R)
