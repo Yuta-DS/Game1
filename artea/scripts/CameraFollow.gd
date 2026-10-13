@@ -201,9 +201,21 @@ func _process(delta: float) -> void:
 			global_transform.origin += ride_motion
 			smoothing = 1.0 - pow(2.0, -ride_lerp_speed * delta)
 
+		_previous_focus = focus
+		if not _ride_view_active:
+			# On foot the camera is held rigidly at the orbit point and aimed by
+			# the mouse alone, like the town's spring-arm camera. Easing toward a
+			# player that only moves on physics ticks crept and snapped back every
+			# tick, and look_at() from that lagging spot swung the heading by 5+
+			# degrees a frame from top-down: a shaking, drunken view.
+			global_transform.origin = target
+			var aim := focus - target
+			global_basis = Basis.from_euler(Vector3(
+				atan2(aim.y, Vector2(aim.x, aim.z).length()), _yaw, 0.0))
+			return
+
 		global_transform.origin = global_transform.origin.lerp(
 			target, clampf(smoothing, 0.0, 1.0))
-		_previous_focus = focus
 
 		# Looking straight up or down leaves the view direction parallel to
 		# Vector3.UP, where look_at() has no valid basis and the camera snaps.
