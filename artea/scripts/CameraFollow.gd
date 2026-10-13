@@ -225,16 +225,14 @@ func _follow(delta: float) -> void:
 		target, clampf(smoothing, 0.0, 1.0))
 	_previous_focus = focus
 
-	# Looking straight up or down leaves the view direction parallel to
-	# Vector3.UP, where look_at() has no valid basis and the camera snaps.
-	# Tilting the up-vector along the view's own horizontal heading keeps
-	# a stable basis all the way to the poles, so the player can look
-	# fully overhead or straight down without the view breaking.
-	var to_focus := focus - global_transform.origin
-	var up_hint := Vector3.UP
-	if absf(to_focus.normalized().dot(Vector3.UP)) > 0.999:
-		up_hint = Vector3(sin(_yaw), 0.0, cos(_yaw))
-	look_at(focus, up_hint)
+	# Aim along the orbit itself: heading from the mouse yaw, tilt from the
+	# ideal camera spot down to the player. look_at() from the eased position
+	# made the view spin and shake from above: top-down, the camera sits only a
+	# few centimetres off the player's vertical, so the smoothing lag alone
+	# swung its heading by over 5 degrees a frame while walking.
+	var aim := focus - target
+	var aim_pitch := atan2(aim.y, Vector2(aim.x, aim.z).length())
+	global_basis = Basis.from_euler(Vector3(aim_pitch, _yaw, 0.0))
 
 
 func _zoom_by(amount: float) -> void:
