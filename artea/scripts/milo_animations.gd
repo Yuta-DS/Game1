@@ -140,6 +140,8 @@ var _grounding_targets: Node3D
 # The rescue owns his position, so following, gravity and foot grounding stand
 # down until it hands him back.
 var _fall_rescue_active := false
+# Set while Milo sits on the train (sit_on / stand_up).
+var _seat_anchor: RemoteTransform3D
 
 const CANE_GAIT_CYCLE_SECONDS := 1.28
 const CANE_GAIT_STRIDE_METRES := 1.40
@@ -321,6 +323,115 @@ func _set_companion_state(next_state: CompanionState) -> void:
 
 func get_companion_state_name() -> String:
 	return CompanionState.keys()[companion_state]
+
+
+## Riding the Crown Line. The train seats Milo on a RemoteTransform3D anchor -
+## the place beside the rider - and he sits in it, instead of walking after,
+## or teleporting to, a player who is moving at train speed.
+func sit_on(anchor: RemoteTransform3D) -> void:
+	if anchor == null:
+		return
+	_seat_anchor = anchor
+	velocity = Vector3.ZERO
+	_follow_active = false
+	_catch_up_active = false
+	_breadcrumbs.clear()
+	for shape in find_children("*", "CollisionShape3D", false, false):
+		(shape as CollisionShape3D).disabled = true
+	# Grounding IK would pull his feet to the floor through the chair pose.
+	for ik in _leg_ik.values():
+		(ik as TwoBoneIK3D).set_influence(0.0)
+	if _cane_arm_ik != null:
+		_cane_arm_ik.set_influence(0.0)
+	_set_cane_visible(false)
+	anchor.remote_path = anchor.get_path_to(self)
+	_apply_sit_pose()
+
+
+func stand_up() -> void:
+	if _seat_anchor == null:
+		return
+	if is_instance_valid(_seat_anchor):
+		_seat_anchor.remote_path = NodePath()
+	_seat_anchor = null
+	for shape in find_children("*", "CollisionShape3D", false, false):
+		(shape as CollisionShape3D).disabled = false
+	_set_cane_visible(true)
+	rotation = Vector3(0.0, rotation.y, 0.0)
+	_release_sit_pose()
+	# Deferred: the train puts the player on the platform after unseating them,
+	# and Milo should land beside that spot, not beside the empty seat.
+	call_deferred("_reposition_safely_near_player")
+
+
+func is_seated() -> bool:
+	return _seat_anchor != null
+
+
+# The donor Sit_Chair_* clips kept no leg or hip tracks when they were
+# retargeted onto Milo's rig, so playing them leaves him standing. The seated
+# pose is built from the leg bones instead: freeze the idle, swing both thighs
+# forward, bend the knees back down, and lower the model so the thighs rest on
+# the seat.
+const SIT_THIGH_DEGREES := 90.0
+# Gap left between the hip joint and the cushion (the thigh's own thickness).
+const SIT_SEAT_CLEARANCE := 0.06
+var _sit_pose_applied := false
+var _model_rest_position := Vector3.ZERO
+
+
+func _apply_sit_pose() -> void:
+	if _sit_pose_applied or gait_skeleton == null:
+		return
+	if anim_player != null:
+		anim_player.play("Idle" if anim_player.has_animation("Idle") else anim_player.current_animation)
+		anim_player.seek(0.0, true)
+		anim_player.pause()
+	gait_skeleton.force_update_all_bone_transforms()
+	for side in ["l", "r"]:
+		var thigh := gait_skeleton.find_bone("upperleg.%s" % side)
+		var shin := gait_skeleton.find_bone("lowerleg.%s" % side)
+		if thigh < 0 or shin < 0:
+			continue
+		var hip := to_local(_bone_world_position("upperleg.%s" % side))
+		_rotate_bone_in_skeleton(thigh, -SIT_THIGH_DEGREES)
+		# Milo faces +Z; if the rig's axes put the knee behind him, bend the
+		# other way.
+		if to_local(_bone_world_position("lowerleg.%s" % side)).z < hip.z:
+			_rotate_bone_in_skeleton(thigh, 2.0 * SIT_THIGH_DEGREES)
+			_rotate_bone_in_skeleton(shin, -SIT_THIGH_DEGREES)
+		else:
+			_rotate_bone_in_skeleton(shin, SIT_THIGH_DEGREES)
+	if model_root != null:
+		_model_rest_position = model_root.position
+		var hip_height := to_local(_bone_world_position("upperleg.l")).y
+		model_root.position.y -= hip_height - SIT_SEAT_CLEARANCE
+	_sit_pose_applied = true
+
+
+func _release_sit_pose() -> void:
+	if not _sit_pose_applied:
+		return
+	_sit_pose_applied = false
+	if gait_skeleton != null:
+		gait_skeleton.reset_bone_poses()
+	if model_root != null:
+		model_root.position = _model_rest_position
+	if anim_player != null:
+		anim_player.play()
+
+
+## Rotates a bone about the skeleton's X axis, in skeleton space.
+func _rotate_bone_in_skeleton(bone: int, degrees: float) -> void:
+	var pose := gait_skeleton.get_bone_global_pose(bone)
+	var parent := gait_skeleton.get_bone_parent(bone)
+	var parent_pose := gait_skeleton.get_bone_global_pose(parent) if parent >= 0 \
+		else Transform3D()
+	var turned := Transform3D(Basis(Vector3.RIGHT, deg_to_rad(degrees)) * pose.basis,
+		pose.origin)
+	gait_skeleton.set_bone_pose_rotation(bone,
+		(parent_pose.affine_inverse() * turned).basis.get_rotation_quaternion())
+	gait_skeleton.force_update_all_bone_transforms()
 
 
 func begin_fall_rescue() -> void:
@@ -1082,7 +1193,7 @@ func _reset_mayor_arm_pose() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _fall_rescue_active:
+	if _fall_rescue_active or _seat_anchor != null:
 		velocity = Vector3.ZERO
 		return
 	if gravity_enabled and not is_on_floor():
@@ -1316,12 +1427,20 @@ func _reset_npc_state():
 func _process(delta):
 	_update_speaking(delta)
 	_update_eye_animation(delta)
-	_update_secondary_motion(delta)
-	if not _fall_rescue_active:
+	if _seat_anchor == null:
+		_update_secondary_motion(delta)
+	if not _fall_rescue_active and _seat_anchor == null:
 		_update_terrain_grounding(delta)
 	_apply_journey_stage()
 	if aura != null:
 		aura.rotate_y(delta * (0.18 + max(journey_stage, 0) * 0.08))
+	if _seat_anchor != null:
+		# Other systems (counsellor poses, pauses) can start a clip, which
+		# would overwrite the seated legs; freeze and pose again.
+		if anim_player != null and anim_player.is_playing():
+			_release_sit_pose()
+			_apply_sit_pose()
+		return
 	if _fall_rescue_active:
 		return
 
