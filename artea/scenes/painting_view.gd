@@ -1,4 +1,5 @@
 extends Node2D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 
 
@@ -103,4 +104,4 @@ func _on_uplift_button_pressed() -> void:
 
 #Go back button
 func _on_back_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/ArtGallery.tscn")
+	SceneLoader.change_scene(get_tree(), "res://scenes/ArtGallery.tscn")

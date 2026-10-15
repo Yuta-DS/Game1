@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 const SPEED = 150
 const JUMP_VELOCITY = -350.0
@@ -150,7 +151,7 @@ func _process(_delta):
 	if curr and curr.name == "ArtGallery":
 		if interacting_area and (Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("jump")):
 			Global.painting_to_show = interacting_area.painting_id
-			get_tree().change_scene_to_file("res://scenes/PaintingView.tscn")
+			SceneLoader.change_scene(get_tree(), "res://scenes/PaintingView.tscn")
 
 func _on_attack_animation_finished(anim_name):
 	if anim_name == "attack1":
