@@ -23,6 +23,9 @@ const GravityLeafReliefStyle := preload(
 const TREE_CHRISTMAS_MELODY := preload(
 	"res://assets/audio/tree_of_life_christmas_ambience.ogg")
 const TREE_CHRISTMAS_BELLS := preload("res://assets/SFX/fairy dust.ogg")
+const MindSparkFoley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
+const ArrivalPlazaShader := preload("res://shaders/arrival_plaza.gdshader")
+const GalleryRotunda := preload("res://scripts/gallery_rotunda.gd")
 const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
 
 @export var embedded_in_gallery := false
@@ -130,6 +133,14 @@ const CAUSEWAY_ISLAND_RADIUS := 46.0
 const HEART := Vector3(0.0, 0.0, 2290.0)
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
 const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
+# Arrival-island bounce pads: ~12 m of air at the default 9.8 gravity.
+const BOUNCE_PAD_LAUNCH_SPEED := 15.5
+const BOUNCE_PAD_RADIUS := 3.2
+# Latona fountain: 60 m toward the gate from the island centre, where the
+# south observatory tower used to stand. Basin radius is 30 m.
+const ARRIVAL_FOUNTAIN_CENTRE := SOUTH_GATE + Vector3(0.0, 0.0, -60.0)
+# Holding jump on landing: ~27 m of air instead of ~12 m.
+const BOUNCE_PAD_BOOST_SPEED := 23.0
 const RETURN_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 
 var _player: CharacterBody3D
@@ -138,6 +149,7 @@ var _animated_nodes: Array[Node3D] = []
 var _travelling := false
 var _tree_christmas_melody: AudioStreamPlayer3D
 var _tree_christmas_bells: AudioStreamPlayer3D
+var _sfx_players: Dictionary = {}
 
 const TREE_CHRISTMAS_FULL_VOLUME_DISTANCE := 70.0
 const TREE_CHRISTMAS_SILENT_DISTANCE := 620.0
@@ -165,7 +177,6 @@ func _ready() -> void:
 	_build_mind_spark_world_one_gameplay()
 	_build_world_one_walk_route()
 	_build_boundary_observatories()
-	_build_skyline()
 	_build_cloud_banks()
 	_build_world_labels()
 	if not embedded_in_gallery:
@@ -310,25 +321,314 @@ func _build_arrival_island() -> void:
 	island.name = "ArrivalIsland"
 	add_child(island)
 	_build_island_foundation(island, SOUTH_GATE, 155.0, 42.0, 28)
-	_add_box(island, "ArrivalPromenade", Vector3(0.0, 0.3, 760.0), Vector3(86.0, 1.0, 180.0), _materials.stone, true)
-	_add_box(island, "ArrivalMosaic", Vector3(0.0, 1.0, 760.0), Vector3(38.0, 0.8, 118.0), _materials.aqua_glass, false)
+	# The fountain stands on the deck itself. The deck is a circular parterre
+	# centred on it (shaders/arrival_plaza.gdshader).
+	var fountain_centre := ARRIVAL_FOUNTAIN_CENTRE
+	var plaza := ShaderMaterial.new()
+	plaza.shader = ArrivalPlazaShader
+	plaza.set_shader_parameter("plaza_center", Vector2(fountain_centre.x - SOUTH_GATE.x,
+		fountain_centre.z - SOUTH_GATE.z))
+	(island.get_node("WalkableDeck") as MeshInstance3D).material_override = plaza
 	for step in 6:
 		var z := 710.0 + float(step) * 20.0
-		_add_box(island, "MosaicRune_%02d" % step, Vector3(0.0, 1.7, z),
-			Vector3(24.0, 0.35, 3.0), _materials.gold, false)
-		_add_flower_cluster(island, Vector3(-47.0, 2.5, z), step % 2 == 0)
-		_add_flower_cluster(island, Vector3(47.0, 2.5, z), step % 2 != 0)
-	# Give the enlarged Blender gate a clean silhouette. The former z=715 frame
-	# sat only 52 m behind its facade and visually collapsed into it. Placing the
-	# frame at the island centre creates a measured 157 m gate-to-wall setback
-	# without changing the arrival promenade or the playable route.
-	_build_frame(island, Vector3(0.0, 0.0, 820.0), 48.0, 62.0, _materials.gold, "ART CASTLE GALAXY")
+		_add_bounce_pad(island, Vector3(-47.0, 0.0, z), step % 2 == 0)
+		_add_bounce_pad(island, Vector3(47.0, 0.0, z), step % 2 != 0)
+	_build_latona_fountain(island, fountain_centre)
 	for side in [-1.0, 1.0]:
-		_build_cypress(island, Vector3(side * 82.0, 2.0, 785.0), 34.0, _materials.purple_leaf)
-		_build_cypress(island, Vector3(side * 108.0, 2.0, 865.0), 28.0, _materials.pink_leaf)
+		_build_cypress(island, Vector3(side * 82.0, 0.0, 785.0), 34.0, _materials.purple_leaf, true)
+		_build_cypress(island, Vector3(side * 108.0, 0.0, 865.0), 28.0, _materials.pink_leaf, true)
+	# A ring of cypresses between the edge pads (pads sit every 20 degrees at
+	# 125 m), leaving the bridge axis clear and the east side clear for the
+	# Gallery Station stairs.
+	for index in 18:
+		var angle_deg := 10.0 + 20.0 * float(index)
+		var off_axis := absf(wrapf(angle_deg - 90.0, -180.0, 180.0))
+		if off_axis < 25.0 or off_axis > 155.0 or angle_deg < 20.0 or angle_deg > 340.0:
+			continue
+		var angle := deg_to_rad(angle_deg)
+		_build_cypress(island, SOUTH_GATE + Vector3(cos(angle), 0.0, sin(angle)) * 136.0,
+			24.0 + float(index % 3) * 4.0, _materials.pink_leaf if index % 2 == 0 else _materials.purple_leaf, true)
 	for index in 18:
 		var angle := TAU * float(index) / 18.0
-		_add_flower_cluster(island, SOUTH_GATE + Vector3(cos(angle) * 125.0, 2.0, sin(angle) * 125.0), index % 2 == 0)
+		_add_bounce_pad(island, SOUTH_GATE + Vector3(cos(angle) * 125.0, 0.0, sin(angle) * 125.0), index % 2 == 0)
+
+
+## A small flower-bed pad that throws the player up like a trampoline. It has
+## no solid collision, so walking in from the side launches too, and falling
+## back onto it re-enters the area and bounces again.
+func _add_bounce_pad(parent: Node3D, position: Vector3, pink: bool) -> void:
+	var pad := Area3D.new()
+	pad.name = "BouncePad"
+	pad.position = position
+	parent.add_child(pad, true)
+	var visual := _add_sphere(pad, "PadBloom", Vector3.ZERO,
+		Vector3(BOUNCE_PAD_RADIUS, 0.55, BOUNCE_PAD_RADIUS), _materials.pink if pink else _materials.purple)
+	(visual.mesh as SphereMesh).radial_segments = 6
+	(visual.mesh as SphereMesh).rings = 3
+	var shape_node := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = BOUNCE_PAD_RADIUS
+	shape.height = 2.0
+	shape_node.shape = shape
+	shape_node.position.y = 1.0
+	pad.add_child(shape_node)
+	pad.body_entered.connect(func(body: Node3D) -> void:
+		if body != _player:
+			return
+		var boosted := bool(_player.get("input_enabled")) and Input.is_action_pressed("jump")
+		_player.velocity.y = BOUNCE_PAD_BOOST_SPEED if boosted else BOUNCE_PAD_LAUNCH_SPEED
+		_play_sfx(&"pad_bounce", pad.global_position, 1.3 if boosted else 1.0)
+		var squash := visual.create_tween()
+		squash.tween_property(visual, "scale:y", 0.2, 0.06)
+		squash.tween_property(visual, "scale:y", 0.55, 0.25).set_trans(Tween.TRANS_ELASTIC))
+
+
+## One shared positional player per sound, moved to wherever it plays.
+func _play_sfx(event: StringName, at: Vector3, pitch: float = 1.0) -> void:
+	var sfx := _sfx_players.get(event) as AudioStreamPlayer3D
+	if sfx == null:
+		sfx = AudioStreamPlayer3D.new()
+		sfx.name = "Sfx_%s" % event
+		sfx.stream = MindSparkFoley.make_play_event(event)
+		sfx.max_distance = 120.0
+		add_child(sfx)
+		_sfx_players[event] = sfx
+	sfx.global_position = at
+	sfx.pitch_scale = pitch * randf_range(0.94, 1.06)
+	sfx.play()
+
+
+## Decor inspired by the Latona Fountain at Versailles: a wide basin with a
+## stepped pyramid of tiers, gilded frogs spraying inward, and Latona with her
+## two children on top. The middle shelf carries three PrizeSocket markers for
+## the minigame-world rewards (not wired up yet).
+func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
+	var fountain := Node3D.new()
+	fountain.name = "LatonaFountain"
+	fountain.position = center
+	parent.add_child(fountain)
+	var water := _make_glow(Color(0.35, 0.85, 1.0, 0.55), 0.35, true)
+	var spray := _make_glow(Color(0.75, 0.95, 1.0, 0.8), 0.9, true)
+
+	# [radius, wall top]. Every tier is a pool: a solid core up to its floor,
+	# a solid wall with a 0.3 m gold cap, and wadeable water with no
+	# collision. The basin rim (0.9 + 0.3 = 1.2 m) stays under the 1.4 m jump.
+	var tiers := [[30.0, 0.9], [18.0, 5.0], [12.0, 9.0], [7.0, 12.5]]
+	for index in tiers.size():
+		var radius: float = tiers[index][0]
+		var top: float = tiers[index][1]
+		var floor_y := 0.0 if index == 0 else top - 1.0
+		var inner := radius - 1.6
+		if floor_y > 0.0:
+			_add_cylinder(fountain, "Tier%dCore" % index, Vector3(0.0, floor_y * 0.5, 0.0), inner + 0.2,
+				floor_y, _materials.ivory, true, 48)
+		_add_ring_wall(fountain, "Tier%dWall" % index, floor_y, top - floor_y, inner, radius,
+			_materials.ivory)
+		_add_ring_wall(fountain, "Tier%dCap" % index, top, 0.3, inner - 0.1, radius + 0.15,
+			_materials.gold)
+		var water_y := top - 0.3
+		_add_cylinder(fountain, "Tier%dWater" % index, Vector3(0.0, water_y, 0.0), inner, 0.1,
+			water, false, 48)
+		_add_basin_splash_zone(fountain, inner, floor_y, water_y, spray)
+		# Frogs sit on each cap facing the centre and arc water inward.
+		var frog_count := 16 - index * 3
+		for frog_index in frog_count:
+			var angle := TAU * float(frog_index) / float(frog_count)
+			var frog_pos := Vector3(cos(angle), 0.0, sin(angle)) * (radius - 0.8) \
+				+ Vector3(0.0, top + 0.75, 0.0)
+			var frog := _add_sphere(fountain, "Frog", frog_pos, Vector3(0.8, 0.55, 1.0), _materials.gold)
+			frog.rotation.y = -angle + PI * 0.5
+			_add_static_box(fountain, frog_pos, Vector3(1.6, 1.1, 2.0), frog.rotation.y)
+		_add_fountain_spray(fountain, radius - 0.8, top + 1.0, 7.0 + index, radius * 0.35, spray)
+
+	# The top pool's floor is 11.5 m; the plinth rises from it.
+	_add_cylinder(fountain, "StatuePlinth", Vector3(0.0, 14.0, 0.0), 2.6, 5.0, _materials.ivory, true, 16)
+	var statue := Node3D.new()
+	statue.name = "LatonaStatue"
+	statue.position.y = 16.5
+	fountain.add_child(statue)
+	_add_static_box(statue, Vector3(0.0, 3.2, 0.2), Vector3(4.6, 6.4, 3.4), 0.0)
+	_add_statue_figure(statue, Vector3.ZERO, 1.0)
+	_add_statue_figure(statue, Vector3(-1.5, 0.0, 0.6), 0.5)
+	_add_statue_figure(statue, Vector3(1.5, 0.0, 0.6), 0.5)
+
+	# Three reward plinths standing in the 9 m pool (floor 8 m), one facing the
+	# arrival gate.
+	for index in 3:
+		var angle := -PI * 0.5 + TAU * float(index) / 3.0
+		var spot := Vector3(cos(angle) * 8.7, 8.0, sin(angle) * 8.7)
+		_add_cylinder(fountain, "PrizePlinth%d" % index, spot + Vector3(0.0, 0.9, 0.0), 1.0, 1.8,
+			_materials.gold, true, 12)
+		spot.y += 0.3
+		var socket := Marker3D.new()
+		socket.name = "PrizeSocket%d" % index
+		socket.position = spot + Vector3(0.0, 1.5, 0.0)
+		socket.add_to_group("fountain_prize_socket")
+		fountain.add_child(socket)
+
+
+func _add_statue_figure(parent: Node3D, position: Vector3, size: float) -> void:
+	var robe := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.5 * size
+	mesh.bottom_radius = 1.5 * size
+	mesh.height = 5.0 * size
+	mesh.radial_segments = 12
+	robe.mesh = mesh
+	robe.position = position + Vector3(0.0, 2.5 * size, 0.0)
+	robe.material_override = _materials.gold
+	parent.add_child(robe)
+	_add_sphere(parent, "Head", position + Vector3(0.0, 5.7 * size, 0.0), Vector3.ONE * 0.8 * size,
+		_materials.gold)
+
+
+## The water layer of the basin. Its top sits just above the surface, so a
+## jump inside the pool leaves it and the landing splashes again.
+func _add_basin_splash_zone(fountain: Node3D, radius: float, floor_y: float, water_y: float,
+		material: Material) -> void:
+	var zone := Area3D.new()
+	zone.name = "SplashZone"
+	var shape_node := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = radius
+	shape.height = water_y - floor_y + 0.1
+	shape_node.shape = shape
+	shape_node.position.y = floor_y + shape.height * 0.5
+	zone.add_child(shape_node)
+	fountain.add_child(zone, true)
+	var burst := GPUParticles3D.new()
+	burst.name = "SplashBurst"
+	burst.emitting = false
+	burst.one_shot = true
+	burst.explosiveness = 1.0
+	burst.amount = 60
+	burst.lifetime = 0.9
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	process.emission_ring_axis = Vector3.UP
+	process.emission_ring_radius = 0.9
+	process.emission_ring_inner_radius = 0.3
+	process.emission_ring_height = 0.0
+	process.direction = Vector3.UP
+	process.spread = 30.0
+	process.initial_velocity_min = 3.0
+	process.initial_velocity_max = 6.5
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	process.scale_min = 0.15
+	process.scale_max = 0.35
+	burst.process_material = process
+	var drop := SphereMesh.new()
+	drop.radius = 0.5
+	drop.height = 1.0
+	drop.radial_segments = 6
+	drop.rings = 3
+	drop.material = material
+	burst.draw_pass_1 = drop
+	fountain.add_child(burst, true)
+	zone.body_entered.connect(func(body: Node3D) -> void:
+		if body != _player:
+			return
+		var at := Vector3(_player.global_position.x, fountain.global_position.y + water_y,
+			_player.global_position.z)
+		burst.global_position = at
+		burst.restart()
+		_play_sfx(&"water_splash", at))
+
+
+## A hollow cylinder wall (outer, inner and top faces) with matching trimesh
+## collision: one mesh and one body per ring instead of dozens of boxes.
+func _add_ring_wall(parent: Node3D, node_name: String, bottom: float, height: float,
+		inner: float, outer: float, material: Material) -> MeshInstance3D:
+	const SEGMENTS := 48
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var top := bottom + height
+	var up := Vector3.UP
+	for segment in SEGMENTS:
+		var a0 := TAU * float(segment) / SEGMENTS
+		var a1 := TAU * float(segment + 1) / SEGMENTS
+		var d0 := Vector3(cos(a0), 0.0, sin(a0))
+		var d1 := Vector3(cos(a1), 0.0, sin(a1))
+		var radial := (d0 + d1).normalized()
+		_ring_quad(st, d0 * outer + up * bottom, d1 * outer + up * bottom, d1 * outer + up * top,
+			d0 * outer + up * top, radial)
+		_ring_quad(st, d0 * inner + up * bottom, d1 * inner + up * bottom, d1 * inner + up * top,
+			d0 * inner + up * top, -radial)
+		_ring_quad(st, d0 * inner + up * top, d1 * inner + up * top, d1 * outer + up * top,
+			d0 * outer + up * top, up)
+	var mesh := st.commit()
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	instance.mesh = mesh
+	instance.material_override = material
+	parent.add_child(instance)
+	var body := StaticBody3D.new()
+	body.name = "%sCollision" % node_name
+	var shape_node := CollisionShape3D.new()
+	var shape := mesh.create_trimesh_shape()
+	shape.backface_collision = true
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	parent.add_child(body)
+	return instance
+
+
+## Two triangles for quad a-b-c-d, wound so `normal` is the front face
+## (Godot treats clockwise as front).
+func _ring_quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3) -> void:
+	var clockwise := (b - a).cross(c - a).dot(normal) < 0.0
+	var tris := [[a, b, c], [a, c, d]] if clockwise else [[a, c, b], [a, d, c]]
+	for tri in tris:
+		for vertex in tri:
+			st.set_normal(normal)
+			st.add_vertex(vertex)
+
+
+func _add_static_box(parent: Node3D, position: Vector3, size: Vector3, yaw: float) -> void:
+	var body := StaticBody3D.new()
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	body.position = position
+	body.rotation.y = yaw
+	parent.add_child(body)
+
+
+## One particle ring per tier: jets leave the rim, rise, and fall inward.
+func _add_fountain_spray(parent: Node3D, radius: float, height: float, up_speed: float,
+		inward_speed: float, material: Material) -> void:
+	var particles := GPUParticles3D.new()
+	particles.name = "FountainSpray"
+	particles.position.y = height
+	particles.amount = 240
+	particles.lifetime = 1.6
+	particles.visibility_aabb = AABB(Vector3(-radius, -4.0, -radius), Vector3(radius * 2.0, 12.0, radius * 2.0))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	process.emission_ring_axis = Vector3.UP
+	process.emission_ring_radius = radius
+	process.emission_ring_inner_radius = radius
+	process.emission_ring_height = 0.0
+	process.direction = Vector3.UP
+	process.spread = 4.0
+	process.initial_velocity_min = up_speed * 0.9
+	process.initial_velocity_max = up_speed
+	process.radial_velocity_min = -inward_speed
+	process.radial_velocity_max = -inward_speed
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	process.scale_min = 0.25
+	process.scale_max = 0.45
+	particles.process_material = process
+	var drop := SphereMesh.new()
+	drop.radius = 0.5
+	drop.height = 1.0
+	drop.radial_segments = 6
+	drop.rings = 3
+	drop.material = material
+	particles.draw_pass_1 = drop
+	parent.add_child(particles)
 
 
 func _build_castle_approach_bridge() -> void:
@@ -691,11 +991,59 @@ func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width:
 			var pier_leg := pier_center + side_axis * float(side) * (width * 0.42)
 			_add_box(parent, "PierLeg_%03d_%s" % [metre, "L" if side < 0 else "R"],
 				pier_leg, Vector3(2.4, 21.0, 2.4), _materials.bridge_structure, true, yaw, 0.88, 0.0)
-	# Carpet/deck and deck/island thresholds are broad, shallow, walkable ramps.
-	for endpoint_data in [[start, "Castle"], [finish, "Island"]]:
-		_add_box(parent, "%sThresholdRamp" % endpoint_data[1],
-			(endpoint_data[0] as Vector3) + Vector3(0, 0.36, 0),
-			Vector3(width - 0.8, 0.32, 5.0), _materials.bridge_edge, true, yaw, 0.94, 0.0)
+	# Carpet/deck and deck/island thresholds: shallow stairs the player walks
+	# up without jumping. Gallery floor is y=0.25, deck top 0.6, island 0.
+	var along := (finish - start).normalized()
+	_add_walk_stairs(parent, "CastleThresholdStairs", start - along * 8.0 + Vector3.UP * 0.25,
+		start + along * 0.6 + Vector3.UP * 0.6, width - 0.8, false)
+	_add_walk_stairs(parent, "IslandThresholdStairs", finish + along * 10.0,
+		finish - along * 0.6 + Vector3.UP * 0.6, width - 0.8)
+
+
+## Visible steps from `low` to `high` (top-surface points) over an invisible
+## slope that carries the collision, so a CharacterBody walks straight up.
+## Without steps the slope itself is drawn, so what you see is what you walk on.
+func _add_walk_stairs(parent: Node3D, node_name: String, low: Vector3, high: Vector3, width: float,
+		show_steps: bool = true) -> void:
+	const STEPS := 4
+	const THICKNESS := 0.5
+	var stairs := Node3D.new()
+	stairs.name = node_name
+	parent.add_child(stairs)
+	var run := Vector3(high.x - low.x, 0.0, high.z - low.z)
+	var yaw := atan2(run.x, run.z)
+	var rise := high.y - low.y
+	for step in (STEPS if show_steps else 0):
+		var top := low.y + rise * float(step + 1) / STEPS
+		var centre := low + run * (float(step) + 0.5) / STEPS
+		_add_box(stairs, "Step%d" % step, Vector3(centre.x, (low.y - 0.1 + top) * 0.5, centre.z),
+			Vector3(width, top - low.y + 0.1, run.length() / STEPS + 0.02),
+			_materials.passage_stone if step % 2 == 0 else _materials.passage_stone_shadow, false, yaw)
+	var body := StaticBody3D.new()
+	body.name = "%sSlope" % node_name
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(width, THICKNESS, (high - low).length())
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	var basis := Basis.looking_at(high - low, Vector3.UP)
+	body.transform = Transform3D(basis, (low + high) * 0.5 - basis.y * THICKNESS * 0.5)
+	stairs.add_child(body)
+	if not show_steps:
+		var slab := MeshInstance3D.new()
+		slab.name = "Slope"
+		var mesh := BoxMesh.new()
+		mesh.size = shape.size
+		slab.mesh = mesh
+		# Same limestone flags as the gallery floor, projected in world space at
+		# the gallery's 4 m per tile so the joints carry straight out the door.
+		var gallery_floor := GalleryRotunda.make_floor_material()
+		gallery_floor.uv1_triplanar = true
+		gallery_floor.uv1_world_triplanar = true
+		gallery_floor.uv1_scale = Vector3.ONE * 0.25
+		slab.material_override = gallery_floor
+		slab.transform = body.transform
+		stairs.add_child(slab)
 
 
 func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vector3) -> void:
@@ -917,6 +1265,7 @@ func _build_world_one_walk_route() -> void:
 	]
 	for index in points.size() - 1:
 		_add_walk_route_dots(route, points[index], points[index + 1], index)
+	_snap_route_dots_to_floor(route)
 	_add_landmark_label(route, "WORLD ONE • MIND SPARK  ←  WALK LEFT",
 		Vector3(-92, 24, 1518), Color("8df8ff"), 42)
 	_add_landmark_label(route, "MIND SPARK WORLD GATE • QUESTS BEYOND",
@@ -930,8 +1279,29 @@ func _add_walk_route_dots(parent: Node3D, start: Vector3, finish: Vector3, segme
 	var yaw := atan2(direction.x, direction.z)
 	for dot_index in count + 1:
 		var progress := float(dot_index) / float(count)
-		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], start.lerp(finish, progress),
+		var spot := start.lerp(finish, progress)
+		if Vector2(spot.x, spot.z).distance_to(Vector2(ARRIVAL_FOUNTAIN_CENTRE.x,
+				ARRIVAL_FOUNTAIN_CENTRE.z)) < 32.0:
+			continue
+		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], spot,
 			Vector3(7.5, 0.16, 2.2), _materials.aqua, false, yaw)
+
+
+## The route is authored at one height, but decks and bridges differ. Once
+## physics has the static bodies, drop each dot onto whatever floor is under it.
+func _snap_route_dots_to_floor(route: Node3D) -> void:
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if not is_instance_valid(route):
+		return
+	var space := get_world_3d().direct_space_state
+	for dot in route.get_children():
+		if not dot is MeshInstance3D:
+			continue
+		var from := (dot as Node3D).global_position + Vector3.UP * 2.0
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 8.0))
+		if not hit.is_empty():
+			(dot as Node3D).global_position.y = hit.position.y + 0.09
 
 
 func _build_mind_story_landmarks() -> void:
@@ -1047,8 +1417,8 @@ func _build_boundary_observatories() -> void:
 			"source_center": HEART, "source_radius": 175.0},
 		{"name": "EastObservatory", "center": Vector3(920.0, 0.0, 1640.0),
 			"source_center": CREATOR, "source_radius": 195.0},
-		{"name": "SouthObservatory", "center": Vector3(0.0, 0.0, 710.0),
-			"source_center": SOUTH_GATE, "source_radius": 155.0},
+		# No south lookout: its tower stood inside the arrival island between
+		# the gate and the fountain.
 	]
 	for info in points:
 		var lookout := Node3D.new()
@@ -1090,24 +1460,6 @@ func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
 		bridge.set_meta("symmetry_side", int(side))
 		bridge.set_meta("symmetry_offset", LANE_OFFSET)
 		bridge.set_meta("walk_surface_y", source_center.y)
-
-
-func _build_skyline() -> void:
-	var skyline := Node3D.new()
-	skyline.name = "DistantSkyline"
-	add_child(skyline)
-	var tower_data := [
-		Vector4(-860, -720, 180, 42), Vector4(-610, -880, 240, 48),
-		Vector4(-330, -900, 150, 36), Vector4(330, -900, 210, 44),
-		Vector4(670, -820, 160, 38), Vector4(900, -650, 225, 46),
-		Vector4(-940, -430, 145, 34), Vector4(940, -390, 170, 38),
-		Vector4(-870, 540, 190, 42), Vector4(850, 560, 230, 48),
-		Vector4(-600, 760, 145, 34), Vector4(600, 790, 175, 38),
-	]
-	for index in tower_data.size():
-		var data: Vector4 = tower_data[index]
-		var base := Vector3(data.x, -30.0 - float(index % 3) * 16.0, data.y)
-		_build_cloud_tower(skyline, base, data.w, data.z, index)
 
 
 func _build_cloud_banks() -> void:
@@ -3244,8 +3596,6 @@ const HEART_SHRINE_ORBIT_RINGS := [
 const HEART_SHRINE_OUTLINE_GROW := 0.95
 
 
-
-
 # Energy veins climbing the bark. They are pinned to the real surface: the
 # trunk and root mesh is sampled into a height x angle table of bark radii, and
 # every vein segment is placed on that surface. A guessed cylinder profile
@@ -4486,7 +4836,6 @@ func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -
 	canopy.add_child(flow_light)
 
 
-
 # Baubles hung along the whorls. Three colours ride the branches and every
 # fitting - cap and hanger - is gold, matching the star and the shrine rings.
 const ORNAMENT_COLOURS := [
@@ -5102,18 +5451,6 @@ func _build_sun_rune(parent: Node3D, position: Vector3) -> void:
 			Vector3(3.0, 15.0, 3.0), _materials.gold, false, -angle)
 
 
-func _build_cloud_tower(parent: Node3D, base: Vector3, width: float, height: float, index: int) -> void:
-	var tower := Node3D.new()
-	tower.name = "SkyTower_%02d" % index
-	tower.position = base
-	parent.add_child(tower)
-	_add_box(tower, "TowerBody", Vector3(0.0, height * 0.5, 0.0), Vector3(width, height, width * 0.72), _materials.ivory)
-	_add_box(tower, "TowerCrown", Vector3(0.0, height + 15.0, 0.0), Vector3(width * 0.72, 30.0, width * 0.62), _materials.ivory)
-	for level in range(35, int(height), 42):
-		_add_box(tower, "LuminousWindow", Vector3(0.0, float(level), -width * 0.37), Vector3(width * 0.20, 24.0, 2.5), _materials.window)
-	_build_cypress(tower, Vector3(width * 0.34, height + 30.0, 0.0), 22.0 + float(index % 4) * 4.0, _materials.purple_leaf)
-
-
 func _build_tower(parent: Node3D, base: Vector3, width: float, height: float, material: Material) -> void:
 	_add_box(parent, "ObservatoryTower", base + Vector3(0.0, height * 0.5, 18.0), Vector3(width, height, width), material, true)
 	_add_box(parent, "ObservatoryWindow", base + Vector3(0.0, height * 0.62, 0.5), Vector3(width * 0.28, height * 0.34, 3.0), _materials.window)
@@ -5161,12 +5498,19 @@ func _build_frame(parent: Node3D, position: Vector3, width: float, height: float
 	frame.add_child(label)
 
 
-func _build_cypress(parent: Node3D, position: Vector3, height: float, material: Material) -> void:
+func _build_cypress(parent: Node3D, position: Vector3, height: float, material: Material,
+		solid: bool = false) -> void:
 	var tree := Node3D.new()
 	tree.name = "SkyCypress"
 	tree.position = position
-	parent.add_child(tree)
-	_add_cylinder(tree, "Trunk", Vector3(0.0, height * 0.35, 0.0), height * 0.07, height * 0.7, _materials.wood, false, 7)
+	parent.add_child(tree, true)
+	_add_cylinder(tree, "Trunk", Vector3(0.0, height * 0.35, 0.0), height * 0.07, height * 0.7, _materials.wood, solid, 7)
+	var crown_body: StaticBody3D = null
+	if solid:
+		# Crowns are reachable from the bounce pads, so they are solid too.
+		crown_body = StaticBody3D.new()
+		crown_body.name = "CrownCollision"
+		tree.add_child(crown_body)
 	for level in 5:
 		var crown := MeshInstance3D.new()
 		var mesh := CylinderMesh.new()
@@ -5178,6 +5522,11 @@ func _build_cypress(parent: Node3D, position: Vector3, height: float, material: 
 		crown.position.y = height * (0.43 + level * 0.115)
 		crown.material_override = material
 		tree.add_child(crown)
+		if crown_body != null:
+			var shape_node := CollisionShape3D.new()
+			shape_node.shape = mesh.create_convex_shape()
+			shape_node.position = crown.position
+			crown_body.add_child(shape_node)
 
 
 func _add_flower_cluster(parent: Node3D, position: Vector3, pink: bool) -> void:
