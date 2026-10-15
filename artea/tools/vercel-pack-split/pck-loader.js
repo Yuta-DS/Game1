@@ -68,49 +68,130 @@
 		return missing === -1 ? MAX_PARTS : missing;
 	};
 
-	// Fetch one at a time. Requesting all pack parts at once
-	// holds two copies of the pack in memory at peak and mobile Safari drops the
-	// tab under that pressure.
-	// Stream the parts instead of buffering them.
-	//
-	// The previous version awaited response.arrayBuffer() for every part and
-	// kept them all, then copied the lot into a Blob - so a 748 MB pack existed
-	// twice in JS memory (~1.5 GB) before Godot mounted its own copy. Against
-	// wasm32's 4 GB address space that was enough to hang or kill the tab.
-	//
-	// A ReadableStream hands each chunk straight to the consumer and drops it,
-	// so peak cost is one part (8 MB) rather than the whole pack.
-	const streamParts = (requestUrl, partCount) => new ReadableStream({
-		async start(controller) {
-			try {
-				const hashed = manifestParts.get(requestUrl);
-				for (let index = 0; index < partCount; index += 1) {
-					// Hashed parts are named by content, so the browser's normal
-					// HTTP cache is safe for them and the host marks them immutable:
-					// a repeat visit re-downloads none. No ?build= key either, which
-					// would only stop identical parts being reused across deploys.
-					// The older unhashed layout keeps its no-store fetch.
-					const url = hashed
-						? new URL(hashed[index], window.location.href).toString()
-						: partUrl(requestUrl, index);
-					const response = await nativeFetch(url, hashed ? {} : { cache: "no-store" });
-					if (!response.ok) {
-						throw new Error(`${url} returned ${response.status}`);
-					}
-					// Pump this part through without retaining it.
-					const reader = response.body.getReader();
-					for (;;) {
-						const { done, value } = await reader.read();
-						if (done) break;
-						controller.enqueue(value);
-					}
-				}
-				controller.close();
-			} catch (error) {
-				controller.error(error);
-			}
-		},
+	// Parts in flight at once (issue #34). One at a time left the connection
+	// idle for a round trip between every part; a handful in parallel keeps it
+	// busy. Bounded rather than all at once: every part that arrives ahead of
+	// its turn is held in memory until the engine reaches it, and holding the
+	// whole pack twice (~1.5 GB) is what used to hang or kill the tab against
+	// wasm32's 4 GB address space. 4 x 8 MB parts is a 32 MB peak. ?parts=N
+	// overrides it, for measuring (docs/web-baseline.md).
+	const DEFAULT_CONCURRENCY = 4;
+	const concurrency = (() => {
+		const requested = Number.parseInt(
+			new URL(window.location.href).searchParams.get("parts"), 10);
+		return requested >= 1 && requested <= 16 ? requested : DEFAULT_CONCURRENCY;
+	})();
+	// A failed part is retried this many times, waiting longer each time,
+	// before the player is asked. Hosts drop the odd request, and a 404 can be a
+	// part not yet propagated through a CDN; both usually clear on their own.
+	const RETRY_DELAYS_MS = [500, 1500, 4000];
+
+	const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+	// One "couldn't download" overlay for every failing part. The download is
+	// paused, not abandoned: the engine is still waiting on the stream, so
+	// Retry carries on from the part that failed and never re-fetches the parts
+	// already handed over. Nothing reaches the engine half-loaded.
+	let retryOverlay = null;
+	let retryWaiters = [];
+	const askToRetry = (error) => new Promise((resolve) => {
+		retryWaiters.push(resolve);
+		console.error(`pck-loader: giving up for now on ${error.message}`);
+		if (retryOverlay) return;
+		retryOverlay = document.createElement("div");
+		retryOverlay.id = "pck-loader-retry";
+		retryOverlay.setAttribute("role", "alertdialog");
+		retryOverlay.setAttribute("aria-label", "Download problem");
+		retryOverlay.style.cssText = "position:fixed;inset:0;z-index:2147483647;display:flex;"
+			+ "align-items:center;justify-content:center;background:rgba(0,0,0,0.6);"
+			+ "font:16px/1.4 system-ui,sans-serif;color:#fff;";
+		const box = document.createElement("div");
+		box.style.cssText = "max-width:420px;margin:16px;padding:24px;border-radius:12px;"
+			+ "background:#1e1b2e;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5);";
+		const message = document.createElement("p");
+		message.style.margin = "0 0 16px";
+		message.textContent = "Part of the game couldn't be downloaded. "
+			+ "Check your connection, then try again. Nothing already downloaded is lost.";
+		const button = document.createElement("button");
+		button.type = "button";
+		button.textContent = "Retry";
+		button.style.cssText = "font:inherit;padding:10px 28px;border:0;border-radius:8px;"
+			+ "background:#f2c14e;color:#1e1b2e;cursor:pointer;";
+		button.addEventListener("click", () => {
+			retryOverlay.remove();
+			retryOverlay = null;
+			const waiting = retryWaiters;
+			retryWaiters = [];
+			waiting.forEach((resume) => resume());
+		});
+		box.append(message, button);
+		retryOverlay.append(box);
+		document.body.append(retryOverlay);
+		button.focus();
 	});
+
+	// One whole part, retried until it arrives. Buffered rather than streamed
+	// so a connection that drops halfway through a part costs only that part:
+	// nothing from it has reached the engine yet, so it simply starts again.
+	const fetchPart = async (url, init) => {
+		for (let attempt = 0; ; attempt += 1) {
+			try {
+				const response = await nativeFetch(url, init);
+				if (!response.ok) {
+					throw new Error(`${url} returned ${response.status}`);
+				}
+				return new Uint8Array(await response.arrayBuffer());
+			} catch (error) {
+				if (attempt < RETRY_DELAYS_MS.length) {
+					console.warn(`pck-loader: ${error.message}, retrying`);
+					await sleep(RETRY_DELAYS_MS[attempt]);
+				} else {
+					await askToRetry(error);
+					attempt = -1;
+				}
+			}
+		}
+	};
+
+	// Up to `concurrency` parts download at once, but the engine reads them
+	// strictly in order: pull() hands over part N only once it has arrived and
+	// then starts the next one, so the window slides along the pack.
+	const streamParts = (requestUrl, partCount) => {
+		const hashed = manifestParts.get(requestUrl);
+		// Hashed parts are named by content, so the browser's normal HTTP cache
+		// is safe for them and the host marks them immutable: a repeat visit
+		// re-downloads none. No ?build= key either, which would only stop
+		// identical parts being reused across deploys. The older unhashed layout
+		// keeps its no-store fetch.
+		const fetchIndex = (index) => fetchPart(
+			hashed ? new URL(hashed[index], window.location.href).toString()
+				: partUrl(requestUrl, index),
+			hashed ? {} : { cache: "no-store" });
+		const inFlight = new Map();
+		let nextToSend = 0;
+		let nextToStart = 0;
+		const topUp = () => {
+			while (nextToStart < partCount && nextToStart < nextToSend + concurrency) {
+				inFlight.set(nextToStart, fetchIndex(nextToStart));
+				nextToStart += 1;
+			}
+		};
+		return new ReadableStream({
+			start() {
+				topUp();
+			},
+			async pull(controller) {
+				const bytes = await inFlight.get(nextToSend);
+				inFlight.delete(nextToSend);
+				nextToSend += 1;
+				topUp();
+				controller.enqueue(bytes);
+				if (nextToSend >= partCount) {
+					controller.close();
+				}
+			},
+		});
+	};
 
 	window.fetch = async (input, init) => {
 		const requestUrl = typeof input === "string" ? input : input.url;
