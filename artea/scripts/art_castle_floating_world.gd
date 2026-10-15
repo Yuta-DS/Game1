@@ -25,6 +25,9 @@ const TREE_CHRISTMAS_MELODY := preload(
 const TREE_CHRISTMAS_BELLS := preload("res://assets/SFX/fairy dust.ogg")
 const MindSparkFoley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
 const ArrivalPlazaShader := preload("res://shaders/arrival_plaza.gdshader")
+const TreeCourtShader := preload("res://shaders/tree_court.gdshader")
+const MindForecourtShader := preload("res://shaders/mind_forecourt.gdshader")
+const ObservatoryFloorShader := preload("res://shaders/observatory_floor.gdshader")
 const GalleryRotunda := preload("res://scripts/gallery_rotunda.gd")
 const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
 
@@ -269,6 +272,8 @@ func _build_materials() -> void:
 	_materials.purple_leaf = _make_material(Color("8566c7"), 0.86)
 	_materials.pink_leaf = _make_material(Color("db79bd"), 0.84)
 	_materials.green = _make_material(Color("58a77d"), 0.92)
+	_materials.red_leaf = _make_material(Color("d4566a"), 0.84)
+	_materials.blue_leaf = _make_material(Color("4f8fe0"), 0.84)
 	_materials.gold = _make_glow(Color("f2c55e"), 0.55)
 	_materials.wood = _make_material(Color("8a5d3b"), 0.88)
 	_materials.canvas = _make_material(Color("fff9e8"), 0.96)
@@ -929,7 +934,8 @@ func _add_bridge_cone(parent: Node3D, node_name: String, position: Vector3,
 	parent.add_child(instance)
 	return instance
 
-func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width: float) -> void:
+func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width: float,
+		from_gallery: bool = true) -> void:
 	var direction := finish - start
 	var length := direction.length()
 	var midpoint := (start + finish) * 0.5
@@ -994,8 +1000,12 @@ func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width:
 	# Carpet/deck and deck/island thresholds: shallow stairs the player walks
 	# up without jumping. Gallery floor is y=0.25, deck top 0.6, island 0.
 	var along := (finish - start).normalized()
-	_add_walk_stairs(parent, "CastleThresholdStairs", start - along * 8.0 + Vector3.UP * 0.25,
-		start + along * 0.6 + Vector3.UP * 0.6, width - 0.8, false)
+	if from_gallery:
+		_add_walk_stairs(parent, "CastleThresholdStairs", start - along * 8.0 + Vector3.UP * 0.25,
+			start + along * 0.6 + Vector3.UP * 0.6, width - 0.8, false)
+	else:
+		_add_walk_stairs(parent, "StartThresholdStairs", start - along * 10.0,
+			start + along * 0.6 + Vector3.UP * 0.6, width - 0.8)
 	_add_walk_stairs(parent, "IslandThresholdStairs", finish + along * 10.0,
 		finish - along * 0.6 + Vector3.UP * 0.6, width - 0.8)
 
@@ -1084,27 +1094,100 @@ func _build_mind_district() -> void:
 	district.set_meta("rune_grid_size", MIND_RUNE_GRID_SIZE)
 	district.set_meta("requires_jump_from_mind_bridge", false)
 
-	# An odd grid places one tile exactly on the bridge centerline. The shallow
-	# visual inlays sit over the island's continuous deck collision rather than
-	# creating 81 raised collision blocks.
-	var half_grid := float(MIND_RUNE_GRID_SIZE - 1) * 0.5
-	for row in MIND_RUNE_GRID_SIZE:
-		for column in MIND_RUNE_GRID_SIZE:
-			var tile_pos := MIND + Vector3(
-				(float(column) - half_grid) * MIND_RUNE_TILE_SPACING,
-				MIND_RUNE_TILE_HEIGHT * 0.5,
-				(float(row) - half_grid) * MIND_RUNE_TILE_SPACING)
-			var tile_mat: Material = _materials.aqua_glass if (row + column) % 2 == 0 else _materials.stone
-			_add_box(district, "RuneTile_%02d_%02d" % [row, column], tile_pos,
-				Vector3(MIND_RUNE_TILE_SIZE, MIND_RUNE_TILE_HEIGHT, MIND_RUNE_TILE_SIZE),
-				tile_mat, false)
+	# The 9x9 checkerboard is painted by the deck shader (shaders/
+	# mind_forecourt.gdshader): crystal and gold-inlaid marble tiles on one
+	# continuous collision deck. An odd grid keeps one tile on the bridge axis.
+	var forecourt := ShaderMaterial.new()
+	forecourt.shader = MindForecourtShader
+	forecourt.set_shader_parameter("tile_spacing", MIND_RUNE_TILE_SPACING)
+	forecourt.set_shader_parameter("tile_size", MIND_RUNE_TILE_SIZE)
+	forecourt.set_shader_parameter("grid_size", float(MIND_RUNE_GRID_SIZE))
+	forecourt.set_shader_parameter("island_radius", MIND_DISTRICT_RADIUS)
+	(district.get_node("WalkableDeck") as MeshInstance3D).material_override = forecourt
 
-	_build_frame(district, MIND + Vector3(-92.0, 0.0, -96.0), 58.0, 76.0,
-		_materials.aqua, "MIND SPARK")
-	_build_ruin_wall(district, MIND + Vector3(-112.0, 0.0, 96.0), 150.0, 48.0, 0.0, _materials.ivory)
+	_build_world_gate_arch(district, Vector3(MIND_GATE_POSITION.x, MIND.y, MIND_GATE_POSITION.z))
+	# Bounce pads and trees keep clear of the rim openings: the Mind Bridge
+	# (east, ~0 deg), the causeway and the Mind station stair (~170-185 deg),
+	# and the lookout bridges and the world gate (~200-230 deg). Angles are
+	# measured from +X toward +Z.
+	var clear := func(angle_deg: float) -> bool:
+		var a := fposmod(angle_deg, 360.0)
+		return not (a < 14.0 or a > 346.0 or (a > 160.0 and a < 240.0))
 	for index in 24:
-		var angle := TAU * float(index) / 24.0
-		_add_flower_cluster(district, MIND + Vector3(cos(angle) * 148.0, 2.0, sin(angle) * 148.0), false)
+		var angle_deg := 15.0 * float(index)
+		if clear.call(angle_deg):
+			_add_bounce_pad(district, MIND + _flat_dir(angle_deg) * 148.0, index % 2 == 0)
+	for index in 16:
+		var angle_deg := 11.25 + 22.5 * float(index)
+		if clear.call(angle_deg):
+			_add_bounce_pad(district, MIND + _flat_dir(angle_deg) * 104.0, index % 2 != 0)
+	var leaf_colours: Array[Material] = [_materials.red_leaf, _materials.blue_leaf, _materials.green]
+	for index in 12:
+		var angle_deg := 7.5 + 30.0 * float(index)
+		if clear.call(angle_deg):
+			_build_cypress(district, MIND + _flat_dir(angle_deg) * 128.0,
+				22.0 + float(index % 3) * 4.0, leaf_colours[index % 3], true)
+
+
+func _flat_dir(angle_deg: float) -> Vector3:
+	var angle := deg_to_rad(angle_deg)
+	return Vector3(cos(angle), 0.0, sin(angle))
+
+
+## A compact arch around the World One gate's portal ring (radius 5.5 m,
+## centred 5.5 m above the gate): a low two-step plinth, ivory pillars with
+## gold capitals and crystal finials, a lintel and a gold halo round the ring.
+func _build_world_gate_arch(parent: Node3D, base: Vector3) -> void:
+	var arch := Node3D.new()
+	arch.name = "WorldOneGateArch"
+	arch.position = base
+	parent.add_child(arch)
+	_add_cylinder(arch, "PlinthLower", Vector3(0.0, 0.175, 0.0), 11.0, 0.35, _materials.stone, true, 32)
+	_add_cylinder(arch, "PlinthUpper", Vector3(0.0, 0.525, 0.0), 9.0, 0.35, _materials.ivory, true, 32)
+	var ring_centre := MIND_GATE_POSITION.y - base.y + 5.5
+	for side in [-1.0, 1.0]:
+		var x: float = side * 8.4
+		_add_box(arch, "Pillar", Vector3(x, 0.7 + 6.5, 0.0), Vector3(1.8, 13.0, 2.2), _materials.ivory, true)
+		_add_box(arch, "Capital", Vector3(x, 14.1, 0.0), Vector3(2.6, 0.8, 3.0), _materials.gold)
+		_add_box(arch, "PillarBase", Vector3(x, 1.1, 0.0), Vector3(2.6, 0.8, 3.0), _materials.gold)
+		var finial := MeshInstance3D.new()
+		finial.name = "CrystalFinial"
+		var prism := PrismMesh.new()
+		prism.size = Vector3(1.4, 3.0, 1.4)
+		finial.mesh = prism
+		finial.position = Vector3(x, 17.2, 0.0)
+		finial.material_override = _materials.aqua
+		arch.add_child(finial)
+	_add_box(arch, "Lintel", Vector3(0.0, 15.1, 0.0), Vector3(20.0, 1.4, 2.6), _materials.ivory, true)
+	_add_box(arch, "LintelTrim", Vector3(0.0, 14.3, 0.0), Vector3(20.2, 0.25, 2.8), _materials.gold)
+	var keystone := MeshInstance3D.new()
+	keystone.name = "Keystone"
+	var gem := PrismMesh.new()
+	gem.size = Vector3(2.2, 2.6, 1.2)
+	keystone.mesh = gem
+	keystone.position = Vector3(0.0, 17.1, 0.0)
+	keystone.material_override = _materials.aqua
+	arch.add_child(keystone)
+	var halo := MeshInstance3D.new()
+	halo.name = "PortalHalo"
+	var halo_mesh := TorusMesh.new()
+	halo_mesh.inner_radius = 5.8
+	halo_mesh.outer_radius = 6.4
+	halo_mesh.rings = 40
+	halo_mesh.ring_segments = 8
+	halo.mesh = halo_mesh
+	halo.position = Vector3(0.0, ring_centre, 0.0)
+	halo.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+	halo.material_override = _materials.gold
+	arch.add_child(halo)
+	var label := Label3D.new()
+	label.text = "MIND SPARK"
+	label.position = Vector3(0.0, 21.0, 0.0)
+	label.font_size = 40
+	label.outline_size = 9
+	label.modulate = Color("bffbff")
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	arch.add_child(label)
 
 
 func _build_heart_district() -> void:
@@ -1426,14 +1509,100 @@ func _build_boundary_observatories() -> void:
 		add_child(lookout)
 		var center: Vector3 = info.center
 		_build_island_foundation(lookout, center, 70.0, 38.0, 20)
+		if info.name == "WestObservatory":
+			# The World One entrance lookout: a mini observatory on an astrolabe
+			# floor, reached by railed bridges like the World One causeway.
+			var floor_material := ShaderMaterial.new()
+			floor_material.shader = ObservatoryFloorShader
+			(lookout.get_node("WalkableDeck") as MeshInstance3D).material_override = floor_material
+			var source: Vector3 = info.source_center
+			var facing := Vector3(source.x - center.x, 0.0, source.z - center.z).normalized()
+			_build_mini_observatory(lookout, center, facing)
+			var side := Vector3(facing.z, 0.0, -facing.x)
+			for pad_dir in [-facing, side, -side]:
+				_add_bounce_pad(lookout, center + pad_dir * 44.0, pad_dir == side)
+			_add_exact_twin_island_bridges("%sBridge" % info.name,
+				info.source_center, float(info.source_radius), center, 70.0, true)
+			continue
 		_add_torus(lookout, "CompassRing", center + Vector3(0.0, 1.0, 0.0), 33.0, 38.0, _materials.gold)
 		_build_tower(lookout, center, 34.0, 112.0, _materials.ivory)
 		_add_exact_twin_island_bridges("%sBridge" % info.name,
 			info.source_center, float(info.source_radius), center, 70.0)
 
 
+## A small domed observatory for a lookout island: an ivory drum with a band of
+## glowing windows, a gold cornice, a dome with a brass telescope aimed out over
+## the void, a door toward `facing`, and an armillary sphere on a plinth. The
+## base, drum, dome and plinth are solid.
+func _build_mini_observatory(parent: Node3D, center: Vector3, facing: Vector3) -> void:
+	var side := Vector3(facing.z, 0.0, -facing.x)
+	var yaw := atan2(facing.x, facing.z)
+	_add_cylinder(parent, "ObservatoryBase", center + Vector3(0.0, 0.3, 0.0), 11.0, 0.6,
+		_materials.stone, true, 32)
+	# Named for test_train_station_jump_traversal.gd, which keeps it clear of
+	# the Mind station.
+	_add_cylinder(parent, "ObservatoryTower", center + Vector3(0.0, 4.1, 0.0), 8.0, 7.0,
+		_materials.ivory, true, 32)
+	_add_cylinder(parent, "WindowBand", center + Vector3(0.0, 4.6, 0.0), 8.06, 1.6,
+		_materials.aqua, false, 32)
+	for trim_y in [3.65, 5.55]:
+		_add_cylinder(parent, "WindowTrim", center + Vector3(0.0, trim_y, 0.0), 8.12, 0.3,
+			_materials.gold, false, 32)
+	_add_cylinder(parent, "Cornice", center + Vector3(0.0, 7.9, 0.0), 8.8, 0.6, _materials.gold, false, 32)
+	var dome := MeshInstance3D.new()
+	dome.name = "Dome"
+	var dome_mesh := SphereMesh.new()
+	dome_mesh.radius = 8.2
+	dome_mesh.height = 8.2
+	dome_mesh.is_hemisphere = true
+	dome_mesh.radial_segments = 32
+	dome_mesh.rings = 12
+	dome.mesh = dome_mesh
+	dome.position = center + Vector3(0.0, 8.2, 0.0)
+	dome.material_override = _materials.ivory_shadow
+	parent.add_child(dome)
+	var dome_body := StaticBody3D.new()
+	dome_body.name = "DomeCollision"
+	dome_body.position = dome.position
+	var dome_shape := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = 8.2
+	dome_shape.shape = sphere
+	dome_body.add_child(dome_shape)
+	parent.add_child(dome_body)
+	var finial := MeshInstance3D.new()
+	finial.name = "DomeFinial"
+	var prism := PrismMesh.new()
+	prism.size = Vector3(1.2, 2.4, 1.2)
+	finial.mesh = prism
+	finial.position = center + Vector3(0.0, 17.6, 0.0)
+	finial.material_override = _materials.aqua
+	parent.add_child(finial)
+	# Telescope: out of the dome's far side, 40 degrees up.
+	var aim := (-facing * cos(deg_to_rad(40.0)) + Vector3.UP * sin(deg_to_rad(40.0))).normalized()
+	var mount := center + Vector3(0.0, 11.0, 0.0)
+	var tube := _add_cylinder(parent, "Telescope", mount + aim * 6.0, 0.9, 10.0, _materials.gold, false, 12)
+	tube.basis = Basis(Quaternion(Vector3.UP, aim))
+	var lens := _add_cylinder(parent, "TelescopeLens", mount + aim * 11.0, 0.75, 0.3, _materials.aqua, false, 12)
+	lens.basis = tube.basis
+	# Door facing the bridges.
+	_add_box(parent, "Door", center + facing * 8.0 + Vector3(0.0, 2.8, 0.0),
+		Vector3(3.0, 4.4, 0.6), _materials.black, false, yaw)
+	_add_box(parent, "DoorFrame", center + facing * 8.05 + Vector3(0.0, 5.2, 0.0),
+		Vector3(3.8, 0.5, 0.7), _materials.gold, false, yaw)
+	# Armillary sphere beside the door.
+	var armillary := center + facing * 20.0 + side * 14.0
+	_add_cylinder(parent, "ArmillaryPlinth", armillary + Vector3(0.0, 1.2, 0.0), 1.6, 2.4,
+		_materials.ivory, true, 16)
+	var orb := armillary + Vector3(0.0, 5.2, 0.0)
+	_add_sphere(parent, "ArmillaryCore", orb, Vector3.ONE * 0.9, _materials.aqua)
+	for tilt in [Vector3(90.0, 0.0, 0.0), Vector3(90.0, 0.0, 60.0), Vector3(0.0, 0.0, 23.0)]:
+		_add_torus(parent, "ArmillaryRing", orb, 2.5, 2.75, _materials.gold, tilt)
+
+
 func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
-		source_radius: float, target_center: Vector3, target_radius: float) -> void:
+		source_radius: float, target_center: Vector3, target_radius: float,
+		railed: bool = false) -> void:
 	# Two narrow decks mirror each other around the centre-to-centre axis. Their
 	# endpoints are solved on inset circles, keeping the complete deck width over
 	# land rather than leaving an outer corner suspended past a curved island rim.
@@ -1453,7 +1622,19 @@ func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
 		var start: Vector3 = source_center + direction * source_along + side_axis * side * LANE_OFFSET
 		var finish: Vector3 = target_center - direction * target_along + side_axis * side * LANE_OFFSET
 		var bridge_name := base_name if side < 0.0 else "%sTwin" % base_name
-		_add_bridge(bridge_name, start, finish, BRIDGE_WIDTH)
+		if railed:
+			# Causeway style: circuit-stone deck, posts, glass and a top rail,
+			# with bounce pads alternating sides along it.
+			var railed_bridge := Node3D.new()
+			railed_bridge.name = bridge_name
+			add_child(railed_bridge)
+			_add_bridge_between(railed_bridge, start, finish, BRIDGE_WIDTH, false)
+			var across := Vector3(finish.z - start.z, 0.0, start.x - finish.x).normalized()
+			for pad in 3:
+				var on_deck := start.lerp(finish, 0.25 * float(pad + 1)) + Vector3.UP * 0.6
+				_add_bounce_pad(railed_bridge, on_deck + across * (4.5 if pad % 2 == 0 else -4.5), pad == 1)
+		else:
+			_add_bridge(bridge_name, start, finish, BRIDGE_WIDTH)
 		var bridge := get_node(bridge_name) as Node3D
 		bridge.set_meta("connection_start", start)
 		bridge.set_meta("connection_finish", finish)
@@ -1573,7 +1754,7 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var bridge := Node3D.new()
 	bridge.name = node_name
 	add_child(bridge)
-	var tree_processional := node_name == "SouthArrivalBridge"
+	var tree_processional := node_name in ["SouthArrivalBridge", "MindBridge"]
 	var direction := end - start
 	var length := direction.length()
 	# Top at -0.02, not 0: bridges start on island decks whose tops are at 0,
@@ -1636,6 +1817,8 @@ func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
 	# z=975 exactly. Its paver top sits 23 cm above the tested collision deck.
 	asset_holder.position = start
 	asset_holder.rotation.y = yaw + PI
+	# Authored 447 m long and 62 m wide; other processional bridges stretch it.
+	asset_holder.scale = Vector3(width / 62.0, 1.0, length / 447.0)
 	asset_holder.set_meta("source_blend",
 		"res://assets3D/tree_processional_bridge/blend/tree_processional_bridge.blend")
 	asset_holder.set_meta("source_glb",
@@ -1646,6 +1829,48 @@ func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
 	if blender_asset != null:
 		blender_asset.name = "BlenderTreeProcessionalBridge"
 		asset_holder.add_child(blender_asset)
+		# Holds only a lone 21 m gold rod standing mid-deck at the island end.
+		(blender_asset.find_child("PortalGold", true, false) as Node3D).visible = false
+		if bridge.name == "MindBridge":
+			_add_tree_court_deck(bridge, blender_asset, start, end, width)
+
+
+## Replaces the processional deck's plain pavers with the tree court floor
+## (shaders/tree_court.gdshader). The deck is drawn in the court's own
+## coordinates, centred on the tree, so its flagstones, growth rings and roots
+## carry on from the court across the bridge.
+func _add_tree_court_deck(bridge: Node3D, blender_asset: Node3D, start: Vector3,
+		end: Vector3, width: float) -> void:
+	var pavers := blender_asset.find_child("DeckIvory", true, false) as GeometryInstance3D
+	pavers.visible = false
+	var along := (end - start).normalized()
+	var across := Vector3(along.z, 0.0, -along.x) * 41.8 * width / 62.0 * 0.5
+	var lift := Vector3.UP * 0.25
+	var a := start - HUB - across + lift
+	var b := start - HUB + across + lift
+	var c := end - HUB + across + lift
+	var d := end - HUB - across + lift
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	# Both windings, so the deck draws whichever way the bridge runs.
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([a, b, c, a, c, d, a, c, b, a, d, c])
+	var normals := PackedVector3Array()
+	normals.resize(12)
+	normals.fill(Vector3.UP)
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var court_floor := ShaderMaterial.new()
+	court_floor.shader = TreeCourtShader
+	# Past the far end, so the roots and rings run the whole length and the
+	# island rim band never reaches the deck.
+	court_floor.set_shader_parameter("island_radius", HUB.distance_to(end) + 40.0)
+	var deck := MeshInstance3D.new()
+	deck.name = "TreeCourtDeck"
+	deck.mesh = mesh
+	deck.position = HUB
+	deck.material_override = court_floor
+	bridge.add_child(deck)
 
 
 func _build_life_tree(parent: Node3D, center: Vector3) -> void:
@@ -5455,13 +5680,6 @@ func _build_tower(parent: Node3D, base: Vector3, width: float, height: float, ma
 	_add_box(parent, "ObservatoryTower", base + Vector3(0.0, height * 0.5, 18.0), Vector3(width, height, width), material, true)
 	_add_box(parent, "ObservatoryWindow", base + Vector3(0.0, height * 0.62, 0.5), Vector3(width * 0.28, height * 0.34, 3.0), _materials.window)
 	_build_cypress(parent, base + Vector3(width * 0.75, 2.0, -18.0), 28.0, _materials.purple_leaf)
-
-
-func _build_ruin_wall(parent: Node3D, center: Vector3, width: float, height: float,
-		yaw: float, material: Material) -> void:
-	_add_box(parent, "RuinWall", center + Vector3(0.0, height * 0.5, 0.0), Vector3(width, height, 10.0), material, true, yaw)
-	for index in 4:
-		_build_arch(parent, center + Vector3(-width * 0.36 + index * width * 0.24, 1.0, -6.0), 22.0, 36.0, 8.0, _materials.aqua)
 
 
 func _build_arch(parent: Node3D, position: Vector3, opening_width: float,
