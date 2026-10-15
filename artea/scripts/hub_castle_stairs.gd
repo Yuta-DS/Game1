@@ -1778,7 +1778,7 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	handoff_visual.material_override = handoff_material
 	parent.add_child(handoff_visual)
 	handoff_visual.global_position = Vector3(handoff_centre.x,
-		crown_surface_y - 0.09, handoff_centre.z)
+		crown_surface_y - 0.11, handoff_centre.z)  # 2 cm under the deck: no z-fight
 	handoff_visual.look_at(handoff_visual.global_position + stair_end_tangent,
 		Vector3.UP)
 	handoff_visual.set_meta("visual_role", "fitted_spiral_to_crown_transition")
@@ -1796,7 +1796,8 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	# bridge sector only; the spiral stairwell opens on a different sector, so
 	# its final-flight headroom stays untouched.
 	var gateway_apron_size := Vector3(BRIDGE_WIDTH + 0.6, 0.28, 5.8)
-	var gateway_apron_centre := Vector3(base.x, crown_surface_y - 0.14, base.y) \
+	# Top sits 2 cm under the CrownDeck surface; flush, the two z-fought.
+	var gateway_apron_centre := Vector3(base.x, crown_surface_y - 0.16, base.y) \
 		+ gate_dir * 5.8
 	var gateway_apron := _oriented_box(parent, gateway_apron_size,
 		gateway_apron_centre, gateway_apron_centre + gate_dir, deck_material)
@@ -2224,6 +2225,14 @@ func _crown_deck_mesh(base: Vector2, surface_y: float, outer_radius: float,
 		angles.append(a)
 	if angles.size() < 2:
 		angles = [cut_end, cut_start]
+	# One shared angular grid for the ring, outer shelf and centre disc. Each used
+	# to start at a different angle, so their vertices missed along the shared
+	# circles and T-junction cracks let the terrain show through the floor.
+	var wedge_span := cut_end - cut_start
+	var wedge_segments := maxi(1, roundi(float(segments) * absf(wedge_span) / full_turn))
+	var full_angles: Array[float] = angles.duplicate()
+	for i in range(1, wedge_segments + 1):
+		full_angles.append(lerpf(cut_start, cut_end, float(i) / float(wedge_segments)))
 
 	for i in range(angles.size() - 1):
 		var a0: float = angles[i]
@@ -2244,9 +2253,9 @@ func _crown_deck_mesh(base: Vector2, surface_y: float, outer_radius: float,
 	# all the way to LANDING_RADIUS, leaving a broad pie-slice hole beside the
 	# character. This complete outer shelf closes that visual/gameplay gap while
 	# the centred 2.3 m opening remains wider than the 1.0 m player capsule.
-	for i in segments:
-		var a0 := full_turn * float(i) / float(segments)
-		var a1 := full_turn * float(i + 1) / float(segments)
+	for i in range(full_angles.size() - 1):
+		var a0: float = full_angles[i]
+		var a1: float = full_angles[i + 1]
 		var i0t := Vector3(base.x + cos(a0) * cut_outer_radius,
 			top_y, base.y + sin(a0) * cut_outer_radius)
 		var i1t := Vector3(base.x + cos(a1) * cut_outer_radius,
@@ -2272,9 +2281,9 @@ func _crown_deck_mesh(base: Vector2, surface_y: float, outer_radius: float,
 	# the intentional outer stairwell wedge.
 	var centre_top := Vector3(base.x, top_y, base.y)
 	var centre_bottom := Vector3(base.x, bottom_y, base.y)
-	for i in segments:
-		var a0 := full_turn * float(i) / float(segments)
-		var a1 := full_turn * float(i + 1) / float(segments)
+	for i in range(full_angles.size() - 1):
+		var a0: float = full_angles[i]
+		var a1: float = full_angles[i + 1]
 		var c0t := Vector3(base.x + cos(a0) * inner_radius,
 			top_y, base.y + sin(a0) * inner_radius)
 		var c1t := Vector3(base.x + cos(a1) * inner_radius,
@@ -2827,7 +2836,9 @@ func _build_bridge(parent: Node3D, base: Vector2, top_y: float) -> void:
 	# walking axis as an unbroken round obstruction right at the handoff.
 	# Aligned to the direction of travel, it covers the same seam without
 	# blocking or narrowing the route onto the terrace.
-	var landing_size := Vector3(BRIDGE_WIDTH + 1.0, 0.48, 3.4)
+	# 0.40 tall keeps the top 4 cm under the terrace (67.97) and roadbed (67.95);
+	# at 0.48 it sat exactly on the terrace plane and z-fought (striped floor).
+	var landing_size := Vector3(BRIDGE_WIDTH + 1.0, 0.40, 3.4)
 	var landing := _oriented_box(parent, landing_size,
 		target + direction * 0.5, target, light)
 	landing.name = "CastleDoorLanding"

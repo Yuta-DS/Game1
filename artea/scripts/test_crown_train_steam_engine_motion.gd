@@ -48,10 +48,12 @@ func _run() -> void:
 	var gear := detailed.find_child("*SteamDriveGear*", true, false) as Node3D
 	var rod := detailed.find_child("*SteamConnectingRod*", true, false) as Node3D
 	var pressure := detailed.find_child("*SteamPressureOrb*", true, false) as Node3D
-	var valve := detailed.find_child("*SteamPipeValve*", true, false) as Node3D
+	# The chimney ring spins; the three rings on each steam pipe stay still.
+	var valve := detailed.find_child("*SteamChimneyEnergyRing*", true, false) as Node3D
+	var pipe_ring := detailed.find_child("*SteamPipeValve*", true, false) as Node3D
 	var halo_outer := detailed.find_child("*CelestialHaloOuterMechanism*", true, false) as Node3D
 	var halo_inner := detailed.find_child("*CelestialHaloInnerMechanism*", true, false) as Node3D
-	if gear == null or rod == null or pressure == null or valve == null \
+	if gear == null or rod == null or pressure == null or valve == null or pipe_ring == null \
 			or halo_outer == null or halo_inner == null:
 		_fail("named steam and celestial-halo mechanisms are not addressable in the imported GLB")
 		return
@@ -59,6 +61,7 @@ func _run() -> void:
 	var rod_transform := rod.transform
 	var pressure_scale := pressure.scale
 	var valve_basis := valve.basis
+	var pipe_ring_basis := pipe_ring.basis
 	var halo_outer_basis := halo_outer.basis
 	var halo_inner_basis := halo_inner.basis
 

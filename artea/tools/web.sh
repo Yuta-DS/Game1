@@ -6,6 +6,7 @@
 #   ./artea/tools/web.sh --serve-only # skip the export, just serve what exists
 #   ./artea/tools/web.sh --port 9000  # pick the port (default 8800)
 #   ./artea/tools/web.sh --no-open    # serve without launching a browser
+#   ./artea/tools/web.sh --prod-cache # serve with the deployed cache headers
 #
 # Why this exists:
 #
@@ -25,14 +26,16 @@ set -euo pipefail
 port=8800
 mode=auto
 open_browser=1
+cache_mode=no-store
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--rebuild)    mode=rebuild; shift ;;
 		--serve-only) mode=serve;   shift ;;
 		--no-open)    open_browser=0; shift ;;
+		--prod-cache) cache_mode=prod; shift ;;
 		--port)       port="${2:?--port needs a number}"; shift 2 ;;
-		-h|--help)    sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+		-h|--help)    sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 		*) echo "Unknown option: $1 (try --help)" >&2; exit 1 ;;
 	esac
 done
@@ -89,55 +92,26 @@ fi
 
 # Serve the same split layout the deploy uses.
 #
-# pck-loader.js intercepts index.pck and expects index.pck.partNN plus a
-# manifest. Without them it fires 128 parallel HEAD probes that all 404, then
+# pck-loader.js intercepts index.pck and index.side.wasm and expects a manifest
+# plus parts. Without them it fires 128 parallel HEAD probes that all 404, then
 # falls back to fetching the whole pack in one blocking request - and python's
 # http.server ignores Range headers, so that is a single unstreamed 708 MB
 # response. The page just sits there, which reads as the build being broken
 # when it is only the local server layout differing from the deployed one.
-split_for_local() {
-	# pck-loader.js intercepts both index.pck and index.side.wasm, so both need
-	# the split layout locally or the loader stalls probing for parts that are
-	# not there.
-	local pck="$1"
-	[[ -f "${pck}" ]] || return 0
-	local pck_size
-	# GNU stat (Linux, Git Bash on Windows) accepts -c; BSD stat (macOS) does
-	# not and falls through to -f. The reverse order is a trap: GNU stat -f
-	# means "filesystem status" and exits 0 with the wrong number instead of
-	# erroring, so a -f-first probe silently poisons pck_size on those platforms.
-	pck_size=$(stat -c '%s' "${pck}" 2>/dev/null || stat -f '%z' "${pck}")
-	# Re-split whenever the file no longer matches its manifest. Skipping merely
-	# because a manifest exists left a re-export serving the PREVIOUS export's
-	# parts: the loader streamed a pack that disagreed with GODOT_CONFIG's
-	# fileSizes, and the page sat at the loading bar forever with no error.
-	if [[ -f "${pck}.parts.json" ]]; then
-		local manifest_size
-		manifest_size=$(sed -E 's/.*"bytes":([0-9]+).*/\1/' "${pck}.parts.json")
-		[[ "${manifest_size}" == "${pck_size}" ]] && return 0
-		echo "  $(basename "${pck}"): stale parts, re-splitting"
-	fi
-	rm -f "${pck}".part?? "${pck}.parts.json"
-	split -b 8m "${pck}" "${pck}.part"
-	local idx=0
-	for part in "${pck}".part??; do
-		mv "${part}" "$(printf '%s.part%02d' "${pck}" "${idx}")"
-		idx=$((idx + 1))
-	done
-	printf '{"count":%d,"bytes":%d,"partBytes":%d}\n' \
-		"${idx}" "${pck_size}" $((8 * 1024 * 1024)) \
-		> "${pck}.parts.json"
-	echo "  $(basename "${pck}"): ${idx} parts"
-}
-
+#
+# split-pack.sh names parts by the file's content hash and re-splits whenever
+# the hash changes, so a re-export can never serve the previous export's parts
+# (web.txt Problem 2) - the old size check only caught exports that also
+# changed size.
 # The Web preset injects pck-loader.js through html/head_include, but a plain
 # export does not copy it - only the Vercel export script does. Without it the
 # page 404s the loader and the parts below go unused.
 cp "${project_dir}/tools/vercel-pack-split/pck-loader.js" "${build_dir}/pck-loader.js"
 
 echo "Checking split layout for local serving…"
-split_for_local "${build_dir}/index.pck"
-split_for_local "${build_dir}/index.side.wasm"
+for big in "${build_dir}/index.pck" "${build_dir}/index.side.wasm"; do
+	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
+done
 
 url="http://localhost:${port}/index.html"
 echo "Serving ${build_dir}"
@@ -161,20 +135,32 @@ fi
 # and can pair a cached index.js or index.wasm from an earlier export with a
 # freshly exported pack.  The engine then fetches a pack whose size disagrees
 # with its own GODOT_CONFIG and sits on the loading bar with no error at all.
-exec python3 - "${port}" "${build_dir}" <<'PYSERVE'
+#
+# --prod-cache applies the deployed rules instead (vercel.json / _headers):
+# content-hashed parts/ immutable, everything else no-cache, revalidated via
+# Last-Modified. It exists so `./web verify --repeat` can measure a repeat
+# visit locally; day-to-day local serving stays no-store.
+exec python3 - "${port}" "${build_dir}" "${cache_mode}" <<'PYSERVE'
 import functools
 import http.server
 import sys
 
 
-class NoStoreHandler(http.server.SimpleHTTPRequestHandler):
+class CacheHandler(http.server.SimpleHTTPRequestHandler):
 	def end_headers(self):
-		self.send_header("Cache-Control", "no-store, must-revalidate")
-		self.send_header("Pragma", "no-cache")
+		if MODE == "prod":
+			if self.path.split("?")[0].startswith("/parts/"):
+				self.send_header("Cache-Control", "public, max-age=31536000, immutable")
+			else:
+				self.send_header("Cache-Control", "no-cache")
+		else:
+			self.send_header("Cache-Control", "no-store, must-revalidate")
+			self.send_header("Pragma", "no-cache")
 		super().end_headers()
 
 
 port = int(sys.argv[1])
-handler = functools.partial(NoStoreHandler, directory=sys.argv[2])
+MODE = sys.argv[3]
+handler = functools.partial(CacheHandler, directory=sys.argv[2])
 http.server.ThreadingHTTPServer(("127.0.0.1", port), handler).serve_forever()
 PYSERVE

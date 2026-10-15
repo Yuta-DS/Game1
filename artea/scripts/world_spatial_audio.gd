@@ -185,8 +185,13 @@ func _physics_process(delta: float) -> void:
 	var expired: Array[int] = []
 	for instance_id in _footstep_states:
 		var state: Dictionary = _footstep_states[instance_id]
+		# Validity is checked before the cast: casting a freed object with `as`
+		# is itself an error, and players are freed whenever the scene changes.
+		if not is_instance_valid(state.player):
+			expired.append(instance_id)
+			continue
 		var player := state.player as CharacterBody3D
-		if not is_instance_valid(player) or not player.is_inside_tree():
+		if player == null or not player.is_inside_tree():
 			expired.append(instance_id)
 			continue
 		_update_player_footsteps(state, player, delta)
@@ -552,7 +557,9 @@ func classify_world_emitter(node: Node) -> StringName:
 	if label in ["msmine", "clextmine", "hmextmine", "mineentrance", "cavern"] \
 			or label.begins_with("buildingmine"):
 		return &"cave_air"
-	if label in ["treeoflife", "crownrig", "crownoflife", "wisdomheartshrine",
+	# "crownrig" (the small crystal accent on the hub castle roof) is left out:
+	# its hum carried 92 m and read as an unexplained buzz at the castle door.
+	if label in ["treeoflife", "crownoflife", "wisdomheartshrine",
 			"treeofimagination", "reactorcore", "destinationwheel",
 			"thresholdruneseal", "celestialcore", "referenceastralmachine",
 			"lumenenginerig", "heartengine", "midspanresonanceframe"]:
@@ -577,7 +584,12 @@ func _register_world_emitter(node: Node3D, kind: StringName) -> void:
 	var source := _new_attached_source(node, "ObjectAmbience_%s" % String(kind),
 		-25.0, max_distance_value, max_distance_value * 0.14)
 	source.stream = _world_loop_streams[kind]
-	source.play()
+	# Hidden landmarks (e.g. the castle redesign hides ReferenceAstralMachine)
+	# must not keep humming. Visibility changes propagate to Node3D children.
+	source.playing = node.is_visible_in_tree()
+	node.visibility_changed.connect(func() -> void:
+		if is_instance_valid(source) and is_instance_valid(node):
+			source.playing = node.is_visible_in_tree())
 
 
 func _has_same_profile_ancestor(node: Node, kind: StringName) -> bool:

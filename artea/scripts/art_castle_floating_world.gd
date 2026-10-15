@@ -24,6 +24,9 @@ const GravityLeafReliefStyle := preload(
 const TREE_CHRISTMAS_MELODY := preload(
 	"res://assets/audio/tree_of_life_christmas_ambience.ogg")
 const TREE_CHRISTMAS_BELLS := preload("res://assets/SFX/fairy dust.ogg")
+const MindSparkFoley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
+const ArrivalPlazaShader := preload("res://shaders/arrival_plaza.gdshader")
+const GalleryRotunda := preload("res://scripts/gallery_rotunda.gd")
 const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
 
 @export var embedded_in_gallery := false
@@ -131,6 +134,14 @@ const CAUSEWAY_ISLAND_RADIUS := 46.0
 const HEART := Vector3(0.0, 0.0, 2290.0)
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
 const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
+# Arrival-island bounce pads: ~12 m of air at the default 9.8 gravity.
+const BOUNCE_PAD_LAUNCH_SPEED := 15.5
+const BOUNCE_PAD_RADIUS := 3.2
+# Latona fountain: 60 m toward the gate from the island centre, where the
+# south observatory tower used to stand. Basin radius is 30 m.
+const ARRIVAL_FOUNTAIN_CENTRE := SOUTH_GATE + Vector3(0.0, 0.0, -60.0)
+# Holding jump on landing: ~27 m of air instead of ~12 m.
+const BOUNCE_PAD_BOOST_SPEED := 23.0
 const RETURN_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 
 var _player: CharacterBody3D
@@ -139,6 +150,7 @@ var _animated_nodes: Array[Node3D] = []
 var _travelling := false
 var _tree_christmas_melody: AudioStreamPlayer3D
 var _tree_christmas_bells: AudioStreamPlayer3D
+var _sfx_players: Dictionary = {}
 
 const TREE_CHRISTMAS_FULL_VOLUME_DISTANCE := 70.0
 const TREE_CHRISTMAS_SILENT_DISTANCE := 620.0
@@ -168,7 +180,6 @@ func _ready() -> void:
 	_build_heart_melody_island_one()
 	_build_world_one_walk_route()
 	_build_boundary_observatories()
-	_build_skyline()
 	_build_cloud_banks()
 	_build_world_labels()
 	if not embedded_in_gallery:
@@ -1063,11 +1074,59 @@ func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width:
 			var pier_leg := pier_center + side_axis * float(side) * (width * 0.42)
 			_add_box(parent, "PierLeg_%03d_%s" % [metre, "L" if side < 0 else "R"],
 				pier_leg, Vector3(2.4, 21.0, 2.4), _materials.bridge_structure, true, yaw, 0.88, 0.0)
-	# Carpet/deck and deck/island thresholds are broad, shallow, walkable ramps.
-	for endpoint_data in [[start, "Castle"], [finish, "Island"]]:
-		_add_box(parent, "%sThresholdRamp" % endpoint_data[1],
-			(endpoint_data[0] as Vector3) + Vector3(0, 0.36, 0),
-			Vector3(width - 0.8, 0.32, 5.0), _materials.bridge_edge, true, yaw, 0.94, 0.0)
+	# Carpet/deck and deck/island thresholds: shallow stairs the player walks
+	# up without jumping. Gallery floor is y=0.25, deck top 0.6, island 0.
+	var along := (finish - start).normalized()
+	_add_walk_stairs(parent, "CastleThresholdStairs", start - along * 8.0 + Vector3.UP * 0.25,
+		start + along * 0.6 + Vector3.UP * 0.6, width - 0.8, false)
+	_add_walk_stairs(parent, "IslandThresholdStairs", finish + along * 10.0,
+		finish - along * 0.6 + Vector3.UP * 0.6, width - 0.8)
+
+
+## Visible steps from `low` to `high` (top-surface points) over an invisible
+## slope that carries the collision, so a CharacterBody walks straight up.
+## Without steps the slope itself is drawn, so what you see is what you walk on.
+func _add_walk_stairs(parent: Node3D, node_name: String, low: Vector3, high: Vector3, width: float,
+		show_steps: bool = true) -> void:
+	const STEPS := 4
+	const THICKNESS := 0.5
+	var stairs := Node3D.new()
+	stairs.name = node_name
+	parent.add_child(stairs)
+	var run := Vector3(high.x - low.x, 0.0, high.z - low.z)
+	var yaw := atan2(run.x, run.z)
+	var rise := high.y - low.y
+	for step in (STEPS if show_steps else 0):
+		var top := low.y + rise * float(step + 1) / STEPS
+		var centre := low + run * (float(step) + 0.5) / STEPS
+		_add_box(stairs, "Step%d" % step, Vector3(centre.x, (low.y - 0.1 + top) * 0.5, centre.z),
+			Vector3(width, top - low.y + 0.1, run.length() / STEPS + 0.02),
+			_materials.passage_stone if step % 2 == 0 else _materials.passage_stone_shadow, false, yaw)
+	var body := StaticBody3D.new()
+	body.name = "%sSlope" % node_name
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(width, THICKNESS, (high - low).length())
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	var basis := Basis.looking_at(high - low, Vector3.UP)
+	body.transform = Transform3D(basis, (low + high) * 0.5 - basis.y * THICKNESS * 0.5)
+	stairs.add_child(body)
+	if not show_steps:
+		var slab := MeshInstance3D.new()
+		slab.name = "Slope"
+		var mesh := BoxMesh.new()
+		mesh.size = shape.size
+		slab.mesh = mesh
+		# Same limestone flags as the gallery floor, projected in world space at
+		# the gallery's 4 m per tile so the joints carry straight out the door.
+		var gallery_floor := GalleryRotunda.make_floor_material()
+		gallery_floor.uv1_triplanar = true
+		gallery_floor.uv1_world_triplanar = true
+		gallery_floor.uv1_scale = Vector3.ONE * 0.25
+		slab.material_override = gallery_floor
+		slab.transform = body.transform
+		stairs.add_child(slab)
 
 
 func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vector3) -> void:
@@ -3121,8 +3180,29 @@ func _add_walk_route_dots(parent: Node3D, start: Vector3, finish: Vector3, segme
 	var yaw := atan2(direction.x, direction.z)
 	for dot_index in count + 1:
 		var progress := float(dot_index) / float(count)
-		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], start.lerp(finish, progress),
+		var spot := start.lerp(finish, progress)
+		if Vector2(spot.x, spot.z).distance_to(Vector2(ARRIVAL_FOUNTAIN_CENTRE.x,
+				ARRIVAL_FOUNTAIN_CENTRE.z)) < 32.0:
+			continue
+		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], spot,
 			Vector3(7.5, 0.16, 2.2), _materials.aqua, false, yaw)
+
+
+## The route is authored at one height, but decks and bridges differ. Once
+## physics has the static bodies, drop each dot onto whatever floor is under it.
+func _snap_route_dots_to_floor(route: Node3D) -> void:
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if not is_instance_valid(route):
+		return
+	var space := get_world_3d().direct_space_state
+	for dot in route.get_children():
+		if not dot is MeshInstance3D:
+			continue
+		var from := (dot as Node3D).global_position + Vector3.UP * 2.0
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 8.0))
+		if not hit.is_empty():
+			(dot as Node3D).global_position.y = hit.position.y + 0.09
 
 
 func _build_mind_story_landmarks() -> void:
@@ -3410,24 +3490,6 @@ func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
 		bridge.set_meta("walk_surface_y", source_center.y)
 
 
-func _build_skyline() -> void:
-	var skyline := Node3D.new()
-	skyline.name = "DistantSkyline"
-	add_child(skyline)
-	var tower_data := [
-		Vector4(-860, -720, 180, 42), Vector4(-610, -880, 240, 48),
-		Vector4(-330, -900, 150, 36), Vector4(330, -900, 210, 44),
-		Vector4(670, -820, 160, 38), Vector4(900, -650, 225, 46),
-		Vector4(-940, -430, 145, 34), Vector4(940, -390, 170, 38),
-		Vector4(-870, 540, 190, 42), Vector4(850, 560, 230, 48),
-		Vector4(-600, 760, 145, 34), Vector4(600, 790, 175, 38),
-	]
-	for index in tower_data.size():
-		var data: Vector4 = tower_data[index]
-		var base := Vector3(data.x, -30.0 - float(index % 3) * 16.0, data.y)
-		_build_cloud_tower(skyline, base, data.w, data.z, index)
-
-
 func _build_cloud_banks() -> void:
 	var clouds := Node3D.new()
 	clouds.name = "CloudSea"
@@ -3569,7 +3631,7 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 			+ side_axis * float(side) * (width * 0.5 - 2.0) \
 			+ surface_normal * rail_y
 		var safety_rail := _add_box(bridge, "SafetyRail", edge_position,
-			Vector3(2.4 if tree_processional else 3.0, rail_height, length),
+			Vector3(2.4 if tree_processional else 3.0, rail_height, length - 0.04),
 			rail_material, true, yaw)
 		safety_rail.basis = bridge_basis
 		var safety_collision := bridge.get_child(bridge.get_child_count() - 1) as StaticBody3D
@@ -5769,8 +5831,6 @@ const HEART_SHRINE_ORBIT_RINGS := [
 const HEART_SHRINE_OUTLINE_GROW := 0.95
 
 
-
-
 # Energy veins climbing the bark. They are pinned to the real surface: the
 # trunk and root mesh is sampled into a height x angle table of bark radii, and
 # every vein segment is placed on that surface. A guessed cylinder profile
@@ -7011,7 +7071,6 @@ func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -
 	canopy.add_child(flow_light)
 
 
-
 # Baubles hung along the whorls. Three colours ride the branches and every
 # fitting - cap and hanger - is gold, matching the star and the shrine rings.
 const ORNAMENT_COLOURS := [
@@ -7602,18 +7661,6 @@ func _build_sun_rune(parent: Node3D, position: Vector3) -> void:
 			Vector3(3.0, 15.0, 3.0), _materials.gold, false, -angle)
 
 
-func _build_cloud_tower(parent: Node3D, base: Vector3, width: float, height: float, index: int) -> void:
-	var tower := Node3D.new()
-	tower.name = "SkyTower_%02d" % index
-	tower.position = base
-	parent.add_child(tower)
-	_add_box(tower, "TowerBody", Vector3(0.0, height * 0.5, 0.0), Vector3(width, height, width * 0.72), _materials.ivory)
-	_add_box(tower, "TowerCrown", Vector3(0.0, height + 15.0, 0.0), Vector3(width * 0.72, 30.0, width * 0.62), _materials.ivory)
-	for level in range(35, int(height), 42):
-		_add_box(tower, "LuminousWindow", Vector3(0.0, float(level), -width * 0.37), Vector3(width * 0.20, 24.0, 2.5), _materials.window)
-	_build_cypress(tower, Vector3(width * 0.34, height + 30.0, 0.0), 22.0 + float(index % 4) * 4.0, _materials.purple_leaf)
-
-
 func _build_tower(parent: Node3D, base: Vector3, width: float, height: float, material: Material) -> void:
 	var tower_center := base + Vector3(0.0, 0.0, 18.0)
 	# Preserve the stable collision-backed tower node while hiding its former
@@ -7732,12 +7779,19 @@ func _build_frame(parent: Node3D, position: Vector3, width: float, height: float
 	frame.add_child(label)
 
 
-func _build_cypress(parent: Node3D, position: Vector3, height: float, material: Material) -> void:
+func _build_cypress(parent: Node3D, position: Vector3, height: float, material: Material,
+		solid: bool = false) -> void:
 	var tree := Node3D.new()
 	tree.name = "SkyCypress"
 	tree.position = position
-	parent.add_child(tree)
-	_add_cylinder(tree, "Trunk", Vector3(0.0, height * 0.35, 0.0), height * 0.07, height * 0.7, _materials.wood, false, 7)
+	parent.add_child(tree, true)
+	_add_cylinder(tree, "Trunk", Vector3(0.0, height * 0.35, 0.0), height * 0.07, height * 0.7, _materials.wood, solid, 7)
+	var crown_body: StaticBody3D = null
+	if solid:
+		# Crowns are reachable from the bounce pads, so they are solid too.
+		crown_body = StaticBody3D.new()
+		crown_body.name = "CrownCollision"
+		tree.add_child(crown_body)
 	for level in 5:
 		var crown := MeshInstance3D.new()
 		var mesh := CylinderMesh.new()
@@ -7749,6 +7803,11 @@ func _build_cypress(parent: Node3D, position: Vector3, height: float, material: 
 		crown.position.y = height * (0.43 + level * 0.115)
 		crown.material_override = material
 		tree.add_child(crown)
+		if crown_body != null:
+			var shape_node := CollisionShape3D.new()
+			shape_node.shape = mesh.create_convex_shape()
+			shape_node.position = crown.position
+			crown_body.add_child(shape_node)
 
 
 func _add_flower_cluster(parent: Node3D, position: Vector3, pink: bool) -> void:
@@ -7771,9 +7830,13 @@ func _add_arch_support(parent: Node3D, position: Vector3, width: float, yaw: flo
 	support.position = position
 	support.rotation.y = yaw
 	parent.add_child(support)
-	_add_box(support, "LeftPier", Vector3(-width * 0.38, 0.0, 0.0), Vector3(7.0, 48.0, 8.0), _materials.ivory_shadow)
-	_add_box(support, "RightPier", Vector3(width * 0.38, 0.0, 0.0), Vector3(7.0, 48.0, 8.0), _materials.ivory_shadow)
-	_add_box(support, "SupportBeam", Vector3(0.0, 22.0, 0.0), Vector3(width, 6.0, 8.0), _materials.ivory_shadow)
+	# Piers and beam stop at the walkway's underside (support y + 20, i.e. 4 m
+	# below the deck). They used to reach the deck surface: the pier tops
+	# z-fought with it, and the beam's ends shared the walkway's side planes
+	# while poking a metre up through the bridge.
+	_add_box(support, "LeftPier", Vector3(-width * 0.38, -2.0, 0.0), Vector3(7.0, 44.0, 8.0), _materials.ivory_shadow)
+	_add_box(support, "RightPier", Vector3(width * 0.38, -2.0, 0.0), Vector3(7.0, 44.0, 8.0), _materials.ivory_shadow)
+	_add_box(support, "SupportBeam", Vector3(0.0, 17.0, 0.0), Vector3(width - 0.04, 6.0, 8.0), _materials.ivory_shadow)
 
 
 func _add_heart_bridge_support(parent: Node3D, position: Vector3,

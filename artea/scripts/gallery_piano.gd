@@ -494,9 +494,12 @@ func _build_case() -> void:
 	# well short of z = 0, and a lip out there reads as a rail hanging in
 	# mid air rather than part of the keyboard.
 	var lip_front := KEY_WELL_Z + 0.012 + WHITE_KEY_LENGTH
+	# Stops at the cheek blocks: run to `half` its end faces lay in the Rim
+	# wall's plane and z-fought there (the speck at the keyboard's corner).
+	var lip_half := half - CHEEK_WIDTH
 	var lip := PackedVector2Array([
-		Vector2(-half, lip_front + 0.014), Vector2(half, lip_front + 0.014),
-		Vector2(half, lip_front - 0.006), Vector2(-half, lip_front - 0.006),
+		Vector2(-lip_half, lip_front + 0.014), Vector2(lip_half, lip_front + 0.014),
+		Vector2(lip_half, lip_front - 0.006), Vector2(-lip_half, lip_front - 0.006),
 	])
 	_extrude_walls(keyslip, lip, KEY_BED_Y, KEY_BED_Y + 0.026)
 	_cap(keyslip, lip, KEY_BED_Y + 0.026, true)
@@ -504,7 +507,9 @@ func _build_case() -> void:
 
 	# Cheek blocks framing the keyboard at either end.
 	for side: float in [-1.0, 1.0]:
-		var outer := side * half
+		# 2 mm inside the case: at `half` the cheek's outer wall lay in the
+		# same plane as the Rim wall and z-fought with it.
+		var outer := side * (half - 0.002)
 		var inner := side * (half - CHEEK_WIDTH)
 		var cheek := _begin()
 		var plan := PackedVector2Array([
@@ -932,8 +937,15 @@ func _build_case_collision() -> void:
 	body.collision_mask = 0
 	add_child(body)
 
+	# Only the front-left corner (index 0) and the Catmull-Rom control points
+	# (every 4th point from index 1, the last one included). The full smoothed
+	# outline gave the hull dozens of sliver facets along the bent side, and at
+	# the gallery's 5x scale the player capsule snagged on them.
+	# ponytail: chords sit a few cm inside the curve; fine for a walk-around.
+	var outline := _case_outline()
 	var points := PackedVector3Array()
-	for point in _case_outline():
+	for index in [0] + range(1, outline.size(), 4):
+		var point := outline[index]
 		points.append(Vector3(point.x, 0.0, point.y))
 		points.append(Vector3(point.x, RIM_TOP, point.y))
 

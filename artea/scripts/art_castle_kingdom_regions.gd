@@ -385,7 +385,9 @@ func _decorate_heart(parent: Node3D, checkpoint_id: String, index: int) -> void:
 			_add_cylinder(parent, "AmphitheatreTier", Vector3(0, tier * 3, 0), 92 - tier * 16, 3,
 				emotional_materials[index], true, 36)
 		_add_gem(parent, "HarmonyJewel", Vector3(0, 48, 0), _materials.gold)
-	else:
+	elif checkpoint_id != "arrival":
+		# No ring at the arrival checkpoint: the Heart station's access bridge
+		# lands at its centre, and the 18 m solid drums crowded and blocked it.
 		for instrument in 7:
 			var angle := TAU * instrument / 7.0
 			# The arrival bridge leaves the court toward +X. Keep the full

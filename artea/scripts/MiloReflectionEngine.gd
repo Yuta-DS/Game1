@@ -37,7 +37,7 @@ const EMOTION_PROFILES := [
 	{
 		"id": "sad",
 		"words": ["sad", "low", "down", "upset", "cry", "crying", "hurt", "heavy"],
-		"validate": "I hear you. Thank you for trusting Milo with words for a difficult moment.",
+		"validate": "I hear you. Thank you for trusting me with words for a difficult moment.",
 		"reflect": "The words you chose sound heavy or painful. You do not have to pretend that everything is fine.",
 		"strength": "Reaching for a check-in can show self-awareness and courage. You are more than this moment.",
 		"guidance": "Let's explore this gently. Would company, rest, music, or talking with a trusted person feel kindest right now?",
@@ -95,7 +95,7 @@ func reflect(raw_message: String) -> Dictionary:
 			"urgent": true,
 			"emotion": "urgent_support",
 			"validate": "I am glad you told me. Your safety matters more than continuing the game.",
-			"reflect": "Milo is a game companion and cannot keep you safe in an emergency.",
+			"reflect": "I am a game companion and cannot keep you safe in an emergency.",
 			"strength": "Telling someone can be a courageous next step, and you deserve real support right now.",
 			"guidance": "Please go to a trusted adult or another safe person now and show them this screen. Do not stay alone with immediate danger.",
 			"activity": "In Australia, call 000 if there is immediate danger. You can also call Kids Helpline on 1800 55 1800 or Lifeline on 13 11 14. Elsewhere, use your local emergency number or Find a Helpline.",

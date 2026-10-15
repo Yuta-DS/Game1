@@ -801,8 +801,9 @@ func _run() -> void:
 	if String(railway.call("get_interaction_mode_for_position", player.global_position)) != "sit":
 		_fail("passenger section proximity does not resolve to sitting")
 		return
-	if int(railway.call("get_passenger_seat_count")) != 6:
-		_fail("train does not expose all six passenger seats")
+	# One rider per seat on the model: 2 coaches x 3 rows x left and right.
+	if int(railway.call("get_passenger_seat_count")) != 12:
+		_fail("train does not expose all twelve passenger seats")
 		return
 	if not bool(railway.call("sit_in_passenger_seat", 0)) \
 			or not bool(railway.call("is_passenger_seated")) \

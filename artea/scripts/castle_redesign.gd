@@ -6,6 +6,8 @@
 # astral machinery, and adds grounded castle detail around the authored player route.
 extends Node3D
 
+const HubCastleStairs := preload("res://scripts/hub_castle_stairs.gd")
+
 const CASTLE_NAME := "building_castle_red2"
 const ReferenceStyle := preload("res://scripts/castle_reference_style.gd")
 const RoyalBotanicals := preload("res://scripts/castle_royal_botanicals.gd")

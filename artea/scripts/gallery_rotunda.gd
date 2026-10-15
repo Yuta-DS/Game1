@@ -143,7 +143,12 @@ func _build_materials() -> void:
 	glass.emission_energy_multiplier = 0.08
 	_materials.glass = glass
 
-	# Large pale limestone flags with fine joints, one texture tile per 4 m.
+	_materials.floor = make_floor_material()
+
+
+## Large pale limestone flags with fine joints, one texture tile per 4 m of UV.
+## Static so the approach bridge's doorway slab can continue the same floor.
+static func make_floor_material() -> StandardMaterial3D:
 	var image := Image.create(128, 128, false, Image.FORMAT_RGBA8)
 	var base := Color("e8e2d6")
 	var joint := Color("c9c1b1")
@@ -154,10 +159,11 @@ func _build_materials() -> void:
 				+ 0.012 * sin(float(y) * 0.33)
 			image.set_pixel(x, y, joint if on_joint else base.lightened(veining))
 	image.generate_mipmaps()
-	var floor_material := _make_material(Color.WHITE, 0.55)
+	var floor_material := StandardMaterial3D.new()
+	floor_material.roughness = 0.55
 	floor_material.albedo_texture = ImageTexture.create_from_image(image)
 	floor_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	_materials.floor = floor_material
+	return floor_material
 
 
 func _make_material(color: Color, roughness: float) -> StandardMaterial3D:
@@ -383,8 +389,8 @@ func _build_entrance(stone: SurfaceTool, stone_shadow: SurfaceTool, gold: Surfac
 			Vector3(0.08, 9.0, depth - 1.0))
 
 	# Façade dressing: plinth, gold string courses, stepped crown and crest.
-	_box(stone_shadow, _at(Vector3(0, 0.8, zf + 0.25)),
-		Vector3(ENTRANCE_HALF_WIDTH * 2.0, 1.6, 0.5))
+	# The plinth runs only beside the door; a full-width one stood 1.6 m high
+	# across the open doorway with no collision, so the player walked through it.
 	for side in [-1.0, 1.0]:
 		_box(stone_shadow, _at(Vector3(side * side_x, 0.8, zf + 0.25)),
 			Vector3(side_w, 1.6, 0.5))

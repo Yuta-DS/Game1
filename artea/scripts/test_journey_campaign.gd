@@ -21,7 +21,7 @@ func _init() -> void:
 	campaign.journey_state = state
 
 	_test_scene_routes(campaign)
-	_test_treasure_gated_order(campaign, state)
+	_test_treasure_order(campaign, state)
 	_test_router_never_mutates_progress(campaign, state)
 
 	state.clear_journey()
@@ -100,16 +100,11 @@ func _test_scene_routes(campaign: Node) -> void:
 		"Art Castle artworks open their walkable interactive 3D worlds")
 
 
-func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
-	assert(campaign.can_enter_kingdom("mind"), "Mind Spark starts the journey")
-	assert(not campaign.can_enter_kingdom("heart"), "Heart Melody waits for Star of Wisdom")
-	assert(not campaign.can_enter_kingdom("creator"), "Creator's Light waits for both earlier treasures")
+func _test_treasure_order(campaign: Node, state: Node) -> void:
+	for kingdom_id in campaign.CAMPAIGN_ORDER:
+		assert(campaign.can_enter_kingdom(kingdom_id), "%s is open from the start" % kingdom_id)
+	assert(not campaign.can_enter_kingdom("crown"), "unknown kingdoms are refused")
 	assert(campaign.next_kingdom_id() == "mind", "Mind Spark is the first unfinished kingdom")
-
-	# Stage is decorative/wake state, never a shortcut through content.
-	state.stage = 3
-	assert(not campaign.can_enter_kingdom("heart"),
-		"stage alone cannot open Heart Melody")
 
 	state.record_thought_echo("I am learning and growing", "learning")
 	state.record_thought_echo("I can take one brave step", "brave_step")
@@ -118,8 +113,6 @@ func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
 	state.mark_popped("I can take one brave step")
 	assert(state.complete_mind_spark(2), "two resolved curated echoes complete Mind Spark")
 	assert(state.has_treasure("star_of_wisdom"), "thought completion earns the Star")
-	assert(campaign.can_enter_kingdom("heart"), "Star of Wisdom opens Heart Melody")
-	assert(not campaign.can_enter_kingdom("creator"), "Creator still waits for Harmony Jewel")
 	assert(campaign.next_kingdom_id() == "heart", "Heart Melody is next")
 
 	state.record_emotion("hope", Color(0.4, 0.8, 0.6))
@@ -138,7 +131,7 @@ func _test_treasure_gated_order(campaign: Node, state: Node) -> void:
 	assert(state.complete_creator_frame_ritual(creation_id, "star_bridge"),
 		"the Gallery Frame Ritual completes the Creator kingdom")
 	assert(state.has_all_treasures(), "three real activities complete the treasure set")
-	assert(campaign.next_kingdom_id().is_empty(), "no kingdom remains locked after completion")
+	assert(campaign.next_kingdom_id().is_empty(), "no kingdom remains unfinished after completion")
 
 
 func _test_router_never_mutates_progress(campaign: Node, state: Node) -> void:

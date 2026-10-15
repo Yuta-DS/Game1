@@ -10,33 +10,15 @@
 	// turn, so one request that never settled meant the pack was never fetched
 	// and the engine sat at the loading screen with no error.
 	const MAX_PARTS = 128;
-	const PART_TIMEOUT_MS = 45000;
-	// Mobile connections and large cold-cache Vercel responses can fail after a
-	// part has already transferred most of its bytes. Three rapid retries were
-	// too short to outlive a transient edge failure and forced the player to
-	// restart the entire 445 MB download. Keep the attempts bounded, but spread
-	// them out enough for the route to recover.
-	const PART_ATTEMPTS = 6;
-	const MAX_RETRY_DELAY_MS = 8000;
-	// Three 8 MiB logical parts hide edge round trips while keeping the loader's
-	// extra memory bounded to 24 MiB. Fetching the whole pack concurrently used
-	// hundreds of MiB and caused mobile Safari to discard the tab.
-	const PART_PREFETCH = 3;
 
 	const buildKey = new URL(window.location.href).searchParams.get("build");
-	// Canonical visits do not carry the cache-busting `build` query used by the
-	// release verifier. Derive an equally stable identity from the fresh
-	// manifest so immutable part responses can never be reused across different
-	// packs while identical returning visits can skip all 53 network transfers.
-	const manifestCacheKeys = new Map();
-	const partUrl = (requestUrl, index, extension = "") => {
+	const partUrl = (requestUrl, index) => {
 		const url = new URL(
-			`${requestUrl}.part${String(index).padStart(2, "0")}${extension}`,
+			`${requestUrl}.part${String(index).padStart(2, "0")}`,
 			window.location.href,
 		);
-		const cacheKey = buildKey || manifestCacheKeys.get(requestUrl);
-		if (cacheKey) {
-			url.searchParams.set("build", cacheKey);
+		if (buildKey) {
+			url.searchParams.set("build", buildKey);
 		}
 		return url.toString();
 	};
@@ -45,9 +27,9 @@
 	// cost one round trip per part before the download could start.
 	// Byte totals from each manifest, keyed by request URL.
 	const manifestBytes = new Map();
-	const manifestPartBytes = new Map();
-	const manifestEncodings = new Map();
-	const manifestPartHashes = new Map();
+	// Content-hashed part paths from each manifest (split-pack.sh), keyed by
+	// request URL. Absent for the older count-only manifest.
+	const manifestParts = new Map();
 
 	const countParts = async (requestUrl) => {
 		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
@@ -55,42 +37,20 @@
 			manifestUrl.searchParams.set("build", buildKey);
 		}
 		try {
+			// The manifest is the one file that must never come from a cache: it
+			// is what points the build at its own export's parts.
 			const manifestResponse = await nativeFetch(manifestUrl, { cache: "no-store" });
 			if (manifestResponse.ok) {
 				const manifest = await manifestResponse.json();
+				if (Array.isArray(manifest.parts) && manifest.parts.length > 0) {
+					manifestParts.set(requestUrl, manifest.parts.map((part) => part.name));
+				}
 				if (Number.isInteger(manifest.count) && manifest.count > 0) {
-					const logicalBytes = Number.isInteger(manifest.bytes)
-						? manifest.bytes : "unknown";
-					const transferBytes = Number.isInteger(manifest.transferBytes)
-						? manifest.transferBytes : "unknown";
-					const packIdentity = typeof manifest.sha256 === "string"
-						&& /^[0-9a-f]{64}$/i.test(manifest.sha256)
-						? manifest.sha256.toLowerCase()
-						: `${manifest.count}-${logicalBytes}-${transferBytes}`;
-					manifestCacheKeys.set(requestUrl, `pack-${packIdentity}`);
 					// Keep the byte total: the streamed Response needs a
 					// Content-Length, and streaming means it cannot be measured
 					// from an assembled Blob any more.
 					if (Number.isInteger(manifest.bytes)) {
 						manifestBytes.set(requestUrl, manifest.bytes);
-					}
-					if (Number.isInteger(manifest.partBytes) && manifest.partBytes > 0) {
-						manifestPartBytes.set(requestUrl, manifest.partBytes);
-					}
-					if (manifest.encoding === "gzip") {
-						if (typeof DecompressionStream !== "function") {
-							throw new Error("This browser cannot decompress the Web game pack");
-						}
-						manifestEncodings.set(requestUrl, manifest.encoding);
-					}
-					if (Array.isArray(manifest.hashes)
-							&& manifest.hashes.length === manifest.count
-							&& manifest.hashes.every((value) =>
-								typeof value === "string" && /^[0-9a-f]{64}$/i.test(value))) {
-						manifestPartHashes.set(
-							requestUrl,
-							manifest.hashes.map((value) => value.toLowerCase()),
-						);
 					}
 					return manifest.count;
 				}
@@ -108,129 +68,42 @@
 		return missing === -1 ? MAX_PARTS : missing;
 	};
 
-	const pause = (milliseconds) => new Promise((resolve) =>
-		window.setTimeout(resolve, milliseconds),
-	);
-	const sha256Hex = async (bytes) => {
-		const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
-		return Array.from(new Uint8Array(digest), (value) =>
-			value.toString(16).padStart(2, "0")).join("");
-	};
-
-	const fetchPart = async (requestUrl, index) => {
-		const encoding = manifestEncodings.get(requestUrl);
-		const url = partUrl(requestUrl, index, encoding === "gzip" ? ".gz" : "");
-		let lastError;
-		for (let attempt = 1; attempt <= PART_ATTEMPTS; attempt += 1) {
-			const abort = new AbortController();
-			const timeout = window.setTimeout(() => abort.abort(), PART_TIMEOUT_MS);
-			try {
-				const response = await nativeFetch(url, {
-					// The build query makes every release immutable. Let a reload reuse
-					// parts that finished successfully, while a retry bypasses a failed
-					// edge response and refreshes that one cache entry.
-					cache: attempt === 1 ? "default" : "reload",
-					signal: abort.signal,
-				});
-				if (!response.ok) {
-					throw new Error(`${url} returned ${response.status}`);
-				}
-				const transferBuffer = await response.arrayBuffer();
-				const expectedHashes = manifestPartHashes.get(requestUrl);
-				if (expectedHashes) {
-					const actualHash = await sha256Hex(transferBuffer);
-					if (actualHash !== expectedHashes[index]) {
-						throw new Error(`${url} failed SHA-256 integrity verification`);
-					}
-				}
-				let bytes;
-				if (encoding === "gzip") {
-					const compressed = new Blob([transferBuffer]).stream();
-					const decompressed = compressed.pipeThrough(
-						new DecompressionStream("gzip"),
-					);
-					bytes = new Uint8Array(await new Response(decompressed).arrayBuffer());
-				} else {
-					bytes = new Uint8Array(transferBuffer);
-				}
-				const totalBytes = manifestBytes.get(requestUrl);
-				const partBytes = manifestPartBytes.get(requestUrl);
-				const expectedLength = Number.isInteger(totalBytes) && Number.isInteger(partBytes)
-					? Math.min(partBytes, totalBytes - index * partBytes)
-					: null;
-				const lengthHeader = encoding === "gzip"
-					? null : response.headers.get("Content-Length");
-				const declaredLength = lengthHeader === null || lengthHeader === ""
-					? null : Number(lengthHeader);
-				const verifiedLength = Number.isInteger(expectedLength)
-					? expectedLength : declaredLength;
-				if (Number.isInteger(verifiedLength) && verifiedLength >= 0
-						&& bytes.byteLength !== verifiedLength) {
-					throw new Error(
-						`${url} was truncated (${bytes.byteLength}/${verifiedLength} bytes)`,
-					);
-				}
-				return bytes;
-			} catch (error) {
-				lastError = error;
-				if (attempt < PART_ATTEMPTS) {
-					const retryDelay = Math.min(
-						MAX_RETRY_DELAY_MS,
-						500 * (2 ** (attempt - 1)),
-					);
-					console.warn(
-						`[ARTEA] retrying pack part ${index + 1}; attempt ${attempt + 1}/${PART_ATTEMPTS} in ${retryDelay}ms`,
-					);
-					await pause(retryDelay);
-				}
-			} finally {
-				window.clearTimeout(timeout);
-			}
-		}
-		throw new Error(
-			`Failed to download pack part ${index + 1} after ${PART_ATTEMPTS} attempts: ${lastError}`,
-		);
-	};
-
-	// Keep a small ordered prefetch window. Requesting all pack parts at once
+	// Fetch one at a time. Requesting all pack parts at once
 	// holds two copies of the pack in memory at peak and mobile Safari drops the
-	// tab under that pressure. Three 8 MiB logical parts overlap network latency
-	// while keeping JS overhead bounded to 24 MiB. Each part is verified before
-	// enqueueing, so a retry cannot leak partial bytes into the assembled PCK.
+	// tab under that pressure.
+	// Stream the parts instead of buffering them.
 	//
 	// The previous version awaited response.arrayBuffer() for every part and
 	// kept them all, then copied the lot into a Blob - so a 748 MB pack existed
 	// twice in JS memory (~1.5 GB) before Godot mounted its own copy. Against
 	// wasm32's 4 GB address space that was enough to hang or kill the tab.
 	//
-	// A ReadableStream hands each ordered chunk straight to the consumer and
-	// drops it, so peak cost is the prefetch window rather than the whole pack.
+	// A ReadableStream hands each chunk straight to the consumer and drops it,
+	// so peak cost is one part (8 MB) rather than the whole pack.
 	const streamParts = (requestUrl, partCount) => new ReadableStream({
 		async start(controller) {
-			const pending = new Map();
-			let nextIndex = 0;
-			const schedule = () => {
-				while (pending.size < PART_PREFETCH && nextIndex < partCount) {
-					const index = nextIndex;
-					nextIndex += 1;
-					// Convert rejection to data immediately so a later prefetched
-					// failure never becomes an unhandled promise rejection.
-					pending.set(index, fetchPart(requestUrl, index).then(
-						(bytes) => ({ bytes }),
-						(error) => ({ error }),
-					));
-				}
-			};
 			try {
-				schedule();
+				const hashed = manifestParts.get(requestUrl);
 				for (let index = 0; index < partCount; index += 1) {
-					const result = await pending.get(index);
-					pending.delete(index);
-					schedule();
-					if (result.error) {
-						throw result.error;
+					// Hashed parts are named by content, so the browser's normal
+					// HTTP cache is safe for them and the host marks them immutable:
+					// a repeat visit re-downloads none. No ?build= key either, which
+					// would only stop identical parts being reused across deploys.
+					// The older unhashed layout keeps its no-store fetch.
+					const url = hashed
+						? new URL(hashed[index], window.location.href).toString()
+						: partUrl(requestUrl, index);
+					const response = await nativeFetch(url, hashed ? {} : { cache: "no-store" });
+					if (!response.ok) {
+						throw new Error(`${url} returned ${response.status}`);
 					}
-					controller.enqueue(result.bytes);
+					// Pump this part through without retaining it.
+					const reader = response.body.getReader();
+					for (;;) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						controller.enqueue(value);
+					}
 				}
 				controller.close();
 			} catch (error) {
@@ -252,14 +125,6 @@
 		const splittable = ["/index.pck", "/index.side.wasm"];
 		if (!splittable.some((name) => url.pathname.endsWith(name))) {
 			return nativeFetch(input, init);
-		}
-
-		// Local exports keep the side module whole. Avoid probing 128 missing
-		// chunks before downloading it. Older split builds still use the fallback.
-		if (url.pathname.endsWith("/index.side.wasm")) {
-			const whole = await nativeFetch(input, init);
-			if (whole.ok) return whole;
-			if (whole.body) await whole.body.cancel();
 		}
 
 		const partCount = await countParts(requestUrl);

@@ -338,8 +338,10 @@ func _run() -> void:
 	if world.find_children("*", "StaticBody3D", true, false).size() < 90:
 		_fail("world does not contain enough collision-backed architecture")
 		return
-	if world.find_children("SkyTower_*", "Node3D", true, false).size() < 12:
-		_fail("floating skyline is incomplete")
+	# The white skyline towers (each topped with a cypress) were removed as
+	# out of place against the galaxy sky.
+	if not world.find_children("SkyTower_*", "Node3D", true, false).is_empty():
+		_fail("removed skyline towers are back")
 		return
 
 	print("ART_CASTLE_FLOATING_WORLD_TEST: PASS — world, player, live minimap, and return gate")
