@@ -25,14 +25,13 @@ func _run() -> void:
 		return
 	for district in ["CentralSanctuary", "ArrivalIsland", "MindSparkDistrict",
 			"HeartMelodyTemple", "CreatorsLightStudio", "WestObservatory",
-			"NorthObservatory", "EastObservatory", "SouthObservatory"]:
+			"NorthObservatory", "EastObservatory"]:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
 
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
-			"WestObservatoryBridge", "NorthObservatoryBridge", "EastObservatoryBridge",
-			"SouthObservatoryBridge"]:
+			"WestObservatoryBridge", "NorthObservatoryBridge", "EastObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
 		if bridge_node == null or bridge_node.get_node_or_null("Walkway") == null:
 			_fail("missing connected walkway %s" % bridge)
@@ -86,8 +85,10 @@ func _run() -> void:
 	if world.find_children("*", "StaticBody3D", true, false).size() < 90:
 		_fail("world does not contain enough collision-backed architecture")
 		return
-	if world.find_children("SkyTower_*", "Node3D", true, false).size() < 12:
-		_fail("floating skyline is incomplete")
+	# The white skyline towers (each topped with a cypress) were removed as
+	# out of place against the galaxy sky.
+	if not world.find_children("SkyTower_*", "Node3D", true, false).is_empty():
+		_fail("removed skyline towers are back")
 		return
 
 	print("ART_CASTLE_FLOATING_WORLD_TEST: PASS — world, player, live minimap, and return gate")

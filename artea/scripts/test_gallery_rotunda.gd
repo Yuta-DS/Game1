@@ -38,7 +38,7 @@ func _run() -> void:
 	# Walk-in route: from the bridge, through the door, to the bench.
 	for z in [19.5, 16.0, 10.0, 0.0, -10.0]:
 		var hit := _ray(space, Vector3(0, 5, z), Vector3(0, -2, z), skip)
-		# The bridge's threshold ramp (top y=0.52) reaches 2.5 m into the doorway.
+		# The bridge's threshold slope rises from the floor 8 m inside the doorway.
 		if hit.is_empty() or (hit.position as Vector3).y < Rotunda.FLOOR_TOP - 0.05 \
 				or (hit.position as Vector3).y > 0.6:
 			_fail("no walkable floor at z=%.1f on the entrance route" % z)
