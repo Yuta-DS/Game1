@@ -108,11 +108,22 @@ What this says:
 ## Web-only texture re-encoding (issue #39)
 
 `addons/web_asset_slimmer` is an `EditorExportPlugin` that only acts when the
-export platform is Web. It re-stores large textures as lossy WebP
-(`PortableCompressedTexture2D`, quality 0.85), capped at 2048 px. A texture
-qualifies if it is a standalone file stored lossless or lossy (not
-VRAM-compressed) and is either a 3D texture (has mipmaps) or larger than
-1024 px. Small UI icons and pixel art are left alone. Nothing is dropped.
+export platform is Web. Every texture it touches is capped at 2048 px, and
+nothing is dropped:
+
+- **Lossless or lossy (WebP/PNG) textures** are re-stored as lossy WebP
+  (`PortableCompressedTexture2D`, quality 0.85) when they are a 3D texture (have
+  mipmaps) or larger than 1024 px. Small UI icons and pixel art are left alone:
+  lossy WebP smudges hard pixel edges.
+- **VRAM-compressed textures** (S3TC/BPTC) are re-stored as Basis Universal.
+  Basis stays GPU-compressed and the browser transcodes it to whatever it
+  supports: S3TC/BPTC on desktop, ETC2/ASTC on mobile, which the S3TC-only
+  imports never reached. Flat 2D art imported as VRAM is where it pays off
+  (`joyring.png` 3.6 MB → 36 KB, `trophy.png` 3.1 MB → 98 KB). Detailed 3D
+  textures stay about the same size and quality (Milo's skin 2.73 → 2.78 MB,
+  PSNR against the source within 0.2 dB of the shipped DXT1). Lossy WebP would
+  be smaller for those, but decodes to RGBA8, four to eight times the GPU memory
+  of the DXT it replaces. HDR and RGTC normal-map imports are left as they are.
 
 The export scripts (`./web rebuild`, `artea/tools/web.sh`,
 `vercel-pack-split/export_web.sh`) enable it for the length of the export
@@ -122,39 +133,46 @@ as `project.binary`, and enabling it there changes the desktop pack by 48
 bytes.
 
 Pack contents by asset type, from `python artea/tools/pck-contents.py`
-(same project, before and after the plugin):
+(same project, Web export without and with the plugin):
 
 | Asset type | Before MiB | After MiB | Change |
 |---|---:|---:|---:|
-| texture | 359.0 | 220.7 | -138.3 (-39%) |
+| texture | 359.1 | 142.1 | -217.0 (-60%) |
 | 3D scene (glb/fbx) | 192.5 | 192.5 | 0 |
-| audio | 78.2 | 78.2 | 0 |
+| audio | 79.7 | 79.7 | 0 |
 | scene/resource | 17.7 | 17.7 | 0 |
 | other | 12.4 | 12.4 | 0 |
 | mesh | 5.3 | 5.3 | 0 |
-| font | 3.9 | 3.9 | 0 |
+| font | 4.2 | 4.2 | 0 |
 | script | 2.3 | 2.3 | 0 |
 | shader | 0.1 | 0.1 | 0 |
-| **Total** | **671.5** | **533.1** | **-138.4 (-21%)** |
+| **Total** | **673.3** | **456.3** | **-217.0 (-32%)** |
 
-129 of the 589 non-VRAM textures were re-encoded, and 10 of those were
-downscaled. Cold first load (`./web verify`): 755.1 MB → 610.1 MB, still
-PLAYABLE.
+129 of the 589 non-VRAM textures went to lossy WebP and all 221 VRAM textures
+to Basis Universal; 13 were downscaled. The VRAM textures were 106.9 MiB of the
+texture total (DXT5 73.5, DXT1 33.4). With WebP alone the texture row was
+220.7 MiB. Cold first load (`./web verify`): 755.1 MB → 529.6 MB to the hub,
+time to hub 18.0 s, still PLAYABLE, with no texture or Basis errors in the
+browser console.
+
+The 3D scene row is mesh and animation data: every `.glb` import extracts its
+textures to separate files (`gltf/embedded_image_handling=1`), so those are
+already counted, and shrunk, under texture.
 
 Desktop output is unaffected. `pck-contents.py A.pck --compare B.pck` compares
 packs by file and MD5, ignoring storage order, which Godot does not keep
-stable. With a warm export cache, the Windows Desktop pack before and after
-this change has identical content (4,701 files). From an empty cache, Godot's
-`.tscn` → `.scn` conversion is not deterministic: two exports of the *same*
-code differ in the same 212 converted scenes as an export with and without
-this change, and in nothing else.
+stable. Desktop exports never run the wrapper, and the plugin declines every
+platform but Web. To check the second half, the Windows Desktop pack was
+exported with the plugin forcibly enabled (through the wrapper) and without:
+all 4,813 files are byte-identical except `project.binary`, which differs only
+because the wrapper adds the plugin to `project.godot` for the length of the
+export, the 48 bytes that are the reason it is not enabled there.
 
 Not done yet:
 
-- **Audio** (78 MiB) is unchanged. Godot cannot encode Ogg Vorbis, so
+- **Audio** (79.7 MiB) is unchanged. Godot cannot encode Ogg Vorbis, so
   re-encoding at a lower bitrate needs an external encoder such as ffmpeg at
   export time.
-- **VRAM formats for mobile browsers** (ETC2/ASTC) would change project-wide
-  import settings, and so desktop imports too. Left out to keep desktop
-  unchanged.
-- **Visual check** in the Hub, Art Castle and each Kingdom (issue #39 acceptance).
+- **Visual check** in the Hub, Art Castle and each Kingdom (issue #39
+  acceptance). The headless `./web verify` screenshots are taken under the
+  loading overlay (software rendering), so this needs a person in a browser.
