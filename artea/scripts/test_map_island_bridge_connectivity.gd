@@ -24,7 +24,7 @@ func _run() -> void:
 	if not await _check_kingdom_shelf_grids():
 		return
 	print("MAP_ISLAND_BRIDGE_CONNECTIVITY: PASS — World One ring 2 routes/island; " \
-		+ "4 observatory twin pairs; 120 shelf bridges with >=2 routes/island; " \
+		+ "3 observatory twin pairs; 120 shelf bridges with >=2 routes/island; " \
 		+ "steepest legal shelf bridge walked by production player")
 	quit()
 
@@ -75,8 +75,11 @@ func _check_observatory_twins() -> bool:
 	root.add_child(world)
 	for _frame in 4:
 		await physics_frame
+	if world.get_node_or_null("SouthObservatory") != null:
+		_fail("south observatory still stands inside the arrival island")
+		return false
 	for base_name in ["WestObservatoryBridge", "NorthObservatoryBridge",
-			"EastObservatoryBridge", "SouthObservatoryBridge"]:
+			"EastObservatoryBridge"]:
 		var left := world.get_node_or_null(base_name) as Node3D
 		var right := world.get_node_or_null("%sTwin" % base_name) as Node3D
 		if left == null or right == null:
