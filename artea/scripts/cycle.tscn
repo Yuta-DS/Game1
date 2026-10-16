@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://c80txgulck3dx"]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Shader" uid="uid://b80li2r7qy7fh" path="res://scenes/stylizedsky.gdshader" id="1_b5t5u"]
 [ext_resource type="Texture2D" uid="uid://ck04myctechrl" path="res://assets3D/Crescent_Moon_PNG_Clip_Art_Image.png" id="2_pvufr"]

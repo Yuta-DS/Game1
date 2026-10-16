@@ -158,11 +158,7 @@ func request_ai_recovery_status(callback: Callable) -> void:
 
 	http.request_completed.connect(
 		func(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
-			# Network/proxy errors can return empty or HTML bodies. Use the
-			# existing structured fallback without emitting an engine parse error.
-			var decoder := JSON.new()
-			var decoded := decoder.parse(body.get_string_from_utf8())
-			var response: Variant = decoder.data if decoded == OK else null
+			var response = JSON.parse_string(body.get_string_from_utf8())
 			if not response is Dictionary:
 				response = {
 					"error": "Could not read AI recovery status.",
@@ -189,9 +185,7 @@ func _post_ai_json(url: String, payload: Dictionary, callback: Callable) -> void
 
 	http.request_completed.connect(
 		func(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
-			var decoder := JSON.new()
-			var decoded := decoder.parse(body.get_string_from_utf8())
-			var response: Variant = decoder.data if decoded == OK else null
+			var response = JSON.parse_string(body.get_string_from_utf8())
 			if not response is Dictionary:
 				response = {
 					"error": "The creative AI returned an unreadable response.",

@@ -1,17 +1,14 @@
 # Milo's child-safe, offline reflection panel.
 #
-# Typed reflection is bounded to 280 characters and always passes through the
-# authored safety matcher first. Supported desktop builds may then answer with
+# Typed reflection has no length limit and always passes through the authored
+# safety matcher first. Supported desktop builds may then answer with
 # the bundled local Gemma model through NobodyWho. No message is saved, logged,
 # or uploaded; Web and unsupported builds retain the authored local response.
 extends Control
 
-@onready var chat_history: TextEdit = $MiloReplyCard/ChatHistory
-@onready var content: VBoxContainer = $InputContent
-@onready var milo_role: Label = $MiloReplyCard/MiloRole
-@onready var reply_card: Panel = $MiloReplyCard
-@onready var milo_name: Label = $MiloReplyCard/MiloName
-@onready var input_banner: TextureRect = $InputBanner
+@onready var chat_history: RichTextLabel = $Panel/VBoxContainer/ChatHistory
+@onready var content: VBoxContainer = $Panel/VBoxContainer
+@onready var choices_scroll: ScrollContainer = $Panel/VBoxContainer/ChoicesScroll
 
 signal chat_closed
 signal companion_pose_requested(pose_name: String)
@@ -24,45 +21,55 @@ signal companion_activity_state_requested(state_name: String)
 var user_input: Control
 
 const ReflectionEngine := preload("res://scripts/MiloReflectionEngine.gd")
-const WisdomEngine := preload("res://scripts/MiloWisdomEngine.gd")
-const ConversationContext := preload("res://scripts/MiloConversationContext.gd")
 const SupportCard := preload("res://scripts/support_card.gd")
 const CastleGuideArrow := preload("res://scripts/castle_guide_arrow.gd")
 const CASTLE_ARROW_NAME := "CastleGuideArrow"
+const REPLY_TITLE_COLOR := "#9a6a1c"
+const REPLY_SECTION_COLOR := "#2b4f8f"
+const REPLY_HIGHLIGHT_COLOR := "#b5482f"
+# Emoji in replies are drawn as icons: the Web export has no emoji font, so
+# the characters themselves render blank there.
+const REPLY_ICONS := {
+	"✨": "res://assets/UI/icons/sparkle.svg",
+	"⭐": "res://assets/UI/icons/star.svg",
+	"🎉": "res://assets/UI/icons/sparkle.svg",
+}
+# The hub castle's door trigger (teleport_Art_Gallery.gd) in New_Hub_World.
 const CASTLE_DOOR_NODE := "Art_Gallery"
+const MILO_DISCLAIMER := "Milo is an AI friend, not a real counsellor. If something is really bothering you, talk to a grown-up you trust or tap Need help."
 const LOCAL_LLM_MODEL_PATH := "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
 const LOCAL_LLM_PROMPT_PATH := "res://addons/nobodywho/milo_prompt.txt"
 const LOCAL_LLM_CONTEXT_LENGTH := 2048
 const LOCAL_LLM_TIMEOUT_SECONDS := 120.0
 const LOCAL_LLM_MAX_RESPONSE_CHARS := 720
+
+# Web ships without NobodyWho (no Web library for the native extension), so
+# Web builds talk to Milo's cloud proxy instead - a Cloudflare Worker that
+# holds the Gemini API key server-side and never exposes it to the browser.
+# The authored safety matcher above still runs first on every platform; this
+# is only reached for non-urgent messages.
+const CLOUD_LLM_ENDPOINT := "https://milo-dialogue-proxy.corey-thomas99.workers.dev"
+const CLOUD_LLM_TIMEOUT_SECONDS := 20.0
+const CLOUD_LLM_MAX_RESPONSE_CHARS := 720
+
 var _reflection_engine := ReflectionEngine.new()
-var _wisdom_engine := WisdomEngine.new()
-var _conversation_context := ConversationContext.new()
 var _message_input: LineEdit
-var _message_send_button: Button
 var campaign_router: Node
 var _support_card: Node
 var _local_llm_model: Node
 var _local_llm_chat: Node
 var _local_llm_response := ""
 var _local_llm_generating := false
-var _strength_question_index := 0
-var _strength_tally: Dictionary = {}
 var _local_llm_request_id := 0
+var _cloud_llm_request: HTTPRequest
+var _cloud_llm_generating := false
+var _cloud_llm_request_id := 0
 var _pending_authored_response: Dictionary = {}
-var _pending_grounded_response: Dictionary = {}
-var _pending_player_message := ""
-var _last_player_message := ""
-var _last_spoken_text := ""
-var _spoken_full_reply := ""
-var _chat_ui_scale := 1.0
-var _chat_phone_layout := false
 
 const ACTIVITY_DESTINATIONS := {
 	"mind": "Mind Spark Kingdom",
 	"heart": "Heart Melody Kingdom",
 	"creator": "Creator's Light Kingdom",
-	"crown": "Crown of Life",
 }
 
 const MODE_INTROS := {
@@ -129,8 +136,8 @@ const CURATED_REFLECTIONS := {
 			},
 			{
 				"label": "Choose what I like",
-				"faith": "You get to decide what matters in your creation. Milo will not judge it.",
-				"universal": "You get to decide what matters in your creation. Milo will not judge it.",
+				"faith": "You get to decide what matters in your creation. I will not judge it.",
+				"universal": "You get to decide what matters in your creation. I will not judge it.",
 			},
 		],
 	},
@@ -203,8 +210,8 @@ const EMOTION_CHECK_INS := [
 		"reflection": "It sounds like something you chose or created has brought energy and pride.",
 		"strength": "You are more than one achievement. Recognising progress can build confidence and gratitude.",
 		"question": "Let's explore this together. What choice or effort helped create this moment?",
-		"activity": "Would you like to revisit your current ARTÉA space and make a small celebration mark, sound, or reflection?",
-		"activity_id": "crown",
+		"activity": "Would you like to visit Creator's Light and make a small celebration mark for the effort you want to remember?",
+		"activity_id": "creator",
 	},
 	{
 		"label": "I am not sure what I feel",
@@ -217,43 +224,35 @@ const EMOTION_CHECK_INS := [
 	},
 ]
 
-const STRENGTH_DISCOVERIES := [
-	{
-		"label": "I kept trying",
-		"strength": "Perseverance",
-		"reflection": "You continued even when the result was not immediate.",
-		"question": "What helped you return for one more step?",
-	},
-	{
-		"label": "I asked for help",
-		"strength": "Connection",
-		"reflection": "Asking for support can be a wise and courageous choice.",
-		"question": "Who or what helped the task feel more possible?",
-	},
-	{
-		"label": "I made or imagined something",
-		"strength": "Creativity",
-		"reflection": "You turned an idea into something you could explore.",
-		"question": "Which part feels most like your own voice?",
-	},
-	{
-		"label": "I noticed what was happening inside",
-		"strength": "Self-awareness",
-		"reflection": "Pausing to notice can help you choose your next step with care.",
-		"question": "What did noticing help you understand or choose?",
-	},
-]
-
+# A concise, playful strength finder. Each answer points to one of four
+# strengths; Milo names the one the player chose most often. It reflects only
+# the player's own button presses and is never saved, scored, or rewarded.
 const STRENGTHS := {
-	"creativity": {"name": "Creativity", "reveal": "You love turning ideas into something new. You see possibilities other people might miss.", "activity_id": "creator"},
-	"kindness": {"name": "Kindness", "reveal": "You notice how others feel and help them feel less alone.", "activity_id": "heart"},
-	"curiosity": {"name": "Curiosity", "reveal": "You love asking questions and figuring out how things work.", "activity_id": "mind"},
-	"perseverance": {"name": "Perseverance", "reveal": "You keep going even when things are hard. Every attempt helps you grow.", "activity_id": "mind"},
+	"creativity": {
+		"name": "Creativity",
+		"reveal": "You love turning ideas into something new. You see possibilities other people might miss.",
+		"activity_id": "creator",
+	},
+	"kindness": {
+		"name": "Kindness",
+		"reveal": "You notice how others feel and you help them feel less alone. People are lucky to have you nearby.",
+		"activity_id": "heart",
+	},
+	"curiosity": {
+		"name": "Curiosity",
+		"reveal": "You love asking questions and figuring out how things work. Your wondering helps you learn and grow.",
+		"activity_id": "mind",
+	},
+	"perseverance": {
+		"name": "Perseverance",
+		"reveal": "You keep going even when things are hard. Every time you try again, you grow a little stronger.",
+		"activity_id": "mind",
+	},
 }
 
 const STRENGTH_QUESTIONS := [
 	{
-		"question": "When you have free time, what do you enjoy most?",
+		"question": "What do you enjoy doing most?",
 		"answers": [
 			["Making or drawing something", "creativity"],
 			["Spending time with friends or family", "kindness"],
@@ -318,197 +317,38 @@ const ACTIVITY_GUIDES := [
 		"activity_id": "creator",
 		"guide": "Make one mark, shape, or colour choice that belongs to you. There is no perfect result.",
 	},
-	{
-		"label": "Look back at my growth",
-		"activity": "Crown of Life",
-		"activity_id": "crown",
-		"guide": "Review choices and discoveries already recorded by your journey, without adding a new reward.",
-	},
 ]
 
-const STAGE_PROGRESS := {
-	0: {
-		"evidence": "You arrived and made space for a first choice.",
-		"strength": "Curiosity",
-		"next": "Explore at your own pace and choose one small beginning.",
-	},
-	1: {
-		"evidence": "You reached Mind Spark and practised meeting a thought with choice.",
-		"strength": "Perspective",
-		"next": "Notice which response helps you take the next grounded step.",
-	},
-	2: {
-		"evidence": "You continued into Heart Melody and explored experience through sound.",
-		"strength": "Emotional awareness",
-		"next": "Let a rhythm or quiet moment show you what you want to carry forward.",
-	},
-	3: {
-		"evidence": "You reached Creator's Light and gave an idea a visible form.",
-		"strength": "Creative courage",
-		"next": "Choose one part of your creation that feels meaningful to you.",
-	},
-	4: {
-		"evidence": "You brought discoveries from across the journey toward the Crown of Life.",
-		"strength": "Integration",
-		"next": "Pause to recognise how your choices, not perfection, shaped the journey.",
-	},
+# Each completed world is evidenced by its treasure in JourneyState, read
+# through JourneyCampaign. Milo celebrates only what the journey recorded.
+# Short world names for Milo's spoken suggestions ("Try the Mind Spark world").
+const WORLD_SHORT_NAMES := {
+	"mind": "Mind Spark",
+	"heart": "Heart Melody",
+	"creator": "Creator's Light",
+}
+
+const WORLD_STRENGTHS := {
+	"mind": "Perspective",
+	"heart": "Emotional awareness",
+	"creator": "Creative courage",
 }
 
 var _stage := 0
 var _mode := "faith"
 var _choices: VBoxContainer
-
-const UI_INK := Color(0.13, 0.10, 0.075, 1.0)
-const UI_PARCHMENT := Color(0.96, 0.89, 0.72, 1.0)
-const UI_NAVY := Color(0.075, 0.13, 0.24, 0.96)
-const UI_NAVY_HOVER := Color(0.12, 0.22, 0.36, 0.98)
-const UI_GOLD := Color(0.70, 0.52, 0.21, 0.95)
-const UI_GOLD_BRIGHT := Color(0.93, 0.75, 0.36, 1.0)
-const UI_BODY_FONT := preload("res://assets/Fonts/grenze/Grenze-Medium.ttf")
+var _strength_question_index := 0
+var _reply_plain_text := ""
+var _strength_tally: Dictionary = {}
 
 
 func _ready() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	# This is a display transcript, not a text-input surface.
-	chat_history.editable = false
-	chat_history.selecting_enabled = true
-	_layout_for_viewport(get_viewport().get_visible_rect().size)
-	get_viewport().size_changed.connect(func():
-		if is_instance_valid(reply_card):
-			_layout_for_viewport(get_viewport().get_visible_rect().size))
-	_apply_banner_theme()
+	# Third-person cameras stop orbiting and zooming while Milo's chat is open.
+	add_to_group("camera_input_blockers")
 	_resolve_safe_context()
-	var current_scene := get_tree().current_scene
-	_conversation_context.update_scene(current_scene.name if current_scene != null \
-		else "unknown", _stage, _mode, "conversation", false)
 	_initialize_local_llm()
+	_initialize_cloud_llm()
 	_show_choices()
-
-
-func _layout_for_viewport(viewport_size: Vector2,
-		physical_size: Vector2 = Vector2.ZERO) -> void:
-	if physical_size.is_zero_approx():
-		physical_size = _chat_physical_size(viewport_size)
-	_chat_ui_scale = _chat_interface_scale(viewport_size, physical_size)
-	var physical_width := viewport_size.x / _chat_ui_scale
-	var physical_height := viewport_size.y / _chat_ui_scale
-	_chat_phone_layout = physical_width < 700.0 or physical_height < 650.0
-	if not _chat_phone_layout:
-		set_meta("chat_layout", "authored_desktop")
-		return
-
-	var portrait := physical_height >= physical_width
-	var margin := 12.0 * _chat_ui_scale
-	var gap := 8.0 * _chat_ui_scale
-	if portrait:
-		var input_height := 320.0 * _chat_ui_scale
-		var reply_height := 220.0 * _chat_ui_scale
-		_set_rect(reply_card, 0.0, 1.0, 1.0, 1.0,
-			margin, -(input_height + gap + margin + reply_height),
-			-margin, -(input_height + gap + margin))
-		_set_rect(input_banner, 0.0, 1.0, 1.0, 1.0,
-			margin, -(input_height + margin), -margin, -margin)
-		_set_rect(content, 0.0, 1.0, 1.0, 1.0,
-			margin + 18.0 * _chat_ui_scale,
-			-(input_height + margin) + 48.0 * _chat_ui_scale,
-			-(margin + 18.0 * _chat_ui_scale),
-			-(margin + 20.0 * _chat_ui_scale))
-	else:
-		# A side-by-side modal preserves usable reply and choice areas on short,
-		# wide phone screens without stacking them into less than 390 CSS pixels.
-		_set_rect(reply_card, 0.0, 0.0, 0.47, 1.0,
-			margin, margin, -gap * 0.5, -margin)
-		_set_rect(input_banner, 0.49, 0.0, 1.0, 1.0,
-			gap * 0.5, margin, -margin, -margin)
-		_set_rect(content, 0.49, 0.0, 1.0, 1.0,
-			gap * 0.5 + 16.0 * _chat_ui_scale,
-			margin + 42.0 * _chat_ui_scale,
-			-(margin + 16.0 * _chat_ui_scale),
-			-(margin + 18.0 * _chat_ui_scale))
-
-	milo_name.add_theme_font_size_override("font_size", roundi(22.0 * _chat_ui_scale))
-	milo_role.add_theme_font_size_override("font_size", roundi(14.0 * _chat_ui_scale))
-	_set_rect(milo_name, 0.03, 0.0, 0.24, 0.0,
-		0.0, 6.0 * _chat_ui_scale, 0.0, 48.0 * _chat_ui_scale)
-	_set_rect(milo_role, 0.24, 0.0, 0.96, 0.0,
-		0.0, 13.0 * _chat_ui_scale, 0.0, 45.0 * _chat_ui_scale)
-	_set_rect(chat_history, 0.0, 0.0, 1.0, 1.0,
-		14.0 * _chat_ui_scale, 56.0 * _chat_ui_scale,
-		-14.0 * _chat_ui_scale, -12.0 * _chat_ui_scale)
-	chat_history.add_theme_font_size_override("font_size", roundi(16.0 * _chat_ui_scale))
-	chat_history.add_theme_constant_override("line_spacing", roundi(4.0 * _chat_ui_scale))
-	content.add_theme_constant_override("separation", roundi(7.0 * _chat_ui_scale))
-	set_meta("chat_layout", "phone_readable_v1")
-	set_meta("chat_ui_scale", _chat_ui_scale)
-	set_meta("chat_physical_font_pixels", 16.0)
-
-
-func _set_rect(control: Control, left: float, top: float, right: float,
-		bottom: float, offset_left: float, offset_top: float,
-		offset_right: float, offset_bottom: float) -> void:
-	control.anchor_left = left
-	control.anchor_top = top
-	control.anchor_right = right
-	control.anchor_bottom = bottom
-	control.offset_left = offset_left
-	control.offset_top = offset_top
-	control.offset_right = offset_right
-	control.offset_bottom = offset_bottom
-
-
-func _chat_physical_size(viewport_size: Vector2) -> Vector2:
-	var display_size := Vector2(DisplayServer.window_get_size())
-	var css_size := Vector2.ZERO
-	if OS.has_feature("web"):
-		var encoded := str(JavaScriptBridge.eval(
-			"JSON.stringify([window.innerWidth || 0, window.innerHeight || 0])", true))
-		if encoded.begins_with("["):
-			var decoded: Variant = JSON.parse_string(encoded)
-			if decoded is Array and decoded.size() >= 2:
-				css_size = Vector2(float(decoded[0]), float(decoded[1]))
-	return _select_chat_physical_size(viewport_size, display_size, css_size)
-
-
-func _select_chat_physical_size(viewport_size: Vector2, display_size: Vector2,
-		css_size: Vector2 = Vector2.ZERO) -> Vector2:
-	if css_size.x >= 240.0 and css_size.y >= 240.0:
-		return css_size
-	if display_size.x >= 240.0 and display_size.y >= 240.0:
-		return display_size
-	return viewport_size
-
-
-func _chat_interface_scale(viewport_size: Vector2, physical_size: Vector2) -> float:
-	if physical_size.x <= 0.0 or physical_size.y <= 0.0:
-		return 1.0
-	return maxf(1.0, maxf(viewport_size.x / physical_size.x,
-		viewport_size.y / physical_size.y))
-
-
-func _apply_banner_theme() -> void:
-	content.add_theme_constant_override("separation", roundi(7.0 * _chat_ui_scale))
-	chat_history.tooltip_text = "Milo's current reply"
-
-
-func configure_conversation_context(context: MiloConversationContext,
-		scene_name := "unknown", activity_state := "conversation") -> void:
-	if context != null:
-		_conversation_context = context
-	_conversation_context.update_scene(scene_name, _stage, _mode,
-		activity_state.to_lower(), false)
-
-
-func _process(_delta: float) -> void:
-	# Web can deliver the pointer-lock event from the opening click one frame
-	# late. Keep Milo's modal conversation in ordinary cursor mode throughout.
-	if visible and Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_viewport().set_input_as_handled()
-		close_chat()
 
 
 func _resolve_safe_context() -> void:
@@ -524,12 +364,42 @@ func _resolve_safe_context() -> void:
 func _show_choices() -> void:
 	_request_companion_activity("GREETING", "welcome")
 	var reflection: Dictionary = CURATED_REFLECTIONS.get(_stage, CURATED_REFLECTIONS[0])
-	_speak("Wonderful Counsellor Milo · %s\n\n%s\n\nWhat would you like to talk about?" % [
+	_speak("Wonderful Counsellor Milo · %s\n\nHi, I'm Milo! Choose what you'd like to do, or tell me what's on your mind. Nothing you choose here changes your progress." % [
 		reflection["title"],
-		MODE_INTROS[_mode],
 	])
 	_clear_choices()
+
+	var prompt := Label.new()
+	prompt.text = "How can Milo walk alongside you?"
+	prompt.add_theme_font_size_override("font_size", 18)
+	prompt.add_theme_color_override("font_color", Color(0, 0, 0, 1))
+	_choices.add_child(prompt)
+
+	for path_spec in [
+		["Discover a strength", _show_strength_discoveries],
+		["Celebrate my progress", _show_progress_celebration],
+		["Choose an activity", _show_activity_guides],
+	]:
+		var path_button := _quiet_button(path_spec[0], path_spec[1])
+		_choices.add_child(path_button)
+		if user_input == null:
+			user_input = path_button
+
 	_add_message_input()
+
+	var quiet_note := Label.new()
+	# One line by design: the full privacy detail lives in the tooltip.
+	quiet_note.text = MILO_DISCLAIMER
+	quiet_note.tooltip_text = _local_llm_privacy_note()
+	quiet_note.mouse_filter = Control.MOUSE_FILTER_PASS
+	quiet_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	quiet_note.add_theme_font_size_override("font_size", 14)
+	quiet_note.add_theme_color_override("font_color", Color(0, 0, 0, 1))
+	_choices.add_child(quiet_note)
+
+	_choices.add_child(_quiet_button("Need help", _show_support))
+	_choices.add_child(_quiet_button("Close", close_chat))
+	_focus_first_choice()
 
 
 func _show_stage_reflections() -> void:
@@ -553,7 +423,7 @@ func _show_stage_reflections() -> void:
 
 func _show_emotion_check_ins() -> void:
 	_request_companion_activity("LISTENING", "heart")
-	_speak("Wonderful Counsellor Milo · Emotional Companion\n\nChoose words that feel closest, or return without choosing. Milo will respond to your choice—not guess what you feel.")
+	_speak("Wonderful Counsellor Milo · Emotional Companion\n\nChoose words that feel closest, or return without choosing. I will respond to your choice—not guess what you feel.")
 	_clear_choices()
 	for check_in in EMOTION_CHECK_INS:
 		var button := _quiet_button(str(check_in.label), _respond_to_emotion.bind(check_in))
@@ -565,94 +435,56 @@ func _show_emotion_check_ins() -> void:
 
 func _respond_to_emotion(check_in: Dictionary) -> void:
 	_request_companion_activity("ENCOURAGING", "encourage")
-	var player_choice := str(check_in.label)
-	var emotion := _emotion_from_choice(player_choice)
-	_conversation_context.observe_player_message(player_choice, emotion, "")
-	var response := {
-		"emotion": emotion,
-		"validate": str(check_in.acknowledge),
-		"reflect": str(check_in.reflection),
-		"strength": str(check_in.strength),
-		"guidance": str(check_in.question),
-		"activity": str(check_in.activity),
-	}
-	var natural_response := _conversation_context.naturalize_reflection(
-		response, player_choice)
 	_show_companion_response(
 		"Emotional Companion",
-		natural_response,
+		"You chose: %s\n\nVALIDATE\n%s\n\nREFLECT\n%s\n\nIDENTITY & STRENGTH\n%s\n\nGENTLE GUIDANCE\n%s\n\nCONNECT TO ARTÉA\n%s" % [
+			str(check_in.label), str(check_in.acknowledge),
+			str(check_in.reflection), str(check_in.strength),
+			str(check_in.question), str(check_in.activity),
+		],
 		str(check_in.get("activity_id", ""))
 	)
-	_record_conversation_exchange(player_choice, natural_response,
-		_conversation_context.choose_intention("", emotion))
-
-
-func _emotion_from_choice(label: String) -> String:
-	var lower := label.to_lower()
-	for emotion in ["worried", "stressed", "sad", "frustrated", "lonely", "proud"]:
-		if lower.contains(emotion):
-			return emotion
-	return "unclear"
 
 
 func _add_message_input() -> void:
-	if not _last_player_message.is_empty():
-		var player_echo := Label.new()
-		player_echo.name = "PlayerLastMessage"
-		player_echo.text = "YOU  •  %s" % _short_player_echo(_last_player_message)
-		player_echo.custom_minimum_size = Vector2(0, 25.0 * _chat_ui_scale)
-		player_echo.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		player_echo.add_theme_font_override("font", UI_BODY_FONT)
-		player_echo.add_theme_font_size_override("font_size", roundi(16.0 * _chat_ui_scale))
-		player_echo.add_theme_color_override("font_color", Color(0.23, 0.145, 0.065, 1.0))
-		_choices.add_child(player_echo)
-
 	var prompt := Label.new()
-	prompt.text = "YOU  •  TYPE YOUR REPLY"
+	prompt.text = "Or tell Milo what is on your mind:"
 	prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	prompt.add_theme_font_override("font", UI_BODY_FONT)
-	prompt.add_theme_font_size_override("font_size", roundi(14.0 * _chat_ui_scale))
-	prompt.add_theme_color_override("font_color", Color(0.30, 0.20, 0.105, 0.92))
+	prompt.add_theme_font_size_override("font_size", 16)
+	prompt.add_theme_color_override("font_color", Color(0, 0, 0, 1))
 	_choices.add_child(prompt)
 
 	var row := HBoxContainer.new()
 	row.name = "LocalMessageRow"
-	row.add_theme_constant_override("separation", roundi(8.0 * _chat_ui_scale))
 	_choices.add_child(row)
 	_message_input = LineEdit.new()
 	_message_input.name = "MiloMessageInput"
-	_message_input.placeholder_text = "Share a thought, a question, or something you noticed…"
+	_message_input.placeholder_text = "For example: Why am I always stressed?"
+	# 0 = no limit. The safety matcher scans the whole message.
+	_message_input.max_length = 0
 	_message_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_input.tooltip_text = "This message is processed locally and is not saved."
-	_message_input.custom_minimum_size = Vector2(0, 48.0 * _chat_ui_scale)
-	_message_input.add_theme_font_override("font", UI_BODY_FONT)
-	_message_input.add_theme_font_size_override("font_size", roundi(16.0 * _chat_ui_scale))
-	_message_input.add_theme_color_override("font_color", UI_PARCHMENT)
-	_message_input.add_theme_color_override("font_placeholder_color", Color(0.88, 0.82, 0.70, 0.86))
-	_message_input.add_theme_stylebox_override("normal", _input_style(false))
-	_message_input.add_theme_stylebox_override("focus", _input_style(true))
+	var field := StyleBoxFlat.new()
+	field.bg_color = Color(1.0, 1.0, 1.0)
+	field.border_color = Color(0.86, 0.74, 0.53)
+	field.set_border_width_all(2)
+	field.set_corner_radius_all(9)
+	field.set_content_margin_all(8)
+	_message_input.add_theme_stylebox_override("normal", field)
+	var field_focus := field.duplicate() as StyleBoxFlat
+	field_focus.border_color = Color(0.48, 0.73, 1.0)
+	_message_input.add_theme_stylebox_override("focus", field_focus)
+	_message_input.add_theme_color_override("font_color", Color(0.1, 0.1, 0.15))
+	_message_input.add_theme_color_override("font_placeholder_color", Color(0.1, 0.1, 0.15, 0.5))
+	_message_input.add_theme_color_override("caret_color", Color(0.1, 0.1, 0.15))
 	row.add_child(_message_input)
-	_message_send_button = _quiet_button("Send", _submit_message.bind(_message_input))
-	_message_send_button.name = "MiloMessageSend"
-	_message_send_button.custom_minimum_size = Vector2(92.0 * _chat_ui_scale,
-		48.0 * _chat_ui_scale)
-	_style_send_button(_message_send_button)
-	row.add_child(_message_send_button)
+	var send_button := _quiet_button("Ask Milo", _submit_message.bind(_message_input))
+	send_button.name = "MiloMessageSend"
+	row.add_child(send_button)
 	_message_input.text_submitted.connect(func(_submitted_text: String) -> void:
 		_submit_message(_message_input)
 	)
 	user_input = _message_input
-
-
-func _short_player_echo(message: String) -> String:
-	var clean := message.replace("\n", " ").strip_edges()
-	if clean.length() <= 110:
-		return clean
-	var shortened := clean.left(109)
-	var last_space := shortened.rfind(" ")
-	if last_space > 70:
-		shortened = shortened.left(last_space)
-	return shortened + "…"
 
 
 func _submit_message(input: LineEdit) -> void:
@@ -661,16 +493,13 @@ func _submit_message(input: LineEdit) -> void:
 	var message := input.text.strip_edges()
 	input.clear()
 	if message.is_empty():
-		input.placeholder_text = "Write a few words for Milo first."
+		input.placeholder_text = "Write a few words first—or choose a path above."
 		input.grab_focus()
 		return
-	_last_player_message = message
 	var response: Dictionary = _reflection_engine.reflect(message)
 	if bool(response.get("urgent", false)):
-		# Never retain urgent private wording in the player-echo UI.
-		_last_player_message = ""
 		_request_companion_activity("SUPPORTING", "heart")
-		_show_chat_response(
+		_show_companion_response(
 			"Get real-world help now",
 			"%s\n\n%s\n\n%s\n\n%s\n\n%s" % [
 				str(response.validate), str(response.reflect), str(response.strength),
@@ -679,45 +508,25 @@ func _submit_message(input: LineEdit) -> void:
 		)
 		_show_support()
 		return
-	var grounded: Dictionary = _wisdom_engine.respond(message, _mode,
-		_conversation_context.snapshot())
-	var topic := str(grounded.get("category", ""))
-	_conversation_context.observe_player_message(message,
-		str(response.get("emotion", "unclear")), topic)
-	# Exact citation requests bypass generation on every platform so model prose
-	# can never alter the retrieved wording or fabricate a missing verse.
-	if str(grounded.get("category", "")) in ["scripture_reference", "scripture_not_found"]:
-		_show_grounded_wisdom_response(grounded, message)
-		return
 	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
-		_begin_local_llm_response(message, response, grounded)
+		_begin_local_llm_response(message, response)
 		return
-	if not grounded.is_empty() and bool(grounded.get("handled", false)):
-		_show_grounded_wisdom_response(grounded, message)
+	if _cloud_llm_request != null and is_instance_valid(_cloud_llm_request):
+		_begin_cloud_llm_response(message, response)
 		return
-	_show_authored_message_response(response, message)
+	_show_authored_message_response(response)
 
 
-func _show_authored_message_response(response: Dictionary,
-		player_message := "") -> void:
+func _show_authored_message_response(response: Dictionary) -> void:
 	_request_companion_activity("REFLECTING", "tablet")
-	var natural_response := _conversation_context.naturalize_reflection(
-		response, player_message)
-	_show_chat_response(
+	_show_companion_response(
 		"Reflection Partner",
-		natural_response
+		"VALIDATE\n%s\n\nREFLECT\n%s\n\nIDENTITY & STRENGTH\n%s\n\nGENTLE GUIDANCE\n%s\n\nCONNECT TO ARTÉA\n%s" % [
+			str(response.validate), str(response.reflect), str(response.strength),
+			str(response.guidance), str(response.activity),
+		],
+		str(response.get("activity_id", ""))
 	)
-	_record_conversation_exchange(player_message, natural_response,
-		_conversation_context.choose_intention("", str(response.get("emotion", "unclear"))))
-
-
-func _show_grounded_wisdom_response(response: Dictionary,
-		player_message := "") -> void:
-	_request_companion_activity("REFLECTING", "tablet")
-	var grounded_text := str(response.get("text", ""))
-	_show_chat_response("Wisdom Library", grounded_text)
-	_record_conversation_exchange(player_message, grounded_text,
-		_conversation_context.choose_intention(str(response.get("category", "")), ""))
 
 
 func _initialize_local_llm() -> void:
@@ -764,25 +573,28 @@ func _attach_local_llm_chat(local_chat: Node) -> void:
 
 
 func _begin_local_llm_response(message: String,
-		authored_response: Dictionary, grounded_response := {}) -> void:
+		authored_response: Dictionary) -> void:
 	if _local_llm_generating:
 		return
 	_local_llm_generating = true
 	_local_llm_response = ""
 	_pending_authored_response = authored_response.duplicate(true)
-	_pending_grounded_response = grounded_response.duplicate(true)
-	_pending_player_message = message
 	_local_llm_request_id += 1
 	var request_id := _local_llm_request_id
 	_request_companion_activity("LISTENING", "heart")
-	chat_history.text = "Wonderful Counsellor Milo · Listening\n\nMilo is thinking with the local model…"
+	_show_reply("Wonderful Counsellor Milo · Listening\n\nI am thinking with the local model…")
 	_clear_choices()
-	_add_message_input()
-	_message_input.editable = false
-	_message_input.placeholder_text = "Milo is thinking locally…"
-	_message_send_button.disabled = true
-	_local_llm_chat.call("say", _wisdom_engine.build_local_model_packet(
-		message, grounded_response, _conversation_context.snapshot()))
+	var waiting := Label.new()
+	waiting.name = "MiloLocalModelStatus"
+	waiting.text = "Thinking locally… Your message stays on this device."
+	waiting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	waiting.add_theme_color_override("font_color", Color(0, 0, 0, 1))
+	_choices.add_child(waiting)
+	var local_close_button := _quiet_button("Close", close_chat)
+	_choices.add_child(local_close_button)
+	user_input = local_close_button
+	_focus_first_choice()
+	_local_llm_chat.call("say", message)
 	get_tree().create_timer(LOCAL_LLM_TIMEOUT_SECONDS).timeout.connect(
 		_on_local_llm_timeout.bind(request_id))
 
@@ -793,7 +605,7 @@ func _on_local_llm_response_updated(new_token: String) -> void:
 	_local_llm_response += new_token
 	var preview := _clean_local_llm_response(_local_llm_response)
 	if not preview.is_empty():
-		chat_history.text = "Wonderful Counsellor Milo · Thinking locally\n\n%s" % preview
+		_show_reply("Wonderful Counsellor Milo · Thinking locally\n\n%s" % preview)
 
 
 func _on_local_llm_response_finished(response: String) -> void:
@@ -802,17 +614,11 @@ func _on_local_llm_response_finished(response: String) -> void:
 	_local_llm_generating = false
 	var clean_response := _clean_local_llm_response(response)
 	if clean_response.is_empty():
-		_show_pending_local_fallback()
+		_show_authored_message_response(_pending_authored_response)
 	else:
 		_request_companion_activity("REFLECTING", "tablet")
-		_show_chat_response("Local Reflection", clean_response)
-		var local_category := str(_pending_grounded_response.get("category", ""))
-		var local_emotion := str(_pending_authored_response.get("emotion", "unclear"))
-		_record_conversation_exchange(_pending_player_message, clean_response,
-			_conversation_context.choose_intention(local_category, local_emotion))
+		_show_companion_response("Local Reflection", clean_response, "", false)
 	_pending_authored_response.clear()
-	_pending_grounded_response.clear()
-	_pending_player_message = ""
 
 
 func _on_local_llm_timeout(request_id: int) -> void:
@@ -821,20 +627,8 @@ func _on_local_llm_timeout(request_id: int) -> void:
 	_local_llm_generating = false
 	if _local_llm_chat != null and _local_llm_chat.has_method("stop_generation"):
 		_local_llm_chat.call("stop_generation")
-	_show_pending_local_fallback()
+	_show_authored_message_response(_pending_authored_response)
 	_pending_authored_response.clear()
-	_pending_grounded_response.clear()
-	_pending_player_message = ""
-
-
-func _show_pending_local_fallback() -> void:
-	if not _pending_grounded_response.is_empty() \
-			and bool(_pending_grounded_response.get("handled", false)):
-		_show_grounded_wisdom_response(_pending_grounded_response,
-			_pending_player_message)
-	else:
-		_show_authored_message_response(_pending_authored_response,
-			_pending_player_message)
 
 
 func _clean_local_llm_response(source: String) -> String:
@@ -854,12 +648,101 @@ func _clean_local_llm_response(source: String) -> String:
 
 func _local_llm_privacy_note() -> String:
 	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
-		return "Milo is a fictional game character. Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check and does not diagnose or replace a trusted person."
-	return "Milo is a fictional game character. Typed messages stay on this device and are not saved. This build uses authored local reflections and a public-domain Bible library. Milo does not diagnose or replace a trusted person."
+		return "Typed messages stay on this device and are not saved. Milo uses the included local Gemma model after an authored safety check."
+	if is_cloud_llm_active():
+		return "Typed messages pass an authored safety check, then are sent to Milo's AI service to generate a reply, and are not stored afterwards."
+	return "Typed messages stay on this device and are not saved. This build uses Milo's authored local reflections."
 
 
 func is_local_llm_active() -> bool:
 	return _local_llm_chat != null and is_instance_valid(_local_llm_chat)
+
+
+func _initialize_cloud_llm() -> void:
+	# Only Web reaches here: native builds use the local model above, and this
+	# never runs at all if that path is already active.
+	if not OS.has_feature("web") or DisplayServer.get_name() == "headless":
+		return
+	if _local_llm_chat != null and is_instance_valid(_local_llm_chat):
+		return
+	_cloud_llm_request = HTTPRequest.new()
+	_cloud_llm_request.name = "MiloCloudLLMRequest"
+	_cloud_llm_request.timeout = CLOUD_LLM_TIMEOUT_SECONDS
+	add_child(_cloud_llm_request)
+	_cloud_llm_request.request_completed.connect(_on_cloud_llm_request_completed)
+
+
+func _begin_cloud_llm_response(message: String, authored_response: Dictionary) -> void:
+	if _cloud_llm_generating:
+		return
+	_cloud_llm_generating = true
+	_pending_authored_response = authored_response.duplicate(true)
+	_cloud_llm_request_id += 1
+	var request_id := _cloud_llm_request_id
+	_request_companion_activity("LISTENING", "heart")
+	_show_reply("Wonderful Counsellor Milo · Listening\n\nI am thinking…")
+	_clear_choices()
+	var waiting := Label.new()
+	waiting.name = "MiloCloudModelStatus"
+	waiting.text = "Thinking… Your message is sent to Milo's AI service to generate a reply."
+	waiting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	waiting.add_theme_color_override("font_color", Color(0, 0, 0, 1))
+	_choices.add_child(waiting)
+	var cloud_close_button := _quiet_button("Close", close_chat)
+	_choices.add_child(cloud_close_button)
+	user_input = cloud_close_button
+	_focus_first_choice()
+
+	var body := JSON.stringify({"message": message})
+	var headers := ["Content-Type: application/json"]
+	var error := _cloud_llm_request.request(CLOUD_LLM_ENDPOINT, headers, HTTPClient.METHOD_POST, body)
+	if error != OK:
+		_finish_cloud_llm(request_id, "")
+		return
+	get_tree().create_timer(CLOUD_LLM_TIMEOUT_SECONDS + 5.0).timeout.connect(
+		_on_cloud_llm_timeout.bind(request_id))
+
+
+func _on_cloud_llm_request_completed(_result: int, response_code: int,
+		_headers: PackedStringArray, body: PackedByteArray) -> void:
+	var request_id := _cloud_llm_request_id
+	if not _cloud_llm_generating:
+		return
+	var reply := ""
+	if response_code == 200:
+		var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+		if parsed is Dictionary and parsed.has("reply"):
+			reply = str(parsed["reply"])
+	_finish_cloud_llm(request_id, reply)
+
+
+func _on_cloud_llm_timeout(request_id: int) -> void:
+	if not _cloud_llm_generating or request_id != _cloud_llm_request_id:
+		return
+	_finish_cloud_llm(request_id, "")
+
+
+func _finish_cloud_llm(request_id: int, reply: String) -> void:
+	if not _cloud_llm_generating or request_id != _cloud_llm_request_id:
+		return
+	_cloud_llm_generating = false
+	var clean_reply := reply.strip_edges()
+	if clean_reply.length() > CLOUD_LLM_MAX_RESPONSE_CHARS:
+		clean_reply = clean_reply.substr(0, CLOUD_LLM_MAX_RESPONSE_CHARS).strip_edges()
+		var last_space := clean_reply.rfind(" ")
+		if last_space > CLOUD_LLM_MAX_RESPONSE_CHARS / 2:
+			clean_reply = clean_reply.left(last_space)
+		clean_reply += "…"
+	if clean_reply.is_empty():
+		_show_authored_message_response(_pending_authored_response)
+	else:
+		_request_companion_activity("REFLECTING", "tablet")
+		_show_companion_response("Milo", clean_reply, "", false)
+	_pending_authored_response.clear()
+
+
+func is_cloud_llm_active() -> bool:
+	return _cloud_llm_request != null and is_instance_valid(_cloud_llm_request)
 
 
 func _show_strength_discoveries() -> void:
@@ -871,17 +754,23 @@ func _show_strength_discoveries() -> void:
 func _show_strength_question() -> void:
 	_request_companion_activity("REFLECTING", "encourage")
 	var step: Dictionary = STRENGTH_QUESTIONS[_strength_question_index]
-	_speak("Wonderful Counsellor Milo · Strength Finder\n\nQuestion %d of %d\n\n%s" % [
+	_speak("Wonderful Counsellor Milo · Strength Finder
+
+Question %d of %d
+
+%s" % [
 		_strength_question_index + 1, STRENGTH_QUESTIONS.size(), str(step.question),
 	])
 	_clear_choices()
 	for answer in step.answers:
-		var button := _quiet_button(str(answer[0]),
-			_answer_strength_question.bind(str(answer[1])))
+		var button := _quiet_button(str(answer[0]), _answer_strength_question.bind(str(answer[1])))
 		_choices.add_child(button)
 		if user_input == null:
 			user_input = button
-	_add_companion_navigation()
+	var back_button := _quiet_button("Back to companion paths", _show_choices)
+	_choices.add_child(back_button)
+	_choices.add_child(_quiet_button("Close", close_chat))
+	_focus_first_choice()
 
 
 func _answer_strength_question(strength_id: String) -> void:
@@ -894,6 +783,7 @@ func _answer_strength_question(strength_id: String) -> void:
 
 
 func _top_strength_id() -> String:
+	# Ties go to the strength listed first in STRENGTHS, so the result is stable.
 	var best_id := ""
 	var best_count := 0
 	for strength_id in STRENGTHS:
@@ -906,30 +796,56 @@ func _top_strength_id() -> String:
 
 func _reveal_strength() -> void:
 	_request_companion_activity("ENCOURAGING", "encourage")
-	var strength: Dictionary = STRENGTHS.get(_top_strength_id(), STRENGTHS.curiosity)
+	var strength: Dictionary = STRENGTHS.get(_top_strength_id(), STRENGTHS["curiosity"])
 	var world_id := str(strength.get("activity_id", ""))
 	var message := "From your answers, one of your strengths is...\n\n✨ %s ✨\n\n%s\n\nTry the %s world! It is a great fit for your %s." % [
 		str(strength.name), str(strength.reveal),
-		str(ACTIVITY_DESTINATIONS.get(world_id, "next")),
-		str(strength.name).to_lower(),
+		str(WORLD_SHORT_NAMES.get(world_id, "next")), str(strength.name).to_lower(),
 	]
+	# Only the overworld has the castle the other worlds are reached through.
 	if _castle_door() != null:
-		message += "\n\nOther worlds also await you! Choose Try other worlds and Milo will show you the way."
+		message += "\n\nOther worlds also await you! Tap \"Try other worlds\" and I'll show you the way."
 	_show_companion_response("Strength Finder", message, world_id)
 	_add_other_worlds_button()
 
 
-func _respond_to_strength(discovery: Dictionary) -> void:
-	_request_companion_activity("ENCOURAGING", "encourage")
-	_show_companion_response(
-		"Strength Discoverer",
-		"You chose: %s\n\nPossible strength: %s\n\n%s\n\nReflection: %s" % [
-			str(discovery.label), str(discovery.strength),
-			str(discovery.reflection), str(discovery.question),
-		]
-	)
+func _show_progress_celebration() -> void:
+	_request_companion_activity("CELEBRATING", "encourage")
+	var campaign := _campaign()
+	var completed: Array[String] = []
+	var world_ids: Array = WORLD_STRENGTHS.keys()
+	if campaign != null and campaign.has_method("is_kingdom_complete"):
+		for world_id in world_ids:
+			if bool(campaign.call("is_kingdom_complete", world_id)):
+				completed.append(world_id)
+	var total := world_ids.size()
+
+	var lines: Array[String] = []
+	var next_id := ""
+	if completed.is_empty():
+		lines.append("You haven't completed a world yet, and that's okay! Every journey begins with one small step.")
+		next_id = "mind"
+	else:
+		lines.append("You've completed %d of %d worlds! 🎉" % [completed.size(), total])
+		for world_id in completed:
+			lines.append("⭐ %s · you showed %s" % [
+				str(ACTIVITY_DESTINATIONS[world_id]), str(WORLD_STRENGTHS[world_id]).to_lower(),
+			])
+	if completed.size() >= total:
+		lines.append("You finished every world. That took real effort, and I am so proud of you. You can revisit any of them whenever you like.")
+	elif next_id.is_empty() and campaign != null and campaign.has_method("next_kingdom_id"):
+		next_id = str(campaign.call("next_kingdom_id"))
+	if next_id in WORLD_STRENGTHS:
+		lines.append("Next adventure: %s, whenever you are ready." % str(ACTIVITY_DESTINATIONS[next_id]))
+
+	_show_companion_response("Celebrate My Progress", "\n\n".join(lines), next_id)
+	if next_id in WORLD_STRENGTHS:
+		_add_other_worlds_button()
 
 
+# Milo has just said new worlds await at the top of the castle: point the way
+# to the hub castle's door, which leads into the Art Castle and its worlds.
+# Only the hub has that door, so elsewhere this does nothing.
 func _show_castle_arrow() -> void:
 	var castle_door := _castle_door()
 	if castle_door == null:
@@ -944,13 +860,19 @@ func _show_castle_arrow() -> void:
 	scene.add_child(arrow)
 
 
+# The hub castle's door, or null anywhere else (the gallery is inside the
+# castle already, so "the top of the castle" means nothing there).
 func _castle_door() -> Area3D:
 	if not is_inside_tree():
 		return null
 	var scene := get_tree().current_scene
-	return scene.get_node_or_null(CASTLE_DOOR_NODE) as Area3D if scene != null else null
+	if scene == null:
+		return null
+	return scene.get_node_or_null(CASTLE_DOOR_NODE) as Area3D
 
 
+# Offered beside a world suggestion, only where the castle exists. It is placed
+# straight after the travel button so the two world choices sit together.
 func _add_other_worlds_button() -> void:
 	if _castle_door() == null:
 		return
@@ -972,20 +894,9 @@ func _show_other_worlds() -> void:
 		"New worlds await you at the top of the castle!\n\nFollow the golden arrow up the castle stair, then step through the castle door to choose your next world.")
 
 
-func _show_progress_celebration() -> void:
-	_request_companion_activity("CELEBRATING", "encourage")
-	var progress: Dictionary = STAGE_PROGRESS.get(_stage, STAGE_PROGRESS[0])
-	_show_companion_response(
-		"Encourager",
-		"What the journey records: %s\n\nStrength reflected in that step: %s\n\nA possible next step: %s\n\nYour progress comes from the choices you made; this reflection does not add or remove rewards." % [
-			str(progress.evidence), str(progress.strength), str(progress.next),
-		]
-	)
-
-
 func _show_activity_guides() -> void:
 	_request_companion_activity("GUIDING", "map")
-	_speak("Wonderful Counsellor Milo · Journey Guide\n\nChoose what would help now. Milo will suggest an ARTÉA activity without changing your progress.")
+	_speak("Wonderful Counsellor Milo · Journey Guide\n\nChoose what would help now. I will suggest an ARTÉA activity without changing your progress.")
 	_clear_choices()
 	for guide in ACTIVITY_GUIDES:
 		var button := _quiet_button(str(guide.label), _respond_with_activity.bind(guide))
@@ -1006,20 +917,19 @@ func _respond_with_activity(guide: Dictionary) -> void:
 	)
 
 
+# spoken = false shows the reply as text only (used for AI replies, which have
+# no recording and shouldn't fall back to the platform voice).
 func _show_companion_response(title: String, message: String,
-		destination_id := "") -> void:
-	_speak("Wonderful Counsellor Milo · %s\n\n%s" % [title, message])
+		destination_id := "", spoken := true) -> void:
+	var text := "Wonderful Counsellor Milo · %s
+
+%s" % [title, message]
+	if spoken:
+		_speak(text)
+	else:
+		_show_reply(text)
 	_clear_choices()
 	_add_companion_navigation(destination_id)
-
-
-func _show_chat_response(title: String, message: String) -> void:
-	# The speaker card already identifies Milo. Keep this surface focused on the
-	# actual reply so a player can follow the same words that Milo reads aloud.
-	milo_role.text = title.to_upper()
-	_speak(message, message)
-	_clear_choices()
-	_add_message_input()
 
 
 func _add_companion_navigation(destination_id := "") -> void:
@@ -1027,55 +937,30 @@ func _add_companion_navigation(destination_id := "") -> void:
 		var destination_name := str(ACTIVITY_DESTINATIONS[destination_id])
 		var travel_button := _quiet_button(
 			"Go with Milo to %s" % destination_name,
-			_confirm_activity_travel.bind(destination_id))
+			_travel_to_activity.bind(destination_id))
 		travel_button.name = "MiloTravel_%s" % destination_id
 		_choices.add_child(travel_button)
+	_add_message_input()
 	var back_button := _quiet_button("Back to companion paths", _show_choices)
 	_choices.add_child(back_button)
 	user_input = back_button
 	_choices.add_child(_quiet_button("Need help", _show_support))
 	_choices.add_child(_quiet_button("Close", close_chat))
-
-
-func _confirm_activity_travel(destination_id: String) -> void:
-	var destination_name := str(ACTIVITY_DESTINATIONS.get(destination_id, "ARTÉA activity"))
-	_request_companion_activity("GUIDING", "map")
-	_clear_choices()
-	var campaign := _campaign()
-	if destination_id != "crown" and (campaign == null \
-			or not bool(campaign.call("can_enter_kingdom", destination_id))):
-		var next_name := "the next available activity"
-		if campaign != null and campaign.has_method("next_kingdom_id"):
-			var next_id := str(campaign.call("next_kingdom_id"))
-			next_name = str(ACTIVITY_DESTINATIONS.get(next_id, next_name))
-		_speak("Wonderful Counsellor Milo · Journey Guide\n\n%s is still locked by your journey. Milo will not skip or invent progress. Your next available path is %s." % [
-			destination_name, next_name,
-		])
-		_add_companion_navigation()
-		return
-	_speak("Wonderful Counsellor Milo · Journey Guide\n\nReady to travel to %s? Your reflection is not saved, and travelling does not award progress by itself." % destination_name)
-	var confirm_button := _quiet_button("Yes, go with Milo", _travel_to_activity.bind(destination_id))
-	confirm_button.name = "MiloTravelConfirm"
-	_choices.add_child(confirm_button)
-	user_input = confirm_button
-	_choices.add_child(_quiet_button("Stay here", _show_choices))
-	_choices.add_child(_quiet_button("Need help", _show_support))
+	_focus_first_choice()
 
 
 func _travel_to_activity(destination_id: String) -> void:
 	var campaign := _campaign()
 	if campaign == null:
-		_speak("Wonderful Counsellor Milo · Journey Guide\n\nThat path is unavailable right now. You can stay with Milo or continue your adventure.")
+		_speak("Wonderful Counsellor Milo · Journey Guide\n\nThat path is unavailable right now. You can stay with me or continue your adventure.")
 		_clear_choices()
 		_add_companion_navigation()
 		return
-	var route_method := "start_campaign" if destination_id == "crown" else "enter_kingdom"
-	if not campaign.has_method(route_method):
+	if not campaign.has_method("enter_kingdom"):
 		return
 	activity_travel_requested.emit(destination_id)
 	chat_closed.emit()
-	campaign.call(route_method, destination_id) if route_method == "enter_kingdom" \
-		else campaign.call(route_method)
+	campaign.call("enter_kingdom", destination_id)
 
 
 func _campaign() -> Node:
@@ -1085,20 +970,8 @@ func _campaign() -> Node:
 
 
 func _request_companion_activity(state_name: String, pose_name: String) -> void:
-	var scene_name := "unknown"
-	if get_tree().current_scene != null:
-		scene_name = get_tree().current_scene.name
-	_conversation_context.update_scene(scene_name, _stage, _mode,
-		state_name.to_lower(), state_name.to_upper() == "SUPPORTING")
 	companion_activity_state_requested.emit(state_name)
 	companion_pose_requested.emit(pose_name)
-
-
-func _record_conversation_exchange(player_message: String, milo_response: String,
-		intention: String) -> void:
-	if player_message.strip_edges().is_empty():
-		return
-	_conversation_context.record_exchange(player_message, milo_response, intention)
 
 
 func _choose_reflection(choice: Dictionary) -> void:
@@ -1110,9 +983,18 @@ func _choose_reflection(choice: Dictionary) -> void:
 	_clear_choices()
 	var continue_button := _quiet_button("Continue my adventure", close_chat)
 	_choices.add_child(continue_button)
-	user_input = continue_button
+	_add_message_input()
 	_choices.add_child(_quiet_button("Need help", _show_support))
 	_choices.add_child(_quiet_button("Close", close_chat))
+	# Re-asserted after _add_message_input() so the primary action keeps
+	# initial keyboard focus rather than the optional message box.
+	user_input = continue_button
+	_focus_first_choice()
+
+
+func _focus_first_choice() -> void:
+	if user_input != null and is_instance_valid(user_input):
+		user_input.grab_focus()
 
 
 func _clear_choices() -> void:
@@ -1120,8 +1002,9 @@ func _clear_choices() -> void:
 	if _choices == null:
 		_choices = VBoxContainer.new()
 		_choices.name = "CuratedChoices"
-		_choices.add_theme_constant_override("separation", roundi(7.0 * _chat_ui_scale))
-		content.add_child(_choices)
+		_choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_choices.add_theme_constant_override("separation", 8)
+		choices_scroll.add_child(_choices)
 		return
 
 	for child in _choices.get_children():
@@ -1138,74 +1021,24 @@ func _choice_button(choice: Dictionary) -> Button:
 func _quiet_button(text: String, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.focus_mode = Control.FOCUS_ALL
-	button.custom_minimum_size = Vector2(0, 46.0 * _chat_ui_scale)
-	button.add_theme_font_override("font", UI_BODY_FONT)
-	button.add_theme_font_size_override("font_size", roundi(15.0 * _chat_ui_scale))
-	button.add_theme_color_override("font_color", UI_PARCHMENT)
-	button.add_theme_color_override("font_hover_color", Color.WHITE)
-	button.add_theme_color_override("font_focus_color", Color.WHITE)
+	button.custom_minimum_size = Vector2(0, 40)
+	button.add_theme_font_size_override("font_size", 17)
 	button.tooltip_text = "This choice is local and does not change your rewards."
 
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = UI_NAVY
-	normal.border_color = UI_GOLD
-	normal.set_border_width_all(maxi(1, roundi(_chat_ui_scale)))
-	normal.set_corner_radius_all(roundi(7.0 * _chat_ui_scale))
-	normal.set_content_margin_all(5.0 * _chat_ui_scale)
+	normal.bg_color = Color(0.15, 0.26, 0.50, 0.96)
+	normal.border_color = Color(0.48, 0.73, 1.0, 0.82)
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(9)
+	normal.set_content_margin_all(8)
 	button.add_theme_stylebox_override("normal", normal)
 
 	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = UI_NAVY_HOVER
-	hover.border_color = UI_GOLD_BRIGHT
+	hover.bg_color = Color(0.22, 0.36, 0.63, 0.98)
+	hover.border_color = Color(0.83, 0.70, 1.0, 0.96)
 	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("focus", hover)
-	var pressed := hover.duplicate() as StyleBoxFlat
-	pressed.bg_color = Color(0.18, 0.13, 0.07, 0.98)
-	button.add_theme_stylebox_override("pressed", pressed)
 	button.pressed.connect(action)
 	return button
-
-
-func _style_send_button(button: Button) -> void:
-	button.add_theme_font_size_override("font_size", roundi(16.0 * _chat_ui_scale))
-	button.add_theme_color_override("font_color", Color(0.06, 0.12, 0.18, 1.0))
-	button.add_theme_color_override("font_hover_color", Color(0.03, 0.07, 0.11, 1.0))
-	button.add_theme_color_override("font_focus_color", Color(0.03, 0.07, 0.11, 1.0))
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0.80, 0.58, 0.22, 1.0)
-	normal.border_color = Color(1.0, 0.91, 0.64, 1.0)
-	normal.set_border_width_all(maxi(2, roundi(2.0 * _chat_ui_scale)))
-	normal.set_corner_radius_all(roundi(10.0 * _chat_ui_scale))
-	normal.set_content_margin_all(8.0 * _chat_ui_scale)
-	normal.shadow_color = Color(0.10, 0.06, 0.02, 0.32)
-	normal.shadow_size = roundi(3.0 * _chat_ui_scale)
-	normal.shadow_offset = Vector2(0, 2.0 * _chat_ui_scale)
-	button.add_theme_stylebox_override("normal", normal)
-	var active := normal.duplicate() as StyleBoxFlat
-	active.bg_color = Color(0.93, 0.75, 0.36, 1.0)
-	active.border_color = Color(1.0, 0.95, 0.76, 1.0)
-	button.add_theme_stylebox_override("hover", active)
-	button.add_theme_stylebox_override("focus", active)
-	var pressed := normal.duplicate() as StyleBoxFlat
-	pressed.bg_color = Color(0.62, 0.43, 0.15, 1.0)
-	button.add_theme_stylebox_override("pressed", pressed)
-
-
-func _input_style(focused: bool) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.025, 0.06, 0.085, 0.97)
-	style.border_color = UI_GOLD_BRIGHT if focused else Color(0.42, 0.32, 0.18, 0.9)
-	style.set_border_width_all(maxi(1, roundi((2.0 if focused else 1.0) * _chat_ui_scale)))
-	style.set_corner_radius_all(roundi(10.0 * _chat_ui_scale))
-	style.content_margin_left = 16.0 * _chat_ui_scale
-	style.content_margin_right = 16.0 * _chat_ui_scale
-	style.content_margin_top = 8.0 * _chat_ui_scale
-	style.content_margin_bottom = 8.0 * _chat_ui_scale
-	style.shadow_color = Color(0.10, 0.06, 0.02, 0.22)
-	style.shadow_size = roundi(2.0 * _chat_ui_scale)
-	style.shadow_offset = Vector2(0, 2.0 * _chat_ui_scale)
-	return style
 
 
 func _show_support() -> void:
@@ -1217,42 +1050,68 @@ func _show_support() -> void:
 	_support_card.call("show_card")
 
 
-func _speak(text: String, spoken_text := "") -> void:
-	_spoken_full_reply = text.strip_edges()
-	var readable_size := 16.0 if _chat_phone_layout else 24.0
-	chat_history.add_theme_font_size_override("font_size",
-		roundi(readable_size * _chat_ui_scale))
-	chat_history.text = _spoken_full_reply
-	_last_spoken_text = spoken_text.strip_edges() \
-		if not spoken_text.strip_edges().is_empty() else _spoken_full_reply
-	companion_speech_requested.emit(_last_spoken_text)
-
-
-func show_spoken_sentence(sentence: String, sentence_index: int,
-		sentence_count: int, full_reply: String) -> void:
-	if sentence.strip_edges().is_empty():
-		return
-	_spoken_full_reply = full_reply.strip_edges()
-	var reading_size := 20.0 if _chat_phone_layout else 32.0
-	chat_history.add_theme_font_size_override("font_size",
-		roundi(reading_size * _chat_ui_scale))
-	chat_history.text = sentence.strip_edges()
-	milo_role.text = "READING  ·  %d OF %d" % [sentence_index + 1,
-		maxi(sentence_count, 1)]
-
-
-func finish_spoken_reply() -> void:
-	var readable_size := 16.0 if _chat_phone_layout else 24.0
-	chat_history.add_theme_font_size_override("font_size",
-		roundi(readable_size * _chat_ui_scale))
-	if not _spoken_full_reply.is_empty():
-		chat_history.text = _spoken_full_reply
-	milo_role.text = "ART SCHOLAR  ·  READY"
+func _speak(text: String) -> void:
+	_show_reply(text)
+	companion_speech_requested.emit(text)
 
 
 func replay_current_speech() -> void:
-	if not _last_spoken_text.is_empty():
-		companion_speech_requested.emit(_last_spoken_text)
+	if not _reply_plain_text.is_empty():
+		companion_speech_requested.emit(_reply_plain_text)
+
+
+# Every reply is written as plain text and styled only for display, so speech
+# and the transcript never diverge and no markup is ever read aloud.
+func _show_reply(text: String) -> void:
+	_reply_plain_text = text
+	chat_history.text = _format_reply(text)
+	chat_history.scroll_to_line(0)
+
+
+# Layout for Milo's replies: a small gold title line, then compact paragraphs
+# spaced by the panel's paragraph_separation instead of blank lines. A revealed
+# strength (✨ Name ✨) is shown large, and ALL-CAPS section labels such as
+# VALIDATE run inline at the start of the paragraph they introduce.
+func _format_reply(text: String) -> String:
+	var paragraphs: Array[String] = []
+	var pending_label := ""
+	var is_first_line := true
+	for raw_line in text.split("\n"):
+		var line := raw_line.strip_edges()
+		if line.is_empty():
+			continue
+		# Typed and model text can contain "[", which would otherwise be BBCode.
+		var safe := line.replace("[", "[lb]")
+		if is_first_line:
+			is_first_line = false
+			if line.begins_with("Wonderful Counsellor Milo"):
+				paragraphs.append("[font_size=15][color=%s][b]%s[/b][/color][/font_size]" % [
+					REPLY_TITLE_COLOR, safe])
+				continue
+		if line.begins_with("✨") and line.ends_with("✨") and line.length() > 2:
+			paragraphs.append("[center][font_size=28][color=%s][b]%s[/b][/color][/font_size][/center]" % [
+				REPLY_HIGHLIGHT_COLOR, _with_icons(safe, 30)])
+		elif _is_section_label(line):
+			pending_label = safe
+		else:
+			if not pending_label.is_empty():
+				safe = "[color=%s][b]%s[/b][/color]   %s" % [REPLY_SECTION_COLOR, pending_label, safe]
+				pending_label = ""
+			paragraphs.append(_with_icons(safe, 20))
+	if not pending_label.is_empty():
+		paragraphs.append("[color=%s][b]%s[/b][/color]" % [REPLY_SECTION_COLOR, pending_label])
+	return "\n".join(paragraphs)
+
+
+func _with_icons(bbcode: String, size: int) -> String:
+	for glyph in REPLY_ICONS:
+		bbcode = bbcode.replace(glyph, "[img=%dx%d]%s[/img]" % [size, size, REPLY_ICONS[glyph]])
+	return bbcode
+
+
+func _is_section_label(line: String) -> bool:
+	return line.length() <= 28 and line == line.to_upper() and line != line.to_lower() \
+		and not line.ends_with(".") and not line.ends_with("!") and not line.ends_with("?")
 
 
 func close_chat() -> void:
@@ -1261,7 +1120,11 @@ func close_chat() -> void:
 		_local_llm_chat.call("stop_generation")
 	_local_llm_generating = false
 	_local_llm_request_id += 1
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if _cloud_llm_generating and _cloud_llm_request != null \
+			and is_instance_valid(_cloud_llm_request):
+		_cloud_llm_request.cancel_request()
+	_cloud_llm_generating = false
+	_cloud_llm_request_id += 1
 	emit_signal("chat_closed")
 
 

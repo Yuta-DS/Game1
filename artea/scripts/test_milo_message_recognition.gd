@@ -36,22 +36,20 @@ func _run() -> void:
 	root.add_child(chat)
 	await process_frame
 	var input := chat.user_input as LineEdit
-	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as RichTextLabel
 	assert(input != null and input.max_length == 0,
-		"the live input preserves the engine's unlimited message handling")
+		"the live input has no length limit")
+	var long_urgent: Dictionary = engine.reflect("%s I want to die" % "word ".repeat(200))
+	assert(bool(long_urgent.get("urgent", false)),
+		"urgent cues are found even at the end of a very long message")
 	input.text = "Why am I always stressed?"
 	chat._submit_message(input)
 	assert(input.text.is_empty(), "the private message is cleared immediately after local processing")
-	for evidence in ["carrying a lot", "pressure", "courage", "smaller next step"]:
-		assert(history.text.to_lower().contains(evidence),
-			"the natural displayed reply preserves %s" % evidence)
-	for robotic_heading in ["VALIDATE\n", "REFLECT\n", "IDENTITY & STRENGTH",
-			"GENTLE GUIDANCE", "CONNECT TO ARTÉA"]:
-		assert(not history.text.contains(robotic_heading),
-			"the displayed reply removes robotic heading %s" % robotic_heading)
+	for section in ["VALIDATE", "REFLECT", "IDENTITY & STRENGTH", "GENTLE GUIDANCE", "CONNECT TO ARTÉA"]:
+		assert(history.text.contains(section), "the displayed reply contains %s" % section)
 	assert(history.text.contains("Mind Spark Kingdom"), "the stress response connects to the relevant ARTÉA activity")
 	assert(not history.text.contains("Why am I always stressed?"), "the private message is not copied into the transcript")
 
 	chat.queue_free()
-	print("MILO_MESSAGE_RECOGNITION_TEST: PASS — six emotions, grounded strength cues, uncertainty, privacy, and natural replies")
+	print("MILO_MESSAGE_RECOGNITION_TEST: PASS — six emotions, grounded strength cues, uncertainty, privacy, and five-part replies")
 	quit()

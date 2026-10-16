@@ -8,15 +8,10 @@ enemy_kind = 4
 display_name = "Blight Sentinel"
 max_health = 150.0
 xp_reward = 60
-spark_shard_reward = 24
-guaranteed_material_id = "storm_crystal"
-guaranteed_material_quantity = 2
-encounter_tier = 3
-animation_profile = "heavy_guard"
-resistances = {"guarded": 1.0}
 attack_damage = 18.0
 attack_range = 5.5
 move_speed = 3.0
 telegraph_seconds = 1.25
 recovery_seconds = 2.2
 shell_color = Color(0.18, 0.2, 0.29, 1)
+

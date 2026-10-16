@@ -80,7 +80,6 @@ if [[ "${mode}" != serve ]]; then
 			--editor --quit-after 2000 >/dev/null 2>&1 || true
 		"${godot_bin}" --headless --path "${project_dir}" \
 			--export-release Web "${index}"
-		python3 "${project_dir}/tools/patch_web_release_loader.py" "${index}"
 		echo
 	fi
 fi

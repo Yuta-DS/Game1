@@ -169,7 +169,7 @@ async function connect() {
 			// The pack is fully downloaded by the time the engine starts, and
 			// every build logs this, including deployments older than the hub log.
 			if (net.engineAt === null && /engine started/.test(line)) net.engineAt = Date.now();
-			if (net.hubAt === null && /Successfully spawned|galaxy world=true/.test(line)) {
+			if (net.hubAt === null && /Successfully spawned/.test(line)) {
 				net.hubAt = Date.now();
 				net.bytesAtHub = net.bytes;
 				net.requestsAtHub = net.requests;
@@ -285,13 +285,13 @@ async function connect() {
 			say(`clicking Offline Guest at (${button.x}, ${button.y})`);
 			await click(button.x, button.y);
 			try {
-				await waitForLog(/GUEST access selected|galaxy world=true/, 'guest login accepted', 60000);
+				await waitForLog(/GUEST access selected/, 'guest login accepted', 20000);
 				break;
 			} catch (err) {
 				if (index === GUEST_BUTTONS.length - 1) throw err;
 			}
 		}
-		await waitForLog(/Successfully spawned|galaxy world=true/, 'hub scene built', 120000);
+		await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
 		await sleep(8000);
 		const before = await shot('02-in-hub');
 

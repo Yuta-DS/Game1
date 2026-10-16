@@ -78,7 +78,6 @@ func _rebuild() -> void:
 	_build_sky_roof(glass, gold, slate, glow)
 	_build_entrance(stone, stone_shadow, gold, glow, slate, interior)
 	_build_floor(floor_tiles, carpet, gold, glow, stone)
-	_place_existing_paintings_on_wall()
 	_build_bench(velvet, wood, gold)
 
 	_emit_mesh("InteriorWalls", interior, _materials.interior)
@@ -96,26 +95,6 @@ func _rebuild() -> void:
 	_build_collision()
 	_build_signage()
 	_build_lighting()
-
-
-func _place_existing_paintings_on_wall() -> void:
-	var parent := get_parent()
-	if parent == null:
-		return
-	for child in parent.get_children():
-		if not child is Sprite3D or not str(child.name).begins_with("Frame_"):
-			continue
-		var frame := child as Node3D
-		var rel_x := frame.position.x - CENTRE.x
-		var normalized_x := clampf(rel_x / RADIUS_X, -0.985, 0.985)
-		var normalized_z := -sqrt(maxf(0.0, 0.985 * 0.985 - normalized_x * normalized_x))
-		var wall_position := CENTRE + Vector3(rel_x, frame.position.y - CENTRE.y,
-				normalized_z * RADIUS_Z)
-		frame.position = wall_position
-		var local_offset := wall_position - CENTRE
-		var inward: Vector3 = Vector3(-local_offset.x / (RADIUS_X * RADIUS_X), 0.0,
-				-local_offset.z / (RADIUS_Z * RADIUS_Z)).normalized()
-		frame.global_basis = Basis(Vector3(inward.z, 0.0, -inward.x), Vector3.UP, inward)
 
 
 # --- Materials --------------------------------------------------------------

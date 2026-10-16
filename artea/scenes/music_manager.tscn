@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://chjcqc6qpcaee"]
 
 [ext_resource type="Script" uid="uid://6e018jb17h81" path="res://scripts/music_manager.gd" id="1_hetdf"]
-[ext_resource type="AudioStream" uid="uid://14baqk2fiiow" path="res://assets/SFX/Peace - David Lastra.ogg" id="2_hetdf"]
+[ext_resource type="AudioStream" uid="uid://bo2fecg6xsgkk" path="res://assets/SFX/Peace - David Lastra.ogg" id="2_hetdf"]
 
 [node name="Music Manager" type="Node"]
 script = ExtResource("1_hetdf")

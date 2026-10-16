@@ -38,9 +38,6 @@ func _run() -> void:
 	if water_code.contains("discard") or not water_code.contains("CAMERA_POSITION_WORLD"):
 		_fail("desktop sea must be hole-free and fade naturally into atmospheric haze")
 		return
-	if not water_code.contains("sun_direction") or not water_code.contains("sun_glint"):
-		_fail("desktop sea must retain its directional sunlight reflection path")
-		return
 	water.free()
 
 	var cycle_scene := load("res://scripts/cycle.tscn") as PackedScene
@@ -65,12 +62,9 @@ func _run() -> void:
 			or not web_water.code.contains("CAMERA_POSITION_WORLD"):
 		_fail("Web sea must remain continuous and horizon-faded")
 		return
-	if not web_water.code.contains("sun_direction") or not web_water.code.contains("sun_glint"):
-		_fail("Web sea must retain its lightweight sunlight reflection path")
-		return
 	if web_sky == null or not web_sky.code.contains("cloud_amount"):
 		_fail("Web sky must retain its lightweight natural cloud layer")
 		return
 
-	print("HUB_SEA_SKY_TEST: PASS — layered waves, sun reflection, atmospheric horizon, and natural sky")
+	print("HUB_SEA_SKY_TEST: PASS — continuous sea, atmospheric horizon, and natural sky")
 	quit()

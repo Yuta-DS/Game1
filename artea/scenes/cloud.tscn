@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://ceraljeha45mg" path="res://scripts/cloud.gd" id="1_vlwrh"]
 [ext_resource type="Texture2D" uid="uid://cp4773n5q1jft" path="res://assets/Clouds/Clouds2 V2.png" id="2_2kyfr"]
 [ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="3_n1qj5"]
-[ext_resource type="AudioStream" uid="uid://db30346rctsg7" path="res://assets/SFX/cloudpoof.ogg" id="4_fubt3"]
+[ext_resource type="AudioStream" uid="uid://6sbk64i02t2x" path="res://assets/SFX/cloudpoof.ogg" id="4_fubt3"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_n1qj5"]
 atlas = ExtResource("2_2kyfr")

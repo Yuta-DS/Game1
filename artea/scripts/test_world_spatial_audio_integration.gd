@@ -43,9 +43,9 @@ func _run() -> void:
 			if node.get_node_or_null("ObjectAmbience_%s" % String(kind)) == null:
 				_fail("named %s emitter must own its attached AudioStreamPlayer3D" % kind)
 				return
-	if named_emitters < 3 or named_emitters > 5 \
+	if named_emitters < 4 or named_emitters > 6 \
 			or int(emitter_profiles.get(&"cave_air", 0)) < 2 \
-			or int(emitter_profiles.get(&"aether_power", 0)) < 1:
+			or int(emitter_profiles.get(&"aether_power", 0)) < 2:
 		_fail("hub should emit only from real cave-air and aether sources; found %s" % emitter_profiles)
 		return
 	for static_name in ["cl_blacksmith", "building_windmill_red2", "building_watermill_red2"]:
