@@ -4,7 +4,8 @@
 // change_scene_to_packed receive null, so clicking through does nothing at all
 // and the page looks like a slow load rather than a broken build. This drives
 // the real thing - loads the page, clicks Offline Guest, waits for the hub to
-// report itself built, then holds a movement key and checks the frame changed.
+// report that its loading overlay has finished, then holds a movement key and
+// checks the rendered world changed.
 //
 // It also measures the cold first load: the browser cache is disabled, every
 // byte that crosses the network is counted, and the time from navigation until
@@ -55,6 +56,7 @@ const failTimes = Number(option('--fail-times') ?? 2);
 // Requests pck-loader.js makes for one part before showing its Retry overlay:
 // the first try plus RETRY_DELAYS_MS.length retries.
 const LOADER_ATTEMPTS = 4;
+const directScene = args.includes('--direct-scene');
 const DEBUG_PORT = 9222;
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
@@ -188,11 +190,11 @@ async function connect() {
 		if (m.method === 'Runtime.consoleAPICalled') {
 			const line = (m.params.args || []).map((a) => a.value ?? a.description ?? a.type).join(' ');
 			consoleLines.push(line);
-			// Stamp the hub the moment its log arrives, not at the next 1 s poll.
-			// The pack is fully downloaded by the time the engine starts, and
-			// every build logs this, including deployments older than the hub log.
+			// Stamp the hub only when the loading overlay has finished. Collectible
+			// spawn logs happen earlier and allowed screenshots of the loader to
+			// count as playable frames.
 			if (net.engineAt === null && /engine started/.test(line)) net.engineAt = Date.now();
-			if (net.hubAt === null && /Successfully spawned/.test(line)) {
+			if (net.hubAt === null && /\[ARTEA\] scene ready: res:\/\/scenes\/New_Hub_World\.tscn/.test(line)) {
 				net.hubAt = Date.now();
 				net.bytesAtHub = net.bytes;
 				net.requestsAtHub = net.requests;
@@ -356,6 +358,28 @@ async function connect() {
 		await waitForLog(/engine started/, 'engine started', 900000);
 		await sleep(4000);
 		await shot('01-start-screen');
+		if (directScene) {
+			await waitForLog(/\[ARTEA\] galaxy /, 'gallery galaxy constructed', 180000);
+			await sleep(3000);
+			const before = await shot('02-gallery-galaxy');
+			await key('keyDown', 'KeyW', 87);
+			await sleep(2500);
+			const during = await shot('03-gallery-moving');
+			await key('keyUp', 'KeyW', 87);
+			const moved = !before.equals(during);
+			const worldBuilt = consoleLines.some((l) => /\[ARTEA\] galaxy world=true meshes=[1-9]\d*/.test(l));
+			const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|^EXCEPTION |\[ARTEA\] UNHANDLED:/.test(l));
+			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+			say('gallery world built: ' + worldBuilt + '; frame changed while moving: ' + moved);
+			say('fatal game or browser errors: ' + fatal.length);
+			fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
+			const pass = worldBuilt && moved && !crashed() && fatal.length === 0 && net.failed === 0;
+			console.log('screenshots: ' + outDir);
+			console.log('RESULT: ' + (pass ? 'PLAYABLE' : 'NOT PLAYABLE'));
+			if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+			await closeOwnChrome();
+			process.exit(pass ? 0 : 1);
+		}
 
 		for (const [index, button] of GUEST_BUTTONS.entries()) {
 			say(`clicking Offline Guest at (${button.x}, ${button.y})`);
@@ -367,14 +391,16 @@ async function connect() {
 				if (index === GUEST_BUTTONS.length - 1) throw err;
 			}
 		}
-		await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
-		await sleep(8000);
+		await waitForLog(/\[ARTEA\] scene ready: res:\/\/scenes\/New_Hub_World\.tscn/, 'hub ready for play', 180000);
+		await sleep(1500);
 		const before = await shot('02-in-hub');
 
 		// A frozen game returns byte-identical frames, so movement is the check
 		// that separates "rendered once" from "playable".
 		say('holding W to test movement');
-		await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+		// The guest click already focused the canvas. A second synthetic click
+		// requests pointer lock in headless Chrome and raises WrongDocumentError
+		// even while keyboard movement works, obscuring actual game errors.
 		await key('keyDown', 'KeyW', 87);
 		await sleep(2500);
 		const during = await shot('03-moving');
@@ -384,15 +410,15 @@ async function connect() {
 
 		const identical = (a, b) => a.length === b.length && a.equals(b);
 		const moved = !identical(before, during) || !identical(during, after);
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|^EXCEPTION |\[ARTEA\] UNHANDLED:/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();
 		say('frame changed while moving: ' + moved);
-		say('fatal resource errors: ' + fatal.length);
+		say('fatal game or browser errors: ' + fatal.length);
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
 
-		const pass = moved && !crashed() && fatal.length === 0;
+		const pass = moved && !crashed() && fatal.length === 0 && net.failed === 0;
 
 		if (repeat) {
 			// Same page again with the cache on: with content-hashed parts served

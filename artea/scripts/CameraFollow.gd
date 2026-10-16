@@ -95,7 +95,10 @@ func _ready() -> void:
 	if _player:
 		_snap_to_follow_target()
 
-	if capture_mouse:
+	# Browser pointer lock needs a fresh player gesture. Scene transitions can
+	# finish long after the portal click, so request it on the next canvas click.
+	# Keyboard movement and camera follow remain usable until then.
+	if capture_mouse and not OS.has_feature("web"):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _exit_tree() -> void:

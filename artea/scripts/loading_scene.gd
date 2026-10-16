@@ -183,6 +183,9 @@ func _wait_for_scatter_then_finish() -> void:
 
 	await _warm_shaders()
 	await _hold_until_first_frames_settle()
+	# The browser smoke check must wait for this handoff. Earlier hub setup
+	# messages happen while this full-screen loading overlay is still visible.
+	print("[ARTEA] scene ready: ", next_scene_path)
 	queue_free()
 
 
