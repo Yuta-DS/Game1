@@ -27,7 +27,7 @@ const REQUIRED_DYNAMIC_RESOURCES := [
 	"res://assets3D/tree_of_life/gravity_leaf_bough/glb/gravity_leaf_bough_runtime.glb",
 	"res://assets3D/castle_galaxy_bridge/glb/castle_galaxy_bridge_gate.glb",
 	"res://assets3D/tree_processional_bridge/glb/tree_processional_bridge.glb",
-	"res://assets/audio/tree_of_life_christmas_ambience.wav",
+	"res://assets/audio/tree_of_life_christmas_ambience.ogg",
 	"res://assets/SFX/fairy dust.ogg",
 	"res://assets/audio/Ocean_Ambience_Loop.ogg",
 	"res://assets3D/mind_spark/celestial_islands_v08/shared_paving.glb",
