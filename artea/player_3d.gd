@@ -57,6 +57,10 @@ var _land_reaction_remaining := 0.0
 var _hit_reaction_remaining := 0.0
 var _visual_base_position := Vector3.ZERO
 var _visual_base_scale := Vector3.ONE
+var _visual_rest_position := Vector3.ZERO
+var _visual_rest_scale := Vector3.ONE
+var _size_multiplier := 1.0
+var _capsule_rest: Dictionary = {}
 var _combat_audio: AudioStreamPlayer3D
 
 
@@ -85,6 +89,8 @@ func _ready() -> void:
 	if fox_visuals != null:
 		_visual_base_position = fox_visuals.position
 		_visual_base_scale = fox_visuals.scale
+		_visual_rest_position = _visual_base_position
+		_visual_rest_scale = _visual_base_scale
 	_build_combat_rig()
 	_build_combat_audio()
 	_build_combat_help()
@@ -183,6 +189,38 @@ func _fox_skeleton() -> Skeleton3D:
 		return null
 	var found := fox_visuals.find_children("*", "Skeleton3D", true, false)
 	return found[0] as Skeleton3D if not found.is_empty() else null
+
+
+## Grows or shrinks the fox about its feet (the Creator studio makes the
+## player big enough to reach its easels). The collision capsule grows with
+## the model, its base kept on the floor, so a big fox bumps into furniture
+## instead of passing through it.
+func set_size_multiplier(multiplier: float) -> void:
+	_size_multiplier = multiplier
+	var shape_node := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	var feet_drop := 1.0
+	if shape_node != null and shape_node.shape is CapsuleShape3D:
+		if _capsule_rest.is_empty():
+			# The capsule resource is shared with the scene file; resize a copy.
+			shape_node.shape = shape_node.shape.duplicate()
+			var rest := shape_node.shape as CapsuleShape3D
+			_capsule_rest = {"radius": rest.radius, "height": rest.height,
+				"position": shape_node.position}
+		var capsule := shape_node.shape as CapsuleShape3D
+		feet_drop = float(_capsule_rest.height) * 0.5
+		capsule.radius = float(_capsule_rest.radius) * multiplier
+		capsule.height = float(_capsule_rest.height) * multiplier
+		shape_node.position = _capsule_rest.position + Vector3.UP * feet_drop * (multiplier - 1.0)
+	if fox_visuals == null:
+		return
+	_visual_base_scale = _visual_rest_scale * multiplier
+	_visual_base_position = _visual_rest_position + Vector3.UP * feet_drop * (multiplier - 1.0)
+	fox_visuals.scale = _visual_base_scale
+	fox_visuals.position = _visual_base_position
+
+
+func get_size_multiplier() -> float:
+	return _size_multiplier
 
 
 func set_input_enabled(v: bool) -> void:
