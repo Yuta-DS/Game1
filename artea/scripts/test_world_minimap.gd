@@ -96,6 +96,9 @@ func _run() -> void:
 	if minimap.call("get_map_context") != "galaxy":
 		_fail("inside scene did not switch to the separate Castle Galaxy map")
 		return
+	if minimap.call("get_location_title") != "INSIDE • CASTLE GALAXY":
+		_fail("the generic galaxy atlas must retain its Castle Galaxy location title")
+		return
 	for required_method in ["_draw_compact_landscape", "_draw_hub_full_landscape",
 			"_draw_galaxy_full_landscape", "_clip_segment_to_circle"]:
 		if not minimap.has_method(required_method):

@@ -8,10 +8,13 @@ enemy_kind = 0
 display_name = "Static Mite"
 max_health = 25.0
 xp_reward = 10
+spark_shard_reward = 6
+guaranteed_material_id = "signal_glass"
+encounter_tier = 1
+animation_profile = "ground_small"
 attack_damage = 7.0
 attack_range = 4.5
 move_speed = 6.0
 telegraph_seconds = 0.75
 recovery_seconds = 1.45
 shell_color = Color(0.35, 0.76, 0.92, 1)
-

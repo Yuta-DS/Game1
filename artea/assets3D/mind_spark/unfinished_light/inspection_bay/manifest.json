@@ -1,0 +1,23 @@
+{
+  "source_parts": 144,
+  "runtime_meshes": 11,
+  "triangles": 27976,
+  "materials": 4,
+  "moving_parts": [
+    "Control0",
+    "SavedLamp0",
+    "Control1",
+    "SavedLamp1",
+    "Control2",
+    "SavedLamp2",
+    "FocusCarriage",
+    "RecorderDrum",
+    "ValveWheel"
+  ],
+  "bench_dimensions": [
+    5.4,
+    1.9,
+    2.54
+  ],
+  "source": "inspection_bay.blend"
+}

@@ -1,9 +1,8 @@
 extends Control
 
-# Every path out of this screen goes to the hub. They used to point at
-# res://Game.tscn and res://New_Hub_World.tscn, neither of which exists, so
-# signing up dead-ended and logging in hung on the loading screen.
-const HUB_SCENE := "res://scenes/New_Hub_World.tscn"
+# Every authenticated path begins in the same integrated World One scene used
+# by Offline Guest, so account type does not change the player's spawn point.
+const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 
 
 # Called when the node enters the scene tree for the first time.
@@ -20,7 +19,7 @@ func _ready():
 		
 	if OS.get_name() == "Web":
 		var provider: AuthProvider = Firebase.Auth.get_GoogleProvider()
-		Firebase.Auth.set_redirect_uri("http://localhost:8060/index.html")
+		Firebase.Auth.set_redirect_uri(_get_web_redirect_uri())
 		var token = Firebase.Auth.get_token_from_url(provider)
 		if token:
 			Firebase.Auth.login_with_oauth(token, provider)
@@ -48,7 +47,6 @@ func _on_signup_button_pressed():
 
 # Called when login is successful
 func on_login_succeeded(auth):
-	print(auth)
 	%StateLabel.text = "Login success!"
 	Firebase.Auth.save_auth(auth)
 	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
@@ -56,36 +54,26 @@ func on_login_succeeded(auth):
 	# exist, so logging in dropped the player on a loading screen that never
 	# finished — and everything reached through the hub, including the Lens of
 	# Seeing, was unreachable from a normal start.
-	loading_screen.next_scene_path = HUB_SCENE
+	loading_screen.next_scene_path = WORLD_ONE_SCENE
 	
 	get_tree().root.add_child(loading_screen)
 	get_tree().current_scene.queue_free() 
 	#get_tree().change_scene_to_file("res://Game.tscn")
 	
-# Called when sign up is successful
+# Called when sign up is successful	
 func on_signup_succeeded(auth):
-	print(auth)
 	%StateLabel.text = "Sign up success!"
 	Firebase.Auth.save_auth(auth)
-	# change_scene_to_file() loads and builds the hub synchronously on the main
-	# thread, so the window sat frozen through shader compilation and grass
-	# placement with no feedback. Route through the loading screen like login
-	# does, so that cost is hidden behind a progress bar instead.
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = HUB_SCENE
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	# Was res://Game.tscn, which does not exist: a player who registered a new
+	# account landed nowhere.
+	get_tree().change_scene_to_file(WORLD_ONE_SCENE)
 
 # Called if login fails	
 func on_login_failed(error_code, message):
-	print(error_code)
-	print(message)
 	%StateLabel.text = "Login failed. Error: %s" % message
 
 # Called if sign-up fails	
 func on_signup_failed(error_code, message):
-	print(error_code)
-	print(message)
 	%StateLabel.text = "Sign up failed. Error: %s" % message
 
 
@@ -94,13 +82,19 @@ func _on_sign_in_google_button_pressed():
 	
 	if OS.get_name() == "Web":
 		# For web
-		Firebase.Auth.set_redirect_uri("http://localhost:8060/index.html")
+		Firebase.Auth.set_redirect_uri(_get_web_redirect_uri())
 		Firebase.Auth.get_auth_with_redirect(provider)
 	else:
 		# For desktop
 		Firebase.Auth.get_auth_localhost(provider, 8060)
 
+func _get_web_redirect_uri() -> String:
+	var redirect_uri = JavaScriptBridge.eval("window.location.origin + window.location.pathname", true)
+	if redirect_uri is String and not redirect_uri.is_empty():
+		return redirect_uri
+	return "http://localhost:8060/index.html"
+
 func _on_d_button_pressed() -> void:
 	# Was res://scenes/3DScenes.tscn, which does not exist.
-	get_tree().change_scene_to_file(HUB_SCENE)
+	get_tree().change_scene_to_file(WORLD_ONE_SCENE)
 	

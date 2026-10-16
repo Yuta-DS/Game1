@@ -6,7 +6,9 @@
 [ext_resource type="AudioStream" path="res://assets/audio/milo/milo_voice.ogg" id="4_milo_voice"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_milo"]
-radius = 2.0
+# Milo's companion controller keeps him as far as four metres from the player.
+# Keep conversation available throughout that comfortable follow range.
+radius = 4.5
 
 [node name="Milo_Animations" instance=ExtResource("1_milo")]
 # Keep the reusable character at the same native 1x scale as villager scenes.
@@ -23,6 +25,18 @@ outline_modulate = Color(0.1, 0.08, 0.12, 1)
 outline_size = 12
 text = "Mayor Milo"
 font_size = 44
+
+[node name="InteractionPrompt" type="Label3D" parent="."]
+visible = false
+position = Vector3(0, 2.62, 0)
+billboard = 1
+no_depth_test = true
+visibility_range_end = 14.0
+modulate = Color(1, 0.92, 0.62, 1)
+outline_modulate = Color(0.05, 0.08, 0.13, 1)
+outline_size = 12
+text = "Press T to chat with Milo"
+font_size = 38
 
 [node name="MiloGreetingVoice" type="AudioStreamPlayer3D" parent="."]
 stream = ExtResource("4_milo_voice")

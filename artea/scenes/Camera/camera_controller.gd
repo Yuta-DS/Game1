@@ -23,6 +23,8 @@ extends SpringArm3D
 @export var minZoom := 4.8
 @export var maxZoom := 9.2
 @export var zoomStep := 0.7
+var _pointer_capture_ready := false
+var _web_orbit_dragging := false
 
 func _ready() -> void:
 	# Nested PackedScene transform overrides have been lost on some imports of
@@ -39,6 +41,23 @@ func _ready() -> void:
 	# steals focus turns the user's movement away from the terminal into a huge
 	# orbit and can leave them staring at empty sky. A click below opts into look.
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	call_deferred("_arm_pointer_capture")
+
+
+func _arm_pointer_capture() -> void:
+	_pointer_capture_ready = true
+
+
+func try_capture_pointer() -> bool:
+	if not _pointer_capture_ready:
+		return false
+	# Pointer lock is fragile across Web scene/document swaps. Browser players
+	# orbit with a held left mouse button, leaving the pointer visible for UI.
+	if OS.has_feature("web"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	return true
 
 
 func _exit_tree() -> void:
@@ -47,18 +66,17 @@ func _exit_tree() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# The player may be absent (or still loading) in non-hub scenes; only
-	# block camera input when there is a player and it is mid-interaction
-	# (e.g. Milo's chat panel is open). Checked first so a click on a UI
-	# button while talking to Milo cannot recapture/hide the mouse out from
-	# under the player before the click even reaches the button.
-	var busy: bool = player != null and "interacting" in player and player.interacting
 	# Escape releases the pointer for menus and desktop use. Clicking the game
 	# recaptures it, matching the other third-person camera in this project.
 	if event.is_action_pressed("ui_cancel"):
+		_web_orbit_dragging = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
-	if busy:
+	# Modal UI owns the pointer. This must run before generic click capture;
+	# otherwise clicking a Milo option re-locks the mouse to camera look.
+	if player != null and "interacting" in player and player.interacting:
+		_web_orbit_dragging = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -67,11 +85,14 @@ func _input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			spring_length = minf(maxZoom, spring_length + zoomStep)
 			return
-	if event is InputEventMouseButton and event.pressed \
-			and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		_web_orbit_dragging = event.pressed and OS.has_feature("web")
+		if event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+			try_capture_pointer()
 		return
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+
+	if event is InputEventMouseMotion and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED \
+			or (OS.has_feature("web") and _web_orbit_dragging)):
 		rotateFromVector(event.relative * mouseAcceleration)
 
 func rotateFromVector(v: Vector2):

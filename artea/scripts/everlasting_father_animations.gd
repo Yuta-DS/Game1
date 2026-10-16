@@ -27,7 +27,9 @@ func _process(delta):
 		start_dialogue()
 
 	if is_in_dialogue and Input.is_action_just_pressed("ui_cancel"):
-		GameManager.end_dialogue()
+		var game_manager := get_node_or_null("/root/GameManager")
+		if game_manager != null:
+			game_manager.call("end_dialogue")
 		return
 
 	# -----------------------
@@ -78,7 +80,9 @@ func start_dialogue():
 	is_in_dialogue = true
 	player.interacting = true
 
-	GameManager.start_dialogue(dialogue_start_node, self)
+	var game_manager := get_node_or_null("/root/GameManager")
+	if game_manager != null:
+		game_manager.call("start_dialogue", dialogue_start_node, self)
 
 
 func end_dialogue():

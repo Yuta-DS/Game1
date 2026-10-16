@@ -20,10 +20,19 @@ func _test_complete_authored_chapter() -> void:
 	assert(catalog.guardian_name("unknown").is_empty(), "unknown profiles do not leak a default spiritual framing")
 	var quests: Array = catalog.quests()
 	assert(quests.size() == 5, "Mind Spark must have exactly five ordered quests")
+	var expected_islands := ["island_one", "island_one", "island_two", "island_two", "island_three"]
 	var task_count := 0
 	for quest_index in quests.size():
 		var quest: Dictionary = quests[quest_index]
 		assert(quest["order"] == quest_index + 1)
+		assert(quest["island_id"] == expected_islands[quest_index])
+		assert(quest["district_ids"].size() >= 1)
+		assert(quest["object_bindings"].size() >= 1)
+		assert(quest["hint_ladder"].size() >= 2)
+		assert(quest["success_effects"].size() >= 1)
+		var contract: Dictionary = catalog.runtime_contract(quest["save_aliases"][0])
+		assert(contract["canonical_id"] == quest["id"], "legacy save aliases resolve to canonical quests")
+		assert(contract["environment_state"] == quest["environment_state"])
 		assert(quest["tasks"].size() >= 3 and quest["tasks"].size() <= 5)
 		assert(not catalog.localized_dialogue(quest, CatalogScript.PROFILE_FAITH).is_empty())
 		assert(not catalog.localized_dialogue(quest, CatalogScript.PROFILE_UNIVERSAL).is_empty())

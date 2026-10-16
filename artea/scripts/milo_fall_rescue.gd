@@ -37,7 +37,7 @@ const MAX_SAFE_FLOOR_ANGLE := 0.61
 # that the player gets a real moment of falling before Milo swoops in. Scenes
 # with their own void check (station platforms, the approach bridge) use the
 # same depth so every fall feels alike.
-const RESCUE_DROP := 16.0
+const RESCUE_DROP := 28.0
 const FLOORLESS_PROBE := 80.0
 # Past this any fall is rescued, even if there is a floor somewhere far below.
 const HARD_DROP := 60.0

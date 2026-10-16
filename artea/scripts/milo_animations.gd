@@ -21,8 +21,8 @@ enum CompanionState {
 @export var movement_acceleration := 4.2
 @export var movement_deceleration := 5.4
 @export var turn_speed := 5.0
-@export var follow_start_distance := 3.1
-@export var follow_stop_distance := 2.15
+@export var follow_start_distance := 4.4
+@export var follow_stop_distance := 3.4
 @export var catch_up_distance := 8.0
 @export var catch_up_exit_distance := 6.5
 @export var safe_reposition_distance := 18.0
@@ -31,20 +31,14 @@ enum CompanionState {
 @export var breadcrumb_spacing := 0.75
 @export var gravity_enabled := true
 @export var terrain_grounding_enabled := true
+# Dynamic Rex/local-LLM replies have no prerecorded equivalent, so read the
+# exact response with the platform voice on native builds and Web Speech in the
+# browser. The recorded Milo greeting remains unchanged.
+@export var use_device_tts_for_dynamic_replies := true
+# Audio is disabled by default. Milo's chat text, reading layout, and response
+# generation remain available without playing the recorded greeting or TTS.
+@export var voice_enabled := false
 
-const STAGE_GLOW := [
-	Color("7896c8"),
-	Color("86b7ff"),
-	Color("f5a95e"),
-	Color("d98cff"),
-	Color("ffd66e"),
-]
-const STAGE_ENERGY := [0.18, 0.55, 0.85, 1.2, 1.65]
-# Recorded lines in the dialogue box play this much louder than the proximity
-# greeting. Tune by ear; max_db is raised with it so it isn't capped at +3 dB.
-# All of Milo's voice also gets +6 dB on the MiloVoice bus, whose limiter
-# (default_bus_layout.tres) keeps the boosted peaks from clipping.
-const DIALOGUE_VOICE_DB := 5.0
 const COUNSELLOR_ANIMATIONS := {
 	"welcome": "Counsellor_Welcome",
 	"guide": "Counsellor_Guide",
@@ -53,6 +47,10 @@ const COUNSELLOR_ANIMATIONS := {
 	"encourage": "Counsellor_Encourage",
 	"heart": "Counsellor_Heart",
 }
+const CHAT_INTERACTION_RADIUS := 4.5
+const MILO_CHAT_ACTION := "talk_to_milo"
+const MILO_CHAT_KEY_LABEL := "T"
+const MILO_WELCOME_SPEECH := "Hello, traveller. I’m Milo, Artéa’s scholar and reflection companion. Stand nearby and press T whenever you would like to talk."
 
 var player_in_range := false
 var chatbot_ui = null
@@ -73,8 +71,19 @@ var _speech_elapsed := 0.0
 var _mouth_shape := "closed"
 var _tts_voice_id := ""
 var _tts_voice_resolved := false
+var _tts_request_serial := 0
+var _tts_utterance_base := 0
+var _tts_voice_retry_count := 0
+var _speech_sentences: Array[String] = []
+var _speech_sentence_index := -1
+var _speech_full_text := ""
+const MILO_TTS_ID_START := 260300
+const TTS_ESTIMATED_CHARACTERS_PER_SECOND := 11.0
+const TTS_SENTENCE_PAUSE_SECONDS := 0.45
+const TTS_COMPLETION_GRACE_SECONDS := 8.0
 var greeting_voice: AudioStreamPlayer3D
-var _greeting_stream: AudioStream
+var interaction_prompt: Label3D
+var mayor_name_label: Label3D
 var _recorded_greeting_played := false
 var _conversation_state := CompanionState.GREETING
 var _conversation_active := false
@@ -106,10 +115,6 @@ var _procedural_gait_angles: Dictionary = {}
 
 var wave_timer := 0.0
 var first_wave := false
-var journey_stage := -1
-var aura: Node3D
-var aura_light: OmniLight3D
-var aura_material: StandardMaterial3D
 var anim_player: AnimationPlayer
 var counsellor_props: Node3D
 var map_prop: Node3D
@@ -123,110 +128,98 @@ var _leg_targets: Dictionary = {}
 var _leg_poles: Dictionary = {}
 var _foot_locks: Dictionary = {}
 var _foot_was_planted: Dictionary = {"l": false, "r": false}
-var _cane_arm_ik: TwoBoneIK3D
+var _cane_arm_ik: SkeletonIK3D
 var _cane_grip_target: Node3D
+var _cane_chain_markers: Dictionary = {}
+var _cane_paw_grip_marker: Node3D
+var _cane_hand_to_grip := Transform3D.IDENTITY
 var _cane_hand_anchor_local := Vector3.ZERO
+var _cane_grip_reach := 0.0
 var _cane_elbow_pole: Node3D
 var _cane_rig: Node3D
 var _cane_base_transform := Transform3D.IDENTITY
 var _cane_tip_mesh: MeshInstance3D
+var _cane_hook_mesh: MeshInstance3D
 var _cane_tip_lock := Vector3.ZERO
 var _cane_tip_locked := false
 var _cane_was_planted := false
 var _cane_rest_tip_local := Vector3.ZERO
 var _cane_recovery_start_tip_local := Vector3.ZERO
+var _cane_visible := true
+var _cane_arm_constraint_weight := 1.0
+var _free_arm_ik: TwoBoneIK3D
+var _free_wrist_target: Node3D
+var _free_elbow_pole: Node3D
+var _free_wrist_from_shoulder_local := Vector3.ZERO
+var _free_arm_constraint_weight := 1.0
+var _free_arm_chain_markers: Dictionary = {}
 var _grounding_targets: Node3D
-# Set while milo_fall_rescue.gd flies Milo and the player back to safe ground.
-# The rescue owns his position, so following, gravity and foot grounding stand
-# down until it hands him back.
 var _fall_rescue_active := false
-# Set while Milo sits on the train (sit_on / stand_up).
-var _seat_anchor: RemoteTransform3D
 
 const CANE_GAIT_CYCLE_SECONDS := 1.28
-const CANE_GAIT_STRIDE_METRES := 1.40
-const CANE_PLANT_END := 0.18
-const CANE_SUPPORT_END := 0.70
-const LEFT_FOOT_CONTACT_START := 0.10
-const LEFT_FOOT_CONTACT_END := 0.52
-const RIGHT_FOOT_CONTACT_START := 0.60
-const RIGHT_FOOT_CONTACT_END := 0.02
-const CANE_CONTACT_START := 0.05
-const CANE_CONTACT_END := 0.52
+# Runtime samples show each donor stance foot travelling about 0.38 m from heel
+# strike to toe-off over 44% of the loop. A 0.88 m cycle therefore keeps that
+# planted foot still in world space instead of letting Milo glide over it.
+const CANE_GAIT_STRIDE_METRES := 0.88
+const CANE_PLANT_END := 0.10
+const CANE_SUPPORT_END := 0.44
+const LEFT_FOOT_CONTACT_START := 0.96
+const LEFT_FOOT_CONTACT_END := 0.44
+const RIGHT_FOOT_CONTACT_START := 0.46
+const RIGHT_FOOT_CONTACT_END := 0.94
+const CANE_CONTACT_START := 0.93
+const CANE_CONTACT_END := 0.44
 const CONTACT_BLEND_PHASE := 0.055
 const FOOT_BONE_CLEARANCE := 0.14
 const GROUND_PROBE_UP := 0.42
 const GROUND_PROBE_DOWN := 0.72
-const CANE_RECOVERY_TIP_FORWARD := 0.16
-const CANE_RECOVERY_TIP_LIFT := 0.105
-# Eight hand-authored contact/down/pass/up poses describe one complete supported
-# step. Every upper-body part samples this same timing so the cane hand, free arm
-# and centre of mass no longer look like unrelated procedural motions.
+const CANE_RECOVERY_TIP_FORWARD := 0.050
+const CANE_RECOVERY_TIP_LIFT := 0.028
+const FREE_ARM_SWING_DEGREES := 18.0
+const FREE_ARM_REACH_SCALE := 0.965
+const FREE_ARM_OUTWARD_CLEARANCE := 0.045
+const FREE_ELBOW_LATERAL_CLEARANCE := 0.036
+const FREE_ELBOW_DROP := 0.18
+const FREE_ELBOW_BACK := 0.22
+# The shoulder socket remains fixed to the chest, while each wrist travels a
+# little outside the coat. This opens a tapered underarm gap instead of sliding
+# the entire arm away from the torso like a disconnected mannequin part.
+const CANE_HAND_OUTWARD_CLEARANCE := 0.055
+# Keep the cane elbow's IK bend plane behind Milo. A small lateral offset avoids
+# the coat, but the backward component must remain dominant from either side.
+const CANE_ELBOW_LATERAL_CLEARANCE := 0.039
+const CANE_ELBOW_DROP := 0.18
+const CANE_MIN_REACH_SCALE := 0.962
+const CANE_REACH_EXTENSION := 0.028
+# Keep the knuckles slightly forward of the cuff in profile. The grip point
+# stays fixed; this rotates the wrist around the stick instead of sliding the
+# paw along it as the cane changes angle.
+const CANE_WRIST_PITCH_DEGREES := -8.0
+# Eight hand-authored handle and elbow poses describe one complete supported step.
+# The native NPC clip owns every body and limb curve; this data moves only the
+# cane target so the prop cannot flatten the source character performance.
 const CANE_HAND_KEY_POSES := [
-	{"phase": 0.00, "grip": Vector3(0.000, -0.012, 0.080),
-		"upper": Vector3(-8.0, 0.0, -7.0), "lower": Vector3(-34.0, 0.0, 0.0),
-		"wrist": Vector3(8.0, 0.0, -3.0),
-		"free_upper": Vector3(-14.0, 0.0, 3.0),
-		"free_lower": Vector3(-9.0, 0.0, 0.0),
-		"free_wrist": Vector3(3.0, 0.0, 0.0),
-		"body_position": Vector3(0.006, 0.004, 0.0),
-		"body_rotation": Vector3(-0.044, 0.0, -0.010)},
-	{"phase": 0.12, "grip": Vector3(0.004, -0.030, 0.055),
-		"upper": Vector3(-10.0, 0.0, -9.0), "lower": Vector3(-42.0, 0.0, 0.0),
-		"wrist": Vector3(6.0, 0.0, -2.0),
-		"free_upper": Vector3(-10.0, 0.0, 2.0),
-		"free_lower": Vector3(-13.0, 0.0, 0.0),
-		"free_wrist": Vector3(2.0, 0.0, 0.0),
-		"body_position": Vector3(0.013, -0.008, 0.0),
-		"body_rotation": Vector3(-0.058, 0.008, -0.027)},
-	{"phase": 0.30, "grip": Vector3(0.008, -0.020, 0.005),
-		"upper": Vector3(-6.0, 0.0, -7.0), "lower": Vector3(-39.0, 0.0, 0.0),
-		"wrist": Vector3(3.0, 0.0, 1.0),
-		"free_upper": Vector3(2.0, 0.0, 1.0),
-		"free_lower": Vector3(-15.0, 0.0, 0.0),
-		"free_wrist": Vector3(-1.0, 0.0, 0.0),
-		"body_position": Vector3(0.009, 0.001, 0.0),
-		"body_rotation": Vector3(-0.048, 0.004, -0.017)},
-	{"phase": 0.50, "grip": Vector3(0.004, 0.005, -0.060),
-		"upper": Vector3(1.0, 0.0, -5.0), "lower": Vector3(-35.0, 0.0, 0.0),
-		"wrist": Vector3(-4.0, 0.0, 4.0),
-		"free_upper": Vector3(14.0, 0.0, 2.0),
-		"free_lower": Vector3(-9.0, 0.0, 0.0),
-		"free_wrist": Vector3(-3.0, 0.0, 0.0),
-		"body_position": Vector3(-0.005, 0.004, 0.0),
-		"body_rotation": Vector3(-0.041, -0.004, 0.012)},
-	{"phase": 0.60, "grip": Vector3(0.012, 0.050, -0.045),
-		"upper": Vector3(7.0, 0.0, -7.0), "lower": Vector3(-46.0, 0.0, 0.0),
-		"wrist": Vector3(-8.0, 0.0, 6.0),
-		"free_upper": Vector3(10.0, 0.0, 3.0),
-		"free_lower": Vector3(-13.0, 0.0, 0.0),
-		"free_wrist": Vector3(-2.0, 0.0, 0.0),
-		"body_position": Vector3(-0.008, -0.006, 0.0),
-		"body_rotation": Vector3(-0.047, -0.008, 0.020)},
-	{"phase": 0.75, "grip": Vector3(0.018, 0.065, 0.025),
-		"upper": Vector3(3.0, 0.0, -10.0), "lower": Vector3(-44.0, 0.0, 0.0),
-		"wrist": Vector3(-2.0, 0.0, 4.0),
-		"free_upper": Vector3(-2.0, 0.0, 2.0),
-		"free_lower": Vector3(-15.0, 0.0, 0.0),
-		"free_wrist": Vector3(1.0, 0.0, 0.0),
-		"body_position": Vector3(-0.004, 0.001, 0.0),
-		"body_rotation": Vector3(-0.043, -0.004, 0.013)},
-	{"phase": 0.90, "grip": Vector3(0.008, 0.015, 0.075),
-		"upper": Vector3(-5.0, 0.0, -8.0), "lower": Vector3(-37.0, 0.0, 0.0),
-		"wrist": Vector3(5.0, 0.0, 0.0),
-		"free_upper": Vector3(-11.0, 0.0, 3.0),
-		"free_lower": Vector3(-12.0, 0.0, 0.0),
-		"free_wrist": Vector3(2.0, 0.0, 0.0),
-		"body_position": Vector3(0.002, 0.007, 0.0),
-		"body_rotation": Vector3(-0.041, 0.0, 0.001)},
-	{"phase": 1.00, "grip": Vector3(0.000, -0.012, 0.080),
-		"upper": Vector3(-8.0, 0.0, -7.0), "lower": Vector3(-34.0, 0.0, 0.0),
-		"wrist": Vector3(8.0, 0.0, -3.0),
-		"free_upper": Vector3(-14.0, 0.0, 3.0),
-		"free_lower": Vector3(-9.0, 0.0, 0.0),
-		"free_wrist": Vector3(3.0, 0.0, 0.0),
-		"body_position": Vector3(0.006, 0.004, 0.0),
-		"body_rotation": Vector3(-0.044, 0.0, -0.010)},
+	# Negative elbow_z trails the elbow behind the hand while Milo faces +Z.
+	# This makes the flex readable in profile instead of folding sideways.
+	{"phase": 0.00, "grip": Vector3(0.000, -0.012, 0.105),
+		"elbow_z": -0.16, "reach": 0.985},
+	{"phase": 0.12, "grip": Vector3(0.004, -0.030, 0.070),
+		"elbow_z": -0.17, "reach": 0.980},
+	{"phase": 0.30, "grip": Vector3(0.008, -0.020, 0.010),
+		"elbow_z": -0.19, "reach": 0.970},
+	# Keep the recovery hand below the cuff and the elbow only moderately behind
+	# it. Recovery travel happens forward/back instead of upward, preserving the
+	# long first-screenshot forearm without losing the cane's supported cadence.
+	{"phase": 0.50, "grip": Vector3(0.004, -0.005, -0.065),
+		"elbow_z": -0.22, "reach": 0.962},
+	{"phase": 0.60, "grip": Vector3(0.012, -0.008, -0.040),
+		"elbow_z": -0.23, "reach": 0.962},
+	{"phase": 0.75, "grip": Vector3(0.018, -0.005, -0.005),
+		"elbow_z": -0.21, "reach": 0.965},
+	{"phase": 0.90, "grip": Vector3(0.008, -0.008, 0.100),
+		"elbow_z": -0.17, "reach": 0.980},
+	{"phase": 1.00, "grip": Vector3(0.000, -0.012, 0.105),
+		"elbow_z": -0.16, "reach": 0.985},
 ]
 const COUNSELLOR_POSE_SECONDS := 0.36
 const HAND_CLEARANCE_ARC := 0.16
@@ -237,7 +230,6 @@ const ARM_BONES := [
 ]
 const GAIT_BONES := [
 	"upperarm.l", "lowerarm.l", "wrist.l", "hand.l",
-	"upperarm.r", "lowerarm.r", "wrist.r", "hand.r",
 ]
 
 var counsellor_pose_tween: Tween
@@ -245,6 +237,9 @@ var _active_counsellor_pose := ""
 
 
 func _ready():
+	# Resolve Milo's dedicated talk input before nearby controllers. Opening the
+	# chat locks player interaction, so later NPC controllers ignore the frame.
+	process_priority = -100
 	# Milo is a non-blocking companion. He still collides with the world so his
 	# body can walk on terrain, but the player and combat systems cannot hit him.
 	collision_layer = 0
@@ -265,15 +260,22 @@ func _ready():
 	_build_counsellor_props()
 	_resolve_mouth_shapes()
 	greeting_voice = get_node_or_null("MiloGreetingVoice") as AudioStreamPlayer3D
-	if greeting_voice != null:
-		_greeting_stream = greeting_voice.stream
+	interaction_prompt = get_node_or_null("InteractionPrompt") as Label3D
+	mayor_name_label = get_node_or_null("MayorMiloName") as Label3D
+	_configure_tts_callbacks()
+	var chat_collision := get_node_or_null("Area3D/CollisionShape3D") \
+		as CollisionShape3D
+	if chat_collision != null and chat_collision.shape is SphereShape3D:
+		# Scene-local subresources have fallen back to their default radius in some
+		# Web exports. Enforce the gameplay contract on the live resource too.
+		(chat_collision.shape as SphereShape3D).radius = CHAT_INTERACTION_RADIUS
+	if interaction_prompt != null:
+		interaction_prompt.visible = false
 	_resolve_eye_system()
 	_resolve_secondary_parts()
 	_resolve_gait_rig()
 	_build_contact_shadow()
 	_setup_terrain_grounding()
-	_build_journey_aura()
-	_apply_journey_stage()
 	var initial_player := _find_player()
 	if initial_player != null:
 		set_companion_player(initial_player, false)
@@ -315,7 +317,6 @@ func set_companion_player(next_player: CharacterBody3D,
 
 
 func _set_companion_state(next_state: CompanionState) -> void:
-	# Speech starting and ending mid-flight must not report Milo as idle.
 	if _fall_rescue_active and next_state != CompanionState.RESCUING:
 		return
 	companion_state = next_state
@@ -323,115 +324,6 @@ func _set_companion_state(next_state: CompanionState) -> void:
 
 func get_companion_state_name() -> String:
 	return CompanionState.keys()[companion_state]
-
-
-## Riding the Crown Line. The train seats Milo on a RemoteTransform3D anchor -
-## the place beside the rider - and he sits in it, instead of walking after,
-## or teleporting to, a player who is moving at train speed.
-func sit_on(anchor: RemoteTransform3D) -> void:
-	if anchor == null:
-		return
-	_seat_anchor = anchor
-	velocity = Vector3.ZERO
-	_follow_active = false
-	_catch_up_active = false
-	_breadcrumbs.clear()
-	for shape in find_children("*", "CollisionShape3D", false, false):
-		(shape as CollisionShape3D).disabled = true
-	# Grounding IK would pull his feet to the floor through the chair pose.
-	for ik in _leg_ik.values():
-		(ik as TwoBoneIK3D).set_influence(0.0)
-	if _cane_arm_ik != null:
-		_cane_arm_ik.set_influence(0.0)
-	_set_cane_visible(false)
-	anchor.remote_path = anchor.get_path_to(self)
-	_apply_sit_pose()
-
-
-func stand_up() -> void:
-	if _seat_anchor == null:
-		return
-	if is_instance_valid(_seat_anchor):
-		_seat_anchor.remote_path = NodePath()
-	_seat_anchor = null
-	for shape in find_children("*", "CollisionShape3D", false, false):
-		(shape as CollisionShape3D).disabled = false
-	_set_cane_visible(true)
-	rotation = Vector3(0.0, rotation.y, 0.0)
-	_release_sit_pose()
-	# Deferred: the train puts the player on the platform after unseating them,
-	# and Milo should land beside that spot, not beside the empty seat.
-	call_deferred("_reposition_safely_near_player")
-
-
-func is_seated() -> bool:
-	return _seat_anchor != null
-
-
-# The donor Sit_Chair_* clips kept no leg or hip tracks when they were
-# retargeted onto Milo's rig, so playing them leaves him standing. The seated
-# pose is built from the leg bones instead: freeze the idle, swing both thighs
-# forward, bend the knees back down, and lower the model so the thighs rest on
-# the seat.
-const SIT_THIGH_DEGREES := 90.0
-# Gap left between the hip joint and the cushion (the thigh's own thickness).
-const SIT_SEAT_CLEARANCE := 0.06
-var _sit_pose_applied := false
-var _model_rest_position := Vector3.ZERO
-
-
-func _apply_sit_pose() -> void:
-	if _sit_pose_applied or gait_skeleton == null:
-		return
-	if anim_player != null:
-		anim_player.play("Idle" if anim_player.has_animation("Idle") else anim_player.current_animation)
-		anim_player.seek(0.0, true)
-		anim_player.pause()
-	gait_skeleton.force_update_all_bone_transforms()
-	for side in ["l", "r"]:
-		var thigh := gait_skeleton.find_bone("upperleg.%s" % side)
-		var shin := gait_skeleton.find_bone("lowerleg.%s" % side)
-		if thigh < 0 or shin < 0:
-			continue
-		var hip := to_local(_bone_world_position("upperleg.%s" % side))
-		_rotate_bone_in_skeleton(thigh, -SIT_THIGH_DEGREES)
-		# Milo faces +Z; if the rig's axes put the knee behind him, bend the
-		# other way.
-		if to_local(_bone_world_position("lowerleg.%s" % side)).z < hip.z:
-			_rotate_bone_in_skeleton(thigh, 2.0 * SIT_THIGH_DEGREES)
-			_rotate_bone_in_skeleton(shin, -SIT_THIGH_DEGREES)
-		else:
-			_rotate_bone_in_skeleton(shin, SIT_THIGH_DEGREES)
-	if model_root != null:
-		_model_rest_position = model_root.position
-		var hip_height := to_local(_bone_world_position("upperleg.l")).y
-		model_root.position.y -= hip_height - SIT_SEAT_CLEARANCE
-	_sit_pose_applied = true
-
-
-func _release_sit_pose() -> void:
-	if not _sit_pose_applied:
-		return
-	_sit_pose_applied = false
-	if gait_skeleton != null:
-		gait_skeleton.reset_bone_poses()
-	if model_root != null:
-		model_root.position = _model_rest_position
-	if anim_player != null:
-		anim_player.play()
-
-
-## Rotates a bone about the skeleton's X axis, in skeleton space.
-func _rotate_bone_in_skeleton(bone: int, degrees: float) -> void:
-	var pose := gait_skeleton.get_bone_global_pose(bone)
-	var parent := gait_skeleton.get_bone_parent(bone)
-	var parent_pose := gait_skeleton.get_bone_global_pose(parent) if parent >= 0 \
-		else Transform3D()
-	var turned := Transform3D(Basis(Vector3.RIGHT, deg_to_rad(degrees)) * pose.basis,
-		pose.origin)
-	gait_skeleton.set_bone_pose_rotation(bone,
-		(parent_pose.affine_inverse() * turned).basis.get_rotation_quaternion())
-	gait_skeleton.force_update_all_bone_transforms()
 
 
 func begin_fall_rescue() -> void:
@@ -449,17 +341,11 @@ func end_fall_rescue() -> void:
 		return
 	_fall_rescue_active = false
 	_play_animation("Idle_3")
-	# Re-adopting the player grounds Milo beside them and resets his trail, so
-	# he does not walk back along the route he just flew.
 	set_companion_player(player, true)
 
 
 func is_fall_rescue_active() -> bool:
 	return _fall_rescue_active
-
-
-func say_line(line: String) -> void:
-	_on_companion_speech_requested(line)
 
 
 func _resolve_mouth_shapes() -> void:
@@ -486,46 +372,58 @@ func _set_mouth_shape(shape_name: String) -> void:
 
 
 func _on_companion_speech_requested(spoken_text: String) -> void:
+	if not voice_enabled:
+		_stop_speaking()
+		return
 	var clean_text := spoken_text.strip_edges()
 	if clean_text.is_empty():
 		_stop_speaking()
 		return
+	if not use_device_tts_for_dynamic_replies:
+		# Retain an explicit opt-out for accessibility/privacy settings.
+		_stop_speaking()
+		_set_companion_state(CompanionState.TALKING)
+		return
+	_speech_full_text = _spoken_version(clean_text)
+	_speech_sentences = _split_speech_sentences(_speech_full_text)
+	_speech_sentence_index = -1
 	_speech_elapsed = 0.0
-	_speech_remaining = clampf(float(clean_text.length()) / 14.0, 0.8, 42.0)
+	# This is only a watchdog for platforms whose TTS completion callback fails.
+	# Do not cap it: grounded scripture and other RAG answers can legitimately
+	# take longer than one minute, and Milo must keep his reading UI and mouth
+	# active until every queued sentence has been spoken.
+	_speech_remaining = _speech_watchdog_seconds(_speech_full_text,
+		_speech_sentences.size())
 	_set_companion_state(CompanionState.TALKING)
 	_set_mouth_shape("small")
 	if greeting_voice != null and greeting_voice.playing:
 		greeting_voice.stop()
-	var spoken := _spoken_version(clean_text)
-	var recording := recorded_line_path(spoken)
-	if greeting_voice != null and ResourceLoader.exists(recording):
-		if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
-			DisplayServer.tts_stop()
-		greeting_voice.stream = load(recording)
-		greeting_voice.volume_db = DIALOGUE_VOICE_DB
-		greeting_voice.max_db = maxf(3.0, DIALOGUE_VOICE_DB)
-		_speech_remaining = greeting_voice.stream.get_length()
-		greeting_voice.play()
-		return
-	_speak_with_platform_voice(spoken)
+	_present_spoken_sentence(0)
+	_speak_with_platform_voice(_speech_full_text)
 
 
-# Scripted lines recorded in Milo's greeting voice live at
-# assets/audio/milo/lines/<md5 of spoken text>.ogg; anything without a
-# recording (e.g. live chatbot replies) falls back to platform TTS.
-# tools/list_milo_lines.gd lists every scripted line with its file name.
-static func recorded_line_path(spoken_text: String) -> String:
-	return "res://assets/audio/milo/lines/%s.ogg" % spoken_text.md5_text()
+func _speech_watchdog_seconds(spoken_text: String, sentence_count: int) -> float:
+	var estimated_reading := float(spoken_text.length()) \
+		/ TTS_ESTIMATED_CHARACTERS_PER_SECOND
+	var estimated_pauses := float(maxi(sentence_count - 1, 0)) \
+		* TTS_SENTENCE_PAUSE_SECONDS
+	return maxf(1.2, estimated_reading + estimated_pauses \
+		+ TTS_COMPLETION_GRACE_SECONDS)
 
 
 func _play_recorded_greeting() -> void:
-	if greeting_voice == null or greeting_voice.stream == null \
-			or greeting_voice.playing or _recorded_greeting_played:
+	if not voice_enabled:
+		if greeting_voice != null and greeting_voice.playing:
+			greeting_voice.stop()
+		return
+	if _recorded_greeting_played:
 		return
 	_recorded_greeting_played = true
-	greeting_voice.stream = _greeting_stream
-	greeting_voice.volume_db = 0.0
-	greeting_voice.max_db = 3.0
+	# Use the consented original Milo recording documented by the adjacent voice
+	# manifest on every platform. A browser-dependent voice must not replace it.
+	if greeting_voice == null or greeting_voice.stream == null \
+			or greeting_voice.playing:
+		return
 	_speech_elapsed = 0.0
 	_speech_remaining = greeting_voice.stream.get_length()
 	_set_companion_state(CompanionState.TALKING)
@@ -533,17 +431,8 @@ func _play_recorded_greeting() -> void:
 	greeting_voice.play()
 
 
-static func _spoken_version(source_text: String) -> String:
-	var spoken := source_text
-	# Scripted panels open with "Wonderful Counsellor Milo · <Title>"; the title
-	# stays on screen but isn't spoken, so panels sharing a body share a recording.
-	if spoken.begins_with("Wonderful Counsellor Milo ·") and "\n\n" in spoken:
-		spoken = spoken.substr(spoken.find("\n\n") + 2)
-	# Likewise the strength finder's "Question 2 of 5" counter is shown, not said.
-	if spoken.begins_with("Question ") and "\n\n" in spoken \
-			and " of " in spoken.get_slice("\n\n", 0):
-		spoken = spoken.substr(spoken.find("\n\n") + 2)
-	spoken = spoken.replace("Wonderful Counsellor Milo ·", "")
+func _spoken_version(source_text: String) -> String:
+	var spoken := source_text.replace("Wonderful Counsellor Milo ·", "")
 	spoken = spoken.replace("Milo:", "")
 	spoken = spoken.replace("·", ".")
 	# UI layout uses blank lines and bullets; TTS reads more naturally when they
@@ -553,39 +442,139 @@ static func _spoken_version(source_text: String) -> String:
 	return spoken.replace("\n", " ").strip_edges()
 
 
+func _split_speech_sentences(spoken_text: String) -> Array[String]:
+	var sentences: Array[String] = []
+	var current := ""
+	for index in spoken_text.length():
+		var character := spoken_text.substr(index, 1)
+		current += character
+		var next_character := spoken_text.substr(index + 1, 1) \
+			if index + 1 < spoken_text.length() else ""
+		if character in [".", "!", "?"] \
+				and (next_character.is_empty() or next_character == " "):
+			var sentence := current.strip_edges()
+			if not sentence.is_empty():
+				sentences.append(sentence)
+			current = ""
+	var remainder := current.strip_edges()
+	if not remainder.is_empty():
+		sentences.append(remainder)
+	if sentences.is_empty() and not spoken_text.strip_edges().is_empty():
+		sentences.append(spoken_text.strip_edges())
+	return sentences
+
+
+func _configure_tts_callbacks() -> void:
+	if not DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		return
+	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_STARTED,
+		Callable(self, "_on_tts_utterance_started"))
+	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED,
+		Callable(self, "_on_tts_utterance_ended"))
+
+
+func _present_spoken_sentence(index: int, full_reply := "") -> void:
+	if index < 0 or index >= _speech_sentences.size():
+		return
+	_speech_sentence_index = index
+	if chatbot_ui != null and is_instance_valid(chatbot_ui) \
+			and chatbot_ui.has_method("show_spoken_sentence"):
+		chatbot_ui.call("show_spoken_sentence", _speech_sentences[index], index,
+			_speech_sentences.size(), full_reply if not full_reply.is_empty() \
+			else _speech_full_text)
+
+
+func _on_tts_utterance_started(utterance_id: int) -> void:
+	var index := utterance_id - _tts_utterance_base
+	if index < 0 or index >= _speech_sentences.size():
+		return
+	_present_spoken_sentence(index)
+
+
+func _on_tts_utterance_ended(utterance_id: int) -> void:
+	var index := utterance_id - _tts_utterance_base
+	if index != _speech_sentences.size() - 1:
+		return
+	_stop_speaking()
+
+
 func _speak_with_platform_voice(spoken_text: String) -> void:
-	if spoken_text.is_empty() or not DisplayServer.has_feature(
-			DisplayServer.FEATURE_TEXT_TO_SPEECH):
+	if not voice_enabled or spoken_text.is_empty():
 		return
-	if not _tts_voice_resolved:
-		_tts_voice_resolved = true
-		var voices := DisplayServer.tts_get_voices()
-		# Milo has one recognisable voice across supported platforms. Prefer the
-		# male English voice closest to his recordings (~118 Hz): Windows George
-		# measured 114 Hz, macOS Daniel is similar. Then fall back by locale.
-		for preferred_name in ["george", "daniel"]:
-			for voice_data in voices:
-				if str(voice_data.get("name", "")).to_lower().contains(preferred_name):
-					_tts_voice_id = str(voice_data.get("id", ""))
-					break
-			if not _tts_voice_id.is_empty():
-				break
-		for preferred_prefix in ["en_GB", "en_AU", "en_US", "en"]:
-			if not _tts_voice_id.is_empty():
-				break
-			for voice_data in voices:
-				if str(voice_data.get("language", "")).begins_with(preferred_prefix):
-					_tts_voice_id = str(voice_data.get("id", ""))
-					break
-			if not _tts_voice_id.is_empty():
-				break
+	if not DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		return
+	DisplayServer.tts_stop()
+	_tts_request_serial += 1
+	_tts_voice_retry_count = 0
+	_try_start_platform_voice(_tts_request_serial)
+
+
+func _try_start_platform_voice(request_serial: int) -> void:
+	if not voice_enabled or request_serial != _tts_request_serial \
+			or _speech_sentences.is_empty():
+		return
+	_resolve_tts_voice()
 	if _tts_voice_id.is_empty():
+		# Browser voices often arrive shortly after the WebGL game starts. Retry
+		# briefly instead of dropping Milo's first LLM answer in silence.
+		if OS.has_feature("web") and _tts_voice_retry_count < 8:
+			_tts_voice_retry_count += 1
+			get_tree().create_timer(0.35).timeout.connect(
+				_try_start_platform_voice.bind(request_serial))
 		return
-	var voice_volume := 100
+	var voice_volume := 82
 	if player != null:
 		var distance := global_position.distance_to(player.global_position)
-		voice_volume = int(round(lerpf(100.0, 30.0, clampf(distance / 30.0, 0.0, 1.0))))
-	DisplayServer.tts_speak(spoken_text, _tts_voice_id, voice_volume, 1.0, 1.0, 2603, true)
+		voice_volume = int(round(lerpf(86.0, 24.0, clampf(distance / 30.0, 0.0, 1.0))))
+	_tts_utterance_base = MILO_TTS_ID_START + (_tts_request_serial % 1000) * 100
+	for index in _speech_sentences.size():
+		DisplayServer.tts_speak(_speech_sentences[index], _tts_voice_id,
+			voice_volume, 0.90, 0.96, _tts_utterance_base + index, index == 0)
+
+
+func _resolve_tts_voice() -> void:
+	if not _tts_voice_id.is_empty():
+		return
+	var voices := DisplayServer.tts_get_voices()
+	# Milo has one recognisable voice across supported platforms. Prefer a warm
+	# male English voice by name, then fall back by Australian/British locale.
+	for voice_data in voices:
+		var voice_name := str(voice_data.get("name", "")).to_lower()
+		var voice_id := str(voice_data.get("id", "")).to_lower()
+		if voice_name.contains("daniel") or voice_id.contains("daniel"):
+			_tts_voice_id = str(voice_data.get("id", ""))
+			break
+	for preferred_prefix in ["en_AU", "en-AU", "en_GB", "en-GB", "en_US",
+			"en-US", "en"]:
+		if not _tts_voice_id.is_empty():
+			break
+		for voice_data in voices:
+			if str(voice_data.get("language", "")).begins_with(preferred_prefix):
+				_tts_voice_id = str(voice_data.get("id", ""))
+				break
+	_tts_voice_resolved = not _tts_voice_id.is_empty()
+
+
+func _speak_with_web_voice(spoken_text: String) -> void:
+	# Web Speech synthesis runs entirely in the player's browser. JSON encoding
+	# makes the generated/player-influenced text data, never executable script.
+	var safe_text := JSON.stringify(spoken_text)
+	JavaScriptBridge.eval("""
+		(() => {
+			if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return;
+			window.speechSynthesis.cancel();
+			const utterance = new SpeechSynthesisUtterance(%s);
+			utterance.lang = "en-AU";
+			utterance.rate = 0.90;
+			utterance.pitch = 0.96;
+			utterance.volume = 0.82;
+			const voices = window.speechSynthesis.getVoices();
+			utterance.voice = voices.find(v => /^en-AU/i.test(v.lang))
+				|| voices.find(v => /^en-GB/i.test(v.lang))
+				|| voices.find(v => /^en/i.test(v.lang)) || null;
+			window.speechSynthesis.speak(utterance);
+		})();
+	""" % safe_text, true)
 
 
 func _on_companion_activity_state_requested(state_name: String) -> void:
@@ -617,11 +606,13 @@ func _update_speaking(delta: float) -> void:
 
 
 func _stop_speaking() -> void:
-	if greeting_voice != null and greeting_voice.playing:
-		greeting_voice.stop()
+	_tts_request_serial += 1
 	_speech_remaining = 0.0
 	_speech_elapsed = 0.0
 	_set_mouth_shape("closed")
+	if chatbot_ui != null and is_instance_valid(chatbot_ui) \
+			and chatbot_ui.has_method("finish_spoken_reply"):
+		chatbot_ui.call("finish_spoken_reply")
 	if _conversation_active:
 		_set_companion_state(_conversation_state)
 	elif player != null:
@@ -772,6 +763,7 @@ func _setup_terrain_grounding() -> void:
 		if leg_ik != null:
 			_leg_ik[side] = leg_ik
 	_setup_cane_constraint()
+	_setup_free_arm_constraint()
 
 
 func _create_two_bone_ik(node_name: String, root_bone: String,
@@ -785,6 +777,10 @@ func _create_two_bone_ik(node_name: String, root_bone: String,
 	ik.name = node_name
 	gait_skeleton.add_child(ik)
 	ik.set_setting_count(1)
+	# Milo's imported skeleton carries authored pose-space joint offsets. Rebuild
+	# the solver axes from those live offsets so the end joint reaches its target
+	# instead of solving against the donor rig's rest-only segment directions.
+	ik.set_mutable_bone_axes(true)
 	ik.set_root_bone_name(0, root_bone)
 	ik.set_middle_bone_name(0, middle_bone)
 	ik.set_end_bone_name(0, end_bone)
@@ -792,6 +788,39 @@ func _create_two_bone_ik(node_name: String, root_bone: String,
 	ik.set_pole_node(0, ik.get_path_to(pole))
 	ik.set_influence(0.0)
 	return ik
+
+
+func _setup_free_arm_constraint() -> void:
+	# Drive the visible shoulder-elbow-wrist chain through anatomical points,
+	# never through guessed local Euler axes. Milo's imported arm bones carry roll,
+	# so local-axis offsets create the sharp sleeve kink shown in gameplay.
+	_free_wrist_target = Node3D.new()
+	_free_wrist_target.name = "MiloFreeWristTarget"
+	_grounding_targets.add_child(_free_wrist_target)
+	_free_elbow_pole = Node3D.new()
+	_free_elbow_pole.name = "MiloFreeElbowPole"
+	_grounding_targets.add_child(_free_elbow_pole)
+	# Build the neutral hanging vector from the rig rest pose, not whichever donor
+	# idle frame happened to evaluate during scene startup. The latter intermittently
+	# captured a raised forearm and made the first walk frame sweep over Milo's head.
+	var shoulder_local := to_local(_bone_rest_world_position("upperarm.r"))
+	var wrist_local := to_local(_bone_rest_world_position("wrist.r"))
+	_free_wrist_from_shoulder_local = wrist_local - shoulder_local
+	_free_wrist_from_shoulder_local.z = 0.0
+	_free_wrist_target.global_position = to_global(wrist_local)
+	_free_elbow_pole.global_position = to_global(shoulder_local \
+		+ Vector3(-FREE_ELBOW_LATERAL_CLEARANCE, -FREE_ELBOW_DROP,
+			-FREE_ELBOW_BACK))
+	for bone_name in ["upperarm.r", "lowerarm.r", "wrist.r", "hand.r"]:
+		var marker := BoneAttachment3D.new()
+		marker.name = "Free%sMarker" % bone_name.capitalize().replace(".", "")
+		gait_skeleton.add_child(marker)
+		marker.set_bone_name(bone_name)
+		_free_arm_chain_markers[bone_name] = marker
+	_free_arm_ik = _create_two_bone_ik("FreeArmIK", "upperarm.r",
+		"lowerarm.r", "wrist.r", _free_wrist_target, _free_elbow_pole)
+	if _free_arm_ik != null:
+		_free_arm_ik.set_influence(1.0)
 
 
 func _setup_cane_constraint() -> void:
@@ -809,18 +838,20 @@ func _setup_cane_constraint() -> void:
 	# The sculpted prop was built for the shorter donor. A walking stick should
 	# meet a relaxed, flexed wrist; extending only its vertical working length
 	# prevents Milo from locking his elbow to reach a handle below his paw.
-	_cane_rig.scale.y = 1.28
+	_cane_rig.scale.y = 1.52
 	_cane_base_transform = _cane_rig.transform
 	_cane_grip_target = Node3D.new()
 	_cane_grip_target.name = "MiloCaneGripTarget"
-	_cane_rig.add_child(_cane_grip_target)
-	var cane_hook := find_child("MayorCaneHook", true, false) as MeshInstance3D
+	# Keep the IK target outside the scaled prop hierarchy. TwoBoneIK3D expects
+	# an ordinary world-space target; parenting it beneath the non-uniformly
+	# scaled cane caused the evaluated wrist to miss the handle by a paw width.
+	_grounding_targets.add_child(_cane_grip_target)
+	_cane_hook_mesh = find_child("MayorCaneHook", true, false) as MeshInstance3D
 	var grip_position := _bone_world_position("wrist.l")
-	if cane_hook != null and cane_hook.mesh != null:
-		var hook_bounds := cane_hook.get_aabb()
-		grip_position = cane_hook.to_global(hook_bounds.get_center()) \
+	if _cane_hook_mesh != null and _cane_hook_mesh.mesh != null:
+		var hook_bounds := _cane_hook_mesh.get_aabb()
+		grip_position = _cane_hook_mesh.to_global(hook_bounds.get_center()) \
 			+ global_transform.basis.y.normalized() * 0.045
-	_cane_grip_target.global_position = grip_position
 	_cane_hand_anchor_local = to_local(grip_position)
 	_cane_rest_tip_local = to_local(_cane_tip_world_position())
 	_cane_recovery_start_tip_local = _cane_rest_tip_local
@@ -828,10 +859,55 @@ func _setup_cane_constraint() -> void:
 	_cane_elbow_pole.name = "MiloCaneElbowPole"
 	_grounding_targets.add_child(_cane_elbow_pole)
 	_cane_elbow_pole.global_position = _bone_world_position("upperarm.l") \
-		+ global_transform.basis.x.normalized() * 0.34 \
-		+ global_transform.basis.z.normalized() * 0.10
-	_cane_arm_ik = _create_two_bone_ik("CaneArmIK", "upperarm.l",
-		"lowerarm.l", "wrist.l", _cane_grip_target, _cane_elbow_pole)
+		+ global_transform.basis.x.normalized() * CANE_ELBOW_LATERAL_CLEARANCE \
+		- global_transform.basis.y.normalized() * CANE_ELBOW_DROP \
+		+ global_transform.basis.z.normalized() \
+			* float(CANE_HAND_KEY_POSES[0].elbow_z)
+	# Skeleton3D restores its authored pose after modifiers finish. Bone
+	# attachments retain the evaluated IK transforms, giving tests and future
+	# prop logic an exact view of the shoulder, elbow and wrist that are rendered.
+	for bone_name in ["upperarm.l", "lowerarm.l", "wrist.l", "hand.l"]:
+		var marker := BoneAttachment3D.new()
+		marker.name = "Cane%sMarker" % bone_name.capitalize().replace(".", "")
+		gait_skeleton.add_child(marker)
+		marker.set_bone_name(bone_name)
+		_cane_chain_markers[bone_name] = marker
+	var hand_attachment := _cane_chain_markers.get("hand.l") as BoneAttachment3D
+	if hand_attachment != null:
+		_cane_paw_grip_marker = Node3D.new()
+		_cane_paw_grip_marker.name = "CanePawGripMarker"
+		hand_attachment.add_child(_cane_paw_grip_marker)
+		# Calibrate from rest transforms so scene startup cannot bake an arbitrary
+		# donor animation frame into the paw-to-handle relationship.
+		var hand_world := _bone_rest_world_transform("hand.l")
+		_cane_paw_grip_marker.position = hand_world.affine_inverse() \
+			* grip_position
+		# Preserve the authored wrist-to-hook relationship so the sculpted paw keeps
+		# its palm orientation around the handle after the arm reach is solved.
+		var wrist_world := _bone_rest_world_transform("wrist.l")
+		_cane_hand_to_grip = wrist_world.affine_inverse() \
+			* _cane_hook_world_transform()
+		_cane_grip_target.global_transform = _cane_hand_target_world_transform() \
+			* _cane_hand_to_grip.affine_inverse()
+		# SkeletonIK solves to the wrist, not to the hook inside Milo's paw. Store
+		# shoulder-to-wrist reach so rotating the stick cannot accidentally collapse
+		# the elbow while the hand-to-hook offset remains exact.
+		_cane_grip_reach = _bone_world_position("upperarm.l").distance_to(
+			_cane_grip_target.global_position)
+	_cane_arm_ik = SkeletonIK3D.new()
+	_cane_arm_ik.name = "CaneArmIK"
+	_cane_arm_ik.root_bone = &"upperarm.l"
+	_cane_arm_ik.tip_bone = &"wrist.l"
+	gait_skeleton.add_child(_cane_arm_ik)
+	_cane_arm_ik.target_node = _cane_arm_ik.get_path_to(_cane_grip_target)
+	# The runtime target blends the Blender wrist roll with the handle alignment.
+	# Keeping the override enabled makes that blended basis reach the visible paw.
+	_cane_arm_ik.override_tip_basis = true
+	_cane_arm_ik.use_magnet = true
+	_cane_arm_ik.magnet = gait_skeleton.to_local(_cane_elbow_pole.global_position)
+	_cane_arm_ik.set_influence(0.0)
+	_cane_arm_ik.start()
+	_cane_arm_ik.set_influence(1.0)
 
 
 func _bone_world_position(bone_name: String) -> Vector3:
@@ -842,6 +918,20 @@ func _bone_world_position(bone_name: String) -> Vector3:
 		return global_position
 	return gait_skeleton.global_transform \
 		* gait_skeleton.get_bone_global_pose(bone_index).origin
+
+
+func _bone_rest_world_position(bone_name: String) -> Vector3:
+	return _bone_rest_world_transform(bone_name).origin
+
+
+func _bone_rest_world_transform(bone_name: String) -> Transform3D:
+	if gait_skeleton == null:
+		return global_transform
+	var bone_index := gait_skeleton.find_bone(bone_name)
+	if bone_index < 0:
+		return global_transform
+	return gait_skeleton.global_transform \
+		* gait_skeleton.get_bone_global_rest(bone_index)
 
 
 func _add_secondary_part(target: Array[Node3D], part_name: String) -> void:
@@ -875,7 +965,8 @@ func _play_animation(animation_name: String) -> void:
 
 
 func _on_companion_pose_requested(pose_name: String) -> void:
-	_active_counsellor_pose = pose_name
+	if anim_player != null:
+		anim_player.process_priority = -10
 	var animation_name := str(COUNSELLOR_ANIMATIONS.get(pose_name, "Counsellor_Welcome"))
 	_play_animation(animation_name)
 	_start_counsellor_arm_transition(pose_name)
@@ -952,11 +1043,15 @@ func _blend_counsellor_arm_pose(weight: float, skeleton: Skeleton3D,
 
 func _finish_counsellor_arm_transition(pose_name: String) -> void:
 	counsellor_pose_tween = null
+	_active_counsellor_pose = pose_name
+	# Resolve the prop endpoint against the current animated torso, after blend-out.
+	_apply_counsellor_arm_pose(pose_name)
 	_set_cane_visible(pose_name in ["welcome", "guide", "neutral"])
 	_set_counsellor_prop(pose_name)
 
 
 func _cancel_counsellor_pose_transition() -> void:
+	_active_counsellor_pose = ""
 	if counsellor_pose_tween != null and counsellor_pose_tween.is_valid():
 		counsellor_pose_tween.kill()
 	counsellor_pose_tween = null
@@ -981,16 +1076,16 @@ func _apply_counsellor_arm_pose(pose_name: String) -> void:
 				Vector3(55.0, 0.0, -125.0), Vector3(0.0, 0.0, 14.0))
 			# The map's visible front reaches z=0.376. A 0.105 m-deep paw
 			# therefore rests at z=0.487 with 6 mm clearance instead of clipping.
-			_place_hand("l", Vector3(0.42, 1.05, 0.487))
-			_place_hand("r", Vector3(-0.42, 1.05, 0.487))
+			_place_hand("l", Vector3(0.42, 1.05, 0.487), 0.0, true)
+			_place_hand("r", Vector3(-0.42, 1.05, 0.487), 0.0, true)
 		"tablet":
 			_pose_arm("l", Vector3(-55.0, 0.0, -30.0),
 				Vector3(55.0, 0.0, 130.0), Vector3(0.0, 0.0, -12.0))
 			_pose_arm("r", Vector3(-55.0, 0.0, 30.0),
 				Vector3(55.0, 0.0, -130.0), Vector3(0.0, 0.0, 16.0))
 			# Tablet runes reach z=0.409; z=0.520 retains the same safe gap.
-			_place_hand("l", Vector3(0.29, 1.05, 0.520))
-			_place_hand("r", Vector3(-0.41, 1.05, 0.520))
+			_place_hand("l", Vector3(0.29, 1.05, 0.520), 0.0, true)
+			_place_hand("r", Vector3(-0.41, 1.05, 0.520), 0.0, true)
 		"encourage":
 			_pose_arm("l", Vector3(-8.0, 0.0, -58.0),
 				Vector3(0.0, 0.0, -26.0), Vector3(0.0, 0.0, 12.0))
@@ -1022,7 +1117,7 @@ func _set_bone_euler(skeleton: Skeleton3D, bone_name: String,
 		skeleton.set_bone_pose_rotation(bone_index, rest_rotation * gesture_rotation)
 
 
-func _place_hand(side: String, target: Vector3, roll_degrees := 0.0) -> void:
+func _place_hand(side: String, target: Vector3, roll_degrees := 0.0, inward_grip := false) -> void:
 	var skeleton := find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton == null:
 		return
@@ -1030,6 +1125,9 @@ func _place_hand(side: String, target: Vector3, roll_degrees := 0.0) -> void:
 	if bone_index < 0:
 		return
 	var hand_pose := skeleton.get_bone_global_pose(bone_index)
+	if inward_grip:
+		var grip_direction := Vector3(-1.0 if side == "l" else 1.0, 0.25, 0.0).normalized()
+		hand_pose.basis = Basis(Quaternion(hand_pose.basis.y.normalized(), grip_direction)) * hand_pose.basis
 	if not is_zero_approx(roll_degrees):
 		hand_pose.basis = Basis(Vector3.FORWARD, deg_to_rad(roll_degrees)) \
 			* hand_pose.basis
@@ -1038,6 +1136,7 @@ func _place_hand(side: String, target: Vector3, roll_degrees := 0.0) -> void:
 
 
 func _set_cane_visible(is_visible: bool) -> void:
+	_cane_visible = is_visible
 	for descendant in find_children("*", "Node3D", true, false):
 		var part := descendant as Node3D
 		var part_name := str(part.name)
@@ -1058,7 +1157,6 @@ func _set_counsellor_prop(pose_name: String) -> void:
 
 func _begin_pause(_duration := -1.0) -> void:
 	_cancel_counsellor_pose_transition()
-	_active_counsellor_pose = ""
 	velocity.x = 0.0
 	velocity.z = 0.0
 	_reset_cane_gait()
@@ -1086,7 +1184,10 @@ func _reset_cane_gait() -> void:
 	for side in _leg_ik:
 		(_leg_ik[side] as TwoBoneIK3D).set_influence(0.0)
 	if _cane_arm_ik != null:
-		_cane_arm_ik.set_influence(0.0)
+		# Pausing returns to a supported neutral stance. The hand must keep owning
+		# the visible stick instead of revealing the donor idle's raised arm pose.
+		_cane_arm_constraint_weight = 1.0 if _cane_visible else 0.0
+		_cane_arm_ik.set_influence(_cane_arm_constraint_weight)
 
 
 func _sample_cane_gait(phase: float) -> Dictionary:
@@ -1148,23 +1249,24 @@ func _sample_cane_hand_pose(phase: float) -> Dictionary:
 		var start := float(from_pose.phase)
 		var finish := float(to_pose.phase)
 		if wrapped <= finish:
-			var linear_weight := inverse_lerp(start, finish, wrapped)
-			var weight := smoothstep(0.0, 1.0, linear_weight)
+			# Cyclic Catmull-Rom interpolation carries velocity through each authored
+			# pose. The former smoothstep stopped at every key and made the elbow pop
+			# between a sequence of otherwise-correct still poses.
+			var unique_pose_count := CANE_HAND_KEY_POSES.size() - 1
+			var previous_index := posmod(pose_index - 1, unique_pose_count)
+			var following_index := posmod(pose_index + 2, unique_pose_count)
+			var previous_pose: Dictionary = CANE_HAND_KEY_POSES[previous_index]
+			var following_pose: Dictionary = CANE_HAND_KEY_POSES[following_index]
+			var weight := inverse_lerp(start, finish, wrapped)
 			return {
-				"grip": (from_pose.grip as Vector3).lerp(to_pose.grip, weight),
-				"upper": (from_pose.upper as Vector3).lerp(to_pose.upper, weight),
-				"lower": (from_pose.lower as Vector3).lerp(to_pose.lower, weight),
-				"wrist": (from_pose.wrist as Vector3).lerp(to_pose.wrist, weight),
-				"free_upper": (from_pose.free_upper as Vector3).lerp(
-					to_pose.free_upper, weight),
-				"free_lower": (from_pose.free_lower as Vector3).lerp(
-					to_pose.free_lower, weight),
-				"free_wrist": (from_pose.free_wrist as Vector3).lerp(
-					to_pose.free_wrist, weight),
-				"body_position": (from_pose.body_position as Vector3).lerp(
-					to_pose.body_position, weight),
-				"body_rotation": (from_pose.body_rotation as Vector3).lerp(
-					to_pose.body_rotation, weight),
+				"grip": (from_pose.grip as Vector3).cubic_interpolate(
+					to_pose.grip, previous_pose.grip, following_pose.grip, weight),
+				"elbow_z": cubic_interpolate(float(from_pose.elbow_z),
+					float(to_pose.elbow_z), float(previous_pose.elbow_z),
+					float(following_pose.elbow_z), weight),
+				"reach": maxf(CANE_MIN_REACH_SCALE, cubic_interpolate(float(from_pose.reach),
+					float(to_pose.reach), float(previous_pose.reach),
+					float(following_pose.reach), weight)),
 			}
 	return CANE_HAND_KEY_POSES[0]
 
@@ -1193,7 +1295,7 @@ func _reset_mayor_arm_pose() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _fall_rescue_active or _seat_anchor != null:
+	if _fall_rescue_active:
 		velocity = Vector3.ZERO
 		return
 	if gravity_enabled and not is_on_floor():
@@ -1211,6 +1313,14 @@ func _physics_process(delta: float) -> void:
 			return
 		set_companion_player(player, false)
 
+	# A sailing player has no walkable breadcrumb trail. Wait ashore; the
+	# existing catch-up/reposition logic resumes after safe disembarking.
+	if player.get_meta("sailing_boat", false):
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_set_companion_state(CompanionState.WAITING)
+		move_and_slide()
+		return
 	if _player_teleported_since_last_frame():
 		_reposition_safely_near_player()
 		move_and_slide()
@@ -1292,7 +1402,9 @@ func _approach_horizontal_velocity(target: Vector3, acceleration: float,
 
 
 func _update_locomotion_playback(actual_speed: float, authored_speed: float) -> void:
-	if anim_player == null:
+	# A skin can finish loading after the controller starts following. Missing
+	# clips must not cause an error on every physics frame or freeze other clips.
+	if anim_player == null or not anim_player.has_animation("Cane_Walk"):
 		return
 	var clip := anim_player.get_animation("Cane_Walk")
 	if clip == null or clip.length <= 0.0:
@@ -1368,12 +1480,18 @@ func _reposition_safely_near_player() -> void:
 	var horizontal_velocity := Vector3(player.velocity.x, 0.0, player.velocity.z)
 	var behind := -horizontal_velocity.normalized() if horizontal_velocity.length() > 0.2 \
 		else Vector3(1.0, 0.0, 1.0).normalized()
-	var desired := player.global_position
+	var side := Vector3(-behind.z, 0.0, behind.x)
+	# A missing/late physics surface must never collapse the companion onto the
+	# player's exact transform. Keep a safe side offset as the fallback, then
+	# ground it below when the world can provide a walkable hit.
+	var desired := player.global_position + side * follow_stop_distance
 	var world := get_world_3d()
 	if world != null:
-		var side := Vector3(-behind.z, 0.0, behind.x)
-		for offset: Vector3 in [behind * follow_stop_distance,
-				side * follow_stop_distance, -side * follow_stop_distance,
+		# Prefer either side of the player. Placing Milo directly behind the player
+		# puts him between the third-person camera and the fox, visually replacing
+		# the player's torso even though their physics bodies do not collide.
+		for offset: Vector3 in [side * follow_stop_distance,
+				-side * follow_stop_distance, behind * follow_stop_distance,
 				-behind * follow_stop_distance, Vector3.ZERO]:
 			var candidate: Vector3 = player.global_position + offset
 			var query := PhysicsRayQueryParameters3D.create(
@@ -1414,6 +1532,8 @@ func _on_area_3d_player_entered(body):
 func _on_area_3d_player_exited(body):
 	if body == player:
 		player_in_range = false
+		if interaction_prompt != null:
+			interaction_prompt.visible = false
 		_reset_npc_state()
 
 
@@ -1425,25 +1545,25 @@ func _reset_npc_state():
 
 
 func _process(delta):
+	_refresh_chat_range()
 	_update_speaking(delta)
 	_update_eye_animation(delta)
-	if _seat_anchor == null:
-		_update_secondary_motion(delta)
-	if not _fall_rescue_active and _seat_anchor == null:
+	_update_secondary_motion(delta)
+	if not _fall_rescue_active:
 		_update_terrain_grounding(delta)
-	_apply_journey_stage()
-	if aura != null:
-		aura.rotate_y(delta * (0.18 + max(journey_stage, 0) * 0.08))
-	if _seat_anchor != null:
-		# Other systems (counsellor poses, pauses) can start a clip, which
-		# would overwrite the seated legs; freeze and pose again.
-		if anim_player != null and anim_player.is_playing():
-			_release_sit_pose()
-			_apply_sit_pose()
-		return
+	# Keep hands on the prop as the animated chest continues breathing.
+	if _active_counsellor_pose in ["map", "tablet", "heart"]:
+		_apply_counsellor_arm_pose(_active_counsellor_pose)
+	# The mayor nameplate is the single interaction cue. The older standalone
+	# prompt is retained only for scene compatibility and stays hidden so Web
+	# builds never stack duplicate Q/T labels above Milo.
+	if interaction_prompt != null:
+		interaction_prompt.visible = false
+	if mayor_name_label != null:
+		mayor_name_label.text = "Mayor Milo\nPress %s to chat" % MILO_CHAT_KEY_LABEL \
+			if player_in_range and chatbot_ui == null else "Mayor Milo"
 	if _fall_rescue_active:
 		return
-
 	# Outside the interaction zone, locomotion owns Milo's facing and animation.
 	if not player_in_range:
 		return
@@ -1451,7 +1571,8 @@ func _process(delta):
 	look_at_player(delta)
 
 	# INSIDE interaction zone: waving logic
-	if not first_wave:
+	if not first_wave and chatbot_ui == null and not _conversation_active \
+			and not _player_is_busy():
 		_play_animation("Wave_One_Hand")
 		_set_companion_state(CompanionState.GREETING)
 		_play_recorded_greeting()
@@ -1460,15 +1581,32 @@ func _process(delta):
 
 	wave_timer += delta
 
-	if wave_timer >= 5.0 and not _player_is_busy():
-		_play_animation("Wave_One_Hand")
-		wave_timer = 0.0
+	# Greeting is a one-shot arrival gesture, not a permanent locomotion state
+	# or a repeated interruption every five seconds while the player stands here.
+	var greeting_duration := 1.0
+	if anim_player != null and anim_player.has_animation("Wave_One_Hand"):
+		greeting_duration = anim_player.get_animation("Wave_One_Hand").length / 0.76 + 0.22
+	if companion_state == CompanionState.GREETING and wave_timer >= greeting_duration \
+			and chatbot_ui == null and not _conversation_active and not is_speaking():
+		_begin_pause()
 
 	# interaction
-	if Input.is_action_just_pressed("interact") and player_in_range \
+	if Input.is_action_just_pressed(MILO_CHAT_ACTION) and player_in_range \
 			and not _player_is_busy():
 		print("Interacting with Milo")
 		open_chatbot()
+
+
+func _refresh_chat_range() -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	# Web physics overlap notifications can arrive late or be missed while Milo is
+	# repositioned by the companion controller. Distance is the authoritative
+	# gameplay rule; Area3D signals remain useful for immediate native feedback.
+	var horizontal_distance := Vector2(global_position.x - player.global_position.x,
+		global_position.z - player.global_position.z).length()
+	player_in_range = horizontal_distance <= CHAT_INTERACTION_RADIUS \
+		and absf(global_position.y - player.global_position.y) <= 3.0
 
 
 func _update_secondary_motion(delta: float) -> void:
@@ -1486,12 +1624,8 @@ func _update_secondary_motion(delta: float) -> void:
 		stride_wave = sin(stride_phase * TAU)
 		var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 		gait_strength = clampf(horizontal_speed / maxf(walk_speed, 0.01), 0.0, 1.0)
-		# Contact/down/pass/up keys carry the centre of mass over each stance foot.
-		# Limbs still articulate on deform bones, so shoes remain attached and IK
-		# can lock the planted foot without fighting a second sinusoidal root pass.
-		var body_pose := _sample_cane_hand_pose(stride_phase)
-		target_position += (body_pose.body_position as Vector3) * gait_strength
-		target_rotation += (body_pose.body_rotation as Vector3) * gait_strength
+		# The same native Walking_A clip as the other cast members owns Milo's centre
+		# of mass, torso counter-rotation and shoulder rhythm without a second root pass.
 	else:
 		var breath := sin(_motion_elapsed * 1.65)
 		target_position.y += breath * 0.004
@@ -1558,8 +1692,13 @@ func _update_cane_grounding(delta: float, contact_weight: float,
 		return
 	var phase := _current_gait_phase()
 	var authored_pose := _sample_cane_hand_pose(phase)
-	var desired_grip := to_global(_cane_hand_anchor_local \
-		+ (authored_pose.grip as Vector3) * gait_strength)
+	var grip_offset := (authored_pose.grip as Vector3) * gait_strength
+	grip_offset.x += CANE_HAND_OUTWARD_CLEARANCE * gait_strength
+	var desired_grip := to_global(_cane_hand_anchor_local + grip_offset)
+	var extended_reach := minf(1.0,
+		float(authored_pose.reach) + CANE_REACH_EXTENSION)
+	var desired_reach := _cane_grip_reach * lerpf(1.0,
+		extended_reach, gait_strength)
 	var planted := is_walking and contact_weight > 0.015
 	if planted and not _cane_tip_locked:
 		var tip_position := _cane_tip_world_position()
@@ -1568,7 +1707,7 @@ func _update_cane_grounding(delta: float, contact_weight: float,
 			_cane_tip_lock = hit.position as Vector3
 			_cane_tip_locked = true
 	if planted and _cane_tip_locked:
-		_place_cane_between(_cane_tip_lock, desired_grip)
+		_place_cane_between(_cane_tip_lock, desired_grip, desired_reach)
 		if cane_contact_shadow != null:
 			cane_contact_shadow.global_position = _cane_tip_lock \
 				+ Vector3.UP * 0.027
@@ -1576,12 +1715,18 @@ func _update_cane_grounding(delta: float, contact_weight: float,
 		if _cane_was_planted:
 			_cane_recovery_start_tip_local = to_local(_cane_tip_world_position())
 		_cane_tip_locked = false
-		var recovery_progress := fposmod(phase - CANE_CONTACT_END, 1.0) \
-			/ fposmod(CANE_CONTACT_START - CANE_CONTACT_END, 1.0)
+		# Contact fades below the planted threshold just BEFORE CONTACT_END.
+		# Wrapping that small negative offset mapped it to the END of recovery,
+		# snapping the cane forward and back on consecutive frames. Recovery is
+		# the non-wrapping interval [0.44, 0.93]; clamp early release to its start.
+		var recovery_progress := (phase - CANE_CONTACT_END) \
+			/ (CANE_CONTACT_START - CANE_CONTACT_END)
 		var recovery_weight := smoothstep(0.0, 1.0,
 			clampf(recovery_progress, 0.0, 1.0))
+		# Milo's model faces local +Z. Advance the stick toward the next heel
+		# strike; Vector3.FORWARD is -Z in Godot and previously sent it backward.
 		var target_tip_local := _cane_rest_tip_local \
-			+ Vector3.FORWARD * CANE_RECOVERY_TIP_FORWARD
+			+ Vector3.BACK * CANE_RECOVERY_TIP_FORWARD
 		var start_tip := to_global(_cane_recovery_start_tip_local)
 		var target_tip := to_global(target_tip_local)
 		var target_hit := _probe_ground(target_tip)
@@ -1590,7 +1735,7 @@ func _update_cane_grounding(delta: float, contact_weight: float,
 		var desired_tip := start_tip.lerp(target_tip, recovery_weight)
 		desired_tip += global_transform.basis.y.normalized() \
 			* sin(recovery_weight * PI) * CANE_RECOVERY_TIP_LIFT * gait_strength
-		_place_cane_between(desired_tip, desired_grip)
+		_place_cane_between(desired_tip, desired_grip, desired_reach)
 		if cane_contact_shadow != null:
 			var shadow_hit := _probe_ground(desired_tip)
 			var shadow_y := (shadow_hit.position as Vector3).y + 0.027 \
@@ -1598,20 +1743,69 @@ func _update_cane_grounding(delta: float, contact_weight: float,
 			cane_contact_shadow.global_position = Vector3(desired_tip.x,
 				shadow_y, desired_tip.z)
 	if _cane_elbow_pole != null:
-		var grip_offset := authored_pose.grip as Vector3
+		# A mostly sideways, shoulder-height pole made the sleeve look rigid from
+		# profile while the stick moved alone. Keep only a little coat clearance,
+		# lower the elbow, and trail it behind the hand in the sagittal plane.
 		_cane_elbow_pole.global_position = _bone_world_position("upperarm.l") \
-			+ global_transform.basis.x.normalized() * (0.23 + grip_offset.y * 0.30) \
-			+ global_transform.basis.z.normalized() * (0.17 + grip_offset.z * 0.65)
+			+ global_transform.basis.x.normalized() \
+				* CANE_ELBOW_LATERAL_CLEARANCE \
+			- global_transform.basis.y.normalized() * CANE_ELBOW_DROP \
+			+ global_transform.basis.z.normalized() * float(authored_pose.elbow_z)
+		if _cane_arm_ik != null:
+			_cane_arm_ik.magnet = gait_skeleton.to_local(
+				_cane_elbow_pole.global_position)
 	if _cane_arm_ik != null:
-		_cane_arm_ik.set_influence(0.98 * gait_strength if is_walking else 0.0)
+		# A visible cane is always owned by its hand through idle, walking and stopping.
+		# Only counsellor poses that hide the prop release this constraint.
+		var constraint_target := 1.0 if _cane_visible else 0.0
+		var constraint_blend := 1.0 - exp(-delta * 14.0)
+		_cane_arm_constraint_weight = lerpf(_cane_arm_constraint_weight,
+			constraint_target, constraint_blend)
+		_cane_arm_ik.set_influence(_cane_arm_constraint_weight)
 	_cane_was_planted = planted
 
 
-func _place_cane_between(desired_tip: Vector3, desired_grip: Vector3) -> void:
+func _place_cane_between(desired_tip: Vector3, desired_grip: Vector3,
+		desired_reach := -1.0) -> void:
 	if _cane_grip_target == null:
 		return
+	var cane_length := _cane_tip_world_position().distance_to(
+		_cane_hook_world_position())
+	var desired_axis := desired_grip - desired_tip
+	if desired_axis.length_squared() > 0.000001:
+		desired_grip = desired_tip + desired_axis.normalized() * cane_length
+	var working_reach := desired_reach if desired_reach > 0.001 \
+		else _cane_grip_reach
+	# The visible paw-to-hook transform offsets the wrist from the cane axis. Solve
+	# against that actual wrist target, not the hook, over a few small projections.
+	# This removes the 76-degree recovery collapse that made the sleeve flip.
+	for _iteration in 5:
+		_orient_cane_to_tip_and_hook(desired_tip, desired_grip)
+		var proposed_wrist := (_cane_hand_target_world_transform() \
+			* _cane_hand_to_grip.affine_inverse()).origin
+		var shoulder := _bone_world_position("upperarm.l")
+		var from_shoulder := proposed_wrist - shoulder
+		if from_shoulder.length_squared() <= 0.000001:
+			break
+		var reach_error := working_reach - from_shoulder.length()
+		if absf(reach_error) < 0.001:
+			break
+		desired_grip += from_shoulder.normalized() * reach_error
+		desired_axis = desired_grip - desired_tip
+		if desired_axis.length_squared() > 0.000001:
+			desired_grip = desired_tip + desired_axis.normalized() * cane_length
+	_orient_cane_to_tip_and_hook(desired_tip, desired_grip)
+	# Exact grip orientation is non-negotiable: the paw must remain wrapped around
+	# the hook in every frame. Wrist/forearm articulation comes from the smooth IK
+	# reach and elbow path, not by allowing the visible hand to drift off the prop.
+	_cane_grip_target.global_transform = _cane_hand_target_world_transform() \
+		* _cane_hand_to_grip.affine_inverse()
+
+
+func _orient_cane_to_tip_and_hook(desired_tip: Vector3,
+		desired_grip: Vector3) -> void:
 	var tip_now := _cane_tip_world_position()
-	var grip_now := _cane_grip_target.global_position
+	var grip_now := _cane_hook_world_position()
 	var current_axis := grip_now - tip_now
 	var desired_axis := desired_grip - desired_tip
 	if current_axis.length_squared() > 0.0001 \
@@ -1622,6 +1816,29 @@ func _place_cane_between(desired_tip: Vector3, desired_grip: Vector3) -> void:
 		_cane_rig.global_transform = global_pose
 	var corrected_tip := _cane_tip_world_position()
 	_cane_rig.global_position += desired_tip - corrected_tip
+
+
+func _cane_hook_world_position() -> Vector3:
+	if _cane_hook_mesh == null or _cane_hook_mesh.mesh == null:
+		return _cane_grip_target.global_position if _cane_grip_target != null \
+			else global_position
+	return _cane_hook_mesh.to_global(_cane_hook_mesh.get_aabb().get_center()) \
+		+ global_transform.basis.y.normalized() * 0.045
+
+
+func _cane_hook_world_transform() -> Transform3D:
+	var basis := _cane_hook_mesh.global_transform.basis.orthonormalized() \
+		if _cane_hook_mesh != null else global_transform.basis.orthonormalized()
+	return Transform3D(basis, _cane_hook_world_position())
+
+
+func _cane_hand_target_world_transform() -> Transform3D:
+	var target := _cane_hook_world_transform()
+	var lateral_axis := global_transform.basis.x.normalized()
+	var anatomical_pitch := Basis(Quaternion(lateral_axis,
+		deg_to_rad(CANE_WRIST_PITCH_DEGREES)))
+	target.basis = anatomical_pitch * target.basis
+	return target
 
 
 func _cane_tip_world_position() -> Vector3:
@@ -1654,18 +1871,55 @@ func _update_limb_secondary_motion(stride_wave: float, is_walking: bool,
 	_set_secondary_part_offset(free_hand_parts, Vector3.ZERO, weight)
 	_set_secondary_part_offset(left_foot_parts, Vector3.ZERO, weight)
 	_set_secondary_part_offset(right_foot_parts, Vector3.ZERO, weight)
-	_update_procedural_cane_gait(stride_wave, is_walking, gait_strength, delta)
+	# Walking_A now owns both complete arm chains. This reset is needed only when
+	# the arm tracks are intentionally removed from Milo's relaxed idle clip.
+	if not is_walking:
+		_update_procedural_cane_gait(stride_wave, false, gait_strength, delta)
+	_update_free_arm_swing(is_walking, gait_strength, delta)
 	_update_hand_motion(stride_wave, is_walking, delta)
+
+
+func _update_free_arm_swing(is_walking: bool, gait_strength: float,
+		delta: float) -> void:
+	if _free_arm_ik == null or _free_wrist_target == null \
+			or _free_elbow_pole == null:
+		return
+	var idle_owns_arm := anim_player != null \
+		and anim_player.current_animation == "Idle_3"
+	var constraint_target := 1.0 if is_walking or idle_owns_arm else 0.0
+	var constraint_blend := 1.0 - exp(-delta * 14.0)
+	_free_arm_constraint_weight = lerpf(_free_arm_constraint_weight,
+		constraint_target, constraint_blend)
+	if _free_arm_constraint_weight <= 0.001:
+		_free_arm_ik.set_influence(0.0)
+		return
+	var phase := _current_gait_phase()
+	# The free arm counter-swings against its same-side leg. Rotating the complete
+	# resting arm vector around the character's lateral axis preserves its length
+	# and keeps the elbow connected; this sign matches Milo's mirrored donor legs.
+	var swing_strength := gait_strength if is_walking else 0.0
+	# The imported rig mirrors its visual right arm relative to the donor's bone
+	# suffixes, so negate the phase to keep the hand opposite the same-side foot.
+	var swing := -cos(phase * TAU) * swing_strength
+	var swing_angle := swing * deg_to_rad(FREE_ARM_SWING_DEGREES)
+	var shoulder_local := to_local(_bone_world_position("upperarm.r"))
+	var arm_vector := Basis(Vector3.RIGHT, swing_angle) \
+		* _free_wrist_from_shoulder_local * FREE_ARM_REACH_SCALE
+	var target_local := shoulder_local + arm_vector
+	target_local.x -= FREE_ARM_OUTWARD_CLEARANCE
+	_free_wrist_target.global_position = to_global(target_local)
+	# The pole stays outside the coat and follows the swing slightly. This gives
+	# the elbow one stable backward-facing bend instead of allowing an IK flip.
+	var pole_local := shoulder_local + Vector3(
+		-FREE_ELBOW_LATERAL_CLEARANCE, -FREE_ELBOW_DROP,
+		-FREE_ELBOW_BACK + swing * 0.025)
+	_free_elbow_pole.global_position = to_global(pole_local)
+	_free_arm_ik.set_influence(_free_arm_constraint_weight)
 
 
 func _update_procedural_cane_gait(stride_wave: float, is_walking: bool,
 		gait_strength: float, delta: float) -> void:
 	if gait_skeleton == null:
-		return
-	# The counsellor FK pose owns these same arm bones. The idle cane-gait pass
-	# used to reset their rotations after the transition, pulling both paws away
-	# from the visible map and tablet edges.
-	if not _active_counsellor_pose.is_empty():
 		return
 	if not is_walking and companion_state not in [CompanionState.WAITING,
 			CompanionState.IDLE_NEAR_PLAYER]:
@@ -1674,21 +1928,6 @@ func _update_procedural_cane_gait(stride_wave: float, is_walking: bool,
 	var targets: Dictionary = {}
 	for bone_name in GAIT_BONES:
 		targets[bone_name] = Vector3.ZERO
-	if is_walking:
-		var phase := _current_gait_phase()
-		var cane_pose := _sample_cane_hand_pose(phase)
-
-		# The visual right arm is .l on this mirrored donor rig. Its authored key
-		# poses flex the shoulder, elbow and wrist before IK places the paw exactly
-		# on the cane hook. The free arm counter-swings with the opposite leg.
-		targets["upperarm.l"] = cane_pose.upper as Vector3
-		targets["lowerarm.l"] = cane_pose.lower as Vector3
-		targets["wrist.l"] = cane_pose.wrist as Vector3
-		targets["hand.l"] = Vector3(0.0, 0.0,
-			lerpf(-3.0, 4.0, get_cane_contact_weight()))
-		targets["upperarm.r"] = cane_pose.free_upper as Vector3
-		targets["lowerarm.r"] = cane_pose.free_lower as Vector3
-		targets["wrist.r"] = cane_pose.free_wrist as Vector3
 
 	for bone_name in targets:
 		targets[bone_name] = (targets[bone_name] as Vector3) * gait_strength
@@ -1720,6 +1959,65 @@ func get_rig_bone_pose_angle(bone_name: String) -> Vector3:
 		return Vector3.ZERO
 	var euler := gait_skeleton.get_bone_pose_rotation(bone_index).get_euler()
 	return Vector3(rad_to_deg(euler.x), rad_to_deg(euler.y), rad_to_deg(euler.z))
+
+
+func get_cane_elbow_flex_degrees() -> float:
+	if gait_skeleton == null:
+		return 0.0
+	var shoulder := _cane_chain_world_position("upperarm.l")
+	var elbow := _cane_chain_world_position("lowerarm.l")
+	var wrist := _cane_chain_world_position("wrist.l")
+	var upper_direction := shoulder - elbow
+	var lower_direction := wrist - elbow
+	if upper_direction.length_squared() < 0.0001 \
+			or lower_direction.length_squared() < 0.0001:
+		return 0.0
+	var included_angle := rad_to_deg(upper_direction.angle_to(lower_direction))
+	return 180.0 - included_angle
+
+
+func get_cane_wrist_world_position() -> Vector3:
+	return _cane_chain_world_position("wrist.l")
+
+
+func get_cane_paw_grip_world_position() -> Vector3:
+	return _cane_paw_grip_marker.global_position \
+		if _cane_paw_grip_marker != null else get_cane_wrist_world_position()
+
+
+func _cane_chain_world_position(bone_name: String) -> Vector3:
+	var marker := _cane_chain_markers.get(bone_name) as BoneAttachment3D
+	if marker != null:
+		return marker.global_position
+	return _bone_world_position(bone_name)
+
+
+func get_free_elbow_flex_degrees() -> float:
+	var shoulder := _free_chain_world_position("upperarm.r")
+	var elbow := _free_chain_world_position("lowerarm.r")
+	var wrist := _free_chain_world_position("wrist.r")
+	var upper_direction := shoulder - elbow
+	var lower_direction := wrist - elbow
+	if upper_direction.length_squared() < 0.0001 \
+			or lower_direction.length_squared() < 0.0001:
+		return 0.0
+	return 180.0 - rad_to_deg(upper_direction.angle_to(lower_direction))
+
+
+func get_free_wrist_world_position() -> Vector3:
+	return _free_chain_world_position("wrist.r")
+
+
+func get_free_wrist_target_world_position() -> Vector3:
+	return _free_wrist_target.global_position \
+		if _free_wrist_target != null else global_position
+
+
+func _free_chain_world_position(bone_name: String) -> Vector3:
+	var marker := _free_arm_chain_markers.get(bone_name) as BoneAttachment3D
+	if marker != null:
+		return marker.global_position
+	return _bone_world_position(bone_name)
 
 
 func _current_gait_phase() -> float:
@@ -1783,6 +2081,13 @@ func open_chatbot():
 	chatbot_ui = load("res://scenes/chatbot.tscn").instantiate()
 	get_tree().current_scene.add_child(chatbot_ui)
 	print("Milo opened chat")
+	var companion_manager := get_node_or_null("/root/MiloCompanionManager")
+	if companion_manager != null \
+			and companion_manager.has_method("get_conversation_context") \
+			and chatbot_ui.has_method("configure_conversation_context"):
+		chatbot_ui.call("configure_conversation_context",
+			companion_manager.call("get_conversation_context"),
+			get_tree().current_scene.name, get_companion_state_name())
 
 	chatbot_ui.user_input.grab_focus()
 	chatbot_ui.connect("chat_closed", Callable(self, "close_chatbot"))
@@ -1793,14 +2098,10 @@ func open_chatbot():
 	chatbot_ui.connect("companion_activity_state_requested",
 		Callable(self, "_on_companion_activity_state_requested"))
 	_on_companion_pose_requested("welcome")
-	chatbot_ui.call("replay_current_speech")
 
 	_set_player_interaction_locked(true)
-	_set_companion_state(CompanionState.TALKING)
-	# The 3D camera captures the mouse for look control during normal play, so
-	# without releasing it here the cursor stays hidden/locked and the chat
-	# panel's buttons cannot be clicked at all.
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_set_companion_state(CompanionState.TALKING)
 
 
 func close_chatbot():
@@ -1809,10 +2110,12 @@ func close_chatbot():
 		chatbot_ui = null
 
 	_set_player_interaction_locked(false)
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_conversation_active = false
 	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_stop()
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.speechSynthesis && window.speechSynthesis.cancel();", true)
 	_stop_speaking()
 	_set_counsellor_prop("")
 	_play_animation("Idle_3")
@@ -1853,7 +2156,6 @@ func _exit_tree() -> void:
 		chatbot_ui.queue_free()
 		chatbot_ui = null
 	_set_player_interaction_locked(false)
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _build_counsellor_props() -> void:
@@ -1982,71 +2284,3 @@ void fragment() {
 		GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	cane_contact_shadow.material_override = shadow_material
 	add_child(cane_contact_shadow)
-
-
-# Milo's glow is evidence of the journey, not a generic NPC highlight. The
-# orbital bands pick up the same colour as the castle's current stage, so he
-# remains the player's visual companion even before they open the chat.
-func _build_journey_aura() -> void:
-	aura = Node3D.new()
-	aura.name = "JourneyAura"
-	# Keep the journey glow grounded around Milo's feet. A floating ring above
-	# his head made the neutral standing pose read like a prototype gizmo.
-	aura.position = Vector3(0.0, 0.10, 0.0)
-	add_child(aura)
-
-	var halo := MeshInstance3D.new()
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.50
-	ring.outer_radius = 0.54
-	ring.rings = 16
-	ring.ring_segments = 8
-	halo.mesh = ring
-	aura_material = StandardMaterial3D.new()
-	aura_material.emission_enabled = true
-	aura_material.metallic = 0.5
-	aura_material.roughness = 0.25
-	halo.material_override = aura_material
-	aura.add_child(halo)
-
-	for i in range(3):
-		var star := MeshInstance3D.new()
-		var gem := SphereMesh.new()
-		gem.radius = 0.075
-		gem.height = 0.15
-		gem.radial_segments = 6
-		gem.rings = 3
-		star.mesh = gem
-		star.position = Vector3(cos(TAU * i / 3.0) * 0.56, 0.0,
-			sin(TAU * i / 3.0) * 0.56)
-		star.material_override = aura_material
-		aura.add_child(star)
-
-	aura_light = OmniLight3D.new()
-	aura_light.position = Vector3(0.0, 0.55, 0.0)
-	aura_light.omni_range = 5.5
-	aura_light.shadow_enabled = false
-	aura.add_child(aura_light)
-
-
-func _apply_journey_stage() -> void:
-	var js := get_node_or_null("/root/JourneyState")
-	var next_stage := clampi(js.stage, 0, STAGE_GLOW.size() - 1) if js != null else 0
-	if next_stage == journey_stage:
-		return
-
-	journey_stage = next_stage
-	if aura == null:
-		return
-	# Let Milo read as a natural character at the opening stage. The evidence
-	# aura appears only after the player has actually advanced their journey.
-	aura.visible = journey_stage > 0
-
-	var glow: Color = STAGE_GLOW[journey_stage]
-	aura_material.albedo_color = glow
-	aura_material.emission = glow
-	aura_material.emission_energy_multiplier = STAGE_ENERGY[journey_stage]
-	aura_light.light_color = glow
-	aura_light.light_energy = STAGE_ENERGY[journey_stage]
-	var scale_factor := 0.72 + journey_stage * 0.12
-	aura.scale = Vector3.ONE * scale_factor

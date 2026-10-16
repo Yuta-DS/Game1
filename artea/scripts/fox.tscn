@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://s55egnlukr74"]
+[gd_scene load_steps=9 format=3 uid="uid://1h0uyr0trc5p"]
 
 [ext_resource type="PackedScene" uid="uid://g2swdgcf4ywc" path="res://assets3D/characters/fox.glb" id="1_8x0u3"]
 [ext_resource type="Texture2D" uid="uid://dag2fpps4rq86" path="res://assets3D/characters/fox_Diffuse.png" id="2_k0xb2"]

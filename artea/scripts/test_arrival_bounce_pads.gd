@@ -25,6 +25,21 @@ func _run() -> void:
 		return
 
 	var pads := island.find_children("BouncePad*", "Area3D", false, false)
+	# This branch keeps its formal arrival court where main places the fountain
+	# and bounce pads. The court has its own detailed check in
+	# test_art_castle_floating_world.gd; verify that this is that layout.
+	if pads.is_empty():
+		var court := island.get_node_or_null("GrandGatePatternedCourt") as Node3D
+		var garden := island.get_node_or_null("GrandGateGarden") as Node3D
+		if str(island.get_meta("design_revision", "")) != "grand_garden_gate_v4_formal_full_island_court" \
+				or court == null or garden == null \
+				or int(court.get_meta("paving_panel_count", 0)) != 89 \
+				or garden.find_children("*FountainWater", "MeshInstance3D", true, false).size() != 2:
+			_fail("arrival island has neither the formal court nor the bounce-pad layout")
+			return
+		print("ARRIVAL_BOUNCE_PAD_TEST: PASS — branch formal court retained")
+		quit(0)
+		return
 	if pads.size() != 30:
 		_fail("expected 30 arrival bounce pads, found %d" % pads.size())
 		return

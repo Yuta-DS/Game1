@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://p7nsmqxevfcm"
+path="res://.godot/imported/open chest.ogg-568e0a3574a9d21a4e0740ccd1a7d83a.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/SFX/open chest.ogg"
+dest_files=["res://.godot/imported/open chest.ogg-568e0a3574a9d21a4e0740ccd1a7d83a.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -134,9 +134,6 @@ func _run() -> void:
 	var court_level: Vector3 = entrance.get("COURT_LEVEL")
 	var ascent_width: float = entrance.get("CASTLE_ASCENT_WIDTH")
 	var threshold_width: float = entrance.get("CASTLE_THRESHOLD_WIDTH")
-	var door_stair_steps: int = entrance.get("DOOR_STAIR_STEPS")
-	var door_stair_run: float = entrance.get("DOOR_STAIR_RUN")
-	var door_stair_rise: float = entrance.get("DOOR_STAIR_RISE")
 	if not is_equal_approx(castle_rise, 9.0) or not is_equal_approx(castle_threshold.y, 78.33):
 		_fail("high citadel datum drifted: rise=%s threshold=%s"
 			% [castle_rise, castle_threshold.y])
@@ -151,27 +148,43 @@ func _run() -> void:
 		_fail("castle is not visibly higher than its entrance: %s vs %s"
 			% [castle_threshold.y, upper_deck_y])
 		return
-	var ascent_ramp := rig.get_node_or_null("CastleAscentRamp") as MeshInstance3D
-	if ascent_ramp == null \
-		or ascent_ramp.find_children("*", "StaticBody3D", true, false).is_empty():
-		_fail("smooth castle ascent is missing or has no collision")
+	var stair := rig.get_node_or_null("RoyalCastleStair") as Node3D
+	if stair == null or stair.get_meta("walk_surface_policy", "") != "visible_treads_are_physical_treads":
+		_fail("royal stair must use matching visible and physical treads")
 		return
-	var door_treads := rig.find_children("CastleDoorTread_*", "MeshInstance3D", true, false)
-	if door_treads.size() != door_stair_steps or door_stair_steps != 3:
-		_fail("compact doorway stair does not contain exactly three treads")
+	if rig.has_node("CastleAscentRamp") or rig.has_node("RaisedCastleThreshold"):
+		_fail("superseded ramp or overlapping threshold remains")
 		return
-	if not is_equal_approx(door_stair_run, 1.5):
-		_fail("compact doorway stair is longer than the requested 1.5 m")
+	var treads := stair.find_children("RoyalTread_*", "MeshInstance3D", true, false)
+	if treads.size() != 18:
+		_fail("royal ascent does not contain 18 regular closed treads")
 		return
-	if door_stair_rise / float(door_stair_steps) > 0.65:
-		_fail("compact doorway stair exceeds the safe controller step height")
-		return
-	for tread in door_treads:
-		if (tread as MeshInstance3D).find_children("*", "StaticBody3D", true, false).is_empty():
-			_fail("compact doorway stair contains a tread without collision")
+	for tread: MeshInstance3D in treads:
+		if tread.find_children("*", "StaticBody3D", true, false).size() != 1:
+			_fail("visible tread must own exactly one collision body")
 			return
-	if not rig.find_children("CastleAscentTread_*", "MeshInstance3D", true, false).is_empty():
-		_fail("old oversized upper stair treads were rebuilt")
+	var soffit := stair.get_node_or_null("RoyalStairSoffit")
+	if soffit == null or not soffit.get_meta("finished_stone_soffit", false):
+		_fail("finished closed underside is missing")
+		return
+	var guards := stair.find_children("RoyalStairParapet*", "MeshInstance3D", true, false)
+	if guards.size() != 2:
+		_fail("stair needs two continuous side barriers")
+		return
+	for guard in guards:
+		if guard.find_children("*", "StaticBody3D", true, false).size() != 1:
+			_fail("each side barrier must have one simple solid body")
+			return
+	if stair.find_children("RoyalStairCoping*", "MeshInstance3D", true, false).size() != 2:
+		_fail("side barriers are missing their fitted stone coping")
+		return
+	var landing := stair.get_node_or_null("RoyalDoorLanding") as MeshInstance3D
+	if landing == null or landing.find_children("*", "StaticBody3D", true, false).is_empty():
+		_fail("door landing has no support")
+		return
+	var landing_bounds := landing.global_transform * landing.mesh.get_aabb()
+	if absf(landing_bounds.end.y - castle_threshold.y) > 0.002 or landing_bounds.end.x > castle_threshold.x + 0.002:
+		_fail("door landing projects above/over the final tread")
 		return
 
 	print("CASTLE_ENTRANCE_TEST: PASS — %d meshes, %d collision bodies, arrival at %s, "
