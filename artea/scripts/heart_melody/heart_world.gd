@@ -59,6 +59,7 @@ var _view_garden := false
 var river: Node3D
 var musical_garden: Node3D
 var chapter_world: Node3D
+var _return_gate_busy := false
 
 func _ready() -> void:
 	# This island's authored guides share its single interaction owner. The
@@ -108,7 +109,7 @@ func _set_embedded_active(active: bool) -> void:
 		# Suspend only the competing local guides/story UI, preserving their state.
 		var scene := get_tree().current_scene
 		if scene != null:
-			for node_name in ["WonderfulCounsellorMilo", "ConnectedKingdomStory", "ConnectedStoryHUD", "CrownLineHUD", "CombatHelpHUD"]:
+			for node_name in ["WonderfulCounsellorMilo", "MiloFallRescue", "ConnectedKingdomStory", "ConnectedStoryHUD", "CrownLineHUD", "CombatHelpHUD"]:
 				var node := scene.find_child(node_name, true, false)
 				if node == null: continue
 				var record := {"node": node, "mode": node.process_mode}
@@ -211,7 +212,8 @@ func _build_environment() -> void:
 	for i in 7:
 		Art.cone(blight, Vector3(8 + cos(i * TAU / 7) * 4, 1.2, -23 + sin(i * TAU / 7) * 4), 1.4, 0.1, 2.4, Color("685971"), false, 5)
 	Art.cone(island, Vector3(8, 0.7, -23), 5.8, 5.2, 1.4, Color("879477"), true)
-	_gate(island, Vector3(-76, 0, 12), "Walk back to station 03" if embedded_in_overworld else "Castle return")
+	_gate(island, Vector3(-76, 0, 12), "Castle return - walk through")
+	_automatic_return_gate(island, Vector3(-76, 0, 12))
 	if not embedded_in_overworld:
 		_object("gate", -1, Vector3(-72, 1, 12), "Return to the Castle")
 	Art.box(island, Vector3(-60, 1, 23), Vector3(5, 0.5, 1.5), Color("816c5a"), true)
@@ -297,6 +299,33 @@ func _gate(parent: Node3D, pos: Vector3, words: String) -> void:
 
 func _object(kind: String, index: int, pos: Vector3, title: String) -> void:
 	interactables.append({"kind": kind, "index": index, "pos": pos, "title": title})
+
+func _automatic_return_gate(parent: Node3D, pos: Vector3) -> void:
+	var area := Area3D.new()
+	area.name = "AutomaticCastleReturn"
+	area.position = pos + Vector3(0, 2.5, 0)
+	area.collision_layer = 0
+	area.collision_mask = 1
+	var collider := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(3, 5, 4.5)
+	collider.shape = shape
+	area.add_child(collider)
+	parent.add_child(area)
+	area.body_entered.connect(func(body):
+		# The shared entrance also admits players walking in from the station.
+		if embedded_in_overworld and pos.x < 0 and player_local_position().x < pos.x: return
+		if body == player and scene_ready: _return_to_castle.call_deferred()
+	)
+
+func _return_to_castle() -> void:
+	if _return_gate_busy: return
+	_return_gate_busy = true
+	if not progress.commit():
+		_return_gate_busy = false
+		_notice("Saving failed. Your progress is still here. Retry saving in Help, then walk through the gate again.")
+		return
+	get_node("/root/JourneyCampaign").return_to_campaign()
 
 func _build_player() -> void:
 	if embedded_in_overworld:

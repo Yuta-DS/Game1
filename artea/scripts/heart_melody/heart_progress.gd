@@ -318,6 +318,16 @@ func configure_instrument(instrument: String, slot: int, fruit_id: String) -> bo
 	data.music.checkpoint = "instruments"
 	return commit()
 
+func eat_orchard_fruit(fruit_id: String) -> bool:
+	if dirty or fruit_id not in Music.FRUIT_ORDER or int(committed.music.basket.get(fruit_id, 0)) < 1: return false
+	var before := data.duplicate(true)
+	data.music.basket[fruit_id] -= 1
+	if data.music.basket[fruit_id] == 0: data.music.basket.erase(fruit_id)
+	if commit(): return true
+	data = before
+	dirty = false
+	return false
+
 func set_music_phrase(kind: String, notes: Array) -> bool:
 	if kind not in ["flowers", "marimba", "bells"] or notes.size() > 5: return false
 	for note in notes:

@@ -74,8 +74,10 @@ static func banner(parent: Node3D, words: String, pos: Vector3, size := 30) -> L
 	# A single cloth sign with a quiet ivory border. All surfaces face together;
 	# it has no physics and fades before distant signs stack over the landscape.
 	var sign := Node3D.new()
+	sign.set_script(preload("res://scripts/heart_melody/landmark_banner.gd"))
 	sign.name = "LandmarkBanner"
 	sign.position = pos
+	sign.set_meta("anchor_position", pos)
 	parent.add_child(sign)
 	for layer in 1:
 		var shape := QuadMesh.new()
@@ -84,11 +86,14 @@ static func banner(parent: Node3D, words: String, pos: Vector3, size := 30) -> L
 		surface.mesh = shape
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		# Keep nearby landmark signs readable through crossing foliage.
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.no_depth_test = true
 		var cloth := Image.create(256, 80, false, Image.FORMAT_RGBA8)
 		cloth.fill(Color("cfbf8d"))
 		cloth.fill_rect(Rect2i(3, 3, 250, 74), Color("29463e"))
 		mat.albedo_texture = ImageTexture.create_from_image(cloth)
-		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		mat.billboard_mode = BaseMaterial3D.BILLBOARD_DISABLED
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		mat.render_priority = layer
 		surface.material_override = mat
@@ -96,7 +101,9 @@ static func banner(parent: Node3D, words: String, pos: Vector3, size := 30) -> L
 		surface.visibility_range_end = 55
 		surface.visibility_range_end_margin = 10
 		sign.add_child(surface)
-	var text := label(sign, words, Vector3.ZERO, 44 if size >= 30 else 40)
+	var text := label(sign, words, Vector3(0, 0, 0.04), 44 if size >= 30 else 40)
+	text.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	text.no_depth_test = true
 	text.name = "BannerText"
 	text.pixel_size = 0.018
 	text.width = 540

@@ -255,7 +255,7 @@ func interact(kind: String, index: int) -> void:
 
 func _fruit_panel(fruit_id: String) -> void:
 	var info: Dictionary = Catalog.FRUITS[fruit_id]
-	world._open(str(info.name), "%s\n%s\n\nListen first, then harvest. Fruit never decays and harvested fruit stays in your basket, ready for every instrument." % [info.symbol, info.role])
+	world._open(str(info.name), "%s\n%s\n\nListen first, then harvest. Eat collected fruit from the fruit bucket in the valley journal. Its unlocked instrument voice stays available after eating." % [info.symbol, info.role])
 	world._button("Preview sound", func():
 		world.note(Catalog.FRUIT_ORDER.find(fruit_id), 0.18, int(info.timbre)); _pulse(fruit_visuals[fruit_id])
 		world.message.text = "%s sounds like %s. Pitch will come from an instrument slot." % [info.name, info.role]
@@ -264,7 +264,7 @@ func _fruit_panel(fruit_id: String) -> void:
 		var first: bool = not world.progress.data.music.discovered.has(fruit_id)
 		if world.progress.discover_fruit(fruit_id):
 			world.note(Catalog.FRUIT_ORDER.find(fruit_id), 0.20, int(info.timbre)); refresh(); _harvest_visual(fruit_id)
-			world.message.text = "%s added to the basket%s. It is always available in your basket." % [info.name, " for the first time" if first else " again"]
+			world.message.text = "%s added to the basket%s. Open the valley journal to eat it." % [info.name, " for the first time" if first else " again"]
 			_check_orchard_activity()
 			world._close()
 		else: world.message.text = "The fruit is safe in this session. Saving is pending; retry from Help."
@@ -463,7 +463,7 @@ func _undo_phrase(kind: String) -> void:
 func basket_summary() -> String:
 	var symbols: PackedStringArray = []
 	for fruit_id in Catalog.FRUIT_ORDER:
-		if world.progress.data.music.discovered.has(fruit_id): symbols.append(Catalog.fruit_symbol(fruit_id).get_slice(" / ", 0))
+		if world.progress.data.music.basket.get(fruit_id, 0) > 0: symbols.append(Catalog.fruit_symbol(fruit_id).get_slice(" / ", 0))
 	return "Basket " + (" + ".join(symbols) if not symbols.is_empty() else "empty")
 
 func objective() -> String:
@@ -485,7 +485,7 @@ func refresh() -> void:
 	for light in garden_lights:
 		light.visible = level >= 4
 	for fruit_id in fruit_visuals:
-		var collected: bool = world.progress.data.music.discovered.has(fruit_id)
+		var collected: bool = world.progress.data.music.basket.get(fruit_id, 0) > 0
 		fruit_visuals[fruit_id].visible = not collected
 		basket_fruit[fruit_id].visible = collected
 

@@ -131,6 +131,13 @@ func consume_recipe(recipe_id: String) -> bool:
 	chapter.recipes[recipe_id] -= 1
 	return _save(chapter)
 
+func consume_fruit(fruit_id: String) -> bool:
+	if fruit_id not in Fruit.IDS: return false
+	var chapter := snapshot()
+	if int(chapter.materials.get(fruit_id, 0)) < 1: return false
+	chapter.materials[fruit_id] -= 1
+	return _save(chapter)
+
 func checkpoint(id: String) -> bool:
 	var chapter := snapshot()
 	var required := {"arrival": 0, "garden": 1, "restored_garden": 2, "river": 2, "bell_grove": 5, "peace_flower": 7, "stage": 7, "sanctuary": 10}

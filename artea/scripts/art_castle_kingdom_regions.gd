@@ -363,6 +363,11 @@ func _decorate_heart(parent: Node3D, checkpoint_id: String, index: int) -> void:
 			for flower in 4:
 				_add_sphere(parent, "ArrivalBlossom", Vector3(-32 + flower * 18, 2, side * 17),
 					Vector3(2.4, 1.5, 2.4), _materials.pink)
+		# Keep main's seven landmark instruments, beside the clear through-route.
+		for instrument in 7:
+			_add_cylinder(parent, "EmotionInstrument",
+				Vector3(-42 + (instrument % 4) * 28, 10, -48 if instrument < 4 else 48),
+				8 + instrument % 2 * 4, 18, emotional_materials[index], true, 16)
 	elif checkpoint_id == "sadness":
 		_add_cylinder(parent, "RainLake", Vector3(0, 0, 0), 54, 3, _materials.blue, true, 32)
 		_add_box(parent, "GentleBoat", Vector3(0, 7, 0), Vector3(28, 5, 12), _materials.wood)

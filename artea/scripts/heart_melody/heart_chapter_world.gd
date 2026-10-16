@@ -89,6 +89,7 @@ func _build_valley() -> void:
 	Art.banner(self, "HARMONY STAGE\nBring the valley's voices together", Vector3(397, 10, -7), 32)
 	Art.banner(self, "JEWEL SANCTUARY", Vector3(460, 7, -1), 32)
 	world._gate(self, Vector3(477, 0, 8), "RETURN TO ART CASTLE")
+	world._automatic_return_gate(self, Vector3(477, 0, 8))
 	world._object("chapter_gate", 0, Vector3(474, 1, 8), "Return to the Art Castle")
 	for index in 4:
 		var pos := Vector3(353 + index * 35, 1, 30)
@@ -420,6 +421,7 @@ func tick(delta: float) -> void:
 func journal() -> void:
 	var chapter := director.snapshot()
 	world._open("Heart Melody · valley journal", objective() + "\n" + " → ".join(["Meadow", "Feeling Garden", "River", "Bell Grove", "Stage", "Sanctuary"]) + "\nQuest pouch: " + str(chapter.quest_pouch) + "\nMaterials: " + str(chapter.materials) + "\nCheckpoint storage: " + str(chapter.storage))
+	world._button("Open fruit bucket / eat fruit", fruit_bucket)
 	world._button("Assistance: " + ("ON" if assistance else "OFF"), func():
 		assistance = not assistance
 		challenge.assisted = assistance
@@ -450,6 +452,40 @@ func journal() -> void:
 		journal()
 	)
 	world._button("Return to exploring", world._close)
+
+func fruit_bucket() -> void:
+	world._open("Fruit bucket", "Eat one fruit to recover 20 health and 20 focus.\nStory fruit and unlocked instrument voices stay protected.")
+	var chapter := director.snapshot()
+	for id in Fruit.IDS:
+		var count := int(chapter.materials.get(id, 0))
+		var button: Button = world._button("Eat %s (%d)" % [Fruit.FRUITS[id].label, count], func(): eat_fruit(id))
+		button.disabled = count == 0
+	world._button("Back to valley journal", journal)
+	for id in world.musical_garden.Catalog.FRUIT_ORDER:
+		var count := int(world.progress.committed.music.basket.get(id, 0))
+		var button: Button = world._button("Eat %s (%d)" % [world.musical_garden.Catalog.fruit_name(id), count], func():
+			if world.progress.eat_orchard_fruit(id):
+				world.player.heal(20)
+				focus = minf(100, focus + 20)
+				world.musical_garden.harvested.erase(id)
+				world.musical_garden.refresh()
+				fruit_bucket()
+				world.message.text = "Fruit eaten! Recovered 20 health and 20 focus. Harvest again in the orchard."
+			else: world.message.text = "Fruit could not be saved. Nothing was eaten; retry saving in Help."
+		)
+		button.disabled = count == 0
+	world._button("Return to exploring", world._close)
+
+func eat_fruit(id: String) -> bool:
+	if not director.consume_fruit(id):
+		world.message.text = "No fruit available, or saving failed. Your fruit has not been consumed."
+		return false
+	world.player.heal(20)
+	focus = minf(100, focus + 20)
+	caption = "Ate " + str(Fruit.FRUITS[id].label) + " - recovered health and focus."
+	fruit_bucket()
+	world.message.text = caption
+	return true
 
 func use_recipe(id: String) -> void:
 	if id == "echo_nectar" and active_task < 0: world.message.text = "Begin an instrument first."; return

@@ -34,9 +34,7 @@ func run() -> void:
 	heart._close()
 	check(heart.player.input_enabled and heart.camera.current, "entry restores camera and controls")
 	check(heart.player.is_on_floor() and heart.player.position.x > -70, "safe landing is outside return gate")
-	heart.player.position = Vector3(-71, 1.1, 12)
-	heart._process(0)
-	heart._interact_nearest()
+	heart.player.position = Vector3(-76, 1.1, 12)
 	var castle_ready := false
 	for frame in 1800:
 		await process_frame

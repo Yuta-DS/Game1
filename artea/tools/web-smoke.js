@@ -121,6 +121,8 @@ async function connect() {
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
 	await send('Runtime.enable');
 	await send('Page.enable');
+	await send('Page.bringToFront');
+	await send('Emulation.setFocusEmulationEnabled', { enabled: true });
 
 	const shot = async (name) => {
 		const s = await send('Page.captureScreenshot', { format: 'png' });
@@ -170,7 +172,7 @@ async function connect() {
 			say('clicking Offline Guest');
 			await click(GUEST_BUTTON.x, GUEST_BUTTON.y);
 			await waitForLog(/GUEST access selected/, 'guest login accepted', 20000);
-			await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
+			await waitForLog(/ARTEA WORLD READY:/, 'world loading and shader warmup complete', 240000);
 		}
 		const webgl = await send('Runtime.evaluate', { expression: "!!document.createElement('canvas').getContext('webgl2')", returnByValue: true });
 		if (webgl.result.value !== true) throw new Error('WebGL2 unavailable');

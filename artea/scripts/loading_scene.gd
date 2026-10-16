@@ -164,6 +164,7 @@ func _wait_for_scatter_then_finish() -> void:
 
 	await _warm_shaders()
 	await _hold_until_first_frames_settle()
+	print("ARTEA WORLD READY: ", next_scene_path)
 	queue_free()
 
 
