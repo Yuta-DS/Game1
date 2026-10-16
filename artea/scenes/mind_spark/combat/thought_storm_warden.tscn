@@ -1,7 +1,6 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/mind_spark/combat/mind_spark_warden_boss.gd" id="1_boss"]
-[ext_resource type="Resource" path="res://resources/mind_spark/enemies/thought_storm_warden.tres" id="2_definition"]
 
 [sub_resource type="CylinderShape3D" id="BodyShape"]
 radius = 7.0
@@ -10,16 +9,14 @@ height = 13.0
 [sub_resource type="SphereMesh" id="ShellMesh"]
 radius = 6.5
 height = 13.0
-radial_segments = 12
-rings = 6
 
 [sub_resource type="StandardMaterial3D" id="ShellMaterial"]
-albedo_color = Color(0.18, 0.21, 0.24, 1)
+albedo_color = Color(0.13, 0.1, 0.22, 1)
 metallic = 0.45
-roughness = 0.62
+roughness = 0.32
 emission_enabled = true
-emission = Color(0.18, 0.34, 0.39, 1)
-emission_energy_multiplier = 0.22
+emission = Color(0.38, 0.22, 0.62, 1)
+emission_energy_multiplier = 0.75
 
 [sub_resource type="SphereMesh" id="CoreMesh"]
 radius = 2.8
@@ -56,7 +53,6 @@ orientation = 1
 collision_layer = 1
 collision_mask = 1
 script = ExtResource("1_boss")
-definition = ExtResource("2_definition")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 position = Vector3(0, 6.5, 0)

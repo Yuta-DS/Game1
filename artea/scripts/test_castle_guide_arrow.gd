@@ -49,8 +49,8 @@ func _run() -> void:
 	chat._show_strength_discoveries()
 	for _question in chat.STRENGTH_QUESTIONS:
 		chat._answer_strength_question("curiosity")
-	var choices := chat.get_node("InputContent/CuratedChoices") as VBoxContainer
-	var reveal := (chat.get_node("MiloReplyCard/ChatHistory") as TextEdit).text
+	var choices := chat.get_node("Panel/VBoxContainer/ChoicesScroll/CuratedChoices") as VBoxContainer
+	var reveal := (chat.get_node("Panel/VBoxContainer/ChatHistory") as RichTextLabel).text
 	assert(reveal.contains("Other worlds also await you") and not reveal.contains("Try this"),
 		"in the overworld the reveal mentions the other worlds instead of a tip")
 	assert(hub.get_node_or_null("CastleGuideArrow") == null,
@@ -61,7 +61,7 @@ func _run() -> void:
 	assert(travel != null and other_worlds.get_index() == travel.get_index() + 1,
 		"Try other worlds sits right after the suggested world")
 	other_worlds.pressed.emit()
-	var history := chat.get_node("MiloReplyCard/ChatHistory") as TextEdit
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as RichTextLabel
 	assert(history.text.contains("top of the castle"),
 		"Try other worlds tells the player the worlds are at the top of the castle")
 	var arrow := hub.get_node_or_null("CastleGuideArrow") as Node3D

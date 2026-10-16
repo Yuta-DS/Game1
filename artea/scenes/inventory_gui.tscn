@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://0bb61ebi0v3j"]
 
-[ext_resource type="Script" uid="uid://b9k3m8n2p7q5r" path="res://scenes/inventory_gui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cak3m8n2p7q5r" path="res://scenes/inventory_gui.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://cpbmxnjcctsoj" path="res://scenes/slot.tscn" id="2_akoca"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_akoca"]

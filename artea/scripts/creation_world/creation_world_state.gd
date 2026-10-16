@@ -184,10 +184,7 @@ func request_world(prompt: String, callback: Callable, update_existing := false)
 
 	var existing := current_manifest() if update_existing else {}
 	if not _can_request_ai():
-		var local_response := _local_semantic_world_response(
-			"The vision server is not available for this session.")
-		callback.call(not local_response.is_empty(), local_response if not local_response.is_empty() \
-			else _semantic_world_error("The vision server is not available for this session."))
+		callback.call(false, _semantic_world_error("The vision server is not available for this session."))
 		return
 
 	APIManager.request_world_manifest(
@@ -221,16 +218,11 @@ func request_world(prompt: String, callback: Callable, update_existing := false)
 					"recovery_message": "Your existing semantic world was preserved while vision reconnects.",
 				}
 			else:
-				var outage_reason := str(response.get("error",
-					"Vision is reconnecting. Stay in the gallery and try this artwork again in a moment."))
-				var local_response := _local_semantic_world_response(outage_reason)
-				if not local_response.is_empty():
-					manifest = local_response["world_manifest"]
-					degraded = true
-					response = local_response
-				else:
-					callback.call(false, _semantic_world_error(outage_reason))
-					return
+				callback.call(false, _semantic_world_error(str(response.get(
+					"error",
+					"Vision is reconnecting. Stay in the gallery and try this artwork again in a moment."
+				))))
+				return
 			_store_manifest(manifest)
 			world_ready.emit(manifest, degraded)
 			response["world_manifest"] = manifest
@@ -238,26 +230,6 @@ func request_world(prompt: String, callback: Callable, update_existing := false)
 			callback.call(true, response),
 		existing
 	)
-
-
-func _local_semantic_world_response(reason: String) -> Dictionary:
-	var manifest := _offline_manifest({})
-	if not _manifest_is_semantic_ready(manifest, true):
-		return {}
-	manifest["semantic_ready"] = true
-	manifest["vision_source"] = "on-device-vision"
-	manifest["recovery"] = {
-		"mode": "on-device-vision",
-		"retry_automatically": true,
-		"reason": reason,
-	}
-	return {
-		"world_manifest": manifest,
-		"semantic_ready": true,
-		"degraded": true,
-		"ai_source": "on-device-vision",
-		"recovery_message": reason,
-	}
 
 
 func select_variation(path: String, style: String) -> void:
@@ -460,7 +432,6 @@ func _offline_manifest(existing: Dictionary = {}) -> Dictionary:
 	var extracted_objects := ImageSubjectExtractor.extract(_load_current_image())
 	if extracted_objects.is_empty():
 		extracted_objects = _default_objects()
-	_apply_guide_semantic_types(extracted_objects)
 	var extracted_animations: Array = []
 	for subject in extracted_objects:
 		extracted_animations.append({
@@ -486,39 +457,6 @@ func _offline_manifest(existing: Dictionary = {}) -> Dictionary:
 	manifest["local_world_ready"] = true
 	manifest["vision_source"] = "on-device"
 	return manifest
-
-
-func _apply_guide_semantic_types(objects: Array) -> void:
-	# The on-device extractor owns spatial segmentation while the already-saved
-	# creative guide owns subject names. Combine them during an outage so a boat,
-	# tree, character, or landmark remains an independently interactive actor
-	# instead of every detected region becoming an anonymous art_shape.
-	if objects.is_empty():
-		return
-	var guide_text := JSON.stringify(current_guide()).to_lower()
-	var semantic_candidates := [
-		{"terms": ["boat", "ship"], "type": "boat", "label": "painted boat"},
-		{"terms": ["tree", "willow"], "type": "tree", "label": "painted tree"},
-		{"terms": ["girl", "boy", "child", "person", "character"], "type": "character", "label": "painted character"},
-		{"terms": ["pagoda", "house", "building"], "type": "structure", "label": "painted structure"},
-		{"terms": ["mountain", "hill"], "type": "mountain", "label": "painted mountain"},
-		{"terms": ["water", "lake", "river"], "type": "water", "label": "painted water"},
-	]
-	var object_index := 0
-	for candidate in semantic_candidates:
-		var mentioned := false
-		for term in candidate["terms"]:
-			if guide_text.contains(str(term)):
-				mentioned = true
-				break
-		if not mentioned or object_index >= objects.size():
-			continue
-		var subject := objects[object_index] as Dictionary
-		subject["type"] = candidate["type"]
-		subject["label"] = candidate["label"]
-		subject["description"] = "An independently detected %s from the player's artwork" % candidate["type"]
-		objects[object_index] = subject
-		object_index += 1
 
 
 func _default_objects() -> Array:

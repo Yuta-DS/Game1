@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bv8j65cqbdag0"]
+[gd_scene load_steps=10 format=3 uid="uid://dy41m6ln41a45"]
 
 [ext_resource type="Shader" uid="uid://cv8ab5vu6dl4j" path="res://Wind.gdshader" id="1_8buv3"]
 [ext_resource type="Script" uid="uid://ivmns8nk7ft0" path="res://MultiMeshSpawner.gd" id="2_gyuev"]

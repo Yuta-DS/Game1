@@ -16,10 +16,6 @@ extends Camera3D
 ## small residual, and a slow rate there reads as the view sloshing behind.
 @export var ride_lerp_speed := 14.0
 @export var collision_margin := 0.35
-## Radius of the volume swept from the player focus to the desired camera.
-## A centre ray can miss the edge of a pillar while that pillar still fills a
-## wide third-person frame; this volume keeps the whole camera aperture clear.
-@export var collision_radius := 0.58
 
 ## Scroll-wheel zoom bounds for the third-person view. The far end is wide
 ## enough to take in the train and the sky islands around it while riding.
@@ -55,9 +51,7 @@ var _inspect_focus := Vector3.ZERO
 var _view := "third"
 ## Set while the player is aboard the train. First person is still selectable
 ## with 1, but boarding always starts from the third-person view.
-var _ride_collision_rids: Array[RID] = []
 var _ride_view_active := false
-var _collision_probe := SphereShape3D.new()
 
 ## Last frame's focus point, used to carry the train's motion into the camera
 ## before smoothing so a fast-moving ride does not leave the view trailing.
@@ -73,10 +67,12 @@ const CAMERA_INPUT_BLOCKERS_GROUP := "camera_input_blockers"
 var _yaw := 0.0
 var _pitch := 0.0
 var _touch_emulation_was_on := false
-var _pointer_capture_ready := false
-var _web_orbit_dragging := false
 
 func _ready() -> void:
+	# Follow after gameplay movers have published their final frame transform.
+	# This is especially important for sync-to-physics train platforms, whose
+	# rider position otherwise reaches the camera one render frame late.
+	process_priority = 100
 	_player = get_node_or_null(player_path)
 	current = true  # make this the active camera
 
@@ -99,29 +95,8 @@ func _ready() -> void:
 	if _player:
 		_snap_to_follow_target()
 
-	# The scene is commonly created by the same click that leaves the start
-	# screen. A Web pointer-lock request during that scene swap targets the old
-	# document and produces WrongDocumentError. Keep the cursor visible for the
-	# transition and arm click-to-look after the current input dispatch ends.
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	call_deferred("_arm_pointer_capture")
-
-
-func _arm_pointer_capture() -> void:
-	_pointer_capture_ready = true
-
-
-func try_capture_pointer() -> bool:
-	if not capture_mouse or not _pointer_capture_ready or _mode != "follow":
-		return false
-	# Browser pointer lock can target the document that owned the click before a
-	# scene transition and throw WrongDocumentError. Web uses deliberate
-	# left-drag orbit instead, which is predictable and keeps menus reachable.
-	if OS.has_feature("web"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		return false
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	return true
+	if capture_mouse:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _exit_tree() -> void:
 	Input.set_emulate_touch_from_mouse(_touch_emulation_was_on)
@@ -141,9 +116,7 @@ func _input(event: InputEvent) -> void:
 	# require MOUSE_MODE_CAPTURED: capture can silently fail to apply (it does
 	# on a headless run, and can lag by a frame after an alt-tab), and gating on
 	# it meant the view froze with no way to recover.
-	if event is InputEventMouseMotion and _mode == "follow" \
-			and (not OS.has_feature("web") or _web_orbit_dragging \
-			or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
+	if event is InputEventMouseMotion and _mode == "follow":
 		# Wrapped rather than left to accumulate: yaw turns freely through a
 		# full circle in both directions, and wrapping keeps it from drifting
 		# into large float values over a long session.
@@ -172,13 +145,10 @@ func _input(event: InputEvent) -> void:
 	# Escape releases the cursor so the player can reach menus; clicking back in
 	# the window recaptures it.
 	if event.is_action_pressed("ui_cancel"):
-		_web_orbit_dragging = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		_web_orbit_dragging = event.pressed and OS.has_feature("web") \
-			and capture_mouse and _mode == "follow"
-		if event.pressed and capture_mouse and _mode == "follow":
-			try_capture_pointer()
+	elif event is InputEventMouseButton and event.pressed and capture_mouse and _mode == "follow" \
+			and event.button_index == MOUSE_BUTTON_LEFT:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _process(delta: float) -> void:
 	if _mode == "follow" and _player and _view == "first":
@@ -283,37 +253,10 @@ func get_view_mode() -> String:
 	return _view
 
 
-## Recompose the third-person view after a long-distance teleport. Without an
-## explicit snap, the smoothing path crosses every district between the old and
-## new positions and can spend several seconds inside distant architecture.
-## The caller supplies the desired world-space orbit yaw so authored arrivals
-## can open toward their first landmark rather than inherit an unrelated view.
-func compose_arrival_view(yaw_degrees: float, pitch_degrees: float,
-		distance: float) -> void:
-	if _player == null:
-		_player = get_node_or_null(player_path)
-	if _player == null:
-		return
-	_mode = "follow"
-	_view = "third"
-	_yaw = deg_to_rad(yaw_degrees)
-	_pitch = clampf(deg_to_rad(pitch_degrees),
-		deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
-	follow_distance = clampf(distance, min_follow_distance, max_follow_distance)
-	_apply_character_visibility()
-	_snap_to_follow_target()
-
-
 # Called by the train when the player takes a seat or the driver cab. Riding
 # always begins in third person — the point of being on the train is seeing it —
 # and pulls the view out far enough to take in the carriage and the route.
-func begin_ride_view(distance := 14.0, vehicle: Node3D = null) -> void:
-	_ride_collision_rids.clear()
-	if vehicle != null:
-		if vehicle is CollisionObject3D:
-			_ride_collision_rids.append(vehicle.get_rid())
-		for body in vehicle.find_children("*", "CollisionObject3D", true, false):
-			_ride_collision_rids.append(body.get_rid())
+func begin_ride_view(distance := 14.0) -> void:
 	_ride_view_active = true
 	follow_distance = clampf(distance, min_follow_distance, max_follow_distance)
 	# Seed the motion carry-over from where the focus is now. Without this the
@@ -325,7 +268,6 @@ func begin_ride_view(distance := 14.0, vehicle: Node3D = null) -> void:
 
 
 func end_ride_view() -> void:
-	_ride_collision_rids.clear()
 	_ride_view_active = false
 
 
@@ -354,36 +296,28 @@ func _snap_to_follow_target() -> void:
 
 
 func _collision_safe_target(focus: Vector3, target: Vector3) -> Vector3:
-	# Keep the whole third-person camera aperture on the player's side of walls,
-	# islands and large props. The former centre ray could pass beside a pillar
-	# while its edge still occupied a third of the frame. Sweep a sphere instead
-	# so both the camera centre and its near-plane neighbourhood stay clear.
+	# Keep the third-person camera on the player's side of walls, islands and
+	# large props. Without this cast the camera crossed geometry and the whole
+	# screen could be hidden by the object behind the player.
 	var space := get_world_3d().direct_space_state
-	var motion := target - focus
-	if motion.length_squared() < .000001:
-		return target
-	_collision_probe.radius = maxf(collision_radius, .05)
-	var query := PhysicsShapeQueryParameters3D.new()
-	query.shape = _collision_probe
-	query.transform = Transform3D(Basis.IDENTITY, focus)
-	query.motion = motion
-	query.margin = .02
-	query.collision_mask = 1
-	query.collide_with_bodies = true
-	query.collide_with_areas = false
+	var query := PhysicsRayQueryParameters3D.create(focus, target)
+	var excluded_rids: Array[RID] = []
 	if _player is CollisionObject3D:
-		query.exclude = [(_player as CollisionObject3D).get_rid()]
+		excluded_rids.append((_player as CollisionObject3D).get_rid())
+	# The train is the platform carrying the camera focus, not an intervening
+	# wall. Letting the camera ray hit its own carriage shell makes the target
+	# alternate between stopped and moving as rail geometry crosses the ray.
 	if _ride_view_active:
-		var excluded := query.exclude
-		excluded.append_array(_ride_collision_rids)
-		query.exclude = excluded
-	var cast := space.cast_motion(query)
-	if cast.size() < 2 or float(cast[0]) >= .9999:
+		for ride_body in get_tree().get_nodes_in_group("ride_camera_ignore"):
+			if ride_body is CollisionObject3D:
+				excluded_rids.append((ride_body as CollisionObject3D).get_rid())
+	query.exclude = excluded_rids
+	var hit := space.intersect_ray(query)
+	if hit.is_empty():
 		return target
-	var safe_distance := motion.length() * clampf(float(cast[0]), 0.0, 1.0)
-	var backed_distance := maxf(0.0, safe_distance - minf(collision_margin,
-		safe_distance * .45))
-	return focus + motion.normalized() * backed_distance
+	var hit_position: Vector3 = hit.position
+	var toward_focus := hit_position.direction_to(focus)
+	return hit_position + toward_focus * collision_margin
 
 func enter_inspect(target: Node3D) -> void:
 	_mode = "inspect"
@@ -408,23 +342,27 @@ func enter_inspect(target: Node3D) -> void:
 	_tween = create_tween()
 	_tween.tween_property(self, "global_transform:origin", cam_pos, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
-
-func enter_inspect_framed(target: Node3D, focus_offset: Vector3,
-		view_offset: Vector3, duration := 0.55) -> void:
+# Inspect with the framing chosen by the caller, both offsets given in the
+# target's local space.  `enter_inspect` above frames a painting from straight
+# ahead, which is wrong for anything you look down at rather than up at - the
+# gallery piano seats the camera above and in front of its own keyboard.
+func enter_inspect_framed(target: Node3D, focus_offset: Vector3, view_offset: Vector3,
+		duration := 0.55) -> void:
 	_mode = "inspect"
 	var basis := target.global_transform.basis
 	_inspect_focus = target.global_transform.origin + basis * focus_offset
+
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
 	var cam_pos := _inspect_focus + basis * view_offset
-	if _tween:
-		_tween.kill()
+
+	if _tween: _tween.kill()
 	_tween = create_tween()
-	_tween.tween_property(self, "global_transform:origin", cam_pos, duration) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(self, "global_transform:origin", cam_pos, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func exit_inspect() -> void:
 	_mode = "follow"
 	if _tween: _tween.kill()
 
 	if capture_mouse:
-		try_capture_pointer()
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

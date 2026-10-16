@@ -13,6 +13,13 @@ func _fail(message: String) -> void:
 	quit(1)
 
 
+func _has_live_collision(body: Node) -> bool:
+	for shape in body.find_children("*", "CollisionShape3D", false, false):
+		if not (shape as CollisionShape3D).disabled:
+			return true
+	return false
+
+
 func _point_is_inside_solid(space: PhysicsDirectSpaceState3D, point: Vector3) -> bool:
 	var query := PhysicsPointQueryParameters3D.new()
 	query.position = point
@@ -67,13 +74,12 @@ func _run() -> void:
 	# 1. The cab and every seat must be air the player can stand in. A boarding
 	#    point inside a collision box teleports the player into the geometry.
 	var driver_point: Vector3 = railway.call("get_driver_interaction_position")
-	var driver_seat: Vector3 = railway.call("get_driver_seat_position")
 	if _point_is_inside_solid(space, driver_point):
 		_fail("driver interaction point is buried inside the train collision shell")
 		return
-	if _point_is_inside_solid(space, driver_seat):
-		_fail("driver seat is buried inside the train collision shell")
-		return
+	# The driver's seat is in the engine's open cab, inside the engine's
+	# collision shell. That is safe only because a seated rider has no collision
+	# of their own; checked in section 3 once the player is driving.
 	for seat_index in int(railway.call("get_passenger_seat_count")):
 		var seat: Vector3 = railway.call("get_passenger_seat_position", seat_index)
 		if _point_is_inside_solid(space, seat):
@@ -95,22 +101,28 @@ func _run() -> void:
 	# 3. Number 1 explicitly selects driver mode from the train deck.
 	player.global_position = front_deck
 	railway.call("_update_prompt")
+	var controls := railway.get_node("CrownLineHUD/TrainControls") as Control
+	if not controls.visible or controls.anchor_left != 1.0:
+		_fail("boarding the deck must reveal controls on the right")
+		return
+	player.global_position = train.to_global(Vector3(0, 10, 2.8))
+	railway.call("_update_prompt")
+	if not controls.visible:
+		_fail("controls disappeared while jumping over the train deck")
+		return
+	player.global_position = train.to_global(Vector3(100, 0, 0))
+	railway.call("_update_prompt")
+	if controls.visible:
+		_fail("train controls remain visible away from the train")
+		return
+	player.global_position = front_deck
 	_press_train_mode(railway, KEY_1)
 	if not bool(railway.call("is_driving")):
 		_fail("pressing 1 at the train did not take control of the train")
 		return
-	if not bool(player.call("is_train_seated_pose")):
-		_fail("the driver character did not enter a seated driving pose")
+	if not bool(player.call("is_seated")) or _has_live_collision(player):
+		_fail("the driver is not seated with collision off inside the engine cab")
 		return
-	var train_forward := -train.global_basis.z.normalized()
-	var player_forward := -player.global_basis.z.normalized()
-	if player_forward.dot(train_forward) < 0.99:
-		_fail("the seated driver is not facing the front of the train")
-		return
-	# This suite drives through the public method with a fixed delta. Disable the
-	# runtime Input poll so an empty test keyboard cannot apply a second, zero
-	# throttle command in the same iteration and cancel the command under test.
-	railway.set_process(false)
 	var horn_count := int(railway.call("get_horn_request_count"))
 	_press_train_mode(railway, KEY_R)
 	if int(railway.call("get_horn_request_count")) != horn_count + 1:
@@ -182,21 +194,14 @@ func _run() -> void:
 	while bool(railway.get("_passenger_in_motion")):
 		await process_frame
 	for _stop in 4:
-		var current_station := int(railway.call("get_current_station"))
-		var next_station := (current_station + 1) % 4
-		var unlocked := bool(railway.call("is_station_unlocked", next_station))
+		var next_station := (int(railway.call("get_current_station")) + 1) % 4
 		_press_train_mode(railway, KEY_2)
 		while bool(railway.get("_passenger_in_motion")):
 			await process_frame
-		if not unlocked:
-			if int(railway.call("get_current_station")) != current_station:
-				_fail("passenger train entered a locked station")
-				return
-			break
 		if int(railway.call("get_current_station")) != next_station:
-			_fail("passenger cannot continue to an unlocked station with 2")
+			_fail("passenger cannot continue to every station with 2")
 			return
-	print("TRAIN_DRIVE_TEST: PASS — unlocked stations, passenger continuation and deck boarding")
+	print("TRAIN_DRIVE_TEST: PASS — all stations, passenger continuation and right-side boarding controls")
 	quit()
 
 

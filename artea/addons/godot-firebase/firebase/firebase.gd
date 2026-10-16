@@ -15,7 +15,6 @@ extends Node
 const _ENVIRONMENT_VARIABLES : String = "firebase/environment_variables"
 const _EMULATORS_PORTS : String = "firebase/emulators/ports"
 const _AUTH_PROVIDERS : String = "firebase/auth_providers"
-const PublicClientConfig = preload("res://addons/godot-firebase/firebase/public_client_config.gd")
 
 ## @type FirebaseAuth
 ## The Firebase Authentication API.
@@ -103,14 +102,6 @@ func _check_emulating() -> void:
 			module._check_emulating()
 
 func _load_config() -> void:
-	if OS.has_feature("web"):
-		var public_config: Dictionary = PublicClientConfig.read_client_file()
-		if not PublicClientConfig.missing_required(public_config).is_empty():
-			_printerr("Missing Firebase public client configuration. Rebuild with scripts/export_web.sh.")
-		else:
-			_config.merge(public_config, true)
-		_setup_modules()
-		return
 	if not (_config.apiKey != "" and _config.authDomain != ""):
 		var env = ConfigFile.new()
 		var err = env.load("res://addons/godot-firebase/.env")

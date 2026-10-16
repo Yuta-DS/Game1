@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://xlc4qq0cvb1s"]
 
-[ext_resource type="Script" uid="uid://b3k7m2n9p5q8r" path="res://scenes/items/collectible_item.gd" id="1_collectible"]
+[ext_resource type="Script" uid="uid://b3k7m2oap5q8r" path="res://scenes/items/collectible_item.gd" id="1_collectible"]
 [ext_resource type="Resource" uid="uid://cqakoqubqlb3f" path="res://resources/items/apple_item.tres" id="2_item_data"]
 [ext_resource type="PackedScene" uid="uid://jjrmwlsewv3o" path="res://assets3D/pixel_apple.glb" id="3_model"]
 

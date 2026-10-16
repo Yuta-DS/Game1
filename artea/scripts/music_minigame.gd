@@ -340,7 +340,7 @@ func _choose_emotion(choice: Dictionary) -> void:
 
 	result.text = "Milo: %s" % str(choice.get("reply", "You chose a melody path."))
 	if is_new_choice:
-		result.text += "\n\nYour melody is remembered. Continue the Heart Melody adventure to restore the garden and its song."
+		result.text += "\n\nHARMONY JEWEL DISCOVERED\nYour feelings matter. Your heart has a beautiful voice."
 	else:
 		result.text += "\n\nYou can keep playing, choose another melody, or return when you are ready."
 
