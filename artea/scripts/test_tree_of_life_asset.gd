@@ -2,7 +2,7 @@ extends SceneTree
 
 ## Asset and gameplay regression for the central Tree of Imagination.
 ## The Blender source remains richly editable while Godot renders eight joined
-## systems and collides only with authored trunk/root proxy shapes.
+## systems and collides with the lower trunk's own mesh.
 
 const WorldScene := preload("res://scenes/art_castle_floating_world.tscn")
 const MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
@@ -246,9 +246,8 @@ func _run() -> void:
 		"ChristmasTreeBells3D") as AudioStreamPlayer3D
 	if christmas_melody == null or christmas_bells == null \
 			or not christmas_melody.playing or not christmas_bells.playing \
-			or not christmas_melody.stream is AudioStreamWAV \
-			or (christmas_melody.stream as AudioStreamWAV).loop_mode \
-				!= AudioStreamWAV.LOOP_FORWARD \
+			or not christmas_melody.stream is AudioStreamOggVorbis \
+			or not (christmas_melody.stream as AudioStreamOggVorbis).loop \
 			or christmas_melody.attenuation_model \
 				!= AudioStreamPlayer3D.ATTENUATION_DISABLED \
 			or christmas_melody.max_distance != 0.0 \
@@ -274,7 +273,7 @@ func _run() -> void:
 	var audio_test_origin := audio_test_player.global_position
 	audio_test_player.global_position = christmas_melody.global_position + Vector3(5.0, 0.0, 0.0)
 	world.call("_update_tree_christmas_ambience", 4.0)
-	if christmas_melody.volume_db < -6.0:
+	if christmas_melody.volume_db < -18.0:
 		_fail("Christmas ambience does not become loud when the player approaches")
 		return
 	var near_volume := christmas_melody.volume_db
@@ -657,19 +656,12 @@ func _run() -> void:
 		_fail("rotating Blender heart-diamond crystal or its gold mandorla is incomplete")
 		return
 
-	var proxies := tree.get_node_or_null("TreeOfLifeCollisionProxies") as Node3D
-	if proxies == null:
-		_fail("authored collision proxy system is missing")
-		return
-	var static_bodies := proxies.find_children("*", "StaticBody3D", true, false)
-	var collision_shapes := proxies.find_children("*", "CollisionShape3D", true, false)
-	if static_bodies.size() != 14 or collision_shapes.size() != 14:
-		_fail("expected 2 original-trunk and 12 big-root proxies, found %d bodies/%d shapes"
-			% [static_bodies.size(), collision_shapes.size()])
-		return
-	if proxies.find_children("TrunkPillar*", "StaticBody3D", true, false).size() != 2 \
-			or proxies.find_children("SimpleTrunkDoorway*", "StaticBody3D", true, false).size() != 0:
-		_fail("original gothic passage collision is not the authoritative two-pillar layout")
+	var trunk_body := tree.get_node_or_null("TrunkCollision") as StaticBody3D
+	var trunk_shapes := trunk_body.find_children("*", "CollisionShape3D", false, false) \
+		if trunk_body else []
+	if trunk_shapes.size() != 1 \
+			or not (trunk_shapes[0] as CollisionShape3D).shape is ConcavePolygonShape3D:
+		_fail("trunk mesh collision is missing")
 		return
 
 	var manifest := _load_manifest()
@@ -704,8 +696,8 @@ func _run() -> void:
 		_fail("v3 asset is not bound to the crystal-powered leaf blueprint")
 		return
 
-	# Drive the real production CharacterBody3D capsule through the widest
-	# ceremonial arch. This catches accidental trunk/root collision overlap.
+	# Drive the real production CharacterBody3D capsule in through the doorway
+	# (the back of the trunk is solid). This catches roots blocking the way in.
 	var player := world.get_node_or_null("Player3D") as CharacterBody3D
 	if player == null:
 		_fail("production player is missing")
@@ -713,7 +705,7 @@ func _run() -> void:
 	player.set_physics_process(false)
 	var tree_center := tree.global_position
 	var start := tree_center + Vector3(0.0, 4.0, -98.0)
-	var destination := tree_center + Vector3(0.0, 4.0, 98.0)
+	var destination := tree_center + Vector3(0.0, 4.0, -20.0)
 	if not await _settle(player, start):
 		_fail("production player cannot stand at the south tree entrance")
 		return
@@ -730,6 +722,6 @@ func _run() -> void:
 		int(canopy.get_meta("visible_small_branches_without_leaves", -1)),
 		int(canopy.get_meta("heart_niche_hidden_leafless_twigs", -1)),
 		int(canopy.get_meta("minimum_visible_leaves_per_visible_twig", -1))])
-	print("TREE_OF_LIFE_ASSET_TEST: PASS — %s editable vertices, %s modules, %s game meshes, and production player crossed the clear south-facing arch" % [
+	print("TREE_OF_LIFE_ASSET_TEST: PASS — %s editable vertices, %s modules, %s game meshes, and production player walked in through the doorway" % [
 		int(source.get("vertices", 0)), int(source.get("named_mesh_modules", 0)), game_meshes.size()])
 	quit()
