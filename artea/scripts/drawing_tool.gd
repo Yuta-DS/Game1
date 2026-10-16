@@ -718,6 +718,15 @@ func save_artwork_to_desktop() -> void:
 
 	var file_name = custom_title + "_" + uuid + "_" + timestamp + ".png"
 
+	if OS.has_feature("web"):
+		var png_bytes := image.save_png_to_buffer()
+		if png_bytes.is_empty():
+			show_notification("Failed to save artwork!", false)
+			return
+		JavaScriptBridge.download_buffer(png_bytes, file_name, "image/png")
+		show_notification("Artwork download started!", true)
+		return
+
 	var save_path: String
 
 	if OS.has_feature("Android"):

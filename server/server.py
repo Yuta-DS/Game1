@@ -233,7 +233,6 @@ def allowed_file(filename):
 @app.route('/upload_artwork', methods=['POST'])
 @jwt_required()
 def upload_artwork():
-    print("HEADERS:", dict(request.headers))
     user_id = int(get_jwt_identity())
 
     image_data = request.data
