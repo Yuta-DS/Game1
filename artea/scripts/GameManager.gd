@@ -334,7 +334,7 @@ func resolve_variants(text: String) -> String:
 func request_music_minigame():
 	print("DEBUG: MUSIC MINIGAME REQUESTED")
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("res://scenes/music_minigame.tscn")
+	SceneLoader.change_scene(get_tree(), "res://scenes/music_minigame.tscn")
 
 # Milo speaks to where the player actually is in the journey — and, where a
 # more specific node exists, to *what they actually did* to get there.
@@ -389,12 +389,12 @@ func _milo_variant(stage: int, js) -> String:
 
 func request_pop_thoughts():
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("res://scenes/popThoughtsMenu.tscn")
+	SceneLoader.change_scene(get_tree(), "res://scenes/popThoughtsMenu.tscn")
 
 
 func request_paingting():
 	MusicManager._check_scene()
-	get_tree().change_scene_to_file("res://scenes/drawing_tool.tscn")
+	SceneLoader.change_scene(get_tree(), "res://scenes/drawing_tool.tscn")
 
 
 # Changed to 3D Gallery
@@ -423,8 +423,5 @@ func request_goback_HubWorld():
 
 # LEGACY: 2D version cat therapist scene
 func request_Art_Therapy():
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/art_therapist_Scene.tscn"
 	MusicManager._check_scene()
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_therapist_Scene.tscn")

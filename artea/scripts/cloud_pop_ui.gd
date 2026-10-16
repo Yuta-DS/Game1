@@ -1,4 +1,5 @@
 extends CanvasLayer
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 @onready var input_field = $"UIControl/CenterContainer/VSplitContainer/Control/Line Edit"
 @onready var add_button = $"UIControl/CenterContainer/VSplitContainer/Control2/Create Cloud"
@@ -340,7 +341,7 @@ func cloud_popped():
 		scene_changed = true
 		JourneyState.advance_to(1)
 		await get_tree().create_timer(1.0).timeout
-		get_tree().change_scene_to_file("res://scenes/cloudPopFinish.tscn")
+		SceneLoader.change_scene(get_tree(), "res://scenes/cloudPopFinish.tscn")
 	else:
 		print("FAILED: Conditions not met")
 		

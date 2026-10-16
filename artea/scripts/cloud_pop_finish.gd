@@ -82,7 +82,7 @@ func _build_reflection() -> String:
 
 # Play again button
 func _on_play_again_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/popThoughtsMenu.tscn")
+	SceneLoader.change_scene(get_tree(), "res://scenes/popThoughtsMenu.tscn")
 	
 
 # Return to Hubworld button
