@@ -1896,7 +1896,7 @@ func _replay_journey() -> void:
 		js.clear_journey()
 		js.set_audience_mode(mode)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	get_tree().change_scene_to_file(STORY_SCENE_PATH)
+	SceneLoader.change_scene(get_tree(), STORY_SCENE_PATH)
 
 
 # --- HUD --------------------------------------------------------------

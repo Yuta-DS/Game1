@@ -1,11 +1,11 @@
 extends Node3D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 @export var painting_title: String = "artwork_1.png"
 var current_target_sprite: Sprite2D
 
 const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
 const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
-const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
 @onready var paintings = [
 	$Frame/Area2D/Painting1,
@@ -65,18 +65,14 @@ func _on_body_entered(body: Node3D) -> void:
 		go_to_scene(HUB_WORLD_PATH)
 
 func _on_back_to_hubworld_pressed() -> void:
-	var loading_screen = LOADING_SCENE_PATH.instantiate()
-	loading_screen.next_scene_path = ARTEA_GAME_PATH
-
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	SceneLoader.change_scene_with_loading(get_tree(), ARTEA_GAME_PATH)
 
 func go_to_scene(path: String) -> void:
 	if ResourceLoader.exists(path):
 		if path == HUB_WORLD_PATH:
 			_request_castle_front_door_spawn()
 		print("TRAVELING to: ", path)
-		get_tree().change_scene_to_file(path)
+		SceneLoader.change_scene(get_tree(), path)
 	else:
 		print("ERROR: Target scene file not found at path: ", path)
 

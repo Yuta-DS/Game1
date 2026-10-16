@@ -19,7 +19,6 @@ const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
 const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
 const CREATION_WORLD_PATH = "res://scenes/creation_world.tscn"
 const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
-const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
 # --- Rating UI ---
 @onready var ratingpanel: Control = $CanvasLayer/RatingPanel
@@ -238,7 +237,7 @@ func _open_quest_journal() -> void:
 		if bool(campaign.call("open_quest_journal")):
 			return
 	if ResourceLoader.exists(QUEST_JOURNAL_PATH):
-		get_tree().change_scene_to_file(QUEST_JOURNAL_PATH)
+		SceneLoader.change_scene(get_tree(), QUEST_JOURNAL_PATH)
 
 func show_rating_panel(frame_name: String, current_rating: int) -> void:
 	selected_frame_name = frame_name
@@ -270,11 +269,7 @@ func _on_body_entered(body: Node3D) -> void:
 		go_to_scene(HUB_WORLD_PATH)
 
 func _on_back_to_hubworld_pressed() -> void:
-	var loading_screen = LOADING_SCENE_PATH.instantiate()
-	loading_screen.next_scene_path = ARTEA_GAME_PATH
-
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	SceneLoader.change_scene_with_loading(get_tree(), ARTEA_GAME_PATH)
 
 func go_to_scene(path: String) -> void:
 	if ResourceLoader.exists(path):
@@ -352,8 +347,7 @@ func _enter_current_frame_world() -> void:
 			ratinglabel.text = str(response.get("error",
 				"This artwork world could not open yet. Please try again."))
 			return
-		var transition_error := get_tree().change_scene_to_file(CREATION_WORLD_PATH)
-		if transition_error != OK:
+		if not SceneLoader.change_scene(get_tree(), CREATION_WORLD_PATH):
 			_world_opening = false
 			ratinglabel.text = "The interactive artwork world could not open yet. Please try again."
 	)

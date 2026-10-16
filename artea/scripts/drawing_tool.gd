@@ -301,8 +301,7 @@ func _enter_current_artwork_world() -> void:
 		CreationWorldState.prepare_artwork(path, _sanitize_title(title_input.text))
 	_enter_world_button.disabled = true
 	show_notification("Opening the Gallery Frame Ritual…", true)
-	var scene_error := get_tree().change_scene_to_file("res://scenes/gallery_frame_ritual.tscn")
-	if scene_error != OK:
+	if not SceneLoader.change_scene(get_tree(), "res://scenes/gallery_frame_ritual.tscn"):
 		_enter_world_button.disabled = false
 		show_notification("The Gallery Frame Ritual could not open yet.", false)
 

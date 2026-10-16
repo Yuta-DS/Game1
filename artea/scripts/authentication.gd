@@ -1,4 +1,5 @@
 extends Control
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 # Every authenticated path begins in the same integrated World One scene used
 # by Offline Guest, so account type does not change the player's spawn point.
@@ -49,24 +50,22 @@ func _on_signup_button_pressed():
 func on_login_succeeded(auth):
 	%StateLabel.text = "Login success!"
 	Firebase.Auth.save_auth(auth)
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
 	# The hub lives in res://scenes/. The old res://New_Hub_World.tscn does not
 	# exist, so logging in dropped the player on a loading screen that never
 	# finished — and everything reached through the hub, including the Lens of
 	# Seeing, was unreachable from a normal start.
-	loading_screen.next_scene_path = WORLD_ONE_SCENE
-	
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free() 
+	SceneLoader.change_scene_with_loading(get_tree(), HUB_SCENE)
 	#get_tree().change_scene_to_file("res://Game.tscn")
 	
-# Called when sign up is successful	
+# Called when sign up is successful
 func on_signup_succeeded(auth):
 	%StateLabel.text = "Sign up success!"
 	Firebase.Auth.save_auth(auth)
-	# Was res://Game.tscn, which does not exist: a player who registered a new
-	# account landed nowhere.
-	get_tree().change_scene_to_file(WORLD_ONE_SCENE)
+	# change_scene_to_file() loads and builds the hub synchronously on the main
+	# thread, so the window sat frozen through shader compilation and grass
+	# placement with no feedback. Route through the loading screen like login
+	# does, so that cost is hidden behind a progress bar instead.
+	SceneLoader.change_scene_with_loading(get_tree(), HUB_SCENE)
 
 # Called if login fails	
 func on_login_failed(error_code, message):
@@ -96,5 +95,5 @@ func _get_web_redirect_uri() -> String:
 
 func _on_d_button_pressed() -> void:
 	# Was res://scenes/3DScenes.tscn, which does not exist.
-	get_tree().change_scene_to_file(WORLD_ONE_SCENE)
+	SceneLoader.change_scene(get_tree(), HUB_SCENE)
 	

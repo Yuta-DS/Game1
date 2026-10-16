@@ -1,4 +1,5 @@
 extends Area3D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 const TARGET_SCENE_PATH = "res://scenes/heart_melody/heart_melody_world.tscn"
 

@@ -17,3 +17,7 @@
 
 # Local output from the F12 coordinate-probe debug tool
 tools/coordinate_log.txt
+
+# Left behind only if a Web export is killed before tools/with-web-export-plugins.sh
+# can restore project.godot
+project.godot.web-export-backup

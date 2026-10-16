@@ -128,8 +128,7 @@ func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null,
 	var tree := _scene_tree(scene_tree)
 	if tree == null:
 		return false
-	var result := tree.change_scene_to_file(scene_path)
-	if result != OK:
+	if not SceneLoader.change_scene(tree, scene_path):
 		push_error("JourneyCampaign: could not enter %s" % kingdom_id)
 		return false
 	active_kingdom_id = kingdom_id
@@ -189,7 +188,7 @@ func _change_scene(scene_path: String, scene_tree: SceneTree = null) -> bool:
 	var tree := _scene_tree(scene_tree)
 	if tree == null:
 		return false
-	return tree.change_scene_to_file(scene_path) == OK
+	return SceneLoader.change_scene(tree, scene_path)
 
 
 func _scene_tree(scene_tree: SceneTree) -> SceneTree:

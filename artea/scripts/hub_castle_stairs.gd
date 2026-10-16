@@ -1941,6 +1941,83 @@ func _build_crown(parent: Node3D, base: Vector2, ground: float, top_y: float) ->
 	RoyalTerrace.build(parent, Vector3(base.x, crown_surface_y, base.y))
 
 
+	# An open Aether Lens gateway marks the route without putting a collider or
+	# a camera-filling box across it. Its slender pylons stand well outside the
+	# 4.8 m road edge; split brass/cyan yokes converge on a violet calibration
+	# lens above player headroom.
+	var gate_side := gate_dir.cross(Vector3.UP).normalized()
+	var gate_centre := Vector3(base.x, crown_surface_y, base.y) \
+		+ gate_dir * (LANDING_RADIUS - 0.5)
+	_build_aether_lens_gate(parent, gate_centre, gate_dir, gate_side,
+		"Crown", brass, cyan, violet)
+
+	# Layered arcane circuitry turns the formerly empty arrival platform into a
+	# readable destination. These pieces are low and decorative, leaving the
+	# whole crown walkable while visually linking it to the Aether Court.
+	for ring_index in 3:
+		var rune_ring := MeshInstance3D.new()
+		rune_ring.name = "CrownRuneRing_%d" % ring_index
+		var rune_mesh := TorusMesh.new()
+		rune_mesh.inner_radius = 1.15 + float(ring_index) * 0.72
+		rune_mesh.outer_radius = rune_mesh.inner_radius + 0.10
+		rune_mesh.rings = 20
+		rune_mesh.ring_segments = 4
+		rune_ring.mesh = rune_mesh
+		rune_ring.material_override = cyan if ring_index % 2 == 0 else violet
+		parent.add_child(rune_ring)
+		rune_ring.global_position = Vector3(base.x, crown_surface_y + 0.03, base.y)
+
+	for i in 4:
+		var angle := TAU * float(i) / 4.0 + PI * 0.25
+		var crystal := MeshInstance3D.new()
+		crystal.name = "CrownCrystal_%d" % i
+		var crystal_mesh := PrismMesh.new()
+		crystal_mesh.size = Vector3(0.42, 1.15, 0.42)
+		crystal.mesh = crystal_mesh
+		crystal.material_override = cyan if i % 2 == 0 else violet
+		parent.add_child(crystal)
+		crystal.global_position = Vector3(
+			base.x + cos(angle) * 3.65, crown_surface_y + 0.67,
+			base.y + sin(angle) * 3.65)
+		crystal.rotation_degrees.z = 12.0 if i % 2 == 0 else -12.0
+
+		var crystal_base := MeshInstance3D.new()
+		var base_mesh := CylinderMesh.new()
+		base_mesh.top_radius = 0.42
+		base_mesh.bottom_radius = 0.50
+		base_mesh.height = 0.22
+		base_mesh.radial_segments = 8
+		crystal_base.mesh = base_mesh
+		crystal_base.material_override = brass
+		parent.add_child(crystal_base)
+		crystal_base.global_position = Vector3(
+			base.x + cos(angle) * 3.65, crown_surface_y + 0.11,
+			base.y + sin(angle) * 3.65)
+
+	# A small red pennant, echoing the castle's banners.
+	var pole := MeshInstance3D.new()
+	var pm := CylinderMesh.new()
+	pm.top_radius = 0.09
+	pm.bottom_radius = 0.09
+	pm.height = 3.2
+	pole.mesh = pm
+	pole.material_override = _stone(STONE_DARK)
+	parent.add_child(pole)
+	# Kept off the circulation axis so the crown reads as a room, not a prop
+	# pile the player has to weave through.
+	pole.global_position = Vector3(
+		base.x - 2.2, crown_surface_y + 1.6, base.y + 1.8)
+
+	var flag := MeshInstance3D.new()
+	var fm := BoxMesh.new()
+	fm.size = Vector3(1.6, 0.9, 0.08)
+	flag.mesh = fm
+	var red := StandardMaterial3D.new()
+	red.albedo_color = ROOF_RED
+	red.roughness = 0.9
+	flag.material_override = red
+	parent.add_child(flag)
+	flag.global_position = pole.global_position + Vector3(0.8, 1.0, 0.0)
 func _build_crown_split_arrival_parapet(parent: Node3D, base: Vector2,
 		surface_y: float, panel_angle: float, arrival_angle: float,
 		panel_length: float, panel_index: int) -> void:

@@ -1,4 +1,5 @@
 extends Node2D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 
@@ -309,7 +310,12 @@ func enter_game(username: String, is_guest: bool = false):
 		var tween := create_tween()
 		tween.tween_property(menu_music, "volume_db", -80.0, 1.5)
 
-	# Begin directly in the integrated World One scene. Its gallery controller
-	# builds the Mind Spark land and places the character at Island One's arrival
-	# court before the first playable frame.
-	get_tree().change_scene_to_file(WORLD_ONE_SCENE)
+	# Open up the master integrated sandbox environment through the loading
+	# screen rather than a direct change_scene_to_file. A direct swap dropped
+	# the player straight into a bare hub that then visibly populated with
+	# tens of thousands of grass instances over the next few seconds -
+	# ProtonScatter builds them on a background thread, which keeps the game
+	# from freezing but does nothing to hide the pop-in. The loading screen
+	# now waits on that thread too (see loading_scene.gd), not just the scene
+	# resource itself.
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")
