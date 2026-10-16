@@ -29,7 +29,7 @@ func _run() -> void:
 
 	var gate := world.get_island_one_heavenly_star_gate()
 	assert(gate != null and not world.is_island_one_star_gate_open())
-	assert(str(gate.get_meta("purpose", "")).contains("Thought Constellation"))
+	assert(str(gate.get_meta("purpose", "")).contains("Signal Prism"))
 	var west := gate.get_node("WestGoldenStarLeaf") as AnimatableBody3D
 	var east := gate.get_node("EastGoldenStarLeaf") as AnimatableBody3D
 	assert(west.get_node_or_null("GateLeafCollision") is CollisionShape3D)
@@ -74,8 +74,8 @@ func _run() -> void:
 	assert([aligned.outer_ring, aligned.middle_ring, aligned.inner_ring] == [1, 0, 5])
 	assert(aligned.constellation_turns == 6)
 	assert(puzzle.interact_control("confirm").reason == "completed")
-	assert(not world.is_island_one_star_gate_open(),
-		"the Signal Prism unlocks Quest 2 without opening the inter-island gate")
+	assert(world.is_island_one_star_gate_open(),
+		"the Signal Prism opens the passage to the Living Research Garden")
 	assert(puzzle.solve_echo_for_test().reason == "completed")
 	assert(world.is_island_one_star_gate_open())
 	assert(str(gate.get_meta("gate_state", "")) == "opening")
@@ -91,7 +91,7 @@ func _run() -> void:
 		"the astrolabe rotates around its crown bearing instead of orbiting the gate origin")
 	assert((gate.get_node("HeavenlyGatePowerCore") as MeshInstance3D).material_override \
 		== world.get("_materials").gold)
-	print("IslandOneHeavenlyStarGateV24: PASS — Signal Observatory + Echo Garden → powered hinged gate")
+	print("IslandOneHeavenlyStarGateV24: PASS — Signal Prism opens the hinged gate and Echo Garden remains playable")
 
 	world.queue_free()
 	await process_frame

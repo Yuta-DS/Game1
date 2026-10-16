@@ -47,6 +47,15 @@ func _sweep_clear(leaf: AnimatableBody3D, next: float) -> bool:
 	query.collision_mask=leaf.collision_mask
 	var exclusions: Array[RID]=[]
 	for other in leaves: exclusions.append(other.get_rid())
+	# The fixed connector walls wrap the hinge shafts. A leaf briefly sweeps
+	# through that built-in housing, but the walls remain solid to the player.
+	var perimeter := leaf.get_parent().get_node_or_null(
+		"HeavenlyThresholdCourt/CollisionBackedGatePerimeter")
+	if perimeter != null:
+		for side in ["West", "East"]:
+			var connector := perimeter.get_node_or_null(
+				"%sGateTowerConnectorWallCollision" % side) as CollisionObject3D
+			if connector != null: exclusions.append(connector.get_rid())
 	query.exclude=exclusions
 	# At most one degree per angular sample, including the current occupied pose.
 	var steps := maxi(1,int(ceil(absf(next-leaf.rotation.y)/deg_to_rad(1))))

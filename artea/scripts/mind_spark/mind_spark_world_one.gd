@@ -2639,7 +2639,8 @@ func _build_island_one_heavenly_star_gate(route: Node3D, start: Vector3,
 		shape_node.name = "GateLeafCollision"
 		shape_node.position = Vector3(-side * 2.68, 10.5, 0)
 		var shape := BoxShape3D.new()
-		shape.size = Vector3(5.9, 17.2, 1.10)
+		# Match the 5.36 m framed leaf instead of extending into the hinge wall.
+		shape.size = Vector3(5.4, 17.2, 1.10)
 		shape_node.shape = shape
 		leaf.add_child(shape_node)
 		_island_one_star_gate_leaves.append(leaf)
