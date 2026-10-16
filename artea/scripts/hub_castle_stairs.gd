@@ -1177,7 +1177,8 @@ func _build_foundation_toe(parent: Node3D, base: Vector2, _ground: float,
 	toe.set_meta("preserve_castle_finish", true)
 
 
-# Visual-only medieval dressing replaces the unrelated green fibre stripes.
+# Medieval dressing replaces the unrelated green fibre stripes. Its newels,
+# capitals, and roofs have collision outside the continuous walking lane.
 # Repeated newels and red caps give the long curve a readable castle rhythm.
 # The former underside corbels were removed because their ends projected below
 # the soffit as a row of exposed rectangular teeth. The continuous stone body

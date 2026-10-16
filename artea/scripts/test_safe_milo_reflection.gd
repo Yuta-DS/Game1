@@ -57,7 +57,7 @@ func _run() -> void:
 		"Milo opens the direct chat conversation")
 	assert(choices != null, "Milo builds the direct chat input surface")
 	assert(chat.user_input is LineEdit, "Milo focuses the bounded local reflection field")
-	assert(chat.user_input.max_length == 280, "typed reflection is strictly bounded")
+	assert(chat.user_input.max_length == 0, "typed reflection accepts the full message for safety review")
 	assert(chat.user_input.tooltip_text.contains("not saved"), "the input explains local privacy")
 	assert(_has_button(choices, "Send"), "the player input keeps a send control")
 	assert(reply_card.get_global_rect().encloses(history.get_global_rect()),

@@ -263,8 +263,10 @@ func _run() -> void:
 	assert(medieval_details.find_children("UndersideCorbel_*", "MeshInstance3D",
 		true, false).is_empty(),
 		"no decorative corbel ends project below the continuous stair soffit")
-	assert(medieval_details.find_children("*", "StaticBody3D", true, false).is_empty(),
-		"medieval stair dressing remains visual-only outside the proven route")
+	assert(medieval_details.find_children("*", "StaticBody3D", true, false).size() >= 12
+		and medieval_details.get_meta("collision_policy", "") \
+			== "solid_keep_details_outside_continuous_guard_lane",
+		"medieval stair newels remain solid outside the proven route")
 	assert(stair.get_node_or_null("LowPolyStairGrowth") == null,
 		"green vine and fibre stripes are removed from the castle stair")
 	assert(stair.find_children("AetherWindow_*", "MeshInstance3D", true, false).is_empty(),

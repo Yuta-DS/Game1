@@ -29,16 +29,19 @@ const KINGDOMS := {
 		"label": "Mind Spark Kingdom",
 		"scene_path": "res://scenes/popThoughtsMenu.tscn",
 		"treasure": "star_of_wisdom",
+		"requires": [],
 	},
 	"heart": {
 		"label": "Heart Melody Kingdom",
 		"scene_path": "res://scenes/heart_melody/heart_garden_entry.tscn",
 		"treasure": "harmony_jewel",
+		"requires": ["star_of_wisdom"],
 	},
 	"creator": {
 		"label": "Creator's Light Kingdom",
 		"scene_path": "res://scenes/drawing_tool.tscn",
 		"treasure": "creators_light",
+		"requires": ["star_of_wisdom", "harmony_jewel"],
 	},
 }
 
@@ -61,10 +64,22 @@ func kingdom_scene_path(kingdom_id: String) -> String:
 	return str(get_kingdom(kingdom_id).get("scene_path", ""))
 
 
-# Every kingdom is open from the start; only unknown ids are refused. Entering
-# never awards a treasure, so the journey's record stays true.
 func can_enter_kingdom(kingdom_id: String) -> bool:
-	return not get_kingdom(kingdom_id).is_empty()
+	return can_enter_kingdom_with(kingdom_id, _journey_state())
+
+
+# Pure route policy seam. It never calls JourneyState mutators, so tests can
+# prove that navigation itself cannot award a treasure or invent a reflection.
+func can_enter_kingdom_with(kingdom_id: String, state: Node = null) -> bool:
+	var kingdom := get_kingdom(kingdom_id)
+	if kingdom.is_empty():
+		return false
+	for treasure_id in kingdom.get("requires", []):
+		if state == null or not state.has_method("has_treasure"):
+			return false
+		if not bool(state.call("has_treasure", str(treasure_id))):
+			return false
+	return true
 
 
 func is_kingdom_complete(kingdom_id: String, state: Node = null) -> bool:
@@ -93,7 +108,11 @@ func portal_status(kingdom_id: String) -> String:
 	var state := _journey_state()
 	if is_kingdom_complete(kingdom_id, state):
 		return "CROWN JOURNEY\nREVISIT %s" % str(kingdom["label"]).to_upper()
-	return "CROWN JOURNEY\nENTER %s" % str(kingdom["label"]).to_upper()
+	if can_enter_kingdom_with(kingdom_id, state):
+		return "CROWN JOURNEY\nENTER %s" % str(kingdom["label"]).to_upper()
+	var next_id := next_kingdom_id(state)
+	var next_label := str(get_kingdom(next_id).get("label", "the next light"))
+	return "CROWN JOURNEY\nFOLLOW THE LIGHT TO %s" % next_label.to_upper()
 
 
 # ignore_lock is for Milo's strength-finder suggestion only: it opens a world

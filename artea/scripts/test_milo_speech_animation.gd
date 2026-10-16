@@ -55,8 +55,11 @@ func _run() -> void:
 		_fail("Milo must use a dedicated talk action instead of the camera Q key")
 		return
 	var talk_events := InputMap.action_get_events("talk_to_milo")
-	if talk_events.size() != 1 or not talk_events[0] is InputEventKey \
-			or (talk_events[0] as InputEventKey).physical_keycode != KEY_T:
+	var has_t_key := false
+	for event in talk_events:
+		if event is InputEventKey and event.physical_keycode == KEY_T:
+			has_t_key = true
+	if not has_t_key:
 		_fail("Milo's dedicated talk action must use T")
 		return
 	if interaction_shape == null or not interaction_shape.shape is SphereShape3D \

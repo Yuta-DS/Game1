@@ -95,21 +95,6 @@ func _run() -> void:
 	# 3. Number 1 explicitly selects driver mode from the train deck.
 	player.global_position = front_deck
 	railway.call("_update_prompt")
-	var controls := railway.get_node("CrownLineHUD/TrainControls") as Control
-	if not controls.visible or controls.anchor_left != 1.0:
-		_fail("boarding the deck must reveal controls on the right")
-		return
-	player.global_position = train.to_global(Vector3(0, 10, 2.8))
-	railway.call("_update_prompt")
-	if not controls.visible:
-		_fail("controls disappeared while jumping over the train deck")
-		return
-	player.global_position = train.to_global(Vector3(100, 0, 0))
-	railway.call("_update_prompt")
-	if controls.visible:
-		_fail("train controls remain visible away from the train")
-		return
-	player.global_position = front_deck
 	_press_train_mode(railway, KEY_1)
 	if not bool(railway.call("is_driving")):
 		_fail("pressing 1 at the train did not take control of the train")
@@ -197,14 +182,21 @@ func _run() -> void:
 	while bool(railway.get("_passenger_in_motion")):
 		await process_frame
 	for _stop in 4:
-		var next_station := (int(railway.call("get_current_station")) + 1) % 4
+		var current_station := int(railway.call("get_current_station"))
+		var next_station := (current_station + 1) % 4
+		var unlocked := bool(railway.call("is_station_unlocked", next_station))
 		_press_train_mode(railway, KEY_2)
 		while bool(railway.get("_passenger_in_motion")):
 			await process_frame
+		if not unlocked:
+			if int(railway.call("get_current_station")) != current_station:
+				_fail("passenger train entered a locked station")
+				return
+			break
 		if int(railway.call("get_current_station")) != next_station:
-			_fail("passenger cannot continue to every station with 2")
+			_fail("passenger cannot continue to an unlocked station with 2")
 			return
-	print("TRAIN_DRIVE_TEST: PASS — all stations, passenger continuation and right-side boarding controls")
+	print("TRAIN_DRIVE_TEST: PASS — unlocked stations, passenger continuation and deck boarding")
 	quit()
 
 

@@ -67,7 +67,7 @@ func _run() -> void:
 	chat._show_strength_discoveries()
 	assert(requested_poses.back() == "encourage",
 		"strength discovery uses Milo's encouraging pose")
-	assert(history.text.contains("Strength Discoverer"),
+	assert(history.text.contains("Strength Finder"),
 		"Milo offers strengths-based reflection")
 	chat._respond_to_strength({
 		"label": "I kept trying",

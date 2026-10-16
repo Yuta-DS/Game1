@@ -220,9 +220,15 @@ func _apply_pending_spawn() -> void:
 	player.velocity = Vector3.ZERO
 	player.global_position = get_spawn_position()
 
-	# Face the player away from the door, looking out over the plaza and the
-	# kingdom beyond — they just came OUT of the castle.
-	player.rotation.y = atan2(OUT.x, OUT.z)
+	# Keep the CharacterBody's movement basis in world space. Face the visible
+	# character and its camera toward the plaza without rotating the root.
+	var outward_yaw := atan2(OUT.x, OUT.z)
+	var visual := player.get_node_or_null("RogueSkin") as Node3D
+	if visual != null:
+		visual.global_rotation.y = outward_yaw
+	var camera_controller := player.get_node_or_null("CameraController") as Node3D
+	if camera_controller != null:
+		camera_controller.global_rotation.y = -outward_yaw
 
 
 # Public so a portal, a test, or a future fast-travel system can ask where this

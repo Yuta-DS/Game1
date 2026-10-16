@@ -667,6 +667,8 @@ func select_train_mode(mode: String) -> bool:
 		_disembark_driver()
 	elif _seated_passenger:
 		if mode == "ride":
+			if not _passenger_in_motion:
+				_ride_seated_passenger_one_station()
 			return true
 		if _passenger_in_motion:
 			_status.text = "PASSENGER RIDE IN PROGRESS  •  SWITCH TO DRIVER AT THE NEXT STATION"
