@@ -17,6 +17,8 @@
 #   --repeat              verify: load twice with the cache on and report what
 #                         the second visit downloads (serves the local build
 #                         with the deployed cache headers)
+#   --register-smoke      verify: register one local test account and play as
+#                         that user instead of Offline Guest
 #   -h, --help            this text
 #
 # Settings live in .webrc next to this script if you want different defaults:
@@ -47,6 +49,7 @@ port="${PORT:-${port}}"
 command=run
 target_url=""
 repeat=0
+register_smoke=0
 [[ $# -gt 0 && "$1" != -* ]] && { command="$1"; shift; }
 
 while [[ $# -gt 0 ]]; do
@@ -55,6 +58,7 @@ while [[ $# -gt 0 ]]; do
 		--no-open) open_browser=0; shift ;;
 		--url)     target_url="${2:?--url needs a URL}"; shift 2 ;;
 		--repeat)  repeat=1; shift ;;
+		--register-smoke) register_smoke=1; shift ;;
 		-h|--help) sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 		*) echo "Unknown option: $1 (try --help)" >&2; exit 1 ;;
 	esac
@@ -153,6 +157,7 @@ case "${command}" in
 		started_here=0
 		smoke_args=(--out "${smoke_dir}")
 		[[ "${repeat}" == 1 ]] && smoke_args+=(--repeat)
+		[[ "${register_smoke}" == 1 ]] && smoke_args+=(--register-smoke)
 		if [[ -n "${target_url}" ]]; then
 			url="${target_url}"
 		else

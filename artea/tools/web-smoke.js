@@ -17,6 +17,8 @@
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
+// --register-smoke creates one test account on the local backend, confirms the
+// game's automatic login, and then checks hub movement in that session.
 //
 // --latency and --mbps shape the network like DevTools throttling: MS of added
 // round trip per request, and an N Mbit/s cap on the whole download. Used to
@@ -49,6 +51,7 @@ const url = args.find((a, i) => !a.startsWith('--') && !VALUE_OPTIONS.includes(a
 const outDir = option('--out') ?? fs.mkdtempSync(path.join(os.tmpdir(), 'artea-smoke-'));
 const keepOpen = args.includes('--keep-open');
 const repeat = args.includes('--repeat');
+const registerSmoke = args.includes('--register-smoke');
 const latencyMs = Number(option('--latency') ?? 0);
 const mbps = Number(option('--mbps') ?? 0);
 const failPart = option('--fail-part');
@@ -330,6 +333,17 @@ async function connect() {
 		type, code, key: code.replace('Key', '').toLowerCase(),
 		windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode,
 	});
+	const typeText = async (value) => {
+		for (const letter of value) {
+			const keyCode = letter.toUpperCase().charCodeAt(0);
+			const params = {
+				key: letter, code: `Key${letter.toUpperCase()}`, text: letter,
+				windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode,
+			};
+			await send('Input.dispatchKeyEvent', { ...params, type: 'keyDown' });
+			await send('Input.dispatchKeyEvent', { ...params, type: 'keyUp' });
+		}
+	};
 
 	try {
 		say('loading ' + url);
@@ -381,14 +395,31 @@ async function connect() {
 			process.exit(pass ? 0 : 1);
 		}
 
-		for (const [index, button] of GUEST_BUTTONS.entries()) {
-			say(`clicking Offline Guest at (${button.x}, ${button.y})`);
-			await click(button.x, button.y);
-			try {
-				await waitForLog(/GUEST access selected/, 'guest login accepted', 20000);
-				break;
-			} catch (err) {
-				if (index === GUEST_BUTTONS.length - 1) throw err;
+		if (registerSmoke) {
+			const username = `websmoke${Math.random().toString(36).replace(/[^a-z]/g, '').slice(0, 10)}`;
+			const password = 'smokepass';
+			say('registering a local test account through the game UI');
+			await click(300, 488);
+			await typeText(username);
+			await click(300, 546);
+			await typeText(password);
+			await shot('01-filled-form');
+			await click(300, 665);
+			await waitForLog(/REGISTER SUCCESS/, 'account registered', 30000);
+			await waitForLog(/SESSION LOCKED: Connected to live API Server/, 'registered user logged in', 30000);
+			const apiSucceeded = [...net.urls].some(([id, u]) => u.endsWith('/register') && net.tally(id).status === 201)
+				&& [...net.urls].some(([id, u]) => u.endsWith('/login') && net.tally(id).status === 200);
+			if (!apiSucceeded) throw new Error('registration or login API did not return success');
+		} else {
+			for (const [index, button] of GUEST_BUTTONS.entries()) {
+				say(`clicking Offline Guest at (${button.x}, ${button.y})`);
+				await click(button.x, button.y);
+				try {
+					await waitForLog(/GUEST access selected/, 'guest login accepted', 20000);
+					break;
+				} catch (err) {
+					if (index === GUEST_BUTTONS.length - 1) throw err;
+				}
 			}
 		}
 		await waitForLog(/\[ARTEA\] scene ready: res:\/\/scenes\/New_Hub_World\.tscn/, 'hub ready for play', 180000);
