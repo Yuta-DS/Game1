@@ -237,7 +237,7 @@ HOW TO VERIFY
 
 
 --------------------------------------------------------------------------------
-PROBLEM 4 - SCENE SWITCH FAILS SILENTLY                                  [OPEN]
+PROBLEM 4 - SCENE SWITCH FAILS SILENTLY                                 [FIXED]
 --------------------------------------------------------------------------------
 SYMPTOM
   This is the reason Problem 1 looked like a hang instead of an error. Worth
@@ -259,6 +259,14 @@ SUGGESTED FIX
         # surface it on screen too - stdout is invisible to a browser player
 
   Apply at both call sites.
+
+FIX (issue #31)
+  Every scene swap now goes through artea/scripts/scene_loader.gd:
+  SceneLoader.change_scene() for light scenes, change_scene_with_loading() for
+  heavy ones. A missing scene, a failed swap, or a threaded load that fails
+  behind the loading screen is logged with push_error and shown on screen
+  (SceneLoader.report_failure). scripts/test_scene_swaps_use_loader.gd fails
+  on any new direct swap to a scene outside the Core pack.
 
 
 --------------------------------------------------------------------------------

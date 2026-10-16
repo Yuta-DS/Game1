@@ -16,7 +16,11 @@ deployed as-is. These files work around it:
   listing them. It also copies in `vercel.json` and `.vercelignore`.
 - `pck-loader.js` - a `fetch` shim, injected through `html/head_include`, that
   intercepts the requests for `index.pck` and `index.side.wasm`, reads the
-  manifest (never cached), and streams the listed parts into the engine.
+  manifest (never cached), and streams the listed parts into the engine in
+  order. Up to 4 parts download at once (`?parts=N` overrides it for
+  measuring). A failed part is retried after 0.5, 1.5 and 4 s; after that a
+  Retry overlay pauses the download until the player presses it, and it
+  carries on from the failed part without refetching the rest (issue #34).
 - `vercel.json` - serves `parts/` as `immutable` and everything else
   `no-cache` (ADR-0002, issue #33).
 - `.vercelignore` - keeps the unsplit originals out of the upload, so the build

@@ -105,8 +105,9 @@ func _run() -> void:
 		_fail("legacy box-per-step railing is still present")
 		return
 	var safety_fields := stair.find_children("CausewaySafetyWall*", "MeshInstance3D", true, false)
-	var safety_posts := stair.find_children("AetherSafetyPost_*", "MeshInstance3D", true, false)
-	if safety_fields.size() != 6 or safety_posts.size() != 10:
+	# The aether safety posts are freed by the castle redesign (visual only,
+	# no collision); the safety walls carry the edge protection.
+	if safety_fields.size() != 6:
 		_fail("causeway does not have two core safety walls and four flared mouth wings")
 		return
 	var core_safety_fields := 0
@@ -145,72 +146,22 @@ func _run() -> void:
 	if core_safety_fields != 2 or mouth_safety_wings != 4:
 		_fail("causeway safety field naming/inventory does not describe two flared mouths")
 		return
-	# Exact Aether Lens Bridge inventory. The former duplicated gateways used
-	# unnamed 1.15 m collider piers at the deck edge and a 6 m box lintel across
-	# the player camera. The new paired lens gates are named, visual-only, and
-	# stand outside the complete 4.8 m road envelope.
-	var rune_seals := stair.find_children("LumenRuneSeal_*", "MeshInstance3D", true, false)
-	var arch_pylons := stair.find_children("LumenArchPylon_*", "MeshInstance3D", true, false)
-	var arch_keystones := stair.find_children("LumenArchKeystone_*", "MeshInstance3D", true, false)
-	var lens_gates := stair.find_children("*AetherLensGate", "Node3D", true, false)
-	var lens_pylons := stair.find_children("AetherLensPylon_*", "MeshInstance3D", true, false)
-	var lens_yokes := stair.find_children("AetherLensYoke_*", "MeshInstance3D", true, false)
-	var lens_apices := stair.find_children("AetherLensApex_*", "MeshInstance3D", true, false)
-	var midspan_frames := stair.find_children("MidspanResonanceFrame", "Node3D", true, false)
-	var arch_yokes := stair.find_children("LumenArchYoke_*", "MeshInstance3D", true, false)
-	var glass_bays := stair.find_children("AetherRuneGlassBay_*", "MeshInstance3D", true, false)
-	var glass_tracery := stair.find_children("AetherGlassTracery_*", "MeshInstance3D", true, false)
-	var rune_fascias := stair.find_children("AetherRuneFascia_*", "MeshInstance3D", true, false)
-	var fascia_runes := stair.find_children("AetherFasciaRune_*", "MeshInstance3D", true, false)
-	var gear_roots := stair.find_children("AetherGear_*", "Node3D", true, false)
-	var gear_hubs := stair.find_children("AetherGearHub_*", "MeshInstance3D", true, false)
-	var gear_cores := stair.find_children("AetherGearCore_*", "MeshInstance3D", true, false)
-	var gear_teeth := stair.find_children("AetherGearTooth_*", "MeshInstance3D", true, false)
-	var astrolabe_rings := stair.find_children("AetherAstrolabeRing_*", "MeshInstance3D", true, false)
-	var astrolabe_cores := stair.find_children("AetherAstrolabeCore_*", "MeshInstance3D", true, false)
-	var conductors := stair.find_children("LumenCenterConductor_*", "MeshInstance3D", true, false)
-	var tension_ribs := stair.find_children("AetherTensionRib_*", "MeshInstance3D", true, false)
-	var underbraces := stair.find_children("AetherUnderbrace_*", "MeshInstance3D", true, false)
-	var levitation_coils := stair.find_children("AetherLevitationCoil_*", "MeshInstance3D", true, false)
-	var bridge_keel := stair.get_node_or_null("AetherBridgeKeel") as MeshInstance3D
-	if rune_seals.size() != 3 or arch_pylons.size() != 2 or arch_keystones.size() != 1 \
-			or lens_gates.size() != 2 or lens_pylons.size() != 4 \
-			or lens_yokes.size() != 8 or lens_apices.size() != 2 \
-			or midspan_frames.size() != 1 or arch_yokes.size() != 4 \
-			or glass_bays.size() != 6 or glass_tracery.size() != 12 \
-			or rune_fascias.size() != 2 or fascia_runes.size() != 6 \
-			or gear_roots.size() != 2 or gear_hubs.size() != 2 \
-			or gear_cores.size() != 2 or gear_teeth.size() != 16 \
-			or astrolabe_rings.size() != 4 or astrolabe_cores.size() != 2 \
-			or conductors.size() != 12 or tension_ribs.size() != 3 \
-			or underbraces.size() != 6 or levitation_coils.size() != 2 \
-			or bridge_keel == null:
-		_fail("Aether Lens Bridge inventory is incomplete: %d seals, %d resonance pylons, %d keystones, %d gates, %d gate pylons, %d yokes, %d lenses, %d conductor segments, %d ribs, %d coils, keel %s"
-			% [rune_seals.size(), arch_pylons.size(), arch_keystones.size(),
-				lens_gates.size(), lens_pylons.size(), lens_yokes.size(), lens_apices.size(),
-				conductors.size(), tension_ribs.size(), levitation_coils.size(), bridge_keel != null])
+	# The castle redesign removes the Aether Lens Bridge's technology dressing
+	# (castle_redesign.gd frees it: it was visual-only, with no collision), so
+	# none of it may be left over the walkway.
+	var aether_leftovers: Array = []
+	for pattern in ["LumenRuneSeal_*", "LumenArchPylon_*", "LumenArchKeystone_*",
+			"*AetherLensGate", "AetherLensPylon_*", "AetherLensYoke_*",
+			"AetherLensApex_*", "MidspanResonanceFrame", "LumenArchYoke_*",
+			"AetherRuneGlassBay_*", "AetherGlassTracery_*", "AetherRuneFascia_*",
+			"AetherFasciaRune_*", "AetherGear_*", "AetherAstrolabeRing_*",
+			"LumenCenterConductor_*", "AetherTensionRib_*", "AetherUnderbrace_*",
+			"AetherLevitationCoil_*", "AetherBridgeKeel"]:
+		aether_leftovers += stair.find_children(pattern, "Node3D", true, false)
+	if not aether_leftovers.is_empty():
+		_fail("Aether Lens Bridge dressing survived the castle redesign: %s"
+			% ", ".join(aether_leftovers.map(func(n): return String(n.name)).slice(0, 6)))
 		return
-	# All three pointed assemblies must clear the complete camera prism. The
-	# AABB test catches a thickened or lowered yoke even when its origin remains
-	# above the clearance plane.
-	var clear_prism := AABB(Vector3(-18.6, 67.73 + 0.55, 27.41 - 2.4),
-		Vector3(10.6, 2.85, 4.8))
-	var reference_ornaments: Array = lens_pylons + lens_yokes + lens_apices \
-		+ arch_pylons + arch_yokes + arch_keystones + glass_bays \
-		+ glass_tracery + rune_fascias + fascia_runes + gear_hubs \
-		+ gear_cores + gear_teeth + astrolabe_rings + astrolabe_cores \
-		+ underbraces + tension_ribs + levitation_coils
-	for ornament_candidate in reference_ornaments:
-		var ornament := ornament_candidate as MeshInstance3D
-		if ornament == null or ornament.mesh == null:
-			_fail("reference bridge inventory contains an invalid mesh")
-			return
-		if _world_aabb(ornament).intersects(clear_prism):
-			_fail("reference ornament %s enters the 4.8 m × 3.4 m player/camera prism" % ornament.name)
-			return
-		if not ornament.find_children("*", "StaticBody3D", true, false).is_empty():
-			_fail("reference ornament %s carries collision" % ornament.name)
-			return
 
 	var roadbed := stair.get_node_or_null("LumenBridgeRoadbed") as MeshInstance3D
 	var launch := stair.get_node_or_null("LumenBridgeLaunch") as MeshInstance3D
@@ -247,16 +198,6 @@ func _run() -> void:
 			or not stair.find_children("LumenRunePlate_*", "MeshInstance3D", true, false).is_empty():
 		_fail("legacy bridge lintel or oversized rune plate survived the redesign")
 		return
-	for pylon_candidate in lens_pylons:
-		var pylon := pylon_candidate as MeshInstance3D
-		if not (pylon.mesh is BoxMesh):
-			_fail("lens gate pylon %s is not measurable box geometry" % pylon.name)
-			return
-		var half_extent := (pylon.mesh as BoxMesh).size.z * 0.5
-		var inner_face := absf(pylon.global_position.z - 27.41) - half_extent
-		if inner_face < 2.80:
-			_fail("lens gate pylon %s narrows the 4.8 m route: inner face %.2f" % [pylon.name, inner_face])
-			return
 	# Detect a future unnamed replacement for the old camera-blocking lintel:
 	# no wide box may cross a gateway between 3.0 and 5.0 m above the deck.
 	for candidate in stair.find_children("*", "MeshInstance3D", true, false):
@@ -267,14 +208,6 @@ func _run() -> void:
 			if over_deck > 3.0 and over_deck < 5.0 and maxf(size.x, size.z) > 5.5:
 				_fail("wide transverse box %s blocks the gateway camera at %.2f m" % [piece.name, over_deck])
 				return
-	var bridge_ornaments: Array = rune_seals + arch_pylons + arch_keystones \
-		+ lens_pylons + lens_yokes + lens_apices + conductors \
-		+ tension_ribs + levitation_coils
-	bridge_ornaments.append(bridge_keel)
-	for ornament in bridge_ornaments:
-		if not ornament.find_children("*", "StaticBody3D", true, false).is_empty():
-			_fail("Aether Lens Bridge ornament %s has collision inside the visual layer" % ornament.name)
-			return
 
 	var foundation := hub.get_node_or_null("CastleFoundation") as Node3D
 	var tree_foundation := foundation.get_node_or_null("GiantTreeFoundation") as Node3D \
@@ -426,21 +359,15 @@ func _run() -> void:
 				"*", "StaticBody3D", true, false).is_empty():
 		_fail("spiral crown still renders the oversized box instead of the fitted landing")
 		return
-	var ballista := stair.get_node_or_null("CastleBallista") as Node3D
-	if ballista == null or not bool(ballista.get_meta("visual_only", false)) \
-			or ballista.find_children("BallistaWoodArm_*", "MeshInstance3D", true, false).size() != 2 \
-			or not ballista.find_children("*", "StaticBody3D", true, false).is_empty():
-		_fail("crown is missing its safe visual-only castle ballista")
+	if stair.get_node_or_null("CastleBallista") != null:
+		_fail("the crossbow was removed from the stair crown but is back")
 		return
 	var arrival_court := stair.get_node_or_null("CrownArrivalCourt") as Node3D
 	var arrival_pylons := stair.find_children(
 		"CrownArrivalPylon_*", "MeshInstance3D", true, false)
-	var arrival_yokes := stair.find_children(
-		"CrownArrivalYoke_*", "MeshInstance3D", true, false)
-	var arrival_guides := stair.find_children(
-		"CrownArrivalGuide_*", "MeshInstance3D", true, false)
-	if arrival_court == null or arrival_pylons.size() != 2 \
-			or arrival_yokes.size() != 2 or arrival_guides.size() != 3:
+	# The overhead yokes and guide strips are freed by the castle redesign
+	# along with the rest of the visual-only aether dressing.
+	if arrival_court == null or arrival_pylons.size() != 2:
 		_fail("redesigned crown arrival court is incomplete")
 		return
 	if not arrival_court.find_children("*", "StaticBody3D", true, false).is_empty():
@@ -671,11 +598,11 @@ func _run() -> void:
 		for castle_surface in castle_mesh.mesh.get_surface_count():
 			var castle_material := castle_mesh.get_active_material(castle_surface)
 			if castle_material is StandardMaterial3D \
-					and castle_material.get_meta("castle_palette", "") == "simple_village_atlas" \
+					and castle_material.get_meta("castle_palette", "") == "sleeping_beauty_rose_atlas" \
 					and not (castle_material as StandardMaterial3D).emission_enabled:
 				simple_palette_found = true
 	if not simple_palette_found:
-		_fail("castle does not use the simple non-emissive village colour atlas")
+		_fail("castle does not use the non-emissive rose village colour atlas")
 		return
 
 	# Real support collision remains outside the final-ascent corridor after the

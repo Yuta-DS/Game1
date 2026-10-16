@@ -57,13 +57,6 @@ const ORIGINAL_CANOPY_BASE_SCALE := 1.28
 const ORIGINAL_CANOPY_TIP_SCALE := 0.34
 const ORIGINAL_CANOPY_HEIGHT_SCALE := 1.62
 const TREE_OF_LIFE_SCALE_MULTIPLIER := 2.0
-# Retained only by the standalone trunk-core asset validator. The runtime tree
-# no longer instantiates that replacement core.
-const SIMPLE_TRUNK_HEIGHT_M := 18.0
-const SIMPLE_TRUNK_ROOT_DIAMETER_M := 14.4
-const SIMPLE_TRUNK_DOOR_WIDTH_M := 3.0
-const SIMPLE_TRUNK_DOOR_HEIGHT_M := 4.2
-
 # Web LOD for the Tree of Life.
 #
 # The authored canopy is 480 bough modules x 1,296 compound leaf sockets x 2
@@ -156,7 +149,7 @@ var _sfx_players: Dictionary = {}
 
 const TREE_CHRISTMAS_FULL_VOLUME_DISTANCE := 70.0
 const TREE_CHRISTMAS_SILENT_DISTANCE := 620.0
-const TREE_CHRISTMAS_NEAR_VOLUME_DB := -5.0
+const TREE_CHRISTMAS_NEAR_VOLUME_DB := -17.0
 const TREE_CHRISTMAS_SILENT_VOLUME_DB := -80.0
 const TREE_CHRISTMAS_FADE_IN_SPEED := 1.60
 const TREE_CHRISTMAS_FADE_OUT_SPEED := 0.28
@@ -300,18 +293,39 @@ func _build_central_sanctuary() -> void:
 	add_child(island)
 	_build_island_foundation(island, HUB, 220.0, 58.0, 40)
 
-	# Concentric paths and planted rings reproduce the round garden composition.
-	_add_torus(island, "OuterGardenRing", HUB + Vector3(0.0, 0.35, 0.0), 153.0, 165.0, _materials.purple)
-	_add_cylinder(island, "TreeCourt", HUB + Vector3(0.0, 0.1, 0.0), 108.0, 1.4, _materials.stone, true, 48)
-	_add_torus(island, "InnerGardenRing", HUB + Vector3(0.0, 1.0, 0.0), 62.0, 68.0, _materials.aqua)
+	var floor_material := ShaderMaterial.new()
+	floor_material.shader = TreeCourtShader
+	(island.get_node("WalkableDeck") as MeshInstance3D).material_override = floor_material
+	# The court stands 0.8 m proud of the deck. Its edge is a gentle ramp
+	# (108 m at the top, 114 m at the bottom) rather than a kerb.
+	var court := MeshInstance3D.new()
+	court.name = "TreeCourt"
+	var court_mesh := CylinderMesh.new()
+	court_mesh.top_radius = 108.0
+	court_mesh.bottom_radius = 114.0
+	court_mesh.height = 1.4
+	court_mesh.radial_segments = 48
+	court.mesh = court_mesh
+	court.position = HUB + Vector3(0.0, 0.1, 0.0)
+	court.material_override = floor_material
+	island.add_child(court)
+	var court_body := StaticBody3D.new()
+	court_body.name = "TreeCourtCollision"
+	court_body.position = court.position
+	var court_shape := CollisionShape3D.new()
+	court_shape.shape = court_mesh.create_convex_shape()
+	court_body.add_child(court_shape)
+	island.add_child(court_body)
 
 	for index in 72:
 		var angle := TAU * float(index) / 72.0
 		var radius := 132.0 + sin(float(index) * 2.3) * 15.0
-		_add_flower_cluster(island, HUB + Vector3(cos(angle) * radius, 2.0, sin(angle) * radius),
+		_add_bounce_pad(island, HUB + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius),
 			index % 3 == 0)
 
 	_build_life_tree(island, HUB)
+	# TreeCourt's top is 0.8 m above the deck.
+	_build_tree_spiral_stairs(island, HUB + Vector3(0.0, 0.8, 0.0))
 	_build_cat_companion(island, HUB + Vector3(-18.0, 2.0, -68.0))
 	_build_radial_arches(island)
 
@@ -444,7 +458,16 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 			var frog := _add_sphere(fountain, "Frog", frog_pos, Vector3(0.8, 0.55, 1.0), _materials.gold)
 			frog.rotation.y = -angle + PI * 0.5
 			_add_static_box(fountain, frog_pos, Vector3(1.6, 1.1, 2.0), frog.rotation.y)
-		_add_fountain_spray(fountain, radius - 0.8, top + 1.0, 7.0 + index, radius * 0.35, spray)
+		# Each frog spouts a short arc that lands mid-way across its own pool,
+		# short of the next tier's wall (or the plinth on the top tier).
+		var next_wall: float = tiers[index + 1][0] if index + 1 < tiers.size() else 2.6
+		var spout_up := 5.5
+		var air_time := (spout_up + sqrt(spout_up * spout_up + 2.0 * 9.8 * 1.3)) / 9.8
+		_add_fountain_spray(fountain, radius - 0.8, top + 1.0, spout_up,
+			(radius - 0.8 - next_wall) * 0.5 / air_time, spray)
+		# Every tier above the basin overflows its rim into the pool below.
+		if index > 0:
+			_add_fountain_cascade(fountain, radius, top, float(tiers[index - 1][1]) - 0.3, water, spray)
 
 	# The top pool's floor is 11.5 m; the plinth rises from it.
 	_add_cylinder(fountain, "StatuePlinth", Vector3(0.0, 14.0, 0.0), 2.6, 5.0, _materials.ivory, true, 16)
@@ -456,6 +479,9 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 	_add_statue_figure(statue, Vector3.ZERO, 1.0)
 	_add_statue_figure(statue, Vector3(-1.5, 0.0, 0.6), 0.5)
 	_add_statue_figure(statue, Vector3(1.5, 0.0, 0.6), 0.5)
+	# The source: a jet from above Latona's head that falls back into the top
+	# pool, which then overflows tier by tier down to the basin.
+	_add_fountain_jet(fountain, Vector3(0.0, 23.6, 0.0), spray)
 
 	# Three reward plinths standing in the 9 m pool (floor 8 m), one facing the
 	# arrival gate.
@@ -599,6 +625,81 @@ func _add_static_box(parent: Node3D, position: Vector3, size: Vector3, yaw: floa
 	body.position = position
 	body.rotation.y = yaw
 	parent.add_child(body)
+
+
+## Water spilling over a tier's gold cap (top + 0.3) down the outside of its
+## wall into the pool below: a translucent curtain that flares as it falls,
+## with streaks running down it so it reads as moving water.
+func _add_fountain_cascade(parent: Node3D, radius: float, top: float, landing_y: float,
+		water: Material, spray: Material) -> void:
+	var lip := top + 0.3
+	var fall := lip - landing_y
+	var curtain := MeshInstance3D.new()
+	curtain.name = "OverflowCurtain"
+	var sheet := CylinderMesh.new()
+	sheet.top_radius = radius + 0.2
+	sheet.bottom_radius = radius + 0.9
+	sheet.height = fall
+	sheet.cap_top = false
+	sheet.cap_bottom = false
+	sheet.radial_segments = 48
+	curtain.mesh = sheet
+	curtain.position.y = landing_y + fall * 0.5
+	curtain.material_override = water
+	parent.add_child(curtain, true)
+	var streaks := GPUParticles3D.new()
+	streaks.name = "OverflowStreaks"
+	streaks.position.y = lip
+	streaks.amount = 320
+	streaks.lifetime = sqrt(2.0 * fall / 9.8)
+	streaks.visibility_aabb = AABB(Vector3(-radius - 2.0, -fall - 1.0, -radius - 2.0),
+		Vector3(radius * 2.0 + 4.0, fall + 2.0, radius * 2.0 + 4.0))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	process.emission_ring_axis = Vector3.UP
+	process.emission_ring_radius = radius + 0.25
+	process.emission_ring_inner_radius = radius + 0.25
+	process.emission_ring_height = 0.0
+	process.direction = Vector3.DOWN
+	process.spread = 2.0
+	process.initial_velocity_min = 0.2
+	process.initial_velocity_max = 0.6
+	process.radial_velocity_min = 0.9
+	process.radial_velocity_max = 1.3
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	streaks.process_material = process
+	var streak := BoxMesh.new()
+	streak.size = Vector3(0.14, 0.9, 0.14)
+	streak.material = spray
+	streaks.draw_pass_1 = streak
+	parent.add_child(streaks, true)
+
+
+## The fountain's source: a tall jet that rises and falls back around it.
+func _add_fountain_jet(parent: Node3D, origin: Vector3, material: Material) -> void:
+	var jet := GPUParticles3D.new()
+	jet.name = "CentralJet"
+	jet.position = origin
+	jet.amount = 220
+	jet.lifetime = 2.8
+	jet.visibility_aabb = AABB(Vector3(-6.0, -14.0, -6.0), Vector3(12.0, 20.0, 12.0))
+	var process := ParticleProcessMaterial.new()
+	process.direction = Vector3.UP
+	process.spread = 7.0
+	process.initial_velocity_min = 9.0
+	process.initial_velocity_max = 10.0
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	process.scale_min = 0.25
+	process.scale_max = 0.45
+	jet.process_material = process
+	var drop := SphereMesh.new()
+	drop.radius = 0.5
+	drop.height = 1.0
+	drop.radial_segments = 6
+	drop.rings = 3
+	drop.material = material
+	jet.draw_pass_1 = drop
+	parent.add_child(jet)
 
 
 ## One particle ring per tier: jets leave the rim, rise, and fall inward.
@@ -1902,11 +2003,14 @@ func _build_life_tree(parent: Node3D, center: Vector3) -> void:
 	visual.scale = Vector3.ONE * TREE_OF_LIFE_GAME_SCALE
 	tree.add_child(visual)
 	_style_original_tree_body(tree, visual)
-	_build_tree_of_life_collision(tree, manifest)
 	_build_blender_blueprint_trunk_root(tree)
 	_build_reference_trunk_root_facade(tree)
 	_build_old_growth_trunk_body(tree)
 	_hide_superseded_procedural_lower_body(tree)
+	# Clear the roots that grew across the doorway (the arch is at z = -42).
+	_cut_tree_meshes(tree, DOORWAY_ROOT_MESHES,
+		AABB(Vector3(-10.0, -5.0, -100.0), Vector3(20.0, 30.0, 70.0)))
+	_build_trunk_collision(tree)
 	# The capture-only switch lets the inspection harness render the embedded
 	# heart at full trunk quality without first submitting the unrelated 43k-leaf
 	# canopy. Normal gameplay never sets this environment variable.
@@ -2029,6 +2133,10 @@ func _build_blender_blueprint_trunk_root(tree: Node3D) -> void:
 	body.set_meta("laptop_runtime_triangles", 58904)
 	body.set_meta("authoritative_lower_body", true)
 	tree.add_child(body)
+	# The dark slate plinth ringing the roots; the court floor shows instead.
+	(body.find_child("FoundationArchitecture", true, false) as Node3D).visible = false
+	# Its cyan ring stood 0.8 m proud of the court at the stair foot; sit it flush.
+	(body.find_child("RootManifold", true, false) as Node3D).global_position.y -= 0.8
 	for mesh_node in body.find_children("*", "MeshInstance3D", true, false):
 		var mesh := mesh_node as MeshInstance3D
 		# The canopy already owns the dominant landmark shadow. Keeping the detailed
@@ -2112,7 +2220,10 @@ func _style_original_tree_body(tree: Node3D, visual: Node3D) -> void:
 		# receive lighting, but this authored visual no longer submits a second full
 		# copy of all its leaves and branches to the shadow renderer.
 		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		if mesh.name.begins_with("Trunk"):
+		if mesh.name.begins_with("Foundation"):
+			# Dark engineered-stone disc around the roots; the court floor shows instead.
+			mesh.visible = false
+		elif mesh.name.begins_with("Trunk"):
 			mesh.visible = false
 			mesh.scale = Vector3(
 				mesh.scale.x * ORIGINAL_TRUNK_RADIAL_SCALE,
@@ -5521,95 +5632,239 @@ func _load_tree_of_life_manifest() -> Dictionary:
 	return parsed as Dictionary if parsed is Dictionary else {}
 
 
-func _build_tree_of_life_collision(tree: Node3D, manifest: Dictionary) -> void:
-	# The 172k-vertex Blender mesh is visual-only. Authored manifest primitives
-	# approximate the load-bearing trunk and low roots without turning thousands
-	# of leaves into expensive collision. The centerline remains a continuous
-	# south-to-north arch wider than the production player capsule.
-	var collision_root := Node3D.new()
-	collision_root.name = "TreeOfLifeCollisionProxies"
-	collision_root.set_meta("proxy_system", "low_cost_authored_primitives")
-	collision_root.set_meta("clear_path_axis", "local_z")
-	var policy := manifest.get("collision_policy", {}) as Dictionary
-	var collision_scale := TREE_OF_LIFE_GAME_SCALE if bool(policy.get("scale_with_visual", true)) else 1.0
-	var minimum_clear_width := SIMPLE_TRUNK_DOOR_WIDTH_M * collision_scale \
-		if bool(tree.get_meta("simple_trunk_core", false)) \
-		else TREE_OF_LIFE_CLEAR_PATH_M * collision_scale
-	collision_root.set_meta("minimum_clear_width_m", minimum_clear_width)
-	collision_root.set_meta("collision_scale", collision_scale)
-	tree.add_child(collision_root)
-
-	if bool(tree.get_meta("simple_trunk_core", false)):
-		_build_simple_trunk_collision(collision_root, collision_scale)
-	else:
-		var trunk_specs := policy.get("trunk_pillars", []) as Array
-		for value in trunk_specs:
-			var spec := value as Dictionary
-			var trunk_body := StaticBody3D.new()
-			trunk_body.name = String(spec.get("name", "TrunkPillar"))
-			trunk_body.position = Vector3(
-				float(spec.get("x_m", 0.0)) * collision_scale,
-				float(spec.get("y_m", 13.5)) * collision_scale,
-				0.0)
-			trunk_body.set_meta("tree_collision_role", "load_bearing_trunk")
-			var trunk_shape_node := CollisionShape3D.new()
-			var trunk_shape := CylinderShape3D.new()
-			trunk_shape.radius = float(spec.get("radius_m", 3.25)) * collision_scale
-			trunk_shape.height = float(spec.get("height_m", 27.0)) * collision_scale
-			trunk_shape_node.shape = trunk_shape
-			trunk_body.add_child(trunk_shape_node)
-			collision_root.add_child(trunk_body)
-
-	var root_specs := policy.get("root_proxies", []) as Array
-	for value in root_specs:
-		var spec := value as Dictionary
-		var blender_xy := spec.get("position_blender_xy_m", [0.0, 0.0]) as Array
-		var size_values := spec.get("size_m", [3.3, 3.0, 16.0]) as Array
-		var root_body := StaticBody3D.new()
-		root_body.name = String(spec.get("name", "LowRootProxy"))
-		# Blender local Y becomes Godot local -Z through the glTF Y-up export.
-		root_body.position = Vector3(
-			float(blender_xy[0]) * collision_scale,
-			float(size_values[1]) * collision_scale * 0.5,
-			-float(blender_xy[1]) * collision_scale)
-		root_body.rotation.y = deg_to_rad(float(spec.get("yaw_godot_deg", 0.0)))
-		root_body.set_meta("tree_collision_role", "low_root")
-		var root_shape_node := CollisionShape3D.new()
-		var root_shape := BoxShape3D.new()
-		root_shape.size = Vector3(
-			float(size_values[0]), float(size_values[1]), float(size_values[2])) * collision_scale
-		root_shape_node.shape = root_shape
-		root_body.add_child(root_shape_node)
-		collision_root.add_child(root_body)
+## Trunk and root collision made from the Blender body's own triangles, so the
+## player stops at the bark and roots they see. Veins, trim and leaves stay visual-only,
+## and only the reachable lower trunk (below TRUNK_COLLISION_TOP_M) is kept.
+const TRUNK_COLLISION_MESHES := ["InnerShell", "BarkRibs", "PrimaryRoots", "RootCambiumWebbing",
+	"SecondaryRootlets", "DoorwayButtresses", "DoorwayArch", "HeartRecess",
+	"ReferenceRootFlare_01", "ReferenceRootFlare_02", "ReferenceRootFlare_03",
+	"ReferenceRootFlare_04", "ReferenceRootFlare_05", "ReferenceRootFlare_06",
+	"ReferenceRootFlare_07", "ReferenceRootFlare_08"]
+const TRUNK_COLLISION_TOP_M := 100.0
 
 
-func _build_simple_trunk_collision(parent: Node3D, collision_scale: float) -> void:
-	var root_radius := SIMPLE_TRUNK_ROOT_DIAMETER_M * collision_scale * 0.5
-	var door_half_width := SIMPLE_TRUNK_DOOR_WIDTH_M * collision_scale * 0.5
-	var door_height := SIMPLE_TRUNK_DOOR_HEIGHT_M * collision_scale
-	var trunk_height := SIMPLE_TRUNK_HEIGHT_M * collision_scale
-	var trunk_depth := SIMPLE_TRUNK_ROOT_DIAMETER_M * collision_scale
-	var side_width := root_radius - door_half_width
-	for side in [-1.0, 1.0]:
-		_add_trunk_collision_box(parent,
-			"SimpleTrunkDoorway%s" % ("Left" if side < 0.0 else "Right"),
-			Vector3(side * (door_half_width + side_width * 0.5),
-				door_height * 0.5, 0.0),
-			Vector3(side_width, door_height, trunk_depth))
-	_add_trunk_collision_box(parent, "SimpleTrunkDoorwayTop",
-		Vector3(0.0, door_height + (trunk_height - door_height) * 0.5, 0.0),
-		Vector3(root_radius * 2.0, trunk_height - door_height, trunk_depth))
+func _build_trunk_collision(tree: Node3D) -> void:
+	var to_tree := tree.global_transform.affine_inverse()
+	var faces := PackedVector3Array()
+	for mesh_name in TRUNK_COLLISION_MESHES:
+		var mesh_node := tree.find_child(mesh_name, true, false) as MeshInstance3D
+		var to_local := to_tree * mesh_node.global_transform
+		var mesh_faces := mesh_node.mesh.get_faces()
+		for index in range(0, mesh_faces.size(), 3):
+			var a := to_local * mesh_faces[index]
+			var b := to_local * mesh_faces[index + 1]
+			var c := to_local * mesh_faces[index + 2]
+			if minf(a.y, minf(b.y, c.y)) < TRUNK_COLLISION_TOP_M:
+				faces.append(a)
+				faces.append(b)
+				faces.append(c)
+	var shape := ConcavePolygonShape3D.new()
+	# The bark is a shell: walked against from the court and from the hollow.
+	shape.backface_collision = true
+	shape.set_faces(faces)
+	var body := StaticBody3D.new()
+	body.name = "TrunkCollision"
+	var shape_node := CollisionShape3D.new()
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	tree.add_child(body)
 
 
-func _add_trunk_collision_box(parent: Node3D, body_name: String,
-		position: Vector3, size: Vector3) -> void:
+## Root meshes trimmed out of the doorway by _cut_tree_meshes.
+const DOORWAY_ROOT_MESHES := ["PrimaryRoots", "SecondaryRootlets", "RootCambiumWebbing",
+	"RootEnergyChannels", "ReferenceRootFlare_04", "ReferenceRootFlare_08",
+	"ReferenceRootEmbeddedEnergyFiberBundle", "ReferenceRootGoldSlashInlayBundle"]
+
+
+## Drops every triangle whose centre lies inside `box` (tree space) from the
+## named meshes, keeping their materials.
+func _cut_tree_meshes(tree: Node3D, mesh_names: Array, box: AABB) -> void:
+	var to_tree := tree.global_transform.affine_inverse()
+	for mesh_name in mesh_names:
+		var mesh_node := tree.find_child(mesh_name, true, false) as MeshInstance3D
+		var to_local := to_tree * mesh_node.global_transform
+		var source := mesh_node.mesh
+		var cut := ArrayMesh.new()
+		var overrides := []
+		for surface in source.get_surface_count():
+			overrides.append(mesh_node.get_surface_override_material(surface))
+			var arrays := source.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			if indices.is_empty():
+				indices = PackedInt32Array(range(vertices.size()))
+			var kept := PackedInt32Array()
+			for index in range(0, indices.size(), 3):
+				var centre := to_local * ((vertices[indices[index]] + vertices[indices[index + 1]]
+					+ vertices[indices[index + 2]]) / 3.0)
+				if not box.has_point(centre):
+					kept.append(indices[index])
+					kept.append(indices[index + 1])
+					kept.append(indices[index + 2])
+			arrays[Mesh.ARRAY_INDEX] = kept
+			cut.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+			cut.surface_set_material(surface, source.surface_get_material(surface))
+		mesh_node.mesh = cut
+		for surface in overrides.size():
+			mesh_node.set_surface_override_material(surface, overrides[surface])
+
+
+## A spiral stair up the middle of the hollow trunk to a glass lookout floor.
+## The floor spans the hollow below the first branches (~45 m), so nothing
+## without collision is reachable. Like _add_walk_stairs, the stair collision
+## is one smooth ramp (a helix here) and the visible steps sit on it.
+const TREE_STAIR_INNER_RADIUS := 6.0
+const TREE_STAIR_OUTER_RADIUS := 16.0
+const TREE_STAIR_TOP := 34.0
+const TREE_STAIR_RISE_PER_TURN := 18.0
+const TREE_STAIR_STEP_COUNT := 75
+const TREE_LOOKOUT_RADIUS := 24.0
+const TREE_LOOKOUT_WALL_HEIGHT := 2.4
+# The lookout floor leaves the last ~80 degrees of stair open above it, so
+# the stair under the floor is always at least 4 m below: room to climb.
+const TREE_LOOKOUT_STAIRWELL := 1.4
+
+
+func _build_tree_spiral_stairs(parent: Node3D, base: Vector3) -> void:
+	var stairs := Node3D.new()
+	stairs.name = "TreeSpiralStairs"
+	stairs.position = base
+	parent.add_child(stairs)
+	var rise := TREE_STAIR_TOP / TREE_STAIR_STEP_COUNT
+	var step_angle := TAU * rise / TREE_STAIR_RISE_PER_TURN
+	var climb_angle := step_angle * TREE_STAIR_STEP_COUNT
+	# The first step faces the doorway (-Z).
+	var start_angle := -PI * 0.5
+
+	# Split radially as well: one quad per step twists enough that its long
+	# diagonal reads as a wall and stops the capsule.
+	var faces := PackedVector3Array()
+	for ring in 4:
+		faces.append_array(_helix_faces(start_angle, 0.0, climb_angle, TREE_STAIR_STEP_COUNT,
+			lerpf(TREE_STAIR_INNER_RADIUS, TREE_STAIR_OUTER_RADIUS, ring / 4.0),
+			lerpf(TREE_STAIR_INNER_RADIUS, TREE_STAIR_OUTER_RADIUS, (ring + 1) / 4.0),
+			TREE_STAIR_RISE_PER_TURN))
+	_add_faces_body(stairs, "StairRamp", faces, false)
+
+	# One draw call for every tread.
+	var tread := BoxMesh.new()
+	tread.size = Vector3(TREE_STAIR_OUTER_RADIUS - TREE_STAIR_INNER_RADIUS, 0.5,
+		2.0 * TREE_STAIR_OUTER_RADIUS * sin(step_angle * 0.5) + 0.1)
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = tread
+	multimesh.instance_count = TREE_STAIR_STEP_COUNT
+	for step in TREE_STAIR_STEP_COUNT:
+		var mid := start_angle + step_angle * (float(step) + 0.5)
+		var centre := Vector3(cos(mid), 0.0, sin(mid)) \
+			* (TREE_STAIR_INNER_RADIUS + TREE_STAIR_OUTER_RADIUS) * 0.5
+		multimesh.set_instance_transform(step,
+			Transform3D(Basis(Vector3.UP, -mid), centre + Vector3.UP * (rise * float(step + 1) - 0.25)))
+	var treads := MultiMeshInstance3D.new()
+	treads.name = "Treads"
+	treads.multimesh = multimesh
+	treads.material_override = _materials.passage_stone
+	stairs.add_child(treads)
+	_add_cylinder(stairs, "StairColumn", Vector3(0.0, TREE_STAIR_TOP * 0.5, 0.0),
+		TREE_STAIR_INNER_RADIUS, TREE_STAIR_TOP, _materials.wood, true, 16)
+	_build_tree_lookout(stairs, start_angle + climb_angle)
+
+
+## Glass-floored lookout at the stair head: look down the spiral and up the
+## hollow into the canopy. A glass wall and gold rails ring it.
+func _build_tree_lookout(stairs: Node3D, stair_end_angle: float) -> void:
+	var lookout := Node3D.new()
+	lookout.name = "GlassLookout"
+	lookout.position.y = TREE_STAIR_TOP
+	stairs.add_child(lookout)
+	var glass := _make_glow(Color(0.62, 0.92, 1.0, 0.28), 0.25, true)
+	# Floor: everything inside the wall except the stairwell over the last
+	# stretch of stair, which arrives at stair_end_angle.
+	var floor_faces := _helix_faces(stair_end_angle, 0.0, TAU - TREE_LOOKOUT_STAIRWELL, 48,
+		TREE_STAIR_INNER_RADIUS, TREE_STAIR_OUTER_RADIUS, 0.0)
+	floor_faces.append_array(_helix_faces(stair_end_angle, 0.0, TAU, 64,
+		TREE_STAIR_OUTER_RADIUS, TREE_LOOKOUT_RADIUS, 0.0))
+	_add_faces_body(lookout, "LookoutFloor", floor_faces, false)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = floor_faces
+	var normals := PackedVector3Array()
+	normals.resize(floor_faces.size())
+	normals.fill(Vector3.UP)
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var floor_mesh := ArrayMesh.new()
+	floor_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var floor_visual := MeshInstance3D.new()
+	floor_visual.name = "GlassFloor"
+	floor_visual.mesh = floor_mesh
+	floor_visual.material_override = glass
+	lookout.add_child(floor_visual)
+
+	var wall_mesh := CylinderMesh.new()
+	wall_mesh.top_radius = TREE_LOOKOUT_RADIUS
+	wall_mesh.bottom_radius = TREE_LOOKOUT_RADIUS
+	wall_mesh.height = TREE_LOOKOUT_WALL_HEIGHT
+	wall_mesh.radial_segments = 64
+	wall_mesh.cap_top = false
+	wall_mesh.cap_bottom = false
+	var wall := MeshInstance3D.new()
+	wall.name = "GlassWall"
+	wall.mesh = wall_mesh
+	wall.position.y = TREE_LOOKOUT_WALL_HEIGHT * 0.5
+	wall.material_override = glass
+	lookout.add_child(wall)
+	var wall_faces := PackedVector3Array()
+	var up := Vector3.UP * TREE_LOOKOUT_WALL_HEIGHT
+	for segment in 64:
+		var p0 := Vector3(cos(TAU * segment / 64.0), 0.0, sin(TAU * segment / 64.0)) \
+			* TREE_LOOKOUT_RADIUS
+		var p1 := Vector3(cos(TAU * (segment + 1) / 64.0), 0.0, sin(TAU * (segment + 1) / 64.0)) \
+			* TREE_LOOKOUT_RADIUS
+		wall_faces.append_array(PackedVector3Array([p0, p1, p1 + up, p0, p1 + up, p0 + up]))
+	_add_faces_body(lookout, "GlassWallCollision", wall_faces, true)
+	for rail_y in [0.0, TREE_LOOKOUT_WALL_HEIGHT]:
+		var rail_mesh := TorusMesh.new()
+		rail_mesh.inner_radius = TREE_LOOKOUT_RADIUS - 0.2
+		rail_mesh.outer_radius = TREE_LOOKOUT_RADIUS + 0.2
+		rail_mesh.rings = 64
+		rail_mesh.ring_segments = 6
+		var rail := MeshInstance3D.new()
+		rail.name = "GoldRail"
+		rail.mesh = rail_mesh
+		rail.position.y = rail_y
+		rail.material_override = _materials.gold
+		lookout.add_child(rail, true)
+
+
+## Top faces of a band swept from `from` to `from + sweep` (radians past
+## `start_angle`), rising `rise_per_turn` per turn; 0 gives a flat ring sector.
+## Clockwise from above is the front face (as in hub_castle_stairs.gd).
+func _helix_faces(start_angle: float, from: float, sweep: float, segments: int,
+		inner: float, outer: float, rise_per_turn: float) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	for segment in segments:
+		var a0 := from + sweep * segment / segments
+		var a1 := from + sweep * (segment + 1) / segments
+		var d0 := Vector3(cos(start_angle + a0), 0.0, sin(start_angle + a0))
+		var d1 := Vector3(cos(start_angle + a1), 0.0, sin(start_angle + a1))
+		var y0 := Vector3.UP * a0 / TAU * rise_per_turn
+		var y1 := Vector3.UP * a1 / TAU * rise_per_turn
+		var in0 := d0 * inner + y0
+		var out0 := d0 * outer + y0
+		var in1 := d1 * inner + y1
+		var out1 := d1 * outer + y1
+		faces.append_array(PackedVector3Array([out0, out1, in1, out0, in1, in0]))
+	return faces
+
+
+func _add_faces_body(parent: Node3D, body_name: String, faces: PackedVector3Array,
+		two_sided: bool) -> void:
+	var shape := ConcavePolygonShape3D.new()
+	shape.backface_collision = two_sided
+	shape.set_faces(faces)
 	var body := StaticBody3D.new()
 	body.name = body_name
-	body.position = position
-	body.set_meta("tree_collision_role", "simple_trunk_shell")
 	var shape_node := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = size
 	shape_node.shape = shape
 	body.add_child(shape_node)
 	parent.add_child(body)
@@ -5631,6 +5886,17 @@ func _build_cat_companion(parent: Node3D, position: Vector3) -> void:
 		ear.material_override = _materials.black
 		cat.add_child(ear)
 		_add_sphere(cat, "Eye", Vector3(side * 1.8, 12.7, -4.2), Vector3(0.75, 1.0, 0.45), _materials.gold)
+	# One cylinder from the court floor to the ear tips.
+	var body := StaticBody3D.new()
+	body.name = "CatCollision"
+	body.position.y = 8.0
+	var shape_node := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = 5.2
+	shape.height = 18.0
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	cat.add_child(body)
 
 
 func _build_radial_arches(parent: Node3D) -> void:

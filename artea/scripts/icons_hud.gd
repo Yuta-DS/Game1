@@ -1,4 +1,5 @@
 extends Control
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 @onready var settingsPanel = $"Settings Panel"
 @onready var inventoryPanel = $"Inventory Panel"
@@ -41,16 +42,9 @@ func _on_mute_check_box_toggled(toggled_on: bool) -> void:
 func _on_settings_logout_button_pressed() -> void:
 	
 	Auth.logout()
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/game_start.tscn"
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/game_start.tscn")
 
 
 func _on_settings_credits_button_pressed() -> void:
 	
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/credit_Section.tscn"
-	
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/credit_Section.tscn")

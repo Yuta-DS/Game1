@@ -1,4 +1,5 @@
 extends Area3D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 # NOTE: _on_body_entered ignores this and hard-codes the drawing tool, so this
 # export currently does nothing. Left pointing at a real scene rather than the
@@ -11,4 +12,4 @@ func _ready():
 
 func _on_body_entered(body):
 	if body.is_in_group("player"):  # Make sure only the player triggers it
-		get_tree().change_scene_to_file('res://scenes/drawing_tool.tscn')
+		SceneLoader.change_scene(get_tree(), 'res://scenes/drawing_tool.tscn')

@@ -1,4 +1,5 @@
 extends Control
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 # Configuration Variables
 const GRID_SIZE = 32 # Length in each direction
@@ -637,4 +638,4 @@ func _on_LocalButton_pressed() -> void:
  
 #Back button clicked – return to hub scene
 func _on_back_to_hub_button_pressed() -> void:
-    get_tree().change_scene_to_file("res://scenes/artea_game.tscn")
+    SceneLoader.change_scene(get_tree(), "res://scenes/artea_game.tscn")

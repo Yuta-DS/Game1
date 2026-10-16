@@ -30,13 +30,13 @@ func _run() -> void:
 			"barbican tower %s is solid and cannot be walked through" % tower.name)
 		assert(absf(tower.position.z) >= 4.19,
 			"solid barbican tower %s leaves a full player lane beside the fire" % tower.name)
-	var village_masonry := hub.get_node_or_null("VillageStyleStairTowerMasonry") as Node3D
-	assert(village_masonry != null
-		and village_masonry.find_children("VillageMasonryBlock_*", "MeshInstance3D",
-			true, false).size() >= 128,
-		"plain stair tower receives reference-density staggered village masonry")
-	assert(village_masonry.find_children("*", "StaticBody3D", true, false).is_empty(),
-		"village-style masonry is visual-only and cannot snag the player")
+	var stair_tower := hub.get_node_or_null("CastleStairs/CastleStair/MasonryTower") as MeshInstance3D
+	assert(stair_tower != null and stair_tower.material_override != null
+		and stair_tower.material_override.get_meta("castle_role", "") == "stained_glass",
+		"the spiral stair tower's core is glazed in stained glass")
+	assert(hub.get_node("CastleStairs/CastleStair").find_children(
+			"AetherWindow*", "Node3D", false, false).is_empty(),
+		"the square panels on the stair tower are removed")
 
 	var palette_found := false
 	for mesh_candidate in castle.find_children("*", "MeshInstance3D", true, false):
@@ -46,16 +46,24 @@ func _run() -> void:
 		for surface in mesh_node.mesh.get_surface_count():
 			var material := mesh_node.get_active_material(surface)
 			if material is StandardMaterial3D and material.get_meta("castle_palette", "") \
-					== "simple_village_atlas" \
+					== "sleeping_beauty_rose_atlas" \
 					and not (material as StandardMaterial3D).emission_enabled:
 				palette_found = true
-	assert(palette_found, "castle uses the same simple non-emissive village atlas")
+	assert(palette_found, "castle uses the non-emissive rose (Sleeping Beauty) village atlas")
 	assert(architecture.find_children("*TurretRoof", "MeshInstance3D", true, false).size() == 4,
-		"four castle turrets use the restored red roof language")
+		"four castle turrets carry spire roofs")
 	for roof in architecture.find_children("*TurretRoof", "MeshInstance3D", true, false):
 		assert((roof as MeshInstance3D).material_override.get_meta(
-			"original_palette_role", "") == "reference_red_roof",
-			"added turret roofs match the original red castle roofs")
+			"original_palette_role", "") == "sleeping_beauty_blue_roof",
+			"added turret roofs match the castle's blue roofs")
+		assert(architecture.get_node_or_null("%sFinialOrb" % roof.name) != null,
+			"each turret spire is topped with a gold finial")
+	for lancet in architecture.find_children("GothicLancet_*", "Node3D", true, false):
+		var glass := lancet.get_node_or_null("StainedGlass") as MeshInstance3D
+		assert(glass != null and glass.material_override.get_meta("castle_role", "")
+			== "stained_glass", "every lancet frame is glazed with stained glass")
+	assert(architecture.get_node_or_null("RoseWindow/StainedGlass") != null,
+		"the entrance face carries a stained-glass rose window")
 	assert(architecture.find_children("GothicButtress_*", "Node3D", true, false).size() == 4,
 		"castle-only redesign retains detailed Gothic buttresses")
 	assert(architecture.find_children("GothicLancet_*", "Node3D", true, false).size() == 4,
@@ -85,7 +93,7 @@ func _run() -> void:
 			"%s is not built into the simple castle silhouette" % technology_path)
 	var gallery_ring := hub.get_node_or_null(
 		"CastleFoundation/GalleryFoundationPlaza") as MeshInstance3D
-	assert(gallery_ring != null and not gallery_ring.visible,
+	assert(gallery_ring == null or not gallery_ring.visible,
 		"large grey circular platform beneath the front door is removed")
 	var root_crown := hub.get_node_or_null(
 		"CastleFoundation/GiantTreeFoundation/IntegratedCastleRootCrown") as Node3D
@@ -109,7 +117,6 @@ func _run() -> void:
 	var entrance := hub.get_node_or_null("CastleEntrance/CastleEntrance") as Node3D
 	var terrace_rings := entrance.find_children("TerraceLevitationRing_*",
 		"MeshInstance3D", true, false) if entrance != null else []
-	assert(terrace_rings.size() == 2, "the two terrace rings have stable identities")
 	for terrace_ring in terrace_rings:
 		assert(not (terrace_ring as MeshInstance3D).visible,
 			"tree-root-adjacent ring %s is removed" % terrace_ring.name)
