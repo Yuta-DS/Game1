@@ -600,6 +600,11 @@ func _apply_visual_state(animate: bool) -> void:
 	var broken_core := visual_root.get_node_or_null("BrokenCore") as MeshInstance3D
 	if broken_core != null:
 		broken_core.visible = int(current_state.get("anchor_state", 0)) == AnchorState.BROKEN
+	# This board uses its authored strip visuals. Pulsing the hidden generic core
+	# crashes the Web renderer during an interaction, so update the model only.
+	if save_id == "world_one.memory_board":
+		_apply_blender_visual_state()
+		return
 	if animate and not bool(current_state.get("completed", false)):
 		var tween := create_tween()
 		tween.tween_property(core, "scale", Vector3.ONE * 1.12, 0.09)

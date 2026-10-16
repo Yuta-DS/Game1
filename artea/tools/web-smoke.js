@@ -33,13 +33,14 @@ const outDir = (() => {
 })();
 const keepOpen = args.includes('--keep-open');
 const repeat = args.includes('--repeat');
+const storyProbe = new URL(url).searchParams.get('world_one_story') === '1';
 const DEBUG_PORT = 9222;
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
-// current login screen puts it at y=726; deployments still running the older,
-// shorter login panel have it at y=568. Tried in order until one is accepted.
+// current login screen puts it at y=568; other deployments may put it at
+// y=726. Tried in order until one is accepted.
 const VIEWPORT = { width: 1280, height: 800 };
-const GUEST_BUTTONS = [{ x: 300, y: 726 }, { x: 287, y: 568 }];
+const GUEST_BUTTONS = [{ x: 287, y: 568 }, { x: 300, y: 726 }];
 
 const CHROME_PATHS = [
 	'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -251,6 +252,8 @@ async function connect() {
 		const until = Date.now() + timeoutMs;
 		while (Date.now() < until) {
 			if (crashed()) throw new Error('renderer crashed (out of memory is the usual cause)');
+			const runtimeError = consoleLines.find((line) => /Uncaught RuntimeError:/.test(line));
+			if (runtimeError) throw new Error(runtimeError);
 			if (consoleLines.slice(from).some((l) => re.test(l))) {
 				say('OK  ' + label);
 				return;
@@ -288,10 +291,16 @@ async function connect() {
 				await waitForLog(/GUEST access selected|galaxy world=true/, 'guest login accepted', 60000);
 				break;
 			} catch (err) {
-				if (index === GUEST_BUTTONS.length - 1) throw err;
+				if (index === GUEST_BUTTONS.length - 1 || /Uncaught RuntimeError:/.test(err.message)) throw err;
 			}
 		}
 		await waitForLog(/Successfully spawned|galaxy world=true/, 'hub scene built', 120000);
+		if (storyProbe) {
+			await waitForLog(/WORLD_ONE_WEB_STORY: /, 'World One story probe completed', 180000);
+			const reportLine = consoleLines.find((line) => line.startsWith('WORLD_ONE_WEB_STORY: '));
+			const report = JSON.parse(reportLine.slice('WORLD_ONE_WEB_STORY: '.length));
+			if (!report.ok) throw new Error('World One story probe failed: ' + JSON.stringify(report.errors));
+		}
 		await sleep(8000);
 		const before = await shot('02-in-hub');
 
@@ -308,7 +317,7 @@ async function connect() {
 
 		const identical = (a, b) => a.length === b.length && a.equals(b);
 		const moved = !identical(before, during) || !identical(during, after);
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|Uncaught RuntimeError:/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();
