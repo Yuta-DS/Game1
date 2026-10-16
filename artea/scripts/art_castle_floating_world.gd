@@ -1803,8 +1803,12 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var midpoint := (start + end) * 0.5 + Vector3(0.0, -2.02, 0.0)
 	var yaw := atan2(direction.x, direction.z)
 	var walkway_material: Material = _materials.passage_stone if tree_processional else _materials.stone
-	_add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
+	var walkway := _add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
 		walkway_material, true, yaw)
+	# Processional bridges draw their own deck over the full width; the plain
+	# walkway underneath only z-fought with the island decks where the ends
+	# overlap them. Its collision stays the walkable surface.
+	walkway.visible = not tree_processional
 	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
 	for side in [-1.0, 1.0]:
 		var rail_height := 5.0 if tree_processional else 10.0
@@ -1856,7 +1860,9 @@ func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
 	asset_holder.name = "ReferenceTreeProcessionalBridge"
 	# Blender +Y imports as Godot -Z, which matches this route from z=1422 to
 	# z=975 exactly. Its paver top sits 23 cm above the tested collision deck.
-	asset_holder.position = start
+	# Lifted 8 cm: the asset's deck base is authored at y=0, level with the
+	# island decks it overlaps at each end, and flickered against them there.
+	asset_holder.position = start + Vector3.UP * 0.08
 	asset_holder.rotation.y = yaw + PI
 	# The asset is authored at 447 x 62 m (SouthArrivalBridge). Shorter
 	# bridges squeeze it to fit; it is visual only, collision is the Walkway.
