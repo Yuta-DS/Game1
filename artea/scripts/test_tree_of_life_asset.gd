@@ -244,8 +244,11 @@ func _run() -> void:
 		"ChristmasTreeMelody3D") as AudioStreamPlayer3D
 	var christmas_bells := tree.get_node_or_null(
 		"ChristmasTreeBells3D") as AudioStreamPlayer3D
+	# The player spawns far from the tree, where both streams intentionally pause.
+	# The movement checks below verify they resume, fade, and pause again.
 	if christmas_melody == null or christmas_bells == null \
-			or not christmas_melody.playing or not christmas_bells.playing \
+			or not (christmas_melody.playing or christmas_melody.stream_paused) \
+			or not (christmas_bells.playing or christmas_bells.stream_paused) \
 			or not christmas_melody.stream is AudioStreamOggVorbis \
 			or not (christmas_melody.stream as AudioStreamOggVorbis).loop \
 			or christmas_melody.attenuation_model \
@@ -735,4 +738,6 @@ func _run() -> void:
 		int(canopy.get_meta("minimum_visible_leaves_per_visible_twig", -1))])
 	print("TREE_OF_LIFE_ASSET_TEST: PASS — %s editable vertices, %s modules, %s game meshes, and production player walked in through the doorway" % [
 		int(source.get("vertices", 0)), int(source.get("named_mesh_modules", 0)), game_meshes.size()])
+	world.queue_free()
+	await process_frame
 	quit()
