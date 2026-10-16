@@ -1,4 +1,5 @@
 extends Control
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 # Every path out of this screen goes to the hub. They used to point at
 # res://Game.tscn and res://New_Hub_World.tscn, neither of which exists, so
@@ -51,15 +52,11 @@ func on_login_succeeded(auth):
 	print(auth)
 	%StateLabel.text = "Login success!"
 	Firebase.Auth.save_auth(auth)
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
 	# The hub lives in res://scenes/. The old res://New_Hub_World.tscn does not
 	# exist, so logging in dropped the player on a loading screen that never
 	# finished — and everything reached through the hub, including the Lens of
 	# Seeing, was unreachable from a normal start.
-	loading_screen.next_scene_path = HUB_SCENE
-	
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free() 
+	SceneLoader.change_scene_with_loading(get_tree(), HUB_SCENE)
 	#get_tree().change_scene_to_file("res://Game.tscn")
 	
 # Called when sign up is successful
@@ -71,10 +68,7 @@ func on_signup_succeeded(auth):
 	# thread, so the window sat frozen through shader compilation and grass
 	# placement with no feedback. Route through the loading screen like login
 	# does, so that cost is hidden behind a progress bar instead.
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = HUB_SCENE
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	SceneLoader.change_scene_with_loading(get_tree(), HUB_SCENE)
 
 # Called if login fails	
 func on_login_failed(error_code, message):
@@ -102,5 +96,5 @@ func _on_sign_in_google_button_pressed():
 
 func _on_d_button_pressed() -> void:
 	# Was res://scenes/3DScenes.tscn, which does not exist.
-	get_tree().change_scene_to_file(HUB_SCENE)
+	SceneLoader.change_scene(get_tree(), HUB_SCENE)
 	

@@ -1,4 +1,5 @@
 extends Node2D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 # Links to the intro music audio player node
 @onready var menu_music = $AudioStreamPlayer 
@@ -203,7 +204,4 @@ func enter_game(username: String, is_guest: bool = false):
 	# from freezing but does nothing to hide the pop-in. The loading screen
 	# now waits on that thread too (see loading_scene.gd), not just the scene
 	# resource itself.
-	var loading_screen = preload("res://scenes/loading_scene.tscn").instantiate()
-	loading_screen.next_scene_path = "res://scenes/New_Hub_World.tscn"
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")

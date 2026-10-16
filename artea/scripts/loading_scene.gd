@@ -1,6 +1,7 @@
 extends Control
 
 const ShaderWarmup := preload("res://scripts/shader_warmup.gd")
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 @export var next_scene_path: String = ""
 @onready var progress_bar = $progress_bar
@@ -82,14 +83,32 @@ func _process(_delta):
 	if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 		_report(float(progress[0]) * LOAD_SLICE, "Loading world")
 
+	elif status == ResourceLoader.THREAD_LOAD_FAILED \
+			or status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		loading_started = false
+		_fail("load failed")
+
 	elif status == ResourceLoader.THREAD_LOAD_LOADED:
 		loading_started = false  # prevent re-entry
 		var loaded_scene = ResourceLoader.load_threaded_get(next_scene_path)
-		get_tree().change_scene_to_packed(loaded_scene)
+		# A scene missing one of its dependencies arrives as null (web.txt
+		# Problem 1), and change_scene_to_packed then does nothing.
+		var err: Error = ERR_CANT_CREATE if loaded_scene == null \
+			else get_tree().change_scene_to_packed(loaded_scene)
+		if err != OK:
+			_fail(error_string(err))
+			return
 
 		await get_tree().process_frame
 		MusicManager._check_scene()
 		_wait_for_scatter_then_finish()
+
+# The scene being left is already gone, so this screen is all the player has:
+# say so on it rather than leaving the bar parked as if still loading.
+func _fail(reason: String) -> void:
+	SceneLoader.report_failure(get_tree(), next_scene_path, reason)
+	progress_label.text = "Couldn't load this area. Reload the game to try again."
+
 
 # The .tscn resource finishing "load" above only means it has been parsed
 # and instantiated. ProtonScatter's Grass/Objects nodes then spend several

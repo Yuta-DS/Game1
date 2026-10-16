@@ -181,14 +181,20 @@ func _process(delta: float) -> void:
 	for i in _banners.size():
 		_banners[i].rotation.z = sin(_sway_time * 0.9 + float(i) * 1.7) * 0.06
 
+	# The castle redesign frees the gears and floating orbs it does not use
+	# (castle_redesign.gd _remove_piece), so skip any that are gone.
 	if not is_zero_approx(_gear_speed):
 		for i in _gears.size():
+			if not is_instance_valid(_gears[i]):
+				continue
 			var direction := 1.0 if i % 2 == 0 else -1.0
 			_gears[i].rotate_y(_gear_speed * direction * delta)
 
 	# The fountain core hovers inside its armature. Rest height is stored on the
 	# node the first time it is seen, so this works no matter where it was built.
 	for i in _floaters.size():
+		if not is_instance_valid(_floaters[i]):
+			continue
 		var floater := _floaters[i]
 		if not floater.has_meta("rest_y"):
 			floater.set_meta("rest_y", floater.global_position.y)

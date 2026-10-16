@@ -10,7 +10,7 @@ func _on_play_pressed():
 	if not ResourceLoader.exists(TWO_LENSES_SCENE):
 		push_error("Mind Spark: Two Lenses scene is unavailable")
 		return
-	get_tree().change_scene_to_file(TWO_LENSES_SCENE)
+	SceneLoader.change_scene(get_tree(), TWO_LENSES_SCENE)
 	
 func _on_instructions_pressed():
 	$CenterContainer.visible = false
