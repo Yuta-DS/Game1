@@ -439,7 +439,16 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 			var frog := _add_sphere(fountain, "Frog", frog_pos, Vector3(0.8, 0.55, 1.0), _materials.gold)
 			frog.rotation.y = -angle + PI * 0.5
 			_add_static_box(fountain, frog_pos, Vector3(1.6, 1.1, 2.0), frog.rotation.y)
-		_add_fountain_spray(fountain, radius - 0.8, top + 1.0, 7.0 + index, radius * 0.35, spray)
+		# Each frog spouts a short arc that lands mid-way across its own pool,
+		# short of the next tier's wall (or the plinth on the top tier).
+		var next_wall: float = tiers[index + 1][0] if index + 1 < tiers.size() else 2.6
+		var spout_up := 5.5
+		var air_time := (spout_up + sqrt(spout_up * spout_up + 2.0 * 9.8 * 1.3)) / 9.8
+		_add_fountain_spray(fountain, radius - 0.8, top + 1.0, spout_up,
+			(radius - 0.8 - next_wall) * 0.5 / air_time, spray)
+		# Every tier above the basin overflows its rim into the pool below.
+		if index > 0:
+			_add_fountain_cascade(fountain, radius, top, float(tiers[index - 1][1]) - 0.3, water, spray)
 
 	# The top pool's floor is 11.5 m; the plinth rises from it.
 	_add_cylinder(fountain, "StatuePlinth", Vector3(0.0, 14.0, 0.0), 2.6, 5.0, _materials.ivory, true, 16)
@@ -451,6 +460,9 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 	_add_statue_figure(statue, Vector3.ZERO, 1.0)
 	_add_statue_figure(statue, Vector3(-1.5, 0.0, 0.6), 0.5)
 	_add_statue_figure(statue, Vector3(1.5, 0.0, 0.6), 0.5)
+	# The source: a jet from above Latona's head that falls back into the top
+	# pool, which then overflows tier by tier down to the basin.
+	_add_fountain_jet(fountain, Vector3(0.0, 23.6, 0.0), spray)
 
 	# Three reward plinths standing in the 9 m pool (floor 8 m), one facing the
 	# arrival gate.
@@ -594,6 +606,81 @@ func _add_static_box(parent: Node3D, position: Vector3, size: Vector3, yaw: floa
 	body.position = position
 	body.rotation.y = yaw
 	parent.add_child(body)
+
+
+## Water spilling over a tier's gold cap (top + 0.3) down the outside of its
+## wall into the pool below: a translucent curtain that flares as it falls,
+## with streaks running down it so it reads as moving water.
+func _add_fountain_cascade(parent: Node3D, radius: float, top: float, landing_y: float,
+		water: Material, spray: Material) -> void:
+	var lip := top + 0.3
+	var fall := lip - landing_y
+	var curtain := MeshInstance3D.new()
+	curtain.name = "OverflowCurtain"
+	var sheet := CylinderMesh.new()
+	sheet.top_radius = radius + 0.2
+	sheet.bottom_radius = radius + 0.9
+	sheet.height = fall
+	sheet.cap_top = false
+	sheet.cap_bottom = false
+	sheet.radial_segments = 48
+	curtain.mesh = sheet
+	curtain.position.y = landing_y + fall * 0.5
+	curtain.material_override = water
+	parent.add_child(curtain, true)
+	var streaks := GPUParticles3D.new()
+	streaks.name = "OverflowStreaks"
+	streaks.position.y = lip
+	streaks.amount = 320
+	streaks.lifetime = sqrt(2.0 * fall / 9.8)
+	streaks.visibility_aabb = AABB(Vector3(-radius - 2.0, -fall - 1.0, -radius - 2.0),
+		Vector3(radius * 2.0 + 4.0, fall + 2.0, radius * 2.0 + 4.0))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	process.emission_ring_axis = Vector3.UP
+	process.emission_ring_radius = radius + 0.25
+	process.emission_ring_inner_radius = radius + 0.25
+	process.emission_ring_height = 0.0
+	process.direction = Vector3.DOWN
+	process.spread = 2.0
+	process.initial_velocity_min = 0.2
+	process.initial_velocity_max = 0.6
+	process.radial_velocity_min = 0.9
+	process.radial_velocity_max = 1.3
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	streaks.process_material = process
+	var streak := BoxMesh.new()
+	streak.size = Vector3(0.14, 0.9, 0.14)
+	streak.material = spray
+	streaks.draw_pass_1 = streak
+	parent.add_child(streaks, true)
+
+
+## The fountain's source: a tall jet that rises and falls back around it.
+func _add_fountain_jet(parent: Node3D, origin: Vector3, material: Material) -> void:
+	var jet := GPUParticles3D.new()
+	jet.name = "CentralJet"
+	jet.position = origin
+	jet.amount = 220
+	jet.lifetime = 2.8
+	jet.visibility_aabb = AABB(Vector3(-6.0, -14.0, -6.0), Vector3(12.0, 20.0, 12.0))
+	var process := ParticleProcessMaterial.new()
+	process.direction = Vector3.UP
+	process.spread = 7.0
+	process.initial_velocity_min = 9.0
+	process.initial_velocity_max = 10.0
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	process.scale_min = 0.25
+	process.scale_max = 0.45
+	jet.process_material = process
+	var drop := SphereMesh.new()
+	drop.radius = 0.5
+	drop.height = 1.0
+	drop.radial_segments = 6
+	drop.rings = 3
+	drop.material = material
+	jet.draw_pass_1 = drop
+	parent.add_child(jet)
 
 
 ## One particle ring per tier: jets leave the rim, rise, and fall inward.
