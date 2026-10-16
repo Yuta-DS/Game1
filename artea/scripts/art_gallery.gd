@@ -161,7 +161,9 @@ func _input(event):
 			viewport.set_input_as_handled()
 		return
 
-	if event.is_action_pressed("ui_accept") and player_near_artwork:
+	if event.is_action_pressed("ui_accept") and player_near_artwork and not _world_opening:
+		if event is InputEventKey and event.echo:
+			return
 		_enter_current_frame_world()
 		var viewport := get_viewport()
 		if viewport != null:
@@ -296,19 +298,21 @@ func _enter_current_frame_world() -> void:
 	if current_frame_name.is_empty() or _world_opening:
 		return
 	_world_opening = true
+	# Space is also Jump. Stop that input before the next physics frame and keep
+	# the player still while the artwork world is being prepared.
+	var player := get_node_or_null("Player3D")
+	if player != null and player.has_method("set_input_enabled"):
+		player.set_input_enabled(false)
 	var path: String = $GalleryManager.prepare_frame_for_world(current_frame_name)
 	if path.is_empty() or not FileAccess.file_exists(path):
-		_world_opening = false
-		ratinglabel.text = "This artwork is not available locally yet. Please try again."
+		_frame_world_failed("This artwork is not available locally yet. Please try again.")
 		return
 	var state := get_node_or_null("/root/CreationWorldState")
 	if state == null:
-		_world_opening = false
-		ratinglabel.text = "The interactive artwork world is not available in this scene yet."
+		_frame_world_failed("The interactive artwork world is not available in this scene yet.")
 		return
 	if not ResourceLoader.exists(CREATION_WORLD_PATH):
-		_world_opening = false
-		ratinglabel.text = "The interactive artwork world is still being prepared. Please try again shortly."
+		_frame_world_failed("The interactive artwork world is still being prepared. Please try again shortly.")
 		return
 
 	state.prepare_artwork(path, current_frame_name.replace("_", " "))
@@ -317,11 +321,23 @@ func _enter_current_frame_world() -> void:
 		if not is_instance_valid(self):
 			return
 		if not ok:
-			_world_opening = false
-			ratinglabel.text = str(response.get("error",
-				"This artwork world could not open yet. Please try again."))
+			_frame_world_failed(str(response.get("error",
+				"This artwork world could not open yet. Please try again.")))
 			return
-		if not SceneLoader.change_scene(get_tree(), CREATION_WORLD_PATH):
-			_world_opening = false
-			ratinglabel.text = "The interactive artwork world could not open yet. Please try again."
+		# Leave the current input dispatch before replacing its scene. Otherwise
+		# the Space event used at the frame can reach the new world as a jump.
+		call_deferred("_open_prepared_frame_world")
 	)
+
+
+func _open_prepared_frame_world() -> void:
+	if not SceneLoader.change_scene(get_tree(), CREATION_WORLD_PATH):
+		_frame_world_failed("The interactive artwork world could not open yet. Please try again.")
+
+
+func _frame_world_failed(message: String) -> void:
+	_world_opening = false
+	ratinglabel.text = message
+	var player := get_node_or_null("Player3D")
+	if player != null and player.has_method("set_input_enabled"):
+		player.set_input_enabled(true)
