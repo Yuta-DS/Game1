@@ -622,6 +622,177 @@ func _build_castle_bridge(parent: Node3D) -> void:
 	# colliders are retained. No plank overlay sits above the player's feet.
 
 
+func _build_bridge_barbican(parent: Node3D) -> void:
+	var barbican := Node3D.new()
+	barbican.name = "CastleBridgeBarbican"
+	barbican.position = parent.to_local(BRIDGE_END_WORLD)
+	barbican.set_meta("route_policy", "solid_towers_clear_central_court_lane")
+	parent.add_child(barbican)
+	for side_value in [-1.0, 1.0]:
+		var lateral: float = side_value
+		# The former +/-3.25 m placement left less than one capsule width between
+		# a tower and the central fire. Because the towers were also visual-only,
+		# the fox appeared to solve that impossible gap by walking through stone.
+		# Moving them to the terrace shoulders creates a broad real route while
+		# keeping the bridge framed by the same two-tower silhouette.
+		var tower_size := Vector3(2.2, 5.2, 2.2)
+		var tower_lateral := lateral * 4.2
+		var pier := _add_mesh(barbican, _box(tower_size), _stone,
+			Vector3(0.0, 2.6, tower_lateral))
+		pier.name = "BarbicanTower"
+		pier.set_meta("collision_policy", "solid_simple_box_no_mesh_tunnelling")
+		_add_box_body(pier, tower_size, "SolidBarbicanTower")
+		var roof := _add_mesh(barbican, _cone(1.75, 2.4, 8), _slate,
+			Vector3(0.0, 6.35, tower_lateral))
+		roof.name = "BarbicanSlateRoof"
+	var left_shoulder := Vector3(0.0, 4.6, -2.3)
+	var right_shoulder := Vector3(0.0, 4.6, 2.3)
+	var apex := Vector3(0.0, 7.4, 0.0)
+	_add_beam_between(barbican, left_shoulder, apex, 0.52, _stone).name = "BarbicanPointedArch"
+	_add_beam_between(barbican, right_shoulder, apex, 0.52, _stone).name = "BarbicanPointedArch"
+
+
+func _build_full_castle_ascent(parent: Node3D) -> void:
+	var ascent := Node3D.new()
+	ascent.name = "CastleGrandCastleAscent"
+	parent.add_child(ascent)
+	var top := parent.to_local(CASTLE_DOOR_WORLD)
+	var bottom := parent.to_local(CASTLE_DOOR_WORLD + Vector3(8.4, -9.0, 0.0))
+	const STEP_COUNT := 18
+	var run := absf(top.x - bottom.x) / float(STEP_COUNT)
+	var rise := (top.y - bottom.y) / float(STEP_COUNT)
+
+	# Eighteen overlapping masonry blocks replace the single steep grey slab.
+	# Their 0.5 m visual rise matches the controller's safe step language while
+	# the original hidden ramp remains the authoritative collision surface.
+	for step_index in STEP_COUNT:
+		var t := (float(step_index) + 0.5) / float(STEP_COUNT)
+		var surface_y := bottom.y + rise * float(step_index + 1)
+		var centre := Vector3(lerpf(bottom.x, top.x, t), surface_y - 0.27, top.z)
+		var tread := _add_mesh(ascent,
+			_box(Vector3(run + 0.20, 0.54, 5.25)),
+			_stone_light if step_index % 3 == 1 else _stone, centre)
+		tread.name = "GrandAscentTread_%02d" % (step_index + 1)
+
+		# Stepped cheek walls turn the climb into a defensible castle stair and
+		# visually connect each tread to the gatehouse foundations above.
+		for side_value in [-1.0, 1.0]:
+			var lateral: float = side_value
+			var cheek := _add_mesh(ascent,
+				_box(Vector3(run + 0.22, 1.12, 0.68)), _stone,
+				Vector3(centre.x, surface_y + 0.28, top.z + lateral * 2.92))
+			cheek.name = "GrandAscentCheek"
+			# Inner face (2.58 m) is outside the 2.4 m hidden ramp, so this never
+			# narrows the route. 3 m tall so the player can't hop the 0.84 m wall.
+			_add_box_body(cheek, Vector3(run + 0.22, 3.0, 0.68), "SolidAscentCheek")
+			if step_index % 3 == 0:
+				var merlon := _add_mesh(ascent, _box(Vector3(0.52, 0.72, 0.78)),
+					_stone_light,
+					Vector3(centre.x, surface_y + 1.18, top.z + lateral * 2.92))
+				merlon.name = "GrandAscentMerlon"
+
+	# Broad landings and square newels mark both ends, making the whole climb
+	# read as one route from the lower court to the upper oak gate.
+	for landing_index in 2:
+		var at_top := landing_index == 1
+		var anchor := top if at_top else bottom
+		var landing := _add_mesh(ascent, _box(Vector3(2.1, 0.46, 6.2)),
+			_stone_light, anchor + Vector3(0.0, -0.23, 0.0))
+		landing.name = "UpperGateLanding" if at_top else "LowerCourtLanding"
+		for side_value in [-1.0, 1.0]:
+			var lateral: float = side_value
+			var newel := _add_mesh(ascent, _box(Vector3(1.05, 2.0, 1.05)), _stone,
+				anchor + Vector3(0.0, 0.76, lateral * 3.05))
+			newel.name = "AscentNewelTower"
+			var cap := _add_mesh(ascent, _cone(0.78, 1.15, 4), _slate,
+				anchor + Vector3(0.0, 2.28, lateral * 3.05))
+			cap.name = "AscentNewelRedCap"
+
+	# Four red heraldic shields repeat the original castle's red accents down
+	# the climb, tying the new stair visually to the restored roof colour.
+	for shield_index in 4:
+		var shield_t := (float(shield_index) + 0.5) / 4.0
+		var shield_y := lerpf(bottom.y, top.y, shield_t) + 1.12
+		var shield_x := lerpf(bottom.x, top.x, shield_t)
+		for side_value in [-1.0, 1.0]:
+			var shield := _add_mesh(ascent, _box(Vector3(0.10, 0.92, 0.62)), _slate,
+				Vector3(shield_x, shield_y, top.z + float(side_value) * 3.29))
+			shield.name = "AscentHeraldicShield"
+
+
+func _build_front_gatehouse(parent: Node3D) -> void:
+	var gatehouse := Node3D.new()
+	gatehouse.name = "CastleFrontGatehouse"
+	gatehouse.position = parent.to_local(CASTLE_DOOR_WORLD)
+	parent.add_child(gatehouse)
+
+	# A battered plinth and shallow stepped sill carry the doorway down into the
+	# castle threshold. These replace the removed floating circular platform.
+	for side_value in [-1.0, 1.0]:
+		var foundation_side: float = side_value
+		var foundation := _add_mesh(gatehouse, _box(Vector3(3.8, 2.6, 3.8)),
+			_stone, Vector3(-0.45, -1.3, foundation_side * 4.0))
+		foundation.name = "GatehouseGroundFoundation"
+		var footing := _add_mesh(gatehouse, _box(Vector3(4.35, 0.42, 4.35)),
+			_stone, Vector3(-0.45, -2.78, foundation_side * 4.0))
+		footing.name = "GatehouseSpreadFooting"
+	for step_index in 3:
+		var step_width := 5.45 + float(step_index) * 0.34
+		var step := _add_mesh(gatehouse,
+			_box(Vector3(0.78, 0.28, step_width)), _stone,
+			Vector3(0.25 + float(step_index) * 0.58,
+				-0.14 - float(step_index) * 0.20, 0.0))
+		step.name = "GateThresholdStep_%02d" % (step_index + 1)
+	var retaining_wall := _add_mesh(gatehouse, _box(Vector3(1.35, 1.7, 5.8)),
+		_stone, Vector3(-0.35, -0.85, 0.0))
+	retaining_wall.name = "GateThresholdRetainingWall"
+	for corbel_side_value in [-1.0, 1.0]:
+		var corbel_side: float = corbel_side_value
+		var corbel := _add_mesh(gatehouse, _box(Vector3(1.75, 0.62, 0.72)),
+			_stone, Vector3(0.18, -0.38, corbel_side * 2.45))
+		corbel.name = "GateThresholdCorbel"
+	for side_value in [-1.0, 1.0]:
+		var lateral: float = side_value
+		var tower := _add_mesh(gatehouse, _box(Vector3(3.1, 8.0, 3.1)), _stone,
+			Vector3(-0.35, 4.0, lateral * 4.0))
+		tower.name = "GatehouseTower"
+		var roof := _add_mesh(gatehouse, _cone(2.35, 3.4, 10), _slate,
+			Vector3(-0.35, 9.7, lateral * 4.0))
+		roof.name = "GatehouseSlateRoof"
+		for merlon_index in 3:
+			var merlon := _add_mesh(gatehouse, _box(Vector3(0.72, 0.9, 0.72)), _stone,
+				Vector3(-0.35, 8.38, lateral * (2.9 + float(merlon_index) * 1.1)))
+			merlon.name = "GatehouseMerlon"
+
+	var left_shoulder := Vector3(-0.15, 5.2, -2.65)
+	var right_shoulder := Vector3(-0.15, 5.2, 2.65)
+	var apex := Vector3(-0.15, 9.0, 0.0)
+	_add_beam_between(gatehouse, Vector3(-0.15, 0.0, -2.65), left_shoulder,
+		0.64, _stone).name = "GatePierLeft"
+	_add_beam_between(gatehouse, Vector3(-0.15, 0.0, 2.65), right_shoulder,
+		0.64, _stone).name = "GatePierRight"
+	_add_beam_between(gatehouse, left_shoulder, apex, 0.64, _stone).name = "PointedGateArch"
+	_add_beam_between(gatehouse, right_shoulder, apex, 0.64, _stone).name = "PointedGateArch"
+	for leaf_index in 2:
+		var side_sign := -1.0 if leaf_index == 0 else 1.0
+		var door := _add_mesh(gatehouse, _box(Vector3(0.28, 4.8, 2.35)), _timber,
+			Vector3(0.08, 2.4, side_sign * 1.2))
+		door.name = "OakGateLeaf_%02d" % (leaf_index + 1)
+		for board_index in 3:
+			var board := _add_mesh(gatehouse, _box(Vector3(0.08, 4.46, 0.62)),
+				_timber_light, door.position + Vector3(0.18, 0.0,
+					-0.68 + float(board_index) * 0.68))
+			board.name = "OakGateBoard"
+		for band_index in 3:
+			var band := _add_mesh(gatehouse, _box(Vector3(0.34, 0.18, 2.28)), _iron,
+				door.position + Vector3(-0.02, -1.45 + float(band_index) * 1.45, 0.0))
+			band.name = "WroughtIronDoorBand"
+	var handle := _add_mesh(gatehouse, _torus(0.23, 0.32), _iron,
+		Vector3(0.29, 2.35, 0.0))
+	handle.name = "WroughtIronGateHandle"
+	handle.rotation.z = PI * 0.5
+
+
 func _add_mesh(parent: Node3D, mesh: Mesh, material: Material,
 		position: Vector3) -> MeshInstance3D:
 	var part := MeshInstance3D.new()

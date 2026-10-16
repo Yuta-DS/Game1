@@ -349,7 +349,7 @@ func collect_item(item: itemData) -> bool:
 				if slot.item_Data.name == item.name:
 					slot.quantity += 1
 					if inventory_gui:
-						inventory_gui.refresh_slots(i)
+						inventory_gui.refresh_slots()
 					return true
 
 	for i in range(inventory_data.slot_Data.size()):
@@ -359,7 +359,7 @@ func collect_item(item: itemData) -> bool:
 			new_slot.quantity = 1
 			inventory_data.slot_Data[i] = new_slot
 			if inventory_gui:
-				inventory_gui.refresh_slots(i)
+				inventory_gui.refresh_slots()
 			return true
 	
 	return false

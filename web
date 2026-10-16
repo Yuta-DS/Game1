@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Artéa on the web, from the repo root.
 #
-#   ./web                 export if needed, serve, open a browser
+#   ./web                 start local backend, export if needed, serve, open a browser
 #   ./web rebuild         force a fresh export first
 #   ./web serve           serve whatever is already built
-#   ./web verify          headless check that Offline Guest reaches the hub,
+#   ./web verify          check the local backend and Offline Guest gameplay,
 #                         plus first-load bytes transferred and time-to-hub
 #   ./web status          what is built, what is serving
 #   ./web stop            stop the local server
@@ -75,6 +75,44 @@ serving_pid() {
 	fi
 }
 
+backend_up() {
+	curl -fsS -m 3 http://127.0.0.1:8000/ 2>/dev/null | grep -q 'server running'
+}
+
+backend_browser_ready() {
+	curl -fsS -m 3 -D - -o /dev/null -X OPTIONS \
+		-H "Origin: http://localhost:${port}" \
+		-H 'Access-Control-Request-Method: POST' \
+		http://127.0.0.1:8000/login 2>/dev/null \
+		| tr -d '\r' \
+		| grep -Eiq "^Access-Control-Allow-Origin: (\\*|http://localhost:${port})$"
+}
+
+ensure_backend() {
+	backend_up && { echo "Backend ready on 127.0.0.1:8000"; return 0; }
+	local backend_python="${repo_dir}/server/venv/bin/python"
+	if [[ ! -x "${backend_python}" ]]; then
+		echo "Backend unavailable: run ./setup.sh to install its dependencies." >&2
+		echo "Offline Guest remains available." >&2
+		return 1
+	fi
+	if ! "${backend_python}" -c 'import flask, flask_cors, flask_sqlalchemy, flask_jwt_extended, bcrypt, requests' >/dev/null 2>&1; then
+		echo "Backend dependencies are incomplete. Run ./setup.sh to install server/requirements.txt." >&2
+		echo "Offline Guest remains available." >&2
+		return 1
+	fi
+	echo "Starting local backend on 127.0.0.1:8000…"
+	mkdir -p "${repo_dir}/server/logs"
+	( cd "${repo_dir}/server" && HOST=127.0.0.1 PORT=8000 \
+		"${backend_python}" server.py >> logs/flaskapp.err.log 2>&1 & )
+	for _ in $(seq 1 20); do
+		backend_up && { echo "Backend ready"; return 0; }
+		sleep 0.5
+	done
+	echo "Backend did not start; Offline Guest remains available. See server/logs/flaskapp.err.log." >&2
+	return 1
+}
+
 kill_server() {
 	# netstat reports a Windows PID, which Git Bash's kill does not know about,
 	# so fall back to taskkill there.
@@ -98,9 +136,24 @@ serve_background() {
 
 case "${command}" in
 	run|rebuild|serve)
+		ensure_backend || true
 		flag=""
 		[[ "${command}" == rebuild ]] && flag="--rebuild"
 		[[ "${command}" == serve ]] && flag="--serve-only"
+		if [[ -n "$(serving_pid)" ]]; then
+			if [[ "${command}" == serve ]]; then
+				echo "Already serving on ${url}"
+			else
+				args=(--export-only)
+				[[ -n "${flag}" ]] && args=("${flag}" "${args[@]}")
+				"${web_sh}" "${args[@]}"
+				echo "Build refreshed; server already listening on ${url}"
+			fi
+			if [[ "${open_browser}" == 1 ]] && command -v open >/dev/null 2>&1; then
+				open "${url}"
+			fi
+			exit 0
+		fi
 		args=(--port "${port}")
 		[[ -n "${flag}" ]] && args=("${flag}" "${args[@]}")
 		[[ "${open_browser}" == 0 ]] && args+=(--no-open)
@@ -116,7 +169,14 @@ case "${command}" in
 		[[ "${repeat}" == 1 ]] && smoke_args+=(--repeat)
 		if [[ -n "${target_url}" ]]; then
 			url="${target_url}"
-		elif [[ -z "$(serving_pid)" ]]; then
+		else
+			ensure_backend
+			backend_browser_ready || {
+				echo "Backend is running but the browser cannot call its login API (CORS preflight failed)." >&2
+				exit 1
+			}
+		fi
+		if [[ -z "${target_url}" && -z "$(serving_pid)" ]]; then
 			echo "Starting a server on ${port} for the check…"
 			if [[ "${repeat}" == 1 ]]; then
 				# A repeat visit is only meaningful with the deployed cache rules.
@@ -125,7 +185,7 @@ case "${command}" in
 				serve_background --serve-only
 			fi
 			started_here=1
-		elif [[ "${repeat}" == 1 ]]; then
+		elif [[ -z "${target_url}" && "${repeat}" == 1 ]]; then
 			echo "A server is already running on ${port} with its own cache headers;" >&2
 			echo "stop it (./web stop) so --repeat can serve with the deployed ones." >&2
 			exit 1
@@ -143,6 +203,7 @@ case "${command}" in
 		;;
 
 	status)
+		backend_up && echo "backend http://127.0.0.1:8000/" || echo "backend not running on 8000"
 		if [[ -f "${build_dir}/index.pck" ]]; then
 			size=$(stat -c '%s' "${build_dir}/index.pck" 2>/dev/null || stat -f '%z' "${build_dir}/index.pck")
 			when=$(stat -c '%y' "${build_dir}/index.pck" 2>/dev/null || stat -f '%Sm' -t '%Y-%m-%d %H:%M' "${build_dir}/index.pck")

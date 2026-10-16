@@ -45,6 +45,13 @@ func _measure(path: String, pitch_degrees: float) -> Vector2:
 	var camera := root.get_viewport().get_camera_3d()
 	var player := scene.get_node("Player3D") as Node3D
 	camera.set("_pitch", deg_to_rad(pitch_degrees))
+	if path.get_file() == "art_gallery_3d_inprogress.tscn":
+		# This scene now starts inside World One, where nearby architecture
+		# legitimately moves the collision-safe camera arm. Measure the rigid
+		# walking follow on the gallery's clear floor instead.
+		player.global_position = Vector3(0.0, 3.0, 0.0)
+		(player as CharacterBody3D).velocity = Vector3.ZERO
+		camera.call("_snap_to_follow_target")
 	for _i in 90:
 		await physics_frame
 	Input.action_press("move_right")

@@ -2226,6 +2226,7 @@ func _build_crown_arrival_court(parent: Node3D, base: Vector2,
 			+ forward, _stone(Color("748b99")))
 	threshold.name = "CrownArrivalThreshold"
 	threshold.set_meta("flush_detail", true)
+	threshold.set_meta("preserve_castle_finish", true)
 
 	# Paired square gateposts with red pyramidal caps repeat the castle and
 	# village towers. They replace the glowing pylons, floating lens and split
@@ -2272,6 +2273,7 @@ func _build_crown_arrival_court(parent: Node3D, base: Vector2,
 				course_position, course_position + forward,
 				_stone(Color("8399a6")))
 			course.name = "CrownArrivalAshlarCourse_%s_%d" % [side_name, course_index]
+			course.set_meta("preserve_castle_finish", true)
 
 
 # Builds the crown landing slab as a full disc with one radial wedge removed,

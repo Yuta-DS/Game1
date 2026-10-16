@@ -259,6 +259,7 @@ func _on_register_button_pressed() -> void:
 
 # Connected to your physical 'GuestButton' (Play Offline as Guest)
 func _on_guest_button_pressed() -> void:
+	print("GUEST access selected")
 	# FORCE WIPE FIELDS: This guarantees the text fields are blanked out 
 	# before the engine moves scenes, cutting any accidental link to input tracking.
 	user_node.text = ""
@@ -318,4 +319,11 @@ func enter_game(username: String, is_guest: bool = false):
 	# from freezing but does nothing to hide the pop-in. The loading screen
 	# now waits on that thread too (see loading_scene.gd), not just the scene
 	# resource itself.
-	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")
+	var destination := "res://scenes/New_Hub_World.tscn"
+	if is_guest and OS.has_feature("web"):
+		# The opt-in browser probes need to exercise the actual World One entry
+		# without relying on a long mouse route through the hub.
+		var query := str(JavaScriptBridge.eval("window.location.search", true))
+		if "world_one_story=1" in query or "world_one_quality=1" in query:
+			destination = "res://scenes/art_gallery_3d_inprogress.tscn"
+	SceneLoader.change_scene_with_loading(get_tree(), destination)

@@ -17,9 +17,14 @@ func _run() -> void:
 	item.name = "Startup collectible"
 	item.stackable = true
 	assert(player.collect_item(item), "an immediate pickup is accepted")
+	var quantity_label := gui.get_node("NinePatchRect/GridContainer/slot/QuantityLabel") as Label
+	assert(quantity_label.text == "1" and not quantity_label.visible,
+		"a new stack refreshes the visible inventory slot")
 	assert(player.collect_item(item), "a repeated pickup stacks")
 	assert(player.inventory_data.slot_Data[0].quantity == 2)
 	assert(gui.inventory_data.slot_Data[0].quantity == 2, "UI and player share the collected state")
+	assert(quantity_label.text == "2" and quantity_label.visible,
+		"stacking refreshes the displayed quantity")
 	player.queue_free()
 	await process_frame
 	print("PLAYER_INVENTORY_STARTUP: PASS — immediate pickups and stacking retain bound UI state")

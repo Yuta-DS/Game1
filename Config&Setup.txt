@@ -1,4 +1,7 @@
 RUN AS WEB: ./web   (rebuild: ./web rebuild | check it plays: ./web verify | stop: ./web stop)
+After ./setup.sh, ./web also starts the local backend on port 8000 if needed,
+so login, registration, artwork, and AI API features can use the same service
+as ./setup.sh run. Offline Guest remains available when the backend is down.
 
 ===============================================================================
 ARTEA - CONFIGURATION & SETUP GUIDE

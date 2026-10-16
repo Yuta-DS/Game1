@@ -597,48 +597,10 @@ func _run() -> void:
 		_fail("causeway end-cap is missing or is still a round full-disc obstruction")
 		return
 
-	# The Lumen Bridge's ceremonial dressing (halo arches, conduit pylons, rune
-	# inlays) has to stay decorative. Two things can go wrong as it is tuned:
-	# an ornament creeps inboard into the 4.8 m deck at body height, or one
-	# quietly gains a collider and becomes a wall across the route. Assert both.
-	#
-	# Corridor test: for every ceremonial mesh, either it stands outboard of the
-	# deck half-width, or it crests above the head-clearance datum, or it lies
-	# flush with the deck. Anything else is inside the player's capsule.
-	const DECK_HALF_WIDTH := 2.4
-	const HEAD_CLEARANCE := 2.4
-	const FLUSH_BAND := 0.75
-	var stair_owner := hub.get_node_or_null("CastleStairs") as Node3D
-	if stair_owner == null:
-		_fail("castle stair root did not build")
-		return
-	var stair_terrace: float = stair_owner.get("TERRACE_DECK_Y")
-	var ceremony := stair.find_children("LumenArch*", "MeshInstance3D", true, false)
-	ceremony.append_array(
-		stair.find_children("LumenRuneSeal_*", "MeshInstance3D", true, false))
-	ceremony.append_array(
-		stair.find_children("AetherLens*", "MeshInstance3D", true, false))
-	if ceremony.size() < 4:
-		_fail("Lumen Bridge ceremonial dressing is missing (found %d pieces)"
-			% ceremony.size())
-		return
-	for candidate in ceremony:
-		var piece := candidate as MeshInstance3D
-		var p := piece.global_position
-		# The span runs along X on the castle's Z 27.41 axis, so lateral offset
-		# from the corridor centreline is the Z distance.
-		var lateral := absf(p.z - 27.41)
-		var height := p.y - stair_terrace
-		var outboard := lateral >= DECK_HALF_WIDTH - 0.01
-		var overhead := height >= HEAD_CLEARANCE
-		var flush := height <= FLUSH_BAND
-		if not (outboard or overhead or flush):
-			_fail("Lumen ceremonial piece %s intrudes into the walking corridor at %s (lateral %.2f m, height %.2f m)"
-				% [piece.name, p, lateral, height])
-			return
-		if not piece.find_children("*", "StaticBody3D", true, false).is_empty():
-			_fail("Lumen ceremonial piece %s carries collision; decoration must be visual-only"
-				% piece.name)
+	# The medieval redesign removes the old glowing bridge machinery.
+	for pattern in ["LumenArch*", "LumenRuneSeal_*", "AetherLens*"]:
+		if not stair.find_children(pattern, "MeshInstance3D", true, false).is_empty():
+			_fail("obsolete Lumen Bridge machinery remains: %s" % pattern)
 			return
 
 	# Datum cross-check: the entrance's upper court and the stair's terrace

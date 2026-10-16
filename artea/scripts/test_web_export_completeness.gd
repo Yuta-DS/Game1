@@ -5,7 +5,19 @@ var _failures := 0
 
 func _init() -> void:
 	var project := FileAccess.get_file_as_string("res://project.godot")
-	var presets := FileAccess.get_file_as_string("res://export_presets.cfg")
+	var presets := ConfigFile.new()
+	var preset_error := presets.load("res://export_presets.cfg")
+	var web_section := ""
+	if preset_error == OK:
+		for section in presets.get_sections():
+			if str(presets.get_value(section, "name", "")) == "Web":
+				web_section = section
+				break
+	var web_files: PackedStringArray = presets.get_value(web_section,
+		"export_files", PackedStringArray())
+	var web_includes := str(presets.get_value(web_section, "include_filter", ""))
+	var web_excludes := str(presets.get_value(web_section, "exclude_filter", ""))
+	var web_options := web_section + ".options"
 	var shell := FileAccess.get_file_as_string("res://web_export_shell.html")
 	var compatibility := FileAccess.get_file_as_string(
 		"res://scripts/web_terrain_compat.gd")
@@ -14,21 +26,34 @@ func _init() -> void:
 		"desktop/editor and Web use the same Compatibility renderer")
 	_check(project.contains('renderer/rendering_method.mobile="gl_compatibility"'),
 		"mobile browsers use the Compatibility renderer")
-	_check(presets.contains('name="Web"')
-		and presets.contains('export_filter="all_resources"'),
-		"Web export packages all runtime Godot resources")
-	_check(presets.contains("data/*.json")
-		and presets.contains("data/scripture/**")
-		and presets.contains("dialogue/**"),
+	_check(not web_section.is_empty()
+		and str(presets.get_value(web_section, "export_filter", "")) == "scenes"
+		and web_files.has("res://scenes/start_screen.tscn")
+		and web_files.has("res://scenes/art_gallery_3d_inprogress.tscn")
+		and web_files.has("res://scenes/mind_spark/mind_spark_world_one.tscn")
+		and web_files.has("res://scenes/creation_world.tscn"),
+		"selected Web preset includes the startup, gallery, Galaxy World, and creation scenes")
+	_check(web_includes.contains("data/*.json")
+		and web_includes.contains("data/scripture/**")
+		and web_includes.contains("dialogue/**"),
 		"dynamically read data and dialogue files are explicitly packaged")
-	_check(presets.contains("vram_texture_compression/for_desktop=true")
-		and presets.contains("vram_texture_compression/for_mobile=true"),
-		"Web textures are exported for desktop and mobile browser GPUs")
-	_check(presets.contains("addons/terrain_3d/bin/libterrain.web.release.wasm32.wasm")
-		and presets.contains("addons/terrain_3d/bin/libterrain.web.debug.wasm32.wasm")
-		and presets.contains("addons/terrain_3d/bin/*windows*")
-		and presets.contains("addons/terrain_3d/bin/*macos*")
-		and presets.contains("addons/terrain_3d/bin/*linux*"),
+	_check(web_includes.contains("shaders/**")
+		and web_includes.contains("resources/**")
+		and web_includes.contains("addons/proton_scatter/src/**")
+		and web_includes.contains("assets3D/characters/**")
+		and web_includes.contains("assets3D/coastal_harbour/**")
+		and web_includes.contains("assets3D/castle_rooftop_parapet/**")
+		and web_includes.contains("scenes/**")
+		and web_includes.contains("assets3D/royal_garden/**"),
+		"hub and World One runtime resources are explicitly packaged")
+	_check(bool(presets.get_value(web_options, "vram_texture_compression/for_desktop", false))
+		and bool(presets.get_value(web_options, "vram_texture_compression/for_mobile", false)),
+		"selected Web preset exports desktop and mobile compressed textures")
+	_check(web_includes.contains("addons/terrain_3d/bin/libterrain.web.release.wasm32.wasm")
+		and web_excludes.contains("addons/terrain_3d/bin/libterrain.web.debug.wasm32.wasm")
+		and web_excludes.contains("addons/terrain_3d/bin/*windows*")
+		and web_excludes.contains("addons/terrain_3d/bin/*macos*")
+		and web_excludes.contains("addons/terrain_3d/bin/*linux*"),
 		"Web extension is included while incompatible native libraries are excluded")
 	_check(shell.contains("background-color: #61a8e8")
 		and shell.contains("Engine.getMissingFeatures"),
@@ -53,7 +78,7 @@ func _init() -> void:
 			"required Web runtime asset exists: %s" % path)
 
 	if _failures == 0:
-		print("PASS: complete cross-platform Web export configuration")
+		print("PASS: selected Web export configuration")
 	quit(_failures)
 
 

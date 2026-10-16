@@ -4,6 +4,7 @@
 #   ./artea/tools/web.sh              # export if needed, then serve + open
 #   ./artea/tools/web.sh --rebuild    # force a fresh export first
 #   ./artea/tools/web.sh --serve-only # skip the export, just serve what exists
+#   ./artea/tools/web.sh --export-only # refresh the build without serving
 #   ./artea/tools/web.sh --port 9000  # pick the port (default 8800)
 #   ./artea/tools/web.sh --no-open    # serve without launching a browser
 #   ./artea/tools/web.sh --prod-cache # serve with the deployed cache headers
@@ -32,6 +33,7 @@ while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--rebuild)    mode=rebuild; shift ;;
 		--serve-only) mode=serve;   shift ;;
+		--export-only) mode=export; shift ;;
 		--no-open)    open_browser=0; shift ;;
 		--prod-cache) cache_mode=prod; shift ;;
 		--port)       port="${2:?--port needs a number}"; shift 2 ;;
@@ -43,6 +45,27 @@ done
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 build_dir="${project_dir}/builds/web"
 index="${build_dir}/index.html"
+pack="${build_dir}/index.pck"
+export_head="${build_dir}/.export-git-head"
+
+export_is_stale() {
+	[[ -f "${index}" && -f "${pack}" && -f "${export_head}" ]] || return 0
+	local current_head
+	current_head="$(git -C "${project_dir}" rev-parse HEAD 2>/dev/null)" || return 0
+	[[ "$(cat "${export_head}")" == "${current_head}" ]] || return 0
+	# Generated imports and outputs change while exporting; only project inputs
+	# should make the next ./web rebuild automatically.
+	if find "${project_dir}" \
+		\( -type d \( -name .godot -o -name builds -o -name artifacts \
+			-o -name __pycache__ \) -prune \) -o \
+		\( -type f ! -name '*.import' ! -name '*.uid' ! -name '*.log' \
+			! -name '*.md' ! -name '*.gguf' ! -name '.DS_Store' \
+			-newer "${pack}" -print -quit \) \
+		| grep -q .; then
+		return 0
+	fi
+	return 1
+}
 
 find_godot() {
 	# Prefer an explicit GODOT_BIN, then anything on PATH, then the usual
@@ -65,7 +88,7 @@ find_godot() {
 }
 
 if [[ "${mode}" != serve ]]; then
-	if [[ "${mode}" == rebuild || ! -f "${index}" ]]; then
+	if [[ "${mode}" == rebuild ]] || export_is_stale; then
 		godot_bin="$(find_godot)" || {
 			echo "No non-Mono Godot 4 found." >&2
 			echo "Web export does not work from a Mono/.NET build." >&2
@@ -84,6 +107,7 @@ if [[ "${mode}" != serve ]]; then
 			"${godot_bin}" --headless --path "${project_dir}" \
 			--export-release Web "${index}"
 		python3 "${project_dir}/tools/patch_web_release_loader.py" "${index}"
+		git -C "${project_dir}" rev-parse HEAD > "${export_head}"
 		echo
 	fi
 fi
@@ -115,6 +139,11 @@ echo "Checking split layout for local serving…"
 for big in "${build_dir}/index.pck" "${build_dir}/index.side.wasm"; do
 	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
 done
+
+if [[ "${mode}" == export ]]; then
+	echo "Web build ready at ${build_dir}"
+	exit 0
+fi
 
 url="http://localhost:${port}/index.html"
 echo "Serving ${build_dir}"

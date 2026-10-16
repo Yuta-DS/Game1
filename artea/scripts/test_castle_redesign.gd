@@ -68,8 +68,8 @@ func _run() -> void:
 		"the entrance face carries a stained-glass rose window")
 	assert(architecture.find_children("GothicButtress_*", "Node3D", true, false).size() == 4,
 		"castle-only redesign retains detailed Gothic buttresses")
-	assert(architecture.find_children("GothicLancet_*", "Node3D", true, false).is_empty(),
-		"original rounded windows are not covered by mismatched pointed frames")
+	assert(architecture.find_children("GothicLancet_*", "Node3D", true, false).size() == 4,
+		"four glazed lancet frames complete the keep detailing")
 	assert(architecture.get_node_or_null("LowerKeepHoarding") == null
 		and architecture.get_node_or_null("UpperKeepHoarding") == null,
 		"both wooden rings around the upper castle are removed")
@@ -84,7 +84,8 @@ func _run() -> void:
 	assert(architecture_bodies.size() >= 12,
 		"wide gate, continuous courtyard barriers and stone planters are solid")
 	for body_candidate in architecture_bodies:
-		assert((body_candidate as StaticBody3D).name in ["SolidBarbicanTower", "CourtyardSolidBody"],
+		assert((body_candidate as StaticBody3D).name in ["SolidBarbicanTower",
+			"SolidAscentCheek", "CourtyardSolidBody"],
 			"only authored courtyard structures add collision, not tiny decorative details")
 
 	for technology_path in ["ReferenceAstralMachine", "HighAetherFacade",

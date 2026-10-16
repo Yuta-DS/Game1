@@ -56,6 +56,10 @@ const failTimes = Number(option('--fail-times') ?? 2);
 // Requests pck-loader.js makes for one part before showing its Retry overlay:
 // the first try plus RETRY_DELAYS_MS.length retries.
 const LOADER_ATTEMPTS = 4;
+const qualityProbe = new URL(url).searchParams.get('world_one_quality') === '1';
+const targetScene = storyProbe || qualityProbe
+	? 'art_gallery_3d_inprogress.tscn' : 'New_Hub_World.tscn';
+const sceneReadyPattern = new RegExp(`\\[ARTEA\\] scene ready res://scenes/${targetScene.replace('.', '\\.')}`);
 const DEBUG_PORT = 9222;
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
@@ -193,7 +197,7 @@ async function connect() {
 			// The pack is fully downloaded by the time the engine starts, and
 			// every build logs this, including deployments older than the hub log.
 			if (net.engineAt === null && /engine started/.test(line)) net.engineAt = Date.now();
-			if (net.hubAt === null && /Successfully spawned|galaxy world=true/.test(line)) {
+			if (net.hubAt === null && sceneReadyPattern.test(line)) {
 				net.hubAt = Date.now();
 				net.bytesAtHub = net.bytes;
 				net.requestsAtHub = net.requests;
@@ -364,18 +368,24 @@ async function connect() {
 			say(`clicking Offline Guest at (${button.x}, ${button.y})`);
 			await click(button.x, button.y);
 			try {
-				await waitForLog(/GUEST access selected|galaxy world=true/, 'guest login accepted', 60000);
+				await waitForLog(/GUEST access selected/, 'guest login accepted', 60000);
 				break;
 			} catch (err) {
 				if (index === GUEST_BUTTONS.length - 1 || /Uncaught RuntimeError:/.test(err.message)) throw err;
 			}
 		}
-		await waitForLog(/Successfully spawned|galaxy world=true/, 'hub scene built', 120000);
+		await waitForLog(sceneReadyPattern, 'destination scene built', 120000);
 		if (storyProbe) {
 			await waitForLog(/WORLD_ONE_WEB_STORY: /, 'World One story probe completed', 180000);
 			const reportLine = consoleLines.find((line) => line.startsWith('WORLD_ONE_WEB_STORY: '));
 			const report = JSON.parse(reportLine.slice('WORLD_ONE_WEB_STORY: '.length));
 			if (!report.ok) throw new Error('World One story probe failed: ' + JSON.stringify(report.errors));
+		}
+		if (qualityProbe) {
+			await waitForLog(/WORLD_ONE_WEB_QUALITY: /, 'World One quality probe completed', 180000);
+			const reportLine = consoleLines.find((line) => line.startsWith('WORLD_ONE_WEB_QUALITY: '));
+			const report = JSON.parse(reportLine.slice('WORLD_ONE_WEB_QUALITY: '.length));
+			if (!report.ok) throw new Error('World One quality probe failed: ' + JSON.stringify(report.errors));
 		}
 		await sleep(8000);
 		const before = await shot('02-in-hub');

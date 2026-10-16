@@ -3443,7 +3443,12 @@ func remove_pink_purple_sphere_placeholders() -> int:
 		if material == null or not _is_pink_or_purple_placeholder_colour(
 				material.albedo_color):
 			continue
-		instance.free()
+		# Some blooms are held by bounce-pad callbacks. Freeing their mesh
+		# immediately leaves those callbacks with a dead capture every time the
+		# area fires; hiding the placeholder preserves the interaction safely.
+		if not instance.visible:
+			continue
+		instance.visible = false
 		removed += 1
 	set_meta("pink_purple_sphere_cleanup", true)
 	set_meta("pink_purple_spheres_removed",
