@@ -12,9 +12,21 @@
 // load-time work is measured against (docs/web-baseline.md).
 //
 //   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open] [--repeat]
+//       [--latency MS] [--mbps N] [--fail-part NN] [--fail-times K]
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
+//
+// --latency and --mbps shape the network like DevTools throttling: MS of added
+// round trip per request, and an N Mbit/s cap on the whole download. Used to
+// tune pck-loader.js's parallel part fetches (issue #34) - a local server has
+// neither, so without them parallel fetching has nothing to win.
+//
+// --fail-part makes the pack part numbered NN (e.g. 05) answer 404 for its
+// first K requests (--fail-times, default 2). Up to the loader's retries it
+// should recover on its own; beyond them its Retry overlay must appear, and
+// this lets the part through and presses Retry. Either way the game must still
+// reach the hub, and no other part may be fetched twice.
 //
 // Chrome is driven over CDP. Node 22+ ships a global WebSocket, so this needs
 // no npm packages at all: the only requirement is a Chrome that can be started
@@ -26,13 +38,23 @@ const os = require('node:os');
 const path = require('node:path');
 
 const args = process.argv.slice(2);
-const url = args.find((a) => !a.startsWith('--')) || 'http://localhost:8800/index.html';
-const outDir = (() => {
-	const i = args.indexOf('--out');
-	return i === -1 ? fs.mkdtempSync(path.join(os.tmpdir(), 'artea-smoke-')) : args[i + 1];
-})();
+const VALUE_OPTIONS = ['--out', '--latency', '--mbps', '--fail-part', '--fail-times'];
+const option = (name) => {
+	const i = args.indexOf(name);
+	return i === -1 ? null : args[i + 1];
+};
+const url = args.find((a, i) => !a.startsWith('--') && !VALUE_OPTIONS.includes(args[i - 1]))
+	|| 'http://localhost:8800/index.html';
+const outDir = option('--out') ?? fs.mkdtempSync(path.join(os.tmpdir(), 'artea-smoke-'));
 const keepOpen = args.includes('--keep-open');
 const repeat = args.includes('--repeat');
+const latencyMs = Number(option('--latency') ?? 0);
+const mbps = Number(option('--mbps') ?? 0);
+const failPart = option('--fail-part');
+const failTimes = Number(option('--fail-times') ?? 2);
+// Requests pck-loader.js makes for one part before showing its Retry overlay:
+// the first try plus RETRY_DELAYS_MS.length retries.
+const LOADER_ATTEMPTS = 4;
 const DEBUG_PORT = 9222;
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
@@ -89,6 +111,7 @@ async function connect() {
 	const ws = new WebSocket(target.webSocketDebuggerUrl);
 	let id = 0;
 	const pending = new Map();
+	const listeners = new Map();
 	const consoleLines = [];
 	let crashed = false;
 	// Bytes that crossed the wire (after any Content-Encoding), per request.
@@ -179,6 +202,7 @@ async function connect() {
 			consoleLines.push('EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text));
 		}
 		if (m.method === 'Inspector.targetCrashed') crashed = true;
+		if (listeners.has(m.method)) listeners.get(m.method)(m.params);
 	});
 	await new Promise((r) => ws.addEventListener('open', r));
 
@@ -187,7 +211,8 @@ async function connect() {
 		pending.set(msgId, { resolve, reject });
 		ws.send(JSON.stringify({ id: msgId, method, params }));
 	});
-	return { send, consoleLines, crashed: () => crashed, targetId: target.id, net };
+	const on = (method, handler) => listeners.set(method, handler);
+	return { send, on, consoleLines, crashed: () => crashed, targetId: target.id, net };
 }
 
 (async () => {
@@ -204,7 +229,7 @@ async function connect() {
 		if (keepOpen || !ownChrome) return;
 		try { process.kill(ownChrome.pid); } catch { /* already gone */ }
 	};
-	const { send, consoleLines, crashed, targetId, net } = await connect();
+	const { send, on, consoleLines, crashed, targetId, net } = await connect();
 
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
 	await send('Runtime.enable');
@@ -214,6 +239,26 @@ async function connect() {
 	// --repeat needs the cache on so the second visit can use it; the first
 	// load is still cold because startChrome() uses a fresh profile.
 	if (!repeat) await send('Network.setCacheDisabled', { cacheDisabled: true });
+	if (latencyMs || mbps) {
+		await send('Network.emulateNetworkConditions', {
+			offline: false,
+			latency: latencyMs,
+			downloadThroughput: mbps ? (mbps * 1e6) / 8 : -1,
+			uploadThroughput: -1,
+		});
+	}
+	let failuresLeft = failPart === null ? 0 : failTimes;
+	if (failPart !== null) {
+		on('Fetch.requestPaused', ({ requestId }) => {
+			if (failuresLeft > 0) {
+				failuresLeft -= 1;
+				send('Fetch.fulfillRequest', { requestId, responseCode: 404, body: '' }).catch(() => {});
+			} else {
+				send('Fetch.continueRequest', { requestId }).catch(() => {});
+			}
+		});
+		await send('Fetch.enable', { patterns: [{ urlPattern: `*part${failPart}*` }] });
+	}
 	let navigatedAt = null;
 
 	// Plain KEY=value lines so CI and later tickets can grep the numbers.
@@ -231,6 +276,18 @@ async function connect() {
 		console.log(`METRIC time_to_engine_s=${engineSeconds ?? -1}`);
 		console.log(`METRIC time_to_hub_s=${reached ? hubSeconds : -1}`);
 		console.log(`METRIC bytes_total=${net.bytes}`);
+		// Parts requested more than once. Only a part that actually failed may
+		// be fetched again; anything else means a retry restarted good parts.
+		const partRequests = new Map();
+		for (const u of net.urls.values()) {
+			const name = new URL(u).pathname.split('/').pop();
+			if (/part\d\d/.test(name)) partRequests.set(name, (partRequests.get(name) || 0) + 1);
+		}
+		const refetched = [...partRequests].filter(([, n]) => n > 1);
+		const retries = consoleLines.filter((l) => /pck-loader: .*retrying/.test(l)).length;
+		console.log(`  parts refetched:          ${refetched.length ? refetched.map(([n, c]) => `${n} x${c}`).join(', ') : 'none'}`);
+		console.log(`METRIC part_retries=${retries}`);
+		console.log(`METRIC parts_refetched=${refetched.length}`);
 		// Per-request bytes, largest first: where the download actually goes.
 		const rows = [...net.perRequest.keys()].map((id) => [net.of(id), net.urls.get(id) || id]).sort((a, c) => c[0] - a[0]);
 		fs.writeFileSync(path.join(outDir, 'requests.log'), rows.map(([b, u]) => `${b}\t${u}`).join('\n'));
@@ -276,6 +333,25 @@ async function connect() {
 		say('loading ' + url);
 		navigatedAt = Date.now();
 		await send('Page.navigate', { url });
+		if (failPart !== null && failTimes >= LOADER_ATTEMPTS) {
+			// More failures than the loader retries: its Retry overlay must come
+			// up and hold the download. Then let the part through and press it.
+			const overlayUp = async () => (await send('Runtime.evaluate', {
+				expression: "!!document.getElementById('pck-loader-retry')", returnByValue: true,
+			})).result.value;
+			const until = Date.now() + 180000;
+			while (!(await overlayUp())) {
+				if (Date.now() > until) throw new Error('Retry overlay never appeared');
+				await sleep(500);
+			}
+			say('OK  Retry overlay shown');
+			await shot('00-retry-overlay');
+			failuresLeft = 0;
+			await send('Runtime.evaluate', {
+				expression: "document.querySelector('#pck-loader-retry button').click()",
+			});
+			say('pressed Retry');
+		}
 		// Generous: a deployed cold load pulls the whole pack over the internet.
 		await waitForLog(/engine started/, 'engine started', 900000);
 		await sleep(4000);

@@ -105,6 +105,50 @@ What this says:
   the host allows it (`pck-loader.js` notes Cloudflare strips a manually set
   Content-Encoding).
 
+## Parallel part fetching (issue #34)
+
+`pck-loader.js` used to fetch the pack's 8 MB parts one at a time, leaving the
+connection idle for a round trip between parts. It now keeps a bounded number
+in flight and hands them to the engine strictly in order, so the engine still
+sees one in-order stream. Parts that arrive ahead of their turn wait in memory,
+so the bound is also the memory cost: 4 parts is a 32 MB peak.
+
+Time from navigation to "engine started" (the whole pack downloaded), one run
+each, local build (757 MB first load), `?parts=N` to set the concurrency:
+
+| Loader | Local, no shaping | 100 ms latency, 200 Mbit/s |
+|---|---:|---:|
+| Before (one at a time) | 7.2 s | 46.3 s |
+| 1 in flight | 8.0 s | 47.5 s |
+| 2 in flight | 6.7 s | 41.2 s |
+| **4 in flight (default)** | **6.4 s** | **36.6 s (-21%)** |
+| 6 in flight | 6.3 s | 36.2 s |
+| 8 in flight | 6.3 s | 36.0 s |
+
+```sh
+node artea/tools/web-smoke.js "http://localhost:8801/index.html?parts=4" --latency 100 --mbps 200
+```
+
+On the shaped network, 4 is the knee. It is within 2 s of the 30 s that
+200 Mbit/s needs for 757 MB, and more parts in flight only add memory. Time to
+hub fell from 57.6 s to 47.4 s. Unshaped, localhost has no round trip to hide,
+so the gain is small (7.2 s to 6.4 s).
+
+Failure handling, checked with `web-smoke.js --fail-part 05 --fail-times K`
+(part 05 of the pack and of `index.side.wasm` answer 404 for the first K
+requests between them):
+
+- **K = 2:** each part is retried once after 0.5 s and the load carries on.
+  Only the two failing parts were requested again, and it was still PLAYABLE
+  with the same time to engine start.
+- **K = 10:** after four attempts the loader shows a "Part of the game couldn't
+  be downloaded" overlay with a Retry button and holds the download. The
+  engine is still waiting on its stream, so nothing half-loads. Pressing Retry
+  carried on from the failed parts, with no other part fetched twice, and
+  reached the hub.
+
+All of these ran with the Flask server down (Offline Guest).
+
 ## Web-only texture re-encoding (issue #39)
 
 `addons/web_asset_slimmer` is an `EditorExportPlugin` that only acts when the
