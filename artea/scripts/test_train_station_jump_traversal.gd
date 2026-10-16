@@ -285,6 +285,11 @@ func _run() -> void:
 	var heart_landing: Vector3 = railway.call("get_station_landing", 2)
 	player.global_position = railway.to_global(heart_landing + Vector3(-5.0, 2.0, 0.0))
 	player.velocity = Vector3.ZERO
+	await physics_frame
+	if player.global_position.distance_to(railway.to_global(
+			heart_landing + Vector3(-5.0, 2.0, 0.0))) > 5.0:
+		_fail("leaving the Mind station pulls the player back from Heart Melody")
+		return
 	if not await _settle(player):
 		_fail("player cannot stand on the Heart Melody arrival court")
 		return

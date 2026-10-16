@@ -264,6 +264,11 @@ func _update_station_fall_recovery() -> void:
 	var platform := _station_nodes[_station_fall_recovery] \
 		.get_node("WalkablePlatform") as Node3D
 	var local := platform.to_local(_player.global_position)
+	# A player who has travelled to another station or kingdom is no longer
+	# falling from this platform, even if that destination is lower.
+	if absf(local.x) > 45.0 or absf(local.z) > 60.0:
+		_station_fall_recovery = -1
+		return
 	if local.y < -1.5 and (_player.velocity.y < 0.0 or _player.is_on_floor()):
 		var fallback := get_station_disembark_position(_station_fall_recovery)
 		var manager := get_node_or_null("/root/MiloCompanionManager")
@@ -271,8 +276,6 @@ func _update_station_fall_recovery() -> void:
 			return
 		_player.global_position = fallback
 		_player.velocity = Vector3.ZERO
-	elif absf(local.x) > 45.0 or absf(local.z) > 60.0:
-		_station_fall_recovery = -1
 
 
 func _unhandled_input(event: InputEvent) -> void:

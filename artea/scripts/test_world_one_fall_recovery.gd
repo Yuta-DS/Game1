@@ -47,6 +47,11 @@ func _run() -> void:
 	world_one.call("_on_recovery_body_entered", player)
 	assert(player.global_position.distance_to(island_three_safe) < .05,
 		"the Island Three perimeter recovery volume stays inside World One")
+	var heart_landing := floating_world.to_global(Vector3(1495.0, 4.0, 7640.0))
+	player.global_position = heart_landing
+	world_one.call("_on_recovery_body_entered", player)
+	assert(player.global_position.distance_to(heart_landing) < .05,
+		"a delayed World One recovery signal cannot pull the player out of Heart Melody")
 
 	print("WORLD_ONE_FALL_RECOVERY: PASS — all three islands retain their local recovery spawn")
 	gallery.queue_free()

@@ -9563,7 +9563,10 @@ func _build_recovery_volume(zone: Node3D, radius: float) -> void:
 
 
 func _on_recovery_body_entered(body: Node3D) -> void:
-	if body == _player and _player != null:
+	# Physics can deliver a queued entry after the player has travelled to a
+	# different kingdom. Never pull that player back to a World One checkpoint.
+	if body == _player and _player != null \
+			and owns_horizontal_position(_player.global_position):
 		_player.global_position = _last_safe_position
 		_player.velocity = Vector3.ZERO
 
