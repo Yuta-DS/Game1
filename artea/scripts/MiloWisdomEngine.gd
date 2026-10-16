@@ -16,7 +16,7 @@ const MAX_QUOTED_VERSES := 5
 const RECOVERY_BOOKS := [{
 	"code": "JOH",
 	"name": "John",
-	"path": "res://data/scripture/books/JOH.json",
+	"path": "res://data/scripture/books/joh.json",
 	"aliases": ["john", "joh", "jn"],
 }]
 

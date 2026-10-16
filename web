@@ -103,8 +103,11 @@ ensure_backend() {
 	fi
 	echo "Starting local backend on 127.0.0.1:8000…"
 	mkdir -p "${repo_dir}/server/logs"
-	( cd "${repo_dir}/server" && HOST=127.0.0.1 PORT=8000 \
-		"${backend_python}" server.py >> logs/flaskapp.err.log 2>&1 & )
+	(
+		cd "${repo_dir}/server"
+		HOST=127.0.0.1 PORT=8000 "${backend_python}" server.py \
+			>> logs/flaskapp.err.log 2>&1 < /dev/null &
+	)
 	for _ in $(seq 1 20); do
 		backend_up && { echo "Backend ready"; return 0; }
 		sleep 0.5

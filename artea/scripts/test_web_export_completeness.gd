@@ -46,6 +46,15 @@ func _init() -> void:
 		and web_includes.contains("scenes/**")
 		and web_includes.contains("assets3D/royal_garden/**"),
 		"hub and World One runtime resources are explicitly packaged")
+	_check(web_includes.contains("assets/audio/minigame/**")
+		and web_includes.contains("assets/Paintingtool/**")
+		and web_includes.contains("assets/Collectibles/**")
+		and web_includes.contains("assets/Fonts/NotoColorEmoji-Regular.ttf")
+		and web_includes.contains("assets3D/mind_spark/anycreature/root_stalker.glb")
+		and web_includes.contains("assets3D/worlds/Floating_Cloud_1031084848_texture.glb")
+		and web_includes.contains("demo/assets/textures/rock023_alb_ht.png")
+		and not web_excludes.contains("demo/**"),
+		"Web export includes music, painting, collectible, creation, and combat assets")
 	_check(bool(presets.get_value(web_options, "vram_texture_compression/for_desktop", false))
 		and bool(presets.get_value(web_options, "vram_texture_compression/for_mobile", false)),
 		"selected Web preset exports desktop and mobile compressed textures")
