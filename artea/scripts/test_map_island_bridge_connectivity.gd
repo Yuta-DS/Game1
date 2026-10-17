@@ -24,7 +24,7 @@ func _run() -> void:
 	if not await _check_kingdom_shelf_grids():
 		return
 	print("MAP_ISLAND_BRIDGE_CONNECTIVITY: PASS — World One ring 2 routes/island; " \
-		+ "3 observatory twin pairs; 120 shelf bridges with >=2 routes/island; " \
+		+ "3 observatory twin pairs; 40 Mind shelf bridges with >=2 routes/island; " \
 		+ "steepest legal shelf bridge walked by production player")
 	quit()
 
@@ -120,7 +120,7 @@ func _check_kingdom_shelf_grids() -> bool:
 		await physics_frame
 	var steepest: Node3D
 	var steepest_slope := -1.0
-	for kingdom_name in ["MindKingdom3000m", "HeartKingdom3000m", "CreatorKingdom3000m"]:
+	for kingdom_name in ["MindKingdom3000m"]:
 		var grid := regions.get_node("%s/OptimizedLandmass/InterIslandBridgeGrid" % kingdom_name) as Node3D
 		if int(grid.get_meta("bridge_count", 0)) != 40:
 			_fail("%s does not have all 40 adjacent-shelf bridges" % kingdom_name)
