@@ -22,7 +22,7 @@ func _ready() -> void:
 	_probe.radius = 0.32
 
 func active() -> bool:
-	return world.player != null and (not world.embedded_in_overworld or world.embedded_active)
+	return world.player != null and not world.embedded_in_overworld
 
 func orbit(motion: Vector2) -> void:
 	yaw = wrapf(yaw - motion.x, -PI, PI)
@@ -93,7 +93,7 @@ func update_camera(delta: float) -> void:
 	global_position = pivot + direction * actual_distance
 	look_at(pivot)
 	var avatar: Node3D = world.player.get_node_or_null("FoxVisuals")
-	if avatar != null: avatar.visible = actual_distance > 1.25
+	if avatar != null: avatar.visible = true
 
 func _exit_tree() -> void:
 	if is_instance_valid(world) and is_instance_valid(world.player):

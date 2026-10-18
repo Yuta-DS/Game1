@@ -186,9 +186,7 @@ func interact(kind: String, index: int) -> void:
 			focus = 100
 			journal()
 		"chapter_reflect": reflect(index)
-		"chapter_gate":
-			if world.progress.commit(): world.get_node("/root/JourneyCampaign").return_to_campaign()
-			else: world._notice("Your progress is still here. Retry saving in Help before returning to the Castle.")
+		"chapter_gate": world._return_to_castle()
 		"chapter_sanctuary":
 			world._open("Harmony Jewel Sanctuary", "Every feeling belonged in the song. The Guardian thanks you for listening.\n" + ("Harmony Jewel and Harmony Shield earned. The completed-world railway remains available at the Castle entrance." if Catalog.TASKS[9] in director.snapshot().tasks else "The Jewel forms when the Conductor is free."))
 			world._button("Return to the valley", world._close)
@@ -265,8 +263,8 @@ func _instrument_panel() -> void:
 					challenge.tune(i, clampi(current + change, 0, 5))
 					if active_task == 2:
 						world.river.channels[i].visible = true
-						world.river.channels[i].scale.y = 0.4 + float(challenge.input[i]) * 0.18
-					else: note_visuals[30 + i].scale.y = 0.6 + float(challenge.input[i]) * 0.16
+						world._pulse(world.river.channels[i])
+					else: world._pulse(note_visuals[30 + i])
 					_update_score()
 				)
 	else:

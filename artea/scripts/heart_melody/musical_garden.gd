@@ -481,7 +481,7 @@ func progress_text() -> String:
 func refresh() -> void:
 	var level: int = world.progress.data.music.completed.size()
 	for i in garden_blooms.size():
-		garden_blooms[i].scale = Vector3.ONE * (1.0 if i < level + 2 else 0.65)
+		garden_blooms[i].scale = Vector3.ONE
 	for light in garden_lights:
 		light.visible = level >= 4
 	for fruit_id in fruit_visuals:
@@ -490,8 +490,4 @@ func refresh() -> void:
 		basket_fruit[fruit_id].visible = collected
 
 func _pulse(node: Node3D) -> void:
-	if world.reduced_motion: return
-	var base := node.scale
-	var tween := create_tween()
-	tween.tween_property(node, "scale", base * 1.18, 0.14)
-	tween.tween_property(node, "scale", base, 0.28)
+	world._pulse(node)

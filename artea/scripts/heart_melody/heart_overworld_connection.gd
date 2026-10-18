@@ -77,4 +77,4 @@ func _build_walk_segment(parent: Node3D, start: Vector3, finish: Vector3, entry_
 		rail.look_at(to_global(rail_finish + side * sign_value * 6.0 + Vector3.UP))
 		for index in 7:
 			var point := rail_start.lerp(rail_finish, float(index) / 6.0)
-			Art.flower(parent, point + side * sign_value * 6.7, Color("df9fb7"), 1.1)
+			Art.flower(parent, point + side * sign_value * 4.8 + Vector3.UP * 0.025, Color("df9fb7"), 1.1)

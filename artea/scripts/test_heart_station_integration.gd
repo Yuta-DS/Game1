@@ -69,12 +69,50 @@ func _run() -> void:
 	for frame in 120: await physics_frame
 	check(player.is_on_floor(), "station access ramp supports player")
 	check(await _walk_to(connection.to_global(connection.WALK_START)), "walk from station ramp onto arrival court")
+	var station_milo = root.get_node("MiloCompanionManager").get_active_milo()
+	check(station_milo != null and player.get_meta("milo_heart_escort", false), "Milo joins the player at the station landing")
+	var milo_station_position: Vector3 = station_milo.global_position
 	check(await _walk_to(connection.to_global(connection.WALK_TURN)), "walk continuous garden slope without jumping")
+	print("MILO STATION ROUTE: start=", milo_station_position, " now=", station_milo.global_position, " player=", player.global_position, " breadcrumbs=", station_milo._breadcrumbs.size())
+	check(station_milo.global_position.distance_to(milo_station_position) > 100, "Milo physically walks the station-to-garden slope")
+	check(station_milo.global_position.distance_to(player.global_position) < 22, "walking escort keeps up on the station route")
 	check(await _walk_to(connection.to_global(connection.WALK_FINISH)), "walk garden entrance bridge")
+	var entry_camera = root.get_camera_3d()
+	var entry_yaw: float = entry_camera._yaw
+	var entry_pitch: float = entry_camera._pitch
+	var entry_zoom: float = entry_camera.follow_distance
 	check(await _walk_to(island.to_global(Vector3(-65, 1, 12))), "walk through arrival arch")
+	check(root.get_camera_3d() == entry_camera and is_equal_approx(entry_camera._yaw, entry_yaw) and is_equal_approx(entry_camera._pitch, entry_pitch) and is_equal_approx(entry_camera.follow_distance, entry_zoom), "entry preserves the shared camera angle and zoom")
 	check(current_scene == gallery and island.embedded_active, "entry stays in same overworld scene")
-	check(player.input_enabled and island.camera.current, "garden camera and controls activate")
+	check(player.input_enabled and gallery.get_node("Camera3D").current, "garden camera and controls activate")
 	check(island.get_node("HeartHUD").visible, "garden HUD activates on entry")
+	var companion = root.get_node("MiloCompanionManager").get_active_milo()
+	check(is_instance_valid(companion) and companion.visible and companion.can_process(), "Milo remains visible and follows inside Heart Melody")
+	if is_instance_valid(companion):
+		check(companion.player == player, "Milo follows the shared player")
+		var before: Vector3 = companion.global_position
+		player.global_position = island.to_global(Vector3(-55, 1, 12))
+		for frame in 120: await physics_frame
+		check(companion.global_position.distance_to(before) > 0.5, "Milo walks after the player in Heart Melody")
+	check(player.get_node("FoxVisuals").visible, "player remains visible inside Heart Melody")
+	check(island.hud.get_parent().anchor_left == 1.0, "description is anchored to the right of the minimap")
+	for guide in island.find_children("*", "Node3D", true, false):
+		if guide.has_method("set_dialogue_line") and guide.has_node("DialogueLabel"):
+			check(not guide.get_node("DialogueLabel").visible, "tiny guide captions removed")
+	var arrival = gallery.find_child("StoryCheckpoint_01_arrival", true, false)
+	# Find the Heart checkpoint specifically; other kingdoms have an arrival too.
+	for node in gallery.find_children("StoryCheckpoint_01_arrival", "Node3D", true, false):
+		if node.get_meta("kingdom_id", "") == "heart": arrival = node
+	if arrival != null:
+		check(arrival.find_children("EmotionInstrument*", "MeshInstance3D", true, false).is_empty(), "giant yellow arrival cylinders removed")
+		var light = arrival.get_node("StoryLight")
+		check(light.position.y + light.mesh.height / 2 < 0.54, "pink pad stays flush with the collision floor")
+	for x in [126.0, 143.0, 160.0]:
+		var grounded := false
+		for bloom in island.river.get_children():
+			if bloom is Node3D and bloom.position.is_equal_approx(Vector3(x, 0, 0)):
+				grounded = true
+		check(grounded, "organ valve flower is planted on the riverbank floor")
 	# Real planter interaction at the translated and rotated world location.
 	check(await _walk_to(island.to_global(Vector3(-40, 1, 8))), "walk to first planter")
 	player.global_position = island.to_global(Vector3(-40, 1.1, 6.2))
@@ -112,5 +150,19 @@ func _run() -> void:
 	check(player.input_enabled and is_equal_approx(player.speed, original_speed), "overworld movement restored")
 	check(current_scene == gallery and island.progress.data.planters.has("0"), "same scene retains saved progress")
 	check(not state.has_treasure("harmony_jewel"), "walkthrough does not grant full-world treasure")
+	player.global_position = island.to_global(Vector3(474, 1.2, 8))
+	for frame in 8: await physics_frame
+	if island.modal_open: island._close()
+	island._process(0)
+	check(island.nearest >= 0 and island.interactables[island.nearest].kind == "chapter_gate", "castle gate offers the return interaction")
+	island._interact_nearest()
+	for frame in 12: await physics_frame
+	check(current_scene == gallery and player.global_position.distance_to(gallery.to_global(Vector3(0, 2, 26))) < 5, "return gate reaches the Castle without rebuilding the overworld")
+	check(player.input_enabled and not island.embedded_active and not island._return_gate_busy, "return gate restores controls and releases its busy state")
+	var return_position: Vector3 = player.global_position
+	Input.action_press("move_forward")
+	for frame in 30: await physics_frame
+	Input.action_release("move_forward")
+	check(player.global_position.distance_to(return_position) > 0.5, "player can walk after returning to Castle")
 	print("HEART STATION INTEGRATION: all checks passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)

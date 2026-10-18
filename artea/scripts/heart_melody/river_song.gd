@@ -31,11 +31,11 @@ func _ready() -> void:
 	for index in 3:
 		var x := 126.0 + index * 17.0
 		Art.cone(self, Vector3(x, 6 + index, -15), 2, 1.7, 12 + index * 2, Color("789d83"), true)
-		Art.flower(self, Vector3(x, 3, 0), Color("e9c891"), 1.6)
-		Art.symbol(self, Vector3(x, 3, 1), NOTES[index])
+		Art.flower(self, Vector3(x, 0, 0), Color("e9c891"), 1.6)
+		Art.symbol(self, Vector3(x, 0.2, 1), NOTES[index])
 		world._object("river_valve", index, Vector3(x, 1, 3), "Tune organ valve %d" % (index + 1))
 		channels.append(Art.box(self, Vector3(x, 5 + index, -12.8), Vector3(1.8, 10 + index * 2, 0.2), Color("86d4df")))
-		var pos := Vector3(140 + index * 12, 1, 23)
+		var pos := Vector3(140 + index * 12, 0, 23)
 		bulbs.append(Art.flower(self, pos, Color("755b82"), 1.9))
 		world._object("river_bulb", index, pos + Vector3(0, 0, -3), "Release Hush Vine bulb %d" % (index + 1))
 	for pos in [Vector3(116,0,-17), Vector3(174,0,-17), Vector3(234,0,-10), Vector3(342,0,-13)]: Art.tree(self, pos, 1)
@@ -102,7 +102,7 @@ func refresh() -> void:
 		_show_solid(decks[index], true)
 		decks[index].scale = Vector3.ONE if saved.chimes.has(index) else Vector3(1.0, 0.75, 1.0)
 	_show_solid(warning_barrier, not saved.warning)
-	flower.scale = Vector3.ONE * (1.5 if saved.peace else 0.7)
+	flower.scale = Vector3.ONE * 0.7
 	if saved.grove:
 		for index in 2:
 			world.restore_creature({"id": "river_moth" if index == 0 else "river_slime", "kind": "moth" if index == 0 else "slime"}, GROVE + Vector3(index * 5, 0, -8))

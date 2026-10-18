@@ -321,7 +321,7 @@ func _build_checkpoint(parent: Node3D, kingdom_id: String, info: Dictionary, ind
 	var court_material: Material = _materials.mind_court if kingdom_id == "mind" else _materials.ivory
 	_add_cylinder(checkpoint, "CheckpointCourt", Vector3(0, -2, 0), 70.0 if index < 7 else 105.0,
 		5.0, court_material, true, 32)
-	_add_cylinder(checkpoint, "StoryLight", Vector3(0, 2, 0), 20.0, 1.2,
+	_add_cylinder(checkpoint, "StoryLight", Vector3(0, 0.51, 0), 20.0, 0.02,
 		_kingdom_material(kingdom_id), false, 24)
 	_add_label(checkpoint, info.title, Vector3(0, 42, 0), _kingdom_color(kingdom_id), 39)
 	if kingdom_id == "mind": _decorate_mind(checkpoint, str(info.id), index)
@@ -363,11 +363,6 @@ func _decorate_heart(parent: Node3D, checkpoint_id: String, index: int) -> void:
 			for flower in 4:
 				_add_sphere(parent, "ArrivalBlossom", Vector3(-32 + flower * 18, 2, side * 17),
 					Vector3(2.4, 1.5, 2.4), _materials.pink)
-		# Keep main's seven landmark instruments, beside the clear through-route.
-		for instrument in 7:
-			_add_cylinder(parent, "EmotionInstrument",
-				Vector3(-42 + (instrument % 4) * 28, 10, -48 if instrument < 4 else 48),
-				8 + instrument % 2 * 4, 18, emotional_materials[index], true, 16)
 	elif checkpoint_id == "sadness":
 		_add_cylinder(parent, "RainLake", Vector3(0, 0, 0), 54, 3, _materials.blue, true, 32)
 		_add_box(parent, "GentleBoat", Vector3(0, 7, 0), Vector3(28, 5, 12), _materials.wood)

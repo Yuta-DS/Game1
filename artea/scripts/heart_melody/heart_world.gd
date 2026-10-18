@@ -60,11 +60,11 @@ var river: Node3D
 var musical_garden: Node3D
 var chapter_world: Node3D
 var _return_gate_busy := false
+var milo_guide: Node
 
 func _ready() -> void:
-	# This island's authored guides share its single interaction owner. The
-	# generic following Milo otherwise polls Q independently and opens a second UI.
-	set_meta("owns_companion_guidance", true)
+	# Milo follows here; Heart Melody owns the interaction key.
+	set_meta("owns_companion_guidance", false)
 	progress.load_progress()
 	_load_settings()
 	_configure_controller()
@@ -76,6 +76,10 @@ func _ready() -> void:
 	chapter_world = preload("res://scripts/heart_melody/heart_chapter_world.gd").new()
 	add_child(chapter_world)
 	chapter_world.install_hud()
+	milo_guide = preload("res://scripts/heart_melody/heart_milo_guide.gd").new()
+	milo_guide.name = "HeartMiloGuide"
+	add_child(milo_guide)
+	_register_flowers()
 	_refresh_plants()
 	_apply_restoration()
 	scene_ready = true
@@ -103,13 +107,11 @@ func _set_embedded_active(active: bool) -> void:
 		_previous_blocking = player.blocking_enabled
 		player.speed = 10.0
 		player.blocking_enabled = get_node("/root/JourneyState").has_treasure("harmony_jewel")
-		player.set("_camera", camera)
-		camera.make_current()
-		_camera_update(1)
+		# Keep the shared orbit camera and its current heading, pitch and zoom.
 		# Suspend only the competing local guides/story UI, preserving their state.
 		var scene := get_tree().current_scene
 		if scene != null:
-			for node_name in ["WonderfulCounsellorMilo", "MiloFallRescue", "ConnectedKingdomStory", "ConnectedStoryHUD", "CrownLineHUD", "CombatHelpHUD"]:
+			for node_name in ["MiloFallRescue", "ConnectedKingdomStory", "ConnectedStoryHUD", "CrownLineHUD", "CombatHelpHUD"]:
 				var node := scene.find_child(node_name, true, false)
 				if node == null: continue
 				var record := {"node": node, "mode": node.process_mode}
@@ -214,8 +216,7 @@ func _build_environment() -> void:
 	Art.cone(island, Vector3(8, 0.7, -23), 5.8, 5.2, 1.4, Color("879477"), true)
 	_gate(island, Vector3(-76, 0, 12), "Castle return - walk through")
 	_automatic_return_gate(island, Vector3(-76, 0, 12))
-	if not embedded_in_overworld:
-		_object("gate", -1, Vector3(-72, 1, 12), "Return to the Castle")
+	_object("gate", -1, Vector3(-72, 1, 12), "Return to the Castle")
 	Art.box(island, Vector3(-60, 1, 23), Vector3(5, 0.5, 1.5), Color("816c5a"), true)
 	for x in [-62, -58]: Art.box(island, Vector3(x, 0.4, 23), Vector3(0.5, 0.8, 1.2), Color("b5aa95"), true)
 	_object("bench", -1, Vector3(-60, 1, 21), "Song Memory Bench")
@@ -262,6 +263,7 @@ func _build_environment() -> void:
 		guide.scale = Vector3.ONE * 0.5
 		guide.default_line = "Every feeling may speak here. Choose a feeling, or simply choose a sound."
 		island.add_child(guide)
+		guide.get_node("DialogueLabel").hide()
 	_object("intro", -1, Vector3(-60, 1, 8), "Talk with Milo and the Guardian")
 	var environment := WorldEnvironment.new()
 	var env := Environment.new()
@@ -314,7 +316,7 @@ func _automatic_return_gate(parent: Node3D, pos: Vector3) -> void:
 	parent.add_child(area)
 	area.body_entered.connect(func(body):
 		# The shared entrance also admits players walking in from the station.
-		if embedded_in_overworld and pos.x < 0 and player_local_position().x < pos.x: return
+		if embedded_in_overworld and pos.x < 0: return
 		if body == player and scene_ready: _return_to_castle.call_deferred()
 	)
 
@@ -325,7 +327,21 @@ func _return_to_castle() -> void:
 		_return_gate_busy = false
 		_notice("Saving failed. Your progress is still here. Retry saving in Help, then walk through the gate again.")
 		return
-	get_node("/root/JourneyCampaign").return_to_campaign()
+	if embedded_in_overworld:
+		var scene := get_tree().current_scene
+		milo_guide.stop()
+		player.set_meta("milo_heart_escort", false)
+		_set_embedded_active(false)
+		player.global_position = scene.to_global(Vector3(0, 2, 26))
+		player.velocity = Vector3.ZERO
+		player.set_input_enabled(true)
+		if is_instance_valid(_previous_camera) and _previous_camera.has_method("_snap_to_follow_target"):
+			_previous_camera.call("_snap_to_follow_target")
+		get_node("/root/MiloCompanionManager").refresh_companion()
+		_return_gate_busy = false
+	elif not get_node("/root/JourneyCampaign").return_to_campaign():
+		_return_gate_busy = false
+		_notice("The Castle could not open. Your progress is saved; try the gate again.")
 
 func _build_player() -> void:
 	if embedded_in_overworld:
@@ -338,6 +354,7 @@ func _build_player() -> void:
 		return
 	player = PlayerScene.instantiate()
 	player.name = "Player"
+	player.set_meta("heart_melody_active", true)
 	player.blocking_enabled = get_node("/root/JourneyState").has_treasure("harmony_jewel")
 	player.add_to_group("Player")
 	player.position = Vector3(-65, 2, 12) if progress.data.checkpoint == "arrival" else Vector3(20, 2, 12)
@@ -362,14 +379,18 @@ func _build_player() -> void:
 	_camera_update(1)
 
 func _camera_update(delta: float) -> void:
-	camera.update_camera(delta)
+	if not embedded_in_overworld: camera.update_camera(delta)
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "HeartHUD"
 	add_child(layer)
 	var top := PanelContainer.new()
-	top.position = Vector2(24, 20)
+	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	top.offset_left = -624
+	top.offset_right = -24
+	top.offset_top = 88
+	top.offset_bottom = 218
 	top.custom_minimum_size = Vector2(600, 130)
 	layer.add_child(top)
 	hud = Label.new()
@@ -427,6 +448,7 @@ func _build_hud() -> void:
 
 func _process(delta: float) -> void:
 	if not scene_ready: return
+	milo_guide.tick(delta)
 	if embedded_in_overworld:
 		var local := player_local_position()
 		if embedded_active and local.y < -15:
@@ -446,8 +468,8 @@ func _process(delta: float) -> void:
 	nearest = -1
 	var distance := 5.0
 	for i in interactables.size():
-		var d: float = player_local_position().distance_to(interactables[i].pos)
-		if d < distance and _clear_sight(interactables[i].pos):
+		var d: float = _interaction_distance(interactables[i])
+		if d < distance and _interaction_visible(interactables[i]):
 			distance = d
 			nearest = i
 	prompt.visible = nearest >= 0 and not modal_open
@@ -455,6 +477,8 @@ func _process(delta: float) -> void:
 	var heading := "River Song" if player_local_position().x > 104 else "Musical Orchard"
 	hud.text = "  HEART MELODY · " + heading + "\n  " + objective() + "\n  %s  ·  %s  ·  Health %d" % [musical_garden.progress_text(), musical_garden.basket_summary(), player.current_health]
 	if progress.dirty: hud.text += "  ·  Save pending — retry in Help"
+	if chapter_world != null:
+		chapter_world.chapter_hud.offset_top = hud.get_parent().get_rect().end.y + 12
 	if not modal_open and progress.committed.solved and not progress.data.complete and active_wave == 0 and player_local_position().distance_to(encounter_center) < 13:
 		_start_wave(2 if progress.data.waves.has(1) else 1)
 	_ambient_time += delta
@@ -489,7 +513,7 @@ func _interact_nearest() -> void:
 	if river != null and river.riding: return
 	if nearest < 0 or modal_open: return
 	var item: Dictionary = interactables[nearest]
-	if player_local_position().distance_to(item.pos) >= 5 or not _clear_sight(item.pos): return
+	if _interaction_distance(item) >= 5 or not _interaction_visible(item): return
 	if str(item.kind).begins_with("chapter_"):
 		chapter_world.interact(item.kind, item.index)
 		return
@@ -525,9 +549,10 @@ func _interact_nearest() -> void:
 			note(2)
 			_notice("Restored to full health.\n" + objective())
 		"intro": _intro()
-		"gate":
-			if progress.commit(): get_node("/root/JourneyCampaign").return_to_campaign()
-			else: _notice("Your progress is still here. Saving failed; retry before leaving.")
+		"gate": _return_to_castle()
+		"flower":
+			note(item.index % 6)
+			_pulse(item.flower)
 
 func _open(title: String, body: String) -> void:
 	_view_garden = false
@@ -724,10 +749,54 @@ func _demonstrate(sequence: Array) -> void:
 	demonstration = false
 
 func _pulse(object: Node3D) -> void:
+	if object.has_meta("note_tween"):
+		var previous: Tween = object.get_meta("note_tween")
+		if previous != null and previous.is_valid(): previous.kill()
+	if not object.has_meta("note_rotation"): object.set_meta("note_rotation", object.rotation)
+	var rest: Vector3 = object.get_meta("note_rotation")
+	object.rotation = rest
 	if reduced_motion: return
-	var tween := create_tween()
-	tween.tween_property(object, "scale", Vector3.ONE * 1.12, 0.18)
-	tween.tween_property(object, "scale", Vector3.ONE, 0.25)
+	var tween := create_tween().bind_node(object)
+	object.set_meta("note_tween", tween)
+	tween.tween_property(object, "rotation", rest + Vector3(0, 0, 0.04), 0.12)
+	tween.tween_property(object, "rotation", rest, 0.18)
+
+func _interaction_distance(item: Dictionary) -> float:
+	if item.kind == "flower" and (not is_instance_valid(item.flower) or not item.flower.is_visible_in_tree()): return INF
+	var offset: Vector3 = player_local_position() - item.pos
+	offset.y = 0
+	return offset.length()
+
+func _interaction_visible(item: Dictionary) -> bool:
+	if _clear_sight(item.pos): return true
+	# A flower's own planter or drum must not block its back or side controls.
+	if item.kind not in ["flower", "drum", "planter", "music_drum", "chapter_note", "river_valve", "river_bulb"]: return false
+	var target: Vector3 = to_global(item.pos + Vector3.UP * 0.5)
+	var query := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP * 1.1, target, 1, [player.get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return hit.is_empty() or hit.position.distance_to(target) < 3.0
+
+func _register_flowers() -> void:
+	var flowers: Array[Node3D] = []
+	for flower in get_tree().get_nodes_in_group("heart_flower"):
+		if is_ancestor_of(flower): flowers.append(flower)
+	var assigned := {}
+	for item in interactables:
+		if item.kind not in ["drum", "planter", "music_drum", "chapter_note", "river_valve", "river_bulb", "chapter_checkpoint", "river_peace"]: continue
+		var closest: Node3D
+		var distance := 3.6
+		for flower in flowers:
+			var offset: Vector3 = item.pos - to_local(flower.global_position)
+			offset.y = 0
+			if offset.length() < distance:
+				distance = offset.length()
+				closest = flower
+		if closest != null:
+			item.pos = to_local(closest.global_position) + Vector3.UP
+			assigned[closest.get_instance_id()] = true
+	for flower in flowers:
+		if assigned.has(flower.get_instance_id()): continue
+		interactables.append({"kind": "flower", "index": interactables.size(), "pos": to_local(flower.global_position) + Vector3.UP, "title": "Play flower", "flower": flower})
 
 func _bench() -> void:
 	_open("Song Memory Bench", objective())
@@ -778,6 +847,7 @@ func _help() -> void:
 		_apply_restoration()
 		river.refresh()
 	)
+	_button("Hear Milo explain the next step", milo_guide.replay)
 	_button("Back to exploring", _close)
 
 func _start_wave(wave: int) -> void:
@@ -809,7 +879,7 @@ func _apply_restoration() -> void:
 	river_route_sign.text = "RIVER SONG / ORGAN\nGarden awake - follow the connected walk" if restored else "RIVER SONG / ORGAN\nConnected walk - restore the garden to awaken it"
 	soundscape.restore(progress.committed.planters.size() == 3, restored)
 	get_node("IslandOne/BlightCovering").visible = not restored
-	get_node("IslandOne/GardenHeartBlossom").scale = Vector3.ONE if restored else Vector3(0.4, 0.7, 0.4)
+	get_node("IslandOne/GardenHeartBlossom").scale = Vector3(0.4, 0.7, 0.4)
 	bridge_barrier.get_meta("visual").visible = false
 	for child in bridge_barrier.get_children():
 		if child is CollisionShape3D: child.set_deferred("disabled", true)

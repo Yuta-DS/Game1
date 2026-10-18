@@ -116,6 +116,7 @@ static func banner(parent: Node3D, words: String, pos: Vector3, size := 30) -> L
 
 static func flower(parent: Node3D, pos: Vector3, colour: Color, radius := 1.0) -> Node3D:
 	var root := Node3D.new()
+	root.add_to_group("heart_flower")
 	root.position = pos
 	parent.add_child(root)
 	cone(root, Vector3(0, 0.6, 0), 0.16, 0.12, 1.2, Color("53876a"))
@@ -271,6 +272,7 @@ static func fruit_body(parent: Node3D, pos: Vector3, profile: Array, colour: Col
 static func garden_flower(parent: Node3D, pos: Vector3, variety: int, colour: Color) -> Node3D:
 	var root := Node3D.new()
 	root.name = "GardenBloom"
+	root.add_to_group("heart_flower")
 	root.position = pos
 	root.set_meta("flower_variety", variety)
 	parent.add_child(root)
