@@ -5,9 +5,11 @@
 // and the page looks like a slow load rather than a broken build. This drives
 // the real thing - loads the page, clicks Offline Guest, waits for the hub to
 // report itself built, then holds a movement key and checks the frame changed.
-// Then it enters the Art Castle and each Kingdom, whose Packs are not in the
-// first load, checking each loads (and the castle moves) and that the Hub
-// loads again afterwards.
+// Then it goes into the Crown of Life story before the background download
+// can reach it (the loading screen must download its Pack), waits in the Hub
+// for the rest to finish downloading while comparing frame pacing, and enters
+// the Art Castle and each Kingdom, which must need no download by then. After
+// each area it checks the Hub loads again.
 //
 // It also measures the cold first load: the browser cache is disabled, every
 // byte that crosses the network is counted, and the time from navigation until
@@ -371,37 +373,22 @@ async function connect() {
 			}
 		}
 		await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
-		await sleep(8000);
-		const before = await shot('02-in-hub');
-
-		// A frozen game returns byte-identical frames, so movement is the check
-		// that separates "rendered once" from "playable".
-		const identical = (a, b) => a.length === b.length && a.equals(b);
-		const movesWithW = async (start, duringName, afterName) => {
-			say('holding W to test movement');
-			await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
-			await key('keyDown', 'KeyW', 87);
-			await sleep(2500);
-			const during = await shot(duringName);
-			await key('keyUp', 'KeyW', 87);
-			await sleep(1500);
-			const after = await shot(afterName);
-			return !identical(start, during) || !identical(during, after);
-		};
-		const moved = await movesWithW(before, '03-moving', '04-after-move');
+		const evaluate = async (expression) => (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
+		// Every frame's timestamp from here on, to compare the Hub's frame pacing
+		// while the other areas' Packs download in the background with after.
+		await evaluate('window.__frames = []; (function tick(t) { window.__frames.push(t); requestAnimationFrame(tick); })(performance.now()); true');
 
 		// Every area outside Core, entered the way a player goes there and left
-		// again for the Hub (issues #35, #36). Their Packs are not in the first
-		// load, so this checks each downloads, mounts and plays. window.arteaGo
-		// (Global.gd) takes the route a teleporter or the journey takes:
-		// SceneLoader, the loading screen and the Pack downloads.
+		// again for the Hub (issues #35-#38). window.arteaGo (Global.gd) takes the
+		// route a teleporter or the journey takes: SceneLoader, the loading
+		// screen, and the Pack downloads.
 		const HUB = 'res://scenes/New_Hub_World.tscn';
 		const goTo = async (label, scene) => {
 			const from = consoleLines.length;
 			const bytesBefore = net.bytes;
 			const started = Date.now();
 			say(`going to ${label}`);
-			await send('Runtime.evaluate', { expression: `window.arteaGo(${JSON.stringify(scene)})` });
+			await evaluate(`window.arteaGo(${JSON.stringify(scene)})`);
 			try {
 				// The loading screen logs when it hands the scene over, after
 				// the Pack download, the build and the shader warmup.
@@ -413,27 +400,85 @@ async function connect() {
 			}
 			return { bytes: net.bytes - bytesBefore, seconds: ((Date.now() - started) / 1000).toFixed(1) };
 		};
+		const areas = [];
 
+		// Issue #38 fallback: straight into the area the background download
+		// reaches last, before it can. The loading screen downloads its Pack
+		// itself, with progress, while the background downloads hold back.
+		const STORY = ['the Crown of Life story', 'res://scenes/viewfinder/crown_of_life_story.tscn'];
+		const story = await goTo(...STORY);
+		areas.push([STORY[0], story, story ? await goTo('the Hub', HUB) : null, 'not prefetched yet']);
+
+		// Standing in the Hub while the rest downloads, then a while after.
+		const prefetchFrom = await evaluate('performance.now()');
+		const prefetchUntil = Date.now() + 600000;
+		while (!(await evaluate('window.arteaPacks.prefetch.doneAt !== null'))) {
+			if (Date.now() > prefetchUntil) throw new Error('the background download never finished');
+			await sleep(500);
+		}
+		const prefetch = await evaluate('JSON.stringify(window.arteaPacks.prefetch)');
+		await sleep(8000);
+		const frames = await evaluate('JSON.stringify(window.__frames)');
+		const { queue, startedAt, doneAt } = JSON.parse(prefetch);
+		say(`background download finished: ${queue.join(', ')}`);
+		// When each Pack started, was asked for by the loading screen, and
+		// finished, from the start of the background download: a Pack the
+		// player asked for should finish ahead of the background ones.
+		const at = (t) => (t === null ? '-' : `${((t - startedAt) / 1000).toFixed(1)} s`);
+		const packState = JSON.parse(await evaluate('JSON.stringify(window.arteaPacks.state)'));
+		console.log('  Pack                                                    started   wanted  finished');
+		for (const [file, s] of Object.entries(packState).sort((a, b) => a[1].startedAt - b[1].startedAt)) {
+			console.log(`  ${file.padEnd(54)} ${at(s.startedAt).padStart(8)} ${at(s.wantedAt).padStart(8)} ${at(s.finishedAt).padStart(9)}`);
+		}
+		const pacing = (from, to) => {
+			const stamps = JSON.parse(frames).filter((t) => t >= from && t <= to);
+			const gaps = stamps.slice(1).map((t, i) => t - stamps[i]).sort((a, b) => a - b);
+			if (gaps.length < 10) return null;
+			const at = (q) => gaps[Math.min(gaps.length - 1, Math.floor(q * gaps.length))];
+			return { frames: gaps.length, median: at(0.5), p95: at(0.95) };
+		};
+		const during = pacing(prefetchFrom + 1000, doneAt);
+		const after = pacing(doneAt + 1000, doneAt + 8000);
+
+		const before = await shot('02-in-hub');
+
+		// A frozen game returns byte-identical frames, so movement is the check
+		// that separates "rendered once" from "playable".
+		const identical = (a, b) => a.length === b.length && a.equals(b);
+		const movesWithW = async (start, duringName, afterName) => {
+			say('holding W to test movement');
+			await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+			await key('keyDown', 'KeyW', 87);
+			await sleep(2500);
+			const duringShot = await shot(duringName);
+			await key('keyUp', 'KeyW', 87);
+			await sleep(1500);
+			const afterShot = await shot(afterName);
+			return !identical(start, duringShot) || !identical(duringShot, afterShot);
+		};
+		const moved = await movesWithW(before, '03-moving', '04-after-move');
+
+		// Prefetched by now, so these should download (next to) nothing on the
+		// way in.
 		const castle = await goTo('the Art Castle', 'res://scenes/art_gallery_3d_inprogress.tscn');
 		let castlePlayable = false;
 		if (castle) {
 			await sleep(3000);
 			castlePlayable = await movesWithW(await shot('05-art-castle'), '06-castle-moving', '07-castle-after-move');
 		}
+		areas.push(['the Art Castle', castle, castle ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		const KINGDOMS = [
 			['Mind Spark', 'res://scenes/popThoughtsMenu.tscn'],
 			['Heart Melody', 'res://scenes/music_minigame.tscn'],
 			["Creator's Light", 'res://scenes/drawing_tool.tscn'],
-			['the Crown of Life story', 'res://scenes/viewfinder/crown_of_life_story.tscn'],
 		];
-		const areas = [['the Art Castle', castle, castle ? await goTo('the Hub', HUB) : null]];
 		for (const [index, [label, scene]] of KINGDOMS.entries()) {
 			const entered = await goTo(label, scene);
 			if (entered) {
 				await sleep(3000);
 				await shot(`${String(8 + index).padStart(2, '0')}-${label.replace(/[^A-Za-z]+/g, '-').toLowerCase()}`);
 			}
-			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null]);
+			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		}
 
 		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open/.test(l));
@@ -445,16 +490,31 @@ async function connect() {
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
 
 		console.log('\nareas (entered from the Hub, then back):');
-		for (const [label, entered, back] of areas) {
-			console.log(`  ${label.padEnd(24)} ${entered ? `entered in ${entered.seconds} s, ${(entered.bytes / 1048576).toFixed(1)} MiB downloaded` : 'NOT ENTERED'}`
+		const MiB = 1048576;
+		for (const [label, entered, back, when] of areas) {
+			console.log(`  ${label.padEnd(24)} ${when.padEnd(19)} ${entered ? `entered in ${entered.seconds} s, ${(entered.bytes / MiB).toFixed(1)} MiB downloaded` : 'NOT ENTERED'}`
 				+ `; back to the Hub: ${back ? 'yes' : 'NO'}`);
-			const key = label.replace(/^the /, '').replace(/[^A-Za-z]+/g, '_').toLowerCase();
-			console.log(`METRIC bytes_${key}=${entered ? entered.bytes : -1}`);
+			const metric = label.replace(/^the /, '').replace(/[^A-Za-z]+/g, '_').toLowerCase();
+			console.log(`METRIC bytes_${metric}=${entered ? entered.bytes : -1}`);
 		}
 		console.log(`  Art Castle playable (moves): ${castlePlayable ? 'yes' : 'NO'}`);
+		const show = (p) => (p ? `median ${p.median.toFixed(1)} ms, p95 ${p.p95.toFixed(1)} ms over ${p.frames} frames` : 'too few frames to say');
+		console.log('\nHub frame pacing (standing still):');
+		console.log(`  during background download: ${show(during)}`);
+		console.log(`  after it finished:          ${show(after)}`);
+		console.log(`METRIC hub_frame_median_ms_prefetch=${during ? during.median.toFixed(1) : -1}`);
+		console.log(`METRIC hub_frame_median_ms_idle=${after ? after.median.toFixed(1) : -1}`);
 
+		// Prefetched areas: no download wait (a few hundred KB of manifests and
+		// revalidation at most). The story went first, so it had to download.
+		const noWait = areas.filter(([, , , when]) => when === 'prefetched')
+			.every(([, entered]) => entered && entered.bytes < MiB);
+		const fellBack = story !== null && story.bytes > MiB;
+		// Not visibly slower: the median frame within 25% of the idle Hub's.
+		const smooth = !during || !after || during.median <= after.median * 1.25;
+		say(`prefetched areas entered without downloading: ${noWait}; story fell back to downloading: ${fellBack}; hub pacing held: ${smooth}`);
 		const pass = moved && castlePlayable && areas.every(([, entered, back]) => entered && back)
-			&& !crashed() && fatal.length === 0;
+			&& noWait && fellBack && smooth && !crashed() && fatal.length === 0;
 
 		if (repeat) {
 			// Same page again with the cache on: with content-hashed parts served

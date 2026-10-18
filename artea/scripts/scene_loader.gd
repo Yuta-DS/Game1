@@ -111,6 +111,35 @@ static func packs_needed(scene_path: String) -> PackedStringArray:
 	return needed
 
 
+## Every Pack file not yet mounted, most likely needed first, for downloading
+## in the background once the Hub is playable (issue #38). The journey decides
+## the order: the Art Castle, where the campaign goes from the Hub; then the
+## Kingdoms in campaign order, from the player's next unfinished one; then the
+## optional Crown of Life story; then any other area. Each area's Shared packs
+## come just before it.
+static func prefetch_order(tree: SceneTree) -> PackedStringArray:
+	var scenes: Array[String] = []
+	var campaign := tree.root.get_node_or_null("/root/JourneyCampaign")
+	if campaign != null:
+		var journey: Dictionary = campaign.get_script().get_script_constant_map()
+		scenes.append(journey.CAMPAIGN_HOME_SCENE)
+		var kingdoms: Array = journey.CAMPAIGN_ORDER
+		var next := maxi(0, kingdoms.find(campaign.call("next_kingdom_id")))
+		for i in kingdoms.size():
+			scenes.append(campaign.call("kingdom_scene_path", kingdoms[(next + i) % kingdoms.size()]))
+		scenes.append(journey.OPTIONAL_GUIDED_STORY_SCENE)
+	if FileAccess.file_exists(PACK_MANIFEST):
+		var manifest = JSON.parse_string(FileAccess.get_file_as_string(PACK_MANIFEST))
+		for pack in (manifest.values() if manifest is Dictionary else []):
+			scenes.append_array(pack.entries)
+	var order := PackedStringArray()
+	for scene in scenes:
+		for file in packs_needed(scene):
+			if not file in order:
+				order.append(file)
+	return order
+
+
 ## Logs a scene switch that failed and puts a message on screen for a while.
 ## The message hangs off the root, so it stays up whichever scene is showing.
 static func report_failure(tree: SceneTree, scene_path: String, reason: String) -> void:

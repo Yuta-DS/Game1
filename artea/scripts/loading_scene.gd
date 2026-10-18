@@ -66,6 +66,8 @@ const DEPENDENCY_FRAME_BUDGET_MS := 50
 # Fetching an area's Pack, when it has not been fetched yet, fills the first
 # part of the load slice; loading the scene from it fills the rest.
 const PACK_SLICE := LOAD_SLICE * 0.5
+# Arriving here starts the background download of the other areas' Packs.
+const HUB_SCENE := "res://scenes/New_Hub_World.tscn"
 
 func _ready():
 	# Milo and MusicManager hold off until this screen is gone.
@@ -358,6 +360,12 @@ func _wait_for_scatter_then_finish() -> void:
 	if OS.has_feature("web"):
 		var music_at := _hide_web_overlay()
 		MusicManager._check_scene(music_at if arriving_track == MusicManager.MAGIC_TRACK else 0.0)
+		# The Hub is playable now, so the page starts downloading the other
+		# areas' Packs in the background, most likely next first (issue #38).
+		# Only downloading: mounting happens when the player goes there.
+		if next_scene_path == HUB_SCENE:
+			var files := SceneLoader.prefetch_order(get_tree())
+			JavaScriptBridge.eval("arteaPacks.startPrefetch(%s)" % JSON.stringify(files))
 	else:
 		_release_scene_audio()
 		_hand_over_music(arriving_track)
