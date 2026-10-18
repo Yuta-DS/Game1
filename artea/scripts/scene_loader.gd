@@ -26,6 +26,9 @@ extends RefCounted
 ## calling scripts from compiling there.
 
 const LOADING_SCENE = "res://scenes/loading_scene.tscn"
+# Written into Web builds by tools/export-web-packs.sh: which entry scenes live
+# in which area Pack. Desktop builds and the editor have no file and no Packs.
+const PACK_MANIFEST := "res://packs.json"
 # Above every HUD layer (the highest is 100) so the incoming scene's minimap
 # and inventory icons can't draw over the loading screen before it is ready,
 # and below the failure message (128).
@@ -37,6 +40,10 @@ const FAILURE_GROUP := "scene_switch_failed"
 static func change_scene(tree: SceneTree, scene_path: String) -> bool:
 	if tree == null:
 		return false
+	# A scene whose Pack has not been fetched yet needs the loading screen to
+	# download it, however light the scene itself is.
+	if pack_needed(scene_path) != "":
+		return change_scene_with_loading(tree, scene_path)
 	if not ResourceLoader.exists(scene_path):
 		report_failure(tree, scene_path, "scene file missing")
 		return false
@@ -50,7 +57,7 @@ static func change_scene(tree: SceneTree, scene_path: String) -> bool:
 static func change_scene_with_loading(tree: SceneTree, scene_path: String) -> bool:
 	if tree == null:
 		return false
-	if not ResourceLoader.exists(scene_path):
+	if not can_open(scene_path):
 		report_failure(tree, scene_path, "scene file missing")
 		return false
 	# Loaded at call time, not preloaded: loading_scene.gd references the
@@ -73,6 +80,26 @@ static func change_scene_with_loading(tree: SceneTree, scene_path: String) -> bo
 	if tree.current_scene != null:
 		tree.current_scene.queue_free()
 	return true
+
+
+## Whether `scene_path` can be opened: it is here, or its Pack can be fetched.
+## Use this, not ResourceLoader.exists, to decide whether a route is open: a
+## Pack's scenes do not exist until the loading screen has fetched the Pack.
+static func can_open(scene_path: String) -> bool:
+	return ResourceLoader.exists(scene_path) or pack_needed(scene_path) != ""
+
+
+## The Pack file `scene_path` is waiting on (ADR-0001), or "" when it can load
+## now: it is in Core, its Pack is already mounted, or the build has no Packs.
+static func pack_needed(scene_path: String) -> String:
+	if ResourceLoader.exists(scene_path) or not FileAccess.file_exists(PACK_MANIFEST):
+		return ""
+	var manifest = JSON.parse_string(FileAccess.get_file_as_string(PACK_MANIFEST))
+	if manifest is Dictionary:
+		for pack in manifest.values():
+			if scene_path in pack.entries:
+				return pack.file
+	return ""
 
 
 ## Logs a scene switch that failed and puts a message on screen for a while.

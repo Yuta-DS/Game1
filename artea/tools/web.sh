@@ -78,11 +78,9 @@ if [[ "${mode}" != serve ]]; then
 		# rebuilt .glb silently exports at its previous revision.
 		"${godot_bin}" --headless --path "${project_dir}" \
 			--editor --quit-after 2000 >/dev/null 2>&1 || true
-		# The wrapper turns on the Web-only export plugins (texture slimming,
-		# issue #39) without enabling them for desktop exports.
-		"${project_dir}/tools/with-web-export-plugins.sh" \
-			"${godot_bin}" --headless --path "${project_dir}" \
-			--export-release Web "${index}"
+		# Core plus one .pck per area Pack (issue #35), with the Web-only
+		# export plugins (texture slimming, issue #39) on.
+		"${project_dir}/tools/export-web-packs.sh" "${godot_bin}" "${index}"
 		echo
 	fi
 fi
@@ -111,7 +109,7 @@ fi
 cp "${project_dir}/tools/vercel-pack-split/pck-loader.js" "${build_dir}/pck-loader.js"
 
 echo "Checking split layout for local serving…"
-for big in "${build_dir}/index.pck" "${build_dir}/index.side.wasm"; do
+for big in "${build_dir}"/*.pck "${build_dir}/index.side.wasm"; do
 	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
 done
 

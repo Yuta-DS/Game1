@@ -152,7 +152,7 @@ func open_guided_lens_story(scene_tree: SceneTree = null) -> bool:
 
 
 func _change_scene_with_loading(scene_path: String, scene_tree: SceneTree = null) -> bool:
-	if not ResourceLoader.exists(scene_path):
+	if not SceneLoader.can_open(scene_path):
 		push_error("JourneyCampaign: missing scene %s" % scene_path)
 		return false
 	var tree := _scene_tree(scene_tree)
@@ -162,7 +162,7 @@ func _change_scene_with_loading(scene_path: String, scene_tree: SceneTree = null
 
 
 func _change_scene(scene_path: String, scene_tree: SceneTree = null) -> bool:
-	if not ResourceLoader.exists(scene_path):
+	if not SceneLoader.can_open(scene_path):
 		push_error("JourneyCampaign: missing scene %s" % scene_path)
 		return false
 	var tree := _scene_tree(scene_tree)

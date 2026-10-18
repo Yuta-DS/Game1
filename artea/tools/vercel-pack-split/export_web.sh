@@ -28,18 +28,16 @@ fi
 
 mkdir -p "${output_dir}"
 
-# The wrapper turns on the Web-only export plugins (texture slimming, issue
-# #39) without enabling them for desktop exports.
-"${project_dir}/tools/with-web-export-plugins.sh" \
-	"${godot_bin}" --headless --path "${project_dir}" \
-	--export-release Web "${output_dir}/index.html"
+# Core plus one .pck per area Pack (issue #35), with the Web-only export
+# plugins (texture slimming, issue #39) on.
+"${project_dir}/tools/export-web-packs.sh" "${godot_bin}" "${output_dir}/index.html"
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
 
 # Content-hashed parts and manifests, the same layout local ./web and the
 # Cloudflare deploy use (see split-pack.sh). index.side.wasm is split too: the
 # loader rejoins it, and one code path for both keeps the layouts identical.
-for big in "${output_dir}/index.pck" "${output_dir}/index.side.wasm"; do
+for big in "${output_dir}"/*.pck "${output_dir}/index.side.wasm"; do
 	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
 done
 

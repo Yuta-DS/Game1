@@ -220,3 +220,56 @@ Not done yet:
 - **Visual check** in the Hub, Art Castle and each Kingdom (issue #39
   acceptance). The headless `./web verify` screenshots are taken under the
   loading overlay (software rendering), so this needs a person in a browser.
+
+## Art Castle as an on-demand Pack (issue #35)
+
+The first split of the single pack into Packs (ADR-0001). Core (`index.pck`)
+holds everything the start screen and the Hub need; `art_castle.pck` holds
+what only the Art Castle uses, and is fetched the first time the player goes
+in. Same build, local server, `./web verify`:
+
+| | Before | After |
+|---|---:|---:|
+| First load, to the Hub | 512.6 MiB (one pack) | **375.8 MiB (-27%)** |
+| Art Castle Pack, on first entry | - | 136.8 MiB |
+| Time to Hub, local | - | 15.4 s |
+| Hub to playable Art Castle, local | - | 47.3 s |
+| Time to Hub, 100 Mbit/s, 40 ms | - | 46.6 s |
+| Hub to playable Art Castle, 100 Mbit/s, 40 ms | - | 58.9 s |
+
+Most of "Hub to playable Art Castle" is the loading screen compiling shaders
+under the headless run's software renderer, not the download.
+
+How the build decides (`artea/tools/pack_split.gd`): a file goes in the Art
+Castle Pack when the castle's entry scenes reach it and nothing in Core does.
+"Reaches" follows ext_resources and preloads, `res://` paths written in code,
+and `class_name` uses. Files nothing outside their own folder uses (a GLB's
+leftover extracted textures, prototype models) go with the Pack that owns
+that folder. So a shared asset always stays in Core, and nothing is listed by
+hand. `PACK_WHY=res://some/file` prints how Core reaches a file, for finding
+what pulls castle content back into the first load.
+
+The same tool fails the export when a shipped scene depends on a file in no
+Pack (missing, or left out by the preset's `exclude_filter`), naming both.
+`artea/tools/test_pack_split.sh` checks that, and that the Tree of Life and
+Crown Line stay out of Core.
+
+How it ships (`artea/tools/export-web-packs.sh`, used by `./web rebuild` and
+both deploy scripts): presets "Web Core" and "Web Pack art_castle" are
+generated from the hand-maintained "Web" preset for the length of the export
+and then removed. Core exports as before; the Pack exports with
+`--export-patch` against Core, so nothing Core holds is shipped twice. The
+Pack preset is the whole Web preset minus other Packs, never just its own
+files: a patch marks every Core file its preset leaves out as removed, and
+mounting it would delete them from the running game. The export refuses a
+Pack that would.
+
+At runtime `res://packs.json` (in Core only) maps entry scenes to Packs.
+`SceneLoader.can_open()` replaces `ResourceLoader.exists()` for routing
+checks, since a Pack's scenes do not exist until it is mounted; any route
+into a Pack's scene goes through the loading screen, which has the page
+download the Pack (`arteaPacks` in `pck-loader.js`: the same parallel,
+retrying part fetch as the first load) into memory and mounts it with
+`ProjectSettings.load_resource_pack`. Godot's own `HTTPRequest` was tried
+first and read a fixed chunk per frame: 137 MB took ten minutes behind a
+loading screen running at a few frames per second.
