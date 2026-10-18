@@ -13,6 +13,11 @@ if [[ ! -f "${local_manifest}" ]]; then
 	exit 1
 fi
 
+# ./web rebuild recreates this generated directory without the deployment
+# metadata that export_web.sh installs. Keep both local build paths deployable.
+cp "${project_dir}/tools/vercel-pack-split/vercel.json" "${build_dir}/vercel.json"
+cp "${project_dir}/tools/vercel-pack-split/.vercelignore" "${build_dir}/.vercelignore"
+
 (
 	cd "${build_dir}"
 	# build_dir is generated and may have lost its .vercel link after a rebuild.
