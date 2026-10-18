@@ -24,6 +24,12 @@ const REFLECTIONS := [
 	"Milo asks: What did you discover about yourself?",
 ]
 
+## Emitted by Exit when `embedded`; the owner frees the tool and resumes play.
+signal closed
+
+## Set by whoever opens the tool over a running world instead of as a scene.
+var embedded := false
+
 # Link of background
 # https://images.nasa.gov/details/PIA12348
 
@@ -82,6 +88,7 @@ var _creative_summary: Label
 var _creative_styles: VBoxContainer
 var _guide_button: Button
 var _enter_world_button: Button
+var _ritual_button: Button
 var _last_gallery_path := ""
 
 
@@ -137,6 +144,33 @@ func _ready() -> void:
 	artgallery.pressed.connect(_on_art_gallery_button_pressed)
 
 	_update_undo_button()
+	if embedded:
+		_configure_embedded()
+
+
+## Opened over the Creator studio: no routes out to the park, the gallery or
+## the frame ritual, only back to the easel (Escape does the same).
+func _configure_embedded() -> void:
+	exit.text = "Back to\nStudio"
+	for button in [artgallery, _enter_world_button, _ritual_button]:
+		if button != null:
+			button.visible = false
+	# Both popups are saved open in the scene. Left up, they hold key focus and
+	# eat the first Escape; their buttons still open them as usual.
+	for popup_path in ["BrushPopUp", "StampPopUp"]:
+		for owner_button in [brush, stamp]:
+			var popup := owner_button.get_node_or_null(popup_path) as Window
+			if popup != null:
+				popup.hide()
+
+
+## True once anything has been drawn (or cleared) since the tool opened.
+func has_drawing() -> bool:
+	return not undo_history.is_empty()
+
+
+func get_artwork_image() -> Image:
+	return _build_artwork_image()
 
 
 func _build_creative_prompt() -> void:
@@ -223,6 +257,7 @@ func _build_ai_companion() -> void:
 	box.add_child(original_button)
 
 	var world_button := Button.new()
+	_ritual_button = world_button
 	world_button.text = "Begin the Gallery Frame Ritual"
 	world_button.pressed.connect(func() -> void:
 		_creative_dialog.hide()
@@ -867,6 +902,10 @@ func _on_local_button_pressed() -> void:
 
 
 func _on_back_to_hub_button_pressed() -> void:
+	# Opened over a 3D world (the Creator studio easels): close back to it.
+	if embedded:
+		closed.emit()
+		return
 	_return_to_park()
 	
 func _on_art_gallery_button_pressed() -> void:

@@ -26,6 +26,9 @@ const TREE_CHRISTMAS_BELLS := preload("res://assets/SFX/fairy dust.ogg")
 const MindSparkFoley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
 const ArrivalPlazaShader := preload("res://shaders/arrival_plaza.gdshader")
 const TreeCourtShader := preload("res://shaders/tree_court.gdshader")
+const CreatorStudioFloorShader := preload("res://shaders/creator_studio_floor.gdshader")
+const EaselCanvasShader := preload("res://shaders/easel_canvas.gdshader")
+const CreatorStudio := preload("res://scripts/creator_studio.gd")
 const MindForecourtShader := preload("res://shaders/mind_forecourt.gdshader")
 const ObservatoryFloorShader := preload("res://shaders/observatory_floor.gdshader")
 const GalleryRotunda := preload("res://scripts/gallery_rotunda.gd")
@@ -128,6 +131,8 @@ const CAUSEWAY_SEGMENT_LENGTH := 420.0
 const CAUSEWAY_ISLAND_RADIUS := 46.0
 const HEART := Vector3(0.0, 0.0, 2290.0)
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
+# Half extents of the raised studio platform (2 m tall, top at y=2).
+const CREATOR_PLATFORM_HALF := Vector3(90.0, 1.0, 82.0)
 const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
 # Arrival-island bounce pads: ~12 m of air at the default 9.8 gravity.
 const BOUNCE_PAD_LAUNCH_SPEED := 15.5
@@ -1321,21 +1326,153 @@ func _build_creator_district() -> void:
 	district.name = "CreatorsLightStudio"
 	add_child(district)
 	_build_island_foundation(district, CREATOR, 195.0, 50.0, 36)
-	_add_box(district, "StudioFloor", CREATOR + Vector3(0.0, 1.0, 0.0),
-		Vector3(310.0, 2.0, 260.0), _make_material(Color("d9b275"), 0.88), true)
-	_add_box(district, "StudioBackWall", CREATOR + Vector3(92.0, 48.0, -92.0),
-		Vector3(120.0, 96.0, 9.0), _materials.ivory, true)
+	# One floor material for the island deck and the studio platform: both are
+	# centred on CREATOR, so the shader's model-space pattern lines up.
+	var floor_material := ShaderMaterial.new()
+	floor_material.shader = CreatorStudioFloorShader
+	floor_material.set_shader_parameter("platform_half",
+		Vector2(CREATOR_PLATFORM_HALF.x, CREATOR_PLATFORM_HALF.z))
+	(district.get_node("WalkableDeck") as MeshInstance3D).material_override = floor_material
+	_add_box(district, "StudioFloor", CREATOR + Vector3(0.0, CREATOR_PLATFORM_HALF.y, 0.0),
+		CREATOR_PLATFORM_HALF * 2.0, floor_material, true)
+	# Shallow stairs up every side of the platform, deck (y=0) to top (y=2).
+	var top := CREATOR_PLATFORM_HALF.y * 2.0
+	var sides := [Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]
+	for index in sides.size():
+		var outward: Vector3 = sides[index]
+		var edge := absf(outward.dot(CREATOR_PLATFORM_HALF))
+		var span := CREATOR_PLATFORM_HALF.z if outward.x != 0.0 else CREATOR_PLATFORM_HALF.x
+		_add_walk_stairs(district, "StudioStairs_%d" % index, CREATOR + outward * (edge + 10.0),
+			CREATOR + outward * edge + Vector3.UP * top, span * 2.0)
 
+	var easels := _creator_easel_offsets()
+	for index in easels.size():
+		_build_easel(district, CREATOR + easels[index], index)
+	_build_art_table(district, CREATOR + Vector3(-35.0, top, 60.0))
+	_build_studio_garden(district)
+
+
+## Six easels in two rows of three on the studio platform, relative to CREATOR.
+func _creator_easel_offsets() -> Array[Vector3]:
+	var top := CREATOR_PLATFORM_HALF.y * 2.0
+	var offsets: Array[Vector3] = []
 	for index in 6:
-		var row := index / 3
-		var column := index % 3
-		_build_easel(district, CREATOR + Vector3(-82.0 + column * 78.0, 2.0, -40.0 + row * 92.0), index)
-	_build_art_table(district, CREATOR + Vector3(92.0, 2.0, 68.0))
-	_build_sun_rune(district, CREATOR + Vector3(92.0, 49.0, -86.5))
-	_build_frame(district, CREATOR + Vector3(-105.0, 0.0, -105.0), 48.0, 66.0, _materials.gold, "CREATOR'S LIGHT")
-	for index in 30:
-		var angle := TAU * float(index) / 30.0
-		_add_flower_cluster(district, CREATOR + Vector3(cos(angle) * 168.0, 2.0, sin(angle) * 168.0), index % 3 == 0)
+		offsets.append(Vector3(-45.0 + (index % 3) * 45.0, top, -20.0 + (index / 3) * 42.0))
+	return offsets
+
+
+## Flowering shrubs over the terrazzo between the platform and the island rim,
+## kept clear of the stairs and of the hub bridge landing on the west side.
+## Each plant is a leafy mound with a few flowers on stems: six tilted petals
+## round a golden centre. Four MultiMeshes (leaves, stems, petals, centres)
+## keep the whole garden to four draws; one static body holds a cylinder per
+## plant so the player walks round them instead of through.
+func _build_studio_garden(parent: Node3D) -> void:
+	const PLANTS := 70
+	const PETALS := 6
+	var paints := [Color("e3546a"), Color("f59e40"), Color("fad65c"),
+		Color("ff8fc8"), Color("4f8fe0"), Color("9e6ddb")]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 6
+	var leaves: Array[Transform3D] = []
+	var leaf_colors: Array[Color] = []
+	var stems: Array[Transform3D] = []
+	var stem_colors: Array[Color] = []
+	var petals: Array[Transform3D] = []
+	var petal_colors: Array[Color] = []
+	var centres: Array[Transform3D] = []
+	var centre_colors: Array[Color] = []
+	var collision := StaticBody3D.new()
+	collision.name = "StudioGardenCollision"
+	collision.position = CREATOR
+	parent.add_child(collision)
+	var planted := 0
+	while planted < PLANTS:
+		var angle := rng.randf() * TAU
+		var spot := Vector2(cos(angle), sin(angle)) * rng.randf_range(110.0, 176.0)
+		if absf(spot.x) < CREATOR_PLATFORM_HALF.x + 14.0 and absf(spot.y) < CREATOR_PLATFORM_HALF.z + 14.0:
+			continue
+		if spot.x < 0.0 and absf(spot.y) < 40.0:
+			continue
+		planted += 1
+		var size := rng.randf_range(3.0, 6.0)
+		var ground := Vector3(spot.x, 0.0, spot.y)
+		# Three overlapping leaf lobes read as a bush rather than one blob.
+		for lobe in 3:
+			var turn := TAU * float(lobe) / 3.0 + rng.randf()
+			leaves.append(Transform3D(Basis.from_scale(Vector3(size, size * 0.6, size)),
+				ground + Vector3(cos(turn) * size * 0.3, size * 0.25, sin(turn) * size * 0.3)))
+			leaf_colors.append(Color("3f8f52").lerp(Color("7cc36b"), rng.randf()))
+		var paint: Color = paints[rng.randi() % paints.size()]
+		for flower in rng.randi_range(3, 5):
+			var around := rng.randf() * TAU
+			var reach := rng.randf_range(0.0, 0.4) * size
+			var height := size * rng.randf_range(0.8, 1.3)
+			var foot := ground + Vector3(cos(around) * reach, 0.0, sin(around) * reach)
+			var head := foot + Vector3.UP * height
+			stems.append(Transform3D(Basis.from_scale(Vector3(0.18, height, 0.18)), foot + Vector3.UP * height * 0.5))
+			stem_colors.append(Color("3f8a4a"))
+			var petal_length := size * rng.randf_range(0.38, 0.5)
+			var tint := paint.lightened(rng.randf_range(0.0, 0.3))
+			var spin := rng.randf() * TAU
+			for petal in PETALS:
+				# Petal along +X, its outer end tilted up, then turned round the head.
+				var petal_basis := Basis(Vector3.UP, spin + TAU * float(petal) / PETALS) \
+					* Basis(Vector3.BACK, deg_to_rad(25.0))
+				petals.append(Transform3D(
+					petal_basis * Basis.from_scale(Vector3(petal_length, petal_length * 0.18, petal_length * 0.5)),
+					head + petal_basis * Vector3(petal_length * 0.45, 0.0, 0.0)))
+				petal_colors.append(tint)
+			centres.append(Transform3D(Basis.from_scale(Vector3.ONE * petal_length * 0.45),
+				head + Vector3.UP * petal_length * 0.08))
+			centre_colors.append(Color("ffd447") if paint != paints[2] else Color("fff6dc"))
+		var shape_node := CollisionShape3D.new()
+		var shape := CylinderShape3D.new()
+		shape.radius = size * 0.65
+		shape.height = size * 1.4
+		shape_node.shape = shape
+		shape_node.position = ground + Vector3.UP * shape.height * 0.5
+		collision.add_child(shape_node)
+	var stem_mesh := CylinderMesh.new()
+	stem_mesh.top_radius = 0.5
+	stem_mesh.bottom_radius = 0.5
+	stem_mesh.height = 1.0
+	stem_mesh.radial_segments = 5
+	stem_mesh.rings = 1
+	_add_tinted_multimesh(parent, "StudioGardenLeaves", leaves, leaf_colors, 0.9)
+	_add_tinted_multimesh(parent, "StudioGardenStems", stems, stem_colors, 0.9, stem_mesh)
+	_add_tinted_multimesh(parent, "StudioGardenPetals", petals, petal_colors, 0.55)
+	_add_tinted_multimesh(parent, "StudioGardenCentres", centres, centre_colors, 0.5)
+
+
+## A MultiMesh of `mesh` (a low-poly unit sphere by default) with a colour per
+## instance, positioned on the Creator district.
+func _add_tinted_multimesh(parent: Node3D, node_name: String, transforms: Array[Transform3D],
+		colors: Array[Color], roughness: float, mesh: PrimitiveMesh = null) -> void:
+	if mesh == null:
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.5
+		sphere.height = 1.0
+		sphere.radial_segments = 8
+		sphere.rings = 4
+		mesh = sphere
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	material.roughness = roughness
+	mesh.material = material
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.use_colors = true
+	multimesh.mesh = mesh
+	multimesh.instance_count = transforms.size()
+	for index in transforms.size():
+		multimesh.set_instance_transform(index, transforms[index])
+		multimesh.set_instance_color(index, colors[index])
+	var instance := MultiMeshInstance3D.new()
+	instance.name = node_name
+	instance.multimesh = multimesh
+	instance.position = CREATOR
+	parent.add_child(instance)
 
 
 # Readable physical landmarks turn the story document into an explorable route.
@@ -1561,33 +1698,17 @@ func _build_creator_story_landmarks() -> void:
 	var story := Node3D.new()
 	story.name = "CreatorsLightQuestLandmarks"
 	add_child(story)
-	var studios := [
-		{"name": "DrawingStudio", "text": "DRAWING STUDIO", "offset": Vector3(-130.0, 0.0, 70.0)},
-		{"name": "DreamDoorWorkshop", "text": "DREAM DOOR WORKSHOP", "offset": Vector3(-115.0, 0.0, -18.0)},
-		{"name": "RestingPlaceCanvas", "text": "RESTING PLACE CANVAS", "offset": Vector3(0.0, 0.0, 110.0)},
-		{"name": "ArtRealGarden", "text": "ART-REAL GARDEN", "offset": Vector3(125.0, 0.0, 65.0)},
-	]
-	for index in studios.size():
-		var info: Dictionary = studios[index]
-		var landmark := Node3D.new()
-		landmark.name = info.name
-		story.add_child(landmark)
-		var position_value: Vector3 = CREATOR + info.offset
-		_build_frame(landmark, position_value, 28.0, 38.0,
-			_materials.aqua if index % 2 == 0 else _materials.gold, info.text)
-	# Floating shapes, glass seeds and silver pipes give this world the highest
-	# magic/technology balance while keeping the handmade art studio central.
-	for index in 10:
-		var angle := TAU * float(index) / 10.0
-		var shape_pos := CREATOR + Vector3(cos(angle) * 145.0, 45.0 + index % 3 * 14.0, sin(angle) * 145.0)
-		_add_sphere(story, "GlassSeed_%02d" % index, shape_pos, Vector3(5.0, 10.0, 5.0), _materials.aqua_glass)
-		_add_cylinder(story, "SilverPipe_%02d" % index, shape_pos + Vector3(0.0, -24.0, 0.0), 2.6, 42.0, _materials.stone, false, 10)
-	var blank := Node3D.new()
-	blank.name = "PerfectBlankSanctuary"
-	story.add_child(blank)
-	_build_frame(blank, CREATOR + Vector3(108.0, 0.0, -108.0), 60.0, 82.0, _materials.canvas, "THE PERFECT BLANK")
-	_add_torus(blank, "CreatorsLight", CREATOR + Vector3(108.0, 48.0, -102.0), 11.0, 16.0, _materials.gold)
-	_add_landmark_label(blank, "URIEL • CREATOR'S LIGHT", CREATOR + Vector3(108.0, 104.0, -108.0), Color("fff0a8"))
+	# The studio's drawing gameplay: grow on the platform, paint at the easels.
+	var studio := CreatorStudio.new()
+	studio.name = "CreatorStudio"
+	studio.position = CREATOR
+	studio.platform_half = Vector2(CREATOR_PLATFORM_HALF.x, CREATOR_PLATFORM_HALF.z)
+	studio.platform_top = CREATOR_PLATFORM_HALF.y * 2.0
+	studio.easel_positions = _creator_easel_offsets()
+	for index in studio.easel_positions.size():
+		studio.easel_canvases.append(get_node_or_null(
+			"CreatorsLightStudio/PaintingEasel_%02d/Canvas" % index) as MeshInstance3D)
+	story.add_child(studio)
 
 
 func _build_boundary_observatories() -> void:
@@ -1599,8 +1720,7 @@ func _build_boundary_observatories() -> void:
 			"source_center": MIND, "source_radius": MIND_DISTRICT_RADIUS},
 		{"name": "NorthObservatory", "center": Vector3(0.0, 0.0, 2565.0),
 			"source_center": HEART, "source_radius": 175.0},
-		{"name": "EastObservatory", "center": Vector3(920.0, 0.0, 1640.0),
-			"source_center": CREATOR, "source_radius": 195.0},
+		# No east lookout: the Creator studio island stands on its own.
 		# No south lookout: its tower stood inside the arrival island between
 		# the gate and the fountain.
 	]
@@ -1855,7 +1975,7 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var bridge := Node3D.new()
 	bridge.name = node_name
 	add_child(bridge)
-	var tree_processional := node_name in ["SouthArrivalBridge", "MindBridge"]
+	var tree_processional := node_name in ["SouthArrivalBridge", "CreatorBridge", "MindBridge"]
 	var direction := end - start
 	var length := direction.length()
 	# Top at -0.02, not 0: bridges start on island decks whose tops are at 0,
@@ -1863,8 +1983,12 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var midpoint := (start + end) * 0.5 + Vector3(0.0, -2.02, 0.0)
 	var yaw := atan2(direction.x, direction.z)
 	var walkway_material: Material = _materials.passage_stone if tree_processional else _materials.stone
-	_add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
+	var walkway := _add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
 		walkway_material, true, yaw)
+	# Processional bridges draw their own deck over the full width; the plain
+	# walkway underneath only z-fought with the island decks where the ends
+	# overlap them. Its collision stays the walkable surface.
+	walkway.visible = not tree_processional
 	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
 	for side in [-1.0, 1.0]:
 		var rail_height := 5.0 if tree_processional else 10.0
@@ -1916,9 +2040,12 @@ func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
 	asset_holder.name = "ReferenceTreeProcessionalBridge"
 	# Blender +Y imports as Godot -Z, which matches this route from z=1422 to
 	# z=975 exactly. Its paver top sits 23 cm above the tested collision deck.
-	asset_holder.position = start
+	# Lifted 8 cm: the asset's deck base is authored at y=0, level with the
+	# island decks it overlaps at each end, and flickered against them there.
+	asset_holder.position = start + Vector3.UP * 0.08
 	asset_holder.rotation.y = yaw + PI
-	# Authored 447 m long and 62 m wide; other processional bridges stretch it.
+	# The asset is authored at 447 x 62 m (SouthArrivalBridge). Shorter
+	# bridges squeeze it to fit; it is visual only, collision is the Walkway.
 	asset_holder.scale = Vector3(width / 62.0, 1.0, length / 447.0)
 	asset_holder.set_meta("source_blend",
 		"res://assets3D/tree_processional_bridge/blend/tree_processional_bridge.blend")
@@ -5910,13 +6037,55 @@ func _build_easel(parent: Node3D, position: Vector3, index: int) -> void:
 	var easel := Node3D.new()
 	easel.name = "PaintingEasel_%02d" % index
 	easel.position = position
+	easel.scale = Vector3.ONE * 0.7
+	# Painted face toward the hub bridge (west), the way players arrive.
+	easel.rotation.y = PI * 0.5
 	parent.add_child(easel)
+	# A-frame: two splayed front legs, a raked rear leg and a top crossbar.
+	# The painted face of the canvas looks along local -Z.
 	for side in [-1.0, 1.0]:
-		var leg := _add_box(easel, "Leg", Vector3(side * 11.0, 18.0, 2.0), Vector3(4.0, 40.0, 4.0), _materials.wood)
+		var leg := _add_box(easel, "Leg", Vector3(side * 12.0, 19.0, 1.5), Vector3(2.6, 42.0, 2.6), _materials.wood)
 		leg.rotation.z = deg_to_rad(side * 8.0)
-	_add_box(easel, "RearLeg", Vector3(0.0, 16.0, 10.0), Vector3(4.0, 38.0, 4.0), _materials.wood)
-	_add_box(easel, "Canvas", Vector3(0.0, 34.0, -1.0), Vector3(38.0, 45.0, 3.0), _materials.canvas)
-	_add_box(easel, "CanvasRest", Vector3(0.0, 12.0, 0.0), Vector3(46.0, 4.0, 7.0), _materials.wood)
+	var rear := _add_box(easel, "RearLeg", Vector3(0.0, 18.0, 8.0), Vector3(2.6, 40.0, 2.6), _materials.wood)
+	rear.rotation.x = deg_to_rad(-15.0)
+	_add_box(easel, "Crossbar", Vector3(0.0, 37.0, 1.5), Vector3(28.0, 2.2, 2.2), _materials.wood)
+
+	# Blank canvas on a wooden stretcher. Its own material, so the player's
+	# drawing can be shown on just this easel (creator_studio.gd).
+	var canvas_material := ShaderMaterial.new()
+	canvas_material.shader = EaselCanvasShader
+	_add_box(easel, "Canvas", Vector3(0.0, 34.0, -1.0), Vector3(38.0, 45.0, 1.6), canvas_material)
+	for bar in [[Vector3(0.0, 56.8, -1.0), Vector3(39.6, 1.6, 2.2)],
+			[Vector3(0.0, 11.2, -1.0), Vector3(39.6, 1.6, 2.2)],
+			[Vector3(-19.8, 34.0, -1.0), Vector3(1.6, 45.0, 2.2)],
+			[Vector3(19.8, 34.0, -1.0), Vector3(1.6, 45.0, 2.2)]]:
+		_add_box(easel, "Stretcher", bar[0], bar[1], _materials.wood)
+	_add_box(easel, "TopClamp", Vector3(0.0, 58.5, -1.0), Vector3(6.0, 3.0, 3.4), _materials.wood)
+
+	# Ledge with a brush jar.
+	_add_box(easel, "CanvasRest", Vector3(0.0, 9.8, -1.0), Vector3(44.0, 2.2, 6.0), _materials.wood)
+	_add_box(easel, "CanvasRestLip", Vector3(0.0, 11.2, -3.6), Vector3(44.0, 1.6, 0.8), _materials.wood)
+	_add_cylinder(easel, "BrushJar", Vector3(13.0, 12.4, -1.0), 1.6, 3.0, _materials.wood, false, 10)
+	for brush in 3:
+		var handle := _add_box(easel, "Brush", Vector3(12.2 + brush * 0.8, 15.5, -1.0),
+			Vector3(0.4, 7.0, 0.4), _materials.wood)
+		handle.rotation.z = deg_to_rad(-12.0 + brush * 12.0)
+	# One solid box round the whole easel, legs to clamp, so the player bumps
+	# into it instead of walking through.
+	_add_collision_box(easel, "EaselCollision", Vector3(0.0, 30.0, 4.0), Vector3(42.0, 60.0, 18.0))
+
+
+## An invisible static box, local to `parent`.
+func _add_collision_box(parent: Node3D, node_name: String, position: Vector3, size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = node_name
+	body.position = position
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	parent.add_child(body)
 
 
 func _build_art_table(parent: Node3D, position: Vector3) -> void:
@@ -5924,22 +6093,15 @@ func _build_art_table(parent: Node3D, position: Vector3) -> void:
 	table.name = "ArtistMaterialsTable"
 	table.position = position
 	parent.add_child(table)
-	_add_box(table, "Top", Vector3(0.0, 20.0, 0.0), Vector3(72.0, 5.0, 38.0), _materials.wood, true)
+	_add_box(table, "Top", Vector3(0.0, 20.0, 0.0), Vector3(72.0, 5.0, 38.0), _materials.wood)
+	# Solid from the floor to the pots, so the player cannot walk under or into it.
+	_add_collision_box(table, "TableCollision", Vector3(0.0, 14.0, 0.0), Vector3(72.0, 28.0, 38.0))
 	for x in [-29.0, 29.0]:
 		for z in [-12.0, 12.0]:
 			_add_box(table, "Leg", Vector3(x, 9.0, z), Vector3(5.0, 18.0, 5.0), _materials.wood)
 	for index in 8:
 		var color_mat: Material = [_materials.aqua, _materials.pink, _materials.purple, _materials.gold][index % 4]
 		_add_cylinder(table, "PaintPot_%02d" % index, Vector3(-26.0 + index * 7.5, 25.0, 0.0), 3.0, 5.0, color_mat, false, 12)
-
-
-func _build_sun_rune(parent: Node3D, position: Vector3) -> void:
-	_add_torus(parent, "SunRuneOuter", position, 22.0, 25.0, _materials.gold, Vector3(90.0, 0.0, 0.0))
-	_add_torus(parent, "SunRuneInner", position + Vector3(0.0, 0.0, -1.0), 8.0, 10.0, _materials.gold, Vector3(90.0, 0.0, 0.0))
-	for index in 8:
-		var angle := TAU * float(index) / 8.0
-		_add_box(parent, "SunRay", position + Vector3(cos(angle) * 34.0, sin(angle) * 34.0, 0.0),
-			Vector3(3.0, 15.0, 3.0), _materials.gold, false, -angle)
 
 
 func _build_tower(parent: Node3D, base: Vector3, width: float, height: float, material: Material) -> void:

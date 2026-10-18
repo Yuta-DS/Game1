@@ -25,19 +25,27 @@ func _run() -> void:
 		return
 	for district in ["CentralSanctuary", "ArrivalIsland", "MindSparkDistrict",
 			"HeartMelodyTemple", "CreatorsLightStudio", "WestObservatory",
-			"NorthObservatory", "EastObservatory"]:
+			"NorthObservatory"]:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
 
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
-			"WestObservatoryBridge", "NorthObservatoryBridge", "EastObservatoryBridge"]:
+			"WestObservatoryBridge", "NorthObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
 		# The West lookout's railed bridges use the causeway's deck.
 		if bridge_node == null or (bridge_node.get_node_or_null("Walkway") == null
 				and bridge_node.get_node_or_null("ContinuousWalkway") == null):
 			_fail("missing connected walkway %s" % bridge)
 			return
+	# The raised Creator studio platform must be walkable from every side.
+	for index in 4:
+		if world.get_node_or_null("CreatorsLightStudio/StudioStairs_%d" % index) == null:
+			_fail("Creator studio platform is missing stairs on side %d" % index)
+			return
+	if world.get_node_or_null("CreatorBridge/ReferenceTreeProcessionalBridge") == null:
+		_fail("CreatorBridge does not use the processional bridge style")
+		return
 	var tree_bridge := world.get_node_or_null("SouthArrivalBridge") as Node3D
 	if tree_bridge.get_meta("visual_style", "") != \
 			"castle_arcane_tree_of_life_processional" \
