@@ -1,8 +1,7 @@
 extends Node3D
 
-# Three full 3 km x 3 km floating kingdoms. Broad landforms are deliberately
-# chunked into large shared meshes so the player receives nine square
-# kilometres of authored exploration without thousands of individual props.
+# The Mind kingdom is a full 3 km x 3 km floating region, chunked into large
+# shared meshes. Heart Melody and Creator's Light are one station platform each.
 
 const KINGDOM_SIZE := Vector2(3000.0, 3000.0)
 const LAND_CHUNK_SIZE := 570.0
@@ -14,13 +13,16 @@ const SHELF_BRIDGE_MAX_SLOPE_DEGREES := 18.0
 const GALLERY_CONNECTION_Z := 820.0
 const CASTLE_CLEAR_BUFFER := 1600.0
 const MIND_CENTER := Vector3(-3600.0, 0.0, 3940.0)
-const HEART_CENTER := Vector3(0.0, 0.0, 7640.0)
-const CREATOR_CENTER := Vector3(3600.0, 0.0, 3940.0)
 const FLOATING_STATIONS := {
 	"mind": Vector3(-1900, 35, 3940),
 	"heart": Vector3(1700, 35, 7640),
 	"creator": Vector3(5300, 35, 3940),
 }
+
+# Heart and Creator arrive on one platform each instead of a 3 km kingdom:
+# three times the fountain island's 155 m so they read from a distance.
+const STATION_PLATFORM_RADIUS := 465.0
+const STATION_PLATFORM_TITLES := {"heart": "HEART MELODY", "creator": "CREATOR'S LIGHT"}
 
 const STORY_ROUTES := {
 	"mind": [
@@ -34,7 +36,7 @@ const STORY_ROUTES := {
 		{"id": "finale", "title": "OLDEST TREE • STAR OF WISDOM", "position": Vector3(-4850, 118, 4400)},
 	],
 	"heart": [
-		{"id": "arrival", "title": "HEART MELODY SKYBRIDGE LANDING", "position": Vector3(1500, 2, 7640)},
+		{"id": "arrival", "title": "HEART MELODY SKYBRIDGE LANDING", "position": Vector3(1722.4, 2, 7838.7)},
 		{"id": "joy", "title": "JOY GARDEN", "position": Vector3(-720, 16, 6990)},
 		{"id": "frustration", "title": "FRUSTRATION DRUM TERRACES", "position": Vector3(-180, 30, 7290)},
 		{"id": "sadness", "title": "SADNESS RAIN BOAT", "position": Vector3(420, 44, 7140)},
@@ -61,16 +63,30 @@ var _materials: Dictionary = {}
 func _ready() -> void:
 	_build_materials()
 	_build_kingdom("mind", MIND_CENTER)
-	_build_kingdom("heart", HEART_CENTER)
-	_build_kingdom("creator", CREATOR_CENTER)
+	# Paving in each kingdom's station colours (STATION_PALETTES in the
+	# railway), deeper here because the open island floor is in full sun.
+	_build_station_platform("heart", [Color("b8607f"), Color("a85272"), Color("5e2440")], _materials.pink)
+	_build_station_platform("creator", [Color("c98f3c"), Color("b87d2e"), Color("5e3a12")], _materials.gold)
 
 
-func get_kingdom_size(_kingdom_id: String = "") -> Vector2:
+func get_kingdom_size(kingdom_id: String = "mind") -> Vector2:
+	if STATION_PLATFORM_TITLES.has(kingdom_id):
+		return Vector2.ONE * STATION_PLATFORM_RADIUS * 2.0
 	return KINGDOM_SIZE
 
 
 func get_kingdom_centers() -> Dictionary:
-	return {"mind": MIND_CENTER, "heart": HEART_CENTER, "creator": CREATOR_CENTER}
+	return {"mind": MIND_CENTER, "heart": _platform_center("heart"),
+		"creator": _platform_center("creator")}
+
+
+## Out from the station along its access bridge; the bridge lands 15 m
+## inside the rim.
+func _platform_center(kingdom_id: String) -> Vector3:
+	var landing: Vector3 = STORY_ROUTES[kingdom_id][0].position
+	var station: Vector3 = FLOATING_STATIONS[kingdom_id]
+	var away := Vector3(landing.x - station.x, 0.0, landing.z - station.z).normalized()
+	return Vector3(landing.x, 0.0, landing.z) + away * (STATION_PLATFORM_RADIUS - 15.0)
 
 
 func get_story_route(kingdom_id: String) -> Array:
@@ -129,6 +145,53 @@ func _build_kingdom(kingdom_id: String, center: Vector3) -> void:
 		_build_checkpoint(kingdom, kingdom_id, route[index], index)
 	_add_label(kingdom, "%s • 3000m × 3000m" % kingdom_id.replace("_", " ").to_upper(),
 		center + Vector3(0, 230, 0), _kingdom_color(kingdom_id), 72)
+
+
+## A fountain-island-sized platform where the station's access bridge lands,
+## with the centre left clear (inlay ring) for the kingdom's centrepiece.
+func _paving(colors: Array, tile: float) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://shaders/station_surface.gdshader")
+	material.set_shader_parameter("pattern", 0)
+	material.set_shader_parameter("base_color", colors[0])
+	material.set_shader_parameter("alt_color", colors[1])
+	material.set_shader_parameter("line_color", colors[2])
+	material.set_shader_parameter("tile_size", tile)
+	material.set_shader_parameter("roughness_value", 0.86)
+	return material
+
+
+## `paving` is [light, dark, grout].
+func _build_station_platform(kingdom_id: String, paving: Array, accent: Material) -> void:
+	var deck_color: Color = paving[0]
+	var platform := Node3D.new()
+	platform.name = "%sKingdomPlatform" % kingdom_id.to_pascal_case()
+	add_child(platform)
+	var center := _platform_center(kingdom_id)
+	platform.set_meta("centrepiece_position", center)
+	var deck_material := _paving(paving, 1.6)
+	# The centrepiece space is paved larger and lighter so it reads as a plaza.
+	var plaza_material := _paving([deck_color.lightened(0.15), deck_color.lightened(0.05),
+		paving[2]], 3.2)
+	var r := STATION_PLATFORM_RADIUS
+	# Stacked a few cm apart so no two tops are coplanar.
+	_add_cylinder(platform, "WalkableDeck", center + Vector3(0, -1.5, 0), r, 3.0, accent, true, 64)
+	_add_cylinder(platform, "DeckField", center + Vector3(0, 0.02, 0), r - 8.0, 0.04, deck_material, false, 64)
+	_add_cylinder(platform, "CentrepieceInlay", center + Vector3(0, 0.06, 0), 126.0, 0.04, accent, false, 64)
+	_add_cylinder(platform, "CentrepieceSpace", center + Vector3(0, 0.1, 0), 118.0, 0.04, plaza_material, false, 64)
+	var underside := MeshInstance3D.new()
+	underside.name = "FloatingUnderside"
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = r * 0.94
+	mesh.bottom_radius = r * 0.2
+	mesh.height = 120.0
+	mesh.radial_segments = 48
+	underside.mesh = mesh
+	underside.position = center + Vector3(0, -62.0, 0)
+	underside.material_override = _material(deck_color.darkened(0.3), 0.92)
+	platform.add_child(underside)
+	_add_label(platform, str(STATION_PLATFORM_TITLES[kingdom_id]), center + Vector3(0, 160, 0),
+		_kingdom_color(kingdom_id), 160)
 
 
 func _build_landmass(parent: Node3D, kingdom_id: String, center: Vector3) -> void:

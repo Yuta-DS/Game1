@@ -18,7 +18,7 @@ config/name="Artea"
 run/main_scene="res://scenes/start_screen.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/image="res://splash_milo.png"
-config/icon="res://icon.svg"
+config/icon="res://icon_milo.png"
 run/main_scene.crown_story="res://scenes/viewfinder/crown_of_life_story.tscn"
 
 [artea]

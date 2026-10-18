@@ -87,7 +87,8 @@ func _wait_for_loading_screen() -> int:
 	while Time.get_ticks_msec() < deadline:
 		await process_frame
 		var found := false
-		for child in root.get_children():
+		# The loading screen sits inside a CanvasLayer (scene_loader.gd).
+		for child in root.find_children("*", "Control", true, false):
 			var child_script := child.get_script() as Script
 			if child_script != null and str(child_script.resource_path).ends_with("loading_scene.gd"):
 				found = true

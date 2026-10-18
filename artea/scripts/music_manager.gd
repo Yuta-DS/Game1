@@ -39,12 +39,17 @@ func _debounced_check() -> void:
 	_tree_changed_pending = false
 	_check_scene()
 
-func _check_scene() -> void:
+# start_at: where to begin a newly started track, in seconds. The loading
+# screen passes how far its music got, when that's this scene's track.
+func _check_scene(start_at := 0.0) -> void:
 	await get_tree().process_frame
 	
 	var cs = get_tree().current_scene
 	if cs == null:
 		return    # nothing to do yet, wait for a real scene
+	# The loading screen calls this again once the world is showing.
+	if not get_tree().get_nodes_in_group("loading_screen").is_empty():
+		return
 
 	var path = cs.scene_file_path
 	
@@ -58,7 +63,7 @@ func _check_scene() -> void:
 
 		# If changing to a different track, swap streams and play
 		player2.stream = new_track
-		player2.play()
+		player2.play(fmod(start_at, new_track.get_length()) if start_at > 0.0 else 0.0)
 	else:
 		# No mapping means stop any music
 		if player2.playing:
