@@ -71,6 +71,28 @@ func _run() -> void:
 
 	var safe_return := floating_world.to_global(Vector3(-650, 7, 1575))
 	var entry_return := geometry.get_node("01WorldGateLanding/EntryWorldGate") as MindSparkWorldGate
+	var island_one_arch := geometry.get_node(
+		"01WorldGateLanding/CelestialWorldGateArrival/GateArchitectureKit/03_ThresholdStructureKit/WorldGateCelestialArch") as Node3D
+	if Vector2(island_one_arch.position.x, island_one_arch.position.z).distance_to(
+			Vector2(entry_return.position.x, entry_return.position.z)) > 0.01 \
+			or absf(wrapf(island_one_arch.rotation.y - entry_return.rotation.y,
+				-PI, PI)) > 0.001:
+		_fail("Island One return arch is not aligned with its working portal")
+		return
+	var island_three_arch := geometry.get_node(
+		"06OldestTreeSanctuary/ReturnWorldGate") as Node3D
+	if island_three_arch.get_meta("design_source", "") != \
+			island_one_arch.get_meta("design_source", "") \
+			or island_three_arch.find_children("IvoryCurvedVoussoir_*", "MeshInstance3D",
+				false, false).size() != 18 \
+			or island_three_arch.find_children("GiltCurvedReveal_*", "MeshInstance3D",
+				false, false).size() != 18:
+		_fail("Island 3 return portal does not reuse the Island 1 teleport arch")
+		return
+	if island_three_arch.find_children("*", "StaticBody3D",
+			false, false).size() < 2:
+		_fail("the shared return arch has no solid supporting piers")
+		return
 	if not entry_return.teleport_player(player) \
 			or player.global_position.distance_to(safe_return) > 0.05:
 		_fail("Zone 01 abort gate does not return to the safe forecourt landing")
@@ -81,6 +103,11 @@ func _run() -> void:
 
 	var final_return := geometry.get_node(
 		"06OldestTreeSanctuary/ReturnToArtCastleWorldGate") as MindSparkWorldGate
+	if absf(wrapf(final_return.rotation.y - island_three_arch.rotation.y, -PI, PI)) > 0.001 \
+			or island_three_arch.position.distance_to(
+				final_return.position - Vector3.UP) > 0.01:
+		_fail("Island 3 arch does not frame its live teleport")
+		return
 	if not final_return.gate_enabled \
 			or str(final_return.get_meta("destination_landmark", "")) != "Mind Spark Train Station" \
 			or not bool(final_return.get_meta("always_available_return", false)):

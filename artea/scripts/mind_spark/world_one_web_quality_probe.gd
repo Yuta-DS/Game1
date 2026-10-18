@@ -20,6 +20,11 @@ const EXPECTED_IDS := [
 	"world_one.calm_rain_basin", "world_one.identity_reflection",
 ]
 const PARTIAL_OBJECT_COUNT := 7
+const GROUND_ZONES := [
+	["01_world_gate_landing", 125.0], ["02_living_network_forest", 155.0],
+	["03_constellation_court", 150.0], ["04_hope_path_ridge", 122.0],
+	["05_thought_storm_arena", 175.0], ["06_oldest_tree_sanctuary", 145.0],
+]
 
 var _world: MindSparkWorldOne
 var _object_store_path := ""
@@ -58,6 +63,16 @@ func _begin() -> void:
 		"touch_modes": 0,
 		"controller_modes": 0,
 		"controller_close": false,
+		"gates_verified": 0,
+		"gates_traversed": 0,
+		"gate_traveler": "",
+		"ground_zones_verified": 0,
+		"ground_saddles_verified": 0,
+		"ground_samples_hit": 0,
+		"expected_portals": 2,
+		"portals_verified": 0,
+		"expected_portal_trips": 0,
+		"portal_trips_verified": 0,
 		"state_restored": false,
 		"identity_restored": false,
 		"errors": [],
@@ -120,6 +135,9 @@ func _begin() -> void:
 	_restore_objects()
 	report.state_restored = _objects_match_snapshots()
 	report.identity_restored = _restore_identity_tracker()
+	await _verify_gate_frames(report)
+	_verify_world_ground(report)
+	await _verify_world_portals(report)
 	store.clear()
 	if not _identity_store_path.is_empty() and FileAccess.file_exists(_identity_store_path):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(_identity_store_path))
@@ -132,6 +150,12 @@ func _begin() -> void:
 		and int(report.durable_completed) == 10 \
 		and int(report.modes) == 5 and int(report.touch_modes) == 5 \
 		and int(report.controller_modes) == 5 and bool(report.controller_close) \
+		and int(report.gates_verified) == 2 and int(report.gates_traversed) == 2 \
+		and int(report.ground_zones_verified) == 6 \
+		and int(report.ground_saddles_verified) == 3 \
+		and int(report.ground_samples_hit) == 216 \
+		and int(report.portals_verified) == int(report.expected_portals) \
+		and int(report.portal_trips_verified) == int(report.expected_portal_trips) \
 		and bool(report.state_restored) and bool(report.identity_restored)
 	_world.set_meta("web_quality_results", report.duplicate(true))
 	_world.set_meta("web_quality_probe_completed", true)
@@ -141,8 +165,380 @@ func _begin() -> void:
 		# result without repeating the 445 MB production download.
 		JavaScriptBridge.eval(
 			"window.__ARTEA_WORLD_ONE_QUALITY__ = %s;" % JSON.stringify(report), true)
+		var query := str(JavaScriptBridge.eval("window.location.search", true))
+		for gate_number in [1, 2, 3]:
+			if "gate_view=%d" % gate_number in query:
+				_install_gate_review_camera(gate_number)
+				break
+		for island_number in [2, 3]:
+			if "island_view=%d" % island_number in query:
+				_install_island_review_camera(island_number)
+				break
+		for portal_name in ["source", "entry_side", "entry", "return"]:
+			if "portal_view=%s" % portal_name in query:
+				_install_portal_review_camera(portal_name)
+				break
 	print("WORLD_ONE_WEB_QUALITY: %s" % JSON.stringify(report))
 	queue_free()
+
+
+func _install_gate_review_camera(gate_number: int) -> void:
+	# Test-only view of the actual browser geometry. Leave the gameplay camera
+	# untouched unless a screenshot run explicitly requests this viewpoint.
+	var gate := _world.get_island_one_heavenly_star_gate() if gate_number == 1 else \
+		_world.get_node_or_null(
+			"WorldOneGeometry/SavedQuestProgressionGates/QuestGate_%d" % gate_number) as Node3D
+	if gate == null:
+		return
+	var camera := Camera3D.new()
+	camera.name = "WebGate%dReviewCamera" % gate_number
+	_world.add_child(camera)
+	if gate_number == 1:
+		camera.global_position = gate.to_global(Vector3(0, 7.0, -36.0))
+		camera.look_at(gate.to_global(Vector3(0, 13.0, 0)), Vector3.UP)
+		camera.fov = 59.0
+		camera.far = 800.0
+		camera.current = true
+		return
+	var approach_sign := -1.0 if gate_number == 3 else 1.0
+	var camera_distance := 30.0 if gate_number == 3 else 42.0
+	camera.global_position = gate.global_position + gate.global_basis.z.normalized() * approach_sign * camera_distance + Vector3.UP * 7.0
+	camera.look_at(gate.global_position + Vector3.UP * 11.0, Vector3.UP)
+	camera.fov = 60.0
+	camera.far = 800.0
+	camera.current = true
+	var player := _world.get("_player") as CharacterBody3D
+	if player != null:
+		player.global_position = camera.global_position - Vector3.UP * 5.0
+		player.velocity = Vector3.ZERO
+
+
+func _install_island_review_camera(island_number: int) -> void:
+	var eye := Vector3.ZERO
+	var target := Vector3.ZERO
+	if island_number == 2:
+		var object := _world.get_object_by_kind(QuestObjectDefinition.ObjectKind.EVIDENCE_SCANNER)
+		if object == null:
+			return
+		var pose := _world.get_quest_review_camera_pose(object)
+		if pose.is_empty():
+			return
+		eye = pose.eye
+		target = pose.target
+	else:
+		eye = _world.to_global(Vector3(300, 27, 28))
+		target = _world.to_global(Vector3(430, 35, 25))
+	var camera := Camera3D.new()
+	camera.name = "WebIsland%dGroundReviewCamera" % island_number
+	_world.add_child(camera)
+	camera.global_position = eye
+	camera.look_at(target, Vector3.UP)
+	camera.fov = 62.0
+	camera.far = 900.0
+	camera.current = true
+	var player := _world.get("_player") as CharacterBody3D
+	if player != null:
+		player.global_position = eye - Vector3.UP * 5.0
+		player.velocity = Vector3.ZERO
+
+
+func _install_portal_review_camera(portal_name: String) -> void:
+	var gate: MindSparkWorldGate
+	if portal_name == "source":
+		var floating_world := _world.get_parent() as Node3D
+		gate = floating_world.get_node_or_null("MindSparkWorldGate") as MindSparkWorldGate if floating_world != null else null
+	elif portal_name == "entry" or portal_name == "entry_side":
+		gate = _world.get_node_or_null("WorldOneGeometry/01WorldGateLanding/EntryWorldGate") as MindSparkWorldGate
+	else:
+		gate = _world.get_node_or_null("WorldOneGeometry/06OldestTreeSanctuary/ReturnToArtCastleWorldGate") as MindSparkWorldGate
+	if gate == null:
+		return
+	var camera := Camera3D.new()
+	camera.name = "Web%sPortalReviewCamera" % portal_name.capitalize()
+	_world.add_child(camera)
+	var approach_sign := -1.0 if portal_name == "return" else 1.0
+	var camera_distance := 36.0 if portal_name == "source" else 40.0
+	camera.global_position = gate.global_position + gate.global_basis.z.normalized() \
+		* approach_sign * camera_distance + Vector3.UP * 7.0
+	if portal_name == "entry_side":
+		camera.global_position -= gate.global_basis.x.normalized() * 12.0
+	camera.look_at(gate.global_position + Vector3.UP * 5.0, Vector3.UP)
+	camera.fov = 58.0
+	camera.far = 900.0
+	camera.current = true
+	var player := _world.get("_player") as CharacterBody3D
+	if player != null:
+		player.global_position = camera.global_position - Vector3.UP * 5.0
+		player.velocity = Vector3.ZERO
+
+
+func _verify_world_portals(report: Dictionary) -> void:
+	var portal_paths := [
+		"WorldOneGeometry/01WorldGateLanding/EntryWorldGate",
+		"WorldOneGeometry/06OldestTreeSanctuary/ReturnToArtCastleWorldGate",
+	]
+	for portal_path in portal_paths:
+		var portal := _world.get_node_or_null(portal_path) as MindSparkWorldGate
+		if not _portal_uses_shared_design(portal):
+			(report.errors as Array).append("%s lacks the Island One teleport design" % portal_path)
+		else:
+			report.portals_verified += 1
+	var entry := _world.get_node_or_null(portal_paths[0]) as MindSparkWorldGate
+	var entry_arch := _world.get_node_or_null(
+		"WorldOneGeometry/01WorldGateLanding/CelestialWorldGateArrival/GateArchitectureKit/03_ThresholdStructureKit/WorldGateCelestialArch") as Node3D
+	var final_portal := _world.get_node_or_null(portal_paths[1]) as MindSparkWorldGate
+	var final_arch := _world.get_node_or_null(
+		"WorldOneGeometry/06OldestTreeSanctuary/ReturnWorldGate") as Node3D
+	if entry == null or entry_arch == null \
+			or entry.global_position.distance_to(entry_arch.global_position + Vector3.UP) > 0.05 \
+			or absf(wrapf(entry.global_rotation.y - entry_arch.global_rotation.y, -PI, PI)) > 0.01:
+		(report.errors as Array).append("Island One return portal does not match its arch")
+	if final_portal == null or final_arch == null \
+			or final_portal.global_position.distance_to(final_arch.global_position + Vector3.UP) > 0.05 \
+			or absf(wrapf(final_portal.global_rotation.y - final_arch.global_rotation.y, -PI, PI)) > 0.01:
+		(report.errors as Array).append("Island Three return portal does not match its arch")
+	var floating_world := _world.get_parent() as Node3D
+	if floating_world != null and floating_world.name == "ArtCastleFloatingWorld":
+		report.expected_portals = 3
+		report.expected_portal_trips = 3
+		var source := floating_world.get_node_or_null("MindSparkWorldGate") as MindSparkWorldGate
+		if not _portal_uses_shared_design(source):
+			(report.errors as Array).append("Art Castle World One entrance lacks the shared teleport design")
+		else:
+			report.portals_verified += 1
+		await _verify_live_portal_trips(report, floating_world, source, entry, final_portal)
+
+
+func _verify_live_portal_trips(report: Dictionary, floating_world: Node3D,
+		source: MindSparkWorldGate, entry: MindSparkWorldGate,
+		final_portal: MindSparkWorldGate) -> void:
+	var player := _world.get("_player") as CharacterBody3D
+	if player == null or source == null or entry == null or final_portal == null:
+		(report.errors as Array).append("live World One teleport player or portal is missing")
+		return
+	var original_transform := player.global_transform
+	var original_velocity := player.velocity
+	var originally_processing := player.is_physics_processing()
+	player.set_physics_process(false)
+	var safe_return := floating_world.to_global(Vector3(-650, 7, 1575))
+	var island_one_arrival := floating_world.to_global(
+		_world.position + _world.get_player_arrival_local())
+	if await _travel_portal_with_q(source, player) \
+			and player.global_position.distance_to(island_one_arrival) < 0.05 \
+			and player.velocity.is_zero_approx():
+		report.portal_trips_verified += 1
+	else:
+		(report.errors as Array).append("Art Castle portal Q input did not land at Island One")
+	if await _travel_portal_with_q(entry, player) \
+			and player.global_position.distance_to(safe_return) < 0.05 \
+			and player.velocity.is_zero_approx():
+		report.portal_trips_verified += 1
+	else:
+		(report.errors as Array).append("Island One portal Q input did not return to the safe forecourt")
+	if await _travel_portal_with_q(final_portal, player) \
+			and player.global_position.distance_to(safe_return) < 0.05 \
+			and player.velocity.is_zero_approx():
+		report.portal_trips_verified += 1
+	else:
+		(report.errors as Array).append("Island Three portal Q input did not return to the safe forecourt")
+	player.global_transform = original_transform
+	player.velocity = original_velocity
+	player.set_physics_process(originally_processing)
+
+
+func _travel_portal_with_q(portal: MindSparkWorldGate,
+		player: CharacterBody3D) -> bool:
+	player.global_position = portal.global_position + Vector3.UP * 1.5
+	player.velocity = Vector3.ZERO
+	for _frame in 4:
+		await get_tree().physics_frame
+	var entered: bool = portal.get("_player_inside") == player
+	var prompt_visible := bool(portal.get_node("Prompt").visible)
+	if not entered or not prompt_visible:
+		print("WORLD_ONE_PORTAL_INPUT: %s" % JSON.stringify({
+			"portal": portal.name, "entered": entered, "prompt": prompt_visible,
+			"stage": "before_q"}))
+		return false
+	var q := InputEventKey.new()
+	q.keycode = KEY_Q
+	q.physical_keycode = KEY_Q
+	q.pressed = true
+	var mapped := q.is_action_pressed("interact")
+	var browser_key := OS.has_feature("web") and "portal_key_audit=1" in str(
+		JavaScriptBridge.eval("window.location.search", true))
+	if browser_key:
+		print("WORLD_ONE_PORTAL_READY: %s" % portal.name)
+		for _frame in 180:
+			await get_tree().physics_frame
+			if portal.get("_player_inside") != player:
+				break
+	else:
+		Input.parse_input_event(q)
+		for _frame in 4:
+			await get_tree().physics_frame
+		q.pressed = false
+		Input.parse_input_event(q)
+	print("WORLD_ONE_PORTAL_INPUT: %s" % JSON.stringify({
+		"portal": portal.name, "entered": entered, "prompt": prompt_visible,
+		"mapped": mapped, "player_position": player.global_position,
+		"portal_position": portal.global_position,
+		"still_inside": portal.get("_player_inside") == player}))
+	return portal.get("_player_inside") != player
+
+
+func _portal_uses_shared_design(portal: MindSparkWorldGate) -> bool:
+	if portal == null:
+		return false
+	var frame := portal.get_node_or_null("Portal/FinishedPortalInstrument") as Node3D
+	return frame != null and frame.has_node("IvoryOuterCase") \
+		and frame.has_node("CharcoalInnerBezel") \
+		and frame.has_node("LavenderEnergyBand") \
+		and frame.has_node("CyanNavigationSigil")
+
+
+func _verify_world_ground(report: Dictionary) -> void:
+	var zones: Dictionary = _world.get("_zone_nodes")
+	var space := _world.get_world_3d().direct_space_state
+	for zone_info in GROUND_ZONES:
+		var zone := zones.get(zone_info[0]) as Node3D
+		var body := zone.get_node_or_null("WalkableZoneFloorCollision") as StaticBody3D if zone != null else null
+		var shape_node := body.get_child(0) as CollisionShape3D if body != null and body.get_child_count() > 0 else null
+		var cylinder := shape_node.shape as CylinderShape3D if shape_node != null else null
+		if body == null or cylinder == null or shape_node.disabled \
+				or (body.collision_layer & 1) == 0 \
+				or cylinder.radius < float(zone_info[1]) - 0.01:
+			(report.errors as Array).append("%s lacks its full solid ground disk" % zone_info[0])
+			continue
+		report.ground_zones_verified += 1
+		var center := _world.to_global(_world.get_zone_position(str(zone_info[0])))
+		for radius_ratio in [0.0, 0.5, 0.85]:
+			for spoke in 12:
+				var angle := TAU * float(spoke) / 12.0
+				var sample: Vector3 = center + Vector3(cos(angle), 0, sin(angle)) \
+					* cylinder.radius * radius_ratio
+				var query := PhysicsRayQueryParameters3D.create(
+					sample + Vector3.UP * 60.0, sample - Vector3.UP * 60.0)
+				query.collision_mask = 1
+				if space.intersect_ray(query).is_empty():
+					(report.errors as Array).append("%s ground sample has no collision" % zone_info[0])
+				else:
+					report.ground_samples_hit += 1
+	var geometry := _world.get_node_or_null("WorldOneGeometry") as Node3D
+	if geometry == null:
+		(report.errors as Array).append("World One ground geometry is missing")
+		return
+	for island_number in [1, 2, 3]:
+		var saddle := geometry.get_node_or_null(
+			"ThreeFusedSuperIslands/FusedSuperIsland_%02d_%02d/SharedIvorySaddleCollision" \
+			% [island_number * 2 - 1, island_number * 2]) as StaticBody3D
+		var shape_node := saddle.get_child(0) as CollisionShape3D if saddle != null and saddle.get_child_count() > 0 else null
+		if saddle == null or shape_node == null or shape_node.disabled \
+				or (saddle.collision_layer & 1) == 0:
+			(report.errors as Array).append("island %d lacks its solid joining saddle" % island_number)
+		else:
+			report.ground_saddles_verified += 1
+
+
+func _verify_gate_frames(report: Dictionary) -> void:
+	var geometry := _world.get_node_or_null("WorldOneGeometry") as Node3D
+	if geometry == null:
+		(report.errors as Array).append("World One gate geometry is missing")
+		return
+	_world.call("_find_player")
+	var traveler := _world.get("_player") as CharacterBody3D
+	var live_player := traveler != null and traveler.has_node("CollisionShape3D")
+	var saved_transform := Transform3D.IDENTITY
+	var saved_velocity := Vector3.ZERO
+	var saved_physics := false
+	var saved_input := false
+	if live_player:
+		saved_transform = traveler.global_transform
+		saved_velocity = traveler.velocity
+		saved_physics = traveler.is_physics_processing()
+		saved_input = traveler.is_processing_input()
+		traveler.set_physics_process(false)
+		traveler.set_process_input(false)
+		report.gate_traveler = "production_player"
+	else:
+		traveler = CharacterBody3D.new()
+		traveler.name = "WorldOneGateTraversalProbe"
+		traveler.collision_layer = 1
+		traveler.collision_mask = 1
+		var shape := CollisionShape3D.new()
+		var capsule := CapsuleShape3D.new()
+		capsule.height = 2.0
+		capsule.radius = 0.45
+		shape.shape = capsule
+		traveler.add_child(shape)
+		_world.add_child(traveler)
+		report.gate_traveler = "test_capsule"
+	for gate_number in [2, 3]:
+		var gate := geometry.get_node_or_null(
+			"SavedQuestProgressionGates/QuestGate_%d" % gate_number) as AnimatableBody3D
+		if gate == null:
+			(report.errors as Array).append("quest gate %d is missing" % gate_number)
+			continue
+		var facade := gate.get_node_or_null("HeavenlyStarGateFamilyFacade") as Node3D
+		if facade == null:
+			(report.errors as Array).append("quest gate %d lacks its matched frame" % gate_number)
+			continue
+		var complete_reveal := true
+		for segment in 14:
+			if not facade.has_node("GiltCrownReveal_%02d" % (segment + 1)):
+				complete_reveal = false
+		if not complete_reveal:
+			(report.errors as Array).append("quest gate %d has a broken arch reveal" % gate_number)
+			continue
+		var leaves := facade.get_node_or_null("SharedHeavenlyGateLeaves") as Node3D
+		var west := leaves.get_node_or_null("WestCelestialLeaf") as AnimatableBody3D if leaves != null else null
+		var east := leaves.get_node_or_null("EastCelestialLeaf") as AnimatableBody3D if leaves != null else null
+		if west == null or east == null \
+				or west.get_node_or_null("LeafCollision") == null \
+				or east.get_node_or_null("LeafCollision") == null:
+			(report.errors as Array).append("quest gate %d lacks solid paired leaves" % gate_number)
+			continue
+		var initially_open := _world.is_quest_gate_open(gate_number - 1)
+		_world.set_quest_gate_open(gate_number - 1, false)
+		for _frame in 4:
+			await get_tree().physics_frame
+		var sealed := absf(west.rotation.y) < 0.01 and absf(east.rotation.y) < 0.01
+		var direction := gate.global_basis.z.normalized()
+		var start := gate.global_position + direction * 12.0 + Vector3.UP * 1.5
+		var motion := -direction * 16.0
+		traveler.global_position = start
+		for _frame in 2:
+			await get_tree().physics_frame
+		var closed_hit := traveler.move_and_collide(motion)
+		var stopped_by_leaf := closed_hit != null \
+			and closed_hit.get_collider() in [west, east]
+		_world.set_quest_gate_open(gate_number - 1, true)
+		for _frame in 4:
+			await get_tree().physics_frame
+		var opened := west.rotation.y < -1.5 and east.rotation.y > 1.5
+		traveler.global_position = start
+		for _frame in 2:
+			await get_tree().physics_frame
+		var open_hit := traveler.move_and_collide(motion)
+		var crossed := open_hit == null \
+			and (traveler.global_position - gate.global_position).dot(direction) < -3.0
+		_world.set_quest_gate_open(gate_number - 1, initially_open)
+		for _frame in 3:
+			await get_tree().physics_frame
+		if not sealed or not opened:
+			(report.errors as Array).append("quest gate %d did not close and swing open" % gate_number)
+			continue
+		report.gates_verified += 1
+		if stopped_by_leaf and crossed:
+			report.gates_traversed += 1
+		else:
+			(report.errors as Array).append("quest gate %d did not block closed and allow crossing open" % gate_number)
+	if live_player:
+		traveler.global_transform = saved_transform
+		traveler.velocity = saved_velocity
+		traveler.set_process_input(saved_input)
+		traveler.set_physics_process(saved_physics)
+	else:
+		traveler.free()
 
 
 func _prepare_objects(store: RefCounted) -> Array[QuestObjectBase]:

@@ -33,6 +33,27 @@ func _run() -> void:
 	var entry_gate := zone.get_node_or_null("EntryWorldGate") as MindSparkWorldGate
 	assert(entry_gate != null,
 		"The functional Art Castle return gate must remain present")
+	var arch := arrival.get_node(
+		"GateArchitectureKit/03_ThresholdStructureKit/WorldGateCelestialArch") as Node3D
+	assert(entry_gate.position.is_equal_approx(
+		world.ISLAND_ONE_RETURN_GATE_AT + Vector3.UP),
+		"the return ring must stand on the centre of its authored threshold")
+	var court_radius := 73.0
+	var ring_outer_radius := 6.30
+	var ring_distance_from_court_center := Vector2(
+		entry_gate.position.x, entry_gate.position.z - 8.0).length()
+	assert(ring_distance_from_court_center + ring_outer_radius < court_radius,
+		"the complete return ring must stand inside the circular arrival court")
+	assert(Vector2(entry_gate.global_position.x, entry_gate.global_position.z).distance_to(
+		Vector2(arch.global_position.x, arch.global_position.z)) < 0.05,
+		"the return ring and arch must have the same ground position")
+	assert(absf(wrapf(entry_gate.global_rotation.y - arch.global_rotation.y,
+		-PI, PI)) < 0.01, "the portal and its arch must face the same approach")
+	for pier in arch.find_children("IvoryPortalPier", "MeshInstance3D", true, false):
+		assert(Vector2((pier as Node3D).global_position.x,
+			(pier as Node3D).global_position.z).distance_to(
+			Vector2(entry_gate.global_position.x, entry_gate.global_position.z)) > 17.0,
+			"a structural arch pier must not overlap the return ring")
 	var gate_to_arrival := (world.STANDALONE_PLAYER_ARRIVAL - entry_gate.position)
 	gate_to_arrival.y = 0.0
 	var gate_facing := entry_gate.basis.z
@@ -44,8 +65,21 @@ func _run() -> void:
 	assert(zone.get_node_or_null("ArrivalRootBridge") == null \
 		and zone.get_node_or_null("ArrivalRootBridgeCollision") == null,
 		"The obsolete static bridge must no longer occupy the gate centre")
-	assert(world.get_island_one_heavenly_star_gate() != null,
+	var star_gate := world.get_island_one_heavenly_star_gate()
+	assert(star_gate != null,
 		"The fused promenade must be controlled by the Heavenly Star Gate")
+	var perimeter := star_gate.get_node(
+		"HeavenlyThresholdCourt/CollisionBackedGatePerimeter") as Node3D
+	assert(perimeter.get_meta("barrier_design_revision", "") \
+		== "arched_ivory_brass_balustrade")
+	assert(perimeter.get_node_or_null("WestConnectedBoundaryOuterWallCollision") \
+		is StaticBody3D and perimeter.get_node_or_null(
+		"EastConnectedBoundaryOuterWallCollision") is StaticBody3D,
+		"the redesigned railing must retain physical side barriers")
+	assert(perimeter.find_child("WestBoundaryScrollwork_01GiltCrownArch_04", true, false) \
+		is MeshInstance3D and perimeter.find_child(
+		"WestBoundaryScrollwork_01WestScroll", true, false) == null,
+		"the gate approach should use an arched balustrade without A-shaped braces")
 
 	# Drive the production capsule along the covered outer approach to the
 	# compass court. The compass machine occupies the middle of the plaza, so a

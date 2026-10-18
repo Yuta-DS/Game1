@@ -119,17 +119,32 @@ func _run() -> void:
 				"GroundEntry*Barrier", "MeshInstance3D", true, false).size() != 2:
 		_fail("ground entry does not carry both barriers continuously into the terrain")
 		return
+	var rock_exclusion := hub.get_node_or_null(
+		"Environment/Objects/CastleStairFootRockExclusion") as Node3D
+	if rock_exclusion == null or not bool(rock_exclusion.get("negative")):
+		_fail("stair foot is not protected from scattered rocks")
+		return
+	var exclusion_shape = rock_exclusion.get("shape")
+	for point: Vector3 in [Vector3(5.1, 29.0, 17.0),
+			Vector3(18.0, 29.0, 22.0)]:
+		if not exclusion_shape.is_point_inside(point, rock_exclusion.global_transform):
+			_fail("stair-foot rock exclusion misses %s" % point)
+			return
 	var promenade := grounded_entry.get_node_or_null("GroundEntryWalkSurface") \
 		as MeshInstance3D
+	var promenade_collision := grounded_entry.get_node_or_null(
+		"GroundEntryWalkCollision") as MeshInstance3D
 	if promenade == null or not promenade.visible \
 			or not bool(promenade.get_meta("smooth_straight_route", false)) \
-			or promenade.find_children("*", "StaticBody3D", true, false).size() != 1:
+			or promenade_collision == null or promenade_collision.visible \
+			or promenade_collision.find_children(
+				"*", "StaticBody3D", true, false).size() != 1:
 		_fail("ground entry is not one visible, smooth collision promenade")
 		return
 	for barrier in grounded_entry.find_children(
 			"GroundEntry*Barrier", "MeshInstance3D", true, false):
-		if not barrier.find_children("*", "StaticBody3D", true, false).is_empty():
-			_fail("decorative ground-entry barrier can physically snag the player: %s"
+		if barrier.find_children("*", "StaticBody3D", true, false).size() != 1:
+			_fail("ground-entry barrier is not a continuous solid wall: %s"
 				% barrier.name)
 			return
 	var treads := stair.find_children("StairTread_*", "MeshInstance3D", true, false)
@@ -145,6 +160,35 @@ func _run() -> void:
 	forward = forward.normalized()
 	player.set_physics_process(false)
 	player.set_process_input(false)
+	var access := grounded_entry.get_node_or_null("GroundAccessWalkSurface") \
+		as MeshInstance3D
+	var access_collision := grounded_entry.get_node_or_null(
+		"GroundAccessWalkCollision") as MeshInstance3D
+	var access_slope := float(grounded_entry.get_meta("ground_access_slope", INF))
+	if access == null or not access.visible \
+			or access_collision == null or access_collision.visible \
+			or access_collision.find_children("*", "CollisionShape3D", true, false).size() != 1 \
+			or access_slope > 0.20:
+		_fail("grass-to-promenade approach is not a gentle, solid paved route")
+		return
+	var entry_start: Vector3 = grounded_entry.get_meta("surface_start")
+	var entry_end: Vector3 = grounded_entry.get_meta("surface_end")
+	var entry_forward := entry_end - entry_start
+	entry_forward.y = 0.0
+	entry_forward = entry_forward.normalized()
+	var entry_right := Vector3(entry_forward.z, 0.0, -entry_forward.x)
+	var promenade_width := (promenade.mesh as BoxMesh).size.x
+	if absf((access.mesh as BoxMesh).size.x - promenade_width) > 0.025 \
+			or absf(entry_right.dot(access.global_position - promenade.global_position)) > 0.025:
+		_fail("grass-to-promenade paving does not line up with the castle path")
+		return
+	var foot: Vector3 = grounded_entry.get_meta("ground_access_foot")
+	if not await _settle(player, foot - entry_forward * 0.35 + Vector3.UP * 3.0) \
+			or not await _walk_to(player, entry_start + entry_forward * 0.5) \
+			or not await _walk_to(player, entry_end):
+		_fail("player cannot walk from grass onto the paved approach without jumping: %s; collisions: %s"
+			% [player.global_position, _colliders(player)])
+		return
 	for lane_offset: float in [-0.75, 0.0, 0.75]:
 		var radial := Vector3(first.global_position.x - (stair.get_meta("tower_base") as Vector2).x,
 			0.0, first.global_position.z - (stair.get_meta("tower_base") as Vector2).y).normalized()

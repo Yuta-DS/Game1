@@ -31,6 +31,10 @@ func _run() -> void:
 	if rotunda == null or rotunda.get_node_or_null("RotundaCollision") == null:
 		_fail("the rotunda or its collision was not built")
 		return
+	for node_name in ["Ground", "Ground2", "Ground3", "Wall BG", "Frame_Asset01"]:
+		if (gallery.get_node(node_name) as Node3D).visible:
+			_fail("legacy gold gallery wall or oversized frame is still visible: " + node_name)
+			return
 	var player := gallery.get_node("Player3D") as CharacterBody3D
 	var space := (gallery as Node3D).get_world_3d().direct_space_state
 	var skip: Array[RID] = [player.get_rid()]
@@ -81,6 +85,13 @@ func _run() -> void:
 		var inward := -Vector3(p.x / pow(Rotunda.RADIUS_X, 2), 0, p.z / pow(Rotunda.RADIUS_Z, 2)).normalized()
 		if frame.global_basis.z.normalized().dot(inward) < 0.95:
 			_fail("%s does not face into the room" % frame.name)
+			return
+		var trim := frame.get_node_or_null("GalleryFrameTrim") as Node3D
+		if trim == null or trim.get_child_count() != 9:
+			_fail("%s has no compact ivory and gold frame" % frame.name)
+			return
+		if bool(frame.get("inspect_on_accept")):
+			_fail("%s still intercepts Space before artwork entry" % frame.name)
 			return
 
 	print("GALLERY_ROTUNDA_TEST: PASS — open doorway, walkable floor, enclosed oval, roof behind façade, canvases hung facing in")

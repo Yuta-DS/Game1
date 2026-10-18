@@ -1,9 +1,12 @@
 extends CharacterBody3D
 
+const RestoreCharacterTexture = preload("res://scripts/npc/restore_character_texture.gd")
+
 @export var walk_speed: float = 2.0
 @export var wander_radius: float = 4.0
 @export var idle_anim: String = "Idle"
 @export var walk_anim: String = "Walking_A"
+@export var model_atlas: Texture2D
 
 var _home: Vector3
 var _target: Vector3
@@ -11,6 +14,7 @@ var _state_timer: float = 0.0
 var _anim_player: AnimationPlayer
 
 func _ready() -> void:
+	RestoreCharacterTexture.apply($Model, model_atlas)
 	_home = global_position
 	_pick_new_target()
 	_anim_player = _find_anim_player(self)

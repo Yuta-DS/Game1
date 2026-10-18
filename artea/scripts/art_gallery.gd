@@ -19,6 +19,7 @@ const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
 const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
 const CREATION_WORLD_PATH = "res://scenes/creation_world.tscn"
 const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
+const GALLERY_ENTRY_SPAWN := "art_castle_gallery"
 
 # --- Rating UI ---
 @onready var ratingpanel: Control = $CanvasLayer/RatingPanel
@@ -41,6 +42,44 @@ func _ready() -> void:
 
 	if ratingpanel:
 		ratingpanel.visible = false
+	_install_galaxy_web_ground_audit()
+	_install_gallery_web_artwork_audit()
+
+
+func _install_galaxy_web_ground_audit() -> void:
+	if not OS.has_feature("web"):
+		return
+	var query := str(JavaScriptBridge.eval("window.location.search", true))
+	var requested_view := ""
+	if "galaxy_audit=creator" in query:
+		requested_view = "creator"
+	elif "galaxy_audit=heart" in query:
+		requested_view = "heart"
+	if requested_view.is_empty():
+		return
+	var floating_world := get_node_or_null("ArtCastleFloatingWorld") as Node3D
+	if floating_world == null:
+		return
+	var probe := Node.new()
+	probe.name = "GalaxyWebGroundAuditProbe"
+	probe.set_script(load("res://scripts/galaxy_web_ground_audit_probe.gd"))
+	add_child(probe)
+	probe.call("configure", self, floating_world, requested_view)
+
+
+func _install_gallery_web_artwork_audit() -> void:
+	if not OS.has_feature("web"):
+		return
+	var query := str(JavaScriptBridge.eval("window.location.search", true))
+	if not ("gallery_audit=1" in query) \
+			or not get_tree().get_nodes_in_group("gallery_web_artwork_audit").is_empty():
+		return
+	var probe := Node.new()
+	probe.name = "GalleryWebArtworkAuditProbe"
+	probe.add_to_group("gallery_web_artwork_audit")
+	probe.set_script(load("res://scripts/gallery_web_artwork_audit_probe.gd"))
+	get_tree().root.add_child.call_deferred(probe)
+	probe.call_deferred("configure", self)
 
 
 # The complete train-and-island kingdom belongs inside this cosmic Art Castle
@@ -134,13 +173,9 @@ func _build_galaxy_transit() -> void:
 	story_director.set_script(load("res://scripts/art_castle_kingdom_story.gd"))
 	floating_world.add_child(story_director)
 
-	# World One is the player's starting destination. Build its arrival court
-	# before moving the live character so Web players never spawn over the
-	# deferred, still-empty blueprint and fall through the world.
-	# The game opens in World One, so complete the relocation in this same scene
-	# setup pass. A deferred move left the authored character and SpawnPoint at
-	# the old gallery start for a frame and made the actual start depend on a
-	# later callback.
+	# Build World One before placing the player so its gate remains ready on both
+	# entry routes. The castle doorway requests the gallery interior; normal
+	# login still starts at World One's supported arrival court.
 	_place_player_in_world_one(floating_world)
 
 	var map_canvas := CanvasLayer.new()
@@ -163,6 +198,15 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 		return
 	world_one.ensure_world_built()
 	var arrival := world_one.get_player_arrival_local()
+	if _consume_gallery_entry_request():
+		var gallery_gate := floating_world.get_node_or_null(
+			"MindSparkWorldGate") as MindSparkWorldGate
+		if gallery_gate != null:
+			gallery_gate.destination_world_local = world_one.position + arrival
+		_place_player_in_gallery(player)
+		if floating_world.has_method("remove_pink_purple_sphere_placeholders"):
+			floating_world.call("remove_pink_purple_sphere_placeholders")
+		return
 	player.global_position = world_one.to_global(arrival)
 	player.velocity = Vector3.ZERO
 	var source_gate := floating_world.get_node_or_null(
@@ -184,6 +228,31 @@ func _place_player_in_world_one(floating_world: Node3D) -> void:
 		camera.call("compose_arrival_view", 180.0, -10.0, 18.0)
 	if floating_world.has_method("remove_pink_purple_sphere_placeholders"):
 		floating_world.call("remove_pink_purple_sphere_placeholders")
+
+
+func _consume_gallery_entry_request() -> bool:
+	var global := get_node_or_null("/root/Global")
+	if global == null or not global.has_method("consume_spawn_point") \
+			or str(global.pending_spawn_point) != GALLERY_ENTRY_SPAWN:
+		return false
+	global.consume_spawn_point()
+	return true
+
+
+func _place_player_in_gallery(player: CharacterBody3D) -> void:
+	var entry := get_node_or_null("CastleGalleryEntry") as Marker3D
+	if entry == null:
+		push_error("Art Castle gallery entry marker is missing")
+		return
+	player.global_position = entry.global_position
+	player.velocity = Vector3.ZERO
+	var spawn_marker := get_node_or_null("SpawnPoint") as Node3D
+	if spawn_marker != null:
+		spawn_marker.global_position = entry.global_position
+		spawn_marker.set_meta("world", "gallery")
+	var camera := get_node_or_null("Camera3D") as Camera3D
+	if camera != null and camera.has_method("compose_arrival_view"):
+		camera.call("compose_arrival_view", 0.0, -12.0, 6.0)
 		
 		
 func _input(event):

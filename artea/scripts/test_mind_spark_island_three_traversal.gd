@@ -52,6 +52,16 @@ func _run() -> void:
 	assert(rim_hit == null, "the arena rim must be level and traversable without jumping")
 	var arena_landing := player.move_and_collide(Vector3.DOWN * 2.0)
 	assert(arena_landing != null, "the corrected arena floor supports the production capsule")
+	# The moved arrival portico now joins the Route 04 bridge. Cross its seam
+	# with the production capsule, then confirm the terrace supports landing.
+	player.global_position = world.to_global(Vector3(255.0, 19.35, 25.0))
+	await physics_frame
+	var bridge_gate_hit := player.move_and_collide(Vector3(25.0, 0.0, 0.0))
+	assert(bridge_gate_hit == null,
+		"the player must walk from the bridge through the arrival gate without jumping")
+	var gate_terrace_landing := player.move_and_collide(Vector3.DOWN * 2.0)
+	assert(gate_terrace_landing != null,
+		"the relocated gate terrace supports the player after crossing")
 
 	for object in world.get_quest_objects():
 		if int(object.get_meta("physical_island", 0)) != 3:

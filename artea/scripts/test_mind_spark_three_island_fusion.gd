@@ -257,6 +257,14 @@ func _run() -> void:
 	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerNorthCollision"))
 	assert(island_three.has_node("StormworksArrivalPortico/ArrivalTowerSouthCollision"))
 	var arrival_portico := island_three.get_node("StormworksArrivalPortico") as Node3D
+	var arrival_terrace := arrival_portico.get_node("IvoryArrivalTerrace") as MeshInstance3D
+	var terrace_length := (arrival_terrace.mesh as BoxMesh).size.z
+	var bridge_end_x := 430.0 - (175.0 - 1.5)
+	var bridge_overlap := bridge_end_x - (arrival_terrace.position.x - terrace_length * 0.5)
+	assert(bridge_overlap > 1.0 and bridge_overlap < 4.0,
+		"the Stormworks gate terrace must overlap the incoming bridge landing")
+	assert(absf(arrival_portico.get_node("PorticoAetherCrown").position.x - 271.0) < 0.1,
+		"the arrival gatehouse must sit three metres closer to the bridge")
 	assert(not arrival_portico.has_node("CharcoalArrivalAxis"),
 		"Island 3 arrival must not retain the abrupt prototype centre stripe")
 	assert(arrival_portico.get_meta("route_surface") ==
@@ -697,21 +705,20 @@ func _run() -> void:
 		and shared_palette.island_three_hero_bark_shadow.albedo_color in ribbon_colors,
 		"alternating bark facets give the hero trunk readable low-poly depth; got %s" % str(ribbon_colors))
 	assert(island_three.has_node("LowPolyUndersideAccents/EmbeddedAetherCrystal_01"))
-	var return_arch_left := geometry.get_node(
-		"06OldestTreeSanctuary/ReturnWorldGate/Left") as MeshInstance3D
-	assert(return_arch_left.material_override == world.get("_materials").celestial_floor,
-		"the old gold return arch is refinished in ivory")
 	var return_arch := geometry.get_node("06OldestTreeSanctuary/ReturnWorldGate") as Node3D
-	assert(str(return_arch.get_meta("design_revision", "")) == "sanctuary_portal_v2")
+	assert(str(return_arch.get_meta("design_revision", "")) == "island_one_celestial_arch_shared")
+	assert(str(return_arch.get_meta("design_source", "")) == "Island One WorldGateCelestialArch")
 	assert(float(return_arch.get_meta("clear_opening_width_m", 0.0)) >= 24.0)
 	assert(bool(return_arch.get_meta("faces_oldest_tree_court", false))
 		and absf(return_arch.rotation.y) > .8,
 		"the portal opening faces the sanctuary approach instead of reading edge-on")
-	assert(return_arch.has_node("ReturnGateSteppedFoot_West")
-		and return_arch.has_node("ReturnGateSteppedFoot_East")
-		and return_arch.has_node("ReturnGateCrownCrystal")
-		and return_arch.has_node("ReturnGateThresholdCollision"),
-		"the return threshold is a finished, collision-backed sanctuary portal")
+	assert(return_arch.find_children("IvoryCurvedVoussoir_*", "MeshInstance3D",
+		false, false).size() == 18
+		and return_arch.find_children("GiltCurvedReveal_*", "MeshInstance3D",
+			false, false).size() == 18
+		and return_arch.has_node("IvoryPortalThresholdCollision")
+		and return_arch.find_children("*", "StaticBody3D", false, false).size() >= 3,
+		"the sanctuary portal shares Island One's arch and has a walkable threshold")
 	assert(int(island_three.get_meta("gold_rings_removed", 0)) > 0)
 	assert(int(island_three.get_meta("visible_gold_ring_count", -1)) == 0,
 		"Island 3 contains no visible gold torus geometry")

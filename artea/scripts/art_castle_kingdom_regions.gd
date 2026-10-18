@@ -1,5 +1,7 @@
 extends Node3D
 
+const GalaxyCivicRailing := preload("res://scripts/galaxy_civic_railing.gd")
+
 # Three full 3 km x 3 km floating kingdoms. Broad landforms are deliberately
 # chunked into large shared meshes so the player receives nine square
 # kilometres of authored exploration without thousands of individual props.
@@ -166,6 +168,108 @@ func _build_landmass(parent: Node3D, kingdom_id: String, center: Vector3) -> voi
 				var grove_height := 19.0 if kingdom_id == "mind" else 25.0
 				_build_grove(land, kingdom_id, deck_pos + Vector3(0, grove_height, 0), row * 5 + column)
 	_build_inter_island_bridge_grid(land, kingdom_id, chunk_surfaces)
+	_build_chunk_edge_guards(land, kingdom_id, chunk_surfaces)
+
+
+func _build_chunk_edge_guards(land: Node3D, kingdom_id: String,
+		chunk_surfaces: Dictionary) -> void:
+	# Every floating shelf has four exposed sides. The grid bridges and story
+	# walks receive measured openings instead of a fence through their landings.
+	var guards := Node3D.new()
+	guards.name = "CivicShelfEdgeGuards"
+	land.add_child(guards)
+	var route_segments: Array = []
+	var route: Array = STORY_ROUTES[kingdom_id]
+	for index in route.size() - 1:
+		var start: Vector3 = route[index].position
+		var finish: Vector3 = route[index + 1].position
+		var middle := (start + finish) * 0.5 \
+			+ Vector3(0, 4, sin(float(index) * 1.9) * 90.0)
+		route_segments.append([start, middle])
+		route_segments.append([middle, finish])
+	var half := LAND_CHUNK_SIZE * 0.5 - 1.6
+	var side_directions: Array[Vector2i] = [Vector2i(-1, 0),
+		Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]
+	for row in 5:
+		for column in 5:
+			var chunk := Vector2i(column, row)
+			var center: Vector3 = chunk_surfaces[chunk]
+			var paths: Array = []
+			var passage_count := 0
+			for side in 4:
+				var vertical := side < 2
+				var fixed := (center.x if vertical else center.z) \
+					+ (-half if side % 2 == 0 else half)
+				var openings: Array[Vector2] = []
+				var neighbor: Vector2i = chunk + side_directions[side]
+				if chunk_surfaces.has(neighbor):
+					openings.append(Vector2(0.0, SHELF_BRIDGE_WIDTH * 0.5 + 3.0))
+				for route_segment in route_segments:
+					var first: Vector3 = route_segment[0]
+					var last: Vector3 = route_segment[1]
+					var first_fixed := first.x if vertical else first.z
+					var last_fixed := last.x if vertical else last.z
+					var delta := last_fixed - first_fixed
+					if absf(delta) < 0.001:
+						continue
+					var progress := (fixed - first_fixed) / delta
+					if progress <= 0.0 or progress >= 1.0:
+						continue
+					var crossing := first.lerp(last, progress)
+					# An elevated story walk passes above this shelf edge, so it
+					# must not leave an unfenced opening at ground level.
+					if crossing.y + 2.5 > center.y + 7.0:
+						continue
+					var along := (crossing.z - center.z) if vertical \
+						else (crossing.x - center.x)
+					if absf(along) > half + 2.0:
+						continue
+					var length := Vector2(last.x - first.x,
+						last.z - first.z).length()
+					var crossing_factor := absf(delta) / maxf(0.001, length)
+					var opening_half := minf(65.0,
+						18.0 / maxf(0.3, crossing_factor))
+					openings.append(Vector2(along, opening_half))
+				passage_count += openings.size()
+				var steps := ceili(half * 2.0 / 8.0)
+				var current := PackedVector3Array()
+				for step in steps:
+					var first_along := lerpf(-half, half,
+						float(step) / float(steps))
+					var last_along := lerpf(-half, half,
+						float(step + 1) / float(steps))
+					var middle_along := (first_along + last_along) * 0.5
+					var passage := false
+					for opening in openings:
+						if absf(middle_along - opening.x) < opening.y:
+							passage = true
+							break
+					if passage:
+						if current.size() > 1:
+							paths.append(current)
+						current = PackedVector3Array()
+						continue
+					if current.is_empty():
+						current.append(_chunk_edge_point(center, vertical,
+							fixed, first_along))
+					var end_point := _chunk_edge_point(center, vertical,
+						fixed, last_along)
+					if current.size() == 1:
+						current.append(end_point)
+					else:
+						current[1] = end_point
+				if current.size() > 1:
+					paths.append(current)
+			var railing := GalaxyCivicRailing.build(guards,
+				"ShelfGuard_%02d_%02d" % [row, column], paths)
+			railing.set_meta("chunk", chunk)
+			railing.set_meta("intentional_passages", passage_count)
+
+
+func _chunk_edge_point(center: Vector3, vertical: bool, fixed: float,
+		along: float) -> Vector3:
+	return Vector3(fixed, center.y, center.z + along) if vertical \
+		else Vector3(center.x + along, center.y, fixed)
 
 
 func _build_inter_island_bridge_grid(land: Node3D, kingdom_id: String,
@@ -245,20 +349,29 @@ func _add_exact_bridge_segment(parent: Node3D, node_name: String,
 
 func _add_shelf_bridge_guards(parent: Node3D, start_surface: Vector3,
 		finish_surface: Vector3) -> void:
-	# One continuous pair is lighter than repeating rails on all three deck
-	# pieces, while remaining perfectly mirrored around the complete bridge axis.
+	# Keep the continuous existing collision and replace its plain glass visual
+	# with the same civic railing found on the adjacent shelf edges.
 	var horizontal := Vector3(
 		finish_surface.x - start_surface.x, 0.0,
 		finish_surface.z - start_surface.z).normalized()
 	var side_axis := Vector3(horizontal.z, 0.0, -horizontal.x)
+	var paths: Array = []
 	for side_value in [-1.0, 1.0]:
 		var side: float = side_value
 		var side_name := "Left" if side < 0.0 else "Right"
 		var rail_offset: Vector3 = side_axis * side * (SHELF_BRIDGE_WIDTH * 0.5 - 0.6)
-		_add_sloped_box_between(parent, "%sSafetyRail" % side_name,
+		var old_rail := _add_sloped_box_between(parent, "%sSafetyRail" % side_name,
 			start_surface + rail_offset + Vector3.UP * 1.5,
 			finish_surface + rail_offset + Vector3.UP * 1.5,
 			Vector2(0.8, 2.4), _materials.glass, true)
+		old_rail.visible = false
+		var body := parent.get_node("%sSafetyRailCollision" % side_name) as StaticBody3D
+		body.position.y += 1.5
+		var shape := (body.get_child(0) as CollisionShape3D).shape as BoxShape3D
+		shape.size.y = 5.4
+		paths.append(PackedVector3Array([
+			start_surface + rail_offset, finish_surface + rail_offset]))
+	GalaxyCivicRailing.build(parent, "CivicBridgeRailing", paths, false)
 
 
 func _add_sloped_box_between(parent: Node3D, node_name: String,
@@ -305,9 +418,62 @@ func _build_story_path(parent: Node3D, route: Array, kingdom_id := "") -> void:
 		var middle := (start + finish) * 0.5 + Vector3(0, 4, sin(float(index) * 1.9) * 90.0)
 		_add_walkway(path, "StoryWay_%02d_A" % index, start, middle, 30.0)
 		_add_walkway(path, "StoryWay_%02d_B" % index, middle, finish, 30.0)
+		_add_story_void_guards(path, "StoryWay_%02d_A" % index,
+			start, middle, kingdom_id)
+		_add_story_void_guards(path, "StoryWay_%02d_B" % index,
+			middle, finish, kingdom_id)
 		if kingdom_id == "mind":
 			_add_route_seam(path, "StoryCircuit_%02d_A" % index, start, middle)
 			_add_route_seam(path, "StoryCircuit_%02d_B" % index, middle, finish)
+
+
+func _add_story_void_guards(parent: Node3D, node_name: String,
+		start: Vector3, finish: Vector3, kingdom_id: String) -> void:
+	# The story route crosses some shelf seams away from the regular bridge grid.
+	# Rail only those void spans; a continuous rail would divide usable land.
+	var distance := Vector2(finish.x - start.x, finish.z - start.z).length()
+	var sample_count := maxi(1, ceili(distance / 4.0))
+	var centre: Vector3 = {"mind": MIND_CENTER, "heart": HEART_CENTER,
+		"creator": CREATOR_CENTER}[kingdom_id]
+	var horizontal := Vector3(finish.x - start.x, 0.0,
+		finish.z - start.z).normalized()
+	var side_axis := Vector3(horizontal.z, 0.0, -horizontal.x)
+	var paths: Array = []
+	var exposed_from := -1
+	for sample in sample_count + 1:
+		var exposed := false
+		if sample < sample_count:
+			var point := start.lerp(finish,
+				(float(sample) + 0.5) / float(sample_count))
+			exposed = not _point_over_shelf(point, centre)
+		if exposed and exposed_from < 0:
+			exposed_from = sample
+		elif not exposed and exposed_from >= 0:
+			var first := start.lerp(finish,
+				float(exposed_from) / float(sample_count)) + Vector3.UP * 2.5
+			var last := start.lerp(finish,
+				float(sample) / float(sample_count)) + Vector3.UP * 2.5
+			if first.distance_to(last) >= 3.0:
+				for side in [-1.0, 1.0]:
+					var offset := side_axis * float(side) * 14.3
+					paths.append(PackedVector3Array([first + offset,
+						last + offset]))
+			exposed_from = -1
+	if not paths.is_empty():
+		GalaxyCivicRailing.build(parent, node_name + "VoidGuard", paths)
+
+
+func _point_over_shelf(point: Vector3, centre: Vector3) -> bool:
+	var first_x := centre.x - 1160.0
+	var first_z := centre.z - 1160.0
+	var column := roundi((point.x - first_x) / LAND_CHUNK_SPACING)
+	var row := roundi((point.z - first_z) / LAND_CHUNK_SPACING)
+	if column < 0 or column >= 5 or row < 0 or row >= 5:
+		return false
+	var chunk_x := first_x + float(column) * LAND_CHUNK_SPACING
+	var chunk_z := first_z + float(row) * LAND_CHUNK_SPACING
+	return absf(point.x - chunk_x) <= LAND_CHUNK_SIZE * 0.5 \
+		and absf(point.z - chunk_z) <= LAND_CHUNK_SIZE * 0.5
 
 
 func _build_checkpoint(parent: Node3D, kingdom_id: String, info: Dictionary, index: int) -> void:

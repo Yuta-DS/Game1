@@ -12,6 +12,19 @@ const AI_STATUS_URL = BASE_URL + "/ai/status"
 
 var auth_token = ""
 
+
+func can_reach_configured_backend() -> bool:
+	if not OS.has_feature("web"):
+		return true
+	var backend_url := BASE_URL.to_lower()
+	var backend_is_loopback := backend_url.begins_with("http://127.0.0.1") \
+		or backend_url.begins_with("http://localhost") \
+		or backend_url.begins_with("http://[::1]")
+	if not backend_is_loopback:
+		return true
+	var browser_host := str(JavaScriptBridge.eval("window.location.hostname", true)).to_lower()
+	return browser_host in ["localhost", "127.0.0.1", "::1", "[::1]"]
+
 # =========================
 # LOGIN
 # =========================

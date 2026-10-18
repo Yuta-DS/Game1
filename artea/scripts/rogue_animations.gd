@@ -1,5 +1,8 @@
 extends Node3D
 
+const RestoreCharacterTexture = preload("res://scripts/npc/restore_character_texture.gd")
+const ROGUE_ATLAS = preload("res://assets3D/characters/rogue_texture.png")
+
 @onready var anim_player = $AnimationPlayer
 
 @export var player_path: NodePath
@@ -20,6 +23,7 @@ var cheer_duration := 1.5
 
 
 func _ready():
+	RestoreCharacterTexture.apply(self, ROGUE_ATLAS)
 	anim_player.play("Idle")
 	_schedule_next_cheer()
 

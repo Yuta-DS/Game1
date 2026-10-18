@@ -12,16 +12,18 @@ func _run() -> void:
 	var gate := world.get_node("WorldOneGeometry/SavedQuestProgressionGates/QuestGate_3") as Node3D
 	var center := world.get_zone_position("04_hope_path_ridge")
 	assert(is_equal_approx(Vector2(gate.position.x-center.x, gate.position.z-center.z).length(), 100.0))
-	var portal := gate.get_node("IslandTwoMemoryGate") as Node3D
+	var leaves := gate.get_node("HeavenlyStarGateFamilyFacade/SharedHeavenlyGateLeaves") as Node3D
+	var west := leaves.get_node("WestCelestialLeaf") as AnimatableBody3D
+	var east := leaves.get_node("EastCelestialLeaf") as AnimatableBody3D
 	world.set_quest_gate_open(2, false)
 	await create_timer(2.5).timeout
-	assert(portal.get_meta("gate_state") == "sealed")
+	assert(is_zero_approx(west.rotation.y) and is_zero_approx(east.rotation.y))
 	world.set_quest_gate_open(2, true)
 	await create_timer(2.5).timeout
-	assert(portal.get_meta("gate_state") == "open", str(portal.get_meta("last_obstruction", "departure blocked")))
+	assert(west.rotation.y < -1.5 and east.rotation.y > 1.5)
 	world.set_quest_gate_open(2, false)
 	await create_timer(2.5).timeout
-	assert(portal.get_meta("gate_state") == "sealed")
+	assert(is_zero_approx(west.rotation.y) and is_zero_approx(east.rotation.y))
 	var physics := world.get_world_3d().direct_space_state
 	# Bridge traversal is tested only after the preceding quest gate is unlocked.
 	world.set_quest_gate_open(0, true)

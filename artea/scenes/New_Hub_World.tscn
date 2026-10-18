@@ -319,6 +319,10 @@ metadata/_custom_type_script = "uid://7iwrp8x1pemc"
 script = ExtResource("112_scatter_box")
 size = Vector3(74, 100, 152)
 
+[sub_resource type="Resource" id="Resource_castle_ground_access_grass_exclusion"]
+script = ExtResource("112_scatter_box")
+size = Vector3(3.8, 100, 2.5)
+
 [sub_resource type="Resource" id="Resource_creator_district_tree_exclusion"]
 script = ExtResource("112_scatter_box")
 size = Vector3(110, 100, 110)
@@ -330,6 +334,10 @@ size = Vector3(78, 100, 86)
 [sub_resource type="Resource" id="Resource_castle_route_tree_exclusion"]
 script = ExtResource("112_scatter_box")
 size = Vector3(78, 100, 46)
+
+[sub_resource type="Resource" id="Resource_castle_stair_foot_rock_exclusion"]
+script = ExtResource("112_scatter_box")
+size = Vector3(32, 100, 32)
 
 [sub_resource type="Resource" id="Resource_nfeeq"]
 script = ExtResource("15_o1ycd")
@@ -525,6 +533,12 @@ script = ExtResource("20_7nfwd")
 negative = true
 shape = SubResource("Resource_village_plaza_exclusion")
 
+[node name="CastleGroundAccessGrassExclusion" type="Node3D" parent="Environment/Grass"]
+position = Vector3(5.58825, 0, 1.3303)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_castle_ground_access_grass_exclusion")
+
 [node name="ScatterItemGrassA" type="Node3D" parent="Environment/Grass" unique_id=528747301]
 script = ExtResource("19_ngqnt")
 proportion = 1200
@@ -647,6 +661,12 @@ script = ExtResource("20_7nfwd")
 negative = true
 shape = SubResource("Resource_castle_route_tree_exclusion")
 
+[node name="CastleStairFootRockExclusion" type="Node3D" parent="Environment/Objects"]
+position = Vector3(-60.8145, 0, 22)
+script = ExtResource("20_7nfwd")
+negative = true
+shape = SubResource("Resource_castle_stair_foot_rock_exclusion")
+
 [node name="ScatterItem" type="Node3D" parent="Environment/Objects" unique_id=1584586711]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.22015, 0, 0)
 script = ExtResource("19_ngqnt")
@@ -701,19 +721,6 @@ script = ExtResource("19_ngqnt")
 proportion = 500
 source_scale_multiplier = 1.35
 path = "res://assets3D/trees/tree_3_a_color_12.tscn"
-metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-
-[node name="ScatterItem9" type="Node3D" parent="Environment/Objects" unique_id=2032956564]
-script = ExtResource("19_ngqnt")
-proportion = 500
-path = "res://assets3D/trees/rock_3_l_color_12.tscn"
-metadata/_custom_type_script = "uid://c52rvhnaia2p3"
-
-[node name="ScatterItem10" type="Node3D" parent="Environment/Objects" unique_id=917907085]
-script = ExtResource("19_ngqnt")
-proportion = 500
-source_scale_multiplier = 3.0
-path = "res://assets3D/trees/rock_3_l_color_12.tscn"
 metadata/_custom_type_script = "uid://c52rvhnaia2p3"
 
 [node name="buildings" type="Node3D" parent="Environment" unique_id=1896146652]
@@ -1144,7 +1151,7 @@ spawn_height = 23.0
 min_distance_between = 6.0
 
 [node name="Story_Intro_Spawn" parent="." unique_id=1554091635 instance=ExtResource("61_krhoc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.603652, 25.680845, 0.27523494)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 27.0, 3.635168)
 
 [node name="Milo2Gameplay" parent="." unique_id=1929992946 instance=ExtResource("62_milo")]
 # Native villager scale. The previous basis was exactly 2x and made Mayor Milo

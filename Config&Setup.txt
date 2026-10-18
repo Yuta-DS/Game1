@@ -1,7 +1,9 @@
 RUN AS WEB: ./web   (rebuild: ./web rebuild | check it plays: ./web verify | stop: ./web stop)
-After ./setup.sh, ./web also starts the local backend on port 8000 if needed,
-so login, registration, artwork, and AI API features can use the same service
-as ./setup.sh run. Offline Guest remains available when the backend is down.
+./web and ./web rebuild fetch Web art assets from Git LFS, prepare the local
+Python environment and Godot imports through ./setup.sh web, then start the
+backend on port 8000 if needed. Login,
+registration, artwork, and AI API features use the same local service as
+./setup.sh run. Offline Guest remains available if the backend cannot start.
 
 ===============================================================================
 ARTEA - CONFIGURATION & SETUP GUIDE
@@ -31,16 +33,16 @@ Verified on: macOS (Darwin 25.5.0), Apple M2 Pro, 2026-08-04
 
 WHAT ./setup.sh DOES (in order)
 
-  1. Checks prerequisites are installed - python3, dotnet, git-lfs, and the
-     Godot .NET/Mono build. If one is missing it stops and prints the exact
-     install command. It does NOT install them for you.
+  1. Checks prerequisites are installed - python3, git-lfs, and Godot. dotnet
+     is required only when this checkout contains a C# project. If one is
+     missing it stops and prints the exact install command.
   2. git lfs pull, then verifies the LLM models are real binaries and not
      unpulled pointer stubs.
   3. Creates server/venv and installs the pinned Python dependencies.
   4. Builds the Godot import cache - the step missing from the original
      documentation, and the one that breaks the game if skipped. Takes a few
      minutes. See section 2.5 for why this matters.
-  5. Builds the C# assembly (dotnet build).
+  5. Builds the C# assembly only when a .csproj exists in artea/.
 
 WHAT ./setup.sh run DOES
 
@@ -286,19 +288,17 @@ thing. Running a scene directly with --path does NOT - it skips import
 entirely, which is how this problem goes unnoticed.
 
 -------------------------------------------------------------------------------
-2.6  BUILD THE C# ASSEMBLY
+2.6  BUILD THE C# ASSEMBLY (ONLY IF artea/*.csproj EXISTS)
 -------------------------------------------------------------------------------
+
+The current checkout has no C# project, so this step is skipped. If a C#
+project is present in another checkout, run:
 
     cd artea
     dotnet build
 
-Expect: "Build succeeded", 0 errors, 3 warnings.
-
-The 3 warnings (CS8600, CS8602 nullable reference warnings) come from
-addons/dialogue_manager/DialogueManager.cs and are pre-existing. They are
-not caused by any macOS change and do not need fixing.
-
-Output: artea/.godot/mono/temp/bin/Debug/Artea.dll
+Its output is under artea/.godot/mono/temp/bin/Debug/. Web exports use a
+non-Mono Godot build and do not run this step.
 
 -------------------------------------------------------------------------------
 2.7  POINT THE CLIENT AT YOUR SERVER
@@ -534,11 +534,11 @@ Run manually (development):
 
     HOST=127.0.0.1 PORT=8000 python server.py
 
-Import cache and build - same as macOS, different binary path:
+Import cache, and build C# only if artea/*.csproj exists:
 
     cd artea
     /path/to/godot-mono --headless --path . --import
-    dotnet build
+    dotnet build    # skip when there is no .csproj
 
 Production deployment via systemd - this is what flaskapp.service is for:
 
@@ -605,7 +605,7 @@ This is the environment the original documentation recommends.
 
     cd ..\artea
     "C:\path\to\Godot_v4.x-stable_mono_win64.exe" --headless --path . --import
-    dotnet build
+    dotnet build    # skip when there is no .csproj
 
 Windows needs the .pdb and .dll files from LFS:
     nobodywho-godot-x86_64-pc-windows-msvc-release.dll

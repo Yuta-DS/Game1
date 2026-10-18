@@ -32,6 +32,8 @@ func _run() -> void:
 		assert(control.get_meta("design_revision") == "heavenly_kit_02")
 	var gate := world.get_island_one_heavenly_star_gate()
 	var gate_visual := gate.get_node("HeavenlyStarGateProductionVisual") as Node3D
+	assert(not gate_visual.visible,
+		"obsolete imported shaft must stay hidden behind the finished gate")
 	assert(int(gate_visual.get_meta("editable_source_modules", 0)) == 365)
 	assert(int(gate_visual.get_meta("triangles", 0)) == 57292)
 	assert(gate.find_children("MSHG_*", "MeshInstance3D", true, false).size() == 10)
@@ -41,11 +43,11 @@ func _run() -> void:
 		"MSHG_GateLeafRight", true, false) is MeshInstance3D)
 	var threshold_court := gate.get_node("HeavenlyThresholdCourt") as Node3D
 	var classical_portal := threshold_court.get_node("ClassicalHeavenlyHingedPortal") as Node3D
-	assert(classical_portal.find_children("HeavenlyArchOrder_*", "MeshInstance3D", true, false).size() == 72)
+	assert(classical_portal.find_children("HeavenlyArchOrder_*", "MeshInstance3D", true, false).size() == 64)
 	assert(classical_portal.find_children("*ClassicalPilaster", "MeshInstance3D", true, false).size() == 2)
 	assert(classical_portal.find_children("*TympanumScroll", "Node3D", true, false).size() == 2)
 	assert(classical_portal.find_children("TympanumSunRay_*", "MeshInstance3D", true, false).size() == 9)
-	assert(threshold_court.find_child("HeavenlyGateLintelBand", true, false) is MeshInstance3D)
+	assert(threshold_court.find_child("HeavenlyGateLintelBand", true, false) == null)
 	assert(threshold_court.find_child("HeavenlyGateThresholdBand", true, false) is MeshInstance3D)
 	assert(threshold_court.find_children("*HingeDriveHousing", "Node3D", true, false).size() == 2)
 	assert(threshold_court.find_children("*HingeDrivePowerBay", "Node3D", true, false).size() == 2)
@@ -58,18 +60,19 @@ func _run() -> void:
 	for leaf_name in ["WestGoldenStarLeaf", "EastGoldenStarLeaf"]:
 		var leaf := gate.get_node(leaf_name) as Node3D
 		assert(leaf.find_child("IvoryLeafSpine", true, false) is MeshInstance3D)
-		assert(leaf.find_children("GiltWingRib_*", "MeshInstance3D", true, false).size() == 6)
-		assert(leaf.find_children("AetherLattice_*", "MeshInstance3D", true, false).size() == 4)
-		assert(leaf.find_children("AetherDoorPane_*", "MeshInstance3D", true, false).size() == 3)
-		assert(leaf.find_children("CelestialGrilleBar_*", "MeshInstance3D", true, false).size() == 7)
-		assert(leaf.find_children("GrilleSpearPearl_*", "MeshInstance3D", true, false).size() == 7)
+		assert(leaf.find_child("CelestialEnamelPanel", true, false) is MeshInstance3D)
+		assert(leaf.find_child("LowerEnamelKickPanel", true, false) is MeshInstance3D)
+		assert(leaf.find_child("LowerBrassFootRail", true, false) is MeshInstance3D)
+		assert(leaf.find_children("GiltWingRib_*", "MeshInstance3D", true, false).size() == 2)
+		assert(leaf.find_children("CelestialGrilleBar_*", "MeshInstance3D", true, false).size() == 5)
+		assert(leaf.find_children("GrilleSpearPearl_*", "MeshInstance3D", true, false).size() == 5)
 		assert(leaf.find_children("*FiligreeScroll", "Node3D", true, false).size() == 2)
 		assert(leaf.find_children("DoorHingeBarrel_*", "MeshInstance3D", true, false).size() == 3)
 		assert(leaf.find_children("DoorHingeCollarTop_*", "MeshInstance3D", true, false).size() == 3)
 		assert(leaf.find_children("DoorHingeCollarBottom_*", "MeshInstance3D", true, false).size() == 3)
 		assert(leaf.find_child("LeafAstrolabeMedallion", true, false) is MeshInstance3D)
 		assert(leaf.find_children("FrameRivet_*", "MeshInstance3D", true, false).size() == 16)
-		assert(leaf.find_children("AetherCircuit_*", "MeshInstance3D", true, false).size() == 4)
+		assert(leaf.find_children("AetherCircuit_*", "MeshInstance3D", true, false).size() == 2)
 		assert(leaf.find_child("DoorStateCrystal", true, false) is MeshInstance3D)
 		assert(leaf.find_child("*CelestialInterlock", true, false) is Node3D)
 	var crest := gate.get_node("HeavenlyStarHalo") as Node3D

@@ -26,6 +26,7 @@ set -euo pipefail
 
 port=8800
 mode=auto
+export_only=0
 open_browser=1
 cache_mode=no-store
 
@@ -33,7 +34,7 @@ while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--rebuild)    mode=rebuild; shift ;;
 		--serve-only) mode=serve;   shift ;;
-		--export-only) mode=export; shift ;;
+		--export-only) export_only=1; shift ;;
 		--no-open)    open_browser=0; shift ;;
 		--prod-cache) cache_mode=prod; shift ;;
 		--port)       port="${2:?--port needs a number}"; shift 2 ;;
@@ -97,10 +98,15 @@ if [[ "${mode}" != serve ]]; then
 		}
 		echo "Exporting with ${godot_bin}"
 		mkdir -p "${build_dir}"
-		# Import once so freshly changed assets are in the pack.  Without this a
-		# rebuilt .glb silently exports at its previous revision.
-		"${godot_bin}" --headless --path "${project_dir}" \
-			--editor --quit-after 2000 >/dev/null 2>&1 || true
+		# Import once so freshly changed assets are in the pack. A failed import
+		# must stop the export instead of silently shipping stale models.
+		import_log="${project_dir}/.godot/web-import.log"
+		if ! "${godot_bin}" --headless --path "${project_dir}" \
+				--import >"${import_log}" 2>&1; then
+			tail -n 80 "${import_log}" >&2
+			echo "Web import failed. Full log: ${import_log}" >&2
+			exit 1
+		fi
 		# The wrapper turns on the Web-only export plugins (texture slimming,
 		# issue #39) without enabling them for desktop exports.
 		"${project_dir}/tools/with-web-export-plugins.sh" \
@@ -140,7 +146,7 @@ for big in "${build_dir}/index.pck" "${build_dir}/index.side.wasm"; do
 	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
 done
 
-if [[ "${mode}" == export ]]; then
+if [[ "${export_only}" == 1 ]]; then
 	echo "Web build ready at ${build_dir}"
 	exit 0
 fi

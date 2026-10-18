@@ -561,12 +561,7 @@ func _apply_task_gating() -> void:
 
 
 func _update_cast_for_task() -> void:
-	var milo := world.get_cast_member("milo")
 	var guardian := world.get_cast_member("guardian")
-	if milo != null:
-		milo.position = world.get_zone_position("01_world_gate_landing") + _world_offset(Vector3(-28, 3, -12))
-		if milo.has_method("set_dialogue_line"):
-			milo.call("set_dialogue_line", "Balance the twin towers, align the compass, then wake both roots. Its cyan route points to Island Two.")
 	if guardian == null:
 		return
 	var guide_position := world.get_zone_position("03_constellation_court") + _world_offset(Vector3(0, 4, -84))

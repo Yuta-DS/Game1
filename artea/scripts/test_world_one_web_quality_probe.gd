@@ -1,6 +1,7 @@
 extends SceneTree
 
 const WorldScene := preload("res://scenes/mind_spark/mind_spark_world_one.tscn")
+const PlayerScene := preload("res://scenes/player_3d.tscn")
 const StateStore := preload("res://scripts/mind_spark/quest_objects/quest_object_state_store.gd")
 
 const TEST_PATH := "user://test_world_one_web_quality_probe.json"
@@ -18,6 +19,13 @@ func _run() -> void:
 		"last_action": "heal",
 	}), "the restoration fixture must be saved")
 	OS.set_environment("ARTEA_WORLD_ONE_WEB_QUALITY", "1")
+	var player := PlayerScene.instantiate() as CharacterBody3D
+	player.name = "Player3D"
+	player.add_to_group("Player")
+	root.add_child(player)
+	player.set_physics_process(false)
+	player.global_position = Vector3(25, 10, 25)
+	var player_start := player.global_transform
 	var world := WorldScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
 	world.object_state_store_path = TEST_PATH
@@ -49,6 +57,22 @@ func _run() -> void:
 	assert(int(report.get("controller_modes", 0)) == 5
 		and bool(report.get("controller_close", false)),
 		"every distinct game mode supports D-pad/stick/A input and B maps to close")
+	assert(int(report.get("gates_verified", 0)) == 2
+		and int(report.get("gates_traversed", 0)) == 2,
+		"both gates block the production player closed and allow it across when open")
+	assert(str(report.get("gate_traveler", "")) == "production_player"
+		and player.global_transform.is_equal_approx(player_start),
+		"gate verification uses and restores the production player")
+	assert(int(report.get("ground_zones_verified", 0)) == 6
+		and int(report.get("ground_saddles_verified", 0)) == 3
+		and int(report.get("ground_samples_hit", 0)) == 216,
+		"all three islands retain their solid district disks and connecting saddles")
+	assert(int(report.get("portals_verified", 0)) == int(report.get("expected_portals", -1))
+		and int(report.get("expected_portals", 0)) == 2,
+		"both standalone World One return portals share the Island One instrument")
+	assert(int(report.get("portal_trips_verified", -1)) == 0
+		and int(report.get("expected_portal_trips", -1)) == 0,
+		"standalone quality probe has no live Gallery portal trip to exercise")
 	var checkpoint: QuestObjectBase
 	for object in world.get_quest_objects():
 		if object.save_id == "world_one.checkpoint.landing":
@@ -61,6 +85,7 @@ func _run() -> void:
 	assert(not world.has_node("WorldOneWebQualityProbe"),
 		"normal production sessions keep the diagnostic dormant")
 	world.queue_free()
+	player.queue_free()
 	store.clear()
 	print("WORLD_ONE_WEB_QUALITY_PROBE_TEST: PASS — 15 rewards, saves, five keyboard/touch/controller modes, and live-state restoration")
 	quit()

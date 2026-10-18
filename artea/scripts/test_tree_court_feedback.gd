@@ -1,7 +1,7 @@
 extends SceneTree
 
 # Tree of Imagination court: quieter music, no purple ring, flower beds are
-# bounce pads, no slate plinth, solid trunk/floor/cat, and a spiral stair up
+# bounce pads, no slate plinth or black cat, a solid trunk/floor, and a spiral stair up
 # the hollow trunk the real player capsule can climb.
 
 const HUB := Vector3(0.0, 0.0, 1640.0)
@@ -66,6 +66,9 @@ func _run() -> void:
 
 	if island.get_node_or_null("OuterGardenRing") != null:
 		_fail("purple outer ring is still there")
+		return
+	if not island.find_children("OpenArch", "Node3D", true, false).is_empty():
+		_fail("gray rectangular arches with pink rings still surround the Tree of Life")
 		return
 	if island.find_children("BouncePad*", "Area3D", false, false).size() != 72:
 		_fail("expected the 72 court flower beds to be bounce pads")
@@ -146,14 +149,10 @@ func _run() -> void:
 			_fail("%s has no collision" % root_mesh.name)
 			return
 
-	# Cat statue is solid.
-	var cat := island.get_node("BlackCatGuide") as Node3D
-	await _settle(player, cat.global_position + Vector3(20, 2, 0))
-	await _walk(player, func() -> Vector3: return cat.global_position, 300)
-	var cat_gap := Vector2(player.global_position.x - cat.global_position.x,
-		player.global_position.z - cat.global_position.z).length()
-	if cat_gap < 5.0:
-		_fail("walked into the cat statue (%.1f m from its centre)" % cat_gap)
+	# The former statue and its collider must leave the approach open.
+	if island.get_node_or_null("BlackCatGuide") != null \
+			or island.find_child("CatCollision", true, false) != null:
+		_fail("black cat or its collision still stands beside the Tree of Life")
 		return
 
 	# In through the doorway to the foot of the stair, then round and up.

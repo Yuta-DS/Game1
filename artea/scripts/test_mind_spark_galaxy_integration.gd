@@ -22,7 +22,7 @@ func _run() -> void:
 	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v6")
 	assert(forecourt.get_meta("footprint_m") == Vector2(64.0, 54.0))
 	assert(float(forecourt.get_meta("clear_processional_lane_m", 0.0)) >= 18.0)
-	assert(bool(forecourt.get_meta("functional_gate_transform_preserved", false)))
+	assert(bool(forecourt.get_meta("functional_gate_centre_preserved", false)))
 	var landscape_frame := forecourt.get_node("DistrictLandscapeFrame") as Node3D
 	assert(bool(landscape_frame.get_meta("grey_foundation_visually_covered", false)))
 	assert(landscape_frame.find_children("*LandscapeLawn", "MeshInstance3D", true, false).size() == 2)
@@ -38,9 +38,18 @@ func _run() -> void:
 	var portal_cradle := gatehouse.get_node("WorldGatePortalCradle") as Node3D
 	assert(bool(portal_cradle.get_meta("functional_portal_remains_independent", false)))
 	assert(bool(portal_cradle.get_meta("opening_collision_free", false)))
+	assert(str(portal_cradle.get_meta("design_revision", "")) == "clear_single_ring_threshold")
 	assert(portal_cradle.find_children("*PortalButtress", "MeshInstance3D", true, false).size() == 2)
-	assert(portal_cradle.get_node_or_null("PortalArchitecturalBezel") is MeshInstance3D)
-	assert(portal_cradle.find_children("PortalBezelClamp_*", "MeshInstance3D", true, false).size() == 3)
+	assert(portal_cradle.find_children("*PortalButtressCollision", "StaticBody3D", true, false).size() == 2)
+	assert(portal_cradle.get_node_or_null("PortalArchitecturalBezel") == null
+		and portal_cradle.find_children("PortalArchStone_*", "MeshInstance3D", true, false).is_empty()
+		and portal_cradle.find_children("PortalBezelClamp_*", "MeshInstance3D", true, false).is_empty(),
+		"the active teleport has one aligned ring, without a second fragmented arc")
+	var portal_apron := portal_cradle.get_node("PortalDaisIvory") as MeshInstance3D
+	assert(portal_apron.position.y + (portal_apron.mesh as CylinderMesh).height * 0.5 < 0.06,
+		"the portal apron stays flush with the walkable deck")
+	assert(gatehouse.get_node_or_null("CrownPendant") == null,
+		"the hanging decoration does not obscure the active teleport crown")
 	var terraces := forecourt.get_node("SideTerraceGardens") as Node3D
 	assert(terraces.find_children("*GardenTerraceCollision", "StaticBody3D", true, false).size() == 2)
 	assert(terraces.find_children("SolidWarmTrunkCollision", "StaticBody3D", true, false).size() == 6)
@@ -83,6 +92,11 @@ func _run() -> void:
 		"Mind Bridge and island collision deck must share the exact y=0 datum")
 	var mind_gate := floating_world.get_node("MindSparkWorldGate") as MindSparkWorldGate
 	assert(mind_gate != null)
+	assert(mind_gate.global_position.distance_to(forecourt.global_position) < 0.01,
+		"the active portal must remain centred in its architectural arch")
+	assert(mind_gate.global_basis.z.normalized().dot(
+			forecourt.global_basis.z.normalized()) > 0.999,
+		"the active portal must face along the same axis as its arch and walkway")
 	assert(is_equal_approx(float(mind_gate.get_meta("ceremonial_visual_scale", 0.0)), 1.26))
 	var instrument := mind_gate.get_node(
 		"Portal/FinishedPortalInstrument") as Node3D

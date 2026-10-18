@@ -74,6 +74,12 @@ static func apply(world: MindSparkWorldOne) -> void:
 		var control := controls.get_node("PuzzleControl_"+id) as Node3D
 		_face(control,approaches[id])
 		control.set_meta("laboratory_department","Signal Laboratory")
+	# Both departments use the same finished deck. Their imported base meshes
+	# start at the control origin; the former 5 cm clearance left a visible seam
+	# under every plinth, especially at low camera angles.
+	for control in controls.get_children():
+		if control is Node3D:
+			(control as Node3D).position.y=.005
 	_install_quest_visual_hierarchy(world,campus,controls)
 	# Beam endpoints are authored from the actual output anchors.
 	var old_routes := puzzle.get_node("LivingLightLaboratoryRoutes")

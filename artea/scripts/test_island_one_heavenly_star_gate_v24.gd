@@ -32,10 +32,22 @@ func _run() -> void:
 	assert(str(gate.get_meta("purpose", "")).contains("Signal Prism"))
 	var west := gate.get_node("WestGoldenStarLeaf") as AnimatableBody3D
 	var east := gate.get_node("EastGoldenStarLeaf") as AnimatableBody3D
+	assert(is_equal_approx(absf(west.position.x), 6.55)
+		and is_equal_approx(absf(east.position.x), 6.55),
+		"the leaves must reach the ivory arch's inner pilasters")
 	assert(west.get_node_or_null("GateLeafCollision") is CollisionShape3D)
 	assert(east.get_node_or_null("GateLeafCollision") is CollisionShape3D)
+	assert(is_equal_approx(((west.get_node("GateLeafCollision") as CollisionShape3D).shape as BoxShape3D).size.x, 6.5),
+		"the widened leaf must also block its full visual span")
 	var west_closed := west.position
 	var east_closed := east.position
+	var threshold_ray := PhysicsRayQueryParameters3D.create(
+		gate.to_global(Vector3(2.5, 8.0, -8.0)),
+		gate.to_global(Vector3(2.5, 8.0, 8.0)))
+	threshold_ray.collision_mask = 1
+	var sealed_hit := world.get_world_3d().direct_space_state.intersect_ray(threshold_ray)
+	assert(not sealed_hit.is_empty() and sealed_hit.collider == east,
+		"the sealed golden leaf must physically block the player-height passage")
 	assert(str(gate.get_node("HeavenlyThresholdCourt").get_meta("mass_clearance_rule", "")).contains(
 		"reserved inward swing envelope"))
 	var perimeter := gate.get_node(
@@ -86,6 +98,10 @@ func _run() -> void:
 	assert(is_equal_approx(west.rotation.y, deg_to_rad(-96.0)) \
 		and is_equal_approx(east.rotation.y, deg_to_rad(96.0)),
 		"both leaves swing inward and away from the arriving player")
+	await physics_frame
+	var open_hit := world.get_world_3d().direct_space_state.intersect_ray(threshold_ray)
+	assert(open_hit.is_empty() or (open_hit.collider != west and open_hit.collider != east),
+		"the open golden leaves must release the player-height passage")
 	var halo := gate.get_node("HeavenlyStarHalo") as Node3D
 	assert(halo.position.is_equal_approx(Vector3(0, 25.0, -2.15)),
 		"the astrolabe rotates around its crown bearing instead of orbiting the gate origin")

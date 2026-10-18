@@ -4,7 +4,7 @@ This document provides instructions for setting up and running the Artéa game p
 
 
 Guide to Running the Project
-  1. **Engine Requirement:** Download and install Godot Engine version 4.4 or newer, specifically the version that includes .NET/Mono support (for C# compilation).
+  1. **Engine Requirement:** Download and install Godot Engine version 4.4 or newer. Use the standard non-Mono build for Web exports. A .NET build and SDK are needed only if this checkout includes a C# project.
   2. **Import Project:** Import the project directory into the Godot Project Manager.
   3. **Initial Scene Launch:** To test the project, click the "Run Scene" button (F6). If the main scene is not already assigned, set it to:
     - "res://scenes/start_screen.tscn"
@@ -156,9 +156,13 @@ OpenRouter or be replaced with another server-side model provider.
 
 ## Web architecture
 
-The `Web_Version` preset exports generated files to the repository-level
-`web-build/` directory. Do not edit those generated files; change source under
-`artea/` and create a fresh export instead.
+The `Web` preset exports generated files to `artea/builds/web/`. Run `./web`
+to prepare the web prerequisites, refresh the export when source has changed,
+start the local backend, and serve the game. Use `./web rebuild` for a forced
+fresh export. These commands fetch Web art assets from Git LFS and prepare the
+Python environment and Godot import cache through `./setup.sh web`. They do not
+require the desktop-only GGUF model
+or a C# build. Do not edit generated files; change source under `artea/`.
 
 Desktop builds prefer the bundled NobodyWho/GGUF model for Milo and emotion
 analysis. Web builds exclude that native extension and model, and send the same

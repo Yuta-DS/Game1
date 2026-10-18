@@ -19,12 +19,12 @@ func _fail(message: String) -> void:
 func _run() -> void:
 	if not await _check_world_one_three_island_route():
 		return
-	if not await _check_observatory_twins():
+	if not await _check_retired_observatory_spans():
 		return
 	if not await _check_kingdom_shelf_grids():
 		return
 	print("MAP_ISLAND_BRIDGE_CONNECTIVITY: PASS — Island One tree bridge restored; " \
-		+ "2 observatory twin pairs; retired South and West lookouts absent; " \
+		+ "North/East lookout spans absent; main Creator route and South/West lookout cleanup retained; " \
 		+ "120 shelf bridges with >=2 routes/island; " \
 		+ "steepest legal shelf bridge walked by production player")
 	quit()
@@ -68,37 +68,36 @@ func _check_world_one_three_island_route() -> bool:
 	return true
 
 
-func _check_observatory_twins() -> bool:
+func _check_retired_observatory_spans() -> bool:
 	var world := FloatingWorldScene.instantiate() as Node3D
 	root.add_child(world)
 	for _frame in 4:
 		await physics_frame
-	for base_name in ["NorthObservatoryBridge", "EastObservatoryBridge"]:
-		var left := world.get_node_or_null(base_name) as Node3D
-		var right := world.get_node_or_null("%sTwin" % base_name) as Node3D
-		if left == null or right == null:
-			_fail("%s does not have its mirrored companion" % base_name)
+	if world.get_node_or_null("NorthObservatoryBridge") != null \
+			or world.get_node_or_null("NorthObservatoryBridgeTwin") != null:
+		_fail("retired Heart Melody lookout spans still cross the void")
+		return false
+	var former_span := PhysicsRayQueryParameters3D.create(
+		world.to_global(Vector3(-165.0, 20.0, 2443.0)),
+		world.to_global(Vector3(-165.0, -20.0, 2443.0)))
+	if not world.get_world_3d().direct_space_state.intersect_ray(former_span).is_empty():
+		_fail("former Heart Melody lookout span still has collision in the void")
+		return false
+	if world.get_node_or_null("EastObservatoryBridge") != null \
+			or world.get_node_or_null("EastObservatoryBridgeTwin") != null:
+		_fail("retired Creator lookout spans still cross the void")
+		return false
+	for lane_z in [1622.0, 1658.0]:
+		var east_span := PhysicsRayQueryParameters3D.create(
+			world.to_global(Vector3(825.0, 10.0, lane_z)),
+			world.to_global(Vector3(825.0, -20.0, lane_z)))
+		if not world.get_world_3d().direct_space_state.intersect_ray(east_span).is_empty():
+			_fail("former Creator lookout lane still has collision at z=%.1f" % lane_z)
 			return false
-		if left.get_node_or_null("WalkwayCollision") == null \
-				or right.get_node_or_null("WalkwayCollision") == null:
-			_fail("%s twin pair lacks walkable collision" % base_name)
-			return false
-		var left_start: Vector3 = left.get_meta("connection_start")
-		var right_start: Vector3 = right.get_meta("connection_start")
-		var left_finish: Vector3 = left.get_meta("connection_finish")
-		var right_finish: Vector3 = right.get_meta("connection_finish")
-		if not is_equal_approx(left_start.distance_to(right_start), 36.0) \
-				or not is_equal_approx(left_finish.distance_to(right_finish), 36.0):
-			_fail("%s endpoints are not exact 18 m mirrors" % base_name)
-			return false
-		var left_walkway := left.get_node("Walkway") as MeshInstance3D
-		var right_walkway := right.get_node("Walkway") as MeshInstance3D
-		# Within 5 cm of the island top: the walkway sits 2 cm low on purpose so
-		# it does not z-fight with the island deck it starts on.
-		if absf(left_walkway.position.y + 2.0) > 0.05 \
-				or absf(right_walkway.position.y + 2.0) > 0.05:
-			_fail("%s decks do not share the island top plane" % base_name)
-			return false
+	var creator_bridge := world.get_node_or_null("CreatorBridge") as Node3D
+	if creator_bridge == null or creator_bridge.get_node_or_null("WalkwayCollision") == null:
+		_fail("main Creator bridge was removed with the lookout spans")
+		return false
 	if world.get_node_or_null("WestObservatory") != null \
 			or world.get_node_or_null("WestObservatoryBridge") != null \
 			or world.get_node_or_null("WestObservatoryBridgeTwin") != null:

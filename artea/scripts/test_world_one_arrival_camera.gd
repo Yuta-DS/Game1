@@ -78,6 +78,8 @@ func _run() -> void:
 	var return_gate := world.get_node(
 		"WorldOneGeometry/01WorldGateLanding/EntryWorldGate") as Node3D
 	var toward_return_gate := camera.global_position.direction_to(return_gate.global_position)
+	print("WORLD_ONE_ARRIVAL_CAMERA: camera=%s gate=%s backward_alignment=%.3f" % [
+		camera.global_position, return_gate.global_position, forward.dot(toward_return_gate)])
 	assert(forward.dot(toward_return_gate) < -0.45,
 		"the return portal and threshold remain behind the opening camera")
 	print("WORLD_ONE_ARRIVAL_CAMERA_TEST: PASS — distance %.2f m, route alignment %.3f" \

@@ -57,7 +57,11 @@ const failTimes = Number(option('--fail-times') ?? 2);
 // the first try plus RETRY_DELAYS_MS.length retries.
 const LOADER_ATTEMPTS = 4;
 const qualityProbe = new URL(url).searchParams.get('world_one_quality') === '1';
-const targetScene = storyProbe || qualityProbe
+const portalKeyAudit = new URL(url).searchParams.get('portal_key_audit') === '1';
+const galaxyAudit = new URL(url).searchParams.get('galaxy_audit');
+const galleryAudit = new URL(url).searchParams.get('gallery_audit') === '1';
+const hubRockAudit = new URL(url).searchParams.get('hub_rock_audit') === '1';
+const targetScene = storyProbe || qualityProbe || galaxyAudit || galleryAudit
 	? 'art_gallery_3d_inprogress.tscn' : 'New_Hub_World.tscn';
 const sceneReadyPattern = new RegExp(`\\[ARTEA\\] scene ready res://scenes/${targetScene.replace('.', '\\.')}`);
 const DEBUG_PORT = 9222;
@@ -374,6 +378,17 @@ async function connect() {
 				if (index === GUEST_BUTTONS.length - 1 || /Uncaught RuntimeError:/.test(err.message)) throw err;
 			}
 		}
+		if (portalKeyAudit) {
+			if (!qualityProbe) throw new Error('portal_key_audit requires world_one_quality=1');
+			for (const portalName of ['MindSparkWorldGate', 'EntryWorldGate', 'ReturnToArtCastleWorldGate']) {
+				await waitForLog(new RegExp(`WORLD_ONE_PORTAL_READY: ${portalName}`),
+					`${portalName} ready for browser Q`, 180000);
+				await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+				await key('keyDown', 'KeyQ', 81);
+				await sleep(180);
+				await key('keyUp', 'KeyQ', 81);
+			}
+		}
 		await waitForLog(sceneReadyPattern, 'destination scene built', 120000);
 		if (storyProbe) {
 			await waitForLog(/WORLD_ONE_WEB_STORY: /, 'World One story probe completed', 180000);
@@ -386,28 +401,56 @@ async function connect() {
 			const reportLine = consoleLines.find((line) => line.startsWith('WORLD_ONE_WEB_QUALITY: '));
 			const report = JSON.parse(reportLine.slice('WORLD_ONE_WEB_QUALITY: '.length));
 			if (!report.ok) throw new Error('World One quality probe failed: ' + JSON.stringify(report.errors));
+			if (report.gate_traveler !== 'production_player') {
+				throw new Error('World One gates were not crossed by the production player');
+			}
+		}
+		if (galaxyAudit) {
+			await waitForLog(/GALAXY_WEB_AUDIT: /, 'Galaxy ground audit completed', 180000);
+			const reportLine = consoleLines.find((line) => line.startsWith('GALAXY_WEB_AUDIT: '));
+			const report = JSON.parse(reportLine.slice('GALAXY_WEB_AUDIT: '.length));
+			if (!report.ok || report.view !== galaxyAudit) {
+				throw new Error('Galaxy ground audit failed: ' + JSON.stringify(report));
+			}
+		}
+		if (galleryAudit) {
+			await waitForLog(/GALLERY_WEB_AUDIT: /, 'gallery artwork audit completed', 180000);
+			const reportLine = consoleLines.find((line) => line.startsWith('GALLERY_WEB_AUDIT: '));
+			const report = JSON.parse(reportLine.slice('GALLERY_WEB_AUDIT: '.length));
+			if (!report.ok) throw new Error('Gallery artwork audit failed: ' + JSON.stringify(report));
+		}
+		if (hubRockAudit) {
+			await waitForLog(/HUB_ROCK_AUDIT: /, 'hub rock removal audit completed', 180000);
+			const reportLine = consoleLines.find((line) => line.startsWith('HUB_ROCK_AUDIT: '));
+			const report = JSON.parse(reportLine.slice('HUB_ROCK_AUDIT: '.length));
+			if (!report.ok) throw new Error('Hub rock removal audit failed: ' + JSON.stringify(report));
 		}
 		await sleep(8000);
-		const before = await shot('02-in-hub');
+		const before = await shot(galaxyAudit ? `02-galaxy-${galaxyAudit}`
+			: galleryAudit ? '02-gallery-audit' : hubRockAudit ? '02-hub-rock-audit' : '02-in-hub');
 
 		// A frozen game returns byte-identical frames, so movement is the check
-		// that separates "rendered once" from "playable".
-		say('holding W to test movement');
-		await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
-		await key('keyDown', 'KeyW', 87);
-		await sleep(2500);
-		const during = await shot('03-moving');
-		await key('keyUp', 'KeyW', 87);
-		await sleep(1500);
-		const after = await shot('04-after-move');
-
+		// that separates "rendered once" from "playable". Galaxy audit mode
+		// already walks a real CharacterBody3D and uses a fixed review camera.
 		const identical = (a, b) => a.length === b.length && a.equals(b);
-		const moved = !identical(before, during) || !identical(during, after);
+		let moved = true;
+		if (!galaxyAudit && !hubRockAudit) {
+			say('holding W to test movement');
+			await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+			await key('keyDown', 'KeyW', 87);
+			await sleep(2500);
+			const during = await shot('03-moving');
+			await key('keyUp', 'KeyW', 87);
+			await sleep(1500);
+			const after = await shot('04-after-move');
+			moved = !identical(before, during) || !identical(during, after);
+		}
 		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|Uncaught RuntimeError:/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();
-		say('frame changed while moving: ' + moved);
+		say(galaxyAudit ? 'real player walk verified by Galaxy audit'
+			: hubRockAudit ? 'fixed hub rock removal view verified' : 'frame changed while moving: ' + moved);
 		say('fatal resource errors: ' + fatal.length);
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
 

@@ -7,7 +7,7 @@ const RailPost := preload("res://assets3D/mind_spark/echo_garden_benchmark/expor
 const RailPostWeb := preload("res://assets3D/mind_spark/echo_garden_benchmark/export/rail_post_web.glb")
 
 
-func _initialize() -> void:
+func _init() -> void:
 	call_deferred("_run")
 
 
@@ -30,6 +30,13 @@ func _run() -> void:
 	world.object_state_store_path = "user://test_world_one_web_perimeter_lod.json"
 	root.add_child(world)
 	await process_frame
+	var island_one_repairs := world.get_node(
+		"WorldOneGeometry/IslandOnePerimeterRepairs") as Node3D
+	assert(bool(island_one_repairs.get_meta("web_low_poly_perimeter", false)),
+		"Island One must also use the reduced Web railing kit")
+	assert(island_one_repairs.find_children(
+		"rail_bay", "MeshInstance3D", true, false).size() >= 20,
+		"Island One must keep its exposed edge barrier")
 	var repairs := world.get_node("WorldOneGeometry/IslandTwoPerimeterRepairs") as Node3D
 	assert(bool(repairs.get_meta("web_low_poly_perimeter", false)),
 		"Island Two must select its Web-only low-poly perimeter kit")
@@ -56,6 +63,26 @@ func _run() -> void:
 	assert(_mesh_triangles((island_three_bays[0] as MeshInstance3D).mesh) <= 1200 \
 			and _mesh_triangles((island_three_posts[0] as MeshInstance3D).mesh) <= 850,
 		"Island Three's shared barrier uses the reduced Web meshes")
+	for crossing in ["02", "04"]:
+		for segment in ["A", "B"]:
+			var route_name := "CircuitRoute_%s_%s" % [crossing, segment]
+			var route := world.get_node("WorldOneGeometry/MainStoryCircuitRoute") as Node3D
+			var barrier := route.get_node_or_null(
+				"%sCivicBarrier" % route_name) as Node3D
+			assert(barrier != null and str(barrier.get_meta("barrier_style", "")) \
+				== "island_one_two_civic_railing",
+				"both exposed sky bridges must share the island railing style")
+			assert(barrier.find_children("*CyanInset", "MeshInstance3D", true, false).size() >= 2 \
+				and barrier.find_children("*CrossA", "MeshInstance3D", true, false).size() >= 2,
+				"bridge barrier needs cyan piers and crossed gold rails on both sides")
+			for side in ["Left", "Right"]:
+				var old_rail := route.get_node("%s%sRail" % [route_name, side]) as MeshInstance3D
+				var collision := route.get_node(
+					"%s%sRailCollision" % [route_name, side]) as StaticBody3D
+				assert(not old_rail.visible and collision != null \
+					and ((collision.get_child(0) as CollisionShape3D).shape \
+					as BoxShape3D).size.y >= 5.0,
+					"styled bridge rails must keep tall fall-prevention collision")
 	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
 	if FileAccess.file_exists(world.object_state_store_path):
 		DirAccess.remove_absolute(world.object_state_store_path)

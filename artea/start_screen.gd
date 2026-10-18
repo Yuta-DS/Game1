@@ -324,6 +324,8 @@ func enter_game(username: String, is_guest: bool = false):
 		# The opt-in browser probes need to exercise the actual World One entry
 		# without relying on a long mouse route through the hub.
 		var query := str(JavaScriptBridge.eval("window.location.search", true))
-		if "world_one_story=1" in query or "world_one_quality=1" in query:
+		if "world_one_story=1" in query or "world_one_quality=1" in query \
+				or "galaxy_audit=creator" in query or "galaxy_audit=heart" in query \
+				or "gallery_audit=1" in query:
 			destination = "res://scenes/art_gallery_3d_inprogress.tscn"
 	SceneLoader.change_scene_with_loading(get_tree(), destination)

@@ -43,6 +43,7 @@ open_browser=1
 # shellcheck source=/dev/null
 [[ -f "${repo_dir}/.webrc" ]] && source "${repo_dir}/.webrc"
 port="${PORT:-${port}}"
+[[ -n "${GODOT_BIN:-}" ]] && export GODOT_BIN
 
 command=run
 target_url=""
@@ -139,6 +140,9 @@ serve_background() {
 
 case "${command}" in
 	run|rebuild|serve)
+		if [[ "${command}" != serve ]]; then
+			"${repo_dir}/setup.sh" web
+		fi
 		ensure_backend || true
 		flag=""
 		[[ "${command}" == rebuild ]] && flag="--rebuild"

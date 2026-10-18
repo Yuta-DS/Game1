@@ -1,8 +1,4 @@
-extends Sprite3D
-
-# These $ signs tell Godot to look INSIDE the spawn for the labels
-@onready var message_label = $Label3D
-@onready var name_label = $CharacterName
+extends "res://scenes/narrative_bubble.gd"
 
 func _ready():
 	await get_tree().process_frame

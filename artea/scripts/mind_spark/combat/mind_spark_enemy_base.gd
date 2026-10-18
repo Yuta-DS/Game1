@@ -50,6 +50,23 @@ func set_active(enabled: bool) -> void:
 		velocity = Vector3.ZERO
 
 
+func anchor_spawn_to_ground(support_y: float) -> void:
+	# World One builds its final decks after these actors enter the tree. Keep the
+	# collision capsule just above that deck, and set the reset point to the same
+	# place so a combat retry cannot restore the old airborne authored position.
+	var grounded := global_position
+	grounded.y = support_y + 0.20
+	global_position = grounded
+	_spawn_position = grounded
+	match definition.enemy_kind:
+		Definition.EnemyKind.STATIC_MITE:
+			# Its low legs were modelled 0.7 m above the scene origin.
+			$VisualRoot.position.y = 0.35
+		Definition.EnemyKind.GLITCH_SPROUT:
+			# The stem extends below the scene origin and should meet the soil.
+			$VisualRoot.position.y = 1.65
+
+
 func reset_enemy() -> void:
 	current_health = definition.max_health
 	global_position = _spawn_position

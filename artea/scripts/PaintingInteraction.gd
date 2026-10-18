@@ -3,6 +3,7 @@ extends Node3D
 
 @export var painting_id: int = 0
 @export var camera_path: NodePath  # drag your Camera3D here in the Inspector
+@export var inspect_on_accept := false  # gallery Space enters the artwork world
 
 var _player_in_range := false
 var _camera: Node = null
@@ -24,6 +25,8 @@ func _on_body_exited(body: Node) -> void:
 		_player_in_range = false
 
 func _process(_delta: float) -> void:
+	if not inspect_on_accept:
+		return
 	# Enter inspect
 	if _player_in_range and Input.is_action_just_pressed("ui_accept"):
 		if _camera and _camera.has_method("enter_inspect"):

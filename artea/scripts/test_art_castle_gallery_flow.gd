@@ -129,8 +129,29 @@ func _run() -> void:
 	if not interactive_found:
 		_fail("interactive artwork world contains no responsive 3D artwork objects")
 		return
+	var exit_button := world.find_child("GalleryButton", true, false) as Button
+	if exit_button == null or not exit_button.is_visible_in_tree():
+		_fail("interactive artwork world has no visible Gallery exit button")
+		return
+	exit_button.pressed.emit()
+	var returned := false
+	for _frame in 180:
+		await process_frame
+		if current_scene != null \
+				and current_scene.scene_file_path == "res://scenes/art_gallery_3d_inprogress.tscn":
+			returned = true
+			break
+	if not returned:
+		_fail("Gallery exit button did not return the player to the gallery")
+		return
+	var returned_player := current_scene.get_node_or_null("Player3D") as CharacterBody3D
+	var gallery_entry := current_scene.get_node_or_null("CastleGalleryEntry") as Marker3D
+	if returned_player == null or gallery_entry == null \
+			or returned_player.global_position.distance_to(gallery_entry.global_position) > 1.0:
+		_fail("Gallery exit button returned to World One instead of the gallery hall")
+		return
 
-	print("ART_CASTLE_GALLERY_TEST: PASS — raised castle door, gallery artwork, walking player and interactive 3D world are connected")
+	print("ART_CASTLE_GALLERY_TEST: PASS — castle door, artwork entry, interactive world and Gallery exit button")
 	quit()
 
 

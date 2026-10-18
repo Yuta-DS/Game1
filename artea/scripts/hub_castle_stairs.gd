@@ -153,10 +153,13 @@ const GUARD_ENTRY_LEAD_T := 0.0
 # surface. Past this point the stair visibly becomes the tower's spiral rather
 # than pretending the entire elevated ascent is part of the hillside.
 const ENTRY_FOUNDATION_END_T := 0.20
-# A short grounded flight reaches back onto the real hillside. The tower-centre
+# A short paved approach reaches back onto the real hillside. The tower-centre
 # terrain datum is substantially higher than the land at the stair mouth, so a
 # nominally grounded first spiral tread can still demand a jump from the player.
 const GROUND_ENTRY_RUN := 6.0
+const GROUND_ACCESS_RUN_INCREMENT := 0.58
+const GROUND_ACCESS_MAX_SLOPE := 0.20
+const GROUND_ACCESS_MAX_INCREMENTS := 18
 
 # Rise per tread. Kept well under the controller's MAX_STEP_HEIGHT (0.65) so
 # every step is climbed by walking, never by jumping.
@@ -631,6 +634,8 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 		entry_surface_y, first_surface_y, dark)
 	_decorate_ground_entry_brick_courses(entry, radial, far_centre, first_centre,
 		entry_surface_y, first_surface_y)
+	_build_ground_access_approach(entry, radial, forward, far_centre,
+		entry_surface_y, paving)
 
 	# Both capitals use the entrance floor datum. Only their buried feet follow
 	# terrain, so the hillside cannot leave the two rooflines at different heights.
@@ -675,6 +680,49 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 	entry.set_meta("barriers_join_spiral", true)
 	entry.set_meta("collision_surface_continuous", true)
 	entry.set_meta("terrain_gap_closed", true)
+
+
+# The hillside drops at the outer edge of the promenade. A pair of blocky
+# add-on steps reached the grass but looked disconnected from the stone path.
+# Continue the same paving and collision lane onto the hillside at a gentle
+# grade, so the player enters without jumping or encountering a loose stair.
+func _build_ground_access_approach(parent: Node3D, radial: Vector3,
+		forward: Vector3, entrance: Vector3, entrance_y: float,
+		paving: Material) -> void:
+	var increments := 3
+	var foot_ground := entrance_y
+	for candidate in range(3, GROUND_ACCESS_MAX_INCREMENTS + 1):
+		var foot := entrance - forward * (float(candidate) * GROUND_ACCESS_RUN_INCREMENT)
+		foot_ground = -INF
+		for lane: float in [-0.65, 0.0, 0.65]:
+			var point := foot + radial * lane
+			foot_ground = maxf(foot_ground, _ground_at(point.x, point.z))
+		increments = candidate
+		if entrance_y - foot_ground <= float(candidate) * GROUND_ACCESS_RUN_INCREMENT \
+				* GROUND_ACCESS_MAX_SLOPE:
+			break
+	var foot := entrance - forward * (float(increments) * GROUND_ACCESS_RUN_INCREMENT)
+	var foot_y := minf(entrance_y - 0.01, foot_ground + 0.03)
+	var visual_shift := radial * (ENTRY_FLOOR_CENTRE - TREAD_CENTRE_RADIUS)
+	var from := Vector3(foot.x, foot_y - 0.15, foot.z)
+	var to := Vector3(entrance.x, entrance_y - 0.15, entrance.z)
+	var length := from.distance_to(to) + 0.16
+	var approach := _oriented_box(parent,
+		Vector3(ENTRY_FLOOR_WIDTH, 0.30, length),
+		from.lerp(to, 0.5) + visual_shift,
+		to + visual_shift, paving)
+	approach.name = "GroundAccessWalkSurface"
+	approach.set_meta("preserve_castle_finish", true)
+	approach.set_meta("continuous_paved_approach", true)
+	var collision := _oriented_box(parent,
+		Vector3(TREAD_CLEAR_WIDTH, 0.30, length),
+		from.lerp(to, 0.5), to, ReferenceStyle.material("wall"))
+	collision.name = "GroundAccessWalkCollision"
+	_add_box_body(collision, (collision.mesh as BoxMesh).size)
+	collision.visible = false
+	parent.set_meta("ground_access_foot", Vector3(foot.x, foot_y, foot.z))
+	parent.set_meta("ground_access_slope", (entrance_y - foot_y) / \
+		(float(increments) * GROUND_ACCESS_RUN_INCREMENT))
 
 
 # Closed stonework under the straight approach. Its upper edge follows the
@@ -3403,6 +3451,11 @@ func _ground_at(x: float, z: float) -> float:
 	var space := get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(
 		Vector3(x, 400.0, z), Vector3(x, -100.0, z))
+	# On Web, sample only the baked terrain collider. Once this stair has begun
+	# building, an unrestricted ray can hit its own new steps or promenade and
+	# mistake that elevated masonry for the hillside beneath it.
+	if get_parent().get_node_or_null("WebTerrainCompatibility/WebTerrainCollision") != null:
+		query.collision_mask = 1 << 19 # web_terrain_compat.WEB_TERRAIN_SCATTER_LAYER
 	var hit := space.intersect_ray(query)
 	return hit.position.y if hit.has("position") else 35.5
 

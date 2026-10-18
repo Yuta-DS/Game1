@@ -57,6 +57,7 @@ func _rebuild() -> void:
 		if child.owner == null:
 			remove_child(child)
 			child.queue_free()
+	_hide_legacy_gallery_backdrop()
 	_build_materials()
 
 	var interior := SurfaceTool.new()
@@ -98,6 +99,22 @@ func _rebuild() -> void:
 	_build_lighting()
 
 
+func _hide_legacy_gallery_backdrop() -> void:
+	# The old gold planes and oversized imported frames sit across the finished
+	# oval room. Keep their authored nodes as references, but show the new wall
+	# and the compact frames built around the live painting sprites below.
+	var parent := get_parent()
+	if parent == null:
+		return
+	for node_name in ["Ground", "Ground2", "Ground3", "Wall BG"]:
+		var old_wall := parent.get_node_or_null(node_name) as Node3D
+		if old_wall != null:
+			old_wall.visible = false
+	for child in parent.get_children():
+		if child is MeshInstance3D and str(child.name).begins_with("Frame_Asset"):
+			(child as MeshInstance3D).visible = false
+
+
 func _place_existing_paintings_on_wall() -> void:
 	var parent := get_parent()
 	if parent == null:
@@ -116,6 +133,39 @@ func _place_existing_paintings_on_wall() -> void:
 		var inward: Vector3 = Vector3(-local_offset.x / (RADIUS_X * RADIUS_X), 0.0,
 				-local_offset.z / (RADIUS_Z * RADIUS_Z)).normalized()
 		frame.global_basis = Basis(Vector3(inward.z, 0.0, -inward.x), Vector3.UP, inward)
+		_build_compact_painting_frame(frame)
+
+
+func _build_compact_painting_frame(painting: Node3D) -> void:
+	if painting.has_node("GalleryFrameTrim"):
+		return
+	var trim := Node3D.new()
+	trim.name = "GalleryFrameTrim"
+	painting.add_child(trim)
+	_add_frame_piece(trim, "SlateBack", Vector3(0, 0, -0.12),
+		Vector3(6.05, 6.05, 0.18), _materials.slate)
+	for side in [-1.0, 1.0]:
+		var label := "Left" if side < 0.0 else "Right"
+		_add_frame_piece(trim, "IvorySide" + label,
+			Vector3(side * 2.82, 0, 0.10), Vector3(0.40, 6.06, 0.27), _materials.stone)
+		_add_frame_piece(trim, "IvoryEnd" + label,
+			Vector3(0, side * 2.82, 0.10), Vector3(6.06, 0.40, 0.27), _materials.stone)
+		_add_frame_piece(trim, "GoldSide" + label,
+			Vector3(side * 2.59, 0, 0.23), Vector3(0.075, 5.20, 0.08), _materials.gold)
+		_add_frame_piece(trim, "GoldEnd" + label,
+			Vector3(0, side * 2.59, 0.23), Vector3(5.20, 0.075, 0.08), _materials.gold)
+
+
+func _add_frame_piece(parent: Node3D, node_name: String, at: Vector3,
+		size: Vector3, material: Material) -> void:
+	var piece := MeshInstance3D.new()
+	piece.name = node_name
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	piece.mesh = mesh
+	piece.position = at
+	piece.material_override = material
+	parent.add_child(piece)
 
 
 # --- Materials --------------------------------------------------------------

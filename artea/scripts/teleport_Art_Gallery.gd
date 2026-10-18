@@ -4,6 +4,7 @@ const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 const TARGET_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 const CASTLE_NODE_NAME := "building_castle_red2"
+const GALLERY_ENTRY_SPAWN := "art_castle_gallery"
 
 # Measured from the imported castle mesh. Its root is scaled 10x and rotated
 # 90 degrees in New_Hub_World, so local +Z is the visible world +X door face.
@@ -144,4 +145,7 @@ func _travel() -> void:
 # anything. SceneLoader.change_scene_with_loading threads the load behind the
 # progress bar instead - the same route every other way into the castle uses.
 func _enter_gallery() -> void:
+	var global := get_node_or_null("/root/Global")
+	if global != null and global.has_method("request_spawn_at"):
+		global.request_spawn_at(GALLERY_ENTRY_SPAWN)
 	SceneLoader.change_scene_with_loading(get_tree(), TARGET_SCENE_PATH)

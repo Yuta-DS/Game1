@@ -134,6 +134,36 @@ func _ready() -> void:
 		push_warning("hub_awakening: sun not found, sky will not respond to stage")
 
 	apply_stage(_current_stage())
+	if OS.has_feature("web") and "hub_rock_audit=1" in str(
+			JavaScriptBridge.eval("window.location.search", true)):
+		call_deferred("_install_rock_audit_camera")
+
+
+func _install_rock_audit_camera() -> void:
+	# Screenshot-only view of the former gray rock scatter near the castle stair.
+	# The scene itself must no longer contain either source scatter item.
+	var objects := get_node_or_null("Environment/Objects")
+	var rock_items_present: Array[String] = []
+	for item_name in ["ScatterItem9", "ScatterItem10"]:
+		if objects != null and objects.has_node(item_name):
+			rock_items_present.append(item_name)
+	var exclusion := get_node_or_null(
+		"Environment/Objects/CastleStairFootRockExclusion") as Node3D
+	var report := {
+		"ok": objects != null and exclusion != null and rock_items_present.is_empty(),
+		"removed_rock_items_present": rock_items_present,
+		"review_location": "castle stair foot",
+	}
+	if exclusion != null:
+		var camera := Camera3D.new()
+		camera.name = "HubRockRemovalReviewCamera"
+		camera.fov = 62.0
+		camera.far = 800.0
+		add_child(camera)
+		camera.global_position = exclusion.global_position + Vector3(31.0, 24.0, 31.0)
+		camera.look_at(exclusion.global_position + Vector3.UP * 4.0)
+		camera.current = true
+	print("HUB_ROCK_AUDIT: %s" % JSON.stringify(report))
 
 
 func _build_outdoor_minimap() -> void:

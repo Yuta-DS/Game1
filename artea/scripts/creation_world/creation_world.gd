@@ -1289,6 +1289,9 @@ func _request_fresh_manifest() -> void:
 
 func _return_to_gallery() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	var global := get_node_or_null("/root/Global")
+	if global != null and global.has_method("request_spawn_at"):
+		global.request_spawn_at("art_castle_gallery")
 	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
 
 
