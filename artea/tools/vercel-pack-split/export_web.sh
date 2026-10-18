@@ -35,6 +35,10 @@ mkdir -p "${output_dir}"
 	--export-release Web "${output_dir}/index.html"
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
+# The loading screen's music (the gallery's track). The page plays it with an
+# <audio> element rather than through the game, so it keeps playing while the
+# game's thread is busy loading (see web_export_shell.html).
+cp "${project_dir}/assets/SFX/Magic in the Garden.ogg" "${output_dir}/loading_music.ogg"
 
 # Content-hashed parts and manifests, the same layout local ./web and the
 # Cloudflare deploy use (see split-pack.sh). index.side.wasm is split too: the

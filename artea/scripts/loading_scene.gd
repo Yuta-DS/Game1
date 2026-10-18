@@ -9,6 +9,13 @@ const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 var loading_started := false
 var _shown_percent := 0.0
+var _status_text := ""
+# Resources loaded ahead of the scene (see _load_dependencies_in_slices).
+# The cache only keeps a resource while something references it, so without
+# this each one is freed as soon as it loads and the final request loads the
+# lot again in one block.
+var _held: Array[Resource] = []
+var _audio_was_muted := false
 
 # Entering a scene has three phases with very different costs, and only
 # reporting the first one left the bar parked while the other two ran. Each
@@ -40,7 +47,27 @@ const SETTLE_FRAME_BUDGET_MS := 80
 const SETTLE_FRAMES_REQUIRED := 3
 const SETTLE_TIMEOUT_MS := 5000
 
+# How long _load_dependencies_in_slices may keep the main thread per frame.
+# Short enough that the browser stays responsive and the dots keep moving;
+# yielding after every single resource instead spent ~3.5 s of the hub's load
+# just waiting on frames.
+const DEPENDENCY_FRAME_BUDGET_MS := 50
+
 func _ready():
+	# Milo and MusicManager hold off until this screen is gone.
+	add_to_group("loading_screen")
+	# The new scene's own sounds (ocean ambience, gallery music) start the
+	# moment it enters the tree, under this screen. Silence them until the
+	# player can see the world they belong to.
+	_audio_was_muted = AudioServer.is_bus_mute(0)
+	AudioServer.set_bus_mute(0, true)
+	if OS.has_feature("web"):
+		# The music starts straight away. Waiting to see whether a load turns
+		# out long doesn't work: the wait is checked from _process, which
+		# can't run during the very freezes the music is meant to cover.
+		JavaScriptBridge.eval("arteaLoading.show(); arteaLoading.startMusic()")
+		get_viewport().size_changed.connect(_place_web_overlay)
+		_place_web_overlay.call_deferred()
 	if next_scene_path == "":
 		push_error("⚠ No scene path provided to loading screen.")
 		return
@@ -61,8 +88,42 @@ func _start_load_once_visible() -> void:
 	_report(0.0, "Loading world")
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if not OS.has_feature("threads"):
+		await _load_dependencies_in_slices()
 	ResourceLoader.load_threaded_request(next_scene_path)
 	loading_started = true
+
+
+# Without threads (the Web build) the request above does the whole load in a
+# single main-thread block - ~5 s for the hub - long enough for Chrome to call
+# the page unresponsive and with the screen frozen throughout. Loading the
+# scene's dependencies first, a few per frame, hands control back to the
+# browser in between, so the request is left to assemble resources already
+# cached (~0.3 s for the hub).
+func _load_dependencies_in_slices() -> void:
+	var order: Array[String] = []
+	_collect_dependencies(next_scene_path, {}, order)
+	order.erase(next_scene_path)
+	var frame_start := Time.get_ticks_msec()
+	for i in order.size():
+		if not ResourceLoader.has_cached(order[i]):
+			_held.append(load(order[i]))
+		if Time.get_ticks_msec() - frame_start >= DEPENDENCY_FRAME_BUDGET_MS:
+			_report(LOAD_SLICE * float(i + 1) / float(order.size() + 1), "Loading world")
+			await get_tree().process_frame
+			frame_start = Time.get_ticks_msec()
+
+
+# Depth first, so each resource is loaded after the ones it depends on.
+func _collect_dependencies(path: String, seen: Dictionary, order: Array[String]) -> void:
+	if seen.has(path):
+		return
+	seen[path] = true
+	for dep in ResourceLoader.get_dependencies(path):
+		var dep_path: String = dep.get_slice("::", 2) if dep.contains("::") else dep
+		if ResourceLoader.exists(dep_path):
+			_collect_dependencies(dep_path, seen, order)
+	order.append(path)
 
 # The bar only ever moves forward. Phase three's measurement can legitimately
 # reset (a stalled frame puts the settled-frame count back to zero), and a bar
@@ -70,10 +131,21 @@ func _start_load_once_visible() -> void:
 func _report(fraction: float, text: String) -> void:
 	_shown_percent = maxf(_shown_percent, clampf(fraction, 0.0, 1.0) * 100.0)
 	progress_bar.value = _shown_percent
-	progress_label.text = "%d%%  %s" % [int(_shown_percent), text]
+	_status_text = text
+	_refresh_label()
+
+
+# The bar only moves on real progress, so through a long phase it sits still
+# and the screen looks frozen even while the game is running fine. The dots
+# tick every frame instead: they keep moving whenever the game is alive and
+# stop only if the main thread really is blocked.
+func _refresh_label() -> void:
+	var dots := ".".repeat(int(Time.get_ticks_msec() / 300) % 4)
+	progress_label.text = "%d%%  %s%s" % [int(_shown_percent), _status_text, dots]
 
 
 func _process(_delta):
+	_refresh_label()
 	if not loading_started:
 		return
 
@@ -91,6 +163,12 @@ func _process(_delta):
 	elif status == ResourceLoader.THREAD_LOAD_LOADED:
 		loading_started = false  # prevent re-entry
 		var loaded_scene = ResourceLoader.load_threaded_get(next_scene_path)
+		_held.clear()
+		# Building the scene can't be split up and is the longest single pause
+		# (~1.6 s for the hub on desktop). Say so before it starts, so the bar
+		# isn't left at 59% looking stuck while it happens.
+		_report(LOAD_SLICE, "Building the world")
+		await get_tree().process_frame
 		# A scene missing one of its dependencies arrives as null (web.txt
 		# Problem 1), and change_scene_to_packed then does nothing.
 		var err: Error = ERR_CANT_CREATE if loaded_scene == null \
@@ -100,12 +178,12 @@ func _process(_delta):
 			return
 
 		await get_tree().process_frame
-		MusicManager._check_scene()
 		_wait_for_scatter_then_finish()
 
 # The scene being left is already gone, so this screen is all the player has:
 # say so on it rather than leaving the bar parked as if still loading.
 func _fail(reason: String) -> void:
+	_hide_web_overlay()
 	SceneLoader.report_failure(get_tree(), next_scene_path, reason)
 	progress_label.text = "Couldn't load this area. Reload the game to try again."
 
@@ -183,7 +261,42 @@ func _wait_for_scatter_then_finish() -> void:
 
 	await _warm_shaders()
 	await _hold_until_first_frames_settle()
+	# Out of the group first: MusicManager skips while a loading screen is up.
+	# Starting the track here rather than at the scene swap means it begins
+	# from the top as the world appears, not part-way through.
+	remove_from_group("loading_screen")
+	# The loading music is the gallery's own track, so arriving there carries
+	# on from the same spot instead of starting again.
+	var music_at := _hide_web_overlay()
+	var scene := get_tree().current_scene
+	var arriving_track = MusicManager.scene_to_track.get(scene.scene_file_path) if scene else null
+	MusicManager._check_scene(music_at if arriving_track == MusicManager.MAGIC_TRACK else 0.0)
 	queue_free()
+
+
+func _exit_tree() -> void:
+	AudioServer.set_bus_mute(0, _audio_was_muted)
+	_hide_web_overlay()
+
+
+# Godot draws on the same thread that loads, so a step that can't be split
+# (building the scene, compiling shaders) still freezes this screen for a
+# moment. The page shell (web_export_shell.html) draws Milo in a spinning ring
+# under the bar and plays the loading music. The browser animates and plays
+# those itself, so they keep going through those moments and the game never
+# looks hung.
+func _place_web_overlay() -> void:
+	var below_bar: Vector2 = progress_bar.get_screen_transform() 		* Vector2(progress_bar.size.x / 2.0, progress_bar.size.y)
+	JavaScriptBridge.eval("arteaLoading.place(%f, %f)" % [below_bar.x, below_bar.y])
+
+
+# Returns where the loading music had got to, in seconds (0 if it never
+# started), so the gallery can carry on from there.
+func _hide_web_overlay() -> float:
+	if not OS.has_feature("web"):
+		return 0.0
+	var at = JavaScriptBridge.eval("arteaLoading.hide()")
+	return float(at) if at != null else 0.0
 
 
 # Compile the new scene's shaders while this screen is still covering them.
