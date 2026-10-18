@@ -126,9 +126,12 @@ func _start_load_once_visible() -> void:
 	_report(0.0, "Loading world")
 	await get_tree().process_frame
 	await get_tree().process_frame
-	var pack := SceneLoader.pack_needed(next_scene_path)
-	if pack != "" and not await _fetch_pack(pack):
-		return
+	# Shared packs first, then the area's own, which names the area.
+	var packs := SceneLoader.packs_needed(next_scene_path)
+	for index in packs.size():
+		if not await _fetch_pack(packs[index], packs[-1].get_basename().capitalize(),
+				float(index) / packs.size(), 1.0 / packs.size()):
+			return
 	if not OS.has_feature("threads"):
 		await _load_dependencies_in_slices()
 	ResourceLoader.load_threaded_request(next_scene_path)
@@ -142,8 +145,8 @@ func _start_load_once_visible() -> void:
 # the Retry overlay) and writes the file into the engine's memory-backed /tmp;
 # this only shows its progress. The parts are in the browser's cache for the
 # next visit (ADR-0002), so nothing needs keeping in user:// as well.
-func _fetch_pack(file: String) -> bool:
-	var area := file.get_basename().capitalize()
+## `start` and `share` place this file's download within the bar's Pack slice.
+func _fetch_pack(file: String, area: String, start: float, share: float) -> bool:
 	var local := "/tmp/artea_packs/" + file
 	var key := JSON.stringify(file)
 	JavaScriptBridge.eval("arteaPacks.fetch(%s, %s)" % [key, JSON.stringify(local)])
@@ -155,8 +158,8 @@ func _fetch_pack(file: String) -> bool:
 		if state.done:
 			break
 		if state.total > 0:
-			_report(PACK_SLICE * state.loaded / state.total, "Downloading the %s (%d / %d MB)"
-				% [area, state.loaded / 1048576, state.total / 1048576])
+			_report(PACK_SLICE * (start + share * state.loaded / state.total),
+				"Downloading the %s (%d / %d MB)" % [area, state.loaded / 1048576, state.total / 1048576])
 		await get_tree().process_frame
 	if not ProjectSettings.load_resource_pack(local):
 		_fail("couldn't open the downloaded %s" % area)

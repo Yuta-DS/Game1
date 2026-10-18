@@ -24,17 +24,30 @@ const SKIP_PREFIXES := ["test_", "capture_", "probe_", "diag_"]
 var _direct := RegEx.create_from_string(
 	"(?:change_scene_to_(?:file|packed)|ChangeSceneTo(?:File|Packed))\\s*\\(\\s*(?:\"([^\"]*)\"|'([^']*)')?")
 var _hand_built := RegEx.create_from_string("next_scene_path\\s*=|NextScenePath\\s*=")
+# A Pack's scenes do not exist until its Pack is mounted (issues #35, #36), so
+# ResourceLoader.exists() on one says "missing" on the web and the route is
+# never taken. SceneLoader.can_open() is the check for those.
+var _exists_check := RegEx.create_from_string("ResourceLoader\\.exists\\(\\s*(?:\"([^\"]*)\"|([A-Za-z_][A-Za-z0-9_]*))\\s*\\)")
+var _const_path := RegEx.create_from_string("const\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*:?=\\s*\"(res://[^\"]*)\"")
+var _pack_entries := {}
 var _violations: Array[String] = []
 
 
 func _init() -> void:
+	# The entry scenes of every Pack, from the build's own list.
+	var packs: Dictionary = load("res://tools/pack_split.gd").get_script_constant_map().PACKS
+	for pack in packs:
+		for entry in packs[pack]:
+			_pack_entries[entry] = pack
+			if entry in CORE_SCENES:
+				_violations.append("%s is listed as Core here but is an entry of the %s Pack" % [entry, pack])
 	_scan("res://")
 	if not _violations.is_empty():
-		push_error("SCENE_SWAPS_USE_LOADER_TEST: %d direct scene swap(s) outside SceneLoader:\n  %s\nRoute them through SceneLoader.change_scene() or change_scene_with_loading()." % [
+		push_error("SCENE_SWAPS_USE_LOADER_TEST: %d route(s) bypassing SceneLoader:\n  %s\nRoute them through SceneLoader.change_scene(), change_scene_with_loading() or can_open()." % [
 			_violations.size(), "\n  ".join(_violations)])
 		quit(1)
 		return
-	print("SCENE_SWAPS_USE_LOADER_TEST: PASS - every scene swap outside the Core pack goes through SceneLoader")
+	print("SCENE_SWAPS_USE_LOADER_TEST: PASS - every scene swap outside the Core pack goes through SceneLoader, and no route checks a Pack scene with ResourceLoader.exists()")
 	quit()
 
 
@@ -51,8 +64,19 @@ func _scan(dir: String) -> void:
 
 
 func _check(path: String) -> void:
-	var lines := FileAccess.get_file_as_string(path).split("\n")
+	var text := FileAccess.get_file_as_string(path)
+	var consts := {}
+	for found in _const_path.search_all(text):
+		consts[found.get_string(1)] = found.get_string(2)
+	var lines := text.split("\n")
 	for i in lines.size():
+		var exists := _exists_check.search(lines[i])
+		if exists != null and not lines[i].strip_edges().begins_with("#"):
+			var checked: String = exists.get_string(1) if exists.get_string(1) != "" \
+				else consts.get(exists.get_string(2), "")
+			if _pack_entries.has(checked):
+				_violations.append("%s:%d  ResourceLoader.exists() on a %s Pack scene; use SceneLoader.can_open()"
+					% [path, i + 1, _pack_entries[checked]])
 		var line := lines[i].strip_edges()
 		if line.begins_with("#") or line.begins_with("//"):
 			continue

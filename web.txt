@@ -270,7 +270,7 @@ FIX (issue #31)
 
 
 --------------------------------------------------------------------------------
-PROBLEM 5 - CROWN OF LIFE STORY LOADS A TEXTURE EXCLUDED FROM WEB        [OPEN]
+PROBLEM 5 - CROWN OF LIFE STORY LOADS A TEXTURE EXCLUDED FROM WEB        [FIXED]
 --------------------------------------------------------------------------------
 SYMPTOM
   Web only, cosmetic: untextured stone in the Crown of Life story scene, plus
@@ -290,6 +290,11 @@ SUGGESTED FIX
   Preferred: move the texture out of demo/ into a real assets folder and update
   the constant. Nothing in the game should depend on a plugin's demo folder.
   Quicker: add that single file to the Web preset's include_filter.
+
+FIX (issue #36)
+  The texture moved to assets/textures/stone/rock023_alb_ht.png, with its
+  .import, so its UID (and Terrain3D's demo materials, which use it by UID)
+  are unchanged. It now ships in the Crown of Life story's Pack.
 
 
 --------------------------------------------------------------------------------
