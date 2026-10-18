@@ -324,3 +324,27 @@ moves between areas: the same route as a teleporter.
 
 The full export (Core and seven Packs) takes about five minutes: each Pack's
 patch export only writes what Core lacks.
+
+## Shared packs, overrides and the size report (issue #37)
+
+Files several areas use already went into a Shared pack per set of areas
+(#36). Now:
+
+- **Merging.** A Shared pack under `merge_below_mb` (5 MB) joins the nearest
+  larger Shared pack: the one whose set of areas differs least from its own.
+  Each Shared pack is one more download for every area that needs it, so a
+  small one costs more in requests than it saves in bytes. Today's three are
+  all above the floor (9.5, 16.6 and 29.0 MB); `test_pack_split.sh` checks
+  the merge with a 12 MB floor.
+- **Overrides.** `artea/tools/packs.cfg` can pin files (or globs) to Core,
+  with everything they use, and sets the merge floor and the Core budget.
+- **Size report.** The split prints each Pack's size, what it requires and
+  its three largest folders, then Core + Hub against the budget. After the
+  export, `tools/check_packs.py` prints the real `.pck` sizes, and fails the
+  build if an asset ships in two `.pck` files or a Pack would delete Core
+  files when mounted.
+
+Core + Hub today: 247.9 MB of `index.pck` against the 100 MB budget. Its
+largest folders are the Hub's Terrain3D regions (`scenes/Level`, 58.6 MB
+imported), characters (55.2 MB) and sound effects (20.4 MB); the report is
+where to look next.

@@ -9,11 +9,13 @@ extends SceneTree
 ## scenes need which Pack, read by scene_loader.gd) and the presets the split
 ## exports with. Both are build output, put back or deleted after the export.
 ##
-## A file goes in the Art Castle Pack only when the castle's entry scene reaches
-## it and nothing in Core does. Core is everything else the Web preset ships,
-## plus whatever that reaches. So a shared asset always stays in Core, and a
-## castle file that Core starts using moves back to Core on the next build,
-## without anyone editing a list.
+## A file goes in an area's Pack when that area's entry scenes reach it and
+## nothing in Core does; one several areas use goes in a Shared pack for that
+## set of areas (small ones merged, see _merge_small_groups). Core is everything
+## else the Web preset ships, plus whatever that reaches, plus anything pinned
+## in tools/packs.cfg. So an area file that Core starts using moves back to Core
+## on the next build, without anyone editing a list. The build prints each
+## Pack's size and Core's against the budget in tools/packs.cfg.
 ##
 ## "Reaches" follows what the engine would actually load: ext_resources and
 ## preloads (ResourceLoader.get_dependencies), res:// paths written in code
@@ -55,13 +57,17 @@ const PACKS := {
 	"crown_of_life_story": ["res://scenes/viewfinder/crown_of_life_story.tscn"],
 }
 const WEB_PRESET := "Web"
+const CONFIG_PATH := "res://tools/packs.cfg"
 const PRESETS_PATH := "res://export_presets.cfg"
 const MANIFEST_PATH := "res://packs.json"
 const TEXT_EXTENSIONS := ["gd", "tscn", "tres", "gdshader", "gdshaderinc"]
 const SKIP_DIRS := [".godot", ".git", ".import"]
 
 var _excludes: PackedStringArray = []
+var _config := ConfigFile.new()
+var _pinned: Array[String] = []  # files tools/packs.cfg pins to Core
 var _class_paths := {}  # class_name -> script path
+var _sizes := {}  # path -> bytes, see _size()
 var _edges := {}  # path -> {"deps": Array[String], "refs": Array[String]}
 
 
@@ -75,6 +81,11 @@ func _initialize() -> void:
 
 	var shipped := {}
 	_walk("res://", shipped)
+	_config.load(CONFIG_PATH)
+	for pattern in _config.get_value("core", "pin", []):
+		for path in shipped:
+			if path.match(pattern):
+				_pinned.append(path)
 
 	var errors: Array[String] = []
 	var result := {"packs": {}}
@@ -136,18 +147,21 @@ func _initialize() -> void:
 	# A file several Packs use goes in a Shared pack for exactly that set of
 	# Packs, fetched before whichever of them the player enters first. In any
 	# one of them it would be missing from the others: each Pack's export
-	# leaves out every other Pack's files.
-	# ponytail: one Shared pack per distinct set of Packs; issue #37 merges the
-	# small ones and adds overrides and a size report.
+	# leaves out every other Pack's files. So no file is in two Packs.
+	var groups := {}  # area set ("art_castle+mind_spark") -> files
 	for path in users:
-		var owner: String = users[path][0]
-		if users[path].size() > 1:
-			owner = "shared_" + "_".join(users[path])
-			if not result.packs.has(owner):
-				result.packs[owner] = {"entries": [], "requires": [], "files": []}
-				for user in users[path]:
-					result.packs[user].requires.append(owner)
-		result.packs[owner].files.append(path)
+		if users[path].size() == 1:
+			result.packs[users[path][0]].files.append(path)
+		else:
+			var key := "+".join(users[path])
+			groups[key] = groups.get(key, []) + [path]
+	_merge_small_groups(groups)
+	for key in groups:
+		var areas: PackedStringArray = key.split("+")
+		var name := "shared_" + "_".join(areas)
+		result.packs[name] = {"entries": [], "requires": [], "files": groups[key]}
+		for area in areas:
+			result.packs[area].requires.append(name)
 	for pack in result.packs:
 		result.packs[pack].files.sort()
 
@@ -191,17 +205,120 @@ func _initialize() -> void:
 	if write and errors.is_empty():
 		_write_manifest(result.packs)
 		_write_presets(result.packs)
-	for pack in result.packs:
-		print("PACK %s: %d files" % [pack, result.packs[pack].files.size()])
+	_report(result)
 	for error in errors:
 		printerr("PACK ERROR: " + error)
 	quit(1 if not errors.is_empty() else 0)
 
 
+## Each Pack's size and largest folders, then Core (the first load: Core and
+## the Hub) against the budget in tools/packs.cfg. Sizes are what the import
+## wrote; export-web-packs.sh prints the real .pck sizes after exporting.
+## "PACK <name>:" lines are also how export-web-packs.sh learns the Pack names.
+func _report(result: Dictionary) -> void:
+	for pack in result.packs:
+		var files: Array = result.packs[pack].files
+		var requires: Array = result.packs[pack].requires
+		print("PACK %s: %d files, %s%s" % [pack, files.size(), _mb(_size_of(files)),
+			", requires " + ", ".join(requires) if not requires.is_empty() else ""])
+		_print_largest_folders(files)
+	var core_bytes := _size_of(result.core)
+	var budget := int(float(_config.get_value("core", "budget_mb", 100)) * 1048576)
+	print("CORE + HUB: %d files, %s against a %s budget (%s)" % [result.core.size(), _mb(core_bytes),
+		_mb(budget), ("%s over" % _mb(core_bytes - budget)) if core_bytes > budget else "within"])
+	_print_largest_folders(result.core)
+
+
+func _print_largest_folders(files: Array) -> void:
+	var by_folder := {}
+	for path in files:
+		var folder := "/".join(path.trim_prefix("res://").split("/").slice(0, 2))
+		by_folder[folder] = by_folder.get(folder, 0) + _size(path)
+	var folders := by_folder.keys()
+	folders.sort_custom(func(a, b): return by_folder[a] > by_folder[b])
+	for folder in folders.slice(0, 3):
+		print("    %9s  %s" % [_mb(by_folder[folder]), folder])
+
+
+func _mb(bytes: int) -> String:
+	return "%.1f MB" % (bytes / 1048576.0)
+
+
+## A Shared pack is one more download for each area that needs it, so one
+## below the size floor is merged into the nearest larger Shared pack: the one
+## whose set of areas differs least from its own (then the smaller of those).
+## The merged pack serves both sets of areas, so an area may now fetch a little
+## data it never uses. One with no larger pack to join is left as it is.
+func _merge_small_groups(groups: Dictionary) -> void:
+	var floor_bytes := int(float(_config.get_value("shared", "merge_below_mb", 5.0)) * 1048576)
+	while true:
+		var small := ""
+		for key in groups:
+			if _size_of(groups[key]) < floor_bytes \
+					and (small == "" or _size_of(groups[key]) < _size_of(groups[small])):
+				small = key
+		if small == "":
+			return
+		var into := ""
+		for key in groups:
+			if key == small or _size_of(groups[key]) <= _size_of(groups[small]):
+				continue
+			if into == "" or _area_distance(small, key) < _area_distance(small, into) \
+					or (_area_distance(small, key) == _area_distance(small, into)
+						and _size_of(groups[key]) < _size_of(groups[into])):
+				into = key
+		if into == "":
+			return
+		var areas := {}
+		for area in Array(small.split("+")) + Array(into.split("+")):
+			areas[area] = true
+		var merged := ""
+		for area in PACKS:  # PACKS order, so a set always gets the same name
+			if areas.has(area):
+				merged += ("+" if merged != "" else "") + area
+		var files: Array = groups[small] + groups[into]
+		groups.erase(small)
+		groups.erase(into)
+		groups[merged] = groups.get(merged, []) + files
+
+
+## How many areas are in one set and not the other.
+func _area_distance(a: String, b: String) -> int:
+	var left := Array(a.split("+"))
+	var right := Array(b.split("+"))
+	return left.filter(func(area): return not area in right).size() \
+		+ right.filter(func(area): return not area in left).size()
+
+
+## Bytes a file adds to a Pack, estimated from what the import wrote to
+## .godot/imported (the Web export re-encodes some textures smaller still).
+func _size(path: String) -> int:
+	if not _sizes.has(path):
+		_sizes[path] = _file_size(path)
+		var imported := ConfigFile.new()
+		if imported.load(path + ".import") == OK:
+			_sizes[path] = 0
+			for dest in imported.get_value("deps", "dest_files", []):
+				_sizes[path] += _file_size(dest)
+	return _sizes[path]
+
+
+func _size_of(paths: Array) -> int:
+	var total := 0
+	for path in paths:
+		total += _size(path)
+	return total
+
+
+func _file_size(path: String) -> int:
+	var file := FileAccess.open(path, FileAccess.READ)
+	return file.get_length() if file != null else 0
+
+
 ## Core: the project file's paths, everything shipped that no Pack reaches, and
 ## all they reach. Maps each file to the one that reached it ("" for a root).
 func _core_closure(shipped: Dictionary, pack_reach: Dictionary, boundary: Dictionary) -> Dictionary:
-	var roots: Array[String] = _project_setting_paths()
+	var roots: Array[String] = _project_setting_paths() + _pinned
 	for path in shipped:
 		var in_pack := false
 		for pack in pack_reach:

@@ -58,24 +58,10 @@ for pack in ${packs}; do
 		"${godot_bin}" --headless --path "${project_dir}" \
 		--export-patch "Web Pack ${pack}" "${build_dir}/${pack}.pck" \
 		--patches "${build_dir}/index.pck"
-	# A patch marks each Core file its preset left out as removed (directory
-	# flag 2), and mounting it deletes those files from the running game.
-	# Refuse such a Pack rather than ship a build that falls apart on entry.
-	python3 - "${build_dir}/${pack}.pck" <<'PY' || exit 1
-# PCK v3+: header to byte 32, then the directory offset; per file a path,
-# offset + size + md5 (32 bytes), then flags.
-import struct, sys
-f = open(sys.argv[1], "rb")
-assert f.read(4) == b"GDPC", "not a pck"
-f.seek(32)
-f.seek(struct.unpack("<Q", f.read(8))[0])
-removed = []
-for _ in range(struct.unpack("<I", f.read(4))[0]):
-    name = f.read(struct.unpack("<I", f.read(4))[0]).rstrip(b"\0").decode("utf-8", "replace")
-    f.read(32)
-    if struct.unpack("<I", f.read(4))[0] & 2:
-        removed.append(name)
-if removed:
-    sys.exit(f"{sys.argv[1]} would delete {len(removed)} Core files when mounted, e.g. {removed[0]}")
-PY
 done
+
+# Refuse a Pack that would delete Core files when mounted, or an asset shipped
+# twice, rather than ship a build that falls apart on entry; then the real
+# sizes, Core against the budget in tools/packs.cfg.
+budget_mb=$(sed -n 's/^budget_mb=\([0-9.]*\).*/\1/p' "${project_dir}/tools/packs.cfg")
+python3 "${project_dir}/tools/check_packs.py" "${build_dir}" "${budget_mb:-100}"
