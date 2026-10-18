@@ -6,3 +6,4 @@
 /index.side.wasm
 # Editor import sidecars Godot writes beside the exported icons.
 *.import
+/.env.local

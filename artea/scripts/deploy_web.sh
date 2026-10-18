@@ -15,6 +15,12 @@ fi
 
 (
 	cd "${build_dir}"
+	# build_dir is generated and may have lost its .vercel link after a rebuild.
+	# Bind it to the existing production project before uploading anything.
+	npx vercel link --yes --project artea-web
+	# A link may download a short-lived OIDC token into this generated folder.
+	# The deployment only needs .vercel/project.json; never upload the token.
+	rm -f .env.local
 	npx vercel --prod --yes
 	npx vercel alias set "${project_alias}" "${public_alias}"
 )
