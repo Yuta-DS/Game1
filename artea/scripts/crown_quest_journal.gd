@@ -350,7 +350,7 @@ func _on_back_pressed() -> bool:
 	if _campaign != null and _campaign.has_method("return_to_campaign"):
 		if bool(_campaign.call("return_to_campaign")):
 			return true
-	if ResourceLoader.exists(CASTLE_SCENE) and get_tree() != null:
+	if SceneLoader.can_open(CASTLE_SCENE) and get_tree() != null:
 		return SceneLoader.change_scene_with_loading(get_tree(), CASTLE_SCENE)
 	return false
 

@@ -203,8 +203,10 @@
 		// rejoined here. Serving it pre-gzipped is not an option: Cloudflare
 		// strips a manually set Content-Encoding, so the browser receives gzip
 		// bytes where it expects a wasm module and refuses to instantiate it.
-		const splittable = ["/index.pck", "/index.side.wasm"];
-		if (!splittable.some((name) => url.pathname.endsWith(name))) {
+		// Every .pck is split: index.pck (Core) and each area Pack the game
+		// fetches when the player first enters that area (ADR-0001), so a Pack
+		// gets the same parallel, retrying, resumable download as the first load.
+		if (!url.pathname.endsWith(".pck") && !url.pathname.endsWith("/index.side.wasm")) {
 			return nativeFetch(input, init);
 		}
 
@@ -229,5 +231,48 @@
 			status: 200,
 			headers,
 		});
+	};
+
+	// Area Packs (ADR-0001, issue #35). The game asks for one by file name when
+	// the player first heads into its area; the page downloads it through the
+	// fetch above (parts, in parallel, retried, with the Retry overlay) and
+	// writes it into the engine's file system with the engine's own copyToFS,
+	// as Godot does for the files it loads at boot. The game polls `state` for
+	// progress and mounts the file once `done`. Doing the download here rather
+	// than through Godot's HTTPRequest matters: that reads a fixed chunk per
+	// frame, and the loading screen runs at a few frames per second, so 137 MB
+	// took ten minutes.
+	window.arteaPacks = {
+		state: {},
+		fetch(file, path) {
+			const state = { loaded: 0, total: 0, done: false, error: "" };
+			this.state[file] = state;
+			(async () => {
+				const response = await window.fetch(new URL(file, window.location.href).toString());
+				if (!response.ok) {
+					throw new Error(`${file} returned ${response.status}`);
+				}
+				// The size comes from the Pack's parts manifest, so the bytes go
+				// straight into one buffer. copyToFS wraps that buffer rather than
+				// copying it, so the Pack is held twice only while the file system
+				// takes its own copy.
+				state.total = Number(response.headers.get("Content-Length"));
+				if (!(state.total > 0)) {
+					throw new Error(`${file} has no parts manifest`);
+				}
+				const bytes = new Uint8Array(state.total);
+				const reader = response.body.getReader();
+				for (;;) {
+					const { done, value } = await reader.read();
+					if (done) break;
+					bytes.set(value, state.loaded);
+					state.loaded += value.byteLength;
+				}
+				engine.copyToFS(path, bytes.buffer);
+				state.done = true;
+			})().catch((error) => {
+				state.error = String(error && error.message ? error.message : error);
+			});
+		},
 	};
 })();

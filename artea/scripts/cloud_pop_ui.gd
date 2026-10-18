@@ -235,7 +235,7 @@ func _return_to_campaign() -> void:
 	if campaign != null and campaign.has_method("return_to_campaign"):
 		campaign.call("return_to_campaign")
 	else:
-		get_tree().change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn")
+		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
 
 
 func _spawn_curated_cloud(echo_text: String, echo_id: String) -> bool:

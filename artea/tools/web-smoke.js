@@ -5,6 +5,8 @@
 // and the page looks like a slow load rather than a broken build. This drives
 // the real thing - loads the page, clicks Offline Guest, waits for the hub to
 // report itself built, then holds a movement key and checks the frame changed.
+// Then it enters the Art Castle, whose Pack is not in the first load, and waits
+// for the castle to report itself built.
 //
 // It also measures the cold first load: the browser cache is disabled, every
 // byte that crosses the network is counted, and the time from navigation until
@@ -373,18 +375,47 @@ async function connect() {
 
 		// A frozen game returns byte-identical frames, so movement is the check
 		// that separates "rendered once" from "playable".
-		say('holding W to test movement');
-		await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
-		await key('keyDown', 'KeyW', 87);
-		await sleep(2500);
-		const during = await shot('03-moving');
-		await key('keyUp', 'KeyW', 87);
-		await sleep(1500);
-		const after = await shot('04-after-move');
-
 		const identical = (a, b) => a.length === b.length && a.equals(b);
-		const moved = !identical(before, during) || !identical(during, after);
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene/.test(l));
+		const movesWithW = async (start, duringName, afterName) => {
+			say('holding W to test movement');
+			await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+			await key('keyDown', 'KeyW', 87);
+			await sleep(2500);
+			const during = await shot(duringName);
+			await key('keyUp', 'KeyW', 87);
+			await sleep(1500);
+			const after = await shot(afterName);
+			return !identical(start, during) || !identical(during, after);
+		};
+		const moved = await movesWithW(before, '03-moving', '04-after-move');
+
+		// On into the Art Castle the way a player goes (issue #35). Its Pack is
+		// not in the first load, so this checks that it downloads, mounts and
+		// builds. The hub's Art Gallery button script exposes the route on web.
+		say('entering the Art Castle');
+		const castleFrom = consoleLines.length;
+		const bytesBeforeCastle = net.bytes;
+		const castleStarted = Date.now();
+		await send('Runtime.evaluate', { expression: 'window.arteaEnterArtCastle()' });
+		await sleep(2000);
+		await shot('05-downloading-art-castle');
+		let castle = false;
+		let castleSeconds = null;
+		try {
+			await waitForLog(/\[ARTEA\] galaxy world=true/, 'Art Castle built', 600000, castleFrom);
+			// Built is not yet playable: the loading screen stays up while it
+			// compiles shaders, and logs when it hands the castle over.
+			await waitForLog(/\[ARTEA\] loading screen done: .*art_gallery_3d_inprogress/,
+				'Art Castle loading screen closed', 600000, castleFrom);
+			castleSeconds = ((Date.now() - castleStarted) / 1000).toFixed(1);
+			await sleep(3000);
+			castle = await movesWithW(await shot('06-art-castle'), '07-castle-moving', '08-castle-after-move');
+		} catch (err) {
+			say('FAIL ' + err.message);
+		}
+		const castleBytes = net.bytes - bytesBeforeCastle;
+
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();
@@ -392,7 +423,12 @@ async function connect() {
 		say('fatal resource errors: ' + fatal.length);
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
 
-		const pass = moved && !crashed() && fatal.length === 0;
+		console.log(`  Art Castle playable:      ${castle ? 'yes' : 'NO'}, ${(castleBytes / 1048576).toFixed(1)} MiB downloaded on the way in`
+			+ (castleSeconds !== null ? `, ${castleSeconds} s from the Hub` : ''));
+		console.log(`METRIC bytes_art_castle=${castleBytes}`);
+		console.log(`METRIC time_to_art_castle_s=${castleSeconds ?? -1}`);
+
+		const pass = moved && castle && !crashed() && fatal.length === 0;
 
 		if (repeat) {
 			// Same page again with the cache on: with content-hashed parts served

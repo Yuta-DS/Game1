@@ -63,6 +63,10 @@ const SETTLE_TIMEOUT_MS := 5000
 # just waiting on frames.
 const DEPENDENCY_FRAME_BUDGET_MS := 50
 
+# Fetching an area's Pack, when it has not been fetched yet, fills the first
+# part of the load slice; loading the scene from it fills the rest.
+const PACK_SLICE := LOAD_SLICE * 0.5
+
 func _ready():
 	# Milo and MusicManager hold off until this screen is gone.
 	add_to_group("loading_screen")
@@ -122,10 +126,42 @@ func _start_load_once_visible() -> void:
 	_report(0.0, "Loading world")
 	await get_tree().process_frame
 	await get_tree().process_frame
+	var pack := SceneLoader.pack_needed(next_scene_path)
+	if pack != "" and not await _fetch_pack(pack):
+		return
 	if not OS.has_feature("threads"):
 		await _load_dependencies_in_slices()
 	ResourceLoader.load_threaded_request(next_scene_path)
 	loading_started = true
+
+
+# An area's Pack is not part of the first download (ADR-0001), so the first
+# time the player heads into the area it is fetched here, then mounted, and the
+# load carries on as if it had always been there. The page does the download
+# (arteaPacks in pck-loader.js: the Pack's parts in parallel, with retries and
+# the Retry overlay) and writes the file into the engine's memory-backed /tmp;
+# this only shows its progress. The parts are in the browser's cache for the
+# next visit (ADR-0002), so nothing needs keeping in user:// as well.
+func _fetch_pack(file: String) -> bool:
+	var area := file.get_basename().capitalize()
+	var local := "/tmp/artea_packs/" + file
+	var key := JSON.stringify(file)
+	JavaScriptBridge.eval("arteaPacks.fetch(%s, %s)" % [key, JSON.stringify(local)])
+	while true:
+		var state = JSON.parse_string(str(JavaScriptBridge.eval("JSON.stringify(arteaPacks.state[%s])" % key)))
+		if not state is Dictionary or state.error != "":
+			_fail("download failed: %s" % (state.error if state is Dictionary else "no loader"))
+			return false
+		if state.done:
+			break
+		if state.total > 0:
+			_report(PACK_SLICE * state.loaded / state.total, "Downloading the %s (%d / %d MB)"
+				% [area, state.loaded / 1048576, state.total / 1048576])
+		await get_tree().process_frame
+	if not ProjectSettings.load_resource_pack(local):
+		_fail("couldn't open the downloaded %s" % area)
+		return false
+	return true
 
 
 # Without threads (the Web build) the request above does the whole load in a
@@ -322,6 +358,9 @@ func _wait_for_scatter_then_finish() -> void:
 	else:
 		_release_scene_audio()
 		_hand_over_music(arriving_track)
+	# The browser console is the only log a web player has; tools/web-smoke.js
+	# waits for this before checking the new scene is playable.
+	print("[ARTEA] loading screen done: ", next_scene_path)
 	queue_free()
 
 

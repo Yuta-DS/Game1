@@ -194,7 +194,7 @@ func _travel() -> void:
 	# instant, so without this guard the change is queued more than once.
 	if _travelling:
 		return
-	if not ResourceLoader.exists(TARGET_SCENE_PATH):
+	if not SceneLoader.can_open(TARGET_SCENE_PATH):
 		push_error("Art Explore destination is missing: %s" % TARGET_SCENE_PATH)
 		return
 	_travelling = true
