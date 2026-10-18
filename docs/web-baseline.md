@@ -348,3 +348,39 @@ Core + Hub today: 247.9 MB of `index.pck` against the 100 MB budget. Its
 largest folders are the Hub's Terrain3D regions (`scenes/Level`, 58.6 MB
 imported), characters (55.2 MB) and sound effects (20.4 MB); the report is
 where to look next.
+
+## Background prefetch after the Hub is playable (issue #38)
+
+When the loading screen hands the Hub over, the page starts downloading every
+Pack not yet mounted, one at a time, most likely next first. The order comes
+from the journey (`SceneLoader.prefetch_order()`): the Art Castle (where the
+campaign goes from the Hub), then the Kingdoms in campaign order from the
+player's next unfinished one, then the optional Crown of Life story. Each
+area's Shared packs come just before it.
+
+- **Download only.** A prefetched Pack stays in the page's memory. Copying it
+  into the engine's file system is a long main-thread block, so it happens on
+  the loading screen when the player goes there, where it cannot be seen.
+- **Yields.** While the loading screen is fetching a Pack for the player,
+  other Packs' background downloads hold their next part back. A Pack the
+  player asks for that is already downloading carries on at full speed, and
+  the loading screen shows its progress.
+- **Quiet failures.** A background download that fails gives up without the
+  Retry overlay; the loading screen fetches it again if the player goes there.
+
+`./web verify` checks it: it goes into the Crown of Life story the moment the
+Hub is up (before the background download can reach it), then waits in the
+Hub for the rest, then enters every other area. Local server shaped to
+100 Mbit/s and 40 ms (`web-smoke.js --mbps 100 --latency 40`):
+
+| | |
+|---|---|
+| Story, entered before it was prefetched | 56.8 MiB on the way in (its Packs, then the castle's resuming), 19.6 s |
+| Art Castle, Mind Spark, Heart Melody, Creator's Light | **0.0 MiB** on the way in |
+| Hub frame time while prefetching | median 16.6 ms, p95 20.8 ms (338 frames) |
+| Hub frame time after | median 16.6 ms, p95 20.7 ms (460 frames) |
+
+The smoke test prints when each Pack started, was asked for and finished. In
+that run the story's Packs were asked for at 0.9 s and 2.5 s and done by
+2.7 s, while the background Pack that had started at 0.9 s held back and
+finished at 13.0 s.

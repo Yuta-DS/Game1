@@ -130,10 +130,23 @@
 		button.focus();
 	});
 
+	// Area Packs the player is waiting on right now (issue #38). While any is,
+	// every other Pack's background download holds its next part back, so the
+	// player's load gets the connection.
+	const foreground = new Set();
+	const waitTurn = async (pack) => {
+		while (pack && foreground.size > 0 && !foreground.has(pack)) {
+			await sleep(250);
+		}
+	};
+
 	// One whole part, retried until it arrives. Buffered rather than streamed
 	// so a connection that drops halfway through a part costs only that part:
 	// nothing from it has reached the engine yet, so it simply starts again.
-	const fetchPart = async (url, init) => {
+	// `pack` names the area Pack being fetched, if any: one only prefetched in
+	// the background gives up quietly instead of asking the player to retry,
+	// and the loading screen fetches it again when the player goes there.
+	const fetchPart = async (url, init, pack) => {
 		for (let attempt = 0; ; attempt += 1) {
 			try {
 				const response = await nativeFetch(url, init);
@@ -145,6 +158,8 @@
 				if (attempt < RETRY_DELAYS_MS.length) {
 					console.warn(`pck-loader: ${error.message}, retrying`);
 					await sleep(RETRY_DELAYS_MS[attempt]);
+				} else if (pack && !foreground.has(pack)) {
+					throw error;
 				} else {
 					await askToRetry(error);
 					attempt = -1;
@@ -156,17 +171,20 @@
 	// Up to `concurrency` parts download at once, but the engine reads them
 	// strictly in order: pull() hands over part N only once it has arrived and
 	// then starts the next one, so the window slides along the pack.
-	const streamParts = (requestUrl, partCount) => {
+	const streamParts = (requestUrl, partCount, pack) => {
 		const hashed = manifestParts.get(requestUrl);
 		// Hashed parts are named by content, so the browser's normal HTTP cache
 		// is safe for them and the host marks them immutable: a repeat visit
 		// re-downloads none. No ?build= key either, which would only stop
 		// identical parts being reused across deploys. The older unhashed layout
 		// keeps its no-store fetch.
-		const fetchIndex = (index) => fetchPart(
-			hashed ? new URL(hashed[index], window.location.href).toString()
-				: partUrl(requestUrl, index),
-			hashed ? {} : { cache: "no-store" });
+		const fetchIndex = async (index) => {
+			await waitTurn(pack);
+			return fetchPart(
+				hashed ? new URL(hashed[index], window.location.href).toString()
+					: partUrl(requestUrl, index),
+				hashed ? {} : { cache: "no-store" }, pack);
+		};
 		const inFlight = new Map();
 		let nextToSend = 0;
 		let nextToStart = 0;
@@ -227,7 +245,9 @@
 			headers["Content-Length"] = String(totalBytes);
 		}
 
-		return new Response(streamParts(requestUrl, partCount), {
+		// arteaPack (set by arteaPacks below) names the area Pack, so its parts
+		// can yield to the one the player is waiting on.
+		return new Response(streamParts(requestUrl, partCount, init && init.arteaPack), {
 			status: 200,
 			headers,
 		});
@@ -242,13 +262,32 @@
 	// than through Godot's HTTPRequest matters: that reads a fixed chunk per
 	// frame, and the loading screen runs at a few frames per second, so 137 MB
 	// took ten minutes.
+	//
+	// Once the Hub is playable the game also hands over every Pack it has not
+	// mounted, most likely next first (issue #38), and they download one after
+	// another in the background. A Pack is downloaded once, whoever asks first:
+	// entering an area whose Pack is already here skips the download, and one
+	// still arriving shows its progress on the loading screen. Background
+	// downloads stay in memory; copying one into the engine's file system is a
+	// long main-thread block, so it waits for the loading screen.
+	const buffers = new Map();  // file -> its bytes, until written for the engine
+	const downloads = new Map();  // file -> the download's promise
 	window.arteaPacks = {
+		// Plain fields only: the game reads one as JSON every frame.
 		state: {},
-		fetch(file, path) {
-			const state = { loaded: 0, total: 0, done: false, error: "" };
+		prefetch: { queue: [], running: false, startedAt: null, doneAt: null },
+		download(file) {
+			const known = this.state[file];
+			if (known && !known.error) {
+				return downloads.get(file);
+			}
+			// Times are performance.now(), for seeing what the background held back.
+			const state = { loaded: 0, total: 0, downloaded: false, done: false, error: "",
+				startedAt: performance.now(), wantedAt: null, finishedAt: null };
 			this.state[file] = state;
-			(async () => {
-				const response = await window.fetch(new URL(file, window.location.href).toString());
+			const download = (async () => {
+				const response = await window.fetch(new URL(file, window.location.href).toString(),
+					{ arteaPack: file });
 				if (!response.ok) {
 					throw new Error(`${file} returned ${response.status}`);
 				}
@@ -268,11 +307,46 @@
 					bytes.set(value, state.loaded);
 					state.loaded += value.byteLength;
 				}
-				engine.copyToFS(path, bytes.buffer);
-				state.done = true;
+				buffers.set(file, bytes);
+				state.downloaded = true;
+				state.finishedAt = performance.now();
 			})().catch((error) => {
 				state.error = String(error && error.message ? error.message : error);
 			});
+			downloads.set(file, download);
+			return download;
+		},
+		// The loading screen's request: this Pack now, written where the game
+		// mounts it. Other Packs' background downloads hold back meanwhile.
+		fetch(file, path) {
+			foreground.add(file);
+			(async () => {
+				const download = this.download(file);
+				this.state[file].wantedAt = performance.now();
+				await download;
+				const state = this.state[file];
+				if (!state.error) {
+					engine.copyToFS(path, buffers.get(file).buffer);
+					buffers.delete(file);
+					state.done = true;
+				}
+			})().finally(() => foreground.delete(file));
+		},
+		// Background downloads, one at a time, in the order given. A later call
+		// (another return to the Hub) adds any Packs not queued yet.
+		startPrefetch(files) {
+			const prefetch = this.prefetch;
+			prefetch.queue.push(...files.filter((file) => !prefetch.queue.includes(file)));
+			if (prefetch.running) return;
+			prefetch.running = true;
+			prefetch.startedAt = prefetch.startedAt ?? performance.now();
+			(async () => {
+				for (let i = 0; i < prefetch.queue.length; i += 1) {
+					await this.download(prefetch.queue[i]);
+				}
+				prefetch.running = false;
+				prefetch.doneAt = performance.now();
+			})();
 		},
 	};
 })();
