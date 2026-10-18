@@ -59,7 +59,8 @@ func _run() -> void:
 		and not password.get_signal_connection_list("text_submitted").is_empty(),
 		"both fields need an Enter-key path")
 	assert(status.autowrap_mode != TextServer.AUTOWRAP_OFF
-		and status.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER,
+		and status.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER
+		and status.custom_minimum_size.y >= 50.0,
 		"authentication feedback must wrap inside the form")
 	for button_name in ["Button", "RegisterButton", "GuestButton"]:
 		var button := form.get_node(button_name) as Button

@@ -106,6 +106,7 @@ func _layout_for_viewport(viewport_size: Vector2,
 		var button := form.get_node(button_name) as Button
 		button.custom_minimum_size.y = 50.0
 		button.add_theme_font_size_override("font_size", 22 if portrait else 24)
+	status_label.custom_minimum_size.y = 54.0
 	status_label.add_theme_font_size_override("font_size", 16 if portrait else 18)
 
 	# The host and all its children remain authored in physical-pixel units, then
