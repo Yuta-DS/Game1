@@ -13,10 +13,46 @@ const AI_STATUS_URL = BASE_URL + "/ai/status"
 var auth_token = ""
 
 
+func get_base_url() -> String:
+	var configured := str(ProjectSettings.get_setting(
+		"artea/network/api_base_url", "")).strip_edges().trim_suffix("/")
+	if OS.has_feature("web"):
+		var page_setting: Variant = JavaScriptBridge.eval(
+			"window.ARTEA_API_BASE_URL || ''", true)
+		return _resolve_web_base_url(
+			str(JavaScriptBridge.eval("window.location.hostname", true)),
+			str(JavaScriptBridge.eval("window.location.origin", true)),
+			str(page_setting) if page_setting is String else "", configured)
+	if not configured.is_empty():
+		return configured
+	return BASE_URL
+
+
+func _resolve_web_base_url(browser_host: String, browser_origin: String,
+		page_setting: String, project_setting: String) -> String:
+	if not page_setting.strip_edges().is_empty():
+		return page_setting.strip_edges().trim_suffix("/")
+	if not project_setting.strip_edges().is_empty():
+		return project_setting.strip_edges().trim_suffix("/")
+	if browser_host.to_lower() in ["localhost", "127.0.0.1", "::1", "[::1]"]:
+		return BASE_URL
+	# A visitor's loopback address is their own computer. Public Web needs
+	# an API on this origin, or an explicit URL from the hosting page.
+	return browser_origin.trim_suffix("/")
+
+
+func get_api_url(path: String) -> String:
+	return get_base_url() + path
+
+
+func get_upload_artwork_url() -> String:
+	return get_api_url("/upload_artwork")
+
+
 func can_reach_configured_backend() -> bool:
 	if not OS.has_feature("web"):
 		return true
-	var backend_url := BASE_URL.to_lower()
+	var backend_url := get_base_url().to_lower()
 	var backend_is_loopback := backend_url.begins_with("http://127.0.0.1") \
 		or backend_url.begins_with("http://localhost") \
 		or backend_url.begins_with("http://[::1]")
@@ -32,22 +68,21 @@ func can_reach_configured_backend() -> bool:
 func login(username: String, password: String, callback: Callable):
 
 	var http = HTTPRequest.new()
+	http.timeout = 20.0
 	add_child(http)
 
 	http.request_completed.connect(
 		func(result, response_code, headers, body):
 
-			var json = JSON.parse_string(body.get_string_from_utf8())
-
-			if response_code == 200:
-
-				auth_token = json["token"]
-
+			var json: Variant = JSON.parse_string(body.get_string_from_utf8())
+			if result == HTTPRequest.RESULT_SUCCESS and response_code == 200 \
+					and json is Dictionary and json.get("token") is String \
+					and not str(json["token"]).is_empty():
+				auth_token = str(json["token"])
 				callback.call(true, json)
-
 			else:
-
-				callback.call(false, json)
+				auth_token = ""
+				callback.call(false, _auth_error(result, response_code, json))
 
 			http.queue_free()
 	)
@@ -63,12 +98,15 @@ func login(username: String, password: String, callback: Callable):
 		"Content-Type: application/json"
 	]
 
-	http.request(
-		BASE_URL + "/login",
+	var request_error := http.request(
+		get_api_url("/login"),
 		headers,
 		HTTPClient.METHOD_POST,
 		json_body
 	)
+	if request_error != OK:
+		callback.call(false, {"error": "Authentication server is unavailable. Use Offline Guest or check the API address."})
+		http.queue_free()
 
 # =========================
 # REGISTER
@@ -77,20 +115,21 @@ func login(username: String, password: String, callback: Callable):
 func register(username: String, password: String, callback: Callable):
 
 	var http = HTTPRequest.new()
+	http.timeout = 20.0
 	add_child(http)
 
 	http.request_completed.connect(
 		func(result, response_code, headers, body):
 
-			var json = JSON.parse_string(body.get_string_from_utf8())
+			var json: Variant = JSON.parse_string(body.get_string_from_utf8())
 
-			if response_code == 201:
+			if result == HTTPRequest.RESULT_SUCCESS and response_code == 201:
 
 				callback.call(true, json)
 
 			else:
 
-				callback.call(false, json)
+				callback.call(false, _auth_error(result, response_code, json))
 
 			http.queue_free()
 	)
@@ -106,12 +145,25 @@ func register(username: String, password: String, callback: Callable):
 		"Content-Type: application/json"
 	]
 
-	http.request(
-		BASE_URL + "/register",
+	var request_error := http.request(
+		get_api_url("/register"),
 		headers,
 		HTTPClient.METHOD_POST,
 		json_body
 	)
+	if request_error != OK:
+		callback.call(false, {"error": "Account service is unavailable. Use Offline Guest or check the API address."})
+		http.queue_free()
+
+
+func _auth_error(result: int, response_code: int, parsed: Variant) -> Dictionary:
+	if result != HTTPRequest.RESULT_SUCCESS or response_code == 0:
+		return {"error": "Authentication server is unavailable. Use Offline Guest or check the API address."}
+	if parsed is Dictionary and parsed.get("error") is String:
+		return parsed
+	if response_code == 404 or response_code == 200:
+		return {"error": "Account service is not configured at this address. Use Offline Guest."}
+	return {"error": "Account service failed (HTTP %d). Try again later." % response_code}
 
 
 # =========================
@@ -134,7 +186,7 @@ func request_creative_guide(
 	if encoded_artwork.has("artwork_base64"):
 		payload["artwork_base64"] = encoded_artwork["artwork_base64"]
 
-	_post_ai_json(CREATIVE_GUIDE_URL, payload, callback)
+	_post_ai_json(get_api_url("/ai/creative-guide"), payload, callback)
 
 
 # =========================
@@ -161,7 +213,7 @@ func request_world_manifest(
 	if encoded_artwork.has("artwork_base64"):
 		payload["artwork_base64"] = encoded_artwork["artwork_base64"]
 
-	_post_ai_json(WORLD_BUILDER_URL, payload, callback)
+	_post_ai_json(get_api_url("/ai/world-builder"), payload, callback)
 
 
 func request_ai_recovery_status(callback: Callable) -> void:
@@ -185,7 +237,7 @@ func request_ai_recovery_status(callback: Callable) -> void:
 			http.queue_free()
 	)
 
-	var request_error := http.request(AI_STATUS_URL)
+	var request_error := http.request(get_api_url("/ai/status"))
 	if request_error != OK:
 		callback.call(false, {"error": "Could not contact the AI recovery monitor."})
 		http.queue_free()

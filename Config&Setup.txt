@@ -59,11 +59,13 @@ BEFORE YOU RUN IT - install the prerequisites:
   Ubuntu:  sudo apt install -y git-lfs python3-venv python3-pip dotnet-sdk-8.0
            plus the Godot .NET build from godotengine.org
 
-  Windows: setup.sh does not run on Windows. Follow section 5 manually,
-           or use Git Bash / WSL.
+  Windows: run setup.sh from Git Bash with Python 3, Git LFS, Godot and
+           .NET on PATH. Use GODOT_BIN if Godot is installed elsewhere.
+           Section 5 has the manual setup and WSL alternatives.
 
-The script works on macOS and Linux. It finds Godot in /Applications,
-~/Applications, or on your PATH.
+The script searches /Applications, ~/Applications and PATH for Godot.
+On Windows it also accepts executable names ending in .exe and the
+virtual environment's Scripts/python.exe layout.
 
 IF THE SCRIPT FAILS: it stops at the first problem and prints what to do.
 Section 7 (Troubleshooting) covers every failure we have actually hit.

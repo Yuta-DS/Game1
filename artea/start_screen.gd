@@ -168,6 +168,9 @@ func show_message(text: String, is_error: bool = true):
 		status_label.add_theme_color_override("font_color", Color.RED)
 	else:
 		status_label.add_theme_color_override("font_color", Color.GREEN)
+	# An empty status has no height at startup. Re-measure the panel when text
+	# arrives so network failures remain visible below the buttons on Web.
+	call_deferred("_layout_for_viewport", get_viewport().get_visible_rect().size)
 
 # Connected to the 'Login' Button's pressed() signal
 func _on_button_pressed():
@@ -254,7 +257,10 @@ func _on_register_button_pressed() -> void:
 				)
 			else:
 				pass_node.text = ""
-				show_message("Username already exists!")
+				if data is Dictionary and data.has("error"):
+					show_message(str(data["error"]))
+				else:
+					show_message("Account registration failed. Try again later.")
 	)
 
 # Connected to your physical 'GuestButton' (Play Offline as Guest)
@@ -276,7 +282,12 @@ func _on_guest_button_pressed() -> void:
 # Loopback is still accepted when the API itself is on localhost, which is the
 # case for a local development server.
 func check_internet_connection() -> bool:
-	if APIManager.BASE_URL.contains("127.0.0.1") or APIManager.BASE_URL.contains("localhost"):
+	# Browsers do not expose a reliable list of the player's network addresses.
+	# Let the real HTTP request decide whether the configured API is available.
+	if OS.has_feature("web"):
+		return true
+	var backend_url := APIManager.get_base_url()
+	if backend_url.contains("127.0.0.1") or backend_url.contains("localhost"):
 		return true
 
 	for address in IP.get_local_addresses():

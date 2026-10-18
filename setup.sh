@@ -4,8 +4,8 @@
 # Then start the game with:
 #     ./setup.sh run
 #
-# Works on macOS and Linux. See Config&Setup.txt for the manual steps
-# and for Windows.
+# Works on macOS, Linux, and Windows through Git Bash when Godot, Python,
+# Git LFS, and (for desktop C#) .NET are installed.
 
 set -euo pipefail
 
@@ -34,7 +34,7 @@ find_godot() {
             "/Applications/Godot.app/Contents/MacOS/Godot"
         )
     fi
-    candidates+=(godot-mono godot4 godot)
+    candidates+=(godot-mono godot4 godot godot-mono.exe godot4.exe godot.exe)
     for c in "${candidates[@]}"; do
         if [ -x "$c" ]; then
             resolved="$c"
@@ -52,9 +52,31 @@ find_godot() {
     echo ""
 }
 
+find_python() {
+    local candidate
+    for candidate in "${PYTHON_BIN:-}" python3 python python.exe; do
+        [ -n "$candidate" ] || continue
+        if command -v "$candidate" >/dev/null 2>&1; then
+            command -v "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+venv_python() {
+    if [ -x "$ROOT/server/venv/bin/python" ]; then
+        printf '%s' "$ROOT/server/venv/bin/python"
+    elif [ -x "$ROOT/server/venv/Scripts/python.exe" ]; then
+        printf '%s' "$ROOT/server/venv/Scripts/python.exe"
+    fi
+}
+
 python_env_ready() {
-    [ -x "$ROOT/server/venv/bin/python" ] && \
-        "$ROOT/server/venv/bin/python" -c \
+    local backend_python
+    backend_python="$(venv_python)"
+    [ -n "$backend_python" ] && \
+        "$backend_python" -c \
         'import flask, flask_cors, flask_sqlalchemy, flask_jwt_extended, bcrypt, requests' \
         >/dev/null 2>&1
 }
@@ -62,8 +84,11 @@ python_env_ready() {
 ensure_python_env() {
     python_env_ready && return
     say "Setting up Python environment"
-    [ -d "$ROOT/server/venv" ] || python3 -m venv "$ROOT/server/venv"
-    "$ROOT/server/venv/bin/python" -m pip install -q -r "$ROOT/server/requirements.txt"
+    [ -d "$ROOT/server/venv" ] || "$PYTHON" -m venv "$ROOT/server/venv"
+    local backend_python
+    backend_python="$(venv_python)"
+    [ -n "$backend_python" ] || die "Python virtual environment has no runnable interpreter."
+    "$backend_python" -m pip install -q -r "$ROOT/server/requirements.txt"
     python_env_ready || die "Backend Python dependencies are incomplete."
 }
 
@@ -123,7 +148,7 @@ ensure_import_cache() {
 # model and C# assembly are native-only and are intentionally excluded by the
 # non-Mono Web export preset.
 if [ "${1:-}" = "web" ]; then
-    command -v python3 >/dev/null || die "python3 not found."
+    PYTHON="$(find_python)" || die "Python 3 not found."
     command -v git-lfs >/dev/null || die "git-lfs not found. macOS: brew install git-lfs"
     GODOT="$(find_godot web)"
     [ -n "$GODOT" ] || die "Non-Mono Godot not found. Set GODOT_BIN to the standard Godot executable."
@@ -139,16 +164,19 @@ fi
 
 # --- run mode: start server (if needed) + game -----------------------------
 if [ "${1:-}" = "run" ]; then
+    PYTHON="$(find_python)" || die "Python 3 not found."
     GODOT="$(find_godot)"
     [ -n "$GODOT" ] || die "Godot not found. Run ./setup.sh first."
 
+    ensure_python_env
     ensure_import_cache
 
     if ! curl -fsS -m 3 http://127.0.0.1:8000/ >/dev/null 2>&1; then
         say "Starting server on 127.0.0.1:8000"
         mkdir -p "$ROOT/server/logs"
+        backend_python="$(venv_python)"
         ( cd "$ROOT/server" && HOST=127.0.0.1 PORT=8000 \
-            ./venv/bin/python server.py >> logs/flaskapp.err.log 2>&1 & )
+            "$backend_python" server.py >> logs/flaskapp.err.log 2>&1 & )
         for _ in $(seq 1 20); do
             curl -fsS -m 2 http://127.0.0.1:8000/ >/dev/null 2>&1 && break
             sleep 0.5
@@ -169,7 +197,7 @@ fi
 
 # --- 1. prerequisites ------------------------------------------------------
 say "Checking prerequisites"
-command -v python3 >/dev/null || die "python3 not found."
+PYTHON="$(find_python)" || die "Python 3 not found."
 command -v git-lfs >/dev/null || die "git-lfs not found. macOS: brew install git-lfs"
 if find "$ROOT/artea" -maxdepth 1 -name '*.csproj' -print -quit | grep -q .; then
     command -v dotnet >/dev/null || die "dotnet SDK not found. macOS: brew install --cask dotnet-sdk"

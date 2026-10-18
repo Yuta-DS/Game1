@@ -575,7 +575,7 @@ func _can_request_ai() -> bool:
 	# use the existing on-device world instead of fetching the visitor's localhost.
 	if not APIManager.can_reach_configured_backend():
 		return false
-	var base_url := str(APIManager.BASE_URL).to_lower()
+	var base_url := str(APIManager.get_base_url()).to_lower()
 	return _has_session_token() or base_url.begins_with("http://127.0.0.1") \
 		or base_url.begins_with("http://localhost") or base_url.begins_with("http://[::1]")
 

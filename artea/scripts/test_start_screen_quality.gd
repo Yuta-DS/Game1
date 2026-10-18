@@ -79,6 +79,15 @@ func _run() -> void:
 		and guest.focus_neighbor_bottom == NodePath("../UsernameInput")
 		and username.focus_neighbor_top == NodePath("../GuestButton"),
 		"controller navigation must wrap through the complete entry form")
+	screen.call("show_message", "Account service is unavailable. Use Offline Guest.")
+	await process_frame
+	await process_frame
+	assert(status.visible and status.get_global_rect().end.y \
+		<= root.get_viewport().get_visible_rect().size.y + 1.0,
+		"login failures must remain visible below the buttons")
+	screen.call("show_message", "")
+	await process_frame
+	await process_frame
 
 	# Exercise the exact logical/CSS relationship produced by canvas_items on a
 	# 390×844 portrait phone. The background must cover the whole viewport and

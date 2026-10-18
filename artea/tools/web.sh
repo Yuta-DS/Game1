@@ -73,7 +73,11 @@ find_godot() {
 	# install locations.  Any Mono build is skipped: it cannot export Web.
 	local candidates=()
 	[[ -n "${GODOT_BIN:-}" ]] && candidates+=("${GODOT_BIN}")
-	command -v godot >/dev/null 2>&1 && candidates+=("$(command -v godot)")
+	local on_path
+	for on_path in godot4 godot godot4.exe godot.exe; do
+		command -v "${on_path}" >/dev/null 2>&1 \
+			&& candidates+=("$(command -v "${on_path}")")
+	done
 	candidates+=(
 		"${HOME}/Downloads/Godot.app/Contents/MacOS/Godot"
 		"${HOME}/Applications/Godot.app/Contents/MacOS/Godot"
@@ -84,6 +88,18 @@ find_godot() {
 		"${candidate}" --version 2>/dev/null | grep -qi mono && continue
 		printf '%s' "${candidate}"
 		return 0
+	done
+	return 1
+}
+
+find_python() {
+	local candidate
+	for candidate in "${PYTHON_BIN:-}" python3 python python.exe; do
+		[[ -n "${candidate}" ]] || continue
+		if command -v "${candidate}" >/dev/null 2>&1; then
+			command -v "${candidate}"
+			return 0
+		fi
 	done
 	return 1
 }
@@ -112,7 +128,8 @@ if [[ "${mode}" != serve ]]; then
 		"${project_dir}/tools/with-web-export-plugins.sh" \
 			"${godot_bin}" --headless --path "${project_dir}" \
 			--export-release Web "${index}"
-		python3 "${project_dir}/tools/patch_web_release_loader.py" "${index}"
+		python_bin="$(find_python)" || { echo "Python 3 is required for Web export." >&2; exit 1; }
+		"${python_bin}" "${project_dir}/tools/patch_web_release_loader.py" "${index}"
 		git -C "${project_dir}" rev-parse HEAD > "${export_head}"
 		echo
 	fi
@@ -178,7 +195,8 @@ fi
 # content-hashed parts/ immutable, everything else no-cache, revalidated via
 # Last-Modified. It exists so `./web verify --repeat` can measure a repeat
 # visit locally; day-to-day local serving stays no-store.
-exec python3 - "${port}" "${build_dir}" "${cache_mode}" <<'PYSERVE'
+python_bin="$(find_python)" || { echo "Python 3 is required to serve the Web build." >&2; exit 1; }
+exec "${python_bin}" - "${port}" "${build_dir}" "${cache_mode}" <<'PYSERVE'
 import functools
 import http.server
 import sys

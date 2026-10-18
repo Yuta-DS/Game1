@@ -170,21 +170,24 @@ prompts through the Flask `/ai/chat` endpoint. If `OPENROUTER_API_KEY` is not
 configured, the server provides a limited local fallback so both features remain
 usable without placing a provider secret in the game or browser.
 
-The web client uses the page's own origin for API calls by default, which avoids
-HTTPS mixed-content errors when the game and API are served behind the same
-domain. For a separate API origin, define `window.ARTEA_API_BASE_URL` in the
-hosting page before the Godot loader starts, or set the Godot project setting
-`artea/network/api_base_url`. The API URL must use HTTPS when the game uses HTTPS.
+Desktop and local Web launches use the Flask server at `127.0.0.1:8000`. A
+public Web build uses the page's own origin for API calls, so account login
+requires a deployed API on that origin. For a separate API origin, define
+`window.ARTEA_API_BASE_URL` in the hosting page before the Godot loader starts,
+or set the Godot project setting `artea/network/api_base_url`. The API URL must
+use HTTPS when the game uses HTTPS. The current static Vercel deployment does
+not include a hosted Flask account API; Offline Guest works there, while
+account login needs a persistent hosted backend and an API URL or reverse proxy.
 
-For cross-origin hosting, set `ARTEA_ALLOWED_ORIGINS` on the Flask server to a
+For cross-origin hosting, set `CORS_ALLOWED_ORIGINS` on the Flask server to a
 comma-separated list of exact web origins. For example:
 
-    ARTEA_ALLOWED_ORIGINS=https://game.example.com,https://staging.example.com
+    CORS_ALLOWED_ORIGINS=https://game.example.com,https://staging.example.com
 
 Server secrets and optional model configuration are supplied through environment
 variables rather than source files:
 
-    ARTEA_JWT_SECRET_KEY=<random-production-secret>
+    JWT_SECRET_KEY=<random-production-secret>
     OPENROUTER_API_KEY=<provider-key>
     OPENROUTER_MODEL=openai/gpt-oss-20b:free
 
