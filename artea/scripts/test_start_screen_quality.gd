@@ -60,7 +60,8 @@ func _run() -> void:
 		"both fields need an Enter-key path")
 	assert(status.autowrap_mode != TextServer.AUTOWRAP_OFF
 		and status.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER
-		and status.custom_minimum_size.y >= 50.0,
+		and status.custom_minimum_size.y >= 60.0
+		and status.text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING,
 		"authentication feedback must wrap inside the form")
 	for button_name in ["Button", "RegisterButton", "GuestButton"]:
 		var button := form.get_node(button_name) as Button
