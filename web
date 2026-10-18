@@ -4,9 +4,9 @@
 #   ./web                 export if needed, serve, open a browser
 #   ./web rebuild         force a fresh export first
 #   ./web serve           serve whatever is already built
-#   ./web verify          headless check that Offline Guest reaches the hub and
-#                         then the Art Castle (fetching its Pack), plus
-#                         first-load bytes transferred and time-to-hub
+#   ./web verify          headless check that Offline Guest reaches the hub,
+#                         then the Art Castle and each Kingdom (fetching their
+#                         Packs) and back, plus first-load bytes and time-to-hub
 #   ./web status          what is built, what is serving
 #   ./web stop            stop the local server
 #

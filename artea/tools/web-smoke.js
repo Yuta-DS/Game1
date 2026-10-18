@@ -5,8 +5,9 @@
 // and the page looks like a slow load rather than a broken build. This drives
 // the real thing - loads the page, clicks Offline Guest, waits for the hub to
 // report itself built, then holds a movement key and checks the frame changed.
-// Then it enters the Art Castle, whose Pack is not in the first load, and waits
-// for the castle to report itself built.
+// Then it enters the Art Castle and each Kingdom, whose Packs are not in the
+// first load, checking each loads (and the castle moves) and that the Hub
+// loads again afterwards.
 //
 // It also measures the cold first load: the browser cache is disabled, every
 // byte that crosses the network is counted, and the time from navigation until
@@ -389,31 +390,51 @@ async function connect() {
 		};
 		const moved = await movesWithW(before, '03-moving', '04-after-move');
 
-		// On into the Art Castle the way a player goes (issue #35). Its Pack is
-		// not in the first load, so this checks that it downloads, mounts and
-		// builds. The hub's Art Gallery button script exposes the route on web.
-		say('entering the Art Castle');
-		const castleFrom = consoleLines.length;
-		const bytesBeforeCastle = net.bytes;
-		const castleStarted = Date.now();
-		await send('Runtime.evaluate', { expression: 'window.arteaEnterArtCastle()' });
-		await sleep(2000);
-		await shot('05-downloading-art-castle');
-		let castle = false;
-		let castleSeconds = null;
-		try {
-			await waitForLog(/\[ARTEA\] galaxy world=true/, 'Art Castle built', 600000, castleFrom);
-			// Built is not yet playable: the loading screen stays up while it
-			// compiles shaders, and logs when it hands the castle over.
-			await waitForLog(/\[ARTEA\] loading screen done: .*art_gallery_3d_inprogress/,
-				'Art Castle loading screen closed', 600000, castleFrom);
-			castleSeconds = ((Date.now() - castleStarted) / 1000).toFixed(1);
+		// Every area outside Core, entered the way a player goes there and left
+		// again for the Hub (issues #35, #36). Their Packs are not in the first
+		// load, so this checks each downloads, mounts and plays. window.arteaGo
+		// (Global.gd) takes the route a teleporter or the journey takes:
+		// SceneLoader, the loading screen and the Pack downloads.
+		const HUB = 'res://scenes/New_Hub_World.tscn';
+		const goTo = async (label, scene) => {
+			const from = consoleLines.length;
+			const bytesBefore = net.bytes;
+			const started = Date.now();
+			say(`going to ${label}`);
+			await send('Runtime.evaluate', { expression: `window.arteaGo(${JSON.stringify(scene)})` });
+			try {
+				// The loading screen logs when it hands the scene over, after
+				// the Pack download, the build and the shader warmup.
+				const done = `[ARTEA] loading screen done: ${scene}`;
+				await waitForLog({ test: (line) => line.includes(done) }, `${label} loaded`, 600000, from);
+			} catch (err) {
+				say('FAIL ' + err.message);
+				return null;
+			}
+			return { bytes: net.bytes - bytesBefore, seconds: ((Date.now() - started) / 1000).toFixed(1) };
+		};
+
+		const castle = await goTo('the Art Castle', 'res://scenes/art_gallery_3d_inprogress.tscn');
+		let castlePlayable = false;
+		if (castle) {
 			await sleep(3000);
-			castle = await movesWithW(await shot('06-art-castle'), '07-castle-moving', '08-castle-after-move');
-		} catch (err) {
-			say('FAIL ' + err.message);
+			castlePlayable = await movesWithW(await shot('05-art-castle'), '06-castle-moving', '07-castle-after-move');
 		}
-		const castleBytes = net.bytes - bytesBeforeCastle;
+		const KINGDOMS = [
+			['Mind Spark', 'res://scenes/popThoughtsMenu.tscn'],
+			['Heart Melody', 'res://scenes/music_minigame.tscn'],
+			["Creator's Light", 'res://scenes/drawing_tool.tscn'],
+			['the Crown of Life story', 'res://scenes/viewfinder/crown_of_life_story.tscn'],
+		];
+		const areas = [['the Art Castle', castle, castle ? await goTo('the Hub', HUB) : null]];
+		for (const [index, [label, scene]] of KINGDOMS.entries()) {
+			const entered = await goTo(label, scene);
+			if (entered) {
+				await sleep(3000);
+				await shot(`${String(8 + index).padStart(2, '0')}-${label.replace(/[^A-Za-z]+/g, '-').toLowerCase()}`);
+			}
+			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null]);
+		}
 
 		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open/.test(l));
 
@@ -423,12 +444,17 @@ async function connect() {
 		say('fatal resource errors: ' + fatal.length);
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
 
-		console.log(`  Art Castle playable:      ${castle ? 'yes' : 'NO'}, ${(castleBytes / 1048576).toFixed(1)} MiB downloaded on the way in`
-			+ (castleSeconds !== null ? `, ${castleSeconds} s from the Hub` : ''));
-		console.log(`METRIC bytes_art_castle=${castleBytes}`);
-		console.log(`METRIC time_to_art_castle_s=${castleSeconds ?? -1}`);
+		console.log('\nareas (entered from the Hub, then back):');
+		for (const [label, entered, back] of areas) {
+			console.log(`  ${label.padEnd(24)} ${entered ? `entered in ${entered.seconds} s, ${(entered.bytes / 1048576).toFixed(1)} MiB downloaded` : 'NOT ENTERED'}`
+				+ `; back to the Hub: ${back ? 'yes' : 'NO'}`);
+			const key = label.replace(/^the /, '').replace(/[^A-Za-z]+/g, '_').toLowerCase();
+			console.log(`METRIC bytes_${key}=${entered ? entered.bytes : -1}`);
+		}
+		console.log(`  Art Castle playable (moves): ${castlePlayable ? 'yes' : 'NO'}`);
 
-		const pass = moved && castle && !crashed() && fatal.length === 0;
+		const pass = moved && castlePlayable && areas.every(([, entered, back]) => entered && back)
+			&& !crashed() && fatal.length === 0;
 
 		if (repeat) {
 			// Same page again with the cache on: with content-hashed parts served

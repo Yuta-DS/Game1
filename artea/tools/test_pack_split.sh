@@ -19,11 +19,35 @@ fail() { echo "FAIL: $*" >&2; exit 1; }
 
 log="$(split)" || fail "the project does not split cleanly:"$'\n'"$(grep '^PACK' <<<"${log}")"
 grep -q '"res://scripts/art_castle_floating_world.gd"' "${out}" || fail "galaxy script not in the Art Castle Pack"
-python3 - "${out}" <<'PY' || fail "Art Castle content left in Core"
+python3 - "${out}" <<'PY' || fail "an area's content is in the wrong place (see above)"
 import json, sys
-core = json.load(open(sys.argv[1]))["core"]
+split = json.load(open(sys.argv[1]))
+core, packs = split["core"], split["packs"]
+problems = []
 left = [p for p in core if p.startswith(("res://assets3D/tree_of_life/", "res://assets3D/crown_line_train/"))]
-sys.exit(1 if left else 0)
+if left:
+    problems.append(f"Art Castle content left in Core: {left[:3]}")
+# Issue #36: each Kingdom and the Crown of Life story in its own Pack.
+for pack, scene in {
+    "mind_spark": "res://scenes/popThoughtsMenu.tscn",
+    "heart_melody": "res://scenes/music_minigame.tscn",
+    "creators_light": "res://scenes/drawing_tool.tscn",
+    "crown_of_life_story": "res://scenes/viewfinder/crown_of_life_story.tscn",
+}.items():
+    if scene not in packs.get(pack, {}).get("files", []):
+        problems.append(f"{scene} is not in the {pack} Pack")
+# web.txt Problem 5: the story's stone texture ships, with the story.
+if "res://assets/textures/stone/rock023_alb_ht.png" not in packs["crown_of_life_story"]["files"]:
+    problems.append("the story's stone texture is not in its Pack")
+# No file in two Packs: a Pack's export leaves out every other Pack's files.
+seen = {}
+for pack, info in packs.items():
+    for path in info["files"]:
+        if path in seen:
+            problems.append(f"{path} is in both {seen[path]} and {pack}")
+        seen[path] = pack
+print("\n".join(problems))
+sys.exit(1 if problems else 0)
 PY
 
 cat > "${broken}" <<'TSCN'

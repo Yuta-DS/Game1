@@ -273,3 +273,54 @@ retrying part fetch as the first load) into memory and mounts it with
 `ProjectSettings.load_resource_pack`. Godot's own `HTTPRequest` was tried
 first and read a fixed chunk per frame: 137 MB took ten minutes behind a
 loading screen running at a few frames per second.
+
+## Every area as its own Pack (issue #36)
+
+Mind Spark, Heart Melody, Creator's Light and the Crown of Life story now each
+ship in their own Pack too, so the first load is Core and the Hub. Same build,
+local server, `./web verify`:
+
+| | After #35 | After #36 |
+|---|---:|---:|
+| First load, to the Hub | 375.8 MiB | **296.3 MiB** |
+| `index.pck` (Core) | 343 MB | 248 MiB |
+
+Downloaded on first entry, each area entered from the Hub and left again:
+
+| Area | Downloaded | Entered in |
+|---|---:|---:|
+| Art Castle | 180.0 MiB (its Pack and two Shared packs) | 47.4 s |
+| Mind Spark | 1.3 MiB (its Shared pack came with the castle) | 1.7 s |
+| Heart Melody | 24.0 MiB | 2.7 s |
+| Creator's Light | 17.7 MiB | 4.8 s |
+| Crown of Life story | 1.4 MiB | 3.8 s |
+
+What changed in `tools/pack_split.gd`:
+
+- **Entries.** Each area lists the scenes the rest of the game routes into
+  (`PACKS`). A route into another area (a Kingdom's way back to the Art
+  Castle) is a boundary, not a dependency, for Packs as it already was for
+  Core. The cloud-pop game and the paint tool are no longer routed to, but
+  `music_manager.gd` still names them, so they are entries of their Kingdom
+  rather than first-load content.
+- **Shared packs.** A file several areas use goes in a Shared pack for exactly
+  that set of areas (`shared_art_castle_mind_spark`, ...), fetched before
+  whichever of them the player enters first and not again after.
+  `res://packs.json` lists each area's Shared packs and a file whose presence
+  shows a Pack is mounted. Merging small groups, overrides and a size report
+  are issue #37.
+- **Missing files.** The check now requires a dependency's source file, not
+  just a `.import`: a GLB's extracted texture can be gone while its `.import`
+  stays (after a branch switch), and the export then skips it. The message
+  names the fix (`tools/regen_extracted_textures.sh`).
+
+Dev-only fixtures that dragged area content into Core (a quest-object contact
+sheet, the Lens demo, audit and bake scripts) are now excluded from the Web
+preset. `scripts/test_scene_swaps_use_loader.gd` reads the Pack entries from
+the same `PACKS` list and fails on `ResourceLoader.exists()` used on one,
+which is false on the web until its Pack is mounted; `SceneLoader.can_open()`
+is the check. `window.arteaGo(scene)` (`Global.gd`) is how the smoke test
+moves between areas: the same route as a teleporter.
+
+The full export (Core and seven Packs) takes about five minutes: each Pack's
+patch export only writes what Core lacks.

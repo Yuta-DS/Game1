@@ -42,7 +42,7 @@ static func change_scene(tree: SceneTree, scene_path: String) -> bool:
 		return false
 	# A scene whose Pack has not been fetched yet needs the loading screen to
 	# download it, however light the scene itself is.
-	if pack_needed(scene_path) != "":
+	if not packs_needed(scene_path).is_empty():
 		return change_scene_with_loading(tree, scene_path)
 	if not ResourceLoader.exists(scene_path):
 		report_failure(tree, scene_path, "scene file missing")
@@ -86,20 +86,29 @@ static func change_scene_with_loading(tree: SceneTree, scene_path: String) -> bo
 ## Use this, not ResourceLoader.exists, to decide whether a route is open: a
 ## Pack's scenes do not exist until the loading screen has fetched the Pack.
 static func can_open(scene_path: String) -> bool:
-	return ResourceLoader.exists(scene_path) or pack_needed(scene_path) != ""
+	return ResourceLoader.exists(scene_path) or not packs_needed(scene_path).is_empty()
 
 
-## The Pack file `scene_path` is waiting on (ADR-0001), or "" when it can load
-## now: it is in Core, its Pack is already mounted, or the build has no Packs.
-static func pack_needed(scene_path: String) -> String:
+## The Pack files `scene_path` is waiting on (ADR-0001), in mounting order;
+## empty when it can load now: it is in Core, its Pack is already mounted, or
+## the build has no Packs.
+static func packs_needed(scene_path: String) -> PackedStringArray:
+	var needed := PackedStringArray()
 	if ResourceLoader.exists(scene_path) or not FileAccess.file_exists(PACK_MANIFEST):
-		return ""
+		return needed
 	var manifest = JSON.parse_string(FileAccess.get_file_as_string(PACK_MANIFEST))
-	if manifest is Dictionary:
-		for pack in manifest.values():
-			if scene_path in pack.entries:
-				return pack.file
-	return ""
+	if not manifest is Dictionary:
+		return needed
+	for pack in manifest.values():
+		if scene_path in pack.entries:
+			# Shared packs first: the area's own files depend on them. One
+			# mounted along with another area already is not fetched again.
+			for shared in pack.requires:
+				var probe: String = manifest[shared].probe
+				if not ResourceLoader.exists(probe) and not FileAccess.file_exists(probe):
+					needed.append(manifest[shared].file)
+			needed.append(pack.file)
+	return needed
 
 
 ## Logs a scene switch that failed and puts a message on screen for a while.

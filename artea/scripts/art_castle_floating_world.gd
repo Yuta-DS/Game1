@@ -1630,7 +1630,7 @@ func _build_return_gate() -> void:
 func _on_return_gate_entered(body: Node3D) -> void:
 	if _travelling or body != _player:
 		return
-	if not ResourceLoader.exists(RETURN_SCENE_PATH):
+	if not SceneLoader.can_open(RETURN_SCENE_PATH):
 		return
 	_travelling = true
 	# Deferred: swapping scenes inside the Area3D's body_entered callback frees

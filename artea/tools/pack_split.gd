@@ -40,6 +40,19 @@ const PACKS := {
 		# The galaxy on its own, for running it straight from the editor.
 		"res://scenes/art_castle_floating_world.tscn",
 	],
+	# The three Kingdoms, entered from the Hub's teleporters and the journey
+	# (journey_campaign.gd KINGDOMS), and the optional Crown of Life story.
+	# The cloud-pop game and the paint tool are no longer routed to, but
+	# music_manager.gd still names them; as entries they ship with their
+	# Kingdom instead of in the first load, and still open if routed to again.
+	"mind_spark": [
+		"res://scenes/popThoughtsMenu.tscn",
+		"res://scenes/cloud_pop_ui.tscn",
+		"res://scenes/cloudPopFinish.tscn",
+	],
+	"heart_melody": ["res://scenes/music_minigame.tscn"],
+	"creators_light": ["res://scenes/drawing_tool.tscn", "res://scenes/paint_tool.tscn"],
+	"crown_of_life_story": ["res://scenes/viewfinder/crown_of_life_story.tscn"],
 }
 const WEB_PRESET := "Web"
 const PRESETS_PATH := "res://export_presets.cfg"
@@ -70,10 +83,12 @@ func _initialize() -> void:
 		for entry in PACKS[pack]:
 			boundary[entry] = true
 
-	# Pass 1: what each Pack's entries reach that Core does not.
+	# Pass 1: what each Pack's entries reach that Core does not. Another Pack's
+	# entry is a route there (a Kingdom's way back to the Art Castle), not a
+	# dependency, just as it is for Core.
 	var pack_reach := {}
 	for pack in PACKS:
-		pack_reach[pack] = _closure(PACKS[pack], {})
+		pack_reach[pack] = _closure(PACKS[pack], _other_entries(pack))
 	var core := _core_closure(shipped, pack_reach, boundary)
 
 	# Pass 2: files nothing outside their own folder uses (a GLB's leftover
@@ -97,30 +112,62 @@ func _initialize() -> void:
 		for path in core:
 			if areas.has(_area(path)):
 				extra.append(path)
-		pack_reach[pack] = _closure(PACKS[pack] + extra, {})
+		pack_reach[pack] = _closure(PACKS[pack] + extra, _other_entries(pack))
 	core = _core_closure(shipped, pack_reach, boundary)
 
-	# PACK_WHY=res://a,res://b prints how Core reaches each file, for finding
-	# what holds castle content in the first load.
+	# PACK_WHY=res://a,res://b prints which Core files use each file, for
+	# finding what holds area content in the first load. "nothing" means the
+	# file is in Core only because nothing references it at all.
 	for probe in OS.get_environment("PACK_WHY").split(",", false):
-		var chain := []
-		var at := probe
-		while at != "" and chain.size() < 40:
-			chain.append(at)
-			at = core.get(at, "")
-		print("WHY ", " <- ".join(chain))
+		var users_of: Array[String] = []
+		for path in core:
+			if path != probe and probe in _edges_of(path).deps + _edges_of(path).refs:
+				users_of.append(path)
+		print("WHY %s <- %s" % [probe, ", ".join(users_of) if not users_of.is_empty() else "nothing"])
 
+	# Which Packs use each file Core does not have.
+	var users := {}
 	for pack in pack_reach:
-		var files: Array[String] = []
 		for path in pack_reach[pack]:
 			if not core.has(path):
-				files.append(path)
-		files.sort()
-		result.packs[pack] = {"entries": PACKS[pack], "files": files}
+				users[path] = users.get(path, []) + [pack]
+	for pack in pack_reach:
+		result.packs[pack] = {"entries": PACKS[pack], "requires": [], "files": []}
+	# A file several Packs use goes in a Shared pack for exactly that set of
+	# Packs, fetched before whichever of them the player enters first. In any
+	# one of them it would be missing from the others: each Pack's export
+	# leaves out every other Pack's files.
+	# ponytail: one Shared pack per distinct set of Packs; issue #37 merges the
+	# small ones and adds overrides and a size report.
+	for path in users:
+		var owner: String = users[path][0]
+		if users[path].size() > 1:
+			owner = "shared_" + "_".join(users[path])
+			if not result.packs.has(owner):
+				result.packs[owner] = {"entries": [], "requires": [], "files": []}
+				for user in users[path]:
+					result.packs[user].requires.append(owner)
+		result.packs[owner].files.append(path)
+	for pack in result.packs:
+		result.packs[pack].files.sort()
 
 	var core_files: Array = core.keys()
 	core_files.sort()
 	result["core"] = core_files
+	# Core files nothing shipped references: each is in the first load only
+	# because it might be loaded by a path built at runtime (Terrain3D's region
+	# files are), or because it is dead. The list is where to look when Core
+	# carries an area's content.
+	var referenced := {}
+	for path in shipped:
+		for target in _edges_of(path).deps + _edges_of(path).refs:
+			if target != path:
+				referenced[target] = true
+	var unreferenced: Array = []
+	for path in core_files:
+		if not referenced.has(path) and not path in _project_setting_paths():
+			unreferenced.append(path)
+	result["unreferenced"] = unreferenced
 
 	# Every hard dependency of anything shipped must itself be shipped.
 	var everything := core.duplicate()
@@ -129,7 +176,9 @@ func _initialize() -> void:
 	for path in everything:
 		for dep in _edges_of(path).deps:
 			if not _exists(dep):
-				errors.append("%s depends on %s, which does not exist" % [path, dep])
+				errors.append("%s depends on %s, which does not exist%s" % [path, dep,
+					" (only its .import does: run tools/regen_extracted_textures.sh)"
+					if FileAccess.file_exists(dep + ".import") else ""])
 			elif _excluded(dep):
 				errors.append("%s depends on %s, which the %s preset's exclude_filter leaves out of every Pack"
 					% [path, dep, WEB_PRESET])
@@ -164,6 +213,15 @@ func _core_closure(shipped: Dictionary, pack_reach: Dictionary, boundary: Dictio
 
 ## The folder two levels down that a file sits in (assets3D/tree_of_life), or
 ## "" for a file nearer the root, which belongs to no area.
+func _other_entries(pack: String) -> Dictionary:
+	var entries := {}
+	for other in PACKS:
+		if other != pack:
+			for entry in PACKS[other]:
+				entries[entry] = true
+	return entries
+
+
 func _area(path: String) -> String:
 	var parts := path.trim_prefix("res://").split("/")
 	return "/".join(parts.slice(0, 2)) if parts.size() >= 3 else ""
@@ -294,11 +352,18 @@ func _walk(dir_path: String, out: Dictionary) -> void:
 			out[path] = true
 
 
-## What the game needs at runtime: which entry scenes need which Pack file.
+## What the game needs at runtime: which entry scenes need which Pack file,
+## the Shared packs to mount first, and a file each Pack holds, whose presence
+## shows the Pack is already mounted.
 func _write_manifest(packs: Dictionary) -> void:
 	var manifest := {}
 	for pack in packs:
-		manifest[pack] = {"file": "%s.pck" % pack, "entries": packs[pack].entries}
+		manifest[pack] = {
+			"file": "%s.pck" % pack,
+			"entries": packs[pack].entries,
+			"requires": packs[pack].requires,
+			"probe": packs[pack].files[0],
+		}
 	FileAccess.open(MANIFEST_PATH, FileAccess.WRITE).store_string(JSON.stringify(manifest, "\t"))
 
 
@@ -355,8 +420,12 @@ func _copy_preset(presets: ConfigFile, from: String, to: String, overrides: Dict
 		presets.set_value(to, key, overrides[key])
 
 
+## The source file itself. ResourceLoader.exists() is also true for an image
+## whose file is gone but whose .import is left behind (GLB-extracted textures,
+## after a branch switch), and the export skips such an image, so on the web it
+## fails to load.
 func _exists(path: String) -> bool:
-	return ResourceLoader.exists(path) or FileAccess.file_exists(path)
+	return FileAccess.file_exists(path)
 
 
 func _excluded(path: String) -> bool:
