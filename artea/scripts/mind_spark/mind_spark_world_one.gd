@@ -3106,13 +3106,18 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 		_add_brick(walls, "%sBoundaryCrystal" % suffix,
 			Vector3(side * 13.7, 15.25, 13.2), Bricks.build_crystal(0.9, 3.2, 0.28, 8),
 			_materials.arrival_glass)
-		# Form one uninterrupted wall from the gate tower to the outer edge of the
-		# Island One court. The former short outer panel and covered side opening
-		# still left most of the frontage visually open. This wider span makes the
-		# main gate the single deliberate entrance and encloses the complete garden.
+		# Continue the civic fence from each tower to the actual island rim. A
+		# fixed 66 m span stopped halfway across the Living Network floor.
 		const BOUNDARY_INNER_EDGE := 8.1
-		const BOUNDARY_OUTER_EDGE := 66.0
 		const GATE_OPENING_HALF_WIDTH := 5.9
+		var boundary_outer_edge := BOUNDARY_INNER_EDGE
+		for zone_id in ["01_world_gate_landing", "02_living_network_forest"]:
+			var center := court.to_local(to_global(get_zone_position(zone_id)))
+			var radius := get_zone_radius(zone_id)
+			if absf(center.z - 0.35) < radius:
+				boundary_outer_edge = maxf(boundary_outer_edge,
+					float(side) * center.x
+					+ sqrt(radius * radius - pow(center.z - 0.35, 2.0)) - 2.0)
 		var connector_width: float = BOUNDARY_INNER_EDGE - GATE_OPENING_HALF_WIDTH
 		var connector_x: float = float(side) * (
 			GATE_OPENING_HALF_WIDTH + connector_width * 0.5)
@@ -3129,7 +3134,7 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 			Vector3(connector_x, 13.72, 0.35),
 			Bricks.build_bevel_box(Vector3(connector_width + 0.45, 0.72, 3.65), 0.20),
 			_materials.sanctum_ivory)
-		var boundary_width: float = BOUNDARY_OUTER_EDGE - BOUNDARY_INNER_EDGE
+		var boundary_width: float = boundary_outer_edge - BOUNDARY_INNER_EDGE
 		var boundary_x: float = float(side) * (
 			BOUNDARY_INNER_EDGE + boundary_width * 0.5)
 		_add_box(walls, "%sConnectedBoundaryOuterFoundation" % suffix,
@@ -3142,8 +3147,10 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 		# Open scrollwork bays reproduce the civic railing already used around the
 		# rear garden: ivory lantern piers, dark rails, brass curls and a low curb.
 		# The hidden wall behind them retains the required physical barrier.
-		for bay_index in 7:
-			var bay_distance := BOUNDARY_INNER_EDGE + 4.4 + float(bay_index) * 8.0
+		var bay_count := maxi(1, ceili(boundary_width / 8.0))
+		var bay_width := boundary_width / float(bay_count)
+		for bay_index in bay_count:
+			var bay_distance := BOUNDARY_INNER_EDGE + float(bay_index) * bay_width
 			var bay_x := float(side) * bay_distance
 			var pier_prefix := "%sBoundaryPier_%02d" % [suffix, bay_index + 1]
 			_add_heavenly_civic_railing_pier(walls,
@@ -3155,10 +3162,10 @@ func _build_heavenly_gate_perimeter_walls(court: Node3D) -> void:
 						(part as Node3D).visible = false
 			_add_heavenly_civic_railing_bay(walls,
 				"%sBoundaryScrollwork_%02d" % [suffix, bay_index + 1],
-				float(side) * (bay_distance + 3.5), 7.0, 0.35)
+				float(side) * (bay_distance + bay_width * 0.5), bay_width - 0.70, 0.35)
 		_add_heavenly_civic_railing_pier(walls, "%sBoundaryEndPier" % suffix,
-			Vector3(float(side) * BOUNDARY_OUTER_EDGE, 0.0, 0.35))
-	walls.set_meta("connected_boundary_span_m", 132.0)
+			Vector3(float(side) * boundary_outer_edge, 0.0, 0.35))
+	walls.set_meta("connected_boundary_span_m", 2.0 * (walls.get_node("EastBoundaryEndPierFoot") as Node3D).position.x)
 	walls.set_meta("covers_gate_flanks", true)
 	walls.set_meta("continuous_ground_to_coping", true)
 	walls.set_meta("full_frontage_enclosure", true)
@@ -10007,8 +10014,10 @@ func _is_exposed_garden_edge(zone_index: int, angle: float) -> bool:
 	var exit_index := (5 if zone_index == 0 else 2) if zone_index < 2 else (zone_index - 1 if zone_index % 2 == 0 else zone_index + 1)
 	var exit: Vector3 = ZONES[exit_index].position - center
 	var direction := Vector2(exit.x,exit.z).normalized()
+	# The 28 m bridge meets Zone 02 at rails 13.3 m from its centreline. The
+	# former 30 m half-opening left a long unguarded gap on both bridge flanks.
 	var opening_half_width := ISLAND_THREE_ARRIVAL_EDGE_OPENING_HALF_WIDTH \
-		if zone_index == 4 else (30.0 if zone_index < 2 else 18.0)
+		if zone_index == 4 else (14.0 if zone_index == 1 else (30.0 if zone_index == 0 else 18.0))
 	return not (radial.dot(direction) > 0 and absf(radial.cross(direction))*radius < opening_half_width)
 
 

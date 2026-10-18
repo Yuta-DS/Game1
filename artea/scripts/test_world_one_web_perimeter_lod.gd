@@ -83,6 +83,18 @@ func _run() -> void:
 					and ((collision.get_child(0) as CollisionShape3D).shape \
 					as BoxShape3D).size.y >= 5.0,
 					"styled bridge rails must keep tall fall-prevention collision")
+	var island_one_route := world.get_node("WorldOneGeometry/MainStoryCircuitRoute") as Node3D
+	var bridge_entrance := island_one_route.get_node("CircuitRoute_02_ACivicBarrier") as Node3D
+	var perimeter_collisions := island_one_repairs.find_children(
+		"RepairedBay_1_*", "MeshInstance3D", false, false)
+	for side in ["Left", "Right"]:
+		var pier := bridge_entrance.get_node("%sPier_00Foot" % side) as Node3D
+		var nearest := INF
+		for bay in perimeter_collisions:
+			var delta := (bay as Node3D).global_position - pier.global_position
+			nearest = minf(nearest, Vector2(delta.x, delta.z).length())
+		assert(nearest < 5.0,
+			"the Island One rim barrier must meet both sides of the bridge entrance")
 	OS.set_environment("ARTEA_FORCE_WEB_LOD", "")
 	if FileAccess.file_exists(world.object_state_store_path):
 		DirAccess.remove_absolute(world.object_state_store_path)

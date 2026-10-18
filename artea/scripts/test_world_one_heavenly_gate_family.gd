@@ -101,6 +101,19 @@ func _run() -> void:
 		assert(perimeter.get_node("%sGateTowerConnectorFoundationCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node("%sConnectedBoundaryOuterWallCollision" % side) is StaticBody3D)
 		assert(perimeter.get_node_or_null("%sBoundaryReturnWallCollision" % side) == null)
+		var end_pier := perimeter.get_node("%sBoundaryEndPierFoot" % side) as Node3D
+		var wall := perimeter.get_node("%sConnectedBoundaryOuterWall" % side) as MeshInstance3D
+		var side_sign := -1.0 if side == "West" else 1.0
+		var edge := side_sign * end_pier.position.x
+		assert(edge > 125.0 and edge < 132.0,
+			"the civic wall must reach the Living Network island rim on both sides")
+		assert(absf(side_sign * (wall.position.x + side_sign * wall.mesh.get_aabb().size.x * 0.5)
+			- edge) < 0.2,
+			"the collidable wall must meet its final ivory lantern pier")
+		var bay_count := perimeter.find_children(
+			"%sBoundaryScrollwork_*BrassMedallion" % side, "MeshInstance3D", false, false).size()
+		assert(bay_count >= 15,
+			"the complete side wall must use the same scrollwork bays as the garden fence")
 	assert(bool(perimeter.get_meta("covers_gate_flanks", false)))
 	assert(bool(perimeter.get_meta("continuous_ground_to_coping", false)))
 	assert(bool(perimeter.get_meta("full_frontage_enclosure", false)))
