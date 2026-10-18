@@ -17,7 +17,9 @@ const STATIONS := [
 	# from the platform rim to the island rim is exactly occupied by one centred
 	# ceremonial stair, with its landing overlapping the island by 8 m.
 	{"id": "mind", "title": "MIND SPARK", "subtitle": "PARK EDGE STATION", "position": Vector3(-883.0, ROUTE_HEIGHT, 1640.0), "landing": Vector3(-767.0, 2.0, 1640.0)},
-	{"id": "heart", "title": "HEART MELODY", "subtitle": "EAST FLOATING STATION", "position": Vector3(1700.0, ROUTE_HEIGHT, 7640.0), "landing": Vector3(1500.0, 2.0, 7640.0)},
+	# Heart's track runs east-west, so its landing is 200 m off the north side,
+	# square to the track (not along it, where the train comes in).
+	{"id": "heart", "title": "HEART MELODY", "subtitle": "EAST FLOATING STATION", "position": Vector3(1700.0, ROUTE_HEIGHT, 7640.0), "landing": Vector3(1722.4, 2.0, 7838.7)},
 	{"id": "creator", "title": "CREATOR'S LIGHT", "subtitle": "EAST FLOATING STATION", "position": Vector3(5300.0, ROUTE_HEIGHT, 3940.0), "landing": Vector3(5100.0, 2.0, 3940.0)},
 ]
 
@@ -171,11 +173,11 @@ var _controls_panel: PanelContainer
 var _rail_material: ShaderMaterial
 var _gold_material: StandardMaterial3D
 var _glass_material: StandardMaterial3D
-var _stone_material: StandardMaterial3D
+var _stone_material: Material
 var _nature_material: StandardMaterial3D
 var _violet_material: StandardMaterial3D
 var _canopy_material: StandardMaterial3D
-var _dark_metal_material: StandardMaterial3D
+var _dark_metal_material: Material
 var _station_rainbow_materials: Array[StandardMaterial3D] = []
 var _external_drive_commanded := false
 var _station_fall_recovery := -1
@@ -1199,15 +1201,76 @@ func _add_surface_quad(surface: SurfaceTool, a: Vector3, b: Vector3,
 		surface.add_vertex(vertex)
 
 
+## Each station's colour identity: accent and second colour, then paving
+## light/dark/grout.
+const STATION_PALETTES := {
+	"gallery": ["8a5fe0", "f2b134", "d9c7a5", "c9b48e", "8a7350"],
+	"mind": ["26c6f0", "3fd68a", "a9c6db", "95b5cc", "4a6a80"],
+	"heart": ["f2589e", "f592c0", "e9b6c9", "dba1b7", "9a5f78"],
+	"creator": ["ff8a1f", "ffc43d", "eccf98", "dfbd7f", "9a7646"],
+}
+const StationSurfaceShader := preload("res://shaders/station_surface.gdshader")
+
+var _driver_walk_material: Material
+var _passenger_walk_material: Material
+var _tactile_material: Material
+
+
+func _surface_material(pattern: int, base: Color, alt: Color, line: Color, tile: float,
+		roughness: float = 0.8, metallic: float = 0.0, glow := Color.BLACK,
+		glow_strength := 0.0) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = StationSurfaceShader
+	material.set_shader_parameter("pattern", pattern)
+	material.set_shader_parameter("base_color", base)
+	material.set_shader_parameter("alt_color", alt)
+	material.set_shader_parameter("line_color", line)
+	material.set_shader_parameter("tile_size", tile)
+	material.set_shader_parameter("roughness_value", roughness)
+	material.set_shader_parameter("metallic_value", metallic)
+	material.set_shader_parameter("glow_color", glow)
+	material.set_shader_parameter("glow_strength", glow_strength)
+	return material
+
+
+## Swaps the shared station materials for this station's textured palette.
+func _apply_station_palette(station_id: String) -> void:
+	var palette: Array = STATION_PALETTES[station_id]
+	var accent := Color(palette[0])
+	var second := Color(palette[1])
+	_stone_material = _surface_material(0, Color(palette[2]), Color(palette[3]),
+		Color(palette[4]), 1.2, 0.86)
+	_dark_metal_material = _surface_material(1, accent.darkened(0.72), accent.darkened(0.5),
+		accent.darkened(0.88), 2.0, 0.42, 0.45, accent, 0.6)
+	_violet_material = _material(second, 0.32, second, 1.3)
+	_glass_material = _material(Color(accent, 0.72), 0.20, accent, 1.6, true)
+	_canopy_material = _material(Color(accent, 0.72), 0.3, accent, 0.25, true)
+	_driver_walk_material = _surface_material(0, accent, accent.darkened(0.12),
+		accent.darkened(0.45), 0.9, 0.85)
+	_passenger_walk_material = _surface_material(0, second, second.darkened(0.12),
+		second.darkened(0.45), 0.9, 0.85)
+
+
 func _build_stations() -> void:
 	var stations_root := Node3D.new()
 	stations_root.name = "StoryStations"
 	add_child(stations_root)
+	var shared := [_stone_material, _dark_metal_material, _violet_material,
+		_glass_material, _canopy_material]
+	_tactile_material = _surface_material(2, Color("f5c518"), Color("fff0a0"),
+		Color.BLACK, 1.0, 0.9)
 	for index in STATIONS.size():
 		var info: Dictionary = STATIONS[index]
+		_apply_station_palette(String(info.id))
 		var station := Node3D.new()
 		station.name = "Station_%02d_%s" % [index + 1, info.id]
 		station.position = info.position
+		# Stations are authored with the track along local Z and the access
+		# bridge along local X. A landing off the X axis turns the station so
+		# its local -X points at it (the landing must be square to the track).
+		var to_landing: Vector3 = info.landing - info.position
+		if absf(to_landing.z) > 1.0:
+			station.rotation.y = atan2(to_landing.z, -to_landing.x)
 		stations_root.add_child(station)
 		_station_nodes.append(station)
 		_build_station_platform_from_scratch(station, index)
@@ -1216,7 +1279,7 @@ func _build_stations() -> void:
 			_build_mind_spark_station_upgrade(station)
 		else:
 			_build_bio_magitech_pavilion(station)
-		var landing_local: Vector3 = info.landing - info.position
+		var landing_local: Vector3 = station.basis.inverse() * to_landing
 		var dock_sign := signf(landing_local.x)
 		if is_zero_approx(dock_sign):
 			dock_sign = -1.0
@@ -1243,9 +1306,16 @@ func _build_stations() -> void:
 		label.position = Vector3(0.0, 20.0, 0.0)
 		label.font_size = 46
 		label.outline_size = 10
+		label.modulate = Color(STATION_PALETTES[info.id][0]).lightened(0.3)
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = false
 		station.add_child(label)
+	# The train and everything after the stations keep the shared materials.
+	_stone_material = shared[0]
+	_dark_metal_material = shared[1]
+	_violet_material = shared[2]
+	_glass_material = shared[3]
+	_canopy_material = shared[4]
 
 
 func _build_station_platform_from_scratch(station: Node3D,
@@ -1255,7 +1325,7 @@ func _build_station_platform_from_scratch(station: Node3D,
 	# independent eight-metre platform foundations.
 	var platform := Node3D.new()
 	platform.name = "WalkablePlatform"
-	platform.basis = Basis.looking_at(
+	platform.basis = station.basis.inverse() * Basis.looking_at(
 		get_route_forward_direction_at_station(station_index), Vector3.UP)
 	platform.set_meta("design", "twin_train_fit_platform")
 	platform.set_meta("platform_length_m", 57.0)
@@ -1347,7 +1417,7 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 	var direction := get_route_forward_direction_at_station(station_index)
 	var layout := Node3D.new()
 	layout.name = "BoardingLane"
-	layout.basis = Basis.looking_at(direction, Vector3.UP)
+	layout.basis = station.basis.inverse() * Basis.looking_at(direction, Vector3.UP)
 	layout.set_meta("aligned_to_train_route", true)
 	layout.set_meta("train_clear_width_m", 12.0)
 	layout.set_meta("train_clear_length_m", 54.0)
@@ -1361,12 +1431,17 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 		var side_name := "Left" if side < 0.0 else "Right"
 		_add_box(layout, "DriverWalkway%s" % side_name,
 			Vector3(float(side) * 8.75, 0.8, -7.0), Vector3(5.5, 0.6, 18.0),
-			_violet_material, true)
+			_driver_walk_material, true)
 		# Starts 2 cm after the driver walkway ends, so the two do not share an
-		# end face (visible through this see-through glass floor).
+		# end face.
 		_add_box(layout, "PassengerWalkway%s" % side_name,
 			Vector3(float(side) * 8.75, 0.8, 13.01), Vector3(5.5, 0.6, 21.98),
-			_glass_material, true)
+			_passenger_walk_material, true)
+		# Tactile warning band just inside the track-side fence (7.4 m), 3 cm
+		# proud of the walkway so it never z-fights it.
+		_add_box(layout, "TactileEdge%s" % side_name,
+			Vector3(float(side) * 7.95, 1.115, 4.0), Vector3(0.7, 0.03, 39.9),
+			_tactile_material, false)
 		# Boarding bridges sit 4 cm below the walkway tops they overlap (and 2 cm
 		# below the raised base top at 1.08).
 		_add_box(layout, "DriverBoardingBridge%s" % side_name,
@@ -1395,6 +1470,68 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 		"RIDING  •  2", Vector3(access_side * 11.9, 4.0, 13.0), Color("72eaff"))
 	_build_platform_guardrails(station, layout.basis, access_side, access_target.z,
 		dock_sign)
+	_build_track_overpass(layout)
+
+
+## A footbridge over the track behind the parked train, so a player who steps
+## off on the far platform reaches the exit side without crossing the train.
+## Route space: x across the track, z along it (rear of the platforms is +z).
+func _build_track_overpass(layout: Node3D) -> void:
+	const RAMP_X := 9.45
+	const RAMP_WIDTH := 3.7
+	const FOOT_Z := 24.0 # PassengerWalkway rear end
+	# 17 degree ramps up to a deck whose underside (15.4 m) clears the train's
+	# tallest part (14 m above the platform origin).
+	const DECK_Z := 72.0
+	const DECK_DEPTH := 4.0
+	const FOOT_Y := 1.1
+	const DECK_Y := 16.0
+	const RAIL_HEIGHTS := [1.15, 2.35]
+	var overpass := Node3D.new()
+	overpass.name = "TrackOverpass"
+	layout.add_child(overpass)
+	var outer := RAMP_X + RAMP_WIDTH * 0.5 - 0.15
+	var inner := RAMP_X - RAMP_WIDTH * 0.5 + 0.15
+	for side in [-1.0, 1.0]:
+		var side_name := "Left" if side < 0.0 else "Right"
+		var foot := Vector3(float(side) * RAMP_X, FOOT_Y, FOOT_Z)
+		var top := Vector3(float(side) * RAMP_X, DECK_Y, DECK_Z)
+		_add_surface_ramp_mesh(overpass, "%sOverpassRamp" % side_name, foot, top,
+			RAMP_WIDTH, 0.5, _dark_metal_material)
+		_add_surface_ramp_collision(overpass, "%sOverpassRamp" % side_name, foot, top,
+			RAMP_WIDTH, 0.5)
+		_add_surface_ramp_mesh(overpass, "%sOverpassGlowStrip" % side_name,
+			foot + Vector3.UP * 0.04, top + Vector3.UP * 0.04, 0.9, 0.06, _glass_material)
+		for x in [inner, outer]:
+			for h in RAIL_HEIGHTS:
+				_add_walkway_between(overpass, "%sOverpassRampRail" % side_name,
+					Vector3(float(side) * x, FOOT_Y + float(h), FOOT_Z),
+					Vector3(float(side) * x, DECK_Y + float(h), DECK_Z),
+					0.3, 0.3, _gold_material, true)
+		# The deck's ends, beside each ramp's top.
+		for h in RAIL_HEIGHTS:
+			_add_walkway_between(overpass, "%sOverpassEndRail" % side_name,
+				Vector3(float(side) * outer, DECK_Y + float(h), DECK_Z),
+				Vector3(float(side) * outer, DECK_Y + float(h), DECK_Z + DECK_DEPTH),
+				0.3, 0.3, _gold_material, true)
+	_add_box(overpass, "OverpassDeck",
+		Vector3(0.0, DECK_Y - 0.3, DECK_Z + DECK_DEPTH * 0.5),
+		Vector3(outer * 2.0 + 0.3, 0.6, DECK_DEPTH), _dark_metal_material, true)
+	_add_box(overpass, "OverpassDeckGlowStrip",
+		Vector3(0.0, DECK_Y + 0.03, DECK_Z + DECK_DEPTH * 0.5),
+		Vector3(outer * 2.0, 0.06, 0.9), _glass_material, false)
+	for h in RAIL_HEIGHTS:
+		# Far rail spans the whole deck; the near one stops at the ramp openings.
+		_add_walkway_between(overpass, "OverpassFarRail",
+			Vector3(-outer, DECK_Y + float(h), DECK_Z + DECK_DEPTH - 0.15),
+			Vector3(outer, DECK_Y + float(h), DECK_Z + DECK_DEPTH - 0.15),
+			0.3, 0.3, _gold_material, true)
+		_add_walkway_between(overpass, "OverpassNearRail",
+			Vector3(-inner, DECK_Y + float(h), DECK_Z + 0.15),
+			Vector3(inner, DECK_Y + float(h), DECK_Z + 0.15),
+			0.3, 0.3, _gold_material, true)
+	_add_boarding_zone_label(overpass, "OverpassSign", "⇄  OTHER PLATFORM",
+		Vector3(0.0, DECK_Y + 4.0, DECK_Z + DECK_DEPTH * 0.5), Color("72eaff"))
 
 
 func _add_boarding_zone_label(parent: Node3D, node_name: String, text_value: String,
@@ -1486,10 +1623,14 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 	var restored_supports := Node3D.new()
 	restored_supports.name = "RestoredBranchingSupportColumns"
 	upgrade.add_child(restored_supports)
+	# Same rule as the pavilion: no column standing on a platform or ramp.
+	var to_route := (station.get_node("WalkablePlatform") as Node3D).transform.affine_inverse()
 	for side in [-1.0, 1.0]:
 		for support_index in 3:
 			var z := -14.0 + float(support_index) * 14.0
 			var x := float(side) * 19.0
+			if _in_train_corridor(to_route, Vector3(x, 1.0, z)):
+				continue
 			_add_cylinder(restored_supports,
 				"RestoredLivingColumn_%s_%02d" % [
 					"L" if side < 0 else "R", support_index],
@@ -1871,10 +2012,15 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 	var supports := Node3D.new()
 	supports.name = "BranchingSupportColumns"
 	pavilion.add_child(supports)
+	# Where the track crosses the station at an angle a column can land on a
+	# platform or the overpass ramp foot, where the player walked through it.
+	var to_route := (station.get_node("WalkablePlatform") as Node3D).transform.affine_inverse()
 	for side in [-1.0, 1.0]:
 		for support_index in 3:
 			var z := -14.0 + float(support_index) * 14.0
 			var x := float(side) * 19.0
+			if _in_train_corridor(to_route, Vector3(x, 1.0, z)):
+				continue
 			_add_cylinder(supports, "LivingColumn_%s_%02d" % ["L" if side < 0 else "R", support_index],
 				Vector3(x, 5.2, z), 0.75, 10.4, _nature_material, false, 8)
 			_add_cylinder(supports, "EngineeringCollar_%s_%02d" % ["L" if side < 0 else "R", support_index],
@@ -2113,8 +2259,9 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 	# Open rails replace the previous 2.6 m solid yellow walls, which filled the
 	# camera and visually hid the stairs in the Web build.
 	# The stairs follow the station's axes but the track crosses each station at
-	# an angle, so the rails' upper ends ran into the docked train. Stop every
-	# rail at the train corridor and drop posts that would stand inside it.
+	# an angle, so the rails' upper ends ran into the docked train, and across
+	# the far platform where they blocked the overpass ramp. Stop every rail at
+	# the platform's outer fence and drop posts that would stand inside it.
 	var to_route := (station.get_node("WalkablePlatform") as Node3D).transform.affine_inverse()
 	for side in [-1.0, 1.0]:
 		var side_z := float(side) * 7.55
@@ -2136,11 +2283,12 @@ func _build_dock_arrival_stairs(station: Node3D, dock_sign: float,
 	# visual only, and read as two stray yellow lines down the ramp.
 
 
-## True when a station-local point lies where the docked train and its inner
-## platform fences stand: within the 7.4 m fence line, along the train's length.
+## True when a station-local point lies on the train, the twin platforms or
+## the overpass ramps behind them: within the 11.5 m outer fences, from the
+## train's front to the overpass deck.
 func _in_train_corridor(to_route: Transform3D, station_point: Vector3) -> bool:
 	var p := to_route * station_point
-	return absf(p.x) < 7.4 and absf(p.z) < 30.0
+	return absf(p.x) < 11.6 and p.z > -30.0 and p.z < 77.0
 
 
 ## Pull `finish` back towards `start` until the rail stays out of the train
@@ -2322,10 +2470,7 @@ func _build_platform_guardrails(station: Node3D, route_basis: Basis,
 			Vector3(inner_x, 0.0, PLATFORM_FRONT_Z),
 			Vector3(outer_x, 0.0, PLATFORM_FRONT_Z),
 			"stops players walking beyond the front of the platform")
-		_add_purpose_barrier_segment(guard, "RearPlatformEndStop",
-			Vector3(inner_x, 0.0, PLATFORM_REAR_Z),
-			Vector3(outer_x, 0.0, PLATFORM_REAR_Z),
-			"stops players walking beyond the rear of the platform")
+		# The rear end stays open: it is the foot of the track overpass ramp.
 
 		# One post per coordinate connects every rail span. Long sections receive
 		# intermediate supports at no more than five-metre spacing, while adjoining
