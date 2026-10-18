@@ -271,13 +271,12 @@ func _run() -> void:
 	if not reached_mind_platform or mind_station.to_local(player.global_position).y < 0.7:
 		_fail("player cannot walk the restored Mind Spark station stair onto the platform")
 		return
-	var west_removal := world.get_node_or_null("WestObservatoryRemoved") as Node3D
-	if world.get_node_or_null("WestObservatory") != null \
-			or world.get_node_or_null("WestObservatoryBridge") != null \
-			or west_removal == null \
-			or not bool(west_removal.get_meta("tower_removed", false)) \
-			or not bool(west_removal.get_meta("island_foundation_removed", false)):
-		_fail("West Observatory tower or its detached land still crowds the Mind station")
+	var west_observatory := world.get_node_or_null("WestObservatory") as Node3D
+	if west_observatory == null \
+			or west_observatory.get_node_or_null("ObservatoryTower") == null \
+			or (west_observatory.get_node("WalkableDeck") as Node3D).position.z > 1500.0 \
+			or world.get_node_or_null("WestObservatoryBridge/ContinuousWalkwayCollision") == null:
+		_fail("the compact West lookout or its station-clear approach is missing")
 		return
 	# Start on the Heart arrival court, not above the bridge: its instrument
 	# ring previously put a solid 18 m column directly across the ascent.

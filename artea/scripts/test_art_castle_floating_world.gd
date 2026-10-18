@@ -69,15 +69,13 @@ func _run() -> void:
 			or absf(north_observatory.get_node("WalkableDeck").position.x) < 200.0:
 		_fail("north observatory still blocks the Heart gate sightline")
 		return
-	var west_removal := world.get_node_or_null("WestObservatoryRemoved") as Node3D
-	if world.get_node_or_null("WestObservatory") != null \
-			or world.get_node_or_null("WestObservatoryBridge") != null \
-			or world.get_node_or_null("WestObservatoryBridgeTwin") != null \
-			or west_removal == null \
-			or not bool(west_removal.get_meta("tower_removed", false)) \
-			or not bool(west_removal.get_meta("island_foundation_removed", false)) \
-			or not bool(west_removal.get_meta("dead_end_bridges_removed", false)):
-		_fail("the West watchtower, its land, or its dead-end bridges remain")
+	var west_observatory := world.get_node_or_null("WestObservatory") as Node3D
+	if west_observatory == null \
+			or west_observatory.get_node_or_null("ObservatoryTower") == null \
+			or west_observatory.get_node_or_null("DomeCollision") == null \
+			or world.get_node_or_null("WestObservatoryBridge/ContinuousWalkwayCollision") == null \
+			or world.get_node_or_null("WestObservatoryBridgeTwin/ContinuousWalkwayCollision") == null:
+		_fail("the compact West lookout or its walkable paired approach is missing")
 		return
 	var arrival := world.get_node("ArrivalIsland") as Node3D
 	var grand_gate := arrival.get_node_or_null("ArtCastleGalaxyGrandGate") as Node3D
@@ -256,7 +254,9 @@ func _run() -> void:
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
 			"NorthObservatoryBridge", "EastObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
-		if bridge_node == null or bridge_node.get_node_or_null("Walkway") == null:
+		# The West lookout's railed bridges use the causeway's deck.
+		if bridge_node == null or (bridge_node.get_node_or_null("Walkway") == null
+				and bridge_node.get_node_or_null("ContinuousWalkway") == null):
 			_fail("missing connected walkway %s" % bridge)
 			return
 	var tree_bridge := world.get_node_or_null("SouthArrivalBridge") as Node3D

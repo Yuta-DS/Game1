@@ -97,10 +97,15 @@ func _check_retired_observatory_spans() -> bool:
 	if creator_bridge == null or creator_bridge.get_node_or_null("WalkwayCollision") == null:
 		_fail("main Creator bridge was removed with the lookout spans")
 		return false
-	if world.get_node_or_null("WestObservatory") != null \
-			or world.get_node_or_null("WestObservatoryBridge") != null \
-			or world.get_node_or_null("WestObservatoryBridgeTwin") != null:
-		_fail("retired West Observatory geometry still participates in the island map")
+	var west := world.get_node_or_null("WestObservatory") as Node3D
+	if west == null or west.get_node_or_null("DomeCollision") == null:
+		_fail("the compact West lookout is missing")
+		return false
+	for name in ["WestObservatoryBridge", "WestObservatoryBridgeTwin"]:
+		var bridge := world.get_node_or_null(name) as Node3D
+		if bridge == null or bridge.get_node_or_null("ContinuousWalkwayCollision") == null:
+			_fail("%s has no walkable deck" % name)
+			return false
 		return false
 	if world.get_node_or_null("SouthObservatory") != null \
 			or world.get_node_or_null("SouthObservatoryBridge") != null \
