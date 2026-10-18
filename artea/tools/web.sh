@@ -177,7 +177,7 @@ echo
 open_url() {
 	command -v open >/dev/null 2>&1 && { open "$1"; return; }       # macOS
 	command -v xdg-open >/dev/null 2>&1 && { xdg-open "$1"; return; } # Linux
-	command -v start >/dev/null 2>&1 && { start "$1"; return; }      # Git Bash / Windows
+	command -v cmd.exe >/dev/null 2>&1 && { cmd.exe /c start "" "$1"; return; } # Git Bash / Windows
 	echo "Don't know how to open a browser here - visit $1" >&2
 }
 

@@ -129,7 +129,7 @@ ensure_backend() {
 open_url() {
 	command -v open >/dev/null 2>&1 && { open "$1"; return; }
 	command -v xdg-open >/dev/null 2>&1 && { xdg-open "$1"; return; }
-	command -v start >/dev/null 2>&1 && { start "$1"; return; }
+	command -v cmd.exe >/dev/null 2>&1 && { cmd.exe /c start "" "$1"; return; }
 	echo "Open $1 in a browser" >&2
 }
 
