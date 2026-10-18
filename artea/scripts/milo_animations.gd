@@ -1450,8 +1450,9 @@ func _process(delta):
 
 	look_at_player(delta)
 
-	# INSIDE interaction zone: waving logic
-	if not first_wave:
+	# INSIDE interaction zone: waving logic. Milo spawns beside the player, so
+	# without the loading-screen check he greets them while it's still up.
+	if not first_wave and get_tree().get_nodes_in_group("loading_screen").is_empty():
 		_play_animation("Wave_One_Hand")
 		_set_companion_state(CompanionState.GREETING)
 		_play_recorded_greeting()
