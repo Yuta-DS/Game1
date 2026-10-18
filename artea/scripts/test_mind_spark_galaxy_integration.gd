@@ -18,24 +18,17 @@ func _run() -> void:
 	assert(world.position == Vector3(-2200, 0, 1640))
 	assert(world.get_node("WorldOneGeometry/MainStoryCircuitRoute") is Node3D)
 	assert(world.find_children("WalkableZoneFloor", "MeshInstance3D", true, false).size() == 6)
-	var rune_tiles := district.find_children("RuneTile_*", "MeshInstance3D", true, false)
-	assert(rune_tiles.size() == 81,
-		"the Mind district uses a centered 9x9 cyan-grid forecourt")
-	assert(district.find_children("RuneTile_*Collision", "StaticBody3D", true, false).is_empty(),
-		"rune inlays must not introduce collision seams over the continuous deck")
+	# The 9x9 forecourt is painted by the deck shader, centred on the deck (and
+	# so on the Mind Bridge axis), with no tile nodes or collision seams.
+	var forecourt := (district.get_node("WalkableDeck") as MeshInstance3D).material_override as ShaderMaterial
+	assert(forecourt != null and int(forecourt.get_shader_parameter("grid_size")) == 9,
+		"the Mind district uses a centered 9x9 checkerboard forecourt")
+	assert(district.find_children("RuneTile_*", "", true, false).is_empty())
 	assert(district.get_meta("rune_grid_size") == 9)
 	assert(not bool(district.get_meta("requires_jump_from_mind_bridge")))
-	var center_tile := district.get_node("RuneTile_04_04") as MeshInstance3D
-	assert(is_equal_approx(center_tile.position.x, -600.0))
-	assert(is_equal_approx(center_tile.position.z, 1640.0),
-		"the central rune tile must lie exactly on the Mind Bridge axis")
-	for row in 9:
-		for column in 9:
-			var tile := district.get_node("RuneTile_%02d_%02d" % [row, column]) as MeshInstance3D
-			var mirror := district.get_node("RuneTile_%02d_%02d" % [8 - row, 8 - column]) as MeshInstance3D
-			assert(is_equal_approx(tile.position.x + mirror.position.x, -1200.0))
-			assert(is_equal_approx(tile.position.z + mirror.position.z, 3280.0),
-				"every rune tile needs an exact point-reflected partner")
+	var deck := district.get_node("WalkableDeck") as MeshInstance3D
+	assert(is_equal_approx(deck.position.x, -600.0) and is_equal_approx(deck.position.z, 1640.0),
+		"the checkerboard centre must lie exactly on the Mind Bridge axis")
 	var bridge_walkway := floating_world.get_node("MindBridge/Walkway") as MeshInstance3D
 	var island_deck := district.get_node("WalkableDeck") as MeshInstance3D
 	var bridge_top := bridge_walkway.position.y + (bridge_walkway.mesh as BoxMesh).size.y * 0.5

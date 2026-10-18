@@ -85,8 +85,11 @@ func _check_observatory_twins() -> bool:
 		if left == null or right == null:
 			_fail("%s does not have its mirrored companion" % base_name)
 			return false
-		if left.get_node_or_null("WalkwayCollision") == null \
-				or right.get_node_or_null("WalkwayCollision") == null:
+		# The West lookout's railed bridges use the causeway's deck, whose top
+		# sits 0.6 m above the islands with threshold steps at both ends.
+		var walkway_name := "ContinuousWalkway" if base_name == "WestObservatoryBridge" else "Walkway"
+		if left.get_node_or_null("%sCollision" % walkway_name) == null \
+				or right.get_node_or_null("%sCollision" % walkway_name) == null:
 			_fail("%s twin pair lacks walkable collision" % base_name)
 			return false
 		var left_start: Vector3 = left.get_meta("connection_start")
@@ -97,12 +100,13 @@ func _check_observatory_twins() -> bool:
 				or not is_equal_approx(left_finish.distance_to(right_finish), 36.0):
 			_fail("%s endpoints are not exact 18 m mirrors" % base_name)
 			return false
-		var left_walkway := left.get_node("Walkway") as MeshInstance3D
-		var right_walkway := right.get_node("Walkway") as MeshInstance3D
+		var left_walkway := left.get_node(walkway_name) as MeshInstance3D
+		var right_walkway := right.get_node(walkway_name) as MeshInstance3D
 		# Within 5 cm of the island top: the walkway sits 2 cm low on purpose so
 		# it does not z-fight with the island deck it starts on.
-		if absf(left_walkway.position.y + 2.0) > 0.05 \
-				or absf(right_walkway.position.y + 2.0) > 0.05:
+		var expected_y := 0.0 if base_name == "WestObservatoryBridge" else -2.0
+		if absf(left_walkway.position.y - expected_y) > 0.05 \
+				or absf(right_walkway.position.y - expected_y) > 0.05:
 			_fail("%s decks do not share the island top plane" % base_name)
 			return false
 	world.queue_free()

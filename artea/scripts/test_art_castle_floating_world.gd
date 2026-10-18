@@ -33,7 +33,9 @@ func _run() -> void:
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
 			"WestObservatoryBridge", "NorthObservatoryBridge", "EastObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
-		if bridge_node == null or bridge_node.get_node_or_null("Walkway") == null:
+		# The West lookout's railed bridges use the causeway's deck.
+		if bridge_node == null or (bridge_node.get_node_or_null("Walkway") == null
+				and bridge_node.get_node_or_null("ContinuousWalkway") == null):
 			_fail("missing connected walkway %s" % bridge)
 			return
 	var tree_bridge := world.get_node_or_null("SouthArrivalBridge") as Node3D
