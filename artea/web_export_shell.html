@@ -104,9 +104,55 @@ body {
 	text-align: center;
 	z-index: 1;
 }
+
+/* Milo in a spinning ring, shown by loading_scene.gd under the loading bar.
+   Transform animations run on the browser's compositor thread, so these keep
+   moving even while the game's thread is busy and the canvas can't redraw. */
+#artea-busy {
+	position: fixed;
+	left: 50%;
+	top: 70%;
+	width: 72px;
+	height: 72px;
+	margin: 12px 0 0 -36px;
+	pointer-events: none;
+	z-index: 2;
+}
+
+#artea-busy[hidden] {
+	display: none;
+}
+
+#artea-busy-ring {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	border: 5px solid rgba(28, 31, 10, 0.25);
+	border-top-color: #1c1f0a;
+	border-radius: 50%;
+	will-change: transform;
+	animation: artea-spin 0.9s linear infinite;
+}
+
+#artea-busy-milo {
+	position: absolute;
+	left: 14px;
+	top: 14px;
+	width: 44px;
+	height: 44px;
+	will-change: transform;
+	animation: artea-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes artea-spin {
+	to { transform: rotate(360deg); }
+}
+
+@keyframes artea-bob {
+	0%, 100% { transform: translateY(1px) rotate(-6deg); }
+	50% { transform: translateY(-3px) rotate(6deg); }
+}
 		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
-<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
 $GODOT_HEAD_INCLUDE
 
 	</head>
@@ -125,6 +171,83 @@ $GODOT_HEAD_INCLUDE
 			<div id="status-notice"></div>
 		</div>
 
+		<div id="artea-busy" hidden>
+			<div id="artea-busy-ring"></div>
+			<img id="artea-busy-milo" alt="">
+		</div>
+
+		<script>
+// Driven by loading_scene.gd through JavaScriptBridge.
+window.arteaLoading = {
+	music: null,
+	musicUrl: '',
+	fade: 0,
+	show() {
+		// Milo is the project icon. Godot names the exported files after the
+		// export (index.* from the export script, tmp_js_export.* from the
+		// editor's Run in Browser), so take the address from the link it adds.
+		const milo = document.getElementById('artea-busy-milo');
+		const icon = document.querySelector('link[rel="apple-touch-icon"]');
+		if (!milo.src && icon) {
+			milo.src = icon.href;
+		}
+		document.getElementById('artea-busy').hidden = false;
+	},
+	// x, y: just under the loading bar, in canvas pixels.
+	place(x, y) {
+		const rect = document.getElementById('canvas').getBoundingClientRect();
+		const busy = document.getElementById('artea-busy');
+		busy.style.left = (rect.left + x / window.devicePixelRatio) + 'px';
+		busy.style.top = (rect.top + y / window.devicePixelRatio) + 'px';
+	},
+	hasMusic() {
+		return this.musicUrl !== '';
+	},
+	// The game hands over the track's bytes once (from its pack, so this
+	// works in any web export), as base64.
+	setMusic(base64) {
+		const bin = atob(base64);
+		const bytes = new Uint8Array(bin.length);
+		for (let i = 0; i < bin.length; i++) {
+			bytes[i] = bin.charCodeAt(i);
+		}
+		this.musicUrl = URL.createObjectURL(new Blob([bytes], { type: 'audio/ogg' }));
+	},
+	// The browser plays this itself, so it doesn't stutter while the game is
+	// busy.
+	startMusic() {
+		if (!this.musicUrl) {
+			return;
+		}
+		if (!this.music) {
+			this.music = new Audio(this.musicUrl);
+			this.music.loop = true;
+		}
+		clearInterval(this.fade);
+		this.music.volume = 0.32; // the game plays it at -10 dB
+		this.music.play().catch(() => {});
+	},
+	// Hides the overlay and fades the music out. Returns where the music had
+	// got to, in seconds, so the gallery can carry on from there.
+	hide() {
+		document.getElementById('artea-busy').hidden = true;
+		const music = this.music;
+		if (!music || music.paused) {
+			return 0;
+		}
+		const at = music.currentTime;
+		clearInterval(this.fade);
+		this.fade = setInterval(() => {
+			music.volume = Math.max(0, music.volume - 0.04);
+			if (music.volume === 0) {
+				music.pause();
+				clearInterval(this.fade);
+			}
+		}, 50);
+		return at;
+	},
+};
+		</script>
 		<script src="$GODOT_URL"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;

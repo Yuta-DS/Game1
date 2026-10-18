@@ -26,6 +26,10 @@ extends RefCounted
 ## calling scripts from compiling there.
 
 const LOADING_SCENE = "res://scenes/loading_scene.tscn"
+# Above every HUD layer (the highest is 100) so the incoming scene's minimap
+# and inventory icons can't draw over the loading screen before it is ready,
+# and below the failure message (128).
+const LOADING_LAYER := 120
 const FAILURE_MESSAGE_SECONDS := 8.0
 const FAILURE_GROUP := "scene_switch_failed"
 
@@ -58,7 +62,12 @@ static func change_scene_with_loading(tree: SceneTree, scene_path: String) -> bo
 		return change_scene(tree, scene_path)
 	var loading_screen := packed.instantiate()
 	loading_screen.next_scene_path = scene_path
-	tree.root.add_child(loading_screen)
+	var layer := CanvasLayer.new()
+	layer.name = "LoadingLayer"
+	layer.layer = LOADING_LAYER
+	layer.add_child(loading_screen)
+	loading_screen.tree_exited.connect(layer.queue_free)
+	tree.root.add_child(layer)
 	# The loading screen lives under root, so freeing the outgoing scene here
 	# leaves it on screen driving the threaded load.
 	if tree.current_scene != null:

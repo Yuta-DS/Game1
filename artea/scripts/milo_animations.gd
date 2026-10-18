@@ -1570,9 +1570,10 @@ func _process(delta):
 
 	look_at_player(delta)
 
-	# INSIDE interaction zone: waving logic
+	# Greet only after the loading screen leaves and Milo is free.
 	if not first_wave and chatbot_ui == null and not _conversation_active \
-			and not _player_is_busy():
+			and not _player_is_busy() \
+			and get_tree().get_nodes_in_group("loading_screen").is_empty():
 		_play_animation("Wave_One_Hand")
 		_set_companion_state(CompanionState.GREETING)
 		_play_recorded_greeting()

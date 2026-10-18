@@ -90,6 +90,7 @@ var _sample_spur_active := false
 var _sample_spur_start := Vector2.ZERO
 var _sample_station_centre := Vector2.ZERO
 var _sample_kingdom_centres: Array[Vector2] = []
+var _sample_kingdom_halves: Array[float] = []
 var _sample_kingdom_colors: Array[Color] = []
 
 # Redraw cadence state (see MAP_REFRESH_INTERVAL).
@@ -449,10 +450,11 @@ func _landscape_color(world_position: Vector3) -> Color:
 	for segment in GALAXY_BRIDGE_SEGMENTS:
 		if _distance_to_segment(local_flat, segment[0], segment[1]) <= float(segment[2]):
 			return Color("8d88a0").lightened(texture_wave * 0.035)
-	# Each 3 km kingdom is a real authored square region beyond the inner isles.
+	# Each kingdom's land (3 km Mind, station platforms for the others).
 	for index in _sample_kingdom_centres.size():
 		var centre: Vector2 = _sample_kingdom_centres[index]
-		if absf(local.x - centre.x) <= 1500.0 and absf(local.z - centre.y) <= 1500.0:
+		var half := _sample_kingdom_halves[index]
+		if absf(local.x - centre.x) <= half and absf(local.z - centre.y) <= half:
 			return _sample_kingdom_colors[index].lightened(texture_wave * 0.055)
 	return Color("101329").lightened(texture_wave * 0.018)
 
@@ -464,6 +466,7 @@ func _refresh_landscape_sampling() -> void:
 	_sample_zone_centres.clear()
 	_sample_zone_radii.clear()
 	_sample_kingdom_centres.clear()
+	_sample_kingdom_halves.clear()
 	_sample_kingdom_colors.clear()
 	if _world == null:
 		return
@@ -498,6 +501,7 @@ func _refresh_landscape_sampling() -> void:
 				continue
 			var centre: Vector3 = centres[KINGDOM_IDS[index]]
 			_sample_kingdom_centres.append(Vector2(centre.x, centre.z))
+			_sample_kingdom_halves.append((_regions.call("get_kingdom_size", KINGDOM_IDS[index]) as Vector2).x * 0.5)
 			_sample_kingdom_colors.append(KINGDOM_COLORS[index])
 
 

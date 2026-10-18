@@ -389,7 +389,7 @@ func request_pop_thoughts():
 
 func request_paingting():
 	MusicManager._check_scene()
-	SceneLoader.change_scene(get_tree(), "res://scenes/drawing_tool.tscn")
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/drawing_tool.tscn")
 
 
 # Changed to 3D Gallery

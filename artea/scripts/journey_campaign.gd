@@ -128,7 +128,9 @@ func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null,
 	var tree := _scene_tree(scene_tree)
 	if tree == null:
 		return false
-	if not SceneLoader.change_scene(tree, scene_path):
+	# Minigames are heavy enough that a direct swap freezes the player on the
+	# last frame, which reads as the game breaking.
+	if not SceneLoader.change_scene_with_loading(tree, scene_path):
 		push_error("JourneyCampaign: could not enter %s" % kingdom_id)
 		return false
 	active_kingdom_id = kingdom_id
