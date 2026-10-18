@@ -160,8 +160,6 @@ body {
 	50% { transform: translateY(-3px) rotate(6deg); }
 }
 		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
-<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
 $GODOT_HEAD_INCLUDE
 
 	</head>
@@ -182,15 +180,24 @@ $GODOT_HEAD_INCLUDE
 
 		<div id="artea-busy" hidden>
 			<div id="artea-busy-ring"></div>
-			<img id="artea-busy-milo" src="index.apple-touch-icon.png" alt="">
+			<img id="artea-busy-milo" alt="">
 		</div>
 
 		<script>
 // Driven by loading_scene.gd through JavaScriptBridge.
 window.arteaLoading = {
 	music: null,
+	musicUrl: '',
 	fade: 0,
 	show() {
+		// Milo is the project icon. Godot names the exported files after the
+		// export (index.* from the export script, tmp_js_export.* from the
+		// editor's Run in Browser), so take the address from the link it adds.
+		const milo = document.getElementById('artea-busy-milo');
+		const icon = document.querySelector('link[rel="apple-touch-icon"]');
+		if (!milo.src && icon) {
+			milo.src = icon.href;
+		}
 		document.getElementById('artea-busy').hidden = false;
 	},
 	// x, y: just under the loading bar, in canvas pixels.
@@ -200,12 +207,27 @@ window.arteaLoading = {
 		busy.style.left = (rect.left + x / window.devicePixelRatio) + 'px';
 		busy.style.top = (rect.top + y / window.devicePixelRatio) + 'px';
 	},
+	hasMusic() {
+		return this.musicUrl !== '';
+	},
+	// The game hands over the track's bytes once (from its pack, so this
+	// works in any web export), as base64.
+	setMusic(base64) {
+		const bin = atob(base64);
+		const bytes = new Uint8Array(bin.length);
+		for (let i = 0; i < bin.length; i++) {
+			bytes[i] = bin.charCodeAt(i);
+		}
+		this.musicUrl = URL.createObjectURL(new Blob([bytes], { type: 'audio/ogg' }));
+	},
 	// The browser plays this itself, so it doesn't stutter while the game is
-	// busy. The file is the gallery's track, copied next to the build by
-	// tools/vercel-pack-split/export_web.sh.
+	// busy.
 	startMusic() {
+		if (!this.musicUrl) {
+			return;
+		}
 		if (!this.music) {
-			this.music = new Audio('loading_music.ogg');
+			this.music = new Audio(this.musicUrl);
 			this.music.loop = true;
 		}
 		clearInterval(this.fade);

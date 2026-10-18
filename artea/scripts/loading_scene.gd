@@ -16,6 +16,16 @@ var _status_text := ""
 # lot again in one block.
 var _held: Array[Resource] = []
 var _audio_was_muted := false
+# Off the web: the new scene's sound players, held on a muted bus until this
+# screen goes, mapped to the bus each one belongs on.
+var _held_audio := {}
+const HOLD_BUS := &"LoadingHold"
+# The gallery's track as a plain file (not imported), so its bytes can be
+# handed to the web page, which plays it itself. Listed in the Web preset's
+# include_filter.
+const WEB_MUSIC_PATH := "res://assets/SFX/loading_music.ogg.raw"
+var _spinner_ring: Control
+var _spinner_milo: TextureRect
 
 # Entering a scene has three phases with very different costs, and only
 # reporting the first one left the bar parked while the other two ran. Each
@@ -58,16 +68,40 @@ func _ready():
 	add_to_group("loading_screen")
 	# The new scene's own sounds (ocean ambience, gallery music) start the
 	# moment it enters the tree, under this screen. Silence them until the
-	# player can see the world they belong to.
-	_audio_was_muted = AudioServer.is_bus_mute(0)
-	AudioServer.set_bus_mute(0, true)
+	# player can see the world they belong to. The loading music starts
+	# straight away: waiting to see whether a load turns out long doesn't
+	# work, because the wait is checked from _process, which can't run during
+	# the very freezes the music is meant to cover.
 	if OS.has_feature("web"):
-		# The music starts straight away. Waiting to see whether a load turns
-		# out long doesn't work: the wait is checked from _process, which
-		# can't run during the very freezes the music is meant to cover.
+		# The browser plays the music on the web, so the whole bus can go.
+		_audio_was_muted = AudioServer.is_bus_mute(0)
+		AudioServer.set_bus_mute(0, true)
+		if not JavaScriptBridge.eval("arteaLoading.hasMusic()"):
+			var bytes := FileAccess.get_file_as_bytes(WEB_MUSIC_PATH)
+			if not bytes.is_empty():
+				JavaScriptBridge.eval("arteaLoading.setMusic('%s')" % Marshalls.raw_to_base64(bytes))
 		JavaScriptBridge.eval("arteaLoading.show(); arteaLoading.startMusic()")
 		get_viewport().size_changed.connect(_place_web_overlay)
 		_place_web_overlay.call_deferred()
+	else:
+		# The music plays through the game here, so hold the scene's own
+		# players on a muted bus instead of muting everything.
+		if AudioServer.get_bus_index(HOLD_BUS) == -1:
+			AudioServer.add_bus()
+			AudioServer.set_bus_name(AudioServer.bus_count - 1, HOLD_BUS)
+			AudioServer.set_bus_mute(AudioServer.bus_count - 1, true)
+		get_tree().node_added.connect(_hold_scene_audio)
+		var music: AudioStreamPlayer2D = MusicManager.player2
+		# A load started while the last one's music is still fading out
+		# takes the music back instead of letting the fade stop it.
+		var fade = music.get_meta("loading_fade", null)
+		if fade is Tween and fade.is_valid():
+			fade.kill()
+			music.volume_db = music.get_meta("loading_fade_volume")
+		if music.stream != MusicManager.MAGIC_TRACK or not music.playing:
+			music.stream = MusicManager.MAGIC_TRACK
+			music.play()
+		_build_milo_spinner()
 	if next_scene_path == "":
 		push_error("⚠ No scene path provided to loading screen.")
 		return
@@ -146,6 +180,19 @@ func _refresh_label() -> void:
 
 func _process(_delta):
 	_refresh_label()
+	# A script can set its player's bus after it enters the tree (Milo's voice
+	# does), so take any change as the bus to return to and hold it again.
+	for player in _held_audio:
+		if is_instance_valid(player) and player.bus != HOLD_BUS:
+			_held_audio[player] = player.bus
+			player.bus = HOLD_BUS
+	if _spinner_ring != null:
+		# Matches the web version in web_export_shell.html: one turn every
+		# 0.9 s, Milo bobbing and tilting every 1.6 s.
+		_spinner_ring.rotation = fmod(Time.get_ticks_msec() / 900.0, 1.0) * TAU
+		var bob := sin(Time.get_ticks_msec() / 1600.0 * TAU)
+		_spinner_milo.position.y = 13.0 - bob * 2.0
+		_spinner_milo.rotation = deg_to_rad(6.0) * bob
 	if not loading_started:
 		return
 
@@ -267,16 +314,89 @@ func _wait_for_scatter_then_finish() -> void:
 	remove_from_group("loading_screen")
 	# The loading music is the gallery's own track, so arriving there carries
 	# on from the same spot instead of starting again.
-	var music_at := _hide_web_overlay()
 	var scene := get_tree().current_scene
 	var arriving_track = MusicManager.scene_to_track.get(scene.scene_file_path) if scene else null
-	MusicManager._check_scene(music_at if arriving_track == MusicManager.MAGIC_TRACK else 0.0)
+	if OS.has_feature("web"):
+		var music_at := _hide_web_overlay()
+		MusicManager._check_scene(music_at if arriving_track == MusicManager.MAGIC_TRACK else 0.0)
+	else:
+		_release_scene_audio()
+		_hand_over_music(arriving_track)
 	queue_free()
 
 
 func _exit_tree() -> void:
-	AudioServer.set_bus_mute(0, _audio_was_muted)
-	_hide_web_overlay()
+	if OS.has_feature("web"):
+		AudioServer.set_bus_mute(0, _audio_was_muted)
+		_hide_web_overlay()
+	else:
+		_release_scene_audio()
+
+
+# Moving the player to a muted bus rather than pausing it: some (the train,
+# the tree's bells) call play() again whenever they find themselves stopped,
+# which a pause counts as.
+func _hold_scene_audio(node: Node) -> void:
+	if node is AudioStreamPlayer or node is AudioStreamPlayer2D or node is AudioStreamPlayer3D:
+		_held_audio[node] = node.bus
+		node.bus = HOLD_BUS
+
+
+func _release_scene_audio() -> void:
+	if get_tree().node_added.is_connected(_hold_scene_audio):
+		get_tree().node_added.disconnect(_hold_scene_audio)
+	for player in _held_audio:
+		if is_instance_valid(player):
+			player.bus = _held_audio[player]
+	_held_audio.clear()
+
+
+# Off the web the loading music is MusicManager's own player. The gallery
+# keeps it playing; anywhere else it fades out before that scene's track (if
+# any) takes over.
+func _hand_over_music(arriving_track) -> void:
+	if arriving_track == MusicManager.MAGIC_TRACK:
+		MusicManager._check_scene()
+		return
+	var music: AudioStreamPlayer2D = MusicManager.player2
+	var volume := music.volume_db
+	var fade := MusicManager.create_tween()
+	music.set_meta("loading_fade", fade)
+	music.set_meta("loading_fade_volume", volume)
+	fade.tween_property(music, "volume_db", -40.0, 0.6)
+	fade.tween_callback(func():
+		music.stop()
+		music.volume_db = volume
+		MusicManager._check_scene())
+
+
+# Off the web, Godot draws the Milo spinner itself (on the web the page shell
+# does, so it keeps moving through main-thread stalls). Same look: Milo in a
+# ring, centred just under the bar.
+func _build_milo_spinner() -> void:
+	var holder := Control.new()
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.size = Vector2(72, 72)
+	holder.position = progress_bar.position + Vector2(progress_bar.size.x / 2.0 - 36.0, progress_bar.size.y + 12.0)
+	add_child(holder)
+	_spinner_ring = Control.new()
+	_spinner_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_spinner_ring.size = holder.size
+	_spinner_ring.pivot_offset = holder.size / 2.0
+	_spinner_ring.draw.connect(func():
+		var ink := Color(0.109804, 0.121569, 0.0392157)
+		_spinner_ring.draw_arc(Vector2(36, 36), 33.5, 0.0, TAU, 48, Color(ink, 0.25), 5.0, true)
+		_spinner_ring.draw_arc(Vector2(36, 36), 33.5, -PI * 0.75, -PI * 0.25, 16, ink, 5.0, true))
+	holder.add_child(_spinner_ring)
+	_spinner_milo = TextureRect.new()
+	_spinner_milo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_spinner_milo.texture = preload("res://icon_milo.png")
+	_spinner_milo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_spinner_milo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_spinner_milo.size = Vector2(44, 44)
+	_spinner_milo.position = Vector2(14, 14)
+	_spinner_milo.pivot_offset = Vector2(22, 22)
+	holder.add_child(_spinner_milo)
 
 
 # Godot draws on the same thread that loads, so a step that can't be split
@@ -286,7 +406,7 @@ func _exit_tree() -> void:
 # those itself, so they keep going through those moments and the game never
 # looks hung.
 func _place_web_overlay() -> void:
-	var below_bar: Vector2 = progress_bar.get_screen_transform() 		* Vector2(progress_bar.size.x / 2.0, progress_bar.size.y)
+	var below_bar: Vector2 = progress_bar.get_screen_transform() * Vector2(progress_bar.size.x / 2.0, progress_bar.size.y)
 	JavaScriptBridge.eval("arteaLoading.place(%f, %f)" % [below_bar.x, below_bar.y])
 
 
