@@ -4,8 +4,8 @@
 # Then start the game with:
 #     ./setup.sh run
 #
-# Works on macOS and Linux. See Config&Setup.txt for the manual steps
-# and for Windows.
+# Works on macOS, Linux, and Windows through Git Bash when Godot, Python,
+# Git LFS, and (for desktop C#) .NET are installed.
 
 set -euo pipefail
 
@@ -15,19 +15,81 @@ ROOT="$PWD"
 say() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
 die() { printf '\n\033[31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
 
-# --- locate the Godot .NET/Mono binary -------------------------------------
+# --- locate the Godot binary -----------------------------------------------
 find_godot() {
-    local candidates=(
-        "/Applications/Godot_mono.app/Contents/MacOS/Godot"
-        "$HOME/Applications/Godot_mono.app/Contents/MacOS/Godot"
-    )
+    local target="${1:-desktop}" candidate resolved
+    local candidates=()
+    [ -n "${GODOT_BIN:-}" ] && candidates+=("$GODOT_BIN")
+    if [ "$target" = "web" ]; then
+        candidates+=(
+            "$HOME/Downloads/Godot.app/Contents/MacOS/Godot"
+            "$HOME/Applications/Godot.app/Contents/MacOS/Godot"
+            "/Applications/Godot.app/Contents/MacOS/Godot"
+        )
+    else
+        candidates+=(
+            "/Applications/Godot_mono.app/Contents/MacOS/Godot"
+            "$HOME/Applications/Godot_mono.app/Contents/MacOS/Godot"
+            "$HOME/Downloads/Godot.app/Contents/MacOS/Godot"
+            "/Applications/Godot.app/Contents/MacOS/Godot"
+        )
+    fi
+    candidates+=(godot-mono godot4 godot godot-mono.exe godot4.exe godot.exe)
     for c in "${candidates[@]}"; do
-        [ -x "$c" ] && { echo "$c"; return; }
-    done
-    for c in godot-mono godot4 godot; do
-        command -v "$c" >/dev/null 2>&1 && { command -v "$c"; return; }
+        if [ -x "$c" ]; then
+            resolved="$c"
+        elif command -v "$c" >/dev/null 2>&1; then
+            resolved="$(command -v "$c")"
+        else
+            continue
+        fi
+        if [ "$target" = "web" ] && "$resolved" --version 2>/dev/null | grep -qi mono; then
+            continue
+        fi
+        echo "$resolved"
+        return
     done
     echo ""
+}
+
+find_python() {
+    local candidate
+    for candidate in "${PYTHON_BIN:-}" python3 python python.exe; do
+        [ -n "$candidate" ] || continue
+        if command -v "$candidate" >/dev/null 2>&1; then
+            command -v "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+venv_python() {
+    if [ -x "$ROOT/server/venv/bin/python" ]; then
+        printf '%s' "$ROOT/server/venv/bin/python"
+    elif [ -x "$ROOT/server/venv/Scripts/python.exe" ]; then
+        printf '%s' "$ROOT/server/venv/Scripts/python.exe"
+    fi
+}
+
+python_env_ready() {
+    local backend_python
+    backend_python="$(venv_python)"
+    [ -n "$backend_python" ] && \
+        "$backend_python" -c \
+        'import flask, flask_cors, flask_sqlalchemy, flask_jwt_extended, bcrypt, requests' \
+        >/dev/null 2>&1
+}
+
+ensure_python_env() {
+    python_env_ready && return
+    say "Setting up Python environment"
+    [ -d "$ROOT/server/venv" ] || "$PYTHON" -m venv "$ROOT/server/venv"
+    local backend_python
+    backend_python="$(venv_python)"
+    [ -n "$backend_python" ] || die "Python virtual environment has no runnable interpreter."
+    "$backend_python" -m pip install -q -r "$ROOT/server/requirements.txt"
+    python_env_ready || die "Backend Python dependencies are incomplete."
 }
 
 # Godot's .godot directory is a disposable local cache and is intentionally
@@ -82,18 +144,39 @@ ensure_import_cache() {
     import_cache_ready || build_import_cache
 }
 
+# Web needs the backend and imported assets from first-time setup. The GGUF
+# model and C# assembly are native-only and are intentionally excluded by the
+# non-Mono Web export preset.
+if [ "${1:-}" = "web" ]; then
+    PYTHON="$(find_python)" || die "Python 3 not found."
+    command -v git-lfs >/dev/null || die "git-lfs not found. macOS: brew install git-lfs"
+    GODOT="$(find_godot web)"
+    [ -n "$GODOT" ] || die "Non-Mono Godot not found. Set GODOT_BIN to the standard Godot executable."
+    say "Pulling Web art assets from Git LFS"
+    git lfs install --local >/dev/null 2>&1 || true
+    git lfs pull --exclude="*.gguf,*.dll,*.so,*.pdb,*.blend" \
+        || die "Web art asset LFS pull failed."
+    ensure_python_env
+    ensure_import_cache
+    say "Web prerequisites ready"
+    exit 0
+fi
+
 # --- run mode: start server (if needed) + game -----------------------------
 if [ "${1:-}" = "run" ]; then
+    PYTHON="$(find_python)" || die "Python 3 not found."
     GODOT="$(find_godot)"
     [ -n "$GODOT" ] || die "Godot not found. Run ./setup.sh first."
 
+    ensure_python_env
     ensure_import_cache
 
     if ! curl -fsS -m 3 http://127.0.0.1:8000/ >/dev/null 2>&1; then
         say "Starting server on 127.0.0.1:8000"
         mkdir -p "$ROOT/server/logs"
+        backend_python="$(venv_python)"
         ( cd "$ROOT/server" && HOST=127.0.0.1 PORT=8000 \
-            ./venv/bin/python server.py >> logs/flaskapp.err.log 2>&1 & )
+            "$backend_python" server.py >> logs/flaskapp.err.log 2>&1 & )
         for _ in $(seq 1 20); do
             curl -fsS -m 2 http://127.0.0.1:8000/ >/dev/null 2>&1 && break
             sleep 0.5
@@ -114,14 +197,18 @@ fi
 
 # --- 1. prerequisites ------------------------------------------------------
 say "Checking prerequisites"
-command -v python3 >/dev/null || die "python3 not found."
-command -v dotnet  >/dev/null || die "dotnet SDK not found. macOS: brew install --cask dotnet-sdk"
+PYTHON="$(find_python)" || die "Python 3 not found."
 command -v git-lfs >/dev/null || die "git-lfs not found. macOS: brew install git-lfs"
+if find "$ROOT/artea" -maxdepth 1 -name '*.csproj' -print -quit | grep -q .; then
+    command -v dotnet >/dev/null || die "dotnet SDK not found. macOS: brew install --cask dotnet-sdk"
+fi
 
 GODOT="$(find_godot)"
 [ -n "$GODOT" ] || die "Godot (.NET/Mono build) not found. macOS: brew install --cask godot-mono"
 echo "Godot:  $("$GODOT" --version 2>/dev/null | tail -1)"
-echo "dotnet: $(dotnet --version)"
+if command -v dotnet >/dev/null 2>&1; then
+    echo "dotnet: $(dotnet --version)"
+fi
 
 # --- 2. git lfs ------------------------------------------------------------
 say "Pulling Git LFS assets (large, may take a while)"
@@ -132,17 +219,18 @@ head -c 4 artea/nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf 2>/dev/null | grep -q 
     || die "LFS models are still pointer stubs. Re-run: git lfs pull"
 
 # --- 3. python venv --------------------------------------------------------
-say "Setting up Python environment"
-[ -d server/venv ] || python3 -m venv server/venv
-./server/venv/bin/pip install -q --upgrade pip
-./server/venv/bin/pip install -q -r server/requirements.txt
+ensure_python_env
 
 # --- 4. godot import cache (REQUIRED - see Config&Setup.txt section 2.5) ---
 ensure_import_cache
 
 # --- 5. build c# -----------------------------------------------------------
-say "Building C# assembly"
-( cd artea && dotnet build -v quiet --nologo ) || die "dotnet build failed."
+if find "$ROOT/artea" -maxdepth 1 -name '*.csproj' -print -quit | grep -q .; then
+    say "Building C# assembly"
+    ( cd artea && dotnet build -v quiet --nologo ) || die "dotnet build failed."
+else
+    say "No C# project in this checkout; skipping .NET build"
+fi
 
 say "Setup complete"
 cat <<'EOF'

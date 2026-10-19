@@ -1,0 +1,10 @@
+.env
+.env.*
+database.db
+uploads/
+ai_cache/
+logs/
+venv/
+__pycache__/
+*.pyc
+*.sqlite*

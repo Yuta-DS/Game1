@@ -26,6 +26,7 @@ set -euo pipefail
 port=8800
 mode=auto
 open_browser=1
+export_only=0
 cache_mode=no-store
 
 while [[ $# -gt 0 ]]; do
@@ -33,6 +34,7 @@ while [[ $# -gt 0 ]]; do
 		--rebuild)    mode=rebuild; shift ;;
 		--serve-only) mode=serve;   shift ;;
 		--no-open)    open_browser=0; shift ;;
+		--export-only) export_only=1; shift ;;
 		--prod-cache) cache_mode=prod; shift ;;
 		--port)       port="${2:?--port needs a number}"; shift 2 ;;
 		-h|--help)    sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -49,7 +51,9 @@ find_godot() {
 	# install locations.  Any Mono build is skipped: it cannot export Web.
 	local candidates=()
 	[[ -n "${GODOT_BIN:-}" ]] && candidates+=("${GODOT_BIN}")
-	command -v godot >/dev/null 2>&1 && candidates+=("$(command -v godot)")
+	for name in godot godot4 godot.exe godot4.exe; do
+		command -v "${name}" >/dev/null 2>&1 && candidates+=("$(command -v "${name}")")
+	done
 	candidates+=(
 		"${HOME}/Downloads/Godot.app/Contents/MacOS/Godot"
 		"${HOME}/Applications/Godot.app/Contents/MacOS/Godot"
@@ -60,6 +64,15 @@ find_godot() {
 		"${candidate}" --version 2>/dev/null | grep -qi mono && continue
 		printf '%s' "${candidate}"
 		return 0
+	done
+	return 1
+}
+
+find_python() {
+	local name
+	for name in "${PYTHON_BIN:-}" python3 python python.exe; do
+		[[ -n "${name}" ]] || continue
+		command -v "${name}" >/dev/null 2>&1 && { command -v "${name}"; return 0; }
 	done
 	return 1
 }
@@ -113,6 +126,8 @@ for big in "${build_dir}"/*.pck "${build_dir}/index.side.wasm"; do
 	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
 done
 
+[[ "${export_only}" == 1 ]] && exit 0
+
 url="http://localhost:${port}/index.html"
 echo "Serving ${build_dir}"
 echo "  ${url}"
@@ -122,7 +137,7 @@ echo
 open_url() {
 	command -v open >/dev/null 2>&1 && { open "$1"; return; }       # macOS
 	command -v xdg-open >/dev/null 2>&1 && { xdg-open "$1"; return; } # Linux
-	command -v start >/dev/null 2>&1 && { start "$1"; return; }      # Git Bash / Windows
+	command -v cmd.exe >/dev/null 2>&1 && { cmd.exe /c start "" "$1"; return; } # Git Bash / Windows
 	echo "Don't know how to open a browser here - visit $1" >&2
 }
 
@@ -140,7 +155,8 @@ fi
 # content-hashed parts/ immutable, everything else no-cache, revalidated via
 # Last-Modified. It exists so `./web verify --repeat` can measure a repeat
 # visit locally; day-to-day local serving stays no-store.
-exec python3 - "${port}" "${build_dir}" "${cache_mode}" <<'PYSERVE'
+python_bin="$(find_python)" || { echo "Python 3 is required to serve the Web build." >&2; exit 1; }
+exec "${python_bin}" - "${port}" "${build_dir}" "${cache_mode}" <<'PYSERVE'
 import functools
 import http.server
 import sys

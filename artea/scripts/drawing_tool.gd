@@ -951,7 +951,7 @@ func upload_artwork_to_server() -> void:
 	]
 
 	var err = http_request.request_raw(
-		APIManager.UPLOAD_ARTWORK_URL,
+		APIManager.get_upload_artwork_url(),
 		headers,
 		HTTPClient.METHOD_POST,
 		byte_data

@@ -4,16 +4,36 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd "${script_dir}/../.." && pwd)"
 output_dir="${project_dir}/builds/web"
+# Check deployment configuration before running a potentially long export.
+public_api_url="${ARTEA_PUBLIC_API_BASE_URL:-}"
+if [[ -z "${public_api_url}" ]]; then
+    echo "Set ARTEA_PUBLIC_API_BASE_URL to the deployed HTTPS Artéa API." >&2
+    exit 1
+fi
+python_bin=""
+for name in "${PYTHON_BIN:-}" python3 python python.exe; do
+    [[ -n "${name}" ]] || continue
+    if command -v "${name}" >/dev/null 2>&1; then
+        python_bin="$(command -v "${name}")"
+        break
+    fi
+done
+[[ -n "${python_bin}" ]] || { echo "Python 3 is required for Web export." >&2; exit 1; }
 if [[ -n "${GODOT_BIN:-}" ]]; then
 	if command -v "${GODOT_BIN}" >/dev/null 2>&1; then
 		godot_bin="$(command -v "${GODOT_BIN}")"
 	else
 		godot_bin="${GODOT_BIN}"
 	fi
-elif command -v godot >/dev/null 2>&1; then
-	godot_bin="$(command -v godot)"
 else
-	godot_bin="/Users/davidsovann/Downloads/Godot.app/Contents/MacOS/Godot"
+	godot_bin=""
+	for name in godot godot4 godot.exe godot4.exe; do
+		if command -v "${name}" >/dev/null 2>&1; then
+			godot_bin="$(command -v "${name}")"
+			break
+		fi
+	done
+	[[ -n "${godot_bin}" ]] || godot_bin="/Users/davidsovann/Downloads/Godot.app/Contents/MacOS/Godot"
 fi
 
 if [[ ! -x "${godot_bin}" ]]; then
@@ -33,6 +53,28 @@ mkdir -p "${output_dir}"
 "${project_dir}/tools/export-web-packs.sh" "${godot_bin}" "${output_dir}/index.html"
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
+
+# Public browser builds must point at the hosted account API. Local ./web uses
+# its own loopback backend and does not call this deployment export script.
+"${python_bin}" - "${output_dir}/index.html" "${public_api_url}" <<'PYAPI'
+import json
+from pathlib import Path
+import sys
+from urllib.parse import urlparse
+
+index = Path(sys.argv[1])
+api_url = sys.argv[2].rstrip("/")
+parsed = urlparse(api_url)
+if parsed.scheme != "https" or not parsed.hostname or parsed.path or parsed.query or parsed.fragment:
+    raise SystemExit("ARTEA_PUBLIC_API_BASE_URL must be an HTTPS origin")
+html = index.read_text(encoding="utf-8")
+marker = '<script src="pck-loader.js"></script>'
+if marker not in html:
+    raise SystemExit("Cannot find the Godot pack loader in index.html")
+config = f'<script>window.ARTEA_API_BASE_URL = {json.dumps(api_url)};</script>'
+html = html.replace(marker, config + "\n" + marker, 1)
+index.write_text(html, encoding="utf-8")
+PYAPI
 
 # Content-hashed parts and manifests, the same layout local ./web and the
 # Cloudflare deploy use (see split-pack.sh). index.side.wasm is split too: the

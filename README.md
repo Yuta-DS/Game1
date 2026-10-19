@@ -157,3 +157,22 @@ A test OpenRouter implementation exists in server.py under:
 @app.route('/ai/chat')
 
 Future teams may replace this implementation with another cloud model provider or a self-hosted model.
+
+## Hosted Web account login
+
+The browser game uses the same Flask account API as desktop. A public Web
+export needs a persistent HTTPS API: deploy `server/` as a Vercel Python project,
+connect managed Postgres so Vercel supplies `DATABASE_URL`, and set a random
+`JWT_SECRET_KEY` plus
+`CORS_ALLOWED_ORIGINS=https://artea-web.vercel.app` in its production
+environment. Deploy the API before exporting the game. Never commit these
+values to the repository.
+
+For a Vercel game export, run
+`ARTEA_PUBLIC_API_BASE_URL=https://artea-api.vercel.app artea/tools/vercel-pack-split/export_web.sh`.
+That script embeds the public API origin in the generated HTML. Local `./web`
+continues to use the backend at `127.0.0.1:8000`; `./setup.sh run` uses that
+same local backend. Local SQLite accounts and hosted Postgres accounts are
+separate until data is explicitly migrated. On Vercel, uploaded artwork bytes
+are stored in Postgres and uploads are limited to 4 MiB; the local server allows
+20 MiB.

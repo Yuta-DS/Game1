@@ -175,7 +175,12 @@ func _on_guest_button_pressed() -> void:
 # Loopback is still accepted when the API itself is on localhost, which is the
 # case for a local development server.
 func check_internet_connection() -> bool:
-	if APIManager.BASE_URL.contains("127.0.0.1") or APIManager.BASE_URL.contains("localhost"):
+	# Browsers do not expose a reliable list of the player's network addresses.
+	# Let the real HTTP request decide whether the configured API is available.
+	if OS.has_feature("web"):
+		return true
+	var backend_url := APIManager.get_base_url()
+	if backend_url.contains("127.0.0.1") or backend_url.contains("localhost"):
 		return true
 
 	for address in IP.get_local_addresses():

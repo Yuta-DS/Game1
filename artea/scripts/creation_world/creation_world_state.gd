@@ -509,7 +509,11 @@ func _has_session_token() -> bool:
 func _can_request_ai() -> bool:
 	# The bundled server permits unsigned requests only from the same machine.
 	# Remote deployments still require the player's JWT.
-	var base_url := str(APIManager.BASE_URL).to_lower()
+	# A public Web page cannot reach 127.0.0.1 on the developer's machine;
+	# use the existing on-device world instead of fetching the visitor's localhost.
+	if not APIManager.can_reach_configured_backend():
+		return false
+	var base_url := str(APIManager.get_base_url()).to_lower()
 	return _has_session_token() or base_url.begins_with("http://127.0.0.1") \
 		or base_url.begins_with("http://localhost") or base_url.begins_with("http://[::1]")
 
