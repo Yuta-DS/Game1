@@ -384,7 +384,7 @@ func _build_checkpoint(parent: Node3D, kingdom_id: String, info: Dictionary, ind
 	var court_material: Material = _materials.mind_court if kingdom_id == "mind" else _materials.ivory
 	_add_cylinder(checkpoint, "CheckpointCourt", Vector3(0, -2, 0), 70.0 if index < 7 else 105.0,
 		5.0, court_material, true, 32)
-	_add_cylinder(checkpoint, "StoryLight", Vector3(0, 2, 0), 20.0, 1.2,
+	_add_cylinder(checkpoint, "StoryLight", Vector3(0, 0.51, 0), 20.0, 0.02,
 		_kingdom_material(kingdom_id), false, 24)
 	_add_label(checkpoint, info.title, Vector3(0, 42, 0), _kingdom_color(kingdom_id), 39)
 	if kingdom_id == "mind": _decorate_mind(checkpoint, str(info.id), index)
@@ -419,7 +419,14 @@ func _decorate_mind(parent: Node3D, checkpoint_id: String, index: int) -> void:
 func _decorate_heart(parent: Node3D, checkpoint_id: String, index: int) -> void:
 	var emotional_materials := [_materials.gold, _materials.coral, _materials.blue,
 		_materials.purple, _materials.green, _materials.gold, _materials.pink, _materials.gold]
-	if checkpoint_id == "sadness":
+	if checkpoint_id == "arrival":
+		# A clear east-west avenue connects the station ramp to the playable gate.
+		# The old ring of solid instruments put an 18 m pillar across that route.
+		for side in [-1.0, 1.0]:
+			for flower in 4:
+				_add_sphere(parent, "ArrivalBlossom", Vector3(-32 + flower * 18, 2, side * 17),
+					Vector3(2.4, 1.5, 2.4), _materials.pink)
+	elif checkpoint_id == "sadness":
 		_add_cylinder(parent, "RainLake", Vector3(0, 0, 0), 54, 3, _materials.blue, true, 32)
 		_add_box(parent, "GentleBoat", Vector3(0, 7, 0), Vector3(28, 5, 12), _materials.wood)
 	elif checkpoint_id == "frustration":

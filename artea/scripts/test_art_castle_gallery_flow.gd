@@ -148,7 +148,9 @@ func _run() -> void:
 		_fail("interactive artwork world did not create a walking player")
 		return
 	var artwork_player := world.find_child("CreationWorldPlayer", true, false)
-	if not bool(artwork_player.get("_jump_requires_release")):
+	# Main may clear held actions during the scene transition. A release lock
+	# is only needed when Space remains held in the new scene.
+	if Input.is_action_pressed("jump") and not bool(artwork_player.get("_jump_requires_release")):
 		_fail("held Space can make the new artwork player jump on arrival")
 		return
 	Input.action_release("jump")

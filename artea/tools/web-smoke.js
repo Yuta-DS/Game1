@@ -75,6 +75,8 @@ const CHROME_PATHS = [
 	'/usr/bin/chromium',
 	'C:/Program Files/Google/Chrome/Application/chrome.exe',
 	'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+	'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+	'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -102,7 +104,7 @@ async function startChrome() {
 		'--no-first-run',
 		'--enable-unsafe-swiftshader',
 		...(process.env.SMOKE_CACHE_BYTES ? [`--disk-cache-size=${process.env.SMOKE_CACHE_BYTES}`] : []),
-	], { stdio: 'ignore', detached: true });
+	], { stdio: 'ignore', detached: true, windowsHide: true });
 	for (let i = 0; i < 30; i += 1) {
 		await sleep(500);
 		if (await chromeIsUp()) return child;
@@ -361,6 +363,8 @@ async function connect() {
 		await waitForLog(/engine started/, 'engine started', 900000);
 		await sleep(4000);
 		await shot('01-start-screen');
+		const previewState = await send('Runtime.evaluate', { expression: 'String(window.ARTEA_HEART_PREVIEW)', returnByValue: true });
+		say('preview flag: ' + previewState.result.value);
 
 		for (const [index, button] of GUEST_BUTTONS.entries()) {
 			say(`clicking Offline Guest at (${button.x}, ${button.y})`);

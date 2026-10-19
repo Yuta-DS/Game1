@@ -33,6 +33,13 @@ func _attach_to_current_scene() -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
+	# Authored chapter guides own their interactions and checkpoint recovery.
+	# All other scenes retain main's companion and flying fall-rescue system.
+	if scene.get_meta("owns_companion_guidance", false):
+		active_milo = null
+		active_player = null
+		active_fall_rescue = null
+		return
 	var player := _find_3d_player(scene)
 	if player == null:
 		return

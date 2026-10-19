@@ -41,6 +41,9 @@ const PACKS := {
 		"res://scenes/art_gallery_3d.tscn",
 		# The galaxy on its own, for running it straight from the editor.
 		"res://scenes/art_castle_floating_world.tscn",
+		# World 2 is also embedded in the Castle station walk, so it must
+		# be mounted with the Castle, including when entered directly.
+		"res://scenes/heart_melody/heart_melody_world.tscn",
 	],
 	# The three Kingdoms, entered from the Hub's teleporters and the journey
 	# (journey_campaign.gd KINGDOMS), and the optional Crown of Life story.

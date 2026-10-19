@@ -372,6 +372,7 @@ func _wait_for_scatter_then_finish() -> void:
 	# The browser console is the only log a web player has; tools/web-smoke.js
 	# waits for this before checking the new scene is playable.
 	print("[ARTEA] loading screen done: ", next_scene_path)
+	print("ARTEA WORLD READY: ", next_scene_path)
 	queue_free()
 
 

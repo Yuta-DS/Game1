@@ -14,6 +14,22 @@ const SceneLoader := preload("res://scripts/scene_loader.gd")
 func _ready():
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
+	# Release Web templates reject scene paths in engine startup arguments.
+	# The local preview adapter requests a normal runtime scene transition.
+	var heart_preview := "--heart-preview" in OS.get_cmdline_user_args()
+	if OS.has_feature("web"):
+		heart_preview = heart_preview or JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW === true", true) == true
+	if heart_preview:
+		print("HEART PREVIEW REQUEST ACCEPTED")
+		if OS.has_feature("web"): JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW = false", true)
+		_open_heart_preview.call_deferred()
+
+func _open_heart_preview() -> void:
+	Global.current_user_name = "Guest_Player"
+	Global.auth_token = "OFFLINE_GUEST_TOKEN"
+	var opened := SceneLoader.change_scene(get_tree(), "res://scenes/heart_melody/heart_melody_world.tscn")
+	if not opened:
+		show_message("The garden could not open. Please reload and try again.")
 
 # Helper utility to cleanly control status messages and alert color states
 func show_message(text: String, is_error: bool = true):

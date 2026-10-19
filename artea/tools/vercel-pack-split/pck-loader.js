@@ -228,6 +228,14 @@
 			return nativeFetch(input, init);
 		}
 
+		// Local exports keep the side module whole. Avoid probing 128 missing
+		// chunks before downloading it. Older split builds still use the fallback.
+		if (url.pathname.endsWith("/index.side.wasm")) {
+			const whole = await nativeFetch(input, init);
+			if (whole.ok) return whole;
+			if (whole.body) await whole.body.cancel();
+		}
+
 		const partCount = await countParts(requestUrl);
 		if (partCount === 0) {
 			return nativeFetch(input, init);

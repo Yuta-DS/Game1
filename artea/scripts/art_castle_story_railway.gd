@@ -281,6 +281,7 @@ func _ready() -> void:
 	_build_materials()
 	_build_route()
 	_build_stations()
+	_build_heart_melody_entrance()
 	_build_train()
 	_build_hud()
 	_refresh_station_lights()
@@ -3918,3 +3919,13 @@ func _material(color: Color, roughness: float, emission: Color = Color.BLACK,
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return material
+
+
+func _build_heart_melody_entrance() -> void:
+	if _player == null:
+		return
+	var connection := Node3D.new()
+	connection.name = "HeartMelodyConnection"
+	connection.set_script(load("res://scripts/heart_melody/heart_overworld_connection.gd"))
+	connection.set("player", _player)
+	add_child(connection)

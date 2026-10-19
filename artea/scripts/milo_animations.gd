@@ -533,6 +533,17 @@ func _play_recorded_greeting() -> void:
 	greeting_voice.play()
 
 
+func begin_recorded_guidance(duration: float) -> void:
+	if greeting_voice != null: greeting_voice.stop()
+	_recorded_greeting_played = true
+	_speech_elapsed = 0
+	_speech_remaining = duration
+	_set_mouth_shape("small")
+
+func end_recorded_guidance() -> void:
+	_stop_speaking()
+
+
 static func _spoken_version(source_text: String) -> String:
 	var spoken := source_text
 	# Scripted panels open with "Wonderful Counsellor Milo · <Title>"; the title
@@ -1217,7 +1228,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_sample_player_breadcrumb()
 	# Conversation owns Milo's pose and facing until the panel closes.
-	if chatbot_ui != null or player_in_range:
+	if chatbot_ui != null or (player_in_range and not player.get_meta("milo_heart_escort", false)):
 		_approach_horizontal_velocity(Vector3.ZERO, movement_deceleration, delta)
 		move_and_slide()
 		return
@@ -1256,6 +1267,10 @@ func _physics_process(delta: float) -> void:
 	elif separation <= catch_up_exit_distance:
 		_catch_up_active = false
 	var movement_speed := catch_up_speed if _catch_up_active else walk_speed
+	if player.get_meta("milo_heart_escort", false):
+		var escort_speed := maxf(player.velocity.length(), player.speed) * 1.5 \
+			if separation > catch_up_distance else player.velocity.length() * 1.02
+		movement_speed = maxf(movement_speed, escort_speed)
 	_set_companion_state(CompanionState.CATCHING_UP if _catch_up_active \
 		else CompanionState.FOLLOWING)
 	var stride_multiplier := float(_sample_cane_gait(_current_gait_phase()).speed)
@@ -1264,7 +1279,7 @@ func _physics_process(delta: float) -> void:
 		desired_velocity = Vector3.ZERO
 	# Catch-up changes the destination speed, not Milo's physical ability to lunge.
 	# Keeping the same acceleration preserves the supported elderly silhouette.
-	var acceleration := movement_acceleration
+	var acceleration := maxf(movement_acceleration, player.speed * 2.0) if player.get_meta("milo_heart_escort", false) else movement_acceleration
 	var actual_speed := _approach_horizontal_velocity(
 		desired_velocity, acceleration, delta)
 	_advance_cane_gait(delta, actual_speed)
@@ -1314,7 +1329,7 @@ func _has_walkable_ground_ahead(direction: Vector3) -> bool:
 	var probe_origin := global_position + direction.normalized() * 0.48 \
 		+ Vector3.UP * 0.48
 	var query := PhysicsRayQueryParameters3D.create(probe_origin,
-		probe_origin + Vector3.DOWN * 1.15, collision_mask)
+		probe_origin + Vector3.DOWN * (2.5 if is_instance_valid(player) and player.get_meta("milo_heart_escort", false) else 1.15), collision_mask)
 	query.exclude = [get_rid()]
 	if player != null and is_instance_valid(player):
 		query.exclude.append(player.get_rid())
@@ -1359,7 +1374,8 @@ func _has_reached_breadcrumb(point: Vector3) -> bool:
 	# A point directly above or below Milo is not reached. Retaining its height
 	# keeps him on the player's castle stair/ledge route instead of cutting to
 	# another side of the structure.
-	return horizontal_delta <= 0.65 and absf(point_delta.y) <= 0.85
+	var height_tolerance := 1.6 if is_instance_valid(player) and player.get_meta("milo_heart_escort", false) else 0.85
+	return horizontal_delta <= 0.65 and absf(point_delta.y) <= height_tolerance
 
 
 func _reposition_safely_near_player() -> void:
@@ -1444,6 +1460,7 @@ func _process(delta):
 	if _fall_rescue_active:
 		return
 
+	if is_instance_valid(player) and player.get_meta("milo_heart_escort", false): return
 	# Outside the interaction zone, locomotion owns Milo's facing and animation.
 	if not player_in_range:
 		return
@@ -1467,6 +1484,7 @@ func _process(delta):
 
 	# interaction
 	if Input.is_action_just_pressed("interact") and player_in_range \
+			and not (is_instance_valid(player) and player.get_meta("heart_melody_active", false)) \
 			and not _player_is_busy():
 		print("Interacting with Milo")
 		open_chatbot()
@@ -1742,7 +1760,7 @@ func _update_hand_motion(stride_wave: float, is_walking: bool,
 			# the free paw remains relaxed enough to counter-swing.
 			curl = 0.78 + absf(stride_wave) * 0.08 \
 				if hand.name == "Paw_R" else 0.18 + absf(stride_wave) * 0.05
-		if speaking:
+		if speaking and (not is_walking or hand.name != "Paw_R"):
 			curl = 0.62 + sin(_speech_elapsed * 10.0) * 0.16
 		var shape_index: int = _hand_curl_shape_indices[hand]
 		var current := hand.get_blend_shape_value(shape_index)

@@ -35,6 +35,12 @@ const KINGDOMS := {
 		"scene_path": "res://scenes/music_minigame.tscn",
 		"treasure": "harmony_jewel",
 	},
+	"heart_melody": {
+		"label": "Heart Melody Musical Valley",
+		"scene_path": "res://scenes/heart_melody/heart_melody_world.tscn",
+		"treasure": "harmony_jewel",
+		"requires": [],
+	},
 	"creator": {
 		"label": "Creator's Light Kingdom",
 		"scene_path": "res://scenes/drawing_tool.tscn",
@@ -100,7 +106,7 @@ func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null) -> bool:
 	if not can_enter_kingdom(kingdom_id):
 		return false
 	var scene_path := kingdom_scene_path(kingdom_id)
-	if scene_path.is_empty() or not ResourceLoader.exists(scene_path):
+	if scene_path.is_empty() or not SceneLoader.can_open(scene_path):
 		push_error("JourneyCampaign: missing kingdom scene for %s" % kingdom_id)
 		return false
 	var tree := _scene_tree(scene_tree)

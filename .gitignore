@@ -1,6 +1,10 @@
 artea/addons/terrain_3d/bin/~libterrain.windows.debug.x86_64.dll
 
 # Operating-system and editor files
+# Local Heart Melody browser profile, server process ID and verification output
+/.edge-heart-web/
+/.heart-web-server.pid
+/work/
 .DS_Store
 ._*
 __MACOSX/

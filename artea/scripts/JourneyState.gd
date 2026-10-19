@@ -17,6 +17,7 @@ const SAVE_PATH := "user://journey.json"
 # overwrite or erase a real child's record. Instance state rather than a const
 # because that is the only way a test can redirect it.
 var save_path: String = SAVE_PATH
+var campaign_version: int = 2
 
 # 0 = not started, 1 = thoughts, 2 = emotions, 3 = creativity, 4 = identity
 var stage: int = 0
@@ -308,6 +309,7 @@ func save() -> void:
 		push_error("JourneyState: could not write %s" % save_path)
 		return
 	file.store_string(JSON.stringify({
+		"campaign_version": campaign_version,
 		"stage": stage,
 		"thoughts": thoughts,
 		"emotions": emotions,
@@ -360,7 +362,9 @@ func load_journey() -> void:
 	# evidence even though they predate explicit treasure ownership.
 	if popped_count() > 0:
 		treasures["star_of_wisdom"] = true
-	if not emotions.is_empty():
+	# Older canonical journeys earned this through emotion play. Version 2
+	# chapter saves must retain their explicit entitlement instead of inferring it.
+	if int(data.get("campaign_version", 1)) < 2 and not emotions.is_empty():
 		treasures["harmony_jewel"] = true
 	# Before the Gallery Frame Ritual existed, saving an artwork immediately
 	# earned Creator's Light. Preserve those established journeys exactly once.
@@ -376,6 +380,13 @@ func load_journey() -> void:
 # The player can erase their journey at any time. No confirmation maze,
 # no partial wipe — the file goes and the state resets.
 func clear_journey() -> void:
+	if save_path == SAVE_PATH and is_inside_tree():
+		var tracker := get_node_or_null("/root/PlayerIdentityTracker")
+		if tracker != null: tracker.clear_world_evidence("heart_melody")
+	for suffix in ["", ".bak", ".tmp"]:
+		var heart_path: String = "user://heart_melody_island_one.json" + suffix
+		if save_path == SAVE_PATH and FileAccess.file_exists(heart_path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(heart_path))
 	stage = 0
 	thoughts.clear()
 	emotions.clear()

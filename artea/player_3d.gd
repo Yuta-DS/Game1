@@ -8,6 +8,7 @@ signal block_changed(active: bool)
 
 @export var speed: float = 10.0
 @export var input_enabled: bool = true
+@export var blocking_enabled: bool = true
 @export var ground_acceleration := 70.0
 @export var ground_deceleration := 85.0
 @export var air_acceleration := 28.0
@@ -346,7 +347,7 @@ func _update_combat(delta: float) -> void:
 		_finish_attack()
 		return
 
-	_set_blocking(Input.is_action_pressed("block") and not is_attacking)
+	_set_blocking(blocking_enabled and Input.is_action_pressed("block") and not is_attacking)
 	if Input.is_action_just_pressed("attack") and not is_blocking \
 			and _attack_cooldown_remaining <= 0.0:
 		_start_attack()
