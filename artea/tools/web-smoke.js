@@ -74,6 +74,11 @@ const DEBUG_PORT = 9222;
 // shorter login panel have it at y=568. Tried in order until one is accepted.
 const VIEWPORT = { width: 1280, height: 800 };
 const GUEST_BUTTONS = [{ x: 300, y: 726 }, { x: 287, y: 568 }];
+const LOGIN_FIELDS = [
+	{ user: [285, 295], pass: [285, 355], start: [285, 414] },
+	{ user: [285, 488], pass: [285, 547], start: [285, 605] },
+];
+const HUB_READY = /\[ARTEA\] (?:loading screen done:|scene ready) res:\/\/scenes\/New_Hub_World\.tscn/;
 
 const CHROME_PATHS = [
 	'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -133,7 +138,7 @@ async function connect() {
 	// exact total including headers. A request that ends in loadingFailed never
 	// gets a loadingFinished, so without dataReceived its bytes would vanish.
 	const net = {
-		perRequest: new Map(), urls: new Map(), failures: [], cached: new Set(),
+		perRequest: new Map(), urls: new Map(), methods: new Map(), failures: [], cached: new Set(),
 		requests: 0, failed: 0, hubAt: null, bytesAtHub: null, requestsAtHub: null, engineAt: null,
 		// Each source is tallied on its own and the largest wins: adding them
 		// into one slot would count every streamed part twice.
@@ -164,7 +169,10 @@ async function connect() {
 			pending.delete(m.id);
 			return m.error ? reject(new Error(JSON.stringify(m.error))) : resolve(m.result);
 		}
-		if (m.method === 'Network.requestWillBeSent') net.urls.set(m.params.requestId, m.params.request.url);
+		if (m.method === 'Network.requestWillBeSent') {
+			net.urls.set(m.params.requestId, m.params.request.url);
+			net.methods.set(m.params.requestId, m.params.request.method);
+		}
 		// pck-loader.js hands each part's body to a stream, and Chrome reports
 		// many of those requests as net::ERR_ABORTED before its dataReceived
 		// events catch up, undercounting by ~1%. Content-Length is the exact
@@ -205,7 +213,7 @@ async function connect() {
 			// Stamp the hub the moment its log arrives, not at the next 1 s poll.
 			// The pack is fully downloaded by the time the engine starts.
 			if (net.engineAt === null && /engine started/.test(line)) net.engineAt = Date.now();
-			if (net.hubAt === null && line.includes('[ARTEA] loading screen done: res://scenes/New_Hub_World.tscn')) {
+			if (net.hubAt === null && HUB_READY.test(line)) {
 				net.hubAt = Date.now();
 				net.bytesAtHub = net.bytes;
 				net.requestsAtHub = net.requests;
@@ -401,13 +409,31 @@ async function connect() {
 				body: JSON.stringify({ username, password }),
 			});
 			if (registration.status !== 201) throw new Error(`account setup failed (HTTP ${registration.status})`);
-			await click(285, 488);
-			await typeText(username);
-			await click(285, 547);
-			await typeText(password);
-			await click(285, 605);
-			await waitForLog(/LOGIN GRANTED/, 'game account login accepted', 30000);
-			await waitForLog(/\[ARTEA\] loading screen done: res:\/\/scenes\/New_Hub_World\.tscn/, 'account hub scene ready', 120000);
+			const loginRequests = () => [...net.urls.keys()].filter((id) =>
+				net.methods.get(id) === 'POST' && new URL(net.urls.get(id)).pathname.endsWith('/login'));
+			let loginId = null;
+			for (const [index, fields] of LOGIN_FIELDS.entries()) {
+				const before = new Set(loginRequests());
+				await click(...fields.user);
+				await typeText(username);
+				await click(...fields.pass);
+				await typeText(password);
+				await click(...fields.start);
+				const until = Date.now() + 8000;
+				while (Date.now() < until && loginId === null) {
+					loginId = loginRequests().find((id) => !before.has(id)) || null;
+					if (loginId === null) await sleep(250);
+				}
+				if (loginId !== null) break;
+				if (index === LOGIN_FIELDS.length - 1) throw new Error('login form sent no account request');
+			}
+			const responseUntil = Date.now() + 30000;
+			while (!net.tally(loginId).status && Date.now() < responseUntil) await sleep(250);
+			if (net.tally(loginId).status !== 200) {
+				throw new Error(`game account login failed (HTTP ${net.tally(loginId).status || 'no response'})`);
+			}
+			say('OK  game account login accepted (HTTP 200)');
+			await waitForLog(HUB_READY, 'account hub scene ready', 120000);
 			await sleep(1500);
 			await shot('02-account-login-hub');
 			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
@@ -430,7 +456,7 @@ async function connect() {
 				if (index === GUEST_BUTTONS.length - 1) throw err;
 			}
 		}
-		await waitForLog(/\[ARTEA\] loading screen done: res:\/\/scenes\/New_Hub_World\.tscn/, 'hub scene ready', 120000);
+		await waitForLog(HUB_READY, 'hub scene ready', 120000);
 		const evaluate = async (expression) => (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
 		// Every frame's timestamp from here on, to compare the Hub's frame pacing
 		// while the other areas' Packs download in the background with after.
