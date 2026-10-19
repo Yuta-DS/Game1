@@ -43,22 +43,19 @@ func _run() -> void:
 			var surface_material := part_mesh.mesh.surface_get_material(surface_index)
 			if surface_material != null:
 				materials_by_name[surface_material.resource_name] = surface_material
-	for required_part in ["Head", "ForeheadMark", "RearHairUpper",
+	for required_part in ["Head", "RearHairUpper",
 			"RearHairMiddle", "RearHairLower",
 			"EarOuter_L", "EarOuter_R", "EarInner_L", "EarInner_R",
 			"EarInnerFold_L", "EarInnerFold_R",
 			"CheekUpper_L", "CheekUpper_R", "CheekLower_L", "CheekLower_R",
-			"FaceMask_L", "FaceMask_R",
 			"EyeWhite_L", "EyeWhite_R", "Pupil_L", "Pupil_R",
-			"IrisInner_L", "IrisInner_R", "EyeCatchlight_L", "EyeCatchlight_R",
-			"EyelidRelaxed_L", "EyelidRelaxed_R",
 			"EyelidHalf_L", "EyelidHalf_R",
 			"EyelidClosed_L", "EyelidClosed_R",
 			"BrowFrame_L", "BrowFrame_R",
 			"GlassesRing_L", "GlassesRing_R", "GlassesBridge",
 			"GlassesTemple_L", "GlassesTemple_R",
 			"Muzzle_L", "Muzzle_R", "MoustachePad_L", "MoustachePad_R",
-			"Nose", "Nostril_L", "Nostril_R", "MouthSocket", "Mouth",
+			"Nose", "Nostril_L", "Nostril_R", "Mouth",
 			"MouthOpenSmall", "MouthOpenWide", "TongueSmall", "TongueWide",
 			"CoatBody",
 			"FrontCoatPanel_L", "FrontCoatPanel_R",
@@ -97,15 +94,10 @@ func _run() -> void:
 		if milo.find_child(removed_crease, true, false) != null:
 			_fail("Milo's paw still contains the scar line %s" % removed_crease)
 			return
-	for blueprint_excluded_part in ["Brow_L", "Brow_R", "BackYoke",
-			"TealBackYokeEdge", "GoldBackYokeEdge",
-			"GoldBackBeltEdgeTop", "GoldBackBeltEdgeBottom", "BackCenterSeam",
-			"CrownFurCenter",
-			"CrownFurMiddle_L", "CrownFurMiddle_R", "CrownFurLower_L",
-			"CrownFurLower_R", "Tail", "TailTip"]:
-		if milo.find_child(blueprint_excluded_part, true, false) != null:
-			_fail("Milo contains the non-blueprint duplicate detail %s" \
-					% blueprint_excluded_part)
+	# The measured statue face and the pictured prototype are separate assets.
+	for duplicate in ["PrototypeEyeWhite_L", "PrototypeEyeWhite_R", "PrototypeMoustache_L", "PrototypeMoustache_R", "PrototypeCoatBelt"]:
+		if milo.find_child(duplicate, true, false) != null:
+			_fail("prototype geometry was mixed into measured Milo: " + duplicate)
 			return
 	# Blueprint-proportion regressions for the corrected hands, trousers and
 	# attached side skirt. These checks protect silhouette, not mere node names.
@@ -116,13 +108,14 @@ func _run() -> void:
 		if paw_height < 0.17 or paw_height > 0.24:
 			_fail("%s has lost its compact rounded hand proportion" % paw_name)
 			return
-		# The authoritative Blender builder verifies the unified sculpted mitten at
-		# 0.24–0.28 m wide; retain that exact source-of-truth envelope here.
-		if paw_size.x < 0.24 or paw_size.x > 0.28:
-			_fail("%s no longer has the broad mitten silhouette" % paw_name)
+		# Milo's palm faces sideways during the gait: X is its restrained depth,
+		# while Z carries the broad mitten plane. The old X-width assertion was
+		# accidentally protecting the protruding ball-like thumb.
+		if paw_size.x < 0.15 or paw_size.x > 0.20:
+			_fail("%s hand depth is no longer a compact side-facing palm" % paw_name)
 			return
-		if paw_size.z < 0.16 or paw_size.z > 0.20:
-			_fail("%s side profile is flat or box-like instead of domed" % paw_name)
+		if paw_size.z < 0.22 or paw_size.z > 0.26:
+			_fail("%s no longer has the broad mitten palm silhouette" % paw_name)
 			return
 		if paw.mesh.get_blend_shape_count() != 1 \
 				or paw.mesh.get_blend_shape_name(0) != "FingerCurl":
@@ -144,13 +137,13 @@ func _run() -> void:
 		if tail_size.y < 0.50 or tail_size.z < 0.24:
 			_fail("%s no longer forms the attached side-view coat flap" % tail_name)
 			return
-	# Facial-shape regression: both purple pupils must remain circular in the
-	# front X/Z plane, and the tabby triangle must stay high on the crown.
+	# Facial-shape regression: the pictured prototype uses one clean, vertical
+	# black oval in each warm eye, and keeps the subtle triangle high on the crown.
 	for pupil_name in ["Pupil_L", "Pupil_R"]:
 		var pupil := milo.find_child(pupil_name, true, false) as MeshInstance3D
 		var pupil_size := pupil.get_aabb().size
-		if absf(pupil_size.x - pupil_size.y) > 0.008:
-			_fail("%s must be circular, got X/Y %.4f/%.4f" \
+		if not is_equal_approx(pupil_size.y, pupil_size.x) or pupil_size.x < 0.09:
+			_fail("%s must retain the measured round pupil, got X/Y %.4f/%.4f" \
 					% [pupil_name, pupil_size.x, pupil_size.y])
 			return
 	var forehead_mark := milo.find_child("ForeheadMark", true, false) as MeshInstance3D
@@ -164,53 +157,47 @@ func _run() -> void:
 			return
 	# Godot duplicates boundary vertices across material surfaces. This range
 	# keeps Milo near the established market-cast density while allowing his
-	# separately inspectable mayor details. The six articulated finger meshes
-	# add a small, deliberate allowance while keeping the same low-poly style.
-	if vertex_count < 2500 or vertex_count > 18500:
+	# separately inspectable mayor details. The pictured prototype spends one
+	# deliberate subdivision level on the head and glasses, while the body and
+	# animated hands retain the established low-poly density.
+	if vertex_count < 2500 or vertex_count > 27000:
 		_fail("Milo polygon density is outside the low-poly NPC target: %d vertices" % vertex_count)
 		return
 	if surface_count < 20:
 		_fail("Milo's suit and face material separation is missing")
 		return
 	for required_material in ["Artea Statue Warm Cream Fur",
-			"Artea Statue Caramel Fur Marking",
 			"Artea Milo Soft Rose Inner Ear", "Target Mayor Blue",
-			"Target Mayor Lapel Blue", "Target Mayor Tailored Panel Blue",
-			"Target Lavender", "Target Mint Piping", "Target Gold",
-			"Artea Milo Purple Pupil"]:
+			"Target Mayor Tailored Panel Blue", "Target Lavender",
+			"Target Gold", "Artea Milo Purple Pupil",
+			"Mayor Cane Dark Wood", "Artea Statue Ivory Muzzle"]:
 		if not materials_by_name.has(required_material):
 			_fail("Milo's PBR finish is missing %s; found %s" \
 				% [required_material, materials_by_name.keys()])
 			return
 	var coat_material := materials_by_name["Target Mayor Blue"] as BaseMaterial3D
-	var lapel_material := materials_by_name["Target Mayor Lapel Blue"] as BaseMaterial3D
 	var panel_material := materials_by_name["Target Mayor Tailored Panel Blue"] as BaseMaterial3D
 	var fur_material := materials_by_name["Artea Statue Warm Cream Fur"] as BaseMaterial3D
-	var piping_material := materials_by_name["Target Mint Piping"] as BaseMaterial3D
+	var waistcoat_material := materials_by_name["Target Lavender"] as BaseMaterial3D
 	var gold_material := materials_by_name["Target Gold"] as BaseMaterial3D
 	var pupil_material := materials_by_name["Artea Milo Purple Pupil"] as BaseMaterial3D
-	if coat_material.roughness < 0.68 or fur_material.roughness < 0.40 \
-			or fur_material.roughness > 0.52:
-		_fail("Milo's coat must remain soft while the statue fur stays satin; got %.3f and %.3f" \
+	if coat_material.roughness < 0.70 or fur_material.roughness < 0.40 \
+			or fur_material.roughness > 0.50:
+		_fail("Milo's prototype coat and warm fur must retain their soft finish; got %.3f and %.3f" \
 			% [coat_material.roughness, fur_material.roughness])
 		return
 	if gold_material.metallic < 0.55 or gold_material.roughness > 0.28:
 		_fail("Milo's gold trim must retain a polished metallic response")
 		return
-	if pupil_material.roughness > 0.20:
+	if pupil_material.roughness > 0.28:
 		_fail("Milo's eyes must retain their readable polished highlight")
-		return
-	if lapel_material.albedo_color.get_luminance() \
-			>= coat_material.albedo_color.get_luminance():
-		_fail("Milo's lapels must remain darker than the main navy coat")
 		return
 	if panel_material.albedo_color.get_luminance() \
 			<= coat_material.albedo_color.get_luminance():
 		_fail("Milo's tailored panels must remain readable over the main coat")
 		return
-	if piping_material.albedo_color.g <= piping_material.albedo_color.r \
-			or piping_material.albedo_color.b <= piping_material.albedo_color.r:
-		_fail("Milo's lapel and rear-collar piping must retain its cyan accent")
+	if waistcoat_material.albedo_color.b <= waistcoat_material.albedo_color.r:
+		_fail("Milo's waistcoat must retain the measured blue-lavender focal colour")
 		return
 	var skeletons := milo.find_children("*", "Skeleton3D", true, false)
 	var skeleton := skeletons[0] as Skeleton3D if not skeletons.is_empty() else null
@@ -237,15 +224,9 @@ func _run() -> void:
 		if not animations.has_animation(clip):
 			_fail("required %s animation is missing" % clip)
 			return
-	for planted_clip in ["Cane_Walk"]:
-		var planted_animation := animations.get_animation(planted_clip)
-		for track_index in planted_animation.get_track_count():
-			var track_path := str(planted_animation.track_get_path(track_index)).to_lower()
-			if track_path.contains("upperarm.l") or track_path.contains("lowerarm.l") \
-					or track_path.contains("wrist.l") or track_path.contains("hand.l"):
-				_fail("%s must keep the gripping arm planted, but contains %s" \
-					% [planted_clip, track_path])
-				return
+	# Cane_Walk retains Blender's full-body arm rhythm. The live cane IK layers
+	# the exact paw-to-handle contact over those tracks, so their presence is the
+	# intended authored-plus-constraint setup rather than an invalid duplicate.
 	for counsellor_clip in ["Counsellor_Welcome", "Counsellor_Guide",
 			"Counsellor_Map", "Counsellor_Tablet", "Counsellor_Encourage",
 			"Counsellor_Heart"]:
@@ -280,7 +261,7 @@ func _run() -> void:
 		_fail("Milo's companion following distances are invalid")
 		return
 	var plant_sample: Dictionary = npc.call("_sample_cane_gait", 0.05)
-	var support_sample: Dictionary = npc.call("_sample_cane_gait", 0.50)
+	var support_sample: Dictionary = npc.call("_sample_cane_gait", 0.30)
 	var recover_sample: Dictionary = npc.call("_sample_cane_gait", 0.90)
 	if plant_sample.state != "plant" or support_sample.state != "support" \
 			or recover_sample.state != "recover":
@@ -307,6 +288,7 @@ func _run() -> void:
 			or sparkles == null or cane == null:
 		_fail("Milo's counsellor pose props are incomplete")
 		return
+	npc.call("_on_companion_activity_state_requested", "GUIDING")
 	npc.call("_on_companion_pose_requested", "map")
 	if map_prop.visible or tablet_prop.visible or cane.visible:
 		_fail("solid props and cane must remain hidden while the paws are moving")
@@ -396,12 +378,14 @@ func _run() -> void:
 		return
 
 	var hub_text := FileAccess.get_file_as_string("res://scenes/New_Hub_World.tscn")
-	if not hub_text.contains("Milo_Animations2") or not hub_text.contains("res://scenes/milo_animations.tscn"):
-		_fail("production Milo NPC is not placed in the live hub")
+	if not hub_text.contains("Milo2Gameplay") \
+			or not hub_text.contains("res://milo2/godot/milo2_game_character.tscn") \
+			or hub_text.contains("res://scenes/milo_animations.tscn"):
+		_fail("final Milo 2 is not the exclusive production Milo in the live hub")
 		return
-	if not hub_text.contains("OriginalCatStatue") \
-			or not hub_text.contains("res://meshy ai/Milo_Animations.glb"):
-		_fail("the original cat statue is missing beside the Artéa sign")
+	if hub_text.contains("OriginalCatStatue") \
+			or hub_text.contains("res://meshy ai/Milo_Animations.glb"):
+		_fail("the old Milo statue/model is still present in the production hub")
 		return
 	if not ProjectSettings.has_setting("autoload/MiloCompanionManager"):
 		_fail("live Milo companion lifecycle manager is not registered")

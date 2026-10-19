@@ -33,24 +33,10 @@ func _run() -> void:
 	assert(source.contains("ClassDB.instantiate"), "NobodyWho is loaded dynamically for Web compatibility")
 	assert(not scene_source.contains("NobodyWhoChat") and not scene_source.contains("NobodyWhoModel"),
 		"the Web-loadable chat scene has no native-only NobodyWho node types")
-	for forbidden in ["openai_api_key", "Firebase", "user://", "ConfigFile"]:
+	for forbidden in ["HTTPRequest", "openai_api_key", "Firebase", "HTTPClient", "user://", "ConfigFile"]:
 		assert(not source.contains(forbidden), "Milo script does not contain %s" % forbidden)
 		assert(not engine_source.contains(forbidden), "Milo matcher does not contain %s" % forbidden)
 		assert(not scene_source.contains(forbidden), "Milo scene does not contain %s" % forbidden)
-	# The Web build's cloud LLM path legitimately uses HTTPRequest/HTTPClient
-	# to reach Milo's own Cloudflare Worker proxy - never a model API
-	# directly, and never with an embedded key. The safety matcher and the
-	# scene file itself still make zero network calls; verify chatbot.gd's
-	# usage stays scoped to the one known, trusted endpoint.
-	for forbidden in ["HTTPRequest", "HTTPClient"]:
-		assert(not engine_source.contains(forbidden), "Milo matcher does not contain %s" % forbidden)
-		assert(not scene_source.contains(forbidden), "Milo scene file declares no network node for %s" % forbidden)
-	if source.contains("HTTPRequest") or source.contains("HTTPClient"):
-		assert(source.contains("CLOUD_LLM_ENDPOINT"),
-			"any HTTPRequest/HTTPClient usage in Milo's script is scoped to the known cloud proxy endpoint")
-		for direct_api in ["api.openai.com", "generativelanguage.googleapis.com", "api.anthropic.com"]:
-			assert(not source.contains(direct_api),
-				"Milo's script never calls a model API directly - only its own proxy")
 	for write_api in ["FileAccess.open", "store_string", "store_line", "store_var"]:
 		assert(not source.contains(write_api), "Milo does not persist messages with %s" % write_api)
 		assert(not engine_source.contains(write_api), "Milo matcher does not persist messages with %s" % write_api)
@@ -59,32 +45,64 @@ func _run() -> void:
 	root.add_child(chat)
 	await process_frame
 
-	var history := chat.get_node_or_null("Panel/VBoxContainer/ChatHistory") as TextEdit
-	var choices := chat.get_node_or_null("Panel/VBoxContainer/ChoicesScroll/CuratedChoices") as VBoxContainer
+	var history := chat.get_node_or_null("MiloReplyCard/ChatHistory") as TextEdit
+	var choices := chat.get_node_or_null("InputContent/CuratedChoices") as VBoxContainer
+	var reply_card := chat.get_node("MiloReplyCard") as Panel
+	var input_banner := chat.get_node("InputBanner") as TextureRect
+	var message_row := choices.get_node("LocalMessageRow") as HBoxContainer
+	var message_input := message_row.get_node("MiloMessageInput") as LineEdit
+	var message_send := message_row.get_node("MiloMessageSend") as Button
 	assert(history != null and not history.editable, "Milo transcript is read-only")
-	assert(history.text.contains("Choose one, or skip"), "Milo explains the safe, skippable choice")
-	assert(choices != null, "Milo builds curated reflection choices")
+	assert(history.text.contains("What would you like to talk about"),
+		"Milo opens the direct chat conversation")
+	assert(choices != null, "Milo builds the direct chat input surface")
 	assert(chat.user_input is LineEdit, "Milo focuses the bounded local reflection field")
 	assert(chat.user_input.max_length == 280, "typed reflection is strictly bounded")
 	assert(chat.user_input.tooltip_text.contains("not saved"), "the input explains local privacy")
-	assert(_has_button(choices, "Skip this reflection"), "skipping is explicit")
-	assert(_has_button(choices, "Close"), "closing is always explicit")
-	assert(_has_button(choices, "Need help"), "support remains available from Milo")
+	assert(_has_button(choices, "Send"), "the player input keeps a send control")
+	assert(reply_card.get_global_rect().encloses(history.get_global_rect()),
+		"Milo's reply stays inside its floating speaker card")
+	assert(input_banner.get_global_rect().encloses(message_row.get_global_rect()),
+		"only the player input stays inside the parchment banner")
+	assert(history.get_global_rect().end.x < message_row.get_global_rect().end.x,
+		"Milo's speech card is visually distinct from the wider player input")
+	assert(is_equal_approx(message_input.size.y, message_send.size.y),
+		"the Milo input and send control share one height")
+	for removed_option in ["Skip this reflection", "Close", "Need help"]:
+		assert(not _has_button(choices, removed_option),
+			"chat-only Milo removes the %s option" % removed_option)
 	assert(not chat.is_local_llm_active(), "headless/Web-safe tests use the authored fallback")
 
 	var fake_chat := FakeLocalChat.new()
 	chat.add_child(fake_chat)
 	chat._attach_local_llm_chat(fake_chat)
-	var message_input := chat.user_input as LineEdit
+	var spoken_outputs: Array[String] = []
+	chat.companion_speech_requested.connect(func(spoken_text: String) -> void:
+		spoken_outputs.append(spoken_text)
+	)
+	message_input = chat.user_input as LineEdit
 	message_input.text = "I need a calm next step"
 	chat._submit_message(message_input)
-	assert(fake_chat.last_message == "I need a calm next step",
-		"a safe typed message is sent to the existing local LLM")
+	var player_echo := choices.get_node_or_null("PlayerLastMessage") as Label
+	assert(player_echo != null and player_echo.text.contains("I need a calm next step"),
+		"the player side keeps the most recent submitted line")
+	assert(fake_chat.last_message.contains("PLAYER MESSAGE") \
+		and fake_chat.last_message.contains("I need a calm next step") \
+		and fake_chat.last_message.contains("GROUNDED MILO NOTES"),
+		"a safe typed message is sent to the local LLM inside a grounded context packet")
 	assert(history.text.contains("local model"), "Milo shows local inference status")
 	fake_chat.response_updated.emit("I see you. ")
-	fake_chat.response_finished.emit("I see you. Take one gentle step when you are ready.")
-	assert(history.text.contains("Local Reflection"), "the completed local response is presented by Milo")
+	var complete_llm_reply := "I see you. Take one gentle step when you are ready."
+	fake_chat.response_finished.emit(complete_llm_reply)
+	var role := chat.get_node("MiloReplyCard/MiloRole") as Label
+	assert(role.text == "LOCAL REFLECTION", "the completed local response is identified as Milo's LLM reply")
 	assert(history.text.contains("one gentle step"), "Milo displays the local model response")
+	assert(not spoken_outputs.is_empty() and spoken_outputs.back() == complete_llm_reply,
+		"Milo sends the complete final local-LLM output to his voice queue")
+	var visible_chat_buttons := choices.find_children("*", "Button", true, false)
+	assert(visible_chat_buttons.size() == 1 \
+		and (visible_chat_buttons[0] as Button).text == "Send",
+		"Milo's completed reply returns to the chat-only input surface")
 
 	chat._choose_reflection({
 		"label": "Skip this reflection",
@@ -109,7 +127,7 @@ func _run() -> void:
 
 
 func _has_button(container: VBoxContainer, text: String) -> bool:
-	for child in container.get_children():
-		if child is Button and child.text == text:
+	for child in container.find_children("*", "Button", true, false):
+		if (child as Button).text == text:
 			return true
 	return false

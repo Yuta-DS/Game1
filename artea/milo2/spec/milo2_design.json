@@ -1,0 +1,41 @@
+{
+  "name": "Milo2Independent",
+  "reference": "../reference/milo2_target.png",
+  "identity": "chubby elderly feline mayor and warm scholarly guide",
+  "feeling": "wise, kind, luxurious, approachable",
+  "signature": "large round gold spectacles above a bold swept white moustache",
+  "primary_view": "front three-quarter",
+  "proportions": {
+    "head_height_share": 0.43,
+    "head_width_to_body_width": 1.08,
+    "visible_neck": 0.0,
+    "paw_width_to_sleeve_width": 0.78,
+    "eye_height_to_head_height": 0.27
+  },
+  "palette": {
+    "fur": "#E8DFC8",
+    "inner_ear": "#CFA69A",
+    "coat": "#183847",
+    "coat_secondary": "#244C59",
+    "waistcoat": "#6D2847",
+    "gold": "#C89A42",
+    "leather": "#4B3329",
+    "moustache": "#F7F3E8"
+  },
+  "rig": {
+    "bones": 41,
+    "delivery_mesh_objects": 1,
+    "surface": "fully triangulated with smooth normals",
+    "design_regions": ["head", "face", "torso", "coat", "arms", "paws", "fingers", "legs", "boots", "tail"],
+    "required_animations": ["Milo2_Idle", "Milo2_Walk", "Milo2_Wave"]
+  },
+  "constraints": [
+    "generated from a blank Blender scene",
+    "no Milo 1 source asset or controller dependency",
+    "head connects directly into shoulders",
+    "paws have a palm, thumb, and three readable fingers",
+    "all face and clothing details are physically attached",
+    "one unified skinned mesh; regions use materials and vertex groups instead of separate objects",
+    "web-compatible glTF output"
+  ]
+}

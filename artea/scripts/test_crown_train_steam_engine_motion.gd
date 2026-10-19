@@ -66,14 +66,19 @@ func _run() -> void:
 	if not bool(railway.call("board_as_driver")):
 		_fail("could not enter driving mode")
 		return
+	# Use one fixed command/update pair per sample; the normal Input poll has no
+	# held key in this direct-call test and must not inject a second zero throttle.
+	railway.set_process(false)
 	var gear_moved := false
 	var rod_moved := false
 	var pressure_moved := false
 	var valve_moved := false
 	var halo_outer_moved := false
 	var halo_inner_moved := false
-	for _frame in 150:
+	# Observe movement after the new cab startup and direction-selection checks.
+	for _frame in 270:
 		railway.call("drive_manual", 1.0, 1.0 / 60.0)
+		railway.call("_update_train_mechanisms", 1.0 / 60.0)
 		await process_frame
 		gear_moved = gear_moved or not gear.basis.is_equal_approx(gear_basis)
 		rod_moved = rod_moved or not rod.transform.is_equal_approx(rod_transform)
@@ -85,6 +90,14 @@ func _run() -> void:
 			or not halo_outer_moved or not halo_inner_moved:
 		_fail("one or more functional steam or celestial-halo mechanisms stayed static while driving")
 		return
+	if not _check_gear_rotation(railway, detailed, 1):
+		return
+	# Reverse through the real braking/direction-change path, not a forced flag.
+	for _frame in 300:
+		railway.call("drive_manual", -1.0, 1.0 / 60.0)
+		railway.call("_update_train_mechanisms", 1.0 / 60.0)
+	if not _check_gear_rotation(railway, detailed, -1):
+		return
 	state = railway.call("get_steam_engine_animation_state")
 	if not bool(state.exhaust_emitting):
 		_fail("chimney steam did not emit while the engine was running")
@@ -92,3 +105,28 @@ func _run() -> void:
 
 	print("CROWN_TRAIN_STEAM_ENGINE_MOTION_TEST: PASS — gears, rods, pressure orbs, valves, chimney steam, and both celestial-halo layers animate in the playable train")
 	quit()
+
+
+func _check_gear_rotation(railway: Node3D, detailed: Node3D, direction: int) -> bool:
+	var parts: Array[Node3D] = []
+	var before: Array[Basis] = []
+	for node in detailed.find_children("*", "MeshInstance3D", true, false):
+		if node.has_meta("mechanism_spin_ratio") and String(node.name).contains("Steam"):
+			parts.append(node)
+			before.append(node.basis.orthonormalized())
+	if parts.size() != 18:
+		_fail("expected both sides' three gears, hubs and energy rings")
+		return false
+	railway.call("_update_train_mechanisms", 1.0 / 60.0)
+	for index in parts.size():
+		var part := parts[index]
+		var change := part.basis.orthonormalized() * before[index].inverse()
+		var spin := change.get_rotation_quaternion()
+		var expected_sign := -direction * (-1 if String(part.name).ends_with("_1") else 1)
+		# GLB axle is parent-space X. Turning about Z tumbles the gear face.
+		if absf(spin.y) > .00001 or absf(spin.z) > .00001 \
+				or spin.x * expected_sign <= .00001:
+			_fail("%s must spin on its axle with the opposite neighbour direction (drive %d, delta %s)" \
+				% [part.name, direction, spin])
+			return false
+	return true
