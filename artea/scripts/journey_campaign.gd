@@ -13,6 +13,9 @@ signal kingdom_entered(kingdom_id: String)
 signal returned_to_castle
 
 const CAMPAIGN_HOME_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
+# Artéa Park is the hub village the minigames' "Return to Artéa Park" buttons
+# lead back to, as opposed to the Art Castle gallery above.
+const PARK_SCENE := "res://scenes/New_Hub_World.tscn"
 const OPTIONAL_GUIDED_STORY_SCENE := "res://scenes/viewfinder/crown_of_life_story.tscn"
 const QUEST_JOURNAL_SCENE := "res://scenes/crown_quest_journal.tscn"
 
@@ -30,7 +33,7 @@ const KINGDOMS := {
 	},
 	"heart": {
 		"label": "Heart Melody Kingdom",
-		"scene_path": "res://scenes/music_minigame.tscn",
+		"scene_path": "res://scenes/heart_melody/heart_garden_entry.tscn",
 		"treasure": "harmony_jewel",
 		"requires": ["star_of_wisdom"],
 	},
@@ -112,8 +115,11 @@ func portal_status(kingdom_id: String) -> String:
 	return "CROWN JOURNEY\nFOLLOW THE LIGHT TO %s" % next_label.to_upper()
 
 
-func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null) -> bool:
-	if not can_enter_kingdom(kingdom_id):
+# ignore_lock is for Milo's strength-finder suggestion only: it opens a world
+# early but still never awards a treasure, so the journey's record stays true.
+func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null,
+		ignore_lock := false) -> bool:
+	if not ignore_lock and not can_enter_kingdom(kingdom_id):
 		return false
 	var scene_path := kingdom_scene_path(kingdom_id)
 	if scene_path.is_empty() or not ResourceLoader.exists(scene_path):
@@ -146,6 +152,13 @@ func return_to_campaign(scene_tree: SceneTree = null) -> bool:
 	if returned:
 		returned_to_castle.emit()
 	return returned
+
+
+# "Return to Artéa Park" in the minigames: back to the hub village rather
+# than the Art Castle gallery that return_to_campaign() leads to.
+func return_to_park(scene_tree: SceneTree = null) -> bool:
+	active_kingdom_id = ""
+	return _change_scene_with_loading(PARK_SCENE, scene_tree)
 
 
 func open_quest_journal(scene_tree: SceneTree = null) -> bool:

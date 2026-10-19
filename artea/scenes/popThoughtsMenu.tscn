@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bv41a05s1gxp5" path="res://scripts/pop_thoughts_menu.gd" id="1_n0gf0"]
 [ext_resource type="Texture2D" uid="uid://c4kq5fmy10iyj" path="res://assets/Clouds/Menu/Pop Thoughts Garden.png" id="2_lnna2"]
 [ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="3_5jjns"]
-[ext_resource type="AudioStream" uid="uid://b5rwhf7ltnj05" path="res://assets/SFX/introminigame.ogg" id="4_5jjns"]
+[ext_resource type="AudioStream" uid="uid://brgt2fy4o4pxw" path="res://assets/SFX/introminigame.ogg" id="4_5jjns"]
 [ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="4_lnna2"]
 
 [node name="PopThoughtsMenu" type="Control" unique_id=653637478]
