@@ -17,7 +17,7 @@ const PLAYER_HEIGHT := 1.8
 
 # The control hint is fixed and scannable, so it stays separate from the
 # status line rather than growing into one long sentence at the bottom.
-const CONTROL_HINT := "WASD move · Shift run · Space jump · E interact · Q lens"
+const CONTROL_HINT := "WASD move · Shift run · Space jump · E interact · Q lens · X exit"
 
 var _player: CharacterBody3D
 var _camera: Camera3D
@@ -127,6 +127,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_D:
 			_toggle_sketch_panel(true)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_X:
+			_return_to_gallery()
 			get_viewport().set_input_as_handled()
 
 
@@ -470,8 +473,8 @@ func _build_action_group(root: Control, accent: Color) -> void:
 			_toggle_idea_panel.bind(true), "Add an idea to your world"],
 		["DrawButton", "Draw  (D)", HudTheme.CREATOR_CORAL,
 			_toggle_sketch_panel.bind(true), "Draw something new"],
-		["GalleryButton", "Gallery", HudTheme.CASTLE_BLUE,
-			_return_to_gallery, "Return to the gallery"],
+		["ExitArtworkButton", "Exit Artwork  (X)", HudTheme.CASTLE_BLUE,
+			_return_to_gallery, "Leave this artwork and return to the gallery"],
 	]
 	for action in actions:
 		var button := Button.new()

@@ -8,7 +8,6 @@
 [ext_resource type="ArrayMesh" uid="uid://dvxtnr8jtdt5u" path="res://chair_proxy_mesh.obj" id="7_bvso8"]
 [ext_resource type="Script" uid="uid://dwykxf5gpxmtn" path="res://scripts/PaintingInteraction.gd" id="7_dw71r"]
 [ext_resource type="Script" uid="uid://coy1vsu11fgud" path="res://scenes/interaction_area.gd" id="7_rye7r"]
-[ext_resource type="ArrayMesh" uid="uid://r364k2f0d5mn" path="res://assets/models/10305_picture_frame_V2_max2011_it2.obj" id="14_6ynge"]
 [ext_resource type="Texture2D" uid="uid://bmac1y5j1g7xe" path="res://assets/models/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg" id="14_k4ey6"]
 [ext_resource type="Script" uid="uid://bk7rt45bvooh5" path="res://scenes/ExitGallery.gd" id="14_qum7w"]
 [ext_resource type="ArrayMesh" uid="uid://t2bnky34v4qp" path="res://exitart_door_mesh.obj" id="17_bvso8"]
@@ -72,83 +71,6 @@ albedo_texture = ExtResource("14_k4ey6")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bvso8"]
 albedo_texture = ExtResource("14_k4ey6")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6ynge"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48g0v"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a2hqd"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n1pvk"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j2nib"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3btdo"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ybvl3"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8fcft"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rh7pn"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2mqet"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a185g"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.741176, 0.541176, 0.184314, 0.635294)
-grow = true
-grow_amount = -2.0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bvso8"]
 
@@ -366,73 +288,6 @@ script = ExtResource("24_3btdo")
 [node name="ListHTTPRequest" type="HTTPRequest" parent="GalleryManager" unique_id=2131185197]
 
 [node name="DownloadHTTPRequest" type="HTTPRequest" parent="GalleryManager" unique_id=1433679892]
-
-[node name="Frame_Asset01" type="MeshInstance3D" parent="." unique_id=1407208292]
-transform = Transform3D(-0.4128849, 0.0827395, -8.318315e-09, 0, -6.5567085e-09, -0.345, -0.27304035, -0.12511665, 1.2578751e-08, -47.298836, 12.987526, 6.818061)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_6ynge")
-
-[node name="ratinglabel1" type="Label3D" parent="Frame_Asset01" unique_id=921215485]
-visible = false
-pixel_size = 2.0
-offset = Vector2(-0.085, 0)
-text = "Rating: ****"
-font_size = 1
-
-[node name="Frame_Asset02" type="MeshInstance3D" parent="." unique_id=425683593]
-transform = Transform3D(-0.1820709, 0.13948455, -1.4023247e-08, 0, -6.5567085e-09, -0.345, -0.460299, -0.055172984, 5.5468816e-09, -61.808044, 13.221819, -9.415188)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_48g0v")
-
-[node name="Frame_Asset10" type="MeshInstance3D" parent="." unique_id=1046826393]
-transform = Transform3D(0.43352592, 0.07239839, -7.2786586e-09, 0, -6.5567085e-09, -0.345, -0.2389146, 0.13137151, -1.32075915e-08, -43.224533, 13.221819, -45.463898)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_48g0v")
-
-[node name="Frame_Asset03" type="MeshInstance3D" parent="." unique_id=1252198632]
-transform = Transform3D(0.2578989, 0.1280328, -1.2871929e-08, 0, -6.5567085e-09, -0.345, -0.42250812, 0.078151196, -7.857023e-09, -59.226654, 13, -30.512611)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_a2hqd")
-
-[node name="Frame_Asset04" type="MeshInstance3D" parent="." unique_id=1481843272]
-transform = Transform3D(0.4832427, 0.032498475, -3.2672731e-09, 0, -6.5567085e-09, -0.345, -0.10724498, 0.1464372, -1.4722238e-08, -22.255116, 13.30135, -53.026512)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_n1pvk")
-
-[node name="Frame_Asset05" type="MeshInstance3D" parent="." unique_id=898501516]
-transform = Transform3D(0.495, 0, 0, 0, -6.5567085e-09, -0.345, -1.7509365e-09, 0.15, -1.5080431e-08, -0.0169098, 13.199531, -55.273117)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_j2nib")
-
-[node name="Frame_Asset06" type="MeshInstance3D" parent="." unique_id=1797407532]
-transform = Transform3D(0.4832427, -0.032498475, 3.2672731e-09, 0, -6.5567085e-09, -0.345, 0.107244976, 0.1464372, -1.4722238e-08, 22.169193, 13.180809, -53.17579)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_3btdo")
-
-[node name="Frame_Asset07" type="MeshInstance3D" parent="." unique_id=1178215650]
-transform = Transform3D(0.4326894, -0.072856516, 7.324716e-09, 0, -6.5567085e-09, -0.345, 0.24042645, 0.13111801, -1.3182106e-08, 43.257263, 13.165434, -45.649944)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_ybvl3")
-
-[node name="Frame_Asset08" type="MeshInstance3D" parent="." unique_id=746042058]
-transform = Transform3D(0.2578989, -0.12803279, 1.2871929e-08, 0, -6.5567085e-09, -0.345, 0.42250812, 0.078151174, -7.857021e-09, 59.34623, 13.096689, -30.69498)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_8fcft")
-
-[node name="Frame_Asset09" type="MeshInstance3D" parent="." unique_id=1325763105]
-transform = Transform3D(0.18207075, 0.13948457, -1.4023247e-08, 0, -6.5567085e-09, -0.345, -0.460299, 0.055172972, -5.54688e-09, 61.967987, 13.151455, -9.392225)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_rh7pn")
-
-[node name="Frame_Asset11" type="MeshInstance3D" parent="." unique_id=978016162]
-transform = Transform3D(0.4128849, 0.0827395, -8.318315e-09, 0, -6.5567085e-09, -0.345, -0.27304035, 0.12511665, -1.2578751e-08, 47.241745, 13.1947, 7.0423903)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_2mqet")
-
-[node name="Frame_Asset12" type="MeshInstance3D" parent="." unique_id=659578068]
-transform = Transform3D(0.4770702, 0.040005796, -4.022031e-09, 0, -6.5567085e-09, -0.345, -0.13201915, 0.14456671, -1.4534187e-08, 30.840595, 12.9083805, 14.344366)
-mesh = ExtResource("14_6ynge")
-surface_material_override/0 = SubResource("StandardMaterial3D_a185g")
 
 [node name="Low-Poly Plant_4" parent="." unique_id=1351898497 instance=ExtResource("22_8fcft")]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -48, 0, -6)
