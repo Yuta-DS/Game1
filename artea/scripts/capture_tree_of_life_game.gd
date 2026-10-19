@@ -43,7 +43,8 @@ func _capture() -> void:
 	var materials := world.get("_materials") as Dictionary
 	var hub := Vector3(0.0, 0.0, 1640.0)
 	world.call("_add_cylinder", sanctuary, "TreeCourt", hub + Vector3(0.0, 0.1, 0.0),
-		108.0, 1.4, materials.stone, true, 48)
+		108.0, 1.4, materials.heart_path, true, 48)
+	world.call("_build_tree_of_life_ground_finish", sanctuary)
 	world.call("_build_life_tree", sanctuary, hub)
 	print("TREE_OF_LIFE_GAME_CAPTURE: production court and tree built")
 	world.set_script(null)
