@@ -19,9 +19,8 @@
 # * A Godot web build cannot be opened from disk.  index.html fetches the pack
 #   and the wasm, and file:// origins are opaque, so those requests fail.  It
 #   needs a real HTTP origin, which is why serving is part of the same command.
-# * The Vercel export path splits index.pck into parts and DELETES the whole
-#   pack.  That is right for deploying and wrong for playing locally, so this
-#   script exports plainly and keeps index.pck intact.
+# * The browser needs both startup and deferred content packs. Local serving
+#   keeps the unsplit files alongside their deployment-sized parts.
 set -euo pipefail
 
 port=8800
@@ -129,6 +128,7 @@ if [[ "${mode}" != serve ]]; then
 			"${godot_bin}" --headless --path "${project_dir}" \
 			--export-release Web "${index}"
 		python_bin="$(find_python)" || { echo "Python 3 is required for Web export." >&2; exit 1; }
+		"${python_bin}" "${project_dir}/tools/build_fast_web_pack.py" --godot "${godot_bin}"
 		"${python_bin}" "${project_dir}/tools/patch_web_release_loader.py" "${index}"
 		git -C "${project_dir}" rev-parse HEAD > "${export_head}"
 		echo
@@ -142,10 +142,10 @@ fi
 
 # Serve the same split layout the deploy uses.
 #
-# pck-loader.js intercepts index.pck and index.side.wasm and expects a manifest
+# pck-loader.js intercepts index.pck, content.pck and index.side.wasm and expects a manifest
 # plus parts. Without them it fires 128 parallel HEAD probes that all 404, then
 # falls back to fetching the whole pack in one blocking request - and python's
-# http.server ignores Range headers, so that is a single unstreamed 708 MB
+# http.server ignores Range headers, so that is a single unstreamed pack
 # response. The page just sits there, which reads as the build being broken
 # when it is only the local server layout differing from the deployed one.
 #
@@ -159,7 +159,7 @@ fi
 cp "${project_dir}/tools/vercel-pack-split/pck-loader.js" "${build_dir}/pck-loader.js"
 
 echo "Checking split layout for local serving…"
-for big in "${build_dir}/index.pck" "${build_dir}/index.side.wasm"; do
+for big in "${build_dir}/index.pck" "${build_dir}/content.pck" "${build_dir}/index.side.wasm"; do
 	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
 done
 

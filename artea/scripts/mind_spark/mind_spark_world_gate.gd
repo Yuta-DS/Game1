@@ -182,7 +182,7 @@ func teleport_player(player: CharacterBody3D) -> bool:
 	return true
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if _player_inside != null and event.is_action_pressed("interact") and teleport_player(_player_inside):
 		get_viewport().set_input_as_handled()
 

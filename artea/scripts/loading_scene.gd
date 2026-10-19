@@ -61,8 +61,46 @@ func _start_load_once_visible() -> void:
 	_report(0.0, "Loading world")
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if OS.has_feature("web") and not ResourceLoader.exists(next_scene_path):
+		if not await _load_web_content_pack():
+			return
+	if not ResourceLoader.exists(next_scene_path):
+		_fail("scene file missing")
+		return
 	ResourceLoader.load_threaded_request(next_scene_path)
 	loading_started = true
+
+
+# The browser starts with the hub in a small pack. Other scenes and their
+# imported assets are downloaded together on the first trip out of the hub.
+# Desktop exports retain the normal single-pack scene loading path.
+func _load_web_content_pack() -> bool:
+	var state := str(JavaScriptBridge.eval(
+		"window.ARTEA_CONTENT_PACK ? window.ARTEA_CONTENT_PACK.state : 'missing'", true))
+	if state == "missing":
+		_fail("content downloader unavailable")
+		return false
+	if state == "mounted":
+		return true
+	if state != "ready":
+		JavaScriptBridge.eval("window.ARTEA_CONTENT_PACK.load()", true)
+		while true:
+			state = str(JavaScriptBridge.eval("window.ARTEA_CONTENT_PACK.state", true))
+			if state == "ready":
+				break
+			if state == "failed":
+				_fail("content download failed")
+				return false
+			var fraction := float(JavaScriptBridge.eval(
+				"window.ARTEA_CONTENT_PACK.progress", true))
+			_report(fraction * 0.2, "Downloading game area")
+			await get_tree().process_frame
+	_report(0.2, "Opening game area")
+	if not ProjectSettings.load_resource_pack("/content.pck", true):
+		_fail("content pack could not be opened")
+		return false
+	JavaScriptBridge.eval("window.ARTEA_CONTENT_PACK.state = 'mounted'", true)
+	return true
 
 # The bar only ever moves forward. Phase three's measurement can legitimately
 # reset (a stalled frame puts the settled-frame count back to zero), and a bar

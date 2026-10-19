@@ -12,6 +12,20 @@ Guide to Running the Project
 
 ---
 
+# Web build
+
+From the repository root, run `./web rebuild` to export and serve the browser
+game, or `./web verify` to check Offline Guest play and measure the cold load.
+Web export requires a standard non-Mono Godot binary and Python 3.
+
+The export starts with a small title-and-hub pack. On the first trip to another
+area, the loading screen downloads and mounts the remaining game content. The
+build compares both packs with the full export before accepting the split, so
+assets and scenes are retained. Desktop Godot uses its normal scene loading
+path. See `artea/tools/vercel-pack-split/README.md` for deployment details.
+
+---
+
 # Project Setup
 
 ## Git Setup & Large File Requirements

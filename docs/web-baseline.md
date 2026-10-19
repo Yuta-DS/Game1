@@ -220,3 +220,22 @@ Not done yet:
 - **Visual check** in the Hub, Art Castle and each Kingdom (issue #39
   acceptance). The headless `./web verify` screenshots are taken under the
   loading overlay (software rendering), so this needs a person in a browser.
+
+## Startup pack split (October 2026)
+
+The browser now starts with the title and hub in a Core pack and downloads a
+second pack on the first transition to another area. The builder compares the
+combined pack catalogue with all 4,564 files from the full export before
+replacing it. Local browser checks covered Offline Guest movement, World One
+portal trips, the gallery artwork audit, and the Creator ground audit.
+
+| Public cold run | Previous full pack | Core + deferred content |
+|---|---:|---:|
+| Engine started | 128.2 s | 31.7 s |
+| Playable hub | 147.6 s | 48.9 s |
+| Transfer to hub | 503.6 MB | 141.4 MB |
+
+These are separate public runs, so network conditions vary. The first trip to
+another area still downloads the 453.6 MB deferred pack; a fresh public World
+One quality run reached that area in 145.1 s from navigation. Splitting the
+deferred pack by area is the next step if those transitions need to be faster.

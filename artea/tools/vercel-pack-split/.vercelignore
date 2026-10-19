@@ -3,6 +3,7 @@
 # are not listed: split-pack.sh deletes them, and a pattern for them would also
 # match the hashed parts in parts/.)
 /index.pck
+/content.pck
 /index.side.wasm
 # Editor import sidecars Godot writes beside the exported icons.
 *.import

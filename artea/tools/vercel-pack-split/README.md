@@ -7,15 +7,21 @@ split pack before deployment.
 ## What this is for
 
 Vercel rejects individual deployment files over 100 MB (Cloudflare Pages: 25 MB).
-The web export emits a single `index.pck` far past that, so it cannot be
-deployed as-is. These files work around it:
+The full Godot export is far past that limit. The build now splits its files
+into a startup pack (title and hub) and a deferred content pack. The browser
+fetches the latter on the first move to another area, while desktop loading
+continues to use the normal scene path. These files support that layout:
 
-- `export_web.sh` - runs the Godot web export, then splits `index.pck` and
-  `index.side.wasm` with `../split-pack.sh` into 8 MB content-hashed parts
+- `../build_fast_web_pack.py` - exports the startup pack from the same Web
+  preset, copies every remaining or changed full-export file into
+  `content.pck`, and checks that the two packs cover the full export before
+  replacing it.
+- `export_web.sh` - runs the Godot web export, then splits `index.pck`,
+  `content.pck`, and `index.side.wasm` with `../split-pack.sh` into 8 MB content-hashed parts
   (`parts/index.pck.<hash>.partNN`) plus a manifest (`index.pck.parts.json`)
   listing them. It also copies in `vercel.json` and `.vercelignore`.
 - `pck-loader.js` - a `fetch` shim, injected through `html/head_include`, that
-  intercepts the requests for `index.pck` and `index.side.wasm`, reads the
+  intercepts the requests for `index.pck`, `content.pck`, and `index.side.wasm`, reads the
   manifest (never cached), and streams the listed parts into the engine in
   order. Up to 4 parts download at once (`?parts=N` overrides it for
   measuring). A failed part is retried after 0.5, 1.5 and 4 s; after that a
@@ -34,8 +40,7 @@ deployed as-is. These files work around it:
 Part names carry the SHA-256 of the whole file they were cut from, so a new
 export always produces new names. That makes them safe to cache forever: a
 repeat visit to an unchanged build downloads only the two part manifests and
-~130-byte revalidations of the HTML, js and wasm (measured: 7.4 KB, against
-755 MB for the first visit). Files with fixed names stay `no-cache`, so a new
+~130-byte revalidations of the HTML, js and wasm. Files with fixed names stay `no-cache`, so a new
 export can never be paired with old engine modules. Local `./web` keeps
 `no-store`.
 

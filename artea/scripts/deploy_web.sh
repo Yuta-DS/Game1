@@ -7,9 +7,14 @@ build_dir="${project_dir}/builds/web"
 public_alias="artea-web.vercel.app"
 project_alias="artea-web-dsovann80-2407s-projects.vercel.app"
 local_manifest="${build_dir}/index.pck.parts.json"
+content_manifest="${build_dir}/content.pck.parts.json"
 
 if [[ ! -f "${local_manifest}" ]]; then
 	echo "No split Web pack found. Run scripts/export_web.sh first." >&2
+	exit 1
+fi
+if [[ ! -f "${content_manifest}" ]]; then
+	echo "No split content pack found. Run scripts/export_web.sh first." >&2
 	exit 1
 fi
 
@@ -31,22 +36,31 @@ cp "${project_dir}/tools/vercel-pack-split/.vercelignore" "${build_dir}/.verceli
 )
 
 for attempt in {1..8}; do
-	remote_manifest="$(curl -fsSL \
-		"https://${public_alias}/index.pck.parts.json?build=$(date +%s)-${attempt}")"
-	if python3 - "${local_manifest}" "${remote_manifest}" <<'PY'
+	if ! remote_manifest="$(curl -fsSL \
+		"https://${public_alias}/index.pck.parts.json?build=$(date +%s)-${attempt}")" \
+		|| ! remote_content_manifest="$(curl -fsSL \
+		"https://${public_alias}/content.pck.parts.json?build=$(date +%s)-${attempt}")"; then
+		[[ "${attempt}" -lt 8 ]] && sleep 2
+		continue
+	fi
+	if python3 - "${local_manifest}" "${remote_manifest}" \
+		"${content_manifest}" "${remote_content_manifest}" <<'PY'
 import json
 import pathlib
 import sys
 
 local = json.loads(pathlib.Path(sys.argv[1]).read_text())
 remote = json.loads(sys.argv[2])
-if local != remote:
+local_content = json.loads(pathlib.Path(sys.argv[3]).read_text())
+remote_content = json.loads(sys.argv[4])
+if local != remote or local_content != remote_content:
     raise SystemExit(
-        f"Public Web pack does not match local export: local={local}, remote={remote}"
+        "Public Web pack manifests do not match the local export"
     )
 print(
-    "Production alias verified: "
-    f"{remote['count']} parts, {remote['bytes']} bytes"
+    "Production alias verified: core "
+    f"{remote['count']} parts, {remote['bytes']} bytes; content "
+    f"{remote_content['count']} parts, {remote_content['bytes']} bytes"
 )
 PY
 	then

@@ -34,6 +34,8 @@ static func change_scene(tree: SceneTree, scene_path: String) -> bool:
 	if tree == null:
 		return false
 	if not ResourceLoader.exists(scene_path):
+		if OS.has_feature("web") and not _web_content_mounted():
+			return change_scene_with_loading(tree, scene_path)
 		report_failure(tree, scene_path, "scene file missing")
 		return false
 	var err := tree.change_scene_to_file(scene_path)
@@ -46,7 +48,7 @@ static func change_scene(tree: SceneTree, scene_path: String) -> bool:
 static func change_scene_with_loading(tree: SceneTree, scene_path: String) -> bool:
 	if tree == null:
 		return false
-	if not ResourceLoader.exists(scene_path):
+	if not ResourceLoader.exists(scene_path) and (not OS.has_feature("web") or _web_content_mounted()):
 		report_failure(tree, scene_path, "scene file missing")
 		return false
 	# Loaded at call time, not preloaded: loading_scene.gd references the
@@ -64,6 +66,11 @@ static func change_scene_with_loading(tree: SceneTree, scene_path: String) -> bo
 	if tree.current_scene != null:
 		tree.current_scene.queue_free()
 	return true
+
+
+static func _web_content_mounted() -> bool:
+	return OS.has_feature("web") and str(JavaScriptBridge.eval(
+		"window.ARTEA_CONTENT_PACK && window.ARTEA_CONTENT_PACK.state", true)) == "mounted"
 
 
 ## Logs a scene switch that failed and puts a message on screen for a while.

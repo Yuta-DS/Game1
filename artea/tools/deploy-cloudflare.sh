@@ -46,17 +46,9 @@ build_dir="${project_dir}/builds/web"
 stage_dir="${project_dir}/builds/cloudflare"
 max_bytes=$((25 * 1024 * 1024))
 
-if [[ "${rebuild}" == 1 || ! -f "${build_dir}/index.html" ]]; then
+if [[ "${rebuild}" == 1 || ! -f "${build_dir}/index.html" || ! -f "${build_dir}/content.pck" ]]; then
 	echo "==> Building web export"
-	"${project_dir}/tools/web.sh" --rebuild --port 0 >/dev/null 2>&1 &
-	build_pid=$!
-	# web.sh serves after exporting; wait for the artefact, then stop it.
-	while [[ ! -f "${build_dir}/index.pck" && ! -f "${build_dir}/index.pck.part00" ]]; do
-		sleep 5
-		kill -0 "${build_pid}" 2>/dev/null || break
-	done
-	sleep 5
-	kill "${build_pid}" 2>/dev/null || true
+	"${project_dir}/tools/web.sh" --rebuild --export-only
 fi
 
 if [[ ! -f "${build_dir}/index.html" ]]; then
@@ -72,7 +64,7 @@ mkdir -p "${stage_dir}"
 # Vercel export use (see split-pack.sh). Splitting from the pack that was
 # actually exported, with the hash in every part name, is what keeps the
 # manifest honest: it can only ever list parts cut from its own export.
-for big in "${build_dir}/index.pck" "${build_dir}/index.side.wasm"; do
+for big in "${build_dir}/index.pck" "${build_dir}/content.pck" "${build_dir}/index.side.wasm"; do
 	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
 done
 
@@ -82,7 +74,7 @@ done
 for path in "${build_dir}"/*; do
 	name="$(basename "${path}")"
 	case "${name}" in
-		index.pck|index.side.wasm|*.import|*.tmp) continue ;;
+		index.pck|content.pck|index.side.wasm|*.import|*.tmp) continue ;;
 		.env.local|.vercel|vercel.json) continue ;;   # Vercel CLI token/config, never deploy
 	esac
 	cp -R "${path}" "${stage_dir}/"

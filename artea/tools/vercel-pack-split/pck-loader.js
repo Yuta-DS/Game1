@@ -203,7 +203,7 @@
 		// rejoined here. Serving it pre-gzipped is not an option: Cloudflare
 		// strips a manually set Content-Encoding, so the browser receives gzip
 		// bytes where it expects a wasm module and refuses to instantiate it.
-		const splittable = ["/index.pck", "/index.side.wasm"];
+		const splittable = ["/index.pck", "/content.pck", "/index.side.wasm"];
 		if (!splittable.some((name) => url.pathname.endsWith(name))) {
 			return nativeFetch(input, init);
 		}

@@ -33,13 +33,15 @@ mkdir -p "${output_dir}"
 "${project_dir}/tools/with-web-export-plugins.sh" \
 	"${godot_bin}" --headless --path "${project_dir}" \
 	--export-release Web "${output_dir}/index.html"
+python3 "${project_dir}/tools/build_fast_web_pack.py" --godot "${godot_bin}"
+python3 "${project_dir}/tools/patch_web_release_loader.py" "${output_dir}/index.html"
 
 cp "${script_dir}/pck-loader.js" "${output_dir}/pck-loader.js"
 
 # Content-hashed parts and manifests, the same layout local ./web and the
 # Cloudflare deploy use (see split-pack.sh). index.side.wasm is split too: the
 # loader rejoins it, and one code path for both keeps the layouts identical.
-for big in "${output_dir}/index.pck" "${output_dir}/index.side.wasm"; do
+for big in "${output_dir}/index.pck" "${output_dir}/content.pck" "${output_dir}/index.side.wasm"; do
 	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
 done
 

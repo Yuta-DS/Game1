@@ -131,6 +131,50 @@ const GODOT_CONFIG = $GODOT_CONFIG;
 const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 const engine = new Engine(GODOT_CONFIG);
 
+// The initial Godot pack contains the title and hub. The remaining scenes
+// live in a second pack that is fetched only when a player enters one of them.
+// pck-loader.js supplies a joined stream from the immutable deployment parts.
+window.ARTEA_CONTENT_PACK = {
+	state: 'idle',
+	progress: 0,
+	error: '',
+	load() {
+		if (this.state !== 'idle' && this.state !== 'failed') return;
+		this.state = 'loading';
+		this.progress = 0;
+		this.error = '';
+		(async () => {
+			const response = await fetch('content.pck');
+			if (!response.ok) throw new Error(`Content pack: HTTP ${response.status}`);
+			const expected = Number(response.headers.get('Content-Length'));
+			if (!Number.isSafeInteger(expected) || expected <= 0 || !response.body) {
+				throw new Error('Content pack has no usable length or stream');
+			}
+			const bytes = new Uint8Array(expected);
+			const reader = response.body.getReader();
+			let received = 0;
+			for (;;) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				if (received + value.byteLength > expected) {
+					throw new Error('Content pack is larger than its manifest');
+				}
+				bytes.set(value, received);
+				received += value.byteLength;
+				this.progress = received / expected;
+			}
+			if (received !== expected) throw new Error('Content pack is incomplete');
+			engine.copyToFS('/content.pck', bytes.buffer);
+			this.progress = 1;
+			this.state = 'ready';
+		})().catch((error) => {
+			console.error('Content pack download failed', error);
+			this.error = String(error);
+			this.state = 'failed';
+		});
+	},
+};
+
 (function () {
 	const statusOverlay = document.getElementById('status');
 	const statusProgress = document.getElementById('status-progress');
