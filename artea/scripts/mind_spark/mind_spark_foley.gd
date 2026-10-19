@@ -37,6 +37,13 @@ static func make_combat_event(event: StringName) -> AudioStreamWAV:
 		_: return _render(event, 440.0, 0.35, 0, 0.25)
 
 
+static func make_play_event(event: StringName) -> AudioStreamWAV:
+	match event:
+		&"pad_bounce": return _render(event, 196.0, 0.42, 2, 0.08)
+		&"water_splash": return _render(event, 140.0, 0.55, 3, 0.85)
+		_: return _render(event, 440.0, 0.35, 0, 0.25)
+
+
 static func _render(event: StringName, frequency: float, duration: float,
 		character: int, noise_amount: float) -> AudioStreamWAV:
 	var wav := AudioStreamWAV.new()

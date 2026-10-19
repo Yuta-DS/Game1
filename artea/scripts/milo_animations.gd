@@ -40,6 +40,11 @@ const STAGE_GLOW := [
 	Color("ffd66e"),
 ]
 const STAGE_ENERGY := [0.18, 0.55, 0.85, 1.2, 1.65]
+# Recorded lines in the dialogue box play this much louder than the proximity
+# greeting. Tune by ear; max_db is raised with it so it isn't capped at +3 dB.
+# All of Milo's voice also gets +6 dB on the MiloVoice bus, whose limiter
+# (default_bus_layout.tres) keeps the boosted peaks from clipping.
+const DIALOGUE_VOICE_DB := 5.0
 const COUNSELLOR_ANIMATIONS := {
 	"welcome": "Counsellor_Welcome",
 	"guide": "Counsellor_Guide",
@@ -69,6 +74,7 @@ var _mouth_shape := "closed"
 var _tts_voice_id := ""
 var _tts_voice_resolved := false
 var greeting_voice: AudioStreamPlayer3D
+var _greeting_stream: AudioStream
 var _recorded_greeting_played := false
 var _conversation_state := CompanionState.GREETING
 var _conversation_active := false
@@ -134,6 +140,8 @@ var _grounding_targets: Node3D
 # The rescue owns his position, so following, gravity and foot grounding stand
 # down until it hands him back.
 var _fall_rescue_active := false
+# Set while Milo sits on the train (sit_on / stand_up).
+var _seat_anchor: RemoteTransform3D
 
 const CANE_GAIT_CYCLE_SECONDS := 1.28
 const CANE_GAIT_STRIDE_METRES := 1.40
@@ -257,6 +265,8 @@ func _ready():
 	_build_counsellor_props()
 	_resolve_mouth_shapes()
 	greeting_voice = get_node_or_null("MiloGreetingVoice") as AudioStreamPlayer3D
+	if greeting_voice != null:
+		_greeting_stream = greeting_voice.stream
 	_resolve_eye_system()
 	_resolve_secondary_parts()
 	_resolve_gait_rig()
@@ -313,6 +323,115 @@ func _set_companion_state(next_state: CompanionState) -> void:
 
 func get_companion_state_name() -> String:
 	return CompanionState.keys()[companion_state]
+
+
+## Riding the Crown Line. The train seats Milo on a RemoteTransform3D anchor -
+## the place beside the rider - and he sits in it, instead of walking after,
+## or teleporting to, a player who is moving at train speed.
+func sit_on(anchor: RemoteTransform3D) -> void:
+	if anchor == null:
+		return
+	_seat_anchor = anchor
+	velocity = Vector3.ZERO
+	_follow_active = false
+	_catch_up_active = false
+	_breadcrumbs.clear()
+	for shape in find_children("*", "CollisionShape3D", false, false):
+		(shape as CollisionShape3D).disabled = true
+	# Grounding IK would pull his feet to the floor through the chair pose.
+	for ik in _leg_ik.values():
+		(ik as TwoBoneIK3D).set_influence(0.0)
+	if _cane_arm_ik != null:
+		_cane_arm_ik.set_influence(0.0)
+	_set_cane_visible(false)
+	anchor.remote_path = anchor.get_path_to(self)
+	_apply_sit_pose()
+
+
+func stand_up() -> void:
+	if _seat_anchor == null:
+		return
+	if is_instance_valid(_seat_anchor):
+		_seat_anchor.remote_path = NodePath()
+	_seat_anchor = null
+	for shape in find_children("*", "CollisionShape3D", false, false):
+		(shape as CollisionShape3D).disabled = false
+	_set_cane_visible(true)
+	rotation = Vector3(0.0, rotation.y, 0.0)
+	_release_sit_pose()
+	# Deferred: the train puts the player on the platform after unseating them,
+	# and Milo should land beside that spot, not beside the empty seat.
+	call_deferred("_reposition_safely_near_player")
+
+
+func is_seated() -> bool:
+	return _seat_anchor != null
+
+
+# The donor Sit_Chair_* clips kept no leg or hip tracks when they were
+# retargeted onto Milo's rig, so playing them leaves him standing. The seated
+# pose is built from the leg bones instead: freeze the idle, swing both thighs
+# forward, bend the knees back down, and lower the model so the thighs rest on
+# the seat.
+const SIT_THIGH_DEGREES := 90.0
+# Gap left between the hip joint and the cushion (the thigh's own thickness).
+const SIT_SEAT_CLEARANCE := 0.06
+var _sit_pose_applied := false
+var _model_rest_position := Vector3.ZERO
+
+
+func _apply_sit_pose() -> void:
+	if _sit_pose_applied or gait_skeleton == null:
+		return
+	if anim_player != null:
+		anim_player.play("Idle" if anim_player.has_animation("Idle") else anim_player.current_animation)
+		anim_player.seek(0.0, true)
+		anim_player.pause()
+	gait_skeleton.force_update_all_bone_transforms()
+	for side in ["l", "r"]:
+		var thigh := gait_skeleton.find_bone("upperleg.%s" % side)
+		var shin := gait_skeleton.find_bone("lowerleg.%s" % side)
+		if thigh < 0 or shin < 0:
+			continue
+		var hip := to_local(_bone_world_position("upperleg.%s" % side))
+		_rotate_bone_in_skeleton(thigh, -SIT_THIGH_DEGREES)
+		# Milo faces +Z; if the rig's axes put the knee behind him, bend the
+		# other way.
+		if to_local(_bone_world_position("lowerleg.%s" % side)).z < hip.z:
+			_rotate_bone_in_skeleton(thigh, 2.0 * SIT_THIGH_DEGREES)
+			_rotate_bone_in_skeleton(shin, -SIT_THIGH_DEGREES)
+		else:
+			_rotate_bone_in_skeleton(shin, SIT_THIGH_DEGREES)
+	if model_root != null:
+		_model_rest_position = model_root.position
+		var hip_height := to_local(_bone_world_position("upperleg.l")).y
+		model_root.position.y -= hip_height - SIT_SEAT_CLEARANCE
+	_sit_pose_applied = true
+
+
+func _release_sit_pose() -> void:
+	if not _sit_pose_applied:
+		return
+	_sit_pose_applied = false
+	if gait_skeleton != null:
+		gait_skeleton.reset_bone_poses()
+	if model_root != null:
+		model_root.position = _model_rest_position
+	if anim_player != null:
+		anim_player.play()
+
+
+## Rotates a bone about the skeleton's X axis, in skeleton space.
+func _rotate_bone_in_skeleton(bone: int, degrees: float) -> void:
+	var pose := gait_skeleton.get_bone_global_pose(bone)
+	var parent := gait_skeleton.get_bone_parent(bone)
+	var parent_pose := gait_skeleton.get_bone_global_pose(parent) if parent >= 0 \
+		else Transform3D()
+	var turned := Transform3D(Basis(Vector3.RIGHT, deg_to_rad(degrees)) * pose.basis,
+		pose.origin)
+	gait_skeleton.set_bone_pose_rotation(bone,
+		(parent_pose.affine_inverse() * turned).basis.get_rotation_quaternion())
+	gait_skeleton.force_update_all_bone_transforms()
 
 
 func begin_fall_rescue() -> void:
@@ -377,7 +496,26 @@ func _on_companion_speech_requested(spoken_text: String) -> void:
 	_set_mouth_shape("small")
 	if greeting_voice != null and greeting_voice.playing:
 		greeting_voice.stop()
-	_speak_with_platform_voice(_spoken_version(clean_text))
+	var spoken := _spoken_version(clean_text)
+	var recording := recorded_line_path(spoken)
+	if greeting_voice != null and ResourceLoader.exists(recording):
+		if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+			DisplayServer.tts_stop()
+		greeting_voice.stream = load(recording)
+		greeting_voice.volume_db = DIALOGUE_VOICE_DB
+		greeting_voice.max_db = maxf(3.0, DIALOGUE_VOICE_DB)
+		_speech_remaining = greeting_voice.stream.get_length()
+		greeting_voice.play()
+		return
+	_speak_with_platform_voice(spoken)
+
+
+# Scripted lines recorded in Milo's greeting voice live at
+# assets/audio/milo/lines/<md5 of spoken text>.ogg; anything without a
+# recording (e.g. live chatbot replies) falls back to platform TTS.
+# tools/list_milo_lines.gd lists every scripted line with its file name.
+static func recorded_line_path(spoken_text: String) -> String:
+	return "res://assets/audio/milo/lines/%s.ogg" % spoken_text.md5_text()
 
 
 func _play_recorded_greeting() -> void:
@@ -385,6 +523,9 @@ func _play_recorded_greeting() -> void:
 			or greeting_voice.playing or _recorded_greeting_played:
 		return
 	_recorded_greeting_played = true
+	greeting_voice.stream = _greeting_stream
+	greeting_voice.volume_db = 0.0
+	greeting_voice.max_db = 3.0
 	_speech_elapsed = 0.0
 	_speech_remaining = greeting_voice.stream.get_length()
 	_set_companion_state(CompanionState.TALKING)
@@ -403,8 +544,17 @@ func end_recorded_guidance() -> void:
 	_stop_speaking()
 
 
-func _spoken_version(source_text: String) -> String:
-	var spoken := source_text.replace("Wonderful Counsellor Milo ·", "")
+static func _spoken_version(source_text: String) -> String:
+	var spoken := source_text
+	# Scripted panels open with "Wonderful Counsellor Milo · <Title>"; the title
+	# stays on screen but isn't spoken, so panels sharing a body share a recording.
+	if spoken.begins_with("Wonderful Counsellor Milo ·") and "\n\n" in spoken:
+		spoken = spoken.substr(spoken.find("\n\n") + 2)
+	# Likewise the strength finder's "Question 2 of 5" counter is shown, not said.
+	if spoken.begins_with("Question ") and "\n\n" in spoken \
+			and " of " in spoken.get_slice("\n\n", 0):
+		spoken = spoken.substr(spoken.find("\n\n") + 2)
+	spoken = spoken.replace("Wonderful Counsellor Milo ·", "")
 	spoken = spoken.replace("Milo:", "")
 	spoken = spoken.replace("·", ".")
 	# UI layout uses blank lines and bullets; TTS reads more naturally when they
@@ -421,13 +571,15 @@ func _speak_with_platform_voice(spoken_text: String) -> void:
 	if not _tts_voice_resolved:
 		_tts_voice_resolved = true
 		var voices := DisplayServer.tts_get_voices()
-		# Milo has one recognisable voice across supported platforms. Prefer a
-		# warm male English voice by name, then fall back by English locale.
-		for voice_data in voices:
-			var voice_name := str(voice_data.get("name", "")).to_lower()
-			var voice_id := str(voice_data.get("id", "")).to_lower()
-			if voice_name.contains("daniel") or voice_id.contains("daniel"):
-				_tts_voice_id = str(voice_data.get("id", ""))
+		# Milo has one recognisable voice across supported platforms. Prefer the
+		# male English voice closest to his recordings (~118 Hz): Windows George
+		# measured 114 Hz, macOS Daniel is similar. Then fall back by locale.
+		for preferred_name in ["george", "daniel"]:
+			for voice_data in voices:
+				if str(voice_data.get("name", "")).to_lower().contains(preferred_name):
+					_tts_voice_id = str(voice_data.get("id", ""))
+					break
+			if not _tts_voice_id.is_empty():
 				break
 		for preferred_prefix in ["en_GB", "en_AU", "en_US", "en"]:
 			if not _tts_voice_id.is_empty():
@@ -440,11 +592,11 @@ func _speak_with_platform_voice(spoken_text: String) -> void:
 				break
 	if _tts_voice_id.is_empty():
 		return
-	var voice_volume := 82
+	var voice_volume := 100
 	if player != null:
 		var distance := global_position.distance_to(player.global_position)
-		voice_volume = int(round(lerpf(86.0, 24.0, clampf(distance / 30.0, 0.0, 1.0))))
-	DisplayServer.tts_speak(spoken_text, _tts_voice_id, voice_volume, 0.90, 0.96, 2603, true)
+		voice_volume = int(round(lerpf(100.0, 30.0, clampf(distance / 30.0, 0.0, 1.0))))
+	DisplayServer.tts_speak(spoken_text, _tts_voice_id, voice_volume, 1.0, 1.0, 2603, true)
 
 
 func _on_companion_activity_state_requested(state_name: String) -> void:
@@ -476,6 +628,8 @@ func _update_speaking(delta: float) -> void:
 
 
 func _stop_speaking() -> void:
+	if greeting_voice != null and greeting_voice.playing:
+		greeting_voice.stop()
 	_speech_remaining = 0.0
 	_speech_elapsed = 0.0
 	_set_mouth_shape("closed")
@@ -1050,7 +1204,7 @@ func _reset_mayor_arm_pose() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _fall_rescue_active:
+	if _fall_rescue_active or _seat_anchor != null:
 		velocity = Vector3.ZERO
 		return
 	if gravity_enabled and not is_on_floor():
@@ -1114,7 +1268,9 @@ func _physics_process(delta: float) -> void:
 		_catch_up_active = false
 	var movement_speed := catch_up_speed if _catch_up_active else walk_speed
 	if player.get_meta("milo_heart_escort", false):
-		movement_speed = maxf(movement_speed, player.velocity.length() * (1.15 if separation > catch_up_distance else 1.02))
+		var escort_speed := maxf(player.velocity.length(), player.speed) * 1.5 \
+			if separation > catch_up_distance else player.velocity.length() * 1.02
+		movement_speed = maxf(movement_speed, escort_speed)
 	_set_companion_state(CompanionState.CATCHING_UP if _catch_up_active \
 		else CompanionState.FOLLOWING)
 	var stride_multiplier := float(_sample_cane_gait(_current_gait_phase()).speed)
@@ -1287,12 +1443,20 @@ func _reset_npc_state():
 func _process(delta):
 	_update_speaking(delta)
 	_update_eye_animation(delta)
-	_update_secondary_motion(delta)
-	if not _fall_rescue_active:
+	if _seat_anchor == null:
+		_update_secondary_motion(delta)
+	if not _fall_rescue_active and _seat_anchor == null:
 		_update_terrain_grounding(delta)
 	_apply_journey_stage()
 	if aura != null:
 		aura.rotate_y(delta * (0.18 + max(journey_stage, 0) * 0.08))
+	if _seat_anchor != null:
+		# Other systems (counsellor poses, pauses) can start a clip, which
+		# would overwrite the seated legs; freeze and pose again.
+		if anim_player != null and anim_player.is_playing():
+			_release_sit_pose()
+			_apply_sit_pose()
+		return
 	if _fall_rescue_active:
 		return
 
@@ -1303,8 +1467,9 @@ func _process(delta):
 
 	look_at_player(delta)
 
-	# INSIDE interaction zone: waving logic
-	if not first_wave:
+	# INSIDE interaction zone: waving logic. Milo spawns beside the player, so
+	# without the loading-screen check he greets them while it's still up.
+	if not first_wave and get_tree().get_nodes_in_group("loading_screen").is_empty():
 		_play_animation("Wave_One_Hand")
 		_set_companion_state(CompanionState.GREETING)
 		_play_recorded_greeting()

@@ -1,4 +1,5 @@
 extends Node3D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 func _on_explore_colours_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/drawing_tool.tscn")
+	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/drawing_tool.tscn")

@@ -1,6 +1,8 @@
 extends Node
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const RatingHeart := preload("res://scripts/rating_heart.gd")
+const STAR_ICON := preload("res://assets/UI/icons/star.svg")
 
 @export var painting_title: String = "artwork_1.png"
 
@@ -17,7 +19,6 @@ const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
 const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
 const CREATION_WORLD_PATH = "res://scenes/creation_world.tscn"
 const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
-const LOADING_SCENE_PATH = preload("res://scenes/loading_scene.tscn")
 
 # --- Rating UI ---
 @onready var ratingpanel: Control = $CanvasLayer/RatingPanel
@@ -32,8 +33,7 @@ func _ready() -> void:
 	_report_galaxy_state()
 	_build_quest_journal_button()
 	likebutton.visible = true
-	
-	likebutton.text = "♥"
+	RatingHeart.apply_to_button(likebutton, false)
 
 	
 	print("RatingPanel = ", ratingpanel)
@@ -146,7 +146,7 @@ func _build_galaxy_transit() -> void:
 	add_child(map_canvas)
 	var minimap := Control.new()
 	minimap.name = "ArteaWorldMinimap"
-	minimap.set_script(load("res://scripts/art_castle_minimap.gd"))
+	minimap.set_script(preload("res://scripts/art_castle_minimap.gd"))
 	minimap.set("map_context", "galaxy")
 	map_canvas.add_child(minimap)
 		
@@ -164,7 +164,9 @@ func _input(event):
 			viewport.set_input_as_handled()
 		return
 
-	if event.is_action_pressed("ui_accept") and player_near_artwork:
+	if event.is_action_pressed("ui_accept") and player_near_artwork and not _world_opening:
+		if event is InputEventKey and event.echo:
+			return
 		_enter_current_frame_world()
 		var viewport := get_viewport()
 		if viewport != null:
@@ -182,7 +184,10 @@ func _input(event):
 func _build_quest_journal_button() -> void:
 	var button := Button.new()
 	button.name = "CrownJourneyJournalButton"
-	button.text = "✦ Crown Journey  [J]"
+	button.text = "Crown Journey  [J]"
+	button.icon = STAR_ICON
+	button.expand_icon = false
+	button.add_theme_constant_override("icon_max_width", 22)
 	button.tooltip_text = "Open the Crown of Life quest journal"
 	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	button.position = Vector2(-250.0, 24.0)
@@ -199,7 +204,7 @@ func _open_quest_journal() -> void:
 		if bool(campaign.call("open_quest_journal")):
 			return
 	if ResourceLoader.exists(QUEST_JOURNAL_PATH):
-		get_tree().change_scene_to_file(QUEST_JOURNAL_PATH)
+		SceneLoader.change_scene(get_tree(), QUEST_JOURNAL_PATH)
 
 func show_rating_panel(frame_name: String, current_rating: int) -> void:
 	print("Frame:", frame_name)
@@ -208,14 +213,9 @@ func show_rating_panel(frame_name: String, current_rating: int) -> void:
 	selected_frame_name = frame_name
 	ratingpanel.visible = true
 
-	if current_rating > 0:
-		ratinglabel.text = "Artwork Rating: ♥\nEnter / Space — explore this artwork"
-		ratinglabel.modulate = Color.RED
-		likebutton.modulate = Color.RED
-	else:
-		ratinglabel.text = "Artwork Rating: ♡\nEnter / Space — explore this artwork"
-		ratinglabel.modulate = Color.WHITE
-		likebutton.modulate = Color.WHITE
+	var liked := current_rating > 0
+	RatingHeart.apply_to_label(ratinglabel, liked, "\nEnter / Space — explore this artwork")
+	RatingHeart.apply_to_button(likebutton, liked)
 		
 func hide_rating_panel() -> void:
 	ratingpanel.visible = false
@@ -230,29 +230,16 @@ func _on_rate_button_pressed(value: int) -> void:
 	if gallery_manager:
 		var current_rating = gallery_manager.get_frame_rating(selected_frame_name)
 
-		if current_rating > 0:
-			gallery_manager.rate_frame(selected_frame_name, 0)
-
-			ratinglabel.text = "Artwork Rating:\n♡"
-			ratinglabel.modulate = Color.WHITE
-			likebutton.modulate = Color.WHITE
-
-		else:
-			gallery_manager.rate_frame(selected_frame_name, 1)
-
-			ratinglabel.text = "Artwork Rating:\n♥"
-			ratinglabel.modulate = Color.RED
-			likebutton.modulate = Color.RED			
+		var liked: bool = current_rating <= 0
+		gallery_manager.rate_frame(selected_frame_name, 1 if liked else 0)
+		RatingHeart.apply_to_label(ratinglabel, liked)
+		RatingHeart.apply_to_button(likebutton, liked)			
 func _on_body_entered(body: Node3D) -> void:
 	if body is CharacterBody3D:
 		go_to_scene(HUB_WORLD_PATH)
 
 func _on_back_to_hubworld_pressed() -> void:
-	var loading_screen = LOADING_SCENE_PATH.instantiate()
-	loading_screen.next_scene_path = ARTEA_GAME_PATH
-
-	get_tree().root.add_child(loading_screen)
-	get_tree().current_scene.queue_free()
+	SceneLoader.change_scene_with_loading(get_tree(), ARTEA_GAME_PATH)
 
 func go_to_scene(path: String) -> void:
 	if ResourceLoader.exists(path):
@@ -314,19 +301,21 @@ func _enter_current_frame_world() -> void:
 	if current_frame_name.is_empty() or _world_opening:
 		return
 	_world_opening = true
+	# Space is also Jump. Stop that input before the next physics frame and keep
+	# the player still while the artwork world is being prepared.
+	var player := get_node_or_null("Player3D")
+	if player != null and player.has_method("set_input_enabled"):
+		player.set_input_enabled(false)
 	var path: String = $GalleryManager.prepare_frame_for_world(current_frame_name)
 	if path.is_empty() or not FileAccess.file_exists(path):
-		_world_opening = false
-		ratinglabel.text = "This artwork is not available locally yet. Please try again."
+		_frame_world_failed("This artwork is not available locally yet. Please try again.")
 		return
 	var state := get_node_or_null("/root/CreationWorldState")
 	if state == null:
-		_world_opening = false
-		ratinglabel.text = "The interactive artwork world is not available in this scene yet."
+		_frame_world_failed("The interactive artwork world is not available in this scene yet.")
 		return
 	if not ResourceLoader.exists(CREATION_WORLD_PATH):
-		_world_opening = false
-		ratinglabel.text = "The interactive artwork world is still being prepared. Please try again shortly."
+		_frame_world_failed("The interactive artwork world is still being prepared. Please try again shortly.")
 		return
 
 	state.prepare_artwork(path, current_frame_name.replace("_", " "))
@@ -335,12 +324,23 @@ func _enter_current_frame_world() -> void:
 		if not is_instance_valid(self):
 			return
 		if not ok:
-			_world_opening = false
-			ratinglabel.text = str(response.get("error",
-				"This artwork world could not open yet. Please try again."))
+			_frame_world_failed(str(response.get("error",
+				"This artwork world could not open yet. Please try again.")))
 			return
-		var transition_error := get_tree().change_scene_to_file(CREATION_WORLD_PATH)
-		if transition_error != OK:
-			_world_opening = false
-			ratinglabel.text = "The interactive artwork world could not open yet. Please try again."
+		# Leave the current input dispatch before replacing its scene. Otherwise
+		# the Space event used at the frame can reach the new world as a jump.
+		call_deferred("_open_prepared_frame_world")
 	)
+
+
+func _open_prepared_frame_world() -> void:
+	if not SceneLoader.change_scene(get_tree(), CREATION_WORLD_PATH):
+		_frame_world_failed("The interactive artwork world could not open yet. Please try again.")
+
+
+func _frame_world_failed(message: String) -> void:
+	_world_opening = false
+	ratinglabel.text = message
+	var player := get_node_or_null("Player3D")
+	if player != null and player.has_method("set_input_enabled"):
+		player.set_input_enabled(true)

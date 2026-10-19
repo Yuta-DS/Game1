@@ -1,0 +1,8 @@
+[gd_resource type="Theme" format=3]
+
+[ext_resource type="FontFile" path="res://assets/Fonts/OpenDyslexic-Regular.otf" id="1_regular"]
+[ext_resource type="FontFile" path="res://assets/Fonts/OpenDyslexic-Bold.otf" id="2_bold"]
+
+[resource]
+default_font = ExtResource("1_regular")
+RichTextLabel/fonts/bold_font = ExtResource("2_bold")

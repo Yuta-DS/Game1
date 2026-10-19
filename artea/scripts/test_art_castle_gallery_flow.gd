@@ -84,6 +84,21 @@ func _run() -> void:
 		if gallery.get_node_or_null("%s/InteractionArea" % frame_name) == null:
 			_fail("%s cannot be entered by the player" % frame_name)
 			return
+		var surround := frame.get_node_or_null("ArtworkSurround")
+		if surround == null or surround.get_child_count() < 12:
+			_fail("%s has no fitted picture surround" % frame_name)
+			return
+		if gallery.get_node_or_null("Frame_Asset%02d" % (frame_index + 1)) != null:
+			_fail("%s still has the oversized legacy gold frame" % frame_name)
+			return
+		var trigger := frame.get_node_or_null("InteractionArea/CollisionShape3D") as CollisionShape3D
+		if trigger == null or not trigger.shape is BoxShape3D:
+			_fail("%s has no picture interaction volume" % frame_name)
+			return
+		var bottom := trigger.to_global(Vector3(0, -(trigger.shape as BoxShape3D).size.y * 0.5, 0)).y
+		if bottom > player.global_position.y:
+			_fail("%s interaction volume is above the player" % frame_name)
+			return
 	gallery.call("_on_interaction_area_body_entered", player, "Frame_01")
 	if not bool(gallery.get("player_near_artwork")):
 		_fail("gallery artwork interaction does not recognise the player")
@@ -105,10 +120,21 @@ func _run() -> void:
 		_fail("interactive artwork world scene is missing")
 		return
 
-	# Exercise the player's real Enter/Space handler all the way through its
-	# world preparation and scene change, without prebuilding a manifest.
+	# Exercise the player's real Space handler all the way through its world
+	# preparation and scene change, without prebuilding a manifest.
 	current_scene = gallery
-	gallery.call("_enter_current_frame_world")
+	Input.action_press("jump")
+	var space := InputEventKey.new()
+	space.keycode = KEY_SPACE
+	space.pressed = true
+	gallery.call("_input", space)
+	if not bool(gallery.get("_world_opening")) or bool(player.get("input_enabled")):
+		_fail("Space did not lock movement while opening the artwork")
+		return
+	var camera := gallery.get_node("Camera3D")
+	if str(camera.get("_mode")) != "follow":
+		_fail("Space also switched the camera into inspect mode")
+		return
 	await process_frame
 	await process_frame
 	var world := current_scene
@@ -121,6 +147,23 @@ func _run() -> void:
 	if world.find_child("CreationWorldPlayer", true, false) == null:
 		_fail("interactive artwork world did not create a walking player")
 		return
+	var artwork_player := world.find_child("CreationWorldPlayer", true, false)
+	# Main may clear held actions during the scene transition. A release lock
+	# is only needed when Space remains held in the new scene.
+	if Input.is_action_pressed("jump") and not bool(artwork_player.get("_jump_requires_release")):
+		_fail("held Space can make the new artwork player jump on arrival")
+		return
+	Input.action_release("jump")
+	for _frame in 3:
+		await physics_frame
+	if bool(artwork_player.get("_jump_requires_release")):
+		_fail("artwork jump did not reset after releasing Space (pressed=%s)" %
+			str(Input.is_action_pressed("jump")))
+		return
+	var exit_button := world.find_child("ExitArtworkButton", true, false) as Button
+	if exit_button == null:
+		_fail("interactive artwork world has no Exit Artwork button")
+		return
 	var interactive_found := false
 	for actor in world.find_children("*", "StaticBody3D", true, false):
 		if bool(actor.get_meta("artwork_interactive", false)):
@@ -129,8 +172,18 @@ func _run() -> void:
 	if not interactive_found:
 		_fail("interactive artwork world contains no responsive 3D artwork objects")
 		return
+	exit_button.pressed.emit()
+	var return_deadline := Time.get_ticks_msec() + 30000
+	while (current_scene == null or current_scene.scene_file_path !=
+			"res://scenes/art_gallery_3d_inprogress.tscn") \
+			and Time.get_ticks_msec() < return_deadline:
+		await process_frame
+	if current_scene == null or current_scene.scene_file_path != \
+			"res://scenes/art_gallery_3d_inprogress.tscn":
+		_fail("Exit Artwork button did not return to the gallery")
+		return
 
-	print("ART_CASTLE_GALLERY_TEST: PASS — raised castle door, gallery artwork, walking player and interactive 3D world are connected")
+	print("ART_CASTLE_GALLERY_TEST: PASS — fitted frames, Space entry, held-key protection, Exit Artwork button and gallery return")
 	quit()
 
 

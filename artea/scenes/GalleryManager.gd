@@ -8,6 +8,7 @@ extends Node3D
 
 #const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
 #const SERVER_BASE = "http://54.252.162.122"
+const RatingHeart := preload("res://scripts/rating_heart.gd")
 const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
 const SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
@@ -147,6 +148,7 @@ func one_placeholder(frame_node: Sprite3D, texture: Texture2D) -> void:
 	frame_node.texture = resized_texture
 	frame_node.visible = true
 	frame_node.modulate = Color.WHITE
+	frame_node.call("refresh_frame")
 
 func load_local_art_paths() -> void:
 
@@ -368,6 +370,7 @@ func _on_download_request_completed(
 				frame_node.texture = texture
 				frame_node.visible = true
 				frame_node.modulate = Color.WHITE
+				frame_node.call("refresh_frame")
 
 				frame_to_artwork[frame_name] = int(current_download_artwork_id)
 
@@ -454,6 +457,7 @@ func apply_local_art_over_online() -> void:
 			frame_node.texture = texture
 			frame_node.visible = true
 			frame_node.modulate = Color.WHITE
+			frame_node.call("refresh_frame")
 
 			frame_to_artwork[frame_name] = local_art_paths[i]
 
@@ -727,14 +731,8 @@ func show_rating_ui(frame_name: String) -> void:
 	print("Showing rating for:", frame_name)
 	print("Saved rating:", rating)
 
-	if rating > 0:
-		rating_label.text = "Artwork Rating:\n♥"
-		rating_label.modulate = Color.RED
-		likebutton.modulate = Color.RED
-	else:
-		rating_label.text = "Artwork Rating:\n♡"
-		rating_label.modulate = Color.WHITE
-		likebutton.modulate = Color.WHITE		
+	RatingHeart.apply_to_label(rating_label, rating > 0)
+	RatingHeart.apply_to_button(likebutton, rating > 0)		
 
 
 func hide_rating_ui() -> void:
@@ -743,24 +741,6 @@ func hide_rating_ui() -> void:
 
 	rating_ui.visible = false
 	
-func _input(event):
-
-	if event.is_action_pressed("ui_accept"):
-
-		if current_frame_hovered == "":
-			return
-
-		var current_saved_rating = get_frame_rating(current_frame_hovered)
-
-		if current_saved_rating == 0:
-			rate_frame(current_frame_hovered, 1)
-		else:
-			rate_frame(current_frame_hovered, 0)
-
-		show_rating_ui(current_frame_hovered)
-			
-
-
 func _on_interaction_area_body_entered(body: Node3D, frame_name: String) -> void:
 
 	pass

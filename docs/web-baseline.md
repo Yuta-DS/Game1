@@ -1,0 +1,386 @@
+# Web load baseline
+
+The numbers every load-time ticket is measured against (issue #32). Re-measure
+after a change and compare with the tables below.
+
+## How to measure
+
+```sh
+./web verify                                      # local build (serves artea/builds/web)
+./web verify --url https://artea-web.vercel.app/  # a deployment
+node artea/tools/web-compression-report.js        # gzip/brotli savings on the local build
+```
+
+`./web verify` loads the page in headless Chrome with the cache disabled, so
+every run is a cold first load. It prints, besides the usual PLAYABLE check:
+
+```
+first load (cache disabled):
+  bytes transferred to hub: 755122206 (720.1 MiB, 75 requests)
+  time to engine started:   5.7 s
+  time to hub:              15.2 s
+  bytes transferred total:  755126302 (720.1 MiB, 76 requests, 0 failed)
+METRIC bytes_to_hub=755122206
+METRIC time_to_engine_s=5.7
+METRIC time_to_hub_s=15.2
+METRIC bytes_total=755126302
+```
+
+- **Bytes transferred** is what crossed the wire (after any Content-Encoding,
+  headers included). It was checked against the files on disk: the local count
+  matches the requested files to within 19.5 KB of HTTP headers.
+- **Time to hub** runs from navigation to the hub's `Successfully spawned` log.
+  It includes the smoke test's own fixed pause of about 4.5 s between the engine
+  starting and clicking Offline Guest, so treat it as a comparable number, not
+  the pure loading time. **Time to engine started** has no such pause, and every
+  build logs it.
+- The `METRIC` lines are for scripts and CI to grep. `-1` means not reached.
+- Per-request bytes go to `artea/builds/smoke/requests.log`, largest first.
+
+## Baseline (2026-10-11)
+
+Local build: `main` at `df299eeb`, exported with Godot 4.7.2, served by
+`./web` on localhost (no network limit, so this is disk and CPU, not download
+speed). Machine: AMD Ryzen 7 9800X3D, Windows 11, Chrome headless.
+
+| Measure | Local build | Deployed (`artea-web.vercel.app`) |
+|---|---:|---:|
+| Bytes transferred to hub | 755,122,206 (720.1 MiB) | hub not detected¹ |
+| Bytes transferred, whole run | 755,126,302 (720.1 MiB) | 357,776,755 (341.2 MiB)² |
+| Requests | 76 | 68 |
+| Time to engine started | 5.7 s | 9.2 s |
+| Time to hub | 15.2 s | hub not detected¹ |
+
+¹ The deployment is an older build (Godot 4.7.1, World One content, 424 MB
+pack) that predates the hub's `Successfully spawned` log, so time-to-hub cannot
+be read from it. It does reach gameplay (screenshot `99-failure.png`). Once
+current `main` is deployed, `--url` reports time-to-hub there too.
+
+² The deployment serves the pack compressed in transit, which is why it moves
+less than its 424 MB pack.
+
+## Repeat visit (issue #33)
+
+`./web verify --repeat` serves the local build with the deployed cache headers
+(content-hashed `parts/` immutable, everything else `no-cache`), loads it once
+cold, then loads it again with the cache on.
+
+| Measure | Before #33 (`no-store`) | After #33 |
+|---|---:|---:|
+| First visit | 755 MB | 755 MB |
+| Second visit, unchanged build | 755 MB | 7,367 bytes |
+| Second visit, parts from cache | 0 of 90 | 90 of 90 |
+
+The 7.4 KB is the two part manifests (never cached) plus ~130-byte `304`
+revalidations of the HTML, js and wasm.
+
+## Compression (local build, 2026-10-11)
+
+From `node artea/tools/web-compression-report.js` (2 m 43 s). gzip at level 6,
+what servers apply on the fly. Brotli at quality 11, what you would
+precompress with, except the pack, which uses quality 9 because quality 11 on
+700 MB would take the better part of an hour.
+
+| File | Raw MiB | gzip -6 MiB | saved | brotli MiB | saved |
+|---|---:|---:|---:|---:|---:|
+| index.pck | 671.86 | 472.85 | 30% | 456.96 (q9) | 32% |
+| index.side.wasm | 42.04 | 10.12 | 76% | 6.86 (q11) | 84% |
+| index.js | 2.73 | 0.34 | 87% | 0.24 (q11) | 91% |
+| libterrain.web.release.wasm32.wasm | 1.95 | 0.37 | 81% | 0.23 (q11) | 88% |
+| index.wasm | 1.44 | 0.56 | 61% | 0.45 (q11) | 68% |
+| index.html | 0.01 | 0.00 | 60% | 0.00 (q11) | 68% |
+| index.audio.worklet.js | 0.01 | 0.00 | 70% | 0.00 (q11) | 75% |
+| pck-loader.js | 0.01 | 0.00 | 57% | 0.00 (q11) | 64% |
+| index.audio.position.worklet.js | 0.00 | 0.00 | 61% | 0.00 (q11) | 70% |
+| **Total** | **720.04** | **484.25** | **33%** | **464.75** | **35%** |
+
+What this says:
+
+- The pack is 93% of the download, and it only compresses by about a third:
+  most of it is already-compressed textures and audio. Shrinking what goes into
+  the pack, or not loading all of it before the hub, will matter more than
+  transfer compression.
+- The engine files compress very well. `index.side.wasm` alone drops from 42 MiB
+  to under 7 MiB with brotli, so serving it compressed is an easy win wherever
+  the host allows it (`pck-loader.js` notes Cloudflare strips a manually set
+  Content-Encoding).
+
+## Parallel part fetching (issue #34)
+
+`pck-loader.js` used to fetch the pack's 8 MB parts one at a time, leaving the
+connection idle for a round trip between parts. It now keeps a bounded number
+in flight and hands them to the engine strictly in order, so the engine still
+sees one in-order stream. Parts that arrive ahead of their turn wait in memory,
+so the bound is also the memory cost: 4 parts is a 32 MB peak.
+
+Time from navigation to "engine started" (the whole pack downloaded), one run
+each, local build (757 MB first load), `?parts=N` to set the concurrency:
+
+| Loader | Local, no shaping | 100 ms latency, 200 Mbit/s |
+|---|---:|---:|
+| Before (one at a time) | 7.2 s | 46.3 s |
+| 1 in flight | 8.0 s | 47.5 s |
+| 2 in flight | 6.7 s | 41.2 s |
+| **4 in flight (default)** | **6.4 s** | **36.6 s (-21%)** |
+| 6 in flight | 6.3 s | 36.2 s |
+| 8 in flight | 6.3 s | 36.0 s |
+
+```sh
+node artea/tools/web-smoke.js "http://localhost:8801/index.html?parts=4" --latency 100 --mbps 200
+```
+
+On the shaped network, 4 is the knee. It is within 2 s of the 30 s that
+200 Mbit/s needs for 757 MB, and more parts in flight only add memory. Time to
+hub fell from 57.6 s to 47.4 s. Unshaped, localhost has no round trip to hide,
+so the gain is small (7.2 s to 6.4 s).
+
+Failure handling, checked with `web-smoke.js --fail-part 05 --fail-times K`
+(part 05 of the pack and of `index.side.wasm` answer 404 for the first K
+requests between them):
+
+- **K = 2:** each part is retried once after 0.5 s and the load carries on.
+  Only the two failing parts were requested again, and it was still PLAYABLE
+  with the same time to engine start.
+- **K = 10:** after four attempts the loader shows a "Part of the game couldn't
+  be downloaded" overlay with a Retry button and holds the download. The
+  engine is still waiting on its stream, so nothing half-loads. Pressing Retry
+  carried on from the failed parts, with no other part fetched twice, and
+  reached the hub.
+
+All of these ran with the Flask server down (Offline Guest).
+
+## Web-only texture re-encoding (issue #39)
+
+`addons/web_asset_slimmer` is an `EditorExportPlugin` that only acts when the
+export platform is Web. Every texture it touches is capped at 2048 px, and
+nothing is dropped:
+
+- **Lossless or lossy (WebP/PNG) textures** are re-stored as lossy WebP
+  (`PortableCompressedTexture2D`, quality 0.85) when they are a 3D texture (have
+  mipmaps) or larger than 1024 px. Small UI icons and pixel art are left alone:
+  lossy WebP smudges hard pixel edges.
+- **VRAM-compressed textures** (S3TC/BPTC) are re-stored as Basis Universal.
+  Basis stays GPU-compressed and the browser transcodes it to whatever it
+  supports: S3TC/BPTC on desktop, ETC2/ASTC on mobile, which the S3TC-only
+  imports never reached. Flat 2D art imported as VRAM is where it pays off
+  (`joyring.png` 3.6 MB → 36 KB, `trophy.png` 3.1 MB → 98 KB). Detailed 3D
+  textures stay about the same size and quality (Milo's skin 2.73 → 2.78 MB,
+  PSNR against the source within 0.2 dB of the shipped DXT1). Lossy WebP would
+  be smaller for those, but decodes to RGBA8, four to eight times the GPU memory
+  of the DXT it replaces. HDR and RGTC normal-map imports are left as they are.
+
+The export scripts (`./web rebuild`, `artea/tools/web.sh`,
+`vercel-pack-split/export_web.sh`) enable it for the length of the export
+through `artea/tools/with-web-export-plugins.sh`. It is not enabled in
+`project.godot`, because every project setting is baked into the exported pack
+as `project.binary`, and enabling it there changes the desktop pack by 48
+bytes.
+
+Pack contents by asset type, from `python artea/tools/pck-contents.py`
+(same project, Web export without and with the plugin):
+
+| Asset type | Before MiB | After MiB | Change |
+|---|---:|---:|---:|
+| texture | 359.1 | 142.1 | -217.0 (-60%) |
+| 3D scene (glb/fbx) | 192.5 | 192.5 | 0 |
+| audio | 79.7 | 79.7 | 0 |
+| scene/resource | 17.7 | 17.7 | 0 |
+| other | 12.4 | 12.4 | 0 |
+| mesh | 5.3 | 5.3 | 0 |
+| font | 4.2 | 4.2 | 0 |
+| script | 2.3 | 2.3 | 0 |
+| shader | 0.1 | 0.1 | 0 |
+| **Total** | **673.3** | **456.3** | **-217.0 (-32%)** |
+
+129 of the 589 non-VRAM textures went to lossy WebP and all 221 VRAM textures
+to Basis Universal; 13 were downscaled. The VRAM textures were 106.9 MiB of the
+texture total (DXT5 73.5, DXT1 33.4). With WebP alone the texture row was
+220.7 MiB. Cold first load (`./web verify`): 755.1 MB → 529.6 MB to the hub,
+time to hub 18.0 s, still PLAYABLE, with no texture or Basis errors in the
+browser console.
+
+The 3D scene row is mesh and animation data: every `.glb` import extracts its
+textures to separate files (`gltf/embedded_image_handling=1`), so those are
+already counted, and shrunk, under texture.
+
+Desktop output is unaffected. `pck-contents.py A.pck --compare B.pck` compares
+packs by file and MD5, ignoring storage order, which Godot does not keep
+stable. Desktop exports never run the wrapper, and the plugin declines every
+platform but Web. To check the second half, the Windows Desktop pack was
+exported with the plugin forcibly enabled (through the wrapper) and without:
+all 4,813 files are byte-identical except `project.binary`, which differs only
+because the wrapper adds the plugin to `project.godot` for the length of the
+export, the 48 bytes that are the reason it is not enabled there.
+
+Not done yet:
+
+- **Audio** (79.7 MiB) is unchanged. Godot cannot encode Ogg Vorbis, so
+  re-encoding at a lower bitrate needs an external encoder such as ffmpeg at
+  export time.
+- **Visual check** in the Hub, Art Castle and each Kingdom (issue #39
+  acceptance). The headless `./web verify` screenshots are taken under the
+  loading overlay (software rendering), so this needs a person in a browser.
+
+## Art Castle as an on-demand Pack (issue #35)
+
+The first split of the single pack into Packs (ADR-0001). Core (`index.pck`)
+holds everything the start screen and the Hub need; `art_castle.pck` holds
+what only the Art Castle uses, and is fetched the first time the player goes
+in. Same build, local server, `./web verify`:
+
+| | Before | After |
+|---|---:|---:|
+| First load, to the Hub | 512.6 MiB (one pack) | **375.8 MiB (-27%)** |
+| Art Castle Pack, on first entry | - | 136.8 MiB |
+| Time to Hub, local | - | 15.4 s |
+| Hub to playable Art Castle, local | - | 47.3 s |
+| Time to Hub, 100 Mbit/s, 40 ms | - | 46.6 s |
+| Hub to playable Art Castle, 100 Mbit/s, 40 ms | - | 58.9 s |
+
+Most of "Hub to playable Art Castle" is the loading screen compiling shaders
+under the headless run's software renderer, not the download.
+
+How the build decides (`artea/tools/pack_split.gd`): a file goes in the Art
+Castle Pack when the castle's entry scenes reach it and nothing in Core does.
+"Reaches" follows ext_resources and preloads, `res://` paths written in code,
+and `class_name` uses. Files nothing outside their own folder uses (a GLB's
+leftover extracted textures, prototype models) go with the Pack that owns
+that folder. So a shared asset always stays in Core, and nothing is listed by
+hand. `PACK_WHY=res://some/file` prints how Core reaches a file, for finding
+what pulls castle content back into the first load.
+
+The same tool fails the export when a shipped scene depends on a file in no
+Pack (missing, or left out by the preset's `exclude_filter`), naming both.
+`artea/tools/test_pack_split.sh` checks that, and that the Tree of Life and
+Crown Line stay out of Core.
+
+How it ships (`artea/tools/export-web-packs.sh`, used by `./web rebuild` and
+both deploy scripts): presets "Web Core" and "Web Pack art_castle" are
+generated from the hand-maintained "Web" preset for the length of the export
+and then removed. Core exports as before; the Pack exports with
+`--export-patch` against Core, so nothing Core holds is shipped twice. The
+Pack preset is the whole Web preset minus other Packs, never just its own
+files: a patch marks every Core file its preset leaves out as removed, and
+mounting it would delete them from the running game. The export refuses a
+Pack that would.
+
+At runtime `res://packs.json` (in Core only) maps entry scenes to Packs.
+`SceneLoader.can_open()` replaces `ResourceLoader.exists()` for routing
+checks, since a Pack's scenes do not exist until it is mounted; any route
+into a Pack's scene goes through the loading screen, which has the page
+download the Pack (`arteaPacks` in `pck-loader.js`: the same parallel,
+retrying part fetch as the first load) into memory and mounts it with
+`ProjectSettings.load_resource_pack`. Godot's own `HTTPRequest` was tried
+first and read a fixed chunk per frame: 137 MB took ten minutes behind a
+loading screen running at a few frames per second.
+
+## Every area as its own Pack (issue #36)
+
+Mind Spark, Heart Melody, Creator's Light and the Crown of Life story now each
+ship in their own Pack too, so the first load is Core and the Hub. Same build,
+local server, `./web verify`:
+
+| | After #35 | After #36 |
+|---|---:|---:|
+| First load, to the Hub | 375.8 MiB | **296.3 MiB** |
+| `index.pck` (Core) | 343 MB | 248 MiB |
+
+Downloaded on first entry, each area entered from the Hub and left again:
+
+| Area | Downloaded | Entered in |
+|---|---:|---:|
+| Art Castle | 180.0 MiB (its Pack and two Shared packs) | 47.4 s |
+| Mind Spark | 1.3 MiB (its Shared pack came with the castle) | 1.7 s |
+| Heart Melody | 24.0 MiB | 2.7 s |
+| Creator's Light | 17.7 MiB | 4.8 s |
+| Crown of Life story | 1.4 MiB | 3.8 s |
+
+What changed in `tools/pack_split.gd`:
+
+- **Entries.** Each area lists the scenes the rest of the game routes into
+  (`PACKS`). A route into another area (a Kingdom's way back to the Art
+  Castle) is a boundary, not a dependency, for Packs as it already was for
+  Core. The cloud-pop game and the paint tool are no longer routed to, but
+  `music_manager.gd` still names them, so they are entries of their Kingdom
+  rather than first-load content.
+- **Shared packs.** A file several areas use goes in a Shared pack for exactly
+  that set of areas (`shared_art_castle_mind_spark`, ...), fetched before
+  whichever of them the player enters first and not again after.
+  `res://packs.json` lists each area's Shared packs and a file whose presence
+  shows a Pack is mounted. Merging small groups, overrides and a size report
+  are issue #37.
+- **Missing files.** The check now requires a dependency's source file, not
+  just a `.import`: a GLB's extracted texture can be gone while its `.import`
+  stays (after a branch switch), and the export then skips it. The message
+  names the fix (`tools/regen_extracted_textures.sh`).
+
+Dev-only fixtures that dragged area content into Core (a quest-object contact
+sheet, the Lens demo, audit and bake scripts) are now excluded from the Web
+preset. `scripts/test_scene_swaps_use_loader.gd` reads the Pack entries from
+the same `PACKS` list and fails on `ResourceLoader.exists()` used on one,
+which is false on the web until its Pack is mounted; `SceneLoader.can_open()`
+is the check. `window.arteaGo(scene)` (`Global.gd`) is how the smoke test
+moves between areas: the same route as a teleporter.
+
+The full export (Core and seven Packs) takes about five minutes: each Pack's
+patch export only writes what Core lacks.
+
+## Shared packs, overrides and the size report (issue #37)
+
+Files several areas use already went into a Shared pack per set of areas
+(#36). Now:
+
+- **Merging.** A Shared pack under `merge_below_mb` (5 MB) joins the nearest
+  larger Shared pack: the one whose set of areas differs least from its own.
+  Each Shared pack is one more download for every area that needs it, so a
+  small one costs more in requests than it saves in bytes. Today's three are
+  all above the floor (9.5, 16.6 and 29.0 MB); `test_pack_split.sh` checks
+  the merge with a 12 MB floor.
+- **Overrides.** `artea/tools/packs.cfg` can pin files (or globs) to Core,
+  with everything they use, and sets the merge floor and the Core budget.
+- **Size report.** The split prints each Pack's size, what it requires and
+  its three largest folders, then Core + Hub against the budget. After the
+  export, `tools/check_packs.py` prints the real `.pck` sizes, and fails the
+  build if an asset ships in two `.pck` files or a Pack would delete Core
+  files when mounted.
+
+Core + Hub today: 247.9 MB of `index.pck` against the 100 MB budget. Its
+largest folders are the Hub's Terrain3D regions (`scenes/Level`, 58.6 MB
+imported), characters (55.2 MB) and sound effects (20.4 MB); the report is
+where to look next.
+
+## Background prefetch after the Hub is playable (issue #38)
+
+When the loading screen hands the Hub over, the page starts downloading every
+Pack not yet mounted, one at a time, most likely next first. The order comes
+from the journey (`SceneLoader.prefetch_order()`): the Art Castle (where the
+campaign goes from the Hub), then the Kingdoms in campaign order from the
+player's next unfinished one, then the optional Crown of Life story. Each
+area's Shared packs come just before it.
+
+- **Download only.** A prefetched Pack stays in the page's memory. Copying it
+  into the engine's file system is a long main-thread block, so it happens on
+  the loading screen when the player goes there, where it cannot be seen.
+- **Yields.** While the loading screen is fetching a Pack for the player,
+  other Packs' background downloads hold their next part back. A Pack the
+  player asks for that is already downloading carries on at full speed, and
+  the loading screen shows its progress.
+- **Quiet failures.** A background download that fails gives up without the
+  Retry overlay; the loading screen fetches it again if the player goes there.
+
+`./web verify` checks it: it goes into the Crown of Life story the moment the
+Hub is up (before the background download can reach it), then waits in the
+Hub for the rest, then enters every other area. Local server shaped to
+100 Mbit/s and 40 ms (`web-smoke.js --mbps 100 --latency 40`):
+
+| | |
+|---|---|
+| Story, entered before it was prefetched | 56.8 MiB on the way in (its Packs, then the castle's resuming), 19.6 s |
+| Art Castle, Mind Spark, Heart Melody, Creator's Light | **0.0 MiB** on the way in |
+| Hub frame time while prefetching | median 16.6 ms, p95 20.8 ms (338 frames) |
+| Hub frame time after | median 16.6 ms, p95 20.7 ms (460 frames) |
+
+The smoke test prints when each Pack started, was asked for and finished. In
+that run the story's Packs were asked for at 0.9 s and 2.5 s and done by
+2.7 s, while the background Pack that had started at 0.9 s held back and
+finished at 13.0 s.

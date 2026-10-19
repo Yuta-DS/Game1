@@ -18,7 +18,23 @@ func _run() -> void:
 	regions.set_script(load("res://scripts/art_castle_kingdom_regions.gd"))
 	world.add_child(regions)
 	await process_frame
-	for kingdom_id in ["mind", "heart", "creator"]:
+	# Heart and Creator are one fountain-island-sized platform each, holding the
+	# station's access-bridge landing.
+	for kingdom_id in ["heart", "creator"]:
+		var platform := regions.get_node_or_null("%sKingdomPlatform" % kingdom_id.to_pascal_case()) as Node3D
+		if platform == null or platform.get_node_or_null("WalkableDeck") == null:
+			_fail("missing %s station platform" % kingdom_id)
+			return
+		if regions.get_node_or_null("%sKingdom3000m" % kingdom_id.to_pascal_case()) != null:
+			_fail("%s still builds the 3 km grey kingdom" % kingdom_id)
+			return
+		var landing: Vector3 = (regions.call("get_story_route", kingdom_id) as Array)[0].position
+		var deck := platform.get_node("WalkableDeck") as Node3D
+		if Vector2(landing.x, landing.z).distance_to(Vector2(deck.position.x, deck.position.z)) \
+				> regions.call("get_kingdom_size", kingdom_id).x * 0.5 - 5.0:
+			_fail("%s access-bridge landing is not on its platform" % kingdom_id)
+			return
+	for kingdom_id in ["mind"]:
 		if regions.call("get_kingdom_size", kingdom_id) != Vector2(3000, 3000):
 			_fail("%s is not exactly 3000m x 3000m" % kingdom_id)
 			return
@@ -52,10 +68,10 @@ func _run() -> void:
 		if float(centers[kingdom_id].z) <= 820.0:
 			_fail("%s was not mirrored to the gallery-facing side" % kingdom_id)
 			return
-		var nearest_edge_z := float(centers[kingdom_id].z) - 1500.0
+		var nearest_edge_z: float = float(centers[kingdom_id].z) - regions.call("get_kingdom_size", kingdom_id).y * 0.5
 		if nearest_edge_z - 820.0 < 1500.0:
 			_fail("%s edge is still too close to the Art Castle entrance: %.1fm clearance"
 				% [kingdom_id, nearest_edge_z - 820.0])
 			return
-	print("KINGDOM_REGIONS_3000M_TEST: PASS — three 3 km worlds, 24 story checkpoints, distinct regions")
+	print("KINGDOM_REGIONS_3000M_TEST: PASS — 3 km Mind world with 8 checkpoints, Heart and Creator station platforms, distinct regions")
 	quit()

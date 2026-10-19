@@ -25,18 +25,27 @@ func _run() -> void:
 		return
 	for district in ["CentralSanctuary", "ArrivalIsland", "MindSparkDistrict",
 			"HeartMelodyTemple", "CreatorsLightStudio", "WestObservatory",
-			"NorthObservatory", "EastObservatory", "SouthObservatory"]:
+			"NorthObservatory"]:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
 
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
-			"WestObservatoryBridge", "NorthObservatoryBridge", "EastObservatoryBridge",
-			"SouthObservatoryBridge"]:
+			"WestObservatoryBridge", "NorthObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
-		if bridge_node == null or bridge_node.get_node_or_null("Walkway") == null:
+		# The West lookout's railed bridges use the causeway's deck.
+		if bridge_node == null or (bridge_node.get_node_or_null("Walkway") == null
+				and bridge_node.get_node_or_null("ContinuousWalkway") == null):
 			_fail("missing connected walkway %s" % bridge)
 			return
+	# The raised Creator studio platform must be walkable from every side.
+	for index in 4:
+		if world.get_node_or_null("CreatorsLightStudio/StudioStairs_%d" % index) == null:
+			_fail("Creator studio platform is missing stairs on side %d" % index)
+			return
+	if world.get_node_or_null("CreatorBridge/ReferenceTreeProcessionalBridge") == null:
+		_fail("CreatorBridge does not use the processional bridge style")
+		return
 	var tree_bridge := world.get_node_or_null("SouthArrivalBridge") as Node3D
 	if tree_bridge.get_meta("visual_style", "") != \
 			"castle_arcane_tree_of_life_processional" \
@@ -86,8 +95,10 @@ func _run() -> void:
 	if world.find_children("*", "StaticBody3D", true, false).size() < 90:
 		_fail("world does not contain enough collision-backed architecture")
 		return
-	if world.find_children("SkyTower_*", "Node3D", true, false).size() < 12:
-		_fail("floating skyline is incomplete")
+	# The white skyline towers (each topped with a cypress) were removed as
+	# out of place against the galaxy sky.
+	if not world.find_children("SkyTower_*", "Node3D", true, false).is_empty():
+		_fail("removed skyline towers are back")
 		return
 
 	print("ART_CASTLE_FLOATING_WORLD_TEST: PASS — world, player, live minimap, and return gate")

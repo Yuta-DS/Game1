@@ -442,7 +442,7 @@ func _return_to_castle() -> void:
 	return_requested = true
 	if campaign != null and campaign.has_method("return_to_campaign"):
 		campaign.call("return_to_campaign", get_tree())
-	elif ResourceLoader.exists(CASTLE_SCENE):
+	elif SceneLoader.can_open(CASTLE_SCENE):
 		SceneLoader.change_scene_with_loading(get_tree(), CASTLE_SCENE)
 
 

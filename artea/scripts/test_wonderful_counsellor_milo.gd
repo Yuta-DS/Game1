@@ -16,17 +16,17 @@ func _run() -> void:
 		requested_poses.append(pose_name)
 	)
 
-	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as TextEdit
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as RichTextLabel
 	var choices := chat.get_node("Panel/VBoxContainer/ChoicesScroll/CuratedChoices") as VBoxContainer
 	chat._show_choices()
 	assert(requested_poses.back() == "welcome",
 		"the companion menu uses Milo's welcoming cane pose")
 	for companion_path in [
-		"Check in with a feeling",
-		"Reflect with Milo",
 		"Discover a strength",
 		"Celebrate my progress",
-		"Choose an ARTÉA activity",
+		"Choose an activity",
+		"Need help",
+		"Close",
 	]:
 		assert(_has_button(choices, companion_path),
 			"Wonderful Counsellor Milo exposes %s" % companion_path)
@@ -61,29 +61,40 @@ func _run() -> void:
 
 	chat._show_strength_discoveries()
 	assert(requested_poses.back() == "encourage",
-		"strength discovery uses Milo's encouraging pose")
-	assert(history.text.contains("Strength Discoverer"),
-		"Milo offers strengths-based reflection")
-	chat._respond_to_strength({
-		"label": "I kept trying",
-		"strength": "PERSEVERANCE",
-		"reflection": "OBSERVED ACTION",
-		"question": "STRENGTH QUESTION",
-	})
-	for evidence in ["PERSEVERANCE", "OBSERVED ACTION", "STRENGTH QUESTION"]:
-		assert(history.text.contains(evidence),
-			"strength response contains %s" % evidence)
+		"strength finder uses Milo's encouraging pose")
+	assert(history.text.contains("Strength Finder") and history.text.contains("Question 1 of 5"),
+		"Milo starts the concise strength finder")
+	# Answer kindness three times and creativity twice: kindness wins.
+	for strength_id in ["kindness", "creativity", "kindness", "creativity", "kindness"]:
+		chat._answer_strength_question(strength_id)
+	assert(history.text.contains("Kindness"),
+		"Milo reveals the strength the player chose most often")
+	assert(_has_button(choices, "Go with Milo to Heart Melody Kingdom"),
+		"the revealed strength links to a matching activity")
 
-	chat._stage = 3
+	var fake_campaign := FakeCampaign.new()
+	chat.campaign_router = fake_campaign
 	chat._show_progress_celebration()
 	assert(requested_poses.back() == "encourage",
 		"progress celebration uses Milo's celebratory pose")
-	assert(history.text.contains("Creator's Light"),
-		"progress celebration uses recorded journey stage")
-	assert(history.text.contains("Creative courage"),
-		"progress celebration names a stage-grounded strength")
-	assert(history.text.contains("does not add or remove rewards"),
-		"reflection never manufactures game progress")
+	assert(history.text.contains("haven't completed a world yet"),
+		"no completed worlds is celebrated kindly, not invented")
+	fake_campaign.completed = ["mind", "heart"]
+	chat._show_progress_celebration()
+	assert(history.text.contains("2 of 3 worlds"),
+		"progress counts the worlds the journey recorded")
+	assert(history.text.contains("Mind Spark Kingdom") and history.text.contains("Heart Melody Kingdom"),
+		"each completed world is named")
+	assert(history.text.contains("Next adventure: Creator's Light Kingdom"),
+		"Milo points to the next unfinished world")
+	fake_campaign.completed = ["mind", "heart", "creator"]
+	chat._show_progress_celebration()
+	assert(history.text.contains("3 of 3 worlds") and history.text.contains("finished every world"),
+		"finishing every world is celebrated")
+	assert(not history.text.contains("Crown of Life") and not _has_button(choices, "Go with Milo to Crown of Life"),
+		"the Crown of Life is not offered while the worlds are a work in progress")
+	chat.campaign_router = null
+	fake_campaign.free()
 
 	chat._show_activity_guides()
 	assert(requested_poses.back() == "map",
@@ -114,6 +125,19 @@ func _run() -> void:
 	chat.queue_free()
 	print("WONDERFUL_COUNSELLOR_MILO_TEST: PASS — five safe roles drive six readable counsellor poses end to end")
 	quit()
+
+
+class FakeCampaign extends Node:
+	var completed: Array = []
+
+	func is_kingdom_complete(kingdom_id: String) -> bool:
+		return kingdom_id in completed
+
+	func next_kingdom_id() -> String:
+		for kingdom_id in ["mind", "heart", "creator"]:
+			if not kingdom_id in completed:
+				return kingdom_id
+		return ""
 
 
 func _has_button(container: VBoxContainer, text: String) -> bool:

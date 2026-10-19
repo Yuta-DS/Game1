@@ -39,8 +39,10 @@ func _run() -> void:
 	if regions == null or story == null or railway == null:
 		_fail("3 km kingdoms, connected story, and Crown Line do not coexist in the gallery")
 		return
+	# Heart and Creator are station platforms, Mind the full 3 km world.
 	for kingdom_id in ["mind", "heart", "creator"]:
-		if regions.call("get_kingdom_size", kingdom_id) != Vector2(3000, 3000):
+		var expected := Vector2(3000, 3000) if kingdom_id == "mind" else Vector2(930, 930)
+		if regions.call("get_kingdom_size", kingdom_id) != expected:
 			_fail("%s region has the wrong exploration size" % kingdom_id)
 			return
 	if not bool(story.call("story_is_connected")):

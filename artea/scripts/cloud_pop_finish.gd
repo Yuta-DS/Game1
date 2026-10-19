@@ -82,17 +82,17 @@ func _build_reflection() -> String:
 
 # Play again button
 func _on_play_again_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/popThoughtsMenu.tscn")
+	SceneLoader.change_scene(get_tree(), "res://scenes/popThoughtsMenu.tscn")
 	
 
 # Return to Hubworld button
 func _on_return_to_hubworld_pressed():
-	_return_to_campaign()
+	_return_to_park()
 
 
-func _return_to_campaign() -> void:
+func _return_to_park() -> void:
 	var campaign := get_node_or_null("/root/JourneyCampaign")
-	if campaign != null and campaign.has_method("return_to_campaign"):
-		campaign.call("return_to_campaign")
+	if campaign != null and campaign.has_method("return_to_park"):
+		campaign.call("return_to_park")
 	else:
-		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
+		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")

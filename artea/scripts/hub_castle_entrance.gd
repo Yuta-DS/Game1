@@ -181,14 +181,20 @@ func _process(delta: float) -> void:
 	for i in _banners.size():
 		_banners[i].rotation.z = sin(_sway_time * 0.9 + float(i) * 1.7) * 0.06
 
+	# The castle redesign frees the gears and floating orbs it does not use
+	# (castle_redesign.gd _remove_piece), so skip any that are gone.
 	if not is_zero_approx(_gear_speed):
 		for i in _gears.size():
+			if not is_instance_valid(_gears[i]):
+				continue
 			var direction := 1.0 if i % 2 == 0 else -1.0
 			_gears[i].rotate_y(_gear_speed * direction * delta)
 
 	# The fountain core hovers inside its armature. Rest height is stored on the
 	# node the first time it is seen, so this works no matter where it was built.
 	for i in _floaters.size():
+		if not is_instance_valid(_floaters[i]):
+			continue
 		var floater := _floaters[i]
 		if not floater.has_meta("rest_y"):
 			floater.set_meta("rest_y", floater.global_position.y)
@@ -382,6 +388,35 @@ func _build_grand_stair(parent: Node3D) -> void:
 				_emissive(CIRCUIT_CYAN, 1.5))
 			inlay.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
+	# Invisible ramp laid across the tread nosings. Without it the player's
+	# step-up pops 0.23 m per riser (plus a 6 cm lip where the raised terrace
+	# buries the last tread), so walking the flight stutters. The nosings are
+	# collinear (~25 deg, under floor_max_angle), so one box glides over all of
+	# them; the treads keep their own collision underneath.
+	var half_tread := (GRAND_STAIR_RUN / float(GRAND_STAIR_STEPS) + 0.55) * 0.5
+	var nosings: Array[Vector3] = []
+	for i in [0, GRAND_STAIR_STEPS - 1]:
+		var nosing_t := (float(i) + 0.5) / float(GRAND_STAIR_STEPS)
+		nosings.append(CASTLE_DOOR
+			+ OUT * (UPPER_LENGTH + GRAND_STAIR_RUN * nosing_t + half_tread)
+			+ Vector3(0.0, -CEREMONIAL_RISE * nosing_t - 0.04, 0.0))
+	var slope_dir := (nosings[1] - nosings[0]).normalized()
+	# Run 0.6 m past the last nosing so the low end sinks under the terrace.
+	var ramp_end := nosings[1] + slope_dir * 0.6
+	var ramp_length := nosings[0].distance_to(ramp_end)
+	var ramp := StaticBody3D.new()
+	ramp.name = "GrandStairGlideRamp"
+	ramp.set_meta("collision_only", true)
+	parent.add_child(ramp)
+	ramp.global_position = nosings[0].lerp(ramp_end, 0.5)
+	ramp.look_at(ramp.global_position + slope_dir, Vector3.UP)
+	ramp.global_position -= ramp.global_basis.y * 0.15  # top face on the nosings
+	var ramp_shape := CollisionShape3D.new()
+	var ramp_box := BoxShape3D.new()
+	ramp_box.size = Vector3(stair_width, 0.3, ramp_length)
+	ramp_shape.shape = ramp_box
+	ramp.add_child(ramp_shape)
+
 	# Cheek walls: solid ramps of masonry down both sides of the flight, capped
 	# in brass. Without them the steps float as loose slabs.
 	for side_value in [-1.0, 1.0]:
@@ -454,6 +489,23 @@ func _build_castle_ascent(parent: Node3D) -> void:
 	ramp.name = "CastleAscentRamp"
 	ramp.global_rotation.z = angle
 	_add_box_body(ramp, ramp_size)
+
+	# The ramp's square-cut foot leaves its top face ~0.3 m above the upper
+	# court, so the player had to step up a lip straight onto a 46 deg slope.
+	# A collision-only toe continues the same plane 1 m further down, sinking
+	# below the court so the floor flows into the ramp with no lip.
+	var along := Vector3(cos(angle), sin(angle), 0.0)
+	var toe := StaticBody3D.new()
+	toe.name = "CastleAscentRampToe"
+	toe.set_meta("collision_only", true)
+	parent.add_child(toe)
+	toe.global_position = centre + along * (length * 0.5 + 0.5)
+	toe.global_rotation.z = angle
+	var toe_shape := CollisionShape3D.new()
+	var toe_box := BoxShape3D.new()
+	toe_box.size = Vector3(1.0, ramp_size.y, ramp_size.z)
+	toe_shape.shape = toe_box
+	toe.add_child(toe_shape)
 
 	# One restrained centre conduit preserves the established aether language
 	# without making the smooth surface read as another run of treads.

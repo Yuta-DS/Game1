@@ -89,6 +89,7 @@ var _sample_spur_active := false
 var _sample_spur_start := Vector2.ZERO
 var _sample_station_centre := Vector2.ZERO
 var _sample_kingdom_centres: Array[Vector2] = []
+var _sample_kingdom_halves: Array[float] = []
 var _sample_kingdom_colors: Array[Color] = []
 
 # Redraw cadence state (see MAP_REFRESH_INTERVAL).
@@ -380,10 +381,11 @@ func _landscape_color(world_position: Vector3) -> Color:
 	for segment in GALAXY_BRIDGE_SEGMENTS:
 		if _distance_to_segment(local_flat, segment[0], segment[1]) <= float(segment[2]):
 			return Color("8d88a0").lightened(texture_wave * 0.035)
-	# Each 3 km kingdom is a real authored square region beyond the inner isles.
+	# Each kingdom's land (3 km Mind, station platforms for the others).
 	for index in _sample_kingdom_centres.size():
 		var centre: Vector2 = _sample_kingdom_centres[index]
-		if absf(local.x - centre.x) <= 1500.0 and absf(local.z - centre.y) <= 1500.0:
+		var half := _sample_kingdom_halves[index]
+		if absf(local.x - centre.x) <= half and absf(local.z - centre.y) <= half:
 			return _sample_kingdom_colors[index].lightened(texture_wave * 0.055)
 	return Color("101329").lightened(texture_wave * 0.018)
 
@@ -395,19 +397,20 @@ func _refresh_landscape_sampling() -> void:
 	_sample_zone_centres.clear()
 	_sample_zone_radii.clear()
 	_sample_kingdom_centres.clear()
+	_sample_kingdom_halves.clear()
 	_sample_kingdom_colors.clear()
 	if _world == null:
 		return
 	_sample_world_to_local = _world.global_transform.affine_inverse()
 
-	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
-	if mind_world != null and mind_world.force_standalone_blueprint:
+	var mind_world := _blueprint_world()
+	if mind_world != null:
 		_sample_blueprint_active = true
-		var mind_ids := mind_world.get_zone_ids()
+		var mind_ids: Array = mind_world.call("get_zone_ids")
 		for zone_id in mind_ids:
-			var centre: Vector3 = mind_world.position + mind_world.get_zone_position(zone_id)
+			var centre: Vector3 = mind_world.position + mind_world.call("get_zone_position", zone_id)
 			_sample_zone_centres.append(Vector2(centre.x, centre.z))
-			_sample_zone_radii.append(mind_world.get_zone_radius(zone_id))
+			_sample_zone_radii.append(float(mind_world.call("get_zone_radius", zone_id)))
 		var station_spur := mind_world.get_node_or_null(
 			"WorldOneGeometry/OptionalCompletedWorldStationSpur") as Node3D
 		if station_spur != null and station_spur.visible:
@@ -429,6 +432,7 @@ func _refresh_landscape_sampling() -> void:
 				continue
 			var centre: Vector3 = centres[KINGDOM_IDS[index]]
 			_sample_kingdom_centres.append(Vector2(centre.x, centre.z))
+			_sample_kingdom_halves.append((_regions.call("get_kingdom_size", KINGDOM_IDS[index]) as Vector2).x * 0.5)
 			_sample_kingdom_colors.append(KINGDOM_COLORS[index])
 
 
@@ -684,18 +688,29 @@ func _draw_galaxy_full_landscape(rect: Rect2) -> void:
 	_draw_mind_spark_blueprint(rect)
 
 
+# World One, when it is drawing its standalone blueprint. Found by name and
+# called by method name rather than cast to MindSparkWorldOne: naming the class
+# compiles World One's script into whatever ships the minimap - the Hub - and so
+# dragged World One into the Core Pack instead of the Art Castle's (ADR-0001).
+func _blueprint_world() -> Node3D:
+	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as Node3D if _world != null else null
+	if mind_world == null or not bool(mind_world.get("force_standalone_blueprint")):
+		return null
+	return mind_world
+
+
 func _draw_mind_spark_blueprint(rect: Rect2) -> void:
-	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
-	if mind_world == null or not mind_world.force_standalone_blueprint:
+	var mind_world := _blueprint_world()
+	if mind_world == null:
 		return
-	var zone_ids := mind_world.get_zone_ids()
+	var zone_ids: Array = mind_world.call("get_zone_ids")
 	var points := PackedVector2Array()
 	var radius_scale := rect.size.x / maxf(_bounds.size.x, 1.0)
 	for zone_index in zone_ids.size():
-		var local_center := mind_world.position + mind_world.get_zone_position(zone_ids[zone_index])
+		var local_center: Vector3 = mind_world.position + mind_world.call("get_zone_position", zone_ids[zone_index])
 		var point := _map_local(local_center, rect)
 		points.append(point)
-		var radius := maxf(3.0, mind_world.get_zone_radius(zone_ids[zone_index]) * radius_scale)
+		var radius := maxf(3.0, float(mind_world.call("get_zone_radius", zone_ids[zone_index])) * radius_scale)
 		var color := Color("315f70") if zone_index < 4 else Color("4c386a")
 		draw_circle(point, radius, Color(color, 0.92))
 		draw_arc(point, radius, 0, TAU, 32, Color("72e6f1"), 1.0, true)
@@ -829,11 +844,11 @@ func _recalculate_bounds() -> void:
 		max_x = maxf(max_x, centre_global.x + 1500.0 + GALAXY_PADDING)
 		min_z = minf(min_z, centre_global.z - 1500.0 - GALAXY_PADDING)
 		max_z = maxf(max_z, centre_global.z + 1500.0 + GALAXY_PADDING)
-	var mind_world := _world.get_node_or_null("MindSparkWorldOne") as MindSparkWorldOne
-	if mind_world != null and mind_world.force_standalone_blueprint:
-		for zone_id in mind_world.get_zone_ids():
-			var centre_global := mind_world.to_global(mind_world.get_zone_position(zone_id))
-			var radius := mind_world.get_zone_radius(zone_id) + 12.0
+	var mind_world := _blueprint_world()
+	if mind_world != null:
+		for zone_id in mind_world.call("get_zone_ids"):
+			var centre_global := mind_world.to_global(mind_world.call("get_zone_position", zone_id))
+			var radius := float(mind_world.call("get_zone_radius", zone_id)) + 12.0
 			min_x = minf(min_x, centre_global.x - radius)
 			max_x = maxf(max_x, centre_global.x + radius)
 			min_z = minf(min_z, centre_global.z - radius)

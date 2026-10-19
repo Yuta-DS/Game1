@@ -24,6 +24,10 @@ func run() -> void:
 	check(gate.teleport_player(player), "real World Gate accepts Heart destination")
 	check(not state.has_treasure("star_of_wisdom"), "Heart entry does not fabricate Mind Spark completion")
 	# Allow the normal gravity contract to settle the capsule from its 2 m spawn.
+	for frame in 1800:
+		await physics_frame
+		if current_scene != null and current_scene.scene_file_path == "res://scenes/heart_melody/heart_melody_world.tscn":
+			break
 	for frame in 60: await physics_frame
 	var heart = current_scene
 	check(heart != null and heart.scene_file_path == "res://scenes/heart_melody/heart_melody_world.tscn", "real gate loads Heart without a Mind Spark builder")
@@ -44,6 +48,6 @@ func run() -> void:
 	check(castle_ready, "Castle return loads the actual campaign scene")
 	progress.load_progress()
 	check(progress.data.planters.has("0") and not progress.data.complete, "early Castle return preserves seed without completing island")
-	check(not state.has_treasure("harmony_jewel") and not root.get_node("JourneyCampaign").can_enter_kingdom("creator"), "travel cannot award Jewel or Creator access")
+	check(not state.has_treasure("harmony_jewel") and not state.has_treasure("creators_light"), "travel cannot award Jewel or Creator treasure")
 	print("HEART GATE ROUND TRIP: all checks passed" if failures.is_empty() else "HEART GATE FAILURES: " + str(failures))
 	quit(0 if failures.is_empty() else 1)

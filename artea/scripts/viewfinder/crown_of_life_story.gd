@@ -34,7 +34,9 @@ const STORY_SCENE_PATH := "res://scenes/viewfinder/crown_of_life_story.tscn"
 const SETTINGS_PATH := "user://crown_story_settings.cfg"
 
 const FALL_RESPAWN_Y := -12.0
-const STONE_ALBEDO := "res://demo/assets/textures/rock023_alb_ht.png"
+# Out of demo/ (Terrain3D's demo, which the Web preset leaves out): from there
+# the story showed bare stone on the web (web.txt Problem 5).
+const STONE_ALBEDO := "res://assets/textures/stone/rock023_alb_ht.png"
 
 # One named emotion cue per chapter, played on approach and on completion, so
 # Heart Melody in particular is legible with the game fully muted (captions
@@ -1881,7 +1883,7 @@ func _replay_journey() -> void:
 		js.clear_journey()
 		js.set_audience_mode(mode)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	get_tree().change_scene_to_file(STORY_SCENE_PATH)
+	SceneLoader.change_scene(get_tree(), STORY_SCENE_PATH)
 
 
 # --- HUD --------------------------------------------------------------

@@ -2,9 +2,47 @@
 #
 # The original mesh owns gameplay collision, the gallery doorway and the exact
 # silhouette from the supplied screenshot. This layer changes only appearance:
-# it restores the original blue/red village colour atlas, removes unrelated
-# astral machinery, and adds grounded castle detail around the authored player route.
+# it dresses the castle in a Sleeping Beauty palette (rose masonry, cobalt
+# roofs, gold finials and stained glass), removes unrelated astral machinery,
+# and adds grounded castle detail around the authored player route.
 extends Node3D
+
+# The village atlas with the castle's grey masonry turned rose and its red roofs
+# turned blue (tools/recolor_castle_atlas.gd). Only the castle uses it; the
+# village houses keep the original.
+const VILLAGE_ATLAS_PATH := "res://assets3D/houses/red/hexagons_castle.png"
+const ROSE_ATLAS := preload("res://assets3D/houses/red/hexagons_castle_rose.png")
+const STAINED_GLASS := preload("res://shaders/stained_glass.gdshader")
+# The imported castle's 23 arched windows: the centre of each recess's back
+# wall relative to the castle's origin, and the way it faces. Read off the
+# model (the faces textured with the atlas's dark window swatch), since the
+# texture itself is not readable at runtime once the Web export re-encodes it.
+const CASTLE_WINDOW_SIZE := Vector2(0.74, 1.66)
+const CASTLE_WINDOWS := [
+	[Vector3(2.04, 22.31, -3.54), Vector3(0.500, 0.0, -0.866)],
+	[Vector3(1.97, 28.64, 3.41), Vector3(0.500, 0.0, 0.866)],
+	[Vector3(-1.97, 28.64, -3.41), Vector3(-0.500, 0.0, -0.866)],
+	[Vector3(1.97, 28.64, -3.41), Vector3(0.500, 0.0, -0.866)],
+	[Vector3(-1.97, 28.64, 3.41), Vector3(-0.500, 0.0, 0.866)],
+	[Vector3(-3.94, 28.64, 0.00), Vector3(-1.000, 0.0, 0.000)],
+	[Vector3(3.94, 28.64, 0.00), Vector3(1.000, 0.0, 0.000)],
+	[Vector3(2.04, 22.31, 3.54), Vector3(0.500, 0.0, 0.866)],
+	[Vector3(-2.04, 22.31, -3.54), Vector3(-0.500, 0.0, -0.866)],
+	[Vector3(-2.04, 22.31, 3.54), Vector3(-0.500, 0.0, 0.866)],
+	[Vector3(3.82, 6.31, -9.30), Vector3(0.000, 0.0, -1.000)],
+	[Vector3(6.15, 6.31, -7.95), Vector3(0.866, 0.0, -0.500)],
+	[Vector3(-3.81, 6.31, 9.32), Vector3(0.000, 0.0, 1.000)],
+	[Vector3(-3.81, 10.31, -9.32), Vector3(0.000, 0.0, -1.000)],
+	[Vector3(3.82, 10.31, 9.32), Vector3(0.000, 0.0, 1.000)],
+	[Vector3(-9.51, 4.31, -2.04), Vector3(-0.866, 0.0, -0.500)],
+	[Vector3(-9.51, 9.31, -2.04), Vector3(-0.866, 0.0, -0.500)],
+	[Vector3(-9.51, 4.31, 2.04), Vector3(-0.866, 0.0, 0.500)],
+	[Vector3(-9.51, 9.31, 2.04), Vector3(-0.866, 0.0, 0.500)],
+	[Vector3(5.97, 13.91, -2.69), Vector3(0.000, 0.0, -1.000)],
+	[Vector3(8.30, 13.91, 1.35), Vector3(0.866, 0.0, 0.500)],
+	[Vector3(-8.30, 18.31, -1.35), Vector3(-0.866, 0.0, -0.500)],
+	[Vector3(-8.30, 18.31, 1.34), Vector3(-0.866, 0.0, 0.500)],
+]
 
 const CASTLE_NAME := "building_castle_red2"
 var _stone: StandardMaterial3D
@@ -15,6 +53,7 @@ var _timber: StandardMaterial3D
 var _timber_light: StandardMaterial3D
 var _timber_dark: StandardMaterial3D
 var _iron: StandardMaterial3D
+var _gold: StandardMaterial3D
 
 const CASTLE_DOOR_WORLD := Vector3(-39.8, 78.33, 27.41)
 const BRIDGE_START_WORLD := Vector3(-7.4, 67.73, 27.41)
@@ -38,32 +77,49 @@ func _ready() -> void:
 	_remove_reference_technology()
 	_restyle_castle_approach()
 	_build_castle_architecture(castle)
-	_build_village_style_stair_tower()
+	_glaze_stair_tower()
+	_glaze_castle_windows(castle)
 	_position_castle_commander()
+	_gild_cone_roofs()
 
 
 func _create_materials() -> void:
-	# Sampled from the same red-house kit used by tower_B, tower_catapult and the
-	# village homes. The imported castle already uses their hexagons_castle atlas;
-	# these flat procedural materials reproduce its rendered value hierarchy so
-	# added architecture no longer looks like a different graphics pack.
-	_stone = _material(Color("8399a6"), 0.92)
-	_stone_light = _material(Color("c7d2d2"), 0.90)
-	_stone_course = _material(Color("9aabb2"), 0.91)
-	_slate = _material(Color("ef443d"), 0.88)
+	# Sleeping Beauty palette for everything built around the castle: the front,
+	# stairs, bridges and gatehouse share these with the castle body, so the
+	# whole approach matches the rose atlas (tools/recolor_castle_atlas.gd).
+	# Rose walls, warm ivory walkways and treads (warm enough to stay ivory under
+	# the blue sky light on wide decks), and a deeper rose for courses and
+	# buttresses, keeping the old light/mid/dark stone hierarchy.
+	_stone = _material(Color.from_hsv(350.0 / 360.0, 0.29, 0.79), 0.9)
+	_stone_light = _material(Color("e3b8a2"), 0.9)
+	_stone_course = _material(Color.from_hsv(348.0 / 360.0, 0.33, 0.66), 0.91)
+	# Cobalt, like Sleeping Beauty Castle's spires, matching the recoloured atlas.
+	_slate = _material(Color("3f6fc6"), 0.82)
 	_timber = _material(Color("7f4628"), 0.91)
 	_timber_light = _material(Color("a96032"), 0.90)
 	_timber_dark = _material(Color("4d2d20"), 0.94)
 	_iron = _material(Color("526671"), 0.82, 0.18)
+	_gold = _material(Color("e2b448"), 0.38, 0.65)
 	_stone.set_meta("castle_role", "weathered_masonry")
-	_stone.set_meta("original_palette_role", "blue_gray_castle_masonry")
-	_stone_light.set_meta("original_palette_role", "blue_gray_castle_highlight")
-	_slate.set_meta("original_palette_role", "reference_red_roof")
+	_stone.set_meta("original_palette_role", "sleeping_beauty_rose_masonry")
+	_stone_light.set_meta("original_palette_role", "sleeping_beauty_ivory_walk")
+	_slate.set_meta("original_palette_role", "sleeping_beauty_blue_roof")
+	_gold.set_meta("castle_role", "gilded_finial")
 	_timber.set_meta("castle_role", "oak_structure")
 	_iron.set_meta("castle_role", "wrought_iron")
 	for shared_material in [_stone, _stone_light, _stone_course, _slate, _timber,
-			_timber_light, _timber_dark, _iron]:
+			_timber_light, _timber_dark, _iron, _gold]:
 		shared_material.set_meta("render_family", "red_village_hexagons_castle")
+
+
+func _stained_glass(shape: int, size: Vector2, seed: int) -> ShaderMaterial:
+	var glass := ShaderMaterial.new()
+	glass.shader = STAINED_GLASS
+	glass.set_shader_parameter("shape", shape)
+	glass.set_shader_parameter("panel_size", size)
+	glass.set_shader_parameter("seed", float(seed) * 17.0)
+	glass.set_meta("castle_role", "stained_glass")
+	return glass
 
 
 func _material(colour: Color, roughness: float, metallic := 0.0) -> StandardMaterial3D:
@@ -85,12 +141,12 @@ func _apply_simple_village_palette(node: Node) -> void:
 						var standard := source as StandardMaterial3D
 						if standard.albedo_texture != null:
 							var simple := StandardMaterial3D.new()
-							simple.albedo_texture = standard.albedo_texture
+							simple.albedo_texture = ROSE_ATLAS 								if standard.albedo_texture.resource_path == VILLAGE_ATLAS_PATH 								else standard.albedo_texture
 							simple.albedo_color = Color.WHITE
 							simple.roughness = 0.92
 							simple.metallic = 0.0
 							simple.emission_enabled = false
-							simple.set_meta("castle_palette", "simple_village_atlas")
+							simple.set_meta("castle_palette", "sleeping_beauty_rose_atlas")
 							mesh_node.set_surface_override_material(surface, simple)
 		_apply_simple_village_palette(child)
 
@@ -105,16 +161,14 @@ func _remove_reference_technology() -> void:
 			"AstralObservatoryCrown", "AetherCalibrationBand"]:
 		var technology := foundation.get_node_or_null(path) as Node3D
 		if technology != null:
-			technology.visible = false
-			technology.set_meta("removed_for_castle_redesign", true)
+			_remove_piece(technology)
 
 	# This round gallery plinth is the broad grey ring visible under the front
 	# door in the supplied screenshot. The gate and real ramp no longer need it.
 	var gallery_ring := foundation.get_node_or_null("GalleryFoundationPlaza") \
 		as MeshInstance3D
 	if gallery_ring != null:
-		gallery_ring.visible = false
-		gallery_ring.set_meta("removed_for_castle_redesign", true)
+		_remove_piece(gallery_ring)
 
 
 func _restyle_castle_approach() -> void:
@@ -134,13 +188,11 @@ func _restyle_approach_tree(node: Node) -> void:
 		# The simplified castle deliberately keeps this one warm, non-technical
 		# light source. Do not recurse into it and hide its emissive fire or lamp.
 		if child is Node3D and (child_name == "castlecourtyardfire"
-				or child_name.begins_with("castlestairtorch")
-				or child_name == "castleballista"):
+				or child_name.begins_with("castlestairtorch")):
 			continue
 		if child is Node3D and _name_has_any(child_name,
 				["resonanceframe", "aetherlensgate", "aethergear"]):
-			(child as Node3D).visible = false
-			child.set_meta("removed_for_castle_redesign", true)
+			_remove_piece(child)
 			continue
 		if child is MeshInstance3D:
 			var mesh := child as MeshInstance3D
@@ -160,8 +212,8 @@ func _restyle_approach_tree(node: Node) -> void:
 					"aetherbridgekeel", "lumenbridgesurfaceplank", "safetypost",
 					"safetyplinth", "terracelevitationring", "handrail", "castleascentramp",
 					"castledoortread", "castledoornosing"]) or thin_technology_strip:
-				mesh.visible = false
-				mesh.set_meta("removed_for_castle_redesign", true)
+				if _remove_piece(mesh):
+					continue
 			elif "aetherwindowframe" in lower_name:
 				mesh.material_override = _stone_light
 			elif "aetherwindow" in lower_name:
@@ -189,8 +241,45 @@ func _restyle_approach_tree(node: Node) -> void:
 		elif child is OmniLight3D:
 			# Remove the cyan/violet bulbs and lines around the approach. Castle
 			# daylight and the existing village lighting remain unchanged.
-			(child as OmniLight3D).visible = false
+			_remove_piece(child)
+			continue
 		_restyle_approach_tree(child)
+
+
+# Every blue cone roof on the front, stairs and bridges gets the turret spires'
+# gold tip. Small cones (buttress weatherings) are left plain; the turret spires
+# already carry theirs.
+func _gild_cone_roofs() -> void:
+	var orb := SphereMesh.new()
+	orb.radius = 0.14
+	orb.height = 0.28
+	for path in ["CastleArchitecture", "CastleStairs/CastleStair", "CastleEntrance/CastleEntrance"]:
+		var root := get_parent().get_node_or_null(path)
+		if root == null:
+			continue
+		for candidate in root.find_children("*", "MeshInstance3D", true, false):
+			var roof := candidate as MeshInstance3D
+			var cone := roof.mesh as CylinderMesh
+			if roof.material_override != _slate or cone == null or cone.top_radius > 0.0 					or cone.height < 1.5 or String(roof.name).ends_with("TurretRoof"):
+				continue
+			var tip := Vector3.UP * (cone.height * 0.5)
+			var spike := _add_mesh(roof, _cylinder(0.02, 0.08, 0.9, 6), _gold,
+				tip + Vector3.UP * 0.4)
+			spike.name = "GoldFinial"
+			_add_mesh(roof, orb, _gold, tip + Vector3.UP * 0.04).name = "GoldFinialOrb"
+
+
+# Removed pieces are freed, not just hidden, so they cost no memory or draw
+# setup. A piece that still carries collision (an invisible ramp or tread the
+# player walks on) is only hidden, so the route underfoot stays. Returns true
+# when the piece was freed.
+func _remove_piece(piece: Node3D) -> bool:
+	if piece is CollisionObject3D 			or not piece.find_children("*", "CollisionObject3D", true, false).is_empty():
+		piece.visible = false
+		piece.set_meta("removed_for_castle_redesign", true)
+		return false
+	piece.queue_free()
+	return true
 
 
 func _name_has_any(value: String, fragments: Array[String]) -> bool:
@@ -234,49 +323,57 @@ func _build_castle_architecture(castle: Node3D) -> void:
 	_build_full_castle_ascent(architecture)
 
 
-# The separate spiral stair tower was the last large smooth surface in the
-# castle precinct. Reference tower_B and the catapult tower break their walls
-# into many small low-poly faces; this staggered veneer gives the stair tower
-# the same apparent mesh density, scale and light response without replacing
-# its authoritative collision cylinder or narrowing the route.
-func _build_village_style_stair_tower() -> void:
+# Every arched window in the castle gets a pane of stained glass, set into the
+# recess just in front of its dark back wall.
+func _glaze_castle_windows(castle: Node3D) -> void:
+	var glazing := Node3D.new()
+	glazing.name = "CastleWindowGlass"
+	get_parent().add_child(glazing)
+	for index in CASTLE_WINDOWS.size():
+		var outward: Vector3 = CASTLE_WINDOWS[index][1]
+		var glass := MeshInstance3D.new()
+		glass.name = "StainedGlass_%02d" % index
+		glass.mesh = QuadMesh.new()
+		(glass.mesh as QuadMesh).size = CASTLE_WINDOW_SIZE
+		var material := _stained_glass(0, CASTLE_WINDOW_SIZE, 20 + index)
+		material.set_shader_parameter("round_head", true)
+		material.set_shader_parameter("shoulder",
+			CASTLE_WINDOW_SIZE.y - CASTLE_WINDOW_SIZE.x * 0.5)
+		material.set_shader_parameter("quarry", 0.24)
+		material.set_shader_parameter("lead_width", 0.02)
+		glass.material_override = material
+		glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		glazing.add_child(glass)
+		glass.global_basis = Basis.looking_at(-outward, Vector3.UP)
+		glass.global_position = castle.global_position + CASTLE_WINDOWS[index][0] 			+ outward * 0.03
+
+
+# The spiral stair tower's core is glazed top to bottom in stained glass. The
+# square aether panels that dotted it (and their ring frames) are gone; its
+# stone rings stay, as tracery dividing the glass into tiers. The shaft keeps
+# its own collision: only the look changes.
+func _glaze_stair_tower() -> void:
 	var stair := get_parent().get_node_or_null("CastleStairs/CastleStair") as Node3D
 	if stair == null:
 		return
-	var overlay := Node3D.new()
-	overlay.name = "VillageStyleStairTowerMasonry"
-	overlay.set_meta("style_reference", "tower_B_and_tower_catapult")
-	overlay.set_meta("render_family", "red_village_hexagons_castle")
-	overlay.set_meta("collision_policy", "visual_only")
-	get_parent().add_child(overlay)
-
-	var base: Vector2 = stair.get_meta("tower_base")
-	var ground := float(stair.get_meta("terrain_ground_y"))
-	var top_y := float(stair.get_meta("tower_top_y"))
-	var facade_height := top_y - ground
-	const ROW_HEIGHT := 2.20
-	var row_count := maxi(4, int(floor((facade_height - 3.0) / ROW_HEIGHT)))
-	for row_index in row_count:
-		var y := ground + 1.55 + float(row_index) * ROW_HEIGHT
-		var height_ratio := clampf((y - ground) / maxf(facade_height, 0.1), 0.0, 1.0)
-		var wall_radius := lerpf(3.88, 3.08, height_ratio) + 0.018
-		for face_index in 8:
-			var angle := TAU * float(face_index) / 8.0
-			var radial := Vector3(cos(angle), 0.0, sin(angle))
-			var tangent := Vector3(-radial.z, 0.0, radial.x)
-			var stagger := 0.28 if row_index % 2 == 1 else 0.0
-			for block_index in 2:
-				var lateral := (float(block_index) - 0.5) * 1.30 + stagger
-				# The staggered end block wraps naturally onto the next octagonal
-				# face; clipping it would create a repeated vertical seam.
-				var position := Vector3(base.x, y, base.y) + radial * wall_radius \
-					+ tangent * lateral
-				var block := _add_mesh(overlay,
-					_box(Vector3(1.10, 0.18, 0.036)), _stone_course, position)
-				block.name = "VillageMasonryBlock_%02d_%d_%d" % [
-					row_index, face_index, block_index]
-				block.rotation.y = -angle
-				block.set_meta("visual_only", true)
+	for part in stair.get_children():
+		if part is Node3D and String(part.name).begins_with("AetherWindow"):
+			_remove_piece(part)
+	var shaft := stair.get_node_or_null("MasonryTower") as MeshInstance3D
+	var mesh := shaft.mesh as CylinderMesh if shaft != null else null
+	if mesh == null:
+		return
+	# Perimeter of the octagonal shaft at mid-height, split into a whole number
+	# of quarries so the pattern closes seamlessly round the column.
+	var sides := mesh.radial_segments
+	var radius := (mesh.top_radius + mesh.bottom_radius) * 0.5
+	var perimeter := float(sides) * 2.0 * radius * sin(PI / float(sides))
+	var quarries := maxi(1, roundi(perimeter / 0.9))
+	var glass := _stained_glass(2, Vector2(perimeter, mesh.height), 11)
+	glass.set_shader_parameter("quarry", perimeter / float(quarries))
+	glass.set_shader_parameter("wrap_cells", quarries)
+	glass.set_shader_parameter("lead_width", 0.06)
+	shaft.material_override = glass
 
 
 func _build_turret_roofs(parent: Node3D) -> void:
@@ -287,13 +384,22 @@ func _build_turret_roofs(parent: Node3D) -> void:
 		["SouthEastTurretRoof", Vector3(7.2, 18.2, 6.0), 2.85, 4.2],
 	]
 	for roof_spec in roofs:
-		var roof := _add_mesh(parent,
-			_cone(float(roof_spec[2]), float(roof_spec[3]), 10), _slate,
-			roof_spec[1] as Vector3)
+		# Sleeping Beauty spires: narrower and half as tall again as the village
+		# cones, raised so each still sits on its turret at the same eave height.
+		var radius := float(roof_spec[2]) * 0.82
+		var height := float(roof_spec[3]) * 1.55
+		var centre := (roof_spec[1] as Vector3) \
+			+ Vector3.UP * ((height - float(roof_spec[3])) * 0.5)
+		var roof := _add_mesh(parent, _cone(radius, height, 12), _slate, centre)
 		roof.name = roof_spec[0]
-		var finial := _add_mesh(parent, _cylinder(0.11, 0.11, 1.2, 8), _iron,
-			(roof_spec[1] as Vector3) + Vector3.UP * (float(roof_spec[3]) * 0.62))
+		var tip := centre + Vector3.UP * (height * 0.5)
+		var finial := _add_mesh(parent, _cylinder(0.03, 0.12, 1.4, 8), _gold,
+			tip + Vector3.UP * 0.55)
 		finial.name = "%sFinial" % roof_spec[0]
+		var orb := SphereMesh.new()
+		orb.radius = 0.2
+		orb.height = 0.4
+		_add_mesh(parent, orb, _gold, tip + Vector3.UP * 0.05).name = "%sFinialOrb" % roof_spec[0]
 
 
 func _build_gothic_keep_details(parent: Node3D) -> void:
@@ -342,6 +448,44 @@ func _build_gothic_keep_details(parent: Node3D) -> void:
 		for segment in [[left_base, left_shoulder], [right_base, right_shoulder],
 				[left_shoulder, apex], [right_shoulder, apex]]:
 			_add_beam_between(lancet, segment[0], segment[1], 0.30, _stone)
+		# Stained glass fills the frame: same width, sill, springing line and
+		# point as the beams above, set just behind them so they read as tracery.
+		var outward := Vector3(centre.x, 0.0, centre.z).normalized()
+		var size := Vector2(2.64, 5.95)
+		var glass := MeshInstance3D.new()
+		glass.name = "StainedGlass"
+		glass.mesh = QuadMesh.new()
+		(glass.mesh as QuadMesh).size = size
+		glass.material_override = _stained_glass(0, size, face_index)
+		glass.basis = Basis.looking_at(-outward, Vector3.UP)
+		glass.position = left_base.lerp(right_base, 0.5) + Vector3.UP * (size.y * 0.5) \
+			- outward * 0.1
+		glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		lancet.add_child(glass)
+
+	# A rose window on the keep's entrance face, the castle's hero view: the
+	# plain wall between the lancet's point and the upper tower's ledge.
+	var rose := Node3D.new()
+	rose.name = "RoseWindow"
+	parent.add_child(rose)
+	var rose_centre := Vector3(4.24, 28.0, 0.0)
+	var rose_radius := 1.45
+	var rose_glass := MeshInstance3D.new()
+	rose_glass.name = "StainedGlass"
+	rose_glass.mesh = QuadMesh.new()
+	(rose_glass.mesh as QuadMesh).size = Vector2.ONE * rose_radius * 2.0
+	rose_glass.material_override = _stained_glass(1, Vector2.ONE * rose_radius * 2.0, 7)
+	rose_glass.basis = Basis.looking_at(Vector3.LEFT, Vector3.UP)
+	rose_glass.position = rose_centre
+	rose_glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	rose.add_child(rose_glass)
+	var surround := MeshInstance3D.new()
+	surround.name = "RoseWindowSurround"
+	surround.mesh = _torus(rose_radius - 0.04, rose_radius + 0.22)
+	surround.material_override = _stone
+	surround.basis = Basis(Vector3.FORWARD, PI * 0.5)
+	surround.position = rose_centre + Vector3.RIGHT * 0.04
+	rose.add_child(surround)
 
 
 func _build_timber_hoarding(parent: Node3D, hoarding_name: String,
@@ -518,6 +662,9 @@ func _build_full_castle_ascent(parent: Node3D) -> void:
 				_box(Vector3(run + 0.22, 1.12, 0.68)), _stone,
 				Vector3(centre.x, surface_y + 0.28, top.z + lateral * 2.92))
 			cheek.name = "GrandAscentCheek"
+			# Inner face (2.58 m) is outside the 2.4 m hidden ramp, so this never
+			# narrows the route. 3 m tall so the player can't hop the 0.84 m wall.
+			_add_box_body(cheek, Vector3(run + 0.22, 3.0, 0.68), "SolidAscentCheek")
 			if step_index % 3 == 0:
 				var merlon := _add_mesh(ascent, _box(Vector3(0.52, 0.72, 0.78)),
 					_stone_light,

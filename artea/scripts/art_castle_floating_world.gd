@@ -23,6 +23,15 @@ const GravityLeafReliefStyle := preload(
 const TREE_CHRISTMAS_MELODY := preload(
 	"res://assets/audio/tree_of_life_christmas_ambience.ogg")
 const TREE_CHRISTMAS_BELLS := preload("res://assets/SFX/fairy dust.ogg")
+const MindSparkFoley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
+const ArrivalPlazaShader := preload("res://shaders/arrival_plaza.gdshader")
+const TreeCourtShader := preload("res://shaders/tree_court.gdshader")
+const CreatorStudioFloorShader := preload("res://shaders/creator_studio_floor.gdshader")
+const EaselCanvasShader := preload("res://shaders/easel_canvas.gdshader")
+const CreatorStudio := preload("res://scripts/creator_studio.gd")
+const MindForecourtShader := preload("res://shaders/mind_forecourt.gdshader")
+const ObservatoryFloorShader := preload("res://shaders/observatory_floor.gdshader")
+const GalleryRotunda := preload("res://scripts/gallery_rotunda.gd")
 const TREE_OF_LIFE_MANIFEST_PATH := "res://assets3D/tree_of_life/tree_of_life_manifest.json"
 
 @export var embedded_in_gallery := false
@@ -51,13 +60,6 @@ const ORIGINAL_CANOPY_BASE_SCALE := 1.28
 const ORIGINAL_CANOPY_TIP_SCALE := 0.34
 const ORIGINAL_CANOPY_HEIGHT_SCALE := 1.62
 const TREE_OF_LIFE_SCALE_MULTIPLIER := 2.0
-# Retained only by the standalone trunk-core asset validator. The runtime tree
-# no longer instantiates that replacement core.
-const SIMPLE_TRUNK_HEIGHT_M := 18.0
-const SIMPLE_TRUNK_ROOT_DIAMETER_M := 14.4
-const SIMPLE_TRUNK_DOOR_WIDTH_M := 3.0
-const SIMPLE_TRUNK_DOOR_HEIGHT_M := 4.2
-
 # Web LOD for the Tree of Life.
 #
 # The authored canopy is 480 bough modules x 1,296 compound leaf sockets x 2
@@ -129,7 +131,17 @@ const CAUSEWAY_SEGMENT_LENGTH := 420.0
 const CAUSEWAY_ISLAND_RADIUS := 46.0
 const HEART := Vector3(0.0, 0.0, 2290.0)
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
+# Half extents of the raised studio platform (2 m tall, top at y=2).
+const CREATOR_PLATFORM_HALF := Vector3(90.0, 1.0, 82.0)
 const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
+# Arrival-island bounce pads: ~12 m of air at the default 9.8 gravity.
+const BOUNCE_PAD_LAUNCH_SPEED := 15.5
+const BOUNCE_PAD_RADIUS := 3.2
+# Latona fountain: 60 m toward the gate from the island centre, where the
+# south observatory tower used to stand. Basin radius is 30 m.
+const ARRIVAL_FOUNTAIN_CENTRE := SOUTH_GATE + Vector3(0.0, 0.0, -60.0)
+# Holding jump on landing: ~27 m of air instead of ~12 m.
+const BOUNCE_PAD_BOOST_SPEED := 23.0
 const RETURN_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 
 var _player: CharacterBody3D
@@ -138,10 +150,11 @@ var _animated_nodes: Array[Node3D] = []
 var _travelling := false
 var _tree_christmas_melody: AudioStreamPlayer3D
 var _tree_christmas_bells: AudioStreamPlayer3D
+var _sfx_players: Dictionary = {}
 
 const TREE_CHRISTMAS_FULL_VOLUME_DISTANCE := 70.0
 const TREE_CHRISTMAS_SILENT_DISTANCE := 620.0
-const TREE_CHRISTMAS_NEAR_VOLUME_DB := -5.0
+const TREE_CHRISTMAS_NEAR_VOLUME_DB := -17.0
 const TREE_CHRISTMAS_SILENT_VOLUME_DB := -80.0
 const TREE_CHRISTMAS_FADE_IN_SPEED := 1.60
 const TREE_CHRISTMAS_FADE_OUT_SPEED := 0.28
@@ -165,7 +178,6 @@ func _ready() -> void:
 	_build_mind_spark_world_one_gameplay()
 	_build_world_one_walk_route()
 	_build_boundary_observatories()
-	_build_skyline()
 	_build_cloud_banks()
 	_build_world_labels()
 	if not embedded_in_gallery:
@@ -199,7 +211,7 @@ func _build_standalone_minimap() -> void:
 	add_child(canvas)
 	var minimap := Control.new()
 	minimap.name = "ArteaWorldMinimap"
-	minimap.set_script(load("res://scripts/art_castle_minimap.gd"))
+	minimap.set_script(preload("res://scripts/art_castle_minimap.gd"))
 	minimap.set("map_context", "galaxy")
 	canvas.add_child(minimap)
 
@@ -258,6 +270,8 @@ func _build_materials() -> void:
 	_materials.purple_leaf = _make_material(Color("8566c7"), 0.86)
 	_materials.pink_leaf = _make_material(Color("db79bd"), 0.84)
 	_materials.green = _make_material(Color("58a77d"), 0.92)
+	_materials.red_leaf = _make_material(Color("d4566a"), 0.84)
+	_materials.blue_leaf = _make_material(Color("4f8fe0"), 0.84)
 	_materials.gold = _make_glow(Color("f2c55e"), 0.55)
 	_materials.wood = _make_material(Color("8a5d3b"), 0.88)
 	_materials.canvas = _make_material(Color("fff9e8"), 0.96)
@@ -284,18 +298,39 @@ func _build_central_sanctuary() -> void:
 	add_child(island)
 	_build_island_foundation(island, HUB, 220.0, 58.0, 40)
 
-	# Concentric paths and planted rings reproduce the round garden composition.
-	_add_torus(island, "OuterGardenRing", HUB + Vector3(0.0, 0.35, 0.0), 153.0, 165.0, _materials.purple)
-	_add_cylinder(island, "TreeCourt", HUB + Vector3(0.0, 0.1, 0.0), 108.0, 1.4, _materials.stone, true, 48)
-	_add_torus(island, "InnerGardenRing", HUB + Vector3(0.0, 1.0, 0.0), 62.0, 68.0, _materials.aqua)
+	var floor_material := ShaderMaterial.new()
+	floor_material.shader = TreeCourtShader
+	(island.get_node("WalkableDeck") as MeshInstance3D).material_override = floor_material
+	# The court stands 0.8 m proud of the deck. Its edge is a gentle ramp
+	# (108 m at the top, 114 m at the bottom) rather than a kerb.
+	var court := MeshInstance3D.new()
+	court.name = "TreeCourt"
+	var court_mesh := CylinderMesh.new()
+	court_mesh.top_radius = 108.0
+	court_mesh.bottom_radius = 114.0
+	court_mesh.height = 1.4
+	court_mesh.radial_segments = 48
+	court.mesh = court_mesh
+	court.position = HUB + Vector3(0.0, 0.1, 0.0)
+	court.material_override = floor_material
+	island.add_child(court)
+	var court_body := StaticBody3D.new()
+	court_body.name = "TreeCourtCollision"
+	court_body.position = court.position
+	var court_shape := CollisionShape3D.new()
+	court_shape.shape = court_mesh.create_convex_shape()
+	court_body.add_child(court_shape)
+	island.add_child(court_body)
 
 	for index in 72:
 		var angle := TAU * float(index) / 72.0
 		var radius := 132.0 + sin(float(index) * 2.3) * 15.0
-		_add_flower_cluster(island, HUB + Vector3(cos(angle) * radius, 2.0, sin(angle) * radius),
+		_add_bounce_pad(island, HUB + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius),
 			index % 3 == 0)
 
 	_build_life_tree(island, HUB)
+	# TreeCourt's top is 0.8 m above the deck.
+	_build_tree_spiral_stairs(island, HUB + Vector3(0.0, 0.8, 0.0))
 	_build_cat_companion(island, HUB + Vector3(-18.0, 2.0, -68.0))
 	_build_radial_arches(island)
 
@@ -310,25 +345,401 @@ func _build_arrival_island() -> void:
 	island.name = "ArrivalIsland"
 	add_child(island)
 	_build_island_foundation(island, SOUTH_GATE, 155.0, 42.0, 28)
-	_add_box(island, "ArrivalPromenade", Vector3(0.0, 0.3, 760.0), Vector3(86.0, 1.0, 180.0), _materials.stone, true)
-	_add_box(island, "ArrivalMosaic", Vector3(0.0, 1.0, 760.0), Vector3(38.0, 0.8, 118.0), _materials.aqua_glass, false)
+	# The fountain stands on the deck itself. The deck is a circular parterre
+	# centred on it (shaders/arrival_plaza.gdshader).
+	var fountain_centre := ARRIVAL_FOUNTAIN_CENTRE
+	var plaza := ShaderMaterial.new()
+	plaza.shader = ArrivalPlazaShader
+	plaza.set_shader_parameter("plaza_center", Vector2(fountain_centre.x - SOUTH_GATE.x,
+		fountain_centre.z - SOUTH_GATE.z))
+	(island.get_node("WalkableDeck") as MeshInstance3D).material_override = plaza
 	for step in 6:
 		var z := 710.0 + float(step) * 20.0
-		_add_box(island, "MosaicRune_%02d" % step, Vector3(0.0, 1.7, z),
-			Vector3(24.0, 0.35, 3.0), _materials.gold, false)
-		_add_flower_cluster(island, Vector3(-47.0, 2.5, z), step % 2 == 0)
-		_add_flower_cluster(island, Vector3(47.0, 2.5, z), step % 2 != 0)
-	# Give the enlarged Blender gate a clean silhouette. The former z=715 frame
-	# sat only 52 m behind its facade and visually collapsed into it. Placing the
-	# frame at the island centre creates a measured 157 m gate-to-wall setback
-	# without changing the arrival promenade or the playable route.
-	_build_frame(island, Vector3(0.0, 0.0, 820.0), 48.0, 62.0, _materials.gold, "ART CASTLE GALAXY")
+		_add_bounce_pad(island, Vector3(-47.0, 0.0, z), step % 2 == 0)
+		_add_bounce_pad(island, Vector3(47.0, 0.0, z), step % 2 != 0)
+	_build_latona_fountain(island, fountain_centre)
 	for side in [-1.0, 1.0]:
-		_build_cypress(island, Vector3(side * 82.0, 2.0, 785.0), 34.0, _materials.purple_leaf)
-		_build_cypress(island, Vector3(side * 108.0, 2.0, 865.0), 28.0, _materials.pink_leaf)
+		_build_cypress(island, Vector3(side * 82.0, 0.0, 785.0), 34.0, _materials.purple_leaf, true)
+		_build_cypress(island, Vector3(side * 108.0, 0.0, 865.0), 28.0, _materials.pink_leaf, true)
+	# A ring of cypresses between the edge pads (pads sit every 20 degrees at
+	# 125 m), leaving the bridge axis clear and the east side clear for the
+	# Gallery Station stairs.
+	for index in 18:
+		var angle_deg := 10.0 + 20.0 * float(index)
+		var off_axis := absf(wrapf(angle_deg - 90.0, -180.0, 180.0))
+		if off_axis < 25.0 or off_axis > 155.0 or angle_deg < 20.0 or angle_deg > 340.0:
+			continue
+		var angle := deg_to_rad(angle_deg)
+		_build_cypress(island, SOUTH_GATE + Vector3(cos(angle), 0.0, sin(angle)) * 136.0,
+			24.0 + float(index % 3) * 4.0, _materials.pink_leaf if index % 2 == 0 else _materials.purple_leaf, true)
 	for index in 18:
 		var angle := TAU * float(index) / 18.0
-		_add_flower_cluster(island, SOUTH_GATE + Vector3(cos(angle) * 125.0, 2.0, sin(angle) * 125.0), index % 2 == 0)
+		_add_bounce_pad(island, SOUTH_GATE + Vector3(cos(angle) * 125.0, 0.0, sin(angle) * 125.0), index % 2 == 0)
+
+
+## A small flower-bed pad that throws the player up like a trampoline. It has
+## no solid collision, so walking in from the side launches too, and falling
+## back onto it re-enters the area and bounces again.
+func _add_bounce_pad(parent: Node3D, position: Vector3, pink: bool) -> void:
+	var pad := Area3D.new()
+	pad.name = "BouncePad"
+	pad.position = position
+	parent.add_child(pad, true)
+	var visual := _add_sphere(pad, "PadBloom", Vector3.ZERO,
+		Vector3(BOUNCE_PAD_RADIUS, 0.55, BOUNCE_PAD_RADIUS), _materials.pink if pink else _materials.purple)
+	(visual.mesh as SphereMesh).radial_segments = 6
+	(visual.mesh as SphereMesh).rings = 3
+	var shape_node := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = BOUNCE_PAD_RADIUS
+	shape.height = 2.0
+	shape_node.shape = shape
+	shape_node.position.y = 1.0
+	pad.add_child(shape_node)
+	pad.body_entered.connect(func(body: Node3D) -> void:
+		if body != _player:
+			return
+		var boosted := bool(_player.get("input_enabled")) and Input.is_action_pressed("jump")
+		_player.velocity.y = BOUNCE_PAD_BOOST_SPEED if boosted else BOUNCE_PAD_LAUNCH_SPEED
+		_play_sfx(&"pad_bounce", pad.global_position, 1.3 if boosted else 1.0)
+		var squash := visual.create_tween()
+		squash.tween_property(visual, "scale:y", 0.2, 0.06)
+		squash.tween_property(visual, "scale:y", 0.55, 0.25).set_trans(Tween.TRANS_ELASTIC))
+
+
+## One shared positional player per sound, moved to wherever it plays.
+func _play_sfx(event: StringName, at: Vector3, pitch: float = 1.0) -> void:
+	var sfx := _sfx_players.get(event) as AudioStreamPlayer3D
+	if sfx == null:
+		sfx = AudioStreamPlayer3D.new()
+		sfx.name = "Sfx_%s" % event
+		sfx.stream = MindSparkFoley.make_play_event(event)
+		sfx.max_distance = 120.0
+		add_child(sfx)
+		_sfx_players[event] = sfx
+	sfx.global_position = at
+	sfx.pitch_scale = pitch * randf_range(0.94, 1.06)
+	sfx.play()
+
+
+## Decor inspired by the Latona Fountain at Versailles: a wide basin with a
+## stepped pyramid of tiers, gilded frogs spraying inward, and Latona with her
+## two children on top. The middle shelf carries three PrizeSocket markers for
+## the minigame-world rewards (not wired up yet).
+func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
+	var fountain := Node3D.new()
+	fountain.name = "LatonaFountain"
+	fountain.position = center
+	parent.add_child(fountain)
+	var water := _make_glow(Color(0.35, 0.85, 1.0, 0.55), 0.35, true)
+	var spray := _make_glow(Color(0.75, 0.95, 1.0, 0.8), 0.9, true)
+
+	# [radius, wall top]. Every tier is a pool: a solid core up to its floor,
+	# a solid wall with a 0.3 m gold cap, and wadeable water with no
+	# collision. The basin rim (0.9 + 0.3 = 1.2 m) stays under the 1.4 m jump.
+	var tiers := [[30.0, 0.9], [18.0, 5.0], [12.0, 9.0], [7.0, 12.5]]
+	for index in tiers.size():
+		var radius: float = tiers[index][0]
+		var top: float = tiers[index][1]
+		var floor_y := 0.0 if index == 0 else top - 1.0
+		var inner := radius - 1.6
+		if floor_y > 0.0:
+			_add_cylinder(fountain, "Tier%dCore" % index, Vector3(0.0, floor_y * 0.5, 0.0), inner + 0.2,
+				floor_y, _materials.ivory, true, 48)
+		_add_ring_wall(fountain, "Tier%dWall" % index, floor_y, top - floor_y, inner, radius,
+			_materials.ivory)
+		_add_ring_wall(fountain, "Tier%dCap" % index, top, 0.3, inner - 0.1, radius + 0.15,
+			_materials.gold)
+		var water_y := top - 0.3
+		_add_cylinder(fountain, "Tier%dWater" % index, Vector3(0.0, water_y, 0.0), inner, 0.1,
+			water, false, 48)
+		_add_basin_splash_zone(fountain, inner, floor_y, water_y, spray)
+		# Frogs sit on each cap facing the centre and arc water inward.
+		var frog_count := 16 - index * 3
+		for frog_index in frog_count:
+			var angle := TAU * float(frog_index) / float(frog_count)
+			var frog_pos := Vector3(cos(angle), 0.0, sin(angle)) * (radius - 0.8) \
+				+ Vector3(0.0, top + 0.75, 0.0)
+			var frog := _add_sphere(fountain, "Frog", frog_pos, Vector3(0.8, 0.55, 1.0), _materials.gold)
+			frog.rotation.y = -angle + PI * 0.5
+			_add_static_box(fountain, frog_pos, Vector3(1.6, 1.1, 2.0), frog.rotation.y)
+		# Each frog spouts a short arc that lands mid-way across its own pool,
+		# short of the next tier's wall (or the plinth on the top tier).
+		var next_wall: float = tiers[index + 1][0] if index + 1 < tiers.size() else 2.6
+		var spout_up := 5.5
+		var air_time := (spout_up + sqrt(spout_up * spout_up + 2.0 * 9.8 * 1.3)) / 9.8
+		_add_fountain_spray(fountain, radius - 0.8, top + 1.0, spout_up,
+			(radius - 0.8 - next_wall) * 0.5 / air_time, spray)
+		# Every tier above the basin overflows its rim into the pool below.
+		if index > 0:
+			_add_fountain_cascade(fountain, radius, top, float(tiers[index - 1][1]) - 0.3, water, spray)
+
+	# The top pool's floor is 11.5 m; the plinth rises from it.
+	_add_cylinder(fountain, "StatuePlinth", Vector3(0.0, 14.0, 0.0), 2.6, 5.0, _materials.ivory, true, 16)
+	var statue := Node3D.new()
+	statue.name = "LatonaStatue"
+	statue.position.y = 16.5
+	fountain.add_child(statue)
+	_add_static_box(statue, Vector3(0.0, 3.2, 0.2), Vector3(4.6, 6.4, 3.4), 0.0)
+	_add_statue_figure(statue, Vector3.ZERO, 1.0)
+	_add_statue_figure(statue, Vector3(-1.5, 0.0, 0.6), 0.5)
+	_add_statue_figure(statue, Vector3(1.5, 0.0, 0.6), 0.5)
+	# The source: a jet from above Latona's head that falls back into the top
+	# pool, which then overflows tier by tier down to the basin.
+	_add_fountain_jet(fountain, Vector3(0.0, 23.6, 0.0), spray)
+
+	# Three reward plinths standing in the 9 m pool (floor 8 m), one facing the
+	# arrival gate.
+	for index in 3:
+		var angle := -PI * 0.5 + TAU * float(index) / 3.0
+		var spot := Vector3(cos(angle) * 8.7, 8.0, sin(angle) * 8.7)
+		_add_cylinder(fountain, "PrizePlinth%d" % index, spot + Vector3(0.0, 0.9, 0.0), 1.0, 1.8,
+			_materials.gold, true, 12)
+		spot.y += 0.3
+		var socket := Marker3D.new()
+		socket.name = "PrizeSocket%d" % index
+		socket.position = spot + Vector3(0.0, 1.5, 0.0)
+		socket.add_to_group("fountain_prize_socket")
+		fountain.add_child(socket)
+
+
+func _add_statue_figure(parent: Node3D, position: Vector3, size: float) -> void:
+	var robe := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.5 * size
+	mesh.bottom_radius = 1.5 * size
+	mesh.height = 5.0 * size
+	mesh.radial_segments = 12
+	robe.mesh = mesh
+	robe.position = position + Vector3(0.0, 2.5 * size, 0.0)
+	robe.material_override = _materials.gold
+	parent.add_child(robe)
+	_add_sphere(parent, "Head", position + Vector3(0.0, 5.7 * size, 0.0), Vector3.ONE * 0.8 * size,
+		_materials.gold)
+
+
+## The water layer of the basin. Its top sits just above the surface, so a
+## jump inside the pool leaves it and the landing splashes again.
+func _add_basin_splash_zone(fountain: Node3D, radius: float, floor_y: float, water_y: float,
+		material: Material) -> void:
+	var zone := Area3D.new()
+	zone.name = "SplashZone"
+	var shape_node := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = radius
+	shape.height = water_y - floor_y + 0.1
+	shape_node.shape = shape
+	shape_node.position.y = floor_y + shape.height * 0.5
+	zone.add_child(shape_node)
+	fountain.add_child(zone, true)
+	var burst := GPUParticles3D.new()
+	burst.name = "SplashBurst"
+	burst.emitting = false
+	burst.one_shot = true
+	burst.explosiveness = 1.0
+	burst.amount = 60
+	burst.lifetime = 0.9
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	process.emission_ring_axis = Vector3.UP
+	process.emission_ring_radius = 0.9
+	process.emission_ring_inner_radius = 0.3
+	process.emission_ring_height = 0.0
+	process.direction = Vector3.UP
+	process.spread = 30.0
+	process.initial_velocity_min = 3.0
+	process.initial_velocity_max = 6.5
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	process.scale_min = 0.15
+	process.scale_max = 0.35
+	burst.process_material = process
+	var drop := SphereMesh.new()
+	drop.radius = 0.5
+	drop.height = 1.0
+	drop.radial_segments = 6
+	drop.rings = 3
+	drop.material = material
+	burst.draw_pass_1 = drop
+	fountain.add_child(burst, true)
+	zone.body_entered.connect(func(body: Node3D) -> void:
+		if body != _player:
+			return
+		var at := Vector3(_player.global_position.x, fountain.global_position.y + water_y,
+			_player.global_position.z)
+		burst.global_position = at
+		burst.restart()
+		_play_sfx(&"water_splash", at))
+
+
+## A hollow cylinder wall (outer, inner and top faces) with matching trimesh
+## collision: one mesh and one body per ring instead of dozens of boxes.
+func _add_ring_wall(parent: Node3D, node_name: String, bottom: float, height: float,
+		inner: float, outer: float, material: Material) -> MeshInstance3D:
+	const SEGMENTS := 48
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var top := bottom + height
+	var up := Vector3.UP
+	for segment in SEGMENTS:
+		var a0 := TAU * float(segment) / SEGMENTS
+		var a1 := TAU * float(segment + 1) / SEGMENTS
+		var d0 := Vector3(cos(a0), 0.0, sin(a0))
+		var d1 := Vector3(cos(a1), 0.0, sin(a1))
+		var radial := (d0 + d1).normalized()
+		_ring_quad(st, d0 * outer + up * bottom, d1 * outer + up * bottom, d1 * outer + up * top,
+			d0 * outer + up * top, radial)
+		_ring_quad(st, d0 * inner + up * bottom, d1 * inner + up * bottom, d1 * inner + up * top,
+			d0 * inner + up * top, -radial)
+		_ring_quad(st, d0 * inner + up * top, d1 * inner + up * top, d1 * outer + up * top,
+			d0 * outer + up * top, up)
+	var mesh := st.commit()
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	instance.mesh = mesh
+	instance.material_override = material
+	parent.add_child(instance)
+	var body := StaticBody3D.new()
+	body.name = "%sCollision" % node_name
+	var shape_node := CollisionShape3D.new()
+	var shape := mesh.create_trimesh_shape()
+	shape.backface_collision = true
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	parent.add_child(body)
+	return instance
+
+
+## Two triangles for quad a-b-c-d, wound so `normal` is the front face
+## (Godot treats clockwise as front).
+func _ring_quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3) -> void:
+	var clockwise := (b - a).cross(c - a).dot(normal) < 0.0
+	var tris := [[a, b, c], [a, c, d]] if clockwise else [[a, c, b], [a, d, c]]
+	for tri in tris:
+		for vertex in tri:
+			st.set_normal(normal)
+			st.add_vertex(vertex)
+
+
+func _add_static_box(parent: Node3D, position: Vector3, size: Vector3, yaw: float) -> void:
+	var body := StaticBody3D.new()
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	body.position = position
+	body.rotation.y = yaw
+	parent.add_child(body)
+
+
+## Water spilling over a tier's gold cap (top + 0.3) down the outside of its
+## wall into the pool below: a translucent curtain that flares as it falls,
+## with streaks running down it so it reads as moving water.
+func _add_fountain_cascade(parent: Node3D, radius: float, top: float, landing_y: float,
+		water: Material, spray: Material) -> void:
+	var lip := top + 0.3
+	var fall := lip - landing_y
+	var curtain := MeshInstance3D.new()
+	curtain.name = "OverflowCurtain"
+	var sheet := CylinderMesh.new()
+	sheet.top_radius = radius + 0.2
+	sheet.bottom_radius = radius + 0.9
+	sheet.height = fall
+	sheet.cap_top = false
+	sheet.cap_bottom = false
+	sheet.radial_segments = 48
+	curtain.mesh = sheet
+	curtain.position.y = landing_y + fall * 0.5
+	curtain.material_override = water
+	parent.add_child(curtain, true)
+	var streaks := GPUParticles3D.new()
+	streaks.name = "OverflowStreaks"
+	streaks.position.y = lip
+	streaks.amount = 320
+	streaks.lifetime = sqrt(2.0 * fall / 9.8)
+	streaks.visibility_aabb = AABB(Vector3(-radius - 2.0, -fall - 1.0, -radius - 2.0),
+		Vector3(radius * 2.0 + 4.0, fall + 2.0, radius * 2.0 + 4.0))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	process.emission_ring_axis = Vector3.UP
+	process.emission_ring_radius = radius + 0.25
+	process.emission_ring_inner_radius = radius + 0.25
+	process.emission_ring_height = 0.0
+	process.direction = Vector3.DOWN
+	process.spread = 2.0
+	process.initial_velocity_min = 0.2
+	process.initial_velocity_max = 0.6
+	process.radial_velocity_min = 0.9
+	process.radial_velocity_max = 1.3
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	streaks.process_material = process
+	var streak := BoxMesh.new()
+	streak.size = Vector3(0.14, 0.9, 0.14)
+	streak.material = spray
+	streaks.draw_pass_1 = streak
+	parent.add_child(streaks, true)
+
+
+## The fountain's source: a tall jet that rises and falls back around it.
+func _add_fountain_jet(parent: Node3D, origin: Vector3, material: Material) -> void:
+	var jet := GPUParticles3D.new()
+	jet.name = "CentralJet"
+	jet.position = origin
+	jet.amount = 220
+	jet.lifetime = 2.8
+	jet.visibility_aabb = AABB(Vector3(-6.0, -14.0, -6.0), Vector3(12.0, 20.0, 12.0))
+	var process := ParticleProcessMaterial.new()
+	process.direction = Vector3.UP
+	process.spread = 7.0
+	process.initial_velocity_min = 9.0
+	process.initial_velocity_max = 10.0
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	process.scale_min = 0.25
+	process.scale_max = 0.45
+	jet.process_material = process
+	var drop := SphereMesh.new()
+	drop.radius = 0.5
+	drop.height = 1.0
+	drop.radial_segments = 6
+	drop.rings = 3
+	drop.material = material
+	jet.draw_pass_1 = drop
+	parent.add_child(jet)
+
+
+## One particle ring per tier: jets leave the rim, rise, and fall inward.
+func _add_fountain_spray(parent: Node3D, radius: float, height: float, up_speed: float,
+		inward_speed: float, material: Material) -> void:
+	var particles := GPUParticles3D.new()
+	particles.name = "FountainSpray"
+	particles.position.y = height
+	particles.amount = 240
+	particles.lifetime = 1.6
+	particles.visibility_aabb = AABB(Vector3(-radius, -4.0, -radius), Vector3(radius * 2.0, 12.0, radius * 2.0))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	process.emission_ring_axis = Vector3.UP
+	process.emission_ring_radius = radius
+	process.emission_ring_inner_radius = radius
+	process.emission_ring_height = 0.0
+	process.direction = Vector3.UP
+	process.spread = 4.0
+	process.initial_velocity_min = up_speed * 0.9
+	process.initial_velocity_max = up_speed
+	process.radial_velocity_min = -inward_speed
+	process.radial_velocity_max = -inward_speed
+	process.gravity = Vector3(0.0, -9.8, 0.0)
+	process.scale_min = 0.25
+	process.scale_max = 0.45
+	particles.process_material = process
+	var drop := SphereMesh.new()
+	drop.radius = 0.5
+	drop.height = 1.0
+	drop.radial_segments = 6
+	drop.rings = 3
+	drop.material = material
+	particles.draw_pass_1 = drop
+	parent.add_child(particles)
 
 
 func _build_castle_approach_bridge() -> void:
@@ -629,7 +1040,8 @@ func _add_bridge_cone(parent: Node3D, node_name: String, position: Vector3,
 	parent.add_child(instance)
 	return instance
 
-func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width: float) -> void:
+func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width: float,
+		from_gallery: bool = true) -> void:
 	var direction := finish - start
 	var length := direction.length()
 	var midpoint := (start + finish) * 0.5
@@ -691,11 +1103,63 @@ func _add_bridge_between(parent: Node3D, start: Vector3, finish: Vector3, width:
 			var pier_leg := pier_center + side_axis * float(side) * (width * 0.42)
 			_add_box(parent, "PierLeg_%03d_%s" % [metre, "L" if side < 0 else "R"],
 				pier_leg, Vector3(2.4, 21.0, 2.4), _materials.bridge_structure, true, yaw, 0.88, 0.0)
-	# Carpet/deck and deck/island thresholds are broad, shallow, walkable ramps.
-	for endpoint_data in [[start, "Castle"], [finish, "Island"]]:
-		_add_box(parent, "%sThresholdRamp" % endpoint_data[1],
-			(endpoint_data[0] as Vector3) + Vector3(0, 0.36, 0),
-			Vector3(width - 0.8, 0.32, 5.0), _materials.bridge_edge, true, yaw, 0.94, 0.0)
+	# Carpet/deck and deck/island thresholds: shallow stairs the player walks
+	# up without jumping. Gallery floor is y=0.25, deck top 0.6, island 0.
+	var along := (finish - start).normalized()
+	if from_gallery:
+		_add_walk_stairs(parent, "CastleThresholdStairs", start - along * 8.0 + Vector3.UP * 0.25,
+			start + along * 0.6 + Vector3.UP * 0.6, width - 0.8, false)
+	else:
+		_add_walk_stairs(parent, "StartThresholdStairs", start - along * 10.0,
+			start + along * 0.6 + Vector3.UP * 0.6, width - 0.8)
+	_add_walk_stairs(parent, "IslandThresholdStairs", finish + along * 10.0,
+		finish - along * 0.6 + Vector3.UP * 0.6, width - 0.8)
+
+
+## Visible steps from `low` to `high` (top-surface points) over an invisible
+## slope that carries the collision, so a CharacterBody walks straight up.
+## Without steps the slope itself is drawn, so what you see is what you walk on.
+func _add_walk_stairs(parent: Node3D, node_name: String, low: Vector3, high: Vector3, width: float,
+		show_steps: bool = true) -> void:
+	const STEPS := 4
+	const THICKNESS := 0.5
+	var stairs := Node3D.new()
+	stairs.name = node_name
+	parent.add_child(stairs)
+	var run := Vector3(high.x - low.x, 0.0, high.z - low.z)
+	var yaw := atan2(run.x, run.z)
+	var rise := high.y - low.y
+	for step in (STEPS if show_steps else 0):
+		var top := low.y + rise * float(step + 1) / STEPS
+		var centre := low + run * (float(step) + 0.5) / STEPS
+		_add_box(stairs, "Step%d" % step, Vector3(centre.x, (low.y - 0.1 + top) * 0.5, centre.z),
+			Vector3(width, top - low.y + 0.1, run.length() / STEPS + 0.02),
+			_materials.passage_stone if step % 2 == 0 else _materials.passage_stone_shadow, false, yaw)
+	var body := StaticBody3D.new()
+	body.name = "%sSlope" % node_name
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(width, THICKNESS, (high - low).length())
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	var basis := Basis.looking_at(high - low, Vector3.UP)
+	body.transform = Transform3D(basis, (low + high) * 0.5 - basis.y * THICKNESS * 0.5)
+	stairs.add_child(body)
+	if not show_steps:
+		var slab := MeshInstance3D.new()
+		slab.name = "Slope"
+		var mesh := BoxMesh.new()
+		mesh.size = shape.size
+		slab.mesh = mesh
+		# Same limestone flags as the gallery floor, projected in world space at
+		# the gallery's 4 m per tile so the joints carry straight out the door.
+		var gallery_floor := GalleryRotunda.make_floor_material()
+		gallery_floor.uv1_triplanar = true
+		gallery_floor.uv1_world_triplanar = true
+		gallery_floor.uv1_scale = Vector3.ONE * 0.25
+		slab.material_override = gallery_floor
+		slab.transform = body.transform
+		stairs.add_child(slab)
 
 
 func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vector3) -> void:
@@ -736,27 +1200,100 @@ func _build_mind_district() -> void:
 	district.set_meta("rune_grid_size", MIND_RUNE_GRID_SIZE)
 	district.set_meta("requires_jump_from_mind_bridge", false)
 
-	# An odd grid places one tile exactly on the bridge centerline. The shallow
-	# visual inlays sit over the island's continuous deck collision rather than
-	# creating 81 raised collision blocks.
-	var half_grid := float(MIND_RUNE_GRID_SIZE - 1) * 0.5
-	for row in MIND_RUNE_GRID_SIZE:
-		for column in MIND_RUNE_GRID_SIZE:
-			var tile_pos := MIND + Vector3(
-				(float(column) - half_grid) * MIND_RUNE_TILE_SPACING,
-				MIND_RUNE_TILE_HEIGHT * 0.5,
-				(float(row) - half_grid) * MIND_RUNE_TILE_SPACING)
-			var tile_mat: Material = _materials.aqua_glass if (row + column) % 2 == 0 else _materials.stone
-			_add_box(district, "RuneTile_%02d_%02d" % [row, column], tile_pos,
-				Vector3(MIND_RUNE_TILE_SIZE, MIND_RUNE_TILE_HEIGHT, MIND_RUNE_TILE_SIZE),
-				tile_mat, false)
+	# The 9x9 checkerboard is painted by the deck shader (shaders/
+	# mind_forecourt.gdshader): crystal and gold-inlaid marble tiles on one
+	# continuous collision deck. An odd grid keeps one tile on the bridge axis.
+	var forecourt := ShaderMaterial.new()
+	forecourt.shader = MindForecourtShader
+	forecourt.set_shader_parameter("tile_spacing", MIND_RUNE_TILE_SPACING)
+	forecourt.set_shader_parameter("tile_size", MIND_RUNE_TILE_SIZE)
+	forecourt.set_shader_parameter("grid_size", float(MIND_RUNE_GRID_SIZE))
+	forecourt.set_shader_parameter("island_radius", MIND_DISTRICT_RADIUS)
+	(district.get_node("WalkableDeck") as MeshInstance3D).material_override = forecourt
 
-	_build_frame(district, MIND + Vector3(-92.0, 0.0, -96.0), 58.0, 76.0,
-		_materials.aqua, "MIND SPARK")
-	_build_ruin_wall(district, MIND + Vector3(-112.0, 0.0, 96.0), 150.0, 48.0, 0.0, _materials.ivory)
+	_build_world_gate_arch(district, Vector3(MIND_GATE_POSITION.x, MIND.y, MIND_GATE_POSITION.z))
+	# Bounce pads and trees keep clear of the rim openings: the Mind Bridge
+	# (east, ~0 deg), the causeway and the Mind station stair (~170-185 deg),
+	# and the lookout bridges and the world gate (~200-230 deg). Angles are
+	# measured from +X toward +Z.
+	var clear := func(angle_deg: float) -> bool:
+		var a := fposmod(angle_deg, 360.0)
+		return not (a < 14.0 or a > 346.0 or (a > 160.0 and a < 240.0))
 	for index in 24:
-		var angle := TAU * float(index) / 24.0
-		_add_flower_cluster(district, MIND + Vector3(cos(angle) * 148.0, 2.0, sin(angle) * 148.0), false)
+		var angle_deg := 15.0 * float(index)
+		if clear.call(angle_deg):
+			_add_bounce_pad(district, MIND + _flat_dir(angle_deg) * 148.0, index % 2 == 0)
+	for index in 16:
+		var angle_deg := 11.25 + 22.5 * float(index)
+		if clear.call(angle_deg):
+			_add_bounce_pad(district, MIND + _flat_dir(angle_deg) * 104.0, index % 2 != 0)
+	var leaf_colours: Array[Material] = [_materials.red_leaf, _materials.blue_leaf, _materials.green]
+	for index in 12:
+		var angle_deg := 7.5 + 30.0 * float(index)
+		if clear.call(angle_deg):
+			_build_cypress(district, MIND + _flat_dir(angle_deg) * 128.0,
+				22.0 + float(index % 3) * 4.0, leaf_colours[index % 3], true)
+
+
+func _flat_dir(angle_deg: float) -> Vector3:
+	var angle := deg_to_rad(angle_deg)
+	return Vector3(cos(angle), 0.0, sin(angle))
+
+
+## A compact arch around the World One gate's portal ring (radius 5.5 m,
+## centred 5.5 m above the gate): a low two-step plinth, ivory pillars with
+## gold capitals and crystal finials, a lintel and a gold halo round the ring.
+func _build_world_gate_arch(parent: Node3D, base: Vector3) -> void:
+	var arch := Node3D.new()
+	arch.name = "WorldOneGateArch"
+	arch.position = base
+	parent.add_child(arch)
+	_add_cylinder(arch, "PlinthLower", Vector3(0.0, 0.175, 0.0), 11.0, 0.35, _materials.stone, true, 32)
+	_add_cylinder(arch, "PlinthUpper", Vector3(0.0, 0.525, 0.0), 9.0, 0.35, _materials.ivory, true, 32)
+	var ring_centre := MIND_GATE_POSITION.y - base.y + 5.5
+	for side in [-1.0, 1.0]:
+		var x: float = side * 8.4
+		_add_box(arch, "Pillar", Vector3(x, 0.7 + 6.5, 0.0), Vector3(1.8, 13.0, 2.2), _materials.ivory, true)
+		_add_box(arch, "Capital", Vector3(x, 14.1, 0.0), Vector3(2.6, 0.8, 3.0), _materials.gold)
+		_add_box(arch, "PillarBase", Vector3(x, 1.1, 0.0), Vector3(2.6, 0.8, 3.0), _materials.gold)
+		var finial := MeshInstance3D.new()
+		finial.name = "CrystalFinial"
+		var prism := PrismMesh.new()
+		prism.size = Vector3(1.4, 3.0, 1.4)
+		finial.mesh = prism
+		finial.position = Vector3(x, 17.2, 0.0)
+		finial.material_override = _materials.aqua
+		arch.add_child(finial)
+	_add_box(arch, "Lintel", Vector3(0.0, 15.1, 0.0), Vector3(20.0, 1.4, 2.6), _materials.ivory, true)
+	_add_box(arch, "LintelTrim", Vector3(0.0, 14.3, 0.0), Vector3(20.2, 0.25, 2.8), _materials.gold)
+	var keystone := MeshInstance3D.new()
+	keystone.name = "Keystone"
+	var gem := PrismMesh.new()
+	gem.size = Vector3(2.2, 2.6, 1.2)
+	keystone.mesh = gem
+	keystone.position = Vector3(0.0, 17.1, 0.0)
+	keystone.material_override = _materials.aqua
+	arch.add_child(keystone)
+	var halo := MeshInstance3D.new()
+	halo.name = "PortalHalo"
+	var halo_mesh := TorusMesh.new()
+	halo_mesh.inner_radius = 5.8
+	halo_mesh.outer_radius = 6.4
+	halo_mesh.rings = 40
+	halo_mesh.ring_segments = 8
+	halo.mesh = halo_mesh
+	halo.position = Vector3(0.0, ring_centre, 0.0)
+	halo.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+	halo.material_override = _materials.gold
+	arch.add_child(halo)
+	var label := Label3D.new()
+	label.text = "MIND SPARK"
+	label.position = Vector3(0.0, 21.0, 0.0)
+	label.font_size = 40
+	label.outline_size = 9
+	label.modulate = Color("bffbff")
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	arch.add_child(label)
 
 
 func _build_heart_district() -> void:
@@ -796,21 +1333,153 @@ func _build_creator_district() -> void:
 	district.name = "CreatorsLightStudio"
 	add_child(district)
 	_build_island_foundation(district, CREATOR, 195.0, 50.0, 36)
-	_add_box(district, "StudioFloor", CREATOR + Vector3(0.0, 1.0, 0.0),
-		Vector3(310.0, 2.0, 260.0), _make_material(Color("d9b275"), 0.88), true)
-	_add_box(district, "StudioBackWall", CREATOR + Vector3(92.0, 48.0, -92.0),
-		Vector3(120.0, 96.0, 9.0), _materials.ivory, true)
+	# One floor material for the island deck and the studio platform: both are
+	# centred on CREATOR, so the shader's model-space pattern lines up.
+	var floor_material := ShaderMaterial.new()
+	floor_material.shader = CreatorStudioFloorShader
+	floor_material.set_shader_parameter("platform_half",
+		Vector2(CREATOR_PLATFORM_HALF.x, CREATOR_PLATFORM_HALF.z))
+	(district.get_node("WalkableDeck") as MeshInstance3D).material_override = floor_material
+	_add_box(district, "StudioFloor", CREATOR + Vector3(0.0, CREATOR_PLATFORM_HALF.y, 0.0),
+		CREATOR_PLATFORM_HALF * 2.0, floor_material, true)
+	# Shallow stairs up every side of the platform, deck (y=0) to top (y=2).
+	var top := CREATOR_PLATFORM_HALF.y * 2.0
+	var sides := [Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]
+	for index in sides.size():
+		var outward: Vector3 = sides[index]
+		var edge := absf(outward.dot(CREATOR_PLATFORM_HALF))
+		var span := CREATOR_PLATFORM_HALF.z if outward.x != 0.0 else CREATOR_PLATFORM_HALF.x
+		_add_walk_stairs(district, "StudioStairs_%d" % index, CREATOR + outward * (edge + 10.0),
+			CREATOR + outward * edge + Vector3.UP * top, span * 2.0)
 
+	var easels := _creator_easel_offsets()
+	for index in easels.size():
+		_build_easel(district, CREATOR + easels[index], index)
+	_build_art_table(district, CREATOR + Vector3(-35.0, top, 60.0))
+	_build_studio_garden(district)
+
+
+## Six easels in two rows of three on the studio platform, relative to CREATOR.
+func _creator_easel_offsets() -> Array[Vector3]:
+	var top := CREATOR_PLATFORM_HALF.y * 2.0
+	var offsets: Array[Vector3] = []
 	for index in 6:
-		var row := index / 3
-		var column := index % 3
-		_build_easel(district, CREATOR + Vector3(-82.0 + column * 78.0, 2.0, -40.0 + row * 92.0), index)
-	_build_art_table(district, CREATOR + Vector3(92.0, 2.0, 68.0))
-	_build_sun_rune(district, CREATOR + Vector3(92.0, 49.0, -86.5))
-	_build_frame(district, CREATOR + Vector3(-105.0, 0.0, -105.0), 48.0, 66.0, _materials.gold, "CREATOR'S LIGHT")
-	for index in 30:
-		var angle := TAU * float(index) / 30.0
-		_add_flower_cluster(district, CREATOR + Vector3(cos(angle) * 168.0, 2.0, sin(angle) * 168.0), index % 3 == 0)
+		offsets.append(Vector3(-45.0 + (index % 3) * 45.0, top, -20.0 + (index / 3) * 42.0))
+	return offsets
+
+
+## Flowering shrubs over the terrazzo between the platform and the island rim,
+## kept clear of the stairs and of the hub bridge landing on the west side.
+## Each plant is a leafy mound with a few flowers on stems: six tilted petals
+## round a golden centre. Four MultiMeshes (leaves, stems, petals, centres)
+## keep the whole garden to four draws; one static body holds a cylinder per
+## plant so the player walks round them instead of through.
+func _build_studio_garden(parent: Node3D) -> void:
+	const PLANTS := 70
+	const PETALS := 6
+	var paints := [Color("e3546a"), Color("f59e40"), Color("fad65c"),
+		Color("ff8fc8"), Color("4f8fe0"), Color("9e6ddb")]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 6
+	var leaves: Array[Transform3D] = []
+	var leaf_colors: Array[Color] = []
+	var stems: Array[Transform3D] = []
+	var stem_colors: Array[Color] = []
+	var petals: Array[Transform3D] = []
+	var petal_colors: Array[Color] = []
+	var centres: Array[Transform3D] = []
+	var centre_colors: Array[Color] = []
+	var collision := StaticBody3D.new()
+	collision.name = "StudioGardenCollision"
+	collision.position = CREATOR
+	parent.add_child(collision)
+	var planted := 0
+	while planted < PLANTS:
+		var angle := rng.randf() * TAU
+		var spot := Vector2(cos(angle), sin(angle)) * rng.randf_range(110.0, 176.0)
+		if absf(spot.x) < CREATOR_PLATFORM_HALF.x + 14.0 and absf(spot.y) < CREATOR_PLATFORM_HALF.z + 14.0:
+			continue
+		if spot.x < 0.0 and absf(spot.y) < 40.0:
+			continue
+		planted += 1
+		var size := rng.randf_range(3.0, 6.0)
+		var ground := Vector3(spot.x, 0.0, spot.y)
+		# Three overlapping leaf lobes read as a bush rather than one blob.
+		for lobe in 3:
+			var turn := TAU * float(lobe) / 3.0 + rng.randf()
+			leaves.append(Transform3D(Basis.from_scale(Vector3(size, size * 0.6, size)),
+				ground + Vector3(cos(turn) * size * 0.3, size * 0.25, sin(turn) * size * 0.3)))
+			leaf_colors.append(Color("3f8f52").lerp(Color("7cc36b"), rng.randf()))
+		var paint: Color = paints[rng.randi() % paints.size()]
+		for flower in rng.randi_range(3, 5):
+			var around := rng.randf() * TAU
+			var reach := rng.randf_range(0.0, 0.4) * size
+			var height := size * rng.randf_range(0.8, 1.3)
+			var foot := ground + Vector3(cos(around) * reach, 0.0, sin(around) * reach)
+			var head := foot + Vector3.UP * height
+			stems.append(Transform3D(Basis.from_scale(Vector3(0.18, height, 0.18)), foot + Vector3.UP * height * 0.5))
+			stem_colors.append(Color("3f8a4a"))
+			var petal_length := size * rng.randf_range(0.38, 0.5)
+			var tint := paint.lightened(rng.randf_range(0.0, 0.3))
+			var spin := rng.randf() * TAU
+			for petal in PETALS:
+				# Petal along +X, its outer end tilted up, then turned round the head.
+				var petal_basis := Basis(Vector3.UP, spin + TAU * float(petal) / PETALS) \
+					* Basis(Vector3.BACK, deg_to_rad(25.0))
+				petals.append(Transform3D(
+					petal_basis * Basis.from_scale(Vector3(petal_length, petal_length * 0.18, petal_length * 0.5)),
+					head + petal_basis * Vector3(petal_length * 0.45, 0.0, 0.0)))
+				petal_colors.append(tint)
+			centres.append(Transform3D(Basis.from_scale(Vector3.ONE * petal_length * 0.45),
+				head + Vector3.UP * petal_length * 0.08))
+			centre_colors.append(Color("ffd447") if paint != paints[2] else Color("fff6dc"))
+		var shape_node := CollisionShape3D.new()
+		var shape := CylinderShape3D.new()
+		shape.radius = size * 0.65
+		shape.height = size * 1.4
+		shape_node.shape = shape
+		shape_node.position = ground + Vector3.UP * shape.height * 0.5
+		collision.add_child(shape_node)
+	var stem_mesh := CylinderMesh.new()
+	stem_mesh.top_radius = 0.5
+	stem_mesh.bottom_radius = 0.5
+	stem_mesh.height = 1.0
+	stem_mesh.radial_segments = 5
+	stem_mesh.rings = 1
+	_add_tinted_multimesh(parent, "StudioGardenLeaves", leaves, leaf_colors, 0.9)
+	_add_tinted_multimesh(parent, "StudioGardenStems", stems, stem_colors, 0.9, stem_mesh)
+	_add_tinted_multimesh(parent, "StudioGardenPetals", petals, petal_colors, 0.55)
+	_add_tinted_multimesh(parent, "StudioGardenCentres", centres, centre_colors, 0.5)
+
+
+## A MultiMesh of `mesh` (a low-poly unit sphere by default) with a colour per
+## instance, positioned on the Creator district.
+func _add_tinted_multimesh(parent: Node3D, node_name: String, transforms: Array[Transform3D],
+		colors: Array[Color], roughness: float, mesh: PrimitiveMesh = null) -> void:
+	if mesh == null:
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.5
+		sphere.height = 1.0
+		sphere.radial_segments = 8
+		sphere.rings = 4
+		mesh = sphere
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	material.roughness = roughness
+	mesh.material = material
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.use_colors = true
+	multimesh.mesh = mesh
+	multimesh.instance_count = transforms.size()
+	for index in transforms.size():
+		multimesh.set_instance_transform(index, transforms[index])
+		multimesh.set_instance_color(index, colors[index])
+	var instance := MultiMeshInstance3D.new()
+	instance.name = node_name
+	instance.multimesh = multimesh
+	instance.position = CREATOR
+	parent.add_child(instance)
 
 
 # Readable physical landmarks turn the story document into an explorable route.
@@ -924,6 +1593,7 @@ func _build_world_one_walk_route() -> void:
 	]
 	for index in points.size() - 1:
 		_add_walk_route_dots(route, points[index], points[index + 1], index)
+	_snap_route_dots_to_floor(route)
 	_add_landmark_label(route, "WORLD ONE • MIND SPARK  ←  WALK LEFT",
 		Vector3(-92, 24, 1518), Color("8df8ff"), 42)
 	_add_landmark_label(route, "MIND SPARK WORLD GATE • QUESTS BEYOND",
@@ -937,8 +1607,29 @@ func _add_walk_route_dots(parent: Node3D, start: Vector3, finish: Vector3, segme
 	var yaw := atan2(direction.x, direction.z)
 	for dot_index in count + 1:
 		var progress := float(dot_index) / float(count)
-		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], start.lerp(finish, progress),
+		var spot := start.lerp(finish, progress)
+		if Vector2(spot.x, spot.z).distance_to(Vector2(ARRIVAL_FOUNTAIN_CENTRE.x,
+				ARRIVAL_FOUNTAIN_CENTRE.z)) < 32.0:
+			continue
+		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], spot,
 			Vector3(7.5, 0.16, 2.2), _materials.aqua, false, yaw)
+
+
+## The route is authored at one height, but decks and bridges differ. Once
+## physics has the static bodies, drop each dot onto whatever floor is under it.
+func _snap_route_dots_to_floor(route: Node3D) -> void:
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if not is_instance_valid(route):
+		return
+	var space := get_world_3d().direct_space_state
+	for dot in route.get_children():
+		if not dot is MeshInstance3D:
+			continue
+		var from := (dot as Node3D).global_position + Vector3.UP * 2.0
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 8.0))
+		if not hit.is_empty():
+			(dot as Node3D).global_position.y = hit.position.y + 0.09
 
 
 func _build_mind_story_landmarks() -> void:
@@ -1014,33 +1705,17 @@ func _build_creator_story_landmarks() -> void:
 	var story := Node3D.new()
 	story.name = "CreatorsLightQuestLandmarks"
 	add_child(story)
-	var studios := [
-		{"name": "DrawingStudio", "text": "DRAWING STUDIO", "offset": Vector3(-130.0, 0.0, 70.0)},
-		{"name": "DreamDoorWorkshop", "text": "DREAM DOOR WORKSHOP", "offset": Vector3(-115.0, 0.0, -18.0)},
-		{"name": "RestingPlaceCanvas", "text": "RESTING PLACE CANVAS", "offset": Vector3(0.0, 0.0, 110.0)},
-		{"name": "ArtRealGarden", "text": "ART-REAL GARDEN", "offset": Vector3(125.0, 0.0, 65.0)},
-	]
-	for index in studios.size():
-		var info: Dictionary = studios[index]
-		var landmark := Node3D.new()
-		landmark.name = info.name
-		story.add_child(landmark)
-		var position_value: Vector3 = CREATOR + info.offset
-		_build_frame(landmark, position_value, 28.0, 38.0,
-			_materials.aqua if index % 2 == 0 else _materials.gold, info.text)
-	# Floating shapes, glass seeds and silver pipes give this world the highest
-	# magic/technology balance while keeping the handmade art studio central.
-	for index in 10:
-		var angle := TAU * float(index) / 10.0
-		var shape_pos := CREATOR + Vector3(cos(angle) * 145.0, 45.0 + index % 3 * 14.0, sin(angle) * 145.0)
-		_add_sphere(story, "GlassSeed_%02d" % index, shape_pos, Vector3(5.0, 10.0, 5.0), _materials.aqua_glass)
-		_add_cylinder(story, "SilverPipe_%02d" % index, shape_pos + Vector3(0.0, -24.0, 0.0), 2.6, 42.0, _materials.stone, false, 10)
-	var blank := Node3D.new()
-	blank.name = "PerfectBlankSanctuary"
-	story.add_child(blank)
-	_build_frame(blank, CREATOR + Vector3(108.0, 0.0, -108.0), 60.0, 82.0, _materials.canvas, "THE PERFECT BLANK")
-	_add_torus(blank, "CreatorsLight", CREATOR + Vector3(108.0, 48.0, -102.0), 11.0, 16.0, _materials.gold)
-	_add_landmark_label(blank, "URIEL • CREATOR'S LIGHT", CREATOR + Vector3(108.0, 104.0, -108.0), Color("fff0a8"))
+	# The studio's drawing gameplay: grow on the platform, paint at the easels.
+	var studio := CreatorStudio.new()
+	studio.name = "CreatorStudio"
+	studio.position = CREATOR
+	studio.platform_half = Vector2(CREATOR_PLATFORM_HALF.x, CREATOR_PLATFORM_HALF.z)
+	studio.platform_top = CREATOR_PLATFORM_HALF.y * 2.0
+	studio.easel_positions = _creator_easel_offsets()
+	for index in studio.easel_positions.size():
+		studio.easel_canvases.append(get_node_or_null(
+			"CreatorsLightStudio/PaintingEasel_%02d/Canvas" % index) as MeshInstance3D)
+	story.add_child(studio)
 
 
 func _build_boundary_observatories() -> void:
@@ -1052,10 +1727,9 @@ func _build_boundary_observatories() -> void:
 			"source_center": MIND, "source_radius": MIND_DISTRICT_RADIUS},
 		{"name": "NorthObservatory", "center": Vector3(0.0, 0.0, 2565.0),
 			"source_center": HEART, "source_radius": 175.0},
-		{"name": "EastObservatory", "center": Vector3(920.0, 0.0, 1640.0),
-			"source_center": CREATOR, "source_radius": 195.0},
-		{"name": "SouthObservatory", "center": Vector3(0.0, 0.0, 710.0),
-			"source_center": SOUTH_GATE, "source_radius": 155.0},
+		# No east lookout: the Creator studio island stands on its own.
+		# No south lookout: its tower stood inside the arrival island between
+		# the gate and the fountain.
 	]
 	for info in points:
 		var lookout := Node3D.new()
@@ -1063,14 +1737,100 @@ func _build_boundary_observatories() -> void:
 		add_child(lookout)
 		var center: Vector3 = info.center
 		_build_island_foundation(lookout, center, 70.0, 38.0, 20)
+		if info.name == "WestObservatory":
+			# The World One entrance lookout: a mini observatory on an astrolabe
+			# floor, reached by railed bridges like the World One causeway.
+			var floor_material := ShaderMaterial.new()
+			floor_material.shader = ObservatoryFloorShader
+			(lookout.get_node("WalkableDeck") as MeshInstance3D).material_override = floor_material
+			var source: Vector3 = info.source_center
+			var facing := Vector3(source.x - center.x, 0.0, source.z - center.z).normalized()
+			_build_mini_observatory(lookout, center, facing)
+			var side := Vector3(facing.z, 0.0, -facing.x)
+			for pad_dir in [-facing, side, -side]:
+				_add_bounce_pad(lookout, center + pad_dir * 44.0, pad_dir == side)
+			_add_exact_twin_island_bridges("%sBridge" % info.name,
+				info.source_center, float(info.source_radius), center, 70.0, true)
+			continue
 		_add_torus(lookout, "CompassRing", center + Vector3(0.0, 1.0, 0.0), 33.0, 38.0, _materials.gold)
 		_build_tower(lookout, center, 34.0, 112.0, _materials.ivory)
 		_add_exact_twin_island_bridges("%sBridge" % info.name,
 			info.source_center, float(info.source_radius), center, 70.0)
 
 
+## A small domed observatory for a lookout island: an ivory drum with a band of
+## glowing windows, a gold cornice, a dome with a brass telescope aimed out over
+## the void, a door toward `facing`, and an armillary sphere on a plinth. The
+## base, drum, dome and plinth are solid.
+func _build_mini_observatory(parent: Node3D, center: Vector3, facing: Vector3) -> void:
+	var side := Vector3(facing.z, 0.0, -facing.x)
+	var yaw := atan2(facing.x, facing.z)
+	_add_cylinder(parent, "ObservatoryBase", center + Vector3(0.0, 0.3, 0.0), 11.0, 0.6,
+		_materials.stone, true, 32)
+	# Named for test_train_station_jump_traversal.gd, which keeps it clear of
+	# the Mind station.
+	_add_cylinder(parent, "ObservatoryTower", center + Vector3(0.0, 4.1, 0.0), 8.0, 7.0,
+		_materials.ivory, true, 32)
+	_add_cylinder(parent, "WindowBand", center + Vector3(0.0, 4.6, 0.0), 8.06, 1.6,
+		_materials.aqua, false, 32)
+	for trim_y in [3.65, 5.55]:
+		_add_cylinder(parent, "WindowTrim", center + Vector3(0.0, trim_y, 0.0), 8.12, 0.3,
+			_materials.gold, false, 32)
+	_add_cylinder(parent, "Cornice", center + Vector3(0.0, 7.9, 0.0), 8.8, 0.6, _materials.gold, false, 32)
+	var dome := MeshInstance3D.new()
+	dome.name = "Dome"
+	var dome_mesh := SphereMesh.new()
+	dome_mesh.radius = 8.2
+	dome_mesh.height = 8.2
+	dome_mesh.is_hemisphere = true
+	dome_mesh.radial_segments = 32
+	dome_mesh.rings = 12
+	dome.mesh = dome_mesh
+	dome.position = center + Vector3(0.0, 8.2, 0.0)
+	dome.material_override = _materials.ivory_shadow
+	parent.add_child(dome)
+	var dome_body := StaticBody3D.new()
+	dome_body.name = "DomeCollision"
+	dome_body.position = dome.position
+	var dome_shape := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = 8.2
+	dome_shape.shape = sphere
+	dome_body.add_child(dome_shape)
+	parent.add_child(dome_body)
+	var finial := MeshInstance3D.new()
+	finial.name = "DomeFinial"
+	var prism := PrismMesh.new()
+	prism.size = Vector3(1.2, 2.4, 1.2)
+	finial.mesh = prism
+	finial.position = center + Vector3(0.0, 17.6, 0.0)
+	finial.material_override = _materials.aqua
+	parent.add_child(finial)
+	# Telescope: out of the dome's far side, 40 degrees up.
+	var aim := (-facing * cos(deg_to_rad(40.0)) + Vector3.UP * sin(deg_to_rad(40.0))).normalized()
+	var mount := center + Vector3(0.0, 11.0, 0.0)
+	var tube := _add_cylinder(parent, "Telescope", mount + aim * 6.0, 0.9, 10.0, _materials.gold, false, 12)
+	tube.basis = Basis(Quaternion(Vector3.UP, aim))
+	var lens := _add_cylinder(parent, "TelescopeLens", mount + aim * 11.0, 0.75, 0.3, _materials.aqua, false, 12)
+	lens.basis = tube.basis
+	# Door facing the bridges.
+	_add_box(parent, "Door", center + facing * 8.0 + Vector3(0.0, 2.8, 0.0),
+		Vector3(3.0, 4.4, 0.6), _materials.black, false, yaw)
+	_add_box(parent, "DoorFrame", center + facing * 8.05 + Vector3(0.0, 5.2, 0.0),
+		Vector3(3.8, 0.5, 0.7), _materials.gold, false, yaw)
+	# Armillary sphere beside the door.
+	var armillary := center + facing * 20.0 + side * 14.0
+	_add_cylinder(parent, "ArmillaryPlinth", armillary + Vector3(0.0, 1.2, 0.0), 1.6, 2.4,
+		_materials.ivory, true, 16)
+	var orb := armillary + Vector3(0.0, 5.2, 0.0)
+	_add_sphere(parent, "ArmillaryCore", orb, Vector3.ONE * 0.9, _materials.aqua)
+	for tilt in [Vector3(90.0, 0.0, 0.0), Vector3(90.0, 0.0, 60.0), Vector3(0.0, 0.0, 23.0)]:
+		_add_torus(parent, "ArmillaryRing", orb, 2.5, 2.75, _materials.gold, tilt)
+
+
 func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
-		source_radius: float, target_center: Vector3, target_radius: float) -> void:
+		source_radius: float, target_center: Vector3, target_radius: float,
+		railed: bool = false) -> void:
 	# Two narrow decks mirror each other around the centre-to-centre axis. Their
 	# endpoints are solved on inset circles, keeping the complete deck width over
 	# land rather than leaving an outer corner suspended past a curved island rim.
@@ -1090,31 +1850,25 @@ func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
 		var start: Vector3 = source_center + direction * source_along + side_axis * side * LANE_OFFSET
 		var finish: Vector3 = target_center - direction * target_along + side_axis * side * LANE_OFFSET
 		var bridge_name := base_name if side < 0.0 else "%sTwin" % base_name
-		_add_bridge(bridge_name, start, finish, BRIDGE_WIDTH)
+		if railed:
+			# Causeway style: circuit-stone deck, posts, glass and a top rail,
+			# with bounce pads alternating sides along it.
+			var railed_bridge := Node3D.new()
+			railed_bridge.name = bridge_name
+			add_child(railed_bridge)
+			_add_bridge_between(railed_bridge, start, finish, BRIDGE_WIDTH, false)
+			var across := Vector3(finish.z - start.z, 0.0, start.x - finish.x).normalized()
+			for pad in 3:
+				var on_deck := start.lerp(finish, 0.25 * float(pad + 1)) + Vector3.UP * 0.6
+				_add_bounce_pad(railed_bridge, on_deck + across * (4.5 if pad % 2 == 0 else -4.5), pad == 1)
+		else:
+			_add_bridge(bridge_name, start, finish, BRIDGE_WIDTH)
 		var bridge := get_node(bridge_name) as Node3D
 		bridge.set_meta("connection_start", start)
 		bridge.set_meta("connection_finish", finish)
 		bridge.set_meta("symmetry_side", int(side))
 		bridge.set_meta("symmetry_offset", LANE_OFFSET)
 		bridge.set_meta("walk_surface_y", source_center.y)
-
-
-func _build_skyline() -> void:
-	var skyline := Node3D.new()
-	skyline.name = "DistantSkyline"
-	add_child(skyline)
-	var tower_data := [
-		Vector4(-860, -720, 180, 42), Vector4(-610, -880, 240, 48),
-		Vector4(-330, -900, 150, 36), Vector4(330, -900, 210, 44),
-		Vector4(670, -820, 160, 38), Vector4(900, -650, 225, 46),
-		Vector4(-940, -430, 145, 34), Vector4(940, -390, 170, 38),
-		Vector4(-870, 540, 190, 42), Vector4(850, 560, 230, 48),
-		Vector4(-600, 760, 145, 34), Vector4(600, 790, 175, 38),
-	]
-	for index in tower_data.size():
-		var data: Vector4 = tower_data[index]
-		var base := Vector3(data.x, -30.0 - float(index % 3) * 16.0, data.y)
-		_build_cloud_tower(skyline, base, data.w, data.z, index)
 
 
 func _build_cloud_banks() -> void:
@@ -1183,7 +1937,7 @@ func _build_return_gate() -> void:
 func _on_return_gate_entered(body: Node3D) -> void:
 	if _travelling or body != _player:
 		return
-	if not ResourceLoader.exists(RETURN_SCENE_PATH):
+	if not SceneLoader.can_open(RETURN_SCENE_PATH):
 		return
 	_travelling = true
 	# Deferred: swapping scenes inside the Area3D's body_entered callback frees
@@ -1228,14 +1982,20 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var bridge := Node3D.new()
 	bridge.name = node_name
 	add_child(bridge)
-	var tree_processional := node_name == "SouthArrivalBridge"
+	var tree_processional := node_name in ["SouthArrivalBridge", "CreatorBridge", "MindBridge"]
 	var direction := end - start
 	var length := direction.length()
-	var midpoint := (start + end) * 0.5 + Vector3(0.0, -2.0, 0.0)
+	# Top at -0.02, not 0: bridges start on island decks whose tops are at 0,
+	# and the flush walkway z-fought with them across the whole overlap.
+	var midpoint := (start + end) * 0.5 + Vector3(0.0, -2.02, 0.0)
 	var yaw := atan2(direction.x, direction.z)
 	var walkway_material: Material = _materials.passage_stone if tree_processional else _materials.stone
-	_add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
+	var walkway := _add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
 		walkway_material, true, yaw)
+	# Processional bridges draw their own deck over the full width; the plain
+	# walkway underneath only z-fought with the island decks where the ends
+	# overlap them. Its collision stays the walkable surface.
+	walkway.visible = not tree_processional
 	var side_axis := Vector3(cos(yaw), 0.0, -sin(yaw))
 	for side in [-1.0, 1.0]:
 		var rail_height := 5.0 if tree_processional else 10.0
@@ -1245,8 +2005,10 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 		var edge_position: Vector3 = midpoint \
 			+ side_axis * float(side) * (width * 0.5 - 2.0) \
 			+ Vector3(0.0, rail_y, 0.0)
+		# 4 cm shorter than the walkway so the rail's end faces are not in the
+		# walkway's end planes (they overlap where the rail sinks into it).
 		var safety_rail := _add_box(bridge, "SafetyRail", edge_position,
-			Vector3(2.4 if tree_processional else 3.0, rail_height, length),
+			Vector3(2.4 if tree_processional else 3.0, rail_height, length - 0.04),
 			rail_material, true, yaw)
 		# Retain the original continuous fall-prevention collision, but let the
 		# lightweight botanical lattice carry the visible silhouette.
@@ -1285,8 +2047,13 @@ func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
 	asset_holder.name = "ReferenceTreeProcessionalBridge"
 	# Blender +Y imports as Godot -Z, which matches this route from z=1422 to
 	# z=975 exactly. Its paver top sits 23 cm above the tested collision deck.
-	asset_holder.position = start
+	# Lifted 8 cm: the asset's deck base is authored at y=0, level with the
+	# island decks it overlaps at each end, and flickered against them there.
+	asset_holder.position = start + Vector3.UP * 0.08
 	asset_holder.rotation.y = yaw + PI
+	# The asset is authored at 447 x 62 m (SouthArrivalBridge). Shorter
+	# bridges squeeze it to fit; it is visual only, collision is the Walkway.
+	asset_holder.scale = Vector3(width / 62.0, 1.0, length / 447.0)
 	asset_holder.set_meta("source_blend",
 		"res://assets3D/tree_processional_bridge/blend/tree_processional_bridge.blend")
 	asset_holder.set_meta("source_glb",
@@ -1297,6 +2064,48 @@ func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,
 	if blender_asset != null:
 		blender_asset.name = "BlenderTreeProcessionalBridge"
 		asset_holder.add_child(blender_asset)
+		# Holds only a lone 21 m gold rod standing mid-deck at the island end.
+		(blender_asset.find_child("PortalGold", true, false) as Node3D).visible = false
+		if bridge.name == "MindBridge":
+			_add_tree_court_deck(bridge, blender_asset, start, end, width)
+
+
+## Replaces the processional deck's plain pavers with the tree court floor
+## (shaders/tree_court.gdshader). The deck is drawn in the court's own
+## coordinates, centred on the tree, so its flagstones, growth rings and roots
+## carry on from the court across the bridge.
+func _add_tree_court_deck(bridge: Node3D, blender_asset: Node3D, start: Vector3,
+		end: Vector3, width: float) -> void:
+	var pavers := blender_asset.find_child("DeckIvory", true, false) as GeometryInstance3D
+	pavers.visible = false
+	var along := (end - start).normalized()
+	var across := Vector3(along.z, 0.0, -along.x) * 41.8 * width / 62.0 * 0.5
+	var lift := Vector3.UP * 0.25
+	var a := start - HUB - across + lift
+	var b := start - HUB + across + lift
+	var c := end - HUB + across + lift
+	var d := end - HUB - across + lift
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	# Both windings, so the deck draws whichever way the bridge runs.
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([a, b, c, a, c, d, a, c, b, a, d, c])
+	var normals := PackedVector3Array()
+	normals.resize(12)
+	normals.fill(Vector3.UP)
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var court_floor := ShaderMaterial.new()
+	court_floor.shader = TreeCourtShader
+	# Past the far end, so the roots and rings run the whole length and the
+	# island rim band never reaches the deck.
+	court_floor.set_shader_parameter("island_radius", HUB.distance_to(end) + 40.0)
+	var deck := MeshInstance3D.new()
+	deck.name = "TreeCourtDeck"
+	deck.mesh = mesh
+	deck.position = HUB
+	deck.material_override = court_floor
+	bridge.add_child(deck)
 
 
 func _build_life_tree(parent: Node3D, center: Vector3) -> void:
@@ -1328,11 +2137,14 @@ func _build_life_tree(parent: Node3D, center: Vector3) -> void:
 	visual.scale = Vector3.ONE * TREE_OF_LIFE_GAME_SCALE
 	tree.add_child(visual)
 	_style_original_tree_body(tree, visual)
-	_build_tree_of_life_collision(tree, manifest)
 	_build_blender_blueprint_trunk_root(tree)
 	_build_reference_trunk_root_facade(tree)
 	_build_old_growth_trunk_body(tree)
 	_hide_superseded_procedural_lower_body(tree)
+	# Clear the roots that grew across the doorway (the arch is at z = -42).
+	_cut_tree_meshes(tree, DOORWAY_ROOT_MESHES,
+		AABB(Vector3(-10.0, -5.0, -100.0), Vector3(20.0, 30.0, 70.0)))
+	_build_trunk_collision(tree)
 	# The capture-only switch lets the inspection harness render the embedded
 	# heart at full trunk quality without first submitting the unrelated 43k-leaf
 	# canopy. Normal gameplay never sets this environment variable.
@@ -1455,6 +2267,10 @@ func _build_blender_blueprint_trunk_root(tree: Node3D) -> void:
 	body.set_meta("laptop_runtime_triangles", 58904)
 	body.set_meta("authoritative_lower_body", true)
 	tree.add_child(body)
+	# The dark slate plinth ringing the roots; the court floor shows instead.
+	(body.find_child("FoundationArchitecture", true, false) as Node3D).visible = false
+	# Its cyan ring stood 0.8 m proud of the court at the stair foot; sit it flush.
+	(body.find_child("RootManifold", true, false) as Node3D).global_position.y -= 0.8
 	for mesh_node in body.find_children("*", "MeshInstance3D", true, false):
 		var mesh := mesh_node as MeshInstance3D
 		# The canopy already owns the dominant landmark shadow. Keeping the detailed
@@ -1538,7 +2354,10 @@ func _style_original_tree_body(tree: Node3D, visual: Node3D) -> void:
 		# receive lighting, but this authored visual no longer submits a second full
 		# copy of all its leaves and branches to the shadow renderer.
 		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		if mesh.name.begins_with("Trunk"):
+		if mesh.name.begins_with("Foundation"):
+			# Dark engineered-stone disc around the roots; the court floor shows instead.
+			mesh.visible = false
+		elif mesh.name.begins_with("Trunk"):
 			mesh.visible = false
 			mesh.scale = Vector3(
 				mesh.scale.x * ORIGINAL_TRUNK_RADIAL_SCALE,
@@ -3247,8 +4066,6 @@ const HEART_SHRINE_ORBIT_RINGS := [
 const HEART_SHRINE_OUTLINE_GROW := 0.95
 
 
-
-
 # Energy veins climbing the bark. They are pinned to the real surface: the
 # trunk and root mesh is sampled into a height x angle table of bark radii, and
 # every vein segment is placed on that surface. A guessed cylinder profile
@@ -4489,7 +5306,6 @@ func _build_powered_living_bough_canopy(tree: Node3D, previous_canopy: Node3D) -
 	canopy.add_child(flow_light)
 
 
-
 # Baubles hung along the whorls. Three colours ride the branches and every
 # fitting - cap and hanger - is gold, matching the star and the shrine rings.
 const ORNAMENT_COLOURS := [
@@ -4950,95 +5766,239 @@ func _load_tree_of_life_manifest() -> Dictionary:
 	return parsed as Dictionary if parsed is Dictionary else {}
 
 
-func _build_tree_of_life_collision(tree: Node3D, manifest: Dictionary) -> void:
-	# The 172k-vertex Blender mesh is visual-only. Authored manifest primitives
-	# approximate the load-bearing trunk and low roots without turning thousands
-	# of leaves into expensive collision. The centerline remains a continuous
-	# south-to-north arch wider than the production player capsule.
-	var collision_root := Node3D.new()
-	collision_root.name = "TreeOfLifeCollisionProxies"
-	collision_root.set_meta("proxy_system", "low_cost_authored_primitives")
-	collision_root.set_meta("clear_path_axis", "local_z")
-	var policy := manifest.get("collision_policy", {}) as Dictionary
-	var collision_scale := TREE_OF_LIFE_GAME_SCALE if bool(policy.get("scale_with_visual", true)) else 1.0
-	var minimum_clear_width := SIMPLE_TRUNK_DOOR_WIDTH_M * collision_scale \
-		if bool(tree.get_meta("simple_trunk_core", false)) \
-		else TREE_OF_LIFE_CLEAR_PATH_M * collision_scale
-	collision_root.set_meta("minimum_clear_width_m", minimum_clear_width)
-	collision_root.set_meta("collision_scale", collision_scale)
-	tree.add_child(collision_root)
-
-	if bool(tree.get_meta("simple_trunk_core", false)):
-		_build_simple_trunk_collision(collision_root, collision_scale)
-	else:
-		var trunk_specs := policy.get("trunk_pillars", []) as Array
-		for value in trunk_specs:
-			var spec := value as Dictionary
-			var trunk_body := StaticBody3D.new()
-			trunk_body.name = String(spec.get("name", "TrunkPillar"))
-			trunk_body.position = Vector3(
-				float(spec.get("x_m", 0.0)) * collision_scale,
-				float(spec.get("y_m", 13.5)) * collision_scale,
-				0.0)
-			trunk_body.set_meta("tree_collision_role", "load_bearing_trunk")
-			var trunk_shape_node := CollisionShape3D.new()
-			var trunk_shape := CylinderShape3D.new()
-			trunk_shape.radius = float(spec.get("radius_m", 3.25)) * collision_scale
-			trunk_shape.height = float(spec.get("height_m", 27.0)) * collision_scale
-			trunk_shape_node.shape = trunk_shape
-			trunk_body.add_child(trunk_shape_node)
-			collision_root.add_child(trunk_body)
-
-	var root_specs := policy.get("root_proxies", []) as Array
-	for value in root_specs:
-		var spec := value as Dictionary
-		var blender_xy := spec.get("position_blender_xy_m", [0.0, 0.0]) as Array
-		var size_values := spec.get("size_m", [3.3, 3.0, 16.0]) as Array
-		var root_body := StaticBody3D.new()
-		root_body.name = String(spec.get("name", "LowRootProxy"))
-		# Blender local Y becomes Godot local -Z through the glTF Y-up export.
-		root_body.position = Vector3(
-			float(blender_xy[0]) * collision_scale,
-			float(size_values[1]) * collision_scale * 0.5,
-			-float(blender_xy[1]) * collision_scale)
-		root_body.rotation.y = deg_to_rad(float(spec.get("yaw_godot_deg", 0.0)))
-		root_body.set_meta("tree_collision_role", "low_root")
-		var root_shape_node := CollisionShape3D.new()
-		var root_shape := BoxShape3D.new()
-		root_shape.size = Vector3(
-			float(size_values[0]), float(size_values[1]), float(size_values[2])) * collision_scale
-		root_shape_node.shape = root_shape
-		root_body.add_child(root_shape_node)
-		collision_root.add_child(root_body)
+## Trunk and root collision made from the Blender body's own triangles, so the
+## player stops at the bark and roots they see. Veins, trim and leaves stay visual-only,
+## and only the reachable lower trunk (below TRUNK_COLLISION_TOP_M) is kept.
+const TRUNK_COLLISION_MESHES := ["InnerShell", "BarkRibs", "PrimaryRoots", "RootCambiumWebbing",
+	"SecondaryRootlets", "DoorwayButtresses", "DoorwayArch", "HeartRecess",
+	"ReferenceRootFlare_01", "ReferenceRootFlare_02", "ReferenceRootFlare_03",
+	"ReferenceRootFlare_04", "ReferenceRootFlare_05", "ReferenceRootFlare_06",
+	"ReferenceRootFlare_07", "ReferenceRootFlare_08"]
+const TRUNK_COLLISION_TOP_M := 100.0
 
 
-func _build_simple_trunk_collision(parent: Node3D, collision_scale: float) -> void:
-	var root_radius := SIMPLE_TRUNK_ROOT_DIAMETER_M * collision_scale * 0.5
-	var door_half_width := SIMPLE_TRUNK_DOOR_WIDTH_M * collision_scale * 0.5
-	var door_height := SIMPLE_TRUNK_DOOR_HEIGHT_M * collision_scale
-	var trunk_height := SIMPLE_TRUNK_HEIGHT_M * collision_scale
-	var trunk_depth := SIMPLE_TRUNK_ROOT_DIAMETER_M * collision_scale
-	var side_width := root_radius - door_half_width
-	for side in [-1.0, 1.0]:
-		_add_trunk_collision_box(parent,
-			"SimpleTrunkDoorway%s" % ("Left" if side < 0.0 else "Right"),
-			Vector3(side * (door_half_width + side_width * 0.5),
-				door_height * 0.5, 0.0),
-			Vector3(side_width, door_height, trunk_depth))
-	_add_trunk_collision_box(parent, "SimpleTrunkDoorwayTop",
-		Vector3(0.0, door_height + (trunk_height - door_height) * 0.5, 0.0),
-		Vector3(root_radius * 2.0, trunk_height - door_height, trunk_depth))
+func _build_trunk_collision(tree: Node3D) -> void:
+	var to_tree := tree.global_transform.affine_inverse()
+	var faces := PackedVector3Array()
+	for mesh_name in TRUNK_COLLISION_MESHES:
+		var mesh_node := tree.find_child(mesh_name, true, false) as MeshInstance3D
+		var to_local := to_tree * mesh_node.global_transform
+		var mesh_faces := mesh_node.mesh.get_faces()
+		for index in range(0, mesh_faces.size(), 3):
+			var a := to_local * mesh_faces[index]
+			var b := to_local * mesh_faces[index + 1]
+			var c := to_local * mesh_faces[index + 2]
+			if minf(a.y, minf(b.y, c.y)) < TRUNK_COLLISION_TOP_M:
+				faces.append(a)
+				faces.append(b)
+				faces.append(c)
+	var shape := ConcavePolygonShape3D.new()
+	# The bark is a shell: walked against from the court and from the hollow.
+	shape.backface_collision = true
+	shape.set_faces(faces)
+	var body := StaticBody3D.new()
+	body.name = "TrunkCollision"
+	var shape_node := CollisionShape3D.new()
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	tree.add_child(body)
 
 
-func _add_trunk_collision_box(parent: Node3D, body_name: String,
-		position: Vector3, size: Vector3) -> void:
+## Root meshes trimmed out of the doorway by _cut_tree_meshes.
+const DOORWAY_ROOT_MESHES := ["PrimaryRoots", "SecondaryRootlets", "RootCambiumWebbing",
+	"RootEnergyChannels", "ReferenceRootFlare_04", "ReferenceRootFlare_08",
+	"ReferenceRootEmbeddedEnergyFiberBundle", "ReferenceRootGoldSlashInlayBundle"]
+
+
+## Drops every triangle whose centre lies inside `box` (tree space) from the
+## named meshes, keeping their materials.
+func _cut_tree_meshes(tree: Node3D, mesh_names: Array, box: AABB) -> void:
+	var to_tree := tree.global_transform.affine_inverse()
+	for mesh_name in mesh_names:
+		var mesh_node := tree.find_child(mesh_name, true, false) as MeshInstance3D
+		var to_local := to_tree * mesh_node.global_transform
+		var source := mesh_node.mesh
+		var cut := ArrayMesh.new()
+		var overrides := []
+		for surface in source.get_surface_count():
+			overrides.append(mesh_node.get_surface_override_material(surface))
+			var arrays := source.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			if indices.is_empty():
+				indices = PackedInt32Array(range(vertices.size()))
+			var kept := PackedInt32Array()
+			for index in range(0, indices.size(), 3):
+				var centre := to_local * ((vertices[indices[index]] + vertices[indices[index + 1]]
+					+ vertices[indices[index + 2]]) / 3.0)
+				if not box.has_point(centre):
+					kept.append(indices[index])
+					kept.append(indices[index + 1])
+					kept.append(indices[index + 2])
+			arrays[Mesh.ARRAY_INDEX] = kept
+			cut.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+			cut.surface_set_material(surface, source.surface_get_material(surface))
+		mesh_node.mesh = cut
+		for surface in overrides.size():
+			mesh_node.set_surface_override_material(surface, overrides[surface])
+
+
+## A spiral stair up the middle of the hollow trunk to a glass lookout floor.
+## The floor spans the hollow below the first branches (~45 m), so nothing
+## without collision is reachable. Like _add_walk_stairs, the stair collision
+## is one smooth ramp (a helix here) and the visible steps sit on it.
+const TREE_STAIR_INNER_RADIUS := 6.0
+const TREE_STAIR_OUTER_RADIUS := 16.0
+const TREE_STAIR_TOP := 34.0
+const TREE_STAIR_RISE_PER_TURN := 18.0
+const TREE_STAIR_STEP_COUNT := 75
+const TREE_LOOKOUT_RADIUS := 24.0
+const TREE_LOOKOUT_WALL_HEIGHT := 2.4
+# The lookout floor leaves the last ~80 degrees of stair open above it, so
+# the stair under the floor is always at least 4 m below: room to climb.
+const TREE_LOOKOUT_STAIRWELL := 1.4
+
+
+func _build_tree_spiral_stairs(parent: Node3D, base: Vector3) -> void:
+	var stairs := Node3D.new()
+	stairs.name = "TreeSpiralStairs"
+	stairs.position = base
+	parent.add_child(stairs)
+	var rise := TREE_STAIR_TOP / TREE_STAIR_STEP_COUNT
+	var step_angle := TAU * rise / TREE_STAIR_RISE_PER_TURN
+	var climb_angle := step_angle * TREE_STAIR_STEP_COUNT
+	# The first step faces the doorway (-Z).
+	var start_angle := -PI * 0.5
+
+	# Split radially as well: one quad per step twists enough that its long
+	# diagonal reads as a wall and stops the capsule.
+	var faces := PackedVector3Array()
+	for ring in 4:
+		faces.append_array(_helix_faces(start_angle, 0.0, climb_angle, TREE_STAIR_STEP_COUNT,
+			lerpf(TREE_STAIR_INNER_RADIUS, TREE_STAIR_OUTER_RADIUS, ring / 4.0),
+			lerpf(TREE_STAIR_INNER_RADIUS, TREE_STAIR_OUTER_RADIUS, (ring + 1) / 4.0),
+			TREE_STAIR_RISE_PER_TURN))
+	_add_faces_body(stairs, "StairRamp", faces, false)
+
+	# One draw call for every tread.
+	var tread := BoxMesh.new()
+	tread.size = Vector3(TREE_STAIR_OUTER_RADIUS - TREE_STAIR_INNER_RADIUS, 0.5,
+		2.0 * TREE_STAIR_OUTER_RADIUS * sin(step_angle * 0.5) + 0.1)
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = tread
+	multimesh.instance_count = TREE_STAIR_STEP_COUNT
+	for step in TREE_STAIR_STEP_COUNT:
+		var mid := start_angle + step_angle * (float(step) + 0.5)
+		var centre := Vector3(cos(mid), 0.0, sin(mid)) \
+			* (TREE_STAIR_INNER_RADIUS + TREE_STAIR_OUTER_RADIUS) * 0.5
+		multimesh.set_instance_transform(step,
+			Transform3D(Basis(Vector3.UP, -mid), centre + Vector3.UP * (rise * float(step + 1) - 0.25)))
+	var treads := MultiMeshInstance3D.new()
+	treads.name = "Treads"
+	treads.multimesh = multimesh
+	treads.material_override = _materials.passage_stone
+	stairs.add_child(treads)
+	_add_cylinder(stairs, "StairColumn", Vector3(0.0, TREE_STAIR_TOP * 0.5, 0.0),
+		TREE_STAIR_INNER_RADIUS, TREE_STAIR_TOP, _materials.wood, true, 16)
+	_build_tree_lookout(stairs, start_angle + climb_angle)
+
+
+## Glass-floored lookout at the stair head: look down the spiral and up the
+## hollow into the canopy. A glass wall and gold rails ring it.
+func _build_tree_lookout(stairs: Node3D, stair_end_angle: float) -> void:
+	var lookout := Node3D.new()
+	lookout.name = "GlassLookout"
+	lookout.position.y = TREE_STAIR_TOP
+	stairs.add_child(lookout)
+	var glass := _make_glow(Color(0.62, 0.92, 1.0, 0.28), 0.25, true)
+	# Floor: everything inside the wall except the stairwell over the last
+	# stretch of stair, which arrives at stair_end_angle.
+	var floor_faces := _helix_faces(stair_end_angle, 0.0, TAU - TREE_LOOKOUT_STAIRWELL, 48,
+		TREE_STAIR_INNER_RADIUS, TREE_STAIR_OUTER_RADIUS, 0.0)
+	floor_faces.append_array(_helix_faces(stair_end_angle, 0.0, TAU, 64,
+		TREE_STAIR_OUTER_RADIUS, TREE_LOOKOUT_RADIUS, 0.0))
+	_add_faces_body(lookout, "LookoutFloor", floor_faces, false)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = floor_faces
+	var normals := PackedVector3Array()
+	normals.resize(floor_faces.size())
+	normals.fill(Vector3.UP)
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var floor_mesh := ArrayMesh.new()
+	floor_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var floor_visual := MeshInstance3D.new()
+	floor_visual.name = "GlassFloor"
+	floor_visual.mesh = floor_mesh
+	floor_visual.material_override = glass
+	lookout.add_child(floor_visual)
+
+	var wall_mesh := CylinderMesh.new()
+	wall_mesh.top_radius = TREE_LOOKOUT_RADIUS
+	wall_mesh.bottom_radius = TREE_LOOKOUT_RADIUS
+	wall_mesh.height = TREE_LOOKOUT_WALL_HEIGHT
+	wall_mesh.radial_segments = 64
+	wall_mesh.cap_top = false
+	wall_mesh.cap_bottom = false
+	var wall := MeshInstance3D.new()
+	wall.name = "GlassWall"
+	wall.mesh = wall_mesh
+	wall.position.y = TREE_LOOKOUT_WALL_HEIGHT * 0.5
+	wall.material_override = glass
+	lookout.add_child(wall)
+	var wall_faces := PackedVector3Array()
+	var up := Vector3.UP * TREE_LOOKOUT_WALL_HEIGHT
+	for segment in 64:
+		var p0 := Vector3(cos(TAU * segment / 64.0), 0.0, sin(TAU * segment / 64.0)) \
+			* TREE_LOOKOUT_RADIUS
+		var p1 := Vector3(cos(TAU * (segment + 1) / 64.0), 0.0, sin(TAU * (segment + 1) / 64.0)) \
+			* TREE_LOOKOUT_RADIUS
+		wall_faces.append_array(PackedVector3Array([p0, p1, p1 + up, p0, p1 + up, p0 + up]))
+	_add_faces_body(lookout, "GlassWallCollision", wall_faces, true)
+	for rail_y in [0.0, TREE_LOOKOUT_WALL_HEIGHT]:
+		var rail_mesh := TorusMesh.new()
+		rail_mesh.inner_radius = TREE_LOOKOUT_RADIUS - 0.2
+		rail_mesh.outer_radius = TREE_LOOKOUT_RADIUS + 0.2
+		rail_mesh.rings = 64
+		rail_mesh.ring_segments = 6
+		var rail := MeshInstance3D.new()
+		rail.name = "GoldRail"
+		rail.mesh = rail_mesh
+		rail.position.y = rail_y
+		rail.material_override = _materials.gold
+		lookout.add_child(rail, true)
+
+
+## Top faces of a band swept from `from` to `from + sweep` (radians past
+## `start_angle`), rising `rise_per_turn` per turn; 0 gives a flat ring sector.
+## Clockwise from above is the front face (as in hub_castle_stairs.gd).
+func _helix_faces(start_angle: float, from: float, sweep: float, segments: int,
+		inner: float, outer: float, rise_per_turn: float) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	for segment in segments:
+		var a0 := from + sweep * segment / segments
+		var a1 := from + sweep * (segment + 1) / segments
+		var d0 := Vector3(cos(start_angle + a0), 0.0, sin(start_angle + a0))
+		var d1 := Vector3(cos(start_angle + a1), 0.0, sin(start_angle + a1))
+		var y0 := Vector3.UP * a0 / TAU * rise_per_turn
+		var y1 := Vector3.UP * a1 / TAU * rise_per_turn
+		var in0 := d0 * inner + y0
+		var out0 := d0 * outer + y0
+		var in1 := d1 * inner + y1
+		var out1 := d1 * outer + y1
+		faces.append_array(PackedVector3Array([out0, out1, in1, out0, in1, in0]))
+	return faces
+
+
+func _add_faces_body(parent: Node3D, body_name: String, faces: PackedVector3Array,
+		two_sided: bool) -> void:
+	var shape := ConcavePolygonShape3D.new()
+	shape.backface_collision = two_sided
+	shape.set_faces(faces)
 	var body := StaticBody3D.new()
 	body.name = body_name
-	body.position = position
-	body.set_meta("tree_collision_role", "simple_trunk_shell")
 	var shape_node := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = size
 	shape_node.shape = shape
 	body.add_child(shape_node)
 	parent.add_child(body)
@@ -5060,6 +6020,17 @@ func _build_cat_companion(parent: Node3D, position: Vector3) -> void:
 		ear.material_override = _materials.black
 		cat.add_child(ear)
 		_add_sphere(cat, "Eye", Vector3(side * 1.8, 12.7, -4.2), Vector3(0.75, 1.0, 0.45), _materials.gold)
+	# One cylinder from the court floor to the ear tips.
+	var body := StaticBody3D.new()
+	body.name = "CatCollision"
+	body.position.y = 8.0
+	var shape_node := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = 5.2
+	shape.height = 18.0
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	cat.add_child(body)
 
 
 func _build_radial_arches(parent: Node3D) -> void:
@@ -5073,13 +6044,55 @@ func _build_easel(parent: Node3D, position: Vector3, index: int) -> void:
 	var easel := Node3D.new()
 	easel.name = "PaintingEasel_%02d" % index
 	easel.position = position
+	easel.scale = Vector3.ONE * 0.7
+	# Painted face toward the hub bridge (west), the way players arrive.
+	easel.rotation.y = PI * 0.5
 	parent.add_child(easel)
+	# A-frame: two splayed front legs, a raked rear leg and a top crossbar.
+	# The painted face of the canvas looks along local -Z.
 	for side in [-1.0, 1.0]:
-		var leg := _add_box(easel, "Leg", Vector3(side * 11.0, 18.0, 2.0), Vector3(4.0, 40.0, 4.0), _materials.wood)
+		var leg := _add_box(easel, "Leg", Vector3(side * 12.0, 19.0, 1.5), Vector3(2.6, 42.0, 2.6), _materials.wood)
 		leg.rotation.z = deg_to_rad(side * 8.0)
-	_add_box(easel, "RearLeg", Vector3(0.0, 16.0, 10.0), Vector3(4.0, 38.0, 4.0), _materials.wood)
-	_add_box(easel, "Canvas", Vector3(0.0, 34.0, -1.0), Vector3(38.0, 45.0, 3.0), _materials.canvas)
-	_add_box(easel, "CanvasRest", Vector3(0.0, 12.0, 0.0), Vector3(46.0, 4.0, 7.0), _materials.wood)
+	var rear := _add_box(easel, "RearLeg", Vector3(0.0, 18.0, 8.0), Vector3(2.6, 40.0, 2.6), _materials.wood)
+	rear.rotation.x = deg_to_rad(-15.0)
+	_add_box(easel, "Crossbar", Vector3(0.0, 37.0, 1.5), Vector3(28.0, 2.2, 2.2), _materials.wood)
+
+	# Blank canvas on a wooden stretcher. Its own material, so the player's
+	# drawing can be shown on just this easel (creator_studio.gd).
+	var canvas_material := ShaderMaterial.new()
+	canvas_material.shader = EaselCanvasShader
+	_add_box(easel, "Canvas", Vector3(0.0, 34.0, -1.0), Vector3(38.0, 45.0, 1.6), canvas_material)
+	for bar in [[Vector3(0.0, 56.8, -1.0), Vector3(39.6, 1.6, 2.2)],
+			[Vector3(0.0, 11.2, -1.0), Vector3(39.6, 1.6, 2.2)],
+			[Vector3(-19.8, 34.0, -1.0), Vector3(1.6, 45.0, 2.2)],
+			[Vector3(19.8, 34.0, -1.0), Vector3(1.6, 45.0, 2.2)]]:
+		_add_box(easel, "Stretcher", bar[0], bar[1], _materials.wood)
+	_add_box(easel, "TopClamp", Vector3(0.0, 58.5, -1.0), Vector3(6.0, 3.0, 3.4), _materials.wood)
+
+	# Ledge with a brush jar.
+	_add_box(easel, "CanvasRest", Vector3(0.0, 9.8, -1.0), Vector3(44.0, 2.2, 6.0), _materials.wood)
+	_add_box(easel, "CanvasRestLip", Vector3(0.0, 11.2, -3.6), Vector3(44.0, 1.6, 0.8), _materials.wood)
+	_add_cylinder(easel, "BrushJar", Vector3(13.0, 12.4, -1.0), 1.6, 3.0, _materials.wood, false, 10)
+	for brush in 3:
+		var handle := _add_box(easel, "Brush", Vector3(12.2 + brush * 0.8, 15.5, -1.0),
+			Vector3(0.4, 7.0, 0.4), _materials.wood)
+		handle.rotation.z = deg_to_rad(-12.0 + brush * 12.0)
+	# One solid box round the whole easel, legs to clamp, so the player bumps
+	# into it instead of walking through.
+	_add_collision_box(easel, "EaselCollision", Vector3(0.0, 30.0, 4.0), Vector3(42.0, 60.0, 18.0))
+
+
+## An invisible static box, local to `parent`.
+func _add_collision_box(parent: Node3D, node_name: String, position: Vector3, size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = node_name
+	body.position = position
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	parent.add_child(body)
 
 
 func _build_art_table(parent: Node3D, position: Vector3) -> void:
@@ -5087,7 +6100,9 @@ func _build_art_table(parent: Node3D, position: Vector3) -> void:
 	table.name = "ArtistMaterialsTable"
 	table.position = position
 	parent.add_child(table)
-	_add_box(table, "Top", Vector3(0.0, 20.0, 0.0), Vector3(72.0, 5.0, 38.0), _materials.wood, true)
+	_add_box(table, "Top", Vector3(0.0, 20.0, 0.0), Vector3(72.0, 5.0, 38.0), _materials.wood)
+	# Solid from the floor to the pots, so the player cannot walk under or into it.
+	_add_collision_box(table, "TableCollision", Vector3(0.0, 14.0, 0.0), Vector3(72.0, 28.0, 38.0))
 	for x in [-29.0, 29.0]:
 		for z in [-12.0, 12.0]:
 			_add_box(table, "Leg", Vector3(x, 9.0, z), Vector3(5.0, 18.0, 5.0), _materials.wood)
@@ -5096,38 +6111,10 @@ func _build_art_table(parent: Node3D, position: Vector3) -> void:
 		_add_cylinder(table, "PaintPot_%02d" % index, Vector3(-26.0 + index * 7.5, 25.0, 0.0), 3.0, 5.0, color_mat, false, 12)
 
 
-func _build_sun_rune(parent: Node3D, position: Vector3) -> void:
-	_add_torus(parent, "SunRuneOuter", position, 22.0, 25.0, _materials.gold, Vector3(90.0, 0.0, 0.0))
-	_add_torus(parent, "SunRuneInner", position + Vector3(0.0, 0.0, -1.0), 8.0, 10.0, _materials.gold, Vector3(90.0, 0.0, 0.0))
-	for index in 8:
-		var angle := TAU * float(index) / 8.0
-		_add_box(parent, "SunRay", position + Vector3(cos(angle) * 34.0, sin(angle) * 34.0, 0.0),
-			Vector3(3.0, 15.0, 3.0), _materials.gold, false, -angle)
-
-
-func _build_cloud_tower(parent: Node3D, base: Vector3, width: float, height: float, index: int) -> void:
-	var tower := Node3D.new()
-	tower.name = "SkyTower_%02d" % index
-	tower.position = base
-	parent.add_child(tower)
-	_add_box(tower, "TowerBody", Vector3(0.0, height * 0.5, 0.0), Vector3(width, height, width * 0.72), _materials.ivory)
-	_add_box(tower, "TowerCrown", Vector3(0.0, height + 15.0, 0.0), Vector3(width * 0.72, 30.0, width * 0.62), _materials.ivory)
-	for level in range(35, int(height), 42):
-		_add_box(tower, "LuminousWindow", Vector3(0.0, float(level), -width * 0.37), Vector3(width * 0.20, 24.0, 2.5), _materials.window)
-	_build_cypress(tower, Vector3(width * 0.34, height + 30.0, 0.0), 22.0 + float(index % 4) * 4.0, _materials.purple_leaf)
-
-
 func _build_tower(parent: Node3D, base: Vector3, width: float, height: float, material: Material) -> void:
 	_add_box(parent, "ObservatoryTower", base + Vector3(0.0, height * 0.5, 18.0), Vector3(width, height, width), material, true)
 	_add_box(parent, "ObservatoryWindow", base + Vector3(0.0, height * 0.62, 0.5), Vector3(width * 0.28, height * 0.34, 3.0), _materials.window)
 	_build_cypress(parent, base + Vector3(width * 0.75, 2.0, -18.0), 28.0, _materials.purple_leaf)
-
-
-func _build_ruin_wall(parent: Node3D, center: Vector3, width: float, height: float,
-		yaw: float, material: Material) -> void:
-	_add_box(parent, "RuinWall", center + Vector3(0.0, height * 0.5, 0.0), Vector3(width, height, 10.0), material, true, yaw)
-	for index in 4:
-		_build_arch(parent, center + Vector3(-width * 0.36 + index * width * 0.24, 1.0, -6.0), 22.0, 36.0, 8.0, _materials.aqua)
 
 
 func _build_arch(parent: Node3D, position: Vector3, opening_width: float,
@@ -5164,12 +6151,19 @@ func _build_frame(parent: Node3D, position: Vector3, width: float, height: float
 	frame.add_child(label)
 
 
-func _build_cypress(parent: Node3D, position: Vector3, height: float, material: Material) -> void:
+func _build_cypress(parent: Node3D, position: Vector3, height: float, material: Material,
+		solid: bool = false) -> void:
 	var tree := Node3D.new()
 	tree.name = "SkyCypress"
 	tree.position = position
-	parent.add_child(tree)
-	_add_cylinder(tree, "Trunk", Vector3(0.0, height * 0.35, 0.0), height * 0.07, height * 0.7, _materials.wood, false, 7)
+	parent.add_child(tree, true)
+	_add_cylinder(tree, "Trunk", Vector3(0.0, height * 0.35, 0.0), height * 0.07, height * 0.7, _materials.wood, solid, 7)
+	var crown_body: StaticBody3D = null
+	if solid:
+		# Crowns are reachable from the bounce pads, so they are solid too.
+		crown_body = StaticBody3D.new()
+		crown_body.name = "CrownCollision"
+		tree.add_child(crown_body)
 	for level in 5:
 		var crown := MeshInstance3D.new()
 		var mesh := CylinderMesh.new()
@@ -5181,6 +6175,11 @@ func _build_cypress(parent: Node3D, position: Vector3, height: float, material: 
 		crown.position.y = height * (0.43 + level * 0.115)
 		crown.material_override = material
 		tree.add_child(crown)
+		if crown_body != null:
+			var shape_node := CollisionShape3D.new()
+			shape_node.shape = mesh.create_convex_shape()
+			shape_node.position = crown.position
+			crown_body.add_child(shape_node)
 
 
 func _add_flower_cluster(parent: Node3D, position: Vector3, pink: bool) -> void:
@@ -5203,9 +6202,13 @@ func _add_arch_support(parent: Node3D, position: Vector3, width: float, yaw: flo
 	support.position = position
 	support.rotation.y = yaw
 	parent.add_child(support)
-	_add_box(support, "LeftPier", Vector3(-width * 0.38, 0.0, 0.0), Vector3(7.0, 48.0, 8.0), _materials.ivory_shadow)
-	_add_box(support, "RightPier", Vector3(width * 0.38, 0.0, 0.0), Vector3(7.0, 48.0, 8.0), _materials.ivory_shadow)
-	_add_box(support, "SupportBeam", Vector3(0.0, 22.0, 0.0), Vector3(width, 6.0, 8.0), _materials.ivory_shadow)
+	# Piers and beam stop at the walkway's underside (support y + 20, i.e. 4 m
+	# below the deck). They used to reach the deck surface: the pier tops
+	# z-fought with it, and the beam's ends shared the walkway's side planes
+	# while poking a metre up through the bridge.
+	_add_box(support, "LeftPier", Vector3(-width * 0.38, -2.0, 0.0), Vector3(7.0, 44.0, 8.0), _materials.ivory_shadow)
+	_add_box(support, "RightPier", Vector3(width * 0.38, -2.0, 0.0), Vector3(7.0, 44.0, 8.0), _materials.ivory_shadow)
+	_add_box(support, "SupportBeam", Vector3(0.0, 17.0, 0.0), Vector3(width - 0.04, 6.0, 8.0), _materials.ivory_shadow)
 
 
 func _add_world_label(node_name: String, text: String, position: Vector3,

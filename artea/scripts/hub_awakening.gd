@@ -145,7 +145,7 @@ func _build_outdoor_minimap() -> void:
 	add_child(canvas)
 	var minimap := Control.new()
 	minimap.name = "ArteaWorldMinimap"
-	minimap.set_script(load("res://scripts/art_castle_minimap.gd"))
+	minimap.set_script(preload("res://scripts/art_castle_minimap.gd"))
 	minimap.set("map_context", "hub")
 	canvas.add_child(minimap)
 

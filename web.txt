@@ -61,7 +61,12 @@ HOW TO RUN AND VERIFY THE WEB BUILD
 
   Run it against any URL, including a deployed one:
 
-      node artea/tools/web-smoke.js https://artea-web.vercel.app/ --out /tmp/x
+      ./web verify --url https://artea-web.vercel.app/
+
+  It also measures the cold first load (cache disabled): bytes transferred
+  and time until the hub is built, printed as numbers and as grep-able
+  METRIC lines. Baseline figures, and the gzip/brotli compression report
+  (node artea/tools/web-compression-report.js), are in docs/web-baseline.md.
 
   Last verified run:
 
@@ -176,8 +181,15 @@ HOW TO VERIFY
 
 MANUAL RECOVERY (if it ever happens again)
     cd artea/builds/web
-    rm -f index.pck.part?? index.pck.parts.json
+    rm -rf parts index.pck.parts.json index.side.wasm.parts.json
     ./artea/tools/web.sh --serve-only
+
+SUPERSEDED BY CONTENT HASHES (#33, ADR-0002)
+  The size check above missed any re-export that kept the same size. Every
+  deploy path now splits through artea/tools/split-pack.sh, which names each
+  part after the SHA-256 of the whole file (parts/index.pck.<hash>.partNN) and
+  re-splits whenever the hash changes, deleting every other export's parts. A
+  manifest can only ever list parts cut from its own export.
 
 
 --------------------------------------------------------------------------------
@@ -207,6 +219,15 @@ FIX APPLIED
 
   Nothing from a previous export can be reused now, on any port.
 
+  DEPLOYED HOSTS (#33, ADR-0002): parts/ is content-hashed, so Vercel
+  (vercel.json) and Cloudflare (_headers) serve it immutable. Everything with a
+  fixed name - index.html, index.js, the wasm files, the part manifests - is
+  no-cache: revalidated on every visit (a ~130 byte 304 when unchanged), so a
+  new export can never pair old modules with a new pack. Local ./web keeps
+  no-store; artea/tools/web.sh --serve-only --prod-cache applies the deployed
+  rules locally, and ./web verify --repeat uses that to measure what a repeat
+  visit downloads.
+
 HOW TO VERIFY
       curl -sI http://127.0.0.1:8801/index.js | grep -i cache-control
       -> Cache-Control: no-store, must-revalidate
@@ -216,7 +237,7 @@ HOW TO VERIFY
 
 
 --------------------------------------------------------------------------------
-PROBLEM 4 - SCENE SWITCH FAILS SILENTLY                                  [OPEN]
+PROBLEM 4 - SCENE SWITCH FAILS SILENTLY                                 [FIXED]
 --------------------------------------------------------------------------------
 SYMPTOM
   This is the reason Problem 1 looked like a hang instead of an error. Worth
@@ -239,9 +260,17 @@ SUGGESTED FIX
 
   Apply at both call sites.
 
+FIX (issue #31)
+  Every scene swap now goes through artea/scripts/scene_loader.gd:
+  SceneLoader.change_scene() for light scenes, change_scene_with_loading() for
+  heavy ones. A missing scene, a failed swap, or a threaded load that fails
+  behind the loading screen is logged with push_error and shown on screen
+  (SceneLoader.report_failure). scripts/test_scene_swaps_use_loader.gd fails
+  on any new direct swap to a scene outside the Core pack.
+
 
 --------------------------------------------------------------------------------
-PROBLEM 5 - CROWN OF LIFE STORY LOADS A TEXTURE EXCLUDED FROM WEB        [OPEN]
+PROBLEM 5 - CROWN OF LIFE STORY LOADS A TEXTURE EXCLUDED FROM WEB        [FIXED]
 --------------------------------------------------------------------------------
 SYMPTOM
   Web only, cosmetic: untextured stone in the Crown of Life story scene, plus
@@ -261,6 +290,11 @@ SUGGESTED FIX
   Preferred: move the texture out of demo/ into a real assets folder and update
   the constant. Nothing in the game should depend on a plugin's demo folder.
   Quicker: add that single file to the Web preset's include_filter.
+
+FIX (issue #36)
+  The texture moved to assets/textures/stone/rock023_alb_ht.png, with its
+  .import, so its UID (and Terrain3D's demo materials, which use it by UID)
+  are unchanged. It now ships in the Crown of Life story's Pack.
 
 
 --------------------------------------------------------------------------------

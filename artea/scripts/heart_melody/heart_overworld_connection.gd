@@ -1,10 +1,10 @@
 extends Node3D
 
 const Art = preload("res://scripts/heart_melody/heart_art.gd")
-const ISLAND_ORIGIN := Vector3(1400, 45, 7470)
-const WALK_START := Vector3(1500, 2.5, 7640)
-const WALK_TURN := Vector3(1504, 45, 7458)
-const WALK_FINISH := Vector3(1470, 45, 7458)
+const ISLAND_ORIGIN := Vector3(1400, 45, 8000)
+const WALK_START := Vector3(1722.4, 0.05, 7838.7)
+const WALK_TURN := Vector3(1504, 45, 7988)
+const WALK_FINISH := Vector3(1470, 45, 7988)
 var player: CharacterBody3D
 var island: Node3D
 var barrier: StaticBody3D
@@ -24,8 +24,11 @@ func _ready() -> void:
 	add_child(path)
 	# Top surfaces meet the arrival court and island floor with overlap. A
 	# single collision-backed slope has no risers or seams requiring a jump.
-	_build_walk_segment(path, WALK_START, WALK_TURN + Vector3(0, 0, 12), 10.0, 0.0)
-	_build_walk_segment(path, WALK_TURN + Vector3(0, 0, 12), WALK_TURN, 0.0, 6.0)
+	var approach := WALK_START - WALK_TURN
+	approach.y = 0
+	approach = WALK_TURN + approach.normalized() * 16.0
+	_build_walk_segment(path, WALK_START, approach, 10.0, 12.0)
+	_build_walk_segment(path, approach, WALK_TURN, 0.0, 12.0)
 	_build_walk_segment(path, WALK_TURN, WALK_FINISH, 6.0, 0.0)
 	Art.box(path, WALK_TURN - Vector3.UP * 0.5, Vector3(20, 1, 20), Color("bdac90"), true)
 	var direction := (WALK_TURN - WALK_START).normalized()

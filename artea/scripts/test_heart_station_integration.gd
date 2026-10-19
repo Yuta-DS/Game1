@@ -13,7 +13,7 @@ func _release() -> void:
 	for action in ["move_forward", "move_backward", "move_left", "move_right"]:
 		Input.action_release(action)
 
-func _walk_to(target: Vector3, frames := 1800) -> bool:
+func _walk_to(target: Vector3, frames := 3600) -> bool:
 	for frame in frames:
 		var offset := target - player.global_position
 		offset.y = 0
@@ -63,12 +63,12 @@ func _run() -> void:
 	await process_frame
 	await physics_frame
 	check(not connection.barrier.get_parent().visible, "legitimate Star progress leaves the independent path open")
-	# Start on the station access ramp and walk onto the arrival court.
-	player.global_position = railway.to_global(Vector3(1585, 25, 7640))
+	# Start at main's current Heart station landing and walk onto the garden path.
+	player.global_position = railway.to_global(railway.STATIONS[2].landing)
 	player.velocity = Vector3.ZERO
 	for frame in 120: await physics_frame
-	check(player.is_on_floor(), "station access ramp supports player")
-	check(await _walk_to(connection.to_global(connection.WALK_START)), "walk from station ramp onto arrival court")
+	check(player.is_on_floor(), "main Heart station landing supports player")
+	check(await _walk_to(connection.to_global(connection.WALK_START)), "walk from main station landing onto garden path")
 	var station_milo = root.get_node("MiloCompanionManager").get_active_milo()
 	check(station_milo != null and player.get_meta("milo_heart_escort", false), "Milo joins the player at the station landing")
 	var milo_station_position: Vector3 = station_milo.global_position

@@ -1,4 +1,5 @@
 extends Area3D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 var artwork_path := ""
 var artwork_title := "Artwork"
@@ -61,8 +62,7 @@ func _open_artwork_world() -> void:
 		_prompt.text = "The Gallery Frame Ritual is still being prepared. Please try again shortly."
 		return
 	state.prepare_artwork(artwork_path, artwork_title)
-	var transition_error := get_tree().change_scene_to_file(GALLERY_FRAME_RITUAL_PATH)
-	if transition_error != OK:
+	if not SceneLoader.change_scene(get_tree(), GALLERY_FRAME_RITUAL_PATH):
 		_opening = false
 		_prompt.text = "The Gallery Frame Ritual could not open yet. Please try again."
 

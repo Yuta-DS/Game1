@@ -51,11 +51,17 @@ var _hit_targets: Dictionary = {}
 var _coyote_remaining := 0.0
 var _jump_buffer_remaining := 0.0
 var _animation_state := "idle"
+var seated := false
+var _sit_pose_applied := false
 var _was_grounded := false
 var _land_reaction_remaining := 0.0
 var _hit_reaction_remaining := 0.0
 var _visual_base_position := Vector3.ZERO
 var _visual_base_scale := Vector3.ONE
+var _visual_rest_position := Vector3.ZERO
+var _visual_rest_scale := Vector3.ONE
+var _size_multiplier := 1.0
+var _capsule_rest: Dictionary = {}
 var _combat_audio: AudioStreamPlayer3D
 
 
@@ -84,10 +90,138 @@ func _ready() -> void:
 	if fox_visuals != null:
 		_visual_base_position = fox_visuals.position
 		_visual_base_scale = fox_visuals.scale
+		_visual_rest_position = _visual_base_position
+		_visual_rest_scale = _visual_base_scale
 	_build_combat_rig()
 	_build_combat_audio()
 	_build_combat_help()
 	_update_character_animation(0.0, false)
+
+
+## Seated on a train (or any seat): the seat owner places the body each frame,
+## so this stops gravity and move_and_slide, switches collision off (seats can
+## sit inside the train's collision shell) and holds a sitting pose. Riding
+## used to keep the walking body running underneath, which looked like the
+## fox being dragged along standing up.
+func set_seated(on: bool) -> void:
+	if seated == on:
+		return
+	seated = on
+	velocity = Vector3.ZERO
+	for shape in find_children("*", "CollisionShape3D", false, false):
+		(shape as CollisionShape3D).disabled = on
+	if not on:
+		# The seat turned the whole body; hand that yaw back to the visuals so
+		# the body is upright again and the fox keeps facing the same way.
+		var yaw := global_rotation.y
+		global_rotation = Vector3.ZERO
+		if fox_visuals != null:
+			fox_visuals.rotation.y = yaw
+		_release_sit_pose()
+	_update_character_animation(0.0, false)
+
+
+func is_seated() -> bool:
+	return seated
+
+
+# The fox has no sitting clip, so the pose is built from its leg bones. Its
+# legs were rigged with IK that Godot does not run: thigh -> shin chains hang
+# from the hips, and the feet are separate root bones on the floor. Sitting
+# swings each thigh forward, bends the shin back to vertical and moves the
+# foot under the knee. [thigh, shin, foot] per side.
+const SIT_LEG_BONES := [["Bone.002", "L_leg_3", "L_leg_1"], ["R_leg_1", "R_leg_2", "Bone.013"]]
+const SIT_THIGH_DEGREES := 90.0
+
+
+func _apply_sit_pose() -> void:
+	var skeleton := _fox_skeleton()
+	if skeleton == null or _sit_pose_applied:
+		return
+	if animation_player != null:
+		# Freeze the rest-like first frame so the player does not overwrite the
+		# pose; resumed in _release_sit_pose().
+		animation_player.play("Idle")
+		animation_player.seek(0.0, true)
+		animation_player.pause()
+	skeleton.force_update_all_bone_transforms()
+	for chain in SIT_LEG_BONES:
+		var thigh := skeleton.find_bone(chain[0])
+		var shin := skeleton.find_bone(chain[1])
+		var foot := skeleton.find_bone(chain[2])
+		if thigh < 0 or shin < 0 or foot < 0:
+			continue
+		_rotate_bone_globally(skeleton, thigh, -SIT_THIGH_DEGREES)
+		_rotate_bone_globally(skeleton, shin, SIT_THIGH_DEGREES)
+		var knee := skeleton.get_bone_global_pose(shin).origin
+		var rest_foot := skeleton.get_bone_global_rest(foot).origin
+		var shin_length := skeleton.get_bone_global_rest(shin).origin.y - rest_foot.y
+		skeleton.set_bone_pose_position(foot,
+			Vector3(rest_foot.x, knee.y - shin_length, knee.z))
+	skeleton.force_update_all_bone_transforms()
+	_sit_pose_applied = true
+
+
+func _release_sit_pose() -> void:
+	if not _sit_pose_applied:
+		return
+	_sit_pose_applied = false
+	var skeleton := _fox_skeleton()
+	if skeleton != null:
+		skeleton.reset_bone_poses()
+	if animation_player != null:
+		animation_player.play("Idle")
+
+
+## Rotates a bone about the skeleton's X axis (the fox's left-right axis) in
+## skeleton space, so the swing is the same whatever the bone's own axes are.
+func _rotate_bone_globally(skeleton: Skeleton3D, bone: int, degrees: float) -> void:
+	var pose := skeleton.get_bone_global_pose(bone)
+	var parent := skeleton.get_bone_parent(bone)
+	var parent_pose := skeleton.get_bone_global_pose(parent) if parent >= 0 else Transform3D()
+	var turned := Transform3D(Basis(Vector3.RIGHT, deg_to_rad(degrees)) * pose.basis, pose.origin)
+	skeleton.set_bone_pose_rotation(bone,
+		(parent_pose.affine_inverse() * turned).basis.get_rotation_quaternion())
+	skeleton.force_update_all_bone_transforms()
+
+
+func _fox_skeleton() -> Skeleton3D:
+	if fox_visuals == null:
+		return null
+	var found := fox_visuals.find_children("*", "Skeleton3D", true, false)
+	return found[0] as Skeleton3D if not found.is_empty() else null
+
+
+## Grows or shrinks the fox about its feet (the Creator studio makes the
+## player big enough to reach its easels). The collision capsule grows with
+## the model, its base kept on the floor, so a big fox bumps into furniture
+## instead of passing through it.
+func set_size_multiplier(multiplier: float) -> void:
+	_size_multiplier = multiplier
+	var shape_node := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	var feet_drop := 1.0
+	if shape_node != null and shape_node.shape is CapsuleShape3D:
+		if _capsule_rest.is_empty():
+			# The capsule resource is shared with the scene file; resize a copy.
+			shape_node.shape = shape_node.shape.duplicate()
+			var rest := shape_node.shape as CapsuleShape3D
+			_capsule_rest = {"radius": rest.radius, "height": rest.height,
+				"position": shape_node.position}
+		var capsule := shape_node.shape as CapsuleShape3D
+		feet_drop = float(_capsule_rest.height) * 0.5
+		capsule.radius = float(_capsule_rest.radius) * multiplier
+		capsule.height = float(_capsule_rest.height) * multiplier
+		shape_node.position = _capsule_rest.position + Vector3.UP * feet_drop * (multiplier - 1.0)
+	if fox_visuals == null:
+		return
+	_visual_base_scale = _visual_rest_scale * multiplier
+	_visual_base_position = _visual_rest_position + Vector3.UP * feet_drop * (multiplier - 1.0)
+	fox_visuals.scale = _visual_base_scale
+	fox_visuals.position = _visual_base_position
+
+
+func get_size_multiplier() -> float:
+	return _size_multiplier
 
 
 func set_input_enabled(v: bool) -> void:
@@ -123,6 +257,10 @@ func get_camera_relative_move_direction(input_dir: Vector2) -> Vector3:
 
 
 func _physics_process(delta: float) -> void:
+	if seated:
+		# The seat owner places the body; no gravity or sliding underneath it.
+		velocity = Vector3.ZERO
+		return
 	_update_combat(delta)
 	var was_grounded := is_on_floor()
 	_hit_reaction_remaining = maxf(0.0, _hit_reaction_remaining - delta)
@@ -306,6 +444,12 @@ func _update_character_animation(delta: float, moving: bool) -> void:
 	fox_visuals.position = _visual_base_position
 	fox_visuals.scale = _visual_base_scale
 	fox_visuals.rotation.z = 0.0
+	if seated:
+		_animation_state = "sit"
+		# Face the way the seat faces (the seat turns the whole body).
+		fox_visuals.rotation.y = 0.0
+		_apply_sit_pose()
+		return
 	if current_health <= 0.0:
 		_animation_state = "defeated"
 		_play_character_clip(["Death", "Defeat", "Idle"], 0.55)

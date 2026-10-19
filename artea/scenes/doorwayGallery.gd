@@ -1,5 +1,6 @@
 # ExitGallery.gd
 extends Area3D
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 # The hub lives in res://scenes/. The old res://New_Hub_World.tscn does not
 # exist, so go_to_scene() took the "target scene not found" branch below and
@@ -24,6 +25,6 @@ func go_to_scene(path: String):
 			if global != null and global.has_method("request_spawn_at"):
 				global.request_spawn_at("castle_front_door")
 		print("TRAVELING from:", self.name, " to: ", path)
-		get_tree().change_scene_to_file(path)
+		SceneLoader.change_scene(get_tree(), path)
 	else:
 		print("ERROR: Target scene not found at:", path)

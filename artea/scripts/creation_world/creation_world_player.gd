@@ -17,6 +17,7 @@ var idle_animation := &""
 var walk_animation := &""
 var run_animation := &""
 var locomotion_state := "idle"
+var _jump_requires_release := false
 
 
 func _ready() -> void:
@@ -31,6 +32,9 @@ func _ready() -> void:
 	floor_snap_length = 0.45
 	floor_max_angle = deg_to_rad(50.0)
 	floor_stop_on_slope = true
+	# Space may still be held from entering the painting. Require a fresh press
+	# before the new world's player can jump.
+	_jump_requires_release = Input.is_action_pressed("jump")
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -52,7 +56,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity += get_gravity() * delta
-	if not ui_open and Input.is_action_just_pressed("jump") and is_on_floor():
+	if _jump_requires_release and not Input.is_action_pressed("jump"):
+		_jump_requires_release = false
+	if not ui_open and not _jump_requires_release \
+			and Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = JUMP_SPEED
 
 	var input := Vector2.ZERO if ui_open else Input.get_vector(

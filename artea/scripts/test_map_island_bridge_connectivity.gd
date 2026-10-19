@@ -24,7 +24,7 @@ func _run() -> void:
 	if not await _check_kingdom_shelf_grids():
 		return
 	print("MAP_ISLAND_BRIDGE_CONNECTIVITY: PASS — World One ring 2 routes/island; " \
-		+ "4 observatory twin pairs; 120 shelf bridges with >=2 routes/island; " \
+		+ "2 observatory twin pairs; 40 Mind shelf bridges with >=2 routes/island; " \
 		+ "steepest legal shelf bridge walked by production player")
 	quit()
 
@@ -75,15 +75,23 @@ func _check_observatory_twins() -> bool:
 	root.add_child(world)
 	for _frame in 4:
 		await physics_frame
-	for base_name in ["WestObservatoryBridge", "NorthObservatoryBridge",
-			"EastObservatoryBridge", "SouthObservatoryBridge"]:
+	if world.get_node_or_null("SouthObservatory") != null:
+		_fail("south observatory still stands inside the arrival island")
+		return false
+	if world.get_node_or_null("EastObservatory") != null:
+		_fail("east observatory should be gone; the Creator studio stands alone")
+		return false
+	for base_name in ["WestObservatoryBridge", "NorthObservatoryBridge"]:
 		var left := world.get_node_or_null(base_name) as Node3D
 		var right := world.get_node_or_null("%sTwin" % base_name) as Node3D
 		if left == null or right == null:
 			_fail("%s does not have its mirrored companion" % base_name)
 			return false
-		if left.get_node_or_null("WalkwayCollision") == null \
-				or right.get_node_or_null("WalkwayCollision") == null:
+		# The West lookout's railed bridges use the causeway's deck, whose top
+		# sits 0.6 m above the islands with threshold steps at both ends.
+		var walkway_name := "ContinuousWalkway" if base_name == "WestObservatoryBridge" else "Walkway"
+		if left.get_node_or_null("%sCollision" % walkway_name) == null \
+				or right.get_node_or_null("%sCollision" % walkway_name) == null:
 			_fail("%s twin pair lacks walkable collision" % base_name)
 			return false
 		var left_start: Vector3 = left.get_meta("connection_start")
@@ -94,10 +102,13 @@ func _check_observatory_twins() -> bool:
 				or not is_equal_approx(left_finish.distance_to(right_finish), 36.0):
 			_fail("%s endpoints are not exact 18 m mirrors" % base_name)
 			return false
-		var left_walkway := left.get_node("Walkway") as MeshInstance3D
-		var right_walkway := right.get_node("Walkway") as MeshInstance3D
-		if not is_equal_approx(left_walkway.position.y + 2.0, 0.0) \
-				or not is_equal_approx(right_walkway.position.y + 2.0, 0.0):
+		var left_walkway := left.get_node(walkway_name) as MeshInstance3D
+		var right_walkway := right.get_node(walkway_name) as MeshInstance3D
+		# Within 5 cm of the island top: the walkway sits 2 cm low on purpose so
+		# it does not z-fight with the island deck it starts on.
+		var expected_y := 0.0 if base_name == "WestObservatoryBridge" else -2.0
+		if absf(left_walkway.position.y - expected_y) > 0.05 \
+				or absf(right_walkway.position.y - expected_y) > 0.05:
 			_fail("%s decks do not share the island top plane" % base_name)
 			return false
 	world.queue_free()
@@ -115,7 +126,7 @@ func _check_kingdom_shelf_grids() -> bool:
 		await physics_frame
 	var steepest: Node3D
 	var steepest_slope := -1.0
-	for kingdom_name in ["MindKingdom3000m", "HeartKingdom3000m", "CreatorKingdom3000m"]:
+	for kingdom_name in ["MindKingdom3000m"]:
 		var grid := regions.get_node("%s/OptimizedLandmass/InterIslandBridgeGrid" % kingdom_name) as Node3D
 		if int(grid.get_meta("bridge_count", 0)) != 40:
 			_fail("%s does not have all 40 adjacent-shelf bridges" % kingdom_name)

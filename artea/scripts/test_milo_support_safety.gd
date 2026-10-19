@@ -42,7 +42,7 @@ func _run() -> void:
 	input = chat.user_input as LineEdit
 	input.text = "I want to hurt myself"
 	chat._submit_message(input)
-	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as TextEdit
+	var history := chat.get_node("Panel/VBoxContainer/ChatHistory") as RichTextLabel
 	assert(input.text.is_empty(), "urgent private wording is cleared immediately")
 	assert(not history.text.contains("I want to hurt myself"), "urgent private wording is never echoed")
 	assert(history.text.contains("Get real-world help now") and history.text.contains("trusted adult"),

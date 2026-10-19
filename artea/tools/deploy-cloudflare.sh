@@ -17,8 +17,8 @@
 #   Cloudflare rejects any single file over 25 MB - stricter than Vercel's
 #   100 MB. Two files in a Godot web export break that:
 #
-#     * index.pck (750 MB) - already split into 8 MB index.pck.partNN files by
-#       the export script, and rejoined in the browser by pck-loader.js. The
+#     * index.pck (750 MB) - split into 8 MB content-hashed parts under parts/
+#       by split-pack.sh, and rejoined in the browser by pck-loader.js. The
 #       whole .pck must NOT be uploaded; only the parts.
 #     * index.side.wasm (42 MB) - the GDExtension side module (terrain_3d).
 #       Serving it pre-gzipped does NOT work: Cloudflare strips a manually set
@@ -68,88 +68,60 @@ echo "==> Staging deployment in ${stage_dir}"
 rm -rf "${stage_dir}"
 mkdir -p "${stage_dir}"
 
-# web.sh exports a whole index.pck and does not split it, so any part files and
-# manifest still sitting in builds/web are left over from an earlier, differently
-# sized export. Copying those stages a manifest that disagrees with the pack:
-# the browser reads the stale count, fetches too few parts, and assembles a
-# truncated pack - which loads without an obvious error and then behaves as if
-# half the game is missing. Drop them so the split below is always authoritative.
-find "${build_dir}" -maxdepth 1 -name 'index.pck.part*' -delete
-rm -f "${build_dir}/index.pck.parts.json"
-find "${build_dir}" -maxdepth 1 -name 'index.side.wasm.part*' -delete
-rm -f "${build_dir}/index.side.wasm.parts.json"
+# Content-hashed parts and manifests, the same layout local ./web and the
+# Vercel export use (see split-pack.sh). Splitting from the pack that was
+# actually exported, with the hash in every part name, is what keeps the
+# manifest honest: it can only ever list parts cut from its own export.
+for big in "${build_dir}"/*.pck "${build_dir}/index.side.wasm"; do
+	[[ -f "${big}" ]] && "${project_dir}/tools/split-pack.sh" "${big}"
+done
 
-# Copy everything except the unsplit pack, which is what the parts replace.
+# Copy everything except what must not be uploaded: the unsplit originals
+# (the parts replace them, and both exceed the 25 MB limit), editor import
+# sidecars, and Vercel's local files.
 for path in "${build_dir}"/*; do
 	name="$(basename "${path}")"
-	[[ "${name}" == "index.pck" ]] && continue
-	[[ "${name}" == ".env.local" ]] && continue   # Vercel CLI token, never deploy
-	[[ "${name}" == ".vercel" ]] && continue
+	case "${name}" in
+		*.pck|index.side.wasm|*.import|*.tmp) continue ;;
+		.env.local|.vercel|vercel.json) continue ;;   # Vercel CLI token/config, never deploy
+	esac
 	cp -R "${path}" "${stage_dir}/"
 done
 
-# Split any remaining oversized file the same way the pack is split, so the
-# loader's existing part-fetching logic can rejoin it.
-split_oversized() {
-	local file="$1"
-	local base
-	base="$(basename "${file}")"
-	local size
-	size=$(stat -f '%z' "${file}" 2>/dev/null || stat -c '%s' "${file}")
-	(( size <= max_bytes )) && return 0
-	echo "    splitting ${base} ($(( size / 1024 / 1024 )) MB)"
-	split -b 8m "${file}" "${file}.part"
-	# split(1) uses aa/ab suffixes; rename to the numeric form the loader wants.
-	local index=0
-	for part in "${file}".part??; do
-		mv "${part}" "$(printf '%s.part%02d' "${file}" "${index}")"
-		index=$((index + 1))
-	done
-	rm -f "${file}"
-	printf '{"count":%d,"bytes":%d,"partBytes":%d}\n' \
-		"${index}" "${size}" $((8 * 1024 * 1024)) \
-		> "${file}.parts.json"
-}
-
-# Only the pack may be split - the loader rejoins nothing else. Anything else
-# that is oversized has to be shrunk in place instead.
-# Copy the pack in and split it here. Splitting at deploy time, from the pack
-# that was actually exported, is what keeps the part count and the manifest
-# honest - a mismatch silently truncates the game in the browser.
-if [[ -f "${build_dir}/index.pck" ]]; then
-	cp "${build_dir}/index.pck" "${stage_dir}/index.pck"
-fi
-
-for candidate in "${stage_dir}"/*; do
-	[[ -f "${candidate}" ]] || continue
-	name="$(basename "${candidate}")"
-	[[ "${name}" == *.part[0-9][0-9] ]] && continue
-	split_oversized "${candidate}"
-done
-
-# Cloudflare needs the right MIME type for .wasm or the browser refuses to
-# stream-compile it, and long-lived caching on the immutable pack parts keeps
-# repeat loads cheap.
+# ADR-0002: parts are named by content hash, so they can be cached forever.
+# Everything else - the HTML, the part manifests, the engine js/wasm whose
+# names never change - is no-cache: revalidated on every visit (a ~130 byte 304
+# when unchanged), so a new export can never pair old modules with a new pack
+# (web.txt Problem 3). Cloudflare joins a header set by two matching rules with
+# a comma, so /parts/* detaches the catch-all value before setting its own.
+# Cloudflare also needs the right MIME type for .wasm or the browser refuses to
+# stream-compile it.
 cat > "${stage_dir}/_headers" <<'HEADERS'
+/*
+  Cache-Control: no-cache
+
+/parts/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
+
 /*.wasm
   Content-Type: application/wasm
-  Cache-Control: public, max-age=31536000, immutable
-
-/index.pck.part*
-  Cache-Control: public, max-age=31536000, immutable
 HEADERS
 
 echo "==> Verifying Cloudflare limits"
 oversize=0
 while IFS= read -r f; do
-	size=$(stat -f '%z' "${f}" 2>/dev/null || stat -c '%s' "${f}")
+	# -c before -f: GNU stat -f means "filesystem status" and succeeds with
+	# text instead of a size (see web.sh).
+	size=$(stat -c '%s' "${f}" 2>/dev/null || stat -f '%z' "${f}")
 	if (( size > max_bytes )); then
 		echo "    TOO LARGE: $(basename "${f}") ($(( size / 1024 / 1024 )) MB)"
 		oversize=$((oversize + 1))
 	fi
 done < <(find "${stage_dir}" -type f)
 file_count=$(find "${stage_dir}" -type f | wc -l | tr -d ' ')
-total_mb=$(( $(find "${stage_dir}" -type f -exec stat -f '%z' {} \; 2>/dev/null | paste -sd+ - | bc) / 1024 / 1024 ))
+total_mb=$(find "${stage_dir}" -type f -exec sh -c 'stat -c %s "$1" 2>/dev/null || stat -f %z "$1"' _ {} \; \
+	| awk '{ total += $1 } END { printf "%d", total / 1048576 }')
 echo "    ${file_count} files, ${total_mb} MB total, ${oversize} over the 25 MB limit"
 
 if (( oversize > 0 )); then
