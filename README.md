@@ -1,9 +1,21 @@
+# Artéa
+
+Artéa is a 3D narrative exploration game built in Godot 4, where players paint
+artwork that becomes the seed for AI-generated explorable worlds. It combines
+a hub-world/"Castle Universe" journey structure, a local on-device LLM
+companion (Milo), narrative dialogue and NPCs, and a Flask-backed online
+gallery where players' paintings are uploaded, rated, and browsed.
+
+See [CHANGELOG.md](./CHANGELOG.md) for release history, and
+[AGENT.md](./AGENT.md) for fuller technical/contributor guidance (test
+suites, architecture conventions, known issues).
+
 This document provides instructions for setting up and running the Artéa game project within the Godot Development Engine.
 
 **Note on Development Integrity:** To ensure maximum project stability and to minimise issues related to file path case sensitivity and the Godot .NET runtime dependencies, it is strongly recommended that all developers work on a _**Windows operating system.**_
 
 
-Guide to Running the Project
+# Guide to Running the Project
   1. **Engine Requirement:** Download and install Godot Engine version 4.4 or newer, specifically the version that includes .NET/Mono support (for C# compilation).
   2. **Import Project:** Import the project directory into the Godot Project Manager.
   3. **Initial Scene Launch:** To test the project, click the "Run Scene" button (F6). If the main scene is not already assigned, set it to:
@@ -69,35 +81,76 @@ flaskapp.service allows the server to run automatically through systemd.
 
 From the server directory:
 
+macOS/Linux:
+
 python3 -m venv venv
 
 source venv/bin/activate
 
 
-Install required packages:
+Windows / PowerShell:
 
-pip install flask
+python -m venv venv
 
-pip install flask_sqlalchemy
+.\venv\Scripts\activate
 
-pip install flask_jwt_extended
 
-pip install bcrypt
+Install dependencies from the pinned requirements file:
 
-pip install requests
+pip install -r requirements.txt
 
 
 ## Running the Server Manually
 
 Activate the virtual environment:
 
+macOS/Linux:
+
 source venv/bin/activate
+
+Windows / PowerShell:
+
+.\venv\Scripts\activate
 
 Run:
 
 python server.py
 
-The API should now be available on port 80.
+By default this binds `0.0.0.0:80`, which needs root. On a dev machine, override
+host/port and set a JWT secret instead:
+
+macOS/Linux:
+
+HOST=127.0.0.1 PORT=8000 JWT_SECRET_KEY=local-dev-test-secret python server.py
+
+Windows / PowerShell:
+
+$env:HOST = "127.0.0.1"
+$env:PORT = "8000"
+$env:JWT_SECRET_KEY = "local-dev-test-secret"
+python server.py
+
+`database.db` and `uploads/` are created automatically on first run — both are
+gitignored and persist across restarts (stopping the server does not erase
+registered accounts, only deleting `database.db` does).
+
+Verify it's up:
+
+curl http://127.0.0.1:8000/
+# {"status":"server running"}
+
+### Configuration
+
+All of the following are optional and read from the environment, falling back
+to development defaults if unset:
+
+| Variable | Purpose |
+| --- | --- |
+| `HOST` / `PORT` | Bind address (default `0.0.0.0:80`, needs root) |
+| `JWT_SECRET_KEY` | Signs login tokens — **must** be overridden with a real secret before any deploy reachable by others |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins for a browser-hosted export (default `*`) |
+| `MAX_UPLOAD_BYTES` | Artwork upload size cap (default 20 MB) |
+| `OPENROUTER_API_KEY` | Enables the cloud AI creative-guide/world-builder routes |
 
 ## Enabling flaskapp.service (make server.py run upon booting the server)
 
@@ -157,3 +210,12 @@ A test OpenRouter implementation exists in server.py under:
 @app.route('/ai/chat')
 
 Future teams may replace this implementation with another cloud model provider or a self-hosted model.
+
+## Tests
+
+Headless Godot test suites live in `artea/scripts/test_*.gd`:
+
+Godot --headless --path artea --script res://scripts/<name>.gd
+
+See `artea/CASTLE_UNIVERSE_IMPLEMENTATION.md` for the full list and what each
+one verifies.
