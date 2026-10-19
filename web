@@ -6,6 +6,7 @@
 #   ./web serve           serve whatever is already built
 #   ./web verify          check the local backend and Offline Guest gameplay,
 #                         plus first-load bytes transferred and time-to-hub
+#   ./web verify --account-login  check account login through the game UI
 #   ./web status          what is built, what is serving
 #   ./web stop            stop the local server
 #
@@ -17,6 +18,8 @@
 #   --repeat              verify: load twice with the cache on and report what
 #                         the second visit downloads (serves the local build
 #                         with the deployed cache headers)
+#   --account-login       verify: register a disposable account and log in
+#   --api-url URL         verify: override the account API for --account-login
 #   -h, --help            this text
 #
 # Settings live in .webrc next to this script if you want different defaults:
@@ -48,6 +51,8 @@ port="${PORT:-${port}}"
 command=run
 target_url=""
 repeat=0
+account_login=0
+api_url=""
 [[ $# -gt 0 && "$1" != -* ]] && { command="$1"; shift; }
 
 while [[ $# -gt 0 ]]; do
@@ -56,7 +61,9 @@ while [[ $# -gt 0 ]]; do
 		--no-open) open_browser=0; shift ;;
 		--url)     target_url="${2:?--url needs a URL}"; shift 2 ;;
 		--repeat)  repeat=1; shift ;;
-		-h|--help) sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+		--account-login) account_login=1; shift ;;
+		--api-url) api_url="${2:?--api-url needs a URL}"; shift 2 ;;
+		-h|--help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 0 ;;
 		*) echo "Unknown option: $1 (try --help)" >&2; exit 1 ;;
 	esac
 done
@@ -190,6 +197,8 @@ case "${command}" in
 		started_here=0
 		smoke_args=(--out "${smoke_dir}")
 		[[ "${repeat}" == 1 ]] && smoke_args+=(--repeat)
+		[[ "${account_login}" == 1 ]] && smoke_args+=(--account-login)
+		[[ -n "${api_url}" ]] && smoke_args+=(--api-url "${api_url}")
 		if [[ -n "${target_url}" ]]; then
 			url="${target_url}"
 		else

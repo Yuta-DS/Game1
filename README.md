@@ -176,3 +176,8 @@ same local backend. Local SQLite accounts and hosted Postgres accounts are
 separate until data is explicitly migrated. On Vercel, uploaded artwork bytes
 are stored in Postgres and uploads are limited to 4 MiB; the local server allows
 20 MiB.
+
+Run `./web verify --account-login` to create a disposable local test account,
+log in through the browser game, and confirm the hub is ready. Add
+`--url https://artea-web.vercel.app/` to check the published game; the test
+uses the API origin embedded in that page.

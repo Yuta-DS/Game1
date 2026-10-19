@@ -18,6 +18,11 @@
 //
 //   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open] [--repeat]
 //       [--latency MS] [--mbps N] [--fail-part NN] [--fail-times K]
+//       [--account-login] [--api-url URL]
+//
+// --account-login creates a disposable account through the configured API,
+// enters its credentials through Godot's canvas, and checks that the account
+// reaches the hub. For a non-standard API address, pass --api-url.
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
@@ -41,9 +46,10 @@ const { spawn, execSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { randomUUID } = require('node:crypto');
 
 const args = process.argv.slice(2);
-const VALUE_OPTIONS = ['--out', '--latency', '--mbps', '--fail-part', '--fail-times'];
+const VALUE_OPTIONS = ['--out', '--latency', '--mbps', '--fail-part', '--fail-times', '--api-url'];
 const option = (name) => {
 	const i = args.indexOf(name);
 	return i === -1 ? null : args[i + 1];
@@ -53,6 +59,7 @@ const url = args.find((a, i) => !a.startsWith('--') && !VALUE_OPTIONS.includes(a
 const outDir = option('--out') ?? fs.mkdtempSync(path.join(os.tmpdir(), 'artea-smoke-'));
 const keepOpen = args.includes('--keep-open');
 const repeat = args.includes('--repeat');
+const accountLogin = args.includes('--account-login');
 const latencyMs = Number(option('--latency') ?? 0);
 const mbps = Number(option('--mbps') ?? 0);
 const failPart = option('--fail-part');
@@ -196,10 +203,9 @@ async function connect() {
 			const line = (m.params.args || []).map((a) => a.value ?? a.description ?? a.type).join(' ');
 			consoleLines.push(line);
 			// Stamp the hub the moment its log arrives, not at the next 1 s poll.
-			// The pack is fully downloaded by the time the engine starts, and
-			// every build logs this, including deployments older than the hub log.
+			// The pack is fully downloaded by the time the engine starts.
 			if (net.engineAt === null && /engine started/.test(line)) net.engineAt = Date.now();
-			if (net.hubAt === null && /Successfully spawned/.test(line)) {
+			if (net.hubAt === null && line.includes('[ARTEA] loading screen done: res://scenes/New_Hub_World.tscn')) {
 				net.hubAt = Date.now();
 				net.bytesAtHub = net.bytes;
 				net.requestsAtHub = net.requests;
@@ -366,6 +372,54 @@ async function connect() {
 		const previewState = await send('Runtime.evaluate', { expression: 'String(window.ARTEA_HEART_PREVIEW)', returnByValue: true });
 		say('preview flag: ' + previewState.result.value);
 
+		if (accountLogin) {
+			const username = `artea${randomUUID().replaceAll('-', '').slice(0, 12)}`;
+			const password = randomUUID().replaceAll('-', '');
+			const typeText = async (value) => {
+				for (const letter of value) {
+					const upper = letter.toUpperCase();
+					const virtualKey = upper.charCodeAt(0);
+					const code = /[0-9]/.test(letter) ? `Digit${letter}` : `Key${upper}`;
+					await send('Input.dispatchKeyEvent', {
+						type: 'keyDown', key: letter, code, text: letter, unmodifiedText: letter,
+						windowsVirtualKeyCode: virtualKey, nativeVirtualKeyCode: virtualKey,
+					});
+					await send('Input.dispatchKeyEvent', {
+						type: 'keyUp', key: letter, code,
+						windowsVirtualKeyCode: virtualKey, nativeVirtualKeyCode: virtualKey,
+					});
+				}
+			};
+			const pageApi = (await send('Runtime.evaluate', {
+				expression: "String(window.ARTEA_API_BASE_URL || window.location.origin)",
+				returnByValue: true,
+			})).result.value;
+			const localPage = ['localhost', '127.0.0.1'].includes(new URL(url).hostname);
+			const apiUrl = option('--api-url') || (localPage ? 'http://127.0.0.1:8000' : pageApi);
+			const registration = await fetch(`${apiUrl}/register`, {
+				method: 'POST', headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ username, password }),
+			});
+			if (registration.status !== 201) throw new Error(`account setup failed (HTTP ${registration.status})`);
+			await click(285, 488);
+			await typeText(username);
+			await click(285, 547);
+			await typeText(password);
+			await click(285, 605);
+			await waitForLog(/LOGIN GRANTED/, 'game account login accepted', 30000);
+			await waitForLog(/\[ARTEA\] loading screen done: res:\/\/scenes\/New_Hub_World\.tscn/, 'account hub scene ready', 120000);
+			await sleep(1500);
+			await shot('02-account-login-hub');
+			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+			reportMetrics();
+			const pass = net.failed === 0 && !crashed();
+			console.log('RESULT: ' + (pass ? 'ACCOUNT LOGIN PLAYABLE' : 'ACCOUNT LOGIN FAILED'));
+			console.log('screenshots: ' + outDir);
+			if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+			await closeOwnChrome();
+			process.exit(pass ? 0 : 1);
+		}
+
 		for (const [index, button] of GUEST_BUTTONS.entries()) {
 			say(`clicking Offline Guest at (${button.x}, ${button.y})`);
 			await click(button.x, button.y);
@@ -376,7 +430,7 @@ async function connect() {
 				if (index === GUEST_BUTTONS.length - 1) throw err;
 			}
 		}
-		await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
+		await waitForLog(/\[ARTEA\] loading screen done: res:\/\/scenes\/New_Hub_World\.tscn/, 'hub scene ready', 120000);
 		const evaluate = async (expression) => (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
 		// Every frame's timestamp from here on, to compare the Hub's frame pacing
 		// while the other areas' Packs download in the background with after.
