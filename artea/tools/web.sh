@@ -47,9 +47,10 @@ build_dir="${project_dir}/builds/web"
 index="${build_dir}/index.html"
 pack="${build_dir}/index.pck"
 export_head="${build_dir}/.export-git-head"
+export_stamp="${build_dir}/.export-source-stamp"
 
 export_is_stale() {
-	[[ -f "${index}" && -f "${pack}" && -f "${export_head}" ]] || return 0
+	[[ -f "${index}" && -f "${pack}" && -f "${export_head}" && -f "${export_stamp}" ]] || return 0
 	local current_head
 	current_head="$(git -C "${project_dir}" rev-parse HEAD 2>/dev/null)" || return 0
 	[[ "$(cat "${export_head}")" == "${current_head}" ]] || return 0
@@ -58,9 +59,9 @@ export_is_stale() {
 	if find "${project_dir}" \
 		\( -type d \( -name .godot -o -name builds -o -name artifacts \
 			-o -name __pycache__ \) -prune \) -o \
-		\( -type f ! -name '*.import' ! -name '*.uid' ! -name '*.log' \
+		\( -type f ! -name 'deploy_web.sh' ! -name '*.import' ! -name '*.uid' ! -name '*.log' \
 			! -name '*.md' ! -name '*.gguf' ! -name '.DS_Store' \
-			-newer "${pack}" -print -quit \) \
+			-newer "${export_stamp}" -print -quit \) \
 		| grep -q .; then
 		return 0
 	fi
@@ -131,6 +132,10 @@ if [[ "${mode}" != serve ]]; then
 		"${python_bin}" "${project_dir}/tools/build_fast_web_pack.py" --godot "${godot_bin}"
 		"${python_bin}" "${project_dir}/tools/patch_web_release_loader.py" "${index}"
 		git -C "${project_dir}" rev-parse HEAD > "${export_head}"
+		# Godot may re-save export_presets.cfg after writing index.pck without
+		# changing its contents. Record when the whole export finished so that
+		# a later ./web does not rebuild for this export-time timestamp alone.
+		touch "${export_stamp}"
 		echo
 	fi
 fi

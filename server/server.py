@@ -14,9 +14,11 @@ import copy
 import hashlib
 import json
 import os
+import tempfile
 import threading
 import time
 from datetime import timedelta, datetime, timezone
+from io import BytesIO
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 import requests
@@ -28,6 +30,8 @@ app = Flask(__name__)
 # =========================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+WRITABLE_DIR = os.path.join(tempfile.gettempdir(), "artea") if IS_VERCEL else BASE_DIR
 
 
 def load_local_environment(path):
@@ -100,17 +104,30 @@ AI_CACHE_MAX_AGE_SECONDS = int(os.environ.get(
     "AI_CACHE_MAX_AGE_SECONDS",
     str(7 * 24 * 60 * 60)
 ))
-AI_CACHE_DIR = os.path.join(BASE_DIR, "ai_cache")
+AI_CACHE_DIR = os.path.join(WRITABLE_DIR, "ai_cache")
 os.makedirs(AI_CACHE_DIR, exist_ok=True)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
+database_url = os.environ.get("DATABASE_URL", "")
+if IS_VERCEL and not database_url:
+    raise RuntimeError("DATABASE_URL must point to persistent Postgres on Vercel")
+if database_url.startswith("postgres://"):
+    database_url = "postgresql+psycopg://" + database_url[len("postgres://"):]
+elif database_url.startswith("postgresql://"):
+    database_url = "postgresql+psycopg://" + database_url[len("postgresql://"):]
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or (
+    'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+if database_url:
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"pool_pre_ping": True}
 
 _DEFAULT_JWT_SECRET = 'dev_secret_change_later_12345'
 app.config['JWT_SECRET_KEY'] = os.environ.get(
     "JWT_SECRET_KEY",
     _DEFAULT_JWT_SECRET
 )
+if IS_VERCEL and app.config['JWT_SECRET_KEY'] == _DEFAULT_JWT_SECRET:
+    raise RuntimeError("JWT_SECRET_KEY must be configured on Vercel")
 if app.config['JWT_SECRET_KEY'] == _DEFAULT_JWT_SECRET:
     print(
         "[server] WARNING: JWT_SECRET_KEY is not set - using the public "
@@ -137,13 +154,13 @@ CORS(
 # after it's already on disk.
 app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get(
     "MAX_UPLOAD_BYTES",
-    20 * 1024 * 1024
+    4 * 1024 * 1024 if IS_VERCEL else 20 * 1024 * 1024
 ))
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+UPLOAD_FOLDER = os.path.join(WRITABLE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # =========================
@@ -166,6 +183,12 @@ class Artwork(db.Model):
     filename = db.Column(db.String(255), nullable=False)
     is_public = db.Column(db.Boolean, default=False)
 
+
+class ArtworkBlob(db.Model):
+    """Persist serverless uploads without changing the existing Artwork table."""
+    artwork_id = db.Column(db.Integer, db.ForeignKey('artwork.id'), primary_key=True)
+    image_data = db.Column(db.LargeBinary, nullable=False)
+
 # Runs at import time, not just under `if __name__ == '__main__'`: a
 # production WSGI server (gunicorn) imports this module and calls the `app`
 # object directly, it never executes the __main__ block, so table creation
@@ -179,7 +202,7 @@ with app.app_context():
 
 @app.route('/register', methods=['POST'])
 def register():
-    data = request.json
+    data = request.get_json(silent=True) or {}
 
     username = data.get("username")
     password = data.get("password")
@@ -204,10 +227,13 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.json
+    data = request.get_json(silent=True) or {}
 
     username = data.get("username")
     password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"error": "Missing username or password"}), 400
 
     user = User.query.filter_by(username=username).first()
 
@@ -233,7 +259,6 @@ def allowed_file(filename):
 @app.route('/upload_artwork', methods=['POST'])
 @jwt_required()
 def upload_artwork():
-    print("HEADERS:", dict(request.headers))
     user_id = int(get_jwt_identity())
 
     image_data = request.data
@@ -255,18 +280,6 @@ def upload_artwork():
 
     filename = f"{safe_title}_{timestamp}_{unique_id}.png"
 
-    user_folder = os.path.join(
-        UPLOAD_FOLDER,
-        f"user_{user_id}"
-    )
-
-    os.makedirs(user_folder, exist_ok=True)
-
-    save_path = os.path.join(user_folder, filename)
-
-    with open(save_path, "wb") as f:
-        f.write(image_data)
-
     artwork = Artwork(
         user_id=user_id,
         title=title,
@@ -274,7 +287,17 @@ def upload_artwork():
         is_public=False
     )
 
+    if not IS_VERCEL:
+        user_folder = os.path.join(UPLOAD_FOLDER, f"user_{user_id}")
+        os.makedirs(user_folder, exist_ok=True)
+        save_path = os.path.join(user_folder, filename)
+        with open(save_path, "wb") as artwork_file:
+            artwork_file.write(image_data)
+
     db.session.add(artwork)
+    db.session.flush()
+    if IS_VERCEL:
+        db.session.add(ArtworkBlob(artwork_id=artwork.id, image_data=image_data))
     db.session.commit()
 
     return jsonify({
@@ -292,6 +315,11 @@ def download_artwork(artwork_id):
 
     if not artwork:
         return jsonify({"error": "Artwork not found"}), 404
+
+    stored_blob = db.session.get(ArtworkBlob, artwork.id)
+    if stored_blob is not None:
+        return send_file(BytesIO(stored_blob.image_data), mimetype="image/png",
+                         download_name=artwork.filename)
 
     file_path = os.path.join(
         UPLOAD_FOLDER,

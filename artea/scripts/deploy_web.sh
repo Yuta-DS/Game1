@@ -8,6 +8,12 @@ public_alias="artea-web.vercel.app"
 project_alias="artea-web-dsovann80-2407s-projects.vercel.app"
 local_manifest="${build_dir}/index.pck.parts.json"
 content_manifest="${build_dir}/content.pck.parts.json"
+public_api_url="${ARTEA_PUBLIC_API_BASE_URL:-}"
+
+if [[ -z "${public_api_url}" ]]; then
+	echo "Set ARTEA_PUBLIC_API_BASE_URL to the deployed HTTPS Artéa API before publishing." >&2
+	exit 1
+fi
 
 if [[ ! -f "${local_manifest}" ]]; then
 	echo "No split Web pack found. Run scripts/export_web.sh first." >&2
@@ -22,6 +28,33 @@ fi
 # metadata that export_web.sh installs. Keep both local build paths deployable.
 cp "${project_dir}/tools/vercel-pack-split/vercel.json" "${build_dir}/vercel.json"
 cp "${project_dir}/tools/vercel-pack-split/.vercelignore" "${build_dir}/.vercelignore"
+
+# The Godot client uses this value on a public host. Local ./web still selects
+# 127.0.0.1:8000 and never needs a hosted account server.
+python3 - "${build_dir}/index.html" "${public_api_url}" <<'PY'
+import json
+from pathlib import Path
+import sys
+from urllib.parse import urlparse
+
+index = Path(sys.argv[1])
+api_url = sys.argv[2].rstrip("/")
+parsed = urlparse(api_url)
+if parsed.scheme != "https" or not parsed.netloc or parsed.path:
+    raise SystemExit("ARTEA_PUBLIC_API_BASE_URL must be an HTTPS origin")
+html = index.read_text(encoding="utf-8")
+marker = '<script src="pck-loader.js"></script>'
+config = f'<script>window.ARTEA_API_BASE_URL = {json.dumps(api_url)};</script>'
+if marker not in html:
+    raise SystemExit("Cannot find the Godot loader in index.html")
+if "window.ARTEA_API_BASE_URL =" not in html:
+    html = html.replace(marker, config + "\n" + marker, 1)
+else:
+    import re
+    html = re.sub(r'<script>window\.ARTEA_API_BASE_URL = .*?</script>',
+                  config, html, count=1)
+index.write_text(html, encoding="utf-8")
+PY
 
 (
 	cd "${build_dir}"

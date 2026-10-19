@@ -189,9 +189,21 @@ public Web build uses the page's own origin for API calls, so account login
 requires a deployed API on that origin. For a separate API origin, define
 `window.ARTEA_API_BASE_URL` in the hosting page before the Godot loader starts,
 or set the Godot project setting `artea/network/api_base_url`. The API URL must
-use HTTPS when the game uses HTTPS. The current static Vercel deployment does
-not include a hosted Flask account API; Offline Guest works there, while
-account login needs a persistent hosted backend and an API URL or reverse proxy.
+use HTTPS when the game uses HTTPS. `artea/scripts/deploy_web.sh` injects the
+configured `ARTEA_PUBLIC_API_BASE_URL` into the generated hosting page and
+refuses to publish without it. The API should be deployed and checked first.
+
+The Flask server in `server/` can run as a separate Vercel project with managed
+Postgres. Connect a persistent Postgres database to that project so Vercel sets
+`DATABASE_URL`, and set a random `JWT_SECRET_KEY` and
+`CORS_ALLOWED_ORIGINS=https://artea-web.vercel.app` in the production
+environment. Then deploy `server/` and publish the game with
+`ARTEA_PUBLIC_API_BASE_URL=https://<deployed-api-origin>` set. The deployed
+API keeps artwork bytes in Postgres because Vercel's local filesystem is
+temporary; its default upload cap is 4 MiB, while the local Flask server allows
+20 MiB. Existing local SQLite accounts do not automatically migrate to the
+hosted database, so players must register separately unless their data is
+explicitly migrated.
 
 For cross-origin hosting, set `CORS_ALLOWED_ORIGINS` on the Flask server to a
 comma-separated list of exact web origins. For example:

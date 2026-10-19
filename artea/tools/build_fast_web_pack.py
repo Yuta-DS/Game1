@@ -47,6 +47,9 @@ CORE_INCLUDES = (
     "assets3D/mind_spark/puzzle_control_kit/**",
     "assets3D/kkNatureForest/**", "textures/dialogue_box.png",
     "assets3D/royal_garden/glb/MasonryBridge.glb",
+    "assets3D/royal_garden/glb/FountainStone.glb",
+    "assets3D/royal_garden/glb/WaterMotion.glb",
+    "assets3D/grass/GrassShader.tres",
 )
 
 
