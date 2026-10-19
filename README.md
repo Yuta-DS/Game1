@@ -139,7 +139,8 @@ to development defaults if unset:
 | `JWT_SECRET_KEY` | Signs login tokens — **must** be overridden with a real secret before any deploy reachable by others |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins for a browser-hosted export (default `*`) |
 | `MAX_UPLOAD_BYTES` | Artwork upload size cap (default 20 MB) |
-| `OPENROUTER_API_KEY` | Enables the cloud AI creative-guide/world-builder routes |
+| `OMNIROUTE_BASE_URL`, `OMNIROUTE_CREATIVE_GUIDE_API_KEY`, `OMNIROUTE_WORLD_BUILDER_API_KEY` | Enable the `/ai/creative-guide` and `/ai/world-builder` routes (see [AI Integration](#ai-integration)) |
+| `OPENROUTER_API_KEY` | Enables `/ai/chat` — defined but not currently called by the Godot client |
 
 ## Enabling flaskapp.service (make server.py run upon booting the server)
 
@@ -167,12 +168,26 @@ const MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
 
 Replace `YOUR_SERVER_IP` with the public IP or domain name of the server.
 
-## Future AI Integration
+## AI Integration
 
-The current project uses a local LLM inside Godot. A test OpenRouter
-implementation exists in `server.py` under the `@app.route('/ai/chat')` route.
-Future teams may replace this implementation with another cloud model
-provider or a self-hosted model.
+Artéa uses AI in two independent places, each with its own provider:
+
+- **Milo's companion chat** (`artea/scenes/chatbot.gd`): native/desktop builds
+  run a local, on-device model (Gemma-2-2B via the `nobodywho` addon), so
+  typed messages never leave the device. Web builds can't bundle that native
+  library, so they instead call a Cloudflare Worker that proxies Gemini — a
+  separate system from the Flask server below, and entirely cloud-based.
+  Whichever path is unavailable (missing model files, no network), Milo
+  falls back to fully authored/static reflections, so the companion is
+  never silent.
+- **Painting → explorable world** (`/ai/creative-guide` and
+  `/ai/world-builder` in `server.py`): always cloud-based, calling OmniRoute
+  to turn a player's artwork into a creative brief and a walkable 3D world
+  manifest. There is no local/offline mode for this path.
+
+`server.py` also defines a third route, `/ai/chat` (OpenRouter), but it is
+not called anywhere in the Godot client — it's left as a starting point for
+a team that wants to add another cloud chat provider or a self-hosted model.
 
 ## Tests
 
