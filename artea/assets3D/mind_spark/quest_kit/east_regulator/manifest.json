@@ -1,0 +1,13 @@
+{
+  "id": "east_regulator",
+  "revision": "heavenly_kit_02",
+  "triangles": 2584,
+  "runtime_mesh_nodes": 4,
+  "editable_source_meshes": 31,
+  "materials": 4,
+  "atlas_size": 1024,
+  "moving_groups": [
+    "Mechanism",
+    "Valve"
+  ]
+}

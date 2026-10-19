@@ -1,0 +1,11 @@
+{
+  "source_parts": 143,
+  "runtime_meshes": 6,
+  "triangles": 29800,
+  "moving_parts": [
+    "FlowColumn",
+    "ValveWheel",
+    "Shutter",
+    "Selector"
+  ]
+}

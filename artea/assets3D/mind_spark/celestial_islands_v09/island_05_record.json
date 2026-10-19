@@ -1,0 +1,25 @@
+{
+  "id": 5,
+  "name": "Stormworks Bastion",
+  "file": "island_05.glb",
+  "source": "source/island_05_3000.blend",
+  "bom": "bom/island_05_parts.csv",
+  "editable_mesh_parts": 3000,
+  "natural_components_before_patching": 2191,
+  "surface_split_operations": 809,
+  "component_kinds": {
+    "constructed_component": 1150,
+    "editable_surface_patch": 1460,
+    "connected_component": 390
+  },
+  "categories": {
+    "00_Preserved_Architecture": 363,
+    "01_Civic_Paving": 835,
+    "02_Cliff_Masonry": 719,
+    "03_Civic_Frieze": 324,
+    "04_Engine_Assemblies": 564,
+    "05_Service_Galleries": 195
+  },
+  "runtime_triangles": 226394,
+  "glb_bytes": 8119744
+}

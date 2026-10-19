@@ -5,12 +5,11 @@
 [resource]
 script = ExtResource("1")
 object_kind = 3
-display_name = "Memory Constellation Board"
-action_prompt = "CONNECT ONE LARGE NODE"
-success_message = "★ MEMORY RESTORED • SPARK FOUND"
+display_name = "Memory Atelier"
+action_prompt = "WEAVE NOTICE • NAME • CHOOSE"
+success_message = "★ FAIR MEMORY WOVEN • SPARK FORMED"
 progress_total = 3
 accent_color = Color(0.74, 0.6, 1, 1)
 icon_waiting = "✧"
 icon_success = "★"
 sequence_order = Array[String](["notice", "name", "choose"])
-

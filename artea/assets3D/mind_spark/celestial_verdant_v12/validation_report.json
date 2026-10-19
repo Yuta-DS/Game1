@@ -1,0 +1,54 @@
+{
+  "checks": {
+    "preserved_baseline_files": true,
+    "exactly_3000_nonempty_parts": true,
+    "unique_ids": true,
+    "bom_matches": true,
+    "kind_counts_match": true,
+    "bom_triangles_match": true,
+    "original_enginehouse_geometry_retained": true,
+    "original_route_openings_retained": true,
+    "four_planted_terraces": true,
+    "four_pressure_stays": true,
+    "source_split_keel_open_air": true,
+    "source_finite_vertices": true,
+    "source_triangle_faces": true,
+    "source_positive_face_areas": true,
+    "source_no_mesh_repairs": true,
+    "source_nonrail_below_walkable_plane": true,
+    "source_railing_outside_gameplay_disc": true,
+    "source_bridge_and_station_openings": true,
+    "visibly_wider_asymmetric_silhouette": true,
+    "runtime_finite_vertices": true,
+    "runtime_triangle_faces": true,
+    "runtime_positive_face_areas": true,
+    "runtime_no_mesh_repairs": true,
+    "runtime_nonrail_below_walkable_plane": true,
+    "runtime_railing_outside_gameplay_disc": true,
+    "runtime_bridge_and_station_openings": true,
+    "five_batched_families": true,
+    "source_export_coverage": true,
+    "triangle_count_match": true,
+    "triangle_budget": true,
+    "runtime_split_keel_open_air": true,
+    "paving_unchanged": true
+  },
+  "passed": true,
+  "runtime": {
+    "triangles": 531836,
+    "area": 112.50668393488726,
+    "bounds": [
+      [
+        -1.4116828441619873,
+        -1.2279300689697266,
+        -2.0199999809265137
+      ],
+      [
+        1.5848467350006104,
+        1.227929711341858,
+        0.2771396338939667
+      ]
+    ]
+  },
+  "visible_triangles": 592500
+}

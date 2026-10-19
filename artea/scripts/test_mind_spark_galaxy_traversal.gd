@@ -41,8 +41,8 @@ func _run() -> void:
 			_fail("%s does not retain a physical floor" % zone_id)
 			return
 	var route := world.get_node("WorldOneGeometry/MainStoryCircuitRoute") as Node3D
-	if _story_route_collision_count(route) != 10:
-		_fail("all five story links must have two collision-backed legs")
+	if _story_route_collision_count(route) != 8:
+		_fail("four retained links need eight collision-backed legs; route 01 uses its fused foundation")
 		return
 	var return_gate := world.get_node("WorldOneGeometry/01WorldGateLanding/EntryWorldGate") as MindSparkWorldGate
 	if not return_gate.teleport_player(player):
@@ -51,7 +51,7 @@ func _run() -> void:
 	if player.global_position.distance_to(floating_world.to_global(Vector3(-650, 7, 1575))) >= 0.25:
 		_fail("the abort gate did not use the safe forecourt return landing")
 		return
-	print("MindSparkGalaxyTraversal: PASS — solid forecourt reaches gate; six-island route enters and returns")
+	print("MindSparkGalaxyTraversal: PASS — solid forecourt reaches gate; three-island route enters and returns")
 	quit()
 
 
