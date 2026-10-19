@@ -74,6 +74,37 @@ A map of the critical files and folders for orienting new developers — see
 
 # Project Setup
 
+## Historical World One branch split
+
+For review, the former `world-one-fixed` work has been reconstructed locally
+as a series of historical topic branches. These are review snapshots, not a
+list of features verified in the current game. They have not been published
+to GitHub. The first ten branches are stacked: each contains the preceding
+branches, and its own changes are the difference from its parent.
+
+| Local branch (`world-one-fixed-history/`) | Changes grouped for review |
+| --- | --- |
+| `01-shared-game-and-assets` | Shared game systems, scenes, assets, project settings, and addons. |
+| `02-platform-and-web` | Web export and compatibility, authentication, API, and browser checks. |
+| `03-mind-spark` | World One islands, quests, progression, combat, gates, models, and documentation. |
+| `04-heart-melody` | Heart Melody garden, musical regions, progression, audio, and checks. |
+| `05-creator-gallery` | Gallery, drawing tools, artwork-world state, and gallery navigation. |
+| `06-train-and-milo` | Crown Line train and stations; Milo's companion, conversation, and animations. |
+| `07-castle-and-hub` | Castle, hub, floating world, gardens, barriers, and Tree of Life. |
+| `08-tools-and-checks` | General authoring tools, captures, and gameplay checks. |
+| `09-documentation` | General repository documentation and attribution. |
+| `10-generated-imports` | Historical generated Godot import metadata, separated for review. |
+| `11-post-merge-repair` | Reference to a later repair snapshot, including startup, train, and Web fixes. |
+| `12-gallery-follow-up` | Reference to the later branch tip, including gallery frame and artwork entry/exit changes. |
+
+The first ten branches together reproduce the pre-revert snapshot at
+`23367f6d` from the original base `6d3614ef`. Grouping is by file, so shared
+files can include multiple topics and intermediate branches may not run on
+their own. The final two references point to existing commits and include
+their prior history. Review and integrate changes against current `main`
+before opening feature PRs; the original work was merged and later reverted
+in part. Generated imports should be assessed separately before inclusion.
+
 ## Git Setup & Large File Requirements
 
 This project uses **Git LFS (Large File Storage)** for large assets including:
