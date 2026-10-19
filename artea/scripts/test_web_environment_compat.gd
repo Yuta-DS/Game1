@@ -34,10 +34,11 @@ var _failures := 0
 func _init() -> void:
 	var compat_source := FileAccess.get_file_as_string("res://scripts/web_terrain_compat.gd")
 	var grass_filter_source := FileAccess.get_file_as_string("res://scripts/web_grass_surface_filter.gd")
-	_check(compat_source.contains("modifier.collision_mask = WEB_TERRAIN_SCATTER_LAYER"),
-		"Web grass cannot project onto houses or props")
-	_check(compat_source.contains("WebGrassSurfaceFilter.new()"),
-		"Web grass stack installs the painted-surface filter")
+	_check(compat_source.contains("child_name in [\"Grass\", \"Objects\"]")
+		and compat_source.contains("modifier.collision_mask = WEB_TERRAIN_SCATTER_LAYER"),
+		"Web grass and trees cannot project onto houses or props")
+	_check(compat_source.contains("WebNaturalSoilSurfaceFilter.new()"),
+		"Web vegetation stacks install the painted-surface filter")
 	_check(grass_filter_source.contains("GRASS_TEXTURE_ID := 0"),
 		"Web surface filter targets only authored grass soil")
 	_check(grass_filter_source.contains("Vector2i.LEFT")
