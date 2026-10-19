@@ -17,54 +17,52 @@ func _fail(message: String) -> void:
 
 
 func _run() -> void:
-	if not await _check_world_one_ring():
+	if not await _check_world_one_three_island_route():
 		return
 	if not await _check_observatory_twins():
 		return
 	if not await _check_kingdom_shelf_grids():
 		return
-	print("MAP_ISLAND_BRIDGE_CONNECTIVITY: PASS — World One ring 2 routes/island; " \
-		+ "4 observatory twin pairs; 120 shelf bridges with >=2 routes/island; " \
+	print("MAP_ISLAND_BRIDGE_CONNECTIVITY: PASS — Island One tree bridge restored; " \
+		+ "2 observatory twin pairs; retired South and West lookouts absent; " \
+		+ "120 shelf bridges with >=2 routes/island; " \
 		+ "steepest legal shelf bridge walked by production player")
 	quit()
 
 
-func _check_world_one_ring() -> bool:
+func _check_world_one_three_island_route() -> bool:
 	var world := WorldOneScene.instantiate() as MindSparkWorldOne
 	world.build_hud = false
 	root.add_child(world)
 	for _frame in 4:
 		await physics_frame
 	var route := world.get_node("WorldOneGeometry/MainStoryCircuitRoute") as Node3D
-	if not bool(route.get_meta("ring_closed", false)):
-		_fail("World One route is still an open chain")
+	if bool(route.get_meta("ring_closed", true)):
+		_fail("World One still has the obsolete sixth external bridge")
 		return false
-	var degrees := {}
-	for zone_id in world.get_zone_ids():
-		degrees[zone_id] = 0
-	for encoded in PackedStringArray(route.get_meta("connection_pairs", [])):
-		var pair := encoded.split(">")
-		degrees[pair[0]] += 1
-		degrees[pair[1]] += 1
-	for zone_id in degrees:
-		if int(degrees[zone_id]) < 2:
-			_fail("World One island %s has only %d physical route links" % [zone_id, degrees[zone_id]])
-			return false
-	for leg in ["A", "B", "C"]:
-		var deck := route.get_node_or_null("CircuitRoute_06_%s" % leg) as MeshInstance3D
-		if deck == null or route.get_node_or_null("CircuitRoute_06_%sCollision" % leg) == null:
-			_fail("World One ring closure leg %s is missing walkable collision" % leg)
-			return false
-	var start_deck := route.get_node("CircuitRoute_06_A") as MeshInstance3D
-	var finish_deck := route.get_node("CircuitRoute_06_C") as MeshInstance3D
-	if not is_equal_approx(float(start_deck.get_meta("walk_surface_start_y")),
-			world.get_zone_position("06_oldest_tree_sanctuary").y):
-		_fail("World One closure is not coplanar with the sanctuary")
+	if int(route.get_meta("physical_island_count", 0)) != 3 \
+			or int(route.get_meta("external_bridge_count", 0)) != 2:
+		_fail("World One does not expose three physical islands and both sky bridges")
 		return false
-	if not is_equal_approx(float(finish_deck.get_meta("walk_surface_finish_y")),
-			world.get_zone_position("01_world_gate_landing").y):
-		_fail("World One closure is not coplanar with the arrival island")
+	if PackedStringArray(route.get_meta("internal_promenade_pairs", [])).size() != 3:
+		_fail("World One does not retain the three required paired-district promenades")
 		return false
+	for link_index in range(1, 6):
+		if link_index == 1:
+			if route.get_node_or_null("CircuitRoute_01_A") != null \
+					or world.get_island_one_heavenly_star_gate() == null:
+				_fail("World One route 01 must use its fused foundation and Heavenly Star Gate")
+				return false
+			continue
+		var expected_kind := "internal_promenade" if link_index % 2 == 1 else "external_sky_bridge"
+		for leg in ["A", "B"]:
+			var deck := route.get_node_or_null("CircuitRoute_%02d_%s" % [link_index, leg]) as MeshInstance3D
+			if deck == null or route.get_node_or_null("CircuitRoute_%02d_%sCollision" % [link_index, leg]) == null:
+				_fail("World One route %d%s lacks walkable collision" % [link_index, leg])
+				return false
+			if str(deck.get_meta("route_kind", "")) != expected_kind:
+				_fail("World One route %d%s has the wrong structural role" % [link_index, leg])
+				return false
 	world.queue_free()
 	await process_frame
 	return true
@@ -75,8 +73,7 @@ func _check_observatory_twins() -> bool:
 	root.add_child(world)
 	for _frame in 4:
 		await physics_frame
-	for base_name in ["WestObservatoryBridge", "NorthObservatoryBridge",
-			"EastObservatoryBridge", "SouthObservatoryBridge"]:
+	for base_name in ["NorthObservatoryBridge", "EastObservatoryBridge"]:
 		var left := world.get_node_or_null(base_name) as Node3D
 		var right := world.get_node_or_null("%sTwin" % base_name) as Node3D
 		if left == null or right == null:
@@ -100,6 +97,16 @@ func _check_observatory_twins() -> bool:
 				or not is_equal_approx(right_walkway.position.y + 2.0, 0.0):
 			_fail("%s decks do not share the island top plane" % base_name)
 			return false
+	if world.get_node_or_null("WestObservatory") != null \
+			or world.get_node_or_null("WestObservatoryBridge") != null \
+			or world.get_node_or_null("WestObservatoryBridgeTwin") != null:
+		_fail("retired West Observatory geometry still participates in the island map")
+		return false
+	if world.get_node_or_null("SouthObservatory") != null \
+			or world.get_node_or_null("SouthObservatoryBridge") != null \
+			or world.get_node_or_null("SouthObservatoryBridgeTwin") != null:
+		_fail("retired South watchtower geometry still participates in the island map")
+		return false
 	world.queue_free()
 	await process_frame
 	return true

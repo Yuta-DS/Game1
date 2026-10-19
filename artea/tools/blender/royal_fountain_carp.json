@@ -1,0 +1,41 @@
+{
+  "name": "carved_royal_carp_spout",
+  "build": "rigid",
+  "smooth_angle": 65,
+  "shading": {"gradient": {"top": 0.08, "bottom": -0.12}, "noise": {"size": 0.035, "amount": 0.025}},
+  "palette": {
+    "limestone_body": {"color": "#c1cbbf", "rough": 0.88},
+    "carved_fins": {"color": "#a4b5b3", "rough": 0.88},
+    "eye_insets": {"color": "#657e83", "rough": 0.75}
+  },
+  "joints": {
+    "TailRoot": [0, 0, -0.46],
+    "Body": [0, 0.02, -0.12],
+    "Head": [0, 0.035, 0.30],
+    "Mouth": [0, -0.01, 0.62]
+  },
+  "chains": {"body": ["TailRoot", "Body", "Head", "Mouth"]},
+  "volumes": [{
+    "chain": "body", "material": "limestone_body", "frame": "up", "sides": 20,
+    "ring_step": 0.075,
+    "profile": [[0,0.06,0.085],[0.18,0.15,0.21],[0.43,0.21,0.29],
+      [0.67,0.225,0.26],[0.82,0.17,0.18],[1,0.11,0.105]],
+    "caps": ["dome", "dome"]
+  }],
+  "parts": [
+    {"type":"fin","host":"TailRoot","material":"carved_fins","offset":[0,0,-0.015],
+      "udir":[0,0,-1],"vdir":[0,1,0],"conform":false,"thickness":0.055,
+      "points":[[0,-0.06],[0.25,-0.29],[0.25,0.29],[0,0.06]]},
+    {"type":"fin","host":"Body","material":"carved_fins",
+      "anchor":{"chain":"body","t":0.45,"around":0},"conform":false,
+      "udir":[0,0,1],"vdir":[0,1,0],"thickness":0.045,
+      "points":[[-0.25,-0.05],[-0.12,0.18],[0.08,0.18],[0.23,-0.05]]},
+    {"type":"fin","host":"Body","material":"carved_fins","mirrored":true,
+      "anchor":{"chain":"body","t":0.58,"around":95},"conform":false,
+      "udir":[0,0,1],"vdir":[1,-0.45,0],"thickness":0.04,
+      "points":[[-0.10,-0.035],[-0.24,0.23],[0.05,0.16],[0.14,-0.035]]},
+    {"type":"eye","host":"Head","material":"eye_insets","size":0.035,
+      "anchor":{"chain":"body","t":0.80,"around":65}}
+  ],
+  "animations": {}
+}
