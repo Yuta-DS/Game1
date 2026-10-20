@@ -83,6 +83,9 @@ func run() -> void:
 	assert(piano._player_in_range and piano._keys.size() == 88 and piano._samples.size() == 36)
 	piano._sit_down()
 	assert(piano._seated and not player.input_enabled)
+	assert(player.is_seated() and piano.has_node("PianoBench"), "Piano must seat the real controller on a physical bench")
+	if player._fox_skeleton() != null: assert(player._sit_pose_applied)
+	assert(player.global_position.distance_to(piano.to_global(piano.BENCH_TOP)) < 0.02)
 	var key := InputEventKey.new()
 	key.pressed = true
 	key.physical_keycode = KEY_A
@@ -93,11 +96,16 @@ func run() -> void:
 	var pointer := InputEventMouseButton.new()
 	pointer.button_index = MOUSE_BUTTON_LEFT
 	pointer.pressed = true
-	pointer.position = camera.unproject_position(mesh.to_global(Vector3(0, 0.04, 0)))
+	pointer.position = camera.unproject_position(mesh.to_global(Vector3(0, 0.012, 0.055)))
 	piano._unhandled_input(pointer)
 	assert(_last_midi == 72, "Clicking a piano key must pick and sound the correct pitch")
+	var tab := InputEventKey.new()
+	tab.pressed = true
+	tab.physical_keycode = KEY_TAB
+	piano._unhandled_input(tab)
+	assert(piano._keyboard_view and player.is_seated())
 	piano._stand_up()
-	assert(player.input_enabled and camera.get("_mode") == "follow")
+	assert(player.input_enabled and not player.is_seated() and not player._sit_pose_applied and camera.get("_mode") == "follow")
 	# Leaving the scene while playing must also restore controls.
 	var last := circle.get_node("Playable_guitar")
 	player.global_position = last.to_global(Vector3(0, 2, 5))
