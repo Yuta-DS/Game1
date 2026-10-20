@@ -1,102 +1,460 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Artea browser playtest: private S3 origin, HTTPS CloudFront and Godot isolation headers.",
+  "Description": "Artea production edge: private S3, HTTPS CloudFront, WAF and optional same-origin API.",
   "Resources": {
     "GameBucket": {
       "Type": "AWS::S3::Bucket",
       "DeletionPolicy": "Retain",
       "UpdateReplacePolicy": "Retain",
       "Properties": {
-        "PublicAccessBlockConfiguration": {"BlockPublicAcls": true, "IgnorePublicAcls": true, "BlockPublicPolicy": true, "RestrictPublicBuckets": true},
-        "OwnershipControls": {"Rules": [{"ObjectOwnership": "BucketOwnerEnforced"}]},
-        "BucketEncryption": {"ServerSideEncryptionConfiguration": [{"ServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerEnforced"
+            }
+          ]
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        }
       }
     },
     "OriginAccess": {
       "Type": "AWS::CloudFront::OriginAccessControl",
-      "Properties": {"OriginAccessControlConfig": {
-        "Name": {"Fn::Sub": "${AWS::StackName}-origin"},
-        "OriginAccessControlOriginType": "s3", "SigningBehavior": "always", "SigningProtocol": "sigv4"
-      }}
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-origin"
+          },
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4"
+        }
+      }
     },
     "GameHeaders": {
       "Type": "AWS::CloudFront::ResponseHeadersPolicy",
-      "Properties": {"ResponseHeadersPolicyConfig": {
-        "Name": {"Fn::Sub": "${AWS::StackName}-headers"},
-        "CustomHeadersConfig": {"Items": [
-          {"Header": "Cross-Origin-Opener-Policy", "Value": "same-origin", "Override": true},
-          {"Header": "Cross-Origin-Embedder-Policy", "Value": "require-corp", "Override": true},
-          {"Header": "Cross-Origin-Resource-Policy", "Value": "same-origin", "Override": true}
-        ]},
-        "SecurityHeadersConfig": {
-          "ContentTypeOptions": {"Override": true},
-          "ReferrerPolicy": {"ReferrerPolicy": "strict-origin-when-cross-origin", "Override": true},
-          "StrictTransportSecurity": {"AccessControlMaxAgeSec": 31536000, "Override": true}
+      "Properties": {
+        "ResponseHeadersPolicyConfig": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-headers"
+          },
+          "CustomHeadersConfig": {
+            "Items": [
+              {
+                "Header": "Cross-Origin-Opener-Policy",
+                "Value": "same-origin",
+                "Override": true
+              },
+              {
+                "Header": "Cross-Origin-Embedder-Policy",
+                "Value": "require-corp",
+                "Override": true
+              },
+              {
+                "Header": "Cross-Origin-Resource-Policy",
+                "Value": "same-origin",
+                "Override": true
+              }
+            ]
+          },
+          "SecurityHeadersConfig": {
+            "ContentTypeOptions": {
+              "Override": true
+            },
+            "ReferrerPolicy": {
+              "ReferrerPolicy": "strict-origin-when-cross-origin",
+              "Override": true
+            },
+            "StrictTransportSecurity": {
+              "AccessControlMaxAgeSec": 31536000,
+              "Override": true
+            }
+          }
         }
-      }}
+      }
     },
     "GameCache": {
       "Type": "AWS::CloudFront::CachePolicy",
-      "Properties": {"CachePolicyConfig": {
-        "Name": {"Fn::Sub": "${AWS::StackName}-cache"},
-        "MinTTL": 0, "DefaultTTL": 0, "MaxTTL": 31536000,
-        "ParametersInCacheKeyAndForwardedToOrigin": {
-          "EnableAcceptEncodingGzip": true, "EnableAcceptEncodingBrotli": true,
-          "CookiesConfig": {"CookieBehavior": "none"},
-          "HeadersConfig": {"HeaderBehavior": "none"},
-          "QueryStringsConfig": {"QueryStringBehavior": "none"}
+      "Properties": {
+        "CachePolicyConfig": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-cache"
+          },
+          "MinTTL": 0,
+          "DefaultTTL": 0,
+          "MaxTTL": 31536000,
+          "ParametersInCacheKeyAndForwardedToOrigin": {
+            "EnableAcceptEncodingGzip": true,
+            "EnableAcceptEncodingBrotli": true,
+            "CookiesConfig": {
+              "CookieBehavior": "none"
+            },
+            "HeadersConfig": {
+              "HeaderBehavior": "none"
+            },
+            "QueryStringsConfig": {
+              "QueryStringBehavior": "none"
+            }
+          }
         }
-      }}
+      }
     },
     "GameDistribution": {
       "Type": "AWS::CloudFront::Distribution",
-      "Properties": {"DistributionConfig": {
-        "Enabled": true, "Comment": "Artea public browser playtest",
-        "DefaultRootObject": "index.html", "HttpVersion": "http2and3",
-        "IPV6Enabled": true, "PriceClass": "PriceClass_All",
-        "ViewerCertificate": {"CloudFrontDefaultCertificate": true},
-        "Origins": [{
-          "Id": "private-game-bucket",
-          "DomainName": {"Fn::GetAtt": ["GameBucket", "RegionalDomainName"]},
-          "OriginAccessControlId": {"Ref": "OriginAccess"},
-          "S3OriginConfig": {"OriginAccessIdentity": ""}
-        }],
-        "DefaultCacheBehavior": {
-          "TargetOriginId": "private-game-bucket", "ViewerProtocolPolicy": "redirect-to-https",
-          "AllowedMethods": ["GET", "HEAD", "OPTIONS"], "CachedMethods": ["GET", "HEAD"],
-          "Compress": true,
-          "CachePolicyId": {"Ref": "GameCache"},
-          "ResponseHeadersPolicyId": {"Ref": "GameHeaders"}
-        },
-        "CustomErrorResponses": [
-          {"ErrorCode": 403, "ErrorCachingMinTTL": 0},
-          {"ErrorCode": 404, "ErrorCachingMinTTL": 0}
-        ]
-      }}
+      "Properties": {
+        "DistributionConfig": {
+          "Enabled": true,
+          "Comment": "Artea public browser playtest",
+          "DefaultRootObject": "index.html",
+          "HttpVersion": "http2and3",
+          "IPV6Enabled": true,
+          "PriceClass": "PriceClass_All",
+          "ViewerCertificate": {
+            "CloudFrontDefaultCertificate": true
+          },
+          "Origins": [
+            {
+              "Id": "private-game-bucket",
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "GameBucket",
+                  "RegionalDomainName"
+                ]
+              },
+              "OriginAccessControlId": {
+                "Ref": "OriginAccess"
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": ""
+              }
+            },
+            {
+              "Fn::If": [
+                "HasBackend",
+                {
+                  "Id": "api",
+                  "DomainName": {
+                    "Ref": "BackendDomain"
+                  },
+                  "OriginCustomHeaders": [
+                    {
+                      "HeaderName": "X-Artea-Origin",
+                      "HeaderValue": {
+                        "Fn::Sub": "{{resolve:secretsmanager:${BackendOriginSecretArn}:SecretString:token}}"
+                      }
+                    }
+                  ],
+                  "VpcOriginConfig": {
+                    "VpcOriginId": {
+                      "Ref": "BackendVpcOriginId"
+                    },
+                    "OriginReadTimeout": 100,
+                    "OriginKeepaliveTimeout": 5
+                  }
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          ],
+          "DefaultCacheBehavior": {
+            "TargetOriginId": "private-game-bucket",
+            "ViewerProtocolPolicy": "redirect-to-https",
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "CachedMethods": [
+              "GET",
+              "HEAD"
+            ],
+            "Compress": true,
+            "CachePolicyId": {
+              "Ref": "GameCache"
+            },
+            "ResponseHeadersPolicyId": {
+              "Ref": "GameHeaders"
+            }
+          },
+          "CustomErrorResponses": [
+            {
+              "ErrorCode": 403,
+              "ErrorCachingMinTTL": 0
+            },
+            {
+              "ErrorCode": 404,
+              "ErrorCachingMinTTL": 0
+            }
+          ],
+          "WebACLId": {
+            "Fn::If": [
+              "HasWaf",
+              {
+                "Ref": "WebAclArn"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "CacheBehaviors": [
+            {
+              "Fn::If": [
+                "HasBackend",
+                {
+                  "PathPattern": "/api/*",
+                  "TargetOriginId": "api",
+                  "ViewerProtocolPolicy": "https-only",
+                  "AllowedMethods": [
+                    "GET",
+                    "HEAD",
+                    "OPTIONS",
+                    "PUT",
+                    "PATCH",
+                    "POST",
+                    "DELETE"
+                  ],
+                  "CachedMethods": [
+                    "GET",
+                    "HEAD"
+                  ],
+                  "Compress": true,
+                  "CachePolicyId": {
+                    "Ref": "ApiCache"
+                  },
+                  "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+                  "ResponseHeadersPolicyId": {
+                    "Ref": "GameHeaders"
+                  }
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          ]
+        }
+      }
     },
     "GameBucketPolicy": {
       "Type": "AWS::S3::BucketPolicy",
       "Properties": {
-        "Bucket": {"Ref": "GameBucket"},
-        "PolicyDocument": {"Version": "2012-10-17", "Statement": [
-          {
-            "Sid": "CloudFrontReadOnly", "Effect": "Allow",
-            "Principal": {"Service": "cloudfront.amazonaws.com"}, "Action": "s3:GetObject",
-            "Resource": {"Fn::Sub": "${GameBucket.Arn}/*"},
-            "Condition": {"StringEquals": {"AWS:SourceArn": {"Fn::Sub": "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${GameDistribution}"}}}
+        "Bucket": {
+          "Ref": "GameBucket"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "CloudFrontReadOnly",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudfront.amazonaws.com"
+              },
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Sub": "${GameBucket.Arn}/*"
+              },
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${GameDistribution}"
+                  }
+                }
+              }
+            },
+            {
+              "Sid": "RequireTLS",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "GameBucket",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${GameBucket.Arn}/*"
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ApiCache": {
+      "Type": "AWS::CloudFront::CachePolicy",
+      "Condition": "HasBackend",
+      "Properties": {
+        "CachePolicyConfig": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-api-no-cache"
           },
-          {
-            "Sid": "RequireTLS", "Effect": "Deny", "Principal": "*", "Action": "s3:*",
-            "Resource": [{"Fn::GetAtt": ["GameBucket", "Arn"]}, {"Fn::Sub": "${GameBucket.Arn}/*"}],
-            "Condition": {"Bool": {"aws:SecureTransport": "false"}}
+          "MinTTL": 0,
+          "DefaultTTL": 0,
+          "MaxTTL": 0,
+          "ParametersInCacheKeyAndForwardedToOrigin": {
+            "EnableAcceptEncodingGzip": false,
+            "EnableAcceptEncodingBrotli": false,
+            "CookiesConfig": {
+              "CookieBehavior": "none"
+            },
+            "HeadersConfig": {
+              "HeaderBehavior": "none"
+            },
+            "QueryStringsConfig": {
+              "QueryStringBehavior": "none"
+            }
           }
-        ]}
+        }
       }
     }
   },
   "Outputs": {
-    "BucketName": {"Value": {"Ref": "GameBucket"}},
-    "DistributionId": {"Value": {"Ref": "GameDistribution"}},
-    "WebsiteURL": {"Value": {"Fn::Sub": "https://${GameDistribution.DomainName}/"}}
+    "BucketName": {
+      "Value": {
+        "Ref": "GameBucket"
+      }
+    },
+    "DistributionId": {
+      "Value": {
+        "Ref": "GameDistribution"
+      }
+    },
+    "WebsiteURL": {
+      "Value": {
+        "Fn::Sub": "https://${GameDistribution.DomainName}/"
+      }
+    }
+  },
+  "Parameters": {
+    "BackendDomain": {
+      "Type": "String",
+      "Default": "",
+      "AllowedPattern": "^$|^[a-z0-9.-]+\\.amazonaws\\.com$"
+    },
+    "BackendOriginSecretArn": {
+      "Type": "String",
+      "Default": ""
+    },
+    "WebAclArn": {
+      "Type": "String",
+      "Default": ""
+    },
+    "BackendVpcOriginId": {
+      "Type": "String",
+      "Default": ""
+    }
+  },
+  "Conditions": {
+    "HasBackend": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "BackendDomain"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "HasWaf": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "WebAclArn"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Rules": {
+    "BackendSecretRequired": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "BackendDomain"
+                  },
+                  ""
+                ]
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      {
+                        "Ref": "BackendOriginSecretArn"
+                      },
+                      ""
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "An API origin requires its origin secret ARN."
+        },
+        {
+          "Assert": {
+            "Fn::Or": [
+              {
+                "Fn::Equals": [
+                  {
+                    "Ref": "BackendDomain"
+                  },
+                  ""
+                ]
+              },
+              {
+                "Fn::Not": [
+                  {
+                    "Fn::Equals": [
+                      {
+                        "Ref": "BackendVpcOriginId"
+                      },
+                      ""
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "An API origin requires its private VPC origin ID."
+        }
+      ]
+    }
   }
 }

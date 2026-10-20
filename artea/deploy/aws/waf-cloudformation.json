@@ -1,0 +1,131 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Deploy in us-east-1 for CloudFront. WAF managed protections and account throttling.",
+  "Resources": {
+    "WebAcl": {
+      "Type": "AWS::WAFv2::WebACL",
+      "Properties": {
+        "Scope": "CLOUDFRONT",
+        "DefaultAction": {
+          "Allow": {}
+        },
+        "VisibilityConfig": {
+          "CloudWatchMetricsEnabled": true,
+          "SampledRequestsEnabled": false,
+          "MetricName": "ArteaEdge"
+        },
+        "Rules": [
+          {
+            "Name": "AWSManagedRulesCommonRuleSet",
+            "Priority": 0,
+            "OverrideAction": {
+              "None": {}
+            },
+            "Statement": {
+              "ManagedRuleGroupStatement": {
+                "VendorName": "AWS",
+                "Name": "AWSManagedRulesCommonRuleSet",
+                "RuleActionOverrides": [
+                  {
+                    "Name": "SizeRestrictions_BODY",
+                    "ActionToUse": {
+                      "Count": {}
+                    }
+                  }
+                ]
+              }
+            },
+            "VisibilityConfig": {
+              "CloudWatchMetricsEnabled": true,
+              "SampledRequestsEnabled": false,
+              "MetricName": "AWSManagedRulesCommonRuleSet"
+            }
+          },
+          {
+            "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+            "Priority": 1,
+            "OverrideAction": {
+              "None": {}
+            },
+            "Statement": {
+              "ManagedRuleGroupStatement": {
+                "VendorName": "AWS",
+                "Name": "AWSManagedRulesKnownBadInputsRuleSet"
+              }
+            },
+            "VisibilityConfig": {
+              "CloudWatchMetricsEnabled": true,
+              "SampledRequestsEnabled": false,
+              "MetricName": "AWSManagedRulesKnownBadInputsRuleSet"
+            }
+          },
+          {
+            "Name": "AWSManagedRulesAmazonIpReputationList",
+            "Priority": 2,
+            "OverrideAction": {
+              "None": {}
+            },
+            "Statement": {
+              "ManagedRuleGroupStatement": {
+                "VendorName": "AWS",
+                "Name": "AWSManagedRulesAmazonIpReputationList"
+              }
+            },
+            "VisibilityConfig": {
+              "CloudWatchMetricsEnabled": true,
+              "SampledRequestsEnabled": false,
+              "MetricName": "AWSManagedRulesAmazonIpReputationList"
+            }
+          },
+          {
+            "Name": "AccountRate",
+            "Priority": 3,
+            "Action": {
+              "Block": {}
+            },
+            "Statement": {
+              "RateBasedStatement": {
+                "Limit": 100,
+                "EvaluationWindowSec": 300,
+                "AggregateKeyType": "IP",
+                "ScopeDownStatement": {
+                  "RegexMatchStatement": {
+                    "RegexString": "^/api/(login|register|refresh|forgot_password|reset_password|resend_confirmation|confirm_registration)$",
+                    "FieldToMatch": {
+                      "UriPath": {}
+                    },
+                    "TextTransformations": [
+                      {
+                        "Priority": 0,
+                        "Type": "URL_DECODE"
+                      },
+                      {
+                        "Priority": 1,
+                        "Type": "NORMALIZE_PATH"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "VisibilityConfig": {
+              "CloudWatchMetricsEnabled": true,
+              "SampledRequestsEnabled": false,
+              "MetricName": "AccountRate"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "WebAclArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WebAcl",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

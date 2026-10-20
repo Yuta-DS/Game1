@@ -9,8 +9,8 @@ extends Node3D
 #const MY_ARTWORKS_URL = "http://54.252.162.122/my_artworks"
 #const SERVER_BASE = "http://54.252.162.122"
 const RatingHeart := preload("res://scripts/rating_heart.gd")
-const MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
-const SERVER_BASE = APIManager.BASE_URL
+@onready var MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
+@onready var SERVER_BASE = APIManager.BASE_URL
 const R2_DOWNLOAD_HOST = "https://pub-dcfcf45c45f94920a79a5f0ef9ecb177.r2.dev"
 const PLACEHOLDER_PATH = "res://assets/ArtGallery/placeholders/"
 const PLACEHOLDERS = [
@@ -316,7 +316,7 @@ func start_next_download() -> void:
 
 	print("Downloading online art: ", full_url)
 
-	var error = download_request.request(full_url)
+	var error = download_request.request(full_url, ["Authorization: Bearer " + APIManager.auth_token])
 
 	if error != OK:
 

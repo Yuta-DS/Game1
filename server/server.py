@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, g
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import (
@@ -103,7 +103,17 @@ AI_CACHE_MAX_AGE_SECONDS = int(os.environ.get(
 AI_CACHE_DIR = os.path.join(BASE_DIR, "ai_cache")
 os.makedirs(AI_CACHE_DIR, exist_ok=True)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
+if os.environ.get("DB_HOST"):
+    from sqlalchemy.engine import URL
+    app.config['SQLALCHEMY_DATABASE_URI'] = URL.create(
+        "postgresql+psycopg", username=os.environ["DB_USERNAME"],
+        password=os.environ["DB_PASSWORD"], host=os.environ["DB_HOST"],
+        port=5432, database=os.environ.get("DB_NAME", "artea"),
+        query={"sslmode": "verify-full", "sslrootcert": os.environ["DB_SSL_CA"]}
+    )
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", 'sqlite:///' + os.path.join(BASE_DIR, 'database.db'))
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"pool_pre_ping": True, "pool_recycle": 300}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 _DEFAULT_JWT_SECRET = 'dev_secret_change_later_12345'
@@ -154,6 +164,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.LargeBinary, nullable=False)
+    if os.environ.get("AUTH_PROVIDER") == "cognito":
+        cognito_sub = db.Column(db.String(64), unique=True, nullable=True)
 
 class Artwork(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -170,8 +182,13 @@ class Artwork(db.Model):
 # production WSGI server (gunicorn) imports this module and calls the `app`
 # object directly, it never executes the __main__ block, so table creation
 # has to happen here or a fresh deploy has no `user`/`artwork` tables at all.
-with app.app_context():
-    db.create_all()
+if os.environ.get("AUTO_CREATE_SCHEMA", "true").lower() == "true":
+    with app.app_context():
+        db.create_all()
+
+def current_user_id():
+    return int(getattr(g, "cognito_user_id", None) or get_jwt_identity())
+
 
 # =========================
 # REGISTER
@@ -233,8 +250,8 @@ def allowed_file(filename):
 @app.route('/upload_artwork', methods=['POST'])
 @jwt_required()
 def upload_artwork():
-    print("HEADERS:", dict(request.headers))
-    user_id = int(get_jwt_identity())
+    # Never log bearer tokens or other request credentials.
+    user_id = current_user_id()
 
     image_data = request.data
 
@@ -311,7 +328,7 @@ def download_artwork(artwork_id):
 @app.route('/my_artworks', methods=['GET'])
 @jwt_required()
 def my_artworks():
-    user_id = int(get_jwt_identity())
+    user_id = current_user_id()
 
     artworks = Artwork.query.filter_by(user_id=user_id)\
         .order_by(Artwork.id.desc())\
@@ -403,7 +420,7 @@ def call_openrouter(messages):
         )
 
         if response.status_code != 200:
-            print("OpenRouter error:", response.text)
+            print("OpenRouter request failed with HTTP status:", response.status_code)
             return None
 
         data = response.json()
@@ -1280,7 +1297,7 @@ def ai_world_builder():
             '{"x":0.64,"y":0.16,"width":0.18,"height":0.58},"depth_layer":"middle",'
             '"scale_hint":"large","animation":"sway"}. '
             "Use specific semantic types such as person, tree, boat, pagoda, house, "
-            "bridge, mountain, river, cloud, sun, path, or flower—not structure/object."
+            "bridge, mountain, river, cloud, sun, path, or flowerâ€”not structure/object."
         )
         fingerprint = _cache_fingerprint(
             "world_builder",
