@@ -37,6 +37,9 @@ func _run() -> void:
 	var materials_by_name := {}
 	for mesh_node in meshes:
 		var part_mesh := mesh_node as MeshInstance3D
+		# Rigid Web pieces keep their named source nodes for the controller;
+		# only their replacement surface batches contribute rendered vertices.
+		if part_mesh.layers == 0: continue
 		for surface_index in part_mesh.mesh.get_surface_count():
 			vertex_count += part_mesh.mesh.surface_get_array_len(surface_index)
 			surface_count += 1
