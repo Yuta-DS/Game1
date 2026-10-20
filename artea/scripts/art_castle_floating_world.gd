@@ -129,7 +129,6 @@ const CAUSEWAY_WIDTH := 26.0
 const CAUSEWAY_DECK_Y := 1.0
 const CAUSEWAY_SEGMENT_LENGTH := 420.0
 const CAUSEWAY_ISLAND_RADIUS := 46.0
-const HEART := Vector3(0.0, 0.0, 2290.0)
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
 # Half extents of the raised studio platform (2 m tall, top at y=2).
 const CREATOR_PLATFORM_HALF := Vector3(90.0, 1.0, 82.0)
@@ -176,7 +175,6 @@ func _ready() -> void:
 	if embedded_in_gallery:
 		_build_castle_approach_bridge()
 	_build_mind_district()
-	_build_heart_district()
 	_build_creator_district()
 	_build_story_landmarks()
 	_build_mind_spark_world_one_gameplay()
@@ -335,11 +333,9 @@ func _build_central_sanctuary() -> void:
 	# TreeCourt's top is 0.8 m above the deck.
 	_build_tree_spiral_stairs(island, HUB + Vector3(0.0, 0.8, 0.0))
 	_build_cat_companion(island, HUB + Vector3(-18.0, 2.0, -68.0))
-	_build_radial_arches(island)
 
 	_add_bridge("SouthArrivalBridge", Vector3(0.0, 0.0, 1422.0), Vector3(0.0, 0.0, 975.0), 62.0)
 	_add_bridge("MindBridge", Vector3(-218.0, 0.0, 1640.0), Vector3(-430.0, 0.0, 1640.0), 58.0)
-	_add_bridge("HeartBridge", Vector3(0.0, 0.0, 1858.0), Vector3(0.0, 0.0, 2120.0), 58.0)
 	_add_bridge("CreatorBridge", Vector3(218.0, 0.0, 1640.0), Vector3(410.0, 0.0, 1640.0), 58.0)
 
 
@@ -1311,38 +1307,6 @@ func _build_world_gate_arch(parent: Node3D, base: Vector3) -> void:
 	arch.add_child(label)
 
 
-func _build_heart_district() -> void:
-	var heart_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
-	heart_gate.name = "HeartMelodyWorldGate"
-	heart_gate.position = HEART + Vector3(0, 4, 45)
-	heart_gate.target_kingdom_id = "heart_melody"
-	heart_gate.target_world_path = NodePath()
-	heart_gate.prompt_text = "Q · VISIT HEART MELODY — MUSICAL ORCHARD (open journey)"
-	add_child(heart_gate)
-	var district := Node3D.new()
-	district.name = "HeartMelodyTemple"
-	add_child(district)
-	_build_island_foundation(district, HEART, 175.0, 55.0, 32)
-	_add_cylinder(district, "MelodyStage", HEART + Vector3(0.0, 2.0, 0.0), 118.0, 4.0, _materials.pink, true, 40)
-
-	# Seven playable-looking note pads arranged as a melody constellation.
-	for index in 7:
-		var angle := -PI * 0.8 + float(index) * PI * 0.27
-		var radius := 65.0 + float(index % 2) * 24.0
-		var pad_pos := HEART + Vector3(cos(angle) * radius, 5.0, sin(angle) * radius)
-		_add_cylinder(district, "MelodyPad_%02d" % index, pad_pos, 17.0, 2.0,
-			_materials.pink if index % 2 == 0 else _materials.purple, true, 24)
-
-	# Temple arcade and central open doorway.
-	for index in 7:
-		var x := -108.0 + float(index) * 36.0
-		_build_arch(district, HEART + Vector3(x, 2.0, -105.0), 26.0, 62.0, 10.0, _materials.ivory)
-	_build_frame(district, HEART + Vector3(0.0, 2.0, -118.0), 44.0, 64.0, _materials.pink, "HEART MELODY")
-	for index in 34:
-		var angle := TAU * float(index) / 34.0
-		_add_flower_cluster(district, HEART + Vector3(cos(angle) * 147.0, 3.0, sin(angle) * 147.0), true)
-
-
 func _build_creator_district() -> void:
 	var district := Node3D.new()
 	district.name = "CreatorsLightStudio"
@@ -1502,7 +1466,6 @@ func _add_tinted_multimesh(parent: Node3D, node_name: String, transforms: Array[
 func _build_story_landmarks() -> void:
 	# Mind Spark's story landmarks live in the complete six-island World One.
 	# The original cyan district remains a clear World Gate forecourt.
-	_build_heart_story_landmarks()
 	_build_creator_story_landmarks()
 
 
@@ -1687,35 +1650,6 @@ func _build_mind_story_landmarks() -> void:
 	_add_landmark_label(sanctuary, "OLDEST TREE • STAR OF WISDOM", MIND + Vector3(118.0, 88.0, 45.0), Color("fff1a4"))
 
 
-func _build_heart_story_landmarks() -> void:
-	var story := Node3D.new()
-	story.name = "HeartMelodyQuestLandmarks"
-	add_child(story)
-	# Seven emotional places circle the Personal Song amphitheatre.
-	var places := [
-		{"name": "JoyGarden", "text": "JOY GARDEN", "offset": Vector3(-125.0, 0.0, 42.0), "mat": _materials.gold},
-		{"name": "FrustrationDrums", "text": "FRUSTRATION DRUMS", "offset": Vector3(-92.0, 0.0, -80.0), "mat": _materials.pink},
-		{"name": "SadnessRainBoat", "text": "SADNESS RAIN BOAT", "offset": Vector3(-8.0, 0.0, -135.0), "mat": _materials.aqua},
-		{"name": "FearWarningBells", "text": "FEAR WARNING BELLS", "offset": Vector3(95.0, 0.0, -82.0), "mat": _materials.purple},
-		{"name": "PeaceFlowers", "text": "PEACE FLOWERS", "offset": Vector3(132.0, 0.0, 20.0), "mat": _materials.green},
-		{"name": "HopeMorningStage", "text": "HOPE MORNING STAGE", "offset": Vector3(70.0, 0.0, 118.0), "mat": _materials.gold},
-	]
-	for index in places.size():
-		var info: Dictionary = places[index]
-		var landmark := Node3D.new()
-		landmark.name = info.name
-		story.add_child(landmark)
-		var position_value: Vector3 = HEART + info.offset
-		_add_cylinder(landmark, "EmotionInstrument", position_value + Vector3(0.0, 8.0, 0.0),
-			12.0 + float(index % 2) * 4.0, 16.0, info.mat, true, 20)
-		_add_landmark_label(landmark, info.text, position_value + Vector3(0.0, 31.0, 0.0), Color("ffe5f4"), 31)
-	var song := Node3D.new()
-	song.name = "PersonalSongAmphitheatre"
-	story.add_child(song)
-	_add_torus(song, "HarmonyJewelRing", HEART + Vector3(0.0, 9.0, 0.0), 32.0, 39.0, _materials.gold)
-	_add_landmark_label(song, "RAPHAEL • PERSONAL SONG • HARMONY JEWEL", HEART + Vector3(0.0, 58.0, 0.0), Color("fff0b0"), 34)
-
-
 func _build_creator_story_landmarks() -> void:
 	var story := Node3D.new()
 	story.name = "CreatorsLightQuestLandmarks"
@@ -1740,8 +1674,8 @@ func _build_boundary_observatories() -> void:
 		# no longer passes through the station platform and crystal canopy.
 		{"name": "WestObservatory", "center": Vector3(-920.0, 0.0, 1430.0),
 			"source_center": MIND, "source_radius": MIND_DISTRICT_RADIUS},
-		{"name": "NorthObservatory", "center": Vector3(0.0, 0.0, 2565.0),
-			"source_center": HEART, "source_radius": 175.0},
+		# No north lookout: it only connected to the old Heart Melody temple
+		# island behind the tree, which has been removed.
 		# No east lookout: the Creator studio island stands on its own.
 		# No south lookout: its tower stood inside the arrival island between
 		# the gate and the fountain.
@@ -1890,7 +1824,6 @@ func _build_world_labels() -> void:
 	_add_world_label("CentralLabel", "TREE OF IMAGINATION • CROWN LINE", HUB + Vector3(0.0, 72.0, -80.0), Color("e9d9ff"), 74)
 	_add_world_label("GalleryStationLabel", "ARTÉA GALLERY STATION • JOURNEY BEGINS", Vector3(0.0, 76.0, 750.0), Color("fff0b0"), 54)
 	_add_world_label("MindLabel", "MIND SPARK  •  CONSTELLATION COURT", MIND + Vector3(0.0, 82.0, 125.0), Color("9ff7ff"), 58)
-	_add_world_label("HeartLabel", "HEART MELODY  •  TEMPLE OF SONG", HEART + Vector3(0.0, 90.0, 120.0), Color("ffd0ea"), 58)
 	_add_world_label("CreatorLabel", "CREATOR'S LIGHT  •  SKY STUDIO", CREATOR + Vector3(0.0, 88.0, 135.0), Color("ffe4a0"), 58)
 	if embedded_in_gallery:
 		return
@@ -6022,13 +5955,6 @@ func _build_cat_companion(parent: Node3D, position: Vector3) -> void:
 	shape_node.shape = shape
 	body.add_child(shape_node)
 	cat.add_child(body)
-
-
-func _build_radial_arches(parent: Node3D) -> void:
-	var configs := [HUB + Vector3(-145.0, 0.0, -145.0), HUB + Vector3(145.0, 0.0, -145.0),
-		HUB + Vector3(-145.0, 0.0, 145.0), HUB + Vector3(145.0, 0.0, 145.0)]
-	for index in configs.size():
-		_build_arch(parent, configs[index], 34.0, 58.0, 12.0, _materials.ivory)
 
 
 func _build_easel(parent: Node3D, position: Vector3, index: int) -> void:

@@ -92,7 +92,7 @@ func _run() -> void:
 		_fail("floating world is not shifted to the player-facing side of the gallery wall")
 		return
 	for district in ["CentralSanctuary", "ArrivalIsland", "MindSparkDistrict",
-			"HeartMelodyTemple", "CreatorsLightStudio"]:
+			"CreatorsLightStudio"]:
 		if floating_world.get_node_or_null(district) == null:
 			_fail("same-scene floating world is missing %s" % district)
 			return
@@ -127,9 +127,9 @@ func _run() -> void:
 		_fail("Harmony Jewel must open Creator's Light")
 		return
 	# Mind Spark now ships as the complete six-island gameplay world rather than
-	# the old decorative landmark cluster. Heart and Creator retain their named
-	# landmark containers.
-	for landmarks in ["MindSparkWorldOne", "HeartMelodyQuestLandmarks", "CreatorsLightQuestLandmarks"]:
+	# the old decorative landmark cluster. Creator retains its named landmark
+	# container; Heart's old temple island behind the tree was removed.
+	for landmarks in ["MindSparkWorldOne", "CreatorsLightQuestLandmarks"]:
 		if floating_world.get_node_or_null(landmarks) == null:
 			_fail("story world is missing %s" % landmarks)
 			return

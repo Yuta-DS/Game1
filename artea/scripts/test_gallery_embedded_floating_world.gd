@@ -138,8 +138,7 @@ func _run() -> void:
 	if world.get_node_or_null("ReturnToCastleGate") != null:
 		_fail("same-scene world still contains a return teleport")
 		return
-	for district in ["CentralSanctuary", "MindSparkDistrict", "HeartMelodyTemple",
-			"CreatorsLightStudio"]:
+	for district in ["CentralSanctuary", "MindSparkDistrict", "CreatorsLightStudio"]:
 		if world.get_node_or_null(district) == null:
 			_fail("embedded world is missing %s" % district)
 			return
