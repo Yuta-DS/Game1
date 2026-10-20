@@ -159,7 +159,8 @@ async function connect() {
 	ws.addEventListener('message', (ev) => {
 		const m = JSON.parse(ev.data);
 		if (m.id && pending.has(m.id)) {
-			const { resolve, reject } = pending.get(m.id);
+			const { resolve, reject, timer } = pending.get(m.id);
+			clearTimeout(timer);
 			pending.delete(m.id);
 			return m.error ? reject(new Error(JSON.stringify(m.error))) : resolve(m.result);
 		}
@@ -201,6 +202,7 @@ async function connect() {
 		if (m.method === 'Runtime.consoleAPICalled') {
 			const line = (m.params.args || []).map((a) => a.value ?? a.description ?? a.type).join(' ');
 			consoleLines.push(line);
+			fs.appendFileSync(path.join(outDir, 'console-live.log'), line + '\n');
 			// Stamp the hub the moment its log arrives, not at the next 1 s poll.
 			// The pack is fully downloaded by the time the engine starts, and
 			// every build logs this, including deployments older than the hub log.
@@ -212,7 +214,9 @@ async function connect() {
 			}
 		}
 		if (m.method === 'Runtime.exceptionThrown') {
-			consoleLines.push('EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text));
+			const line = 'EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);
+			consoleLines.push(line);
+			fs.appendFileSync(path.join(outDir, 'console-live.log'), line + '\n');
 		}
 		if (m.method === 'Inspector.targetCrashed') crashed = true;
 		if (listeners.has(m.method)) listeners.get(m.method)(m.params);
@@ -221,7 +225,8 @@ async function connect() {
 
 	const send = (method, params = {}) => new Promise((resolve, reject) => {
 		const msgId = (id += 1);
-		pending.set(msgId, { resolve, reject });
+		const timer = setTimeout(() => { pending.delete(msgId); reject(new Error('Browser stopped responding to ' + method)); }, 180000);
+		pending.set(msgId, { resolve, reject, timer });
 		ws.send(JSON.stringify({ id: msgId, method, params }));
 	});
 	const on = (method, handler) => listeners.set(method, handler);
@@ -633,7 +638,11 @@ async function connect() {
 				await waitForLog(new RegExp('JOURNEY QA stage ' + stage), stage + ' presentation', 10000, from);
 				await sleep(stage === 'gate' ? 300 : 700);
 				await shot('journey-' + stage);
-				if (stage === 'transcript') await waitForLog(/JOURNEY QA voice ended and transcript hidden/, 'voice ends and transcript disappears', 60000, from);
+				if (stage === 'transcript') {
+					await waitForLog(/JOURNEY QA transcript page advanced/, 'transcript follows recorded playback', 60000, from);
+					await shot('journey-transcript-next');
+					await waitForLog(/JOURNEY QA voice ended and transcript hidden/, 'voice ends and transcript disappears', 60000, from);
+				}
 			}
 		}
 		areas.push(['the Art Castle', castle, castle ? await goTo('the Hub', HUB) : null, 'prefetched']);

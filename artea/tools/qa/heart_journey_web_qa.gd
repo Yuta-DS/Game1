@@ -3,6 +3,8 @@ extends Node3D
 var world: Node3D
 var command: JavaScriptObject
 var waiting_for_voice := false
+var first_caption := ""
+var page_advanced := false
 
 func _ready() -> void:
 	world = (load("res://scenes/heart_melody/heart_melody_world.tscn") as PackedScene).instantiate()
@@ -20,6 +22,9 @@ func _ready() -> void:
 	print("JOURNEY QA ready")
 
 func _process(_delta: float) -> void:
+	if waiting_for_voice and world.milo_guide.panel.visible and not page_advanced and world.milo_guide.caption.text != first_caption:
+		page_advanced = true
+		print("JOURNEY QA transcript page advanced")
 	if waiting_for_voice and not world.milo_guide.panel.visible:
 		waiting_for_voice = false
 		world.milo_guide.enabled = false
@@ -34,6 +39,8 @@ func run(stage: String) -> void:
 		"transcript":
 			world.milo_guide.enabled = true
 			world.milo_guide.play_line("garden")
+			first_caption = world.milo_guide.caption.text
+			page_advanced = false
 			waiting_for_voice = true
 		"harvest": world.chapter_world.harvest(0)
 		"journal": world.chapter_world.journal()
@@ -65,6 +72,11 @@ func run(stage: String) -> void:
 	if world.modal_open:
 		var rect: Rect2 = world.panel.get_global_rect()
 		print("JOURNEY QA panel ", stage, " ", rect.size.x, " ", rect.size.y)
+		await get_tree().create_timer(0.4).timeout
+		if world.options.get_parent().scroll_vertical != 0:
+			push_error("JOURNEY QA menu did not start on its heading: " + stage)
+			return
+		print("JOURNEY QA heading visible ", stage)
 	print("JOURNEY QA stage ", stage)
 
 func _press_harvest(index: int) -> void:
