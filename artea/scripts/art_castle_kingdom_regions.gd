@@ -182,6 +182,11 @@ func _build_station_platform(kingdom_id: String, paving: Array, accent: Material
 		garden.name = "HeartArrivalGarden"
 		garden.set_script(preload("res://scripts/heart_melody/heart_arrival_garden.gd"))
 		platform.add_child(garden)
+		var music_circle := Node3D.new()
+		music_circle.name = "HeartMusicCircle"
+		music_circle.position = center + Vector3.UP * 0.20
+		music_circle.set_script(preload("res://scripts/heart_melody/heart_music_circle.gd"))
+		platform.add_child(music_circle)
 	else:
 		_add_cylinder(platform, "DeckField", center + Vector3(0, 0.02, 0), r - 8.0, 0.04, deck_material, false, 64)
 		_add_cylinder(platform, "CentrepieceInlay", center + Vector3(0, 0.06, 0), 126.0, 0.04, accent, false, 64)
