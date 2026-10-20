@@ -68,6 +68,7 @@ func run(stage: String) -> void:
 					enemy.phase = "recovery"
 					enemy.take_damage(100, world.player)
 				world._close()
+				print("JOURNEY QA flower answer wave ", wave, " cleared")
 			world.player.position = Vector3(79, 1, 8)
 			world.camera.yaw = -PI / 2
 			world.camera.pitch = -0.28

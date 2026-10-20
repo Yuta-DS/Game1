@@ -89,3 +89,26 @@ fixed or that every device will sustain 60 FPS. The smoke runner now writes
 live console logs and times out unanswered browser commands for diagnosis.
 
 Vercel login and deployment remain skipped at the user's explicit request.
+
+## Flower answer and island progression audit
+
+The optional orchard's **Answer the Flowers** menu previously saved only its
+local music activity; the story encounter required a different confirmation.
+Both confirmation menus now save the same story phrase after three committed
+seed plantings. The optional four-fruit orchard is not a story prerequisite.
+Existing saves can submit the flower answer again without losing progress.
+The HUD then directs the player to the round sandy Blight Clearing and identifies
+the pending wave. Closing the panel and entering that clearing spawns each wave.
+
+The wider audit also fixed stale instrument keyboard ownership and timing text
+when visiting Help or the journal, plus premature completion wording after an
+individual Conductor anchor. Outdoor flower-key play retains its active lesson.
+
+Native checks passed: complete ten-task chapter, progression/save migration,
+save failure safety, real island walking and earned gate crossing, instrument
+feedback, fruit bucket, final gate/signage, castle round trip, journey menus and
+Milo guidance. The chapter regression now uses the screenshot's flower menu,
+automatic wave spawning, rejects future-task shortcuts without consuming fruit,
+reloads each completed instrument, verifies journal isolation, and checks partial
+anchor feedback. An older walking test was updated to respect the deliberately
+locked gate before restoration and walk its far side only after earning entry.

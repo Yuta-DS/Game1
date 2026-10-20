@@ -663,7 +663,7 @@ async function connect() {
 			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		}
 
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error|MUSIC QA FAILURE/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error|MUSIC QA FAILURE|JOURNEY QA (?:flower answer did not|clearing did not|gate failed|fountain not|menu did not|missing control)/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();

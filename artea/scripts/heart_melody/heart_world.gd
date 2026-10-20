@@ -566,6 +566,7 @@ func _interact_nearest() -> void:
 			_pulse(item.flower)
 
 func _open(title: String, body: String) -> void:
+	if chapter_world != null: chapter_world.instrument_panel_open = false
 	_view_garden = false
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.offset_left = -380
@@ -655,6 +656,7 @@ func _button(title: String, action: Callable) -> Button:
 	return button
 
 func _close() -> void:
+	if chapter_world != null: chapter_world.instrument_panel_open = false
 	if chapter_world != null: chapter_world.challenge.cancel_playback()
 	if demonstration: audio_director.cancel()
 	_panel_generation += 1

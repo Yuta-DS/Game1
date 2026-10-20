@@ -21,6 +21,7 @@ var director := Director.new()
 var challenge := Challenge.new()
 var encounter := Encounter.new()
 var active_task := -1
+var instrument_panel_open := false
 var active_anchor := -1
 var fruit_nodes: Array[Node3D] = []
 var regrow: Dictionary = {}
@@ -271,6 +272,7 @@ func _instrument_panel() -> void:
 		8: "The shell rests after each wave. Answer this anchor's short lesson.",
 		9: "Place Echo, Sun, Dew, Bell, Moon, Harmony fruits. Then conduct North, East, South, West on four open beats."}
 	world._open(Catalog.TITLES[active_task], explanations[active_task] + "\nScore: " + _score())
+	instrument_panel_open = true
 	var steps := ["Listen / watch", "Play the pattern", "Check composition"]
 	if active_task in [2, 3]: steps = ["Read target numbers", "Tune each control", "Check composition"]
 	if active_task in [5, 9]: steps = ["Watch for OPEN", "Play the next note", "Check composition"]
@@ -328,7 +330,7 @@ func _instrument_panel() -> void:
 	world._button("Play by moving between the flower keys", world._close)
 
 func _input(event: InputEvent) -> void:
-	if active_task < 0 or not world.modal_open or not (event is InputEventKey) or not event.pressed or event.echo: return
+	if active_task < 0 or not world.modal_open or not instrument_panel_open or not (event is InputEventKey) or not event.pressed or event.echo: return
 	if world.embedded_in_overworld and not world.embedded_active: return
 	var code: int = event.physical_keycode
 	if code >= KEY_1 and code <= KEY_6 and active_task not in [2, 3]:
@@ -378,11 +380,14 @@ func submit() -> void:
 		world._notice("This answer is ready, but saving failed. Retry saving in Help, then check it again.")
 		return
 	var finished := active_task
+	var finished_anchor := active_anchor
 	active_task = -1
 	active_anchor = -1
 	refresh()
 	world.river.refresh()
-	world._notice("The valley answers. " + Catalog.TITLES[finished] + " restored.\n" + objective())
+	if finished_anchor >= 0 and director.snapshot().anchors.size() < 3:
+		world._notice("Anchor saved: %d / 3 singing. Wait for RECOVERY, then answer the remaining anchors." % director.snapshot().anchors.size())
+	else: world._notice("The valley answers. " + Catalog.TITLES[finished] + " restored.\n" + objective())
 	if finished == 9: _award_finale()
 
 func open_anchor(index: int) -> void:
@@ -428,13 +433,13 @@ func _feedback(text: String, note: int) -> void:
 		if not muted: world.note(note, 0.18)
 		if note_visuals.has(active_task * 100 + note): world._pulse(note_visuals[active_task * 100 + note])
 		for device in Input.get_connected_joypads(): Input.start_joy_vibration(device, 0.15, 0.2, 0.12 + note * 0.025)
-	if world.modal_open and is_instance_valid(world.message): world.message.text = text + "\nScore: " + _score()
+	if world.modal_open and instrument_panel_open and is_instance_valid(world.message): world.message.text = text + "\nScore: " + _score()
 
 func _score() -> String:
 	return str(challenge.input.map(func(n): return int(n) + 1))
 
 func _update_score() -> void:
-	if world.modal_open and is_instance_valid(world.message): world.message.text = caption + "\nScore: " + _score() + ("\nAssistance is available in Valley map." if challenge.failures >= 2 else "")
+	if world.modal_open and instrument_panel_open and is_instance_valid(world.message): world.message.text = caption + "\nScore: " + _score() + ("\nAssistance is available in Valley map." if challenge.failures >= 2 else "")
 
 func _beat_open() -> bool:
 	return fposmod(challenge.elapsed, 2.0) < (0.85 if assistance else (0.6 if rosin else 0.4))
@@ -466,7 +471,7 @@ func tick(delta: float) -> void:
 		timing_lens.scale = Vector3.ONE * (1.3 if _beat_open() else 0.65)
 	elif active_task == 6: timing_label.text = "QUIET · MOVE" if _quiet() else "WARNING · WAIT"
 	else: timing_label.text = ""
-	if world.modal_open and active_task in [5, 6, 9] and is_instance_valid(world.message):
+	if world.modal_open and instrument_panel_open and active_task in [5, 6, 9] and is_instance_valid(world.message):
 		world.message.text = timing_label.text + "\nScore: " + _score() + "\n" + caption
 	presentation.update(chapter.tasks.size(), focus, caption if clock < feedback_until else "", world._large_text)
 

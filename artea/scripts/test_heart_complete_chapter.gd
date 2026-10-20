@@ -62,8 +62,25 @@ func run() -> void:
 		world._close()
 	check(world.progress.committed.complete, "original garden and encounters complete")
 	for task in range(2, 8):
+		var before: Dictionary = chapter.director.snapshot()
+		check(not chapter.director.finish_instrument(task + 1, Catalog.PATTERNS[task + 1]), "future task %d cannot skip current island" % (task + 1))
+		check(chapter.director.snapshot() == before, "rejected future task consumes no story fruit")
 		chapter.open_instrument(task)
 		check(chapter.active_task == task, "instrument %d opens in quest order" % task)
+		# Leaving an unfinished instrument must not give it keyboard ownership
+		# of the journal, or let timing captions replace the current objective.
+		world._close()
+		chapter.journal()
+		var journal_text: String = world.message.text
+		var previous_input: Array = chapter.challenge.input.duplicate()
+		var key := InputEventKey.new()
+		key.physical_keycode = KEY_1
+		key.pressed = true
+		chapter._input(key)
+		chapter.tick(0.1)
+		check(chapter.challenge.input == previous_input and world.message.text == journal_text, "task %d cannot control journal" % task)
+		world._close()
+		chapter.open_instrument(task)
 		if task in [2, 3]:
 			for i in Catalog.PATTERNS[task].size(): chapter.challenge.tune(i, Catalog.PATTERNS[task][i])
 		else:
@@ -73,12 +90,17 @@ func run() -> void:
 				chapter.play(note)
 		chapter.submit()
 		check(Catalog.TASKS[task] in world.progress.committed.chapter.tasks, "instrument %d saves completion" % task)
+		var task_reload := Progress.new()
+		task_reload.path = world.progress.path
+		task_reload.load_progress()
+		check(task_reload.committed.chapter.tasks == world.progress.committed.chapter.tasks, "task %d unlock survives reload" % task)
 		world._close()
 	for i in 3:
 		chapter.encounter.phase = "recovery"
 		chapter.open_anchor(i)
 		for note in chapter.challenge.target: chapter.play(note)
 		chapter.submit()
+		if i < 2: check(world.message.text.contains("%d / 3" % (i + 1)), "partial anchor reports remaining work")
 		world._close()
 		check(world.progress.committed.chapter.anchors.size() == i + 1, "anchor persists independently")
 		if i == 0:
