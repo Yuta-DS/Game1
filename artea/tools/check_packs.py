@@ -53,6 +53,8 @@ def main():
     core_mb = os.path.getsize(os.path.join(build_dir, "index.pck")) / 1048576
     state = f"{core_mb - budget_mb:.1f} MB over" if core_mb > budget_mb else "within"
     print(f"Core + Hub (index.pck): {core_mb:.1f} MB against a {budget_mb:.0f} MB budget ({state})")
+    if core_mb > budget_mb:
+        problems.append(f"Bootstrap pack exceeds its {budget_mb:.0f} MB startup budget: {core_mb:.1f} MB")
     if problems:
         print("\n".join(problems[:20]), file=sys.stderr)
         sys.exit(f"{len(problems)} problem(s) with the exported Packs")

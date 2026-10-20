@@ -347,6 +347,7 @@
 			prefetch.queue.push(...files.filter((file) => !prefetch.queue.includes(file)));
 			if (prefetch.running) return;
 			prefetch.running = true;
+			prefetch.doneAt = null;
 			prefetch.startedAt = prefetch.startedAt ?? performance.now();
 			(async () => {
 				for (let i = 0; i < prefetch.queue.length; i += 1) {

@@ -18,6 +18,7 @@
 //
 //   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open] [--repeat]
 //       [--latency MS] [--mbps N] [--fail-part NN] [--fail-times K]
+//       [--startup-only] (login, hub entry and movement; skips later worlds)
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
@@ -60,7 +61,7 @@ const failTimes = Number(option('--fail-times') ?? 2);
 // Requests pck-loader.js makes for one part before showing its Retry overlay:
 // the first try plus RETRY_DELAYS_MS.length retries.
 const LOADER_ATTEMPTS = 4;
-const DEBUG_PORT = 9222;
+const DEBUG_PORT = Number(process.env.ARTEA_SMOKE_DEBUG_PORT || 9222);
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
 // current login screen puts it at y=726; deployments still running the older,
@@ -241,6 +242,8 @@ async function connect() {
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
 	await send('Runtime.enable');
 	await send('Page.enable');
+	await send('Page.bringToFront');
+	await send('Emulation.setFocusEmulationEnabled', { enabled: true });
 	await send('Network.enable');
 	// Cold load every run, even against a Chrome the user started themselves.
 	// --repeat needs the cache on so the second visit can use it; the first
@@ -377,6 +380,25 @@ async function connect() {
 			}
 		}
 		await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
+		await waitForLog(/\[ARTEA\] loading screen done: res:\/\/scenes\/New_Hub_World.tscn/, 'hub controls ready', 240000);
+		if (args.includes('--startup-only')) {
+			const before = await shot('02-in-hub');
+			await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+			await key('keyDown', 'KeyW', 87);
+			await sleep(2500);
+			await key('keyUp', 'KeyW', 87);
+			const after = await shot('03-after-move');
+			const fatal = consoleLines.filter((line) => /SCRIPT ERROR|Parse Error|EXCEPTION|SceneLoader: could not open/.test(line));
+			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+			reportMetrics();
+			if (crashed() || before.equals(after) || fatal.length) {
+				throw new Error('Startup/movement check failed: ' + fatal.slice(0, 3).join('; '));
+			}
+			console.log('RESULT: STARTUP AND HUB PLAYABLE');
+			if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+			await closeOwnChrome();
+			process.exit(0);
+		}
 		const evaluate = async (expression) => (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
 		// Every frame's timestamp from here on, to compare the Hub's frame pacing
 		// while the other areas' Packs download in the background with after.
@@ -474,6 +496,7 @@ async function connect() {
 		const KINGDOMS = [
 			['Mind Spark', 'res://scenes/popThoughtsMenu.tscn'],
 			['Heart Melody', 'res://scenes/music_minigame.tscn'],
+			['Heart Melody valley', 'res://scenes/heart_melody/heart_melody_world.tscn'],
 			["Creator's Light", 'res://scenes/drawing_tool.tscn'],
 		];
 		for (const [index, [label, scene]] of KINGDOMS.entries()) {
@@ -485,7 +508,7 @@ async function connect() {
 			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		}
 
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();

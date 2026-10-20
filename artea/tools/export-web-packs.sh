@@ -24,6 +24,19 @@ presets="${project_dir}/export_presets.cfg"
 backup="${presets}.packs-backup"
 manifest="${project_dir}/packs.json"
 
+# Settle new scripts/import UIDs before analyzing the resource graph.
+echo "Importing project before generating Pack presets"
+"${godot_bin}" --headless --editor --path "${project_dir}" --import --quit \
+	> "${build_dir}/import.log" 2>&1
+
+echo "Preparing castle tree geometry"
+"${godot_bin}" --headless --path "${project_dir}" --script res://tools/bake_castle_tree.gd \
+	> "${build_dir}/castle-tree-bake.log" 2>&1
+grep -q "CASTLE TREE BAKE: PASS" "${build_dir}/castle-tree-bake.log" || {
+	cat "${build_dir}/castle-tree-bake.log" >&2
+	exit 1
+}
+
 # Same guard as with-web-export-plugins.sh: a leftover backup means a run was
 # killed mid-export, and copying over it would lose the real presets.
 if [[ -e "${backup}" ]]; then
@@ -32,7 +45,7 @@ if [[ -e "${backup}" ]]; then
 	exit 1
 fi
 cp "${presets}" "${backup}"
-trap 'mv -f "${backup}" "${presets}"; rm -f "${manifest}"' EXIT
+trap 'mv -f "${backup}" "${presets}"; rm -f "${manifest}" "${project_dir}/export_presets.generated.cfg"' EXIT
 
 echo "Working out the Packs"
 split_log="$("${godot_bin}" --headless --path "${project_dir}" \
@@ -42,6 +55,8 @@ split_log="$("${godot_bin}" --headless --path "${project_dir}" \
 	exit 1
 }
 grep -E "^PACK" <<<"${split_log}"
+mv -f "${project_dir}/export_presets.generated.cfg" "${presets}"
+cp "${manifest}" "${build_dir}/web-packs.json"
 packs=$(sed -n 's/^PACK \([a-z_0-9]*\): .*/\1/p' <<<"${split_log}")
 
 # Old Packs from a previous export would otherwise be served with this Core.

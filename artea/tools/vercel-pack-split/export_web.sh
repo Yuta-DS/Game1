@@ -21,12 +21,19 @@ if [[ ! -x "${godot_bin}" ]]; then
 	exit 1
 fi
 
+# Git Bash can finish the Windows console launcher before its child closes
+# export files. Run the engine directly so preset restoration waits for it.
+if [[ "${godot_bin}" == *_console.exe && -x "${godot_bin%_console.exe}.exe" ]]; then
+	godot_bin="${godot_bin%_console.exe}.exe"
+fi
+
 if "${godot_bin}" --version | grep -qi mono; then
 	echo "Web export requires the standard non-Mono Godot executable." >&2
 	exit 1
 fi
 
 mkdir -p "${output_dir}"
+touch "${output_dir}/.export-in-progress"
 
 # Core plus one .pck per area Pack (issue #35), with the Web-only export
 # plugins (texture slimming, issue #39) on.
@@ -47,4 +54,5 @@ done
 cp "${script_dir}/vercel.json" "${output_dir}/vercel.json"
 cp "${script_dir}/.vercelignore" "${output_dir}/.vercelignore"
 
+rm -f "${output_dir}/.export-in-progress"
 echo "Web build ready in ${output_dir}"
