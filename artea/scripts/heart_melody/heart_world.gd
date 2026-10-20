@@ -602,6 +602,14 @@ func _fit_panel() -> void:
 	panel.offset_top = -height * 0.5
 	panel.offset_bottom = height * 0.5
 	panel.size.y = height
+	# Flow cards add content before the buttons. Keep keyboard/controller
+	# focus inside the new menu rather than on a hidden exploration prompt.
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused == null or not options.is_ancestor_of(focused):
+		for button in options.find_children("*", "Button", true, false):
+			if not button.disabled:
+				button.grab_focus()
+				break
 
 func _flow(steps: Array, active := 0) -> Control:
 	var result := UI.flow(options, steps, active)

@@ -20,6 +20,7 @@
 //       [--latency MS] [--mbps N] [--fail-part NN] [--fail-times K]
 //       [--startup-only] (login, hub entry and movement; skips later worlds)
 //       [--music-circle] (instruments, seated piano, maze, fountain and Milo)
+//       [--heart-journey] (staged garden UI, voice lifecycle, fountain and gate)
 //       [--profile-frames] (opt-in release telemetry and reversible A/B samples)
 //       [--profile-hub] (with --profile-frames: Hub diagnostics only)
 //       [--profile-rigid-milo] (with both above: compare the optimizer on an older build)
@@ -618,6 +619,22 @@ async function connect() {
 			await tap('KeyQ', 81, 'q');
 			await waitForLog(/MAZE QA return works/, 'maze return to entrance', 10000);
 			musicCirclePlayable = true;
+		}
+		if (castle && args.includes('--heart-journey')) {
+			for (const name of ['heart_journey_web_qa.gd', 'heart_journey_web_qa.tscn']) {
+				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8').replace('res://tools/qa/heart_journey_web_qa.gd', '/tmp/heart_journey_web_qa.gd');
+				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
+			}
+			if (!await goTo('the Melody journey test', '/tmp/heart_journey_web_qa.tscn')) throw new Error('Journey fixture failed');
+			await waitForLog(/JOURNEY QA ready/, 'garden presentation fixture', 20000);
+			for (const stage of ['intro', 'transcript', 'harvest', 'journal', 'fountain', 'gate', 'instrument']) {
+				const from = consoleLines.length;
+				await evaluate(`window.arteaJourneyQA(${JSON.stringify(stage)})`);
+				await waitForLog(new RegExp('JOURNEY QA stage ' + stage), stage + ' presentation', 10000, from);
+				await sleep(stage === 'gate' ? 300 : 700);
+				await shot('journey-' + stage);
+				if (stage === 'transcript') await waitForLog(/JOURNEY QA voice ended and transcript hidden/, 'voice ends and transcript disappears', 60000, from);
+			}
 		}
 		areas.push(['the Art Castle', castle, castle ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		const KINGDOMS = [

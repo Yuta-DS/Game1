@@ -28,6 +28,7 @@ func run() -> void:
 	world._intro()
 	await process_frame
 	check(world.options.get_node_or_null("ActivityFlow") != null, "Arrival teaches one visual sequence")
+	check(world.options.is_ancestor_of(root.gui_get_focus_owner()), "Keyboard and controller focus starts inside the activity menu")
 	check(world.message.text.length() < 350 and not world.message.text.contains("Silent Conductor"), "Arrival does not dump future chapters")
 	world._close()
 	world.chapter_world.journal()
