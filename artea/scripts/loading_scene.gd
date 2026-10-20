@@ -517,13 +517,8 @@ func _warm_shaders() -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
-	# Warm the real castle arrival view rather than a second quad scene with
-	# different lighting. The opaque loader remains until actual frames settle.
-	if OS.has_feature("web") and next_scene_path == "res://scenes/art_gallery_3d_inprogress.tscn":
-		_restore_world_rendering()
-		await get_tree().process_frame
-		await get_tree().process_frame
-		return
+	# Include hidden and distant cells, including the castle. Preparing only
+	# the arrival view leaves synchronous compiles for the first camera turn.
 	# Benchmark escape hatch (tools/bench_castle_cold.gd), so the before/after
 	# can be measured in the same build rather than by reverting the change.
 	if Engine.has_meta("artea_skip_shader_warmup"):

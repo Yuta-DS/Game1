@@ -47,6 +47,29 @@ func run() -> void:
 	assert(Warmup.unwarmed([material_b]).is_empty(), "Reloaded identical shader sources reuse warmup")
 	shader_b.code = "shader_type spatial; render_mode unshaded; void fragment() { ALBEDO = vec3(1.0); }"
 	assert(Warmup.unwarmed([material_b]).size() == 1, "Modified shader programs must warm again")
+	# Distant streaming cells start hidden. Their ordinary and instanced
+	# materials must still be prepared before the first camera turn.
+	var district := Node3D.new()
+	district.hide()
+	var mesh := BoxMesh.new()
+	mesh.material = other_program
+	var distant := MeshInstance3D.new()
+	distant.mesh = mesh
+	district.add_child(distant)
+	var instances := MultiMeshInstance3D.new()
+	instances.multimesh = MultiMesh.new()
+	instances.multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	instances.multimesh.mesh = mesh
+	instances.material_override = material_b
+	district.add_child(instances)
+	var hidden_materials := Warmup.collect(district)
+	assert(hidden_materials.has(other_program) and hidden_materials.has(material_b),
+		"Hidden and instanced world materials are included in loading warmup")
+	var rig := Warmup.build_rig(hidden_materials)
+	assert(Warmup.warm_node_count(rig) == hidden_materials.size() * 2,
+		"Prepare both ordinary and instanced shader variants")
+	rig.free()
+	district.free()
 	var loader = load("res://scenes/loading_scene.tscn").instantiate()
 	loader._main_viewport = root
 	loader._previous_disable_3d = false
