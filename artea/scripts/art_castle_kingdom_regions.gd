@@ -220,9 +220,9 @@ func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
 	var away := Vector3(landing.x - station.x, 0.0, landing.z - station.z).normalized()
 	var easel := Node3D.new()
 	easel.name = "CreatorCentrepieceEasel"
-	easel.position = center + Vector3(0, 16, 0)
+	easel.position = center + Vector3(0, 30, 0)
 	easel.rotation.y = atan2(away.x, away.z)
-	easel.rotation.x = deg_to_rad(8.0)
+	easel.rotation.x = deg_to_rad(20.0)
 	# A little further from the arrival line than the first pass, so players
 	# meet the dais before they meet the easel itself.
 	easel.position += easel.transform.basis.z * 15.0
@@ -259,12 +259,45 @@ func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
 	canvas_group.name = "CentrepieceCanvasGroup"
 	# z=-5 sat flush with the crossbar/legs plane and clipped into them;
 	# pulled forward (local -Z, toward the station) to clear the easel.
-	canvas_group.position = Vector3(0, 115, -20)
+	canvas_group.position = Vector3(0, 105, -20)
 	canvas_group.rotation.z = deg_to_rad(6.0)
 	canvas_group.rotation.x = deg_to_rad(25.0)
 	easel.add_child(canvas_group)
 	_add_box(canvas_group, "CentrepieceCanvas", Vector3.ZERO, Vector3(70, 90, 4), _materials.canvas)
 	_build_frame(canvas_group, Vector3(0, -45, 0), 70, 90, _materials.gold)
+
+	# The brush floats tip-down, clear of the canvas.
+	var brush_x := 8.0
+	var brush_z := -57.0
+	_add_sphere(canvas_group, "CentrepieceBrushTip", Vector3(brush_x, 10, brush_z),
+		Vector3(3.08, 4.9, 3.08), _materials.shadow)
+	_add_box(canvas_group, "CentrepieceBrushFerrule", Vector3(brush_x, 17, brush_z),
+		Vector3(5.04, 7.0, 5.04), _materials.shadow)
+	_add_box(canvas_group, "CentrepieceBrushHandle", Vector3(brush_x, 28, brush_z),
+		Vector3(4.2, 25.2, 4.2), _materials.wood)
+
+	# A short paint trail that continues down past the tip (the direction the
+	# brush is already pointing), then curves back upward. Still plain
+	# spheres — no per-blob rotation, just a position lerp and a uniform
+	# scale — but the two curve points are rotated 30 degrees further
+	# downward around the tip (local X axis) before the curve is built.
+	var trail_start := Vector3(brush_x, 8.0, brush_z)
+	var trail_tilt := deg_to_rad(30.0)
+	var bulge_rel := Vector3(15.0, -26.0, 10.0)
+	var turn_rel := Vector3(28.0, -2.0, 22.0)
+	bulge_rel = Vector3(bulge_rel.x, bulge_rel.y * cos(trail_tilt) - bulge_rel.z * sin(trail_tilt),
+		bulge_rel.y * sin(trail_tilt) + bulge_rel.z * cos(trail_tilt))
+	turn_rel = Vector3(turn_rel.x, turn_rel.y * cos(trail_tilt) - turn_rel.z * sin(trail_tilt),
+		turn_rel.y * sin(trail_tilt) + turn_rel.z * cos(trail_tilt))
+	var trail_bulge := trail_start + bulge_rel
+	var trail_turn := trail_start + turn_rel
+	var trail_blobs := 8
+	for step in trail_blobs:
+		var t := float(step + 1) / float(trail_blobs)
+		var point: Vector3 = trail_start.lerp(trail_bulge, t).lerp(
+			trail_bulge.lerp(trail_turn, t), t)
+		_add_sphere(canvas_group, "CentrepiecePaintTrail_%d" % step, point,
+			Vector3.ONE * lerp(3.2, 1.3, t), _materials.gold)
 
 
 func _build_landmass(parent: Node3D, kingdom_id: String, center: Vector3) -> void:
