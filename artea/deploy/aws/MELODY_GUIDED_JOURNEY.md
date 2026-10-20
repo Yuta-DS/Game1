@@ -112,3 +112,14 @@ automatic wave spawning, rejects future-task shortcuts without consuming fruit,
 reloads each completed instrument, verifies journal isolation, and checks partial
 anchor feedback. An older walking test was updated to respect the deliberately
 locked gate before restoration and walk its far side only after earning entry.
+
+Web release `97fc9465a205f200` passed the full diagnostic browser tour
+(`work/flower-garden-browser-run.log`, RESULT: PLAYABLE). The transient journey
+fixture used real flower-menu buttons and automatic clearing entry, observed and
+released both enemy waves, then verified the River Song gate opening. Native
+combat tests separately exercise the player's strike input and recovery window.
+All tested worlds returned to the Hub; no fatal script/resource errors were
+reported. All 102 packaged and hosted files passed manifest/header checks
+(`work/flower-garden-hosting-verify.log`). Local preview: port 8906.
+These checks establish the tested progression paths, not a guarantee against
+every possible gameplay or device-specific issue.
