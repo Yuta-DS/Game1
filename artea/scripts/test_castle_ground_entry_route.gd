@@ -128,9 +128,19 @@ func _run() -> void:
 		return
 	for barrier in grounded_entry.find_children(
 			"GroundEntry*Barrier", "MeshInstance3D", true, false):
-		if not barrier.find_children("*", "StaticBody3D", true, false).is_empty():
-			_fail("decorative ground-entry barrier can physically snag the player: %s"
+		if barrier.find_children("*", "StaticBody3D", true, false).size() != 1:
+			_fail("ground-entry barrier does not stop the player clipping through it: %s"
 				% barrier.name)
+			return
+		var inward: Vector3 = barrier.global_basis.x.normalized()
+		if inward.dot(promenade.global_position - barrier.global_position) < 0.0:
+			inward = -inward
+		var probe := player.global_transform
+		probe.origin = barrier.global_position + inward * 1.6 + Vector3.UP * 0.15
+		var hit := KinematicCollision3D.new()
+		if not player.test_move(probe, -inward * 3.0, hit) \
+				or hit.get_collider() != barrier.get_child(0):
+			_fail("player capsule can pass through the visible %s" % barrier.name)
 			return
 	var treads := stair.find_children("StairTread_*", "MeshInstance3D", true, false)
 	treads.sort_custom(func(a, b):

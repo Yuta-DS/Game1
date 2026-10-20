@@ -2,7 +2,7 @@ extends Node3D
 
 const Art = preload("res://scripts/heart_melody/heart_art.gd")
 const ISLAND_ORIGIN := Vector3(1400, 45, 8000)
-const WALK_START := Vector3(1722.4, 0.05, 7838.7)
+const WALK_START := Vector3(1722.4, 0.20, 7838.7)
 const WALK_TURN := Vector3(1504, 45, 7988)
 const WALK_FINISH := Vector3(1470, 45, 7988)
 var player: CharacterBody3D
