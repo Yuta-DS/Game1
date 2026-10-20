@@ -1888,18 +1888,6 @@ func _build_island_foundation(parent: Node3D, center: Vector3, radius: float,
 	underside.position = center + Vector3(0.0, -depth * 0.5 - 2.0, 0.0)
 	underside.material_override = _materials.ivory_shadow
 	parent.add_child(underside)
-	for index in 12:
-		var angle := TAU * float(index) / 12.0
-		var crystal := MeshInstance3D.new()
-		var crystal_mesh := CylinderMesh.new()
-		crystal_mesh.top_radius = radius * 0.035
-		crystal_mesh.bottom_radius = radius * 0.006
-		crystal_mesh.height = depth * (0.55 + float(index % 3) * 0.10)
-		crystal_mesh.radial_segments = 5
-		crystal.mesh = crystal_mesh
-		crystal.position = center + Vector3(cos(angle) * radius * 0.72, -depth * 0.78, sin(angle) * radius * 0.72)
-		crystal.material_override = _materials.ivory_shadow
-		parent.add_child(crystal)
 
 
 func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) -> void:
