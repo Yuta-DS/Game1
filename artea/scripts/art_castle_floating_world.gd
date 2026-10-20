@@ -147,6 +147,20 @@ const RETURN_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 var _player: CharacterBody3D
 var _materials: Dictionary = {}
 var _animated_nodes: Array[Node3D] = []
+# Animation only runs near the player (_update_nearby_animation): the spinning
+# rings and cogs, characters' AnimationPlayers, every particle effect such as
+# the fountain's water, and scripts in ANIMATE_NEAR_GROUP. From further away
+# they hold still, which nobody can tell at that distance, and the world stops
+# paying for motion it is not showing.
+const ANIMATE_RADIUS := 160.0
+const ANIMATE_CHECK_SECONDS := 0.5
+## Joined (in _init) by nodes whose _process only animates them; it is paused
+## beyond ANIMATE_RADIUS.
+const ANIMATE_NEAR_GROUP := &"animate_near_player"
+var _animated_near: Array[bool] = []
+var _spin_tweens: Array = []  # [pivot: Node3D, tween: Tween]
+var _gated: Array[Node] = []  # AnimationMixers, particles, ANIMATE_NEAR_GROUP
+var _animate_check := 0.0
 var _travelling := false
 var _tree_christmas_melody: AudioStreamPlayer3D
 var _tree_christmas_bells: AudioStreamPlayer3D
@@ -161,6 +175,11 @@ const TREE_CHRISTMAS_FADE_OUT_SPEED := 0.28
 
 
 func _ready() -> void:
+	# Everything built below (and later, such as the embedded worlds' cast)
+	# arrives through node_added; what the scene file brought is already here.
+	for node in find_children("*", "", true, false):
+		_track_animation(node)
+	get_tree().node_added.connect(_track_animation)
 	_player = get_node_or_null("Player3D") as CharacterBody3D
 	if _player == null and embedded_in_gallery and get_parent() != null:
 		_player = get_parent().get_node_or_null("Player3D") as CharacterBody3D
@@ -184,6 +203,65 @@ func _ready() -> void:
 		_build_standalone_minimap()
 		_build_return_gate()
 	_build_streaming_director()
+
+
+func _track_animation(node: Node) -> void:
+	if not is_ancestor_of(node):
+		return
+	if node is AnimationMixer:
+		node.set_meta(&"animate_mode", node.process_mode)
+	elif node is GPUParticles3D or node is CPUParticles3D:
+		node.set_meta(&"animate_speed", node.get("speed_scale"))
+	elif not node.is_in_group(ANIMATE_NEAR_GROUP):
+		return
+	_gated.append(node)
+
+
+## Runs the world's animation within ANIMATE_RADIUS of the player and holds it
+## still beyond: rotating rings, spinning cogs and the like pause, characters
+## stop animating, and particle effects (the fountain's water, sprays) freeze
+## where they are.
+func _update_nearby_animation() -> void:
+	var eye := Vector3.ZERO
+	if _player != null and is_instance_valid(_player):
+		eye = _player.global_position
+	elif get_viewport().get_camera_3d() != null:
+		eye = get_viewport().get_camera_3d().global_position
+	_animated_near.resize(_animated_nodes.size())
+	for index in _animated_nodes.size():
+		var node := _animated_nodes[index]
+		_animated_near[index] = is_instance_valid(node) and _is_near(node, eye)
+	for entry in _spin_tweens:
+		var pivot: Node3D = entry[0]
+		var spin: Tween = entry[1]
+		if not is_instance_valid(pivot) or not spin.is_valid():
+			continue
+		var near := _is_near(pivot, eye)
+		if near and not spin.is_running():
+			spin.play()
+		elif not near and spin.is_running():
+			spin.pause()
+	var live: Array[Node] = []
+	for node in _gated:
+		if not is_instance_valid(node):
+			continue
+		live.append(node)
+		# An AnimationPlayer is a plain Node; it animates its parent.
+		var anchor := node as Node3D if node is Node3D else node.get_parent() as Node3D
+		if anchor == null:
+			continue
+		var near := _is_near(anchor, eye)
+		if node.is_in_group(ANIMATE_NEAR_GROUP):
+			node.set_process(near)
+		elif node is AnimationMixer:
+			node.process_mode = node.get_meta(&"animate_mode") if near else Node.PROCESS_MODE_DISABLED
+		else:
+			node.set("speed_scale", node.get_meta(&"animate_speed") if near else 0.0)
+	_gated = live
+
+
+func _is_near(node: Node3D, eye: Vector3) -> bool:
+	return node.is_visible_in_tree() and node.global_position.distance_to(eye) <= ANIMATE_RADIUS
 
 
 func _build_streaming_director() -> void:
@@ -217,9 +295,14 @@ func _build_standalone_minimap() -> void:
 
 
 func _process(delta: float) -> void:
+	_animate_check -= delta
+	if _animate_check <= 0.0:
+		_animate_check = ANIMATE_CHECK_SECONDS
+		_update_nearby_animation()
 	for index in _animated_nodes.size():
-		var node := _animated_nodes[index]
-		node.rotation.y += delta * (0.10 + float(index % 5) * 0.018)
+		if index < _animated_near.size() and _animated_near[index]:
+			var node := _animated_nodes[index]
+			node.rotation.y += delta * (0.10 + float(index % 5) * 0.018)
 	if _player != null and _player.global_position.y < -120.0:
 		var respawn := PLAYER_SPAWN
 		var regions := get_node_or_null("KingdomRegions3000m")
@@ -433,6 +516,11 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 	parent.add_child(fountain)
 	var water := _make_glow(Color(0.35, 0.85, 1.0, 0.55), 0.35, true)
 	var spray := _make_glow(Color(0.75, 0.95, 1.0, 0.8), 0.9, true)
+	# Translucent things are sorted by their centres, and every curtain, pool and
+	# particle system here is centred on the fountain's axis - a curtain and its
+	# streaks at the very same point - so their order flipped with the view angle
+	# and the water came and went. Spray always draws over the water sheets.
+	spray.render_priority = 1
 
 	# [radius, wall top]. Every tier is a pool: a solid core up to its floor,
 	# a solid wall with a 0.3 m gold cap, and wadeable water with no
@@ -805,6 +893,14 @@ func _build_castle_to_galaxy_reference_bridge(parent: Node3D, start: Vector3,
 	if blender_asset != null:
 		blender_asset.name = "BlenderCastleGalaxyBridgeGate"
 		asset_holder.add_child(blender_asset)
+		# The bridge's first newel posts stand where the gallery's doorway jambs
+		# are (global x = +/-7.5, z = 20), buried in the masonry - all but the
+		# tip of each slate cap, which came through the jamb face as a dark
+		# triangle. Those caps go.
+		var to_asset := blender_asset.global_transform.affine_inverse()
+		for side in [-1.0, 1.0]:
+			_cut_tree_meshes(blender_asset, ["Roofs"], to_asset * AABB(
+				Vector3(6.5 if side > 0.0 else -8.6, 1.8, 19.0), Vector3(2.1, 7.2, 2.0)))
 	parent.set_meta("reference", "user_supplied_bridge_gate_image")
 	parent.set_meta("blender_editable_module_count", 1437)
 	parent.set_meta("blender_runtime_mesh_group_count", 13)
@@ -2115,6 +2211,9 @@ func _build_life_tree(parent: Node3D, center: Vector3) -> void:
 	var design := manifest.get("design", {}) as Dictionary
 	var tree := Node3D.new()
 	tree.name = "TreeOfImagination"
+	# Its leaves and ornaments are small, but they are the tree: drawn at any
+	# distance rather than coming and going with the detail around it.
+	tree.add_to_group(StreamingDirector.ALWAYS_DRAWN_GROUP)
 	tree.position = center + Vector3.UP * TREE_OF_LIFE_COURT_SURFACE_Y
 	tree.set_meta("architecture", "nature_magic_technology_engineering")
 	tree.set_meta("blueprint_revision", manifest.get("blueprint_revision", ""))
@@ -4885,6 +4984,7 @@ func _spin_forever(pivot: Node3D, seconds: float, axis: String = "y") -> void:
 	var spin := pivot.create_tween().set_loops()
 	spin.tween_property(pivot, "rotation:%s" % axis,
 		TAU * signf(seconds), absf(seconds)).from(0.0)
+	_spin_tweens.append([pivot, spin])
 
 
 func _make_crystal_outline_material() -> StandardMaterial3D:

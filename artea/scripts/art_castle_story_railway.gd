@@ -306,9 +306,20 @@ func _process(delta: float) -> void:
 	# relying only on the earlier queued target leaves the camera one frame behind.
 	if _manual_driving or (_seated_passenger and _passenger_seat_index >= 0):
 		_place_rider()
-	_update_train_mechanisms(delta)
+	if _animates_near(_train):
+		_update_train_mechanisms(delta)
+	elif _train != null:
+		# Kept current so the first frame back does not read as a jump.
+		_last_train_position = _train.global_position
 	_update_island_power_effect(delta)
 	_update_prompt()
+
+
+## Whether `node` is close enough to the player to animate: the same
+## ANIMATE_RADIUS (160 m) art_castle_floating_world.gd holds its own motion to.
+func _animates_near(node: Node3D) -> bool:
+	return node != null and (_player == null or _riding or _manual_driving
+		or node.global_position.distance_to(_player.global_position) <= 160.0)
 func _unhandled_input(event: InputEvent) -> void:
 	if _player == null:
 		return
@@ -1926,7 +1937,7 @@ func _update_island_power_effect(delta: float) -> void:
 		return
 	for rotor_index in _island_power_rotors.size():
 		var rotor := _island_power_rotors[rotor_index]
-		if is_instance_valid(rotor):
+		if is_instance_valid(rotor) and _animates_near(rotor):
 			var direction := 1.0 if rotor_index % 2 == 0 else -1.0
 			rotor.rotate_y(delta * direction * (0.22 + float(rotor_index) * 0.045))
 	for light_index in _island_power_lights.size():

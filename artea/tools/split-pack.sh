@@ -6,9 +6,17 @@
 #
 # Writes, next to the file:
 #
-#   parts/index.pck.<hash>.part00, part01, ...   8 MB slices, named by content
+#   parts/index.pck.<hash>.part00, part01, ...   8 MB slices, named by content,
+#                                                 each gzipped
 #   index.pck.parts.json                          {"count","bytes","partBytes",
-#                                                  "hash","parts":[{name,size}]}
+#                                                  "hash","encoding",
+#                                                  "parts":[{name,size}]}
+#
+# Each part is gzipped on its own and pck-loader.js inflates it in the browser
+# (DecompressionStream). Hosts do not compress the parts themselves - they are
+# opaque binary - and Cloudflare strips a Content-Encoding set by hand, so this
+# is the only way the download gets smaller: 38% off Core, 76% off the engine's
+# index.side.wasm. Per part, so a retry or resume still costs one part.
 #
 # pck-loader.js fetches the manifest uncached, then the parts it lists. Because
 # a part's name carries the hash of the whole file it came from, a new export
@@ -50,6 +58,7 @@ for stale in "${dir}/parts/${name}".*.part[0-9]*; do
 done
 
 if [[ -f "${manifest}" ]] && grep -q "\"hash\":\"${hash}\"" "${manifest}" \
+		&& grep -q '"encoding":"gzip"' "${manifest}" \
 		&& [[ -f "${dir}/parts/${name}.${hash}.part00" ]]; then
 	echo "  ${name}: parts up to date (${hash})"
 	exit 0
@@ -64,13 +73,16 @@ index=0
 entries=""
 for tmp in "${dir}/parts/${name}.${hash}.tmp"??; do
 	part="$(printf '%s.%s.part%02d' "${name}" "${hash}" "${index}")"
-	mv "${tmp}" "${dir}/parts/${part}"
+	# -n: no name or time in the header, so the same input always gives the
+	# same bytes.
+	gzip -6 -n -c "${tmp}" > "${dir}/parts/${part}"
+	rm -f "${tmp}"
 	part_size=$(stat -c '%s' "${dir}/parts/${part}" 2>/dev/null || stat -f '%z' "${dir}/parts/${part}")
 	entries+="${entries:+,}{\"name\":\"parts/${part}\",\"size\":${part_size}}"
 	index=$((index + 1))
 done
 
 # "bytes" stays the first key: web.sh status reads it with a simple sed.
-printf '{"bytes":%d,"count":%d,"partBytes":%d,"hash":"%s","parts":[%s]}\n' \
+printf '{"bytes":%d,"count":%d,"partBytes":%d,"hash":"%s","encoding":"gzip","parts":[%s]}\n' \
 	"${size}" "${index}" "${part_bytes}" "${hash}" "${entries}" > "${manifest}"
 echo "  ${name}: ${index} parts (${hash})"
