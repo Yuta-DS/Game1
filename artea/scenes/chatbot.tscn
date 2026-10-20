@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bslgdnvsaqhn2" path="res://scenes/chatbot.gd" id="1_7qo2j"]
 [ext_resource type="Theme" path="res://assets/Fonts/opendyslexic_theme.tres" id="2_odtheme"]
+[ext_resource type="FontFile" uid="uid://csiqg248ql0s2" path="res://assets/Fonts/OpenDyslexic-Bold.otf" id="3_odbold"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_an77j"]
 
@@ -78,6 +79,7 @@ size_flags_vertical = 3
 size_flags_stretch_ratio = 0.45
 theme_override_colors/default_color = Color(0.11, 0.1, 0.12, 1)
 theme_override_constants/line_separation = 2
+theme_override_fonts/normal_font = ExtResource("3_odbold")
 theme_override_constants/paragraph_separation = 9
 theme_override_font_sizes/normal_font_size = 18
 theme_override_font_sizes/bold_font_size = 18
