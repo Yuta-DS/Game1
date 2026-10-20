@@ -192,6 +192,79 @@ func _build_station_platform(kingdom_id: String, paving: Array, accent: Material
 	platform.add_child(underside)
 	_add_label(platform, str(STATION_PLATFORM_TITLES[kingdom_id]), center + Vector3(0, 160, 0),
 		_kingdom_color(kingdom_id), 160)
+	if kingdom_id == "creator":
+		_build_creator_centrepiece(platform, center)
+
+
+## The plaza _build_station_platform reserves (CentrepieceSpace, 118 m
+## radius) was never filled in. A single oversized easel and canvas,
+## hovering clear of its dais — this kingdom's own drawing mechanic (see
+## art_castle_floating_world.gd's player-painted easels) made into the one
+## landmark you see on arrival, rather than a new symbol.
+func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
+	_add_cylinder(parent, "CentrepieceDais", center + Vector3(0, 4, 0), 50.0, 8.0,
+		_materials.ivory, false, 24)
+	# A gold glow pooling under the easel reads as "lit from within" rather
+	# than just "gold-coloured", and sells the hover gap above the dais.
+	_add_cylinder(parent, "CentrepieceGlow", center + Vector3(0, 9, 0), 42.0, 0.3,
+		_material(Color("f1ac32"), 0.3, Color("f1ac32"), 1.4), false, 24)
+
+	# _platform_center's own "away" vector (station -> landing -> centre) is
+	# the line the player actually walks in on. For "creator" that line runs
+	# along X, not Z. Face the canvas's local -Z (its painted side) straight
+	# down +away, back at the station itself, then add a slight backward
+	# lean (local +X) so the whole easel reads as propped up, not bolt
+	# upright.
+	var landing: Vector3 = STORY_ROUTES["creator"][0].position
+	var station: Vector3 = FLOATING_STATIONS["creator"]
+	var away := Vector3(landing.x - station.x, 0.0, landing.z - station.z).normalized()
+	var easel := Node3D.new()
+	easel.name = "CreatorCentrepieceEasel"
+	easel.position = center + Vector3(0, 16, 0)
+	easel.rotation.y = atan2(away.x, away.z)
+	easel.rotation.x = deg_to_rad(8.0)
+	# A little further from the arrival line than the first pass, so players
+	# meet the dais before they meet the easel itself.
+	easel.position += easel.transform.basis.z * 15.0
+	parent.add_child(easel)
+
+	# Local -Z faces the station; the rear leg sits on the far local +Z side,
+	# behind the canvas, where it stays hidden from that approach. Easel
+	# sized at 80% of the first pass.
+	for side in [-1.0, 1.0]:
+		var leg := _add_box(easel, "CentrepieceEaselLeg", Vector3(side * 22, 40, -5),
+			Vector3(7, 80, 7), _materials.wood)
+		leg.rotation.z = deg_to_rad(side * 7.0)
+	var rear := _add_box(easel, "CentrepieceEaselRearLeg", Vector3(0, 37, 16),
+		Vector3(7, 74, 7), _materials.wood)
+	rear.rotation.x = deg_to_rad(-14.0)
+	_add_box(easel, "CentrepieceEaselCrossbar", Vector3(0, 59, -5), Vector3(62, 6, 6), _materials.wood)
+	# The rear leg sat 21 units behind the crossbar with nothing bridging
+	# them, so the pieces read as separate floating boxes instead of one
+	# easel. A diagonal brace ties the rear leg to the crossbar, the way a
+	# real easel's back brace does.
+	var brace_start := Vector3(0, 66, 13)
+	var brace_finish := Vector3(0, 59, -5)
+	var brace_dir := brace_finish - brace_start
+	var brace := _add_box(easel, "CentrepieceEaselBrace", (brace_start + brace_finish) * 0.5,
+		Vector3(5, 5, brace_dir.length()), _materials.wood)
+	brace.rotation = Vector3(-atan2(brace_dir.y, Vector2(brace_dir.x, brace_dir.z).length()),
+		atan2(brace_dir.x, brace_dir.z), 0)
+
+	# The canvas floats straight up off the crossbar (local Y) rather than
+	# out toward the viewer (local Z), tilted a touch to one side so it
+	# doesn't read as a flat cutout. Canvas and frame share one group so the
+	# tilt carries both together.
+	var canvas_group := Node3D.new()
+	canvas_group.name = "CentrepieceCanvasGroup"
+	# z=-5 sat flush with the crossbar/legs plane and clipped into them;
+	# pulled forward (local -Z, toward the station) to clear the easel.
+	canvas_group.position = Vector3(0, 115, -20)
+	canvas_group.rotation.z = deg_to_rad(6.0)
+	canvas_group.rotation.x = deg_to_rad(25.0)
+	easel.add_child(canvas_group)
+	_add_box(canvas_group, "CentrepieceCanvas", Vector3.ZERO, Vector3(70, 90, 4), _materials.canvas)
+	_build_frame(canvas_group, Vector3(0, -45, 0), 70, 90, _materials.gold)
 
 
 func _build_landmass(parent: Node3D, kingdom_id: String, center: Vector3) -> void:
