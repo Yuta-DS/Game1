@@ -63,6 +63,8 @@ func _check_scene(start_at := 0.0) -> void:
 
 		# If changing to a different track, swap streams and play
 		player2.stream = new_track
+		player2.playback_type = AudioServer.PLAYBACK_TYPE_DEFAULT
+		preload("res://scripts/web_audio_policy.gd").configure_player(player2)
 		player2.play(fmod(start_at, new_track.get_length()) if start_at > 0.0 else 0.0)
 	else:
 		# No mapping means stop any music
