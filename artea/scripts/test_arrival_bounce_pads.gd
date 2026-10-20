@@ -3,6 +3,7 @@ extends SceneTree
 # Arrival-island bounce pads launch the real gallery player, bounce again on
 # the way back down, and the Latona fountain carries three prize sockets.
 
+const S: float = preload("res://scripts/art_castle_floating_world.gd").FOUNTAIN_SCALE
 
 func _init() -> void:
 	call_deferred("_run")
@@ -85,7 +86,8 @@ func _run() -> void:
 		return
 	var water := fountain.get_node("Tier0Water") as MeshInstance3D
 	var splash := fountain.get_node("SplashBurst") as GPUParticles3D
-	player.global_position = fountain.global_position + Vector3(24.0, 3.0, 0.0)
+	# Between tier 1's wall and the basin's inner wall.
+	player.global_position = fountain.global_position + Vector3((18.0 + 30.0) * 0.5 * S, 3.0, 0.0)
 	player.velocity = Vector3.ZERO
 	var splashed := false
 	for _frame in 120:
@@ -105,12 +107,12 @@ func _run() -> void:
 	# Every fountain layer is solid: tier walls/caps, frogs, statue, plinths.
 	var space := player.get_world_3d().direct_space_state
 	var probes := {
-		"tier 1 cap": [Vector3(0.0, 0.0, 17.2), 5.3],
-		"tier 2 cap": [Vector3(0.0, 0.0, 11.2), 9.3],
-		"tier 3 cap": [Vector3(-6.2, 0.0, 0.0), 12.8],
-		"basin frog": [Vector3(29.2, 0.0, 0.0), 1.7],
+		"tier 1 cap": [Vector3(0.0, 0.0, 18.0 * S - 0.8), 5.3],
+		"tier 2 cap": [Vector3(0.0, 0.0, 12.0 * S - 0.8), 9.3],
+		"tier 3 cap": [Vector3(-(7.0 * S - 0.8), 0.0, 0.0), 12.8],
+		"basin frog": [Vector3(30.0 * S - 0.8, 0.0, 0.0), 1.7],
 		"statue": [Vector3(0.0, 0.0, 0.2), 22.9],
-		"prize plinth": [Vector3(0.0, 0.0, -8.7), 9.8],
+		"prize plinth": [Vector3(0.0, 0.0, -(7.0 * S + 12.0 * S - 1.6) * 0.5), 9.8],
 	}
 	for label in probes:
 		var at: Vector3 = fountain.global_position + probes[label][0]
@@ -131,8 +133,19 @@ func _run() -> void:
 		if local.y > 0.3:
 			_fail("route dot %s floats %.2f m above the arrival floor" % [dot.name, local.y])
 			return
-		if Vector2(local.x, local.z - 760.0).length() < 30.0:
+		if Vector2(local.x, local.z - 760.0).length() < 30.0 * S:
 			_fail("route dot %s sits inside the fountain" % dot.name)
+			return
+
+	# The widened basin leaves room around it: no pad or tree inside its rim.
+	var centre := Vector2(fountain.global_position.x, fountain.global_position.z)
+	for child in island.get_children():
+		if child == fountain or not child is Node3D or not (child.name.begins_with("BouncePad")
+				or child.name.begins_with("SkyCypress")):
+			continue
+		var at := (child as Node3D).global_position
+		if Vector2(at.x, at.z).distance_to(centre) < 30.0 * S + 2.0:
+			_fail("%s stands inside the fountain basin" % child.name)
 			return
 
 	# Arrival cypresses stand on the floor, and trunks and crowns are solid.

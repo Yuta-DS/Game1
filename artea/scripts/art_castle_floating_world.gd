@@ -138,8 +138,12 @@ const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
 const BOUNCE_PAD_LAUNCH_SPEED := 15.5
 const BOUNCE_PAD_RADIUS := 3.2
 # Latona fountain: 60 m toward the gate from the island centre, where the
-# south observatory tower used to stand. Basin radius is 30 m.
+# south observatory tower used to stand. Basin radius is 30 m x FOUNTAIN_SCALE.
 const ARRIVAL_FOUNTAIN_CENTRE := SOUTH_GATE + Vector3(0.0, 0.0, -60.0)
+# Widens every tier, keeping heights so the rim stays jumpable. The nearest
+# bounce pads are ~45 m from the centre, so keep the basin (30 m x scale)
+# a few metres inside that.
+const FOUNTAIN_SCALE := 1.35
 # Holding jump on landing: ~27 m of air instead of ~12 m.
 const BOUNCE_PAD_BOOST_SPEED := 23.0
 const RETURN_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
@@ -435,6 +439,7 @@ func _build_arrival_island() -> void:
 	plaza.shader = ArrivalPlazaShader
 	plaza.set_shader_parameter("plaza_center", Vector2(fountain_centre.x - SOUTH_GATE.x,
 		fountain_centre.z - SOUTH_GATE.z))
+	plaza.set_shader_parameter("basin_radius", 30.0 * FOUNTAIN_SCALE)
 	(island.get_node("WalkableDeck") as MeshInstance3D).material_override = plaza
 	for step in 6:
 		var z := 710.0 + float(step) * 20.0
@@ -492,6 +497,13 @@ func _add_bounce_pad(parent: Node3D, position: Vector3, pink: bool) -> void:
 
 ## One shared positional player per sound, moved to wherever it plays.
 func _play_sfx(event: StringName, at: Vector3, pitch: float = 1.0) -> void:
+	var sfx := _sfx_player(event)
+	sfx.global_position = at
+	sfx.pitch_scale = pitch * randf_range(0.94, 1.06)
+	sfx.play()
+
+
+func _sfx_player(event: StringName) -> AudioStreamPlayer3D:
 	var sfx := _sfx_players.get(event) as AudioStreamPlayer3D
 	if sfx == null:
 		sfx = AudioStreamPlayer3D.new()
@@ -500,9 +512,7 @@ func _play_sfx(event: StringName, at: Vector3, pitch: float = 1.0) -> void:
 		sfx.max_distance = 120.0
 		add_child(sfx)
 		_sfx_players[event] = sfx
-	sfx.global_position = at
-	sfx.pitch_scale = pitch * randf_range(0.94, 1.06)
-	sfx.play()
+	return sfx
 
 
 ## Decor inspired by the Latona Fountain at Versailles: a wide basin with a
@@ -521,11 +531,16 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 	# streaks at the very same point - so their order flipped with the view angle
 	# and the water came and went. Spray always draws over the water sheets.
 	spray.render_priority = 1
+	# The splash is synthesised (~60 ms); do it now, behind the loading screen,
+	# rather than as a hitch on the player's first jump into the water.
+	_sfx_player(&"water_splash")
 
 	# [radius, wall top]. Every tier is a pool: a solid core up to its floor,
 	# a solid wall with a 0.3 m gold cap, and wadeable water with no
 	# collision. The basin rim (0.9 + 0.3 = 1.2 m) stays under the 1.4 m jump.
 	var tiers := [[30.0, 0.9], [18.0, 5.0], [12.0, 9.0], [7.0, 12.5]]
+	for tier in tiers:
+		tier[0] *= FOUNTAIN_SCALE
 	for index in tiers.size():
 		var radius: float = tiers[index][0]
 		var top: float = tiers[index][1]
@@ -543,7 +558,7 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 			water, false, 48)
 		_add_basin_splash_zone(fountain, inner, floor_y, water_y, spray)
 		# Frogs sit on each cap facing the centre and arc water inward.
-		var frog_count := 16 - index * 3
+		var frog_count := roundi((16 - index * 3) * FOUNTAIN_SCALE)
 		for frog_index in frog_count:
 			var angle := TAU * float(frog_index) / float(frog_count)
 			var frog_pos := Vector3(cos(angle), 0.0, sin(angle)) * (radius - 0.8) \
@@ -577,10 +592,11 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 	_add_fountain_jet(fountain, Vector3(0.0, 23.6, 0.0), spray)
 
 	# Three reward plinths standing in the 9 m pool (floor 8 m), one facing the
-	# arrival gate.
+	# arrival gate, midway between the top tier's wall and the pool's inner wall.
+	var plinth_radius: float = (tiers[3][0] + tiers[2][0] - 1.6) * 0.5
 	for index in 3:
 		var angle := -PI * 0.5 + TAU * float(index) / 3.0
-		var spot := Vector3(cos(angle) * 8.7, 8.0, sin(angle) * 8.7)
+		var spot := Vector3(cos(angle) * plinth_radius, 8.0, sin(angle) * plinth_radius)
 		_add_cylinder(fountain, "PrizePlinth%d" % index, spot + Vector3(0.0, 0.9, 0.0), 1.0, 1.8,
 			_materials.gold, true, 12)
 		spot.y += 0.3
@@ -1705,7 +1721,7 @@ func _add_walk_route_dots(parent: Node3D, start: Vector3, finish: Vector3, segme
 		var progress := float(dot_index) / float(count)
 		var spot := start.lerp(finish, progress)
 		if Vector2(spot.x, spot.z).distance_to(Vector2(ARRIVAL_FOUNTAIN_CENTRE.x,
-				ARRIVAL_FOUNTAIN_CENTRE.z)) < 32.0:
+				ARRIVAL_FOUNTAIN_CENTRE.z)) < 30.0 * FOUNTAIN_SCALE + 2.0:
 			continue
 		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], spot,
 			Vector3(7.5, 0.16, 2.2), _materials.aqua, false, yaw)
