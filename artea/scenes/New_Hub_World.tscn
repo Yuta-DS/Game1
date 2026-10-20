@@ -927,7 +927,7 @@ transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8, 10.2, 19.856)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="Popthought_world" type="Area3D" parent="." unique_id=952177838]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 90.3, 15, -83)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 88.9264, 15, -75.4485)
 script = ExtResource("57_ewago")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Popthought_world" unique_id=1161001295]
