@@ -59,6 +59,17 @@ const STORY_ROUTES := {
 
 var _materials: Dictionary = {}
 
+# Same idle-bob convention as hub_sky_isles.gd's floating islands: a time
+# accumulator plus sin() against a stored base Y, so each part drifts
+# without permanently displacing its authored position. Phases borrowed from
+# hub_sky_isles.gd's BOB_PHASES so the frame/canvas/brush never bob in sync -
+# a synchronised group reads as one object, not three independent parts.
+const CREATOR_CENTREPIECE_BOB_AMPLITUDE := 2.0
+const CREATOR_CENTREPIECE_BOB_PERIOD := 9.0
+const CREATOR_CENTREPIECE_BOB_PHASES := [0.0, 2.1, 4.3]
+var _bob_time := 0.0
+var _creator_bob_parts: Array[Dictionary] = []
+
 
 func _ready() -> void:
 	_build_materials()
@@ -67,6 +78,24 @@ func _ready() -> void:
 	# railway), deeper here because the open island floor is in full sun.
 	_build_station_platform("heart", [Color("b8607f"), Color("a85272"), Color("5e2440")], _materials.pink)
 	_build_station_platform("creator", [Color("c98f3c"), Color("b87d2e"), Color("5e3a12")], _materials.gold)
+
+
+func _process(delta: float) -> void:
+	if _creator_bob_parts.is_empty():
+		return
+	_bob_time += delta
+	for part in _creator_bob_parts:
+		var node: Node3D = part.node
+		node.position.y = part.base_y + sin(
+			(_bob_time / CREATOR_CENTREPIECE_BOB_PERIOD) * TAU + part.phase) \
+			* CREATOR_CENTREPIECE_BOB_AMPLITUDE
+
+
+## Registers a node for the idle bob, remembering its authored Y so repeated
+## calls (across reloads) never compound an offset onto an offset.
+func _register_creator_bob(node: Node3D) -> void:
+	var phase: float = CREATOR_CENTREPIECE_BOB_PHASES[_creator_bob_parts.size() % CREATOR_CENTREPIECE_BOB_PHASES.size()]
+	_creator_bob_parts.append({"node": node, "base_y": node.position.y, "phase": phase})
 
 
 func get_kingdom_size(kingdom_id: String = "mind") -> Vector2:
@@ -228,17 +257,25 @@ func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
 	easel.position += easel.transform.basis.z * 15.0
 	parent.add_child(easel)
 
+	# Easel frame, canvas, and brush/paint-trails are three separate groups
+	# (not easel itself) so each can bob on its own phase instead of
+	# floating as one rigid unit.
+	var easel_frame := Node3D.new()
+	easel_frame.name = "CreatorCentrepieceEaselFrame"
+	easel.add_child(easel_frame)
+	_register_creator_bob(easel_frame)
+
 	# Local -Z faces the station; the rear leg sits on the far local +Z side,
 	# behind the canvas, where it stays hidden from that approach. Easel
 	# sized at 80% of the first pass.
 	for side in [-1.0, 1.0]:
-		var leg := _add_box(easel, "CentrepieceEaselLeg", Vector3(side * 22, 40, -5),
+		var leg := _add_box(easel_frame, "CentrepieceEaselLeg", Vector3(side * 22, 40, -5),
 			Vector3(7, 80, 7), _materials.wood)
 		leg.rotation.z = deg_to_rad(side * 7.0)
-	var rear := _add_box(easel, "CentrepieceEaselRearLeg", Vector3(0, 37, 16),
+	var rear := _add_box(easel_frame, "CentrepieceEaselRearLeg", Vector3(0, 37, 16),
 		Vector3(7, 74, 7), _materials.wood)
 	rear.rotation.x = deg_to_rad(-14.0)
-	_add_box(easel, "CentrepieceEaselCrossbar", Vector3(0, 59, -5), Vector3(62, 6, 6), _materials.wood)
+	_add_box(easel_frame, "CentrepieceEaselCrossbar", Vector3(0, 59, -5), Vector3(62, 6, 6), _materials.wood)
 	# The rear leg sat 21 units behind the crossbar with nothing bridging
 	# them, so the pieces read as separate floating boxes instead of one
 	# easel. A diagonal brace ties the rear leg to the crossbar, the way a
@@ -246,7 +283,7 @@ func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
 	var brace_start := Vector3(0, 66, 13)
 	var brace_finish := Vector3(0, 59, -5)
 	var brace_dir := brace_finish - brace_start
-	var brace := _add_box(easel, "CentrepieceEaselBrace", (brace_start + brace_finish) * 0.5,
+	var brace := _add_box(easel_frame, "CentrepieceEaselBrace", (brace_start + brace_finish) * 0.5,
 		Vector3(5, 5, brace_dir.length()), _materials.wood)
 	brace.rotation = Vector3(-atan2(brace_dir.y, Vector2(brace_dir.x, brace_dir.z).length()),
 		atan2(brace_dir.x, brace_dir.z), 0)
@@ -263,17 +300,28 @@ func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
 	canvas_group.rotation.z = deg_to_rad(6.0)
 	canvas_group.rotation.x = deg_to_rad(25.0)
 	easel.add_child(canvas_group)
+	_register_creator_bob(canvas_group)
 	_add_box(canvas_group, "CentrepieceCanvas", Vector3.ZERO, Vector3(70, 90, 4), _materials.canvas)
 	_build_frame(canvas_group, Vector3(0, -45, 0), 70, 90, _materials.gold)
+
+	# Brush and paint trails share canvas_group's exact transform but sit in
+	# their own sibling group (not nested under canvas_group) so they can
+	# bob on a third, independent phase.
+	var brush_group := Node3D.new()
+	brush_group.name = "CreatorCentrepieceBrushGroup"
+	brush_group.position = canvas_group.position
+	brush_group.rotation = canvas_group.rotation
+	easel.add_child(brush_group)
+	_register_creator_bob(brush_group)
 
 	# The brush floats tip-down, clear of the canvas.
 	var brush_x := 8.0
 	var brush_z := -57.0
-	_add_sphere(canvas_group, "CentrepieceBrushTip", Vector3(brush_x, 10, brush_z),
+	_add_sphere(brush_group, "CentrepieceBrushTip", Vector3(brush_x, 10, brush_z),
 		Vector3(3.08, 4.9, 3.08), _materials.shadow)
-	_add_box(canvas_group, "CentrepieceBrushFerrule", Vector3(brush_x, 17, brush_z),
+	_add_box(brush_group, "CentrepieceBrushFerrule", Vector3(brush_x, 17, brush_z),
 		Vector3(5.04, 7.0, 5.04), _materials.shadow)
-	_add_box(canvas_group, "CentrepieceBrushHandle", Vector3(brush_x, 28, brush_z),
+	_add_box(brush_group, "CentrepieceBrushHandle", Vector3(brush_x, 28, brush_z),
 		Vector3(4.2, 25.2, 4.2), _materials.wood)
 
 	# A short paint trail that continues down past the tip (the direction the
@@ -291,18 +339,18 @@ func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
 		turn_rel.y * sin(trail_tilt) + turn_rel.z * cos(trail_tilt))
 	var trail_bulge := trail_start + bulge_rel
 	var trail_turn := trail_start + turn_rel
-	_build_paint_curve(canvas_group, "CentrepiecePaintTrail", trail_start, trail_bulge, trail_turn,
+	_build_paint_curve(brush_group, "CentrepiecePaintTrail", trail_start, trail_bulge, trail_turn,
 		12, 3.2, 1.3, _materials.gold)
 
 	# A few loose paint-curve flourishes scattered around the canvas corners,
 	# same technique — pushed further out from the frame and bigger than the
 	# first pass so they read as their own flourish, not crowding the canvas.
-	_build_paint_curve(canvas_group, "CentrepieceCornerCurveA",
-		Vector3(40.0, 54.0, -4.0), Vector3(65.0, 46.0, -12.0), Vector3(57.0, 30.0, -19.0),
-		8, 4.8, 1.4, _materials.gold)
-	_build_paint_curve(canvas_group, "CentrepieceCornerCurveB",
-		Vector3(-38.0, -51.0, -4.0), Vector3(-62.0, -41.0, -14.0), Vector3(-49.0, -24.0, -22.0),
-		8, 4.8, 1.4, _materials.gold)
+	_build_paint_curve(brush_group, "CentrepieceCornerCurveA",
+		Vector3(40.0, 54.0, -4.0), Vector3(72.0, 44.0, -14.0), Vector3(62.0, 23.0, -24.0),
+		12, 5.8, 1.8, _materials.gold)
+	_build_paint_curve(brush_group, "CentrepieceCornerCurveB",
+		Vector3(-38.0, -51.0, -4.0), Vector3(-69.0, -38.0, -17.0), Vector3(-52.0, -16.0, -27.0),
+		12, 5.8, 1.8, _materials.gold)
 
 
 ## A short curved paint streak as a chain of plain, non-rotated spheres —
