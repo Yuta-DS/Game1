@@ -1,8 +1,8 @@
 extends SceneTree
 
 # The Mind causeway runs through the fall-recovery volumes under World One
-# islands 04 and 05. Walking along it used to trigger a Milo rescue even though
-# the player never left the ground.
+# islands 04 and 05. Walking or jumping along it used to trigger a Milo rescue
+# even though the player never fell.
 
 
 func _init() -> void:
@@ -45,13 +45,19 @@ func _run() -> void:
 		if floor_point == Vector3.INF:
 			_fail("no causeway floor inside %s's recovery volume" % zone_name)
 			return
-		var before: int = rescue.get_rescue_count()
-		player.global_position = floor_point + Vector3(0, 1.2, 0)
-		player.velocity = Vector3.ZERO
-		for i in 150:
-			await physics_frame
-		if rescue.get_rescue_count() != before:
-			_fail("standing on the causeway inside %s triggered a rescue" % zone_name)
-			return
+		# Standing, then mid-jump: entering the volume airborne just above the
+		# deck is what crossing its edge during a jump looks like.
+		for case in [["standing on", 1.2, 0.0], ["jumping above", 3.0, 4.0]]:
+			player.global_position = floor_point + Vector3(0, 300, 0)
+			for i in 5:
+				await physics_frame
+			var before: int = rescue.get_rescue_count()
+			player.global_position = floor_point + Vector3(0, case[1], 0)
+			player.velocity = Vector3(0, case[2], 0)
+			for i in 150:
+				await physics_frame
+			if rescue.get_rescue_count() != before:
+				_fail("%s the causeway inside %s triggered a rescue" % [case[0], zone_name])
+				return
 	print("RECOVERY_VOLUME_GROUNDED_TEST: PASS")
 	quit()
