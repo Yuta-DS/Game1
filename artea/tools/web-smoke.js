@@ -19,7 +19,7 @@
 //   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open] [--repeat]
 //       [--latency MS] [--mbps N] [--fail-part NN] [--fail-times K]
 //       [--startup-only] (login, hub entry and movement; skips later worlds)
-//       [--music-circle] (actual keyboard/click tests on all five instruments)
+//       [--music-circle] (instruments, seated piano, maze, fountain and Milo)
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
@@ -236,6 +236,19 @@ async function connect() {
 	const ownChrome = await startChrome();
 	const closeOwnChrome = async () => {
 		if (keepOpen || !ownChrome) return;
+		// Chromium's Windows launcher may exit before its browser process.
+		// Close the owned browser over its browser-level CDP connection so
+		// repeated tours do not leave headless browser trees consuming memory.
+		try {
+			const version = await cdp('/json/version');
+			await new Promise((resolve) => {
+				const browser = new WebSocket(version.webSocketDebuggerUrl);
+				const timer = setTimeout(() => { browser.close(); resolve(); }, 2000);
+				browser.addEventListener('open', () => browser.send(JSON.stringify({ id: 1, method: 'Browser.close' })));
+				browser.addEventListener('close', () => { clearTimeout(timer); resolve(); });
+				browser.addEventListener('error', () => { clearTimeout(timer); resolve(); });
+			});
+		} catch { /* browser may already have exited with its last tab */ }
 		try { process.kill(ownChrome.pid); } catch { /* already gone */ }
 	};
 	const { send, on, consoleLines, crashed, targetId, net } = await connect();
@@ -530,10 +543,26 @@ async function connect() {
 				await click(Number(coords[1]), Number(coords[2]));
 				await waitForLog(new RegExp('MUSIC QA note ' + kind + ' ' + (kind === 'piano' ? 60 : 0)), kind + ' clicked sound', 10000, from);
 				await shot('music-circle-' + kind);
+				if (kind === 'piano') {
+					await tap('Tab', 9, 'Tab');
+					await waitForLog(/BENCH QA keyboard view/, 'bench keyboard view', 10000);
+					await sleep(900);
+					await shot('piano-keyboard-view');
+				}
 				await tap('Escape', 27, 'Escape');
 				await waitForLog(new RegExp('MUSIC QA closed ' + kind), kind + ' exit restores movement', 10000);
 				if (kind !== 'piano') await tap('F8', 119, 'F8');
 			}
+			await tap('F9', 120, 'F9');
+			await waitForLog(/MAZE QA path playable/, 'maze solution and solid walls', 30000);
+			await waitForLog(/MAZE QA music active/, 'fountain music playback', 10000);
+			await waitForLog(/MAZE QA guide station/, 'Milo directions in the maze court', 10000);
+			await waitForLog(/MAZE QA overview ready/, 'maze overview', 10000);
+			await shot('maze-overview');
+			await waitForLog(/MAZE QA fountain ready/, 'fountain clearing', 10000);
+			await shot('maze-fountain');
+			await tap('KeyQ', 81, 'q');
+			await waitForLog(/MAZE QA return works/, 'maze return to entrance', 10000);
 			musicCirclePlayable = true;
 		}
 		areas.push(['the Art Castle', castle, castle ? await goTo('the Hub', HUB) : null, 'prefetched']);

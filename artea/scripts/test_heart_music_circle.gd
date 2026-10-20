@@ -106,6 +106,10 @@ func run() -> void:
 	assert(piano._keyboard_view and player.is_seated())
 	piano._stand_up()
 	assert(player.input_enabled and not player.is_seated() and not player._sit_pose_applied and camera.get("_mode") == "follow")
+	piano._sit_down()
+	assert(player.is_seated())
+	piano.free()
+	assert(player.input_enabled and not player.is_seated() and camera.get("_mode") == "follow", "Removing an occupied piano must restore walking")
 	# Leaving the scene while playing must also restore controls.
 	var last := circle.get_node("Playable_guitar")
 	player.global_position = last.to_global(Vector3(0, 2, 5))
