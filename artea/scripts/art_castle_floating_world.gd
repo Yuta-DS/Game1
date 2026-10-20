@@ -1504,9 +1504,7 @@ func _build_mind_spark_world_one_gameplay() -> void:
 func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 	## A physically walkable route from the Mind Spark district out to the
 	## relocated World One landing, so the new land is reachable on foot and not
-	## only through the world gate. The span crosses open void, so it is built as
-	## a piered causeway resting on intermediate support islands rather than as a
-	## single unsupported deck.
+	## only through the world gate. The span crosses open void on piers.
 	if has_node("MindSparkWorldOneCauseway"):
 		return
 	var causeway := Node3D.new()
@@ -1523,10 +1521,6 @@ func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 	finish.y = CAUSEWAY_DECK_Y
 	var span := start.distance_to(finish)
 	var segment_count := maxi(2, int(round(span / CAUSEWAY_SEGMENT_LENGTH)))
-	# Support islands sit between segments and carry the piers of both neighbours.
-	for index in range(1, segment_count):
-		var pier_center: Vector3 = start.lerp(finish, float(index) / float(segment_count))
-		_build_causeway_support_island(causeway, pier_center, index)
 	for index in segment_count:
 		var leg_start: Vector3 = start.lerp(finish, float(index) / float(segment_count))
 		var leg_finish: Vector3 = start.lerp(finish, float(index + 1) / float(segment_count))
@@ -1540,22 +1534,6 @@ func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 	causeway.set_meta("deck_y", CAUSEWAY_DECK_Y)
 	causeway.set_meta("walk_start", start)
 	causeway.set_meta("walk_finish", finish)
-
-
-func _build_causeway_support_island(parent: Node3D, center: Vector3, index: int) -> void:
-	var island := Node3D.new()
-	island.name = "CausewaySupportIsland_%02d" % index
-	parent.add_child(island)
-	# The deck lands on top of the island, so the walk stays level across it.
-	_build_island_foundation(island, center, CAUSEWAY_ISLAND_RADIUS, 44.0, 24)
-	_add_cylinder(island, "RestPlaza", center + Vector3(0.0, 0.15, 0.0),
-		CAUSEWAY_ISLAND_RADIUS * 0.66, 0.3, _materials.aqua_glass, false, 24)
-	for lamp in 4:
-		var angle := TAU * float(lamp) / 4.0
-		_add_cylinder(island, "CausewayLamp_%02d" % lamp,
-			center + Vector3(cos(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72, 7.0,
-				sin(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72), 1.1, 14.0,
-			_materials.aqua, false, 8)
 
 
 func _build_world_one_walk_route() -> void:
