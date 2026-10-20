@@ -7,7 +7,7 @@ func _initialize() -> void:
 	var music := drawing.get_node("AudioStreamPlayer") as AudioStreamPlayer
 	assert(music.stream.get_length() > 1800, "Exercise the real half-hour soundtrack")
 	Policy.configure_player(music, false)
-	assert(music.playback_type == AudioServer.PLAYBACK_TYPE_DEFAULT, "Native playback is unchanged")
+	assert(music.playback_type == AudioServer.PLAYBACK_TYPE_STREAM, "The half-hour soundtrack streams before scene autoplay on every platform")
 	Policy.configure_player(music, true)
 	assert(music.playback_type == AudioServer.PLAYBACK_TYPE_STREAM, "Long Web music streams before autoplay")
 	var note := AudioStreamPlayer.new()
