@@ -189,7 +189,7 @@ func _run() -> void:
 		_fail("Mind Spark station east guardrail has no centred stair entrance opening")
 		return
 	var west_observatory_tower := world.get_node_or_null(
-		"WestObservatory/ObservatoryTower") as MeshInstance3D
+		"WestObservatory/MiniObservatory/ObservatoryTower") as MeshInstance3D
 	if west_observatory_tower == null:
 		_fail("West Observatory tower is missing")
 		return

@@ -128,7 +128,7 @@ const MIND_RUNE_TILE_HEIGHT := 0.08
 const CAUSEWAY_WIDTH := 26.0
 const CAUSEWAY_DECK_Y := 1.0
 const CAUSEWAY_SEGMENT_LENGTH := 420.0
-const CAUSEWAY_ISLAND_RADIUS := 46.0
+const MINI_OBSERVATORY_SCALE := 2.0
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
 # Half extents of the raised studio platform (2 m tall, top at y=2).
 const CREATOR_PLATFORM_HALF := Vector3(90.0, 1.0, 82.0)
@@ -1691,7 +1691,15 @@ func _build_boundary_observatories() -> void:
 ## glowing windows, a gold cornice, a dome with a brass telescope aimed out over
 ## the void, a door toward `facing`, and an armillary sphere on a plinth. The
 ## base, drum, dome and plinth are solid.
-func _build_mini_observatory(parent: Node3D, center: Vector3, facing: Vector3) -> void:
+func _build_mini_observatory(lookout: Node3D, island_center: Vector3, facing: Vector3) -> void:
+	# Built at the original small size inside one node scaled up as a whole, so
+	# every part (dome, telescope, door, armillary) stays in proportion.
+	var parent := Node3D.new()
+	parent.name = "MiniObservatory"
+	parent.position = island_center
+	parent.scale = Vector3.ONE * MINI_OBSERVATORY_SCALE
+	lookout.add_child(parent)
+	var center := Vector3.ZERO
 	var side := Vector3(facing.z, 0.0, -facing.x)
 	var yaw := atan2(facing.x, facing.z)
 	_add_cylinder(parent, "ObservatoryBase", center + Vector3(0.0, 0.3, 0.0), 11.0, 0.6,
