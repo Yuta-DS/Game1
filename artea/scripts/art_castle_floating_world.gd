@@ -136,9 +136,9 @@ const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
 # Arrival-island bounce pads: ~12 m of air at the default 9.8 gravity.
 const BOUNCE_PAD_LAUNCH_SPEED := 15.5
 const BOUNCE_PAD_RADIUS := 3.2
-# Latona fountain: 60 m toward the gate from the island centre, where the
-# south observatory tower used to stand. Basin radius is 30 m x FOUNTAIN_SCALE.
-const ARRIVAL_FOUNTAIN_CENTRE := SOUTH_GATE + Vector3(0.0, 0.0, -60.0)
+# Latona fountain: the dead centre of the arrival island. Basin radius is
+# 30 m x FOUNTAIN_SCALE.
+const ARRIVAL_FOUNTAIN_CENTRE := SOUTH_GATE
 # Widens every tier, keeping heights so the rim stays jumpable. The nearest
 # bounce pads are ~45 m from the centre, so keep the basin (30 m x scale)
 # a few metres inside that.
@@ -353,8 +353,9 @@ func _build_arrival_island() -> void:
 		fountain_centre.z - SOUTH_GATE.z))
 	plaza.set_shader_parameter("basin_radius", 30.0 * FOUNTAIN_SCALE)
 	(island.get_node("WalkableDeck") as MeshInstance3D).material_override = plaza
+	# Two rows of pads flank the fountain, centred on it.
 	for step in 6:
-		var z := 710.0 + float(step) * 20.0
+		var z := ARRIVAL_FOUNTAIN_CENTRE.z - 50.0 + float(step) * 20.0
 		_add_bounce_pad(island, Vector3(-47.0, 0.0, z), step % 2 == 0)
 		_add_bounce_pad(island, Vector3(47.0, 0.0, z), step % 2 != 0)
 	_build_latona_fountain(island, fountain_centre)
