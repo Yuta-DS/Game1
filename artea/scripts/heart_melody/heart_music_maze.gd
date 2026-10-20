@@ -35,8 +35,9 @@ func _ready() -> void:
 	add_child(layer)
 	_hud = Label.new()
 	_hud.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	_hud.offset_top = -120
-	_hud.offset_bottom = -80
+	# Keep the maze objective above the spoken-guidance subtitle panel.
+	_hud.offset_top = -305
+	_hud.offset_bottom = -265
 	_hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hud.add_theme_font_size_override("font_size", 24)
 	_hud.add_theme_color_override("font_outline_color", Color.BLACK)
