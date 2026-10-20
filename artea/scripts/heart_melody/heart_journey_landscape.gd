@@ -10,6 +10,11 @@ var celebrations := 0
 
 func _ready() -> void:
 	world = get_parent()
+	# Reuse the existing archways without stacking their old sign over the
+	# new gate's live requirement/achievement sign.
+	for label in world.find_children("BannerText", "Label3D", true, false):
+		if label.text in ["River Song / Waterfall Organ", "Harmony Stage · Shared Song"]:
+			label.get_parent().hide()
 	var fountain := preload("res://scripts/heart_melody/heart_arrival_garden.gd").new()
 	fountain.name = "MeadowSingingFountain"
 	fountain.fountain_position = Vector3.ZERO

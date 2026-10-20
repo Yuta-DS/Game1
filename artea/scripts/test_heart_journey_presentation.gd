@@ -21,14 +21,24 @@ func run() -> void:
 	for i in 12: await physics_frame
 	var guide = world.milo_guide
 	check(guide.panel.visible and guide._pages.size() > 1, "Long narration uses short transcript pages")
+	check(world.hud.get_parent().get_global_rect().end.x <= root.get_visible_rect().size.x, "Status card stays inside the screen's right margin")
 	check(guide.caption.text.length() < 180 and guide.panel.size.x < 500, "Transcript has a clear compact card")
 	guide.voice.finished.emit()
 	check(not guide.panel.visible and guide.current_line.is_empty(), "Transcript disappears on the actual voice finished signal")
 	guide.enabled = false
 	world._intro()
 	await process_frame
+	await process_frame
+	await process_frame
 	check(world.options.get_node_or_null("ActivityFlow") != null, "Arrival teaches one visual sequence")
 	check(world.options.is_ancestor_of(root.gui_get_focus_owner()), "Keyboard and controller focus starts inside the activity menu")
+	check(world.options.get_parent().scroll_vertical == 0, "The entry heading and visual sequence start in view")
+	check(not world.options.get_parent().follow_focus, "Late browser focus cannot hide the introduction")
+	var navigation := InputEventAction.new()
+	navigation.action = "ui_down"
+	navigation.pressed = true
+	world._input(navigation)
+	check(world.options.get_parent().follow_focus, "Controller navigation enables focus-follow through long menus")
 	check(world.message.text.length() < 350 and not world.message.text.contains("Silent Conductor"), "Arrival does not dump future chapters")
 	world._close()
 	world.chapter_world.journal()
@@ -85,7 +95,9 @@ func run() -> void:
 	press("Harvest protected story allotment")
 	world._close()
 	world.chapter_world.open_instrument(2)
+	for i in 3: await process_frame
 	check(world.options.get_node_or_null("ActivityFlow") != null, "Garden instrument receives visual instructions")
+	check(world.options.get_parent().scroll_vertical == 0, "Instrument opens on its title, lesson and tuning controls")
 	world._close()
 	world.queue_free()
 	await process_frame

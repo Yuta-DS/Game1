@@ -402,7 +402,7 @@ func _build_hud() -> void:
 	UI.decorate(top)
 	hud = Label.new()
 	hud.add_theme_font_size_override("font_size", 28 if _large_text else 22)
-	hud.custom_minimum_size.x = 600
+	hud.custom_minimum_size.x = 550
 	hud.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	top.add_child(hud)
 	prompt = Button.new()
@@ -569,6 +569,9 @@ func _open(title: String, body: String) -> void:
 	panel.offset_right = 380
 	panel.offset_bottom = 160
 	_panel_generation += 1
+	var scroll := options.get_parent() as ScrollContainer
+	scroll.follow_focus = false
+	scroll.scroll_vertical = 0
 	demonstration = false
 	modal_open = true
 	player.set_input_enabled(false)
@@ -589,6 +592,26 @@ func _open(title: String, body: String) -> void:
 	options.add_child(message)
 	panel.show()
 	_queue_fit()
+	_reset_menu_scroll(_panel_generation)
+
+func _reset_menu_scroll(generation: int) -> void:
+	# Layout and focus notifications can otherwise restore the previous menu's
+	# scroll after it is rebuilt. Always reveal the heading and flow first.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if generation != _panel_generation or not modal_open: return
+	var scroll := options.get_parent() as ScrollContainer
+	scroll.scroll_vertical = 0
+	# Enable focus-follow only when the player actually navigates. Web focus
+	# restoration can arrive later than layout and otherwise jump down again.
+	scroll.follow_focus = false
+
+func _input(event: InputEvent) -> void:
+	if not modal_open: return
+	for action in ["ui_up", "ui_down", "ui_left", "ui_right", "ui_focus_next", "ui_focus_prev"]:
+		if event.is_action_pressed(action):
+			(options.get_parent() as ScrollContainer).follow_focus = true
+			return
 
 func _queue_fit() -> void:
 	if _fit_queued: return

@@ -288,13 +288,15 @@ func _instrument_panel() -> void:
 			var row := HBoxContainer.new()
 			world.options.add_child(row)
 			var label := Label.new()
-			label.text = "Valve / string %d  target %d" % [i + 1, int(challenge.target[i]) + 1]
+			label.text = ("Valve %d · target note %d" if active_task == 2 else "String %d · target note %d") % [i + 1, int(challenge.target[i]) + 1]
 			label.custom_minimum_size.x = 310
+			label.add_theme_font_size_override("font_size", 22)
 			row.add_child(label)
 			for change in [-1, 1]:
 				var button := Button.new()
 				button.text = "Loosen −" if change == -1 else "Tighten +"
 				button.custom_minimum_size = Vector2(140, 52)
+				button.add_theme_font_size_override("font_size", 21)
 				row.add_child(button)
 				button.pressed.connect(func():
 					var current := int(challenge.input[i]) if challenge.input.size() > i else 0
@@ -313,6 +315,7 @@ func _instrument_panel() -> void:
 			var button := Button.new()
 			button.text = str(i + 1) + "\n" + (["Drums", "Water", "Harp", "Chimes"][i] if active_task == 7 else NOTE_NAMES[i].split(" / ")[0])
 			button.custom_minimum_size = Vector2(104, 70)
+			button.add_theme_font_size_override("font_size", 22)
 			row.add_child(button)
 			button.pressed.connect(func(): play(i))
 		if active_task == 7:
