@@ -1,6 +1,7 @@
 extends Control
 
 const ShaderWarmup := preload("res://scripts/shader_warmup.gd")
+const SceneViewWarmup := preload("res://scripts/scene_view_warmup.gd")
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 @export var next_scene_path: String = ""
@@ -518,6 +519,12 @@ func _warm_shaders() -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
+	if OS.has_feature("web") and scene.find_child("ArtCastleFloatingWorld", true, false) != null:
+		_report(LOAD_SLICE + SCATTER_SLICE, "Preparing smooth exploration")
+		_restore_world_rendering()
+		var views: int = await SceneViewWarmup.run(scene, func(fraction: float):
+			_report(LOAD_SLICE + SCATTER_SLICE + WARMUP_SLICE * fraction, "Preparing smooth exploration"))
+		if views > 0: return
 	# Include hidden and distant cells, including the castle. Preparing only
 	# the arrival view leaves synchronous compiles for the first camera turn.
 	# Benchmark escape hatch (tools/bench_castle_cold.gd), so the before/after
