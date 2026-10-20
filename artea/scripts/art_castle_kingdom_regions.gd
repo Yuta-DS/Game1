@@ -291,13 +291,31 @@ func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
 		turn_rel.y * sin(trail_tilt) + turn_rel.z * cos(trail_tilt))
 	var trail_bulge := trail_start + bulge_rel
 	var trail_turn := trail_start + turn_rel
-	var trail_blobs := 8
-	for step in trail_blobs:
-		var t := float(step + 1) / float(trail_blobs)
-		var point: Vector3 = trail_start.lerp(trail_bulge, t).lerp(
-			trail_bulge.lerp(trail_turn, t), t)
-		_add_sphere(canvas_group, "CentrepiecePaintTrail_%d" % step, point,
-			Vector3.ONE * lerp(3.2, 1.3, t), _materials.gold)
+	_build_paint_curve(canvas_group, "CentrepiecePaintTrail", trail_start, trail_bulge, trail_turn,
+		12, 3.2, 1.3, _materials.gold)
+
+	# A few loose paint-curve flourishes scattered around the canvas corners,
+	# same technique — pushed further out from the frame and bigger than the
+	# first pass so they read as their own flourish, not crowding the canvas.
+	_build_paint_curve(canvas_group, "CentrepieceCornerCurveA",
+		Vector3(40.0, 54.0, -4.0), Vector3(65.0, 46.0, -12.0), Vector3(57.0, 30.0, -19.0),
+		8, 4.8, 1.4, _materials.gold)
+	_build_paint_curve(canvas_group, "CentrepieceCornerCurveB",
+		Vector3(-38.0, -51.0, -4.0), Vector3(-62.0, -41.0, -14.0), Vector3(-49.0, -24.0, -22.0),
+		8, 4.8, 1.4, _materials.gold)
+
+
+## A short curved paint streak as a chain of plain, non-rotated spheres —
+## safe and cheap, so every paint-curve decoration in this kingdom reuses it
+## instead of its own rotated/tapered geometry.
+func _build_paint_curve(parent: Node3D, name_prefix: String, start: Vector3, control: Vector3,
+		finish: Vector3, blob_count: int, scale_start: float, scale_end: float,
+		material: Material) -> void:
+	for step in blob_count:
+		var t := float(step + 1) / float(blob_count)
+		var point: Vector3 = start.lerp(control, t).lerp(control.lerp(finish, t), t)
+		_add_sphere(parent, "%s_%d" % [name_prefix, step], point,
+			Vector3.ONE * lerp(scale_start, scale_end, t), material)
 
 
 func _build_landmass(parent: Node3D, kingdom_id: String, center: Vector3) -> void:
