@@ -182,7 +182,6 @@ func _ready() -> void:
 	_build_mind_spark_world_one_gameplay()
 	_build_world_one_walk_route()
 	_build_boundary_observatories()
-	_build_cloud_banks()
 	_build_world_labels()
 	if not embedded_in_gallery:
 		_build_standalone_minimap()
@@ -1885,30 +1884,6 @@ func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
 		bridge.set_meta("symmetry_side", int(side))
 		bridge.set_meta("symmetry_offset", LANE_OFFSET)
 		bridge.set_meta("walk_surface_y", source_center.y)
-
-
-func _build_cloud_banks() -> void:
-	var clouds := Node3D.new()
-	clouds.name = "CloudSea"
-	add_child(clouds)
-	var cloud_material := _make_material(Color(0.88, 0.94, 0.98, 0.72), 1.0, true)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 26032026
-	for index in 120:
-		var angle := rng.randf_range(0.0, TAU)
-		var radius := rng.randf_range(280.0, 1120.0)
-		var puff := MeshInstance3D.new()
-		puff.name = "Cloud_%03d" % index
-		var mesh := SphereMesh.new()
-		mesh.radius = rng.randf_range(30.0, 80.0)
-		mesh.height = mesh.radius * rng.randf_range(0.65, 1.1)
-		mesh.radial_segments = 8
-		mesh.rings = 4
-		puff.mesh = mesh
-		puff.scale = Vector3(rng.randf_range(1.4, 2.6), 0.45, rng.randf_range(0.9, 1.5))
-		puff.position = Vector3(cos(angle) * radius, rng.randf_range(-95.0, -45.0), sin(angle) * radius)
-		puff.material_override = cloud_material
-		clouds.add_child(puff)
 
 
 func _build_world_labels() -> void:
