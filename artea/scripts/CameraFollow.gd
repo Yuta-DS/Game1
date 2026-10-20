@@ -287,6 +287,13 @@ func is_ride_view_active() -> bool:
 	return _ride_view_active
 
 
+# Turns the view to look along `direction` from behind the player, e.g. so a
+# scene can face a landmark on arrival.
+func face_direction(direction: Vector3) -> void:
+	_yaw = atan2(-direction.x, -direction.z)
+	_snap_to_follow_target()
+
+
 func _snap_to_follow_target() -> void:
 	# Public callers (the train forcing a ride view, a scene re-seating the
 	# camera) can reach this before _ready has resolved the player, so this
