@@ -47,6 +47,7 @@ const SETTLE_SLICE := 0.1
 # cost ~4.4 s of compilation between them), so it gets its own slice of the bar
 # rather than being hidden inside the settle phase.
 const WARMUP_TIMEOUT_MS := 20000
+const WEB_WARMUP_TIMEOUT_MS := 60000
 
 # How the screen decides the new scene is actually drawable (see
 # _hold_until_first_frames_settle).
@@ -113,7 +114,7 @@ func _ready():
 		var music: AudioStreamPlayer2D = MusicManager.player2
 		# A load started while the last one's music is still fading out
 		# takes the music back instead of letting the fade stop it.
-		var fade = music.get_meta("loading_fade", null)
+		var fade = music.get_meta("loading_fade") if music.has_meta("loading_fade") else null
 		if fade is Tween and fade.is_valid():
 			fade.kill()
 			music.volume_db = music.get_meta("loading_fade_volume")
@@ -537,7 +538,7 @@ func _warm_shaders() -> void:
 	# a backstop only: a driver that compiles unusually slowly hands over to
 	# gameplay rather than stranding the player here.
 	var cursor := 0
-	var deadline := Time.get_ticks_msec() + WARMUP_TIMEOUT_MS
+	var deadline := Time.get_ticks_msec() + (WEB_WARMUP_TIMEOUT_MS if OS.has_feature("web") else WARMUP_TIMEOUT_MS)
 	while cursor >= 0 and Time.get_ticks_msec() < deadline:
 		cursor = ShaderWarmup.reveal_next(rig, cursor)
 		if cursor < 0:
@@ -550,6 +551,7 @@ func _warm_shaders() -> void:
 	await get_tree().process_frame
 	var completed: int = materials.size() if cursor < 0 else int(cursor / (2 if ShaderWarmup.WARM_INSTANCED else 1))
 	ShaderWarmup.remember_warmed(materials, completed)
+	print("SHADER WARMUP ", next_scene_path, " ", completed, "/", materials.size(), " variants")
 	rig.queue_free()
 
 
