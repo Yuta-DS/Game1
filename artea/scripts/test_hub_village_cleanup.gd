@@ -5,7 +5,10 @@ extends SceneTree
 # door has a sign beside it that doesn't block the way in.
 
 const MUTED_NPCS := ["Father_Animations2", "Knight2", "Rogue", "Barbarian", "Mage"]
-const REMOVED := ["MayorAlder", "Magitech", "Music_World", "Knight"]
+# Includes the floating orbs: the skyway trail with its "Mind Spark Kingdom"
+# marker, the landmark lantern crystals and the drifting aether motes.
+const REMOVED := ["MayorAlder", "Magitech", "Music_World", "Knight",
+	"SkywayMap", "MindSparkWaypoint", "LandmarkGlow", "CastleAtmosphere"]
 const SIGNED_DOORS := {
 	"Popthought_world": "MinigameSign_PopThoughts",
 	"Drawing_Tool2": "MinigameSign_Music",
