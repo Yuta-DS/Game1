@@ -168,7 +168,8 @@ func _build_environment() -> void:
 	recovery.add_child(recovery_shape)
 	island.add_child(recovery)
 	recovery.body_entered.connect(func(body):
-		if body == player and (not embedded_in_overworld or embedded_active): call_deferred("_recover")
+		# The station garden walk passes through this volume; walking it is not a fall.
+		if body == player and not player.is_on_floor() and (not embedded_in_overworld or embedded_active): call_deferred("_recover")
 	)
 
 	# Broad connected ground; paths sit flush above it and require no jumps.

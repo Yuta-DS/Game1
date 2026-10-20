@@ -2900,7 +2900,9 @@ func _build_recovery_volume(zone: Node3D, radius: float) -> void:
 
 
 func _on_recovery_body_entered(body: Node3D) -> void:
-	if body == _player and _player != null:
+	# The Mind causeway runs through some of these volumes; walking along it is
+	# not a fall.
+	if body == _player and _player != null and not _player.is_on_floor():
 		var regions := get_parent().get_parent() if get_parent() != null and get_parent().get_parent() != null else null
 		var floating_world := regions.get_parent() if regions != null else null
 		var respawn := _last_safe_position

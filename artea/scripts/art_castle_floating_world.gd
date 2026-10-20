@@ -1191,7 +1191,8 @@ func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vecto
 
 
 func _recover_approach_player(body: Node3D, safe_position: Vector3) -> void:
-	if body != _player or _player == null:
+	# Standing on something inside the volume (a lower walkway) is not a fall.
+	if body != _player or _player == null or _player.is_on_floor():
 		return
 	if _request_milo_rescue(to_global(safe_position)):
 		return
