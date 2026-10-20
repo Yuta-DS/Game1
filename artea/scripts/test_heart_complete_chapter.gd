@@ -28,6 +28,7 @@ func run() -> void:
 	var state = root.get_node("JourneyState")
 	var prior_treasures: Dictionary = state.treasures.duplicate(true)
 	state.treasures.harmony_jewel = false
+	check(not world.progress.answer_flowers([0, 2, 1]), "flower answer cannot bypass three saved seeds")
 	for i in 6:
 		chapter.harvest(i)
 		press("Harvest protected story allotment")
@@ -37,13 +38,24 @@ func run() -> void:
 		world._planter(i)
 		press("Confirm planting / appearance")
 	check(world.progress.committed.chapter.quest_pouch.echo_berry == 1, "celesta consumes three protected seeds once")
-	world._phrase_panel()
-	for symbol in ["Leaf", "Sun", "Droplet"]: press(symbol)
-	press("Confirm phrase")
+	check(not world.progress.answer_flowers([0, 1, 2]), "wrong flower order cannot unlock encounters")
+	# Use the flower menu players actually encounter, without completing the
+	# unrelated optional four-fruit orchard activity first.
+	world.musical_garden._flower_activity()
+	for symbol in ["LEAF", "SUN", "DROPLET"]: press("Add " + symbol)
+	press("Answer the flowers")
+	check(world.progress.committed.solved, "flower activity confirms the saved story phrase")
+	var phrase_reload := Progress.new()
+	phrase_reload.path = world.progress.path
+	phrase_reload.load_progress()
+	check(phrase_reload.committed.solved, "flower confirmation survives reload")
 	world._close()
 	# Exercise the actual shell exposure/release contract for both old waves.
 	for wave in [1, 2]:
-		world._start_wave(wave)
+		world.player.position = world.encounter_center
+		await process_frame
+		await process_frame
+		check(world.active_wave == wave and not world.enemies.is_empty(), "entering clearing automatically spawns wave %d" % wave)
 		for enemy in world.enemies.duplicate():
 			enemy.phase = "recovery"
 			enemy.take_damage(100, world.player)

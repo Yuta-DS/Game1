@@ -349,9 +349,17 @@ func _flower_activity() -> void:
 	world._button("Undo response", func(): _undo_phrase("flowers"))
 	world._button("Reset response", func(): world.progress.set_music_phrase("flowers", []); world.message.text = _phrase_text("flowers", ["LEAF", "DROPLET", "SUN"]))
 	world._button("Answer the flowers", func():
-		if world.progress.data.music.phrases.flowers == Catalog.FLOWER_PHRASE and world.progress.complete_music_activity(Catalog.ACTIVITY_FLOWERS):
-			world.message.text = "The flowers answer in harmony. Activity complete; your exact progress is saved."
-		else: world.message.text = "The matching beginning is kept. Listen again, undo, or revise without penalty."
+		if world.progress.data.music.phrases.flowers != Catalog.FLOWER_PHRASE:
+			world.message.text = "Answer LEAF, then SUN, then DROPLET. Undo or reset to revise your response."
+			return
+		world.progress.complete_music_activity(Catalog.ACTIVITY_FLOWERS)
+		if world.progress.committed.planters.size() == 3:
+			if world.progress.answer_flowers(world.progress.data.music.phrases.flowers):
+				world._apply_restoration()
+				world.message.text = "Phrase confirmed and saved! Close flower play, then enter the round sandy Blight Clearing beside the drums. Step aside during attacks; press F when a shell is recovering. Clear both waves to open River Song."
+			else: world.message.text = "The answer is correct, but saving failed. Retry saving from Help before entering the clearing."
+		else:
+			world.message.text = "Correct answer! Plant and confirm all three feeling seeds first, then return here and answer the flowers to awaken the Blight Clearing."
 	)
 	world._button("Optional rhythm mode: %s" % ("assisted" if rhythm_assist else "standard"), func(): rhythm_assist = not rhythm_assist; rhythm_speed = 1.1 if rhythm_assist else 0.7; _flower_activity())
 	world._button("Exit flower play", world._close)

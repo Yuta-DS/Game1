@@ -55,10 +55,19 @@ func run(stage: String) -> void:
 			for i in 3:
 				world._planter(i)
 				_press("Confirm planting / appearance")
-			world.progress.edit_phrase([0, 2, 1])
-			world.progress.solve()
-			world.progress.clear_wave(1)
-			world.progress.clear_wave(2)
+			world.musical_garden._flower_activity()
+			for symbol in ["LEAF", "SUN", "DROPLET"]: _press("Add " + symbol)
+			_press("Answer the flowers")
+			world._close()
+			if not world.progress.committed.solved: push_error("JOURNEY QA flower answer did not unlock clearing")
+			for wave in [1, 2]:
+				world.player.position = world.encounter_center
+				for i in 3: await get_tree().process_frame
+				if world.active_wave != wave or world.enemies.is_empty(): push_error("JOURNEY QA clearing did not spawn wave " + str(wave))
+				for enemy in world.enemies.duplicate():
+					enemy.phase = "recovery"
+					enemy.take_damage(100, world.player)
+				world._close()
 			world.player.position = Vector3(79, 1, 8)
 			world.camera.yaw = -PI / 2
 			world.camera.pitch = -0.28

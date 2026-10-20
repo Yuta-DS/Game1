@@ -488,6 +488,10 @@ func _process(delta: float) -> void:
 		for i in plants.size(): plants[i].rotation.z = sin(_ambient_time * 1.3 + i) * 0.025
 
 func objective() -> String:
+	if not progress.data.complete and progress.data.solved:
+		if not progress.committed.solved: return "Correct phrase: retry saving in Help before entering the Blight Clearing."
+		if active_wave > 0: return "Blight wave %d / 2: step aside, then press F while the shell recovers." % active_wave
+		return "Enter the round sandy Blight Clearing beside the drums. Clear wave %d / 2." % (2 if progress.data.waves.has(1) else 1)
 	if chapter_world != null: return chapter_world.objective()
 	if musical_garden != null:
 		if player != null and player_local_position().x > 104 and progress.data.complete and river != null:
@@ -794,7 +798,7 @@ func _confirm_phrase() -> void:
 		while mismatch < progress.data.phrase.size() and progress.data.phrase[mismatch] == Catalog.PHRASE[mismatch]: mismatch += 1
 		message.text = "Note %d is the %s flower. Your phrase is kept; undo or listen again.\n%s" % [mismatch + 1, Catalog.SYMBOLS[Catalog.PHRASE[mini(mismatch, 2)]], _phrase_text()]
 		return
-	if progress.solve():
+	if progress.answer_flowers(progress.data.phrase):
 		_apply_restoration()
 		_notice("The flowers found their phrase. Walk into the marked clearing when ready.\nRead the warning, step aside, then press F to release the shell during recovery.")
 		_demonstrate(Catalog.PHRASE)
