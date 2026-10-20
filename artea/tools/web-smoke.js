@@ -19,6 +19,7 @@
 //   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open] [--repeat]
 //       [--latency MS] [--mbps N] [--fail-part NN] [--fail-times K]
 //       [--startup-only] (login, hub entry and movement; skips later worlds)
+//       [--music-circle] (actual keyboard/click tests on all five instruments)
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
@@ -492,6 +493,49 @@ async function connect() {
 			await sleep(3000);
 			castlePlayable = await movesWithW(await shot('05-art-castle'), '06-castle-moving', '07-castle-after-move');
 		}
+		let musicCirclePlayable = !args.includes('--music-circle');
+		if (castle && args.includes('--music-circle')) {
+			// tools/** is intentionally excluded from production. Copy only the
+			// opt-in controller into this browser's transient virtual filesystem;
+			// it instantiates and operates the unmodified exported gallery.
+			for (const name of ['music_circle_web_qa.gd', 'music_circle_web_qa.tscn']) {
+				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8')
+					.replace('res://tools/qa/music_circle_web_qa.gd', '/tmp/music_circle_web_qa.gd');
+				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
+			}
+			const fixture = await goTo('the music-circle test', '/tmp/music_circle_web_qa.tscn');
+			if (!fixture) throw new Error('Could not open the real music-circle test scene');
+			const tap = async (code, keyCode, keyValue) => {
+				for (const type of ['keyDown', 'keyUp']) {
+					await send('Input.dispatchKeyEvent', { type, code, key: keyValue, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode });
+					await sleep(code === 'F8' ? 450 : 180);
+				}
+			};
+			for (const kind of ['xylophone', 'drums', 'bells', 'guitar', 'piano']) {
+				await waitForLog(new RegExp('MUSIC QA near ' + kind), kind + ' proximity', 20000);
+				await tap('KeyQ', 81, 'q');
+				await waitForLog(new RegExp('MUSIC QA open ' + kind), kind + ' controls', 20000);
+				let from = consoleLines.length;
+				await tap('KeyA', 65, 'a');
+				await waitForLog(new RegExp('MUSIC QA note ' + kind + ' ' + (kind === 'piano' ? 60 : 0)), kind + ' keyboard sound', 10000, from);
+				if (kind === 'xylophone' || kind === 'piano') {
+					from = consoleLines.length;
+					await tap('KeyJ', 74, 'j');
+					await waitForLog(new RegExp('MUSIC QA note ' + kind + ' ' + (kind === 'piano' ? 71 : 6)), kind + ' J note without journal', 10000, from);
+				}
+				const line = consoleLines.findLast((line) => line.includes('MUSIC QA pad ' + kind));
+				const coords = line.match(/MUSIC QA pad \w+ ([\d.\-]+) ([\d.\-]+)/);
+				if (!coords) throw new Error('No clickable pad position for ' + kind);
+				from = consoleLines.length;
+				await click(Number(coords[1]), Number(coords[2]));
+				await waitForLog(new RegExp('MUSIC QA note ' + kind + ' ' + (kind === 'piano' ? 60 : 0)), kind + ' clicked sound', 10000, from);
+				await shot('music-circle-' + kind);
+				await tap('Escape', 27, 'Escape');
+				await waitForLog(new RegExp('MUSIC QA closed ' + kind), kind + ' exit restores movement', 10000);
+				if (kind !== 'piano') await tap('F8', 119, 'F8');
+			}
+			musicCirclePlayable = true;
+		}
 		areas.push(['the Art Castle', castle, castle ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		const KINGDOMS = [
 			['Mind Spark', 'res://scenes/popThoughtsMenu.tscn'],
@@ -508,7 +552,7 @@ async function connect() {
 			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		}
 
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error|MUSIC QA FAILURE/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();
@@ -540,7 +584,7 @@ async function connect() {
 		// Not visibly slower: the median frame within 25% of the idle Hub's.
 		const smooth = !during || !after || during.median <= after.median * 1.25;
 		say(`prefetched areas entered without downloading: ${noWait}; story fell back to downloading: ${fellBack}; hub pacing held: ${smooth}`);
-		const pass = moved && castlePlayable && areas.every(([, entered, back]) => entered && back)
+		const pass = moved && castlePlayable && musicCirclePlayable && areas.every(([, entered, back]) => entered && back)
 			&& noWait && fellBack && smooth && !crashed() && fatal.length === 0;
 
 		if (repeat) {
