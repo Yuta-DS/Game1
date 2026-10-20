@@ -33,6 +33,11 @@ var _packet_base_scales: PackedVector3Array = PackedVector3Array()
 
 var _needs_recache := false
 
+# Its _process only animates it: art_castle_floating_world.gd pauses it away
+# from the player.
+func _init() -> void:
+	add_to_group(&"animate_near_player")
+
 
 func _ready() -> void:
 	call_deferred("_cache_details")

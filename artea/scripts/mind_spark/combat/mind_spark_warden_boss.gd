@@ -32,6 +32,11 @@ var _storm_crown: Node3D
 var _visual_time := 0.0
 var _combat_audio: AudioStreamPlayer3D
 
+# Its _process only animates it: art_castle_floating_world.gd pauses it away
+# from the player.
+func _init() -> void:
+	add_to_group(&"animate_near_player")
+
 
 func _ready() -> void:
 	_build_combat_audio()

@@ -1,6 +1,7 @@
 extends Node
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const WebDecor := preload("res://scripts/web_decor.gd")
 const RatingHeart := preload("res://scripts/rating_heart.gd")
 const STAR_ICON := preload("res://assets/UI/icons/star.svg")
 
@@ -149,6 +150,11 @@ func _build_galaxy_transit() -> void:
 	minimap.set_script(preload("res://scripts/art_castle_minimap.gd"))
 	minimap.set("map_context", "galaxy")
 	map_canvas.add_child(minimap)
+	# On the web, small decoration is drawn unshaded: entering the castle is
+	# mostly shader compilation, and these compile at about half the cost.
+	# Done before the first frame, so the lit versions are never compiled.
+	if OS.has_feature("web"):
+		WebDecor.make_decoration_unshaded(floating_world)
 		
 		
 func _input(event):
