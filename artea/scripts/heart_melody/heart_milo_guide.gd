@@ -44,6 +44,11 @@ func station_approach() -> bool:
 	if not world.embedded_in_overworld: return false
 	var connection := world.get_parent()
 	var point: Vector3 = connection.to_local(world.player.global_position)
+	var circle := connection.get_parent().get_parent().get_node_or_null("KingdomRegions3000m/HeartKingdomPlatform/HeartMusicCircle") as Node3D
+	if circle != null:
+		var court_point := circle.to_local(world.player.global_position)
+		if absf(court_point.y) < 24.0 and Vector2(court_point.x, court_point.z).length() < 455.0:
+			return true
 	for segment in [[connection.WALK_START, connection.WALK_TURN], [connection.WALK_TURN, connection.WALK_FINISH]]:
 		if point.distance_to(Geometry3D.get_closest_point_to_segment(point, segment[0], segment[1])) < 24: return true
 	return false
@@ -111,6 +116,9 @@ func stop() -> void:
 
 func replay() -> void:
 	world._close()
+	if world.embedded_in_overworld and not world.embedded_active and station_approach():
+		play_line("station")
+		return
 	var index: int = mini(world.progress.committed.chapter.tasks.size(), 10)
 	play_line(STAGES[index])
 

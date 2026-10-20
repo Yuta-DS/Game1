@@ -32,7 +32,7 @@ func _ready() -> void:
 	_build_walk_segment(path, WALK_TURN, WALK_FINISH, 6.0, 0.0)
 	Art.box(path, WALK_TURN - Vector3.UP * 0.5, Vector3(20, 1, 20), Color("bdac90"), true)
 	var direction := (WALK_TURN - WALK_START).normalized()
-	Art.label(self, "03 · HEART MELODY\nQUIET MEADOW\nWalk up to the Feeling Garden", WALK_START + Vector3(0, 12, 0), 38)
+	Art.label(self, "03 · HEART MELODY\nStraight ahead: instruments & singing fountain maze\nRaised flower path: Melody World Garden islands", WALK_START + Vector3(0, 12, 0), 32)
 	var lock_mesh := Art.box(self, WALK_START + direction * 12 + Vector3.UP * 2.0,
 		Vector3(12, 4, 0.5), Color("bc8cab"), true)
 	lock_mesh.look_at(to_global(lock_mesh.position + direction))
