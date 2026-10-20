@@ -256,6 +256,7 @@ func interact(kind: String, index: int) -> void:
 func _fruit_panel(fruit_id: String) -> void:
 	var info: Dictionary = Catalog.FRUITS[fruit_id]
 	world._open(str(info.name), "%s\n%s\n\nListen first, then harvest. Eat collected fruit from the fruit bucket in the valley journal. Its unlocked instrument voice stays available after eating." % [info.symbol, info.role])
+	world._flow(["Listen / preview", "Harvest the fruit", "Place it or eat it"])
 	world._button("Preview sound", func():
 		world.note(Catalog.FRUIT_ORDER.find(fruit_id), 0.18, int(info.timbre)); _pulse(fruit_visuals[fruit_id])
 		world.message.text = "%s sounds like %s. Pitch will come from an instrument slot." % [info.name, info.role]
@@ -301,6 +302,7 @@ func on_flower_play(note_index: int) -> void:
 
 func _instrument_panel(instrument: String) -> void:
 	world._open(Catalog.instrument_name(instrument), "Free play is always available. Note position sets pitch; fruit changes only the tone. Use Tab / arrows and Enter, controller focus, or touch.")
+	world._flow(["Hear the example", "Click notes to play", "Arrange / record"])
 	var note_count: int = int(Catalog.INSTRUMENTS[instrument].notes)
 	for note_index in note_count:
 		world._button("Play note %d  %s" % [note_index + 1, _slot_description(instrument, note_index)], func(): play_note(instrument, note_index))
@@ -403,6 +405,7 @@ func _bell_activity() -> void:
 func _ensemble_panel() -> void:
 	var ready: bool = world.progress.data.music.completed.has(Catalog.ACTIVITY_BELLS)
 	world._open("The Garden Ensemble", ("Combine rhythm, melody, harmony and accents. Fruit choices colour the timbre." if ready else "The ensemble is resting. Complete Orchard Voices, Answer the Flowers, Fruit Melody and Bell Grove first."))
+	world._flow(["Restore the activities", "Choose your layers", "Play the ensemble"])
 	if ready:
 		for layer in ["drums", "marimba", "harp", "bells"]:
 			world._button("%s layer: %s" % [Catalog.instrument_name(layer), "ON" if world.progress.data.music.ensemble[layer] else "OFF"], func(): world.progress.set_ensemble_layer(layer, not world.progress.data.music.ensemble[layer]); _ensemble_panel())

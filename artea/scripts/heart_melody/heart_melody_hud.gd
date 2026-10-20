@@ -5,7 +5,7 @@ var journal_button: Button
 
 func build(layer: CanvasLayer, open_journal: Callable) -> Label:
 	journal_button = Button.new()
-	journal_button.text = "Valley map · fruit · crafting"
+	journal_button.text = "Melody journal · current task"
 	journal_button.position = Vector2(890, 24)
 	journal_button.custom_minimum_size = Vector2(310, 52)
 	journal_button.pressed.connect(open_journal)
@@ -25,7 +25,8 @@ func build(layer: CanvasLayer, open_journal: Callable) -> Label:
 
 func update(tasks: int, focus: float, text: String, large_text: bool) -> void:
 	if not is_instance_valid(caption): return
-	caption.text = "Chapter %d / 10 · Focus %d\n%s" % [tasks, focus, text]
+	caption.visible = not text.is_empty() or focus < 100
+	caption.text = ("Focus %d\n" % focus if focus < 100 else "") + text
 	caption.add_theme_font_size_override("font_size", 28 if large_text else 22)
 	caption.custom_minimum_size.x = 600
 	caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

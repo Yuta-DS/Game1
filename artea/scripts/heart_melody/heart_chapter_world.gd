@@ -43,6 +43,7 @@ var presentation := HUD.new()
 var fruit_objects: Array[Node3D] = []
 var note_visuals: Dictionary = {}
 var warning_steps := 0
+var feedback_until := 0.0
 
 func _ready() -> void:
 	world = get_parent()
@@ -168,7 +169,32 @@ func _build_instruments() -> void:
 func objective() -> String:
 	var id := Catalog.next_task(director.snapshot().tasks)
 	if id.is_empty(): return "The valley sings again. Visit the Jewel Sanctuary or return to the Castle railway."
-	return Catalog.TITLES[Catalog.TASKS.find(id)] + " · follow the valley path; find fruit directions in the journal."
+	var index := Catalog.TASKS.find(id)
+	return ["Harvest Echo Berries beside the entrance, then plant three seeds.",
+		"Answer Leaf → Sun → Droplet. Confirm the phrase and clear both Blight waves.",
+		"Enter River Song. Harvest Dew Pears, then tune the three organ valves.",
+		"Harvest Sun Plums. Tune five Hush Vine strings to their target numbers.",
+		"Harvest Bell Apples by the dock. Answer the Call Bells to unlock Bell Grove.",
+		"Restore three bridge chimes on OPEN beats to unlock the next gate.",
+		"Harvest Moon Melons. Follow Leaf → Sun → Droplet during QUIET gaps.",
+		"Enter Harmony Stage. Arrange drums → water → harp → chimes at the loom.",
+		"Complete three beat anchors during the Conductor's RECOVERY.",
+		"Bring all six story fruits to the orchestra, then conduct four OPEN beats."][index]
+
+func area_title() -> String:
+	var x: float = world.player_local_position().x
+	if x < 104: return "Feeling Garden"
+	if x < 225: return "River Song"
+	if x < 345: return "Bell Grove"
+	if x < 439: return "Harmony Stage"
+	return "Jewel Sanctuary"
+
+func revealed_fruit(index: int) -> bool:
+	var count: int = director.snapshot().tasks.size()
+	# A grove becomes useful when its first activity is available. Completed
+	# and physically discovered groves remain in the journal on backtracking.
+	var required := [0, 3, 2, 4, 6, 9]
+	return count >= required[index] or world.player_local_position().distance_to(FRUIT_POS[index]) < 24
 
 func interact(kind: String, index: int) -> void:
 	match kind:
@@ -195,6 +221,7 @@ func harvest(index: int) -> void:
 	var id: String = Fruit.IDS[index]
 	var spec: Dictionary = Fruit.FRUITS[id]
 	world._open(spec.label, spec.property + "\nShape: " + spec.shape + " · Leaf: " + spec.leaf + " · Icon: " + spec.icon + "\nStory fruit is protected. Extra fruit is for crafting.")
+	world._flow(["Listen to the fruit", "Harvest story allotment", "Use at this activity"])
 	world._button("Preview note and silhouette", func(): _feedback(spec.label + " · " + spec.icon, index))
 	world._button("Harvest protected story allotment", func():
 		if fruit_objects[index].interact("harvest_story"):
@@ -244,6 +271,17 @@ func _instrument_panel() -> void:
 		8: "The shell rests after each wave. Answer this anchor's short lesson.",
 		9: "Place Echo, Sun, Dew, Bell, Moon, Harmony fruits. Then conduct North, East, South, West on four open beats."}
 	world._open(Catalog.TITLES[active_task], explanations[active_task] + "\nScore: " + _score())
+	var steps := ["Listen / watch", "Play the pattern", "Check composition"]
+	if active_task in [2, 3]: steps = ["Read target numbers", "Tune each control", "Check composition"]
+	if active_task in [5, 9]: steps = ["Watch for OPEN", "Play the next note", "Check composition"]
+	if active_task == 6: steps = ["Wait for QUIET", "Leaf → Sun → Droplet", "Check composition"]
+	world._flow(steps)
+	if active_task not in [2, 3]:
+		var keys := Label.new()
+		keys.text = "Click a note or use 1–6 · Backspace: undo · Enter: check · Esc: leave"
+		keys.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		keys.add_theme_font_size_override("font_size", 20)
+		world.options.add_child(keys)
 	if active_task in [2, 3]:
 		var count := 3 if active_task == 2 else 5
 		for i in count:
@@ -285,6 +323,18 @@ func _instrument_panel() -> void:
 	world._button("Hint", func(): world.message.text = challenge.hint(); _store_attempt())
 	world._button("Check composition", submit)
 	world._button("Play by moving between the flower keys", world._close)
+
+func _input(event: InputEvent) -> void:
+	if active_task < 0 or not world.modal_open or not (event is InputEventKey) or not event.pressed or event.echo: return
+	if world.embedded_in_overworld and not world.embedded_active: return
+	var code: int = event.physical_keycode
+	if code >= KEY_1 and code <= KEY_6 and active_task not in [2, 3]:
+		var count := 6 if active_task == 9 else (4 if active_task in [4, 7] or active_anchor == 2 else 3)
+		if code - KEY_1 < count: play(code - KEY_1)
+	elif code == KEY_BACKSPACE: challenge.undo(); _store_attempt(); _update_score()
+	elif code == KEY_ENTER: submit()
+	else: return
+	get_viewport().set_input_as_handled()
 
 func play(note: int) -> void:
 	if active_task < 0: return
@@ -370,6 +420,7 @@ func _store_attempt() -> void:
 
 func _feedback(text: String, note: int) -> void:
 	caption = text
+	feedback_until = clock + 5.0
 	if note >= 0:
 		if not muted: world.note(note, 0.18)
 		if note_visuals.has(active_task * 100 + note): world._pulse(note_visuals[active_task * 100 + note])
@@ -414,11 +465,20 @@ func tick(delta: float) -> void:
 	else: timing_label.text = ""
 	if world.modal_open and active_task in [5, 6, 9] and is_instance_valid(world.message):
 		world.message.text = timing_label.text + "\nScore: " + _score() + "\n" + caption
-	presentation.update(chapter.tasks.size(), focus, caption, world._large_text)
+	presentation.update(chapter.tasks.size(), focus, caption if clock < feedback_until else "", world._large_text)
 
 func journal() -> void:
 	var chapter := director.snapshot()
-	world._open("Heart Melody · valley journal", objective() + "\n" + " → ".join(["Meadow", "Feeling Garden", "River", "Bell Grove", "Stage", "Sanctuary"]) + "\nQuest pouch: " + str(chapter.quest_pouch) + "\nMaterials: " + str(chapter.materials) + "\nCheckpoint storage: " + str(chapter.storage))
+	world._open("Your Melody journal · " + area_title(), objective())
+	var count: int = mini(chapter.tasks.size(), 10)
+	var now: String = Catalog.TITLES[count] if count < 10 else "Harmony Jewel"
+	world._flow(["Explore this area", now, "Open the next gate"])
+	world._button("Current task · replay Milo's guidance", func(): world.milo_guide.replay())
+	if count > 0:
+		world._button("Completed activities (%d)" % count, func():
+			world._open("Your restored instruments", "\n".join(Catalog.TITLES.slice(0, count)))
+			world._button("Back to current task", journal)
+		)
 	world._button("Open fruit bucket / eat fruit", fruit_bucket)
 	world._button("Assistance: " + ("ON" if assistance else "OFF"), func():
 		assistance = not assistance
@@ -436,10 +496,13 @@ func journal() -> void:
 		journal()
 	)
 	for i in 6:
+		if not revealed_fruit(i): continue
 		var id: String = Fruit.IDS[i]
 		world._button(Fruit.FRUITS[id].label + " · " + GROVE_DIRECTIONS[i], func(): caption = "Find " + Fruit.FRUITS[id].label + " " + GROVE_DIRECTIONS[i]; world._close())
 	for recipe_id in Fruit.RECIPES:
+		if count < 2 or (recipe_id == "harmony_glaze" and count < 10): continue
 		var recipe: Dictionary = Fruit.RECIPES[recipe_id]
+		if not revealed_fruit(Fruit.IDS.find(recipe.fruit)): continue
 		world._button("Craft " + recipe_id.replace("_", " ") + " · %d fruit" % recipe.cost, func():
 			caption = "Crafted " + recipe_id if director.craft(recipe_id) else "Restored garden and enough crafting fruit are required. Quest fruit stays protected."
 			journal()
@@ -455,6 +518,7 @@ func fruit_bucket() -> void:
 	world._open("Fruit bucket", "Eat one fruit to recover 20 health and 20 focus.\nStory fruit and unlocked instrument voices stay protected.")
 	var chapter := director.snapshot()
 	for id in Fruit.IDS:
+		if not revealed_fruit(Fruit.IDS.find(id)): continue
 		var count := int(chapter.materials.get(id, 0))
 		var button: Button = world._button("Eat %s (%d)" % [Fruit.FRUITS[id].label, count], func(): eat_fruit(id))
 		button.disabled = count == 0

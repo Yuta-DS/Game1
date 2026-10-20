@@ -26,9 +26,9 @@ func _ready() -> void:
 	var sound := AudioStreamPlayer3D.new()
 	sound.name = "FountainMusic"
 	sound.position = Vector3.UP * 4
-	sound.unit_size = 24.0
+	sound.unit_size = 32.0
 	sound.max_distance = 120.0
-	sound.volume_db = -10.0
+	sound.volume_db = -2.0
 	sound.bus = "Music" if AudioServer.get_bus_index("Music") >= 0 else "Master"
 	var path := "res://assets/audio/music_circle/fountain_theme.wav"
 	if ResourceLoader.exists(path):
