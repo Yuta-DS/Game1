@@ -14,7 +14,9 @@ func run() -> void:
 	var garden := regions.get_node("HeartKingdomPlatform/HeartArrivalGarden")
 	var fountain := garden.get_node("MusicalFountain")
 	assert(fountain.get_node("SkywardMusicNotes").multimesh.instance_count == 28)
-	assert(garden.get_node("BlossomGrove").get_child_count() == 24)
+	assert(not garden.has_node("BlossomGrove"), "The arrival trees are replaced by the hedge maze")
+	var maze := regions.get_node("HeartKingdomPlatform/HeartMusicMaze")
+	assert(fountain.global_position.distance_to(maze.to_global(maze.fountain_position())) < 0.03, "Fountain belongs in the maze clearing")
 	# All adjacent paving surfaces share a height but never overlap in area.
 	assert(court.mesh.get_surface_count() == 3)
 	for surface in court.mesh.get_surface_count():

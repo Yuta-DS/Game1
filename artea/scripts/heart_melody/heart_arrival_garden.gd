@@ -3,11 +3,12 @@ extends Node3D
 const Art = preload("res://scripts/heart_melody/heart_art.gd")
 const NoteShader = preload("res://shaders/heart_fountain_notes.gdshader")
 const CENTER := Vector3(1787.4, 0.22, 7943.7)
+var fountain_position := CENTER
 
 func _ready() -> void:
 	var fountain := Node3D.new()
 	fountain.name = "MusicalFountain"
-	fountain.position = CENTER
+	fountain.position = fountain_position
 	add_child(fountain)
 	Art.cone(fountain, Vector3(0, 0.4, 0), 19, 19, 0.8, Color("c9afbd"), true, 24)
 	Art.cone(fountain, Vector3(0, 1.1, 0), 16.5, 17.5, 1.1, Color("f2d8cf"), true, 24)
@@ -22,20 +23,22 @@ func _ready() -> void:
 			0.48, 0.48, height, Color("e7c27f"), false, 8)
 	_build_water_arcs(fountain)
 	_build_notes(fountain)
-	var grove := Node3D.new()
-	grove.name = "BlossomGrove"
-	add_child(grove)
-	# Leave the station landing and the entire twelve-metre garden route clear.
-	for index in 18:
-		var angle := float(index) * TAU / 18.0
-		var radius := 36.0 + float(index % 3) * 12.0
-		var point := CENTER + Vector3(cos(angle) * radius, 0, sin(angle) * radius)
-		Art.tree(grove, point, index % 2)
-		var tree := grove.get_child(grove.get_child_count() - 1) as Node3D
-		tree.name = "ArrivalBlossom_%02d" % index
-	# Small groves frame the promenade rather than filling its walking lane.
-	for index in 6:
-		Art.tree(grove, Vector3(1680 + index * 16, 0.22, 7880 + index * 12), index % 2)
+	var sound := AudioStreamPlayer3D.new()
+	sound.name = "FountainMusic"
+	sound.position = Vector3.UP * 4
+	sound.unit_size = 24.0
+	sound.max_distance = 120.0
+	sound.volume_db = -10.0
+	sound.bus = "Music" if AudioServer.get_bus_index("Music") >= 0 else "Master"
+	var path := "res://assets/audio/music_circle/fountain_theme.wav"
+	if ResourceLoader.exists(path):
+		var stream := load(path) as AudioStreamWAV
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_begin = 0
+		stream.loop_end = 22050 * 16
+		sound.stream = stream
+		sound.autoplay = true
+	fountain.add_child(sound)
 
 func _build_water_arcs(parent: Node3D) -> void:
 	var surface := SurfaceTool.new()

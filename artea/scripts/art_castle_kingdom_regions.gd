@@ -178,9 +178,15 @@ func _build_station_platform(kingdom_id: String, paving: Array, accent: Material
 	_add_cylinder(platform, "WalkableDeck", center + Vector3(0, -1.5, 0), r, 3.0, accent, true, 64)
 	if kingdom_id == "heart":
 		_build_heart_court(platform, center, r - 8.0, [deck_material, accent, plaza_material])
+		var maze := Node3D.new()
+		maze.name = "HeartMusicMaze"
+		maze.position = center + Vector3.UP * 0.20
+		maze.set_script(preload("res://scripts/heart_melody/heart_music_maze.gd"))
+		platform.add_child(maze)
 		var garden := Node3D.new()
 		garden.name = "HeartArrivalGarden"
 		garden.set_script(preload("res://scripts/heart_melody/heart_arrival_garden.gd"))
+		garden.fountain_position = center + maze.fountain_position() + Vector3.UP * 0.20
 		platform.add_child(garden)
 		var music_circle := Node3D.new()
 		music_circle.name = "HeartMusicCircle"
