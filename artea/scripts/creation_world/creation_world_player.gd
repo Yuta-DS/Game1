@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
-const WALK_SPEED := 6.0
-const RUN_SPEED := 9.5
+const WALK_SPEED := 9.5
+const RUN_SPEED := 14.0
 const JUMP_SPEED := 6.5
 const LOOK_SENSITIVITY := 0.0024
 const ACCELERATION := 28.0
@@ -127,14 +127,9 @@ func _update_locomotion(moving_on_floor: bool, running: bool) -> void:
 		locomotion_state = "idle"
 		_play_animation(idle_animation, 1.0)
 		return
-	if running:
-		locomotion_state = "run"
-		_play_animation(run_animation, 1.15)
-	else:
-		locomotion_state = "walk"
-		# The fox pack exposes Run rather than Walk on some imports. Slowing that
-		# clip gives a natural walk without requiring a duplicate animation asset.
-		_play_animation(walk_animation, 0.72 if walk_animation == run_animation else 1.0)
+	# The default pace is a run; Shift sprints.
+	locomotion_state = "sprint" if running else "run"
+	_play_animation(run_animation, 1.5 if running else 1.15)
 
 
 func _play_animation(animation_name: StringName, speed_scale: float) -> void:

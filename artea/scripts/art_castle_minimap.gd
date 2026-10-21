@@ -16,7 +16,7 @@ const COMPACT_RADIUS := 104.0
 const COMPACT_MAP_RECT := Rect2(39.0, 22.0, 208.0, 208.0)
 const HUB_METERS_PER_PIXEL := 1.7
 const GALAXY_METERS_PER_PIXEL := 9.5
-const GALAXY_PADDING := 180.0
+const GALAXY_PADDING := 420.0
 const HUB_BOUNDS := Rect2(-230.0, -230.0, 460.0, 460.0)
 const CASTLE_POSITION := Vector3(-51.4, 0.0, 27.41)
 const FACING_SPEED_THRESHOLD := 0.08
@@ -57,13 +57,24 @@ const GALAXY_BRIDGE_SEGMENTS := [
 	[Vector2(218, 1640), Vector2(410, 1640), 34.0],
 ]
 
-const HUB_RIVER := [
-	Vector3(-190, 0, -220), Vector3(-132, 0, -110), Vector3(-148, 0, 4),
-	Vector3(-108, 0, 102), Vector3(-82, 0, 220),
+# The hub is one round island: sea all round, a mountain ridge along its -Z
+# rim and down both sides, a beach on the +Z side, and the brick village plaza
+# east of the castle. Measured from a top-down render of New_Hub_World.
+const HUB_ISLAND_CENTER := Vector2(15.0, -45.0)
+const HUB_ISLAND_RADIUS := 200.0
+const HUB_VILLAGE_PLAZA := Rect2(55.0, -120.0, 65.0, 155.0)
+const HUB_LANDMARKS := [
+	[Vector3(107, 0, -6), "VILLAGE SQUARE", Color("9bd487")],
+	[Vector3(170, 0, 60), "PORT", Color("6fcfe8")],
 ]
-const HUB_ROAD := [
-	Vector3(150, 0, -150), Vector3(62, 0, -48), Vector3(5, 0, 4), CASTLE_POSITION,
+# Minigame doors are read from their triggers, like hub_minigame_signs.gd, so
+# the map follows the buildings if they move.
+const HUB_DOORS := [
+	["Popthought_world", "POP THOUGHTS"],
+	["Drawing_Tool2", "MUSIC"], # Despite its name, this trigger opens the music minigame.
+	["Drawing_Tool", "DRAWING"],
 ]
+const DOOR_COLOR := Color("ffb86b")
 
 @export_enum("hub", "galaxy") var map_context := CONTEXT_GALAXY
 
@@ -71,6 +82,7 @@ var _player: Node3D
 var _world: Node3D
 var _regions: Node3D
 var _railway: Node3D
+var _track: Array = [] # See _track_points().
 var _bounds := HUB_BOUNDS
 var _full_map_open := false
 var _previous_mouse_mode := Input.MOUSE_MODE_VISIBLE
@@ -102,6 +114,8 @@ func _ready() -> void:
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	gui_input.connect(_on_gui_input)
+	# The full map only redraws when the view changes, so a window resize must ask.
+	resized.connect(queue_redraw)
 	_apply_layout()
 	call_deferred("_refresh_world_references")
 
@@ -132,6 +146,7 @@ func _refresh_world_references() -> void:
 			_world = owner.get_node_or_null("ArtCastleFloatingWorld") as Node3D
 	_regions = _world.get_node_or_null("KingdomRegions3000m") as Node3D if _world != null else null
 	_railway = _world.get_node_or_null("StoryCrownRailway") as Node3D if _world != null else null
+	_track.clear()
 	_recalculate_bounds()
 	queue_redraw()
 
@@ -142,7 +157,7 @@ func _process(delta: float) -> void:
 		_has_last_player_position = false
 	_update_player_facing(delta)
 	_redraw_cooldown -= delta
-	if _redraw_cooldown > 0.0 and not _view_moved():
+	if (_redraw_cooldown > 0.0 or _full_map_open) and not _view_moved():
 		return
 	_redraw_cooldown = MAP_REFRESH_INTERVAL
 	if _player != null and is_instance_valid(_player):
@@ -329,25 +344,19 @@ func _draw_compact_landscape() -> void:
 func _landscape_color(world_position: Vector3) -> Color:
 	var texture_wave := sin(world_position.x * 0.037) * cos(world_position.z * 0.029)
 	if map_context == CONTEXT_HUB:
-		# Hub terrain: ocean edge, beaches, forest/grass, village clearings, and
-		# the raised castle rock. Coordinates match the current playable hub.
-		var coast := world_position.z + 176.0 + sin(world_position.x * 0.025) * 20.0
-		if coast < 0.0:
+		# Hub terrain: see HUB_ISLAND_CENTER for the layout.
+		var flat := Vector2(world_position.x, world_position.z)
+		var from_centre := flat.distance_to(HUB_ISLAND_CENTER)
+		if from_centre > HUB_ISLAND_RADIUS:
 			return Color("275a72").lightened(texture_wave * 0.035)
-		if coast < 18.0:
-			return Color("b99a61").lightened(texture_wave * 0.035)
-		var castle_distance := Vector2(world_position.x, world_position.z).distance_to(
-			Vector2(CASTLE_POSITION.x, CASTLE_POSITION.z))
-		if castle_distance < 29.0:
+		if flat.distance_to(Vector2(CASTLE_POSITION.x, CASTLE_POSITION.z)) < 29.0:
 			return Color("62697a").lightened(texture_wave * 0.045)
-		var village_distance := Vector2(world_position.x - 42.0, world_position.z + 40.0).length()
-		if village_distance < 52.0:
-			return Color("617f4c").lightened(texture_wave * 0.05)
-		var mountain_distance := minf(
-			Vector2(world_position.x + 95.0, world_position.z + 118.0).length(),
-			Vector2(world_position.x - 112.0, world_position.z + 94.0).length())
-		if mountain_distance < 58.0:
-			return Color("435749").lightened(texture_wave * 0.04)
+		if HUB_VILLAGE_PLAZA.has_point(flat):
+			return Color("8a7a66").lightened(texture_wave * 0.05)
+		if flat.y < -110.0 or (from_centre > 140.0 and flat.y < 35.0):
+			return Color("4d5a5e").lightened(texture_wave * 0.04)
+		if flat.y > 70.0 or from_centre > 160.0:
+			return Color("b99a61").lightened(texture_wave * 0.035)
 		return Color("527d4e").lightened(texture_wave * 0.055)
 
 	if _world == null:
@@ -379,11 +388,9 @@ func _landscape_color(world_position: Vector3) -> Color:
 	for segment in GALAXY_BRIDGE_SEGMENTS:
 		if _distance_to_segment(local_flat, segment[0], segment[1]) <= float(segment[2]):
 			return Color("8d88a0").lightened(texture_wave * 0.035)
-	# Each kingdom's land (3 km Mind, station platforms for the others).
+	# Each kingdom's round station platform.
 	for index in _sample_kingdom_centres.size():
-		var centre: Vector2 = _sample_kingdom_centres[index]
-		var half := _sample_kingdom_halves[index]
-		if absf(local.x - centre.x) <= half and absf(local.z - centre.y) <= half:
+		if local_flat.distance_to(_sample_kingdom_centres[index]) <= _sample_kingdom_halves[index]:
 			return _sample_kingdom_colors[index].lightened(texture_wave * 0.055)
 	return Color("101329").lightened(texture_wave * 0.018)
 
@@ -424,7 +431,7 @@ func _refresh_landscape_sampling() -> void:
 		var centres: Dictionary = _regions.call("get_kingdom_centers")
 		for index in KINGDOM_IDS.size():
 			# Only kingdoms the regions node actually reports. Defaulting a
-			# missing one to Vector3.ZERO would paint its 3 km square over the
+			# missing one to Vector3.ZERO would paint its platform over the
 			# world origin, which is the Tree of Life.
 			if not centres.has(KINGDOM_IDS[index]):
 				continue
@@ -443,12 +450,44 @@ func _distance_to_segment(point: Vector2, start: Vector2, finish: Vector2) -> fl
 
 
 func _draw_hub_compact() -> void:
-	_draw_compact_route(HUB_RIVER, Color("4b99b7"), 8.0)
-	_draw_compact_route(HUB_ROAD, Color("c9ab72"), 3.5)
 	_draw_compact_marker(CASTLE_POSITION, "CASTLE", Color("f2c55e"), "castle")
-	_draw_compact_marker(Vector3(42, 0, -40), "VILLAGE", Color("9bd487"), "place")
-	_draw_compact_marker(Vector3(150, 0, -150), "PIER", Color("6fcfe8"), "place")
-	_draw_compact_marker(Vector3(-120, 0, 112), "SKYRAIL", Color("d89cff"), "station")
+	for mark in _hub_landmarks():
+		# The doors stand ~13 m apart, under 8 px here: dots only, names on the full map.
+		var door: bool = mark[2] == DOOR_COLOR
+		_draw_compact_marker(mark[0], "" if door else mark[1], mark[2], "door" if door else "place")
+
+
+func _hub_landmarks() -> Array:
+	var marks := HUB_LANDMARKS.duplicate()
+	var scene := get_tree().current_scene if is_inside_tree() else null
+	for door in HUB_DOORS:
+		var trigger := scene.get_node_or_null("%s/CollisionShape3D" % door[0]) as Node3D \
+			if scene != null else null
+		if trigger != null:
+			marks.append([trigger.global_position, door[1], DOOR_COLOR])
+	return marks
+
+
+## Galaxy landmarks as [global position, label, colour], read from the live
+## scene so they follow the world if it is rebuilt.
+func _galaxy_landmarks() -> Array:
+	var marks := []
+	var world_consts: Dictionary = _world.get_script().get_script_constant_map()
+	for entry in [["ARRIVAL_FOUNTAIN_CENTRE", "FOUNTAIN", Color("8fe3ff")],
+			["HUB", "TREE OF LIFE", Color("9ef0a0")],
+			["MIND_GATE_POSITION", "WORLD ONE GATE", Color("63e8ff"), true]]:
+		if world_consts.has(entry[0]):
+			marks.append([_world.to_global(world_consts[entry[0]]), entry[1], entry[2],
+				entry.size() > 3])
+	var maze := _regions.get_node_or_null("HeartKingdomPlatform/HeartMusicMaze") as Node3D \
+		if _regions != null else null
+	if maze != null:
+		marks.append([maze.to_global(maze.call("entrance_position")), "MELODY MAZE", Color("ff91c9")])
+	var heart := _railway.get_node_or_null("HeartMelodyConnection/HeartMelodyIslandOne") as Node3D \
+		if _railway != null else null
+	if heart != null:
+		marks.append([heart.global_position, "QUIET MEADOW", Color("ff91c9"), true])
+	return marks
 
 
 func _draw_galaxy_compact() -> void:
@@ -458,10 +497,7 @@ func _draw_galaxy_compact() -> void:
 		return
 	var centres: Dictionary = _regions.call("get_kingdom_centers")
 	var stations: Dictionary = _railway.call("get_station_positions")
-	var route := []
-	for station_id in ["gallery", "mind", "heart", "creator"]:
-		route.append(_world.to_global(stations[station_id]))
-	_draw_compact_route(route, Color("b97cff"), 3.0)
+	_draw_compact_route(_track_points(), Color("b97cff"), 3.0)
 	_draw_compact_marker(_galaxy_castle_position(), "GALLERY", Color("f2c55e"), "castle")
 	var colors := {"mind": Color("63e8ff"), "heart": Color("ff91c9"), "creator": Color("ffd46b")}
 	var labels := {"mind": "MIND", "heart": "HEART", "creator": "CREATOR"}
@@ -474,9 +510,17 @@ func _draw_galaxy_compact() -> void:
 		var station_color := Color("f8f2ff") if bool(_railway.call("is_station_unlocked", index)) \
 			else Color("646679")
 		_draw_compact_marker(_world.to_global(stations[station_id]), "", station_color, "station")
-	var heart := _railway.get_node_or_null("HeartMelodyConnection/HeartMelodyIslandOne") as Node3D
-	if heart != null:
-		_draw_compact_marker(heart.global_position, "QUIET MEADOW", Color("ff91c9"), "place")
+	for mark in _galaxy_landmarks():
+		_draw_compact_marker(mark[0], mark[1], mark[2], "place")
+
+
+## The railway's track in global space, sampled once: it never moves, and the
+## railway may still be building its curves when the map first looks.
+func _track_points() -> Array:
+	if _track.is_empty() and _railway != null and _railway.has_method("get_track_points"):
+		for point in _railway.call("get_track_points"):
+			_track.append(_railway.to_global(point))
+	return _track
 
 
 func _draw_compact_route(world_points: Array, color: Color, width: float) -> void:
@@ -500,6 +544,8 @@ func _draw_compact_marker(world_position: Vector3, label: String, color: Color, 
 	var point := COMPACT_CENTER + offset.normalized() * max_distance if clamped else raw
 	if kind == "castle":
 		_draw_castle(point, true)
+	elif kind == "door":
+		draw_rect(Rect2(point - Vector2(3.5, 3.5), Vector2(7, 7)), color, true)
 	elif kind == "station":
 		draw_circle(point, 4.5, _map_background())
 		draw_arc(point, 5.5, 0, TAU, 20, color, 2.0, true)
@@ -573,6 +619,14 @@ func _draw_full_map() -> void:
 	draw_string(ThemeDB.fallback_font, panel.position + Vector2(panel.size.x - 190, 40),
 		"M / ESC  CLOSE", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("f5f1e8"))
 	var map_rect := Rect2(panel.position + Vector2(28, 62), panel.size - Vector2(56, 116))
+	# Keep the world's proportions, so a round island stays round.
+	var aspect := _bounds.size.x / maxf(_bounds.size.y, 0.001)
+	var fitted := map_rect.size
+	if fitted.x / fitted.y > aspect:
+		fitted.x = fitted.y * aspect
+	else:
+		fitted.y = fitted.x / aspect
+	map_rect = Rect2(map_rect.position + (map_rect.size - fitted) * 0.5, fitted)
 	draw_rect(map_rect, _map_background(), true)
 	draw_rect(map_rect, Color(_accent(), 0.52), false, 1.5)
 	if map_context == CONTEXT_HUB:
@@ -590,98 +644,41 @@ func _draw_full_map() -> void:
 
 
 func _draw_hub_full(rect: Rect2) -> void:
-	var river := PackedVector2Array()
-	for point in HUB_RIVER:
-		river.append(_map_global(point, rect))
-	draw_polyline(river, Color("4b99b7"), 12.0, true)
-	var road := PackedVector2Array()
-	for point in HUB_ROAD:
-		road.append(_map_global(point, rect))
-	draw_polyline(road, Color("c9ab72"), 5.0, true)
 	_draw_castle(_map_global(CASTLE_POSITION, rect), false)
-	_draw_full_landmark(_map_global(Vector3(42, 0, -40), rect), "VILLAGE", Color("9bd487"))
-	_draw_full_landmark(_map_global(Vector3(150, 0, -150), rect), "PIER", Color("6fcfe8"))
-	_draw_full_landmark(_map_global(Vector3(-120, 0, 112), rect), "SKYRAIL", Color("d89cff"))
+	for mark in _hub_landmarks():
+		_draw_full_landmark(_map_global(mark[0], rect), mark[1], mark[2])
 
 
 func _draw_hub_full_landscape(rect: Rect2) -> void:
-	# Broad terrain silhouettes before paths and labels. These are keyed to the
-	# live hub bounds and landmark coordinates rather than decorative wallpaper.
-	var sea_edge := PackedVector2Array([
-		_map_global(Vector3(-230, 0, -230), rect),
-		_map_global(Vector3(230, 0, -230), rect),
-		_map_global(Vector3(230, 0, -172), rect),
-		_map_global(Vector3(120, 0, -158), rect),
-		_map_global(Vector3(15, 0, -182), rect),
-		_map_global(Vector3(-95, 0, -154), rect),
-		_map_global(Vector3(-230, 0, -176), rect),
-	])
-	draw_colored_polygon(sea_edge, Color("275a72"))
-	var beach := PackedVector2Array([
-		_map_global(Vector3(-230, 0, -176), rect),
-		_map_global(Vector3(-95, 0, -154), rect),
-		_map_global(Vector3(15, 0, -182), rect),
-		_map_global(Vector3(120, 0, -158), rect),
-		_map_global(Vector3(230, 0, -172), rect),
-		_map_global(Vector3(230, 0, -142), rect),
-		_map_global(Vector3(105, 0, -132), rect),
-		_map_global(Vector3(10, 0, -154), rect),
-		_map_global(Vector3(-110, 0, -126), rect),
-		_map_global(Vector3(-230, 0, -146), rect),
-	])
-	draw_colored_polygon(beach, Color("9e8759"))
-	for mountain in [Vector3(-95, 0, -118), Vector3(112, 0, -94)]:
-		var centre := _map_global(mountain, rect)
-		draw_circle(centre, rect.size.x * 0.105, Color("405348"))
-		draw_arc(centre, rect.size.x * 0.072, 0, TAU, 40, Color("73826c"), 2.0, true)
-	var village := _map_global(Vector3(42, 0, -40), rect)
-	draw_circle(village, rect.size.x * 0.085, Color("657d4e"))
-	var castle_rock := _map_global(CASTLE_POSITION, rect)
-	draw_circle(castle_rock, rect.size.x * 0.055, Color("646b7b"))
+	_draw_sampled_landscape(rect)
+
+
+## Paints the full map from the same sampler as the compact map, so the two
+## can never disagree about where land, sea or a platform is.
+func _draw_sampled_landscape(rect: Rect2) -> void:
+	_refresh_landscape_sampling()
+	const TILE := 10.0
+	var y := rect.position.y
+	while y < rect.end.y:
+		var x := rect.position.x
+		while x < rect.end.x:
+			var tile := Rect2(x, y, minf(TILE, rect.end.x - x), minf(TILE, rect.end.y - y))
+			draw_rect(tile, _landscape_color(_world_for_map_point(tile.get_center(), rect)), true)
+			x += TILE
+		y += TILE
+
+
+## Inverse of _map_global.
+func _world_for_map_point(point: Vector2, rect: Rect2) -> Vector3:
+	var normalized := (point - rect.position) / rect.size
+	return Vector3(_bounds.position.x + normalized.x * _bounds.size.x, 0.0,
+		_bounds.position.y + (1.0 - normalized.y) * _bounds.size.y)
 
 
 func _draw_galaxy_full_landscape(rect: Rect2) -> void:
 	if _world == null:
 		return
-	# Outer kingdom landmasses: exact 3 km x 3 km authored extents.
-	if _regions != null:
-		var centres: Dictionary = _regions.call("get_kingdom_centers")
-		var colors := {"mind": Color("25394c"), "heart": Color("584052"),
-			"creator": Color("655a3c")}
-		for kingdom_id in centres:
-			var centre: Vector3 = centres[kingdom_id]
-			var top_left := _map_local(centre + Vector3(-1500, 0, 1500), rect)
-			var bottom_right := _map_local(centre + Vector3(1500, 0, -1500), rect)
-			var region_rect := Rect2(top_left, bottom_right - top_left).abs()
-			draw_rect(region_rect, colors[kingdom_id], true)
-			draw_rect(region_rect, Color(colors[kingdom_id].lightened(0.28), 0.75), false, 1.5)
-			# Five-by-five shelves mirror the generated region chunk layout.
-			for row in 5:
-				for column in 5:
-					var chunk := centre + Vector3(-1160 + column * 580, 0, -1160 + row * 580)
-					var chunk_point := _map_local(chunk, rect)
-					draw_circle(chunk_point, maxf(2.0, region_rect.size.x * 0.048),
-						Color(colors[kingdom_id].lightened(0.07), 0.58))
-	# Inner floating islands and their true connecting bridges.
-	var island_specs := [
-		[Vector3(0, 0, 820), 155.0, Color("596d72")],
-		[Vector3(0, 0, 1640), 220.0, Color("537d66")],
-		[Vector3(-600, 0, 1640), 175.0, Color("315f70")],
-		[Vector3(600, 0, 1640), 175.0, Color("806f49")],
-	]
-	var radius_scale := rect.size.x / maxf(_bounds.size.x, 1.0)
-	for spec in island_specs:
-		var centre := _map_local(spec[0], rect)
-		var radius := maxf(4.0, float(spec[1]) * radius_scale)
-		draw_circle(centre, radius, spec[2])
-		draw_arc(centre, radius, 0, TAU, 40, Color((spec[2] as Color).lightened(0.25), 0.72), 1.2)
-	for bridge in [
-		[Vector3(0, 0, 500), Vector3(0, 0, 1422)],
-		[Vector3(-218, 0, 1640), Vector3(-430, 0, 1640)],
-		[Vector3(218, 0, 1640), Vector3(410, 0, 1640)],
-	]:
-		draw_line(_map_local(bridge[0], rect), _map_local(bridge[1], rect),
-			Color("9e98ad"), 4.0, true)
+	_draw_sampled_landscape(rect)
 	_draw_mind_spark_blueprint(rect)
 
 
@@ -731,9 +728,10 @@ func _draw_galaxy_full(rect: Rect2) -> void:
 	var centres: Dictionary = _regions.call("get_kingdom_centers")
 	var stations: Dictionary = _railway.call("get_station_positions")
 	var route := PackedVector2Array()
-	for station_id in ["gallery", "mind", "heart", "creator"]:
-		route.append(_map_local(stations[station_id], rect))
-	draw_polyline(route, Color("b97cff"), 4.0, true)
+	for point in _track_points():
+		route.append(_map_global(point, rect))
+	if route.size() > 1:
+		draw_polyline(route, Color("b97cff"), 4.0, true)
 	_draw_castle(_map_global(_galaxy_castle_position(), rect), false)
 	var colors := {"mind": Color("63e8ff"), "heart": Color("ff91c9"), "creator": Color("ffd46b")}
 	var labels := {"mind": "MIND SPARK", "heart": "HEART MELODY", "creator": "CREATOR'S LIGHT"}
@@ -744,9 +742,8 @@ func _draw_galaxy_full(rect: Rect2) -> void:
 		var unlocked := bool(_railway.call("is_station_unlocked", index))
 		draw_circle(point, 5.0, Color("f8f2ff") if unlocked else Color("55576b"))
 		draw_arc(point, 8.0, 0, TAU, 18, Color("6deaff") if unlocked else Color("77798b"), 1.5)
-	var heart := _railway.get_node_or_null("HeartMelodyConnection/HeartMelodyIslandOne") as Node3D
-	if heart != null:
-		_draw_full_landmark(_map_global(heart.global_position, rect), "QUIET MEADOW · ISLAND 1", Color("ff91c9"))
+	for mark in _galaxy_landmarks():
+		_draw_full_landmark(_map_global(mark[0], rect), mark[1], mark[2], mark.size() > 3 and mark[3])
 
 
 func _draw_full_kingdom(point: Vector2, color: Color, label: String) -> void:
@@ -756,10 +753,13 @@ func _draw_full_kingdom(point: Vector2, color: Color, label: String) -> void:
 		HORIZONTAL_ALIGNMENT_CENTER, 140, 14, color.lightened(0.18))
 
 
-func _draw_full_landmark(point: Vector2, label: String, color: Color) -> void:
+func _draw_full_landmark(point: Vector2, label: String, color: Color, label_left := false) -> void:
 	draw_circle(point, 7.0, color)
-	draw_string(ThemeDB.fallback_font, point + Vector2(10, 5), label,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 13, color.lightened(0.16))
+	var font := ThemeDB.fallback_font
+	var at := point + Vector2(10, 5)
+	if label_left:
+		at.x = point.x - 10.0 - font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+	draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, color.lightened(0.16))
 
 
 func _draw_castle(point: Vector2, compact: bool) -> void:
@@ -835,12 +835,13 @@ func _recalculate_bounds() -> void:
 	var max_x := GALAXY_PADDING
 	var min_z := 10.0 - GALAXY_PADDING
 	var max_z := 10.0 + GALAXY_PADDING
-	for centre_value in centres.values():
-		var centre_global := _world.to_global(centre_value)
-		min_x = minf(min_x, centre_global.x - 1500.0 - GALAXY_PADDING)
-		max_x = maxf(max_x, centre_global.x + 1500.0 + GALAXY_PADDING)
-		min_z = minf(min_z, centre_global.z - 1500.0 - GALAXY_PADDING)
-		max_z = maxf(max_z, centre_global.z + 1500.0 + GALAXY_PADDING)
+	for kingdom_id in centres:
+		var centre_global := _world.to_global(centres[kingdom_id])
+		var reach := (_regions.call("get_kingdom_size", kingdom_id) as Vector2).x * 0.5 + GALAXY_PADDING
+		min_x = minf(min_x, centre_global.x - reach)
+		max_x = maxf(max_x, centre_global.x + reach)
+		min_z = minf(min_z, centre_global.z - reach)
+		max_z = maxf(max_z, centre_global.z + reach)
 	var mind_world := _blueprint_world()
 	if mind_world != null:
 		for zone_id in mind_world.call("get_zone_ids"):

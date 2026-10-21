@@ -14,12 +14,16 @@ var selected_frame_name: String = ""
 var player_near_artwork = false
 var current_frame_name := ""
 var _world_opening := false
+var _journal: CrownQuestJournal
 
 # --- Scene Paths ---
 const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
 const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
 const CREATION_WORLD_PATH = "res://scenes/creation_world.tscn"
 const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
+# Player3D's authored spot inside the gallery; the journal's "Return to the
+# Art Gallery" teleports here instead of reloading the castle.
+const GALLERY_SPAWN := Vector3(0, 1.2, 26)
 
 # --- Rating UI ---
 @onready var ratingpanel: Control = $CanvasLayer/RatingPanel
@@ -183,10 +187,15 @@ func _input(event):
 	if active_player != null and active_player.get_meta("heart_melody_active", false):
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_J:
-		_open_quest_journal()
+		if is_instance_valid(_journal):
+			_journal.close()
+		else:
+			_open_quest_journal()
 		var viewport := get_viewport()
 		if viewport != null:
 			viewport.set_input_as_handled()
+		return
+	if is_instance_valid(_journal):
 		return
 
 	if event.is_action_pressed("ui_accept") and player_near_artwork and not _world_opening:
@@ -223,13 +232,53 @@ func _build_quest_journal_button() -> void:
 	$CanvasLayer.add_child(button)
 
 
+# The journal floats over the gallery rather than replacing it, so closing it
+# (or returning to the gallery) never reloads the whole castle world.
 func _open_quest_journal() -> void:
-	var campaign := get_node_or_null("/root/JourneyCampaign")
-	if campaign != null and campaign.has_method("open_quest_journal"):
-		if bool(campaign.call("open_quest_journal")):
-			return
-	if ResourceLoader.exists(QUEST_JOURNAL_PATH):
-		SceneLoader.change_scene(get_tree(), QUEST_JOURNAL_PATH)
+	if is_instance_valid(_journal) or not ResourceLoader.exists(QUEST_JOURNAL_PATH):
+		return
+	var layer := CanvasLayer.new()
+	layer.name = "QuestJournalLayer"
+	layer.layer = 100
+	add_child(layer)
+	_journal = (load(QUEST_JOURNAL_PATH) as PackedScene).instantiate()
+	_journal.overlay = true
+	# CameraFollow stops orbiting while any member of this group exists.
+	_journal.add_to_group("camera_input_blockers")
+	layer.add_child(_journal)
+	_journal.tree_exited.connect(_on_quest_journal_closed.bind(layer))
+	_journal.return_to_gallery_requested.connect(_return_player_to_gallery)
+	var player := get_node_or_null("Player3D")
+	if player != null:
+		if player.has_method("set_input_enabled"):
+			player.call("set_input_enabled", false)
+		if player.has_method("is_seated") and bool(player.call("is_seated")):
+			_journal.set_return_available(false, "Leave the train first")
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _on_quest_journal_closed(layer: CanvasLayer) -> void:
+	layer.queue_free()
+	if not is_inside_tree():
+		return
+	var player := get_node_or_null("Player3D")
+	if player != null and player.has_method("set_input_enabled"):
+		player.call("set_input_enabled", true)
+	var camera := get_node_or_null("Camera3D")
+	if camera != null and bool(camera.get("capture_mouse")):
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func _return_player_to_gallery() -> void:
+	var player := get_node_or_null("Player3D") as CharacterBody3D
+	if player == null:
+		return
+	player.global_position = GALLERY_SPAWN
+	player.velocity = Vector3.ZERO
+	var camera := get_node_or_null("Camera3D")
+	if camera != null and camera.has_method("_snap_to_follow_target"):
+		camera.call("_snap_to_follow_target")
+	_face_fountain_on_spawn()
 
 func show_rating_panel(frame_name: String, current_rating: int) -> void:
 	print("Frame:", frame_name)
