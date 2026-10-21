@@ -108,7 +108,7 @@ func _on_note(index: int, kind: String) -> void:
 func _maze_tour() -> void:
 	var maze := _circle.get_parent().get_node("HeartMusicMaze")
 	var route: Array = maze.route_to(maze.FOUNTAIN_CELL)
-	if route.size() < 5:
+	if route.size() < 40:
 		push_error("MUSIC QA FAILURE: maze has no solution")
 		return
 	_player.global_position = maze.to_global(maze.cell_position(route[0]) + Vector3.UP)
@@ -130,8 +130,24 @@ func _maze_tour() -> void:
 		push_error("MUSIC QA FAILURE: player can walk through a hedge")
 		return
 	_player.global_position = maze.to_global(Vector3(96, 1, -410))
-	if _player.test_move(_player.global_transform, Vector3(0, 0, 298)):
-		push_error("MUSIC QA FAILURE: instrument promenade is blocked")
+	if not _player.test_move(_player.global_transform, Vector3(0, 0, 298)):
+		push_error("MUSIC QA FAILURE: the old straight maze bypass is still open")
+		return
+	var music_route: Array = maze.route_to(maze.MUSIC_EXIT)
+	if music_route.size() < 40:
+		push_error("MUSIC QA FAILURE: instrument route is too direct")
+		return
+	_player.global_position = maze.to_global(maze.cell_position(music_route[0]) + Vector3.UP)
+	for index in range(1, music_route.size()):
+		var target: Vector3 = maze.to_global(maze.cell_position(music_route[index]) + Vector3.UP)
+		if _player.test_move(_player.global_transform, target - _player.global_position):
+			push_error("MUSIC QA FAILURE: instrument maze route is blocked")
+			return
+		_player.global_position = target
+		await get_tree().physics_frame
+	var circle_entry: Vector3 = maze.to_global(maze.cell_position(maze.MUSIC_EXIT) + Vector3(0, 1, maze.CELL * 1.5))
+	if _player.test_move(_player.global_transform, circle_entry - _player.global_position):
+		push_error("MUSIC QA FAILURE: maze exit does not reach the instruments")
 		return
 	_player.global_position = maze.to_global(maze.fountain_position() + Vector3(32, 1, 0))
 	print("MAZE QA path playable")

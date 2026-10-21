@@ -25,7 +25,15 @@ func run() -> void:
 	# Sweep the actual gallery player's walking capsule through the solution.
 	# Stop beside the fountain instead of trying to walk through its stone basin.
 	var route: Array = maze.route_to(maze.FOUNTAIN_CELL)
-	assert(route.size() > 4)
+	assert(route.size() >= 40, "Finding the fountain must require searching winding passages")
+	var turns := 0
+	for index in range(2, route.size()):
+		if route[index] - route[index - 1] != route[index - 1] - route[index - 2]: turns += 1
+	assert(turns >= 8, "The fountain route needs turns, not a long straight corridor")
+	var dead_ends := 0
+	for cell in maze.passages:
+		if maze.passages[cell].size() == 1: dead_ends += 1
+	assert(dead_ends >= 15, "Wrong turns must give the player something to explore")
 	player.global_position = maze.to_global(maze.cell_position(route[0]) + Vector3.UP)
 	for index in range(1, route.size() - 1):
 		var target: Vector3 = maze.to_global(maze.cell_position(route[index]) + Vector3.UP)
@@ -39,7 +47,17 @@ func run() -> void:
 	player.global_position = maze.to_global(wall.position - normal * 6)
 	assert(player.test_move(player.global_transform, normal * 12), "Real hedge collision must prevent walking through walls")
 	player.global_position = maze.to_global(Vector3(96, 1, -410))
-	assert(not player.test_move(player.global_transform, Vector3(0, 0, 298)), "The open promenade must reach the instrument circle without solving the maze")
+	assert(player.test_move(player.global_transform, Vector3(0, 0, 298)), "The old straight bypass must now lead into hedge passages")
+	var music_route: Array = maze.route_to(maze.MUSIC_EXIT)
+	assert(music_route.size() >= 40, "The instrument entrance must also require searching")
+	player.global_position = maze.to_global(maze.cell_position(music_route[0]) + Vector3.UP)
+	for index in range(1, music_route.size()):
+		var target: Vector3 = maze.to_global(maze.cell_position(music_route[index]) + Vector3.UP)
+		assert(not player.test_move(player.global_transform, target - player.global_position), "The instrument route must remain physically traversable")
+		player.global_position = target
+		await physics_frame
+	var circle_entry: Vector3 = maze.to_global(maze.cell_position(maze.MUSIC_EXIT) + Vector3(0, 1, maze.CELL * 1.5))
+	assert(not player.test_move(player.global_transform, circle_entry - player.global_position), "The maze exit must open into the instrument area")
 	player.global_position = maze.to_global(maze.cell_position(maze.FOUNTAIN_CELL + Vector2i.RIGHT) + Vector3.UP)
 	await process_frame
 	var q := InputEventAction.new()
