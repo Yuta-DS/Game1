@@ -3,6 +3,8 @@ extends Node
 const BASE_URL = "http://127.0.0.1:8000"
 const LOGIN_URL = BASE_URL + "/login"
 const REGISTER_URL = BASE_URL + "/register"
+const ADMIN_RESET_PASSWORD_URL = BASE_URL + "/admin/reset-password"
+const RESET_PASSWORD_WITH_CODE_URL = BASE_URL + "/reset-password-with-code"
 
 const UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
 const MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
@@ -95,6 +97,94 @@ func register(username: String, password: String, callback: Callable):
 
 	http.request(
 		BASE_URL + "/register",
+		headers,
+		HTTPClient.METHOD_POST,
+		json_body
+	)
+
+# =========================
+# SELF-SERVICE PASSWORD RESET
+# =========================
+
+func reset_password_with_code(username: String, recovery_code: String, new_password: String, callback: Callable) -> void:
+
+	var http = HTTPRequest.new()
+	add_child(http)
+
+	http.request_completed.connect(
+		func(result, response_code, headers, body):
+
+			var json = JSON.parse_string(body.get_string_from_utf8())
+
+			if response_code == 200:
+
+				callback.call(true, json)
+
+			else:
+
+				callback.call(false, json)
+
+			http.queue_free()
+	)
+
+	var body_data = {
+		"username": username,
+		"recovery_code": recovery_code,
+		"new_password": new_password
+	}
+
+	var json_body = JSON.stringify(body_data)
+
+	var headers = [
+		"Content-Type: application/json"
+	]
+
+	http.request(
+		RESET_PASSWORD_WITH_CODE_URL,
+		headers,
+		HTTPClient.METHOD_POST,
+		json_body
+	)
+
+# =========================
+# ADMIN PASSWORD RESET
+# =========================
+
+func admin_reset_password(admin_key: String, username: String, new_password: String, callback: Callable) -> void:
+
+	var http = HTTPRequest.new()
+	add_child(http)
+
+	http.request_completed.connect(
+		func(result, response_code, headers, body):
+
+			var json = JSON.parse_string(body.get_string_from_utf8())
+
+			if response_code == 200:
+
+				callback.call(true, json)
+
+			else:
+
+				callback.call(false, json)
+
+			http.queue_free()
+	)
+
+	var body_data = {
+		"admin_key": admin_key,
+		"username": username,
+		"new_password": new_password
+	}
+
+	var json_body = JSON.stringify(body_data)
+
+	var headers = [
+		"Content-Type: application/json"
+	]
+
+	http.request(
+		ADMIN_RESET_PASSWORD_URL,
 		headers,
 		HTTPClient.METHOD_POST,
 		json_body

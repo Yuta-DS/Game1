@@ -14,6 +14,7 @@ import copy
 import hashlib
 import json
 import os
+import secrets
 import threading
 import time
 from datetime import timedelta, datetime, timezone
@@ -120,6 +121,20 @@ if app.config['JWT_SECRET_KEY'] == _DEFAULT_JWT_SECRET:
     )
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 
+# There's no player-facing password reset (no email on file for accounts),
+# so a forgotten password is recovered by whoever holds this key running
+# the /admin/reset-password endpoint below. Same env-var-with-dev-fallback
+# pattern as JWT_SECRET_KEY above.
+_DEFAULT_ADMIN_RESET_KEY = 'dev_admin_reset_change_later_12345'
+ADMIN_RESET_KEY = os.environ.get("ADMIN_RESET_KEY", _DEFAULT_ADMIN_RESET_KEY)
+if ADMIN_RESET_KEY == _DEFAULT_ADMIN_RESET_KEY:
+    print(
+        "[server] WARNING: ADMIN_RESET_KEY is not set - using the public "
+        "default from source. Anyone who has read this repository can "
+        "reset any player's password. Set a real ADMIN_RESET_KEY before "
+        "deploying anywhere reachable by players."
+    )
+
 # A browser-hosted export talks to this API from a different origin than
 # the one serving the game, so without CORS every request gets blocked
 # client-side regardless of whether the server itself responds correctly.
@@ -154,6 +169,13 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.LargeBinary, nullable=False)
+    # Hashed the same way as password_hash (bcrypt) - never stored or logged
+    # in plaintext after it's shown to the player once at issuance. Nullable
+    # because db.create_all() only creates missing tables, it never alters
+    # existing ones - any account already in a live database.db has no
+    # recovery code until a migration backfills this column, and self-reset
+    # can't work for that account until a code is actually issued.
+    recovery_code_hash = db.Column(db.LargeBinary, nullable=True)
 
 class Artwork(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -177,6 +199,19 @@ with app.app_context():
 # REGISTER
 # =========================
 
+# Players have no email on file, so a lost password otherwise means the
+# admin-key tool is the only way back into an account. This code is the
+# self-service alternative: returned in plaintext exactly once, in the
+# /register response below, and never stored or logged anywhere after that -
+# only its bcrypt hash lives in recovery_code_hash. If the player doesn't
+# save it, they're back to the admin tool anyway.
+def _generate_recovery_code():
+    raw = secrets.token_hex(5).upper()
+    formatted = f"{raw[0:4]}-{raw[4:8]}-{raw[8:10]}"
+    hashed = bcrypt.hashpw(formatted.encode('utf-8'), bcrypt.gensalt())
+    return formatted, hashed
+
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
@@ -191,12 +226,20 @@ def register():
         return jsonify({"error": "Username already exists"}), 400
 
     hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    recovery_code, recovery_code_hash = _generate_recovery_code()
 
-    user = User(username=username, password_hash=hashed)
+    user = User(
+        username=username,
+        password_hash=hashed,
+        recovery_code_hash=recovery_code_hash
+    )
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"message": "User registered successfully"}), 201
+    return jsonify({
+        "message": "User registered successfully",
+        "recovery_code": recovery_code
+    }), 201
 
 # =========================
 # LOGIN
@@ -220,6 +263,187 @@ def login():
     token = create_access_token(identity=str(user.id))
 
     return jsonify({"token": token})
+
+# =========================
+# SELF-SERVICE PASSWORD RESET
+# =========================
+
+# Keyed on username rather than IP, unlike the admin lockout below: this
+# project is used in schools and community programs (see
+# facilitator_settings.gd), so many players can share one IP behind a
+# school's NAT. Locking by IP would lock out a whole classroom after one
+# kid mistypes a code a few times; locking by username only blocks further
+# attempts against the one account actually being guessed at.
+RECOVERY_RESET_LOCK = threading.Lock()
+RECOVERY_RESET_ATTEMPTS = {}
+RECOVERY_RESET_MAX_ATTEMPTS = 5
+RECOVERY_RESET_LOCKOUT_SECONDS = 15 * 60
+
+
+def _recovery_reset_is_locked_out(username):
+    with RECOVERY_RESET_LOCK:
+        state = RECOVERY_RESET_ATTEMPTS.get(username)
+        if not state:
+            return False
+        return (
+            state["failures"] >= RECOVERY_RESET_MAX_ATTEMPTS
+            and time.monotonic() < state["locked_until"]
+        )
+
+
+def _record_recovery_reset_failure(username):
+    with RECOVERY_RESET_LOCK:
+        state = RECOVERY_RESET_ATTEMPTS.setdefault(
+            username, {"failures": 0, "locked_until": 0.0}
+        )
+        state["failures"] += 1
+        if state["failures"] >= RECOVERY_RESET_MAX_ATTEMPTS:
+            state["locked_until"] = time.monotonic() + RECOVERY_RESET_LOCKOUT_SECONDS
+
+
+def _clear_recovery_reset_failures(username):
+    with RECOVERY_RESET_LOCK:
+        RECOVERY_RESET_ATTEMPTS.pop(username, None)
+
+
+@app.route('/reset-password-with-code', methods=['POST'])
+def reset_password_with_code():
+    data = request.json
+
+    username = data.get("username")
+    recovery_code = data.get("recovery_code")
+    new_password = data.get("new_password")
+
+    if not username or not recovery_code or not new_password:
+        return jsonify({"error": "Missing username, recovery_code, or new_password"}), 400
+
+    if _recovery_reset_is_locked_out(username):
+        return jsonify({"error": "Too many attempts. Try again later."}), 429
+
+    user = User.query.filter_by(username=username).first()
+
+    # Same error for "no such user" and "wrong code" - a distinct "user not
+    # found" response would let an attacker enumerate valid usernames just by
+    # probing this endpoint.
+    if not user or not user.recovery_code_hash or not bcrypt.checkpw(
+        recovery_code.encode('utf-8'), user.recovery_code_hash
+    ):
+        _record_recovery_reset_failure(username)
+        return jsonify({"error": "Invalid username or recovery code"}), 401
+
+    _clear_recovery_reset_failures(username)
+
+    user.password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+    # One-time use: the code just spent is replaced with a fresh one, handed
+    # back the same way the original was at registration.
+    new_recovery_code, new_recovery_code_hash = _generate_recovery_code()
+    user.recovery_code_hash = new_recovery_code_hash
+
+    db.session.commit()
+
+    print(f"[server] Self-service password reset for user '{username}'")
+
+    return jsonify({
+        "message": "Password reset successfully",
+        "recovery_code": new_recovery_code
+    }), 200
+
+# =========================
+# ADMIN PASSWORD RESET
+# =========================
+
+# A wrong-but-unlimited admin_key guess is a brute-forceable key with no
+# lockout - the thing /login already avoids via bcrypt being slow, but a
+# plain secrets.compare_digest has no such cost. Locked out per source IP
+# after a handful of failures, same in-memory dict+lock shape as the AI
+# circuit breaker above rather than pulling in a rate-limiting dependency
+# for one endpoint.
+#
+# Keyed on request.remote_addr, which is the real caller's address only as
+# long as nothing between it and gunicorn rewrites the source IP. Once a
+# reverse proxy sits in front in production (see MACOS_SETUP.md), every
+# request will arrive from that proxy's own address and this degrades to a
+# single shared lockout bucket for all callers - still fails closed, but
+# worth revisiting alongside whatever proxy/X-Forwarded-For trust config
+# lands then.
+ADMIN_RESET_LOCK = threading.Lock()
+ADMIN_RESET_ATTEMPTS = {}
+ADMIN_RESET_MAX_ATTEMPTS = 5
+ADMIN_RESET_LOCKOUT_SECONDS = 15 * 60
+
+
+def _admin_reset_is_locked_out(ip):
+    with ADMIN_RESET_LOCK:
+        state = ADMIN_RESET_ATTEMPTS.get(ip)
+        if not state:
+            return False
+        return (
+            state["failures"] >= ADMIN_RESET_MAX_ATTEMPTS
+            and time.monotonic() < state["locked_until"]
+        )
+
+
+def _record_admin_reset_failure(ip):
+    with ADMIN_RESET_LOCK:
+        state = ADMIN_RESET_ATTEMPTS.setdefault(
+            ip, {"failures": 0, "locked_until": 0.0}
+        )
+        state["failures"] += 1
+        if state["failures"] >= ADMIN_RESET_MAX_ATTEMPTS:
+            state["locked_until"] = time.monotonic() + ADMIN_RESET_LOCKOUT_SECONDS
+
+
+def _clear_admin_reset_failures(ip):
+    with ADMIN_RESET_LOCK:
+        ADMIN_RESET_ATTEMPTS.pop(ip, None)
+
+
+@app.route('/admin/reset-password', methods=['POST'])
+def admin_reset_password():
+    client_ip = request.remote_addr
+
+    if _admin_reset_is_locked_out(client_ip):
+        return jsonify({"error": "Too many attempts. Try again later."}), 429
+
+    data = request.json
+
+    admin_key = data.get("admin_key")
+    username = data.get("username")
+    new_password = data.get("new_password")
+
+    if not admin_key or not secrets.compare_digest(admin_key, ADMIN_RESET_KEY):
+        _record_admin_reset_failure(client_ip)
+        print(f"[server] WARNING: failed admin password reset attempt from {client_ip}")
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    _clear_admin_reset_failures(client_ip)
+
+    if not username or not new_password:
+        return jsonify({"error": "Missing username or new_password"}), 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+    # An admin reset is also the moment to (re)issue a recovery code: the
+    # player needed help getting back in at all, so handing them a fresh
+    # self-service code now means next time they might not need to. This
+    # also backfills accounts from before this feature existed, which
+    # otherwise have recovery_code_hash = NULL forever.
+    new_recovery_code, new_recovery_code_hash = _generate_recovery_code()
+    user.recovery_code_hash = new_recovery_code_hash
+
+    db.session.commit()
+
+    print(f"[server] Admin password reset for user '{username}' from {client_ip}")
+
+    return jsonify({
+        "message": "Password reset successfully",
+        "recovery_code": new_recovery_code
+    }), 200
 
 # =========================
 # UPLOAD ARTWORK
