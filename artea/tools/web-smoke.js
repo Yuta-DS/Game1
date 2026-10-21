@@ -18,6 +18,13 @@
 //
 //   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open] [--repeat]
 //       [--latency MS] [--mbps N] [--fail-part NN] [--fail-times K]
+//       [--startup-only] (login, hub entry and movement; skips later worlds)
+//       [--music-circle] (instruments, seated piano, maze, fountain and Milo)
+//       [--heart-journey] (staged garden UI, voice lifecycle, fountain and gate)
+//       [--heart-audio-only] (focused garden fountain audio and Hub round trip)
+//       [--heart-river-only] (actual organ, harp, Call Bells and Bell Grove gate)
+//       [--profile-frames] (opt-in release telemetry and reversible A/B samples)
+//       [--profile-hub] (with --profile-frames: Hub diagnostics only)
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
@@ -60,7 +67,7 @@ const failTimes = Number(option('--fail-times') ?? 2);
 // Requests pck-loader.js makes for one part before showing its Retry overlay:
 // the first try plus RETRY_DELAYS_MS.length retries.
 const LOADER_ATTEMPTS = 4;
-const DEBUG_PORT = 9222;
+const DEBUG_PORT = Number(process.env.ARTEA_SMOKE_DEBUG_PORT || 9222);
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
 // current login screen puts it at y=726; deployments still running the older,
@@ -153,7 +160,8 @@ async function connect() {
 	ws.addEventListener('message', (ev) => {
 		const m = JSON.parse(ev.data);
 		if (m.id && pending.has(m.id)) {
-			const { resolve, reject } = pending.get(m.id);
+			const { resolve, reject, timer } = pending.get(m.id);
+			clearTimeout(timer);
 			pending.delete(m.id);
 			return m.error ? reject(new Error(JSON.stringify(m.error))) : resolve(m.result);
 		}
@@ -195,6 +203,7 @@ async function connect() {
 		if (m.method === 'Runtime.consoleAPICalled') {
 			const line = (m.params.args || []).map((a) => a.value ?? a.description ?? a.type).join(' ');
 			consoleLines.push(line);
+			fs.appendFileSync(path.join(outDir, 'console-live.log'), line + '\n');
 			// Stamp the hub the moment its log arrives, not at the next 1 s poll.
 			// The pack is fully downloaded by the time the engine starts, and
 			// every build logs this, including deployments older than the hub log.
@@ -206,7 +215,9 @@ async function connect() {
 			}
 		}
 		if (m.method === 'Runtime.exceptionThrown') {
-			consoleLines.push('EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text));
+			const line = 'EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);
+			consoleLines.push(line);
+			fs.appendFileSync(path.join(outDir, 'console-live.log'), line + '\n');
 		}
 		if (m.method === 'Inspector.targetCrashed') crashed = true;
 		if (listeners.has(m.method)) listeners.get(m.method)(m.params);
@@ -215,7 +226,8 @@ async function connect() {
 
 	const send = (method, params = {}) => new Promise((resolve, reject) => {
 		const msgId = (id += 1);
-		pending.set(msgId, { resolve, reject });
+		const timer = setTimeout(() => { pending.delete(msgId); reject(new Error('Browser stopped responding to ' + method)); }, 180000);
+		pending.set(msgId, { resolve, reject, timer });
 		ws.send(JSON.stringify({ id: msgId, method, params }));
 	});
 	const on = (method, handler) => listeners.set(method, handler);
@@ -234,6 +246,19 @@ async function connect() {
 	const ownChrome = await startChrome();
 	const closeOwnChrome = async () => {
 		if (keepOpen || !ownChrome) return;
+		// Chromium's Windows launcher may exit before its browser process.
+		// Close the owned browser over its browser-level CDP connection so
+		// repeated tours do not leave headless browser trees consuming memory.
+		try {
+			const version = await cdp('/json/version');
+			await new Promise((resolve) => {
+				const browser = new WebSocket(version.webSocketDebuggerUrl);
+				const timer = setTimeout(() => { browser.close(); resolve(); }, 2000);
+				browser.addEventListener('open', () => browser.send(JSON.stringify({ id: 1, method: 'Browser.close' })));
+				browser.addEventListener('close', () => { clearTimeout(timer); resolve(); });
+				browser.addEventListener('error', () => { clearTimeout(timer); resolve(); });
+			});
+		} catch { /* browser may already have exited with its last tab */ }
 		try { process.kill(ownChrome.pid); } catch { /* already gone */ }
 	};
 	const { send, on, consoleLines, crashed, targetId, net } = await connect();
@@ -241,6 +266,8 @@ async function connect() {
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
 	await send('Runtime.enable');
 	await send('Page.enable');
+	await send('Page.bringToFront');
+	await send('Emulation.setFocusEmulationEnabled', { enabled: true });
 	await send('Network.enable');
 	// Cold load every run, even against a Chrome the user started themselves.
 	// --repeat needs the cache on so the second visit can use it; the first
@@ -377,6 +404,25 @@ async function connect() {
 			}
 		}
 		await waitForLog(/Successfully spawned/, 'hub scene built', 120000);
+		await waitForLog(/\[ARTEA\] loading screen done: res:\/\/scenes\/New_Hub_World.tscn/, 'hub controls ready', 240000);
+		if (args.includes('--startup-only')) {
+			const before = await shot('02-in-hub');
+			await click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+			await key('keyDown', 'KeyW', 87);
+			await sleep(2500);
+			await key('keyUp', 'KeyW', 87);
+			const after = await shot('03-after-move');
+			const fatal = consoleLines.filter((line) => /SCRIPT ERROR|Parse Error|EXCEPTION|SceneLoader: could not open/.test(line));
+			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+			reportMetrics();
+			if (crashed() || before.equals(after) || fatal.length) {
+				throw new Error('Startup/movement check failed: ' + fatal.slice(0, 3).join('; '));
+			}
+			console.log('RESULT: STARTUP AND HUB PLAYABLE');
+			if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+			await closeOwnChrome();
+			process.exit(0);
+		}
 		const evaluate = async (expression) => (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
 		// Every frame's timestamp from here on, to compare the Hub's frame pacing
 		// while the other areas' Packs download in the background with after.
@@ -410,7 +456,7 @@ async function connect() {
 		// reaches last, before it can. The loading screen downloads its Pack
 		// itself, with progress, while the background downloads hold back.
 		const STORY = ['the Crown of Life story', 'res://scenes/viewfinder/crown_of_life_story.tscn'];
-		const story = await goTo(...STORY);
+		const story = args.includes('--profile-hub') || args.includes('--heart-river-only') ? null : await goTo(...STORY);
 		areas.push([STORY[0], story, story ? await goTo('the Hub', HUB) : null, 'not prefetched yet']);
 
 		// Standing in the Hub while the rest downloads, then a while after.
@@ -461,6 +507,67 @@ async function connect() {
 			return !identical(start, duringShot) || !identical(duringShot, afterShot);
 		};
 		const moved = await movesWithW(before, '03-moving', '04-after-move');
+		if (args.includes('--heart-audio-only') || args.includes('--heart-river-only')) {
+			// Mount the valley pack through its real loader before the transient
+			// fixture dynamically loads that scene.
+			if (!await goTo('Heart Melody valley', 'res://scenes/heart_melody/heart_melody_world.tscn')) throw new Error('Garden pack failed');
+			for (const name of ['heart_journey_web_qa.gd', 'heart_journey_web_qa.tscn']) {
+				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8').replace('res://tools/qa/heart_journey_web_qa.gd', '/tmp/heart_journey_web_qa.gd');
+				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
+			}
+			if (!moved || !await goTo('the garden audio test', '/tmp/heart_journey_web_qa.tscn')) throw new Error('Garden audio scene failed');
+			await waitForLog(/JOURNEY QA ready/, 'garden audio fixture', 20000);
+			const stages = args.includes('--heart-river-only') ? ['gate', 'instrument', 'river-organ', 'river-harp', 'river-bells'] : ['fountain'];
+			for (const stage of stages) {
+				const from = consoleLines.length;
+				await evaluate(`window.arteaJourneyQA(${JSON.stringify(stage)})`);
+				await waitForLog(new RegExp('JOURNEY QA stage ' + stage), stage, 15000, from);
+				await sleep(700);
+				await shot('journey-' + stage);
+			}
+			if (!await goTo('the Hub', HUB)) throw new Error('Garden audio return failed');
+			const errors = consoleLines.filter(line => /SCRIPT ERROR|Parse Error|Failed to load scene|JOURNEY QA (?:FAILURE|flower answer did not|clearing did not|gate failed|menu did not|missing control|fountain not|garden background)/.test(line));
+			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+			if (errors.length) throw new Error(errors.join('\n'));
+			await cdp(`/json/close/${targetId}`).catch(() => {});
+			await closeOwnChrome();
+			console.log(args.includes('--heart-river-only') ? 'RESULT: RIVER SONG ROUTE PLAYABLE' : 'RESULT: GARDEN AUDIO PLAYABLE');
+			process.exit(0);
+		}
+		const profiles = [];
+		const profile = async (label, options = {}, seconds = 6) => {
+			if (!args.includes('--profile-frames')) return;
+			const from = consoleLines.length;
+			await evaluate(`window.arteaFrameProfile(${JSON.stringify(label)}, ${seconds}, ${JSON.stringify(JSON.stringify(options))})`);
+			if (options.portrait) { await sleep(2000); await shot(label); }
+			await waitForLog({ test: line => line.includes('FRAME PROFILE ') && line.includes(JSON.stringify(label)) }, label, 70000, from);
+			const line = consoleLines.slice(from).find(line => line.includes('FRAME PROFILE ') && line.includes(JSON.stringify(label)));
+			const result = JSON.parse(line.slice(line.indexOf('FRAME PROFILE ') + 14));
+			profiles.push(result);
+			fs.writeFileSync(path.join(outDir, 'frame-profiles.json'), JSON.stringify(profiles, null, 2));
+			say(`${label}: median ${result.frames.p50.toFixed(1)} ms; p95 ${result.frames.p95.toFixed(1)}; max ${result.frames.max.toFixed(1)}; draws ${result.draws.p50}`);
+		};
+		if (args.includes('--profile-frames')) {
+			for (const name of ['frame_profile_bootstrap.gd', 'frame_profile_bootstrap.tscn', 'frame_profile_sampler.gd']) {
+				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8').replace('res://tools/qa/frame_profile_bootstrap.gd', '/tmp/frame_profile_bootstrap.gd');
+				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
+			}
+			if (!await goTo('frame sampler bootstrap', '/tmp/frame_profile_bootstrap.tscn')) throw new Error('Frame sampler bootstrap failed');
+			await waitForLog(/FRAME SAMPLER READY/, 'frame sampler ready', 10000);
+			await goTo('the Hub', HUB);
+			const renderer = await evaluate(`(() => { const canvas = document.querySelector('canvas'); const gl = canvas.getContext('webgl2'); const ext = gl.getExtension('WEBGL_debug_renderer_info'); return {renderer: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER), vendor: ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR), width: canvas.width, height: canvas.height, attributes: gl.getContextAttributes()}; })()`);
+			fs.writeFileSync(path.join(outDir, 'renderer.json'), JSON.stringify(renderer, null, 2));
+			for (const [suffix, options] of [['idle', {}], ['milo-portrait', {portrait:true}], ['render-off', {render_off:true}], ['scripts-off', {scripts_off:true}], ['no-scatter', {no_scatter:true}], ['no-shadows', {no_shadows:true}]]) await profile('hub-' + suffix, options);
+			if (args.includes('--profile-hub')) {
+				const samples = [['no-msaa', {msaa_3d:0}], ['no-lights', {no_lights:true}], ['animations-off', {animations_off:true}], ['hide-milo', {hide_names:['Milo_Animations2']}]];
+				for (const [suffix, options] of samples) await profile('hub-' + suffix, options);
+				fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+				if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
+				await closeOwnChrome();
+				console.log('RESULT: FRAME PROFILE COMPLETE');
+				process.exit(0);
+			}
+		}
 
 		// Prefetched by now, so these should download (next to) nothing on the
 		// way in.
@@ -469,23 +576,107 @@ async function connect() {
 		if (castle) {
 			await sleep(3000);
 			castlePlayable = await movesWithW(await shot('05-art-castle'), '06-castle-moving', '07-castle-after-move');
+			const samples = [['idle', {}], ['orbit', {orbit:true}], ['render-off', {render_off:true}], ['scripts-off', {scripts_off:true}], ['no-floating', {hide_names:['ArtCastleFloatingWorld']}], ['melody-idle', {at:'melody'}], ['melody-orbit', {at:'melody',orbit:true}], ['melody-render-off', {at:'melody',render_off:true}], ['melody-scripts-off', {at:'melody',scripts_off:true}]];
+			for (const [suffix, options] of samples) await profile('castle-' + suffix, options);
+		}
+		let musicCirclePlayable = !args.includes('--music-circle');
+		if (castle && args.includes('--music-circle')) {
+			// tools/** is intentionally excluded from production. Copy only the
+			// opt-in controller into this browser's transient virtual filesystem;
+			// it instantiates and operates the unmodified exported gallery.
+			for (const name of ['music_circle_web_qa.gd', 'music_circle_web_qa.tscn']) {
+				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8')
+					.replace('res://tools/qa/music_circle_web_qa.gd', '/tmp/music_circle_web_qa.gd');
+				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
+			}
+			const fixture = await goTo('the music-circle test', '/tmp/music_circle_web_qa.tscn');
+			if (!fixture) throw new Error('Could not open the real music-circle test scene');
+			const tap = async (code, keyCode, keyValue) => {
+				for (const type of ['keyDown', 'keyUp']) {
+					await send('Input.dispatchKeyEvent', { type, code, key: keyValue, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode });
+					await sleep(code === 'F8' ? 450 : 180);
+				}
+			};
+			for (const kind of ['xylophone', 'drums', 'bells', 'guitar', 'piano']) {
+				await waitForLog(new RegExp('MUSIC QA near ' + kind), kind + ' proximity', 20000);
+				await tap('KeyQ', 81, 'q');
+				await waitForLog(new RegExp('MUSIC QA open ' + kind), kind + ' controls', 20000);
+				let from = consoleLines.length;
+				await tap('KeyA', 65, 'a');
+				await waitForLog(new RegExp('MUSIC QA note ' + kind + ' ' + (kind === 'piano' ? 60 : 0)), kind + ' keyboard sound', 10000, from);
+				if (kind === 'xylophone' || kind === 'piano') {
+					from = consoleLines.length;
+					await tap('KeyJ', 74, 'j');
+					await waitForLog(new RegExp('MUSIC QA note ' + kind + ' ' + (kind === 'piano' ? 71 : 6)), kind + ' J note without journal', 10000, from);
+				}
+				const line = consoleLines.findLast((line) => line.includes('MUSIC QA pad ' + kind));
+				const coords = line.match(/MUSIC QA pad \w+ ([\d.\-]+) ([\d.\-]+)/);
+				if (!coords) throw new Error('No clickable pad position for ' + kind);
+				from = consoleLines.length;
+				await click(Number(coords[1]), Number(coords[2]));
+				await waitForLog(new RegExp('MUSIC QA note ' + kind + ' ' + (kind === 'piano' ? 60 : 0)), kind + ' clicked sound', 10000, from);
+				await shot('music-circle-' + kind);
+				if (kind === 'piano') {
+					await tap('Tab', 9, 'Tab');
+					await waitForLog(/BENCH QA keyboard view/, 'bench keyboard view', 10000);
+					await sleep(900);
+					await shot('piano-keyboard-view');
+				}
+				await tap('Escape', 27, 'Escape');
+				await waitForLog(new RegExp('MUSIC QA closed ' + kind), kind + ' exit restores movement', 10000);
+				if (kind !== 'piano') await tap('F8', 119, 'F8');
+			}
+			await tap('F9', 120, 'F9');
+			await waitForLog(/MAZE QA path playable/, 'maze solution and solid walls', 30000);
+			await waitForLog(/MAZE QA music active/, 'fountain music playback', 10000);
+			await waitForLog(/MAZE QA guide station/, 'Milo directions in the maze court', 10000);
+			await waitForLog(/MAZE QA overview ready/, 'maze overview', 10000);
+			await shot('maze-overview');
+			await waitForLog(/MAZE QA fountain ready/, 'fountain clearing', 10000);
+			await shot('maze-fountain');
+			await tap('KeyQ', 81, 'q');
+			await waitForLog(/MAZE QA return works/, 'maze return to entrance', 10000);
+			musicCirclePlayable = true;
+		}
+		if (castle && args.includes('--heart-journey')) {
+			for (const name of ['heart_journey_web_qa.gd', 'heart_journey_web_qa.tscn']) {
+				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8').replace('res://tools/qa/heart_journey_web_qa.gd', '/tmp/heart_journey_web_qa.gd');
+				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
+			}
+			if (!await goTo('the Melody journey test', '/tmp/heart_journey_web_qa.tscn')) throw new Error('Journey fixture failed');
+			await waitForLog(/JOURNEY QA ready/, 'garden presentation fixture', 20000);
+			for (const stage of ['intro', 'transcript', 'harvest', 'journal', 'fountain', 'gate', 'instrument', 'river-organ', 'river-harp', 'river-bells']) {
+				const from = consoleLines.length;
+				await evaluate(`window.arteaJourneyQA(${JSON.stringify(stage)})`);
+				await waitForLog(new RegExp('JOURNEY QA stage ' + stage), stage + ' presentation', 10000, from);
+				await sleep(stage === 'gate' ? 300 : 700);
+				await shot('journey-' + stage);
+				if (stage === 'transcript') {
+					await waitForLog(/JOURNEY QA transcript page advanced/, 'transcript follows recorded playback', 60000, from);
+					await shot('journey-transcript-next');
+					await waitForLog(/JOURNEY QA voice ended and transcript hidden/, 'voice ends and transcript disappears', 60000, from);
+				}
+			}
 		}
 		areas.push(['the Art Castle', castle, castle ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		const KINGDOMS = [
 			['Mind Spark', 'res://scenes/popThoughtsMenu.tscn'],
 			['Heart Melody', 'res://scenes/music_minigame.tscn'],
+			['Heart Melody valley', 'res://scenes/heart_melody/heart_melody_world.tscn'],
 			["Creator's Light", 'res://scenes/drawing_tool.tscn'],
 		];
 		for (const [index, [label, scene]] of KINGDOMS.entries()) {
 			const entered = await goTo(label, scene);
 			if (entered) {
 				await sleep(3000);
+				await profile(label + '-idle');
+				await profile(label + '-orbit', {orbit:true});
 				await shot(`${String(8 + index).padStart(2, '0')}-${label.replace(/[^A-Za-z]+/g, '-').toLowerCase()}`);
 			}
 			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		}
 
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error|MUSIC QA FAILURE|JOURNEY QA (?:FAILURE|flower answer did not|clearing did not|gate failed|fountain not|menu did not|missing control)/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();
@@ -519,7 +710,7 @@ async function connect() {
 		// has not visibly dropped; one sliding from 60 to 45 has.
 		const smooth = !during || !after || during.median <= Math.max(after.median * 1.25, 1000 / 60 + 0.5);
 		say(`prefetched areas entered without downloading: ${noWait}; story fell back to downloading: ${fellBack}; hub pacing held: ${smooth}`);
-		const pass = moved && castlePlayable && areas.every(([, entered, back]) => entered && back)
+		const pass = moved && castlePlayable && musicCirclePlayable && areas.every(([, entered, back]) => entered && back)
 			&& noWait && fellBack && smooth && !crashed() && fatal.length === 0;
 
 		if (repeat) {

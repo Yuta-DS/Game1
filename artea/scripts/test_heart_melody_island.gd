@@ -66,16 +66,18 @@ func run() -> void:
 	root.add_child(world)
 	current_scene = world
 	root.get_node("MiloCompanionManager").refresh_companion()
-	check(not world.has_node("WonderfulCounsellorMilo"), "authored guides retain single interaction ownership")
+	check(world.interactables.filter(func(item): return item.kind == "intro").size() == 1, "garden guides retain one shared introduction control")
 	await physics_frame
 	await physics_frame
 	var crossing_query := PhysicsRayQueryParameters3D.create(Vector3(76, 5, 8), Vector3(76, -4, 8))
 	check(not world.get_world_3d().direct_space_state.intersect_ray(crossing_query).is_empty(),
 		"root crossing physically connects the garden before restoration")
-	for point in [Vector3(-60, 1, 8), Vector3(55, 1, 8), Vector3(94, 1, 8), Vector3(118, 1, 8)]:
+	# The newer progress gate at x=88 intentionally blocks the unrestored
+	# crossing. Test its near apron now and the far side after earning entry.
+	for point in [Vector3(-60, 1, 8), Vector3(55, 1, 8), Vector3(82, 1, 8)]:
 		await walk_to(point)
 	check(not world.progress.data.complete, "connected exploration does not auto-complete garden progress")
-	for point in [Vector3(94, 1, 8), Vector3(55, 1, 8), Vector3(-60, 1, 8), Vector3(-65, 1, 12)]:
+	for point in [Vector3(55, 1, 8), Vector3(-60, 1, 8), Vector3(-65, 1, 12)]:
 		await walk_to(point)
 	# Exercise the real player controller: continuous arrival-to-garden walking.
 	Input.action_press("move_right")
@@ -163,6 +165,8 @@ func run() -> void:
 	world._close()
 	check(world.bridge.position == Vector3.ZERO and not world._restoring, "skip restoration settles deck and collision together")
 	check(world.restored_creatures.size() == 3, "released shells leave three living creatures")
+	for point in [Vector3(82, 1, 8), Vector3(94, 1, 8), Vector3(118, 1, 8), Vector3(55, 1, 8)]:
+		await walk_to(point)
 	world.player.position = Vector3(-65, 2, 8)
 	Input.action_press("move_right")
 	for frame in 850: await physics_frame

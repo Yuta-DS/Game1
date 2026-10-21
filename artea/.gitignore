@@ -23,3 +23,6 @@ project.godot.web-export-backup
 # manifest, and the presets backup left only if an export is killed mid-way.
 /packs.json
 export_presets.cfg.packs-backup
+
+# Old generated assets are not source files or exported game content.
+/generated/

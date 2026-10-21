@@ -38,8 +38,28 @@ func _get_name() -> String:
 
 func _get_customization_configuration_hash() -> int:
 	# Changing any setting must invalidate the export cache of customised files.
-	return hash("web_asset_slimmer v3 %d %d %.2f" % [
+	return hash("web_asset_slimmer v4 %d %d %.2f" % [
 		MAX_TEXTURE_SIZE, MIN_SIZE_TO_REENCODE, LOSSY_QUALITY])
+
+
+func _begin_customize_scenes(platform: EditorExportPlatform, _features: PackedStringArray) -> bool:
+	return platform.get_os_name() == "Web"
+
+
+func _customize_scene(scene: Node, _path: String) -> Node:
+	# Godot 4.7's export resource walker reads all four advertised particle
+	# mesh properties even when only one pass is allocated. Allocate the empty
+	# slots in the Web copy; their null meshes draw nothing. Native scenes and
+	# the authored particle effect remain unchanged.
+	var pending: Array[Node] = [scene]
+	var changed := false
+	while not pending.is_empty():
+		var node := pending.pop_back() as Node
+		pending.append_array(node.get_children())
+		if node is GPUParticles3D and node.draw_passes < 4:
+			node.draw_passes = 4
+			changed = true
+	return scene if changed else null
 
 
 func _begin_customize_resources(platform: EditorExportPlatform,

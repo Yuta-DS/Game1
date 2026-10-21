@@ -286,6 +286,13 @@ func solve() -> bool:
 	data.checkpoint = "garden"
 	return commit()
 
+func answer_flowers(notes: Array) -> bool:
+	# Both flower interfaces confirm the same story phrase. Optional orchard
+	# activities must not be a prerequisite for the Blight encounter.
+	if notes != Catalog.PHRASE or committed.planters.size() != 3: return false
+	data.phrase = notes.duplicate()
+	return solve()
+
 func reward(id: String, amount: int) -> void:
 	if data.receipts.has(id): return
 	data.receipts[id] = amount

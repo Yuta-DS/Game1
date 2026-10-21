@@ -1,19 +1,29 @@
 {
   "reference": "res://assets/audio/milo/milo_voice.ogg",
   "lines": {
-    "station": "Come along! I'll walk beside you from the station into Heart Melody. Follow this broad path up to the Feeling Garden. You can keep moving while I explain what to do.",
+    "station": "Welcome to Heart Melody! Go straight ahead to explore the musical instruments and the hedge maze. Find the singing fountain in the middle of the maze. To reach the Melody World Garden islands, follow this raised, flower-lined path. I'll walk beside you, and you can keep moving while I talk.",
     "garden": "Welcome to Heart Melody! First, find the Echo Berry grove beside the meadow entrance. Press Q, or A on your controller, and harvest the protected story allotment. Then visit all three seed planters. Choose any feeling or sound, and confirm each planting.",
     "rhythm": "Your three seeds are planted! Now play the flower drums in this order: Leaf, Sun, then Droplet. Open Arrange the garden phrase, and confirm your answer. Then enter the Blight clearing. Step away from an attack, and press F, or X on your controller, when its shell is recovering. Clear both waves to awaken River Song.",
-    "organ": "The Feeling Garden is restored! Follow the connected root walk to the Waterfall Organ. Harvest the protected Dew Pears nearby, then interact with the organ and tune its three valves to the target numbers. You can explore the other gardens on foot while you restore their music in order.",
+    "organ": "You have reached River Song Island! Harvest the protected Dew Pears on the near riverbank. Open the Waterfall Organ, listen to the chord, and tune all three valves to the target numbers. Then check your composition to restore the organ.",
     "harp": "The organ is singing! Next is the Hush Vine String Harp. Harvest the protected Sun Plums, then tune the five strings to match their target numbers. Use the instrument's listen and hint buttons whenever you need them.",
-    "boat": "Well done! Find the Rain Boat Call Bells and harvest the protected Bell Apples. Repeat the bell pattern shown by the activity to wake the boat. The connected root walk is also open if you would rather walk across.",
+    "boat": "Now try the Rain Boat Call Bells. Collect the protected Bell Apples beside the dock. Listen, then answer North, South, East, West. Check the pattern to unlock the crossing into Bell Grove. You can sail on the boat or take the flowering bridge.",
     "chimes": "Next, restore the Harmony Bridge Chimes with protected Bell Apples. Play the three arches in order when the wind marker says OPEN. Your completed instruments stay restored.",
     "warning": "Now follow the Fear Warning Bell Path. Harvest the protected Moon Melons, then answer Leaf, Sun, and Droplet. Wait for QUIET before each step. Your completed steps survive a retry.",
     "loom": "The valley has found its voices! At the Heart Song Loom, bring the recovered drum, water, harp, and chime motifs together. Listen to the tracks before adding them to your song.",
     "anchors": "Let's help the Silent Conductor. Approach each of the three beat anchors while the shell is recovering, and complete its short rhythm, pitch, or direction lesson. Keep outside the warning ripple during an attack.",
     "orchestra": "One final song! Bring the six protected story fruits to the Harmony Fruit Orchestra: Echo Berry, Sun Plum, Dew Pear, Bell Apple, Moon Melon, and Harmony Fig. Place them in that order, then conduct North, East, South, and West on the open beats.",
     "complete": "You restored Heart Melody! Visit the Jewel Sanctuary for your Harmony Jewel and shield. All the flowers and musical activities remain available to replay. The return gate takes us back to the Castle, and I'll stay beside you.",
-    "free_play": "You can play flowers from the front, back, or either side. Press Q, or A, when Play flower appears. Visit the Fruit Marimba, Vine Harp, Hanging Bell Garden, and Garden Ensemble for more music. The Valley map shows your next objective, fruit locations, hints, and crafting. Open Help to hear my current guidance again."
+    "free_play": "You can play flowers from the front, back, or either side. Press Q, or A, when Play flower appears. Visit the Fruit Marimba, Vine Harp, Hanging Bell Garden, and Garden Ensemble for more music. The Valley map shows your next objective, fruit locations, hints, and crafting. Open Help to hear my current guidance again.",
+    "done_0": "Your three feeling seeds are planted! Now listen to the flower drums. Answer Leaf, Sun, Droplet, and confirm the garden phrase. Then release both waves of silenced creatures in the clearing.",
+    "done_1": "You have completed the Feeling Garden! Well done. The River Song gate is ready. Walk up to it to open the crossing, then follow the path to the Waterfall Organ. I'll explain the next activity when we arrive.",
+    "done_2": "You have restored the Waterfall Organ! Next, find the Hush Vine String Harp beside the river. Gather Sun Plums and tune its five strings to their target numbers.",
+    "done_3": "The Hush Vine String Harp is restored! Now collect Bell Apples beside the Rain Boat dock and answer the Call Bells. That will unlock the crossing to Bell Grove.",
+    "done_4": "You have completed the Rain Boat Call Bells! Approach the gate on the flowering river bridge and it will open. Cross into Bell Grove to restore the Harmony Bridge Chimes.",
+    "done_5": "The Harmony Bridge Chimes are restored! Now the next gate is ready. Follow the warning bell path, collect Moon Melons and answer Leaf, Sun, Droplet during the quiet gaps.",
+    "done_6": "You have completed the warning bell path! Approach the next gate to open the way to Harmony Stage. At the Heart Song Loom, arrange the drum, water, harp and chime motifs.",
+    "done_7": "Your Heart Song is complete! Now help the Silent Conductor. During recovery, approach each of the three beat anchors and answer its short lesson. Stay outside the warning ripple during attacks.",
+    "done_8": "All three beat anchors are singing! Now bring one of each protected story fruit to the Harmony Fruit Orchestra. Place Echo, Sun, Dew, Bell, Moon and Harmony in that order, then conduct the final four beats.",
+    "done_9": "You have completed Heart Melody! The sanctuary gate is ready to open. Visit the Harmony Jewel and enjoy your shield. You can replay the instruments or return through the Castle gate. I'll walk with you."
   },
   "reference_sha256": "17262e317f8c0eaedd74625ade3c819e2092620e1b24837e44e403d94c5c9c65",
   "generation": {

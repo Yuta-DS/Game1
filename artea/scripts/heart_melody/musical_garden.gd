@@ -258,6 +258,7 @@ func interact(kind: String, index: int) -> void:
 func _fruit_panel(fruit_id: String) -> void:
 	var info: Dictionary = Catalog.FRUITS[fruit_id]
 	world._open(str(info.name), "%s\n%s\n\nListen first, then harvest. Eat collected fruit from the fruit bucket in the valley journal. Its unlocked instrument voice stays available after eating." % [info.symbol, info.role])
+	world._flow(["Listen / preview", "Harvest the fruit", "Place it or eat it"])
 	world._button("Preview sound", func():
 		world.note(Catalog.FRUIT_ORDER.find(fruit_id), 0.18, int(info.timbre)); _pulse(fruit_visuals[fruit_id])
 		world.message.text = "%s sounds like %s. Pitch will come from an instrument slot." % [info.name, info.role]
@@ -303,6 +304,7 @@ func on_flower_play(note_index: int) -> void:
 
 func _instrument_panel(instrument: String) -> void:
 	world._open(Catalog.instrument_name(instrument), "Free play is always available. Note position sets pitch; fruit changes only the tone. Use Tab / arrows and Enter, controller focus, or touch.")
+	world._flow(["Hear the example", "Click notes to play", "Arrange / record"])
 	var note_count: int = int(Catalog.INSTRUMENTS[instrument].notes)
 	for note_index in note_count:
 		world._button("Play note %d  %s" % [note_index + 1, _slot_description(instrument, note_index)], func(): play_note(instrument, note_index))
@@ -349,9 +351,17 @@ func _flower_activity() -> void:
 	world._button("Undo response", func(): _undo_phrase("flowers"))
 	world._button("Reset response", func(): world.progress.set_music_phrase("flowers", []); world.message.text = _phrase_text("flowers", ["LEAF", "DROPLET", "SUN"]))
 	world._button("Answer the flowers", func():
-		if world.progress.data.music.phrases.flowers == Catalog.FLOWER_PHRASE and world.progress.complete_music_activity(Catalog.ACTIVITY_FLOWERS):
-			world.message.text = "The flowers answer in harmony. Activity complete; your exact progress is saved."
-		else: world.message.text = "The matching beginning is kept. Listen again, undo, or revise without penalty."
+		if world.progress.data.music.phrases.flowers != Catalog.FLOWER_PHRASE:
+			world.message.text = "Answer LEAF, then SUN, then DROPLET. Undo or reset to revise your response."
+			return
+		world.progress.complete_music_activity(Catalog.ACTIVITY_FLOWERS)
+		if world.progress.committed.planters.size() == 3:
+			if world.progress.answer_flowers(world.progress.data.music.phrases.flowers):
+				world._apply_restoration()
+				world.message.text = "Phrase confirmed and saved! Close flower play, then enter the round sandy Blight Clearing beside the drums. Step aside during attacks; press F when a shell is recovering. Clear both waves to open River Song."
+			else: world.message.text = "The answer is correct, but saving failed. Retry saving from Help before entering the clearing."
+		else:
+			world.message.text = "Correct answer! Plant and confirm all three feeling seeds first, then return here and answer the flowers to awaken the Blight Clearing."
 	)
 	world._button("Optional rhythm mode: %s" % ("assisted" if rhythm_assist else "standard"), func(): rhythm_assist = not rhythm_assist; rhythm_speed = 1.1 if rhythm_assist else 0.7; _flower_activity())
 	world._button("Exit flower play", world._close)
@@ -405,6 +415,7 @@ func _bell_activity() -> void:
 func _ensemble_panel() -> void:
 	var ready: bool = world.progress.data.music.completed.has(Catalog.ACTIVITY_BELLS)
 	world._open("The Garden Ensemble", ("Combine rhythm, melody, harmony and accents. Fruit choices colour the timbre." if ready else "The ensemble is resting. Complete Orchard Voices, Answer the Flowers, Fruit Melody and Bell Grove first."))
+	world._flow(["Restore the activities", "Choose your layers", "Play the ensemble"])
 	if ready:
 		for layer in ["drums", "marimba", "harp", "bells"]:
 			world._button("%s layer: %s" % [Catalog.instrument_name(layer), "ON" if world.progress.data.music.ensemble[layer] else "OFF"], func(): world.progress.set_ensemble_layer(layer, not world.progress.data.music.ensemble[layer]); _ensemble_panel())

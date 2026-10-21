@@ -4,6 +4,7 @@ const Catalog = preload("res://scripts/heart_melody/heart_catalog.gd")
 const Progress = preload("res://scripts/heart_melody/heart_progress.gd")
 const Enemy = preload("res://scripts/heart_melody/heart_enemy.gd")
 const MusicalGarden = preload("res://scripts/heart_melody/musical_garden.gd")
+const UI = preload("res://scripts/heart_melody/heart_ui.gd")
 const PlayerScene = preload("res://scenes/player_3d.tscn")
 @export var embedded_in_overworld := false
 var overworld_player: CharacterBody3D
@@ -61,6 +62,8 @@ var musical_garden: Node3D
 var chapter_world: Node3D
 var _return_gate_busy := false
 var milo_guide: Node
+var journey_landscape: Node3D
+var _fit_queued := false
 
 func _ready() -> void:
 	# Milo follows here; Heart Melody owns the interaction key.
@@ -79,6 +82,9 @@ func _ready() -> void:
 	milo_guide = preload("res://scripts/heart_melody/heart_milo_guide.gd").new()
 	milo_guide.name = "HeartMiloGuide"
 	add_child(milo_guide)
+	journey_landscape = preload("res://scripts/heart_melody/heart_journey_landscape.gd").new()
+	journey_landscape.name = "HeartJourneyLandscape"
+	add_child(journey_landscape)
 	_register_flowers()
 	_refresh_plants()
 	_apply_restoration()
@@ -109,9 +115,12 @@ func _set_embedded_active(active: bool) -> void:
 		player.blocking_enabled = get_node("/root/JourneyState").has_treasure("harmony_jewel")
 		# Keep the shared orbit camera and its current heading, pitch and zoom.
 		# Suspend only the competing local guides/story UI, preserving their state.
+		# MiloFallRescue stays live: a fall off the island's edge leaves the
+		# Heart bounds before _recover() runs, and Milo needs fresh island
+		# ground to carry the player back to.
 		var scene := get_tree().current_scene
 		if scene != null:
-			for node_name in ["MiloFallRescue", "ConnectedKingdomStory", "ConnectedStoryHUD", "CrownLineHUD", "CombatHelpHUD"]:
+			for node_name in ["ConnectedKingdomStory", "ConnectedStoryHUD", "CrownLineHUD", "CombatHelpHUD"]:
 				var node := scene.find_child(node_name, true, false)
 				if node == null: continue
 				var record := {"node": node, "mode": node.process_mode}
@@ -394,9 +403,10 @@ func _build_hud() -> void:
 	top.offset_bottom = 218
 	top.custom_minimum_size = Vector2(600, 130)
 	layer.add_child(top)
+	UI.decorate(top)
 	hud = Label.new()
-	hud.add_theme_font_size_override("font_size", 30 if _large_text else 24)
-	hud.custom_minimum_size.x = 600
+	hud.add_theme_font_size_override("font_size", 28 if _large_text else 22)
+	hud.custom_minimum_size.x = 550
 	hud.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	top.add_child(hud)
 	prompt = Button.new()
@@ -416,17 +426,11 @@ func _build_hud() -> void:
 	panel = PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.position = Vector2(-350, -330)
-	panel.custom_minimum_size = Vector2(700, 560)
+	panel.custom_minimum_size = Vector2.ZERO
 	layer.add_child(panel)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("293d36")
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 16
-	style.content_margin_bottom = 16
-	panel.add_theme_stylebox_override("panel", style)
+	UI.decorate(panel)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(720, 560)
+	scroll.custom_minimum_size = Vector2.ZERO
 	scroll.follow_focus = true
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
@@ -464,6 +468,7 @@ func _process(delta: float) -> void:
 		if not embedded_active: return
 	river.tick(delta)
 	chapter_world.tick(delta)
+	journey_landscape.tick(delta)
 	_camera_update(delta)
 	if player_local_position().y < -15: _recover()
 	nearest = -1
@@ -475,8 +480,8 @@ func _process(delta: float) -> void:
 			nearest = i
 	prompt.visible = nearest >= 0 and not modal_open
 	if nearest >= 0: prompt.text = "Q / A · " + str(interactables[nearest].title)
-	var heading := "River Song" if player_local_position().x > 104 else "Musical Orchard"
-	hud.text = "  HEART MELODY · " + heading + "\n  " + objective() + "\n  %s  ·  %s  ·  Health %d" % [musical_garden.progress_text(), musical_garden.basket_summary(), player.current_health]
+	var heading: String = chapter_world.area_title()
+	hud.text = "HEART MELODY · " + heading + "\n" + objective() + "\nHealth %d · Journal: current route & supplies" % player.current_health
 	if progress.dirty: hud.text += "  ·  Save pending — retry in Help"
 	if chapter_world != null:
 		chapter_world.chapter_hud.offset_top = hud.get_parent().get_rect().end.y + 12
@@ -487,6 +492,10 @@ func _process(delta: float) -> void:
 		for i in plants.size(): plants[i].rotation.z = sin(_ambient_time * 1.3 + i) * 0.025
 
 func objective() -> String:
+	if not progress.data.complete and progress.data.solved:
+		if not progress.committed.solved: return "Correct phrase: retry saving in Help before entering the Blight Clearing."
+		if active_wave > 0: return "Blight wave %d / 2: step aside, then press F while the shell recovers." % active_wave
+		return "Enter the round sandy Blight Clearing beside the drums. Clear wave %d / 2." % (2 if progress.data.waves.has(1) else 1)
 	if chapter_world != null: return chapter_world.objective()
 	if musical_garden != null:
 		if player != null and player_local_position().x > 104 and progress.data.complete and river != null:
@@ -549,6 +558,11 @@ func _interact_nearest() -> void:
 			player.heal(100)
 			note(2)
 			_notice("Restored to full health.\n" + objective())
+		"healing_fountain":
+			player.heal(100)
+			chapter_world.focus = 100
+			note(2)
+			_notice("The singing fountain restored your health and focus.\n" + objective())
 		"intro": _intro()
 		"gate": _return_to_castle()
 		"flower":
@@ -556,13 +570,17 @@ func _interact_nearest() -> void:
 			_pulse(item.flower)
 
 func _open(title: String, body: String) -> void:
+	if chapter_world != null: chapter_world.instrument_panel_open = false
 	_view_garden = false
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.offset_left = -380
-	panel.offset_top = -330
+	panel.offset_top = -160
 	panel.offset_right = 380
-	panel.offset_bottom = 330
+	panel.offset_bottom = 160
 	_panel_generation += 1
+	var scroll := options.get_parent() as ScrollContainer
+	scroll.follow_focus = false
+	scroll.scroll_vertical = 0
 	demonstration = false
 	modal_open = true
 	player.set_input_enabled(false)
@@ -571,6 +589,8 @@ func _open(title: String, body: String) -> void:
 		child.queue_free()
 	var heading := Label.new()
 	heading.text = title
+	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	heading.add_theme_color_override("font_color", UI.ACCENT)
 	heading.add_theme_font_size_override("font_size", 34 if _large_text else 30)
 	options.add_child(heading)
 	message = Label.new()
@@ -580,6 +600,53 @@ func _open(title: String, body: String) -> void:
 	message.add_theme_font_size_override("font_size", 28 if _large_text else 22)
 	options.add_child(message)
 	panel.show()
+	_queue_fit()
+	_reset_menu_scroll(_panel_generation)
+
+func _reset_menu_scroll(generation: int) -> void:
+	# Layout and focus notifications can otherwise restore the previous menu's
+	# scroll after it is rebuilt. Always reveal the heading and flow first.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if generation != _panel_generation or not modal_open: return
+	var scroll := options.get_parent() as ScrollContainer
+	scroll.scroll_vertical = 0
+	# Enable focus-follow only when the player actually navigates. Web focus
+	# restoration can arrive later than layout and otherwise jump down again.
+	scroll.follow_focus = false
+
+func _input(event: InputEvent) -> void:
+	if not modal_open: return
+	for action in ["ui_up", "ui_down", "ui_left", "ui_right", "ui_focus_next", "ui_focus_prev"]:
+		if event.is_action_pressed(action):
+			(options.get_parent() as ScrollContainer).follow_focus = true
+			return
+
+func _queue_fit() -> void:
+	if _fit_queued: return
+	_fit_queued = true
+	_fit_panel.call_deferred()
+
+func _fit_panel() -> void:
+	_fit_queued = false
+	if not modal_open or _view_garden: return
+	var height := clampf(options.get_combined_minimum_size().y + 40, 180, minf(660, get_viewport().get_visible_rect().size.y - 100))
+	panel.offset_top = -height * 0.5
+	panel.offset_bottom = height * 0.5
+	panel.size.y = height
+	# Flow cards add content before the buttons. Keep keyboard/controller
+	# focus inside the new menu rather than on a hidden exploration prompt.
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused == null or not options.is_ancestor_of(focused):
+		for button in options.find_children("*", "Button", true, false):
+			if not button.disabled:
+				button.grab_focus()
+				break
+
+func _flow(steps: Array, active := 0) -> Control:
+	var result := UI.flow(options, steps, active)
+	_queue_fit()
+	return result
 
 func _button(title: String, action: Callable) -> Button:
 	var button := Button.new()
@@ -588,10 +655,12 @@ func _button(title: String, action: Callable) -> Button:
 	button.add_theme_font_size_override("font_size", 27 if _large_text else 21)
 	button.pressed.connect(action)
 	options.add_child(button)
+	_queue_fit()
 	if options.get_child_count() == 3: button.grab_focus()
 	return button
 
 func _close() -> void:
+	if chapter_world != null: chapter_world.instrument_panel_open = false
 	if chapter_world != null: chapter_world.challenge.cancel_playback()
 	if demonstration: audio_director.cancel()
 	_panel_generation += 1
@@ -609,12 +678,19 @@ func _notice(body: String) -> void:
 
 func _river_directions() -> String:
 	if progress.committed.complete:
-		return "River Song / Waterfall Organ is awake! Follow the marked connected root walk beyond the Feeling Garden."
-	return "Every Heart Melody garden is joined by a safe root walk, so you may explore freely. To awaken River Song / Waterfall Organ:\n1. Plant all three seeds.\n2. Solve the flower phrase.\n3. Clear both Blight waves.\nYour progress saves automatically. If saving fails, open Help and choose Retry saving."
+		return "River Song is ready! Approach its gate to open the safe crossing beyond the Feeling Garden."
+	return "To open the River Song gate:\n1. Plant all three seeds.\n2. Solve the flower phrase.\n3. Clear both Blight waves.\nThen approach the gate to celebrate and cross. Progress saves automatically; retry a failed save in Help."
 
 func _intro() -> void:
-	_open("Heart Melody · First Breath", "Milo: The valley has lost its song. Harvest Echo Berries beside the entrance, plant three feeling seeds, then answer the flower drums.\n\nMother Guardian: Every feeling and neutral sound belongs. Your seed choice never changes a reward. Follow the river's instruments to the Silent Conductor and help every voice return.\n\nSix fruit families support ten living instruments. Story fruit is protected; extra fruit is for crafting. The musical orchard remains available for free play.\n\nMove with WASD or the left stick; Q / A interacts. F / X releases exposed silencing shells. The Valley journal has fruit directions and assistance.\n\n" + objective())
-	_button("Explore the orchard", _close)
+	if progress.committed.chapter.tasks.size() > 0:
+		_open("Welcome back to Heart Melody", objective())
+		_flow(["Continue your task", "Restore the music", "Approach the next gate"])
+		_button("Continue exploring", _close)
+		_button("Hear Milo's current guidance", func(): milo_guide.replay())
+		return
+	_open("Welcome to the Feeling Garden", "Start with one small task: collect Echo Berries beside the entrance. Milo will explain each new activity as you reach it.\nMove: WASD / left stick · Interact: Q / controller A")
+	_flow(["Find the berry grove", "Harvest story fruit", "Plant three seeds"])
+	_button("Start exploring", _close)
 	_button("Replay controls and accessibility", _help)
 	_button("Optional greeting", func(): _identity(0))
 	_button("Skip introduction", _close)
@@ -625,6 +701,7 @@ func _planter(index: int) -> void:
 		return
 	preview_planter = index
 	_open(Catalog.SYMBOLS[index] + " planter", "Choose an appearance and sound. All choices succeed. Nothing is saved until you confirm.")
+	_flow(["Choose a feeling", "Preview its sound", "Confirm planting"])
 	if progress.data.planters.has(str(index)):
 		_button("Replay planted note", func(): note(index, 0.22, int(progress.data.planters[str(index)])); _pulse(plants[index]))
 	var row := HBoxContainer.new()
@@ -727,7 +804,7 @@ func _confirm_phrase() -> void:
 		while mismatch < progress.data.phrase.size() and progress.data.phrase[mismatch] == Catalog.PHRASE[mismatch]: mismatch += 1
 		message.text = "Note %d is the %s flower. Your phrase is kept; undo or listen again.\n%s" % [mismatch + 1, Catalog.SYMBOLS[Catalog.PHRASE[mini(mismatch, 2)]], _phrase_text()]
 		return
-	if progress.solve():
+	if progress.answer_flowers(progress.data.phrase):
 		_apply_restoration()
 		_notice("The flowers found their phrase. Walk into the marked clearing when ready.\nRead the warning, step aside, then press F to release the shell during recovery.")
 		_demonstrate(Catalog.PHRASE)

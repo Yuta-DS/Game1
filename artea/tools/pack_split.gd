@@ -62,8 +62,9 @@ const PACKS := {
 const WEB_PRESET := "Web"
 const CONFIG_PATH := "res://tools/packs.cfg"
 const PRESETS_PATH := "res://export_presets.cfg"
+const GENERATED_PRESETS_PATH := "res://export_presets.generated.cfg"
 const MANIFEST_PATH := "res://packs.json"
-const TEXT_EXTENSIONS := ["gd", "tscn", "tres", "gdshader", "gdshaderinc"]
+const TEXT_EXTENSIONS := ["gd", "tscn", "tres", "gdshader", "gdshaderinc", "gdextension"]
 const SKIP_DIRS := [".godot", ".git", ".import"]
 
 var _excludes: PackedStringArray = []
@@ -207,7 +208,8 @@ func _initialize() -> void:
 		file.store_string(JSON.stringify(result, "\t"))
 	if write and errors.is_empty():
 		_write_manifest(result.packs)
-		_write_presets(result.packs)
+		if _write_presets(result.packs) != OK:
+			errors.append("Could not write generated export presets")
 	_report(result)
 	for error in errors:
 		printerr("PACK ERROR: " + error)
@@ -390,6 +392,13 @@ func _edges_of(path: String) -> Dictionary:
 		refs.append_array(_string_paths(text))
 		if path.get_extension() == "gd":
 			refs.append_array(_class_uses(text, path))
+			# GDScript dependencies are not all reported by ResourceLoader,
+			# including relative preloads used by editor/runtime addons.
+			var loads := RegEx.create_from_string("(?:preload|load|extends)\\s*\\(?\\s*[\"']([^\"']+)[\"']")
+			for match in loads.search_all(text):
+				var target: String = match.get_string(1)
+				if not target.begins_with("res://") and not target.begins_with("uid://"):
+					refs.append(path.get_base_dir().path_join(target).simplify_path())
 	_edges[path] = {"deps": deps, "refs": refs}
 	return _edges[path]
 
@@ -399,7 +408,7 @@ func _edges_of(path: String) -> Dictionary:
 ## skipped too: a path named in prose is not a load.
 func _string_paths(text: String) -> Array[String]:
 	var found: Array[String] = []
-	var regex := RegEx.create_from_string("res://[^\"'\\s)\\]]+")
+	var regex := RegEx.create_from_string("res://[^\"'\\r\\n]+")
 	for line in text.split("\n"):
 		if line.strip_edges().begins_with("#"):
 			continue
@@ -449,6 +458,9 @@ func _project_setting_paths() -> Array[String]:
 	var paths: Array[String] = []
 	for path in _string_paths(text):
 		paths.append(path)
+	# Godot uses this conventional filename without an explicit project key.
+	if FileAccess.file_exists("res://default_bus_layout.tres"):
+		paths.append("res://default_bus_layout.tres")
 	return paths
 
 
@@ -496,7 +508,7 @@ func _write_manifest(packs: Dictionary) -> void:
 ## The Pack preset must not select only its own files: a patch records every
 ## base file its preset leaves out as removed, and mounting it would then delete
 ## those files from the running game.
-func _write_presets(packs: Dictionary) -> void:
+func _write_presets(packs: Dictionary) -> Error:
 	var presets := ConfigFile.new()
 	presets.load(PRESETS_PATH)
 	var web := ""
@@ -519,7 +531,9 @@ func _write_presets(packs: Dictionary) -> void:
 			"name": "Web Pack %s" % pack,
 			"exclude_filter": _with_excluded(base_excludes, packs, pack),
 		})
-	presets.save(PRESETS_PATH)
+	# The running engine may map the original config. Publish from the shell
+	# after this process exits instead of overwriting that mapped file.
+	return presets.save(GENERATED_PRESETS_PATH)
 
 
 ## `excludes` plus the files of every Pack except `keep`.

@@ -622,6 +622,7 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 		var post := _oriented_box(entry, Vector3(0.52, 1.45, 0.52),
 			post_position, post_position + forward, dark)
 		post.name = "GroundEntryStoneNewel_%s" % ("Left" if side_sign < 0.0 else "Right")
+		_add_box_body(post, (post.mesh as BoxMesh).size)
 	_build_ground_entry_balustrades(entry, radial, far_centre,
 		first_centre, entry_surface_y, first_surface_y, light)
 	entry.set_meta("walkable_from_terrain", true)
@@ -632,8 +633,8 @@ func _build_grounded_castle_entry(parent: Node3D, base: Vector2,
 # Low retaining walls give the straight ground promenade a finished silhouette
 # and carry both spiral barriers into the hillside. Each side is one continuous
 # sloped piece; the former segmented boxes visibly kinked and left unnecessary
-# joins. They remain visual-only and outboard of the authoritative promenade,
-# so neither wall nor its cap can catch the player or a loose prop.
+# joins. Matching solid boxes stay outboard of the walking lane so characters
+# cannot pass through the visible wall when approaching from the hillside.
 func _build_ground_entry_balustrades(parent: Node3D, radial: Vector3,
 		far_centre: Vector3, first_centre: Vector3,
 		entry_surface_y: float, first_surface_y: float, material: Material) -> void:
@@ -654,7 +655,8 @@ func _build_ground_entry_balustrades(parent: Node3D, radial: Vector3,
 			Vector3(WALL_THICKNESS, WALL_HEIGHT, from.distance_to(to) + 0.10),
 			centre, to, material)
 		wall.name = "GroundEntry%sBarrier" % side_name
-		wall.set_meta("visual_only", true)
+		_add_box_body(wall, (wall.mesh as BoxMesh).size)
+		wall.set_meta("solid_guard", true)
 		wall.set_meta("continuous_slope", true)
 		var cap_from := from + Vector3.UP * (WALL_HEIGHT * 0.5)
 		var cap_to := to + Vector3.UP * (WALL_HEIGHT * 0.5)

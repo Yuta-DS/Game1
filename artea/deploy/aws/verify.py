@@ -28,7 +28,7 @@ def validate(package):
         with path.open("rb") as source:
             if hashlib.file_digest(source, "sha256").hexdigest() != item["sha256"]:
                 raise ValueError(f"Checksum mismatch: {key}")
-    required = {"index.html", f"releases/{release}/index.html", f"releases/{release}/heart.html"}
+    required = {"index.html", f"releases/{release}/index.html"}
     if not required.issubset(seen): raise ValueError("Missing game entry page")
     actual = {p.relative_to(package / "site").as_posix() for p in (package / "site").rglob("*") if p.is_file()}
     if actual != seen: raise ValueError("Upload folder contains files not covered by the manifest")
@@ -45,8 +45,12 @@ def verify_host(base, manifest, release_only=False):
                 if response.headers.get(name) != expected: raise ValueError(f"Missing {name}: {url}")
             if response.headers.get_content_type() != item["content_type"].split(";")[0]:
                 raise ValueError(f"Wrong content type: {url}")
-            if not response.headers.get("Content-Encoding") and int(response.headers.get("Content-Length", -1)) != item["bytes"]:
+            if response.headers.get("Content-Encoding") != item.get("content_encoding"):
+                raise ValueError(f"Wrong content encoding: {url}")
+            if int(response.headers.get("Content-Length", -1)) != item["bytes"]:
                 raise ValueError(f"Wrong content length: {url}")
+            if response.headers.get("Cache-Control") != item["cache_control"]:
+                raise ValueError(f"Wrong cache policy: {url}")
             if item["path"] == "index.html" and "no-store" not in response.headers.get("Cache-Control", ""):
                 raise ValueError("Landing page must not be cached")
     items = [f for f in manifest["files"] if not release_only or f["path"] != "index.html"]

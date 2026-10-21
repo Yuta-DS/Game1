@@ -25,8 +25,19 @@ var _forgot_password_panel: Node
 var _code_modal: Node
 
 func _ready():
+	print("Account screen initializing")
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
+	if APIManager.uses_managed_accounts():
+		var recovery := Button.new()
+		recovery.text = "Verify account / reset password"
+		recovery.pressed.connect(_managed_recovery)
+		user_node.get_parent().add_child(recovery)
+	print("Account screen initialized")
+	# Download, without mounting, the first playable area's packs while the
+	# player is signing in. Later worlds retain the existing in-game prefetch.
+	if OS.has_feature("web"):
+		_prefetch_hub.call_deferred()
 	# Release Web templates reject scene paths in engine startup arguments.
 	# The local preview adapter requests a normal runtime scene transition.
 	var heart_preview := "--heart-preview" in OS.get_cmdline_user_args()
@@ -36,6 +47,19 @@ func _ready():
 		print("HEART PREVIEW REQUEST ACCEPTED")
 		if OS.has_feature("web"): JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW = false", true)
 		_open_heart_preview.call_deferred()
+
+func _prefetch_hub() -> void:
+	var hub_files := SceneLoader.packs_needed("res://scenes/New_Hub_World.tscn")
+	if hub_files.is_empty():
+		return
+	var browser := JavaScriptBridge.get_interface("window")
+	var connection = browser.navigator.connection
+	if connection != null and bool(connection.saveData):
+		return
+	if browser.arteaPacks != null:
+		var files = JavaScriptBridge.get_interface("JSON").parse(JSON.stringify(hub_files))
+		browser.arteaPacks.startPrefetch(files)
+
 
 func _open_heart_preview() -> void:
 	Global.current_user_name = "Guest_Player"
@@ -180,6 +204,9 @@ func _on_register_button_pressed() -> void:
 		show_message("Fields cannot be empty!")
 		return
 
+	if APIManager.uses_managed_accounts():
+		_managed_register(entered_user, entered_pass)
+		return
 	show_message("Registering account...", false)
 
 	APIManager.register(
@@ -239,6 +266,8 @@ func _on_register_button_pressed() -> void:
 
 # Connected to your physical 'GuestButton' (Play Offline as Guest)
 func _on_guest_button_pressed() -> void:
+	print("Guest button selected")
+	APIManager.clear_session()
 	print("GUEST access selected - Cleaning input boxes completely")
 	
 	# FORCE WIPE FIELDS: This guarantees the text fields are blanked out 
@@ -257,6 +286,8 @@ func _on_guest_button_pressed() -> void:
 # Loopback is still accepted when the API itself is on localhost, which is the
 # case for a local development server.
 func check_internet_connection() -> bool:
+	# Browser network interfaces are unavailable; let HTTP report connectivity.
+	if OS.has_feature("web"): return true
 	if APIManager.BASE_URL.contains("127.0.0.1") or APIManager.BASE_URL.contains("localhost"):
 		return true
 
@@ -303,3 +334,101 @@ func enter_game(username: String, is_guest: bool = false):
 	# now waits on that thread too (see loading_scene.gd), not just the scene
 	# resource itself.
 	SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/New_Hub_World.tscn")
+
+
+# Account setup stays outside gameplay. Cognito sends codes to the verified
+# email; credentials and refresh tokens are never written to browser storage.
+func _account_form(title_text: String, labels: Array, submit: Callable) -> Window:
+	var dialog := Window.new()
+	dialog.title = title_text
+	dialog.size = Vector2i(500, 340)
+	dialog.transient = true
+	dialog.exclusive = true
+	add_child(dialog)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "right", "top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 18)
+	dialog.add_child(margin)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 12)
+	margin.add_child(column)
+	var fields: Array[LineEdit] = []
+	for caption in labels:
+		var label := Label.new()
+		label.text = str(caption)
+		column.add_child(label)
+		var field := LineEdit.new()
+		field.secret = "password" in str(caption).to_lower()
+		field.custom_minimum_size.y = 42
+		column.add_child(field)
+		fields.append(field)
+	var message := Label.new()
+	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(message)
+	var button := Button.new()
+	button.text = "Continue"
+	button.custom_minimum_size.y = 44
+	column.add_child(button)
+	button.pressed.connect(func():
+		var values: Array[String] = []
+		for field in fields: values.append(field.text)
+		message.text = "Please wait..."
+		button.disabled = true
+		submit.call(values, func(ok: bool, text: String):
+			if not is_instance_valid(dialog): return
+			if ok:
+				dialog.exclusive = false
+				dialog.hide()
+				dialog.queue_free()
+			else:
+				message.text = text
+				button.disabled = false
+		)
+	)
+	dialog.close_requested.connect(dialog.queue_free)
+	dialog.popup_centered()
+	fields[0].grab_focus()
+	return dialog
+
+func _managed_register(username: String, password: String) -> void:
+	_account_form("Create your account", ["Email for account verification and recovery"], func(values, done):
+		APIManager.register(username, password, func(ok, data):
+			done.call(ok, str(data.get("error", "Could not create account.")))
+			if ok: _managed_confirm(username)
+		, values[0].strip_edges())
+	)
+
+func _managed_confirm(username: String) -> void:
+	_account_form("Verify your email", ["Verification code from your email"], func(values, done):
+		APIManager.confirm_account(username, values[0].strip_edges(), func(ok, data):
+			done.call(ok, str(data.get("error", "Could not verify account.")))
+			if ok: show_message("Email verified. You can now sign in.", false)
+		)
+	)
+
+func _managed_recovery() -> void:
+	var username: String = user_node.text.strip_edges()
+	if username.is_empty():
+		show_message("Enter your username first.")
+		return
+	var dialog := _account_form("Reset password", ["Code from your email", "New password (at least 14 characters)"], func(values, done):
+		APIManager.reset_password(username, values[0].strip_edges(), values[1], func(ok, data):
+			done.call(ok, str(data.get("error", "Could not reset password.")))
+			if ok: show_message("Password changed. You can now sign in.", false)
+		)
+	)
+	APIManager.request_password_reset(username, func(_ok, _data): pass)
+	var verify := Button.new()
+	verify.text = "Resend verification email instead"
+	verify.position = Vector2(20, 295)
+	dialog.add_child(verify)
+	verify.pressed.connect(func():
+		APIManager.resend_confirmation(username, func(ok, data):
+			if ok:
+				dialog.exclusive = false
+				dialog.hide()
+				dialog.queue_free()
+				_managed_confirm(username)
+			else: show_message(str(data.get("error", "Please try again.")))
+		)
+	)

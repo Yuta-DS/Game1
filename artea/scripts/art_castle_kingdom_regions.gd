@@ -157,9 +157,27 @@ func _build_station_platform(kingdom_id: String, paving: Array, accent: Material
 	var r := STATION_PLATFORM_RADIUS
 	# Stacked a few cm apart so no two tops are coplanar.
 	_add_cylinder(platform, "WalkableDeck", center + Vector3(0, -1.5, 0), r, 3.0, accent, true, 64)
-	_add_cylinder(platform, "DeckField", center + Vector3(0, 0.02, 0), r - 8.0, 0.04, deck_material, false, 64)
-	_add_cylinder(platform, "CentrepieceInlay", center + Vector3(0, 0.06, 0), 126.0, 0.04, accent, false, 64)
-	_add_cylinder(platform, "CentrepieceSpace", center + Vector3(0, 0.1, 0), 118.0, 0.04, plaza_material, false, 64)
+	if kingdom_id == "heart":
+		_build_heart_court(platform, center, r - 8.0, [deck_material, accent, plaza_material])
+		var maze := Node3D.new()
+		maze.name = "HeartMusicMaze"
+		maze.position = center + Vector3.UP * 0.20
+		maze.set_script(preload("res://scripts/heart_melody/heart_music_maze.gd"))
+		platform.add_child(maze)
+		var garden := Node3D.new()
+		garden.name = "HeartArrivalGarden"
+		garden.set_script(preload("res://scripts/heart_melody/heart_arrival_garden.gd"))
+		garden.fountain_position = center + maze.fountain_position() + Vector3.UP * 0.20
+		platform.add_child(garden)
+		var music_circle := Node3D.new()
+		music_circle.name = "HeartMusicCircle"
+		music_circle.position = center + Vector3.UP * 0.20
+		music_circle.set_script(preload("res://scripts/heart_melody/heart_music_circle.gd"))
+		platform.add_child(music_circle)
+	else:
+		_add_cylinder(platform, "DeckField", center + Vector3(0, 0.02, 0), r - 8.0, 0.04, deck_material, false, 64)
+		_add_cylinder(platform, "CentrepieceInlay", center + Vector3(0, 0.06, 0), 126.0, 0.04, accent, false, 64)
+		_add_cylinder(platform, "CentrepieceSpace", center + Vector3(0, 0.1, 0), 118.0, 0.04, plaza_material, false, 64)
 	var underside := MeshInstance3D.new()
 	underside.name = "FloatingUnderside"
 	var mesh := CylinderMesh.new()
@@ -175,6 +193,34 @@ func _build_station_platform(kingdom_id: String, paving: Array, accent: Material
 		_kingdom_color(kingdom_id), 160)
 	if kingdom_id == "creator":
 		_build_creator_centrepiece(platform, center)
+
+
+func _build_heart_court(parent: Node3D, center: Vector3, radius: float, materials: Array) -> void:
+	# Adjacent annuli share exact boundaries. Unlike stacked disks, there are
+	# no coplanar tops for the long-range Web camera's depth buffer to fight over.
+	var mesh := ArrayMesh.new()
+	var radii := [radius, 126.0, 118.0, 0.0]
+	for ring in 3:
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for index in 96:
+			var a0 := float(index) * TAU / 96.0
+			var a1 := float(index + 1) * TAU / 96.0
+			var outer0 := Vector3(cos(a0) * radii[ring], 0.20, sin(a0) * radii[ring])
+			var outer1 := Vector3(cos(a1) * radii[ring], 0.20, sin(a1) * radii[ring])
+			var inner0 := Vector3(cos(a0) * radii[ring + 1], 0.20, sin(a0) * radii[ring + 1])
+			var inner1 := Vector3(cos(a1) * radii[ring + 1], 0.20, sin(a1) * radii[ring + 1])
+			for point in [outer0, outer1, inner1, outer0, inner1, inner0]:
+				surface.add_vertex(point)
+		surface.generate_normals()
+		surface.set_material(materials[ring])
+		surface.commit(mesh)
+	var court := MeshInstance3D.new()
+	court.name = "ContinuousHeartPaving"
+	court.mesh = mesh
+	court.position = center
+	parent.add_child(court)
+	court.create_trimesh_collision()
 
 
 ## The plaza _build_station_platform reserves (CentrepieceSpace, 118 m

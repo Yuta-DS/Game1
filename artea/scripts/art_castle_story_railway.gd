@@ -2124,6 +2124,13 @@ func _build_world_access_bridge(station: Node3D, landing_local: Vector3,
 	_add_walkway_between(bridge, "FloatingAccessDeck", dock_edge, landing, 16.0,
 		ACCESS_DECK_THICKNESS, _dark_metal_material, false)
 	_build_bridge_ceremonial_ascent(bridge, dock_edge, landing)
+	if str(station.name).ends_with("_heart"):
+		# One matte paving family, rather than alternating black metal panels,
+		# bright conduit and stone rectangles at the Feeling Garden landing.
+		for piece_name in ["FloatingAccessDeck", "CentralLumenRamp", "AccessEnergyConduit"]:
+			var piece := bridge.get_node_or_null(NodePath(piece_name)) as MeshInstance3D
+			if piece != null:
+				piece.material_override = _stone_material
 	_build_dock_arrival_stairs(station, dock_sign,
 		Vector3(landing.x, landing_surface_y, landing.z))
 	var direction := landing - dock_edge

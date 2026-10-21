@@ -49,9 +49,13 @@ func consume_spawn_point() -> String:
 	pending_spawn_point = ""
 	return point
 
-const SERVER_BASE = "http://54.252.162.122"
-
-const LOGIN_URL = SERVER_BASE + "/login"
-const REGISTER_URL = SERVER_BASE + "/register"
-const MY_ARTWORKS_URL = SERVER_BASE + "/my_artworks"
-const UPLOAD_ARTWORK_URL = SERVER_BASE + "/upload_artwork"
+var SERVER_BASE: String:
+	get: return APIManager.BASE_URL
+var LOGIN_URL: String:
+	get: return APIManager.LOGIN_URL
+var REGISTER_URL: String:
+	get: return APIManager.REGISTER_URL
+var MY_ARTWORKS_URL: String:
+	get: return APIManager.MY_ARTWORKS_URL
+var UPLOAD_ARTWORK_URL: String:
+	get: return APIManager.UPLOAD_ARTWORK_URL
