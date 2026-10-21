@@ -127,7 +127,11 @@ func tick(delta: float) -> void:
 	for gate in gates:
 		if gate.open: continue
 		var eligible: bool = world.progress.committed.chapter.tasks.size() >= gate.required
-		gate.sign.text = gate.title + "\n" + ("Ready · approach to open" if eligible else gate.hint)
+		var hint: String = gate.hint
+		var completed: int = world.progress.committed.chapter.tasks.size()
+		if gate.required == 5 and completed >= 2 and not eligible:
+			hint = "River Song: %d / 3 restored\nNext: %s" % [completed - 2, Catalog.TITLES[completed]]
+		gate.sign.text = gate.title + "\n" + ("Ready · approach to open" if eligible else hint)
 		var local: Vector3 = world.player_local_position()
 		if eligible and local.distance_to(gate.root.position) < 13:
 			open_gate(gate)

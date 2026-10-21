@@ -22,6 +22,7 @@
 //       [--music-circle] (instruments, seated piano, maze, fountain and Milo)
 //       [--heart-journey] (staged garden UI, voice lifecycle, fountain and gate)
 //       [--heart-audio-only] (focused garden fountain audio and Hub round trip)
+//       [--heart-river-only] (actual organ, harp, Call Bells and Bell Grove gate)
 //       [--profile-frames] (opt-in release telemetry and reversible A/B samples)
 //       [--profile-hub] (with --profile-frames: Hub diagnostics only)
 //
@@ -455,7 +456,7 @@ async function connect() {
 		// reaches last, before it can. The loading screen downloads its Pack
 		// itself, with progress, while the background downloads hold back.
 		const STORY = ['the Crown of Life story', 'res://scenes/viewfinder/crown_of_life_story.tscn'];
-		const story = args.includes('--profile-hub') ? null : await goTo(...STORY);
+		const story = args.includes('--profile-hub') || args.includes('--heart-river-only') ? null : await goTo(...STORY);
 		areas.push([STORY[0], story, story ? await goTo('the Hub', HUB) : null, 'not prefetched yet']);
 
 		// Standing in the Hub while the rest downloads, then a while after.
@@ -506,7 +507,7 @@ async function connect() {
 			return !identical(start, duringShot) || !identical(duringShot, afterShot);
 		};
 		const moved = await movesWithW(before, '03-moving', '04-after-move');
-		if (args.includes('--heart-audio-only')) {
+		if (args.includes('--heart-audio-only') || args.includes('--heart-river-only')) {
 			// Mount the valley pack through its real loader before the transient
 			// fixture dynamically loads that scene.
 			if (!await goTo('Heart Melody valley', 'res://scenes/heart_melody/heart_melody_world.tscn')) throw new Error('Garden pack failed');
@@ -516,16 +517,21 @@ async function connect() {
 			}
 			if (!moved || !await goTo('the garden audio test', '/tmp/heart_journey_web_qa.tscn')) throw new Error('Garden audio scene failed');
 			await waitForLog(/JOURNEY QA ready/, 'garden audio fixture', 20000);
-			await evaluate(`window.arteaJourneyQA('fountain')`);
-			await waitForLog(/JOURNEY QA stage fountain/, 'local fountain playback', 10000);
-			await shot('garden-fountain-audio');
+			const stages = args.includes('--heart-river-only') ? ['gate', 'instrument', 'river-organ', 'river-harp', 'river-bells'] : ['fountain'];
+			for (const stage of stages) {
+				const from = consoleLines.length;
+				await evaluate(`window.arteaJourneyQA(${JSON.stringify(stage)})`);
+				await waitForLog(new RegExp('JOURNEY QA stage ' + stage), stage, 15000, from);
+				await sleep(700);
+				await shot('journey-' + stage);
+			}
 			if (!await goTo('the Hub', HUB)) throw new Error('Garden audio return failed');
-			const errors = consoleLines.filter(line => /SCRIPT ERROR|Parse Error|Failed to load scene|JOURNEY QA (?:fountain not|garden background)/.test(line));
+			const errors = consoleLines.filter(line => /SCRIPT ERROR|Parse Error|Failed to load scene|JOURNEY QA (?:FAILURE|flower answer did not|clearing did not|gate failed|menu did not|missing control|fountain not|garden background)/.test(line));
 			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 			if (errors.length) throw new Error(errors.join('\n'));
 			await cdp(`/json/close/${targetId}`).catch(() => {});
 			await closeOwnChrome();
-			console.log('RESULT: GARDEN AUDIO PLAYABLE');
+			console.log(args.includes('--heart-river-only') ? 'RESULT: RIVER SONG ROUTE PLAYABLE' : 'RESULT: GARDEN AUDIO PLAYABLE');
 			process.exit(0);
 		}
 		const profiles = [];
@@ -639,7 +645,7 @@ async function connect() {
 			}
 			if (!await goTo('the Melody journey test', '/tmp/heart_journey_web_qa.tscn')) throw new Error('Journey fixture failed');
 			await waitForLog(/JOURNEY QA ready/, 'garden presentation fixture', 20000);
-			for (const stage of ['intro', 'transcript', 'harvest', 'journal', 'fountain', 'gate', 'instrument']) {
+			for (const stage of ['intro', 'transcript', 'harvest', 'journal', 'fountain', 'gate', 'instrument', 'river-organ', 'river-harp', 'river-bells']) {
 				const from = consoleLines.length;
 				await evaluate(`window.arteaJourneyQA(${JSON.stringify(stage)})`);
 				await waitForLog(new RegExp('JOURNEY QA stage ' + stage), stage + ' presentation', 10000, from);
@@ -670,7 +676,7 @@ async function connect() {
 			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		}
 
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error|MUSIC QA FAILURE|JOURNEY QA (?:flower answer did not|clearing did not|gate failed|fountain not|menu did not|missing control)/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error|MUSIC QA FAILURE|JOURNEY QA (?:FAILURE|flower answer did not|clearing did not|gate failed|fountain not|menu did not|missing control)/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();

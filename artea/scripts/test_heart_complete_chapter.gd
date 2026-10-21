@@ -65,7 +65,8 @@ func run() -> void:
 		var before: Dictionary = chapter.director.snapshot()
 		check(not chapter.director.finish_instrument(task + 1, Catalog.PATTERNS[task + 1]), "future task %d cannot skip current island" % (task + 1))
 		check(chapter.director.snapshot() == before, "rejected future task consumes no story fruit")
-		chapter.open_instrument(task)
+		if task in [2, 3, 4]: open_river_control(task)
+		else: chapter.open_instrument(task)
 		check(chapter.active_task == task, "instrument %d opens in quest order" % task)
 		# Leaving an unfinished instrument must not give it keyboard ownership
 		# of the journal, or let timing captions replace the current objective.
@@ -82,19 +83,43 @@ func run() -> void:
 		world._close()
 		chapter.open_instrument(task)
 		if task in [2, 3]:
-			for i in Catalog.PATTERNS[task].size(): chapter.challenge.tune(i, Catalog.PATTERNS[task][i])
+			if task == 2:
+				press("Check composition")
+				check(not Catalog.TASKS[2] in world.progress.committed.chapter.tasks, "unfinished valves do not count as a completed organ")
+			for i in Catalog.PATTERNS[task].size(): tune_control(i, Catalog.PATTERNS[task][i])
 		else:
 			for note in Catalog.PATTERNS[task]:
 				chapter.challenge.elapsed = 0
 				chapter.clock = 2
-				chapter.play(note)
-		chapter.submit()
+				if task == 4: press_note(note)
+				else: chapter.play(note)
+		if task == 4:
+			var save_path: String = world.progress.path
+			var before_bells: Dictionary = chapter.director.snapshot()
+			world.progress.path = "res://missing_directory/river_save_failure.json"
+			press("Check composition")
+			check(chapter.director.snapshot() == before_bells and not world.progress.committed.river.boat, "failed Call Bell save neither spends fruit nor unlocks Bell Grove")
+			world.progress.path = save_path
+			world._close()
+			chapter.open_instrument(task)
+		press("Check composition")
 		check(Catalog.TASKS[task] in world.progress.committed.chapter.tasks, "instrument %d saves completion" % task)
 		var task_reload := Progress.new()
 		task_reload.path = world.progress.path
 		task_reload.load_progress()
 		check(task_reload.committed.chapter.tasks == world.progress.committed.chapter.tasks, "task %d unlock survives reload" % task)
 		world._close()
+		if task in [2, 3]:
+			world.player.position = Vector3(207, 1, -8)
+			world.journey_landscape.tick(0)
+			var gate: Dictionary = world.journey_landscape.gates[1]
+			check(not gate.open and gate.sign.text.contains(Catalog.TITLES[task + 1]), "Bell Grove stays locked and identifies the next River Song activity")
+		if task == 4:
+			world.progress.load_progress()
+			world.player.position = Vector3(178, 1, 12)
+			for point in [Vector3(176, 0, -8), Vector3(202, 0, -8), Vector3(230, 0, -8)]:
+				check(await walk(point), "walk from Rain Boat across the earned Bell Grove gate: " + str(point))
+			check(world.journey_landscape.gates[1].open and world.journey_landscape.gates[1].collider.disabled, "saved organ, harp and Call Bells open the real Bell Grove collider on approach")
 	for i in 3:
 		chapter.encounter.phase = "recovery"
 		chapter.open_anchor(i)
@@ -131,6 +156,33 @@ func run() -> void:
 	state.save()
 	print("HEART COMPLETE CHAPTER: PASS" if failures.is_empty() else "HEART COMPLETE CHAPTER: " + str(failures))
 	quit(0 if failures.is_empty() else 1)
+
+func open_river_control(task: int) -> void:
+	var kind: String = {2: "river_valve", 3: "river_bulb", 4: "river_boat"}[task]
+	for index in world.interactables.size():
+		var item: Dictionary = world.interactables[index]
+		if item.kind == kind and item.index == 0:
+			world.player.position = item.pos + Vector3(0, 0, 1)
+			world.nearest = index
+			world._interact_nearest()
+			check(world.modal_open and world.chapter_world.active_task == task, "physical %s control opens the connected chapter activity" % kind)
+			return
+	check(false, "river control exists: " + kind)
+
+func tune_control(index: int, target: int) -> void:
+	for row in world.options.get_children():
+		if row.get_meta("tuning_index", -1) != index: continue
+		var input: Array = world.chapter_world.challenge.input
+		var current := int(input[index]) if index < input.size() else 0
+		for step in absi(target - current): row.get_child(2 if target > current else 1).pressed.emit()
+		check(row.get_child(0).text.contains("now %d / goal %d" % [target + 1, target + 1]), "tuning control displays the actual matching note")
+		return
+	check(false, "tuning row exists")
+
+func press_note(note: int) -> void:
+	for button in world.options.find_children("*", "Button", true, false):
+		if button.text.begins_with(str(note + 1) + "\n"): button.pressed.emit(); return
+	check(false, "directional note button exists")
 
 func walk(target: Vector3) -> bool:
 	for frame in 700:

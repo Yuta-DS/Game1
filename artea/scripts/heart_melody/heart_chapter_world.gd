@@ -174,7 +174,7 @@ func objective() -> String:
 	return ["Harvest Echo Berries beside the entrance, then plant three seeds.",
 		"Answer Leaf → Sun → Droplet. Confirm the phrase and clear both Blight waves.",
 		"Enter River Song. Harvest Dew Pears, then tune the three organ valves.",
-		"Harvest Sun Plums. Tune five Hush Vine strings to their target numbers.",
+		"Harvest Sun Plums in Feeling Garden, then tune the five Hush Vine strings beside the river.",
 		"Harvest Bell Apples by the dock. Answer the Call Bells to unlock Bell Grove.",
 		"Restore three bridge chimes on OPEN beats to unlock the next gate.",
 		"Harvest Moon Melons. Follow Leaf → Sun → Droplet during QUIET gaps.",
@@ -288,9 +288,10 @@ func _instrument_panel() -> void:
 		var count := 3 if active_task == 2 else 5
 		for i in count:
 			var row := HBoxContainer.new()
+			row.set_meta("tuning_index", i)
 			world.options.add_child(row)
 			var label := Label.new()
-			label.text = ("Valve %d · target note %d" if active_task == 2 else "String %d · target note %d") % [i + 1, int(challenge.target[i]) + 1]
+			label.text = _tuning_text(i)
 			label.custom_minimum_size.x = 310
 			label.add_theme_font_size_override("font_size", 22)
 			row.add_child(label)
@@ -387,7 +388,13 @@ func submit() -> void:
 	world.river.refresh()
 	if finished_anchor >= 0 and director.snapshot().anchors.size() < 3:
 		world._notice("Anchor saved: %d / 3 singing. Wait for RECOVERY, then answer the remaining anchors." % director.snapshot().anchors.size())
-	else: world._notice("The valley answers. " + Catalog.TITLES[finished] + " restored.\n" + objective())
+	else:
+		var next_step := objective()
+		if finished in [2, 3]:
+			next_step = "River Song: %d / 3 activities restored. Bell Grove needs the organ, harp and Call Bells.\n" % (finished - 1) + next_step
+		elif finished == 4:
+			next_step = "Bell Grove unlocked! Approach the gate on the flowering bridge beside the Rain Boat.\n" + next_step
+		world._notice("The valley answers. " + Catalog.TITLES[finished] + " restored.\n" + next_step)
 	if finished == 9: _award_finale()
 
 func open_anchor(index: int) -> void:
@@ -438,7 +445,14 @@ func _feedback(text: String, note: int) -> void:
 func _score() -> String:
 	return str(challenge.input.map(func(n): return int(n) + 1))
 
+func _tuning_text(index: int) -> String:
+	var current := int(challenge.input[index]) if index < challenge.input.size() else 0
+	return "%s %d · now %d / goal %d" % ["Valve" if active_task == 2 else "String", index + 1, current + 1, int(challenge.target[index]) + 1]
+
 func _update_score() -> void:
+	if instrument_panel_open and active_task in [2, 3]:
+		for row in world.options.get_children():
+			if row.has_meta("tuning_index"): row.get_child(0).text = _tuning_text(int(row.get_meta("tuning_index")))
 	if world.modal_open and instrument_panel_open and is_instance_valid(world.message): world.message.text = caption + "\nScore: " + _score() + ("\nAssistance is available in Valley map." if challenge.failures >= 2 else "")
 
 func _beat_open() -> bool:
