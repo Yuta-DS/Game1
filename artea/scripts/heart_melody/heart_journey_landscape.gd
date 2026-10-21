@@ -22,8 +22,8 @@ func _ready() -> void:
 	fountain.scale = Vector3.ONE * 0.23
 	add_child(fountain)
 	var music := fountain.get_node("MusicalFountain/FountainMusic") as AudioStreamPlayer3D
-	music.unit_size = 9
-	music.max_distance = 55
+	music.unit_size = 4
+	music.max_distance = 28
 	world._object("healing_fountain", 0, Vector3(-61, 1, 32), "Rest at the singing fountain")
 	# Water sits below the bridge deck. Its healing mist reaches the walkway,
 	# so recovery never requires a jump off an island or an unsafe swim.

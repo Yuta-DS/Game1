@@ -50,6 +50,7 @@ func run() -> void:
 	var fountain := platform.get_node("HeartArrivalGarden/MusicalFountain")
 	var music := fountain.get_node("FountainMusic") as AudioStreamPlayer3D
 	assert(music.stream != null and music.playing and music.max_distance <= 120.0)
+	assert(music.volume_db == -12 and music.unit_size == 12 and music.max_distance == 72 and music.max_db == -10, "Maze fountain stays gentle nearby and fades on retreat")
 	assert(music.stream.loop_mode == AudioStreamWAV.LOOP_FORWARD and music.stream.get_length() > 15)
 	assert(fountain.global_position.distance_to(maze.to_global(maze.fountain_position())) < 0.03)
 	# Use the fully rigged gallery fox, not the simple controller fixture.

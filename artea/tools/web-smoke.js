@@ -21,6 +21,7 @@
 //       [--startup-only] (login, hub entry and movement; skips later worlds)
 //       [--music-circle] (instruments, seated piano, maze, fountain and Milo)
 //       [--heart-journey] (staged garden UI, voice lifecycle, fountain and gate)
+//       [--heart-audio-only] (focused garden fountain audio and Hub round trip)
 //       [--profile-frames] (opt-in release telemetry and reversible A/B samples)
 //       [--profile-hub] (with --profile-frames: Hub diagnostics only)
 //       [--profile-rigid-milo] (with both above: compare the optimizer on an older build)
@@ -506,6 +507,25 @@ async function connect() {
 			return !identical(start, duringShot) || !identical(duringShot, afterShot);
 		};
 		const moved = await movesWithW(before, '03-moving', '04-after-move');
+		if (args.includes('--heart-audio-only')) {
+			for (const name of ['heart_journey_web_qa.gd', 'heart_journey_web_qa.tscn']) {
+				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8').replace('res://tools/qa/heart_journey_web_qa.gd', '/tmp/heart_journey_web_qa.gd');
+				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
+			}
+			if (!moved || !await goTo('the garden audio test', '/tmp/heart_journey_web_qa.tscn')) throw new Error('Garden audio scene failed');
+			await waitForLog(/JOURNEY QA ready/, 'garden audio fixture', 20000);
+			await evaluate(`window.arteaJourneyQA('fountain')`);
+			await waitForLog(/JOURNEY QA stage fountain/, 'local fountain playback', 10000);
+			await shot('garden-fountain-audio');
+			if (!await goTo('the Hub', HUB)) throw new Error('Garden audio return failed');
+			const errors = consoleLines.filter(line => /SCRIPT ERROR|Parse Error|Failed to load scene|JOURNEY QA (?:fountain not|garden background)/.test(line));
+			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
+			if (errors.length) throw new Error(errors.join('\n'));
+			await cdp(`/json/close/${targetId}`).catch(() => {});
+			await closeOwnChrome();
+			console.log('RESULT: GARDEN AUDIO PLAYABLE');
+			process.exit(0);
+		}
 		const profiles = [];
 		const profile = async (label, options = {}, seconds = 6) => {
 			if (!args.includes('--profile-frames')) return;

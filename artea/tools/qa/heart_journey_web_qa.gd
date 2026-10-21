@@ -49,7 +49,8 @@ func run(stage: String) -> void:
 			world.camera.yaw = 0.6
 			world.camera.pitch = -0.35
 			var sound := world.journey_landscape.get_node("MeadowSingingFountain/MusicalFountain/FountainMusic") as AudioStreamPlayer3D
-			if not sound.playing or sound.volume_db < -2: push_error("JOURNEY QA fountain not audible")
+			if not sound.playing or sound.volume_db != -12 or sound.unit_size != 4 or sound.max_distance != 28: push_error("JOURNEY QA fountain not gently spatialized")
+			if not world.soundscape.layers.is_empty(): push_error("JOURNEY QA garden background music still present")
 		"gate":
 			_press_harvest(0)
 			for i in 3:

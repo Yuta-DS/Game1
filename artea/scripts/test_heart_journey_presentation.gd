@@ -50,7 +50,11 @@ func run() -> void:
 	check(landscape.gates.size() == 5 and landscape.waters.size() == 6, "Five progress gates and healing water under the crossings")
 	check(not ray(Vector3(88, 2, 8)).is_empty(), "A real collider closes the River Song gate before restoration")
 	var music = landscape.get_node("MeadowSingingFountain/MusicalFountain/FountainMusic")
-	check(music.playing and music.volume_db == -2 and music.stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "New meadow fountain plays the louder looping music")
+	check(music.playing and music.volume_db == -12 and music.stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "Meadow fountain plays gentle local music")
+	check(music.unit_size == 4 and music.max_distance == 28 and music.max_db == -10, "Fountain fades with distance and caps nearby loudness")
+	for state in [[false, false], [true, false], [true, true]]:
+		world.soundscape.restore(state[0], state[1])
+		check(world.soundscape.layers.is_empty() and world.soundscape.get_child_count() == 0, "Garden progression never starts background music")
 	world.player.set_physics_process(false)
 	world.player.position = Vector3(76, 1, 8)
 	world.player.current_health = 40
