@@ -89,6 +89,14 @@ func run(stage: String) -> void:
 		var rect: Rect2 = world.panel.get_global_rect()
 		print("JOURNEY QA panel ", stage, " ", rect.size.x, " ", rect.size.y)
 		await get_tree().create_timer(0.4).timeout
+		if stage == "instrument":
+			var visible_rect: Rect2 = world.options.get_parent().get_global_rect()
+			for button in world.options.find_children("*", "Button", true, false):
+				if button.text != "Check composition": continue
+				var button_rect: Rect2 = button.get_global_rect()
+				if button_rect.position.y < visible_rect.position.y or button_rect.end.y > visible_rect.end.y + 1:
+					push_error("JOURNEY QA FAILURE: organ confirmation is outside the visible controls")
+				else: print("JOURNEY QA organ confirmation visible")
 		if world.options.get_parent().scroll_vertical != 0:
 			push_error("JOURNEY QA menu did not start on its heading: " + stage)
 			return

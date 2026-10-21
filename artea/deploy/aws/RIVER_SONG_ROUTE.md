@@ -17,7 +17,8 @@ The existing save and gate requirements are connected. The unclear feedback was
 that the gate named the final Call Bell requirement even when the harp was the
 next missing task, and the tuning rows showed only goal notes. Rows now display
 their current notes and goals; the gate shows River Song progress out of three
-and the next missing activity. Completion notices explain when Bell Grove is
+and the next missing activity. Check composition now comes directly below the
+playing controls, ahead of optional replay/hint/reset controls. Completion notices explain when Bell Grove is
 actually unlocked. No gameplay requirement or save schema was bypassed.
 
 ## Native validation

@@ -323,11 +323,11 @@ func _instrument_panel() -> void:
 			button.pressed.connect(func(): play(i))
 		if active_task == 7:
 			for i in 4: world._button("Audition " + ["drums", "water", "harp", "chimes"][i], func(): _feedback("Track " + str(i + 1), i))
+	world._button("Check composition", submit)
 	world._button("Replay demonstration", func(): challenge.replay(get_tree(), 0.5 if assistance else 1.0))
 	world._button("Undo last change", func(): challenge.undo(); _update_score())
 	world._button("Reset this attempt", func(): challenge.reset(); _store_attempt(); _update_score())
 	world._button("Hint", func(): world.message.text = challenge.hint(); _store_attempt())
-	world._button("Check composition", submit)
 	world._button("Play by moving between the flower keys", world._close)
 
 func _input(event: InputEvent) -> void:
