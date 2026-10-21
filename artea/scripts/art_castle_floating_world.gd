@@ -418,6 +418,8 @@ func _build_central_sanctuary() -> void:
 	_build_cat_companion(island, HUB + Vector3(-18.0, 2.0, -68.0))
 
 	_add_bridge("SouthArrivalBridge", Vector3(0.0, 0.0, 1422.0), Vector3(0.0, 0.0, 975.0), 62.0)
+	# _build_arrival_island's deck: radius 155, 28 sides.
+	_fill_bridge_end(get_node("SouthArrivalBridge"), 975.0, 31.0, SOUTH_GATE, 155.0, 28)
 	_add_bridge("MindBridge", Vector3(-218.0, 0.0, 1640.0), Vector3(-430.0, 0.0, 1640.0), 58.0)
 	_add_bridge("CreatorBridge", Vector3(218.0, 0.0, 1640.0), Vector3(410.0, 0.0, 1640.0), 58.0)
 
@@ -1989,6 +1991,12 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 	var walkway_material: Material = _materials.passage_stone if tree_processional else _materials.stone
 	var walkway := _add_box(bridge, "Walkway", midpoint, Vector3(width, 4.0, length),
 		walkway_material, true, yaw)
+	# The collision runs 4 m further into each island: a square bridge end
+	# meets a round deck only at its centreline, and left 1-2.5 m holes at the
+	# corners that the player fell through. Collision only - a longer visible
+	# walkway 2 cm under the deck would z-fight with it across the overlap.
+	var walkway_shape := (bridge.get_node("WalkwayCollision").get_child(0) as CollisionShape3D).shape as BoxShape3D
+	walkway_shape.size.z = length + 8.0
 	# Processional bridges draw their own deck over the full width; the plain
 	# walkway underneath only z-fought with the island decks where the ends
 	# overlap them. Its collision stays the walkable surface.
@@ -2023,6 +2031,58 @@ func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) 
 		_add_arch_support(bridge, support_pos, width, yaw)
 	if tree_processional:
 		_build_tree_of_life_processional_style(bridge, start, end, width, yaw, side_axis)
+
+
+## Fills the sky-coloured wedges between a bridge's square end (at z = end_z,
+## running toward -Z onto the island) and the island deck's polygon edge. The
+## fill follows the deck's real CylinderMesh edge, so it meets the deck without
+## overlapping it - no coplanar faces to z-fight - and sinks 3 m like the deck.
+func _fill_bridge_end(bridge: Node3D, end_z: float, half_width: float,
+		island_centre: Vector3, island_radius: float, segments: int) -> void:
+	# CylinderMesh puts vertex k at (sin, cos) of k * TAU / segments.
+	var edge: Array[Vector2] = []
+	for k in range(-segments / 4, segments / 4 + 1):
+		var angle := float(k) * TAU / float(segments)
+		edge.append(Vector2(island_centre.x + sin(angle) * island_radius,
+			island_centre.z + cos(angle) * island_radius))
+	var edge_z := func(x: float) -> float:
+		for i in edge.size() - 1:
+			var a: Vector2 = edge[i]
+			var b: Vector2 = edge[i + 1]
+			if (x - a.x) * (x - b.x) <= 0.0 and not is_equal_approx(a.x, b.x):
+				return lerpf(a.y, b.y, (x - a.x) / (b.x - a.x))
+		return end_z
+	var xs: Array[float] = [-half_width, half_width]
+	for point in edge:
+		if absf(point.x) < half_width:
+			xs.append(point.x)
+	xs.sort()
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in xs.size() - 1:
+		var x0: float = xs[i]
+		var x1: float = xs[i + 1]
+		var top := [Vector3(x0, 0.0, edge_z.call(x0)), Vector3(x1, 0.0, edge_z.call(x1)),
+			Vector3(x1, 0.0, end_z), Vector3(x0, 0.0, end_z)]
+		var bottom := top.map(func(v: Vector3) -> Vector3: return v + Vector3.DOWN * 3.0)
+		for quad in [top, bottom]:
+			for index in [0, 1, 2, 0, 2, 3]:
+				surface.add_vertex(quad[index])
+	# The two open sides, under the bridge's outer rails.
+	for x in [-half_width, half_width]:
+		var near := Vector3(x, 0.0, edge_z.call(x))
+		var far := Vector3(x, 0.0, end_z)
+		for v in [near, far, far + Vector3.DOWN * 3.0, near, far + Vector3.DOWN * 3.0, near + Vector3.DOWN * 3.0]:
+			surface.add_vertex(v)
+	surface.generate_normals()
+	var fill := MeshInstance3D.new()
+	fill.name = "IslandEndFill"
+	fill.mesh = surface.commit()
+	# Top, bottom and sides share one winding, so draw both faces.
+	var material := _materials.passage_stone.duplicate() as StandardMaterial3D
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	fill.material_override = material
+	bridge.add_child(fill)
 
 
 func _build_tree_of_life_processional_style(bridge: Node3D, start: Vector3,

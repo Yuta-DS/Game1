@@ -88,9 +88,9 @@ libraries/ = SubResource("AnimationLibrary_r2jwc")
 
 [node name="CenterContainer" type="CenterContainer" parent="AnimationParent" unique_id=1695625190]
 offset_left = 89.0
-offset_top = 489.0
+offset_top = 399.0
 offset_right = 749.0
-offset_bottom = 1151.0
+offset_bottom = 1061.0
 
 [node name="PanelContainer" type="PanelContainer" parent="AnimationParent/CenterContainer" unique_id=675696548]
 layout_mode = 2

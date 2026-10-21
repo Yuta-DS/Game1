@@ -12,10 +12,9 @@ extends CharacterBody3D
 
 # Player-scale speeds. The previous 12/22 m/s values crossed a full courtyard
 # in under a second, skipped narrow collisions and made the follow camera feel
-# unstable. These retain a responsive sprint without turning traversal into a
-# debug fly-through.
-@export var baseSpeed := 6.0
-@export var runSpeed := 10.0
+# unstable. The default pace is a run; holding Shift sprints.
+@export var baseSpeed := 10.0
+@export var runSpeed := 15.0
 
 # --- INTERACTION & GRASS FIX ---
 var interacting := false  # Critical fix for team's grass shader
@@ -305,10 +304,7 @@ func moveLogic(delta) -> void:
 		
 		var animation_player := get_node_or_null("RogueSkin/AnimationPlayer") as AnimationPlayer
 		if animation_player != null:
-			var locomotion := "Run"
-			if not isRunning and animation_player.has_animation("Walk"):
-				locomotion = "Walk"
-			_play_locomotion_animation(locomotion, 1.05 if isRunning else 0.72)
+			_play_locomotion_animation("Run", 1.5 if isRunning else 1.05)
 		
 		var targetAngle = -movementInput.angle() + PI/2
 		# Guarded like every other skin lookup here: this runs before

@@ -23,6 +23,8 @@ signal block_changed(active: bool)
 @export var attack_cooldown := 0.55
 @export var attack_active_time := 0.18
 @export var block_speed_multiplier := 0.38
+# Holding Shift (the "run" action) sprints above the default running pace.
+@export var sprint_multiplier := 1.5
 
 ## The camera the player moves relative to. When unset, the player falls back to
 ## the viewport's active camera, so the gallery, the hub and any other scene all
@@ -303,6 +305,8 @@ func _physics_process(delta: float) -> void:
 
 	# Apply velocity based on input and speed
 	var movement_multiplier := block_speed_multiplier if is_blocking else 1.0
+	if Input.is_action_pressed("run"):
+		movement_multiplier *= sprint_multiplier
 	if is_attacking:
 		movement_multiplier *= 0.28
 	var target_velocity := Vector2(move_dir.x, move_dir.z) * speed * movement_multiplier
@@ -488,7 +492,7 @@ func _update_character_animation(delta: float, moving: bool) -> void:
 		return
 	if moving:
 		_animation_state = "run"
-		_play_character_clip(["Run", "Walk"], 1.0)
+		_play_character_clip(["Run", "Walk"], 1.4 if Input.is_action_pressed("run") else 1.0)
 	else:
 		_animation_state = "idle"
 		_play_character_clip(["Idle"], 1.0)

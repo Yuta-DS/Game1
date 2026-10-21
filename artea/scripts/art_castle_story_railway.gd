@@ -414,6 +414,18 @@ func get_route_forward_direction_at_station(station_index: int) -> Vector3:
 	return (curve.sample_baked(2.0) - curve.sample_baked(0.0)).normalized()
 
 
+## The whole looped track as points every `spacing` metres, in this node's
+## space. The minimap draws this instead of straight station-to-station lines.
+func get_track_points(spacing := 60.0) -> PackedVector3Array:
+	var points := PackedVector3Array()
+	for curve in _curves:
+		var length := curve.get_baked_length()
+		var steps := maxi(1, ceili(length / spacing))
+		for step in steps + 1:
+			points.append(curve.sample_baked(length * float(step) / float(steps)))
+	return points
+
+
 func get_route_endpoints() -> PackedVector3Array:
 	return PackedVector3Array([STATIONS.front().position, STATIONS.back().position])
 

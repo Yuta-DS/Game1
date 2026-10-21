@@ -34,6 +34,24 @@ func _ready():
 		recovery.pressed.connect(_managed_recovery)
 		user_node.get_parent().add_child(recovery)
 	print("Account screen initialized")
+	# Built here rather than added to the .tscn - runtime-built UI is this
+	# project's house style for anything that isn't the primary scene content
+	# (see facilitator_settings.gd), and keeps a support tool out of the
+	# scene diff entirely.
+	_admin_panel = AdminResetPanel.new()
+	add_child(_admin_panel)
+	_build_admin_button()
+
+	_forgot_password_panel = ForgotPasswordPanel.new()
+	add_child(_forgot_password_panel)
+
+	_code_modal = RecoveryCodeModal.new()
+	add_child(_code_modal)
+	_build_forgot_password_button()
+	# The background is authored for the 1710x1112 base size; stretch "expand"
+	# widens the view on 16:9 screens, which left a bare strip at the edge.
+	get_viewport().size_changed.connect(_fit_background)
+	_fit_background()
 	# Download, without mounting, the first playable area's packs while the
 	# player is signing in. Later worlds retain the existing in-game prefetch.
 	if OS.has_feature("web"):
@@ -47,6 +65,16 @@ func _ready():
 		print("HEART PREVIEW REQUEST ACCEPTED")
 		if OS.has_feature("web"): JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW = false", true)
 		_open_heart_preview.call_deferred()
+
+# Scales the background to cover the whole visible area, like CSS
+# background-size: cover, so there is never an empty strip at any aspect.
+func _fit_background() -> void:
+	var background := $Background as Sprite2D
+	var view := get_viewport_rect().size
+	var tex := background.texture.get_size()
+	background.position = view * 0.5
+	background.scale = Vector2.ONE * maxf(view.x / tex.x, view.y / tex.y)
+
 
 func _prefetch_hub() -> void:
 	var hub_files := SceneLoader.packs_needed("res://scenes/New_Hub_World.tscn")
@@ -67,21 +95,6 @@ func _open_heart_preview() -> void:
 	var opened := SceneLoader.change_scene(get_tree(), "res://scenes/heart_melody/heart_melody_world.tscn")
 	if not opened:
 		show_message("The garden could not open. Please reload and try again.")
-
-	# Built here rather than added to the .tscn - runtime-built UI is this
-	# project's house style for anything that isn't the primary scene content
-	# (see facilitator_settings.gd), and keeps a support tool out of the
-	# scene diff entirely.
-	_admin_panel = AdminResetPanel.new()
-	add_child(_admin_panel)
-	_build_admin_button()
-
-	_forgot_password_panel = ForgotPasswordPanel.new()
-	add_child(_forgot_password_panel)
-
-	_code_modal = RecoveryCodeModal.new()
-	add_child(_code_modal)
-	_build_forgot_password_button()
 
 
 # Small and tucked in a corner on purpose - this is a support tool for

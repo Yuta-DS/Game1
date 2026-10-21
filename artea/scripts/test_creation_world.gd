@@ -191,15 +191,15 @@ func _run() -> void:
 	Input.action_release("move_forward")
 	assert(player.global_position.distance_to(walk_start) > 0.5,
 		"the creation-world character walks across the physical world")
-	assert(player.call("current_locomotion_state") == "walk",
-		"walking input drives the locomotion animation state")
+	assert(player.call("current_locomotion_state") == "run",
+		"movement input runs by default")
 	assert(fox_animation.is_playing(), "the imported fox animation plays while walking")
 	Input.action_press("move_forward")
 	Input.action_press("run")
 	for _frame in 6:
 		await physics_frame
-	assert(player.call("current_locomotion_state") == "run",
-		"the run modifier drives the faster animation state")
+	assert(player.call("current_locomotion_state") == "sprint",
+		"the run modifier (Shift) sprints")
 	Input.action_release("move_forward")
 	Input.action_release("run")
 	await physics_frame

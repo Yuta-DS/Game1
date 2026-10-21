@@ -537,7 +537,9 @@ func _build_hud() -> void:
 	_hud_root = ColorRect.new()
 	_hud_root.name = "QuestPanel"
 	_hud_root.color = Color(0.025, 0.05, 0.12, 0.88)
-	_hud_root.position = Vector2(22, 78)
+	# Below the compact minimap, which fills the top-left corner down to y=304
+	# (art_castle_minimap.gd: 18 px margin + 286 px COMPACT_SIZE).
+	_hud_root.position = Vector2(22, 312)
 	_hud_root.size = Vector2(530, 184)
 	canvas.add_child(_hud_root)
 	_quest_label = _hud_label(Vector2(16, 12), Vector2(498, 30), 20, Color("ffe27a"))

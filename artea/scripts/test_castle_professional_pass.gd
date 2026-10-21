@@ -626,7 +626,7 @@ func _run() -> void:
 	var player := hub.get_node_or_null("NewPlayer") as CharacterBody3D
 	var camera_arm := player.get_node_or_null("CameraController") as SpringArm3D \
 		if player != null else null
-	if player == null or float(player.get("runSpeed")) > 10.0:
+	if player == null or float(player.get("runSpeed")) > 15.0:
 		_fail("player traversal is still tuned as a debug sprint")
 		return
 	if camera_arm == null or camera_arm.spring_length < 6.5:
