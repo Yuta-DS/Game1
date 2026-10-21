@@ -123,3 +123,23 @@ reported. All 102 packaged and hosted files passed manifest/header checks
 (`work/flower-garden-hosting-verify.log`). Local preview: port 8906.
 These checks establish the tested progression paths, not a guarantee against
 every possible gameplay or device-specific issue.
+
+## Garden audio revision
+
+Continuous synthesized garden music is removed, including the layers previously
+enabled by planting and restoration. Milo and player-played instruments retain
+their own audio. Fountains now play at -12 dB with a -10 dB maximum spatial gain,
+using native 3D distance attenuation. The maze source has a 12-unit reference
+distance and 72-unit range; the smaller meadow fountain uses 4 and 28 units.
+This supersedes the earlier louder-fountain setting above.
+
+Focused native journey, maze and Milo checks passed. The maintained non-Mono
+Web export completed without script/parse errors. Release `3ad50964657e813c`
+passed all 102 local manifest checks and hosted MIME/isolation-header checks.
+Local preview uses port 8907. Vercel remains skipped.
+
+The focused WebGL check passed fountain playback, absence of soundtrack layers,
+and return to the Hub (`work/garden-audio-browser-final-run.log`, RESULT: GARDEN
+AUDIO PLAYABLE). The initial focused harness omitted mounting the valley pack;
+the harness now enters the real valley through SceneLoader before its fixture.
+The passing rerun used the same exported game package.

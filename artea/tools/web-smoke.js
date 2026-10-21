@@ -508,6 +508,9 @@ async function connect() {
 		};
 		const moved = await movesWithW(before, '03-moving', '04-after-move');
 		if (args.includes('--heart-audio-only')) {
+			// Mount the valley pack through its real loader before the transient
+			// fixture dynamically loads that scene.
+			if (!await goTo('Heart Melody valley', 'res://scenes/heart_melody/heart_melody_world.tscn')) throw new Error('Garden pack failed');
 			for (const name of ['heart_journey_web_qa.gd', 'heart_journey_web_qa.tscn']) {
 				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8').replace('res://tools/qa/heart_journey_web_qa.gd', '/tmp/heart_journey_web_qa.gd');
 				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
