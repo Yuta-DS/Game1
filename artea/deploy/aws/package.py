@@ -62,6 +62,9 @@ def required_files(source):
         parts = manifest.get("parts")
         if parts is not None and (not isinstance(parts, list) or len(parts) != count):
             raise ValueError("Invalid part list")
+        encoding = manifest.get("encoding")
+        if encoding not in (None, "gzip") or (encoding and parts is None):
+            raise ValueError("Invalid pack encoding")
         names.add(name + ".parts.json")
         checksum = hashlib.sha256()
         for i in range(count):
@@ -70,9 +73,17 @@ def required_files(source):
             safe(part)
             if parts is not None and not re.fullmatch(r"parts/" + re.escape(name) + r"\.[0-9a-f]{16}\.part" + f"{i:02d}", part):
                 raise ValueError(f"Unsafe hashed part name: {part}")
-            if safe(part).stat().st_size != expected or (parts is not None and parts[i].get("size") != expected):
+            payload = safe(part).read_bytes()
+            if parts is not None and parts[i].get("size") != len(payload):
                 raise ValueError(f"Missing or truncated pack part: {part}")
-            checksum.update(safe(part).read_bytes())
+            if encoding == "gzip":
+                try:
+                    payload = gzip.decompress(payload)
+                except (OSError, EOFError) as error:
+                    raise ValueError(f"Invalid compressed pack part: {part}") from error
+            if len(payload) != expected:
+                raise ValueError(f"Missing or truncated pack part: {part}")
+            checksum.update(payload)
             names.add(part)
         if manifest.get("hash") and checksum.hexdigest()[:16] != manifest["hash"]:
             raise ValueError(f"Part checksum disagrees with manifest: {name}")
@@ -120,9 +131,15 @@ def build(source, output):
     html = html.replace("const GODOT_CONFIG =", 'window.ARTEA_AUTH_MODE = "cognito"; window.ARTEA_API_BASE = location.origin + "/api";\nconst GODOT_CONFIG =', 1)
     (runtime / "index.html").write_text(html, encoding="utf-8")
     encodings = {}
+    compressed_parts = set()
+    for name in names:
+        if name.endswith(".parts.json"):
+            manifest = json.loads((source / name).read_text(encoding="utf-8"))
+            if manifest.get("encoding") == "gzip":
+                compressed_parts.update(part["name"] for part in manifest["parts"])
     for name in names:
         path = runtime / name
-        if re.search(r"\.part[0-9]+$", name) or path.suffix in {".js", ".wasm"}:
+        if name not in compressed_parts and (re.search(r"\.part[0-9]+$", name) or path.suffix in {".js", ".wasm"}):
             original = path.read_bytes()
             buffer = io.BytesIO()
             with gzip.GzipFile(fileobj=buffer, mode="wb", filename="", mtime=0, compresslevel=6) as compressed:
