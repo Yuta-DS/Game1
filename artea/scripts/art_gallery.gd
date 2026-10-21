@@ -1,6 +1,7 @@
 extends Node
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const WebDecor := preload("res://scripts/web_decor.gd")
 const RatingHeart := preload("res://scripts/rating_heart.gd")
 const STAR_ICON := preload("res://assets/UI/icons/star.svg")
 
@@ -30,6 +31,7 @@ const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
 
 func _ready() -> void:
 	_build_galaxy_transit()
+	_face_fountain_on_spawn()
 	_report_galaxy_state()
 	_build_quest_journal_button()
 	likebutton.visible = true
@@ -81,6 +83,24 @@ func _report_galaxy_state() -> void:
 		str(cam.global_position) if cam != null else "none"]
 	print("[ARTEA] galaxy ", report)
 
+
+
+# The scene's authored camera looks back into the gallery. Turn the fox and
+# the view toward the arrival island's fountain instead, so every visit starts
+# looking out at the world.
+func _face_fountain_on_spawn() -> void:
+	var player := get_node_or_null("Player3D") as Node3D
+	var fountain := find_child("LatonaFountain", true, false) as Node3D
+	if player == null or fountain == null:
+		return
+	var to_fountain := fountain.global_position - player.global_position
+	to_fountain.y = 0.0
+	var visuals := player.get_node_or_null("FoxVisuals") as Node3D
+	if visuals != null:
+		visuals.rotation.y = atan2(to_fountain.x, to_fountain.z) - player.global_rotation.y
+	var camera := get_node_or_null("Camera3D")
+	if camera != null and camera.has_method("face_direction"):
+		camera.face_direction(to_fountain)
 
 
 func _build_galaxy_transit() -> void:
@@ -149,6 +169,11 @@ func _build_galaxy_transit() -> void:
 	minimap.set_script(preload("res://scripts/art_castle_minimap.gd"))
 	minimap.set("map_context", "galaxy")
 	map_canvas.add_child(minimap)
+	# On the web, small decoration is drawn unshaded: entering the castle is
+	# mostly shader compilation, and these compile at about half the cost.
+	# Done before the first frame, so the lit versions are never compiled.
+	if OS.has_feature("web"):
+		WebDecor.make_decoration_unshaded(floating_world)
 		
 		
 func _input(event):

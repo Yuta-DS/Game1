@@ -49,13 +49,11 @@ const GALAXY_ISLAND_SPECS := [
 	[Vector2(0, 820), 160.0, Color("596d72")],
 	[Vector2(0, 1640), 225.0, Color("537d66")],
 	[Vector2(-600, 1640), 180.0, Color("315f70")],
-	[Vector2(0, 2290), 180.0, Color("79526d")],
 	[Vector2(600, 1640), 180.0, Color("806f49")],
 ]
 const GALAXY_BRIDGE_SEGMENTS := [
 	[Vector2(0, 500), Vector2(0, 1422), 34.0],
 	[Vector2(-218, 1640), Vector2(-430, 1640), 34.0],
-	[Vector2(0, 1858), Vector2(0, 2120), 34.0],
 	[Vector2(218, 1640), Vector2(410, 1640), 34.0],
 ]
 
@@ -467,7 +465,8 @@ func _draw_galaxy_compact() -> void:
 	_draw_compact_marker(_galaxy_castle_position(), "GALLERY", Color("f2c55e"), "castle")
 	var colors := {"mind": Color("63e8ff"), "heart": Color("ff91c9"), "creator": Color("ffd46b")}
 	var labels := {"mind": "MIND", "heart": "HEART", "creator": "CREATOR"}
-	for kingdom_id in ["mind", "heart", "creator"]:
+	# Only kingdoms the regions node reports; Mind is drawn from World One.
+	for kingdom_id in centres:
 		_draw_compact_marker(_world.to_global(centres[kingdom_id]), labels[kingdom_id],
 			colors[kingdom_id], "place")
 	for index in 4:
@@ -649,7 +648,7 @@ func _draw_galaxy_full_landscape(rect: Rect2) -> void:
 		var centres: Dictionary = _regions.call("get_kingdom_centers")
 		var colors := {"mind": Color("25394c"), "heart": Color("584052"),
 			"creator": Color("655a3c")}
-		for kingdom_id in ["mind", "heart", "creator"]:
+		for kingdom_id in centres:
 			var centre: Vector3 = centres[kingdom_id]
 			var top_left := _map_local(centre + Vector3(-1500, 0, 1500), rect)
 			var bottom_right := _map_local(centre + Vector3(1500, 0, -1500), rect)
@@ -668,7 +667,6 @@ func _draw_galaxy_full_landscape(rect: Rect2) -> void:
 		[Vector3(0, 0, 820), 155.0, Color("596d72")],
 		[Vector3(0, 0, 1640), 220.0, Color("537d66")],
 		[Vector3(-600, 0, 1640), 175.0, Color("315f70")],
-		[Vector3(0, 0, 2290), 175.0, Color("79526d")],
 		[Vector3(600, 0, 1640), 175.0, Color("806f49")],
 	]
 	var radius_scale := rect.size.x / maxf(_bounds.size.x, 1.0)
@@ -680,7 +678,6 @@ func _draw_galaxy_full_landscape(rect: Rect2) -> void:
 	for bridge in [
 		[Vector3(0, 0, 500), Vector3(0, 0, 1422)],
 		[Vector3(-218, 0, 1640), Vector3(-430, 0, 1640)],
-		[Vector3(0, 0, 1858), Vector3(0, 0, 2120)],
 		[Vector3(218, 0, 1640), Vector3(410, 0, 1640)],
 	]:
 		draw_line(_map_local(bridge[0], rect), _map_local(bridge[1], rect),
@@ -740,7 +737,7 @@ func _draw_galaxy_full(rect: Rect2) -> void:
 	_draw_castle(_map_global(_galaxy_castle_position(), rect), false)
 	var colors := {"mind": Color("63e8ff"), "heart": Color("ff91c9"), "creator": Color("ffd46b")}
 	var labels := {"mind": "MIND SPARK", "heart": "HEART MELODY", "creator": "CREATOR'S LIGHT"}
-	for kingdom_id in ["mind", "heart", "creator"]:
+	for kingdom_id in centres:
 		_draw_full_kingdom(_map_local(centres[kingdom_id], rect), colors[kingdom_id], labels[kingdom_id])
 	for index in 4:
 		var point := _map_local(stations[["gallery", "mind", "heart", "creator"][index]], rect)

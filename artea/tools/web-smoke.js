@@ -705,8 +705,10 @@ async function connect() {
 		const noWait = areas.filter(([, , , when]) => when === 'prefetched')
 			.every(([, entered]) => entered && entered.bytes < MiB);
 		const fellBack = story !== null && story.bytes > MiB;
-		// Not visibly slower: the median frame within 25% of the idle Hub's.
-		const smooth = !during || !after || during.median <= after.median * 1.25;
+		// Not visibly slower: the median frame within 25% of the idle Hub's, or
+		// still at 60 fps. A Hub idling at 80 fps that holds 60 while prefetching
+		// has not visibly dropped; one sliding from 60 to 45 has.
+		const smooth = !during || !after || during.median <= Math.max(after.median * 1.25, 1000 / 60 + 0.5);
 		say(`prefetched areas entered without downloading: ${noWait}; story fell back to downloading: ${fellBack}; hub pacing held: ${smooth}`);
 		const pass = moved && castlePlayable && musicCirclePlayable && areas.every(([, entered, back]) => entered && back)
 			&& noWait && fellBack && smooth && !crashed() && fatal.length === 0;

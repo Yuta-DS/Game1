@@ -30,7 +30,6 @@ func _capture() -> void:
 	regions.name = "KingdomRegions3000m"
 	regions.set_script(load("res://scripts/art_castle_kingdom_regions.gd"))
 	world.add_child(regions)
-	_grade_kingdom(regions.get_node_or_null("MindKingdom3000m"), Color("a4b9d4"))
 	_grade_kingdom(regions.get_node_or_null("HeartKingdom3000m"), Color("789b78"))
 	_grade_kingdom(regions.get_node_or_null("CreatorKingdom3000m"), Color("ad8c5e"))
 
@@ -69,7 +68,6 @@ func _capture() -> void:
 
 	var centres: Dictionary = regions.call("get_kingdom_centers")
 	var captures := [
-		["mind", "mind_spark_birdseye.png"],
 		["heart", "heart_melody_birdseye.png"],
 		["creator", "creators_light_birdseye.png"],
 	]

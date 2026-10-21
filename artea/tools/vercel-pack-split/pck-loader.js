@@ -30,8 +30,12 @@
 	// Content-hashed part paths from each manifest (split-pack.sh), keyed by
 	// request URL. Absent for the older count-only manifest.
 	const manifestParts = new Map();
+	// Request URLs whose parts are gzipped (split-pack.sh), inflated here.
+	const gzippedParts = new Set();
 
-	const countParts = async (requestUrl) => {
+	// `probe` false: no manifest means the file is not split (0), rather than
+	// probing for parts the way builds without manifests need.
+	const countParts = async (requestUrl, probe = true) => {
 		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
 		if (buildKey) {
 			manifestUrl.searchParams.set("build", buildKey);
@@ -44,6 +48,9 @@
 				const manifest = await manifestResponse.json();
 				if (Array.isArray(manifest.parts) && manifest.parts.length > 0) {
 					manifestParts.set(requestUrl, manifest.parts.map((part) => part.name));
+					if (manifest.encoding === "gzip") {
+						gzippedParts.add(requestUrl);
+					}
 				}
 				if (Number.isInteger(manifest.count) && manifest.count > 0) {
 					// Keep the byte total: the streamed Response needs a
@@ -57,6 +64,9 @@
 			}
 		} catch (_error) {
 			// Fall through to bounded probing for backward-compatible builds.
+		}
+		if (!probe) {
+			return 0;
 		}
 		const probes = Array.from({ length: MAX_PARTS }, (_, index) =>
 			nativeFetch(partUrl(requestUrl, index), { method: "HEAD", cache: "no-store" })
@@ -146,14 +156,17 @@
 	// `pack` names the area Pack being fetched, if any: one only prefetched in
 	// the background gives up quietly instead of asking the player to retry,
 	// and the loading screen fetches it again when the player goes there.
-	const fetchPart = async (url, init, pack) => {
+	const fetchPart = async (url, init, pack, gzipped) => {
 		for (let attempt = 0; ; attempt += 1) {
 			try {
 				const response = await nativeFetch(url, init);
 				if (!response.ok) {
 					throw new Error(`${url} returned ${response.status}`);
 				}
-				return new Uint8Array(await response.arrayBuffer());
+				// Inflated as it streams in, by the browser's own decompressor.
+				const body = gzipped ? new Response(response.body.pipeThrough(new DecompressionStream("gzip")))
+					: response;
+				return new Uint8Array(await body.arrayBuffer());
 			} catch (error) {
 				if (attempt < RETRY_DELAYS_MS.length) {
 					console.warn(`pck-loader: ${error.message}, retrying`);
@@ -183,13 +196,17 @@
 			return fetchPart(
 				hashed ? new URL(hashed[index], window.location.href).toString()
 					: partUrl(requestUrl, index),
-				hashed ? {} : { cache: "no-store" }, pack);
+				hashed ? {} : { cache: "no-store" }, pack, gzippedParts.has(requestUrl));
 		};
 		const inFlight = new Map();
 		let nextToSend = 0;
 		let nextToStart = 0;
 		const topUp = () => {
-			while (nextToStart < partCount && nextToStart < nextToSend + concurrency) {
+			// A Pack only prefetched in the background fetches one part at a
+			// time: nobody is waiting on it, and each part is inflated on the
+			// main thread, so fewer at once keeps the Hub's frames even.
+			const ahead = pack && !foreground.has(pack) ? 1 : concurrency;
+			while (nextToStart < partCount && nextToStart < nextToSend + ahead) {
 				inFlight.set(nextToStart, fetchIndex(nextToStart));
 				nextToStart += 1;
 			}
@@ -228,15 +245,10 @@
 			return nativeFetch(input, init);
 		}
 
-		// Local exports keep the side module whole. Avoid probing 128 missing
-		// chunks before downloading it. Older split builds still use the fallback.
-		if (url.pathname.endsWith("/index.side.wasm")) {
-			const whole = await nativeFetch(input, init);
-			if (whole.ok) return whole;
-			if (whole.body) await whole.body.cancel();
-		}
-
-		const partCount = await countParts(requestUrl);
+		// The side module's parts are gzipped to a quarter of its 42 MB, so use
+		// them whenever its manifest says they exist. Without one, the build
+		// keeps the module whole: fetch it as is, without probing 128 parts.
+		const partCount = await countParts(requestUrl, !url.pathname.endsWith("/index.side.wasm"));
 		if (partCount === 0) {
 			return nativeFetch(input, init);
 		}

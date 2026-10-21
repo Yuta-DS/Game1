@@ -5,14 +5,14 @@ extends Node3D
 # JourneyCampaign remain the sole authorities for earned treasures.
 
 const INTERACTION_RANGE := 75.0
-const KINGDOM_ORDER := ["mind", "heart", "creator"]
+# Mind's story checkpoints lived in its old 3 km region, which was removed;
+# Mind Spark's story now runs in World One.
+const KINGDOM_ORDER := ["heart", "creator"]
 const INTRO_LINES := {
-	"mind": "Milo: Every thought is trying to tell us something. Let us slow down and look closely.",
 	"heart": "Raphael: Every feeling needs a safe place in the music.",
 	"creator": "Uriel: Make one small mark, and the world will answer.",
 }
 const COMPLETION_LINES := {
-	"mind": "The storm has become gentle rain. Enter the sanctuary activity to discover the Star of Wisdom.",
 	"heart": "Your emotion sounds are ready to become a Personal Song. Enter the activity to discover the Harmony Jewel.",
 	"creator": "Your unfinished picture is enough to begin. Enter the activity to discover the Creator's Light.",
 }
@@ -20,7 +20,7 @@ const COMPLETION_LINES := {
 var _regions: Node3D
 var _player: CharacterBody3D
 var _routes: Dictionary = {}
-var _progress := {"mind": 0, "heart": 0, "creator": 0}
+var _progress := {"heart": 0, "creator": 0}
 var _active_kingdom := ""
 var _prompt: Label
 var _story: Label
@@ -72,8 +72,7 @@ func can_activate_checkpoint(kingdom_id: String, checkpoint_index: int) -> bool:
 
 
 func story_is_connected() -> bool:
-	return get_checkpoint_count("mind") == 8 and get_checkpoint_count("heart") == 8 \
-		and get_checkpoint_count("creator") == 8
+	return get_checkpoint_count("heart") == 8 and get_checkpoint_count("creator") == 8
 
 
 func _closest_kingdom() -> String:

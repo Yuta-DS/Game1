@@ -4,7 +4,6 @@ const ProceduralFoleyScript := preload("res://scripts/procedural_foley.gd")
 
 const ART_CASTLE_HUB := Vector3(0.0, 0.0, 1640.0)
 const ART_CASTLE_MIND := Vector3(-600.0, 0.0, 1640.0)
-const ART_CASTLE_HEART := Vector3(0.0, 0.0, 2290.0)
 const ART_CASTLE_CREATOR := Vector3(600.0, 0.0, 1640.0)
 const TREE_BRIDGE_PORTAL_STATIONS := [107.28, 223.50, 339.72]
 const TREE_BRIDGE_START_Z := 1422.0
@@ -807,8 +806,6 @@ func _install_environment_audio() -> void:
 		_install_tree_bridge_ambience()
 		_add_recorded_wind("TreeOfLifeCanopyWind", ART_CASTLE_HUB + Vector3(0, 92, 0), 310.0)
 		_add_recorded_wind("MindSparkHighWind", ART_CASTLE_MIND + Vector3(0, 54, 0), 230.0)
-		_add_loop("HeartMelodyWaterGarden", "res://assets/audio/waterfall_ambient_loop.ogg",
-			ART_CASTLE_HEART + Vector3(0, 8, 0), -18.0, 240.0, 38.0)
 		_add_recorded_wind("CreatorsLightCanvasWind", ART_CASTLE_CREATOR + Vector3(0, 42, 0), 230.0)
 
 

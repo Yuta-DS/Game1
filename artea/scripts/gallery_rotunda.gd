@@ -359,8 +359,10 @@ func _build_entrance(stone: SurfaceTool, stone_shadow: SurfaceTool, gold: Surfac
 			_beam(gold, previous + Vector3(0, -0.2, zf + 0.95),
 				point + Vector3(0, -0.2, zf + 0.95), 0.22)
 			previous = point
-		# Jambs: bronze-gold ribs and a teal reveal the player walks past.
-		_box(stone_shadow, _at(Vector3(side * (DOOR_HALF_WIDTH + 0.6), shoulder_y * 0.5, zf + 0.3)),
+		# Jambs: bronze-gold ribs and a teal reveal the player walks past. Each
+		# stands 5 cm proud of the doorway side: flush, its face shared the side
+		# wall's plane where the two overlap and flickered (z-fighting).
+		_box(stone_shadow, _at(Vector3(side * (DOOR_HALF_WIDTH + 0.55), shoulder_y * 0.5, zf + 0.3)),
 			Vector3(1.2, shoulder_y, 1.2))
 		_box(gold, _at(Vector3(side * (DOOR_HALF_WIDTH + 0.6), shoulder_y * 0.5, zf + 0.95)),
 			Vector3(0.22, shoulder_y, 0.1))

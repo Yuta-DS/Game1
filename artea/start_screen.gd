@@ -1,15 +1,28 @@
 extends Node2D
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 
+const AdminResetPanel := preload("res://scripts/admin_reset_panel.gd")
+const ForgotPasswordPanel := preload("res://scripts/forgot_password_panel.gd")
+const RecoveryCodeModal := preload("res://scripts/recovery_code_modal.gd")
+
 # Links to the intro music audio player node
-@onready var menu_music = $AudioStreamPlayer 
+@onready var menu_music = $AudioStreamPlayer
 
 # Grab the UI Input Fields
 @onready var user_node = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/UsernameInput
 @onready var pass_node = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/PasswordInput
 
+# The options box the real login/register/guest buttons already live in -
+# the forgot-password button joins them here instead of floating separately,
+# so it rides the same panel and animation.
+@onready var options_box = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer
+
 # Dynamic visual feedback label for formatting error reporting
 @onready var status_label = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/StatusLabel
+
+var _admin_panel: Node
+var _forgot_password_panel: Node
+var _code_modal: Node
 
 func _ready():
 	print("Account screen initializing")
@@ -54,6 +67,61 @@ func _open_heart_preview() -> void:
 	var opened := SceneLoader.change_scene(get_tree(), "res://scenes/heart_melody/heart_melody_world.tscn")
 	if not opened:
 		show_message("The garden could not open. Please reload and try again.")
+
+	# Built here rather than added to the .tscn - runtime-built UI is this
+	# project's house style for anything that isn't the primary scene content
+	# (see facilitator_settings.gd), and keeps a support tool out of the
+	# scene diff entirely.
+	_admin_panel = AdminResetPanel.new()
+	add_child(_admin_panel)
+	_build_admin_button()
+
+	_forgot_password_panel = ForgotPasswordPanel.new()
+	add_child(_forgot_password_panel)
+
+	_code_modal = RecoveryCodeModal.new()
+	add_child(_code_modal)
+	_build_forgot_password_button()
+
+
+# Small and tucked in a corner on purpose - this is a support tool for
+# whoever holds the server's admin key, not a player-facing feature.
+#
+# Top-right rather than top-left: the always-on FPS counter (fps_counter.gd)
+# sits at (16, 16) on its own CanvasLayer above everything, which otherwise
+# covers this button entirely.
+func _build_admin_button() -> void:
+	# A Control's anchors resolve against the viewport only when its parent
+	# is not itself a CanvasItem - StartScreen is a Node2D, which is one, so
+	# anchoring the button straight onto it resolves against the wrong rect
+	# and the button ends up off-screen. Every other overlay in this project
+	# (facilitator_settings.gd, JourneySafeguards, admin_reset_panel.gd)
+	# avoids this by wrapping in its own CanvasLayer first; this needs the
+	# same fix.
+	var layer := CanvasLayer.new()
+	layer.layer = 14
+	add_child(layer)
+
+	var button := Button.new()
+	button.text = "Admin"
+	button.custom_minimum_size = Vector2(90, 30)
+	button.add_theme_font_size_override("font_size", 14)
+	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	# PRESET_TOP_RIGHT anchors the corner at the right edge, so x must be
+	# negative to pull the button back onto the screen.
+	button.position = Vector2(-102, 12)
+	button.pressed.connect(_admin_panel.show_panel)
+	layer.add_child(button)
+
+
+# Joins the real login panel rather than floating separately, since this is
+# a normal part of the login flow, not a support tool like the Admin button.
+func _build_forgot_password_button() -> void:
+	var button := Button.new()
+	button.text = "Forgot password?"
+	button.add_theme_font_size_override("font_size", 24)
+	button.pressed.connect(_forgot_password_panel.show_panel)
+	options_box.add_child(button)
 
 # Helper utility to cleanly control status messages and alert color states
 func show_message(text: String, is_error: bool = true):
@@ -147,18 +215,32 @@ func _on_register_button_pressed() -> void:
 		func(success, data):
 			if success:
 				print("REGISTER SUCCESS")
-				show_message("Account created! Auto-logging in...", false)
-				
-				# Trigger auto-login loop so the player bypasses double entry
-				APIManager.login(
-					entered_user,
-					entered_pass,
-					func(login_success, login_data):
-						if login_success:
-							enter_game(entered_user, false)
-						else:
-							show_message("Auto-login failed. Try logging in manually.")
-				)
+				show_message("Account created!", false)
+
+				var do_auto_login := func():
+					show_message("Logging in...", false)
+					# Trigger auto-login loop so the player bypasses double entry
+					APIManager.login(
+						entered_user,
+						entered_pass,
+						func(login_success, login_data):
+							if login_success:
+								enter_game(entered_user, false)
+							else:
+								show_message("Auto-login failed. Try logging in manually.")
+					)
+
+				# The recovery code is only ever shown this once - the modal
+				# blocks auto-login until the player acknowledges it, so the
+				# scene change below can't carry it away unseen.
+				var recovery_code := ""
+				if typeof(data) == TYPE_DICTIONARY:
+					recovery_code = str(data.get("recovery_code", ""))
+
+				if recovery_code != "":
+					_code_modal.show_code(recovery_code, do_auto_login)
+				else:
+					do_auto_login.call()
 			else:
 				print("REGISTER FAILED")
 				print("Backend response data type: ", typeof(data))

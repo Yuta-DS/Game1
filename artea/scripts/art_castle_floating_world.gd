@@ -128,8 +128,7 @@ const MIND_RUNE_TILE_HEIGHT := 0.08
 const CAUSEWAY_WIDTH := 26.0
 const CAUSEWAY_DECK_Y := 1.0
 const CAUSEWAY_SEGMENT_LENGTH := 420.0
-const CAUSEWAY_ISLAND_RADIUS := 46.0
-const HEART := Vector3(0.0, 0.0, 2290.0)
+const MINI_OBSERVATORY_SCALE := 2.0
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
 # Half extents of the raised studio platform (2 m tall, top at y=2).
 const CREATOR_PLATFORM_HALF := Vector3(90.0, 1.0, 82.0)
@@ -137,9 +136,13 @@ const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
 # Arrival-island bounce pads: ~12 m of air at the default 9.8 gravity.
 const BOUNCE_PAD_LAUNCH_SPEED := 15.5
 const BOUNCE_PAD_RADIUS := 3.2
-# Latona fountain: 60 m toward the gate from the island centre, where the
-# south observatory tower used to stand. Basin radius is 30 m.
-const ARRIVAL_FOUNTAIN_CENTRE := SOUTH_GATE + Vector3(0.0, 0.0, -60.0)
+# Latona fountain: the dead centre of the arrival island. Basin radius is
+# 30 m x FOUNTAIN_SCALE.
+const ARRIVAL_FOUNTAIN_CENTRE := SOUTH_GATE
+# Widens every tier, keeping heights so the rim stays jumpable. The nearest
+# bounce pads are ~45 m from the centre, so keep the basin (30 m x scale)
+# a few metres inside that.
+const FOUNTAIN_SCALE := 1.35
 # Holding jump on landing: ~27 m of air instead of ~12 m.
 const BOUNCE_PAD_BOOST_SPEED := 23.0
 const RETURN_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
@@ -147,6 +150,20 @@ const RETURN_SCENE_PATH := "res://scenes/art_gallery_3d_inprogress.tscn"
 var _player: CharacterBody3D
 var _materials: Dictionary = {}
 var _animated_nodes: Array[Node3D] = []
+# Animation only runs near the player (_update_nearby_animation): the spinning
+# rings and cogs, characters' AnimationPlayers, every particle effect such as
+# the fountain's water, and scripts in ANIMATE_NEAR_GROUP. From further away
+# they hold still, which nobody can tell at that distance, and the world stops
+# paying for motion it is not showing.
+const ANIMATE_RADIUS := 160.0
+const ANIMATE_CHECK_SECONDS := 0.5
+## Joined (in _init) by nodes whose _process only animates them; it is paused
+## beyond ANIMATE_RADIUS.
+const ANIMATE_NEAR_GROUP := &"animate_near_player"
+var _animated_near: Array[bool] = []
+var _spin_tweens: Array = []  # [pivot: Node3D, tween: Tween]
+var _gated: Array[Node] = []  # AnimationMixers, particles, ANIMATE_NEAR_GROUP
+var _animate_check := 0.0
 var _travelling := false
 var _tree_christmas_melody: AudioStreamPlayer3D
 var _tree_christmas_bells: AudioStreamPlayer3D
@@ -161,6 +178,11 @@ const TREE_CHRISTMAS_FADE_OUT_SPEED := 0.28
 
 
 func _ready() -> void:
+	# Everything built below (and later, such as the embedded worlds' cast)
+	# arrives through node_added; what the scene file brought is already here.
+	for node in find_children("*", "", true, false):
+		_track_animation(node)
+	get_tree().node_added.connect(_track_animation)
 	_player = get_node_or_null("Player3D") as CharacterBody3D
 	if _player == null and embedded_in_gallery and get_parent() != null:
 		_player = get_parent().get_node_or_null("Player3D") as CharacterBody3D
@@ -172,18 +194,75 @@ func _ready() -> void:
 	if embedded_in_gallery:
 		_build_castle_approach_bridge()
 	_build_mind_district()
-	_build_heart_district()
 	_build_creator_district()
 	_build_story_landmarks()
 	_build_mind_spark_world_one_gameplay()
 	_build_world_one_walk_route()
 	_build_boundary_observatories()
-	_build_cloud_banks()
 	_build_world_labels()
 	if not embedded_in_gallery:
 		_build_standalone_minimap()
 		_build_return_gate()
 	_build_streaming_director()
+
+
+func _track_animation(node: Node) -> void:
+	if not is_ancestor_of(node):
+		return
+	if node is AnimationMixer:
+		node.set_meta(&"animate_mode", node.process_mode)
+	elif node is GPUParticles3D or node is CPUParticles3D:
+		node.set_meta(&"animate_speed", node.get("speed_scale"))
+	elif not node.is_in_group(ANIMATE_NEAR_GROUP):
+		return
+	_gated.append(node)
+
+
+## Runs the world's animation within ANIMATE_RADIUS of the player and holds it
+## still beyond: rotating rings, spinning cogs and the like pause, characters
+## stop animating, and particle effects (the fountain's water, sprays) freeze
+## where they are.
+func _update_nearby_animation() -> void:
+	var eye := Vector3.ZERO
+	if _player != null and is_instance_valid(_player):
+		eye = _player.global_position
+	elif get_viewport().get_camera_3d() != null:
+		eye = get_viewport().get_camera_3d().global_position
+	_animated_near.resize(_animated_nodes.size())
+	for index in _animated_nodes.size():
+		var node := _animated_nodes[index]
+		_animated_near[index] = is_instance_valid(node) and _is_near(node, eye)
+	for entry in _spin_tweens:
+		var pivot: Node3D = entry[0]
+		var spin: Tween = entry[1]
+		if not is_instance_valid(pivot) or not spin.is_valid():
+			continue
+		var near := _is_near(pivot, eye)
+		if near and not spin.is_running():
+			spin.play()
+		elif not near and spin.is_running():
+			spin.pause()
+	var live: Array[Node] = []
+	for node in _gated:
+		if not is_instance_valid(node):
+			continue
+		live.append(node)
+		# An AnimationPlayer is a plain Node; it animates its parent.
+		var anchor := node as Node3D if node is Node3D else node.get_parent() as Node3D
+		if anchor == null:
+			continue
+		var near := _is_near(anchor, eye)
+		if node.is_in_group(ANIMATE_NEAR_GROUP):
+			node.set_process(near)
+		elif node is AnimationMixer:
+			node.process_mode = node.get_meta(&"animate_mode") if near else Node.PROCESS_MODE_DISABLED
+		else:
+			node.set("speed_scale", node.get_meta(&"animate_speed") if near else 0.0)
+	_gated = live
+
+
+func _is_near(node: Node3D, eye: Vector3) -> bool:
+	return node.is_visible_in_tree() and node.global_position.distance_to(eye) <= ANIMATE_RADIUS
 
 
 func _build_streaming_director() -> void:
@@ -217,9 +296,14 @@ func _build_standalone_minimap() -> void:
 
 
 func _process(delta: float) -> void:
+	_animate_check -= delta
+	if _animate_check <= 0.0:
+		_animate_check = ANIMATE_CHECK_SECONDS
+		_update_nearby_animation()
 	for index in _animated_nodes.size():
-		var node := _animated_nodes[index]
-		node.rotation.y += delta * (0.10 + float(index % 5) * 0.018)
+		if index < _animated_near.size() and _animated_near[index]:
+			var node := _animated_nodes[index]
+			node.rotation.y += delta * (0.10 + float(index % 5) * 0.018)
 	if _player != null and _player.global_position.y < -120.0:
 		var respawn := PLAYER_SPAWN
 		var regions := get_node_or_null("KingdomRegions3000m")
@@ -332,11 +416,9 @@ func _build_central_sanctuary() -> void:
 	# TreeCourt's top is 0.8 m above the deck.
 	_build_tree_spiral_stairs(island, HUB + Vector3(0.0, 0.8, 0.0))
 	_build_cat_companion(island, HUB + Vector3(-18.0, 2.0, -68.0))
-	_build_radial_arches(island)
 
 	_add_bridge("SouthArrivalBridge", Vector3(0.0, 0.0, 1422.0), Vector3(0.0, 0.0, 975.0), 62.0)
 	_add_bridge("MindBridge", Vector3(-218.0, 0.0, 1640.0), Vector3(-430.0, 0.0, 1640.0), 58.0)
-	_add_bridge("HeartBridge", Vector3(0.0, 0.0, 1858.0), Vector3(0.0, 0.0, 2120.0), 58.0)
 	_add_bridge("CreatorBridge", Vector3(218.0, 0.0, 1640.0), Vector3(410.0, 0.0, 1640.0), 58.0)
 
 
@@ -352,9 +434,11 @@ func _build_arrival_island() -> void:
 	plaza.shader = ArrivalPlazaShader
 	plaza.set_shader_parameter("plaza_center", Vector2(fountain_centre.x - SOUTH_GATE.x,
 		fountain_centre.z - SOUTH_GATE.z))
+	plaza.set_shader_parameter("basin_radius", 30.0 * FOUNTAIN_SCALE)
 	(island.get_node("WalkableDeck") as MeshInstance3D).material_override = plaza
+	# Two rows of pads flank the fountain, centred on it.
 	for step in 6:
-		var z := 710.0 + float(step) * 20.0
+		var z := ARRIVAL_FOUNTAIN_CENTRE.z - 50.0 + float(step) * 20.0
 		_add_bounce_pad(island, Vector3(-47.0, 0.0, z), step % 2 == 0)
 		_add_bounce_pad(island, Vector3(47.0, 0.0, z), step % 2 != 0)
 	_build_latona_fountain(island, fountain_centre)
@@ -409,6 +493,13 @@ func _add_bounce_pad(parent: Node3D, position: Vector3, pink: bool) -> void:
 
 ## One shared positional player per sound, moved to wherever it plays.
 func _play_sfx(event: StringName, at: Vector3, pitch: float = 1.0) -> void:
+	var sfx := _sfx_player(event)
+	sfx.global_position = at
+	sfx.pitch_scale = pitch * randf_range(0.94, 1.06)
+	sfx.play()
+
+
+func _sfx_player(event: StringName) -> AudioStreamPlayer3D:
 	var sfx := _sfx_players.get(event) as AudioStreamPlayer3D
 	if sfx == null:
 		sfx = AudioStreamPlayer3D.new()
@@ -417,9 +508,7 @@ func _play_sfx(event: StringName, at: Vector3, pitch: float = 1.0) -> void:
 		sfx.max_distance = 120.0
 		add_child(sfx)
 		_sfx_players[event] = sfx
-	sfx.global_position = at
-	sfx.pitch_scale = pitch * randf_range(0.94, 1.06)
-	sfx.play()
+	return sfx
 
 
 ## Decor inspired by the Latona Fountain at Versailles: a wide basin with a
@@ -433,11 +522,21 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 	parent.add_child(fountain)
 	var water := _make_glow(Color(0.35, 0.85, 1.0, 0.55), 0.35, true)
 	var spray := _make_glow(Color(0.75, 0.95, 1.0, 0.8), 0.9, true)
+	# Translucent things are sorted by their centres, and every curtain, pool and
+	# particle system here is centred on the fountain's axis - a curtain and its
+	# streaks at the very same point - so their order flipped with the view angle
+	# and the water came and went. Spray always draws over the water sheets.
+	spray.render_priority = 1
+	# The splash is synthesised (~60 ms); do it now, behind the loading screen,
+	# rather than as a hitch on the player's first jump into the water.
+	_sfx_player(&"water_splash")
 
 	# [radius, wall top]. Every tier is a pool: a solid core up to its floor,
 	# a solid wall with a 0.3 m gold cap, and wadeable water with no
 	# collision. The basin rim (0.9 + 0.3 = 1.2 m) stays under the 1.4 m jump.
 	var tiers := [[30.0, 0.9], [18.0, 5.0], [12.0, 9.0], [7.0, 12.5]]
+	for tier in tiers:
+		tier[0] *= FOUNTAIN_SCALE
 	for index in tiers.size():
 		var radius: float = tiers[index][0]
 		var top: float = tiers[index][1]
@@ -455,7 +554,7 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 			water, false, 48)
 		_add_basin_splash_zone(fountain, inner, floor_y, water_y, spray)
 		# Frogs sit on each cap facing the centre and arc water inward.
-		var frog_count := 16 - index * 3
+		var frog_count := roundi((16 - index * 3) * FOUNTAIN_SCALE)
 		for frog_index in frog_count:
 			var angle := TAU * float(frog_index) / float(frog_count)
 			var frog_pos := Vector3(cos(angle), 0.0, sin(angle)) * (radius - 0.8) \
@@ -489,10 +588,11 @@ func _build_latona_fountain(parent: Node3D, center: Vector3) -> void:
 	_add_fountain_jet(fountain, Vector3(0.0, 23.6, 0.0), spray)
 
 	# Three reward plinths standing in the 9 m pool (floor 8 m), one facing the
-	# arrival gate.
+	# arrival gate, midway between the top tier's wall and the pool's inner wall.
+	var plinth_radius: float = (tiers[3][0] + tiers[2][0] - 1.6) * 0.5
 	for index in 3:
 		var angle := -PI * 0.5 + TAU * float(index) / 3.0
-		var spot := Vector3(cos(angle) * 8.7, 8.0, sin(angle) * 8.7)
+		var spot := Vector3(cos(angle) * plinth_radius, 8.0, sin(angle) * plinth_radius)
 		_add_cylinder(fountain, "PrizePlinth%d" % index, spot + Vector3(0.0, 0.9, 0.0), 1.0, 1.8,
 			_materials.gold, true, 12)
 		spot.y += 0.3
@@ -805,6 +905,14 @@ func _build_castle_to_galaxy_reference_bridge(parent: Node3D, start: Vector3,
 	if blender_asset != null:
 		blender_asset.name = "BlenderCastleGalaxyBridgeGate"
 		asset_holder.add_child(blender_asset)
+		# The bridge's first newel posts stand where the gallery's doorway jambs
+		# are (global x = +/-7.5, z = 20), buried in the masonry - all but the
+		# tip of each slate cap, which came through the jamb face as a dark
+		# triangle. Those caps go.
+		var to_asset := blender_asset.global_transform.affine_inverse()
+		for side in [-1.0, 1.0]:
+			_cut_tree_meshes(blender_asset, ["Roofs"], to_asset * AABB(
+				Vector3(6.5 if side > 0.0 else -8.6, 1.8, 19.0), Vector3(2.1, 7.2, 2.0)))
 	parent.set_meta("reference", "user_supplied_bridge_gate_image")
 	parent.set_meta("blender_editable_module_count", 1437)
 	parent.set_meta("blender_runtime_mesh_group_count", 13)
@@ -1180,7 +1288,9 @@ func _build_approach_fall_recovery(parent: Node3D, start: Vector3, finish: Vecto
 
 
 func _recover_approach_player(body: Node3D, safe_position: Vector3) -> void:
-	if body != _player or _player == null:
+	# Standing on, or jumping just above, a lower walkway inside the volume is
+	# not a fall.
+	if body != _player or _player == null or _player.is_on_floor() 			or _player.test_move(_player.global_transform, Vector3.DOWN * 6.0):
 		return
 	if _request_milo_rescue(to_global(safe_position)):
 		return
@@ -1294,38 +1404,6 @@ func _build_world_gate_arch(parent: Node3D, base: Vector3) -> void:
 	label.modulate = Color("bffbff")
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	arch.add_child(label)
-
-
-func _build_heart_district() -> void:
-	var heart_gate := MindSparkWorldGateScene.instantiate() as MindSparkWorldGate
-	heart_gate.name = "HeartMelodyWorldGate"
-	heart_gate.position = HEART + Vector3(0, 4, 45)
-	heart_gate.target_kingdom_id = "heart_melody"
-	heart_gate.target_world_path = NodePath()
-	heart_gate.prompt_text = "Q · VISIT HEART MELODY — MUSICAL ORCHARD (open journey)"
-	add_child(heart_gate)
-	var district := Node3D.new()
-	district.name = "HeartMelodyTemple"
-	add_child(district)
-	_build_island_foundation(district, HEART, 175.0, 55.0, 32)
-	_add_cylinder(district, "MelodyStage", HEART + Vector3(0.0, 2.0, 0.0), 118.0, 4.0, _materials.pink, true, 40)
-
-	# Seven playable-looking note pads arranged as a melody constellation.
-	for index in 7:
-		var angle := -PI * 0.8 + float(index) * PI * 0.27
-		var radius := 65.0 + float(index % 2) * 24.0
-		var pad_pos := HEART + Vector3(cos(angle) * radius, 5.0, sin(angle) * radius)
-		_add_cylinder(district, "MelodyPad_%02d" % index, pad_pos, 17.0, 2.0,
-			_materials.pink if index % 2 == 0 else _materials.purple, true, 24)
-
-	# Temple arcade and central open doorway.
-	for index in 7:
-		var x := -108.0 + float(index) * 36.0
-		_build_arch(district, HEART + Vector3(x, 2.0, -105.0), 26.0, 62.0, 10.0, _materials.ivory)
-	_build_frame(district, HEART + Vector3(0.0, 2.0, -118.0), 44.0, 64.0, _materials.pink, "HEART MELODY")
-	for index in 34:
-		var angle := TAU * float(index) / 34.0
-		_add_flower_cluster(district, HEART + Vector3(cos(angle) * 147.0, 3.0, sin(angle) * 147.0), true)
 
 
 func _build_creator_district() -> void:
@@ -1487,7 +1565,6 @@ func _add_tinted_multimesh(parent: Node3D, node_name: String, transforms: Array[
 func _build_story_landmarks() -> void:
 	# Mind Spark's story landmarks live in the complete six-island World One.
 	# The original cyan district remains a clear World Gate forecourt.
-	_build_heart_story_landmarks()
 	_build_creator_story_landmarks()
 
 
@@ -1524,9 +1601,7 @@ func _build_mind_spark_world_one_gameplay() -> void:
 func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 	## A physically walkable route from the Mind Spark district out to the
 	## relocated World One landing, so the new land is reachable on foot and not
-	## only through the world gate. The span crosses open void, so it is built as
-	## a piered causeway resting on intermediate support islands rather than as a
-	## single unsupported deck.
+	## only through the world gate. The span crosses open void on piers.
 	if has_node("MindSparkWorldOneCauseway"):
 		return
 	var causeway := Node3D.new()
@@ -1543,10 +1618,6 @@ func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 	finish.y = CAUSEWAY_DECK_Y
 	var span := start.distance_to(finish)
 	var segment_count := maxi(2, int(round(span / CAUSEWAY_SEGMENT_LENGTH)))
-	# Support islands sit between segments and carry the piers of both neighbours.
-	for index in range(1, segment_count):
-		var pier_center: Vector3 = start.lerp(finish, float(index) / float(segment_count))
-		_build_causeway_support_island(causeway, pier_center, index)
 	for index in segment_count:
 		var leg_start: Vector3 = start.lerp(finish, float(index) / float(segment_count))
 		var leg_finish: Vector3 = start.lerp(finish, float(index + 1) / float(segment_count))
@@ -1560,22 +1631,6 @@ func _build_world_one_causeway(world_one: MindSparkWorldOne) -> void:
 	causeway.set_meta("deck_y", CAUSEWAY_DECK_Y)
 	causeway.set_meta("walk_start", start)
 	causeway.set_meta("walk_finish", finish)
-
-
-func _build_causeway_support_island(parent: Node3D, center: Vector3, index: int) -> void:
-	var island := Node3D.new()
-	island.name = "CausewaySupportIsland_%02d" % index
-	parent.add_child(island)
-	# The deck lands on top of the island, so the walk stays level across it.
-	_build_island_foundation(island, center, CAUSEWAY_ISLAND_RADIUS, 44.0, 24)
-	_add_cylinder(island, "RestPlaza", center + Vector3(0.0, 0.15, 0.0),
-		CAUSEWAY_ISLAND_RADIUS * 0.66, 0.3, _materials.aqua_glass, false, 24)
-	for lamp in 4:
-		var angle := TAU * float(lamp) / 4.0
-		_add_cylinder(island, "CausewayLamp_%02d" % lamp,
-			center + Vector3(cos(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72, 7.0,
-				sin(angle) * CAUSEWAY_ISLAND_RADIUS * 0.72), 1.1, 14.0,
-			_materials.aqua, false, 8)
 
 
 func _build_world_one_walk_route() -> void:
@@ -1609,7 +1664,7 @@ func _add_walk_route_dots(parent: Node3D, start: Vector3, finish: Vector3, segme
 		var progress := float(dot_index) / float(count)
 		var spot := start.lerp(finish, progress)
 		if Vector2(spot.x, spot.z).distance_to(Vector2(ARRIVAL_FOUNTAIN_CENTRE.x,
-				ARRIVAL_FOUNTAIN_CENTRE.z)) < 32.0:
+				ARRIVAL_FOUNTAIN_CENTRE.z)) < 30.0 * FOUNTAIN_SCALE + 2.0:
 			continue
 		_add_box(parent, "MindRoute_%02d_%02d" % [segment_index, dot_index], spot,
 			Vector3(7.5, 0.16, 2.2), _materials.aqua, false, yaw)
@@ -1672,35 +1727,6 @@ func _build_mind_story_landmarks() -> void:
 	_add_landmark_label(sanctuary, "OLDEST TREE • STAR OF WISDOM", MIND + Vector3(118.0, 88.0, 45.0), Color("fff1a4"))
 
 
-func _build_heart_story_landmarks() -> void:
-	var story := Node3D.new()
-	story.name = "HeartMelodyQuestLandmarks"
-	add_child(story)
-	# Seven emotional places circle the Personal Song amphitheatre.
-	var places := [
-		{"name": "JoyGarden", "text": "JOY GARDEN", "offset": Vector3(-125.0, 0.0, 42.0), "mat": _materials.gold},
-		{"name": "FrustrationDrums", "text": "FRUSTRATION DRUMS", "offset": Vector3(-92.0, 0.0, -80.0), "mat": _materials.pink},
-		{"name": "SadnessRainBoat", "text": "SADNESS RAIN BOAT", "offset": Vector3(-8.0, 0.0, -135.0), "mat": _materials.aqua},
-		{"name": "FearWarningBells", "text": "FEAR WARNING BELLS", "offset": Vector3(95.0, 0.0, -82.0), "mat": _materials.purple},
-		{"name": "PeaceFlowers", "text": "PEACE FLOWERS", "offset": Vector3(132.0, 0.0, 20.0), "mat": _materials.green},
-		{"name": "HopeMorningStage", "text": "HOPE MORNING STAGE", "offset": Vector3(70.0, 0.0, 118.0), "mat": _materials.gold},
-	]
-	for index in places.size():
-		var info: Dictionary = places[index]
-		var landmark := Node3D.new()
-		landmark.name = info.name
-		story.add_child(landmark)
-		var position_value: Vector3 = HEART + info.offset
-		_add_cylinder(landmark, "EmotionInstrument", position_value + Vector3(0.0, 8.0, 0.0),
-			12.0 + float(index % 2) * 4.0, 16.0, info.mat, true, 20)
-		_add_landmark_label(landmark, info.text, position_value + Vector3(0.0, 31.0, 0.0), Color("ffe5f4"), 31)
-	var song := Node3D.new()
-	song.name = "PersonalSongAmphitheatre"
-	story.add_child(song)
-	_add_torus(song, "HarmonyJewelRing", HEART + Vector3(0.0, 9.0, 0.0), 32.0, 39.0, _materials.gold)
-	_add_landmark_label(song, "RAPHAEL • PERSONAL SONG • HARMONY JEWEL", HEART + Vector3(0.0, 58.0, 0.0), Color("fff0b0"), 34)
-
-
 func _build_creator_story_landmarks() -> void:
 	var story := Node3D.new()
 	story.name = "CreatorsLightQuestLandmarks"
@@ -1725,8 +1751,8 @@ func _build_boundary_observatories() -> void:
 		# no longer passes through the station platform and crystal canopy.
 		{"name": "WestObservatory", "center": Vector3(-920.0, 0.0, 1430.0),
 			"source_center": MIND, "source_radius": MIND_DISTRICT_RADIUS},
-		{"name": "NorthObservatory", "center": Vector3(0.0, 0.0, 2565.0),
-			"source_center": HEART, "source_radius": 175.0},
+		# No north lookout: it only connected to the old Heart Melody temple
+		# island behind the tree, which has been removed.
 		# No east lookout: the Creator studio island stands on its own.
 		# No south lookout: its tower stood inside the arrival island between
 		# the gate and the fountain.
@@ -1762,7 +1788,15 @@ func _build_boundary_observatories() -> void:
 ## glowing windows, a gold cornice, a dome with a brass telescope aimed out over
 ## the void, a door toward `facing`, and an armillary sphere on a plinth. The
 ## base, drum, dome and plinth are solid.
-func _build_mini_observatory(parent: Node3D, center: Vector3, facing: Vector3) -> void:
+func _build_mini_observatory(lookout: Node3D, island_center: Vector3, facing: Vector3) -> void:
+	# Built at the original small size inside one node scaled up as a whole, so
+	# every part (dome, telescope, door, armillary) stays in proportion.
+	var parent := Node3D.new()
+	parent.name = "MiniObservatory"
+	parent.position = island_center
+	parent.scale = Vector3.ONE * MINI_OBSERVATORY_SCALE
+	lookout.add_child(parent)
+	var center := Vector3.ZERO
 	var side := Vector3(facing.z, 0.0, -facing.x)
 	var yaw := atan2(facing.x, facing.z)
 	_add_cylinder(parent, "ObservatoryBase", center + Vector3(0.0, 0.3, 0.0), 11.0, 0.6,
@@ -1871,35 +1905,10 @@ func _add_exact_twin_island_bridges(base_name: String, source_center: Vector3,
 		bridge.set_meta("walk_surface_y", source_center.y)
 
 
-func _build_cloud_banks() -> void:
-	var clouds := Node3D.new()
-	clouds.name = "CloudSea"
-	add_child(clouds)
-	var cloud_material := _make_material(Color(0.88, 0.94, 0.98, 0.72), 1.0, true)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 26032026
-	for index in 120:
-		var angle := rng.randf_range(0.0, TAU)
-		var radius := rng.randf_range(280.0, 1120.0)
-		var puff := MeshInstance3D.new()
-		puff.name = "Cloud_%03d" % index
-		var mesh := SphereMesh.new()
-		mesh.radius = rng.randf_range(30.0, 80.0)
-		mesh.height = mesh.radius * rng.randf_range(0.65, 1.1)
-		mesh.radial_segments = 8
-		mesh.rings = 4
-		puff.mesh = mesh
-		puff.scale = Vector3(rng.randf_range(1.4, 2.6), 0.45, rng.randf_range(0.9, 1.5))
-		puff.position = Vector3(cos(angle) * radius, rng.randf_range(-95.0, -45.0), sin(angle) * radius)
-		puff.material_override = cloud_material
-		clouds.add_child(puff)
-
-
 func _build_world_labels() -> void:
 	_add_world_label("CentralLabel", "TREE OF IMAGINATION • CROWN LINE", HUB + Vector3(0.0, 72.0, -80.0), Color("e9d9ff"), 74)
 	_add_world_label("GalleryStationLabel", "ARTÉA GALLERY STATION • JOURNEY BEGINS", Vector3(0.0, 76.0, 750.0), Color("fff0b0"), 54)
 	_add_world_label("MindLabel", "MIND SPARK  •  CONSTELLATION COURT", MIND + Vector3(0.0, 82.0, 125.0), Color("9ff7ff"), 58)
-	_add_world_label("HeartLabel", "HEART MELODY  •  TEMPLE OF SONG", HEART + Vector3(0.0, 90.0, 120.0), Color("ffd0ea"), 58)
 	_add_world_label("CreatorLabel", "CREATOR'S LIGHT  •  SKY STUDIO", CREATOR + Vector3(0.0, 88.0, 135.0), Color("ffe4a0"), 58)
 	if embedded_in_gallery:
 		return
@@ -1964,18 +1973,6 @@ func _build_island_foundation(parent: Node3D, center: Vector3, radius: float,
 	underside.position = center + Vector3(0.0, -depth * 0.5 - 2.0, 0.0)
 	underside.material_override = _materials.ivory_shadow
 	parent.add_child(underside)
-	for index in 12:
-		var angle := TAU * float(index) / 12.0
-		var crystal := MeshInstance3D.new()
-		var crystal_mesh := CylinderMesh.new()
-		crystal_mesh.top_radius = radius * 0.035
-		crystal_mesh.bottom_radius = radius * 0.006
-		crystal_mesh.height = depth * (0.55 + float(index % 3) * 0.10)
-		crystal_mesh.radial_segments = 5
-		crystal.mesh = crystal_mesh
-		crystal.position = center + Vector3(cos(angle) * radius * 0.72, -depth * 0.78, sin(angle) * radius * 0.72)
-		crystal.material_override = _materials.ivory_shadow
-		parent.add_child(crystal)
 
 
 func _add_bridge(node_name: String, start: Vector3, end: Vector3, width: float) -> void:
@@ -2115,6 +2112,9 @@ func _build_life_tree(parent: Node3D, center: Vector3) -> void:
 	var design := manifest.get("design", {}) as Dictionary
 	var tree := Node3D.new()
 	tree.name = "TreeOfImagination"
+	# Its leaves and ornaments are small, but they are the tree: drawn at any
+	# distance rather than coming and going with the detail around it.
+	tree.add_to_group(StreamingDirector.ALWAYS_DRAWN_GROUP)
 	tree.position = center + Vector3.UP * TREE_OF_LIFE_COURT_SURFACE_Y
 	tree.set_meta("architecture", "nature_magic_technology_engineering")
 	tree.set_meta("blueprint_revision", manifest.get("blueprint_revision", ""))
@@ -4885,6 +4885,7 @@ func _spin_forever(pivot: Node3D, seconds: float, axis: String = "y") -> void:
 	var spin := pivot.create_tween().set_loops()
 	spin.tween_property(pivot, "rotation:%s" % axis,
 		TAU * signf(seconds), absf(seconds)).from(0.0)
+	_spin_tweens.append([pivot, spin])
 
 
 func _make_crystal_outline_material() -> StandardMaterial3D:
@@ -6031,13 +6032,6 @@ func _build_cat_companion(parent: Node3D, position: Vector3) -> void:
 	shape_node.shape = shape
 	body.add_child(shape_node)
 	cat.add_child(body)
-
-
-func _build_radial_arches(parent: Node3D) -> void:
-	var configs := [HUB + Vector3(-145.0, 0.0, -145.0), HUB + Vector3(145.0, 0.0, -145.0),
-		HUB + Vector3(-145.0, 0.0, 145.0), HUB + Vector3(145.0, 0.0, 145.0)]
-	for index in configs.size():
-		_build_arch(parent, configs[index], 34.0, 58.0, 12.0, _materials.ivory)
 
 
 func _build_easel(parent: Node3D, position: Vector3, index: int) -> void:

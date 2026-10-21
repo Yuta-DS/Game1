@@ -206,6 +206,10 @@ func _collect_dependencies(path: String, seen: Dictionary, order: Array[String])
 func _report(fraction: float, text: String) -> void:
 	_shown_percent = maxf(_shown_percent, clampf(fraction, 0.0, 1.0) * 100.0)
 	progress_bar.value = _shown_percent
+	# Each phase once (not its running counts), timestamped by the browser
+	# console, so a slow load can be split into download, load, build, shaders.
+	if text.get_slice(" (", 0) != _status_text.get_slice(" (", 0):
+		print("[ARTEA] loading phase: ", text.get_slice(" (", 0))
 	_status_text = text
 	_refresh_label()
 

@@ -70,7 +70,9 @@ func _build_island_spaces() -> void:
 
 func _path(a: Vector3, b: Vector3, width: float, colour: Color) -> void:
 	var path := Art.box(self, (a + b) * 0.5, Vector3(width, 0.05, a.distance_to(b) + 0.6), colour)
-	path.look_at_from_position((a + b) * 0.5, b)
+	# Local basis, not look_at_from_position(): that sets a global transform, so
+	# on the island embedded in the gallery world the paths landed by the gallery.
+	path.basis = Basis.looking_at(b - a)
 
 func _build_fruit_tree(fruit_id: String, pos: Vector3, variant: int, primary := true) -> void:
 	var tree := Node3D.new()

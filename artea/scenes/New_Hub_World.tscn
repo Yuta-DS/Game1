@@ -56,7 +56,6 @@
 [ext_resource type="PackedScene" uid="uid://ch7f1gvh71svv" path="res://meshy ai/Milo_Animations.glb" id="45_cat_statue"]
 [ext_resource type="PackedScene" uid="uid://mlbbm08eu5nw" path="res://assets3D/house scenes/tower_b.tscn" id="45_t72bn"]
 [ext_resource type="PackedScene" uid="uid://bdx4hvm2wninr" path="res://assets3D/house scenes/tower_catapult.tscn" id="46_40xrb"]
-[ext_resource type="PackedScene" uid="uid://catvjmgmxqdgx" path="res://assets3D/house scenes/Prince.tscn" id="48_kjbyn"]
 [ext_resource type="Script" uid="uid://psrly1at8x5g" path="res://scripts/teleport_Art_Gallery.gd" id="55_njk6r"]
 [ext_resource type="Script" uid="uid://d2k3w3ctvtigl" path="res://scripts/teleport_Drawing_Tool.gd" id="56_kl01c"]
 [ext_resource type="Script" uid="uid://ihvii2ailb4k" path="res://scripts/teleport_Popthought_World.gd" id="57_ewago"]
@@ -69,8 +68,6 @@
 [ext_resource type="PackedScene" uid="uid://c080vovqsegsq" path="res://scenes/mage_animations.tscn" id="67_mage"]
 [ext_resource type="Script" uid="uid://qb1nswsvuwr6" path="res://scripts/hub_awakening.gd" id="69_awakn"]
 [ext_resource type="Script" uid="uid://gsntm6hmt4y5" path="res://scripts/hub_creations.gd" id="70_creat"]
-[ext_resource type="Script" uid="uid://21liuf4lp7d4" path="res://scripts/hub_magitech.gd" id="71_magit"]
-[ext_resource type="Script" uid="uid://ydrly55v5cjq" path="res://scripts/hub_landmark_glow.gd" id="72_lndmk"]
 [ext_resource type="Script" uid="uid://duo3eoxvgqoaw" path="res://scripts/hub_lumen_citadel.gd" id="73_citdl"]
 [ext_resource type="Script" uid="uid://kb7gxmt1810v" path="res://scripts/castle_redesign.gd" id="74_castle"]
 [ext_resource type="Script" uid="uid://fk3emtido11m" path="res://scripts/original_cat_statue.gd" id="76_cat_statue"]
@@ -89,7 +86,6 @@
 [ext_resource type="Shape3D" path="res://scenes/collision/archery_trimesh.tres" id="80_archshape"]
 [ext_resource type="PackedScene" uid="uid://3dcfig4m8j0g" path="res://assets3D/houses/red/building_mine_red.gltf" id="81_mine"]
 [ext_resource type="Shape3D" path="res://scenes/collision/mine_trimesh.tres" id="81_mineshape"]
-[ext_resource type="Script" uid="uid://fjofyeo0o7iu" path="res://scripts/hub_atmosphere.gd" id="82_atmos"]
 [ext_resource type="PackedScene" uid="uid://by5o8lpmk7jm0" path="res://assets3D/houses/red/building_tower_A_red.gltf" id="82_towa"]
 [ext_resource type="Script" uid="uid://bvlwdas2yhiq5" path="res://scripts/web_terrain_compat.gd" id="82_webterrain"]
 [ext_resource type="Script" uid="uid://b3intmx6e5t4y" path="res://scripts/hub_castle_entrance.gd" id="83_entrn"]
@@ -122,8 +118,8 @@
 [ext_resource type="Script" uid="uid://cm2pleici8vh6" path="res://scripts/hub_bee_garden.gd" id="110_bee_garden"]
 [ext_resource type="Script" uid="uid://0p1absvmv73d" path="res://scripts/hub_village_brick_plaza.gd" id="111_brick_plaza"]
 [ext_resource type="Script" uid="uid://dw3vdx4o2smhf" path="res://addons/proton_scatter/src/shapes/box_shape.gd" id="112_scatter_box"]
-[ext_resource type="PackedScene" path="res://scenes/characters/elder_cat_mayor.tscn" id="113_mayor"]
 [ext_resource type="PackedScene" path="res://scenes/characters/town_villager.tscn" id="114_town_villager"]
+[ext_resource type="Script" path="res://scripts/hub_minigame_signs.gd" id="200_signs"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -419,20 +415,11 @@ script = ExtResource("111_brick_plaza")
 [node name="CreationsSpawner" type="Node" parent="." unique_id=1290888740]
 script = ExtResource("70_creat")
 
-[node name="Magitech" type="Node3D" parent="." unique_id=1379033633]
-script = ExtResource("71_magit")
-
-[node name="LandmarkGlow" type="Node3D" parent="." unique_id=1529296031]
-script = ExtResource("72_lndmk")
-
 [node name="LumenCitadel" type="Node3D" parent="." unique_id=1220221388]
 script = ExtResource("73_citdl")
 
 [node name="CastleRedesign" type="Node3D" parent="." unique_id=1355169591]
 script = ExtResource("74_castle")
-
-[node name="CastleAtmosphere" type="Node3D" parent="." unique_id=569365088]
-script = ExtResource("82_atmos")
 
 [node name="CastleCrown" type="Node3D" parent="." unique_id=1619518533]
 script = ExtResource("77_crown")
@@ -897,10 +884,6 @@ transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 19.9201, 0.48, 189.907)
 [node name="building_tower_catapult_red2" parent="." unique_id=525608042 instance=ExtResource("46_40xrb")]
 transform = Transform3D(-0.975829, 0, 9.95227, 0, 10, 0, -9.95227, 0, -0.975829, -70, 39.47, 10)
 
-[node name="Knight" parent="." unique_id=1422498343 instance=ExtResource("48_kjbyn")]
-transform = Transform3D(0.195166, 0, 1.99045, 0, 2, 0, -1.99045, 0, 0.195166, -34.4799, 30.6393, 36.7945)
-visible = false
-
 [node name="Art_Gallery" type="Area3D" parent="." unique_id=1255044157]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -32.3, 20, -2)
 collision_layer = 0
@@ -927,7 +910,7 @@ transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8, 10.2, 19.856)
 shape = SubResource("BoxShape3D_kl01c")
 
 [node name="Popthought_world" type="Area3D" parent="." unique_id=952177838]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 90.3, 15, -83)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 88.9264, 15, -75.4485)
 script = ExtResource("57_ewago")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Popthought_world" unique_id=1161001295]
@@ -1182,14 +1165,6 @@ transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 6, 40, 14.64, 122)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 shape = SubResource("CylinderShape3D_tree_large")
 
-[node name="Music_World" type="Area3D" parent="." unique_id=1112197752]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 80, 18.7, 72)
-script = ExtResource("57_he78i")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Music_World" unique_id=1376603742]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -8.635, 11.479, 20.5)
-shape = SubResource("BoxShape3D_kl01c")
-
 [node name="District_HeartMelody" type="Node3D" parent="." unique_id=419672065]
 
 [node name="hm_tavern" parent="District_HeartMelody" unique_id=1861608309 instance=ExtResource("41_kjbyn")]
@@ -1338,18 +1313,23 @@ guide_point_id = &"celebration"
 arrival_animation = &"Celebrate"
 
 [node name="Father_Animations2" parent="." unique_id=742864976 instance=ExtResource("63_father")]
+dialogue_start_node = ""
 transform = Transform3D(1.5695528, 0, -1.239558, 0, 2, 0, 1.239558, 0, 1.5695528, 90, 20, -61)
 
 [node name="Knight2" parent="." unique_id=668042314 instance=ExtResource("64_knight")]
+dialogue_start_node = ""
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 35, 20)
 
 [node name="Rogue" parent="." unique_id=1520299301 instance=ExtResource("65_rogue")]
+dialogue_start_node = ""
 transform = Transform3D(-0.7042032, 0, 0.7099904, 0, 1, 0, -0.7099904, 0, -0.7042032, 100.123764, 19.9392, -3.1377468)
 
 [node name="Barbarian" parent="." unique_id=172103663 instance=ExtResource("66_barbarian")]
+dialogue_start_node = ""
 transform = Transform3D(-0.295708, 0, 0.9552784, 0, 1, 0, -0.9552784, 0, -0.295708, 57, 20, -31)
 
 [node name="Mage" parent="." unique_id=460202447 instance=ExtResource("67_mage")]
+dialogue_start_node = ""
 transform = Transform3D(0.7847764, 0, 0.619779, 0, 1, 0, -0.619779, 0, 0.7847764, 59, 20, -49)
 
 [node name="Port" parent="." unique_id=2058906824 instance=ExtResource("98_pier")]
@@ -1374,21 +1354,8 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 113, 19.31, 19)
 
 [node name="Villagers" type="Node3D" parent="." unique_id=1168237956]
 
-[node name="AlderGuidePoints" type="Node3D" parent="Villagers" unique_id=1077638574]
-
-[node name="HomePoint" type="Marker3D" parent="Villagers/AlderGuidePoints" unique_id=763931756]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107, 20, 16)
-
-[node name="MissionBriefingPoint" type="Marker3D" parent="Villagers/AlderGuidePoints" unique_id=299236732]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 103, 20, 12)
-
-[node name="CelebrationPoint" type="Marker3D" parent="Villagers/AlderGuidePoints" unique_id=1460768293]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110, 20, 9)
-
-[node name="MayorAlder" parent="Villagers" unique_id=1931640654 instance=ExtResource("113_mayor")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107, 20, 16)
-
 [node name="Villager_Greeter" parent="Villagers" unique_id=1653957681 instance=ExtResource("114_town_villager")]
+dialogue_node = ""
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 20, 8)
 
 [node name="Villager_Market1" parent="Villagers" unique_id=144841560 instance=ExtResource("101_vbarb")]
@@ -1421,6 +1388,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 21.688478, 25)
 [node name="Villager_Homes3" parent="Villagers" unique_id=2092261842 instance=ExtResource("103_vroguehood")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 20.05, -85)
 
+[node name="MinigameSigns" type="Node3D" parent="."]
+script = ExtResource("200_signs")
+
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]
 [connection signal="pressed" from="Environment/ArtGalleryButton/CanvasLayer/Button" to="Environment/ArtGalleryButton" method="_on_button_pressed"]
@@ -1428,4 +1398,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 20.05, -85)
 [connection signal="body_entered" from="Drawing_Tool" to="Drawing_Tool" method="_on_body_entered"]
 [connection signal="body_entered" from="Drawing_Tool2" to="Drawing_Tool2" method="_on_body_entered"]
 [connection signal="body_entered" from="Popthought_world" to="Popthought_world" method="_on_body_entered"]
-[connection signal="body_entered" from="Music_World" to="Music_World" method="_on_body_entered"]

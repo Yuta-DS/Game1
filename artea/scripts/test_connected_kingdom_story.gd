@@ -23,9 +23,9 @@ func _run() -> void:
 	world.add_child(story)
 	await process_frame
 	if not story.call("story_is_connected"):
-		_fail("the three kingdom chapters are not connected to one progression")
+		_fail("the kingdom chapters are not connected to one progression")
 		return
-	for kingdom_id in ["mind", "heart", "creator"]:
+	for kingdom_id in ["heart", "creator"]:
 		if int(story.call("get_checkpoint_count", kingdom_id)) != 8:
 			_fail("%s story does not have eight ordered checkpoints" % kingdom_id)
 			return

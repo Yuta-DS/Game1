@@ -4,8 +4,10 @@ shader_type spatial;
 // Latona fountain. Pattern is in the deck's model space (XZ), so it follows
 // the island wherever the floating world is placed.
 
-uniform vec2 plaza_center = vec2(0.0, -60.0);   // fountain, relative to deck centre
+uniform vec2 plaza_center = vec2(0.0, 0.0);   // fountain, relative to deck centre
 uniform float island_radius = 155.0;
+// The inlay rings and rose start just outside the fountain basin.
+uniform float basin_radius = 30.0;
 uniform float paver_size = 8.0;
 uniform vec3 marble : source_color = vec3(0.925, 0.905, 0.94);
 uniform vec3 marble_alt : source_color = vec3(0.95, 0.89, 0.93);
@@ -66,11 +68,13 @@ void fragment() {
 		color = mix(color, vein, smoothstep(0.02, 0.0, abs(v - 0.5)) * 0.55);
 
 		// Eight-petal rose between the inner and outer gold rings.
-		float petal_edge = 38.0 + 54.0 * pow(abs(cos(ang * 4.0)), 2.5);
-		if (r > 38.0 && r < petal_edge) {
+		float inner_ring = basin_radius + 6.0;
+		float petal_start = basin_radius + 8.0;
+		float petal_edge = petal_start + (92.0 - petal_start) * pow(abs(cos(ang * 4.0)), 2.5);
+		if (r > petal_start && r < petal_edge) {
 			color = mix(color, petal, 0.55);
 		}
-		float petal_line = line(r - petal_edge, 0.25) * step(38.0, r) * step(r, 96.0);
+		float petal_line = line(r - petal_edge, 0.25) * step(petal_start, r) * step(r, 96.0);
 
 		// Paver joints (suppressed under inlays drawn below).
 		float joints = max(line(fract(r / paver_size + 0.5) - 0.5, 0.012),
@@ -79,15 +83,15 @@ void fragment() {
 
 		// Gold inlay rings and sixteen rays.
 		float rays = line(fract(ang / 6.2831 * 16.0 + 0.5) - 0.5, 0.004 * 100.0 / max(r, 1.0))
-			* step(38.0, r) * step(r, 100.0);
-		float gold_mask = max(max(line(r - 36.0, 0.45), line(r - 100.0, 0.45)),
+			* step(petal_start, r) * step(r, 100.0);
+		float gold_mask = max(max(line(r - inner_ring, 0.45), line(r - 100.0, 0.45)),
 			max(line(edge - (island_radius - 12.0), 0.4), max(petal_line, rays * 0.8)));
 		color = mix(color, gold, gold_mask);
 		glow += gold_mask * 0.35;
 		glow_color += gold * gold_mask * 0.35;
 
 		// Cyan route line through the plaza, matching the bridge inlay.
-		float route = line(p.x, 0.22) * step(36.5, r) * step(edge, island_radius - 12.5);
+		float route = line(p.x, 0.22) * step(inner_ring + 0.5, r) * step(edge, island_radius - 12.5);
 		color = mix(color, cyan, route);
 		glow_color += cyan * route * 0.9;
 
