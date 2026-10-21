@@ -28,7 +28,7 @@ def validate(package):
         with path.open("rb") as source:
             if hashlib.file_digest(source, "sha256").hexdigest() != item["sha256"]:
                 raise ValueError(f"Checksum mismatch: {key}")
-    required = {"index.html", f"releases/{release}/index.html", f"releases/{release}/heart.html"}
+    required = {"index.html", f"releases/{release}/index.html"}
     if not required.issubset(seen): raise ValueError("Missing game entry page")
     actual = {p.relative_to(package / "site").as_posix() for p in (package / "site").rglob("*") if p.is_file()}
     if actual != seen: raise ValueError("Upload folder contains files not covered by the manifest")

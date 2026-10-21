@@ -20,16 +20,13 @@ The API uses a server-only Cognito app-client secret; the task role may describe
 
 Local development still uses the existing Flask/SQLite/bcrypt server at port 8000. Production uses the separate `server/aws_app.py` adapter. Existing team accounts are not migrated, as requested.
 
-## Faster loading
+## Player entry and downloads
 
-1. The small landing page renders before Godot downloads.
-2. The login screen requires only bootstrap assets, engine and startup dependencies.
-3. Hub/common runtime packs download during sign-in and mount on hub entry.
-4. Once the hub is playable, later worlds prefetch in likely next-use order. Explicit travel takes priority.
-5. Pack files use 8 MiB content-hashed chunks, bounded parallel downloads, retries and immutable caching.
-6. Packaging precompresses worthwhile JS, Wasm and binary chunks with deterministic gzip and correct S3 `Content-Encoding`. CloudFront does not automatically compress `application/octet-stream`.
+The public landing page launches the complete game. The separate Heart Melody preview page is no longer published; all Melody content remains accessible through normal gameplay.
 
-Chunking alone does not reduce total data or scene/shader construction time. The deferred common-runtime pack deliberately retains dynamically discovered/legacy resources; auditing these is the next step toward a faster login-to-movement transition. Cold and cached loads must both be measured. The landing page reports measured package download sizes.
+The initial download includes the engine, login screen, hub and common runtime. Later worlds retain the original area-pack loading. The loading/smoothness changes reverted at the player's request remain reverted; this release does not reintroduce them. See `PERFORMANCE_ROLLBACK.md` in the source repository for measured limitations.
+
+Packaging retains hashed chunks, immutable caching and deterministic gzip with correct Content-Encoding. The landing page reports actual initial and complete download sizes. CDN delivery improves asset delivery but does not guarantee smooth rendering on every device.
 
 `web-packs.json` records all current packs, including dependencies. Packaging follows modern hashed manifests and split Wasm, rejects missing/truncated/unsafe paths and mixed exports, and excludes stale parts and private files. Every uploaded file has SHA-256, MIME, cache and encoding metadata. Only `site/` is public; backend code and deployment tools are outside it.
 

@@ -24,5 +24,5 @@ if __name__ == "__main__":
     package = args.package.resolve()
     manifest = validate(package)
     Handler.metadata_by_path = {item["path"]: item for item in manifest["files"]}
-    print(f"Local playtest: http://127.0.0.1:{args.port}/", flush=True)
+    print(f"Local full game: http://127.0.0.1:{args.port}/", flush=True)
     ThreadingHTTPServer(("127.0.0.1", args.port), partial(Handler, directory=str(package / "site"))).serve_forever()

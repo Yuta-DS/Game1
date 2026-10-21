@@ -1,4 +1,4 @@
-"""Create/update the AWS playtest stack and publish a verified release."""
+"""Create/update the AWS production stack and publish a verified release."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import json
@@ -12,7 +12,7 @@ from verify import validate, verify_host
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package", type=Path, default=Path(__file__).resolve().parent)
-    parser.add_argument("--stack", default="artea-playtest", help="Use the same name for updates")
+    parser.add_argument("--stack", default="artea-production-web", help="Use the same name for updates")
     parser.add_argument("--region", default="ap-southeast-2")
     parser.add_argument("--profile", help="Optional named AWS CLI profile")
     parser.add_argument("--backend-vpc-origin-id", default="")
@@ -57,7 +57,7 @@ def main():
     verify_host(url, manifest)
     receipt = {"stack": args.stack, "region": args.region, "release": manifest["release"], **outputs}
     (package / "deployment.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
-    print(f"Published: {url}\nHeart Melody: {url}releases/{manifest['release']}/heart.html")
-    print("Now perform the browser playtest checklist in README.md; HTTP checks alone do not prove gameplay.")
+    print(f"Published full game: {url}")
+    print("Now perform the production acceptance checklist in README.md; HTTP checks alone do not prove gameplay.")
 
 if __name__ == "__main__": main()

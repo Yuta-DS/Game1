@@ -119,11 +119,6 @@ def build(source, output):
     html = (runtime / "index.html").read_text(encoding="utf-8")
     html = html.replace("const GODOT_CONFIG =", 'window.ARTEA_AUTH_MODE = "cognito"; window.ARTEA_API_BASE = location.origin + "/api";\nconst GODOT_CONFIG =', 1)
     (runtime / "index.html").write_text(html, encoding="utf-8")
-    preview = html.replace("const GODOT_CONFIG =", "window.ARTEA_HEART_PREVIEW = true;\nconst GODOT_CONFIG =", 1)
-    marker = "const engine = new Engine(GODOT_CONFIG);"
-    if marker not in preview: raise ValueError("Preview startup adapter does not match this export")
-    preview = preview.replace(marker, 'GODOT_CONFIG.args = (GODOT_CONFIG.args || []).concat(["--", "--heart-preview"]);\n' + marker, 1)
-    (runtime / "heart.html").write_text(preview, encoding="utf-8")
     encodings = {}
     for name in names:
         path = runtime / name
