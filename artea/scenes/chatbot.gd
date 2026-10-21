@@ -23,6 +23,7 @@ var user_input: Control
 const ReflectionEngine := preload("res://scripts/MiloReflectionEngine.gd")
 const SupportCard := preload("res://scripts/support_card.gd")
 const CastleGuideArrow := preload("res://scripts/castle_guide_arrow.gd")
+const BoldFont := preload("res://assets/Fonts/OpenDyslexic-Bold.otf")
 const CASTLE_ARROW_NAME := "CastleGuideArrow"
 const REPLY_TITLE_COLOR := "#9a6a1c"
 const REPLY_SECTION_COLOR := "#2b4f8f"
@@ -1023,6 +1024,7 @@ func _quiet_button(text: String, action: Callable) -> Button:
 	button.text = text
 	button.custom_minimum_size = Vector2(0, 40)
 	button.add_theme_font_size_override("font_size", 17)
+	button.add_theme_font_override("font", BoldFont)
 	button.tooltip_text = "This choice is local and does not change your rewards."
 
 	var normal := StyleBoxFlat.new()

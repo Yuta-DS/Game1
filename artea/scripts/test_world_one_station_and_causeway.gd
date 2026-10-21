@@ -145,10 +145,11 @@ func _run() -> void:
 	if deck_count != segment_count:
 		_fail("causeway has %d decks for %d segments" % [deck_count, segment_count])
 		return
-	for index in range(1, segment_count):
-		if causeway.get_node_or_null("CausewaySupportIsland_%02d" % index) == null:
-			_fail("causeway support island %d is missing" % index)
-			return
+	# The support islands (and their lamp posts) poked through the deck and
+	# were removed; the deck stands on its piers.
+	if not causeway.find_children("CausewaySupportIsland*", "", false, false).is_empty():
+		_fail("causeway support islands are back")
+		return
 
 	# Ray-sample along the causeway centre line: every sample must hit floor, so
 	# there is no gap the player can fall through.

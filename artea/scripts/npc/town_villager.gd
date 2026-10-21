@@ -195,7 +195,8 @@ func _on_dialogue_area_body_entered(body: Node3D) -> void:
 	if not _is_player(body):
 		return
 	_player = body
-	prompt.visible = state != State.TALKING
+	# A villager with no dialogue (dialogue_node left empty) offers no prompt.
+	prompt.visible = state != State.TALKING and not dialogue_node.is_empty()
 
 
 func _on_dialogue_area_body_exited(body: Node3D) -> void:

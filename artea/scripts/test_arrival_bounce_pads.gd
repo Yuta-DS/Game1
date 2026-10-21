@@ -133,7 +133,7 @@ func _run() -> void:
 		if local.y > 0.3:
 			_fail("route dot %s floats %.2f m above the arrival floor" % [dot.name, local.y])
 			return
-		if Vector2(local.x, local.z - 760.0).length() < 30.0 * S:
+		if Vector2(local.x, local.z - 820.0).length() < 30.0 * S:
 			_fail("route dot %s sits inside the fountain" % dot.name)
 			return
 

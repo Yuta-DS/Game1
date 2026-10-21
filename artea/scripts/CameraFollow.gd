@@ -66,6 +66,8 @@ const CAMERA_INPUT_BLOCKERS_GROUP := "camera_input_blockers"
 
 var _yaw := 0.0
 var _pitch := 0.0
+# Frames left during which mouse motion is ignored after face_direction().
+var _settle_frames := 0
 var _touch_emulation_was_on := false
 
 func _ready() -> void:
@@ -116,7 +118,7 @@ func _input(event: InputEvent) -> void:
 	# require MOUSE_MODE_CAPTURED: capture can silently fail to apply (it does
 	# on a headless run, and can lag by a frame after an alt-tab), and gating on
 	# it meant the view froze with no way to recover.
-	if event is InputEventMouseMotion and _mode == "follow":
+	if event is InputEventMouseMotion and _mode == "follow" and _settle_frames <= 0:
 		# Wrapped rather than left to accumulate: yaw turns freely through a
 		# full circle in both directions, and wrapping keeps it from drifting
 		# into large float values over a long session.
@@ -151,6 +153,7 @@ func _input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _process(delta: float) -> void:
+	_settle_frames = maxi(0, _settle_frames - 1)
 	if _mode == "follow" and _player and _view == "first":
 		# First person sits at the player's eye and aims along the same yaw and
 		# pitch the mouse already drives, so switching views never changes which
@@ -285,6 +288,18 @@ func end_ride_view() -> void:
 
 func is_ride_view_active() -> bool:
 	return _ride_view_active
+
+
+# Turns the view to look along `direction` from behind the player at the
+# starting tilt, e.g. so a scene can face a landmark on arrival. Mouse motion
+# is ignored for a few frames: capturing the cursor on load (or moving it
+# during the loading screen) arrives as one big jump that would otherwise
+# swing the new view, often straight down at the floor.
+func face_direction(direction: Vector3) -> void:
+	_yaw = atan2(-direction.x, -direction.z)
+	_pitch = deg_to_rad(initial_pitch_degrees)
+	_settle_frames = 10
+	_snap_to_follow_target()
 
 
 func _snap_to_follow_target() -> void:

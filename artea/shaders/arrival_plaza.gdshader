@@ -4,7 +4,7 @@ shader_type spatial;
 // Latona fountain. Pattern is in the deck's model space (XZ), so it follows
 // the island wherever the floating world is placed.
 
-uniform vec2 plaza_center = vec2(0.0, -60.0);   // fountain, relative to deck centre
+uniform vec2 plaza_center = vec2(0.0, 0.0);   // fountain, relative to deck centre
 uniform float island_radius = 155.0;
 // The inlay rings and rose start just outside the fountain basin.
 uniform float basin_radius = 30.0;

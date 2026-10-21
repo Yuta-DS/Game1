@@ -24,14 +24,24 @@ func _run() -> void:
 		_fail("world is not exactly 2000m x 2000m")
 		return
 	for district in ["CentralSanctuary", "ArrivalIsland", "MindSparkDistrict",
-			"HeartMelodyTemple", "CreatorsLightStudio", "WestObservatory",
-			"NorthObservatory"]:
+			"CreatorsLightStudio", "WestObservatory"]:
 		if world.get_node_or_null(district) == null:
 			_fail("missing explorable district %s" % district)
 			return
 
-	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
-			"WestObservatoryBridge", "NorthObservatoryBridge"]:
+	# The old Heart temple island behind the tree, its bridge and the north
+	# lookout that hung off it were removed, as were the tree's pink-ring arches.
+	for removed in ["HeartMelodyTemple", "HeartBridge", "HeartMelodyQuestLandmarks",
+			"NorthObservatory", "NorthObservatoryBridge"]:
+		if world.get_node_or_null(removed) != null:
+			_fail("removed %s is back" % removed)
+			return
+	if not world.get_node("CentralSanctuary").find_children("OpenArch*", "", false, false).is_empty():
+		_fail("the tree court's pink-ring arches are back")
+		return
+
+	for bridge in ["SouthArrivalBridge", "MindBridge", "CreatorBridge",
+			"WestObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
 		# The West lookout's railed bridges use the causeway's deck.
 		if bridge_node == null or (bridge_node.get_node_or_null("Walkway") == null

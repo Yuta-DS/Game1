@@ -46,7 +46,9 @@ func _run() -> void:
 	for forbidden in ["func attack", "func take_damage", "func solve", "advance_to("]:
 		_check(source.find(forbidden) == -1, "mayor excludes forbidden behavior: %s" % forbidden)
 	var hub_text := FileAccess.get_file_as_string("res://scenes/New_Hub_World.tscn")
-	_check(hub_text.contains("MayorAlder"), "Mayor Alder is placed in the town")
+	# Mayor Alder is kept as a scene for a future group but no longer placed in
+	# the hub town; Milo is the hub's only guide for now.
+	_check(not hub_text.contains("MayorAlder"), "Mayor Alder is not placed in the town")
 	mayor.queue_free()
 	journey.queue_free()
 	if _failures.is_empty():

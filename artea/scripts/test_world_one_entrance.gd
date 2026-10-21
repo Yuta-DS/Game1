@@ -101,8 +101,8 @@ func _run() -> void:
 	if lookout.get_node_or_null("CompassRing") != null:
 		_fail("the gold ring is still on the lookout")
 		return
-	var tower := lookout.get_node("ObservatoryTower") as Node3D
-	var dome_hit := _hit_below(space, tower.global_position + Vector3.UP * 20.0)
+	var tower := lookout.get_node("MiniObservatory/ObservatoryTower") as Node3D
+	var dome_hit := _hit_below(space, tower.global_position + Vector3.UP * 40.0)
 	if dome_hit == null or dome_hit.name != "DomeCollision":
 		_fail("the observatory dome has no collision")
 		return
