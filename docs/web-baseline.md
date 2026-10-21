@@ -384,3 +384,109 @@ The smoke test prints when each Pack started, was asked for and finished. In
 that run the story's Packs were asked for at 0.9 s and 2.5 s and done by
 2.7 s, while the background Pack that had started at 0.9 s held back and
 finished at 13.0 s.
+
+## Gzipped parts and the side module (load-time pass, 2026-10-19)
+
+Hosts do not compress the parts (opaque binary), and Cloudflare strips a
+`Content-Encoding` set by hand. So `split-pack.sh` now gzips each 8 MB part
+itself (`"encoding":"gzip"` in the manifest) and `pck-loader.js` inflates it
+with the browser's own `DecompressionStream`. Parts stay independent, so a
+retry or resume still costs one part.
+
+It also found the engine's `index.side.wasm` was never coming from its parts:
+the loader fetched the whole file first and fell back to parts only if that
+failed, so locally it downloaded 42 MB raw (and on a host without the whole
+file, cost a wasted 404). It now uses the parts whenever a manifest lists
+them: 10.1 MB on the wire. Background (prefetch) downloads take one part at a
+time, since each part is inflated on the main thread and nobody is waiting.
+
+Local server shaped to 100 Mbit/s and 40 ms (`web-smoke.js --mbps 100
+--latency 40`):
+
+| | main | gzipped parts |
+|---|---:|---:|
+| Downloaded before the Hub | 297.7 MiB | **170.3 MiB** (-43%) |
+| Time to engine started | 29.3 s | **18.8 s** |
+| Time to Hub | 40.3 s | **29.3 s** (-11 s) |
+| Hub frame time, median, prefetching / idle | 16.6 / 12.6 ms | 16.8 / 16.7 ms |
+
+Per file: `index.pck` 249 to 153 MiB (38%), `index.side.wasm` 42 to 10 MiB
+(76%); the Art Castle Pack only 141 to 129 MiB (8%), being mostly textures.
+
+### Where Art Castle entry goes (real GPU)
+
+Each loading phase now logs `[ARTEA] loading phase: ...` to the browser
+console. In Chrome on a real GPU, entering the prefetched Art Castle:
+
+| Phase | Time |
+|---|---:|
+| Mount the Pack and load the scene's resources | ~1 s |
+| Build the world (its first frame compiles ~93 shader programs) | ~20 s |
+| Shader warm-up (~119 programs) | ~20 s (its `WARMUP_TIMEOUT_MS` cap) |
+
+Shader compilation is the cost now, not downloading. The warm-up is worth
+keeping: with it, walking around the castle afterwards compiled nothing; with
+it skipped, the same walk compiled 36 programs, one freeze lasting 9 s. To
+shorten entry the castle needs fewer distinct materials (each combination of
+material features and lighting is its own program), or the browser's own
+program cache, which makes repeat visits faster.
+
+The warm-up phase is as long as its 20 s cap: on the web it never finishes
+inside it. What was tried, entering the castle on a real GPU:
+
+| Warm-up | Entry | Walking afterwards |
+|---|---:|---|
+| All of it up front (main, kept) | 41.7-43.5 s | nothing compiled, no stalls |
+| None up front, one variant per frame during play | 23.8 s | three 2 s freezes |
+| Lit up front (30 s cap), unshaded during play | 52.9 s | a 100-180 ms hitch every second |
+| Same, drawn in the castle's own world | 57.7 s | as above |
+
+Engine overrides (`force_lambert_over_burley`, `force_vertex_shading`,
+`max_lights_per_object`) did not change which programs the web build compiles.
+Neither did dropping lighting-only features (normal maps, rim, clearcoat) from
+every lit material on the web: it folded 20 lit material variants into 17, yet
+entry still compiled the same 261 programs (44.9 s), so it was not kept.
+
+Main against this branch, same machine, fresh Chrome profile (a second visit
+reuses it):
+
+| | Hub | Art Castle entry |
+|---|---:|---:|
+| main, first visit | 55.4 s | 42.8 s |
+| this branch, first visit | 52.2 s | 41.8 s |
+| this branch, second visit | 17.5 s | 29.8 s |
+
+On the second visit everything but the warm-up gets faster (building the
+castle's first view: 18.8 to 5.8 s). The warm-up still links its ~180
+programs from scratch, about 20 s: Chrome keeps only the first hundred or so
+programs, and those are the first view's. It also freezes the page for 2-4 s
+at a time, so the bar moves in jumps.
+
+Common advice that does not apply here:
+
+- Exporting `*.shader_cache` files: Godot's shader cache is for the
+  Vulkan/D3D12/Metal renderers only, and WebGL cannot load precompiled
+  programs. The browser's own program cache is the equivalent, and already
+  works (a repeat visit entered in 31.6 s against 42.8 s).
+- GPUParticles to CPUParticles: castle entry compiles no particle programs.
+- A custom engine build with `disable_3d`: this is a 3D game, and a smaller
+  engine shrinks the download, not the set of shaders compiled.
+
+### Galaxy drawing on the web
+
+- Small decoration (under 4 m, not skinned) is drawn unshaded on the web
+  (`web_decor.gd`). Without it the walk compiled 35 lit programs, freezing for
+  up to 2.4 s.
+- Landscape is drawn at any distance; only the detail in a mixed cell is
+  distance-culled (`world_streaming_director.gd`). Nodes in
+  `streaming_always_drawn` (the Tree of Imagination) are never culled.
+- Animation only runs within 160 m of the player
+  (`art_castle_floating_world.gd`): spinning parts (the tree's clockwork),
+  every particle effect (the fountain's water), AnimationPlayers, the train's
+  mechanism, and scripts in the `animate_near_player` group (Mind Spark island
+  orbiters, collectibles, the warden's crown).
+
+For measuring on a real GPU, start Chrome with
+`--disable-backgrounding-occluded-windows --disable-renderer-backgrounding`:
+otherwise a Chrome window behind other windows stops drawing, and loads appear
+two or three times slower.
