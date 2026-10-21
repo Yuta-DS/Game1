@@ -29,14 +29,6 @@ echo "Importing project before generating Pack presets"
 "${godot_bin}" --headless --editor --path "${project_dir}" --import --quit \
 	> "${build_dir}/import.log" 2>&1
 
-echo "Preparing castle tree geometry"
-"${godot_bin}" --headless --path "${project_dir}" --script res://tools/bake_castle_tree.gd \
-	> "${build_dir}/castle-tree-bake.log" 2>&1
-grep -q "CASTLE TREE BAKE: PASS" "${build_dir}/castle-tree-bake.log" || {
-	cat "${build_dir}/castle-tree-bake.log" >&2
-	exit 1
-}
-
 # Same guard as with-web-export-plugins.sh: a leftover backup means a run was
 # killed mid-export, and copying over it would lose the real presets.
 if [[ -e "${backup}" ]]; then

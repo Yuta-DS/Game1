@@ -25,8 +25,6 @@ func is_market_cast_style() -> bool:
 
 
 func _ready() -> void:
-	if OS.has_feature("web") or OS.get_environment("ARTEA_TEST_RIGID_MILO") == "1":
-		print("MILO RIGID SKIN: ", preload("res://scripts/rigid_milo_skin.gd").build(self), " exact rigid parts")
 	# The speaking shapes are exported as ordinary rigged meshes. They start
 	# hidden everywhere; the live companion controller reveals them only while
 	# Milo is presenting dialogue.

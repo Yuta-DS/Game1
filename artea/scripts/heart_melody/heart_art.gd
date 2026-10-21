@@ -120,21 +120,11 @@ static func flower(parent: Node3D, pos: Vector3, colour: Color, radius := 1.0) -
 	root.position = pos
 	parent.add_child(root)
 	cone(root, Vector3(0, 0.6, 0), 0.16, 0.12, 1.2, Color("53876a"))
-	# Petals always move and change colour together. Keep the same polygons
-	# in one surface instead of five draws for every playable/meadow flower.
-	var petals := SurfaceTool.new()
-	petals.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in 5:
 		var angle := TAU * i / 5.0
 		var petal := cone(root, Vector3(sin(angle) * radius * 0.7, 1.2, cos(angle) * radius * 0.7), radius * 0.6, radius * 0.4, 0.28, colour, false, 5)
 		petal.rotation_degrees.z = sin(angle) * 16
 		petal.rotation_degrees.x = cos(angle) * 16
-		var pose := petal.transform
-		pose.origin.y -= 1.2
-		petals.append_from(petal.mesh, 0, pose)
-		petal.free()
-	# Preserve the existing y=1.2 petal anchor used by seed-colour previews.
-	mesh(root, petals.commit(), Vector3(0, 1.2, 0), colour)
 	cone(root, Vector3(0, 1.38, 0), radius * 0.42, radius * 0.35, 0.25, Color("f6d58a"))
 	return root
 

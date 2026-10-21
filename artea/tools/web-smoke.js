@@ -24,7 +24,6 @@
 //       [--heart-audio-only] (focused garden fountain audio and Hub round trip)
 //       [--profile-frames] (opt-in release telemetry and reversible A/B samples)
 //       [--profile-hub] (with --profile-frames: Hub diagnostics only)
-//       [--profile-rigid-milo] (with both above: compare the optimizer on an older build)
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
@@ -456,7 +455,7 @@ async function connect() {
 		// reaches last, before it can. The loading screen downloads its Pack
 		// itself, with progress, while the background downloads hold back.
 		const STORY = ['the Crown of Life story', 'res://scenes/viewfinder/crown_of_life_story.tscn'];
-		const story = args.includes('--profile-hub') || args.includes('--view-warmup-trial') ? null : await goTo(...STORY);
+		const story = args.includes('--profile-hub') ? null : await goTo(...STORY);
 		areas.push([STORY[0], story, story ? await goTo('the Hub', HUB) : null, 'not prefetched yet']);
 
 		// Standing in the Hub while the rest downloads, then a while after.
@@ -543,8 +542,6 @@ async function connect() {
 			say(`${label}: median ${result.frames.p50.toFixed(1)} ms; p95 ${result.frames.p95.toFixed(1)}; max ${result.frames.max.toFixed(1)}; draws ${result.draws.p50}`);
 		};
 		if (args.includes('--profile-frames')) {
-			await evaluate(`engine.copyToFS('/tmp/static_surface_batch.gd', new TextEncoder().encode(${JSON.stringify(fs.readFileSync(path.join(__dirname, '../scripts/static_surface_batch.gd'), 'utf8'))}).buffer)`);
-			await evaluate(`engine.copyToFS('/tmp/rigid_milo_skin.gd', new TextEncoder().encode(${JSON.stringify(fs.readFileSync(path.join(__dirname, '../scripts/rigid_milo_skin.gd'), 'utf8').replace('res://scripts/static_surface_batch.gd', '/tmp/static_surface_batch.gd'))}).buffer)`);
 			for (const name of ['frame_profile_bootstrap.gd', 'frame_profile_bootstrap.tscn', 'frame_profile_sampler.gd']) {
 				const source = fs.readFileSync(path.join(__dirname, 'qa', name), 'utf8').replace('res://tools/qa/frame_profile_bootstrap.gd', '/tmp/frame_profile_bootstrap.gd');
 				await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
@@ -552,17 +549,12 @@ async function connect() {
 			if (!await goTo('frame sampler bootstrap', '/tmp/frame_profile_bootstrap.tscn')) throw new Error('Frame sampler bootstrap failed');
 			await waitForLog(/FRAME SAMPLER READY/, 'frame sampler ready', 10000);
 			await goTo('the Hub', HUB);
-			if (args.includes('--view-warmup-trial')) {
-				for (const [name, source] of [['scene_view_warmup.gd', fs.readFileSync(path.join(__dirname, '../scripts/scene_view_warmup.gd'), 'utf8')], ['loading_scene_view_trial.gd', fs.readFileSync(path.join(__dirname, '../scripts/loading_scene.gd'), 'utf8').replace('res://scripts/scene_view_warmup.gd', '/tmp/scene_view_warmup.gd')]]) await evaluate(`engine.copyToFS(${JSON.stringify('/tmp/' + name)}, new TextEncoder().encode(${JSON.stringify(source)}).buffer)`);
-				await profile('install-view-loader', {view_loader:true}, 1);
-			}
 			const renderer = await evaluate(`(() => { const canvas = document.querySelector('canvas'); const gl = canvas.getContext('webgl2'); const ext = gl.getExtension('WEBGL_debug_renderer_info'); return {renderer: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER), vendor: ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR), width: canvas.width, height: canvas.height, attributes: gl.getContextAttributes()}; })()`);
 			fs.writeFileSync(path.join(outDir, 'renderer.json'), JSON.stringify(renderer, null, 2));
-			if (!args.includes('--profile-rigid-milo') && !args.includes('--view-warmup-trial')) for (const [suffix, options] of [['idle', {}], ['milo-portrait', {portrait:true}], ['render-off', {render_off:true}], ['scripts-off', {scripts_off:true}], ['no-scatter', {no_scatter:true}], ['no-shadows', {no_shadows:true}]]) await profile('hub-' + suffix, options);
+			for (const [suffix, options] of [['idle', {}], ['milo-portrait', {portrait:true}], ['render-off', {render_off:true}], ['scripts-off', {scripts_off:true}], ['no-scatter', {no_scatter:true}], ['no-shadows', {no_shadows:true}]]) await profile('hub-' + suffix, options);
 			if (args.includes('--profile-hub')) {
 				const samples = [['no-msaa', {msaa_3d:0}], ['no-lights', {no_lights:true}], ['animations-off', {animations_off:true}], ['hide-milo', {hide_names:['Milo_Animations2']}]];
-				const selected = args.includes('--profile-rigid-milo') ? [['idle', {}], ['milo-portrait-before', {portrait:true}], ['rigid-milo', {rigid_milo:true}], ['rigid-repeat', {}], ['milo-portrait-after', {portrait:true}]] : samples;
-				for (const [suffix, options] of selected) { await profile('hub-' + suffix, options); if (args.includes('--profile-rigid-milo')) await shot('profile-' + suffix); }
+				for (const [suffix, options] of samples) await profile('hub-' + suffix, options);
 				fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 				if (!keepOpen) await cdp(`/json/close/${targetId}`).catch(() => {});
 				await closeOwnChrome();
@@ -578,16 +570,8 @@ async function connect() {
 		if (castle) {
 			await sleep(3000);
 			castlePlayable = await movesWithW(await shot('05-art-castle'), '06-castle-moving', '07-castle-after-move');
-			const samples = args.includes('--view-warmup-trial') ? [['idle', {}], ['orbit', {orbit:true}], ['melody-idle', {at:'melody'}], ['melody-orbit', {at:'melody',orbit:true}]] : [['idle', {}], ['orbit', {orbit:true}], ['render-off', {render_off:true}], ['scripts-off', {scripts_off:true}], ['no-floating', {hide_names:['ArtCastleFloatingWorld']}], ['melody-idle', {at:'melody'}], ['melody-orbit', {at:'melody',orbit:true}], ['melody-render-off', {at:'melody',render_off:true}], ['melody-scripts-off', {at:'melody',scripts_off:true}]];
+			const samples = [['idle', {}], ['orbit', {orbit:true}], ['render-off', {render_off:true}], ['scripts-off', {scripts_off:true}], ['no-floating', {hide_names:['ArtCastleFloatingWorld']}], ['melody-idle', {at:'melody'}], ['melody-orbit', {at:'melody',orbit:true}], ['melody-render-off', {at:'melody',render_off:true}], ['melody-scripts-off', {at:'melody',scripts_off:true}]];
 			for (const [suffix, options] of samples) await profile('castle-' + suffix, options);
-		}
-		if (args.includes('--view-warmup-trial')) {
-			if (!castle || !await goTo('the Hub', HUB)) throw new Error('View warmup round trip failed');
-			fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
-			await cdp(`/json/close/${targetId}`).catch(() => {});
-			await closeOwnChrome();
-			console.log('RESULT: VIEW WARMUP TRIAL COMPLETE');
-			process.exit(0);
 		}
 		let musicCirclePlayable = !args.includes('--music-circle');
 		if (castle && args.includes('--music-circle')) {

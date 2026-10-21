@@ -405,5 +405,4 @@ text = "Upload to Art Gallery"
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1987357163]
 stream = ExtResource("15_hjdgo")
-playback_type = 1
 autoplay = true

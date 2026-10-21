@@ -35,7 +35,6 @@ extends SceneTree
 ## (painting_view.gd still returns to the first); they run the same
 ## art_gallery.gd and build the same galaxy, so they are castle entries too.
 const PACKS := {
-	"hub": ["res://scenes/New_Hub_World.tscn"],
 	"art_castle": [
 		"res://scenes/art_gallery_3d_inprogress.tscn",
 		"res://scenes/ArtGallery.tscn",
@@ -170,27 +169,6 @@ func _initialize() -> void:
 	for pack in result.packs:
 		result.packs[pack].files.sort()
 
-	# Only the start screen, autoloads and loader are needed before login. Keep
-	# runtime-discovered assets in a deferred common pack rather than deleting
-	# them: dynamic path construction still works once any world is entered.
-	var bootstrap_roots: Array = _project_setting_paths() + _pinned
-	# Native engine classes are registered before any deferred pack is mounted.
-	# Their descriptors and Web libraries must therefore be present at boot.
-	for path in shipped:
-		if path.ends_with(".gdextension"):
-			bootstrap_roots.append(path)
-	var bootstrap := _closure(bootstrap_roots, boundary)
-	var runtime: Array = []
-	for path in core:
-		if not bootstrap.has(path):
-			runtime.append(path)
-	if not runtime.is_empty():
-		runtime.sort()
-		for pack in result.packs:
-			result.packs[pack].requires.push_front("shared_runtime")
-		result.packs["shared_runtime"] = {"entries": [], "requires": [], "files": runtime}
-		for path in runtime:
-			core.erase(path)
 	var core_files: Array = core.keys()
 	core_files.sort()
 	result["core"] = core_files

@@ -1,7 +1,5 @@
 extends Node3D
 
-var _mesh_cache := preload("res://scripts/castle_mesh_cache.gd").new()
-
 # The Rainbow Galaxy Train follows one level closed Crown Line. The route runs
 # Gallery -> Mind -> Heart -> Creator -> Gallery without a terminal reversal.
 
@@ -3526,7 +3524,8 @@ func _add_segment_box(parent: Node3D, node_name: String, start: Vector3, finish:
 		return
 	var mesh_instance := MeshInstance3D.new()
 	mesh_instance.name = node_name
-	var mesh := _mesh_cache.box(Vector3(cross_section.x, cross_section.y, direction.length()))
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(cross_section.x, cross_section.y, direction.length())
 	mesh_instance.mesh = mesh
 	mesh_instance.position = (start + finish) * 0.5
 	mesh_instance.rotation.y = atan2(direction.x, direction.z)
@@ -3550,7 +3549,8 @@ func _add_box(parent: Node3D, node_name: String, position_value: Vector3, size: 
 		rotation_y: float = 0.0) -> void:
 	var instance := MeshInstance3D.new()
 	instance.name = node_name
-	var mesh := _mesh_cache.box(size)
+	var mesh := BoxMesh.new()
+	mesh.size = size
 	instance.mesh = mesh
 	instance.position = position_value
 	instance.rotation = Vector3(rotation_x, rotation_y, 0.0)
@@ -3586,7 +3586,11 @@ func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3,
 		segments: int = 32, rotation_value: Vector3 = Vector3.ZERO) -> void:
 	var instance := MeshInstance3D.new()
 	instance.name = node_name
-	var mesh := _mesh_cache.cylinder(radius, height, segments)
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = segments
 	instance.mesh = mesh
 	instance.position = position_value
 	instance.rotation_degrees = rotation_value

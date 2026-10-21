@@ -1,7 +1,5 @@
 extends Node3D
 
-var _mesh_cache := preload("res://scripts/castle_mesh_cache.gd").new()
-
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 const StreamingDirector := preload("res://scripts/world_streaming_director.gd")
 
@@ -2111,22 +2109,6 @@ func _add_tree_court_deck(bridge: Node3D, blender_asset: Node3D, start: Vector3,
 
 
 func _build_life_tree(parent: Node3D, center: Vector3) -> void:
-	if (OS.has_feature("web") or OS.get_environment("ARTEA_USE_BAKED_TREE") == "1") \
-			and ResourceLoader.exists("res://generated/castle_tree.scn"):
-		var prepared := load("res://generated/castle_tree.scn") as PackedScene
-		var tree := prepared.instantiate() as Node3D
-		tree.position = center + Vector3.UP * TREE_OF_LIFE_COURT_SURFACE_Y
-		parent.add_child(tree)
-		for node in tree.find_children("*", "Node3D", true, false):
-			if node.has_meta("castle_spin_seconds"):
-				_spin_forever(node, node.get_meta("castle_spin_seconds"), node.get_meta("castle_spin_axis"))
-			if node.get_meta("castle_animated_torus", false):
-				_animated_nodes.append(node)
-		_tree_christmas_melody = tree.get_node("ChristmasTreeMelody3D")
-		_tree_christmas_bells = tree.get_node("ChristmasTreeBells3D")
-		_tree_christmas_melody.play()
-		_tree_christmas_bells.play()
-		return
 	var manifest := _load_tree_of_life_manifest()
 	var source := manifest.get("source", {}) as Dictionary
 	var game_export := manifest.get("game_export", {}) as Dictionary
@@ -4895,9 +4877,6 @@ func _add_gear(parent: Node3D, gear_name: String, offset: Vector3, radius: float
 
 
 func _spin_forever(pivot: Node3D, seconds: float, axis: String = "y") -> void:
-	# Preserve the runtime animation when the static tree is prepared offline.
-	pivot.set_meta("castle_spin_seconds", seconds)
-	pivot.set_meta("castle_spin_axis", axis)
 	# A looping tween rather than _process: the rotation keeps running without
 	# this world script paying a per-frame callback for decoration.
 	#
@@ -6265,7 +6244,8 @@ func _add_box(parent: Node3D, node_name: String, position: Vector3, size: Vector
 		friction: float = 0.86, bounce: float = 0.0) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
 	instance.name = node_name
-	var mesh := _mesh_cache.box(size)
+	var mesh := BoxMesh.new()
+	mesh.size = size
 	instance.mesh = mesh
 	instance.position = position
 	instance.rotation.y = yaw
@@ -6297,7 +6277,11 @@ func _add_cylinder(parent: Node3D, node_name: String, position: Vector3,
 		segments: int) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
 	instance.name = node_name
-	var mesh := _mesh_cache.cylinder(radius, height, segments)
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = segments
 	instance.mesh = mesh
 	instance.position = position
 	instance.material_override = material
@@ -6331,7 +6315,6 @@ func _add_torus(parent: Node3D, node_name: String, position: Vector3,
 	instance.material_override = material
 	parent.add_child(instance)
 	_animated_nodes.append(instance)
-	instance.set_meta("castle_animated_torus", true)
 	return instance
 
 
@@ -6339,7 +6322,11 @@ func _add_sphere(parent: Node3D, node_name: String, position: Vector3,
 		scale_value: Vector3, material: Material) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
 	instance.name = node_name
-	var mesh := _mesh_cache.sphere()
+	var mesh := SphereMesh.new()
+	mesh.radius = 1.0
+	mesh.height = 2.0
+	mesh.radial_segments = 8
+	mesh.rings = 4
 	instance.mesh = mesh
 	instance.position = position
 	instance.scale = scale_value

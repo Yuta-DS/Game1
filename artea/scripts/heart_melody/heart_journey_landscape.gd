@@ -1,7 +1,6 @@
 extends Node3D
 ## Bounded static scenery, healing crossings and saved-progress gates.
 const Art = preload("res://scripts/heart_melody/heart_art.gd")
-const Batch = preload("res://scripts/static_surface_batch.gd")
 const Catalog = preload("res://scripts/heart_melody/heart_melody_chapter_catalog.gd")
 var world: Node3D
 var gates: Array[Dictionary] = []
@@ -51,7 +50,6 @@ func _ready() -> void:
 				Art.cone(scenery, point + Vector3.UP * 0.6, 0.18, 0.1, 0.2, Color("edc78d"), false, 5)
 			for i in 3:
 				Art.cone(scenery, Vector3(x - 4 + i, 0.35, z + side * 2), 0.6, 0.35, 0.7, Color("a5aea1"), false, 5)
-	Batch.build(scenery)
 
 func _tree(parent: Node3D, at: Vector3, variant: int) -> void:
 	Art.cone(parent, at + Vector3.UP * 2.7, 0.55, 0.3, 5.4, Color("806554"), false, 7)

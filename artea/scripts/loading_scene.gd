@@ -1,7 +1,6 @@
 extends Control
 
 const ShaderWarmup := preload("res://scripts/shader_warmup.gd")
-const SceneViewWarmup := preload("res://scripts/scene_view_warmup.gd")
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 @export var next_scene_path: String = ""
@@ -20,10 +19,6 @@ var _audio_was_muted := false
 # Off the web: the new scene's sound players, held on a muted bus until this
 # screen goes, mapped to the bus each one belongs on.
 var _held_audio := {}
-var _main_viewport: Viewport
-var _restore_3d := false
-var _previous_disable_3d := false
-var _load_started_ms := 0
 const HOLD_BUS := &"LoadingHold"
 # The gallery's track as a plain file (not imported), so its bytes can be
 # handed to the web page, which plays it itself. Listed in the Web preset's
@@ -48,7 +43,6 @@ const SETTLE_SLICE := 0.1
 # cost ~4.4 s of compilation between them), so it gets its own slice of the bar
 # rather than being hidden inside the settle phase.
 const WARMUP_TIMEOUT_MS := 20000
-const WEB_WARMUP_TIMEOUT_MS := 60000
 
 # How the screen decides the new scene is actually drawable (see
 # _hold_until_first_frames_settle).
@@ -76,15 +70,6 @@ const PACK_SLICE := LOAD_SLICE * 0.5
 const HUB_SCENE := "res://scenes/New_Hub_World.tscn"
 
 func _ready():
-	_load_started_ms = Time.get_ticks_msec()
-	# The opaque loader already covers this viewport. Drawing the full world
-	# underneath competes with the tiny shader-warmup viewport on every frame.
-	# Keep physics, scripts, cameras and authored visibility unchanged.
-	if OS.has_feature("web"):
-		_main_viewport = get_viewport()
-		_previous_disable_3d = _main_viewport.disable_3d
-		_main_viewport.disable_3d = true
-		_restore_3d = true
 	# Milo and MusicManager hold off until this screen is gone.
 	add_to_group("loading_screen")
 	# The new scene's own sounds (ocean ambience, gallery music) start the
@@ -115,7 +100,7 @@ func _ready():
 		var music: AudioStreamPlayer2D = MusicManager.player2
 		# A load started while the last one's music is still fading out
 		# takes the music back instead of letting the fade stop it.
-		var fade = music.get_meta("loading_fade") if music.has_meta("loading_fade") else null
+		var fade = music.get_meta("loading_fade", null)
 		if fade is Tween and fade.is_valid():
 			fade.kill()
 			music.volume_db = music.get_meta("loading_fade_volume")
@@ -151,7 +136,6 @@ func _start_load_once_visible() -> void:
 			return
 	if not OS.has_feature("threads"):
 		await _load_dependencies_in_slices()
-	_log_load_phase("resources")
 	ResourceLoader.load_threaded_request(next_scene_path)
 	loading_started = true
 
@@ -287,7 +271,6 @@ func _process(_delta):
 # The scene being left is already gone, so this screen is all the player has:
 # say so on it rather than leaving the bar parked as if still loading.
 func _fail(reason: String) -> void:
-	_restore_world_rendering()
 	_hide_web_overlay()
 	SceneLoader.report_failure(get_tree(), next_scene_path, reason)
 	progress_label.text = "Couldn't load this area. Reload the game to try again."
@@ -364,10 +347,7 @@ func _wait_for_scatter_then_finish() -> void:
 				break
 			await get_tree().process_frame
 
-	_log_load_phase("construction")
 	await _warm_shaders()
-	_log_load_phase("warmup")
-	_restore_world_rendering()
 	await _hold_until_first_frames_settle()
 	# Out of the group first: MusicManager skips while a loading screen is up.
 	# Starting the track here rather than at the scene swap means it begins
@@ -393,27 +373,15 @@ func _wait_for_scatter_then_finish() -> void:
 	# waits for this before checking the new scene is playable.
 	print("[ARTEA] loading screen done: ", next_scene_path)
 	print("ARTEA WORLD READY: ", next_scene_path)
-	_log_load_phase("ready")
 	queue_free()
 
 
 func _exit_tree() -> void:
-	_restore_world_rendering()
 	if OS.has_feature("web"):
 		AudioServer.set_bus_mute(0, _audio_was_muted)
 		_hide_web_overlay()
 	else:
 		_release_scene_audio()
-
-
-func _restore_world_rendering() -> void:
-	if _restore_3d and is_instance_valid(_main_viewport):
-		_main_viewport.disable_3d = _previous_disable_3d
-	_restore_3d = false
-
-
-func _log_load_phase(phase: String) -> void:
-	print("LOAD TIMING ", next_scene_path, " ", phase, " ", Time.get_ticks_msec() - _load_started_ms, " ms")
 
 
 # Moving the player to a muted bus rather than pausing it: some (the train,
@@ -519,20 +487,12 @@ func _warm_shaders() -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
-	if OS.has_feature("web") and scene.find_child("ArtCastleFloatingWorld", true, false) != null:
-		_report(LOAD_SLICE + SCATTER_SLICE, "Preparing smooth exploration")
-		_restore_world_rendering()
-		var views: int = await SceneViewWarmup.run(scene, func(fraction: float):
-			_report(LOAD_SLICE + SCATTER_SLICE + WARMUP_SLICE * fraction, "Preparing smooth exploration"))
-		if views > 0: return
-	# Include hidden and distant cells, including the castle. Preparing only
-	# the arrival view leaves synchronous compiles for the first camera turn.
 	# Benchmark escape hatch (tools/bench_castle_cold.gd), so the before/after
 	# can be measured in the same build rather than by reverting the change.
 	if Engine.has_meta("artea_skip_shader_warmup"):
 		return
 	_report(LOAD_SLICE + SCATTER_SLICE, "Compiling shaders")
-	var materials := ShaderWarmup.unwarmed(ShaderWarmup.collect(scene))
+	var materials := ShaderWarmup.collect(scene)
 	if materials.is_empty():
 		return
 	var rig := ShaderWarmup.build_rig(materials)
@@ -545,7 +505,7 @@ func _warm_shaders() -> void:
 	# a backstop only: a driver that compiles unusually slowly hands over to
 	# gameplay rather than stranding the player here.
 	var cursor := 0
-	var deadline := Time.get_ticks_msec() + (WEB_WARMUP_TIMEOUT_MS if OS.has_feature("web") else WARMUP_TIMEOUT_MS)
+	var deadline := Time.get_ticks_msec() + WARMUP_TIMEOUT_MS
 	while cursor >= 0 and Time.get_ticks_msec() < deadline:
 		cursor = ShaderWarmup.reveal_next(rig, cursor)
 		if cursor < 0:
@@ -556,9 +516,6 @@ func _warm_shaders() -> void:
 		await get_tree().process_frame
 	# One more frame so the final batch is actually drawn before the rig goes.
 	await get_tree().process_frame
-	var completed: int = materials.size() if cursor < 0 else int(cursor / (2 if ShaderWarmup.WARM_INSTANCED else 1))
-	ShaderWarmup.remember_warmed(materials, completed)
-	print("SHADER WARMUP ", next_scene_path, " ", completed, "/", materials.size(), " variants")
 	rig.queue_free()
 
 

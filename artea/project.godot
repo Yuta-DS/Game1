@@ -33,7 +33,6 @@ general/3d_panning_strength=1.0
 [autoload]
 
 Firebase="*res://addons/godot-firebase/firebase/firebase.tscn"
-WebAudioPolicy="*res://scripts/web_audio_policy.gd"
 MusicManager="*res://scenes/music_manager.tscn"
 Global="*res://scripts/Global.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"

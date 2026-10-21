@@ -20,7 +20,6 @@ var _pitch := 0.0
 var _scripts := {}
 var _mesh_groups := {}
 var _portrait: Camera3D
-var _held_loader: PackedScene
 
 func _ready() -> void:
 	set_process(false)
@@ -45,23 +44,6 @@ func _start(label: String, seconds: float, options: Dictionary) -> void:
 		_yaw = _camera.get("_yaw")
 		_pitch = _camera.get("_pitch")
 	var scene := get_tree().current_scene
-	if options.get("view_loader", false):
-		var instance := (load("res://scenes/loading_scene.tscn") as PackedScene).instantiate()
-		instance.set_script(load("/tmp/loading_scene_view_trial.gd"))
-		instance.scene_file_path = ""
-		for child in instance.find_children("*", "", true, false):
-			child.scene_file_path = ""
-			child.owner = instance
-		_held_loader = PackedScene.new()
-		var packed := _held_loader.pack(instance)
-		if packed != OK:
-			instance.free()
-			push_error("Could not prepare the opt-in loader test: " + str(packed))
-			_label = ""
-			return
-		instance.free()
-		_held_loader.take_over_path("res://scenes/loading_scene.tscn")
-		print("VIEW LOADER TRIAL INSTALLED")
 	if options.get("portrait", false):
 		var milo := scene.get_node("Milo_Animations2") as Node3D
 		_portrait = Camera3D.new()
@@ -69,13 +51,6 @@ func _start(label: String, seconds: float, options: Dictionary) -> void:
 		_portrait.global_position = milo.global_position + milo.global_basis.z * 3.0 + milo.global_basis.x * 1.2 + Vector3.UP * 1.6
 		_portrait.look_at(milo.global_position + Vector3.UP * 1.2)
 		_portrait.make_current()
-	if options.get("rigid_milo", false):
-		var model := scene.get_node("Milo_Animations2/Model") as Node3D
-		print("MILO RIGID QA: ", (load("/tmp/rigid_milo_skin.gd") as GDScript).build(model))
-		var owner := scene.get_node("Milo_Animations2")
-		var origins: Dictionary = owner.get("_secondary_part_origins")
-		for part in origins:
-			if part.has_meta("rigid_skin_bone"): origins[part] = part.position
 	for property in ["scaling_3d_scale", "msaa_3d"]:
 		if options.has(property):
 			_saved.append({"node": get_viewport(), "property": property, "value": get_viewport().get(property)})

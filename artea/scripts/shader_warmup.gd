@@ -48,25 +48,6 @@ const WARM_INSTANCED := true
 ## grouping can never turn the loading screen into a longer wait than the
 ## stutter it is there to remove.
 const MAX_VARIANTS := 600
-const CACHE_META := &"artea_warmed_shader_variants"
-
-
-## RenderingServer's shader programs survive scene changes. Keep only keys,
-## never scene/material references, and only record variants actually drawn.
-static func unwarmed(materials: Array[Material]) -> Array[Material]:
-	var cache: Dictionary = Engine.get_meta(CACHE_META, {})
-	var pending: Array[Material] = []
-	for material in materials:
-		if not cache.has(_variant_key(material)):
-			pending.append(material)
-	return pending
-
-
-static func remember_warmed(materials: Array[Material], count: int) -> void:
-	var cache: Dictionary = Engine.get_meta(CACHE_META, {})
-	for index in mini(count, materials.size()):
-		cache[_variant_key(materials[index])] = true
-	Engine.set_meta(CACHE_META, cache)
 
 
 ## Walk `scene` and return one representative Material per distinct shader
@@ -138,7 +119,7 @@ static func _note(material: Material, by_key: Dictionary) -> void:
 static func _variant_key(material: Material) -> String:
 	if material is ShaderMaterial:
 		var shader := (material as ShaderMaterial).shader
-		return "shader:%s" % (shader.code.sha256_text() if shader != null else "none")
+		return "shader:%d" % (shader.get_instance_id() if shader != null else 0)
 	if material is BaseMaterial3D:
 		var base := material as BaseMaterial3D
 		var features := 0
