@@ -115,9 +115,12 @@ func _set_embedded_active(active: bool) -> void:
 		player.blocking_enabled = get_node("/root/JourneyState").has_treasure("harmony_jewel")
 		# Keep the shared orbit camera and its current heading, pitch and zoom.
 		# Suspend only the competing local guides/story UI, preserving their state.
+		# MiloFallRescue stays live: a fall off the island's edge leaves the
+		# Heart bounds before _recover() runs, and Milo needs fresh island
+		# ground to carry the player back to.
 		var scene := get_tree().current_scene
 		if scene != null:
-			for node_name in ["MiloFallRescue", "ConnectedKingdomStory", "ConnectedStoryHUD", "CrownLineHUD", "CombatHelpHUD"]:
+			for node_name in ["ConnectedKingdomStory", "ConnectedStoryHUD", "CrownLineHUD", "CombatHelpHUD"]:
 				var node := scene.find_child(node_name, true, false)
 				if node == null: continue
 				var record := {"node": node, "mode": node.process_mode}

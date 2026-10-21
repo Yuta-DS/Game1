@@ -58,7 +58,10 @@ func _generate() -> void:
 			if cell.x == 14 and cell.y <= 7: continue
 			passages[cell] = []
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 26032026
+	# Chosen so the fountain is a real search from both ways in: 38 cells from
+	# the entrance and 28 from the Music Circle exit. The old seed ran almost
+	# straight to it (11 and 4).
+	rng.seed = 1199
 	var stack: Array[Vector2i] = [ENTRANCE]
 	var visited := {ENTRANCE: true}
 	while not stack.is_empty():
