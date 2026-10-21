@@ -35,3 +35,21 @@ Evidence: `work/river-song-route-tests.log`.
 
 The recent loading/audio/rendering rollback and fountain-only garden music are
 preserved. Vercel login and deployment remain skipped.
+
+## Final Web verification
+
+Release `57d0e3181fa70633` is served at the existing local preview address,
+`http://127.0.0.1:8908/`. All 95 file/hash/MIME/header checks passed. The focused
+browser run completed the actual organ, harp and Call Bell controls, checked the
+gate's next-task feedback after each step, confirmed the gate collider opens,
+and returned to the Hub (`RESULT: RIVER SONG ROUTE PLAYABLE`). It also measured
+the organ confirmation button inside the visible control area and captured its
+layout. Evidence: `work/river-song-route-final-browser-run.log`,
+`work/river-song-route-final-browser/`, and
+`work/river-song-route-final-hosting-verify.log`.
+
+The final confirmation placement also passed the complete-chapter and menu
+regressions (`work/river-song-confirmation-tests.log`). Loader, shader warmup,
+pack layout, project configuration, MusicManager and drawing music remain byte
+identical to the performance rollback. This tests the connected route; it does
+not inspect or reset the player's personal browser save.
