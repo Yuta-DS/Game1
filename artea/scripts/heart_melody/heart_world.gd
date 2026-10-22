@@ -429,15 +429,25 @@ func _build_hud() -> void:
 	panel.custom_minimum_size = Vector2.ZERO
 	layer.add_child(panel)
 	UI.decorate(panel)
+	var menu := VBoxContainer.new()
+	panel.add_child(menu)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2.ZERO
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.follow_focus = true
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
+	menu.add_child(scroll)
 	options = VBoxContainer.new()
 	options.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	options.add_theme_constant_override("separation", 8)
 	scroll.add_child(options)
+	var exit_menu := Button.new()
+	exit_menu.name = "ExitMenu"
+	exit_menu.text = "Exit menu · Esc"
+	exit_menu.custom_minimum_size.y = 52
+	exit_menu.add_theme_font_size_override("font_size", 22)
+	exit_menu.pressed.connect(_close)
+	menu.add_child(exit_menu)
 	panel.hide()
 	if DisplayServer.is_touchscreen_available():
 		for entry in [["Left", "move_left", Vector2(24, -230)], ["Up", "move_forward", Vector2(128, -334)], ["Down", "move_backward", Vector2(128, -230)], ["Right", "move_right", Vector2(232, -230)], ["Strike", "attack", Vector2(350, -230)]]:
@@ -595,7 +605,7 @@ func _open(title: String, body: String) -> void:
 	options.add_child(heading)
 	message = Label.new()
 	message.text = body
-	message.custom_minimum_size.x = 680
+	message.custom_minimum_size.x = 0
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message.add_theme_font_size_override("font_size", 28 if _large_text else 22)
 	options.add_child(message)
@@ -630,7 +640,12 @@ func _queue_fit() -> void:
 func _fit_panel() -> void:
 	_fit_queued = false
 	if not modal_open or _view_garden: return
-	var height := clampf(options.get_combined_minimum_size().y + 40, 180, minf(660, get_viewport().get_visible_rect().size.y - 100))
+	var viewport_size := get_viewport().get_visible_rect().size
+	var width := minf(760, viewport_size.x - 48)
+	panel.offset_left = -width * 0.5
+	panel.offset_right = width * 0.5
+	panel.size.x = width
+	var height := clampf(options.get_combined_minimum_size().y + 100, 180, minf(720, viewport_size.y - 64))
 	panel.offset_top = -height * 0.5
 	panel.offset_bottom = height * 0.5
 	panel.size.y = height
@@ -711,7 +726,8 @@ func _planter(index: int) -> void:
 	select.selected = int(progress.data.planters.get(str(index), 6))
 	preview_choice = select.selected
 	select.item_selected.connect(func(value: int): preview_choice = value)
-	select.custom_minimum_size = Vector2(650, 52)
+	select.custom_minimum_size.y = 52
+	select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	select.add_theme_font_size_override("font_size", 27 if _large_text else 21)
 	row.add_child(select)
 	select.grab_focus()
