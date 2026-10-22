@@ -68,19 +68,8 @@ func _tree(parent: Node3D, at: Vector3, variant: int) -> void:
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 func _water(at: Vector3, span: Vector2) -> void:
-	var water := Art.box(self, at, Vector3(span.x, 0.16, span.y), Color("69bec4"))
-	water.name = "HealingRiverWater"
-	# Opaque water and a few ripple rings keep Web fill cost predictable.
-	for side in [-1, 1]:
-		Art.box(self, at + Vector3(0, -0.25, side * span.y * 0.5), Vector3(span.x + 1, 0.5, 0.8), Color("a9bdad"))
-	for i in 3:
-		var ripple := TorusMesh.new()
-		ripple.inner_radius = 0.8 + i * 1.1
-		ripple.outer_radius = 0.88 + i * 1.1
-		ripple.rings = 16
-		ripple.ring_segments = 6
-		var item := Art.mesh(self, ripple, at + Vector3(0, 0.14, span.y * 0.3), Color("bce8d8"))
-		item.scale.y = 0.1
+	# The lake beneath the islands is the water now; only its healing mist,
+	# reaching up to the crossings above, is kept here.
 	var area := Area3D.new()
 	area.name = "HealingRiverMist"
 	area.position = at + Vector3.UP * 2.2

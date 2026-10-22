@@ -5,6 +5,9 @@ const Enemy = preload("res://scripts/heart_melody/heart_enemy.gd")
 const NOTES := [2, 0, 1]
 const SYMBOLS := ["Leaf", "Droplet", "Sun"]
 const GROVE := Vector3(322, 1, 8)
+## The Rain Boat waits on the water just beyond each bank's fence.
+const NEAR_DOCK := 189.0
+const FAR_DOCK := 215.0
 var world: Node3D
 var channels: Array[Node3D] = []
 var bulbs: Array[Node3D] = []
@@ -20,13 +23,15 @@ var _fighting := false
 
 func _ready() -> void:
 	world = get_parent()
-	_land(Vector3(146, 0, 8), Vector3(76, 2, 58))
-	_land(Vector3(244, 0, 8), Vector3(48, 2, 44))
-	_land(Vector3(327, 0, 8), Vector3(54, 2, 58))
-	Art.box(self, Vector3(106, -0.1, 8), Vector3(28, 0.2, 6), Color("bdac90"), true)
-	for z in [4.7, 11.3]: Art.box(self, Vector3(106, 0.85, z), Vector3(26, 1.6, 0.4), Color("816e5a"), true)
+	# Every bank is fenced all round, open only where a bridge meets it; the
+	# Peace Garden runs on into the Harmony valley, so its far end stays open.
+	_land(Vector3(146, 0, 8), Vector3(76, 2, 58), {"x-": [Vector2(8, Art.CROSSING_WIDTH)], "x+": [Vector2(-8, ROOT_WALK_WIDTH)]})
+	_land(Vector3(244, 0, 8), Vector3(48, 2, 44), {"x-": [Vector2(-8, ROOT_WALK_WIDTH)], "x+": [Vector2(8, CHIME_WIDTH)]})
+	_land(Vector3(327, 0, 8), Vector3(54, 2, 58), {"x-": [Vector2(8, CHIME_WIDTH)], "x+": null}, 346.0)
+	# Decks stand a few centimetres proud of the banks they meet: level with
+	# the turf, overlapping ends flickered (z-fighting) as the camera moved.
+	Art.crossing(self, 92, 108, 8)
 	Art.banner(self, "WATERFALL ORGAN\nRestore the river's chord", Vector3(146, 10, -12), 32)
-	Art.box(self, Vector3(146, 0.06, -9), Vector3(58, 0.1, 19), Color("74b9c4"))
 	for index in 3:
 		var x := 126.0 + index * 17.0
 		Art.cone(self, Vector3(x, 6 + index, -15), 2, 1.7, 12 + index * 2, Color("789d83"), true)
@@ -38,12 +43,9 @@ func _ready() -> void:
 		bulbs.append(Art.flower(self, pos, Color("755b82"), 1.9))
 		world._object("river_bulb", index, pos + Vector3(0, 0, -3), "Release Hush Vine bulb %d" % (index + 1))
 	for pos in [Vector3(116,0,-17), Vector3(174,0,-17), Vector3(234,0,-10), Vector3(342,0,-13)]: Art.tree(self, pos, 1)
-	Art.box(self, Vector3(202, -3, 8), Vector3(36, 0.2, 44), Color("66aeba"))
 	# A permanent flowering root walk joins both river banks. The Rain Boat stays
 	# as a playful musical activity and shortcut, not the only route between land.
-	Art.box(self, Vector3(202, 0.0, -8), Vector3(40, 0.35, 5.5), Color("b89d72"), true)
-	for z in [-11.0, -5.0]:
-		Art.box(self, Vector3(202, 1.0, z), Vector3(40, 1.4, 0.45), Color("75684f"), true)
+	Art.crossing(self, 184, 220, -8, ROOT_WALK_WIDTH)
 	for x in [187.0, 195.0, 203.0, 211.0, 219.0]:
 		Art.flower(self, Vector3(x, 0.1, -4.4), Color("e6b4c8") if int(x) % 2 else Color("eed17f"), 0.65)
 	for x in [179, 225]:
@@ -55,7 +57,7 @@ func _ready() -> void:
 	boat = Node3D.new()
 	boat.name = "RainBoat"
 	add_child(boat)
-	boat.position = Vector3(183, 0.1, 8)
+	boat.position = Vector3(NEAR_DOCK, 0.1, 8)
 	Art.box(boat, Vector3.ZERO, Vector3(8, 0.4, 6), Color("96764f"), true)
 	for z in [-2.8, 2.8]: Art.box(boat, Vector3(0, 0.7, z), Vector3(8, 1, 0.3), Color("799d72"), true)
 	for x in [-3, 3]: Art.cone(boat, Vector3(x, 2, 2.3), 0.2, 0.2, 4, Color("816e5a"))
@@ -70,8 +72,9 @@ func _ready() -> void:
 		deck.name = "ChimeBridge%d" % (index + 1)
 		add_child(deck)
 		decks.append(deck)
-		Art.box(deck, Vector3(x + 8, -0.1, 8), Vector3(12, 0.2, 8), Color("bdac90"), true)
-		for z in [3.8, 12.2]: Art.box(deck, Vector3(x + 8, 0.8, z), Vector3(12, 1.5, 0.4), Color("816e5a"), true)
+		# Three sections span exactly from the Bell Grove bank to the Peace Garden.
+		var span := (300.0 - 268.0) / 3.0
+		Art.crossing(deck, 268.0 + index * span, 268.0 + (index + 1) * span, 8, CHIME_WIDTH)
 	world._object("river_warning", 0, Vector3(298, 1, 8), "Read the warning bells")
 	Art.banner(self, "WARNING BELLS\nFollow the quiet gaps", Vector3(301, 7, 8), 28)
 	Art.banner(self, "PEACE GARDEN\nA safe place to listen", Vector3(322, 6, -12), 30)
@@ -80,11 +83,17 @@ func _ready() -> void:
 	world._gate(self, Vector3(350, 0, 8), "Harmony Stage · Shared Song")
 	refresh()
 
-func _land(at: Vector3, size: Vector3) -> void:
+const ROOT_WALK_WIDTH := 5.5
+const CHIME_WIDTH := 8.0
+
+# A rectangular bank with its fence. `fence_to_x` ends the long sides early
+# where the bank runs on into the next platform.
+func _land(at: Vector3, size: Vector3, sides: Dictionary, fence_to_x := INF) -> void:
 	Art.box(self, at - Vector3.UP * size.y / 2, size, Color("8fab88"), true)
 	Art.cone(self, at - Vector3.UP * 12, size.x * 0.35, size.x * 0.48, 22, Color("9f9982"))
-	# Protect the long banks; docks and bridge entrances remain open at either end.
-	for side in [-1, 1]: Art.box(self, at + Vector3(0, 0.8, side * size.z / 2), Vector3(size.x, 1.6, 0.5), Color("816e5a"), true)
+	var low := Vector2(at.x - size.x / 2, at.z - size.z / 2)
+	var high := Vector2(minf(at.x + size.x / 2, fence_to_x), at.z + size.z / 2)
+	Art.rail_rect(self, low, high, sides)
 
 func _show_solid(node: Node3D, enabled: bool) -> void:
 	node.visible = enabled
@@ -98,7 +107,6 @@ func refresh() -> void:
 		# Keep essential terrain connected. Each completed chime raises its bridge
 		# to full visual strength instead of spawning a previously missing floor.
 		_show_solid(decks[index], true)
-		decks[index].scale = Vector3.ONE if saved.chimes.has(index) else Vector3(1.0, 0.75, 1.0)
 	flower.scale = Vector3.ONE * 0.7
 	if saved.grove:
 		for index in 2:
@@ -137,7 +145,7 @@ func interact(kind: String, index: int) -> void:
 				return
 			_far_dock = index == 1
 			world.note(1, 0.18)
-			boat.position = Vector3(221 if _far_dock else 183, 0.1, 8)
+			boat.position = Vector3(FAR_DOCK if _far_dock else NEAR_DOCK, 0.1, 8)
 			world._open("Rain Boat", "The boat will wait here. Board only when you are ready. You can return from the other dock at any time.")
 			world._button("Board and sail", begin_ride)
 			world._button("Stay on shore", world._close)
@@ -169,7 +177,7 @@ func begin_ride() -> void:
 	world.player.set_input_enabled(false)
 	_ride_time = 0
 	_departure = boat.position
-	_destination = Vector3(183 if _far_dock else 221, 0.1, 8)
+	_destination = Vector3(NEAR_DOCK if _far_dock else FAR_DOCK, 0.1, 8)
 
 func tick(delta: float) -> void:
 	if riding:

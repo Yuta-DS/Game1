@@ -312,20 +312,6 @@ surface_material_override/0 = ExtResource("18_rye7r")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1917426506]
 
-[node name="RatingUI" type="PanelContainer" parent="CanvasLayer" unique_id=1058555852]
-custom_minimum_size = Vector2(-200, -150)
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -855.0
-offset_top = -1112.0
-offset_right = -455.0
-offset_bottom = -992.0
-grow_horizontal = 2
-grow_vertical = 0
-
 [node name="RatingPanel" type="Panel" parent="CanvasLayer" unique_id=646990229]
 anchors_preset = 8
 anchor_left = 0.5

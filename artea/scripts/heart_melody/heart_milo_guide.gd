@@ -65,8 +65,9 @@ func station_approach() -> bool:
 		var court_point := circle.to_local(world.player.global_position)
 		if absf(court_point.y) < 24.0 and Vector2(court_point.x, court_point.z).length() < 455.0:
 			return true
-	for segment in [[connection.WALK_START, connection.WALK_TURN], [connection.WALK_TURN, connection.WALK_FINISH]]:
-		if point.distance_to(Geometry3D.get_closest_point_to_segment(point, segment[0], segment[1])) < 24: return true
+	var walk: PackedVector3Array = connection.walk_points
+	for i in walk.size() - 1:
+		if point.distance_to(Geometry3D.get_closest_point_to_segment(point, walk[i], walk[i + 1])) < 24: return true
 	return false
 
 func tick(delta: float) -> void:
@@ -122,8 +123,8 @@ func play_line(id: String) -> bool:
 	heard[id] = true
 	_duration = stream.get_length()
 	_prepare_pages(str(LINES.data.lines[id]))
+	# Milo is heard, not captioned on screen: the transcript card stays hidden.
 	caption.text = _pages[0]
-	panel.show()
 	voice.stream = stream
 	voice.play()
 	_remaining = stream.get_length()

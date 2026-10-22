@@ -9,7 +9,9 @@ const PlayerScene = preload("res://scenes/player_3d.tscn")
 @export var embedded_in_overworld := false
 var overworld_player: CharacterBody3D
 var embedded_active := false
-var _introduced := false
+## Positional sound is heard from the player rather than from the orbiting
+## camera, turned with the view so left and right still match the screen.
+var listener: AudioListener3D
 var _previous_camera: Camera3D
 var _previous_player_camera: Camera3D
 var _previous_speed := 10.0
@@ -75,6 +77,10 @@ func _ready() -> void:
 	musical_garden = MusicalGarden.new()
 	add_child(musical_garden)
 	_build_player()
+	listener = AudioListener3D.new()
+	listener.name = "PlayerEarListener"
+	add_child(listener)
+	if not embedded_in_overworld: listener.make_current()
 	_build_hud()
 	chapter_world = preload("res://scripts/heart_melody/heart_chapter_world.gd").new()
 	add_child(chapter_world)
@@ -94,7 +100,7 @@ func _ready() -> void:
 		get_node("HeartHUD").hide()
 		for layer in soundscape.layers: layer.stream_paused = true
 	else:
-		if not test_mode: _intro()
+		# The welcome menu waits to be asked for at Milo and the Guardian.
 		if not progress.recovery_message.is_empty(): _notice(progress.recovery_message)
 
 func player_local_position() -> Vector3:
@@ -134,12 +140,11 @@ func _set_embedded_active(active: bool) -> void:
 					node.hide()
 				node.process_mode = Node.PROCESS_MODE_DISABLED
 				_suspended_nodes.append(record)
-		if not _introduced and not test_mode:
-			_introduced = true
-			_intro()
+		listener.make_current()
 		if not progress.recovery_message.is_empty(): _notice(progress.recovery_message)
 	else:
 		if modal_open: _close()
+		listener.clear_current()
 		audio.stop()
 		progress.commit()
 		player.speed = _previous_speed
@@ -176,22 +181,19 @@ func _build_environment() -> void:
 	recovery_shape.shape = recovery_box
 	recovery.add_child(recovery_shape)
 	island.add_child(recovery)
+	_build_lake(island)
 	recovery.body_entered.connect(func(body):
 		# The station garden walk passes through this volume; walking or jumping on it is not a fall.
 		if body == player and not player.is_on_floor() and not player.test_move(player.global_transform, Vector3.DOWN * 6.0) 				and (not embedded_in_overworld or embedded_active): call_deferred("_recover")
 	)
 
-	# Broad connected ground; paths sit flush above it and require no jumps.
-	for segment in [[Vector3(-70, 0.04, 12), Vector3(-35, 0.04, 12)], [Vector3(-35, 0.04, 12), Vector3(5, 0.04, 8)], [Vector3(5, 0.04, 8), Vector3(42, 0.04, 8)], [Vector3(42, 0.04, 8), Vector3(64, 0.04, 8)]]:
+	# Broad meadow; one paved route runs from the arrival plaza straight on to
+	# the next island's crossing. Everything else is grass.
+	for segment in [[Vector3(-72, 0.04, 12), Vector3(-35, 0.04, 12)], [Vector3(-35, 0.04, 12), Vector3(5, 0.04, 8)], [Vector3(5, 0.04, 8), Vector3(66, 0.04, 8)]]:
 		var a: Vector3 = segment[0]
 		var b: Vector3 = segment[1]
 		var path := Art.box(island, (a + b) / 2, Vector3(5, 0.06, a.distance_to(b) + 1), Color("cdb990"))
 		path.look_at_from_position(to_global((a + b) / 2), to_global(b))
-	for segment in [[Vector3(-40, 0.06, 8), Vector3(-34, 0.06, 26)], [Vector3(-34, 0.06, 26), Vector3(-20, 0.06, 26)], [Vector3(-20, 0.06, 26), Vector3(-12, 0.06, 8)], [Vector3(25, 0.06, 8), Vector3(44, 0.06, -4)], [Vector3(-60, 0.06, 12), Vector3(-60, 0.06, 21)]]:
-		var a: Vector3 = segment[0]
-		var b: Vector3 = segment[1]
-		var path := Art.box(island, (a + b) / 2, Vector3(3, 0.04, a.distance_to(b) + 1), Color("cdb990"))
-		path.look_at(to_global(b))
 	for pos in [Vector3(-76,0,-16), Vector3(-58,0,-31), Vector3(-22,0,-34), Vector3(-13,0,33), Vector3(17,0,33), Vector3(57,0,-30), Vector3(57,0,32)]:
 		Art.tree(island, pos, int(absf(pos.x)) % 2)
 	for i in 24:
@@ -200,19 +202,6 @@ func _build_environment() -> void:
 		if pos.x > 62: continue
 		Art.cone(island, pos + Vector3(0, 0.7, 0), 1.7, 0.8, 1.4, Color("b8b2a2"), true, 5 + i % 3)
 		Art.flower(island, pos + Vector3(2, 0, 1), Color("d8b7ba"), 0.6)
-	# The root crossing keeps every Heart Melody landform physically connected.
-	# River Song still waits for garden restoration, but exploration never
-	# depends on an invisible bridge or a precision jump.
-	Art.box(island, Vector3(66, 0.85, -21), Vector3(1, 1.7, 54), Color("796e56"), true)
-	Art.box(island, Vector3(66, 0.85, 30), Vector3(1, 1.7, 37), Color("796e56"), true)
-	Art.island(island, Vector3(94, 0, 8), 9, 12, Color("8fab88"))
-	for i in range(1, 14):
-		var angle := -PI + i * TAU / 14.0
-		var pos := Vector3(94 + cos(angle) * 8.5, 0.8, 8 + sin(angle) * 8.5)
-		if cos(angle) > 0.6: continue
-		var rail := Art.box(island, pos, Vector3(4.2, 1.6, 0.7), Color("796e56"), true)
-		rail.rotation.y = -angle + PI / 2
-	Art.cone(island, Vector3(-35, 0.06, -16), 9, 9, 0.07, Color("8fc5c4"), false, 16)
 	Art.banner(island, "QUIET MEADOW\nFeeling Seed Celesta", Vector3(-53, 6, -6), 32)
 	Art.banner(island, "FEELING GARDEN\nEcho Drum Garden", Vector3(8, 7, -10), 32)
 	var landmark := Art.flower(island, Vector3(8, 0, -23), Color("dba0b2"), 6.0)
@@ -224,7 +213,6 @@ func _build_environment() -> void:
 	for i in 7:
 		Art.cone(blight, Vector3(8 + cos(i * TAU / 7) * 4, 1.2, -23 + sin(i * TAU / 7) * 4), 1.4, 0.1, 2.4, Color("685971"), false, 5)
 	Art.cone(island, Vector3(8, 0.7, -23), 5.8, 5.2, 1.4, Color("879477"), true)
-	_gate(island, Vector3(-76, 0, 12), "Castle return - walk through")
 	_automatic_return_gate(island, Vector3(-76, 0, 12))
 	_object("gate", -1, Vector3(-72, 1, 12), "Return to the Castle")
 	Art.box(island, Vector3(-60, 1, 23), Vector3(5, 0.5, 1.5), Color("816c5a"), true)
@@ -255,8 +243,9 @@ func _build_environment() -> void:
 	bridge = Node3D.new()
 	bridge.name = "RestoredRootCrossing"
 	add_child(bridge)
-	Art.box(bridge, Vector3(76, 0.1, 8), Vector3(24, 0.2, 4), Color("b19c79"), true)
-	for z in [5.7, 10.3]: Art.box(bridge, Vector3(76, 1, z), Vector3(24, 1.6, 0.5), Color("7e785a"), true)
+	# One straight railed crossing on to the River Song bank; the River Song gate
+	# stands on it as the storyline's divider.
+	Art.crossing(bridge, 66, 92, 8)
 	var barrier_mesh := Art.box(self, Vector3(66, 4.2, 8), Vector3(0.7, 1.2, 7.0), Color("a6bd88"), true)
 	bridge_barrier = barrier_mesh.get_child(0)
 	bridge_barrier.name = "ClosedRootCollision"
@@ -267,14 +256,8 @@ func _build_environment() -> void:
 	river.name = "RiverSong"
 	river.set_script(load("res://scripts/heart_melody/river_song.gd"))
 	add_child(river)
-	for info in [["mayor_milo", Vector3(-63, 0, 6)], ["guardian_angel", Vector3(-54, 0, 5)]]:
-		var guide: Node3D = load("res://scenes/mind_spark/cast/" + info[0] + ".tscn").instantiate()
-		guide.position = info[1]
-		guide.scale = Vector3.ONE * 0.5
-		guide.default_line = "Every feeling may speak here. Choose a feeling, or simply choose a sound."
-		island.add_child(guide)
-		guide.get_node("DialogueLabel").hide()
-	_object("intro", -1, Vector3(-60, 1, 8), "Talk with Milo and the Guardian")
+	# The welcome and controls stay one step off the arrival path.
+	_object("intro", -1, Vector3(-60, 1, 8), "Garden welcome & controls")
 	var environment := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
@@ -302,6 +285,78 @@ func _build_environment() -> void:
 	for spec in Catalog.ENEMIES:
 		var wave := 1 if str(spec.id).begins_with("wave1") else 2
 		if progress.committed.waves.has(wave): restore_creature(spec, Vector3(38 + wave * 4, 1, -22 if spec.kind == "moth" else -10))
+
+# One lake basin under the whole chain: the islands rise out of a single body
+# of water instead of floating apart, and every bridge crosses water. Falling
+# into the lake returns the player to land like any other fall.
+const LAKE_MIN := Vector2(-100, -66)
+const LAKE_MAX := Vector2(498, 70)
+const LAKE_CORNER := 36.0
+const LAKE_LEVEL := -2.75
+
+func _build_lake(parent: Node3D) -> void:
+	var outline := PackedVector3Array()
+	var corners := [Vector2(LAKE_MAX.x - LAKE_CORNER, LAKE_MAX.y - LAKE_CORNER), Vector2(LAKE_MIN.x + LAKE_CORNER, LAKE_MAX.y - LAKE_CORNER),
+		Vector2(LAKE_MIN.x + LAKE_CORNER, LAKE_MIN.y + LAKE_CORNER), Vector2(LAKE_MAX.x - LAKE_CORNER, LAKE_MIN.y + LAKE_CORNER)]
+	for corner in 4:
+		for step in 9:
+			var angle := (corner + step / 8.0) * PI / 2
+			var centre: Vector2 = corners[corner]
+			outline.append(Vector3(centre.x + cos(angle) * LAKE_CORNER, 0, centre.y + sin(angle) * LAKE_CORNER))
+	var middle := Vector3((LAKE_MIN.x + LAKE_MAX.x) / 2, 0, (LAKE_MIN.y + LAKE_MAX.y) / 2)
+	var lip := LAKE_LEVEL + 0.9
+	var water := SurfaceTool.new()
+	water.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var shore := SurfaceTool.new()
+	shore.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var cliff := SurfaceTool.new()
+	cliff.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in outline.size():
+		var a := outline[i]
+		var b := outline[(i + 1) % outline.size()]
+		for vertex in [middle, a, b]:
+			water.set_normal(Vector3.UP)
+			water.add_vertex(vertex + Vector3.UP * LAKE_LEVEL)
+		# A low stone lip frames the water; below it the basin falls away as
+		# one rocky landmass beneath every island.
+		var out_a := a + (a - middle).normalized() * 2.5
+		var out_b := b + (b - middle).normalized() * 2.5
+		var up := Vector3.UP * lip
+		var down := Vector3.UP * LAKE_LEVEL
+		for vertex in [a + up, out_a + up, out_b + up, a + up, out_b + up, b + up]: shore.add_vertex(vertex)
+		for vertex in [a + up, b + down, a + down, a + up, b + up, b + down]: shore.add_vertex(vertex)
+		var low := Vector3.UP * (lip - 14)
+		for vertex in [out_a + up, out_a + low, out_b + low, out_a + up, out_b + low, out_b + up]: cliff.add_vertex(vertex)
+		var deep_a := middle.lerp(a, 0.55) + Vector3.UP * -48
+		var deep_b := middle.lerp(b, 0.55) + Vector3.UP * -48
+		for vertex in [out_a + low, deep_a, deep_b, out_a + low, deep_b, out_b + low, deep_a, middle + Vector3.UP * -52, deep_b]:
+			cliff.add_vertex(vertex)
+	var lake := Art.mesh(parent, water.commit(), Vector3.ZERO, Color("66aeba"))
+	lake.name = "ConnectingLake"
+	shore.generate_normals()
+	Art.mesh(parent, shore.commit(), Vector3.ZERO, Color("b8b2a2")).name = "LakeShore"
+	cliff.generate_normals()
+	Art.mesh(parent, cliff.commit(), Vector3.ZERO, Color("ac9e8e")).name = "LakeBasin"
+	var fall := Area3D.new()
+	fall.name = "LakeFall"
+	fall.position = Vector3(middle.x, LAKE_LEVEL - 1.5, middle.z)
+	fall.collision_layer = 0
+	fall.collision_mask = 1
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(LAKE_MAX.x - LAKE_MIN.x, 2, LAKE_MAX.y - LAKE_MIN.y)
+	shape.shape = box
+	fall.add_child(shape)
+	parent.add_child(fall)
+	fall.body_entered.connect(func(body):
+		if body == player and (not embedded_in_overworld or embedded_active): _fall_into_lake.call_deferred()
+	)
+
+# Milo scoops a player out of the lake and flies them back to the last ground
+# they stood on; the old respawn is only the fallback when he cannot.
+func _fall_into_lake() -> void:
+	var milo := get_node_or_null("/root/MiloCompanionManager")
+	if milo == null or not milo.request_fall_rescue(to_global(Vector3(-56, 2, 17))): _recover()
 
 func _gate(parent: Node3D, pos: Vector3, words: String) -> void:
 	for z in [-3, 3]: Art.cone(parent, pos + Vector3(0, 3, z), 0.9, 0.5, 6, Color("84775d"), true)
@@ -478,6 +533,8 @@ func _process(delta: float) -> void:
 		elif not inside and embedded_active:
 			_set_embedded_active(false)
 		if not embedded_active: return
+	var view := get_viewport().get_camera_3d()
+	listener.global_transform = Transform3D(view.global_basis if view != null else Basis.IDENTITY, player.global_position + Vector3.UP * 1.6)
 	river.tick(delta)
 	chapter_world.tick(delta)
 	journey_landscape.tick(delta)
