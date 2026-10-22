@@ -123,6 +123,10 @@ func run() -> void:
 			for chime_x in [262.0, 274.0, 286.0]:
 				check(await walk(Vector3(chime_x, 0, 8)), "reach chime before unlocking Warning Bell gate: " + str(chime_x))
 			check(not world.journey_landscape.gates[2].open, "All three chimes are reachable while their gate is still locked")
+		if task == 5:
+			world.player.position = Vector3(300, 1, 8)
+			await physics_frame
+			check(not world.player.test_move(world.player.global_transform, Vector3(4, 0, 0)), "No obsolete pink barrier blocks the open Warning Bell crossing")
 	for i in 3:
 		chapter.encounter.phase = "recovery"
 		chapter.open_anchor(i)

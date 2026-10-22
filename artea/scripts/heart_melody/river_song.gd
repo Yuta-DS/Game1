@@ -11,7 +11,6 @@ var bulbs: Array[Node3D] = []
 var decks: Array[Node3D] = []
 var boat: Node3D
 var flower: Node3D
-var warning_barrier: Node3D
 var riding := false
 var _ride_time := 0.0
 var _departure := Vector3.ZERO
@@ -75,7 +74,6 @@ func _ready() -> void:
 		for z in [3.8, 12.2]: Art.box(deck, Vector3(x + 8, 0.8, z), Vector3(12, 1.5, 0.4), Color("816e5a"), true)
 	world._object("river_warning", 0, Vector3(298, 1, 8), "Read the warning bells")
 	Art.banner(self, "WARNING BELLS\nFollow the quiet gaps", Vector3(301, 7, 8), 28)
-	warning_barrier = Art.box(self, Vector3(302, 1.5, 8), Vector3(0.5, 3, 8), Color("a887ad"), true)
 	Art.banner(self, "PEACE GARDEN\nA safe place to listen", Vector3(322, 6, -12), 30)
 	flower = Art.flower(self, Vector3(343, 0, 8), Color("e7d68f"), 3)
 	world._object("river_peace", 0, Vector3(339, 1, 8), "Awaken the Peace Flower")
@@ -101,7 +99,6 @@ func refresh() -> void:
 		# to full visual strength instead of spawning a previously missing floor.
 		_show_solid(decks[index], true)
 		decks[index].scale = Vector3.ONE if saved.chimes.has(index) else Vector3(1.0, 0.75, 1.0)
-	_show_solid(warning_barrier, not saved.warning)
 	flower.scale = Vector3.ONE * 0.7
 	if saved.grove:
 		for index in 2:
