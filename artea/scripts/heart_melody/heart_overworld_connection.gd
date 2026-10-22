@@ -4,11 +4,11 @@ const Art = preload("res://scripts/heart_melody/heart_art.gd")
 ## Just beyond the edge of the Heart kingdom's pink floor (whose rim is about
 ## 40 m past the island's far lobe at the old x = 1400), a short bridge away.
 const ISLAND_ORIGIN := Vector3(1250, 45, 8000)
-const WALK_START := Vector3(1722.4, 0.20, 7838.7)
-## One continuous railed bridge: it leaves the station court on its old
-## heading, climbs as it curves round, and arrives along the island's axis on
-## a round plaza before the entrance arch.
-const WALK_EXIT_CONTROL := Vector3(1590, 0, 7929)
+## The bridge begins in the clearing at the heart of the melody maze, on the
+## music circle's north stage where its grand piano stood: the route runs from
+## the station, through the maze, then over the hedges to the island.
+const WALK_START := Vector3(1772.81, 0.22, 8223.87)
+const WALK_EXIT_CONTROL := Vector3(1641, 0, 8152)
 const WALK_ARRIVE_CONTROL := Vector3(1482, 0, 7988)
 ## Where the bridge meets the island's edge (local x = -92), through an
 ## opening in its fence exactly the bridge's width (Art.STATION_OPENING).
@@ -45,12 +45,21 @@ func _ready() -> void:
 		var flat := WALK_START * u * u * u + WALK_EXIT_CONTROL * 3.0 * u * u * t 			+ WALK_ARRIVE_CONTROL * 3.0 * u * t * t + WALK_LAND * t * t * t
 		flat.y = lerpf(WALK_START.y, WALK_LAND.y, smoothstep(0.0, WALK_CLIMB_END, t))
 		walk_points.append(flat)
-	# Rails run the whole way, from the court to where they join the island's
-	# own fence.
-	_build_walk_path(path, walk_points, 2.0, 0.0)
-	# Raised just above the island's turf and paths (local 0.07-0.08) so the
-	# overlapping surfaces never fight over the same depth.
-	var landing := Art.cone(path, LANDING_CENTRE + Vector3.UP * (0.1 - 0.15), LANDING_RADIUS, LANDING_RADIUS, 0.3, Color("cdb990"), true, 32)
+	# The deck runs on past the island's edge to beneath the plaza, so the
+	# round plaza meets the planks with no gap; the rails stop at the fence.
+	walk_points.append(LANDING_CENTRE + Vector3.RIGHT * 4.0)
+	_build_walk_path(path, walk_points, 2.0, WALK_LAND.distance_to(walk_points[-1]))
+	# Each bridge rail turns in to meet the end of the island's fence exactly.
+	var side := (walk_points[-2] - walk_points[-3]).cross(Vector3.UP)
+	side.y = 0
+	side = side.normalized() * 6.0
+	for end in Art.station_opening_ends():
+		var fence_end := Vector3(ISLAND_ORIGIN.x - end.x, ISLAND_ORIGIN.y, ISLAND_ORIGIN.z - end.z)
+		var rail_end := WALK_LAND + (side if side.dot(fence_end - WALK_LAND) > 0 else -side)
+		Art.rail(path, rail_end, fence_end)
+	# A thin slab lying on the turf over the deck end and the start of the main
+	# path (local 0.025-0.07), a few centimetres proud so neither flickers.
+	var landing := Art.cone(path, LANDING_CENTRE + Vector3.UP * 0.06, LANDING_RADIUS, LANDING_RADIUS, 0.08, Color("cdb990"), true, 32)
 	landing.name = "ArrivalLanding"
 	var direction := (walk_points[2] - walk_points[0]).normalized()
 	var lock_mesh := Art.box(self, WALK_START + direction * 12 + Vector3.UP * 2.0,
@@ -89,6 +98,8 @@ func _build_walk_path(parent: Node3D, points: PackedVector3Array, entry_clearanc
 		var d := points[i + 1] - sides[i + 1] * 6.0
 		# Slightly above adjacent floors so overlapping arrival surfaces do not flicker.
 		for vertex in [a, c, b, a, d, c]: surface.add_vertex(vertex + lift)
+		# The underside closes the deck, so it is solid seen from below too.
+		for vertex in [a, b, c, a, c, d]: surface.add_vertex(vertex + lift - Vector3.UP)
 		# Fascias give the deck thickness without introducing raised collision lips.
 		var edges := [[b, c], [d, a]]
 		if i == 0: edges.append([a, b])

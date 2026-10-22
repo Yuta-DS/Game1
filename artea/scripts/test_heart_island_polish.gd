@@ -43,9 +43,23 @@ func _run() -> void:
 			var hit: Dictionary = space.intersect_ray(PhysicsRayQueryParameters3D.create(p + Vector3.UP * 30, p + Vector3.DOWN * 200))
 			if hit and not connection.is_ancestor_of(hit.collider): over_floor += 1
 	check(over_floor == 0, "island and lake clear the kingdom floor (%d points over it)" % over_floor)
+	# The bridge starts on the floor, back from the station, and its deck runs
+	# on under a plaza lying flush on the turf.
+	var walk: PackedVector3Array = connection.walk_points
+	# Sampled just beside the deck, which would otherwise be the first hit.
+	var beside: Vector3 = connection.to_global(walk[0]) + (walk[1] - walk[0]).cross(Vector3.UP).normalized() * 8.0
+	var start_hit: Dictionary = space.intersect_ray(PhysicsRayQueryParameters3D.create(
+		beside + Vector3.UP * 3, beside + Vector3.DOWN * 3))
+	check(not start_hit.is_empty() and not connection.is_ancestor_of(start_hit.collider), "bridge starts on the kingdom floor")
+	check(walk[-1].distance_to(connection.LANDING_CENTRE) < connection.LANDING_RADIUS - 2, "deck continues under the plaza")
+	var plaza := connection.get_node("Station03GardenWalk/ArrivalLanding") as MeshInstance3D
+	var plaza_top: float = (plaza.global_transform * plaza.get_aabb()).end.y - island.global_position.y
+	check(plaza_top > 0.09 and plaza_top < 0.12, "plaza lies flush on the island (top %.3f)" % plaza_top)
 	var lake: Node3D = island.get_node("IslandOne/ConnectingLake")
 	check(lake != null and lake.is_visible_in_tree(), "one lake joins the islands")
 
+	# Before entering, the gallery hears from its own camera, not the island.
+	check(root.get_viewport().get_audio_listener_3d() == null, "the gallery's sound is heard from its camera")
 	# Walk-in activation: no welcome menu, ears move to the player.
 	player.global_position = island.to_global(Vector3(-60, 1.2, 12))
 	for i in 10: await physics_frame
@@ -92,7 +106,7 @@ func _run() -> void:
 	await process_frame
 	check(not island.embedded_active, "walking out deactivates Heart Melody")
 	check(sword.visible, "sword returns outside Heart Melody")
-	check(not island.listener.is_current(), "outside, sound is heard from the camera again")
+	check(island.listener == null and root.get_viewport().get_audio_listener_3d() == null, "outside, sound is heard from the camera again")
 
 	# The standalone garden camera, like the overworld one, is steered only by
 	# the mouse on a PC: running back towards it leaves the view alone.
@@ -110,6 +124,12 @@ func _run() -> void:
 	Input.action_release("move_backward")
 	check(absf(angle_difference(camera.yaw, yaw_before)) < 0.01, "desktop: S does not turn the garden camera")
 	check(absf(angle_difference(frame_yaw, yaw_before)) < 0.05, "movement keeps its frame while S is held")
+	# A locked gate offers no interaction: it says which island comes first.
+	world.player.global_position = world.to_global(Vector3(84, 1.2, 8))
+	world._process(0.016)
+	check(world.nearest == -1 and world.prompt.visible and world.prompt.disabled
+		and world.prompt.text.begins_with("Progress locked") and world.prompt.text.contains("Feeling Garden"),
+		"a locked gate tells the player to finish the previous island")
 	for suffix in ["", ".bak", ".tmp"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://heart_island_polish_test.json" + suffix))
 
