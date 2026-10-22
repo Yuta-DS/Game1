@@ -77,10 +77,7 @@ func _ready() -> void:
 	musical_garden = MusicalGarden.new()
 	add_child(musical_garden)
 	_build_player()
-	listener = AudioListener3D.new()
-	listener.name = "PlayerEarListener"
-	add_child(listener)
-	if not embedded_in_overworld: listener.make_current()
+	if not embedded_in_overworld: _hear_from_player(true)
 	_build_hud()
 	chapter_world = preload("res://scripts/heart_melody/heart_chapter_world.gd").new()
 	add_child(chapter_world)
@@ -140,11 +137,11 @@ func _set_embedded_active(active: bool) -> void:
 					node.hide()
 				node.process_mode = Node.PROCESS_MODE_DISABLED
 				_suspended_nodes.append(record)
-		listener.make_current()
+		_hear_from_player(true)
 		if not progress.recovery_message.is_empty(): _notice(progress.recovery_message)
 	else:
 		if modal_open: _close()
-		listener.clear_current()
+		_hear_from_player(false)
 		audio.stop()
 		progress.commit()
 		player.speed = _previous_speed
@@ -187,9 +184,10 @@ func _build_environment() -> void:
 		if body == player and not player.is_on_floor() and not player.test_move(player.global_transform, Vector3.DOWN * 6.0) 				and (not embedded_in_overworld or embedded_active): call_deferred("_recover")
 	)
 
-	# Broad meadow; one paved route runs from the arrival plaza straight on to
+	# Broad meadow; one paved route runs from the arrival plaza's centre (local
+	# -82, 12; heart_overworld_connection.gd LANDING_CENTRE) straight on to
 	# the next island's crossing. Everything else is grass.
-	for segment in [[Vector3(-72, 0.04, 12), Vector3(-35, 0.04, 12)], [Vector3(-35, 0.04, 12), Vector3(5, 0.04, 8)], [Vector3(5, 0.04, 8), Vector3(66, 0.04, 8)]]:
+	for segment in [[Vector3(-82, 0.04, 12), Vector3(-35, 0.04, 12)], [Vector3(-35, 0.04, 12), Vector3(5, 0.04, 8)], [Vector3(5, 0.04, 8), Vector3(66, 0.04, 8)]]:
 		var a: Vector3 = segment[0]
 		var b: Vector3 = segment[1]
 		var path := Art.box(island, (a + b) / 2, Vector3(5, 0.06, a.distance_to(b) + 1), Color("cdb990"))
@@ -250,7 +248,6 @@ func _build_environment() -> void:
 	bridge_barrier = barrier_mesh.get_child(0)
 	bridge_barrier.name = "ClosedRootCollision"
 	bridge_barrier.set_meta("visual", barrier_mesh)
-	_gate(island, Vector3(88, 0, 8), "River Song / Waterfall Organ")
 	river_route_sign = Art.banner(island, "RIVER SONG", Vector3(57, 5, 8), 30)
 	river = Node3D.new()
 	river.name = "RiverSong"
@@ -357,6 +354,22 @@ func _build_lake(parent: Node3D) -> void:
 func _fall_into_lake() -> void:
 	var milo := get_node_or_null("/root/MiloCompanionManager")
 	if milo == null or not milo.request_fall_rescue(to_global(Vector3(-56, 2, 17))): _recover()
+
+# The ear listener exists only while Heart Melody is being played. An
+# AudioListener3D makes itself current whenever none is, so one left in the
+# tree while the player was elsewhere in the gallery took over from the camera
+# and silenced the whole castle.
+func _hear_from_player(enabled: bool) -> void:
+	if enabled and listener == null:
+		listener = AudioListener3D.new()
+		listener.name = "PlayerEarListener"
+		add_child(listener)
+		listener.global_position = player.global_position + Vector3.UP * 1.6
+		listener.make_current()
+	elif not enabled and listener != null:
+		listener.clear_current()
+		listener.queue_free()
+		listener = null
 
 func _gate(parent: Node3D, pos: Vector3, words: String) -> void:
 	for z in [-3, 3]: Art.cone(parent, pos + Vector3(0, 3, z), 0.9, 0.5, 6, Color("84775d"), true)
@@ -534,7 +547,8 @@ func _process(delta: float) -> void:
 			_set_embedded_active(false)
 		if not embedded_active: return
 	var view := get_viewport().get_camera_3d()
-	listener.global_transform = Transform3D(view.global_basis if view != null else Basis.IDENTITY, player.global_position + Vector3.UP * 1.6)
+	if listener != null:
+		listener.global_transform = Transform3D(view.global_basis if view != null else Basis.IDENTITY, player.global_position + Vector3.UP * 1.6)
 	river.tick(delta)
 	chapter_world.tick(delta)
 	journey_landscape.tick(delta)
@@ -547,8 +561,14 @@ func _process(delta: float) -> void:
 		if d < distance and _interaction_visible(interactables[i]):
 			distance = d
 			nearest = i
-	prompt.visible = nearest >= 0 and not modal_open
+	# A gate that is still locked offers nothing to interact with; it says
+	# which island has to be finished first.
+	var locked: String = journey_landscape.locked_gate_message(player_local_position())
+	if locked != "": nearest = -1
+	prompt.visible = (nearest >= 0 or locked != "") and not modal_open
+	prompt.disabled = locked != ""
 	if nearest >= 0: prompt.text = "Q / A · " + str(interactables[nearest].title)
+	elif locked != "": prompt.text = locked
 	var heading: String = chapter_world.area_title()
 	hud.text = "HEART MELODY · " + heading + "\n" + objective() + "\nHealth %d · Journal: current route & supplies" % player.current_health
 	if progress.dirty: hud.text += "  ·  Save pending — retry in Help"

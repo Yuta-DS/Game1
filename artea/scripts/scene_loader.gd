@@ -111,6 +111,40 @@ static func packs_needed(scene_path: String) -> PackedStringArray:
 	return needed
 
 
+## Downloads one Pack file through the page's loader (arteaPacks, in
+## pck-loader.js) and mounts it. `on_progress(loaded, total)` is called while it
+## downloads. Returns "" once mounted, or why not. Web only: other builds have
+## no Packs, so packs_needed never asks for one.
+static func fetch_pack(tree: SceneTree, file: String, on_progress := Callable()) -> String:
+	var local := "/tmp/artea_packs/" + file
+	var key := JSON.stringify(file)
+	JavaScriptBridge.eval("arteaPacks.fetch(%s, %s)" % [key, JSON.stringify(local)])
+	while true:
+		var state = JSON.parse_string(str(JavaScriptBridge.eval("JSON.stringify(arteaPacks.state[%s])" % key)))
+		if not state is Dictionary or state.error != "":
+			return "download failed: %s" % (state.error if state is Dictionary else "no loader")
+		if state.done:
+			break
+		if state.total > 0 and on_progress.is_valid():
+			on_progress.call(float(state.loaded), float(state.total))
+		await tree.process_frame
+	if not ProjectSettings.load_resource_pack(local):
+		return "couldn't open the downloaded %s" % file
+	return ""
+
+
+## Mounts whatever Packs `scene_path` is waiting on, for a scene opened inside
+## the current one instead of through the loading screen (the Creator studio's
+## easels open the drawing tool, which lives in the creators_light Pack).
+## Returns "" once it can be loaded, or why not.
+static func mount_packs_for(tree: SceneTree, scene_path: String, on_progress := Callable()) -> String:
+	for file in packs_needed(scene_path):
+		var error: String = await fetch_pack(tree, file, on_progress)
+		if not error.is_empty():
+			return error
+	return ""
+
+
 ## Every Pack file not yet mounted, most likely needed first, for downloading
 ## in the background once the Hub is playable (issue #38). The journey decides
 ## the order: the Art Castle, where the campaign goes from the Hub; then the

@@ -348,7 +348,8 @@ static func island(parent: Node3D, pos: Vector3, radius: float, depth: float, gr
 		var angle := i * TAU / 9
 		cone(parent, pos + Vector3(sin(angle) * radius * 0.78, -depth * 0.7, cos(angle) * radius * 0.78), 0.2, 1.3, depth, Color("7e7461"), false, 5)
 
-static func paired_island(parent: Node3D, open_station_entrance := false) -> void:
+# The two-lobed island's edge (x, z), cut straight at x = 66 for the crossing.
+static func paired_outline() -> PackedVector2Array:
 	var outline := PackedVector2Array()
 	var join := acos(35.0 / 57.0)
 	for i in 19:
@@ -363,7 +364,25 @@ static func paired_island(parent: Node3D, open_station_entrance := false) -> voi
 		var b := outline[(i + 1) % outline.size()]
 		if a.x <= 66: clipped.append(a)
 		if (a.x <= 66) != (b.x <= 66): clipped.append(a.lerp(b, (66 - a.x) / (b.x - a.x)))
-	outline = clipped
+	return clipped
+
+# Where the fence stops on either side of the station bridge's opening, so the
+# bridge's rails can run straight into it.
+static func station_opening_ends() -> Array[Vector3]:
+	var outline := paired_outline()
+	var ends: Array[Vector3] = []
+	for z in [STATION_OPENING.x, STATION_OPENING.y]:
+		for i in outline.size():
+			var a := outline[i]
+			var b := outline[(i + 1) % outline.size()]
+			if minf(a.x, b.x) < -78 and (a.y - z) * (b.y - z) <= 0 and not is_equal_approx(a.y, b.y):
+				var point := a.lerp(b, (z - a.y) / (b.y - a.y))
+				ends.append(Vector3(point.x, 0, point.y))
+				break
+	return ends
+
+static func paired_island(parent: Node3D, open_station_entrance := false) -> void:
+	var outline := paired_outline()
 	var indices := Geometry2D.triangulate_polygon(outline)
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)

@@ -2,7 +2,6 @@ extends SceneTree
 
 const Circle = preload("res://scripts/heart_melody/heart_music_circle.gd")
 const Sound = preload("res://scripts/heart_melody/music_circle_sound.gd")
-var _last_midi := -1
 
 func _initialize() -> void:
 	call_deferred("run")
@@ -76,40 +75,7 @@ func run() -> void:
 		for frame in 3: await physics_frame
 		assert(instrument.open_playing())
 		instrument.close_playing()
-	var piano := circle.get_node("Playable_piano")
-	piano.note_played.connect(func(midi): _last_midi = midi)
-	player.global_position = piano.to_global(Vector3(0, 0.3, 0.5))
-	for frame in 3: await physics_frame
-	assert(piano._player_in_range and piano._keys.size() == 88 and piano._samples.size() == 36)
-	piano._sit_down()
-	assert(piano._seated and not player.input_enabled)
-	assert(player.is_seated() and piano.has_node("PianoBench"), "Piano must seat the real controller on a physical bench")
-	if player._fox_skeleton() != null: assert(player._sit_pose_applied)
-	assert(player.global_position.distance_to(piano.to_global(piano.BENCH_TOP)) < 0.02)
-	var key := InputEventKey.new()
-	key.pressed = true
-	key.physical_keycode = KEY_A
-	piano._unhandled_input(key)
-	assert(piano._voices[0].playing, "The new piano uses the real sampled gallery voice")
-	await create_timer(0.65).timeout
-	var mesh := piano._keys[72].get_child(0) as MeshInstance3D
-	var pointer := InputEventMouseButton.new()
-	pointer.button_index = MOUSE_BUTTON_LEFT
-	pointer.pressed = true
-	pointer.position = camera.unproject_position(mesh.to_global(Vector3(0, 0.012, 0.055)))
-	piano._unhandled_input(pointer)
-	assert(_last_midi == 72, "Clicking a piano key must pick and sound the correct pitch")
-	var tab := InputEventKey.new()
-	tab.pressed = true
-	tab.physical_keycode = KEY_TAB
-	piano._unhandled_input(tab)
-	assert(piano._keyboard_view and player.is_seated())
-	piano._stand_up()
-	assert(player.input_enabled and not player.is_seated() and not player._sit_pose_applied and camera.get("_mode") == "follow")
-	piano._sit_down()
-	assert(player.is_seated())
-	piano.free()
-	assert(player.input_enabled and not player.is_seated() and camera.get("_mode") == "follow", "Removing an occupied piano must restore walking")
+	assert(not circle.has_node("Playable_piano"), "the bridge to the island replaces the grand piano")
 	# Leaving the scene while playing must also restore controls.
 	var last := circle.get_node("Playable_guitar")
 	player.global_position = last.to_global(Vector3(0, 2, 5))
