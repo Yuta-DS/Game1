@@ -61,6 +61,14 @@ class SessionTests(AccountTestCase):
         # Every route that needs a login refuses the older token, not just /session.
         self.assertEqual(self.client.get("/my_artworks", headers=bearer(first)).status_code, 401)
 
+    def test_with_three_logins_only_the_newest_stays_signed_in(self):
+        first, second, third = (self.login("kit") for _ in range(3))
+        for name, token in (("first", first), ("second", second)):
+            response = self.client.get("/session", headers=bearer(token))
+            self.assertEqual(response.status_code, 401, f"{name} login should be signed out")
+            self.assertEqual(response.get_json()["error"], "signed_in_elsewhere")
+        self.assertEqual(self.client.get("/session", headers=bearer(third)).status_code, 200)
+
     def test_other_accounts_are_unaffected(self):
         alex = self.login("alex")
         self.login("blair")
