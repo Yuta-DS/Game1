@@ -1,4 +1,5 @@
 extends TextureButton
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 # Reference to the player's inventory GUI
 var inventory_gui: Control = null
@@ -6,6 +7,10 @@ var inventory_gui: Control = null
 func _ready():
 	# Disable focus to prevent keyboard activation (like spacebar)
 	focus_mode = Control.FOCUS_NONE
+	# Finger-sized on phones and tablets, growing out of the top-right corner.
+	if TouchDevice.is_touch_device():
+		pivot_offset = Vector2(size.x, 0)
+		scale = Vector2.ONE * 1.5
 	
 	# Connect the button pressed signal
 	pressed.connect(_on_button_pressed)
@@ -41,5 +46,5 @@ func _on_button_pressed():
 func _input(event):
 	# Optional: Allow pressing 'I' or 'Tab' to toggle inventory
 	if event.is_action_pressed("ui_cancel") and inventory_gui != null and inventory_gui.visible:
-		inventory_gui.visible = false
+		inventory_gui.close()
 		# get_tree().paused = false

@@ -1,4 +1,5 @@
 extends Control
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 @onready var grid_container: GridContainer = $NinePatchRect/GridContainer
 
@@ -7,6 +8,29 @@ var isOpen: bool = false
 
 func _ready() -> void:
 	close()
+	# Phones and tablets have no E key to put the bag away again.
+	if TouchDevice.is_touch_device():
+		var close_button := Button.new()
+		close_button.name = "CloseButton"
+		close_button.text = "X"
+		close_button.focus_mode = Control.FOCUS_NONE
+		close_button.add_theme_font_size_override("font_size", 64)
+		close_button.custom_minimum_size = Vector2(120, 120)
+		close_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		close_button.position = Vector2(-170, 40)
+		close_button.pressed.connect(close)
+		$NinePatchRect.add_child(close_button)
+		# Desktop text sizes read at about a third of their size on a phone.
+		var title := $NinePatchRect/TitleLabel as Label
+		title.add_theme_font_size_override("font_size", 90)
+		for slot in grid_container.get_children():
+			var quantity := slot.get_node_or_null("QuantityLabel") as Label
+			if quantity != null:
+				quantity.add_theme_font_size_override("font_size", 40)
+				quantity.add_theme_constant_override("outline_size", 8)
+				# Grow up and left from the slot's corner, where the number sits.
+				quantity.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+				quantity.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	
 func set_inventory_data(data: inventoryData) -> void:
 	print("DEBUG: SET INVENTORY DATA CALLED")
@@ -72,6 +96,7 @@ func toggle_visibility() -> void:
 func open():
 	visible = true
 	isOpen = true
+	add_to_group("touch_hud_blockers")
 	# Refresh slots when opening to show latest inventory state
 	if inventory_data:
 		print("Opening inventory - refreshing slots")
@@ -82,3 +107,4 @@ func open():
 func close():
 	visible = false
 	isOpen = false
+	remove_from_group("touch_hud_blockers")

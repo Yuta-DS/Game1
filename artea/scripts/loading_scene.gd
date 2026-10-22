@@ -2,6 +2,10 @@ extends Control
 
 const ShaderWarmup := preload("res://scripts/shader_warmup.gd")
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+## Phones and tablets: how much bigger the loading words and Milo are drawn.
+const TOUCH_TEXT_SCALE := 1.35
+const TOUCH_MILO_SCALE := 1.9
 
 @export var next_scene_path: String = ""
 @onready var progress_bar = $progress_bar
@@ -72,6 +76,12 @@ const HUB_SCENE := "res://scenes/New_Hub_World.tscn"
 func _ready():
 	# Milo and MusicManager hold off until this screen is gone.
 	add_to_group("loading_screen")
+	if TouchDevice.is_touch_device():
+		# The percentage sits right on the bar, so it grows upwards, away from it.
+		$Title.pivot_offset = $Title.size / 2.0
+		progress_label.pivot_offset = Vector2(progress_label.size.x / 2.0, progress_label.size.y)
+		for label: Label in [$Title, progress_label]:
+			label.scale = Vector2.ONE * TOUCH_TEXT_SCALE
 	# The new scene's own sounds (ocean ambience, gallery music) start the
 	# moment it enters the tree, under this screen. Silence them until the
 	# player can see the world they belong to. The loading music starts
@@ -452,6 +462,10 @@ func _build_milo_spinner() -> void:
 	_spinner_milo.position = Vector2(14, 14)
 	_spinner_milo.pivot_offset = Vector2(22, 22)
 	holder.add_child(_spinner_milo)
+	if TouchDevice.is_touch_device():
+		# Grow downwards from the bar so Milo never covers it.
+		holder.pivot_offset = Vector2(holder.size.x / 2.0, 0.0)
+		holder.scale = Vector2.ONE * TOUCH_MILO_SCALE
 
 
 # Godot draws on the same thread that loads, so a step that can't be split
@@ -462,7 +476,8 @@ func _build_milo_spinner() -> void:
 # looks hung.
 func _place_web_overlay() -> void:
 	var below_bar: Vector2 = progress_bar.get_screen_transform() * Vector2(progress_bar.size.x / 2.0, progress_bar.size.y)
-	JavaScriptBridge.eval("arteaLoading.place(%f, %f)" % [below_bar.x, below_bar.y])
+	var milo_scale := TOUCH_MILO_SCALE if TouchDevice.is_touch_device() else 1.0
+	JavaScriptBridge.eval("arteaLoading.place(%f, %f, %f)" % [below_bar.x, below_bar.y, milo_scale])
 
 
 # Returns where the loading music had got to, in seconds (0 if it never

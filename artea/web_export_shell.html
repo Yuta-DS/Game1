@@ -200,12 +200,15 @@ window.arteaLoading = {
 		}
 		document.getElementById('artea-busy').hidden = false;
 	},
-	// x, y: just under the loading bar, in canvas pixels.
-	place(x, y) {
+	// x, y: just under the loading bar, in canvas pixels. scale: bigger on
+	// phones and tablets, growing downwards so Milo stays under the bar.
+	place(x, y, scale = 1) {
 		const rect = document.getElementById('canvas').getBoundingClientRect();
 		const busy = document.getElementById('artea-busy');
 		busy.style.left = (rect.left + x / window.devicePixelRatio) + 'px';
 		busy.style.top = (rect.top + y / window.devicePixelRatio) + 'px';
+		busy.style.transformOrigin = 'top center';
+		busy.style.transform = 'scale(' + scale + ')';
 	},
 	hasMusic() {
 		return this.musicUrl !== '';

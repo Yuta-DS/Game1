@@ -1,5 +1,12 @@
 class_name CrownQuestJournal
 extends Control
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+
+## Phones and tablets zoom the journal until its 16 px body text reads at this
+## many screen pixels, as long as the layout keeps at least TOUCH_MIN_WIDTH
+## units to reflow into.
+const TOUCH_TEXT_PX := 14.0
+const TOUCH_MIN_WIDTH := 760.0
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 
@@ -68,6 +75,22 @@ func _ready() -> void:
 	_build_shell()
 	_render_story()
 	_back_button.grab_focus()
+	if TouchDevice.is_touch_device():
+		_zoom_for_touch.call_deferred()
+		get_viewport().size_changed.connect(_zoom_for_touch)
+
+
+# The journal is laid out for a desktop-sized screen, which a phone draws at a
+# third of the size. Laying it out in a smaller area and scaling that up to fill
+# the screen works like browser zoom: everything grows and still reflows.
+func _zoom_for_touch() -> void:
+	var screen := get_viewport().get_visible_rect().size
+	var legible := TOUCH_TEXT_PX / (16.0 * TouchDevice.css_pixels_per_unit(get_viewport()))
+	var zoom := clampf(legible, 1.0, maxf(screen.x / TOUCH_MIN_WIDTH, 1.0))
+	set_anchors_preset(Control.PRESET_TOP_LEFT)
+	position = Vector2.ZERO
+	size = screen / zoom
+	scale = Vector2(zoom, zoom)
 
 
 func _draw() -> void:

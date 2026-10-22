@@ -538,8 +538,9 @@ func _build_hud() -> void:
 	_hud_root.name = "QuestPanel"
 	_hud_root.color = Color(0.025, 0.05, 0.12, 0.88)
 	# Below the compact minimap, which fills the top-left corner down to y=304
-	# (art_castle_minimap.gd: 18 px margin + 286 px COMPACT_SIZE).
-	_hud_root.position = Vector2(22, 312)
+	# (art_castle_minimap.gd: 18 px margin + 286 px COMPACT_SIZE, enlarged on
+	# touch devices by hud_scale()).
+	_hud_root.position = Vector2(22, 26 + 286 * preload("res://scripts/art_castle_minimap.gd").hud_scale(get_viewport()))
 	_hud_root.size = Vector2(530, 184)
 	canvas.add_child(_hud_root)
 	_quest_label = _hud_label(Vector2(16, 12), Vector2(498, 30), 20, Color("ffe27a"))

@@ -36,7 +36,9 @@ signal block_changed(active: bool)
 @onready var fox_visuals: Node3D = get_node_or_null("FoxVisuals") as Node3D
 
 const RUNNING_SPEED_THRESHOLD = 0.1 # Minimum speed to trigger the running animation
-const ROTATION_SPEED = 10.0 # Speed at which the fox model rotates (adjust as needed)
+const ROTATION_SPEED = 9.0 # Speed at which the fox model rotates, radians/second
+## Full speed while facing within about 45 degrees of the input; slower beyond.
+const TURN_SLOWDOWN := 1.4
 
 var _camera: Camera3D
 var current_health := 100.0
@@ -250,12 +252,33 @@ func get_camera_relative_move_direction(input_dir: Vector2) -> Vector3:
 		return Vector3.ZERO
 	var normalized_input := input_dir.normalized()
 	var camera := _active_camera()
+	# CameraFollow swings behind the player while they run and holds the yaw
+	# movement should use steady meanwhile (camera_auto_follow.gd).
+	if camera and camera.has_method("movement_yaw"):
+		var yaw: float = camera.movement_yaw()
+		return Vector3(normalized_input.x, 0.0, normalized_input.y).rotated(Vector3.UP, yaw)
 	if camera:
 		var basis := camera.global_transform.basis
 		var camera_forward := Vector3(-basis.z.x, 0.0, -basis.z.z).normalized()
 		var camera_right := Vector3(basis.x.x, 0.0, basis.x.z).normalized()
 		return (camera_right * normalized_input.x + camera_forward * -normalized_input.y).normalized()
 	return Vector3(normalized_input.x, 0.0, normalized_input.y)
+
+
+# The fox turns toward the input and runs the way it faces. Moving straight
+# along the input while the model caught up made it slide sideways for a beat
+# on every A/D press, still facing forward and playing the forward run. Speed
+# eases off through sharp turns, so turning round happens nearly on the spot.
+func _steer(move_dir: Vector3, delta: float) -> Vector3:
+	if move_dir.is_zero_approx() or fox_visuals == null:
+		return move_dir
+	var world_target_yaw := atan2(move_dir.x, move_dir.z)
+	var local_target_yaw := wrapf(world_target_yaw - global_rotation.y, -PI, PI)
+	fox_visuals.rotation.y = rotate_toward(
+		fox_visuals.rotation.y, local_target_yaw, ROTATION_SPEED * delta)
+	var facing := fox_visuals.global_basis.z
+	facing = Vector3(facing.x, 0.0, facing.z).normalized()
+	return facing * clampf(facing.dot(move_dir) * TURN_SLOWDOWN, 0.0, 1.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -302,6 +325,7 @@ func _physics_process(delta: float) -> void:
 	# which meant W always pushed toward world -Z no matter where the view was
 	# pointing.
 	var move_dir := get_camera_relative_move_direction(input_dir)
+	move_dir = _steer(move_dir, delta)
 
 	# Apply velocity based on input and speed
 	var movement_multiplier := block_speed_multiplier if is_blocking else 1.0

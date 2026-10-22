@@ -1,4 +1,5 @@
 extends Node
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 const WebDecor := preload("res://scripts/web_decor.gd")
@@ -266,7 +267,7 @@ func _on_quest_journal_closed(layer: CanvasLayer) -> void:
 		player.call("set_input_enabled", true)
 	var camera := get_node_or_null("Camera3D")
 	if camera != null and bool(camera.get("capture_mouse")):
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		Input.mouse_mode = TouchDevice.captured_mode()
 
 
 func _return_player_to_gallery() -> void:

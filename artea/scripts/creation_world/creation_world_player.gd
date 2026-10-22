@@ -1,4 +1,5 @@
 extends CharacterBody3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 const WALK_SPEED := 9.5
 const RUN_SPEED := 14.0
@@ -21,6 +22,7 @@ var _jump_requires_release := false
 
 
 func _ready() -> void:
+	add_to_group("touch_look")
 	camera_pivot = get_node_or_null("CameraPivot")
 	camera = get_node_or_null("CameraPivot/SpringArm3D/Camera3D")
 	if camera == null:
@@ -35,22 +37,29 @@ func _ready() -> void:
 	# Space may still be held from entering the painting. Require a fresh press
 	# before the new world's player can jump.
 	_jump_requires_release = Input.is_action_pressed("jump")
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = TouchDevice.captured_mode()
 
 
 func set_ui_open(open: bool) -> void:
 	ui_open = open
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if open else Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if open else TouchDevice.captured_mode()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and not ui_open and camera_pivot != null:
-		rotate_y(-event.relative.x * LOOK_SENSITIVITY)
-		camera_pivot.rotate_x(-event.relative.y * LOOK_SENSITIVITY)
-		camera_pivot.rotation.x = clampf(camera_pivot.rotation.x, -1.05, 0.75)
+	# Emulated motion is a finger; TouchControls sends look drags to touch_look().
+	if event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION:
+		touch_look(event.relative)
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE and not ui_open:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE \
-			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
+			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else TouchDevice.captured_mode()
+
+
+func touch_look(relative: Vector2) -> void:
+	if ui_open or camera_pivot == null:
+		return
+	rotate_y(-relative.x * LOOK_SENSITIVITY)
+	camera_pivot.rotate_x(-relative.y * LOOK_SENSITIVITY)
+	camera_pivot.rotation.x = clampf(camera_pivot.rotation.x, -1.05, 0.75)
 
 
 func _physics_process(delta: float) -> void:
