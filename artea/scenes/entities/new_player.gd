@@ -1,6 +1,8 @@
 extends CharacterBody3D
 
-@onready var floor_detector = $FloorDetector 
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+
+@onready var floor_detector = $FloorDetector
 
 # --- JUMP VARIABLES ---
 @export var jump_height : float = 2.25
@@ -308,12 +310,16 @@ func moveLogic(delta) -> void:
 			# Turn toward the input and run the way the fox faces. Moving along
 			# the input while the model caught up slid it sideways on every A/D
 			# press, still facing forward in its run. Speed eases off through
-			# sharp turns, so turning round happens nearly on the spot.
+			# sharp turns, so turning round happens nearly on the spot. That
+			# wind-up is only worth the input lag on a touchscreen -- on desktop
+			# the mouse already aims the camera, so strafe/backward should move
+			# at once rather than waiting on the turn.
 			visual.rotation.y = rotate_toward(visual.rotation.y,
 				atan2(movementInput.x, movementInput.y), TURN_SPEED * delta)
-			var facing := Vector2(sin(visual.rotation.y), cos(visual.rotation.y))
-			movementInput = facing * movementInput.length() \
-				* clampf(facing.dot(movementInput.normalized()) * 1.4, 0.0, 1.0)
+			if TouchDevice.is_touch_device():
+				var facing := Vector2(sin(visual.rotation.y), cos(visual.rotation.y))
+				movementInput = facing * movementInput.length() \
+					* clampf(facing.dot(movementInput.normalized()) * 1.4, 0.0, 1.0)
 		velocity2D = velocity2D.move_toward(movementInput * speed, speed * 12.0 * delta)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y

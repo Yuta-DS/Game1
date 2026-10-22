@@ -1,6 +1,7 @@
 extends CharacterBody3D
 
 const MindSparkFoley := preload("res://scripts/mind_spark/mind_spark_foley.gd")
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 signal health_changed(current: float, maximum: float)
 signal attack_started
@@ -269,6 +270,10 @@ func get_camera_relative_move_direction(input_dir: Vector2) -> Vector3:
 # along the input while the model caught up made it slide sideways for a beat
 # on every A/D press, still facing forward and playing the forward run. Speed
 # eases off through sharp turns, so turning round happens nearly on the spot.
+# On a touchscreen that readable wind-up is worth the input lag. On desktop the
+# mouse already aims the camera, so a mouse-and-keyboard player expects
+# strafe/backward to move at once -- the slowdown there just read as the
+# controls lagging behind the keypress.
 func _steer(move_dir: Vector3, delta: float) -> Vector3:
 	if move_dir.is_zero_approx() or fox_visuals == null:
 		return move_dir
@@ -276,6 +281,8 @@ func _steer(move_dir: Vector3, delta: float) -> Vector3:
 	var local_target_yaw := wrapf(world_target_yaw - global_rotation.y, -PI, PI)
 	fox_visuals.rotation.y = rotate_toward(
 		fox_visuals.rotation.y, local_target_yaw, ROTATION_SPEED * delta)
+	if not TouchDevice.is_touch_device():
+		return move_dir
 	var facing := fox_visuals.global_basis.z
 	facing = Vector3(facing.x, 0.0, facing.z).normalized()
 	return facing * clampf(facing.dot(move_dir) * TURN_SLOWDOWN, 0.0, 1.0)
