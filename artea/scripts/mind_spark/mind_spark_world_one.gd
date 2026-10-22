@@ -25,6 +25,12 @@ const Bricks := preload("res://scripts/altar/AltarParts.gd")
 const NetworkAmbience := preload("res://assets/audio/Atmospheric-instrumental-music.ogg")
 const SanctuaryAmbience := preload("res://assets/audio/calm music.ogg")
 const IslandDetailAnimator := preload("res://scripts/mind_spark/mind_spark_island_detail_animator.gd")
+# Authored PBR surface atlases for the islands' broad continuous surfaces.
+# Thin accent geometry (veins, rings, fibres) stays flat-colored emissive —
+# tiling these onto centimetre-scale cable meshes would just read as noise.
+const TEXTURE_ISLAND_DECK := "res://assets/textures/mind_spark/station_components/v3/deck_radial_alloy_v3.png"
+const TEXTURE_ISLAND_UNDERSIDE := "res://assets/textures/mind_spark/station_components/v3/underbody_charcoal_circuit_v3.png"
+const TEXTURE_ISLAND_CRYSTAL := "res://assets/textures/mind_spark/station_components/v3/crystal_faceted_cyan_v3.png"
 const ENEMY_DEFINITIONS := {
 	"static_mite": preload("res://resources/mind_spark/enemies/static_mite.tres"),
 	"glitch_sprout": preload("res://resources/mind_spark/enemies/glitch_sprout.tres"),
@@ -1058,13 +1064,23 @@ func _build_modular_floating_foundation(zone: Node3D, info: Dictionary, zone_ind
 		block.set_meta("editable_component", true)
 		block.set_meta("aligned_rim_radius", block_radius)
 
-	_add_torus(foundation, "OuterGoldGuidanceRing", Vector3(0, 0.25, 0), radius * 0.76,
+	# A torus's own tube is as tall as it is thick (outer - inner radius), so at
+	# y=0.25-0.31 these stood proud of the deck by roughly a metre -- tall
+	# enough that a walking player visibly passed through the tube instead of
+	# over a ground marking. Sink each ring so only a thin cap breaks the
+	# surface near deck level, the rest buried in the floor slab beneath it.
+	_add_torus(foundation, "OuterGoldGuidanceRing",
+		Vector3(0, 0.20 - radius * 0.0075, 0), radius * 0.76,
 		radius * 0.775, _materials.island_gold)
-	_add_torus(foundation, "InnerCyanEnergyRing", Vector3(0, 0.31, 0), radius * 0.315,
+	_add_torus(foundation, "InnerCyanEnergyRing",
+		Vector3(0, 0.20 - radius * 0.0125, 0), radius * 0.315,
 		radius * 0.34, _materials.island_cyan)
 	_add_cylinder(foundation, "CentralDataPlate", Vector3(0, 0.08, 0), radius * 0.27, 0.16,
 		_materials.island_deck, false, sector_count)
-	_add_torus(foundation, "ZoneIdentityRing", Vector3(0, 0.38, 0), radius * 0.56,
+	# Same fix as the gold/cyan rings above: sink it so the tube is buried
+	# in the floor instead of standing proud of the deck.
+	_add_torus(foundation, "ZoneIdentityRing",
+		Vector3(0, 0.20 - radius * 0.0075, 0), radius * 0.56,
 		radius * 0.575, style.accent as Material)
 	_build_surface_detail_network(foundation, radius, sector_count, zone_index, style.accent as Material)
 	_build_surface_engraved_dials(foundation, radius, zone_index)
@@ -1373,9 +1389,13 @@ func _build_levitation_crystal(parent: Node3D, crystal_index: int, at: Vector3,
 	_add_tapered_cylinder(assembly, "CrystalCrown",
 		Vector3(0, body_length * 0.50 + crystal_radius * 0.45, 0),
 		0.0, crystal_radius, crystal_radius * 0.90, _materials.island_crystal, 8)
-	_add_cylinder(assembly, "MechanicalCrystalSocket",
-		Vector3(0, body_length * 0.62 + crystal_radius * 1.05, 0),
-		crystal_radius * 1.38, crystal_radius * 0.72, _materials.island_rim, false, 10)
+	# MechanicalCrystalSocket used to sit at +body_length*0.62+crystal_radius*1.05
+	# above the assembly origin, which for every crystal (central and trim
+	# alike, across all six islands) landed above the deck's underside -- it
+	# poked up as a flat, unlit, untextured island_rim drum through the deck,
+	# worst on the central crystal where it reads as a wide pillar dead centre.
+	# Removed rather than relowered: GoldCalibrationCollar/LivingRootCoupler
+	# already mark this joint from outside the crystal body.
 	_add_torus(assembly, "GoldCalibrationCollar", Vector3(0, body_length * 0.18, 0),
 		crystal_radius * 1.06, crystal_radius * 1.34, _materials.island_gold)
 	_add_torus(assembly, "LivingRootCoupler", Vector3(0, body_length * 0.39, 0),
@@ -1785,11 +1805,6 @@ func _build_landing(zone: Node3D) -> void:
 	entry_gate.destination_world_local = return_destination_world_local
 	entry_gate.prompt_text = "Q • RETURN TO ART CASTLE"
 	zone.add_child(entry_gate)
-	_add_circuit_walkway(zone, "ArrivalRootBridge", Vector3(0, 1, 92), Vector3(0, 1, -15), 20)
-	for side in [-1.0, 1.0]:
-		for index in 5:
-			_add_cylinder(zone, "RootLamp", Vector3(side * 13, 5, 65 - index * 20), 1.3, 10,
-				_materials.green_glow, false, 7)
 	_add_label(zone, "Q • USE OBJECTS     1–5 • CHOOSE", Vector3(0, 17, 54), Color("fff1aa"), 31)
 
 
@@ -3142,8 +3157,17 @@ func _build_grove_mushroom_mesh(at: Vector3, radius: float, height: float,
 				angle_a, lobes, phase)
 			var p11 := _grove_mushroom_point(at, radius, height, latitude_b,
 				angle_b, lobes, phase)
-			for point in [p00, p11, p10, p00, p01, p11]:
-				surface.add_vertex(point)
+			# Every vertex previously landed at the SurfaceTool's default (0,0)
+			# UV, so the cap sampled one texel of the crystal atlas and read as
+			# flat solid color. Map UV from the same column/row grid instead.
+			var uv00 := Vector2(float(column_index) / COLUMNS, float(row_index) / ROWS)
+			var uv01 := Vector2(float(column_index + 1) / COLUMNS, float(row_index) / ROWS)
+			var uv10 := Vector2(float(column_index) / COLUMNS, float(row_index + 1) / ROWS)
+			var uv11 := Vector2(float(column_index + 1) / COLUMNS, float(row_index + 1) / ROWS)
+			for pair in [[p00, uv00], [p11, uv11], [p10, uv10],
+					[p00, uv00], [p01, uv01], [p11, uv11]]:
+				surface.set_uv(pair[1])
+				surface.add_vertex(pair[0])
 	surface.generate_normals()
 	return surface.commit()
 
@@ -3252,18 +3276,30 @@ func _build_materials() -> void:
 		Color("355747"), Color("4f7257"), Color("e5bd55"), 0.76, 12)
 	_materials.sanctuary_floor = _textured_material(
 		Color("2e4f42"), Color("476a52"), Color("8dffc5"), 0.82, 16)
-	# Base surfaces stay restrained. The approved concept artwork is rebuilt as
-	# editable raised geometry by _build_surface_detail_network() instead of UV
-	# projection, preventing stretching and keeping the island visually alive.
+	# island_deck's only visible surface is the DeckPlate edge wall (its top face
+	# sits under the opaque DeckMicroCell layer); _add_radial_plate's UV ignores
+	# Y, so that edge band samples a single crushed row of the image texture and
+	# reads as a smeared stripe. Keep it on the flat procedural pattern, which
+	# tiles fine at that degenerate UV. Raised geometry from
+	# _build_surface_detail_network() keeps fine circuitry readable without UV
+	# stretching elsewhere.
 	_materials.island_deck = _textured_material(
 		Color("58677c"), Color("647389"), Color("7d8da2"), 0.66, 32)
-	_materials.island_deck_panel_a = _material(Color("65758c"), 0.62)
-	_materials.island_deck_panel_b = _material(Color("4b596e"), 0.72)
+	# DeckMicroCell sits on top of DeckPlate and is what players actually walk
+	# on; its top face uses the same clean outer_radius planar UV as island_deck
+	# (only its thin 0.05 m side wall is degenerate), so the real atlas reads
+	# correctly here. Two tints keep the alternating-cell checker pattern.
+	_materials.island_deck_panel_a = _image_material(
+		TEXTURE_ISLAND_DECK, Color("7985a0"), 0.58, 0.32, Color.BLACK, 0.0, 5.0)
+	_materials.island_deck_panel_b = _image_material(
+		TEXTURE_ISLAND_DECK, Color("5a6680"), 0.64, 0.38, Color.BLACK, 0.0, 5.0)
 	_materials.island_rim = _material(Color("172238"), 0.68)
-	_materials.island_underside = _material(Color("0d1729"), 0.76)
+	_materials.island_underside = _image_material(
+		TEXTURE_ISLAND_UNDERSIDE, Color("9fb4c9"), 0.52, 0.30, Color("2a6fb0"), 0.35, 5.0)
 	# A darker glass body leaves enough contrast for the separately modelled
 	# cyan/gold fracture rails to read, while retaining an internal crystal glow.
-	_materials.island_crystal = _material(Color("1595b0"), 0.15, Color("45e4f5"), 0.42)
+	_materials.island_crystal = _image_material(
+		TEXTURE_ISLAND_CRYSTAL, Color("bfe9f2"), 0.14, 0.05, Color("45e4f5"), 0.75, 2.0)
 	_materials.island_crystal_facet_dark = _material(Color("063f59"), 0.27, Color("087f99"), 0.05)
 	_materials.island_crystal_facet_mid = _material(Color("0e7895"), 0.20, Color("16afc7"), 0.11)
 	_materials.island_crystal_facet_bright = _material(Color("25a9bf"), 0.16, Color("32d5e7"), 0.22)
@@ -3287,12 +3323,11 @@ func _build_materials() -> void:
 		Color("55ff91"), 2.10)
 	_materials.bio_data_glow = _material(Color("0a9fd4"), 0.14,
 		Color("31e8ff"), 2.45)
-	_materials.bio_crown_crystal = _material(Color("1479ad"), 0.34,
-		Color("2ac9f4"), 0.34)
+	_materials.bio_crown_crystal = _image_material(
+		TEXTURE_ISLAND_CRYSTAL, Color("a9e2ef"), 0.22, 0.08, Color("2ac9f4"), 0.55, 1.4)
 	var crown_crystal_material := _materials.bio_crown_crystal as StandardMaterial3D
 	crown_crystal_material.vertex_color_use_as_albedo = true
 	crown_crystal_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	crown_crystal_material.metallic = 0.08
 	crown_crystal_material.metallic_specular = 0.38
 	crown_crystal_material.rim_enabled = true
 	crown_crystal_material.rim = 0.32
@@ -3303,14 +3338,20 @@ func _build_materials() -> void:
 	crown_outline_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	crown_outline_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	crown_outline_material.no_depth_test = false
-	_materials.bio_mushroom = _material(Color("56328f"), 0.32, Color("7146ad"), 0.20)
-	_materials.bio_mushroom_highlight = _material(Color("a57bd7"), 0.22, Color("c09bea"), 0.34)
-	_materials.bio_mushroom_dark = _material(Color("291b49"), 0.40,
-		Color("513075"), 0.16)
-	_materials.bio_mushroom_mid = _material(Color("754daf"), 0.28,
-		Color("9467c9"), 0.28)
-	_materials.bio_mushroom_light = _material(Color("a075cf"), 0.24,
-		Color("bd96e2"), 0.40)
+	# Mushroom caps are the grove (small) trees' only foliage-like surface, so
+	# they share the hero tree's crown-crystal atlas here — pale tints let the
+	# facet pattern itself read, while a stronger violet emission (instead of
+	# the texture's native cyan) keeps the caps on the tree's magic-layer hue.
+	_materials.bio_mushroom = _image_material(
+		TEXTURE_ISLAND_CRYSTAL, Color("b3a3dd"), 0.26, 0.05, Color("7146ad"), 0.55, 1.8)
+	_materials.bio_mushroom_highlight = _image_material(
+		TEXTURE_ISLAND_CRYSTAL, Color("e3daf5"), 0.16, 0.03, Color("c09bea"), 0.85, 1.8)
+	_materials.bio_mushroom_dark = _image_material(
+		TEXTURE_ISLAND_CRYSTAL, Color("9f8fd0"), 0.32, 0.06, Color("513075"), 0.45, 1.8)
+	_materials.bio_mushroom_mid = _image_material(
+		TEXTURE_ISLAND_CRYSTAL, Color("c3b5e6"), 0.22, 0.04, Color("9467c9"), 0.65, 1.8)
+	_materials.bio_mushroom_light = _image_material(
+		TEXTURE_ISLAND_CRYSTAL, Color("d6cbee"), 0.18, 0.03, Color("bd96e2"), 0.75, 1.8)
 	_materials.bio_mushroom_spot = _material(Color("d39acb"), 0.24,
 		Color("f2b4db"), 0.78)
 	for mushroom_surface in [_materials.bio_mushroom, _materials.bio_mushroom_mid,
