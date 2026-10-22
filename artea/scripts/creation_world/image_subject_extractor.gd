@@ -10,6 +10,14 @@ const GRID_WIDTH := 48
 const GRID_HEIGHT := 48
 const MIN_REGION_CELLS := 3
 const MAX_SUBJECTS := 24
+# Points checked per grid cell, along each side. A cell is ~21 px of a
+# 1024 px canvas, and a pen line is often thinner: reading only the cell's
+# centre missed most of a heart's outline and split it into ten fragments.
+const CELL_SAMPLES := 5
+# Neighbours a painted region spreads to: corners too, so a curved or
+# diagonal line stays one shape instead of breaking at every step.
+const NEIGHBOURS: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN,
+	Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1)]
 
 
 static func extract(image: Image) -> Array:
@@ -18,12 +26,12 @@ static func extract(image: Image) -> Array:
 	var grid_height := clampi(int(round(GRID_WIDTH * float(image.get_height()) / maxf(image.get_width(), 1))), 24, GRID_HEIGHT)
 	var colours: Array[Color] = []
 	var buckets: Array[String] = []
-	var background := _background_colour(image)
+	var background := background_colour(image)
 	for y in grid_height:
 		for x in GRID_WIDTH:
-			var colour := _sample(image, x, y, GRID_WIDTH, grid_height)
+			var colour := _sample(image, x, y, GRID_WIDTH, grid_height, background)
 			colours.append(colour)
-			buckets.append("" if _is_background(colour, background) else _bucket(colour))
+			buckets.append("" if is_background(colour, background) else _bucket(colour))
 
 	var visited := PackedByteArray()
 	visited.resize(GRID_WIDTH * grid_height)
@@ -86,7 +94,7 @@ static func _flood_region(start_x: int, start_y: int, width: int, height: int,
 		region["max_y"] = maxi(region["max_y"], point.y)
 		region["cells"] += 1
 		region["colour_sum"] += colours[index]
-		for direction in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+		for direction in NEIGHBOURS:
 			var next: Vector2i = point + direction
 			if next.x >= 0 and next.y >= 0 and next.x < width and next.y < height:
 				var next_index: int = next.y * width + next.x
@@ -95,14 +103,30 @@ static func _flood_region(start_x: int, start_y: int, width: int, height: int,
 	return region
 
 
-static func _sample(image: Image, x: int, y: int, width: int, height: int) -> Color:
-	var px := clampi(int((float(x) + 0.5) / width * image.get_width()), 0, image.get_width() - 1)
-	var py := clampi(int((float(y) + 0.5) / height * image.get_height()), 0, image.get_height() - 1)
-	var colour := image.get_pixel(px, py)
-	return Color.WHITE if colour.a < 0.08 else colour
+# The cell's most painted-looking point: the one furthest from the background,
+# so a line anywhere in the cell counts, not just one through its centre.
+static func _sample(image: Image, x: int, y: int, width: int, height: int,
+		background: Color) -> Color:
+	var best := Color.WHITE
+	var best_difference := -1.0
+	for sy in CELL_SAMPLES:
+		for sx in CELL_SAMPLES:
+			var px := clampi(int((float(x) + (sx + 0.5) / CELL_SAMPLES) / width * image.get_width()),
+				0, image.get_width() - 1)
+			var py := clampi(int((float(y) + (sy + 0.5) / CELL_SAMPLES) / height * image.get_height()),
+				0, image.get_height() - 1)
+			var colour := image.get_pixel(px, py)
+			if colour.a < 0.08:
+				colour = Color.WHITE
+			var difference := Vector3(colour.r - background.r, colour.g - background.g,
+				colour.b - background.b).length()
+			if difference > best_difference:
+				best = colour
+				best_difference = difference
+	return best
 
 
-static func _background_colour(image: Image) -> Color:
+static func background_colour(image: Image) -> Color:
 	var margin_x := maxi(1, image.get_width() / 30)
 	var margin_y := maxi(1, image.get_height() / 30)
 	return (
@@ -113,7 +137,7 @@ static func _background_colour(image: Image) -> Color:
 	) / 4.0
 
 
-static func _is_background(colour: Color, background: Color) -> bool:
+static func is_background(colour: Color, background: Color) -> bool:
 	var difference := Vector3(colour.r - background.r, colour.g - background.g, colour.b - background.b).length()
 	return difference < 0.13
 

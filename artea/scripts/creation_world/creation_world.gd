@@ -10,14 +10,29 @@ const RealtimeWorldGenerator := preload("res://scripts/creation_world/realtime_w
 const TerrainBuilder := preload("res://scripts/creation_world/world_terrain_builder.gd")
 const AmbientLifeLoop := preload("res://scripts/creation_world/ambient_life_loop.gd")
 const ArtworkEnvironmentAnimator := preload("res://scripts/creation_world/artwork_environment_animator.gd")
+const ArtworkPlay := preload("res://scripts/creation_world/artwork_play.gd")
 const HudTheme := preload("res://scripts/ui/artea_hud_theme.gd")
 const WORLD_WIDTH := 36.0
 const WORLD_DEPTH := 28.0
 const PLAYER_HEIGHT := 1.8
 
+# The painting's edge: a gilded frame the player sees, and walls just inside
+# it that they can't walk or jump past (a jump peaks at ~2.2 m). The walls sit
+# on a layer only the player collides with, so the camera can still look out.
+const EDGE_LAYER := 16
+const EDGE_INSET := 0.6
+const EDGE_WALL_HEIGHT := 14.0
+# Below this something has gone wrong (the player can't reach it through the
+# walls): put them back where they came in.
+const FALL_LIMIT := -12.0
+# Each E on a plant grows it this much, up to GROWTH_STEPS times.
+const GROWTH_STEP := 1.18
+const GROWTH_STEPS := 3
+
 # The control hint is fixed and scannable, so it stays separate from the
-# status line rather than growing into one long sentence at the bottom.
-const CONTROL_HINT := "WASD move · Shift run · Space jump · E interact · Q lens · X exit"
+# status line rather than growing into one long sentence at the bottom. Draw (Q)
+# and Paint (F) show their keys on their own buttons.
+const CONTROL_HINT := "WASD move · Shift run · Space jump · E interact · P lens · X exit"
 
 var _player: CharacterBody3D
 var _camera: Camera3D
@@ -44,6 +59,8 @@ var _ambient_root: Node3D
 var _environment_animator: Node3D
 var _sky_material: ProceduralSkyMaterial
 var _artwork_sun: DirectionalLight3D
+var _play: Node3D
+var _spawn_position := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -59,6 +76,7 @@ func _ready() -> void:
 	_apply_manifest(_manifest)
 	_restore_world_drawings()
 	_start_ambient_life()
+	_start_play()
 	if not CreationWorldState.world_ready.is_connected(_on_richer_world_ready):
 		CreationWorldState.world_ready.connect(_on_richer_world_ready)
 	# The background vision request may have completed during scene construction.
@@ -115,6 +133,20 @@ func _process(delta: float) -> void:
 	if _interaction_scan_timer <= 0.0:
 		_interaction_scan_timer = 0.10
 		_refresh_interaction_target()
+	if _player != null and _player.global_position.y < FALL_LIMIT:
+		_player.global_position = _spawn_position
+		_player.velocity = Vector3.ZERO
+		_set_status("The painting caught you and set you back at the start.")
+	# The drops are hidden once the painted subjects are built, so none ends up
+	# inside one of them.
+	if _play != null and _play.drops_remaining() == 0 and not _play.has_meta("drops_placed") \
+			and world_generation_idle():
+		_play.set_meta("drops_placed", true)
+		_play.place_drops(_play_bounds(), _spawn_position,
+			abs(CreationWorldState.current_title.hash()) + 7, _position_is_clear.bind(""))
+		if _play.drops_remaining() > 0:
+			_set_status("%d paint drops are hidden in your painting. Can you find them all?"
+				% _play.drops_remaining())
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -125,8 +157,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_M:
 			_toggle_idea_panel(true)
 			get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_D:
+		# Q, not D: D is also strafe-right, so walking right used to open the
+		# drawing panel. Q is free here (there are no characters to talk to).
+		elif event.keycode == KEY_Q:
 			_toggle_sketch_panel(true)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_F:
+			_toggle_painting()
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_X:
 			_return_to_gallery()
@@ -174,7 +211,54 @@ func _build_environment() -> void:
 	_terrain.sculpt(_source_artwork_image, _palette)
 	_world_root.add_child(_terrain.build_ground(_palette, _source_artwork_image))
 	_world_root.add_child(_terrain.build_water(_palette))
+	_build_world_edge()
 	_build_ambient_life()
+
+
+# The terrain ends in empty air, and its low rim alone never stopped anyone
+# walking off it. A gilded frame marks the edge of the painting; walls just
+# inside it stop the player.
+func _build_world_edge() -> void:
+	var frame := Node3D.new()
+	frame.name = "PaintingFrame"
+	_world_root.add_child(frame)
+	var walls := StaticBody3D.new()
+	walls.name = "PaintingEdge"
+	walls.collision_layer = EDGE_LAYER
+	walls.collision_mask = 0
+	frame.add_child(walls)
+	var gold := StandardMaterial3D.new()
+	gold.albedo_color = Color("d9a93f")
+	gold.metallic = 0.7
+	gold.roughness = 0.32
+	var half_x := float(_terrain.width) * 0.5 - EDGE_INSET
+	var half_z := float(_terrain.depth) * 0.5 - EDGE_INSET
+	# [centre, length along x or z, runs along x]
+	for side in [[Vector3(0, 0, -half_z), half_x * 2.0, true], [Vector3(0, 0, half_z), half_x * 2.0, true],
+			[Vector3(-half_x, 0, 0), half_z * 2.0, false], [Vector3(half_x, 0, 0), half_z * 2.0, false]]:
+		var centre: Vector3 = side[0]
+		var length: float = side[1]
+		var along_x: bool = side[2]
+		var wall := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(length + 1.0, EDGE_WALL_HEIGHT, 0.5) if along_x \
+			else Vector3(0.5, EDGE_WALL_HEIGHT, length + 1.0)
+		wall.shape = box
+		wall.position = centre + Vector3.UP * (EDGE_WALL_HEIGHT * 0.5 - 3.0)
+		walls.add_child(wall)
+		var moulding := MeshInstance3D.new()
+		moulding.name = "FrameMoulding%d" % frame.get_child_count()
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(length + 1.6, 1.4, 0.8) if along_x else Vector3(0.8, 1.4, length + 1.6)
+		moulding.mesh = mesh
+		moulding.material_override = gold
+		moulding.position = centre + Vector3.UP * 0.3
+		frame.add_child(moulding)
+
+
+func _play_bounds() -> Rect2:
+	return Rect2(-float(_terrain.width) * 0.5, -float(_terrain.depth) * 0.5,
+		float(_terrain.width), float(_terrain.depth))
 
 
 func _build_atmosphere() -> void:
@@ -272,6 +356,24 @@ func _start_ambient_life() -> void:
 	_ambient_loop.force_tick()
 
 
+func _start_play() -> void:
+	if _player == null or _terrain == null:
+		return
+	_play = ArtworkPlay.new()
+	_play.name = "ArtworkPlay"
+	_world_root.add_child(_play)
+	_play.message.connect(_set_status)
+	_play.all_drops_collected.connect(_celebrate_artwork)
+	_play.configure(_player, _terrain, _palette)
+
+
+# Every drop found: everything the player painted joins in for a few seconds.
+func _celebrate_artwork() -> void:
+	for actor in _actors.values():
+		if actor is Node3D and is_instance_valid(actor):
+			(actor as Node3D).set_meta("interaction_boost_until", _time + 5.0)
+
+
 # Authored manifest actors claim space so the streaming scatter never grows up
 # through the middle of something the player actually painted.
 func _refresh_ambient_reservations() -> void:
@@ -317,8 +419,9 @@ func _build_player() -> void:
 		# Stand on the sculpted surface rather than inside it.
 		spawn_y = _terrain.height_at(0.0, spawn_z) + PLAYER_HEIGHT * 0.6
 	_player.position = Vector3(0, spawn_y, spawn_z)
+	_spawn_position = _player.position
 	_player.collision_layer = 1
-	_player.collision_mask = 1 | 8
+	_player.collision_mask = 1 | 8 | EDGE_LAYER
 	var collision := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.42
@@ -471,8 +574,10 @@ func _build_action_group(root: Control, accent: Color) -> void:
 	var actions := [
 		["AddIdeaButton", "Add  (M)", HudTheme.CREATOR_CORAL,
 			_toggle_idea_panel.bind(true), "Add an idea to your world"],
-		["DrawButton", "Draw  (D)", HudTheme.CREATOR_CORAL,
+		["DrawButton", "Draw  (Q)", HudTheme.CREATOR_CORAL,
 			_toggle_sketch_panel.bind(true), "Draw something new"],
+		["PaintButton", "Paint  (F)", HudTheme.CREATOR_CORAL,
+			_toggle_painting, "Paint the ground as you walk"],
 		["ExitArtworkButton", "Exit Artwork  (X)", HudTheme.CASTLE_BLUE,
 			_return_to_gallery, "Leave this artwork and return to the gallery"],
 	]
@@ -782,7 +887,8 @@ func _update_manifest_object(spec: Dictionary, animation: Dictionary = {},
 		_remove_manifest_object(id)
 		return _spawn_manifest_object(spec, animation, interaction)
 	var scale_factor := _scale_for_spec(spec, existing_type)
-	actor.scale = Vector3.ONE * scale_factor
+	# Keep what the player grew with E when the world is refined.
+	actor.scale = Vector3.ONE * scale_factor * pow(GROWTH_STEP, int(actor.get_meta("growth", 0)))
 	var desired := _position_for_spec(spec, _actors.keys().find(id))
 	actor.position = _resolve_actor_position(desired, existing_type,
 		_placement_radius_for(existing_type, scale_factor), id)
@@ -1114,7 +1220,13 @@ func _activate_interaction() -> void:
 		_cycle_object_colour(_interaction_target)
 		response += " Its colour changes with you."
 	elif kind in ["tree", "flower", "plant"]:
-		response += " It grows toward the light."
+		var growth := int(_interaction_target.get_meta("growth", 0))
+		if growth < GROWTH_STEPS and spec.has("base"):
+			_interaction_target.set_meta("growth", growth + 1)
+			spec["base"] = (spec["base"] as Transform3D).scaled_local(Vector3.ONE * GROWTH_STEP)
+			response += " It grows toward the light."
+		else:
+			response += " It has grown as tall as it can."
 	elif kind in ["river", "water", "boat"]:
 		response += " Ripples travel across its surface."
 	elif kind == "artwork_portal":
@@ -1272,6 +1384,11 @@ func _toggle_idea_panel(show: bool) -> void:
 	_player.set_ui_open(show)
 	if show:
 		_idea_input.grab_focus()
+
+
+func _toggle_painting() -> void:
+	if _play != null:
+		_play.toggle_painting()
 
 
 func _toggle_sketch_panel(show: bool) -> void:
