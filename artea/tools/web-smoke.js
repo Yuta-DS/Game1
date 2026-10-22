@@ -560,6 +560,8 @@ async function connect() {
 			for (const [suffix, options] of [['idle', {}], ['milo-portrait', {portrait:true}], ['render-off', {render_off:true}], ['scripts-off', {scripts_off:true}], ['no-scatter', {no_scatter:true}], ['no-shadows', {no_shadows:true}]]) await profile('hub-' + suffix, options);
 			await profile('hub-sea-east', {sea_view:'east'});
 			await profile('hub-sea-south', {sea_view:'south'});
+			await profile('hub-ocean-near', {shore_audio:'near'});
+			await profile('hub-ocean-inland', {shore_audio:'inland'});
 			if (args.includes('--profile-hub')) {
 				const samples = [['no-msaa', {msaa_3d:0}], ['no-lights', {no_lights:true}], ['animations-off', {animations_off:true}], ['hide-milo', {hide_names:['Milo_Animations2']}]];
 				for (const [suffix, options] of samples) await profile('hub-' + suffix, options);
@@ -647,7 +649,7 @@ async function connect() {
 			}
 			if (!await goTo('the Melody journey test', '/tmp/heart_journey_web_qa.tscn')) throw new Error('Journey fixture failed');
 			await waitForLog(/JOURNEY QA ready/, 'garden presentation fixture', 20000);
-			for (const stage of ['intro', 'transcript', 'harvest', 'journal', 'fountain', 'gate', 'instrument', 'river-organ', 'river-harp', 'river-bells', 'bridge-chimes']) {
+			for (const stage of ['intro', 'transcript', 'harvest', 'journal', 'fountain', 'gate', 'instrument', 'river-organ', 'river-harp', 'river-bells', 'bridge-chimes', 'warning-crossing']) {
 				const from = consoleLines.length;
 				await evaluate(`window.arteaJourneyQA(${JSON.stringify(stage)})`);
 				await waitForLog(new RegExp('JOURNEY QA stage ' + stage), stage + ' presentation', 10000, from);
@@ -678,7 +680,7 @@ async function connect() {
 			areas.push([label, entered, entered ? await goTo('the Hub', HUB) : null, 'prefetched']);
 		}
 
-		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error|MUSIC QA FAILURE|JOURNEY QA (?:FAILURE|flower answer did not|clearing did not|gate failed|fountain not|menu did not|missing control)/.test(l));
+		const fatal = consoleLines.filter((l) => /new_scene" is null|No loader found|Failed to load scene|SceneLoader: could not open|SCRIPT ERROR|Parse Error|MUSIC QA FAILURE|OCEAN QA FAILURE|JOURNEY QA (?:FAILURE|flower answer did not|clearing did not|gate failed|fountain not|menu did not|missing control)/.test(l));
 
 		fs.writeFileSync(path.join(outDir, 'console.log'), consoleLines.join('\n'));
 		reportMetrics();

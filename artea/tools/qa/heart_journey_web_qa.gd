@@ -94,6 +94,24 @@ func run(stage: String) -> void:
 			if world.journey_landscape.gates[2].open: push_error("JOURNEY QA FAILURE: bridge chime gate bypassed its requirements")
 			world.camera.yaw = -PI / 2
 			world.camera.pitch = -0.4
+		"warning-crossing":
+			world.chapter_world.open_instrument(5)
+			for note in [0, 1, 2]:
+				world.chapter_world.clock = 2
+				world.chapter_world.challenge.elapsed = 0
+				world.chapter_world.play(note)
+			world.chapter_world.submit()
+			world._close()
+			world.player.position = Vector3(286, 1, 8)
+			world.journey_landscape.tick(0)
+			for i in 3: await get_tree().physics_frame
+			for x in [300.0, 304.0]:
+				var target := world.to_global(Vector3(x, 1, 8))
+				if world.player.test_move(world.player.global_transform, target - world.player.global_position):
+					push_error("JOURNEY QA FAILURE: pink barrier still blocks the open warning gate")
+				world.player.global_position = target
+			world.camera.yaw = PI / 2
+			world.camera.pitch = -0.4
 	for i in 3: await get_tree().process_frame
 	if stage == "river-bells" and not world.journey_landscape.gates[1].collider.disabled:
 		push_error("JOURNEY QA FAILURE: Bell Grove collider stayed closed")
