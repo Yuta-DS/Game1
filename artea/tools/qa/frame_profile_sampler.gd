@@ -20,6 +20,9 @@ var _pitch := 0.0
 var _scripts := {}
 var _mesh_groups := {}
 var _portrait: Camera3D
+var _ocean: Node3D
+var _ocean_start := 0.0
+var _near_ocean_distance := 0.0
 
 func _ready() -> void:
 	set_process(false)
@@ -44,12 +47,28 @@ func _start(label: String, seconds: float, options: Dictionary) -> void:
 		_yaw = _camera.get("_yaw")
 		_pitch = _camera.get("_pitch")
 	var scene := get_tree().current_scene
+	if options.has("shore_audio"):
+		_ocean = scene.find_child("Ocean_System", true, false)
+		var player := scene.get_node("NewPlayer") as CharacterBody3D
+		_saved.append({"node": player, "property": "global_position", "value": player.global_position})
+		_saved.append({"node": player, "process": player.is_processing(), "physics": player.is_physics_processing()})
+		player.set_physics_process(false)
+		_ocean._update_shore_source()
+		player.global_position = _ocean._target + Vector3.UP * 2 if options.shore_audio == "near" else Vector3(0, 18, 0)
+		_ocean_start = _ocean.get_node("Ocean Sound").get_playback_position()
 	if options.get("portrait", false):
 		var milo := scene.get_node("Milo_Animations2") as Node3D
 		_portrait = Camera3D.new()
 		add_child(_portrait)
 		_portrait.global_position = milo.global_position + milo.global_basis.z * 3.0 + milo.global_basis.x * 1.2 + Vector3.UP * 1.6
 		_portrait.look_at(milo.global_position + Vector3.UP * 1.2)
+		_portrait.make_current()
+	if options.has("sea_view"):
+		_portrait = Camera3D.new()
+		_portrait.far = 4000
+		add_child(_portrait)
+		_portrait.global_position = Vector3(80, 85, 0) if options.sea_view == "east" else Vector3(0, 85, 80)
+		_portrait.look_at(Vector3(800, 10, 0) if options.sea_view == "east" else Vector3(0, 10, 800))
 		_portrait.make_current()
 	for property in ["scaling_3d_scale", "msaa_3d"]:
 		if options.has(property):
@@ -144,6 +163,17 @@ func _finish() -> void:
 		"node_count": Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
 		"video_mb": Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0,
 		"processing_scripts": _scripts, "mesh_groups": _mesh_groups, "long_audio": long_audio}
+	if _options.has("shore_audio"):
+		var sound := _ocean.get_node("Ocean Sound") as AudioStreamPlayer3D
+		var distance := sound.global_position.distance_to(get_viewport().get_camera_3d().global_position)
+		if not sound.playing or not sound.stream.loop or absf(sound.get_playback_position() - _ocean_start) < 0.2:
+			push_error("OCEAN QA FAILURE: surf playback did not advance")
+		if _options.shore_audio == "near":
+			_near_ocean_distance = distance
+			if distance > sound.unit_size * 2: push_error("OCEAN QA FAILURE: surf source did not follow the coast")
+		elif distance < _near_ocean_distance + 10:
+			push_error("OCEAN QA FAILURE: inland listener is not farther from the surf")
+		print("OCEAN QA ", _options.shore_audio, " listener distance ", distance)
 	for record in _saved:
 		if not is_instance_valid(record.node): continue
 		if record.has("property"):

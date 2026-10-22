@@ -102,6 +102,26 @@ func run() -> void:
 	for i in 3: await process_frame
 	check(world.options.get_node_or_null("ActivityFlow") != null, "Garden instrument receives visual instructions")
 	check(world.options.get_parent().scroll_vertical == 0, "Instrument opens on its title, lesson and tuning controls")
+	var tuning_row: HBoxContainer
+	for row in world.options.get_children():
+		if row.get_meta("tuning_index", -1) == 0: tuning_row = row
+	tuning_row.get_child(2).grab_focus()
+	var enter := InputEventKey.new()
+	enter.keycode = KEY_ENTER
+	enter.physical_keycode = KEY_ENTER
+	enter.pressed = true
+	Input.parse_input_event(enter)
+	await process_frame
+	enter = enter.duplicate()
+	enter.pressed = false
+	Input.parse_input_event(enter)
+	await process_frame
+	check(world.chapter_world.challenge.input[0] == 1 and world.modal_open, "Enter activates focused Tighten without submitting the composition")
+	var exit_menu := world.panel.find_child("ExitMenu", true, false) as Button
+	check(exit_menu != null and exit_menu.is_visible_in_tree(), "Every garden menu has a visible exit button")
+	check(world.panel.get_global_rect().encloses(exit_menu.get_global_rect()), "Exit stays inside the card outside the scrolling content")
+	exit_menu.pressed.emit()
+	check(not world.modal_open and world.player.input_enabled, "Exit menu restores exploration controls")
 	world._close()
 	world.queue_free()
 	await process_frame

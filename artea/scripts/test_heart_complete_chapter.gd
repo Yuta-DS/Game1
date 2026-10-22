@@ -120,6 +120,13 @@ func run() -> void:
 			for point in [Vector3(176, 0, -8), Vector3(202, 0, -8), Vector3(230, 0, -8)]:
 				check(await walk(point), "walk from Rain Boat across the earned Bell Grove gate: " + str(point))
 			check(world.journey_landscape.gates[1].open and world.journey_landscape.gates[1].collider.disabled, "saved organ, harp and Call Bells open the real Bell Grove collider on approach")
+			for chime_x in [262.0, 274.0, 286.0]:
+				check(await walk(Vector3(chime_x, 0, 8)), "reach chime before unlocking Warning Bell gate: " + str(chime_x))
+			check(not world.journey_landscape.gates[2].open, "All three chimes are reachable while their gate is still locked")
+		if task == 5:
+			world.player.position = Vector3(300, 1, 8)
+			await physics_frame
+			check(not world.player.test_move(world.player.global_transform, Vector3(4, 0, 0)), "No obsolete pink barrier blocks the open Warning Bell crossing")
 	for i in 3:
 		chapter.encounter.phase = "recovery"
 		chapter.open_anchor(i)

@@ -280,7 +280,7 @@ func _instrument_panel() -> void:
 	world._flow(steps)
 	if active_task not in [2, 3]:
 		var keys := Label.new()
-		keys.text = "Click a note or use 1–6 · Backspace: undo · Enter: check · Esc: leave"
+		keys.text = "Click a note or use 1–6 · Backspace: undo · Enter: select focused button · Esc: leave"
 		keys.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		keys.add_theme_font_size_override("font_size", 20)
 		world.options.add_child(keys)
@@ -292,13 +292,13 @@ func _instrument_panel() -> void:
 			world.options.add_child(row)
 			var label := Label.new()
 			label.text = _tuning_text(i)
-			label.custom_minimum_size.x = 310
+			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			label.add_theme_font_size_override("font_size", 22)
 			row.add_child(label)
 			for change in [-1, 1]:
 				var button := Button.new()
 				button.text = "Loosen −" if change == -1 else "Tighten +"
-				button.custom_minimum_size = Vector2(140, 52)
+				button.custom_minimum_size = Vector2(120, 52)
 				button.add_theme_font_size_override("font_size", 21)
 				row.add_child(button)
 				button.pressed.connect(func():
@@ -338,7 +338,6 @@ func _input(event: InputEvent) -> void:
 		var count := 6 if active_task == 9 else (4 if active_task in [4, 7] or active_anchor == 2 else 3)
 		if code - KEY_1 < count: play(code - KEY_1)
 	elif code == KEY_BACKSPACE: challenge.undo(); _store_attempt(); _update_score()
-	elif code == KEY_ENTER: submit()
 	else: return
 	get_viewport().set_input_as_handled()
 
