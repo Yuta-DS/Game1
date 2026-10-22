@@ -47,7 +47,8 @@ func _build_shoreline() -> void:
 	_target = shoreline[0] if not shoreline.is_empty() else _sound.global_position
 
 func _update_shore_source() -> void:
-	var player := get_tree().get_first_node_in_group("Player") as Node3D
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	if player == null: player = get_tree().get_first_node_in_group("Player") as Node3D
 	if player == null: return
 	var closest := INF
 	for point in shoreline:

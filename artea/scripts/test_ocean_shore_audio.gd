@@ -6,7 +6,11 @@ func run() -> void:
 	var water := (load("res://scenes/Water.tscn") as PackedScene).instantiate()
 	water.position.y = 0.514
 	var player := Node3D.new()
-	player.add_to_group("Player")
+	player.add_to_group("player")
+	var other_player := Node3D.new()
+	other_player.add_to_group("Player")
+	other_player.position = Vector3(500, 500, 500)
+	root.add_child(other_player)
 	root.add_child(player)
 	root.add_child(water)
 	await process_frame
@@ -32,6 +36,7 @@ func run() -> void:
 	assert(root.audio_listener_enable_3d)
 	water.queue_free()
 	player.queue_free()
+	other_player.queue_free()
 	await process_frame
 	print("OCEAN SHORE AUDIO: PASS")
 	quit()
