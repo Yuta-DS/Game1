@@ -29,6 +29,10 @@ func _ready():
 	print("Account screen initializing")
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
+	# Back here because this account signed in elsewhere (or the sign-in expired).
+	if not APIManager.sign_out_reason.is_empty():
+		show_message(APIManager.sign_out_reason)
+		APIManager.sign_out_reason = ""
 	if APIManager.uses_managed_accounts():
 		var recovery := Button.new()
 		recovery.text = "Verify account / reset password"

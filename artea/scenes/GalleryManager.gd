@@ -312,7 +312,12 @@ func start_next_download() -> void:
 	
 	current_download_artwork_id = int(artwork_data["id"])
 
-	var full_url = artwork_data["url"]
+	# The server lists each artwork as a path ("/download_artwork/3"); on its
+	# own that isn't a URL HTTPRequest can fetch, so account artworks never
+	# reached the gallery.
+	var full_url = str(artwork_data["url"])
+	if full_url.begins_with("/"):
+		full_url = APIManager.BASE_URL + full_url
 
 	print("Downloading online art: ", full_url)
 

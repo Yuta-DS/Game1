@@ -208,6 +208,15 @@ class Artwork(db.Model):
     filename = db.Column(db.String(255), nullable=False)
     is_public = db.Column(db.Boolean, default=False)
 
+
+class ActiveSession(db.Model):
+    """The one login an account may have open. Logging in replaces it (newest
+    wins), and tokens from the older login stop working: see
+    _signed_in_elsewhere. A table of its own, so create_all adds it to an
+    existing database without a migration."""
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    session_id = db.Column(db.String(32), nullable=False)
+
 # Runs at import time, not just under `if __name__ == '__main__'`: a
 # production WSGI server (gunicorn) imports this module and calls the `app`
 # object directly, it never executes the __main__ block, so table creation
@@ -285,9 +294,43 @@ def login():
     if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash):
         return jsonify({"error": "Invalid credentials"}), 401
 
-    token = create_access_token(identity=str(user.id))
+    # One login per account, newest wins: this login's id replaces the last
+    # one's, which signs out the other device on its next request.
+    session_id = secrets.token_hex(16)
+    active = db.session.get(ActiveSession, user.id)
+    if active is None:
+        db.session.add(ActiveSession(user_id=user.id, session_id=session_id))
+    else:
+        active.session_id = session_id
+    db.session.commit()
+    token = create_access_token(identity=str(user.id), additional_claims={"sid": session_id})
 
     return jsonify({"token": token})
+
+
+# Rejects a token from an account's older login. A token without a session id
+# (issued before this check existed) is only refused once the account has
+# logged in again. Cognito (aws_app.py) manages its own sessions and tokens.
+if os.environ.get("AUTH_PROVIDER") != "cognito":
+    @jwt.token_in_blocklist_loader
+    def _signed_in_elsewhere(_header, payload):
+        active = db.session.get(ActiveSession, int(payload["sub"]))
+        return active is not None and payload.get("sid") != active.session_id
+
+    @jwt.revoked_token_loader
+    def _signed_in_elsewhere_response(_header, _payload):
+        return jsonify({
+            "error": "signed_in_elsewhere",
+            "message": "This account was signed in on another device.",
+        }), 401
+
+
+# The game asks this every so often, so a device signed out by a newer login
+# finds out promptly rather than at its next save.
+@app.route('/session', methods=['GET'])
+@jwt_required()
+def session_status():
+    return jsonify({"ok": True}), 200
 
 # =========================
 # SELF-SERVICE PASSWORD RESET
@@ -530,11 +573,17 @@ def upload_artwork():
 # =========================
 
 @app.route('/download_artwork/<int:artwork_id>', methods=['GET'])
+@jwt_required(optional=True)
 def download_artwork(artwork_id):
 
     artwork = Artwork.query.filter_by(id=artwork_id).first()
 
-    if not artwork:
+    # A player's artwork is theirs: anyone else (or no login at all) gets the
+    # same answer as for a missing one, unless it was made public. It used to
+    # need no login, so any id could be fetched by anyone.
+    identity = get_jwt_identity()
+    if not artwork or (not artwork.is_public
+            and (identity is None or int(identity) != artwork.user_id)):
         return jsonify({"error": "Artwork not found"}), 404
 
     file_path = os.path.join(

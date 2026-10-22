@@ -1,5 +1,7 @@
 extends Node
 
+const SceneLoader := preload("res://scripts/scene_loader.gd")
+
 var BASE_URL: String = _configured_base_url()
 var LOGIN_URL = BASE_URL + "/login"
 var REGISTER_URL = BASE_URL + "/register"
@@ -13,6 +15,14 @@ var WORLD_BUILDER_URL = BASE_URL + "/ai/world-builder"
 var AI_STATUS_URL = BASE_URL + "/ai/status"
 
 var auth_token = ""
+var SESSION_URL = BASE_URL + "/session"
+# One login per account, newest wins (server.py). While signed in the game asks
+# every SESSION_CHECK_SECONDS whether this login is still the account's latest;
+# when it isn't, it signs out and the start screen shows `sign_out_reason`.
+const SESSION_CHECK_SECONDS := 30.0
+const START_SCREEN := "res://scenes/start_screen.tscn"
+var sign_out_reason := ""
+var _session_check: Timer
 
 var _refresh_token := ""
 var _session_generation := 0
@@ -64,6 +74,7 @@ func _remember_session(data: Dictionary) -> void:
 	auth_token = str(data.token)
 	if data.has("refresh_token"): _refresh_token = str(data.refresh_token)
 	if Global.auth_token != "OFFLINE_GUEST_TOKEN": Global.auth_token = auth_token
+	_watch_session()
 	if _refresh_token.is_empty(): return
 	_refresh_timer = get_tree().create_timer(maxf(30, float(data.get("expires_in", 3600)) - 120))
 	_refresh_timer.timeout.connect(func():
@@ -332,3 +343,46 @@ func clear_session() -> void:
 	_refresh_token = ""
 	auth_token = ""
 	Global.auth_token = ""
+	if _session_check != null:
+		_session_check.stop()
+
+
+func _watch_session() -> void:
+	if uses_managed_accounts():
+		return  # Cognito manages its own sessions
+	if _session_check == null:
+		_session_check = Timer.new()
+		_session_check.wait_time = SESSION_CHECK_SECONDS
+		# Keeps checking while the game is paused or a menu is open.
+		_session_check.process_mode = Node.PROCESS_MODE_ALWAYS
+		_session_check.timeout.connect(_check_session)
+		add_child(_session_check)
+	_session_check.start()
+
+
+func _check_session() -> void:
+	if not _looks_like_jwt(auth_token):
+		return
+	var generation := _session_generation
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(result, status, _headers, body):
+		http.queue_free()
+		# Offline or the server is down: stay signed in and ask again later.
+		if generation != _session_generation or result != HTTPRequest.RESULT_SUCCESS or status != 401:
+			return
+		var data = JSON.parse_string(body.get_string_from_utf8())
+		var elsewhere: bool = data is Dictionary and data.get("error") == "signed_in_elsewhere"
+		sign_out(
+			"You were signed out because this account signed in on another device."
+			if elsewhere else "Your sign-in has expired. Please sign in again.")
+	)
+	if http.request(SESSION_URL, ["Authorization: Bearer " + auth_token]) != OK:
+		http.queue_free()
+
+
+## Ends this login and returns to the start screen, which shows `reason`.
+func sign_out(reason: String) -> void:
+	clear_session()
+	sign_out_reason = reason
+	SceneLoader.change_scene(get_tree(), START_SCREEN)
