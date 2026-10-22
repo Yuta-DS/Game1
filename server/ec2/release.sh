@@ -10,6 +10,12 @@ BUILD="${ROOT}/artea/builds/web"
 OUT="${ROOT}/artea/builds/artea-release.tar"
 [[ -f "${BUILD}/index.html" ]] || { echo "No Web export in ${BUILD}: run ./web rebuild" >&2; exit 1; }
 [[ -f "${BUILD}/.export-in-progress" ]] && { echo "The export is still running" >&2; exit 1; }
+# A build older than the latest committed game change is stale (the export
+# records no commit of its own, so its age is what can be checked).
+if (( $(date -r "${BUILD}/index.html" +%s) < $(git -C "${ROOT}" log -1 --format=%ct HEAD -- artea) )); then
+	echo "The game in ${BUILD} is older than the latest change to artea/: run ./web rebuild first." >&2
+	exit 1
+fi
 
 STAGE="$(mktemp -d)"
 trap 'rm -rf "${STAGE}"' EXIT
@@ -46,8 +52,8 @@ files="$(echo "${files}" | tr -d '\r')"  # Windows Python ends lines with \r\n
 
 # What is in it, for when someone asks which version is running.
 {
-	echo "server: $(git -C "${ROOT}" log -1 --format='%h %cd' --date=short HEAD)"
-	echo "game:   $(cat "${BUILD}/.export-git-head" 2>/dev/null || echo unknown) (built $(date -r "${BUILD}/index.html" +%F))"
+	echo "release: $(git -C "${ROOT}" rev-parse --abbrev-ref HEAD) at $(git -C "${ROOT}" log -1 --format='%h %cd' --date=short HEAD)"
+	echo "game built: $(date -r "${BUILD}/index.html" '+%F %H:%M')"
 } > "${STAGE}/artea-release/VERSION"
 
 tar -cf "${OUT}" -C "${STAGE}" artea-release

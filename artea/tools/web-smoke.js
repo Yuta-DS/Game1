@@ -70,10 +70,11 @@ const LOADER_ATTEMPTS = 4;
 const DEBUG_PORT = Number(process.env.ARTEA_SMOKE_DEBUG_PORT || 9222);
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
-// current login screen puts it at y=726; deployments still running the older,
-// shorter login panel have it at y=568. Tried in order until one is accepted.
+// current login screen (with "Forgot password?" under it) puts it at y=610;
+// older login panels had it at y=726 and y=568. Tried in order until one is
+// accepted.
 const VIEWPORT = { width: 1280, height: 800 };
-const GUEST_BUTTONS = [{ x: 300, y: 726 }, { x: 287, y: 568 }];
+const GUEST_BUTTONS = [{ x: 300, y: 610 }, { x: 300, y: 726 }, { x: 287, y: 568 }];
 
 const CHROME_PATHS = [
 	'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',

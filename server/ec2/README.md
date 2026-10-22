@@ -55,8 +55,10 @@ Open the instance and go to its **Networking** tab:
    attached). Note the address, e.g. `3.105.12.34`. This is your
    **SERVER_IP**. Without a static IP the address would change whenever the
    server restarts.
-2. Under **IPv4 Firewall**, choose **Add rule** → **HTTPS** (port 443) →
-   **Create**. SSH (22) and HTTP (80) are already open; keep them.
+2. Scroll down to **IPv4 Firewall**, choose **Add rule** → Application
+   **HTTPS** (port 443) → **Create**. Do the same under **IPv6 Firewall**.
+   SSH (22) and HTTP (80) are already open in both; keep them. (The firewall
+   isn't on the page where you create the instance, only on this tab.)
 
 ### 3. Point your domain at the server
 
@@ -118,7 +120,9 @@ that you can restore if something goes wrong.
 
 ### Updating to a new version
 
-When the team sends a new `artea-release.tar`: take a manual snapshot first
+The server never updates itself: changes the developers make only reach it
+when a new release is installed. When the team sends a new
+`artea-release.tar`: take a manual snapshot first
 (Snapshots tab), then do step 4 (upload) and step 5 (the same install line)
 again. Player accounts, artwork and settings are kept. To see which version is
 live, open `https://play.example.com/VERSION.txt`.
@@ -193,8 +197,10 @@ managed on the Snapshots tab.
 
 ## For developers: making a release
 
-From the repository root in Git Bash, on the branch you want to release, with
-your changes committed (the server code goes in as committed):
+Merging to `main` doesn't change any server: each update is a release built
+and installed by hand. From the repository root in Git Bash, on the branch you
+want to release (usually the latest `main`), with your changes committed (the
+server code goes in as committed, never your uncommitted edits):
 
 ```bash
 ./web rebuild          # export the game; stop it with Ctrl+C once it says "Serving"
@@ -202,8 +208,10 @@ your changes committed (the server code goes in as committed):
 server/ec2/release.sh  # writes artea/builds/artea-release.tar
 ```
 
-Send the client `artea-release.tar` (it's too big for email; use a shared
-drive). `install.sh` works on any Ubuntu 24.04 server where the login account
+`release.sh` refuses a game build that's older than the latest committed
+change under `artea/`, so a stale export can't slip into a release; rebuild
+and run it again. Send the client `artea-release.tar` (it's too big for
+email; use a shared drive), or install it yourself with steps 4 and 5. `install.sh` works on any Ubuntu 24.04 server where the login account
 has sudo and ports 80 and 443 are open, so the same file also installs on an
 EC2 instance. After installing, `./web verify --url https://YOUR_DOMAIN/` runs
 the full playability check against the live site.
