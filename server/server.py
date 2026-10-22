@@ -18,11 +18,19 @@ import secrets
 import threading
 import time
 from datetime import timedelta, datetime, timezone
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 import requests
 
 app = Flask(__name__)
+# Behind nginx (server/ec2) every request reaches gunicorn from 127.0.0.1, so
+# the loopback-only AI guest access below would open to the whole internet and
+# the admin-reset lockout would be one bucket for everyone. BEHIND_PROXY=1
+# takes the caller's address from the X-Forwarded-For nginx sets instead. Only
+# set it behind a proxy: without one, a client could send that header itself.
+if os.environ.get("BEHIND_PROXY") == "1":
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
 # =========================
 # CONFIG
@@ -377,13 +385,8 @@ def reset_password_with_code():
 # circuit breaker above rather than pulling in a rate-limiting dependency
 # for one endpoint.
 #
-# Keyed on request.remote_addr, which is the real caller's address only as
-# long as nothing between it and gunicorn rewrites the source IP. Once a
-# reverse proxy sits in front in production (see MACOS_SETUP.md), every
-# request will arrive from that proxy's own address and this degrades to a
-# single shared lockout bucket for all callers - still fails closed, but
-# worth revisiting alongside whatever proxy/X-Forwarded-For trust config
-# lands then.
+# Keyed on request.remote_addr: the real caller's address directly, or behind
+# nginx the one it forwards (BEHIND_PROXY, at the top of this file).
 ADMIN_RESET_LOCK = threading.Lock()
 ADMIN_RESET_ATTEMPTS = {}
 ADMIN_RESET_MAX_ATTEMPTS = 5
