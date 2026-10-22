@@ -11,6 +11,7 @@ import unittest
 _TEMP = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
 os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(_TEMP.name, "sessions_test.db")
 
+import jwt as pyjwt  # noqa: E402
 from flask_jwt_extended import create_access_token  # noqa: E402
 
 from server import server  # noqa: E402
@@ -27,7 +28,9 @@ def bearer(token):
     return {"Authorization": f"Bearer {token}"}
 
 
-class SessionTests(unittest.TestCase):
+class AccountTestCase(unittest.TestCase):
+    """A test client, a temporary uploads folder and a login helper."""
+
     def setUp(self):
         server.app.config["TESTING"] = True
         self.client = server.app.test_client()
@@ -45,6 +48,8 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.get_json())
         return response.get_json()["token"]
 
+
+class SessionTests(AccountTestCase):
     def test_newest_login_signs_out_the_older_one(self):
         first = self.login("sam")
         self.assertEqual(self.client.get("/session", headers=bearer(first)).status_code, 200)
@@ -86,6 +91,61 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(self.client.get(url, headers=bearer(stranger)).status_code, 404)
         self.assertEqual(self.client.get(url).status_code, 404)
         self.assertEqual(self.client.get("/my_artworks", headers=bearer(stranger)).get_json(), [])
+
+
+class TamperingTests(AccountTestCase):
+    """What a player could try by editing the game's JavaScript or calling the
+    API directly: nothing the game itself checks counts, only the server."""
+
+    PROTECTED = [("get", "/session"), ("get", "/my_artworks"), ("post", "/upload_artwork")]
+
+    def assertRefused(self, headers, why):
+        for method, path in self.PROTECTED:
+            response = getattr(self.client, method)(path, headers=headers, data=PNG)
+            self.assertIn(response.status_code, (401, 422), f"{why}: {method.upper()} {path}")
+
+    def owner_with_artwork(self):
+        owner = self.login("frankie")
+        self.client.post("/upload_artwork", data=PNG, headers={
+            **bearer(owner), "Content-Type": "image/png", "Artwork-Title": "Private"})
+        return owner, self.client.get("/my_artworks", headers=bearer(owner)).get_json()[0]["url"]
+
+    def test_no_token_or_the_guest_placeholder_is_refused(self):
+        self.assertRefused({}, "no token")
+        self.assertRefused(bearer("OFFLINE_GUEST_TOKEN"), "guest placeholder")
+
+    def test_a_token_signed_with_another_key_is_refused(self):
+        real = self.login("gale")
+        payload = pyjwt.decode(real, options={"verify_signature": False})
+        forged = pyjwt.encode(payload, "a-guessed-secret-key-of-32-plus-characters", algorithm="HS256")
+        self.assertRefused(bearer(forged), "forged signature")
+
+    def test_an_unsigned_token_is_refused(self):
+        real = self.login("harper")
+        payload = pyjwt.decode(real, options={"verify_signature": False})
+        unsigned = pyjwt.encode(payload, None, algorithm="none")
+        self.assertRefused(bearer(unsigned), "alg none")
+
+    def test_editing_the_token_to_another_account_is_refused(self):
+        _owner, url = self.owner_with_artwork()
+        intruder = self.login("indy")
+        payload = pyjwt.decode(intruder, options={"verify_signature": False})
+        with server.app.app_context():
+            payload["sub"] = str(server.User.query.filter_by(username="frankie").first().id)
+        # Re-signed it can't be (the key never leaves the server), so the
+        # edited token keeps the intruder's now-invalid signature.
+        header, _body, signature = intruder.split(".")
+        edited = ".".join([header, pyjwt.encode(payload, "x" * 32, algorithm="HS256").split(".")[1], signature])
+        self.assertRefused(bearer(edited), "edited account id")
+        self.assertIn(self.client.get(url, headers=bearer(edited)).status_code, (401, 404, 422))
+
+    def test_artwork_ids_cannot_be_walked(self):
+        _owner, url = self.owner_with_artwork()
+        intruder = self.login("jules")
+        artwork_id = int(url.rsplit("/", 1)[1])
+        for guess in range(max(1, artwork_id - 3), artwork_id + 4):
+            self.assertEqual(self.client.get(f"/download_artwork/{guess}", headers=bearer(intruder)).status_code,
+                404, f"artwork {guess} must not reach another account")
 
 
 if __name__ == "__main__":
