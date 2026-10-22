@@ -2,6 +2,7 @@ extends "res://scripts/gallery_piano.gd"
 
 signal note_played(midi: int)
 signal playing_changed(active: bool)
+@export var start_in_keyboard_view := false
 
 const EASY_KEYS := [KEY_A, KEY_S, KEY_D, KEY_F, KEY_G, KEY_H, KEY_J, KEY_K]
 const EASY_NOTES := [60, 62, 64, 65, 67, 69, 71, 72]
@@ -13,6 +14,7 @@ var _standing_visual_yaw := 0.0
 var _keyboard_view := false
 var _bench_milo: Node3D
 var _milo_seat: RemoteTransform3D
+var _dismounting := false
 
 func _ready() -> void:
 	super._ready()
@@ -64,7 +66,7 @@ func _sit_down() -> void:
 			if companion != null and companion.has_method("sit_on") and not companion.is_seated():
 				_bench_milo = companion
 				_bench_milo.sit_on(_milo_seat)
-		_keyboard_view = false
+		_keyboard_view = start_in_keyboard_view
 		_update_seat_view()
 		playing_changed.emit(true)
 
@@ -78,6 +80,8 @@ func _update_seat_view() -> void:
 
 func _stand_up() -> void:
 	var was_seated := _seated
+	var standing_player := _sitting_player
+	var seat_transform := standing_player.global_transform if is_instance_valid(standing_player) else Transform3D.IDENTITY
 	if was_seated and is_instance_valid(_bench_milo):
 		_bench_milo.stand_up()
 		_bench_milo = null
@@ -87,6 +91,18 @@ func _stand_up() -> void:
 		if _sitting_player.fox_visuals != null: _sitting_player.fox_visuals.rotation.y = _standing_visual_yaw
 		_sitting_player = null
 	super._stand_up()
+	if was_seated and start_in_keyboard_view and is_instance_valid(standing_player) and is_inside_tree():
+		_dismounting = true
+		standing_player.global_transform = seat_transform
+		standing_player.set_input_enabled(false)
+		var physics_active := standing_player.is_physics_processing()
+		standing_player.set_physics_process(false)
+		var step_down := standing_player.create_tween()
+		step_down.tween_property(standing_player, "global_transform", _standing_transform, 0.35).set_trans(Tween.TRANS_SINE)
+		step_down.tween_callback(standing_player.set_physics_process.bind(physics_active))
+		step_down.tween_callback(standing_player.set_input_enabled.bind(true))
+		await step_down.finished
+		_dismounting = false
 	if was_seated: playing_changed.emit(false)
 
 func _play_note(midi: int) -> void:
@@ -99,6 +115,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _dismounting: return
 	if _seated and event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_TAB:
 			_keyboard_view = not _keyboard_view
