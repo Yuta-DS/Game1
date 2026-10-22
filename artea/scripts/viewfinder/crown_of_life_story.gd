@@ -16,6 +16,7 @@
 # claims a strength the player actually earned by placing a seeing, matching
 # gallery_ceremony.gd's evidentiary standard.
 extends Node3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 
@@ -226,7 +227,7 @@ func _ready() -> void:
 		_build_finale(js)
 	else:
 		_show_guardian_line("Milo: This optional Lens path remembers what you carry across each gap. The three kingdom treasures are discovered in the connected Art Castle journey.")
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = TouchDevice.captured_mode()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -2227,7 +2228,7 @@ func _close_all_panels() -> void:
 	# The finale keeps the mouse free for its Replay/Credits/Return buttons;
 	# otherwise resuming from pause recaptures the mouse for movement/look.
 	if not _finale_built:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		Input.mouse_mode = TouchDevice.captured_mode()
 
 
 func _build_pause_menu() -> void:
@@ -2553,4 +2554,4 @@ func _confirm_no() -> void:
 	_confirm_panel.visible = false
 	_pause_layer.visible = _confirm_reopens_pause
 	if not _confirm_reopens_pause and (_finale_layer == null or not _finale_built):
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		Input.mouse_mode = TouchDevice.captured_mode()

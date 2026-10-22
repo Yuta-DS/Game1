@@ -1,4 +1,5 @@
 extends Control
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 # A player-centred virtual map camera for Artéa's two connected contexts.
 #
@@ -21,6 +22,12 @@ const HUB_BOUNDS := Rect2(-230.0, -230.0, 460.0, 460.0)
 const CASTLE_POSITION := Vector3(-51.4, 0.0, 27.41)
 const FACING_SPEED_THRESHOLD := 0.08
 const TELEPORT_DISTANCE := 100.0
+## On phones and tablets the compact map is enlarged until its title reads at
+## this many screen pixels, but never past TOUCH_COMPACT_MAX_SHARE of the short
+## side of the screen. mind_spark_world_one_quest.gd reads hud_scale() to keep
+## its panel below the map.
+const TOUCH_COMPACT_TITLE_PX := 14.0
+const TOUCH_COMPACT_MAX_SHARE := 0.45
 
 # The compact map used to queue a redraw on every single frame. Each redraw
 # samples ~530 landscape tiles, and _draw() is not cheap enough to be run 60
@@ -106,6 +113,8 @@ var _sample_kingdom_colors: Array[Color] = []
 var _redraw_cooldown := 0.0
 var _last_drawn_position := Vector3.ZERO
 var _last_drawn_facing := Vector2(0.0, 1.0)
+# Multiplies every label size on phones and tablets (see _fs()); 1 on a PC.
+var _text_scale := 1.0
 
 
 func _ready() -> void:
@@ -116,6 +125,9 @@ func _ready() -> void:
 	gui_input.connect(_on_gui_input)
 	# The full map only redraws when the view changes, so a window resize must ask.
 	resized.connect(queue_redraw)
+	# The touch size depends on the screen, so rotating a tablet re-fits it.
+	if TouchDevice.is_touch_device():
+		get_viewport().size_changed.connect(_apply_layout)
 	_apply_layout()
 	call_deferred("_refresh_world_references")
 
@@ -233,18 +245,48 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_gui_input(event: InputEvent) -> void:
+	# A tap arrives as both a ScreenTouch and the mouse click emulated from it,
+	# so handling both toggled the map open and straight back shut. The mouse
+	# branch alone covers clicks and taps.
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if _full_map_open and TouchDevice.is_touch_device():
+			_shield_taps()
 		set_full_map_open(not _full_map_open)
 		accept_event()
-	elif event is InputEventScreenTouch and event.pressed:
-		set_full_map_open(not _full_map_open)
+	elif event is InputEventScreenTouch:
 		accept_event()
+
+
+# The browser follows a tap with its own click once the finger lifts. The map
+# has already closed by then, so that click landed on whatever was under the
+# X, which is the inventory icon, and opened the bag. A brief full-screen
+# catcher on the map's layer soaks it up.
+func _shield_taps() -> void:
+	var shield := Control.new()
+	shield.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shield.mouse_filter = Control.MOUSE_FILTER_STOP
+	get_parent().add_child(shield)
+	get_tree().create_timer(0.5).timeout.connect(shield.queue_free)
+
+
+static func hud_scale(viewport: Viewport) -> float:
+	if not TouchDevice.is_touch_device():
+		return 1.0
+	var screen := viewport.get_visible_rect().size
+	var legible := TOUCH_COMPACT_TITLE_PX / (14.0 * TouchDevice.css_pixels_per_unit(viewport))
+	var largest := TOUCH_COMPACT_MAX_SHARE * minf(screen.x, screen.y) / COMPACT_SIZE.y
+	return clampf(legible, 1.0, maxf(largest, 1.0))
 
 
 func set_full_map_open(open: bool) -> void:
 	if _full_map_open == open:
 		return
 	_full_map_open = open
+	# Hides the on-screen touch controls (touch_controls.gd) while the map is up.
+	if open:
+		add_to_group("touch_hud_blockers")
+	else:
+		remove_from_group("touch_hud_blockers")
 	if open:
 		_previous_mouse_mode = Input.mouse_mode
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -266,12 +308,24 @@ func _apply_layout() -> void:
 	if _full_map_open:
 		set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		position = Vector2.ZERO
+		scale = Vector2.ONE
 		z_index = 900
 	else:
 		set_anchors_preset(Control.PRESET_TOP_LEFT)
 		position = Vector2(18.0, 18.0)
 		size = COMPACT_SIZE
+		scale = Vector2.ONE * hud_scale(get_viewport())
 		z_index = 100
+	_text_scale = 1.0
+	if TouchDevice.is_touch_device():
+		# Aim for ~13 screen pixels. The compact map is already enlarged by its
+		# scale, so its text needs less help, and is capped to fit the circle.
+		var css := TouchDevice.css_pixels_per_unit(get_viewport()) * scale.x
+		_text_scale = clampf(13.0 / (14.0 * css), 1.0, 2.2 if _full_map_open else 1.4)
+
+
+func _fs(px: int) -> int:
+	return roundi(px * _text_scale)
 
 
 func _draw() -> void:
@@ -300,9 +354,11 @@ func _draw_compact_map() -> void:
 	_draw_compact_compass()
 	var title := "OUTSIDE • ARTÉA KINGDOM" if map_context == CONTEXT_HUB else "INSIDE • CASTLE GALAXY"
 	draw_string(ThemeDB.fallback_font, Vector2(18, 254), title,
-		HORIZONTAL_ALIGNMENT_CENTER, COMPACT_SIZE.x - 36, 14, _accent())
-	draw_string(ThemeDB.fallback_font, Vector2(18, 278), "CLICK OR PRESS M  •  FULL MAP",
-		HORIZONTAL_ALIGNMENT_CENTER, COMPACT_SIZE.x - 36, 11, Color("e9eef7"))
+		HORIZONTAL_ALIGNMENT_CENTER, COMPACT_SIZE.x - 36, _fs(14), _accent())
+	var hint := "TAP  •  FULL MAP" if TouchDevice.is_touch_device() \
+		else "CLICK OR PRESS M  •  FULL MAP"
+	draw_string(ThemeDB.fallback_font, Vector2(18, 278), hint,
+		HORIZONTAL_ALIGNMENT_CENTER, COMPACT_SIZE.x - 36, _fs(11), Color("e9eef7"))
 
 
 func _draw_local_grid() -> void:
@@ -493,7 +549,7 @@ func _galaxy_landmarks() -> Array:
 func _draw_galaxy_compact() -> void:
 	if _regions == null or _railway == null:
 		draw_string(ThemeDB.fallback_font, COMPACT_CENTER + Vector2(-70, 4), "MAPPING GALAXY…",
-			HORIZONTAL_ALIGNMENT_CENTER, 140, 12, Color("cdeeff"))
+			HORIZONTAL_ALIGNMENT_CENTER, 140, _fs(12), Color("cdeeff"))
 		return
 	var centres: Dictionary = _regions.call("get_kingdom_centers")
 	var stations: Dictionary = _railway.call("get_station_positions")
@@ -557,7 +613,7 @@ func _draw_compact_marker(world_position: Vector3, label: String, color: Color, 
 		draw_line(point, point + inward * 7.0, color, 2.0, true)
 	elif not label.is_empty() and point.x > 32.0 and point.x < COMPACT_SIZE.x - 52.0:
 		draw_string(ThemeDB.fallback_font, point + Vector2(8, 4), label,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 9, color.lightened(0.12))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(9), color.lightened(0.12))
 
 
 func compact_point_for_world(global_position: Vector3) -> Vector2:
@@ -597,28 +653,46 @@ func _draw_compact_compass() -> void:
 	var font := ThemeDB.fallback_font
 	draw_circle(COMPACT_CENTER + Vector2(0, -COMPACT_RADIUS + 2), 11.0, Color("151725"))
 	draw_string(font, COMPACT_CENTER + Vector2(-5, -COMPACT_RADIUS + 7), "N",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("fff5d6"))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(13), Color("fff5d6"))
 	draw_string(font, COMPACT_CENTER + Vector2(COMPACT_RADIUS - 8, 4), "E",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("d5d9e6"))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(10), Color("d5d9e6"))
 	draw_string(font, COMPACT_CENTER + Vector2(-4, COMPACT_RADIUS - 4), "S",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("d5d9e6"))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(10), Color("d5d9e6"))
 	draw_string(font, COMPACT_CENTER + Vector2(-COMPACT_RADIUS + 1, 4), "W",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("d5d9e6"))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(10), Color("d5d9e6"))
 
 
 func _draw_full_map() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.01, 0.015, 0.04, 0.82), true)
-	var panel_size := Vector2(minf(size.x - 72.0, 1240.0), minf(size.y - 72.0, 820.0))
+	var touch := TouchDevice.is_touch_device()
+	# On a phone or tablet the map takes the whole screen; the desktop cap would
+	# leave it a fraction of a small display.
+	var panel_size := size - Vector2(24.0, 24.0) if touch \
+		else Vector2(minf(size.x - 72.0, 1240.0), minf(size.y - 72.0, 820.0))
 	var panel := Rect2((size - panel_size) * 0.5, panel_size)
 	draw_rect(panel, Color("111522"), true)
 	draw_rect(panel, Color(_accent(), 0.74), false, 2.0)
 	var title := "ARTÉA KINGDOM • OUTSIDE THE CASTLE" if map_context == CONTEXT_HUB \
 		else "ART CASTLE GALAXY • INSIDE WORLD"
-	draw_string(ThemeDB.fallback_font, panel.position + Vector2(28, 42), title,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 24, _accent())
-	draw_string(ThemeDB.fallback_font, panel.position + Vector2(panel.size.x - 190, 40),
-		"M / ESC  CLOSE", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("f5f1e8"))
-	var map_rect := Rect2(panel.position + Vector2(28, 62), panel.size - Vector2(56, 116))
+	var title_baseline := 18.0 + _fs(24)
+	draw_string(ThemeDB.fallback_font, panel.position + Vector2(28, title_baseline), title,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(24), _accent())
+	if touch:
+		# Tapping anywhere closes the map; the X is there to say so.
+		var radius := 26.0 * _text_scale
+		var x_centre := panel.position + Vector2(panel.size.x - 18.0 - radius, 14.0 + radius)
+		draw_circle(x_centre, radius, Color(_accent(), 0.85))
+		for corner in [Vector2(-0.4, -0.4) * radius, Vector2(0.4, -0.4) * radius]:
+			draw_line(x_centre + corner, x_centre - corner, Color("111522"), 5.0 * _text_scale, true)
+		draw_string(ThemeDB.fallback_font, x_centre + Vector2(-radius - 12.0 - 400.0, _fs(15) * 0.35),
+			"TAP TO CLOSE", HORIZONTAL_ALIGNMENT_RIGHT, 400, _fs(15), Color("f5f1e8"))
+	else:
+		draw_string(ThemeDB.fallback_font, panel.position + Vector2(panel.size.x - 190, 40),
+			"M / ESC  CLOSE", HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(15), Color("f5f1e8"))
+	var header := maxf(title_baseline + 20.0, 62.0 if _text_scale == 1.0 else 28.0 + 52.0 * _text_scale)
+	var footer := 54.0 * _text_scale
+	var map_rect := Rect2(panel.position + Vector2(28, header),
+		panel.size - Vector2(56, header + footer))
 	# Keep the world's proportions, so a round island stays round.
 	var aspect := _bounds.size.x / maxf(_bounds.size.y, 0.001)
 	var fitted := map_rect.size
@@ -638,9 +712,9 @@ func _draw_full_map() -> void:
 	if _player != null:
 		_draw_player(_map_global(_player.global_position, map_rect), false)
 	_draw_full_compass(map_rect)
-	draw_string(ThemeDB.fallback_font, panel.position + Vector2(28, panel.size.y - 24),
+	draw_string(ThemeDB.fallback_font, panel.position + Vector2(28, panel.size.y - 24.0 * _text_scale),
 		"▲ YOU    ◆ ART CASTLE    ○ CROWN LINE STATION",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("dcecff"))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(14), Color("dcecff"))
 
 
 func _draw_hub_full(rect: Rect2) -> void:
@@ -723,7 +797,7 @@ func _draw_mind_spark_blueprint(rect: Rect2) -> void:
 func _draw_galaxy_full(rect: Rect2) -> void:
 	if _regions == null or _railway == null:
 		draw_string(ThemeDB.fallback_font, rect.position + Vector2(18, 34), "MAPPING THE GALAXY…",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("cdeeff"))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(14), Color("cdeeff"))
 		return
 	var centres: Dictionary = _regions.call("get_kingdom_centers")
 	var stations: Dictionary = _railway.call("get_station_positions")
@@ -750,7 +824,7 @@ func _draw_full_kingdom(point: Vector2, color: Color, label: String) -> void:
 	draw_circle(point, 34.0, Color(color, 0.18))
 	draw_arc(point, 34.0, 0, TAU, 32, color, 1.6)
 	draw_string(ThemeDB.fallback_font, point + Vector2(-70, 5), label,
-		HORIZONTAL_ALIGNMENT_CENTER, 140, 14, color.lightened(0.18))
+		HORIZONTAL_ALIGNMENT_CENTER, 140, _fs(14), color.lightened(0.18))
 
 
 func _draw_full_landmark(point: Vector2, label: String, color: Color, label_left := false) -> void:
@@ -759,7 +833,7 @@ func _draw_full_landmark(point: Vector2, label: String, color: Color, label_left
 	var at := point + Vector2(10, 5)
 	if label_left:
 		at.x = point.x - 10.0 - font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
-	draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, color.lightened(0.16))
+	draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(13), color.lightened(0.16))
 
 
 func _draw_castle(point: Vector2, compact: bool) -> void:
@@ -793,11 +867,11 @@ func _draw_player(point: Vector2, compact: bool) -> void:
 func _draw_full_compass(rect: Rect2) -> void:
 	var font := ThemeDB.fallback_font
 	draw_string(font, rect.position + Vector2(rect.size.x * 0.5 - 5, 19), "N",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("f7f1df"))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(16), Color("f7f1df"))
 	draw_string(font, rect.position + Vector2(rect.size.x - 23, rect.size.y * 0.5), "E",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("f7f1df"))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(16), Color("f7f1df"))
 	draw_string(font, rect.position + Vector2(10, rect.size.y * 0.5), "W",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("f7f1df"))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(16), Color("f7f1df"))
 
 
 func _galaxy_castle_position() -> Vector3:

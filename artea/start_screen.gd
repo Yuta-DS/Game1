@@ -1,4 +1,5 @@
 extends Node2D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 const AdminResetPanel := preload("res://scripts/admin_reset_panel.gd")
@@ -48,6 +49,8 @@ func _ready():
 	_code_modal = RecoveryCodeModal.new()
 	add_child(_code_modal)
 	_build_forgot_password_button()
+	if TouchDevice.is_touch_device():
+		_enlarge_buttons_for_touch()
 	# The background is authored for the 1710x1112 base size; stretch "expand"
 	# widens the view on 16:9 screens, which left a bare strip at the edge.
 	get_viewport().size_changed.connect(_fit_background)
@@ -60,7 +63,7 @@ func _ready():
 	# The local preview adapter requests a normal runtime scene transition.
 	var heart_preview := "--heart-preview" in OS.get_cmdline_user_args()
 	if OS.has_feature("web"):
-		heart_preview = heart_preview or JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW === true", true) == true
+		heart_preview = heart_preview or bool(JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW === true", true))
 	if heart_preview:
 		print("HEART PREVIEW REQUEST ACCEPTED")
 		if OS.has_feature("web"): JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW = false", true)
@@ -132,9 +135,21 @@ func _build_admin_button() -> void:
 func _build_forgot_password_button() -> void:
 	var button := Button.new()
 	button.text = "Forgot password?"
-	button.add_theme_font_size_override("font_size", 24)
+	button.add_theme_font_size_override("font_size", 34)
+	button.custom_minimum_size.y = 64.0
 	button.pressed.connect(_forgot_password_panel.show_panel)
 	options_box.add_child(button)
+
+# Phones and tablets draw the login panel at a third of its desktop size, so
+# its buttons grow into comfortable tap targets there.
+func _enlarge_buttons_for_touch() -> void:
+	for child in options_box.get_children():
+		var button := child as Button
+		if button == null:
+			continue
+		var font_size := button.get_theme_font_size("font_size")
+		button.add_theme_font_size_override("font_size", roundi(font_size * 1.25))
+		button.custom_minimum_size.y = maxf(button.custom_minimum_size.y * 1.15, 96.0)
 
 # Helper utility to cleanly control status messages and alert color states
 func show_message(text: String, is_error: bool = true):

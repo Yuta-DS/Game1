@@ -440,7 +440,9 @@ func _build_hud() -> void:
 	scroll.add_child(options)
 	panel.hide()
 	if DisplayServer.is_touchscreen_available():
-		for entry in [["Left", "move_left", Vector2(24, -230)], ["Up", "move_forward", Vector2(128, -334)], ["Down", "move_backward", Vector2(128, -230)], ["Right", "move_right", Vector2(232, -230)], ["Strike", "attack", Vector2(350, -230)]]:
+		# Movement comes from the TouchControls joystick, which sits where the
+		# old arrow buttons were.
+		for entry in [["Strike", "attack", Vector2(350, -230)]]:
 			var button := Button.new()
 			button.text = entry[0]
 			button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)

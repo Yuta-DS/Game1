@@ -1,4 +1,5 @@
 extends Camera3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 ## Matches the shared SpringArm camera's sensitivity, pivot and zoom range.
 ## Sweep a volume, not a ray: near-plane corners must also clear scenery.
 const MIN_PITCH := -1.18
@@ -40,8 +41,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed: distance = minf(9.2, distance + 0.7)
 		elif event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
 			if OS.has_feature("web"): _web_drag = event.pressed
-			elif event.pressed: Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if event is InputEventMouseMotion and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or _web_drag):
+			elif event.pressed: Input.mouse_mode = TouchDevice.captured_mode()
+	# Emulated motion is a finger: the touch branch below already orbits for it,
+	# and the joystick's finger must not turn the view.
+	if event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION \
+			and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or _web_drag):
 		orbit(event.relative * 0.005)
 	if event is InputEventScreenTouch:
 		if event.pressed and event.position.x > get_viewport().get_visible_rect().size.x * 0.5 and _touch < 0:

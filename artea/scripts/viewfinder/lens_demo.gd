@@ -12,6 +12,7 @@
 # Deliberately built in code with no dependency on Artéa's player, hub, or
 # autoloads, so a cutter regression can be reproduced without loading the game.
 extends Node3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 const ControllerScript := preload("res://scripts/viewfinder/lens_controller.gd")
 const FrustumCutterScript := preload("res://scripts/viewfinder/frustum_cutter.gd")
@@ -29,7 +30,7 @@ func _ready() -> void:
 	_build_room()
 	_build_player()
 	_build_props()
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = TouchDevice.captured_mode()
 
 
 func _unhandled_input(event: InputEvent) -> void:

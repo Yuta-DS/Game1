@@ -88,9 +88,9 @@ libraries/ = SubResource("AnimationLibrary_r2jwc")
 
 [node name="CenterContainer" type="CenterContainer" parent="AnimationParent" unique_id=1695625190]
 offset_left = 89.0
-offset_top = 399.0
+offset_top = 329.0
 offset_right = 749.0
-offset_bottom = 1061.0
+offset_bottom = 991.0
 
 [node name="PanelContainer" type="PanelContainer" parent="AnimationParent/CenterContainer" unique_id=675696548]
 layout_mode = 2
@@ -118,21 +118,24 @@ secret = true
 
 [node name="Button" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=56447978]
 layout_mode = 2
-theme_override_font_sizes/font_size = 50
+custom_minimum_size = Vector2(0, 100)
+theme_override_font_sizes/font_size = 58
 theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
 text = "Start Game"
 
 [node name="RegisterButton" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=2004161624]
 layout_mode = 2
-theme_override_font_sizes/font_size = 50
+custom_minimum_size = Vector2(0, 100)
+theme_override_font_sizes/font_size = 58
 theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
 text = "Register"
 
 [node name="GuestButton" type="Button" parent="AnimationParent/CenterContainer/PanelContainer/VBoxContainer" unique_id=895124456]
 layout_mode = 2
-theme_override_font_sizes/font_size = 50
+custom_minimum_size = Vector2(0, 100)
+theme_override_font_sizes/font_size = 58
 theme_override_styles/normal = SubResource("StyleBoxFlat_o7i0r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o7i0r")
 text = "Offline Guest"

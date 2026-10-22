@@ -1,4 +1,5 @@
 extends Node3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 ## Creator's Light studio. Stepping onto the raised floor grows the player
 ## SIZE_MULTIPLIER times with a clockwise spin, so the easels are in reach;
@@ -177,7 +178,7 @@ func _close_drawing() -> void:
 		_player.call("set_input_enabled", true)
 	var camera := get_viewport().get_camera_3d()
 	if camera != null and bool(camera.get("capture_mouse")):
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		Input.mouse_mode = TouchDevice.captured_mode()
 
 
 ## Puts the drawing on that easel's canvas (see shaders/easel_canvas.gdshader).

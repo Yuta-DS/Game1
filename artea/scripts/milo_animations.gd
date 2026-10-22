@@ -1,4 +1,5 @@
 extends CharacterBody3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 enum CompanionState {
 	WAITING,
@@ -1828,7 +1829,7 @@ func close_chatbot():
 		chatbot_ui = null
 
 	_set_player_interaction_locked(false)
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = TouchDevice.captured_mode()
 	_conversation_active = false
 	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_stop()
@@ -1872,7 +1873,7 @@ func _exit_tree() -> void:
 		chatbot_ui.queue_free()
 		chatbot_ui = null
 	_set_player_interaction_locked(false)
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = TouchDevice.captured_mode()
 
 
 func _build_counsellor_props() -> void:

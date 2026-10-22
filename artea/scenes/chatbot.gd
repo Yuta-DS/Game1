@@ -5,6 +5,14 @@
 # the bundled local Gemma model through NobodyWho. No message is saved, logged,
 # or uploaded; Web and unsupported builds retain the authored local response.
 extends Control
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+
+## Phones and tablets: Milo's panel is rescaled until its 18 px body text reads
+## at this many screen pixels, and resized to use the screen around it.
+const TOUCH_TEXT_PX := 14.0
+const TOUCH_MIN_WIDTH := 560.0
+const TOUCH_MAX_WIDTH := 1600.0
+const TOUCH_HEIGHT_SHARE := 0.62
 
 @onready var chat_history: RichTextLabel = $Panel/VBoxContainer/ChatHistory
 @onready var content: VBoxContainer = $Panel/VBoxContainer
@@ -346,10 +354,34 @@ var _strength_tally: Dictionary = {}
 func _ready() -> void:
 	# Third-person cameras stop orbiting and zooming while Milo's chat is open.
 	add_to_group("camera_input_blockers")
+	if TouchDevice.is_touch_device():
+		_fit_to_touch_screen()
+		get_viewport().size_changed.connect(_fit_to_touch_screen)
 	_resolve_safe_context()
 	_initialize_local_llm()
 	_initialize_cloud_llm()
 	_show_choices()
+
+
+# The desktop panel is a fixed 1300x402 at 18 px text, which a phone draws at
+# about 6 px: there, Milo's words could not be read at all. Scaling the whole
+# panel keeps every font and button in proportion; its design size is then
+# narrowed (portrait) or heightened so the scaled panel still fits the screen.
+func _fit_to_touch_screen() -> void:
+	var screen := get_viewport().get_visible_rect().size
+	var legible := TOUCH_TEXT_PX / (18.0 * TouchDevice.css_pixels_per_unit(get_viewport()))
+	var s := clampf(legible, 1.0, screen.x * 0.96 / TOUCH_MIN_WIDTH)
+	var width := clampf(screen.x * 0.96 / s, TOUCH_MIN_WIDTH, TOUCH_MAX_WIDTH)
+	var height := maxf(screen.y * TOUCH_HEIGHT_SHARE / s, 300.0)
+	chat_history.custom_minimum_size.x = 0.0
+	var panel := $Panel as Control
+	panel.offset_left = -width * 0.5
+	panel.offset_right = width * 0.5
+	panel.offset_bottom = -16.0
+	panel.offset_top = -16.0 - height
+	# The root is a zero-size point at the bottom centre of the screen, so
+	# scaling it grows the panel upwards and outwards from there.
+	scale = Vector2(s, s)
 
 
 func _resolve_safe_context() -> void:
