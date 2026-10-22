@@ -18,11 +18,15 @@ var auth_token = ""
 var SESSION_URL = BASE_URL + "/session"
 # One login per account, newest wins (server.py). While signed in the game asks
 # every SESSION_CHECK_SECONDS whether this login is still the account's latest;
-# when it isn't, it signs out and the start screen shows `sign_out_reason`.
-const SESSION_CHECK_SECONDS := 30.0
+# when it isn't, it signs out and the start screen shows `sign_out_reason`. At
+# 30 s a replaced device kept playing for up to half a minute, which looked like
+# it never signed out; the check is one token check and one database read,
+# cheap at this rate.
+const SESSION_CHECK_SECONDS := 5.0
 const START_SCREEN := "res://scenes/start_screen.tscn"
 var sign_out_reason := ""
-var _session_check: Timer
+var _watching_session := false
+var _last_session_check := 0
 
 var _refresh_token := ""
 var _session_generation := 0
@@ -343,21 +347,26 @@ func clear_session() -> void:
 	_refresh_token = ""
 	auth_token = ""
 	Global.auth_token = ""
-	if _session_check != null:
-		_session_check.stop()
+	_watching_session = false
 
 
 func _watch_session() -> void:
 	if uses_managed_accounts():
 		return  # Cognito manages its own sessions
-	if _session_check == null:
-		_session_check = Timer.new()
-		_session_check.wait_time = SESSION_CHECK_SECONDS
-		# Keeps checking while the game is paused or a menu is open.
-		_session_check.process_mode = Node.PROCESS_MODE_ALWAYS
-		_session_check.timeout.connect(_check_session)
-		add_child(_session_check)
-	_session_check.start()
+	# Keeps checking (and its requests running) while the game is paused.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_watching_session = true
+	_last_session_check = Time.get_ticks_msec()
+
+
+# Timed by the clock, not a Timer: a hidden browser tab or a locked phone runs
+# no frames, so a Timer would wait out its whole interval again afterwards. The
+# first frame back is already overdue here, so it checks straight away.
+func _process(_delta: float) -> void:
+	if _watching_session \
+			and Time.get_ticks_msec() - _last_session_check >= SESSION_CHECK_SECONDS * 1000.0:
+		_last_session_check = Time.get_ticks_msec()
+		_check_session()
 
 
 func _check_session() -> void:
