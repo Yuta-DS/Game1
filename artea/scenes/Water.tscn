@@ -5,9 +5,9 @@
 [ext_resource type="Script" uid="uid://ghrycpe5u7pw" path="res://scenes/ocean_sounds.gd" id="3_45jge"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_4nnwq"]
-size = Vector2(1000, 1000)
-subdivide_width = 128
-subdivide_depth = 128
+size = Vector2(8192, 8192)
+subdivide_width = 256
+subdivide_depth = 256
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_xt0xg"]
 noise_type = 3

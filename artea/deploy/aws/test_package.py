@@ -1,6 +1,7 @@
 import json
 import contextlib
 import gzip
+import hashlib
 import io
 from pathlib import Path
 import tempfile
@@ -61,6 +62,32 @@ class PackageTests(unittest.TestCase):
     def test_rejects_escaped_part_path(self):
         (self.source / "index.pck.parts.json").write_text(json.dumps({"count": 2, "bytes": 6, "partBytes": 4, "parts": [{"name": "../private", "size": 4}, {"name": "index.pck.part01", "size": 2}]}))
         with self.assertRaisesRegex(ValueError, "Unsafe"): required_files(self.source)
+
+    def test_gzipped_main_chunks_remain_loader_encoded(self):
+        (self.source / "parts").mkdir()
+        entries = []
+        pack_hash = hashlib.sha256(b"123456").hexdigest()[:16]
+        for index, content in enumerate([b"1234", b"56"]):
+            name = f"parts/index.pck.{pack_hash}.part{index:02d}"
+            payload = gzip.compress(content, mtime=0)
+            (self.source / name).write_bytes(payload)
+            entries.append({"name": name, "size": len(payload)})
+        manifest_path = self.source / "index.pck.parts.json"
+        manifest = {"count": 2, "bytes": 6, "partBytes": 4, "hash": pack_hash, "encoding": "gzip", "parts": entries}
+        manifest_path.write_text(json.dumps(manifest))
+        with contextlib.redirect_stdout(io.StringIO()):
+            target = build(self.source, self.source / "delivery")
+        delivery = validate(target)
+        for part in entries:
+            key = f"releases/{delivery['release']}/{part['name']}"
+            item = next(item for item in delivery["files"] if item["path"] == key)
+            self.assertNotIn("content_encoding", item)
+            self.assertEqual((target / "site" / key).read_bytes(), (self.source / part["name"]).read_bytes())
+        (self.source / entries[0]["name"]).write_bytes(b"x" * entries[0]["size"])
+        with self.assertRaisesRegex(ValueError, "compressed"): required_files(self.source)
+        manifest["encoding"] = "unknown"
+        manifest_path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, "encoding"): required_files(self.source)
 
     def test_delivery_compression_and_private_backend_separation(self):
         with (self.source / "index.html").open("a") as stream:

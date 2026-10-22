@@ -22,6 +22,9 @@ func _run() -> void:
 		_fail("sea must retain one continuous plane surface")
 		return
 	var plane := surface.mesh as PlaneMesh
+	if plane.size.x < 8192 or plane.size.y < 8192:
+		_fail("sea must cover the complete 4096m terrain shelf with an offshore margin")
+		return
 	# Water.tscn raises the complete water system at its root so the mesh,
 	# ambience, and effects stay aligned. Validate the composed transform.
 	if water.position.y + surface.position.y < 0.5:

@@ -53,15 +53,10 @@ func _generate() -> void:
 			if Vector2(point.x, point.z).length() > 405.0: continue
 			# A full margin around the existing ring, its stages and circulation.
 			if Vector2(point.x, point.z).length() < 155.0: continue
-			# An open promenade reaches the instruments without requiring the
-			# player to solve the maze. Hedges frame it rather than block it.
-			if cell.x == 14 and cell.y <= 7: continue
 			passages[cell] = []
 	var rng := RandomNumberGenerator.new()
-	# Chosen so the fountain is a real search from both ways in: 38 cells from
-	# the entrance and 28 from the Music Circle exit. The old seed ran almost
-	# straight to it (11 and 4).
-	rng.seed = 1199
+	# Keep the layout stable between visits while offering branches and dead ends.
+	rng.seed = 1217
 	var stack: Array[Vector2i] = [ENTRANCE]
 	var visited := {ENTRANCE: true}
 	while not stack.is_empty():
@@ -142,7 +137,6 @@ func _build() -> void:
 	add_child(caps)
 	Art.label(self, "MELODY HEDGE MAZE\nFind the singing fountain\nQ inside the maze: return to entrance", entrance_position() + Vector3.UP * 12, 36)
 	Art.label(self, "MUSIC CIRCLE\nFree-play instruments this way", cell_position(MUSIC_EXIT) + Vector3(0, 9, 20), 28)
-	Art.label(self, "MUSIC CIRCLE\nOpen promenade · no maze required", Vector3(96, 12, -390), 32)
 	Art.label(self, "THE SINGING FOUNTAIN\nYou found the heart of the maze", fountain_position() + Vector3.UP * 23, 32)
 
 func _hedge_material(color: Color) -> ShaderMaterial:
