@@ -27,10 +27,10 @@ func _ready() -> void:
 	sound.name = "FountainMusic"
 	sound.position = Vector3.UP * 4
 	# Natural distance attenuation brings the music forward on approach.
-	sound.unit_size = 12.0
-	sound.max_distance = 72.0
-	sound.volume_db = -12.0
-	sound.max_db = -10.0
+	sound.unit_size = 24.0
+	sound.max_distance = 110.0
+	sound.volume_db = -4.0
+	sound.max_db = -2.0
 	sound.bus = "Music" if AudioServer.get_bus_index("Music") >= 0 else "Master"
 	var path := "res://assets/audio/music_circle/fountain_theme.wav"
 	if ResourceLoader.exists(path):

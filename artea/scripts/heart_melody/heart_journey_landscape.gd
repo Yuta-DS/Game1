@@ -23,6 +23,8 @@ func _ready() -> void:
 	var music := fountain.get_node("MusicalFountain/FountainMusic") as AudioStreamPlayer3D
 	music.unit_size = 4
 	music.max_distance = 28
+	music.volume_db = -12
+	music.max_db = -10
 	world._object("healing_fountain", 0, Vector3(-61, 1, 32), "Rest at the singing fountain")
 	# Water sits below the bridge deck. Its healing mist reaches the walkway,
 	# so recovery never requires a jump off an island or an unsafe swim.
@@ -30,7 +32,7 @@ func _ready() -> void:
 		_water(Vector3(spec[0], -2.6, spec[1]), Vector2(spec[2], spec[3]))
 	_gate(Vector3(88, 0, 8), 6, 2, "River Song", "Restore the Feeling Garden")
 	_gate(Vector3(219, 0, -8), 5.5, 5, "Bell Grove", "Restore the Rain Boat Call Bells")
-	_gate(Vector3(278, 0, 8), 7, 6, "Warning Bell Path", "Restore the Harmony Bridge Chimes")
+	_gate(Vector3(294, 0, 8), 7, 6, "Warning Bell Path", "Restore the Harmony Bridge Chimes")
 	_gate(Vector3(350, 0, 8), 7, 7, "Harmony Stage", "Complete the Warning Bell Path")
 	_gate(Vector3(453, 0, 8), 7, 10, "Jewel Sanctuary", "Complete the Fruit Orchestra")
 	var scenery := Node3D.new()
