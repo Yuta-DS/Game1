@@ -159,22 +159,12 @@ func _start_load_once_visible() -> void:
 # next visit (ADR-0002), so nothing needs keeping in user:// as well.
 ## `start` and `share` place this file's download within the bar's Pack slice.
 func _fetch_pack(file: String, area: String, start: float, share: float) -> bool:
-	var local := "/tmp/artea_packs/" + file
-	var key := JSON.stringify(file)
-	JavaScriptBridge.eval("arteaPacks.fetch(%s, %s)" % [key, JSON.stringify(local)])
-	while true:
-		var state = JSON.parse_string(str(JavaScriptBridge.eval("JSON.stringify(arteaPacks.state[%s])" % key)))
-		if not state is Dictionary or state.error != "":
-			_fail("download failed: %s" % (state.error if state is Dictionary else "no loader"))
-			return false
-		if state.done:
-			break
-		if state.total > 0:
-			_report(PACK_SLICE * (start + share * state.loaded / state.total),
-				"Downloading the %s (%d / %d MB)" % [area, state.loaded / 1048576, state.total / 1048576])
-		await get_tree().process_frame
-	if not ProjectSettings.load_resource_pack(local):
-		_fail("couldn't open the downloaded %s" % area)
+	var error: String = await SceneLoader.fetch_pack(get_tree(), file,
+		func(loaded: float, total: float) -> void:
+			_report(PACK_SLICE * (start + share * loaded / total),
+				"Downloading the %s (%d / %d MB)" % [area, int(loaded) / 1048576, int(total) / 1048576]))
+	if not error.is_empty():
+		_fail(error)
 		return false
 	return true
 
