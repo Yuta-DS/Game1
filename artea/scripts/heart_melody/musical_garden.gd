@@ -22,25 +22,6 @@ func _ready() -> void:
 
 func _build_island_spaces() -> void:
 	name = "MusicalOrchardAndInstruments"
-	# Moss ribbons connect the existing arrival/planter loop to each new clearing.
-	for segment in [
-		[Vector3(-54, 0.09, 12), Vector3(-66, 0.09, -8)],
-		[Vector3(-66, 0.09, -8), Vector3(-48, 0.09, -28)],
-		[Vector3(-48, 0.09, -28), Vector3(-21, 0.09, -31)],
-		[Vector3(-21, 0.09, -31), Vector3(8, 0.09, -34)],
-		[Vector3(8, 0.09, -34), Vector3(21, 0.09, -29)],
-		[Vector3(21, 0.09, -29), Vector3(23, 0.09, -10)],
-		[Vector3(23, 0.09, -10), Vector3(15, 0.09, 4)],
-		[Vector3(15, 0.09, 4), Vector3(8, 0.09, 20)],
-		[Vector3(8, 0.09, 20), Vector3(8, 0.09, 29)],
-		[Vector3(8, 0.09, 29), Vector3(15, 0.09, 29)],
-		[Vector3(8, 0.09, 20), Vector3(26, 0.09, 20)],
-		[Vector3(26, 0.09, 20), Vector3(42, 0.09, 24)],
-		[Vector3(15, 0.09, 4), Vector3(42, 0.09, 28)],
-		[Vector3(42, 0.09, 28), Vector3(30, 0.09, 43)],
-		[Vector3(30, 0.09, 43), Vector3(-12, 0.09, 26)],
-	]:
-		_path(segment[0], segment[1], 3.2, Color("6f9b74"))
 
 	# Orchard: four strong canopy silhouettes and fruit at ordinary camera height.
 	Art.banner(self, "MUSICAL ORCHARD\nListen before you harvest", Vector3(-54, 7, -16), 32)
@@ -51,11 +32,7 @@ func _build_island_spaces() -> void:
 		var bloom := Art.garden_flower(self, Vector3(-68 + i * 7, 0, -21 - (i % 2) * 8), i % 3, Color("efb5c7") if i % 2 == 0 else Color("f0cf79"))
 		garden_blooms.append(bloom)
 
-	# Shallow pool and a compact, non-blocking waterfall landmark.
-	Art.cone(self, Vector3(-7, 0.07, -39), 7.5, 7.5, 0.08, Color("70b9bd"), false, 16)
-	Art.box(self, Vector3(-7, 2.5, -45), Vector3(13, 5, 1.2), Color("789079"), true)
-	for x in [-4.0, 0.0, 4.0]:
-		Art.box(self, Vector3(-7 + x, 2.2, -44.25), Vector3(2.2, 4.2, 0.25), Color("9bd5d3"))
+	# Water stays in the lake around the islands; the orchard is all meadow.
 
 	_build_marimba(Vector3(-21, 0, -32))
 	_build_harp(Vector3(8, 0, -34))
@@ -67,12 +44,6 @@ func _build_island_spaces() -> void:
 	for spec in [["marimba_pear", Vector3(-30, 0, -39)], ["shaker_berry", Vector3(23, 0, 33)], ["bell_apple", Vector3(51, 0, 24)], ["bass_melon", Vector3(19, 0, 43)]]:
 		_build_fruit_tree(spec[0], spec[1], Catalog.FRUIT_ORDER.find(spec[0]), false)
 
-
-func _path(a: Vector3, b: Vector3, width: float, colour: Color) -> void:
-	var path := Art.box(self, (a + b) * 0.5, Vector3(width, 0.05, a.distance_to(b) + 0.6), colour)
-	# Local basis, not look_at_from_position(): that sets a global transform, so
-	# on the island embedded in the gallery world the paths landed by the gallery.
-	path.basis = Basis.looking_at(b - a)
 
 func _build_fruit_tree(fruit_id: String, pos: Vector3, variant: int, primary := true) -> void:
 	var tree := Node3D.new()
@@ -148,10 +119,32 @@ func _build_basket() -> void:
 		_build_fruit_shape(fruit, Catalog.FRUIT_ORDER[i], Vector3.ZERO, 0.2)
 		basket_fruit[Catalog.FRUIT_ORDER[i]] = fruit
 
+## Basket size in the fox's hand, and the hand bone it hangs from (the bone the
+## sword is skinned to).
+const BASKET_IN_HAND := 0.65
+const HAND_BONE := "Sword_2"
+
 func _process(_delta: float) -> void:
-	if basket != null and world.player != null:
+	if basket == null or world.player == null: return
+	var active: bool = not world.embedded_in_overworld or world.embedded_active
+	basket.visible = active
+	# In Heart Melody the fox carries the fruit basket where its sword would be.
+	var skeleton := world.player.get_node_or_null("FoxVisuals/Fox/IdleDemo/Skeleton3D") as Skeleton3D
+	var sword := skeleton.get_node_or_null("Sword") as Node3D if skeleton != null else null
+	if sword != null: sword.visible = not active
+	var bone := skeleton.find_bone(HAND_BONE) if skeleton != null else -1
+	if bone < 0:
 		basket.global_position = world.player.global_position + Vector3(0.9, 0.1, 0)
-		basket.visible = not world.embedded_in_overworld or world.embedded_active
+		return
+	var hand := skeleton.global_transform * skeleton.get_bone_global_pose(bone).origin
+	var facing := (world.player.get_node("FoxVisuals") as Node3D).global_basis.get_euler().y
+	basket.global_transform = Transform3D(Basis(Vector3.UP, facing).scaled(Vector3.ONE * BASKET_IN_HAND),
+		hand - Vector3.UP * 0.7 * BASKET_IN_HAND)
+
+func _exit_tree() -> void:
+	# Leaving the scene hands the sword back.
+	var sword := world.player.get_node_or_null("FoxVisuals/Fox/IdleDemo/Skeleton3D/Sword") as Node3D 		if is_instance_valid(world) and is_instance_valid(world.player) else null
+	if sword != null: sword.visible = true
 
 func _harvest_visual(fruit_id: String) -> void:
 	var source: Node3D = fruit_visuals[fruit_id]

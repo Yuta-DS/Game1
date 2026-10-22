@@ -23,7 +23,9 @@ func run() -> void:
 		if text.name == "BannerText":
 			banners += 1
 			check(text.get_parent().find_children("*", "CollisionShape3D", true, false).is_empty(), "banner has no player or camera collision")
-	check(banners >= 10, "major instruments have banners")
+	check(banners >= 10, "major instruments keep their sign text")
+	for banner in heart.find_children("LandmarkBanner", "Node3D", true, false):
+		check(not banner.visible, "no floating sign over the island: " + banner.get_node("BannerText").text)
 	heart.player.position = Vector3(477, 1.5, 8)
 	var returned := false
 	for frame in 1800:

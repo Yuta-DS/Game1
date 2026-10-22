@@ -14,7 +14,7 @@ func _run() -> void:
 	var island = connection.island
 	island.test_mode = true
 	var player = gallery.get_node("Player3D")
-	player.global_position = connection.to_global(connection.WALK_TURN + Vector3.UP * 2)
+	player.global_position = connection.to_global(connection.walk_points[connection.walk_points.size() / 2] + Vector3.UP * 2)
 	for frame in 12: await process_frame
 	var camera := Camera3D.new()
 	gallery.add_child(camera)

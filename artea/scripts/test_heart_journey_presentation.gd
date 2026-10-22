@@ -20,7 +20,7 @@ func run() -> void:
 	current_scene = world
 	for i in 12: await physics_frame
 	var guide = world.milo_guide
-	check(guide.panel.visible and guide._pages.size() > 1, "Long narration uses short transcript pages")
+	check(not guide.panel.visible and guide._pages.size() > 1, "Narration is voiced without an on-screen card")
 	check(world.hud.get_parent().get_global_rect().end.x <= root.get_visible_rect().size.x, "Status card stays inside the screen's right margin")
 	check(guide.caption.text.length() < 180 and guide.panel.size.x < 500, "Transcript has a clear compact card")
 	guide.voice.finished.emit()

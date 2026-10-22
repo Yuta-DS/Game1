@@ -42,7 +42,7 @@ func _walk_to(target: Vector3, frames := 3600) -> bool:
 	return false
 
 func _run() -> void:
-	create_timer(180).timeout.connect(func(): _release(); push_error("Heart station test timed out"); quit(1))
+	create_timer(360).timeout.connect(func(): _release(); push_error("Heart station test timed out"); quit(1))
 	var state = root.get_node("JourneyState")
 	state.treasures["star_of_wisdom"] = false
 	check(change_scene_to_file("res://scenes/art_gallery_3d_inprogress.tscn") == OK, "load actual overworld")
@@ -72,10 +72,17 @@ func _run() -> void:
 	var station_milo = root.get_node("MiloCompanionManager").get_active_milo()
 	check(station_milo != null and player.get_meta("milo_heart_escort", false), "Milo joins the player at the station landing")
 	var milo_station_position: Vector3 = station_milo.global_position
-	check(await _walk_to(connection.to_global(connection.WALK_TURN)), "walk continuous garden slope without jumping")
+	# Follow the curving bridge the way a player would, a stretch at a time.
+	var walk: PackedVector3Array = connection.walk_points
+	var climbed := true
+	for i in range(4, walk.size() / 2, 4): climbed = climbed and await _walk_to(connection.to_global(walk[i]))
+	check(climbed, "walk continuous garden slope without jumping")
 	print("MILO STATION ROUTE: start=", milo_station_position, " now=", station_milo.global_position, " player=", player.global_position, " breadcrumbs=", station_milo._breadcrumbs.size())
 	check(station_milo.global_position.distance_to(milo_station_position) > 100, "Milo physically walks the station-to-garden slope")
 	check(station_milo.global_position.distance_to(player.global_position) < 22, "walking escort keeps up on the station route")
+	var crossed := true
+	for i in range(walk.size() / 2, walk.size(), 4): crossed = crossed and await _walk_to(connection.to_global(walk[i]))
+	check(crossed, "walk curved garden bridge")
 	check(await _walk_to(connection.to_global(connection.WALK_FINISH)), "walk garden entrance bridge")
 	var entry_camera = root.get_camera_3d()
 	var entry_yaw: float = entry_camera._yaw
@@ -144,7 +151,9 @@ func _run() -> void:
 	check(island.player_local_position().distance_to(Vector3(-56, 2, 17)) < 0.1, "recovery uses island transform")
 	check(await _walk_to(island.to_global(Vector3(-65, 1, 12))), "walk back to arrival")
 	check(await _walk_to(connection.to_global(connection.WALK_FINISH)), "walk out of arch")
-	check(await _walk_to(connection.to_global(connection.WALK_TURN)), "walk entrance bridge back to slope")
+	var returned := true
+	for i in range(walk.size() - 4, 0, -4): returned = returned and await _walk_to(connection.to_global(walk[i]))
+	check(returned, "walk the curved bridge back down to the court")
 	check(await _walk_to(connection.to_global(connection.WALK_START)), "walk down slope to station court")
 	check(not island.embedded_active and not island.get_node("HeartHUD").visible, "leaving restores overworld presentation")
 	check(player.input_enabled and is_equal_approx(player.speed, original_speed), "overworld movement restored")

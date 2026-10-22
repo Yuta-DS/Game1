@@ -68,12 +68,8 @@ func _build_valley() -> void:
 	# terraces and a six metre principal route. Scenery has no decorative collision.
 	Art.box(self, Vector3(416, -1.1, 8), Vector3(140, 2, 70), Color("a6b29a"), true)
 	Art.box(self, Vector3(416, 0.02, 8), Vector3(140, 0.14, 7), Color("e0d9c4"), true)
-	Art.box(self, Vector3(415, 0.02, 31), Vector3(132, 0.14, 4), Color("c5bc9d"), true)
-	for x in [355.0, 437.0, 478.0]:
-		Art.box(self, Vector3(x, 0.02, 19), Vector3(6, 0.14, 26), Color("d4ccb5"), true)
-	for z in [-27.0, 43.0]:
-		Art.box(self, Vector3(416, 0.65, z), Vector3(140, 1.3, 0.8), Color("a4a08b"), true)
-	Art.box(self, Vector3(486, 0.65, 8), Vector3(0.8, 1.3, 70), Color("a4a08b"), true)
+	# Fenced all round; its west side is open where the Peace Garden runs in.
+	Art.rail_rect(self, Vector2(346, -27), Vector2(486, 43), {"x-": [Vector2(8, 58)]})
 	for zone in 6:
 		var growth := Node3D.new()
 		growth.name = "Restoration" + str(zone)

@@ -61,7 +61,27 @@ func _run() -> void:
 	# Turning round swings the camera behind the player, while the direction
 	# movement uses holds still so holding S cannot spin forever.
 	var follow = AutoFollow.new()
+	# With a mouse, running left or right leaves the view where the player put
+	# it; on a phone or tablet the camera follows the turn.
+	follow.follow_every_turn = false
+	Input.action_press("move_right")
+	var sideways := 0.0
+	for i in 120: sideways = follow.step(0.016, sideways, Vector3(5, 0, 0))
+	assert(is_zero_approx(sideways), "desktop: running sideways does not turn the camera")
+	var touch_follow = AutoFollow.new()
+	touch_follow.follow_every_turn = true
+	sideways = 0.0
+	for i in 300: sideways = touch_follow.step(0.016, sideways, Vector3(5, 0, 0))
+	assert(absf(angle_difference(sideways, -PI / 2)) < 0.1, "touch: the camera swings behind a sideways run")
+	Input.action_release("move_right")
+	follow = AutoFollow.new()
+	follow.follow_every_turn = false
 	Input.action_press("move_backward")
+	var held_view := 0.0
+	for i in 300: held_view = follow.step(0.016, held_view, Vector3(0, 0, 5))
+	assert(is_zero_approx(held_view), "desktop: holding S does not turn the camera")
+	follow = AutoFollow.new()
+	follow.follow_every_turn = true
 	var yaw := follow.step(0.016, 0.0, Vector3(0, 0, 5)) # running at the camera
 	for i in 300:
 		yaw = follow.step(0.016, yaw, Vector3(0, 0, 5))

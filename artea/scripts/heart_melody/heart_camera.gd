@@ -1,5 +1,6 @@
 extends Camera3D
 const TouchDevice := preload("res://scripts/touch_controls.gd")
+const AutoFollow := preload("res://scripts/camera_auto_follow.gd")
 ## Matches the shared SpringArm camera's sensitivity, pivot and zoom range.
 ## Sweep a volume, not a ray: near-plane corners must also clear scenery.
 const MIN_PITCH := -1.18
@@ -14,6 +15,8 @@ var _pitch := -0.24
 var _touch := -1
 var _web_drag := false
 var _probe := SphereShape3D.new()
+# Swings behind the running player, as the overworld camera does.
+var _follow := AutoFollow.new()
 
 func _ready() -> void:
 	world = get_parent()
@@ -26,6 +29,8 @@ func active() -> bool:
 	return world.player != null and not world.embedded_in_overworld
 
 func orbit(motion: Vector2) -> void:
+	if motion.is_zero_approx(): return
+	_follow.looked()
 	yaw = wrapf(yaw - motion.x, -PI, PI)
 	pitch = clampf(pitch - motion.y, MIN_PITCH, MAX_PITCH)
 
@@ -71,6 +76,7 @@ func update_camera(delta: float) -> void:
 		# Arrows remain movement. I/J/K/L offer keyboard-only camera control.
 		stick += Vector2(float(Input.is_physical_key_pressed(KEY_L)) - float(Input.is_physical_key_pressed(KEY_J)), float(Input.is_physical_key_pressed(KEY_K)) - float(Input.is_physical_key_pressed(KEY_I)))
 		orbit(stick.limit_length() * delta * 1.8)
+		yaw = _follow.step(delta, yaw, world.player.velocity)
 	var weight := 1.0 if world.reduced_motion else 1.0 - exp(-20.0 * delta)
 	_yaw = lerp_angle(_yaw, yaw, weight)
 	_pitch = lerpf(_pitch, pitch, weight)
@@ -98,6 +104,10 @@ func update_camera(delta: float) -> void:
 	look_at(pivot)
 	var avatar: Node3D = world.player.get_node_or_null("FoxVisuals")
 	if avatar != null: avatar.visible = true
+
+## The yaw movement should be relative to (see camera_auto_follow.gd).
+func movement_yaw() -> float:
+	return _follow.control_yaw if _follow.latched and active() else global_rotation.y
 
 func _exit_tree() -> void:
 	if is_instance_valid(world) and is_instance_valid(world.player):
