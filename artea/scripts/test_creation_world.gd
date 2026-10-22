@@ -309,6 +309,63 @@ func _run() -> void:
 	streaming_root.queue_free()
 	await process_frame
 
+	# --- the painting's edge, keys, painting, paint drops, growing --------
+	var edge := world.find_child("PaintingEdge", true, false) as StaticBody3D
+	assert(edge != null and edge.get_child_count() == 4, "walls surround the painting")
+	assert(world.find_children("FrameMoulding*", "", true, false).size() == 4,
+		"a gilded frame marks the painting's edge")
+	var wall_x: float = float(world._terrain.width) * 0.5 - float(world.EDGE_INSET)
+	var play: Node = world.find_child("ArtworkPlay", true, false)
+	assert(play != null, "the artwork world has things to do")
+	world.call("_toggle_painting")
+	assert(play.painting, "F starts painting the ground")
+	# Walk right for longer than it takes to cross the world: the wall stops the
+	# player instead of letting them walk off the edge into empty air.
+	player.global_position = world._spawn_position
+	await physics_frame
+	Input.action_press("move_right")
+	for _frame in 240:
+		await physics_frame
+	Input.action_release("move_right")
+	assert(player.global_position.x < wall_x and player.global_position.y > world.FALL_LIMIT,
+		"the player can't walk off the painting's edge (x=%.1f, wall at %.1f)"
+			% [player.global_position.x, wall_x])
+	assert(int(play.splat_count()) > 5, "walking with the brush leaves paint on the ground")
+	world.call("_toggle_painting")
+	player.global_position = Vector3(0.0, world.FALL_LIMIT - 5.0, 0.0)
+	# process_frame is emitted before the nodes' _process, so wait for a second.
+	await process_frame
+	await process_frame
+	assert(player.global_position.distance_to(world._spawn_position) < 1.0,
+		"a player who falls is put back at the start")
+
+	var draw_key := InputEventKey.new()
+	draw_key.pressed = true
+	draw_key.keycode = KEY_D
+	world._unhandled_input(draw_key)
+	assert(not world._sketch_panel.visible, "D only moves: it no longer opens the drawing panel")
+	draw_key.keycode = KEY_Q
+	world._unhandled_input(draw_key)
+	assert(world._sketch_panel.visible, "Q opens the drawing panel")
+	world.call("_toggle_sketch_panel", false)
+
+	await process_frame
+	var drops_hidden: int = int(play.drops_remaining())
+	assert(drops_hidden > 0, "paint drops are hidden once the world is built")
+	var drop := play.find_child("PaintDrop", true, false) as Area3D
+	player.global_position = drop.global_position
+	for _frame in 4:
+		await physics_frame
+	assert(int(play.drops_remaining()) == drops_hidden - 1, "touching a paint drop collects it")
+
+	world._interaction_target = drawn_tree
+	drawn_tree.set_meta("artwork_kind", "tree")
+	var tree_spec: Dictionary = world._actor_specs[str(drawn_tree.get_meta("artwork_id"))]
+	var tree_scale: float = (tree_spec["base"] as Transform3D).basis.get_scale().y
+	world.call("_activate_interaction")
+	assert((tree_spec["base"] as Transform3D).basis.get_scale().y > tree_scale * 1.1,
+		"E really grows a painted plant")
+
 	var canvas := SketchCanvas.new()
 	root.add_child(canvas)
 	await process_frame

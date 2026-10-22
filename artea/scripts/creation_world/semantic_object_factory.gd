@@ -1,5 +1,7 @@
 extends RefCounted
 
+const ImageSubjectExtractor := preload("res://scripts/creation_world/image_subject_extractor.gd")
+
 # Converts one detected subject into an independent physical 3D object.
 # Anything that came from a bounded region of the artwork keeps that exact crop
 # as a thick, collidable extrusion. Curated models are reserved for new ideas
@@ -153,12 +155,19 @@ static func _art_extrusion(source_image: Image, spec: Dictionary, colour: Color)
 	var body := _body_from_mesh(mesh, colour, "artwork_extrusion")
 	var visual := body.get_node_or_null("SemanticVisual") as MeshInstance3D
 	var material := visual.material_override as StandardMaterial3D
-	var texture := _crop_texture(source_image, spec)
+	var texture := _crop_texture(source_image, spec, true)
 	if texture != null:
 		material.albedo_texture = texture
 		material.albedo_color = Color.WHITE
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		# A hard cut-out: the paper around the shape is gone, and nothing needs
+		# sorting the way blended transparency does.
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		material.alpha_scissor_threshold = 0.5
 		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		# BoxMesh lays its six faces out on the texture as a 3x2 grid, so each
+		# face showed one sixth of the drawing (a heart came out as one curve).
+		# Scaling by 3x2 gives every face the whole drawing.
+		material.uv1_scale = Vector3(3.0, 2.0, 1.0)
 		material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 	body.set_meta("source_bounds", [bounds.position.x, bounds.position.y, bounds.size.x, bounds.size.y])
 	body.set_meta("preserves_artwork_pixels", true)
@@ -184,7 +193,10 @@ static func _body_from_mesh(mesh: PrimitiveMesh, colour: Color, mode: String) ->
 	return body
 
 
-static func _crop_texture(image: Image, spec: Dictionary) -> Texture2D:
+## The artwork inside the spec's bounds. With `cut_out_paper`, pixels the
+## colour of the paper become transparent, so a drawn heart stands as a heart
+## rather than printed on a white card.
+static func _crop_texture(image: Image, spec: Dictionary, cut_out_paper := false) -> Texture2D:
 	if image == null or image.is_empty():
 		return null
 	var bounds := normalized_bounds(spec)
@@ -196,7 +208,31 @@ static func _crop_texture(image: Image, spec: Dictionary) -> Texture2D:
 	rect.size.x = mini(rect.size.x, image.get_width() - rect.position.x)
 	rect.size.y = mini(rect.size.y, image.get_height() - rect.position.y)
 	var crop := image.get_region(rect)
-	return ImageTexture.create_from_image(crop) if not crop.is_empty() else null
+	if crop.is_empty():
+		return null
+	if cut_out_paper:
+		_cut_out_paper(crop, ImageSubjectExtractor.background_colour(image))
+	return ImageTexture.create_from_image(crop)
+
+
+# At most this many pixels a side: keying is a per-pixel loop in GDScript, and a
+# whole 1024 px drawing would stall the world's loading for seconds.
+const CUT_OUT_MAX_SIZE := 256
+
+
+static func _cut_out_paper(crop: Image, paper: Color) -> void:
+	var longest := maxi(crop.get_width(), crop.get_height())
+	if longest > CUT_OUT_MAX_SIZE:
+		var factor := float(CUT_OUT_MAX_SIZE) / longest
+		crop.resize(maxi(1, int(crop.get_width() * factor)), maxi(1, int(crop.get_height() * factor)),
+			Image.INTERPOLATE_BILINEAR)
+	crop.convert(Image.FORMAT_RGBA8)
+	for y in crop.get_height():
+		for x in crop.get_width():
+			var colour := crop.get_pixel(x, y)
+			if ImageSubjectExtractor.is_background(colour, paper):
+				colour.a = 0.0
+				crop.set_pixel(x, y, colour)
 
 
 static func normalized_bounds(spec: Dictionary) -> Rect2:

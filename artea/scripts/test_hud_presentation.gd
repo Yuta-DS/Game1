@@ -143,7 +143,7 @@ func _check_actions(hud: Control) -> void:
 
 	# The actions themselves, plus the keys that reach them, must survive the
 	# restyle — this pass was about presentation, not about removing features.
-	for action_name in ["AddIdeaButton", "DrawButton", "GalleryButton"]:
+	for action_name in ["AddIdeaButton", "DrawButton", "PaintButton", "ExitArtworkButton"]:
 		var button := _find_node_named(hud, action_name) as Button
 		_check(button != null, "the '%s' action is missing" % action_name)
 		if button == null:
@@ -159,7 +159,7 @@ func _check_actions(hud: Control) -> void:
 		_check(button.focus_mode == Control.FOCUS_ALL,
 			"'%s' cannot be reached by keyboard focus" % action_name)
 
-	# The M and D shortcuts have to keep pointing at the same panels.
+	# The M and Q shortcuts have to keep pointing at the same panels.
 	var add_button := _find_node_named(hud, "AddIdeaButton") as Button
 	var draw_button := _find_node_named(hud, "DrawButton") as Button
 	if add_button != null:
