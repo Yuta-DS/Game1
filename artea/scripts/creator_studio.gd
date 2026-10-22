@@ -1,5 +1,6 @@
 extends Node3D
 const TouchDevice := preload("res://scripts/touch_controls.gd")
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 ## Creator's Light studio. Stepping onto the raised floor grows the player
 ## SIZE_MULTIPLIER times with a clockwise spin, so the easels are in reach;
@@ -12,6 +13,7 @@ const TouchDevice := preload("res://scripts/touch_controls.gd")
 ## platform_top and easel_positions (all local to this node).
 
 const DRAWING_TOOL_SCENE := "res://scenes/drawing_tool.tscn"
+const PROMPT_TEXT := "Press Q to paint"
 const SIZE_MULTIPLIER := 8.0
 const SPIN_SECONDS := 0.8
 ## Horizontal reach from an easel's centre, for the grown player.
@@ -34,6 +36,7 @@ var _drawing_layer: CanvasLayer
 var _drawing_tool: Node
 var _easel_in_reach := -1
 var _painting_easel := -1
+var _fetching_tool := false
 
 
 func _ready() -> void:
@@ -42,7 +45,7 @@ func _ready() -> void:
 	layer.layer = 40
 	add_child(layer)
 	_prompt = Label.new()
-	_prompt.text = "Press Q to paint"
+	_prompt.text = PROMPT_TEXT
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.add_theme_font_size_override("font_size", 20)
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -144,6 +147,26 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _open_drawing() -> void:
+	if _fetching_tool:
+		return
+	# On the web the drawing tool is in the creators_light Pack (the Hub's
+	# drawing door), which isn't part of the galaxy's download. Unmounted, load()
+	# found nothing and Q did nothing, so it is mounted here first.
+	if not ResourceLoader.exists(DRAWING_TOOL_SCENE):
+		_fetching_tool = true
+		_prompt.text = "Getting the paints ready…"
+		var error: String = await SceneLoader.mount_packs_for(get_tree(), DRAWING_TOOL_SCENE,
+			func(loaded: float, total: float) -> void:
+				_prompt.text = "Getting the paints ready… %d%%" % int(100.0 * loaded / total))
+		_fetching_tool = false
+		_prompt.text = PROMPT_TEXT
+		if not error.is_empty():
+			push_warning("creator_studio: drawing tool unavailable: " + error)
+			_prompt.text = "The paints couldn't load. Press Q to try again."
+			return
+		# Walked away from the easel while it downloaded.
+		if _easel_in_reach < 0:
+			return
 	var scene := load(DRAWING_TOOL_SCENE) as PackedScene
 	if scene == null:
 		return
