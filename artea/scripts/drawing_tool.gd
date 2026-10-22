@@ -129,9 +129,10 @@ func _ready() -> void:
 	save_close_button.pressed.connect(_on_save_close_button_pressed)
 
 	firebase_button.pressed.connect(_on_firebase_button_pressed)
-	# ARTÉA's default journey is private and offline. Facilitators can add a
-	# deliberate export feature later; a child should never reach cloud upload
-	# from the creative flow by accident.
+	# One save button. Signed in, it saves to the player's account as well as
+	# the device (cloud saves, so drawings follow them to any device); only
+	# their own account can ever download them (server.py). Guests' drawings
+	# stay on the device. The old separate upload button stays hidden.
 	firebase_button.visible = false
 	firebase_button.disabled = true
 

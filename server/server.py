@@ -578,12 +578,11 @@ def download_artwork(artwork_id):
 
     artwork = Artwork.query.filter_by(id=artwork_id).first()
 
-    # A player's artwork is theirs: anyone else (or no login at all) gets the
-    # same answer as for a missing one, unless it was made public. It used to
-    # need no login, so any id could be fetched by anyone.
+    # A player's artwork is only ever available to their own account: anyone
+    # else (or no login at all) gets the same answer as for a missing one. It
+    # used to need no login, so any id could be fetched by anyone.
     identity = get_jwt_identity()
-    if not artwork or (not artwork.is_public
-            and (identity is None or int(identity) != artwork.user_id)):
+    if not artwork or identity is None or int(identity) != artwork.user_id:
         return jsonify({"error": "Artwork not found"}), 404
 
     file_path = os.path.join(
