@@ -150,6 +150,12 @@ func _input(event: InputEvent) -> void:
 	# the window recaptures it.
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		# Un-capturing snaps the OS cursor from its hidden captured position to
+		# where it reappears, which arrives as one huge InputEventMouseMotion.
+		# _orbit() reads motion unconditionally (see the comment above), so
+		# without this that single jump would whip the view right as the
+		# player regains the pointer.
+		_settle_frames = 2
 	elif event is InputEventMouseButton and event.pressed and capture_mouse and _mode == "follow" \
 			and event.button_index == MOUSE_BUTTON_LEFT:
 		Input.mouse_mode = TouchDevice.captured_mode()
