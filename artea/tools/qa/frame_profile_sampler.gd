@@ -51,6 +51,13 @@ func _start(label: String, seconds: float, options: Dictionary) -> void:
 		_portrait.global_position = milo.global_position + milo.global_basis.z * 3.0 + milo.global_basis.x * 1.2 + Vector3.UP * 1.6
 		_portrait.look_at(milo.global_position + Vector3.UP * 1.2)
 		_portrait.make_current()
+	if options.has("sea_view"):
+		_portrait = Camera3D.new()
+		_portrait.far = 4000
+		add_child(_portrait)
+		_portrait.global_position = Vector3(80, 85, 0) if options.sea_view == "east" else Vector3(0, 85, 80)
+		_portrait.look_at(Vector3(800, 10, 0) if options.sea_view == "east" else Vector3(0, 10, 800))
+		_portrait.make_current()
 	for property in ["scaling_3d_scale", "msaa_3d"]:
 		if options.has(property):
 			_saved.append({"node": get_viewport(), "property": property, "value": get_viewport().get(property)})

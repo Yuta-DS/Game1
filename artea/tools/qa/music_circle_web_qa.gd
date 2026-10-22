@@ -2,7 +2,7 @@ extends Node3D
 
 ## Opt-in test scene, opened by web-smoke --music-circle after the castle pack
 ## is mounted. Exercises the real gallery/player, instruments and camera.
-const KINDS := ["xylophone", "drums", "bells", "guitar", "piano"]
+const KINDS := ["xylophone", "drums", "bells", "guitar", "piano", "gallery_piano"]
 var _gallery: Node3D
 var _circle: Node3D
 var _player: CharacterBody3D
@@ -22,7 +22,7 @@ func _ready() -> void:
 	_player = _gallery.get_node("Player3D")
 	_player.set_physics_process(false)
 	for kind in KINDS:
-		var instrument := _circle.get_node("Playable_" + kind)
+		var instrument := _instrument(kind)
 		instrument.note_played.connect(_on_note.bind(kind))
 		instrument.playing_changed.connect(_on_playing.bind(kind))
 	_pose()
@@ -50,10 +50,13 @@ func _process(_delta: float) -> void:
 		_pose()
 	_next_down = down
 
+func _instrument(kind: String) -> Node3D:
+	return _gallery.get_node("GrandPiano") if kind == "gallery_piano" else _circle.get_node("Playable_" + kind)
+
 func _pose() -> void:
 	_posing = true
-	var instrument := _circle.get_node("Playable_" + KINDS[_index])
-	_player.global_position = instrument.to_global(Vector3(0, 0.3, 0.5) if KINDS[_index] == "piano" else Vector3(0, 2, 5))
+	var instrument := _instrument(KINDS[_index])
+	_player.global_position = instrument.to_global(Vector3(0, 0.3, 0.5) if KINDS[_index].ends_with("piano") else Vector3(0, 2, 5))
 	for frame in 5:
 		await get_tree().physics_frame
 		await get_tree().process_frame
@@ -65,7 +68,7 @@ func _on_playing(active: bool, kind: String) -> void:
 		if not _player.input_enabled:
 			push_error("MUSIC QA FAILURE: player controls were not restored")
 			return
-		if kind == "piano" and (_player.is_seated() or _player._sit_pose_applied):
+		if kind.ends_with("piano") and (_player.is_seated() or _player._sit_pose_applied):
 			push_error("MUSIC QA FAILURE: bench did not restore the standing pose")
 			return
 		print("MUSIC QA closed ", kind)
@@ -74,9 +77,9 @@ func _on_playing(active: bool, kind: String) -> void:
 	if _player.input_enabled:
 		push_error("MUSIC QA FAILURE: movement was not paused while playing")
 		return
-	var instrument := _circle.get_node("Playable_" + kind)
+	var instrument := _instrument(kind)
 	var point: Vector2
-	if kind == "piano":
+	if kind.ends_with("piano"):
 		if not _player.is_seated() or not _player._sit_pose_applied:
 			push_error("MUSIC QA FAILURE: real fox is not seated on the bench")
 			return
@@ -94,13 +97,13 @@ func _on_playing(active: bool, kind: String) -> void:
 	print("MUSIC QA open ", kind)
 
 func _on_note(index: int, kind: String) -> void:
-	var instrument := _circle.get_node("Playable_" + kind)
+	var instrument := _instrument(kind)
 	var count: int = instrument._voices.size()
 	var voice = instrument._voices[(instrument._voice_index + count - 1) % count]
 	if voice.stream == null or not voice.playing:
 		push_error("MUSIC QA FAILURE: no audible voice on " + kind)
 		return
-	if kind != "piano" and not voice.stream.resource_path.begins_with("res://assets/audio/music_circle/"):
+	if not kind.ends_with("piano") and not voice.stream.resource_path.begins_with("res://assets/audio/music_circle/"):
 		push_error("MUSIC QA FAILURE: prepared sound was not exported for " + kind)
 		return
 	print("MUSIC QA note ", kind, " ", index)

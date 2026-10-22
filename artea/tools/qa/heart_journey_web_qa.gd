@@ -82,6 +82,18 @@ func run(stage: String) -> void:
 		"river-organ": _river_activity(2, 2)
 		"river-harp": _river_activity(3, 1)
 		"river-bells": _river_activity(4, 3)
+		"bridge-chimes":
+			world._close()
+			world.player.position = Vector3(250, 1, 8)
+			for x in [262.0, 274.0, 286.0]:
+				var target := world.to_global(Vector3(x, 1, 8))
+				if world.player.test_move(world.player.global_transform, target - world.player.global_position):
+					push_error("JOURNEY QA FAILURE: locked gate blocks a bridge chime")
+				world.player.global_position = target
+				await get_tree().physics_frame
+			if world.journey_landscape.gates[2].open: push_error("JOURNEY QA FAILURE: bridge chime gate bypassed its requirements")
+			world.camera.yaw = -PI / 2
+			world.camera.pitch = -0.4
 	for i in 3: await get_tree().process_frame
 	if stage == "river-bells" and not world.journey_landscape.gates[1].collider.disabled:
 		push_error("JOURNEY QA FAILURE: Bell Grove collider stayed closed")
@@ -90,6 +102,21 @@ func run(stage: String) -> void:
 		print("JOURNEY QA panel ", stage, " ", rect.size.x, " ", rect.size.y)
 		await get_tree().create_timer(0.4).timeout
 		if stage == "instrument":
+			for row in world.options.get_children():
+				if row.get_meta("tuning_index", -1) != 0: continue
+				row.get_child(2).grab_focus()
+				var enter := InputEventKey.new()
+				enter.keycode = KEY_ENTER
+				enter.physical_keycode = KEY_ENTER
+				enter.pressed = true
+				Input.parse_input_event(enter)
+				await get_tree().process_frame
+				enter = enter.duplicate()
+				enter.pressed = false
+				Input.parse_input_event(enter)
+				await get_tree().process_frame
+				if world.chapter_world.challenge.input[0] != 1 or not world.modal_open:
+					push_error("JOURNEY QA FAILURE: Enter did not select the focused tuning button")
 			var visible_rect: Rect2 = world.options.get_parent().get_global_rect()
 			for button in world.options.find_children("*", "Button", true, false):
 				if button.text != "Check composition": continue
@@ -97,6 +124,9 @@ func run(stage: String) -> void:
 				if button_rect.position.y < visible_rect.position.y or button_rect.end.y > visible_rect.end.y + 1:
 					push_error("JOURNEY QA FAILURE: organ confirmation is outside the visible controls")
 				else: print("JOURNEY QA organ confirmation visible")
+		var exit_menu := world.panel.find_child("ExitMenu", true, false) as Button
+		if exit_menu == null or not world.panel.get_global_rect().encloses(exit_menu.get_global_rect()):
+			push_error("JOURNEY QA FAILURE: menu exit is not visible inside the card")
 		if world.options.get_parent().scroll_vertical != 0:
 			push_error("JOURNEY QA menu did not start on its heading: " + stage)
 			return
