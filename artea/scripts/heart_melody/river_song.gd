@@ -80,7 +80,6 @@ func _ready() -> void:
 	Art.banner(self, "PEACE GARDEN\nA safe place to listen", Vector3(322, 6, -12), 30)
 	flower = Art.flower(self, Vector3(343, 0, 8), Color("e7d68f"), 3)
 	world._object("river_peace", 0, Vector3(339, 1, 8), "Awaken the Peace Flower")
-	world._gate(self, Vector3(350, 0, 8), "Harmony Stage · Shared Song")
 	refresh()
 
 const ROOT_WALK_WIDTH := 5.5

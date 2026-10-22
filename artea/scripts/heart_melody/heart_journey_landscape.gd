@@ -83,21 +83,27 @@ func _water(at: Vector3, span: Vector2) -> void:
 	add_child(area)
 	waters.append(area)
 
+## How far inside each post a gate leaf is hinged.
+const LEAF_INSET := 0.6
+
 func _gate(at: Vector3, width: float, required: int, title: String, hint: String) -> void:
 	var root := Node3D.new()
 	root.name = "ProgressGate" + str(required)
 	root.position = at
 	add_child(root)
 	var leaves: Array[Node3D] = []
+	# Hinges sit just inside the posts, so an opened leaf lies flat alongside
+	# the bridge rail and post instead of swinging through them.
+	var leaf := width * 0.5 - LEAF_INSET
 	for side in [-1, 1]:
 		Art.cone(root, Vector3(0, 2.7, side * width * 0.5), 0.38, 0.28, 5.4, Color("e2c891"), true, 8)
 		var pivot := Node3D.new()
-		pivot.position.z = side * width * 0.5
+		pivot.position.z = side * leaf
 		root.add_child(pivot)
 		leaves.append(pivot)
 		for i in 4:
-			Art.box(pivot, Vector3(0, 1.9, -side * (i + 0.5) * width / 8), Vector3(0.25, 3.8, 0.13), Color("b7ccae"))
-		for y in [0.6, 3.3]: Art.box(pivot, Vector3(0, y, -side * width * 0.25), Vector3(0.28, 0.22, width * 0.5), Color("e2c891"))
+			Art.box(pivot, Vector3(0, 1.9, -side * (i + 0.5) * leaf / 4), Vector3(0.25, 3.8, 0.13), Color("b7ccae"))
+		for y in [0.6, 3.3]: Art.box(pivot, Vector3(0, y, -side * leaf * 0.5), Vector3(0.28, 0.22, leaf), Color("e2c891"))
 	var body := StaticBody3D.new()
 	var collider := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -127,13 +133,27 @@ func tick(delta: float) -> void:
 		if eligible and local.distance_to(gate.root.position) < 13:
 			open_gate(gate)
 
+## Within this distance of a locked gate the player is told what opens it.
+const LOCKED_NOTICE_DISTANCE := 9.0
+
+# The message for a locked gate the player is standing at, or "" when there is
+# none. The gate's hint names the island still to be completed.
+func locked_gate_message(local: Vector3) -> String:
+	for gate in gates:
+		if gate.open or world.progress.committed.chapter.tasks.size() >= gate.required: continue
+		if local.distance_to(gate.root.position) < LOCKED_NOTICE_DISTANCE:
+			return "Progress locked · %s to open %s" % [str(gate.hint), str(gate.title)]
+	return ""
+
 func open_gate(gate: Dictionary) -> void:
 	if gate.open: return
 	gate.open = true
 	gate.collider.set_deferred("disabled", true)
 	gate.sign.text = gate.title + "\nCrossing open · well done!"
 	var tween := create_tween().set_parallel(true)
-	for i in 2: tween.tween_property(gate.leaves[i], "rotation:y", (-1 if i == 0 else 1) * PI * 0.53, 0.8).set_trans(Tween.TRANS_SINE)
+	# Both leaves swing away from the approach, onward along the crossing, and
+	# stop parallel to its rails.
+	for i in 2: tween.tween_property(gate.leaves[i], "rotation:y", (1 if i == 0 else -1) * PI * 0.5, 0.8).set_trans(Tween.TRANS_SINE)
 	celebrations += 1
 	if not world.reduced_motion: _celebrate(gate.root.position)
 	world.note(0, 0.25)

@@ -68,7 +68,12 @@ func _run() -> void:
 	player.velocity = Vector3.ZERO
 	for frame in 120: await physics_frame
 	check(player.is_on_floor(), "main Heart station landing supports player")
-	check(await _walk_to(connection.to_global(connection.WALK_START)), "walk from main station landing onto garden path")
+	# The route on runs through the hedge maze (test_heart_music_maze.gd covers
+	# it); the bridge to the island begins in the maze's central music circle.
+	player.global_position = connection.to_global(connection.WALK_START) + Vector3(0, 1, 8)
+	player.velocity = Vector3.ZERO
+	for frame in 30: await physics_frame
+	check(await _walk_to(connection.to_global(connection.WALK_START)), "walk onto the bridge from the music circle")
 	var station_milo = root.get_node("MiloCompanionManager").get_active_milo()
 	check(station_milo != null and player.get_meta("milo_heart_escort", false), "Milo joins the player at the station landing")
 	var milo_station_position: Vector3 = station_milo.global_position
@@ -154,7 +159,7 @@ func _run() -> void:
 	var returned := true
 	for i in range(walk.size() - 4, 0, -4): returned = returned and await _walk_to(connection.to_global(walk[i]))
 	check(returned, "walk the curved bridge back down to the court")
-	check(await _walk_to(connection.to_global(connection.WALK_START)), "walk down slope to station court")
+	check(await _walk_to(connection.to_global(connection.WALK_START)), "walk down the bridge to the music circle")
 	check(not island.embedded_active and not island.get_node("HeartHUD").visible, "leaving restores overworld presentation")
 	check(player.input_enabled and is_equal_approx(player.speed, original_speed), "overworld movement restored")
 	check(current_scene == gallery and island.progress.data.planters.has("0"), "same scene retains saved progress")
