@@ -91,6 +91,7 @@ var _world: Node3D
 var _regions: Node3D
 var _railway: Node3D
 var _track: Array = [] # See _track_points().
+var _text_scale := 1.0
 var _bounds := HUB_BOUNDS
 var _full_map_open := false
 var _previous_mouse_mode := Input.MOUSE_MODE_VISIBLE
@@ -636,6 +637,13 @@ func _draw_galaxy_compact() -> void:
 	var heart := _railway.get_node_or_null("HeartMelodyConnection/HeartMelodyIslandOne") as Node3D
 	if heart != null:
 		_draw_compact_marker(heart.global_position, "QUIET MEADOW", Color("ff91c9"), "place")
+
+
+func _track_points() -> Array:
+	if _track.is_empty() and _railway != null and _railway.has_method("get_track_points"):
+		for point in _railway.call("get_track_points"):
+			_track.append(_railway.to_global(point))
+	return _track
 
 
 func _draw_compact_route(world_points: Array, color: Color, width: float) -> void:

@@ -4,6 +4,7 @@ const SceneLoader := preload("res://scripts/scene_loader.gd")
 # Every authenticated path begins in the same integrated World One scene used
 # by Offline Guest, so account type does not change the player's spawn point.
 const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
+const HUB_SCENE := "res://scenes/New_Hub_World.tscn"
 
 
 # Called when the node enters the scene tree for the first time.

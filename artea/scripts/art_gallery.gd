@@ -23,6 +23,7 @@ const ARTEA_GAME_PATH = "res://scenes/artea_game.tscn"
 const CREATION_WORLD_PATH = "res://scenes/creation_world.tscn"
 const QUEST_JOURNAL_PATH = "res://scenes/crown_quest_journal.tscn"
 const GALLERY_ENTRY_SPAWN := "art_castle_gallery"
+const GALLERY_SPAWN := Vector3(0, 1.2, 26)
 
 # --- Rating UI ---
 @onready var ratingpanel: Control = $CanvasLayer/RatingPanel

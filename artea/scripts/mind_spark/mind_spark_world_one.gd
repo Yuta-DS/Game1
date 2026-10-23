@@ -26,6 +26,8 @@ const PuzzleSelectorProductionScene := preload(
 	"res://assets3D/mind_spark/puzzle_control_kit/glb/mind_spark_puzzle_selector.glb")
 const PuzzleConfirmationProductionScene := preload(
 	"res://assets3D/mind_spark/puzzle_control_kit/glb/mind_spark_puzzle_confirmation.glb")
+const TEXTURE_ISLAND_UNDERSIDE := "res://assets/textures/mind_spark/station_components/v3/underbody_charcoal_circuit_v3.png"
+const TEXTURE_ISLAND_CRYSTAL := "res://assets/textures/mind_spark/station_components/v3/crystal_faceted_cyan_v3.png"
 const AetherAnalysisConsoleScene := preload(
 	"res://assets3D/mind_spark/aether_analysis_console/glb/aether_analysis_console.glb")
 # Procedural brick library: chamfered masonry, faceted crystals, bevelled

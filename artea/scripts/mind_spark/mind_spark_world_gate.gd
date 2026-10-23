@@ -4,8 +4,6 @@ extends Area3D
 signal travelled(destination_world_local: Vector3)
 
 @export var destination_world_local := Vector3.ZERO
-@export var target_world_path: NodePath = NodePath("MindSparkWorldOne")
-@export var target_kingdom_id: String = ""
 @export var gate_enabled := true
 @export var prompt_text := "Q • ENTER MIND SPARK"
 ## Empty preserves the original Mind Spark destination contract.

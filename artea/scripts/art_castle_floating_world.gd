@@ -127,12 +127,14 @@ const MIND_RUNE_TILE_HEIGHT := 0.08
 const CAUSEWAY_WIDTH := 26.0
 const CAUSEWAY_DECK_Y := 1.0
 const CAUSEWAY_SEGMENT_LENGTH := 420.0
+const MINI_OBSERVATORY_SCALE := 2.0
 const CAUSEWAY_ISLAND_RADIUS := 46.0
 const HEART := Vector3(0.0, 0.0, 2290.0)
 const HEART_GROUND_SURFACE_Y := 3.8
 const CREATOR := Vector3(600.0, 0.0, 1640.0)
 const CREATOR_BRIDGE_LANDING_Y := 1.75
 const CREATOR_STUDIO_FLOOR_Y := 2.0
+const CREATOR_PLATFORM_HALF := Vector3(150.0, 1.0, 120.0)
 const SOUTH_GATE := Vector3(0.0, 0.0, 820.0)
 # Arrival-island bounce pads: ~12 m of air at the default 9.8 gravity.
 const BOUNCE_PAD_LAUNCH_SPEED := 15.5
@@ -3554,17 +3556,6 @@ func _build_creator_district() -> void:
 		Vector3(300.0, 2.0, 240.0), creator_ground, true)
 	_build_creator_studio_ground_finish(district, creator_ground)
 
-	var easels := _creator_easel_offsets()
-	for index in easels.size():
-		_build_easel(district, CREATOR + easels[index], index)
-	_build_art_table(district, CREATOR + Vector3(-35.0, top, 60.0))
-	_build_studio_garden(district)
-
-
-## Six easels in two rows of three on the studio platform, relative to CREATOR.
-func _creator_easel_offsets() -> Array[Vector3]:
-	var top := CREATOR_PLATFORM_HALF.y * 2.0
-	var offsets: Array[Vector3] = []
 	for index in 6:
 		var row := index / 3
 		var column := index % 3
@@ -3573,6 +3564,7 @@ func _creator_easel_offsets() -> Array[Vector3]:
 	for index in 30:
 		var angle := TAU * float(index) / 30.0
 		_add_flower_cluster(district, CREATOR + Vector3(cos(angle) * 168.0, 2.0, sin(angle) * 168.0), index % 3 == 0)
+	_build_studio_garden(district)
 
 
 func _build_creator_studio_ground_finish(district: Node3D,
@@ -9178,3 +9170,129 @@ func _exit_tree() -> void:
 		if is_instance_valid(source):
 			source.stop()
 			source.stream = null
+
+
+func _add_tinted_multimesh(parent: Node3D, node_name: String, transforms: Array[Transform3D],
+		colors: Array[Color], roughness: float, mesh: PrimitiveMesh = null) -> void:
+	if mesh == null:
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.5
+		sphere.height = 1.0
+		sphere.radial_segments = 8
+		sphere.rings = 4
+		mesh = sphere
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	material.roughness = roughness
+	mesh.material = material
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.use_colors = true
+	multimesh.mesh = mesh
+	multimesh.instance_count = transforms.size()
+	for index in transforms.size():
+		multimesh.set_instance_transform(index, transforms[index])
+		multimesh.set_instance_color(index, colors[index])
+	var instance := MultiMeshInstance3D.new()
+	instance.name = node_name
+	instance.multimesh = multimesh
+	instance.position = CREATOR
+	parent.add_child(instance)
+
+
+# Readable physical landmarks turn the story document into an explorable route.
+# Each named node is also a stable hook for later quest interaction scripts.
+
+
+func _build_studio_garden(parent: Node3D) -> void:
+	const PLANTS := 70
+	const PETALS := 6
+	var paints := [Color("e3546a"), Color("f59e40"), Color("fad65c"),
+		Color("ff8fc8"), Color("4f8fe0"), Color("9e6ddb")]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 6
+	var leaves: Array[Transform3D] = []
+	var leaf_colors: Array[Color] = []
+	var stems: Array[Transform3D] = []
+	var stem_colors: Array[Color] = []
+	var petals: Array[Transform3D] = []
+	var petal_colors: Array[Color] = []
+	var centres: Array[Transform3D] = []
+	var centre_colors: Array[Color] = []
+	var collision := StaticBody3D.new()
+	collision.name = "StudioGardenCollision"
+	collision.position = CREATOR
+	parent.add_child(collision)
+	var planted := 0
+	while planted < PLANTS:
+		var angle := rng.randf() * TAU
+		var spot := Vector2(cos(angle), sin(angle)) * rng.randf_range(110.0, 176.0)
+		if absf(spot.x) < CREATOR_PLATFORM_HALF.x + 14.0 and absf(spot.y) < CREATOR_PLATFORM_HALF.z + 14.0:
+			continue
+		if spot.x < 0.0 and absf(spot.y) < 40.0:
+			continue
+		planted += 1
+		var size := rng.randf_range(3.0, 6.0)
+		var ground := Vector3(spot.x, 0.0, spot.y)
+		# Three overlapping leaf lobes read as a bush rather than one blob.
+		for lobe in 3:
+			var turn := TAU * float(lobe) / 3.0 + rng.randf()
+			leaves.append(Transform3D(Basis.from_scale(Vector3(size, size * 0.6, size)),
+				ground + Vector3(cos(turn) * size * 0.3, size * 0.25, sin(turn) * size * 0.3)))
+			leaf_colors.append(Color("3f8f52").lerp(Color("7cc36b"), rng.randf()))
+		var paint: Color = paints[rng.randi() % paints.size()]
+		for flower in rng.randi_range(3, 5):
+			var around := rng.randf() * TAU
+			var reach := rng.randf_range(0.0, 0.4) * size
+			var height := size * rng.randf_range(0.8, 1.3)
+			var foot := ground + Vector3(cos(around) * reach, 0.0, sin(around) * reach)
+			var head := foot + Vector3.UP * height
+			stems.append(Transform3D(Basis.from_scale(Vector3(0.18, height, 0.18)), foot + Vector3.UP * height * 0.5))
+			stem_colors.append(Color("3f8a4a"))
+			var petal_length := size * rng.randf_range(0.38, 0.5)
+			var tint := paint.lightened(rng.randf_range(0.0, 0.3))
+			var spin := rng.randf() * TAU
+			for petal in PETALS:
+				# Petal along +X, its outer end tilted up, then turned round the head.
+				var petal_basis := Basis(Vector3.UP, spin + TAU * float(petal) / PETALS) \
+					* Basis(Vector3.BACK, deg_to_rad(25.0))
+				petals.append(Transform3D(
+					petal_basis * Basis.from_scale(Vector3(petal_length, petal_length * 0.18, petal_length * 0.5)),
+					head + petal_basis * Vector3(petal_length * 0.45, 0.0, 0.0)))
+				petal_colors.append(tint)
+			centres.append(Transform3D(Basis.from_scale(Vector3.ONE * petal_length * 0.45),
+				head + Vector3.UP * petal_length * 0.08))
+			centre_colors.append(Color("ffd447") if paint != paints[2] else Color("fff6dc"))
+		var shape_node := CollisionShape3D.new()
+		var shape := CylinderShape3D.new()
+		shape.radius = size * 0.65
+		shape.height = size * 1.4
+		shape_node.shape = shape
+		shape_node.position = ground + Vector3.UP * shape.height * 0.5
+		collision.add_child(shape_node)
+	var stem_mesh := CylinderMesh.new()
+	stem_mesh.top_radius = 0.5
+	stem_mesh.bottom_radius = 0.5
+	stem_mesh.height = 1.0
+	stem_mesh.radial_segments = 5
+	stem_mesh.rings = 1
+	_add_tinted_multimesh(parent, "StudioGardenLeaves", leaves, leaf_colors, 0.9)
+	_add_tinted_multimesh(parent, "StudioGardenStems", stems, stem_colors, 0.9, stem_mesh)
+	_add_tinted_multimesh(parent, "StudioGardenPetals", petals, petal_colors, 0.55)
+	_add_tinted_multimesh(parent, "StudioGardenCentres", centres, centre_colors, 0.5)
+
+
+## A MultiMesh of `mesh` (a low-poly unit sphere by default) with a colour per
+## instance, positioned on the Creator district.
+
+
+func _add_collision_box(parent: Node3D, node_name: String, position: Vector3, size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = node_name
+	body.position = position
+	var shape_node := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	shape_node.shape = shape
+	body.add_child(shape_node)
+	parent.add_child(body)

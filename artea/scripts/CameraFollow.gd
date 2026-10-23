@@ -49,6 +49,7 @@ const AutoFollow := preload("res://scripts/camera_auto_follow.gd")
 
 var _mode := "follow"                   # "follow" or "inspect"
 var _player: Node3D
+var _follow := AutoFollow.new()
 var _tween: Tween
 var _inspect_focus := Vector3.ZERO
 

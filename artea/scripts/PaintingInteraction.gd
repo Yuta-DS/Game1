@@ -1,11 +1,25 @@
 extends Sprite3D
 
 @export var painting_id: int = 0
-@export var camera_path: NodePath  # drag your Camera3D here in the Inspector
-@export var inspect_on_accept := false  # gallery Space enters the artwork world
+@export var camera_path: NodePath
+@export var inspect_on_accept := false
+
+const FRAME_DEPTH := 0.10
+const OUTER_WIDTH := 0.36
+const BRASS_WIDTH := 0.22
+const INNER_WIDTH := 0.07
+
+var _frame_root: Node3D
+var _player_in_range := false
+var _camera: Node
 
 
 func _ready() -> void:
+	_camera = get_node_or_null(camera_path)
+	var area := get_node_or_null("InteractionArea") as Area3D
+	if area != null:
+		area.body_entered.connect(_on_body_entered)
+		area.body_exited.connect(_on_body_exited)
 	# Several authored triggers were high above the floor. Give every picture
 	# the same reachable area on the room side of its wall.
 	var trigger := get_node_or_null("InteractionArea/CollisionShape3D") as CollisionShape3D
@@ -15,6 +29,36 @@ func _ready() -> void:
 		trigger.shape = shape
 		trigger.scale = Vector3.ONE
 		trigger.position = Vector3(0, -2.3, 2.5)
+
+
+func _on_body_entered(body: Node3D) -> void:
+	if body.is_in_group("Player"):
+		_player_in_range = true
+
+
+func _on_body_exited(body: Node3D) -> void:
+	if body.is_in_group("Player"):
+		_player_in_range = false
+
+
+func _process(_delta: float) -> void:
+	if not inspect_on_accept:
+		return
+	if _player_in_range and Input.is_action_just_pressed("ui_accept"):
+		if _camera != null and _camera.has_method("enter_inspect"):
+			_camera.call("enter_inspect", self)
+		_lock_player(true)
+	if Input.is_action_just_pressed("ui_cancel"):
+		if _camera != null and _camera.has_method("exit_inspect"):
+			_camera.call("exit_inspect")
+		_lock_player(false)
+
+
+func _lock_player(lock: bool) -> void:
+	for player in get_tree().get_nodes_in_group("Player"):
+		if player.has_method("set_input_enabled"):
+			player.call("set_input_enabled", not lock)
+			break
 
 
 # GalleryManager assigns the picture after this node enters the scene. Size the
@@ -29,14 +73,22 @@ func refresh_frame() -> void:
 	_frame_root.name = "ArtworkSurround"
 	add_child(_frame_root)
 
-func _process(_delta: float) -> void:
-	if not inspect_on_accept:
-		return
-	# Enter inspect
-	if _player_in_range and Input.is_action_just_pressed("ui_accept"):
-		if _camera and _camera.has_method("enter_inspect"):
-			_camera.enter_inspect(self)
-		_lock_player(true)
+	var size := texture.get_size() * pixel_size
+	var outer := StandardMaterial3D.new()
+	outer.albedo_color = Color("4b342b")
+	outer.metallic = 0.1
+	outer.roughness = 0.55
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = Color("b88b49")
+	brass.metallic = 0.65
+	brass.roughness = 0.34
+	var inner := StandardMaterial3D.new()
+	inner.albedo_color = Color("e8d7ad")
+	inner.roughness = 0.72
+	_add_rails(size, OUTER_WIDTH, 0.04, outer)
+	_add_rails(size, BRASS_WIDTH, 0.10, brass)
+	_add_rails(size, INNER_WIDTH, 0.16, inner)
+	_add_corner_pins(size, brass)
 
 
 func _add_rails(size: Vector2, width: float, front: float,

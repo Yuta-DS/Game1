@@ -1,4 +1,5 @@
 extends CharacterBody3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 const COMBAT_BALANCE_PATH := "res://resources/mind_spark/player_combat_balance.json"
 
@@ -89,6 +90,10 @@ var _land_reaction_remaining := 0.0
 var _hit_reaction_remaining := 0.0
 var _visual_base_position := Vector3.ZERO
 var _visual_base_scale := Vector3.ONE
+var _visual_rest_position := Vector3.ZERO
+var _visual_rest_scale := Vector3.ONE
+var _size_multiplier := 1.0
+var _capsule_rest: Dictionary = {}
 var _train_seated_pose := false
 var current_focus := 100.0
 var is_dodging := false
