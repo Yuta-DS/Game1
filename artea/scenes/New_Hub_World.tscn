@@ -119,6 +119,7 @@
 [ext_resource type="PackedScene" uid="uid://cejjhajbx8vwe" path="res://assets3D/houses/gltf/fence_straight_long.gltf" id="97_fnstrl"]
 [ext_resource type="PackedScene" path="res://scripts/Pier.tscn" id="98_pier"]
 [ext_resource type="PackedScene" path="res://scenes/boat.tscn" id="99_boat"]
+[ext_resource type="Script" path="res://scripts/hub_minigame_signs.gd" id="200_signs"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
