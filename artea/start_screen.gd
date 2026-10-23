@@ -1,14 +1,20 @@
 extends Node2D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 
 # Links to the intro music audio player node
-@onready var menu_music = $AudioStreamPlayer 
+@onready var menu_music = $AudioStreamPlayer
 
 # Grab the UI Input Fields
 @onready var user_node = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/UsernameInput
 @onready var pass_node = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/PasswordInput
+
+# The options box the real login/register/guest buttons already live in -
+# the forgot-password button joins them here instead of floating separately,
+# so it rides the same panel and animation.
+@onready var options_box = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer
 
 # Dynamic visual feedback label for formatting error reporting
 @onready var status_label = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/StatusLabel
@@ -17,7 +23,12 @@ const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 @onready var form: VBoxContainer = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer
 @onready var guest_button: Button = $AnimationParent/CenterContainer/PanelContainer/VBoxContainer/GuestButton
 
+var _admin_panel: Node
+var _forgot_password_panel: Node
+var _code_modal: Node
+
 func _ready():
+	print("Account screen initializing")
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
 	# Keyboard users can advance through the form without reaching for the
@@ -237,6 +248,9 @@ func _on_register_button_pressed() -> void:
 		show_message("Fields cannot be empty!")
 		return
 
+	if APIManager.uses_managed_accounts():
+		_managed_register(entered_user, entered_pass)
+		return
 	show_message("Registering account...", false)
 
 	APIManager.register(

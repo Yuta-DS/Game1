@@ -1,6 +1,8 @@
 extends CharacterBody3D
 
-@onready var floor_detector = $FloorDetector 
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+
+@onready var floor_detector = $FloorDetector
 
 # --- JUMP VARIABLES ---
 @export var jump_height : float = 2.25
@@ -12,10 +14,9 @@ extends CharacterBody3D
 
 # Player-scale speeds. The previous 12/22 m/s values crossed a full courtyard
 # in under a second, skipped narrow collisions and made the follow camera feel
-# unstable. These retain a responsive sprint without turning traversal into a
-# debug fly-through.
-@export var baseSpeed := 6.0
-@export var runSpeed := 10.0
+# unstable. The default pace is a run; holding Shift sprints.
+@export var baseSpeed := 10.0
+@export var runSpeed := 15.0
 
 # --- INTERACTION & GRASS FIX ---
 var interacting := false  # Critical fix for team's grass shader
@@ -51,6 +52,8 @@ var movementInput := Vector2.ZERO
 # The castle stair (hub_castle_stairs.gd) rises 0.284 m per tread. The ceiling
 # is set well above that so uneven terrain and the bridge planks also step
 # cleanly, but stays under the 1.0 m mark so the player cannot walk up walls.
+## How fast the fox turns toward the input, in radians per second.
+const TURN_SPEED := 9.0
 const MAX_STEP_HEIGHT := 0.65
 # Ignore hops smaller than this — they are surface noise, and stepping every
 # one of them makes flat ground feel jittery.
@@ -285,7 +288,7 @@ func jumpLogic(delta) -> void:
 	else:
 		if has_node("RogueSkin/AnimationPlayer"):
 			$RogueSkin/AnimationPlayer.current_animation = 'ToucheGround'
-		
+
 	var gravity = jump_gravity if velocity.y > 0.0 else fall_gravity
 	velocity.y -= gravity * delta
 	
@@ -296,37 +299,50 @@ func moveLogic(delta) -> void:
 		_play_locomotion_animation("Idle", 1.0)
 		return
 	
-	movementInput = Input.get_vector("move_left", "move_right", "move_forward", "move_backward").rotated(-camera.global_rotation.y)
+	movementInput = Input.get_vector("move_left", "move_right", "move_forward", "move_backward").rotated(-_movement_yaw())
 	var velocity2D = Vector2(velocity.x, velocity.z)
 	var isRunning: bool = Input.is_action_pressed("run")
 	
 	if movementInput != Vector2.ZERO:
 		var speed = runSpeed if isRunning else baseSpeed
-		velocity2D += movementInput * speed * delta * 8
-		velocity2D = velocity2D.limit_length(speed)
-		velocity.x = velocity2D.x
-		velocity.z = velocity2D.y
-		
-		var animation_player := get_node_or_null("RogueSkin/AnimationPlayer") as AnimationPlayer
-		if animation_player != null:
-			var locomotion := "Run"
-			if not isRunning and animation_player.has_animation("Walk"):
-				locomotion = "Walk"
-			_play_locomotion_animation(locomotion, 1.05 if isRunning else 0.72)
-		
-		var targetAngle = -movementInput.angle() + PI/2
 		# Guarded like every other skin lookup here: this runs before
 		# move_and_slide(), so a missing RogueSkin -- an unimported fox.glb on a
 		# clone without Git LFS -- would abort _physics_process and freeze the
 		# player outright rather than just leaving them unrendered.
 		var visual := get_node_or_null("RogueSkin") as Node3D
 		if visual != null:
-			visual.rotation.y = rotate_toward(visual.rotation.y, targetAngle, 6.0 * delta)
+			# Turn toward the input and run the way the fox faces. Moving along
+			# the input while the model caught up slid it sideways on every A/D
+			# press, still facing forward in its run. Speed eases off through
+			# sharp turns, so turning round happens nearly on the spot. That
+			# wind-up is only worth the input lag on a touchscreen -- on desktop
+			# the mouse already aims the camera, so strafe/backward should move
+			# at once rather than waiting on the turn.
+			visual.rotation.y = rotate_toward(visual.rotation.y,
+				atan2(movementInput.x, movementInput.y), TURN_SPEED * delta)
+			if TouchDevice.is_touch_device():
+				var facing := Vector2(sin(visual.rotation.y), cos(visual.rotation.y))
+				movementInput = facing * movementInput.length() \
+					* clampf(facing.dot(movementInput.normalized()) * 1.4, 0.0, 1.0)
+		velocity2D = velocity2D.move_toward(movementInput * speed, speed * 12.0 * delta)
+		velocity.x = velocity2D.x
+		velocity.z = velocity2D.y
+
+		var animation_player := get_node_or_null("RogueSkin/AnimationPlayer") as AnimationPlayer
+		if animation_player != null:
+			_play_locomotion_animation("Run", 1.5 if isRunning else 1.05)
 	else:
 		velocity2D = velocity2D.move_toward(Vector2.ZERO, baseSpeed * 10.0 * delta)
 		velocity.x = velocity2D.x
 		velocity.z = velocity2D.y
 		_play_locomotion_animation("Idle", 1.0)
+
+
+# The camera rig swings behind the player while they run, so movement uses
+# the yaw it holds steady for that (camera_controller.gd movement_yaw()).
+func _movement_yaw() -> float:
+	var rig := camera.get_parent()
+	return rig.movement_yaw() if rig.has_method("movement_yaw") else camera.global_rotation.y
 
 
 func _play_locomotion_animation(animation_name: String, speed_scale: float) -> void:

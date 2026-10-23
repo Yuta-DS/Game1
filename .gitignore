@@ -1,6 +1,10 @@
 artea/addons/terrain_3d/bin/~libterrain.windows.debug.x86_64.dll
 
 # Operating-system and editor files
+# Local Heart Melody browser profile, server process ID and verification output
+/.edge-heart-web/
+/.heart-web-server.pid
+/work/
 .DS_Store
 ._*
 __MACOSX/
@@ -210,3 +214,6 @@ artea/assets3D/worlds/Floating_Cloud_1031084848_texture_0.jpg
 artea/assets3D/worlds/Floating_Cloud_1031084848_texture_1.jpg
 artea/assets3D/worlds/Floating_Cloud_1031084848_texture_2.jpg
 artea/meshy ai/Milo_output_texture_0.png
+
+# SSH keys for the hosting server (server/ec2) - never commit them.
+*.pem

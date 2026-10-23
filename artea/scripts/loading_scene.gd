@@ -2,6 +2,10 @@ extends Control
 
 const ShaderWarmup := preload("res://scripts/shader_warmup.gd")
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+## Phones and tablets: how much bigger the loading words and Milo are drawn.
+const TOUCH_TEXT_SCALE := 1.35
+const TOUCH_MILO_SCALE := 1.9
 
 @export var next_scene_path: String = ""
 @onready var progress_bar = $progress_bar
@@ -9,6 +13,23 @@ const SceneLoader := preload("res://scripts/scene_loader.gd")
 
 var loading_started := false
 var _shown_percent := 0.0
+var _status_text := ""
+# Resources loaded ahead of the scene (see _load_dependencies_in_slices).
+# The cache only keeps a resource while something references it, so without
+# this each one is freed as soon as it loads and the final request loads the
+# lot again in one block.
+var _held: Array[Resource] = []
+var _audio_was_muted := false
+# Off the web: the new scene's sound players, held on a muted bus until this
+# screen goes, mapped to the bus each one belongs on.
+var _held_audio := {}
+const HOLD_BUS := &"LoadingHold"
+# The gallery's track as a plain file (not imported), so its bytes can be
+# handed to the web page, which plays it itself. Listed in the Web preset's
+# include_filter.
+const WEB_MUSIC_PATH := "res://assets/SFX/loading_music.ogg.raw"
+var _spinner_ring: Control
+var _spinner_milo: TextureRect
 
 # Entering a scene has three phases with very different costs, and only
 # reporting the first one left the bar parked while the other two ran. Each
@@ -40,7 +61,63 @@ const SETTLE_FRAME_BUDGET_MS := 80
 const SETTLE_FRAMES_REQUIRED := 3
 const SETTLE_TIMEOUT_MS := 5000
 
+# How long _load_dependencies_in_slices may keep the main thread per frame.
+# Short enough that the browser stays responsive and the dots keep moving;
+# yielding after every single resource instead spent ~3.5 s of the hub's load
+# just waiting on frames.
+const DEPENDENCY_FRAME_BUDGET_MS := 50
+
+# Fetching an area's Pack, when it has not been fetched yet, fills the first
+# part of the load slice; loading the scene from it fills the rest.
+const PACK_SLICE := LOAD_SLICE * 0.5
+# Arriving here starts the background download of the other areas' Packs.
+const HUB_SCENE := "res://scenes/New_Hub_World.tscn"
+
 func _ready():
+	# Milo and MusicManager hold off until this screen is gone.
+	add_to_group("loading_screen")
+	if TouchDevice.is_touch_device():
+		# The percentage sits right on the bar, so it grows upwards, away from it.
+		$Title.pivot_offset = $Title.size / 2.0
+		progress_label.pivot_offset = Vector2(progress_label.size.x / 2.0, progress_label.size.y)
+		for label: Label in [$Title, progress_label]:
+			label.scale = Vector2.ONE * TOUCH_TEXT_SCALE
+	# The new scene's own sounds (ocean ambience, gallery music) start the
+	# moment it enters the tree, under this screen. Silence them until the
+	# player can see the world they belong to. The loading music starts
+	# straight away: waiting to see whether a load turns out long doesn't
+	# work, because the wait is checked from _process, which can't run during
+	# the very freezes the music is meant to cover.
+	if OS.has_feature("web"):
+		# The browser plays the music on the web, so the whole bus can go.
+		_audio_was_muted = AudioServer.is_bus_mute(0)
+		AudioServer.set_bus_mute(0, true)
+		if not JavaScriptBridge.eval("arteaLoading.hasMusic()"):
+			var bytes := FileAccess.get_file_as_bytes(WEB_MUSIC_PATH)
+			if not bytes.is_empty():
+				JavaScriptBridge.eval("arteaLoading.setMusic('%s')" % Marshalls.raw_to_base64(bytes))
+		JavaScriptBridge.eval("arteaLoading.show(); arteaLoading.startMusic()")
+		get_viewport().size_changed.connect(_place_web_overlay)
+		_place_web_overlay.call_deferred()
+	else:
+		# The music plays through the game here, so hold the scene's own
+		# players on a muted bus instead of muting everything.
+		if AudioServer.get_bus_index(HOLD_BUS) == -1:
+			AudioServer.add_bus()
+			AudioServer.set_bus_name(AudioServer.bus_count - 1, HOLD_BUS)
+			AudioServer.set_bus_mute(AudioServer.bus_count - 1, true)
+		get_tree().node_added.connect(_hold_scene_audio)
+		var music: AudioStreamPlayer2D = MusicManager.player2
+		# A load started while the last one's music is still fading out
+		# takes the music back instead of letting the fade stop it.
+		var fade = music.get_meta("loading_fade", null)
+		if fade is Tween and fade.is_valid():
+			fade.kill()
+			music.volume_db = music.get_meta("loading_fade_volume")
+		if music.stream != MusicManager.MAGIC_TRACK or not music.playing:
+			music.stream = MusicManager.MAGIC_TRACK
+			music.play()
+		_build_milo_spinner()
 	if next_scene_path == "":
 		push_error("⚠ No scene path provided to loading screen.")
 		return
@@ -108,10 +185,38 @@ func _load_web_content_pack() -> bool:
 func _report(fraction: float, text: String) -> void:
 	_shown_percent = maxf(_shown_percent, clampf(fraction, 0.0, 1.0) * 100.0)
 	progress_bar.value = _shown_percent
-	progress_label.text = "%d%%  %s" % [int(_shown_percent), text]
+	# Each phase once (not its running counts), timestamped by the browser
+	# console, so a slow load can be split into download, load, build, shaders.
+	if text.get_slice(" (", 0) != _status_text.get_slice(" (", 0):
+		print("[ARTEA] loading phase: ", text.get_slice(" (", 0))
+	_status_text = text
+	_refresh_label()
+
+
+# The bar only moves on real progress, so through a long phase it sits still
+# and the screen looks frozen even while the game is running fine. The dots
+# tick every frame instead: they keep moving whenever the game is alive and
+# stop only if the main thread really is blocked.
+func _refresh_label() -> void:
+	var dots := ".".repeat(int(Time.get_ticks_msec() / 300) % 4)
+	progress_label.text = "%d%%  %s%s" % [int(_shown_percent), _status_text, dots]
 
 
 func _process(_delta):
+	_refresh_label()
+	# A script can set its player's bus after it enters the tree (Milo's voice
+	# does), so take any change as the bus to return to and hold it again.
+	for player in _held_audio:
+		if is_instance_valid(player) and player.bus != HOLD_BUS:
+			_held_audio[player] = player.bus
+			player.bus = HOLD_BUS
+	if _spinner_ring != null:
+		# Matches the web version in web_export_shell.html: one turn every
+		# 0.9 s, Milo bobbing and tilting every 1.6 s.
+		_spinner_ring.rotation = fmod(Time.get_ticks_msec() / 900.0, 1.0) * TAU
+		var bob := sin(Time.get_ticks_msec() / 1600.0 * TAU)
+		_spinner_milo.position.y = 13.0 - bob * 2.0
+		_spinner_milo.rotation = deg_to_rad(6.0) * bob
 	if not loading_started:
 		return
 
@@ -129,6 +234,12 @@ func _process(_delta):
 	elif status == ResourceLoader.THREAD_LOAD_LOADED:
 		loading_started = false  # prevent re-entry
 		var loaded_scene = ResourceLoader.load_threaded_get(next_scene_path)
+		_held.clear()
+		# Building the scene can't be split up and is the longest single pause
+		# (~1.6 s for the hub on desktop). Say so before it starts, so the bar
+		# isn't left at 59% looking stuck while it happens.
+		_report(LOAD_SLICE, "Building the world")
+		await get_tree().process_frame
 		# A scene missing one of its dependencies arrives as null (web.txt
 		# Problem 1), and change_scene_to_packed then does nothing.
 		var err: Error = ERR_CANT_CREATE if loaded_scene == null \
@@ -138,12 +249,12 @@ func _process(_delta):
 			return
 
 		await get_tree().process_frame
-		MusicManager._check_scene()
 		_wait_for_scatter_then_finish()
 
 # The scene being left is already gone, so this screen is all the player has:
 # say so on it rather than leaving the bar parked as if still loading.
 func _fail(reason: String) -> void:
+	_hide_web_overlay()
 	SceneLoader.report_failure(get_tree(), next_scene_path, reason)
 	progress_label.text = "Couldn't load this area. Reload the game to try again."
 
@@ -223,6 +334,105 @@ func _wait_for_scatter_then_finish() -> void:
 	await _hold_until_first_frames_settle()
 	print("[ARTEA] scene ready ", next_scene_path)
 	queue_free()
+
+
+func _exit_tree() -> void:
+	if OS.has_feature("web"):
+		AudioServer.set_bus_mute(0, _audio_was_muted)
+		_hide_web_overlay()
+	else:
+		_release_scene_audio()
+
+
+# Moving the player to a muted bus rather than pausing it: some (the train,
+# the tree's bells) call play() again whenever they find themselves stopped,
+# which a pause counts as.
+func _hold_scene_audio(node: Node) -> void:
+	if node is AudioStreamPlayer or node is AudioStreamPlayer2D or node is AudioStreamPlayer3D:
+		_held_audio[node] = node.bus
+		node.bus = HOLD_BUS
+
+
+func _release_scene_audio() -> void:
+	if get_tree().node_added.is_connected(_hold_scene_audio):
+		get_tree().node_added.disconnect(_hold_scene_audio)
+	for player in _held_audio:
+		if is_instance_valid(player):
+			player.bus = _held_audio[player]
+	_held_audio.clear()
+
+
+# Off the web the loading music is MusicManager's own player. The gallery
+# keeps it playing; anywhere else it fades out before that scene's track (if
+# any) takes over.
+func _hand_over_music(arriving_track) -> void:
+	if arriving_track == MusicManager.MAGIC_TRACK:
+		MusicManager._check_scene()
+		return
+	var music: AudioStreamPlayer2D = MusicManager.player2
+	var volume := music.volume_db
+	var fade := MusicManager.create_tween()
+	music.set_meta("loading_fade", fade)
+	music.set_meta("loading_fade_volume", volume)
+	fade.tween_property(music, "volume_db", -40.0, 0.6)
+	fade.tween_callback(func():
+		music.stop()
+		music.volume_db = volume
+		MusicManager._check_scene())
+
+
+# Off the web, Godot draws the Milo spinner itself (on the web the page shell
+# does, so it keeps moving through main-thread stalls). Same look: Milo in a
+# ring, centred just under the bar.
+func _build_milo_spinner() -> void:
+	var holder := Control.new()
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.size = Vector2(72, 72)
+	holder.position = progress_bar.position + Vector2(progress_bar.size.x / 2.0 - 36.0, progress_bar.size.y + 12.0)
+	add_child(holder)
+	_spinner_ring = Control.new()
+	_spinner_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_spinner_ring.size = holder.size
+	_spinner_ring.pivot_offset = holder.size / 2.0
+	_spinner_ring.draw.connect(func():
+		var ink := Color(0.109804, 0.121569, 0.0392157)
+		_spinner_ring.draw_arc(Vector2(36, 36), 33.5, 0.0, TAU, 48, Color(ink, 0.25), 5.0, true)
+		_spinner_ring.draw_arc(Vector2(36, 36), 33.5, -PI * 0.75, -PI * 0.25, 16, ink, 5.0, true))
+	holder.add_child(_spinner_ring)
+	_spinner_milo = TextureRect.new()
+	_spinner_milo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_spinner_milo.texture = preload("res://icon_milo.png")
+	_spinner_milo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_spinner_milo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_spinner_milo.size = Vector2(44, 44)
+	_spinner_milo.position = Vector2(14, 14)
+	_spinner_milo.pivot_offset = Vector2(22, 22)
+	holder.add_child(_spinner_milo)
+	if TouchDevice.is_touch_device():
+		# Grow downwards from the bar so Milo never covers it.
+		holder.pivot_offset = Vector2(holder.size.x / 2.0, 0.0)
+		holder.scale = Vector2.ONE * TOUCH_MILO_SCALE
+
+
+# Godot draws on the same thread that loads, so a step that can't be split
+# (building the scene, compiling shaders) still freezes this screen for a
+# moment. The page shell (web_export_shell.html) draws Milo in a spinning ring
+# under the bar and plays the loading music. The browser animates and plays
+# those itself, so they keep going through those moments and the game never
+# looks hung.
+func _place_web_overlay() -> void:
+	var below_bar: Vector2 = progress_bar.get_screen_transform() * Vector2(progress_bar.size.x / 2.0, progress_bar.size.y)
+	var milo_scale := TOUCH_MILO_SCALE if TouchDevice.is_touch_device() else 1.0
+	JavaScriptBridge.eval("arteaLoading.place(%f, %f, %f)" % [below_bar.x, below_bar.y, milo_scale])
+
+
+# Returns where the loading music had got to, in seconds (0 if it never
+# started), so the gallery can carry on from there.
+func _hide_web_overlay() -> float:
+	if not OS.has_feature("web"):
+		return 0.0
+	var at = JavaScriptBridge.eval("arteaLoading.hide()")
+	return float(at) if at != null else 0.0
 
 
 # Compile the new scene's shaders while this screen is still covering them.

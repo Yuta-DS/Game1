@@ -39,8 +39,12 @@ func _run() -> void:
 	if regions == null or story == null or railway == null:
 		_fail("3 km kingdoms, connected story, and Crown Line do not coexist in the gallery")
 		return
-	for kingdom_id in ["mind", "heart", "creator"]:
-		if regions.call("get_kingdom_size", kingdom_id) != Vector2(3000, 3000):
+	# Heart and Creator are station platforms; Mind lives in World One.
+	if regions.get_node_or_null("MindKingdom3000m") != null:
+		_fail("the removed Mind 3 km region is back")
+		return
+	for kingdom_id in ["heart", "creator"]:
+		if regions.call("get_kingdom_size", kingdom_id) != Vector2(930, 930):
 			_fail("%s region has the wrong exploration size" % kingdom_id)
 			return
 	if not bool(story.call("story_is_connected")):
@@ -131,8 +135,7 @@ func _run() -> void:
 	if world.get_node_or_null("ReturnToCastleGate") != null:
 		_fail("same-scene world still contains a return teleport")
 		return
-	for district in ["CentralSanctuary", "MindSparkDistrict", "HeartMelodyTemple",
-			"CreatorsLightStudio"]:
+	for district in ["CentralSanctuary", "MindSparkDistrict", "CreatorsLightStudio"]:
 		if world.get_node_or_null(district) == null:
 			_fail("embedded world is missing %s" % district)
 			return

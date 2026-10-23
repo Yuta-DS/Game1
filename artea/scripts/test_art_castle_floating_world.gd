@@ -256,9 +256,19 @@ func _run() -> void:
 	for bridge in ["SouthArrivalBridge", "MindBridge", "HeartBridge", "CreatorBridge",
 			"NorthObservatoryBridge", "EastObservatoryBridge"]:
 		var bridge_node := world.get_node_or_null(bridge) as Node3D
-		if bridge_node == null or bridge_node.get_node_or_null("Walkway") == null:
+		# The West lookout's railed bridges use the causeway's deck.
+		if bridge_node == null or (bridge_node.get_node_or_null("Walkway") == null
+				and bridge_node.get_node_or_null("ContinuousWalkway") == null):
 			_fail("missing connected walkway %s" % bridge)
 			return
+	# The raised Creator studio platform must be walkable from every side.
+	for index in 4:
+		if world.get_node_or_null("CreatorsLightStudio/StudioStairs_%d" % index) == null:
+			_fail("Creator studio platform is missing stairs on side %d" % index)
+			return
+	if world.get_node_or_null("CreatorBridge/ReferenceTreeProcessionalBridge") == null:
+		_fail("CreatorBridge does not use the processional bridge style")
+		return
 	var tree_bridge := world.get_node_or_null("SouthArrivalBridge") as Node3D
 	var mind_bridge := world.get_node_or_null("MindBridge") as Node3D
 	var heart_bridge := world.get_node_or_null("HeartBridge") as Node3D

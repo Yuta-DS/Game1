@@ -30,8 +30,12 @@
 	// Content-hashed part paths from each manifest (split-pack.sh), keyed by
 	// request URL. Absent for the older count-only manifest.
 	const manifestParts = new Map();
+	// Request URLs whose parts are gzipped (split-pack.sh), inflated here.
+	const gzippedParts = new Set();
 
-	const countParts = async (requestUrl) => {
+	// `probe` false: no manifest means the file is not split (0), rather than
+	// probing for parts the way builds without manifests need.
+	const countParts = async (requestUrl, probe = true) => {
 		const manifestUrl = new URL(`${requestUrl}.parts.json`, window.location.href);
 		if (buildKey) {
 			manifestUrl.searchParams.set("build", buildKey);
@@ -44,6 +48,9 @@
 				const manifest = await manifestResponse.json();
 				if (Array.isArray(manifest.parts) && manifest.parts.length > 0) {
 					manifestParts.set(requestUrl, manifest.parts.map((part) => part.name));
+					if (manifest.encoding === "gzip") {
+						gzippedParts.add(requestUrl);
+					}
 				}
 				if (Number.isInteger(manifest.count) && manifest.count > 0) {
 					// Keep the byte total: the streamed Response needs a
@@ -57,6 +64,9 @@
 			}
 		} catch (_error) {
 			// Fall through to bounded probing for backward-compatible builds.
+		}
+		if (!probe) {
+			return 0;
 		}
 		const probes = Array.from({ length: MAX_PARTS }, (_, index) =>
 			nativeFetch(partUrl(requestUrl, index), { method: "HEAD", cache: "no-store" })
@@ -130,21 +140,39 @@
 		button.focus();
 	});
 
+	// Area Packs the player is waiting on right now (issue #38). While any is,
+	// every other Pack's background download holds its next part back, so the
+	// player's load gets the connection.
+	const foreground = new Set();
+	const waitTurn = async (pack) => {
+		while (pack && foreground.size > 0 && !foreground.has(pack)) {
+			await sleep(250);
+		}
+	};
+
 	// One whole part, retried until it arrives. Buffered rather than streamed
 	// so a connection that drops halfway through a part costs only that part:
 	// nothing from it has reached the engine yet, so it simply starts again.
-	const fetchPart = async (url, init) => {
+	// `pack` names the area Pack being fetched, if any: one only prefetched in
+	// the background gives up quietly instead of asking the player to retry,
+	// and the loading screen fetches it again when the player goes there.
+	const fetchPart = async (url, init, pack, gzipped) => {
 		for (let attempt = 0; ; attempt += 1) {
 			try {
 				const response = await nativeFetch(url, init);
 				if (!response.ok) {
 					throw new Error(`${url} returned ${response.status}`);
 				}
-				return new Uint8Array(await response.arrayBuffer());
+				// Inflated as it streams in, by the browser's own decompressor.
+				const body = gzipped ? new Response(response.body.pipeThrough(new DecompressionStream("gzip")))
+					: response;
+				return new Uint8Array(await body.arrayBuffer());
 			} catch (error) {
 				if (attempt < RETRY_DELAYS_MS.length) {
 					console.warn(`pck-loader: ${error.message}, retrying`);
 					await sleep(RETRY_DELAYS_MS[attempt]);
+				} else if (pack && !foreground.has(pack)) {
+					throw error;
 				} else {
 					await askToRetry(error);
 					attempt = -1;
@@ -156,22 +184,29 @@
 	// Up to `concurrency` parts download at once, but the engine reads them
 	// strictly in order: pull() hands over part N only once it has arrived and
 	// then starts the next one, so the window slides along the pack.
-	const streamParts = (requestUrl, partCount) => {
+	const streamParts = (requestUrl, partCount, pack) => {
 		const hashed = manifestParts.get(requestUrl);
 		// Hashed parts are named by content, so the browser's normal HTTP cache
 		// is safe for them and the host marks them immutable: a repeat visit
 		// re-downloads none. No ?build= key either, which would only stop
 		// identical parts being reused across deploys. The older unhashed layout
 		// keeps its no-store fetch.
-		const fetchIndex = (index) => fetchPart(
-			hashed ? new URL(hashed[index], window.location.href).toString()
-				: partUrl(requestUrl, index),
-			hashed ? {} : { cache: "no-store" });
+		const fetchIndex = async (index) => {
+			await waitTurn(pack);
+			return fetchPart(
+				hashed ? new URL(hashed[index], window.location.href).toString()
+					: partUrl(requestUrl, index),
+				hashed ? {} : { cache: "no-store" }, pack, gzippedParts.has(requestUrl));
+		};
 		const inFlight = new Map();
 		let nextToSend = 0;
 		let nextToStart = 0;
 		const topUp = () => {
-			while (nextToStart < partCount && nextToStart < nextToSend + concurrency) {
+			// A Pack only prefetched in the background fetches one part at a
+			// time: nobody is waiting on it, and each part is inflated on the
+			// main thread, so fewer at once keeps the Hub's frames even.
+			const ahead = pack && !foreground.has(pack) ? 1 : concurrency;
+			while (nextToStart < partCount && nextToStart < nextToSend + ahead) {
 				inFlight.set(nextToStart, fetchIndex(nextToStart));
 				nextToStart += 1;
 			}
@@ -208,7 +243,10 @@
 			return nativeFetch(input, init);
 		}
 
-		const partCount = await countParts(requestUrl);
+		// The side module's parts are gzipped to a quarter of its 42 MB, so use
+		// them whenever its manifest says they exist. Without one, the build
+		// keeps the module whole: fetch it as is, without probing 128 parts.
+		const partCount = await countParts(requestUrl, !url.pathname.endsWith("/index.side.wasm"));
 		if (partCount === 0) {
 			return nativeFetch(input, init);
 		}
@@ -225,9 +263,109 @@
 			headers["Content-Length"] = String(totalBytes);
 		}
 
-		return new Response(streamParts(requestUrl, partCount), {
+		// arteaPack (set by arteaPacks below) names the area Pack, so its parts
+		// can yield to the one the player is waiting on.
+		return new Response(streamParts(requestUrl, partCount, init && init.arteaPack), {
 			status: 200,
 			headers,
 		});
+	};
+
+	// Area Packs (ADR-0001, issue #35). The game asks for one by file name when
+	// the player first heads into its area; the page downloads it through the
+	// fetch above (parts, in parallel, retried, with the Retry overlay) and
+	// writes it into the engine's file system with the engine's own copyToFS,
+	// as Godot does for the files it loads at boot. The game polls `state` for
+	// progress and mounts the file once `done`. Doing the download here rather
+	// than through Godot's HTTPRequest matters: that reads a fixed chunk per
+	// frame, and the loading screen runs at a few frames per second, so 137 MB
+	// took ten minutes.
+	//
+	// Once the Hub is playable the game also hands over every Pack it has not
+	// mounted, most likely next first (issue #38), and they download one after
+	// another in the background. A Pack is downloaded once, whoever asks first:
+	// entering an area whose Pack is already here skips the download, and one
+	// still arriving shows its progress on the loading screen. Background
+	// downloads stay in memory; copying one into the engine's file system is a
+	// long main-thread block, so it waits for the loading screen.
+	const buffers = new Map();  // file -> its bytes, until written for the engine
+	const downloads = new Map();  // file -> the download's promise
+	window.arteaPacks = {
+		// Plain fields only: the game reads one as JSON every frame.
+		state: {},
+		prefetch: { queue: [], running: false, startedAt: null, doneAt: null },
+		download(file) {
+			const known = this.state[file];
+			if (known && !known.error) {
+				return downloads.get(file);
+			}
+			// Times are performance.now(), for seeing what the background held back.
+			const state = { loaded: 0, total: 0, downloaded: false, done: false, error: "",
+				startedAt: performance.now(), wantedAt: null, finishedAt: null };
+			this.state[file] = state;
+			const download = (async () => {
+				const response = await window.fetch(new URL(file, window.location.href).toString(),
+					{ arteaPack: file });
+				if (!response.ok) {
+					throw new Error(`${file} returned ${response.status}`);
+				}
+				// The size comes from the Pack's parts manifest, so the bytes go
+				// straight into one buffer. copyToFS wraps that buffer rather than
+				// copying it, so the Pack is held twice only while the file system
+				// takes its own copy.
+				state.total = Number(response.headers.get("Content-Length"));
+				if (!(state.total > 0)) {
+					throw new Error(`${file} has no parts manifest`);
+				}
+				const bytes = new Uint8Array(state.total);
+				const reader = response.body.getReader();
+				for (;;) {
+					const { done, value } = await reader.read();
+					if (done) break;
+					bytes.set(value, state.loaded);
+					state.loaded += value.byteLength;
+				}
+				buffers.set(file, bytes);
+				state.downloaded = true;
+				state.finishedAt = performance.now();
+			})().catch((error) => {
+				state.error = String(error && error.message ? error.message : error);
+			});
+			downloads.set(file, download);
+			return download;
+		},
+		// The loading screen's request: this Pack now, written where the game
+		// mounts it. Other Packs' background downloads hold back meanwhile.
+		fetch(file, path) {
+			foreground.add(file);
+			(async () => {
+				const download = this.download(file);
+				this.state[file].wantedAt = performance.now();
+				await download;
+				const state = this.state[file];
+				if (!state.error) {
+					engine.copyToFS(path, buffers.get(file).buffer);
+					buffers.delete(file);
+					state.done = true;
+				}
+			})().finally(() => foreground.delete(file));
+		},
+		// Background downloads, one at a time, in the order given. A later call
+		// (another return to the Hub) adds any Packs not queued yet.
+		startPrefetch(files) {
+			const prefetch = this.prefetch;
+			prefetch.queue.push(...files.filter((file) => !prefetch.queue.includes(file)));
+			if (prefetch.running) return;
+			prefetch.running = true;
+			prefetch.doneAt = null;
+			prefetch.startedAt = prefetch.startedAt ?? performance.now();
+			(async () => {
+				for (let i = 0; i < prefetch.queue.length; i += 1) {
+					await this.download(prefetch.queue[i]);
+				}
+				prefetch.running = false;
+				prefetch.doneAt = performance.now();
+			})();
+		},
 	};
 })();

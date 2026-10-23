@@ -148,6 +148,7 @@ func one_placeholder(frame_node: Sprite3D, texture: Texture2D) -> void:
 	frame_node.texture = resized_texture
 	frame_node.visible = true
 	frame_node.modulate = Color.WHITE
+	frame_node.call("refresh_frame")
 
 func load_local_art_paths() -> void:
 
@@ -309,11 +310,16 @@ func start_next_download() -> void:
 	
 	current_download_artwork_id = int(artwork_data["id"])
 
-	var full_url = artwork_data["url"]
+	# The server lists each artwork as a path ("/download_artwork/3"); on its
+	# own that isn't a URL HTTPRequest can fetch, so account artworks never
+	# reached the gallery.
+	var full_url = str(artwork_data["url"])
+	if full_url.begins_with("/"):
+		full_url = APIManager.BASE_URL + full_url
 
 	print("Downloading online art: ", full_url)
 
-	var error = download_request.request(full_url)
+	var error = download_request.request(full_url, ["Authorization: Bearer " + APIManager.auth_token])
 
 	if error != OK:
 
@@ -367,6 +373,7 @@ func _on_download_request_completed(
 				frame_node.texture = texture
 				frame_node.visible = true
 				frame_node.modulate = Color.WHITE
+				frame_node.call("refresh_frame")
 
 				frame_to_artwork[frame_name] = int(current_download_artwork_id)
 
@@ -449,6 +456,7 @@ func apply_local_art_over_online() -> void:
 			frame_node.texture = texture
 			frame_node.visible = true
 			frame_node.modulate = Color.WHITE
+			frame_node.call("refresh_frame")
 
 			frame_to_artwork[frame_name] = local_art_paths[i]
 
@@ -732,24 +740,6 @@ func hide_rating_ui() -> void:
 
 	rating_ui.visible = false
 	
-func _input(event):
-
-	if event.is_action_pressed("ui_accept"):
-
-		if current_frame_hovered == "":
-			return
-
-		var current_saved_rating = get_frame_rating(current_frame_hovered)
-
-		if current_saved_rating == 0:
-			rate_frame(current_frame_hovered, 1)
-		else:
-			rate_frame(current_frame_hovered, 0)
-
-		show_rating_ui(current_frame_hovered)
-			
-
-
 func _on_interaction_area_body_entered(body: Node3D, frame_name: String) -> void:
 
 	pass

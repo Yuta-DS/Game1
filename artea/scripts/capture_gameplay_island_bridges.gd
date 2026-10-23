@@ -63,16 +63,7 @@ func _capture() -> void:
 		bridge_end.lerp(island_end, 0.18), island_end,
 		"living_network_bridge_gameplay.png")
 
-	var shelf := floating_world.get_node(
-		"KingdomRegions3000m/MindKingdom3000m/OptimizedLandmass/" \
-		+ "InterIslandBridgeGrid/ShelfBridge_00_00_to_00_01") as Node3D
-	var shelf_start := floating_world.to_global(shelf.get_meta("walk_start"))
-	var shelf_finish := floating_world.to_global(shelf.get_meta("walk_finish"))
-	await _capture_gameplay_view(gallery, player, camera,
-		shelf_start.lerp(shelf_finish, 0.35), shelf_finish,
-		"mind_kingdom_shelf_bridge_gameplay.png")
-
-	print("GAMEPLAY_BRIDGE_CAPTURE: PASS — live fox, HUD, lighting, bridges, and Mind ground captured")
+	print("GAMEPLAY_BRIDGE_CAPTURE: PASS — live fox, HUD, lighting and bridges captured")
 	quit()
 
 

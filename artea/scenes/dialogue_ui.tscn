@@ -4,6 +4,9 @@
 [ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="2_6q285"]
 [ext_resource type="Theme" uid="uid://nm7lamdm42pn" path="res://choices_buttons.tres" id="3_jx1sv"]
 
+[sub_resource type="FontVariation" id="FontVariation_bold"]
+variation_embolden = 0.8
+
 [node name="CanvasLayer" type="CanvasLayer" unique_id=319602805]
 script = ExtResource("1_dwk8m")
 
@@ -41,6 +44,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(1200, 120)
 layout_mode = 2
 theme_override_colors/default_color = Color(0, 0, 0, 1)
+theme_override_fonts/normal_font = SubResource("FontVariation_bold")
 theme_override_font_sizes/normal_font_size = 36
 fit_content = true
 

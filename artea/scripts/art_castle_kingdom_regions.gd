@@ -6,37 +6,24 @@ const GalaxyCivicRailing := preload("res://scripts/galaxy_civic_railing.gd")
 # chunked into large shared meshes so the player receives nine square
 # kilometres of authored exploration without thousands of individual props.
 
-const KINGDOM_SIZE := Vector2(3000.0, 3000.0)
-const LAND_CHUNK_SIZE := 570.0
-const LAND_CHUNK_SPACING := 580.0
-const SHELF_BRIDGE_WIDTH := 30.0
-const SHELF_BRIDGE_THICKNESS := 1.2
-const SHELF_BRIDGE_LANDING_LENGTH := 6.0
-const SHELF_BRIDGE_MAX_SLOPE_DEGREES := 18.0
 const GALLERY_CONNECTION_Z := 820.0
-const CASTLE_CLEAR_BUFFER := 1600.0
-const MIND_CENTER := Vector3(-3600.0, 0.0, 3940.0)
-const HEART_CENTER := Vector3(0.0, 0.0, 7640.0)
-const CREATOR_CENTER := Vector3(3600.0, 0.0, 3940.0)
 const FLOATING_STATIONS := {
-	"mind": Vector3(-1900, 35, 3940),
+	# Mind has no floating station of its own any more: this is the park-edge
+	# Mind station's landing on the Mind district island, less the respawn
+	# offset added in get_safe_respawn(), so falls near World One recover there.
+	"mind": Vector3(-792, 2, 1640),
 	"heart": Vector3(1700, 35, 7640),
 	"creator": Vector3(5300, 35, 3940),
 }
 
+# Heart and Creator arrive on one platform each instead of a 3 km kingdom:
+# three times the fountain island's 155 m so they read from a distance.
+const STATION_PLATFORM_RADIUS := 465.0
+const STATION_PLATFORM_TITLES := {"heart": "HEART MELODY", "creator": "CREATOR'S LIGHT"}
+
 const STORY_ROUTES := {
-	"mind": [
-		{"id": "arrival", "title": "MIND SPARK SKYBRIDGE LANDING", "position": Vector3(-2100, 2, 3940)},
-		{"id": "tower_forest", "title": "COMPUTER-TOWER FOREST", "position": Vector3(-2800, 12, 3120)},
-		{"id": "thought_sparks", "title": "THOUGHT SPARK CONSTELLATION", "position": Vector3(-3400, 24, 3020)},
-		{"id": "fear_gate", "title": "FEAR GATE", "position": Vector3(-3850, 38, 3380)},
-		{"id": "proof_gate", "title": "PROOF GATE", "position": Vector3(-4100, 54, 3900)},
-		{"id": "truth_gate", "title": "WHAT ELSE IS TRUE?", "position": Vector3(-3900, 72, 4460)},
-		{"id": "thought_storm", "title": "THOUGHT STORM • GENTLE RAIN", "position": Vector3(-4400, 92, 4820)},
-		{"id": "finale", "title": "OLDEST TREE • STAR OF WISDOM", "position": Vector3(-4850, 118, 4400)},
-	],
 	"heart": [
-		{"id": "arrival", "title": "HEART MELODY SKYBRIDGE LANDING", "position": Vector3(1500, 2, 7640)},
+		{"id": "arrival", "title": "HEART MELODY SKYBRIDGE LANDING", "position": Vector3(1722.4, 2, 7838.7)},
 		{"id": "joy", "title": "JOY GARDEN", "position": Vector3(-720, 16, 6990)},
 		{"id": "frustration", "title": "FRUSTRATION DRUM TERRACES", "position": Vector3(-180, 30, 7290)},
 		{"id": "sadness", "title": "SADNESS RAIN BOAT", "position": Vector3(420, 44, 7140)},
@@ -59,20 +46,59 @@ const STORY_ROUTES := {
 
 var _materials: Dictionary = {}
 
+# Same idle-bob convention as hub_sky_isles.gd's floating islands: a time
+# accumulator plus sin() against a stored base Y, so each part drifts
+# without permanently displacing its authored position. Phases borrowed from
+# hub_sky_isles.gd's BOB_PHASES so the frame/canvas/brush never bob in sync -
+# a synchronised group reads as one object, not three independent parts.
+const CREATOR_CENTREPIECE_BOB_AMPLITUDE := 2.0
+const CREATOR_CENTREPIECE_BOB_PERIOD := 9.0
+const CREATOR_CENTREPIECE_BOB_PHASES := [0.0, 2.1, 4.3]
+var _bob_time := 0.0
+var _creator_bob_parts: Array[Dictionary] = []
+
 
 func _ready() -> void:
 	_build_materials()
-	_build_kingdom("mind", MIND_CENTER)
-	_build_kingdom("heart", HEART_CENTER)
-	_build_kingdom("creator", CREATOR_CENTER)
+	# Paving in each kingdom's station colours (STATION_PALETTES in the
+	# railway), deeper here because the open island floor is in full sun.
+	_build_station_platform("heart", [Color("b8607f"), Color("a85272"), Color("5e2440")], _materials.pink)
+	_build_station_platform("creator", [Color("c98f3c"), Color("b87d2e"), Color("5e3a12")], _materials.gold)
+
+
+func _process(delta: float) -> void:
+	if _creator_bob_parts.is_empty():
+		return
+	_bob_time += delta
+	for part in _creator_bob_parts:
+		var node: Node3D = part.node
+		node.position.y = part.base_y + sin(
+			(_bob_time / CREATOR_CENTREPIECE_BOB_PERIOD) * TAU + part.phase) \
+			* CREATOR_CENTREPIECE_BOB_AMPLITUDE
+
+
+## Registers a node for the idle bob, remembering its authored Y so repeated
+## calls (across reloads) never compound an offset onto an offset.
+func _register_creator_bob(node: Node3D) -> void:
+	var phase: float = CREATOR_CENTREPIECE_BOB_PHASES[_creator_bob_parts.size() % CREATOR_CENTREPIECE_BOB_PHASES.size()]
+	_creator_bob_parts.append({"node": node, "base_y": node.position.y, "phase": phase})
 
 
 func get_kingdom_size(_kingdom_id: String = "") -> Vector2:
-	return KINGDOM_SIZE
+	return Vector2.ONE * STATION_PLATFORM_RADIUS * 2.0
 
 
 func get_kingdom_centers() -> Dictionary:
-	return {"mind": MIND_CENTER, "heart": HEART_CENTER, "creator": CREATOR_CENTER}
+	return {"heart": _platform_center("heart"), "creator": _platform_center("creator")}
+
+
+## Out from the station along its access bridge; the bridge lands 15 m
+## inside the rim.
+func _platform_center(kingdom_id: String) -> Vector3:
+	var landing: Vector3 = STORY_ROUTES[kingdom_id][0].position
+	var station: Vector3 = FLOATING_STATIONS[kingdom_id]
+	var away := Vector3(landing.x - station.x, 0.0, landing.z - station.z).normalized()
+	return Vector3(landing.x, 0.0, landing.z) + away * (STATION_PLATFORM_RADIUS - 15.0)
 
 
 func get_story_route(kingdom_id: String) -> Array:
@@ -101,36 +127,22 @@ func get_safe_respawn(near_position: Vector3) -> Vector3:
 func _build_materials() -> void:
 	_materials.ivory = _material(Color("e8e5ef"), 0.84)
 	_materials.shadow = _material(Color("8587a2"), 0.94)
-	_materials.mind = _material(Color("23233e"), 0.82)
-	_materials.mind_surface_a = _material(Color("202b43"), 0.88)
-	_materials.mind_surface_b = _material(Color("29304b"), 0.84)
-	_materials.mind_court = _material(Color("17263d"), 0.64, Color("1b5872"), 0.22)
-	_materials.mind_edge = _material(Color("243d5a"), 0.48, Color("2bcfe3"), 0.38)
-	_materials.aqua = _material(Color("39dbea"), 0.32, Color("26d7f2"), 1.5)
-	_materials.purple = _material(Color("8b69d3"), 0.72, Color("7048c5"), 0.45)
-	_materials.green = _material(Color("58a979"), 0.90)
+	_materials.canvas = _material(Color("fff9e8"), 0.96)
+	_materials.wood = _material(Color("815b3d"), 0.90)
 	_materials.gold = _material(Color("f0c35e"), 0.42, Color("f1ac32"), 1.25)
 	_materials.pink = _material(Color("ed83c1"), 0.55, Color("e45da8"), 0.7)
-	_materials.blue = _material(Color("4fa9df"), 0.42, Color("39bde7"), 0.8)
-	_materials.coral = _material(Color("dc735b"), 0.58, Color("d95845"), 0.45)
-	_materials.canvas = _material(Color("fff9e8"), 0.96)
-	_materials.silver = _material(Color("c8d4dc"), 0.30)
-	_materials.glass = _material(Color(0.30, 0.90, 0.95, 0.62), 0.20, Color("59e9f4"), 1.0, true)
-	_materials.wood = _material(Color("815b3d"), 0.90)
 
 
-func _build_kingdom(kingdom_id: String, center: Vector3) -> void:
-	var kingdom := Node3D.new()
-	kingdom.name = "%sKingdom3000m" % kingdom_id.to_pascal_case()
-	add_child(kingdom)
-	_build_landmass(kingdom, kingdom_id, center)
-	_build_boundary(kingdom, kingdom_id, center)
-	var route: Array = STORY_ROUTES[kingdom_id]
-	_build_story_path(kingdom, route, kingdom_id)
-	for index in route.size():
-		_build_checkpoint(kingdom, kingdom_id, route[index], index)
-	_add_label(kingdom, "%s • 3000m × 3000m" % kingdom_id.replace("_", " ").to_upper(),
-		center + Vector3(0, 230, 0), _kingdom_color(kingdom_id), 72)
+func _paving(colors: Array, tile: float) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://shaders/station_surface.gdshader")
+	material.set_shader_parameter("pattern", 0)
+	material.set_shader_parameter("base_color", colors[0])
+	material.set_shader_parameter("alt_color", colors[1])
+	material.set_shader_parameter("line_color", colors[2])
+	material.set_shader_parameter("tile_size", tile)
+	material.set_shader_parameter("roughness_value", 0.86)
+	return material
 
 
 func _build_landmass(parent: Node3D, kingdom_id: String, center: Vector3) -> void:
@@ -596,101 +608,193 @@ func _decorate_creator(parent: Node3D, checkpoint_id: String, _index: int) -> vo
 			parent.add_child(frame)
 			_build_frame(frame, Vector3.ZERO, 22, 34, _materials.gold)
 	else:
-		for shape in 9:
-			var angle := TAU * shape / 9.0
-			_add_gem(parent, "FloatingShape", Vector3(cos(angle) * 48, 25 + shape % 3 * 12, sin(angle) * 48),
-				_materials.glass, Vector3.ONE * (6 + shape % 3 * 2))
+		_add_cylinder(platform, "DeckField", center + Vector3(0, 0.02, 0), r - 8.0, 0.04, deck_material, false, 64)
+		_add_cylinder(platform, "CentrepieceInlay", center + Vector3(0, 0.06, 0), 126.0, 0.04, accent, false, 64)
+		_add_cylinder(platform, "CentrepieceSpace", center + Vector3(0, 0.1, 0), 118.0, 0.04, plaza_material, false, 64)
+	var underside := MeshInstance3D.new()
+	underside.name = "FloatingUnderside"
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = r * 0.94
+	mesh.bottom_radius = r * 0.2
+	mesh.height = 120.0
+	mesh.radial_segments = 48
+	underside.mesh = mesh
+	underside.position = center + Vector3(0, -62.0, 0)
+	underside.material_override = _material(deck_color.darkened(0.3), 0.92)
+	platform.add_child(underside)
+	_add_label(platform, str(STATION_PLATFORM_TITLES[kingdom_id]), center + Vector3(0, 160, 0),
+		_kingdom_color(kingdom_id), 160)
+	if kingdom_id == "creator":
+		_build_creator_centrepiece(platform, center)
 
 
-func _build_grove(parent: Node3D, kingdom_id: String, center: Vector3, seed: int) -> void:
-	if kingdom_id == "mind":
-		var tree_scenes := [
-			"res://assets3D/trees/tree_1_c_color_12.tscn",
-			"res://assets3D/trees/tree_2_b_color_12.tscn",
-			"res://assets3D/trees/tree_3_a_color_12.tscn",
-			"res://assets3D/trees/tree_4_a_color_12.tscn",
-		]
-		for index in 9:
-			var angle := TAU * float(index) / 9.0 + seed * 0.31
-			var radius := 78.0 + float(index % 3) * 42.0
-			var tree := _add_asset_scene(parent, "MindLivingTree_%02d_%02d" % [seed, index],
-				tree_scenes[(seed + index) % tree_scenes.size()],
-				center + Vector3(cos(angle) * radius, 0, sin(angle) * radius),
-				Vector3.ONE * (7.0 + float((seed + index) % 4) * 1.4))
-			if tree != null:
-				tree.rotation.y = angle + PI
-		return
-	for index in 7:
-		var angle := TAU * index / 7.0 + seed * 0.31
-		var radius := 80.0 + (index % 3) * 30.0
-		var material: Material = _materials.purple if kingdom_id != "heart" else _materials.green
-		_add_cylinder(parent, "DistantTree", center + Vector3(cos(angle) * radius, 22, sin(angle) * radius),
-			5, 44 + index % 3 * 16, _materials.wood, false, 7)
-		_add_sphere(parent, "DistantCanopy", center + Vector3(cos(angle) * radius, 55 + index % 3 * 16, sin(angle) * radius),
-			Vector3(18, 22, 18), material)
+func _build_heart_court(parent: Node3D, center: Vector3, radius: float, materials: Array) -> void:
+	# Adjacent annuli share exact boundaries. Unlike stacked disks, there are
+	# no coplanar tops for the long-range Web camera's depth buffer to fight over.
+	var mesh := ArrayMesh.new()
+	var radii := [radius, 126.0, 118.0, 0.0]
+	for ring in 3:
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for index in 96:
+			var a0 := float(index) * TAU / 96.0
+			var a1 := float(index + 1) * TAU / 96.0
+			var outer0 := Vector3(cos(a0) * radii[ring], 0.20, sin(a0) * radii[ring])
+			var outer1 := Vector3(cos(a1) * radii[ring], 0.20, sin(a1) * radii[ring])
+			var inner0 := Vector3(cos(a0) * radii[ring + 1], 0.20, sin(a0) * radii[ring + 1])
+			var inner1 := Vector3(cos(a1) * radii[ring + 1], 0.20, sin(a1) * radii[ring + 1])
+			for point in [outer0, outer1, inner1, outer0, inner1, inner0]:
+				surface.add_vertex(point)
+		surface.generate_normals()
+		surface.set_material(materials[ring])
+		surface.commit(mesh)
+	var court := MeshInstance3D.new()
+	court.name = "ContinuousHeartPaving"
+	court.mesh = mesh
+	court.position = center
+	parent.add_child(court)
+	court.create_trimesh_collision()
 
 
-func _add_asset_scene(parent: Node3D, node_name: String, resource_path: String,
-		position_value: Vector3, scale_value: Vector3) -> Node3D:
-	var packed := load(resource_path) as PackedScene
-	if packed == null:
-		return null
-	var instance := packed.instantiate() as Node3D
-	if instance == null:
-		return null
-	instance.name = node_name
-	instance.position = position_value
-	instance.scale = scale_value
-	parent.add_child(instance)
-	return instance
+## The plaza _build_station_platform reserves (CentrepieceSpace, 118 m
+## radius) was never filled in. A single oversized easel and canvas,
+## hovering clear of its dais — this kingdom's own drawing mechanic (see
+## art_castle_floating_world.gd's player-painted easels) made into the one
+## landmark you see on arrival, rather than a new symbol.
+func _build_creator_centrepiece(parent: Node3D, center: Vector3) -> void:
+	_add_cylinder(parent, "CentrepieceDais", center + Vector3(0, 4, 0), 50.0, 8.0,
+		_materials.ivory, false, 24)
+	# A gold glow pooling under the easel reads as "lit from within" rather
+	# than just "gold-coloured", and sells the hover gap above the dais.
+	_add_cylinder(parent, "CentrepieceGlow", center + Vector3(0, 9, 0), 42.0, 0.3,
+		_material(Color("f1ac32"), 0.3, Color("f1ac32"), 1.4), false, 24)
+
+	# _platform_center's own "away" vector (station -> landing -> centre) is
+	# the line the player actually walks in on. For "creator" that line runs
+	# along X, not Z. Face the canvas's local -Z (its painted side) straight
+	# down +away, back at the station itself, then add a slight backward
+	# lean (local +X) so the whole easel reads as propped up, not bolt
+	# upright.
+	var landing: Vector3 = STORY_ROUTES["creator"][0].position
+	var station: Vector3 = FLOATING_STATIONS["creator"]
+	var away := Vector3(landing.x - station.x, 0.0, landing.z - station.z).normalized()
+	var easel := Node3D.new()
+	easel.name = "CreatorCentrepieceEasel"
+	easel.position = center + Vector3(0, 30, 0)
+	easel.rotation.y = atan2(away.x, away.z)
+	easel.rotation.x = deg_to_rad(20.0)
+	# A little further from the arrival line than the first pass, so players
+	# meet the dais before they meet the easel itself.
+	easel.position += easel.transform.basis.z * 15.0
+	parent.add_child(easel)
+
+	# Easel frame, canvas, and brush/paint-trails are three separate groups
+	# (not easel itself) so each can bob on its own phase instead of
+	# floating as one rigid unit.
+	var easel_frame := Node3D.new()
+	easel_frame.name = "CreatorCentrepieceEaselFrame"
+	easel.add_child(easel_frame)
+	_register_creator_bob(easel_frame)
+
+	# Local -Z faces the station; the rear leg sits on the far local +Z side,
+	# behind the canvas, where it stays hidden from that approach. Easel
+	# sized at 80% of the first pass.
+	for side in [-1.0, 1.0]:
+		var leg := _add_box(easel_frame, "CentrepieceEaselLeg", Vector3(side * 22, 40, -5),
+			Vector3(7, 80, 7), _materials.wood)
+		leg.rotation.z = deg_to_rad(side * 7.0)
+	var rear := _add_box(easel_frame, "CentrepieceEaselRearLeg", Vector3(0, 37, 16),
+		Vector3(7, 74, 7), _materials.wood)
+	rear.rotation.x = deg_to_rad(-14.0)
+	_add_box(easel_frame, "CentrepieceEaselCrossbar", Vector3(0, 59, -5), Vector3(62, 6, 6), _materials.wood)
+	# The rear leg sat 21 units behind the crossbar with nothing bridging
+	# them, so the pieces read as separate floating boxes instead of one
+	# easel. A diagonal brace ties the rear leg to the crossbar, the way a
+	# real easel's back brace does.
+	var brace_start := Vector3(0, 66, 13)
+	var brace_finish := Vector3(0, 59, -5)
+	var brace_dir := brace_finish - brace_start
+	var brace := _add_box(easel_frame, "CentrepieceEaselBrace", (brace_start + brace_finish) * 0.5,
+		Vector3(5, 5, brace_dir.length()), _materials.wood)
+	brace.rotation = Vector3(-atan2(brace_dir.y, Vector2(brace_dir.x, brace_dir.z).length()),
+		atan2(brace_dir.x, brace_dir.z), 0)
+
+	# The canvas floats straight up off the crossbar (local Y) rather than
+	# out toward the viewer (local Z), tilted a touch to one side so it
+	# doesn't read as a flat cutout. Canvas and frame share one group so the
+	# tilt carries both together.
+	var canvas_group := Node3D.new()
+	canvas_group.name = "CentrepieceCanvasGroup"
+	# z=-5 sat flush with the crossbar/legs plane and clipped into them;
+	# pulled forward (local -Z, toward the station) to clear the easel.
+	canvas_group.position = Vector3(0, 105, -20)
+	canvas_group.rotation.z = deg_to_rad(6.0)
+	canvas_group.rotation.x = deg_to_rad(25.0)
+	easel.add_child(canvas_group)
+	_register_creator_bob(canvas_group)
+	_add_box(canvas_group, "CentrepieceCanvas", Vector3.ZERO, Vector3(70, 90, 4), _materials.canvas)
+	_build_frame(canvas_group, Vector3(0, -45, 0), 70, 90, _materials.gold)
+
+	# Brush and paint trails share canvas_group's exact transform but sit in
+	# their own sibling group (not nested under canvas_group) so they can
+	# bob on a third, independent phase.
+	var brush_group := Node3D.new()
+	brush_group.name = "CreatorCentrepieceBrushGroup"
+	brush_group.position = canvas_group.position
+	brush_group.rotation = canvas_group.rotation
+	easel.add_child(brush_group)
+	_register_creator_bob(brush_group)
+
+	# The brush floats tip-down, clear of the canvas.
+	var brush_x := 8.0
+	var brush_z := -57.0
+	_add_sphere(brush_group, "CentrepieceBrushTip", Vector3(brush_x, 10, brush_z),
+		Vector3(3.08, 4.9, 3.08), _materials.shadow)
+	_add_box(brush_group, "CentrepieceBrushFerrule", Vector3(brush_x, 17, brush_z),
+		Vector3(5.04, 7.0, 5.04), _materials.shadow)
+	_add_box(brush_group, "CentrepieceBrushHandle", Vector3(brush_x, 28, brush_z),
+		Vector3(4.2, 25.2, 4.2), _materials.wood)
+
+	# A short paint trail that continues down past the tip (the direction the
+	# brush is already pointing), then curves back upward. Still plain
+	# spheres — no per-blob rotation, just a position lerp and a uniform
+	# scale — but the two curve points are rotated 30 degrees further
+	# downward around the tip (local X axis) before the curve is built.
+	var trail_start := Vector3(brush_x, 8.0, brush_z)
+	var trail_tilt := deg_to_rad(30.0)
+	var bulge_rel := Vector3(15.0, -26.0, 10.0)
+	var turn_rel := Vector3(28.0, -2.0, 22.0)
+	bulge_rel = Vector3(bulge_rel.x, bulge_rel.y * cos(trail_tilt) - bulge_rel.z * sin(trail_tilt),
+		bulge_rel.y * sin(trail_tilt) + bulge_rel.z * cos(trail_tilt))
+	turn_rel = Vector3(turn_rel.x, turn_rel.y * cos(trail_tilt) - turn_rel.z * sin(trail_tilt),
+		turn_rel.y * sin(trail_tilt) + turn_rel.z * cos(trail_tilt))
+	var trail_bulge := trail_start + bulge_rel
+	var trail_turn := trail_start + turn_rel
+	_build_paint_curve(brush_group, "CentrepiecePaintTrail", trail_start, trail_bulge, trail_turn,
+		12, 3.2, 1.3, _materials.gold)
+
+	# A few loose paint-curve flourishes scattered around the canvas corners,
+	# same technique — pushed further out from the frame and bigger than the
+	# first pass so they read as their own flourish, not crowding the canvas.
+	_build_paint_curve(brush_group, "CentrepieceCornerCurveA",
+		Vector3(40.0, 54.0, -4.0), Vector3(72.0, 44.0, -14.0), Vector3(62.0, 23.0, -24.0),
+		12, 5.8, 1.8, _materials.gold)
+	_build_paint_curve(brush_group, "CentrepieceCornerCurveB",
+		Vector3(-38.0, -51.0, -4.0), Vector3(-69.0, -38.0, -17.0), Vector3(-52.0, -16.0, -27.0),
+		12, 5.8, 1.8, _materials.gold)
 
 
-func _add_route_seam(parent: Node3D, node_name: String, start: Vector3, finish: Vector3) -> void:
-	var direction := finish - start
-	var seam := _add_box(parent, node_name, (start + finish) * 0.5 + Vector3.UP * 2.65,
-		Vector3(2.6, 0.24, direction.length() - 4.0), _materials.aqua)
-	seam.rotation = Vector3(-atan2(direction.y, Vector2(direction.x, direction.z).length()),
-		atan2(direction.x, direction.z), 0)
-
-
-func _build_gate(parent: Node3D, material: Material) -> void:
-	_add_box(parent, "LeftPillar", Vector3(-24, 24, 0), Vector3(10, 48, 12), _materials.ivory, true)
-	_add_box(parent, "RightPillar", Vector3(24, 24, 0), Vector3(10, 48, 12), _materials.ivory, true)
-	_add_box(parent, "GateLight", Vector3(0, 49, 0), Vector3(58, 8, 12), material, true)
-
-
-func _build_old_tree(parent: Node3D, reward: bool = true) -> void:
-	_add_cylinder(parent, "OldestTreeTrunk", Vector3(0, 34, 0), 13, 68, _materials.wood, true, 10)
-	for bloom in 20:
-		var angle := TAU * bloom / 20.0
-		_add_sphere(parent, "AncientCanopy", Vector3(cos(angle) * (25 + bloom % 4 * 8), 75 + bloom % 3 * 12,
-			sin(angle) * (25 + bloom % 4 * 8)), Vector3(17, 13, 17), _materials.purple)
-	if reward:
-		_add_gem(parent, "StarOfWisdom", Vector3(0, 46, -18), _materials.gold)
-
-
-func _build_easel(parent: Node3D, position_value: Vector3) -> void:
-	_add_box(parent, "Canvas", position_value + Vector3(0, 20, 0), Vector3(18, 24, 2), _materials.canvas)
-	_add_box(parent, "EaselLeg", position_value + Vector3(-6, 7, 1), Vector3(2, 15, 2), _materials.wood)
-	_add_box(parent, "EaselLeg", position_value + Vector3(6, 7, 1), Vector3(2, 15, 2), _materials.wood)
-
-
-func _build_frame(parent: Node3D, position_value: Vector3, width: float, height: float, material: Material) -> void:
-	_add_box(parent, "FrameLeft", position_value + Vector3(-width * 0.5, height * 0.5, 0), Vector3(6, height, 6), material, true)
-	_add_box(parent, "FrameRight", position_value + Vector3(width * 0.5, height * 0.5, 0), Vector3(6, height, 6), material, true)
-	_add_box(parent, "FrameTop", position_value + Vector3(0, height, 0), Vector3(width + 6, 6, 6), material, true)
-
-
-func _add_walkway(parent: Node3D, node_name: String, start: Vector3, finish: Vector3, width: float) -> void:
-	var direction := finish - start
-	var instance := _add_box(parent, node_name, (start + finish) * 0.5,
-		Vector3(width, 5, direction.length()), _materials.ivory, true)
-	var slope := -atan2(direction.y, Vector2(direction.x, direction.z).length())
-	instance.rotation = Vector3(slope, atan2(direction.x, direction.z), 0)
-	# Match the collision body created by _add_box.
-	var collision_body := parent.get_child(parent.get_child_count() - 1) as StaticBody3D
-	if collision_body != null:
-		collision_body.rotation = instance.rotation
+## A short curved paint streak as a chain of plain, non-rotated spheres —
+## safe and cheap, so every paint-curve decoration in this kingdom reuses it
+## instead of its own rotated/tapered geometry.
+func _build_paint_curve(parent: Node3D, name_prefix: String, start: Vector3, control: Vector3,
+		finish: Vector3, blob_count: int, scale_start: float, scale_end: float,
+		material: Material) -> void:
+	for step in blob_count:
+		var t := float(step + 1) / float(blob_count)
+		var point: Vector3 = start.lerp(control, t).lerp(control.lerp(finish, t), t)
+		_add_sphere(parent, "%s_%d" % [name_prefix, step], point,
+			Vector3.ONE * lerp(scale_start, scale_end, t), material)
 
 
 func _add_label(parent: Node3D, text: String, position_value: Vector3, color: Color, font_size: int) -> void:
@@ -704,28 +808,6 @@ func _add_label(parent: Node3D, text: String, position_value: Vector3, color: Co
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = false
 	parent.add_child(label)
-
-
-func _add_box(parent: Node3D, node_name: String, position_value: Vector3, size: Vector3,
-		material: Material, collision := false) -> MeshInstance3D:
-	var instance := MeshInstance3D.new()
-	instance.name = node_name
-	var mesh := BoxMesh.new()
-	mesh.size = size
-	instance.mesh = mesh
-	instance.position = position_value
-	instance.material_override = material
-	parent.add_child(instance)
-	if collision:
-		var body := StaticBody3D.new()
-		var shape_node := CollisionShape3D.new()
-		var shape := BoxShape3D.new()
-		shape.size = size
-		shape_node.shape = shape
-		body.add_child(shape_node)
-		body.position = position_value
-		parent.add_child(body)
-	return instance
 
 
 func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3, radius: float,
@@ -754,46 +836,7 @@ func _add_cylinder(parent: Node3D, node_name: String, position_value: Vector3, r
 	return instance
 
 
-func _add_sphere(parent: Node3D, node_name: String, position_value: Vector3, scale_value: Vector3,
-		material: Material) -> void:
-	var instance := MeshInstance3D.new()
-	instance.name = node_name
-	var mesh := SphereMesh.new()
-	mesh.radius = 1
-	mesh.height = 2
-	mesh.radial_segments = 8
-	mesh.rings = 4
-	instance.mesh = mesh
-	instance.position = position_value
-	instance.scale = scale_value
-	instance.material_override = material
-	parent.add_child(instance)
-
-
-func _add_gem(parent: Node3D, node_name: String, position_value: Vector3, material: Material,
-		scale_value: Vector3 = Vector3(10, 14, 10)) -> void:
-	var gem := MeshInstance3D.new()
-	gem.name = node_name
-	var mesh := CylinderMesh.new()
-	mesh.top_radius = 0
-	mesh.bottom_radius = 1
-	mesh.height = 2
-	mesh.radial_segments = 6
-	gem.mesh = mesh
-	gem.position = position_value
-	gem.scale = scale_value
-	gem.material_override = material
-	parent.add_child(gem)
-
-
-func _kingdom_material(kingdom_id: String) -> Material:
-	if kingdom_id == "mind": return _materials.aqua
-	if kingdom_id == "heart": return _materials.pink
-	return _materials.gold
-
-
 func _kingdom_color(kingdom_id: String) -> Color:
-	if kingdom_id == "mind": return Color("83efff")
 	if kingdom_id == "heart": return Color("ffc8e8")
 	return Color("ffe49a")
 
@@ -811,3 +854,47 @@ func _material(color: Color, roughness: float, emission: Color = Color.BLACK,
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return material
+
+
+func _add_box(parent: Node3D, node_name: String, position_value: Vector3, size: Vector3,
+		material: Material, collision := false) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	instance.mesh = mesh
+	instance.position = position_value
+	instance.material_override = material
+	parent.add_child(instance)
+	if collision:
+		var body := StaticBody3D.new()
+		var shape_node := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = size
+		shape_node.shape = shape
+		body.add_child(shape_node)
+		body.position = position_value
+		parent.add_child(body)
+	return instance
+
+
+func _add_sphere(parent: Node3D, node_name: String, position_value: Vector3, scale_value: Vector3,
+		material: Material) -> void:
+	var instance := MeshInstance3D.new()
+	instance.name = node_name
+	var mesh := SphereMesh.new()
+	mesh.radius = 1
+	mesh.height = 2
+	mesh.radial_segments = 8
+	mesh.rings = 4
+	instance.mesh = mesh
+	instance.position = position_value
+	instance.scale = scale_value
+	instance.material_override = material
+	parent.add_child(instance)
+
+
+func _build_frame(parent: Node3D, position_value: Vector3, width: float, height: float, material: Material) -> void:
+	_add_box(parent, "FrameLeft", position_value + Vector3(-width * 0.5, height * 0.5, 0), Vector3(6, height, 6), material, true)
+	_add_box(parent, "FrameRight", position_value + Vector3(width * 0.5, height * 0.5, 0), Vector3(6, height, 6), material, true)
+	_add_box(parent, "FrameTop", position_value + Vector3(0, height, 0), Vector3(width + 6, 6, 6), material, true)

@@ -1,6 +1,8 @@
 extends Node
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const WebDecor := preload("res://scripts/web_decor.gd")
 const RatingHeart := preload("res://scripts/rating_heart.gd")
 const STAR_ICON := preload("res://assets/UI/icons/star.svg")
 
@@ -13,6 +15,7 @@ var selected_frame_name: String = ""
 var player_near_artwork = false
 var current_frame_name := ""
 var _world_opening := false
+var _journal: CrownQuestJournal
 
 # --- Scene Paths ---
 const HUB_WORLD_PATH = "res://scenes/New_Hub_World.tscn"
@@ -31,6 +34,7 @@ const GALLERY_ENTRY_SPAWN := "art_castle_gallery"
 
 func _ready() -> void:
 	_build_galaxy_transit()
+	_face_fountain_on_spawn()
 	_report_galaxy_state()
 	_build_quest_journal_button()
 	likebutton.visible = true
@@ -116,6 +120,24 @@ func _report_galaxy_state() -> void:
 
 
 
+# The scene's authored camera looks back into the gallery. Turn the fox and
+# the view toward the arrival island's fountain instead, so every visit starts
+# looking out at the world.
+func _face_fountain_on_spawn() -> void:
+	var player := get_node_or_null("Player3D") as Node3D
+	var fountain := find_child("LatonaFountain", true, false) as Node3D
+	if player == null or fountain == null:
+		return
+	var to_fountain := fountain.global_position - player.global_position
+	to_fountain.y = 0.0
+	var visuals := player.get_node_or_null("FoxVisuals") as Node3D
+	if visuals != null:
+		visuals.rotation.y = atan2(to_fountain.x, to_fountain.z) - player.global_rotation.y
+	var camera := get_node_or_null("Camera3D")
+	if camera != null and camera.has_method("face_direction"):
+		camera.face_direction(to_fountain)
+
+
 func _build_galaxy_transit() -> void:
 	# The 2 km island is part of this same scene—there is no portal or scene
 	# change. Its arrival island is centred under the authored gallery floor,
@@ -184,7 +206,7 @@ func _build_galaxy_transit() -> void:
 	add_child(map_canvas)
 	var minimap := Control.new()
 	minimap.name = "ArteaWorldMinimap"
-	minimap.set_script(load("res://scripts/art_castle_minimap.gd"))
+	minimap.set_script(preload("res://scripts/art_castle_minimap.gd"))
 	minimap.set("map_context", "galaxy")
 	map_canvas.add_child(minimap)
 
@@ -262,13 +284,20 @@ func _input(event):
 	if active_player != null and active_player.get_meta("heart_melody_active", false):
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_J:
-		_open_quest_journal()
+		if is_instance_valid(_journal):
+			_journal.close()
+		else:
+			_open_quest_journal()
 		var viewport := get_viewport()
 		if viewport != null:
 			viewport.set_input_as_handled()
 		return
+	if is_instance_valid(_journal):
+		return
 
-	if event.is_action_pressed("ui_accept") and player_near_artwork:
+	if event.is_action_pressed("ui_accept") and player_near_artwork and not _world_opening:
+		if event is InputEventKey and event.echo:
+			return
 		_enter_current_frame_world()
 		var viewport := get_viewport()
 		if viewport != null:
@@ -300,13 +329,53 @@ func _build_quest_journal_button() -> void:
 	$CanvasLayer.add_child(button)
 
 
+# The journal floats over the gallery rather than replacing it, so closing it
+# (or returning to the gallery) never reloads the whole castle world.
 func _open_quest_journal() -> void:
-	var campaign := get_node_or_null("/root/JourneyCampaign")
-	if campaign != null and campaign.has_method("open_quest_journal"):
-		if bool(campaign.call("open_quest_journal")):
-			return
-	if ResourceLoader.exists(QUEST_JOURNAL_PATH):
-		SceneLoader.change_scene(get_tree(), QUEST_JOURNAL_PATH)
+	if is_instance_valid(_journal) or not ResourceLoader.exists(QUEST_JOURNAL_PATH):
+		return
+	var layer := CanvasLayer.new()
+	layer.name = "QuestJournalLayer"
+	layer.layer = 100
+	add_child(layer)
+	_journal = (load(QUEST_JOURNAL_PATH) as PackedScene).instantiate()
+	_journal.overlay = true
+	# CameraFollow stops orbiting while any member of this group exists.
+	_journal.add_to_group("camera_input_blockers")
+	layer.add_child(_journal)
+	_journal.tree_exited.connect(_on_quest_journal_closed.bind(layer))
+	_journal.return_to_gallery_requested.connect(_return_player_to_gallery)
+	var player := get_node_or_null("Player3D")
+	if player != null:
+		if player.has_method("set_input_enabled"):
+			player.call("set_input_enabled", false)
+		if player.has_method("is_seated") and bool(player.call("is_seated")):
+			_journal.set_return_available(false, "Leave the train first")
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _on_quest_journal_closed(layer: CanvasLayer) -> void:
+	layer.queue_free()
+	if not is_inside_tree():
+		return
+	var player := get_node_or_null("Player3D")
+	if player != null and player.has_method("set_input_enabled"):
+		player.call("set_input_enabled", true)
+	var camera := get_node_or_null("Camera3D")
+	if camera != null and bool(camera.get("capture_mouse")):
+		Input.mouse_mode = TouchDevice.captured_mode()
+
+
+func _return_player_to_gallery() -> void:
+	var player := get_node_or_null("Player3D") as CharacterBody3D
+	if player == null:
+		return
+	player.global_position = GALLERY_SPAWN
+	player.velocity = Vector3.ZERO
+	var camera := get_node_or_null("Camera3D")
+	if camera != null and camera.has_method("_snap_to_follow_target"):
+		camera.call("_snap_to_follow_target")
+	_face_fountain_on_spawn()
 
 func show_rating_panel(frame_name: String, current_rating: int) -> void:
 	selected_frame_name = frame_name
@@ -391,19 +460,21 @@ func _enter_current_frame_world() -> void:
 	if current_frame_name.is_empty() or _world_opening:
 		return
 	_world_opening = true
+	# Space is also Jump. Stop that input before the next physics frame and keep
+	# the player still while the artwork world is being prepared.
+	var player := get_node_or_null("Player3D")
+	if player != null and player.has_method("set_input_enabled"):
+		player.set_input_enabled(false)
 	var path: String = $GalleryManager.prepare_frame_for_world(current_frame_name)
 	if path.is_empty() or not FileAccess.file_exists(path):
-		_world_opening = false
-		ratinglabel.text = "This artwork is not available locally yet. Please try again."
+		_frame_world_failed("This artwork is not available locally yet. Please try again.")
 		return
 	var state := get_node_or_null("/root/CreationWorldState")
 	if state == null:
-		_world_opening = false
-		ratinglabel.text = "The interactive artwork world is not available in this scene yet."
+		_frame_world_failed("The interactive artwork world is not available in this scene yet.")
 		return
 	if not ResourceLoader.exists(CREATION_WORLD_PATH):
-		_world_opening = false
-		ratinglabel.text = "The interactive artwork world is still being prepared. Please try again shortly."
+		_frame_world_failed("The interactive artwork world is still being prepared. Please try again shortly.")
 		return
 
 	state.prepare_artwork(path, current_frame_name.replace("_", " "))
@@ -412,11 +483,23 @@ func _enter_current_frame_world() -> void:
 		if not is_instance_valid(self):
 			return
 		if not ok:
-			_world_opening = false
-			ratinglabel.text = str(response.get("error",
-				"This artwork world could not open yet. Please try again."))
+			_frame_world_failed(str(response.get("error",
+				"This artwork world could not open yet. Please try again.")))
 			return
-		if not SceneLoader.change_scene(get_tree(), CREATION_WORLD_PATH):
-			_world_opening = false
-			ratinglabel.text = "The interactive artwork world could not open yet. Please try again."
+		# Leave the current input dispatch before replacing its scene. Otherwise
+		# the Space event used at the frame can reach the new world as a jump.
+		call_deferred("_open_prepared_frame_world")
 	)
+
+
+func _open_prepared_frame_world() -> void:
+	if not SceneLoader.change_scene(get_tree(), CREATION_WORLD_PATH):
+		_frame_world_failed("The interactive artwork world could not open yet. Please try again.")
+
+
+func _frame_world_failed(message: String) -> void:
+	_world_opening = false
+	ratinglabel.text = message
+	var player := get_node_or_null("Player3D")
+	if player != null and player.has_method("set_input_enabled"):
+		player.set_input_enabled(true)

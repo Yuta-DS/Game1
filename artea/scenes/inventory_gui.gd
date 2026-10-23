@@ -1,4 +1,5 @@
 extends Control
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
 const INVENTORY_CAPACITY := 30
 const SlotScene := preload("res://scenes/slot.tscn")
@@ -57,3 +58,4 @@ func open() -> void:
 func close() -> void:
 	visible = false
 	isOpen = false
+	remove_from_group("touch_hud_blockers")

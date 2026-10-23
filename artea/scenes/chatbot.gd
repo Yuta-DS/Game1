@@ -5,6 +5,14 @@
 # the bundled local Gemma model through NobodyWho. No message is saved, logged,
 # or uploaded; Web and unsupported builds retain the authored local response.
 extends Control
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+
+## Phones and tablets: Milo's panel is rescaled until its 18 px body text reads
+## at this many screen pixels, and resized to use the screen around it.
+const TOUCH_TEXT_PX := 14.0
+const TOUCH_MIN_WIDTH := 560.0
+const TOUCH_MAX_WIDTH := 1600.0
+const TOUCH_HEIGHT_SHARE := 0.62
 
 @onready var chat_history: TextEdit = $MiloReplyCard/ChatHistory
 @onready var content: VBoxContainer = $InputContent
@@ -28,6 +36,7 @@ const WisdomEngine := preload("res://scripts/MiloWisdomEngine.gd")
 const ConversationContext := preload("res://scripts/MiloConversationContext.gd")
 const SupportCard := preload("res://scripts/support_card.gd")
 const CastleGuideArrow := preload("res://scripts/castle_guide_arrow.gd")
+const BoldFont := preload("res://assets/Fonts/OpenDyslexic-Bold.otf")
 const CASTLE_ARROW_NAME := "CastleGuideArrow"
 const CASTLE_DOOR_NODE := "Art_Gallery"
 const LOCAL_LLM_MODEL_PATH := "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"

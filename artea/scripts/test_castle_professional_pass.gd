@@ -688,17 +688,16 @@ func _run() -> void:
 			_fail("foundation support intrudes into final ascent corridor: %s" % support_name)
 			return
 
-	var skyway := hub.get_node_or_null("SkywayMap") as Node3D
-	var bead_count := skyway.find_children("Skyway_Bead*", "MeshInstance3D", true, false).size() \
-		if skyway != null else 0
-	if bead_count < 20:
-		_fail("constellation route has only %d dotted wayfinding beads" % bead_count)
+	# The floating skyway orbs (and their "Mind Spark Kingdom" marker) were
+	# removed from the hub.
+	if hub.get_node_or_null("SkywayMap") != null:
+		_fail("the floating skyway orbs are back")
 		return
 
 	var player := hub.get_node_or_null("NewPlayer") as CharacterBody3D
 	var camera_arm := player.get_node_or_null("CameraController") as SpringArm3D \
 		if player != null else null
-	if player == null or float(player.get("runSpeed")) > 10.0:
+	if player == null or float(player.get("runSpeed")) > 15.0:
 		_fail("player traversal is still tuned as a debug sprint")
 		return
 	if camera_arm == null or camera_arm.spring_length < 6.5:

@@ -66,6 +66,7 @@ def make_core_preset(source: str, export_path: str) -> str:
     core = core.replace(f"[preset.{old_number}.options]", f"[preset.{number}.options]")
     core = core.replace('name="Web"', 'name="WebCore"', 1)
     replacements = {
+        "export_filter": '"scenes"',
         "export_files": 'PackedStringArray(' + ', '.join(
             '"' + item + '"' for item in CORE_SCENES) + ')',
         "include_filter": '"' + ','.join(CORE_INCLUDES) + '"',

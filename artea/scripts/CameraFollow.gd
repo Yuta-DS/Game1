@@ -4,6 +4,8 @@
 # the camera trails the player at that angle, so the view follows the cursor
 # instead of being welded behind the player's back.
 extends Camera3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+const AutoFollow := preload("res://scripts/camera_auto_follow.gd")
 
 @export var player_path: NodePath
 @export var follow_height := 3.0        # how high the camera sits
@@ -72,6 +74,8 @@ const CAMERA_INPUT_BLOCKERS_GROUP := "camera_input_blockers"
 
 var _yaw := 0.0
 var _pitch := 0.0
+# Frames left during which mouse motion is ignored after face_direction().
+var _settle_frames := 0
 var _touch_emulation_was_on := false
 var _pointer_capture_ready := false
 var _web_orbit_dragging := false
@@ -181,6 +185,7 @@ func _input(event: InputEvent) -> void:
 			try_capture_pointer()
 
 func _process(delta: float) -> void:
+	_settle_frames = maxi(0, _settle_frames - 1)
 	if _mode == "follow" and _player and _view == "first":
 		# First person sits at the player's eye and aims along the same yaw and
 		# pitch the mouse already drives, so switching views never changes which
@@ -199,6 +204,8 @@ func _process(delta: float) -> void:
 		return
 
 	if _mode == "follow" and _player:
+		if not _ride_view_active and _player is CharacterBody3D:
+			_yaw = _follow.step(delta, _yaw, (_player as CharacterBody3D).velocity)
 		var focus := _player.global_transform.origin + follow_look_at_offset
 
 		# Orbit around the player using the mouse-driven yaw/pitch instead of
@@ -260,6 +267,34 @@ func _process(delta: float) -> void:
 
 	elif _mode == "inspect":
 		look_at(_inspect_focus, Vector3.UP)
+
+
+func _orbit(relative: Vector2) -> void:
+	if _mode != "follow" or _settle_frames > 0:
+		return
+	# Wrapped rather than left to accumulate: yaw turns freely through a
+	# full circle in both directions, and wrapping keeps it from drifting
+	# into large float values over a long session.
+	_follow.looked()
+	_yaw = wrapf(_yaw - relative.x * mouse_sensitivity, -PI, PI)
+	_pitch -= relative.y * mouse_sensitivity
+	_pitch = clampf(_pitch, deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
+
+
+# Look drag from the on-screen touch controls (scripts/touch_controls.gd).
+func touch_look(relative: Vector2) -> void:
+	if not current or not get_tree().get_nodes_in_group(CAMERA_INPUT_BLOCKERS_GROUP).is_empty():
+		return
+	_orbit(relative)
+
+
+## The yaw movement should be relative to. While the player runs this stays
+## where the view was when they started, so the camera can swing behind them
+## (camera_auto_follow.gd) without changing which way "forward" is mid-run.
+func movement_yaw() -> float:
+	if _follow.latched and _mode == "follow" and _view == "third" and not _ride_view_active:
+		return _follow.control_yaw
+	return global_rotation.y
 
 
 func _zoom_by(amount: float) -> void:
@@ -343,6 +378,19 @@ func end_ride_view() -> void:
 
 func is_ride_view_active() -> bool:
 	return _ride_view_active
+
+
+# Turns the view to look along `direction` from behind the player at the
+# starting tilt, e.g. so a scene can face a landmark on arrival. Mouse motion
+# is ignored for a few frames: capturing the cursor on load (or moving it
+# during the loading screen) arrives as one big jump that would otherwise
+# swing the new view, often straight down at the floor.
+func face_direction(direction: Vector3) -> void:
+	_yaw = atan2(-direction.x, -direction.z)
+	_follow.looked()
+	_pitch = deg_to_rad(initial_pitch_degrees)
+	_settle_frames = 10
+	_snap_to_follow_target()
 
 
 func _snap_to_follow_target() -> void:

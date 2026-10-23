@@ -455,7 +455,7 @@ func _run() -> void:
 					station_index + 1, raised_base_name])
 				return
 		var route_forward: Vector3 = railway.call("get_route_forward_direction_at_station", station_index)
-		if (-boarding_layout.basis.z).normalized().dot(route_forward) < 0.999:
+		if (-boarding_layout.global_basis.z).normalized().dot(route_forward) < 0.999:
 			_fail("station %d walkways do not follow the parked train direction" % (station_index + 1))
 			return
 		for guard_name in ["PlatformGuardLeft", "PlatformGuardRight"]:

@@ -9,7 +9,6 @@ extends Node3D
 
 const HubLightFade := preload("res://scripts/hub_light_fade.gd")
 
-const THOUGHTS_PORTAL := Vector3(90.3, 15.0, -83.0)
 const CASTLE_NAME := "building_castle_red2"
 const STAGE_COLOURS := [
 	Color("415777"), # sleeping blue-grey
@@ -29,7 +28,6 @@ var _time := 0.0
 var _stage := 0
 var _rotors: Array[Node3D] = []
 var _light_materials: Array[StandardMaterial3D] = []
-var _waypoint_lights: Array[OmniLight3D] = []
 var _citadel_lamp: OmniLight3D
 var _castle_fill: OmniLight3D
 var _foundation: Node3D
@@ -48,7 +46,6 @@ func _ready() -> void:
 	_castle_start_position = _castle.position
 	_brighten_castle_materials(_castle)
 	_build_castle_foundation()
-	_build_skyway()
 	apply_stage(_current_stage())
 
 
@@ -82,12 +79,6 @@ func apply_stage(stage: int) -> void:
 	for material in _light_materials:
 		material.emission = glow
 		material.emission_energy_multiplier = energy
-
-	for i in _waypoint_lights.size():
-		# The route only reveals the next destination at first. Later lights
-		# make the complete journey legible as one path, rather than a menu.
-		_waypoint_lights[i].visible = i <= _stage
-		_waypoint_lights[i].light_color = glow
 
 	if _citadel_lamp != null:
 		_citadel_lamp.light_color = glow
@@ -1253,71 +1244,6 @@ func _build_citadel_rig() -> void:
 
 
 # --- Living map ------------------------------------------------------
-
-func _build_skyway() -> void:
-	var map := Node3D.new()
-	map.name = "SkywayMap"
-	get_parent().add_child(map)
-
-	# A small, physical constellation is more useful than a full-screen map:
-	# it literally connects the sleeping citadel to the first kingdom.
-	var route := [
-		Vector3(-28.0, 42.0, 22.0),
-		Vector3(5.0, 39.0, 5.0),
-		Vector3(35.0, 33.0, -20.0),
-		Vector3(65.0, 27.0, -53.0),
-		THOUGHTS_PORTAL + Vector3(0.0, 7.0, 0.0),
-	]
-
-	for i in route.size():
-		var point: Vector3 = route[i]
-		var star := MeshInstance3D.new()
-		star.name = "Skyway_Star_%d" % (i + 1)
-		star.mesh = _sphere(0.42 if i == route.size() - 1 else 0.22,
-			0.42 if i == route.size() - 1 else 0.22)
-		star.material_override = _glow_material(STAGE_COLOURS[0])
-		star.position = point
-		map.add_child(star)
-
-		var lamp := OmniLight3D.new()
-		lamp.position = point
-		lamp.omni_range = 7.5
-		lamp.light_energy = 0.8
-		lamp.shadow_enabled = false
-		HubLightFade.apply(lamp)
-		map.add_child(lamp)
-		_waypoint_lights.append(lamp)
-
-		if i > 0:
-			_add_route_segment(map, route[i - 1], point)
-
-	var destination := Node3D.new()
-	destination.name = "MindSparkWaypoint"
-	destination.position = THOUGHTS_PORTAL + Vector3(0.0, 8.3, 0.0)
-	map.add_child(destination)
-	_add_mesh(destination, _torus(0.92, 1.02), _glow_material(STAGE_COLOURS[1]), Vector3.ZERO)
-	_add_title(destination, "MIND SPARK KINGDOM", Vector3(0.0, 1.25, 0.0), Color("b9dfff"), 36)
-	_add_title(destination, "Begin with one thought", Vector3(0.0, 0.78, 0.0), Color("eff7ff"), 22)
-
-
-func _add_route_segment(parent: Node3D, from: Vector3, to: Vector3) -> void:
-	# Long emissive cylinders crossed the camera as bright white cables. A
-	# constellation should be read as points the eye completes, so the route is
-	# now a restrained sequence of floating brass-and-blue beads.
-	const BEADS := 7
-	var bead_material := _glow_material(Color("789dcc"))
-	for bead_index in BEADS:
-		var t := (float(bead_index) + 1.0) / float(BEADS + 1)
-		var bead := MeshInstance3D.new()
-		bead.name = "Skyway_Bead"
-		bead.mesh = _sphere(0.08, 0.08)
-		bead.material_override = bead_material
-		bead.position = from.lerp(to, t)
-		bead.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		# Readable unique names make the generated route inspectable in Godot and
-		# allow regression tests to count every bead rather than anonymous nodes.
-		parent.add_child(bead, true)
-
 
 # --- Tiny mesh/material helpers -------------------------------------
 

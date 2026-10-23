@@ -1,7 +1,20 @@
+# Artéa
+
+Artéa is a 3D narrative exploration game built in Godot 4, where players paint
+artwork that becomes the seed for AI-generated explorable worlds. It combines
+a hub-world/"Castle Universe" journey structure, a local on-device LLM
+companion (Milo), narrative dialogue and NPCs, and a Flask-backed online
+gallery where players' paintings are uploaded, rated, and browsed.
+
+See [CHANGELOG.md](./CHANGELOG.md) for release history, and
+[AGENT.md](./AGENT.md) for fuller technical/contributor guidance (test
+suites, architecture conventions, known issues).
+
 This document provides instructions for setting up and running the Artéa game project within the Godot Development Engine.
 
 **Note on Development Integrity:** To ensure maximum project stability and to minimise issues related to file path case sensitivity and the Godot .NET runtime dependencies, it is strongly recommended that all developers work on a _**Windows operating system.**_
 
+---
 
 Guide to Running the Project
   1. **Engine Requirement:** Download and install Godot Engine version 4.4 or newer. Use the standard non-Mono build for Web exports. A .NET build and SDK are needed only if this checkout includes a C# project.
@@ -9,6 +22,57 @@ Guide to Running the Project
   3. **Initial Scene Launch:** To test the project, click the "Run Scene" button (F6). If the main scene is not already assigned, set it to:
     - "res://scenes/start_screen.tscn"
 
+**Game client:**
+- Godot Engine 4.4+ with .NET/Mono support (for C# compilation)
+- Windows is the only platform the client is tested on (see note above) —
+  file path case-sensitivity and .NET runtime issues are more likely on
+  macOS/Linux
+- Git + Git LFS — roughly **2.1 GB** of LFS-tracked assets (local LLM model
+  files, native plugin binaries) are required for the game to run correctly
+
+**Server:**
+- Python 3.x (tested on 3.13 — see `server/MACOS_SETUP.md`); runs on
+  Windows, macOS, or Linux
+- Dependencies pinned in `server/requirements.txt` (Flask, SQLAlchemy, JWT,
+  CORS, bcrypt, gunicorn) — no manual package list to keep in sync
+
+---
+
+# Project Structure
+
+A map of the critical files and folders for orienting new developers — see
+[AGENT.md](./AGENT.md) for deeper architectural conventions.
+
+- **`artea/`** — the Godot project.
+  - `scenes/` — game scenes (`.tscn`) and their attached scripts.
+  - `scripts/` — GDScript gameplay code, including every `test_*.gd`
+    headless test suite.
+  - `scripts/API_Manager.gd` — the single source of truth for every backend
+    URL; update here if the server address changes.
+  - `scripts/JourneyState.gd` — autoload tracking player progress through
+    the journey/"Castle Universe" system.
+  - `scenes/chatbot.gd` — Milo, the AI companion (see
+    [AI Integration](#ai-integration) below).
+  - `scenes/drawing_tool.gd` / `scenes/GalleryManager.gd` — the painting →
+    upload → online gallery flow.
+  - `addons/` — third-party/engine plugins: `dialogue_manager`, `nobodywho`
+    (local LLM), `terrain_3d`, `proton_scatter`. `godot-firebase` is present
+    but unused — artwork storage moved to the Flask server below; its
+    upload calls are commented out in `drawing_tool.gd`.
+  - `CASTLE_UNIVERSE_IMPLEMENTATION.md` — deep dive into the hub/journey
+    system and its test coverage.
+- **`server/`** — the Flask backend (folder layout detailed under
+  [Server Setup](#server-setup)).
+- **`CHANGELOG.md`** — release history (v1.0, v2.0).
+- **`AGENT.md`** — fuller technical/contributor guidance.
+
+---
+
+# Guide to Running the Project
+
+1. **Engine Requirement:** Download and install Godot Engine version 4.4 or newer, specifically the version that includes .NET/Mono support (for C# compilation).
+2. **Import Project:** Import the project directory into the Godot Project Manager.
+3. **Initial Scene Launch:** To test the project, click the "Run Scene" button (F6). If the main scene is not already assigned, set it to `res://scenes/start_screen.tscn`.
 
 ---
 
@@ -36,18 +100,17 @@ This project uses **Git LFS (Large File Storage)** for large assets including:
 
 These files are required for the project to run correctly (local/offline LLM).
 
----
-
 ### First-time setup (required for all developers)
 
 Install Git LFS before pulling or checking out the project files:
 
+```sh
 git lfs install
-
 git clone <repo>
-
 git lfs pull
+```
 
+---
 
 # Server Setup
 
@@ -55,110 +118,165 @@ git lfs pull
 
 The server should be deployed with the following structure:
 
+```
 server/
+├── server.py          # the Flask backend
+├── database.db        # user + artwork data (created automatically)
+├── uploads/            # uploaded artwork files (created automatically)
+├── venv/               # Python virtual environment
+└── flaskapp.service    # systemd unit for automatic startup
+```
 
-  server.py
+## Accounts
 
-  database.db
+**No seed or admin accounts ship with the project** — `database.db` is
+created empty on first run. Create your own account:
 
-  uploads/
+```sh
+curl -X POST http://127.0.0.1:8000/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"yourname","password":"yourpassword"}'
+```
 
-  venv/
-
-  flaskapp.service
-
-
-server.py contains the Flask backend.
-
-database.db stores user and artwork information. (created automatically)
-
-uploads/ stores uploaded artwork files. (created automatically)
-
-venv/ contains the Python virtual environment.
-
-flaskapp.service allows the server to run automatically through systemd.
-
+or use the in-game registration screen (`res://scenes/authentication.tscn`).
+Then `POST /login` with the same credentials to get the JWT the client and
+`curl` both use for the upload/gallery endpoints.
 
 ## Creating the Python Environment
 
 From the server directory:
 
+**macOS/Linux:**
+
+```sh
 python3 -m venv venv
-
 source venv/bin/activate
+pip install -r requirements.txt
+```
 
+**Windows / PowerShell:**
 
-Install required packages:
+```powershell
+python -m venv venv
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
-pip install flask
-
-pip install flask_sqlalchemy
-
-pip install flask_jwt_extended
-
-pip install bcrypt
-
-pip install requests
-
+PowerShell's default execution policy blocks `.\venv\Scripts\activate`, so
+Windows commands below call `.\venv\Scripts\python.exe` directly instead of
+activating the venv first.
 
 ## Running the Server Manually
 
-Activate the virtual environment:
+**macOS/Linux:**
 
+```sh
 source venv/bin/activate
-
-Run:
-
 python server.py
+```
 
-The API should now be available on port 80.
+**Windows / PowerShell:**
+
+```powershell
+.\venv\Scripts\python.exe server.py
+```
+
+By default this binds `0.0.0.0:80`, which needs root/admin. On a dev machine,
+override host/port and set a JWT secret instead:
+
+**macOS/Linux:**
+
+```sh
+HOST=127.0.0.1 PORT=8000 JWT_SECRET_KEY=local-dev-test-secret python server.py
+```
+
+**Windows / PowerShell:**
+
+```powershell
+$env:HOST = "127.0.0.1"
+$env:PORT = "8000"
+$env:JWT_SECRET_KEY = "local-dev-test-secret"
+.\venv\Scripts\python.exe server.py
+```
+
+`database.db` and `uploads/` are created automatically on first run — both are
+gitignored and persist across restarts (stopping the server does not erase
+registered accounts, only deleting `database.db` does).
+
+Verify it's up:
+
+```sh
+curl http://127.0.0.1:8000/
+# {"status":"server running"}
+```
+
+### Configuration
+
+All of the following are optional and read from the environment, falling back
+to development defaults if unset:
+
+| Variable | Purpose |
+| --- | --- |
+| `HOST` / `PORT` | Bind address (default `0.0.0.0:80`, needs root) |
+| `JWT_SECRET_KEY` | Signs login tokens — **must** be overridden with a real secret before any deploy reachable by others |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins for a browser-hosted export (default `*`) |
+| `MAX_UPLOAD_BYTES` | Artwork upload size cap (default 20 MB) |
+| `OMNIROUTE_BASE_URL`, `OMNIROUTE_CREATIVE_GUIDE_API_KEY`, `OMNIROUTE_WORLD_BUILDER_API_KEY` | Enable the `/ai/creative-guide` and `/ai/world-builder` routes (see [AI Integration](#ai-integration)) |
+| `OPENROUTER_API_KEY` | Enables `/ai/chat` — defined but not currently called by the Godot client |
 
 ## Enabling flaskapp.service (make server.py run upon booting the server)
 
-Reload systemd:
-
-sudo systemctl daemon-reload
-
-Enable automatic startup:
-
-sudo systemctl enable flaskapp
-
-Start the service:
-
-sudo systemctl start flaskapp
-
-Check status:
-
-sudo systemctl status flaskapp
-
-View logs:
-
-sudo journalctl -u flaskapp -f
-
-Restart after code changes:
-
-sudo systemctl restart flaskapp
+```sh
+sudo systemctl daemon-reload          # reload systemd
+sudo systemctl enable flaskapp        # enable automatic startup
+sudo systemctl start flaskapp         # start the service
+sudo systemctl status flaskapp        # check status
+sudo journalctl -u flaskapp -f        # view logs
+sudo systemctl restart flaskapp       # restart after code changes
+```
 
 ## Updating API Endpoints in Godot
 
-The Godot project uses the APIManager singleton.
+The Godot project uses the `APIManager` singleton. If the server IP address
+changes, update the URLs in `API_Manager.gd`:
 
-If the server IP address changes, update the URLs in:
+```gdscript
+const BASE_URL = "http://YOUR_SERVER_IP"
+const LOGIN_URL = BASE_URL + "/login"
+const REGISTER_URL = BASE_URL + "/register"
+const UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
+const MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
+```
 
-APIManager.gd
+Replace `YOUR_SERVER_IP` with the public IP or domain name of the server.
 
-Typical values:
+## AI Integration
 
-  const BASE_URL = "http://YOUR_SERVER_IP"
+Artéa uses AI in two independent places, each with its own provider:
 
-  const LOGIN_URL = BASE_URL + "/login"
+- **Milo's companion chat** (`artea/scenes/chatbot.gd`): native/desktop builds
+  run a local, on-device model (Gemma-2-2B via the `nobodywho` addon), so
+  typed messages never leave the device. Web builds can't bundle that native
+  library, so they instead call a Cloudflare Worker that proxies Gemini — a
+  separate system from the Flask server below, and entirely cloud-based.
+  Whichever path is unavailable (missing model files, no network), Milo
+  falls back to fully authored/static reflections, so the companion is
+  never silent.
+- **Painting → explorable world** (`/ai/creative-guide` and
+  `/ai/world-builder` in `server.py`): always cloud-based, calling OmniRoute
+  to turn a player's artwork into a creative brief and a walkable 3D world
+  manifest. There is no local/offline mode for this path.
 
-  const REGISTER_URL = BASE_URL + "/register"
+`server.py` also defines a third route, `/ai/chat` (OpenRouter), but it is
+not called anywhere in the Godot client — it's left as a starting point for
+a team that wants to add another cloud chat provider or a self-hosted model.
 
-  const UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
+## Tests
 
-  const MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
+Headless Godot test suites live in `artea/scripts/test_*.gd`:
 
+```sh
+Godot --headless --path artea --script res://scripts/<name>.gd
+```
 
 Replace YOUR_SERVER_IP with the public IP or domain name of the server.
 

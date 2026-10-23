@@ -37,6 +37,12 @@ const KINGDOMS := {
 		"treasure": "harmony_jewel",
 		"requires": ["star_of_wisdom"],
 	},
+	"heart_melody": {
+		"label": "Heart Melody Musical Valley",
+		"scene_path": "res://scenes/heart_melody/heart_melody_world.tscn",
+		"treasure": "harmony_jewel",
+		"requires": [],
+	},
 	"creator": {
 		"label": "Creator's Light Kingdom",
 		"scene_path": "res://scenes/drawing_tool.tscn",
@@ -122,13 +128,15 @@ func enter_kingdom(kingdom_id: String, scene_tree: SceneTree = null,
 	if not ignore_lock and not can_enter_kingdom(kingdom_id):
 		return false
 	var scene_path := kingdom_scene_path(kingdom_id)
-	if scene_path.is_empty() or not ResourceLoader.exists(scene_path):
+	if scene_path.is_empty() or not SceneLoader.can_open(scene_path):
 		push_error("JourneyCampaign: missing kingdom scene for %s" % kingdom_id)
 		return false
 	var tree := _scene_tree(scene_tree)
 	if tree == null:
 		return false
-	if not SceneLoader.change_scene(tree, scene_path):
+	# Minigames are heavy enough that a direct swap freezes the player on the
+	# last frame, which reads as the game breaking.
+	if not SceneLoader.change_scene_with_loading(tree, scene_path):
 		push_error("JourneyCampaign: could not enter %s" % kingdom_id)
 		return false
 	active_kingdom_id = kingdom_id
@@ -172,7 +180,7 @@ func open_guided_lens_story(scene_tree: SceneTree = null) -> bool:
 
 
 func _change_scene_with_loading(scene_path: String, scene_tree: SceneTree = null) -> bool:
-	if not ResourceLoader.exists(scene_path):
+	if not SceneLoader.can_open(scene_path):
 		push_error("JourneyCampaign: missing scene %s" % scene_path)
 		return false
 	var tree := _scene_tree(scene_tree)
@@ -182,7 +190,7 @@ func _change_scene_with_loading(scene_path: String, scene_tree: SceneTree = null
 
 
 func _change_scene(scene_path: String, scene_tree: SceneTree = null) -> bool:
-	if not ResourceLoader.exists(scene_path):
+	if not SceneLoader.can_open(scene_path):
 		push_error("JourneyCampaign: missing scene %s" % scene_path)
 		return false
 	var tree := _scene_tree(scene_tree)

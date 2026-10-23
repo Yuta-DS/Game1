@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://dy6mw3hrtlagf"]
+[gd_scene load_steps=6 format=3 uid="uid://dy6mw3hrtlagf"]
 
 [ext_resource type="Script" uid="uid://br2as6kqpsaj7" path="res://scripts/credit_section.gd" id="1_etfq1"]
 [ext_resource type="Texture2D" uid="uid://bev35lbg44liq" path="res://assets/Game Start/Opening.png" id="1_pxekp"]
@@ -15,7 +15,6 @@ script = ExtResource("1_etfq1")
 [node name="BG" type="Sprite2D" parent="."]
 position = Vector2(616.427, 361)
 scale = Vector2(0.916031, 0.916031)
-texture = ExtResource("1_pxekp")
 
 [node name="Panel Sprite" type="Sprite2D" parent="."]
 position = Vector2(642.75, 357.625)

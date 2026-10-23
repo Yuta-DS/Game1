@@ -1,7 +1,8 @@
 extends CharacterBody3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
 
-const WALK_SPEED := 6.0
-const RUN_SPEED := 9.5
+const WALK_SPEED := 9.5
+const RUN_SPEED := 14.0
 const JUMP_SPEED := 6.5
 const LOOK_SENSITIVITY := 0.0024
 const ACCELERATION := 28.0
@@ -17,9 +18,11 @@ var idle_animation := &""
 var walk_animation := &""
 var run_animation := &""
 var locomotion_state := "idle"
+var _jump_requires_release := false
 
 
 func _ready() -> void:
+	add_to_group("touch_look")
 	camera_pivot = get_node_or_null("CameraPivot")
 	camera = get_node_or_null("CameraPivot/SpringArm3D/Camera3D")
 	if camera == null:
@@ -31,28 +34,41 @@ func _ready() -> void:
 	floor_snap_length = 0.45
 	floor_max_angle = deg_to_rad(50.0)
 	floor_stop_on_slope = true
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# Space may still be held from entering the painting. Require a fresh press
+	# before the new world's player can jump.
+	_jump_requires_release = Input.is_action_pressed("jump")
+	Input.mouse_mode = TouchDevice.captured_mode()
 
 
 func set_ui_open(open: bool) -> void:
 	ui_open = open
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if open else Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if open else TouchDevice.captured_mode()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and not ui_open and camera_pivot != null:
-		rotate_y(-event.relative.x * LOOK_SENSITIVITY)
-		camera_pivot.rotate_x(-event.relative.y * LOOK_SENSITIVITY)
-		camera_pivot.rotation.x = clampf(camera_pivot.rotation.x, -1.05, 0.75)
+	# Emulated motion is a finger; TouchControls sends look drags to touch_look().
+	if event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION:
+		touch_look(event.relative)
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE and not ui_open:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE \
-			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
+			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else TouchDevice.captured_mode()
+
+
+func touch_look(relative: Vector2) -> void:
+	if ui_open or camera_pivot == null:
+		return
+	rotate_y(-relative.x * LOOK_SENSITIVITY)
+	camera_pivot.rotate_x(-relative.y * LOOK_SENSITIVITY)
+	camera_pivot.rotation.x = clampf(camera_pivot.rotation.x, -1.05, 0.75)
 
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity += get_gravity() * delta
-	if not ui_open and Input.is_action_just_pressed("jump") and is_on_floor():
+	if _jump_requires_release and not Input.is_action_pressed("jump"):
+		_jump_requires_release = false
+	if not ui_open and not _jump_requires_release \
+			and Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = JUMP_SPEED
 
 	var input := Vector2.ZERO if ui_open else Input.get_vector(
@@ -120,14 +136,9 @@ func _update_locomotion(moving_on_floor: bool, running: bool) -> void:
 		locomotion_state = "idle"
 		_play_animation(idle_animation, 1.0)
 		return
-	if running:
-		locomotion_state = "run"
-		_play_animation(run_animation, 1.15)
-	else:
-		locomotion_state = "walk"
-		# The fox pack exposes Run rather than Walk on some imports. Slowing that
-		# clip gives a natural walk without requiring a duplicate animation asset.
-		_play_animation(walk_animation, 0.72 if walk_animation == run_animation else 1.0)
+	# The default pace is a run; Shift sprints.
+	locomotion_state = "sprint" if running else "run"
+	_play_animation(run_animation, 1.5 if running else 1.15)
 
 
 func _play_animation(animation_name: StringName, speed_scale: float) -> void:

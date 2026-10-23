@@ -24,6 +24,12 @@ const REFLECTIONS := [
 	"Milo asks: What did you discover about yourself?",
 ]
 
+## Emitted by Exit when `embedded`; the owner frees the tool and resumes play.
+signal closed
+
+## Set by whoever opens the tool over a running world instead of as a scene.
+var embedded := false
+
 # Link of background
 # https://images.nasa.gov/details/PIA12348
 
@@ -82,6 +88,7 @@ var _creative_summary: Label
 var _creative_styles: VBoxContainer
 var _guide_button: Button
 var _enter_world_button: Button
+var _ritual_button: Button
 var _last_gallery_path := ""
 
 
@@ -122,13 +129,18 @@ func _ready() -> void:
 	save_close_button.pressed.connect(_on_save_close_button_pressed)
 
 	firebase_button.pressed.connect(_on_firebase_button_pressed)
-	# ARTÉA's default journey is private and offline. Facilitators can add a
-	# deliberate export feature later; a child should never reach cloud upload
-	# from the creative flow by accident.
+	# One save button. Signed in, it saves to the player's account as well as
+	# the device (cloud saves, so drawings follow them to any device); only
+	# their own account can ever download them (server.py). Guests' drawings
+	# stay on the device. The old separate upload button stays hidden.
 	firebase_button.visible = false
 	firebase_button.disabled = true
 
 	local_button.pressed.connect(_on_local_button_pressed)
+	# A signed-in player's drawings also go to their account, so they're in
+	# their gallery on any device. Guests' stay on this device only.
+	if _signed_in():
+		local_button.text = "Save to My Account"
 
 	http_request.request_completed.connect(_on_http_request_request_completed)
 
@@ -137,6 +149,33 @@ func _ready() -> void:
 	artgallery.pressed.connect(_on_art_gallery_button_pressed)
 
 	_update_undo_button()
+	if embedded:
+		_configure_embedded()
+
+
+## Opened over the Creator studio: no routes out to the park, the gallery or
+## the frame ritual, only back to the easel (Escape does the same).
+func _configure_embedded() -> void:
+	exit.text = "Back to\nStudio"
+	for button in [artgallery, _enter_world_button, _ritual_button]:
+		if button != null:
+			button.visible = false
+	# Both popups are saved open in the scene. Left up, they hold key focus and
+	# eat the first Escape; their buttons still open them as usual.
+	for popup_path in ["BrushPopUp", "StampPopUp"]:
+		for owner_button in [brush, stamp]:
+			var popup := owner_button.get_node_or_null(popup_path) as Window
+			if popup != null:
+				popup.hide()
+
+
+## True once anything has been drawn (or cleared) since the tool opened.
+func has_drawing() -> bool:
+	return not undo_history.is_empty()
+
+
+func get_artwork_image() -> Image:
+	return _build_artwork_image()
 
 
 func _build_creative_prompt() -> void:
@@ -223,6 +262,7 @@ func _build_ai_companion() -> void:
 	box.add_child(original_button)
 
 	var world_button := Button.new()
+	_ritual_button = world_button
 	world_button.text = "Begin the Gallery Frame Ritual"
 	world_button.pressed.connect(func() -> void:
 		_creative_dialog.hide()
@@ -823,16 +863,17 @@ func _on_http_request_request_completed(result, response_code, headers, body) ->
 
 	if result != HTTPRequest.RESULT_SUCCESS:
 		print("Network error: server unreachable or timeout")
+		show_notification("Saved on this device. Couldn't reach your account; try again later.", false)
 		return
 
-	# For debugging
-	var response_text = body.get_string_from_utf8()
-	print("Server response: ", response_text)
-
 	if response_code == 200:
-		show_notification("Artwork uploaded successfully!", true)
+		show_notification("Saved to your account!", true)
+	elif response_code == 401:
+		# Signed in somewhere newer (or the sign-in expired): the session check
+		# will take the player back to the start screen.
+		show_notification("Saved on this device. Sign in again to save to your account.", false)
 	else:
-		show_notification("Failed to save artwork!", false)
+		show_notification("Saved on this device. Your account couldn't save it this time.", false)
 
 
 func _on_save_close_button_pressed() -> void:
@@ -862,11 +903,17 @@ func _on_local_button_pressed() -> void:
 	_last_gallery_path = save_artwork_to_gallery()
 
 	save_artwork_to_desktop()
+	if _signed_in():
+		upload_artwork_to_server()
 	if not _last_gallery_path.is_empty():
 		_begin_creative_guide(_last_gallery_path)
 
 
 func _on_back_to_hub_button_pressed() -> void:
+	# Opened over a 3D world (the Creator studio easels): close back to it.
+	if embedded:
+		closed.emit()
+		return
 	_return_to_park()
 	
 func _on_art_gallery_button_pressed() -> void:
@@ -889,6 +936,11 @@ func _return_to_campaign() -> void:
 		SceneLoader.change_scene_with_loading(get_tree(), "res://scenes/art_gallery_3d_inprogress.tscn")
 	
 # REMOTE GALLERY - SAVE/UPLOAD TO SERVER
+## True for a real account; guests (and signed-out players) save on the device.
+func _signed_in() -> bool:
+	return APIManager._looks_like_jwt(str(Global.auth_token))
+
+
 func upload_artwork_to_server() -> void:
 	
 	if not Global.has_online_session():

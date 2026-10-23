@@ -21,7 +21,7 @@
 [ext_resource type="Script" uid="uid://eraeiu6qk3vg" path="res://scenes/GalleryManager.gd" id="24_3btdo"]
 [ext_resource type="Script" uid="uid://fggwgtmoslkc" path="res://scripts/gallery_ceremony.gd" id="25_crown"]
 [ext_resource type="Script" uid="uid://hepts2s0eon3" path="res://scripts/gallery_rotunda.gd" id="30_rotunda"]
-[ext_resource type="Script" uid="uid://b6snhxhx7jy2s" path="res://scripts/gallery_piano.gd" id="31_piano"]
+[ext_resource type="Script" uid="uid://bi84vm5ahm72l" path="res://scripts/heart_melody/music_circle_piano.gd" id="31_piano"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_48g0v"]
 panorama = ExtResource("2_dw71r")
@@ -286,6 +286,9 @@ camera_path = NodePath("../Camera3D")
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, -0.980317, 0)
 
 [node name="AnimationPlayer2" type="AnimationPlayer" parent="Player3D/FoxVisuals/Fox" unique_id=1917874391]
+
+[node name="MeshInstance3D" parent="Player3D" index="2"]
+visible = false
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1572356374]
 current = true
@@ -623,6 +626,7 @@ autowrap_mode = 2
 transform = Transform3D(1.52554, 0, 1.29334, 0, 2, 0, -1.29334, 0, 1.52554, 15.061, 0.25, 2.23497)
 script = ExtResource("31_piano")
 camera_path = NodePath("../Camera3D")
+start_in_keyboard_view = true
 
 [connection signal="body_entered" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_01"]]
 [connection signal="body_exited" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_01"]]

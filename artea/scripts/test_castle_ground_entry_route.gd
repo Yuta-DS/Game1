@@ -147,6 +147,16 @@ func _run() -> void:
 			_fail("ground-entry barrier is not a continuous solid wall: %s"
 				% barrier.name)
 			return
+		var inward: Vector3 = barrier.global_basis.x.normalized()
+		if inward.dot(promenade.global_position - barrier.global_position) < 0.0:
+			inward = -inward
+		var probe := player.global_transform
+		probe.origin = barrier.global_position + inward * 1.6 + Vector3.UP * 0.15
+		var hit := KinematicCollision3D.new()
+		if not player.test_move(probe, -inward * 3.0, hit) \
+				or hit.get_collider() != barrier.get_child(0):
+			_fail("player capsule can pass through the visible %s" % barrier.name)
+			return
 	var treads := stair.find_children("StairTread_*", "MeshInstance3D", true, false)
 	treads.sort_custom(func(a, b):
 		return (a as MeshInstance3D).global_position.y < (b as MeshInstance3D).global_position.y)

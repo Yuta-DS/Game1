@@ -1,16 +1,32 @@
 extends Node
 
-const BASE_URL = "http://127.0.0.1:8000"
-const LOGIN_URL = BASE_URL + "/login"
-const REGISTER_URL = BASE_URL + "/register"
+const SceneLoader := preload("res://scripts/scene_loader.gd")
 
-const UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
-const MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
-const CREATIVE_GUIDE_URL = BASE_URL + "/ai/creative-guide"
-const WORLD_BUILDER_URL = BASE_URL + "/ai/world-builder"
-const AI_STATUS_URL = BASE_URL + "/ai/status"
+var BASE_URL: String = _configured_base_url()
+var LOGIN_URL = BASE_URL + "/login"
+var REGISTER_URL = BASE_URL + "/register"
+var ADMIN_RESET_PASSWORD_URL = BASE_URL + "/admin/reset-password"
+var RESET_PASSWORD_WITH_CODE_URL = BASE_URL + "/reset-password-with-code"
+
+var UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
+var MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
+var CREATIVE_GUIDE_URL = BASE_URL + "/ai/creative-guide"
+var WORLD_BUILDER_URL = BASE_URL + "/ai/world-builder"
+var AI_STATUS_URL = BASE_URL + "/ai/status"
 
 var auth_token = ""
+var SESSION_URL = BASE_URL + "/session"
+# One login per account, newest wins (server.py). While signed in the game asks
+# every SESSION_CHECK_SECONDS whether this login is still the account's latest;
+# when it isn't, it signs out and the start screen shows `sign_out_reason`. At
+# 30 s a replaced device kept playing for up to half a minute, which looked like
+# it never signed out; the check is one token check and one database read,
+# cheap at this rate.
+const SESSION_CHECK_SECONDS := 5.0
+const START_SCREEN := "res://scenes/start_screen.tscn"
+var sign_out_reason := ""
+var _watching_session := false
+var _last_session_check := 0
 
 
 func get_base_url() -> String:
@@ -66,6 +82,69 @@ func can_reach_configured_backend() -> bool:
 # =========================
 
 func login(username: String, password: String, callback: Callable):
+	clear_session()
+	var generation := _session_generation
+	_post_account("/login", {"username": username, "password": password}, func(ok, data):
+		if generation != _session_generation: return
+		if ok and data is Dictionary and data.has("token"):
+			_remember_session(data)
+		if callback.is_valid(): callback.call(ok, data)
+	)
+
+func register(username: String, password: String, callback: Callable, email := ""):
+	_post_account("/register", {"username": username, "password": password, "email": email}, callback)
+
+func confirm_account(username: String, code: String, callback: Callable):
+	_post_account("/confirm_registration", {"username": username, "code": code}, callback)
+
+func resend_confirmation(username: String, callback: Callable):
+	_post_account("/resend_confirmation", {"username": username}, callback)
+
+func request_password_reset(username: String, callback: Callable):
+	_post_account("/forgot_password", {"username": username}, callback)
+
+func reset_password(username: String, code: String, password: String, callback: Callable):
+	_post_account("/reset_password", {"username": username, "code": code, "password": password}, callback)
+
+func _remember_session(data: Dictionary) -> void:
+	_session_generation += 1
+	var generation := _session_generation
+	auth_token = str(data.token)
+	if data.has("refresh_token"): _refresh_token = str(data.refresh_token)
+	if Global.auth_token != "OFFLINE_GUEST_TOKEN": Global.auth_token = auth_token
+	_watch_session()
+	if _refresh_token.is_empty(): return
+	_refresh_timer = get_tree().create_timer(maxf(30, float(data.get("expires_in", 3600)) - 120))
+	_refresh_timer.timeout.connect(func():
+		if generation != _session_generation or Global.auth_token == "OFFLINE_GUEST_TOKEN": return
+		_post_account("/refresh", {"refresh_token": _refresh_token}, func(ok, response):
+			if generation != _session_generation or Global.auth_token == "OFFLINE_GUEST_TOKEN": return
+			if ok: _remember_session(response)
+			else: clear_session()
+		)
+	)
+
+func _post_account(path: String, payload: Dictionary, callback: Callable) -> void:
+	var http := HTTPRequest.new()
+	http.timeout = 20
+	add_child(http)
+	http.request_completed.connect(func(result, status, _headers, body):
+		var data = JSON.parse_string(body.get_string_from_utf8())
+		if not data is Dictionary:
+			data = {"error": "Could not reach the account server. Please try again."}
+		if callback.is_valid(): callback.call(result == HTTPRequest.RESULT_SUCCESS and status in [200, 201], data)
+		http.queue_free()
+	)
+	var error := http.request(BASE_URL + path, ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if error != OK:
+		http.queue_free()
+		if callback.is_valid(): callback.call(false, {"error": "Could not connect to the account server."})
+
+# =========================
+# SELF-SERVICE PASSWORD RESET
+# =========================
+
+func reset_password_with_code(username: String, recovery_code: String, new_password: String, callback: Callable) -> void:
 
 	var http = HTTPRequest.new()
 	http.timeout = 20.0
@@ -89,7 +168,8 @@ func login(username: String, password: String, callback: Callable):
 
 	var body_data = {
 		"username": username,
-		"password": password
+		"recovery_code": recovery_code,
+		"new_password": new_password
 	}
 
 	var json_body = JSON.stringify(body_data)
@@ -109,10 +189,10 @@ func login(username: String, password: String, callback: Callable):
 		http.queue_free()
 
 # =========================
-# REGISTER
+# ADMIN PASSWORD RESET
 # =========================
 
-func register(username: String, password: String, callback: Callable):
+func admin_reset_password(admin_key: String, username: String, new_password: String, callback: Callable) -> void:
 
 	var http = HTTPRequest.new()
 	http.timeout = 20.0
@@ -135,8 +215,9 @@ func register(username: String, password: String, callback: Callable):
 	)
 
 	var body_data = {
+		"admin_key": admin_key,
 		"username": username,
-		"password": password
+		"new_password": new_password
 	}
 
 	var json_body = JSON.stringify(body_data)
@@ -318,3 +399,57 @@ func _prepare_ai_artwork(artwork: Image) -> Dictionary:
 		"artwork_base64": Marshalls.raw_to_base64(encoded),
 		"encoded_bytes": encoded.size(),
 	}
+
+func clear_session() -> void:
+	_session_generation += 1
+	_refresh_token = ""
+	auth_token = ""
+	Global.auth_token = ""
+	_watching_session = false
+
+
+func _watch_session() -> void:
+	if uses_managed_accounts():
+		return  # Cognito manages its own sessions
+	# Keeps checking (and its requests running) while the game is paused.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_watching_session = true
+	_last_session_check = Time.get_ticks_msec()
+
+
+# Timed by the clock, not a Timer: a hidden browser tab or a locked phone runs
+# no frames, so a Timer would wait out its whole interval again afterwards. The
+# first frame back is already overdue here, so it checks straight away.
+func _process(_delta: float) -> void:
+	if _watching_session \
+			and Time.get_ticks_msec() - _last_session_check >= SESSION_CHECK_SECONDS * 1000.0:
+		_last_session_check = Time.get_ticks_msec()
+		_check_session()
+
+
+func _check_session() -> void:
+	if not _looks_like_jwt(auth_token):
+		return
+	var generation := _session_generation
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(result, status, _headers, body):
+		http.queue_free()
+		# Offline or the server is down: stay signed in and ask again later.
+		if generation != _session_generation or result != HTTPRequest.RESULT_SUCCESS or status != 401:
+			return
+		var data = JSON.parse_string(body.get_string_from_utf8())
+		var elsewhere: bool = data is Dictionary and data.get("error") == "signed_in_elsewhere"
+		sign_out(
+			"You were signed out because this account signed in on another device."
+			if elsewhere else "Your sign-in has expired. Please sign in again.")
+	)
+	if http.request(SESSION_URL, ["Authorization: Bearer " + auth_token]) != OK:
+		http.queue_free()
+
+
+## Ends this login and returns to the start screen, which shows `reason`.
+func sign_out(reason: String) -> void:
+	clear_session()
+	sign_out_reason = reason
+	SceneLoader.change_scene(get_tree(), START_SCREEN)

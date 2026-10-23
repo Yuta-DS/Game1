@@ -21,7 +21,9 @@ const STATIONS := [
 	# from the platform rim to the island rim is exactly occupied by one centred
 	# ceremonial stair, with its landing overlapping the island by 8 m.
 	{"id": "mind", "title": "MIND SPARK", "subtitle": "PARK EDGE STATION", "position": Vector3(-883.0, ROUTE_HEIGHT, 1640.0), "landing": Vector3(-767.0, 2.0, 1640.0)},
-	{"id": "heart", "title": "HEART MELODY", "subtitle": "EAST FLOATING STATION", "position": Vector3(1700.0, ROUTE_HEIGHT, 7640.0), "landing": Vector3(1500.0, 2.0, 7640.0)},
+	# Heart's track runs east-west, so its landing is 200 m off the north side,
+	# square to the track (not along it, where the train comes in).
+	{"id": "heart", "title": "HEART MELODY", "subtitle": "EAST FLOATING STATION", "position": Vector3(1700.0, ROUTE_HEIGHT, 7640.0), "landing": Vector3(1722.4, 2.0, 7838.7)},
 	{"id": "creator", "title": "CREATOR'S LIGHT", "subtitle": "EAST FLOATING STATION", "position": Vector3(5300.0, ROUTE_HEIGHT, 3940.0), "landing": Vector3(5100.0, 2.0, 3940.0)},
 ]
 
@@ -174,7 +176,7 @@ var _status: Label
 var _rail_material: ShaderMaterial
 var _gold_material: StandardMaterial3D
 var _glass_material: StandardMaterial3D
-var _stone_material: StandardMaterial3D
+var _stone_material: Material
 var _nature_material: StandardMaterial3D
 var _violet_material: StandardMaterial3D
 var _canopy_material: StandardMaterial3D
@@ -370,6 +372,18 @@ func get_route_forward_direction_at_station(station_index: int) -> Vector3:
 		return Vector3.ZERO
 	var curve: Curve3D = _curves[posmod(station_index, _curves.size())]
 	return (curve.sample_baked(2.0) - curve.sample_baked(0.0)).normalized()
+
+
+## The whole looped track as points every `spacing` metres, in this node's
+## space. The minimap draws this instead of straight station-to-station lines.
+func get_track_points(spacing := 60.0) -> PackedVector3Array:
+	var points := PackedVector3Array()
+	for curve in _curves:
+		var length := curve.get_baked_length()
+		var steps := maxi(1, ceili(length / spacing))
+		for step in steps + 1:
+			points.append(curve.sample_baked(length * float(step) / float(steps)))
+	return points
 
 
 func get_route_endpoints() -> PackedVector3Array:
@@ -1244,15 +1258,76 @@ func _add_surface_quad(surface: SurfaceTool, a: Vector3, b: Vector3,
 		surface.add_vertex(vertex)
 
 
+## Each station's colour identity: accent and second colour, then paving
+## light/dark/grout.
+const STATION_PALETTES := {
+	"gallery": ["8a5fe0", "f2b134", "d9c7a5", "c9b48e", "8a7350"],
+	"mind": ["26c6f0", "3fd68a", "a9c6db", "95b5cc", "4a6a80"],
+	"heart": ["f2589e", "f592c0", "e9b6c9", "dba1b7", "9a5f78"],
+	"creator": ["ff8a1f", "ffc43d", "eccf98", "dfbd7f", "9a7646"],
+}
+const StationSurfaceShader := preload("res://shaders/station_surface.gdshader")
+
+var _driver_walk_material: Material
+var _passenger_walk_material: Material
+var _tactile_material: Material
+
+
+func _surface_material(pattern: int, base: Color, alt: Color, line: Color, tile: float,
+		roughness: float = 0.8, metallic: float = 0.0, glow := Color.BLACK,
+		glow_strength := 0.0) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = StationSurfaceShader
+	material.set_shader_parameter("pattern", pattern)
+	material.set_shader_parameter("base_color", base)
+	material.set_shader_parameter("alt_color", alt)
+	material.set_shader_parameter("line_color", line)
+	material.set_shader_parameter("tile_size", tile)
+	material.set_shader_parameter("roughness_value", roughness)
+	material.set_shader_parameter("metallic_value", metallic)
+	material.set_shader_parameter("glow_color", glow)
+	material.set_shader_parameter("glow_strength", glow_strength)
+	return material
+
+
+## Swaps the shared station materials for this station's textured palette.
+func _apply_station_palette(station_id: String) -> void:
+	var palette: Array = STATION_PALETTES[station_id]
+	var accent := Color(palette[0])
+	var second := Color(palette[1])
+	_stone_material = _surface_material(0, Color(palette[2]), Color(palette[3]),
+		Color(palette[4]), 1.2, 0.86)
+	_dark_metal_material = _surface_material(1, accent.darkened(0.72), accent.darkened(0.5),
+		accent.darkened(0.88), 2.0, 0.42, 0.45, accent, 0.6)
+	_violet_material = _material(second, 0.32, second, 1.3)
+	_glass_material = _material(Color(accent, 0.72), 0.20, accent, 1.6, true)
+	_canopy_material = _material(Color(accent, 0.72), 0.3, accent, 0.25, true)
+	_driver_walk_material = _surface_material(0, accent, accent.darkened(0.12),
+		accent.darkened(0.45), 0.9, 0.85)
+	_passenger_walk_material = _surface_material(0, second, second.darkened(0.12),
+		second.darkened(0.45), 0.9, 0.85)
+
+
 func _build_stations() -> void:
 	var stations_root := Node3D.new()
 	stations_root.name = "StoryStations"
 	add_child(stations_root)
+	var shared := [_stone_material, _dark_metal_material, _violet_material,
+		_glass_material, _canopy_material]
+	_tactile_material = _surface_material(2, Color("f5c518"), Color("fff0a0"),
+		Color.BLACK, 1.0, 0.9)
 	for index in STATIONS.size():
 		var info: Dictionary = STATIONS[index]
+		_apply_station_palette(String(info.id))
 		var station := Node3D.new()
 		station.name = "Station_%02d_%s" % [index + 1, info.id]
 		station.position = info.position
+		# Stations are authored with the track along local Z and the access
+		# bridge along local X. A landing off the X axis turns the station so
+		# its local -X points at it (the landing must be square to the track).
+		var to_landing: Vector3 = info.landing - info.position
+		if absf(to_landing.z) > 1.0:
+			station.rotation.y = atan2(to_landing.z, -to_landing.x)
 		stations_root.add_child(station)
 		_station_nodes.append(station)
 		var landing_local: Vector3 = info.landing - info.position
@@ -1281,6 +1356,7 @@ func _build_stations() -> void:
 		label.position = Vector3(0.0, 20.0, 0.0)
 		label.font_size = 46
 		label.outline_size = 10
+		label.modulate = Color(STATION_PALETTES[info.id][0]).lightened(0.3)
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = false
 		station.add_child(label)
@@ -1684,7 +1760,7 @@ func _build_station_platform_from_scratch(station: Node3D,
 	# independent eight-metre platform foundations.
 	var platform := Node3D.new()
 	platform.name = "WalkablePlatform"
-	platform.basis = Basis.looking_at(
+	platform.basis = station.basis.inverse() * Basis.looking_at(
 		get_route_forward_direction_at_station(station_index), Vector3.UP)
 	platform.set_meta("design", "twin_train_fit_platform")
 	platform.set_meta("platform_length_m", 57.0)
@@ -1796,7 +1872,7 @@ func _build_train_fit_boarding_layout(station: Node3D, dock_sign: float,
 	var direction := get_route_forward_direction_at_station(station_index)
 	var layout := Node3D.new()
 	layout.name = "BoardingLane"
-	layout.basis = Basis.looking_at(direction, Vector3.UP)
+	layout.basis = station.basis.inverse() * Basis.looking_at(direction, Vector3.UP)
 	layout.set_meta("aligned_to_train_route", true)
 	layout.set_meta("train_clear_width_m", 12.0)
 	layout.set_meta("train_clear_length_m", 54.0)
@@ -1971,10 +2047,14 @@ func _build_mind_spark_station_upgrade(station: Node3D) -> void:
 	restored_supports.set_meta("centre_supports_removed", true)
 	restored_supports.set_meta("canopy_bearing_connected", true)
 	upgrade.add_child(restored_supports)
+	# Same rule as the pavilion: no column standing on a platform or ramp.
+	var to_route := (station.get_node("WalkablePlatform") as Node3D).transform.affine_inverse()
 	for side in [-1.0, 1.0]:
 		for support_index in ROOF_SUPPORT_Z_POSITIONS.size():
 			var z: float = ROOF_SUPPORT_Z_POSITIONS[support_index]
 			var x := float(side) * 19.0
+			if _in_train_corridor(to_route, Vector3(x, 1.0, z)):
+				continue
 			_add_cylinder(restored_supports,
 				"RestoredLivingColumn_%s_%02d" % [
 					"L" if side < 0 else "R", support_index],
@@ -2277,7 +2357,7 @@ func _update_island_power_effect(delta: float) -> void:
 		return
 	for rotor_index in _island_power_rotors.size():
 		var rotor := _island_power_rotors[rotor_index]
-		if is_instance_valid(rotor):
+		if is_instance_valid(rotor) and _animates_near(rotor):
 			var direction := 1.0 if rotor_index % 2 == 0 else -1.0
 			rotor.rotate_y(delta * direction * (0.22 + float(rotor_index) * 0.045))
 	for light_index in _island_power_lights.size():
@@ -2450,10 +2530,15 @@ func _build_bio_magitech_pavilion(station: Node3D) -> void:
 	supports.set_meta("centre_supports_removed", true)
 	supports.set_meta("canopy_bearing_connected", true)
 	pavilion.add_child(supports)
+	# Where the track crosses the station at an angle a column can land on a
+	# platform or the overpass ramp foot, where the player walked through it.
+	var to_route := (station.get_node("WalkablePlatform") as Node3D).transform.affine_inverse()
 	for side in [-1.0, 1.0]:
 		for support_index in ROOF_SUPPORT_Z_POSITIONS.size():
 			var z: float = ROOF_SUPPORT_Z_POSITIONS[support_index]
 			var x := float(side) * 19.0
+			if _in_train_corridor(to_route, Vector3(x, 1.0, z)):
+				continue
 			_add_cylinder(supports, "LivingColumn_%s_%02d" % ["L" if side < 0 else "R", support_index],
 				Vector3(x, 5.2, z), 0.75, 10.4, _piltover_teal_material, true, 8)
 			_add_cylinder(supports, "EngineeringCollar_%s_%02d" % ["L" if side < 0 else "R", support_index],
@@ -2982,10 +3067,7 @@ func _build_platform_guardrails(station: Node3D, route_basis: Basis,
 			Vector3(inner_x, 0.0, PLATFORM_FRONT_Z),
 			Vector3(outer_x, 0.0, PLATFORM_FRONT_Z),
 			"stops players walking beyond the front of the platform")
-		_add_purpose_barrier_segment(guard, "RearPlatformEndStop",
-			Vector3(inner_x, 0.0, PLATFORM_REAR_Z),
-			Vector3(outer_x, 0.0, PLATFORM_REAR_Z),
-			"stops players walking beyond the rear of the platform")
+		# The rear end stays open: it is the foot of the track overpass ramp.
 
 		# One slim post per coordinate connects every window. Long sections receive
 		# intermediate supports at no more than 6.5 m spacing, while adjoining
@@ -4318,3 +4400,13 @@ func _material(color: Color, roughness: float, emission: Color = Color.BLACK,
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return material
+
+
+func _build_heart_melody_entrance() -> void:
+	if _player == null:
+		return
+	var connection := Node3D.new()
+	connection.name = "HeartMelodyConnection"
+	connection.set_script(load("res://scripts/heart_melody/heart_overworld_connection.gd"))
+	connection.set("player", _player)
+	add_child(connection)

@@ -62,7 +62,8 @@ does not erase registered accounts, only deleting `database.db` does.
 
 The API listens on port 80 by default. In production it runs via the
 `flaskapp.service` systemd unit (`sudo systemctl restart flaskapp`
-after code changes).
+after code changes), behind nginx on one EC2 server: see
+`server/ec2/README.md`.
 
 Port 80 needs root, so on a dev machine override it:
 

@@ -69,7 +69,6 @@ func _run() -> void:
 		return
 
 	var routes := {
-		"mind": regions.call("get_story_route", "mind"),
 		"heart": regions.call("get_story_route", "heart"),
 		"creator": regions.call("get_story_route", "creator"),
 	}

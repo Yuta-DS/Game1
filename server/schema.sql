@@ -1,7 +1,8 @@
 CREATE TABLE user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(80) UNIQUE NOT NULL,
-    password_hash BLOB NOT NULL
+    password_hash BLOB NOT NULL,
+    recovery_code_hash BLOB
 );
 
 CREATE TABLE artwork (

@@ -26,6 +26,13 @@ extends RefCounted
 ## calling scripts from compiling there.
 
 const LOADING_SCENE = "res://scenes/loading_scene.tscn"
+# Written into Web builds by tools/export-web-packs.sh: which entry scenes live
+# in which area Pack. Desktop builds and the editor have no file and no Packs.
+const PACK_MANIFEST := "res://packs.json"
+# Above every HUD layer (the highest is 100) so the incoming scene's minimap
+# and inventory icons can't draw over the loading screen before it is ready,
+# and below the failure message (128).
+const LOADING_LAYER := 120
 const FAILURE_MESSAGE_SECONDS := 8.0
 const FAILURE_GROUP := "scene_switch_failed"
 
@@ -33,6 +40,10 @@ const FAILURE_GROUP := "scene_switch_failed"
 static func change_scene(tree: SceneTree, scene_path: String) -> bool:
 	if tree == null:
 		return false
+	# A scene whose Pack has not been fetched yet needs the loading screen to
+	# download it, however light the scene itself is.
+	if not packs_needed(scene_path).is_empty():
+		return change_scene_with_loading(tree, scene_path)
 	if not ResourceLoader.exists(scene_path):
 		if OS.has_feature("web") and not _web_content_mounted():
 			return change_scene_with_loading(tree, scene_path)
@@ -60,7 +71,12 @@ static func change_scene_with_loading(tree: SceneTree, scene_path: String) -> bo
 		return change_scene(tree, scene_path)
 	var loading_screen := packed.instantiate()
 	loading_screen.next_scene_path = scene_path
-	tree.root.add_child(loading_screen)
+	var layer := CanvasLayer.new()
+	layer.name = "LoadingLayer"
+	layer.layer = LOADING_LAYER
+	layer.add_child(loading_screen)
+	loading_screen.tree_exited.connect(layer.queue_free)
+	tree.root.add_child(layer)
 	# The loading screen lives under root, so freeing the outgoing scene here
 	# leaves it on screen driving the threaded load.
 	if tree.current_scene != null:

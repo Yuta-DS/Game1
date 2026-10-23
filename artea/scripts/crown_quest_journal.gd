@@ -1,5 +1,12 @@
 class_name CrownQuestJournal
 extends Control
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+
+## Phones and tablets zoom the journal until its 16 px body text reads at this
+## many screen pixels, as long as the layout keeps at least TOUCH_MIN_WIDTH
+## units to reflow into.
+const TOUCH_TEXT_PX := 14.0
+const TOUCH_MIN_WIDTH := 760.0
 
 const SceneLoader := preload("res://scripts/scene_loader.gd")
 
@@ -16,6 +23,16 @@ const MINT := Color("#9ef0c8")
 const TEXT := Color("#f5f7ff")
 const MUTED := Color("#c3cce4")
 
+## Emitted when the journal is an overlay (see `overlay`) and the player asks
+## to go back to the Art Gallery. The host teleports the player; the journal
+## closes itself either way.
+signal return_to_gallery_requested
+signal closed
+
+## True when the journal floats over the gallery instead of being its own
+## scene: Back then teleports instead of reloading the castle, and Esc closes.
+var overlay := false
+
 var _catalog: Dictionary = {}
 var _tracker: Variant = null
 var _journey_state: Variant = null
@@ -27,6 +44,7 @@ var _objective_title: Label
 var _objective_body: Label
 var _card_container: VBoxContainer
 var _back_button: Button
+var _close_button: Button
 var _arc_statuses: Dictionary = {}
 
 
@@ -57,6 +75,22 @@ func _ready() -> void:
 	_build_shell()
 	_render_story()
 	_back_button.grab_focus()
+	if TouchDevice.is_touch_device():
+		_zoom_for_touch.call_deferred()
+		get_viewport().size_changed.connect(_zoom_for_touch)
+
+
+# The journal is laid out for a desktop-sized screen, which a phone draws at a
+# third of the size. Laying it out in a smaller area and scaling that up to fill
+# the screen works like browser zoom: everything grows and still reflows.
+func _zoom_for_touch() -> void:
+	var screen := get_viewport().get_visible_rect().size
+	var legible := TOUCH_TEXT_PX / (16.0 * TouchDevice.css_pixels_per_unit(get_viewport()))
+	var zoom := clampf(legible, 1.0, maxf(screen.x / TOUCH_MIN_WIDTH, 1.0))
+	set_anchors_preset(Control.PRESET_TOP_LEFT)
+	position = Vector2.ZERO
+	size = screen / zoom
+	scale = Vector2(zoom, zoom)
 
 
 func _draw() -> void:
@@ -101,8 +135,8 @@ func _build_shell() -> void:
 	breadcrumb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	utility.add_child(breadcrumb)
 	_back_button = Button.new()
-	_back_button.text = "← Back to Art Castle"
-	_back_button.tooltip_text = "Return to the central ARTÉA Castle galaxy"
+	_back_button.text = "← Return to the Art Gallery"
+	_back_button.tooltip_text = "Go back to the Art Gallery"
 	_back_button.focus_mode = Control.FOCUS_ALL
 	_back_button.add_theme_font_size_override("font_size", 16)
 	_back_button.add_theme_color_override("font_color", INK)
@@ -113,6 +147,17 @@ func _build_shell() -> void:
 	_back_button.add_theme_stylebox_override("focus", _panel_style(CYAN, 10, 3))
 	_back_button.pressed.connect(_on_back_pressed)
 	utility.add_child(_back_button)
+	_close_button = Button.new()
+	_close_button.text = "Close  [Esc]"
+	_close_button.tooltip_text = "Close the journal"
+	_close_button.focus_mode = Control.FOCUS_ALL
+	_close_button.add_theme_font_size_override("font_size", 16)
+	_close_button.add_theme_color_override("font_color", TEXT)
+	_close_button.add_theme_stylebox_override("normal", _panel_style(DEEP_SPACE, 10, 2, CYAN))
+	_close_button.add_theme_stylebox_override("hover", _panel_style(GLASS, 10, 2, CYAN))
+	_close_button.add_theme_stylebox_override("focus", _panel_style(GLASS, 10, 3, STAR_GOLD))
+	_close_button.pressed.connect(close)
+	utility.add_child(_close_button)
 
 	var header := PanelContainer.new()
 	header.add_theme_stylebox_override("panel", _panel_style(DEEP_SPACE, 18, 2, CYAN))
@@ -346,11 +391,38 @@ func _resolve_audience_mode(requested: String) -> String:
 	return "faith"
 
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close()
+
+
+## Esc / Close. As an overlay this just hides the journal; as its own scene
+## there is nothing underneath, so it goes back to the castle.
+func close() -> void:
+	if not overlay:
+		_on_back_pressed()
+		return
+	closed.emit()
+	queue_free()
+
+
+## Greys out the return button, e.g. while the player is seated on a train.
+func set_return_available(available: bool, reason := "") -> void:
+	_back_button.disabled = not available
+	_back_button.tooltip_text = "Go back to the Art Gallery" if available else reason
+
+
 func _on_back_pressed() -> bool:
+	if overlay:
+		return_to_gallery_requested.emit()
+		closed.emit()
+		queue_free()
+		return true
 	if _campaign != null and _campaign.has_method("return_to_campaign"):
 		if bool(_campaign.call("return_to_campaign")):
 			return true
-	if ResourceLoader.exists(CASTLE_SCENE) and get_tree() != null:
+	if SceneLoader.can_open(CASTLE_SCENE) and get_tree() != null:
 		return SceneLoader.change_scene_with_loading(get_tree(), CASTLE_SCENE)
 	return false
 

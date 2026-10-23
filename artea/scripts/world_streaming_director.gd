@@ -107,6 +107,20 @@ const CHECK_INTERVAL_FRAMES := 4
 ## small detail underfoot is never culled by the size rule.
 const ALWAYS_VISIBLE_RADIUS := 140.0
 
+## Landscape: a single mesh this big (world radius, m) is always drawn, so the
+## islands, platforms, bridges and big trees stay on the horizon from anywhere
+## in the world; only the detail on them comes and goes with distance. Without
+## this, a landscape piece shared a cell with hundreds of small props and went
+## with them - CentralSanctuary's 311 m foundation vanished past 305 m. At 40 m
+## the always-drawn set is about 1,050 meshes and 0.6 M triangles; at 25 m it
+## would be 1.6 M triangles for pieces mostly too small to read from afar.
+const LANDSCAPE_RADIUS := 40.0
+
+## A node in this group is never managed: it and everything under it is drawn
+## at any distance. For a landmark whose small parts are the point of it, such
+## as the Tree of Imagination's leaves and ornaments.
+const ALWAYS_DRAWN_GROUP := &"streaming_always_drawn"
+
 
 class Cell:
 	var roots: Array[Node3D] = []
@@ -122,10 +136,14 @@ class Cell:
 	var probe_cursor := 0
 	var view_distance := 0.0
 	var shown := true
-	## Cells that are only text - the world's signposts. They are one draw call
-	## each and are meant to be legible from across the world, so they are never
+	## Cells that are only text - the world's signposts - or only landscape.
+	## They are meant to be seen from across the world, so they are never
 	## culled by distance.
 	var pinned := false
+	## A cell mixing landscape and detail keeps its roots shown and hides just
+	## these, its smaller meshes. Empty for a cell with no landscape in it,
+	## which hides its roots whole as before.
+	var details: Array[VisualInstance3D] = []
 
 
 var world_root: Node3D
@@ -206,7 +224,7 @@ func _build_cells() -> void:
 func _split(node: Node3D, depth: int) -> void:
 	# A node the world builder deliberately hid stays hidden: this manages
 	# visibility, it does not overrule decisions already made about it.
-	if not node.visible:
+	if not node.visible or node.is_in_group(ALWAYS_DRAWN_GROUP):
 		return
 	var count := _visual_count(node)
 	if count == 0:
@@ -224,7 +242,7 @@ func _split(node: Node3D, depth: int) -> void:
 		if not (child is Node3D) or child == self:
 			continue
 		var child_node := child as Node3D
-		if not child_node.visible:
+		if not child_node.visible or child_node.is_in_group(ALWAYS_DRAWN_GROUP):
 			continue
 		var child_count := _visual_count(child_node)
 		if child_count == 0:
@@ -248,6 +266,9 @@ func _add_cell(roots: Array) -> void:
 	var first := true
 	var all_labels := true
 	var object_radii: Array[float] = []
+	var detail_radii: Array[float] = []
+	var details: Array[VisualInstance3D] = []
+	var has_landscape := false
 	for root_node in roots:
 		var root := root_node as Node3D
 		if root == null:
@@ -261,6 +282,7 @@ func _add_cell(roots: Array) -> void:
 		if all_labels and not _only_labels(root):
 			all_labels = false
 		_collect_object_radii(root, object_radii)
+		has_landscape = _collect_details(root, details, detail_radii) or has_landscape
 		var in_world: AABB = root.global_transform * local
 		if first:
 			world_aabb = in_world
@@ -270,7 +292,11 @@ func _add_cell(roots: Array) -> void:
 	if cell.roots.is_empty():
 		return
 	cell.cached_world_aabb = world_aabb
-	cell.pinned = all_labels
+	cell.pinned = all_labels or (has_landscape and details.is_empty())
+	if has_landscape:
+		# The landscape stays; how far the rest is seen depends on the rest.
+		cell.details = details
+		object_radii = detail_radii
 	cell.view_distance = clampf(_percentile(object_radii, OBJECT_RADIUS_PERCENTILE) * SIZE_FACTOR,
 		MIN_VIEW_DISTANCE, MAX_VIEW_DISTANCE)
 	_cells.append(cell)
@@ -289,19 +315,55 @@ func _collect_object_radii(root: Node3D, into: Array[float]) -> void:
 		if not (node is VisualInstance3D) or node is Light3D:
 			continue
 		var visual := node as VisualInstance3D
+		if visual.visible:
+			into.append(_object_radius(visual))
+
+
+## The visible meshes under `root` smaller than LANDSCAPE_RADIUS, and their
+## radii. Returns whether any mesh under it is landscape.
+func _collect_details(root: Node3D, into: Array[VisualInstance3D], radii: Array[float]) -> bool:
+	var landscape: Array[Node3D] = []
+	var details: Array[VisualInstance3D] = []
+	var detail_radii: Array[float] = []
+	var stack: Array = [root]
+	while stack.size() > 0:
+		var node: Node = stack.pop_back()
+		# Drawn at any distance: it counts as landscape, so the cell holding it
+		# is never hidden whole, and nothing under it is detail.
+		if node.is_in_group(ALWAYS_DRAWN_GROUP):
+			landscape.append(node as Node3D)
+			continue
+		for child in node.get_children():
+			stack.append(child)
+		if not (node is VisualInstance3D) or node is Light3D:
+			continue
+		var visual := node as VisualInstance3D
 		if not visual.visible:
 			continue
-		var local_aabb := visual.get_aabb()
-		if node is MultiMeshInstance3D:
-			var multi := (node as MultiMeshInstance3D).multimesh
-			if multi != null and multi.mesh != null:
-				local_aabb = multi.mesh.get_aabb()
-		var scale := visual.global_transform.basis.get_scale()
-		var sized := Vector3(
-			local_aabb.size.x * scale.x,
-			local_aabb.size.y * scale.y,
-			local_aabb.size.z * scale.z)
-		into.append(sized.length() * 0.5)
+		var radius := _object_radius(visual)
+		if radius >= LANDSCAPE_RADIUS and not (node is Label3D):
+			landscape.append(visual)
+		else:
+			details.append(visual)
+			detail_radii.append(radius)
+	# A small mesh with landscape parented under it stays too: hiding it would
+	# hide the landscape with it.
+	for index in details.size():
+		if not landscape.any(func(big: Node3D) -> bool: return details[index].is_ancestor_of(big)):
+			into.append(details[index])
+			radii.append(detail_radii[index])
+	return not landscape.is_empty()
+
+
+func _object_radius(visual: VisualInstance3D) -> float:
+	var local_aabb := visual.get_aabb()
+	if visual is MultiMeshInstance3D:
+		var multi := (visual as MultiMeshInstance3D).multimesh
+		if multi != null and multi.mesh != null:
+			local_aabb = multi.mesh.get_aabb()
+	var scale := visual.global_transform.basis.get_scale()
+	return Vector3(local_aabb.size.x * scale.x, local_aabb.size.y * scale.y,
+		local_aabb.size.z * scale.z).length() * 0.5
 
 
 func _percentile(values: Array[float], fraction: float) -> float:
@@ -464,6 +526,11 @@ func _apply(force: bool) -> void:
 
 func _set_cell_visible(cell: Cell, value: bool) -> void:
 	cell.shown = value
+	if not cell.details.is_empty():
+		for detail in cell.details:
+			if is_instance_valid(detail):
+				detail.visible = value
+		return
 	for index in cell.roots.size():
 		var root := cell.roots[index]
 		if is_instance_valid(root):

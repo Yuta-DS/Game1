@@ -9,6 +9,11 @@ signal collected(collectible_id: String)
 @onready var visual: Node3D = $Visual
 @onready var label: Label3D = $Label
 
+# Its _process only animates it: art_castle_floating_world.gd pauses it away
+# from the player.
+func _init() -> void:
+	add_to_group(&"animate_near_player")
+
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)

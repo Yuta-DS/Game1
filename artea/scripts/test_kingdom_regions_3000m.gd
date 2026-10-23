@@ -18,44 +18,50 @@ func _run() -> void:
 	regions.set_script(load("res://scripts/art_castle_kingdom_regions.gd"))
 	world.add_child(regions)
 	await process_frame
-	for kingdom_id in ["mind", "heart", "creator"]:
-		if regions.call("get_kingdom_size", kingdom_id) != Vector2(3000, 3000):
-			_fail("%s is not exactly 3000m x 3000m" % kingdom_id)
+	# Heart and Creator are one fountain-island-sized platform each, holding the
+	# station's access-bridge landing.
+	for kingdom_id in ["heart", "creator"]:
+		var platform := regions.get_node_or_null("%sKingdomPlatform" % kingdom_id.to_pascal_case()) as Node3D
+		if platform == null or platform.get_node_or_null("WalkableDeck") == null:
+			_fail("missing %s station platform" % kingdom_id)
 			return
-		var kingdom := regions.get_node_or_null("%sKingdom3000m" % kingdom_id.to_pascal_case())
-		if kingdom == null:
-			_fail("missing %s region" % kingdom_id)
+		if regions.get_node_or_null("%sKingdom3000m" % kingdom_id.to_pascal_case()) != null:
+			_fail("%s still builds the 3 km grey kingdom" % kingdom_id)
 			return
-		if kingdom.get_node_or_null("ExplorationBoundary3000m") == null:
-			_fail("%s has no explicit 3 km exploration boundary" % kingdom_id)
+		var landing: Vector3 = (regions.call("get_story_route", kingdom_id) as Array)[0].position
+		var deck := platform.get_node("WalkableDeck") as Node3D
+		if Vector2(landing.x, landing.z).distance_to(Vector2(deck.position.x, deck.position.z)) \
+				> regions.call("get_kingdom_size", kingdom_id).x * 0.5 - 5.0:
+			_fail("%s access-bridge landing is not on its platform" % kingdom_id)
 			return
-		if kingdom.get_node_or_null("ConnectedStoryPath") == null:
-			_fail("%s has no connected story path" % kingdom_id)
-			return
-		var route: Array = regions.call("get_story_route", kingdom_id)
-		if route.size() != 8:
-			_fail("%s needs eight story chapters, got %d" % [kingdom_id, route.size()])
-			return
-		for index in route.size():
-			var checkpoint_name := "StoryCheckpoint_%02d_%s" % [index + 1, route[index].id]
-			if kingdom.get_node_or_null(checkpoint_name) == null:
-				_fail("%s is missing %s" % [kingdom_id, checkpoint_name])
-				return
+	# Mind's old unreachable 3 km region was removed; Mind Spark is World One.
+	if regions.get_node_or_null("MindKingdom3000m") != null:
+		_fail("the removed Mind 3 km region is back")
+		return
+	if (regions.call("get_story_route", "mind") as Array).size() != 0:
+		_fail("Mind still has story checkpoints in the removed region")
+		return
+	# A fall near World One must recover onto the Mind district island (centre
+	# (-600, 1640), radius 175; the Mind station stair lands on its rim), not
+	# into the void where the region stood.
+	var respawn: Vector3 = regions.call("get_safe_respawn", Vector3(-3000, -130, 1260))
+	if Vector2(respawn.x, respawn.z).distance_to(Vector2(-600, 1640)) > 175.0:
+		_fail("a fall near World One recovers off the Mind district: %s" % respawn)
+		return
 	var centers: Dictionary = regions.call("get_kingdom_centers")
-	if centers.mind.distance_to(centers.heart) < 3000 \
-			or centers.heart.distance_to(centers.creator) < 3000:
-		_fail("kingdom footprints overlap instead of being distinct 3 km worlds")
+	if centers.has("mind") or centers.heart.distance_to(centers.creator) < 3000:
+		_fail("kingdom footprints overlap or the removed Mind region is still reported")
 		return
 	# The gallery connection is at z=820; all large kingdom centres must now be
 	# on its opposite-facing side (+Z), with the furthest world clearly beyond it.
-	for kingdom_id in ["mind", "heart", "creator"]:
+	for kingdom_id in ["heart", "creator"]:
 		if float(centers[kingdom_id].z) <= 820.0:
 			_fail("%s was not mirrored to the gallery-facing side" % kingdom_id)
 			return
-		var nearest_edge_z := float(centers[kingdom_id].z) - 1500.0
+		var nearest_edge_z: float = float(centers[kingdom_id].z) - regions.call("get_kingdom_size", kingdom_id).y * 0.5
 		if nearest_edge_z - 820.0 < 1500.0:
 			_fail("%s edge is still too close to the Art Castle entrance: %.1fm clearance"
 				% [kingdom_id, nearest_edge_z - 820.0])
 			return
-	print("KINGDOM_REGIONS_3000M_TEST: PASS — three 3 km worlds, 24 story checkpoints, distinct regions")
+	print("KINGDOM_REGIONS_3000M_TEST: PASS — Heart and Creator station platforms, distinct regions, old Mind region gone and Mind falls recover on the Mind district")
 	quit()

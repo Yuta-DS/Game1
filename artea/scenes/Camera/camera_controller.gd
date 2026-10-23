@@ -4,6 +4,8 @@
 # poles, where looking exactly straight up or down leaves the arm's basis
 # degenerate and the view snaps.
 extends SpringArm3D
+const TouchDevice := preload("res://scripts/touch_controls.gd")
+const AutoFollow := preload("res://scripts/camera_auto_follow.gd")
 
 # Looked up by path in the hub, but this scene is also instanced in worlds
 # whose root is not HubWorld. Resolved defensively so the camera never hard
@@ -26,7 +28,10 @@ extends SpringArm3D
 var _pointer_capture_ready := false
 var _web_orbit_dragging := false
 
+var _follow := AutoFollow.new()
+
 func _ready() -> void:
+	add_to_group("touch_look")
 	# Nested PackedScene transform overrides have been lost on some imports of
 	# NewPlayer.tscn. Establish the gameplay pose here so the spring arm always
 	# begins above the character instead of intersecting the terrain.
@@ -95,8 +100,29 @@ func _input(event: InputEvent) -> void:
 			or (OS.has_feature("web") and _web_orbit_dragging)):
 		rotateFromVector(event.relative * mouseAcceleration)
 
+
+# Look drag from the on-screen touch controls (scripts/touch_controls.gd).
+func touch_look(relative: Vector2) -> void:
+	if player != null and "interacting" in player and player.interacting:
+		return
+	rotateFromVector(relative * mouseAcceleration)
+
+func _process(delta: float) -> void:
+	if player is CharacterBody3D and not ("interacting" in player and player.interacting):
+		# The arm hangs off the player, so its local yaw is offset from the
+		# world yaw by whatever the player body itself is turned.
+		var body_yaw := global_rotation.y - rotation.y
+		rotation.y = _follow.step(delta, global_rotation.y, player.velocity) - body_yaw
+
+
+## The yaw movement should be relative to (see camera_auto_follow.gd).
+func movement_yaw() -> float:
+	return _follow.control_yaw if _follow.latched else global_rotation.y
+
+
 func rotateFromVector(v: Vector2):
 	if v.length() == 0: return
+	_follow.looked()
 	# Wrapped rather than accumulated: yaw turns through a full circle in
 	# both directions without drifting into large float values over a session.
 	rotation.y = wrapf(rotation.y - v.x, -PI, PI)
