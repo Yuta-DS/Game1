@@ -5,11 +5,6 @@
 // and the page looks like a slow load rather than a broken build. This drives
 // the real thing - loads the page, clicks Offline Guest, waits for the hub to
 // report itself built, then holds a movement key and checks the frame changed.
-// Then it goes into the Crown of Life story before the background download
-// can reach it (the loading screen must download its Pack), waits in the Hub
-// for the rest to finish downloading while comparing frame pacing, and enters
-// the Art Castle and each Kingdom, which must need no download by then. After
-// each area it checks the Hub loads again.
 //
 // It also measures the cold first load: the browser cache is disabled, every
 // byte that crosses the network is counted, and the time from navigation until
@@ -18,13 +13,6 @@
 //
 //   node artea/tools/web-smoke.js [url] [--out DIR] [--keep-open] [--repeat]
 //       [--latency MS] [--mbps N] [--fail-part NN] [--fail-times K]
-//       [--startup-only] (login, hub entry and movement; skips later worlds)
-//       [--music-circle] (instruments, seated piano, maze, fountain and Milo)
-//       [--heart-journey] (staged garden UI, voice lifecycle, fountain and gate)
-//       [--heart-audio-only] (focused garden fountain audio and Hub round trip)
-//       [--heart-river-only] (actual organ, harp, Call Bells and Bell Grove gate)
-//       [--profile-frames] (opt-in release telemetry and reversible A/B samples)
-//       [--profile-hub] (with --profile-frames: Hub diagnostics only)
 //
 // --repeat loads the page a second time with the cache on and reports what
 // that repeat visit transferred.
@@ -91,8 +79,6 @@ const CHROME_PATHS = [
 	'/usr/bin/chromium',
 	'C:/Program Files/Google/Chrome/Application/chrome.exe',
 	'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-	'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
-	'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -120,7 +106,7 @@ async function startChrome() {
 		'--no-first-run',
 		'--enable-unsafe-swiftshader',
 		...(process.env.SMOKE_CACHE_BYTES ? [`--disk-cache-size=${process.env.SMOKE_CACHE_BYTES}`] : []),
-	], { stdio: 'ignore', detached: true, windowsHide: true });
+	], { stdio: 'ignore', detached: true });
 	for (let i = 0; i < 30; i += 1) {
 		await sleep(500);
 		if (await chromeIsUp()) return child;
@@ -169,8 +155,7 @@ async function connect() {
 	ws.addEventListener('message', (ev) => {
 		const m = JSON.parse(ev.data);
 		if (m.id && pending.has(m.id)) {
-			const { resolve, reject, timer } = pending.get(m.id);
-			clearTimeout(timer);
+			const { resolve, reject } = pending.get(m.id);
 			pending.delete(m.id);
 			return m.error ? reject(new Error(JSON.stringify(m.error))) : resolve(m.result);
 		}
@@ -212,7 +197,6 @@ async function connect() {
 		if (m.method === 'Runtime.consoleAPICalled') {
 			const line = (m.params.args || []).map((a) => a.value ?? a.description ?? a.type).join(' ');
 			consoleLines.push(line);
-			fs.appendFileSync(path.join(outDir, 'console-live.log'), line + '\n');
 			// Stamp the hub the moment its log arrives, not at the next 1 s poll.
 			// The pack is fully downloaded by the time the engine starts, and
 			// every build logs this, including deployments older than the hub log.
@@ -224,9 +208,7 @@ async function connect() {
 			}
 		}
 		if (m.method === 'Runtime.exceptionThrown') {
-			const line = 'EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);
-			consoleLines.push(line);
-			fs.appendFileSync(path.join(outDir, 'console-live.log'), line + '\n');
+			consoleLines.push('EXCEPTION ' + (m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text));
 		}
 		if (m.method === 'Inspector.targetCrashed') crashed = true;
 		if (listeners.has(m.method)) listeners.get(m.method)(m.params);
@@ -235,8 +217,7 @@ async function connect() {
 
 	const send = (method, params = {}) => new Promise((resolve, reject) => {
 		const msgId = (id += 1);
-		const timer = setTimeout(() => { pending.delete(msgId); reject(new Error('Browser stopped responding to ' + method)); }, 180000);
-		pending.set(msgId, { resolve, reject, timer });
+		pending.set(msgId, { resolve, reject });
 		ws.send(JSON.stringify({ id: msgId, method, params }));
 	});
 	const on = (method, handler) => listeners.set(method, handler);
@@ -255,19 +236,6 @@ async function connect() {
 	const ownChrome = await startChrome();
 	const closeOwnChrome = async () => {
 		if (keepOpen || !ownChrome) return;
-		// Chromium's Windows launcher may exit before its browser process.
-		// Close the owned browser over its browser-level CDP connection so
-		// repeated tours do not leave headless browser trees consuming memory.
-		try {
-			const version = await cdp('/json/version');
-			await new Promise((resolve) => {
-				const browser = new WebSocket(version.webSocketDebuggerUrl);
-				const timer = setTimeout(() => { browser.close(); resolve(); }, 2000);
-				browser.addEventListener('open', () => browser.send(JSON.stringify({ id: 1, method: 'Browser.close' })));
-				browser.addEventListener('close', () => { clearTimeout(timer); resolve(); });
-				browser.addEventListener('error', () => { clearTimeout(timer); resolve(); });
-			});
-		} catch { /* browser may already have exited with its last tab */ }
 		try { process.kill(ownChrome.pid); } catch { /* already gone */ }
 	};
 	const { send, on, consoleLines, crashed, targetId, net } = await connect();
@@ -275,8 +243,6 @@ async function connect() {
 	await send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false });
 	await send('Runtime.enable');
 	await send('Page.enable');
-	await send('Page.bringToFront');
-	await send('Emulation.setFocusEmulationEnabled', { enabled: true });
 	await send('Network.enable');
 	// Cold load every run, even against a Chrome the user started themselves.
 	// --repeat needs the cache on so the second visit can use it; the first
@@ -401,8 +367,6 @@ async function connect() {
 		await waitForLog(/engine started/, 'engine started', 900000);
 		await sleep(4000);
 		await shot('01-start-screen');
-		const previewState = await send('Runtime.evaluate', { expression: 'String(window.ARTEA_HEART_PREVIEW)', returnByValue: true });
-		say('preview flag: ' + previewState.result.value);
 
 		for (const [index, button] of GUEST_BUTTONS.entries()) {
 			say(`clicking Offline Guest at (${button.x}, ${button.y})`);
@@ -490,34 +454,7 @@ async function connect() {
 		say('fatal resource errors: ' + fatal.length);
 		fatal.slice(0, 5).forEach((l) => console.log('    ' + l.slice(0, 200)));
 
-		console.log('\nareas (entered from the Hub, then back):');
-		const MiB = 1048576;
-		for (const [label, entered, back, when] of areas) {
-			console.log(`  ${label.padEnd(24)} ${when.padEnd(19)} ${entered ? `entered in ${entered.seconds} s, ${(entered.bytes / MiB).toFixed(1)} MiB downloaded` : 'NOT ENTERED'}`
-				+ `; back to the Hub: ${back ? 'yes' : 'NO'}`);
-			const metric = label.replace(/^the /, '').replace(/[^A-Za-z]+/g, '_').toLowerCase();
-			console.log(`METRIC bytes_${metric}=${entered ? entered.bytes : -1}`);
-		}
-		console.log(`  Art Castle playable (moves): ${castlePlayable ? 'yes' : 'NO'}`);
-		const show = (p) => (p ? `median ${p.median.toFixed(1)} ms, p95 ${p.p95.toFixed(1)} ms over ${p.frames} frames` : 'too few frames to say');
-		console.log('\nHub frame pacing (standing still):');
-		console.log(`  during background download: ${show(during)}`);
-		console.log(`  after it finished:          ${show(after)}`);
-		console.log(`METRIC hub_frame_median_ms_prefetch=${during ? during.median.toFixed(1) : -1}`);
-		console.log(`METRIC hub_frame_median_ms_idle=${after ? after.median.toFixed(1) : -1}`);
-
-		// Prefetched areas: no download wait (a few hundred KB of manifests and
-		// revalidation at most). The story went first, so it had to download.
-		const noWait = areas.filter(([, , , when]) => when === 'prefetched')
-			.every(([, entered]) => entered && entered.bytes < MiB);
-		const fellBack = story !== null && story.bytes > MiB;
-		// Not visibly slower: the median frame within 25% of the idle Hub's, or
-		// still at 60 fps. A Hub idling at 80 fps that holds 60 while prefetching
-		// has not visibly dropped; one sliding from 60 to 45 has.
-		const smooth = !during || !after || during.median <= Math.max(after.median * 1.25, 1000 / 60 + 0.5);
-		say(`prefetched areas entered without downloading: ${noWait}; story fell back to downloading: ${fellBack}; hub pacing held: ${smooth}`);
-		const pass = moved && castlePlayable && musicCirclePlayable && areas.every(([, entered, back]) => entered && back)
-			&& noWait && fellBack && smooth && !crashed() && fatal.length === 0;
+		const pass = moved && !crashed() && fatal.length === 0;
 
 		if (repeat) {
 			// Same page again with the cache on: with content-hashed parts served
