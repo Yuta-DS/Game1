@@ -160,8 +160,8 @@ func _run() -> void:
 		_fail("artwork jump did not reset after releasing Space (pressed=%s)" %
 			str(Input.is_action_pressed("jump")))
 		return
-	var exit_button := world.find_child("ExitArtworkButton", true, false) as Button
-	if exit_button == null:
+	var artwork_exit_button := world.find_child("ExitArtworkButton", true, false) as Button
+	if artwork_exit_button == null:
 		_fail("interactive artwork world has no Exit Artwork button")
 		return
 	var interactive_found := false
@@ -172,7 +172,9 @@ func _run() -> void:
 	if not interactive_found:
 		_fail("interactive artwork world contains no responsive 3D artwork objects")
 		return
-	var exit_button := world.find_child("GalleryButton", true, false) as Button
+	var exit_button := artwork_exit_button
+	if exit_button == null:
+		exit_button = world.find_child("GalleryButton", true, false) as Button
 	if exit_button == null or not exit_button.is_visible_in_tree():
 		_fail("interactive artwork world has no visible Gallery exit button")
 		return

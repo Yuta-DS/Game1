@@ -110,7 +110,7 @@ func _ready():
 		var music: AudioStreamPlayer2D = MusicManager.player2
 		# A load started while the last one's music is still fading out
 		# takes the music back instead of letting the fade stop it.
-		var fade = music.get_meta("loading_fade", null)
+		var fade = music.get_meta("loading_fade") if music.has_meta("loading_fade") else null
 		if fade is Tween and fade.is_valid():
 			fade.kill()
 			music.volume_db = music.get_meta("loading_fade_volume")

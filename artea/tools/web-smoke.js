@@ -79,10 +79,10 @@ const sceneReadyPattern = new RegExp(`\\[ARTEA\\] scene ready res://scenes/${tar
 const DEBUG_PORT = 9222;
 
 // The Offline Guest button, in the 1280x800 viewport the script emulates. The
-// current login screen puts it at y=537; older deployments used y=568 or
-// y=726. Tried in order until one is accepted.
+// current login screen puts it at y=498; older deployments used y=537,
+// y=568 or y=726. Tried in order until one is accepted.
 const VIEWPORT = { width: 1280, height: 800 };
-const GUEST_BUTTONS = [{ x: 287, y: 537 }, { x: 287, y: 568 }, { x: 300, y: 726 }];
+const GUEST_BUTTONS = [{ x: 287, y: 498 }, { x: 287, y: 537 }, { x: 287, y: 568 }, { x: 300, y: 726 }];
 
 const CHROME_PATHS = [
 	'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',

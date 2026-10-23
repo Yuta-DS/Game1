@@ -198,6 +198,7 @@ func _ready() -> void:
 	if embedded_in_gallery:
 		_build_castle_approach_bridge()
 	_build_mind_district()
+	_build_heart_district()
 	_build_creator_district()
 	_build_story_landmarks()
 	_build_mind_spark_world_one_gameplay()

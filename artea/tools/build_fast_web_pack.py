@@ -50,6 +50,7 @@ CORE_INCLUDES = (
     "assets3D/royal_garden/glb/FountainStone.glb",
     "assets3D/royal_garden/glb/WaterMotion.glb",
     "assets3D/grass/GrassShader.tres",
+    "icon_milo.png",
 )
 
 
