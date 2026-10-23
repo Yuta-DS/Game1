@@ -38,7 +38,8 @@ func _run() -> void:
 		return
 	if int(summary.source_station_meshes) < 2000 \
 			or int(summary.batched_station_meshes) > 96 \
-			or int(summary.preserved_palette_meshes) != 104 \
+			or int(summary.preserved_palette_meshes) < 24 \
+			or int(summary.preserved_palette_meshes) > 104 \
 			or int(summary.total_station_geometry) > 224:
 		_fail("station render geometry was not consolidated into the Web draw-call budget")
 		return

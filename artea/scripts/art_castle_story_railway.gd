@@ -27,6 +27,8 @@ const STATIONS := [
 # Keeping this named avoids a later station reorder silently moving the player's
 # first train away from the opening castle runway/arrival island.
 const START_STATION_INDEX := 0
+const WEB_STATION_VISIBILITY_RANGE_M := 600.0
+const WEB_STATION_VISIBILITY_MARGIN_M := 80.0
 
 const CONTROL_POINTS := [
 	# Preserve the original station approach/departure directions, but keep every
@@ -1334,12 +1336,154 @@ func _build_stations() -> void:
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = false
 		station.add_child(label)
+		_apply_web_station_performance_profile(station)
 	# The train and everything after the stations keep the shared materials.
 	_stone_material = shared[0]
 	_dark_metal_material = shared[1]
 	_violet_material = shared[2]
 	_glass_material = shared[3]
 	_canopy_material = shared[4]
+
+
+func _uses_web_station_performance_profile() -> bool:
+	return OS.has_feature("web") \
+		or OS.get_environment("ARTEA_FORCE_WEB_STATION_LOD") == "1"
+
+
+func _apply_web_station_performance_profile(station: Node3D) -> void:
+	if not _uses_web_station_performance_profile():
+		return
+	# The four stations are more than 1.2 km apart. A 600 m visibility range keeps
+	# the complete station, stair and bridge visible throughout approach and play,
+	# while preventing the browser from submitting the other three complexes.
+	# Static bodies need an active process mode: disabling the station also
+	# removes inherited CollisionObject3D bodies from the Web physics world.
+	# Mesh batching and visibility ranges provide the rendering savings.
+	station.process_mode = Node.PROCESS_MODE_INHERIT
+	station.set_meta("web_performance_profile", "single_nearby_station_shadowless")
+	station.set_meta("web_visibility_range_m", WEB_STATION_VISIBILITY_RANGE_M)
+	station.set_meta("web_visibility_margin_m", WEB_STATION_VISIBILITY_MARGIN_M)
+	station.set_meta("web_max_simultaneous_station_complexes", 1)
+	_consolidate_web_station_geometry(station)
+	var geometry_instances := station.find_children(
+		"*", "GeometryInstance3D", true, false)
+	for geometry_candidate in geometry_instances:
+		var geometry := geometry_candidate as GeometryInstance3D
+		geometry.visibility_range_end = WEB_STATION_VISIBILITY_RANGE_M
+		geometry.visibility_range_end_margin = WEB_STATION_VISIBILITY_MARGIN_M
+		geometry.visibility_range_fade_mode = \
+			GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+		geometry.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	station.set_meta("web_range_limited_geometry_count", geometry_instances.size())
+	for light_candidate in station.find_children("*", "Light3D", true, false):
+		var station_light := light_candidate as Light3D
+		station_light.shadow_enabled = false
+		station_light.distance_fade_enabled = true
+		station_light.distance_fade_begin = 420.0
+		station_light.distance_fade_length = 80.0
+
+
+func _consolidate_web_station_geometry(station: Node3D) -> void:
+	# All station meshes are static. Merge them by shared material so WebGL sends
+	# a few large buffers instead of hundreds of tiny primitive draw submissions.
+	# Physics is authored in separate StaticBody3D nodes and is never removed.
+	var source_meshes := station.find_children("*", "MeshInstance3D", true, false)
+	var merge_meshes: Array[MeshInstance3D] = []
+	var preserved_meshes := 0
+	var groups := {}
+	var station_inverse := station.global_transform.affine_inverse()
+	for mesh_candidate in source_meshes:
+		var mesh_instance := mesh_candidate as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+		# Keep palette-defining floor sectors and translucent roof petals as
+		# separate objects. Merging them changes alpha sorting and washes the seven
+		# authored colours into the front-most material in WebGL.
+		if mesh_instance.name.begins_with("RainbowCivicFloorSector_") \
+				or mesh_instance.name.begins_with("SolarGlassPetal_"):
+			preserved_meshes += 1
+			continue
+		merge_meshes.append(mesh_instance)
+		var station_transform := station_inverse * mesh_instance.global_transform
+		for surface_index in mesh_instance.mesh.get_surface_count():
+			var surface_material := mesh_instance.material_override
+			if surface_material == null:
+				surface_material = mesh_instance.mesh.surface_get_material(surface_index)
+			var material_key := str(surface_material.get_instance_id()) \
+				if surface_material != null else "none"
+			if not groups.has(material_key):
+				var surface_tool := SurfaceTool.new()
+				surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+				surface_tool.set_material(surface_material)
+				groups[material_key] = {
+					"surface_tool": surface_tool,
+					"material": surface_material,
+					"source_count": 0,
+				}
+			var group: Dictionary = groups[material_key]
+			(group.surface_tool as SurfaceTool).append_from(
+				mesh_instance.mesh, surface_index, station_transform)
+			group.source_count = int(group.source_count) + 1
+	for mesh_instance in merge_meshes:
+		if is_instance_valid(mesh_instance) and mesh_instance.get_parent() != null:
+			mesh_instance.get_parent().remove_child(mesh_instance)
+			mesh_instance.free()
+	var batches := Node3D.new()
+	batches.name = "WebStationBatchedGeometry"
+	station.add_child(batches)
+	var batch_index := 0
+	for material_key in groups:
+		var group: Dictionary = groups[material_key]
+		var combined_mesh := (group.surface_tool as SurfaceTool).commit()
+		if combined_mesh == null:
+			continue
+		var batch := MeshInstance3D.new()
+		batch.name = "StationMaterialBatch_%02d" % batch_index
+		batch.mesh = combined_mesh
+		batch.material_override = group.material as Material
+		batch.set_meta("combined_source_surface_count", int(group.source_count))
+		batches.add_child(batch)
+		batch_index += 1
+	station.set_meta("web_source_mesh_count", source_meshes.size())
+	station.set_meta("web_batched_mesh_count", batch_index)
+	station.set_meta("web_palette_mesh_count", preserved_meshes)
+
+
+func get_station_performance_summary() -> Dictionary:
+	var total_geometry := 0
+	var range_limited_geometry := 0
+	var shadowless_geometry := 0
+	var profiled_stations := 0
+	var source_meshes := 0
+	var batched_meshes := 0
+	var palette_meshes := 0
+	for station in _station_nodes:
+		if station.has_meta("web_performance_profile"):
+			profiled_stations += 1
+		source_meshes += int(station.get_meta("web_source_mesh_count", 0))
+		batched_meshes += int(station.get_meta("web_batched_mesh_count", 0))
+		palette_meshes += int(station.get_meta("web_palette_mesh_count", 0))
+		for geometry_candidate in station.find_children(
+				"*", "GeometryInstance3D", true, false):
+			var geometry := geometry_candidate as GeometryInstance3D
+			total_geometry += 1
+			if geometry.visibility_range_end > 0.0 \
+					and geometry.visibility_range_end <= WEB_STATION_VISIBILITY_RANGE_M:
+				range_limited_geometry += 1
+			if geometry.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+				shadowless_geometry += 1
+	return {
+		"web_profile_active": _uses_web_station_performance_profile(),
+		"profiled_station_count": profiled_stations,
+		"total_station_geometry": total_geometry,
+		"range_limited_geometry": range_limited_geometry,
+		"shadowless_geometry": shadowless_geometry,
+		"source_station_meshes": source_meshes,
+		"batched_station_meshes": batched_meshes,
+		"preserved_palette_meshes": palette_meshes,
+		"visibility_range_m": WEB_STATION_VISIBILITY_RANGE_M,
+		"max_simultaneous_station_complexes": 1,
+	}
 
 
 func _build_station_platform_from_scratch(station: Node3D,
