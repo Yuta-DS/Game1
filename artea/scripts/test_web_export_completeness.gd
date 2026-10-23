@@ -15,6 +15,7 @@ func _init() -> void:
 				break
 	var web_files: PackedStringArray = presets.get_value(web_section,
 		"export_files", PackedStringArray())
+	var web_filter := str(presets.get_value(web_section, "export_filter", ""))
 	var web_includes := str(presets.get_value(web_section, "include_filter", ""))
 	var web_excludes := str(presets.get_value(web_section, "exclude_filter", ""))
 	var web_options := web_section + ".options"
@@ -26,12 +27,12 @@ func _init() -> void:
 		"desktop/editor and Web use the same Compatibility renderer")
 	_check(project.contains('renderer/rendering_method.mobile="gl_compatibility"'),
 		"mobile browsers use the Compatibility renderer")
-	_check(not web_section.is_empty()
-		and str(presets.get_value(web_section, "export_filter", "")) == "scenes"
-		and web_files.has("res://scenes/start_screen.tscn")
-		and web_files.has("res://scenes/art_gallery_3d_inprogress.tscn")
-		and web_files.has("res://scenes/mind_spark/mind_spark_world_one.tscn")
-		and web_files.has("res://scenes/creation_world.tscn"),
+	_check(not web_section.is_empty() and (web_filter == "all_resources"
+		or (web_filter == "scenes"
+			and web_files.has("res://scenes/start_screen.tscn")
+			and web_files.has("res://scenes/art_gallery_3d_inprogress.tscn")
+			and web_files.has("res://scenes/mind_spark/mind_spark_world_one.tscn")
+			and web_files.has("res://scenes/creation_world.tscn"))),
 		"selected Web preset includes the startup, gallery, Galaxy World, and creation scenes")
 	_check(web_includes.contains("data/*.json")
 		and web_includes.contains("data/scripture/**")
