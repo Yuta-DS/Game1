@@ -1,6 +1,9 @@
 extends Node2D
 const TouchDevice := preload("res://scripts/touch_controls.gd")
 const SceneLoader := preload("res://scripts/scene_loader.gd")
+const AdminResetPanel := preload("res://scripts/admin_reset_panel.gd")
+const ForgotPasswordPanel := preload("res://scripts/forgot_password_panel.gd")
+const RecoveryCodeModal := preload("res://scripts/recovery_code_modal.gd")
 
 const WORLD_ONE_SCENE := "res://scenes/art_gallery_3d_inprogress.tscn"
 
@@ -31,6 +34,22 @@ func _ready():
 	print("Account screen initializing")
 	# Clean out any old error text when the start scene boots up
 	status_label.text = ""
+	if not APIManager.sign_out_reason.is_empty():
+		show_message(APIManager.sign_out_reason)
+		APIManager.sign_out_reason = ""
+	if APIManager.uses_managed_accounts():
+		var recovery := Button.new()
+		recovery.text = "Verify account / reset password"
+		recovery.pressed.connect(_managed_recovery)
+		options_box.add_child(recovery)
+	_admin_panel = AdminResetPanel.new()
+	add_child(_admin_panel)
+	_build_admin_button()
+	_forgot_password_panel = ForgotPasswordPanel.new()
+	add_child(_forgot_password_panel)
+	_code_modal = RecoveryCodeModal.new()
+	add_child(_code_modal)
+	_build_forgot_password_button()
 	# Keyboard users can advance through the form without reaching for the
 	# pointer. Do not grab focus automatically because that would open the soft
 	# keyboard over the artwork on phones before the player asks for it.
@@ -39,6 +58,44 @@ func _ready():
 	_layout_for_viewport(get_viewport().get_visible_rect().size)
 	get_viewport().size_changed.connect(func():
 		_layout_for_viewport(get_viewport().get_visible_rect().size))
+	var heart_preview := "--heart-preview" in OS.get_cmdline_user_args()
+	if OS.has_feature("web"):
+		heart_preview = heart_preview or bool(JavaScriptBridge.eval(
+			"window.ARTEA_HEART_PREVIEW === true", true))
+	if heart_preview:
+		if OS.has_feature("web"):
+			JavaScriptBridge.eval("window.ARTEA_HEART_PREVIEW = false", true)
+		_open_heart_preview.call_deferred()
+
+
+func _build_admin_button() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 14
+	add_child(layer)
+	var button := Button.new()
+	button.text = "Admin"
+	button.custom_minimum_size = Vector2(90, 30)
+	button.add_theme_font_size_override("font_size", 14)
+	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	button.position = Vector2(-102, 12)
+	button.pressed.connect(_admin_panel.show_panel)
+	layer.add_child(button)
+
+
+func _build_forgot_password_button() -> void:
+	var button := Button.new()
+	button.text = "Forgot password?"
+	button.add_theme_font_size_override("font_size", 22)
+	button.custom_minimum_size.y = 50.0
+	button.pressed.connect(_forgot_password_panel.show_panel)
+	options_box.add_child(button)
+
+
+func _open_heart_preview() -> void:
+	Global.current_user_name = "Guest_Player"
+	Global.auth_token = Global.OFFLINE_GUEST_TOKEN
+	if not SceneLoader.change_scene(get_tree(), "res://scenes/heart_melody/heart_melody_world.tscn"):
+		show_message("The garden could not open. Please reload and try again.")
 
 
 func _input(event: InputEvent) -> void:
@@ -355,3 +412,101 @@ func enter_game(username: String, is_guest: bool = false):
 				or "gallery_audit=1" in query:
 			destination = "res://scenes/art_gallery_3d_inprogress.tscn"
 	SceneLoader.change_scene_with_loading(get_tree(), destination)
+
+
+# Account setup stays outside gameplay. Cognito sends codes to the verified
+# email; credentials and refresh tokens are never written to browser storage.
+func _account_form(title_text: String, labels: Array, submit: Callable) -> Window:
+	var dialog := Window.new()
+	dialog.title = title_text
+	dialog.size = Vector2i(500, 340)
+	dialog.transient = true
+	dialog.exclusive = true
+	add_child(dialog)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "right", "top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 18)
+	dialog.add_child(margin)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 12)
+	margin.add_child(column)
+	var fields: Array[LineEdit] = []
+	for caption in labels:
+		var label := Label.new()
+		label.text = str(caption)
+		column.add_child(label)
+		var field := LineEdit.new()
+		field.secret = "password" in str(caption).to_lower()
+		field.custom_minimum_size.y = 42
+		column.add_child(field)
+		fields.append(field)
+	var message := Label.new()
+	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(message)
+	var button := Button.new()
+	button.text = "Continue"
+	button.custom_minimum_size.y = 44
+	column.add_child(button)
+	button.pressed.connect(func():
+		var values: Array[String] = []
+		for field in fields: values.append(field.text)
+		message.text = "Please wait..."
+		button.disabled = true
+		submit.call(values, func(ok: bool, text: String):
+			if not is_instance_valid(dialog): return
+			if ok:
+				dialog.exclusive = false
+				dialog.hide()
+				dialog.queue_free()
+			else:
+				message.text = text
+				button.disabled = false
+		)
+	)
+	dialog.close_requested.connect(dialog.queue_free)
+	dialog.popup_centered()
+	fields[0].grab_focus()
+	return dialog
+
+func _managed_register(username: String, password: String) -> void:
+	_account_form("Create your account", ["Email for account verification and recovery"], func(values, done):
+		APIManager.register(username, password, func(ok, data):
+			done.call(ok, str(data.get("error", "Could not create account.")))
+			if ok: _managed_confirm(username)
+		, values[0].strip_edges())
+	)
+
+func _managed_confirm(username: String) -> void:
+	_account_form("Verify your email", ["Verification code from your email"], func(values, done):
+		APIManager.confirm_account(username, values[0].strip_edges(), func(ok, data):
+			done.call(ok, str(data.get("error", "Could not verify account.")))
+			if ok: show_message("Email verified. You can now sign in.", false)
+		)
+	)
+
+func _managed_recovery() -> void:
+	var username: String = user_node.text.strip_edges()
+	if username.is_empty():
+		show_message("Enter your username first.")
+		return
+	var dialog := _account_form("Reset password", ["Code from your email", "New password (at least 14 characters)"], func(values, done):
+		APIManager.reset_password(username, values[0].strip_edges(), values[1], func(ok, data):
+			done.call(ok, str(data.get("error", "Could not reset password.")))
+			if ok: show_message("Password changed. You can now sign in.", false)
+		)
+	)
+	APIManager.request_password_reset(username, func(_ok, _data): pass)
+	var verify := Button.new()
+	verify.text = "Resend verification email instead"
+	verify.position = Vector2(20, 295)
+	dialog.add_child(verify)
+	verify.pressed.connect(func():
+		APIManager.resend_confirmation(username, func(ok, data):
+			if ok:
+				dialog.exclusive = false
+				dialog.hide()
+				dialog.queue_free()
+				_managed_confirm(username)
+			else: show_message(str(data.get("error", "Please try again.")))
+		)
+	)

@@ -27,6 +27,23 @@ const START_SCREEN := "res://scenes/start_screen.tscn"
 var sign_out_reason := ""
 var _watching_session := false
 var _last_session_check := 0
+var _refresh_token := ""
+var _session_generation := 0
+var _refresh_timer: SceneTreeTimer
+
+
+func _configured_base_url() -> String:
+	var configured := OS.get_environment("ARTEA_API_BASE").strip_edges().trim_suffix("/")
+	if configured.is_empty():
+		configured = str(ProjectSettings.get_setting(
+			"artea/network/api_base_url", "")).strip_edges().trim_suffix("/")
+	return configured if not configured.is_empty() else "http://127.0.0.1:8000"
+
+
+func uses_managed_accounts() -> bool:
+	if OS.has_feature("web"):
+		return str(JavaScriptBridge.eval("window.ARTEA_AUTH_MODE || ''", true)) == "cognito"
+	return OS.get_environment("ARTEA_AUTH_MODE") == "cognito"
 
 
 func get_base_url() -> String:
@@ -135,7 +152,7 @@ func _post_account(path: String, payload: Dictionary, callback: Callable) -> voi
 		if callback.is_valid(): callback.call(result == HTTPRequest.RESULT_SUCCESS and status in [200, 201], data)
 		http.queue_free()
 	)
-	var error := http.request(BASE_URL + path, ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(payload))
+	var error := http.request(get_api_url(path), ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if error != OK:
 		http.queue_free()
 		if callback.is_valid(): callback.call(false, {"error": "Could not connect to the account server."})
@@ -179,7 +196,7 @@ func reset_password_with_code(username: String, recovery_code: String, new_passw
 	]
 
 	var request_error := http.request(
-		get_api_url("/login"),
+		get_api_url("/reset-password-with-code"),
 		headers,
 		HTTPClient.METHOD_POST,
 		json_body
@@ -227,7 +244,7 @@ func admin_reset_password(admin_key: String, username: String, new_password: Str
 	]
 
 	var request_error := http.request(
-		get_api_url("/register"),
+		get_api_url("/admin/reset-password"),
 		headers,
 		HTTPClient.METHOD_POST,
 		json_body
@@ -444,7 +461,7 @@ func _check_session() -> void:
 			"You were signed out because this account signed in on another device."
 			if elsewhere else "Your sign-in has expired. Please sign in again.")
 	)
-	if http.request(SESSION_URL, ["Authorization: Bearer " + auth_token]) != OK:
+	if http.request(get_api_url("/session"), ["Authorization: Bearer " + auth_token]) != OK:
 		http.queue_free()
 
 

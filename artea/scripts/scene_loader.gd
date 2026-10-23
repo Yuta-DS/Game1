@@ -40,10 +40,6 @@ const FAILURE_GROUP := "scene_switch_failed"
 static func change_scene(tree: SceneTree, scene_path: String) -> bool:
 	if tree == null:
 		return false
-	# A scene whose Pack has not been fetched yet needs the loading screen to
-	# download it, however light the scene itself is.
-	if not packs_needed(scene_path).is_empty():
-		return change_scene_with_loading(tree, scene_path)
 	if not ResourceLoader.exists(scene_path):
 		if OS.has_feature("web") and not _web_content_mounted():
 			return change_scene_with_loading(tree, scene_path)
@@ -54,6 +50,41 @@ static func change_scene(tree: SceneTree, scene_path: String) -> bool:
 		report_failure(tree, scene_path, error_string(err))
 		return false
 	return true
+
+
+static func can_open(scene_path: String) -> bool:
+	return ResourceLoader.exists(scene_path) or (OS.has_feature("web") and not _web_content_mounted())
+
+
+## Mount the deferred content pack for assets opened inside an existing scene.
+## Scene transitions use loading_scene.gd so they can show their own progress.
+static func mount_packs_for(tree: SceneTree, scene_path: String,
+		on_progress := Callable()) -> String:
+	if ResourceLoader.exists(scene_path):
+		return ""
+	if tree == null or not OS.has_feature("web"):
+		return "scene file missing"
+	var state := str(JavaScriptBridge.eval(
+		"window.ARTEA_CONTENT_PACK ? window.ARTEA_CONTENT_PACK.state : 'missing'", true))
+	if state == "missing":
+		return "content downloader unavailable"
+	if state != "ready" and state != "mounted":
+		JavaScriptBridge.eval("window.ARTEA_CONTENT_PACK.load()", true)
+		while true:
+			state = str(JavaScriptBridge.eval("window.ARTEA_CONTENT_PACK.state", true))
+			if state == "ready" or state == "mounted":
+				break
+			if state == "failed":
+				return "content download failed"
+			if on_progress.is_valid():
+				on_progress.call(float(JavaScriptBridge.eval(
+					"window.ARTEA_CONTENT_PACK.progress", true)), 1.0)
+			await tree.process_frame
+	if state != "mounted":
+		if not ProjectSettings.load_resource_pack("/content.pck", true):
+			return "content pack could not be opened"
+		JavaScriptBridge.eval("window.ARTEA_CONTENT_PACK.state = 'mounted'", true)
+	return "" if ResourceLoader.exists(scene_path) else "scene file missing"
 
 
 static func change_scene_with_loading(tree: SceneTree, scene_path: String) -> bool:

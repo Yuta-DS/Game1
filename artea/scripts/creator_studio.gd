@@ -149,10 +149,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _open_drawing() -> void:
 	if _fetching_tool:
 		return
-	# On the web the drawing tool is in the creators_light Pack (the Hub's
-	# drawing door), which isn't part of the galaxy's download. Unmounted, load()
-	# found nothing and Q did nothing, so it is mounted here first.
-	if not ResourceLoader.exists(DRAWING_TOOL_SCENE):
+	# The drawing tool may be in the deferred Web content pack. Mount it before
+	# opening the easel; the helper returns immediately when it is already here.
+	if OS.has_feature("web") or not SceneLoader.can_open(DRAWING_TOOL_SCENE):
 		_fetching_tool = true
 		_prompt.text = "Getting the paints ready…"
 		var error: String = await SceneLoader.mount_packs_for(get_tree(), DRAWING_TOOL_SCENE,
