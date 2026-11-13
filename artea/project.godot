@@ -27,6 +27,7 @@ MusicManager="*res://scenes/music_manager.tscn"
 Global="*res://scripts/Global.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 GameManager="*res://scripts/GameManager.gd"
+QuestState="*res://scripts/quest/QuestState.gd"
 Auth="*res://addons/godot-firebase/auth/auth.gd"
 APIManager="*uid://dodj1s54vwit2"
 

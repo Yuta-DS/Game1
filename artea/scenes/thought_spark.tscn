@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/quest/ThoughtSpark.gd" id="1_spark"]
+
+[node name="ThoughtSpark" type="Area3D"]
+script = ExtResource("1_spark")
+value = 1

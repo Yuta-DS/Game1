@@ -1,0 +1,74 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/MindSparkZone.gd" id="1_zone"]
+[ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/thought_spark_socket.tscn" id="3_socket"]
+[ext_resource type="PackedScene" path="res://scenes/thought_spark.tscn" id="4_spark"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
+sky_top_color = Color(0.12, 0.09, 0.26, 1)
+sky_horizon_color = Color(0.33, 0.28, 0.52, 1)
+ground_bottom_color = Color(0.07, 0.06, 0.13, 1)
+ground_horizon_color = Color(0.24, 0.2, 0.38, 1)
+
+[sub_resource type="Sky" id="Sky_res"]
+sky_material = SubResource("Sky_mat")
+
+[sub_resource type="Environment" id="Env_res"]
+background_mode = 2
+sky = SubResource("Sky_res")
+ambient_light_source = 3
+ambient_light_color = Color(0.35, 0.38, 0.55, 1)
+ambient_light_energy = 0.55
+fog_enabled = true
+fog_light_color = Color(0.24, 0.22, 0.4, 1)
+fog_density = 0.004
+
+[node name="MindSparkWorld" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_res")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.86, -0.35, 0.37, 0, 0.72, 0.69, -0.51, -0.6, 0.62, 0, 40, 0)
+light_color = Color(0.86, 0.88, 1, 1)
+light_energy = 1.05
+shadow_enabled = true
+
+[node name="Zone" type="Node3D" parent="."]
+script = ExtResource("1_zone")
+show_zone_labels = true
+path_width = 4.0
+
+[node name="NewPlayer" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 8.0)
+
+[node name="Quest" type="Node3D" parent="."]
+
+[node name="SparkA" parent="Quest" instance=ExtResource("4_spark")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40.0, 1.6, -18.0)
+save_id = "mind_spark_pickup_a"
+
+[node name="SparkB" parent="Quest" instance=ExtResource("4_spark")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.0, 1.6, -34.0)
+save_id = "mind_spark_pickup_b"
+
+[node name="SparkC" parent="Quest" instance=ExtResource("4_spark")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.0, 1.6, -34.0)
+save_id = "mind_spark_pickup_c"
+
+[node name="ThoughtSparkSocket" parent="Quest" instance=ExtResource("3_socket")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.0, 4.1, -70.0)
+save_id = "mind_spark_socket_01"
+prompt_label = "Place Thought Spark"
+completed_label = "Socket charged"
+blocked_label = "Find a Thought Spark"
+required_sparks = 3
+
+[node name="CalmRainBasin" parent="Quest" instance=ExtResource("3_socket")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.0, 7.6, -72.0)
+save_id = "mind_spark_calm_rain_basin"
+prompt_label = "Place the final Spark"
+completed_label = "The storm becomes gentle rain"
+blocked_label = "Find a Thought Spark"
+required_sparks = 1

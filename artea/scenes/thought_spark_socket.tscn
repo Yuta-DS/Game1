@@ -1,0 +1,56 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/quest/ThoughtSparkSocket.gd" id="1_socket"]
+[ext_resource type="Script" path="res://scripts/altar/CrystalAltar.gd" id="2_altar"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_zone"]
+radius = 3.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_body"]
+height = 0.6
+radius = 1.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_zone"]
+height = 2.5
+radius = 2.4
+
+[node name="ThoughtSparkSocket" type="Node3D"]
+script = ExtResource("1_socket")
+save_id = "mind_spark_socket_01"
+prompt_label = "Place Thought Spark"
+completed_label = "Socket charged"
+blocked_label = "Find a Thought Spark"
+interact_radius = 3.0
+prompt_height = 1.9
+required_sparks = 3
+altar_path = NodePath("Altar")
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="Shape" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("SphereShape3D_zone")
+
+[node name="Altar" type="Node3D" parent="."]
+script = ExtResource("2_altar")
+charge = 0
+detail = 2
+altar_scale = 1.0
+animate = true
+
+[node name="Body" type="StaticBody3D" parent="Altar"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Altar/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("CylinderShape3D_body")
+
+[node name="InteractZone" type="Area3D" parent="Altar"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Altar/InteractZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("CylinderShape3D_zone")
+
+[node name="CoreLight" type="OmniLight3D" parent="Altar"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+light_color = Color(0.61, 0.42, 1, 1)
+light_energy = 0.0
+omni_range = 5.0

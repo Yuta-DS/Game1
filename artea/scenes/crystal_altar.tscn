@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/altar/CrystalAltar.gd" id="1_altar"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_body"]
+height = 0.6
+radius = 1.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_zone"]
+height = 2.5
+radius = 2.4
+
+[node name="CrystalAltar" type="Node3D"]
+script = ExtResource("1_altar")
+charge = 0
+detail = 2
+altar_scale = 1.0
+animate = true
+
+[node name="Body" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("CylinderShape3D_body")
+
+[node name="InteractZone" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("CylinderShape3D_zone")
+
+[node name="CoreLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+light_color = Color(0.61, 0.42, 1, 1)
+light_energy = 0.0
+omni_range = 5.0
