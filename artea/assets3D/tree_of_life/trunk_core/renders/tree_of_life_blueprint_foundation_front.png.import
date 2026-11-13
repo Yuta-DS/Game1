@@ -3,15 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://6t75lu2o8f8r"
-path="res://.godot/imported/tree_of_life_blueprint_foundation_front.png-fbcda4be8458e4d057f3b0076c32b897.ctex"
+path.s3tc="res://.godot/imported/tree_of_life_blueprint_foundation_front.png-fbcda4be8458e4d057f3b0076c32b897.s3tc.ctex"
+path.etc2="res://.godot/imported/tree_of_life_blueprint_foundation_front.png-fbcda4be8458e4d057f3b0076c32b897.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/trunk_core/renders/tree_of_life_blueprint_foundation_front.png"
-dest_files=["res://.godot/imported/tree_of_life_blueprint_foundation_front.png-fbcda4be8458e4d057f3b0076c32b897.ctex"]
+dest_files=["res://.godot/imported/tree_of_life_blueprint_foundation_front.png-fbcda4be8458e4d057f3b0076c32b897.s3tc.ctex", "res://.godot/imported/tree_of_life_blueprint_foundation_front.png-fbcda4be8458e4d057f3b0076c32b897.etc2.ctex"]
 
 [params]
 

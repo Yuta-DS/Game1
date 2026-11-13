@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://n4r746gyxyad"
 path.s3tc="res://.godot/imported/reference_faithful_leaf_library_emerald_sensor_leaf_reference_rgba.png-8479dd8de669e196cec5cf7cc3d284cc.s3tc.ctex"
+path.etc2="res://.godot/imported/reference_faithful_leaf_library_emerald_sensor_leaf_reference_rgba.png-8479dd8de669e196cec5cf7cc3d284cc.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/leaves/reference_faithful/glb/reference_faithful_leaf_library_emerald_sensor_leaf_reference_rgba.png"
-dest_files=["res://.godot/imported/reference_faithful_leaf_library_emerald_sensor_leaf_reference_rgba.png-8479dd8de669e196cec5cf7cc3d284cc.s3tc.ctex"]
+dest_files=["res://.godot/imported/reference_faithful_leaf_library_emerald_sensor_leaf_reference_rgba.png-8479dd8de669e196cec5cf7cc3d284cc.s3tc.ctex", "res://.godot/imported/reference_faithful_leaf_library_emerald_sensor_leaf_reference_rgba.png-8479dd8de669e196cec5cf7cc3d284cc.etc2.ctex"]
 
 [params]
 

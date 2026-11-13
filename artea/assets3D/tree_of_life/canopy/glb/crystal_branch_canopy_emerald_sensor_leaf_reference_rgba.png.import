@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c8kupl3vaaryc"
 path.s3tc="res://.godot/imported/crystal_branch_canopy_emerald_sensor_leaf_reference_rgba.png-e48606d13f4c756a3487514c85302e38.s3tc.ctex"
+path.etc2="res://.godot/imported/crystal_branch_canopy_emerald_sensor_leaf_reference_rgba.png-e48606d13f4c756a3487514c85302e38.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/canopy/glb/crystal_branch_canopy_emerald_sensor_leaf_reference_rgba.png"
-dest_files=["res://.godot/imported/crystal_branch_canopy_emerald_sensor_leaf_reference_rgba.png-e48606d13f4c756a3487514c85302e38.s3tc.ctex"]
+dest_files=["res://.godot/imported/crystal_branch_canopy_emerald_sensor_leaf_reference_rgba.png-e48606d13f4c756a3487514c85302e38.s3tc.ctex", "res://.godot/imported/crystal_branch_canopy_emerald_sensor_leaf_reference_rgba.png-e48606d13f4c756a3487514c85302e38.etc2.ctex"]
 
 [params]
 

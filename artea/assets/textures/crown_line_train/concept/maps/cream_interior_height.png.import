@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2ar04xhxkxtn"
 path.s3tc="res://.godot/imported/cream_interior_height.png-7da59863e3ca8a9bab575a9cf3cd1767.s3tc.ctex"
+path.etc2="res://.godot/imported/cream_interior_height.png-7da59863e3ca8a9bab575a9cf3cd1767.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/cream_interior_height.png"
-dest_files=["res://.godot/imported/cream_interior_height.png-7da59863e3ca8a9bab575a9cf3cd1767.s3tc.ctex"]
+dest_files=["res://.godot/imported/cream_interior_height.png-7da59863e3ca8a9bab575a9cf3cd1767.s3tc.ctex", "res://.godot/imported/cream_interior_height.png-7da59863e3ca8a9bab575a9cf3cd1767.etc2.ctex"]
 
 [params]
 

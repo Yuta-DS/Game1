@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://byo81yhsmmn11"
 path.s3tc="res://.godot/imported/living_root_emission.png-820b3779fdbcb1d8d58e9c9e9c35c9f8.s3tc.ctex"
+path.etc2="res://.godot/imported/living_root_emission.png-820b3779fdbcb1d8d58e9c9e9c35c9f8.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/living_root_emission.png"
-dest_files=["res://.godot/imported/living_root_emission.png-820b3779fdbcb1d8d58e9c9e9c35c9f8.s3tc.ctex"]
+dest_files=["res://.godot/imported/living_root_emission.png-820b3779fdbcb1d8d58e9c9e9c35c9f8.s3tc.ctex", "res://.godot/imported/living_root_emission.png-820b3779fdbcb1d8d58e9c9e9c35c9f8.etc2.ctex"]
 
 [params]
 

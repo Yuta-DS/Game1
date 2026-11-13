@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c10mi18c68pan"
 path.s3tc="res://.godot/imported/cyan_magic_roughness.png-1d81d529408cc34a58c5a44320ce9932.s3tc.ctex"
+path.etc2="res://.godot/imported/cyan_magic_roughness.png-1d81d529408cc34a58c5a44320ce9932.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/cyan_magic_roughness.png"
-dest_files=["res://.godot/imported/cyan_magic_roughness.png-1d81d529408cc34a58c5a44320ce9932.s3tc.ctex"]
+dest_files=["res://.godot/imported/cyan_magic_roughness.png-1d81d529408cc34a58c5a44320ce9932.s3tc.ctex", "res://.godot/imported/cyan_magic_roughness.png-1d81d529408cc34a58c5a44320ce9932.etc2.ctex"]
 
 [params]
 

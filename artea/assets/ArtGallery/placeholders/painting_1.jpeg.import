@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ltrkmwd17oab"
 path.s3tc="res://.godot/imported/painting_1.jpeg-2247e58aadc420fdee71db3bf34a223d.s3tc.ctex"
+path.etc2="res://.godot/imported/painting_1.jpeg-2247e58aadc420fdee71db3bf34a223d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/ArtGallery/placeholders/painting_1.jpeg"
-dest_files=["res://.godot/imported/painting_1.jpeg-2247e58aadc420fdee71db3bf34a223d.s3tc.ctex"]
+dest_files=["res://.godot/imported/painting_1.jpeg-2247e58aadc420fdee71db3bf34a223d.s3tc.ctex", "res://.godot/imported/painting_1.jpeg-2247e58aadc420fdee71db3bf34a223d.etc2.ctex"]
 
 [params]
 

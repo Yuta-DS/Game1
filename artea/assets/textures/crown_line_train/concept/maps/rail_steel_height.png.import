@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://beju5cm8aw701"
 path.s3tc="res://.godot/imported/rail_steel_height.png-17e3e4de9092dc7b5df70f78c11adeeb.s3tc.ctex"
+path.etc2="res://.godot/imported/rail_steel_height.png-17e3e4de9092dc7b5df70f78c11adeeb.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/rail_steel_height.png"
-dest_files=["res://.godot/imported/rail_steel_height.png-17e3e4de9092dc7b5df70f78c11adeeb.s3tc.ctex"]
+dest_files=["res://.godot/imported/rail_steel_height.png-17e3e4de9092dc7b5df70f78c11adeeb.s3tc.ctex", "res://.godot/imported/rail_steel_height.png-17e3e4de9092dc7b5df70f78c11adeeb.etc2.ctex"]
 
 [params]
 

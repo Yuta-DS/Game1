@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dpti1klpkwkx7"
 path.s3tc="res://.godot/imported/navy_lacquer_albedo.png-fc793f266db904f9fa8eebdea00d587b.s3tc.ctex"
+path.etc2="res://.godot/imported/navy_lacquer_albedo.png-fc793f266db904f9fa8eebdea00d587b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/navy_lacquer_albedo.png"
-dest_files=["res://.godot/imported/navy_lacquer_albedo.png-fc793f266db904f9fa8eebdea00d587b.s3tc.ctex"]
+dest_files=["res://.godot/imported/navy_lacquer_albedo.png-fc793f266db904f9fa8eebdea00d587b.s3tc.ctex", "res://.godot/imported/navy_lacquer_albedo.png-fc793f266db904f9fa8eebdea00d587b.etc2.ctex"]
 
 [params]
 

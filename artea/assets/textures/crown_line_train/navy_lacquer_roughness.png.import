@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cdnqx7hv7kgkn"
 path.s3tc="res://.godot/imported/navy_lacquer_roughness.png-1bd16c83c083b29c9a78e2ee25246e1d.s3tc.ctex"
+path.etc2="res://.godot/imported/navy_lacquer_roughness.png-1bd16c83c083b29c9a78e2ee25246e1d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/navy_lacquer_roughness.png"
-dest_files=["res://.godot/imported/navy_lacquer_roughness.png-1bd16c83c083b29c9a78e2ee25246e1d.s3tc.ctex"]
+dest_files=["res://.godot/imported/navy_lacquer_roughness.png-1bd16c83c083b29c9a78e2ee25246e1d.s3tc.ctex", "res://.godot/imported/navy_lacquer_roughness.png-1bd16c83c083b29c9a78e2ee25246e1d.etc2.ctex"]
 
 [params]
 

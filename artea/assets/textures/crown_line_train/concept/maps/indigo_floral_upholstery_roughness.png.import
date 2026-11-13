@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmk7ybcpxnlqo"
 path.s3tc="res://.godot/imported/indigo_floral_upholstery_roughness.png-f1ae70062e7f98c078e1f74e5ab83119.s3tc.ctex"
+path.etc2="res://.godot/imported/indigo_floral_upholstery_roughness.png-f1ae70062e7f98c078e1f74e5ab83119.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/indigo_floral_upholstery_roughness.png"
-dest_files=["res://.godot/imported/indigo_floral_upholstery_roughness.png-f1ae70062e7f98c078e1f74e5ab83119.s3tc.ctex"]
+dest_files=["res://.godot/imported/indigo_floral_upholstery_roughness.png-f1ae70062e7f98c078e1f74e5ab83119.s3tc.ctex", "res://.godot/imported/indigo_floral_upholstery_roughness.png-f1ae70062e7f98c078e1f74e5ab83119.etc2.ctex"]
 
 [params]
 

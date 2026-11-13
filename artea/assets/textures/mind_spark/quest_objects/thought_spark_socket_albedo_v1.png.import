@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cgmyfv5isioak"
 path.s3tc="res://.godot/imported/thought_spark_socket_albedo_v1.png-c2658464fad6b3fad70432b27fd6135a.s3tc.ctex"
+path.etc2="res://.godot/imported/thought_spark_socket_albedo_v1.png-c2658464fad6b3fad70432b27fd6135a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/quest_objects/thought_spark_socket_albedo_v1.png"
-dest_files=["res://.godot/imported/thought_spark_socket_albedo_v1.png-c2658464fad6b3fad70432b27fd6135a.s3tc.ctex"]
+dest_files=["res://.godot/imported/thought_spark_socket_albedo_v1.png-c2658464fad6b3fad70432b27fd6135a.s3tc.ctex", "res://.godot/imported/thought_spark_socket_albedo_v1.png-c2658464fad6b3fad70432b27fd6135a.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bvees3m6quqhs"
 path.s3tc="res://.godot/imported/roof_turquoise_enamel_emission.png-a5c2a29d20c2946aa70805955dedf764.s3tc.ctex"
+path.etc2="res://.godot/imported/roof_turquoise_enamel_emission.png-a5c2a29d20c2946aa70805955dedf764.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/roof_turquoise_enamel_emission.png"
-dest_files=["res://.godot/imported/roof_turquoise_enamel_emission.png-a5c2a29d20c2946aa70805955dedf764.s3tc.ctex"]
+dest_files=["res://.godot/imported/roof_turquoise_enamel_emission.png-a5c2a29d20c2946aa70805955dedf764.s3tc.ctex", "res://.godot/imported/roof_turquoise_enamel_emission.png-a5c2a29d20c2946aa70805955dedf764.etc2.ctex"]
 
 [params]
 

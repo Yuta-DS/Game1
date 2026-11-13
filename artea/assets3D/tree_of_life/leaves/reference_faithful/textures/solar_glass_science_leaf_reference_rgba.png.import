@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dv71fyfifqoif"
 path.s3tc="res://.godot/imported/solar_glass_science_leaf_reference_rgba.png-081293136514a33e64b289fdf142d4dd.s3tc.ctex"
+path.etc2="res://.godot/imported/solar_glass_science_leaf_reference_rgba.png-081293136514a33e64b289fdf142d4dd.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/leaves/reference_faithful/textures/solar_glass_science_leaf_reference_rgba.png"
-dest_files=["res://.godot/imported/solar_glass_science_leaf_reference_rgba.png-081293136514a33e64b289fdf142d4dd.s3tc.ctex"]
+dest_files=["res://.godot/imported/solar_glass_science_leaf_reference_rgba.png-081293136514a33e64b289fdf142d4dd.s3tc.ctex", "res://.godot/imported/solar_glass_science_leaf_reference_rgba.png-081293136514a33e64b289fdf142d4dd.etc2.ctex"]
 
 [params]
 

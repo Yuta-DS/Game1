@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwdgffmwqu4k5"
 path.s3tc="res://.godot/imported/navy_lacquer_height.png-c0f82526d3d29b78b541bea2d6295443.s3tc.ctex"
+path.etc2="res://.godot/imported/navy_lacquer_height.png-c0f82526d3d29b78b541bea2d6295443.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/navy_lacquer_height.png"
-dest_files=["res://.godot/imported/navy_lacquer_height.png-c0f82526d3d29b78b541bea2d6295443.s3tc.ctex"]
+dest_files=["res://.godot/imported/navy_lacquer_height.png-c0f82526d3d29b78b541bea2d6295443.s3tc.ctex", "res://.godot/imported/navy_lacquer_height.png-c0f82526d3d29b78b541bea2d6295443.etc2.ctex"]
 
 [params]
 

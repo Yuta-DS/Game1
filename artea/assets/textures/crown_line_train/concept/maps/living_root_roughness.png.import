@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bi0aktgov4hsd"
 path.s3tc="res://.godot/imported/living_root_roughness.png-cdbb81f5a99274547896f89c29d23feb.s3tc.ctex"
+path.etc2="res://.godot/imported/living_root_roughness.png-cdbb81f5a99274547896f89c29d23feb.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/living_root_roughness.png"
-dest_files=["res://.godot/imported/living_root_roughness.png-cdbb81f5a99274547896f89c29d23feb.s3tc.ctex"]
+dest_files=["res://.godot/imported/living_root_roughness.png-cdbb81f5a99274547896f89c29d23feb.s3tc.ctex", "res://.godot/imported/living_root_roughness.png-cdbb81f5a99274547896f89c29d23feb.etc2.ctex"]
 
 [params]
 

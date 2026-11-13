@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cykbxcbps60pn"
 path.s3tc="res://.godot/imported/roof_teal_enamel_normal.png-56860d043b30dd359be27e9c470afc15.s3tc.ctex"
+path.etc2="res://.godot/imported/roof_teal_enamel_normal.png-56860d043b30dd359be27e9c470afc15.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/roof_teal_enamel_normal.png"
-dest_files=["res://.godot/imported/roof_teal_enamel_normal.png-56860d043b30dd359be27e9c470afc15.s3tc.ctex"]
+dest_files=["res://.godot/imported/roof_teal_enamel_normal.png-56860d043b30dd359be27e9c470afc15.s3tc.ctex", "res://.godot/imported/roof_teal_enamel_normal.png-56860d043b30dd359be27e9c470afc15.etc2.ctex"]
 
 [params]
 

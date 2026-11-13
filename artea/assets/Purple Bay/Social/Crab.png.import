@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bg4iera1kb8o5"
 path.s3tc="res://.godot/imported/Crab.png-139c39182921b830374e4b1af41fbd76.s3tc.ctex"
+path.etc2="res://.godot/imported/Crab.png-139c39182921b830374e4b1af41fbd76.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Purple Bay/Social/Crab.png"
-dest_files=["res://.godot/imported/Crab.png-139c39182921b830374e4b1af41fbd76.s3tc.ctex"]
+dest_files=["res://.godot/imported/Crab.png-139c39182921b830374e4b1af41fbd76.s3tc.ctex", "res://.godot/imported/Crab.png-139c39182921b830374e4b1af41fbd76.etc2.ctex"]
 
 [params]
 

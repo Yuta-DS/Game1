@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbkk3aqrqhwag"
 path.s3tc="res://.godot/imported/Walk.png-1d45f175d23164e27833466642046fbb.s3tc.ctex"
+path.etc2="res://.godot/imported/Walk.png-1d45f175d23164e27833466642046fbb.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/village-npc-pixel-art-character-sprite-pack/Peasants_3/Walk.png"
-dest_files=["res://.godot/imported/Walk.png-1d45f175d23164e27833466642046fbb.s3tc.ctex"]
+dest_files=["res://.godot/imported/Walk.png-1d45f175d23164e27833466642046fbb.s3tc.ctex", "res://.godot/imported/Walk.png-1d45f175d23164e27833466642046fbb.etc2.ctex"]
 
 [params]
 

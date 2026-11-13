@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5dtqo2ulxvqb"
 path.s3tc="res://.godot/imported/warden_anchor_albedo_v1.png-e0a9815aa25388896d47e11a25952fad.s3tc.ctex"
+path.etc2="res://.godot/imported/warden_anchor_albedo_v1.png-e0a9815aa25388896d47e11a25952fad.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/quest_objects/warden_anchor_albedo_v1.png"
-dest_files=["res://.godot/imported/warden_anchor_albedo_v1.png-e0a9815aa25388896d47e11a25952fad.s3tc.ctex"]
+dest_files=["res://.godot/imported/warden_anchor_albedo_v1.png-e0a9815aa25388896d47e11a25952fad.s3tc.ctex", "res://.godot/imported/warden_anchor_albedo_v1.png-e0a9815aa25388896d47e11a25952fad.etc2.ctex"]
 
 [params]
 

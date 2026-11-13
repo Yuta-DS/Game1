@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://tvg18wk8onuq"
 path.s3tc="res://.godot/imported/undo Icon.png-1938ca1a21a0d06a11da7205b03ee8bc.s3tc.ctex"
+path.etc2="res://.godot/imported/undo Icon.png-1938ca1a21a0d06a11da7205b03ee8bc.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://undo Icon.png"
-dest_files=["res://.godot/imported/undo Icon.png-1938ca1a21a0d06a11da7205b03ee8bc.s3tc.ctex"]
+dest_files=["res://.godot/imported/undo Icon.png-1938ca1a21a0d06a11da7205b03ee8bc.s3tc.ctex", "res://.godot/imported/undo Icon.png-1938ca1a21a0d06a11da7205b03ee8bc.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6rxle4wbv5jt"
 path.s3tc="res://.godot/imported/underside_charcoal_tech_v2.png-ebcfbcd56a3527627b2b8354a4900caa.s3tc.ctex"
+path.etc2="res://.godot/imported/underside_charcoal_tech_v2.png-ebcfbcd56a3527627b2b8354a4900caa.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v2/underside_charcoal_tech_v2.png"
-dest_files=["res://.godot/imported/underside_charcoal_tech_v2.png-ebcfbcd56a3527627b2b8354a4900caa.s3tc.ctex"]
+dest_files=["res://.godot/imported/underside_charcoal_tech_v2.png-ebcfbcd56a3527627b2b8354a4900caa.s3tc.ctex", "res://.godot/imported/underside_charcoal_tech_v2.png-ebcfbcd56a3527627b2b8354a4900caa.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5p1fi176i4va"
 path.s3tc="res://.godot/imported/ivory_ceramic_roughness.png-fddfc797d1dde3c25841c98384356cf1.s3tc.ctex"
+path.etc2="res://.godot/imported/ivory_ceramic_roughness.png-fddfc797d1dde3c25841c98384356cf1.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/ivory_ceramic_roughness.png"
-dest_files=["res://.godot/imported/ivory_ceramic_roughness.png-fddfc797d1dde3c25841c98384356cf1.s3tc.ctex"]
+dest_files=["res://.godot/imported/ivory_ceramic_roughness.png-fddfc797d1dde3c25841c98384356cf1.s3tc.ctex", "res://.godot/imported/ivory_ceramic_roughness.png-fddfc797d1dde3c25841c98384356cf1.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://f2dnjvt0idy8"
 path.s3tc="res://.godot/imported/crown_line_lego_train_roof_turquoise_enamel_metallic-roof_turquoise_enamel_roughness.png-23d3bef3584848784d821793be9de2ec.s3tc.ctex"
+path.etc2="res://.godot/imported/crown_line_lego_train_roof_turquoise_enamel_metallic-roof_turquoise_enamel_roughness.png-23d3bef3584848784d821793be9de2ec.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/crown_line_train/crown_line_lego_train_roof_turquoise_enamel_metallic-roof_turquoise_enamel_roughness.png"
-dest_files=["res://.godot/imported/crown_line_lego_train_roof_turquoise_enamel_metallic-roof_turquoise_enamel_roughness.png-23d3bef3584848784d821793be9de2ec.s3tc.ctex"]
+dest_files=["res://.godot/imported/crown_line_lego_train_roof_turquoise_enamel_metallic-roof_turquoise_enamel_roughness.png-23d3bef3584848784d821793be9de2ec.s3tc.ctex", "res://.godot/imported/crown_line_lego_train_roof_turquoise_enamel_metallic-roof_turquoise_enamel_roughness.png-23d3bef3584848784d821793be9de2ec.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cec14qq61pne2"
 path.s3tc="res://.godot/imported/emerald_sensor_leaf_reference_rgba.png-8b55fccf89cd5dcd64008382a7b119ee.s3tc.ctex"
+path.etc2="res://.godot/imported/emerald_sensor_leaf_reference_rgba.png-8b55fccf89cd5dcd64008382a7b119ee.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/leaves/reference_faithful/textures/emerald_sensor_leaf_reference_rgba.png"
-dest_files=["res://.godot/imported/emerald_sensor_leaf_reference_rgba.png-8b55fccf89cd5dcd64008382a7b119ee.s3tc.ctex"]
+dest_files=["res://.godot/imported/emerald_sensor_leaf_reference_rgba.png-8b55fccf89cd5dcd64008382a7b119ee.s3tc.ctex", "res://.godot/imported/emerald_sensor_leaf_reference_rgba.png-8b55fccf89cd5dcd64008382a7b119ee.etc2.ctex"]
 
 [params]
 

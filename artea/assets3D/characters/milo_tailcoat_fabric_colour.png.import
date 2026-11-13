@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bu1l7eh6gv3lv"
 path.s3tc="res://.godot/imported/milo_tailcoat_fabric_colour.png-af10d48a75f449999c96316d948151b8.s3tc.ctex"
+path.etc2="res://.godot/imported/milo_tailcoat_fabric_colour.png-af10d48a75f449999c96316d948151b8.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/characters/milo_tailcoat_fabric_colour.png"
-dest_files=["res://.godot/imported/milo_tailcoat_fabric_colour.png-af10d48a75f449999c96316d948151b8.s3tc.ctex"]
+dest_files=["res://.godot/imported/milo_tailcoat_fabric_colour.png-af10d48a75f449999c96316d948151b8.s3tc.ctex", "res://.godot/imported/milo_tailcoat_fabric_colour.png-af10d48a75f449999c96316d948151b8.etc2.ctex"]
 
 [params]
 

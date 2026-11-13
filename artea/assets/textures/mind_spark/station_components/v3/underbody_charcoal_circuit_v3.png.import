@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cy4c8cwk52227"
 path.s3tc="res://.godot/imported/underbody_charcoal_circuit_v3.png-4965404124a288e34800c3ebbab93922.s3tc.ctex"
+path.etc2="res://.godot/imported/underbody_charcoal_circuit_v3.png-4965404124a288e34800c3ebbab93922.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v3/underbody_charcoal_circuit_v3.png"
-dest_files=["res://.godot/imported/underbody_charcoal_circuit_v3.png-4965404124a288e34800c3ebbab93922.s3tc.ctex"]
+dest_files=["res://.godot/imported/underbody_charcoal_circuit_v3.png-4965404124a288e34800c3ebbab93922.s3tc.ctex", "res://.godot/imported/underbody_charcoal_circuit_v3.png-4965404124a288e34800c3ebbab93922.etc2.ctex"]
 
 [params]
 

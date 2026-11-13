@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c50lg6ct6mdg6"
 path.s3tc="res://.godot/imported/cyan_circuit_glass_normal.png-4d85aaaa22a97577660c3d552b7578ed.s3tc.ctex"
+path.etc2="res://.godot/imported/cyan_circuit_glass_normal.png-4d85aaaa22a97577660c3d552b7578ed.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/cyan_circuit_glass_normal.png"
-dest_files=["res://.godot/imported/cyan_circuit_glass_normal.png-4d85aaaa22a97577660c3d552b7578ed.s3tc.ctex"]
+dest_files=["res://.godot/imported/cyan_circuit_glass_normal.png-4d85aaaa22a97577660c3d552b7578ed.s3tc.ctex", "res://.godot/imported/cyan_circuit_glass_normal.png-4d85aaaa22a97577660c3d552b7578ed.etc2.ctex"]
 
 [params]
 

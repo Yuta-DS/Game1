@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cu55bfamk7d0c"
 path.s3tc="res://.godot/imported/clear_path_projector_albedo_v1.png-83f6d44020e4a6a51db1659921f249d8.s3tc.ctex"
+path.etc2="res://.godot/imported/clear_path_projector_albedo_v1.png-83f6d44020e4a6a51db1659921f249d8.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/quest_objects/clear_path_projector_albedo_v1.png"
-dest_files=["res://.godot/imported/clear_path_projector_albedo_v1.png-83f6d44020e4a6a51db1659921f249d8.s3tc.ctex"]
+dest_files=["res://.godot/imported/clear_path_projector_albedo_v1.png-83f6d44020e4a6a51db1659921f249d8.s3tc.ctex", "res://.godot/imported/clear_path_projector_albedo_v1.png-83f6d44020e4a6a51db1659921f249d8.etc2.ctex"]
 
 [params]
 

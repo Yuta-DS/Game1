@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgs0ow52qw6on"
 path.s3tc="res://.godot/imported/violet_crystal_height.png-32f4158e90ae13d012fed36f00f457ee.s3tc.ctex"
+path.etc2="res://.godot/imported/violet_crystal_height.png-32f4158e90ae13d012fed36f00f457ee.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/violet_crystal_height.png"
-dest_files=["res://.godot/imported/violet_crystal_height.png-32f4158e90ae13d012fed36f00f457ee.s3tc.ctex"]
+dest_files=["res://.godot/imported/violet_crystal_height.png-32f4158e90ae13d012fed36f00f457ee.s3tc.ctex", "res://.godot/imported/violet_crystal_height.png-32f4158e90ae13d012fed36f00f457ee.etc2.ctex"]
 
 [params]
 

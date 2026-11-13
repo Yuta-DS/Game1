@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bifn0ynjn5mnc"
 path.s3tc="res://.godot/imported/tiles.png-34a3fe54879eb2ec3f1f5906cb0a0345.s3tc.ctex"
+path.etc2="res://.godot/imported/tiles.png-34a3fe54879eb2ec3f1f5906cb0a0345.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Purple Bay/Assets/tiles.png"
-dest_files=["res://.godot/imported/tiles.png-34a3fe54879eb2ec3f1f5906cb0a0345.s3tc.ctex"]
+dest_files=["res://.godot/imported/tiles.png-34a3fe54879eb2ec3f1f5906cb0a0345.s3tc.ctex", "res://.godot/imported/tiles.png-34a3fe54879eb2ec3f1f5906cb0a0345.etc2.ctex"]
 
 [params]
 

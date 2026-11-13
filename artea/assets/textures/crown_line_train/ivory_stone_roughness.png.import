@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c76ky4ivbcthe"
 path.s3tc="res://.godot/imported/ivory_stone_roughness.png-658d98034aa2e968ff95a3e22fc88388.s3tc.ctex"
+path.etc2="res://.godot/imported/ivory_stone_roughness.png-658d98034aa2e968ff95a3e22fc88388.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/ivory_stone_roughness.png"
-dest_files=["res://.godot/imported/ivory_stone_roughness.png-658d98034aa2e968ff95a3e22fc88388.s3tc.ctex"]
+dest_files=["res://.godot/imported/ivory_stone_roughness.png-658d98034aa2e968ff95a3e22fc88388.s3tc.ctex", "res://.godot/imported/ivory_stone_roughness.png-658d98034aa2e968ff95a3e22fc88388.etc2.ctex"]
 
 [params]
 

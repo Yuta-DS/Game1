@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwpiu7qs47vlu"
 path.s3tc="res://.godot/imported/Crescent_Moon_PNG_Clip_Art_Image.png-0edabceab939da1203e34ac2bcb77673.s3tc.ctex"
+path.etc2="res://.godot/imported/Crescent_Moon_PNG_Clip_Art_Image.png-0edabceab939da1203e34ac2bcb77673.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://scripts/assets3D/Crescent_Moon_PNG_Clip_Art_Image.png"
-dest_files=["res://.godot/imported/Crescent_Moon_PNG_Clip_Art_Image.png-0edabceab939da1203e34ac2bcb77673.s3tc.ctex"]
+dest_files=["res://.godot/imported/Crescent_Moon_PNG_Clip_Art_Image.png-0edabceab939da1203e34ac2bcb77673.s3tc.ctex", "res://.godot/imported/Crescent_Moon_PNG_Clip_Art_Image.png-0edabceab939da1203e34ac2bcb77673.etc2.ctex"]
 
 [params]
 

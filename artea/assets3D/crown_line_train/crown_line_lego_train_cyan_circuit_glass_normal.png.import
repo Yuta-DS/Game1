@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bxhdojeiayrx5"
 path.s3tc="res://.godot/imported/crown_line_lego_train_cyan_circuit_glass_normal.png-454b05130436463e4e962a71b405c70b.s3tc.ctex"
+path.etc2="res://.godot/imported/crown_line_lego_train_cyan_circuit_glass_normal.png-454b05130436463e4e962a71b405c70b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/crown_line_train/crown_line_lego_train_cyan_circuit_glass_normal.png"
-dest_files=["res://.godot/imported/crown_line_lego_train_cyan_circuit_glass_normal.png-454b05130436463e4e962a71b405c70b.s3tc.ctex"]
+dest_files=["res://.godot/imported/crown_line_lego_train_cyan_circuit_glass_normal.png-454b05130436463e4e962a71b405c70b.s3tc.ctex", "res://.godot/imported/crown_line_lego_train_cyan_circuit_glass_normal.png-454b05130436463e4e962a71b405c70b.etc2.ctex"]
 
 [params]
 

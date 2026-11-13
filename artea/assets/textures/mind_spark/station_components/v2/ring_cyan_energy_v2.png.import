@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cn3hdvkd0fgyh"
 path.s3tc="res://.godot/imported/ring_cyan_energy_v2.png-70686e4e72c46e72b013f2ab755f6b10.s3tc.ctex"
+path.etc2="res://.godot/imported/ring_cyan_energy_v2.png-70686e4e72c46e72b013f2ab755f6b10.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v2/ring_cyan_energy_v2.png"
-dest_files=["res://.godot/imported/ring_cyan_energy_v2.png-70686e4e72c46e72b013f2ab755f6b10.s3tc.ctex"]
+dest_files=["res://.godot/imported/ring_cyan_energy_v2.png-70686e4e72c46e72b013f2ab755f6b10.s3tc.ctex", "res://.godot/imported/ring_cyan_energy_v2.png-70686e4e72c46e72b013f2ab755f6b10.etc2.ctex"]
 
 [params]
 

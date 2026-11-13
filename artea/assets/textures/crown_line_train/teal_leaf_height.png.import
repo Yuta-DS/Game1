@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgtcj4c4cl1ju"
 path.s3tc="res://.godot/imported/teal_leaf_height.png-d34721cfa8002e5e48d9b1eb40c6f78a.s3tc.ctex"
+path.etc2="res://.godot/imported/teal_leaf_height.png-d34721cfa8002e5e48d9b1eb40c6f78a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/teal_leaf_height.png"
-dest_files=["res://.godot/imported/teal_leaf_height.png-d34721cfa8002e5e48d9b1eb40c6f78a.s3tc.ctex"]
+dest_files=["res://.godot/imported/teal_leaf_height.png-d34721cfa8002e5e48d9b1eb40c6f78a.s3tc.ctex", "res://.godot/imported/teal_leaf_height.png-d34721cfa8002e5e48d9b1eb40c6f78a.etc2.ctex"]
 
 [params]
 

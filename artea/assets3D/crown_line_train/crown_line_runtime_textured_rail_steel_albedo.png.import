@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dil576817hes5"
 path.s3tc="res://.godot/imported/crown_line_runtime_textured_rail_steel_albedo.png-1cbb8de7fe85f77b37a72d378513ad13.s3tc.ctex"
+path.etc2="res://.godot/imported/crown_line_runtime_textured_rail_steel_albedo.png-1cbb8de7fe85f77b37a72d378513ad13.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/crown_line_train/crown_line_runtime_textured_rail_steel_albedo.png"
-dest_files=["res://.godot/imported/crown_line_runtime_textured_rail_steel_albedo.png-1cbb8de7fe85f77b37a72d378513ad13.s3tc.ctex"]
+dest_files=["res://.godot/imported/crown_line_runtime_textured_rail_steel_albedo.png-1cbb8de7fe85f77b37a72d378513ad13.s3tc.ctex", "res://.godot/imported/crown_line_runtime_textured_rail_steel_albedo.png-1cbb8de7fe85f77b37a72d378513ad13.etc2.ctex"]
 
 [params]
 

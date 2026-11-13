@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://wgm61cen41ua"
 path.s3tc="res://.godot/imported/aged_gold_roughness.png-961b5b15621c03a6dfd7271b08dc6c9e.s3tc.ctex"
+path.etc2="res://.godot/imported/aged_gold_roughness.png-961b5b15621c03a6dfd7271b08dc6c9e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/aged_gold_roughness.png"
-dest_files=["res://.godot/imported/aged_gold_roughness.png-961b5b15621c03a6dfd7271b08dc6c9e.s3tc.ctex"]
+dest_files=["res://.godot/imported/aged_gold_roughness.png-961b5b15621c03a6dfd7271b08dc6c9e.s3tc.ctex", "res://.godot/imported/aged_gold_roughness.png-961b5b15621c03a6dfd7271b08dc6c9e.etc2.ctex"]
 
 [params]
 

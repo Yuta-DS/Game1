@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bxm4f465lnm3l"
 path.s3tc="res://.godot/imported/milo_mayor_lowpoly_texture_0.png-7b2e4124f062fcc07f7e14a8a5d93605.s3tc.ctex"
+path.etc2="res://.godot/imported/milo_mayor_lowpoly_texture_0.png-7b2e4124f062fcc07f7e14a8a5d93605.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/characters/milo_mayor_lowpoly_texture_0.png"
-dest_files=["res://.godot/imported/milo_mayor_lowpoly_texture_0.png-7b2e4124f062fcc07f7e14a8a5d93605.s3tc.ctex"]
+dest_files=["res://.godot/imported/milo_mayor_lowpoly_texture_0.png-7b2e4124f062fcc07f7e14a8a5d93605.s3tc.ctex", "res://.godot/imported/milo_mayor_lowpoly_texture_0.png-7b2e4124f062fcc07f7e14a8a5d93605.etc2.ctex"]
 
 [params]
 

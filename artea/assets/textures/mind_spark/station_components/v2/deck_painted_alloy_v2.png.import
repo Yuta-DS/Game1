@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dlie2pleikpw1"
 path.s3tc="res://.godot/imported/deck_painted_alloy_v2.png-da724f0986bada35c95aa2b26e9c4669.s3tc.ctex"
+path.etc2="res://.godot/imported/deck_painted_alloy_v2.png-da724f0986bada35c95aa2b26e9c4669.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v2/deck_painted_alloy_v2.png"
-dest_files=["res://.godot/imported/deck_painted_alloy_v2.png-da724f0986bada35c95aa2b26e9c4669.s3tc.ctex"]
+dest_files=["res://.godot/imported/deck_painted_alloy_v2.png-da724f0986bada35c95aa2b26e9c4669.s3tc.ctex", "res://.godot/imported/deck_painted_alloy_v2.png-da724f0986bada35c95aa2b26e9c4669.etc2.ctex"]
 
 [params]
 

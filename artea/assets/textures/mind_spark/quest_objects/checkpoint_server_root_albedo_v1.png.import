@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dxbh6650i2t1l"
 path.s3tc="res://.godot/imported/checkpoint_server_root_albedo_v1.png-55d11a2c5a2a53ed6287d046b2489c55.s3tc.ctex"
+path.etc2="res://.godot/imported/checkpoint_server_root_albedo_v1.png-55d11a2c5a2a53ed6287d046b2489c55.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/quest_objects/checkpoint_server_root_albedo_v1.png"
-dest_files=["res://.godot/imported/checkpoint_server_root_albedo_v1.png-55d11a2c5a2a53ed6287d046b2489c55.s3tc.ctex"]
+dest_files=["res://.godot/imported/checkpoint_server_root_albedo_v1.png-55d11a2c5a2a53ed6287d046b2489c55.s3tc.ctex", "res://.godot/imported/checkpoint_server_root_albedo_v1.png-55d11a2c5a2a53ed6287d046b2489c55.etc2.ctex"]
 
 [params]
 

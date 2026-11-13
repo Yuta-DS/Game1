@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dr2ganqwjtmqn"
 path.s3tc="res://.godot/imported/energy_mathematical_cyan_v3.png-07631903d800cb31f6a189a813dce4ea.s3tc.ctex"
+path.etc2="res://.godot/imported/energy_mathematical_cyan_v3.png-07631903d800cb31f6a189a813dce4ea.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v3/energy_mathematical_cyan_v3.png"
-dest_files=["res://.godot/imported/energy_mathematical_cyan_v3.png-07631903d800cb31f6a189a813dce4ea.s3tc.ctex"]
+dest_files=["res://.godot/imported/energy_mathematical_cyan_v3.png-07631903d800cb31f6a189a813dce4ea.s3tc.ctex", "res://.godot/imported/energy_mathematical_cyan_v3.png-07631903d800cb31f6a189a813dce4ea.etc2.ctex"]
 
 [params]
 

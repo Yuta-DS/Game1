@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnxkj56oymo24"
 path.s3tc="res://.godot/imported/indigo_floral_upholstery_albedo.png-4a30e99b6dfe92d2b99bb08a9ab97a3a.s3tc.ctex"
+path.etc2="res://.godot/imported/indigo_floral_upholstery_albedo.png-4a30e99b6dfe92d2b99bb08a9ab97a3a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/indigo_floral_upholstery_albedo.png"
-dest_files=["res://.godot/imported/indigo_floral_upholstery_albedo.png-4a30e99b6dfe92d2b99bb08a9ab97a3a.s3tc.ctex"]
+dest_files=["res://.godot/imported/indigo_floral_upholstery_albedo.png-4a30e99b6dfe92d2b99bb08a9ab97a3a.s3tc.ctex", "res://.godot/imported/indigo_floral_upholstery_albedo.png-4a30e99b6dfe92d2b99bb08a9ab97a3a.etc2.ctex"]
 
 [params]
 

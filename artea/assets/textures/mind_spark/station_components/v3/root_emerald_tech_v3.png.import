@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://wwspnoqu0in5"
 path.s3tc="res://.godot/imported/root_emerald_tech_v3.png-ff88c7367c2e0406469b3c9721841e50.s3tc.ctex"
+path.etc2="res://.godot/imported/root_emerald_tech_v3.png-ff88c7367c2e0406469b3c9721841e50.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v3/root_emerald_tech_v3.png"
-dest_files=["res://.godot/imported/root_emerald_tech_v3.png-ff88c7367c2e0406469b3c9721841e50.s3tc.ctex"]
+dest_files=["res://.godot/imported/root_emerald_tech_v3.png-ff88c7367c2e0406469b3c9721841e50.s3tc.ctex", "res://.godot/imported/root_emerald_tech_v3.png-ff88c7367c2e0406469b3c9721841e50.etc2.ctex"]
 
 [params]
 

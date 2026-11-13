@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bdpjytih72x6d"
 path.s3tc="res://.godot/imported/living_leaf_fan_chroma_source.png-706ee6284fab4c02813257ae8ff09eb5.s3tc.ctex"
+path.etc2="res://.godot/imported/living_leaf_fan_chroma_source.png-706ee6284fab4c02813257ae8ff09eb5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/leaves/reference_faithful/textures/living_leaf_fan_chroma_source.png"
-dest_files=["res://.godot/imported/living_leaf_fan_chroma_source.png-706ee6284fab4c02813257ae8ff09eb5.s3tc.ctex"]
+dest_files=["res://.godot/imported/living_leaf_fan_chroma_source.png-706ee6284fab4c02813257ae8ff09eb5.s3tc.ctex", "res://.godot/imported/living_leaf_fan_chroma_source.png-706ee6284fab4c02813257ae8ff09eb5.etc2.ctex"]
 
 [params]
 

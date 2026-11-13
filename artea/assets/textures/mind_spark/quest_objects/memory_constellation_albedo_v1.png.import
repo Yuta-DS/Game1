@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bawcnj0t8yir5"
 path.s3tc="res://.godot/imported/memory_constellation_albedo_v1.png-088c51c6f311015a7ecbb6d10057dc1d.s3tc.ctex"
+path.etc2="res://.godot/imported/memory_constellation_albedo_v1.png-088c51c6f311015a7ecbb6d10057dc1d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/quest_objects/memory_constellation_albedo_v1.png"
-dest_files=["res://.godot/imported/memory_constellation_albedo_v1.png-088c51c6f311015a7ecbb6d10057dc1d.s3tc.ctex"]
+dest_files=["res://.godot/imported/memory_constellation_albedo_v1.png-088c51c6f311015a7ecbb6d10057dc1d.s3tc.ctex", "res://.godot/imported/memory_constellation_albedo_v1.png-088c51c6f311015a7ecbb6d10057dc1d.etc2.ctex"]
 
 [params]
 

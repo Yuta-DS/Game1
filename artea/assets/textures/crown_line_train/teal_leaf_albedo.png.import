@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ctbo05yd40tcn"
 path.s3tc="res://.godot/imported/teal_leaf_albedo.png-73c2afa43c4abb558f70280dbbf5c45a.s3tc.ctex"
+path.etc2="res://.godot/imported/teal_leaf_albedo.png-73c2afa43c4abb558f70280dbbf5c45a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/teal_leaf_albedo.png"
-dest_files=["res://.godot/imported/teal_leaf_albedo.png-73c2afa43c4abb558f70280dbbf5c45a.s3tc.ctex"]
+dest_files=["res://.godot/imported/teal_leaf_albedo.png-73c2afa43c4abb558f70280dbbf5c45a.s3tc.ctex", "res://.godot/imported/teal_leaf_albedo.png-73c2afa43c4abb558f70280dbbf5c45a.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://f0v4b857oqbw"
 path.s3tc="res://.godot/imported/living_branch_teal_albedo.png-0e86b6279f14abdcd8097ea32bb81fb8.s3tc.ctex"
+path.etc2="res://.godot/imported/living_branch_teal_albedo.png-0e86b6279f14abdcd8097ea32bb81fb8.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/leaves/textures/living_branch_teal_albedo.png"
-dest_files=["res://.godot/imported/living_branch_teal_albedo.png-0e86b6279f14abdcd8097ea32bb81fb8.s3tc.ctex"]
+dest_files=["res://.godot/imported/living_branch_teal_albedo.png-0e86b6279f14abdcd8097ea32bb81fb8.s3tc.ctex", "res://.godot/imported/living_branch_teal_albedo.png-0e86b6279f14abdcd8097ea32bb81fb8.etc2.ctex"]
 
 [params]
 

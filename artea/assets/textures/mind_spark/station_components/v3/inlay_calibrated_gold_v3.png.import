@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cslosnptkb2pw"
 path.s3tc="res://.godot/imported/inlay_calibrated_gold_v3.png-5f6123b0081cdbc1bc200de2a0e1a1ff.s3tc.ctex"
+path.etc2="res://.godot/imported/inlay_calibrated_gold_v3.png-5f6123b0081cdbc1bc200de2a0e1a1ff.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v3/inlay_calibrated_gold_v3.png"
-dest_files=["res://.godot/imported/inlay_calibrated_gold_v3.png-5f6123b0081cdbc1bc200de2a0e1a1ff.s3tc.ctex"]
+dest_files=["res://.godot/imported/inlay_calibrated_gold_v3.png-5f6123b0081cdbc1bc200de2a0e1a1ff.s3tc.ctex", "res://.godot/imported/inlay_calibrated_gold_v3.png-5f6123b0081cdbc1bc200de2a0e1a1ff.etc2.ctex"]
 
 [params]
 

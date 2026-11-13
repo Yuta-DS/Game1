@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cww4ac07g2iva"
 path.s3tc="res://.godot/imported/red rect.png-85429fd119eed80a7128c55e3e787335.s3tc.ctex"
+path.etc2="res://.godot/imported/red rect.png-85429fd119eed80a7128c55e3e787335.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/red rect.png"
-dest_files=["res://.godot/imported/red rect.png-85429fd119eed80a7128c55e3e787335.s3tc.ctex"]
+dest_files=["res://.godot/imported/red rect.png-85429fd119eed80a7128c55e3e787335.s3tc.ctex", "res://.godot/imported/red rect.png-85429fd119eed80a7128c55e3e787335.etc2.ctex"]
 
 [params]
 

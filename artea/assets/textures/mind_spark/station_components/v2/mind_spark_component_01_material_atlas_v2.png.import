@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddhgxxrrp38kq"
 path.s3tc="res://.godot/imported/mind_spark_component_01_material_atlas_v2.png-45bfc224482de444e7213ae3006fb599.s3tc.ctex"
+path.etc2="res://.godot/imported/mind_spark_component_01_material_atlas_v2.png-45bfc224482de444e7213ae3006fb599.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v2/mind_spark_component_01_material_atlas_v2.png"
-dest_files=["res://.godot/imported/mind_spark_component_01_material_atlas_v2.png-45bfc224482de444e7213ae3006fb599.s3tc.ctex"]
+dest_files=["res://.godot/imported/mind_spark_component_01_material_atlas_v2.png-45bfc224482de444e7213ae3006fb599.s3tc.ctex", "res://.godot/imported/mind_spark_component_01_material_atlas_v2.png-45bfc224482de444e7213ae3006fb599.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbqk31dcksaft"
 path.s3tc="res://.godot/imported/cream_interior_albedo.png-2698acbb0ade2d6aa4f6c3298c19c781.s3tc.ctex"
+path.etc2="res://.godot/imported/cream_interior_albedo.png-2698acbb0ade2d6aa4f6c3298c19c781.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/cream_interior_albedo.png"
-dest_files=["res://.godot/imported/cream_interior_albedo.png-2698acbb0ade2d6aa4f6c3298c19c781.s3tc.ctex"]
+dest_files=["res://.godot/imported/cream_interior_albedo.png-2698acbb0ade2d6aa4f6c3298c19c781.s3tc.ctex", "res://.godot/imported/cream_interior_albedo.png-2698acbb0ade2d6aa4f6c3298c19c781.etc2.ctex"]
 
 [params]
 

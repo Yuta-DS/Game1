@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://brvx5ewatrs3e"
 path.s3tc="res://.godot/imported/Background-2.png-175db570991dffe8a7a7bf1d6f0dcb92.s3tc.ctex"
+path.etc2="res://.godot/imported/Background-2.png-175db570991dffe8a7a7bf1d6f0dcb92.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Background/Background-2.png"
-dest_files=["res://.godot/imported/Background-2.png-175db570991dffe8a7a7bf1d6f0dcb92.s3tc.ctex"]
+dest_files=["res://.godot/imported/Background-2.png-175db570991dffe8a7a7bf1d6f0dcb92.s3tc.ctex", "res://.godot/imported/Background-2.png-175db570991dffe8a7a7bf1d6f0dcb92.etc2.ctex"]
 
 [params]
 

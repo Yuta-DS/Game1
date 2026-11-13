@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ckqpt0d6aro3f"
 path.s3tc="res://.godot/imported/perspective_lens_albedo_v1.png-b4be3e98c5dd4ab084af95187274578c.s3tc.ctex"
+path.etc2="res://.godot/imported/perspective_lens_albedo_v1.png-b4be3e98c5dd4ab084af95187274578c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/quest_objects/perspective_lens_albedo_v1.png"
-dest_files=["res://.godot/imported/perspective_lens_albedo_v1.png-b4be3e98c5dd4ab084af95187274578c.s3tc.ctex"]
+dest_files=["res://.godot/imported/perspective_lens_albedo_v1.png-b4be3e98c5dd4ab084af95187274578c.s3tc.ctex", "res://.godot/imported/perspective_lens_albedo_v1.png-b4be3e98c5dd4ab084af95187274578c.etc2.ctex"]
 
 [params]
 

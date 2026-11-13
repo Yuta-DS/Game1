@@ -3,15 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bbtl7xs2pml50"
-path="res://.godot/imported/tree_of_life_trunk_detail.png-64bd28f52058135db43aa34f222de0d4.ctex"
+path.s3tc="res://.godot/imported/tree_of_life_trunk_detail.png-64bd28f52058135db43aa34f222de0d4.s3tc.ctex"
+path.etc2="res://.godot/imported/tree_of_life_trunk_detail.png-64bd28f52058135db43aa34f222de0d4.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/trunk_core/renders/tree_of_life_trunk_detail.png"
-dest_files=["res://.godot/imported/tree_of_life_trunk_detail.png-64bd28f52058135db43aa34f222de0d4.ctex"]
+dest_files=["res://.godot/imported/tree_of_life_trunk_detail.png-64bd28f52058135db43aa34f222de0d4.s3tc.ctex", "res://.godot/imported/tree_of_life_trunk_detail.png-64bd28f52058135db43aa34f222de0d4.etc2.ctex"]
 
 [params]
 

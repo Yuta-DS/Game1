@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b4n6f0p7gdsc5"
 path.s3tc="res://.godot/imported/rail_steel_roughness.png-fadb2564a06c0a1910a432707aef33c7.s3tc.ctex"
+path.etc2="res://.godot/imported/rail_steel_roughness.png-fadb2564a06c0a1910a432707aef33c7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/rail_steel_roughness.png"
-dest_files=["res://.godot/imported/rail_steel_roughness.png-fadb2564a06c0a1910a432707aef33c7.s3tc.ctex"]
+dest_files=["res://.godot/imported/rail_steel_roughness.png-fadb2564a06c0a1910a432707aef33c7.s3tc.ctex", "res://.godot/imported/rail_steel_roughness.png-fadb2564a06c0a1910a432707aef33c7.etc2.ctex"]
 
 [params]
 

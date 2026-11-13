@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bjjtx32n4x0b"
 path.s3tc="res://.godot/imported/cyan_crystal_emission.png-890df9ba084271a955ea64a75a34e0d1.s3tc.ctex"
+path.etc2="res://.godot/imported/cyan_crystal_emission.png-890df9ba084271a955ea64a75a34e0d1.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/cyan_crystal_emission.png"
-dest_files=["res://.godot/imported/cyan_crystal_emission.png-890df9ba084271a955ea64a75a34e0d1.s3tc.ctex"]
+dest_files=["res://.godot/imported/cyan_crystal_emission.png-890df9ba084271a955ea64a75a34e0d1.s3tc.ctex", "res://.godot/imported/cyan_crystal_emission.png-890df9ba084271a955ea64a75a34e0d1.etc2.ctex"]
 
 [params]
 

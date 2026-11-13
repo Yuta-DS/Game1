@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bfh1wjgqrjhlq"
 path.s3tc="res://.godot/imported/exitart.mesh.jpg-3ff80abb76314ac40dac29307e660e90.s3tc.ctex"
+path.etc2="res://.godot/imported/exitart.mesh.jpg-3ff80abb76314ac40dac29307e660e90.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://exitart.mesh.jpg"
-dest_files=["res://.godot/imported/exitart.mesh.jpg-3ff80abb76314ac40dac29307e660e90.s3tc.ctex"]
+dest_files=["res://.godot/imported/exitart.mesh.jpg-3ff80abb76314ac40dac29307e660e90.s3tc.ctex", "res://.godot/imported/exitart.mesh.jpg-3ff80abb76314ac40dac29307e660e90.etc2.ctex"]
 
 [params]
 

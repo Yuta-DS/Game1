@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cb606op3syfkf"
 path.s3tc="res://.godot/imported/crown_line_lego_train_violet_crystal_normal.png-8d7d4a688b0d432d1dee1643bd4fbcd9.s3tc.ctex"
+path.etc2="res://.godot/imported/crown_line_lego_train_violet_crystal_normal.png-8d7d4a688b0d432d1dee1643bd4fbcd9.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/crown_line_train/crown_line_lego_train_violet_crystal_normal.png"
-dest_files=["res://.godot/imported/crown_line_lego_train_violet_crystal_normal.png-8d7d4a688b0d432d1dee1643bd4fbcd9.s3tc.ctex"]
+dest_files=["res://.godot/imported/crown_line_lego_train_violet_crystal_normal.png-8d7d4a688b0d432d1dee1643bd4fbcd9.s3tc.ctex", "res://.godot/imported/crown_line_lego_train_violet_crystal_normal.png-8d7d4a688b0d432d1dee1643bd4fbcd9.etc2.ctex"]
 
 [params]
 

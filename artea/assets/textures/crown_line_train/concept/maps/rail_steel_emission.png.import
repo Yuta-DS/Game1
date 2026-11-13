@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cs1b4ixf63btk"
 path.s3tc="res://.godot/imported/rail_steel_emission.png-4e7ba56334f0b45999a60bbc89c0568c.s3tc.ctex"
+path.etc2="res://.godot/imported/rail_steel_emission.png-4e7ba56334f0b45999a60bbc89c0568c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/rail_steel_emission.png"
-dest_files=["res://.godot/imported/rail_steel_emission.png-4e7ba56334f0b45999a60bbc89c0568c.s3tc.ctex"]
+dest_files=["res://.godot/imported/rail_steel_emission.png-4e7ba56334f0b45999a60bbc89c0568c.s3tc.ctex", "res://.godot/imported/rail_steel_emission.png-4e7ba56334f0b45999a60bbc89c0568c.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c38a2yn71yj35"
 path.s3tc="res://.godot/imported/cyan_magic_height.png-736bdc43af0a9daf7ac475555d5b4c8d.s3tc.ctex"
+path.etc2="res://.godot/imported/cyan_magic_height.png-736bdc43af0a9daf7ac475555d5b4c8d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/cyan_magic_height.png"
-dest_files=["res://.godot/imported/cyan_magic_height.png-736bdc43af0a9daf7ac475555d5b4c8d.s3tc.ctex"]
+dest_files=["res://.godot/imported/cyan_magic_height.png-736bdc43af0a9daf7ac475555d5b4c8d.s3tc.ctex", "res://.godot/imported/cyan_magic_height.png-736bdc43af0a9daf7ac475555d5b4c8d.etc2.ctex"]
 
 [params]
 

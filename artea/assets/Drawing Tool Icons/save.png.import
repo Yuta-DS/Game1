@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b512rml8o4340"
 path.s3tc="res://.godot/imported/save.png-079019e54af027721e182f2f7b040780.s3tc.ctex"
+path.etc2="res://.godot/imported/save.png-079019e54af027721e182f2f7b040780.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Drawing Tool Icons/save.png"
-dest_files=["res://.godot/imported/save.png-079019e54af027721e182f2f7b040780.s3tc.ctex"]
+dest_files=["res://.godot/imported/save.png-079019e54af027721e182f2f7b040780.s3tc.ctex", "res://.godot/imported/save.png-079019e54af027721e182f2f7b040780.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cggxpi7q5ca3d"
 path.s3tc="res://.godot/imported/deck_radial_alloy_v3.png-841e676fe1350986e3a419fc4b812609.s3tc.ctex"
+path.etc2="res://.godot/imported/deck_radial_alloy_v3.png-841e676fe1350986e3a419fc4b812609.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v3/deck_radial_alloy_v3.png"
-dest_files=["res://.godot/imported/deck_radial_alloy_v3.png-841e676fe1350986e3a419fc4b812609.s3tc.ctex"]
+dest_files=["res://.godot/imported/deck_radial_alloy_v3.png-841e676fe1350986e3a419fc4b812609.s3tc.ctex", "res://.godot/imported/deck_radial_alloy_v3.png-841e676fe1350986e3a419fc4b812609.etc2.ctex"]
 
 [params]
 

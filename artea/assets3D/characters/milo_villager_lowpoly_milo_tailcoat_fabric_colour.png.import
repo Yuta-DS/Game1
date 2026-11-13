@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://q6768tkb6ex1"
 path.s3tc="res://.godot/imported/milo_villager_lowpoly_milo_tailcoat_fabric_colour.png-e4f86b7415cd78665f39f596d6502bf8.s3tc.ctex"
+path.etc2="res://.godot/imported/milo_villager_lowpoly_milo_tailcoat_fabric_colour.png-e4f86b7415cd78665f39f596d6502bf8.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/characters/milo_villager_lowpoly_milo_tailcoat_fabric_colour.png"
-dest_files=["res://.godot/imported/milo_villager_lowpoly_milo_tailcoat_fabric_colour.png-e4f86b7415cd78665f39f596d6502bf8.s3tc.ctex"]
+dest_files=["res://.godot/imported/milo_villager_lowpoly_milo_tailcoat_fabric_colour.png-e4f86b7415cd78665f39f596d6502bf8.s3tc.ctex", "res://.godot/imported/milo_villager_lowpoly_milo_tailcoat_fabric_colour.png-e4f86b7415cd78665f39f596d6502bf8.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c51ynkk7wj5x8"
 path.s3tc="res://.godot/imported/Idle-Sheet-White.png-3fdf2cdaaaf38a94cca95b33fa37080c.s3tc.ctex"
+path.etc2="res://.godot/imported/Idle-Sheet-White.png-3fdf2cdaaaf38a94cca95b33fa37080c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Idle/Idle-Sheet-White.png"
-dest_files=["res://.godot/imported/Idle-Sheet-White.png-3fdf2cdaaaf38a94cca95b33fa37080c.s3tc.ctex"]
+dest_files=["res://.godot/imported/Idle-Sheet-White.png-3fdf2cdaaaf38a94cca95b33fa37080c.s3tc.ctex", "res://.godot/imported/Idle-Sheet-White.png-3fdf2cdaaaf38a94cca95b33fa37080c.etc2.ctex"]
 
 [params]
 

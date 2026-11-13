@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://i1aspkvx1w38"
 path.s3tc="res://.godot/imported/crown_line_full_body_texture_atlas_v1.png-558d872f9f3cdc5f5fe0bf894c6e0594.s3tc.ctex"
+path.etc2="res://.godot/imported/crown_line_full_body_texture_atlas_v1.png-558d872f9f3cdc5f5fe0bf894c6e0594.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/crown_line_full_body_texture_atlas_v1.png"
-dest_files=["res://.godot/imported/crown_line_full_body_texture_atlas_v1.png-558d872f9f3cdc5f5fe0bf894c6e0594.s3tc.ctex"]
+dest_files=["res://.godot/imported/crown_line_full_body_texture_atlas_v1.png-558d872f9f3cdc5f5fe0bf894c6e0594.s3tc.ctex", "res://.godot/imported/crown_line_full_body_texture_atlas_v1.png-558d872f9f3cdc5f5fe0bf894c6e0594.etc2.ctex"]
 
 [params]
 

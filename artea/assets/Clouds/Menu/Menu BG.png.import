@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://tx6p2ucxpqgl"
 path.s3tc="res://.godot/imported/Menu BG.png-d082d943ae89090a96c765ffca68dffa.s3tc.ctex"
+path.etc2="res://.godot/imported/Menu BG.png-d082d943ae89090a96c765ffca68dffa.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Clouds/Menu/Menu BG.png"
-dest_files=["res://.godot/imported/Menu BG.png-d082d943ae89090a96c765ffca68dffa.s3tc.ctex"]
+dest_files=["res://.godot/imported/Menu BG.png-d082d943ae89090a96c765ffca68dffa.s3tc.ctex", "res://.godot/imported/Menu BG.png-d082d943ae89090a96c765ffca68dffa.etc2.ctex"]
 
 [params]
 

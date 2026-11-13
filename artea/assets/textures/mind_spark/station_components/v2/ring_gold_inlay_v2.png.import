@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://4icp72n2pfrh"
 path.s3tc="res://.godot/imported/ring_gold_inlay_v2.png-453f2c5be197f8cd81f8774b36b1a3b4.s3tc.ctex"
+path.etc2="res://.godot/imported/ring_gold_inlay_v2.png-453f2c5be197f8cd81f8774b36b1a3b4.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mind_spark/station_components/v2/ring_gold_inlay_v2.png"
-dest_files=["res://.godot/imported/ring_gold_inlay_v2.png-453f2c5be197f8cd81f8774b36b1a3b4.s3tc.ctex"]
+dest_files=["res://.godot/imported/ring_gold_inlay_v2.png-453f2c5be197f8cd81f8774b36b1a3b4.s3tc.ctex", "res://.godot/imported/ring_gold_inlay_v2.png-453f2c5be197f8cd81f8774b36b1a3b4.etc2.ctex"]
 
 [params]
 

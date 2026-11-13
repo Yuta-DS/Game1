@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cgfyvx0u78277"
 path.s3tc="res://.godot/imported/ivory_ceramic_albedo.png-96ac8c33b4a7a811a93449d1b271c127.s3tc.ctex"
+path.etc2="res://.godot/imported/ivory_ceramic_albedo.png-96ac8c33b4a7a811a93449d1b271c127.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/ivory_ceramic_albedo.png"
-dest_files=["res://.godot/imported/ivory_ceramic_albedo.png-96ac8c33b4a7a811a93449d1b271c127.s3tc.ctex"]
+dest_files=["res://.godot/imported/ivory_ceramic_albedo.png-96ac8c33b4a7a811a93449d1b271c127.s3tc.ctex", "res://.godot/imported/ivory_ceramic_albedo.png-96ac8c33b4a7a811a93449d1b271c127.etc2.ctex"]
 
 [params]
 

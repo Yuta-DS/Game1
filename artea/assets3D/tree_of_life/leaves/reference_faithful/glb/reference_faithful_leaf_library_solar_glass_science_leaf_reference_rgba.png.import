@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b1qwff7i2686j"
 path.s3tc="res://.godot/imported/reference_faithful_leaf_library_solar_glass_science_leaf_reference_rgba.png-bd3ff73a490cc18d0b6365dc09b88e95.s3tc.ctex"
+path.etc2="res://.godot/imported/reference_faithful_leaf_library_solar_glass_science_leaf_reference_rgba.png-bd3ff73a490cc18d0b6365dc09b88e95.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/leaves/reference_faithful/glb/reference_faithful_leaf_library_solar_glass_science_leaf_reference_rgba.png"
-dest_files=["res://.godot/imported/reference_faithful_leaf_library_solar_glass_science_leaf_reference_rgba.png-bd3ff73a490cc18d0b6365dc09b88e95.s3tc.ctex"]
+dest_files=["res://.godot/imported/reference_faithful_leaf_library_solar_glass_science_leaf_reference_rgba.png-bd3ff73a490cc18d0b6365dc09b88e95.s3tc.ctex", "res://.godot/imported/reference_faithful_leaf_library_solar_glass_science_leaf_reference_rgba.png-bd3ff73a490cc18d0b6365dc09b88e95.etc2.ctex"]
 
 [params]
 

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cuqq5va12ef2d"
 path.s3tc="res://.godot/imported/ivory_stone_height.png-b7d1cce1238c6d035ce44332dec06390.s3tc.ctex"
+path.etc2="res://.godot/imported/ivory_stone_height.png-b7d1cce1238c6d035ce44332dec06390.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/ivory_stone_height.png"
-dest_files=["res://.godot/imported/ivory_stone_height.png-b7d1cce1238c6d035ce44332dec06390.s3tc.ctex"]
+dest_files=["res://.godot/imported/ivory_stone_height.png-b7d1cce1238c6d035ce44332dec06390.s3tc.ctex", "res://.godot/imported/ivory_stone_height.png-b7d1cce1238c6d035ce44332dec06390.etc2.ctex"]
 
 [params]
 

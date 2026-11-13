@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://68y7jtrs3igr"
 path.s3tc="res://.godot/imported/crown_line_lego_train_violet_crystal_metallic-violet_crystal_roughness.png-ee4a45e77970d004f4cb0300b575a5bb.s3tc.ctex"
+path.etc2="res://.godot/imported/crown_line_lego_train_violet_crystal_metallic-violet_crystal_roughness.png-ee4a45e77970d004f4cb0300b575a5bb.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/crown_line_train/crown_line_lego_train_violet_crystal_metallic-violet_crystal_roughness.png"
-dest_files=["res://.godot/imported/crown_line_lego_train_violet_crystal_metallic-violet_crystal_roughness.png-ee4a45e77970d004f4cb0300b575a5bb.s3tc.ctex"]
+dest_files=["res://.godot/imported/crown_line_lego_train_violet_crystal_metallic-violet_crystal_roughness.png-ee4a45e77970d004f4cb0300b575a5bb.s3tc.ctex", "res://.godot/imported/crown_line_lego_train_violet_crystal_metallic-violet_crystal_roughness.png-ee4a45e77970d004f4cb0300b575a5bb.etc2.ctex"]
 
 [params]
 

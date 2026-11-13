@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c8dst48y3x0wy"
 path.s3tc="res://.godot/imported/magic_rune_leaf_chroma_source.png-d648a10e5b0d3fdcaf3aefe64cee880b.s3tc.ctex"
+path.etc2="res://.godot/imported/magic_rune_leaf_chroma_source.png-d648a10e5b0d3fdcaf3aefe64cee880b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/tree_of_life/leaves/reference_faithful/textures/magic_rune_leaf_chroma_source.png"
-dest_files=["res://.godot/imported/magic_rune_leaf_chroma_source.png-d648a10e5b0d3fdcaf3aefe64cee880b.s3tc.ctex"]
+dest_files=["res://.godot/imported/magic_rune_leaf_chroma_source.png-d648a10e5b0d3fdcaf3aefe64cee880b.s3tc.ctex", "res://.godot/imported/magic_rune_leaf_chroma_source.png-d648a10e5b0d3fdcaf3aefe64cee880b.etc2.ctex"]
 
 [params]
 

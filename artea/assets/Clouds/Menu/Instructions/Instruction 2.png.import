@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://chd25a3hdkagb"
 path.s3tc="res://.godot/imported/Instruction 2.png-733c17024f9df0fa43ce687b134742d5.s3tc.ctex"
+path.etc2="res://.godot/imported/Instruction 2.png-733c17024f9df0fa43ce687b134742d5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/Clouds/Menu/Instructions/Instruction 2.png"
-dest_files=["res://.godot/imported/Instruction 2.png-733c17024f9df0fa43ce687b134742d5.s3tc.ctex"]
+dest_files=["res://.godot/imported/Instruction 2.png-733c17024f9df0fa43ce687b134742d5.s3tc.ctex", "res://.godot/imported/Instruction 2.png-733c17024f9df0fa43ce687b134742d5.etc2.ctex"]
 
 [params]
 

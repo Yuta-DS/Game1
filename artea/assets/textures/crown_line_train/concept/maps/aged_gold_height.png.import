@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bh5sms6ml68lp"
 path.s3tc="res://.godot/imported/aged_gold_height.png-3bd9d1eace354e0f88e54a9ddb507b6d.s3tc.ctex"
+path.etc2="res://.godot/imported/aged_gold_height.png-3bd9d1eace354e0f88e54a9ddb507b6d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/aged_gold_height.png"
-dest_files=["res://.godot/imported/aged_gold_height.png-3bd9d1eace354e0f88e54a9ddb507b6d.s3tc.ctex"]
+dest_files=["res://.godot/imported/aged_gold_height.png-3bd9d1eace354e0f88e54a9ddb507b6d.s3tc.ctex", "res://.godot/imported/aged_gold_height.png-3bd9d1eace354e0f88e54a9ddb507b6d.etc2.ctex"]
 
 [params]
 

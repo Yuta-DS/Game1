@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6t5qrla28er5"
 path.s3tc="res://.godot/imported/crown_line_lego_train_aged_gold_normal.png-95c85fbc2ca875b28634a216891bcdd4.s3tc.ctex"
+path.etc2="res://.godot/imported/crown_line_lego_train_aged_gold_normal.png-95c85fbc2ca875b28634a216891bcdd4.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets3D/crown_line_train/crown_line_lego_train_aged_gold_normal.png"
-dest_files=["res://.godot/imported/crown_line_lego_train_aged_gold_normal.png-95c85fbc2ca875b28634a216891bcdd4.s3tc.ctex"]
+dest_files=["res://.godot/imported/crown_line_lego_train_aged_gold_normal.png-95c85fbc2ca875b28634a216891bcdd4.s3tc.ctex", "res://.godot/imported/crown_line_lego_train_aged_gold_normal.png-95c85fbc2ca875b28634a216891bcdd4.etc2.ctex"]
 
 [params]
 

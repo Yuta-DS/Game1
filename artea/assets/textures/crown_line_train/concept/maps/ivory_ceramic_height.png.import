@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://fot7v715cri8"
 path.s3tc="res://.godot/imported/ivory_ceramic_height.png-d44e69ccd0abe87a2b528fc524897f32.s3tc.ctex"
+path.etc2="res://.godot/imported/ivory_ceramic_height.png-d44e69ccd0abe87a2b528fc524897f32.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/crown_line_train/concept/maps/ivory_ceramic_height.png"
-dest_files=["res://.godot/imported/ivory_ceramic_height.png-d44e69ccd0abe87a2b528fc524897f32.s3tc.ctex"]
+dest_files=["res://.godot/imported/ivory_ceramic_height.png-d44e69ccd0abe87a2b528fc524897f32.s3tc.ctex", "res://.godot/imported/ivory_ceramic_height.png-d44e69ccd0abe87a2b528fc524897f32.etc2.ctex"]
 
 [params]
 
