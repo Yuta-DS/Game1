@@ -1,0 +1,20 @@
+{$ARTEA_DOMAIN} {
+	encode zstd gzip
+
+	# Keep the browser and Godot worker/WASM runtime cross-origin isolated.
+	header {
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Embedder-Policy "require-corp"
+		X-Content-Type-Options "nosniff"
+	}
+
+	# The web client uses /api on HTTPS, avoiding mixed-content and CORS.
+	handle_path /api/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	handle {
+		root * /srv/artea/web
+		file_server
+	}
+}

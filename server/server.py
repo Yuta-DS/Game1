@@ -15,19 +15,43 @@ import requests
 
 app = Flask(__name__)
 
+WEB_ALLOWED_ORIGINS = {
+    origin.strip()
+    for origin in os.environ.get(
+        "ARTEA_WEB_ALLOWED_ORIGINS",
+        "http://localhost:8060,http://127.0.0.1:8060",
+    ).split(",")
+    if origin.strip()
+}
+
+
+@app.after_request
+def add_web_api_headers(response):
+    """Allow the local Godot web build; production uses the same-origin proxy."""
+    origin = request.headers.get("Origin", "")
+    if origin in WEB_ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response.headers["Vary"] = "Origin"
+    return response
+
 # =========================
 # CONFIG
 # =========================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OPENROUTER_API_KEY = ""
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-USE_OPENROUTER = True
+USE_OPENROUTER = bool(OPENROUTER_API_KEY)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-app.config['JWT_SECRET_KEY'] = 'dev_secret_change_later_12345'
+app.config['JWT_SECRET_KEY'] = os.environ.get(
+    'ARTEA_JWT_SECRET_KEY',
+    'dev_secret_change_later_12345',
+)
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 
 db = SQLAlchemy(app)
@@ -317,7 +341,6 @@ if __name__ == '__main__':
 
     app.run(
         host='0.0.0.0',
-        port=80,
+        port=int(os.environ.get('ARTEA_PORT', '80')),
         debug=False
     )
-

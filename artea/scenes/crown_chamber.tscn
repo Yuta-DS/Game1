@@ -1,0 +1,423 @@
+[gd_scene load_steps=23 format=3]
+
+[ext_resource type="Script" path="res://scripts/CrownChamber.gd" id="1_chamber"]
+[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="99_galaxy"]
+[ext_resource type="Script" path="res://scripts/CastleFinale.gd" id="2_finale"]
+[ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://catvjmgmxqdgx" path="res://assets3D/house scenes/Prince.tscn" id="4_maker"]
+[ext_resource type="Script" path="res://scripts/CastleDeparture.gd" id="5_departure"]
+[ext_resource type="Script" path="res://scripts/WorldDoorway.gd" id="6_doorway"]
+[ext_resource type="Script" path="res://scripts/FloatingCastleWorld.gd" id="7_floating"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_galaxy"]
+panorama = ExtResource("99_galaxy")
+
+[sub_resource type="Sky" id="Sky_galaxy"]
+sky_material = SubResource("PanoramaSkyMaterial_galaxy")
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(26, 0.4, 40)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall"]
+size = Vector3(26, 9, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ceiling"]
+size = Vector3(26, 0.4, 40)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sidewall"]
+size = Vector3(40, 9, 0.6)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pillar"]
+top_radius = 0.6
+bottom_radius = 0.75
+height = 9.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_treasure"]
+radius = 0.42
+height = 0.84
+
+[sub_resource type="PrismMesh" id="PrismMesh_jewel"]
+size = Vector3(0.7, 0.9, 0.7)
+
+[sub_resource type="SphereMesh" id="SphereMesh_light"]
+radius = 0.95
+height = 1.9
+
+[sub_resource type="TorusMesh" id="TorusMesh_crown"]
+inner_radius = 0.55
+outer_radius = 0.85
+
+[sub_resource type="SphereMesh" id="SphereMesh_star"]
+radius = 0.3
+height = 0.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(7, 6, 7)
+
+[sub_resource type="TorusMesh" id="TorusMesh_portal"]
+inner_radius = 2.2
+outer_radius = 2.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_portal_mind"]
+albedo_color = Color(0.31, 0.847, 0.91, 1)
+emission_enabled = true
+emission = Color(0.31, 0.847, 0.91, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_portal_heart"]
+albedo_color = Color(1, 0.494, 0.659, 1)
+emission_enabled = true
+emission = Color(1, 0.494, 0.659, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_portal_creator"]
+albedo_color = Color(1, 0.71, 0.278, 1)
+emission_enabled = true
+emission = Color(1, 0.71, 0.278, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_entry"]
+size = Vector3(10, 5, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(26, 0.4, 40)
+
+[sub_resource type="StandardMaterial3D" id="Mat_stone"]
+albedo_color = Color(0.208, 0.192, 0.318, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_gold"]
+albedo_color = Color(0.91, 0.784, 0.416, 1)
+metallic = 0.85
+roughness = 0.25
+emission_enabled = true
+emission = Color(0.91, 0.784, 0.416, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_star"]
+albedo_color = Color(0.31, 0.847, 0.91, 1)
+emission_enabled = true
+emission = Color(0.31, 0.847, 0.91, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_jewel"]
+albedo_color = Color(1, 0.494, 0.659, 1)
+emission_enabled = true
+emission = Color(1, 0.494, 0.659, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_flame"]
+albedo_color = Color(1, 0.71, 0.278, 1)
+emission_enabled = true
+emission = Color(1, 0.71, 0.278, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_identity"]
+albedo_color = Color(1, 0.98, 0.92, 1)
+emission_enabled = true
+emission = Color(1, 0.95, 0.82, 1)
+emission_energy_multiplier = 3.5
+
+[sub_resource type="Environment" id="Env_chamber"]
+background_mode = 2
+sky = SubResource("Sky_galaxy")
+background_energy_multiplier = 1.0
+ambient_light_source = 2
+ambient_light_color = Color(0.52, 0.47, 0.7, 1)
+ambient_light_energy = 0.72
+
+[node name="CrownChamber" type="Node3D"]
+script = ExtResource("1_chamber")
+finale_path = NodePath("Finale")
+
+[node name="Finale" type="Node3D" parent="."]
+script = ExtResource("2_finale")
+gathering_time = 4.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_chamber")
+
+[node name="FloatingCastleWorld" type="Node3D" parent="."]
+script = ExtResource("7_floating")
+
+[node name="Architecture" type="Node3D" parent="."]
+
+[node name="Floor" type="MeshInstance3D" parent="Architecture"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("Mat_stone")
+
+[node name="FloorBody" type="StaticBody3D" parent="Architecture"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Architecture/FloorBody"]
+shape = SubResource("BoxShape3D_ground")
+
+[node name="WallNorth" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -13)
+mesh = SubResource("BoxMesh_wall")
+surface_material_override/0 = SubResource("Mat_stone")
+
+[node name="WallSouth" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 20)
+mesh = SubResource("BoxMesh_wall")
+surface_material_override/0 = SubResource("Mat_stone")
+
+[node name="WallEast" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 13, 4.5, 3.5)
+mesh = SubResource("BoxMesh_sidewall")
+surface_material_override/0 = SubResource("Mat_stone")
+
+[node name="WallWest" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -13, 4.5, 3.5)
+mesh = SubResource("BoxMesh_sidewall")
+surface_material_override/0 = SubResource("Mat_stone")
+
+[node name="Ceiling" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 3.5)
+mesh = SubResource("BoxMesh_ceiling")
+surface_material_override/0 = SubResource("Mat_stone")
+
+[node name="PillarNE" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 4.5, -2)
+mesh = SubResource("CylinderMesh_pillar")
+surface_material_override/0 = SubResource("Mat_gold")
+
+[node name="PillarNW" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 4.5, -2)
+mesh = SubResource("CylinderMesh_pillar")
+surface_material_override/0 = SubResource("Mat_gold")
+
+[node name="PillarSE" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 4.5, 10)
+mesh = SubResource("CylinderMesh_pillar")
+surface_material_override/0 = SubResource("Mat_gold")
+
+[node name="PillarSW" type="MeshInstance3D" parent="Architecture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 4.5, 10)
+mesh = SubResource("CylinderMesh_pillar")
+surface_material_override/0 = SubResource("Mat_gold")
+
+[node name="Treasures" type="Node3D" parent="."]
+
+[node name="StarOfWisdom" type="Node3D" parent="Treasures"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 1.6, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Treasures/StarOfWisdom"]
+mesh = SubResource("SphereMesh_treasure")
+surface_material_override/0 = SubResource("Mat_star")
+
+[node name="Glow" type="OmniLight3D" parent="Treasures/StarOfWisdom"]
+light_color = Color(0.31, 0.847, 0.91, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="HarmonyJewel" type="Node3D" parent="Treasures"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.6, 2.8)
+
+[node name="Mesh" type="MeshInstance3D" parent="Treasures/HarmonyJewel"]
+mesh = SubResource("PrismMesh_jewel")
+surface_material_override/0 = SubResource("Mat_jewel")
+
+[node name="Glow" type="OmniLight3D" parent="Treasures/HarmonyJewel"]
+light_color = Color(1, 0.494, 0.659, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="CreatorsLight" type="Node3D" parent="Treasures"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.6, -2.8)
+
+[node name="Mesh" type="MeshInstance3D" parent="Treasures/CreatorsLight"]
+mesh = SubResource("SphereMesh_treasure")
+surface_material_override/0 = SubResource("Mat_flame")
+
+[node name="Glow" type="OmniLight3D" parent="Treasures/CreatorsLight"]
+light_color = Color(1, 0.71, 0.278, 1)
+light_energy = 2.2
+omni_range = 9.0
+
+[node name="LightOfIdentity" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="LightOfIdentity"]
+mesh = SubResource("SphereMesh_light")
+surface_material_override/0 = SubResource("Mat_identity")
+
+[node name="Glow" type="OmniLight3D" parent="LightOfIdentity"]
+light_color = Color(1, 0.95, 0.82, 1)
+light_energy = 5.0
+omni_range = 22.0
+
+[node name="CrownOfLife" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.2, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="CrownOfLife"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_crown")
+surface_material_override/0 = SubResource("Mat_gold")
+
+[node name="Glow" type="OmniLight3D" parent="CrownOfLife"]
+light_color = Color(1, 0.902, 0.6, 1)
+light_energy = 4.0
+omni_range = 18.0
+
+[node name="CastleUniverse" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, 0)
+
+[node name="NewStar" type="Node3D" parent="CastleUniverse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+
+[node name="Mesh" type="MeshInstance3D" parent="CastleUniverse/NewStar"]
+mesh = SubResource("SphereMesh_star")
+surface_material_override/0 = SubResource("Mat_identity")
+
+[node name="Glow" type="OmniLight3D" parent="CastleUniverse/NewStar"]
+light_color = Color(1, 0.98, 0.92, 1)
+light_energy = 3.0
+omni_range = 12.0
+
+[node name="Maker" parent="." instance=ExtResource("4_maker")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -7.5, 0.2, 4)
+
+[node name="EntryArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 6)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EntryArea"]
+shape = SubResource("BoxShape3D_entry")
+
+[node name="ChamberLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, 0)
+light_color = Color(1, 0.96, 0.9, 1)
+light_energy = 1.35
+omni_range = 46.0
+
+[node name="EntranceLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 12)
+light_color = Color(0.95, 0.92, 1, 1)
+light_energy = 0.9
+omni_range = 30.0
+
+[node name="Departure" type="Node3D" parent="."]
+script = ExtResource("5_departure")
+doorways = Array[NodePath]([NodePath("MindSparkDoor"), NodePath("HeartMelodyDoor"), NodePath("CreatorsLightDoor")])
+
+[node name="MindSparkDoor" type="Area3D" parent="Departure"]
+transform = Transform3D(0.242536, 0, 0.970143, 0, 1, 0, -0.970143, 0, 0.242536, -28, 2.6, -7)
+script = ExtResource("6_doorway")
+station_id = "mind_spark"
+island_scene = "res://scenes/mind_spark_kingdom.tscn"
+world_name = "Mind Spark Kingdom"
+world_theme = "I can understand my thoughts"
+doorway_colour = Color(0.31, 0.847, 0.91, 1)
+
+[node name="Portal" type="MeshInstance3D" parent="Departure/MindSparkDoor"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_portal")
+surface_material_override/0 = SubResource("Mat_portal_mind")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Departure/MindSparkDoor"]
+shape = SubResource("BoxShape3D_door")
+
+[node name="Glow" type="OmniLight3D" parent="Departure/MindSparkDoor"]
+light_color = Color(0.31, 0.847, 0.91, 1)
+light_energy = 0.7
+omni_range = 16.0
+
+[node name="WorldName" type="Label3D" parent="Departure/MindSparkDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
+billboard = 1
+font_size = 40
+pixel_size = 0.008
+modulate = Color(0.31, 0.847, 0.91, 1)
+text = "Mind Spark Kingdom"
+
+[node name="Theme" type="Label3D" parent="Departure/MindSparkDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+billboard = 1
+font_size = 28
+pixel_size = 0.008
+width = 460.0
+autowrap_mode = 2
+modulate = Color(0.8, 0.78, 0.9, 1)
+text = "I can understand my thoughts"
+
+[node name="HeartMelodyDoor" type="Area3D" parent="Departure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -30)
+script = ExtResource("6_doorway")
+station_id = "heart_melody"
+island_scene = "res://scenes/heart_melody_kingdom.tscn"
+world_name = "Heart Melody Kingdom"
+world_theme = "My feelings have a voice"
+doorway_colour = Color(1, 0.494, 0.659, 1)
+
+[node name="Portal" type="MeshInstance3D" parent="Departure/HeartMelodyDoor"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_portal")
+surface_material_override/0 = SubResource("Mat_portal_heart")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Departure/HeartMelodyDoor"]
+shape = SubResource("BoxShape3D_door")
+
+[node name="Glow" type="OmniLight3D" parent="Departure/HeartMelodyDoor"]
+light_color = Color(1, 0.494, 0.659, 1)
+light_energy = 0.7
+omni_range = 16.0
+
+[node name="WorldName" type="Label3D" parent="Departure/HeartMelodyDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
+billboard = 1
+font_size = 40
+pixel_size = 0.008
+modulate = Color(1, 0.494, 0.659, 1)
+text = "Heart Melody Kingdom"
+
+[node name="Theme" type="Label3D" parent="Departure/HeartMelodyDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+billboard = 1
+font_size = 28
+pixel_size = 0.008
+width = 460.0
+autowrap_mode = 2
+modulate = Color(0.8, 0.78, 0.9, 1)
+text = "My feelings have a voice"
+
+[node name="CreatorsLightDoor" type="Area3D" parent="Departure"]
+transform = Transform3D(0.242536, 0, -0.970143, 0, 1, 0, 0.970143, 0, 0.242536, 28, 2.6, -7)
+script = ExtResource("6_doorway")
+station_id = "creators_light"
+island_scene = "res://scenes/creators_light_kingdom.tscn"
+world_name = "Creator's Light Kingdom"
+world_theme = "I was created to create"
+doorway_colour = Color(1, 0.71, 0.278, 1)
+
+[node name="Portal" type="MeshInstance3D" parent="Departure/CreatorsLightDoor"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_portal")
+surface_material_override/0 = SubResource("Mat_portal_creator")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Departure/CreatorsLightDoor"]
+shape = SubResource("BoxShape3D_door")
+
+[node name="Glow" type="OmniLight3D" parent="Departure/CreatorsLightDoor"]
+light_color = Color(1, 0.71, 0.278, 1)
+light_energy = 0.7
+omni_range = 16.0
+
+[node name="WorldName" type="Label3D" parent="Departure/CreatorsLightDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
+billboard = 1
+font_size = 40
+pixel_size = 0.008
+modulate = Color(1, 0.71, 0.278, 1)
+text = "Creator's Light Kingdom"
+
+[node name="Theme" type="Label3D" parent="Departure/CreatorsLightDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+billboard = 1
+font_size = 28
+pixel_size = 0.008
+width = 460.0
+autowrap_mode = 2
+modulate = Color(0.8, 0.78, 0.9, 1)
+text = "I was created to create"
+
+[node name="NewPlayer" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 7)

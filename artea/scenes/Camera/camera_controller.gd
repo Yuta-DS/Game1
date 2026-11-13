@@ -1,6 +1,6 @@
 extends Node3D
 
-@onready var player = get_node("/root/HubWorld/NewPlayer")
+@onready var player = get_parent()
 
 @export var minLimitX: float
 @export var maxLimitX: float

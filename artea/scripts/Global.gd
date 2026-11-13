@@ -9,9 +9,18 @@ var auth_token = ""
 
 var painting_to_show: int 
 
-const SERVER_BASE = "http://54.252.162.122"
+var SERVER_BASE := "http://54.252.162.122"
+var LOGIN_URL := SERVER_BASE + "/login"
+var REGISTER_URL := SERVER_BASE + "/register"
+var MY_ARTWORKS_URL := SERVER_BASE + "/my_artworks"
+var UPLOAD_ARTWORK_URL := SERVER_BASE + "/upload_artwork"
 
-const LOGIN_URL = SERVER_BASE + "/login"
-const REGISTER_URL = SERVER_BASE + "/register"
-const MY_ARTWORKS_URL = SERVER_BASE + "/my_artworks"
-const UPLOAD_ARTWORK_URL = SERVER_BASE + "/upload_artwork"
+func _ready() -> void:
+	call_deferred("_sync_api_urls")
+
+func _sync_api_urls() -> void:
+	SERVER_BASE = APIManager.BASE_URL
+	LOGIN_URL = APIManager.LOGIN_URL
+	REGISTER_URL = APIManager.REGISTER_URL
+	MY_ARTWORKS_URL = APIManager.MY_ARTWORKS_URL
+	UPLOAD_ARTWORK_URL = APIManager.UPLOAD_ARTWORK_URL

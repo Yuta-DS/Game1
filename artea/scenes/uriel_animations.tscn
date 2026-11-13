@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" uid="uid://dy4l70dq5ktfm" path="res://assets3D/characters/Rogue_Hooded.glb" id="1_uriel"]
+[ext_resource type="Script" path="res://scripts/uriel_animations.gd" id="2_script"]
+
+[node name="Uriel" instance=ExtResource("1_uriel")]
+script = ExtResource("2_script")

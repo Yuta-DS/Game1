@@ -1,0 +1,587 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARTÉA — Kingdom Map Designer</title>
+<style>
+  :root{
+    --ink:#1b1620; --ink-2:#453c4e; --ink-3:#6f6479;
+    --bg:#f7f4ef; --panel:#fffdfa; --line:#e0d8d0; --line-2:#cec4bb;
+    --gold:#a8802a;
+    --w1:#2f6fb8; --w2:#c05f2e; --w3:#7b4fb0;
+    --grid:#e6ded6; --grid-2:#d5cac0;
+    --shadow:0 1px 2px rgba(27,22,32,.07), 0 6px 20px rgba(27,22,32,.06);
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ink:#efe9f2; --ink-2:#b3a8bd; --ink-3:#847a8e;
+      --bg:#141118; --panel:#1c1822; --line:#2e2836; --line-2:#413a4b;
+      --gold:#e8c46a;
+      --w1:#7fb8ff; --w2:#f0916a; --w3:#c8a4f0;
+      --grid:#241f2c; --grid-2:#302938;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --ink:#1b1620; --ink-2:#453c4e; --ink-3:#6f6479;
+    --bg:#f7f4ef; --panel:#fffdfa; --line:#e0d8d0; --line-2:#cec4bb;
+    --gold:#a8802a; --w1:#2f6fb8; --w2:#c05f2e; --w3:#7b4fb0;
+    --grid:#e6ded6; --grid-2:#d5cac0;
+    --shadow:0 1px 2px rgba(27,22,32,.07), 0 6px 20px rgba(27,22,32,.06);
+  }
+  :root[data-theme="dark"]{
+    --ink:#efe9f2; --ink-2:#b3a8bd; --ink-3:#847a8e;
+    --bg:#141118; --panel:#1c1822; --line:#2e2836; --line-2:#413a4b;
+    --gold:#e8c46a; --w1:#7fb8ff; --w2:#f0916a; --w3:#c8a4f0;
+    --grid:#241f2c; --grid-2:#302938;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); font-size:14px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1500px; margin:0 auto; padding:22px 20px 40px}
+
+  header{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:6px}
+  h1{
+    font-family:Georgia,"Iowan Old Style",serif; font-style:italic;
+    font-weight:400; font-size:27px; letter-spacing:.01em; margin:0;
+  }
+  .sub{color:var(--ink-3); font-size:12.5px; max-width:62ch}
+  .kbd{font-family:var(--mono); font-size:11px; border:1px solid var(--line-2);
+    border-radius:4px; padding:1px 5px; color:var(--ink-2); background:var(--panel)}
+
+  .tabs{display:flex; gap:8px; margin:18px 0 14px; flex-wrap:wrap}
+  .tab{
+    appearance:none; cursor:pointer; font:inherit; color:var(--ink-2);
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:9px; padding:9px 15px 9px 13px; display:flex;
+    align-items:center; gap:9px; transition:border-color .13s, color .13s;
+  }
+  .tab:hover{border-color:var(--line-2); color:var(--ink)}
+  .tab .dot{width:9px; height:9px; border-radius:50%; background:var(--wc); flex:none}
+  .tab[aria-selected="true"]{
+    color:var(--ink); border-color:var(--wc);
+    box-shadow:inset 0 0 0 1px var(--wc);
+  }
+  .tab .nm{font-family:Georgia,serif; font-style:italic; font-size:15px}
+  .tab .ct{font-family:var(--mono); font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+  .tab:focus-visible,.btn:focus-visible,.chip:focus-visible{outline:2px solid var(--wc); outline-offset:2px}
+
+  .layout{display:grid; grid-template-columns:212px minmax(0,1fr) 292px; gap:16px; align-items:start}
+  @media (max-width:1120px){ .layout{grid-template-columns:1fr} }
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow)}
+  .card h2{
+    margin:0; padding:12px 14px 10px; font-size:10.5px; font-weight:600;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);
+    border-bottom:1px solid var(--line);
+  }
+  .pad{padding:12px 14px}
+
+  .chip{
+    display:flex; align-items:center; gap:9px; width:100%; text-align:left;
+    font:inherit; color:var(--ink); cursor:grab; background:transparent;
+    border:1px dashed var(--line-2); border-radius:8px; padding:7px 9px;
+    transition:border-color .13s, background .13s;
+  }
+  .chip:hover{border-color:var(--wc); background:color-mix(in srgb, var(--wc) 8%, transparent)}
+  .chip:active{cursor:grabbing}
+  .chip .gl{width:15px; height:15px; flex:none; display:grid; place-items:center}
+  .chip .lb{font-size:12.5px}
+  .chip .hint{margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--ink-3)}
+  .stack{display:flex; flex-direction:column; gap:7px}
+
+  .canvas-shell{position:relative; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; box-shadow:var(--shadow); overflow:hidden}
+  #stage{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair}
+  .stage-bar{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:9px 13px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-3);
+  }
+  .stage-bar .rd{font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink-2)}
+  .sp{margin-left:auto}
+
+  .btn{
+    appearance:none; font:inherit; font-size:12px; cursor:pointer;
+    background:var(--panel); color:var(--ink-2); border:1px solid var(--line-2);
+    border-radius:7px; padding:5px 11px; transition:border-color .13s,color .13s;
+  }
+  .btn:hover{border-color:var(--wc); color:var(--ink)}
+  .btn[disabled]{opacity:.4; cursor:not-allowed}
+  .btn.danger:hover{border-color:#c94f4f; color:#c94f4f}
+
+  .field{display:flex; flex-direction:column; gap:4px; margin-bottom:10px}
+  .field label{font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
+  .field input{
+    font:inherit; font-size:13px; color:var(--ink); background:var(--bg);
+    border:1px solid var(--line-2); border-radius:7px; padding:6px 9px; width:100%;
+  }
+  .field input:focus{outline:none; border-color:var(--wc)}
+  .field.num input{font-family:var(--mono); font-variant-numeric:tabular-nums}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px}
+  .empty{color:var(--ink-3); font-size:12.5px; font-style:italic; padding:4px 0 2px}
+
+  .typeline{display:flex; align-items:center; gap:8px; margin:2px 0 12px;
+    font-size:11px; color:var(--ink-3); font-family:var(--mono)}
+  .typeline .sw{width:10px; height:10px; border-radius:3px; background:var(--wc)}
+
+  pre{
+    margin:0; padding:12px 13px; font-family:var(--mono); font-size:10.5px; line-height:1.62;
+    color:var(--ink-2); background:var(--bg); border-top:1px solid var(--line);
+    max-height:270px; overflow:auto; white-space:pre; border-radius:0 0 12px 12px;
+  }
+  .legend{display:flex; flex-wrap:wrap; gap:10px 14px; font-size:11px; color:var(--ink-3); padding:2px 0}
+  .legend span{display:flex; align-items:center; gap:5px}
+  .legend i{width:9px; height:9px; border-radius:2px; display:block}
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>ARTÉA — Kingdom Map Designer</h1>
+  </header>
+  <p class="sub">
+    Top-down plan view of the three kingdoms. X runs right, Z runs down — same axes as Godot, so what you
+    lay out here maps straight onto the scene. Drag a marker from the palette onto the map to place it,
+    drag a placed marker to move it. Height (Y) stays editable in the inspector.
+    Hold <span class="kbd">Shift</span> while dragging to snap off the 1-unit grid.
+  </p>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <div class="layout">
+    <div class="card" id="palette-card">
+      <h2>Place a marker</h2>
+      <div class="pad">
+        <div class="typeline"><i class="sw"></i><span id="worldnode"></span></div>
+        <div class="stack" id="palette"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="canvas-shell">
+        <canvas id="stage" width="1100" height="1100" aria-label="Kingdom plan view"></canvas>
+        <div class="stage-bar">
+          <span class="rd" id="cursor">x —  z —</span>
+          <span id="tally"></span>
+          <span class="sp"></span>
+          <button class="btn" id="reset">Restore scene layout</button>
+        </div>
+      </div>
+      <div class="legend" style="margin-top:10px" id="legend"></div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h2>Inspector</h2>
+        <div class="pad" id="inspector"></div>
+      </div>
+      <div class="card">
+        <h2>Godot transforms</h2>
+        <div class="pad" style="padding-bottom:10px">
+          <button class="btn" id="copy">Copy to clipboard</button>
+        </div>
+        <pre id="out"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// Seeded from the real scene files: artea/scenes/*_kingdom.tscn
+const WORLDS = [
+  {
+    id:"mind", name:"Mind Spark", accent:"--w1", scene:"mind_spark_kingdom.tscn",
+    root:"MindSparkKingdom",
+    kinds:[
+      {k:"gate",   label:"Thought gate",  parent:"ThoughtGates", type:"Area3D"},
+      {k:"spark",  label:"Thought spark", parent:"ThoughtSparks", type:"Node3D"},
+      {k:"tower",  label:"Tower tree",    parent:"TowerTrees",   type:"MeshInstance3D"},
+      {k:"treasure",label:"Treasure",     parent:".",            type:"Node3D"},
+    ],
+    nodes:[
+      {n:"Tower1",         k:"tower",   x:-14, y:8,    z:-18},
+      {n:"Tower2",         k:"tower",   x:12,  y:10.4, z:-22},
+      {n:"Tower3",         k:"tower",   x:-22, y:6.8,  z:6},
+      {n:"Tower4",         k:"tower",   x:20,  y:9.2,  z:10},
+      {n:"OldestTree",     k:"tower",   x:0,   y:12.8, z:-34},
+      {n:"Spark1",         k:"spark",   x:-13, y:2.2,  z:2},
+      {n:"Spark2",         k:"spark",   x:12,  y:2.6,  z:2},
+      {n:"Spark3",         k:"spark",   x:0,   y:2.4,  z:6},
+      {n:"IsItAFear",      k:"gate",    x:-10, y:2,    z:-14},
+      {n:"IsThereProof",   k:"gate",    x:0,   y:2,    z:-18},
+      {n:"WhatElseIsTrue", k:"gate",    x:10,  y:2,    z:-14},
+      {n:"Storm",          k:"treasure",x:0,   y:10,   z:-30},
+      {n:"StarOfWisdom",   k:"treasure",x:0,   y:1.6,  z:-34},
+    ]
+  },
+  {
+    id:"heart", name:"Heart Melody", accent:"--w2", scene:"heart_melody_kingdom.tscn",
+    root:"HeartMelodyKingdom",
+    kinds:[
+      {k:"instrument",label:"Instrument",  parent:"Instruments",  type:"Area3D"},
+      {k:"answer",    label:"Milo's answer",parent:"MilosAnswers",type:"MeshInstance3D"},
+      {k:"fall",      label:"Waterfall",   parent:"Waterfalls",   type:"MeshInstance3D"},
+      {k:"treasure",  label:"Treasure",    parent:".",            type:"Node3D"},
+    ],
+    nodes:[
+      {n:"FallWest",         k:"fall",      x:-26, y:7,   z:-26},
+      {n:"FallEast",         k:"fall",      x:26,  y:7,   z:-26},
+      {n:"JoyDrum",          k:"instrument",x:-10, y:1,   z:-6},
+      {n:"SadnessStrings",   k:"instrument",x:10,  y:1,   z:-6},
+      {n:"FrustrationDrum",  k:"instrument",x:-16, y:1,   z:8},
+      {n:"FearBells",        k:"instrument",x:16,  y:1.4, z:8},
+      {n:"PeaceFlowers",     k:"instrument",x:0,   y:1,   z:16},
+      {n:"HopeChimes",       k:"instrument",x:0,   y:1.4, z:-20},
+      {n:"Platform",         k:"answer",    x:-6,  y:2.5, z:-14},
+      {n:"RaindropBoat",     k:"answer",    x:6,   y:2.5, z:-14},
+      {n:"SafePath",         k:"answer",    x:14,  y:2.5, z:0},
+      {n:"RestingPlace",     k:"answer",    x:0,   y:2.5, z:8},
+      {n:"MorningLight",     k:"answer",    x:-14, y:2.5, z:0},
+      {n:"HarmonyJewel",     k:"treasure",  x:0,   y:2.2, z:-28},
+    ]
+  },
+  {
+    id:"creators", name:"Creator's Light", accent:"--w3", scene:"creators_light_kingdom.tscn",
+    root:"CreatorsLightKingdom",
+    kinds:[
+      {k:"frame",   label:"Frame",        parent:"Frames",        type:"Area3D"},
+      {k:"waiting", label:"Waiting thing",parent:"WaitingThings", type:"MeshInstance3D"},
+      {k:"treasure",label:"Treasure",     parent:".",             type:"Node3D"},
+    ],
+    nodes:[
+      {n:"GlassSeed1",   k:"waiting", x:-18, y:1.5, z:4},
+      {n:"GlassSeed2",   k:"waiting", x:18,  y:1.5, z:4},
+      {n:"SilverPipe",   k:"waiting", x:0,   y:1,   z:14},
+      {n:"DoorFrame",    k:"frame",   x:-12, y:3.2, z:-8},
+      {n:"RestFrame",    k:"frame",   x:12,  y:3.2, z:-8},
+      {n:"PerfectBlank", k:"treasure",x:0,   y:8,   z:-30},
+      {n:"CreatorsLight",k:"treasure",x:0,   y:2,   z:-22},
+    ]
+  },
+];
+
+const EXTENT = 40;           // world units from centre to canvas edge
+const state = {
+  world: 0,
+  sel: null,
+  drag: null,               // {id, grabDX, grabDZ} for existing, or {ghostKind} for palette
+  data: structuredClone(WORLDS),
+};
+let uid = 0;
+state.data.forEach(w => w.nodes.forEach(n => n.id = ++uid));
+
+const cv = document.getElementById("stage");
+const ctx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+
+function world(){ return state.data[state.world]; }
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function accent(){ return css(world().accent); }
+function kindOf(w, k){ return w.kinds.find(c => c.k === k); }
+
+/* ---------- geometry ---------- */
+function toPx(wx, wz){
+  const s = cv.width / (EXTENT * 2);
+  return [ (wx + EXTENT) * s, (wz + EXTENT) * s ];
+}
+function toWorld(px, pz){
+  const s = cv.width / (EXTENT * 2);
+  return [ px / s - EXTENT, pz / s - EXTENT ];
+}
+function evtPos(e){
+  const r = cv.getBoundingClientRect();
+  return [ (e.clientX - r.left) * (cv.width / r.width),
+           (e.clientY - r.top)  * (cv.height / r.height) ];
+}
+function snap(v, shift){ return shift ? Math.round(v * 4) / 4 : Math.round(v); }
+
+/* ---------- marker glyphs — one silhouette per kind, readable at 11px ---------- */
+function glyph(c, kind, x, y, r, col, filled){
+  c.save();
+  c.translate(x, y);
+  c.lineWidth = 2.2;
+  c.strokeStyle = col;
+  c.fillStyle = filled ? col : css("--panel");
+  c.beginPath();
+  if (kind === "gate" || kind === "frame"){          // arch / doorway
+    c.moveTo(-r, r); c.lineTo(-r, -r*.25);
+    c.arc(0, -r*.25, r, Math.PI, 0);
+    c.lineTo(r, r); c.closePath();
+  } else if (kind === "spark" || kind === "treasure"){ // 4-point star
+    for (let i = 0; i < 8; i++){
+      const a = (Math.PI / 4) * i - Math.PI / 2;
+      const rr = i % 2 ? r * .38 : r;
+      i ? c.lineTo(Math.cos(a)*rr, Math.sin(a)*rr) : c.moveTo(Math.cos(a)*rr, Math.sin(a)*rr);
+    }
+    c.closePath();
+  } else if (kind === "tower" || kind === "fall"){    // triangle
+    c.moveTo(0, -r); c.lineTo(r*.92, r*.72); c.lineTo(-r*.92, r*.72); c.closePath();
+  } else if (kind === "instrument"){                  // circle
+    c.arc(0, 0, r*.92, 0, Math.PI*2);
+  } else {                                            // answer / waiting — square on point
+    c.moveTo(0,-r); c.lineTo(r,0); c.lineTo(0,r); c.lineTo(-r,0); c.closePath();
+  }
+  c.fill(); c.stroke();
+  c.restore();
+}
+
+/* ---------- render ---------- */
+function draw(){
+  const W = cv.width, col = accent();
+  ctx.clearRect(0, 0, W, W);
+
+  // ground grid: fine 2u, heavy 10u
+  const s = W / (EXTENT * 2);
+  ctx.lineWidth = 1;
+  for (let u = -EXTENT; u <= EXTENT; u += 2){
+    const heavy = u % 10 === 0;
+    ctx.strokeStyle = heavy ? css("--grid-2") : css("--grid");
+    const p = (u + EXTENT) * s;
+    ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, W); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(W, p); ctx.stroke();
+  }
+  // origin cross
+  ctx.strokeStyle = css("--line-2"); ctx.lineWidth = 1.6;
+  const [ox, oz] = toPx(0, 0);
+  ctx.beginPath(); ctx.moveTo(ox, 0); ctx.lineTo(ox, W); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, oz); ctx.lineTo(W, oz); ctx.stroke();
+
+  // island footprint — the playable disc, sized to the scene's own spread
+  ctx.save();
+  ctx.setLineDash([7, 7]); ctx.lineWidth = 1.6;
+  ctx.strokeStyle = col; ctx.globalAlpha = .3;
+  ctx.beginPath(); ctx.arc(ox, oz, 32 * s, 0, Math.PI*2); ctx.stroke();
+  ctx.restore();
+
+  // axis labels
+  ctx.fillStyle = css("--ink-3");
+  ctx.font = "500 17px " + css("--mono").replace(/"/g,"");
+  ctx.textBaseline = "top";
+  ctx.fillText("+X →", W - 82, oz + 8);
+  ctx.fillText("+Z ↓", ox + 9, W - 30);
+
+  // markers
+  const w = world();
+  for (const n of w.nodes){
+    const [px, pz] = toPx(n.x, n.z);
+    const on = state.sel === n.id;
+    if (on){
+      ctx.save(); ctx.globalAlpha = .16; ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(px, pz, 30, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    }
+    glyph(ctx, n.k, px, pz, on ? 15 : 12.5, col, on);
+    ctx.fillStyle = on ? css("--ink") : css("--ink-2");
+    ctx.font = (on ? "600 " : "400 ") + "16px " + css("--sans");
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(n.n, px, pz + 20);
+    ctx.textAlign = "left";
+  }
+  // ghost while dragging from the palette
+  if (state.drag && state.drag.ghostKind && state.drag.at){
+    const [px, pz] = toPx(state.drag.at[0], state.drag.at[1]);
+    ctx.save(); ctx.globalAlpha = .5;
+    glyph(ctx, state.drag.ghostKind, px, pz, 13, col, false);
+    ctx.restore();
+  }
+}
+
+/* ---------- hit test ---------- */
+function pick(px, pz){
+  const w = world();
+  for (let i = w.nodes.length - 1; i >= 0; i--){
+    const n = w.nodes[i];
+    const [nx, nz] = toPx(n.x, n.z);
+    if (Math.hypot(px - nx, pz - nz) < 22) return n;
+  }
+  return null;
+}
+
+/* ---------- pointer ---------- */
+cv.addEventListener("pointerdown", e => {
+  const [px, pz] = evtPos(e);
+  const hit = pick(px, pz);
+  state.sel = hit ? hit.id : null;
+  if (hit){
+    const [wx, wz] = toWorld(px, pz);
+    state.drag = { id: hit.id, dx: hit.x - wx, dz: hit.z - wz };
+    cv.setPointerCapture(e.pointerId);
+  }
+  renderAll();
+});
+cv.addEventListener("pointermove", e => {
+  const [px, pz] = evtPos(e);
+  let [wx, wz] = toWorld(px, pz);
+  $("cursor").textContent = `x ${wx.toFixed(1)}  z ${wz.toFixed(1)}`;
+  if (state.drag && state.drag.id != null){
+    const n = world().nodes.find(m => m.id === state.drag.id);
+    n.x = snap(wx + state.drag.dx, e.shiftKey);
+    n.z = snap(wz + state.drag.dz, e.shiftKey);
+    renderAll();
+  }
+});
+cv.addEventListener("pointerup", e => {
+  if (state.drag && state.drag.id != null) cv.releasePointerCapture(e.pointerId);
+  state.drag = null;
+});
+cv.addEventListener("pointerleave", () => { $("cursor").textContent = "x —  z —"; });
+
+// drop from palette
+cv.addEventListener("dragover", e => {
+  e.preventDefault();
+  const [px, pz] = evtPos(e);
+  const [wx, wz] = toWorld(px, pz);
+  if (state.drag) { state.drag.at = [Math.round(wx), Math.round(wz)]; draw(); }
+});
+cv.addEventListener("dragleave", () => { if (state.drag) state.drag.at = null; draw(); });
+cv.addEventListener("drop", e => {
+  e.preventDefault();
+  const kind = e.dataTransfer.getData("text/plain");
+  if (!kind) return;
+  const [px, pz] = evtPos(e);
+  const [wx, wz] = toWorld(px, pz);
+  addNode(kind, snap(wx, e.shiftKey), snap(wz, e.shiftKey));
+  state.drag = null;
+});
+
+function addNode(kind, x, z){
+  const w = world();
+  const base = kindOf(w, kind).label.replace(/[^A-Za-z]/g, "") || "Node";
+  let i = 1, name;
+  do { name = base + i++; } while (w.nodes.some(n => n.n === name));
+  const n = { id: ++uid, n:name, k:kind, x, y:2, z };
+  w.nodes.push(n);
+  state.sel = n.id;
+  renderAll();
+}
+
+/* ---------- panels ---------- */
+function renderTabs(){
+  const t = $("tabs"); t.innerHTML = "";
+  state.data.forEach((w, i) => {
+    const b = document.createElement("button");
+    b.className = "tab"; b.role = "tab";
+    b.setAttribute("aria-selected", i === state.world);
+    b.style.setProperty("--wc", `var(${w.accent})`);
+    b.innerHTML = `<span class="dot"></span><span class="nm"></span><span class="ct"></span>`;
+    b.querySelector(".nm").textContent = w.name;
+    b.querySelector(".ct").textContent = w.nodes.length;
+    b.onclick = () => { state.world = i; state.sel = null; renderAll(); };
+    t.appendChild(b);
+  });
+}
+
+function renderPalette(){
+  const w = world(), p = $("palette");
+  document.documentElement.style.setProperty("--wc", `var(${w.accent})`);
+  $("worldnode").textContent = w.root;
+  p.innerHTML = "";
+  for (const c of w.kinds){
+    const b = document.createElement("button");
+    b.className = "chip"; b.draggable = true;
+    b.innerHTML = `<span class="gl"><svg width="15" height="15" viewBox="0 0 15 15"></svg></span>
+                   <span class="lb"></span><span class="hint">drag</span>`;
+    b.querySelector(".lb").textContent = c.label;
+    const svg = b.querySelector("svg");
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    g.setAttribute("cx","7.5"); g.setAttribute("cy","7.5"); g.setAttribute("r","5");
+    g.setAttribute("fill","none"); g.setAttribute("stroke","currentColor");
+    g.setAttribute("stroke-width","1.8"); g.style.color = accent();
+    svg.appendChild(g);
+    b.ondragstart = ev => {
+      ev.dataTransfer.setData("text/plain", c.k);
+      ev.dataTransfer.effectAllowed = "copy";
+      state.drag = { ghostKind: c.k, at:null };
+    };
+    b.ondragend = () => { state.drag = null; draw(); };
+    b.onclick = () => addNode(c.k, 0, 0);   // keyboard / no-drag fallback
+    p.appendChild(b);
+  }
+
+  const lg = $("legend"); lg.innerHTML = "";
+  for (const c of w.kinds){
+    const n = w.nodes.filter(x => x.k === c.k).length;
+    const s = document.createElement("span");
+    s.innerHTML = `<i style="background:${accent()}"></i>`;
+    s.append(`${c.label} · ${c.parent} · ${n}`);
+    lg.appendChild(s);
+  }
+}
+
+function renderInspector(){
+  const box = $("inspector");
+  const w = world();
+  const n = w.nodes.find(m => m.id === state.sel);
+  if (!n){
+    box.innerHTML = `<p class="empty">Select a marker on the map, or drag one in from the left.</p>`;
+    return;
+  }
+  const c = kindOf(w, n.k);
+  box.innerHTML = `
+    <div class="field"><label>Node name</label><input id="i-n" value=""></div>
+    <div class="row3">
+      <div class="field num"><label>X</label><input id="i-x" type="number" step="0.1"></div>
+      <div class="field num"><label>Y</label><input id="i-y" type="number" step="0.1"></div>
+      <div class="field num"><label>Z</label><input id="i-z" type="number" step="0.1"></div>
+    </div>
+    <p style="margin:2px 0 12px;font-size:11.5px;color:var(--ink-3)">
+      Parent <code style="font-family:var(--mono)">${c.parent}</code> · ${c.type}
+    </p>
+    <button class="btn danger" id="i-del">Remove marker</button>`;
+  $("i-n").value = n.n;
+  $("i-x").value = n.x; $("i-y").value = n.y; $("i-z").value = n.z;
+  $("i-n").oninput = e => { n.n = e.target.value; draw(); renderOut(); };
+  for (const ax of ["x","y","z"]){
+    $("i-" + ax).oninput = e => {
+      const v = parseFloat(e.target.value);
+      if (!Number.isNaN(v)){ n[ax] = v; draw(); renderOut(); }
+    };
+  }
+  $("i-del").onclick = () => {
+    w.nodes = w.nodes.filter(m => m.id !== n.id);
+    state.sel = null; renderAll();
+  };
+}
+
+function renderOut(){
+  const w = world();
+  const byParent = {};
+  for (const n of w.nodes) (byParent[kindOf(w, n.k).parent] ||= []).push(n);
+  let s = `# ${w.scene} — root ${w.root}\n`;
+  for (const [parent, list] of Object.entries(byParent)){
+    s += `\n# ${parent}\n`;
+    for (const n of list){
+      s += `[node name="${n.n}" type="${kindOf(w, n.k).type}" parent="${parent}"]\n`;
+      s += `transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, ${n.x}, ${n.y}, ${n.z})\n`;
+    }
+  }
+  $("out").textContent = s;
+  $("tally").textContent = `${w.nodes.length} markers placed`;
+}
+
+function renderAll(){ renderTabs(); renderPalette(); renderInspector(); renderOut(); draw(); }
+
+$("copy").onclick = async () => {
+  const b = $("copy");
+  try { await navigator.clipboard.writeText($("out").textContent); b.textContent = "Copied"; }
+  catch { b.textContent = "Select the text below to copy"; }
+  setTimeout(() => b.textContent = "Copy to clipboard", 1600);
+};
+$("reset").onclick = () => {
+  const fresh = structuredClone(WORLDS[state.world]);
+  fresh.nodes.forEach(n => n.id = ++uid);
+  state.data[state.world] = fresh;
+  state.sel = null; renderAll();
+};
+matchMedia("(prefers-color-scheme:dark)").addEventListener("change", renderAll);
+new MutationObserver(renderAll).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
+
+renderAll();
+</script>
+
+</body></html>

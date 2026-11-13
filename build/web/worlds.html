@@ -1,0 +1,419 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>ARTÉA — The Three Kingdoms</title>
+<style>
+  :root{
+    --ink:#f2ecf4; --ink-2:#b6abbe; --ink-3:#857b8d;
+    --bg:#0f0d13; --panel:#171420; --line:#2a2434; --line-2:#3d3549;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:44px 22px 70px}
+
+  .lede{max-width:60ch;margin-bottom:52px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+  h1{font-family:var(--serif);font-style:italic;font-weight:400;
+    font-size:clamp(30px,5vw,46px);line-height:1.1;margin:0 0 16px;text-wrap:balance}
+  .lede p{color:var(--ink-2);margin:0}
+
+  .world{margin-bottom:64px}
+  .world-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .world h2{font-family:var(--serif);font-style:italic;font-weight:400;
+    font-size:27px;margin:0;color:var(--k)}
+  .world .file{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+  .world .tag{font-size:12.5px;color:var(--ink-2);max-width:64ch;margin:0 0 20px}
+
+  .frame{border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    background:var(--panel);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  .frame canvas{display:block;width:100%;height:auto}
+  .caption{display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+    padding:11px 15px;border-top:1px solid var(--line);
+    font-size:11.5px;color:var(--ink-3)}
+  .caption b{color:var(--ink-2);font-weight:500}
+  .sw{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px}
+  .sw i{width:10px;height:10px;border-radius:2px;display:block;border:1px solid rgba(255,255,255,.14)}
+
+  .beats{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+    gap:14px;margin-top:20px}
+  .beat{border:1px solid var(--line);border-radius:11px;padding:13px 15px;background:var(--panel)}
+  .beat h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--k);margin:0 0 7px;font-weight:600}
+  .beat p{margin:0;font-size:13px;color:var(--ink-2)}
+  .beat .q{font-family:var(--serif);font-style:italic;color:var(--ink);font-size:13.5px}
+
+  hr{border:none;border-top:1px solid var(--line);margin:0 0 44px}
+  .foot{color:var(--ink-3);font-size:12.5px;max-width:62ch}
+  .foot code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="lede">
+    <p class="eyebrow">ARTÉA · Concept sheet</p>
+    <h1>The Three Kingdoms</h1>
+    <p>How each world reads at a glance — drawn from the scene files themselves, so the
+    ground tones, light colours, landmark positions and on-screen questions are the ones
+    already in the game. Views look south across each island from just above the treasure.</p>
+  </div>
+
+  <div id="worlds"></div>
+
+  <hr>
+  <p class="foot">
+    Illustrations are generated from <code>mind_spark_kingdom.tscn</code>,
+    <code>heart_melody_kingdom.tscn</code> and <code>creators_light_kingdom.tscn</code> —
+    landmark X/Z positions, <code>ground_colour</code>, <code>light_color</code>,
+    <code>fog_light_color</code> and every <code>Label3D</code> string are read from those
+    files rather than invented. They show layout, palette and mood, not final art.
+  </p>
+</div>
+
+<script>
+"use strict";
+
+const WORLDS = [
+  {
+    id:"mind", name:"Mind Spark Kingdom", file:"mind_spark_kingdom.tscn",
+    tag:"A cold blue forest under a thinking storm. Anxious thoughts drift as sparks; " +
+        "three gates ask the questions that take them apart. The Star of Wisdom waits " +
+        "behind the oldest tree.",
+    sky:["#1c2438","#2f3d5c","#5a6b8e"],
+    ground:"#5c7094",          // ground_colour 0.36,0.44,0.58
+    fog:"#4d6190",             // fog_light_color 0.3,0.38,0.55
+    key:"#7fb8ff",             // light_color 0.5,0.62,0.85
+    accent:"#4fd8e8",          // spark emission 0.31,0.847,0.91
+    treasure:"#9ee8ff",
+    trees:[
+      {x:-14,z:-18,h:8},{x:12,z:-22,h:10.4},{x:-22,z:6,h:6.8},
+      {x:20,z:10,h:9.2},{x:0,z:-34,h:12.8,oldest:true}
+    ],
+    gates:[
+      {x:-10,z:-14,t:"Is it a fear?"},
+      {x:0,  z:-18,t:"Is there proof?"},
+      {x:10, z:-14,t:"What else is true?"}
+    ],
+    sparks:[{x:-13,z:2},{x:12,z:2},{x:0,z:6}],
+    storm:{x:0,z:-30},
+    treasureAt:{x:0,z:-34,label:"Star of Wisdom"},
+    beats:[
+      {h:"The sparks", p:"Three drifting thoughts, lit cyan.",
+       q:'"I am not good enough" · "Something bad will happen" · "Nobody wants me here"'},
+      {h:"The gates", p:"Walk one and it answers back.",
+       q:'"What else might be true, that this thought left out?"'},
+      {h:"The storm", p:"Sits over the oldest tree at the far end. It thins as gates are passed."},
+    ]
+  },
+  {
+    id:"heart", name:"Heart Melody Kingdom", file:"heart_melody_kingdom.tscn",
+    tag:"A warm green valley between two waterfalls. Six instruments, one per feeling — " +
+        "play them and Milo answers back with somewhere to stand, ride or rest.",
+    sky:["#243026","#3c5741","#7fa06a"],
+    ground:"#5c9a6b",          // ground_colour 0.36,0.6,0.42
+    fog:"#3d5c59",             // fog_light_color 0.24,0.36,0.35
+    key:"#fff5e0",             // light_color 1,0.96,0.88
+    accent:"#ff9ebf",
+    treasure:"#ffd0e0",
+    falls:[{x:-26,z:-26},{x:26,z:-26}],
+    instruments:[
+      {x:-10,z:-6, t:"Joy",         c:"#ffd159"},
+      {x:10, z:-6, t:"Sadness",     c:"#73a6eb"},
+      {x:-16,z:8,  t:"Frustration", c:"#eb6b52"},
+      {x:16, z:8,  t:"Fear",        c:"#b899f2"},
+      {x:0,  z:16, t:"Peace",       c:"#99e6b3"},
+      {x:0,  z:-20,t:"Hope",        c:"#ffe68c"}
+    ],
+    answers:[
+      {x:-6,z:-14},{x:6,z:-14},{x:14,z:0},{x:0,z:8},{x:-14,z:0}
+    ],
+    treasureAt:{x:0,z:-28,label:"Harmony Jewel"},
+    beats:[
+      {h:"Six feelings", p:"Each instrument carries its own note colour — gold for Joy, blue for Sadness, ember for Frustration."},
+      {h:"Milo answers", p:"Five shapes rise when you play: a platform, a raindrop boat, a safe path, a resting place, morning light."},
+      {h:"The waterfalls", p:"Two falls frame the valley and carry the ambience bed."},
+    ]
+  },
+  {
+    id:"creators", name:"Creator's Light Kingdom", file:"creators_light_kingdom.tscn",
+    tag:"A violet dusk where nothing is finished yet. Two empty frames ask to be drawn " +
+        "into; the Perfect Blank hangs above, daring you to leave it untouched.",
+    sky:["#241f30","#413a58","#6f6486"],
+    ground:"#8578a1",          // ground_colour 0.52,0.47,0.63
+    fog:"#333047",             // fog_light_color 0.2,0.19,0.28
+    key:"#fff2e6",             // light_color 1,0.95,0.9
+    accent:"#ffb547",          // frame glow 1,0.71,0.278
+    treasure:"#ffd17a",
+    waiting:[{x:-18,z:4,k:"seed"},{x:18,z:4,k:"seed"},{x:0,z:14,k:"pipe"}],
+    frames:[
+      {x:-12,z:-8,t:"Draw a door that leads to your dreams"},
+      {x:12, z:-8,t:"Draw a place where your feelings can rest"}
+    ],
+    blank:{x:0,z:-30},
+    treasureAt:{x:0,z:-22,label:"Creator's Light"},
+    beats:[
+      {h:"Two frames", p:"Empty, gold-lit, each holding a question.",
+       q:'"Draw a door that leads to your dreams"'},
+      {h:"Waiting things", p:"Glass seeds and a silver pipe — objects that exist before they have a purpose."},
+      {h:"The Perfect Blank", p:"Floats high and far back. Approach it and it asks whether it should stay blank."},
+    ]
+  },
+];
+
+const W = 1240, H = 620;
+
+/* Project a world point (x,z) into the illustration.
+   Camera looks south from behind the treasure, so far = small z. */
+const HZ = H * 0.34;                     // horizon line
+function proj(x, z){
+  const zn = (z + 38) / 74;              // 0 far … 1 near
+  const persp = 0.42 + zn * 1.30;        // horizontal spread grows toward camera
+  return {
+    // 15 px/unit keeps the widest landmarks (x = ±26) inside the frame at the
+    // nearest depth, so nothing important gets clipped by the canvas edge.
+    px: W/2 + x * 15 * persp,
+    py: HZ + Math.pow(zn, 1.5) * (H - HZ) * 0.99,
+    s: persp                              // scale factor for anything at this depth
+  };
+}
+
+function lerp(a,b,t){return a+(b-a)*t}
+function hex(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+function mix(a,b,t){const A=hex(a),B=hex(b);
+  return `rgb(${A.map((v,i)=>Math.round(lerp(v,B[i],t))).join(",")})`}
+
+function sky(c, w){
+  const g = c.createLinearGradient(0,0,0,HZ+16);
+  g.addColorStop(0, w.sky[0]); g.addColorStop(.58, w.sky[1]); g.addColorStop(1, w.sky[2]);
+  c.fillStyle = g; c.fillRect(0,0,W,HZ+16);
+  // a low sun sitting on the horizon, tinted by the world's key light
+  glow(c, W*0.5, HZ+6, W*0.30, w.key+"55", .55);
+}
+
+function ground(c, w){
+  const g = c.createLinearGradient(0,HZ,0,H);
+  g.addColorStop(0, mix(w.fog, w.ground, .30));
+  g.addColorStop(.20, mix(w.ground, "#000000", .18));
+  g.addColorStop(.55, mix(w.ground, "#000000", .38));
+  g.addColorStop(1, mix(w.ground, "#000000", .62));   // near ground falls into shadow
+  c.fillStyle = g;
+  c.beginPath();
+  c.moveTo(-40, H+10);
+  for (let i=0;i<=70;i++){
+    const t=i/70, x=lerp(-40,W+40,t);
+    const bow = Math.sin(t*Math.PI);
+    c.lineTo(x, HZ + 6 - bow*9 + Math.sin(t*Math.PI*3.4)*3);
+  }
+  c.lineTo(W+40,H+10); c.closePath(); c.fill();
+
+  // depth banding — faint contour bands so the plane reads as receding, not flat
+  c.save(); c.globalAlpha = .07;
+  for (let z=-30; z<=36; z+=6){
+    const a = proj(-42,z), b = proj(42,z);
+    c.strokeStyle = "#ffffff"; c.lineWidth = 1.4;
+    c.beginPath(); c.moveTo(0,a.py); c.lineTo(W,b.py); c.stroke();
+  }
+  c.restore();
+}
+
+function haze(c, w){
+  const g = c.createLinearGradient(0,HZ-70,0,HZ+90);
+  g.addColorStop(0,"rgba(0,0,0,0)");
+  g.addColorStop(.45, w.fog+"99");
+  g.addColorStop(1,"rgba(0,0,0,0)");
+  c.fillStyle = g; c.fillRect(0,HZ-70,W,160);
+}
+
+// vignette, applied last, to seat the image in its frame
+function vignette(c){
+  const g = c.createRadialGradient(W/2,H*0.5,H*0.30,W/2,H*0.5,H*0.95);
+  g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,"rgba(0,0,0,.55)");
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+}
+
+function glow(c, x, y, r, col, a){
+  const g = c.createRadialGradient(x,y,0,x,y,r);
+  g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)");
+  c.save(); c.globalAlpha = a; c.globalCompositeOperation="lighter";
+  c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); c.restore();
+}
+
+function label(c, x, y, txt, col, size, italic){
+  c.font = `${italic?"italic ":""}${size}px ${italic?"Georgia,serif":"system-ui,sans-serif"}`;
+  c.textAlign="center";
+  c.lineWidth = 3.4; c.strokeStyle="rgba(0,0,0,.55)";
+  c.strokeText(txt,x,y); c.fillStyle=col; c.fillText(txt,x,y);
+}
+
+/* ---- per-world scenery ---- */
+
+function drawMind(c, w){
+  // storm cloud over the far end
+  const st = proj(w.storm.x, w.storm.z);
+  for (let i=0;i<9;i++){
+    const ox = st.px + (i-4)*52, oy = HZ-96 + Math.sin(i*1.3)*17;
+    glow(c, ox, oy, 112, "rgba(125,155,205,.55)", .6);
+  }
+  // tower trees — sorted far to near
+  [...w.trees].sort((a,b)=>a.z-b.z).forEach(t=>{
+    const p = proj(t.x,t.z);
+    // Near trees would tower off-canvas at full perspective scale, so ease the
+    // height gain with depth — they still read as closer, but stay in frame.
+    const hpx = t.h * 16 * Math.pow(p.s, 0.55);
+    // depth cue: distant trees sink toward the fog colour, near ones stay solid
+    const near = Math.min(1, Math.max(.25, (p.s - 0.42) / 1.1));
+    const cs = Math.pow(p.s, 0.55);         // canopy scale, eased to match the trunk
+    c.strokeStyle = mix(w.fog, "#2b3552", near);
+    c.lineWidth = Math.max(2.5, 9*cs);
+    c.beginPath(); c.moveTo(p.px,p.py); c.lineTo(p.px, p.py-hpx); c.stroke();
+    // canopy: stacked ellipses, widest at the base
+    for(let k=0;k<4;k++){
+      const cy = p.py - hpx*(0.52+k*0.17), rw = (46-k*9)*cs;
+      c.fillStyle = mix(w.fog, mix("#46567c", "#7e8cbe", k/3), near);
+      c.beginPath(); c.ellipse(p.px, cy, rw, rw*0.50, 0,0,7); c.fill();
+    }
+    if(t.oldest) glow(c,p.px,p.py-hpx*0.72, 170*p.s, "rgba(160,200,255,.45)", .8);
+  });
+  // gates — arches
+  w.gates.forEach(g=>{
+    const p=proj(g.x,g.z), h=78*p.s, wd=46*p.s;
+    glow(c,p.px,p.py-h*0.6, 130*p.s, w.accent+"99", .6);
+    c.strokeStyle=w.accent; c.lineWidth=Math.max(2.5,6*p.s);
+    c.beginPath();
+    c.moveTo(p.px-wd,p.py); c.lineTo(p.px-wd,p.py-h*0.55);
+    c.arc(p.px,p.py-h*0.55,wd,Math.PI,0); c.lineTo(p.px+wd,p.py); c.stroke();
+    label(c,p.px,p.py+22*p.s,g.t,"#dff3ff",Math.max(12,15*p.s),true);
+  });
+  // sparks — nearest to camera, so largest
+  w.sparks.forEach(s=>{
+    const p=proj(s.x,s.z), y=p.py-62*p.s;
+    glow(c,p.px,y,78*p.s,w.accent+"dd",.9);
+    c.fillStyle="#eafcff";
+    c.beginPath();
+    for(let k=0;k<8;k++){const a=(Math.PI/4)*k-Math.PI/2, r=k%2?7*p.s:19*p.s;
+      k?c.lineTo(p.px+Math.cos(a)*r,y+Math.sin(a)*r):c.moveTo(p.px+Math.cos(a)*r,y+Math.sin(a)*r);}
+    c.closePath(); c.fill();
+  });
+  // treasure
+  const t=proj(w.treasureAt.x,w.treasureAt.z);
+  glow(c,t.px,t.py-44*t.s,150*t.s,w.treasure+"ee",.95);
+  label(c,t.px,t.py-74*t.s,w.treasureAt.label,"#dff3ff",16,true);
+}
+
+function drawHeart(c, w){
+  // waterfalls at the back corners
+  w.falls.forEach(f=>{
+    const p=proj(f.x,f.z), top=HZ-58;
+    const g=c.createLinearGradient(p.px,top,p.px,p.py);
+    g.addColorStop(0,"rgba(165,215,240,.9)"); g.addColorStop(1,"rgba(120,180,215,.2)");
+    c.fillStyle=g; c.fillRect(p.px-20*p.s,top,40*p.s,p.py-top);
+    glow(c,p.px,p.py,100*p.s,"rgba(180,225,245,.55)",.7);
+  });
+  // Milo's answers — pale risen platforms, behind the instruments
+  w.answers.forEach(a=>{
+    const p=proj(a.x,a.z);
+    c.fillStyle="rgba(255,245,225,.26)";
+    c.beginPath(); c.ellipse(p.px,p.py-22*p.s,52*p.s,16*p.s,0,0,7); c.fill();
+  });
+  // instruments — one glowing note colour each
+  [...w.instruments].sort((a,b)=>a.z-b.z).forEach(it=>{
+    const p=proj(it.x,it.z), y=p.py-26*p.s;
+    glow(c,p.px,y,100*p.s,it.c+"cc",.85);
+    c.fillStyle=it.c;
+    c.beginPath(); c.arc(p.px,y,24*p.s,0,7); c.fill();
+    c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=2*p.s; c.stroke();
+    label(c,p.px,p.py+24*p.s,it.t,"#fff6ea",Math.max(12,16*p.s),true);
+  });
+  const t=proj(w.treasureAt.x,w.treasureAt.z);
+  glow(c,t.px,t.py-46*t.s,140*t.s,w.treasure+"ee",.95);
+  label(c,t.px,t.py-76*t.s,w.treasureAt.label,"#ffeaf1",16,true);
+}
+
+function drawCreators(c, w){
+  // the Perfect Blank — a pale slab hanging high and far
+  const b=proj(w.blank.x,w.blank.z), by=HZ-72;
+  glow(c,b.px,by,230*b.s,"rgba(240,238,250,.55)",.8);
+  c.fillStyle="rgba(240,240,248,.95)";
+  c.fillRect(b.px-78*b.s, by-56*b.s, 156*b.s, 112*b.s);
+  label(c,b.px,by+82*b.s,"The Perfect Blank","#efeaf6",14,true);
+
+  // waiting things
+  w.waiting.forEach(o=>{
+    const p=proj(o.x,o.z);
+    if(o.k==="seed"){
+      glow(c,p.px,p.py-24*p.s,72*p.s,"rgba(225,225,245,.55)",.65);
+      c.fillStyle="rgba(240,240,248,.88)";
+      c.beginPath(); c.ellipse(p.px,p.py-24*p.s,17*p.s,24*p.s,0,0,7); c.fill();
+    } else {
+      c.fillStyle="rgba(218,218,230,.82)";
+      c.fillRect(p.px-8*p.s,p.py-52*p.s,16*p.s,52*p.s);
+    }
+  });
+  // frames — empty, gold-lit
+  w.frames.forEach(f=>{
+    const p=proj(f.x,f.z), fw=86*p.s, fh=112*p.s, top=p.py-fh-24*p.s;
+    glow(c,p.px,top+fh/2,190*p.s,w.accent+"aa",.8);
+    c.fillStyle="rgba(18,15,24,.55)"; c.fillRect(p.px-fw/2, top, fw, fh);
+    c.strokeStyle=w.accent; c.lineWidth=Math.max(3,8*p.s);
+    c.strokeRect(p.px-fw/2, top, fw, fh);
+    // question, wrapped to two lines
+    const words=f.t.split(" "), mid=Math.ceil(words.length/2);
+    const fs=Math.max(11,14*p.s);
+    label(c,p.px,p.py+22*p.s, words.slice(0,mid).join(" "), "#ffe6bd", fs, true);
+    label(c,p.px,p.py+22*p.s+fs*1.25, words.slice(mid).join(" "), "#ffe6bd", fs, true);
+  });
+  const t=proj(w.treasureAt.x,w.treasureAt.z);
+  glow(c,t.px,t.py-42*t.s,150*t.s,w.treasure+"ee",.95);
+  label(c,t.px,t.py-72*t.s,w.treasureAt.label,"#ffe6bd",16,true);
+}
+
+const DRAW = {mind:drawMind, heart:drawHeart, creators:drawCreators};
+
+/* ---- build the page ---- */
+const host = document.getElementById("worlds");
+
+for (const w of WORLDS){
+  const sec = document.createElement("section");
+  sec.className = "world";
+  sec.style.setProperty("--k", w.key);
+
+  const swatches = [
+    ["ground", w.ground], ["light", w.key], ["fog", w.fog], ["accent", w.accent]
+  ].map(([n,v]) => `<span class="sw"><i style="background:${v}"></i>${n} ${v}</span>`).join("");
+
+  sec.innerHTML = `
+    <div class="world-head">
+      <h2></h2><span class="file"></span>
+    </div>
+    <p class="tag"></p>
+    <div class="frame">
+      <canvas width="${W}" height="${H}"></canvas>
+      <div class="caption"><b>Looking south across the island</b>${swatches}</div>
+    </div>
+    <div class="beats"></div>`;
+  sec.querySelector("h2").textContent = w.name;
+  sec.querySelector(".file").textContent = w.file;
+  sec.querySelector(".tag").textContent = w.tag;
+
+  const bt = sec.querySelector(".beats");
+  for (const b of w.beats){
+    const d = document.createElement("div");
+    d.className = "beat";
+    d.innerHTML = `<h3></h3><p></p>` + (b.q ? `<p class="q" style="margin-top:7px"></p>` : "");
+    d.querySelector("h3").textContent = b.h;
+    d.querySelector("p").textContent = b.p;
+    if (b.q) d.querySelector(".q").textContent = b.q;
+    bt.appendChild(d);
+  }
+  host.appendChild(sec);
+
+  const c = sec.querySelector("canvas").getContext("2d");
+  sky(c, w); ground(c, w); haze(c, w);
+  DRAW[w.id](c, w);
+  vignette(c);
+}
+</script>
+
+</body></html>

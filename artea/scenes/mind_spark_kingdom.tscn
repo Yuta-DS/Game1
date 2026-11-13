@@ -1,0 +1,573 @@
+[gd_scene load_steps=24 format=3]
+
+[ext_resource type="Script" path="res://scripts/MindSparkKingdom.gd" id="1_world"]
+[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="99_galaxy"]
+[ext_resource type="Script" path="res://scripts/IslandTerrain.gd" id="90_island"]
+[ext_resource type="Script" path="res://scripts/IslandScatter.gd" id="93_scatter"]
+[ext_resource type="Script" path="res://scripts/IslandGateway.gd" id="91_gateway"]
+[ext_resource type="Script" path="res://scripts/IslandDistricts.gd" id="92_districts"]
+[ext_resource type="Script" path="res://scripts/ThoughtSpark.gd" id="2_spark"]
+[ext_resource type="Script" path="res://scripts/ThoughtGate.gd" id="3_gate"]
+[ext_resource type="Script" path="res://scripts/ThoughtCarrier.gd" id="6_carry"]
+[ext_resource type="Script" path="res://scripts/StormApproach.gd" id="7_storm"]
+[ext_resource type="Script" path="res://scripts/KingdomHUD.gd" id="8_hud"]
+[ext_resource type="Script" path="res://scripts/TreasurePickup.gd" id="9_pickup"]
+[ext_resource type="AudioStream" uid="uid://b853lclmr1lkt" path="res://assets/SFX/fairy dust.mp3" id="10_chime"]
+[ext_resource type="AudioStream" uid="uid://ddtvr45ydfv7l" path="res://assets/audio/calm music.mp3" id="11_calm"]
+[ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="12_milo"]
+[ext_resource type="Script" path="res://scripts/MiloCompanion.gd" id="13_companion"]
+[ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="4_player"]
+[ext_resource type="PackedScene" uid="uid://b1d3rlknpgaj3" path="res://scenes/everlasting_father_animations.tscn" id="5_father"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_galaxy"]
+panorama = ExtResource("99_galaxy")
+
+[sub_resource type="Sky" id="Sky_galaxy"]
+sky_material = SubResource("PanoramaSkyMaterial_galaxy")
+
+[sub_resource type="BoxMesh" id="BoxMesh_tower"]
+size = Vector3(2.6, 16, 2.6)
+
+[sub_resource type="SphereMesh" id="SphereMesh_spark"]
+radius = 0.32
+height = 0.64
+
+[sub_resource type="TorusMesh" id="TorusMesh_gate"]
+inner_radius = 1.8
+outer_radius = 2.1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pickup"]
+size = Vector3(6, 5, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_storm"]
+size = Vector3(18, 12, 18)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
+size = Vector3(3.6, 4, 1.4)
+
+[sub_resource type="SphereMesh" id="SphereMesh_star"]
+radius = 0.5
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_tower"]
+albedo_color = Color(0.22, 0.27, 0.4, 1)
+metallic = 0.4
+roughness = 0.6
+emission_enabled = true
+emission = Color(0.26, 0.6, 0.72, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_spark_worry"]
+albedo_color = Color(0.42, 0.45, 0.6, 1)
+emission_enabled = true
+emission = Color(0.45, 0.5, 0.7, 1)
+emission_energy_multiplier = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_gate"]
+albedo_color = Color(0.31, 0.847, 0.91, 1)
+emission_enabled = true
+emission = Color(0.31, 0.847, 0.91, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_star"]
+albedo_color = Color(0.31, 0.847, 0.91, 1)
+emission_enabled = true
+emission = Color(0.62, 0.93, 1, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_rain"]
+albedo_color = Color(0.55, 0.68, 0.85, 0.7)
+transparency = 1
+emission_enabled = true
+emission = Color(0.5, 0.7, 0.9, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="SphereMesh" id="SphereMesh_rain"]
+radius = 0.06
+height = 0.12
+
+[sub_resource type="ParticleProcessMaterial" id="Particles_rain"]
+emission_shape = 3
+emission_box_extents = Vector3(9, 0.5, 9)
+direction = Vector3(0, -1, 0)
+spread = 8.0
+initial_velocity_min = 5.0
+initial_velocity_max = 9.0
+gravity = Vector3(0, -12, 0)
+
+[sub_resource type="Environment" id="Env_forest"]
+background_mode = 2
+sky = SubResource("Sky_galaxy")
+background_energy_multiplier = 0.65
+ambient_light_source = 3
+ambient_light_sky_contribution = 0.45
+reflected_light_source = 2
+ambient_light_color = Color(0.46, 0.55, 0.75, 1)
+ambient_light_energy = 1.9
+fog_enabled = true
+fog_light_color = Color(0.3, 0.38, 0.55, 1)
+fog_density = 0.00035
+
+[sub_resource type="Sky" id="Sky_forest"]
+
+[sub_resource type="BoxMesh" id="Mesh_far_tower"]
+size = Vector3(3, 26, 3)
+
+[sub_resource type="BoxMesh" id="Mesh_stump"]
+size = Vector3(2.2, 3, 2.2)
+
+[sub_resource type="SphereMesh" id="Mesh_far_spark"]
+radius = 0.5
+height = 1.0
+
+[node name="MindSparkKingdom" type="Node3D"]
+script = ExtResource("1_world")
+gates_per_thought = 3
+thoughts_to_light_forest = 3
+storm_thoughts = 3
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_forest")
+
+[node name="ForestLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.819152, 0, -0.573576, -0.519837, 0.422618, -0.742404, 0.242404, 0.906308, 0.346189, 0, 400, 0)
+light_color = Color(0.5, 0.62, 0.85, 1)
+light_energy = 1.6
+shadow_enabled = true
+
+[node name="Island" type="Node3D" parent="."]
+script = ExtResource("90_island")
+island_size = 3000.0
+grid = 60
+relief = 140.0
+shore_falloff = 0.22
+terrain_seed = 11
+ground_colour = Color(0.36, 0.44, 0.58, 1)
+walkable = true
+
+[node name="TowerTrees" type="Node3D" parent="."]
+
+[node name="Tower1" type="MeshInstance3D" parent="TowerTrees"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 8, -18)
+mesh = SubResource("BoxMesh_tower")
+surface_material_override/0 = SubResource("Mat_tower")
+
+[node name="Tower2" type="MeshInstance3D" parent="TowerTrees"]
+transform = Transform3D(1, 0, 0, 0, 1.3, 0, 0, 0, 1, 12, 10.4, -22)
+mesh = SubResource("BoxMesh_tower")
+surface_material_override/0 = SubResource("Mat_tower")
+
+[node name="Tower3" type="MeshInstance3D" parent="TowerTrees"]
+transform = Transform3D(1, 0, 0, 0, 0.85, 0, 0, 0, 1, -22, 6.8, 6)
+mesh = SubResource("BoxMesh_tower")
+surface_material_override/0 = SubResource("Mat_tower")
+
+[node name="Tower4" type="MeshInstance3D" parent="TowerTrees"]
+transform = Transform3D(1, 0, 0, 0, 1.15, 0, 0, 0, 1, 20, 9.2, 10)
+mesh = SubResource("BoxMesh_tower")
+surface_material_override/0 = SubResource("Mat_tower")
+
+[node name="OldestTree" type="MeshInstance3D" parent="TowerTrees"]
+transform = Transform3D(1.6, 0, 0, 0, 1.6, 0, 0, 0, 1.6, 0, 12.8, -34)
+mesh = SubResource("BoxMesh_tower")
+surface_material_override/0 = SubResource("Mat_tower")
+
+[node name="ThoughtSparks" type="Node3D" parent="."]
+
+[node name="Spark1" type="Node3D" parent="ThoughtSparks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 2.2, 2)
+script = ExtResource("2_spark")
+thought = "I am not good enough"
+kind_thought = "I am learning and growing"
+flavour = "worry"
+
+[node name="Mesh" type="MeshInstance3D" parent="ThoughtSparks/Spark1"]
+mesh = SubResource("SphereMesh_spark")
+surface_material_override/0 = SubResource("Mat_spark_worry")
+
+[node name="Glow" type="OmniLight3D" parent="ThoughtSparks/Spark1"]
+light_color = Color(0.45, 0.5, 0.7, 1)
+light_energy = 1.0
+omni_range = 6.0
+
+[node name="Label" type="Label3D" parent="ThoughtSparks/Spark1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+billboard = 1
+font_size = 48
+pixel_size = 0.008
+modulate = Color(0.85, 0.88, 1, 1)
+text = "I am not good enough"
+
+[node name="Spark2" type="Node3D" parent="ThoughtSparks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2.6, 2)
+script = ExtResource("2_spark")
+thought = "Something bad will happen"
+kind_thought = "I can handle what comes, one step at a time"
+flavour = "fear"
+
+[node name="Mesh" type="MeshInstance3D" parent="ThoughtSparks/Spark2"]
+mesh = SubResource("SphereMesh_spark")
+surface_material_override/0 = SubResource("Mat_spark_worry")
+
+[node name="Glow" type="OmniLight3D" parent="ThoughtSparks/Spark2"]
+light_color = Color(0.45, 0.5, 0.7, 1)
+light_energy = 1.0
+omni_range = 6.0
+
+[node name="Label" type="Label3D" parent="ThoughtSparks/Spark2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+billboard = 1
+font_size = 48
+pixel_size = 0.008
+modulate = Color(0.85, 0.88, 1, 1)
+text = "Something bad will happen"
+
+[node name="Spark3" type="Node3D" parent="ThoughtSparks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 6)
+script = ExtResource("2_spark")
+thought = "Nobody wants me here"
+kind_thought = "There are people who are glad I came"
+flavour = "worry"
+
+[node name="Mesh" type="MeshInstance3D" parent="ThoughtSparks/Spark3"]
+mesh = SubResource("SphereMesh_spark")
+surface_material_override/0 = SubResource("Mat_spark_worry")
+
+[node name="Glow" type="OmniLight3D" parent="ThoughtSparks/Spark3"]
+light_color = Color(0.45, 0.5, 0.7, 1)
+light_energy = 1.0
+omni_range = 6.0
+
+[node name="Label" type="Label3D" parent="ThoughtSparks/Spark3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+billboard = 1
+font_size = 48
+pixel_size = 0.008
+modulate = Color(0.85, 0.88, 1, 1)
+text = "Nobody wants me here"
+
+[node name="ThoughtGates" type="Node3D" parent="."]
+
+[node name="IsItAFear" type="Area3D" parent="ThoughtGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2, -14)
+script = ExtResource("3_gate")
+gate_id = "is_it_a_fear"
+question = "Is this a fear about later, or something that already happened?"
+
+[node name="Mesh" type="MeshInstance3D" parent="ThoughtGates/IsItAFear"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_gate")
+surface_material_override/0 = SubResource("Mat_gate")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ThoughtGates/IsItAFear"]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="GateLight" type="OmniLight3D" parent="ThoughtGates/IsItAFear"]
+light_energy = 1.5
+omni_range = 10.0
+
+[node name="Question" type="Label3D" parent="ThoughtGates/IsItAFear"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 40
+pixel_size = 0.007
+width = 700.0
+autowrap_mode = 2
+modulate = Color(0.62, 0.93, 1, 1)
+text = "Is this a fear about later, or something that already happened?"
+
+[node name="IsThereProof" type="Area3D" parent="ThoughtGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -18)
+script = ExtResource("3_gate")
+gate_id = "is_there_proof"
+question = "What would you say to a friend who thought this about themselves?"
+
+[node name="Mesh" type="MeshInstance3D" parent="ThoughtGates/IsThereProof"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_gate")
+surface_material_override/0 = SubResource("Mat_gate")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ThoughtGates/IsThereProof"]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="GateLight" type="OmniLight3D" parent="ThoughtGates/IsThereProof"]
+light_energy = 1.5
+omni_range = 10.0
+
+[node name="Question" type="Label3D" parent="ThoughtGates/IsThereProof"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 40
+pixel_size = 0.007
+width = 700.0
+autowrap_mode = 2
+modulate = Color(0.62, 0.93, 1, 1)
+text = "What would you say to a friend who thought this about themselves?"
+
+[node name="WhatElseIsTrue" type="Area3D" parent="ThoughtGates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -14)
+script = ExtResource("3_gate")
+gate_id = "what_else_is_true"
+question = "What else might be true, that this thought left out?"
+
+[node name="Mesh" type="MeshInstance3D" parent="ThoughtGates/WhatElseIsTrue"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_gate")
+surface_material_override/0 = SubResource("Mat_gate")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ThoughtGates/WhatElseIsTrue"]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="GateLight" type="OmniLight3D" parent="ThoughtGates/WhatElseIsTrue"]
+light_energy = 1.5
+omni_range = 10.0
+
+[node name="Question" type="Label3D" parent="ThoughtGates/WhatElseIsTrue"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 40
+pixel_size = 0.007
+width = 700.0
+autowrap_mode = 2
+modulate = Color(0.62, 0.93, 1, 1)
+text = "What else might be true, that this thought left out?"
+
+[node name="Storm" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, -30)
+visible = false
+
+[node name="Rain" type="GPUParticles3D" parent="Storm"]
+amount = 400
+lifetime = 2.5
+speed_scale = 2.5
+process_material = SubResource("Particles_rain")
+draw_pass_1 = SubResource("SphereMesh_rain")
+material_override = SubResource("Mat_rain")
+
+[node name="Approach" type="Area3D" parent="Storm"]
+script = ExtResource("7_storm")
+kingdom_path = NodePath("../..")
+player_path = NodePath("../../NewPlayer")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Storm/Approach"]
+shape = SubResource("BoxShape3D_storm")
+
+[node name="StormLight" type="OmniLight3D" parent="Storm"]
+light_color = Color(0.5, 0.6, 0.85, 1)
+light_energy = 1.2
+omni_range = 30.0
+
+[node name="StarOfWisdom" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -34)
+
+[node name="Mesh" type="MeshInstance3D" parent="StarOfWisdom"]
+mesh = SubResource("SphereMesh_star")
+surface_material_override/0 = SubResource("Mat_star")
+
+[node name="Pickup" type="Area3D" parent="StarOfWisdom"]
+script = ExtResource("9_pickup")
+kingdom_path = NodePath("../..")
+take_method = "take_the_star"
+ready_method = "storm_is_calm"
+treasure_name = "the Star of Wisdom"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StarOfWisdom/Pickup"]
+shape = SubResource("BoxShape3D_pickup")
+
+[node name="Glow" type="OmniLight3D" parent="StarOfWisdom"]
+light_color = Color(0.62, 0.93, 1, 1)
+light_energy = 4.0
+omni_range = 20.0
+
+[node name="EverlastingFather" parent="." instance=ExtResource("5_father")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 4, 0.3, -32)
+
+[node name="Milo" parent="." instance=ExtResource("12_milo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.9, 10)
+script = ExtResource("13_companion")
+
+[node name="NewPlayer" parent="." instance=ExtResource("4_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 12)
+
+[node name="KinderThoughtChime" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_chime")
+volume_db = -4.0
+
+[node name="ForestSong" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("11_calm")
+volume_db = -8.0
+
+[node name="ThoughtCarrier" type="Node3D" parent="."]
+script = ExtResource("6_carry")
+gates_per_thought = 3
+player_path = NodePath("../NewPlayer")
+sparks_path = NodePath("../ThoughtSparks")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("8_hud")
+kingdom_path = NodePath("..")
+carrier_path = NodePath("../ThoughtCarrier")
+storm_path = NodePath("../Storm/Approach")
+
+[node name="Prompt" type="Label" parent="HUD"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -110.0
+offset_right = 400.0
+offset_bottom = -70.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.62, 0.93, 1, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="CarriedThought" type="Label" parent="HUD"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -160.0
+offset_right = 400.0
+offset_bottom = -118.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Progress" type="Label" parent="HUD"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -440.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 56.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.73, 0.7, 0.86, 1)
+horizontal_alignment = 2
+
+[node name="Banner" type="Label" parent="HUD"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -420.0
+offset_top = 90.0
+offset_right = 420.0
+offset_bottom = 140.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+modulate = Color(1, 1, 1, 0)
+
+[node name="Gateway" type="Area3D" parent="."]
+script = ExtResource("91_gateway")
+destination = "res://scenes/crown_chamber.tscn"
+label_text = "Back to the ARTÉA Castle"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Gateway"]
+shape = SubResource("BoxShape3D_pickup")
+
+[node name="Glow" type="OmniLight3D" parent="Gateway"]
+light_color = Color(0.31, 0.847, 0.91, 1)
+light_energy = 2.0
+omni_range = 30.0
+
+[node name="Label" type="Label3D" parent="Gateway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.01
+modulate = Color(0.31, 0.847, 0.91, 1)
+text = "Back to the ARTÉA Castle"
+
+[node name="Scenery" type="Node3D" parent="."]
+script = ExtResource("93_scatter")
+island_path = NodePath("../Island")
+scatter_seed = 761
+layers = [{
+"name": "DistantTowers",
+"mesh": SubResource("Mesh_far_tower"),
+"count": 544,
+"min_scale": 0.70,
+"max_scale": 1.30,
+"min_distance": 60.0,
+"max_distance": 620.0,
+"colour": Color(0.22, 0.27, 0.4, 1),
+"emission": 0.5,
+"emission_colour": Color(0.26, 0.6, 0.72, 1)
+}, {
+"name": "Stumps",
+"mesh": SubResource("Mesh_stump"),
+"count": 374,
+"min_scale": 0.60,
+"max_scale": 1.30,
+"min_distance": 35.0,
+"max_distance": 620.0,
+"colour": Color(0.26, 0.3, 0.42, 1)
+}, {
+"name": "DriftingSparks",
+"mesh": SubResource("Mesh_far_spark"),
+"count": 442,
+"min_scale": 0.50,
+"max_scale": 1.30,
+"min_distance": 40.0,
+"max_distance": 620.0,
+"colour": Color(0.5, 0.6, 0.85, 1),
+"emission": 1.6,
+"emission_colour": Color(0.45, 0.7, 1, 1)
+}]
+
+[node name="Districts" type="Node3D" parent="."]
+script = ExtResource("92_districts")
+island_path = NodePath("../Island")
+content_root = NodePath("..")
+placements = {
+"NewPlayer": Vector2(180, 88),
+"Milo": Vector2(172, 97),
+"ThoughtSparks/Spark1": Vector2(205, 146),
+"ThoughtSparks/Spark2": Vector2(155, 146),
+"ThoughtSparks/Spark3": Vector2(180, 129),
+"ThoughtGates/IsItAFear": Vector2(200, 218),
+"ThoughtGates/IsThereProof": Vector2(180, 235),
+"ThoughtGates/WhatElseIsTrue": Vector2(160, 218),
+"TowerTrees/Tower1": Vector2(230, 177),
+"TowerTrees/Tower2": Vector2(130, 190),
+"TowerTrees/Tower3": Vector2(250, 272),
+"TowerTrees/Tower4": Vector2(110, 279),
+"TowerTrees/OldestTree": Vector2(180, 367),
+"Storm": Vector2(180, 323),
+"StarOfWisdom": Vector2(180, 354),
+"EverlastingFather": Vector2(168, 350),
+"Gateway": Vector2(180, 61)
+}
+lift = {
+"NewPlayer": 3.0,
+"Milo": 1.6,
+"ThoughtSparks/Spark1": 2.4,
+"ThoughtSparks/Spark2": 2.6,
+"ThoughtSparks/Spark3": 2.4,
+"ThoughtGates/IsItAFear": 3.0,
+"ThoughtGates/IsThereProof": 3.0,
+"ThoughtGates/WhatElseIsTrue": 3.0,
+"TowerTrees/Tower1": 8.0,
+"TowerTrees/Tower2": 10.4,
+"TowerTrees/Tower3": 6.8,
+"TowerTrees/Tower4": 9.2,
+"TowerTrees/OldestTree": 12.8,
+"Storm": 30.0,
+"StarOfWisdom": 2.0,
+"EverlastingFather": 0.5,
+"Gateway": 2.5
+}

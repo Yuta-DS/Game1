@@ -7,28 +7,17 @@ extends Control
 @onready var ai_counselor = $AI_Counselor
 @onready var model = $MiloModel
 
-var openai_api_key = "" # <<<<<< Do not include API key in code
+var local_ai_enabled := false
 signal chat_closed
 
 func _ready():
-	# Load the .gguf model
-	model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
-	ai_counselor.set_model_node(model)
-	ai_counselor.set_system_prompt(load_prompt())
-	ai_counselor.start_worker()
-	
-	# Connect signals
-	ai_counselor.connect("response_finished", Callable(self, "_on_ai_response"))
+	_setup_chat_backend()
 	#model.load_model("")
 	#ai_counselor.set_model(model)
 	#var reply = ai_counselor.generate("Hello")
 	#print(reply)
 	#var reply3 = ai_counselor.generate("User: Hello\nAssistant:")
 	#print(reply3)
-	
-	print("=== CHAT SIGNALS ===")
-	for s in ai_counselor.get_signal_list():
-		print(s.name)
 	
 	#print("=== MODEL FUNCTIONS ===")
 	#for m in model.get_method_list():
@@ -57,6 +46,29 @@ func _ready():
 		
 	user_input.grab_focus()
 
+func _setup_chat_backend() -> void:
+	# Desktop keeps the local NobodyWho model. Web uses the Flask endpoint so
+	# the browser bundle contains no native libraries or multi-gigabyte model.
+	if not OS.has_feature("web") \
+		and ClassDB.class_exists("NobodyWhoChat") \
+		and ClassDB.class_exists("NobodyWhoModel"):
+		ai_counselor.queue_free()
+		model.queue_free()
+		ai_counselor = ClassDB.instantiate("NobodyWhoChat")
+		model = ClassDB.instantiate("NobodyWhoModel")
+		ai_counselor.name = "MiloChatBackend"
+		model.name = "MiloModelBackend"
+		add_child(ai_counselor)
+		add_child(model)
+		model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
+		ai_counselor.set_model_node(model)
+		ai_counselor.set_system_prompt(load_prompt())
+		ai_counselor.start_worker()
+		ai_counselor.connect("response_finished", Callable(self, "_on_ai_response"))
+		local_ai_enabled = true
+	elif not http_request.request_completed.is_connected(_on_http_request_completed):
+		http_request.request_completed.connect(_on_http_request_completed)
+
 func load_prompt() -> String:
 	var file  = FileAccess.open("res://addons/nobodywho/milo_prompt.txt", FileAccess.READ)
 	if file:
@@ -74,51 +86,41 @@ func _on_send_button_pressed(submitted_text = ""):
 		
 	if message != "":
 		append_to_chat("You: " + message)
-		#var reply2 = ai_counselor.generate("User: " + message + "\nAssistant:")
-		#append_to_chat("Milo: " + reply2)
-		ai_counselor.say(message)
+		if local_ai_enabled:
+			ai_counselor.say(message)
+		else:
+			send_message_to_server(message)
 		user_input.text = ""
 
 func append_to_chat(text: String):
 	chat_history.text += text + "\n\n"
 	chat_history.scroll_vertical = chat_history.get_line_count()
 
-func send_message_to_chatgpt(user_message: String) -> void:
-	var url = "https://api.openai.com/v1/chat/completions"
-	
-	var headers = [
-		"Content-Type: application/json",
-		"Authorization: Bearer " + openai_api_key
-	]
-	
+func send_message_to_server(user_message: String) -> void:
 	var body = {
-		"model": "gpt-3.5-turbo",
 		"messages": [
-			{"role": "system", "content": "You are a friendly chatbot."},
-			{"role": "user", "content": user_message}
+			{"role": "system", "content": load_prompt()},
+			{"role": "user", "content": user_message},
 		]
 	}
-	
-	var body_json = JSON.stringify(body)
-	
-	var error = http_request.request(
-		url,
-		headers,
+	var error := http_request.request(
+		APIManager.AI_CHAT_URL,
+		["Content-Type: application/json"],
 		HTTPClient.METHOD_POST,
-		body_json
+		JSON.stringify(body)
 	)
-	
 	if error != OK:
-		append_to_chat("Error sending message! Error code: " + str(error))
+		append_to_chat("Milo: I am having trouble connecting right now. Please try again.")
 
 func _on_http_request_completed(_result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray):
 	if response_code == 200:
 		var response = JSON.parse_string(body.get_string_from_utf8())
-		if response:
-			var reply_text = response["choices"][0]["message"]["content"]
-			append_to_chat("ChatGPT: " + reply_text.strip_edges())
+		if typeof(response) == TYPE_DICTIONARY and response.has("reply"):
+			append_to_chat("Milo: " + str(response["reply"]).strip_edges())
+		else:
+			append_to_chat("Milo: I could not understand the server response.")
 	else:
-		append_to_chat("Request failed! Server returned: " + str(response_code))
+		append_to_chat("Milo: I am having trouble connecting right now. Please try again.")
 
 func close_chat():
 	emit_signal("chat_closed")

@@ -1,0 +1,575 @@
+[gd_scene load_steps=21 format=3]
+
+[ext_resource type="Script" path="res://scripts/HeartMelodyKingdom.gd" id="1_world"]
+[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="99_galaxy"]
+[ext_resource type="Script" path="res://scripts/IslandTerrain.gd" id="90_island"]
+[ext_resource type="Script" path="res://scripts/IslandScatter.gd" id="93_scatter"]
+[ext_resource type="PackedScene" uid="uid://ckdq7v5jxql8c" path="res://assets3D/trees/tree_1_c_color_12.tscn" id="94_tree1"]
+[ext_resource type="PackedScene" uid="uid://d0jx15044dedd" path="res://assets3D/trees/tree_3_a_color_12.tscn" id="95_tree3"]
+[ext_resource type="PackedScene" uid="uid://0i3hkwmt7y7i" path="res://assets3D/trees/tree_4_a_color_12.tscn" id="96_tree4"]
+[ext_resource type="Script" path="res://scripts/IslandGateway.gd" id="91_gateway"]
+[ext_resource type="Script" path="res://scripts/IslandDistricts.gd" id="92_districts"]
+[ext_resource type="Script" path="res://scripts/FeelingInstrument.gd" id="2_instrument"]
+[ext_resource type="Script" path="res://scripts/HeartMelodyHUD.gd" id="3_hud"]
+[ext_resource type="Script" path="res://scripts/TreasurePickup.gd" id="6_pickup"]
+[ext_resource type="PackedScene" uid="uid://c080vovqsegsq" path="res://scenes/mage_animations.tscn" id="7_raphael"]
+[ext_resource type="AudioStream" uid="uid://dyfmwe6m6vvdx" path="res://assets/audio/waterfall_ambient_loop.mp3" id="8_falls"]
+[ext_resource type="AudioStream" uid="uid://b853lclmr1lkt" path="res://assets/SFX/fairy dust.mp3" id="9_note"]
+[ext_resource type="AudioStream" uid="uid://cy3l3avm3i36h" path="res://assets/audio/Beautiful Piano Music.mp3" id="10_song"]
+[ext_resource type="Script" path="res://scripts/MiloCompanion.gd" id="11_companion"]
+[ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="4_player"]
+[ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="5_milo"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_galaxy"]
+panorama = ExtResource("99_galaxy")
+
+[sub_resource type="Sky" id="Sky_galaxy"]
+sky_material = SubResource("PanoramaSkyMaterial_galaxy")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_drum"]
+top_radius = 1.6
+bottom_radius = 1.6
+height = 1.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_reach"]
+size = Vector3(6, 5, 6)
+
+[sub_resource type="SphereMesh" id="SphereMesh_bell"]
+radius = 1.1
+height = 2.2
+
+[sub_resource type="PrismMesh" id="PrismMesh_jewel"]
+size = Vector3(1.1, 1.5, 1.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_platform"]
+size = Vector3(6, 0.5, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_waterfall"]
+size = Vector3(7, 14, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_grass"]
+albedo_color = Color(0.157, 0.294, 0.208, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_instrument"]
+albedo_color = Color(0.42, 0.31, 0.26, 1)
+metallic = 0.3
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="Mat_water"]
+albedo_color = Color(0.42, 0.71, 0.85, 0.75)
+transparency = 1
+roughness = 0.15
+emission_enabled = true
+emission = Color(0.5, 0.78, 0.92, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_jewel"]
+albedo_color = Color(1, 0.494, 0.659, 1)
+emission_enabled = true
+emission = Color(1, 0.62, 0.75, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_built"]
+albedo_color = Color(0.55, 0.45, 0.72, 1)
+emission_enabled = true
+emission = Color(0.6, 0.5, 0.85, 1)
+emission_energy_multiplier = 0.7
+
+[sub_resource type="Environment" id="Env_valley"]
+background_mode = 2
+sky = SubResource("Sky_galaxy")
+background_energy_multiplier = 0.8
+ambient_light_source = 3
+ambient_light_sky_contribution = 0.45
+reflected_light_source = 2
+ambient_light_color = Color(0.45, 0.6, 0.55, 1)
+ambient_light_energy = 1.6
+fog_enabled = true
+fog_light_color = Color(0.24, 0.36, 0.35, 1)
+fog_density = 0.0003
+
+[sub_resource type="SphereMesh" id="Mesh_boulder"]
+radius = 2.2
+height = 3.4
+
+[sub_resource type="CylinderMesh" id="Mesh_reed"]
+top_radius = 0.12
+bottom_radius = 0.3
+height = 5.0
+
+[sub_resource type="SphereMesh" id="Mesh_bloom"]
+radius = 0.7
+height = 1.2
+
+[node name="HeartMelodyKingdom" type="Node3D"]
+script = ExtResource("1_world")
+feelings_for_the_song = 4
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_valley")
+
+[node name="ValleyLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.819152, 0, -0.573576, -0.519837, 0.422618, -0.742404, 0.242404, 0.906308, 0.346189, 0, 400, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 2.0
+shadow_enabled = true
+
+[node name="Island" type="Node3D" parent="."]
+script = ExtResource("90_island")
+island_size = 3000.0
+grid = 60
+relief = 160.0
+shore_falloff = 0.22
+terrain_seed = 22
+ground_colour = Color(0.36, 0.6, 0.42, 1)
+walkable = true
+
+[node name="Waterfalls" type="Node3D" parent="."]
+
+[node name="Ambience" type="AudioStreamPlayer3D" parent="Waterfalls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -26)
+stream = ExtResource("8_falls")
+autoplay = true
+unit_size = 40.0
+max_distance = 90.0
+
+[node name="FallWest" type="MeshInstance3D" parent="Waterfalls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 7, -26)
+mesh = SubResource("BoxMesh_waterfall")
+surface_material_override/0 = SubResource("Mat_water")
+
+[node name="FallEast" type="MeshInstance3D" parent="Waterfalls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 7, -26)
+mesh = SubResource("BoxMesh_waterfall")
+surface_material_override/0 = SubResource("Mat_water")
+
+[node name="Instruments" type="Node3D" parent="."]
+
+[node name="JoyDrum" type="Area3D" parent="Instruments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, -6)
+script = ExtResource("2_instrument")
+feeling = "joy"
+note_pitch = 1.35
+milos_answer = "platform"
+note_colour = Color(1, 0.82, 0.35, 1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Instruments/JoyDrum"]
+mesh = SubResource("CylinderMesh_drum")
+surface_material_override/0 = SubResource("Mat_instrument")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Instruments/JoyDrum"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="Instruments/JoyDrum"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+omni_range = 10.0
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="Instruments/JoyDrum"]
+stream = ExtResource("9_note")
+unit_size = 18.0
+max_distance = 40.0
+
+[node name="Label" type="Label3D" parent="Instruments/JoyDrum"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.008
+text = "Joy"
+
+[node name="SadnessStrings" type="Area3D" parent="Instruments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, -6)
+script = ExtResource("2_instrument")
+feeling = "sadness"
+note_pitch = 0.62
+milos_answer = "raindrop_boat"
+note_colour = Color(0.45, 0.65, 0.92, 1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Instruments/SadnessStrings"]
+mesh = SubResource("CylinderMesh_drum")
+surface_material_override/0 = SubResource("Mat_instrument")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Instruments/SadnessStrings"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="Instruments/SadnessStrings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+omni_range = 10.0
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="Instruments/SadnessStrings"]
+stream = ExtResource("9_note")
+unit_size = 18.0
+max_distance = 40.0
+
+[node name="Label" type="Label3D" parent="Instruments/SadnessStrings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.008
+text = "Sadness"
+
+[node name="FrustrationDrum" type="Area3D" parent="Instruments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 1, 8)
+script = ExtResource("2_instrument")
+feeling = "frustration"
+note_pitch = 0.78
+milos_answer = "platform"
+note_colour = Color(0.92, 0.42, 0.32, 1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Instruments/FrustrationDrum"]
+mesh = SubResource("CylinderMesh_drum")
+surface_material_override/0 = SubResource("Mat_instrument")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Instruments/FrustrationDrum"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="Instruments/FrustrationDrum"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+omni_range = 10.0
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="Instruments/FrustrationDrum"]
+stream = ExtResource("9_note")
+unit_size = 18.0
+max_distance = 40.0
+
+[node name="Label" type="Label3D" parent="Instruments/FrustrationDrum"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.008
+text = "Frustration"
+
+[node name="FearBells" type="Area3D" parent="Instruments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 1.4, 8)
+script = ExtResource("2_instrument")
+feeling = "fear"
+note_pitch = 0.9
+milos_answer = "safe_path"
+note_colour = Color(0.72, 0.6, 0.95, 1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Instruments/FearBells"]
+mesh = SubResource("SphereMesh_bell")
+surface_material_override/0 = SubResource("Mat_instrument")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Instruments/FearBells"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="Instruments/FearBells"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+omni_range = 10.0
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="Instruments/FearBells"]
+stream = ExtResource("9_note")
+unit_size = 18.0
+max_distance = 40.0
+
+[node name="Label" type="Label3D" parent="Instruments/FearBells"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.008
+text = "Fear"
+
+[node name="PeaceFlowers" type="Area3D" parent="Instruments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 16)
+script = ExtResource("2_instrument")
+feeling = "peace"
+note_pitch = 1.15
+milos_answer = "resting_place"
+note_colour = Color(0.6, 0.9, 0.7, 1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Instruments/PeaceFlowers"]
+mesh = SubResource("SphereMesh_bell")
+surface_material_override/0 = SubResource("Mat_instrument")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Instruments/PeaceFlowers"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="Instruments/PeaceFlowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+omni_range = 10.0
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="Instruments/PeaceFlowers"]
+stream = ExtResource("9_note")
+unit_size = 18.0
+max_distance = 40.0
+
+[node name="Label" type="Label3D" parent="Instruments/PeaceFlowers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.008
+text = "Peace"
+
+[node name="HopeChimes" type="Area3D" parent="Instruments"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -20)
+script = ExtResource("2_instrument")
+feeling = "hope"
+note_pitch = 1.6
+milos_answer = "morning_light"
+note_colour = Color(1, 0.9, 0.55, 1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Instruments/HopeChimes"]
+mesh = SubResource("SphereMesh_bell")
+surface_material_override/0 = SubResource("Mat_instrument")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Instruments/HopeChimes"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="Instruments/HopeChimes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+omni_range = 10.0
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="Instruments/HopeChimes"]
+stream = ExtResource("9_note")
+unit_size = 18.0
+max_distance = 40.0
+
+[node name="Label" type="Label3D" parent="Instruments/HopeChimes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.008
+text = "Hope"
+
+[node name="MilosAnswers" type="Node3D" parent="."]
+
+[node name="Platform" type="MeshInstance3D" parent="MilosAnswers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 2.5, -14)
+mesh = SubResource("BoxMesh_platform")
+surface_material_override/0 = SubResource("Mat_built")
+
+[node name="RaindropBoat" type="MeshInstance3D" parent="MilosAnswers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.5, -14)
+mesh = SubResource("BoxMesh_platform")
+surface_material_override/0 = SubResource("Mat_built")
+
+[node name="SafePath" type="MeshInstance3D" parent="MilosAnswers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.5, 0)
+mesh = SubResource("BoxMesh_platform")
+surface_material_override/0 = SubResource("Mat_built")
+
+[node name="RestingPlace" type="MeshInstance3D" parent="MilosAnswers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 8)
+mesh = SubResource("BoxMesh_platform")
+surface_material_override/0 = SubResource("Mat_built")
+
+[node name="MorningLight" type="MeshInstance3D" parent="MilosAnswers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 2.5, 0)
+mesh = SubResource("BoxMesh_platform")
+surface_material_override/0 = SubResource("Mat_built")
+
+[node name="HarmonyJewel" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -28)
+
+[node name="Mesh" type="MeshInstance3D" parent="HarmonyJewel"]
+mesh = SubResource("PrismMesh_jewel")
+surface_material_override/0 = SubResource("Mat_jewel")
+
+[node name="Pickup" type="Area3D" parent="HarmonyJewel"]
+script = ExtResource("6_pickup")
+kingdom_path = NodePath("../..")
+take_method = "take_the_jewel"
+ready_method = "valley_is_singing"
+treasure_name = "the Harmony Jewel"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HarmonyJewel/Pickup"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="HarmonyJewel"]
+light_color = Color(1, 0.62, 0.75, 1)
+light_energy = 4.0
+omni_range = 20.0
+
+[node name="Raphael" parent="." instance=ExtResource("7_raphael")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 5, 0.25, -27)
+
+[node name="Glow" type="OmniLight3D" parent="Raphael"]
+light_color = Color(0.85, 0.95, 1, 1)
+light_energy = 2.5
+omni_range = 14.0
+
+[node name="Milo" parent="." instance=ExtResource("5_milo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.9, 6)
+script = ExtResource("11_companion")
+
+[node name="ValleySong" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_song")
+volume_db = -6.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("3_hud")
+kingdom_path = NodePath("..")
+
+[node name="Prompt" type="Label" parent="HUD"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -110.0
+offset_right = 400.0
+offset_bottom = -70.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.62, 0.75, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Progress" type="Label" parent="HUD"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -440.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 56.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.85, 0.8, 0.9, 1)
+horizontal_alignment = 2
+
+[node name="Song" type="Label" parent="HUD"]
+anchors_preset = 0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 440.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.85, 0.9, 1)
+
+[node name="Banner" type="Label" parent="HUD"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -420.0
+offset_top = 90.0
+offset_right = 420.0
+offset_bottom = 140.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1, 0.92, 0.95, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+modulate = Color(1, 1, 1, 0)
+
+[node name="NewPlayer" parent="." instance=ExtResource("4_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 20)
+
+[node name="Gateway" type="Area3D" parent="."]
+script = ExtResource("91_gateway")
+destination = "res://scenes/crown_chamber.tscn"
+label_text = "Back to the ARTÉA Castle"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Gateway"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="Gateway"]
+light_color = Color(1, 0.494, 0.659, 1)
+light_energy = 2.0
+omni_range = 30.0
+
+[node name="Label" type="Label3D" parent="Gateway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.01
+modulate = Color(1, 0.494, 0.659, 1)
+text = "Back to the ARTÉA Castle"
+
+[node name="Scenery" type="Node3D" parent="."]
+script = ExtResource("93_scatter")
+island_path = NodePath("../Island")
+scatter_seed = 678
+layers = [{
+"name": "TreesRound",
+"scene": ExtResource("94_tree1"),
+"count": 900,
+"min_scale": 1.54,
+"max_scale": 2.56,
+"min_distance": 60.0,
+"max_distance": 300.0
+}, {
+"name": "TreesTall",
+"scene": ExtResource("95_tree3"),
+"count": 700,
+"min_scale": 3.42,
+"max_scale": 5.7,
+"min_distance": 70.0,
+"max_distance": 320.0
+}, {
+"name": "TreesBroad",
+"scene": ExtResource("96_tree4"),
+"count": 600,
+"min_scale": 2.28,
+"max_scale": 3.8,
+"min_distance": 80.0,
+"max_distance": 340.0
+}, {
+"name": "Reeds",
+"mesh": SubResource("Mesh_reed"),
+"count": 714,
+"min_scale": 0.70,
+"max_scale": 1.40,
+"min_distance": 40.0,
+"max_distance": 360.0,
+"colour": Color(0.3, 0.52, 0.34, 1)
+}, {
+"name": "Blooms",
+"mesh": SubResource("Mesh_bloom"),
+"count": 510,
+"min_scale": 0.50,
+"max_scale": 1.20,
+"min_distance": 40.0,
+"max_distance": 340.0,
+"colour": Color(1, 0.72, 0.8, 1),
+"emission": 1.0,
+"emission_colour": Color(1, 0.6, 0.75, 1)
+}]
+
+[node name="Districts" type="Node3D" parent="."]
+script = ExtResource("92_districts")
+island_path = NodePath("../Island")
+content_root = NodePath("..")
+placements = {
+"NewPlayer": Vector2(180, 88),
+"Milo": Vector2(172, 98),
+"Instruments/JoyDrum": Vector2(215, 160),
+"Instruments/SadnessStrings": Vector2(145, 160),
+"Instruments/FrustrationDrum": Vector2(240, 204),
+"Instruments/FearBells": Vector2(120, 204),
+"Instruments/PeaceFlowers": Vector2(180, 136),
+"Instruments/HopeChimes": Vector2(180, 245),
+"Waterfalls/FallWest": Vector2(230, 340),
+"Waterfalls/FallEast": Vector2(130, 340),
+"MilosAnswers/Platform": Vector2(205, 190),
+"MilosAnswers/RaindropBoat": Vector2(155, 190),
+"MilosAnswers/SafePath": Vector2(135, 231),
+"MilosAnswers/RestingPlace": Vector2(180, 170),
+"MilosAnswers/MorningLight": Vector2(225, 231),
+"HarmonyJewel": Vector2(180, 347),
+"Raphael": Vector2(168, 343),
+"Gateway": Vector2(180, 61)
+}
+lift = {
+"NewPlayer": 3.0,
+"Milo": 1.6,
+"Instruments/JoyDrum": 1.0,
+"Instruments/SadnessStrings": 1.0,
+"Instruments/FrustrationDrum": 1.0,
+"Instruments/FearBells": 1.4,
+"Instruments/PeaceFlowers": 1.0,
+"Instruments/HopeChimes": 1.4,
+"Waterfalls/FallWest": 7.0,
+"Waterfalls/FallEast": 7.0,
+"MilosAnswers/Platform": 2.5,
+"MilosAnswers/RaindropBoat": 2.5,
+"MilosAnswers/SafePath": 2.5,
+"MilosAnswers/RestingPlace": 2.5,
+"MilosAnswers/MorningLight": 2.5,
+"HarmonyJewel": 2.2,
+"Raphael": 0.3,
+"Gateway": 2.5
+}

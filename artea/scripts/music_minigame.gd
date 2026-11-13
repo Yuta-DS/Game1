@@ -26,6 +26,7 @@ extends Control
 @export var min_height = 40
 @export var height_multiplier = 2.0
 var music_system_activated = false
+var local_ai_enabled := false
 
 var bars = []
 var bar_speed_offsets = []
@@ -52,23 +53,7 @@ func _ready() -> void:
 	player.stream = load("res://assets/audio/minigame/intro.mp3")
 	player.play()
 	
-	# Load model
-	model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
-
-	# Connect model to AI node
-	emotion_ai.set_model_node(model)
-
-	# Set strict emotion classifier prompt
-	emotion_ai.set_system_prompt(load_emotion_prompt())
-
-	# Start AI worker
-	emotion_ai.start_worker()
-
-	# Connect response signal
-	emotion_ai.connect(
-		"response_finished",
-		Callable(self, "_on_emotion_response")
-	)
+	_setup_emotion_classifier()
 	
 	if not button.pressed.is_connected(_on_generate_pressed):
 		button.pressed.connect(_on_generate_pressed)
@@ -120,6 +105,31 @@ func _ready() -> void:
 	drums_slider.max_value = 4.0
 	drums_slider.step = 0.01
 	drums_slider.value = 1.0
+
+func _setup_emotion_classifier() -> void:
+	# NobodyWho only ships native desktop libraries. Instantiate its classes
+	# dynamically on desktop so a web export never needs to package or load the
+	# 2 GB model and hundreds of megabytes of foreign native binaries.
+	if OS.has_feature("web"):
+		return
+	if not ClassDB.class_exists("NobodyWhoChat") or not ClassDB.class_exists("NobodyWhoModel"):
+		return
+
+	emotion_ai.queue_free()
+	model.queue_free()
+	emotion_ai = ClassDB.instantiate("NobodyWhoChat")
+	model = ClassDB.instantiate("NobodyWhoModel")
+	emotion_ai.name = "EmotionAIBackend"
+	model.name = "EmotionModelBackend"
+	add_child(emotion_ai)
+	add_child(model)
+
+	model.model_path = "res://nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf"
+	emotion_ai.set_model_node(model)
+	emotion_ai.set_system_prompt(load_emotion_prompt())
+	emotion_ai.start_worker()
+	emotion_ai.connect("response_finished", Callable(self, "_on_emotion_response"))
+	local_ai_enabled = true
 	
 func _on_volume_changed(value: float):
 
@@ -338,7 +348,34 @@ func detect_emotion(user_text: String):
 	print("Analyzing emotion...")
 	print(user_text)
 
-	emotion_ai.say(user_text)
+	if local_ai_enabled:
+		emotion_ai.say(user_text)
+	else:
+		_finish_emotion(_classify_emotion_locally(user_text))
+
+func _classify_emotion_locally(user_text: String) -> String:
+	var text := user_text.to_lower()
+	var keyword_groups := {
+		"happy": ["happy", "joy", "joyful", "excited", "great", "good", "love", "delighted"],
+		"anticipation": ["anticipat", "hope", "looking forward", "eager", "expect"],
+		"angry": ["angry", "mad", "furious", "rage", "annoyed", "frustrat"],
+		"disgust": ["disgust", "gross", "revolting", "sickened"],
+		"sad": ["sad", "unhappy", "grief", "lonely", "down", "depressed", "cry"],
+		"surprise": ["surpris", "amazed", "unexpected", "shocked", "wow"],
+		"fear": ["fear", "afraid", "scared", "anxious", "worried", "terrified"],
+		"trust": ["trust", "safe", "secure", "calm", "peace", "confident"],
+	}
+	var best_emotion := "surprise"
+	var best_score := 0
+	for emotion in keyword_groups:
+		var score := 0
+		for keyword in keyword_groups[emotion]:
+			if text.contains(keyword):
+				score += 1
+		if score > best_score:
+			best_score = score
+			best_emotion = emotion
+	return best_emotion
 
 func _on_emotion_response(response):
 	print(typeof(response))
@@ -348,6 +385,9 @@ func _on_emotion_response(response):
 
 	print("RAW AI RESPONSE: " + emotion)
 
+	_finish_emotion(emotion)
+
+func _finish_emotion(emotion: String) -> void:
 	# Safety validation
 	if emotion not in valid_emotions:
 
@@ -363,8 +403,33 @@ func _on_emotion_response(response):
 	apply_color(emotion)
 
 	play_music(emotion)
-	
+
+	_record_feeling(emotion)
+
 	print("Finished processing.")
+
+
+## The story builds the player's song one feeling at a time, so a single note
+## is not the whole melody. Each expressed feeling is recorded, and the Harmony
+## Jewel appears once the player has given several of them a voice.
+const FEELINGS_FOR_THE_JEWEL := 3
+
+func _record_feeling(emotion: String) -> void:
+	var journey := get_node_or_null("/root/JourneyState")
+	if journey == null:
+		return
+
+	journey.record_choice(journey.STATION_HEART, "feeling", emotion)
+
+	# Count the distinct feelings the player has given a voice to. Repeating
+	# one feeling is honest, but the jewel is about range.
+	var voiced := {}
+	for entry in journey.choice_log:
+		if entry.get("kind", "") == "feeling":
+			voiced[entry.get("detail", "")] = true
+
+	if voiced.size() >= FEELINGS_FOR_THE_JEWEL:
+		journey.discover_treasure(journey.TREASURE_JEWEL)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):

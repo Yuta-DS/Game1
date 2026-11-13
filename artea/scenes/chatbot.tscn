@@ -56,9 +56,9 @@ text = "Send"
 
 [node name="HTTPRequestChatGPT" type="HTTPRequest" parent="." unique_id=990123601]
 
-[node name="AI_Counselor" type="NobodyWhoChat" parent="." unique_id=433028267]
+[node name="AI_Counselor" type="Node" parent="." unique_id=433028267]
 
-[node name="MiloModel" type="NobodyWhoModel" parent="." unique_id=2043035805]
+[node name="MiloModel" type="Node" parent="." unique_id=2043035805]
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=1581378263]
 layout_mode = 1

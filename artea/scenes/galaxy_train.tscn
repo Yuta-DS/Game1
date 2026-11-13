@@ -1,0 +1,140 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/GalaxyTrain.gd" id="1_train"]
+[ext_resource type="Script" path="res://scripts/TrainCabin.gd" id="2_cabin"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(4, 0.2, 7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall"]
+size = Vector3(0.2, 2.6, 7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_roof"]
+size = Vector3(4, 0.2, 7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_console"]
+size = Vector3(2.4, 0.15, 0.9)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_wheel"]
+top_radius = 0.45
+bottom_radius = 0.45
+height = 0.12
+
+[sub_resource type="BoxMesh" id="BoxMesh_lever"]
+size = Vector3(0.1, 0.7, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_brake"]
+size = Vector3(0.1, 0.6, 0.1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_bell"]
+radius = 0.18
+height = 0.36
+
+[sub_resource type="QuadMesh" id="QuadMesh_window"]
+size = Vector2(6, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_cabin"]
+albedo_color = Color(0.28, 0.24, 0.42, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Mat_brass"]
+albedo_color = Color(0.91, 0.784, 0.416, 1)
+metallic = 0.8
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_galaxy"]
+albedo_color = Color(0.043, 0.039, 0.122, 1)
+emission_enabled = true
+emission = Color(0.31, 0.847, 0.91, 1)
+emission_energy_multiplier = 0.4
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cabin"]
+size = Vector3(4, 2.6, 7)
+
+[node name="GalaxyTrain" type="Node3D"]
+script = ExtResource("1_train")
+base_journey_time = 24.0
+
+[node name="Cabin" type="Node3D" parent="."]
+script = ExtResource("2_cabin")
+train_path = NodePath("..")
+
+[node name="Body" type="Node3D" parent="Cabin"]
+
+[node name="Floor" type="MeshInstance3D" parent="Cabin/Body"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("Mat_cabin")
+
+[node name="Roof" type="MeshInstance3D" parent="Cabin/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, 0)
+mesh = SubResource("BoxMesh_roof")
+surface_material_override/0 = SubResource("Mat_cabin")
+
+[node name="WallLeft" type="MeshInstance3D" parent="Cabin/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.4, 0)
+mesh = SubResource("BoxMesh_wall")
+surface_material_override/0 = SubResource("Mat_cabin")
+
+[node name="CabinArea" type="Area3D" parent="Cabin/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Cabin/Body/CabinArea"]
+shape = SubResource("BoxShape3D_cabin")
+
+[node name="WindowView" type="Node3D" parent="Cabin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 1.5, 0)
+
+[node name="Scenery" type="Node3D" parent="Cabin/WindowView"]
+
+[node name="GalaxyPane" type="MeshInstance3D" parent="Cabin/WindowView/Scenery"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("QuadMesh_window")
+surface_material_override/0 = SubResource("Mat_galaxy")
+
+[node name="Controls" type="Node3D" parent="Cabin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -2.6)
+
+[node name="Console" type="MeshInstance3D" parent="Cabin/Controls"]
+mesh = SubResource("BoxMesh_console")
+surface_material_override/0 = SubResource("Mat_cabin")
+
+[node name="DestinationWheel" type="Node3D" parent="Cabin/Controls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.3, 0)
+
+[node name="WheelMesh" type="MeshInstance3D" parent="Cabin/Controls/DestinationWheel"]
+mesh = SubResource("CylinderMesh_wheel")
+surface_material_override/0 = SubResource("Mat_brass")
+
+[node name="SpeedLever" type="Node3D" parent="Cabin/Controls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.4, 0)
+
+[node name="LeverMesh" type="MeshInstance3D" parent="Cabin/Controls/SpeedLever"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+mesh = SubResource("BoxMesh_lever")
+surface_material_override/0 = SubResource("Mat_brass")
+
+[node name="BrakeHandle" type="Node3D" parent="Cabin/Controls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.4, 0)
+
+[node name="BrakeMesh" type="MeshInstance3D" parent="Cabin/Controls/BrakeHandle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("BoxMesh_brake")
+surface_material_override/0 = SubResource("Mat_brass")
+
+[node name="LightBell" type="Node3D" parent="Cabin/Controls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 0.4, 0)
+
+[node name="BellMesh" type="MeshInstance3D" parent="Cabin/Controls/LightBell"]
+mesh = SubResource("SphereMesh_bell")
+surface_material_override/0 = SubResource("Mat_brass")
+
+[node name="BellGlow" type="OmniLight3D" parent="Cabin/Controls/LightBell"]
+light_color = Color(1, 0.902, 0.6, 1)
+light_energy = 0.0
+omni_range = 6.0
+
+[node name="CabinLight" type="OmniLight3D" parent="Cabin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+light_color = Color(0.91, 0.85, 1, 1)
+light_energy = 1.6
+omni_range = 12.0

@@ -1,0 +1,75 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/IdentityChooser.gd" id="1_chooser"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.075, 0.067, 0.176, 0.96)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.91, 0.784, 0.416, 0.6)
+
+[node name="IdentityChooser" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_chooser")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -260.0
+offset_right = 320.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="Panel/Margin"]
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Panel/Margin/Layout"]
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(1, 0.95, 0.82, 1)
+text = "Which one feels most like you?"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Intro" type="Label" parent="Panel/Margin/Layout"]
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.73, 0.7, 0.86, 1)
+text = "These are ways your light can shine. None is better than another, and you can change your mind later."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/Layout"]
+size_flags_vertical = 3
+
+[node name="Options" type="VBoxContainer" parent="Panel/Margin/Layout/Scroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Buttons" type="HBoxContainer" parent="Panel/Margin/Layout"]
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="StillDiscovering" type="Button" parent="Panel/Margin/Layout/Buttons"]
+custom_minimum_size = Vector2(240, 48)
+text = "I am still discovering"
+
+[node name="SeeMore" type="Button" parent="Panel/Margin/Layout/Buttons"]
+custom_minimum_size = Vector2(200, 48)
+text = "See all sixteen"

@@ -497,10 +497,22 @@ func save_artwork_to_gallery() -> String:
 
 	if err == OK:
 		show_notification("Artwork added to gallery!", true)
+		_award_creators_light(custom_title)
 		return save_path
 	else:
 		show_notification("Failed to save to gallery!", false)
 		return ""
+
+
+## The story's third treasure is earned by making something and letting it be
+## seen, so it is granted when a picture is actually saved rather than when the
+## player leaves the tool. A failed save grants nothing.
+func _award_creators_light(artwork_title: String) -> void:
+	var journey := get_node_or_null("/root/JourneyState")
+	if journey == null:
+		return
+	journey.record_choice(journey.STATION_CREATOR, "artwork", artwork_title)
+	journey.discover_treasure(journey.TREASURE_LIGHT)
 
 
 func upload_artwork_to_firebase() -> void:

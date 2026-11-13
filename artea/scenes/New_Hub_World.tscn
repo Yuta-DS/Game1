@@ -71,6 +71,10 @@
 [ext_resource type="Script" uid="uid://bfq4aadq6xydk" path="res://scripts/rogue_animations.gd" id="67_xrdtn"]
 [ext_resource type="Script" uid="uid://ca8tvwxs47jqc" path="res://scenes/story_direction.gd" id="68_1fv2d"]
 [ext_resource type="Texture2D" uid="uid://cc7haxr8tbq6n" path="res://textures/Sign_box.png.webp" id="68_yieqa"]
+[ext_resource type="Script" path="res://scripts/StationGate.gd" id="70_gate"]
+[ext_resource type="Script" path="res://scripts/GalleryStation.gd" id="71_station"]
+[ext_resource type="Script" path="res://scripts/RailSpine.gd" id="72_rail"]
+[ext_resource type="PackedScene" path="res://scenes/galaxy_train.tscn" id="73_train"]
 
 [sub_resource type="Gradient" id="Gradient_q1hpc"]
 offsets = PackedFloat32Array(0.2, 1)
@@ -304,10 +308,13 @@ radius = 120.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_a4768"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
+size = Vector3(12, 10, 12)
+
 [node name="HubWorld" type="Node3D" unique_id=2105333492]
 
 [node name="NewPlayer" parent="." unique_id=1353458258 instance=ExtResource("2_q1hpc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.64955, 34.126, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 34.126, 0)
 
 [node name="OmniLight3D" type="OmniLight3D" parent="NewPlayer" unique_id=828421421]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.747093, 0)
@@ -756,6 +763,111 @@ transform = Transform3D(0.9999626, 0, 0.00883121, 0, 1, 0, -0.00883121, 0, 0.999
 offset = Vector2(-220, 0)
 modulate = Color(0.24313726, 0.15294118, 0.13725491, 1)
 text = "Councellor"
+
+[node name="CrownLine" type="Node3D" parent="." unique_id=770100201]
+
+[node name="GalleryStation" type="Node3D" parent="CrownLine" unique_id=770100202]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -190, 20, 0)
+script = ExtResource("71_station")
+train_scene = ExtResource("73_train")
+
+[node name="MindSparkLine" type="Node3D" parent="CrownLine" unique_id=770100240]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.5, 0)
+script = ExtResource("72_rail")
+station_id = "mind_spark"
+from_point = Vector3(0, 0, -40)
+to_point = Vector3(0, 0, -252)
+sleeper_count = 44
+rail_colour = Color(0.31, 0.847, 0.91, 1)
+
+[node name="HeartMelodyLine" type="Node3D" parent="CrownLine" unique_id=770100241]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.5, 0)
+script = ExtResource("72_rail")
+station_id = "heart_melody"
+from_point = Vector3(40, 0, 0)
+to_point = Vector3(252, 0, 0)
+sleeper_count = 44
+rail_colour = Color(1, 0.494, 0.659, 1)
+
+[node name="CreatorsLightLine" type="Node3D" parent="CrownLine" unique_id=770100242]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.5, 0)
+script = ExtResource("72_rail")
+station_id = "creators_light"
+from_point = Vector3(0, 0, 40)
+to_point = Vector3(0, 0, 252)
+sleeper_count = 44
+rail_colour = Color(1, 0.71, 0.278, 1)
+
+[node name="Platform" type="MeshInstance3D" parent="CrownLine/GalleryStation" unique_id=770100203]
+mesh = SubResource("BoxMesh_a4768")
+transform = Transform3D(14, 0, 0, 0, 0.6, 0, 0, 0, 5, 0, 0, 0)
+
+[node name="StationLight" type="OmniLight3D" parent="CrownLine/GalleryStation" unique_id=770100204]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+light_color = Color(0.91, 0.784, 0.416, 1)
+light_energy = 3.0
+omni_range = 40.0
+
+[node name="MindSparkGate" type="Area3D" parent="CrownLine" unique_id=770100210 groups=["station_gate"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, -260)
+collision_layer = 3
+script = ExtResource("70_gate")
+station_id = "mind_spark"
+destination_scene = "res://scenes/mind_spark_kingdom.tscn"
+gate_colour = Color(0.31, 0.847, 0.91, 1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CrownLine/MindSparkGate" unique_id=770100211]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="GateLight" type="OmniLight3D" parent="CrownLine/MindSparkGate" unique_id=770100212]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+omni_range = 30.0
+
+[node name="HeartMelodyGate" type="Area3D" parent="CrownLine" unique_id=770100220 groups=["station_gate"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 260, 20, 0)
+collision_layer = 3
+script = ExtResource("70_gate")
+station_id = "heart_melody"
+destination_scene = "res://scenes/heart_melody_kingdom.tscn"
+gate_colour = Color(1, 0.494, 0.659, 1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CrownLine/HeartMelodyGate" unique_id=770100221]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="GateLight" type="OmniLight3D" parent="CrownLine/HeartMelodyGate" unique_id=770100222]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+omni_range = 30.0
+
+[node name="CastleGate" type="Area3D" parent="CrownLine" unique_id=770100250 groups=["station_gate"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -51.4, 22, 40)
+collision_layer = 3
+script = ExtResource("70_gate")
+station_id = "castle"
+destination_scene = "res://scenes/crown_chamber.tscn"
+gate_colour = Color(0.91, 0.784, 0.416, 1)
+board_the_train = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CrownLine/CastleGate" unique_id=770100251]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="GateLight" type="OmniLight3D" parent="CrownLine/CastleGate" unique_id=770100252]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+omni_range = 30.0
+
+[node name="CreatorsLightGate" type="Area3D" parent="CrownLine" unique_id=770100230 groups=["station_gate"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 260)
+collision_layer = 3
+script = ExtResource("70_gate")
+station_id = "creators_light"
+destination_scene = "res://scenes/creators_light_kingdom.tscn"
+gate_colour = Color(1, 0.71, 0.278, 1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CrownLine/CreatorsLightGate" unique_id=770100231]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="GateLight" type="OmniLight3D" parent="CrownLine/CreatorsLightGate" unique_id=770100232]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+omni_range = 30.0
 
 [connection signal="pressed" from="Environment/Thoughts/Pop Thoughts" to="Environment/Thoughts" method="_on_pop_thoughts_pressed"]
 [connection signal="pressed" from="Environment/Drawing/Paint" to="Environment/Drawing" method="_on_paint_pressed"]

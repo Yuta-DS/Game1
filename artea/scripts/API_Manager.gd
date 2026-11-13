@@ -1,13 +1,42 @@
 extends Node
 
-const BASE_URL = "http://54.252.162.122"
-const LOGIN_URL = BASE_URL + "/login"
-const REGISTER_URL = BASE_URL + "/register"
+const FALLBACK_API_BASE := "http://54.252.162.122"
 
-const UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
-const MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
+var BASE_URL := FALLBACK_API_BASE
+var LOGIN_URL := BASE_URL + "/login"
+var REGISTER_URL := BASE_URL + "/register"
+var UPLOAD_ARTWORK_URL := BASE_URL + "/upload_artwork"
+var MY_ARTWORKS_URL := BASE_URL + "/my_artworks"
+var AI_CHAT_URL := BASE_URL + "/ai/chat"
 
 var auth_token = ""
+
+func _enter_tree() -> void:
+	BASE_URL = _resolve_api_base()
+	LOGIN_URL = BASE_URL + "/login"
+	REGISTER_URL = BASE_URL + "/register"
+	UPLOAD_ARTWORK_URL = BASE_URL + "/upload_artwork"
+	MY_ARTWORKS_URL = BASE_URL + "/my_artworks"
+	AI_CHAT_URL = BASE_URL + "/ai/chat"
+
+func _resolve_api_base() -> String:
+	if not OS.has_feature("web"):
+		return FALLBACK_API_BASE
+
+	# HTTPS pages cannot call the legacy HTTP endpoint. Production hosting
+	# proxies /api to Flask; local HTTP builds keep using the development API.
+	var resolved = JavaScriptBridge.eval("""
+		(() => {
+			const configured = globalThis.ARTEA_API_BASE;
+			if (typeof configured === 'string' && configured.length > 0) {
+				return configured;
+			}
+			return location.protocol === 'https:'
+				? location.origin + '/api'
+				: 'http://54.252.162.122';
+		})()
+	""", true)
+	return str(resolved).trim_suffix("/")
 
 # =========================
 # LOGIN

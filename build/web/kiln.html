@@ -1,0 +1,404 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>KILN — World Concept</title>
+<style>
+  :root{
+    --bone:#efe6d8; --bone-2:#e2d6c4; --paper:#f7f1e6;
+    --iron:#241f1c; --iron-2:#4a4039; --iron-3:#7d7167;
+    --terra:#c4643a; --copper:#4f8a72; --amber:#e8a33d; --ash:#9a8f82;
+    --bg:var(--paper); --ink:var(--iron); --ink-2:var(--iron-2); --ink-3:var(--iron-3);
+    --panel:#fffaf1; --line:#ddd0bc; --line-2:#c9b9a1;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#1a1613; --panel:#231e1a; --ink:#f0e7d9; --ink-2:#c3b5a4; --ink-3:#8d8175;
+      --line:#38302a; --line-2:#4c4139;
+      --terra:#e07d4f; --copper:#6cae91; --amber:#f2b95c;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:var(--paper); --panel:#fffaf1; --ink:var(--iron); --ink-2:var(--iron-2);
+    --ink-3:var(--iron-3); --line:#ddd0bc; --line-2:#c9b9a1;
+    --terra:#c4643a; --copper:#4f8a72; --amber:#e8a33d;
+  }
+  :root[data-theme="dark"]{
+    --bg:#1a1613; --panel:#231e1a; --ink:#f0e7d9; --ink-2:#c3b5a4; --ink-3:#8d8175;
+    --line:#38302a; --line-2:#4c4139;
+    --terra:#e07d4f; --copper:#6cae91; --amber:#f2b95c;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1060px;margin:0 auto;padding:46px 22px 72px}
+
+  .mark{font-family:var(--mono);font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--terra);margin:0 0 14px}
+  h1{font-size:clamp(40px,8vw,74px);line-height:.92;margin:0 0 18px;
+    font-weight:800;letter-spacing:-.03em;text-wrap:balance}
+  h1 em{font-style:normal;color:var(--terra)}
+  .lede{max-width:58ch;color:var(--ink-2);font-size:16.5px;margin:0 0 10px}
+  .pitch{max-width:58ch;color:var(--ink-3);font-size:13.5px;margin:0 0 46px}
+
+  .rule{display:flex;align-items:center;gap:14px;margin:0 0 40px}
+  .rule i{flex:1;height:1px;background:var(--line-2);display:block}
+  .rule span{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-3)}
+
+  .region{margin-bottom:58px}
+  .rhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:5px}
+  .stage{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--bg);background:var(--k);
+    padding:3px 8px;border-radius:3px}
+  .region h2{font-size:25px;margin:0;font-weight:700;letter-spacing:-.015em}
+  .region .say{color:var(--ink-2);font-size:14px;max-width:62ch;margin:0 0 18px}
+
+  .plate{border:1px solid var(--line);background:var(--panel);
+    border-radius:3px;overflow:hidden;box-shadow:0 2px 0 var(--line-2)}
+  .plate canvas{display:block;width:100%;height:auto}
+  .meta{display:flex;gap:16px;flex-wrap:wrap;align-items:center;
+    padding:10px 14px;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+  .meta b{color:var(--ink-2);font-weight:500;letter-spacing:.1em;text-transform:uppercase}
+
+  .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:1px;margin-top:18px;background:var(--line);border:1px solid var(--line)}
+  .note{background:var(--panel);padding:14px 16px}
+  .note h3{margin:0 0 6px;font-size:10.5px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--k);font-family:var(--mono)}
+  .note p{margin:0;font-size:13.5px;color:var(--ink-2)}
+
+  .sw{display:inline-flex;align-items:center;gap:5px}
+  .sw i{width:9px;height:9px;display:block;border:1px solid rgba(0,0,0,.2)}
+
+  .verb{border-left:3px solid var(--terra);padding:2px 0 2px 16px;margin:34px 0 44px;
+    max-width:60ch}
+  .verb h3{margin:0 0 8px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+    font-family:var(--mono);color:var(--terra)}
+  .verb ol{margin:0;padding-left:18px;color:var(--ink-2);font-size:14px}
+  .verb li{margin-bottom:5px}
+  .verb li b{color:var(--ink)}
+
+  .foot{border-top:1px solid var(--line);padding-top:22px;color:var(--ink-3);
+    font-size:12.5px;max-width:64ch}
+</style>
+
+<div class="wrap">
+  <p class="mark">World concept · placement puzzler</p>
+  <h1>KILN<em>.</em></h1>
+  <p class="lede">A drowned ceramics works where the world is unfinished clay. You carry a
+  glaze plate. Press it to a view and that view fires into a tile. Set the tile down and
+  what it holds becomes real, load-bearing, walkable.</p>
+  <p class="pitch">Puzzles are made of missing things — a stair that stops, a gap over the
+  slip-pools, a door with no room behind it. You fix them by firing a piece of somewhere
+  else and setting it into the hole.</p>
+
+  <div class="rule"><span>Four regions · a firing sequence</span><i></i></div>
+
+  <div id="regions"></div>
+
+  <div class="verb">
+    <h3>The verb</h3>
+    <ol>
+      <li><b>Frame</b> — hold up the plate; the view inside its border dims to greenware grey.</li>
+      <li><b>Fire</b> — the plate flashes kiln-amber and the framed view sets as a solid tile.</li>
+      <li><b>Set</b> — carry the tile, align it to a gap; edges that match snap and fuse.</li>
+      <li><b>Break</b> — strike a fired tile to return it to the plate, at the cost of one firing.</li>
+    </ol>
+  </div>
+
+  <p class="foot">
+    Original concept. Flat-shaded geometry, hard shadows, a warm bone void instead of a sky.
+    The palette is earthen throughout — terracotta, oxide copper, iron and kiln amber — so the
+    fired tiles read as ceramic against it rather than as photographs.
+  </p>
+</div>
+
+<script>
+"use strict";
+
+const W = 1180, H = 560;
+
+const REGIONS = [
+  {
+    id:"greenware", stage:"01 · Greenware", name:"The Wet Floor",
+    k:"#9a8f82",
+    say:"Where everything is still soft. Slumped walls, unfired and grey, sag under their own "+
+        "weight. Nothing here holds a shape until you give it one.",
+    void:["#e8dfd0","#d9cdb9"], gnd:"#b9ab98", accent:"#9a8f82", glow:"#e8a33d",
+    mood:"unfired · grey · sagging",
+    slabs:[
+      {x:-16,z:14,w:16,h:2.0,tilt:.06},{x:2,z:10,w:20,h:2.4,tilt:-.03},
+      {x:20,z:16,w:13,h:1.8,tilt:.09},{x:-8,z:-4,w:15,h:2.2,tilt:-.05},
+      {x:14,z:-8,w:12,h:2.0,tilt:.04}
+    ],
+    slumps:[{x:-16,z:8,h:5,lean:.22},{x:10,z:6,h:7,lean:-.16},{x:24,z:12,h:4,lean:.28}],
+    gap:{x:2,z:2,w:9},
+    notes:[
+      {h:"Slumped walls", p:"Unfired clay leans and sags. It can be walked past but never stood on."},
+      {h:"First plate", p:"Found here, chipped. Holds one firing at a time."},
+      {h:"The teaching gap", p:"A single missing floor slab, with an identical slab in plain view to fire."}
+    ]
+  },
+  {
+    id:"bisque", stage:"02 · Bisque", name:"The Rack Halls",
+    k:"#c4643a",
+    say:"Kiln shelves stacked into towers, half of them collapsed into the void. Fired hard "+
+        "but unglazed — porous, matte, and stable enough to build on.",
+    void:["#f0e3d2","#e0c3aa"], gnd:"#c98d68", accent:"#c4643a", glow:"#e8a33d",
+    mood:"porous · matte · stacked",
+    racks:[
+      {x:-22,z:6,levels:4,w:9},{x:-6,z:-2,levels:6,w:8},
+      {x:12,z:4,levels:3,w:10},{x:26,z:-6,levels:5,w:7}
+    ],
+    shelves:[
+      {x:-14,z:16,w:14},{x:4,z:12,w:16},{x:20,z:18,w:11}
+    ],
+    gap:{x:3,z:0,w:11},
+    notes:[
+      {h:"Shelf towers", p:"Vertical puzzles. Fire a shelf from one tower to complete another."},
+      {h:"Porous edges", p:"Bisque tiles fuse to bisque only. Glazed tiles slide off them."},
+      {h:"Kiln mouths", p:"Arched openings that act as doors — fire the view through one to travel it."}
+    ]
+  },
+  {
+    id:"glaze", stage:"03 · Glaze", name:"The Slip Pools",
+    k:"#4f8a72",
+    say:"Wide flat basins of liquid oxide, copper-green and mirror-still. The reflection in a "+
+        "pool can be fired as readily as the thing above it — and comes out inverted.",
+    void:["#e6ead9","#c4d8c9"], gnd:"#79a58c", accent:"#4f8a72", glow:"#e8a33d",
+    mood:"reflective · inverted · still",
+    pools:[{x:-12,z:8,rw:17,rh:6},{x:14,z:2,rw:14,rh:5},{x:0,z:20,rw:21,rh:7}],
+    // Pillars stand inside the pools so their reflections have something to cast.
+    pillars:[{x:-16,z:8,h:11},{x:-6,z:9,h:14},{x:12,z:2,h:9},{x:-6,z:20,h:13},{x:8,z:20,h:10}],
+    gap:{x:0,z:-2,w:10},
+    notes:[
+      {h:"Fire a reflection", p:"The pool image fires as a real, upside-down tile. The core puzzle of the region."},
+      {h:"Oxide line", p:"Copper-green marks every surface the slip has touched — a readable safe/unsafe edge."},
+      {h:"Stillness", p:"Disturb a pool and its reflection is unfireable until it settles."}
+    ]
+  },
+  {
+    id:"fired", stage:"04 · Fired", name:"The Cone Room",
+    k:"#e8a33d",
+    say:"The heart of the works, still hot. Everything here is finished, glassy and permanent — "+
+        "which means nothing here can be broken back down. Every tile you set is your last word.",
+    void:["#3a2a1e","#8a4a24"], gnd:"#a45c2e", accent:"#e8a33d", glow:"#ffd489", dark:true,
+    mood:"permanent · glassy · hot",
+    cones:[{x:-16,z:6,h:20},{x:0,z:-2,h:30},{x:16,z:4,h:24}],
+    vents:[{x:-24,z:14},{x:-8,z:18},{x:8,z:16},{x:22,z:20}],
+    gap:{x:0,z:10,w:12},
+    notes:[
+      {h:"No unmaking", p:"Break is disabled. The region is a one-shot puzzle where mistakes stand."},
+      {h:"Heat shimmer", p:"Air distortion makes distant framing imprecise — you must get close."},
+      {h:"Witness cones", p:"Three cones bend as the room heats. They are the level's timer, and its exit."}
+    ]
+  }
+];
+
+/* ---------- helpers ---------- */
+function hexToRgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+function mix(a,b,t){const A=hexToRgb(a),B=hexToRgb(b);
+  return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(",")})`}
+function shade(h,t){return mix(h, t<0?"#000000":"#ffffff", Math.abs(t))}
+
+const HZ = H*0.40;
+function proj(x,z){
+  const zn=(z+16)/44;                       // 0 far … 1 near
+  const p=0.50+zn*1.15;
+  return {px:W/2+x*13*p, py:HZ+Math.pow(Math.max(zn,0),1.45)*(H-HZ)*0.95, s:p};
+}
+
+/* An isometric-ish slab: top face + two side faces, flat-shaded, hard edges. */
+function slab(c, x, z, wUnits, thick, col, tilt=0){
+  const p=proj(x,z), hw=wUnits*6.5*p.s, d=hw*0.42, t=thick*7*p.s;
+  const cx=p.px, cy=p.py;
+  c.save(); c.translate(cx,cy); c.rotate(tilt);
+  // top
+  c.fillStyle=shade(col,.16);
+  c.beginPath();
+  c.moveTo(-hw,0); c.lineTo(0,-d); c.lineTo(hw,0); c.lineTo(0,d); c.closePath(); c.fill();
+  // left face
+  c.fillStyle=shade(col,-.24);
+  c.beginPath();
+  c.moveTo(-hw,0); c.lineTo(0,d); c.lineTo(0,d+t); c.lineTo(-hw,t); c.closePath(); c.fill();
+  // right face
+  c.fillStyle=shade(col,-.40);
+  c.beginPath();
+  c.moveTo(hw,0); c.lineTo(0,d); c.lineTo(0,d+t); c.lineTo(hw,t); c.closePath(); c.fill();
+  c.restore();
+  return p;
+}
+
+function column(c, x, z, hUnits, col, lean=0){
+  // Verticals carry the silhouette, so they get a wider footprint and a taller
+  // rise than the slabs — at slab scale they read as stubs against the ground.
+  const p=proj(x,z), w=9*p.s, h=hUnits*16*p.s;
+  c.save(); c.translate(p.px,p.py); c.rotate(lean);
+  c.fillStyle=shade(col,-.10); c.fillRect(-w,-h,w*2,h);
+  c.fillStyle=shade(col,-.34); c.fillRect(w*0.35,-h,w*0.65,h);
+  c.fillStyle=shade(col,.20);
+  c.beginPath(); c.moveTo(-w,-h); c.lineTo(0,-h-w*0.5); c.lineTo(w,-h); c.lineTo(0,-h+w*0.35);
+  c.closePath(); c.fill();
+  c.restore();
+  return p;
+}
+
+function voidBg(c,r){
+  const g=c.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,r.void[0]); g.addColorStop(1,r.void[1]);
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+  // kiln glow low on the horizon
+  const rg=c.createRadialGradient(W/2,HZ+30,0,W/2,HZ+30,W*0.42);
+  rg.addColorStop(0, r.glow+"44"); rg.addColorStop(1,"rgba(0,0,0,0)");
+  c.fillStyle=rg; c.fillRect(0,0,W,H);
+}
+
+/* the empty slot the puzzle asks you to fill — drawn as a dashed void */
+function gapMark(c,r){
+  const g=r.gap, p=proj(g.x,g.z), hw=g.w*6.5*p.s, d=hw*0.42;
+  c.save();
+  c.setLineDash([9,7]); c.lineWidth=2.4; c.strokeStyle=r.accent;
+  c.globalAlpha=.95;
+  c.beginPath();
+  c.moveTo(p.px-hw,p.py); c.lineTo(p.px,p.py-d);
+  c.lineTo(p.px+hw,p.py); c.lineTo(p.px,p.py+d); c.closePath(); c.stroke();
+  c.restore();
+  // the plate hovering above it
+  const py=p.py-72*p.s;
+  c.save();
+  c.translate(p.px,py); c.rotate(-.10);
+  const pw=52*p.s, ph=40*p.s;
+  c.fillStyle="rgba(0,0,0,.13)";
+  c.fillRect(-pw/2+4*p.s, -ph/2+5*p.s, pw, ph);
+  c.fillStyle="#f3ece0"; c.fillRect(-pw/2,-ph/2,pw,ph);
+  c.strokeStyle=r.accent; c.lineWidth=3*p.s; c.strokeRect(-pw/2,-ph/2,pw,ph);
+  c.fillStyle=r.glow+"55"; c.fillRect(-pw/2+5*p.s,-ph/2+5*p.s,pw-10*p.s,ph-10*p.s);
+  c.restore();
+  // tether from plate to slot
+  c.save(); c.setLineDash([3,5]); c.strokeStyle=r.accent; c.globalAlpha=.5; c.lineWidth=1.4;
+  c.beginPath(); c.moveTo(p.px,py+22*p.s); c.lineTo(p.px,p.py-d); c.stroke(); c.restore();
+}
+
+function figure(c,x,z,col){
+  const p=proj(x,z), h=17*p.s;
+  c.fillStyle=col;
+  c.fillRect(p.px-2.6*p.s, p.py-h, 5.2*p.s, h);
+  c.beginPath(); c.arc(p.px, p.py-h-3.4*p.s, 3.6*p.s, 0, 7); c.fill();
+}
+
+/* ---------- per-region scenery ---------- */
+const DRAW = {
+  greenware(c,r){
+    [...r.slabs].sort((a,b)=>a.z-b.z).forEach(s=>slab(c,s.x,s.z,s.w,s.h,r.gnd,s.tilt));
+    r.slumps.forEach(s=>column(c,s.x,s.z,s.h,mix(r.gnd,"#6e6459",.75),s.lean));
+    gapMark(c,r);
+    figure(c,-6,12,"#3a332c");
+  },
+  bisque(c,r){
+    // shelf towers, far to near
+    [...r.racks].sort((a,b)=>a.z-b.z).forEach(t=>{
+      for(let i=0;i<t.levels;i++){
+        const zz=t.z, p=proj(t.x,zz);
+        const lift=i*13*p.s;
+        c.save(); c.translate(0,-lift);
+        slab(c,t.x,zz,t.w,1.1, i%2? shade(r.gnd,-.08): r.gnd);
+        c.restore();
+      }
+    });
+    [...r.shelves].sort((a,b)=>a.z-b.z).forEach(s=>slab(c,s.x,s.z,s.w,1.6,shade(r.gnd,.06)));
+    gapMark(c,r);
+    figure(c,-2,15,"#3a2a20");
+  },
+  glaze(c,r){
+    // Pools first, then pillars, so the columns read as standing in the slip
+    // rather than hidden behind it.
+    [...r.pools].sort((a,b)=>a.z-b.z).forEach(pl=>{
+      const p=proj(pl.x,pl.z);
+      const g=c.createLinearGradient(p.px,p.py-pl.rh*6*p.s,p.px,p.py+pl.rh*6*p.s);
+      g.addColorStop(0, shade(r.accent,.30)); g.addColorStop(1, shade(r.accent,-.30));
+      c.fillStyle=g;
+      c.beginPath(); c.ellipse(p.px,p.py,pl.rw*6.5*p.s,pl.rh*4.2*p.s,0,0,7); c.fill();
+      c.strokeStyle=shade(r.accent,.35); c.lineWidth=1.6*p.s; c.stroke();
+    });
+    // The mirrored pillar — this inverted image is what the plate can fire.
+    c.save(); c.globalAlpha=.34;
+    r.pillars.forEach(q=>{
+      const qp=proj(q.x,q.z), w=9*qp.s, h=q.h*16*qp.s;
+      const g=c.createLinearGradient(qp.px,qp.py,qp.px,qp.py+h);
+      g.addColorStop(0, shade(r.accent,-.50)); g.addColorStop(1,"rgba(0,0,0,0)");
+      c.fillStyle=g; c.fillRect(qp.px-w, qp.py, w*2, h*0.60);
+    });
+    c.restore();
+    [...r.pillars].sort((a,b)=>a.z-b.z)
+      .forEach(p=>column(c,p.x,p.z,p.h,mix(r.gnd,"#33513f",.70)));
+    gapMark(c,r);
+    figure(c,-4,16,"#22352c");
+  },
+  fired(c,r){
+    r.vents.forEach(v=>{
+      const p=proj(v.x,v.z);
+      const g=c.createRadialGradient(p.px,p.py,0,p.px,p.py,42*p.s);
+      g.addColorStop(0,r.glow+"cc"); g.addColorStop(1,"rgba(0,0,0,0)");
+      c.fillStyle=g; c.beginPath(); c.arc(p.px,p.py,42*p.s,0,7); c.fill();
+      c.fillStyle=shade(r.gnd,-.45);
+      c.beginPath(); c.ellipse(p.px,p.py,11*p.s,5*p.s,0,0,7); c.fill();
+    });
+    [...r.cones].sort((a,b)=>a.z-b.z).forEach(k=>{
+      const p=proj(k.x,k.z), h=k.h*9*p.s, w=9*p.s;
+      c.fillStyle=shade(r.gnd,.10);
+      c.beginPath(); c.moveTo(p.px-w,p.py); c.lineTo(p.px+w*0.35,p.py-h);
+      c.lineTo(p.px+w,p.py); c.closePath(); c.fill();
+      const g=c.createLinearGradient(p.px,p.py-h,p.px,p.py);
+      g.addColorStop(0,r.glow); g.addColorStop(1,"rgba(0,0,0,0)");
+      c.fillStyle=g; c.globalAlpha=.55;
+      c.beginPath(); c.moveTo(p.px-w,p.py); c.lineTo(p.px+w*0.35,p.py-h);
+      c.lineTo(p.px+w,p.py); c.closePath(); c.fill(); c.globalAlpha=1;
+    });
+    slab(c,0,16,26,2.2,shade(r.gnd,-.10));
+    gapMark(c,r);
+    figure(c,-9,19,"#1c1008");
+  }
+};
+
+/* ---------- build ---------- */
+const host=document.getElementById("regions");
+for(const r of REGIONS){
+  const sec=document.createElement("section");
+  sec.className="region"; sec.style.setProperty("--k", r.k);
+  const swat=[["void",r.void[1]],["ground",r.gnd],["accent",r.accent],["glow",r.glow]]
+    .map(([n,v])=>`<span class="sw"><i style="background:${v}"></i>${n} ${v}</span>`).join("");
+  sec.innerHTML=`
+    <div class="rhead"><span class="stage"></span><h2></h2></div>
+    <p class="say"></p>
+    <div class="plate">
+      <canvas width="${W}" height="${H}"></canvas>
+      <div class="meta"><b></b>${swat}</div>
+    </div>
+    <div class="notes"></div>`;
+  sec.querySelector(".stage").textContent=r.stage;
+  sec.querySelector("h2").textContent=r.name;
+  sec.querySelector(".say").textContent=r.say;
+  sec.querySelector(".meta b").textContent=r.mood;
+  const nb=sec.querySelector(".notes");
+  for(const n of r.notes){
+    const d=document.createElement("div"); d.className="note";
+    d.innerHTML="<h3></h3><p></p>";
+    d.querySelector("h3").textContent=n.h;
+    d.querySelector("p").textContent=n.p;
+    nb.appendChild(d);
+  }
+  host.appendChild(sec);
+
+  const c=sec.querySelector("canvas").getContext("2d");
+  voidBg(c,r);
+  DRAW[r.id](c,r);
+  // seat the image
+  const v=c.createRadialGradient(W/2,H*.5,H*.34,W/2,H*.5,H*.92);
+  v.addColorStop(0,"rgba(0,0,0,0)"); v.addColorStop(1, r.dark?"rgba(0,0,0,.45)":"rgba(60,40,20,.20)");
+  c.fillStyle=v; c.fillRect(0,0,W,H);
+}
+</script>
+
+</body></html>

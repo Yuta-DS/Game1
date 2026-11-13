@@ -1,0 +1,418 @@
+[gd_scene load_steps=22 format=3]
+
+[ext_resource type="Script" path="res://scripts/CreatorsLightKingdom.gd" id="1_world"]
+[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="99_galaxy"]
+[ext_resource type="Script" path="res://scripts/IslandTerrain.gd" id="90_island"]
+[ext_resource type="Script" path="res://scripts/IslandScatter.gd" id="93_scatter"]
+[ext_resource type="Script" path="res://scripts/IslandGateway.gd" id="91_gateway"]
+[ext_resource type="Script" path="res://scripts/IslandDistricts.gd" id="92_districts"]
+[ext_resource type="Script" path="res://scripts/CreatorsFrame.gd" id="2_frame"]
+[ext_resource type="Script" path="res://scripts/PerfectBlankApproach.gd" id="3_blank"]
+[ext_resource type="Script" path="res://scripts/CreatorsLightHUD.gd" id="4_hud"]
+[ext_resource type="Script" path="res://scripts/TreasurePickup.gd" id="5_pickup"]
+[ext_resource type="PackedScene" uid="uid://jyjr0s84odql" path="res://scenes/entities/NewPlayer.tscn" id="6_player"]
+[ext_resource type="PackedScene" uid="uid://crn54vry24lgt" path="res://scenes/milo_animations.tscn" id="7_milo"]
+[ext_resource type="PackedScene" path="res://scenes/uriel_animations.tscn" id="10_uriel"]
+[ext_resource type="Script" path="res://scripts/MiloCompanion.gd" id="11_companion"]
+[ext_resource type="AudioStream" uid="uid://b853lclmr1lkt" path="res://assets/SFX/fairy dust.mp3" id="8_spark"]
+[ext_resource type="AudioStream" uid="uid://c4j2yogfo2xl0" path="res://assets/SFX/Connecting Rainbows.mp3" id="9_song"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_galaxy"]
+panorama = ExtResource("99_galaxy")
+
+[sub_resource type="Sky" id="Sky_galaxy"]
+sky_material = SubResource("PanoramaSkyMaterial_galaxy")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_reach"]
+size = Vector3(7, 6, 7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_blank"]
+size = Vector3(20, 12, 12)
+
+[sub_resource type="TorusMesh" id="TorusMesh_frame"]
+inner_radius = 2.6
+outer_radius = 3.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_blank"]
+size = Vector3(24, 16, 0.4)
+
+[sub_resource type="SphereMesh" id="SphereMesh_seed"]
+radius = 0.9
+height = 1.8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pipe"]
+top_radius = 0.5
+bottom_radius = 0.5
+height = 6.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_flame"]
+radius = 0.55
+height = 1.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_frame"]
+albedo_color = Color(1, 0.71, 0.278, 1)
+metallic = 0.6
+roughness = 0.3
+emission_enabled = true
+emission = Color(1, 0.78, 0.4, 1)
+emission_energy_multiplier = 1.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_blank"]
+albedo_color = Color(0.93, 0.93, 0.96, 1)
+roughness = 1.0
+emission_enabled = true
+emission = Color(0.88, 0.88, 0.95, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_waiting"]
+albedo_color = Color(0.45, 0.62, 0.72, 0.55)
+transparency = 1
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.5, 0.72, 0.85, 1)
+emission_energy_multiplier = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_flame"]
+albedo_color = Color(1, 0.71, 0.278, 1)
+emission_enabled = true
+emission = Color(1, 0.82, 0.45, 1)
+emission_energy_multiplier = 3.2
+
+[sub_resource type="Environment" id="Env_blank"]
+background_mode = 2
+sky = SubResource("Sky_galaxy")
+background_energy_multiplier = 0.75
+ambient_light_source = 3
+ambient_light_sky_contribution = 0.45
+reflected_light_source = 2
+ambient_light_color = Color(0.5, 0.47, 0.62, 1)
+ambient_light_energy = 1.6
+fog_enabled = true
+fog_light_color = Color(0.2, 0.19, 0.28, 1)
+fog_density = 0.00028
+
+[sub_resource type="BoxMesh" id="Mesh_shape"]
+size = Vector3(3, 3, 3)
+
+[sub_resource type="TorusMesh" id="Mesh_blank_frame"]
+inner_radius = 1.6
+outer_radius = 1.9
+
+[sub_resource type="PrismMesh" id="Mesh_shard"]
+size = Vector3(1.6, 2.6, 1.6)
+
+[node name="CreatorsLightKingdom" type="Node3D"]
+script = ExtResource("1_world")
+pictures_to_wake_the_world = 2
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_blank")
+
+[node name="WorldLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.819152, 0, -0.573576, -0.519837, 0.422618, -0.742404, 0.242404, 0.906308, 0.346189, 0, 400, 0)
+light_color = Color(1, 0.95, 0.9, 1)
+light_energy = 1.8
+shadow_enabled = true
+
+[node name="Island" type="Node3D" parent="."]
+script = ExtResource("90_island")
+island_size = 3000.0
+grid = 60
+relief = 120.0
+shore_falloff = 0.22
+terrain_seed = 33
+ground_colour = Color(0.52, 0.47, 0.63, 1)
+walkable = true
+
+[node name="WaitingThings" type="Node3D" parent="."]
+
+[node name="GlassSeed1" type="MeshInstance3D" parent="WaitingThings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 1.5, 4)
+mesh = SubResource("SphereMesh_seed")
+surface_material_override/0 = SubResource("Mat_waiting")
+
+[node name="GlassSeed2" type="MeshInstance3D" parent="WaitingThings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 1.5, 4)
+mesh = SubResource("SphereMesh_seed")
+surface_material_override/0 = SubResource("Mat_waiting")
+
+[node name="SilverPipe" type="MeshInstance3D" parent="WaitingThings"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1, 14)
+mesh = SubResource("CylinderMesh_pipe")
+surface_material_override/0 = SubResource("Mat_waiting")
+
+[node name="Frames" type="Node3D" parent="."]
+
+[node name="DoorFrame" type="Area3D" parent="Frames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 3.2, -8)
+script = ExtResource("2_frame")
+prompt_id = "door"
+milos_question = "Draw a door that leads to your dreams"
+built_width = 7.0
+place_at = NodePath("Placement")
+
+[node name="Mesh" type="MeshInstance3D" parent="Frames/DoorFrame"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_frame")
+surface_material_override/0 = SubResource("Mat_frame")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frames/DoorFrame"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="FrameGlow" type="OmniLight3D" parent="Frames/DoorFrame"]
+light_color = Color(1, 0.78, 0.4, 1)
+light_energy = 1.2
+omni_range = 14.0
+
+[node name="Question" type="Label3D" parent="Frames/DoorFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.2, 0)
+billboard = 1
+font_size = 40
+pixel_size = 0.007
+width = 620.0
+autowrap_mode = 2
+modulate = Color(1, 0.85, 0.6, 1)
+text = "Draw a door that leads to your dreams"
+
+[node name="Placement" type="Node3D" parent="Frames/DoorFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.2, -6)
+
+[node name="RestFrame" type="Area3D" parent="Frames"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.2, -8)
+script = ExtResource("2_frame")
+prompt_id = "resting_place"
+milos_question = "Draw a place where your feelings can rest"
+built_width = 7.0
+place_at = NodePath("Placement")
+
+[node name="Mesh" type="MeshInstance3D" parent="Frames/RestFrame"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_frame")
+surface_material_override/0 = SubResource("Mat_frame")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frames/RestFrame"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="FrameGlow" type="OmniLight3D" parent="Frames/RestFrame"]
+light_color = Color(1, 0.78, 0.4, 1)
+light_energy = 1.2
+omni_range = 14.0
+
+[node name="Question" type="Label3D" parent="Frames/RestFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.2, 0)
+billboard = 1
+font_size = 40
+pixel_size = 0.007
+width = 620.0
+autowrap_mode = 2
+modulate = Color(1, 0.85, 0.6, 1)
+text = "Draw a place where your feelings can rest"
+
+[node name="Placement" type="Node3D" parent="Frames/RestFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.2, -6)
+
+[node name="PerfectBlank" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, -30)
+visible = false
+
+[node name="Mesh" type="MeshInstance3D" parent="PerfectBlank"]
+mesh = SubResource("BoxMesh_blank")
+surface_material_override/0 = SubResource("Mat_blank")
+
+[node name="Approach" type="Area3D" parent="PerfectBlank"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 7)
+script = ExtResource("3_blank")
+kingdom_path = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PerfectBlank/Approach"]
+shape = SubResource("BoxShape3D_blank")
+
+[node name="MilosLight" type="OmniLight3D" parent="PerfectBlank"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 3)
+visible = false
+light_color = Color(1, 0.92, 0.7, 1)
+light_energy = 4.5
+omni_range = 26.0
+
+[node name="CreatorsLight" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -22)
+
+[node name="Mesh" type="MeshInstance3D" parent="CreatorsLight"]
+mesh = SubResource("SphereMesh_flame")
+surface_material_override/0 = SubResource("Mat_flame")
+
+[node name="Pickup" type="Area3D" parent="CreatorsLight"]
+script = ExtResource("5_pickup")
+kingdom_path = NodePath("../..")
+take_method = "take_the_flame"
+ready_method = "blank_answered"
+treasure_name = "the Creator's Light"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CreatorsLight/Pickup"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="CreatorsLight"]
+light_color = Color(1, 0.82, 0.45, 1)
+light_energy = 4.0
+omni_range = 20.0
+
+[node name="Uriel" parent="." instance=ExtResource("10_uriel")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 5, 0.25, -21)
+
+[node name="Glow" type="OmniLight3D" parent="Uriel"]
+light_color = Color(1, 0.9, 0.75, 1)
+light_energy = 2.5
+omni_range = 14.0
+
+[node name="Milo" parent="." instance=ExtResource("7_milo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.9, 8)
+script = ExtResource("11_companion")
+
+[node name="MadeRealSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_spark")
+volume_db = -4.0
+
+[node name="WorldSong" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_song")
+volume_db = -8.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("4_hud")
+kingdom_path = NodePath("..")
+
+[node name="Prompt" type="Label" parent="HUD"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -110.0
+offset_right = 400.0
+offset_bottom = -70.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.82, 0.45, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Progress" type="Label" parent="HUD"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -440.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 56.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.85, 0.82, 0.9, 1)
+horizontal_alignment = 2
+
+[node name="Banner" type="Label" parent="HUD"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -420.0
+offset_top = 90.0
+offset_right = 420.0
+offset_bottom = 140.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1, 0.92, 0.8, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+modulate = Color(1, 1, 1, 0)
+
+[node name="NewPlayer" parent="." instance=ExtResource("6_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 16)
+
+[node name="Gateway" type="Area3D" parent="."]
+script = ExtResource("91_gateway")
+destination = "res://scenes/crown_chamber.tscn"
+label_text = "Back to the ARTÉA Castle"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Gateway"]
+shape = SubResource("BoxShape3D_reach")
+
+[node name="Glow" type="OmniLight3D" parent="Gateway"]
+light_color = Color(1, 0.71, 0.278, 1)
+light_energy = 2.0
+omni_range = 30.0
+
+[node name="Label" type="Label3D" parent="Gateway"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+billboard = 1
+font_size = 44
+pixel_size = 0.01
+modulate = Color(1, 0.71, 0.278, 1)
+text = "Back to the ARTÉA Castle"
+
+[node name="Scenery" type="Node3D" parent="."]
+script = ExtResource("93_scatter")
+island_path = NodePath("../Island")
+scatter_seed = 96
+layers = [{
+"name": "FloatingShapes",
+"mesh": SubResource("Mesh_shape"),
+"count": 510,
+"min_scale": 0.50,
+"max_scale": 1.10,
+"min_distance": 60.0,
+"max_distance": 620.0,
+"colour": Color(0.45, 0.42, 0.6, 1),
+"emission": 0.5,
+"emission_colour": Color(0.6, 0.55, 0.85, 1)
+}, {
+"name": "BlankFrames",
+"mesh": SubResource("Mesh_blank_frame"),
+"count": 306,
+"min_scale": 0.80,
+"max_scale": 1.10,
+"min_distance": 45.0,
+"max_distance": 620.0,
+"colour": Color(1, 0.82, 0.5, 1),
+"emission": 0.9,
+"emission_colour": Color(1, 0.78, 0.4, 1)
+}, {
+"name": "Shards",
+"mesh": SubResource("Mesh_shard"),
+"count": 442,
+"min_scale": 0.50,
+"max_scale": 1.10,
+"min_distance": 40.0,
+"max_distance": 620.0,
+"colour": Color(0.55, 0.5, 0.68, 1)
+}]
+
+[node name="Districts" type="Node3D" parent="."]
+script = ExtResource("92_districts")
+island_path = NodePath("../Island")
+content_root = NodePath("..")
+placements = {
+"NewPlayer": Vector2(180, 88),
+"Milo": Vector2(172, 98),
+"Frames/DoorFrame": Vector2(205, 163),
+"Frames/RestFrame": Vector2(155, 163),
+"WaitingThings/GlassSeed1": Vector2(225, 211),
+"WaitingThings/GlassSeed2": Vector2(135, 211),
+"WaitingThings/SilverPipe": Vector2(180, 122),
+"PerfectBlank": Vector2(180, 333),
+"CreatorsLight": Vector2(180, 299),
+"Uriel": Vector2(168, 296),
+"Gateway": Vector2(180, 61)
+}
+lift = {
+"NewPlayer": 3.0,
+"Milo": 1.6,
+"Frames/DoorFrame": 3.2,
+"Frames/RestFrame": 3.2,
+"WaitingThings/GlassSeed1": 1.5,
+"WaitingThings/GlassSeed2": 1.5,
+"WaitingThings/SilverPipe": 1.0,
+"PerfectBlank": 10.0,
+"CreatorsLight": 2.0,
+"Uriel": 0.3,
+"Gateway": 2.5
+}

@@ -121,6 +121,12 @@ func _load_config() -> void:
 					else:
 						_config[key] = value
 		else:
+			# Web exports intentionally do not package .env files: anything in the
+			# game bundle is public. The web build uses the Flask API for account
+			# and gallery operations, so leave Firebase dormant instead of logging
+			# a misleading startup error or exposing private provider credentials.
+			if OS.has_feature("web"):
+				return
 			_printerr("Unable to read .env file at path 'res://addons/godot-firebase/.env'")
 
 	_setup_modules()

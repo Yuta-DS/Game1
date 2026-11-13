@@ -159,5 +159,6 @@ func enter_game(username: String, is_guest: bool = false):
 		tween.tween_property(menu_music, "volume_db", -80.0, 1.5)
 		await tween.finished
 	
-	# Open up the master integrated sandbox environment
-	get_tree().change_scene_to_file("res://scenes/New_Hub_World.tscn")
+	# The journey begins inside the ARTÉA Castle, where the three doorways to the
+	# island kingdoms stand. The hub town is still reachable from there.
+	get_tree().change_scene_to_file("res://scenes/crown_chamber.tscn")

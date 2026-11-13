@@ -160,11 +160,22 @@ func cloud_popped():
 	if popping_started and are_all_clouds_popped() and not scene_changed:
 		print("SUCCESS: Loading completion screen!")
 		scene_changed = true
+		_award_star_of_wisdom()
 		await get_tree().create_timer(1.0).timeout
 		get_tree().change_scene_to_file("res://scenes/cloudPopFinish.tscn")
 	else:
 		print("FAILED: Conditions not met")
 		
+## The player worked through every clouded thought, so the Star of Wisdom is
+## theirs. Discovering it opens the next station on the Crown Line.
+func _award_star_of_wisdom() -> void:
+	var journey := get_node_or_null("/root/JourneyState")
+	if journey == null:
+		return
+	journey.record_choice(journey.STATION_MIND, "cleared_thoughts")
+	journey.discover_treasure(journey.TREASURE_STAR)
+
+
 func _input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		# Get mouse position
