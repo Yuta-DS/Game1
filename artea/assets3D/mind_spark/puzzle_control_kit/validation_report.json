@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "assets": {
+    "regulator": {
+      "root": "MindSparkPuzzleRegulator",
+      "runtime_meshes": 5,
+      "triangles": 28028,
+      "groups": [
+        "GLASS",
+        "GOLD",
+        "MICRO",
+        "MOVING",
+        "STONE"
+      ],
+      "bytes": 742656
+    },
+    "selector": {
+      "root": "MindSparkPuzzleSelector",
+      "runtime_meshes": 5,
+      "triangles": 26496,
+      "groups": [
+        "GLASS",
+        "GOLD",
+        "MICRO",
+        "MOVING",
+        "STONE"
+      ],
+      "bytes": 700996
+    },
+    "confirmation": {
+      "root": "MindSparkPuzzleConfirmation",
+      "runtime_meshes": 5,
+      "triangles": 25760,
+      "groups": [
+        "GLASS",
+        "GOLD",
+        "MICRO",
+        "MOVING",
+        "STONE"
+      ],
+      "bytes": 684772
+    }
+  },
+  "errors": []
+}

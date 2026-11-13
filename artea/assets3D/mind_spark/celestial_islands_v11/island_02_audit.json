@@ -1,0 +1,33 @@
+{
+  "id": 2,
+  "checks": {
+    "exactly_3000_nonempty_parts": true,
+    "unique_ids": true,
+    "bom_matches": true,
+    "kind_counts_match": true,
+    "two_reference_enginehouses": true,
+    "source_finite_vertices": true,
+    "source_triangle_faces": true,
+    "source_positive_face_areas": true,
+    "source_no_mesh_repairs": true,
+    "source_nonrail_below_walkable_plane": true,
+    "source_railing_outside_gameplay_disc": true,
+    "source_bridge_and_station_openings": true,
+    "rock_clear_of_recessed_machinery": true,
+    "bom_triangles_match": true,
+    "runtime_finite_vertices": true,
+    "runtime_triangle_faces": true,
+    "runtime_positive_face_areas": true,
+    "runtime_no_mesh_repairs": true,
+    "runtime_nonrail_below_walkable_plane": true,
+    "runtime_railing_outside_gameplay_disc": true,
+    "runtime_bridge_and_station_openings": true,
+    "five_batched_families": true,
+    "source_export_coverage": true,
+    "triangle_count_match": true,
+    "triangle_budget": true,
+    "paving_unchanged": true
+  },
+  "passed": true,
+  "visible_triangles": 530960
+}

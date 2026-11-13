@@ -1,0 +1,179 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/mind_spark_split_world.gd" id="1_world"]
+[ext_resource type="PackedScene" path="res://scenes/mind_spark/mind_spark_perspective.tscn" id="2_perspective"]
+
+[node name="MindSparkSplitWorld" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_world")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.018, 0.035, 0.075, 1)
+mouse_filter = 2
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Layout/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.91, 0.46, 1)
+theme_override_font_sizes/font_size = 25
+text = "MIND SPARK • THE TWO LENSES OF WISDOM"
+
+[node name="Phase" type="Label" parent="Layout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.79, 0.91, 1, 1)
+theme_override_font_sizes/font_size = 17
+text = "NOTICE → CHECK → CHOOSE → CONNECT"
+horizontal_alignment = 1
+
+[node name="Skip" type="Button" parent="Layout/Header"]
+layout_mode = 2
+text = "Skip safely to Castle"
+
+[node name="WorldArea" type="Control" parent="Layout"]
+custom_minimum_size = Vector2(0, 420)
+layout_mode = 2
+size_flags_vertical = 3
+clip_contents = true
+
+[node name="Split" type="HSplitContainer" parent="Layout/WorldArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+split_offset = 0
+
+[node name="AlarmViewportContainer" type="SubViewportContainer" parent="Layout/WorldArea/Split"]
+layout_mode = 2
+size_flags_horizontal = 3
+stretch = true
+stretch_shrink = 2
+
+[node name="AlarmViewport" type="SubViewport" parent="Layout/WorldArea/Split/AlarmViewportContainer"]
+handle_input_locally = false
+size = Vector2i(640, 720)
+render_target_update_mode = 4
+own_world_3d = true
+
+[node name="MindSparkPerspective" parent="Layout/WorldArea/Split/AlarmViewportContainer/AlarmViewport" instance=ExtResource("2_perspective")]
+
+[node name="HopeViewportContainer" type="SubViewportContainer" parent="Layout/WorldArea/Split"]
+layout_mode = 2
+size_flags_horizontal = 3
+stretch = true
+stretch_shrink = 2
+
+[node name="HopeViewport" type="SubViewport" parent="Layout/WorldArea/Split/HopeViewportContainer"]
+handle_input_locally = false
+size = Vector2i(640, 720)
+render_target_update_mode = 4
+own_world_3d = true
+
+[node name="MindSparkPerspective" parent="Layout/WorldArea/Split/HopeViewportContainer/HopeViewport" instance=ExtResource("2_perspective")]
+
+[node name="Seam" type="PanelContainer" parent="Layout/WorldArea"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -86.0
+offset_top = -95.0
+offset_right = 86.0
+offset_bottom = 95.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+self_modulate = Color(0.07, 0.09, 0.18, 0.92)
+
+[node name="SeamBox" type="MarginContainer" parent="Layout/WorldArea/Seam"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="SeamLabel" type="Label" parent="Layout/WorldArea/Seam/SeamBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.93, 0.62, 1)
+theme_override_font_sizes/font_size = 16
+text = "TWO LENSES\nONE WHOLE THOUGHT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ActionPanel" type="PanelContainer" parent="Layout"]
+custom_minimum_size = Vector2(0, 174)
+layout_mode = 2
+self_modulate = Color(0.05, 0.08, 0.16, 0.98)
+
+[node name="Box" type="VBoxContainer" parent="Layout/ActionPanel"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Prompt" type="Label" parent="Layout/ActionPanel/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "A difficult thought is visiting. It is not your identity."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Choices" type="HFlowContainer" parent="Layout/ActionPanel/Box"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
+
+[node name="Utility" type="HBoxContainer" parent="Layout/ActionPanel/Box"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="SoloMode" type="Button" parent="Layout/ActionPanel/Box/Utility"]
+layout_mode = 2
+disabled = true
+text = "Solo • Alarm first"
+
+[node name="CoopMode" type="Button" parent="Layout/ActionPanel/Box/Utility"]
+layout_mode = 2
+text = "Local co-op"
+
+[node name="CompanionPing" type="Button" parent="Layout/ActionPanel/Box/Utility"]
+layout_mode = 2
+disabled = true
+text = "Companion Ping"
+
+[node name="SwapRoles" type="Button" parent="Layout/ActionPanel/Box/Utility"]
+visible = false
+layout_mode = 2
+text = "Swap Lens Roles"

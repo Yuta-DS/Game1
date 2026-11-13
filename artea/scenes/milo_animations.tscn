@@ -1,0 +1,55 @@
+[gd_scene load_steps=6 format=3 uid="uid://crn54vry24lgt"]
+
+[ext_resource type="PackedScene" path="res://scenes/characters/milo_scholar.tscn" id="1_milo"]
+[ext_resource type="Script" uid="uid://cni2qkko8tokl" path="res://scripts/milo_animations.gd" id="2_behavior"]
+[ext_resource type="Script" uid="uid://cmibd6k0gwjah" path="res://scenes/chat_detection_area_3d.gd" id="3_detection"]
+[ext_resource type="AudioStream" path="res://assets/audio/milo/milo_voice.ogg" id="4_milo_voice"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_milo"]
+# Milo's companion controller keeps him as far as four metres from the player.
+# Keep conversation available throughout that comfortable follow range.
+radius = 4.5
+
+[node name="Milo_Animations" instance=ExtResource("1_milo")]
+# Keep the reusable character at the same native 1x scale as villager scenes.
+# The obsolete 2x enlargement is removed from the live hub placement itself.
+scale = Vector3(1, 1, 1)
+script = ExtResource("2_behavior")
+
+[node name="MayorMiloName" type="Label3D" parent="."]
+position = Vector3(0, 2.15, 0)
+billboard = 1
+no_depth_test = false
+modulate = Color(1, 0.9, 0.48, 1)
+outline_modulate = Color(0.1, 0.08, 0.12, 1)
+outline_size = 12
+text = "Mayor Milo"
+font_size = 44
+
+[node name="InteractionPrompt" type="Label3D" parent="."]
+visible = false
+position = Vector3(0, 2.62, 0)
+billboard = 1
+no_depth_test = true
+visibility_range_end = 14.0
+modulate = Color(1, 0.92, 0.62, 1)
+outline_modulate = Color(0.05, 0.08, 0.13, 1)
+outline_size = 12
+text = "Press T to chat with Milo"
+font_size = 38
+
+[node name="MiloGreetingVoice" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("4_milo_voice")
+unit_size = 2.0
+max_distance = 24.0
+bus = &"MiloVoice"
+
+[node name="Area3D" type="Area3D" parent="."]
+script = ExtResource("3_detection")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("SphereShape3D_milo")
+
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_3d_player_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_3d_player_exited"]
+[connection signal="player_nearby" from="Area3D" to="." method="_on_area_3d_player_nearby"]

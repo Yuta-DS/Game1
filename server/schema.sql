@@ -1,0 +1,15 @@
+CREATE TABLE user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(80) UNIQUE NOT NULL,
+    password_hash BLOB NOT NULL,
+    recovery_code_hash BLOB
+);
+
+CREATE TABLE artwork (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    filename VARCHAR(255) NOT NULL,
+    is_public BOOLEAN DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES user(id)
+);

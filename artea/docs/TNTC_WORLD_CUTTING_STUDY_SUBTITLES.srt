@@ -1,0 +1,47 @@
+1
+00:00:00,000 --> 00:00:23,000
+The video introduces a puzzle mechanic that captures part of a 3D world and places it somewhere new.
+
+2
+00:00:23,000 --> 00:00:56,000
+Runtime cutting works on polygon faces, edges, and vertices, so simple low-poly level geometry is important for performance.
+
+3
+00:00:56,000 --> 00:01:29,000
+A plane divides space. Vertices are classified by side, crossing triangles are split, and new triangles seal the opening.
+
+4
+00:01:29,000 --> 00:02:16,000
+The camera frustum determines what is preserved. Four thin border volumes define the cut planes and a larger frustum volume finds objects inside.
+
+5
+00:02:16,000 --> 00:02:53,000
+The demonstration level uses deliberately simple walls, floors, props, a portal, and a physical camera model.
+
+6
+00:02:53,000 --> 00:04:21,000
+Distant scenery is real geometry for parallax and cutting. Baked lighting and unlit textures keep captured pieces visually consistent.
+
+7
+00:04:21,000 --> 00:05:08,000
+The player can walk, jump, and turn while carrying the camera. A secondary camera renders the framed view, then freezes it at capture time.
+
+8
+00:05:08,000 --> 00:05:26,000
+Separate camera masks and effects can reveal special objects or present the photographed world differently.
+
+9
+00:05:26,000 --> 00:05:58,000
+Taking a picture preserves the geometry inside the frustum and parents it to the camera viewpoint so it travels with the player.
+
+10
+00:05:58,000 --> 00:06:19,000
+Placing the picture cuts away the destination volume, activates the carried geometry there, and supports rotating the whole captured view.
+
+11
+00:06:19,000 --> 00:06:46,000
+The operation is computationally expensive, so the scene must stay lightweight and be designed around the core feature.
+
+12
+00:07:12,000 --> 00:08:00,000
+The final gameplay demonstrates camera states, frozen photographs, rotated placements, and perspective-based paths through the level.

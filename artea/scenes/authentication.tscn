@@ -1,0 +1,77 @@
+[gd_scene load_steps=6 format=3 uid="uid://i4mvuq140ahc"]
+
+[ext_resource type="Script" path="res://scripts/authentication.gd" id="1_sh67b"]
+[ext_resource type="Texture2D" uid="uid://bev35lbg44liq" path="res://assets/Game Start/Opening.png" id="2_nytem"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="3_g1eqt"]
+[ext_resource type="FontFile" uid="uid://edkftpy6phlo" path="res://assets/Fonts/VCR_OSD_MONO_1.001.ttf" id="4_d5hwv"]
+[ext_resource type="FontFile" uid="uid://1845plk0t8s3" path="res://assets/Fonts/editundo.ttf" id="5_xdphx"]
+
+[node name="Authentication" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sh67b")
+
+[node name="GameStart" type="Sprite2D" parent="."]
+position = Vector2(642.466, 400.156)
+scale = Vector2(0.754244, 1.01741)
+texture = ExtResource("2_nytem")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -267.0
+offset_top = -164.0
+offset_right = 33.0
+offset_bottom = 32.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.97011, 1.97011)
+theme_override_constants/separation = 20
+
+[node name="StateLabel" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_g1eqt")
+theme_override_font_sizes/font_size = 23
+text = "Not logged In yet?"
+
+[node name="EmailLineEdit" type="LineEdit" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_d5hwv")
+placeholder_text = "Email"
+
+[node name="PasswordLineEdit" type="LineEdit" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_d5hwv")
+placeholder_text = "password"
+
+[node name="LoginButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_xdphx")
+text = "log In
+"
+
+[node name="SignupButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_xdphx")
+text = "Sign up"
+
+[node name="3DButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_xdphx")
+text = "3D World test"
+
+[connection signal="pressed" from="VBoxContainer/LoginButton" to="." method="_on_login_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/SignupButton" to="." method="_on_signup_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/3DButton" to="." method="_on_d_button_pressed"]

@@ -1,0 +1,106 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/combat/mind_spark_warden_boss.gd" id="1_boss"]
+[ext_resource type="Resource" path="res://resources/mind_spark/enemies/thought_storm_warden.tres" id="2_definition"]
+
+[sub_resource type="CylinderShape3D" id="BodyShape"]
+radius = 7.0
+height = 13.0
+
+[sub_resource type="SphereMesh" id="ShellMesh"]
+radius = 6.5
+height = 13.0
+radial_segments = 12
+rings = 6
+
+[sub_resource type="StandardMaterial3D" id="ShellMaterial"]
+albedo_color = Color(0.18, 0.21, 0.24, 1)
+metallic = 0.45
+roughness = 0.62
+emission_enabled = true
+emission = Color(0.18, 0.34, 0.39, 1)
+emission_energy_multiplier = 0.22
+
+[sub_resource type="SphereMesh" id="CoreMesh"]
+radius = 2.8
+height = 5.6
+
+[sub_resource type="StandardMaterial3D" id="CoreMaterial"]
+albedo_color = Color(0.37, 0.92, 1, 1)
+emission_enabled = true
+emission = Color(0.25, 0.9, 1, 1)
+emission_energy_multiplier = 1.8
+
+[sub_resource type="BoxMesh" id="StormLineMesh"]
+size = Vector3(72, 0.18, 8)
+
+[sub_resource type="StandardMaterial3D" id="StormLineMaterial"]
+transparency = 1
+albedo_color = Color(1, 0.24, 0.34, 0.48)
+emission_enabled = true
+emission = Color(1, 0.12, 0.24, 1)
+emission_energy_multiplier = 1.4
+
+[sub_resource type="ParticleProcessMaterial" id="RainProcess"]
+emission_shape = 3
+emission_box_extents = Vector3(22, 2, 22)
+direction = Vector3(0, -1, 0)
+initial_velocity_min = 12.0
+initial_velocity_max = 18.0
+
+[sub_resource type="QuadMesh" id="RainDrop"]
+size = Vector2(0.08, 0.9)
+orientation = 1
+
+[node name="ThoughtStormWarden" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_boss")
+definition = ExtResource("2_definition")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 6.5, 0)
+shape = SubResource("BodyShape")
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="BlightShell" type="Node3D" parent="VisualRoot"]
+position = Vector3(0, 7, 0)
+
+[node name="Shell" type="MeshInstance3D" parent="VisualRoot/BlightShell"]
+mesh = SubResource("ShellMesh")
+material_override = SubResource("ShellMaterial")
+
+[node name="CrystalCore" type="MeshInstance3D" parent="VisualRoot"]
+position = Vector3(0, 7, 0)
+mesh = SubResource("CoreMesh")
+material_override = SubResource("CoreMaterial")
+
+[node name="CoreHurtbox" type="Area3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CoreHurtbox"]
+position = Vector3(0, 7, 0)
+shape = SubResource("BodyShape")
+
+[node name="StormLineTelegraph" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.3, 0)
+mesh = SubResource("StormLineMesh")
+material_override = SubResource("StormLineMaterial")
+
+[node name="CoreLabel" type="Label3D" parent="."]
+position = Vector3(0, 17, 0)
+text = "THE STORM IS HURT • BREAK THE DARK ANCHORS"
+font_size = 34
+outline_size = 10
+billboard = 1
+no_depth_test = false
+
+[node name="GentleRain" type="GPUParticles3D" parent="."]
+position = Vector3(0, 26, 0)
+amount = 110
+lifetime = 2.2
+process_material = SubResource("RainProcess")
+draw_pass_1 = SubResource("RainDrop")
+emitting = false

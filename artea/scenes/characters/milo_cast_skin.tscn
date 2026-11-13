@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://assets3D/characters/Barbarian.glb" id="1_villager_cast"]
+[ext_resource type="Script" path="res://scripts/milo_cast_skin.gd" id="2_milo_skin"]
+
+[node name="MiloCastSkin" instance=ExtResource("1_villager_cast")]
+script = ExtResource("2_milo_skin")

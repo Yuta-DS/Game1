@@ -1,0 +1,267 @@
+{
+  "asset": "artea_tree_of_life",
+  "version": 3,
+  "blueprint_revision": "crystal_powered_leaf_system_2026_08_16",
+  "blueprint_references": [
+    "design/tree_of_life/components/01_nature_living_root_architecture.png",
+    "design/tree_of_life/components/02_magic_crystal_sap_energy.png",
+    "design/tree_of_life/components/03_technology_engineered_growth.png",
+    "design/tree_of_life/components/04_crystal_powered_leaf_system.png"
+  ],
+  "design": {
+    "height_m": 53.0,
+    "tree_height_without_crown_m": 42.0,
+    "canopy_diameter_m": 68.0,
+    "foundation_depth_m": 14.0,
+    "player_clear_path_m": 9.5,
+    "silhouette": "braided_twin_trunk_gothic_arch",
+    "style": [
+      "nature",
+      "magic",
+      "technology",
+      "engineering"
+    ],
+    "foliage_style": "dense_crystal_powered_branch_fans",
+    "leaf_families": [
+      "living_nature",
+      "magic_rune",
+      "solar_glass_science",
+      "emerald_sensor"
+    ]
+  },
+  "source": {
+    "blend_path": "assets3D/tree_of_life/source/artea_tree_of_life.blend",
+    "named_mesh_modules": 1545,
+    "editable_mesh_elements": 1831926,
+    "vertices": 583120,
+    "edges": 889888,
+    "faces": 358918,
+    "minimum_requested": 100000,
+    "requirement_definition": "distinct editable mesh vertices in the Blender source",
+    "requirement_met": true,
+    "leaf_modules": 4928,
+    "leaf_power_nodes": 44,
+    "leaf_tech_spines": 88
+  },
+  "game_export": {
+    "glb_path": "assets3D/tree_of_life/glb/artea_tree_of_life.glb",
+    "mesh_nodes": 10,
+    "source_modules_by_system": {
+      "Branches": 480,
+      "BrassEngineering": 225,
+      "CrystalTechnology": 290,
+      "FoliageMagic": 22,
+      "FoliageNature": 56,
+      "FoliageSolarGlass": 10,
+      "Foundation": 191,
+      "Roots": 144,
+      "Trunk": 122,
+      "WisdomStar": 5
+    },
+    "size_bytes": 42572924
+  },
+  "materials": [
+    "MAT_BlackBioTechSpine",
+    "MAT_CrystalSap_Cyan",
+    "MAT_EngineeredBrass",
+    "MAT_EngineeredFoundationDark",
+    "MAT_GoldInlayStone",
+    "MAT_HeartCrystal",
+    "MAT_HeartCrystalInnerViolet",
+    "MAT_LeafCircuit_Cyan",
+    "MAT_Leaf_EmeraldSensor",
+    "MAT_Leaf_Forest",
+    "MAT_Leaf_Jade",
+    "MAT_Leaf_LavenderMagic",
+    "MAT_Leaf_Moss",
+    "MAT_Leaf_VioletMagic",
+    "MAT_LivingBark",
+    "MAT_LivingBark_Dark",
+    "MAT_LivingBark_Light",
+    "MAT_LivingMossPocket",
+    "MAT_RootAnchorStone",
+    "MAT_SolarGlassLeaf",
+    "MAT_WisdomGold"
+  ],
+  "collision_policy": {
+    "source_guides_only": true,
+    "godot_uses_low_cost_authored_proxies": true,
+    "canopy_collision": false,
+    "clear_path_axis": "local Z / Blender Y",
+    "scale_with_visual": true,
+    "trunk_pillars": [
+      {
+        "name": "TrunkPillarLeft",
+        "x_m": -8.4,
+        "radius_m": 3.25,
+        "height_m": 27.0,
+        "y_m": 13.5
+      },
+      {
+        "name": "TrunkPillarRight",
+        "x_m": 8.4,
+        "radius_m": 3.25,
+        "height_m": 27.0,
+        "y_m": 13.5
+      }
+    ],
+    "root_proxies": [
+      {
+        "name": "LowRootProxy_00",
+        "position_blender_xy_m": [
+          -10.571,
+          11.11
+        ],
+        "yaw_godot_deg": -170.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_01",
+        "position_blender_xy_m": [
+          -16.764,
+          8.569
+        ],
+        "yaw_godot_deg": -138.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_02",
+        "position_blender_xy_m": [
+          -20.416,
+          3.205
+        ],
+        "yaw_godot_deg": -106.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_03",
+        "position_blender_xy_m": [
+          -20.416,
+          -3.205
+        ],
+        "yaw_godot_deg": -74.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_04",
+        "position_blender_xy_m": [
+          -16.764,
+          -8.569
+        ],
+        "yaw_godot_deg": -42.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_05",
+        "position_blender_xy_m": [
+          -10.571,
+          -11.11
+        ],
+        "yaw_godot_deg": -10.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_06",
+        "position_blender_xy_m": [
+          10.571,
+          -13.51
+        ],
+        "yaw_godot_deg": 10.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_07",
+        "position_blender_xy_m": [
+          16.764,
+          -10.009
+        ],
+        "yaw_godot_deg": 42.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_08",
+        "position_blender_xy_m": [
+          20.416,
+          -3.685
+        ],
+        "yaw_godot_deg": 74.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_09",
+        "position_blender_xy_m": [
+          20.416,
+          3.685
+        ],
+        "yaw_godot_deg": 106.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_10",
+        "position_blender_xy_m": [
+          16.764,
+          10.009
+        ],
+        "yaw_godot_deg": 138.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      },
+      {
+        "name": "LowRootProxy_11",
+        "position_blender_xy_m": [
+          10.571,
+          13.51
+        ],
+        "yaw_godot_deg": 170.0,
+        "size_m": [
+          3.3,
+          3.0,
+          16.0
+        ]
+      }
+    ]
+  }
+}

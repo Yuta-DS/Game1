@@ -1,0 +1,31 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+.vercel
+
+# Generated per-environment public Firebase identifiers (not private credentials).
+/data/firebase_client_config.json
+
+# Godot leaves these behind when an import is interrupted
+*.png.import-*
+
+# Blender autosave backups
+*.blend1
+
+# Scene saves that were interrupted leave these behind
+*.tscn[0-9]*.tmp
+
+# Local output from the F12 coordinate-probe debug tool
+tools/coordinate_log.txt
+
+# Left behind only if a Web export is killed before tools/with-web-export-plugins.sh
+# can restore project.godot
+project.godot.web-export-backup
+
+# Build output of tools/export-web-packs.sh (issue #35): the runtime Pack
+# manifest, and the presets backup left only if an export is killed mid-way.
+/packs.json
+export_presets.cfg.packs-backup
+
+# Old generated assets are not source files or exported game content.
+/generated/

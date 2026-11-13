@@ -1,0 +1,7 @@
+*
+!requirements.txt
+!requirements-aws.txt
+!server.py
+!aws_app.py
+!manage_aws.py
+!Dockerfile

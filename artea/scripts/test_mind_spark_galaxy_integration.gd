@@ -1,0 +1,122 @@
+extends SceneTree
+
+
+func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	var gallery := (load("res://scenes/art_gallery_3d_inprogress.tscn") as PackedScene).instantiate()
+	root.add_child(gallery)
+	for _frame in 8:
+		await process_frame
+	var floating_world := gallery.get_node("ArtCastleFloatingWorld") as Node3D
+	var district := floating_world.get_node("MindSparkDistrict") as Node3D
+	var world := floating_world.get_node("MindSparkWorldOne") as MindSparkWorldOne
+	assert(world.get_meta("foundation_mode") == "standalone_preview")
+	assert(world.force_standalone_blueprint)
+	assert(world.position == Vector3(-2200, 0, 1640))
+	assert(world.get_node("WorldOneGeometry/MainStoryCircuitRoute") is Node3D)
+	assert(world.find_children("WalkableZoneFloor", "MeshInstance3D", true, false).size() == 6)
+	var forecourt := district.get_node("MindSparkCeremonialForecourt") as Node3D
+	assert(str(forecourt.get_meta("design_revision", "")) == "celestial_gate_garden_v6")
+	assert(forecourt.get_meta("footprint_m") == Vector2(64.0, 54.0))
+	assert(float(forecourt.get_meta("clear_processional_lane_m", 0.0)) >= 18.0)
+	assert(bool(forecourt.get_meta("functional_gate_centre_preserved", false)))
+	var landscape_frame := forecourt.get_node("DistrictLandscapeFrame") as Node3D
+	assert(bool(landscape_frame.get_meta("grey_foundation_visually_covered", false)))
+	assert(landscape_frame.find_children("*LandscapeLawn", "MeshInstance3D", true, false).size() == 2)
+	assert(district.find_children("RuneTile_*", "MeshInstance3D", true, false).is_empty())
+	assert(district.find_children("*RuinWall*", "MeshInstance3D", true, false).is_empty())
+	var processional := forecourt.get_node("IvoryProcessionalWalk") as Node3D
+	assert(processional.find_children("FacetedPaver_*", "MeshInstance3D", true, false).size() == 7)
+	assert(processional.find_children("CyanThreshold_*", "MeshInstance3D", true, false).size() == 6)
+	var gatehouse := forecourt.get_node("CelestialGatehouse") as Node3D
+	assert(float(gatehouse.get_meta("clear_opening_width_m", 0.0)) >= 28.0)
+	assert(gatehouse.find_children("*TowerFoundationCollision", "StaticBody3D", true, false).size() == 2)
+	assert(gatehouse.find_children("*TowerShaftCollision", "StaticBody3D", true, false).size() == 2)
+	var portal_cradle := gatehouse.get_node("WorldGatePortalCradle") as Node3D
+	assert(bool(portal_cradle.get_meta("functional_portal_remains_independent", false)))
+	assert(bool(portal_cradle.get_meta("opening_collision_free", false)))
+	assert(str(portal_cradle.get_meta("design_revision", "")) == "clear_single_ring_threshold")
+	assert(portal_cradle.find_children("*PortalButtress", "MeshInstance3D", true, false).size() == 2)
+	assert(portal_cradle.find_children("*PortalButtressCollision", "StaticBody3D", true, false).size() == 2)
+	assert(portal_cradle.get_node_or_null("PortalArchitecturalBezel") == null
+		and portal_cradle.find_children("PortalArchStone_*", "MeshInstance3D", true, false).is_empty()
+		and portal_cradle.find_children("PortalBezelClamp_*", "MeshInstance3D", true, false).is_empty(),
+		"the active teleport has one aligned ring, without a second fragmented arc")
+	var portal_apron := portal_cradle.get_node("PortalDaisIvory") as MeshInstance3D
+	assert(portal_apron.position.y + (portal_apron.mesh as CylinderMesh).height * 0.5 < 0.06,
+		"the portal apron stays flush with the walkable deck")
+	assert(gatehouse.get_node_or_null("CrownPendant") == null,
+		"the hanging decoration does not obscure the active teleport crown")
+	var terraces := forecourt.get_node("SideTerraceGardens") as Node3D
+	assert(terraces.find_children("*GardenTerraceCollision", "StaticBody3D", true, false).size() == 2)
+	assert(terraces.find_children("SolidWarmTrunkCollision", "StaticBody3D", true, false).size() == 6)
+	var plinths := forecourt.get_node("ConstellationPlinths") as Node3D
+	assert(plinths.find_children("ConstellationPlinth_*", "MeshInstance3D", true, false).size() == 3)
+	assert(plinths.find_children("ConstellationPlinth_*Collision", "StaticBody3D", true, false).size() == 3)
+	var rear_garden := forecourt.get_node("RearConstellationGarden") as Node3D
+	assert(float(rear_garden.get_meta("central_axis_clear_width_m", 0.0)) >= 14.0)
+	var lighting := forecourt.get_node("CeremonialLightingRig") as Node3D
+	assert(lighting.find_children("*WarmKey", "OmniLight3D", true, false).size() == 2)
+	assert(lighting.get_node_or_null("ProcessionalCoolFill") is OmniLight3D)
+	var backdrop := forecourt.get_node("CelestialGardenBackdrop") as Node3D
+	assert(int(backdrop.get_meta("landscape_layers", 0)) == 3)
+	assert(backdrop.find_children("*GardenColumn_*", "MeshInstance3D", true, false).size() == 6)
+	var commons := district.get_node("MindSparkCelestialCommons") as Node3D
+	assert(float(commons.get_meta("covered_foundation_radius_m", 0.0)) >= 160.0)
+	assert(int(commons.get_meta("outward_view_landmarks", 0)) == 8)
+	assert(commons.find_children("RadialPath_*", "MeshInstance3D", true, false).size() == 8)
+	assert(commons.find_children("ConstellationPavilion_*", "Node3D", true, false).size() == 4)
+	assert(commons.find_children("FacetedCanopy", "MeshInstance3D", true, false).size() == 4)
+	assert(commons.find_children("MemoryGrove_*_Tree_*", "Node3D", true, false).size() == 12)
+	assert(int(commons.get_meta("finished_southern_view_count", 0)) == 3)
+	var southern_quarter := commons.get_node("SouthernCelestialQuarter") as Node3D
+	assert(southern_quarter.get_meta("completed_view_numbers") == PackedInt32Array([4, 5, 6]))
+	assert(southern_quarter.get_node_or_null("View04SoutheastSkySurveyTerrace") is Node3D)
+	assert(southern_quarter.get_node_or_null("View05SouthConstellationAmphitheatre") is Node3D)
+	assert(southern_quarter.get_node_or_null("View06SouthwestMemoryArcade") is Node3D)
+	assert(southern_quarter.find_children("ArrivalView*ForegroundGarden", "Node3D", true, false).size() == 3)
+	assert(southern_quarter.find_children("StarMapInlay_*", "MeshInstance3D", true, false).size() == 12)
+	assert(southern_quarter.find_children("ConstellationStar_*", "MeshInstance3D", true, false).size() == 12)
+	assert(southern_quarter.find_children("SolidSurveyFin_*Collision", "StaticBody3D", true, false).size() == 5)
+	assert(southern_quarter.find_children("SolidFacetedSeat_*Collision", "StaticBody3D", true, false).size() == 7)
+	assert(southern_quarter.find_children("*SolidArcadeColumn_*", "StaticBody3D", true, false).size() == 6)
+	assert(not bool(district.get_meta("requires_jump_from_mind_bridge")))
+	var bridge_walkway := floating_world.get_node("MindBridge/Walkway") as MeshInstance3D
+	var island_deck := district.get_node("WalkableDeck") as MeshInstance3D
+	var bridge_top := bridge_walkway.position.y + (bridge_walkway.mesh as BoxMesh).size.y * 0.5
+	var island_top := island_deck.position.y + (island_deck.mesh as CylinderMesh).height * 0.5
+	assert(is_equal_approx(bridge_top, island_top) and is_equal_approx(island_top, 0.0),
+		"Mind Bridge and island collision deck must share the exact y=0 datum")
+	var mind_gate := floating_world.get_node("MindSparkWorldGate") as MindSparkWorldGate
+	assert(mind_gate != null)
+	assert(mind_gate.global_position.distance_to(forecourt.global_position) < 0.01,
+		"the active portal must remain centred in its architectural arch")
+	assert(mind_gate.global_basis.z.normalized().dot(
+			forecourt.global_basis.z.normalized()) > 0.999,
+		"the active portal must face along the same axis as its arch and walkway")
+	assert(is_equal_approx(float(mind_gate.get_meta("ceremonial_visual_scale", 0.0)), 1.26))
+	var instrument := mind_gate.get_node(
+		"Portal/FinishedPortalInstrument") as Node3D
+	assert(str(instrument.get_meta("design_revision", "")) == "celestial_instrument_ring_v2")
+	assert(bool(instrument.get_meta("collision_free", false)))
+	assert(instrument.find_children("IvoryCaseSegment_*", "MeshInstance3D", false, false).size() == 12)
+	assert(instrument.find_children("ApertureTick_*", "MeshInstance3D", false, false).size() == 8)
+	assert(instrument.get_node_or_null("IvoryOuterCase") is MeshInstance3D)
+	assert(instrument.get_node_or_null("CharcoalInnerBezel") is MeshInstance3D)
+	assert(instrument.get_node_or_null("LavenderCrownCrystal") is MeshInstance3D)
+	assert(world.get_quest_objects().size() == 15)
+	assert(world.get_node("WorldOneGeometry/05ThoughtStormArena/BossArenaCollisionCollision") is StaticBody3D)
+	assert(world.get_node("WorldOneGeometry/06OldestTreeSanctuary/OldestTreeTrunkCollision") is StaticBody3D)
+	var station_binding := world.get_node("WorldOneGeometry/OptionalCompletedWorldStationSpur")
+	assert(station_binding.get_meta("branches_from_zone") == "05_thought_storm_arena")
+	assert(not station_binding.visible and not bool(station_binding.get_meta("blocks_story_route")))
+	var remote := floating_world.get_node_or_null("KingdomRegions3000m/MindKingdom3000m/MindSparkWorldOne")
+	assert(remote == null, "no duplicate World One remains in the remote 3 km shelf map")
+	print("MindSparkGalaxyIntegration: PASS — complete three-island/six-district World One is gate-mounted outside the district")
+	gallery.queue_free()
+	await process_frame
+	await process_frame
+	quit()

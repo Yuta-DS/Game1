@@ -1,0 +1,60 @@
+{
+  "asset": "artea_crystal_branch_canopy",
+  "version": 1,
+  "design_reference": "crystal-powered leaf system branch architecture",
+  "source_blend": "assets3D/tree_of_life/canopy/source/crystal_branch_canopy.blend",
+  "game_glb": "assets3D/tree_of_life/canopy/glb/crystal_branch_canopy.glb",
+  "preview": "artifacts/tree_of_life_canopy/crystal_branch_canopy.png",
+  "preview_rendered_this_build": false,
+  "materials": [
+    "black_biotech_wood",
+    "cyan_sap_energy",
+    "brass_articulation",
+    "crystal_power_node"
+  ],
+  "collision_included": false,
+  "replaces_old_foliage_only": true,
+  "major_limbs": 22,
+  "secondary_twigs": 24,
+  "foliage_branch_clusters": 159,
+  "leaf_support_twigs": 1431,
+  "leaf_support_cyan_channels": 159,
+  "leaves_attached_to_support_twigs": true,
+  "living_root_trunks": 12,
+  "secondary_ground_roots": 12,
+  "entrance_framing_roots": 2,
+  "doorway_living_root_jambs": 2,
+  "doorway_editable_joints": 8,
+  "doorway_electric_fibers": 6,
+  "doorway_metal_frame": false,
+  "editable_primary_root_joints": 60,
+  "editable_secondary_root_joints": 36,
+  "secondary_root_cyan_inlays": 12,
+  "powered_root_door_clear_width_m": 9.6,
+  "powered_route_mesh_crossbars": 17,
+  "powered_route_deck_plates": 12,
+  "powered_route_cables": 2,
+  "root_radial_power_feeders": 6,
+  "floating_root_relays": 8,
+  "root_cyan_tributaries": 24,
+  "root_mechanical_clamp_sets": 7,
+  "leaf_instances": 20000,
+  "canopy_diameter_m": 84.0,
+  "leaf_cluster_width_range_m": [
+    0.9,
+    4.2
+  ],
+  "individual_leaflet_width_range_m": [
+    0.22,
+    1.05
+  ],
+  "leaf_counts": {
+    "living_leaf_fan": 7500,
+    "magic_rune_leaf": 5000,
+    "solar_glass_science_leaf": 5000,
+    "emerald_sensor_leaf": 2500
+  },
+  "branch_meshes": 46,
+  "cyan_channel_meshes": 46,
+  "brass_collars": 70
+}

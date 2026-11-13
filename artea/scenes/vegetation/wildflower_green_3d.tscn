@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/vegetation/wildflower_3d.tscn" id="1_base"]
+
+[sub_resource type="StandardMaterial3D" id="Material_petals"]
+albedo_color = Color(0.24, 0.78, 0.26, 1)
+roughness = 0.78
+
+[node name="WildflowerGreen3D" instance=ExtResource("1_base")]
+
+[node name="PetalNorth" parent="." index="3"]
+material_override = SubResource("Material_petals")
+
+[node name="PetalSouth" parent="." index="4"]
+material_override = SubResource("Material_petals")
+
+[node name="PetalEast" parent="." index="5"]
+material_override = SubResource("Material_petals")
+
+[node name="PetalWest" parent="." index="6"]
+material_override = SubResource("Material_petals")
+
+[node name="PetalNorthEast" parent="." index="7"]
+material_override = SubResource("Material_petals")
+
+[node name="PetalSouthWest" parent="." index="8"]
+material_override = SubResource("Material_petals")

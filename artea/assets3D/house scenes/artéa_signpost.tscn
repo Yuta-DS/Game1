@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://bpyjccfwiqsfk"]
+
+[ext_resource type="PackedScene" uid="uid://dpj3nkarrpgqk" path="res://meshy ai/Artéa_Signpost_1027230400_texture.glb" id="1_8o1wf"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_post"]
+size = Vector3(0.2265, 0.5438, 0.2075)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_board"]
+size = Vector3(1.2384, 0.9507, 0.3171)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_topper"]
+size = Vector3(0.4399, 0.4080, 0.4342)
+
+[node name="Artéa_Signpost_1027230400_texture" instance=ExtResource("1_8o1wf")]
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Mesh" index="0"]
+
+[node name="CollisionShape3D_post" type="CollisionShape3D" parent="Mesh/StaticBody3D" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0467, -0.6801, -0.0241)
+shape = SubResource("BoxShape3D_post")
+
+[node name="CollisionShape3D_board" type="CollisionShape3D" parent="Mesh/StaticBody3D" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0001, 0.0677, 0.0006)
+shape = SubResource("BoxShape3D_board")
+
+[node name="CollisionShape3D_topper" type="CollisionShape3D" parent="Mesh/StaticBody3D" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0471, 0.7470, 0.0001)
+shape = SubResource("BoxShape3D_topper")

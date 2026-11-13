@@ -1,0 +1,18 @@
+[configuration]
+entry_symbol = "gdext_rust_init"
+compatibility_minimum = 4.3
+reloadable = true
+
+[libraries]
+windows.debug.x86_64 =   "res://addons/nobodywho/nobodywho-godot-x86_64-pc-windows-msvc-release.dll"
+windows.release.x86_64 = "res://addons/nobodywho/nobodywho-godot-x86_64-pc-windows-msvc-release.dll"
+macos.debug =            "res://addons/nobodywho/nobodywho-godot-x86_64-apple-darwin-release.dylib"
+macos.release =          "res://addons/nobodywho/nobodywho-godot-x86_64-apple-darwin-release.dylib"
+macos.debug.arm64 =      "res://addons/nobodywho/nobodywho-godot-aarch64-apple-darwin-release.dylib"
+macos.release.arm64 =    "res://addons/nobodywho/nobodywho-godot-aarch64-apple-darwin-release.dylib"
+
+[icons]
+NobodyWhoModel =            "res://addons/nobodywho/icon.svg"
+NobodyWhoChat =             "res://addons/nobodywho/icon.svg"
+NobodyWhoEmbedding =             "res://addons/nobodywho/icon.svg"
+NobodyWhoCrossEncoder =             "res://addons/nobodywho/icon.svg"

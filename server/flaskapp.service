@@ -1,0 +1,23 @@
+[Unit]
+Description=Flask Game Backend
+After=network.target
+
+[Service]
+# Not root: a remote-code-execution bug in the Flask app used to hand an
+# attacker the whole machine. Binds a high port instead of 80/443 - nginx
+# (server/ec2/nginx-artea.conf) terminates HTTPS in front of it; a
+# browser-hosted game export can't call a plain-HTTP API anyway once the game
+# itself is served over HTTPS (mixed content).
+User=ubuntu
+WorkingDirectory=/home/ubuntu/server
+# Secrets and settings (JWT_SECRET_KEY, ADMIN_RESET_KEY, CORS_ALLOWED_ORIGINS,
+# BEHIND_PROXY, optional AI keys). server/ec2/install.sh writes it with random
+# secrets; it is git-ignored and never leaves the server.
+EnvironmentFile=/home/ubuntu/server/.env
+# Loopback-only bind: nothing outside this machine talks to gunicorn directly,
+# only through nginx. AI requests can take well over gunicorn's default 30 s.
+ExecStart=/home/ubuntu/server/venv/bin/gunicorn --workers 3 --timeout 100 --bind 127.0.0.1:8000 server:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

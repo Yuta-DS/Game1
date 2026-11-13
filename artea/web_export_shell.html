@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Artea</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+html, body {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+body {
+	color: white;
+	background-color: #61a8e8;
+	overflow: hidden;
+	touch-action: none;
+}
+
+/* Keep the canvas box pinned to the browser viewport. Godot's adaptive
+   resize policy remains the sole owner of the WebGL drawing buffer and
+   renderer viewport, so CSS and engine resizing cannot drift apart. */
+#canvas {
+	display: block;
+	background-color: #61a8e8;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw !important;
+	height: 100vh !important;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
+
+#status {
+	background: linear-gradient(180deg, #75bdf0 0%, #4b91cf 100%);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
+
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
+
+#status-splash.show-image--false {
+	display: none;
+}
+
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
+
+#status-progress, #status-notice {
+	display: none;
+}
+
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
+
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+
+/* Milo in a spinning ring, shown by loading_scene.gd under the loading bar.
+   Transform animations run on the browser's compositor thread, so these keep
+   moving even while the game's thread is busy and the canvas can't redraw. */
+#artea-busy {
+	position: fixed;
+	left: 50%;
+	top: 70%;
+	width: 72px;
+	height: 72px;
+	margin: 12px 0 0 -36px;
+	pointer-events: none;
+	z-index: 2;
+}
+
+#artea-busy[hidden] {
+	display: none;
+}
+
+#artea-busy-ring {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	border: 5px solid rgba(28, 31, 10, 0.25);
+	border-top-color: #1c1f0a;
+	border-radius: 50%;
+	will-change: transform;
+	animation: artea-spin 0.9s linear infinite;
+}
+
+#artea-busy-milo {
+	position: absolute;
+	left: 14px;
+	top: 14px;
+	width: 44px;
+	height: 44px;
+	will-change: transform;
+	animation: artea-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes artea-spin {
+	to { transform: rotate(360deg); }
+}
+
+@keyframes artea-bob {
+	0%, 100% { transform: translateY(1px) rotate(-6deg); }
+	50% { transform: translateY(-3px) rotate(6deg); }
+}
+		</style>
+$GODOT_HEAD_INCLUDE
+
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="$GODOT_SPLASH" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<div id="artea-busy" hidden>
+			<div id="artea-busy-ring"></div>
+			<img id="artea-busy-milo" alt="">
+		</div>
+
+		<script>
+// Driven by loading_scene.gd through JavaScriptBridge.
+window.arteaLoading = {
+	music: null,
+	musicUrl: '',
+	fade: 0,
+	show() {
+		// Milo is the project icon. Godot names the exported files after the
+		// export (index.* from the export script, tmp_js_export.* from the
+		// editor's Run in Browser), so take the address from the link it adds.
+		const milo = document.getElementById('artea-busy-milo');
+		const icon = document.querySelector('link[rel="apple-touch-icon"]');
+		if (!milo.src && icon) {
+			milo.src = icon.href;
+		}
+		document.getElementById('artea-busy').hidden = false;
+	},
+	// x, y: just under the loading bar, in canvas pixels. scale: bigger on
+	// phones and tablets, growing downwards so Milo stays under the bar.
+	place(x, y, scale = 1) {
+		const rect = document.getElementById('canvas').getBoundingClientRect();
+		const busy = document.getElementById('artea-busy');
+		busy.style.left = (rect.left + x / window.devicePixelRatio) + 'px';
+		busy.style.top = (rect.top + y / window.devicePixelRatio) + 'px';
+		busy.style.transformOrigin = 'top center';
+		busy.style.transform = 'scale(' + scale + ')';
+	},
+	hasMusic() {
+		return this.musicUrl !== '';
+	},
+	// The game hands over the track's bytes once (from its pack, so this
+	// works in any web export), as base64.
+	setMusic(base64) {
+		const bin = atob(base64);
+		const bytes = new Uint8Array(bin.length);
+		for (let i = 0; i < bin.length; i++) {
+			bytes[i] = bin.charCodeAt(i);
+		}
+		this.musicUrl = URL.createObjectURL(new Blob([bytes], { type: 'audio/ogg' }));
+	},
+	// The browser plays this itself, so it doesn't stutter while the game is
+	// busy.
+	startMusic() {
+		if (!this.musicUrl) {
+			return;
+		}
+		if (!this.music) {
+			this.music = new Audio(this.musicUrl);
+			this.music.loop = true;
+		}
+		clearInterval(this.fade);
+		this.music.volume = 0.32; // the game plays it at -10 dB
+		this.music.play().catch(() => {});
+	},
+	// Hides the overlay and fades the music out. Returns where the music had
+	// got to, in seconds, so the gallery can carry on from there.
+	hide() {
+		document.getElementById('artea-busy').hidden = true;
+		const music = this.music;
+		if (!music || music.paused) {
+			return 0;
+		}
+		const at = music.currentTime;
+		clearInterval(this.fade);
+		this.fade = setInterval(() => {
+			music.volume = Math.max(0, music.volume - 0.04);
+			if (music.volume === 0) {
+				music.pause();
+				clearInterval(this.fade);
+			}
+		}, 50);
+		return at;
+	},
+};
+		</script>
+		<script src="$GODOT_URL"></script>
+		<script>
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+// The initial Godot pack contains the title and hub. The remaining scenes
+// live in a second pack that is fetched only when a player enters one of them.
+// pck-loader.js supplies a joined stream from the immutable deployment parts.
+window.ARTEA_CONTENT_PACK = {
+	state: 'idle',
+	progress: 0,
+	error: '',
+	load() {
+		if (this.state !== 'idle' && this.state !== 'failed') return;
+		this.state = 'loading';
+		this.progress = 0;
+		this.error = '';
+		(async () => {
+			const response = await fetch('content.pck');
+			if (!response.ok) throw new Error(`Content pack: HTTP ${response.status}`);
+			const expected = Number(response.headers.get('Content-Length'));
+			if (!Number.isSafeInteger(expected) || expected <= 0 || !response.body) {
+				throw new Error('Content pack has no usable length or stream');
+			}
+			const bytes = new Uint8Array(expected);
+			const reader = response.body.getReader();
+			let received = 0;
+			for (;;) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				if (received + value.byteLength > expected) {
+					throw new Error('Content pack is larger than its manifest');
+				}
+				bytes.set(value, received);
+				received += value.byteLength;
+				this.progress = received / expected;
+			}
+			if (received !== expected) throw new Error('Content pack is incomplete');
+			engine.copyToFS('/content.pck', bytes.buffer);
+			this.progress = 1;
+			this.state = 'ready';
+		})().catch((error) => {
+			console.error('Content pack download failed', error);
+			this.error = String(error);
+			this.state = 'failed';
+		});
+	},
+};
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+
+		// Surface what is happening on screen. Startup failures here are
+		// otherwise silent - the page simply sits on a progress bar - and
+		// reading the browser console is not always practical.
+		const diag = document.createElement('div');
+		diag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;'
+			+ 'font:12px/1.5 monospace;color:#9fe;background:rgba(0,0,0,.75);'
+			+ 'padding:6px 10px;border-radius:4px;max-width:90vw;white-space:pre-wrap';
+		diag.textContent = 'starting…';
+		document.body.appendChild(diag);
+		const say = (msg) => { diag.textContent = msg; console.log('[ARTEA] ' + msg); };
+
+		// Any uncaught error or rejected promise is the most likely cause of a
+		// stall, so show those rather than letting them reach only the console.
+		window.addEventListener('error', (e) => {
+			say('ERROR: ' + (e.message || e.error) + '\n' + (e.filename || '') + ':' + (e.lineno || ''));
+		});
+		let lastPointerLockErrorAt = -Infinity;
+		document.addEventListener('pointerlockerror', () => {
+			lastPointerLockErrorAt = performance.now();
+		});
+		window.addEventListener('unhandledrejection', (e) => {
+			const reason = e.reason;
+			const message = reason && reason.message ? reason.message : String(reason);
+			// Chromium automation can reject Godot's pointer-lock promise with
+			// this browser-owned message even though keyboard, controller and touch
+			// input remain usable. Suppress only that rejection when the browser has
+			// also emitted pointerlockerror; every other rejection stays visible.
+			const expectedPointerLockRejection = performance.now() - lastPointerLockErrorAt < 1500
+				&& reason && reason.name === 'UnknownError'
+				&& message === 'If you see this error we have a bug. Please report this bug to chromium.';
+			if (expectedPointerLockRejection) {
+				e.preventDefault();
+				return;
+			}
+			say('UNHANDLED: ' + message);
+		});
+
+		let lastPct = -1;
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+					const pct = Math.floor((current / total) * 100);
+					if (pct !== lastPct) {
+						lastPct = pct;
+						say('loading ' + pct + '%  (' + (current / 1048576).toFixed(0)
+							+ ' / ' + (total / 1048576).toFixed(0) + ' MB)');
+					}
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+					say('loading… (size unknown)');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+			say('engine started');
+			// The diagnostic is useful while the engine is genuinely loading, but
+			// it is release scaffolding rather than game UI. Remove it in the same
+			// task as the successful start so a busy first Godot frame cannot leave
+			// the black status badge over the title screen for several seconds.
+			diag.remove();
+		}, (err) => {
+			say('START FAILED: ' + err);
+			displayFailureNotice(err);
+		});
+	}
+}());
+		</script>
+	</body>
+</html>

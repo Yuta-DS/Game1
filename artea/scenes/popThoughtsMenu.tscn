@@ -1,0 +1,144 @@
+[gd_scene format=3 uid="uid://ctbchsbolgvqh"]
+
+[ext_resource type="Script" uid="uid://bv41a05s1gxp5" path="res://scripts/pop_thoughts_menu.gd" id="1_n0gf0"]
+[ext_resource type="Texture2D" uid="uid://c4kq5fmy10iyj" path="res://assets/Clouds/Menu/Pop Thoughts Garden.png" id="2_lnna2"]
+[ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="3_5jjns"]
+[ext_resource type="AudioStream" uid="uid://brgt2fy4o4pxw" path="res://assets/SFX/introminigame.ogg" id="4_5jjns"]
+[ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="4_lnna2"]
+
+[node name="PopThoughtsMenu" type="Control" unique_id=653637478]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_n0gf0")
+
+[node name="Sprite2D" type="TextureRect" parent="." unique_id=1054361921]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 1641.0
+grow_vertical = 2
+scale = Vector2(1.2021924, 1.3969207)
+texture = ExtResource("2_lnna2")
+
+[node name="Panel" type="Panel" parent="." unique_id=413889371]
+custom_minimum_size = Vector2(2250, 1300)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -905.0
+offset_right = 1345.0
+offset_bottom = 1300.0
+grow_horizontal = 2
+scale = Vector2(0.8, 0.8)
+
+[node name="TextureRect" type="TextureRect" parent="Panel" unique_id=1436794880]
+custom_minimum_size = Vector2(800, 500)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="InstructionText" type="RichTextLabel" parent="Panel"]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 115.0
+offset_right = 2070.0
+offset_bottom = 1160.0
+theme_override_colors/default_color = Color(0.04, 0.09, 0.19, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.35)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="Previous" type="Button" parent="Panel" unique_id=1126446733]
+layout_mode = 0
+offset_left = 13.0
+offset_top = 12.0
+offset_right = 90.0
+offset_bottom = 52.0
+scale = Vector2(1.74831, 1.74831)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 22
+text = "< Back
+"
+flat = true
+
+[node name="Next" type="Button" parent="Panel" unique_id=1825627402]
+layout_mode = 0
+offset_left = 1512.0
+offset_top = 6.0
+offset_right = 1589.0
+offset_bottom = 46.0
+scale = Vector2(1.74831, 1.74831)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 22
+text = "Next >"
+flat = true
+
+[node name="Close" type="Button" parent="Panel" unique_id=1362540439]
+layout_mode = 0
+offset_left = 1682.0
+offset_top = 9.0
+offset_right = 1717.4629
+offset_bottom = 47.0
+scale = Vector2(1.74831, 1.74831)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_lnna2")
+theme_override_font_sizes/font_size = 21
+text = "X"
+flat = true
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1963473751]
+layout_mode = 0
+offset_left = 550.0
+offset_top = 543.0
+offset_right = 865.2919
+offset_bottom = 662.0
+scale = Vector2(2.36289, 2.36289)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=1747143596]
+layout_mode = 2
+
+[node name="Play" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1340550159]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 20
+text = "Begin Two Lenses"
+
+[node name="Instructions" type="Button" parent="CenterContainer/VBoxContainer" unique_id=963584416]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 20
+text = "How to Play"
+
+[node name="Return to Hubworld" type="Button" parent="CenterContainer/VBoxContainer" unique_id=370675233]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_5jjns")
+theme_override_font_sizes/font_size = 20
+text = "Return to Art Castle"
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=739270851]
+stream = ExtResource("4_5jjns")
+volume_db = -10.0
+autoplay = true
+
+[connection signal="pressed" from="Panel/Previous" to="." method="_on_previous_pressed"]
+[connection signal="pressed" from="Panel/Next" to="." method="_on_next_pressed"]
+[connection signal="pressed" from="Panel/Close" to="." method="_on_close_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Play" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Instructions" to="." method="_on_instructions_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Return to Hubworld" to="." method="_on_return_to_hubworld_pressed"]

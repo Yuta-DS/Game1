@@ -1,0 +1,276 @@
+[gd_scene load_steps=9 format=3 uid="uid://b41jqkltcsojp"]
+
+[ext_resource type="Script" uid="uid://ck5bejdr8hc2" path="res://scripts/icons_hud.gd" id="1_qc0o7"]
+[ext_resource type="Texture2D" uid="uid://b42uvpgfhvgje" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Inventory.png" id="1_qfauj"]
+[ext_resource type="Texture2D" uid="uid://csxtjrcnfeldd" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Settings.png" id="2_qc0o7"]
+[ext_resource type="Texture2D" uid="uid://dmttd2nma4g7k" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/User.png" id="3_6vfu2"]
+[ext_resource type="Texture2D" uid="uid://5syxlarhmc24" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/lightSquare.png" id="4_7hxap"]
+[ext_resource type="Texture2D" uid="uid://dohlstihby7mb" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/brownSqaureNoOutline.png" id="5_5hol3"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="5_qfauj"]
+[ext_resource type="Texture2D" uid="uid://cww4ac07g2iva" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/red rect.png" id="7_6vfu2"]
+
+[node name="Icons HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 83.0
+offset_top = 112.0
+offset_right = 83.0
+offset_bottom = 112.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qc0o7")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Settings Panel" type="Panel" parent="."]
+visible = false
+self_modulate = Color(0.733333, 0.670588, 0.470588, 1)
+layout_mode = 0
+offset_left = -1030.0
+offset_top = -54.0
+offset_right = 255.0
+offset_bottom = 673.0
+
+[node name="Sprite2D" type="Sprite2D" parent="Settings Panel"]
+position = Vector2(620, 379.25)
+scale = Vector2(9.13281, 9.13281)
+texture = ExtResource("4_7hxap")
+
+[node name="Settings Label" type="Label" parent="Settings Panel"]
+layout_mode = 0
+offset_left = 322.0
+offset_top = 109.25
+offset_right = 930.0
+offset_bottom = 299.25
+theme_override_colors/font_color = Color(0.0470588, 0.0431373, 0.0352941, 1)
+theme_override_fonts/font = ExtResource("5_qfauj")
+theme_override_font_sizes/font_size = 150
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="Settings Close Button" type="TouchScreenButton" parent="Settings Panel"]
+position = Vector2(660, 558)
+scale = Vector2(2.48497, 2.48497)
+texture_normal = ExtResource("7_6vfu2")
+
+[node name="Close Label" type="Label" parent="Settings Panel"]
+layout_mode = 0
+offset_left = 661.0
+offset_top = 559.0
+offset_right = 781.0
+offset_bottom = 609.0
+scale = Vector2(1.18253, 1.18253)
+mouse_filter = 1
+theme_override_colors/font_color = Color(0.92311, 0.891173, 0.788288, 1)
+theme_override_fonts/font = ExtResource("5_qfauj")
+theme_override_font_sizes/font_size = 50
+text = "Close"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Settings Credits Button" type="TouchScreenButton" parent="Settings Panel"]
+position = Vector2(512, 460)
+scale = Vector2(3.30293, 2.48497)
+texture_normal = ExtResource("7_6vfu2")
+
+[node name="Credits Label" type="Label" parent="Settings Panel"]
+layout_mode = 0
+offset_left = 522.0
+offset_top = 460.0
+offset_right = 662.0
+offset_bottom = 510.0
+scale = Vector2(1.18253, 1.18253)
+mouse_filter = 1
+theme_override_colors/font_color = Color(0.92311, 0.891173, 0.788288, 1)
+theme_override_fonts/font = ExtResource("5_qfauj")
+theme_override_font_sizes/font_size = 50
+text = "Credits"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Settings Logout Button" type="TouchScreenButton" parent="Settings Panel"]
+position = Vector2(403, 553)
+scale = Vector2(2.48497, 2.48497)
+texture_normal = ExtResource("7_6vfu2")
+
+[node name="Settings Logout Label" type="Label" parent="Settings Panel"]
+layout_mode = 0
+offset_left = 405.0
+offset_top = 554.0
+offset_right = 525.0
+offset_bottom = 604.0
+scale = Vector2(1.18253, 1.18253)
+mouse_filter = 1
+theme_override_colors/font_color = Color(0.92311, 0.891173, 0.788288, 1)
+theme_override_fonts/font = ExtResource("5_qfauj")
+theme_override_font_sizes/font_size = 50
+text = "Logout"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Volume Label" type="Label" parent="Settings Panel"]
+layout_mode = 0
+offset_left = 377.0
+offset_top = 293.0
+offset_right = 497.0
+offset_bottom = 343.0
+theme_override_colors/font_color = Color(0.360742, 0.319978, 0.189127, 1)
+theme_override_fonts/font = ExtResource("5_qfauj")
+theme_override_font_sizes/font_size = 50
+text = "Volume"
+
+[node name="Volume" type="HSlider" parent="Settings Panel"]
+layout_mode = 0
+offset_left = 507.0
+offset_top = 282.0
+offset_right = 869.0
+offset_bottom = 363.0
+
+[node name="Mute" type="Label" parent="Settings Panel"]
+layout_mode = 0
+offset_left = 412.0
+offset_top = 368.0
+offset_right = 492.0
+offset_bottom = 418.0
+theme_override_colors/font_color = Color(0.360784, 0.321569, 0.188235, 1)
+theme_override_fonts/font = ExtResource("5_qfauj")
+theme_override_font_sizes/font_size = 50
+text = "Mute"
+
+[node name="MuteCheckBox" type="CheckBox" parent="Settings Panel"]
+layout_mode = 0
+offset_left = 499.0
+offset_top = 376.0
+offset_right = 523.0
+offset_bottom = 400.0
+scale = Vector2(1.91, 1.91)
+
+[node name="Inventory Panel" type="Panel" parent="."]
+visible = false
+self_modulate = Color(0.733333, 0.670588, 0.470588, 1)
+layout_mode = 0
+offset_left = -1030.0
+offset_top = -54.0
+offset_right = 255.0
+offset_bottom = 673.0
+
+[node name="Sprite2D" type="Sprite2D" parent="Inventory Panel"]
+position = Vector2(620, 379.25)
+scale = Vector2(9.13281, 9.13281)
+texture = ExtResource("4_7hxap")
+
+[node name="Settings Label" type="Label" parent="Inventory Panel"]
+layout_mode = 0
+offset_left = 313.0
+offset_top = 109.0
+offset_right = 921.0
+offset_bottom = 299.0
+theme_override_colors/font_color = Color(0.0470588, 0.0431373, 0.0352941, 1)
+theme_override_fonts/font = ExtResource("5_qfauj")
+theme_override_font_sizes/font_size = 150
+text = "Inventory"
+horizontal_alignment = 1
+
+[node name="Inventory Close Button" type="TouchScreenButton" parent="Inventory Panel"]
+position = Vector2(539, 573.25)
+scale = Vector2(2.1014, 2.1014)
+texture_normal = ExtResource("7_6vfu2")
+
+[node name="Close Label" type="Label" parent="Inventory Panel"]
+layout_mode = 0
+offset_left = 540.0
+offset_top = 574.25
+offset_right = 660.0
+offset_bottom = 624.25
+mouse_filter = 1
+theme_override_colors/font_color = Color(0.92311, 0.891173, 0.788288, 1)
+theme_override_fonts/font = ExtResource("5_qfauj")
+theme_override_font_sizes/font_size = 50
+text = "Close"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Inventory Panel"]
+layout_mode = 0
+offset_left = -8.0
+offset_top = 13.0
+offset_right = 142.0
+offset_bottom = 237.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Inventory Panel/VBoxContainer"]
+custom_minimum_size = Vector2(150, 110)
+layout_mode = 2
+
+[node name="BrownSqaureNoOutline" type="Sprite2D" parent="Inventory Panel/VBoxContainer/HBoxContainer"]
+position = Vector2(428, 332)
+scale = Vector2(5.22222, 5.22222)
+texture = ExtResource("5_5hol3")
+
+[node name="BrownSqaureNoOutline2" type="Sprite2D" parent="Inventory Panel/VBoxContainer/HBoxContainer"]
+position = Vector2(557, 332)
+scale = Vector2(5.22222, 5.22222)
+texture = ExtResource("5_5hol3")
+
+[node name="BrownSqaureNoOutline3" type="Sprite2D" parent="Inventory Panel/VBoxContainer/HBoxContainer"]
+position = Vector2(693, 332)
+scale = Vector2(5.22222, 5.22222)
+texture = ExtResource("5_5hol3")
+
+[node name="BrownSqaureNoOutline4" type="Sprite2D" parent="Inventory Panel/VBoxContainer/HBoxContainer"]
+position = Vector2(816, 332)
+scale = Vector2(5.22222, 5.22222)
+texture = ExtResource("5_5hol3")
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Inventory Panel/VBoxContainer"]
+custom_minimum_size = Vector2(150, 110)
+layout_mode = 2
+
+[node name="BrownSqaureNoOutline" type="Sprite2D" parent="Inventory Panel/VBoxContainer/HBoxContainer2"]
+position = Vector2(428, 332)
+scale = Vector2(5.22222, 5.22222)
+texture = ExtResource("5_5hol3")
+
+[node name="BrownSqaureNoOutline2" type="Sprite2D" parent="Inventory Panel/VBoxContainer/HBoxContainer2"]
+position = Vector2(557, 332)
+scale = Vector2(5.22222, 5.22222)
+texture = ExtResource("5_5hol3")
+
+[node name="BrownSqaureNoOutline3" type="Sprite2D" parent="Inventory Panel/VBoxContainer/HBoxContainer2"]
+position = Vector2(693, 332)
+scale = Vector2(5.22222, 5.22222)
+texture = ExtResource("5_5hol3")
+
+[node name="BrownSqaureNoOutline4" type="Sprite2D" parent="Inventory Panel/VBoxContainer/HBoxContainer2"]
+position = Vector2(816, 332)
+scale = Vector2(5.22222, 5.22222)
+texture = ExtResource("5_5hol3")
+
+[node name="Inventory" type="TouchScreenButton" parent="."]
+position = Vector2(79, 0)
+scale = Vector2(4.90909, 4.90909)
+texture_normal = ExtResource("1_qfauj")
+
+[node name="Settings" type="TouchScreenButton" parent="."]
+position = Vector2(145, 0)
+scale = Vector2(4.90909, 4.90909)
+texture_normal = ExtResource("2_qc0o7")
+
+[node name="User2" type="TouchScreenButton" parent="."]
+position = Vector2(5, 0)
+scale = Vector2(4.90909, 4.90909)
+texture_normal = ExtResource("3_6vfu2")
+
+[connection signal="pressed" from="Settings Panel/Settings Close Button" to="." method="_on_settings_close_button_pressed"]
+[connection signal="pressed" from="Settings Panel/Settings Credits Button" to="." method="_on_settings_credits_button_pressed"]
+[connection signal="pressed" from="Settings Panel/Settings Logout Button" to="." method="_on_settings_logout_button_pressed"]
+[connection signal="value_changed" from="Settings Panel/Volume" to="." method="_on_volume_value_changed"]
+[connection signal="toggled" from="Settings Panel/MuteCheckBox" to="." method="_on_mute_check_box_toggled"]
+[connection signal="pressed" from="Inventory Panel/Inventory Close Button" to="." method="_on_inventory_close_button_pressed"]
+[connection signal="pressed" from="Inventory Panel/Inventory Close Button" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="Inventory" to="." method="_on_inventory_pressed"]
+[connection signal="pressed" from="Settings" to="." method="_on_settings_pressed"]

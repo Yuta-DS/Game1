@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestObjectDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/quest_objects/quest_object_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+object_kind = 2
+display_name = "Perspective Laboratory"
+action_prompt = "STUDY THREE VIEWS • RESET AVAILABLE"
+success_message = "◉ THREE VIEWPOINTS ALIGNED"
+progress_total = 3
+accent_color = Color(1, 0.82, 0.32, 1)
+icon_waiting = "◒"
+icon_success = "◉"

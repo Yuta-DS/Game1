@@ -1,0 +1,111 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/mind_spark/mind_spark_split_world.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/mind_spark/mind_spark_chapter_world.gd" id="2_chapter"]
+
+[node name="MindSparkChapterWorld" instance=ExtResource("1_base")]
+script = ExtResource("2_chapter")
+
+[node name="Title" parent="Layout/Header" index="0"]
+text = "MIND SPARK • CROWN I"
+
+[node name="Phase" parent="Layout/Header" index="1"]
+text = "CROWN OF LIFE • PROLOGUE"
+
+[node name="ReducedMotion" type="CheckButton" parent="Layout/Header" index="2"]
+layout_mode = 2
+text = "Reduced motion"
+
+[node name="LocalCoop" type="CheckButton" parent="Layout/Header" index="3"]
+layout_mode = 2
+text = "Local co-op"
+
+[node name="Skip" parent="Layout/Header" index="4"]
+text = "Skip to Castle"
+
+[node name="ActionPanel" parent="Layout" index="2"]
+custom_minimum_size = Vector2(0, 280)
+
+[node name="GuardianName" type="Label" parent="Layout/ActionPanel/Box" index="0"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.87, 0.42, 1)
+theme_override_font_sizes/font_size = 20
+text = "Everlasting Father"
+horizontal_alignment = 1
+
+[node name="GuardianDialogue" type="Label" parent="Layout/ActionPanel/Box" index="1"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "The first treasure is already waiting to be discovered."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Purpose" type="Label" parent="Layout/ActionPanel/Box" index="2"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "PURPOSE • Notice a thought without letting it define you."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Prompt" parent="Layout/ActionPanel/Box" index="3"]
+text = "THE CROWN OF LIFE"
+
+[node name="Instruction" type="Label" parent="Layout/ActionPanel/Box" index="4"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "Begin when ready."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Hint" type="Label" parent="Layout/ActionPanel/Box" index="5"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.78, 0.88, 1)
+theme_override_font_sizes/font_size = 14
+text = "There are no wrong answers, timers, or lost progress."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Choices" parent="Layout/ActionPanel/Box" index="6"]
+visible = false
+
+[node name="SoloMode" parent="Layout/ActionPanel/Box/Utility" index="0"]
+disabled = false
+text = "Begin the First Journey"
+
+[node name="CoopMode" parent="Layout/ActionPanel/Box/Utility" index="1"]
+text = "Accessibility Assist"
+
+[node name="CompanionPing" parent="Layout/ActionPanel/Box/Utility" index="2"]
+text = "Send Companion"
+
+[node name="SwapRoles" parent="Layout/ActionPanel/Box/Utility" index="3"]
+text = "Exchange Lens Roles"
+
+[node name="Consent" type="HBoxContainer" parent="Layout/ActionPanel/Box" index="8"]
+visible = false
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="Receive" type="Button" parent="Layout/ActionPanel/Box/Consent"]
+layout_mode = 2
+text = "Receive the Star"
+
+[node name="Beside" type="Button" parent="Layout/ActionPanel/Box/Consent"]
+layout_mode = 2
+text = "Place it beside me"
+
+[node name="Watch" type="Button" parent="Layout/ActionPanel/Box/Consent"]
+layout_mode = 2
+text = "Watch its light"
+
+[node name="SkipConfirmation" type="ConfirmationDialog" parent="."]
+title = "Return to ARTÉA Castle?"
+dialog_text = "Current Mind Spark progress will not award the Star. You can return whenever you are ready."
+ok_button_text = "Return without reward"
+cancel_button_text = "Keep exploring"
+
+[editable path="Layout/WorldArea/Split/AlarmViewportContainer/AlarmViewport/MindSparkPerspective"]
+[editable path="Layout/WorldArea/Split/HopeViewportContainer/HopeViewport/MindSparkPerspective"]

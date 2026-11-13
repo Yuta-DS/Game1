@@ -1,0 +1,47 @@
+[gd_resource type="SpriteFrames" load_steps=9 format=3 uid="uid://c1jy04q0ub4ar"]
+
+[ext_resource type="Texture2D" uid="uid://djqjt3sw2tf3b" path="res://assets/NPCs/Idle1/1.png" id="1_3oedg"]
+[ext_resource type="Texture2D" uid="uid://0bocbxqjbevp" path="res://assets/NPCs/Idle1/2.png" id="2_7vl3s"]
+[ext_resource type="Texture2D" uid="uid://5bs0a3m8v8xh" path="res://assets/NPCs/Idle1/3.png" id="3_ei78y"]
+[ext_resource type="Texture2D" uid="uid://b8srlq215ueou" path="res://assets/NPCs/Idle1/4.png" id="4_155qn"]
+[ext_resource type="Texture2D" uid="uid://ducfwmwerjcnq" path="res://assets/NPCs/Speak1/1.png" id="5_23qcq"]
+[ext_resource type="Texture2D" uid="uid://7w8mbwqvcvsl" path="res://assets/NPCs/Speak1/2.png" id="6_pnjxt"]
+[ext_resource type="Texture2D" uid="uid://vpeci1wkyl7g" path="res://assets/NPCs/Speak1/3.png" id="7_hsbh6"]
+[ext_resource type="Texture2D" uid="uid://onm4p2me1ajc" path="res://assets/NPCs/Speak1/4.png" id="8_sitov"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_3oedg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_7vl3s")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ei78y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_155qn")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_23qcq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_pnjxt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_hsbh6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_sitov")
+}],
+"loop": true,
+"name": &"speak",
+"speed": 9.0
+}]

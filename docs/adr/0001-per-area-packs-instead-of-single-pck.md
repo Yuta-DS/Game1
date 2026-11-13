@@ -1,0 +1,3 @@
+# The web build ships per-area Packs instead of one pck
+
+The web export was a single large `index.pck` that had to download in full before the game started, taking minutes. The first implementation splits it into a Core pack for the title and hub and a content pack for every other area. The content pack is fetched on the first transition out of the hub. The builder checks that their combined file catalogue covers the original export, so this change does not drop game content. Smaller packs per area remain a future refinement. Parts (8 MB slices) remain for host file-size limits and resumable, bounded-parallel fetching; they are not a unit of content. Keeping one pack and only parallelising its parts cannot reduce the first load.

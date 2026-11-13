@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://cmhekj5dnuwyc"]
+
+[ext_resource type="Texture2D" uid="uid://car5y4dl1hbys" path="res://assets/Legacy-Fantasy-VL.3 - Purple Bay/BackgroundMaker2.png" id="1_cojbh"]
+
+[node name="Sun" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_cojbh")
+region_enabled = true
+region_rect = Rect2(386, 49, 46, 47)

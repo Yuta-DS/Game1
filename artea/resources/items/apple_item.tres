@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="itemData" load_steps=3 format=3 uid="uid://cqakoqubqlb3f"]
+
+[ext_resource type="Script" path="res://InventoryItems/item_data.gd" id="1_apple"]
+[ext_resource type="Texture2D" uid="uid://cwyu3aru0pbrn" path="res://assets/Collectibles/appleicon.png" id="2_apple"]
+
+[resource]
+script = ExtResource("1_apple")
+name = "Apple"
+stackable = true
+texture = ExtResource("2_apple")

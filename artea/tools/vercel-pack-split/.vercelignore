@@ -1,0 +1,10 @@
+# The unsplit originals: pck-loader.js rebuilds them from parts/, and the pack
+# is far over Vercel's 100 MB file limit. (Old unhashed index.pck.partNN files
+# are not listed: split-pack.sh deletes them, and a pattern for them would also
+# match the hashed parts in parts/.)
+/index.pck
+/content.pck
+/index.side.wasm
+# Editor import sidecars Godot writes beside the exported icons.
+*.import
+/.env.local

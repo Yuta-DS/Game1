@@ -1,0 +1,485 @@
+~ start_archangel_dialogue
+Archangel Raphael: [[Welcome, listener of the soul.|Greetings, creator of inner sound.]]
+Archangel Raphael: This is the Sanctuary of Sound—where feelings become music and colour.
+Archangel Raphael: Here, even the heaviest thoughts can be transformed into something gentle and meaningful.
+Archangel Raphael: Would you like to create music from your emotions?
+- Yes—let’s create something beautiful  
+	=> launch_music_minigame
+- Maybe later  
+	=> END
+
+~ launch_music_minigame
+Archangel Raphael: *(Starts humming)*
+do GameManager.request_music_minigame()
+=> END
+
+~ start_zephyr_dialogue
+Everlasting Father: Hey! This is the Pop Thoughts Garden! Ready to lighten your mind?
+- Yes, let’s pop some thoughts!
+	=> launch_pop_thoughts
+- Maybe later
+	=> END
+
+~ launch_pop_thoughts
+Everlasting Father: *(Everlasting Father waves and points to the portal.)*
+Everlasting Father: Loading Pop Thoughts… get ready!
+do GameManager.request_pop_thoughts()
+=> END
+
+~ start_patron_pallete
+Archangel Uriel: [[Hello, artist!|Greetings, creator!|Hey there!]]  
+Archangel Uriel: Welcome to the Imagination Realm!
+Archangel Uriel: Ready to unleash your creativity?
+- Yes—let me paint!
+	=> open_painting_tool
+- How does it work?
+	=> explain_painting_tool
+- Maybe later
+	=> END
+
+~ explain_painting_tool
+Archangel Uriel: In the Imagination Realm you get:  
+• A full colour palette to mix any hue you like  
+• Layer controls for organising your strokes  
+• Undo/Redo for fearless experimentation
+Archangel Uriel: Art can also travel beyond this realm. Louisa shares her artwork with the world through her own Collection.
+Archangel Uriel: What would you like to do now?
+- Let's dive into the Imagination Realm!
+	=> open_painting_tool
+- View Louisa's Collection (opens in browser)
+	=> open_collection
+- Return to Artéa
+	=> END
+	
+~ open_collection
+Archangel Uriel: Every creative journey begins with a single mark. Perhaps Louisa's Collection will inspire your next one.
+do GameManager.request_visit_collection()
+=> END
+
+~ open_painting_tool
+Archangel Uriel: Here we go—happy painting!  
+do GameManager.request_paingting()
+=> END
+
+~ start_maestro_montclair
+Prince of Peace: [[Welcome, art lover!|Greetings, connoisseur!|Hello there!]]
+Prince of Peace: You’ve arrived at the Gallery of Light. What would you like to do?
+- Browse the gallery
+	=> open_art_gallery
+- Tell me about the gallery
+	=> explain_gallery
+- Maybe later
+	=> END
+
+~ explain_gallery
+Prince of Peace: Here you can admire the masterpieces you created in the Imagination Realm!
+Prince of Peace: Ready to explore?
+- Yes—show me the art!
+	=> open_art_gallery
+- Not right now
+	=> END
+
+~ open_art_gallery
+Prince of Peace: Wonderful choice—let the inspiration begin!
+do GameManager.request_art_gallery()
+=> END
+
+
+~ start_archangel_gabriel
+Archangel Gabriel: [[Welcome to Artéa!|Greetings, and welcome!]]
+Archangel Gabriel: I am Archangel Gabriel, the guide of Artéa — a world shaped by creativity, reflection, and emotional discovery.
+
+Archangel Gabriel: Artéa is inspired by Louisa Chan, a Sydney-based artist and educator, and supported through Louisa Chan Creative — a practice dedicated to healing through the arts.
+
+Archangel Gabriel: Within Artéa, you are invited to slow down, explore, and reconnect with your imagination.
+=> show_menu
+
+~ show_menu
+Archangel Gabriel: Where would you like to begin?
+- What can I do in Artéa?
+	=> explain_artea
+- About Louisa Chan
+	=> open_louisa_homepage
+- Start exploring Artéa
+	=> explore_artea
+
+~ explain_artea
+Archangel Gabriel: Artéa is a creative space for exploration, reflection, and expression.
+
+Archangel Gabriel: You can engage with art, interactive experiences, and tools designed to support wellbeing and creativity.
+
+Archangel Gabriel: There is no pressure — only curiosity and expression.
+
+Archangel Gabriel: What would you like to do next?
+- Tell me about Louisa's Creative Healing Workshops
+	=> open_workshops
+- Go back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ open_louisa_homepage
+Archangel Gabriel: Louisa Chan is the creative visionary behind Artéa. Her work explores art, healing, and human transformation.
+
+Archangel Gabriel: You can learn more about her journey and philosophy on her official website.
+
+Archangel Gabriel: What would you like to do?
+- Visit Louisa Chan Creative (opens in browser)
+	=> visit_louisa_site
+- Back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ open_workshops
+Archangel Gabriel: The Creative Healing Workshops are part of Louisa Chan Creative, offering guided art-based experiences for emotional expression and wellbeing.
+
+Archangel Gabriel: These workshops blend creativity, reflection, and personal growth.
+
+Archangel Gabriel: What would you like to do?
+- View Workshops (opens in browser)
+	=> visit_workshops_site
+- Back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+	
+~ explore_artea
+Archangel Gabriel: May your time in Artéa bring clarity, creativity, and calm.
+=> END
+
+~ visit_louisa_site
+do GameManager.request_visit_website()
+=> END
+
+~ visit_workshops_site
+do GameManager.request_visit_workshops()
+=> END
+
+~ END
+Archangel Gabriel: May your time in Artéa bring clarity, creativity, and calm.
+
+# -----------------------
+# MILO — one node per stage of the journey.
+# GameManager.request_milo() picks the node matching JourneyState.stage.
+# Milo never dismisses, never tries to cheer the player up, and never
+# evaluates whether their work was any good.
+# -----------------------
+
+~ milo_stage_0
+Milo: I have been waiting for you.
+Milo: This castle was built from your thoughts. Right now it is sleeping — because your thoughts have been sleeping too.
+Milo: Some are bright. Some are heavy. All of them matter.
+Milo: Would you like to wake them up with me?
+- Yes, let's start
+	=> launch_pop_thoughts
+- Not yet
+	=> milo_wait
+
+~ milo_stage_1
+Milo: You looked at your thoughts and you did not run from them. That took something.
+Milo: Thoughts are like clouds passing through the sky of your mind. You do not have to catch them. You do not have to believe them.
+Milo: Every thought carries a feeling with it — and your feelings have been awake this whole time, trying to get your attention.
+Milo: Shall we listen to them?
+- Yes, let's listen
+	=> launch_music_minigame
+- Not yet
+	=> milo_wait
+
+~ milo_stage_2
+Milo: You have been sitting with your feelings instead of pushing them away. That is harder than it looks.
+Milo: Your sadness shows how much you love. Your anger shows what you are protecting. None of it is broken. It is human.
+Milo: Everything inside you wants to come out into the world. That is what creating is for.
+Milo: It does not have to be beautiful. It only has to be true.
+- I want to make something
+	=> open_painting_tool
+- Not yet
+	=> milo_wait
+
+~ milo_stage_3
+Milo: You made something that did not exist before. The castle is filling up with you.
+Milo: This place was built from your thoughts. Now it is being filled with your heart.
+Milo: Go and stand in the gallery when you are ready. I want to tell you what I have seen in you.
+- Take me to the gallery
+	=> open_art_gallery
+- I will go on my own
+	=> milo_wait
+
+~ milo_stage_4
+Milo: You came here not knowing who you were.
+Milo: Now look around. Your thoughts are on these walls. Your feelings have rooms. Your creations are hanging in the light.
+Milo: The sky over Artéa knows your name. You were always meant to be here.
+Milo: Whatever you want to do next, I am still here.
+- Visit the gallery
+	=> open_art_gallery
+- Just sit with you a while
+	=> milo_wait
+
+~ milo_wait
+Milo: That is alright. There is no hurry here, and nothing to get right.
+
+# Short walking-guide lines used by MiloGuide. They help without taking the
+# next action away from the player or repeating the longer counsellor chat.
+~ milo_guide_stage_0
+Milo: I am beside you. When you are ready, let us begin with the Mind Spark Kingdom and notice one thought together.
+=> END
+
+~ milo_guide_stage_1
+Milo: You have already practised noticing a thought. The Sanctuary of Sound is ready when you want to listen to the feeling beneath it.
+=> END
+
+~ milo_guide_stage_2
+Milo: You stayed with what you felt. The Imagination Realm can help you give that feeling a shape, colour, or mark.
+=> END
+
+~ milo_guide_stage_3
+Milo: You made something honest. The Gallery of Light is where we can pause and recognise what your work reveals about your strengths.
+=> END
+
+~ milo_guide_stage_4
+Milo: You have travelled through thought, feeling, and creation. I will keep walking beside you wherever you choose to explore next.
+=> END
+
+~ milo_hint_stage_0
+Milo: Try choosing just one thought. You do not need to solve it; noticing it is enough for this step.
+=> END
+
+~ milo_hint_stage_1
+Milo: Listen for the feeling under the thought, then choose the sound or colour that feels closest to it.
+=> END
+
+~ milo_hint_stage_2
+Milo: Begin with one mark. Let your hand answer before you ask the artwork to be perfect.
+=> END
+
+~ milo_hint_stage_3
+Milo: Look for the piece you made and give yourself time to notice what it carries before moving on.
+=> END
+
+~ milo_celebrate_mind
+Milo: You noticed a thought without letting it define you. That is awareness growing stronger.
+=> END
+
+~ milo_celebrate_heart
+Milo: You listened to a feeling and gave it room. That took patience and courage.
+=> END
+
+~ milo_celebrate_creator
+Milo: You turned something inside you into something real. Your creativity made that possible.
+=> END
+
+~ milo_celebrate_complete
+Milo: Look at the path behind you. You kept showing up with curiosity, courage, and imagination — and those strengths are yours.
+=> END
+
+# -----------------------
+# MILO — moment-specific variants.
+# GameManager.request_milo() picks these over the plain stage node when
+# JourneyState shows the player did more than the minimum to get here.
+# Same rule as always: cite what actually happened, never invent praise.
+# -----------------------
+
+~ milo_stage_1_many
+Milo: You did not just look at one thought. You went back again and again.
+Milo: That is not nothing. Most people stop after the first one gets uncomfortable.
+Milo: Every thought carries a feeling with it — and your feelings have been awake this whole time, trying to get your attention.
+Milo: Shall we listen to them?
+- Yes, let's listen
+	=> launch_music_minigame
+- Not yet
+	=> milo_wait
+
+~ milo_stage_2_varied
+Milo: You did not sit with just one feeling. You let yourself feel several different things, and stayed for all of them.
+Milo: That takes a wider kind of courage — the kind that does not pick a favorite feeling and hide behind it.
+Milo: Everything inside you wants to come out into the world. That is what creating is for.
+Milo: It does not have to be beautiful. It only has to be true.
+- I want to make something
+	=> open_painting_tool
+- Not yet
+	=> milo_wait
+
+~ milo_stage_3_many
+Milo: You did not stop at one. You kept making things.
+Milo: The castle is not just holding one piece of you now — it is holding a pattern. That is what it looks like when someone means it.
+Milo: Go and stand in the gallery when you are ready. I want to tell you what I have seen in you.
+- Take me to the gallery
+	=> open_art_gallery
+- I will go on my own
+	=> milo_wait
+
+~ milo_stage_4_full
+Milo: I did not have to guess at any of this. You showed me all of it yourself.
+Milo: Courage. Feeling things all the way through. Making something real. Every strength I name, you already proved.
+Milo: The sky over Artéa knows your name. You were always meant to be here.
+Milo: Whatever you want to do next, I am still here.
+- Visit the gallery
+	=> open_art_gallery
+- Just sit with you a while
+	=> milo_wait
+Milo: I will be here when you want me.
+=> END
+
+# -----------------------
+# UNIVERSAL AUDIENCE VARIANTS
+#
+# Selected automatically when JourneyState.audience_mode == "universal"
+# (see GameManager.resolve_audience_node). Faith mode is the default and
+# uses the nodes above; nothing here is reachable unless a facilitator
+# switches modes.
+#
+# Rule for anyone editing these: the guardian keeps the same role, the same
+# warmth, and the same message about being known, valued and uniquely made.
+# Only the naming register changes — the Keeper of Wisdom says what the
+# Everlasting Father says. The universal names are already used as the
+# island subtitles in hub_sky_isles.gd, so the two layers agree.
+#
+# A node with no "_universal" twin simply plays its faith text, so this
+# list does not have to be exhaustive to be safe.
+# -----------------------
+
+~ start_archangel_dialogue_universal
+Keeper of Healing: [[Welcome, listener of the soul.|Greetings, creator of inner sound.]]
+Keeper of Healing: This is the Sanctuary of Sound—where feelings become music and colour.
+Keeper of Healing: Here, even the heaviest thoughts can be transformed into something gentle and meaningful.
+Keeper of Healing: Would you like to create music from your emotions?
+- Yes—let's create something beautiful
+	=> launch_music_minigame
+- Maybe later
+	=> END
+
+~ launch_music_minigame_universal
+Keeper of Healing: *(Starts humming)*
+do GameManager.request_music_minigame()
+=> END
+
+~ start_zephyr_dialogue_universal
+Keeper of Wisdom: Hey! This is the Pop Thoughts Garden! Ready to lighten your mind?
+- Yes, let's pop some thoughts!
+	=> launch_pop_thoughts
+- Maybe later
+	=> END
+
+~ launch_pop_thoughts_universal
+Keeper of Wisdom: *(The Keeper of Wisdom waves and points to the portal.)*
+Keeper of Wisdom: Loading Pop Thoughts… get ready!
+do GameManager.request_pop_thoughts()
+=> END
+
+~ start_patron_pallete_universal
+Keeper of Creativity: [[Hello, artist!|Greetings, creator!|Hey there!]]
+Keeper of Creativity: Welcome to the Imagination Realm!
+Keeper of Creativity: Ready to unleash your creativity?
+- Yes—let me paint!
+	=> open_painting_tool
+- How does it work?
+	=> explain_painting_tool
+- Maybe later
+	=> END
+
+~ explain_painting_tool_universal
+Keeper of Creativity: In the Imagination Realm you get:
+• A full colour palette to mix any hue you like
+• Layer controls for organising your strokes
+• Undo/Redo for fearless experimentation
+Keeper of Creativity: Art can also travel beyond this realm. Louisa shares her artwork with the world through her own Collection.
+Keeper of Creativity: What would you like to do now?
+- Let's dive into the Imagination Realm!
+	=> open_painting_tool
+- View Louisa's Collection (opens in browser)
+	=> open_collection
+- Return to Artéa
+	=> END
+
+~ open_collection_universal
+Keeper of Creativity: Every creative journey begins with a single mark. Perhaps Louisa's Collection will inspire your next one.
+do GameManager.request_visit_collection()
+=> END
+
+~ open_painting_tool_universal
+Keeper of Creativity: Here we go—happy painting!
+do GameManager.request_paingting()
+=> END
+
+~ start_maestro_montclair_universal
+Keeper of Peace: [[Welcome, art lover!|Greetings, connoisseur!|Hello there!]]
+Keeper of Peace: You've arrived at the Gallery of Light. What would you like to do?
+- Browse the gallery
+	=> open_art_gallery
+- Tell me about the gallery
+	=> explain_gallery
+- Maybe later
+	=> END
+
+~ explain_gallery_universal
+Keeper of Peace: Here you can admire the masterpieces you created in the Imagination Realm!
+Keeper of Peace: Ready to explore?
+- Yes—show me the art!
+	=> open_art_gallery
+- Not right now
+	=> END
+
+~ open_art_gallery_universal
+Keeper of Peace: Wonderful choice—let the inspiration begin!
+do GameManager.request_art_gallery()
+=> END
+
+~ start_archangel_gabriel_universal
+Guide of Artéa: [[Welcome to Artéa!|Greetings, and welcome!]]
+Guide of Artéa: I am the Guide of Artéa — a world shaped by creativity, reflection, and emotional discovery.
+Guide of Artéa: Artéa is inspired by Louisa Chan, a Sydney-based artist and educator, and supported through Louisa Chan Creative — a practice dedicated to healing through the arts.
+Guide of Artéa: Within Artéa, you are invited to slow down, explore, and reconnect with your imagination.
+=> show_menu
+
+~ show_menu_universal
+Guide of Artéa: Where would you like to begin?
+- What can I do in Artéa?
+	=> explain_artea
+- About Louisa Chan
+	=> open_louisa_homepage
+- Start exploring Artéa
+	=> explore_artea
+
+~ explain_artea_universal
+Guide of Artéa: Artéa is a creative space for exploration, reflection, and expression.
+Guide of Artéa: You can engage with art, interactive experiences, and tools designed to support wellbeing and creativity.
+Guide of Artéa: There is no pressure — only curiosity and expression.
+Guide of Artéa: What would you like to do next?
+- Tell me about Louisa's Creative Healing Workshops
+	=> open_workshops
+- Go back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ open_louisa_homepage_universal
+Guide of Artéa: Louisa Chan is the creative visionary behind Artéa. Her work explores art, healing, and human transformation.
+Guide of Artéa: You can learn more about her journey and philosophy on her official website.
+Guide of Artéa: What would you like to do?
+- Visit Louisa Chan Creative (opens in browser)
+	=> visit_louisa_site
+- Back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ open_workshops_universal
+Guide of Artéa: The Creative Healing Workshops are part of Louisa Chan Creative, offering guided art-based experiences for emotional expression and wellbeing.
+Guide of Artéa: These workshops blend creativity, reflection, and personal growth.
+Guide of Artéa: What would you like to do?
+- View Workshops (opens in browser)
+	=> visit_workshops_site
+- Back
+	=> show_menu
+- Start exploring Artéa
+	=> explore_artea
+
+~ explore_artea_universal
+Guide of Artéa: May your time in Artéa bring clarity, creativity, and calm.
+=> END
+
+~ END_universal
+Guide of Artéa: May your time in Artéa bring clarity, creativity, and calm.
+~ audience_neutral_fallback
+ARTÉA Guide: This part of the journey is being refreshed for this setting. You can keep exploring whenever you are ready.
+=> END

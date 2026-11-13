@@ -1,0 +1,381 @@
+extends SceneTree
+
+
+func _init() -> void:
+	call_deferred("_run")
+
+
+func _fail(message: String) -> void:
+	push_error("TRAIN_STATION_JUMP_TEST: %s" % message)
+	for action in ["move_forward", "move_backward", "move_left", "move_right", "jump"]:
+		Input.action_release(action)
+	quit(1)
+
+
+func _settle(player: CharacterBody3D) -> bool:
+	for _frame in 150:
+		await physics_frame
+		if player.is_on_floor():
+			return true
+	return false
+
+
+func _run() -> void:
+	var gallery := (load("res://scenes/art_gallery_3d_inprogress.tscn") as PackedScene).instantiate()
+	root.add_child(gallery)
+	for _frame in 6:
+		await physics_frame
+	var player := gallery.get_node_or_null("Player3D") as CharacterBody3D
+	var world := gallery.get_node_or_null("ArtCastleFloatingWorld") as Node3D
+	var railway := world.get_node_or_null("StoryCrownRailway") as Node3D if world != null else null
+	if player == null or railway == null:
+		_fail("gallery player or Crown Line did not load")
+		return
+	var station_position: Vector3 = railway.call("get_station_position", 0)
+	var gallery_station := railway.get_node("StoryStations/Station_01_gallery") as Node3D
+	var pavilion := gallery_station.get_node_or_null("BioMagitechPavilion") as Node3D
+	if pavilion == null or pavilion.find_children("CrystalPlanter_*", "Node3D", true, false).size() != 2:
+		_fail("Gallery Station bio-magitech pavilion or its two stair-clear planters is missing")
+		return
+	var access_stairs := gallery_station.get_node_or_null("AccessRamp") as Node3D
+	if access_stairs == null:
+		_fail("station has no stair transition from the floating skybridge")
+		return
+	var previous_step_x := -INF
+	var previous_step_top := -INF
+	for step_index in 16:
+		var step := access_stairs.get_node_or_null("DockStep_%02d" % (step_index + 1)) as MeshInstance3D
+		if step == null or not (step.mesh is BoxMesh):
+			_fail("dock stair %d is missing its visible tread" % (step_index + 1))
+			return
+		if access_stairs.get_node_or_null("DockStep_%02dCollision" % (step_index + 1)) != null:
+			_fail("dock stair %d still has a cumulative wall collision" % (step_index + 1))
+			return
+		if (step.mesh as BoxMesh).size.y > 0.16:
+			_fail("dock stair %d is still a tall ground block" % (step_index + 1))
+			return
+		if step.position.x <= previous_step_x:
+			_fail("dock stairs do not progress continuously toward the platform")
+			return
+		var step_top := step.position.y + (step.mesh as BoxMesh).size.y * 0.5
+		if previous_step_top > -INF and step_top - previous_step_top > 0.20:
+			_fail("dock stair %d riser is too tall for continuous walking" % (step_index + 1))
+			return
+		previous_step_x = step.position.x
+		previous_step_top = step_top
+	var ramp_collision := access_stairs.get_node_or_null("WalkableStairRampCollision") as StaticBody3D
+	if ramp_collision == null:
+		_fail("station stairs have no continuous walkable ramp collision")
+		return
+	var access_deck := gallery_station.get_node_or_null(
+		"KingdomAccessSkybridge/FloatingAccessDeck") as MeshInstance3D
+	if access_deck == null or not (access_deck.mesh is BoxMesh):
+		_fail("Gallery Station access bridge has no box-shaped walkable deck")
+		return
+	var access_bridge := gallery_station.get_node("KingdomAccessSkybridge") as Node3D
+	var first_ceremonial_step := access_bridge.get_node_or_null(
+		"CeremonialStep_L_00") as MeshInstance3D
+	var last_ceremonial_step := access_bridge.get_node_or_null(
+		"CeremonialStep_L_47") as MeshInstance3D
+	if first_ceremonial_step == null or last_ceremonial_step == null:
+		_fail("Gallery Station skybridge is missing its ceremonial stair treads")
+		return
+	# Each station can approach along a different horizontal heading. Check the
+	# ceremonial flight follows its actual deck instead of being compressed onto
+	# one world axis beneath the pavilion.
+	var bridge_run := Vector2(access_deck.basis.z.x, access_deck.basis.z.z).normalized()
+	var tread_progress := Vector2(
+		last_ceremonial_step.position.x - first_ceremonial_step.position.x,
+		last_ceremonial_step.position.z - first_ceremonial_step.position.z)
+	var deck_horizontal_run := Vector2(
+		access_deck.basis.z.x, access_deck.basis.z.z).length() \
+		* (access_deck.mesh as BoxMesh).size.z
+	if tread_progress.length() < deck_horizontal_run * 0.85 \
+			or absf(tread_progress.normalized().dot(bridge_run)) < 0.98:
+		_fail("ceremonial stairs are piled beneath the station instead of following the skybridge " \
+			+ "(first %s, last %s, progress %s, bridge run %s)" \
+			% [first_ceremonial_step.position, last_ceremonial_step.position,
+				tread_progress, bridge_run])
+		return
+	var central_ramp := access_bridge.get_node_or_null("CentralLumenRamp") as MeshInstance3D
+	if central_ramp == null or not (central_ramp.mesh is BoxMesh) \
+			or (central_ramp.mesh as BoxMesh).size.x < 5.0:
+		_fail("skybridge has no player-width clear central lane")
+		return
+	var first_step := access_stairs.get_node("DockStep_01") as MeshInstance3D
+	var first_step_outer_edge := first_step.position.x \
+		- (first_step.mesh as BoxMesh).size.x * 0.5
+	var deck_dock_edge := access_deck.position.x \
+		+ (access_deck.mesh as BoxMesh).size.z * 0.5 * access_deck.basis.z.x
+	if absf(first_step_outer_edge - deck_dock_edge) > 0.25:
+		_fail("gray platform gap remains between the skybridge and first dock stair")
+		return
+	# Walk the complete transition using ordinary right movement and no jump.
+	# Fix the active camera heading so right maps exactly toward the platform.
+	var test_camera := Camera3D.new()
+	gallery.add_child(test_camera)
+	test_camera.global_transform = Transform3D(Basis.IDENTITY,
+		gallery_station.to_global(Vector3(-37.0, 8.0, 16.0)))
+	test_camera.make_current()
+	# Gallery camera logic may reclaim viewport focus; pin the player's own
+	# camera reference so the scripted direction remains deterministic.
+	player.set("_camera", test_camera)
+	player.global_position = gallery_station.to_global(Vector3(-36.8, 3.0, 0.0))
+	player.velocity = Vector3.ZERO
+	if not await _settle(player):
+		_fail("player cannot stand at the bottom of the station ramp")
+		return
+	Input.action_press("move_right")
+	var reached_ramp_top := false
+	for _frame in 300:
+		await physics_frame
+		var live_ramp_position := gallery_station.to_local(player.global_position)
+		if live_ramp_position.x >= -6.5 and live_ramp_position.y >= 0.7:
+			reached_ramp_top = true
+			break
+	Input.action_release("move_right")
+	var player_at_ramp_top := gallery_station.to_local(player.global_position)
+	if not reached_ramp_top:
+		var collision_names: Array[String] = []
+		for collision_index in player.get_slide_collision_count():
+			var collider := player.get_slide_collision(collision_index).get_collider() as Node
+			if collider is StaticBody3D:
+				var collision_shape := collider.get_child(0) as CollisionShape3D
+				var box_size := (collision_shape.shape as BoxShape3D).size \
+					if collision_shape != null and collision_shape.shape is BoxShape3D else Vector3.ZERO
+				collision_names.append("%s local=%s size=%s" \
+					% [collider.get_path(), (collider as StaticBody3D).position, box_size])
+			else:
+				collision_names.append(str(collider.get_path()) if collider != null else "unknown")
+		_fail("player cannot walk from ground to platform without jumping " \
+			+ "(reached %s, velocity %s, input %.1f, collisions %s)" \
+			% [player_at_ramp_top, player.velocity, Input.get_action_strength("move_right"),
+				collision_names])
+		return
+	# Traverse the long stair shown in the reported screenshots. Its collision is
+	# the continuous access deck; decorative treads, gardens, posts and rails must
+	# remain outside the central lane for the complete island-to-station climb.
+	var access_deck_size := (access_deck.mesh as BoxMesh).size
+	player.global_position = access_deck.to_global(
+		Vector3(0.0, access_deck_size.y * 0.5 + 2.5, -access_deck_size.z * 0.5 + 2.0))
+	player.velocity = Vector3.ZERO
+	if not await _settle(player):
+		_fail("player cannot stand at the island end of the long station stair")
+		return
+	Input.action_press("move_right")
+	Input.action_press("run")
+	var reached_long_stair_top := false
+	for _frame in 600:
+		await physics_frame
+		var live_long_stair_position := gallery_station.to_local(player.global_position)
+		if live_long_stair_position.x >= -42.0 and live_long_stair_position.y >= -4.0:
+			reached_long_stair_top = true
+			break
+	Input.action_release("run")
+	Input.action_release("move_right")
+	var player_after_long_stair := gallery_station.to_local(player.global_position)
+	if not reached_long_stair_top:
+		_fail("player cannot walk through the pictured long station stair " \
+			+ "(reached %s)" % player_after_long_stair)
+		return
+	# Mind Spark keeps a compact stair between its circular court and train deck,
+	# while the former longest bridge remains absent from play and physics.
+	var mind_station := railway.get_node("StoryStations/Station_02_mind") as Node3D
+	if mind_station.get_node_or_null("KingdomAccessSkybridge") != null \
+			or mind_station.get_node_or_null("MindSparkStationAccessStairs") == null \
+			or mind_station.get_node_or_null("MindSparkLongAccessBridgeRemoved") == null:
+		_fail("Mind Spark station lacks its grounded stair or still contains the retired bridge")
+		return
+	var mind_stairs := mind_station.get_node("MindSparkStationAccessStairs") as Node3D
+	var island_connection := mind_station.get_node_or_null(
+		"MindSparkIslandConnectionStair") as Node3D
+	if mind_stairs.get_node_or_null("WalkableStairRampCollision") == null \
+			or island_connection == null \
+			or island_connection.get_node_or_null("WalkableIslandGroundRampCollision") == null \
+			or island_connection.get_node_or_null("IslandGroundLanding") == null \
+			or island_connection.get_node_or_null("StationCourtLanding") == null \
+			or island_connection.get_node_or_null("IslandStairStructuralSpine") == null \
+			or island_connection.get_node_or_null("IslandStairRainbowGuardLeft") == null \
+			or island_connection.get_node_or_null("IslandStairRainbowGuardRight") == null \
+			or not bool(island_connection.get_meta("connects_island_ground_to_station", false)) \
+			or not bool(island_connection.get_meta("matches_station_two_reference", false)) \
+			or int(island_connection.get_meta("rainbow_glass_guard_count", 0)) != 2 \
+			or int(island_connection.get_meta("visible_step_count", 0)) < 64 \
+			or not bool(mind_stairs.get_meta("grounded_to_station_court", false)) \
+			or not bool(mind_stairs.get_meta("station_one_stair_restored", false)) \
+			or mind_stairs.get_node_or_null("StationOneGroundLanding") == null \
+			or mind_stairs.get_node_or_null("StationOnePlatformLanding") == null \
+			or int(mind_stairs.get_meta("visible_central_step_count", 0)) != 16 \
+			or int(mind_stairs.get_meta("visible_full_width_riser_count", 0)) != 15 \
+			or not bool(mind_stairs.get_meta("full_width_stair_read", false)) \
+			or float(mind_stairs.get_meta("clear_centre_lane_m", 0.0)) < 5.4:
+		_fail("Mind Spark train stair is not restored, grounded, collision-backed, and player-clear")
+		return
+	var mind_first := mind_stairs.get_node("DockStep_01") as MeshInstance3D
+	var mind_last := mind_stairs.get_node("DockStep_16") as MeshInstance3D
+	var island_first := island_connection.get_node("IslandGroundStep_01") as MeshInstance3D
+	var island_last := island_connection.get_node("IslandGroundStep_72") as MeshInstance3D
+	if island_first.global_position.y > 1.0 \
+			or island_last.global_position.distance_to(mind_first.global_position) > 8.0:
+		_fail("Mind Spark station stair does not connect the nearby island ground to its upper flight")
+		return
+	player.global_position = island_first.to_global(Vector3.UP * 2.8)
+	player.velocity = Vector3.ZERO
+	if not await _settle(player):
+		_fail("player cannot stand on the Mind Spark island-ground stair landing")
+		return
+	var island_stair_target := island_last.global_position
+	var reached_station_court := false
+	Input.action_press("move_forward")
+	Input.action_press("run")
+	for _frame in 900:
+		var flat_island_target := Vector3(island_stair_target.x,
+			player.global_position.y + 5.0, island_stair_target.z)
+		test_camera.global_position = player.global_position + Vector3.UP * 6.0
+		test_camera.look_at(flat_island_target, Vector3.UP)
+		await physics_frame
+		if Vector2(island_stair_target.x - player.global_position.x,
+				island_stair_target.z - player.global_position.z).length() < 3.0:
+			reached_station_court = true
+			break
+	Input.action_release("run")
+	Input.action_release("move_forward")
+	if not reached_station_court:
+		_fail("player cannot walk from the nearby island ground to the Mind Spark station court")
+		return
+	for step_index in 16:
+		if mind_stairs.get_node_or_null("CentralDockStep_%02d" % (step_index + 1)) == null:
+			_fail("Mind Spark train stair is missing visible central tread %d" % (step_index + 1))
+			return
+	player.global_position = mind_first.to_global(Vector3.UP * 2.8)
+	player.velocity = Vector3.ZERO
+	if not await _settle(player):
+		_fail("player cannot stand at the foot of the Mind Spark train stair")
+		return
+	var mind_target := mind_last.global_position
+	var reached_mind_platform := false
+	Input.action_press("move_forward")
+	Input.action_press("run")
+	for _frame in 500:
+		var flat_target := Vector3(mind_target.x, player.global_position.y + 4.0,
+			mind_target.z)
+		test_camera.global_position = player.global_position + Vector3.UP * 5.0
+		test_camera.look_at(flat_target, Vector3.UP)
+		await physics_frame
+		if Vector2(mind_target.x - player.global_position.x,
+				mind_target.z - player.global_position.z).length() < 2.5:
+			reached_mind_platform = true
+			break
+	Input.action_release("run")
+	Input.action_release("move_forward")
+	if not reached_mind_platform or mind_station.to_local(player.global_position).y < 0.7:
+		_fail("player cannot walk the restored Mind Spark station stair onto the platform")
+		return
+	var west_removal := world.get_node_or_null("WestObservatoryRemoved") as Node3D
+	if world.get_node_or_null("WestObservatory") != null \
+			or world.get_node_or_null("WestObservatoryBridge") != null \
+			or west_removal == null \
+			or not bool(west_removal.get_meta("tower_removed", false)) \
+			or not bool(west_removal.get_meta("island_foundation_removed", false)):
+		_fail("West Observatory tower or its detached land still crowds the Mind station")
+		return
+	# Start on the Heart arrival court, not above the bridge: its instrument
+	# ring previously put a solid 18 m column directly across the ascent.
+	var heart_station := railway.get_node("StoryStations/Station_03_heart") as Node3D
+	var heart_landing: Vector3 = railway.call("get_station_landing", 2)
+	player.global_position = railway.to_global(heart_landing + Vector3(-5.0, 2.0, 0.0))
+	player.velocity = Vector3.ZERO
+	await physics_frame
+	if player.global_position.distance_to(railway.to_global(
+			heart_landing + Vector3(-5.0, 2.0, 0.0))) > 5.0:
+		_fail("leaving the Mind station pulls the player back from Heart Melody")
+		return
+	if not await _settle(player):
+		_fail("player cannot stand on the Heart Melody arrival court")
+		return
+	var heart_stairs := heart_station.get_node("AccessRamp") as Node3D
+	var heart_first := heart_stairs.get_node("DockStep_01") as Node3D
+	var heart_last := heart_stairs.get_node("DockStep_16") as Node3D
+	var side := signf(heart_first.position.x)
+	for target_local in [Vector3(side * 39.0, 0.0, 0.0), Vector3(heart_last.position.x, 0.0, 0.0)]:
+		var target: Vector3 = heart_stairs.to_global(target_local)
+		var reached := false
+		Input.action_press("move_forward")
+		Input.action_press("run")
+		for _frame in 1400:
+			var flat_target := Vector3(target.x, player.global_position.y + 5.0, target.z)
+			test_camera.global_position = player.global_position + Vector3.UP * 5.0
+			if Vector2(target.x - player.global_position.x, target.z - player.global_position.z).length() < 2.5:
+				reached = true
+				break
+			test_camera.look_at(flat_target, Vector3.UP)
+			await physics_frame
+		Input.action_release("run")
+		Input.action_release("move_forward")
+		if not reached:
+			var blockers: Array[String] = []
+			for ci in player.get_slide_collision_count():
+				blockers.append(str(player.get_slide_collision(ci).get_collider().get_path()))
+			_fail("Heart Melody stair approach blocked at %s by %s" % [heart_station.to_local(player.global_position), blockers])
+			return
+	if heart_station.to_local(player.global_position).y < 0.7:
+		_fail("Heart Melody stair did not reach platform height")
+		return
+	var stair_guard := access_stairs.get_node_or_null("StairGuardLeft") as Node3D
+	if stair_guard == null \
+			or String(stair_guard.get_meta("barrier_plan", "")) \
+				!= "rainbow_glass_gold_frame" \
+			or stair_guard.find_children(
+				"GlassWindow_*", "MeshInstance3D", true, false).is_empty():
+		_fail("station stairs still use a view-blocking solid guard wall")
+		return
+	# The station landing is a safe player point 2 m above the island. Verify
+	# the downhill top corner of the access deck itself meets the ground datum;
+	# using the player point as its centre previously left a ~2.9 m visible gap.
+	var deck_size := (access_deck.mesh as BoxMesh).size
+	var deck_landing_top := access_deck.to_global(
+		Vector3(0.0, deck_size.y * 0.5, -deck_size.z * 0.5))
+	var island_surface_y := railway.to_global(
+		railway.call("get_station_landing", 0) - Vector3.UP * 2.0).y
+	if absf(deck_landing_top.y - island_surface_y) > 0.05:
+		_fail("Gallery Station access deck still floats %.2fm above the island ground"
+			% (deck_landing_top.y - island_surface_y))
+		return
+	# Physical station platform supports running and a full jump cycle.
+	player.global_position = railway.to_global(station_position + Vector3(0, 6, 12))
+	player.velocity = Vector3.ZERO
+	if not await _settle(player):
+		_fail("Gallery Station platform does not physically support the player")
+		return
+	var platform_y := player.global_position.y
+	Input.action_press("jump")
+	await physics_frame
+	Input.action_release("jump")
+	var platform_peak := player.global_position.y
+	for _frame in 45:
+		await physics_frame
+		platform_peak = maxf(platform_peak, player.global_position.y)
+	if platform_peak - platform_y < 0.9:
+		_fail("player cannot jump over station-floor features")
+		return
+
+	# Physical passenger deck supports standing and jumping over its low bench.
+	player.global_position = railway.call("get_train_deck_position") + Vector3(0, 3, -2.5)
+	player.velocity = Vector3.ZERO
+	if not await _settle(player):
+		_fail("train passenger deck is not physically walkable")
+		return
+	var deck_y := player.global_position.y
+	Input.action_press("jump")
+	await physics_frame
+	Input.action_release("jump")
+	var deck_peak := player.global_position.y
+	for _frame in 45:
+		await physics_frame
+		deck_peak = maxf(deck_peak, player.global_position.y)
+	if deck_peak - deck_y < 0.9:
+		_fail("player cannot jump on the train passenger deck")
+		return
+
+	print("TRAIN_STATION_JUMP_TEST: PASS — station floor, boarding route, train deck, and jump clearance are physical")
+	quit()

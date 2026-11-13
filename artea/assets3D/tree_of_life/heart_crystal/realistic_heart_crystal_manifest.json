@@ -1,0 +1,19 @@
+{
+  "asset": "tree_of_life_realistic_heart_crystal",
+  "version": 1,
+  "source_blend": "assets3D/tree_of_life/heart_crystal/source/realistic_heart_crystal.blend",
+  "runtime_glb": "assets3D/tree_of_life/heart_crystal/glb/realistic_heart_crystal.glb",
+  "preview": "assets3D/tree_of_life/heart_crystal/renders/realistic_heart_crystal.png",
+  "dimensions_metres": {
+    "width": 16.13,
+    "height": 26.0,
+    "depth": 5.18
+  },
+  "outer_triangular_facets": 24,
+  "girdle_facets": 12,
+  "internal_core_facets": 8,
+  "internal_inclusions": 6,
+  "mesh_objects": 8,
+  "triangles": 176,
+  "runtime_animation": "Godot rotates complete Blender asset about local Y"
+}

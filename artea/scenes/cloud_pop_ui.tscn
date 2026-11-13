@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://djb02d8bw6pi7"]
+
+[ext_resource type="Script" uid="uid://csqtbu457hur7" path="res://scripts/cloud_pop_ui.gd" id="1_xd30s"]
+[ext_resource type="Texture2D" uid="uid://b72ryhthaq71k" path="res://assets/Clouds/Clouds BG.png" id="2_lwtep"]
+[ext_resource type="PackedScene" uid="uid://dim1lk4t7o8jm" path="res://scenes/cloud.tscn" id="3_lwtep"]
+[ext_resource type="FontFile" uid="uid://rmbn6b4oubxc" path="res://assets/Fonts/Cloud_finish_BOLD.ttf" id="4_6iu6h"]
+[ext_resource type="AudioStream" uid="uid://dgydqoer266ya" path="res://assets/SFX/formcloud.ogg" id="4_hyv5u"]
+[ext_resource type="FontFile" uid="uid://5kvgrbi8xgh3" path="res://assets/Fonts/Cloud_Finish_Buttons.ttf" id="5_xed2p"]
+[ext_resource type="AudioStream" uid="uid://14baqk2fiiow" path="res://assets/SFX/Peace - David Lastra.ogg" id="6_gbrvk"]
+
+[node name="CloudPopUI" type="Control" unique_id=2139526021]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -428.0
+offset_bottom = -392.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_stretch_ratio = 4.35
+localize_numeral_system = false
+mouse_filter = 2
+script = ExtResource("1_xd30s")
+
+[node name="Sky Background" type="Sprite2D" parent="." unique_id=349940752]
+position = Vector2(878.8601, 577.49994)
+scale = Vector2(3.6922498, 4.26103)
+texture = ExtResource("2_lwtep")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2117103109]
+
+[node name="Cloud Spawner" type="Node2D" parent="CanvasLayer" unique_id=2102923171]
+position = Vector2(10, 9)
+
+[node name="Cloud" parent="CanvasLayer/Cloud Spawner" unique_id=334368017 instance=ExtResource("3_lwtep")]
+position = Vector2(521, 270)
+scale = Vector2(1e-05, 1e-05)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1533504676]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+rotation = -0.00125291
+
+[node name="VSplitContainer" type="VSplitContainer" parent="CenterContainer" unique_id=698069152]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="CenterContainer/VSplitContainer" unique_id=1570108896]
+layout_mode = 2
+
+[node name="Line Edit" type="LineEdit" parent="CenterContainer/VSplitContainer/Control" unique_id=1983672303]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -224.19957
+offset_top = 159.52231
+offset_right = 425.8004
+offset_bottom = 217.52231
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_stretch_ratio = 0.0
+theme_override_fonts/font = ExtResource("4_6iu6h")
+theme_override_font_sizes/font_size = 45
+placeholder_text = "What are your thoughts?"
+alignment = 1
+max_length = 60
+expand_to_text_length = true
+
+[node name="ColorRect" type="ColorRect" parent="CenterContainer/VSplitContainer/Control" unique_id=1570505884]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.78431374, 1, 1, 1)
+
+[node name="Control2" type="Control" parent="CenterContainer/VSplitContainer" unique_id=260753275]
+layout_mode = 2
+
+[node name="Create Cloud" type="Button" parent="CenterContainer/VSplitContainer/Control2" unique_id=1716830571]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -154.35495
+offset_top = 271.60992
+offset_right = -2.35495
+offset_bottom = 319.60992
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_xed2p")
+theme_override_font_sizes/font_size = 36
+text = "Add Cloud"
+
+[node name="Pop Thoughts" type="Button" parent="CenterContainer/VSplitContainer/Control2" unique_id=1743364030]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 164.64856
+offset_top = 269.00958
+offset_right = 396.64856
+offset_bottom = 317.00958
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_xed2p")
+theme_override_font_sizes/font_size = 36
+text = "Start Popping!"
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1886318870]
+stream = ExtResource("4_hyv5u")
+pitch_scale = 1.29
+
+[node name="BGmusic" type="AudioStreamPlayer2D" parent="." unique_id=387026530]
+position = Vector2(640, 474)
+rotation = -0.00125291
+stream = ExtResource("6_gbrvk")
+volume_db = -20.0
+
+[node name="ErrorLabel" type="Label" parent="." unique_id=1858009231]
+layout_mode = 0
+offset_left = 257.0
+offset_top = 32.0
+offset_right = 1069.0
+offset_bottom = 102.0
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0.747449, 0.582691, 0.201977, 1)
+theme_override_constants/shadow_outline_size = 6
+theme_override_fonts/font = ExtResource("5_xed2p")
+theme_override_font_sizes/font_size = 70
+
+[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Create Cloud" to="." method="_on_create_cloud_pressed"]
+[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_create_cloud_pressed"]
+[connection signal="pressed" from="CenterContainer/VSplitContainer/Control2/Pop Thoughts" to="." method="_on_pop_thoughts_pressed"]

@@ -1,0 +1,16 @@
+{
+  "source_parts": 146,
+  "runtime_meshes": 8,
+  "triangles": 25160,
+  "materials": 4,
+  "moving_parts": [
+    "Drum",
+    "Pointer",
+    "ReplayLever",
+    "EventTile0",
+    "EventTile1",
+    "EventTile2"
+  ],
+  "source": "recorder_bay.blend",
+  "shell_source": "inspection_bay.blend"
+}
