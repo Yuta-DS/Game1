@@ -1,0 +1,73 @@
+{
+	"events": [
+		{
+			"button": "Scan evidence",
+			"description": "Reveal the first evidence plate",
+			"frame": 110
+		},
+		{
+			"button": "FEAR",
+			"description": "Test a wrong answer — progress must remain locked",
+			"frame": 169
+		},
+		{
+			"button": "FACT",
+			"description": "Correct the interpretation using the practice log",
+			"frame": 228
+		},
+		{
+			"button": "Scan evidence",
+			"description": "Read the prediction on plate two",
+			"frame": 287
+		},
+		{
+			"button": "FEAR",
+			"description": "One attempt cannot establish that every future attempt will fail",
+			"frame": 346
+		},
+		{
+			"button": "Scan evidence",
+			"description": "Read the observed action on plate three",
+			"frame": 405
+		},
+		{
+			"button": "FACT",
+			"description": "Three evidence plates secured",
+			"frame": 464
+		},
+		{
+			"button": "CHOOSE",
+			"description": "Try the wrong first link — the pattern resets gently",
+			"frame": 596
+		},
+		{
+			"button": "NOTICE",
+			"description": "Start with what actually happened",
+			"frame": 655
+		},
+		{
+			"button": "Undo",
+			"description": "Undo removes only the last link; evidence stays earned",
+			"frame": 714
+		},
+		{
+			"button": "NOTICE",
+			"description": "Observation: one attempt did not work",
+			"frame": 773
+		},
+		{
+			"button": "NAME",
+			"description": "Interpretation: notice the prediction about always failing",
+			"frame": 832
+		},
+		{
+			"button": "CHOOSE",
+			"description": "Action: pause and try one smaller step",
+			"frame": 891
+		}
+	],
+	"evidence_completed": true,
+	"memory_completed": true,
+	"result": "PASS",
+	"scope": "Native Compatibility automated station test; GUI button signals; camera cuts; not browser or continuous walking"
+}

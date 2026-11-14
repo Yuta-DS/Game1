@@ -1,0 +1,143 @@
+{
+  "date": "2026-08-29",
+  "structural_and_gameplay": [
+    {
+      "name": "castle_full_moss",
+      "exit_code": 0,
+      "diagnostics": "141:FULL_STAIR_MOSS_TEST: PASS — 88 existing wall surfaces; full spiral from 27.63m ground to 67.73m crown plus upper stair; materials, meshes and 909 collision shapes preserved\n147:ERROR: 6 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "castle_reference_style",
+      "exit_code": 0,
+      "diagnostics": "141:CASTLE_REFERENCE_STYLE_TEST: PASS — 1029 route stone surfaces, 133 batched patches, 20 aligned round windows; 438 colliders unchanged; original atlas preserved\n147:ERROR: 6 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "castle_rooftop_garden",
+      "exit_code": 0,
+      "diagnostics": "141:CASTLE_ROOFTOP_GARDEN_TEST: PASS — reference stone perimeter/curved masonry, animated iron torches, flush patterned court, medieval herb plots; aligned walls; sprint, court traversal, corners, landings and exits\n146:ERROR: 6 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "castle_royal_courtyard",
+      "exit_code": 0,
+      "diagnostics": "141:ROYAL_COURTYARD_TEST: PASS — 28 floor probes; 4 gate lanes both ways; full fire circuit; stairs up/down; 6 wall impacts/escapes; jump landing\n146:ERROR: 6 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "castle_spiral_route",
+      "exit_code": 0,
+      "diagnostics": "141:CASTLE_SPIRAL_ROUTE_TEST: PASS — three stair lanes and full crown circuit\n146:ERROR: 6 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "castle_royal_entry",
+      "exit_code": 0,
+      "diagnostics": "150:ROYAL_ENTRY_TEST: PASS — 54 tread/collider and 18 underside probes, 3 ascent/descent lanes, 4 wall impacts/escapes, jump landing, live gallery entry\n153:ERROR: 1 resources still in use at exit (run with --verbose for details).\n155:ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit.\n"
+    },
+    {
+      "name": "castle_rooftop_barrier_safety",
+      "exit_code": 0,
+      "diagnostics": "141:CASTLE_ROOFTOP_BARRIER_TEST: PASS — 6 walkable rooftop sections resisted sprint impacts and released the player cleanly\n146:ERROR: 6 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "castle_inner_roof_guard",
+      "exit_code": 0,
+      "diagnostics": "137:ERROR: refresh_slots called but inventory_data is null\n149:CASTLE_INNER_ROOF_GUARD_TEST: PASS — 50 edge probes, 7 sprint/oblique impacts and clean escapes\n154:ERROR: 8 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "castle_masonry_bridge",
+      "exit_code": 0,
+      "diagnostics": "137:ERROR: refresh_slots called but inventory_data is null\n149:CASTLE_MASONRY_BRIDGE_TEST: PASS — 3 lanes both ways; 72 floor/feet probes; 6 sprint impacts and escapes\n"
+    },
+    {
+      "name": "castle_royal_fountain",
+      "exit_code": 0,
+      "diagnostics": "141:CASTLE_ROYAL_FOUNTAIN_TEST: PASS — enlarged 3.3m basin, 42048 stone triangles, Blender mesh deformation, gravity droplets and 80 impact sprays; 8 solid rim probes, 8 impacts/escapes, full garden aisle and 3 landing exits\n"
+    },
+    {
+      "name": "castle_player_route",
+      "exit_code": 0,
+      "diagnostics": "149:CASTLE_PLAYER_ROUTE_TEST: PASS — packed player crossed crown gateway, full bridge, terrace, final ascent, castle threshold, and both diagonal bridge mouths\n154:ERROR: 6 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "art_castle_gallery_flow",
+      "exit_code": 0,
+      "diagnostics": "32:ERROR: Parse JSON failed. Error at line 0: Unknown error getting token\n36:ART_CASTLE_GALLERY_TEST: PASS — raised castle door, gallery artwork, walking player and interactive 3D world are connected\n"
+    },
+    {
+      "name": "world_minimap",
+      "exit_code": 0,
+      "diagnostics": "17:WORLD_MINIMAP_TEST: PASS — outside/inside atlases, live tracking, and full map toggle\n"
+    },
+    {
+      "name": "gallery_embedded_floating_world",
+      "exit_code": 0,
+      "diagnostics": "25:GALLERY_EMBEDDED_WORLD_TEST: PASS — centred non-overlapping carpet exit and 175m world bridge\n"
+    },
+    {
+      "name": "castle_stair_dynamics",
+      "exit_code": 0,
+      "diagnostics": "141:CASTLE_STAIR_DYNAMICS_TEST: PASS — player crossed terrain-to-crown uphill and downhill, landed both jump transitions, and loose props remained supported at lower/middle/upper stair sections\n"
+    },
+    {
+      "name": "train_station_jump_traversal",
+      "exit_code": 0,
+      "diagnostics": "25:TRAIN_STATION_JUMP_TEST: PASS — station floor, boarding route, train deck, and jump clearance are physical\n28:ERROR: 1 resources still in use at exit (run with --verbose for details).\n"
+    },
+    {
+      "name": "web_environment_compat",
+      "exit_code": 0,
+      "diagnostics": "4:PASS: Web sky, terrain, vegetation, and sea compatibility policy\n"
+    },
+    {
+      "name": "story_crown_railway",
+      "exit_code": 0,
+      "diagnostics": "22:STORY_CROWN_RAILWAY_TEST: PASS — climbable stations and player-driven Crown Line connect all four worlds\n"
+    }
+  ],
+  "new_unification_test": {
+    "name": "castle_main_keep_unification",
+    "exit_code": 0,
+    "result": "PASS; two aisles both ways, four turret impacts/escapes, ground/roof support, shared palette and single-owner coping"
+  },
+  "rendered": [
+    {
+      "name": "castle_reference_atlas_render",
+      "method": "mobile",
+      "exit_code": 0,
+      "summary": "REFERENCE_ATLAS_RENDER_TEST: PASS — mobile, four material roles match original castle atlas under identical lighting; maximum RGB delta 0.00392\n"
+    },
+    {
+      "name": "castle_material_render",
+      "method": "mobile",
+      "exit_code": 0,
+      "summary": "CASTLE_MATERIAL_RENDER_TEST: PASS — mobile, StandardMaterial and floor shader delta 0.00000\n"
+    },
+    {
+      "name": "castle_moss_render",
+      "method": "mobile",
+      "exit_code": 0,
+      "summary": "MOSS_RENDER_TEST: PASS — mobile, 12.9% of full-coat coverage retained; 5.91 colony edges/row; pattern stable; horizontal face unchanged\n"
+    },
+    {
+      "name": "castle_reference_atlas_render",
+      "method": "gl_compatibility",
+      "exit_code": 0,
+      "summary": "REFERENCE_ATLAS_RENDER_TEST: PASS — gl_compatibility, four material roles match original castle atlas under identical lighting; maximum RGB delta 0.00392\n"
+    },
+    {
+      "name": "castle_material_render",
+      "method": "gl_compatibility",
+      "exit_code": 0,
+      "summary": "CASTLE_MATERIAL_RENDER_TEST: PASS — gl_compatibility, StandardMaterial and floor shader delta 0.00000\n"
+    },
+    {
+      "name": "castle_moss_render",
+      "method": "gl_compatibility",
+      "exit_code": 0,
+      "summary": "MOSS_RENDER_TEST: PASS — gl_compatibility, 14.4% of full-coat coverage retained; 6.34 colony edges/row; pattern stable; horizontal face unchanged\n"
+    }
+  ],
+  "web": {
+    "deployed": false,
+    "browser_verified": false,
+    "reason": "Two referenced stylizedNature source glTF assets are missing"
+  }
+}
