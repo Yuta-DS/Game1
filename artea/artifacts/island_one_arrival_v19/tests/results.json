@@ -1,0 +1,182 @@
+[
+  {
+    "name": "test_mind_spark_celestial_land",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 5.014,
+    "passed": true,
+    "evidence": [
+      "CELESTIAL_LAND: PASS — six distinct designs, shared paving, 3223111 total visible triangles, original footprints, 72 support probes, no new obstacles"
+    ]
+  },
+  {
+    "name": "test_mind_spark_zone02_route_clearance",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 6.849,
+    "passed": true,
+    "evidence": [
+      "MIND_SPARK_ZONE02_ROUTE_CLEARANCE: PASS — player walked from the route onto Living Network ground with no slab obstruction"
+    ]
+  },
+  {
+    "name": "test_astral_castle_traversal",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 12.443,
+    "passed": true,
+    "evidence": [
+      "ASTRAL_CASTLE_TRAVERSAL: PASS — locked gate blocks; production capsule walked both approaches with the saved-path gate open"
+    ]
+  },
+  {
+    "name": "test_astral_refinement_v16",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 10.614,
+    "passed": true,
+    "evidence": [
+      "ASTRAL_V16: PASS — player-scale guard stops real capsule at four edges; 20:12 gears and constant-length rod verified; actor handles retained"
+    ]
+  },
+  {
+    "name": "test_hope_viaduct_v17",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 11.586,
+    "passed": true,
+    "evidence": [
+      "DAWN_V18: PASS — upper pavilion, truth portals, condenser houses and gardens built; real guard, gears, jump course and accessible lane retained"
+    ]
+  },
+  {
+    "name": "test_mind_spark_architecture_physics",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 8.401,
+    "passed": true,
+    "evidence": [
+      "MIND_SPARK_ARCHITECTURE_PHYSICS: PASS — bridge, six islands, story decks, textures, and real remote jump verified"
+    ]
+  },
+  {
+    "name": "test_mind_spark_transit_network",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 4.156,
+    "passed": true,
+    "evidence": [
+      "MindSparkTransitNetwork: PASS — 6 islands retain bridge ring and gain 3 reciprocal restored-world shortcuts"
+    ]
+  },
+  {
+    "name": "test_live_mind_spark_entry",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 5.963,
+    "passed": true,
+    "evidence": [
+      "LIVE_MIND_SPARK_ENTRY_TEST: PASS — Art Castle gate enters full six-island World One and returns"
+    ]
+  },
+  {
+    "name": "test_world_minimap",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 2.099,
+    "passed": true,
+    "evidence": [
+      "WORLD_MINIMAP_TEST: PASS — outside/inside atlases, live tracking, and full map toggle"
+    ]
+  },
+  {
+    "name": "test_art_castle_gallery_flow",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 6.44,
+    "passed": true,
+    "evidence": [
+      "ART_CASTLE_GALLERY_TEST: PASS — raised castle door, gallery artwork, walking player and interactive 3D world are connected"
+    ]
+  },
+  {
+    "name": "test_gallery_embedded_floating_world",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 5.976,
+    "passed": true,
+    "evidence": [
+      "GALLERY_EMBEDDED_WORLD_TEST: PASS — centred non-overlapping carpet exit and 175m world bridge"
+    ]
+  },
+  {
+    "name": "test_train_station_jump_traversal",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 21.702,
+    "passed": true,
+    "evidence": [
+      "TRAIN_STATION_JUMP_TEST: PASS — station floor, boarding route, train deck, and jump clearance are physical"
+    ]
+  },
+  {
+    "name": "test_story_crown_railway",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 2.592,
+    "passed": true,
+    "evidence": [
+      "STORY_CROWN_RAILWAY_TEST: PASS — climbable stations and player-driven Crown Line connect all four worlds"
+    ]
+  },
+  {
+    "name": "test_mind_spark_island_texture_coverage",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 4.423,
+    "passed": true,
+    "evidence": [
+      "MIND_SPARK_ISLAND_GEOMETRY_DETAIL: PASS — 6 celestial foundations, 48 batched land meshes; existing Bio-Data Tree detail and animation preserved"
+    ]
+  },
+  {
+    "name": "test_mind_spark_world_one_story",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 4.744,
+    "passed": true,
+    "evidence": [
+      "ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit."
+    ]
+  }
+]

@@ -1,0 +1,183 @@
+{
+	"echo_quest_complete": true,
+	"events": [
+		{
+			"accepted": true,
+			"control": "colour_prism",
+			"frame": 77,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "rhythm_prism",
+			"frame": 126,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "rhythm_prism",
+			"frame": 140,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "weight_prism",
+			"frame": 189,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "weight_prism",
+			"frame": 203,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "weight_prism",
+			"frame": 217,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "analysis_console",
+			"frame": 266,
+			"reason": "composition_analyzed"
+		},
+		{
+			"accepted": true,
+			"control": "west_regulator",
+			"frame": 315,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "east_regulator",
+			"frame": 364,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "east_regulator",
+			"frame": 378,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "outer_ring",
+			"frame": 427,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "outer_ring",
+			"frame": 441,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "outer_ring",
+			"frame": 455,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "middle_ring",
+			"frame": 504,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "middle_ring",
+			"frame": 518,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "inner_ring",
+			"frame": 567,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "confirm",
+			"frame": 616,
+			"reason": "completed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_collector",
+			"frame": 694,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_collector",
+			"frame": 708,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_collector",
+			"frame": 722,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_signal_1",
+			"frame": 771,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_signal_2",
+			"frame": 820,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_signal_2",
+			"frame": 834,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_signal_3",
+			"frame": 883,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_signal_3",
+			"frame": 897,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_signal_3",
+			"frame": 911,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_question",
+			"frame": 960,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_question",
+			"frame": 974,
+			"reason": "control_changed"
+		},
+		{
+			"accepted": true,
+			"control": "echo_question",
+			"frame": 988,
+			"reason": "control_changed"
+		}
+	],
+	"gate_open": true,
+	"recording": "native automated interactions; camera cuts; not browser",
+	"result": "PASS",
+	"signal_quest_complete": true
+}

@@ -1,0 +1,515 @@
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+
+
+ARTÉA • COMPLETE SHORT CAMPAIGN
+
+
+
+THREE WORLDS
+A 55–70 Minute Story, Quest, Combat & Godot Production Guide
+
+
+
+                                      01 MIND SPARK
+                 Technology / Science leads • Understand thoughts • Star of Wisdom
+
+
+                                   02 HEART MELODY
+                      Nature leads • Give feelings a safe voice • Harmony Jewel
+
+
+                                 03 CREATOR’S LIGHT
+                Magic / Creativity leads • Create without perfection • Creator’s Light
+
+ MAIN SCOPE DECISION Keep the full first campaign at 55–70 minutes. Each world is a short 14–16 minute
+ chapter with two quests and one boss. The game is not three times longer.
+
+
+                  Version 1.0 • 14 August 2026 • Prepared for David Sovann and the ARTÉA team
+
+
+
+
+                                                                                                THREE WORLDS • 1
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+CAMPAIGN DECISION
+
+Same Total Playtime, Three Complete Worlds
+The earlier 55–70 minute World One plan is now shared across Mind Spark, Heart Melody, and
+Creator’s Light.
+
+
+ DESIGNED PATH About 61 minutes: 5 minutes opening + 15 minutes per world + two 2-minute train
+ transitions + 7 minutes for the Castle finale. Exploration, retries, and optional reflection create the 55–70
+ minute player range.
+
+
+
+ Stage            Location                    Target     Story and gameplay
+
+                                                         Meet Mayor Milo, fight the tutorial, enter the castle, and see the
+Opening           ARTÉA Town + Art Castle     5–6 min
+                                                         locked train.
+
+World 1           Mind Spark                 14–16 min   Two quests, two enemy families, one boss, and the Star of Wisdom.
+
+Transition        First train unlock          1–2 min    Place the Star, wake the train, and ride to Heart Melody.
+
+World 2           Heart Melody               14–16 min   Two quests, two enemy families, one boss, and the Harmony Jewel.
+
+Transition        World Three route           1–2 min    Place the Jewel and ride to Creator’s Light.
+
+World 3           Creator’s Light            14–16 min   Two quests, two enemy families, one boss, and the Creator’s Light.
+
+                                                         Join the treasures, choose an identity, receive the Crown of Life, and
+Finale            ARTÉA Castle                5–7 min
+                                                         open free travel.
+
+
+Total content budget
+        3 worlds, each with 2 short quests and 1 three-stage boss.
+        6 normal monster designs, but only 2 shared Godot enemy script templates.
+        15 main story tasks: 5 tasks in each world, including the boss.
+        6 required game choices: 2 in each world. Personal questions stay optional.
+        Levels 1–5 across the complete campaign, not Levels 1–5 inside every world.
+        The Crown Railway cannot be ridden before World One is complete.
+
+ PLAYER VALUE RULE The player fights corrupted Blight shells and dangerous machines. Thoughts,
+ feelings, creativity, Milo, guardians, and friendly creatures are never treated as enemies.
+
+
+
+
+                                                                                                          THREE WORLDS • 2
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+PART 1
+
+The Complete Player Journey
+The three kingdoms are short chapters of one connected story. Every treasure changes the Art
+Castle and opens the next step.
+
+Opening — Mayor Milo asks for help
+ARTÉA Town • Meet the mayor and walk to the Art Castle
+
+The player arrives with a crystal sword. Mayor Milo explains that Static Blight creatures are draining the town
+and the Art Castle has gone dark. He asks for help and leads the player toward the castle. Two weak creatures
+teach movement, dodge, block, and sword attack. Milo opens the castle with the town key.
+
+The locked railway and the first gate
+Art Castle Main Gallery • Understand the full mission
+
+Inside the Gallery, the player sees three empty treasure displays and the Crown Railway behind a dark seal.
+Milo explains that the train has no power and cannot be ridden. The Mind Spark World Gate is the only open
+path. The player must recover the first treasure to wake the train, then use the train to reach the other
+kingdoms.
+
+Chapter One — Wisdom
+Mind Spark Kingdom • Understand one thought and free the Star of Wisdom
+
+The player clears Static Blight from a living computer forest, collects Thought Sparks, reads a simple pattern,
+and faces the Thought Storm Warden. The final Hope action frees the Guardian and turns the storm into
+gentle rain. The Star of Wisdom opens the return World Gate.
+
+First train ride — The heart route
+Art Castle Gallery Station • Wake the railway and travel to World Two
+
+The player places the Star in the Gallery. The dark railway seal breaks, and the train wakes for the first time.
+Mayor Milo and the player board together. Heart Melody becomes the first destination. The short ride shows
+Mind Spark shining behind them and the green valley ahead.
+
+Chapter Two — Feeling and connection
+Heart Melody Kingdom • Give feelings a safe voice and earn the Harmony Jewel
+
+The valley is silent because Discord Blight has trapped the instruments. The player fights the Blight shells,
+uses drums, bells, water, and flowers to express different feelings, and helps Milo reconnect the music
+machines. The Silent Conductor boss is defeated when the player combines different feeling sounds into one
+honest chord.
+
+
+
+
+                                                                                               THREE WORLDS • 3
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+
+Second train ride — The creation route
+Heart Melody Station • Place the Jewel and open World Three
+
+The Harmony Jewel powers the next railway line. The train plays the player’s short melody during the ride.
+Creator’s Light appears as a world of blank frames, floating shapes, glass seeds, and silver pipes waiting for
+imagination.
+
+Chapter Three — Creativity
+Creator’s Light Kingdom • Make one brave mark and earn the Creator’s Light
+
+Blank Blight creatures erase paths and cover useful objects. The player fights them, uses a small creation
+palette to make a bridge, door, tree, or light, and learns that art does not need to be perfect. The Perfect
+Blank boss falls when the player uses an unfinished creation as the final answer.
+
+Finale — The Crown of Life
+ARTÉA Castle • Join the three treasures and celebrate the player’s light
+
+The train returns to the castle. The Star of Wisdom, Harmony Jewel, and Creator’s Light become the Light of
+Identity. Milo offers two or three friendly identity suggestions, but the player may choose another or say, ‘I
+am still discovering.’ The Maker shapes the light into the Crown of Life. Free train travel and replay open as
+post-game rewards.
+
+
+
+
+                                                                                               THREE WORLDS • 4
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+PART 2 • WORLD ONE
+
+Mind Spark — The Wisdom Chapter
+Identity: Technology / Science leads • Treasure: Star of Wisdom
+
+
+ TIME 14–16 minutes total: Quest 1 (4–5 min) • Quest 2 (4–5 min) • Boss and reward (5–6 min).
+
+
+Mayor Milo enters through the World Gate with the player, explains the four goals, and then remains beside
+a safe Mayor’s Beacon. The player clears Blight, collects four Thought Sparks, repairs the Wisdom Path, and
+defeats the Thought Storm Warden.
+
+      #     Quest              Required fight              Other tasks                        Short choice                     Unlock
+
+                               2 Static Mites + 1 Glitch   Power 1 forest node; collect 2     Which root still has no
+      1     Wake the Network                                                                                                  Court opens.
+                               Sprout                      Sparks.                            power?
+
+                               1 Static Mite + 1 Glitch    Move 3 points; collect 2 Sparks;   Is this happening now, or       Boss path
+      2     Read the Pattern
+                               Sprout                      choose fact or fear.               might it happen?                opens.
+
+            Thought Storm                                  Power 3 anchors; break shield;     What is one helpful next        Star and
+     Boss                      Boss + up to 2 Mites
+            Warden                                         attack core; place Hope.           step?                           return gate.
+
+
+
+Boss alignment
+1.     Focus: defeat two summoned Mites and switch on three anchors.
+      2. Understand: move the three shield points into the clear pattern.
+      3. Act: strike the exposed core during two openings, then place the Hope tile instead of making a killing blow.
+
+World One result
+       The storm becomes gentle rain and the Star grows from the Oldest Tree.
+       The player reaches Level 2 and gains 110 maximum health.
+       The player returns through the World Gate. The train wakes only after the Star is placed in the Gallery.
+
+
+
+
+                                                                                                                        THREE WORLDS • 5
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+PART 3 • WORLD TWO
+
+Heart Melody — The Feeling Chapter
+Identity: Nature leads; Technology and Magic support • Treasure: Harmony Jewel
+
+
+ TIME 14–16 minutes total: Quest 1 (4–5 min) • Quest 2 (4–5 min) • Boss and reward (5–6 min).
+
+
+The player and Mayor Milo arrive by train. Waterfalls, flowers, drums, bells, and glowing strings fill the valley,
+but the music is trapped inside Discord Blight. Feelings are not the enemy. The player fights only the shell
+that is stopping the feelings from being expressed safely.
+
+      #     Quest               Required fight        Other tasks                          Short choice                     Unlock
+
+            Wake the Feeling                          Touch 3 flowers and match joy,                                        Drum bridge
+      1                         2 Echo Moths                                               Which sound fits this feeling?
+            Garden                                    sadness, or fear to a sound.                                          opens.
+
+            Build the Harmony                         Play 3 drum beats; Milo turns them   What is a safe way to show       Boss stage
+      2                         2 Rhythm Golems
+            Bridge                                    into platforms.                      this feeling?                    opens.
+
+                                                      Restore 3 instruments; block sound   Which two feelings can sing      Harmony
+     Boss   Silent Conductor    Boss + 2 Echo Moths
+                                                      waves; attack mute core.             together?                        Jewel.
+
+
+
+Boss alignment
+1.     Listen: defeat the Echo Moths and turn on drums, bells, and strings.
+      2. Respond: dodge or block the Conductor’s clear sound rings in the shown rhythm.
+      3. Connect: attack the mute core during two openings, then play one chord made from two different feeling
+          sounds.
+
+World Two result
+       The valley’s full song returns, with all feelings represented as colours and sounds.
+       The player reaches Level 3 and unlocks the strong sword attack.
+       The Harmony Jewel powers the Creator’s Light route on the train map.
+
+
+
+
+                                                                                                                  THREE WORLDS • 6
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+PART 4 • WORLD THREE
+
+Creator’s Light — The Creativity Chapter
+Identity: Magic / Creativity leads; Technology and Nature support • Treasure: Creator’s Light
+
+
+ TIME 14–16 minutes total: Quest 1 (4–5 min) • Quest 2 (4–5 min) • Boss and reward (5–6 min).
+
+
+The world contains blank frames, floating shapes, glass seeds, and silver pipes. It is waiting for the player’s
+imagination. To keep the short campaign realistic in Godot, the player uses simple shapes, colours, and
+picture stamps. The game changes approved artwork into prebuilt 3D objects; it does not need to turn any
+freehand drawing into a new 3D mesh.
+
+      #     Quest                 Required fight         Other tasks                              Short choice                     Unlock
+
+                                                                                                                                   Creation
+                                                         Choose shapes and create 1 bridge or
+      1     Make the First Mark   3 Ink Sprites                                                   Which tool helps you continue?   garden
+                                                         door from a stamp.
+                                                                                                                                   opens.
+
+                                                                                                                                   Perfect
+            Grow the Creation                            Create a tree or light; choose colour;   What do you like about your
+      2                           2 Blank Sentinels                                                                                Blank
+            Garden                                       grow 3 glass seeds.                      creation?
+                                                                                                                                   opens.
+
+                                                         Create cover; stop eraser waves;         Will you share one unfinished    Creator’s
+     Boss   The Perfect Blank     Boss + 2 Ink Sprites
+                                                         attack blank core.                       picture?                         Light.
+
+
+
+Boss alignment
+1.     Begin: place a bridge, shield, or light stamp so the player can reach the arena core.
+      2. Try again: dodge eraser waves, rebuild one removed object, and defeat the Ink Sprites.
+      3. Share: strike the exposed Blank core during two openings, then place an unfinished picture into the final
+         frame.
+
+World Three result
+       The empty space grows into a landscape using colours and shapes chosen by the player.
+       The player reaches Level 5 by the end of the world and receives one post-game skill point.
+       The Creator’s Light completes the treasure set and opens the Art Castle finale.
+
+
+
+
+                                                                                                                         THREE WORLDS • 7
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+PART 5
+
+Combat, Monsters & XP Across Three Worlds
+The normal enemies change their art and one main attack, but reuse only two Godot script
+templates.
+
+  World         Enemy                        Shared script                      HP           XP   One main attack
+
+   W1           Static Mite                 MobileEnemyBase                     25           10   Ground lunge; one sword hit.
+
+   W1           Glitch Sprout               GuardEnemyBase                      50           15   Seed shot; open core after firing.
+
+   W2           Echo Moth                   MobileEnemyBase                     50           20   Flying sound ring; block or dodge.
+
+   W2           Rhythm Golem                GuardEnemyBase                      75           30   Two-beat ground slam; attack during pause.
+
+   W3           Ink Sprite                  MobileEnemyBase                     25           10   Ink dash; one sword hit after the dash.
+
+   W3           Blank Sentinel              GuardEnemyBase                      75           30   Eraser shield; attack when the frame opens.
+
+
+
+Boss scope
+ Boss                                     Health        Three-stage structure                                                     Reward
+
+Thought Storm Warden                    200 core HP     Anchors → pattern → two damage openings → Hope action                    50 XP + Star
+
+                                                        Instruments → sound rhythm → two damage openings → harmony
+Silent Conductor                        200 core HP                                                                              75 XP + Jewel
+                                                        chord
+
+Perfect Blank                           200 core HP     Create cover → eraser pattern → two damage openings → unfinished art     100 XP + Light
+
+
+
+Level plan
+
+    Level                    Total XP        Reward
+
+        1                      0 XP         Start: light attack, block, dodge, 100 health.
+
+        2                     100 XP        After World One: 110 health.
+
+        3                     250 XP        During or after World Two: strong sword attack.
+
+        4                     430 XP        During World Three: perfect block can return a projectile.
+
+        5                     600 XP        End of World Three: post-game skill point and free travel.
+
+    Each of the six normal quests gives 15 completion XP. Required fights, three bosses, and these six rewards
+     give about 645 XP in total.
+    The player reaches Level 2 after World One, Level 3 in World Two, Level 4 in World Three, and Level 5 after
+     the final boss. No grinding is needed.
+    Keep a maximum of three normal enemies active in the short campaign, or two normal enemies during a
+     boss phase.
+    Player defeat returns to the last checkpoint with XP, treasures, completed tasks, and solved puzzles kept.
+
+
+
+
+                                                                                                                              THREE WORLDS • 8
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+PART 6
+
+Godot 4.7 Production Plan
+The three-world campaign stays possible by sharing code, limiting unique systems, and building
+pre-authored content instead of expensive procedural technology.
+
+
+ CURRENT PROJECT FIT The ARTÉA player already has health, sword attack, block, Area3D hit detection,
+ and take_damage(amount, source). All enemies and bosses should use this contract.
+
+
+
+ Godot item                    Implementation rule
+
+                               CharacterBody3D, simple collision, detection Area3D, attack Area3D, optional hover setting, AnimationPlayer,
+MobileEnemyBase.tscn
+                               health, XP, and one attack timer.
+
+                               CharacterBody3D, simple collision, open/closed hurt state, AnimationPlayer, health, XP, and one ranged, slam,
+GuardEnemyBase.tscn
+                               or shield attack.
+
+                               CharacterBody3D, 200 core HP, phase enum, two core openings, three interaction nodes, checkpoint signal,
+BossBase.tscn
+                               reward signal, and final non-killing interaction.
+
+                               Stores world completion, treasure ownership, train routes, level, XP, quest steps, checkpoints, optional
+CampaignState
+                               answers, and post-game free travel.
+
+                               A short real ride scene with destination lock states. Before World One: no ride action. After each treasure: add
+Crown Railway
+                               only the next route.
+
+Mind Spark puzzle              Three selectable pattern points, four Sparks, two nodes, simple choice UI, and two world lighting states.
+
+                               Four pre-recorded sound loops, quantized buttons, three instruments, moving platforms, and one combined
+Heart Melody puzzle
+                               final chord.
+
+                               Use four prebuilt object stamps—bridge, door, tree, light—with chosen colour/material. Do not generate
+Creator’s Light tool
+                               arbitrary 3D meshes from drawings.
+
+                               For mobile/GL Compatibility: low-poly meshes, 1–2 materials per enemy, simple shadows, short particles,
+Renderer limits
+                               limited transparent layers, and LOD meshes.
+
+
+
+Build order
+1.    Finish the town, castle entrance, locked railway, and Mind Spark World Gate state.
+     2. Build the two shared enemy bases and prove all six enemy variations work with the current sword.
+     3. Build one BossBase and test the Mind Spark boss before making the other boss variations.
+     4. Finish the full World One loop and first train unlock.
+     5. Add Heart Melody using pre-recorded sounds and existing platform systems.
+     6. Add Creator’s Light using prebuilt stamps and colour/material choices.
+     7. Connect the three treasures, Castle finale, identity choice, Crown of Life, and free travel.
+     8. Test the 55–70 minute target, mobile frame rate, saving, checkpoints, combat assist, and reduced motion.
+
+ DO NOT OVERBUILD Do not create a full procedural music engine, AI drawing-to-3D system, six separate
+ enemy codebases, or three different train systems for this short campaign.
+
+
+
+
+                                                                                                                         THREE WORLDS • 9
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+PART 7
+
+Castle Finale & Acceptance Checklist
+The final 5–7 minutes bring the three discoveries together without adding a fourth full world.
+
+Finale sequence
+1.    The train returns from Creator’s Light and enters Celebration Mode.
+     2. The player places the Creator’s Light beside the Star of Wisdom and Harmony Jewel.
+     3. The three treasures become the Light of Identity.
+     4. Milo shows two or three friendly identity suggestions based on saved choices.
+     5. The player chooses one, selects another, or chooses ‘I am still discovering.’
+     6. The Maker creates the Crown of Life and reminds the player that the treasures did not create their value.
+     7. A star receives the player’s chosen name or symbol. Free railway travel and world replay open.
+
+ FINAL MESSAGE Your story matters. You are uniquely created. Your light has a place in this universe.
+
+
+
+The campaign is ready when
+     ☐ A normal first playthrough finishes in 55–70 minutes, including all three worlds and the Castle finale.
+     ☐ World One can be entered without riding the train, and the train stays sealed until the Star is placed.
+     ☐ Each world contains exactly two short quests, two normal enemy families, and one three-stage boss.
+     ☐ All required fights and story rewards give enough XP to reach Level 5 without grinding.
+     ☐ The player can finish the story after a defeat without losing XP, treasure, solved puzzles, or completed tasks.
+     ☐ Feelings, thoughts, creativity, Milo, guardians, and friendly creatures are never attack targets.
+     ☐ Heart Melody uses pre-recorded sounds and Creator’s Light uses prebuilt object stamps, keeping both
+       systems practical in Godot.
+     ☐ World completion, treasure placement, train routes, levels, XP, checkpoints, and the finale save and load
+       correctly.
+     ☐ No normal encounter has more than three enemies, and the project meets the mobile/GL Compatibility
+       frame-rate target.
+     ☐ Subtitles, larger text, symbols, combat assist, reduced motion, checkpoints, optional reflection, and skip work
+        correctly.
+
+
+
+
+                                                                                                    THREE WORLDS • 10
+ARTÉA / THREE-WORLD CAMPAIGN GUIDE
+
+
+                              ARTÉA • THE COMPLETE SHORT JOURNEY
+
+
+                   THINK • FEEL • CREATE
+
+                                           Mind Spark
+                                      Understand your thoughts.
+
+
+                                         Heart Melody
+                                     Give your feelings a safe voice.
+
+
+                                         Creator’s Light
+                                Create with courage, not perfection.
+
+
+
+               55–70 MINUTES • THREE TREASURES • ONE CONNECTED STORY
+
+
+
+
+                                                                        THREE WORLDS • 11
+

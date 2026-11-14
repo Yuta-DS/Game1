@@ -1,0 +1,697 @@
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+
+                               GAME STORY AND GAME DESIGN
+
+
+
+
+                                      ARTÉA
+             The Journey to Discover Your Light
+
+               A simple story built with Nature, Magic, and Technology
+
+
+
+  THE HEART OF THE GAME The player is not broken. The player already has light inside
+  them. The journey helps them understand their mind, listen to their heart, use their
+  creativity, and discover their gifts.
+
+
+
+
+                                      Prepared by: S2603
+                                     David Sovann - 22105280
+                                    Corey Thomas - 19048198
+                                     Javid Rezaee - 22037307
+                                          Denis Gao - 22090561
+                                          Aaron Lai - 22037345
+
+
+
+
+                                                                 Simple Story and Game Design | Page 1
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+1. The Main Game Idea
+
+ARTÉA is a story about a young person discovering the light inside them. The player travels
+through ARTÉA Town with Milo, a friendly glowing AI helper. Together, they visit three special
+kingdoms and return to the ARTÉA Castle for a joyful celebration.
+
+What the world looks like
+
+The whole game mixes three ideas.
+
+  • Nature brings trees, flowers, water, weather, animals, and growth.
+
+  • Magic brings glowing light, treasures, guardians, stars, and wonder.
+
+  • Technology brings Milo, computer paths, musical machines, and art that becomes real.
+
+The journey
+
+  • First, the player learns to understand their thoughts.
+
+  • Next, the player learns to express their feelings.
+
+  • Then, the player uses art to show their creativity.
+
+  • Finally, the player discovers their strengths, identity, and purpose.
+
+The places already inside ARTÉA
+
+ARTÉA Town: The safe centre of the game. The player can explore, meet Milo, and choose
+where to go next.
+Three game buildings: Each building is a doorway to one of the three kingdoms.
+ARTÉA Gallery: The place where the player can see their thoughts, music, art, memories, and
+treasures.
+ARTÉA Castle: The final place where every discovery comes together.
+
+How the story begins
+
+ARTÉA Town has become quiet. The castle still stands, but its light is sleeping. The paths
+between the Mind, Heart, and Creative worlds are no longer connected.
+
+When the player arrives, Milo wakes up. He tells the player that the castle is not broken. It is
+waiting for a new story and a new light.
+
+
+
+
+                                                                  Simple Story and Game Design | Page 2
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+   Milo
+   “The castle can see something special in you. Let us discover your light together.”
+
+
+2. The Connected Crown of Life Journey
+
+The three mini games are not separate activities. They are three chapters of one connected
+adventure. Every world helps the player discover something beautiful that is already growing
+inside them.
+
+The castle and Gallery universe
+
+The ARTÉA Castle is the centre of the whole journey. Inside the castle is a living universe filled
+with stars, music, colour, memories, and artwork. The ARTÉA Gallery is the place where every
+discovery becomes part of the player’s personal story.
+
+After each kingdom, the player returns to the town or Gallery. They can see that their new
+treasure has changed the castle. This makes every world feel connected to the same
+adventure.
+
+The player is discovering, not repairing
+
+The player is not collecting broken pieces, because the player is not broken. They are
+discovering inner treasures that were already waiting to be seen.
+
+  • Inner strengths
+
+  • Special gifts
+
+  • Lights of hope
+
+  • Jewels of identity
+
+  • Creative possibilities
+
+The three treasures
+
+The Star of Wisdom: Found in Mind Spark Kingdom. It shows wisdom, courage, hope, and the
+strength to understand thoughts.
+The Harmony Jewel: Found in Heart Melody Kingdom. It shows emotional awareness,
+kindness, connection, and the courage to express feelings.
+The Creator’s Light: Found in Creator’s Light Kingdom. It shows imagination, creativity,
+identity, and the power to share a unique gift.
+
+
+
+                                                                 Simple Story and Game Design | Page 3
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+What the treasures reveal
+
+  • Wisdom
+
+  • Courage
+
+  • Emotional awareness
+
+  • Creativity
+
+  • Kindness
+
+  • Identity
+
+  • Purpose
+
+The Rainbow Galaxy Train
+
+The Rainbow Galaxy Train is the main way to travel through the castle universe. Its home is the
+ARTÉA Gallery Station. The railway connects the Gallery, Mind Spark Kingdom, Heart Melody
+Kingdom, and Creator’s Light Kingdom.
+
+The train is not only a travel menu. The player rides inside it, controls it, looks out of the
+windows, and watches the worlds change as the journey grows.
+
+The main Crown Line
+
+  MAIN ROUTE ARTÉA Gallery → Mind Spark Kingdom → Heart Melody Kingdom →
+  Creator’s Light Kingdom → ARTÉA Gallery
+
+During the first story journey, the train follows this main route in order. The next world opens
+only after the player completes the current world and brings its treasure back to the Gallery.
+
+How each station unlocks
+
+At the beginning: Only ARTÉA Gallery Station and Mind Spark Station are open.
+After World One: Mind Spark Station stays open. The player can return to it, and Heart Melody
+Station becomes the next story stop.
+After World Two: Heart Melody Station stays open. Creator’s Light Station becomes the next
+story stop, and the shortcut controls wake up.
+After World Three: Every station and every route is open. The player can travel freely and
+enjoy the complete galaxy railway.
+
+
+
+
+                                                                    Simple Story and Game Design | Page 4
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+The Star Shortcut Lines
+
+The shortcut railway gives the player freedom after a world has been unlocked. At any open
+station, the player enters the train cabin and turns the Destination Wheel towards the world they
+want to visit.
+
+  SHORTCUT ROUTES ARTÉA Gallery ↔ Any unlocked world                       Any unlocked world ↔
+  Another unlocked world
+
+When the player chooses a shortcut, glowing rails grow across the galaxy and connect to the
+chosen station. The journey is faster than the main route, but it is still a real train ride. The
+player experiences the movement and scenery instead of jumping instantly to another world.
+
+How the player controls the train
+
+Destination Wheel: Turn the large wheel towards the symbol of an unlocked world.
+Speed Lever: Move slowly for sightseeing or move faster for a shorter journey.
+Brake Handle: Slow down near views, memory stars, animals, artwork, or stations.
+Light Bell: Ring the bell to wake glowing flowers, musical stars, and friendly creatures beside
+the track.
+Milo Drive: The player can ask Milo to drive automatically at any time.
+
+The view after each world
+
+The railway scenery changes after every completed world. When the player rides past Mind
+Spark Kingdom, they can see the clear thought paths and the forest growing again. Near Heart
+Melody Kingdom, they can hear their personal song and see musical waterfalls. Near Creator’s
+Light Kingdom, they can see their artwork living in the landscape.
+
+This makes the train ride part of the reward. The player can relax, enjoy the view, remember
+what they achieved, and choose where the journey goes next.
+
+The Crown of Life
+
+At the end of the journey, the player brings all three treasures to the Maker inside the ARTÉA
+Castle. The treasures join together and become the Light of Identity. The Maker shapes this
+light into the Crown of Life.
+
+The Crown of Life represents the player’s unique identity, strengths, creativity, purpose, and
+story. It does not give the player value. It celebrates the value and light that were already inside
+them.
+
+A new star appears in the castle universe with the player’s chosen name or symbol.
+
+
+
+                                                                     Simple Story and Game Design | Page 5
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+    The message
+    “Your story matters. You are uniquely created. Your light has a place in this universe.”
+
+
+3. World One: The Mind Spark Kingdom
+
+  THEME I can understand my thoughts.
+
+Treasure: The Star of Wisdom
+Guardian: Everlasting Father, who stands for truth and wisdom
+
+The story
+
+The player enters a dark forest. The trees look like giant computer towers, but leaves and
+glowing vines grow around them. Small lights called Thought Sparks float between the trees.
+
+Some Thought Sparks are worries. Some are fears. Some are dreams and hopes. All of them
+are mixed together, so the player cannot see a clear path through the forest.
+
+    Milo
+    “Every thought is trying to tell us something. We can slow down, look closely, and
+    choose where it should go.”
+
+How the game works
+
+Step 1: Find the thought dots: Thoughts appear as glowing dots joined by lines. The player
+moves the dots until the lines are clear and easy to follow.
+Step 2: Choose the thought: The player chooses one thought, such as “I am not good
+enough” or “Something bad will happen.”
+Step 3: Move through the gates: The player guides the thought through simple gates. One
+gate asks if the thought is a fear. Another asks if there is proof. Another asks what else might be
+true.
+Step 4: Find a new path: The player chooses a kinder and more helpful thought. For example,
+“I am not good enough” can become “I am learning and growing.”
+Step 5: Light the forest: The new thought becomes a bright path. Trees wake up, flowers
+open, and the player can continue.
+
+
+
+
+                                                                 Simple Story and Game Design | Page 6
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+The final challenge
+
+At the centre of the forest is a large storm made from many worried thoughts. The player does
+not fight the storm. The player slows it down, looks at one thought at a time, and finds a hopeful
+path through it.
+
+When the storm becomes gentle rain, the Star of Wisdom grows from the roots of the oldest
+tree.
+
+    Everlasting Father
+    “You found the courage to understand your thoughts and choose hope.”
+
+What the player learns
+
+  • A thought is not always a fact.
+
+  • Difficult thoughts can be understood.
+
+  • The player can choose a helpful next step.
+
+  • Asking Milo for help is a sign of courage.
+
+
+4. World Two: The Heart Melody Kingdom
+
+  THEME My feelings have a voice.
+
+Treasure: The Harmony Jewel
+Guardian: Archangel Raphael, who stands for healing
+
+The story
+
+The player enters a green valley filled with waterfalls, flowers, and giant musical instruments.
+The instruments are connected to glowing machines. The valley should be full of music, but
+everything is quiet because the feelings are stuck.
+
+Joy, sadness, frustration, fear, peace, and hope each have their own sound. The player and
+Milo must help every feeling find its voice.
+
+    Raphael
+    “A healthy heart does not sing only happy songs. Every feeling needs a safe place in the
+    music.”
+
+
+
+
+                                                                  Simple Story and Game Design | Page 7
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+How the game works
+
+The player controls Nature and Magic: The player touches flowers, water, drums, bells, and
+glowing strings to express a feeling.
+Milo controls Technology: Milo uses machines to turn the feeling into moving platforms,
+bridges, lights, and safe paths.
+They must work together: The player cannot finish the puzzle alone. Milo cannot finish it
+alone. Feeling and support must work together.
+
+Example game moments
+
+  • The player hits large drums to express frustration. Milo turns each drum beat into a solid
+     platform.
+
+  • The player plays soft notes for sadness. Milo turns the notes into raindrops that lift a boat.
+
+  • The player rings warning bells for fear. Milo shows which paths are safe and which paths
+     need more care.
+
+  • The player grows quiet flowers for peace. Milo slows the machines so the whole valley can
+     rest.
+
+  • The player creates a hopeful tune. Milo carries the tune into the sky and wakes the
+     morning light.
+
+Building the player’s song
+
+Every puzzle adds one new sound to the music. At the end, the sounds join together. The final
+song is different for every player because it is made from their choices.
+
+The Harmony Jewel appears inside the final note. All the feelings can still be seen as colours
+inside the jewel.
+
+   Raphael
+   “Your feelings matter. Your heart has a beautiful voice.”
+
+What the player learns
+
+  • Feelings are not good or bad.
+
+  • Feelings can be expressed in safe ways.
+
+  • Different feelings can exist together.
+
+
+
+
+                                                                 Simple Story and Game Design | Page 8
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+  • Support and connection can help the heart find balance.
+
+
+5. World Three: The Creator’s Light Kingdom
+
+  THEME I was created to create.
+
+Treasure: The Creator’s Light
+Guardian: Uriel, who stands for imagination
+
+The story
+
+The player enters an empty world filled with floating shapes and blank frames. Plants are
+waiting inside glass seeds. Rivers are waiting inside silver pipes. The world has everything it
+needs, but it needs the player’s imagination to wake up.
+
+Uriel gives the player a glowing frame. Anything drawn inside the frame can become part of the
+world.
+
+   Uriel
+   “You do not need a perfect idea. Make one small mark, and the world will answer.”
+
+How the game works
+
+Step 1: Milo gives a simple art question: Milo might ask, “Draw a door that leads to your
+dreams” or “Draw a place where your feelings can rest.”
+Step 2: The player creates art: The player can draw, paint, use shapes, add colours, or
+choose simple picture stamps.
+Step 3: The art becomes real: The player holds the picture in front of the world. The flat picture
+changes into a real object that can be used inside the game.
+Step 4: The player explores the new creation: A drawn bridge can be crossed. A drawn door
+can be opened. A drawn tree can be climbed. A drawn light can brighten a dark room.
+Step 5: Milo asks a gentle question: Milo asks what the player likes, what the picture means,
+or what strength the player used. The player can answer, keep it private, or skip.
+
+The final challenge
+
+At the end is a huge empty space called the Perfect Blank. It says that nothing is ready and
+nothing is good enough. The player discovers that the answer is not perfect art. The answer is
+the courage to begin.
+
+
+
+
+                                                                 Simple Story and Game Design | Page 9
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+The player places one unfinished picture into the empty space. Milo adds one small light. The
+whole world grows around their shared creation.
+
+The Creator’s Light appears as a glowing flame that carries colours from the player’s artwork.
+
+   Uriel
+   “Your creativity is a gift that only you can share with the world.”
+
+What the player learns
+
+  • There is no wrong way to be creative.
+
+  • Art does not need to be perfect.
+
+  • Trying again is part of creating.
+
+  • The player’s ideas and story matter.
+
+
+6. The ARTÉA Castle Finale
+
+  THEME You are uniquely created with purpose.
+
+Returning to the castle
+
+The player returns to ARTÉA Town with the Star of Wisdom, the Harmony Jewel, and the
+Creator’s Light. The town now shows everything the player discovered. Bright thought paths
+shine above the trees. The player’s song can be heard near the fountain. Their artwork appears
+inside the Gallery.
+
+The doors of the ARTÉA Castle open. The Rainbow Galaxy Train enters Celebration Mode. It
+carries the player around the complete Crown Line so they can see all three worlds shining
+together.
+
+The Light of Identity
+
+Inside the castle, the three treasures float together. The Star brings wisdom. The Jewel brings
+feeling and connection. The Flame brings creativity. Together, they become the Light of Identity.
+
+The game remembers the paths the player chose, the way they worked with Milo, the music
+they made, and the art they created. It uses these choices to suggest one of 16 game identities
+based on the 16 MBTI types.
+
+  IMPORTANT The identity is a guide, not a box. No type is better than another. The player
+  can choose a different identity if another one feels more like them.
+
+
+
+                                                                  Simple Story and Game Design | Page 10
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+The Crown of Life
+
+The Maker, who is also called the Prince of Peace, welcomes the player. The Maker reminds
+the player that they were already known, loved, and valuable before they found any treasure.
+
+The Maker shapes the three treasures and the player’s identity light into the Crown of Life. The
+crown celebrates the player’s thoughts, feelings, creativity, strengths, and growing purpose.
+
+   The Maker
+   “These treasures did not make you valuable. They helped you see the light that was
+   already inside you.”
+
+The celebration
+
+  • A star appears with the player’s chosen name or symbol.
+
+  • The Rainbow Galaxy Train travels past the thoughts the player changed.
+
+  • The player hears the song they created in Heart Melody Kingdom.
+
+  • The player sees their artwork growing across the universe.
+
+  • Milo celebrates every brave moment and every new discovery.
+
+   Milo
+   “Your story matters. You are uniquely created. Your light has a place in this universe.”
+
+
+7. The 16 Game Identities
+
+Each identity shows a possible way the player can use their strengths. These are based on the
+16 MBTI types. The child sees the friendly game name and simple purpose. Adult guides can
+connect the name to the MBTI code if needed.
+
+  Your Game Identity                 Your Purpose
+
+
+  The Guiding Light                  To help people grow and believe in themselves.
+
+  The Quiet Visionary                To see hidden meaning and bring deep healing.
+
+  The Joyful Creator                 To use imagination and bring hope to others.
+
+  The Gentle Peacemaker              To create safe spaces and help dreams grow.
+
+  The Bold Architect                 To build strong plans and lead people towards a better
+
+
+
+                                                               Simple Story and Game Design | Page 11
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+
+  Your Game Identity                 Your Purpose
+
+
+                                     future.
+
+  The Wise Strategist                To understand difficult problems and find a clear path.
+
+  The Bright Spark                   To try new ideas and discover clever ways forward.
+
+  The Deep Thinker                   To understand how things work and search for truth.
+
+  The Warm Guardian                  To care for people and help them feel they belong.
+
+  The Faithful Shield                To protect others and support their hearts.
+
+  The Radiant Star                   To bring joy, colour, and energy into the world.
+
+  The Silent Artist                  To create beauty and express feelings through art.
+
+  The Steadfast Builder              To bring order, solve problems, and build strong teams.
+
+  The Loyal Keeper                   To protect good things and be honest and dependable.
+
+  The Fearless Explorer              To act with courage and help others face challenges.
+
+                                     To fix problems, make useful things, and stay calm under
+  The Calm Craftsman
+                                     pressure.
+
+
+How the player chooses
+
+  • The game suggests two or three identities.
+
+  • Milo explains each one using simple words.
+
+  • The player chooses the identity that feels most like them.
+
+  • The player can say, “I am still discovering.”
+
+  • The player can change the result later.
+
+
+8. Milo, the Friendly Journey Guide
+
+Milo travels with the player from the beginning to the end. He helps the player feel safe,
+understood, and encouraged. He does not judge the player or tell them what they must feel.
+
+
+
+
+                                                                 Simple Story and Game Design | Page 12
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+How Milo answers
+
+First, Milo listens: He says, “I hear you” or “Thank you for telling me.”
+Next, Milo reflects: He gently names a possible feeling and asks if it fits.
+Then, Milo encourages: He reminds the player that one difficult moment does not define who
+they are.
+After that, Milo offers a choice: The player can talk, visit a world, try a calming activity, pause,
+or ask a trusted person for help.
+Finally, Milo celebrates growth: He names a strength that the player showed during the
+game.
+
+Simple example
+
+    Player
+    “Why am I always stressed?”
+
+    Milo
+    “It sounds like you have been carrying a lot. Feeling stressed does not mean you are
+    weak. Your mind and heart may have been working very hard. Would you like to visit
+    Mind Spark Kingdom, take a quiet pause, or think of someone you trust?”
+
+Important care rules
+
+  • Milo is an AI helper, not a real human counsellor.
+
+  • Milo does not give a medical diagnosis.
+
+  • Milo does not ask the player to keep secrets from trusted adults.
+
+  • If a player may be unsafe, Milo helps them contact a trusted adult or the correct support
+      service.
+
+  • The player can skip a question and keep artwork private.
+
+
+9. The Complete Game Journey
+
+Beginning: The player arrives in ARTÉA Town. Milo wakes up and invites the player to
+discover their light.
+Train journey: The Rainbow Galaxy Train carries the player between the Gallery and each
+kingdom. New stations and shortcut routes open as the player completes each world.
+
+
+
+                                                                 Simple Story and Game Design | Page 13
+ARTÉA | THE JOURNEY TO DISCOVER YOUR LIGHT
+
+
+
+World One: The player explores Mind Spark Kingdom, clears the thought paths, changes an
+unhelpful thought, and receives the Star of Wisdom.
+World Two: The player explores Heart Melody Kingdom, expresses emotions with Milo, builds
+a personal song, and receives the Harmony Jewel.
+World Three: The player explores Creator’s Light Kingdom, creates art that becomes real, and
+receives the Creator’s Light.
+Return: The player returns to the ARTÉA Castle. The three treasures become the Light of
+Identity.
+Identity: The player chooses one of 16 friendly game identities and creates a simple purpose
+message.
+Celebration: The Maker creates the Crown of Life. A star appears with the player’s name. The
+Rainbow Galaxy Train follows the complete railway and celebrates the whole journey.
+
+The main game rule
+
+   DISCOVERY, NOT FIXING The player never earns their value. The player already has
+   value. Every activity helps them discover something that was already growing inside them.
+
+What the game should help the player feel
+
+   • I am known.
+
+   • I am loved.
+
+   • My thoughts can be understood.
+
+   • My feelings have a safe voice.
+
+   • My creativity matters.
+
+   • I have strengths.
+
+   • I have a place in this world.
+
+   • My purpose can keep growing.
+
+   FINAL SCREEN MESSAGE Your story matters. You are uniquely created. Your light has
+   a place in this universe.
+
+
+
+
+                                                              Simple Story and Game Design | Page 14
+
