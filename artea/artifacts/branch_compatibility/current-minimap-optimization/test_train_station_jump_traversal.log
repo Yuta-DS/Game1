@@ -1,0 +1,27 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+     at: load (scene/resources/resource_format_text.cpp:501)
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+/Users/davidsovann/Library/Application Support/Godot/app_userdata/Artea
+No authenticated user -> loading local gallery
+Player artworks found: 0
+No player artworks to replace online gallery.
+RatingPanel = RatingPanel:<Panel#363914610831>
+RatingLabel = RatingLabel:<Label#364032051350>
+likebutton = LikeButton:<Button#363981719699>
+[ARTEA] galaxy world=true meshes=21443 cam=(223.0, 43.0, 356.0)
+TRAIN_STATION_JUMP_TEST: PASS — station floor, boarding route, train deck, and jump clearance are physical
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

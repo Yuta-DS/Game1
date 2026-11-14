@@ -1,0 +1,151 @@
+{
+  "component_id": "01_floating_platform_foundation",
+  "blueprint_panel": 1,
+  "blender_version": "5.2.0 LTS",
+  "deterministic_seed": 260301,
+  "dimensions_m": {
+    "diameter": 10.0,
+    "platform_height": 1.2
+  },
+  "editability": {
+    "definition": "disconnected mesh islands; hover and press L in Edit Mode to select one piece",
+    "minimum_requested": 10000,
+    "actual": 10240,
+    "requirement_met": true,
+    "semantic_mesh_objects": 7
+  },
+  "semantic_groups": {
+    "deck_tiles": {
+      "object": "01A_DeckTiles",
+      "editable_disconnected_islands": 4096,
+      "vertices": 32768,
+      "edges": 49152,
+      "faces": 24576,
+      "materials": [
+        "MSK_SoftGreyDeck",
+        "MSK_SoftGreyDeckHighlight",
+        "MSK_IceClarity"
+      ]
+    },
+    "rim_armor_blocks": {
+      "object": "01B_RimArmorBlocks",
+      "editable_disconnected_islands": 1280,
+      "vertices": 10240,
+      "edges": 15360,
+      "faces": 7680,
+      "materials": [
+        "MSK_CharcoalFoundation",
+        "MSK_SoftGreyDeck",
+        "MSK_CyanCircuit"
+      ]
+    },
+    "underside_plates": {
+      "object": "01C_UndersidePlates",
+      "editable_disconnected_islands": 1536,
+      "vertices": 12288,
+      "edges": 18432,
+      "faces": 9216,
+      "materials": [
+        "MSK_CharcoalFoundation",
+        "MSK_SoftGreyDeck"
+      ]
+    },
+    "radial_rib_blocks": {
+      "object": "01D_RadialRibBlocks",
+      "editable_disconnected_islands": 768,
+      "vertices": 6144,
+      "edges": 9216,
+      "faces": 4608,
+      "materials": [
+        "MSK_SilverBlueArchitecture",
+        "MSK_WisdomGold"
+      ]
+    },
+    "levitation_crystal_cells": {
+      "object": "01E_LevitationCrystalCells",
+      "editable_disconnected_islands": 512,
+      "vertices": 4096,
+      "edges": 6144,
+      "faces": 3072,
+      "materials": [
+        "MSK_CyanCircuit",
+        "MSK_VioletThought",
+        "MSK_LavenderCrystal"
+      ]
+    },
+    "structural_fasteners": {
+      "object": "01F_StructuralFasteners",
+      "editable_disconnected_islands": 1536,
+      "vertices": 18432,
+      "edges": 27648,
+      "faces": 12288,
+      "materials": [
+        "MSK_WisdomGold",
+        "MSK_SilverBlueArchitecture"
+      ]
+    },
+    "circuit_inlay_cells": {
+      "object": "01G_CircuitInlayCells",
+      "editable_disconnected_islands": 512,
+      "vertices": 4096,
+      "edges": 6144,
+      "faces": 3072,
+      "materials": [
+        "MSK_CyanCircuit",
+        "MSK_WisdomGold"
+      ]
+    }
+  },
+  "palette": {
+    "midnight_blue": "#143343",
+    "cyan": "#00B2C7",
+    "ice_white": "#EBF9FB",
+    "violet": "#7458BE",
+    "lavender": "#DED3FA",
+    "emerald": "#2F9F7D",
+    "wisdom_gold": "#FFD968",
+    "silver_blue": "#B8D9DF"
+  },
+  "outputs": {
+    "blend": "assets3D/mind_spark/station_components/blend/01_floating_platform_foundation.blend",
+    "assembled_render": "artifacts/blender_mind_spark_station_components/01_floating_platform_assembled.png",
+    "exploded_render": "artifacts/blender_mind_spark_station_components/01_floating_platform_exploded.png",
+    "manifest": "artifacts/blender_mind_spark_station_components/01_manifest.json"
+  },
+  "render": {
+    "engine": "BLENDER_EEVEE",
+    "resolution": [
+      1600,
+      1200
+    ],
+    "look": "AgX - Medium High Contrast",
+    "shadow_lights": [
+      "RENDER_ONLY_Key",
+      "RENDER_ONLY_Fill",
+      "RENDER_ONLY_Rim",
+      "RENDER_ONLY_GoldBounce"
+    ]
+  },
+  "game_surface": {
+    "collection": "01B_GAME_SURFACE_ASSEMBLED",
+    "objects": [
+      "01H_Game_Underside",
+      "01H_Game_OuterRim",
+      "01H_Game_Deck",
+      "01H_Game_CentreSocket",
+      "01H_Game_GoldGuidanceRing",
+      "01H_Game_CyanCentreRing",
+      "01H_Game_CyanRimLight",
+      "01H_Game_HangingCrystal_01",
+      "01H_Game_HangingCrystal_02",
+      "01H_Game_HangingCrystal_03",
+      "01H_Game_HangingCrystal_04",
+      "01H_Game_HangingCrystal_05",
+      "01H_Game_HangingCrystal_06",
+      "01H_Game_HangingCrystal_07",
+      "01H_Game_HangingCrystal_08"
+    ],
+    "visual_target": "supplied Mind Spark station screenshot",
+    "style": "broad soft-grey plates, restrained cyan light, one gold guidance ring, faceted underside crystals"
+  }
+}

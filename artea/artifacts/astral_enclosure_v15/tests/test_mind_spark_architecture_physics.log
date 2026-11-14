@@ -1,0 +1,29 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+     at: load (scene/resources/resource_format_text.cpp:501)
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+/Users/davidsovann/Library/Application Support/Godot/app_userdata/Artea
+No authenticated user -> loading local gallery
+Player artworks found: 0
+No player artworks to replace online gallery.
+RatingPanel = RatingPanel:<Panel#377437047308>
+RatingLabel = RatingLabel:<Label#377554487827>
+likebutton = LikeButton:<Button#377504156176>
+[ARTEA] galaxy world=true meshes=15984 cam=(-2030.0, 48.0, 1288.0)
+MIND_SPARK_ARCHITECTURE_PHYSICS: PASS — bridge, six islands, story decks, textures, and real remote jump verified
+WARNING: 8 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

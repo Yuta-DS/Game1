@@ -1,0 +1,9 @@
+{
+	"mean_draw_calls": 5680.0,
+	"mean_fps": 47.4463766981355,
+	"renderer": "native OpenGL compatibility",
+	"resolution": "1800x1600",
+	"samples": 120,
+	"scope": "Occupied six-island scene, fixed Astral overview, Apple M2 Pro. Not a browser/mobile benchmark.",
+	"video_memory_bytes": 490544866.0
+}

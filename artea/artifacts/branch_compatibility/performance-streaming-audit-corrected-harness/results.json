@@ -1,0 +1,18 @@
+[
+  {
+    "test": "test_agent_streaming_rebuild.gd",
+    "sha": "c1565c9211cc982e431aac493bed9e83f752164c",
+    "exit_code": 1,
+    "seconds": 2.02,
+    "errors": [
+      "ERROR: Streaming rebuild lost a previously culled cell; approaching it must restore visibility"
+    ],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [],
+    "status": "FAIL",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/performance-streaming-audit-corrected-harness/test_agent_streaming_rebuild.log"
+  }
+]

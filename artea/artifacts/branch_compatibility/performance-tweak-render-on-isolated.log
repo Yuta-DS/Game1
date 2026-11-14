@@ -1,0 +1,32 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2 Pro
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+   at: load (scene/resources/resource_format_text.cpp:501)
+=== cold castle benchmark (warmup=on cull=on) ===
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+/Users/davidsovann/Library/Application Support/Godot/app_userdata/Artea
+No authenticated user -> loading local gallery
+Player artworks found: 0
+No player artworks to replace online gallery.
+RatingPanel = RatingPanel:<Panel#397821364694>
+RatingLabel = RatingLabel:<Label#397938805213>
+likebutton = LikeButton:<Button#397888473562>
+[ARTEA] galaxy world=true meshes=29115 cam=(0.0, 7.84939, 32.76148)
+load (loading screen up -> handover): 13285 ms
+total from request to playable      : 13287 ms
+idle       : mean  36.94 ms  median  35.95 ms  p95  41.33 ms  worst   79.23 ms   visible instances 1493
+             draw calls   381  primitives    178407  process 39.68 ms  physics  0.51 ms
+walking out: mean  38.30 ms  median  37.06 ms  p95  41.12 ms  worst   75.46 ms   visible instances 529
+             draw calls   268  primitives     16759  process 41.35 ms  physics  0.70 ms
+director   : 355 cells, 11 visible

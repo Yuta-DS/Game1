@@ -1,0 +1,339 @@
+M	artea/CAT.png.import
+M	artea/Christian.png.import
+M	artea/House_Atlas_Pirate.png.import
+M	artea/UNNDO.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/grid.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/mushroom.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/sky_2.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/t_bush.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/t_grass_2.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/t_leaves_1.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/t_pine_branch.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/t_rock.jpg.import
+M	artea/addons/proton_scatter/demos/assets/textures/t_rock_dirty.png.import
+M	artea/addons/proton_scatter/demos/assets/textures/t_tree_bark_rough.png.import
+M	artea/addons/proton_scatter/icons/loading/progress1.svg.import
+M	artea/addons/proton_scatter/icons/loading/progress2.svg.import
+M	artea/addons/proton_scatter/icons/loading/progress3.svg.import
+M	artea/addons/proton_scatter/icons/loading/progress4.svg.import
+M	artea/addons/proton_scatter/icons/loading/progress5.svg.import
+M	artea/addons/proton_scatter/icons/loading/progress6.svg.import
+M	artea/addons/proton_scatter/icons/loading/progress7.svg.import
+M	artea/addons/proton_scatter/icons/loading/progress8.svg.import
+M	artea/addons/proton_scatter/src/shapes/gizmos_plugin/icons/main_handle.svg.import
+M	artea/addons/proton_scatter/src/shapes/gizmos_plugin/icons/secondary_handle.svg.import
+M	artea/assets/ArtGallery/360_F_241373755_xvmEPTOeXvosc0qGEwBeJ0hdQkgZqrnd.jpg.import
+M	artea/assets/ArtGallery/Nature_3976028952_95869.png.import
+M	artea/assets/ArtGallery/PX 2517_2025-05-23T15-47-51.png.import
+M	artea/assets/ArtGallery/Rainbow_3306278596_88715.png.import
+M	artea/assets/ArtGallery/Screenshot 2025-10-14 094217.png.import
+M	artea/assets/ArtGallery/THIS_IS_IT!!!!!!_2816429549_34409.png.import
+M	artea/assets/ArtGallery/dholpur-texture-500x500.jpg.import
+M	artea/assets/ArtGallery/fsfs_4290328292_1363.png.import
+M	artea/assets/ArtGallery/orange_brick.jpg.import
+M	artea/assets/ArtGallery/pictureframeyay.png.import
+M	artea/assets/ArtGallery/smile_3849499552_29914.png.import
+M	artea/assets/ArtGallery/tile_floor.jpg.import
+M	artea/assets/ArtGallery/untitled_1745583956_24953.png.import
+M	artea/assets/ArtGallery/untitled_2093513383_1467.png.import
+M	artea/assets/CatPackFree/Box3.png.import
+M	artea/assets/CatPackFree/Furnitures.png.import
+M	artea/assets/CatPackFree/Idle.png.import
+M	artea/assets/Clouds/Clouds BG.png.import
+M	artea/assets/Clouds/Clouds V2-2.png.import
+M	artea/assets/Clouds/Clouds V2.png.import
+M	artea/assets/Clouds/Clouds2 V2.png.import
+M	artea/assets/Clouds/Menu/Cloud-Minigame-Menu.png.import
+M	artea/assets/Clouds/Menu/Instructions/Instruction 1.png.import
+M	artea/assets/Clouds/Menu/Instructions/Instruction 2.png.import
+M	artea/assets/Clouds/Menu/Instructions/Instruction 3.png.import
+M	artea/assets/Clouds/Menu/Instructions/Instruction 4.png.import
+M	artea/assets/Clouds/Menu/Instructions/Instruction 5.png.import
+M	artea/assets/Clouds/Menu/Instructions/Instruction 6.png.import
+M	artea/assets/Clouds/Menu/Menu BG.png.import
+M	artea/assets/Clouds/Menu/NewInstructions/PopCloud_instruction1.png.import
+M	artea/assets/Clouds/Menu/NewInstructions/PopCloud_instruction2.png.import
+M	artea/assets/Clouds/Menu/NewInstructions/PopCloud_instruction3.png.import
+M	artea/assets/Clouds/Menu/NewInstructions/PopCloud_instruction4.png.import
+M	artea/assets/Clouds/Menu/NewInstructions/PopCloud_instruction5.png.import
+M	artea/assets/Clouds/Menu/NewInstructions/PopCloud_instruction6.png.import
+M	artea/assets/Clouds/PastelBackground.png.import
+M	artea/assets/Collectibles/Green leaf.png.import
+M	artea/assets/Collectibles/appleicon.png.import
+M	artea/assets/Collectibles/orb.png.import
+M	artea/assets/Collectibles/pinkClam.png.import
+M	artea/assets/Collectibles/purple crystal.png.import
+M	artea/assets/Collectibles/red heart.png.import
+M	artea/assets/Collectibles/trophy.png.import
+M	artea/assets/Collectibles/yellow star.png.import
+M	artea/assets/Drawing Tool Icons/Christian.png.import
+M	artea/assets/Drawing Tool Icons/Cloud.png.import
+M	artea/assets/Drawing Tool Icons/brush.png.import
+M	artea/assets/Drawing Tool Icons/cat.png.import
+M	artea/assets/Drawing Tool Icons/clear.png.import
+M	artea/assets/Drawing Tool Icons/eraser.png.import
+M	artea/assets/Drawing Tool Icons/exit.png.import
+M	artea/assets/Drawing Tool Icons/flower.jpg.import
+M	artea/assets/Drawing Tool Icons/flower2.png.import
+M	artea/assets/Drawing Tool Icons/heart.png.import
+M	artea/assets/Drawing Tool Icons/save.png.import
+M	artea/assets/Drawing Tool Icons/stamp.png.import
+M	artea/assets/Drawing Tool Icons/sun.png.import
+M	artea/assets/Drawing Tool Icons/undo.png.import
+M	artea/assets/Frame 2.png.import
+M	artea/assets/Game Start/Opening.png.import
+M	artea/assets/InventoryRect.png.import
+M	artea/assets/Joystick/joyknobpng.png.import
+M	artea/assets/Joystick/joyring.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Assets/Buildings.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Assets/Hive.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Assets/Interior-01.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Assets/Props-Rocks.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Assets/Tree-Assets.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Background/Background.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Character/Attack-01/Attack-01-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Character/Dead/Dead-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Character/Idle/Frame 2.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Character/Idle/Idle-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Character/Jumlp-All/Jump-All-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Character/Jump-End/Jump-End-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Character/Jump-Start/Jump-Start-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Character/Run/Run-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/Arrow.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/Base-01.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/Inventory.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/Settings.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/User.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/arrowbg.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/attack.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/brownSqaureNoOutline.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/lightSqaureNoOutline.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/lightSquare.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/red rect.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/HUD/x.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Hit-Vanish/Hit-Sheet-Black.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Hit-Vanish/Hit-Sheet-White.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Hit-Vanish/Hit-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Idle/Idle-Sheet-White.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Idle/Idle-Sheet-export-Back.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Idle/Idle-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Run/Run-Sheet-Black.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Run/Run-Sheet-White.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Run/Run-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Walk/Walk-Base-Sheet-White.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Walk/Walk-Base-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Boar/Walk/Walk-Base-SheetBlack.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Small Bee/Attack/Attack-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Small Bee/Fly/Fly-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Small Bee/Hit/Hit-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Snail/Dead-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Snail/Hide-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Snail/all.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Mob/Snail/walk-Sheet.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Trees/Background.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Trees/Dark-Tree.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Trees/Golden-Tree.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Trees/Green-Tree.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Trees/Red-Tree.png.import
+M	artea/assets/Legacy-Fantasy - High Forest 2.3/Trees/Yellow-Tree.png.import
+M	artea/assets/NPCs/Idle1/1.png.import
+M	artea/assets/NPCs/Idle1/2.png.import
+M	artea/assets/NPCs/Idle1/3.png.import
+M	artea/assets/NPCs/Idle1/4.png.import
+M	artea/assets/NPCs/Idle2/1.png.import
+M	artea/assets/NPCs/Idle2/2.png.import
+M	artea/assets/NPCs/Idle2/3.png.import
+M	artea/assets/NPCs/Idle2/4.png.import
+M	artea/assets/NPCs/Idle3/1.png.import
+M	artea/assets/NPCs/Idle3/2.png.import
+M	artea/assets/NPCs/Idle3/3.png.import
+M	artea/assets/NPCs/Idle3/4.png.import
+M	artea/assets/NPCs/Speak1/1.png.import
+M	artea/assets/NPCs/Speak1/2.png.import
+M	artea/assets/NPCs/Speak1/3.png.import
+M	artea/assets/NPCs/Speak1/4.png.import
+M	artea/assets/NPCs/Speak2/1.png.import
+M	artea/assets/NPCs/Speak2/2.png.import
+M	artea/assets/NPCs/Speak2/3.png.import
+M	artea/assets/NPCs/Speak2/4.png.import
+M	artea/assets/NPCs/Speak3/1.png.import
+M	artea/assets/NPCs/Speak3/2.png.import
+M	artea/assets/NPCs/Speak3/3.png.import
+M	artea/assets/NPCs/Speak3/4.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_00_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_01_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_02_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_03_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_04_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_05_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_06_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_07_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_08_delay-0.2s.png.import
+M	artea/assets/Ocean Wallpaper Background/frame_09_delay-0.2s.png.import
+M	artea/assets/Paintingtool/flower.png.import
+M	artea/assets/Paintingtool/frame.png.import
+M	artea/assets/Paintingtool/heart.png.import
+M	artea/assets/Paintingtool/square.png.import
+M	artea/assets/Paintingtool/star.png.import
+M	artea/assets/Paintingtool/sun.png.import
+M	artea/assets/Purple Bay/Assets/tiles.png.import
+M	artea/assets/Purple Bay/Background/Background-1.png.import
+M	artea/assets/Purple Bay/Background/Background-2.png.import
+M	artea/assets/Purple Bay/Background/Background-3.png.import
+M	artea/assets/Purple Bay/Background/Background-4.png.import
+M	artea/assets/Purple Bay/BackgroundMaker2.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Assets/tiles.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Background/Background-1.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Background/Background-2.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Background/Background-3.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Background/Background-4.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Mob/Atack-Sheet.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Mob/Death-Sheet.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Mob/Idle-Sheet.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Mob/Walk-Sheet.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Social/Background-4.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Social/Crab.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Social/MockUp-1-1.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Social/MockUp-1.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Social/MockUp-2.png.import
+M	artea/assets/Purple Bay/Legacy-Fantasy-VL.3 - Purple Bay/Social/tiles.png.import
+M	artea/assets/Purple Bay/Mob/Atack-Sheet.png.import
+M	artea/assets/Purple Bay/Mob/Death-Sheet.png.import
+M	artea/assets/Purple Bay/Mob/Idle-Sheet.png.import
+M	artea/assets/Purple Bay/Mob/Walk-Sheet.png.import
+M	artea/assets/Purple Bay/Social/Background-4.png.import
+M	artea/assets/Purple Bay/Social/Crab.png.import
+M	artea/assets/Purple Bay/Social/MockUp-1-1.png.import
+M	artea/assets/Purple Bay/Social/MockUp-1.png.import
+M	artea/assets/Purple Bay/Social/MockUp-2.png.import
+M	artea/assets/Purple Bay/Social/tiles.png.import
+M	artea/assets/Scarlet Monastery/Legacy-Fantasy-VL.3 - Scarlet Monastery/Assets/Tiles.png.import
+M	artea/assets/UI/paintbrush.png.import
+M	artea/assets/Western Sydney Logo.png.import
+M	artea/assets/inventorySlot.png.import
+M	artea/assets/models/10305_picture_frame_V1_Diffuse.jpg.import
+M	artea/assets/models/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg.import
+M	artea/assets/models/20343_Victor_V_phonograph_v2_diff.jpg.import
+M	artea/assets/models/MODUL_CHANDELIER_0.png.import
+M	artea/assets/models/Pot textures_col.jpg.import
+M	artea/assets/models/bpng.jpg.import
+M	artea/assets/models/texture_book_paper_side_by_nihil_xiii-d5o6s6x.jpg.import
+M	artea/assets/thumbnail_LCC_Main_Logo.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_1/Dialogue.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_1/Idle.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_1/Idle_2.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_2/Dialogue.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_2/Idle.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_2/Idle_2.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_2/Walk.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_3/Dialogue.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_3/Idle.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_3/Sell.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_3/Walk.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_4/Idle.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_4/Sell.png.import
+M	artea/assets/village-npc-pixel-art-character-sprite-pack/Peasants_4/Walk.png.import
+M	artea/assets3D/Crescent_Moon_PNG_Clip_Art_Image.png.import
+M	artea/assets3D/Pink_Shell_Clip_1029042716_texture_0.jpg.import
+M	artea/assets3D/Pink_Shell_Clip_1029042716_texture_1.jpg.import
+M	artea/assets3D/Pink_Shell_Clip_1029042716_texture_2.jpg.import
+M	artea/assets3D/characters/Barbarian_barbarian_texture.png.import
+M	artea/assets3D/characters/Father_Animations_texture_0.png.import
+M	artea/assets3D/characters/Father_output_texture_0.png.import
+M	artea/assets3D/characters/Knight_knight_texture.png.import
+M	artea/assets3D/characters/Mage_mage_texture.png.import
+M	artea/assets3D/characters/Rogue_Hooded_rogue_texture.png.import
+M	artea/assets3D/characters/Rogue_rogue_texture.png.import
+M	artea/assets3D/characters/barbarian_texture.png.import
+M	artea/assets3D/characters/fox_Diffuse.png.import
+M	artea/assets3D/characters/fox_Normal.png.import
+M	artea/assets3D/characters/fox_bow_normal.png.import
+M	artea/assets3D/characters/fox_sword_diffuse.png.import
+M	artea/assets3D/characters/fox_sword_metal.png.import
+M	artea/assets3D/characters/knight_texture.png.import
+M	artea/assets3D/characters/mage_texture.png.import
+M	artea/assets3D/characters/rogue_texture.png.import
+M	artea/assets3D/kkNatureForest/gltf/forest_texture.png.import
+M	artea/assets3D/shooting_star_sampler.png.import
+M	artea/assets3D/stylizedNature/Mushrooms.png.import
+M	artea/assets3D/stylizedNature/PathRocks_Diffuse.png.import
+M	artea/assets3D/stylizedNature/Rocks_Desert_Diffuse.png.import
+M	artea/assets3D/stylizedNature/Rocks_Diffuse.png.import
+M	artea/assets3D/suntext.png.import
+M	artea/assets3D/worlds/Floating_Cloud_1031084848_texture_0.jpg.import
+M	artea/assets3D/worlds/Floating_Cloud_1031084848_texture_1.jpg.import
+M	artea/assets3D/worlds/Floating_Cloud_1031084848_texture_2.jpg.import
+M	artea/assets3D/worlds/paint.png.import
+M	artea/demo/assets/textures/ground037_alb_ht.png.import
+M	artea/demo/assets/textures/ground037_nrm_rgh.png.import
+M	artea/demo/assets/textures/rock023_alb_ht.png.import
+M	artea/demo/assets/textures/rock023_nrm_rgh.png.import
+M	artea/exitart.mesh.jpg.import
+M	artea/icon.png.import
+M	artea/icon.svg.import
+M	"artea/meshy ai/Art\303\251a_Signpost_1027230400_texture_0.jpg.import"
+M	"artea/meshy ai/Art\303\251a_Signpost_1027230400_texture_1.jpg.import"
+M	"artea/meshy ai/Art\303\251a_Signpost_1027230400_texture_2.jpg.import"
+M	artea/meshy ai/Milo_Animations_texture_0.png.import
+M	artea/meshy ai/Milo_output_texture_0.png.import
+M	artea/park.png.import
+M	artea/return-88.png.import
+M	artea/save.png.import
+M	artea/scenes/Pastel_cloud.png.import
+M	artea/scenes/cloud_white.png.import
+M	artea/scenes/clouds2.1Large.png.import
+M	artea/scenes/simple_frame_sprite.png.import
+M	artea/scenes/sparkle_transparent.png.import
+M	artea/scenes/vecteezy_picture-vector-icon-design_20025670.jpg.import
+M	artea/scripts/assets3D/Crescent_Moon_PNG_Clip_Art_Image.png.import
+M	artea/scripts/coudsParallaxmmm2.png.import
+M	artea/scripts/icon.png.import
+M	artea/scripts/icon.svg.import
+M	artea/scripts/thumbnail.webp.import
+M	artea/textures/1064666 (1) 2.png.import
+M	artea/textures/1064666 (2) 2.png.import
+M	artea/textures/1064666 (3) 2.png.import
+M	artea/textures/1064666 (4) 2.png.import
+M	artea/textures/1064666 (5) 2.png.import
+M	artea/textures/Sign_box.png.webp.import
+M	artea/textures/dialogue_box.png.import
+M	artea/textures/ground_tiles_13_1k/ground_tiles_13_ambientOcclusion_1k.png.import
+M	artea/textures/ground_tiles_13_1k/ground_tiles_13_baseColor_1k.png.import
+M	artea/textures/ground_tiles_13_1k/ground_tiles_13_height_1k.png.import
+M	artea/textures/ground_tiles_13_1k/ground_tiles_13_metallic_1k.png.import
+M	artea/textures/ground_tiles_13_1k/ground_tiles_13_normal_dx_1k.png.import
+M	artea/textures/ground_tiles_13_1k/ground_tiles_13_normal_gl_1k.png.import
+M	artea/textures/ground_tiles_13_1k/ground_tiles_13_roughness_1k.png.import
+M	artea/textures/moss_ground_02_1k/moss_groud_02_Ambient_Occlusion_1k.png.import
+M	artea/textures/moss_ground_02_1k/moss_groud_02_Base_Color_1k.png.import
+M	artea/textures/moss_ground_02_1k/moss_groud_02_Height_1k.png.import
+M	artea/textures/moss_ground_02_1k/moss_groud_02_Metallic_1k.png.import
+M	artea/textures/moss_ground_02_1k/moss_groud_02_Normal_dx_1k.png.import
+M	artea/textures/moss_ground_02_1k/moss_groud_02_Normal_gl_1k.png.import
+M	artea/textures/moss_ground_02_1k/moss_groud_02_Roughness_1k.png.import
+M	artea/textures/sand_01_2k/hellothisisToan.png.import
+M	artea/textures/sand_01_2k/sand_01_1k/sand_01_ambient_occlusion_1k.png.import
+M	artea/textures/sand_01_2k/sand_01_1k/sand_01_color_1k.png.import
+M	artea/textures/sand_01_2k/sand_01_1k/sand_01_height_1k.png.import
+M	artea/textures/sand_01_2k/sand_01_1k/sand_01_normal_dx_1k.png.import
+M	artea/textures/sand_01_2k/sand_01_1k/sand_01_normal_gl_1k.png.import
+M	artea/textures/sand_01_2k/sand_01_1k/sand_01_roughness_1k.png.import
+M	artea/textures/sand_01_2k/sand_01_ambient_occlusion_2k.png.import
+M	artea/textures/sand_01_2k/sand_01_color_2k.png.import
+M	artea/textures/sand_01_2k/sand_01_height_2k.png.import
+M	artea/textures/sand_01_2k/sand_01_normal_dx_2k.png.import
+M	artea/textures/sand_01_2k/sand_01_normal_gl_2k.png.import
+M	artea/texPrevious HEAD position was 6fff0f19 Add uid sidecar for hub_light_fade.gd
+HEAD is now at a74d9354 Merge Javid-train-disembark-fix into spawn-cleanup-and-performance-optimisation
+tures/sand_01_2k/sand_01_roughness_2k.png.import
+M	artea/textures/sand_04_1k/sand_04_ambient_occlusion_1k.png.import
+M	artea/textures/sand_04_1k/sand_04_color_1k.png.import
+M	artea/textures/sand_04_1k/sand_04_height_1k.png.import
+M	artea/textures/sand_04_1k/sand_04_normal_dx_1k.png.import
+M	artea/textures/sand_04_1k/sand_04_normal_gl_1k.png.import
+M	artea/textures/sand_04_1k/sand_04_roughness_1k.png.import
+M	artea/thumbnail.webp.import
+M	artea/undo Icon.png.import
+M	artea/undo-icon-style-free-vector.jpg.import
+M	artea/undo-icon-style-free-vector.png.import

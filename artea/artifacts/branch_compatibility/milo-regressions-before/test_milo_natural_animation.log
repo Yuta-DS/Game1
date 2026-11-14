@@ -1,0 +1,31 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+     at: load (scene/resources/resource_format_text.cpp:501)
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+  FAIL: the cane forearm advances smoothly without a one-frame flip (29.41)
+  FAIL: the live face includes PrototypeEyeWhite_L
+  FAIL: the live face includes PrototypeBrow_L
+  FAIL: the live face includes PrototypeMoustache_L
+  FAIL: the live face includes PrototypeEyeWhite_R
+  FAIL: the live face includes PrototypeBrow_R
+  FAIL: the live face includes PrototypeMoustache_R
+  FAIL: Paw_L visibly curls its sculpted finger row
+  FAIL: Paw_R visibly curls its sculpted finger row
+ERROR: MILO_NATURAL_ANIMATION_TEST: 9 failure(s)
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_milo_natural_animation.gd:434)
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

@@ -1,0 +1,16 @@
+[
+  {
+    "test": "test_agent_streaming_rebuild.gd",
+    "sha": "c1565c9211cc982e431aac493bed9e83f752164c",
+    "exit_code": 0,
+    "seconds": 0.18,
+    "errors": [
+      "SCRIPT ERROR: Parse Error: Cannot infer the type of \"director\" variable because the value doesn't have a set type.",
+      "ERROR: Failed to load script \"res://scripts/test_agent_streaming_rebuild.gd\" with error \"Parse error\"."
+    ],
+    "warnings": [],
+    "success_markers": [],
+    "status": "FAIL",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/performance-streaming-audit/test_agent_streaming_rebuild.log"
+  }
+]

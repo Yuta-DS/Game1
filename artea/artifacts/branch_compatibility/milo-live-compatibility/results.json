@@ -1,0 +1,81 @@
+[
+  {
+    "test": "test_milo_generations.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 0,
+    "seconds": 1.95,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "MILO_GENERATIONS_TEST: PASS \u2014 Milo 1 legacy and finalized Milo 2 are independent assets, scenes, controllers, and hub choices"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/milo-live-compatibility/test_milo_generations.log"
+  },
+  {
+    "test": "test_milo_live_hub_visibility.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 0,
+    "seconds": 10.54,
+    "errors": [
+      "SCRIPT ERROR: Compile Error: Identifier not found: Global",
+      "ERROR: Failed to load script \"res://scenes/narrative_bubble.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/everlasting_father_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/knight_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/rogue_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/barbarian_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/mage_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: Global",
+      "ERROR: Failed to load script \"res://scenes/story_direction.gd\" with error \"Compilation failed\"."
+    ],
+    "warnings": [
+      "WARNING: res://scenes/ocean_sounds.tscn:3 - ext_resource, invalid UID: uid://8eksvwwqe1hq - using text path instead: res://assets/audio/Ocean_Ambience_Loop.ogg",
+      "WARNING: res://textures/pebble_round_22.tscn:3 - ext_resource, invalid UID: uid://0p4wab41u4te - using text path instead: res://assets3D/stylizedNature/Pebble_Round_2.gltf",
+      "WARNING: res://assets3D/mountains/rock_medium_12.tscn:3 - ext_resource, invalid UID: uid://dppck752xc7tn - using text path instead: res://assets3D/stylizedNature/Rock_Medium_1.gltf",
+      "WARNING: res://assets3D/mountains/rock_medium_13.tscn:3 - ext_resource, invalid UID: uid://dppck752xc7tn - using text path instead: res://assets3D/stylizedNature/Rock_Medium_1.gltf",
+      "WARNING: res://assets3D/mountains/rock_medium_14.tscn:3 - ext_resource, invalid UID: uid://dppck752xc7tn - using text path instead: res://assets3D/stylizedNature/Rock_Medium_1.gltf",
+      "WARNING: res://assets3D/mountains/rock_medium_22.tscn:3 - ext_resource, invalid UID: uid://bmyci3u7ap1im - using text path instead: res://assets3D/stylizedNature/Rock_Medium_2.gltf",
+      "WARNING: res://scenes/New_Hub_World.tscn:43 - ext_resource, invalid UID: uid://bexb5n8or0c36 - using text path instead: res://assets/audio/Flowing Water and Birds (Hub).ogg",
+      "WARNING: res://scenes/New_Hub_World.tscn:44 - ext_resource, invalid UID: uid://cxwpjfnl8yfbl - using text path instead: res://assets/audio/Campfire.ogg",
+      "WARNING: Terrain3DTextureAsset#4901:set_albedo_texture:79: Texture 'moss_groud_02_Base_Color_1k' has no mipmaps. Change on the Import panel if desired.",
+      "WARNING: Terrain3DTextureAsset#4901:set_normal_texture:100: Texture 'moss_groud_02_Normal_dx_1k' has no mipmaps. Change on the Import panel if desired.",
+      "WARNING: Terrain3DTextureAsset#6550:set_albedo_texture:79: Texture 'sand_01_color_1k' has no mipmaps. Change on the Import panel if desired.",
+      "WARNING: Terrain3DTextureAsset#6550:set_normal_texture:100: Texture 'sand_01_normal_dx_1k' has no mipmaps. Change on the Import panel if desired.",
+      "WARNING: Terrain3DTextureAsset#8199:set_albedo_texture:79: Texture 'ground_tiles_13_baseColor_1k' has no mipmaps. Change on the Import panel if desired.",
+      "WARNING: Terrain3DTextureAsset#8199:set_normal_texture:100: Texture 'ground_tiles_13_normal_dx_1k' has no mipmaps. Change on the Import panel if desired.",
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: instance_reset_physics_interpolation() is deprecated.",
+      "WARNING: Terrain3D#0189:_notification:869: free_editor_textures requires `Assets` be saved to a file. Do so, or disable the former to turn off this warning",
+      "WARNING: 4 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "MILO_LIVE_HUB_VISIBILITY_TEST: PASS \u2014 finalized Milo 2 is the only live Milo and accompanies the player"
+    ],
+    "status": "FAIL",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/milo-live-compatibility/test_milo_live_hub_visibility.log"
+  },
+  {
+    "test": "test_milo_missing_walk_fallback.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 0,
+    "seconds": 1.86,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "MILO_MISSING_WALK: PASS \u2014 donor fallback and silent missing-clip handling"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/milo-live-compatibility/test_milo_missing_walk_fallback.log"
+  }
+]

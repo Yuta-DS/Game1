@@ -1,0 +1,66 @@
+[
+  {
+    "test": "test_milo_natural_animation.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 0,
+    "seconds": 3.29,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "MILO_NATURAL_ANIMATION_TEST: PASS \u2014 Blender full-body gait, stabilized head, readable two-hand motion, cane contact, grounding, blink, and smooth idle settling"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/milo-regressions-fixed/test_milo_natural_animation.log"
+  },
+  {
+    "test": "test_milo_companion_follow.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 0,
+    "seconds": 14.69,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "MILO_COMPANION_FOLLOW_TEST: PASS \u2014 eased acceleration and stopping, breadcrumb following, catch-up, non-blocking body, teleport recovery, and scene manager"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/milo-regressions-fixed/test_milo_companion_follow.log"
+  },
+  {
+    "test": "test_milo_speech_animation.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 0,
+    "seconds": 1.94,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "MILO_SPEECH_ANIMATION_TEST: PASS \u2014 original Milo greeting, spoken dynamic replies, T access, and rigged mouth shapes"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/milo-regressions-fixed/test_milo_speech_animation.log"
+  },
+  {
+    "test": "test_milo_missing_walk_fallback.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 0,
+    "seconds": 1.84,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "MILO_MISSING_WALK: PASS \u2014 donor fallback and silent missing-clip handling"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/milo-regressions-fixed/test_milo_missing_walk_fallback.log"
+  }
+]

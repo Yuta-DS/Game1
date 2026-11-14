@@ -1,0 +1,25 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2 Pro
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+   at: load (scene/resources/resource_format_text.cpp:501)
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+/Users/davidsovann/Library/Application Support/Godot/app_userdata/Artea
+No authenticated user -> loading local gallery
+Player artworks found: 0
+No player artworks to replace online gallery.
+RatingPanel = RatingPanel:<Panel#364434704511>
+RatingLabel = RatingLabel:<Label#364552145030>
+likebutton = LikeButton:<Button#364501813379>
+[ARTEA] galaxy world=true meshes=21443 cam=(0.0, 7.848798, 32.76148)
+RENDER_PACING: maps=1 map_updates=true frames=600 mean_ms=12.390 p50_ms=11.917 p95_ms=15.740 p99_ms=17.185 process_p50_ms=16.741 draw_calls=279

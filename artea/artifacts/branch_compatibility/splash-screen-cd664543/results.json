@@ -1,0 +1,99 @@
+[
+  {
+    "test": "test_web_environment_compat.gd",
+    "sha": "cd664543e2674b8e6483dadbe3db2987252686c8",
+    "exit_code": 0,
+    "seconds": 1.85,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "PASS: Web sky, terrain, vegetation, and sea compatibility policy"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/splash-screen-cd664543/test_web_environment_compat.log"
+  },
+  {
+    "test": "test_castle_entrance.gd",
+    "sha": "cd664543e2674b8e6483dadbe3db2987252686c8",
+    "exit_code": 0,
+    "seconds": 1.89,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "CASTLE_ENTRANCE_TEST: PASS \u2014 235 meshes, 50 collision bodies, arrival at (-32.8, 70.53, 27.41), entrance y=69.3300018310547, castle threshold y=78.3300018310547, terrace y=67.7300018310547"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/splash-screen-cd664543/test_castle_entrance.log"
+  },
+  {
+    "test": "test_player_ground_visual_alignment.gd",
+    "sha": "cd664543e2674b8e6483dadbe3db2987252686c8",
+    "exit_code": 0,
+    "seconds": 2.41,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "PLAYER_GROUND_ALIGNMENT: PASS \u2014 visible feet remain on top of the floor"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/splash-screen-cd664543/test_player_ground_visual_alignment.log"
+  },
+  {
+    "test": "test_art_castle_gallery_flow.gd",
+    "sha": "cd664543e2674b8e6483dadbe3db2987252686c8",
+    "exit_code": 0,
+    "seconds": 7.38,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: Depth of field blur is only available when using the Forward+ or Mobile renderer.",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "ART_CASTLE_GALLERY_TEST: PASS \u2014 raised castle door, gallery artwork, walking player and interactive 3D world are connected"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/splash-screen-cd664543/test_art_castle_gallery_flow.log"
+  },
+  {
+    "test": "test_world_minimap.gd",
+    "sha": "cd664543e2674b8e6483dadbe3db2987252686c8",
+    "exit_code": 0,
+    "seconds": 2.12,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "WORLD_MINIMAP_TEST: PASS \u2014 outside/inside atlases, live tracking, and full map toggle"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/splash-screen-cd664543/test_world_minimap.log"
+  },
+  {
+    "test": "test_story_crown_railway.gd",
+    "sha": "cd664543e2674b8e6483dadbe3db2987252686c8",
+    "exit_code": 0,
+    "seconds": 2.29,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "STORY_CROWN_RAILWAY_TEST: PASS \u2014 climbable stations and player-driven Crown Line connect all four worlds"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/splash-screen-cd664543/test_story_crown_railway.log"
+  }
+]

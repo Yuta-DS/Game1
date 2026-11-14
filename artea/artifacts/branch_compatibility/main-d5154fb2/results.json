@@ -1,0 +1,92 @@
+[
+  {
+    "test": "test_web_environment_compat.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 1.97,
+    "errors": [],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_web_environment_compat.log"
+  },
+  {
+    "test": "test_story_crown_railway_web_performance.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "status": "UNAVAILABLE"
+  },
+  {
+    "test": "test_castle_entrance.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 1.9,
+    "errors": [],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_castle_entrance.log"
+  },
+  {
+    "test": "test_castle_ground_entry_route.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 20.29,
+    "errors": [],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_castle_ground_entry_route.log"
+  },
+  {
+    "test": "test_player_ground_visual_alignment.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 2.41,
+    "errors": [],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_player_ground_visual_alignment.log"
+  },
+  {
+    "test": "test_art_castle_gallery_flow.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 7.6,
+    "errors": [],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_art_castle_gallery_flow.log"
+  },
+  {
+    "test": "test_world_minimap.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 2.07,
+    "errors": [],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_world_minimap.log"
+  },
+  {
+    "test": "test_gallery_embedded_floating_world.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 6.96,
+    "errors": [
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ],
+    "status": "FAIL",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_gallery_embedded_floating_world.log"
+  },
+  {
+    "test": "test_train_station_jump_traversal.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 31.67,
+    "errors": [
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ],
+    "status": "FAIL",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_train_station_jump_traversal.log"
+  },
+  {
+    "test": "test_story_crown_railway.gd",
+    "sha": "d5154fb27ef8803911d0a7b536c2b25791c214a0",
+    "exit_code": 0,
+    "seconds": 2.43,
+    "errors": [],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/main-d5154fb2/test_story_crown_railway.log"
+  }
+]

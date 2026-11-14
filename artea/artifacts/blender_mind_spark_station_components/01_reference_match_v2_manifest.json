@@ -1,0 +1,1236 @@
+{
+  "component_id": "01_floating_platform_reference_match_v2",
+  "reference_image": "Screenshot 2026-08-16 at 1.01.52 pm",
+  "blender_version": "5.2.0 LTS",
+  "dimensions_m": {
+    "diameter": 10.0,
+    "height": 1.2
+  },
+  "hierarchy": {
+    "complete_assembly": 1,
+    "large_deck_sectors": 16,
+    "large_crystal_bays": 8,
+    "large_floating_bottom_assemblies": 1,
+    "semantic_chunk_objects": 101,
+    "editable_micro_pieces": 3000
+  },
+  "piece_counts": {
+    "deck_surface": 1024,
+    "outer_rim": 512,
+    "underside_frame": 512,
+    "ring_systems": 512,
+    "crystal_assemblies": 256,
+    "connectors": 64,
+    "floating_island_bottom": 120
+  },
+  "objects": [
+    {
+      "object": "S01_A_DECK_64",
+      "big_component": "SECTOR_01_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S01_B_OUTER_RIM_32",
+      "big_component": "SECTOR_01_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S01_C_UNDERFRAME_32",
+      "big_component": "SECTOR_01_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S01_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_01_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S01_E_CONNECTORS_04",
+      "big_component": "SECTOR_01_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S02_A_DECK_64",
+      "big_component": "SECTOR_02_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S02_B_OUTER_RIM_32",
+      "big_component": "SECTOR_02_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S02_C_UNDERFRAME_32",
+      "big_component": "SECTOR_02_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S02_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_02_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S02_E_CONNECTORS_04",
+      "big_component": "SECTOR_02_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S03_A_DECK_64",
+      "big_component": "SECTOR_03_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S03_B_OUTER_RIM_32",
+      "big_component": "SECTOR_03_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S03_C_UNDERFRAME_32",
+      "big_component": "SECTOR_03_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S03_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_03_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S03_E_CONNECTORS_04",
+      "big_component": "SECTOR_03_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S04_A_DECK_64",
+      "big_component": "SECTOR_04_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S04_B_OUTER_RIM_32",
+      "big_component": "SECTOR_04_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S04_C_UNDERFRAME_32",
+      "big_component": "SECTOR_04_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S04_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_04_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S04_E_CONNECTORS_04",
+      "big_component": "SECTOR_04_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S05_A_DECK_64",
+      "big_component": "SECTOR_05_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S05_B_OUTER_RIM_32",
+      "big_component": "SECTOR_05_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S05_C_UNDERFRAME_32",
+      "big_component": "SECTOR_05_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S05_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_05_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S05_E_CONNECTORS_04",
+      "big_component": "SECTOR_05_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S06_A_DECK_64",
+      "big_component": "SECTOR_06_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S06_B_OUTER_RIM_32",
+      "big_component": "SECTOR_06_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S06_C_UNDERFRAME_32",
+      "big_component": "SECTOR_06_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S06_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_06_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S06_E_CONNECTORS_04",
+      "big_component": "SECTOR_06_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S07_A_DECK_64",
+      "big_component": "SECTOR_07_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S07_B_OUTER_RIM_32",
+      "big_component": "SECTOR_07_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S07_C_UNDERFRAME_32",
+      "big_component": "SECTOR_07_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S07_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_07_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S07_E_CONNECTORS_04",
+      "big_component": "SECTOR_07_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S08_A_DECK_64",
+      "big_component": "SECTOR_08_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S08_B_OUTER_RIM_32",
+      "big_component": "SECTOR_08_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S08_C_UNDERFRAME_32",
+      "big_component": "SECTOR_08_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S08_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_08_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S08_E_CONNECTORS_04",
+      "big_component": "SECTOR_08_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S09_A_DECK_64",
+      "big_component": "SECTOR_09_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S09_B_OUTER_RIM_32",
+      "big_component": "SECTOR_09_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S09_C_UNDERFRAME_32",
+      "big_component": "SECTOR_09_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S09_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_09_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S09_E_CONNECTORS_04",
+      "big_component": "SECTOR_09_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S10_A_DECK_64",
+      "big_component": "SECTOR_10_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S10_B_OUTER_RIM_32",
+      "big_component": "SECTOR_10_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S10_C_UNDERFRAME_32",
+      "big_component": "SECTOR_10_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S10_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_10_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S10_E_CONNECTORS_04",
+      "big_component": "SECTOR_10_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S11_A_DECK_64",
+      "big_component": "SECTOR_11_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S11_B_OUTER_RIM_32",
+      "big_component": "SECTOR_11_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S11_C_UNDERFRAME_32",
+      "big_component": "SECTOR_11_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S11_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_11_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S11_E_CONNECTORS_04",
+      "big_component": "SECTOR_11_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S12_A_DECK_64",
+      "big_component": "SECTOR_12_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S12_B_OUTER_RIM_32",
+      "big_component": "SECTOR_12_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S12_C_UNDERFRAME_32",
+      "big_component": "SECTOR_12_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S12_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_12_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S12_E_CONNECTORS_04",
+      "big_component": "SECTOR_12_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S13_A_DECK_64",
+      "big_component": "SECTOR_13_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S13_B_OUTER_RIM_32",
+      "big_component": "SECTOR_13_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S13_C_UNDERFRAME_32",
+      "big_component": "SECTOR_13_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S13_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_13_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S13_E_CONNECTORS_04",
+      "big_component": "SECTOR_13_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S14_A_DECK_64",
+      "big_component": "SECTOR_14_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S14_B_OUTER_RIM_32",
+      "big_component": "SECTOR_14_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S14_C_UNDERFRAME_32",
+      "big_component": "SECTOR_14_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S14_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_14_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S14_E_CONNECTORS_04",
+      "big_component": "SECTOR_14_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S15_A_DECK_64",
+      "big_component": "SECTOR_15_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S15_B_OUTER_RIM_32",
+      "big_component": "SECTOR_15_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S15_C_UNDERFRAME_32",
+      "big_component": "SECTOR_15_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S15_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_15_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S15_E_CONNECTORS_04",
+      "big_component": "SECTOR_15_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S16_A_DECK_64",
+      "big_component": "SECTOR_16_BIG_COMPONENT",
+      "chunk": "top deck micro-plates",
+      "editable_micro_pieces": 64,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 64,
+        "MSK_V2_PaintedDeck": 280,
+        "MSK_V2_DeckEdge": 40
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S16_B_OUTER_RIM_32",
+      "big_component": "SECTOR_16_BIG_COMPONENT",
+      "chunk": "segmented outer wall",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 160,
+        "MSK_V2_PaintedDeck": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S16_C_UNDERFRAME_32",
+      "big_component": "SECTOR_16_BIG_COMPONENT",
+      "chunk": "underside metal frame",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S16_D_RING_SYSTEM_32",
+      "big_component": "SECTOR_16_BIG_COMPONENT",
+      "chunk": "recessed guidance and energy rings",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 48,
+        "MSK_V2_CyanEnergy": 60,
+        "MSK_V2_CharcoalMetal": 84
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "S16_E_CONNECTORS_04",
+      "big_component": "SECTOR_16_BIG_COMPONENT",
+      "chunk": "snap connectors and support brackets",
+      "editable_micro_pieces": 4,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 20,
+        "MSK_V2_SilverBlue": 4
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C01_A_CRYSTAL_CELLS_16",
+      "big_component": "CRYSTAL_BAY_01_BIG_COMPONENT",
+      "chunk": "faceted luminous crystal cells",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CrystalLight": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C01_B_MOUNT_PIECES_16",
+      "big_component": "CRYSTAL_BAY_01_BIG_COMPONENT",
+      "chunk": "crystal suspension mount",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C02_A_CRYSTAL_CELLS_16",
+      "big_component": "CRYSTAL_BAY_02_BIG_COMPONENT",
+      "chunk": "faceted luminous crystal cells",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CrystalLight": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C02_B_MOUNT_PIECES_16",
+      "big_component": "CRYSTAL_BAY_02_BIG_COMPONENT",
+      "chunk": "crystal suspension mount",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C03_A_CRYSTAL_CELLS_16",
+      "big_component": "CRYSTAL_BAY_03_BIG_COMPONENT",
+      "chunk": "faceted luminous crystal cells",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CrystalLight": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C03_B_MOUNT_PIECES_16",
+      "big_component": "CRYSTAL_BAY_03_BIG_COMPONENT",
+      "chunk": "crystal suspension mount",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C04_A_CRYSTAL_CELLS_16",
+      "big_component": "CRYSTAL_BAY_04_BIG_COMPONENT",
+      "chunk": "faceted luminous crystal cells",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_VioletCrystal": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C04_B_MOUNT_PIECES_16",
+      "big_component": "CRYSTAL_BAY_04_BIG_COMPONENT",
+      "chunk": "crystal suspension mount",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C05_A_CRYSTAL_CELLS_16",
+      "big_component": "CRYSTAL_BAY_05_BIG_COMPONENT",
+      "chunk": "faceted luminous crystal cells",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CrystalLight": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C05_B_MOUNT_PIECES_16",
+      "big_component": "CRYSTAL_BAY_05_BIG_COMPONENT",
+      "chunk": "crystal suspension mount",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C06_A_CRYSTAL_CELLS_16",
+      "big_component": "CRYSTAL_BAY_06_BIG_COMPONENT",
+      "chunk": "faceted luminous crystal cells",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CrystalLight": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C06_B_MOUNT_PIECES_16",
+      "big_component": "CRYSTAL_BAY_06_BIG_COMPONENT",
+      "chunk": "crystal suspension mount",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C07_A_CRYSTAL_CELLS_16",
+      "big_component": "CRYSTAL_BAY_07_BIG_COMPONENT",
+      "chunk": "faceted luminous crystal cells",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CrystalLight": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C07_B_MOUNT_PIECES_16",
+      "big_component": "CRYSTAL_BAY_07_BIG_COMPONENT",
+      "chunk": "crystal suspension mount",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C08_A_CRYSTAL_CELLS_16",
+      "big_component": "CRYSTAL_BAY_08_BIG_COMPONENT",
+      "chunk": "faceted luminous crystal cells",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_VioletCrystal": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "C08_B_MOUNT_PIECES_16",
+      "big_component": "CRYSTAL_BAY_08_BIG_COMPONENT",
+      "chunk": "crystal suspension mount",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "B01_SLOPED_ISLAND_PLATES_32",
+      "big_component": "FLOATING_ISLAND_BOTTOM_BIG_COMPONENT",
+      "chunk": "tapered floating-island skirt plates",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_DeepStructure": 160,
+        "MSK_V2_CharcoalMetal": 32
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "B02_CYAN_ENERGY_VEINS_16",
+      "big_component": "FLOATING_ISLAND_BOTTOM_BIG_COMPONENT",
+      "chunk": "cyan levitation veins",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CyanEnergy": 96
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "B03_CRYSTAL_SOCKET_JAWS_16",
+      "big_component": "FLOATING_ISLAND_BOTTOM_BIG_COMPONENT",
+      "chunk": "crystal socket jaws",
+      "editable_micro_pieces": 16,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 80,
+        "MSK_V2_SilverBlue": 16
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "B04_PERIMETER_STABILIZER_FINS_24",
+      "big_component": "FLOATING_ISLAND_BOTTOM_BIG_COMPONENT",
+      "chunk": "perimeter stabilizer fins",
+      "editable_micro_pieces": 24,
+      "surface_material_faces": {
+        "MSK_V2_CharcoalMetal": 120,
+        "MSK_V2_SilverBlue": 24
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    },
+    {
+      "object": "B05_CENTRAL_LEVITATION_CORE_32",
+      "big_component": "FLOATING_ISLAND_BOTTOM_BIG_COMPONENT",
+      "chunk": "central levitation core cells",
+      "editable_micro_pieces": 32,
+      "surface_material_faces": {
+        "MSK_V2_WisdomGold": 80,
+        "MSK_V2_CrystalLight": 240
+      },
+      "surface_texture_policy": "face-level: bottom, top and edge materials assigned independently"
+    }
+  ],
+  "materials": {
+    "deck": {
+      "name": "MSK_V2_PaintedDeck",
+      "palette_hex": "#667083",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/deck_painted_alloy_v2.png"
+    },
+    "deck_light": {
+      "name": "MSK_V2_DeckEdge",
+      "palette_hex": "#858EA0",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/deck_painted_alloy_v2.png"
+    },
+    "charcoal": {
+      "name": "MSK_V2_CharcoalMetal",
+      "palette_hex": "#151C2B",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/underside_charcoal_tech_v2.png"
+    },
+    "deep": {
+      "name": "MSK_V2_DeepStructure",
+      "palette_hex": "#0B1220",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/underside_charcoal_tech_v2.png"
+    },
+    "cyan": {
+      "name": "MSK_V2_CyanEnergy",
+      "palette_hex": "#00B2C7",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/ring_cyan_energy_v2.png"
+    },
+    "cyan_light": {
+      "name": "MSK_V2_CrystalLight",
+      "palette_hex": "#73E9F5",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/crystal_cyan_facets_v2.png"
+    },
+    "gold": {
+      "name": "MSK_V2_WisdomGold",
+      "palette_hex": "#FFD968",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/ring_gold_inlay_v2.png"
+    },
+    "silver": {
+      "name": "MSK_V2_SilverBlue",
+      "palette_hex": "#B8D9DF",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/underside_charcoal_tech_v2.png"
+    },
+    "violet": {
+      "name": "MSK_V2_VioletCrystal",
+      "palette_hex": "#7458BE",
+      "texture_style": "subtle procedural painted metal",
+      "texture_image": "assets/textures/mind_spark/station_components/v2/crystal_cyan_facets_v2.png"
+    }
+  },
+  "texture_assets": {
+    "deck": "assets/textures/mind_spark/station_components/v2/deck_painted_alloy_v2.png",
+    "underside": "assets/textures/mind_spark/station_components/v2/underside_charcoal_tech_v2.png",
+    "crystal": "assets/textures/mind_spark/station_components/v2/crystal_cyan_facets_v2.png",
+    "gold": "assets/textures/mind_spark/station_components/v2/ring_gold_inlay_v2.png",
+    "cyan": "assets/textures/mind_spark/station_components/v2/ring_cyan_energy_v2.png"
+  },
+  "surface_application": {
+    "verified": true,
+    "policy": "every editable piece face resolves to a packed image-textured material; top, bottom and edges are assigned independently"
+  },
+  "outputs": {
+    "blend": "assets3D/mind_spark/station_components/blend/01_floating_platform_reference_match_v2.blend",
+    "assembled_render": "artifacts/blender_mind_spark_station_components/01_reference_match_v2_assembled.png",
+    "underside_render": "artifacts/blender_mind_spark_station_components/01_reference_match_v2_underside.png",
+    "exploded_render": "artifacts/blender_mind_spark_station_components/01_reference_match_v2_exploded.png",
+    "manifest": "artifacts/blender_mind_spark_station_components/01_reference_match_v2_manifest.json"
+  }
+}

@@ -1,0 +1,60 @@
+[
+  {
+    "test": "test_milo_missing_walk_fallback.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 0,
+    "seconds": 2.52,
+    "errors": [],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [
+      "MILO_MISSING_WALK: PASS \u2014 donor fallback and silent missing-clip handling"
+    ],
+    "status": "PASS",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/current-milo-animation-render-fix/test_milo_missing_walk_fallback.log"
+  },
+  {
+    "test": "test_milo_companion_follow.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 1,
+    "seconds": 14.69,
+    "errors": [
+      "  FAIL: Milo stops instead of crowding the player (got GREETING)",
+      "ERROR: MILO_COMPANION_FOLLOW_TEST: 1 failure(s)"
+    ],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [],
+    "status": "FAIL",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/current-milo-animation-render-fix/test_milo_companion_follow.log"
+  },
+  {
+    "test": "test_milo_natural_animation.gd",
+    "sha": "004e0dd12112dbf978f47a9a2d1381a1fe060687",
+    "exit_code": 1,
+    "seconds": 3.19,
+    "errors": [
+      "  FAIL: the cane forearm advances smoothly without a one-frame flip (29.54)",
+      "  FAIL: the live face includes PrototypeEyeWhite_L",
+      "  FAIL: the live face includes PrototypeBrow_L",
+      "  FAIL: the live face includes PrototypeMoustache_L",
+      "  FAIL: the live face includes PrototypeEyeWhite_R",
+      "  FAIL: the live face includes PrototypeBrow_R",
+      "  FAIL: the live face includes PrototypeMoustache_R",
+      "  FAIL: Paw_L visibly curls its sculpted finger row",
+      "  FAIL: Paw_R visibly curls its sculpted finger row",
+      "ERROR: MILO_NATURAL_ANIMATION_TEST: 9 failure(s)"
+    ],
+    "warnings": [
+      "WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg",
+      "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    ],
+    "success_markers": [],
+    "status": "FAIL",
+    "log": "/Users/davidsovann/S2603/artea/artifacts/branch_compatibility/current-milo-animation-render-fix/test_milo_natural_animation.log"
+  }
+]
