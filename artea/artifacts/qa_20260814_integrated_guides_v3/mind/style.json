@@ -1,0 +1,170 @@
+{
+  "input": "/Users/davidsovann/Documents/World_One_Mind_Spark_Concise_Developer_Guide_Implementation_Blueprints.docx",
+  "fonts_by_char_count": {
+    "Calibri": 24540
+  },
+  "direct_run_formatting_runs": 683,
+  "direct_paragraph_formatting_paragraphs": 639,
+  "heading_like_paragraphs_not_heading_style": [
+    {
+      "para_index": 1,
+      "text": "ART\u00c9A  \u2022  WORLD ONE  \u2022  CLEAN INTEGRATED EDITION",
+      "style": "Normal"
+    },
+    {
+      "para_index": 2,
+      "text": "MIND SPARK",
+      "style": "Title"
+    },
+    {
+      "para_index": 8,
+      "text": "DOCUMENT ORIENTATION",
+      "style": "Normal"
+    },
+    {
+      "para_index": 20,
+      "text": "PART 1",
+      "style": "Normal"
+    },
+    {
+      "para_index": 31,
+      "text": "PART 2",
+      "style": "Normal"
+    },
+    {
+      "para_index": 51,
+      "text": "PART 3",
+      "style": "Normal"
+    },
+    {
+      "para_index": 59,
+      "text": "PART 4",
+      "style": "Normal"
+    },
+    {
+      "para_index": 72,
+      "text": "PART 5",
+      "style": "Normal"
+    },
+    {
+      "para_index": 79,
+      "text": "PART 6",
+      "style": "Normal"
+    },
+    {
+      "para_index": 92,
+      "text": "PART 7",
+      "style": "Normal"
+    },
+    {
+      "para_index": 115,
+      "text": "Reflection: \u2018What helped you move forward when the path was not clear?\u2019",
+      "style": "Normal"
+    },
+    {
+      "para_index": 116,
+      "text": "PART 8",
+      "style": "Normal"
+    },
+    {
+      "para_index": 129,
+      "text": "PART 9",
+      "style": "Normal"
+    },
+    {
+      "para_index": 143,
+      "text": "PART 10",
+      "style": "Normal"
+    },
+    {
+      "para_index": 175,
+      "text": "Part",
+      "style": "Normal"
+    },
+    {
+      "para_index": 176,
+      "text": "Section",
+      "style": "Normal"
+    },
+    {
+      "para_index": 177,
+      "text": "Main use",
+      "style": "Normal"
+    },
+    {
+      "para_index": 178,
+      "text": "1",
+      "style": "Normal"
+    },
+    {
+      "para_index": 181,
+      "text": "2",
+      "style": "Normal"
+    },
+    {
+      "para_index": 184,
+      "text": "3",
+      "style": "Normal"
+    }
+  ],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 1,
+        "text": "ART\u00c9A  \u2022  WORLD ONE  \u2022  CLEAN INTEGRATED EDITION",
+        "style": "Normal"
+      },
+      {
+        "para_index": 4,
+        "text": "",
+        "style": "Normal"
+      },
+      {
+        "para_index": 6,
+        "text": "WORLD IDENTITY  A living computer forest where thoughts grow like stars and wisdom reorganizes the path.",
+        "style": "Normal"
+      },
+      {
+        "para_index": 7,
+        "text": "Version 3.0  \u2022  14 August 2026  \u2022  Levels 1\u20135  \u2022  55\u201370 minutes",
+        "style": "Normal"
+      },
+      {
+        "para_index": 8,
+        "text": "DOCUMENT ORIENTATION",
+        "style": "Normal"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 1,
+        "run_text": "ART\u00c9A  \u2022  WORLD ONE  \u2022  CLEAN INTEGRATED EDITION",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": "MIND SPARK",
+        "style": "Title"
+      },
+      {
+        "para_index": 3,
+        "run_text": "Story Journey, Quests, Objects, Combat, Characters, Identity System & Godot Buil",
+        "style": "Subtitle"
+      },
+      {
+        "para_index": 5,
+        "run_text": "Actual Art Castle Galaxy world reference. New objects must keep this low-poly, r",
+        "style": "Caption"
+      },
+      {
+        "para_index": 6,
+        "run_text": "WORLD IDENTITY  ",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}
