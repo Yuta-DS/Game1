@@ -1,0 +1,87 @@
+Starting local backend on 127.0.0.1:8000…
+Backend did not start; Offline Guest remains available. See server/logs/flaskapp.err.log.
+Checking split layout for local serving…
+  index.pck: parts up to date (f61b3244dadca042)
+  index.side.wasm: parts up to date (7e4df20e1d767f03)
+Serving /Users/davidsovann/S2603/artea/builds/web
+  http://localhost:8801/index.html
+First load pulls the whole pack - give it a minute. Ctrl-C to stop.
+
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /pck-loader.js HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /index.png HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /index.js HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /index.pck.parts.json HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /index.wasm HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /index.side.wasm.parts.json HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part00 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /index.icon.png HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.side.wasm.7e4df20e1d767f03.part00 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /index.icon.png HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part01 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.side.wasm.7e4df20e1d767f03.part01 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part02 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.side.wasm.7e4df20e1d767f03.part02 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part03 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.side.wasm.7e4df20e1d767f03.part03 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part04 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.side.wasm.7e4df20e1d767f03.part04 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part05 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.side.wasm.7e4df20e1d767f03.part05 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part06 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part07 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part08 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /libterrain.web.release.wasm32.wasm HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part09 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part10 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part11 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part12 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part13 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part14 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part15 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part16 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part17 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part18 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part19 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part20 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part21 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part22 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part23 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part24 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part25 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part26 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part27 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part28 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part29 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:12] "GET /parts/index.pck.f61b3244dadca042.part30 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part31 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part32 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part33 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part34 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part35 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part36 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part37 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part38 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part39 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part40 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part41 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part42 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part43 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part44 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part45 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part46 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part47 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part48 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part49 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part50 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part51 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part52 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part53 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part54 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part55 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part56 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:13] "GET /parts/index.pck.f61b3244dadca042.part57 HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:16] "GET /index.audio.position.worklet.js HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:16] "GET /index.audio.worklet.js HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 17:59:37] "GET /index.icon.png HTTP/1.1" 200 -
+[rtk] ./web: process terminated by signal 15
