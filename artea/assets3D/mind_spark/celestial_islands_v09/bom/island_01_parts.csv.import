@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://t6hi4c0k6uuv"
+
+[deps]
+
+files=["res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.name.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.category.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.assembly.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.role.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.kind.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.triangles.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.source.translation"]
+
+source_file="res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.csv"
+dest_files=["res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.name.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.category.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.assembly.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.role.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.kind.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.triangles.translation", "res://assets3D/mind_spark/celestial_islands_v09/bom/island_01_parts.source.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

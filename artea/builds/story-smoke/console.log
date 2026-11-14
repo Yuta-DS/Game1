@@ -1,0 +1,49 @@
+[ARTEA] loading… (size unknown)
+[ARTEA] loading 0%  (1 / 464 MB)
+[ARTEA] loading 1%  (7 / 464 MB)
+[ARTEA] loading 3%  (17 / 464 MB)
+[ARTEA] loading 7%  (33 / 464 MB)
+[ARTEA] loading 9%  (43 / 464 MB)
+[ARTEA] loading 10%  (49 / 464 MB)
+[ARTEA] loading 12%  (57 / 464 MB)
+[ARTEA] loading 14%  (65 / 464 MB)
+[ARTEA] loading 17%  (83 / 464 MB)
+[ARTEA] loading 22%  (105 / 464 MB)
+[ARTEA] loading 26%  (121 / 464 MB)
+[ARTEA] loading 29%  (137 / 464 MB)
+[ARTEA] loading 32%  (153 / 464 MB)
+[ARTEA] loading 36%  (169 / 464 MB)
+[ARTEA] loading 39%  (185 / 464 MB)
+[ARTEA] loading 44%  (205 / 464 MB)
+[ARTEA] loading 47%  (219 / 464 MB)
+[ARTEA] loading 51%  (239 / 464 MB)
+[ARTEA] loading 54%  (255 / 464 MB)
+[ARTEA] loading 57%  (268 / 464 MB)
+[ARTEA] loading 62%  (289 / 464 MB)
+[ARTEA] loading 65%  (303 / 464 MB)
+[ARTEA] loading 69%  (321 / 464 MB)
+[ARTEA] loading 72%  (337 / 464 MB)
+[ARTEA] loading 75%  (349 / 464 MB)
+[ARTEA] loading 82%  (383 / 464 MB)
+[ARTEA] loading 86%  (401 / 464 MB)
+[ARTEA] loading 89%  (417 / 464 MB)
+[ARTEA] loading 92%  (431 / 464 MB)
+[ARTEA] loading 96%  (447 / 464 MB)
+[ARTEA] loading 100%  (464 / 464 MB)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL
+Build configuration: Emscripten 4.0.20, single-threaded, GDExtension support.
+[ARTEA] engine started
+[ARTEA] ERROR: Uncaught RuntimeError: memory access out of bounds
+http://localhost:8801/index.js:1
+EXCEPTION RuntimeError: memory access out of bounds
+    at wasm://wasm/0a82416e:wasm-function[69110]:0x23d2374
+    at wasm://wasm/0a82416e:wasm-function[69112]:0x23d28c7
+    at wasm://wasm/0a82416e:wasm-function[40537]:0x17afa77
+    at wasm://wasm/0a82416e:wasm-function[40650]:0x17b54e7
+    at wasm://wasm/0a82416e:wasm-function[5908]:0x6c9c74
+    at wasm://wasm/0a82416e:wasm-function[5785]:0x6bc105
+    at wasm://wasm/0a82416e:wasm-function[69126]:0x23d3da5
+    at wasm://wasm/0a82416e:wasm-function[5688]:0x6b1eb9
+    at wasm://wasm/0a82416e:wasm-function[62228]:0x2204a20
+    at wasm://wasm/0a82416e:wasm-function[5908]:0x6c9a80

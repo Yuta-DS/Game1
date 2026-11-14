@@ -1,0 +1,78 @@
+[ARTEA] loading… (size unknown)
+[ARTEA] loading 0%  (0 / 571 MB)
+[ARTEA] loading 1%  (9 / 571 MB)
+[ARTEA] loading 5%  (33 / 571 MB)
+[ARTEA] loading 7%  (41 / 571 MB)
+[ARTEA] loading 11%  (65 / 571 MB)
+[ARTEA] loading 12%  (73 / 571 MB)
+[ARTEA] loading 15%  (89 / 571 MB)
+[ARTEA] loading 17%  (97 / 571 MB)
+[ARTEA] loading 18%  (105 / 571 MB)
+[ARTEA] loading 21%  (121 / 571 MB)
+[ARTEA] loading 22%  (129 / 571 MB)
+[ARTEA] loading 24%  (137 / 571 MB)
+[ARTEA] loading 26%  (153 / 571 MB)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL
+Build configuration: Emscripten 4.0.20, single-threaded, GDExtension support.
+[ARTEA] engine started
+GUEST access selected
+Inventory button found player's inventory GUI
+Spawning 30 collectibles around (0.0, 0.0, 0.0)
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Successfully spawned 30 collectibles in 30 attempts
+Spawning 20 collectibles around (50.0, 0.0, 50.0)
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Successfully spawned 20 collectibles in 21 attempts
+✅ Ocean 1 Found and Playing
+✅ Ocean 2 Found and Playing
+👂 Audio Listener enabled on Viewport
+[ARTEA] scene ready res://scenes/New_Hub_World.tscn

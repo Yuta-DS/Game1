@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Artea web render diagnostic</title>
+<style>
+  body { margin:0; padding:16px; background:#111; color:#eee;
+         font:13px/1.5 ui-monospace,Menlo,monospace; }
+  h1 { font-size:15px; margin:0 0 12px; }
+  pre { white-space:pre-wrap; background:#000; padding:12px; border:1px solid #333; }
+  .row { display:flex; gap:12px; margin:12px 0; flex-wrap:wrap; }
+  .sw { width:120px; }
+  .sw div { height:60px; border:1px solid #555; }
+  .sw span { font-size:11px; }
+  canvas { display:block; width:120px; height:60px; border:1px solid #555; }
+</style>
+</head>
+<body>
+<h1>Artea web render diagnostic</h1>
+
+<div class="row">
+  <div class="sw"><div style="background:#808080"></div><span>CSS #808080</span></div>
+  <div class="sw"><canvas id="c2d" width="120" height="60"></canvas><span>2D fill #808080</span></div>
+  <div class="sw"><canvas id="cgl" width="120" height="60"></canvas><span>WebGL2 clear 0.5</span></div>
+  <div class="sw"><canvas id="cglsrgb" width="120" height="60"></canvas><span>WebGL2 srgb-tagged</span></div>
+</div>
+
+<pre id="out">running…</pre>
+
+<script>
+const L = [];
+const say = (k, v) => L.push(k.padEnd(30) + ': ' + v);
+
+// --- page-level filters: catches Dark Reader and similar extensions ---
+for (const el of [document.documentElement, document.body]) {
+  const cs = getComputedStyle(el);
+  say('filter(' + el.tagName.toLowerCase() + ')', cs.filter);
+  say('bg(' + el.tagName.toLowerCase() + ')', cs.backgroundColor);
+}
+say('injected <style> count', document.querySelectorAll('style').length);
+say('darkreader attr present', !!document.querySelector('[data-darkreader-scheme],.darkreader'));
+
+// --- display / color environment ---
+const mq = q => matchMedia(q).matches;
+say('prefers-color-scheme dark', mq('(prefers-color-scheme: dark)'));
+say('forced-colors active', mq('(forced-colors: active)'));
+say('color-gamut p3', mq('(color-gamut: p3)'));
+say('color-gamut rec2020', mq('(color-gamut: rec2020)'));
+say('dynamic-range high', mq('(dynamic-range: high)'));
+say('devicePixelRatio', devicePixelRatio);
+say('screen colorDepth', screen.colorDepth);
+
+// --- 2D canvas readback ---
+const c2d = document.getElementById('c2d').getContext('2d');
+c2d.fillStyle = '#808080';
+c2d.fillRect(0, 0, 120, 60);
+say('2d readback', Array.from(c2d.getImageData(5, 5, 1, 1).data).join(','));
+
+// --- WebGL2: the decisive test ---
+function glProbe(canvas, attrs, label) {
+  const gl = canvas.getContext('webgl2', attrs);
+  if (!gl) { say(label + ' webgl2', 'UNAVAILABLE'); return null; }
+  gl.clearColor(0.5, 0.5, 0.5, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  const px = new Uint8Array(4);
+  gl.readPixels(5, 5, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  say(label + ' clear(0.5) readback', Array.from(px).join(','));
+  return gl;
+}
+
+const gl = glProbe(document.getElementById('cgl'), {}, 'plain');
+glProbe(document.getElementById('cglsrgb'), { colorSpace: 'display-p3' }, 'p3');
+
+if (gl) {
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  say('UNMASKED_VENDOR', dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : 'n/a');
+  say('UNMASKED_RENDERER', dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'n/a');
+  say('VERSION', gl.getParameter(gl.VERSION));
+  say('SHADING_LANGUAGE_VERSION', gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+  say('MAX_UNIFORM_BLOCK_SIZE', gl.getParameter(gl.MAX_UNIFORM_BLOCK_SIZE));
+  say('MAX_FRAGMENT_UNIFORM_VECTORS', gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
+  say('MAX_TEXTURE_IMAGE_UNITS', gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
+  say('MAX_SAMPLES', gl.getParameter(gl.MAX_SAMPLES));
+  say('drawingBufferColorSpace', gl.drawingBufferColorSpace || 'n/a');
+  say('unpackColorSpace', gl.unpackColorSpace || 'n/a');
+
+  const want = ['EXT_color_buffer_float', 'EXT_sRGB', 'OES_texture_float_linear',
+                'EXT_texture_filter_anisotropic', 'WEBGL_compressed_texture_etc',
+                'WEBGL_compressed_texture_astc', 'WEBGL_compressed_texture_s3tc'];
+  for (const e of want) say('ext ' + e, !!gl.getExtension(e));
+}
+
+// --- threading / isolation, affects Godot but not brightness ---
+say('crossOriginIsolated', self.crossOriginIsolated);
+say('SharedArrayBuffer', typeof SharedArrayBuffer !== 'undefined');
+say('hardwareConcurrency', navigator.hardwareConcurrency);
+say('userAgent', navigator.userAgent);
+
+document.getElementById('out').textContent = L.join('\n');
+</script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS http://127.0.0.1:8000/ai/world-builder
+net::ERR_FAILED http://127.0.0.1:8000/ai/world-builder
