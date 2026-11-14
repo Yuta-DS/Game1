@@ -1,0 +1,81 @@
+{
+	"echo_complete": true,
+	"events": [
+		{
+			"button": "Capture the aligned echo",
+			"description": "Try before alignment — the receiver must reject the capture",
+			"frame": 330
+		},
+		{
+			"button": "Turn the three-notch",
+			"description": "Turn the gear; compare the green hand with the gold source",
+			"frame": 349
+		},
+		{
+			"button": "Capture the aligned echo",
+			"description": "Aligned — capture the thought, then examine its evidence",
+			"frame": 368
+		},
+		{
+			"button": "FACT",
+			"description": "Choose FACT based on what the thought actually says",
+			"frame": 387
+		},
+		{
+			"button": "Turn the three-notch",
+			"description": "Turn the gear; compare the green hand with the gold source",
+			"frame": 418
+		},
+		{
+			"button": "Turn the three-notch",
+			"description": "Turn the gear; compare the green hand with the gold source",
+			"frame": 437
+		},
+		{
+			"button": "Capture the aligned echo",
+			"description": "Aligned — capture the thought, then examine its evidence",
+			"frame": 456
+		},
+		{
+			"button": "POSSIBILITY",
+			"description": "Choose POSSIBILITY based on what the thought actually says",
+			"frame": 475
+		},
+		{
+			"button": "Turn the three-notch",
+			"description": "Turn the gear; compare the green hand with the gold source",
+			"frame": 506
+		},
+		{
+			"button": "Turn the three-notch",
+			"description": "Turn the gear; compare the green hand with the gold source",
+			"frame": 525
+		},
+		{
+			"button": "Turn the three-notch",
+			"description": "Turn the gear; compare the green hand with the gold source",
+			"frame": 544
+		},
+		{
+			"button": "Capture the aligned echo",
+			"description": "Aligned — capture the thought, then examine its evidence",
+			"frame": 563
+		},
+		{
+			"button": "UNSURE",
+			"description": "Choose UNSURE based on what the thought actually says",
+			"frame": 582
+		},
+		{
+			"button": "What One Small Preparation Would Help?",
+			"description": "Choose a useful preparation question instead of predicting failure",
+			"frame": 601
+		}
+	],
+	"external_gate_locked": true,
+	"fps": 12,
+	"frames": 658,
+	"result": "PASS",
+	"scope": "Local Compatibility renderer; public proximity inputs and UI button signals; camera cuts, not walking or browser",
+	"signal_complete": true
+}

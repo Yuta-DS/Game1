@@ -1,0 +1,150 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+   at: load (scene/resources/resource_format_text.cpp:501)
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+WARNING: res://scenes/ocean_sounds.tscn:3 - ext_resource, invalid UID: uid://8eksvwwqe1hq - using text path instead: res://assets/audio/Ocean_Ambience_Loop.ogg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: res://textures/pebble_round_22.tscn:3 - ext_resource, invalid UID: uid://0p4wab41u4te - using text path instead: res://assets3D/stylizedNature/Pebble_Round_2.gltf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: res://assets3D/mountains/rock_medium_12.tscn:3 - ext_resource, invalid UID: uid://dppck752xc7tn - using text path instead: res://assets3D/stylizedNature/Rock_Medium_1.gltf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: res://assets3D/mountains/rock_medium_13.tscn:3 - ext_resource, invalid UID: uid://dppck752xc7tn - using text path instead: res://assets3D/stylizedNature/Rock_Medium_1.gltf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: res://assets3D/mountains/rock_medium_14.tscn:3 - ext_resource, invalid UID: uid://dppck752xc7tn - using text path instead: res://assets3D/stylizedNature/Rock_Medium_1.gltf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: res://assets3D/mountains/rock_medium_22.tscn:3 - ext_resource, invalid UID: uid://bmyci3u7ap1im - using text path instead: res://assets3D/stylizedNature/Rock_Medium_2.gltf
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: res://scenes/New_Hub_World.tscn:43 - ext_resource, invalid UID: uid://bexb5n8or0c36 - using text path instead: res://assets/audio/Flowing Water and Birds (Hub).ogg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: res://scenes/New_Hub_World.tscn:44 - ext_resource, invalid UID: uid://cxwpjfnl8yfbl - using text path instead: res://assets/audio/Campfire.ogg
+   at: load (scene/resources/resource_format_text.cpp:501)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: Terrain3DTextureAsset#0379:set_albedo_texture:79: Texture 'moss_groud_02_Base_Color_1k' has no mipmaps. Change on the Import panel if desired.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: Terrain3DTextureAsset#0379:set_normal_texture:100: Texture 'moss_groud_02_Normal_dx_1k' has no mipmaps. Change on the Import panel if desired.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: Terrain3DTextureAsset#2028:set_albedo_texture:79: Texture 'sand_01_color_1k' has no mipmaps. Change on the Import panel if desired.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: Terrain3DTextureAsset#2028:set_normal_texture:100: Texture 'sand_01_normal_dx_1k' has no mipmaps. Change on the Import panel if desired.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: Terrain3DTextureAsset#3677:set_albedo_texture:79: Texture 'ground_tiles_13_baseColor_1k' has no mipmaps. Change on the Import panel if desired.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: Terrain3DTextureAsset#3677:set_normal_texture:100: Texture 'ground_tiles_13_normal_dx_1k' has no mipmaps. Change on the Import panel if desired.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:104)
+WARNING: instance_reset_physics_interpolation() is deprecated.
+   at: _instance_reset_physics_interpolation_bind_compat_104269 (servers/rendering/rendering_server.compat.inc:62)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:105)
+WARNING: Terrain3D#5805:_notification:869: free_editor_textures requires `Assets` be saved to a file. Do so, or disable the former to turn off this warning
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/test_castle_player_route.gd:105)
+Inventory button found player's inventory GUI
+Spawning 30 collectibles around (0.0, 0.0, 0.0)
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Successfully spawned 30 collectibles in 31 attempts
+Spawning 20 collectibles around (50.0, 0.0, 50.0)
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Successfully spawned 20 collectibles in 24 attempts
+DEBUG: SET INVENTORY DATA CALLED
+=== POPULATE SLOTS CALLED ===
+✅ Ocean 1 Found and Playing
+✅ Ocean 2 Found and Playing
+👂 Audio Listener enabled on Viewport
+/Users/davidsovann/Library/Application Support/Godot/app_userdata/Artea
+No authenticated user -> loading local gallery
+Player artworks found: 0
+No player artworks to replace online gallery.
+RatingPanel = RatingPanel:<Panel#4931679676527>
+RatingLabel = RatingLabel:<Label#4931797117025>
+likebutton = LikeButton:<Button#4931746785383>
+[ARTEA] galaxy world=true meshes=25696 cam=(0.0, 7.840959, 32.76148)
+CASTLE_PLAYER_ROUTE_TEST: PASS — packed player crossed crown gateway, full bridge, terrace, final ascent, castle threshold, and both diagonal bridge mouths
+Exited
+Exited

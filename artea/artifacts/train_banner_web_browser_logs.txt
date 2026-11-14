@@ -1,0 +1,140 @@
+[
+  {
+    level: 'log',
+    message: 'Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org',
+    timestamp: '2026-08-28T15:17:12.533Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL',
+    timestamp: '2026-08-28T15:17:12.716Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'Build configuration: Emscripten 4.0.20, single-threaded, no GDExtension support.',
+    timestamp: '2026-08-28T15:17:12.889Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: STATE Arrival',
+    timestamp: '2026-08-28T15:17:12.995Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: READY compatibility renderer; standalone UI only',
+    timestamp: '2026-08-28T15:17:13.022Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org',
+    timestamp: '2026-08-28T15:18:03.969Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL',
+    timestamp: '2026-08-28T15:18:04.097Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'Build configuration: Emscripten 4.0.20, single-threaded, no GDExtension support.',
+    timestamp: '2026-08-28T15:18:04.153Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: STATE Arrival',
+    timestamp: '2026-08-28T15:18:04.198Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: READY compatibility renderer; standalone UI only',
+    timestamp: '2026-08-28T15:18:04.200Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: CONTINUE',
+    timestamp: '2026-08-28T15:18:14.558Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: STATE Locked route',
+    timestamp: '2026-08-28T15:18:20.636Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: GET_OFF',
+    timestamp: '2026-08-28T15:18:27.224Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: STATE Arrival',
+    timestamp: '2026-08-28T15:18:33.611Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org',
+    timestamp: '2026-08-28T15:19:05.788Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL',
+    timestamp: '2026-08-28T15:19:05.896Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'Build configuration: Emscripten 4.0.20, single-threaded, no GDExtension support.',
+    timestamp: '2026-08-28T15:19:05.935Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: STATE Arrival',
+    timestamp: '2026-08-28T15:19:05.968Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: READY compatibility renderer; standalone UI only',
+    timestamp: '2026-08-28T15:19:05.968Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: CONTINUE',
+    timestamp: '2026-08-28T15:19:43.487Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: STATE Locked route',
+    timestamp: '2026-08-28T15:20:10.069Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: GET_OFF',
+    timestamp: '2026-08-28T15:20:29.048Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  },
+  {
+    level: 'log',
+    message: 'BANNER_WEB: STATE Arrival',
+    timestamp: '2026-08-28T15:20:29.447Z',
+    url: 'http://127.0.0.1:8774/index.js'
+  }
+]

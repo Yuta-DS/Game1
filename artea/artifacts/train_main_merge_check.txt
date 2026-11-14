@@ -1,0 +1,19 @@
+feb91c0f2b0aae93cc46db96ca01d4a457c6a357
+artea/assets3D/houses/red/hexagons_medieval.png.import
+artea/scenes/New_Hub_World.tscn
+artea/scenes/stylizedsky.gdshader
+artea/scripts/Water.tscn
+artea/scripts/web_terrain_compat.gd
+
+CONFLICT (modify/delete): artea/assets3D/houses/red/hexagons_medieval.png.import deleted in HEAD and modified in origin/main.  Version origin/main of artea/assets3D/houses/red/hexagons_medieval.png.import left in tree.
+Auto-merging artea/project.godot
+Auto-merging artea/scenes/New_Hub_World.tscn
+CONFLICT (content): Merge conflict in artea/scenes/New_Hub_World.tscn
+Auto-merging artea/scenes/stylizedsky.gdshader
+CONFLICT (content): Merge conflict in artea/scenes/stylizedsky.gdshader
+CONFLICT (modify/delete): artea/scripts/Water.tscn deleted in origin/main and modified in HEAD.  Version HEAD of artea/scripts/Water.tscn left in tree.
+Auto-merging artea/scripts/cycle.tscn
+Auto-merging artea/scripts/hub_awakening.gd
+Auto-merging artea/scripts/hub_castle_stairs.gd
+Auto-merging artea/scripts/web_terrain_compat.gd
+CONFLICT (content): Merge conflict in artea/scripts/web_terrain_compat.gd

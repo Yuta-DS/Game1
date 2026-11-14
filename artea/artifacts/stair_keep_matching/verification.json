@@ -1,0 +1,113 @@
+{
+  "focused": [
+    {
+      "name": "castle_stair_keep_details",
+      "result": "STAIR_KEEP_DETAIL_TEST: PASS — 12 solid roofed piers, 22 battlements, 40 corner dressings, 10 pennants; outward outer-guard faces and 10 real-input sprint impacts/escapes on both sides\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_spiral_route",
+      "result": "CASTLE_SPIRAL_ROUTE_TEST: PASS — three stair lanes and full crown circuit\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_reference_style",
+      "result": "CASTLE_REFERENCE_STYLE_TEST: PASS — 1175 route stone surfaces, 133 batched patches, 20 aligned round windows; 496 colliders unchanged; original atlas preserved\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_full_moss",
+      "result": "FULL_STAIR_MOSS_TEST: PASS — 80 existing wall surfaces; full spiral from 27.63m ground to 67.73m crown plus upper stair; materials, meshes and 967 collision shapes preserved\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_stair_dynamics",
+      "result": "CASTLE_STAIR_DYNAMICS_TEST: PASS — player crossed terrain-to-crown uphill and downhill, landed both jump transitions, and loose props remained supported at lower/middle/upper stair sections\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_rooftop_barrier_safety",
+      "result": "CASTLE_ROOFTOP_BARRIER_TEST: PASS — 6 walkable rooftop sections resisted sprint impacts and released the player cleanly\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_inner_roof_guard",
+      "result": "CASTLE_INNER_ROOF_GUARD_TEST: PASS — 50 edge probes, 7 sprint/oblique impacts and clean escapes\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_masonry_bridge",
+      "result": "CASTLE_MASONRY_BRIDGE_TEST: PASS — 3 lanes both ways; 72 floor/feet probes; 6 sprint impacts and escapes\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_rooftop_garden",
+      "result": "CASTLE_ROOFTOP_GARDEN_TEST: PASS — reference stone perimeter/curved masonry, animated iron torches, flush patterned court, medieval herb plots; aligned walls; sprint, court traversal, corners, landings and exits\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_player_route",
+      "result": "CASTLE_PLAYER_ROUTE_TEST: PASS — packed player crossed crown gateway, full bridge, terrace, final ascent, castle threshold, and both diagonal bridge mouths\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_royal_entry",
+      "result": "SCRIPT ERROR: Cannot call method 'instantiate' on a null value.\nROYAL_ENTRY_TEST: PASS — 54 tread/collider and 18 underside probes, 3 ascent/descent lanes, 4 wall impacts/escapes, jump landing, live gallery entry\n",
+      "assertions_passed": true
+    },
+    {
+      "name": "castle_main_keep_unification",
+      "result": "MAIN_KEEP_STYLE_TEST: PASS — reference atlas retained, four grounded solid turrets, matching herb beds, single-surface coping; two aisles both ways and four impacts/escapes\n",
+      "assertions_passed": true
+    }
+  ],
+  "baseline": [
+    {
+      "name": "world_minimap",
+      "exit_code": 0,
+      "result": "WORLD_MINIMAP_TEST: PASS — outside/inside atlases, live tracking, and full map toggle\n"
+    },
+    {
+      "name": "art_castle_gallery_flow",
+      "exit_code": 0,
+      "result": "SCRIPT ERROR: Cannot call method 'instantiate' on a null value.\nART_CASTLE_GALLERY_TEST: PASS — raised castle door, gallery artwork, walking player and interactive 3D world are connected\n"
+    },
+    {
+      "name": "gallery_embedded_floating_world",
+      "exit_code": 0,
+      "result": "SCRIPT ERROR: Cannot call method 'instantiate' on a null value.\nGALLERY_EMBEDDED_WORLD_TEST: PASS — centred non-overlapping carpet exit and 175m world bridge\n"
+    },
+    {
+      "name": "story_crown_railway",
+      "exit_code": 0,
+      "result": "STORY_CROWN_RAILWAY_TEST: PASS — climbable stations and player-driven Crown Line connect all four worlds\n"
+    },
+    {
+      "name": "web_environment_compat",
+      "exit_code": 0,
+      "result": "PASS: Web sky, terrain, vegetation, and sea compatibility policy\n"
+    },
+    {
+      "name": "train_station_jump_traversal",
+      "exit_code": 0,
+      "result": "SCRIPT ERROR: Cannot call method 'instantiate' on a null value.\nTRAIN_STATION_JUMP_TEST: PASS — station floor, boarding route, train deck, and jump clearance are physical\n"
+    }
+  ],
+  "rendered": [
+    {
+      "method": "mobile",
+      "exit_code": 0,
+      "result": "REFERENCE_ATLAS_RENDER_TEST: PASS — mobile, four material roles match original castle atlas under identical lighting; maximum RGB delta 0.00392\n"
+    },
+    {
+      "method": "gl_compatibility",
+      "exit_code": 0,
+      "result": "REFERENCE_ATLAS_RENDER_TEST: PASS — gl_compatibility, four material roles match original castle atlas under identical lighting; maximum RGB delta 0.00392\n"
+    }
+  ],
+  "web": {
+    "deployed": false,
+    "browser_verified": false,
+    "blocker": "Missing referenced vegetation source assets"
+  }
+}

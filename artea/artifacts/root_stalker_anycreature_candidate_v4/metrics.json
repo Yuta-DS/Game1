@@ -1,0 +1,28 @@
+{
+ "W_over_H": 1.36,
+ "fill": 0.409,
+ "mass_thirds": [
+  0.225,
+  0.458,
+  0.317
+ ],
+ "torso_depth_max": 0.73,
+ "torso_depth_min": 0.19,
+ "mass_contrast": 3.83,
+ "leg_fraction": 0.34,
+ "turn_count": 20,
+ "zigzag_alignment": 0.67,
+ "iou_vs_prev": null,
+ "front": {
+  "W_over_H": 0.51,
+  "fill": 0.61
+ },
+ "top": {
+  "W_over_H": 0.35,
+  "fill": 0.607
+ },
+ "hero": {
+  "W_over_H": 0.96,
+  "fill": 0.461
+ }
+}
