@@ -1,0 +1,24 @@
+   0.1s loading http://localhost:8801/index.html?galaxy_audit=creator&studio_view=1
+   4.1s OK  engine started
+   8.3s clicking Offline Guest at (287, 568)
+   9.3s OK  guest login accepted
+  31.4s OK  destination scene built
+  33.4s OK  Galaxy ground audit completed
+
+first load (cache disabled):
+  bytes transferred to hub: 669888278 (638.9 MiB, 90 requests)
+  time to engine started:   3.5 s
+  time to hub:              30.6 s
+  bytes transferred total:  669888278 (638.9 MiB, 90 requests, 0 failed)
+METRIC bytes_to_hub=669888278
+METRIC time_to_engine_s=3.5
+METRIC time_to_hub_s=30.6
+METRIC bytes_total=669888278
+  parts refetched:          none
+METRIC part_retries=0
+METRIC parts_refetched=0
+  41.6s real player walk verified by Galaxy audit
+  41.6s fatal resource errors: 0
+
+screenshots: /Users/davidsovann/S2603/artea/builds/smoke
+RESULT: PLAYABLE

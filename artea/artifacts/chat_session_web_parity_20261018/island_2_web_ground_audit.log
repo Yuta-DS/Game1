@@ -1,0 +1,25 @@
+   1.0s loading http://localhost:8801/index.html?world_one_quality=1&island_view=2
+   5.1s OK  engine started
+   9.3s clicking Offline Guest at (287, 568)
+  10.3s OK  guest login accepted
+  33.4s OK  destination scene built
+  33.4s OK  World One quality probe completed
+  41.6s holding W to test movement
+
+first load (cache disabled):
+  bytes transferred to hub: 669887254 (638.9 MiB, 91 requests)
+  time to engine started:   3.4 s
+  time to hub:              31.5 s
+  bytes transferred total:  669887254 (638.9 MiB, 91 requests, 0 failed)
+METRIC bytes_to_hub=669887254
+METRIC time_to_engine_s=3.4
+METRIC time_to_hub_s=31.5
+METRIC bytes_total=669887254
+  parts refetched:          none
+METRIC part_retries=0
+METRIC parts_refetched=0
+  46.2s frame changed while moving: true
+  46.2s fatal resource errors: 0
+
+screenshots: /Users/davidsovann/S2603/artea/builds/smoke
+RESULT: PLAYABLE

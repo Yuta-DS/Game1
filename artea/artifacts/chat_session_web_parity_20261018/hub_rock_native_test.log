@@ -1,0 +1,116 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+WARNING: Terrain3DTextureAsset#9728:set_albedo_texture:79: Texture 'moss_groud_02_Base_Color_1k' has no mipmaps. Change on the Import panel if desired.
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _run (res://scripts/test_hub_entrance_in_scene.gd:16)
+WARNING: Terrain3DTextureAsset#9728:set_normal_texture:100: Texture 'moss_groud_02_Normal_dx_1k' has no mipmaps. Change on the Import panel if desired.
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _run (res://scripts/test_hub_entrance_in_scene.gd:16)
+WARNING: Terrain3DTextureAsset#1377:set_albedo_texture:79: Texture 'sand_01_color_1k' has no mipmaps. Change on the Import panel if desired.
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _run (res://scripts/test_hub_entrance_in_scene.gd:16)
+WARNING: Terrain3DTextureAsset#1377:set_normal_texture:100: Texture 'sand_01_normal_dx_1k' has no mipmaps. Change on the Import panel if desired.
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _run (res://scripts/test_hub_entrance_in_scene.gd:16)
+WARNING: Terrain3DTextureAsset#3026:set_albedo_texture:79: Texture 'ground_tiles_13_baseColor_1k' has no mipmaps. Change on the Import panel if desired.
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _run (res://scripts/test_hub_entrance_in_scene.gd:16)
+WARNING: Terrain3DTextureAsset#3026:set_normal_texture:100: Texture 'ground_tiles_13_normal_dx_1k' has no mipmaps. Change on the Import panel if desired.
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _run (res://scripts/test_hub_entrance_in_scene.gd:16)
+WARNING: instance_reset_physics_interpolation() is deprecated.
+     at: _instance_reset_physics_interpolation_bind_compat_104269 (servers/rendering/rendering_server.compat.inc:62)
+     GDScript backtrace (most recent call first):
+         [0] _run (res://scripts/test_hub_entrance_in_scene.gd:17)
+WARNING: Terrain3D#9587:_notification:869: free_editor_textures requires `Assets` be saved to a file. Do so, or disable the former to turn off this warning
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _run (res://scripts/test_hub_entrance_in_scene.gd:17)
+Inventory button found player's inventory GUI
+Spawning 30 collectibles around (0.0, 0.0, 0.0)
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Successfully spawned 30 collectibles in 32 attempts
+Spawning 20 collectibles around (50.0, 0.0, 50.0)
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Successfully spawned 20 collectibles in 21 attempts
+WARNING: Depth of field blur is only available when using the Forward+ or Mobile renderer.
+     at: camera_attributes_set_dof_blur (servers/rendering/storage/camera_attributes_storage.cpp:74)
+     GDScript backtrace (most recent call first):
+         [0] _build_dof (res://scripts/viewfinder/lens_controller.gd:179)
+         [1] _ready (res://scripts/viewfinder/lens_controller.gd:107)
+         [2] _attach_to_player (res://scripts/viewfinder/hub_lens.gd:102)
+         [3] _ready (res://scripts/viewfinder/hub_lens.gd:65)
+✅ Ocean 1 Found and Playing
+✅ Ocean 2 Found and Playing
+👂 Audio Listener enabled on Viewport
+HUB_ENTRANCE_TEST: PASS — entrance 236 meshes / 75 bodies, arrival (-32.8, 70.53, 27.41), 10 grass items
+Exited
+Exited
+ProtonScatter error: Calling execute on a PhysicsHelper while the node is not inside the tree.
+WARNING: 14 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 6 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

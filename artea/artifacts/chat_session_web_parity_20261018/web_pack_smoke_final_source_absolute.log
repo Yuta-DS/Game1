@@ -1,0 +1,43 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Invalid mix rate of 0, consider reassigning setting 'audio/driver/mix_rate'. 
+Defaulting mix rate to value 44100.
+     at: _get_configured_mix_rate (servers/audio/audio_server.cpp:141)
+
+WARNING: Trying to play stream (-9223370789368062065) as a sample (-9223370789418393715), but the driver doesn't support sample playback.
+     at: start_sample_playback (servers/audio/audio_server.cpp:200)
+     GDScript backtrace (most recent call first):
+         [0] _ready (res://scripts/heart_melody/heart_soundscape.gd:14)
+         [1] _build_environment (res://scripts/heart_melody/heart_world.gd:284)
+         [2] _ready (res://scripts/heart_melody/heart_world.gd:68)
+         [3] _ready (res://scripts/heart_melody/heart_overworld_connection.gd:21)
+         [4] _build_heart_melody_entrance (res://scripts/art_castle_story_railway.gd:224)
+         [5] _ready (res://scripts/art_castle_story_railway.gd:211)
+         [6] _build_galaxy_transit (res://scripts/art_gallery.gd:169)
+         [7] _ready (res://scripts/art_gallery.gd:33)
+         [8] _run (res://scripts/web_pack_smoke.gd:66)
+WARNING: Trying to play stream (-9223370789250621548) as a sample (-9223370789300953198), but the driver doesn't support sample playback.
+     at: start_sample_playback (servers/audio/audio_server.cpp:200)
+     GDScript backtrace (most recent call first):
+         [0] _ready (res://scripts/heart_melody/heart_soundscape.gd:14)
+         [1] _build_environment (res://scripts/heart_melody/heart_world.gd:284)
+         [2] _ready (res://scripts/heart_melody/heart_world.gd:68)
+         [3] _ready (res://scripts/heart_melody/heart_overworld_connection.gd:21)
+         [4] _build_heart_melody_entrance (res://scripts/art_castle_story_railway.gd:224)
+         [5] _ready (res://scripts/art_castle_story_railway.gd:211)
+         [6] _build_galaxy_transit (res://scripts/art_gallery.gd:169)
+         [7] _ready (res://scripts/art_gallery.gd:33)
+         [8] _run (res://scripts/web_pack_smoke.gd:66)
+WARNING: Trying to play stream (-9223370789133181031) as a sample (-9223370789183512681), but the driver doesn't support sample playback.
+     at: start_sample_playback (servers/audio/audio_server.cpp:200)
+     GDScript backtrace (most recent call first):
+         [0] _ready (res://scripts/heart_melody/heart_soundscape.gd:14)
+         [1] _build_environment (res://scripts/heart_melody/heart_world.gd:284)
+         [2] _ready (res://scripts/heart_melody/heart_world.gd:68)
+         [3] _ready (res://scripts/heart_melody/heart_overworld_connection.gd:21)
+         [4] _build_heart_melody_entrance (res://scripts/art_castle_story_railway.gd:224)
+         [5] _ready (res://scripts/art_castle_story_railway.gd:211)
+         [6] _build_galaxy_transit (res://scripts/art_gallery.gd:169)
+         [7] _ready (res://scripts/art_gallery.gd:33)
+         [8] _run (res://scripts/web_pack_smoke.gd:66)
+[ARTEA] galaxy world=true meshes=14475 cam=(-3070.0, 12.19944, 1284.273)
+WEB PACK SMOKE: PASS — scoped pack opens the gallery at World One with six islands and 15 quests

@@ -1,0 +1,25 @@
+   5.9s loading http://localhost:8801/index.html?gallery_audit=1
+  10.0s OK  engine started
+  14.2s clicking Offline Guest at (287, 568)
+  15.3s OK  guest login accepted
+  57.3s OK  destination scene built
+  57.3s OK  gallery artwork audit completed
+  65.5s holding W to test movement
+
+first load (cache disabled):
+  bytes transferred to hub: 669903510 (638.9 MiB, 93 requests)
+  time to engine started:   3.8 s
+  time to hub:              50.5 s
+  bytes transferred total:  669903510 (638.9 MiB, 93 requests, 0 failed)
+METRIC bytes_to_hub=669903510
+METRIC time_to_engine_s=3.8
+METRIC time_to_hub_s=50.5
+METRIC bytes_total=669903510
+  parts refetched:          none
+METRIC part_retries=0
+METRIC parts_refetched=0
+  70.0s frame changed while moving: true
+  70.0s fatal resource errors: 0
+
+screenshots: /Users/davidsovann/S2603/artea/builds/smoke
+RESULT: PLAYABLE

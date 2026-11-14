@@ -1,0 +1,14 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.mono.official)
+Godot Engine v4.7.1.stable.mono.official.a13da4feb - https://godotengine.org
+
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+[ARTEA] galaxy world=true meshes=21939 cam=(-3070.0, 12.19944, 1284.273)
+MIND_SPARK_LIVE_GATE_BLUEPRINT: PASS — source, abort, Island 3 station return, floors, route, and station policy verified
+ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit.

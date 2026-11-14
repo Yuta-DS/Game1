@@ -1,0 +1,24 @@
+   0.1s loading https://artea-web.vercel.app/?build=dpl_73UMvtZ8sxtZHxa83p5AK2c3n9YR&galaxy_audit=creator&studio_view=1
+ 100.7s OK  engine started
+ 105.0s clicking Offline Guest at (287, 568)
+ 106.0s OK  guest login accepted
+ 128.0s OK  destination scene built
+ 130.1s OK  Galaxy ground audit completed
+
+first load (cache disabled):
+  bytes transferred to hub: 525612210 (501.3 MiB, 90 requests)
+  time to engine started:   100.6 s
+  time to hub:              127.4 s
+  bytes transferred total:  525612210 (501.3 MiB, 90 requests, 0 failed)
+METRIC bytes_to_hub=525612210
+METRIC time_to_engine_s=100.6
+METRIC time_to_hub_s=127.4
+METRIC bytes_total=525612210
+  parts refetched:          none
+METRIC part_retries=0
+METRIC parts_refetched=0
+ 138.3s real player walk verified by Galaxy audit
+ 138.3s fatal resource errors: 0
+
+screenshots: /Users/davidsovann/S2603/artea/builds/smoke
+RESULT: PLAYABLE

@@ -1,0 +1,1 @@
+/Users/davidsovann/S2603/artea/scripts/test_train_celestial_banner.gd

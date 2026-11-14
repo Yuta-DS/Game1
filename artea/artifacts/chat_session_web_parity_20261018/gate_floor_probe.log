@@ -1,0 +1,27 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.mono.official)
+Godot Engine v4.7.1.stable.mono.official.a13da4feb - https://godotengine.org
+
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+GATE 2 pos=(-115.0, 10.0, -32.5) front=(0.903277, 0.0, 0.429057)
+  offset=-35.0 floor=(-146.6147, 12.45156, -47.51699) collider=ThreeIslandVisibleObjectCollisions:<StaticBody3D#752575613399>
+  offset=-20.0 floor=(-133.0656, 11.55612, -41.08114) collider=EvidenceDaisAccessRampCollision:<StaticBody3D#509993822943>
+  offset=-10.0 floor=(-124.0328, 10.68528, -36.79057) collider=EvidenceDaisAccessRampCollision:<StaticBody3D#509993822943>
+  offset=0.0 floor=(-115.0, 10.31, -32.5) collider=IvoryDeckSupport_02Collision:<StaticBody3D#509675055857>
+  offset=10.0 floor=(-105.9672, 10.31, -28.20943) collider=IvoryDeckSupport_02Collision:<StaticBody3D#509675055857>
+  offset=20.0 floor=(-96.93445, 10.31, -23.91886) collider=IvoryDeckSupport_02Collision:<StaticBody3D#509675055857>
+  offset=35.0 floor=(-83.38528, 10.31, -17.48301) collider=IvoryDeckSupport_03Collision:<StaticBody3D#509859605223>
+GATE 3 pos=(84.97476, 10.0, 17.24662) front=(0.999748, 0.0, 0.022466)
+  offset=-35.0 floor=(49.9836, 10.0, 16.4603) collider=WalkableZoneFloorCollision:<StaticBody3D#104387840523>
+  offset=-20.0 floor=(64.97981, 10.0, 16.7973) collider=WalkableZoneFloorCollision:<StaticBody3D#104387840523>
+  offset=-10.0 floor=(74.97729, 10.0, 17.02196) collider=WalkableZoneFloorCollision:<StaticBody3D#104387840523>
+  offset=0.0 floor=(84.97476, 10.0, 17.24662) collider=WalkableZoneFloorCollision:<StaticBody3D#104387840523>
+  offset=10.0 floor=(94.97224, 10.0, 17.47129) collider=WalkableZoneFloorCollision:<StaticBody3D#104387840523>
+  offset=20.0 floor=(104.9697, 10.0, 17.69595) collider=WalkableZoneFloorCollision:<StaticBody3D#104387840523>
+  offset=35.0 floor=(119.9659, 10.8238, 18.03295) collider=CircuitRoute_04_ACollision:<StaticBody3D#167134631669>

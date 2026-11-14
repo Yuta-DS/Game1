@@ -1,0 +1,25 @@
+   0.1s loading https://artea-web.vercel.app/?build=dpl_8BnkyxU4djX8nS76M6VVyak2fzQe&world_one_quality=1&gate_view=3
+  86.2s OK  engine started
+  90.5s clicking Offline Guest at (287, 568)
+  91.5s OK  guest login accepted
+ 114.5s OK  destination scene built
+ 114.5s OK  World One quality probe completed
+ 122.8s holding W to test movement
+
+first load (cache disabled):
+  bytes transferred to hub: 525612938 (501.3 MiB, 90 requests)
+  time to engine started:   85.2 s
+  time to hub:              113.7 s
+  bytes transferred total:  525612938 (501.3 MiB, 90 requests, 0 failed)
+METRIC bytes_to_hub=525612938
+METRIC time_to_engine_s=85.2
+METRIC time_to_hub_s=113.7
+METRIC bytes_total=525612938
+  parts refetched:          none
+METRIC part_retries=0
+METRIC parts_refetched=0
+ 127.5s frame changed while moving: true
+ 127.5s fatal resource errors: 0
+
+screenshots: /Users/davidsovann/S2603/artea/builds/smoke
+RESULT: PLAYABLE

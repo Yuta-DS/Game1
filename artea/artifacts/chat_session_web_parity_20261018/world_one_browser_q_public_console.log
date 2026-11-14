@@ -1,0 +1,74 @@
+[ARTEA] loading… (size unknown)
+[ARTEA] loading 0%  (1 / 592 MB)
+[ARTEA] loading 1%  (9 / 592 MB)
+[ARTEA] loading 5%  (33 / 592 MB)
+[ARTEA] loading 6%  (41 / 592 MB)
+[ARTEA] loading 8%  (49 / 592 MB)
+[ARTEA] loading 9%  (57 / 592 MB)
+[ARTEA] loading 11%  (65 / 592 MB)
+[ARTEA] loading 12%  (73 / 592 MB)
+[ARTEA] loading 13%  (81 / 592 MB)
+[ARTEA] loading 15%  (89 / 592 MB)
+[ARTEA] loading 16%  (97 / 592 MB)
+[ARTEA] loading 19%  (113 / 592 MB)
+[ARTEA] loading 20%  (121 / 592 MB)
+[ARTEA] loading 21%  (129 / 592 MB)
+[ARTEA] loading 24%  (145 / 592 MB)
+[ARTEA] loading 25%  (153 / 592 MB)
+[ARTEA] loading 27%  (161 / 592 MB)
+[ARTEA] loading 28%  (169 / 592 MB)
+[ARTEA] loading 29%  (177 / 592 MB)
+[ARTEA] loading 31%  (185 / 592 MB)
+[ARTEA] loading 32%  (193 / 592 MB)
+[ARTEA] loading 34%  (201 / 592 MB)
+[ARTEA] loading 35%  (209 / 592 MB)
+[ARTEA] loading 36%  (217 / 592 MB)
+[ARTEA] loading 38%  (225 / 592 MB)
+[ARTEA] loading 39%  (233 / 592 MB)
+[ARTEA] loading 40%  (241 / 592 MB)
+[ARTEA] loading 42%  (249 / 592 MB)
+[ARTEA] loading 43%  (257 / 592 MB)
+[ARTEA] loading 44%  (265 / 592 MB)
+[ARTEA] loading 46%  (273 / 592 MB)
+[ARTEA] loading 47%  (281 / 592 MB)
+[ARTEA] loading 48%  (289 / 592 MB)
+[ARTEA] loading 50%  (297 / 592 MB)
+[ARTEA] loading 51%  (305 / 592 MB)
+[ARTEA] loading 52%  (313 / 592 MB)
+[ARTEA] loading 55%  (329 / 592 MB)
+[ARTEA] loading 56%  (337 / 592 MB)
+[ARTEA] loading 58%  (345 / 592 MB)
+[ARTEA] loading 59%  (353 / 592 MB)
+[ARTEA] loading 62%  (369 / 592 MB)
+[ARTEA] loading 63%  (377 / 592 MB)
+[ARTEA] loading 65%  (385 / 592 MB)
+[ARTEA] loading 69%  (409 / 592 MB)
+[ARTEA] loading 70%  (417 / 592 MB)
+[ARTEA] loading 75%  (449 / 592 MB)
+[ARTEA] loading 77%  (457 / 592 MB)
+[ARTEA] loading 81%  (481 / 592 MB)
+[ARTEA] loading 82%  (489 / 592 MB)
+[ARTEA] loading 85%  (505 / 592 MB)
+[ARTEA] loading 86%  (513 / 592 MB)
+[ARTEA] loading 88%  (521 / 592 MB)
+[ARTEA] loading 90%  (537 / 592 MB)
+[ARTEA] loading 92%  (545 / 592 MB)
+[ARTEA] loading 93%  (553 / 592 MB)
+[ARTEA] loading 96%  (569 / 592 MB)
+[ARTEA] loading 98%  (585 / 592 MB)
+[ARTEA] loading 100%  (592 / 592 MB)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL
+Build configuration: Emscripten 4.0.20, single-threaded, GDExtension support.
+[ARTEA] engine started
+GUEST access selected
+[ARTEA] galaxy world=true meshes=14286 cam=(-3070.0, 12.19944, 1284.273)
+WORLD_ONE_PORTAL_READY: MindSparkWorldGate
+WORLD_ONE_PORTAL_INPUT: {"entered":true,"mapped":true,"player_position":"(-3070.0, 4.55, 1302.0)","portal":"MindSparkWorldGate","portal_position":"(-692.0, 1.0, 1064.0)","prompt":true,"still_inside":false}
+WORLD_ONE_PORTAL_READY: EntryWorldGate
+WORLD_ONE_PORTAL_INPUT: {"entered":true,"mapped":true,"player_position":"(-650.0, 7.0, 1095.0)","portal":"EntryWorldGate","portal_position":"(-3060.0, 3.0, 1266.0)","prompt":true,"still_inside":false}
+WORLD_ONE_PORTAL_READY: ReturnToArtCastleWorldGate
+WORLD_ONE_PORTAL_INPUT: {"entered":true,"mapped":true,"player_position":"(-650.0, 7.0, 1095.0)","portal":"ReturnToArtCastleWorldGate","portal_position":"(-1467.0, 19.0, 1133.0)","prompt":true,"still_inside":false}
+WORLD_ONE_WEB_QUALITY: {"accepted_rewards":15,"controller_close":true,"controller_modes":5,"durable_completed":10,"errors":[],"expected_objects":15,"expected_portal_trips":3,"expected_portals":3,"fresh_completed":0,"fresh_saved":0,"gates_traversed":2,"gates_verified":2,"ground_saddles_verified":3,"ground_samples_hit":216,"ground_zones_verified":6,"identity_restored":true,"modes":5,"ok":true,"partial_saved":7,"partial_target":7,"portal_trips_verified":3,"portals_verified":3,"saved_objects":15,"state_restored":true,"touch_modes":5}
+[ARTEA] scene ready res://scenes/art_gallery_3d_inprogress.tscn
+Failed to save IDB file system: undefined

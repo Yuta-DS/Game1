@@ -1,0 +1,10 @@
+
+[1m==> Pulling Web art assets from Git LFS[0m
+
+[1m==> Web prerequisites ready[0m
+Backend ready on 127.0.0.1:8000
+Checking split layout for local serving…
+  index.pck: parts up to date (da3e7832a1e6fcbe)
+  index.side.wasm: parts up to date (7e4df20e1d767f03)
+Web build ready at /Users/davidsovann/S2603/artea/builds/web
+Build refreshed; server already listening on http://localhost:8801/index.html

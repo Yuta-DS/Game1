@@ -1,0 +1,82 @@
+[ARTEA] loading… (size unknown)
+[ARTEA] loading 0%  (1 / 592 MB)
+[ARTEA] loading 1%  (9 / 592 MB)
+[ARTEA] loading 4%  (25 / 592 MB)
+[ARTEA] loading 5%  (33 / 592 MB)
+[ARTEA] loading 6%  (41 / 592 MB)
+[ARTEA] loading 8%  (49 / 592 MB)
+[ARTEA] loading 9%  (57 / 592 MB)
+[ARTEA] loading 11%  (65 / 592 MB)
+[ARTEA] loading 12%  (73 / 592 MB)
+[ARTEA] loading 13%  (81 / 592 MB)
+[ARTEA] loading 15%  (89 / 592 MB)
+[ARTEA] loading 17%  (105 / 592 MB)
+[ARTEA] loading 19%  (113 / 592 MB)
+[ARTEA] loading 20%  (121 / 592 MB)
+[ARTEA] loading 21%  (129 / 592 MB)
+[ARTEA] loading 23%  (137 / 592 MB)
+[ARTEA] loading 24%  (145 / 592 MB)
+[ARTEA] loading 25%  (153 / 592 MB)
+[ARTEA] loading 29%  (177 / 592 MB)
+[ARTEA] loading 31%  (185 / 592 MB)
+[ARTEA] loading 35%  (209 / 592 MB)
+[ARTEA] loading 36%  (217 / 592 MB)
+[ARTEA] loading 38%  (225 / 592 MB)
+[ARTEA] loading 39%  (233 / 592 MB)
+[ARTEA] loading 42%  (249 / 592 MB)
+[ARTEA] loading 43%  (257 / 592 MB)
+[ARTEA] loading 44%  (265 / 592 MB)
+[ARTEA] loading 46%  (273 / 592 MB)
+[ARTEA] loading 47%  (281 / 592 MB)
+[ARTEA] loading 48%  (289 / 592 MB)
+[ARTEA] loading 50%  (297 / 592 MB)
+[ARTEA] loading 52%  (313 / 592 MB)
+[ARTEA] loading 54%  (321 / 592 MB)
+[ARTEA] loading 55%  (329 / 592 MB)
+[ARTEA] loading 58%  (345 / 592 MB)
+[ARTEA] loading 61%  (361 / 592 MB)
+[ARTEA] loading 63%  (377 / 592 MB)
+[ARTEA] loading 65%  (385 / 592 MB)
+[ARTEA] loading 66%  (393 / 592 MB)
+[ARTEA] loading 69%  (409 / 592 MB)
+[ARTEA] loading 71%  (425 / 592 MB)
+[ARTEA] loading 73%  (433 / 592 MB)
+[ARTEA] loading 74%  (441 / 592 MB)
+[ARTEA] loading 77%  (457 / 592 MB)
+[ARTEA] loading 78%  (465 / 592 MB)
+[ARTEA] loading 82%  (489 / 592 MB)
+[ARTEA] loading 84%  (497 / 592 MB)
+[ARTEA] loading 88%  (521 / 592 MB)
+[ARTEA] loading 89%  (529 / 592 MB)
+[ARTEA] loading 90%  (537 / 592 MB)
+[ARTEA] loading 94%  (561 / 592 MB)
+[ARTEA] loading 96%  (569 / 592 MB)
+[ARTEA] loading 97%  (577 / 592 MB)
+[ARTEA] loading 98%  (585 / 592 MB)
+[ARTEA] loading 100%  (592 / 592 MB)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL
+Build configuration: Emscripten 4.0.20, single-threaded, GDExtension support.
+[ARTEA] engine started
+GUEST access selected
+[ARTEA] galaxy world=true meshes=14213 cam=(-3070.0, 12.19944, 1284.273)
+Checking frame:Frame_01
+frame_to_artwork:{  }
+FRAME NOT FOUND
+[ARTEA] UNHANDLED: The root document of this element is not valid for pointer lock.
+EXCEPTION WrongDocumentError: The root document of this element is not valid for pointer lock.
+TypeError: Failed to fetch
+    at window.fetch (https://artea-web.vercel.app/pck-loader.js:208:11)
+    at Object.create (https://artea-web.vercel.app/index.js:1:616537)
+    at _godot_js_fetch_create (https://artea-web.vercel.app/index.js:1:617550)
+    at wasm://wasm/0a82416e:wasm-function[796]:0x2c0dd4
+    at wasm://wasm/0a82416e:wasm-function[21548]:0x12fd28c
+    at wasm://wasm/0a82416e:wasm-function[21578]:0x12fe7a0
+    at wasm://wasm/0a82416e:wasm-function[69102]:0x23d0d98
+    at wasm://wasm/0a82416e:wasm-function[22197]:0x132f4f5
+    at wasm://wasm/0a82416e:wasm-function[22192]:0x132e39b
+    at wasm://wasm/0a82416e:wasm-function[22202]:0x132f9bc
+GALLERY_WEB_AUDIT: {"chandeliers":0,"errors":[],"exit_visible":true,"frames":12,"ok":true,"returned":true,"space_entered":true}
+[ARTEA] galaxy world=true meshes=12089 cam=(0.0, 12.0, 52.0)
+[ARTEA] scene ready res://scenes/art_gallery_3d_inprogress.tscn
+[ARTEA] scene ready res://scenes/art_gallery_3d_inprogress.tscn

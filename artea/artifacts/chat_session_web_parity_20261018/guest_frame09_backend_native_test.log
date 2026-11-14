@@ -1,0 +1,164 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/ArtGallery/placeholders/painting_9.jpeg'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load (core/io/image.cpp:2770)
+     GDScript backtrace (most recent call first):
+         [0] _load_current_image (res://scripts/creation_world/creation_world_state.gd:558)
+         [1] request_creative_guide (res://scripts/creation_world/creation_world_state.gd:146)
+         [2] _run (res://scripts/test_guest_frame09_pipeline.gd:25)
+guest guide response: { "ai_source": "primary", "degraded": false, "guide": { "celebration": "Child chose vivid colors and joyful scene with boats and girl", "depth_layers": { "far": "pink and blue mountains with hazy texture", "ground": "yellow striped water surface with blue boat edges", "mid": "yellow and green trees with blue accents", "near": "colorful boats with red, blue, and yellow details", "sky": "soft pink and cream gradient with wispy clouds" }, "enhancement_prompt": "Refine lighting to soften harsh edges while preserving child\'s bold brushstrokes, harmonize colors for warm glow, deepen water reflections, add subtle texture to trees and boat wood, sharpen outlines without erasing original marks", "heightmap_guidance": "Use raised texture for boats and girl, smooth gradients for sky and water, soft peaks for mountains", "safety_flags": ["No text", "No brands", "No violence", "No sexual content", "No horror", "No unsafe themes", "Child-safe fantasy"], "scene_description": "Girl in pink dress on boat with colorful pagodas, water, trees, and distant mountains", "style_ideas": ["Add glowing lanterns to boats", "Make girl\'s dress shimmer with light effects", "Create floating flower petals in air"], "title": "Frame 09" }, "model": "artea-art-director", "status": "ok" }
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/ArtGallery/placeholders/painting_9.jpeg'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load (core/io/image.cpp:2770)
+     GDScript backtrace (most recent call first):
+         [0] _load_current_image (res://scripts/creation_world/creation_world_state.gd:558)
+         [1] request_world (res://scripts/creation_world/creation_world_state.gd:180)
+         [2] _run (res://scripts/test_guest_frame09_pipeline.gd:40)
+         [3] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/ArtGallery/placeholders/painting_9.jpeg'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load (core/io/image.cpp:2770)
+     GDScript backtrace (most recent call first):
+         [0] _load_current_image (res://scripts/creation_world/creation_world_state.gd:558)
+         [1] _palette_from_current_image (res://scripts/creation_world/creation_world_state.gd:541)
+         [2] _normalise_manifest (res://scripts/creation_world/creation_world_state.gd:418)
+         [3] <anonymous lambda> (res://scripts/creation_world/creation_world_state.gd:204)
+         [4] <anonymous lambda> (res://scripts/API_Manager.gd:214)
+guest world response source: cache
+WARNING: Loaded resource as image file, this will not work on export: 'res://assets/ArtGallery/placeholders/painting_9.jpeg'. Instead, import the image file as an Image resource and load it normally as a resource.
+     at: load (core/io/image.cpp:2770)
+     GDScript backtrace (most recent call first):
+         [0] _load_artwork_image (res://scripts/creation_world/creation_world.gd:1308)
+         [1] _build_art_backdrop (res://scripts/creation_world/creation_world.gd:301)
+         [2] _build_environment (res://scripts/creation_world/creation_world.gd:164)
+         [3] _ready (res://scripts/creation_world/creation_world.gd:55)
+         [4] _run (res://scripts/test_guest_frame09_pipeline.gd:57)
+         [5] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+WARNING: Depth of field blur is only available when using the Forward+ or Mobile renderer.
+     at: camera_attributes_set_dof_blur (servers/rendering/storage/camera_attributes_storage.cpp:74)
+     GDScript backtrace (most recent call first):
+         [0] _build_dof (res://scripts/viewfinder/lens_controller.gd:179)
+         [1] _ready (res://scripts/viewfinder/lens_controller.gd:107)
+         [2] _build_player (res://scripts/creation_world/creation_world.gd:371)
+         [3] _ready (res://scripts/creation_world/creation_world.gd:56)
+         [4] _run (res://scripts/test_guest_frame09_pipeline.gd:57)
+         [5] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+WARNING: 'res://assets3D/worlds/Floating_Cloud_1031084848_texture.glb': In external resource #0, invalid UID: 'uid://c8tswh2j74fpy' - using text path instead: 'res://assets3D/worlds/Floating_Cloud_1031084848_texture_0.jpg'.
+     at: open (core/io/resource_format_binary.cpp:1025)
+WARNING: 'res://assets3D/worlds/Floating_Cloud_1031084848_texture.glb': In external resource #1, invalid UID: 'uid://7oj6qlta4h83' - using text path instead: 'res://assets3D/worlds/Floating_Cloud_1031084848_texture_1.jpg'.
+     at: open (core/io/resource_format_binary.cpp:1025)
+WARNING: 'res://assets3D/worlds/Floating_Cloud_1031084848_texture.glb': In external resource #2, invalid UID: 'uid://cpdyvppax7ilj' - using text path instead: 'res://assets3D/worlds/Floating_Cloud_1031084848_texture_2.jpg'.
+     at: open (core/io/resource_format_binary.cpp:1025)
+ERROR: Resource file not found: res://assets3D/worlds/Floating_Cloud_1031084848_texture_0.jpg (expected type: Texture2D)
+   at: _load (core/io/resource_loader.cpp:325)
+ERROR: Resource file not found: res://assets3D/worlds/Floating_Cloud_1031084848_texture_1.jpg (expected type: Texture2D)
+   at: _load (core/io/resource_loader.cpp:325)
+ERROR: Resource file not found: res://assets3D/worlds/Floating_Cloud_1031084848_texture_2.jpg (expected type: Texture2D)
+   at: _load (core/io/resource_loader.cpp:325)
+ERROR: Can't load dependency: 'res://assets3D/worlds/Floating_Cloud_1031084848_texture_0.jpg'.
+   at: parse_variant (core/io/resource_format_binary.cpp:444)
+ERROR: Failed loading resource: res://.godot/imported/Floating_Cloud_1031084848_texture.glb-fe913410692ac8e5299054c214cc0e77.scn.
+   at: _load (core/io/resource_loader.cpp:317)
+ERROR: Failed loading resource: res://assets3D/worlds/Floating_Cloud_1031084848_texture.glb.
+   at: _load (core/io/resource_loader.cpp:317)
+ERROR: Initializing already initialized RID
+   at: get_or_null (./core/templates/rid_owner.h:236)
+   GDScript backtrace (most recent call first):
+       [0] _crossed_quad_mesh (res://scripts/creation_world/ambient_life_loop.gd:437)
+       [1] _procedural_node (res://scripts/creation_world/ambient_life_loop.gd:325)
+       [2] _build_species_node (res://scripts/creation_world/ambient_life_loop.gd:307)
+       [3] _acquire (res://scripts/creation_world/ambient_life_loop.gd:282)
+       [4] _instantiate_species (res://scripts/creation_world/ambient_life_loop.gd:246)
+       [5] _populate_cell (res://scripts/creation_world/ambient_life_loop.gd:206)
+       [6] _drain_queue (res://scripts/creation_world/ambient_life_loop.gd:178)
+       [7] force_tick (res://scripts/creation_world/ambient_life_loop.gd:117)
+       [8] _start_ambient_life (res://scripts/creation_world/creation_world.gd:269)
+       [9] _ready (res://scripts/creation_world/creation_world.gd:61)
+       [10] _run (res://scripts/test_guest_frame09_pipeline.gd:57)
+       [11] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+ERROR: Parameter "mem" is null.
+   at: initialize_rid (./core/templates/rid_owner.h:284)
+   GDScript backtrace (most recent call first):
+       [0] _crossed_quad_mesh (res://scripts/creation_world/ambient_life_loop.gd:437)
+       [1] _procedural_node (res://scripts/creation_world/ambient_life_loop.gd:325)
+       [2] _build_species_node (res://scripts/creation_world/ambient_life_loop.gd:307)
+       [3] _acquire (res://scripts/creation_world/ambient_life_loop.gd:282)
+       [4] _instantiate_species (res://scripts/creation_world/ambient_life_loop.gd:246)
+       [5] _populate_cell (res://scripts/creation_world/ambient_life_loop.gd:206)
+       [6] _drain_queue (res://scripts/creation_world/ambient_life_loop.gd:178)
+       [7] force_tick (res://scripts/creation_world/ambient_life_loop.gd:117)
+       [8] _start_ambient_life (res://scripts/creation_world/creation_world.gd:269)
+       [9] _ready (res://scripts/creation_world/creation_world.gd:61)
+       [10] _run (res://scripts/test_guest_frame09_pipeline.gd:57)
+       [11] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+ERROR: Parameter "m" is null.
+   at: mesh_set_blend_shape_count (servers/rendering/dummy/storage/mesh_storage.h:74)
+   GDScript backtrace (most recent call first):
+       [0] _crossed_quad_mesh (res://scripts/creation_world/ambient_life_loop.gd:437)
+       [1] _procedural_node (res://scripts/creation_world/ambient_life_loop.gd:325)
+       [2] _build_species_node (res://scripts/creation_world/ambient_life_loop.gd:307)
+       [3] _acquire (res://scripts/creation_world/ambient_life_loop.gd:282)
+       [4] _instantiate_species (res://scripts/creation_world/ambient_life_loop.gd:246)
+       [5] _populate_cell (res://scripts/creation_world/ambient_life_loop.gd:206)
+       [6] _drain_queue (res://scripts/creation_world/ambient_life_loop.gd:178)
+       [7] force_tick (res://scripts/creation_world/ambient_life_loop.gd:117)
+       [8] _start_ambient_life (res://scripts/creation_world/creation_world.gd:269)
+       [9] _ready (res://scripts/creation_world/creation_world.gd:61)
+       [10] _run (res://scripts/test_guest_frame09_pipeline.gd:57)
+       [11] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+ERROR: Parameter "m" is null.
+   at: mesh_add_surface (servers/rendering/dummy/storage/mesh_storage.h:81)
+   GDScript backtrace (most recent call first):
+       [0] _crossed_quad_mesh (res://scripts/creation_world/ambient_life_loop.gd:437)
+       [1] _procedural_node (res://scripts/creation_world/ambient_life_loop.gd:325)
+       [2] _build_species_node (res://scripts/creation_world/ambient_life_loop.gd:307)
+       [3] _acquire (res://scripts/creation_world/ambient_life_loop.gd:282)
+       [4] _instantiate_species (res://scripts/creation_world/ambient_life_loop.gd:246)
+       [5] _populate_cell (res://scripts/creation_world/ambient_life_loop.gd:206)
+       [6] _drain_queue (res://scripts/creation_world/ambient_life_loop.gd:178)
+       [7] force_tick (res://scripts/creation_world/ambient_life_loop.gd:117)
+       [8] _start_ambient_life (res://scripts/creation_world/creation_world.gd:269)
+       [9] _ready (res://scripts/creation_world/creation_world.gd:61)
+       [10] _run (res://scripts/test_guest_frame09_pipeline.gd:57)
+       [11] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+ERROR: Parameter "m" is null.
+   at: mesh_set_blend_shape_mode (servers/rendering/dummy/storage/mesh_storage.h:110)
+   GDScript backtrace (most recent call first):
+       [0] _crossed_quad_mesh (res://scripts/creation_world/ambient_life_loop.gd:437)
+       [1] _procedural_node (res://scripts/creation_world/ambient_life_loop.gd:325)
+       [2] _build_species_node (res://scripts/creation_world/ambient_life_loop.gd:307)
+       [3] _acquire (res://scripts/creation_world/ambient_life_loop.gd:282)
+       [4] _instantiate_species (res://scripts/creation_world/ambient_life_loop.gd:246)
+       [5] _populate_cell (res://scripts/creation_world/ambient_life_loop.gd:206)
+       [6] _drain_queue (res://scripts/creation_world/ambient_life_loop.gd:178)
+       [7] force_tick (res://scripts/creation_world/ambient_life_loop.gd:117)
+       [8] _start_ambient_life (res://scripts/creation_world/creation_world.gd:269)
+       [9] _ready (res://scripts/creation_world/creation_world.gd:61)
+       [10] _run (res://scripts/test_guest_frame09_pipeline.gd:57)
+       [11] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+ERROR: Parameter "m" is null.
+   at: mesh_set_blend_shape_mode (servers/rendering/dummy/storage/mesh_storage.h:110)
+   GDScript backtrace (most recent call first):
+       [0] _crossed_quad_mesh (res://scripts/creation_world/ambient_life_loop.gd:437)
+       [1] _procedural_node (res://scripts/creation_world/ambient_life_loop.gd:325)
+       [2] _build_species_node (res://scripts/creation_world/ambient_life_loop.gd:307)
+       [3] _acquire (res://scripts/creation_world/ambient_life_loop.gd:282)
+       [4] _instantiate_species (res://scripts/creation_world/ambient_life_loop.gd:246)
+       [5] _populate_cell (res://scripts/creation_world/ambient_life_loop.gd:206)
+       [6] _drain_queue (res://scripts/creation_world/ambient_life_loop.gd:178)
+       [7] force_tick (res://scripts/creation_world/ambient_life_loop.gd:117)
+       [8] _start_ambient_life (res://scripts/creation_world/creation_world.gd:269)
+       [9] _ready (res://scripts/creation_world/creation_world.gd:61)
+       [10] _run (res://scripts/test_guest_frame09_pipeline.gd:57)
+       [11] _wait_until (res://scripts/test_guest_frame09_pipeline.gd:79)
+guest Frame 09 pipeline: all checks passed
+WARNING: 1 ObjectDB instance was leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 RID allocations of type 'N13RendererDummy9DummyMeshE' were leaked at exit.

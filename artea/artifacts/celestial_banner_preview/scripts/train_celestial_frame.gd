@@ -1,0 +1,1 @@
+/Users/davidsovann/S2603/artea/scripts/train_celestial_frame.gd

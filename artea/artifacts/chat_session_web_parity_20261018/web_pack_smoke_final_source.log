@@ -1,0 +1,97 @@
+ERROR: Cannot open resource pack 'artea/builds/web/index.pck'.
+   at: _setup (core/config/project_settings.cpp:691)
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+SCRIPT ERROR: Parse Error: Identifier "Global" not declared in the current scope.
+          at: GDScript::reload (res://scenes/ExitGallery.gd:38)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+ERROR: Failed to load script "res://scenes/ExitGallery.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "APIManager" not declared in the current scope.
+          at: GDScript::reload (res://scenes/GalleryManager.gd:12)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Assigned value for constant "MY_ARTWORKS_URL" isn't a constant expression.
+          at: GDScript::reload (res://scenes/GalleryManager.gd:12)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "APIManager" not declared in the current scope.
+          at: GDScript::reload (res://scenes/GalleryManager.gd:13)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Assigned value for constant "SERVER_BASE" isn't a constant expression.
+          at: GDScript::reload (res://scenes/GalleryManager.gd:13)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "Global" not declared in the current scope.
+          at: GDScript::reload (res://scenes/GalleryManager.gd:220)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "Global" not declared in the current scope.
+          at: GDScript::reload (res://scenes/GalleryManager.gd:226)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+ERROR: Failed to load script "res://scenes/GalleryManager.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "CreationWorldState" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:243)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "CreationWorldState" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:272)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "CreationWorldState" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:276)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "CreationWorldState" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:280)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "CreationWorldState" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:289)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "CreationWorldState" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:291)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "CreationWorldState" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:300)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "CreationWorldState" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:301)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "Global" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:894)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "Global" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:910)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+SCRIPT ERROR: Parse Error: Identifier "APIManager" not declared in the current scope.
+          at: GDScript::reload (res://scripts/drawing_tool.gd:915)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:56)
+ERROR: Failed to load script "res://scripts/drawing_tool.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/web_pack_smoke.gd:56)
+ERROR: Node not found: "Global" (relative to "/root").
+   at: get_node (scene/main/node.cpp:1976)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://scripts/web_pack_smoke.gd:63)
+SCRIPT ERROR: Invalid access to property or key 'OFFLINE_GUEST_TOKEN' on a base object of type 'null instance'.
+          at: _run (res://scripts/web_pack_smoke.gd:64)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/web_pack_smoke.gd:64)

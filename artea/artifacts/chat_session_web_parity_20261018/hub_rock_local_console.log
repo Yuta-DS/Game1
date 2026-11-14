@@ -1,0 +1,118 @@
+[ARTEA] loading… (size unknown)
+[ARTEA] loading 0%  (1 / 592 MB)
+[ARTEA] loading 1%  (9 / 592 MB)
+[ARTEA] loading 5%  (33 / 592 MB)
+[ARTEA] loading 6%  (41 / 592 MB)
+[ARTEA] loading 8%  (49 / 592 MB)
+[ARTEA] loading 11%  (65 / 592 MB)
+[ARTEA] loading 12%  (73 / 592 MB)
+[ARTEA] loading 15%  (89 / 592 MB)
+[ARTEA] loading 16%  (97 / 592 MB)
+[ARTEA] loading 17%  (105 / 592 MB)
+[ARTEA] loading 20%  (121 / 592 MB)
+[ARTEA] loading 21%  (129 / 592 MB)
+[ARTEA] loading 23%  (137 / 592 MB)
+[ARTEA] loading 25%  (153 / 592 MB)
+[ARTEA] loading 27%  (161 / 592 MB)
+[ARTEA] loading 28%  (169 / 592 MB)
+[ARTEA] loading 31%  (185 / 592 MB)
+[ARTEA] loading 32%  (193 / 592 MB)
+[ARTEA] loading 35%  (209 / 592 MB)
+[ARTEA] loading 38%  (225 / 592 MB)
+[ARTEA] loading 40%  (241 / 592 MB)
+[ARTEA] loading 43%  (257 / 592 MB)
+[ARTEA] loading 44%  (265 / 592 MB)
+[ARTEA] loading 47%  (281 / 592 MB)
+[ARTEA] loading 48%  (289 / 592 MB)
+[ARTEA] loading 50%  (297 / 592 MB)
+[ARTEA] loading 52%  (313 / 592 MB)
+[ARTEA] loading 54%  (321 / 592 MB)
+[ARTEA] loading 55%  (329 / 592 MB)
+[ARTEA] loading 58%  (345 / 592 MB)
+[ARTEA] loading 59%  (353 / 592 MB)
+[ARTEA] loading 62%  (369 / 592 MB)
+[ARTEA] loading 63%  (377 / 592 MB)
+[ARTEA] loading 65%  (385 / 592 MB)
+[ARTEA] loading 66%  (393 / 592 MB)
+[ARTEA] loading 69%  (409 / 592 MB)
+[ARTEA] loading 70%  (417 / 592 MB)
+[ARTEA] loading 71%  (425 / 592 MB)
+[ARTEA] loading 74%  (441 / 592 MB)
+[ARTEA] loading 75%  (449 / 592 MB)
+[ARTEA] loading 77%  (457 / 592 MB)
+[ARTEA] loading 79%  (473 / 592 MB)
+[ARTEA] loading 81%  (481 / 592 MB)
+[ARTEA] loading 84%  (497 / 592 MB)
+[ARTEA] loading 86%  (513 / 592 MB)
+[ARTEA] loading 88%  (521 / 592 MB)
+[ARTEA] loading 90%  (537 / 592 MB)
+[ARTEA] loading 92%  (545 / 592 MB)
+[ARTEA] loading 94%  (561 / 592 MB)
+[ARTEA] loading 96%  (569 / 592 MB)
+[ARTEA] loading 98%  (585 / 592 MB)
+[ARTEA] loading 100%  (592 / 592 MB)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL
+Build configuration: Emscripten 4.0.20, single-threaded, GDExtension support.
+[ARTEA] engine started
+GUEST access selected
+Inventory button found player's inventory GUI
+Spawning 30 collectibles around (0.0, 0.0, 0.0)
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Successfully spawned 30 collectibles in 32 attempts
+Spawning 20 collectibles around (50.0, 0.0, 50.0)
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Successfully spawned 20 collectibles in 22 attempts
+HUB_ROCK_AUDIT: {"ok":true,"removed_rock_items_present":[],"review_location":"castle stair foot"}
+✅ Ocean 1 Found and Playing
+✅ Ocean 2 Found and Playing
+👂 Audio Listener enabled on Viewport
+[ARTEA] scene ready res://scenes/New_Hub_World.tscn

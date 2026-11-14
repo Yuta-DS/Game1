@@ -1,0 +1,31 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+PASS: desktop/editor and Web use the same Compatibility renderer
+PASS: mobile browsers use the Compatibility renderer
+PASS: selected Web preset includes the startup, gallery, Galaxy World, and creation scenes
+PASS: dynamically read data and dialogue files are explicitly packaged
+PASS: hub and World One runtime resources are explicitly packaged
+PASS: Web export includes music, painting, collectible, creation, and combat assets
+PASS: selected Web preset exports desktop and mobile compressed textures
+PASS: Web extension is included while incompatible native libraries are excluded
+PASS: Web shell provides a daylight fallback and reports unsupported browsers
+PASS: Web lighting has a deterministic non-black ambient fallback
+PASS: required Web runtime asset exists: res://resources/web_hub_terrain.res
+PASS: required Web runtime asset exists: res://resources/web_hub_surface_map.png
+PASS: required Web runtime asset exists: res://shaders/web_terrain.gdshader
+PASS: required Web runtime asset exists: res://shaders/web_water.gdshader
+PASS: required Web runtime asset exists: res://shaders/web_sky_dome.gdshader
+PASS: required Web runtime asset exists: res://scripts/web_grass_surface_filter.gd
+PASS: required Web runtime asset exists: res://data/crown_of_life_story.json
+PASS: required Web runtime asset exists: res://data/mind_spark_chapter.json
+PASS: required Web runtime asset exists: res://dialogue/HubworldDialogue.dialogue
+PASS: selected Web export configuration
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.

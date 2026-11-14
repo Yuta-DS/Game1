@@ -1,0 +1,13 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.mono.official)
+Godot Engine v4.7.1.stable.mono.official.a13da4feb - https://godotengine.org
+
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+WORLD_ONE_WEB_QUALITY: {"accepted_rewards":15,"controller_close":true,"controller_modes":5,"durable_completed":10,"errors":[],"expected_objects":15,"fresh_completed":0,"fresh_saved":0,"gates_traversed":2,"gates_verified":2,"ground_saddles_verified":3,"ground_samples_hit":216,"ground_zones_verified":6,"identity_restored":true,"modes":5,"ok":true,"partial_saved":7,"partial_target":7,"saved_objects":15,"state_restored":true,"touch_modes":5}
+WORLD_ONE_WEB_QUALITY_PROBE_TEST: PASS — 15 rewards, saves, five keyboard/touch/controller modes, and live-state restoration

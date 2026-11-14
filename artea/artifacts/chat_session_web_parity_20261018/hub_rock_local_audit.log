@@ -1,0 +1,24 @@
+   0.1s loading http://localhost:8801/index.html?hub_rock_audit=1
+   4.1s OK  engine started
+   8.3s clicking Offline Guest at (287, 568)
+   9.3s OK  guest login accepted
+  22.4s OK  destination scene built
+  22.4s OK  hub rock removal audit completed
+
+first load (cache disabled):
+  bytes transferred to hub: 669888230 (638.9 MiB, 89 requests)
+  time to engine started:   3.5 s
+  time to hub:              22.2 s
+  bytes transferred total:  669888230 (638.9 MiB, 89 requests, 0 failed)
+METRIC bytes_to_hub=669888230
+METRIC time_to_engine_s=3.5
+METRIC time_to_hub_s=22.2
+METRIC bytes_total=669888230
+  parts refetched:          none
+METRIC part_retries=0
+METRIC parts_refetched=0
+  30.7s fixed hub rock removal view verified
+  30.7s fatal resource errors: 0
+
+screenshots: /Users/davidsovann/S2603/artea/builds/smoke
+RESULT: PLAYABLE

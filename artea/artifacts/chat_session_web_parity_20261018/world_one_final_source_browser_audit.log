@@ -1,0 +1,28 @@
+   6.6s loading http://localhost:8801/index.html?world_one_quality=1&portal_key_audit=1
+  10.7s OK  engine started
+  14.9s clicking Offline Guest at (287, 568)
+  16.0s OK  guest login accepted
+  37.0s OK  MindSparkWorldGate ready for browser Q
+  38.1s OK  EntryWorldGate ready for browser Q
+  40.2s OK  ReturnToArtCastleWorldGate ready for browser Q
+  42.5s OK  destination scene built
+  42.5s OK  World One quality probe completed
+  50.7s holding W to test movement
+
+first load (cache disabled):
+  bytes transferred to hub: 669901358 (638.9 MiB, 91 requests)
+  time to engine started:   3.9 s
+  time to hub:              35.5 s
+  bytes transferred total:  669901358 (638.9 MiB, 91 requests, 0 failed)
+METRIC bytes_to_hub=669901358
+METRIC time_to_engine_s=3.9
+METRIC time_to_hub_s=35.5
+METRIC bytes_total=669901358
+  parts refetched:          none
+METRIC part_retries=0
+METRIC parts_refetched=0
+  55.3s frame changed while moving: true
+  55.3s fatal resource errors: 0
+
+screenshots: /Users/davidsovann/S2603/artea/builds/smoke
+RESULT: PLAYABLE
