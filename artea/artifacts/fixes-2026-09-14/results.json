@@ -1,0 +1,471 @@
+[
+  {
+    "test": "test_art_castle_gallery_flow",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 7.77,
+    "errors": [],
+    "log": "test_art_castle_gallery_flow.log"
+  },
+  {
+    "test": "test_crown_train_directional_vfx",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 5.43,
+    "errors": [],
+    "log": "test_crown_train_directional_vfx.log"
+  },
+  {
+    "test": "test_crown_train_soft_smoke_wake",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.38,
+    "errors": [],
+    "log": "test_crown_train_soft_smoke_wake.log"
+  },
+  {
+    "test": "test_crown_train_spatial_audio_integration",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.38,
+    "errors": [],
+    "log": "test_crown_train_spatial_audio_integration.log"
+  },
+  {
+    "test": "test_crown_train_steam_engine_motion",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 3.62,
+    "errors": [],
+    "log": "test_crown_train_steam_engine_motion.log"
+  },
+  {
+    "test": "test_gallery_embedded_floating_world",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 7.47,
+    "errors": [],
+    "log": "test_gallery_embedded_floating_world.log"
+  },
+  {
+    "test": "test_milo_activity_routing",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.88,
+    "errors": [],
+    "log": "test_milo_activity_routing.log"
+  },
+  {
+    "test": "test_milo_activity_states",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.95,
+    "errors": [],
+    "log": "test_milo_activity_states.log"
+  },
+  {
+    "test": "test_milo_character",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 4.17,
+    "errors": [],
+    "log": "test_milo_character.log"
+  },
+  {
+    "test": "test_milo_chat_cursor",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.86,
+    "errors": [],
+    "log": "test_milo_chat_cursor.log"
+  },
+  {
+    "test": "test_milo_companion_follow",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 14.73,
+    "errors": [],
+    "log": "test_milo_companion_follow.log"
+  },
+  {
+    "test": "test_milo_conversation_context",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.0,
+    "errors": [],
+    "log": "test_milo_conversation_context.log"
+  },
+  {
+    "test": "test_milo_generations",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.93,
+    "errors": [],
+    "log": "test_milo_generations.log"
+  },
+  {
+    "test": "test_milo_guide",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.27,
+    "errors": [],
+    "log": "test_milo_guide.log"
+  },
+  {
+    "test": "test_milo_live_hub_visibility",
+    "status": "FAIL",
+    "code": 0,
+    "seconds": 10.68,
+    "errors": [
+      "ERROR: refresh_slots called but inventory_data is null",
+      "ERROR: 2 resources still in use at exit (run with --verbose for details)."
+    ],
+    "log": "test_milo_live_hub_visibility.log"
+  },
+  {
+    "test": "test_milo_message_recognition",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.99,
+    "errors": [],
+    "log": "test_milo_message_recognition.log"
+  },
+  {
+    "test": "test_milo_missing_walk_fallback",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.84,
+    "errors": [],
+    "log": "test_milo_missing_walk_fallback.log"
+  },
+  {
+    "test": "test_milo_natural_animation",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 3.19,
+    "errors": [],
+    "log": "test_milo_natural_animation.log"
+  },
+  {
+    "test": "test_milo_prototype_reference",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.9,
+    "errors": [],
+    "log": "test_milo_prototype_reference.log"
+  },
+  {
+    "test": "test_milo_speech_animation",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.97,
+    "errors": [],
+    "log": "test_milo_speech_animation.log"
+  },
+  {
+    "test": "test_milo_support_safety",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.85,
+    "errors": [],
+    "log": "test_milo_support_safety.log"
+  },
+  {
+    "test": "test_milo_wisdom_engine",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.86,
+    "errors": [],
+    "log": "test_milo_wisdom_engine.log"
+  },
+  {
+    "test": "test_mind_spark_architecture_physics",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 9.45,
+    "errors": [],
+    "log": "test_mind_spark_architecture_physics.log"
+  },
+  {
+    "test": "test_mind_spark_celestial_land",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 5.54,
+    "errors": [],
+    "log": "test_mind_spark_celestial_land.log"
+  },
+  {
+    "test": "test_mind_spark_chapter_catalog",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.86,
+    "errors": [],
+    "log": "test_mind_spark_chapter_catalog.log"
+  },
+  {
+    "test": "test_mind_spark_chapter_world",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.86,
+    "errors": [],
+    "log": "test_mind_spark_chapter_world.log"
+  },
+  {
+    "test": "test_mind_spark_checkpoint_store",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.88,
+    "errors": [],
+    "log": "test_mind_spark_checkpoint_store.log"
+  },
+  {
+    "test": "test_mind_spark_completed_train_policy",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.87,
+    "errors": [],
+    "log": "test_mind_spark_completed_train_policy.log"
+  },
+  {
+    "test": "test_mind_spark_encounter_director",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_mind_spark_encounter_director.log"
+  },
+  {
+    "test": "test_mind_spark_galaxy_integration",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 7.25,
+    "errors": [],
+    "log": "test_mind_spark_galaxy_integration.log"
+  },
+  {
+    "test": "test_mind_spark_galaxy_traversal",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 7.27,
+    "errors": [],
+    "log": "test_mind_spark_galaxy_traversal.log"
+  },
+  {
+    "test": "test_mind_spark_island_one_detailed_guidance",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 7.07,
+    "errors": [],
+    "log": "test_mind_spark_island_one_detailed_guidance.log"
+  },
+  {
+    "test": "test_mind_spark_island_one_quest_1_signal_observatory",
+    "status": "FAIL",
+    "code": 0,
+    "seconds": 6.93,
+    "errors": [
+      "ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit."
+    ],
+    "log": "test_mind_spark_island_one_quest_1_signal_observatory.log"
+  },
+  {
+    "test": "test_mind_spark_island_one_quest_2_echo_garden",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 9.09,
+    "errors": [],
+    "log": "test_mind_spark_island_one_quest_2_echo_garden.log"
+  },
+  {
+    "test": "test_mind_spark_island_texture_coverage",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 4.67,
+    "errors": [],
+    "log": "test_mind_spark_island_texture_coverage.log"
+  },
+  {
+    "test": "test_mind_spark_live_gate_blueprint",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 7.09,
+    "errors": [],
+    "log": "test_mind_spark_live_gate_blueprint.log"
+  },
+  {
+    "test": "test_mind_spark_perspective",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.01,
+    "errors": [],
+    "log": "test_mind_spark_perspective.log"
+  },
+  {
+    "test": "test_mind_spark_quest_object_integration",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.11,
+    "errors": [],
+    "log": "test_mind_spark_quest_object_integration.log"
+  },
+  {
+    "test": "test_mind_spark_quest_objects",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.88,
+    "errors": [],
+    "log": "test_mind_spark_quest_objects.log"
+  },
+  {
+    "test": "test_mind_spark_runtime",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.81,
+    "errors": [],
+    "log": "test_mind_spark_runtime.log"
+  },
+  {
+    "test": "test_mind_spark_shared_state",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.81,
+    "errors": [],
+    "log": "test_mind_spark_shared_state.log"
+  },
+  {
+    "test": "test_mind_spark_split_world",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.29,
+    "errors": [],
+    "log": "test_mind_spark_split_world.log"
+  },
+  {
+    "test": "test_mind_spark_super_island_one_3000",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 4.83,
+    "errors": [],
+    "log": "test_mind_spark_super_island_one_3000.log"
+  },
+  {
+    "test": "test_mind_spark_three_island_fusion",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 4.46,
+    "errors": [],
+    "log": "test_mind_spark_three_island_fusion.log"
+  },
+  {
+    "test": "test_mind_spark_transit_network",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 5.15,
+    "errors": [],
+    "log": "test_mind_spark_transit_network.log"
+  },
+  {
+    "test": "test_mind_spark_world_one",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 4.52,
+    "errors": [],
+    "log": "test_mind_spark_world_one.log"
+  },
+  {
+    "test": "test_mind_spark_world_one_story",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 6.74,
+    "errors": [],
+    "log": "test_mind_spark_world_one_story.log"
+  },
+  {
+    "test": "test_mind_spark_zone02_route_clearance",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 6.56,
+    "errors": [],
+    "log": "test_mind_spark_zone02_route_clearance.log"
+  },
+  {
+    "test": "test_story_crown_railway",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.38,
+    "errors": [],
+    "log": "test_story_crown_railway.log"
+  },
+  {
+    "test": "test_story_crown_railway_web_performance",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.29,
+    "errors": [],
+    "log": "test_story_crown_railway_web_performance.log"
+  },
+  {
+    "test": "test_train_celestial_banner",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 4.43,
+    "errors": [],
+    "log": "test_train_celestial_banner.log"
+  },
+  {
+    "test": "test_train_drive_and_ride",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 12.36,
+    "errors": [],
+    "log": "test_train_drive_and_ride.log"
+  },
+  {
+    "test": "test_train_drive_smoothness",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.41,
+    "errors": [],
+    "log": "test_train_drive_smoothness.log"
+  },
+  {
+    "test": "test_train_rides",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 22.56,
+    "errors": [],
+    "log": "test_train_rides.log"
+  },
+  {
+    "test": "test_train_station_jump_traversal",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 32.76,
+    "errors": [],
+    "log": "test_train_station_jump_traversal.log"
+  },
+  {
+    "test": "test_train_station_physicality",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.4,
+    "errors": [],
+    "log": "test_train_station_physicality.log"
+  },
+  {
+    "test": "test_world_minimap",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.2,
+    "errors": [],
+    "log": "test_world_minimap.log"
+  },
+  {
+    "test": "test_web_environment_compat",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.91,
+    "errors": [],
+    "log": "test_web_environment_compat.log"
+  }
+]

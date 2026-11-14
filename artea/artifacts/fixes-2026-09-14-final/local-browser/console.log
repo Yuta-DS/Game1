@@ -1,0 +1,250 @@
+[ARTEA] loading… (size unknown)
+[ARTEA] loading 0%  (1 / 1159 MB)
+[ARTEA] loading 2%  (33 / 1159 MB)
+[ARTEA] loading 4%  (57 / 1159 MB)
+[ARTEA] loading 5%  (65 / 1159 MB)
+[ARTEA] loading 6%  (73 / 1159 MB)
+[ARTEA] loading 7%  (81 / 1159 MB)
+[ARTEA] loading 8%  (103 / 1159 MB)
+[ARTEA] loading 9%  (105 / 1159 MB)
+[ARTEA] loading 11%  (137 / 1159 MB)
+[ARTEA] loading 13%  (161 / 1159 MB)
+[ARTEA] loading 15%  (185 / 1159 MB)
+[ARTEA] loading 17%  (206 / 1159 MB)
+[ARTEA] loading 20%  (233 / 1159 MB)
+[ARTEA] loading 22%  (257 / 1159 MB)
+[ARTEA] loading 23%  (273 / 1159 MB)
+[ARTEA] loading 25%  (297 / 1159 MB)
+[ARTEA] loading 27%  (321 / 1159 MB)
+[ARTEA] loading 29%  (345 / 1159 MB)
+[ARTEA] loading 31%  (369 / 1159 MB)
+[ARTEA] loading 33%  (394 / 1159 MB)
+[ARTEA] loading 36%  (417 / 1159 MB)
+[ARTEA] loading 38%  (441 / 1159 MB)
+[ARTEA] loading 40%  (465 / 1159 MB)
+[ARTEA] loading 42%  (497 / 1159 MB)
+[ARTEA] loading 44%  (521 / 1159 MB)
+[ARTEA] loading 47%  (545 / 1159 MB)
+[ARTEA] loading 49%  (569 / 1159 MB)
+[ARTEA] loading 51%  (593 / 1159 MB)
+[ARTEA] loading 53%  (617 / 1159 MB)
+[ARTEA] loading 55%  (641 / 1159 MB)
+[ARTEA] loading 57%  (665 / 1159 MB)
+[ARTEA] loading 58%  (684 / 1159 MB)
+[ARTEA] loading 60%  (707 / 1159 MB)
+[ARTEA] loading 62%  (729 / 1159 MB)
+[ARTEA] loading 64%  (749 / 1159 MB)
+[ARTEA] loading 66%  (769 / 1159 MB)
+[ARTEA] loading 69%  (809 / 1159 MB)
+[ARTEA] loading 70%  (817 / 1159 MB)
+[ARTEA] loading 71%  (826 / 1159 MB)
+[ARTEA] loading 73%  (849 / 1159 MB)
+[ARTEA] loading 74%  (865 / 1159 MB)
+[ARTEA] loading 76%  (885 / 1159 MB)
+[ARTEA] loading 78%  (905 / 1159 MB)
+[ARTEA] loading 79%  (922 / 1159 MB)
+[ARTEA] loading 81%  (945 / 1159 MB)
+[ARTEA] loading 82%  (962 / 1159 MB)
+[ARTEA] loading 84%  (979 / 1159 MB)
+[ARTEA] loading 86%  (1001 / 1159 MB)
+[ARTEA] loading 87%  (1018 / 1159 MB)
+[ARTEA] loading 89%  (1038 / 1159 MB)
+[ARTEA] loading 90%  (1050 / 1159 MB)
+[ARTEA] loading 91%  (1065 / 1159 MB)
+[ARTEA] loading 92%  (1077 / 1159 MB)
+[ARTEA] loading 93%  (1089 / 1159 MB)
+[ARTEA] loading 95%  (1106 / 1159 MB)
+[ARTEA] loading 97%  (1130 / 1159 MB)
+[ARTEA] loading 98%  (1147 / 1159 MB)
+[ARTEA] loading 100%  (1159 / 1159 MB)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL
+Build configuration: Emscripten 4.0.20, single-threaded, GDExtension support.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+[ARTEA] engine started
+GUEST access selected - Cleaning input boxes completely
+SESSION LOCKED: API Database completely bypassed.
+DEBUG: SET INVENTORY DATA CALLED
+=== POPULATE SLOTS CALLED ===
+Inventory button found player's inventory GUI
+Spawning 30 collectibles around (0.0, 0.0, 0.0)
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Successfully spawned 30 collectibles in 30 attempts
+Spawning 20 collectibles around (50.0, 0.0, 50.0)
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Successfully spawned 20 collectibles in 24 attempts
+✅ Ocean 1 Found and Playing
+✅ Ocean 2 Found and Playing
+👂 Audio Listener enabled on Viewport
+Player nearby! Attempting to collect...
+=== REFRESH SLOTS CALLED ===
+Grid container children count: 15
+>>> Slot.set_slot_data called
+>>> Setting slot with item: Clam
+>>> Item texture: (res://assets/Collectibles/pinkClam.png):<CompressedTexture2D#-9223371634436453898>
+>>> Item quantity: 1
+>>> Icon set and made visible
+>>> Quantity label set to: 1
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+Item collected! Removing from world...
+Player nearby! Attempting to collect...
+=== REFRESH SLOTS CALLED ===
+Grid container children count: 15
+>>> Slot.set_slot_data called
+>>> Setting slot with item: Clam
+>>> Item texture: (res://assets/Collectibles/pinkClam.png):<CompressedTexture2D#-9223371634436453898>
+>>> Item quantity: 1
+>>> Icon set and made visible
+>>> Quantity label set to: 1
+>>> Slot.set_slot_data called
+>>> Setting slot with item: Apple
+>>> Item texture: (res://assets/Collectibles/appleicon.png):<CompressedTexture2D#-9223371635040433685>
+>>> Item quantity: 1
+>>> Icon set and made visible
+>>> Quantity label set to: 1
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+Item collected! Removing from world...
+Player nearby! Attempting to collect...
+=== REFRESH SLOTS CALLED ===
+Grid container children count: 15
+>>> Slot.set_slot_data called
+>>> Setting slot with item: Clam
+>>> Item texture: (res://assets/Collectibles/pinkClam.png):<CompressedTexture2D#-9223371634436453898>
+>>> Item quantity: 2
+>>> Icon set and made visible
+>>> Quantity label set to: 2
+>>> Slot.set_slot_data called
+>>> Setting slot with item: Apple
+>>> Item texture: (res://assets/Collectibles/appleicon.png):<CompressedTexture2D#-9223371635040433685>
+>>> Item quantity: 1
+>>> Icon set and made visible
+>>> Quantity label set to: 1
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+>>> Slot.set_slot_data called
+>>> Empty slot - hiding icon and label
+Item collected! Removing from world...
