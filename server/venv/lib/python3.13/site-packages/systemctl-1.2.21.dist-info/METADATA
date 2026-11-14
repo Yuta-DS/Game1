@@ -1,0 +1,32 @@
+Metadata-Version: 2.4
+Name: systemctl
+Version: 1.2.21
+Summary: A Python wrapper for systemctl.
+License: GPL-3.0
+License-File: LICENSE
+Keywords: systemctl,systemd,linux,wrapper,subprocess,services
+Author: Nadim-Daniel Ghaznavi
+Author-email: nghaznavi@gmail.com
+Requires-Python: >=3.11,<4.0
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Topic :: System :: Systems Administration
+Requires-Dist: recommonmark (>=0.7.1,<0.8.0)
+Requires-Dist: sphinxcontrib-applehelp (>=2.0.0,<3.0.0)
+Requires-Dist: sphinxcontrib-devhelp (>=2.0.0,<3.0.0)
+Requires-Dist: sphinxcontrib-htmlhelp (>=2.1.0,<3.0.0)
+Requires-Dist: sphinxcontrib-jsmath (>=1.0.1,<2.0.0)
+Requires-Dist: sphinxcontrib-qthelp (>=2.0.0,<3.0.0)
+Requires-Dist: sphinxcontrib-serializinghtml (>=2.0.0,<3.0.0)
+Project-URL: Bug Tracker, https://github.com/NadimGhaznavi/systemctl/issues
+Project-URL: Documentation, https://systemctl.osoyalce.com/
+Project-URL: Homepage, https://systemctl.osoyalce.com/
+Project-URL: Source, https://github.com/NadimGhaznavi/systemctl
+Description-Content-Type: text/markdown
+
+Project information can be found on the [project website](https://systemctl.osoyalce.com/).
+
+

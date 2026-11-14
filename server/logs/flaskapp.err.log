@@ -1,0 +1,2567 @@
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [04/Aug/2026 11:06:07] "GET / HTTP/1.1" 200 -
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [04/Aug/2026 11:06:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:12:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:25:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:25:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:30:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:30:51] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+/Users/davidsovann/S2603/server/venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 29 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+127.0.0.1 - - [04/Aug/2026 11:30:51] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:30:51] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [04/Aug/2026 11:30:51] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [04/Aug/2026 11:45:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:45:15] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:55:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:55:29] "POST /login HTTP/1.1" 200 -
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [04/Aug/2026 11:56:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:56:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 11:57:11] "GET / HTTP/1.1" 200 -
+/Users/davidsovann/S2603/server/venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 29 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+127.0.0.1 - - [04/Aug/2026 11:57:11] "POST /login HTTP/1.1" 200 -
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+127.0.0.1 - - [04/Aug/2026 11:57:27] "GET / HTTP/1.1" 200 -
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Address already in use
+Port 8000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [04/Aug/2026 13:14:13] "GET / HTTP/1.1" 200 -
+/Users/davidsovann/S2603/server/venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 29 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+127.0.0.1 - - [04/Aug/2026 13:14:14] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 16:31:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 16:31:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 16:32:54] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [04/Aug/2026 16:36:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 16:37:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 16:37:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 20:16:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 20:16:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 20:35:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 20:35:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 00:28:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 00:28:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 00:39:00] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [07/Aug/2026 00:57:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 00:57:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 01:11:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 01:11:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 01:33:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 01:33:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 01:38:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 01:38:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 02:12:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 02:12:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 02:20:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 02:20:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 02:27:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 02:27:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 02:29:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 02:29:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 11:51:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 11:51:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 11:53:50] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [07/Aug/2026 12:10:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:10:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:18:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:18:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:32:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:32:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:41:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:41:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:53:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:53:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 12:53:44] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [07/Aug/2026 14:09:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 14:09:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 14:43:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 14:43:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 14:47:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 14:47:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 15:25:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 15:25:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 16:32:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 16:32:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 16:50:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 16:50:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 16:52:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 16:52:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:19:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:19:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:23:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:23:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:28:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:28:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:31:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:31:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:38:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:38:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:41:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:41:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:46:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:46:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:54:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:54:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:59:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:59:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:59:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 17:59:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 18:00:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/Aug/2026 18:00:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 00:07:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 00:07:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 00:34:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 00:34:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 00:42:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 00:42:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 01:16:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 01:16:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 01:25:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 01:25:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 01:49:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 01:49:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 02:22:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 02:22:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 02:31:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 02:31:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 11:49:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 11:49:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 12:27:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 12:27:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 12:32:14] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [08/Aug/2026 13:06:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:06:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:10:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:10:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:15:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:15:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:30:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:30:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:43:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:43:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:50:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 13:50:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 14:09:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 14:09:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 15:30:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 15:30:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 15:46:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 15:46:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 15:59:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 15:59:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 16:31:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 16:31:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 16:31:25] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [08/Aug/2026 17:06:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 17:06:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 17:06:41] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [08/Aug/2026 17:30:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 17:30:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 17:31:19] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [08/Aug/2026 17:44:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 17:44:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 17:47:03] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [08/Aug/2026 18:29:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 18:29:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 18:53:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 18:53:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:14:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:14:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:39:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:39:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:41:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:41:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:45:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:45:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:49:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 19:49:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 20:27:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 20:27:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 20:34:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 20:34:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 20:46:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 20:46:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 20:59:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 20:59:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 21:30:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 21:30:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 21:43:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 21:43:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 21:49:28] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [08/Aug/2026 22:08:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 22:08:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 22:09:34] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [08/Aug/2026 22:31:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 22:31:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 22:31:45] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [08/Aug/2026 22:45:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 22:45:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Aug/2026 22:46:35] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 00:25:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 00:25:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 00:26:30] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 02:04:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 02:04:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 02:29:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 02:29:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 02:31:27] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 03:02:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 03:02:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 03:20:37] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 12:34:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 12:34:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 12:35:36] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 12:40:31] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 12:42:27] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 14:35:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 14:35:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 14:51:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 14:51:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 14:52:22] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 14:52:30] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:52:30] "[33mPOST /ai/world-builder HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:54:07] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 14:54:14] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:54:14] "[33mPOST /ai/world-builder HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:54:14] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:02] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 14:57:07] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:07] "[33mPOST /ai/world-builder HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:14] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 14:57:17] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:17] "[33mPOST /ai/world-builder HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:23] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 14:57:27] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:27] "[33mPOST /ai/world-builder HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:35] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 14:57:45] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:45] "[33mPOST /ai/world-builder HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 14:57:49] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:02:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:02:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:03:21] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:03:26] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 15:03:26] "[33mPOST /ai/world-builder HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 15:22:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:22:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:23:20] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:23:35] "[33mPOST /ai/creative-guide HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 15:23:35] "[33mPOST /ai/world-builder HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 15:25:44] "[33mGET /ai/status HTTP/1.1[0m" 404 -
+127.0.0.1 - - [09/Aug/2026 15:25:54] "GET / HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [09/Aug/2026 15:31:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:31:21] "GET /ai/status HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:31:44] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:31:54] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:32:29] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:32:40] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [09/Aug/2026 15:36:04] "GET /ai/status HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:36:23] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:36:50] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [09/Aug/2026 15:40:23] "GET /ai/status HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:40:48] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:41:00] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:48:00] "GET /ai/status HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:54:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:54:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 15:55:04] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:07] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:07] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:08] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:08] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:10] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:10] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:11] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:11] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:15] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:15] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:19] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:19] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:20] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:20] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:23] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:23] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:31] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:55:31] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 15:57:18] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 400 -
+127.0.0.1 - - [09/Aug/2026 15:59:50] "[31m[1mPOST /ai/creative-guide HTTP/1.1[0m" 400 -
+127.0.0.1 - - [09/Aug/2026 16:02:17] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:02:57] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:03:16] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:03:40] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:05:41] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:05:54] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:06:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:06:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:06:35] "GET /ai/status HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:07:37] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 16:07:45] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:07:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:07:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:07:53] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:09:38] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [09/Aug/2026 16:09:45] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:09:52] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:16:41] "GET /ai/status HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:16:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:16:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:25:28] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:25:40] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:25:53] "GET /ai/status HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:26:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:26:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:26:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 16:26:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 18:01:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Aug/2026 18:01:46] "GET / HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [10/Aug/2026 00:57:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 00:57:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 01:53:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 01:53:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 01:57:33] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [10/Aug/2026 01:57:48] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 01:57:58] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 01:58:26] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [10/Aug/2026 01:58:35] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 01:58:45] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 01:58:55] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [10/Aug/2026 01:59:04] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 01:59:32] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 02:00:03] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [10/Aug/2026 10:57:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 10:57:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 11:48:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 11:48:01] "GET / HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [10/Aug/2026 15:07:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 15:07:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:03:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:03:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:05:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:05:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:26:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:26:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:26:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:26:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:58:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 19:58:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 20:22:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 20:22:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 20:24:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 20:24:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 21:31:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 21:31:30] "[33mGET /health HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /api HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /api/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /docs HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /openapi.json HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /swagger.json HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /routes HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /status HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /info HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /version HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /ping HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /mail HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /email HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /api/v1 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /api/v1/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /v1 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /api/status HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mGET /api/health HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "OPTIONS / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 21:31:50] "[33mPOST /api HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[33mGET /api/password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[33mGET /api/login HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[33mGET /api/send HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[33mGET /api/admin_bot HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[33mGET /api/email HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[33mGET /api/user HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[33mGET /api/emails HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[33mGET /static/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:38:52] "[31m[1mGET /login HTTP/1.1[0m" 405 -
+127.0.0.1 - - [10/Aug/2026 21:39:00] "[31m[1mGET /login HTTP/1.1[0m" 405 -
+127.0.0.1 - - [10/Aug/2026 21:39:00] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [10/Aug/2026 21:39:00] "[33mPOST /api/login HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 21:42:17] "[33mGET /inbox.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /api/password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /api/password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /api/register HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /api/register HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[31m[1mGET /register HTTP/1.1[0m" 405 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[31m[1mPOST /register HTTP/1.1[0m" 400 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /api/send HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /api/send HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /api/email/1 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /api/email/1 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /api/admin_bot HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /api/admin_bot HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /admin_bot HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /admin_bot HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /api/inbox HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /api/inbox HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /inbox HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /inbox HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /api/mail HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /api/mail HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mGET /api/messages HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:53] "[33mPOST /api/messages HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:54] "[33mGET /api/flag HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:54] "[33mPOST /api/flag HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:54] "[33mPOST /api/password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:54] "[33mPOST /password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:54] "[33mPOST /api/send HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:54] "[33mPOST /api/admin_bot HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:54] "[33mPOST /api/email/abc HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:42:54] "[33mPOST /api/emails HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[31m[1mGET /login HTTP/1.1[0m" 405 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /api/login HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /api/login HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /creds HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /creds HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /api/creds HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /api/creds HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /api/password/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /api/password/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /get_password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /get_password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /password/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /password/ HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /api/get_password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /api/get_password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /user/password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /user/password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mGET /api/user/password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[33mPOST /api/user/password HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:15] "[31m[1mGET /register HTTP/1.1[0m" 405 -
+127.0.0.1 - - [10/Aug/2026 21:44:16] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [10/Aug/2026 21:44:16] "[33mGET /signup HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:16] "[33mPOST /signup HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:16] "[33mGET /api/register HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:16] "[33mPOST /api/register HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:16] "[33mGET /api/signup HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:16] "[33mPOST /api/signup HTTP/1.1[0m" 404 -
+127.0.0.1 - - [10/Aug/2026 21:44:16] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 10:20:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 10:20:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 13:52:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 13:52:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 14:26:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 14:26:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 14:29:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 14:29:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 14:56:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 14:56:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 15:26:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 15:26:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 15:58:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 15:58:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 16:30:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 16:30:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 16:55:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 16:55:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 16:57:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 16:57:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 16:58:10] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 16:58:22] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 16:58:29] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 16:59:23] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 17:11:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 17:11:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 17:56:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 17:56:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:02:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:02:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:03:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:03:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:28:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:28:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:29:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:29:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:30:38] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:31:03] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:31:17] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:32:04] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:32:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:32:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:33:48] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:35:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:35:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:36:09] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:41:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:41:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:42:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:42:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:43:46] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:44:37] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:47:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:47:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:49:02] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:50:04] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:53:26] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:53:29] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:54:54] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:57:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:57:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:57:41] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:58:03] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 18:58:21] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 18:58:29] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:03:09] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:04:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:04:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:04:54] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 19:05:12] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:05:15] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 19:05:29] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:06:58] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 19:07:11] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 19:07:18] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:07:24] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 19:07:38] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:10:24] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:32:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 19:32:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 20:16:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 20:16:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 20:16:51] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 20:17:12] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 20:17:13] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 21:30:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 21:30:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 21:31:39] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:32:47] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:33:27] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:33:51] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:34:04] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:34:09] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 21:34:20] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 21:34:21] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:37:51] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:38:26] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 21:38:40] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:38:52] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [11/Aug/2026 21:39:27] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:39:44] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [11/Aug/2026 21:39:59] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [12/Aug/2026 20:50:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 20:50:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 20:51:23] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 20:56:30] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 20:57:35] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 20:57:42] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 20:57:43] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 20:57:58] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 20:58:05] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 20:58:06] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 21:07:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 21:07:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 21:08:35] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 21:59:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 21:59:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:03:55] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:13:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:13:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:13:57] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 22:17:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:17:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:17:24] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:17:34] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 22:18:33] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [12/Aug/2026 22:18:36] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:30:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:30:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [12/Aug/2026 22:31:14] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 00:03:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:03:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:04:26] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 00:12:14] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:13:56] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:16:13] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 00:17:16] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:18:12] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 00:26:59] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:27:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:27:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:27:47] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 00:38:24] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:39:26] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:47:40] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:53:33] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 00:53:34] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:05:30] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:06:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:06:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:07:38] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 01:08:23] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:09:24] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 01:09:38] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:16:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:16:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:16:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:16:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:17:24] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 01:33:38] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:52:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:52:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:53:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:53:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 01:54:30] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 02:00:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 02:00:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 02:01:29] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 02:13:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 02:13:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 02:14:15] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [13/Aug/2026 02:57:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 02:57:31] "[33mGET /apple-touch-icon-precomposed.png HTTP/1.1[0m" 404 -
+127.0.0.1 - - [13/Aug/2026 02:57:31] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+127.0.0.1 - - [13/Aug/2026 02:57:31] "[33mGET /apple-touch-icon.png HTTP/1.1[0m" 404 -
+127.0.0.1 - - [13/Aug/2026 02:57:31] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+127.0.0.1 - - [13/Aug/2026 02:58:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 07:21:26] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 07:42:55] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 08:18:47] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 08:22:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 08:22:23] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+127.0.0.1 - - [13/Aug/2026 08:58:56] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 09:01:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 21:05:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 21:05:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Aug/2026 21:06:12] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [14/Aug/2026 19:54:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 19:54:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 19:54:53] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [14/Aug/2026 20:06:07] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:17:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:17:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:17:40] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [14/Aug/2026 20:17:57] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [14/Aug/2026 20:18:40] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:23:25] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:26:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:26:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:26:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:26:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:27:27] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [14/Aug/2026 20:41:33] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:48:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:48:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 20:49:08] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [14/Aug/2026 21:29:07] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [14/Aug/2026 21:58:48] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 22:36:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 23:01:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 23:01:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 23:01:52] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [14/Aug/2026 23:36:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 23:36:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Aug/2026 23:37:09] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [15/Aug/2026 00:31:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 00:31:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 00:32:44] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [15/Aug/2026 00:39:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 00:39:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 00:40:10] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [15/Aug/2026 01:03:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 01:03:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 01:04:30] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [15/Aug/2026 12:21:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 12:21:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 12:22:06] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [15/Aug/2026 13:19:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 13:19:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 13:20:09] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [15/Aug/2026 16:56:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 16:56:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 16:56:48] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [15/Aug/2026 18:19:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 18:19:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 18:20:27] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [15/Aug/2026 18:39:57] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 18:45:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 18:45:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Aug/2026 18:46:07] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Aug/2026 13:25:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Aug/2026 13:25:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Aug/2026 13:25:58] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Aug/2026 22:50:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Aug/2026 22:50:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Aug/2026 22:51:52] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [16/Aug/2026 23:19:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Aug/2026 23:19:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Aug/2026 23:20:30] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [16/Aug/2026 23:26:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Aug/2026 23:26:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Aug/2026 23:27:06] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [16/Aug/2026 23:44:00] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 00:24:43] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 00:47:04] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [17/Aug/2026 02:04:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:04:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:05:00] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 02:06:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:06:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:20:36] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:32:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:32:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:39:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:39:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:40:46] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 02:46:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:46:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:47:21] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 02:50:46] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 02:56:37] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 09:47:53] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 11:23:16] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 11:47:19] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 11:48:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 11:48:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 11:49:30] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 12:06:26] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 12:10:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 12:10:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 12:11:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 12:11:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 12:12:48] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 12:16:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 12:16:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 12:29:09] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 12:54:12] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 13:11:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 13:11:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 13:19:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 13:19:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 13:24:17] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 13:24:57] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 13:25:07] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 14:06:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 14:06:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 14:23:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 14:23:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 14:26:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 14:26:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 14:37:08] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [17/Aug/2026 16:35:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 16:35:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 18:24:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 18:24:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 18:34:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 18:34:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 18:35:06] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 18:35:23] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 18:36:03] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 19:02:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 19:02:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 19:22:48] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [17/Aug/2026 20:48:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Aug/2026 20:48:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 14:01:19] "[33mHEAD /index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 14:01:37] "[33mHEAD /index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 14:35:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 14:35:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 14:37:21] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [18/Aug/2026 15:04:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[33mGET /index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[33mGET /health HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[33mGET /api HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[33mGET /status HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[33mGET /game HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[33mGET /artea HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[33mGET /robots.txt HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[33mGET /status HTTP/1.1[0m" 404 -
+127.0.0.1 - - [18/Aug/2026 15:04:15] "[31m[1mPOST / HTTP/1.1[0m" 405 -
+127.0.0.1 - - [18/Aug/2026 17:00:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 17:00:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 17:01:39] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [18/Aug/2026 17:20:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 17:20:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Aug/2026 17:24:17] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [19/Aug/2026 14:14:37] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2026 15:47:20] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2026 15:47:48] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2026 15:47:54] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2026 15:50:44] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2026 15:50:54] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2026 15:51:20] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2026 15:51:28] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [19/Aug/2026 21:53:28] "OPTIONS /my_artworks HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [22/Aug/2026 17:59:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Aug/2026 17:59:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Aug/2026 12:08:07] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 12:48:58] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 13:06:38] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 13:59:15] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 14:42:43] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 14:43:10] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 15:34:06] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 16:05:19] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 16:52:35] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 16:53:56] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 17:24:07] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 17:49:20] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 18:32:26] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 18:55:30] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 18:59:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Aug/2026 18:59:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Aug/2026 18:59:46] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [23/Aug/2026 20:06:23] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 20:38:34] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 22:26:59] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Aug/2026 22:50:37] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [24/Aug/2026 00:59:40] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [24/Aug/2026 15:38:55] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [24/Aug/2026 16:53:15] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [24/Aug/2026 17:11:07] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [24/Aug/2026 17:23:11] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [24/Aug/2026 17:24:28] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [24/Aug/2026 20:21:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [24/Aug/2026 20:21:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [24/Aug/2026 20:25:41] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [24/Aug/2026 21:43:00] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [24/Aug/2026 21:56:26] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [24/Aug/2026 22:35:43] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [26/Aug/2026 20:33:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 20:33:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 20:34:47] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 20:38:23] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 20:38:26] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 20:51:26] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 20:54:55] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 20:56:26] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 20:56:28] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:06:38] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:06:41] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:07:23] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:11:20] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:11:22] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:12:54] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:16:34] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:16:36] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:54:45] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:58:21] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 21:58:23] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:09:41] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:13:18] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:13:21] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:30:28] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:34:40] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:39:52] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:45:27] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:49:16] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 22:54:38] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 23:02:21] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 23:09:15] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 23:14:51] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 23:24:10] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 23:37:41] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 23:44:16] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 23:48:10] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [26/Aug/2026 23:58:56] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 00:07:42] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 00:17:18] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 00:26:36] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 00:31:47] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 00:37:47] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 00:57:05] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 01:06:24] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 01:22:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 01:26:33] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [27/Aug/2026 01:31:07] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 12:45:44] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 12:54:27] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 13:38:25] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 13:48:05] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 14:00:48] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 14:15:22] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 14:45:52] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 15:25:01] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 15:36:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 15:52:10] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 16:00:28] "[31m[1mPOST /ai/world-builder HTTP/1.1[0m" 400 -
+127.0.0.1 - - [28/Aug/2026 16:04:11] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 16:06:39] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 16:20:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 16:32:17] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 16:33:29] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 16:33:33] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 16:47:31] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 16:57:11] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 17:03:37] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 17:04:54] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 17:05:10] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 17:13:29] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 17:32:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 17:44:18] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 17:49:25] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 17:59:24] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 18:08:27] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 18:14:24] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 18:24:53] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 18:25:46] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 18:31:46] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [28/Aug/2026 18:50:40] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [29/Aug/2026 01:16:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 01:16:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 01:18:26] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 01:25:24] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 01:49:30] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 10:39:39] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:17:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:47:49] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:14:33] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:18:38] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:45:15] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 13:29:55] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 01:51:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 01:51:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 02:30:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 02:30:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 18:54:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 18:54:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 18:55:53] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [31/Aug/2026 21:49:16] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 22:10:56] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [31/Aug/2026 22:26:38] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 01:28:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 01:28:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 02:43:10] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:19:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:19:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:20:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:20:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:23:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:23:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:24:58] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:30:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Sep/2026 17:30:01] "GET / HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [04/Sep/2026 14:16:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2026 14:16:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 15:23:25] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 16:56:33] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 16:59:02] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:05:43] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:05:58] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:06:25] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:06:35] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:07:21] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:07:41] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:09:14] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:34:06] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:48:02] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:49:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:49:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 17:50:30] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [14/Sep/2026 17:53:54] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 18:40:32] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 18:44:41] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 20:02:46] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 20:28:25] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [14/Sep/2026 20:34:41] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [15/Sep/2026 01:54:23] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [15/Sep/2026 15:31:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Sep/2026 15:31:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Sep/2026 15:32:33] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [15/Sep/2026 15:42:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Sep/2026 15:42:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Sep/2026 15:43:13] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [24/Sep/2026 17:26:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [24/Sep/2026 17:26:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [24/Sep/2026 17:26:58] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [27/Sep/2026 13:05:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 13:05:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 13:06:41] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [27/Sep/2026 16:57:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 16:57:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 16:57:48] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [27/Sep/2026 16:58:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 16:58:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 16:59:24] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [27/Sep/2026 17:01:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 17:01:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 17:15:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Sep/2026 17:15:43] "GET / HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [28/Sep/2026 19:13:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Sep/2026 19:13:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Sep/2026 22:51:27] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [29/Sep/2026 00:00:12] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [29/Sep/2026 00:22:03] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [29/Sep/2026 01:19:08] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [29/Sep/2026 01:32:45] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [29/Sep/2026 03:29:37] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Sep/2026 03:32:07] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [29/Sep/2026 03:32:54] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [29/Sep/2026 20:02:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Sep/2026 20:02:26] "GET / HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [02/Oct/2026 17:03:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 17:03:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [02/Oct/2026 20:14:09] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 11:54:35] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 12:45:56] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 14:17:55] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 15:03:20] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 16:35:40] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 17:18:35] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 18:21:01] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 20:23:43] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 21:40:49] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [03/Oct/2026 22:52:43] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [04/Oct/2026 00:09:28] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [04/Oct/2026 19:41:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Oct/2026 19:41:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Oct/2026 23:36:42] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 00:49:01] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 08:42:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 08:42:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 09:13:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 09:13:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 12:45:37] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 16:32:33] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 18:28:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 18:28:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 19:16:00] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 20:33:35] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 21:06:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 21:48:12] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 23:55:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Oct/2026 23:55:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [06/Oct/2026 00:21:16] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [06/Oct/2026 00:35:47] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [06/Oct/2026 00:59:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [06/Oct/2026 00:59:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [06/Oct/2026 01:15:40] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [06/Oct/2026 01:30:21] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [06/Oct/2026 07:50:50] "POST /ai/world-builder HTTP/1.1" 200 -
+Traceback (most recent call last):
+  File "/Users/davidsovann/S2603/server/server.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+Traceback (most recent call last):
+  File "/Users/davidsovann/S2603/server/server.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+Traceback (most recent call last):
+  File "/Users/davidsovann/S2603/server/server.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+Traceback (most recent call last):
+  File "/Users/davidsovann/S2603/server/server.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+Traceback (most recent call last):
+  File "/Users/davidsovann/S2603/server/server.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+Traceback (most recent call last):
+  File "/Users/davidsovann/S2603/server/server.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 20:22:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:22:42] "OPTIONS /login HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 20:23:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:24:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:24:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:24:38] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:27:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:28:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:28:37] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:29:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:34:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:36:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:36:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:43:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:44:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:44:11] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:44:11] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Oct/2026 20:44:11] "[31m[1mGET /my_artworks HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/Oct/2026 20:44:16] "GET /ai/status HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:44:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:44:29] "OPTIONS /login HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 20:49:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:50:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:50:25] "OPTIONS /login HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 20:50:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:50:34] "OPTIONS /login HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 20:53:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:53:43] "OPTIONS /login HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 20:55:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 20:55:17] "OPTIONS /login HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 21:04:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:05:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:05:13] "OPTIONS /login HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 21:09:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:09:04] "OPTIONS /login HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 21:09:58] "GET / HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [16/Oct/2026 21:18:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:19:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:19:49] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:20:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:20:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:57:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 21:58:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:02:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:07:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:08:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:08:29] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:10:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:10:28] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:14:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:14:12] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:17:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:18:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:18:14] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:19:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:22:21] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:26:18] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:28:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:28:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:28:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:28:39] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:30:43] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:31:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:31:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:31:45] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:32:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:37:19] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:39:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:39:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:39:21] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:39:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:50:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:50:08] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 22:50:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:08:00] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:15:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:15:18] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:20:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:20:28] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:29:34] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:31:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:31:42] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:44:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:44:09] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:58:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:58:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [16/Oct/2026 23:58:37] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+127.0.0.1 - - [17/Oct/2026 00:07:02] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:10:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:10:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:10:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:10:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:10:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:11:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:14:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:14:20] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:15:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:21:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:32:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:32:21] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:48:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 00:48:38] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:03:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:03:31] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:08:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:08:25] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:14:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:14:17] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:18:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:18:43] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:23:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:23:25] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:28:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:34:46] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:35:12] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:36:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:37:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:37:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:37:54] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 01:38:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 06:15:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 06:30:00] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 06:30:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 06:31:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 06:31:54] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 06:40:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 07:39:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:29:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:29:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:30:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:30:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:30:58] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:34:08] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:49:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:50:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:52:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:57:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:57:06] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:57:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 09:59:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:02:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:04:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:08:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:09:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:14:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:15:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:16:33] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:16:36] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:19:01] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:19:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:20:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:21:20] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:21:22] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:22:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:47:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 10:48:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:01:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:16:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:29:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:44:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:45:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:46:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:46:31] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:47:52] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:54:33] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 11:54:34] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 12:10:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 12:11:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 12:11:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 12:11:10] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 13:49:39] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:36:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:37:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:37:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:38:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:38:44] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:40:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:43:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:43:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:43:47] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:49:23] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 15:49:31] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [17/Oct/2026 15:58:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 17:42:41] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 18:14:55] "POST /ai/world-builder HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [17/Oct/2026 20:32:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 20:46:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 20:46:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Oct/2026 20:46:11] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+127.0.0.1 - - [17/Oct/2026 21:28:56] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:09:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:09:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:11:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:11:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:11:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:11:54] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:14:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:14:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:30:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:46:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 02:47:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:02:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:03:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:05:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:05:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:11:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:12:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:18:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:18:10] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:31:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:31:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:57:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 03:59:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 04:14:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 04:15:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 04:20:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 04:22:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 04:29:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 04:30:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 04:50:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 04:51:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 05:15:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 05:16:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 05:43:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 05:46:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 05:48:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:15:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:15:52] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:15:55] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:23:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:24:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:33:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:37:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:38:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:46:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:49:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:54:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:56:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:57:16] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 06:57:18] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:12:29] "POST /ai/creative-guide HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:12:31] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:13:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:14:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:15:48] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:15:50] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:27:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:34:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:39:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 07:44:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:01:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:02:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:08:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:21:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:23:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:25:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:32:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:35:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:42:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:47:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 08:59:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 09:08:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 09:17:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 09:48:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 10:14:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 10:15:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 10:24:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 10:25:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 10:41:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 10:42:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 11:16:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 11:55:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 12:48:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 13:04:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 13:27:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 13:32:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 13:39:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 13:53:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 13:56:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 14:00:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 14:05:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 14:08:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 14:11:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 14:17:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 14:21:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 14:42:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 14:46:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 15:04:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 15:06:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 15:06:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 15:09:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 15:09:40] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 15:22:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 15:28:42] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 15:28:44] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 17:49:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 18:09:57] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:15:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:18:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:18:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:29:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:30:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:30:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:30:44] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:31:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:54:21] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 19:54:24] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 20:01:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 20:20:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 20:23:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 21:31:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:30:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:31:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:31:56] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [18/Oct/2026 22:31:56] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:33:04] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:33:04] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [18/Oct/2026 22:34:01] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [18/Oct/2026 22:34:34] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:34:35] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:55:51] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:55:51] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [18/Oct/2026 22:56:49] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:56:49] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [18/Oct/2026 22:59:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 22:59:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:07:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:09:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:10:43] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:10:43] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [18/Oct/2026 23:11:38] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:11:39] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [18/Oct/2026 23:12:08] "OPTIONS /register HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:12:08] "[31m[1mPOST /register HTTP/1.1[0m" 400 -
+127.0.0.1 - - [18/Oct/2026 23:16:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:22:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:25:49] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:25:49] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [18/Oct/2026 23:26:28] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:26:29] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:27:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:28:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:28:32] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:32:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2026 23:32:38] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 00:02:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 00:04:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 00:04:54] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 00:38:21] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 00:38:21] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [19/Oct/2026 14:07:16] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 14:07:21] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:20:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:22:12] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:22:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:23:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:27:31] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [19/Oct/2026 15:31:58] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:31:58] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:32:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:33:14] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:33:15] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [19/Oct/2026 15:33:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:33:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:36:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:37:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:41:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:45:52] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 15:45:52] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:10:46] "OPTIONS /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:10:48] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:32:18] "[31m[1mGET /login HTTP/1.1[0m" 405 -
+127.0.0.1 - - [19/Oct/2026 16:48:49] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:48:49] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [19/Oct/2026 16:50:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:50:04] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:18] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:54:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 18:20:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 18:34:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 19:24:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 19:28:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 19:32:52] "OPTIONS /my_artworks HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 19:32:52] "[31m[1mGET /my_artworks HTTP/1.1[0m" 422 -
+127.0.0.1 - - [19/Oct/2026 19:45:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 20:03:40] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [19/Oct/2026 20:07:10] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [19/Oct/2026 20:07:10] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 20:07:10] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 20:11:02] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [19/Oct/2026 20:11:02] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 20:11:02] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 20:17:23] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [19/Oct/2026 20:17:23] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 20:17:24] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 20:32:47] "[35m[1mPOST /register HTTP/1.1[0m" 201 -
+127.0.0.1 - - [19/Oct/2026 20:32:56] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 20:32:56] "POST /login HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 15:48:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 15:54:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:00:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:04:20] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:07:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:09:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:09:21] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:12:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:12:26] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:16:01] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:16:57] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:17:53] "POST /ai/world-builder HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:21:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:23:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:23:45] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:25:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:25:12] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:28:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:30:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:30:15] "OPTIONS /login HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:31:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 16:32:28] "GET / HTTP/1.1" 200 -

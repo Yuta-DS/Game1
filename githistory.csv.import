@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dylbqniq2iwms"
+
+[deps]
+
+files=["res://githistory.Terence.translation", "res://githistory.Fri, 1 May 2026 19:16:35 +1000.translation", "res://githistory.Merge pull request #10 from wsu.translation"]
+
+source_file="res://githistory.csv"
+dest_files=["res://githistory.Terence.translation", "res://githistory.Fri, 1 May 2026 19:16:35 +1000.translation", "res://githistory.Merge pull request #10 from wsu.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

@@ -1,0 +1,9 @@
+78098b89c88a74ebe8c20117b8754620
+::res://::1788098638
+godot_import_verification.json::JSON::-1::1788098639::0::1::::<><><>0<>0<><>::
+inspect_paw_material.gd::GDScript::4957132978460543383::1787929701::0::1::::<>SceneTree<><>0<>0<><>::
+milo_fullres.glb::PackedScene::4182253885676939591::1788100400::1788100401::1::::<><><>0<>0<>a8c11ff51e1e6ae01fac80086cf6240b<>res://.godot/imported/milo_fullres.glb-4104da7197a9a5f2b0182c3045b276b5.scn::
+milo_paw_import.gd::GDScript::2924409840926698278::1787929777::0::1::::<>EditorScenePostImport<><>0<>1<><>::
+preview.gd::GDScript::3722261810145329164::1788100391::0::1::::<>Node3D<><>0<>0<><>::
+preview.tscn::PackedScene::-1::1787911980::0::1::::<><><>0<>0<><>::res://preview.gd
+test_import.gd::GDScript::7055315771205390599::1787929777::0::1::::<>SceneTree<><>0<>0<><>::

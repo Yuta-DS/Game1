@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://334221ygmsni"
+
+[deps]
+
+files=["res://git-history.Terence.translation", "res://git-history.Fri, 22 May 2026 14:59:23 +1000.translation", "res://git-history.Merge pull request #20 from wsu.translation"]
+
+source_file="res://git-history.csv"
+dest_files=["res://git-history.Terence.translation", "res://git-history.Fri, 22 May 2026 14:59:23 +1000.translation", "res://git-history.Merge pull request #20 from wsu.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
