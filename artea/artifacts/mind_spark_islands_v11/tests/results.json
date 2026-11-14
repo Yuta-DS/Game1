@@ -1,0 +1,236 @@
+[
+  {
+    "name": "test_mind_spark_celestial_land",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 4.261,
+    "passed": true,
+    "evidence": [
+      "CELESTIAL_LAND: PASS — six distinct designs, shared paving, 3206864 total visible triangles, original footprints, 72 support probes, no new obstacles",
+      "ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit."
+    ]
+  },
+  {
+    "name": "test_mind_spark_zone02_route_clearance",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 6.796,
+    "passed": true,
+    "evidence": [
+      "MIND_SPARK_ZONE02_ROUTE_CLEARANCE: PASS — player walked from the route onto Living Network ground with no slab obstruction"
+    ]
+  },
+  {
+    "name": "test_mind_spark_architecture_physics",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 7.643,
+    "passed": true,
+    "evidence": [
+      "MIND_SPARK_ARCHITECTURE_PHYSICS: PASS — bridge, six islands, story decks, textures, and real remote jump verified",
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ]
+  },
+  {
+    "name": "test_mind_spark_transit_network",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 3.844,
+    "passed": true,
+    "evidence": [
+      "MindSparkTransitNetwork: PASS — 6 islands retain bridge ring and gain 3 reciprocal restored-world shortcuts"
+    ]
+  },
+  {
+    "name": "test_live_mind_spark_entry",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 5.378,
+    "passed": true,
+    "evidence": [
+      "LIVE_MIND_SPARK_ENTRY_TEST: PASS — Art Castle gate enters full six-island World One and returns",
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ]
+  },
+  {
+    "name": "test_world_minimap",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 1.998,
+    "passed": true,
+    "evidence": [
+      "WORLD_MINIMAP_TEST: PASS — outside/inside atlases, live tracking, and full map toggle"
+    ]
+  },
+  {
+    "name": "test_art_castle_gallery_flow",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 5.777,
+    "passed": true,
+    "evidence": [
+      "ART_CASTLE_GALLERY_TEST: PASS — raised castle door, gallery artwork, walking player and interactive 3D world are connected"
+    ]
+  },
+  {
+    "name": "test_gallery_embedded_floating_world",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 5.372,
+    "passed": true,
+    "evidence": [
+      "GALLERY_EMBEDDED_WORLD_TEST: PASS — centred non-overlapping carpet exit and 175m world bridge"
+    ]
+  },
+  {
+    "name": "test_train_station_jump_traversal",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 20.991,
+    "passed": true,
+    "evidence": [
+      "TRAIN_STATION_JUMP_TEST: PASS — station floor, boarding route, train deck, and jump clearance are physical",
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ]
+  },
+  {
+    "name": "test_story_crown_railway",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 2.486,
+    "passed": true,
+    "evidence": [
+      "STORY_CROWN_RAILWAY_TEST: PASS — climbable stations and player-driven Crown Line connect all four worlds"
+    ]
+  },
+  {
+    "name": "test_mind_spark_island_texture_coverage",
+    "code": 1,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 4.223,
+    "passed": false,
+    "evidence": [
+      "ERROR: MIND_SPARK_ISLAND_GEOMETRY_DETAIL: Bio-Data Tree base socket has incomplete service and energy transfer components"
+    ]
+  },
+  {
+    "name": "test_mind_spark_world_one_story",
+    "code": null,
+    "signal": "SIGTERM",
+    "timedOut": false,
+    "scriptFailure": true,
+    "seconds": 4.108,
+    "passed": false,
+    "evidence": [
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.",
+      "SCRIPT ERROR: Assertion failed: elite guard completion saves the pre-boss checkpoint"
+    ]
+  },
+  {
+    "name": "baseline_probe",
+    "code": 0,
+    "signal": null,
+    "timedOut": false,
+    "scriptFailure": false,
+    "seconds": 4.404,
+    "passed": true,
+    "evidence": [
+      "BASELINE_COMPARISON: old_land=true enemy_core_valid=false",
+      "BASELINE_TREE: old_land=true BioBaseServiceCell_*=0",
+      "BASELINE_TREE: old_land=true BioBaseStatusWindow_*=4",
+      "BASELINE_TREE: old_land=true BioBaseFlowFeed_*=12",
+      "BASELINE_COMPARISON: old_land=false enemy_core_valid=false",
+      "BASELINE_TREE: old_land=false BioBaseServiceCell_*=0",
+      "BASELINE_TREE: old_land=false BioBaseStatusWindow_*=4",
+      "BASELINE_TREE: old_land=false BioBaseFlowFeed_*=12"
+    ]
+  }
+]

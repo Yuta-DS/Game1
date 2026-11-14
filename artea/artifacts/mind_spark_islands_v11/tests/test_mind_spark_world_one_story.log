@@ -1,0 +1,757 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+     at: load (scene/resources/resource_format_text.cpp:501)
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:61)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:61)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:61)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:61)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:61)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:61)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:61)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:61)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _try_complete_network_quest_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:255)
+              [6] _on_object_progress (res://scripts/mind_spark/mind_spark_world_one_quest.gd:190)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:284)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:64)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _try_complete_network_quest_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:255)
+              [6] _on_object_progress (res://scripts/mind_spark/mind_spark_world_one_quest.gd:190)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:284)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:64)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _try_complete_network_quest_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:255)
+              [6] _on_object_progress (res://scripts/mind_spark/mind_spark_world_one_quest.gd:190)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:284)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:64)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _try_complete_network_quest_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:255)
+              [6] _on_object_progress (res://scripts/mind_spark/mind_spark_world_one_quest.gd:190)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:284)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:64)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:196)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_evidence_scanner (res://scripts/mind_spark/quest_objects/quest_object_base.gd:295)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:169)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:67)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:196)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_evidence_scanner (res://scripts/mind_spark/quest_objects/quest_object_base.gd:295)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:169)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:67)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:196)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_evidence_scanner (res://scripts/mind_spark/quest_objects/quest_object_base.gd:295)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:169)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:67)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:196)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_evidence_scanner (res://scripts/mind_spark/quest_objects/quest_object_base.gd:295)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:169)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:67)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:69)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:69)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:69)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:69)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:69)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:866)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:866)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:866)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:199)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_sequence (res://scripts/mind_spark/quest_objects/quest_object_base.gd:336)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:175)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:71)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:866)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:866)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:866)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:422)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:202)
+              [5] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [6] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:167)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:72)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:205)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:179)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:75)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:205)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:179)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:75)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:205)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:179)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:75)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:205)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:179)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:75)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:205)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:179)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:75)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:205)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:179)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:75)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:205)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _advance_progress (res://scripts/mind_spark/quest_objects/quest_object_base.gd:282)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:179)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:75)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:207)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_perspective_lens (res://scripts/mind_spark/quest_objects/quest_object_base.gd:307)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:172)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:78)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:207)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_perspective_lens (res://scripts/mind_spark/quest_objects/quest_object_base.gd:307)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:172)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:78)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:207)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_perspective_lens (res://scripts/mind_spark/quest_objects/quest_object_base.gd:307)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:172)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:78)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:207)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_perspective_lens (res://scripts/mind_spark/quest_objects/quest_object_base.gd:307)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:172)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:78)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:207)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_perspective_lens (res://scripts/mind_spark/quest_objects/quest_object_base.gd:307)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:172)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:78)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:207)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_perspective_lens (res://scripts/mind_spark/quest_objects/quest_object_base.gd:307)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:172)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:78)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:429)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:207)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] _use_perspective_lens (res://scripts/mind_spark/quest_objects/quest_object_base.gd:307)
+              [8] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:172)
+              [9] _run (res://scripts/test_mind_spark_world_one_story.gd:78)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:424)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:209)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:182)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:80)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:424)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:209)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:182)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:80)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:424)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:209)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:182)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:80)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:424)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:209)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:182)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:80)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:424)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:209)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:182)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:80)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:424)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:209)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:182)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:80)
+SCRIPT ERROR: Invalid access to property or key 'visible' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase.set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] set_active (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:44)
+              [1] activate_enemy_wave (res://scripts/mind_spark/mind_spark_world_one.gd:863)
+              [2] _activate_current_combat (res://scripts/mind_spark/mind_spark_world_one_quest.gd:424)
+              [3] _apply_task_gating (res://scripts/mind_spark/mind_spark_world_one_quest.gd:348)
+              [4] _complete_current_task (res://scripts/mind_spark/mind_spark_world_one_quest.gd:284)
+              [5] _on_object_completed (res://scripts/mind_spark/mind_spark_world_one_quest.gd:209)
+              [6] _complete (res://scripts/mind_spark/quest_objects/quest_object_base.gd:403)
+              [7] interact (res://scripts/mind_spark/quest_objects/quest_object_base.gd:182)
+              [8] _run (res://scripts/test_mind_spark_world_one_story.gd:80)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:82)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:82)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+          GDScript backtrace (most recent call first):
+              [0] _set_state (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:154)
+              [1] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:164)
+              [2] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [3] _run (res://scripts/test_mind_spark_world_one_story.gd:82)
+SCRIPT ERROR: Invalid assignment of property or key 'visible' with value of type 'bool' on a base object of type 'previously freed'.
+          at: MindSparkEnemyBase._defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+          GDScript backtrace (most recent call first):
+              [0] _defeat (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:166)
+              [1] take_damage (res://scripts/mind_spark/combat/mind_spark_enemy_base.gd:81)
+              [2] _run (res://scripts/test_mind_spark_world_one_story.gd:82)
+SCRIPT ERROR: Assertion failed: elite guard completion saves the pre-boss checkpoint
+          at: _run (res://scripts/test_mind_spark_world_one_story.gd:83)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://scripts/test_mind_spark_world_one_story.gd:83)
