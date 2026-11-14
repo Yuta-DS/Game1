@@ -1,0 +1,129 @@
+[ARTEA] loading… (size unknown)
+[ARTEA] loading 0%  (1 / 1195 MB)
+[ARTEA] loading 2%  (33 / 1195 MB)
+[ARTEA] loading 3%  (41 / 1195 MB)
+[ARTEA] loading 4%  (57 / 1195 MB)
+[ARTEA] loading 6%  (72 / 1195 MB)
+[ARTEA] loading 7%  (85 / 1195 MB)
+[ARTEA] loading 8%  (106 / 1195 MB)
+[ARTEA] loading 10%  (131 / 1195 MB)
+[ARTEA] loading 12%  (154 / 1195 MB)
+[ARTEA] loading 14%  (178 / 1195 MB)
+[ARTEA] loading 16%  (201 / 1195 MB)
+[ARTEA] loading 18%  (219 / 1195 MB)
+[ARTEA] loading 20%  (241 / 1195 MB)
+[ARTEA] loading 22%  (265 / 1195 MB)
+[ARTEA] loading 24%  (290 / 1195 MB)
+[ARTEA] loading 26%  (316 / 1195 MB)
+[ARTEA] loading 28%  (341 / 1195 MB)
+[ARTEA] loading 30%  (367 / 1195 MB)
+[ARTEA] loading 32%  (391 / 1195 MB)
+[ARTEA] loading 33%  (401 / 1195 MB)
+[ARTEA] loading 35%  (419 / 1195 MB)
+[ARTEA] loading 37%  (447 / 1195 MB)
+[ARTEA] loading 39%  (473 / 1195 MB)
+[ARTEA] loading 41%  (498 / 1195 MB)
+[ARTEA] loading 43%  (523 / 1195 MB)
+[ARTEA] loading 45%  (549 / 1195 MB)
+[ARTEA] loading 48%  (575 / 1195 MB)
+[ARTEA] loading 50%  (599 / 1195 MB)
+[ARTEA] loading 51%  (619 / 1195 MB)
+[ARTEA] loading 53%  (637 / 1195 MB)
+[ARTEA] loading 55%  (658 / 1195 MB)
+[ARTEA] loading 57%  (681 / 1195 MB)
+[ARTEA] loading 58%  (704 / 1195 MB)
+[ARTEA] loading 60%  (721 / 1195 MB)
+[ARTEA] loading 62%  (745 / 1195 MB)
+[ARTEA] loading 64%  (769 / 1195 MB)
+[ARTEA] loading 66%  (790 / 1195 MB)
+[ARTEA] loading 68%  (814 / 1195 MB)
+[ARTEA] loading 69%  (830 / 1195 MB)
+[ARTEA] loading 71%  (854 / 1195 MB)
+[ARTEA] loading 73%  (875 / 1195 MB)
+[ARTEA] loading 75%  (899 / 1195 MB)
+[ARTEA] loading 77%  (923 / 1195 MB)
+[ARTEA] loading 79%  (946 / 1195 MB)
+[ARTEA] loading 81%  (969 / 1195 MB)
+[ARTEA] loading 82%  (987 / 1195 MB)
+[ARTEA] loading 83%  (1003 / 1195 MB)
+[ARTEA] loading 85%  (1023 / 1195 MB)
+[ARTEA] loading 86%  (1035 / 1195 MB)
+[ARTEA] loading 87%  (1045 / 1195 MB)
+[ARTEA] loading 88%  (1057 / 1195 MB)
+[ARTEA] loading 89%  (1074 / 1195 MB)
+[ARTEA] loading 91%  (1097 / 1195 MB)
+[ARTEA] loading 93%  (1121 / 1195 MB)
+[ARTEA] loading 95%  (1137 / 1195 MB)
+[ARTEA] loading 96%  (1153 / 1195 MB)
+[ARTEA] loading 97%  (1168 / 1195 MB)
+[ARTEA] loading 99%  (1188 / 1195 MB)
+[ARTEA] loading 100%  (1195 / 1195 MB)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium)) - Compatibility - Using Device: WebKit - WebKit WebGL
+Build configuration: Emscripten 4.0.20, single-threaded, GDExtension support.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+[ARTEA] engine started
+GUEST access selected - Cleaning input boxes completely
+SESSION LOCKED: API Database completely bypassed.
+DEBUG: SET INVENTORY DATA CALLED
+=== POPULATE SLOTS CALLED ===
+Inventory button found player's inventory GUI
+Spawning 30 collectibles around (0.0, 0.0, 0.0)
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Collectible item ready: Apple
+Successfully spawned 30 collectibles in 30 attempts
+Spawning 20 collectibles around (50.0, 0.0, 50.0)
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Collectible item ready: Clam
+Successfully spawned 20 collectibles in 21 attempts
+✅ Ocean 1 Found and Playing
+✅ Ocean 2 Found and Playing
+👂 Audio Listener enabled on Viewport

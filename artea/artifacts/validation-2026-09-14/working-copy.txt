@@ -1,0 +1,7 @@
+ M artea/scripts/art_castle_floating_world.gd
+ M artea/scripts/art_castle_kingdom_regions.gd
+ M artea/scripts/art_castle_story_railway.gd
+ M artea/scripts/test_story_crown_railway.gd
+ M artea/scripts/test_story_crown_railway_web_performance.gd
+ M artea/scripts/test_train_station_jump_traversal.gd
+?? .mind_spark_capture_project/

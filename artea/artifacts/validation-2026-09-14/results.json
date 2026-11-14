@@ -1,0 +1,540 @@
+[
+  {
+    "test": "test_art_castle_gallery_flow",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 8.4,
+    "errors": [],
+    "log": "test_art_castle_gallery_flow.log"
+  },
+  {
+    "test": "test_crown_train_directional_vfx",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 5.4,
+    "errors": [],
+    "log": "test_crown_train_directional_vfx.log"
+  },
+  {
+    "test": "test_crown_train_soft_smoke_wake",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.3,
+    "errors": [],
+    "log": "test_crown_train_soft_smoke_wake.log"
+  },
+  {
+    "test": "test_crown_train_spatial_audio_integration",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.2,
+    "errors": [],
+    "log": "test_crown_train_spatial_audio_integration.log"
+  },
+  {
+    "test": "test_crown_train_steam_engine_motion",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 3.3,
+    "errors": [],
+    "log": "test_crown_train_steam_engine_motion.log"
+  },
+  {
+    "test": "test_gallery_embedded_floating_world",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 7.2,
+    "errors": [],
+    "log": "test_gallery_embedded_floating_world.log"
+  },
+  {
+    "test": "test_milo_activity_routing",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_milo_activity_routing.log"
+  },
+  {
+    "test": "test_milo_activity_states",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.9,
+    "errors": [],
+    "log": "test_milo_activity_states.log"
+  },
+  {
+    "test": "test_milo_character",
+    "status": "FAIL",
+    "code": 1,
+    "seconds": 1.9,
+    "errors": [
+      "ERROR: MILO_CHARACTER_TEST: measured Milo part is missing: PrototypeEyeWhite_L"
+    ],
+    "log": "test_milo_character.log"
+  },
+  {
+    "test": "test_milo_chat_cursor",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.9,
+    "errors": [],
+    "log": "test_milo_chat_cursor.log"
+  },
+  {
+    "test": "test_milo_companion_follow",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 14.7,
+    "errors": [],
+    "log": "test_milo_companion_follow.log"
+  },
+  {
+    "test": "test_milo_conversation_context",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_milo_conversation_context.log"
+  },
+  {
+    "test": "test_milo_generations",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_milo_generations.log"
+  },
+  {
+    "test": "test_milo_guide",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.3,
+    "errors": [],
+    "log": "test_milo_guide.log"
+  },
+  {
+    "test": "test_milo_live_hub_visibility",
+    "status": "FAIL",
+    "code": 0,
+    "seconds": 11.2,
+    "errors": [
+      "SCRIPT ERROR: Compile Error: Identifier not found: Global",
+      "ERROR: Failed to load script \"res://scenes/narrative_bubble.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/everlasting_father_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/knight_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/rogue_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/barbarian_animations.gd\" with error \"Compilation failed\".",
+      "SCRIPT ERROR: Compile Error: Identifier not found: GameManager",
+      "ERROR: Failed to load script \"res://scripts/mage_animations.gd\" with error \"Compilation failed\"."
+    ],
+    "log": "test_milo_live_hub_visibility.log"
+  },
+  {
+    "test": "test_milo_message_recognition",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.0,
+    "errors": [],
+    "log": "test_milo_message_recognition.log"
+  },
+  {
+    "test": "test_milo_missing_walk_fallback",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.9,
+    "errors": [],
+    "log": "test_milo_missing_walk_fallback.log"
+  },
+  {
+    "test": "test_milo_natural_animation",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 3.2,
+    "errors": [],
+    "log": "test_milo_natural_animation.log"
+  },
+  {
+    "test": "test_milo_prototype_reference",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_milo_prototype_reference.log"
+  },
+  {
+    "test": "test_milo_speech_animation",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.9,
+    "errors": [],
+    "log": "test_milo_speech_animation.log"
+  },
+  {
+    "test": "test_milo_support_safety",
+    "status": "FAIL",
+    "code": 124,
+    "seconds": 90.0,
+    "errors": [
+      "SCRIPT ERROR: Assertion failed: urgent wording replaces normal reflection with direct real-world support"
+    ],
+    "log": "test_milo_support_safety.log"
+  },
+  {
+    "test": "test_milo_wisdom_engine",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.9,
+    "errors": [],
+    "log": "test_milo_wisdom_engine.log"
+  },
+  {
+    "test": "test_mind_spark_architecture_physics",
+    "status": "PASS_WITH_CLEANUP_ERRORS",
+    "code": 0,
+    "seconds": 9.1,
+    "errors": [
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ],
+    "log": "test_mind_spark_architecture_physics.log"
+  },
+  {
+    "test": "test_mind_spark_celestial_land",
+    "status": "FAIL",
+    "code": 1,
+    "seconds": 5.4,
+    "errors": [
+      "ERROR: CELESTIAL_LAND: zone position changed: 01_world_gate_landing",
+      "ERROR: CELESTIAL_LAND: zone position changed: 02_living_network_forest",
+      "ERROR: CELESTIAL_LAND: zone radius changed",
+      "ERROR: CELESTIAL_LAND: incorrect shell scale",
+      "ERROR: CELESTIAL_LAND: missing perimeter support: 02_living_network_forest",
+      "ERROR: CELESTIAL_LAND: missing perimeter support: 02_living_network_forest",
+      "ERROR: CELESTIAL_LAND: missing perimeter support: 02_living_network_forest",
+      "ERROR: CELESTIAL_LAND: missing perimeter support: 02_living_network_forest",
+      "ERROR: CELESTIAL_LAND: missing perimeter support: 02_living_network_forest",
+      "ERROR: CELESTIAL_LAND: missing perimeter support: 02_living_network_forest",
+      "ERROR: CELESTIAL_LAND: missing perimeter support: 02_living_network_forest",
+      "ERROR: CELESTIAL_LAND: missing perimeter support: 02_living_network_forest"
+    ],
+    "log": "test_mind_spark_celestial_land.log"
+  },
+  {
+    "test": "test_mind_spark_chapter_catalog",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_mind_spark_chapter_catalog.log"
+  },
+  {
+    "test": "test_mind_spark_chapter_world",
+    "status": "FAIL",
+    "code": 0,
+    "seconds": 2.8,
+    "errors": [
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object.",
+      "ERROR: Error calling deferred method: 'Node(world_spatial_audio.gd)::_configure_surround_source': Cannot convert argument 1 from Object to Object."
+    ],
+    "log": "test_mind_spark_chapter_world.log"
+  },
+  {
+    "test": "test_mind_spark_checkpoint_store",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_mind_spark_checkpoint_store.log"
+  },
+  {
+    "test": "test_mind_spark_completed_train_policy",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_mind_spark_completed_train_policy.log"
+  },
+  {
+    "test": "test_mind_spark_encounter_director",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_mind_spark_encounter_director.log"
+  },
+  {
+    "test": "test_mind_spark_galaxy_integration",
+    "status": "PASS_WITH_CLEANUP_ERRORS",
+    "code": 0,
+    "seconds": 7.0,
+    "errors": [
+      "ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit."
+    ],
+    "log": "test_mind_spark_galaxy_integration.log"
+  },
+  {
+    "test": "test_mind_spark_galaxy_traversal",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 7.5,
+    "errors": [],
+    "log": "test_mind_spark_galaxy_traversal.log"
+  },
+  {
+    "test": "test_mind_spark_island_one_detailed_guidance",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 6.9,
+    "errors": [],
+    "log": "test_mind_spark_island_one_detailed_guidance.log"
+  },
+  {
+    "test": "test_mind_spark_island_one_quest_1_signal_observatory",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 6.7,
+    "errors": [],
+    "log": "test_mind_spark_island_one_quest_1_signal_observatory.log"
+  },
+  {
+    "test": "test_mind_spark_island_one_quest_2_echo_garden",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 8.9,
+    "errors": [],
+    "log": "test_mind_spark_island_one_quest_2_echo_garden.log"
+  },
+  {
+    "test": "test_mind_spark_island_texture_coverage",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 4.7,
+    "errors": [],
+    "log": "test_mind_spark_island_texture_coverage.log"
+  },
+  {
+    "test": "test_mind_spark_live_gate_blueprint",
+    "status": "PASS_WITH_CLEANUP_ERRORS",
+    "code": 0,
+    "seconds": 7.1,
+    "errors": [
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ],
+    "log": "test_mind_spark_live_gate_blueprint.log"
+  },
+  {
+    "test": "test_mind_spark_perspective",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.0,
+    "errors": [],
+    "log": "test_mind_spark_perspective.log"
+  },
+  {
+    "test": "test_mind_spark_quest_object_integration",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.2,
+    "errors": [],
+    "log": "test_mind_spark_quest_object_integration.log"
+  },
+  {
+    "test": "test_mind_spark_quest_objects",
+    "status": "FAIL",
+    "code": 0,
+    "seconds": 2.7,
+    "errors": [
+      "SCRIPT ERROR: Assertion failed: Core uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: CentralSpark uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: Pip1 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: Pip2 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: Pip3 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: _MeshInstance3D_10 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: _MeshInstance3D_11 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: _MeshInstance3D_12 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: _MeshInstance3D_13 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: PedestalCircuitStud00 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: PedestalCircuitStud02 uses a textured socket-ball material",
+      "SCRIPT ERROR: Assertion failed: PedestalCircuitStud04 uses a textured socket-ball material"
+    ],
+    "log": "test_mind_spark_quest_objects.log"
+  },
+  {
+    "test": "test_mind_spark_runtime",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_mind_spark_runtime.log"
+  },
+  {
+    "test": "test_mind_spark_shared_state",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 1.8,
+    "errors": [],
+    "log": "test_mind_spark_shared_state.log"
+  },
+  {
+    "test": "test_mind_spark_split_world",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.3,
+    "errors": [],
+    "log": "test_mind_spark_split_world.log"
+  },
+  {
+    "test": "test_mind_spark_super_island_one_3000",
+    "status": "FAIL",
+    "code": 124,
+    "seconds": 90.0,
+    "errors": [
+      "SCRIPT ERROR: Assertion failed: only the three non-duplicating upper-detail batches are layered over the existing island"
+    ],
+    "log": "test_mind_spark_super_island_one_3000.log"
+  },
+  {
+    "test": "test_mind_spark_three_island_fusion",
+    "status": "FAIL",
+    "code": 124,
+    "seconds": 90.0,
+    "errors": [
+      "SCRIPT ERROR: Assertion failed."
+    ],
+    "log": "test_mind_spark_three_island_fusion.log"
+  },
+  {
+    "test": "test_mind_spark_transit_network",
+    "status": "PASS_WITH_CLEANUP_ERRORS",
+    "code": 0,
+    "seconds": 5.6,
+    "errors": [
+      "ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit."
+    ],
+    "log": "test_mind_spark_transit_network.log"
+  },
+  {
+    "test": "test_mind_spark_world_one",
+    "status": "FAIL",
+    "code": 0,
+    "seconds": 4.5,
+    "errors": [
+      "SCRIPT ERROR: Assertion failed."
+    ],
+    "log": "test_mind_spark_world_one.log"
+  },
+  {
+    "test": "test_mind_spark_world_one_story",
+    "status": "FAIL",
+    "code": 124,
+    "seconds": 90.1,
+    "errors": [
+      "SCRIPT ERROR: Assertion failed: Quest One saves before opening its next path"
+    ],
+    "log": "test_mind_spark_world_one_story.log"
+  },
+  {
+    "test": "test_mind_spark_zone02_route_clearance",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 6.7,
+    "errors": [],
+    "log": "test_mind_spark_zone02_route_clearance.log"
+  },
+  {
+    "test": "test_story_crown_railway",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.5,
+    "errors": [],
+    "log": "test_story_crown_railway.log"
+  },
+  {
+    "test": "test_story_crown_railway_web_performance",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.2,
+    "errors": [],
+    "note": "Passed rerun with required ARTEA_FORCE_WEB_STATION_LOD=1",
+    "log": "railway-web-performance-configured.log"
+  },
+  {
+    "test": "test_train_celestial_banner",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 4.4,
+    "errors": [],
+    "log": "test_train_celestial_banner.log"
+  },
+  {
+    "test": "test_train_drive_and_ride",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 12.3,
+    "errors": [],
+    "log": "test_train_drive_and_ride.log"
+  },
+  {
+    "test": "test_train_drive_smoothness",
+    "status": "FAIL",
+    "code": 1,
+    "seconds": 5.1,
+    "errors": [
+      "ERROR: TRAIN_SMOOTHNESS_TEST: the driving camera's travel per frame jumps (1.16 m, limit 0.60)"
+    ],
+    "log": "test_train_drive_smoothness.log"
+  },
+  {
+    "test": "test_train_rides",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 22.6,
+    "errors": [],
+    "log": "test_train_rides.log"
+  },
+  {
+    "test": "test_train_station_jump_traversal",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 33.1,
+    "errors": [],
+    "log": "test_train_station_jump_traversal.log"
+  },
+  {
+    "test": "test_train_station_physicality",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.2,
+    "errors": [],
+    "log": "test_train_station_physicality.log"
+  },
+  {
+    "test": "test_world_minimap",
+    "status": "PASS",
+    "code": 0,
+    "seconds": 2.2,
+    "errors": [],
+    "log": "test_world_minimap.log"
+  },
+  {
+    "test": "test_web_environment_compat",
+    "status": "PASS",
+    "code": 0,
+    "errors": [],
+    "log": "web-environment.log"
+  }
+]

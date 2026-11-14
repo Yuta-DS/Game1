@@ -1,0 +1,170 @@
+{
+  "input": "/Users/davidsovann/Documents/World_One_Mind_Spark_Concise_Developer_Guide_with_Identity_System.docx",
+  "fonts_by_char_count": {
+    "Calibri": 30981
+  },
+  "direct_run_formatting_runs": 701,
+  "direct_paragraph_formatting_paragraphs": 669,
+  "heading_like_paragraphs_not_heading_style": [
+    {
+      "para_index": 1,
+      "text": "ART\u00c9A  \u2022  WORLD ONE SIMPLE DEVELOPER GUIDE",
+      "style": "Normal"
+    },
+    {
+      "para_index": 2,
+      "text": "MIND SPARK",
+      "style": "Title"
+    },
+    {
+      "para_index": 8,
+      "text": "GUIDE ORIENTATION",
+      "style": "Normal"
+    },
+    {
+      "para_index": 30,
+      "text": "PART 1",
+      "style": "Normal"
+    },
+    {
+      "para_index": 45,
+      "text": "PART 1B",
+      "style": "Normal"
+    },
+    {
+      "para_index": 63,
+      "text": "PART 2",
+      "style": "Normal"
+    },
+    {
+      "para_index": 69,
+      "text": "Town Square  \u2022  Meet the mayor and accept his request",
+      "style": "Normal"
+    },
+    {
+      "para_index": 72,
+      "text": "Town Road and Castle Entrance  \u2022  Follow Milo and learn the basic controls",
+      "style": "Normal"
+    },
+    {
+      "para_index": 78,
+      "text": "Mind Spark Arrival Grove  \u2022  Enter World One and receive the four goals",
+      "style": "Normal"
+    },
+    {
+      "para_index": 90,
+      "text": "Thought Storm Arena  \u2022  Use sword skill and clear thinking in the boss battle",
+      "style": "Normal"
+    },
+    {
+      "para_index": 93,
+      "text": "Oldest Tree Sanctuary  \u2022  Receive the treasure and return through the World Gate",
+      "style": "Normal"
+    },
+    {
+      "para_index": 95,
+      "text": "PART 3",
+      "style": "Normal"
+    },
+    {
+      "para_index": 106,
+      "text": "PART 4",
+      "style": "Normal"
+    },
+    {
+      "para_index": 114,
+      "text": "PART 4 \u2022 GODOT BUILD NOTES",
+      "style": "Normal"
+    },
+    {
+      "para_index": 129,
+      "text": "PART 5",
+      "style": "Normal"
+    },
+    {
+      "para_index": 146,
+      "text": "PART 6",
+      "style": "Normal"
+    },
+    {
+      "para_index": 151,
+      "text": "PART 7 \u2022 BLUEPRINT PLATE A",
+      "style": "Normal"
+    },
+    {
+      "para_index": 156,
+      "text": "BLUEPRINT PLATE B",
+      "style": "Normal"
+    },
+    {
+      "para_index": 161,
+      "text": "BLUEPRINT PLATE C",
+      "style": "Normal"
+    },
+    {
+      "para_index": 166,
+      "text": "BLUEPRINT PLATE D",
+      "style": "Normal"
+    }
+  ],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 1,
+        "text": "ART\u00c9A  \u2022  WORLD ONE SIMPLE DEVELOPER GUIDE",
+        "style": "Normal"
+      },
+      {
+        "para_index": 4,
+        "text": "",
+        "style": "Normal"
+      },
+      {
+        "para_index": 6,
+        "text": "",
+        "style": "Normal"
+      },
+      {
+        "para_index": 8,
+        "text": "GUIDE ORIENTATION",
+        "style": "Normal"
+      },
+      {
+        "para_index": 9,
+        "text": "What is inside this guide",
+        "style": "Heading 1"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 1,
+        "run_text": "ART\u00c9A  \u2022  WORLD ONE SIMPLE DEVELOPER GUIDE",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": "MIND SPARK",
+        "style": "Title"
+      },
+      {
+        "para_index": 3,
+        "run_text": "Player Story, Quests, Combat, Boss & World Building Guide",
+        "style": "Subtitle"
+      },
+      {
+        "para_index": 5,
+        "run_text": "World One direction: Technology and Science lead. Nature and Magic support them.",
+        "style": "Caption"
+      },
+      {
+        "para_index": 7,
+        "run_text": "Version 2.2  \u2022  14 August 2026  \u2022  Prepared for David Sovann and the ART\u00c9A team",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

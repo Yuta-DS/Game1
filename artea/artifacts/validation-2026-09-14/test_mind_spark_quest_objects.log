@@ -1,0 +1,138 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+     at: load (scene/resources/resource_format_text.cpp:501)
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+SCRIPT ERROR: Assertion failed: Core uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: CentralSpark uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: Pip1 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: Pip2 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: Pip3 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: _MeshInstance3D_10 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: _MeshInstance3D_11 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: _MeshInstance3D_12 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: _MeshInstance3D_13 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: PedestalCircuitStud00 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: PedestalCircuitStud02 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: PedestalCircuitStud04 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: PedestalCircuitStud06 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: PedestalCircuitStud08 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: PedestalCircuitStud10 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: SocketPylonCrystal00 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: SocketPylonCrystal01 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: SocketPylonCrystal02 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: SocketPylonCrystal03 uses a textured socket-ball material
+          at: _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+          GDScript backtrace (most recent call first):
+              [0] _assert_textured_socket_ball (res://scripts/test_mind_spark_quest_objects.gd:186)
+              [1] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:211)
+              [2] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+SCRIPT ERROR: Assertion failed: detailed socket exposes staged Blender components
+          at: _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:216)
+          GDScript backtrace (most recent call first):
+              [0] _test_socket_persistence_and_save_order (res://scripts/test_mind_spark_quest_objects.gd:216)
+              [1] _spawn (res://scripts/test_mind_spark_quest_objects.gd:181)
+Mind Spark quest objects: all checks passed
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
