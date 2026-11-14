@@ -1,0 +1,57 @@
+Checking split layout for local serving…
+  index.pck: parts up to date (835bc2851f85162e)
+  content.pck: parts up to date (d7b9be05234ee878)
+  index.side.wasm: parts up to date (7e4df20e1d767f03)
+Serving /Users/davidsovann/S2603/artea/builds/web
+  http://localhost:8802/index.html
+First load pulls the whole pack - give it a minute. Ctrl-C to stop.
+
+127.0.0.1 - - [19/Oct/2026 16:51:21] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /pck-loader.js HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /index.png HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /index.js HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /index.wasm HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /index.pck.parts.json HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /index.side.wasm.parts.json HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /parts/index.pck.835bc2851f85162e.part00 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /parts/index.pck.835bc2851f85162e.part02 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /parts/index.pck.835bc2851f85162e.part01 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /parts/index.pck.835bc2851f85162e.part03 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /index.icon.png HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /parts/index.side.wasm.7e4df20e1d767f03.part00 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:22] "GET /parts/index.side.wasm.7e4df20e1d767f03.part01 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.side.wasm.7e4df20e1d767f03.part02 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.side.wasm.7e4df20e1d767f03.part03 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /index.icon.png HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part04 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part05 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part06 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part07 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.side.wasm.7e4df20e1d767f03.part04 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.side.wasm.7e4df20e1d767f03.part05 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part08 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part09 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part10 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part11 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part12 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /libterrain.web.release.wasm32.wasm HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part13 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part14 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part15 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part16 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part17 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:23] "GET /parts/index.pck.835bc2851f85162e.part18 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:26] "GET /index.audio.position.worklet.js HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:26] "GET /index.audio.worklet.js HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:37] "GET /index.icon.png HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:51:58] "GET /index.html HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:51:58] "GET /index.js HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:51:58] "GET /pck-loader.js HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:51:58] "GET /index.png HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:51:58] "GET /index.pck.parts.json HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:58] "GET /index.wasm HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:51:58] "GET /index.side.wasm.parts.json HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 16:51:58] "GET /libterrain.web.release.wasm32.wasm HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:52:00] "GET /index.audio.position.worklet.js HTTP/1.1" 304 -
+127.0.0.1 - - [19/Oct/2026 16:52:00] "GET /index.audio.worklet.js HTTP/1.1" 304 -

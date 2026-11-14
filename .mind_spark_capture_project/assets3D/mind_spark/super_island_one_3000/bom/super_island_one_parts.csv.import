@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://itjflq2okh2j"
+
+[deps]
+
+files=["res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.name.translation", "res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.category.translation", "res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.role.translation", "res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.assembly.translation", "res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.triangles.translation"]
+
+source_file="res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.csv"
+dest_files=["res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.name.translation", "res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.category.translation", "res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.role.translation", "res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.assembly.translation", "res://assets3D/mind_spark/super_island_one_3000/bom/super_island_one_parts.triangles.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
