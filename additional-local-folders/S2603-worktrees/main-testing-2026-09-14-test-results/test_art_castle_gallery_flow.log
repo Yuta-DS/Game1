@@ -1,0 +1,41 @@
+Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1.stable.official)
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: res://scenes/music_manager.tscn:4 - ext_resource, invalid UID: uid://bo2fecg6xsgkk - using text path instead: res://assets/SFX/Peace - David Lastra.ogg
+     at: load (scene/resources/resource_format_text.cpp:501)
+[Firebase] >> The value for `databaseURL` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientId` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `clientSecret` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `domainUriPrefix` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `functionsGeoZone` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `cacheLocation` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `emulators` is not configured. If you are not planning to use it, ignore this message.
+[Firebase] >> The value for `workarounds` is not configured. If you are not planning to use it, ignore this message.
+Loading dialogue from: HubworldDialogue.dialogue
+Attempting to open: res://dialogue/artea_park_dialogues.txt
+File exists: true
+/Users/davidsovann/Library/Application Support/Godot/app_userdata/Artea
+No authenticated user -> loading local gallery
+Player artworks found: 0
+No player artworks to replace online gallery.
+RatingPanel = RatingPanel:<Panel#368511568339>
+RatingLabel = RatingLabel:<Label#368629008858>
+likebutton = LikeButton:<Button#368578677207>
+[ARTEA] galaxy world=true meshes=29115 cam=(0.0, 7.842911, 32.76148)
+Checking frame:Frame_01
+frame_to_artwork:{  }
+FRAME NOT FOUND
+Entered:Frame_01
+Rating returned:0
+Frame:Frame_01
+Current rating:0
+WARNING: Depth of field blur is only available when using the Forward+ or Mobile renderer.
+     at: camera_attributes_set_dof_blur (servers/rendering/storage/camera_attributes_storage.cpp:74)
+     GDScript backtrace (most recent call first):
+         [0] _build_dof (res://scripts/viewfinder/lens_controller.gd:179)
+         [1] _ready (res://scripts/viewfinder/lens_controller.gd:107)
+         [2] _build_player (res://scripts/creation_world/creation_world.gd:369)
+         [3] _ready (res://scripts/creation_world/creation_world.gd:54)
+ART_CASTLE_GALLERY_TEST: PASS — raised castle door, gallery artwork, walking player and interactive 3D world are connected
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

@@ -1,0 +1,72 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/mind_spark_collectible.gd" id="1_collectible"]
+
+[sub_resource type="SphereShape3D" id="CollectShape"]
+radius = 3.5
+
+[sub_resource type="SphereMesh" id="CoreMesh"]
+radius = 1.1
+height = 2.2
+
+[sub_resource type="StandardMaterial3D" id="CoreMaterial"]
+albedo_color = Color(1, 0.82, 0.28, 1)
+emission_enabled = true
+emission = Color(1, 0.66, 0.14, 1)
+emission_energy_multiplier = 1.8
+
+[sub_resource type="TorusMesh" id="RingMesh"]
+inner_radius = 1.7
+outer_radius = 2.0
+rings = 20
+ring_segments = 6
+
+[sub_resource type="StandardMaterial3D" id="RingMaterial"]
+albedo_color = Color(0.28, 0.9, 1, 1)
+emission_enabled = true
+emission = Color(0.22, 0.85, 1, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="Animation" id="RESET"]
+resource_name = "RESET"
+length = 0.0
+
+[sub_resource type="AnimationLibrary" id="Library"]
+_data = {&"RESET": SubResource("RESET")}
+
+[node name="ThoughtSparkCollectible" type="Area3D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_collectible")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 2.2, 0)
+shape = SubResource("CollectShape")
+
+[node name="Visual" type="Node3D" parent="."]
+position = Vector3(0, 2.4, 0)
+
+[node name="Core" type="MeshInstance3D" parent="Visual"]
+mesh = SubResource("CoreMesh")
+material_override = SubResource("CoreMaterial")
+
+[node name="Ring" type="MeshInstance3D" parent="Visual"]
+rotation_degrees = Vector3(90, 0, 0)
+mesh = SubResource("RingMesh")
+material_override = SubResource("RingMaterial")
+
+[node name="Light" type="OmniLight3D" parent="Visual"]
+light_color = Color(1, 0.77, 0.26, 1)
+light_energy = 3.0
+omni_range = 12.0
+
+[node name="Label" type="Label3D" parent="."]
+position = Vector3(0, 6.2, 0)
+text = "THOUGHT SPARK • WALK THROUGH"
+font_size = 28
+outline_size = 8
+billboard = 1
+no_depth_test = false
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {&"": SubResource("Library")}

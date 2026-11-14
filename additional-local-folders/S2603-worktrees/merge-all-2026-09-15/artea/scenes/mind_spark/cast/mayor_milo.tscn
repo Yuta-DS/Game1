@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/mind_spark_shared_guide.gd" id="1_guide"]
+
+[sub_resource type="CylinderShape3D" id="DialogueShape"]
+radius = 7.0
+height = 7.0
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary"]
+
+[node name="MayorMilo" type="Node3D"]
+script = ExtResource("1_guide")
+guide_kind = 0
+display_name = "Mayor Milo"
+default_line = "The Blight shell is the enemy. The living world is not."
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {&"": SubResource("AnimationLibrary")}
+
+[node name="DialogueArea3D" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DialogueArea3D"]
+position = Vector3(0, 3.5, 0)
+shape = SubResource("DialogueShape")
+
+[node name="GuidePoint" type="Marker3D" parent="."]
+
+[node name="DialogueLabel" type="Label3D" parent="."]
+position = Vector3(0, 11, 0)
+font_size = 28
+outline_size = 9
+billboard = 1
+no_depth_test = false

@@ -1,0 +1,211 @@
+{
+  "objects": [
+    {
+      "object_id": "thought_spark_socket",
+      "root_node": "ThoughtSparkSocketModel",
+      "triangles_lod0": 23818,
+      "triangles_lod1": 11900,
+      "triangles_lod2": 5216,
+      "ucx_nodes": [
+        "UCX_thought_spark_socket"
+      ],
+      "lod0_mesh_count": 35,
+      "states_detected": [
+        "active",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "evidence_scanner",
+      "root_node": "EvidenceScannerModel",
+      "triangles_lod0": 19204,
+      "triangles_lod1": 9596,
+      "triangles_lod2": 4208,
+      "ucx_nodes": [
+        "UCX_evidence_scanner"
+      ],
+      "lod0_mesh_count": 37,
+      "states_detected": [
+        "active",
+        "completed",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "perspective_lens",
+      "root_node": "PerspectiveLensModel",
+      "triangles_lod0": 18748,
+      "triangles_lod1": 9368,
+      "triangles_lod2": 4102,
+      "ucx_nodes": [
+        "UCX_perspective_lens"
+      ],
+      "lod0_mesh_count": 34,
+      "states_detected": [
+        "active",
+        "completed",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "memory_constellation_board",
+      "root_node": "MemoryConstellationBoardModel",
+      "triangles_lod0": 37624,
+      "triangles_lod1": 18808,
+      "triangles_lod2": 8264,
+      "ucx_nodes": [
+        "UCX_memory_constellation_board"
+      ],
+      "lod0_mesh_count": 43,
+      "states_detected": [
+        "active",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "logic_gate_arch",
+      "root_node": "LogicGateArchModel",
+      "triangles_lod0": 19976,
+      "triangles_lod1": 9982,
+      "triangles_lod2": 4378,
+      "ucx_nodes": [
+        "UCX_logic_gate_arch"
+      ],
+      "lod0_mesh_count": 36,
+      "states_detected": [
+        "active",
+        "completed"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "truth_bridge_tile",
+      "root_node": "TruthBridgeTileModel",
+      "triangles_lod0": 30446,
+      "triangles_lod1": 15218,
+      "triangles_lod2": 6682,
+      "ucx_nodes": [
+        "UCX_truth_bridge_tile"
+      ],
+      "lod0_mesh_count": 39,
+      "states_detected": [
+        "active",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "focus_bell_beacon",
+      "root_node": "FocusBellBeaconModel",
+      "triangles_lod0": 28280,
+      "triangles_lod1": 14132,
+      "triangles_lod2": 6198,
+      "ucx_nodes": [
+        "UCX_focus_bell_beacon"
+      ],
+      "lod0_mesh_count": 37,
+      "states_detected": [
+        "active",
+        "completed",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "warden_anchor",
+      "root_node": "WardenAnchorModel",
+      "triangles_lod0": 25996,
+      "triangles_lod1": 12992,
+      "triangles_lod2": 5694,
+      "ucx_nodes": [
+        "UCX_warden_anchor"
+      ],
+      "lod0_mesh_count": 40,
+      "states_detected": [
+        "active",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "calm_rain_basin",
+      "root_node": "CalmRainBasinModel",
+      "triangles_lod0": 20854,
+      "triangles_lod1": 10420,
+      "triangles_lod2": 4568,
+      "ucx_nodes": [
+        "UCX_calm_rain_basin"
+      ],
+      "lod0_mesh_count": 34,
+      "states_detected": [
+        "active",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "identity_reflection_mirror",
+      "root_node": "IdentityReflectionMirrorModel",
+      "triangles_lod0": 32892,
+      "triangles_lod1": 16440,
+      "triangles_lod2": 7218,
+      "ucx_nodes": [
+        "UCX_identity_reflection_mirror"
+      ],
+      "lod0_mesh_count": 37,
+      "states_detected": [
+        "active",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "checkpoint_server_root",
+      "root_node": "CheckpointServerRootModel",
+      "triangles_lod0": 25414,
+      "triangles_lod1": 12704,
+      "triangles_lod2": 5578,
+      "ucx_nodes": [
+        "UCX_checkpoint_server_root"
+      ],
+      "lod0_mesh_count": 43,
+      "states_detected": [
+        "active",
+        "completed",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    },
+    {
+      "object_id": "clear_path_projector",
+      "root_node": "ClearPathProjectorModel",
+      "triangles_lod0": 38868,
+      "triangles_lod1": 19428,
+      "triangles_lod2": 8532,
+      "ucx_nodes": [
+        "UCX_clear_path_projector"
+      ],
+      "lod0_mesh_count": 40,
+      "states_detected": [
+        "active",
+        "inactive"
+      ],
+      "textured_hero_found": true
+    }
+  ],
+  "errors": [],
+  "warnings": [
+    "[memory_constellation_board] LOD0 triangle count 37624 is outside the preferred 10k-25k band",
+    "[truth_bridge_tile] LOD0 triangle count 30446 is outside the preferred 10k-25k band",
+    "[focus_bell_beacon] LOD0 triangle count 28280 is outside the preferred 10k-25k band",
+    "[warden_anchor] LOD0 triangle count 25996 is outside the preferred 10k-25k band",
+    "[identity_reflection_mirror] LOD0 triangle count 32892 is outside the preferred 10k-25k band",
+    "[checkpoint_server_root] LOD0 triangle count 25414 is outside the preferred 10k-25k band",
+    "[clear_path_projector] LOD0 triangle count 38868 is outside the preferred 10k-25k band"
+  ],
+  "passed": true
+}

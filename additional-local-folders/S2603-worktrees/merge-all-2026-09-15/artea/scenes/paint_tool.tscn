@@ -1,0 +1,234 @@
+[gd_scene load_steps=5 format=3 uid="uid://7xt4ip3g0ycd"]
+
+[ext_resource type="Script" uid="uid://caqjskn135p1g" path="res://scripts/paint_tool.gd" id="1_4rbg4"]
+[ext_resource type="Texture2D" path="res://assets/Game Start/Opening.png" id="2_ici5b"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="2_v0vtf"]
+
+[sub_resource type="Theme" id="Theme_a36a0"]
+
+[node name="PaintTool" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.02634, 1)
+script = ExtResource("1_4rbg4")
+
+[node name="GameStart" type="Sprite2D" parent="."]
+position = Vector2(678, 360)
+scale = Vector2(0.923028, 0.923028)
+texture = ExtResource("2_ici5b")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -88.6646
+offset_top = -67.0
+offset_right = -88.6646
+offset_bottom = -67.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.2, 1.2)
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VSplitContainer" type="VSplitContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="Drawing" type="HSplitContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing"]
+layout_mode = 2
+
+[node name="EraserButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer"]
+layout_mode = 2
+text = "Eraser"
+
+[node name="ColorPickerButton" type="ColorPickerButton" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer"]
+layout_mode = 2
+text = "colour"
+
+[node name="BackToHubButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer"]
+layout_mode = 2
+text = "HubWorld"
+
+[node name="ToolButtons" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer"]
+layout_mode = 2
+
+[node name="BrushButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/ToolButtons"]
+layout_mode = 2
+text = "Brush"
+
+[node name="StampButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/ToolButtons"]
+layout_mode = 2
+text = "Stamp"
+
+[node name="SizeButtons" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer"]
+layout_mode = 2
+
+[node name="SizeSmall" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/SizeButtons"]
+layout_mode = 2
+text = "Small"
+
+[node name="SizeMedium" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/SizeButtons"]
+layout_mode = 2
+text = "Medium"
+
+[node name="SizeLarge" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/SizeButtons"]
+layout_mode = 2
+text = "Large"
+
+[node name="SizeXL" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/SizeButtons"]
+layout_mode = 2
+text = "XL"
+
+[node name="GridContainer" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing"]
+layout_mode = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 32
+
+[node name="Actions" type="HSplitContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLineEdit" type="LineEdit" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_v0vtf")
+theme_override_font_sizes/font_size = 25
+placeholder_text = "Enter Title"
+
+[node name="SaveCloseButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_stretch_ratio = 0.0
+theme_override_fonts/font = ExtResource("2_v0vtf")
+theme_override_font_sizes/font_size = 25
+text = "Save"
+
+[node name="Savefiledialog" type="FileDialog" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer/SaveCloseButton"]
+access = 1
+filters = PackedStringArray("*.png ; PNG Images")
+
+[node name="FillButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Fill"
+
+[node name="StampsMenuButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_v0vtf")
+theme_override_font_sizes/font_size = 25
+text = "Stamps Menu"
+
+[node name="UndoRedo" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="UndoButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer/UndoRedo"]
+layout_mode = 2
+text = "Undo"
+
+[node name="RedoButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer/UndoRedo"]
+layout_mode = 2
+text = "Redo"
+
+[node name="ColorPalette" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer"]
+layout_mode = 2
+
+[node name="ColorA" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/ColorPalette"]
+custom_minimum_size = Vector2(48, 32)
+layout_mode = 2
+color = Color(0.933333, 0.576471, 0.196078, 1)
+
+[node name="ColorB" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/ColorPalette"]
+custom_minimum_size = Vector2(48, 32)
+layout_mode = 2
+color = Color(0.972549, 0.8, 0.266667, 1)
+
+[node name="ColorC" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/ColorPalette"]
+custom_minimum_size = Vector2(48, 32)
+layout_mode = 2
+color = Color(0.478431, 0.741176, 0.505882, 1)
+
+[node name="ColorD" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/ColorPalette"]
+custom_minimum_size = Vector2(48, 32)
+layout_mode = 2
+color = Color(0.317647, 0.611765, 0.603922, 1)
+
+[node name="ColorE" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/ColorPalette"]
+custom_minimum_size = Vector2(48, 32)
+layout_mode = 2
+color = Color(0.25098, 0.431373, 0.454902, 1)
+
+[node name="ClearButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions"]
+layout_mode = 2
+theme = SubResource("Theme_a36a0")
+theme_override_fonts/font = ExtResource("2_v0vtf")
+theme_override_font_sizes/font_size = 25
+text = "clear"
+
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
+
+[node name="SaveOptionDialog" type="ConfirmationDialog" parent="."]
+title = "Choose Location"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SaveOptionDialog"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="LocalButton" type="Button" parent="SaveOptionDialog/VBoxContainer"]
+layout_mode = 2
+text = "Save on Device
+"
+
+[node name="FirebaseButton" type="Button" parent="SaveOptionDialog/VBoxContainer"]
+layout_mode = 2
+text = "Upload to Art Gallery"
+
+[node name="StampsMenu" type="PopupPanel" parent="."]
+
+[node name="VBoxContainer" type="VBoxContainer" parent="StampsMenu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MyStamps" type="GridContainer" parent="StampsMenu/VBoxContainer"]
+layout_mode = 2
+columns = 2
+
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/EraserButton" to="." method="_on_eraser_button_pressed"]
+[connection signal="color_changed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/ColorPickerButton" to="." method="_on_color_picker_button_color_changed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/BackToHubButton" to="." method="_on_back_to_hub_button_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/ToolButtons/BrushButton" to="." method="_on_brush_button_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/ToolButtons/StampButton" to="." method="_on_stamp_button_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/SizeButtons/SizeSmall" to="." method="_on_size_small_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/SizeButtons/SizeMedium" to="." method="_on_size_medium_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/SizeButtons/SizeLarge" to="." method="_on_size_large_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Drawing/VBoxContainer/SizeButtons/SizeXL" to="." method="_on_size_xl_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer/SaveCloseButton" to="." method="_on_save_close_button_pressed"]
+[connection signal="files_selected" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer/SaveCloseButton/Savefiledialog" to="." method="_on_savefiledialog_files_selected"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/VBoxContainer/HBoxContainer/StampsMenuButton" to="." method="_on_stamps_menu_button_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VSplitContainer/Actions/ClearButton" to="." method="_on_clear_button_pressed"]
+[connection signal="request_completed" from="HTTPRequest" to="." method="_on_http_request_request_completed"]
+[connection signal="pressed" from="SaveOptionDialog/VBoxContainer/LocalButton" to="." method="_on_local_button_pressed"]
+[connection signal="pressed" from="SaveOptionDialog/VBoxContainer/LocalButton" to="." method="_on_LocalButton_pressed"]
+[connection signal="pressed" from="SaveOptionDialog/VBoxContainer/FirebaseButton" to="." method="_on_firebase_button_pressed"]
+[connection signal="pressed" from="SaveOptionDialog/VBoxContainer/FirebaseButton" to="." method="_on_FirebaseButton_pressed"]

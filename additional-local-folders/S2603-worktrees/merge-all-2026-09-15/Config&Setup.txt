@@ -1,0 +1,1160 @@
+RUN AS WEB: ./web   (rebuild: ./web rebuild | check it plays: ./web verify | stop: ./web stop)
+
+===============================================================================
+ARTEA - CONFIGURATION & SETUP GUIDE
+Cross-platform: macOS (primary focus), Linux/Ubuntu, Windows
+===============================================================================
+
+Verified on: macOS (Darwin 25.5.0), Apple M2 Pro, 2026-08-04
+
+
+*******************************************************************************
+*                                                                             *
+*   QUICK START - NEW USER, FIRST TIME                                        *
+*                                                                             *
+*   Two commands. Nothing else needed.                                        *
+*                                                                             *
+*       git clone <repo-url> S2603 && cd S2603                                *
+*       ./setup.sh                    <- run ONCE after cloning               *
+*                                                                             *
+*   Then, every time you want to play:                                        *
+*                                                                             *
+*       ./setup.sh run                <- starts server + launches game        *
+*                                                                             *
+*   At the start screen: click "Offline Guest" to play with no account,       *
+*   or "Register" to create one against the local server.                     *
+*                                                                             *
+*******************************************************************************
+
+WHAT ./setup.sh DOES (in order)
+
+  1. Checks prerequisites are installed - python3, dotnet, git-lfs, and the
+     Godot .NET/Mono build. If one is missing it stops and prints the exact
+     install command. It does NOT install them for you.
+  2. git lfs pull, then verifies the LLM models are real binaries and not
+     unpulled pointer stubs.
+  3. Creates server/venv and installs the pinned Python dependencies.
+  4. Builds the Godot import cache - the step missing from the original
+     documentation, and the one that breaks the game if skipped. Takes a few
+     minutes. See section 2.5 for why this matters.
+  5. Builds the C# assembly (dotnet build).
+
+WHAT ./setup.sh run DOES
+
+  Checks whether the server is already listening on port 8000. Starts it
+  only if it is not, waits until it actually responds, then launches the
+  game. Safe to run repeatedly.
+
+BEFORE YOU RUN IT - install the prerequisites:
+
+  macOS:   brew install git-lfs
+           brew install --cask godot-mono
+           brew install --cask dotnet-sdk
+
+  Ubuntu:  sudo apt install -y git-lfs python3-venv python3-pip dotnet-sdk-8.0
+           plus the Godot .NET build from godotengine.org
+
+  Windows: setup.sh does not run on Windows. Follow section 5 manually,
+           or use Git Bash / WSL.
+
+The script works on macOS and Linux. It finds Godot in /Applications,
+~/Applications, or on your PATH.
+
+IF THE SCRIPT FAILS: it stops at the first problem and prints what to do.
+Section 7 (Troubleshooting) covers every failure we have actually hit.
+
+The rest of this document explains what the script automates, and is what
+you need when something goes wrong or when you deploy to a real server.
+
+-------------------------------------------------------------------------------
+
+This document sits alongside the original setup instructions in AGENT.md.
+Where the two disagree, the original describes the Ubuntu production
+deployment and this document describes local development, primarily on macOS.
+
+CONTENTS
+  QUICK START - two commands (above)
+  0. Original setup instructions (unchanged, for reference)
+  1. Why macOS needs different steps
+  2. macOS setup - step by step
+  3. Platform comparison table
+  4. Linux / Ubuntu setup
+  5. Windows setup
+  6. Source changes made, and why
+  7. Troubleshooting
+  8. Known issues and outstanding items
+
+
+===============================================================================
+0. ORIGINAL SETUP INSTRUCTIONS (for reference - Ubuntu production)
+===============================================================================
+
+The original documentation specifies:
+
+  Engine:   Godot 4.4+ with .NET/Mono support
+  Scene:    res://scenes/start_screen.tscn (run with F6)
+  Note:     "It is strongly recommended that all developers work on a
+             Windows operating system."
+
+  Git LFS:
+     git lfs install
+     git clone <repo>
+     git lfs pull
+
+  Server:
+     python3 -m venv venv
+     source venv/bin/activate
+     pip install flask flask_sqlalchemy flask_jwt_extended bcrypt requests
+     python server.py            # serves on port 80
+
+  systemd:
+     sudo systemctl daemon-reload
+     sudo systemctl enable flaskapp
+     sudo systemctl start flaskapp
+     sudo systemctl status flaskapp
+     sudo journalctl -u flaskapp -f
+     sudo systemctl restart flaskapp
+
+  Godot client:
+     Update BASE_URL in APIManager.gd to the server IP.
+
+These instructions are correct for the Ubuntu server. Three of them do not
+work as written on macOS. Section 1 explains why.
+
+
+===============================================================================
+1. WHY macOS NEEDS DIFFERENT STEPS
+===============================================================================
+
+Four blockers, in the order you hit them:
+
+  (a) PORT 80 IS PRIVILEGED
+      server.py binds port 80. On Ubuntu the systemd unit runs as root so
+      this succeeds. On macOS, running "python server.py" as a normal user
+      fails to bind. Using sudo would work but runs the whole Flask app as
+      root and leaves root-owned database.db and uploads/ behind.
+      FIX: HOST/PORT are now environment variables. Use PORT=8000.
+
+  (b) systemd DOES NOT EXIST ON macOS
+      Every "sudo systemctl ..." command in the original docs has no macOS
+      equivalent. flaskapp.service cannot be used.
+      FIX: launchd LaunchAgent (section 2.6). Same outcome - starts at
+      login, restarts on crash.
+
+  (c) THE GODOT IMPORT CACHE IS NOT IN THE REPOSITORY
+      This is the big one, and it is not macOS-specific - it affects any
+      fresh clone on any OS. .godot/imported/ is a build artifact and is
+      correctly gitignored. Until it is generated, EVERY asset fails to
+      load, even though all the source files are present on disk.
+
+      Symptom: the game boots to the start screen, you log in, and nothing
+      happens. It looks exactly like a broken login. It is not - the login
+      succeeds and the following scene load fails.
+
+      FIX: run the import once (section 2.5). Required on every fresh clone.
+
+  (d) THE PROJECT FILE NAME IN THE DOCS IS WRONG
+      The docs say APIManager.gd. The actual file is:
+          artea/scripts/API_Manager.gd        (note the underscore)
+      It is autoloaded by UID, not by path:
+          APIManager="*uid://dodj1s54vwit2"
+      Searching the repository for "APIManager.gd" finds nothing.
+
+
+===============================================================================
+2. macOS SETUP - STEP BY STEP
+===============================================================================
+
+SHORTCUT: ./setup.sh automates steps 2.2 through 2.6. See QUICK START at the
+top of this file. The steps below are what it does, for when you need to run
+them by hand or diagnose a failure. Step 2.9 (auto-start at login) is
+optional and is NOT done by the script.
+
+Assumes Homebrew is installed. If not: https://brew.sh
+
+-------------------------------------------------------------------------------
+2.1  PREREQUISITES
+-------------------------------------------------------------------------------
+
+    brew install git-lfs
+    brew install --cask godot-mono
+    brew install --cask dotnet-sdk
+
+Verify (versions confirmed working):
+
+    git lfs version      -> git-lfs/3.7.1 (darwin arm64)
+    dotnet --version     -> 10.0.302
+    /Applications/Godot_mono.app/Contents/MacOS/Godot --version
+                         -> 4.7.1.stable.mono.official
+
+NOTE ON THE APP NAME: the Homebrew cask installs to
+/Applications/Godot_mono.app, NOT /Applications/Godot.app. A search for
+"Godot.app" will report it as missing when it is in fact installed.
+
+NOTE ON .NET VERSION: Artea.csproj targets net8.0. The .NET 10 SDK builds
+this correctly - a separate .NET 8 SDK is not required.
+
+-------------------------------------------------------------------------------
+2.2  CLONE AND PULL LFS ASSETS
+-------------------------------------------------------------------------------
+
+    git lfs install
+    git clone <repo-url> S2603
+    cd S2603
+    git lfs pull
+
+Verify the models are real binaries and not pointer stubs:
+
+    ls -lh artea/nobodywhomodels/
+        gemma-2-2b-it-Q4_K_M.gguf     ~611 MB
+        user-bge-m3-q8_0.gguf         ~388 MB
+
+    head -c 4 artea/nobodywhomodels/gemma-2-2b-it-Q4_K_M.gguf
+        GGUF          <- correct
+        version http  <- WRONG, this is an unpulled LFS pointer
+
+macOS builds of the native plugin are included and pull correctly:
+    artea/addons/nobodywho/nobodywho-godot-aarch64-apple-darwin-release.dylib
+    (Apple Silicon)
+    artea/addons/nobodywho/nobodywho-godot-x86_64-apple-darwin-release.dylib
+    (Intel)
+
+-------------------------------------------------------------------------------
+2.3  PYTHON SERVER ENVIRONMENT
+-------------------------------------------------------------------------------
+
+    cd server
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+
+requirements.txt pins the five dependencies (previously an unpinned
+"pip install flask flask_sqlalchemy ..." which let two developers end up on
+different releases):
+
+    Flask==3.1.3
+    Flask-SQLAlchemy==3.1.1
+    Flask-JWT-Extended==4.7.4
+    bcrypt==5.0.0
+    requests==2.34.2
+
+Verified on Python 3.13.9.
+
+-------------------------------------------------------------------------------
+2.4  RUN THE SERVER MANUALLY
+-------------------------------------------------------------------------------
+
+    cd server
+    HOST=127.0.0.1 PORT=8000 venv/bin/python server.py
+
+Verify:
+
+    curl http://127.0.0.1:8000/
+    -> {"status":"server running"}
+
+database.db and uploads/ are created automatically on first run.
+
+WHY 127.0.0.1 AND NOT 0.0.0.0: binding 0.0.0.0 exposes the API to everyone
+on the local network. On shared or campus Wi-Fi that means anyone can reach
+it. 127.0.0.1 keeps the development server on your machine only.
+
+-------------------------------------------------------------------------------
+2.5  GENERATE THE GODOT IMPORT CACHE  ** DO NOT SKIP **
+-------------------------------------------------------------------------------
+
+This is the step that is missing from the original documentation and it is
+required on every fresh clone.
+
+    cd artea
+    /Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path . --import
+
+Takes a few minutes. Expect roughly 698 import steps.
+
+Verify:
+
+    ls .godot/imported/ | wc -l
+    -> 1583      (any large number is fine; 0 means it did not run)
+
+If you skip this, the game starts but the hub world never loads. Section 7
+covers the symptom in detail.
+
+ALTERNATIVE: opening the project once in the Godot editor GUI does the same
+thing. Running a scene directly with --path does NOT - it skips import
+entirely, which is how this problem goes unnoticed.
+
+-------------------------------------------------------------------------------
+2.6  BUILD THE C# ASSEMBLY
+-------------------------------------------------------------------------------
+
+    cd artea
+    dotnet build
+
+Expect: "Build succeeded", 0 errors, 3 warnings.
+
+The 3 warnings (CS8600, CS8602 nullable reference warnings) come from
+addons/dialogue_manager/DialogueManager.cs and are pre-existing. They are
+not caused by any macOS change and do not need fixing.
+
+Output: artea/.godot/mono/temp/bin/Debug/Artea.dll
+
+-------------------------------------------------------------------------------
+2.7  POINT THE CLIENT AT YOUR SERVER
+-------------------------------------------------------------------------------
+
+Edit artea/scripts/API_Manager.gd line 3:
+
+    const BASE_URL = "http://127.0.0.1:8000"
+
+The other five URL constants (LOGIN_URL, REGISTER_URL, UPLOAD_ARTWORK_URL,
+MY_ARTWORKS_URL) are derived from BASE_URL, so this one line repoints
+everything.
+
+Original production value, restore before deploying:
+
+    const BASE_URL = "http://54.252.162.122"
+
+-------------------------------------------------------------------------------
+2.8  RUN THE GAME
+-------------------------------------------------------------------------------
+
+    cd artea
+    /Applications/Godot_mono.app/Contents/MacOS/Godot --path . res://scenes/start_screen.tscn
+
+Or open the project in the Godot editor and press F6.
+
+A clean startup looks like:
+
+    Initialize godot-rust (API v4.4.stable.official, runtime v4.7.1...)
+    Godot Engine v4.7.1.stable.mono.official
+    Metal 4.0 - Forward Mobile - Using Device #0: Apple - Apple M2 Pro
+
+Zero "Failed loading resource" lines and zero "Parse Error" lines. If you
+see thousands of them, step 2.5 did not run.
+
+The "Initialize godot-rust" line confirms the nobodywho native plugin
+loaded, which is what the offline LLM chatbot needs.
+
+-------------------------------------------------------------------------------
+2.9  AUTO-START THE SERVER AT LOGIN (launchd - the macOS systemd)
+-------------------------------------------------------------------------------
+
+Create ~/Library/LaunchAgents/com.artea.flaskserver.plist:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+      "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+        <key>Label</key>
+        <string>com.artea.flaskserver</string>
+
+        <key>ProgramArguments</key>
+        <array>
+            <string>/Users/YOU/S2603/server/venv/bin/python</string>
+            <string>/Users/YOU/S2603/server/server.py</string>
+        </array>
+
+        <key>WorkingDirectory</key>
+        <string>/Users/YOU/S2603/server</string>
+
+        <key>EnvironmentVariables</key>
+        <dict>
+            <key>HOST</key>
+            <string>127.0.0.1</string>
+            <key>PORT</key>
+            <string>8000</string>
+        </dict>
+
+        <key>RunAtLoad</key>
+        <true/>
+
+        <key>KeepAlive</key>
+        <dict>
+            <key>SuccessfulExit</key>
+            <false/>
+        </dict>
+
+        <key>ThrottleInterval</key>
+        <integer>10</integer>
+
+        <key>StandardOutPath</key>
+        <string>/Users/YOU/S2603/server/logs/flaskapp.out.log</string>
+
+        <key>StandardErrorPath</key>
+        <string>/Users/YOU/S2603/server/logs/flaskapp.err.log</string>
+    </dict>
+    </plist>
+
+Replace /Users/YOU with your actual home directory. launchd does NOT expand
+~ or environment variables in these paths - they must be absolute.
+
+Then:
+
+    mkdir -p ~/S2603/server/logs
+    plutil -lint ~/Library/LaunchAgents/com.artea.flaskserver.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.artea.flaskserver.plist
+
+TWO DESIGN DECISIONS WORTH UNDERSTANDING:
+
+  WorkingDirectory is mandatory. server.py opens database.db and uploads/
+  by relative path. Without this key, launchd starts the process in / and
+  the server silently creates a second, empty database somewhere else.
+
+  KeepAlive uses SuccessfulExit=false, not a blanket true. A clean exit
+  stays exited. Blanket true fights you every time you stop it deliberately.
+
+Daily commands:
+
+    # status
+    launchctl print gui/$(id -u)/com.artea.flaskserver | grep -E "state|pid"
+
+    # restart after editing server.py  <- the one you will use most
+    launchctl kickstart -k gui/$(id -u)/com.artea.flaskserver
+
+    # stop and disable auto-start
+    launchctl bootout gui/$(id -u)/com.artea.flaskserver
+
+    # start / re-enable
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.artea.flaskserver.plist
+
+    # logs - Flask writes requests and tracebacks to stderr,
+    # so .err.log is the one you want. .out.log stays near-empty.
+    tail -f ~/S2603/server/logs/flaskapp.err.log
+
+Verify auto-restart actually works (do not assume it):
+
+    kill -9 <pid>
+    sleep 12
+    launchctl print gui/$(id -u)/com.artea.flaskserver | grep pid
+    # PID should differ from the one you killed
+
+-------------------------------------------------------------------------------
+2.10  LOGGING IN
+-------------------------------------------------------------------------------
+
+Three paths, all working:
+
+  OFFLINE GUEST  - button on the start screen. No server needed at all.
+                   Sets Global.auth_token = "OFFLINE_GUEST_TOKEN" and skips
+                   the API entirely. Works with the server stopped.
+
+  REGISTER       - type username + password, press Register. Server returns
+                   201, then the client auto-logs-in and enters the game.
+                   No second credential entry needed.
+
+  LOGIN          - type username + password, press START.
+
+Create an account from the command line if you prefer:
+
+    curl -X POST http://127.0.0.1:8000/register \
+      -H "Content-Type: application/json" \
+      -d '{"username":"david","password":"test123"}'
+
+
+===============================================================================
+3. PLATFORM COMPARISON TABLE
+===============================================================================
+
+  ITEM                | macOS                  | Linux / Ubuntu        | Windows
+  --------------------+------------------------+-----------------------+-------------------
+  Godot binary        | /Applications/         | godot-mono binary     | Godot_v4.x-stable_
+                      | Godot_mono.app/        | from godotengine.org  | mono_win64.exe
+                      | Contents/MacOS/Godot   |                       |
+  --------------------+------------------------+-----------------------+-------------------
+  Install Godot       | brew install --cask    | download tarball, or  | download from
+                      | godot-mono             | snap install godot4   | godotengine.org
+  --------------------+------------------------+-----------------------+-------------------
+  Server port         | 8000 (unprivileged)    | 80 as root, or 8000   | 8000
+                      | PORT=8000 required     | + nginx in front      |
+  --------------------+------------------------+-----------------------+-------------------
+  Service manager     | launchd                | systemd               | Task Scheduler or
+                      | (LaunchAgent plist)    | (flaskapp.service)    | NSSM
+  --------------------+------------------------+-----------------------+-------------------
+  Enable at boot      | launchctl bootstrap    | sudo systemctl        | schtasks /create
+                      | gui/$(id -u) <plist>   | enable flaskapp       |
+  --------------------+------------------------+-----------------------+-------------------
+  Restart service     | launchctl kickstart -k | sudo systemctl        | schtasks /run
+                      | gui/$(id -u)/<label>   | restart flaskapp      |
+  --------------------+------------------------+-----------------------+-------------------
+  View logs           | tail -f server/logs/   | sudo journalctl       | Event Viewer or
+                      | flaskapp.err.log       | -u flaskapp -f        | redirect to file
+  --------------------+------------------------+-----------------------+-------------------
+  venv python path    | venv/bin/python        | venv/bin/python       | venv\Scripts\
+                      |                        |                       | python.exe
+  --------------------+------------------------+-----------------------+-------------------
+  Activate venv       | source venv/bin/       | source venv/bin/      | venv\Scripts\
+                      | activate               | activate              | activate.bat
+  --------------------+------------------------+-----------------------+-------------------
+  Native plugin       | .dylib                 | .so                   | .dll (+ .pdb)
+                      | aarch64/x86_64-apple-  | x86_64-unknown-       | x86_64-pc-windows-
+                      | darwin                 | linux-gnu             | msvc
+  --------------------+------------------------+-----------------------+-------------------
+  Renderer observed   | Metal 4.0 Forward      | Vulkan                | Vulkan / D3D12
+                      | Mobile                 |                       |
+  --------------------+------------------------+-----------------------+-------------------
+  Filesystem case     | insensitive (default)  | SENSITIVE             | insensitive
+                      | - hides path bugs      | - exposes them        |
+  --------------------+------------------------+-----------------------+-------------------
+  Import cache step   | REQUIRED               | REQUIRED              | REQUIRED
+  (section 2.5)       | (all platforms)        | (all platforms)       | (all platforms)
+
+CASE SENSITIVITY - THE REAL RISK: macOS and Windows are case-insensitive by
+default, Linux is not. A scene referencing "res://Scenes/Player.tscn" when
+the folder is actually "scenes" works fine on macOS and Windows and breaks
+on the Ubuntu server. This is why the original documentation recommends a
+single OS for the team. Test on Linux before deploying.
+
+
+===============================================================================
+4. LINUX / UBUNTU SETUP
+===============================================================================
+
+Prerequisites:
+
+    sudo apt update
+    sudo apt install -y git-lfs python3-venv python3-pip
+    # Godot .NET: download from https://godotengine.org/download/linux
+    # (choose the .NET/Mono build), or:  sudo snap install godot4 --classic
+    # dotnet SDK:
+    sudo apt install -y dotnet-sdk-8.0
+
+Clone and pull LFS - identical to macOS (section 2.2).
+
+Server:
+
+    cd server
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+
+Run manually (development):
+
+    HOST=127.0.0.1 PORT=8000 python server.py
+
+Import cache and build - same as macOS, different binary path:
+
+    cd artea
+    /path/to/godot-mono --headless --path . --import
+    dotnet build
+
+Production deployment via systemd - this is what flaskapp.service is for:
+
+    sudo cp server/flaskapp.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable flaskapp
+    sudo systemctl start flaskapp
+    sudo systemctl status flaskapp
+    sudo journalctl -u flaskapp -f
+    sudo systemctl restart flaskapp        # after code changes
+
+The unit as committed:
+
+    [Unit]
+    Description=Flask Game Backend
+    After=network.target
+
+    [Service]
+    User=root
+    WorkingDirectory=/home/ubuntu/server
+    ExecStart=/home/ubuntu/server/venv/bin/python server.py
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+
+TWO WARNINGS ABOUT THIS UNIT:
+
+  1. It hardcodes /home/ubuntu/server. Deploying to any other path breaks
+     ExecStart with no useful error message.
+
+  2. User=root. Any remote-code-execution bug in Flask gives an attacker the
+     whole machine. Should be User=ubuntu. Note that dropping from root
+     means port 80 can no longer be bound directly - run on a high port with
+     nginx in front, or grant CAP_NET_BIND_SERVICE.
+
+To set the JWT secret properly in production, add to the [Service] section:
+
+    Environment="JWT_SECRET_KEY=<a long random value>"
+
+Generate one with:  python3 -c "import secrets; print(secrets.token_hex(32))"
+
+
+===============================================================================
+5. WINDOWS SETUP
+===============================================================================
+
+This is the environment the original documentation recommends.
+
+    winget install GitHub.GitLFS
+    winget install Microsoft.DotNet.SDK.8
+    # Godot: download the .NET build from godotengine.org
+
+    git lfs install
+    git clone <repo-url>
+    cd S2603
+    git lfs pull
+
+    cd server
+    python -m venv venv
+    venv\Scripts\activate
+    pip install -r requirements.txt
+    set HOST=127.0.0.1 && set PORT=8000 && python server.py
+
+    cd ..\artea
+    "C:\path\to\Godot_v4.x-stable_mono_win64.exe" --headless --path . --import
+    dotnet build
+
+Windows needs the .pdb and .dll files from LFS:
+    nobodywho-godot-x86_64-pc-windows-msvc-release.dll
+    nobodywho-godot-x86_64-pc-windows-msvc-debug.pdb
+
+
+===============================================================================
+6. SOURCE CHANGES MADE, AND WHY
+===============================================================================
+
+Every change is default-preserving. With no environment variables set,
+server.py behaves exactly as it did before, so the Ubuntu deployment is
+unaffected.
+
+-------------------------------------------------------------------------------
+6.1  server/server.py - HOST and PORT configurable  (THE macOS BLOCKER)
+-------------------------------------------------------------------------------
+
+BEFORE:
+    app.run(
+        host='0.0.0.0',
+        port=80,
+        debug=False
+    )
+
+AFTER (lines 324-327):
+    app.run(
+        host=os.environ.get('HOST', '0.0.0.0'),
+        port=int(os.environ.get('PORT', 80)),
+        debug=False
+    )
+
+Defaults unchanged, so systemd still gets 0.0.0.0:80.
+
+-------------------------------------------------------------------------------
+6.2  server/server.py - JWT secret from environment
+-------------------------------------------------------------------------------
+
+BEFORE:
+    app.config['JWT_SECRET_KEY'] = 'dev_secret_change_later_12345'
+
+AFTER (lines 30-33):
+    app.config['JWT_SECRET_KEY'] = os.environ.get(
+        "JWT_SECRET_KEY",
+        'dev_secret_change_later_12345'
+    )
+
+The hardcoded literal stays as the fallback so nothing breaks. See section 8
+- this secret being public is a real vulnerability, and the environment hook
+is now in place, it just needs a value set in production.
+
+-------------------------------------------------------------------------------
+6.3  server/server.py - OpenRouter key from environment
+-------------------------------------------------------------------------------
+
+BEFORE:
+    OPENROUTER_API_KEY = ""
+
+AFTER (line 23):
+    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+
+That empty string is where a live API key would be pasted, and a pasted key
+gets committed. Reading from the environment keeps it out of the repository.
+Behaviour with no key set is identical to before.
+
+-------------------------------------------------------------------------------
+6.4  server/server.py - Python 3.12+ deprecation
+-------------------------------------------------------------------------------
+
+BEFORE:
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+
+AFTER (line 139):
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+
+datetime.utcnow() is deprecated as of 3.12 and scheduled for removal. Same
+output string. "timezone" added to the existing datetime import. Not
+macOS-specific - affects any machine on Python 3.12+.
+
+-------------------------------------------------------------------------------
+6.5  artea/scripts/API_Manager.gd - server address
+-------------------------------------------------------------------------------
+
+Line 3:
+    const BASE_URL = "http://54.252.162.122"      # before, production AWS
+    const BASE_URL = "http://127.0.0.1:8000"      # after, local dev
+
+REVERT THIS BEFORE DEPLOYING OR COMMITTING FOR THE TEAM.
+
+-------------------------------------------------------------------------------
+6.6  artea/start_screen.gd - fixed a broken connectivity check
+-------------------------------------------------------------------------------
+
+BEFORE:
+    func check_internet_connection() -> bool:
+        if IP.get_local_addresses().size() == 0:
+            return false
+        return true
+
+This never returned false. IP.get_local_addresses() always includes the
+loopback entries (127.0.0.1 / ::1) even with Wi-Fi switched off, so the list
+is never empty. The "No internet connection! Use Guest Mode." message could
+not fire, and the function did not do what its name claimed.
+
+AFTER:
+    func check_internet_connection() -> bool:
+        if APIManager.BASE_URL.contains("127.0.0.1") or \
+           APIManager.BASE_URL.contains("localhost"):
+            return true
+
+        for address in IP.get_local_addresses():
+            if address.begins_with("127.") or address == "::1":
+                continue
+            if address.begins_with("169.254.") or \
+               address.to_lower().begins_with("fe80"):
+                continue
+            return true
+
+        return false
+
+Skips loopback and link-local (169.254.x / fe80: - APIPA self-assigned
+addresses, which mean no usable route). Short-circuits to true when BASE_URL
+is localhost, because otherwise it would block login against a local
+development server, which is the setup this whole document describes.
+
+-------------------------------------------------------------------------------
+6.7  server/requirements.txt (new file)
+-------------------------------------------------------------------------------
+
+Pins the five actual dependencies. See section 2.3.
+
+-------------------------------------------------------------------------------
+6.8  .gitignore additions
+-------------------------------------------------------------------------------
+
+    server/venv/
+    server/database.db
+    server/uploads/
+    server/logs/
+    .DS_Store
+    __MACOSX/
+    __pycache__/
+    *.pyc
+
+None belong in version control. database.db in particular contains user
+password hashes.
+
+-------------------------------------------------------------------------------
+6.9  NOT CHANGED: flaskapp.service
+-------------------------------------------------------------------------------
+
+Untouched. It is a systemd unit, systemd does not exist on macOS, and it is
+still correct for the Ubuntu deployment. See section 4 for its two problems.
+
+-------------------------------------------------------------------------------
+6.10  NOT CHANGED: upload validation
+-------------------------------------------------------------------------------
+
+ALLOWED_EXTENSIONS and allowed_file() are defined in server.py but never
+called. /upload_artwork reads request.data and writes it to disk as .png
+regardless of the actual bytes, with no size limit.
+
+Left alone deliberately: adding validation would start rejecting uploads
+that the Godot client currently sends successfully. That is a behaviour
+change for the game, not a macOS fix. Raise it with the team separately.
+
+
+===============================================================================
+7. TROUBLESHOOTING
+===============================================================================
+
+-------------------------------------------------------------------------------
+PROBLEM: "Login does not work" / clicking START does nothing
+-------------------------------------------------------------------------------
+
+This is almost certainly NOT a login problem. Check the console output:
+
+    ERROR: Failed loading resource: res://scenes/New_Hub_World.tscn
+
+Login succeeded, and the scene change on start_screen.gd:163 failed. The
+symptom is indistinguishable from broken auth.
+
+CAUSE: empty Godot import cache.
+
+    ls artea/.godot/imported/ | wc -l
+    -> 0        means the import never ran
+
+FIX: section 2.5.
+
+Confirm login itself is fine, independently of the game:
+
+    curl -X POST http://127.0.0.1:8000/login \
+      -H "Content-Type: application/json" \
+      -d '{"username":"david","password":"test123"}'
+
+A JWT in the response means the server side is working correctly.
+
+-------------------------------------------------------------------------------
+PROBLEM: Thousands of "Failed loading resource" / "Parse Error" lines
+-------------------------------------------------------------------------------
+
+Same cause as above - empty import cache. Note this also produces
+Firebase addon parse errors such as:
+
+    Parse Error: Could not find type "FirebaseDatabaseReference"
+
+These look like a Godot version incompatibility but are not. They disappear
+once the import cache is built.
+
+-------------------------------------------------------------------------------
+PROBLEM: Permission denied binding port 80
+-------------------------------------------------------------------------------
+
+Expected on macOS. Use PORT=8000. Do not use sudo - it leaves root-owned
+database.db and uploads/ files that your normal user cannot then write to.
+
+-------------------------------------------------------------------------------
+PROBLEM: "Address already in use" on port 8000
+-------------------------------------------------------------------------------
+
+Usually the launchd agent already has it.
+
+    lsof -nP -iTCP:8000 -sTCP:LISTEN
+    launchctl bootout gui/$(id -u)/com.artea.flaskserver     # stop it
+    # then run manually
+
+-------------------------------------------------------------------------------
+PROBLEM: git lfs pull leaves small files / "version https://git-lfs..."
+-------------------------------------------------------------------------------
+
+The files are pointer stubs, not real binaries.
+
+    brew install git-lfs
+    git lfs install
+    git lfs pull
+
+Verify with the head -c 4 check in section 2.2.
+
+-------------------------------------------------------------------------------
+PROBLEM: launchd agent will not start
+-------------------------------------------------------------------------------
+
+    plutil -lint ~/Library/LaunchAgents/com.artea.flaskserver.plist
+    launchctl print gui/$(id -u)/com.artea.flaskserver
+    tail -20 ~/S2603/server/logs/flaskapp.err.log
+
+Most common cause: a path in the plist is not absolute, or contains ~ or an
+environment variable. launchd does not expand either.
+
+-------------------------------------------------------------------------------
+PROBLEM: dotnet build fails on net8.0 target
+-------------------------------------------------------------------------------
+
+The .NET 10 SDK builds net8.0 fine. If it genuinely fails:
+
+    dotnet --list-sdks
+    brew install --cask dotnet-sdk
+
+-------------------------------------------------------------------------------
+PROBLEM: Cannot find APIManager.gd
+-------------------------------------------------------------------------------
+
+It does not exist under that name. The file is:
+
+    artea/scripts/API_Manager.gd
+
+Autoloaded by UID (uid://dodj1s54vwit2), not by path, which is why grepping
+project.godot for the filename finds nothing.
+
+
+===============================================================================
+8. KNOWN ISSUES AND OUTSTANDING ITEMS
+===============================================================================
+
+-------------------------------------------------------------------------------
+8.1  SECURITY - raise these with the team before the next deploy
+-------------------------------------------------------------------------------
+
+  1. DEFAULT JWT SECRET IS PUBLIC.
+     'dev_secret_change_later_12345' is in the repository. Anyone who can
+     read the repo can forge a valid token for any user id and access that
+     user's artworks. The signing key is the only thing between an attacker
+     and a token that says "I am user 1".
+     FIX: set JWT_SECRET_KEY in the systemd unit. The hook exists (6.2), it
+     just needs a value.
+
+  2. flaskapp.service RUNS AS User=root.
+     Any RCE bug in Flask gives up the whole machine. See section 4.
+
+  3. THE FLASK DEVELOPMENT SERVER IS SERVING PRODUCTION.
+     Its own startup banner says not to. Single-threaded, no hardening.
+     Use gunicorn or waitress.
+
+  4. NO UPLOAD SIZE LIMIT.
+     A client can POST an arbitrarily large body to /upload_artwork and fill
+     the disk. Flask's MAX_CONTENT_LENGTH is the standard fix.
+
+-------------------------------------------------------------------------------
+8.2  REPOSITORY HYGIENE
+-------------------------------------------------------------------------------
+
+  .import FILE CHURN: .gitignore contains "*.import", but 200+ .import files
+  are already tracked - they were committed before that rule was added, and
+  gitignore does not untrack existing files. Running the import on Godot 4.7
+  rewrites them (adding keys such as gltf/texture_map_mode that 4.6 did not
+  write), so they all show as modified. The project declares
+  config/features=PackedStringArray("4.6", ...) - it was authored for 4.6.
+
+  DECIDE AS A TEAM: either everyone uses the same Godot version and the
+  .import files stay committed, or run
+  "git rm --cached '*.import'" once so the existing ignore rule takes effect.
+  Do not commit the churn casually - it will conflict on every pull.
+
+  LFS JUNK: __MACOSX/ AppleDouble files (._Artea.dll and similar) are
+  tracked in LFS and consume quota for nothing. There are also three
+  ~nobodywho-...dll~RF*.TMP files at 46 MB each - Windows temp leftovers
+  committed by accident, ~138 MB total.
+
+  MODEL FILE CHANGED: the gemma-2-2b-it-Q4_K_M.gguf LFS pointer differs from
+  the committed version - a different, smaller model
+  (1,708,582,752 -> 641,138,688 bytes). Confirm which model the team
+  intends to ship before committing.
+
+  .csproj BACKUPS: Artea.csproj.old through .old.5 are committed. Clean up.
+
+-------------------------------------------------------------------------------
+8.3  CODE NOTES
+-------------------------------------------------------------------------------
+
+  DEAD ERROR BRANCH: start_screen.gd checks for "FOUND" or "EXIST" in the
+  error text to show "Account does not exist!". The server returns
+  {"error":"Invalid credentials"} for both a wrong password and a
+  non-existent user, so that branch never runs. LEAVE IT AS IS - the vague
+  server response is correct security practice. Distinguishing the two cases
+  would let an attacker enumerate valid usernames.
+
+  DOCUMENTATION FIX NEEDED: AGENT.md should be updated with (a) the correct
+  API_Manager.gd filename, and (b) the import cache step, which is required
+  on every fresh clone on every platform and is currently undocumented. It
+  is the single most expensive missing step in the setup process.
+
+
+===============================================================================
+END
+
+
+
+
+
+
+ix all the problem in all of those image for me. like i dont the art castle have the house near, and the stair blocked, and fix + design the bright connected between the front gate way pf the art castle and the stair going up, i saw you almost run out of token can you put most of the work on claude code and document before everything run of token, document in in text file so it easy for me to continue next sessions
+
+
+
+
+
+
+11:02
+
+
+
+
+
+
+Working for 40m 32s
+
+
+
+
+I’m using the supervised-orchestration workflow again because you explicitly want Claude Code to carry most of the implementation while I review it. First I’m writing a plain-text continuation file with the screenshots, exact defects, coordinates, acceptance criteria, and test commands—so another session can resume safely even if this one stops.
+
+
+
+
+Created CASTLE_STAIR_GATE_FIX_HANDOFF.txt+151-0
+
+
+
+
+
+
+Context automatically compacted
+
+
+
+The continuation document is already saved at docs/CASTLE_STAIR_GATE_FIX_HANDOFF.txt. I’m now handing that bounded repair specification to Claude Code, then I’ll inspect its changes, run the Godot regressions, and verify fresh visual captures before accepting the work.
+
+
+
+
+Ran commands
+
+
+Claude Code has finished its initial diagnosis and has assigned the bounded implementation internally. It confirmed the main root cause: the crown uses a full visual mesh and full collider over the final stair sector, so the apparent “landing” is literally a ceiling over the player. I’m leaving the scoped files untouched while Claude repairs them, then I’ll independently review the diff and gameplay captures.
+
+
+
+
+Claude’s first attempt did not modify the project: its internal companion task was unavailable, and I verified that no scoped file changed. I’m correcting that orchestration failure now by explicitly requiring Claude Code itself to implement the repair—no further delegation—and keeping the same file boundaries.
+
+
+
+
+Edited a file, ran commands
+
+
+The second Claude run inherited a stale scheduled-wakeup state and exited without editing—again, no implementation was accepted. I’m isolating the next Claude invocation from that plugin state so it can operate directly in the repository. The handoff document now records this requirement, so a future session will not repeat the same failure.
+
+
+
+
+Ran commands
+
+
+The isolated Claude run is now free of the stale plugin state, but it stopped because its sandbox could not read the screenshots in Documents. I’m granting that run read access to the exact screenshot directory and restarting it; this keeps Claude’s implementation grounded in the images rather than relying only on the written diagnosis.
+
+
+
+
+Ran commands
+
+
+Claude is now editing the scoped implementation successfully. The main stair script has changed, so the repair is no longer stuck in orchestration. I’m waiting for its test-and-capture loop to finish before reviewing the geometry; this avoids judging an intermediate build while it is still correcting the crown opening and route clearance.
+
+
+
+
+Ran rtk stat -f '%Sm %N' -t '%H:%M:%S' scripts/hub_castle_stairs.gd scripts/test_castle_professional_pass.gd scripts/test_approach_continuity.gd docs/CASTLE_STAIR_GATE_FIX_HANDOFF.txt .godot/test_castle_entrance_final.log .godot/test_approach_final.log .godot/test_castle_professional_final.log 2>/dev/null
+
+
+
+
+
+
+
+Claude has completed the first two Godot verification runs and is still iterating. The implementation file changed again after the first edit, which indicates it is responding to test feedback rather than stopping at a visual-only patch. I’ll report exact pass/fail results only after I independently rerun them.
+===============================================================================
+
+
+
+Image #7 (near beach/water): Castle floats whole above player, clean gap between castle base and ground — no terrain under it at all here, sky visible all around edges. Confirms: still floating, badly, at this location. Pine tree + torii gate nearby on solid ground for contrast.
+
+Image #8 (village street): No castle visible. Two magenta/pink vertical rectangle glitches — flat 2D planes, no texture, clearly broken shader/missing material (probably fence or decoration placeholder mesh rendering pink = missing material in Godot). That's a separate bug: pink unshaded quads.
+
+Image #9 (courtyard, matches your earlier screenshot): Castle floating again, gap under it, tapering dark underside visible. Church + tower correctly grounded on left. Blue translucent vertical planes (portal/fence, same shape) also floating disconnected from ground — no visible support under them either.
+
+
+i want the player to able to draw the painting, and after that player able to explore thire drawing wolrds an art like the ViewFinder game mechanic, and the art is that the drawing art section and all the art in the gallory. and other things is that the player draw is not perfect, iwant you to implemnt fuction and help to render and generate thier art to me more better or adjust for them, using AI api key to help to genrate the art work for them to expirince more about thier art or more complete or help give them more idea or new style work of art
+
+https://www.youtube.com/watch?v=Y5Hg4MvUXc4&list=PLwabKnOFhE38C0o6z_bhlF_uOUlblDTjh
+
+The player draw migth not be perfect, so using AI to help generate completeness of their art, suggest idea, suggest of the art work style like inspiration. like a guide that guide the player with thier crateive and help them to achive and find thier best of them self. also when when player explore thier art work, when they enter the art, the art a 3D world animation and live not just a picture or iamge, it ahve action and animation depent on what do we have in the image. and the AI model it mighe it the video generate llm and picture generate llm to work together. i am not sure that shoude we need 2 separate API key that one is for video llm generate that work after the picture or art llm generate that pipe togther and make it work togther like a system
+
+
+
+i needed a complete final product
+
+
+
+
+
+
+10:03
+
+
+
+
+
+
+Worked for 53m 2s
+
+
+
+The complete playable product is finished and packaged for macOS.
+[Download macOS release ZIP](/Users/davidsovann/GAME/artea/builds/Artea-Crown-of-Life-macOS.zip) — 240 MB
+[Runnable Artea.app](/Users/davidsovann/GAME/artea/builds/Artea.app)
+[Standalone Godot package](/Users/davidsovann/GAME/artea/builds/CrownOfLifeStory.pck) — 125 MB
+[SHA-256 checksums](/Users/davidsovann/GAME/artea/builds/SHA256SUMS.txt)
+[Complete implementation and Claude handoff](/Users/davidsovann/GAME/artea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.md)
+The game includes all three story worlds, mandatory Lens puzzles, distinct thought/emotion/creativity interactions, guardians, Milo, treasures, finale, credits, replay, checkpoints, pause/settings, audio, captions, large text, reduced motion, faith/universal modes, and hub integration.
+Validation passed:
+Complete Crown story acceptance suite
+All 11 Viewfinder/Lens suites
+170-script scene-path scan
+Journey, Crown finale, and audience-mode tests
+Source-independent .pck launch
+ZIP extraction and strict signature verification
+Native ARM64 app launch with no startup, script, or dependency errors
+
+The macOS build is ad-hoc signed for local use. Public distribution or App Store release would still require your Apple Developer certificate and notarization. No source was committed, staged, reset, stashed, or pushed.
+
+Edited 8 files+530-62Review changesUndoReview
+
+artea/builds/SHA256SUMS.txtartea/builds/SHA256SUMS.txt+2-0
+artea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.mdartea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.md+157-19
+artea/export_presets.cfgartea/export_presets.cfg+47-13
+artea/project.godotartea/project.godot+3-3
+artea/scripts/capture_crown_story.gdartea/scripts/capture_crown_story.gd+25-7
+artea/scripts/test_crown_story.gdartea/scripts/test_crown_story.gd+26-2
+artea/scripts/viewfinder/crown_of_life_story.gdartea/scripts/viewfinder/crown_of_life_story.gd+266-17
+artea/scripts/viewfinder/lens_controller.gdartea/scripts/viewfinder/lens_controller.gd+4-1
+Collapse files
+
+
+10:56
+
+
+can you render the world, object, and everything for me (skin out side the layer objec. and i want you to details audit and add more on what we have builded to better, not create something new yet but make the existing become better and professional. i saw you almost run out of token can you put most of the work on claude code and document before everything run of token, document in in text file so it easy for me to continue next sessions
+
+
+11:05
+
+
+
+Worked for 33m 42s
+
+
+
+Complete—the existing Crown of Life world is professionally polished, rendered, tested, and repackaged without adding new worlds or mechanics.
+Textured exterior stone, island edges and undersides
+Refined gates, bridges, chasms and chapter motifs
+Better character staging and lighting
+Detailed castle, identity star and rainbow train
+Improved settings and finale presentation
+Nine inspected 1280×720 renders
+Full Lens, journey, finale and audience tests passed
+macOS app and standalone PCK rebuilt and checksum-verified
+Claude completed the primary pass. I stopped it at its 89% usage warning, then finished the audit, corrections, tests, rendering, packaging and documentation myself.
+
+Deliverables:
+[macOS game ZIP](/Users/davidsovann/GAME/artea/builds/Artea-Crown-of-Life-macOS.zip)
+[Standalone PCK](/Users/davidsovann/GAME/artea/builds/CrownOfLifeStory.pck)
+[Checksums](/Users/davidsovann/GAME/artea/builds/SHA256SUMS.txt)
+[Complete continuation handoff](/Users/davidsovann/GAME/artea/docs/CROWN_OF_LIFE_PROFESSIONAL_POLISH_HANDOFF.txt)
+[Canonical implementation documentation](/Users/davidsovann/GAME/artea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.md)
+[All final renders](/Users/davidsovann/GAME/artea/artifacts)
+The macOS app is validly ad-hoc signed and locally verified. Public distribution still requires an Apple Developer certificate and notarization.
+
+Edited 6 files+519-44Review changesUndoReview
+
+artea/builds/SHA256SUMS.txtartea/builds/SHA256SUMS.txt+2-2
+artea/docs/CROWN_OF_LIFE_PROFESSIONAL_POLISH_HANDOFF.txtartea/docs/CROWN_OF_LIFE_PROFESSIONAL_POLISH_HANDOFF.txt+355-0
+artea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.mdartea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.md+26-4
+artea/export_presets.cfgartea/export_presets.cfg+1-1
+artea/scripts/capture_crown_story.gdartea/scripts/capture_crown_story.gd+35-8
+artea/scripts/viewfinder/crown_of_life_story.gdartea/scripts/viewfinder/crown_of_life_story.gd+100-29
+Collapse files
+
+
+
+
+11:38
+
+
+can you make the size arcurate

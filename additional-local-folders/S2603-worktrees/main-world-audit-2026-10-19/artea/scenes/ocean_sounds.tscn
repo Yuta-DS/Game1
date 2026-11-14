@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://bv7c61i5fe66r"]
+
+[ext_resource type="AudioStream" uid="uid://8eksvwwqe1hq" path="res://assets/audio/Ocean_Ambience_Loop.ogg" id="1_na2qp"]
+
+[node name="Ocean_System" type="Node3D" unique_id=392946466]
+
+[node name="Ocean Sound 2" type="AudioStreamPlayer3D" parent="." unique_id=1068984415]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.2, 15.3, 113.8)
+stream = ExtResource("1_na2qp")
+volume_db = -8.0
+autoplay = true
+
+[node name="Ocean Sound" type="AudioStreamPlayer3D" parent="." unique_id=2105005495]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.8, 15.1, 110.7)
+stream = ExtResource("1_na2qp")
+volume_db = -8.0
+autoplay = true

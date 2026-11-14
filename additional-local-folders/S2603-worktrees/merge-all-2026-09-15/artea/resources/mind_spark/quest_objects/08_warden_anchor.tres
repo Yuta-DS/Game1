@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestObjectDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/quest_objects/quest_object_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+object_kind = 7
+display_name = "Warden Anchor"
+action_prompt = "DODGE • THEN STRIKE OPEN RING"
+success_message = "✦ SHIELD LAYER BROKEN"
+accent_color = Color(1, 0.43, 0.55, 1)
+icon_waiting = "◎"
+icon_success = "✦"
+

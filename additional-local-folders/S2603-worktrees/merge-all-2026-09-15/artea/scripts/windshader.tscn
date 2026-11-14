@@ -1,0 +1,73 @@
+[gd_scene load_steps=10 format=3 uid="uid://dy41m6ln41a45"]
+
+[ext_resource type="Shader" uid="uid://cv8ab5vu6dl4j" path="res://Wind.gdshader" id="1_8buv3"]
+[ext_resource type="Script" uid="uid://ivmns8nk7ft0" path="res://MultiMeshSpawner.gd" id="2_gyuev"]
+
+[sub_resource type="Curve" id="Curve_gyuev"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.501208, 0.503555), 0.0, 0.0, 0, 0, Vector2(0.991546, 0.00182819), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="TubeTrailMesh" id="TubeTrailMesh_agw1n"]
+radius = 0.15
+sections = 18
+section_length = 0.35
+curve = SubResource("Curve_gyuev")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_e2x3u"]
+render_priority = 0
+shader = ExtResource("1_8buv3")
+shader_parameter/color = Color(1, 1, 1, 1)
+shader_parameter/fade_time = 5.0
+shader_parameter/time_scale = 3.0
+shader_parameter/wave_amplitude = 0.1
+shader_parameter/wave_frequency = 1.0
+shader_parameter/wave_length = 5.0
+shader_parameter/wave_count = 1.0
+shader_parameter/twist_amplitude = 0.6
+shader_parameter/twist_frequency = 1.0
+shader_parameter/loop_radius = 1.0
+shader_parameter/loop_count = 0.23
+
+[sub_resource type="Curve" id="Curve_agw1n"]
+_data = [Vector2(0.00738916, 0), 0.0, 0.0, 0, 0, Vector2(0.498768, 0.819557), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_af3rv"]
+render_priority = 0
+shader = ExtResource("1_8buv3")
+shader_parameter/color = Color(1, 1, 1, 1)
+shader_parameter/fade_time = 5.0
+shader_parameter/time_scale = 3.0
+shader_parameter/wave_amplitude = 0.1
+shader_parameter/wave_frequency = 1.0
+shader_parameter/wave_length = 4.0
+shader_parameter/wave_count = 1.0
+shader_parameter/twist_amplitude = 0.35
+shader_parameter/twist_frequency = 1.0
+shader_parameter/loop_radius = 1.0
+shader_parameter/loop_count = 0.23
+
+[sub_resource type="TubeTrailMesh" id="TubeTrailMesh_h3lfe"]
+material = SubResource("ShaderMaterial_af3rv")
+custom_aabb = AABB(0, 0, 0, 0, 20, 0)
+radius = 0.15
+sections = 18
+section_length = 0.35
+curve = SubResource("Curve_agw1n")
+
+[sub_resource type="MultiMesh" id="MultiMesh_f5f7j"]
+transform_format = 1
+use_custom_data = true
+mesh = SubResource("TubeTrailMesh_h3lfe")
+
+[node name="Wind" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -0.268079, 0.963397, 0, -0.963397, -0.268079, 0, 0, 0)
+custom_aabb = AABB(0, 0, 0, 0, 20, 0)
+mesh = SubResource("TubeTrailMesh_agw1n")
+surface_material_override/0 = SubResource("ShaderMaterial_e2x3u")
+
+[node name="MultiMeshInstance3D" type="MultiMeshInstance3D" parent="."]
+multimesh = SubResource("MultiMesh_f5f7j")
+script = ExtResource("2_gyuev")

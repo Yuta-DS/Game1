@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# Artéa on the web, from the repo root.
+#
+#   ./web                 export if needed, serve, open a browser
+#   ./web rebuild         force a fresh export first
+#   ./web serve           serve whatever is already built
+#   ./web verify          headless check that Offline Guest reaches the hub
+#   ./web status          what is built, what is serving
+#   ./web stop            stop the local server
+#
+# Options (any command):
+#   --port N              default 8801, or PORT in .webrc
+#   --no-open             do not launch a browser
+#   -h, --help            this text
+#
+# Settings live in .webrc next to this script if you want different defaults:
+#
+#   PORT=9000
+#   GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot
+#
+# Why a wrapper rather than calling artea/tools/web.sh directly: the export and
+# the verification are two halves of the same job. A Godot web export can
+# succeed while the build is unplayable - a missing export dependency makes
+# change_scene_to_packed receive null, and the game simply stops responding with
+# nothing on screen. `./web verify` is what catches that.
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+web_sh="${repo_dir}/artea/tools/web.sh"
+smoke_js="${repo_dir}/artea/tools/web-smoke.js"
+build_dir="${repo_dir}/artea/builds/web"
+smoke_dir="${repo_dir}/artea/builds/smoke"
+
+# Defaults, overridable by .webrc and then by flags.
+port=8801
+open_browser=1
+# shellcheck source=/dev/null
+[[ -f "${repo_dir}/.webrc" ]] && source "${repo_dir}/.webrc"
+port="${PORT:-${port}}"
+
+command=run
+[[ $# -gt 0 && "$1" != -* ]] && { command="$1"; shift; }
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--port)    port="${2:?--port needs a number}"; shift 2 ;;
+		--no-open) open_browser=0; shift ;;
+		-h|--help) sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+		*) echo "Unknown option: $1 (try --help)" >&2; exit 1 ;;
+	esac
+done
+
+url="http://localhost:${port}/index.html"
+pid_file="${repo_dir}/.web-server-${port}.pid"
+
+serving_pid() {
+	if command -v lsof >/dev/null 2>&1; then
+		lsof -tiTCP:"${port}" -sTCP:LISTEN 2>/dev/null | head -1
+	elif command -v netstat >/dev/null 2>&1; then
+		# Git Bash / Windows has no lsof; netstat -ano's last column is the PID.
+		netstat -ano 2>/dev/null | grep -E "[:.]${port}[[:space:]].*LISTENING" | awk '{print $NF}' | head -1
+	fi
+}
+
+serve_background() {
+	# Serving is exec'd by web.sh, so the recorded pid is the server itself.
+	local mode_flag="$1"
+	[[ -n "$(serving_pid)" ]] && { echo "Already serving on ${port} (pid $(serving_pid))"; return 0; }
+	"${web_sh}" "${mode_flag}" --port "${port}" --no-open >"${repo_dir}/.web-server-${port}.log" 2>&1 &
+	echo $! > "${pid_file}"
+	disown %% 2>/dev/null || true
+	for _ in $(seq 60); do
+		curl -sf -o /dev/null "${url}" && return 0
+		sleep 1
+	done
+	echo "Server did not come up. Log: ${repo_dir}/.web-server-${port}.log" >&2
+	return 1
+}
+
+case "${command}" in
+	run|rebuild|serve)
+		flag=""
+		[[ "${command}" == rebuild ]] && flag="--rebuild"
+		[[ "${command}" == serve ]] && flag="--serve-only"
+		args=(--port "${port}")
+		[[ -n "${flag}" ]] && args=("${flag}" "${args[@]}")
+		[[ "${open_browser}" == 0 ]] && args+=(--no-open)
+		exec "${web_sh}" "${args[@]}"
+		;;
+
+	verify)
+		# Verification needs a server but should not leave one behind, so start
+		# one only when nothing is already listening on the port.
+		started_here=0
+		if [[ -z "$(serving_pid)" ]]; then
+			echo "Starting a server on ${port} for the check…"
+			serve_background --serve-only
+			started_here=1
+		fi
+		set +e
+		node "${smoke_js}" "${url}" --out "${smoke_dir}"
+		result=$?
+		set -e
+		if [[ "${started_here}" == 1 ]]; then
+			pid="$(serving_pid)"
+			[[ -n "${pid}" ]] && kill "${pid}" 2>/dev/null
+			rm -f "${pid_file}"
+		fi
+		exit "${result}"
+		;;
+
+	status)
+		if [[ -f "${build_dir}/index.pck" ]]; then
+			size=$(stat -c '%s' "${build_dir}/index.pck" 2>/dev/null || stat -f '%z' "${build_dir}/index.pck")
+			when=$(stat -c '%y' "${build_dir}/index.pck" 2>/dev/null || stat -f '%Sm' -t '%Y-%m-%d %H:%M' "${build_dir}/index.pck")
+			printf 'build   %s  (%.1f MB, %s)\n' "${build_dir}" "$((size / 1048576))" "${when}"
+			if [[ -f "${build_dir}/index.pck.parts.json" ]]; then
+				manifest=$(sed -E 's/.*"bytes":([0-9]+).*/\1/' "${build_dir}/index.pck.parts.json")
+				if [[ "${manifest}" == "${size}" ]]; then
+					echo "parts   in sync with the pack"
+				else
+					echo "parts   STALE - manifest says ${manifest}, pack is ${size}; next serve re-splits"
+				fi
+			else
+				echo "parts   not split yet"
+			fi
+		else
+			echo "build   none - run ./web rebuild"
+		fi
+		pid="$(serving_pid)"
+		if [[ -n "${pid}" ]]; then
+			echo "server  ${url} (pid ${pid})"
+		else
+			echo "server  not running on ${port}"
+		fi
+		;;
+
+	stop)
+		pid="$(serving_pid)"
+		if [[ -n "${pid}" ]]; then
+			kill "${pid}"
+			rm -f "${pid_file}"
+			echo "Stopped server on ${port} (pid ${pid})"
+		else
+			echo "Nothing serving on ${port}"
+		fi
+		;;
+
+	*)
+		echo "Unknown command: ${command} (try --help)" >&2
+		exit 1
+		;;
+esac

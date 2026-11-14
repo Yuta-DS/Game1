@@ -1,0 +1,32 @@
+{
+  "resolution": [
+    1024,
+    1024
+  ],
+  "maps": [
+    "basecolor",
+    "roughness",
+    "normal"
+  ],
+  "material_textures": {
+    "Stone_Dark": "stone_dark",
+    "Stone_Mid": "stone_mid",
+    "Stone_Edge": "silver_edge",
+    "Gunmetal": "gunmetal",
+    "Silver_Edge": "silver_edge",
+    "Cyan_Energy": "cyan_energy",
+    "Violet_Energy": "violet_energy",
+    "White_Star_Glow": "white_star_glow",
+    "Blue_Crystal": "blue_crystal",
+    "Blue_Crystal_Outline": "cyan_energy",
+    "Lavender_Crystal": "lavender_crystal",
+    "Crown_Crystal": "crown_crystal",
+    "Violet_Crystal_Outline": "violet_crystal_outline",
+    "Orb_Glass": "orb_glass"
+  },
+  "source_atlases": [
+    "crystal_atlas.png",
+    "energy_atlas.png",
+    "structural_atlas.png"
+  ]
+}

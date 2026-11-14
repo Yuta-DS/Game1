@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cyl3qacf4cyub"]
+
+[ext_resource type="PackedScene" uid="uid://ca5lwoqwg7een" path="res://assets3D/stylizedNature/Grass_Common_Short.gltf" id="1_iadfm"]
+
+[node name="Grass_Common_Short2" instance=ExtResource("1_iadfm")]
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)

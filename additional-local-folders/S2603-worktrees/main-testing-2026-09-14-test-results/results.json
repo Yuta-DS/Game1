@@ -1,0 +1,142 @@
+[
+  {
+    "test": "startup",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": []
+  },
+  {
+    "test": "test_art_castle_gallery_flow",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "ART_CASTLE_GALLERY_TEST: PASS \u2014 raised castle door, gallery artwork, walking player and interactive 3D world are connected"
+    ]
+  },
+  {
+    "test": "test_world_minimap",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "WORLD_MINIMAP_TEST: PASS \u2014 outside/inside atlases, live tracking, and full map toggle"
+    ]
+  },
+  {
+    "test": "test_gallery_embedded_floating_world",
+    "exit_code": 0,
+    "clean": false,
+    "evidence": [
+      "GALLERY_EMBEDDED_WORLD_TEST: PASS \u2014 centred non-overlapping carpet exit and 175m world bridge",
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ]
+  },
+  {
+    "test": "test_train_station_jump_traversal",
+    "exit_code": 0,
+    "clean": false,
+    "evidence": [
+      "TRAIN_STATION_JUMP_TEST: PASS \u2014 station floor, boarding route, train deck, and jump clearance are physical",
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ]
+  },
+  {
+    "test": "test_story_crown_railway",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "STORY_CROWN_RAILWAY_TEST: PASS \u2014 climbable stations and player-driven Crown Line connect all four worlds"
+    ]
+  },
+  {
+    "test": "test_mesh_cutter",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "mesh cutter: all checks passed"
+    ]
+  },
+  {
+    "test": "test_cutter_cap_loops",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "cutter cap loops: all checks passed"
+    ]
+  },
+  {
+    "test": "test_frustum_cutter",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "frustum cutter: all checks passed"
+    ]
+  },
+  {
+    "test": "test_lens_collision",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "lens collision: all checks passed"
+    ]
+  },
+  {
+    "test": "test_viewfinder_lens",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "viewfinder lens: all checks passed"
+    ]
+  },
+  {
+    "test": "test_lens_safety",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "lens safety: all checks passed"
+    ]
+  },
+  {
+    "test": "test_lens_photo_card",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "lens photo card: all checks passed"
+    ]
+  },
+  {
+    "test": "test_lens_controller",
+    "exit_code": 0,
+    "clean": true,
+    "evidence": [
+      "lens controller: all checks passed"
+    ]
+  },
+  {
+    "test": "test_lens_journey",
+    "exit_code": 0,
+    "clean": false,
+    "evidence": [
+      "lens journey: all checks passed",
+      "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+    ]
+  },
+  {
+    "test": "test_lens_persistence",
+    "exit_code": 0,
+    "clean": false,
+    "evidence": [
+      "ERROR: Parse JSON failed. Error at line 0: Expected key",
+      "ERROR: LensPersistence: res://.godot/test_lens_placements.json is corrupt, ignoring it",
+      "lens persistence: all checks passed"
+    ]
+  },
+  {
+    "test": "test_hub_lens",
+    "exit_code": 0,
+    "clean": false,
+    "evidence": [
+      "hub lens: all checks passed",
+      "ERROR: 8 resources still in use at exit (run with --verbose for details)."
+    ]
+  }
+]

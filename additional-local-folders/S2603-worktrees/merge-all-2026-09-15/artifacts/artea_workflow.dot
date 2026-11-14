@@ -1,0 +1,60 @@
+digraph ARTEA {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad="0.15",
+    nodesep="0.38",
+    ranksep="0.42",
+    splines=ortho,
+    fontname="Arial"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="Arial",
+    fontsize=12,
+    color="#2E74B5",
+    penwidth=1.5,
+    fillcolor="#F4F7FB",
+    fontcolor="#17365D",
+    margin="0.13,0.10"
+  ];
+  edge [color="#607D9B", penwidth=1.5, arrowsize=0.75];
+
+  access [label="1  Simple web access\nCreate or resume journey"];
+  castle [label="2  ARTÉA Castle Hub\nMilo explains the journey"];
+  mind [label="3  Mind Spark\nEarn Star of Wisdom"];
+  heart [label="4  Heart Melody\nEarn Harmony Jewel"];
+  creator [label="5  Creator's Light\nEarn Creator's Light"];
+  finale [label="6  Castle finale\nCrown of Life + personal star", fillcolor="#FFF7E6", color="#B98218", fontcolor="#6D4C00"];
+
+  { rank=same; access; castle; mind; }
+  { rank=same; heart; creator; finale; }
+  access -> castle -> mind -> heart -> creator -> finale;
+
+  support [
+    label="Across every stage: Milo guidance  •  save/progress recognition  •  accessibility  •  performance monitoring  •  trauma-informed content safeguards",
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#EAF5EF",
+    color="#4D8B68",
+    fontcolor="#234A34",
+    fontsize=11
+  ];
+
+  { rank=same; support; revisit; }
+  castle -> support [style=dashed, arrowhead=none, color="#7AA68C"];
+  creator -> support [style=dashed, arrowhead=none, color="#7AA68C"];
+
+  revisit [
+    label="After completion: World Gate or optional Crown Train revisit\n(completed worlds only)",
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#F6F0FA",
+    color="#8064A2",
+    fontcolor="#4C3566",
+    fontsize=11
+  ];
+  finale -> revisit [color="#8064A2"];
+  revisit -> castle [constraint=false, style=dashed, color="#8064A2"];
+}

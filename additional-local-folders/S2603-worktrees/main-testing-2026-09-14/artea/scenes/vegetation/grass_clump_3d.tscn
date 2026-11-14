@@ -1,0 +1,54 @@
+[gd_scene load_steps=5 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Material_grass"]
+albedo_color = Color(0.27, 0.6, 0.18, 1)
+roughness = 0.92
+
+[sub_resource type="PrismMesh" id="BoxMesh_tall"]
+material = SubResource("Material_grass")
+size = Vector3(0.075, 0.72, 0.055)
+
+[sub_resource type="PrismMesh" id="BoxMesh_medium"]
+material = SubResource("Material_grass")
+size = Vector3(0.085, 0.56, 0.065)
+
+[sub_resource type="PrismMesh" id="BoxMesh_short"]
+material = SubResource("Material_grass")
+size = Vector3(0.095, 0.4, 0.075)
+
+[node name="GrassClump3D" type="Node3D"]
+
+[node name="BladeCenter" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.36, 0)
+rotation = Vector3(0.0, 0.22, -0.08)
+mesh = SubResource("BoxMesh_tall")
+
+[node name="BladeNorth" type="MeshInstance3D" parent="."]
+position = Vector3(0.08, 0.28, -0.14)
+rotation = Vector3(0.09, -0.52, 0.18)
+mesh = SubResource("BoxMesh_medium")
+
+[node name="BladeSouth" type="MeshInstance3D" parent="."]
+position = Vector3(-0.09, 0.28, 0.15)
+rotation = Vector3(-0.08, 0.68, -0.2)
+mesh = SubResource("BoxMesh_medium")
+
+[node name="BladeEast" type="MeshInstance3D" parent="."]
+position = Vector3(0.17, 0.2, 0.05)
+rotation = Vector3(0.12, 1.08, -0.28)
+mesh = SubResource("BoxMesh_short")
+
+[node name="BladeWest" type="MeshInstance3D" parent="."]
+position = Vector3(-0.17, 0.2, -0.04)
+rotation = Vector3(-0.1, -0.92, 0.27)
+mesh = SubResource("BoxMesh_short")
+
+[node name="BladeFront" type="MeshInstance3D" parent="."]
+position = Vector3(0.02, 0.28, 0.19)
+rotation = Vector3(0.16, 0.35, 0.13)
+mesh = SubResource("BoxMesh_medium")
+
+[node name="BladeBack" type="MeshInstance3D" parent="."]
+position = Vector3(-0.03, 0.2, -0.2)
+rotation = Vector3(-0.14, -0.26, -0.23)
+mesh = SubResource("BoxMesh_short")

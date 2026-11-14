@@ -1,0 +1,54 @@
+[gd_scene load_steps=7 format=3 uid="uid://tfpr4uiqnkn4"]
+
+[ext_resource type="Texture2D" uid="uid://csf5rxfsdvve2" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/arrowbg.png" id="4_nysna"]
+[ext_resource type="Texture2D" uid="uid://nfcxdkxim45q" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/attack.png" id="5_3rys7"]
+[ext_resource type="Texture2D" uid="uid://rrks4oofgqvf" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/Arrow.png" id="5_f6qnu"]
+[ext_resource type="PackedScene" uid="uid://bspr3hpws6rf7" path="res://scenes/Joystick.tscn" id="6_joystick"]
+[ext_resource type="Script" path="res://scripts/joystick_input_handler.gd" id="7_handler"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vlj8a"]
+size = Vector2(11, 11)
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchor_top = -0.349
+anchor_right = 0.273
+offset_left = 4.0
+offset_top = 200.28
+offset_right = -345.44
+offset_bottom = -51.0
+scale = Vector2(1.22096, 1.22096)
+script = ExtResource("7_handler")
+
+[node name="UpBG" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 861.614
+offset_top = -63.0651
+offset_right = 951.614
+offset_bottom = 26.9349
+scale = Vector2(0.82421, 0.82421)
+texture = ExtResource("4_nysna")
+
+[node name="Up" type="TouchScreenButton" parent="."]
+position = Vector2(869.614, -12.0651)
+rotation = -1.5708
+scale = Vector2(8.419, 8.419)
+texture_normal = ExtResource("5_f6qnu")
+shape = SubResource("RectangleShape2D_vlj8a")
+action = "jump"
+
+[node name="Joystick" parent="." instance=ExtResource("6_joystick")]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.246
+anchor_bottom = 0.419
+offset_left = 5.0
+offset_top = -109.0
+offset_right = 156.0
+offset_bottom = 62.0
+
+[node name="Attack" type="TouchScreenButton" parent="."]
+position = Vector2(724.021, -75.3505)
+scale = Vector2(0.925501, 0.958262)
+texture_normal = ExtResource("5_3rys7")
+action = "attack"

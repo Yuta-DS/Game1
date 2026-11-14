@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Artéa — Complete Sound Effect Preview</title>
+  <style>
+    :root { color-scheme: dark; --ink:#f6f0df; --muted:#b9b3a4; --panel:#202a2b; --line:#4d625d; --gold:#f4c96b; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:15px/1.45 system-ui,sans-serif; color:var(--ink); background:radial-gradient(circle at 20% 0,#334f4a,#131a1b 44rem); }
+    header { position:sticky; top:0; z-index:2; padding:20px clamp(18px,5vw,70px); background:#111919e8; backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+    h1 { margin:0 0 5px; font:700 clamp(23px,4vw,38px) Georgia,serif; color:var(--gold); }
+    header p { margin:0 0 14px; color:var(--muted); }
+    .tools { display:flex; gap:10px; flex-wrap:wrap; }
+    input,button { border:1px solid var(--line); border-radius:8px; background:#172120; color:var(--ink); padding:9px 12px; }
+    input { min-width:min(420px,100%); flex:1; }
+    button { cursor:pointer; color:var(--gold); font-weight:700; }
+    main { max-width:1200px; margin:auto; padding:28px 18px 70px; }
+    section { margin:0 0 34px; }
+    h2 { margin:0 0 12px; color:#9ddbc7; font-size:20px; border-bottom:1px solid var(--line); padding-bottom:7px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:10px; }
+    article { background:linear-gradient(145deg,#263231,#1b2424); border:1px solid #40514e; border-radius:10px; padding:11px; box-shadow:0 5px 18px #0004; }
+    article strong { display:block; margin-bottom:8px; overflow-wrap:anywhere; }
+    audio { width:100%; height:34px; }
+    .empty { display:none; }
+    footer { color:var(--muted); margin-top:35px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Artéa sound-effect preview</h1>
+    <p id="summary">Loading the selected in-game professional recording set…</p>
+    <div class="tools">
+      <input id="filter" type="search" placeholder="Filter: grass, train, Milo, cave, wood…">
+      <button id="stop">Stop all sounds</button>
+    </div>
+  </header>
+  <main id="content"></main>
+  <script>
+    const range = (folder, count, ext='ogg') => Array.from({length:count},(_,i)=>`${folder}/${i}.${ext}`);
+    const named = (folder, names) => names.map(name=>`${folder}/${name}`);
+    const groups = {
+      'World objects': named('world_objects', [
+        'tree_wind_loop.wav','watermill_loop.wav','sawmill_loop.wav','blacksmith_hammer.wav',
+        'cave_air_loop.wav','aether_power_loop.wav','train_departure_horn.wav'
+      ]),
+      'Train — selected Royal Hudson field recordings': named('pro_train', [
+        'royal_hudson_engine_loop.wav','royal_hudson_rail_loop.wav','royal_hudson_whistle.wav'
+      ]),
+      'Vegetation passing beside player — professional': named('pro_vegetation',[
+        'foliage_brush_0.ogg','foliage_brush_1.ogg'
+      ]),
+      'Footsteps — grass underfoot — professional': range('pro_footsteps/grass',6),
+      'Footsteps — earth and dirt': range('footsteps/earth',6),
+      'Footsteps — gravel — professional': range('pro_footsteps/gravel',6),
+      'Footsteps — dry brick and tile — professional': range('pro_footsteps/brick',6),
+      'Footsteps — wooden bridge and planks': range('footsteps/wood',9),
+      'Footsteps — metal only — professional': range('pro_footsteps/metal',6),
+      'Footsteps — sand': named('footsteps/sand',[
+        'Fantozzi-SandL1.ogg','Fantozzi-SandR1.ogg','Fantozzi-SandL2.ogg',
+        'Fantozzi-SandR2.ogg','Fantozzi-SandL3.ogg','Fantozzi-SandR3.ogg'
+      ]),
+      'Footsteps — stone — professional': range('pro_footsteps/stone',6),
+      'Milo voice candidates': named('milo',[
+        'milo_voice.ogg','milo_voice_preview.ogg','milo_voice_clone_preview.ogg',
+        'milo_voice_clone_light_preview.ogg','milo_voice_clone_natural_preview.ogg',
+        'milo_voice_clone_soft_sweet_preview.ogg','milo_voice_inventor_preview.ogg',
+        'milo_voice_inventor_v2_preview.ogg','milo_voice_natural_v3_preview.ogg'
+      ])
+    };
+    const root = document.querySelector('#content');
+    let total = 0;
+    for (const [group, files] of Object.entries(groups)) {
+      total += files.length;
+      const section = document.createElement('section');
+      section.innerHTML = `<h2>${group} · ${files.length}</h2><div class="grid"></div>`;
+      const grid = section.querySelector('.grid');
+      for (const file of files) {
+        const article = document.createElement('article');
+        article.dataset.search = `${group} ${file}`.toLowerCase();
+        article.innerHTML = `<strong>${file.split('/').at(-1)}</strong><audio controls preload="metadata" src="../assets/audio/${file}"></audio>`;
+        grid.append(article);
+      }
+      root.append(section);
+    }
+    document.querySelector('#summary').textContent = `${total} playable files, grouped by their real in-game purpose. Spatial direction and distance attenuation are applied only inside the game.`;
+    document.addEventListener('play', event => {
+      if (event.target.tagName !== 'AUDIO') return;
+      document.querySelectorAll('audio').forEach(audio => { if (audio !== event.target) audio.pause(); });
+    }, true);
+    document.querySelector('#stop').onclick = () => document.querySelectorAll('audio').forEach(audio => { audio.pause(); audio.currentTime=0; });
+    document.querySelector('#filter').oninput = event => {
+      const query = event.target.value.trim().toLowerCase();
+      document.querySelectorAll('article').forEach(card => card.hidden = query && !card.dataset.search.includes(query));
+      document.querySelectorAll('section').forEach(section => section.hidden = !section.querySelector('article:not([hidden])'));
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+artea/addons/terrain_3d/bin/~libterrain.windows.debug.x86_64.dll
+
+# Operating-system and editor files
+.DS_Store
+._*
+__MACOSX/
+*~
+~*
+*.tmp
+*.log
+*.old
+*.old.*
+
+# Godot-generated caches and local editor state
+.godot/
+.dual/
+*.import
+
+# Generated builds, captures, and downloaded reference packages
+artea/builds/
+artea/artifacts/
+ViewFinder-main/
+ViewFinder-main.zip
+Gemini_Generated_Image_*.png
+*.translation
+
+# Python and local server state
+__pycache__/
+*.pyc
+server/venv/
+server/database.db
+server/uploads/
+server/logs/
+server/ai_cache/
+server/.env
+API-Key.txt
+
+# Web export output (regenerable)
+build/
+
+# Cloudflare Wrangler local state
+.wrangler/
+
+# Blender autosave backups
+*.blend1
+
+# GLB colour-edit backups, regenerable via tools/recolour_tree_fibers.py --restore
+*.precolour
+
+# Local AnyCreature tooling and generated review artifacts are not game source.
+# Keep every casing out of commits while allowing final renamed/exported assets.
+.anycreature-runtime/
+**/*anycreature*
+**/*anyCreature*
+**/*AnyCreature*

@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://jyjr0s84odql"]
+
+[ext_resource type="Script" uid="uid://b11bh54mpfuu8" path="res://scenes/entities/new_player.gd" id="1_37sbh"]
+[ext_resource type="PackedScene" uid="uid://b2firggr374w6" path="res://scenes/Camera/camera_controller.tscn" id="2_26y45"]
+[ext_resource type="PackedScene" uid="uid://s55egnlukr74" path="res://scripts/fox.tscn" id="3_btyug"]
+[ext_resource type="Resource" uid="uid://c8v7m3n2k5p4q" path="res://resources/player_inventory.tres" id="4_inv"]
+[ext_resource type="PackedScene" uid="uid://0bb61ebi0v3j" path="res://scenes/inventory_gui.tscn" id="5_invgui"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_37sbh"]
+
+[node name="NewPlayer" type="CharacterBody3D" unique_id=256693606 groups=["player"]]
+script = ExtResource("1_37sbh")
+inventory_data = ExtResource("4_inv")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=777462999]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_37sbh")
+
+[node name="CameraController" parent="." unique_id=1673383484 instance=ExtResource("2_26y45")]
+# camera_controller.gd establishes the launch height and pitch in _ready().
+# Keeping the packed-scene override neutral avoids stale imported transforms.
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+minLimitX = -1.18
+maxLimitX = 1.05
+
+[node name="RogueSkin" parent="." unique_id=54769554 instance=ExtResource("3_btyug")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+
+[node name="InventoryGUI" parent="." unique_id=2012273275 instance=ExtResource("5_invgui")]
+
+[node name="FloorDetector" type="RayCast3D" parent="." unique_id=1675328953]
+target_position = Vector3(0, -3.5, 0)
+collision_mask = 15

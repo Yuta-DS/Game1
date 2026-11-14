@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://6obaxkmc212j"]
+
+[ext_resource type="Texture2D" uid="uid://cc7haxr8tbq6n" path="res://textures/Sign_box.png.webp" id="1_65g5f"]
+[ext_resource type="Script" uid="uid://bet4qknmq15o3" path="res://scenes/narrative_bubble.gd" id="2_y48wk"]
+
+[node name="Story_Intro_Spawn" type="Label3D" unique_id=1554091635]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.352577, 25.852982, 1.8761172)
+billboard = 1
+no_depth_test = false
+modulate = Color(1, 0.95686275, 0.81960785, 1)
+outline_size = 20
+
+[node name="NarrativeBubble" type="Sprite3D" parent="." unique_id=192401457]
+transform = Transform3D(0.048518512, 0, -0.9988223, 0, 1, 0, 0.9988223, 0, 0.048518512, 0, 0, 0.023192167)
+pixel_size = 0.006
+texture = ExtResource("1_65g5f")
+script = ExtResource("2_y48wk")
+
+[node name="Label3D" type="Label3D" parent="NarrativeBubble" unique_id=699826674]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
+no_depth_test = false
+render_priority = 1
+modulate = Color(0.18039216, 0.003921569, 0.2, 1)
+text = "Welcome, Seeker. The light of Artéa has been waiting for you. Step forward, discover your true purpose, and bring your unique spark to our world!"
+autowrap_mode = 2
+width = 1000.0
+
+[node name="CharacterName" type="Label3D" parent="NarrativeBubble" unique_id=489327213]
+transform = Transform3D(1.0000025, 0, 0, 0, 1, 0, 0, 0, 1.0000025, 0.0006740093, 0.5, 0.086155415)
+extra_cull_margin = 2.0
+offset = Vector2(-220, 0)
+no_depth_test = false
+modulate = Color(0.24313726, 0.15294118, 0.13725491, 1)
+text = "Archangel Gabriel"

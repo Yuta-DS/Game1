@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "world_id": "heart_melody",
+  "island_id": "heart_melody.island_one",
+  "title": "Quiet Meadow and Feeling Garden",
+  "content_policy": {
+    "delivery": "curated_offline",
+    "personal_disclosure_required": false,
+    "identity_affects_rewards": false,
+    "timed_reasoning": false
+  },
+  "districts": ["quiet_meadow", "feeling_garden"],
+  "quest": {
+    "id": "heart_melody.quest.wake_feeling_garden",
+    "title": "Wake the Feeling Garden",
+    "xp": 80,
+    "tasks": [
+      {
+        "id": "heart_melody.task.plant_feeling_seeds",
+        "title": "Plant three Feeling Seeds",
+        "required_count": 3,
+        "hint_ladder": ["Follow the path to the three stone nests.", "Choose any feeling or a sound, preview it, then confirm planting."],
+        "success_effect": "seed_flowers_bloom"
+      },
+      {
+        "id": "heart_melody.task.restore_garden_rhythm",
+        "title": "Restore the flower rhythm and release the Blight",
+        "prerequisites": ["heart_melody.task.plant_feeling_seeds"],
+        "phrase": ["leaf", "sun", "droplet"],
+        "hint_ladder": ["Listen to the garden's three-note phrase.", "Watch the symbols as the flowers play: Leaf, Sun, Droplet."],
+        "encounter_waves": [["garden.moth.1"], ["garden.moth.2", "garden.slime.1"]],
+        "success_effect": "garden_restored"
+      }
+    ]
+  },
+  "completion": {
+    "checkpoint": "restored_garden",
+    "next_island_implemented": false,
+    "endpoint_text": "The garden's song is restored. The river is waiting.",
+    "awards_world_treasure": false,
+    "unlocks_train": false
+  }
+}

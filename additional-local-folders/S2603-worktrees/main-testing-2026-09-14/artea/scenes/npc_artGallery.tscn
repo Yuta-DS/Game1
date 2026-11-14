@@ -1,0 +1,85 @@
+[gd_scene load_steps=12 format=3 uid="uid://dnsfq13yvdxf4"]
+
+[ext_resource type="PackedScene" uid="uid://cyoda8mb6h03e" path="res://scenes/npc.tscn" id="1_oqn6u"]
+[ext_resource type="Texture2D" uid="uid://c1ch6sitsndg2" path="res://assets/village-npc-pixel-art-character-sprite-pack/Peasants_3/Idle.png" id="2_oqn6u"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bk8lv"]
+atlas = ExtResource("2_oqn6u")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jcbky"]
+atlas = ExtResource("2_oqn6u")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ivv7s"]
+atlas = ExtResource("2_oqn6u")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_275io"]
+atlas = ExtResource("2_oqn6u")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gdkdt"]
+atlas = ExtResource("2_oqn6u")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xbx0y"]
+atlas = ExtResource("2_oqn6u")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lo1pq"]
+atlas = ExtResource("2_oqn6u")
+region = Rect2(768, 0, 128, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_5eh4s"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bk8lv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jcbky")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ivv7s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_275io")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gdkdt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xbx0y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lo1pq")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_oqn6u"]
+radius = 17.0
+height = 68.0
+
+[node name="NPC" instance=ExtResource("1_oqn6u")]
+script = null
+
+[node name="AnimatedSprite2D" parent="." index="0"]
+sprite_frames = SubResource("SpriteFrames_5eh4s")
+animation = &"default"
+autoplay = "default"
+frame_progress = 0.0
+flip_h = true
+
+[node name="CollisionShape2D" parent="." index="1"]
+position = Vector2(-1, -2)
+shape = SubResource("CapsuleShape2D_oqn6u")
+
+[node name="Actionable" parent="." index="3"]
+dialogue_start = "start_maestro_montclair"
+
+[node name="CollisionShape2D2" parent="Actionable" index="0"]
+position = Vector2(0, 0)

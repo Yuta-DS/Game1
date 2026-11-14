@@ -1,0 +1,378 @@
+[gd_scene format=3 uid="uid://cj5tghjq224it"]
+
+[ext_resource type="Script" uid="uid://bhohq7etfisvh" path="res://scripts/art_gallery.gd" id="1_h6yu7"]
+[ext_resource type="PackedScene" uid="uid://cx6j6vrnhxvfi" path="res://scenes/player_3d.tscn" id="2_3gi0n"]
+[ext_resource type="Texture2D" uid="uid://8bs0vp5scy4b" path="res://assets/ArtGallery/background/galaxy.jpg" id="2_dw71r"]
+[ext_resource type="PackedScene" uid="uid://g2swdgcf4ywc" path="res://assets3D/characters/fox.glb" id="4_k4ey6"]
+[ext_resource type="Script" uid="uid://dbp2n821rrrt6" path="res://scripts/CameraFollow.gd" id="5_n1pvk"]
+[ext_resource type="ArrayMesh" uid="uid://dvxtnr8jtdt5u" path="res://chair_proxy_mesh.obj" id="7_bvso8"]
+[ext_resource type="Script" uid="uid://dwykxf5gpxmtn" path="res://scripts/PaintingInteraction.gd" id="7_dw71r"]
+[ext_resource type="Script" uid="uid://coy1vsu11fgud" path="res://scenes/interaction_area.gd" id="7_rye7r"]
+[ext_resource type="Texture2D" uid="uid://bmac1y5j1g7xe" path="res://assets/models/1257467757Finish-Keats-Dk-Moh-NML-Crop.jpg" id="14_k4ey6"]
+[ext_resource type="Script" uid="uid://bk7rt45bvooh5" path="res://scenes/ExitGallery.gd" id="14_qum7w"]
+[ext_resource type="ArrayMesh" uid="uid://t2bnky34v4qp" path="res://exitart_door_mesh.obj" id="17_bvso8"]
+[ext_resource type="Material" uid="uid://dkkbdeury7542" path="res://portal_colour.tres" id="18_rye7r"]
+[ext_resource type="PackedScene" uid="uid://bc4s70tkatf44" path="res://assets/models/Low-Poly Plant_.fbx" id="22_8fcft"]
+[ext_resource type="Script" uid="uid://eraeiu6qk3vg" path="res://scenes/GalleryManager.gd" id="24_3btdo"]
+[ext_resource type="Script" uid="uid://fggwgtmoslkc" path="res://scripts/gallery_ceremony.gd" id="25_crown"]
+[ext_resource type="Script" uid="uid://hepts2s0eon3" path="res://scripts/gallery_rotunda.gd" id="30_rotunda"]
+[ext_resource type="Script" uid="uid://bi84vm5ahm72l" path="res://scripts/heart_melody/music_circle_piano.gd" id="31_piano"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_48g0v"]
+panorama = ExtResource("2_dw71r")
+
+[sub_resource type="Sky" id="Sky_a2hqd"]
+sky_material = SubResource("PanoramaSkyMaterial_48g0v")
+
+[sub_resource type="Environment" id="Environment_6ynge"]
+background_mode = 2
+sky = SubResource("Sky_a2hqd")
+ambient_light_source = 2
+ambient_light_color = Color(0.88, 0.84, 0.77, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3btdo"]
+size = Vector3(5, 10, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_j2nib"]
+size = Vector3(5, 10, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ybvl3"]
+size = Vector3(5, 10, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8fcft"]
+size = Vector3(5, 10, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rh7pn"]
+size = Vector3(5, 10, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2mqet"]
+size = Vector3(5, 10, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_a185g"]
+size = Vector3(5, 10, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0fngp"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3gi0n"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_k2ron"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6ynge"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_k4ey6"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qum7w"]
+albedo_texture = ExtResource("14_k4ey6")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bvso8"]
+albedo_texture = ExtResource("14_k4ey6")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bvso8"]
+
+[node name="ArtGallery" type="Node3D" unique_id=196583498]
+script = ExtResource("1_h6yu7")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1730386326]
+environment = SubResource("Environment_6ynge")
+
+[node name="SpawnPoint" type="Node3D" parent="." unique_id=689881371]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, 5)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=884368238]
+light_angular_distance = 1.0
+
+[node name="GalleryRotunda" type="Node3D" parent="." unique_id=355097263]
+script = ExtResource("30_rotunda")
+
+[node name="Player3D" parent="." unique_id=1983107366 groups=["Player"] instance=ExtResource("2_3gi0n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 26)
+camera_path = NodePath("../Camera3D")
+
+[node name="FoxVisuals" type="Node3D" parent="Player3D" unique_id=124633337]
+
+[node name="Fox" parent="Player3D/FoxVisuals" unique_id=1877017813 instance=ExtResource("4_k4ey6")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, -0.980317, 0)
+
+[node name="AnimationPlayer2" type="AnimationPlayer" parent="Player3D/FoxVisuals/Fox" unique_id=1917874391]
+
+[node name="MeshInstance3D" parent="Player3D" index="2"]
+visible = false
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1572356374]
+current = true
+script = ExtResource("5_n1pvk")
+player_path = NodePath("../Player3D")
+
+[node name="Frame_01" type="Sprite3D" parent="." unique_id=657278325]
+transform = Transform3D(-0.5517297, 0, 1.3948457, 0, 1.5, 0, -1.3948457, 0, -0.5517297, -61.86668, 7, -9.414707)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_01" unique_id=706567361]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_01"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_01/InteractionArea" unique_id=1191614975]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.3736, 2.37134)
+shape = SubResource("BoxShape3D_3btdo")
+
+[node name="Frame_02" type="Sprite3D" parent="." unique_id=145011599]
+transform = Transform3D(1.3137151, 0, 0.7239837, 0, 1.5, 0, -0.7239837, 0, 1.3137151, -43.23244, 7, -45.52201)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_02" unique_id=1655929801]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_02"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_02/InteractionArea" unique_id=860705008]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.19075, 2.56661)
+shape = SubResource("BoxShape3D_j2nib")
+
+[node name="Frame_03" type="Sprite3D" parent="." unique_id=1292516066]
+transform = Transform3D(-1.2511665, 0, 0.8273951, 0, 1.5, 0, -0.8273951, 0, -1.2511665, -47.28676, 7, 7.086483)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_03" unique_id=1467472175]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_03"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_03/InteractionArea" unique_id=1228575455]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.10188675, -1.0208597, 2.53438)
+shape = SubResource("BoxShape3D_ybvl3")
+
+[node name="Frame_04" type="Sprite3D" parent="." unique_id=2031884334]
+transform = Transform3D(1.4643719, 0, -0.32498476, 0, 1.5, 0, 0.32498476, 0, 1.4643719, 22.24985, 7, -53.17333)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_04" unique_id=450560443]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_04"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_04/InteractionArea" unique_id=632813054]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.60651)
+shape = SubResource("BoxShape3D_8fcft")
+
+[node name="Frame_05" type="Sprite3D" parent="." unique_id=1524334476]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 7, -55.55)
+script = ExtResource("7_dw71r")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_05" unique_id=1806469537]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_05"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_05/InteractionArea" unique_id=95357828]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.994211, 2.36117)
+shape = SubResource("BoxShape3D_rh7pn")
+
+[node name="Frame_06" type="Sprite3D" parent="." unique_id=1090085584]
+transform = Transform3D(1.4643719, 0, 0.32498476, 0, 1.5, 0, -0.32498476, 0, 1.4643719, -22.24985, 7, -53.17333)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_06" unique_id=1461988306]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_06"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_06/InteractionArea" unique_id=1737155676]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.90738)
+shape = SubResource("BoxShape3D_2mqet")
+
+[node name="Frame_07" type="Sprite3D" parent="." unique_id=1562772621]
+transform = Transform3D(0.78151166, 0, 1.2803279, 0, 1.5, 0, -1.2803279, 0, 0.78151166, -59.74709, 7, -30.79467)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_07" unique_id=374333575]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_07"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_07/InteractionArea" unique_id=227149950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.55271)
+shape = SubResource("BoxShape3D_a185g")
+
+[node name="Frame_08" type="Sprite3D" parent="." unique_id=1087075147]
+transform = Transform3D(0.78151166, 0, -1.2803279, 0, 1.5, 0, 1.2803279, 0, 0.78151166, 59.74709, 7, -30.79467)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_08" unique_id=1235332708]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_08"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_08/InteractionArea" unique_id=1615597800]
+transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 2.52149)
+shape = SubResource("BoxShape3D_0fngp")
+
+[node name="Frame_09" type="Sprite3D" parent="." unique_id=622447233]
+transform = Transform3D(1.3137151, 0, -0.7239837, 0, 1.5, 0, 0.7239837, 0, 1.3137151, 43.23244, 7, -45.52201)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_09" unique_id=282923949]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_09"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_09/InteractionArea" unique_id=1425510871]
+transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 2.79949)
+shape = SubResource("BoxShape3D_3gi0n")
+
+[node name="Frame_10" type="Sprite3D" parent="." unique_id=1243461044]
+transform = Transform3D(-1.2511665, 0, -0.8273951, 0, 1.5, 0, 0.8273951, 0, -1.2511665, 47.28676, 7, 7.086483)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_10" unique_id=138448584]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_10"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_10/InteractionArea" unique_id=136065906]
+transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 2.66039)
+shape = SubResource("BoxShape3D_k2ron")
+
+[node name="Frame_11" type="Sprite3D" parent="." unique_id=956446842]
+transform = Transform3D(-0.5517297, 0, -1.3948457, 0, 1.5, 0, 1.3948457, 0, -0.5517297, 61.86668, 7, -9.414707)
+script = ExtResource("7_dw71r")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_11" unique_id=1157437581]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_11"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_11/InteractionArea" unique_id=1652715971]
+transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 0)
+shape = SubResource("BoxShape3D_6ynge")
+
+[node name="Frame_12" type="Sprite3D" parent="." unique_id=600983952]
+transform = Transform3D(-1.4456671, 0, -0.40005797, 0, 1.5, 0, 0.40005797, 0, -1.4456671, 30.836275, 7, 14.568604)
+script = ExtResource("7_dw71r")
+camera_path = NodePath("../Camera3D")
+
+[node name="InteractionArea" type="Area3D" parent="Frame_12" unique_id=214498844]
+script = ExtResource("7_rye7r")
+frame_name = "Frame_12"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Frame_12/InteractionArea" unique_id=192586580]
+transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, 1.98311)
+shape = SubResource("BoxShape3D_k4ey6")
+
+[node name="chair" type="MeshInstance3D" parent="." unique_id=207194934]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.1288, 0, 5.82374)
+visible = false
+mesh = ExtResource("7_bvso8")
+surface_material_override/0 = SubResource("StandardMaterial3D_qum7w")
+surface_material_override/1 = SubResource("StandardMaterial3D_bvso8")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="chair" unique_id=679899354]
+transform = Transform3D(60, 0, 0, 0, 60, 0, 0, 0, 60, 3.965, 4.785, 5.34)
+mesh = ExtResource("7_bvso8")
+
+[node name="Low-Poly Plant_" parent="." unique_id=526839900 instance=ExtResource("22_8fcft")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -23.3237, 0, 2.91988)
+
+[node name="Low-Poly Plant_2" parent="." unique_id=1668061383 instance=ExtResource("22_8fcft")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 6.36041, 0, 3.58337)
+
+[node name="Low-Poly Plant_3" parent="." unique_id=600643860 instance=ExtResource("22_8fcft")]
+transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, 5.19448, 0, 2.21)
+
+[node name="Ceremony" type="Node" parent="." unique_id=178681412]
+script = ExtResource("25_crown")
+
+[node name="GalleryManager" type="Node3D" parent="." unique_id=178681411]
+script = ExtResource("24_3btdo")
+
+[node name="ListHTTPRequest" type="HTTPRequest" parent="GalleryManager" unique_id=2131185197]
+
+[node name="DownloadHTTPRequest" type="HTTPRequest" parent="GalleryManager" unique_id=1433679892]
+
+[node name="Low-Poly Plant_4" parent="." unique_id=1351898497 instance=ExtResource("22_8fcft")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -48, 0, -6)
+
+[node name="Low-Poly Plant_5" parent="." unique_id=2139469049 instance=ExtResource("22_8fcft")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -34.0054, 0, 0.803734)
+
+[node name="Exit1" type="Area3D" parent="." unique_id=1651203399]
+transform = Transform3D(-2.891334, 0, 0.800116, 0, 3, 0, -0.800116, 0, -2.891334, -27.01512, 0.02892721, 16.39751)
+script = ExtResource("14_qum7w")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Exit1" unique_id=167635426]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.474042, 0)
+shape = SubResource("BoxShape3D_bvso8")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Exit1" unique_id=1668907191]
+mesh = ExtResource("17_bvso8")
+surface_material_override/0 = ExtResource("18_rye7r")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1917426506]
+
+[node name="RatingPanel" type="Panel" parent="CanvasLayer" unique_id=646990229]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/RatingPanel" unique_id=26409745]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 120.0
+offset_right = 600.0
+offset_bottom = 240.0
+
+[node name="LikeButton" type="Button" parent="CanvasLayer/RatingPanel/HBoxContainer" unique_id=2057295699]
+layout_mode = 2
+theme_override_font_sizes/font_size = 87
+text = "♥"
+
+[node name="RatingLabel" type="Label" parent="CanvasLayer/RatingPanel" unique_id=208061834]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 15.43
+offset_right = 440.0
+offset_bottom = 116.43
+text = "Artwork Rating:
+♥"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="GrandPiano" type="Node3D" parent="." unique_id=467563158]
+transform = Transform3D(3.81385, 0, 3.23335, 0, 5, 0, -3.23335, 0, 3.81385, 15.061, 0.25, 2.23497)
+script = ExtResource("31_piano")
+camera_path = NodePath("../Camera3D")
+start_in_keyboard_view = true
+
+[connection signal="body_entered" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_01"]]
+[connection signal="body_exited" from="Frame_01/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_01"]]
+[connection signal="body_entered" from="Frame_02/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_02"]]
+[connection signal="body_exited" from="Frame_02/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_02"]]
+[connection signal="body_entered" from="Frame_03/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_03"]]
+[connection signal="body_exited" from="Frame_03/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_03"]]
+[connection signal="body_entered" from="Frame_04/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_04"]]
+[connection signal="body_exited" from="Frame_04/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_04"]]
+[connection signal="body_entered" from="Frame_05/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_05"]]
+[connection signal="body_exited" from="Frame_05/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_05"]]
+[connection signal="body_entered" from="Frame_06/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_06"]]
+[connection signal="body_exited" from="Frame_06/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_06"]]
+[connection signal="body_entered" from="Frame_07/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_07"]]
+[connection signal="body_exited" from="Frame_07/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_07"]]
+[connection signal="body_entered" from="Frame_08/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_08"]]
+[connection signal="body_exited" from="Frame_08/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_08"]]
+[connection signal="body_entered" from="Frame_09/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_09"]]
+[connection signal="body_exited" from="Frame_09/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_09"]]
+[connection signal="body_entered" from="Frame_10/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_10"]]
+[connection signal="body_exited" from="Frame_10/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_10"]]
+[connection signal="body_entered" from="Frame_11/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_11"]]
+[connection signal="body_exited" from="Frame_11/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_11"]]
+[connection signal="body_entered" from="Frame_12/InteractionArea" to="." method="_on_interaction_area_body_entered" binds= ["Frame_12"]]
+[connection signal="body_exited" from="Frame_12/InteractionArea" to="." method="_on_interaction_area_body_exited" binds= ["Frame_12"]]
+[connection signal="body_entered" from="Exit1" to="." method="_on_body_entered"]

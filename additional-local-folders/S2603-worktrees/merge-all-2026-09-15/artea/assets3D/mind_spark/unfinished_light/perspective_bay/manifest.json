@@ -1,0 +1,9 @@
+{
+  "source_parts": 150,
+  "runtime_meshes": 4,
+  "triangles": 30068,
+  "moving_parts": [
+    "Carousel",
+    "Selector"
+  ]
+}

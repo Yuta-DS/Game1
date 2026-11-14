@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://bl16o3pl5goi6"
+path="res://.godot/imported/Beautiful Piano Music.ogg-65d44dbc9b4abf6e5ece0a28520e6073.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/Beautiful Piano Music.ogg"
+dest_files=["res://.godot/imported/Beautiful Piano Music.ogg-65d44dbc9b4abf6e5ece0a28520e6073.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

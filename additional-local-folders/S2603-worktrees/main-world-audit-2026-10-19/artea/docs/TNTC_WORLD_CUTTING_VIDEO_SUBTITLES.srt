@@ -1,0 +1,367 @@
+1
+00:00:00,000 --> 00:00:09,500
+Whether you have played Viewfinder or not, the concept of a puzzle game where you can capture a section of the world and place it wherever you need is both intriguing and innovative.
+
+2
+00:00:10,040 --> 00:00:14,940
+This idea captured my imagination, and here is my attempt to bring it to life in Unity.
+
+3
+00:00:22,740 --> 00:00:26,800
+Polygon 3D models consist of faces, edges and vertices.
+
+4
+00:00:26,800 --> 00:00:33,060
+When slicing them in real time, it's crucial to consider the complexity and polycount of the geometry.
+
+5
+00:00:33,720 --> 00:00:40,040
+Cutting intricate models demands significant computational power, which can lead to serious performance issues.
+
+6
+00:00:40,740 --> 00:00:43,760
+This was one of the first things I noticed while playing the game.
+
+7
+00:00:44,280 --> 00:00:48,380
+The level geometries are simple, composed of basic shapes to avoid such problems.
+
+8
+00:00:49,380 --> 00:00:53,420
+To cut a model, we can use the Plane class along with some calculations.
+
+9
+00:00:55,260 --> 00:01:03,540
+First, we define a plane, an infinite flat surface that represents the cutting position, splitting the 3D space into two sides.
+
+10
+00:01:04,820 --> 00:01:11,560
+Next, we determine which vertices of the geometry fall on each side and generate two separate meshes.
+
+11
+00:01:12,400 --> 00:01:17,040
+During this process, we encounter triangles that have vertices on both sides.
+
+12
+00:01:17,560 --> 00:01:22,380
+These triangles are key in determining the new vertices needed to create fresh triangles.
+
+13
+00:01:22,380 --> 00:01:24,960
+Fill in the gaps created by the cut.
+
+14
+00:01:29,160 --> 00:01:33,240
+Next, we need a method to determine what to slice and what to preserve.
+
+15
+00:01:33,920 --> 00:01:38,880
+It's clear that slicing affects everything within the camera's view borders.
+
+16
+00:01:39,800 --> 00:01:46,380
+So we use the camera's frustum shape to create colliders that can scan the environment through the collision system.
+
+17
+00:01:47,560 --> 00:01:52,740
+To detect objects at the edges, we will generate 4 parallelepipeds.
+
+18
+00:01:53,360 --> 00:01:57,960
+And for everything within the view, we will use a large trapezoid to cover the entire frustum.
+
+19
+00:01:59,180 --> 00:02:02,280
+These thin colliders also define the cutting position.
+
+20
+00:02:03,100 --> 00:02:05,900
+So we use their transform to generate slicing planes.
+
+21
+00:02:06,920 --> 00:02:09,160
+Following the logic, we previously established.
+
+22
+00:02:10,160 --> 00:02:12,540
+With that, we have built the core of the system.
+
+23
+00:02:15,900 --> 00:02:20,920
+Before continuing with the game mechanics, let's first create our environmental level.
+
+24
+00:02:21,580 --> 00:02:26,680
+Using Blender, we can model simple objects that mimic the game's original aesthetic.
+
+25
+00:02:27,440 --> 00:02:32,140
+The puzzle is shaped by how we position walls, floors and other elements,
+
+26
+00:02:32,560 --> 00:02:35,520
+blending in some of the logic pattern from the original game.
+
+27
+00:02:36,340 --> 00:02:39,480
+We will take a look at the final result at the end.
+
+28
+00:02:40,140 --> 00:02:44,140
+Let's also create the levels and portal and the camera model.
+
+29
+00:02:52,520 --> 00:02:55,120
+Big ground elements play a crucial role.
+
+30
+00:02:55,680 --> 00:02:59,540
+At first glance, they might look like a part of a standard HDRI,
+
+31
+00:02:59,940 --> 00:03:03,320
+or something mapped onto a sphere with reversed normals.
+
+32
+00:03:03,720 --> 00:03:04,760
+But that's not the case.
+
+33
+00:03:04,760 --> 00:03:10,100
+The objects are real, and you can appreciate the parallax effect as you move around.
+
+34
+00:03:10,680 --> 00:03:13,660
+This is important because you will want to be able to cut them.
+
+35
+00:03:14,260 --> 00:03:17,640
+In Viewfinder, you expect to slice through everything in the frame,
+
+36
+00:03:18,240 --> 00:03:21,300
+and that's one of the most satisfying parts of the game.
+
+37
+00:03:24,200 --> 00:03:28,720
+PS, some elements in the game, like the cat, can be cut or copied.
+
+38
+00:03:29,200 --> 00:03:32,880
+You can replicate this by applying layer filtering to specific objects.
+
+39
+00:03:33,880 --> 00:03:39,220
+The developers meticulously design every detail of the world to emphasize the slicing mechanic.
+
+40
+00:03:39,860 --> 00:03:45,060
+For instance, what appears to be fog below the horizon is actually a large object
+
+41
+00:03:45,060 --> 00:03:48,000
+with a gradient material simulating a fog effect.
+
+42
+00:03:48,940 --> 00:03:53,000
+Additionally, all the scenes lighting is baked into the model's textures.
+
+43
+00:03:54,420 --> 00:03:58,240
+If we rely on real-time lighting, objects spawned from the picture
+
+44
+00:03:58,240 --> 00:04:02,360
+wouldn't match the original shading since they would interact with light differently.
+
+45
+00:04:03,100 --> 00:04:06,480
+By baking lights and shadows into the textures in Blender,
+
+46
+00:04:07,000 --> 00:04:11,180
+and using unlit materials, we create a consistent and unchanging environment.
+
+47
+00:04:11,960 --> 00:04:16,360
+For educational purposes, we will use HDRP fog below the horizon
+
+48
+00:04:16,360 --> 00:04:19,600
+to demonstrate the limitation it brings to this type of scenario.
+
+49
+00:04:20,920 --> 00:04:26,600
+Our player character uses a basic character controller that can move, jump, and rotate.
+
+50
+00:04:27,600 --> 00:04:31,560
+A camera model is parented to the player so it can be carried around.
+
+51
+00:04:32,300 --> 00:04:36,340
+The camera and picture states are controlled by an Animator controller,
+
+52
+00:04:37,080 --> 00:04:40,360
+requiring animations like look in and look out,
+
+53
+00:04:41,020 --> 00:04:44,920
+as well as a shaking animation for when the player is walking or idling.
+
+54
+00:04:45,620 --> 00:04:49,420
+To create a second point of view, or the camera's eye,
+
+55
+00:04:50,280 --> 00:04:54,900
+we need a secondary Unity camera set to render on the square ratio render texture.
+
+56
+00:04:54,900 --> 00:04:59,600
+The key is to disable the second camera at the moment the shot is taken.
+
+57
+00:05:00,520 --> 00:05:04,680
+So the render texture freezes, capturing a specific moment in time,
+
+58
+00:05:05,380 --> 00:05:06,760
+just like a real photograph.
+
+59
+00:05:07,960 --> 00:05:11,760
+Having a second Unity camera unlocks creative possibilities.
+
+60
+00:05:12,240 --> 00:05:17,460
+For example, you can use it to display objects that are only visible through the camera lens
+
+61
+00:05:17,460 --> 00:05:23,400
+by filtering with culling masks, or apply different post-processing effects to each camera.
+
+62
+00:05:25,220 --> 00:05:29,640
+Now, it's time to integrate the player's input with the cutting mechanic.
+
+63
+00:05:30,380 --> 00:05:32,460
+Let's start with the shooting mechanic.
+
+64
+00:05:33,200 --> 00:05:36,900
+When a picture is taken, we apply our logic to cut the environment,
+
+65
+00:05:37,400 --> 00:05:40,740
+preserving what's within the frustum and hiding what's outside.
+
+66
+00:05:41,360 --> 00:05:45,900
+Before performing the cut, we duplicate the game objects so that they appear untouched.
+
+67
+00:05:46,760 --> 00:05:52,080
+The cut objects are then parented to a transform representing the camera's point of view,
+
+68
+00:05:52,080 --> 00:05:55,080
+allowing them to move and rotate with the player.
+
+69
+00:05:55,920 --> 00:05:58,320
+You have probably guessed the next step.
+
+70
+00:05:58,760 --> 00:06:02,180
+To reintegrate the frame view into the world, we cut the environment,
+
+71
+00:06:02,600 --> 00:06:07,340
+delete the objects inside the frustum, and re-enabled the previously cut objects.
+
+72
+00:06:08,180 --> 00:06:09,120
+And that's the trick.
+
+73
+00:06:10,160 --> 00:06:15,240
+Just like in the game, we will also add a button to rotate the picture and hit the objects,
+
+74
+00:06:15,780 --> 00:06:18,480
+which will open many new puzzle possibilities.
+
+75
+00:06:19,300 --> 00:06:23,620
+As you can imagine, there is a computational cost during these frames,
+
+76
+00:06:24,040 --> 00:06:26,620
+which is why it's essential to keep the scene lightweight
+
+77
+00:06:26,620 --> 00:06:29,120
+and design everything around the core feature.
+
+78
+00:06:29,560 --> 00:06:31,580
+Of course, this is just a case study.
+
+79
+00:06:32,000 --> 00:06:35,980
+The team behind the game has likely optimized the process significantly
+
+80
+00:06:35,980 --> 00:06:38,480
+or approach the mechanic differently.
+
+81
+00:06:38,920 --> 00:06:42,220
+Do you have any other ideas on how to achieve this?
+
+82
+00:06:42,640 --> 00:06:43,620
+Let me know in the comments.
+
+83
+00:06:44,400 --> 00:06:48,340
+Also, for more insights into the cutting process and idea,
+
+84
+00:06:49,020 --> 00:06:51,780
+I recommend checking out this video from Christian League.
+
+85
+00:06:52,500 --> 00:06:58,080
+Before we reveal the final result, we want to remind you that this is Unity Unite Week.
+
+86
+00:06:58,900 --> 00:07:03,160
+We will be attending the event in Barcelona as Unity Insiders.
+
+87
+00:07:03,920 --> 00:07:08,360
+And look forward to connecting with you and exploring Unity's future together.
+
+88
+00:07:12,240 --> 00:07:15,160
+Now, here is the final result and gameplay.
+
+89
+00:08:00,060 --> 00:08:04,240
+Please, help our channel reach a wider audience by subscribing.
+
+90
+00:08:04,880 --> 00:08:08,280
+It's a small action for you, but a huge boost for us.
+
+91
+00:08:09,080 --> 00:08:13,120
+Let us know if you enjoyed the project and what you would like to see next.
+
+92
+00:08:14,180 --> 00:08:14,460
+Cheers!

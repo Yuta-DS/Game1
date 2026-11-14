@@ -1,0 +1,355 @@
+CROWN OF LIFE — PROFESSIONAL VISUAL POLISH HANDOFF
+==================================================
+
+Last updated: 10 August 2026, Australia/Sydney
+Workspace: /Users/davidsovann/GAME
+Godot project: /Users/davidsovann/GAME/artea
+Primary scene: res://scenes/viewfinder/crown_of_life_story.tscn
+Primary implementation: res://scripts/viewfinder/crown_of_life_story.gd
+Canonical product handoff: artea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.md
+
+PURPOSE
+-------
+This is the durable continuation file for the professional art/material/render
+pass requested after the complete Crown of Life product was built. Read this
+entire file before changing anything. Update CHECKPOINT LOG and CURRENT STATUS
+before a Claude or Codex context limit.
+
+EXACT USER INTENT
+-----------------
+Render the existing world, objects, and everything; add visible exterior
+surfaces/"skin" to the plain layered objects; perform a detailed audit and make
+what is already built feel better and professional. Do not create a new world,
+chapter, mechanic, story branch, or architecture. Claude Code should do most of
+the implementation. Codex plans, supervises, validates, renders, and preserves
+this handoff for later sessions.
+
+NON-NEGOTIABLE SCOPE
+--------------------
+1. Improve the existing Crown of Life journey only.
+2. Preserve all story beats, chapter order, Lens capture/place mechanic,
+   collisions, Cuttable isolation, save evidence, pause/settings, accessibility,
+   audience modes, hub portal, credits, replay, and release behavior.
+3. Do not create a second cutter, new world, new gameplay system, new chapter,
+   new collectable economy, or online/generative feature.
+4. Do not make Terrain3D, hub architecture, trains, rails, or unrelated objects
+   Cuttable. Only the three existing source props remain Cuttable.
+5. Improve surfaces with procedural StandardMaterial3D settings, layered mesh
+   trim, bevel-like silhouettes, decals/pattern geometry, lights, particles,
+   props, and composition built from Godot primitives. Reuse existing project
+   assets when appropriate. Do not download unlicensed assets.
+6. Keep faith and universal modes identical in gameplay and reward.
+7. Keep captions and objective UI readable at 960x540 and 1280x720.
+8. Preserve the dirty worktree. No stash, reset, checkout, commit, stage, push,
+   or deletion of unrelated files.
+9. Shell commands in this workspace must be prefixed with `rtk`.
+
+BASELINE VISUAL AUDIT
+---------------------
+Evidence inspected:
+- artifacts/crown_story_01_prologue.png
+- artifacts/crown_story_02_mind_spark.png
+- artifacts/crown_story_03_pause_settings.png
+- artifacts/crown_story_04_heart_melody.png
+- artifacts/crown_story_05_creators_light.png
+- artifacts/crown_story_06_finale.png
+
+What already works:
+- One continuous Castle Galaxy journey with three physically separated islands.
+- Strong chapter colour coding: blue Mind, rose Heart, gold Creator.
+- Milo and three guardian character models are present and readable.
+- Mind sphere, Heart torus/emotion orbit, Creator canvas/choice crystals are
+  mechanically distinct.
+- Stars, distant castle, crown, identity star, rainbow train, HUD, captions,
+  pause/settings, and final actions are present.
+- Gameplay, tests, standalone PCK, and native macOS build were complete before
+  this polish pass.
+
+Professional-quality gaps to fix:
+A. World surfaces
+- Islands are large flat grey boxes with no top/edge/underside hierarchy.
+- Walls/gates look like single translucent rectangles instead of authored
+  magical architecture.
+- Chasm edges and bridges lack trim, rail/light language, depth, and destination
+  framing.
+- Castle towers read as placeholder cylinders/cones and lack windows, doors,
+  battlements, trim, or scale cues.
+
+B. Materials / "skin"
+- Most objects use one flat albedo and emission value.
+- Exterior faces have no trim, secondary layer, roughness variation, or motifs.
+- Black shadows are too hard; objects lose form and feel disconnected from the
+  floor.
+- Bright emissive props need restrained bloom/contrast instead of plastic white
+  highlights.
+
+C. Chapter identity
+- Mind should feel crystalline/celestial and contemplative, not just blue.
+- Heart should feel musical and alive: note paths/rings/pulses, warm floor motif,
+  and six emotion colours arranged intentionally.
+- Creator should feel like a luminous art studio/forge: framed canvas, palette
+  accents, brush/light motifs, and a welcoming golden material language.
+- These are visual refinements to existing interactions, not new mechanics.
+
+D. Characters / staging
+- Milo and guardians need grounding pools/runes/pedestals and subtle key lights.
+- Scale/position should avoid props obscuring character faces.
+- Labels overlap distant geometry and can be too small or visually noisy.
+
+E. Lighting / atmosphere
+- Global fill is low; shadows collapse to near-black.
+- Each zone needs controlled key/fill/rim balance while keeping galaxy mood.
+- Fog and star distribution need depth layers; the corridor currently ends
+  abruptly in empty space.
+- Avoid expensive real-time effects that break the mobile renderer.
+
+F. Finale / composition
+- The player-attached crown clips off the top of the frame and is extremely
+  oversized in the existing proof.
+- Rainbow train cars are floating cubes with no wheels, windows, connectors,
+  engine silhouette, or luminous track/path.
+- Identity star is a sphere instead of a recognisable star/sigil.
+- Castle, crown, train, star, message, and buttons compete rather than forming
+  one deliberate hero composition.
+
+G. UI / rendered proof
+- Small top control text has low contrast.
+- Pause/settings panel is functional but visually plain and the huge world prop
+  remains distracting behind it.
+- Existing capture angles are diagnostic rather than presentation-quality.
+- Need a new full set of polished 1280x720 renders and at least one wide world
+  overview showing the complete connected journey.
+
+IMPLEMENTATION DIRECTION (NOT A NEW SYSTEM)
+-------------------------------------------
+Prefer helper functions inside crown_of_life_story.gd so the runtime-built scene
+remains self-contained and tests keep their node contracts. Suitable helpers:
+- reusable material constructors for stone, trim, glass/energy, emissive accent;
+- a mesh-instance helper and safe decorative primitive helper;
+- island top slab + coloured edge band + dark stone underside + corner crystals;
+- chapter-specific floor inlays/runes made from thin non-colliding meshes;
+- bridge deck, glowing side trim, and small posts without changing collision;
+- gate frame/arch surrounding the existing invisible/energy blocker;
+- castle facade trim, windows, central doorway, battlements, and bridge approach;
+- guardian grounding sigil + local key/rim light;
+- visual source shells/details attached below each existing Cuttable body so
+  cutting/collision contracts remain intact;
+- starfield depth variation and restrained environment glow/tonemap adjustments;
+- finale crown scale/position correction, star rays, train engine/wheels/windows/
+  couplers, and luminous path.
+
+Decorations must have collision_layer = 0 or no physics body unless they are
+part of an existing safe floor/bridge collision. Never add decorative children
+to group `Cuttable`; only preserve the existing source body membership/layer.
+
+FILE OWNERSHIP FOR CLAUDE PASS
+------------------------------
+Claude may edit only:
+- artea/scripts/viewfinder/crown_of_life_story.gd
+- artea/scripts/capture_crown_story.gd
+- artea/scripts/test_crown_story.gd only if adding non-brittle visual-contract
+  assertions (never weaken gameplay assertions)
+- this handoff text file, but only CHECKPOINT LOG/CURRENT STATUS
+
+Claude must not edit JourneyState, lens_controller, cutter files, hub scene,
+project.godot, export presets, release artifacts, or unrelated files.
+
+ACCEPTANCE CRITERIA
+-------------------
+Functional:
+- Existing three chapters still require their unique discovery interaction and
+  one real Lens capture/place at the correct gap.
+- Exactly one LensController remains.
+- Existing node names used by tests remain.
+- Player collisions, bridges, gates, fall recovery, pause/settings, replay,
+  credits, return/exit, save migration, and audience modes remain unchanged.
+- No new script/parser/runtime errors.
+
+Visual:
+- Every visible island has distinct top, edge, and underside treatment.
+- Every chapter has a professional, recognisable visual identity beyond colour.
+- Guardians and Milo are staged with grounding and readable lighting.
+- Source objects read as authored story artefacts rather than raw primitives.
+- Chasms, gates, and bridges look intentional while their physics stay intact.
+- Distant castle reads as an actual castle destination.
+- Finale crown fits the frame; star reads as a star; train reads as a train.
+- No major label/character/prop overlap in final proof renders.
+- UI contrast remains readable at 1280x720 and muted gameplay is understandable.
+- Reduce Motion still avoids animated polish that could cause discomfort.
+
+Performance / safety:
+- Mobile renderer compatible.
+- Prefer shared materials and modest primitive counts.
+- No texture downloads and no personal data/network behavior.
+- Decorative nodes do not participate in Lens cutting or goal collision.
+
+REQUIRED VALIDATION
+-------------------
+Godot executable:
+/Applications/Godot_mono.app/Contents/MacOS/Godot
+
+Run at minimum:
+1. rtk Godot --headless --path artea --script res://scripts/test_crown_story.gd
+2. rtk bash artea/scripts/run_viewfinder_tests.sh
+3. rtk Godot --headless --path artea --script res://scripts/test_scene_paths.gd
+4. rtk Godot --headless --path artea --script res://scripts/test_journey_state.gd
+5. rtk Godot --headless --path artea --script res://scripts/test_crown_finale.gd
+6. rtk Godot --headless --path artea --script res://scripts/test_audience_mode.gd
+7. rtk Godot --path artea --resolution 1280x720 --script
+   res://scripts/capture_crown_story.gd
+8. Inspect every generated PNG visually, not just file existence.
+9. rtk git diff --check on every edited text/code file.
+10. Confirm `rtk git stash list` remains empty.
+
+RENDER DELIVERABLES
+-------------------
+Keep the six established proof names and improve their angles/content:
+- crown_story_01_prologue.png
+- crown_story_02_mind_spark.png
+- crown_story_03_pause_settings.png
+- crown_story_04_heart_melody.png
+- crown_story_05_creators_light.png
+- crown_story_06_finale.png
+
+Add presentation proofs for the same existing world (not new gameplay):
+- crown_story_00_world_overview.png
+- crown_story_07_castle_destination.png
+- crown_story_08_finale_hero.png
+
+CLAUDE CODE TASK PROMPT
+-----------------------
+You are the primary implementation worker for an existing Godot 4.7.1 game.
+Work in /Users/davidsovann/GAME. Read this entire file and
+artea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.md first. Perform one bounded
+professional visual polish pass on the existing Crown of Life scene. Do not add
+new gameplay, worlds, chapters, mechanics, architecture, or online behavior.
+Implement the audit items above primarily in crown_of_life_story.gd, preserving
+all tested node names, Cuttable/physics contracts, and accessibility behavior.
+Improve the capture driver to render the nine specified professional proof
+images. You own only the files listed under FILE OWNERSHIP. Run the Crown test
+and scene-path scan before stopping. Update CHECKPOINT LOG and CURRENT STATUS in
+this text file with files changed, tests, render status, remaining risks, and the
+next exact action. Do not commit, stash, reset, checkout, stage, or push.
+
+CHECKPOINT LOG
+--------------
+2026-08-10 — Codex baseline checkpoint
+- Inspected all six existing renders at original resolution.
+- Recorded detailed visual gaps and non-negotiable scope above.
+- Confirmed supervised-orchestration runner is absent; using one bounded direct
+  Claude Code worker with Codex validation, as the skill fallback.
+- Saved this document before implementation so a context/token limit could not
+  erase the plan, scope, acceptance criteria, or continuation instructions.
+
+2026-08-10 — Claude Code implementation checkpoint
+- Claude Code 2.1.226 / claude-sonnet-5 performed the primary bounded art pass
+  in session e220ed1b-1917-4d40-a407-1c6548545990.
+- Claude edited only the owned Crown implementation and capture driver.
+- Added layered floating-island structure, chapter floor motifs, chasm/bridge
+  trim, framed gates, source pedestals/symbols, character grounding/light,
+  castle facade details, deeper stars, restrained post-processing, a corrected
+  crown, a ray-shaped identity star, detailed train cars, and luminous track.
+- Claude's Crown test and 170-script scene-path scan passed.
+- Claude visually inspected the first render set and began lighting/framing
+  corrections. The weekly-usage warning reached 89%; Codex stopped the session
+  before exhaustion, preserving all edits and taking over as requested.
+
+2026-08-10 — Codex supervisor/finalizer checkpoint
+- Audited all nine 1280x720 renders independently; did not accept the first pass
+  because full emissive top slabs, transparent wall-like gates, flat stone,
+  a weak settings composition, and dark finale framing still read as prototype.
+- Reused the project's existing licensed rock texture as the exterior stone
+  skin. The island/castle material is now visibly textured, with narrow edge
+  rails revealing the top surface and tapered textured undersides below it.
+- Reworked each existing gate into a restrained transparent field plus a spaced
+  energy curtain inside the existing frame. Collision and tested node contracts
+  did not change.
+- Corrected the castle's front-facing windows/door/frame, added localized castle
+  lighting, reduced spill from zone/guardian lights, and kept global galaxy mood.
+- Improved chapter-title staging, added a proper settings backing card, reduced
+  finale dimming so earned objects remain visible, corrected the mirrored star
+  label, and refined presentation cameras.
+- Made capture_crown_story.gd deterministic on Forward Mobile by explicitly
+  settling/re-establishing the gameplay frustum after detached beauty cameras.
+  The complete nine-image capture completed twice consecutively.
+- Rebuilt the standalone PCK and universal macOS zip with the polished source;
+  added the rock skin to the selected-scene export, restored all normal project
+  autoloads, re-signed the extracted app, verified the archive round trip, and
+  smoke-tested both PCK and app.
+
+FILES CHANGED BY THIS POLISH PASS
+---------------------------------
+- artea/scripts/viewfinder/crown_of_life_story.gd
+- artea/scripts/capture_crown_story.gd
+- artea/export_presets.cfg (explicit rock-skin export dependency only)
+- artea/docs/CROWN_OF_LIFE_PROFESSIONAL_POLISH_HANDOFF.txt
+- artea/artifacts/crown_story_00_world_overview.png
+- artea/artifacts/crown_story_01_prologue.png
+- artea/artifacts/crown_story_02_mind_spark.png
+- artea/artifacts/crown_story_03_pause_settings.png
+- artea/artifacts/crown_story_04_heart_melody.png
+- artea/artifacts/crown_story_05_creators_light.png
+- artea/artifacts/crown_story_06_finale.png
+- artea/artifacts/crown_story_07_castle_destination.png
+- artea/artifacts/crown_story_08_finale_hero.png
+- artea/builds/Artea.app
+- artea/builds/Artea-Crown-of-Life-macOS.zip
+- artea/builds/CrownOfLifeStory.pck
+- artea/builds/SHA256SUMS.txt
+
+FINAL VALIDATION EVIDENCE
+-------------------------
+Godot 4.7.1 Mono on Apple M2 Pro, Forward Mobile renderer:
+- crown story: all checks passed
+- all viewfinder tests passed (11 suites)
+- scene paths: all checks passed (171 scripts scanned)
+- JourneyState: all checks passed
+- CROWN_FINALE_TEST: PASS
+- audience mode: all checks passed
+- nine-image 1280x720 capture: PASS twice consecutively after timing fix
+- PCK source-independent startup smoke: exit 0
+- extracted macOS app startup smoke: exit 0
+- codesign deep/strict verification: valid and satisfies requirement
+- archive extraction + signature verification: PASS
+- git diff --check: PASS
+- git stash list: empty
+
+Expected pre-existing notices only: Firebase configuration messages in the full
+project, deliberate corrupt-JSON coverage in lens persistence, duplicate UID /
+Terrain import warnings during export, and Godot shutdown ObjectDB/resource
+warnings. There were no parser, assertion, dependency, startup, or test failures.
+
+POLISHED RELEASE CHECKSUMS (SHA-256)
+-----------------------------------
+d6159df34740347a4c25b5ae47fdc3020d89005bac3d94c446e0710829f71274  Artea-Crown-of-Life-macOS.zip
+5079da8f510f3431b1ffb9679043ac2efcbebea0c790f89d49852fdee4168917  CrownOfLifeStory.pck
+
+CURRENT STATUS
+--------------
+Phase: PROFESSIONAL POLISH COMPLETE; SOURCE, PROOFS, TESTS, AND RELEASE VERIFIED.
+No required implementation work remains in this requested scope. The existing
+three-chapter world is now professionally surfaced and staged without adding a
+new world, mechanic, story branch, or Cuttable category. Normal project.godot
+autoloads are restored. No commit, branch, stage, stash, reset, or push was made.
+
+Optional future work only: replace procedural/low-poly art with commissioned
+final ARTÉA models while preserving contracts, record voice acting, and conduct
+a child/facilitator playtest for text dwell time and comfort. These are not
+required for the current playable final product.
+
+If continuing anyway, the next exact action is NOT another architecture pass.
+Open the nine final PNGs, play the verified macOS build with a child/facilitator,
+record concrete observed issues, and make only evidence-based polish changes.
+
+PASTE INTO A NEW SESSION
+------------------------
+Continue the verified Crown of Life product in /Users/davidsovann/GAME. Read
+artea/docs/CROWN_OF_LIFE_PROFESSIONAL_POLISH_HANDOFF.txt completely, then read
+artea/docs/CROWN_OF_LIFE_STORY_IMPLEMENTATION.md. The professional polish,
+nine renders, full regression suite, standalone PCK, macOS app/zip, signature,
+archive round trip, and checksums are complete as of 10 August 2026. Preserve
+unrelated dirty-worktree changes and all tested node/physics/Cuttable contracts.
+Do not create a new world or mechanic unless the user explicitly changes scope.
+Before editing, inspect CURRENT STATUS and the nine final PNGs. Only act on a
+specific new user request or evidence from a real playtest; update this text
+before any future model/context limit.

@@ -1,0 +1,573 @@
+{
+  "schema_version": 1,
+  "story": {
+    "id": "crown_of_life",
+    "title": "ARTÉA: The Crown of Life",
+    "promise": "Discover the wisdom, harmony, and creativity already alive within you, then bring their light home to the ARTÉA Castle.",
+    "central_need": "The Castle has not been damaged and the player is never incomplete. Its paths have grown quiet because they awaken only when a person freely notices and shares their own light.",
+    "player_role": "Lightbearer and co-author of the journey",
+    "theme": "You are known, valued, uniquely created, and your light has a place in this universe."
+  },
+  "safety": {
+    "mode": "curated_offline",
+    "principles": [
+      "Never diagnose, score, or infer a child's inner state.",
+      "Never require personal disclosure or a correct emotion.",
+      "Offer pause, skip, replay, and neutral choices without penalty.",
+      "Treat every creation as the player's own meaning; prompts invite but never judge.",
+      "Store only explicit player actions already supported by JourneyState."
+    ]
+  },
+  "prologue": {
+    "id": "prologue_castle_of_listening_light",
+    "completion_id": "story.prologue.complete",
+    "title": "The Castle of Listening Light",
+    "purpose": "Give the player agency and establish that the quest reveals existing strengths rather than repairing a broken self.",
+    "story_reason": "The three celestial roads respond to lived choices, so the Castle asks for a Lightbearer who will awaken them in order.",
+    "dialogue": {
+      "speaker": "Milo",
+      "faith": "The Maker knows your light already. Nothing in you is a missing piece. Will you discover the gifts placed within you and carry their glow through the Castle?",
+      "universal": "Your light is already part of you. Nothing in you is a missing piece. Will you discover your gifts and carry their glow through the Castle?"
+    },
+    "beats": [
+      "A dark-blue gallery unfolds into a living galaxy of art, music, memory, and stars.",
+      "Milo reveals three quiet roads: the Thought Constellation, the Heart Resonance Rail, and the Creator's Prism Path.",
+      "The player chooses Continue, Not yet, or Explore controls; only Continue completes the prologue."
+    ]
+  },
+  "kingdom_arcs": [
+    {
+      "id": "mind",
+      "order": 1,
+      "title": "Mind Spark Kingdom",
+      "subtitle": "The Constellation of Chosen Hope",
+      "theme": "I can notice my thoughts and choose a helpful next thought.",
+      "guardian": "Everlasting Father",
+      "entry_requirements": ["story.prologue.complete"],
+      "reward_id": "treasure.star_of_wisdom",
+      "reward_title": "Star of Wisdom",
+      "purpose": "Build self-awareness, courage, and flexible thinking through safe, curated reframing.",
+      "story_reason": "A thought-star can guide the next road only after the player has noticed it, named its effect, and chosen where its light points.",
+      "arrival_dialogue": {
+        "speaker": "Everlasting Father",
+        "faith": "Truth is a lantern, not a test. I will walk beside you while you notice each thought and choose hope without pretending hard things are easy.",
+        "universal": "Wisdom is a lantern, not a test. I will walk beside you while you notice each thought and choose hope without pretending hard things are easy."
+      },
+      "quests": [
+        {
+          "id": "mind.quest.listen",
+          "order": 1,
+          "title": "Whispers in the Thought Sky",
+          "purpose": "Practise observing a thought without treating it as a fact or identity.",
+          "story_reason": "Unheard thought-clouds cover the first constellation, while noticed thoughts become visible stars.",
+          "prerequisites": ["story.prologue.complete"],
+          "tasks": [
+            {
+              "id": "mind.listen.notice",
+              "order": 1,
+              "title": "Notice a Thought Cloud",
+              "mechanic_action": "Choose one curated cloud or the neutral 'A thought is here' cloud; hold focus until its words become readable.",
+              "purpose": "Separate noticing from believing or judging.",
+              "story_reason": "The first hidden star appears when a cloud is witnessed rather than fought.",
+              "prerequisites": ["story.prologue.complete"],
+              "completion_evidence": {"type": "explicit_choice", "event": "thought_cloud_selected"},
+              "optional": false,
+              "skip_policy": "A neutral cloud completes the same learning goal without disclosure.",
+              "replay_policy": "Replay any cloud; prior choices are never treated as a diagnosis.",
+              "dialogue": {"speaker": "Everlasting Father", "faith": "A thought can visit you without naming who God created you to be.", "universal": "A thought can visit you without deciding who you are."}
+            },
+            {
+              "id": "mind.listen.name",
+              "order": 2,
+              "title": "Name What the Cloud Does",
+              "mechanic_action": "Pick one curated effect: makes things feel smaller, louder, rushed, hopeful, or unsure; 'not sure' is always available.",
+              "purpose": "Grow emotional and cognitive vocabulary without asking for private details.",
+              "story_reason": "Naming the cloud's movement reveals its safe path through the sky.",
+              "prerequisites": ["mind.listen.notice"],
+              "completion_evidence": {"type": "explicit_choice", "event": "thought_effect_selected"},
+              "optional": false,
+              "skip_policy": "Choosing 'not sure' is complete and receives equal celebration.",
+              "replay_policy": "The player may choose a different effect on replay without correction messaging."
+            },
+            {
+              "id": "mind.listen.release",
+              "order": 3,
+              "title": "Give the Cloud Some Space",
+              "mechanic_action": "Use the split-lens gesture to move the cloud beside the player instead of over the whole view.",
+              "purpose": "Represent cognitive distance through a concrete spatial action.",
+              "story_reason": "With room around it, the cloud no longer hides the constellation.",
+              "prerequisites": ["mind.listen.name"],
+              "completion_evidence": {"type": "gameplay_event", "event": "thought_cloud_repositioned"},
+              "optional": false,
+              "skip_policy": "An accessibility button performs the same move with no score penalty.",
+              "replay_policy": "Unlimited practice; speed and precision are not scored."
+            }
+          ]
+        },
+        {
+          "id": "mind.quest.reframe",
+          "order": 2,
+          "title": "The Two Windows of Truth",
+          "purpose": "Choose a believable, compassionate next thought rather than forced positivity.",
+          "story_reason": "Two star-windows show that perspective can change while the real challenge remains acknowledged.",
+          "prerequisites": ["mind.listen.release"],
+          "tasks": [
+            {
+              "id": "mind.reframe.compare",
+              "order": 1,
+              "title": "Open Both Windows",
+              "mechanic_action": "Split the scene between a difficult curated thought and two truthful, hopeful alternatives.",
+              "purpose": "Show multiple interpretations without labelling one feeling wrong.",
+              "story_reason": "Both windows must be seen before the star-map can offer a route.",
+              "prerequisites": ["mind.listen.release"],
+              "completion_evidence": {"type": "gameplay_event", "event": "both_reframe_windows_viewed"},
+              "optional": false,
+              "skip_policy": "A read-aloud mode can reveal both windows automatically.",
+              "replay_policy": "Alternative pairs remain curated and replayable."
+            },
+            {
+              "id": "mind.reframe.choose",
+              "order": 2,
+              "title": "Choose a Growing Thought",
+              "mechanic_action": "Choose a believable reframe such as 'I am learning and growing' or 'I can ask for help.'",
+              "purpose": "Practise agency and resilient self-talk.",
+              "story_reason": "The selected words become a bridge of light rather than erasing the original cloud.",
+              "prerequisites": ["mind.reframe.compare"],
+              "completion_evidence": {"type": "journey_state_event", "event": "thought_marked_popped"},
+              "optional": false,
+              "skip_policy": "Choosing 'I want more time' saves no personal response and offers a neutral reframe.",
+              "replay_policy": "The player can collect several helpful thoughts; none is ranked."
+            },
+            {
+              "id": "mind.reframe.bridge",
+              "order": 3,
+              "title": "Cross the Hope Bridge",
+              "mechanic_action": "Walk across platforms formed from the chosen words and light each word in sequence.",
+              "purpose": "Turn reflection into a calm, embodied action.",
+              "story_reason": "The completed sentence points the constellation home to ARTÉA.",
+              "prerequisites": ["mind.reframe.choose"],
+              "completion_evidence": {"type": "gameplay_event", "event": "hope_bridge_crossed"},
+              "optional": false,
+              "skip_policy": "Auto-cross is available after one attempt and grants identical progress.",
+              "replay_policy": "No lives, timer, or failure state."
+            }
+          ]
+        },
+        {
+          "id": "mind.quest.guardian",
+          "order": 3,
+          "title": "The Wisdom Constellation",
+          "purpose": "Consolidate noticing, naming, and choosing into one strength the player can remember.",
+          "story_reason": "The Star of Wisdom forms only when the player recognizes their own courageous choices.",
+          "prerequisites": ["mind.reframe.bridge"],
+          "tasks": [
+            {
+              "id": "mind.guardian.trace",
+              "order": 1,
+              "title": "Trace Your Three Lights",
+              "mechanic_action": "Connect the symbols for Notice, Name, and Choose in any visual pattern.",
+              "purpose": "Rehearse the skill sequence without testing memory.",
+              "story_reason": "The player's path, not a perfect shape, becomes the constellation.",
+              "prerequisites": ["mind.reframe.bridge"],
+              "completion_evidence": {"type": "gameplay_event", "event": "wisdom_symbols_connected"},
+              "optional": false,
+              "skip_policy": "A one-button constellation option completes it.",
+              "replay_policy": "Every traced shape is accepted and can be remade."
+            },
+            {
+              "id": "mind.guardian.receive",
+              "order": 2,
+              "title": "Receive the Star of Wisdom",
+              "mechanic_action": "Choose Receive now or Place it nearby; both animate the Star into the journey compass.",
+              "purpose": "Celebrate demonstrated self-awareness while preserving bodily and spiritual consent.",
+              "story_reason": "The Star turns the quiet Castle road toward the Heart Melody Kingdom.",
+              "prerequisites": ["mind.guardian.trace"],
+              "completion_evidence": {"type": "journey_state_event", "event": "treasure_awarded", "value": "star_of_wisdom"},
+              "optional": false,
+              "skip_policy": "Place nearby avoids crown/body imagery and awards the same treasure.",
+              "replay_policy": "Ceremony may replay; treasure is idempotent.",
+              "dialogue": {"speaker": "Everlasting Father", "faith": "God-given courage helped you understand a thought and choose hope.", "universal": "You found the courage to understand a thought and choose hope."}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heart",
+      "order": 2,
+      "title": "Heart Melody Kingdom",
+      "subtitle": "The Garden of Many Voices",
+      "theme": "My feelings have a voice, and I can listen without being ruled by one note.",
+      "guardian": "Archangel Raphael",
+      "entry_requirements": ["castle.return.wisdom"],
+      "reward_id": "treasure.harmony_jewel",
+      "reward_title": "Harmony Jewel",
+      "purpose": "Practise emotional expression, empathy, connection, and regulation through cooperative music.",
+      "story_reason": "The Rainbow Galaxy Train needs a true chord made from different feelings, not a single permanently happy note.",
+      "arrival_dialogue": {"speaker": "Archangel Raphael", "faith": "Healing begins with listening. Every feeling may bring its note; together we can help each one find room in the song.", "universal": "Wellbeing begins with listening. Every feeling may bring its note; together we can help each one find room in the song."},
+      "quests": [
+        {
+          "id": "heart.quest.voices",
+          "order": 1,
+          "title": "The Instruments That Went Quiet",
+          "purpose": "Associate feelings with sound choices while keeping the player's real-life feelings private.",
+          "story_reason": "Six garden instruments are waiting to be invited back into the kingdom's song.",
+          "prerequisites": ["castle.return.wisdom"],
+          "tasks": [
+            {
+              "id": "heart.voices.listen",
+              "order": 1,
+              "title": "Listen Without Guessing",
+              "mechanic_action": "Preview curated motifs for joy, sadness, frustration, fear, peace, and hope without matching them to the player.",
+              "purpose": "Explore emotional qualities without diagnostic inference.",
+              "story_reason": "Each instrument wakes when heard fully rather than hurried into a label.",
+              "prerequisites": ["castle.return.wisdom"],
+              "completion_evidence": {"type": "gameplay_event", "event": "three_emotion_motifs_previewed"},
+              "optional": false,
+              "skip_policy": "Visual pulse previews replace audio where needed.",
+              "replay_policy": "Motifs can be replayed in any order with volume controls."
+            },
+            {
+              "id": "heart.voices.choose",
+              "order": 2,
+              "title": "Give One Feeling a Voice",
+              "mechanic_action": "Choose a feeling card for the fictional garden scene, then choose its instrument, colour, and tempo.",
+              "purpose": "Practise expressive choice without requiring autobiography.",
+              "story_reason": "A chosen voice grows the first singing flower beside the rail.",
+              "prerequisites": ["heart.voices.listen"],
+              "completion_evidence": {"type": "journey_state_event", "event": "emotion_recorded"},
+              "optional": false,
+              "skip_policy": "The neutral 'mystery feeling' card is equally valid.",
+              "replay_policy": "Every feeling and combination may be revisited; no mood is rewarded more."
+            },
+            {
+              "id": "heart.voices.echo",
+              "order": 3,
+              "title": "Answer the Garden's Echo",
+              "mechanic_action": "Repeat or simplify a short call-and-response rhythm from the selected instrument.",
+              "purpose": "Build attention and regulation through predictable musical turn-taking.",
+              "story_reason": "The garden answers only when its voice is given room and then respectfully echoed.",
+              "prerequisites": ["heart.voices.choose"],
+              "completion_evidence": {"type": "gameplay_event", "event": "emotion_echo_answered"},
+              "optional": false,
+              "skip_policy": "Pulse once to echo; timing accuracy is not required.",
+              "replay_policy": "Tempo may be slowed and attempts are unlimited."
+            }
+          ]
+        },
+        {
+          "id": "heart.quest.duet",
+          "order": 2,
+          "title": "The Bridge That Needs Two Songs",
+          "purpose": "Practise empathy and cooperation by holding two distinct emotional perspectives.",
+          "story_reason": "The next rail bridge is woven from listening and response; one melody alone cannot span it.",
+          "prerequisites": ["heart.voices.echo"],
+          "tasks": [
+            {
+              "id": "heart.duet.first_voice",
+              "order": 1,
+              "title": "Carry the First Melody",
+              "mechanic_action": "Guide one character's motif through cooperative platforms while Milo carries a contrasting motif.",
+              "purpose": "Experience an emotion as one valid part of a shared scene.",
+              "story_reason": "The left half of the bridge grows when one voice is carried faithfully.",
+              "prerequisites": ["heart.voices.echo"],
+              "completion_evidence": {"type": "gameplay_event", "event": "first_duet_path_complete"},
+              "optional": false,
+              "skip_policy": "Solo-assist mode controls Milo automatically.",
+              "replay_policy": "Character roles and motifs can be swapped."
+            },
+            {
+              "id": "heart.duet.swap",
+              "order": 2,
+              "title": "Hear the Other Side",
+              "mechanic_action": "Swap musical roles and use the other motif to reveal platforms that were previously hidden.",
+              "purpose": "Represent perspective-taking without claiming to know another person's feelings.",
+              "story_reason": "The second half appears when the player listens from a different musical position.",
+              "prerequisites": ["heart.duet.first_voice"],
+              "completion_evidence": {"type": "gameplay_event", "event": "duet_roles_swapped"},
+              "optional": false,
+              "skip_policy": "A guided demonstration counts as completion.",
+              "replay_policy": "The swap can be repeated with different fictional feeling pairs."
+            },
+            {
+              "id": "heart.duet.resolve",
+              "order": 3,
+              "title": "Make Room for Both",
+              "mechanic_action": "Adjust volume and tempo until both motifs remain audible in a player-chosen balance.",
+              "purpose": "Practise regulation as making room, not suppressing a feeling.",
+              "story_reason": "The bridge becomes stable when neither voice must disappear.",
+              "prerequisites": ["heart.duet.swap"],
+              "completion_evidence": {"type": "gameplay_event", "event": "duet_balance_confirmed"},
+              "optional": false,
+              "skip_policy": "Any balance, including the default, is valid after listening once.",
+              "replay_policy": "There is no optimal mix or emotional score."
+            }
+          ]
+        },
+        {
+          "id": "heart.quest.harmony",
+          "order": 3,
+          "title": "The Chord of Belonging",
+          "purpose": "Celebrate expression and connection while giving the train its harmonic key.",
+          "story_reason": "The kingdom's distinct voices become one jewel that preserves every note rather than blending them away.",
+          "prerequisites": ["heart.duet.resolve"],
+          "tasks": [
+            {
+              "id": "heart.harmony.compose",
+              "order": 1,
+              "title": "Compose the Heart Constellation",
+              "mechanic_action": "Place at least two unlocked feeling motifs on a short looping star staff and confirm when it feels complete.",
+              "purpose": "Give authorship over an emotional musical journey.",
+              "story_reason": "The loop calls the Harmony Jewel out of the garden fountain.",
+              "prerequisites": ["heart.duet.resolve"],
+              "completion_evidence": {"type": "gameplay_event", "event": "heart_loop_confirmed"},
+              "optional": false,
+              "skip_policy": "A curated two-note loop may be accepted unchanged.",
+              "replay_policy": "Loops can be remixed; no composition is graded."
+            },
+            {
+              "id": "heart.harmony.receive",
+              "order": 2,
+              "title": "Receive the Harmony Jewel",
+              "mechanic_action": "Choose Carry it or Let the train carry it; both place the Jewel in the journey compass.",
+              "purpose": "Affirm emotional voice, empathy, and connection with a consent-respecting celebration.",
+              "story_reason": "The Jewel tunes the Rainbow Galaxy Train for the road to Creator's Light.",
+              "prerequisites": ["heart.harmony.compose"],
+              "completion_evidence": {"type": "journey_state_event", "event": "treasure_awarded", "value": "harmony_jewel"},
+              "optional": false,
+              "skip_policy": "Letting the train carry it grants identical progress.",
+              "replay_policy": "Ceremony may replay; treasure is idempotent.",
+              "dialogue": {"speaker": "Archangel Raphael", "faith": "Your feelings matter. God can meet you in every note, and your heart has a beautiful voice.", "universal": "Your feelings matter. Every note can have room, and your heart has a beautiful voice."}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "creator",
+      "order": 3,
+      "title": "Creator's Light Kingdom",
+      "subtitle": "The Gallery Beyond the Frame",
+      "theme": "I was created to create, and my choices can reveal meaning.",
+      "guardian": "Uriel — Keeper of Creativity",
+      "entry_requirements": ["castle.return.harmony"],
+      "reward_id": "treasure.creators_light",
+      "reward_title": "Creator's Light",
+      "purpose": "Support imagination, creative identity, strength recognition, and purpose through art-making and reflection.",
+      "story_reason": "The final road cannot be found on an old map; the player must make an image that becomes a place only their choices could reveal.",
+      "arrival_dialogue": {"speaker": "Uriel", "faith": "The Creator's imagination echoes through yours. I will offer doors, but the colours, symbols, and meaning remain yours.", "universal": "Your imagination can open paths no old map contains. I will offer doors, but the colours, symbols, and meaning remain yours."},
+      "quests": [
+        {
+          "id": "creator.quest.spark",
+          "order": 1,
+          "title": "The Door No Map Could Draw",
+          "purpose": "Begin from a freely chosen prompt and protect the player's ownership of meaning.",
+          "story_reason": "A blank gallery wall becomes a doorway only after the player chooses what kind of light it might hold.",
+          "prerequisites": ["castle.return.harmony"],
+          "tasks": [
+            {
+              "id": "creator.spark.prompt",
+              "order": 1,
+              "title": "Choose Your Creative Door",
+              "mechanic_action": "Choose one curated prompt from Identity, Courage, Emotions, Creativity, Purpose, or Free Create.",
+              "purpose": "Offer direction without demanding personal disclosure.",
+              "story_reason": "The chosen prompt becomes a prism-key for a unique gallery door.",
+              "prerequisites": ["castle.return.harmony"],
+              "completion_evidence": {"type": "explicit_choice", "event": "creative_prompt_selected"},
+              "optional": false,
+              "skip_policy": "Free Create contains no reflective question and is fully equivalent.",
+              "replay_policy": "Prompts may be changed before saving and revisited later."
+            },
+            {
+              "id": "creator.spark.create",
+              "order": 2,
+              "title": "Make a Light Only You Would Make",
+              "mechanic_action": "Use the offline ARTÉA drawing tools to add marks, shapes, colour, stamps, or an imported safe in-app motif.",
+              "purpose": "Exercise creative agency and playful experimentation.",
+              "story_reason": "Each intentional mark adds depth to the world waiting beyond the frame.",
+              "prerequisites": ["creator.spark.prompt"],
+              "completion_evidence": {"type": "gameplay_event", "event": "artwork_has_player_mark"},
+              "optional": false,
+              "skip_policy": "A single mark, stamp, or colour choice is enough; no quality threshold exists.",
+              "replay_policy": "Undo, redo, restart, and pause are unlimited."
+            },
+            {
+              "id": "creator.spark.save",
+              "order": 3,
+              "title": "Name the Moment",
+              "mechanic_action": "Save locally with a curated title, optional custom title, or Untitled Light.",
+              "purpose": "Recognize completion while making personal naming optional.",
+              "story_reason": "Saving anchors the image so its doorway can remain in the personal ARTÉA Gallery.",
+              "prerequisites": ["creator.spark.create"],
+              "completion_evidence": {"type": "journey_state_event", "event": "creation_recorded"},
+              "optional": false,
+              "skip_policy": "Untitled Light avoids text entry and completes normally.",
+              "replay_policy": "Multiple versions may be saved; none replaces the player's original without confirmation."
+            }
+          ]
+        },
+        {
+          "id": "creator.quest.view",
+          "order": 2,
+          "title": "Step Through the Living Frame",
+          "purpose": "Translate 2D creative choices into spatial puzzle possibilities without judging symbolism.",
+          "story_reason": "The artwork becomes a viewfinder: placement changes the kingdom and reveals a path hidden behind ordinary perspective.",
+          "prerequisites": ["creator.spark.save"],
+          "tasks": [
+            {
+              "id": "creator.view.place",
+              "order": 1,
+              "title": "Place the Frame",
+              "mechanic_action": "Position and scale the saved artwork against the 3D scene until one of several highlighted silhouettes aligns.",
+              "purpose": "Explore perspective, spatial reasoning, and experimentation.",
+              "story_reason": "The image becomes architecture where its edges meet the world's shapes.",
+              "prerequisites": ["creator.spark.save"],
+              "completion_evidence": {"type": "gameplay_event", "event": "artwork_frame_aligned"},
+              "optional": false,
+              "skip_policy": "Snap assist or automatic placement is always available.",
+              "replay_policy": "Every valid alignment opens a different decorative path, never a better score."
+            },
+            {
+              "id": "creator.view.transform",
+              "order": 2,
+              "title": "Walk Into Your Perspective",
+              "mechanic_action": "Confirm the frame to transform its visible forms into a navigable bridge, garden, creature trail, or constellation path.",
+              "purpose": "Let the player experience creativity as consequential and world-making.",
+              "story_reason": "The kingdom responds to the player's viewpoint and reveals the Keeper's tower.",
+              "prerequisites": ["creator.view.place"],
+              "completion_evidence": {"type": "gameplay_event", "event": "artwork_world_entered"},
+              "optional": false,
+              "skip_policy": "A guided camera journey completes the transformation without navigation demands.",
+              "replay_policy": "Return to the frame at any time; transformations do not overwrite the artwork."
+            },
+            {
+              "id": "creator.view.discover",
+              "order": 3,
+              "title": "Find the Unplanned Wonder",
+              "mechanic_action": "Touch one emergent detail generated from authored mappings of colour, shape, and tool—not a model inference—and choose a wonder label.",
+              "purpose": "Encourage curiosity while keeping interpretation with the player.",
+              "story_reason": "The selected wonder becomes the motif carried back into the Castle Gallery.",
+              "prerequisites": ["creator.view.transform"],
+              "completion_evidence": {"type": "explicit_choice", "event": "authored_wonder_selected"},
+              "optional": false,
+              "skip_policy": "Choose 'A mystery' to continue without interpretation.",
+              "replay_policy": "Other authored wonders remain discoverable."
+            }
+          ]
+        },
+        {
+          "id": "creator.quest.reflect",
+          "order": 3,
+          "title": "The Gallery Frame Ritual",
+          "purpose": "Support self-reflection and purpose while explicitly refusing automated judgement.",
+          "story_reason": "Creator's Light awakens when the player claims a meaning or chooses mystery, then places the work among the Castle's stars.",
+          "prerequisites": ["creator.view.discover"],
+          "tasks": [
+            {
+              "id": "creator.reflect.choose",
+              "order": 1,
+              "title": "Choose What You Want to Notice",
+              "mechanic_action": "Milo offers curated prompts: proud part, strength used, story told, discovery, or Keep it mysterious; choose one response card or skip.",
+              "purpose": "Invite self-authored reflection without AI evaluation or forced disclosure.",
+              "story_reason": "The frame listens for the player's meaning rather than deciding it for them.",
+              "prerequisites": ["creator.view.discover"],
+              "completion_evidence": {"type": "explicit_choice", "event": "reflection_card_or_mystery_selected"},
+              "optional": true,
+              "skip_policy": "Keep it mysterious completes the task with equal affirmation and no reflection stored.",
+              "replay_policy": "Responses may be revisited; the game never claims they reveal personality.",
+              "dialogue": {"speaker": "Milo", "faith": "Only you can choose what this creation means. The Maker delights in your creating; I am here to listen, not judge.", "universal": "Only you can choose what this creation means. Your creativity matters; I am here to listen, not judge."}
+            },
+            {
+              "id": "creator.reflect.frame",
+              "order": 2,
+              "title": "Place Your Work Among the Stars",
+              "mechanic_action": "Select a curated gallery motif, preview placement, then Confirm or Undo before local display.",
+              "purpose": "Provide consent, reversibility, and a tangible sense of belonging.",
+              "story_reason": "The Gallery gains a new window into the player's journey.",
+              "prerequisites": ["creator.reflect.choose"],
+              "completion_evidence": {"type": "journey_state_event", "event": "creator_frame_ritual_completed"},
+              "optional": false,
+              "skip_policy": "A private unshown frame still completes the ritual and remains local.",
+              "replay_policy": "Placement and motif can be changed or removed later."
+            },
+            {
+              "id": "creator.reflect.receive",
+              "order": 3,
+              "title": "Receive the Creator's Light",
+              "mechanic_action": "Choose Hold the Light or Let it shine from the artwork; both add Creator's Light to the compass.",
+              "purpose": "Affirm creativity, identity, strengths, and purpose without grading the artwork.",
+              "story_reason": "The third treasure wakes the Castle and completes the route of the Rainbow Galaxy Train.",
+              "prerequisites": ["creator.reflect.frame"],
+              "completion_evidence": {"type": "journey_state_event", "event": "treasure_awarded", "value": "creators_light"},
+              "optional": false,
+              "skip_policy": "Letting the artwork hold the Light grants identical progress.",
+              "replay_policy": "Ceremony may replay; treasure is idempotent.",
+              "dialogue": {"speaker": "Uriel", "faith": "Your creativity is a gift from the Creator, expressed in a way only you can share.", "universal": "Your creativity is a gift, expressed in a way only you can share."}
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "castle_interludes": [
+    {
+      "id": "return_with_wisdom",
+      "order": 1,
+      "completion_id": "castle.return.wisdom",
+      "requirements": ["mind.guardian.receive"],
+      "title": "The Observatory Remembers",
+      "purpose": "Show that Mind Spark changed the shared Castle and establish Heart Melody's need.",
+      "story_reason": "The Star of Wisdom lights an observatory lens, revealing a silent music rail that needs emotional voices.",
+      "dialogue": {"speaker": "Milo", "faith": "Wisdom has opened the way. The Maker welcomes every honest feeling; let us listen for the Heart Kingdom's song.", "universal": "Wisdom has opened the way. Every honest feeling can have room; let us listen for the Heart Kingdom's song."}
+    },
+    {
+      "id": "return_with_harmony",
+      "order": 2,
+      "completion_id": "castle.return.harmony",
+      "requirements": ["heart.harmony.receive"],
+      "title": "The Train Finds Its Chord",
+      "purpose": "Connect emotional expression to the creative world and foreshadow the finale ride.",
+      "story_reason": "The Harmony Jewel gives the Rainbow Galaxy Train a voice, but its final destination must be imagined into existence.",
+      "dialogue": {"speaker": "Milo", "faith": "Your heart's music has tuned the train. Now the creative light placed within you can reveal where its last rail leads.", "universal": "Your heart's music has tuned the train. Now your creative light can reveal where its last rail leads."}
+    },
+    {
+      "id": "return_with_creation",
+      "order": 3,
+      "completion_id": "castle.return.creation",
+      "requirements": ["creator.reflect.receive"],
+      "title": "The Gallery Becomes a Universe",
+      "purpose": "Gather the three accomplishments without reducing the player to a score.",
+      "story_reason": "Wisdom gives direction, Harmony gives connection, and Creativity gives form; together they awaken the Light of Identity.",
+      "dialogue": {"speaker": "Milo", "faith": "The gifts the Maker placed within you are shining together. The Castle is ready to celebrate your story.", "universal": "Your gifts are shining together. The Castle is ready to celebrate your story."}
+    }
+  ],
+  "finale": {
+    "id": "finale_crown_of_life",
+    "completion_id": "story.finale.complete",
+    "requirements": ["castle.return.creation", "treasure.star_of_wisdom", "treasure.harmony_jewel", "treasure.creators_light"],
+    "title": "The Crown of Life Celebration",
+    "purpose": "Celebrate the player's unique journey, preserve choice around faith/body/name presentation, and open continued play.",
+    "story_reason": "The three treasures resonate as the Light of Identity, allowing the whole Castle universe to answer the player's authored path.",
+    "beats": [
+      "Star of Wisdom, Harmony Jewel, and Creator's Light combine as the Light of Identity without losing their individual forms.",
+      "The Rainbow Galaxy Train carries the player past constellations of brave choices, musical moments, and their locally saved gallery art.",
+      "The celebrant shapes a symbolic Crown of Life; the player chooses Wear, Hold, Display nearby, or Watch the light only.",
+      "The player may type a display name, choose a local profile name, choose 'My Light', or skip the named-star moment entirely.",
+      "A final portal opens Free Journey mode: replay kingdoms, remix music, add art, or rest in the Castle with no lost progress."
+    ],
+    "celebrant": {
+      "faith": "The Maker / Prince of Peace",
+      "universal": "The Keeper of the Living Gallery"
+    },
+    "dialogue": {
+      "speaker": "Celebrant",
+      "faith": "You are known and loved. God created you with unique gifts and purpose. Your story matters, and your light has a place in this universe.",
+      "universal": "You are known and valued. You carry unique gifts and purpose. Your story matters, and your light has a place in this universe."
+    },
+    "name_star": {
+      "optional": true,
+      "privacy": "Local display only by default; never upload, share, or expose a child's name without a separate verified adult-controlled flow.",
+      "skip_text": {"faith": "The Maker knows your name even when you keep it private.", "universal": "Your light belongs here even when you keep your name private."}
+    }
+  }
+}

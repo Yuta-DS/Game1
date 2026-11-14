@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3 uid="uid://bffxunl12g7ne"]
+
+[ext_resource type="PackedScene" uid="uid://tfpr4uiqnkn4" path="res://scenes/Control_HUD.tscn" id="1_oxtoc"]
+[ext_resource type="PackedScene" uid="uid://b41jqkltcsojp" path="res://scenes/Icons_HUD.tscn" id="2_va005"]
+
+[node name="Interface" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Control" parent="." instance=ExtResource("1_oxtoc")]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 51.0
+offset_top = -95.0
+offset_right = 51.0
+offset_bottom = -95.0
+grow_vertical = 0
+
+[node name="HUD" parent="." instance=ExtResource("2_va005")]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_bottom = 0.0
+offset_left = -248.0
+offset_top = 53.0
+offset_right = -248.0
+offset_bottom = 53.0
+grow_horizontal = 0
+grow_vertical = 1

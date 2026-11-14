@@ -1,0 +1,150 @@
+[gd_scene load_steps=6 format=3 uid="uid://dy6mw3hrtlagf"]
+
+[ext_resource type="Script" uid="uid://br2as6kqpsaj7" path="res://scripts/credit_section.gd" id="1_etfq1"]
+[ext_resource type="Texture2D" uid="uid://5syxlarhmc24" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/lightSquare.png" id="2_sgykx"]
+[ext_resource type="Texture2D" uid="uid://cww4ac07g2iva" path="res://assets/Legacy-Fantasy - High Forest 2.3/HUD/red rect.png" id="3_fycop"]
+[ext_resource type="FontFile" uid="uid://bfcqe32gid7re" path="res://assets/Fonts/VT323-Regular.ttf" id="4_su8v1"]
+[ext_resource type="FontFile" uid="uid://edkftpy6phlo" path="res://assets/Fonts/VCR_OSD_MONO_1.001.ttf" id="5_su8v1"]
+
+[node name="Node2D" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_etfq1")
+
+[node name="BG" type="Sprite2D" parent="."]
+position = Vector2(616.427, 361)
+scale = Vector2(0.916031, 0.916031)
+
+[node name="Panel Sprite" type="Sprite2D" parent="."]
+position = Vector2(642.75, 357.625)
+scale = Vector2(19.2422, 10.1133)
+texture = ExtResource("2_sgykx")
+
+[node name="Back to Hub Button" type="TouchScreenButton" parent="."]
+position = Vector2(461.5, 584.25)
+scale = Vector2(6.68966, 2.41871)
+texture_normal = ExtResource("3_fycop")
+
+[node name="Back to Hub Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 488.5
+offset_top = 591.25
+offset_right = 828.5
+offset_bottom = 641.25
+mouse_filter = 1
+theme_override_colors/font_color = Color(0.92311, 0.891173, 0.788288, 1)
+theme_override_fonts/font = ExtResource("4_su8v1")
+theme_override_font_sizes/font_size = 50
+text = "Back to Hub World"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Credit Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 232.5
+offset_top = 72.2499
+offset_right = 1072.5
+offset_bottom = 222.25
+theme_override_colors/font_color = Color(0.0470588, 0.0431373, 0.0352941, 1)
+theme_override_fonts/font = ExtResource("4_su8v1")
+theme_override_font_sizes/font_size = 100
+text = "Credit Section"
+horizontal_alignment = 1
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+layout_mode = 0
+offset_left = 88.0
+offset_top = 183.0
+offset_right = 1202.0
+offset_bottom = 554.0
+theme_override_colors/default_color = Color(0.0470588, 0.0431373, 0.0352941, 1)
+theme_override_constants/line_separation = 3
+theme_override_fonts/normal_font = ExtResource("5_su8v1")
+theme_override_font_sizes/normal_font_size = 35
+text = "We sincerely thank the following creators and platforms for their contributions to this project. Your work has greatly enhanced the depth, atmosphere, and emotional impact of our app.
+
+Art & Sprite Assets
+Cat Pack
+By ToffeeCraft
+https://toffeecraft.itch.io/cat-pack
+-------------------------------------------
+Legacy Fantasy – Complete Collection
+By Anokolia
+https://anokolisa.itch.io/
+License: Legacy Fantasy Asset PackTerms file
+-------------------------------------------
+Pixel Adventure 1
+By PixelFrog
+https://pixelfrog-assets.itch.io/pixel-adventure-1
+-------------------------------------------
+CraftPix Sprites
+
+Village NPC Pixel Art Character Sprite Pack
+
+Witch Pixel Art Character Sprite Sheets
+
+Priest Pixel Art Character Sprite Sheets
+From: CraftPix.net
+License: CraftPix License Terms
+-------------------------------------------
+Make Your Own Background
+By EverCrazy
+https://evercrazy.itch.io/background-maker
+-------------------------------------------
+Music
+The following royalty-free tracks were sourced from FreePD.com and are used under their public domain or royalty-free terms. Thank you to these talented composers:
+
+“Slice of Life” – Written by Bryan Teoh
+A lighthearted piece that sets the tone for a day-in-the-life intro.
+
+“Magic in the Garden” – Written by Rafael Krux
+A whimsical and magical track featuring light clarinet work.
+
+“Forest Frolic Loop” – Written by Kevin MacLeod
+Cheerful and fantastical, perfect for an enchanted setting or tutorial level.
+
+“Connecting Rainbows” – Written by Kevin MacLeod
+A nostalgic and relaxing piece centered around Celtic harp melodies.
+
+All tracks are used in accordance with their free-to-use status on FreePD.com for commercial and non-commercial purposes.
+-------------------------------------------
+ Audio & Sound Effects
+Music Track
+“Produced by: @Davidlastra12”
+https://www.youtube.com/watch?v=_k7RQ6RlUc8
+
+Walking on Grass SFX
+By davidsonfreemedia
+https://freesound.org/people/davidsonfreemedia/sounds/504590
+
+Chest Open SFX
+By famerij
+https://freesound.org/people/famerij/sounds/609707
+
+Cloud Poof SFX
+By Mateusz_Chenc
+https://freesound.org/people/Mateusz_Chenc/sounds/512217
+
+Cloud Buildup SFX
+YouTube Source
+https://www.youtube.com/watch?v=OOPT-Qv7Na0
+
+Note: Some sound effects were modified to better suit the in-game experience.
+-------------------------------------------
+Tools & Systems
+Dialogue Manager (Godot)
+By Nathan Hoad
+https://github.com/nathanhoad/godot_dialogue_manager
+
+Paint Tool System Tutorial & Assets
+
+Tutorial: https://www.youtube.com/watch?v=kAm7DbsRVWA
+
+Assets: https://github.com/algornon/Godot-Painting-Tutorial/tree/main/assets/sprites
+
+Firebase Authentication Setup Guide
+https://www.youtube.com/watch?v=7ehE4IdSP5s
+-------------------------------------------
+We acknowledge and appreciate the open-source and creative communities whose tools and assets enriched The Artéa Game. "
+
+[connection signal="pressed" from="Back to Hub Button" to="." method="_on_back_to_hub_button_pressed"]

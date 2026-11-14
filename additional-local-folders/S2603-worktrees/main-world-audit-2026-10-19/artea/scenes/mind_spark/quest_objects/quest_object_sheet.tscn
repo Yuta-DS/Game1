@@ -1,0 +1,77 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/mind_spark/quest_objects/quest_object_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/01_thought_spark_socket.tres" id="2_01"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/02_evidence_scanner.tres" id="3_02"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/03_perspective_lens.tres" id="4_03"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/04_memory_constellation.tres" id="5_04"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/05_logic_gate_arch.tres" id="6_05"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/06_truth_bridge_tile.tres" id="7_06"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/07_focus_bell_beacon.tres" id="8_07"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/08_warden_anchor.tres" id="9_08"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/09_calm_rain_basin.tres" id="10_09"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/10_identity_reflection_mirror.tres" id="11_10"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/11_checkpoint_server_root.tres" id="12_11"]
+[ext_resource type="Resource" path="res://resources/mind_spark/quest_objects/12_clear_path_projector.tres" id="13_12"]
+
+[node name="MindSparkQuestObjectSheet" type="Node3D"]
+
+[node name="ThoughtSparkSocket" parent="." instance=ExtResource("1_base")]
+position = Vector3(-3.2, 0, -4.8)
+definition = ExtResource("2_01")
+save_id = "sheet.thought_spark_socket"
+
+[node name="EvidenceScanner" parent="." instance=ExtResource("1_base")]
+position = Vector3(0, 0, -4.8)
+definition = ExtResource("3_02")
+save_id = "sheet.evidence_scanner"
+
+[node name="PerspectiveLens" parent="." instance=ExtResource("1_base")]
+position = Vector3(3.2, 0, -4.8)
+definition = ExtResource("4_03")
+save_id = "sheet.perspective_lens"
+
+[node name="MemoryConstellationBoard" parent="." instance=ExtResource("1_base")]
+position = Vector3(-3.2, 0, -1.6)
+definition = ExtResource("5_04")
+save_id = "sheet.memory_constellation"
+
+[node name="LogicGateArch" parent="." instance=ExtResource("1_base")]
+position = Vector3(0, 0, -1.6)
+definition = ExtResource("6_05")
+save_id = "sheet.logic_gate"
+
+[node name="TruthBridgeTile" parent="." instance=ExtResource("1_base")]
+position = Vector3(3.2, 0, -1.6)
+definition = ExtResource("7_06")
+save_id = "sheet.truth_bridge"
+
+[node name="FocusBellBeacon" parent="." instance=ExtResource("1_base")]
+position = Vector3(-3.2, 0, 1.6)
+definition = ExtResource("8_07")
+save_id = "sheet.focus_bell"
+
+[node name="WardenAnchor" parent="." instance=ExtResource("1_base")]
+position = Vector3(0, 0, 1.6)
+definition = ExtResource("9_08")
+save_id = "sheet.warden_anchor"
+
+[node name="CalmRainBasin" parent="." instance=ExtResource("1_base")]
+position = Vector3(3.2, 0, 1.6)
+definition = ExtResource("10_09")
+save_id = "sheet.calm_rain"
+
+[node name="IdentityReflectionMirror" parent="." instance=ExtResource("1_base")]
+position = Vector3(-3.2, 0, 4.8)
+definition = ExtResource("11_10")
+save_id = "sheet.identity_mirror"
+
+[node name="CheckpointServerRoot" parent="." instance=ExtResource("1_base")]
+position = Vector3(0, 0, 4.8)
+definition = ExtResource("12_11")
+save_id = "sheet.checkpoint_root"
+
+[node name="ClearPathProjector" parent="." instance=ExtResource("1_base")]
+position = Vector3(3.2, 0, 4.8)
+definition = ExtResource("13_12")
+save_id = "sheet.path_projector"

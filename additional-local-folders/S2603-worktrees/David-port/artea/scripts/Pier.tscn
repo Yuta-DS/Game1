@@ -1,0 +1,49 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="PackedScene" path="res://assets3D/coastal_harbour/artea_harbour.glb" id="1_harbour"]
+[ext_resource type="Script" path="res://scripts/watchtower_harbour_link.gd" id="4_collision"]
+
+[sub_resource type="BoxShape3D" id="BoxShape_landing"]
+size = Vector3(12, 0.32, 4.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape_jetty"]
+size = Vector3(3.55, 0.32, 10.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape_berth"]
+size = Vector3(4.5, 0.32, 3.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape_office"]
+size = Vector3(2.6, 2.6, 2.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape_counter"]
+size = Vector3(2.95, 1.04, 0.86)
+
+[node name="Pier" type="Node3D"]
+
+[node name="HarbourModel" parent="." instance=ExtResource("1_harbour")]
+rotation = Vector3(0, 3.1415927, 0)
+script = ExtResource("4_collision")
+
+[node name="WalkableHarbour" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 1
+
+[node name="LandingCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(0, 0.44, -4.95)
+shape = SubResource("BoxShape_landing")
+
+[node name="JettyCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(0, 0.44, 2.25)
+shape = SubResource("BoxShape_jetty")
+
+[node name="BerthCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(-4, 0.44, 6)
+shape = SubResource("BoxShape_berth")
+
+[node name="OfficeCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(3.6, 1.9, -5)
+shape = SubResource("BoxShape_office")
+
+[node name="CounterCollision" type="CollisionShape3D" parent="WalkableHarbour"]
+position = Vector3(-3.8, 1.12, -4)
+shape = SubResource("BoxShape_counter")

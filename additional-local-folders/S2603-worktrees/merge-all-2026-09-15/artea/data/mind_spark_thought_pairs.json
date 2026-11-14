@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "experience_id": "artea.mind_spark.two_lenses",
+  "title": "The Two Lenses of Mind Spark",
+  "reward_request": "star_of_wisdom",
+  "safety": {
+    "mode": "curated_offline",
+    "principles": [
+      "A difficult thought is a visitor, not the player's identity.",
+      "Never diagnose, judge, or infer a private experience.",
+      "Never require personal disclosure or free-text input.",
+      "Neutral and not-sure choices earn equal progress.",
+      "Every interaction is untimed, replayable, and safe to skip through assistance."
+    ]
+  },
+  "lenses": {
+    "alarm": {
+      "title": "Alarm Lens",
+      "world": "Celestial technology",
+      "purpose": "Notice the thought and describe its effect without treating it as a fact.",
+      "verbs": ["scan", "classify", "stabilize"]
+    },
+    "hope": {
+      "title": "Hope Lens",
+      "world": "Living nature-magic",
+      "purpose": "Choose a truthful next thought without pretending the challenge is easy.",
+      "verbs": ["listen", "grow", "connect"]
+    }
+  },
+  "rounds": [
+    {
+      "id": "round.small_step",
+      "order": 1,
+      "thought": "What if I get it wrong?",
+      "purpose": "Practise separating uncertainty from identity and choosing one manageable next step.",
+      "alarm_effects": [
+        {"id": "effect.urgent", "label": "Everything feels urgent", "neutral": false},
+        {"id": "effect.unsure", "label": "I feel unsure", "neutral": true},
+        {"id": "effect.not_sure", "label": "Not sure yet", "neutral": true}
+      ],
+      "hope_responses": [
+        {"id": "response.small_step", "label": "I can take one small step", "grounded": true},
+        {"id": "response.learning", "label": "Mistakes can help me learn", "grounded": true},
+        {"id": "response.ask_help", "label": "I can ask for help", "grounded": true}
+      ],
+      "anchors": [
+        {"id": "anchor.signal_beacon", "lens": "alarm", "label": "Stabilize the Signal Beacon"},
+        {"id": "anchor.root_lantern", "lens": "hope", "label": "Grow the Root Lantern"}
+      ],
+      "bridge": {"id": "bridge.first_step", "label": "Build the First-Step Bridge"}
+    },
+    {
+      "id": "round.safe_connection",
+      "order": 2,
+      "thought": "What if I do not belong?",
+      "purpose": "Acknowledge the alarm of disconnection while keeping identity and belonging open to growth.",
+      "alarm_effects": [
+        {"id": "effect.left_out", "label": "I feel left out", "neutral": false},
+        {"id": "effect.far_away", "label": "The room feels far away", "neutral": false},
+        {"id": "effect.not_sure", "label": "Not sure yet", "neutral": true}
+      ],
+      "hope_responses": [
+        {"id": "response.safe_connection", "label": "I can look for one safe connection", "grounded": true},
+        {"id": "response.grow_over_time", "label": "Belonging can grow over time", "grounded": true},
+        {"id": "response.keep_self", "label": "I can share space without changing who I am", "grounded": true}
+      ],
+      "anchors": [
+        {"id": "anchor.truth_array", "lens": "alarm", "label": "Align the Truth Array"},
+        {"id": "anchor.welcome_vine", "lens": "hope", "label": "Wake the Welcome Vine"}
+      ],
+      "bridge": {"id": "bridge.safe_connection", "label": "Build the Connection Bridge"}
+    }
+  ],
+  "constellation": {
+    "id": "constellation.wisdom",
+    "symbols": [
+      {"id": "symbol.notice", "label": "Notice"},
+      {"id": "symbol.name", "label": "Name"},
+      {"id": "symbol.choose", "label": "Choose"}
+    ],
+    "completion_event": "wisdom_symbols_connected"
+  }
+}

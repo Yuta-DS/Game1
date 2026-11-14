@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c4j2yogfo2xl0"
+path="res://.godot/imported/Connecting Rainbows.mp3-e9b6bf7dca857f9d2479c779ed8fd7fe.mp3str"
+
+[deps]
+
+source_file="res://assets/SFX/Connecting Rainbows.mp3"
+dest_files=["res://.godot/imported/Connecting Rainbows.mp3-e9b6bf7dca857f9d2479c779ed8fd7fe.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "checks": {
+    "previous_source_unchanged": true,
+    "3000_nonempty_editable_meshes": true,
+    "matching_unique_part_inventory": true,
+    "source_finite_vertices": true,
+    "source_triangle_faces": true,
+    "source_positive_face_areas": true,
+    "source_no_mesh_repairs": true,
+    "player_scale_rails_and_lamps": true,
+    "rails_seated_inside_collision_floor": true,
+    "bridge_clearance": true,
+    "continuous_hand_edge": true,
+    "arch_and_vent_clear_of_old_rock_and_transfer_beam": true,
+    "286_interior_samples_have_clear_rock_recesses": true,
+    "all_four_piers_reach_their_capitals": true,
+    "eight_separate_motion_assemblies": true,
+    "13_runtime_meshes_including_moving_parts": true,
+    "source_export_coverage": true,
+    "restored_540k_architecture_budget": true,
+    "recorded_triangles": true,
+    "runtime_finite_vertices": true,
+    "runtime_triangle_faces": true,
+    "runtime_positive_face_areas": true,
+    "runtime_no_mesh_repairs": true
+  },
+  "runtime": {
+    "triangles": 517995,
+    "area": 113.89574601871868,
+    "bounds": [
+      [
+        -1.524999976158142,
+        -1.0992927551269531,
+        -2.130000114440918
+      ],
+      [
+        1.5250000953674316,
+        1.0992927551269531,
+        0.5209999680519104
+      ]
+    ]
+  },
+  "rail_samples": 1318,
+  "missing_samples": [],
+  "occluded_arch_samples": [],
+  "interior_rock_occlusions": [],
+  "scope": "Geometry, export, scale, edge coverage and targeted visual occlusion. Gameplay collision and crank kinematics tested in Godot."
+}

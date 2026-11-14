@@ -1,0 +1,35 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/sky_isles/sky_isles_world.gd" id="1_world"]
+[ext_resource type="Script" path="res://scripts/sky_isles/isle_castle.gd" id="2_castle"]
+[ext_resource type="Script" path="res://scripts/sky_isles/isle_kingdoms.gd" id="3_kingdoms"]
+[ext_resource type="Script" path="res://scripts/sky_isles/rail_network.gd" id="4_rail"]
+[ext_resource type="Script" path="res://scripts/sky_isles/travel_controller.gd" id="5_travel"]
+[ext_resource type="Script" path="res://scripts/sky_isles/isle_state.gd" id="6_state"]
+[ext_resource type="Script" path="res://scripts/sky_isles/debug_panel.gd" id="7_debug"]
+
+[node name="SkyIsles" type="Node3D"]
+script = ExtResource("1_world")
+
+[node name="CameraRig" type="Node3D" parent="."]
+
+[node name="OrbitCamera" type="Camera3D" parent="CameraRig"]
+fov = 60.0
+
+[node name="Isles" type="Node3D" parent="."]
+script = ExtResource("2_castle")
+
+[node name="Isles2" type="Node3D" parent="."]
+script = ExtResource("3_kingdoms")
+
+[node name="RailNetwork" type="Node3D" parent="."]
+script = ExtResource("4_rail")
+
+[node name="TravelController" type="Node3D" parent="."]
+script = ExtResource("5_travel")
+
+[node name="IsleState" type="Node3D" parent="."]
+script = ExtResource("6_state")
+
+[node name="DebugPanel" type="CanvasLayer" parent="."]
+script = ExtResource("7_debug")

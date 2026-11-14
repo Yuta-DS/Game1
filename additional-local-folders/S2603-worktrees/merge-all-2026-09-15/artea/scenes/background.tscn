@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3 uid="uid://c02j4pfrscui4"]
+
+[ext_resource type="Texture2D" uid="uid://qe8sjiwlxccn" path="res://assets/Purple Bay/Background/Background-1.png" id="1_y0upk"]
+[ext_resource type="Texture2D" uid="uid://17ocw0fcqqbq" path="res://assets/Purple Bay/Background/Background-4.png" id="2_jougr"]
+[ext_resource type="Texture2D" uid="uid://kgua4pu5e1ke" path="res://assets/Purple Bay/Background/Background-3.png" id="2_y0upk"]
+[ext_resource type="Texture2D" uid="uid://owhlibqlymis" path="res://assets/Purple Bay/Background/Background-2.png" id="4_cbsqf"]
+[ext_resource type="PackedScene" uid="uid://cmhekj5dnuwyc" path="res://scenes/sun.tscn" id="5_wisxt"]
+
+[node name="Background" type="Node2D"]
+position = Vector2(-15, 3)
+
+[node name="Sky" type="Sprite2D" parent="."]
+position = Vector2(440, 170.188)
+scale = Vector2(2.55859, 2.25846)
+texture = ExtResource("1_y0upk")
+
+[node name="Clouds" type="Sprite2D" parent="."]
+z_index = 1
+position = Vector2(438, 174)
+scale = Vector2(2.56055, 2.56055)
+texture = ExtResource("2_y0upk")
+
+[node name="mountains" type="Sprite2D" parent="."]
+z_index = 2
+position = Vector2(438, 206)
+scale = Vector2(2.56055, 2.56055)
+texture = ExtResource("2_jougr")
+
+[node name="ocean" type="Sprite2D" parent="."]
+z_index = 1
+position = Vector2(458.25, 208.313)
+scale = Vector2(1.82292, 1.85091)
+texture = ExtResource("4_cbsqf")
+
+[node name="Sun" parent="." instance=ExtResource("5_wisxt")]
+position = Vector2(252, 168)
+scale = Vector2(2.18949, 2.18949)

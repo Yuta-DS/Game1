@@ -1,0 +1,56 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/mind_spark_role_controller.gd" id="1_role"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_role"]
+radius = 0.34
+height = 1.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_role"]
+radius = 0.34
+height = 1.5
+radial_segments = 12
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="RoleMaterial"]
+albedo_color = Color(0.24, 0.75, 0.94, 1)
+emission_enabled = true
+emission = Color(0.07, 0.33, 0.48, 1)
+emission_energy_multiplier = 0.8
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="CoreMaterial"]
+albedo_color = Color(1, 0.88, 0.38, 1)
+emission_enabled = true
+emission = Color(1, 0.65, 0.12, 1)
+emission_energy_multiplier = 1.2
+
+[node name="MindSparkRole" type="CharacterBody3D"]
+script = ExtResource("1_role")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.75, 0)
+shape = SubResource("CapsuleShape_role")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.75, 0)
+mesh = SubResource("CapsuleMesh_role")
+material_override = SubResource("RoleMaterial")
+cast_shadow = 0
+
+[node name="CoreLight" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.92, -0.31)
+scale = Vector3(0.12, 0.12, 0.12)
+mesh = SubResource("CapsuleMesh_role")
+material_override = SubResource("CoreMaterial")
+cast_shadow = 0
+
+[node name="RoleLabel" type="Label3D" parent="."]
+visible = false
+position = Vector3(0, 1.72, 0)
+text = "ALARM LENS"
+font_size = 34
+outline_size = 8
+modulate = Color(0.55, 0.92, 1, 1)
+billboard = 1
+no_depth_test = false

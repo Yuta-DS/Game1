@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="QuestObjectDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/quest_objects/quest_object_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+object_kind = 0
+display_name = "Torch Spark Socket"
+action_prompt = "PLACE ONE FOUND SPARK"
+success_message = "3/3 • LINKED TASK OPEN"
+progress_total = 3
+accent_color = Color(0.45, 0.91, 1, 1)
+icon_waiting = "◇"
+icon_success = "★"
+linked_task_id = "open_logic_gate"

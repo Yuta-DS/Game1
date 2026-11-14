@@ -1,0 +1,292 @@
+{
+  "reference_image": {
+    "width_px": 664,
+    "height_px": 1028,
+    "character_axis_px": 286,
+    "top_px": 18,
+    "floor_px": 1026
+  },
+  "projection": {
+    "type": "orthographic_front",
+    "blender_axes": "X=screen horizontal, Y=depth, Z=up",
+    "world_height": 2.1,
+    "measured_character_height": 2.05,
+    "pixels_per_world_unit": 491.707317,
+    "world_units_per_pixel": 0.00203373,
+    "pixel_to_world": "x=(pixel_x-286)*0.00203373; z=(1026-pixel_y)*0.00203373",
+    "depth_rule": "Depth cannot be recovered from one front image. Organic Y radii use 70-85% of X radii; garment panels use 0.012-0.275 units according to visible shading and the existing NPC style."
+  },
+  "parts": {
+    "head": {
+      "reference_bbox_px": [34, 99, 540, 521],
+      "primitive": "ellipsoid",
+      "center_xyz": [0.0, -0.005, 1.51],
+      "radii_xyz": [0.46, 0.35, 0.43],
+      "bone": "head"
+    },
+    "cheek_upper_left": {
+      "reference_bbox_px": [13, 326, 131, 411],
+      "primitive": "faceted_tapered_leaf_tuft",
+      "rings_xyz_radius_y_radius_z": [[-0.335, -0.18, 1.33, 0.035, 0.012], [-0.385, -0.135, 1.36, 0.04, 0.05], [-0.435, -0.07, 1.39, 0.03, 0.04], [-0.47, -0.08, 1.405, 0.012, 0.012]],
+      "attachment_rule": "Shallow rings follow and overlap the curved cheek surface; only the pointed X tip projects beyond the silhouette.",
+      "bone": "head"
+    },
+    "cheek_upper_right": {
+      "reference_bbox_px": [455, 323, 560, 405],
+      "primitive": "faceted_tapered_leaf_tuft",
+      "rings_xyz_radius_y_radius_z": [[0.335, -0.18, 1.33, 0.035, 0.012], [0.385, -0.135, 1.36, 0.04, 0.05], [0.435, -0.07, 1.39, 0.03, 0.04], [0.47, -0.08, 1.405, 0.012, 0.012]],
+      "attachment_rule": "Shallow rings follow and overlap the curved cheek surface; only the pointed X tip projects beyond the silhouette.",
+      "bone": "head"
+    },
+    "cheek_lower_pair": {
+      "reference_bboxes_px": [[29, 386, 125, 451], [467, 383, 553, 448]],
+      "primitive": "mirrored_faceted_tapered_leaf_tufts",
+      "right_rings_xyz_radius_y_radius_z": [[0.35, -0.145, 1.285, 0.035, 0.01], [0.39, -0.08, 1.295, 0.03, 0.035], [0.455, -0.075, 1.315, 0.012, 0.011]],
+      "surface_rule": "Each cheek uses two shallow low-poly teardrop leaves fitted into the rounded head surface, eliminating air gaps without projecting forward like blades.",
+      "bone": "head"
+    },
+    "ears_outer": {
+      "reference_bboxes_px": [[52, 17, 207, 277], [381, 18, 532, 277]],
+      "primitive": "mirrored_beveled_tapered_depth_ear_shells",
+      "tip_xyz": [[-0.4, -0.075, 2.045], [0.4, -0.075, 2.045]],
+      "visible_outer_root_xyz": [[-0.43, -0.098, 1.4], [0.43, -0.098, 1.4]],
+      "buried_inner_root_xyz": [[-0.29, -0.115, 1.46], [0.29, -0.115, 1.46]],
+      "right_outline_xyz": [[0.43, -0.098, 1.4], [0.49, -0.095, 1.66], [0.485, -0.09, 1.82], [0.44, -0.082, 1.96], [0.4, -0.075, 2.045], [0.35, -0.08, 2.035], [0.13, -0.105, 1.7], [0.29, -0.115, 1.46]],
+      "depth_range_y": [-0.105, 0.005],
+      "depth_rule": "The shell tapers toward the tip, while its two lower root vertices close inside the head so the visible ear-to-cheek contour has no diagonal notch or blue air gap.",
+      "bone": "head"
+    },
+    "ears_inner": {
+      "reference_bboxes_px": [[81, 72, 178, 262], [415, 73, 505, 261]],
+      "primitive": "mirrored_broad_beveled_inner_panels",
+      "outer_lower_xyz": [[-0.452, -0.112, 1.62], [0.452, -0.112, 1.62]],
+      "inner_lower_xyz": [[-0.105, -0.112, 1.66], [0.105, -0.112, 1.66]],
+      "tip_xyz": [[-0.35, -0.112, 2.015], [0.35, -0.112, 2.015]],
+      "thickness_y": 0.006,
+      "bevel": 0.014,
+      "bone": "head"
+    },
+    "eyes_white": {
+      "reference_bboxes_px": [[107, 259, 236, 387], [306, 258, 439, 388]],
+      "primitive": "mirrored_single_surface_domed_caps",
+      "layer_count_per_eye": 1,
+      "centers_xz": [[-0.16, 1.5], [0.16, 1.5]],
+      "radii_xz": [0.102, 0.118],
+      "center_y": -0.382,
+      "edge_y": -0.347,
+      "surface_rule": "One 24-segment radial cap per eye; no rear eyeball shell or concentric topology rings.",
+      "bone": "head"
+    },
+    "pupils": {
+      "reference_bboxes_px": [[160, 281, 205, 342], [348, 280, 391, 342]],
+      "primitive": "mirrored_ellipsoids",
+      "centers_xyz": [[-0.16, -0.389, 1.5], [0.16, -0.389, 1.5]],
+      "radii_xyz": [0.034, 0.01, 0.063],
+      "bone": "head"
+    },
+    "glasses_rings": {
+      "reference_bboxes_px": [[94, 249, 243, 390], [291, 249, 444, 391]],
+      "primitive": "mirrored_tori",
+      "centers_xyz": [[-0.16, -0.421, 1.51], [0.16, -0.421, 1.51]],
+      "major_radius": 0.137,
+      "minor_radius": 0.012,
+      "bone": "head"
+    },
+    "glasses_bridge": {
+      "reference_bbox_px": [237, 298, 303, 318],
+      "primitive": "tube",
+      "endpoints_xyz": [[-0.035, -0.423, 1.515], [0.0, -0.426, 1.532], [0.035, -0.423, 1.515]],
+      "radius": 0.01,
+      "bone": "head"
+    },
+    "brows": {
+      "reference_bboxes_px": [[114, 194, 229, 251], [316, 195, 430, 251]],
+      "primitive": "mirrored_extruded_panels",
+      "center_z": 1.69,
+      "front_y": -0.405,
+      "thickness_y": 0.012,
+      "bone": "head"
+    },
+    "forehead_mark": {
+      "reference_bbox_px": [235, 135, 330, 225],
+      "primitive": "triangle_panel",
+      "vertices_xyz": [[-0.075, -0.392, 1.78], [0.075, -0.392, 1.78], [0.0, -0.402, 1.63]],
+      "bone": "head"
+    },
+    "muzzle_pair": {
+      "reference_bboxes_px": [[61, 354, 278, 479], [253, 353, 493, 480]],
+      "primitive": "mirrored_ellipsoids",
+      "centers_xyz": [[-0.09, -0.374, 1.35], [0.09, -0.374, 1.35]],
+      "radii_xyz": [0.158, 0.072, 0.1],
+      "bone": "head"
+    },
+    "moustache_pads": {
+      "reference_bboxes_px": [[55, 385, 274, 486], [258, 384, 500, 487]],
+      "primitive": "mirrored_faceted_swept_leaf_lobes",
+      "right_rings_xyz_radius_y_radius_z": [[0.004, -0.465, 1.345, 0.022, 0.034], [0.07, -0.47, 1.32, 0.044, 0.06], [0.15, -0.474, 1.292, 0.054, 0.082], [0.23, -0.468, 1.302, 0.052, 0.076], [0.3, -0.452, 1.34, 0.038, 0.052], [0.355, -0.43, 1.395, 0.01, 0.012]],
+      "radial_segments": 10,
+      "construction_rule": "Two thick leaf-shaped lobes meet tightly under the nose, widen through the belly, then taper into raised outer tips; no overlapping pad-and-tube stack.",
+      "bone": "head"
+    },
+    "nose": {
+      "reference_bbox_px": [217, 325, 322, 392],
+      "primitive": "rounded_heptagonal_cat_nose_panel",
+      "front_outline_xz": [[-0.065, 1.398], [-0.04, 1.42], [0.04, 1.42], [0.065, 1.398], [0.045, 1.365], [0.0, 1.342], [-0.045, 1.365]],
+      "front_y": -0.522,
+      "thickness_y": 0.034,
+      "bevel": 0.012,
+      "nostril_centers_xyz": [[-0.028, -0.526, 1.38], [0.028, -0.526, 1.38]],
+      "bone": "head"
+    },
+    "mouth": {
+      "reference_bbox_px": [247, 427, 293, 454],
+      "primitive": "beveled_diamond_panel",
+      "center_xyz": [0.0, -0.506, 1.246],
+      "half_extents_xz": [0.04, 0.022],
+      "bone": "head"
+    },
+    "coat_body": {
+      "reference_bbox_px": [28, 473, 559, 891],
+      "primitive": "single_closed_five_ring_tailored_coat_torso",
+      "ring_specs_z_radius_x_radius_y_center_y": [[0.24, 0.39, 0.27, 0.015], [0.33, 0.41, 0.28, 0.015], [0.72, 0.42, 0.285, 0.015], [1.08, 0.405, 0.27, 0.015], [1.18, 0.33, 0.23, 0.015]],
+      "bottom_ring_z_offsets_around_12_segments": [0.025, 0.015, 0.0, 0.055, 0.0, 0.015, 0.025, 0.015, 0.0, 0.055, 0.0, 0.015],
+      "tail_split_rule": "Front and rear center vents are cut into the coat-body silhouette; the quarter tails hang lowest and the gold hem follows the same W profile.",
+      "radial_segments": 12,
+      "construction_rule": "This coat mesh is the torso body; no separate body shell or overlaid skirt panels are used.",
+      "bottom_z": 0.24,
+      "gold_hem_z_range": [0.233, 0.307],
+      "bone": "chest"
+    },
+    "waistcoat": {
+      "reference_bbox_px": [169, 524, 386, 827],
+      "primitive": "segmented_surface_fitted_five_column_shell_with_center_seam",
+      "front_y_range": [-0.278333, -0.210739],
+      "front_clearance_from_coat": 0.01,
+      "thickness_y": 0.003,
+      "x_range": [-0.23, 0.23],
+      "z_range": [0.59, 1.07],
+      "top_row_xyz": [[-0.23, -0.210739, 1.075], [-0.2025, -0.229026, 1.075], [0.0, -0.265208, 1.075], [0.2025, -0.229026, 1.075], [0.23, -0.210739, 1.075]],
+      "bottom_row_xyz": [[-0.23, -0.227345, 0.675], [-0.2025, -0.242577, 0.675], [0.0, -0.278333, 0.59], [0.2025, -0.242577, 0.675], [0.23, -0.227345, 0.675]],
+      "surface_rule": "Every rear vertex remains outside the coat; measured minimum clearance is 0.00699 units after shell thickness.",
+      "center_seam_z_range": [0.625, 0.93],
+      "bone": "chest"
+    },
+    "buttons": {
+      "reference_centers_px": [[189, 657], [363, 656], [189, 761], [367, 761], [271, 596]],
+      "primitive": "four_beveled_decagonal_buttons_and_dodecagonal_medallion",
+      "centers_xyz": [[-0.135, -0.257177, 0.875], [0.135, -0.257177, 0.875], [-0.135, -0.262846, 0.735], [0.135, -0.262846, 0.735], [0.0, -0.287875, 1.035]],
+      "button_radius_depth": [0.038, 0.02],
+      "medallion_radius_depth": [0.048, 0.024],
+      "bone": "chest"
+    },
+    "tailored_coat_seams": {
+      "primitive": "exact_facet_sampled_darts_pockets_and_center_vent_on_single_coat_torso",
+      "dart_paths_xyz": [[[-0.305, -0.242, 0.635], [-0.292, -0.248, 0.58]], [[0.305, -0.242, 0.635], [0.292, -0.248, 0.58]]],
+      "pocket_flap_centers_xyz": [[-0.2725, -0.254, 0.526], [0.2725, -0.254, 0.526]],
+      "bone": "chest"
+    },
+    "gold_suit_details": {
+      "primitive": "surface_fitted_low_poly_lapel_edges_shaped_pocket_welts_tie_clip_and_watch_chain",
+      "lapel_edge_paths_xyz": [[[-0.225, -0.271, 1.06], [-0.247, -0.266, 0.825]], [[0.225, -0.271, 1.06], [0.247, -0.266, 0.825]]],
+      "pocket_trim_centers_xyz": [[-0.275, -0.262, 0.5535], [0.275, -0.262, 0.5535]],
+      "coat_hem_style": "mirrored_surface_fitted_gold_ribbons_with_center_notch",
+      "coat_hem_z_range": [0.233, 0.297],
+      "tie_clip_center_xyz": [0.0, -0.286542, 0.875],
+      "watch_chain_path_xyz": [[0.035, -0.366, 1.01], [0.075, -0.328, 0.97], [0.11, -0.32, 0.925], [0.135, -0.316, 0.89]],
+      "material": "gold",
+      "bone": "chest"
+    },
+    "rear_and_side_coat": {
+      "primitive": "segmented_surface_fitted_back_yoke_split_vent_and_connected_side_seams",
+      "back_yoke_top_row_xyz": [[-0.32, 0.179953, 1.07], [-0.2025, 0.251853, 1.09], [0.0, 0.286, 1.1], [0.2025, 0.251853, 1.09], [0.32, 0.179953, 1.07]],
+      "back_yoke_bottom_row_xyz": [[-0.32, 0.185254, 0.955], [-0.2025, 0.263483, 0.938], [0.0, 0.3015, 0.9], [0.2025, 0.263483, 0.938], [0.32, 0.185254, 0.955]],
+      "back_yoke_surface_rule": "Four connected front quads align to the exact low-poly coat facet boundaries. The rear wall has at least 0.0058 units measured clearance; flat gold piping follows the same surface with at least 0.0103 units coat clearance.",
+      "left_rear_outline_xyz": [[0.0, 0.296, 0.9], [-0.285, 0.255, 0.955], [-0.37, 0.215, 0.68], [-0.385, 0.205, 0.3], [-0.215, 0.255, 0.242], [-0.045, 0.288, 0.268], [0.0, 0.296, 0.6]],
+      "right_rear_outline_xyz": [[0.0, 0.296, 0.9], [0.285, 0.255, 0.955], [0.37, 0.215, 0.68], [0.385, 0.205, 0.3], [0.215, 0.255, 0.242], [0.045, 0.288, 0.268], [0.0, 0.296, 0.6]],
+      "center_seam_z_range": [0.6, 0.895],
+      "split_vent_bottom_x": [-0.045, 0.045],
+      "side_seam_x": [-0.414, 0.414],
+      "gold_back_hem_z_range": [0.235, 0.307],
+      "gold_side_hem_connects_front_to_back": true,
+      "bone": "chest"
+    },
+    "sleeves": {
+      "reference_bboxes_px": [[25, 478, 170, 787], [423, 477, 558, 787]],
+      "primitive": "mirrored_connected_six_ring_tapered_sleeve_skins",
+      "left_centerline_xz": [[-0.35, 1.135], [-0.37, 1.095], [-0.395, 1.0], [-0.415, 0.88], [-0.435, 0.76], [-0.44, 0.69]],
+      "ring_radii_xy": [[0.045, 0.07], [0.115, 0.125], [0.12, 0.125], [0.108, 0.118], [0.095, 0.11], [0.088, 0.102]],
+      "weight_rule": "Normalized weights blend continuously from upperarm through lowerarm to wrist; mirrored on the right.",
+      "bone": ["upperarm.r", "lowerarm.r", "wrist.r", "upperarm.l", "lowerarm.l", "wrist.l"]
+    },
+    "paws": {
+      "reference_bboxes_px": [[20, 756, 137, 885], [446, 753, 557, 879]],
+      "primitive": "mirrored_five_ring_tapered_mitten_meshes_with_attached_thumb_and_two_finger_creases",
+      "centers_xyz": [[-0.44, -0.015, 0.605], [0.44, -0.015, 0.605]],
+      "z_profile": [0.7, 0.665, 0.6, 0.535, 0.49],
+      "ring_radii_xy": [[0.072, 0.085], [0.095, 0.105], [0.105, 0.11], [0.088, 0.092], [0.04, 0.05]],
+      "thumb_centers_xyz": [[-0.37, -0.095, 0.61], [0.37, -0.095, 0.61]],
+      "bone": ["hand.r", "hand.l"]
+    },
+    "trousers": {
+      "reference_bboxes_px": [[149, 876, 287, 966], [301, 876, 436, 967]],
+      "primitive": "mirrored_ellipsoids",
+      "centers_xyz": [[-0.16, -0.002, 0.29], [0.16, -0.002, 0.29]],
+      "radii_xyz": [0.09, 0.1, 0.075],
+      "bone": ["lowerleg.r", "lowerleg.l"]
+    },
+    "boots": {
+      "reference_bboxes_px": [[126, 923, 297, 1027], [286, 923, 463, 1027]],
+      "primitive": "mirrored_ellipsoids",
+      "centers_xyz": [[-0.17, -0.095, 0.14], [0.17, -0.095, 0.14]],
+      "radii_xyz": [0.17, 0.225, 0.12],
+      "separation_rule": "Left and right shoes touch only at the centerline; they no longer overlap into one fused silhouette.",
+      "bone": ["foot.r", "foot.l"]
+    },
+    "mayor_cane": {
+      "reference_image_px": [0, 0, 272, 740],
+      "primitive": "slanted_wood_tube_with_gold_ferrules_and_bezier_hook",
+      "shaft_endpoints_xyz": [[0.55, -0.02, 0.1], [0.47, -0.02, 0.74]],
+      "shaft_radius": 0.024,
+      "wood_color_hex": "4a2816",
+      "lower_ferrule_endpoints_xyz": [[0.553, -0.02, 0.055], [0.547, -0.02, 0.145]],
+      "upper_collar_center_xyz": [0.47, -0.02, 0.74],
+      "hook_path_xyz": [[0.47, -0.02, 0.735], [0.47, -0.02, 0.795], [0.495, -0.02, 0.86], [0.555, -0.02, 0.905], [0.625, -0.02, 0.905], [0.67, -0.02, 0.865], [0.674, -0.02, 0.81], [0.642, -0.02, 0.775], [0.598, -0.02, 0.778]],
+      "hook_radius": 0.034,
+      "right_thumb_center_xyz": [0.493, -0.105, 0.63],
+      "grip_finger_paths_xyz": [[[0.448, -0.082, 0.65], [0.463, -0.112, 0.65], [0.487, -0.118, 0.65], [0.508, -0.09, 0.65]], [[0.448, -0.084, 0.615], [0.464, -0.114, 0.615], [0.489, -0.119, 0.615], [0.51, -0.088, 0.615]], [[0.448, -0.086, 0.58], [0.466, -0.114, 0.58], [0.491, -0.118, 0.58], [0.512, -0.085, 0.58]]],
+      "grip_rule": "The hook and upper collar sit immediately above the paw; the shaft crosses the palm center while a compact thumb and three cream finger arcs wrap its front and return into the paw volume.",
+      "ground_rule": "The gold ground tip ends at z=0.003, aligned with the boot sole floor.",
+      "bone": "hand.l"
+    },
+    "tail": {
+      "reference_bbox_px": [545, 609, 662, 824],
+      "primitive": "bezier_tube",
+      "path_xyz": [[0.0, 0.16, 0.52], [0.0, 0.315, 0.52], [0.16, 0.32, 0.54], [0.36, 0.29, 0.6], [0.52, 0.25, 0.68], [0.58, 0.21, 0.78], [0.54, 0.18, 0.87]],
+      "radius": 0.06,
+      "curve_radius_multipliers_root_to_tip": [1.5, 1.38, 1.28, 1.15, 1.02, 0.88, 0.72],
+      "anchor_rule": "Tail exits at x=0 through the center-back coat vent before curving toward Milo's right.",
+      "bone": "hips"
+    },
+    "tail_stripes_and_tip": {
+      "reference_bbox_px": [570, 635, 655, 770],
+      "primitive": "two_tori_and_ellipsoid",
+      "stripe_centers_xyz": [[0.52, 0.25, 0.68], [0.58, 0.21, 0.78]],
+      "stripe_major_radii": [0.061, 0.059],
+      "stripe_minor_radius": 0.011,
+      "tip_center_xyz": [0.54, 0.18, 0.87],
+      "tip_radii_xyz": [0.062, 0.062, 0.067],
+      "bone": "hips"
+    }
+  },
+  "animation_contract": {
+    "locomotion_clip": "Cane_Walk",
+    "source_clip": "Walking_A",
+    "playback_speed": 0.62,
+    "cycle_seconds": 1.15,
+    "gait_phases": [{"name": "plant", "range": [0.0, 0.18], "speed_range": [0.52, 0.72]}, {"name": "support", "range": [0.18, 0.7], "speed_range": [0.86, 1.22]}, {"name": "recover", "range": [0.7, 1.0], "speed_range": [0.88, 0.62]}],
+    "planted_grip_bones": ["upperarm.l", "lowerarm.l", "wrist.l", "hand.l"],
+    "preserved_motion": "Walking legs, hips, coat, head and free left arm remain animated; the visual right arm stays in its closed cane grip.",
+    "grounding_rule": "With the gripping arm held in rest pose, the cane ground tip remains at the authored floor height instead of following the donor arm swing.",
+    "synchronization_rule": "Translation speed and AnimationPlayer cadence sample the same plant/support/recover cycle, preventing constant-speed cane sliding."
+  }
+}

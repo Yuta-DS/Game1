@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://r00t8lu5773m"
+path="res://.godot/imported/Forest Frolic Loop.mp3-0efa077a133c6c03e1bf2a8ce9f16927.mp3str"
+
+[deps]
+
+source_file="res://assets/SFX/Forest Frolic Loop.mp3"
+dest_files=["res://.godot/imported/Forest Frolic Loop.mp3-0efa077a133c6c03e1bf2a8ce9f16927.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

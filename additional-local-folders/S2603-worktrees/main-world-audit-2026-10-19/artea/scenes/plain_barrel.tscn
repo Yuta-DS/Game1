@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://dnigmisk0uut0"]
+
+[ext_resource type="Texture2D" uid="uid://bifn0ynjn5mnc" path="res://assets/Legacy-Fantasy-VL.3 - Purple Bay/Assets/tiles.png" id="1_3yl6f"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_bj6vc"]
+
+[node name="Plain barrel" type="StaticBody2D"]
+z_index = 6
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_3yl6f")
+region_enabled = true
+region_rect = Rect2(3.89484, 310.987, 25.1052, 31.3026)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_bj6vc")

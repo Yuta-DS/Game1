@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="QuestObjectDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/quest_objects/quest_object_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+object_kind = 4
+display_name = "Logic Gate Arch"
+action_prompt = "PLACE ONE EVIDENCE"
+success_message = "🔓 2/2 • GATE OPEN"
+progress_total = 2
+accent_color = Color(0.35, 0.93, 0.74, 1)
+icon_waiting = "▣"
+icon_success = "✓"
+

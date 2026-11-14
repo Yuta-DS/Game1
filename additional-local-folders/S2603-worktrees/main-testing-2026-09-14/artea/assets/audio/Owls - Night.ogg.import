@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://et1bl2ordovd"
+path="res://.godot/imported/Owls - Night.ogg-67be29bcdebabfb6271b2ce15394d47e.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/Owls - Night.ogg"
+dest_files=["res://.godot/imported/Owls - Night.ogg-67be29bcdebabfb6271b2ce15394d47e.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

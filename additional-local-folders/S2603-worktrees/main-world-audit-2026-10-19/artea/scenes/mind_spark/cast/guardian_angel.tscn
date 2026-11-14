@@ -1,0 +1,50 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/mind_spark/mind_spark_shared_guide.gd" id="1_guide"]
+
+[sub_resource type="CylinderShape3D" id="DialogueShape"]
+radius = 8.0
+height = 8.0
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary"]
+
+[sub_resource type="ParticleProcessMaterial" id="Particles"]
+emission_shape = 3
+emission_box_extents = Vector3(2, 3, 2)
+gravity = Vector3(0, -0.25, 0)
+initial_velocity_min = 0.2
+initial_velocity_max = 0.6
+
+[node name="MotherGuardian" type="Node3D"]
+script = ExtResource("1_guide")
+guide_kind = 1
+display_name = "Mother Guardian"
+default_line = "A thought can feel strong without being a fact. Let us look for one clear sign."
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {&"": SubResource("AnimationLibrary")}
+
+[node name="DialogueArea3D" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DialogueArea3D"]
+position = Vector3(0, 4, 0)
+shape = SubResource("DialogueShape")
+
+[node name="GuidePoint" type="Marker3D" parent="."]
+
+[node name="DialogueLabel" type="Label3D" parent="."]
+position = Vector3(0, 12, 0)
+font_size = 28
+outline_size = 9
+billboard = 1
+no_depth_test = false
+
+[node name="WarmLeavesAndStars" type="GPUParticles3D" parent="."]
+position = Vector3(0, 5, 0)
+amount = 18
+lifetime = 2.4
+process_material = SubResource("Particles")

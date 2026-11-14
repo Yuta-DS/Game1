@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://sv4s22ki8dww"]
+
+[ext_resource type="Script" uid="uid://bslgdnvsaqhn2" path="res://scenes/chatbot.gd" id="1_7qo2j"]
+[ext_resource type="Texture2D" uid="uid://c7ekk4xrowj7l" path="res://textures/dialogue_box.png" id="2_an77j"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_an77j"]
+
+[node name="chatbot" type="Control" unique_id=707514885]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_7qo2j")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=29689236]
+z_index = 1
+layout_mode = 1
+offset_left = -683.0
+offset_top = -600.0
+offset_right = 617.0
+offset_bottom = -48.0
+
+[node name="ChatHistory" type="TextEdit" parent="VBoxContainer" unique_id=1121175732]
+custom_minimum_size = Vector2(800, 142)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxEmpty_an77j")
+editable = false
+wrap_mode = 1
+scroll_smooth = true
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1581378263]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -847.9999
+offset_top = -722.99994
+offset_right = 152.00012
+offset_bottom = -122.99994
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(1.7, 1.7)
+mouse_filter = 2
+texture = ExtResource("2_an77j")
+stretch_mode = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="TextureRect" unique_id=916384367]
+layout_mode = 0
+offset_left = 219.99992
+offset_top = 202.94115
+offset_right = 898.99994
+offset_bottom = 342.94116
+
+[node name="RichTextLabel" type="RichTextLabel" parent="TextureRect/MarginContainer" unique_id=951159884]
+layout_mode = 2
+text = "Wonderful Counsellor Milo · Guided companion"

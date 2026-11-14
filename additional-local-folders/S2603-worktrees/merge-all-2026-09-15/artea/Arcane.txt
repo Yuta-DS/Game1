@@ -1,0 +1,420 @@
+ARCANE-INSPIRED PIXEL ARCHITECTURE BLUEPRINT FOR ARTEA
+Version: 1.0
+Date: 2026-08-25
+Scope: reusable environment, architecture, prop, lighting, VFX, and animation rules
+
+PURPOSE
+
+This document translates the visual-production principles of the animated series
+Arcane into an original pixel-art architecture system for Artea. It is not a
+pixel-perfect copy of any Arcane frame, building, character, logo, graffiti, or
+prop. Arcane is painterly hybrid 2D/3D animation, not pixel art. Every pixel-art
+rule below is an original game-design inference built from documented production
+principles and the existing Artea architecture blueprints.
+
+Use this blueprint for:
+- stations, platforms, bridges, stairs, plazas, and guard systems;
+- castles, civic buildings, laboratories, workshops, and houses;
+- floating islands, undercrofts, foundations, machines, and vehicles;
+- props, signs, doors, windows, furniture, and interaction markers;
+- background districts, skyline landmarks, and world transitions;
+- Web-safe Godot materials, animation, lighting, and VFX.
+
+Do not use it to reproduce protected Arcane characters, symbols, exact buildings,
+scene compositions, story elements, or graffiti. Build an original Artea visual
+identity from the reusable principles.
+
+
+1. RESEARCH FINDINGS: WHAT ARCANE ACTUALLY DOES
+
+1.1 World design communicates story
+
+- Piltover and Zaun are deliberately different visual narratives.
+- Piltover's established shape language is geometry, symmetry, and mechanical
+  beauty. It is modern and clean, but also grounded, weathered, and visibly old
+  enough to feel inhabited.
+- Piltover uses strong verticals and ordered geometry associated with Art Deco.
+- Zaun acts as a dark mirror: Victorian and industrial components, handcrafted
+  upcycled construction, asymmetric flourish, Gothic influence, and organic
+  beauty rather than civic purity.
+- Landmarks orient the viewer and carry story meaning. Repeated generic clutter
+  is less valuable than one readable clock tower, bridge, gate, reactor, or sign.
+- A visual library of compatible buildings, stores, props, and set components
+  lets individual streets feel unique while sharing one shape language.
+
+1.2 Surface and image style
+
+- Fortiche combines 3D staging with painted backgrounds, matte painting, and 2D
+  effects. Graphic scratches, textures, and imperfections help the image feel
+  drawn and raw rather than uniformly computer-clean.
+- Detail is simplified and composed. Appeal comes from graphic shape, texture,
+  and painting rather than from covering every surface with small objects.
+- A first sketch can carry useful energy; iteration should preserve that clear
+  first idea rather than polish it into visual noise.
+- Composition, camera angle, framing, pose, and lighting intention are planned
+  early. An object is designed for how it reads in the final view.
+
+1.3 Color and light
+
+- Color and lighting are narrative systems, selected from mood boards and kept
+  coherent across sequences.
+- Dark passages alternate with focused high-contrast moments. Bright energy is
+  meaningful because it is not equally bright everywhere.
+- Piltover's useful game translation is pale mineral, blue-green metal, deep
+  blue shadow, controlled brass, and blue Hextech-like energy.
+- Zaun's useful game translation is soot, old iron, oxidized green, toxic lime,
+  bruised violet, stained amber, and irregular local light.
+- Materials must remain distinguishable by value before hue: light stone, middle
+  metal, dark recess, bright energy, and small warm accent.
+
+1.4 Animation and effects
+
+- Arcane animation prioritizes readable composition and restrained, believable
+  movement instead of constant motion or exaggerated overacting.
+- 2D effects, scratches, painted accents, and graphic shapes sit over 3D motion.
+- Moving parts should reveal purpose: gears transfer power, pistons reciprocate,
+  conduits pulse toward a destination, and lights signal state.
+- Environment motion is selective. A still structure with one moving mechanism
+  reads more strongly than an entire building moving without hierarchy.
+
+
+2. ARTEA PIXEL-ART TRANSLATION
+
+2.1 Pixel grid
+
+- Author environment textures on a 16 px base module.
+- Use 8 px for small props, 16 px for standard architectural tiles, 32 px for
+  large facade modules, and 64 px for hero floor or wall motifs.
+- Snap primary edges to a 2 px sub-grid. Reserve isolated 1 px marks for wear,
+  sparks, highlights, and silhouette correction.
+- Never scatter single pixels uniformly. Cluster pixels into intentional chips,
+  brush marks, rivets, or light blooms.
+- Use nearest-neighbour filtering. Do not blur pixel textures.
+
+2.2 Value hierarchy
+
+Every asset must read in grayscale using five roles:
+
+1. Deep recess: 10-18% lightness.
+2. Structural shadow: 20-32%.
+3. Main material: 38-58%.
+4. Edge plane: 62-78%.
+5. Energy/specular focal point: 82-100%.
+
+Use no more than three large value masses in one ordinary asset. The fourth and
+fifth roles are accents, not equal-area fills.
+
+2.3 Shape hierarchy
+
+- Start with one silhouette statement.
+- Divide it into three large architectural masses.
+- Add one repeated structural rhythm.
+- Add one focal mechanism, entrance, window group, or emblem.
+- Add weathering last and never use it to repair weak geometry.
+
+Piltover module language:
+- bilateral symmetry or carefully balanced near-symmetry;
+- stepped Art Deco crowns and chevrons;
+- tall piers, recessed panels, fan motifs, diamonds, and sunbursts;
+- circles used as mechanisms inside rectilinear frames;
+- clean spans with visible bearings and load paths;
+- brass only at joints, frames, thresholds, controls, and focal inlays.
+
+Zaun module language:
+- controlled asymmetry around a stable load-bearing core;
+- reused plates, pipes, braces, vents, and suspended walkways;
+- Gothic points and Art Nouveau curves made from practical industrial parts;
+- local repairs and material changes that tell construction history;
+- bright chemical light contained in pipes, tanks, windows, or work zones.
+
+2.4 Anti-clutter law
+
+For each 64 x 64 architectural tile:
+- 70% quiet primary material;
+- 20% structural paneling or shadow;
+- at most 10% warm metal or high-energy accent.
+
+Do not stack multiple full-size floor meshes to indicate gameplay zones. Use one
+walkable surface, clear openings, signs, edge frames, and an authored texture.
+Do not place decoration in a player route, doorway projection, stair head, train
+clearance envelope, or moving-object sweep.
+Do not add a brace, ring, pipe, crystal, gear, or light without a named purpose.
+When two decorative systems occupy the same plane, keep the more informative one.
+
+
+3. RECOMMENDED ORIGINAL PALETTES
+
+These hexadecimal values are Artea implementation palettes inferred from the
+researched visual language. They are not sampled official Arcane color values.
+
+PILTOVER CIVIC / PIXEL DECO
+- Void navy:       #101D2B
+- Structural navy: #182C43
+- Recess blue:     #203B4D
+- Oxidized teal:   #245F64
+- Civic teal:      #347B7D
+- Energy cyan:     #45C7D8
+- Pale mineral:    #D9D2C0
+- Warm ivory:      #E7DFC9
+- Antique brass:   #C99B3D
+- Brass highlight: #F0C968
+
+Recommended area balance:
+- 35% navy/recess;
+- 25% teal metal;
+- 22% pale mineral;
+- 8% neutral transition/shadow;
+- 6-8% brass;
+- 2-4% cyan emission.
+
+ZAUN INDUSTRIAL / ORGANIC GOTHIC
+- Soot:            #151A1C
+- Iron:            #293438
+- Patina:          #315D52
+- Bottle green:    #3C6B4E
+- Chemical lime:   #8FCB54
+- Bruised violet:  #6D477C
+- Stained amber:   #B37438
+- Chalk highlight: #B7B6A4
+
+TRANSITION / SHARED ARCANE TECHNOLOGY
+- Keep the structure in navy, iron, and pale mineral.
+- Let district identity enter through secondary metal, window light, signage,
+  surface wear, and one energy color.
+- Never use rainbow distribution across architecture. Rainbow belongs to a hero
+  magical object or route and should be framed by a stable neutral structure.
+
+
+4. PIXEL MATERIAL RECIPES
+
+Pale mineral:
+- 4 colors: shadow, body, worn edge, highlight.
+- Use broad 2-4 px planar brush clusters.
+- Break long bright edges every 12-20 px to avoid a plastic white line.
+
+Navy painted metal:
+- 4 colors plus optional rust/brass chip.
+- Use 1 px highlight only on top-facing or focal edges.
+- Put scratches in clusters of 2-5 pixels and align some with use direction.
+
+Oxidized teal metal:
+- Use dark blue shadow under the teal; do not shade toward gray.
+- Patina collects under joints and around water paths.
+- Keep the center of panels quieter than their frames.
+
+Brass/gold:
+- Use dark brown, antique brass, warm gold, and one pale highlight.
+- Limit continuous gold lines. Break or step them at structural bays.
+- Gold must explain hierarchy: threshold, bearing, control, crown, or focal icon.
+
+Energy cyan:
+- Use deep teal casing, cyan core, and a tiny near-white center.
+- Emission belongs inside an engineered channel, not across an entire floor.
+- Pulse along a path toward a mechanism; do not flash every segment together.
+
+Glass:
+- Use dark transparent body with selective cyan edge pixels.
+- Reflections should be sparse diagonal clusters, not full white stripes.
+- Glass frames carry collision; glass panes remain visual.
+
+
+5. ARCHITECTURE KIT
+
+5.1 Platform and station
+
+- One continuous floor surface per platform side.
+- One dark structural deck beneath it.
+- Recessed teal facade panels on a consistent bay spacing.
+- Broken/stepped brass threshold lines rather than one white underside stripe.
+- Three doorway-aligned gate openings: one driver and two passenger.
+- Floor motif: large mirrored Deco frame, central cyan circuit, brass corner
+  keystones, quiet navy field, and sparse painterly wear.
+- Roof loads travel through bearing beam -> column -> plinth -> drop pier ->
+  island/hull. No loose horizontal blocks beside foundations.
+
+5.2 Bridge and stair
+
+- Deck, stair, and platform share the same material family and pixel density.
+- Keep a clear central travel lane.
+- Put Art Deco rhythm in the edge frame and landing, not on every stair tread.
+- A bridge must visibly land on a bearing or foundation; never float near it.
+- Remove energy strips that visually pass through the foundation or terminate in
+  empty space.
+
+5.3 Civic building
+
+- Three-part facade: grounded base, ordered middle bays, stepped crown.
+- Use a centered entrance and vertical window grouping.
+- One landmark element per building: clock, dome, tower, bridge, observatory, or
+  mechanical rose window.
+- Add subtle wear at ground contact, drains, hinges, and traffic zones.
+
+5.4 Workshop / laboratory
+
+- Expose only the machine parts needed to explain power flow.
+- Group pipes into manifolds rather than scattering individual tubes.
+- Give each animated mechanism an input, transformation, and output.
+- Keep a dark backing plane behind bright gears or crystals for silhouette.
+
+5.5 Floating island / undercroft
+
+- Read as 3-5 large horizontal or radial masses, not many colored triangles.
+- Top crown supports traversal; middle band carries civic structure; deep taper
+  carries weight toward the core.
+- Ribs repeat at a deterministic interval and use one material family.
+- Use one narrow brass crown band and one cyan energy belt at different heights.
+
+5.6 Natural and Tree of Life integration
+
+- Preserve the existing rule that trunk, roots, and structural ridges form one
+  continuous load-bearing mass.
+- Mechanical collars attach only where wood mass can plausibly support them.
+- Cyan stays in biological energy paths; antique gold stays on mechanisms.
+- Keep heart, doorway, and projection corridors free of foliage and ornament.
+
+
+6. PIXEL ANIMATION BLUEPRINT
+
+Static architecture:
+- 0 fps. Let lighting and one focal mechanism carry life.
+
+Ambient mechanism:
+- Author at 12 fps or animate on every second rendered frame.
+- Use 4, 6, 8, or 12-frame loops.
+- Gear rotation must match connected gear ratios and direction.
+- Piston and rod endpoints remain attached throughout the loop.
+
+Energy:
+- Use a 6-8 frame traveling pulse, not whole-object blinking.
+- Offset repeated conduits so the pulse reads as flow.
+- Idle energy range: 15-35% brightness variation.
+- Alert/action range: one quick 70-100% peak followed by recovery.
+
+Smoke/steam:
+- 6-10 frame shape loop with pixel-cluster expansion.
+- Move the mass first, then add only a few detached pixels at dissipation.
+- Use dark-to-light value change before transparency fade.
+
+Impact and magic FX:
+- One anticipation frame, one high-contrast contact frame, 2-4 decay frames.
+- Use graphic 2D overlays for sparks, scratches, speed lines, and impact shapes.
+- Keep FX outside text, face, doorway, and interaction-sign readability zones.
+
+Camera and presentation:
+- Compose landmark, route, and focal light before adding detail.
+- Use strong foreground/midground/background value separation.
+- Reserve camera shake for impacts; ordinary mechanisms should not shake the view.
+
+
+7. GODOT IMPLEMENTATION CONTRACT
+
+- Use one collision owner per continuous walkable route where practical.
+- Visual pixel patterns use a single nearest-filtered texture/material, not
+  stacked coplanar meshes.
+- Visual ornament has no collision unless it is a real barrier or support.
+- Use named semantic nodes: Structure, WalkableSurface, Frame, EnergyPath,
+  Mechanism, Bearing, Support, Collision.
+- Keep Web materials simple: StandardMaterial3D or Web-safe spatial shaders.
+- Avoid runtime booleans, displacement, excessive transparent layers, and large
+  particle counts.
+- Prefer instanced modules and deterministic counts.
+- Separate static architecture from animated pivots.
+- Every moving part has a bounded loop and a documented purpose.
+- Every platform and bridge change must re-run traversal, station, train, gallery,
+  minimap, Web export, and production browser checks required by AGENTS.md.
+
+
+8. RELATION TO EXISTING ARTEA BLUEPRINTS
+
+This blueprint preserves the strongest existing contracts:
+
+- Art Castle Magitech Research: visible load paths; integrated light technology;
+  total-environment detail instead of loose decoration; clear walkable routes.
+- Castle Entrance Reengineering: consistent datums, unobstructed axis, restrained
+  element counts, and correct causeway/terrace handoff.
+- Tree of Life blueprints: named modules and sockets; organic/mechanical clear
+  zones; limited gold/cyan roles; static architecture with bounded focal motion.
+- Crown of Life implementation: low-poly/Web-safe presentation, gameplay-first
+  collision, accessible routes, and deterministic tests.
+- Mind Spark design: technology is readable through purpose and progression, not
+  through random density.
+
+When a future blueprint conflicts with this file, gameplay clearance, structural
+continuity, authored story meaning, accessibility, and Web performance take
+priority over style.
+
+
+9. REVIEW CHECKLIST
+
+Silhouette
+[ ] One clear large idea is readable at thumbnail scale.
+[ ] Architecture has 1-3 dominant masses, not a pile of equal objects.
+[ ] Landmark and entrance are visible from the intended player route.
+
+Structure
+[ ] Roof, bridge, platform, and machine loads have visible support paths.
+[ ] No beam, pipe, brace, or line ends in empty space.
+[ ] No decorative object overlaps another structural object accidentally.
+
+Pixel art
+[ ] All primary edges use the selected grid and nearest filtering.
+[ ] Pixel clusters are intentional; there is no uniform single-pixel noise.
+[ ] Materials read by value before hue.
+[ ] Wear is localized and supports history.
+
+Color
+[ ] Gold/brass occupies at most 10% of ordinary architecture.
+[ ] Cyan emission occupies at most 4% unless it is the focal magical object.
+[ ] Large surfaces use navy, teal, mineral, wood, stone, or iron fields.
+[ ] No competing rainbow panels appear on ordinary civic foundations.
+
+Gameplay
+[ ] Player route and all doorway projections remain clear.
+[ ] Train, vehicle, gear, and animated sweep volumes remain clear.
+[ ] Collision is simple, continuous, and independent from visual ornament.
+
+Animation
+[ ] Every moving part communicates a function.
+[ ] Motion uses readable, bounded loops and does not animate everything.
+[ ] FX preserve route, sign, UI, and character readability.
+
+Performance
+[ ] Materials and shaders work in the Godot Web renderer.
+[ ] Transparent layers and particles are bounded.
+[ ] Repeated modules are instanced or generated deterministically.
+[ ] Required native and production Web tests pass.
+
+
+10. SOURCES
+
+Primary/official production sources:
+
+1. Netflix Tudum, "ARCANE Season Two Deep Dive on How It Was Made"
+   https://www.netflix.com/tudum/features/arcane-season-two-behind-the-scenes
+
+2. League of Legends / Riot Games, "Arcane: Bridging the Rift, Part 3"
+   https://www.youtube.com/watch?v=Qd1rOtu4SMI
+
+3. Fortiche Production FAQ
+   https://forticheprod.com/faq/
+
+4. CNC interview with Fortiche co-founder Pascal Charrue
+   https://www.cnc.fr/web/en/news/how-do-you-adapt-a-video-game-for-the-screen_2056918
+
+5. The Art and Making of Arcane, official Riot Games art-book project page
+   https://melcher.com/book/the-art-and-making-of-arcane/
+
+Direct interviews with Arcane production artists:
+
+6. Arnaud-Loris Baudry, Production Designer/Senior Concept Artist at Riot Games
+   https://80.lv/articles/riot-games-on-designing-arcane-s-piltover-zaun
+
+7. Julien Georgel and Arnaud-Loris Baudry production-design interview
+   https://www.vfxvoice.com/riot-games-and-fortiche-get-revolutionary-with-arcane-season-2/
+
+8. Alexis Wanneroy, Fortiche Animation Supervisor interview
+   https://blog.syncsketch.com/creator-stories/arcane-fortiche/
+
+Research accessed 2026-08-25. All pixel palettes, grids, proportions, component
+rules, and Godot implementation guidance in this document are original Artea
+design synthesis rather than official Arcane specifications.

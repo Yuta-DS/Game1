@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "errors": [],
+  "scope": "leaves_only_no_tree_geometry",
+  "leaf_types": {
+    "emerald_sensor_leaf": {
+      "vertices": 10814,
+      "named_modules": 10
+    },
+    "living_leaf_fan": {
+      "vertices": 10481,
+      "named_modules": 14
+    },
+    "magic_rune_leaf": {
+      "vertices": 11068,
+      "named_modules": 8
+    },
+    "solar_glass_science_leaf": {
+      "vertices": 11132,
+      "named_modules": 8
+    }
+  },
+  "glb_reusable_roots": [
+    "EmeraldSensorLeaf",
+    "LivingLeafFan",
+    "MagicRuneLeaf",
+    "SolarGlassScienceLeaf"
+  ]
+}
